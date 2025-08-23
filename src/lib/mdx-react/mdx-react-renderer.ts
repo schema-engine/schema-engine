@@ -64,12 +64,13 @@ interface MDXReactIntegrationRendererOptions<C = ReactNode> extends IntegrationR
 }
 
 /**
- * A renderer for the MDX integration.
+ * Generates scripts for MDX components and hydration
  */
-export class MDXReactRenderer extends IntegrationRenderer<EcoPagesElement> {
-	name = PLUGIN_NAME;
-
-	private createHydrationScript(componentName: string): string {
+class ScriptsGenerator {
+	/**
+	 * Creates a hydration script for client-side React component mounting
+	 */
+	createHydrationScript(componentName: string): string {
 		return `
 import { hydrateRoot, createElement } from "react";
 
@@ -100,68 +101,13 @@ if (document.readyState === 'loading') {
 } else {
     hydrate();
 }
-		`.trim();
+        `.trim();
 	}
 
-	override async buildRouteRenderAssets(pagePath: string): Promise<ProcessedAsset[]> {
-		try {
-			const pathHash = rapidhash(pagePath);
-			const componentName = `ecopages-react-${pathHash}`;
-
-			const wrapperScript = await this.createMDXWrapperScript(pagePath);
-
-			const dependencies = [
-				AssetFactory.createContentScript({
-					position: 'head',
-					content: wrapperScript,
-					name: componentName,
-					excludeFromHtml: true,
-					bundle: true,
-					bundleOptions: {
-						external: [
-							'react',
-							'react-dom',
-							'react/jsx-runtime',
-							'react/jsx-dev-runtime',
-							'react-dom/client',
-						],
-						...(import.meta.env.NODE_ENV === 'production' && {
-							minify: true,
-							splitting: false,
-							treeshaking: true,
-						}),
-					},
-					attributes: {
-						type: 'module',
-						defer: '',
-					},
-				}),
-
-				AssetFactory.createContentScript({
-					position: 'head',
-					content: this.createHydrationScript(componentName),
-					name: `${componentName}-hydration`,
-					bundle: false,
-					attributes: {
-						type: 'module',
-						defer: '',
-					},
-				}),
-			];
-
-			if (!this.assetProcessingService) throw new Error('AssetProcessingService is not set');
-
-			return await this.assetProcessingService.processDependencies(dependencies, componentName);
-		} catch (error) {
-			if (error instanceof BundleError) console.error('[ecopages] Bundle errors:', error.logs);
-
-			throw new ReactRenderError(
-				`Failed to generate hydration script: ${error instanceof Error ? error.message : String(error)}`,
-			);
-		}
-	}
-
-	private async createMDXWrapperScript(pagePath: string): Promise<string> {
+	/**
+	 * Creates a wrapper script for MDX content with layout support
+	 */
+	async createMDXWrapperScript(pagePath: string): Promise<string> {
 		try {
 			const mdxContent = await fs.readFile(pagePath, 'utf-8');
 
@@ -207,6 +153,72 @@ function WrappedMDXComponent(props) {
 }
 export default WrappedMDXComponent;
         `.trim();
+		}
+	}
+}
+
+/**
+ * A renderer for the MDX integration.
+ */
+export class MDXReactRenderer extends IntegrationRenderer<EcoPagesElement> {
+	name = PLUGIN_NAME;
+	private scriptsGenerator = new ScriptsGenerator();
+
+	override async buildRouteRenderAssets(pagePath: string): Promise<ProcessedAsset[]> {
+		try {
+			const pathHash = rapidhash(pagePath);
+			const componentName = `ecopages-react-${pathHash}`;
+
+			const wrapperScript = await this.scriptsGenerator.createMDXWrapperScript(pagePath);
+
+			const dependencies = [
+				AssetFactory.createContentScript({
+					position: 'head',
+					content: wrapperScript,
+					name: componentName,
+					excludeFromHtml: true,
+					bundle: true,
+					bundleOptions: {
+						external: [
+							'react',
+							'react-dom',
+							'react/jsx-runtime',
+							'react/jsx-dev-runtime',
+							'react-dom/client',
+						],
+						...(import.meta.env.NODE_ENV === 'production' && {
+							minify: true,
+							splitting: false,
+							treeshaking: true,
+						}),
+					},
+					attributes: {
+						type: 'module',
+						defer: '',
+					},
+				}),
+
+				AssetFactory.createContentScript({
+					position: 'head',
+					content: this.scriptsGenerator.createHydrationScript(componentName),
+					name: `${componentName}-hydration`,
+					bundle: false,
+					attributes: {
+						type: 'module',
+						defer: '',
+					},
+				}),
+			];
+
+			if (!this.assetProcessingService) throw new Error('AssetProcessingService is not set');
+
+			return await this.assetProcessingService.processDependencies(dependencies, componentName);
+		} catch (error) {
+			if (error instanceof BundleError) console.error('[ecopages] Bundle errors:', error.logs);
+
+			throw new ReactRenderError(
+				`Failed to generate hydration script: ${error instanceof Error ? error.message : String(error)}`,
+			);
 		}
 	}
 
