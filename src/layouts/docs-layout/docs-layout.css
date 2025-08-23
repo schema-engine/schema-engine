@@ -4,6 +4,43 @@
 	--docs-toc-width: 300px;
 }
 
+/* Override body grid layout for docs pages */
+body:has([data-slot="sidebar-wrapper"]) {
+	display: block !important;
+	place-items: unset !important;
+	margin: 0 !important;
+	padding: 0 !important;
+}
+
+/* Fix sidebar width classes for Tailwind v3 */
+.w-\\(--sidebar-width\\) {
+	width: var(--sidebar-width) !important;
+}
+
+.w-\\(--sidebar-width-icon\\) {
+	width: var(--sidebar-width-icon) !important;
+}
+
+/* Force proper sidebar layout */
+[data-slot="sidebar-wrapper"] {
+	display: flex !important;
+	min-height: 100vh !important;
+	width: 100% !important;
+}
+
+[data-slot="sidebar-container"] {
+	position: relative !important;
+	left: auto !important;
+	right: auto !important;
+	transform: none !important;
+	width: var(--sidebar-width) !important;
+	flex-shrink: 0 !important;
+}
+
+[data-slot="sidebar-gap"] {
+	display: none !important;
+}
+
 /* Collapsible animations */
 @keyframes collapsible-down {
 	from {

@@ -260,7 +260,7 @@ export class MDXReactRenderer extends IntegrationRenderer<EcoPagesElement> {
 			}
 
 			const pageElement = layout
-				? React.createElement(layout, {}, React.createElement(Page as React.ComponentType))
+				? React.createElement(layout, undefined, React.createElement(Page as React.ComponentType))
 				: React.createElement(Page as React.ComponentType);
 
 			const wrappedContent = React.createElement(
