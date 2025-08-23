@@ -1,0 +1,263 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const config = {
+  dependencies: {
+    components: [DocsLayout],
+  }
+};
+
+
+export const getMetadata = () => ({
+  title: 'Form Engine | Documentation',
+  description: 'Comprehensive documentation for the Form Engine - a type-safe, configuration-driven form rendering system.',
+})
+
+<div className="banner banner--info mt-4" role="alert">
+  <p className="banner__title">Production Ready</p>
+  <p>Form Engine is battle-tested and used in production applications handling thousands of form submissions daily.</p>
+</div>
+
+## Features
+
+<div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 my-8">
+  <h2 className="text-2xl font-semibold mb-4">What is Form Engine?</h2>
+  <p>1. A comprehensive, type-safe form rendering engine built with React Hook Form and Zod validation.</p>
+  <ul className="list-disc text-gray-800 ml-6">
+    <li>"a declarative system for building complex interactive forms"</li>
+  </ul>
+  <p>2. A configuration-driven architecture that eliminates boilerplate and ensures consistency.</p>
+  <ul className="list-disc text-gray-800 ml-6">
+    <li>"developers can create dynamic forms through JSON configuration alone"</li>
+  </ul>
+</div>
+
+Form Engine is a comprehensive, type-safe form rendering system designed for modern React applications. 
+
+It leverages React Hook Form for performance, Zod for validation, and provides a declarative configuration-driven API that eliminates the need for imperative form building.
+
+This approach offers a complete solution for complex form requirements through a modular, extensible architecture that scales from simple contact forms to multi-step wizards with conditional logic.
+
+## Quick Navigation
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
+  <div className="space-y-4">
+    <h3 className="text-xl font-semibold">Getting Started</h3>
+    <ul className="space-y-2">
+      <li><a href="/docs/introduction" className="text-blue-600 hover:text-blue-800">Introduction</a> - Learn about Form Engine</li>
+      <li><a href="/docs/installation" className="text-blue-600 hover:text-blue-800">Installation</a> - Setup and dependencies</li>
+      <li><a href="/docs/quick-start" className="text-blue-600 hover:text-blue-800">Quick Start</a> - Build your first form</li>
+    </ul>
+  </div>
+  
+  <div className="space-y-4">
+    <h3 className="text-xl font-semibold">Core Concepts</h3>
+    <ul className="space-y-2">
+      <li><a href="/docs/concepts/configuration" className="text-blue-600 hover:text-blue-800">Configuration</a> - Form structure and settings</li>
+      <li><a href="/docs/concepts/field-types" className="text-blue-600 hover:text-blue-800">Field Types</a> - Available form components</li>
+      <li><a href="/docs/concepts/validation" className="text-blue-600 hover:text-blue-800">Validation</a> - Rules and schema generation</li>
+    </ul>
+  </div>
+  
+  <div className="space-y-4">
+    <h3 className="text-xl font-semibold">Advanced Features</h3>
+    <ul className="space-y-2">
+      <li><a href="/docs/advanced/multi-step-forms" className="text-blue-600 hover:text-blue-800">Multi-Step Forms</a> - Complex workflows</li>
+      <li><a href="/docs/advanced/array-fields" className="text-blue-600 hover:text-blue-800">Array Fields</a> - Dynamic repeating sections</li>
+      <li><a href="/docs/advanced/actions-system" className="text-blue-600 hover:text-blue-800">Actions System</a> - Form behaviors</li>
+    </ul>
+  </div>
+  
+  <div className="space-y-4">
+    <h3 className="text-xl font-semibold">Examples & Guides</h3>
+    <ul className="space-y-2">
+      <li><a href="/docs/examples/basic-form" className="text-blue-600 hover:text-blue-800">Basic Form</a> - Simple contact form</li>
+      <li><a href="/docs/examples/registration-flow" className="text-blue-600 hover:text-blue-800">Registration Flow</a> - Multi-step example</li>
+      <li><a href="/docs/guides/performance" className="text-blue-600 hover:text-blue-800">Performance Guide</a> - Optimization tips</li>
+    </ul>
+  </div>
+</div>
+
+## Key Features
+
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 my-8">
+  <div className="border rounded-lg p-4">
+    <h3 className="font-semibold text-lg mb-2">🎯 Configuration-Driven</h3>
+    <p className="text-gray-600">Build complex forms using JSON configuration with no imperative code required.</p>
+  </div>
+
+  <div className="border rounded-lg p-4">
+    <h3 className="font-semibold text-lg mb-2">🛡️ Type-Safe Validation</h3>
+    <p className="text-gray-600">Automatic Zod schema generation with full TypeScript support and runtime validation.</p>
+  </div>
+
+  <div className="border rounded-lg p-4">
+    <h3 className="font-semibold text-lg mb-2">📱 Responsive Grid</h3>
+    <p className="text-gray-600">CSS Grid-based responsive layouts with mobile-first cascade behavior.</p>
+  </div>
+
+  <div className="border rounded-lg p-4">
+    <h3 className="font-semibold text-lg mb-2">🔀 Conditional Logic</h3>
+    <p className="text-gray-600">Dynamic field visibility and behavior based on form state and user input.</p>
+  </div>
+
+  <div className="border rounded-lg p-4">
+    <h3 className="font-semibold text-lg mb-2">📋 Multi-Step Forms</h3>
+    <p className="text-gray-600">Composable stepper components with flexible navigation and validation modes.</p>
+  </div>
+
+  <div className="border rounded-lg p-4">
+    <h3 className="font-semibold text-lg mb-2">⚡ Actions System</h3>
+    <p className="text-gray-600">Trigger-based actions for submissions, auto-save, tracking, and custom operations.</p>
+  </div>
+</div>
+
+## Quick Example
+
+Here's how easy it is to create a contact form with validation:
+
+```typescript
+import { FormRenderer } from "@/lib/form-engine";
+
+const contactFormConfig = {
+  id: "contact-form",
+  title: "Contact Us",
+  steps: [{
+    id: "contact-details",
+    title: "Contact Information",
+    fields: [
+      {
+        type: "input",
+        name: "name",
+        label: "Full Name",
+        validation: [
+          { type: "required", message: "Name is required" }
+        ]
+      },
+      {
+        type: "input",
+        name: "email",
+        label: "Email",
+        inputType: "email",
+        validation: [
+          { type: "required", message: "Email is required" },
+          { type: "email", message: "Invalid email format" }
+        ]
+      },
+      {
+        type: "textarea",
+        name: "message",
+        label: "Message",
+        rows: 4,
+        validation: [
+          { type: "required", message: "Message is required" }
+        ]
+      }
+    ]
+  }]
+};
+
+export function ContactForm() {
+  return (
+    <FormRenderer 
+      config={contactFormConfig}
+      onSubmit={(data) => console.log(data)}
+    />
+  );
+}
+```
+
+## Architecture Overview
+
+Form Engine is built on solid foundations with modern web standards:
+
+### Design Principles
+
+- **Configuration-Driven**: Single source of truth with JSON-serializable configurations
+- **Type Safety**: Full TypeScript support with discriminated unions and runtime validation
+- **Performance First**: Optimized re-renders and tree-shakable components
+- **Extensible**: Pluggable registry system for custom field types
+
+### Technical Stack
+
+- **React Hook Form**: Performant forms with minimal re-renders
+- **Zod Validation**: Runtime validation with TypeScript inference
+- **CSS Grid**: Modern, responsive layouts with cascade behavior
+- **Tailwind CSS**: Utility-first styling with design system support
+
+## Getting Started
+
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 my-8">
+  <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+    <div className="flex items-center gap-2 mb-2">
+      <span className="text-2xl">🚀</span>
+      <h3 className="font-semibold">Quick Start</h3>
+    </div>
+    <p className="text-sm text-gray-600 mb-3">Get up and running with your first form in minutes</p>
+    <a href="/docs/quick-start" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+      Read Quick Start →
+    </a>
+  </div>
+
+  <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+    <div className="flex items-center gap-2 mb-2">
+      <span className="text-2xl">📚</span>
+      <h3 className="font-semibold">Core Concepts</h3>
+    </div>
+    <p className="text-sm text-gray-600 mb-3">Learn the fundamental concepts and architecture</p>
+    <a href="/docs/concepts" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+      Learn Concepts →
+    </a>
+  </div>
+
+  <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+    <div className="flex items-center gap-2 mb-2">
+      <span className="text-2xl">🎯</span>
+      <h3 className="font-semibold">Examples</h3>
+    </div>
+    <p className="text-sm text-gray-600 mb-3">Explore real-world examples and use cases</p>
+    <a href="/docs/examples" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+      View Examples →
+    </a>
+  </div>
+
+  <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+    <div className="flex items-center gap-2 mb-2">
+      <span className="text-2xl">⚙️</span>
+      <h3 className="font-semibold">API Reference</h3>
+    </div>
+    <p className="text-sm text-gray-600 mb-3">Complete reference for all components and APIs</p>
+    <a href="/docs/api" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+      Browse API →
+    </a>
+  </div>
+</div>
+
+## Live Examples
+
+Explore the Form Engine in action with our interactive examples:
+
+- **[Basic Demo](/basic-demo)** - Simple form with validation
+- **[Multi-Step Forms](/multi-step-forms)** - Complex wizards with navigation
+- **[Responsive Grid](/responsive-grid)** - Adaptive layouts and device testing
+- **[Conditional Forms](/conditional-forms)** - Dynamic fields with logic
+- **[Actions System](/actions)** - Auto-save, tracking, and submissions
+- **[Complete Showcase](/showcase)** - All features in one place
+
+## Community & Support
+
+<div className="bg-gray-50 rounded-lg p-6 my-8">
+  <h3 className="text-xl font-semibold mb-4">Ready to Get Started?</h3>
+  <p className="text-gray-600 mb-4">
+    Jump into the documentation and build your first form in minutes.
+  </p>
+  <div className="flex flex-col sm:flex-row gap-3">
+    <a href="/docs/quick-start" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-block text-center">
+      🚀 Quick Start Guide
+    </a>
+    <a href="/docs/examples" className="border border-gray-300 px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors inline-block text-center">
+      📚 Browse Examples
+    </a>
+  </div>
+</div>

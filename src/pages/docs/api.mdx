@@ -1,0 +1,445 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+  title: 'API Reference | Form Engine Documentation',
+  description: 'Complete API reference for Form Engine components, hooks, and types.',
+})
+
+# API Reference
+
+Complete reference for all Form Engine components, hooks, and types.
+
+## Components
+
+### FormRenderer
+
+The main component for rendering forms from configuration.
+
+```typescript
+import { FormRenderer } from "@/lib/form-engine";
+
+interface FormRendererProps {
+  config: FormConfig;
+  onSubmit: (data: any) => void | Promise<void>;
+  onChange?: (data: any) => void;
+  initialValues?: Record<string, any>;
+  className?: string;
+}
+
+<FormRenderer
+  config={formConfig}
+  onSubmit={handleSubmit}
+  onChange={handleChange}
+  initialValues={defaultValues}
+  className="my-form"
+/>
+```
+
+#### Props
+
+- **config** (`FormConfig`) - Required. The form configuration object
+- **onSubmit** (`(data: any) => void | Promise<void>`) - Required. Called when form is submitted
+- **onChange** (`(data: any) => void`) - Optional. Called when form values change
+- **initialValues** (`Record<string, any>`) - Optional. Initial form values
+- **className** (`string`) - Optional. CSS class for the form container
+
+### Stepper
+
+Multi-step form navigation component with compound pattern.
+
+```typescript
+import { Stepper } from "@/lib/form-engine";
+
+<Stepper sections={formSections} currentStep={currentStep}>
+  <Stepper.Header variant="default" orientation="horizontal" />
+  <Stepper.Content>{/* Current step content */}</Stepper.Content>
+  <Stepper.Navigation
+    previousButton={{ label: "Back", variant: "outline" }}
+    nextButton={{ label: "Next", variant: "default" }}
+  />
+</Stepper>
+```
+
+#### Stepper Props
+
+- **sections** (`FormStep[]`) - Required. Array of form steps
+- **currentStep** (`number`) - Required. Current active step index
+- **onStepChange** (`(step: number) => void`) - Optional. Step change handler
+- **mode** (`'wizard' | 'free'`) - Optional. Navigation mode (default: 'wizard')
+
+#### Stepper.Header Props
+
+- **variant** (`'default' | 'pills' | 'arrows' | 'dots'`) - Visual style variant
+- **orientation** (`'horizontal' | 'vertical'`) - Step indicator orientation
+- **showStepNumbers** (`boolean`) - Whether to show step numbers
+- **className** (`string`) - Optional CSS class
+
+#### Stepper.Navigation Props
+
+- **previousButton** (`ButtonConfig`) - Previous button configuration
+- **nextButton** (`ButtonConfig`) - Next button configuration
+- **showPrevious** (`boolean`) - Whether to show previous button
+- **showNext** (`boolean`) - Whether to show next button
+
+### ViewportPreview
+
+Component for testing forms across different screen sizes.
+
+```typescript
+import { ViewportPreview } from "@/lib/form-engine";
+
+<ViewportPreview
+  title="Mobile Preview"
+  device="iphone-x"
+  orientation="portrait"
+>
+  <FormRenderer config={config} onSubmit={handleSubmit} />
+</ViewportPreview>
+```
+
+#### Props
+
+- **title** (`string`) - Preview window title
+- **device** (`DeviceType`) - Device to simulate
+- **orientation** (`'portrait' | 'landscape'`) - Device orientation
+- **children** (`ReactNode`) - Content to preview
+
+## Hooks
+
+### useFormActions
+
+Hook for managing form actions and triggers.
+
+```typescript
+import { useFormActions } from "@/lib/form-engine";
+
+const { executeAction, actionHistory } = useFormActions(
+  formConfig,
+  form,
+  currentStep
+);
+```
+
+#### Parameters
+
+- **config** (`FormConfig`) - Form configuration
+- **form** (`UseFormReturn`) - React Hook Form instance
+- **currentStep** (`number`) - Current step index
+
+#### Returns
+
+- **executeAction** (`(action: FormAction) => Promise<void>`) - Execute an action
+- **actionHistory** (`ActionExecutionResult[]`) - History of executed actions
+
+### useConstraintLogic
+
+Hook for evaluating conditional field logic.
+
+```typescript
+import { useConstraintLogic } from "@/lib/form-engine";
+
+const { isVisible, isEnabled, isRequired } = useConstraintLogic(
+  constraints,
+  formWatch
+);
+```
+
+#### Parameters
+
+- **constraints** (`ConstraintLogic[]`) - Array of constraint rules
+- **formWatch** (`any`) - Form watch function or values
+
+#### Returns
+
+- **isVisible** (`boolean`) - Whether field should be visible
+- **isEnabled** (`boolean`) - Whether field should be enabled
+- **isRequired** (`boolean`) - Whether field should be required
+
+### useGridLayout
+
+Hook for responsive grid layout management.
+
+```typescript
+import { useGridLayout } from "@/lib/form-engine";
+
+const { gridStyles, breakpoint } = useGridLayout(layoutConfig);
+```
+
+#### Parameters
+
+- **config** (`GridLayoutConfig`) - Grid layout configuration
+
+#### Returns
+
+- **gridStyles** (`CSSProperties`) - CSS styles for grid container
+- **breakpoint** (`Breakpoint`) - Current responsive breakpoint
+
+## Types
+
+### FormConfig
+
+Main configuration interface for forms.
+
+```typescript
+interface FormConfig {
+  id: string;
+  title?: string;
+  description?: string;
+  steps: FormStep[];
+  stepper?: StepperConfig;
+  actions?: FormActionConfig[];
+  layout?: GridLayoutConfig;
+  mode?: 'wizard' | 'free';
+}
+```
+
+### FormStep
+
+Configuration for individual form steps.
+
+```typescript
+interface FormStep {
+  id: string;
+  title: string;
+  description?: string;
+  fields: FieldConfig[];
+  layout?: GridLayoutConfig;
+  constraints?: ConstraintLogic[];
+}
+```
+
+### FieldConfig
+
+Union type for all field configurations.
+
+```typescript
+type FieldConfig =
+  | InputFieldConfig
+  | SelectFieldConfig
+  | CheckboxFieldConfig
+  | NumberFieldConfig
+  | TextareaFieldConfig
+  | RadioFieldConfig
+  | ArrayFieldConfig
+  | DateFieldConfig
+  | FileFieldConfig
+  | SwitchFieldConfig;
+```
+
+### InputFieldConfig
+
+Configuration for input fields.
+
+```typescript
+interface InputFieldConfig extends BaseFieldConfig {
+  type: "input";
+  inputType?: "text" | "email" | "password" | "url" | "tel" | "search";
+  placeholder?: string;
+  maxLength?: number;
+  minLength?: number;
+}
+```
+
+### SelectFieldConfig
+
+Configuration for select fields.
+
+```typescript
+interface SelectFieldConfig extends BaseFieldConfig {
+  type: "select";
+  options: SelectOption[];
+  multiple?: boolean;
+  searchable?: boolean;
+  placeholder?: string;
+}
+
+interface SelectOption {
+  value: string | number;
+  label: string;
+  disabled?: boolean;
+}
+```
+
+### ValidationRule
+
+Validation rule configuration.
+
+```typescript
+interface ValidationRule {
+  type: "required" | "email" | "minLength" | "maxLength" | "pattern" | "custom";
+  message: string;
+  value?: any;
+}
+```
+
+### ConstraintLogic
+
+Conditional logic configuration.
+
+```typescript
+interface ConstraintLogic {
+  field: string;
+  operator: ConstraintOperator;
+  value: any;
+  action: ConstraintAction;
+}
+
+type ConstraintOperator =
+  | "equals"
+  | "not_equals"
+  | "contains"
+  | "not_contains"
+  | "greater_than"
+  | "less_than"
+  | "is_empty"
+  | "is_not_empty";
+
+type ConstraintAction = "show" | "hide" | "enable" | "disable" | "require";
+```
+
+### FormActionConfig
+
+Action configuration for form behaviors.
+
+```typescript
+type FormActionConfig =
+  | SubmitAction
+  | AutoSaveDraftAction
+  | GTMEventAction
+  | ResetAction;
+
+interface SubmitAction {
+  type: "submit";
+  trigger: ActionTrigger;
+  endpoint: string;
+  method: "POST" | "PUT" | "PATCH" | "DELETE";
+  headers?: Record<string, string>;
+  successMessage?: string;
+  errorMessage?: string;
+}
+```
+
+### GridLayoutConfig
+
+Responsive grid layout configuration.
+
+```typescript
+interface GridLayoutConfig {
+  columns: number | "auto";
+  gap: number | string;
+  responsive: {
+    default: GridBreakpointConfig;
+    sm?: GridBreakpointConfig;
+    md?: GridBreakpointConfig;
+    lg?: GridBreakpointConfig;
+    xl?: GridBreakpointConfig;
+    "2xl"?: GridBreakpointConfig;
+  };
+}
+
+interface GridBreakpointConfig {
+  columns?: number | "auto";
+  gap?: number | string;
+  minItemWidth?: string;
+}
+```
+
+## Utilities
+
+### generateZodSchema
+
+Generate Zod validation schema from field configurations.
+
+```typescript
+import { generateZodSchema } from "@/lib/form-engine";
+
+const schema = generateZodSchema(fieldConfigs);
+```
+
+### validateFormConfig
+
+Validate form configuration at runtime.
+
+```typescript
+import { validateFormConfig } from "@/lib/form-engine";
+
+try {
+  const validConfig = validateFormConfig(config);
+} catch (error) {
+  console.error("Invalid configuration:", error);
+}
+```
+
+### serializeFormData
+
+Serialize form data for storage or transmission.
+
+```typescript
+import { serializeFormData } from "@/lib/form-engine";
+
+const serialized = serializeFormData(formData, metadata);
+```
+
+## Registry
+
+### FormComponentRegistry
+
+Registry for managing field components.
+
+```typescript
+import { registry } from "@/lib/form-engine";
+
+// Register a custom component
+registry.register("custom-field", CustomFieldComponent);
+
+// Check if component exists
+if (registry.hasComponent("custom-field")) {
+  const Component = registry.getComponent("custom-field");
+}
+
+// Get all registered components
+const allComponents = registry.getAllComponents();
+```
+
+## Error Handling
+
+Form Engine provides comprehensive error handling:
+
+```typescript
+import { FormEngineError, ValidationError } from "@/lib/form-engine";
+
+try {
+  // Form Engine operations
+} catch (error) {
+  if (error instanceof ValidationError) {
+    // Handle validation errors
+  } else if (error instanceof FormEngineError) {
+    // Handle other Form Engine errors
+  }
+}
+```
+
+## TypeScript Integration
+
+Form Engine provides full TypeScript support with type inference:
+
+```typescript
+import type { 
+  FormConfig,
+  FieldConfig,
+  FormSubmitHandler,
+  ValidationRule 
+} from "@/lib/form-engine";
+
+// Type-safe form configuration
+const config: FormConfig = {
+  // TypeScript will enforce correct structure
+};
+
+// Type-safe submit handler
+const handleSubmit: FormSubmitHandler = (data) => {
+  // data is properly typed based on configuration
+};
+```

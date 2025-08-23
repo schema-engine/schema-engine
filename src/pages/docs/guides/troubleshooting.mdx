@@ -1,0 +1,725 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'Troubleshooting Guide | Form Engine Documentation',
+    description: 'Common issues and solutions when working with Form Engine, including debugging tips and error resolution.',
+})
+
+# Troubleshooting Guide
+
+This guide covers common issues you might encounter when working with Form Engine and provides step-by-step solutions to resolve them.
+
+## Common Issues
+
+### Installation and Setup Issues
+
+#### Issue: Module Resolution Errors
+
+**Error:**
+```
+Cannot resolve module '@/lib/form-engine'
+Cannot resolve module '@/components/form/registries'
+```
+
+**Solution:**
+
+1. **Check path mapping in tsconfig.json:**
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  }
+}
+```
+
+2. **Configure bundler aliases:**
+
+**Vite (vite.config.ts):**
+```typescript
+import { defineConfig } from 'vite';
+import { resolve } from 'path';
+
+export default defineConfig({
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src'),
+    },
+  },
+});
+```
+
+**Next.js (next.config.js):**
+```javascript
+const path = require('path');
+
+module.exports = {
+  webpack: (config) => {
+    config.resolve.alias['@'] = path.resolve(__dirname, 'src');
+    return config;
+  },
+};
+```
+
+3. **Restart development server** after configuration changes.
+
+#### Issue: Peer Dependency Warnings
+
+**Error:**
+```
+npm WARN peer dep missing: react-hook-form@^7.43.0
+npm WARN peer dep missing: zod@^3.20.0
+```
+
+**Solution:**
+
+Install missing peer dependencies:
+```bash
+npm install react-hook-form zod @hookform/resolvers
+
+# Or with specific versions
+npm install react-hook-form@^7.43.0 zod@^3.20.0 @hookform/resolvers@^3.0.0
+```
+
+#### Issue: TypeScript Errors on Import
+
+**Error:**
+```
+Module '"@/lib/form-engine"' has no exported member 'FormRenderer'
+```
+
+**Solution:**
+
+1. **Ensure TypeScript version compatibility:**
+```bash
+npm install typescript@^4.5.0
+```
+
+2. **Check if types are being generated:**
+```bash
+# Clear TypeScript cache
+rm -rf node_modules/.cache
+npm run build
+```
+
+3. **Verify import syntax:**
+```typescript
+// ✅ Correct import
+import { FormRenderer } from "@/lib/form-engine";
+
+// ❌ Incorrect import
+import FormRenderer from "@/lib/form-engine";
+```
+
+### Field Registry Issues
+
+#### Issue: Field Type Not Found
+
+**Error:**
+```
+Error: Field type 'input' not found in registry
+```
+
+**Solution:**
+
+1. **Import the required registry:**
+```typescript
+// Import before using FormRenderer
+import "@/components/form/registries/input.registry";
+
+// Or import all registries
+import "@/components/form/registries";
+```
+
+2. **Check import order:**
+```typescript
+// ✅ Correct order - registries first
+import "@/components/form/registries/input.registry";
+import { FormRenderer } from "@/lib/form-engine";
+
+// ❌ Incorrect order
+import { FormRenderer } from "@/lib/form-engine";
+import "@/components/form/registries/input.registry"; // Too late
+```
+
+3. **Verify field type in configuration:**
+```typescript
+// ✅ Correct field type
+{
+  type: "input",  // Must match registered type
+  name: "fieldName"
+}
+
+// ❌ Typo in field type
+{
+  type: "Input",  // Capital I - won't match
+  name: "fieldName"
+}
+```
+
+#### Issue: Custom Field Not Rendering
+
+**Error:**
+```
+Error: Field type 'customField' not found in registry
+```
+
+**Solution:**
+
+1. **Register the custom field:**
+```typescript
+import { registry } from "@/lib/form-engine";
+import { CustomFieldComponent } from "./CustomFieldComponent";
+
+// Register before use
+registry.register("customField", CustomFieldComponent);
+```
+
+2. **Ensure component props match interface:**
+```typescript
+interface FieldProps {
+  config: FieldConfig;
+  value: any;
+  onChange: (value: any) => void;
+  error?: string;
+}
+
+function CustomFieldComponent({ config, value, onChange, error }: FieldProps) {
+  return (
+    <div>
+      {/* Your implementation */}
+    </div>
+  );
+}
+```
+
+### Validation Issues
+
+#### Issue: Validation Schema Not Working
+
+**Error:**
+```
+Validation not triggering
+Form submits without validation
+```
+
+**Solution:**
+
+1. **Enable auto-schema generation:**
+```typescript
+const formConfig = {
+  id: "my-form",
+  autoGenerateSchema: true,  // Add this line
+  steps: [/* ... */]
+};
+```
+
+2. **Check validation rule syntax:**
+```typescript
+// ✅ Correct validation syntax
+{
+  type: "input",
+  name: "email",
+  validation: [
+    { type: "required", message: "Email is required" },
+    { type: "email", message: "Invalid email format" }
+  ]
+}
+
+// ❌ Incorrect syntax
+{
+  type: "input",
+  name: "email",
+  required: true,  // Wrong - use validation array
+  email: true      // Wrong - use validation array
+}
+```
+
+3. **Verify Zod is installed:**
+```bash
+npm list zod
+# Should show zod@^3.20.0 or higher
+```
+
+#### Issue: Custom Validation Not Working
+
+**Error:**
+```
+Custom validator never called
+TypeError: validator is not a function
+```
+
+**Solution:**
+
+1. **Check validator function syntax:**
+```typescript
+// ✅ Correct validator
+{
+  type: "custom",
+  message: "Invalid value",
+  validator: (value, formData) => {
+    return value && value.length > 0;
+  }
+}
+
+// ❌ Missing validator function
+{
+  type: "custom",
+  message: "Invalid value"
+  // Missing validator property
+}
+```
+
+2. **Handle async validation:**
+```typescript
+// ✅ Correct async validator
+{
+  type: "custom",
+  message: "Username taken",
+  validator: async (value) => {
+    try {
+      const response = await fetch(`/api/check-username?username=${value}`);
+      const data = await response.json();
+      return data.available;
+    } catch (error) {
+      console.error('Validation error:', error);
+      return false;
+    }
+  }
+}
+```
+
+### Styling and Layout Issues
+
+#### Issue: Styles Not Applying
+
+**Error:**
+```
+Form appears unstyled
+CSS classes not working
+```
+
+**Solution:**
+
+1. **Ensure Tailwind CSS is configured:**
+```javascript
+// tailwind.config.js
+module.exports = {
+  content: [
+    "./src/**/*.{js,jsx,ts,tsx}",
+    // Include form engine files
+    "./node_modules/@/lib/form-engine/**/*.{js,jsx,ts,tsx}"
+  ],
+  // ...
+};
+```
+
+2. **Import Tailwind CSS:**
+```css
+/* src/styles/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+3. **Check CSS variables:**
+```css
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --primary: 222.2 47.4% 11.2%;
+  --primary-foreground: 210 40% 98%;
+  /* ... other CSS variables ... */
+}
+```
+
+#### Issue: Responsive Grid Not Working
+
+**Error:**
+```
+Grid layout not responsive
+Fields not arranging correctly
+```
+
+**Solution:**
+
+1. **Check grid configuration syntax:**
+```typescript
+// ✅ Correct grid configuration
+const formConfig = {
+  id: "form",
+  grid: {
+    columns: 1,
+    gap: 24,
+    responsive: {
+      md: {
+        columns: 2
+      },
+      lg: {
+        columns: 3
+      }
+    }
+  },
+  steps: [/* ... */]
+};
+```
+
+2. **Verify CSS Grid support:**
+```css
+/* Check if grid styles are applied */
+.form-container {
+  display: grid;
+  grid-template-columns: repeat(var(--columns, 1), 1fr);
+  gap: var(--gap, 1rem);
+}
+```
+
+3. **Test responsive breakpoints:**
+```typescript
+// Debug current breakpoint
+import { useFieldGridStyles } from "@/lib/form-engine";
+
+function DebugGrid() {
+  const styles = useFieldGridStyles({ colSpan: 2 });
+  console.log('Grid styles:', styles);
+  return null;
+}
+```
+
+### Form Submission Issues
+
+#### Issue: Form Not Submitting
+
+**Error:**
+```
+onSubmit not called
+Form submission blocked
+```
+
+**Solution:**
+
+1. **Check onSubmit handler:**
+```typescript
+// ✅ Correct onSubmit
+function MyForm() {
+  const handleSubmit = (data) => {
+    console.log('Form submitted:', data);
+  };
+
+  return (
+    <FormRenderer
+      config={formConfig}
+      onSubmit={handleSubmit}  // Must be provided
+    />
+  );
+}
+
+// ❌ Missing onSubmit
+<FormRenderer config={formConfig} />
+```
+
+2. **Verify form validation:**
+```typescript
+// Check if validation is blocking submission
+const formConfig = {
+  id: "form",
+  validation: {
+    strategy: "onSubmit",
+    shouldFocusError: true  // Will focus first error
+  },
+  steps: [/* ... */]
+};
+```
+
+3. **Debug submission process:**
+```typescript
+const handleSubmit = async (data) => {
+  console.log('Submit called with:', data);
+  try {
+    const result = await submitToAPI(data);
+    console.log('Submit successful:', result);
+  } catch (error) {
+    console.error('Submit failed:', error);
+  }
+};
+```
+
+#### Issue: Actions Not Executing
+
+**Error:**
+```
+Form actions not running
+Submit action not triggered
+```
+
+**Solution:**
+
+1. **Check action configuration:**
+```typescript
+const formConfig = {
+  id: "form",
+  steps: [/* ... */],
+  actions: [
+    {
+      id: "submit-action",
+      type: "submit",
+      endpoint: "/api/submit",
+      triggers: ["form_submit"]  // Must include correct trigger
+    }
+  ]
+};
+```
+
+2. **Verify action registration:**
+```typescript
+// Ensure action plugins are registered
+import { submitPlugin } from "@/lib/form-engine/actions/plugins";
+import { registerAction } from "@/lib/form-engine/actions/action-registry";
+
+registerAction(submitPlugin({
+  onSuccess: (data) => console.log('Success:', data),
+  onError: (error) => console.error('Error:', error)
+}));
+```
+
+3. **Debug action execution:**
+```typescript
+// Check action executor logs
+import { ActionExecutor } from "@/lib/form-engine/actions/action-executor";
+
+const executor = new ActionExecutor();
+executor.enableDebugLogs = true;  // Enable detailed logging
+```
+
+### Performance Issues
+
+#### Issue: Slow Form Rendering
+
+**Error:**
+```
+Form takes long to render
+Performance issues with large forms
+```
+
+**Solution:**
+
+1. **Optimize field imports:**
+```typescript
+// ✅ Import only needed fields
+import "@/components/form/registries/input.registry";
+import "@/components/form/registries/select.registry";
+
+// ❌ Import all fields
+import "@/components/form/registries";  // Large bundle
+```
+
+2. **Use React.memo for large forms:**
+```typescript
+import { memo } from 'react';
+
+const OptimizedFormRenderer = memo(FormRenderer);
+
+function MyForm() {
+  return <OptimizedFormRenderer config={formConfig} onSubmit={handleSubmit} />;
+}
+```
+
+3. **Optimize constraint evaluation:**
+```typescript
+// Minimize watched fields
+const optimizedConstraints = useMemo(() => {
+  return constraints.filter(c => c.field in formData);
+}, [constraints, formData]);
+```
+
+#### Issue: Memory Leaks
+
+**Error:**
+```
+Memory usage increasing over time
+Form components not unmounting properly
+```
+
+**Solution:**
+
+1. **Cleanup in useEffect:**
+```typescript
+function FormComponent() {
+  useEffect(() => {
+    const cleanup = setupFormListeners();
+    
+    return () => {
+      cleanup();  // Important: cleanup on unmount
+    };
+  }, []);
+}
+```
+
+2. **Clear intervals and timeouts:**
+```typescript
+useEffect(() => {
+  const interval = setInterval(autoSave, 30000);
+  
+  return () => clearInterval(interval);
+}, []);
+```
+
+3. **Remove event listeners:**
+```typescript
+useEffect(() => {
+  const handleResize = () => updateLayout();
+  window.addEventListener('resize', handleResize);
+  
+  return () => {
+    window.removeEventListener('resize', handleResize);
+  };
+}, []);
+```
+
+## Debugging Tools
+
+### Enable Debug Mode
+
+```typescript
+// Enable debug logging
+const formConfig = {
+  id: "debug-form",
+  debug: true,  // Enables detailed logging
+  steps: [/* ... */]
+};
+```
+
+### Browser DevTools
+
+1. **Check Console for Errors:**
+   - Look for Form Engine specific errors
+   - Check for validation errors
+   - Monitor action execution logs
+
+2. **Inspect Form State:**
+```typescript
+// Add to window for debugging
+window.debugFormState = formState;
+window.debugFormConfig = formConfig;
+```
+
+3. **Network Tab:**
+   - Check API calls for form submission
+   - Verify action endpoints are correct
+   - Monitor response status codes
+
+### React DevTools
+
+1. **Install React DevTools browser extension**
+2. **Inspect Form Components:**
+   - Check FormRenderer props
+   - Verify field component state
+   - Monitor re-renders
+
+### Custom Debug Component
+
+```typescript
+function FormDebugger({ config, formState }) {
+  if (process.env.NODE_ENV !== 'development') return null;
+
+  return (
+    <div className="p-4 bg-gray-100 rounded mt-4">
+      <h3 className="font-bold mb-2">Form Debug Info</h3>
+      <details>
+        <summary>Configuration</summary>
+        <pre className="text-xs overflow-auto">
+          {JSON.stringify(config, null, 2)}
+        </pre>
+      </details>
+      <details>
+        <summary>Form State</summary>
+        <pre className="text-xs overflow-auto">
+          {JSON.stringify(formState, null, 2)}
+        </pre>
+      </details>
+    </div>
+  );
+}
+```
+
+## Getting Help
+
+### Before Asking for Help
+
+1. **Check console for errors**
+2. **Verify configuration syntax**
+3. **Test with minimal reproduction**
+4. **Check documentation and examples**
+
+### Minimal Reproduction
+
+Create a minimal example that reproduces the issue:
+
+```typescript
+// Minimal example for bug reports
+import { FormRenderer } from "@/lib/form-engine";
+import "@/components/form/registries/input.registry";
+
+const minimalConfig = {
+  id: "minimal-test",
+  steps: [
+    {
+      title: "Test",
+      fields: [
+        {
+          type: "input",
+          name: "test",
+          label: "Test Field",
+          validation: [{ type: "required" }]
+        }
+      ]
+    }
+  ]
+};
+
+export function MinimalExample() {
+  const handleSubmit = (data) => {
+    console.log('Submitted:', data);
+  };
+
+  return (
+    <FormRenderer
+      config={minimalConfig}
+      onSubmit={handleSubmit}
+    />
+  );
+}
+```
+
+### Community Resources
+
+- **GitHub Issues**: [Report bugs and feature requests](https://github.com/your-org/form-engine/issues)
+- **Discussions**: [Ask questions and share tips](https://github.com/your-org/form-engine/discussions)
+- **Documentation**: [Complete API reference](/docs/api)
+- **Examples**: [Working code examples](/docs/examples)
+
+### When Reporting Issues
+
+Include the following information:
+
+1. **Form Engine version**
+2. **React version**
+3. **TypeScript version**
+4. **Build tool (Vite, Next.js, etc.)**
+5. **Minimal reproduction code**
+6. **Expected vs actual behavior**
+7. **Console errors (if any)**
+8. **Browser and OS version**
+
+This troubleshooting guide covers the most common issues you'll encounter with Form Engine. Most problems can be resolved by checking configuration syntax, verifying imports, and ensuring proper setup of peer dependencies.
+
+## Next Steps
+
+- [Performance Guide](/docs/guides/performance) - Optimize your forms
+- [Migration Guide](/docs/guides/migration) - Upgrade between versions
+- [Contributing Guide](/docs/guides/contributing) - Help improve Form Engine
+- [Examples](/docs/examples) - See working implementations

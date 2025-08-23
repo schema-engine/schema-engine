@@ -1,0 +1,645 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'Performance Guide | Form Engine Documentation',
+    description: 'Learn how to optimize Form Engine for maximum performance in production applications.',
+})
+
+# Performance Guide
+
+Form Engine is designed with performance as a first-class concern. This guide covers optimization strategies, best practices, and techniques to ensure your forms perform excellently at scale.
+
+## Performance Principles
+
+Form Engine's performance architecture is built on several key principles:
+
+### 1. Minimal Re-renders
+
+Form Engine uses React Hook Form's optimized rendering strategy with strategic `useWatch` implementation:
+
+```typescript
+// ✅ Form Engine automatically optimizes re-renders
+function ConditionalField({ field, constraints }) {
+  // Only re-renders when watched fields change
+  const watchedFields = constraints?.map(c => c.field) || [];
+  const watchedValues = useWatch({ name: watchedFields });
+  
+  const shouldShow = evaluateConstraints(constraints, watchedValues);
+  
+  return shouldShow ? <FieldComponent field={field} /> : null;
+}
+```
+
+### 2. Tree-Shakable Architecture
+
+Only import the field components you actually use:
+
+```typescript
+// ✅ Production: Import only what you need
+import "@/components/form/registries/input.registry";
+import "@/components/form/registries/select.registry";
+import "@/components/form/registries/checkbox.registry";
+
+// ❌ Development: Import everything (for convenience)
+import "@/components/form/registries"; // 50KB+ bundle impact
+```
+
+### 3. Lazy Validation
+
+Zod schemas are generated only when needed:
+
+```typescript
+// Schema generation is deferred until first validation
+const schema = useMemo(() => {
+  return autoGenerateSchema ? generateZodSchema(formConfig) : undefined;
+}, [formConfig, autoGenerateSchema]);
+```
+
+## Bundle Size Optimization
+
+### Field Registry Optimization
+
+Control your bundle size by importing only required field types:
+
+```typescript
+// Calculate your bundle impact:
+// input.registry.ts: ~8KB
+// select.registry.ts: ~12KB  
+// date.registry.ts: ~15KB
+// file.registry.ts: ~18KB
+// array.registry.ts: ~22KB
+
+// For a basic contact form, import only:
+import "@/components/form/registries/input.registry";     // 8KB
+import "@/components/form/registries/textarea.registry";  // 6KB  
+import "@/components/form/registries/select.registry";    // 12KB
+import "@/components/form/registries/checkbox.registry";  // 4KB
+// Total: ~30KB instead of 120KB+ for all registries
+```
+
+### Dynamic Imports for Large Forms
+
+For forms with many field types, use dynamic imports:
+
+```typescript
+// src/components/DynamicFormRenderer.tsx
+import { lazy, Suspense } from 'react';
+
+const BasicFormRenderer = lazy(() => 
+  import("@/lib/form-engine").then(module => ({ 
+    default: module.FormRenderer 
+  }))
+);
+
+const AdvancedFormRenderer = lazy(async () => {
+  // Import advanced field types only when needed
+  await import("@/components/form/registries/array.registry");
+  await import("@/components/form/registries/file.registry");
+  await import("@/components/form/registries/date.registry");
+  
+  const module = await import("@/lib/form-engine");
+  return { default: module.FormRenderer };
+});
+
+export function DynamicFormRenderer({ config, ...props }) {
+  const hasAdvancedFields = config.steps.some(step =>
+    step.fields.some(field => 
+      ['array', 'file', 'date'].includes(field.type)
+    )
+  );
+
+  const Renderer = hasAdvancedFields ? AdvancedFormRenderer : BasicFormRenderer;
+  
+  return (
+    <Suspense fallback={<FormSkeleton />}>
+      <Renderer config={config} {...props} />
+    </Suspense>
+  );
+}
+```
+
+## Runtime Performance
+
+### Constraint Evaluation Optimization
+
+Optimize conditional logic for large forms:
+
+```typescript
+// ✅ Optimized constraint evaluation
+const optimizedConstraints = useMemo(() => {
+  return constraints?.reduce((acc, constraint) => {
+    const key = constraint.field;
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(constraint);
+    return acc;
+  }, {} as Record<string, ConstraintLogic[]>);
+}, [constraints]);
+
+// Watch only the fields that have constraints
+const watchedFields = Object.keys(optimizedConstraints);
+const formValues = useWatch({ name: watchedFields });
+
+// Evaluate constraints efficiently
+const constraintResults = useMemo(() => {
+  return Object.entries(optimizedConstraints).reduce((acc, [field, fieldConstraints]) => {
+    acc[field] = evaluateFieldConstraints(fieldConstraints, formValues[field]);
+    return acc;
+  }, {});
+}, [optimizedConstraints, formValues]);
+```
+
+### Form Data Optimization
+
+Use efficient data structures for large datasets:
+
+```typescript
+// ✅ Optimized for large option lists
+const memoizedOptions = useMemo(() => {
+  return largeOptionList.map(item => ({
+    value: item.id,
+    label: item.name,
+    searchableText: `${item.name} ${item.category}`.toLowerCase()
+  }));
+}, [largeOptionList]);
+
+// ✅ Virtual scrolling for very large lists
+import { FixedSizeList as List } from 'react-window';
+
+function VirtualizedSelect({ options, ...props }) {
+  const Row = ({ index, style }) => (
+    <div style={style}>
+      <option value={options[index].value}>
+        {options[index].label}
+      </option>
+    </div>
+  );
+
+  return (
+    <List
+      height={200}
+      itemCount={options.length}
+      itemSize={35}
+    >
+      {Row}
+    </List>
+  );
+}
+```
+
+### Debounced Operations
+
+Optimize expensive operations with debouncing:
+
+```typescript
+// ✅ Auto-save with debouncing
+const debouncedAutoSave = useMemo(
+  () => debounce(async (data) => {
+    await saveFormDraft(data);
+  }, 2000),
+  []
+);
+
+useEffect(() => {
+  return () => {
+    debouncedAutoSave.cancel();
+  };
+}, [debouncedAutoSave]);
+
+// ✅ Search optimization
+const debouncedSearch = useMemo(
+  () => debounce(async (query) => {
+    const results = await searchAPI(query);
+    setSearchResults(results);
+  }, 300),
+  []
+);
+```
+
+## Memory Management
+
+### Proper Cleanup
+
+Ensure proper cleanup to prevent memory leaks:
+
+```typescript
+// ✅ Component cleanup
+function FormComponent({ config }) {
+  useEffect(() => {
+    const cleanup = setupFormListeners(config);
+    
+    return () => {
+      cleanup();
+    };
+  }, [config]);
+
+  // ✅ Clear intervals and timeouts
+  useEffect(() => {
+    const interval = setInterval(() => {
+      autoSaveForm();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+}
+
+// ✅ Registry cleanup for SPA applications
+export function cleanupFormRegistry() {
+  registry.clear();
+}
+```
+
+### Efficient State Management
+
+Use efficient patterns for form state:
+
+```typescript
+// ✅ Use useCallback for stable references
+const handleSubmit = useCallback(async (data) => {
+  setIsSubmitting(true);
+  try {
+    await submitForm(data);
+  } finally {
+    setIsSubmitting(false);
+  }
+}, []);
+
+// ✅ Memoize expensive computations
+const validationSchema = useMemo(() => {
+  return generateZodSchema(formConfig.steps);
+}, [formConfig.steps]);
+
+// ✅ Split large forms into smaller components
+const PersonalInfoStep = memo(({ fields, ...props }) => {
+  return <FieldGroup fields={fields} {...props} />;
+});
+```
+
+## Monitoring and Measurement
+
+### Performance Metrics
+
+Monitor key performance indicators:
+
+```typescript
+// Performance monitoring
+function PerformanceMonitor({ children }) {
+  useEffect(() => {
+    const observer = new PerformanceObserver((list) => {
+      list.getEntries().forEach((entry) => {
+        if (entry.name.includes('form-render')) {
+          console.log(`Form render time: ${entry.duration}ms`);
+          
+          // Send to analytics
+          analytics.track('form_performance', {
+            duration: entry.duration,
+            formId: entry.detail?.formId
+          });
+        }
+      });
+    });
+
+    observer.observe({ entryTypes: ['measure'] });
+
+    return () => observer.disconnect();
+  }, []);
+
+  return children;
+}
+
+// Usage in FormRenderer
+function FormRenderer({ config, ...props }) {
+  useEffect(() => {
+    performance.mark('form-render-start');
+    
+    return () => {
+      performance.mark('form-render-end');
+      performance.measure(
+        'form-render',
+        'form-render-start',
+        'form-render-end'
+      );
+    };
+  }, []);
+
+  // ... rest of component
+}
+```
+
+### Bundle Analysis
+
+Analyze your bundle to identify optimization opportunities:
+
+```bash
+# Using webpack-bundle-analyzer
+npm install --save-dev webpack-bundle-analyzer
+
+# Add to package.json scripts
+{
+  "scripts": {
+    "analyze": "npx webpack-bundle-analyzer .next/static/chunks/*.js"
+  }
+}
+
+# Run analysis
+npm run analyze
+```
+
+```javascript
+// Next.js bundle analyzer configuration
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
+module.exports = withBundleAnalyzer({
+  // Your Next.js config
+});
+```
+
+## Production Optimizations
+
+### Build-Time Optimizations
+
+Configure your build for optimal performance:
+
+```javascript
+// webpack.config.js optimizations
+module.exports = {
+  optimization: {
+    splitChunks: {
+      chunks: 'all',
+      cacheGroups: {
+        formEngine: {
+          name: 'form-engine',
+          test: /[\\/]lib[\\/]form-engine[\\/]/,
+          priority: 30,
+          enforce: true,
+        },
+        formRegistries: {
+          name: 'form-registries',
+          test: /[\\/]components[\\/]form[\\/]registries[\\/]/,
+          priority: 25,
+          enforce: true,
+        },
+      },
+    },
+  },
+};
+```
+
+### Runtime Optimizations
+
+Optimize for production runtime:
+
+```typescript
+// Production-specific optimizations
+const productionConfig = {
+  // Disable development features
+  enableDevTools: process.env.NODE_ENV === 'development',
+  
+  // Enable production optimizations
+  enableMemoization: true,
+  batchUpdates: true,
+  
+  // Optimize validation
+  validationStrategy: 'onSubmit', // vs 'onChange' for development
+  
+  // Reduce bundle size
+  includeFieldDescriptions: false,
+  enableDebugLogs: false,
+};
+```
+
+### CDN and Caching
+
+Leverage CDN and caching strategies:
+
+```typescript
+// Cache form configurations
+const formConfigCache = new Map();
+
+export function getCachedFormConfig(configId: string) {
+  if (formConfigCache.has(configId)) {
+    return formConfigCache.get(configId);
+  }
+  
+  const config = loadFormConfig(configId);
+  formConfigCache.set(configId, config);
+  return config;
+}
+
+// Preload critical forms
+export function preloadCriticalForms() {
+  const criticalForms = ['contact-form', 'registration-form'];
+  
+  criticalForms.forEach(formId => {
+    getCachedFormConfig(formId);
+  });
+}
+```
+
+## Performance Testing
+
+### Load Testing
+
+Test form performance under load:
+
+```typescript
+// Performance test utilities
+export class FormPerformanceTester {
+  private metrics: PerformanceMetric[] = [];
+
+  async testFormRender(config: FormConfig, iterations = 100) {
+    for (let i = 0; i < iterations; i++) {
+      const start = performance.now();
+      
+      render(<FormRenderer config={config} />);
+      
+      const end = performance.now();
+      this.metrics.push({
+        operation: 'render',
+        duration: end - start,
+        iteration: i
+      });
+    }
+
+    return this.getStats();
+  }
+
+  async testValidation(formData: any, schema: ZodSchema, iterations = 1000) {
+    for (let i = 0; i < iterations; i++) {
+      const start = performance.now();
+      
+      await schema.parseAsync(formData);
+      
+      const end = performance.now();
+      this.metrics.push({
+        operation: 'validation',
+        duration: end - start,
+        iteration: i
+      });
+    }
+
+    return this.getStats();
+  }
+
+  private getStats() {
+    const durations = this.metrics.map(m => m.duration);
+    return {
+      min: Math.min(...durations),
+      max: Math.max(...durations),
+      avg: durations.reduce((a, b) => a + b, 0) / durations.length,
+      p95: this.percentile(durations, 0.95),
+      p99: this.percentile(durations, 0.99)
+    };
+  }
+
+  private percentile(values: number[], p: number) {
+    const sorted = values.sort((a, b) => a - b);
+    const index = Math.ceil(sorted.length * p) - 1;
+    return sorted[index];
+  }
+}
+```
+
+### Real User Monitoring
+
+Monitor real user performance:
+
+```typescript
+// Real User Monitoring (RUM)
+function useFormPerformanceMonitoring(formId: string) {
+  useEffect(() => {
+    const startTime = performance.now();
+
+    return () => {
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+
+      // Send to analytics service
+      analytics.track('form_session_duration', {
+        formId,
+        duration,
+        timestamp: new Date().toISOString()
+      });
+    };
+  }, [formId]);
+
+  const trackInteraction = useCallback((event: string, data?: any) => {
+    analytics.track(`form_${event}`, {
+      formId,
+      timestamp: new Date().toISOString(),
+      ...data
+    });
+  }, [formId]);
+
+  return { trackInteraction };
+}
+```
+
+## Common Performance Issues
+
+### Issue 1: Excessive Re-renders
+
+```typescript
+// ❌ Problematic: Creates new objects on every render
+function ProblematicForm() {
+  return (
+    <FormRenderer
+      config={formConfig}
+      onSubmit={(data) => submitForm(data)} // New function every render
+      initialValues={{ name: "" }}          // New object every render
+    />
+  );
+}
+
+// ✅ Optimized: Stable references
+function OptimizedForm() {
+  const handleSubmit = useCallback((data) => submitForm(data), []);
+  const initialValues = useMemo(() => ({ name: "" }), []);
+
+  return (
+    <FormRenderer
+      config={formConfig}
+      onSubmit={handleSubmit}
+      initialValues={initialValues}
+    />
+  );
+}
+```
+
+### Issue 2: Large Bundle Size
+
+```typescript
+// ❌ Imports everything
+import "@/components/form/registries";
+
+// ✅ Tree-shakable imports
+import "@/components/form/registries/input.registry";
+import "@/components/form/registries/select.registry";
+
+// ✅ Dynamic imports for conditional features
+async function loadAdvancedRegistries() {
+  if (needsAdvancedFields) {
+    await import("@/components/form/registries/array.registry");
+    await import("@/components/form/registries/file.registry");
+  }
+}
+```
+
+### Issue 3: Inefficient Constraint Evaluation
+
+```typescript
+// ❌ Evaluates all constraints on every change
+function InefficientConstraints({ constraints, formData }) {
+  const results = constraints.map(constraint => 
+    evaluateConstraint(constraint, formData)
+  );
+  // Re-evaluates everything when any field changes
+}
+
+// ✅ Efficient constraint evaluation
+function EfficientConstraints({ constraints, formData }) {
+  const results = useMemo(() => {
+    return constraints.map(constraint => 
+      evaluateConstraint(constraint, formData)
+    );
+  }, [constraints, formData]); // Only re-evaluate when dependencies change
+}
+```
+
+## Performance Checklist
+
+### Development
+
+- [ ] Import only required field registries
+- [ ] Use useCallback for event handlers
+- [ ] Use useMemo for expensive computations  
+- [ ] Implement proper cleanup in useEffect
+- [ ] Avoid creating objects in render functions
+
+### Production
+
+- [ ] Enable bundle splitting for form components
+- [ ] Configure CDN for static assets
+- [ ] Implement proper caching strategies
+- [ ] Monitor bundle size regularly
+- [ ] Set up performance monitoring
+
+### Monitoring
+
+- [ ] Track Core Web Vitals
+- [ ] Monitor bundle size over time
+- [ ] Set up performance budgets
+- [ ] Monitor real user metrics
+- [ ] Alert on performance regressions
+
+Following these performance guidelines will ensure your Form Engine implementation scales efficiently and provides an excellent user experience even with complex forms and large datasets.
+
+## Next Steps
+
+- [Troubleshooting Guide](/docs/guides/troubleshooting) - Debug performance issues
+- [Migration Guide](/docs/guides/migration) - Optimize during upgrades  
+- [Contributing Guide](/docs/guides/contributing) - Help improve performance
+- [Architecture](/docs/architecture) - Understand the performance design

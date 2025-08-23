@@ -1,0 +1,153 @@
+import { DocsLayout } from '../../layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+  title: 'Introduction | Form Engine Documentation',
+  description: 'Learn about Form Engine - a comprehensive, type-safe form rendering system for React applications.',
+})
+
+# Introduction
+
+Welcome to Form Engine - a comprehensive, type-safe form rendering system designed for modern React applications. Form Engine eliminates the complexity of building dynamic forms by providing a declarative, configuration-driven approach that scales from simple contact forms to complex multi-step wizards.
+
+## What is Form Engine?
+
+Form Engine is a React-based form system that transforms JSON configurations into fully functional, interactive forms. Built on top of React Hook Form and Zod, it provides:
+
+- **Declarative Configuration**: Define forms using JSON instead of writing imperative React components
+- **Type Safety**: Full TypeScript support with automatic type inference and validation
+- **Performance**: Optimized rendering with minimal re-renders and tree-shakable components
+- **Flexibility**: Extensible architecture that adapts to any use case
+
+## Core Philosophy
+
+### Configuration Over Code
+
+Instead of writing form components manually, you define the structure, validation, and behavior in a JSON configuration:
+
+```typescript
+const formConfig = {
+  id: "user-profile",
+  title: "User Profile",
+  steps: [
+    {
+      title: "Personal Information",
+      fields: [
+        {
+          type: "input",
+          name: "firstName",
+          label: "First Name",
+          validation: [{ type: "required" }]
+        },
+        {
+          type: "input",
+          name: "email",
+          label: "Email Address",
+          validation: [
+            { type: "required" },
+            { type: "email" }
+          ]
+        }
+      ]
+    }
+  ]
+};
+```
+
+### Type Safety Throughout
+
+Form Engine provides complete type safety from configuration to runtime:
+
+- **Configuration Types**: Strongly typed form configs with discriminated unions
+- **Validation Schema**: Automatic Zod schema generation from validation rules
+- **Runtime Safety**: Runtime validation of configurations and form data
+- **Developer Experience**: Full IntelliSense and compile-time error checking
+
+### Performance by Design
+
+Built with performance as a first-class concern:
+
+- **Minimal Re-renders**: Strategic use of React Hook Form's `useWatch`
+- **Tree Shaking**: Only imported field components are bundled
+- **Lazy Loading**: Components and validation load as needed
+- **Memory Management**: Proper cleanup and resource management
+
+## Key Benefits
+
+### For Developers
+
+- **Faster Development**: Build complex forms in minutes, not hours
+- **Consistency**: Enforced patterns and behaviors across your application
+- **Maintainability**: Centralized form logic that's easy to update and debug
+- **Extensibility**: Plugin architecture for custom fields and behaviors
+
+### for Applications
+
+- **Better UX**: Consistent, accessible forms with proper validation feedback
+- **Performance**: Optimized bundle sizes and runtime performance
+- **Reliability**: Battle-tested patterns with comprehensive error handling
+- **Scalability**: Architecture that grows with your application needs
+
+## Architecture Overview
+
+Form Engine follows a modular, plugin-based architecture:
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   JSON Config   │────▶│  Form Engine    │────▶│  Rendered Form  │
+│                 │    │                 │    │                 │
+│ • Structure     │    │ • Validation    │    │ • Components    │
+│ • Validation    │    │ • Rendering     │    │ • Interactions  │
+│ • Behavior      │    │ • Actions       │    │ • Accessibility │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                              │
+                              ▼
+                    ┌─────────────────┐
+                    │   Plugin System │
+                    │                 │
+                    │ • Field Types   │
+                    │ • Actions       │
+                    │ • Validators    │
+                    │ • Layouts       │
+                    └─────────────────┘
+```
+
+## When to Use Form Engine
+
+Form Engine is ideal for applications that need:
+
+### ✅ Perfect Fit
+
+- **Dynamic Forms**: Forms that change based on user input or external data
+- **Multi-Step Workflows**: Registration flows, surveys, wizards
+- **Consistent UI**: Standardized form appearance across your application
+- **Complex Validation**: Conditional validation rules and cross-field dependencies
+- **Responsive Design**: Forms that work perfectly on all device sizes
+- **Developer Productivity**: Teams that want to move fast without sacrificing quality
+
+### ❌ Consider Alternatives
+
+- **Simple Static Forms**: Basic contact forms might be overkill
+- **Highly Custom UI**: Forms requiring pixel-perfect custom designs
+- **Non-React Applications**: Form Engine is React-specific
+- **Minimal Bundle Size**: If every KB matters and you only need basic forms
+
+## Getting Started
+
+Ready to build your first form? Head over to the [Quick Start](/docs/quick-start) guide to get up and running in minutes.
+
+Or explore these key concepts:
+
+- [Configuration](/docs/concepts/configuration) - Learn the form configuration structure
+- [Field Types](/docs/concepts/field-types) - Discover available field components
+- [Validation](/docs/concepts/validation) - Understand the validation system
+- [Examples](/docs/examples) - See complete working examples
+
+## Community and Support
+
+- **GitHub**: [Repository](https://github.com/your-org/form-engine) for issues and contributions
+- **Documentation**: This comprehensive guide with examples and API reference
+- **TypeScript**: Full type definitions for optimal developer experience
+
+Form Engine is actively maintained and production-ready. Join our growing community of developers building better forms with less code.

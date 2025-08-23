@@ -1,0 +1,290 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+  title: 'Quick Start | Form Engine Documentation',
+  description: 'Get up and running with Form Engine in just a few minutes.',
+})
+
+# Quick Start
+
+Get up and running with Form Engine in just a few minutes.
+
+<div className="banner banner--alert mt-4" role="alert">
+  <p className="banner__title">Prerequisites</p>
+  <p>This guide assumes you have a React project set up with TypeScript. Form Engine requires React 18+ and TypeScript 4.5+.</p>
+</div>
+
+## Installation
+
+Install the required packages and peer dependencies:
+
+```bash
+# Using npm
+npm install react-hook-form zod @hookform/resolvers
+
+# Using yarn
+yarn add react-hook-form zod @hookform/resolvers
+
+# Using pnpm
+pnpm add react-hook-form zod @hookform/resolvers
+
+# Using bun
+bun add react-hook-form zod @hookform/resolvers
+```
+
+## Import Registry
+
+Import the field components you need (tree-shakable for optimal bundle size):
+
+```typescript
+// Import specific field types for optimal bundle size
+import "@/components/form/registries/input.registry";
+import "@/components/form/registries/select.registry";
+import "@/components/form/registries/checkbox.registry";
+import "@/components/form/registries/textarea.registry";
+
+// Or import all for development convenience
+import "@/components/form/registries";
+```
+
+## Create Your First Form
+
+Define a form configuration and render it:
+
+```typescript
+import { FormRenderer } from "@/lib/form-engine";
+
+const contactFormConfig = {
+  id: "contact-form",
+  title: "Contact Us",
+  steps: [{
+    id: "contact-details",
+    title: "Contact Information",
+    fields: [
+      {
+        type: "input",
+        name: "name",
+        label: "Full Name",
+        validation: [
+          { type: "required", message: "Name is required" }
+        ]
+      },
+      {
+        type: "input",
+        name: "email",
+        label: "Email",
+        inputType: "email",
+        validation: [
+          { type: "required", message: "Email is required" },
+          { type: "email", message: "Invalid email format" }
+        ]
+      },
+      {
+        type: "textarea",
+        name: "message",
+        label: "Message",
+        rows: 4,
+        validation: [
+          { type: "required", message: "Message is required" },
+          { type: "minLength", value: 10, message: "Message too short" }
+        ]
+      }
+    ]
+  }]
+};
+
+export function ContactForm() {
+  const handleSubmit = (data) => {
+    console.log("Form submitted:", data);
+    // Handle form submission here
+  };
+
+  return (
+    <FormRenderer 
+      config={contactFormConfig}
+      onSubmit={handleSubmit}
+    />
+  );
+}
+```
+
+## Configuration Structure
+
+Understanding the basic structure of a form configuration:
+
+### Required Properties
+
+- `id` - Unique identifier for the form
+- `steps` - Array of form steps (at least one required)
+
+### Optional Properties
+
+- `title` - Form title
+- `description` - Form description
+- `stepper` - Multi-step configuration
+- `actions` - Form actions (submit, auto-save, etc.)
+- `layout` - Responsive grid configuration
+
+## Validation Rules
+
+Built-in validation rules with automatic Zod schema generation:
+
+### Basic Rules
+
+- `required` - Field is required
+- `email` - Valid email format
+- `minLength` - Minimum string length
+- `maxLength` - Maximum string length
+
+### Advanced Rules
+
+- `pattern` - Custom regex pattern
+- `custom` - Custom validation function
+- `min` - Minimum number value
+- `max` - Maximum number value
+
+### Example Validation
+
+```typescript
+{
+  type: "input",
+  name: "username",
+  label: "Username",
+  validation: [
+    { type: "required", message: "Username is required" },
+    { type: "minLength", value: 3, message: "Username must be at least 3 characters" },
+    { type: "pattern", value: "^[a-zA-Z0-9_]+$", message: "Username can only contain letters, numbers, and underscores" }
+  ]
+}
+```
+
+## Field Types
+
+The Form Engine supports a comprehensive set of field types:
+
+```typescript
+// Input fields with various types
+{
+  type: "input",
+  inputType: "text" | "email" | "password" | "url" | "tel" | "search",
+  name: "fieldName",
+  label: "Field Label"
+}
+
+// Select dropdowns
+{
+  type: "select",
+  options: [
+    { value: "option1", label: "Option 1" },
+    { value: "option2", label: "Option 2" }
+  ],
+  multiple: true, // For multi-select
+  searchable: true // Enable search
+}
+
+// Number inputs
+{
+  type: "number",
+  min: 0,
+  max: 100,
+  step: 0.1
+}
+
+// Textarea for long text
+{
+  type: "textarea",
+  rows: 4,
+  maxLength: 500
+}
+
+// Checkbox for boolean values
+{
+  type: "checkbox"
+}
+
+// Radio buttons
+{
+  type: "radio",
+  options: [...],
+  orientation: "horizontal" | "vertical"
+}
+
+// File uploads
+{
+  type: "file",
+  accept: ".pdf,.doc,.docx",
+  multiple: true
+}
+
+// Date/time inputs
+{
+  type: "date",
+  dateType: "date" | "datetime-local" | "time"
+}
+
+// Toggle switches
+{
+  type: "switch"
+}
+```
+
+## Multi-Step Forms
+
+For multi-step forms, add multiple steps to your configuration:
+
+```typescript
+const multiStepConfig = {
+  id: "registration",
+  title: "User Registration",
+  steps: [
+    {
+      id: "personal",
+      title: "Personal Information",
+      fields: [
+        { type: "input", name: "firstName", label: "First Name" },
+        { type: "input", name: "lastName", label: "Last Name" }
+      ]
+    },
+    {
+      id: "contact",
+      title: "Contact Details",
+      fields: [
+        { type: "input", name: "email", label: "Email", inputType: "email" },
+        { type: "input", name: "phone", label: "Phone", inputType: "tel" }
+      ]
+    }
+  ],
+  stepper: {
+    variant: "default",
+    orientation: "horizontal",
+    showStepNumbers: true
+  }
+};
+```
+
+## Next Steps
+
+<div className="bg-green-50 border border-green-200 rounded-lg p-6 my-8">
+  <h3 className="text-lg font-semibold text-green-800 mb-2">🎉 You're All Set!</h3>
+  <p className="text-green-700 mb-4">
+    You now have a working Form Engine setup. Here are some next steps to explore:
+  </p>
+  <ul className="space-y-2 text-green-700">
+    <li>• <a href="/docs/concepts" className="underline">Learn core concepts</a></li>
+    <li>• <a href="/docs/examples" className="underline">Browse examples</a></li>
+    <li>• <a href="/docs/advanced" className="underline">Explore advanced features</a></li>
+    <li>• <a href="/showcase" className="underline">Try the interactive showcase</a></li>
+  </ul>
+</div>
+
+## Live Examples
+
+Try these working examples to see Form Engine in action:
+
+- **[Basic Demo](/basic-demo)** - Simple contact form
+- **[Multi-Step Forms](/multi-step-forms)** - Registration wizard
+- **[Responsive Grid](/responsive-grid)** - Device-adaptive layouts
+- **[Conditional Forms](/conditional-forms)** - Dynamic field logic
+- **[Actions System](/actions)** - Auto-save and tracking

@@ -1,0 +1,738 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'Multi-Step Forms | Form Engine Documentation',
+    description: 'Learn how to create complex multi-step forms with navigation, validation, and custom stepper components.',
+})
+
+# Multi-Step Forms
+
+Form Engine provides powerful support for multi-step forms with built-in navigation, step validation, and customizable stepper components. Multi-step forms are perfect for complex workflows like user registration, surveys, checkout processes, and data collection wizards.
+
+## Basic Multi-Step Setup
+
+Create a multi-step form by defining multiple steps in your configuration:
+
+```typescript
+const multiStepFormConfig = {
+  id: "user-registration",
+  title: "Create Your Account",
+  steps: [
+    {
+      title: "Personal Information",
+      description: "Tell us about yourself",
+      fields: [
+        {
+          type: "input",
+          name: "firstName",
+          label: "First Name",
+          validation: [{ type: "required" }]
+        },
+        {
+          type: "input",
+          name: "lastName",
+          label: "Last Name",
+          validation: [{ type: "required" }]
+        },
+        {
+          type: "date",
+          name: "birthDate",
+          label: "Date of Birth",
+          dateType: "date",
+          validation: [{ type: "required" }]
+        }
+      ]
+    },
+    {
+      title: "Account Details",
+      description: "Set up your login credentials",
+      fields: [
+        {
+          type: "input",
+          name: "email",
+          label: "Email Address",
+          inputType: "email",
+          validation: [
+            { type: "required" },
+            { type: "email" }
+          ]
+        },
+        {
+          type: "input",
+          name: "password",
+          label: "Password",
+          inputType: "password",
+          validation: [
+            { type: "required" },
+            { type: "minLength", value: 8 }
+          ]
+        },
+        {
+          type: "input",
+          name: "confirmPassword",
+          label: "Confirm Password",
+          inputType: "password",
+          validation: [
+            { type: "required" },
+            {
+              type: "custom",
+              message: "Passwords must match",
+              validator: (value, formData) => value === formData.password
+            }
+          ]
+        }
+      ]
+    },
+    {
+      title: "Preferences",
+      description: "Customize your experience",
+      fields: [
+        {
+          type: "checkbox",
+          name: "newsletter",
+          label: "Subscribe to newsletter",
+          description: "Receive updates about new features"
+        },
+        {
+          type: "select",
+          name: "theme",
+          label: "Preferred Theme",
+          options: [
+            { value: "light", label: "Light" },
+            { value: "dark", label: "Dark" },
+            { value: "auto", label: "Auto" }
+          ],
+          defaultValue: "auto"
+        }
+      ]
+    }
+  ]
+};
+```
+
+## Stepper Configuration
+
+Customize the stepper appearance and behavior:
+
+```typescript
+const formWithStepperConfig = {
+  id: "advanced-form",
+  title: "Advanced Multi-Step Form",
+  steps: [/* ... */],
+  stepper: {
+    variant: "default",              // Stepper visual style
+    orientation: "horizontal",       // Layout direction
+    showStepNumbers: true,           // Display step numbers
+    showStepTitles: true,           // Display step titles
+    validateOnNext: true,           // Validate current step before proceeding
+    allowSkipping: false,           // Allow jumping to any step
+    showProgress: true,             // Show progress indicator
+    className: "my-custom-stepper"  // Custom CSS class
+  }
+};
+```
+
+### Stepper Variants
+
+Form Engine provides several built-in stepper variants:
+
+```typescript
+// Default variant with clean lines
+{
+  stepper: {
+    variant: "default",
+    orientation: "horizontal"
+  }
+}
+
+// Pills variant with rounded indicators
+{
+  stepper: {
+    variant: "pills",
+    orientation: "horizontal"
+  }
+}
+
+// Arrows variant with connected flow
+{
+  stepper: {
+    variant: "arrows", 
+    orientation: "horizontal"
+  }
+}
+
+// Dots variant for minimal design
+{
+  stepper: {
+    variant: "dots",
+    orientation: "vertical"
+  }
+}
+```
+
+## Step Validation
+
+Control how and when steps are validated:
+
+```typescript
+const validatedFormConfig = {
+  id: "wizard-form",
+  steps: [
+    {
+      title: "Step 1",
+      fields: [
+        {
+          type: "input",
+          name: "email",
+          label: "Email",
+          validation: [
+            { type: "required" },
+            { type: "email" }
+          ]
+        }
+      ]
+    },
+    {
+      title: "Step 2", 
+      fields: [
+        {
+          type: "input",
+          name: "phone",
+          label: "Phone Number",
+          validation: [
+            { type: "required" },
+            {
+              type: "custom",
+              message: "Please enter a valid phone number",
+              validator: (value) => /^\+?[\d\s\-\(\)]+$/.test(value)
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  stepper: {
+    validateOnNext: true,     // Validate before moving to next step
+    validateOnPrevious: false, // Don't validate when going back
+    showErrors: true,         // Show validation errors immediately
+    blockInvalidSteps: true   // Prevent navigation to invalid steps
+  }
+};
+```
+
+## Custom Step Behaviors
+
+Add custom logic for step transitions:
+
+```typescript
+const customBehaviorForm = {
+  id: "conditional-wizard",
+  steps: [
+    {
+      title: "Account Type",
+      fields: [
+        {
+          type: "radio",
+          name: "accountType",
+          label: "Account Type",
+          options: [
+            { value: "personal", label: "Personal" },
+            { value: "business", label: "Business" }
+          ],
+          validation: [{ type: "required" }]
+        }
+      ]
+    },
+    {
+      title: "Personal Details",
+      fields: [
+        {
+          type: "input",
+          name: "fullName",
+          label: "Full Name",
+          validation: [{ type: "required" }]
+        }
+      ],
+      // Show only for personal accounts
+      constraints: [
+        {
+          field: "accountType",
+          operator: "equals",
+          value: "personal",
+          action: "show"
+        }
+      ]
+    },
+    {
+      title: "Business Details",
+      fields: [
+        {
+          type: "input",
+          name: "companyName",
+          label: "Company Name",
+          validation: [{ type: "required" }]
+        },
+        {
+          type: "input",
+          name: "taxId",
+          label: "Tax ID",
+          validation: [{ type: "required" }]
+        }
+      ],
+      // Show only for business accounts
+      constraints: [
+        {
+          field: "accountType",
+          operator: "equals",
+          value: "business",
+          action: "show"
+        }
+      ]
+    }
+  ]
+};
+```
+
+## Manual Stepper Control
+
+For advanced use cases, use the stepper components directly:
+
+```typescript
+import { Stepper, FormRenderer } from "@/lib/form-engine";
+import { useState } from "react";
+
+function CustomMultiStepForm() {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [formData, setFormData] = useState({});
+  
+  const handleStepChange = (newStep: number) => {
+    // Custom validation or logic before step change
+    if (validateCurrentStep()) {
+      setCurrentStep(newStep);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentStep < formConfig.steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto p-6">
+      <Stepper 
+        sections={formConfig.steps}
+        currentStep={currentStep}
+        onStepChange={handleStepChange}
+      >
+        <Stepper.Header 
+          variant="default"
+          orientation="horizontal"
+          showStepNumbers={true}
+          className="mb-8"
+        />
+        
+        <Stepper.Content>
+          <FormRenderer
+            config={{
+              ...formConfig,
+              steps: [formConfig.steps[currentStep]]
+            }}
+            onSubmit={handleStepSubmit}
+            onChange={setFormData}
+            initialValues={formData}
+          />
+        </Stepper.Content>
+        
+        <Stepper.Navigation
+          previousButton={{
+            label: "Back",
+            variant: "outline",
+            disabled: currentStep === 0
+          }}
+          nextButton={{
+            label: currentStep === formConfig.steps.length - 1 ? "Submit" : "Next",
+            variant: "default"
+          }}
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+          className="mt-6"
+        />
+      </Stepper>
+    </div>
+  );
+}
+```
+
+## Step Progress Tracking
+
+Add progress indicators and completion tracking:
+
+```typescript
+const progressTrackingForm = {
+  id: "progress-form",
+  title: "Application Form",
+  steps: [
+    {
+      title: "Basic Information",
+      description: "Required personal details",
+      completionWeight: 30,    // This step represents 30% of completion
+      fields: [/* ... */]
+    },
+    {
+      title: "Documentation",
+      description: "Upload required documents", 
+      completionWeight: 40,    // This step represents 40% of completion
+      fields: [/* ... */]
+    },
+    {
+      title: "Review & Submit",
+      description: "Review your application",
+      completionWeight: 30,    // This step represents 30% of completion
+      fields: [/* ... */]
+    }
+  ],
+  stepper: {
+    showProgress: true,
+    progressType: "percentage"  // or "steps"
+  }
+};
+```
+
+## Conditional Step Flow
+
+Create dynamic step flows based on user responses:
+
+```typescript
+const conditionalFlowForm = {
+  id: "dynamic-wizard",
+  steps: [
+    {
+      title: "User Type",
+      fields: [
+        {
+          type: "radio",
+          name: "userType",
+          label: "I am a...",
+          options: [
+            { value: "student", label: "Student" },
+            { value: "teacher", label: "Teacher" },
+            { value: "parent", label: "Parent" },
+            { value: "admin", label: "Administrator" }
+          ],
+          validation: [{ type: "required" }]
+        }
+      ]
+    },
+    // Student-specific steps
+    {
+      title: "Student Information",
+      fields: [
+        {
+          type: "input",
+          name: "studentId",
+          label: "Student ID",
+          validation: [{ type: "required" }]
+        },
+        {
+          type: "select",
+          name: "grade",
+          label: "Grade Level",
+          options: [
+            { value: "9", label: "9th Grade" },
+            { value: "10", label: "10th Grade" },
+            { value: "11", label: "11th Grade" },
+            { value: "12", label: "12th Grade" }
+          ]
+        }
+      ],
+      constraints: [
+        {
+          field: "userType",
+          operator: "equals", 
+          value: "student",
+          action: "show"
+        }
+      ]
+    },
+    // Teacher-specific steps
+    {
+      title: "Teacher Information",
+      fields: [
+        {
+          type: "input",
+          name: "employeeId",
+          label: "Employee ID",
+          validation: [{ type: "required" }]
+        },
+        {
+          type: "array",
+          name: "subjects",
+          label: "Subjects Taught",
+          elements: [
+            {
+              type: "input",
+              name: "subject",
+              label: "Subject",
+              validation: [{ type: "required" }]
+            }
+          ],
+          minItems: 1
+        }
+      ],
+      constraints: [
+        {
+          field: "userType",
+          operator: "equals",
+          value: "teacher", 
+          action: "show"
+        }
+      ]
+    },
+    // Common final step
+    {
+      title: "Contact Information",
+      fields: [
+        {
+          type: "input",
+          name: "email",
+          label: "Email Address",
+          inputType: "email",
+          validation: [
+            { type: "required" },
+            { type: "email" }
+          ]
+        },
+        {
+          type: "input",
+          name: "phone",
+          label: "Phone Number",
+          inputType: "tel"
+        }
+      ]
+    }
+  ]
+};
+```
+
+## Step Persistence and Recovery
+
+Save progress and allow users to continue later:
+
+```typescript
+const persistentForm = {
+  id: "application-form",
+  steps: [/* ... */],
+  actions: [
+    {
+      id: "auto-save",
+      type: "auto_save_draft",
+      interval: 30000,          // Auto-save every 30 seconds
+      showNotification: true,
+      triggers: ["form_change", "step_change"]
+    },
+    {
+      id: "manual-save",
+      type: "save_draft",
+      buttonText: "Save Progress",
+      triggers: ["manual_save"]
+    },
+    {
+      id: "restore-draft",
+      type: "restore_draft",
+      triggers: ["form_start"]
+    }
+  ]
+};
+```
+
+## Advanced Stepper Customization
+
+Create fully custom stepper components:
+
+```typescript
+import { StepperProvider, useStepperContext } from "@/lib/form-engine";
+
+function CustomStepperHeader() {
+  const { currentStep, sections, goToStep } = useStepperContext();
+  
+  return (
+    <div className="flex items-center justify-between mb-8">
+      {sections.map((section, index) => (
+        <div key={index} className="flex items-center">
+          <button
+            onClick={() => goToStep(index)}
+            className={cn(
+              "w-10 h-10 rounded-full flex items-center justify-center",
+              index === currentStep 
+                ? "bg-blue-600 text-white" 
+                : index < currentStep
+                ? "bg-green-600 text-white"
+                : "bg-gray-200 text-gray-600"
+            )}
+          >
+            {index < currentStep ? "✓" : index + 1}
+          </button>
+          <span className="ml-2 text-sm font-medium">
+            {section.title}
+          </span>
+          {index < sections.length - 1 && (
+            <div className="mx-4 h-px bg-gray-300 flex-1" />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CustomMultiStepForm() {
+  return (
+    <StepperProvider sections={formConfig.steps}>
+      <CustomStepperHeader />
+      <StepperContent>
+        {/* Form content */}
+      </StepperContent>
+      <StepperNavigation />
+    </StepperProvider>
+  );
+}
+```
+
+## Best Practices
+
+### 1. Logical Step Division
+
+```typescript
+// ✅ Group related fields logically
+const steps = [
+  {
+    title: "Personal Information",
+    fields: [/* name, email, phone */]
+  },
+  {
+    title: "Address Details", 
+    fields: [/* street, city, country */]
+  },
+  {
+    title: "Preferences",
+    fields: [/* settings, notifications */]
+  }
+];
+```
+
+### 2. Clear Progress Indication
+
+```typescript
+// ✅ Show progress and completion
+{
+  stepper: {
+    showProgress: true,
+    showStepNumbers: true,
+    showStepTitles: true
+  }
+}
+```
+
+### 3. Appropriate Validation
+
+```typescript
+// ✅ Validate before proceeding
+{
+  stepper: {
+    validateOnNext: true,
+    showErrors: true,
+    blockInvalidSteps: true
+  }
+}
+```
+
+### 4. Save User Progress
+
+```typescript
+// ✅ Auto-save for long forms
+{
+  actions: [
+    {
+      type: "auto_save_draft",
+      interval: 30000,
+      triggers: ["step_change"]
+    }
+  ]
+}
+```
+
+### 5. Responsive Design
+
+```typescript
+// ✅ Adapt stepper to mobile
+{
+  stepper: {
+    orientation: "horizontal",
+    responsive: {
+      sm: { orientation: "vertical" }
+    }
+  }
+}
+```
+
+## Common Patterns
+
+### Registration Flow
+
+```typescript
+const registrationFlow = {
+  id: "user-registration",
+  steps: [
+    { title: "Account Type", fields: [/* account selection */] },
+    { title: "Personal Info", fields: [/* name, email */] },
+    { title: "Security", fields: [/* password setup */] },
+    { title: "Verification", fields: [/* email/phone verification */] },
+    { title: "Welcome", fields: [/* onboarding preferences */] }
+  ]
+};
+```
+
+### Survey Form
+
+```typescript
+const surveyForm = {
+  id: "customer-survey",
+  steps: [
+    { title: "Demographics", fields: [/* age, location */] },
+    { title: "Experience", fields: [/* satisfaction ratings */] },
+    { title: "Feedback", fields: [/* open-ended questions */] },
+    { title: "Contact", fields: [/* follow-up preferences */] }
+  ]
+};
+```
+
+### Checkout Process
+
+```typescript
+const checkoutProcess = {
+  id: "order-checkout",
+  steps: [
+    { title: "Cart Review", fields: [/* order summary */] },
+    { title: "Shipping", fields: [/* address, delivery options */] },
+    { title: "Payment", fields: [/* payment method, billing */] },
+    { title: "Confirmation", fields: [/* final review */] }
+  ]
+};
+```
+
+Multi-step forms in Form Engine provide the flexibility to create any complex workflow while maintaining a consistent, user-friendly experience. The combination of declarative configuration, built-in validation, and customizable components makes it easy to build sophisticated form flows that guide users smoothly through complex processes.
+
+## Next Steps
+
+- [Array Fields](/docs/advanced/array-fields) - Dynamic repeating sections
+- [Actions System](/docs/advanced/actions-system) - Form behaviors and integrations
+- [Custom Fields](/docs/advanced/custom-fields) - Extend with custom components
+- [Examples](/docs/examples) - See multi-step forms in action

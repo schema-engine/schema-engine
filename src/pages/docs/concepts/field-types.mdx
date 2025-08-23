@@ -1,0 +1,890 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'Field Types | Form Engine Documentation',
+    description: 'Complete reference for all available field types in Form Engine with examples and configuration options.',
+})
+
+# Field Types
+
+Form Engine provides a comprehensive set of field types to handle any form requirement. Each field type is designed with accessibility, usability, and flexibility in mind.
+
+## Overview
+
+Form Engine uses a type-safe, discriminated union system for field configuration. Each field type has its own specific properties while sharing common base properties.
+
+```typescript
+type FieldConfig = 
+  | InputFieldConfig      // Text inputs, email, password, etc.
+  | SelectFieldConfig     // Dropdowns and multi-select
+  | CheckboxFieldConfig   // Boolean checkboxes
+  | NumberFieldConfig     // Numeric inputs with constraints
+  | TextareaFieldConfig   // Multi-line text areas
+  | RadioFieldConfig      // Single-choice radio groups
+  | SwitchFieldConfig     // Toggle switches
+  | DateFieldConfig       // Date/time pickers
+  | FileFieldConfig       // File uploads
+  | ArrayFieldConfig;     // Dynamic arrays of fields
+```
+
+## Input Fields
+
+Versatile text input fields supporting various input types.
+
+### Configuration
+
+```typescript
+interface InputFieldConfig {
+  type: "input";
+  name: string;
+  label?: string;
+  inputType: "text" | "email" | "password" | "url" | "tel" | "search";
+  placeholder?: string;
+  maxLength?: number;
+  minLength?: number;
+  autoComplete?: string;
+  validation?: ValidationRule[];
+}
+```
+
+### Examples
+
+```typescript
+// Basic text input
+{
+  type: "input",
+  name: "fullName",
+  label: "Full Name",
+  placeholder: "Enter your full name",
+  validation: [{ type: "required" }]
+}
+
+// Email input with validation
+{
+  type: "input",
+  name: "email",
+  label: "Email Address",
+  inputType: "email",
+  placeholder: "john@example.com",
+  autoComplete: "email",
+  validation: [
+    { type: "required" },
+    { type: "email" }
+  ]
+}
+
+// Password with constraints
+{
+  type: "input",
+  name: "password",
+  label: "Password",
+  inputType: "password",
+  validation: [
+    { type: "required" },
+    { type: "minLength", value: 8 },
+    {
+      type: "custom",
+      message: "Password must contain uppercase, lowercase, and number",
+      validator: (value) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)
+    }
+  ]
+}
+
+// Phone number input
+{
+  type: "input",
+  name: "phone",
+  label: "Phone Number",
+  inputType: "tel",
+  placeholder: "+1 (555) 123-4567",
+  validation: [
+    {
+      type: "pattern",
+      value: "^\\+?[1-9]\\d{1,14}$",
+      message: "Please enter a valid phone number"
+    }
+  ]
+}
+```
+
+## Select Fields
+
+Dropdown selections supporting single and multi-select modes.
+
+### Configuration
+
+```typescript
+interface SelectFieldConfig {
+  type: "select";
+  name: string;
+  label?: string;
+  options: SelectOption[];
+  multiple?: boolean;
+  searchable?: boolean;
+  placeholder?: string;
+  emptyOption?: string;
+  validation?: ValidationRule[];
+}
+
+interface SelectOption {
+  value: string | number;
+  label: string;
+  disabled?: boolean;
+  description?: string;
+}
+```
+
+### Examples
+
+```typescript
+// Basic single select
+{
+  type: "select",
+  name: "country",
+  label: "Country",
+  placeholder: "Select your country",
+  options: [
+    { value: "us", label: "United States" },
+    { value: "ca", label: "Canada" },
+    { value: "uk", label: "United Kingdom" },
+    { value: "au", label: "Australia" }
+  ],
+  validation: [{ type: "required" }]
+}
+
+// Multi-select with search
+{
+  type: "select",
+  name: "skills",
+  label: "Technical Skills",
+  multiple: true,
+  searchable: true,
+  placeholder: "Select your skills",
+  options: [
+    { value: "javascript", label: "JavaScript" },
+    { value: "typescript", label: "TypeScript" },
+    { value: "react", label: "React" },
+    { value: "vue", label: "Vue.js" },
+    { value: "angular", label: "Angular" },
+    { value: "nodejs", label: "Node.js" },
+    { value: "python", label: "Python" },
+    { value: "java", label: "Java" }
+  ]
+}
+
+// Select with descriptions
+{
+  type: "select",
+  name: "plan",
+  label: "Subscription Plan",
+  options: [
+    { 
+      value: "basic", 
+      label: "Basic Plan",
+      description: "$9/month - Perfect for individuals"
+    },
+    { 
+      value: "pro", 
+      label: "Pro Plan",
+      description: "$29/month - Great for small teams"
+    },
+    { 
+      value: "enterprise", 
+      label: "Enterprise Plan",
+      description: "$99/month - For large organizations"
+    }
+  ]
+}
+```
+
+## Number Fields
+
+Numeric inputs with built-in validation and formatting.
+
+### Configuration
+
+```typescript
+interface NumberFieldConfig {
+  type: "number";
+  name: string;
+  label?: string;
+  min?: number;
+  max?: number;
+  step?: number;
+  precision?: number;
+  prefix?: string;
+  suffix?: string;
+  placeholder?: string;
+  validation?: ValidationRule[];
+}
+```
+
+### Examples
+
+```typescript
+// Basic number input
+{
+  type: "number",
+  name: "age",
+  label: "Age",
+  min: 0,
+  max: 120,
+  placeholder: "Enter your age",
+  validation: [{ type: "required" }]
+}
+
+// Currency input
+{
+  type: "number",
+  name: "salary",
+  label: "Annual Salary",
+  min: 0,
+  step: 1000,
+  prefix: "$",
+  placeholder: "50000",
+  validation: [
+    { type: "required" },
+    { type: "min", value: 0 }
+  ]
+}
+
+// Percentage with precision
+{
+  type: "number",
+  name: "completion",
+  label: "Completion Percentage",
+  min: 0,
+  max: 100,
+  step: 0.1,
+  precision: 1,
+  suffix: "%",
+  defaultValue: 0
+}
+
+// Quantity with increment controls
+{
+  type: "number",
+  name: "quantity",
+  label: "Quantity",
+  min: 1,
+  max: 99,
+  step: 1,
+  defaultValue: 1,
+  validation: [{ type: "required" }]
+}
+```
+
+## Textarea Fields
+
+Multi-line text inputs for longer content.
+
+### Configuration
+
+```typescript
+interface TextareaFieldConfig {
+  type: "textarea";
+  name: string;
+  label?: string;
+  rows?: number;
+  maxLength?: number;
+  minLength?: number;
+  placeholder?: string;
+  resize?: "none" | "vertical" | "horizontal" | "both";
+  validation?: ValidationRule[];
+}
+```
+
+### Examples
+
+```typescript
+// Basic textarea
+{
+  type: "textarea",
+  name: "message",
+  label: "Message",
+  rows: 4,
+  placeholder: "Enter your message here...",
+  validation: [
+    { type: "required" },
+    { type: "minLength", value: 10 }
+  ]
+}
+
+// Comments with character limit
+{
+  type: "textarea",
+  name: "comments",
+  label: "Additional Comments",
+  rows: 6,
+  maxLength: 500,
+  placeholder: "Share any additional thoughts or feedback...",
+  resize: "vertical"
+}
+
+// Description field
+{
+  type: "textarea",
+  name: "description",
+  label: "Project Description",
+  rows: 8,
+  placeholder: "Describe your project goals, timeline, and requirements...",
+  validation: [
+    { type: "required" },
+    { type: "minLength", value: 50 },
+    { type: "maxLength", value: 1000 }
+  ]
+}
+```
+
+## Checkbox Fields
+
+Boolean checkboxes for single true/false values.
+
+### Configuration
+
+```typescript
+interface CheckboxFieldConfig {
+  type: "checkbox";
+  name: string;
+  label?: string;
+  description?: string;
+  checked?: boolean;
+  validation?: ValidationRule[];
+}
+```
+
+### Examples
+
+```typescript
+// Simple checkbox
+{
+  type: "checkbox",
+  name: "newsletter",
+  label: "Subscribe to newsletter",
+  description: "Receive updates about new features and promotions"
+}
+
+// Required agreement checkbox
+{
+  type: "checkbox",
+  name: "terms",
+  label: "I agree to the Terms of Service and Privacy Policy",
+  validation: [
+    {
+      type: "custom",
+      message: "You must agree to the terms to continue",
+      validator: (value) => value === true
+    }
+  ]
+}
+
+// Preference checkbox with default
+{
+  type: "checkbox",
+  name: "notifications",
+  label: "Enable email notifications",
+  description: "Get notified about important account activities",
+  checked: true
+}
+```
+
+## Radio Fields
+
+Single-choice selection from multiple options.
+
+### Configuration
+
+```typescript
+interface RadioFieldConfig {
+  type: "radio";
+  name: string;
+  label?: string;
+  options: RadioOption[];
+  orientation?: "horizontal" | "vertical";
+  validation?: ValidationRule[];
+}
+
+interface RadioOption {
+  value: string | number;
+  label: string;
+  description?: string;
+  disabled?: boolean;
+}
+```
+
+### Examples
+
+```typescript
+// Basic radio group
+{
+  type: "radio",
+  name: "gender",
+  label: "Gender",
+  options: [
+    { value: "male", label: "Male" },
+    { value: "female", label: "Female" },
+    { value: "other", label: "Other" },
+    { value: "prefer-not-to-say", label: "Prefer not to say" }
+  ],
+  validation: [{ type: "required" }]
+}
+
+// Horizontal radio group with descriptions
+{
+  type: "radio",
+  name: "experience",
+  label: "Programming Experience",
+  orientation: "horizontal",
+  options: [
+    { 
+      value: "beginner", 
+      label: "Beginner",
+      description: "0-1 years"
+    },
+    { 
+      value: "intermediate", 
+      label: "Intermediate",
+      description: "2-5 years"
+    },
+    { 
+      value: "advanced", 
+      label: "Advanced",
+      description: "5+ years"
+    }
+  ]
+}
+
+// Priority selection
+{
+  type: "radio",
+  name: "priority",
+  label: "Project Priority",
+  options: [
+    { value: "low", label: "Low", description: "Can wait" },
+    { value: "medium", label: "Medium", description: "Standard timeline" },
+    { value: "high", label: "High", description: "Urgent" },
+    { value: "critical", label: "Critical", description: "Emergency" }
+  ],
+  validation: [{ type: "required" }]
+}
+```
+
+## Switch Fields
+
+Toggle switches for boolean preferences.
+
+### Configuration
+
+```typescript
+interface SwitchFieldConfig {
+  type: "switch";
+  name: string;
+  label?: string;
+  description?: string;
+  size?: "sm" | "md" | "lg";
+  checked?: boolean;
+  validation?: ValidationRule[];
+}
+```
+
+### Examples
+
+```typescript
+// Basic switch
+{
+  type: "switch",
+  name: "darkMode",
+  label: "Dark Mode",
+  description: "Enable dark theme"
+}
+
+// Large switch with default
+{
+  type: "switch",
+  name: "marketing",
+  label: "Marketing Communications",
+  description: "Receive promotional emails and updates",
+  size: "lg",
+  checked: false
+}
+
+// Small switch for preferences
+{
+  type: "switch",
+  name: "autoSave",
+  label: "Auto-save",
+  description: "Automatically save changes",
+  size: "sm",
+  checked: true
+}
+```
+
+## Date Fields
+
+Date and time inputs with various formats.
+
+### Configuration
+
+```typescript
+interface DateFieldConfig {
+  type: "date";
+  name: string;
+  label?: string;
+  dateType: "date" | "datetime-local" | "time";
+  min?: string;
+  max?: string;
+  placeholder?: string;
+  validation?: ValidationRule[];
+}
+```
+
+### Examples
+
+```typescript
+// Date picker
+{
+  type: "date",
+  name: "birthDate",
+  label: "Date of Birth",
+  dateType: "date",
+  max: new Date().toISOString().split('T')[0], // Today's date
+  validation: [{ type: "required" }]
+}
+
+// Date range with constraints
+{
+  type: "date",
+  name: "eventDate",
+  label: "Event Date",
+  dateType: "date",
+  min: new Date().toISOString().split('T')[0], // Today
+  max: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // One year from now
+  validation: [{ type: "required" }]
+}
+
+// DateTime picker
+{
+  type: "date",
+  name: "appointmentTime",
+  label: "Appointment Date & Time",
+  dateType: "datetime-local",
+  min: new Date().toISOString().slice(0, 16),
+  validation: [{ type: "required" }]
+}
+
+// Time picker
+{
+  type: "date",
+  name: "preferredTime",
+  label: "Preferred Time",
+  dateType: "time",
+  placeholder: "09:00"
+}
+```
+
+## File Fields
+
+File upload inputs with validation and constraints.
+
+### Configuration
+
+```typescript
+interface FileFieldConfig {
+  type: "file";
+  name: string;
+  label?: string;
+  accept?: string;
+  multiple?: boolean;
+  maxSize?: number;
+  maxFiles?: number;
+  validation?: ValidationRule[];
+}
+```
+
+### Examples
+
+```typescript
+// Single file upload
+{
+  type: "file",
+  name: "resume",
+  label: "Resume",
+  accept: ".pdf,.doc,.docx",
+  maxSize: 5242880, // 5MB
+  validation: [{ type: "required" }]
+}
+
+// Multiple image upload
+{
+  type: "file",
+  name: "photos",
+  label: "Profile Photos",
+  accept: "image/*",
+  multiple: true,
+  maxFiles: 5,
+  maxSize: 2097152 // 2MB per file
+}
+
+// Document upload with specific types
+{
+  type: "file",
+  name: "documents",
+  label: "Supporting Documents",
+  accept: ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx",
+  multiple: true,
+  maxFiles: 10,
+  maxSize: 10485760 // 10MB per file
+}
+```
+
+## Array Fields
+
+Dynamic arrays for repeating field groups.
+
+### Configuration
+
+```typescript
+interface ArrayFieldConfig {
+  type: "array";
+  name: string;
+  label?: string;
+  elements: FieldConfig[];
+  minItems?: number;
+  maxItems?: number;
+  addButtonText?: string;
+  removeButtonText?: string;
+  validation?: ValidationRule[];
+}
+```
+
+### Examples
+
+```typescript
+// Simple array of strings
+{
+  type: "array",
+  name: "skills",
+  label: "Skills",
+  elements: [
+    {
+      type: "input",
+      name: "skill",
+      label: "Skill",
+      validation: [{ type: "required" }]
+    }
+  ],
+  minItems: 1,
+  maxItems: 10,
+  addButtonText: "Add Skill"
+}
+
+// Complex contact array
+{
+  type: "array",
+  name: "contacts",
+  label: "Emergency Contacts",
+  elements: [
+    {
+      type: "input",
+      name: "name",
+      label: "Name",
+      validation: [{ type: "required" }],
+      grid: { colSpan: 1 }
+    },
+    {
+      type: "input",
+      name: "phone",
+      label: "Phone",
+      inputType: "tel",
+      validation: [{ type: "required" }],
+      grid: { colSpan: 1 }
+    },
+    {
+      type: "select",
+      name: "relationship",
+      label: "Relationship",
+      options: [
+        { value: "parent", label: "Parent" },
+        { value: "spouse", label: "Spouse" },
+        { value: "sibling", label: "Sibling" },
+        { value: "friend", label: "Friend" },
+        { value: "other", label: "Other" }
+      ],
+      validation: [{ type: "required" }],
+      grid: { colSpan: 2 }
+    }
+  ],
+  minItems: 1,
+  maxItems: 3,
+  addButtonText: "Add Contact",
+  grid: {
+    columns: 2,
+    gap: 16
+  }
+}
+
+// Work experience array
+{
+  type: "array",
+  name: "experience",
+  label: "Work Experience",
+  elements: [
+    {
+      type: "input",
+      name: "company",
+      label: "Company",
+      validation: [{ type: "required" }]
+    },
+    {
+      type: "input",
+      name: "position",
+      label: "Position",
+      validation: [{ type: "required" }]
+    },
+    {
+      type: "date",
+      name: "startDate",
+      label: "Start Date",
+      dateType: "date",
+      validation: [{ type: "required" }]
+    },
+    {
+      type: "date",
+      name: "endDate",
+      label: "End Date",
+      dateType: "date"
+    },
+    {
+      type: "textarea",
+      name: "description",
+      label: "Description",
+      rows: 3,
+      placeholder: "Describe your role and achievements..."
+    }
+  ],
+  maxItems: 5,
+  addButtonText: "Add Experience"
+}
+```
+
+## Field Grid Configuration
+
+All field types support grid-specific configuration for responsive layouts:
+
+```typescript
+interface FieldGridConfig {
+  colSpan?: number | "auto";
+  rowSpan?: number | "auto";
+  colStart?: number;
+  colEnd?: number;
+  rowStart?: number;
+  rowEnd?: number;
+  responsive?: {
+    sm?: Partial<FieldGridConfig>;
+    md?: Partial<FieldGridConfig>;
+    lg?: Partial<FieldGridConfig>;
+    xl?: Partial<FieldGridConfig>;
+    "2xl"?: Partial<FieldGridConfig>;
+  };
+}
+```
+
+### Grid Examples
+
+```typescript
+// Full-width field
+{
+  type: "textarea",
+  name: "description",
+  label: "Description",
+  grid: { colSpan: 2 }
+}
+
+// Responsive field spanning
+{
+  type: "input",
+  name: "title",
+  label: "Title",
+  grid: {
+    colSpan: 1,
+    responsive: {
+      md: { colSpan: 2 },
+      lg: { colSpan: 3 }
+    }
+  }
+}
+
+// Specific grid positioning
+{
+  type: "input",
+  name: "featured",
+  label: "Featured Item",
+  grid: {
+    colStart: 2,
+    colEnd: 4,
+    rowStart: 1
+  }
+}
+```
+
+## Best Practices
+
+### 1. Choose Appropriate Field Types
+
+```typescript
+// ✅ Use specific input types
+{ type: "input", inputType: "email", name: "email" }
+
+// ❌ Generic text for email
+{ type: "input", inputType: "text", name: "email" }
+```
+
+### 2. Provide Clear Labels and Help Text
+
+```typescript
+// ✅ Descriptive labels
+{
+  type: "input",
+  name: "taxId",
+  label: "Tax Identification Number",
+  description: "Your business tax ID (e.g., 12-3456789)",
+  placeholder: "12-3456789"
+}
+```
+
+### 3. Use Appropriate Validation
+
+```typescript
+// ✅ Relevant validation rules
+{
+  type: "number",
+  name: "age",
+  validation: [
+    { type: "required" },
+    { type: "min", value: 0, message: "Age must be positive" },
+    { type: "max", value: 120, message: "Please enter a valid age" }
+  ]
+}
+```
+
+### 4. Consider User Experience
+
+```typescript
+// ✅ Reasonable constraints
+{
+  type: "select",
+  name: "country",
+  searchable: true,          // Enable search for long lists
+  placeholder: "Select...",  // Clear placeholder
+  emptyOption: "None"        // Allow empty selection if optional
+}
+```
+
+## Next Steps
+
+- [Validation](/docs/concepts/validation) - Learn about validation rules and schema generation
+- [Responsive Grid](/docs/concepts/responsive-grid) - Master the layout system
+- [Conditional Logic](/docs/concepts/conditional-logic) - Add dynamic behavior to fields
+- [Examples](/docs/examples) - See field types in action
