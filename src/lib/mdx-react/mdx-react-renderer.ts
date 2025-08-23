@@ -89,7 +89,6 @@ async function hydrate() {
             return;
         }
         
-        // Create the same structure as server-side rendering
         hydrateRoot(root, createElement(Component));
     } catch (error) {
         console.error('[MDX React] Hydration failed:', error);
@@ -175,7 +174,7 @@ if (document.readyState === 'loading') {
 			});
 
 			const compiledCode = compiledMDX.toString();
-			
+
 			const modifiedCode = compiledCode
 				.replace(/export default function (\w+)/g, 'function $1')
 				.replace(/export default /g, 'const MDXContent = ')
@@ -210,6 +209,7 @@ export default WrappedMDXComponent;
         `.trim();
 		}
 	}
+
 	protected override async importPageFile(file: string): Promise<
 		EcoPageFile<{
 			layout?: React.ComponentType<{ children: ReactNode }>;
@@ -247,11 +247,17 @@ export default WrappedMDXComponent;
 				throw new Error(`Page must be a React component function, got ${typeof Page}: ${String(Page)}`);
 			}
 
-			const pageElement = React.createElement(Page as React.ComponentType);
-			
-			const wrappedContent = React.createElement('div', { 
-				'data-react-root': true
-			}, pageElement);
+			const pageElement = layout
+				? React.createElement(layout, {}, React.createElement(Page as React.ComponentType))
+				: React.createElement(Page as React.ComponentType);
+
+			const wrappedContent = React.createElement(
+				'div',
+				{
+					'data-react-root': true,
+				},
+				pageElement,
+			);
 
 			const htmlElement = React.createElement(
 				HtmlTemplate as React.ComponentType<{
