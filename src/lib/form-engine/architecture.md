@@ -62,7 +62,6 @@ src/lib/form-engine/
 ```typescript
 FormRenderer
 ├── FormProvider                 # React Hook Form context
-├── FormEngineProvider          # Form Engine context
 ├── Stepper                     # Multi-step navigation (if steps > 1)
 │   ├── Stepper.Header         # Step indicators
 │   ├── Stepper.Content        # Current step content

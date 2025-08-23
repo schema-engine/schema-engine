@@ -101,7 +101,6 @@ export function FormEngineFormProvider({
 	 * Get all fields from config - only from steps since that's the only way to define fields
 	 */
 	const allFields = useMemo(() => {
-		// All forms now use steps - collect fields from all steps
 		return config.steps.flatMap((step) => step.fields || []);
 	}, [config.steps]);
 
@@ -145,8 +144,8 @@ export function FormEngineFormProvider({
 	const form = useForm({
 		resolver: validationSchema ? zodResolver(validationSchema as any) : undefined,
 		defaultValues: formDefaultValues,
-		mode: 'onChange', // Validate on change to catch errors immediately
-		reValidateMode: 'onChange', // Re-validate on subsequent changes
+		mode: config.validationMode || 'onBlur',
+		reValidateMode: config.reValidateMode,
 	});
 
 	/**
@@ -230,14 +229,13 @@ export function FormEngineFormProvider({
 	 */
 	const handleSubmit = useCallback(
 		async (data: any) => {
-			// Execute form-level submit actions using the new plugin-based system
 			if (config.actions && config.actions.length > 0) {
 				try {
 					const context = buildActionContext();
 					const results = await actionExecutor.executeTrigger(config.actions, 'form_submit', context);
 
-					// Check if any action failed and should stop processing
 					const failedAction = results.find((result) => !result.success && result.shouldContinue === false);
+
 					if (failedAction) {
 						if (onValidationError) {
 							onValidationError({ _actionError: failedAction.error || 'Action execution failed' });
@@ -251,7 +249,6 @@ export function FormEngineFormProvider({
 				}
 			}
 
-			// Then execute legacy callbacks for backward compatibility
 			if (onSubmit) {
 				onSubmit(data);
 			}

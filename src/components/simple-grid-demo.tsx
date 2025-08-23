@@ -1,4 +1,4 @@
-import { FormEngineProvider, FormRenderer } from '@/lib/form-engine';
+import { FormRenderer } from '@/lib/form-engine';
 import type { FormConfig } from '@/lib/form-engine/types';
 import { ValidationPresets } from '@/lib/form-engine/validation';
 // Import to register components
@@ -106,9 +106,7 @@ export function SimpleGridDemo() {
 			<p className="text-sm text-gray-600 mb-4">
 				🔄 Resize your browser window to see the responsive grid in action
 			</p>
-			<FormEngineProvider>
-				<FormRenderer config={config} />
-			</FormEngineProvider>
+			<FormRenderer config={config} />
 		</div>
 	);
 }

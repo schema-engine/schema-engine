@@ -1,4 +1,4 @@
-import { FormEngineProvider, FormRenderer } from '@/lib/form-engine';
+import { FormRenderer } from '@/lib/form-engine';
 import type { FormConfig } from '@/lib/form-engine/types';
 import { ValidationPresets } from '@/lib/form-engine/validation';
 // Import to register components
@@ -119,9 +119,7 @@ export function FieldTypesDemo() {
 	return (
 		<div className="border rounded-lg p-4 bg-gray-50/50">
 			<p className="text-sm text-gray-600 mb-4">🎯 Try different field types and see how they behave</p>
-			<FormEngineProvider>
-				<FormRenderer config={config} />
-			</FormEngineProvider>
+			<FormRenderer config={config} />
 		</div>
 	);
 }

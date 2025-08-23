@@ -1,4 +1,4 @@
-import { FormEngineProvider, FormRenderer } from '@/lib/form-engine';
+import { FormRenderer } from '@/lib/form-engine';
 import type { FormConfig } from '@/lib/form-engine/types';
 import { ValidationPresets } from '@/lib/form-engine/validation';
 // Import to register components
@@ -52,7 +52,6 @@ export function SimpleInputDemo() {
 				successMessage: 'Form submitted successfully! 🎉',
 				errorMessage: 'Failed to submit form. Please try again.',
 				enabled: true,
-				// Mock endpoint for demo
 				endpoint: '/api/demo-submit',
 				method: 'POST',
 			},
@@ -61,9 +60,7 @@ export function SimpleInputDemo() {
 
 	return (
 		<div className="border rounded-lg p-4 bg-gray-50/50">
-			<FormEngineProvider>
-				<FormRenderer config={config} />
-			</FormEngineProvider>
+			<FormRenderer config={config} />
 		</div>
 	);
 }

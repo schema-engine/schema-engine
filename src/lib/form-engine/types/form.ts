@@ -1,16 +1,16 @@
-import { z } from "zod";
-import type { FieldPath, FieldValues, UseFormReturn } from "react-hook-form";
-import type { ValidationRule } from "../validation";
-import { FormActionConfigSchema, type FormActionConfig } from "../actions/types";
+import { z } from 'zod';
+import type { FieldPath, FieldValues, UseFormReturn } from 'react-hook-form';
+import type { ValidationRule } from '../validation';
+import { FormActionConfigSchema, type FormActionConfig } from '../actions/types';
 
-export type { FormActionConfig } from "../actions/types";
+export type { FormActionConfig } from '../actions/types';
 
 /**
  * Responsive breakpoint configuration for grid layout
  */
 export const GridBreakpointConfigSchema = z.object({
-	columns: z.union([z.number(), z.literal("auto")]).optional(),
-	rows: z.union([z.number(), z.literal("auto")]).optional(),
+	columns: z.union([z.number(), z.literal('auto')]).optional(),
+	rows: z.union([z.number(), z.literal('auto')]).optional(),
 	gap: z.union([z.number(), z.string()]).optional(),
 	minColumnWidth: z.string().optional(),
 	maxColumnWidth: z.string().optional(),
@@ -34,8 +34,8 @@ export type FormStepConfig = {
 export const FieldGridBreakpointSchema = z.object({
 	column: z.union([z.number(), z.string()]).optional(),
 	row: z.union([z.number(), z.string()]).optional(),
-	justifySelf: z.enum(["start", "end", "center", "stretch"]).optional(),
-	alignSelf: z.enum(["start", "end", "center", "stretch"]).optional(),
+	justifySelf: z.enum(['start', 'end', 'center', 'stretch']).optional(),
+	alignSelf: z.enum(['start', 'end', 'center', 'stretch']).optional(),
 	hidden: z.boolean().optional(),
 });
 
@@ -43,8 +43,8 @@ export const FieldGridBreakpointSchema = z.object({
  * Grid layout configuration schema
  */
 export const GridLayoutConfigSchema = z.object({
-	columns: z.union([z.number(), z.literal("auto")]).optional(),
-	rows: z.union([z.number(), z.literal("auto")]).optional(),
+	columns: z.union([z.number(), z.literal('auto')]).optional(),
+	rows: z.union([z.number(), z.literal('auto')]).optional(),
 	gap: z.union([z.number(), z.string()]).optional(),
 	responsive: z
 		.object({
@@ -53,21 +53,21 @@ export const GridLayoutConfigSchema = z.object({
 			md: GridBreakpointConfigSchema.optional(),
 			lg: GridBreakpointConfigSchema.optional(),
 			xl: GridBreakpointConfigSchema.optional(),
-			"2xl": GridBreakpointConfigSchema.optional(),
+			'2xl': GridBreakpointConfigSchema.optional(),
 		})
 		.optional(),
 	autoFit: z.boolean().optional(),
 	autoFill: z.boolean().optional(),
 	minColumnWidth: z.string().optional(),
 	maxColumnWidth: z.string().optional(),
-	justifyItems: z.enum(["start", "end", "center", "stretch"]).optional(),
-	alignItems: z.enum(["start", "end", "center", "stretch"]).optional(),
+	justifyItems: z.enum(['start', 'end', 'center', 'stretch']).optional(),
+	alignItems: z.enum(['start', 'end', 'center', 'stretch']).optional(),
 	placeItems: z.string().optional(),
 	justifyContent: z
-		.enum(["start", "end", "center", "stretch", "space-around", "space-between", "space-evenly"])
+		.enum(['start', 'end', 'center', 'stretch', 'space-around', 'space-between', 'space-evenly'])
 		.optional(),
 	alignContent: z
-		.enum(["start", "end", "center", "stretch", "space-around", "space-between", "space-evenly"])
+		.enum(['start', 'end', 'center', 'stretch', 'space-around', 'space-between', 'space-evenly'])
 		.optional(),
 	placeContent: z.string().optional(),
 });
@@ -85,11 +85,11 @@ export const FieldGridConfigSchema = z.object({
 			md: FieldGridBreakpointSchema.optional(),
 			lg: FieldGridBreakpointSchema.optional(),
 			xl: FieldGridBreakpointSchema.optional(),
-			"2xl": FieldGridBreakpointSchema.optional(),
+			'2xl': FieldGridBreakpointSchema.optional(),
 		})
 		.optional(),
-	justifySelf: z.enum(["start", "end", "center", "stretch"]).optional(),
-	alignSelf: z.enum(["start", "end", "center", "stretch"]).optional(),
+	justifySelf: z.enum(['start', 'end', 'center', 'stretch']).optional(),
+	alignSelf: z.enum(['start', 'end', 'center', 'stretch']).optional(),
 	placeSelf: z.string().optional(),
 });
 
@@ -99,17 +99,17 @@ export const FieldGridConfigSchema = z.object({
 export const ConstraintLogicSchema = z.object({
 	field: z.string(),
 	operator: z.enum([
-		"equals",
-		"not_equals",
-		"contains",
-		"not_contains",
-		"greater_than",
-		"less_than",
-		"is_empty",
-		"is_not_empty",
+		'equals',
+		'not_equals',
+		'contains',
+		'not_contains',
+		'greater_than',
+		'less_than',
+		'is_empty',
+		'is_not_empty',
 	]),
 	value: z.any(),
-	action: z.enum(["show", "hide", "enable", "disable", "require"]),
+	action: z.enum(['show', 'hide', 'enable', 'disable', 'require']),
 });
 
 /**
@@ -135,8 +135,8 @@ export const BaseFieldConfigSchema = z.object({
  * Input field configuration schema
  */
 export const InputFieldConfigSchema = BaseFieldConfigSchema.extend({
-	type: z.literal("input"),
-	inputType: z.enum(["text", "email", "password", "url", "tel", "search"]),
+	type: z.literal('input'),
+	inputType: z.enum(['text', 'email', 'password', 'url', 'tel', 'search']),
 	maxLength: z.number().optional(),
 	minLength: z.number().optional(),
 	pattern: z.string().optional(),
@@ -148,7 +148,7 @@ export const InputFieldConfigSchema = BaseFieldConfigSchema.extend({
  * Number field configuration schema
  */
 export const NumberFieldConfigSchema = BaseFieldConfigSchema.extend({
-	type: z.literal("number"),
+	type: z.literal('number'),
 	min: z.number().optional(),
 	max: z.number().optional(),
 	step: z.number().optional(),
@@ -159,12 +159,12 @@ export const NumberFieldConfigSchema = BaseFieldConfigSchema.extend({
  * Textarea field configuration schema
  */
 export const TextareaFieldConfigSchema = BaseFieldConfigSchema.extend({
-	type: z.literal("textarea"),
+	type: z.literal('textarea'),
 	rows: z.number().optional(),
 	cols: z.number().optional(),
 	maxLength: z.number().optional(),
 	minLength: z.number().optional(),
-	resize: z.enum(["none", "both", "horizontal", "vertical"]).optional(),
+	resize: z.enum(['none', 'both', 'horizontal', 'vertical']).optional(),
 });
 
 /**
@@ -180,7 +180,7 @@ export const SelectOptionSchema = z.object({
  * Select field configuration schema
  */
 export const SelectFieldConfigSchema = BaseFieldConfigSchema.extend({
-	type: z.literal("select"),
+	type: z.literal('select'),
 	options: z.array(SelectOptionSchema),
 	multiple: z.boolean().optional(),
 	searchable: z.boolean().optional(),
@@ -191,7 +191,7 @@ export const SelectFieldConfigSchema = BaseFieldConfigSchema.extend({
  * Checkbox field configuration schema
  */
 export const CheckboxFieldConfigSchema = BaseFieldConfigSchema.extend({
-	type: z.literal("checkbox"),
+	type: z.literal('checkbox'),
 	checked: z.boolean().optional(),
 });
 
@@ -199,17 +199,17 @@ export const CheckboxFieldConfigSchema = BaseFieldConfigSchema.extend({
  * Radio group field configuration schema
  */
 export const RadioFieldConfigSchema = BaseFieldConfigSchema.extend({
-	type: z.literal("radio"),
+	type: z.literal('radio'),
 	options: z.array(SelectOptionSchema),
-	orientation: z.enum(["horizontal", "vertical"]).optional(),
+	orientation: z.enum(['horizontal', 'vertical']).optional(),
 });
 
 /**
  * Date field configuration schema
  */
 export const DateFieldConfigSchema = BaseFieldConfigSchema.extend({
-	type: z.literal("date"),
-	dateType: z.enum(["date", "datetime-local", "time"]),
+	type: z.literal('date'),
+	dateType: z.enum(['date', 'datetime-local', 'time']),
 	min: z.string().optional(),
 	max: z.string().optional(),
 	showCalendar: z.boolean().optional(),
@@ -219,7 +219,7 @@ export const DateFieldConfigSchema = BaseFieldConfigSchema.extend({
  * File upload field configuration schema
  */
 export const FileFieldConfigSchema = BaseFieldConfigSchema.extend({
-	type: z.literal("file"),
+	type: z.literal('file'),
 	accept: z.string().optional(),
 	multiple: z.boolean().optional(),
 	maxSize: z.number().optional(),
@@ -230,9 +230,9 @@ export const FileFieldConfigSchema = BaseFieldConfigSchema.extend({
  * Switch/Toggle field configuration schema
  */
 export const SwitchFieldConfigSchema = BaseFieldConfigSchema.extend({
-	type: z.literal("switch"),
+	type: z.literal('switch'),
 	checked: z.boolean().optional(),
-	size: z.enum(["sm", "md", "lg"]).optional(),
+	size: z.enum(['sm', 'md', 'lg']).optional(),
 });
 
 /**
@@ -256,7 +256,7 @@ export type SwitchFieldConfig = z.infer<typeof SwitchFieldConfigSchema>;
  * Array field configuration type
  */
 export interface ArrayFieldConfig extends BaseFieldConfig {
-	type: "array";
+	type: 'array';
 	elements: FieldConfig[]; // Changed to array to support multiple field types
 	minItems?: number;
 	maxItems?: number;
@@ -284,19 +284,19 @@ export type FieldConfig =
  * Array field configuration schema
  */
 export const ArrayFieldConfigSchema = BaseFieldConfigSchema.extend({
-	type: z.literal("array"),
+	type: z.literal('array'),
 	elements: z.array(z.lazy(() => FieldConfigSchema)),
 	minItems: z.number().optional(),
 	maxItems: z.number().optional(),
 	addButtonText: z.string().optional(),
 	removeButtonText: z.string().optional(),
-	keyName: z.string().default("id"),
+	keyName: z.string().default('id'),
 });
 
 /**
  * Union schema for all field configurations
  */
-export const FieldConfigSchema: z.ZodSchema<FieldConfig> = z.discriminatedUnion("type", [
+export const FieldConfigSchema: z.ZodSchema<FieldConfig> = z.discriminatedUnion('type', [
 	InputFieldConfigSchema,
 	NumberFieldConfigSchema,
 	TextareaFieldConfigSchema,
@@ -337,7 +337,7 @@ export interface FieldWrapperConfig {
  * Layout configuration schema
  */
 export const LayoutConfigSchema = z.object({
-	type: z.enum(["group", "grid", "tabs", "accordion", "collapsible"]),
+	type: z.enum(['group', 'grid', 'tabs', 'accordion', 'collapsible']),
 	title: z.string().optional(),
 	description: z.string().optional(),
 	columns: z.number().optional(),
@@ -351,7 +351,7 @@ export const LayoutConfigSchema = z.object({
  */
 export const StepNavigationButtonSchema = z.object({
 	label: z.string(),
-	variant: z.enum(["primary", "secondary", "outline", "ghost"]).optional(),
+	variant: z.enum(['primary', 'secondary', 'outline', 'ghost']).optional(),
 	className: z.string().optional(),
 	disabled: z.boolean().optional(),
 	hidden: z.boolean().optional(),
@@ -365,12 +365,9 @@ export const StepNavigationButtonSchema = z.object({
 export const StepNavigationConfigSchema = z.object({
 	showStepNumbers: z.boolean().optional().default(true),
 	showStepTitles: z.boolean().optional().default(true),
-	orientation: z.enum(["horizontal", "vertical"]).optional().default("horizontal"),
-	variant: z
-		.enum(["default", "pills", "arrows", "dots", "minimal", "compact"])
-		.optional()
-		.default("default"),
-	position: z.enum(["top", "bottom", "left", "right"]).optional().default("top"),
+	orientation: z.enum(['horizontal', 'vertical']).optional().default('horizontal'),
+	variant: z.enum(['default', 'pills', 'arrows', 'dots', 'minimal', 'compact']).optional().default('default'),
+	position: z.enum(['top', 'bottom', 'left', 'right']).optional().default('top'),
 	buttons: z
 		.object({
 			previous: StepNavigationButtonSchema.optional(),
@@ -409,7 +406,7 @@ export const FormStepSchema = z.object({
 export const ExtendedFieldConfigSchema = FieldConfigSchema.and(
 	z.object({
 		step: z.string().optional(), // Which step this field belongs to
-	})
+	}),
 );
 
 /**
@@ -423,7 +420,9 @@ export const FormConfigSchema = z.object({
 	layout: z.array(LayoutConfigSchema).optional(),
 	grid: GridLayoutConfigSchema.optional(),
 	stepper: StepNavigationConfigSchema.optional(),
-	mode: z.enum(["wizard", "free"]).optional().default("wizard"),
+	mode: z.enum(['wizard', 'free']).optional().default('wizard'),
+	validationMode: z.enum(['onSubmit', 'onChange', 'onBlur', 'all']).optional(),
+	reValidateMode: z.enum(['onSubmit', 'onChange', 'onBlur']).optional(),
 	autoGenerateSchema: z.boolean().optional().default(true),
 	validation: z.any().optional(),
 	onSubmit: z.any().optional(),
@@ -451,17 +450,17 @@ export type FormConfig = z.infer<typeof FormConfigSchema>;
 /**
  * Stepper variant options
  */
-export type StepperVariant = "default" | "minimal" | "compact";
+export type StepperVariant = 'default' | 'minimal' | 'compact';
 
 /**
  * Stepper orientation options
  */
-export type StepperOrientation = "horizontal" | "vertical";
+export type StepperOrientation = 'horizontal' | 'vertical';
 
 /**
  * Stepper validation mode options
  */
-export type StepperValidationMode = "wizard" | "free";
+export type StepperValidationMode = 'wizard' | 'free';
 
 /**
  * Handler types for custom stepper functionality

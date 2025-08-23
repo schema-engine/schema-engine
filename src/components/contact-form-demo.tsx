@@ -1,4 +1,4 @@
-import { FormEngineProvider, FormRenderer } from '@/lib/form-engine';
+import { FormRenderer } from '@/lib/form-engine';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ValidationPresets } from '@/lib/form-engine/validation';
 import '@/components/form/registry';
@@ -196,9 +196,7 @@ export function ContactFormDemo() {
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<FormEngineProvider>
-							<FormRenderer config={contactFormConfig} onSubmit={handleSubmit} />
-						</FormEngineProvider>
+						<FormRenderer config={contactFormConfig} onSubmit={handleSubmit} />
 					</CardContent>
 				</Card>
 			</div>

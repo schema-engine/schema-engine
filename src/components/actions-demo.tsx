@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { FormEngineProvider, FormRenderer } from '../lib/form-engine';
+import { FormRenderer } from '../lib/form-engine';
 import { useGDPRConsent, useGTMTracker } from '../hooks/use-form-actions';
 import { actionsFormConfig, simpleActionsFormConfig } from '../configs/forms/actions-forms';
 
@@ -89,9 +89,7 @@ export function ActionsDemo() {
 
 			<Card>
 				<CardContent className="pt-6">
-					<FormEngineProvider>
-						<FormRenderer config={formConfig} onSubmit={onSubmit} onChange={onChange} onAction={onAction} />
-					</FormEngineProvider>
+					<FormRenderer config={formConfig} onSubmit={onSubmit} onChange={onChange} onAction={onAction} />
 				</CardContent>
 			</Card>
 

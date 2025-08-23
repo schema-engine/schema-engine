@@ -1,4 +1,4 @@
-import { FormEngineProvider, FormRenderer } from '@/lib/form-engine';
+import { FormRenderer } from '@/lib/form-engine';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ValidationPresets } from '@/lib/form-engine/validation';
 import { useState } from 'react';
@@ -134,11 +134,11 @@ const stepperDemoConfig = {
 			},
 			next: {
 				label: 'Continue',
-				variant: 'default' as const,
+				variant: 'primary' as const,
 			},
 			submit: {
 				label: 'Complete Demo',
-				variant: 'default' as const,
+				variant: 'primary' as const,
 			},
 		},
 	},
@@ -208,7 +208,6 @@ export function MultiStepDemo() {
 
 	return (
 		<div className="space-y-6">
-			{/* Variant Selector */}
 			<div className="flex justify-center space-x-2">
 				<Button
 					size="sm"
@@ -233,7 +232,6 @@ export function MultiStepDemo() {
 				</Button>
 			</div>
 
-			{/* Demo Form */}
 			<Card>
 				<CardHeader>
 					<CardTitle>
@@ -248,9 +246,7 @@ export function MultiStepDemo() {
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
-					<FormEngineProvider>
-						<FormRenderer config={getConfig()} onSubmit={handleSubmit} />
-					</FormEngineProvider>
+					<FormRenderer config={getConfig()} onSubmit={handleSubmit} />
 				</CardContent>
 			</Card>
 		</div>

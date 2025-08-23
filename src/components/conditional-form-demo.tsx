@@ -1,4 +1,4 @@
-import { FormEngineProvider, FormRenderer } from '@/lib/form-engine';
+import { FormRenderer } from '@/lib/form-engine';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { conditionalFormConfig } from '@/configs/forms/conditional-forms';
 import '@/components/form/registry';
@@ -56,9 +56,7 @@ export function ConditionalFormDemo() {
 								</ul>
 							</div>
 
-							<FormEngineProvider>
-								<FormRenderer config={conditionalFormConfig} onSubmit={handleSubmit} />
-							</FormEngineProvider>
+							<FormRenderer config={conditionalFormConfig} onSubmit={handleSubmit} />
 						</div>
 					</CardContent>
 				</Card>

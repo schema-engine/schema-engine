@@ -1,10 +1,16 @@
 import type React from 'react';
-import { FormEngineFormProvider, type FormProviderProps } from './provider';
+import {
+	FormEngineFormProvider,
+	type FormProviderProps,
+	type FormEngineProviderProps,
+	FormEngineProvider,
+} from './provider';
 import { FormField } from './field-renderer';
 import { useFormGridStyles } from './grid-hooks';
 import { Stepper, useStepper } from './stepper';
 import { useFormContext } from 'react-hook-form';
 import type { FormConfig, FormStep, FieldConfig } from './types/form';
+import { logger } from '@/lib/logger';
 
 /**
  * Helper to get fields for a specific step - now fields are directly in steps
@@ -24,12 +30,10 @@ function isMultiStepForm(config: FormConfig): boolean {
  * Internal component that renders fields with access to form context and grid layout
  */
 function FormFields({ config }: { config: FormConfig }) {
-	// All forms now use steps - either single step or multi-step
 	if (isMultiStepForm(config)) {
 		return <MultiStepFormFields config={config} />;
 	}
 
-	// Single step form - render the first (and only) step fields directly
 	return <SingleStepFormFields config={config} />;
 }
 
@@ -52,41 +56,57 @@ function SingleStepFormFields({ config }: { config: FormConfig }) {
 }
 
 /**
+ * Submit button component that has access to form context for proper validation
+ */
+function SubmitButton({
+	submitButtonText = 'Submit',
+	submitButtonClassName = 'px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500',
+}: {
+	submitButtonText?: string;
+	submitButtonClassName?: string;
+}) {
+	const { formState } = useFormContext();
+
+	return (
+		<div className="pt-4">
+			<button type="submit" className={submitButtonClassName} disabled={formState.isSubmitting}>
+				{formState.isSubmitting ? 'Submitting...' : submitButtonText}
+			</button>
+		</div>
+	);
+}
+
+/**
  * Internal component for multi-step form rendering
  */
 function MultiStepFormFields({ config }: { config: FormConfig }) {
 	const { trigger, getValues, setFocus, formState } = useFormContext();
 
 	const handleStepChange = (stepIndex: number, step: FormStep) => {
-		console.log(`Navigated to step ${stepIndex}: ${step.title}`);
+		logger.debug(`Navigated to step ${stepIndex}: ${step.title}`);
 	};
 
-	// Validation function that uses trigger to validate current step fields
 	const validateStep = async (stepIndex: number): Promise<boolean> => {
 		const step = config.steps[stepIndex];
 		if (!step?.fields) return true;
 
-		// Get all field names for this step
 		const fieldNames = step.fields.map((field) => field.name);
 
 		try {
-			// Use trigger to validate all fields in the current step
 			const isValid = await trigger(fieldNames);
 
 			if (!isValid) {
-				// Find the first field with an error and focus on it
 				const fieldsWithErrors = fieldNames.filter((fieldName) => formState.errors[fieldName]);
 
 				if (fieldsWithErrors.length > 0) {
-					// Focus on the first field with an error
 					setFocus(fieldsWithErrors[0]);
-					console.log(`Validation failed. Focused on field: ${fieldsWithErrors[0]}`);
+					logger.debug(`Validation failed. Focused on field: ${fieldsWithErrors[0]}`);
 				}
 			}
 
 			return isValid;
 		} catch (error) {
-			console.error('Validation error:', error);
+			logger.error('Validation error:', error as Error);
 			return false;
 		}
 	};
@@ -120,34 +140,30 @@ function StepperLayout({
 	const { currentStep } = useStepper();
 
 	const handleSubmit = async () => {
-		// Validate the current step before submitting
 		const isValid = await validateStepFn(currentStep);
 
 		if (!isValid) {
-			console.log('Final step validation failed, cannot submit');
+			logger.debug('Final step validation failed, cannot submit');
 			return;
 		}
 
-		// Get form data and submit it
 		const formData = getValuesFn();
-		console.log('Multi-step form completed:', formData);
+		logger.debug('Multi-step form completed:', formData);
 
-		// Show alert for demo purposes
 		alert('Form submitted successfully!');
 	};
+
 	const orientation = config.stepper?.orientation || 'horizontal';
 
 	if (orientation === 'vertical') {
 		return (
 			<div className="flex gap-12">
-				{/* Vertical stepper on the left */}
 				<div className="w-72 flex-shrink-0">
 					<div className="sticky top-8">
 						<Stepper.Header navigation={config.stepper} />
 					</div>
 				</div>
 
-				{/* Content on the right */}
 				<div className="flex-1 min-w-0">
 					<Stepper.Content>
 						<StepperFormContent config={config} />
@@ -161,7 +177,6 @@ function StepperLayout({
 		);
 	}
 
-	// Horizontal layout (default)
 	return (
 		<>
 			<Stepper.Header navigation={config.stepper} className="mb-8" />
@@ -186,18 +201,15 @@ function StepperFormContent({ config }: { config: FormConfig }) {
 
 	if (!currentStep_data) return null;
 
-	// Get fields for current step - fields are now directly in the step
 	const stepFields = getFieldsForStep(currentStep_data);
 
 	return (
 		<div className="min-h-[400px]">
-			{/* Step Title and Description */}
 			<div className="mb-6">
 				<h3 className="text-xl font-semibold text-gray-900">{currentStep_data.title}</h3>
 				{currentStep_data.description && <p className="mt-2 text-gray-600">{currentStep_data.description}</p>}
 			</div>
 
-			{/* Step Fields */}
 			<div style={gridStyles}>
 				{stepFields.map((field: FieldConfig) => (
 					<FormField key={field.id} config={field} className={field.className} style={field.style} />
@@ -216,6 +228,7 @@ export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
 	showSubmitButton?: boolean;
 	submitButtonText?: string;
 	submitButtonClassName?: string;
+	registry?: FormEngineProviderProps['registry'];
 }
 
 /**
@@ -228,46 +241,43 @@ export function FormRenderer({
 	onChange,
 	onAction,
 	onValidationError,
-	registerActionHandlers,
 	className = '',
 	style,
 	showSubmitButton = true,
 	submitButtonText = 'Submit',
 	submitButtonClassName = 'px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500',
+	registry,
 }: FormRendererProps) {
 	const isMultiStep = isMultiStepForm(config);
 
 	return (
-		<FormEngineFormProvider
-			config={config}
-			defaultValues={defaultValues}
-			onSubmit={onSubmit}
-			onChange={onChange}
-			onAction={onAction}
-			onValidationError={onValidationError}
-			registerActionHandlers={registerActionHandlers}
-		>
-			<div className={`space-y-6 ${className}`} style={style}>
-				{/* Form title - only show for single step or if no stepper header */}
-				{config.title && (!isMultiStep || !config.stepper?.showStepTitles) && (
-					<div className="mb-6">
-						<h2 className="text-2xl font-bold text-gray-900">{config.title}</h2>
-						{config.description && <p className="mt-2 text-gray-600">{config.description}</p>}
-					</div>
-				)}
+		<FormEngineProvider registry={registry}>
+			<FormEngineFormProvider
+				config={config}
+				defaultValues={defaultValues}
+				onSubmit={onSubmit}
+				onChange={onChange}
+				onAction={onAction}
+				onValidationError={onValidationError}
+			>
+				<div className={`space-y-6 ${className}`} style={style}>
+					{config.title && (!isMultiStep || !config.stepper?.showStepTitles) && (
+						<div className="mb-6">
+							<h2 className="text-2xl font-bold text-gray-900">{config.title}</h2>
+							{config.description && <p className="mt-2 text-gray-600">{config.description}</p>}
+						</div>
+					)}
 
-				{/* Form fields */}
-				<FormFields config={config} />
+					<FormFields config={config} />
 
-				{/* Submit button - only show for single step forms */}
-				{!isMultiStep && showSubmitButton && (
-					<div className="pt-4">
-						<button type="submit" className={submitButtonClassName}>
-							{submitButtonText}
-						</button>
-					</div>
-				)}
-			</div>
-		</FormEngineFormProvider>
+					{!isMultiStep && showSubmitButton && (
+						<SubmitButton
+							submitButtonText={submitButtonText}
+							submitButtonClassName={submitButtonClassName}
+						/>
+					)}
+				</div>
+			</FormEngineFormProvider>
+		</FormEngineProvider>
 	);
 }

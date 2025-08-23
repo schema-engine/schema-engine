@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FormEngineProvider, FormRenderer, type FormConfig } from '@/lib/form-engine';
+import { FormRenderer, type FormConfig } from '@/lib/form-engine';
 import { registerAction } from '@/lib/form-engine/actions/action-registry';
 import { submitPlugin, resetPlugin, notificationPlugin } from '@/lib/form-engine/actions/plugins';
 import '@/components/form/registry';
@@ -166,9 +166,7 @@ const FormEngineActionExecutor: React.FC = () => {
 						{/* Form Section */}
 						<div className="space-y-4">
 							<h3 className="text-lg font-semibold">Interactive Form</h3>
-							<FormEngineProvider>
-								<FormRenderer config={formConfigWithActions} />
-							</FormEngineProvider>
+							<FormRenderer config={formConfigWithActions} />
 						</div>
 
 						{/* Execution Log Section */}
