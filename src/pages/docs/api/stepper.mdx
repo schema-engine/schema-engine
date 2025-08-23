@@ -1,0 +1,387 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'Stepper API | Form Engine Documentation',
+    description: 'API reference for the Stepper component used in multi-step forms.',
+})
+
+# Stepper API
+
+The `Stepper` component provides navigation and progress indication for multi-step forms. It's automatically rendered when your form configuration has multiple steps.
+
+## Import
+
+```typescript
+import { Stepper } from '@/lib/form-engine/components';
+```
+
+## Basic Usage
+
+The Stepper is typically used internally by FormRenderer, but you can use it standalone:
+
+```typescript
+import { Stepper } from '@/lib/form-engine/components';
+
+const steps = [
+  { id: 'personal', title: 'Personal Info', completed: true },
+  { id: 'contact', title: 'Contact Info', completed: false },
+  { id: 'review', title: 'Review', completed: false }
+];
+
+function MyFormStepper() {
+  const [currentStep, setCurrentStep] = useState(0);
+
+  return (
+    <Stepper
+      steps={steps}
+      currentStep={currentStep}
+      onStepClick={setCurrentStep}
+    />
+  );
+}
+```
+
+## Props
+
+### steps (required)
+
+**Type:** `StepConfig[]`
+
+Array of step configurations.
+
+```typescript
+interface StepConfig {
+  id: string;
+  title: string;
+  description?: string;
+  icon?: string;
+  completed?: boolean;
+  disabled?: boolean;
+  validation?: ValidationRule[];
+}
+```
+
+### currentStep (required)
+
+**Type:** `number`
+
+The currently active step index (0-based).
+
+### onStepClick
+
+**Type:** `(stepIndex: number) => void`  
+**Default:** `undefined`
+
+Callback fired when a step is clicked. If not provided, steps are not clickable.
+
+```typescript
+<Stepper
+  steps={steps}
+  currentStep={currentStep}
+  onStepClick={(index) => {
+    if (steps[index].completed || index === currentStep + 1) {
+      setCurrentStep(index);
+    }
+  }}
+/>
+```
+
+### orientation
+
+**Type:** `'horizontal' | 'vertical'`  
+**Default:** `'horizontal'`
+
+The layout orientation of the stepper.
+
+```typescript
+<Stepper
+  steps={steps}
+  currentStep={currentStep}
+  orientation="vertical"
+/>
+```
+
+### variant
+
+**Type:** `'default' | 'compact' | 'minimal'`  
+**Default:** `'default'`
+
+Visual variant of the stepper.
+
+```typescript
+<Stepper
+  steps={steps}
+  currentStep={currentStep}
+  variant="compact"
+/>
+```
+
+### showProgress
+
+**Type:** `boolean`  
+**Default:** `true`
+
+Whether to show progress indicators between steps.
+
+### allowClickNavigation
+
+**Type:** `boolean`  
+**Default:** `true`
+
+Whether steps can be clicked for navigation.
+
+### className
+
+**Type:** `string`  
+**Default:** `undefined`
+
+Additional CSS classes for the stepper container.
+
+## Step States
+
+Each step can have different visual states:
+
+### Active
+
+The currently active step is highlighted and shows progress.
+
+### Completed
+
+Completed steps show a checkmark and can typically be navigated back to.
+
+### Disabled
+
+Disabled steps cannot be clicked and appear grayed out.
+
+### Error
+
+Steps with validation errors show an error indicator.
+
+## Customization
+
+### Custom Step Icons
+
+```typescript
+const stepsWithIcons = [
+  { 
+    id: 'user', 
+    title: 'User Info', 
+    icon: 'user' 
+  },
+  { 
+    id: 'settings', 
+    title: 'Settings', 
+    icon: 'settings' 
+  }
+];
+```
+
+### Custom Step Content
+
+```typescript
+function CustomStepContent({ step, isActive, isCompleted }) {
+  return (
+    <div className={`step-content ${isActive ? 'active' : ''}`}>
+      <div className="step-number">
+        {isCompleted ? '✓' : step.index + 1}
+      </div>
+      <div className="step-info">
+        <div className="step-title">{step.title}</div>
+        {step.description && (
+          <div className="step-description">{step.description}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+## Navigation Methods
+
+The Stepper provides methods for programmatic navigation:
+
+```typescript
+import { useRef } from 'react';
+
+function MyForm() {
+  const stepperRef = useRef<StepperRef>(null);
+
+  const goToNext = () => {
+    stepperRef.current?.nextStep();
+  };
+
+  const goToPrevious = () => {
+    stepperRef.current?.previousStep();
+  };
+
+  const goToStep = (index: number) => {
+    stepperRef.current?.goToStep(index);
+  };
+
+  return (
+    <div>
+      <Stepper
+        ref={stepperRef}
+        steps={steps}
+        currentStep={currentStep}
+      />
+      <div className="navigation-buttons">
+        <button onClick={goToPrevious}>Previous</button>
+        <button onClick={goToNext}>Next</button>
+      </div>
+    </div>
+  );
+}
+```
+
+## Validation Integration
+
+The Stepper integrates with Form Engine's validation system:
+
+```typescript
+const stepsWithValidation = [
+  {
+    id: 'personal',
+    title: 'Personal Information',
+    validation: [
+      { field: 'firstName', required: true },
+      { field: 'lastName', required: true },
+      { field: 'email', required: true, type: 'email' }
+    ]
+  },
+  {
+    id: 'address',
+    title: 'Address Information',
+    validation: [
+      { field: 'street', required: true },
+      { field: 'city', required: true },
+      { field: 'zipCode', required: true }
+    ]
+  }
+];
+```
+
+## Events
+
+### onStepChange
+
+Fired when the active step changes.
+
+```typescript
+<Stepper
+  steps={steps}
+  currentStep={currentStep}
+  onStepChange={(fromIndex, toIndex) => {
+    console.log(\`Step changed from \${fromIndex} to \${toIndex}\`);
+  }}
+/>
+```
+
+### onStepComplete
+
+Fired when a step is completed.
+
+```typescript
+<Stepper
+  steps={steps}
+  currentStep={currentStep}
+  onStepComplete={(stepIndex, stepData) => {
+    console.log(\`Step \${stepIndex} completed with data:`, stepData);
+  }}
+/>
+```
+
+### onStepValidation
+
+Fired when step validation occurs.
+
+```typescript
+<Stepper
+  steps={steps}
+  currentStep={currentStep}
+  onStepValidation={(stepIndex, isValid, errors) => {
+    if (!isValid) {
+      console.log(\`Step \${stepIndex} validation failed:`, errors);
+    }
+  }}
+/>
+```
+
+## Responsive Design
+
+The Stepper automatically adapts to different screen sizes:
+
+```typescript
+// Horizontal on desktop, vertical on mobile
+<Stepper
+  steps={steps}
+  currentStep={currentStep}
+  orientation="horizontal"
+  responsive={{
+    mobile: { orientation: 'vertical', variant: 'compact' },
+    tablet: { orientation: 'horizontal', variant: 'default' },
+    desktop: { orientation: 'horizontal', variant: 'default' }
+  }}
+/>
+```
+
+## Accessibility
+
+The Stepper includes comprehensive accessibility features:
+
+- ARIA labels and roles
+- Keyboard navigation support
+- Screen reader announcements
+- Focus management
+- High contrast mode support
+
+```typescript
+<Stepper
+  steps={steps}
+  currentStep={currentStep}
+  aria-label="Form progress"
+  role="tablist"
+/>
+```
+
+## Styling
+
+The Stepper can be styled using CSS custom properties:
+
+```css
+.stepper {
+  --stepper-active-color: #3b82f6;
+  --stepper-completed-color: #10b981;
+  --stepper-disabled-color: #9ca3af;
+  --stepper-background: #f9fafb;
+  --stepper-border-radius: 0.5rem;
+}
+```
+
+## Integration with FormRenderer
+
+When used with FormRenderer, the Stepper is automatically configured:
+
+```typescript
+const multiStepConfig: FormConfig = {
+  id: 'multi-step-form',
+  mode: 'stepped',
+  steps: [
+    {
+      id: 'step1',
+      title: 'Personal Info',
+      fields: [/* ... */]
+    },
+    {
+      id: 'step2', 
+      title: 'Contact Info',
+      fields: [/* ... */]
+    }
+  ]
+};
+
+// Stepper is automatically rendered
+<FormRenderer config={multiStepConfig} />
+```

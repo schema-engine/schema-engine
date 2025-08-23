@@ -1,28 +1,63 @@
 import { DocsLayout } from '@/layouts/docs-layout';
+import { MultiStepDemo } from '@/components/multi-step-demo';
 
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'Multi-Step Forms | Form Engine Documentation',
-    description: 'Learn how to create complex multi-step forms with navigation, validation, and custom stepper components.',
+  title: 'Multi-Step Forms | Form Engine Documentation',
+  description: 'Learn how to create complex multi-step forms with navigation, validation, and custom stepper components.',
 })
 
 # Multi-Step Forms
 
 Form Engine provides powerful support for multi-step forms with built-in navigation, step validation, and customizable stepper components. Multi-step forms are perfect for complex workflows like user registration, surveys, checkout processes, and data collection wizards.
 
+## Interactive Stepper Demo
+
+Experience different stepper styles and see how they handle navigation, validation, and user experience:
+
+<MultiStepDemo />
+
+## Stepper Capabilities
+
+The Form Engine stepper system offers several key capabilities:
+
+### 1. Multiple Visual Styles
+- **Default Stepper**: Traditional horizontal layout with step numbers and titles
+- **Vertical Stepper**: Space-efficient design perfect for mobile and narrow layouts  
+- **Minimal Stepper**: Clean design with free navigation and reduced visual elements
+
+### 2. Smart Navigation
+- **Controlled Navigation**: Enforce step-by-step progression with validation
+- **Free Navigation**: Allow users to jump between completed steps
+- **Validation on Next**: Automatically validate current step before proceeding
+
+### 3. Flexible Positioning
+- **Top Position**: Standard placement above form content
+- **Left Position**: Side-by-side layout for vertical steppers
+- **Custom Positioning**: Full control over stepper placement
+
+### 4. Rich Step Information
+- **Step Titles**: Clear labels for each step
+- **Step Descriptions**: Additional context for users
+- **Step Icons**: Visual indicators and branding
+- **Step Numbers**: Sequential numbering with progress indication
+
 ## Basic Multi-Step Setup
 
-Create a multi-step form by defining multiple steps in your configuration:
+Create a multi-step form by defining multiple steps and configuring the stepper behavior:
 
 ```typescript
 const multiStepFormConfig = {
-  id: "user-registration",
-  title: "Create Your Account",
+  id: "stepper-demo",
+  title: "Multi-Step Form",
+  mode: "wizard", // Enforces step-by-step progression
   steps: [
     {
+      id: "step1",
       title: "Personal Information",
       description: "Tell us about yourself",
+      icon: "👤",
       fields: [
         {
           type: "input",
@@ -32,28 +67,23 @@ const multiStepFormConfig = {
         },
         {
           type: "input",
-          name: "lastName",
+          name: "lastName", 
           label: "Last Name",
-          validation: [{ type: "required" }]
-        },
-        {
-          type: "date",
-          name: "birthDate",
-          label: "Date of Birth",
-          dateType: "date",
           validation: [{ type: "required" }]
         }
       ]
     },
     {
-      title: "Account Details",
-      description: "Set up your login credentials",
+      id: "step2",
+      title: "Contact Details",
+      description: "How can we reach you?",
+      icon: "📧",
       fields: [
         {
           type: "input",
+          inputType: "email",
           name: "email",
           label: "Email Address",
-          inputType: "email",
           validation: [
             { type: "required" },
             { type: "email" }
@@ -61,113 +91,154 @@ const multiStepFormConfig = {
         },
         {
           type: "input",
-          name: "password",
-          label: "Password",
-          inputType: "password",
-          validation: [
-            { type: "required" },
-            { type: "minLength", value: 8 }
-          ]
-        },
-        {
-          type: "input",
-          name: "confirmPassword",
-          label: "Confirm Password",
-          inputType: "password",
-          validation: [
-            { type: "required" },
-            {
-              type: "custom",
-              message: "Passwords must match",
-              validator: (value, formData) => value === formData.password
-            }
-          ]
-        }
-      ]
-    },
-    {
-      title: "Preferences",
-      description: "Customize your experience",
-      fields: [
-        {
-          type: "checkbox",
-          name: "newsletter",
-          label: "Subscribe to newsletter",
-          description: "Receive updates about new features"
-        },
-        {
-          type: "select",
-          name: "theme",
-          label: "Preferred Theme",
-          options: [
-            { value: "light", label: "Light" },
-            { value: "dark", label: "Dark" },
-            { value: "auto", label: "Auto" }
-          ],
-          defaultValue: "auto"
+          inputType: "tel",
+          name: "phone",
+          label: "Phone Number",
+          validation: [{ type: "required" }]
         }
       ]
     }
-  ]
-};
-```
-
-## Stepper Configuration
-
-Customize the stepper appearance and behavior:
-
-```typescript
-const formWithStepperConfig = {
-  id: "advanced-form",
-  title: "Advanced Multi-Step Form",
-  steps: [/* ... */],
+  ],
+  
+  // Stepper configuration
   stepper: {
-    variant: "default",              // Stepper visual style
-    orientation: "horizontal",       // Layout direction
-    showStepNumbers: true,           // Display step numbers
-    showStepTitles: true,           // Display step titles
-    validateOnNext: true,           // Validate current step before proceeding
-    allowSkipping: false,           // Allow jumping to any step
-    showProgress: true,             // Show progress indicator
-    className: "my-custom-stepper"  // Custom CSS class
+    variant: "default",           // "default" | "minimal" | "pills"
+    orientation: "horizontal",    // "horizontal" | "vertical"
+    position: "top",              // "top" | "left" | "right"
+    showStepNumbers: true,        // Show step numbers (1, 2, 3...)
+    showStepTitles: true,         // Show step titles
+    allowStepJumping: false,      // Allow clicking on future steps
+    validateOnNext: true,         // Validate before proceeding
+    buttons: {
+      previous: {
+        label: "Back",
+        variant: "outline"
+      },
+      next: {
+        label: "Continue", 
+        variant: "default"
+      },
+      submit: {
+        label: "Complete",
+        variant: "default"
+      }
+    }
   }
 };
 ```
 
-### Stepper Variants
+## Stepper Variants
 
-Form Engine provides several built-in stepper variants:
+### Default Stepper
+The standard stepper with full visual elements:
 
 ```typescript
-// Default variant with clean lines
-{
-  stepper: {
-    variant: "default",
-    orientation: "horizontal"
+stepper: {
+  variant: "default",
+  orientation: "horizontal",
+  showStepNumbers: true,
+  showStepTitles: true,
+  allowStepJumping: false,
+  validateOnNext: true
+}
+```
+
+### Vertical Stepper  
+Perfect for mobile layouts or narrow containers:
+
+```typescript
+stepper: {
+  variant: "default",
+  orientation: "vertical",
+  position: "left",
+  showStepNumbers: true,
+  showStepTitles: true
+}
+```
+
+### Minimal Stepper
+Clean design with free navigation:
+
+```typescript
+stepper: {
+  variant: "minimal", 
+  orientation: "horizontal",
+  showStepNumbers: false,
+  showStepTitles: false,
+  allowStepJumping: true,
+  validateOnNext: false
+}
+```
+
+## Navigation Control
+
+The stepper system provides several navigation control options:
+
+### Controlled Navigation
+Enforce step-by-step progression with validation:
+
+```typescript
+stepper: {
+  allowStepJumping: false,    // Users must complete steps in order
+  validateOnNext: true,       // Validate current step before proceeding
+  mode: "wizard"              // Wizard mode enforces linear progression
+}
+```
+
+### Free Navigation
+Allow users to move freely between steps:
+
+```typescript
+stepper: {
+  allowStepJumping: true,     // Users can click any step
+  validateOnNext: false,      // No validation required
+  mode: "free"                // Free mode allows any navigation
+}
+```
+
+### Custom Button Configuration
+Customize navigation button appearance and behavior:
+
+```typescript
+stepper: {
+  buttons: {
+    previous: {
+      label: "← Previous",
+      variant: "outline",
+      disabled: false
+    },
+    next: {
+      label: "Continue →",
+      variant: "default",
+      loadingText: "Processing..."
+    },
+    submit: {
+      label: "🎉 Complete",
+      variant: "default",
+      loadingText: "Submitting..."
+    }
   }
 }
+```
 
-// Pills variant with rounded indicators
-{
-  stepper: {
-    variant: "pills",
-    orientation: "horizontal"
-  }
-}
+## Stepper Events
 
-// Arrows variant with connected flow
-{
-  stepper: {
-    variant: "arrows", 
-    orientation: "horizontal"
-  }
-}
+Handle stepper navigation events:
 
-// Dots variant for minimal design
-{
-  stepper: {
-    variant: "dots",
-    orientation: "vertical"
+```typescript
+<FormRenderer 
+  config={multiStepConfig}
+  onStepChange={(stepIndex, step) => {
+    console.log(`Navigated to step ${stepIndex}: ${step.title}`);
+  }}
+  onStepComplete={(stepIndex, stepData) => {
+    console.log(`Completed step ${stepIndex}:`, stepData);
+  }}
+  onValidationError={(stepIndex, errors) => {
+    console.log(`Validation failed on step ${stepIndex}:`, errors);
+  }}
+/>
+```
   }
 }
 ```

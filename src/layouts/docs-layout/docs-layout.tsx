@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Github, Sun, Moon, Home, ChevronRight, ChevronDown } from 'lucide-react';
+import { Search, Github, Sun, Moon, ChevronRight, ChevronDown, Code2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -39,6 +39,7 @@ import {
 import { useTheme } from '@/hooks/use-theme';
 import type { EcoComponent } from '@ecopages/core';
 import type { ReactNode } from 'react';
+import pkg from '../../../package.json';
 import './docs-layout.css';
 
 export interface DocsSection {
@@ -136,16 +137,16 @@ function DocsSidebar({ currentPath }: { currentPath?: string }) {
 		<Sidebar variant="sidebar">
 			<SidebarHeader className="p-4 border-b">
 				<div className="space-y-4">
-					{/* Version Switcher Replacement */}
-					<div className="flex items-center gap-2">
+					{/* Project Title - Clickable */}
+					<a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
 						<div className="bg-primary text-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-							<span className="text-sm font-bold">FE</span>
+							<Code2 className="h-4 w-4" />
 						</div>
 						<div className="flex flex-col gap-0.5 leading-none">
 							<span className="font-medium">Form Engine</span>
-							<span className="text-xs text-muted-foreground">v1.0.0</span>
+							<span className="text-xs text-muted-foreground">v{pkg.version}</span>
 						</div>
-					</div>
+					</a>
 
 					{/* Search Replacement */}
 					<div className="relative">
@@ -257,15 +258,11 @@ export const DocsLayout: EcoComponent<DocsLayoutProps, ReactNode> = ({ children,
 		<SidebarProvider defaultOpen>
 			<DocsSidebar currentPath={currentPath} />
 			<SidebarInset>
-				<header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear">
+				<header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-[width,height] ease-linear">
 					<div className="flex items-center gap-2">
 						<SidebarTrigger className="-ml-1" />
 						<div className="flex items-center gap-4 ml-2">
 							<div className="hidden md:flex items-center">
-								<a className="mr-6 flex items-center space-x-2" href="/">
-									<Home className="h-6 w-6" />
-									<span className="hidden font-bold sm:inline-block">Form Engine</span>
-								</a>
 								<nav className="flex items-center space-x-6 text-sm font-medium">
 									<a
 										className="transition-colors hover:text-foreground/80 text-foreground/60"
@@ -288,14 +285,13 @@ export const DocsLayout: EcoComponent<DocsLayoutProps, ReactNode> = ({ children,
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button variant="outline" size="sm" className="h-8 gap-1">
-									v1.0.0
+									v{pkg.version}
 									<ChevronDown className="h-3 w-3" />
 								</Button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="end">
-								<DropdownMenuItem>v1.0.0</DropdownMenuItem>
-								<DropdownMenuItem>v1.1.0-alpha</DropdownMenuItem>
-								<DropdownMenuItem>v2.0.0-beta</DropdownMenuItem>
+								<DropdownMenuItem>v{pkg.version}</DropdownMenuItem>
+								<DropdownMenuItem disabled>v1.1.0 (coming soon)</DropdownMenuItem>
 							</DropdownMenuContent>
 						</DropdownMenu>
 

@@ -1,11 +1,1005 @@
 import { DocsLayout } from '@/layouts/docs-layout';
+import { SimpleInputDemo } from '@/components/simple-input-demo';
+import { SimpleConditionalDemo } from '@/components/simple-conditional-demo';
+import { SimpleGridDemo } from '@/components/simple-grid-demo';
+import { ValidationDemo } from '@/components/validation-demo';
 
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
   title: 'Examples | Form Engine Documentation',
-  description: 'Real-world examples and use cases for Form Engine.',
+  description: 'Comprehensive examples showing how to use Form Engine features.',
 })
+
+# Examples
+
+Real-world examples demonstrating Form Engine capabilities with focused, interactive demonstrations.
+
+## Basic Form with Validation
+
+Learn the fundamentals with a simple form that includes validation:
+
+<SimpleInputDemo />
+
+**Key concepts demonstrated:**
+- Basic field configuration
+- Required field validation
+- Email validation
+- Form submission handling
+
+## Conditional Field Logic
+
+See how fields can appear and disappear based on user input:
+
+<SimpleConditionalDemo />
+
+**Key concepts demonstrated:**
+- Constraint-based conditional logic
+- Show/hide field actions
+- Dynamic form behavior
+
+## Responsive Grid Layout
+
+Experience how forms adapt to different screen sizes:
+
+<SimpleGridDemo />
+
+**Key concepts demonstrated:**
+- Responsive grid configuration
+- Mobile-first design approach
+- Breakpoint-based layouts
+
+## Advanced Validation Rules
+
+Explore different validation scenarios:
+
+<ValidationDemo />
+
+**Key concepts demonstrated:**
+- Multiple validation rules per field
+- Custom error messages
+- Numeric range validation
+- Optional field validation
+
+## Additional Live Examples
+
+<div className="bg-blue-50 border border-blue-200 rounded-lg p-6 my-8">
+  <h3 className="text-lg font-semibold text-blue-800 mb-2">🎯 More Interactive Demos</h3>
+  <p className="text-blue-700 mb-4">
+    For even more complex examples, check out these specialized demo pages:
+  </p>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <a href="/multi-step-forms" className="block p-4 bg-white rounded-lg border border-blue-200 hover:border-blue-300 transition-colors">
+      <h4 className="font-semibold text-blue-800">Multi-Step Forms</h4>
+      <p className="text-sm text-blue-600">Registration wizard with step navigation</p>
+    </a>
+    <a href="/actions" className="block p-4 bg-white rounded-lg border border-blue-200 hover:border-blue-300 transition-colors">
+      <h4 className="font-semibold text-blue-800">Actions System</h4>
+      <p className="text-sm text-blue-600">Auto-save, analytics, and form behaviors</p>
+    </a>
+    <a href="/showcase" className="block p-4 bg-white rounded-lg border border-blue-200 hover:border-blue-300 transition-colors">
+      <h4 className="font-semibold text-blue-800">Complete Showcase</h4>
+      <p className="text-sm text-blue-600">All features in one comprehensive demo</p>
+    </a>
+  </div>
+</div>
+
+## Code Examples
+
+### Basic Form Configuration
+
+Here's the configuration that powers the basic demo above:
+
+```typescript
+import { FormRenderer } from "@/lib/form-engine";
+import { ValidationPresets } from "@/lib/form-engine/validation";
+import type { FormConfig } from "@/lib/form-engine/types";
+
+const basicFormConfig: FormConfig = {
+  id: "demo-form",
+  title: "Interactive Form Demo",
+  description: "Try out different field types and configurations",
+  autoGenerateSchema: true,
+  mode: "free",
+  steps: [
+    {
+      id: "demo-step",
+      title: "Demo Form",
+      fields: [
+        {
+          type: "input",
+          inputType: "text",
+          id: "name",
+          name: "name",
+          label: "Full Name",
+          placeholder: "Enter your full name",
+          validation: [
+            ValidationPresets.minLength(2, "Name must be at least 2 characters"),
+            ValidationPresets.maxLength(50, "Name cannot exceed 50 characters"),
+          ],
+        },
+        {
+          type: "input",
+          inputType: "email",
+          id: "email",
+          name: "email",
+          label: "Email Address",
+          placeholder: "Enter your email",
+          validation: [ValidationPresets.email("Please enter a valid email address")],
+        },
+        // ... more fields
+      ],
+    },
+  ],
+  actions: [
+    {
+      id: "demo-form-submit",
+      type: "submit",
+      description: "Submit demo form",
+      successMessage: "Message sent successfully!",
+      errorMessage: "Failed to send message. Please try again.",
+      enabled: true,
+    },
+  ],
+};
+
+// Usage
+export function ContactForm() {
+  return <FormRenderer config={basicFormConfig} onSubmit={console.log} />;
+}
+```
+
+### Conditional Logic Configuration
+
+This is the configuration for the conditional demo:
+
+```typescript
+const conditionalFormConfig: FormConfig = {
+  id: "conditional-demo",
+  title: "Event Registration",
+  autoGenerateSchema: true,
+  steps: [{
+    id: "registration-details",
+    title: "Registration Details",
+    fields: [
+      {
+        type: "select",
+        id: "attendanceType",
+        name: "attendanceType",
+        label: "Attendance Type",
+        validation: [ValidationPresets.required("Please select attendance type")],
+        options: [
+          { value: "in-person", label: "In Person" },
+          { value: "virtual", label: "Virtual" }
+        ]
+      },
+      // This field only shows when "in-person" is selected
+      {
+        type: "input",
+        inputType: "text",
+        id: "address",
+        name: "address",
+        label: "Address",
+        placeholder: "Enter your address",
+        validation: [ValidationPresets.required("Address is required for in-person attendance")],
+        constraints: [
+          {
+            field: "attendanceType",
+            operator: "equals",
+            value: "in-person",
+            action: "show"
+          }
+        ]
+      },
+      // This field only shows when "virtual" is selected
+      {
+        type: "input",
+        inputType: "email",
+        id: "virtualEmail",
+        name: "virtualEmail",
+        label: "Email for Virtual Link",
+        placeholder: "Enter email for meeting link",
+        validation: [
+          ValidationPresets.required("Email is required for virtual attendance"),
+          ValidationPresets.email("Please enter a valid email")
+        ],
+        constraints: [
+          {
+            field: "attendanceType",
+            operator: "equals",
+            value: "virtual",
+            action: "show"
+          }
+        ]
+      }
+    ]
+  }]
+};
+```
+
+### Responsive Grid Configuration
+
+This shows how the responsive grid demo is configured:
+
+```typescript
+const responsiveFormConfig: FormConfig = {
+  id: "responsive-demo",
+  title: "Responsive Contact Form",
+  autoGenerateSchema: true,
+  grid: {
+    columns: 1,
+    gap: "1rem",
+    responsive: {
+      default: { columns: 1, gap: "1rem" },    // Mobile: single column
+      md: { columns: 2, gap: "1.5rem" },       // Tablet: two columns
+      lg: { columns: 3, gap: "2rem" }          // Desktop: three columns
+    }
+  },
+  steps: [{
+    id: "contact-info",
+    title: "Contact Information",
+    fields: [
+      {
+        type: "input",
+        inputType: "text",
+        id: "firstName",
+        name: "firstName",
+        label: "First Name",
+        validation: [ValidationPresets.required("First name is required")],
+        grid: {
+          responsive: {
+            default: { column: "1 / -1" },  // Full width on mobile
+            md: { column: "1 / 2" }         // Half width on tablet+
+          }
+        }
+      },
+      {
+        type: "input",
+        inputType: "text",
+        id: "lastName",
+        name: "lastName",
+        label: "Last Name",
+        validation: [ValidationPresets.required("Last name is required")],
+        grid: {
+          responsive: {
+            default: { column: "1 / -1" },  // Full width on mobile
+            md: { column: "2 / 3" }         // Half width on tablet+
+          }
+        }
+      },
+      // ... more fields with grid configurations
+    ]
+  }]
+};
+```
+
+## Real Working Code Examples
+
+Below are actual configuration examples that power the live demos. You can copy these directly into your application:
+
+### Basic Contact Form Configuration
+
+This is the exact configuration used in the [Basic Demo](/basic-demo):
+
+```typescript
+import { FormRenderer } from "@/lib/form-engine";
+import { ValidationPresets } from "@/lib/form-engine/validation";
+import type { FormConfig } from "@/lib/form-engine/types";
+
+const contactFormConfig: FormConfig = {
+  id: "demo-form",
+  title: "Interactive Form Demo",
+  description: "Try out different field types and configurations",
+  autoGenerateSchema: true,
+  mode: "free",
+  steps: [
+    {
+      id: "demo-step",
+      title: "Demo Form",
+      description: "Fill out the form below",
+      fields: [
+        {
+          type: "input",
+          inputType: "text",
+          id: "name",
+          name: "name",
+          label: "Full Name",
+          placeholder: "Enter your full name",
+          validation: [
+            ValidationPresets.minLength(2, "Name must be at least 2 characters"),
+            ValidationPresets.maxLength(50, "Name cannot exceed 50 characters"),
+          ],
+        },
+        {
+          type: "input",
+          inputType: "email",
+          id: "email",
+          name: "email",
+          label: "Email Address",
+          placeholder: "Enter your email",
+          validation: [ValidationPresets.email("Please enter a valid email address")],
+        },
+        {
+          type: "number",
+          id: "age",
+          name: "age",
+          label: "Age",
+          placeholder: "Enter your age",
+          validation: [
+            ValidationPresets.min(18, "Must be at least 18 years old"),
+            ValidationPresets.max(120, "Age must be realistic"),
+          ],
+        },
+        {
+          type: "input",
+          inputType: "url",
+          id: "website",
+          name: "website",
+          label: "Website (Optional)",
+          placeholder: "https://example.com",
+          validation: [ValidationPresets.url("Please enter a valid URL")],
+        },
+        {
+          type: "textarea",
+          id: "bio",
+          name: "bio",
+          label: "Bio",
+          placeholder: "Tell us about yourself...",
+          rows: 4,
+          validation: [ValidationPresets.maxLength(500, "Bio cannot exceed 500 characters")],
+        },
+        {
+          type: "select",
+          id: "country",
+          name: "country",
+          label: "Country",
+          placeholder: "Select your country",
+          validation: [{ type: "required", message: "Please select your country" }],
+          options: [
+            { value: "us", label: "United States" },
+            { value: "ca", label: "Canada" },
+            { value: "uk", label: "United Kingdom" },
+            { value: "de", label: "Germany" },
+            { value: "fr", label: "France" },
+            { value: "jp", label: "Japan" },
+            { value: "au", label: "Australia" },
+          ],
+        },
+        {
+          type: "checkbox",
+          id: "newsletter",
+          name: "newsletter",
+          label: "Subscribe to newsletter",
+        },
+        {
+          type: "checkbox",
+          id: "terms",
+          name: "terms",
+          label: "I agree to the terms and conditions",
+          validation: [{ type: "required", message: "You must accept the terms and conditions" }],
+        },
+      ],
+    },
+  ],
+  actions: [
+    {
+      id: "demo-form-submit",
+      type: "submit",
+      description: "Submit demo form",
+      endpoint: "/api/submit-demo",
+      method: "POST",
+      successMessage: "Message sent successfully!",
+      errorMessage: "Failed to send message. Please try again.",
+      enabled: true,
+    },
+    {
+      id: "reset-after-success",
+      type: "reset",
+      enabled: true,
+      triggers: ["submit_success"],
+      resetToDefaults: true,
+    },
+  ],
+};
+
+// Usage
+export function ContactForm() {
+  return <FormRenderer config={contactFormConfig} onSubmit={console.log} />;
+}
+```
+
+### Conditional Logic Example
+
+This configuration shows dynamic field behavior based on user selections:
+
+```typescript
+const conditionalFormConfig: FormConfig = {
+  id: "conditional-demo",
+  title: "Event Registration",
+  autoGenerateSchema: true,
+  steps: [{
+    id: "registration-details",
+    title: "Registration Details",
+    fields: [
+      {
+        type: "input",
+        inputType: "text",
+        id: "name",
+        name: "name",
+        label: "Full Name",
+        validation: [ValidationPresets.required("Name is required")]
+      },
+      {
+        type: "select",
+        id: "attendanceType",
+        name: "attendanceType",
+        label: "Attendance Type",
+        validation: [ValidationPresets.required("Please select attendance type")],
+        options: [
+          { value: "in-person", label: "In Person" },
+          { value: "virtual", label: "Virtual" }
+        ]
+      },
+      // This field only shows when "in-person" is selected
+      {
+        type: "input",
+        inputType: "text",
+        id: "address",
+        name: "address",
+        label: "Address",
+        placeholder: "Enter your address",
+        validation: [ValidationPresets.required("Address is required for in-person attendance")],
+        constraints: [
+          {
+            field: "attendanceType",
+            operator: "equals",
+            value: "in-person",
+            action: "show"
+          }
+        ]
+      },
+      // This field only shows when "virtual" is selected
+      {
+        type: "input",
+        inputType: "email",
+        id: "virtualEmail",
+        name: "virtualEmail",
+        label: "Email for Virtual Link",
+        placeholder: "Enter email for meeting link",
+        validation: [
+          ValidationPresets.required("Email is required for virtual attendance"),
+          ValidationPresets.email("Please enter a valid email")
+        ],
+        constraints: [
+          {
+            field: "attendanceType",
+            operator: "equals",
+            value: "virtual",
+            action: "show"
+          }
+        ]
+      }
+    ]
+  }]
+};
+```
+
+### Responsive Grid Layout
+
+This example shows how forms adapt to different screen sizes:
+
+```typescript
+const responsiveFormConfig: FormConfig = {
+  id: "responsive-demo",
+  title: "Responsive Contact Form",
+  autoGenerateSchema: true,
+  grid: {
+    columns: 1,
+    gap: "1rem",
+    responsive: {
+      default: { columns: 1, gap: "1rem" },    // Mobile: single column
+      md: { columns: 2, gap: "1.5rem" },       // Tablet: two columns
+      lg: { columns: 3, gap: "2rem" }          // Desktop: three columns
+    }
+  },
+  steps: [{
+    id: "contact-info",
+    title: "Contact Information",
+    fields: [
+      {
+        type: "input",
+        inputType: "text",
+        id: "firstName",
+        name: "firstName",
+        label: "First Name",
+        validation: [ValidationPresets.required("First name is required")],
+        grid: {
+          responsive: {
+            default: { column: "1 / -1" },  // Full width on mobile
+            md: { column: "1 / 2" },        // First column on tablet+
+            lg: { column: "1 / 2" }         // First column on desktop
+          }
+        }
+      },
+      {
+        type: "input",
+        inputType: "text",
+        id: "lastName",
+        name: "lastName",
+        label: "Last Name",
+        validation: [ValidationPresets.required("Last name is required")],
+        grid: {
+          responsive: {
+            default: { column: "1 / -1" },  // Full width on mobile
+            md: { column: "2 / 3" },        // Second column on tablet+
+            lg: { column: "2 / 3" }         // Second column on desktop
+          }
+        }
+      },
+      {
+        type: "input",
+        inputType: "email",
+        id: "email",
+        name: "email",
+        label: "Email Address",
+        validation: [
+          ValidationPresets.required("Email is required"),
+          ValidationPresets.email("Please enter a valid email")
+        ],
+        grid: {
+          responsive: {
+            default: { column: "1 / -1" },  // Full width on mobile
+            md: { column: "1 / -1" },       // Full width on tablet
+            lg: { column: "3 / 4" }         // Third column on desktop
+          }
+        }
+      }
+    ]
+  }]
+};
+```
+
+## Testing Your Forms
+
+Form Engine includes a viewport preview component for testing responsive behavior:
+
+```typescript
+import { ViewportPreview } from "@/lib/form-engine";
+
+// Test your form in different viewport sizes
+export function FormTesting() {
+  return (
+    <div className="space-y-8">
+      <h2>Desktop View</h2>
+      <FormRenderer config={responsiveFormConfig} />
+      
+      <h2>Mobile Preview</h2>
+      <ViewportPreview title="iPhone 12" width={390} height={844}>
+        <FormRenderer config={responsiveFormConfig} />
+      </ViewportPreview>
+    </div>
+  );
+}
+```## Multi-Step Registration Form
+
+A comprehensive registration flow with multiple steps and validation:
+
+```typescript
+const registrationFormConfig: FormConfig = {
+  id: "registration-form",
+  title: "User Registration",
+  description: "Create your account in a few simple steps",
+  autoGenerateSchema: true,
+  steps: [
+    {
+      id: "personal-info",
+      title: "Personal Information", 
+      description: "Tell us about yourself",
+      fields: [
+        {
+          type: "input",
+          inputType: "text",
+          id: "firstName",
+          name: "firstName",
+          label: "First Name",
+          placeholder: "Enter your first name",
+          validation: [ValidationPresets.required("First name is required")]
+        },
+        {
+          type: "input",
+          inputType: "text", 
+          id: "lastName",
+          name: "lastName",
+          label: "Last Name",
+          placeholder: "Enter your last name",
+          validation: [ValidationPresets.required("Last name is required")]
+        },
+        {
+          type: "input",
+          inputType: "email",
+          id: "email", 
+          name: "email",
+          label: "Email Address",
+          placeholder: "Enter your email",
+          validation: [
+            ValidationPresets.required("Email is required"),
+            ValidationPresets.email("Please enter a valid email")
+          ]
+        },
+        {
+          type: "number",
+          id: "age",
+          name: "age",
+          label: "Age",
+          placeholder: "Enter your age",
+          validation: [
+            ValidationPresets.required("Age is required"),
+            ValidationPresets.min(18, "Must be at least 18 years old"),
+            ValidationPresets.max(120, "Age must be realistic")
+          ]
+        }
+      ]
+    },
+    {
+      id: "preferences",
+      title: "Preferences",
+      description: "Customize your experience",
+      fields: [
+        {
+          type: "select",
+          id: "country",
+          name: "country", 
+          label: "Country",
+          placeholder: "Select your country",
+          validation: [ValidationPresets.required("Please select your country")],
+          options: [
+            { value: "us", label: "United States" },
+            { value: "ca", label: "Canada" },
+            { value: "uk", label: "United Kingdom" },
+            { value: "de", label: "Germany" },
+            { value: "fr", label: "France" }
+          ]
+        },
+        {
+          type: "checkbox",
+          id: "newsletter",
+          name: "newsletter",
+          label: "Subscribe to newsletter"
+        },
+        {
+          type: "checkbox",
+          id: "terms",
+          name: "terms", 
+          label: "I agree to the terms and conditions",
+          validation: [ValidationPresets.required("You must accept the terms")]
+        }
+      ]
+    }
+  ],
+  actions: [
+    {
+      id: "registration-submit",
+      type: "submit",
+      description: "Submit registration",
+      endpoint: "/api/register",
+      method: "POST", 
+      successMessage: "Registration successful!",
+      errorMessage: "Registration failed. Please try again.",
+      enabled: true
+    }
+  ]
+};
+```
+
+## Conditional Logic Form
+
+Form with fields that show/hide based on other field values:
+
+```typescript
+const conditionalFormConfig: FormConfig = {
+  id: "conditional-form",
+  title: "Event Registration",
+  autoGenerateSchema: true,
+  steps: [{
+    id: "registration-details",
+    title: "Registration Details",
+    fields: [
+      {
+        type: "input",
+        inputType: "text",
+        id: "name",
+        name: "name", 
+        label: "Full Name",
+        validation: [ValidationPresets.required("Name is required")]
+      },
+      {
+        type: "select",
+        id: "attendanceType",
+        name: "attendanceType",
+        label: "Attendance Type",
+        validation: [ValidationPresets.required("Please select attendance type")],
+        options: [
+          { value: "in-person", label: "In Person" },
+          { value: "virtual", label: "Virtual" }
+        ]
+      },
+      {
+        type: "input",
+        inputType: "text",
+        id: "address",
+        name: "address",
+        label: "Address",
+        placeholder: "Enter your address",
+        validation: [ValidationPresets.required("Address is required for in-person attendance")],
+        constraints: [
+          {
+            field: "attendanceType",
+            operator: "equals",
+            value: "in-person", 
+            action: "show"
+          }
+        ]
+      },
+      {
+        type: "input",
+        inputType: "email",
+        id: "virtualEmail",
+        name: "virtualEmail",
+        label: "Email for Virtual Link",
+        placeholder: "Enter email for meeting link",
+        validation: [
+          ValidationPresets.required("Email is required for virtual attendance"),
+          ValidationPresets.email("Please enter a valid email")
+        ],
+        constraints: [
+          {
+            field: "attendanceType", 
+            operator: "equals",
+            value: "virtual",
+            action: "show"
+          }
+        ]
+      }
+    ]
+  }]
+};
+```
+
+## Responsive Grid Layout
+
+Form with responsive grid positioning for different screen sizes:
+
+```typescript
+const responsiveFormConfig: FormConfig = {
+  id: "responsive-form",
+  title: "Responsive Contact Form",
+  autoGenerateSchema: true,
+  grid: {
+    columns: 1,
+    gap: "1rem",
+    responsive: {
+      default: { columns: 1, gap: "1rem" }, // Mobile: single column
+      md: { columns: 2, gap: "1.5rem" },    // Tablet: two columns  
+      lg: { columns: 3, gap: "2rem" }       // Desktop: three columns
+    }
+  },
+  steps: [{
+    id: "contact-info",
+    title: "Contact Information", 
+    fields: [
+      {
+        type: "input",
+        inputType: "text",
+        id: "firstName", 
+        name: "firstName",
+        label: "First Name",
+        validation: [ValidationPresets.required("First name is required")],
+        grid: {
+          responsive: {
+            default: { column: "1 / -1" }, // Full width on mobile
+            md: { column: "1 / 2" },       // First column on tablet+
+            lg: { column: "1 / 2" }        // First column on desktop
+          }
+        }
+      },
+      {
+        type: "input",
+        inputType: "text",
+        id: "lastName",
+        name: "lastName", 
+        label: "Last Name",
+        validation: [ValidationPresets.required("Last name is required")],
+        grid: {
+          responsive: {
+            default: { column: "1 / -1" }, // Full width on mobile
+            md: { column: "2 / 3" },       // Second column on tablet+
+            lg: { column: "2 / 3" }        // Second column on desktop
+          }
+        }
+      },
+      {
+        type: "input",
+        inputType: "email",
+        id: "email",
+        name: "email",
+        label: "Email Address", 
+        validation: [
+          ValidationPresets.required("Email is required"),
+          ValidationPresets.email("Please enter a valid email")
+        ],
+        grid: {
+          responsive: {
+            default: { column: "1 / -1" }, // Full width on mobile
+            md: { column: "1 / -1" },      // Full width on tablet
+            lg: { column: "3 / 4" }        // Third column on desktop
+          }
+        }
+      }
+    ]
+  }]
+};
+```
+
+## Form with Actions
+
+Form demonstrating the action system for submissions and side effects:
+
+```typescript
+const actionFormConfig: FormConfig = {
+  id: "action-demo-form",
+  title: "Action Demo Form",
+  autoGenerateSchema: true,
+  steps: [{
+    id: "demo-step",
+    title: "Demo Form",
+    fields: [
+      {
+        type: "input",
+        inputType: "text",
+        id: "name",
+        name: "name",
+        label: "Name",
+        validation: [ValidationPresets.required("Name is required")]
+      },
+      {
+        type: "input", 
+        inputType: "email",
+        id: "email",
+        name: "email",
+        label: "Email",
+        validation: [
+          ValidationPresets.required("Email is required"),
+          ValidationPresets.email("Please enter a valid email")
+        ]
+      }
+    ]
+  }],
+  actions: [
+    // Main form submission
+    {
+      id: "main-submit",
+      type: "submit", 
+      description: "Submit form data",
+      endpoint: "/api/submit",
+      method: "POST",
+      successMessage: "Form submitted successfully!",
+      errorMessage: "Submission failed. Please try again.",
+      enabled: true
+    },
+    // Reset form after successful submission
+    {
+      id: "reset-after-success",
+      type: "reset",
+      description: "Reset form after success",
+      enabled: true,
+      triggers: ["submit_success"],
+      resetToDefaults: true
+    }
+  ]
+};
+```
+
+## Field Types Showcase
+
+Example showing all available field types:
+
+```typescript
+const fieldTypesConfig: FormConfig = {
+  id: "field-types-showcase", 
+  title: "All Field Types",
+  autoGenerateSchema: true,
+  steps: [{
+    id: "field-showcase",
+    title: "Field Types",
+    fields: [
+      // Text Input
+      {
+        type: "input",
+        inputType: "text",
+        id: "textInput",
+        name: "textInput",
+        label: "Text Input",
+        placeholder: "Enter text"
+      },
+      // Email Input
+      {
+        type: "input", 
+        inputType: "email",
+        id: "emailInput",
+        name: "emailInput",
+        label: "Email Input",
+        placeholder: "Enter email"
+      },
+      // Number Input
+      {
+        type: "number",
+        id: "numberInput",
+        name: "numberInput",
+        label: "Number Input",
+        placeholder: "Enter number"
+      },
+      // Textarea
+      {
+        type: "textarea",
+        id: "textareaInput",
+        name: "textareaInput", 
+        label: "Textarea",
+        placeholder: "Enter long text",
+        rows: 3
+      },
+      // Select Dropdown
+      {
+        type: "select",
+        id: "selectInput",
+        name: "selectInput",
+        label: "Select Dropdown",
+        placeholder: "Choose option",
+        options: [
+          { value: "option1", label: "Option 1" },
+          { value: "option2", label: "Option 2" },
+          { value: "option3", label: "Option 3" }
+        ]
+      },
+      // Checkbox
+      {
+        type: "checkbox",
+        id: "checkboxInput",
+        name: "checkboxInput",
+        label: "Checkbox Option"
+      },
+      // Radio Group  
+      {
+        type: "radio",
+        id: "radioInput",
+        name: "radioInput",
+        label: "Radio Group",
+        options: [
+          { value: "radio1", label: "Radio 1" },
+          { value: "radio2", label: "Radio 2" },
+          { value: "radio3", label: "Radio 3" }
+        ]
+      },
+      // Date Input
+      {
+        type: "date",
+        id: "dateInput",
+        name: "dateInput",
+        label: "Date Input",
+        dateType: "date"
+      },
+      // Switch Toggle
+      {
+        type: "switch",
+        id: "switchInput", 
+        name: "switchInput",
+        label: "Switch Toggle"
+      }
+    ]
+  }]
+};
+```
+
+These examples demonstrate the core capabilities of Form Engine as currently implemented. Each example can be used directly in your application by importing the necessary components from `@/lib/form-engine`.
 
 # Examples
 

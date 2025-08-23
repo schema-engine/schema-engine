@@ -9,45 +9,502 @@ export const getMetadata = () => ({
 
 # API Reference
 
-Complete reference for all Form Engine components, hooks, and types.
+Complete reference for all Form Engine components, hooks, and types currently implemented.
 
-## Components
+## Core Components
 
 ### FormRenderer
 
-The main component for rendering forms from configuration.
+The main component for rendering forms from configuration objects.
 
 ```typescript
 import { FormRenderer } from "@/lib/form-engine";
+import type { FormConfig } from "@/lib/form-engine/types";
 
 interface FormRendererProps {
   config: FormConfig;
-  onSubmit: (data: any) => void | Promise<void>;
+  onSubmit?: (data: any) => void | Promise<void>;
   onChange?: (data: any) => void;
   initialValues?: Record<string, any>;
   className?: string;
 }
 
+// Basic usage
 <FormRenderer
   config={formConfig}
   onSubmit={handleSubmit}
   onChange={handleChange}
-  initialValues={defaultValues}
   className="my-form"
 />
 ```
 
 #### Props
 
-- **config** (`FormConfig`) - Required. The form configuration object
-- **onSubmit** (`(data: any) => void | Promise<void>`) - Required. Called when form is submitted
-- **onChange** (`(data: any) => void`) - Optional. Called when form values change
-- **initialValues** (`Record<string, any>`) - Optional. Initial form values
-- **className** (`string`) - Optional. CSS class for the form container
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `config` | `FormConfig` | Yes | Form configuration object defining structure and behavior |
+| `onSubmit` | `(data: any) => void \| Promise<void>` | No | Called when form is submitted successfully |
+| `onChange` | `(data: any) => void` | No | Called whenever form values change |
+| `initialValues` | `Record<string, any>` | No | Default values for form fields |
+| `className` | `string` | No | CSS class applied to form container |
+
+### FieldRenderer
+
+Low-level component for rendering individual form fields.
+
+```typescript
+import { FieldRenderer } from "@/lib/form-engine";
+import type { FieldConfig } from "@/lib/form-engine/types";
+
+interface FieldRendererProps {
+  field: FieldConfig;
+  form: UseFormReturn;
+  className?: string;
+}
+
+<FieldRenderer 
+  field={fieldConfig} 
+  form={formInstance}
+  className="field-wrapper" 
+/>
+```
+
+### GridContainer
+
+Container component for responsive grid layouts.
+
+```typescript
+import { GridContainer } from "@/lib/form-engine";
+
+<GridContainer 
+  gridConfig={gridConfig}
+  className="form-grid"
+>
+  {children}
+</GridContainer>
+```
 
 ### Stepper
 
 Multi-step form navigation component with compound pattern.
+
+```typescript
+import { Stepper } from "@/lib/form-engine";
+
+<Stepper sections={formSections} currentStep={currentStep}>
+  <Stepper.Header 
+    variant="default" 
+    orientation="horizontal" 
+    className="mb-8" 
+  />
+  <Stepper.Content>
+    {currentStepContent}
+  </Stepper.Content>
+  <Stepper.Navigation
+    previousButton={{ label: "Back", variant: "outline" }}
+    nextButton={{ label: "Next", variant: "default" }}
+  />
+</Stepper>
+```
+
+### ViewportPreview
+
+Component for testing responsive layouts in different viewport sizes.
+
+```typescript
+import { ViewportPreview } from "@/lib/form-engine";
+
+<ViewportPreview 
+  title="iPhone 12" 
+  width={390} 
+  height={844}
+>
+  <FormRenderer config={mobileFormConfig} />
+</ViewportPreview>
+```
+
+## Validation
+
+### ValidationPresets
+
+Pre-built validation rules using Zod schemas.
+
+```typescript
+import { ValidationPresets } from "@/lib/form-engine/validation";
+
+// Available presets
+ValidationPresets.required(message?: string)
+ValidationPresets.email(message?: string)
+ValidationPresets.url(message?: string)
+ValidationPresets.minLength(length: number, message?: string)
+ValidationPresets.maxLength(length: number, message?: string)
+ValidationPresets.min(value: number, message?: string)
+ValidationPresets.max(value: number, message?: string)
+ValidationPresets.regex(pattern: RegExp, message?: string)
+
+// Usage in field config
+{
+  type: "input",
+  name: "email",
+  validation: [
+    ValidationPresets.required("Email is required"),
+    ValidationPresets.email("Please enter a valid email")
+  ]
+}
+```
+
+## Actions System
+
+### Action Types
+
+Currently implemented action types for form behavior:
+
+#### Submit Action
+
+Handles form submissions to API endpoints.
+
+```typescript
+{
+  id: "form-submit",
+  type: "submit",
+  description: "Submit form data",
+  endpoint: "/api/submit",
+  method: "POST" | "PUT" | "PATCH",
+  headers?: Record<string, string>,
+  successMessage?: string,
+  errorMessage?: string,
+  enabled: boolean,
+  triggers?: ActionTrigger[]
+}
+```
+
+#### Reset Action
+
+Resets form to initial or default values.
+
+```typescript
+{
+  id: "form-reset",
+  type: "reset", 
+  description: "Reset form",
+  enabled: boolean,
+  triggers?: ActionTrigger[],
+  resetToDefaults?: boolean
+}
+```
+
+#### Auto Save Action
+
+Automatically saves form progress as draft.
+
+```typescript
+{
+  id: "auto-save",
+  type: "auto_save_draft",
+  description: "Auto save form progress",
+  mode: "debounced" | "interval",
+  debounceMs?: number,
+  intervalMs?: number,
+  formId: string,
+  enabled: boolean,
+  showNotification?: boolean
+}
+```
+
+#### GTM Event Action
+
+Sends events to Google Tag Manager for analytics.
+
+```typescript
+{
+  id: "analytics-event",
+  type: "gtm_event",
+  description: "Track form event",
+  eventName: string,
+  eventData?: Record<string, any>,
+  includeFormData?: boolean | string[],
+  includeMetadata?: boolean,
+  enabled: boolean
+}
+```
+
+#### Notification Action
+
+Displays user notifications and messages.
+
+```typescript
+{
+  id: "show-notification",
+  type: "notification",
+  description: "Show user notification",
+  message: string,
+  variant: "success" | "error" | "warning" | "info",
+  duration?: number,
+  enabled: boolean
+}
+```
+
+### Action Triggers
+
+Events that can trigger action execution:
+
+```typescript
+type ActionTrigger =
+  | "form_start"      // When form initializes
+  | "form_change"     // When any field value changes
+  | "form_submit"     // When form submission starts
+  | "submit_start"    // When submit process begins
+  | "submit_success"  // When submit completes successfully
+  | "submit_error"    // When submit fails
+  | "submit_complete" // When submit process finishes
+  | "step_change"     // When navigating between steps
+  | "step_submit"     // When submitting a specific step
+  | "step_enter"      // When entering a step
+  | "step_leave"      // When leaving a step
+  | "step_view"       // When step becomes visible
+  | "manual_save"     // When user saves manually
+  | "manual_reset";   // When user resets manually
+```
+
+## Type Definitions
+
+### Core Types
+
+#### FormConfig
+
+Main configuration object for defining forms.
+
+```typescript
+interface FormConfig {
+  id: string;
+  title?: string;
+  description?: string;
+  steps: FormStepConfig[];
+  actions?: FormActionConfig[];
+  grid?: GridLayoutConfig;
+  schema?: z.ZodSchema<any>;
+  autoGenerateSchema?: boolean;
+  mode?: "free" | "strict";
+}
+```
+
+#### FormStepConfig
+
+Configuration for individual form steps.
+
+```typescript
+interface FormStepConfig {
+  id: string;
+  title?: string;
+  description?: string;
+  fields: FieldConfig[];
+  validation?: z.ZodSchema<any>;
+  actions?: FormActionConfig[];
+}
+```
+
+#### FieldConfig
+
+Union type for all field configurations.
+
+```typescript
+type FieldConfig =
+  | InputFieldConfig
+  | NumberFieldConfig
+  | TextareaFieldConfig
+  | SelectFieldConfig
+  | CheckboxFieldConfig
+  | RadioFieldConfig
+  | DateFieldConfig
+  | FileFieldConfig
+  | SwitchFieldConfig
+  | ArrayFieldConfig;
+```
+
+### Field Type Configurations
+
+#### InputFieldConfig
+
+Text input field configuration.
+
+```typescript
+interface InputFieldConfig extends BaseFieldConfig {
+  type: "input";
+  inputType: "text" | "email" | "password" | "url" | "tel" | "search";
+  maxLength?: number;
+  minLength?: number;
+  pattern?: string;
+  autoComplete?: string;
+  autoFocus?: boolean;
+}
+```
+
+#### SelectFieldConfig
+
+Dropdown select field configuration.
+
+```typescript
+interface SelectFieldConfig extends BaseFieldConfig {
+  type: "select";
+  options: SelectOption[];
+  multiple?: boolean;
+  searchable?: boolean;
+}
+
+interface SelectOption {
+  value: string;
+  label: string;
+  disabled?: boolean;
+}
+```
+
+#### ArrayFieldConfig
+
+Dynamic array field configuration.
+
+```typescript
+interface ArrayFieldConfig extends BaseFieldConfig {
+  type: "array";
+  elements: FieldConfig[];
+  minItems?: number;
+  maxItems?: number;
+  addButtonText?: string;
+  removeButtonText?: string;
+  keyName?: string;
+}
+```
+
+### Grid System Types
+
+#### GridLayoutConfig
+
+Responsive grid layout configuration.
+
+```typescript
+interface GridLayoutConfig {
+  columns?: number | "auto";
+  rows?: number | "auto";
+  gap?: number | string;
+  responsive?: {
+    default?: GridBreakpointConfig;
+    sm?: GridBreakpointConfig;
+    md?: GridBreakpointConfig;
+    lg?: GridBreakpointConfig;
+    xl?: GridBreakpointConfig;
+    "2xl"?: GridBreakpointConfig;
+  };
+  autoFit?: boolean;
+  autoFill?: boolean;
+  minColumnWidth?: string;
+  maxColumnWidth?: string;
+}
+```
+
+#### FieldGridConfig
+
+Grid positioning for individual fields.
+
+```typescript
+interface FieldGridConfig {
+  column?: number | string;
+  row?: number | string;
+  responsive?: {
+    default?: FieldGridBreakpointConfig;
+    sm?: FieldGridBreakpointConfig;
+    md?: FieldGridBreakpointConfig;
+    lg?: FieldGridBreakpointConfig;
+    xl?: FieldGridBreakpointConfig;
+    "2xl"?: FieldGridBreakpointConfig;
+  };
+  justifySelf?: "start" | "end" | "center" | "stretch";
+  alignSelf?: "start" | "end" | "center" | "stretch";
+}
+```
+
+### Constraint Logic Types
+
+#### ConstraintLogic
+
+Configuration for conditional field behavior.
+
+```typescript
+interface ConstraintLogic {
+  field: string;
+  operator: "equals" | "not_equals" | "contains" | "not_contains" | 
+           "greater_than" | "less_than" | "is_empty" | "is_not_empty";
+  value: any;
+  action: "show" | "hide" | "enable" | "disable" | "require";
+}
+```
+
+## Hooks
+
+### useConstraintLogic
+
+Hook for implementing conditional field logic.
+
+```typescript
+import { useConstraintLogic } from "@/lib/form-engine/hooks";
+
+const { shouldShow, shouldEnable, isRequired } = useConstraintLogic(
+  fieldConstraints,
+  formValues
+);
+```
+
+### useField
+
+Hook for field-level state management and validation.
+
+```typescript
+import { useField } from "@/lib/form-engine/hooks";
+
+const {
+  field,
+  fieldState,
+  formState
+} = useField({
+  name: "fieldName",
+  control: formControl,
+  rules: validationRules
+});
+```
+
+## Utilities
+
+### Serialization
+
+Utilities for form data serialization and deserialization.
+
+```typescript
+import { serialize, deserialize } from "@/lib/form-engine/serialization";
+
+// Serialize form data for storage/transmission
+const serialized = serialize(formData);
+
+// Deserialize stored data back to form values
+const formValues = deserialize(serializedData, formConfig);
+```
+
+### Registry Functions
+
+Functions for managing field type registrations.
+
+```typescript
+import { registerFieldType, getFieldComponent } from "@/lib/form-engine/registry";
+
+// Register custom field type
+registerFieldType("custom", CustomFieldComponent);
+
+// Get registered field component
+const FieldComponent = getFieldComponent("input");
+```
+
+This API reference covers all currently implemented features in Form Engine. The library is designed to be extensible, so additional field types, actions, and utilities can be added as needed.
+    ValidationPresets.email("Please enter a valid email")
+  ]
+}
+```
 
 ```typescript
 import { Stepper } from "@/lib/form-engine";

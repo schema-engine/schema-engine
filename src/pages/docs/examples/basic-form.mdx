@@ -1,27 +1,164 @@
 import { DocsLayout } from '@/layouts/docs-layout';
+import { SimpleInputDemo } from '@/components/simple-input-demo';
 
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'Basic Form Example | Form Engine Documentation',
-    description: 'Complete example of a basic contact form built with Form Engine, including configuration, validation, and submission handling.',
+  title: 'Basic Form Example | Form Engine Documentation',
+  description: 'Simple contact form example showing Form Engine fundamentals: fields, validation, and actions.',
 })
 
 # Basic Form Example
 
-This example demonstrates how to create a simple yet complete contact form using Form Engine. It covers all the essential concepts including field configuration, validation, responsive layout, and form submission.
+Learn Form Engine fundamentals with this simple contact form example that demonstrates field configuration, validation, and the actions system.
 
-## Live Demo
+## Interactive Demo
 
-<div class="border rounded-lg p-6 my-6 bg-gray-50">
-  <p class="text-center text-gray-600">
-    📝 Interactive demo coming soon - see the configuration below for implementation details
-  </p>
-</div>
+<SimpleInputDemo />
 
-## Complete Form Configuration
+## Key Concepts
 
-Here's the complete configuration for a contact form:
+This basic form demonstrates the essential Form Engine concepts:
+
+### 1. Field Configuration
+
+Each field requires an `id`, `type`, `name`, and `label`:
+
+```typescript
+{
+  id: 'name',
+  type: 'text',
+  name: 'name',
+  label: 'Name',
+  placeholder: 'Enter your name',
+  required: true
+}
+```
+
+### 2. Validation Rules
+
+Add validation rules to each field:
+
+```typescript
+validation: [
+  { type: 'required', message: 'Name is required' },
+  { type: 'minLength', value: 2, message: 'Name must be at least 2 characters' }
+]
+```
+
+### 3. Actions System
+
+Define how the form behaves when submitted using actions:
+
+```typescript
+actions: [
+  {
+    id: 'submit',
+    type: 'submit',
+    label: 'Send Message',
+    endpoint: '/api/contact',
+    method: 'POST',
+    validation: true,
+    onSuccess: {
+      type: 'message',
+      title: 'Message Sent!',
+      message: 'We\'ll get back to you soon.'
+    }
+  }
+]
+```
+
+## Complete Configuration
+
+```typescript
+import { FormConfig } from '@/lib/form-engine/types';
+
+const basicFormConfig: FormConfig = {
+  id: 'basic-contact-form',
+  title: 'Contact Us',
+  fields: [
+    {
+      id: 'name',
+      type: 'text',
+      name: 'name',
+      label: 'Name',
+      placeholder: 'Enter your name',
+      required: true,
+      validation: [
+        { type: 'required', message: 'Name is required' },
+        { type: 'minLength', value: 2, message: 'Name must be at least 2 characters' }
+      ]
+    },
+    {
+      id: 'email',
+      type: 'email',
+      name: 'email',
+      label: 'Email',
+      placeholder: 'your.email@example.com',
+      required: true,
+      validation: [
+        { type: 'required', message: 'Email is required' },
+        { type: 'email', message: 'Please enter a valid email address' }
+      ]
+    },
+    {
+      id: 'message',
+      type: 'textarea',
+      name: 'message',
+      label: 'Message',
+      placeholder: 'Tell us how we can help...',
+      required: true,
+      props: { rows: 4 },
+      validation: [
+        { type: 'required', message: 'Message is required' },
+        { type: 'minLength', value: 10, message: 'Message must be at least 10 characters' }
+      ]
+    }
+  ],
+  actions: [
+    {
+      id: 'submit',
+      type: 'submit',
+      label: 'Send Message',
+      endpoint: '/api/contact',
+      method: 'POST',
+      validation: true,
+      onSuccess: {
+        type: 'message',
+        title: 'Message Sent!',
+        message: 'We\'ll get back to you soon.'
+      },
+      onError: {
+        type: 'message',
+        title: 'Error',
+        message: 'Failed to send message. Please try again.',
+        variant: 'destructive'
+      }
+    }
+  ]
+};
+```
+
+## Usage
+
+```typescript
+import { FormRenderer } from '@/lib/form-engine';
+
+function ContactPage() {
+  return (
+    <div className="max-w-md mx-auto p-6">
+      <FormRenderer config={basicFormConfig} />
+    </div>
+  );
+}
+```
+
+## Next Steps
+
+- **[Field Types](/docs/concepts/field-types)** - Explore all available field types
+- **[Validation](/docs/concepts/validation)** - Learn about validation rules
+- **[Contact Form](/docs/examples/contact-form)** - See a more complex example
+- **[Multi-Step Forms](/docs/advanced/multi-step-forms)** - Build wizards and surveys
 
 ```typescript
 // src/configs/forms/contact-form.ts
@@ -32,7 +169,6 @@ export const contactFormConfig: FormConfig = {
   title: "Get in Touch",
   description: "We'd love to hear from you. Send us a message and we'll respond as soon as possible.",
   
-  // Single step for simple form
   steps: [
     {
       title: "Contact Information",

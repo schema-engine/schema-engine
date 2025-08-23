@@ -9,68 +9,38 @@ export const getMetadata = () => ({
 
 # Installation
 
-Get Form Engine up and running in your React project with this comprehensive installation guide.
+{/* TODO: Package distribution setup - Form Engine will be available as @andeeplus/form-engine */}
 
-## Prerequisites
-
-Before installing Form Engine, ensure your project meets these requirements:
-
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
-  <div className="border rounded-lg p-4">
-    <h3 className="font-semibold text-lg mb-2">React Version</h3>
-    <p className="text-gray-600">React 18.0.0 or higher</p>
-    <code className="text-sm bg-gray-100 px-2 py-1 rounded">react@^18.0.0</code>
-  </div>
-  
-  <div className="border rounded-lg p-4">
-    <h3 className="font-semibold text-lg mb-2">TypeScript</h3>
-    <p className="text-gray-600">TypeScript 4.5.0 or higher</p>
-    <code className="text-sm bg-gray-100 px-2 py-1 rounded">typescript@^4.5.0</code>
-  </div>
+<div className="banner banner--warning mt-4" role="alert">
+  <p className="banner__title">Development Phase</p>
+  <p>Form Engine is currently in development. Installation as a standalone package is not yet available. The library exists within this project and will be packaged for distribution in the future.</p>
 </div>
 
-## Package Installation
+Form Engine is currently available as source code within this project. Future releases will be distributed as npm packages for easy installation.
 
-Install Form Engine and its peer dependencies using your preferred package manager:
+## Current Usage (Development)
 
-### Using npm
+Within this project, you can import Form Engine components directly:
 
-```bash
-npm install react-hook-form zod @hookform/resolvers
+```typescript
+import { FormRenderer } from "@/lib/form-engine";
+import { ValidationPresets } from "@/lib/form-engine/validation";
+import type { FormConfig } from "@/lib/form-engine/types";
 ```
 
-### Using Yarn
+## Future Installation (Planned)
+
+When the package is ready for distribution, installation will be:
 
 ```bash
-yarn add react-hook-form zod @hookform/resolvers
+# Future package installation
+npm install @andeeplus/form-engine
+
+# Or with specific modules
+npm install @andeeplus/form-engine/core
+npm install @andeeplus/form-engine/validation
+npm install @andeeplus/form-engine/actions
 ```
-
-### Using pnpm
-
-```bash
-pnpm add react-hook-form zod @hookform/resolvers
-```
-
-### Using Bun
-
-```bash
-bun add react-hook-form zod @hookform/resolvers
-```
-
-## Peer Dependencies
-
-Form Engine requires these peer dependencies:
-
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `react-hook-form` | `^7.43.0` | Form state management and validation |
-| `zod` | `^3.20.0` | Schema validation and type inference |
-| `@hookform/resolvers` | `^3.0.0` | Zod integration for React Hook Form |
-
-<div className="banner banner--info mt-4" role="alert">
-  <p className="banner__title">Why Peer Dependencies?</p>
-  <p>These packages are peer dependencies to avoid version conflicts and allow you to control the exact versions used in your project.</p>
-</div>
 
 ## TypeScript Configuration
 

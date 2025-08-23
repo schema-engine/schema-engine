@@ -1,0 +1,271 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'Array Fields | Form Engine Documentation',
+    description: 'Learn how to use dynamic array fields for repeating form sections and data lists.',
+})
+
+# Array Fields
+
+Array fields allow you to create dynamic, repeating sections in your forms. Users can add or remove items dynamically, making them perfect for collecting lists of data like contact information, addresses, or any repeating data structure.
+
+## Basic Array Field
+
+Here's a simple array field for collecting multiple email addresses:
+
+```typescript
+{
+  type: "array",
+  id: "emails",
+  name: "emails",
+  label: "Email Addresses",
+  minItems: 1,
+  maxItems: 5,
+  addButtonText: "Add Email",
+  removeButtonText: "Remove",
+  elements: [
+    {
+      type: "input",
+      inputType: "email",
+      id: "email",
+      name: "email",
+      label: "Email Address",
+      placeholder: "Enter email address",
+      validation: [
+        ValidationPresets.required("Email is required"),
+        ValidationPresets.email("Please enter a valid email")
+      ]
+    }
+  ]
+}
+```
+
+## Complex Array Fields
+
+Array fields can contain multiple field types within each item:
+
+```typescript
+{
+  type: "array",
+  id: "contacts",
+  name: "emergencyContacts",
+  label: "Emergency Contacts",
+  minItems: 1,
+  maxItems: 3,
+  addButtonText: "Add Contact",
+  removeButtonText: "Remove Contact",
+  elements: [
+    {
+      type: "input",
+      inputType: "text",
+      id: "name",
+      name: "name",
+      label: "Full Name",
+      validation: [ValidationPresets.required("Name is required")]
+    },
+    {
+      type: "input",
+      inputType: "tel", 
+      id: "phone",
+      name: "phone",
+      label: "Phone Number",
+      validation: [ValidationPresets.required("Phone is required")]
+    },
+    {
+      type: "select",
+      id: "relationship",
+      name: "relationship",
+      label: "Relationship",
+      placeholder: "Select relationship",
+      options: [
+        { value: "family", label: "Family Member" },
+        { value: "friend", label: "Friend" },
+        { value: "colleague", label: "Colleague" },
+        { value: "other", label: "Other" }
+      ],
+      validation: [ValidationPresets.required("Please select relationship")]
+    }
+  ]
+}
+```
+
+## Configuration Options
+
+### ArrayFieldConfig Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `type` | `"array"` | Yes | Field type identifier |
+| `id` | `string` | Yes | Unique field identifier |
+| `name` | `string` | Yes | Form field name |
+| `label` | `string` | No | Field label displayed to user |
+| `elements` | `FieldConfig[]` | Yes | Array of field configurations for each item |
+| `minItems` | `number` | No | Minimum number of items required |
+| `maxItems` | `number` | No | Maximum number of items allowed |
+| `addButtonText` | `string` | No | Text for add item button (default: "Add Item") |
+| `removeButtonText` | `string` | No | Text for remove item button (default: "Remove") |
+| `keyName` | `string` | No | Field name used as unique key (default: "id") |
+
+### Validation
+
+Array fields support validation at both the array level and individual item level:
+
+```typescript
+{
+  type: "array",
+  name: "addresses",
+  label: "Addresses",
+  minItems: 1,
+  maxItems: 3,
+  validation: [
+    ValidationPresets.required("At least one address is required")
+  ],
+  elements: [
+    {
+      type: "input",
+      name: "street",
+      label: "Street Address",
+      validation: [ValidationPresets.required("Street address is required")]
+    },
+    {
+      type: "input", 
+      name: "city",
+      label: "City",
+      validation: [ValidationPresets.required("City is required")]
+    }
+  ]
+}
+```
+
+## Grid Layout in Arrays
+
+Array fields support responsive grid layouts for complex item layouts:
+
+```typescript
+{
+  type: "array",
+  name: "products",
+  label: "Products",
+  grid: {
+    columns: 1,
+    responsive: {
+      default: { columns: 1, gap: "1rem" },
+      md: { columns: 2, gap: "1.5rem" }
+    }
+  },
+  elements: [
+    {
+      type: "input",
+      name: "name",
+      label: "Product Name",
+      grid: {
+        responsive: {
+          default: { column: "1 / -1" },
+          md: { column: "1 / 2" }
+        }
+      }
+    },
+    {
+      type: "number",
+      name: "price", 
+      label: "Price",
+      grid: {
+        responsive: {
+          default: { column: "1 / -1" },
+          md: { column: "2 / 3" }
+        }
+      }
+    }
+  ]
+}
+```
+
+## Conditional Logic in Arrays
+
+Array items can include conditional logic based on other fields within the same item:
+
+```typescript
+{
+  type: "array",
+  name: "attendees",
+  label: "Event Attendees",
+  elements: [
+    {
+      type: "input",
+      name: "name",
+      label: "Attendee Name"
+    },
+    {
+      type: "select",
+      name: "attendanceType",
+      label: "Attendance Type",
+      options: [
+        { value: "in-person", label: "In Person" },
+        { value: "virtual", label: "Virtual" }
+      ]
+    },
+    {
+      type: "input",
+      name: "dietaryRestrictions",
+      label: "Dietary Restrictions",
+      constraints: [
+        {
+          field: "attendanceType",
+          operator: "equals",
+          value: "in-person",
+          action: "show"
+        }
+      ]
+    }
+  ]
+}
+```
+
+## Best Practices
+
+### Performance
+
+- **Limit Array Size**: Set reasonable `maxItems` to prevent performance issues
+- **Simple Validation**: Keep validation logic simple for better performance with large arrays
+- **Optimize Rendering**: Use keys effectively by setting appropriate `keyName`
+
+### User Experience
+
+- **Clear Labels**: Use descriptive `addButtonText` and `removeButtonText`
+- **Sensible Minimums**: Set appropriate `minItems` based on business requirements
+- **Visual Hierarchy**: Use grid layouts to organize complex array items clearly
+
+### Data Structure
+
+```typescript
+// Array field produces this data structure:
+{
+  emergencyContacts: [
+    {
+      id: "1",
+      name: "John Doe", 
+      phone: "555-0123",
+      relationship: "family"
+    },
+    {
+      id: "2",
+      name: "Jane Smith",
+      phone: "555-0456", 
+      relationship: "friend"
+    }
+  ]
+}
+```
+
+## Working Example
+
+See array fields in action in our [Multi-Step Forms demo](/multi-step-forms) which includes a dynamic contact list.
+
+## Related Topics
+
+- [Field Types](/docs/concepts/field-types) - Overview of all field types
+- [Validation](/docs/concepts/validation) - Validation rules and schemas
+- [Responsive Grid](/docs/concepts/responsive-grid) - Grid layout system
+- [Conditional Logic](/docs/concepts/conditional-logic) - Dynamic field behavior

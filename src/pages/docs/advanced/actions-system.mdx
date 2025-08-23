@@ -1,0 +1,373 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+import { ActionsDemo } from '@/components/actions-demo';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'Actions System | Form Engine Documentation',
+    description: 'Learn how to use the Form Engine actions system for form submissions, auto-saving, analytics, and custom behaviors.',
+})
+
+# Actions System
+
+The Form Engine actions system provides a powerful, extensible way to handle form behaviors like submissions, auto-saving, analytics tracking, and custom business logic. Actions are configuration-driven and can be triggered by various form events.
+
+## Interactive Demo
+
+Try this demo to see different actions in practice - submit the form, trigger auto-save, and see how analytics events are fired:
+
+<ActionsDemo />
+
+## Action Types
+
+Form Engine currently supports these action types:
+
+### Submit Actions
+Handle form submissions to API endpoints with error handling and user feedback.
+
+### Reset Actions  
+Reset forms to initial or default values based on triggers.
+
+### Auto Save Actions
+Automatically save form progress as drafts with configurable strategies.
+
+### GTM Event Actions
+Send events to Google Tag Manager for analytics and tracking.
+
+### Notification Actions
+Display user notifications and messages.
+
+## Submit Actions
+
+Submit actions handle form submissions to API endpoints:
+
+```typescript
+{
+  id: "contact-form-submit",
+  type: "submit",
+  description: "Submit contact form to API",
+  endpoint: "/api/contact",
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer token"
+  },
+  successMessage: "Thank you for your message!",
+  errorMessage: "Failed to send message. Please try again.",
+  enabled: true,
+  triggers: ["form_submit"]
+}
+```
+
+### Configuration Options
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | `string` | Yes | Unique action identifier |
+| `type` | `"submit"` | Yes | Action type |
+| `description` | `string` | Yes | Action description |
+| `endpoint` | `string` | Yes | API endpoint URL |
+| `method` | `"POST" \| "PUT" \| "PATCH"` | Yes | HTTP method |
+| `headers` | `Record<string, string>` | No | Additional HTTP headers |
+| `successMessage` | `string` | No | Success notification message |
+| `errorMessage` | `string` | No | Error notification message |
+| `enabled` | `boolean` | Yes | Whether action is enabled |
+| `triggers` | `ActionTrigger[]` | No | Events that trigger this action |
+
+## Reset Actions
+
+Reset actions restore forms to their initial state:
+
+```typescript
+{
+  id: "form-reset",
+  type: "reset",
+  description: "Reset form after successful submission",
+  enabled: true,
+  triggers: ["submit_success"],
+  resetToDefaults: true
+}
+```
+
+### Configuration Options
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | `string` | Yes | Unique action identifier |
+| `type` | `"reset"` | Yes | Action type |
+| `description` | `string` | Yes | Action description |
+| `enabled` | `boolean` | Yes | Whether action is enabled |
+| `triggers` | `ActionTrigger[]` | No | Events that trigger this action |
+| `resetToDefaults` | `boolean` | No | Reset to default values vs empty form |
+
+## Auto Save Actions
+
+Auto save actions automatically save form progress:
+
+```typescript
+// Debounced auto-save (saves after user stops typing)
+{
+  id: "auto-save-debounced",
+  type: "auto_save_draft",
+  description: "Auto save form progress",
+  mode: "debounced",
+  debounceMs: 2000,
+  formId: "contact-form",
+  enabled: true,
+  showNotification: false
+}
+
+// Interval auto-save (saves every X seconds)
+{
+  id: "auto-save-interval",
+  type: "auto_save_draft", 
+  description: "Backup save every 30 seconds",
+  mode: "interval",
+  intervalMs: 30000,
+  formId: "contact-form",
+  enabled: true,
+  showNotification: false
+}
+```
+
+### Configuration Options
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | `string` | Yes | Unique action identifier |
+| `type` | `"auto_save_draft"` | Yes | Action type |
+| `description` | `string` | Yes | Action description |
+| `mode` | `"debounced" \| "interval"` | Yes | Auto-save strategy |
+| `debounceMs` | `number` | No | Debounce delay in milliseconds |
+| `intervalMs` | `number` | No | Interval delay in milliseconds |
+| `formId` | `string` | Yes | Form identifier for storage |
+| `enabled` | `boolean` | Yes | Whether action is enabled |
+| `showNotification` | `boolean` | No | Show save notifications |
+
+## GTM Event Actions
+
+GTM actions send events to Google Tag Manager for analytics:
+
+```typescript
+{
+  id: "form-analytics",
+  type: "gtm_event",
+  description: "Track form submission",
+  eventName: "form_submission", 
+  eventData: {
+    form_type: "contact",
+    form_version: "v2",
+    source: "homepage"
+  },
+  includeFormData: ["email", "source"], // Only specific fields
+  includeMetadata: true,
+  enabled: true,
+  triggers: ["submit_success"]
+}
+```
+
+### Configuration Options
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | `string` | Yes | Unique action identifier |
+| `type` | `"gtm_event"` | Yes | Action type |
+| `description` | `string` | Yes | Action description |
+| `eventName` | `string` | Yes | GTM event name |
+| `eventData` | `Record<string, any>` | No | Additional event data |
+| `includeFormData` | `boolean \| string[]` | No | Include form data (all or specific fields) |
+| `includeMetadata` | `boolean` | No | Include form metadata |
+| `enabled` | `boolean` | Yes | Whether action is enabled |
+| `triggers` | `ActionTrigger[]` | No | Events that trigger this action |
+
+## Notification Actions
+
+Notification actions display messages to users:
+
+```typescript
+{
+  id: "success-notification",
+  type: "notification",
+  description: "Show success message", 
+  message: "Form submitted successfully!",
+  variant: "success",
+  duration: 5000,
+  enabled: true,
+  triggers: ["submit_success"]
+}
+```
+
+### Configuration Options
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | `string` | Yes | Unique action identifier |
+| `type` | `"notification"` | Yes | Action type |
+| `description` | `string` | Yes | Action description |
+| `message` | `string` | Yes | Notification message |
+| `variant` | `"success" \| "error" \| "warning" \| "info"` | Yes | Notification style |
+| `duration` | `number` | No | Auto-dismiss duration in milliseconds |
+| `enabled` | `boolean` | Yes | Whether action is enabled |
+| `triggers` | `ActionTrigger[]` | No | Events that trigger this action |
+
+## Action Triggers
+
+Actions can be triggered by various form events:
+
+```typescript
+type ActionTrigger =
+  | "form_start"      // When form initializes
+  | "form_change"     // When any field value changes
+  | "form_submit"     // When form submission starts
+  | "submit_start"    // When submit process begins
+  | "submit_success"  // When submit completes successfully
+  | "submit_error"    // When submit fails
+  | "submit_complete" // When submit process finishes (success or error)
+  | "step_change"     // When navigating between steps
+  | "step_submit"     // When submitting a specific step
+  | "step_enter"      // When entering a step
+  | "step_leave"      // When leaving a step
+  | "step_view"       // When step becomes visible
+  | "manual_save"     // When user saves manually
+  | "manual_reset";   // When user resets manually
+```
+
+## Action Execution Order
+
+Actions are executed in the order they appear in the configuration. Some actions form lifecycle chains:
+
+### Submit Lifecycle
+1. `form_submit` - User initiates submission
+2. `submit_start` - Validation passes, submission begins
+3. `submit_success` OR `submit_error` - Result of submission
+4. `submit_complete` - Always fired after success/error
+
+### Step Lifecycle
+1. `step_change` - User navigates to different step
+2. `step_leave` - Previous step cleanup
+3. `step_enter` - New step initialization
+4. `step_view` - Step becomes visible (for analytics)
+
+## Complex Action Workflows
+
+Combine multiple actions for sophisticated form behaviors:
+
+```typescript
+{
+  id: "contact-form",
+  title: "Contact Form",
+  steps: [/* ... */],
+  actions: [
+    // Track form start
+    {
+      id: "track-form-start",
+      type: "gtm_event", 
+      eventName: "form_start",
+      triggers: ["form_start"],
+      enabled: true
+    },
+    
+    // Auto-save progress
+    {
+      id: "auto-save-progress",
+      type: "auto_save_draft",
+      mode: "debounced",
+      debounceMs: 2000,
+      formId: "contact-form",
+      enabled: true
+    },
+    
+    // Submit to API
+    {
+      id: "api-submission",
+      type: "submit",
+      endpoint: "/api/contact",
+      method: "POST",
+      successMessage: "Thank you for your message!",
+      errorMessage: "Failed to send. Please try again.",
+      enabled: true
+    },
+    
+    // Track successful submission
+    {
+      id: "track-submission",
+      type: "gtm_event",
+      eventName: "form_conversion",
+      includeFormData: true,
+      triggers: ["submit_success"],
+      enabled: true
+    },
+    
+    // Reset form after success
+    {
+      id: "reset-after-success",
+      type: "reset", 
+      resetToDefaults: true,
+      triggers: ["submit_success"],
+      enabled: true
+    }
+  ]
+}
+```
+
+## Step-Level Actions
+
+Actions can be defined at the step level for multi-step forms:
+
+```typescript
+{
+  steps: [
+    {
+      id: "personal-info",
+      title: "Personal Information",
+      fields: [/* ... */],
+      actions: [
+        {
+          id: "step-analytics",
+          type: "gtm_event",
+          eventName: "step_complete",
+          eventData: { step: "personal-info" },
+          triggers: ["step_submit"],
+          enabled: true
+        }
+      ]
+    }
+  ]
+}
+```
+
+## Working Examples
+
+See the actions system in practice:
+
+- **[Actions Demo](/actions)** - Complete actions showcase
+- **[Multi-Step Forms](/multi-step-forms)** - Step-level actions
+- **[Basic Demo](/basic-demo)** - Simple submit and reset actions
+
+## Best Practices
+
+### Performance
+- Use debounced auto-save to avoid excessive API calls
+- Be selective with `includeFormData` in analytics actions
+- Consider disabling actions during development/testing
+
+### User Experience  
+- Provide clear success and error messages
+- Use appropriate notification durations
+- Consider accessibility in notification design
+
+### Analytics
+- Structure event data consistently
+- Include relevant context in GTM events
+- Track user journey through multi-step forms
+
+### Error Handling
+- Always provide fallback error messages
+- Consider retry mechanisms for failed submissions
+- Log errors for debugging purposes
+
+## Related Topics
+
+- [API Reference](/docs/api) - Action type definitions
+- [Examples](/docs/examples) - Working action examples
+- [Multi-Step Forms](/docs/advanced/multi-step-forms) - Step-level actions

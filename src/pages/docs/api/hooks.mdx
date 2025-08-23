@@ -1,0 +1,659 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'Hooks API | Form Engine Documentation',
+    description: 'API reference for React hooks provided by the Form Engine library.',
+})
+
+# Hooks API
+
+The Form Engine provides several custom React hooks to simplify form management, validation, and interaction.
+
+## useFormEngine
+
+The primary hook for managing form state and behavior.
+
+### Import
+
+```typescript
+import { useFormEngine } from '@/lib/form-engine/hooks';
+```
+
+### Usage
+
+```typescript
+function MyForm() {
+  const {
+    formState,
+    handleSubmit,
+    setValue,
+    getValue,
+    validate,
+    reset,
+    watch
+  } = useFormEngine({
+    config: formConfig,
+    defaultValues: initialData,
+    mode: 'onChange'
+  });
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      {/* Form fields */}
+    </form>
+  );
+}
+```
+
+### Parameters
+
+#### config (required)
+
+**Type:** `FormConfig`
+
+The form configuration object defining fields, validation, and behavior.
+
+#### defaultValues
+
+**Type:** `Record<string, any>`  
+**Default:** `{}`
+
+Initial values for form fields.
+
+#### mode
+
+**Type:** `'onChange' | 'onBlur' | 'onSubmit' | 'onTouched' | 'all'`  
+**Default:** `'onChange'`
+
+When validation should trigger.
+
+#### resolver
+
+**Type:** `Resolver`  
+**Default:** `zodResolver`
+
+Custom validation resolver. Defaults to Zod resolver.
+
+### Return Value
+
+```typescript
+interface UseFormEngineReturn {
+  // Form state
+  formState: FormState;
+  
+  // Form methods
+  handleSubmit: (onValid: SubmitHandler, onInvalid?: SubmitErrorHandler) => (e?: BaseSyntheticEvent) => Promise<void>;
+  setValue: (name: string, value: any, options?: SetValueConfig) => void;
+  getValue: (name: string) => any;
+  getValues: () => Record<string, any>;
+  
+  // Validation
+  validate: (name?: string) => Promise<boolean>;
+  trigger: (name?: string | string[]) => Promise<boolean>;
+  
+  // State management
+  reset: (values?: Record<string, any>) => void;
+  watch: (name?: string | string[] | WatchCallback) => any;
+  
+  // Error handling
+  setError: (name: string, error: FieldError) => void;
+  clearErrors: (name?: string | string[]) => void;
+  
+  // Field registration
+  register: (name: string, options?: RegisterOptions) => UseFormRegisterReturn;
+  unregister: (name?: string | string[]) => void;
+  
+  // Focus management
+  setFocus: (name: string, options?: SetFocusOptions) => void;
+}
+```
+
+## useFieldArray
+
+Hook for managing dynamic arrays of fields.
+
+### Import
+
+```typescript
+import { useFieldArray } from '@/lib/form-engine/hooks';
+```
+
+### Usage
+
+```typescript
+function DynamicFieldsForm() {
+  const { control } = useFormEngine({ config });
+  
+  const {
+    fields,
+    append,
+    prepend,
+    remove,
+    swap,
+    move,
+    insert,
+    update
+  } = useFieldArray({
+    control,
+    name: 'items',
+    keyName: 'id'
+  });
+
+  return (
+    <div>
+      {fields.map((field, index) => (
+        <div key={field.id}>
+          <input {...register(\`items.\${index}.name\`)} />
+          <button onClick={() => remove(index)}>Remove</button>
+        </div>
+      ))}
+      <button onClick={() => append({ name: '' })}>Add Item</button>
+    </div>
+  );
+}
+```
+
+### Parameters
+
+#### control (required)
+
+**Type:** `Control`
+
+The control object from useFormEngine.
+
+#### name (required)
+
+**Type:** `string`
+
+The name of the field array.
+
+#### keyName
+
+**Type:** `string`  
+**Default:** `'id'`
+
+The key name for identifying array items.
+
+### Return Value
+
+```typescript
+interface UseFieldArrayReturn {
+  fields: FieldArrayWithId[];
+  append: (value: any | any[], options?: FieldArrayMethodProps) => void;
+  prepend: (value: any | any[], options?: FieldArrayMethodProps) => void;
+  insert: (index: number, value: any | any[], options?: FieldArrayMethodProps) => void;
+  swap: (indexA: number, indexB: number) => void;
+  move: (from: number, to: number) => void;
+  update: (index: number, value: any) => void;
+  replace: (value: any[]) => void;
+  remove: (index?: number | number[]) => void;
+}
+```
+
+## useFormValidation
+
+Hook for advanced form validation scenarios.
+
+### Import
+
+```typescript
+import { useFormValidation } from '@/lib/form-engine/hooks';
+```
+
+### Usage
+
+```typescript
+function ValidatedForm() {
+  const {
+    validate,
+    validateField,
+    errors,
+    isValid,
+    isValidating,
+    clearError
+  } = useFormValidation({
+    schema: validationSchema,
+    mode: 'onChange'
+  });
+
+  const handleFieldChange = async (name: string, value: any) => {
+    await validateField(name, value);
+  };
+
+  return (
+    <form>
+      {/* Form fields with validation */}
+    </form>
+  );
+}
+```
+
+### Parameters
+
+#### schema (required)
+
+**Type:** `ZodSchema | YupSchema | JoiSchema`
+
+The validation schema.
+
+#### mode
+
+**Type:** `ValidationMode`  
+**Default:** `'onChange'`
+
+When validation should trigger.
+
+#### reValidateMode
+
+**Type:** `ValidationMode`  
+**Default:** `'onChange'`
+
+When re-validation should trigger.
+
+### Return Value
+
+```typescript
+interface UseFormValidationReturn {
+  validate: (values: Record<string, any>) => Promise<ValidationResult>;
+  validateField: (name: string, value: any) => Promise<FieldValidationResult>;
+  errors: Record<string, FieldError>;
+  isValid: boolean;
+  isValidating: boolean;
+  clearError: (name: string) => void;
+  clearErrors: () => void;
+  setError: (name: string, error: FieldError) => void;
+}
+```
+
+## useFormActions
+
+Hook for managing form actions and submissions.
+
+### Import
+
+```typescript
+import { useFormActions } from '@/lib/form-engine/hooks';
+```
+
+### Usage
+
+```typescript
+function ActionForm() {
+  const {
+    executeAction,
+    isExecuting,
+    lastResult,
+    clearResult
+  } = useFormActions({
+    onSuccess: (result) => console.log('Action succeeded:', result),
+    onError: (error) => console.error('Action failed:', error)
+  });
+
+  const handleSubmit = async (data: any) => {
+    await executeAction('submit', {
+      endpoint: '/api/submit',
+      method: 'POST',
+      data
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* Form fields */}
+      {isExecuting && <span>Submitting...</span>}
+    </form>
+  );
+}
+```
+
+### Return Value
+
+```typescript
+interface UseFormActionsReturn {
+  executeAction: (actionType: string, config: ActionConfig) => Promise<ActionResult>;
+  isExecuting: boolean;
+  executingAction: string | null;
+  lastResult: ActionResult | null;
+  clearResult: () => void;
+  abortAction: () => void;
+}
+```
+
+## useFormStepper
+
+Hook for managing multi-step forms.
+
+### Import
+
+```typescript
+import { useFormStepper } from '@/lib/form-engine/hooks';
+```
+
+### Usage
+
+```typescript
+function MultiStepForm() {
+  const {
+    currentStep,
+    totalSteps,
+    isFirstStep,
+    isLastStep,
+    canGoNext,
+    canGoPrevious,
+    nextStep,
+    previousStep,
+    goToStep,
+    validateCurrentStep
+  } = useFormStepper({
+    steps: formSteps,
+    initialStep: 0,
+    onStepChange: (from, to) => console.log(\`Step \${from} -> \${to}\`)
+  });
+
+  return (
+    <div>
+      <div>Step {currentStep + 1} of {totalSteps}</div>
+      {/* Current step content */}
+      <div>
+        <button 
+          onClick={previousStep} 
+          disabled={!canGoPrevious}
+        >
+          Previous
+        </button>
+        <button 
+          onClick={nextStep} 
+          disabled={!canGoNext}
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+### Return Value
+
+```typescript
+interface UseFormStepperReturn {
+  currentStep: number;
+  totalSteps: number;
+  isFirstStep: boolean;
+  isLastStep: boolean;
+  canGoNext: boolean;
+  canGoPrevious: boolean;
+  nextStep: () => Promise<boolean>;
+  previousStep: () => void;
+  goToStep: (step: number) => Promise<boolean>;
+  validateCurrentStep: () => Promise<boolean>;
+  getStepData: (step?: number) => any;
+  setStepData: (step: number, data: any) => void;
+}
+```
+
+## useFormStorage
+
+Hook for persisting form data across sessions.
+
+### Import
+
+```typescript
+import { useFormStorage } from '@/lib/form-engine/hooks';
+```
+
+### Usage
+
+```typescript
+function PersistentForm() {
+  const {
+    save,
+    load,
+    clear,
+    isLoaded,
+    lastSaved
+  } = useFormStorage({
+    key: 'my-form-data',
+    storage: 'localStorage', // or 'sessionStorage'
+    debounceMs: 1000
+  });
+
+  useEffect(() => {
+    const savedData = load();
+    if (savedData) {
+      reset(savedData);
+    }
+  }, []);
+
+  const { watch } = useFormEngine({ config });
+  
+  useEffect(() => {
+    const subscription = watch((value) => {
+      save(value);
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, save]);
+
+  return (
+    <form>
+      {/* Form fields */}
+      {lastSaved && <span>Last saved: {lastSaved.toLocaleTimeString()}</span>}
+    </form>
+  );
+}
+```
+
+### Return Value
+
+```typescript
+interface UseFormStorageReturn {
+  save: (data: any) => void;
+  load: () => any | null;
+  clear: () => void;
+  isLoaded: boolean;
+  lastSaved: Date | null;
+}
+```
+
+## useFormContext
+
+Hook for accessing form context in nested components.
+
+### Import
+
+```typescript
+import { useFormContext } from '@/lib/form-engine/hooks';
+```
+
+### Usage
+
+```typescript
+function NestedFormField() {
+  const {
+    register,
+    formState: { errors },
+    setValue,
+    watch
+  } = useFormContext();
+
+  const fieldValue = watch('fieldName');
+
+  return (
+    <div>
+      <input {...register('fieldName')} />
+      {errors.fieldName && <span>{errors.fieldName.message}</span>}
+    </div>
+  );
+}
+
+// Usage within FormProvider
+function ParentForm() {
+  const methods = useFormEngine({ config });
+
+  return (
+    <FormProvider {...methods}>
+      <form>
+        <NestedFormField />
+      </form>
+    </FormProvider>
+  );
+}
+```
+
+## useWatch
+
+Hook for watching specific form field values.
+
+### Import
+
+```typescript
+import { useWatch } from '@/lib/form-engine/hooks';
+```
+
+### Usage
+
+```typescript
+function WatchedField() {
+  const { control } = useFormContext();
+  
+  // Watch a single field
+  const fieldValue = useWatch({
+    control,
+    name: 'watchedField'
+  });
+
+  // Watch multiple fields
+  const [field1, field2] = useWatch({
+    control,
+    name: ['field1', 'field2']
+  });
+
+  // Watch with default value
+  const valueWithDefault = useWatch({
+    control,
+    name: 'optionalField',
+    defaultValue: 'default'
+  });
+
+  return (
+    <div>
+      Current value: {fieldValue}
+    </div>
+  );
+}
+```
+
+## Custom Hook Examples
+
+### Creating a Custom Validation Hook
+
+```typescript
+function useCustomValidation(rules: ValidationRule[]) {
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  const validate = useCallback(async (values: Record<string, any>) => {
+    const newErrors: Record<string, string> = {};
+    
+    for (const rule of rules) {
+      const result = await validateRule(rule, values);
+      if (!result.isValid) {
+        newErrors[rule.field] = result.message;
+      }
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [rules]);
+
+  return { errors, validate, clearErrors: () => setErrors({}) };
+}
+```
+
+### Creating a Form Wizard Hook
+
+```typescript
+function useFormWizard(steps: WizardStep[]) {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  
+  const goToNext = useCallback(() => {
+    if (currentStep < steps.length - 1) {
+      setCompletedSteps(prev => new Set([...prev, currentStep]));
+      setCurrentStep(prev => prev + 1);
+    }
+  }, [currentStep, steps.length]);
+
+  const goToPrevious = useCallback(() => {
+    if (currentStep > 0) {
+      setCurrentStep(prev => prev - 1);
+    }
+  }, [currentStep]);
+
+  return {
+    currentStep,
+    totalSteps: steps.length,
+    isFirstStep: currentStep === 0,
+    isLastStep: currentStep === steps.length - 1,
+    completedSteps,
+    goToNext,
+    goToPrevious
+  };
+}
+```
+
+## Best Practices
+
+### 1. Use Appropriate Hooks
+
+Choose the right hook for your use case:
+- `useFormEngine` for basic form management
+- `useFieldArray` for dynamic lists
+- `useFormStepper` for multi-step forms
+- `useFormValidation` for complex validation
+
+### 2. Optimize Performance
+
+```typescript
+// Debounce validation for better performance
+const debouncedValidate = useMemo(
+  () => debounce(validate, 300),
+  [validate]
+);
+
+// Use watch selectively
+const specificField = useWatch({ name: 'specificField' });
+// Instead of watching everything
+const allValues = useWatch();
+```
+
+### 3. Handle Cleanup
+
+```typescript
+useEffect(() => {
+  const subscription = watch((value) => {
+    // Handle value changes
+  });
+  
+  return () => subscription.unsubscribe();
+}, [watch]);
+```
+
+### 4. Type Safety
+
+```typescript
+interface FormData {
+  name: string;
+  email: string;
+  age: number;
+}
+
+const {
+  register,
+  handleSubmit,
+  formState: { errors }
+} = useFormEngine<FormData>({
+  config: typedFormConfig
+});
+```

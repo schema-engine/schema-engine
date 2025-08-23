@@ -1,0 +1,734 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'Types API | Form Engine Documentation',
+    description: 'TypeScript type definitions and interfaces for the Form Engine library.',
+})
+
+# Types API
+
+Comprehensive TypeScript type definitions for the Form Engine library.
+
+## Core Types
+
+### FormConfig
+
+The main configuration interface for defining forms.
+
+```typescript
+interface FormConfig {
+  id: string;
+  title?: string;
+  description?: string;
+  mode?: FormMode;
+  layout?: LayoutConfig;
+  fields: FieldConfig[];
+  steps?: StepConfig[];
+  validation?: ValidationConfig;
+  actions?: ActionConfig[];
+  styling?: StylingConfig;
+  metadata?: Record<string, any>;
+}
+```
+
+### FieldConfig
+
+Configuration for individual form fields.
+
+```typescript
+interface FieldConfig {
+  id: string;
+  type: FieldType;
+  name: string;
+  label?: string;
+  placeholder?: string;
+  description?: string;
+  required?: boolean;
+  disabled?: boolean;
+  readonly?: boolean;
+  hidden?: boolean;
+  defaultValue?: any;
+  validation?: ValidationRule[];
+  options?: FieldOption[];
+  props?: Record<string, any>;
+  styling?: FieldStyling;
+  conditional?: ConditionalRule;
+  grid?: GridConfig;
+}
+```
+
+### FieldType
+
+Enumeration of supported field types.
+
+```typescript
+type FieldType = 
+  // Text inputs
+  | 'text'
+  | 'email'
+  | 'password'
+  | 'tel'
+  | 'url'
+  | 'number'
+  | 'textarea'
+  
+  // Selection
+  | 'select'
+  | 'multiselect'
+  | 'radio'
+  | 'checkbox'
+  | 'switch'
+  
+  // Date and time
+  | 'date'
+  | 'datetime'
+  | 'time'
+  | 'daterange'
+  
+  // File handling
+  | 'file'
+  | 'image'
+  
+  // Advanced
+  | 'rich-text'
+  | 'json'
+  | 'code'
+  | 'color'
+  | 'range'
+  | 'rating'
+  
+  // Layout
+  | 'group'
+  | 'section'
+  | 'divider'
+  | 'html'
+  
+  // Custom
+  | 'custom';
+```
+
+## Validation Types
+
+### ValidationRule
+
+Interface for field validation rules.
+
+```typescript
+interface ValidationRule {
+  type: ValidationType;
+  message?: string;
+  value?: any;
+  condition?: ConditionalRule;
+  async?: boolean;
+  debounce?: number;
+}
+
+type ValidationType = 
+  | 'required'
+  | 'min'
+  | 'max'
+  | 'minLength'
+  | 'maxLength'
+  | 'pattern'
+  | 'email'
+  | 'url'
+  | 'number'
+  | 'integer'
+  | 'positive'
+  | 'negative'
+  | 'custom';
+```
+
+### ValidationResult
+
+Result of validation operations.
+
+```typescript
+interface ValidationResult {
+  isValid: boolean;
+  errors: FieldError[];
+  warnings?: FieldWarning[];
+  data?: any;
+}
+
+interface FieldError {
+  field: string;
+  type: string;
+  message: string;
+  value?: any;
+}
+
+interface FieldWarning {
+  field: string;
+  type: string;
+  message: string;
+  value?: any;
+}
+```
+
+## Layout Types
+
+### LayoutConfig
+
+Configuration for form layout and presentation.
+
+```typescript
+interface LayoutConfig {
+  type: LayoutType;
+  columns?: number | LayoutBreakpoints;
+  gap?: number | string;
+  padding?: number | string;
+  responsive?: ResponsiveConfig;
+  className?: string;
+}
+
+type LayoutType = 
+  | 'single-column'
+  | 'multi-column'
+  | 'grid'
+  | 'flex'
+  | 'custom';
+
+interface LayoutBreakpoints {
+  xs?: number;
+  sm?: number;
+  md?: number;
+  lg?: number;
+  xl?: number;
+}
+```
+
+### GridConfig
+
+Grid-specific layout configuration.
+
+```typescript
+interface GridConfig {
+  column?: GridPosition;
+  row?: GridPosition;
+  span?: GridSpan;
+  order?: number;
+  align?: GridAlign;
+  justify?: GridJustify;
+}
+
+type GridPosition = number | 'auto' | \`\${number} / \${number}\`;
+type GridSpan = number | 'full' | \`span \${number}\`;
+type GridAlign = 'start' | 'end' | 'center' | 'stretch';
+type GridJustify = 'start' | 'end' | 'center' | 'stretch';
+```
+
+## Action Types
+
+### ActionConfig
+
+Configuration for form actions (submit, validate, etc.).
+
+```typescript
+interface ActionConfig {
+  id: string;
+  type: ActionType;
+  label?: string;
+  description?: string;
+  trigger?: ActionTrigger;
+  condition?: ConditionalRule;
+  endpoint?: string;
+  method?: HttpMethod;
+  headers?: Record<string, string>;
+  data?: any;
+  transform?: TransformFunction;
+  onSuccess?: ActionCallback;
+  onError?: ActionCallback;
+  validation?: boolean;
+  debounce?: number;
+  loading?: LoadingConfig;
+}
+
+type ActionType = 
+  | 'submit'
+  | 'validate'
+  | 'reset'
+  | 'save'
+  | 'cancel'
+  | 'next'
+  | 'previous'
+  | 'custom';
+
+type ActionTrigger = 
+  | 'submit'
+  | 'change'
+  | 'blur'
+  | 'click'
+  | 'timer'
+  | 'custom';
+```
+
+### ActionResult
+
+Result of action execution.
+
+```typescript
+interface ActionResult {
+  success: boolean;
+  data?: any;
+  error?: ActionError;
+  metadata?: ActionMetadata;
+  timestamp: Date;
+}
+
+interface ActionError {
+  code: string;
+  message: string;
+  details?: any;
+  field?: string;
+}
+
+interface ActionMetadata {
+  duration: number;
+  retries?: number;
+  endpoint?: string;
+  status?: number;
+}
+```
+
+## Step Types
+
+### StepConfig
+
+Configuration for multi-step forms.
+
+```typescript
+interface StepConfig {
+  id: string;
+  title: string;
+  description?: string;
+  icon?: string;
+  fields: FieldConfig[];
+  validation?: ValidationRule[];
+  actions?: ActionConfig[];
+  conditional?: ConditionalRule;
+  onEnter?: StepCallback;
+  onExit?: StepCallback;
+  onComplete?: StepCallback;
+  metadata?: Record<string, any>;
+}
+
+type StepCallback = (stepData: any, formData: any) => Promise<boolean> | boolean;
+```
+
+### StepperState
+
+State management for multi-step forms.
+
+```typescript
+interface StepperState {
+  currentStep: number;
+  totalSteps: number;
+  completedSteps: Set<number>;
+  stepData: Record<string, any>;
+  isValid: boolean;
+  canGoNext: boolean;
+  canGoPrevious: boolean;
+  errors: Record<string, FieldError[]>;
+}
+```
+
+## Conditional Logic Types
+
+### ConditionalRule
+
+Rules for conditional field visibility and behavior.
+
+```typescript
+interface ConditionalRule {
+  field: string;
+  operator: ConditionalOperator;
+  value: any;
+  action: ConditionalAction;
+  logic?: LogicalOperator;
+  rules?: ConditionalRule[];
+}
+
+type ConditionalOperator = 
+  | 'equals'
+  | 'not-equals'
+  | 'greater-than'
+  | 'less-than'
+  | 'greater-equal'
+  | 'less-equal'
+  | 'contains'
+  | 'not-contains'
+  | 'starts-with'
+  | 'ends-with'
+  | 'is-empty'
+  | 'is-not-empty'
+  | 'in'
+  | 'not-in';
+
+type ConditionalAction = 
+  | 'show'
+  | 'hide'
+  | 'enable'
+  | 'disable'
+  | 'require'
+  | 'optional'
+  | 'validate'
+  | 'set-value'
+  | 'clear-value';
+
+type LogicalOperator = 'and' | 'or';
+```
+
+## Styling Types
+
+### StylingConfig
+
+Styling and theming configuration.
+
+```typescript
+interface StylingConfig {
+  theme?: ThemeConfig;
+  className?: string;
+  style?: React.CSSProperties;
+  variants?: StyleVariants;
+  responsive?: ResponsiveStyles;
+}
+
+interface ThemeConfig {
+  primary?: string;
+  secondary?: string;
+  success?: string;
+  warning?: string;
+  error?: string;
+  background?: string;
+  surface?: string;
+  text?: string;
+  border?: string;
+  radius?: string;
+  spacing?: string;
+  font?: FontConfig;
+}
+
+interface FontConfig {
+  family?: string;
+  size?: string;
+  weight?: string | number;
+  lineHeight?: string | number;
+}
+```
+
+### FieldStyling
+
+Field-specific styling options.
+
+```typescript
+interface FieldStyling {
+  container?: StyleConfig;
+  label?: StyleConfig;
+  input?: StyleConfig;
+  error?: StyleConfig;
+  description?: StyleConfig;
+  icon?: StyleConfig;
+}
+
+interface StyleConfig {
+  className?: string;
+  style?: React.CSSProperties;
+  variant?: string;
+}
+```
+
+## Event Types
+
+### FormEvent
+
+Events emitted by the form engine.
+
+```typescript
+interface FormEvent<T = any> {
+  type: FormEventType;
+  field?: string;
+  value?: any;
+  data?: T;
+  timestamp: Date;
+  source: FormEventSource;
+}
+
+type FormEventType = 
+  | 'field-change'
+  | 'field-blur'
+  | 'field-focus'
+  | 'validation'
+  | 'submit'
+  | 'reset'
+  | 'step-change'
+  | 'action-execute'
+  | 'error'
+  | 'load'
+  | 'save';
+
+type FormEventSource = 
+  | 'user'
+  | 'system'
+  | 'api'
+  | 'validation'
+  | 'action';
+```
+
+### EventHandler
+
+Type for event handler functions.
+
+```typescript
+type EventHandler<T = any> = (event: FormEvent<T>) => void | Promise<void>;
+
+interface EventHandlers {
+  onChange?: EventHandler;
+  onBlur?: EventHandler;
+  onFocus?: EventHandler;
+  onSubmit?: EventHandler;
+  onValidation?: EventHandler;
+  onError?: EventHandler;
+  onReset?: EventHandler;
+  onStepChange?: EventHandler;
+}
+```
+
+## Utility Types
+
+### FormData
+
+Type for form data values.
+
+```typescript
+type FormData = Record<string, any>;
+
+type FieldValue = 
+  | string
+  | number
+  | boolean
+  | Date
+  | File
+  | FileList
+  | any[]
+  | Record<string, any>
+  | null
+  | undefined;
+```
+
+### FormMode
+
+Operational modes for forms.
+
+```typescript
+type FormMode = 
+  | 'create'
+  | 'edit'
+  | 'view'
+  | 'stepped'
+  | 'wizard'
+  | 'survey';
+```
+
+### ResponseConfig
+
+Configuration for responsive behavior.
+
+```typescript
+interface ResponsiveConfig {
+  breakpoints?: BreakpointConfig;
+  mobile?: Partial<LayoutConfig>;
+  tablet?: Partial<LayoutConfig>;
+  desktop?: Partial<LayoutConfig>;
+}
+
+interface BreakpointConfig {
+  mobile: number;
+  tablet: number;
+  desktop: number;
+}
+```
+
+## Provider Types
+
+### FormEngineProvider
+
+Context provider for form engine.
+
+```typescript
+interface FormEngineContextValue {
+  config: FormConfig;
+  formState: FormState;
+  methods: FormMethods;
+  actions: ActionMethods;
+  theme: ThemeConfig;
+  i18n: I18nConfig;
+}
+
+interface FormEngineProviderProps {
+  children: React.ReactNode;
+  config?: Partial<FormConfig>;
+  theme?: Partial<ThemeConfig>;
+  i18n?: Partial<I18nConfig>;
+  onEvent?: EventHandler;
+}
+```
+
+## Registry Types
+
+### FieldRegistry
+
+Registry for custom field types.
+
+```typescript
+interface FieldRegistry {
+  register: (type: string, component: FieldComponent) => void;
+  unregister: (type: string) => void;
+  get: (type: string) => FieldComponent | undefined;
+  list: () => string[];
+  extend: (type: string, extensions: FieldExtensions) => void;
+}
+
+interface FieldComponent {
+  component: React.ComponentType<FieldProps>;
+  config?: FieldTypeConfig;
+  validation?: ValidationPreset[];
+  defaultProps?: Record<string, any>;
+}
+
+interface FieldProps {
+  field: FieldConfig;
+  value: any;
+  onChange: (value: any) => void;
+  onBlur: () => void;
+  error?: FieldError;
+  disabled?: boolean;
+  readonly?: boolean;
+}
+```
+
+### ValidationRegistry
+
+Registry for custom validation rules.
+
+```typescript
+interface ValidationRegistry {
+  register: (type: string, validator: ValidatorFunction) => void;
+  unregister: (type: string) => void;
+  get: (type: string) => ValidatorFunction | undefined;
+  validate: (rule: ValidationRule, value: any, data: FormData) => Promise<ValidationResult>;
+}
+
+type ValidatorFunction = (
+  value: any, 
+  rule: ValidationRule, 
+  data: FormData
+) => Promise<ValidationResult> | ValidationResult;
+```
+
+## Export Configuration
+
+### Module Exports
+
+```typescript
+// Main exports
+export type {
+  FormConfig,
+  FieldConfig,
+  ValidationRule,
+  ActionConfig,
+  StepConfig,
+  LayoutConfig,
+  ConditionalRule,
+  FormEvent,
+  FormData,
+  ValidationResult,
+  ActionResult
+};
+
+// Component types
+export type {
+  FieldComponent,
+  FieldProps,
+  FormEngineProviderProps,
+  EventHandler,
+  ValidatorFunction
+};
+
+// Utility types
+export type {
+  FieldType,
+  ActionType,
+  FormMode,
+  LayoutType,
+  ConditionalOperator,
+  FormEventType
+};
+```
+
+### Type Guards
+
+Utility functions for type checking.
+
+```typescript
+// Type guard functions
+export function isFieldConfig(obj: any): obj is FieldConfig;
+export function isValidationRule(obj: any): obj is ValidationRule;
+export function isActionConfig(obj: any): obj is ActionConfig;
+export function isFormEvent(obj: any): obj is FormEvent;
+
+// Example implementation
+function isFieldConfig(obj: any): obj is FieldConfig {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    typeof obj.id === 'string' &&
+    typeof obj.type === 'string' &&
+    typeof obj.name === 'string'
+  );
+}
+```
+
+## Generic Types
+
+### Type Parameters
+
+Many interfaces support generic type parameters for better type safety.
+
+```typescript
+interface TypedFormConfig<T extends Record<string, any> = FormData> {
+  id: string;
+  fields: TypedFieldConfig<T>[];
+  validation?: TypedValidationConfig<T>;
+  onSubmit?: (data: T) => void | Promise<void>;
+}
+
+interface TypedFieldConfig<T> {
+  name: keyof T;
+  type: FieldType;
+  validation?: TypedValidationRule<T>[];
+}
+
+// Usage
+interface UserFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  age: number;
+}
+
+const userFormConfig: TypedFormConfig<UserFormData> = {
+  id: 'user-form',
+  fields: [
+    {
+      name: 'firstName', // Type-safe field names
+      type: 'text',
+      validation: [/* type-safe validation */]
+    }
+  ]
+};
+```
+
+This comprehensive type system ensures type safety throughout your Form Engine implementation while providing flexibility for customization and extension.

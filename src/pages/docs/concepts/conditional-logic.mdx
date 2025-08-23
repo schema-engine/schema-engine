@@ -1,15 +1,22 @@
 import { DocsLayout } from '@/layouts/docs-layout';
+import { SimpleConditionalDemo } from '@/components/simple-conditional-demo';
 
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'Conditional Logic | Form Engine Documentation',
-    description: 'Learn how to create dynamic, interactive forms with conditional logic, field dependencies, and smart form behavior.',
+  title: 'Conditional Logic | Form Engine Documentation',
+  description: 'Learn how to create dynamic, interactive forms with conditional logic, field dependencies, and smart form behavior.',
 })
 
 # Conditional Logic
 
 Form Engine provides a powerful constraint system that enables dynamic, interactive forms where fields can show, hide, enable, disable, or become required based on user input. This creates intelligent forms that adapt to user responses and guide them through complex workflows.
+
+## Basic Show/Hide Example
+
+The most common use case is showing or hiding fields based on user selections:
+
+<SimpleConditionalDemo />
 
 ## Constraint System Overview
 

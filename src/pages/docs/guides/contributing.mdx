@@ -1,0 +1,521 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'Contributing Guide | Form Engine Documentation',
+    description: 'Learn how to contribute to the Form Engine project, including setup instructions, coding standards, and submission guidelines.',
+})
+
+# Contributing Guide
+
+Thank you for your interest in contributing to Form Engine! This guide will help you get started with contributing to the project.
+
+## Getting Started
+
+### Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- [Bun](https://bun.sh/) (latest version)
+- [Git](https://git-scm.com/)
+- [Node.js](https://nodejs.org/) 18+ (for compatibility testing)
+
+### Development Setup
+
+1. **Fork the repository**
+   
+   Fork the Form Engine repository on GitHub to your own account.
+
+2. **Clone your fork**
+   
+   ```bash
+   git clone https://github.com/your-username/form-engine.git
+   cd form-engine
+   ```
+
+3. **Install dependencies**
+   
+   ```bash
+   bun install
+   ```
+
+4. **Start the development server**
+   
+   ```bash
+   bun run dev
+   ```
+
+5. **Open your browser**
+   
+   Navigate to `http://localhost:3000` to see the development environment.
+
+## Project Structure
+
+Understanding the project structure will help you navigate and contribute effectively:
+
+```
+form-engine/
+├── src/
+│   ├── components/          # React components
+│   │   ├── form/           # Form Engine components
+│   │   ├── ui/             # UI components (shadcn/ui)
+│   │   └── docs/           # Documentation components
+│   ├── lib/
+│   │   ├── form-engine/    # Core Form Engine library
+│   │   │   ├── components/ # Form field components
+│   │   │   ├── hooks/      # Custom hooks
+│   │   │   ├── types/      # TypeScript definitions
+│   │   │   ├── utils/      # Utility functions
+│   │   │   └── validation/ # Validation logic
+│   │   └── utils.ts        # General utilities
+│   ├── pages/              # Application pages
+│   │   └── docs/           # Documentation pages (MDX)
+│   ├── styles/             # Global styles
+│   └── configs/            # Configuration files
+├── public/                 # Static assets
+├── docs/                   # Additional documentation
+└── tests/                  # Test files
+```
+
+## Development Workflow
+
+### 1. Create a Branch
+
+Always create a new branch for your changes:
+
+```bash
+git checkout -b feature/your-feature-name
+# or
+git checkout -b fix/your-bug-fix
+# or
+git checkout -b docs/your-documentation-update
+```
+
+### 2. Make Your Changes
+
+Follow our coding standards and guidelines (see below).
+
+### 3. Test Your Changes
+
+Run the test suite to ensure your changes don't break existing functionality:
+
+```bash
+# Run all tests
+bun test
+
+# Run tests in watch mode
+bun test --watch
+
+# Run specific test file
+bun test src/lib/form-engine/components/input.test.tsx
+```
+
+### 4. Lint and Format
+
+Ensure your code follows our style guidelines:
+
+```bash
+# Check for linting issues
+bun run lint
+
+# Fix auto-fixable linting issues
+bun run lint:fix
+
+# Format code
+bun run format
+```
+
+### 5. Commit Your Changes
+
+We use conventional commits for clear commit messages:
+
+```bash
+git add .
+git commit -m "feat: add new field type for rating inputs"
+# or
+git commit -m "fix: resolve validation issue with conditional fields"
+# or
+git commit -m "docs: update API documentation for hooks"
+```
+
+### Commit Message Convention
+
+We follow the [Conventional Commits](https://conventionalcommits.org/) specification:
+
+- `feat:` New features
+- `fix:` Bug fixes
+- `docs:` Documentation changes
+- `style:` Code style changes (formatting, etc.)
+- `refactor:` Code refactoring
+- `test:` Adding or updating tests
+- `chore:` Maintenance tasks
+
+### 6. Push and Create Pull Request
+
+```bash
+git push origin your-branch-name
+```
+
+Then create a pull request on GitHub with a clear description of your changes.
+
+## Coding Standards
+
+### TypeScript Guidelines
+
+- Use TypeScript for all new code
+- Define proper interfaces and types
+- Avoid `any` type unless absolutely necessary
+- Use `unknown` instead of `any` when possible
+- Document complex types with JSDoc comments
+
+```typescript
+// Good
+interface FieldConfig {
+  id: string;
+  type: FieldType;
+  name: string;
+  label?: string;
+  required?: boolean;
+}
+
+// Avoid
+const fieldConfig: any = {
+  id: 'field1',
+  type: 'text'
+};
+```
+
+### React Guidelines
+
+- Use functional components with hooks
+- Follow React best practices for performance
+- Use meaningful component and prop names
+- Extract reusable logic into custom hooks
+
+```typescript
+// Good
+interface ButtonProps {
+  variant?: 'primary' | 'secondary';
+  size?: 'sm' | 'md' | 'lg';
+  disabled?: boolean;
+  children: React.ReactNode;
+  onClick?: () => void;
+}
+
+function Button({ variant = 'primary', size = 'md', ...props }: ButtonProps) {
+  return (
+    <button 
+      className={cn('btn', `btn-${variant}`, `btn-${size}`)}
+      {...props}
+    />
+  );
+}
+```
+
+### Code Style
+
+We use Biome for code formatting and linting. Key points:
+
+- Use 2 spaces for indentation
+- Use single quotes for strings
+- Use trailing commas
+- Prefer template literals over string concatenation
+- No semicolons (optional)
+
+```typescript
+// Good
+const message = `Hello, ${name}!`
+const items = [
+  'item1',
+  'item2',
+  'item3',
+]
+
+// Avoid
+const message = "Hello, " + name + "!";
+const items = ['item1', 'item2', 'item3'];
+```
+
+### Component Guidelines
+
+- Keep components small and focused
+- Use composition over inheritance
+- Implement proper prop validation
+- Handle edge cases and error states
+
+```typescript
+// Good - focused component
+function FieldLabel({ 
+  htmlFor, 
+  required = false, 
+  children 
+}: FieldLabelProps) {
+  return (
+    <label htmlFor={htmlFor} className="field-label">
+      {children}
+      {required && <span className="required-indicator">*</span>}
+    </label>
+  )
+}
+
+// Good - composition
+function FormField({ field, error, ...props }: FormFieldProps) {
+  return (
+    <div className="form-field">
+      <FieldLabel htmlFor={field.id} required={field.required}>
+        {field.label}
+      </FieldLabel>
+      <FieldInput field={field} {...props} />
+      {error && <FieldError message={error.message} />}
+    </div>
+  )
+}
+```
+
+## Testing Guidelines
+
+### Unit Tests
+
+Write unit tests for:
+- Utility functions
+- Custom hooks
+- Component logic
+- Validation functions
+
+```typescript
+import { describe, it, expect } from 'bun:test'
+import { validateField } from '../validation'
+
+describe('validateField', () => {
+  it('should validate required fields', () => {
+    const rule = { type: 'required', message: 'Field is required' }
+    const result = validateField('', rule)
+    
+    expect(result.isValid).toBe(false)
+    expect(result.message).toBe('Field is required')
+  })
+
+  it('should pass validation for valid values', () => {
+    const rule = { type: 'required', message: 'Field is required' }
+    const result = validateField('valid value', rule)
+    
+    expect(result.isValid).toBe(true)
+  })
+})
+```
+
+### Integration Tests
+
+Write integration tests for:
+- Form rendering
+- User interactions
+- Form submissions
+- Multi-step workflows
+
+```typescript
+import { render, screen, fireEvent } from '@testing-library/react'
+import { FormRenderer } from '../FormRenderer'
+
+describe('FormRenderer Integration', () => {
+  it('should render form fields correctly', () => {
+    const config = {
+      id: 'test-form',
+      fields: [
+        {
+          id: 'name',
+          type: 'text',
+          name: 'name',
+          label: 'Name',
+          required: true
+        }
+      ]
+    }
+
+    render(<FormRenderer config={config} />)
+    
+    expect(screen.getByLabelText('Name')).toBeInTheDocument()
+    expect(screen.getByRole('textbox')).toBeRequired()
+  })
+})
+```
+
+## Documentation Guidelines
+
+### Code Documentation
+
+- Use JSDoc comments for public APIs
+- Document complex logic and algorithms
+- Include usage examples for public functions
+- Keep comments concise and relevant
+
+```typescript
+/**
+ * Validates a field value against a set of validation rules
+ * 
+ * @param value - The value to validate
+ * @param rules - Array of validation rules to apply
+ * @param formData - Complete form data for cross-field validation
+ * @returns Validation result with isValid flag and error messages
+ * 
+ * @example
+ * ```typescript
+ * const result = validateField('john@example.com', [
+ *   { type: 'required', message: 'Email is required' },
+ *   { type: 'email', message: 'Invalid email format' }
+ * ]);
+ * ```
+ */
+function validateField(
+  value: any,
+  rules: ValidationRule[],
+  formData?: Record<string, any>
+): ValidationResult {
+  // Implementation
+}
+```
+
+### MDX Documentation
+
+- Use clear, descriptive headings
+- Include code examples for all features
+- Provide both basic and advanced usage
+- Add live demos when possible
+
+## Contributing Areas
+
+We welcome contributions in several areas:
+
+### 1. Core Library
+
+- New field types
+- Validation enhancements
+- Performance improvements
+- Bug fixes
+
+### 2. Components
+
+- UI component improvements
+- Accessibility enhancements
+- New layout options
+- Styling updates
+
+### 3. Documentation
+
+- API documentation
+- Usage examples
+- Migration guides
+- Tutorial content
+
+### 4. Testing
+
+- Increase test coverage
+- Add integration tests
+- Performance testing
+- Accessibility testing
+
+### 5. Tooling
+
+- Build process improvements
+- Development experience enhancements
+- CI/CD pipeline updates
+
+## Pull Request Process
+
+### 1. Pre-Submission Checklist
+
+Before submitting your PR, ensure:
+
+- [ ] Code follows our style guidelines
+- [ ] All tests pass
+- [ ] Documentation is updated (if needed)
+- [ ] Commit messages follow conventional format
+- [ ] No merge conflicts with main branch
+- [ ] Changes are tested in development environment
+
+### 2. PR Description Template
+
+Use this template for your pull request description:
+
+```markdown
+## Description
+Brief description of the changes
+
+## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Documentation update
+- [ ] Refactoring
+- [ ] Performance improvement
+
+## Testing
+- [ ] Unit tests added/updated
+- [ ] Integration tests added/updated
+- [ ] Manual testing performed
+
+## Screenshots (if applicable)
+Add screenshots for UI changes
+
+## Breaking Changes
+List any breaking changes and migration steps
+
+## Checklist
+- [ ] Code follows project style guidelines
+- [ ] Self-review completed
+- [ ] Documentation updated
+- [ ] Tests added/updated
+```
+
+### 3. Review Process
+
+Your PR will go through:
+
+1. **Automated checks** - CI pipeline runs tests and linting
+2. **Code review** - Maintainers review your changes
+3. **Testing** - Changes are tested in different environments
+4. **Approval** - PR is approved by maintainers
+5. **Merge** - Changes are merged into main branch
+
+## Release Process
+
+We follow semantic versioning (SemVer):
+
+- **Patch** (1.0.1): Bug fixes
+- **Minor** (1.1.0): New features (backward compatible)
+- **Major** (2.0.0): Breaking changes
+
+## Community Guidelines
+
+### Code of Conduct
+
+- Be respectful and inclusive
+- Welcome newcomers and help them learn
+- Focus on constructive feedback
+- Collaborate effectively
+
+### Communication
+
+- Use GitHub Issues for bug reports and feature requests
+- Use GitHub Discussions for questions and general discussion
+- Be clear and specific in your communications
+- Provide context and examples when asking for help
+
+## Getting Help
+
+If you need help with contributing:
+
+1. **Check existing issues** - Your question might already be answered
+2. **Read the documentation** - Start with our guides and API docs
+3. **Ask in discussions** - Use GitHub Discussions for general questions
+4. **Join our community** - Connect with other contributors
+
+## Recognition
+
+We value all contributions and recognize contributors in:
+
+- Release notes
+- Contributors page
+- GitHub repository insights
+- Community highlights
+
+Thank you for contributing to Form Engine! Your efforts help make forms better for everyone.

@@ -1,15 +1,22 @@
 import { DocsLayout } from '@/layouts/docs-layout';
+import { ValidationDemo } from '@/components/validation-demo';
 
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'Validation | Form Engine Documentation',
-    description: 'Learn about Form Engine\'s powerful validation system with automatic Zod schema generation and custom validation rules.',
+  title: 'Validation | Form Engine Documentation',
+  description: 'Learn about Form Engine\'s powerful validation system with automatic Zod schema generation and custom validation rules.',
 })
 
 # Validation
 
 Form Engine provides a powerful, declarative validation system that automatically generates Zod schemas from your validation rules. This approach ensures type safety while eliminating the need to write validation schemas manually.
+
+## Try Different Validation Rules
+
+Experiment with different validation scenarios in this interactive demo:
+
+<ValidationDemo />
 
 ## Validation Philosophy
 

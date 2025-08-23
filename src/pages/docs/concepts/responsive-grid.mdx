@@ -1,19 +1,27 @@
 import { DocsLayout } from '@/layouts/docs-layout';
+import { SimpleGridDemo } from '@/components/simple-grid-demo';
+import { ViewportPreview } from '@/components/viewport-preview';
 
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'Responsive Grid | Form Engine Documentation',
-    description: 'Master Form Engine\'s responsive grid system for creating layouts that work perfectly on all device sizes.',
+  title: 'Responsive Grid | Form Engine Documentation',
+  description: 'Master Form Engine\'s responsive grid system for creating layouts that work perfectly on all device sizes.',
 })
 
 # Responsive Grid System
 
 Form Engine provides a powerful, CSS Grid-based responsive layout system that adapts seamlessly to any screen size. Built on modern CSS Grid with mobile-first cascade behavior, it offers precise control over form layouts while maintaining simplicity.
 
-## Grid Philosophy
+## See Grid Responsiveness in Action
 
-### Mobile-First Approach
+Try resizing your browser window to see how the form adapts to different screen sizes:
+
+<ViewportPreview>
+  <SimpleGridDemo />
+</ViewportPreview>
+
+## Grid Philosophy### Mobile-First Approach
 
 The grid system follows a mobile-first philosophy where you define base styles for mobile devices and progressively enhance for larger screens:
 
