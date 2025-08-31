@@ -1,5 +1,5 @@
 import type React from 'react';
-import FormEngineActionExecutor from '@/components/form-engine-action-executor';
+import FormEngineActionExecutor from '@/components/demo/form-engine-action-executor';
 
 const SequentialActionsPage: React.FC = () => {
 	return (

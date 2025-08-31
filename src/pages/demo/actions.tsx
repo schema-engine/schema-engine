@@ -1,21 +1,21 @@
-import { JsonBuilderDemo } from '@/components/json-builder-demo';
+import { ActionsDemo } from '../../components/demo/actions-demo';
 import { FormEngineLayout } from '@/layouts/form-engine-layout';
 import type { EcoComponent } from '@ecopages/core';
 import type { JSX } from 'react';
 
-const JsonBuilder: EcoComponent<unknown, JSX.Element> = () => {
+const ActionDemo: EcoComponent<unknown, JSX.Element> = () => {
 	return (
 		<FormEngineLayout>
-			<JsonBuilderDemo />
+			<ActionsDemo />
 		</FormEngineLayout>
 	);
 };
 
-JsonBuilder.config = {
+ActionDemo.config = {
 	importMeta: import.meta,
 	dependencies: {
 		components: [FormEngineLayout],
 	},
 };
 
-export default JsonBuilder;
+export default ActionDemo;

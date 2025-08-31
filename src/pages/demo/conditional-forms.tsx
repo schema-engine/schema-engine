@@ -1,21 +1,21 @@
-import { ResponsiveGridDemo } from '@/components/responsive-grid-demo';
+import { ConditionalFormDemo } from '@/components/demo/conditional-form-demo';
 import { FormEngineLayout } from '@/layouts/form-engine-layout';
 import type { EcoComponent } from '@ecopages/core';
 import type { JSX } from 'react';
 
-const ResponsiveGrid: EcoComponent<unknown, JSX.Element> = () => {
+const ConditionalForms: EcoComponent<unknown, JSX.Element> = () => {
 	return (
 		<FormEngineLayout>
-			<ResponsiveGridDemo />
+			<ConditionalFormDemo />
 		</FormEngineLayout>
 	);
 };
 
-ResponsiveGrid.config = {
+ConditionalForms.config = {
 	importMeta: import.meta,
 	dependencies: {
 		components: [FormEngineLayout],
 	},
 };
 
-export default ResponsiveGrid;
+export default ConditionalForms;

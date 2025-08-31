@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { Button } from '../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { FormRenderer } from '../lib/form-engine';
-import { useGDPRConsent, useGTMTracker } from '../hooks/use-form-actions';
-import { actionsFormConfig, simpleActionsFormConfig } from '../configs/forms/actions-forms';
+import { Button } from '../ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { FormRenderer } from '../../lib/form-engine';
+import { useGDPRConsent, useGTMTracker } from '../../hooks/use-form-actions';
+import { actionsFormConfig, simpleActionsFormConfig } from '../../configs/forms/actions-forms';
 
 // Import field registries to ensure components are available
-import '../components/form/fields/input-field.registry';
-import '../components/form/fields/select-field.registry';
-import '../components/form/fields/checkbox-field.registry';
-import '../components/form/fields/textarea-field.registry';
+import '../form/fields/input-field.registry';
+import '../form/fields/select-field.registry';
+import '../form/fields/checkbox-field.registry';
+import '../form/fields/textarea-field.registry';
 
 /**
  * Demo component showcasing the simplified action system

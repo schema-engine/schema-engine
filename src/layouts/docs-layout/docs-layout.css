@@ -12,15 +12,6 @@ body:has([data-slot="sidebar-wrapper"]) {
 	padding: 0 !important;
 }
 
-/* Fix sidebar width classes for Tailwind v3 */
-.w-\\(--sidebar-width\\) {
-	width: var(--sidebar-width) !important;
-}
-
-.w-\\(--sidebar-width-icon\\) {
-	width: var(--sidebar-width-icon) !important;
-}
-
 /* Force proper sidebar layout */
 [data-slot="sidebar-wrapper"] {
 	display: flex !important;

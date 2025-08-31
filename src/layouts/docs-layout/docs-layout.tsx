@@ -137,7 +137,6 @@ function DocsSidebar({ currentPath }: { currentPath?: string }) {
 		<Sidebar variant="sidebar">
 			<SidebarHeader className="p-4 border-b">
 				<div className="space-y-4">
-					{/* Project Title - Clickable */}
 					<a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
 						<div className="bg-primary text-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
 							<Code2 className="h-4 w-4" />
@@ -147,8 +146,6 @@ function DocsSidebar({ currentPath }: { currentPath?: string }) {
 							<span className="text-xs text-muted-foreground">v{pkg.version}</span>
 						</div>
 					</a>
-
-					{/* Search Replacement */}
 					<div className="relative">
 						<Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 						<input
@@ -272,7 +269,7 @@ export const DocsLayout: EcoComponent<DocsLayoutProps, ReactNode> = ({ children,
 									</a>
 									<a
 										className="transition-colors hover:text-foreground/80 text-foreground/60"
-										href="/showcase"
+										href="/docs/examples/basic-form"
 									>
 										Examples
 									</a>
