@@ -1,0 +1,235 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'Submit Plugin | Form Engine Documentation',
+    description: 'Complete guide to the Submit plugin for handling form submissions.',
+});
+
+# Submit Plugin
+
+The Submit plugin handles form submission to API endpoints with configurable request handling, data transformation, and lifecycle management.
+
+## Basic Usage
+
+```typescript
+import { registerAction } from "@/lib/form-engine/actions/action-registry";
+import { submitPlugin } from "@/lib/form-engine/actions/plugins";
+
+// Register with default configuration
+registerAction(submitPlugin());
+```
+
+## Action Configuration
+
+```typescript
+{
+  id: "submit-form",
+  type: "submit",
+  endpoint: "/api/submit", // Required: API endpoint
+  method: "POST", // Optional: HTTP method (default: POST)
+  successMessage: "Form submitted!", // Optional: success message
+  errorMessage: "Submit failed", // Optional: error message
+  redirectUrl: "/thank-you" // Optional: redirect after success
+}
+```
+
+### Configuration Options
+
+| Option | Type | Required | Default | Description |
+|--------|------|----------|---------|-------------|
+| `endpoint` | `string` | Yes | - | API endpoint URL (relative or absolute) |
+| `method` | `"POST" \| "PUT" \| "PATCH"` | No | `"POST"` | HTTP method |
+| `successMessage` | `string` | No | `"Form submitted successfully"` | Success message |
+| `errorMessage` | `string` | No | - | Custom error message |
+| `redirectUrl` | `string` | No | - | URL to redirect to after success |
+
+## Plugin Customization
+
+```typescript
+registerAction(submitPlugin({
+  // Custom request adapter (e.g., axios)
+  request: async (url, options) => {
+    const response = await axios({
+      method: options.method,
+      url,
+      data: JSON.parse(options.body),
+      headers: options.headers
+    });
+    
+    return {
+      ok: response.status < 400,
+      status: response.status,
+      statusText: response.statusText,
+      json: async () => response.data
+    } as Response;
+  },
+
+  // Transform data before sending
+  transformData: (data, context) => ({
+    ...data,
+    metadata: {
+      formId: context.formId,
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent
+    }
+  }),
+
+  // Success callback
+  onSuccess: (data, context) => {
+    console.log("Form submitted successfully:", data);
+    analytics.track("form_submitted", { 
+      formId: context.formId,
+      submissionId: data.id 
+    });
+  },
+
+  // Error callback
+  onError: (error, context) => {
+    console.error("Submit failed:", error);
+    Sentry.captureException(error, {
+      contexts: { form: context }
+    });
+  },
+
+  // Custom validation
+  validate: (context) => {
+    if (context.formData.email?.includes("spam")) {
+      return "Email domain not allowed";
+    }
+    if (!context.isValid) {
+      return "Please fix form errors before submitting";
+    }
+    return true;
+  }
+}));
+```
+
+### Customization Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `request` | `(url: string, options: any) => Promise<Response>` | Custom request adapter |
+| `transformData` | `(data: any, context: ActionExecutionContext) => any` | Transform data before sending |
+| `onSuccess` | `(data: any, context: ActionExecutionContext) => void` | Success callback |
+| `onError` | `(error: Error, context: ActionExecutionContext) => void` | Error callback |
+| `validate` | `(context: ActionExecutionContext) => boolean \| string` | Custom validation |
+
+## Default Triggers
+
+The Submit plugin responds to these triggers by default:
+- `form_submit` - When the entire form is submitted
+- `step_submit` - When a step in a multi-step form is submitted
+
+## Examples
+
+### Basic Form Submission
+
+```typescript
+const actions = [
+  {
+    id: "submit-contact-form",
+    type: "submit",
+    endpoint: "/api/contact",
+    method: "POST",
+    successMessage: "Thank you for your message!",
+    redirectUrl: "/thank-you"
+  }
+];
+```
+
+### Multi-Step Form Submission
+
+```typescript
+const actions = [
+  {
+    id: "submit-step",
+    type: "submit",
+    endpoint: "/api/save-step",
+    method: "POST",
+    triggers: ["step_submit"]
+  },
+  {
+    id: "submit-final",
+    type: "submit",
+    endpoint: "/api/submit-final",
+    method: "POST",
+    triggers: ["form_submit"],
+    redirectUrl: "/success"
+  }
+];
+```
+
+### Custom Request with Authentication
+
+```typescript
+registerAction(submitPlugin({
+  request: async (url, options) => {
+    return fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        'Authorization': `Bearer ${getAuthToken()}`,
+        'X-API-Key': process.env.API_KEY
+      }
+    });
+  },
+  
+  transformData: (data, context) => ({
+    formData: data,
+    metadata: {
+      formId: context.formId,
+      timestamp: new Date().toISOString(),
+      step: context.currentStep,
+      totalSteps: context.totalSteps
+    }
+  })
+}));
+```
+
+## Error Handling
+
+The Submit plugin provides comprehensive error handling:
+
+```typescript
+registerAction(submitPlugin({
+  onError: (error, context) => {
+    // Log error with context
+    console.error('Submit error:', {
+      error: error.message,
+      formId: context.formId,
+      formData: context.formData,
+      endpoint: action.endpoint
+    });
+    
+    // Send to error tracking
+    Sentry.captureException(error, {
+      tags: { component: 'form-submit' },
+      contexts: { 
+        form: {
+          id: context.formId,
+          step: context.currentStep,
+          valid: context.isValid
+        }
+      }
+    });
+    
+    // Show user-friendly message
+    toast.error('Failed to submit form. Please try again.');
+  }
+}));
+```
+
+## Related
+
+- **[Notification Plugin](/docs/actions/plugins/notification)** - Show feedback after submission
+- **[GTM Plugin](/docs/actions/plugins/gtm)** - Track submission events
+- **[Reset Plugin](/docs/actions/plugins/reset)** - Reset form after successful submission
+
+## Examples
+
+See the Submit plugin in action:
+
+- **[Sequential Actions Example](/docs/examples/sequential-actions)** - Submit with notifications
+- **[Contact Form Example](/docs/examples/contact-form)** - Complete form implementation

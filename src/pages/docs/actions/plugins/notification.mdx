@@ -1,0 +1,267 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'Notification Plugin | Form Engine Documentation',
+    description: 'Complete guide to the Notification plugin for displaying user feedback.',
+});
+
+# Notification Plugin
+
+The Notification plugin displays user notifications with different styles and durations. It's commonly used to provide feedback after form submissions or other user actions.
+
+## Basic Usage
+
+```typescript
+import { registerAction } from "@/lib/form-engine/actions/action-registry";
+import { notificationPlugin } from "@/lib/form-engine/actions/plugins";
+
+// Register with default configuration
+registerAction(notificationPlugin());
+```
+
+## Action Configuration
+
+```typescript
+{
+  id: "success-message",
+  type: "show_notification",
+  message: "Form submitted successfully!", // Required: notification text
+  variant: "success", // Required: success|error|warning|info
+  duration: 3000, // Optional: display duration in ms (default: 3000)
+  triggers: ["submit_success"] // Optional: when to show
+}
+```
+
+### Configuration Options
+
+| Option | Type | Required | Default | Description |
+|--------|------|----------|---------|-------------|
+| `message` | `string` | Yes | - | The notification text to display |
+| `variant` | `"success" \| "error" \| "warning" \| "info"` | Yes | `"info"` | Visual style of the notification |
+| `duration` | `number` | No | `3000` | Duration in milliseconds (0 = permanent) |
+
+## Plugin Customization
+
+```typescript
+registerAction(notificationPlugin({
+  // Custom handlers for each variant
+  onSuccess: (message) => toast.success(message),
+  onError: (message) => toast.error(message),
+  onWarning: (message) => toast.warning(message),
+  onInfo: (message) => toast.info(message),
+  
+  // Global handler for all notifications
+  onNotification: (message, variant, context) => {
+    console.log(`[${variant.toUpperCase()}] ${message}`);
+    customNotificationService.show(message, variant);
+  }
+}));
+```
+
+### Customization Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `onSuccess` | `(message: string, context: ActionExecutionContext) => void` | Success notification handler |
+| `onError` | `(message: string, context: ActionExecutionContext) => void` | Error notification handler |
+| `onWarning` | `(message: string, context: ActionExecutionContext) => void` | Warning notification handler |
+| `onInfo` | `(message: string, context: ActionExecutionContext) => void` | Info notification handler |
+| `onNotification` | `(message: string, variant: string, context: ActionExecutionContext) => void` | Global notification handler |
+
+## Default Triggers
+
+The Notification plugin responds to these triggers by default:
+- `form_submit` - Shows notifications immediately when form is submitted
+
+## Examples
+
+### Basic Success/Error Notifications
+
+```typescript
+const actions = [
+  {
+    id: "submit-form",
+    type: "submit",
+    endpoint: "/api/contact",
+    method: "POST"
+  },
+  {
+    id: "success-notification",
+    type: "show_notification",
+    message: "Thank you for your message!",
+    variant: "success",
+    triggers: ["submit_success"]
+  },
+  {
+    id: "error-notification",
+    type: "show_notification",
+    message: "Failed to submit form. Please try again.",
+    variant: "error",
+    triggers: ["submit_error"]
+  }
+];
+```
+
+### Multi-Step Form Progress
+
+```typescript
+const actions = [
+  {
+    id: "step-progress",
+    type: "show_notification",
+    message: "Step completed! Moving to next step...",
+    variant: "info",
+    duration: 2000,
+    triggers: ["step_submit"]
+  },
+  {
+    id: "form-complete",
+    type: "show_notification",
+    message: "Registration completed successfully!",
+    variant: "success",
+    duration: 5000,
+    triggers: ["submit_success"]
+  }
+];
+```
+
+### Warning Messages
+
+```typescript
+const actions = [
+  {
+    id: "validation-warning",
+    type: "show_notification",
+    message: "Some fields need attention before submitting.",
+    variant: "warning",
+    duration: 4000,
+    triggers: ["form_submit"] // Show immediately on submit attempt
+  }
+];
+```
+
+## Integration Examples
+
+### React Hot Toast
+
+```typescript
+import { toast } from 'react-hot-toast';
+
+registerAction(notificationPlugin({
+  onSuccess: (message) => toast.success(message, {
+    duration: 4000,
+    position: 'top-right',
+  }),
+  onError: (message) => toast.error(message, {
+    duration: 6000,
+    position: 'top-right',
+  }),
+  onWarning: (message) => toast(message, {
+    icon: '⚠️',
+    duration: 4000,
+  }),
+  onInfo: (message) => toast(message, {
+    icon: 'ℹ️',
+    duration: 3000,
+  })
+}));
+```
+
+### Chakra UI Toast
+
+```typescript
+import { useToast } from '@chakra-ui/react';
+
+const toast = useToast();
+
+registerAction(notificationPlugin({
+  onSuccess: (message) => toast({
+    title: 'Success',
+    description: message,
+    status: 'success',
+    duration: 3000,
+    isClosable: true,
+  }),
+  onError: (message) => toast({
+    title: 'Error',
+    description: message,
+    status: 'error',
+    duration: 5000,
+    isClosable: true,
+  })
+}));
+```
+
+### Custom Notification System
+
+```typescript
+registerAction(notificationPlugin({
+  onNotification: (message, variant, context) => {
+    // Log to analytics
+    analytics.track('notification_shown', {
+      message,
+      variant,
+      formId: context.formId,
+      step: context.currentStep
+    });
+    
+    // Show in custom notification center
+    NotificationCenter.add({
+      id: `${context.formId}-${Date.now()}`,
+      message,
+      type: variant,
+      timestamp: new Date(),
+      actions: variant === 'error' ? [
+        { label: 'Retry', onClick: () => retryLastAction() },
+        { label: 'Contact Support', onClick: () => openSupport() }
+      ] : undefined
+    });
+  }
+}));
+```
+
+## Accessibility
+
+When implementing custom notification handlers, consider accessibility:
+
+```typescript
+registerAction(notificationPlugin({
+  onSuccess: (message) => {
+    // Use ARIA live regions for screen readers
+    const liveRegion = document.getElementById('notifications-live-region');
+    if (liveRegion) {
+      liveRegion.textContent = message;
+    }
+    
+    // Visual notification
+    toast.success(message);
+  },
+  
+  onError: (message) => {
+    // Use assertive live region for errors
+    const liveRegion = document.getElementById('notifications-live-region');
+    if (liveRegion) {
+      liveRegion.setAttribute('aria-live', 'assertive');
+      liveRegion.textContent = message;
+    }
+    
+    // Visual notification
+    toast.error(message);
+  }
+}));
+```
+
+## Related
+
+- **[Submit Plugin](/docs/actions/plugins/submit)** - Often triggers notifications
+- **[Reset Plugin](/docs/actions/plugins/reset)** - Can show confirmation notifications
+- **[Triggers & Lifecycle](/docs/actions/triggers)** - Learn about notification timing
+
+## Examples
+
+See the Notification plugin in action:
+
+- **[Sequential Actions Example](/docs/examples/sequential-actions)** - Notifications with other actions
+- **[Contact Form Example](/docs/examples/contact-form)** - Real-world notification usage

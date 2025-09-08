@@ -1,0 +1,537 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'GTM Plugin | Form Engine Documentation',
+    description: 'Complete guide to the GTM (Google Tag Manager) plugin for analytics tracking.',
+});
+
+# GTM Plugin
+
+The GTM (Google Tag Manager) plugin provides comprehensive analytics tracking for form interactions. It automatically sends events to Google Tag Manager for form submissions, field interactions, validation errors, and custom user actions.
+
+## Basic Usage
+
+```typescript
+import { registerAction } from "@/lib/form-engine/actions/action-registry";
+import { gtmPlugin } from "@/lib/form-engine/actions/plugins";
+
+// Register with default configuration
+registerAction(gtmPlugin());
+```
+
+## Action Configuration
+
+```typescript
+{
+  id: "track-form-events",
+  type: "gtm_track",
+  eventName: "form_submit", // Required: GTM event name
+  eventAction: "submit", // Optional: event action
+  eventCategory: "form", // Optional: event category
+  eventLabel: "contact-form", // Optional: event label
+  customParameters: { // Optional: additional GTM parameters
+    form_id: "contact-form",
+    form_type: "lead_generation",
+    page_section: "hero"
+  },
+  triggers: ["submit_success"] // Optional: when to send event
+}
+```
+
+### Configuration Options
+
+| Option | Type | Required | Default | Description |
+|--------|------|----------|---------|-------------|
+| `eventName` | `string` | Yes | - | GTM event name (e.g., "form_submit") |
+| `eventAction` | `string` | No | `"interaction"` | What action was performed |
+| `eventCategory` | `string` | No | `"form"` | Event category for grouping |
+| `eventLabel` | `string` | No | - | Additional label for the event |
+| `customParameters` | `object` | No | `{}` | Additional parameters to send |
+| `includeFormData` | `boolean` | No | `false` | Include form field values (be mindful of PII) |
+| `dataLayerName` | `string` | No | `"dataLayer"` | Custom data layer name |
+
+## Plugin Customization
+
+```typescript
+registerAction(gtmPlugin({
+  // Custom data layer name
+  dataLayerName: 'customDataLayer',
+  
+  // Global parameters added to all events
+  globalParameters: {
+    app_version: '1.2.3',
+    environment: 'production',
+    user_type: 'authenticated'
+  },
+  
+  // Data transformation hook
+  onBeforeTrack: (eventData, context) => {
+    console.log('Sending GTM event:', eventData);
+    
+    // Add dynamic parameters
+    return {
+      ...eventData,
+      timestamp: Date.now(),
+      session_id: getSessionId(),
+      user_id: getCurrentUserId(),
+      form_completion_time: calculateCompletionTime(context)
+    };
+  },
+  
+  // Success callback
+  onAfterTrack: (eventData, context) => {
+    console.log('GTM event sent successfully');
+    
+    // Update internal analytics
+    internalAnalytics.track('gtm_event_sent', {
+      event_name: eventData.event,
+      form_id: context.formId
+    });
+  },
+  
+  // Error handling
+  onError: (error, eventData, context) => {
+    console.error('GTM tracking error:', error);
+    
+    // Fallback tracking
+    fallbackAnalytics.track(eventData);
+  }
+}));
+```
+
+### Customization Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `dataLayerName` | `string` | Custom data layer variable name |
+| `globalParameters` | `object` | Parameters added to all events |
+| `onBeforeTrack` | `(data: any, context: ActionExecutionContext) => any` | Transform data before sending |
+| `onAfterTrack` | `(data: any, context: ActionExecutionContext) => void` | Called after successful tracking |
+| `onError` | `(error: Error, data: any, context: ActionExecutionContext) => void` | Error handling callback |
+
+## Default Triggers
+
+The GTM plugin responds to these triggers by default:
+- `form_submit` - When form is submitted
+- `field_change` - When field values change (if configured)
+
+## Standard GTM Events
+
+### Form Submission Tracking
+
+```typescript
+const actions = [
+  {
+    id: "track-form-submit",
+    type: "gtm_track",
+    eventName: "form_submit",
+    eventAction: "submit",
+    eventCategory: "engagement",
+    eventLabel: "contact-form",
+    customParameters: {
+      form_id: "contact-form",
+      form_type: "lead_generation",
+      form_length: "medium"
+    },
+    triggers: ["submit_attempt"]
+  },
+  {
+    id: "track-submit-success",
+    type: "gtm_track",
+    eventName: "form_submit_success",
+    eventAction: "submit_success",
+    eventCategory: "conversion",
+    customParameters: {
+      conversion_value: 100,
+      lead_source: "website"
+    },
+    triggers: ["submit_success"]
+  },
+  {
+    id: "track-submit-error",
+    type: "gtm_track",
+    eventName: "form_submit_error",
+    eventAction: "submit_error",
+    eventCategory: "error",
+    customParameters: {
+      error_type: "validation",
+      error_count: "{{ validation_errors.length }}"
+    },
+    triggers: ["submit_error"]
+  }
+];
+```
+
+### Field Interaction Tracking
+
+```typescript
+const actions = [
+  {
+    id: "track-field-focus",
+    type: "gtm_track",
+    eventName: "form_field_focus",
+    eventAction: "field_focus",
+    eventCategory: "engagement",
+    customParameters: {
+      field_name: "{{ field.name }}",
+      field_type: "{{ field.type }}",
+      form_step: "{{ currentStep }}"
+    },
+    triggers: ["field_focus"]
+  },
+  {
+    id: "track-field-completion",
+    type: "gtm_track",
+    eventName: "form_field_complete",
+    eventAction: "field_complete",
+    eventCategory: "engagement",
+    customParameters: {
+      field_name: "{{ field.name }}",
+      completion_time: "{{ field.completionTime }}"
+    },
+    triggers: ["field_blur"]
+  }
+];
+```
+
+### Multi-Step Form Tracking
+
+```typescript
+const actions = [
+  {
+    id: "track-step-start",
+    type: "gtm_track",
+    eventName: "form_step_start",
+    eventAction: "step_start",
+    eventCategory: "funnel",
+    eventLabel: "step-{{ currentStep }}",
+    customParameters: {
+      step_number: "{{ currentStep }}",
+      total_steps: "{{ totalSteps }}",
+      step_name: "{{ stepName }}"
+    },
+    triggers: ["step_enter"]
+  },
+  {
+    id: "track-step-complete",
+    type: "gtm_track",
+    eventName: "form_step_complete",
+    eventAction: "step_complete",
+    eventCategory: "funnel",
+    customParameters: {
+      step_number: "{{ currentStep }}",
+      step_completion_time: "{{ stepCompletionTime }}",
+      fields_completed: "{{ completedFields.length }}"
+    },
+    triggers: ["step_submit"]
+  },
+  {
+    id: "track-form-abandon",
+    type: "gtm_track",
+    eventName: "form_abandon",
+    eventAction: "abandon",
+    eventCategory: "engagement",
+    customParameters: {
+      abandon_step: "{{ currentStep }}",
+      time_spent: "{{ timeSpent }}",
+      completion_percentage: "{{ completionPercentage }}"
+    },
+    triggers: ["form_abandon"]
+  }
+];
+```
+
+## E-commerce Tracking
+
+### Enhanced E-commerce Events
+
+```typescript
+const actions = [
+  {
+    id: "track-begin-checkout",
+    type: "gtm_track",
+    eventName: "begin_checkout",
+    customParameters: {
+      currency: "USD",
+      value: "{{ cart.total }}",
+      items: "{{ cart.items }}",
+      checkout_step: 1,
+      checkout_option: "guest"
+    },
+    triggers: ["checkout_start"]
+  },
+  {
+    id: "track-purchase",
+    type: "gtm_track",
+    eventName: "purchase",
+    customParameters: {
+      transaction_id: "{{ order.id }}",
+      value: "{{ order.total }}",
+      currency: "USD",
+      tax: "{{ order.tax }}",
+      shipping: "{{ order.shipping }}",
+      items: "{{ order.items }}"
+    },
+    triggers: ["order_complete"]
+  }
+];
+```
+
+### Lead Generation Tracking
+
+```typescript
+const actions = [
+  {
+    id: "track-lead-generation",
+    type: "gtm_track",
+    eventName: "generate_lead",
+    eventAction: "generate_lead",
+    eventCategory: "conversion",
+    customParameters: {
+      lead_type: "contact_form",
+      lead_source: "organic",
+      lead_medium: "website",
+      form_type: "contact",
+      value: 50 // Estimated lead value
+    },
+    triggers: ["submit_success"]
+  }
+];
+```
+
+## Advanced Tracking Patterns
+
+### Custom Event with Form Data
+
+```typescript
+registerAction(gtmPlugin({
+  onBeforeTrack: (eventData, context) => {
+    // Add form completion metrics
+    const formState = context.getFormState();
+    const startTime = context.getStartTime();
+    
+    return {
+      ...eventData,
+      form_completion_time: Date.now() - startTime,
+      fields_filled: Object.values(formState).filter(v => v).length,
+      form_completion_percentage: calculateCompletionPercentage(formState),
+      user_agent: navigator.userAgent,
+      viewport_size: `${window.innerWidth}x${window.innerHeight}`
+    };
+  }
+}));
+
+const actions = [
+  {
+    id: "comprehensive-form-tracking",
+    type: "gtm_track",
+    eventName: "form_interaction",
+    includeFormData: false, // Don't include PII
+    customParameters: {
+      form_id: "registration-form",
+      form_version: "2.1",
+      ab_test_variant: "variant-b"
+    },
+    triggers: ["submit_success"]
+  }
+];
+```
+
+### Funnel Analysis
+
+```typescript
+const actions = [
+  {
+    id: "track-funnel-progress",
+    type: "gtm_track",
+    eventName: "funnel_progress",
+    eventAction: "step_complete",
+    eventCategory: "funnel",
+    customParameters: {
+      funnel_name: "registration_funnel",
+      step_name: "{{ stepName }}",
+      step_number: "{{ currentStep }}",
+      previous_step: "{{ previousStep }}",
+      time_on_step: "{{ stepTime }}",
+      total_time: "{{ totalTime }}",
+      drop_off_risk: "{{ dropOffRisk }}" // Calculated risk score
+    },
+    triggers: ["step_complete"]
+  }
+];
+```
+
+### Error and Validation Tracking
+
+```typescript
+const actions = [
+  {
+    id: "track-validation-errors",
+    type: "gtm_track",
+    eventName: "form_validation_error",
+    eventAction: "validation_error",
+    eventCategory: "error",
+    customParameters: {
+      error_fields: "{{ errorFields }}",
+      error_count: "{{ errorCount }}",
+      error_types: "{{ errorTypes }}",
+      attempt_number: "{{ attemptNumber }}"
+    },
+    triggers: ["validation_error"]
+  },
+  {
+    id: "track-field-errors",
+    type: "gtm_track",
+    eventName: "field_error",
+    eventAction: "field_validation_error",
+    eventCategory: "error",
+    customParameters: {
+      field_name: "{{ field.name }}",
+      error_type: "{{ field.errorType }}",
+      error_message: "{{ field.errorMessage }}",
+      field_value_length: "{{ field.value.length }}"
+    },
+    triggers: ["field_error"]
+  }
+];
+```
+
+## Privacy and Compliance
+
+### GDPR-Compliant Tracking
+
+```typescript
+registerAction(gtmPlugin({
+  onBeforeTrack: (eventData, context) => {
+    // Check consent
+    const hasAnalyticsConsent = checkGDPRConsent('analytics');
+    if (!hasAnalyticsConsent) {
+      return null; // Skip tracking if no consent
+    }
+    
+    // Remove PII
+    const sanitizedData = { ...eventData };
+    delete sanitizedData.email;
+    delete sanitizedData.phone;
+    delete sanitizedData.name;
+    
+    return sanitizedData;
+  }
+}));
+
+const actions = [
+  {
+    id: "gdpr-compliant-tracking",
+    type: "gtm_track",
+    eventName: "form_submit",
+    includeFormData: false,
+    customParameters: {
+      consent_given: "{{ gdprConsent.analytics }}",
+      consent_timestamp: "{{ gdprConsent.timestamp }}"
+    },
+    triggers: ["submit_success"]
+  }
+];
+```
+
+### Anonymized User Tracking
+
+```typescript
+registerAction(gtmPlugin({
+  globalParameters: {
+    user_id_hash: hashUserId(getCurrentUserId()), // Hashed user ID
+    session_id: getSessionId(),
+    anonymized_ip: true
+  },
+  
+  onBeforeTrack: (eventData, context) => {
+    // Remove or hash any identifying information
+    return {
+      ...eventData,
+      client_id: generateAnonymousClientId(),
+      fingerprint: generateDeviceFingerprint()
+    };
+  }
+}));
+```
+
+## Integration with Google Analytics 4
+
+### GA4 Event Format
+
+```typescript
+const actions = [
+  {
+    id: "ga4-form-submit",
+    type: "gtm_track",
+    eventName: "form_submit", // GA4 recommended event
+    customParameters: {
+      // GA4 standard parameters
+      engagement_time_msec: "{{ engagementTime }}",
+      session_engaged: true,
+      
+      // Custom parameters
+      form_id: "contact-form",
+      form_name: "Contact Us",
+      form_destination: "/thank-you"
+    },
+    triggers: ["submit_success"]
+  }
+];
+```
+
+### Conversion Tracking
+
+```typescript
+const actions = [
+  {
+    id: "ga4-conversion",
+    type: "gtm_track",
+    eventName: "conversion",
+    customParameters: {
+      send_to: "AW-CONVERSION_ID/CONVERSION_LABEL",
+      value: "{{ conversionValue }}",
+      currency: "USD",
+      transaction_id: "{{ transactionId }}"
+    },
+    triggers: ["submit_success"]
+  }
+];
+```
+
+## Testing and Debugging
+
+### Debug Mode
+
+```typescript
+registerAction(gtmPlugin({
+  debug: process.env.NODE_ENV === 'development',
+  
+  onBeforeTrack: (eventData, context) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.group('GTM Event Debug');
+      console.log('Event Data:', eventData);
+      console.log('Context:', context);
+      console.log('Data Layer:', window.dataLayer);
+      console.groupEnd();
+    }
+    
+    return eventData;
+  }
+}));
+```
+
+## Related
+
+- **[Submit Plugin](/docs/actions/plugins/submit)** - Often triggers GTM events
+- **[Notification Plugin](/docs/actions/plugins/notification)** - Can track notification events
+- **[Triggers & Lifecycle](/docs/actions/triggers)** - Learn about event timing
+
+## Examples
+
+See the GTM plugin in action:
+
+- **[Analytics Dashboard Example](/docs/examples/analytics-dashboard)** - Comprehensive tracking setup
+- **[E-commerce Form Example](/docs/examples/ecommerce-form)** - Conversion tracking

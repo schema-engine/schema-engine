@@ -1,0 +1,495 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'Auto-Save Plugin | Form Engine Documentation',
+    description: 'Complete guide to the Auto-Save plugin for automatic form data persistence.',
+});
+
+# Auto-Save Plugin
+
+The Auto-Save plugin automatically saves form data to local storage or custom storage backends. It provides configurable intervals, triggers, and data persistence strategies to prevent data loss.
+
+## Basic Usage
+
+```typescript
+import { registerAction } from "@/lib/form-engine/actions/action-registry";
+import { autoSavePlugin } from "@/lib/form-engine/actions/plugins";
+
+// Register with default configuration
+registerAction(autoSavePlugin());
+```
+
+## Action Configuration
+
+```typescript
+{
+  id: "auto-save-form",
+  type: "auto_save",
+  enabled: true, // Required: enable/disable auto-save
+  interval: 30000, // Optional: save interval in ms (default: 30000)
+  storageKey: "form-data", // Optional: custom storage key
+  includeFields: ["name", "email"], // Optional: specific fields to save
+  excludeFields: ["password"], // Optional: fields to exclude from saving
+  triggers: ["field_change"], // Optional: when to trigger saves
+  clearOnSubmit: true // Optional: clear saved data after successful submit
+}
+```
+
+### Configuration Options
+
+| Option | Type | Required | Default | Description |
+|--------|------|----------|---------|-------------|
+| `enabled` | `boolean` | Yes | `true` | Enable or disable auto-save |
+| `interval` | `number` | No | `30000` | Auto-save interval in milliseconds |
+| `storageKey` | `string` | No | `"form-${formId}"` | Storage key for saved data |
+| `includeFields` | `string[]` | No | `[]` | Only save these fields (empty = all fields) |
+| `excludeFields` | `string[]` | No | `[]` | Exclude these fields from saving |
+| `clearOnSubmit` | `boolean` | No | `true` | Clear saved data after successful submit |
+| `storageType` | `"localStorage" \| "sessionStorage" \| "custom"` | No | `"localStorage"` | Storage backend type |
+
+## Plugin Customization
+
+```typescript
+registerAction(autoSavePlugin({
+  // Custom storage backend
+  storage: {
+    getItem: async (key) => {
+      return await customDB.get(key);
+    },
+    setItem: async (key, value) => {
+      await customDB.set(key, value);
+    },
+    removeItem: async (key) => {
+      await customDB.delete(key);
+    }
+  },
+  
+  // Before save hook
+  onBeforeSave: (data, context) => {
+    console.log('About to save:', Object.keys(data));
+    
+    // Validate data before saving
+    const sanitizedData = sanitizeFormData(data);
+    return sanitizedData;
+  },
+  
+  // After save hook
+  onAfterSave: (data, context) => {
+    console.log('Data saved successfully');
+    
+    // Update UI indicator
+    showSaveIndicator('saved');
+  },
+  
+  // On load hook
+  onLoad: (data, context) => {
+    console.log('Loaded saved data:', Object.keys(data));
+    
+    // Show notification about restored data
+    showNotification({
+      message: 'Previous form data has been restored.',
+      variant: 'info',
+      duration: 3000
+    });
+  },
+  
+  // Error handling
+  onError: (error, context) => {
+    console.error('Auto-save error:', error);
+    
+    // Fallback to localStorage
+    localStorage.setItem(`fallback-${context.formId}`, JSON.stringify(context.getFormState()));
+  }
+}));
+```
+
+### Customization Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `storage` | `CustomStorage` | Custom storage backend implementation |
+| `onBeforeSave` | `(data: any, context: ActionExecutionContext) => any` | Process data before saving |
+| `onAfterSave` | `(data: any, context: ActionExecutionContext) => void` | Called after successful save |
+| `onLoad` | `(data: any, context: ActionExecutionContext) => void` | Called when loading saved data |
+| `onError` | `(error: Error, context: ActionExecutionContext) => void` | Error handling callback |
+
+## Default Triggers
+
+The Auto-Save plugin responds to these triggers by default:
+- `field_change` - Save when any field value changes
+- `form_blur` - Save when form loses focus
+
+## Examples
+
+### Basic Auto-Save
+
+```typescript
+const actions = [
+  {
+    id: "basic-auto-save",
+    type: "auto_save",
+    enabled: true,
+    interval: 30000, // Save every 30 seconds
+    triggers: ["field_change"]
+  }
+];
+```
+
+### Selective Field Auto-Save
+
+```typescript
+const actions = [
+  {
+    id: "selective-auto-save",
+    type: "auto_save",
+    enabled: true,
+    interval: 15000,
+    includeFields: ["name", "email", "message"], // Only save these fields
+    excludeFields: ["password", "confirmPassword"], // Never save these
+    storageKey: "contact-form-draft"
+  }
+];
+```
+
+### Multi-Step Form Auto-Save
+
+```typescript
+const actions = [
+  {
+    id: "step-auto-save",
+    type: "auto_save",
+    enabled: true,
+    interval: 10000, // More frequent saves for long forms
+    storageKey: "registration-progress",
+    clearOnSubmit: false, // Keep data until final submission
+    triggers: ["field_change", "step_change"]
+  }
+];
+```
+
+### Conditional Auto-Save
+
+```typescript
+const actions = [
+  {
+    id: "conditional-auto-save",
+    type: "auto_save",
+    enabled: true,
+    interval: 60000,
+    triggers: ["field_change"],
+    conditions: [
+      {
+        field: "saveProgress",
+        operator: "equals",
+        value: true
+      }
+    ]
+  }
+];
+
+// Form with save option
+<FormEngine
+  config={formConfig}
+  actions={actions}
+>
+  <Checkbox 
+    name="saveProgress" 
+    label="Save my progress automatically"
+  />
+</FormEngine>
+```
+
+### Custom Storage Backend
+
+```typescript
+// Database storage implementation
+const databaseStorage = {
+  async getItem(key: string) {
+    const response = await fetch(`/api/form-drafts/${key}`);
+    return response.ok ? await response.json() : null;
+  },
+  
+  async setItem(key: string, value: any) {
+    await fetch(`/api/form-drafts/${key}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: value, timestamp: Date.now() })
+    });
+  },
+  
+  async removeItem(key: string) {
+    await fetch(`/api/form-drafts/${key}`, {
+      method: 'DELETE'
+    });
+  }
+};
+
+registerAction(autoSavePlugin({
+  storage: databaseStorage,
+  onError: (error, context) => {
+    // Fallback to localStorage on database errors
+    console.warn('Database save failed, using localStorage:', error);
+    localStorage.setItem(
+      `backup-${context.formId}`, 
+      JSON.stringify(context.getFormState())
+    );
+  }
+}));
+
+const actions = [
+  {
+    id: "database-auto-save",
+    type: "auto_save",
+    enabled: true,
+    interval: 45000,
+    storageKey: `user-${userId}-form-${formId}`,
+    storageType: "custom"
+  }
+];
+```
+
+### Smart Auto-Save with Visual Feedback
+
+```typescript
+registerAction(autoSavePlugin({
+  onBeforeSave: (data, context) => {
+    // Show saving indicator
+    updateSaveStatus('saving');
+    
+    // Only save if form has meaningful data
+    const hasContent = Object.values(data).some(value => 
+      value && value.toString().trim().length > 0
+    );
+    
+    return hasContent ? data : null; // Return null to skip save
+  },
+  
+  onAfterSave: (data, context) => {
+    // Show success indicator
+    updateSaveStatus('saved');
+    
+    // Hide indicator after delay
+    setTimeout(() => updateSaveStatus('idle'), 2000);
+  },
+  
+  onError: (error, context) => {
+    // Show error indicator
+    updateSaveStatus('error');
+    
+    // Retry after delay
+    setTimeout(() => {
+      executeAction('smart-auto-save');
+    }, 5000);
+  }
+}));
+
+const actions = [
+  {
+    id: "smart-auto-save",
+    type: "auto_save",
+    enabled: true,
+    interval: 20000,
+    triggers: ["field_change"]
+  }
+];
+
+// Save status component
+const SaveStatus = ({ status }: { status: 'idle' | 'saving' | 'saved' | 'error' }) => {
+  const statusConfig = {
+    idle: { icon: '', text: '', color: 'gray' },
+    saving: { icon: '⏳', text: 'Saving...', color: 'blue' },
+    saved: { icon: '✓', text: 'Saved', color: 'green' },
+    error: { icon: '⚠️', text: 'Save failed', color: 'red' }
+  };
+  
+  const config = statusConfig[status];
+  
+  return status !== 'idle' ? (
+    <div className={`save-status text-${config.color}-600`}>
+      {config.icon} {config.text}
+    </div>
+  ) : null;
+};
+```
+
+### Auto-Save with Conflict Resolution
+
+```typescript
+registerAction(autoSavePlugin({
+  onLoad: async (savedData, context) => {
+    // Check for newer server data
+    const serverData = await fetchLatestFormData(context.formId);
+    
+    if (serverData && serverData.timestamp > savedData.timestamp) {
+      // Show conflict resolution dialog
+      const choice = await showConflictDialog({
+        localData: savedData,
+        serverData: serverData,
+        options: ['Use Local', 'Use Server', 'Merge']
+      });
+      
+      switch (choice) {
+        case 'Use Server':
+          return serverData.data;
+        case 'Merge':
+          return mergeFormData(savedData.data, serverData.data);
+        default:
+          return savedData.data;
+      }
+    }
+    
+    return savedData.data;
+  }
+}));
+
+const actions = [
+  {
+    id: "conflict-aware-auto-save",
+    type: "auto_save",
+    enabled: true,
+    interval: 30000,
+    storageKey: "collaborative-form"
+  }
+];
+```
+
+## Integration with Other Actions
+
+### Auto-Save with Submit
+
+```typescript
+const actions = [
+  {
+    id: "auto-save",
+    type: "auto_save",
+    enabled: true,
+    interval: 30000,
+    clearOnSubmit: true
+  },
+  {
+    id: "submit-form",
+    type: "submit",
+    endpoint: "/api/contact",
+    method: "POST"
+  },
+  {
+    id: "clear-auto-save",
+    type: "auto_save",
+    enabled: false,
+    clearSaved: true,
+    triggers: ["submit_success"]
+  }
+];
+```
+
+### Auto-Save with Reset
+
+```typescript
+const actions = [
+  {
+    id: "auto-save",
+    type: "auto_save",
+    enabled: true,
+    interval: 30000
+  },
+  {
+    id: "reset-form",
+    type: "reset_form",
+    resetType: "all",
+    confirmReset: true
+  },
+  {
+    id: "clear-saved-data",
+    type: "auto_save",
+    enabled: false,
+    clearSaved: true,
+    triggers: ["reset_success"]
+  }
+];
+```
+
+## Privacy and Security
+
+### Sensitive Data Handling
+
+```typescript
+registerAction(autoSavePlugin({
+  onBeforeSave: (data, context) => {
+    // Remove sensitive fields
+    const sensitiveFields = ['password', 'ssn', 'creditCard'];
+    const sanitizedData = { ...data };
+    
+    sensitiveFields.forEach(field => {
+      delete sanitizedData[field];
+    });
+    
+    // Encrypt remaining data
+    return encryptFormData(sanitizedData);
+  },
+  
+  onLoad: (encryptedData, context) => {
+    // Decrypt loaded data
+    return decryptFormData(encryptedData);
+  }
+}));
+
+const actions = [
+  {
+    id: "secure-auto-save",
+    type: "auto_save",
+    enabled: true,
+    interval: 45000,
+    excludeFields: ["password", "confirmPassword", "ssn"],
+    storageType: "custom" // Use encrypted storage
+  }
+];
+```
+
+### GDPR Compliance
+
+```typescript
+registerAction(autoSavePlugin({
+  onBeforeSave: (data, context) => {
+    // Check user consent
+    const hasConsent = localStorage.getItem('auto-save-consent') === 'true';
+    if (!hasConsent) {
+      return null; // Skip save if no consent
+    }
+    
+    // Add expiration timestamp
+    return {
+      ...data,
+      _autoSave: {
+        timestamp: Date.now(),
+        expires: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7 days
+      }
+    };
+  },
+  
+  onLoad: (data, context) => {
+    // Check if data has expired
+    if (data._autoSave && data._autoSave.expires < Date.now()) {
+      // Remove expired data
+      localStorage.removeItem(context.storageKey);
+      return null;
+    }
+    
+    return data;
+  }
+}));
+```
+
+## Related
+
+- **[Submit Plugin](/docs/actions/plugins/submit)** - Clear auto-save on successful submit
+- **[Reset Plugin](/docs/actions/plugins/reset)** - Clear saved data when resetting
+- **[Triggers & Lifecycle](/docs/actions/triggers)** - Learn about save timing
+
+## Examples
+
+See the Auto-Save plugin in action:
+
+- **[Long Form Example](/docs/examples/long-form)** - Auto-save for lengthy forms
+- **[Multi-Step Form Example](/docs/examples/multi-step-form)** - Progress preservation

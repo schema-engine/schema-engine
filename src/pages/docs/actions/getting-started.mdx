@@ -1,0 +1,188 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'Getting Started with Actions | Form Engine Documentation',
+    description: 'Learn the basics of setting up and using actions in Form Engine.',
+});
+
+# Getting Started with Actions
+
+Actions in Form Engine follow a simple two-step process: register plugins, then configure actions in your forms. This guide will walk you through the essentials.
+
+## Step 1: Register Plugins
+
+Before you can use actions, you need to register the plugins that will handle them. This is typically done once in your application setup:
+
+```typescript
+import { registerAction } from "@/lib/form-engine/actions/action-registry";
+import { 
+  submitPlugin, 
+  notificationPlugin, 
+  resetPlugin,
+  autoSavePlugin,
+  gtmPlugin
+} from "@/lib/form-engine/actions/plugins";
+
+// Register all the plugins you plan to use
+registerAction(submitPlugin());
+registerAction(notificationPlugin());
+registerAction(resetPlugin());
+registerAction(autoSavePlugin());
+registerAction(gtmPlugin());
+```
+
+### Plugin Customization
+
+You can customize plugin behavior when registering them:
+
+```typescript
+// Customize submit plugin
+registerAction(submitPlugin({
+  onSuccess: (data, context) => {
+    console.log("Form submitted successfully:", data);
+  },
+  onError: (error, context) => {
+    console.error("Submit failed:", error);
+  }
+}));
+
+// Customize notification plugin with toast integration
+registerAction(notificationPlugin({
+  onSuccess: (message) => toast.success(message),
+  onError: (message) => toast.error(message)
+}));
+```
+
+## Step 2: Configure Actions in Your Form
+
+Once plugins are registered, add actions to your form configuration:
+
+```typescript
+const formConfig = {
+  id: "contact-form",
+  fields: [
+    // ... your form fields
+  ],
+  actions: [
+    {
+      id: "submit-form",
+      type: "submit",
+      endpoint: "/api/contact",
+      method: "POST"
+    },
+    {
+      id: "success-notification",
+      type: "show_notification",
+      message: "Thank you for your message!",
+      variant: "success",
+      triggers: ["submit_success"]
+    },
+    {
+      id: "error-notification",
+      type: "show_notification",
+      message: "Failed to submit form. Please try again.",
+      variant: "error",
+      triggers: ["submit_error"]
+    }
+  ]
+};
+```
+
+## Action Execution
+
+Actions execute automatically based on their triggers:
+
+1. When the form is submitted, the `submit` action runs (default trigger: `form_submit`)
+2. If submission succeeds, actions with `submit_success` trigger execute
+3. If submission fails, actions with `submit_error` trigger execute
+
+## Common Patterns
+
+### Basic Form with Feedback
+
+```typescript
+const actions = [
+  {
+    id: "submit-form",
+    type: "submit",
+    endpoint: "/api/submit",
+    method: "POST"
+  },
+  {
+    id: "success-message",
+    type: "show_notification",
+    message: "Form submitted successfully!",
+    variant: "success",
+    triggers: ["submit_success"]
+  }
+];
+```
+
+### Form with Auto-Save
+
+```typescript
+const actions = [
+  {
+    id: "auto-save-draft",
+    type: "auto_save",
+    interval: 30000, // Save every 30 seconds
+    triggers: ["form_change"]
+  },
+  {
+    id: "submit-form",
+    type: "submit",
+    endpoint: "/api/submit",
+    method: "POST"
+  }
+];
+```
+
+### Form with Analytics Tracking
+
+```typescript
+const actions = [
+  {
+    id: "track-form-start",
+    type: "gtm_event",
+    eventName: "form_interaction_start",
+    eventData: { form_type: "contact" },
+    triggers: ["form_start"]
+  },
+  {
+    id: "submit-form",
+    type: "submit",
+    endpoint: "/api/submit",
+    method: "POST"
+  },
+  {
+    id: "track-submit-success",
+    type: "gtm_event",
+    eventName: "form_submit_success",
+    eventData: { conversion_event: true },
+    triggers: ["submit_success"]
+  }
+];
+```
+
+## Best Practices
+
+1. **Register plugins once** - Do this in your application setup, not in individual components
+2. **Use descriptive action IDs** - Makes debugging and maintenance easier
+3. **Handle both success and error cases** - Provide feedback for all scenarios
+4. **Leverage triggers** - Use `submit_success` and `submit_error` for coordinated workflows
+5. **Test action sequences** - Verify actions execute in the expected order
+
+## Next Steps
+
+- **[Built-in Plugins](/docs/actions/plugins)** - Explore all available plugins and their options
+- **[Triggers & Lifecycle](/docs/actions/triggers)** - Learn about all available triggers
+- **[Custom Plugins](/docs/actions/custom-plugins)** - Create your own action plugins
+
+## Examples
+
+See these complete examples for more context:
+
+- **[Sequential Actions Example](/docs/examples/sequential-actions)** - Actions working together
+- **[Contact Form Example](/docs/examples/contact-form)** - Real-world implementation

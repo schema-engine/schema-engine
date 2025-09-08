@@ -104,6 +104,52 @@ registerAction(notificationPlugin({
 ];`}</code>
 				</pre>
 
+				<h2>Sequential Actions Example</h2>
+				<p>
+					Below is an example of how sequential actions are configured and executed in the FormEngine action
+					system.
+				</p>
+				<pre>
+					<code>{`const actions: FormActionConfig[] = [
+  {
+    id: "validate-inputs",
+    type: "validate", // Custom validation plugin
+    triggers: ["form_submit"],
+    onValidate: (data) => {
+      if (!data.email) {
+        throw new Error("Email is required");
+      }
+    }
+  },
+  {
+    id: "submit-data",
+    type: "submit", // Submit plugin
+    endpoint: "/api/submit",
+    method: "POST",
+    triggers: ["validate_success"] // Runs after validation succeeds
+  },
+  {
+    id: "show-success-notification",
+    type: "show_notification", // Notification plugin
+    message: "Form submitted successfully!",
+    variant: "success",
+    triggers: ["submit_success"] // Runs after successful submission
+  }
+];`}</code>
+				</pre>
+				<p>In this example, actions are executed in the following sequence:</p>
+				<ol>
+					<li>
+						<code>validate-inputs</code> ensures all required fields are filled before submission.
+					</li>
+					<li>
+						<code>submit-data</code> sends the form data to the server if validation passes.
+					</li>
+					<li>
+						<code>show-success-notification</code> displays a success message after the data is submitted.
+					</li>
+				</ol>
+
 				<h2>Key Benefits</h2>
 				<ul>
 					<li>

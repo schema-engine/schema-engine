@@ -1,27 +1,20 @@
 import { DocsLayout } from '@/layouts/docs-layout';
+import { MultiStepDemo } from '@/components/demo/multi-step-demo';
 
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'Registration Flow Example | Form Engine Documentation',
-    description: 'Complete example of a multi-step registration flow using Form Engine.',
+  title: 'Registration Flow Example | Form Engine Documentation',
+  description: 'Complete example of a multi-step registration flow using Form Engine.',
 })
 
 # Registration Flow Example
 
 This example demonstrates a complete user registration flow using Form Engine's multi-step capabilities, validation, and actions system.
 
-## Live Demo
+## Interactive Demo
 
-<div className="bg-green-50 border border-green-200 rounded-lg p-6 my-8">
-  <h3 className="text-lg font-semibold text-green-800 mb-2">🎯 Interactive Demo</h3>
-  <p className="text-green-700 mb-4">
-    Try the complete registration flow with step navigation, validation, and form actions:
-  </p>
-  <a href="/multi-step-forms" className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-    Open Multi-Step Registration Demo →
-  </a>
-</div>
+<MultiStepDemo />
 
 ## Complete Configuration
 
@@ -433,12 +426,12 @@ Start with a simple single-step form and gradually add steps as needed.
 ## Related Examples
 
 - **[Basic Contact Form](/docs/examples/basic-form)** - Simple single-step form
-- **[Conditional Logic Example](/conditional-forms)** - Dynamic field behavior
-- **[Actions System Demo](/actions)** - Advanced form actions
+- **[Sequential Actions Example](/docs/examples/sequential-actions)** - Chained form actions
+- **[Actions System](/docs/actions)** - Complete actions documentation
 
 ## Next Steps
 
-1. Try the [live demo](/multi-step-forms) to see the registration flow in action
+1. Experiment with the interactive demo above to see all the features in action
 2. Explore [conditional logic](/docs/concepts/conditional-logic) for dynamic fields
-3. Learn about [form actions](/docs/advanced/actions-system) for advanced behaviors
+3. Learn about [form actions](/docs/actions) for advanced behaviors
 4. Check out the [API reference](/docs/api) for complete configuration options

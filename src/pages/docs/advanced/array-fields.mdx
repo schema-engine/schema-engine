@@ -3,8 +3,8 @@ import { DocsLayout } from '@/layouts/docs-layout';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'Array Fields | Form Engine Documentation',
-    description: 'Learn how to use dynamic array fields for repeating form sections and data lists.',
+  title: 'Array Fields | Form Engine Documentation',
+  description: 'Learn how to use dynamic array fields for repeating form sections and data lists.',
 })
 
 # Array Fields
@@ -101,12 +101,12 @@ Array fields can contain multiple field types within each item:
 | `id` | `string` | Yes | Unique field identifier |
 | `name` | `string` | Yes | Form field name |
 | `label` | `string` | No | Field label displayed to user |
-| `elements` | `FieldConfig[]` | Yes | Array of field configurations for each item |
+| `elements` | `FieldConfig[]` | Yes | Field configurations for each item |
 | `minItems` | `number` | No | Minimum number of items required |
 | `maxItems` | `number` | No | Maximum number of items allowed |
-| `addButtonText` | `string` | No | Text for add item button (default: "Add Item") |
-| `removeButtonText` | `string` | No | Text for remove item button (default: "Remove") |
-| `keyName` | `string` | No | Field name used as unique key (default: "id") |
+| `addButtonText` | `string` | No | Add button text (default: "Add Item") |
+| `removeButtonText` | `string` | No | Remove button text (default: "Remove") |
+| `keyName` | `string` | No | Unique key field name (default: "id") |
 
 ### Validation
 

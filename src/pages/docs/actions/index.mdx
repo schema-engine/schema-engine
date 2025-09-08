@@ -1,0 +1,82 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'Actions System | Form Engine Documentation',
+    description: 'Complete guide to the Form Engine action system - plugins, triggers, and sequential execution.',
+});
+
+# Actions System
+
+The Form Engine action system enables you to define form behaviors through a **plugin-based architecture**. Actions handle form submissions, user notifications, data persistence, analytics tracking, and other interactive behaviors.
+
+## Core Concepts
+
+### Actions
+Actions are configuration objects that define what should happen when specific events occur in your form. Each action has:
+
+- **ID**: Unique identifier within the form
+- **Type**: Determines which plugin handles the action
+- **Triggers**: Events that cause the action to execute
+- **Configuration**: Action-specific settings
+
+### Plugins
+Plugins are reusable handlers that process specific action types. Form Engine provides built-in plugins for common scenarios, and you can create custom plugins for specialized needs.
+
+### Sequential Execution
+Actions execute one after another in a predictable order, preventing race conditions and ensuring reliable workflows.
+
+## Quick Start
+
+```typescript
+import { registerAction } from "@/lib/form-engine/actions/action-registry";
+import { submitPlugin, notificationPlugin } from "@/lib/form-engine/actions/plugins";
+
+// Register plugins
+registerAction(submitPlugin());
+registerAction(notificationPlugin());
+
+// Define actions in your form
+const formConfig = {
+  actions: [
+    {
+      id: "submit-form",
+      type: "submit",
+      endpoint: "/api/submit",
+      method: "POST"
+    },
+    {
+      id: "success-notification",
+      type: "show_notification",
+      message: "Form submitted successfully!",
+      variant: "success",
+      triggers: ["submit_success"]
+    }
+  ]
+};
+```
+
+## Available Plugins
+
+Form Engine comes with several built-in plugins:
+
+- **[Submit Plugin](/docs/actions/plugins/submit)** - Handles form submission to API endpoints
+- **[Notification Plugin](/docs/actions/plugins/notification)** - Displays user notifications
+- **[Reset Plugin](/docs/actions/plugins/reset)** - Resets form to initial state
+- **[Auto-Save Plugin](/docs/actions/plugins/auto-save)** - Automatically saves form drafts
+- **[GTM Plugin](/docs/actions/plugins/gtm)** - Pushes events to Google Tag Manager
+
+## Next Steps
+
+- **[Getting Started](/docs/actions/getting-started)** - Learn the basics of setting up actions
+- **[Built-in Plugins](/docs/actions/plugins)** - Explore all available plugins
+- **[Triggers & Lifecycle](/docs/actions/triggers)** - Understand when actions execute
+- **[Custom Plugins](/docs/actions/custom-plugins)** - Create your own action plugins
+
+## Examples
+
+For practical examples of actions in use, see:
+
+- **[Sequential Actions Example](/docs/examples/sequential-actions)** - Complete workflow demonstration
+- **[Contact Form Example](/docs/examples/contact-form)** - Real-world form with actions

@@ -1,0 +1,508 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'Actions in Form Engine | Form Engine Documentation',
+    description: 'Learn about the action system in Form Engine, including plugins, triggers, and sequential execution.',
+});
+
+# Actions in Form Engine
+
+The Form Engine action system enables you to define form behaviors through a **plugin-based architecture**. Actions handle form submissions, user notifications, data persistence, and other interactive behaviors.
+
+## Core Concepts
+
+### Actions
+Actions are configuration objects that define what should happen when specific events occur in your form. Each action has:
+
+- **ID**: Unique identifier within the form
+- **Type**: Determines which plugin handles the action
+- **Triggers**: Events that cause the action to execute
+- **Configuration**: Action-specific settings
+
+### Plugins
+Plugins are reusable handlers that process specific action types. Form Engine provides built-in plugins for common scenarios, and you can create custom plugins for specialized needs.
+
+### Sequential Execution
+Actions execute one after another in a predictable order, preventing race conditions and ensuring reliable workflows.
+
+## Getting Started
+
+### 1. Register Plugins
+
+Before using actions, register the plugins you need:
+
+```typescript
+import { registerAction } from "@/lib/form-engine/actions/action-registry";
+import { 
+  submitPlugin, 
+  notificationPlugin, 
+  resetPlugin, 
+  autoSavePlugin,
+  gtmPlugin 
+} from "@/lib/form-engine/actions/plugins";
+
+// Register submit plugin
+registerAction(submitPlugin());
+
+// Register notification plugin  
+registerAction(notificationPlugin());
+
+// Register reset plugin
+registerAction(resetPlugin());
+
+// Register auto-save plugin
+registerAction(autoSavePlugin());
+
+// Register GTM plugin
+registerAction(gtmPlugin());
+```
+
+### 2. Define Actions in Your Form
+
+Add actions to your form configuration:
+
+```typescript
+const formConfig = {
+  // ... other form config
+  actions: [
+    {
+      id: "submit-form",
+      type: "submit",
+      endpoint: "/api/submit",
+      method: "POST"
+    },
+    {
+      id: "success-notification",
+      type: "show_notification", 
+      message: "Form submitted successfully!",
+      variant: "success",
+      triggers: ["submit_success"]
+    }
+  ]
+## Available Plugins
+
+The Form Engine comes with several built-in plugins:
+
+### Submit Plugin (`type: "submit"`)
+
+Handles form submission to API endpoints.
+
+**Configuration Options:**
+```typescript
+{
+  id: "submit-form",
+  type: "submit", 
+  endpoint: "/api/submit", // Required: API endpoint
+  method: "POST", // Optional: HTTP method (default: POST)
+  successMessage: "Form submitted!", // Optional: success message
+  errorMessage: "Submit failed" // Optional: error message
+}
+```
+
+### Notification Plugin (`type: "show_notification"`)
+
+Displays user notifications with different styles.
+
+**Configuration Options:**
+```typescript
+{
+  id: "show-notification",
+  type: "show_notification",
+  message: "Success!", // Required: notification text
+  variant: "success", // Required: success|error|warning|info
+  duration: 3000, // Optional: display duration in ms (default: 3000)
+  triggers: ["submit_success"] // Optional: when to show (default: form_submit)
+}
+```
+
+### Reset Plugin (`type: "reset"`)
+
+Resets form to initial state.
+
+**Configuration Options:**
+```typescript
+{
+  id: "reset-form", 
+  type: "reset",
+  resetToDefaults: true, // Optional: reset to default values (default: true)
+  confirmMessage: "Reset form?", // Optional: confirmation prompt
+  triggers: ["manual_reset"] // Optional: when to reset
+}
+```
+
+### Auto-Save Plugin (`type: "auto_save"`)
+
+Automatically saves form data as drafts to prevent data loss.
+
+**Configuration Options:**
+```typescript
+{
+  id: "auto-save",
+  type: "auto_save",
+  interval: 30000, // Optional: save interval in ms (default: 30000)
+  storageKey: "my-form-draft", // Optional: custom storage key
+  triggers: ["form_change"] // Optional: when to save (default: form_change)
+}
+```
+
+### GTM Plugin (`type: "gtm_event"`)
+
+Pushes analytics events to Google Tag Manager.
+
+**Configuration Options:**
+```typescript
+{
+  id: "track-form-start",
+  type: "gtm_event",
+  eventName: "form_start", // Required: GTM event name
+  eventData: { // Optional: static event data
+    form_type: "contact",
+    page_section: "footer"
+  },
+  includeFormData: false, // Optional: false|true|["field1", "field2"]
+  triggers: ["form_start"] // Optional: when to fire event
+}
+```
+
+## Plugin Customization
+
+You can customize plugin behavior when registering them:
+
+```typescript
+// Customize submit plugin
+registerAction(submitPlugin({
+  onSuccess: (data, context) => {
+    console.log("Form submitted successfully:", data);
+  },
+  onError: (error, context) => {
+    console.error("Submit failed:", error);
+  }
+}));
+
+// Customize notification plugin
+registerAction(notificationPlugin({
+  onSuccess: (message) => toast.success(message),
+  onError: (message) => toast.error(message)
+}));
+
+// Customize reset plugin  
+registerAction(resetPlugin({
+  confirm: (message) => window.confirm(message),
+  onReset: (context) => {
+    console.log("Form reset!");
+  }
+}));
+
+// Customize auto-save plugin
+registerAction(autoSavePlugin({
+  storage: {
+    save: async (key, data) => {
+      await api.saveDraft(key, data);
+    },
+    load: async (key) => {
+      return await api.loadDraft(key);
+    },
+    remove: async (key) => {
+      await api.deleteDraft(key);
+    }
+  },
+  onSave: (data, context) => {
+    console.log(`Draft saved for ${context.formId}`);
+  }
+}));
+
+// Customize GTM plugin
+registerAction(gtmPlugin({
+  onEvent: (eventName, eventData) => {
+    console.log("GTM Event:", eventName, eventData);
+  }
+}));
+```
+
+```typescript
+autoSavePlugin({
+  // Custom storage backend
+  storage: {
+    save: async (key, data) => {
+      await api.saveDraft(key, data);
+    },
+    load: async (key) => {
+      return await api.loadDraft(key);
+    },
+    remove: async (key) => {
+      await api.deleteDraft(key);
+    }
+  },
+  
+  // Save callback
+  onSave: (data, context) => {
+    console.log(`Draft saved for ${context.formId}`);
+  },
+  
+  // Error callback
+  onError: (error, context) => {
+    // Fallback to localStorage
+    localStorage.setItem(`backup_${context.formId}`, JSON.stringify(data));
+  }
+});
+```
+
+**Action Configuration:**
+```typescript
+{
+  id: "auto-save",
+  type: "auto_save",
+  interval: 30000, // Save every 30 seconds
+  storageKey: "my-form-draft" // Optional custom key
+}
+```
+
+## How Actions Work
+
+The Form Engine action system follows a clear workflow:
+
+1. **Register Plugins**: Use the `registerAction` function to register plugin factories.
+2. **Define Actions**: Specify actions in your form configuration.
+3. **Execute Triggers**: The `ActionExecutor` runs actions based on lifecycle triggers.
+
+### Step 1: Register Plugins
+
+Before you can use actions, you must register the plugin handlers:
+
+```typescript
+import { registerAction } from "@/lib/form-engine/actions/action-registry";
+import { submitPlugin, resetPlugin, notificationPlugin } from "@/lib/form-engine/actions/plugins";
+
+// Register submit plugin with custom behavior
+registerAction(submitPlugin({
+  onSuccess: (data, context) => {
+    console.log("Form submitted successfully:", data);
+    // Custom success logic here
+  },
+  onError: (error, context) => {
+    console.error("Submit failed:", error);
+    // Custom error handling here
+  }
+}));
+
+// Register notification plugin
+registerAction(notificationPlugin({
+  onSuccess: (message) => toast.success(message),
+  onError: (message) => toast.error(message)
+}));
+
+// Register reset plugin
+registerAction(resetPlugin({
+  confirm: (message) => window.confirm(message)
+}));
+## Common Patterns
+
+### Form Submission with Feedback
+
+```typescript
+const actions = [
+  {
+    id: "submit-form",
+    type: "submit",
+    endpoint: "/api/contact",
+    method: "POST"
+  },
+  {
+    id: "success-notification", 
+    type: "show_notification",
+    message: "Thank you for your message!",
+    variant: "success",
+    triggers: ["submit_success"]
+  },
+  {
+    id: "error-notification",
+    type: "show_notification", 
+    message: "Failed to submit form. Please try again.",
+    variant: "error",
+    triggers: ["submit_error"]
+  }
+];
+```
+
+### Auto-Save with Reset
+
+```typescript
+const actions = [
+  {
+    id: "auto-save-draft",
+    type: "auto_save",
+    interval: 30000, // Save every 30 seconds
+    triggers: ["form_change"]
+  },
+  {
+    id: "reset-with-confirmation",
+    type: "reset", 
+    confirmMessage: "This will clear all data. Continue?",
+    triggers: ["manual_reset"]
+  }
+];
+```
+
+### Analytics Tracking
+
+```typescript
+const actions = [
+  {
+    id: "track-form-start",
+    type: "gtm_event",
+    eventName: "form_interaction_start",
+    eventData: {
+      form_type: "contact",
+      page_url: window.location.href
+    },
+    triggers: ["form_start"]
+  },
+  {
+    id: "track-submit-success", 
+    type: "gtm_event",
+    eventName: "form_submit_success",
+    eventData: { conversion_event: true },
+    includeFormData: ["email", "company"], // Only specific fields
+    triggers: ["submit_success"]
+  }
+];
+```
+
+## Action Execution
+
+Actions execute automatically based on their triggers. The Form Engine handles the execution flow internally - you just need to define the actions and their triggers.
+
+## Lifecycle Triggers
+
+Actions can respond to various lifecycle events throughout the form's lifetime:
+
+### Form Lifecycle
+- `form_start`: Triggered when the form is initialized
+- `form_change`: Triggered when any form field value changes
+- `form_submit`: Triggered when the form submission is initiated
+
+### Submit Lifecycle
+- `submit_start`: Triggered when the submit process begins
+- `submit_success`: Triggered after a successful submission
+- `submit_error`: Triggered if the submission fails
+- `submit_complete`: Triggered after the submission process finishes (success or error)
+
+### Multi-Step Forms
+- `step_change`: Triggered when navigating between steps in multi-step forms
+- `step_submit`: Triggered when submitting a specific step
+
+### Manual Actions
+- `manual_save`: Triggered when the user manually saves a draft
+- `manual_reset`: Triggered when the user manually resets the form
+
+## Creating Custom Plugins
+
+You can extend the action system by creating custom plugins. Here's a complete example:
+
+```typescript
+import { z } from "zod";
+import { registerAction } from "@/lib/form-engine/actions/action-registry";
+import type { ActionExecutionContext, ActionExecutionResult } from "@/lib/form-engine/actions/types";
+
+// 1. Define the action schema
+const AnalyticsActionSchema = z.object({
+  id: z.string(),
+  type: z.literal("track_analytics"),
+  event: z.string().min(1, "Event name is required"),
+  properties: z.record(z.any()).optional()
+});
+
+type AnalyticsAction = z.infer<typeof AnalyticsActionSchema>;
+
+// 2. Create plugin configuration interface
+interface AnalyticsPluginConfig {
+  apiKey?: string;
+  onTrack?: (event: string, properties: any) => void;
+  onError?: (error: Error) => void;
+}
+
+// 3. Create the plugin factory
+export function analyticsPlugin(config: AnalyticsPluginConfig = {}) {
+  return {
+    type: "track_analytics",
+    schema: AnalyticsActionSchema,
+    defaultTriggers: ["submit_success"], // Default trigger
+    handler: async (action: AnalyticsAction, context: ActionExecutionContext): Promise<ActionExecutionResult> => {
+      try {
+        const properties = {
+          ...action.properties,
+          formId: context.formId,
+          timestamp: new Date().toISOString()
+        };
+        
+        // Custom tracking logic
+        if (config.onTrack) {
+          config.onTrack(action.event, properties);
+        } else {
+          // Default analytics call
+          analytics.track(action.event, properties);
+        }
+        
+        return {
+          success: true,
+          message: `Analytics event '${action.event}' tracked successfully`
+        };
+      } catch (error) {
+        if (config.onError) {
+          config.onError(error as Error);
+        }
+        
+        return {
+          success: false,
+          error: `Failed to track analytics: ${error.message}`
+        };
+      }
+    }
+  };
+}
+
+// 4. Add TypeScript module augmentation
+declare module "@/lib/form-engine/actions/types" {
+  interface PluginActions {
+    track_analytics: AnalyticsAction;
+  }
+}
+
+// 5. Register the plugin
+registerAction(analyticsPlugin({
+  onTrack: (event, properties) => {
+    console.log("Tracking:", event, properties);
+    // Your analytics service here
+  }
+}));
+```
+
+**Using Your Custom Plugin:**
+
+```typescript
+{
+  id: "track-form-submission",
+  type: "track_analytics",
+  event: "form_submitted",
+  properties: {
+    form_type: "contact",
+    source: "website"
+  },
+  triggers: ["submit_success"]
+}
+```
+
+## Best Practices
+
+1. **Use Plugins**: Keep your actions modular and reusable.
+2. **Handle Errors Gracefully**: Provide meaningful feedback to users.
+3. **Test Extensively**: Ensure actions execute in the correct order.
+4. **Document Your Plugins**: Include clear usage examples.
+
+## Next Steps
+
+- Explore the [Sequential Actions Example](/docs/examples/sequential-actions) to see actions in action.
+- Learn about [Field Customization](/docs/guides/custom-fields) for specialized inputs.
+- Try the [Contact Form Example](/docs/examples/contact-form) for a complete form implementation.

@@ -1,0 +1,378 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'Custom Plugins | Form Engine Documentation',
+    description: 'Learn how to create custom action plugins for Form Engine.',
+});
+
+# Custom Plugins
+
+You can extend the Form Engine action system by creating custom plugins. This guide shows you how to build your own action plugins with full TypeScript support.
+
+## Plugin Structure
+
+A plugin consists of:
+
+1. **Schema** - Zod schema defining the action configuration
+2. **Handler** - Function that executes the action
+3. **Default Triggers** - When the action runs by default
+4. **Type Augmentation** - TypeScript integration
+
+## Basic Plugin Example
+
+Here's a complete example of a custom analytics plugin:
+
+```typescript
+import { z } from "zod";
+import { registerAction } from "@/lib/form-engine/actions/action-registry";
+import type { ActionExecutionContext, ActionExecutionResult } from "@/lib/form-engine/actions/types";
+
+// 1. Define the action schema
+const AnalyticsActionSchema = z.object({
+  id: z.string().min(1, "Action ID cannot be empty"),
+  type: z.literal("track_analytics"),
+  description: z.string().optional(),
+  enabled: z.boolean().default(true),
+  triggers: z.array(z.string()).optional(),
+  event: z.string().min(1, "Event name is required"),
+  properties: z.record(z.any()).optional()
+});
+
+type AnalyticsAction = z.infer<typeof AnalyticsActionSchema>;
+
+// 2. Define plugin configuration interface
+interface AnalyticsPluginConfig {
+  apiKey?: string;
+  onTrack?: (event: string, properties: any) => void;
+  onError?: (error: Error) => void;
+}
+
+// 3. Create the plugin factory
+export function analyticsPlugin(config: AnalyticsPluginConfig = {}) {
+  return {
+    type: "track_analytics" as const,
+    schema: AnalyticsActionSchema,
+    defaultTriggers: ["submit_success"] as const,
+    handler: async (
+      action: AnalyticsAction, 
+      context: ActionExecutionContext
+    ): Promise<ActionExecutionResult> => {
+      try {
+        const properties = {
+          ...action.properties,
+          formId: context.formId,
+          timestamp: new Date().toISOString(),
+          step: context.currentStep,
+          totalSteps: context.totalSteps
+        };
+        
+        if (config.onTrack) {
+          config.onTrack(action.event, properties);
+        } else {
+          // Default analytics call
+          analytics.track(action.event, properties);
+        }
+        
+        return {
+          success: true,
+          message: `Analytics event '${action.event}' tracked successfully`
+        };
+      } catch (error) {
+        if (config.onError) {
+          config.onError(error as Error);
+        }
+        
+        return {
+          success: false,
+          error: `Failed to track analytics: ${(error as Error).message}`
+        };
+      }
+    }
+  };
+}
+
+// 4. Add TypeScript module augmentation
+declare module "@/lib/form-engine/actions/types" {
+  interface PluginActions {
+    track_analytics: AnalyticsAction;
+  }
+}
+
+// 5. Register the plugin
+registerAction(analyticsPlugin({
+  onTrack: (event, properties) => {
+    console.log("Tracking:", event, properties);
+    // Your analytics service here
+  }
+}));
+```
+
+## Using Your Custom Plugin
+
+```typescript
+{
+  id: "track-form-submission",
+  type: "track_analytics",
+  event: "form_submitted",
+  properties: {
+    form_type: "contact",
+    source: "website"
+  },
+  triggers: ["submit_success"]
+}
+```
+
+## Advanced Plugin Examples
+
+### API Integration Plugin
+
+```typescript
+const APIIntegrationActionSchema = z.object({
+  id: z.string(),
+  type: z.literal("api_integration"),
+  service: z.enum(["hubspot", "salesforce", "mailchimp"]),
+  endpoint: z.string(),
+  fieldMapping: z.record(z.string()),
+  credentials: z.object({
+    apiKey: z.string(),
+    secret: z.string().optional()
+  }).optional()
+});
+
+export function apiIntegrationPlugin(config: {
+  defaultCredentials?: Record<string, any>;
+  onSuccess?: (response: any) => void;
+  onError?: (error: Error) => void;
+} = {}) {
+  return {
+    type: "api_integration" as const,
+    schema: APIIntegrationActionSchema,
+    defaultTriggers: ["submit_success"] as const,
+    handler: async (action, context) => {
+      try {
+        // Map form data to API fields
+        const mappedData = Object.entries(action.fieldMapping).reduce((acc, [apiField, formField]) => {
+          acc[apiField] = context.formData[formField];
+          return acc;
+        }, {} as Record<string, any>);
+        
+        // Make API call
+        const response = await fetch(action.endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${action.credentials?.apiKey || config.defaultCredentials?.apiKey}`
+          },
+          body: JSON.stringify(mappedData)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API call failed: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (config.onSuccess) {
+          config.onSuccess(result);
+        }
+        
+        return {
+          success: true,
+          message: `Successfully integrated with ${action.service}`,
+          data: result
+        };
+      } catch (error) {
+        if (config.onError) {
+          config.onError(error as Error);
+        }
+        
+        return {
+          success: false,
+          error: `API integration failed: ${(error as Error).message}`
+        };
+      }
+    }
+  };
+}
+```
+
+### Email Notification Plugin
+
+```typescript
+const EmailNotificationActionSchema = z.object({
+  id: z.string(),
+  type: z.literal("send_email"),
+  to: z.array(z.string().email()),
+  subject: z.string(),
+  template: z.string(),
+  includeFormData: z.boolean().default(true)
+});
+
+export function emailNotificationPlugin(config: {
+  emailService?: any;
+  onSent?: (emailId: string) => void;
+  onError?: (error: Error) => void;
+} = {}) {
+  return {
+    type: "send_email" as const,
+    schema: EmailNotificationActionSchema,
+    defaultTriggers: ["submit_success"] as const,
+    handler: async (action, context) => {
+      try {
+        const emailData = {
+          to: action.to,
+          subject: action.subject,
+          template: action.template,
+          data: action.includeFormData ? context.formData : {}
+        };
+        
+        const result = await config.emailService.send(emailData);
+        
+        if (config.onSent) {
+          config.onSent(result.id);
+        }
+        
+        return {
+          success: true,
+          message: "Email notification sent successfully",
+          data: { emailId: result.id }
+        };
+      } catch (error) {
+        if (config.onError) {
+          config.onError(error as Error);
+        }
+        
+        return {
+          success: false,
+          error: `Failed to send email: ${(error as Error).message}`
+        };
+      }
+    }
+  };
+}
+```
+
+## Plugin Best Practices
+
+### 1. Use TypeScript Module Augmentation
+
+Always add your action type to the `PluginActions` interface:
+
+```typescript
+declare module "@/lib/form-engine/actions/types" {
+  interface PluginActions {
+    your_action_type: YourActionType;
+  }
+}
+```
+
+### 2. Provide Configuration Options
+
+Make your plugins configurable through the factory function:
+
+```typescript
+export function myPlugin(config: MyPluginConfig = {}) {
+  const {
+    onSuccess = () => {},
+    onError = console.error,
+    customOption = "default"
+  } = config;
+  
+  return {
+    // ... plugin implementation
+  };
+}
+```
+
+### 3. Handle Errors Gracefully
+
+Always return structured error information:
+
+```typescript
+handler: async (action, context) => {
+  try {
+    // Plugin logic
+    return { success: true, message: "Success" };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      shouldContinue: false // Stop other actions if critical
+    };
+  }
+}
+```
+
+### 4. Use Descriptive Schemas
+
+Provide clear validation and documentation in your schemas:
+
+```typescript
+const MyActionSchema = z.object({
+  id: z.string().min(1, "Action ID cannot be empty"),
+  type: z.literal("my_action"),
+  requiredField: z.string().min(1, "This field is required"),
+  optionalField: z.string().optional(),
+  numericField: z.number().min(0, "Must be positive").default(100)
+});
+```
+
+### 5. Test Your Plugins
+
+Create unit tests for your plugin logic:
+
+```typescript
+import { analyticsPlugin } from './analytics-plugin';
+
+describe('Analytics Plugin', () => {
+  it('should track events successfully', async () => {
+    const mockOnTrack = jest.fn();
+    const plugin = analyticsPlugin({ onTrack: mockOnTrack });
+    
+    const action = {
+      id: 'test',
+      type: 'track_analytics',
+      event: 'test_event',
+      properties: { foo: 'bar' }
+    };
+    
+    const context = {
+      formId: 'test-form',
+      // ... other context
+    };
+    
+    const result = await plugin.handler(action, context);
+    
+    expect(result.success).toBe(true);
+    expect(mockOnTrack).toHaveBeenCalledWith('test_event', expect.objectContaining({
+      foo: 'bar',
+      formId: 'test-form'
+    }));
+  });
+});
+```
+
+## Plugin Distribution
+
+For reusable plugins, consider publishing them as separate packages:
+
+```typescript
+// @your-org/form-engine-analytics-plugin
+export { analyticsPlugin } from './analytics-plugin';
+export type { AnalyticsAction, AnalyticsPluginConfig } from './analytics-plugin';
+```
+
+## Related
+
+- **[Getting Started](/docs/actions/getting-started)** - Learn action basics
+- **[Built-in Plugins](/docs/actions/plugins)** - See existing plugin implementations
+- **[Triggers & Lifecycle](/docs/actions/triggers)** - Understand when actions execute
+
+## Examples
+
+See custom plugins in action:
+
+- **[Sequential Actions Example](/docs/examples/sequential-actions)** - Plugin integration patterns
+- Check the built-in plugin source code for implementation examples

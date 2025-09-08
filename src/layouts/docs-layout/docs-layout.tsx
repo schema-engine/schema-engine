@@ -80,13 +80,24 @@ const docsNavigation: DocsSection[] = [
 		],
 	},
 	{
+		id: 'actions-system',
+		title: 'Actions System',
+		path: '/docs/actions',
+		children: [
+			{ id: 'overview', title: 'Overview', path: '/docs/actions' },
+			{ id: 'getting-started', title: 'Getting Started', path: '/docs/actions/getting-started' },
+			{ id: 'plugins', title: 'Built-in Plugins', path: '/docs/actions/plugins' },
+			{ id: 'triggers', title: 'Triggers & Lifecycle', path: '/docs/actions/triggers' },
+			{ id: 'custom-plugins', title: 'Custom Plugins', path: '/docs/actions/custom-plugins' },
+		],
+	},
+	{
 		id: 'advanced-features',
 		title: 'Advanced Features',
 		path: '/docs/advanced',
 		children: [
 			{ id: 'multi-step-forms', title: 'Multi-Step Forms', path: '/docs/advanced/multi-step-forms' },
 			{ id: 'array-fields', title: 'Array Fields', path: '/docs/advanced/array-fields' },
-			{ id: 'actions-system', title: 'Actions System', path: '/docs/advanced/actions-system' },
 			{ id: 'custom-fields', title: 'Custom Fields', path: '/docs/advanced/custom-fields' },
 		],
 	},
@@ -110,6 +121,7 @@ const docsNavigation: DocsSection[] = [
 			{ id: 'contact-form', title: 'Contact Form', path: '/docs/examples/contact-form' },
 			{ id: 'registration-flow', title: 'Registration Flow', path: '/docs/examples/registration-flow' },
 			{ id: 'survey-form', title: 'Survey Form', path: '/docs/examples/survey-form' },
+			{ id: 'sequential-actions', title: 'Sequential Actions', path: '/docs/examples/sequential-actions' },
 		],
 	},
 	{

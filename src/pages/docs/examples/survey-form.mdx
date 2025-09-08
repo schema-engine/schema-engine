@@ -1,5 +1,6 @@
 import { DocsLayout } from '@/layouts/docs-layout';
-import { FormEngineDemo } from '@/components/demo/form-engine-demo';
+import { FormRenderer } from '@/lib/form-engine';
+import '@/components/form/registry';
 
 export const layout = DocsLayout;
 
@@ -12,251 +13,217 @@ export const getMetadata = () => ({
 
 An advanced survey form showcasing Form Engine's sophisticated features including multi-step navigation, complex conditional logic, various question types, and comprehensive data collection patterns.
 
-## Live Demo
+## Interactive Demo
 
-<FormEngineDemo
-  config={{
-    id: 'customer-survey',
-    title: 'Customer Satisfaction Survey',
-    description: 'Help us improve our services',
-    mode: 'stepped',
-    steps: [
-      {
-        id: 'demographics',
-        title: 'About You',
-        description: 'Basic information',
-        fields: [
-          {
-            id: 'age',
-            type: 'select',
-            name: 'age',
-            label: 'Age Range',
-            required: true,
-            options: [
-              { label: '18-24', value: '18-24' },
-              { label: '25-34', value: '25-34' },
-              { label: '35-44', value: '35-44' },
-              { label: '45-54', value: '45-54' },
-              { label: '55+', value: '55-plus' }
-            ]
-          },
-          {
-            id: 'customerType',
-            type: 'radio',
-            name: 'customerType',
-            label: 'How would you describe yourself?',
-            required: true,
-            options: [
-              { label: 'New customer', value: 'new' },
-              { label: 'Regular customer', value: 'regular' },
-              { label: 'Long-time customer', value: 'longtime' }
-            ]
-          }
-        ]
-      },
-      {
-        id: 'experience',
-        title: 'Your Experience',
-        description: 'Tell us about your experience',
-        fields: [
-          {
-            id: 'overallSatisfaction',
-            type: 'range',
-            name: 'overallSatisfaction',
-            label: 'Overall Satisfaction (1-5)',
-            required: true,
-            props: { min: 1, max: 5, step: 1, showValue: true }
-          },
-          {
-            id: 'recommendationScore',
-            type: 'range',
-            name: 'recommendationScore',
-            label: 'How likely are you to recommend us? (0-10)',
-            required: true,
-            props: { min: 0, max: 10, step: 1, showValue: true }
-          },
-          {
-            id: 'improvements',
-            type: 'textarea',
-            name: 'improvements',
-            label: 'What could we improve?',
-            placeholder: 'Share your suggestions...',
-            props: { rows: 3 }
-          }
-        ]
-      },
-      {
-        id: 'feedback',
-        title: 'Additional Feedback',
-        description: 'Optional feedback',
-        fields: [
-          {
-            id: 'futureInterest',
-            type: 'radio',
-            name: 'futureInterest',
-            label: 'How likely are you to continue using our services?',
-            required: true,
-            options: [
-              { label: 'Definitely will continue', value: 'definitely' },
-              { label: 'Probably will continue', value: 'probably' },
-              { label: 'Might or might not continue', value: 'maybe' },
-              { label: 'Probably will not continue', value: 'probably-not' }
-            ]
-          },
-          {
-            id: 'additionalComments',
-            type: 'textarea',
-            name: 'additionalComments',
-            label: 'Additional Comments',
-            placeholder: 'Anything else you\'d like to share?',
-            props: { rows: 3 }
-          }
-        ]
-      }
-    ],
-    actions: [
-      {
-        id: 'submit',
-        type: 'submit',
-        label: 'Submit Survey',
-        endpoint: '/api/survey',
-        method: 'POST',
-        validation: true,
-        onSuccess: {
-          type: 'message',
-          title: 'Thank You!',
-          message: 'Your feedback has been submitted successfully.'
+<div className="my-8">
+  <FormRenderer
+    config={{
+      id: 'customer-survey',
+      title: 'Customer Satisfaction Survey',
+      description: 'Help us improve our services',
+      mode: 'stepped',
+      steps: [
+        {
+          id: 'experience',
+          title: 'Your Experience',
+          fields: [
+            {
+              id: 'satisfaction',
+              type: 'select',
+              name: 'satisfaction',
+              label: 'Overall Satisfaction',
+              required: true,
+              options: [
+                { label: 'Very Satisfied', value: '5' },
+                { label: 'Satisfied', value: '4' },
+                { label: 'Neutral', value: '3' },
+                { label: 'Dissatisfied', value: '2' },
+                { label: 'Very Dissatisfied', value: '1' }
+              ]
+            },
+            {
+              id: 'recommendation',
+              type: 'radio',
+              name: 'recommendation',
+              label: 'Would you recommend us?',
+              required: true,
+              options: [
+                { label: 'Definitely', value: 'yes' },
+                { label: 'Probably', value: 'maybe' },
+                { label: 'No', value: 'no' }
+              ]
+            }
+          ]
         },
-        onError: {
-          type: 'message',
-          title: 'Submission Failed',
-          message: 'There was an error submitting your survey. Please try again.',
-          variant: 'destructive'
+        {
+          id: 'feedback',
+          title: 'Feedback',
+          fields: [
+            {
+              id: 'improvements',
+              type: 'textarea',
+              name: 'improvements',
+              label: 'What could we improve?',
+              placeholder: 'Share your suggestions...',
+              props: { rows: 3 }
+            },
+            {
+              id: 'contact',
+              type: 'checkbox',
+              name: 'contact',
+              label: 'I agree to be contacted for follow-up',
+              required: false
+            }
+          ]
         }
-      }
-    ]
-  }}
+      ]
+    }}
+    onSubmit={(data) => {
+      console.log('Survey submitted:', data);
+      alert('Thank you for your feedback!');
+    }}
+  />
+</div>
+
+## Key Features Demonstrated
+
+This survey example showcases several important Form Engine features:
+
+### 1. Multi-Step Navigation
+- **Step-by-Step Flow**: Breaks complex surveys into manageable sections
+- **Progress Indication**: Users can see their progress through the survey
+- **Step Validation**: Each step must be completed before proceeding
+
+### 2. Various Field Types
+- **Select Dropdowns**: For structured rating scales
+- **Radio Buttons**: For exclusive choice questions
+- **Textarea Fields**: For open-ended feedback
+- **Checkboxes**: For opt-in preferences
+
+### 3. Survey Best Practices
+- **Clear Labels**: Each question is clearly labeled and easy to understand
+- **Logical Flow**: Questions progress from general to specific
+- **Optional Fields**: Not every question needs to be required
+- **User-Friendly**: Simple, intuitive interface reduces survey abandonment
+
+## Implementation Tips
+
+When building surveys with Form Engine:
+
+1. **Keep Steps Focused**: Each step should have a clear purpose and limited number of questions
+2. **Use Appropriate Field Types**: Match the field type to the question format for better UX
+3. **Progressive Disclosure**: Start with basic questions and get more specific
+4. **Provide Context**: Use step descriptions to explain what information you're collecting
+5. **Make It Optional**: Only mark fields as required when truly necessary
+
+## Configuration Example
+
+Here's how to structure a basic survey configuration:
+
+```typescript
+import { FormRenderer } from '@/lib/form-engine';
+
+const surveyConfig = {
+  id: 'customer-survey',
+  title: 'Customer Satisfaction Survey',
+  description: 'Help us improve our services',
+  mode: 'stepped',
+  steps: [
+    {
+      id: 'experience',
+      title: 'Your Experience',
+      fields: [
+        {
+          id: 'satisfaction',
+          type: 'select',
+          name: 'satisfaction',
+          label: 'Overall Satisfaction',
+          required: true,
+          options: [
+            { label: 'Very Satisfied', value: '5' },
+            { label: 'Satisfied', value: '4' },
+            { label: 'Neutral', value: '3' },
+            { label: 'Dissatisfied', value: '2' },
+            { label: 'Very Dissatisfied', value: '1' }
+          ]
+        }
+      ]
+    }
+  ]
+};
+
+// Render the survey
+<FormRenderer 
+  config={surveyConfig}
+  onSubmit={(data) => console.log('Survey results:', data)}
 />
-
-## Features Demonstrated
-
-This survey demonstrates several advanced Form Engine features:
-
-### Multi-Step Navigation
-
-The survey is divided into logical sections:
-
-1. **Demographics** - Basic user information
-2. **Experience** - Overall satisfaction and NPS
-3. **Detailed Feedback** - Specific area ratings
-4. **Additional Information** - Optional follow-up questions
-
-### Advanced Field Types
-
-- **Rating fields** with custom labels
-- **Range sliders** for NPS scoring
-- **Multi-select checkboxes** for multiple options
-- **Conditional fields** that show/hide based on responses
-
-### Complex Conditional Logic
-
-Fields appear or disappear based on user responses:
-
-- Follow-up questions based on satisfaction scores
-- Churn reason questions for at-risk customers
-- Email field only when follow-up is requested
-
-## Configuration Code
-
-Here's the complete survey configuration:
+```
 
 ```typescript
 import { FormConfig } from '@/lib/form-engine/types';
 
-const surveyConfig: FormConfig = {
-  id: 'customer-satisfaction-survey',
-  title: 'Customer Satisfaction Survey',
-  description: 'Help us improve our services by sharing your experience',
-  mode: 'stepped',
+```
 
-  steps: [
-    {
-      id: 'demographics',
-      title: 'About You',
-      description: 'Basic information to help us understand our audience',
-      fields: [
-        {
-          id: 'age',
-          type: 'select',
-          name: 'age',
-          label: 'Age Range',
-          required: true,
-          options: [
-            { label: 'Under 18', value: 'under-18' },
-            { label: '18-24', value: '18-24' },
-            { label: '25-34', value: '25-34' },
-            { label: '35-44', value: '35-44' },
-            { label: '45-54', value: '45-54' },
-            { label: '55-64', value: '55-64' },
-            { label: '65+', value: '65-plus' }
-          ]
-        },
-        // ... more demographic fields
-      ]
-    },
-    {
-      id: 'experience',
-      title: 'Your Experience',
-      description: 'Tell us about your recent experience',
-      fields: [
-        {
-          id: 'overallSatisfaction',
-          type: 'rating',
-          name: 'overallSatisfaction',
-          label: 'Overall Satisfaction',
-          required: true,
-          props: {
-            max: 5,
-            labels: ['Very Dissatisfied', 'Dissatisfied', 'Neutral', 'Satisfied', 'Very Satisfied']
-          }
-        },
-        {
-          id: 'recommendationScore',
-          type: 'range',
-          name: 'recommendationScore',
-          label: 'Net Promoter Score',
-          description: 'How likely are you to recommend us? (0-10)',
-          required: true,
-          props: {
-            min: 0,
-            max: 10,
-            step: 1,
-            showValue: true
-          }
-        }
-        // ... more experience fields
-      ]
-    }
-    // ... more steps
-  ],
+## Advanced Survey Patterns
 
-  actions: [
+For more complex surveys, you can extend this basic pattern with:
+
+### Conditional Logic
+Show or hide questions based on previous answers:
+
+```typescript
+{
+  id: 'followup',
+  type: 'input',
+  name: 'followup',
+  label: 'Please explain your dissatisfaction',
+  conditions: [
     {
-      id: 'submit',
-      type: 'submit',
-      label: 'Submit Survey',
-      endpoint: '/api/survey',
-      method: 'POST',
-      validation: true,
-      onSuccess: {
-        type: 'message',
-        title: 'Thank You!',
-        message: 'Your feedback has been submitted successfully.',
-        action: 'reset'
-      }
+      field: 'satisfaction',
+      operator: 'in',
+      value: ['1', '2'] // Show only for dissatisfied users
     }
   ]
-};
+}
+```
+
+### Rating Scales
+Use number or range fields for numeric ratings:
+
+```typescript
+{
+  id: 'nps',
+  type: 'number',
+  name: 'nps',
+  label: 'How likely are you to recommend us? (0-10)',
+  props: { min: 0, max: 10 }
+}
+```
+
+### Matrix Questions
+Group related questions using field groups:
+
+```typescript
+{
+  id: 'service-ratings',
+  type: 'group',
+  label: 'Rate our services',
+  fields: [
+    { id: 'support', type: 'select', name: 'support', label: 'Customer Support' },
+    { id: 'delivery', type: 'select', name: 'delivery', label: 'Delivery Speed' },
+    { id: 'quality', type: 'select', name: 'quality', label: 'Product Quality' }
+  ]
+}
+```
+
+## Next Steps
+
+- Explore [Multi-Step Forms](/docs/examples/registration-flow) for complex workflows
+- Learn about [Conditional Logic](/docs/concepts/conditional-logic) for dynamic surveys  
+- Check out [Form Actions](/docs/actions) for advanced survey behaviors
+- See [Validation](/docs/concepts/validation) for robust data collection
+
+This survey example demonstrates how Form Engine makes it easy to create professional, user-friendly surveys that collect valuable feedback while providing an excellent user experience.
 ```
 
 ## Implementation
