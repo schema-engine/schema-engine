@@ -202,6 +202,23 @@
 	.field-group-spacing > label {
 		@apply mb-2 block;
 	}
+
+	table {
+		@apply w-full border-collapse;
+	}
+
+	td,
+	th {
+		@apply border border-border px-4 py-2 text-left;
+	}
+
+	tr:nth-child(even) {
+		@apply bg-muted;
+	}
+
+	th {
+		@apply pt-3 pb-3.5 font-medium bg-secondary text-secondary-foreground;
+	}
 }
 
 .prose {

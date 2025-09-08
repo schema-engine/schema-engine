@@ -1,27 +1,52 @@
-import { IntegrationPlugin, type IntegrationPluginConfig } from '@ecopages/core/plugins/integration-plugin';
-import { MDXReactRenderer } from './mdx-react-renderer';
+import {
+	IntegrationPlugin,
+	type IntegrationPluginConfig,
+	type RendererClass,
+} from '@ecopages/core/plugins/integration-plugin';
+import { createMDXReactRenderer } from './mdx-react-renderer';
 import { AssetFactory, type AssetDefinition } from '@ecopages/core/services/asset-processing-service';
+import mdx from '@mdx-js/esbuild';
+import type { CompileOptions } from '@mdx-js/mdx';
+import { deepMerge, type EcoPagesElement } from '@ecopages/core';
 
-/**
- * The name of the MDX plugin
- */
 export const PLUGIN_NAME = 'MDX_REACT';
+
+export type MDXPluginConfig = Partial<Omit<IntegrationPluginConfig, 'name'>> & { compilerOptions?: CompileOptions };
+
+const defaultOptions: CompileOptions = {
+	format: 'detect',
+	outputFormat: 'program',
+	jsxImportSource: 'react',
+	jsxRuntime: 'automatic',
+	development: process.env.NODE_ENV === 'development',
+};
 
 /**
  * The MDX plugin class
  * This plugin provides support for MDX components in Ecopages
  */
 export class MDXPlugin extends IntegrationPlugin {
-	renderer = MDXReactRenderer;
+	renderer: RendererClass<EcoPagesElement>;
 
-	constructor(options?: Omit<IntegrationPluginConfig, 'name'>) {
+	constructor({ compilerOptions, ...options }: MDXPluginConfig = { extensions: ['.mdx'] }) {
 		super({
-			name: PLUGIN_NAME,
-			extensions: ['.mdx'],
 			...options,
+			name: PLUGIN_NAME,
+			extensions: options.extensions ?? ['.mdx'],
 		});
 
+		const finalCompilerOptions = deepMerge(compilerOptions, defaultOptions);
+
+		this.renderer = createMDXReactRenderer(finalCompilerOptions);
+
+		this.setupBunPlugin(finalCompilerOptions);
+
 		this.integrationDependencies.unshift(...this.getDependencies());
+	}
+
+	async setupBunPlugin(options?: Readonly<CompileOptions>): Promise<void> {
+		// @ts-expect-error: esbuild plugin vs bun plugin
+		Bun.plugin(mdx(deepMerge(options, defaultOptions)));
 	}
 
 	private buildImportMapSourceUrl(fileName: string): string {
@@ -77,6 +102,6 @@ export class MDXPlugin extends IntegrationPlugin {
  * @param options Configuration options for the MDX plugin
  * @returns A new MDXPlugin instance
  */
-export function mdxPlugin(options?: Omit<IntegrationPluginConfig, 'name'>): MDXPlugin {
+export function mdxPlugin(options?: MDXPluginConfig): MDXPlugin {
 	return new MDXPlugin(options);
 }

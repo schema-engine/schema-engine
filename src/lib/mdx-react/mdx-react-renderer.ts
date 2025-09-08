@@ -18,9 +18,14 @@ import { rapidhash } from '@ecopages/core/hash';
 import React, { type ReactNode } from 'react';
 import { renderToString } from 'react-dom/server';
 import { PLUGIN_NAME } from './mdx-react.plugin';
-import { AssetFactory, type ProcessedAsset } from '@ecopages/core/services/asset-processing-service';
+import {
+	AssetFactory,
+	type AssetProcessingService,
+	type ProcessedAsset,
+} from '@ecopages/core/services/asset-processing-service';
 import fs from 'node:fs/promises';
-import { compile } from '@mdx-js/mdx';
+import { compile, type CompileOptions } from '@mdx-js/mdx';
+import type { EcoPagesAppConfig } from 'node_modules/@ecopages/core/_dist/src/internal-types';
 
 /**
  * Error thrown when an error occurs while rendering a React component.
@@ -64,9 +69,26 @@ interface MDXReactIntegrationRendererOptions<C = ReactNode> extends IntegrationR
 }
 
 /**
+ * Constructor options for MDXReactRenderer
+ */
+interface MDXReactRendererConstructorOptions {
+	appConfig: EcoPagesAppConfig;
+	assetProcessingService: AssetProcessingService;
+	resolvedIntegrationDependencies: ProcessedAsset[];
+	runtimeOrigin: string;
+	compilerOptions: CompileOptions;
+}
+
+/**
  * Generates scripts for MDX components and hydration
  */
 class ScriptsGenerator {
+	private compilerOptions: CompileOptions;
+
+	constructor(compilerOptions: CompileOptions) {
+		this.compilerOptions = compilerOptions;
+	}
+
 	/**
 	 * Creates a hydration script for client-side React component mounting
 	 */
@@ -111,13 +133,7 @@ if (document.readyState === 'loading') {
 		try {
 			const mdxContent = await fs.readFile(pagePath, 'utf-8');
 
-			const compiledMDX = await compile(mdxContent, {
-				format: 'detect',
-				outputFormat: 'program',
-				jsxImportSource: 'react',
-				jsxRuntime: 'automatic',
-				development: process.env.NODE_ENV === 'development',
-			});
+			const compiledMDX = await compile(mdxContent, this.compilerOptions);
 
 			const compiledCode = compiledMDX.toString();
 
@@ -162,7 +178,12 @@ export default WrappedMDXComponent;
  */
 export class MDXReactRenderer extends IntegrationRenderer<EcoPagesElement> {
 	name = PLUGIN_NAME;
-	private scriptsGenerator = new ScriptsGenerator();
+	private scriptsGenerator: ScriptsGenerator;
+
+	constructor(options: MDXReactRendererConstructorOptions) {
+		super(options);
+		this.scriptsGenerator = new ScriptsGenerator(options.compilerOptions);
+	}
 
 	override async buildRouteRenderAssets(pagePath: string): Promise<ProcessedAsset[]> {
 		try {
@@ -289,4 +310,23 @@ export class MDXReactRenderer extends IntegrationRenderer<EcoPagesElement> {
 			throw new Error(`[ecopages] Error rendering page: ${error}`);
 		}
 	}
+}
+
+/**
+ * Factory function to create an MDX React renderer class with specific compiler options
+ */
+export function createMDXReactRenderer(compilerOptions: CompileOptions) {
+	return class extends MDXReactRenderer {
+		constructor(options: {
+			appConfig: any;
+			assetProcessingService: AssetProcessingService;
+			resolvedIntegrationDependencies: ProcessedAsset[];
+			runtimeOrigin: string;
+		}) {
+			super({
+				...options,
+				compilerOptions,
+			});
+		}
+	};
 }
