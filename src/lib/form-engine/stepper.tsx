@@ -103,7 +103,6 @@ export function Stepper({
 				}
 			}
 
-			// Call step leave handler
 			const currentStep_data = steps[currentStep];
 			if (handlers?.onStepLeave) {
 				const canLeave = await handlers.onStepLeave(currentStep_data.id, currentStep, formData);
@@ -112,7 +111,6 @@ export function Stepper({
 
 			setCurrentStep(step);
 
-			// Call step enter handler
 			const newStep = steps[step];
 			if (handlers?.onStepEnter) {
 				await handlers.onStepEnter(newStep.id, step, formData);
@@ -344,7 +342,6 @@ export function StepperNavigation({ navigation, onSubmit, className }: StepperNa
 		...buttons.submit,
 	};
 
-	// Handle custom button actions
 	const handleCustomAction = useCallback(
 		async (buttonKey: string) => {
 			const customButton = buttons.custom?.[buttonKey];
@@ -396,29 +393,28 @@ export function StepperNavigation({ navigation, onSubmit, className }: StepperNa
 			</div>
 
 			<div>
-				{isLastStep
-					? !submitButton.hidden && (
-							<Button
-								type="submit"
-								variant={getVariantForButton(submitButton.variant)}
-								onClick={onSubmit}
-								disabled={submitButton.disabled}
-								className={submitButton.className}
-							>
-								{submitButton.label}
-							</Button>
-						)
-					: !nextButton.hidden && (
-							<Button
-								type="button"
-								variant={getVariantForButton(nextButton.variant)}
-								onClick={goToNext}
-								disabled={!canGoNext || nextButton.disabled}
-								className={nextButton.className}
-							>
-								{nextButton.label}
-							</Button>
-						)}
+				<Button
+					type="submit"
+					variant={getVariantForButton(submitButton.variant)}
+					onClick={onSubmit}
+					disabled={submitButton.disabled}
+					className={cn(submitButton.className, {
+						hidden: submitButton.hidden || !isLastStep,
+					})}
+				>
+					{submitButton.label}
+				</Button>
+				<Button
+					type="button"
+					variant={getVariantForButton(nextButton.variant)}
+					onClick={goToNext}
+					disabled={!canGoNext || nextButton.disabled}
+					className={cn(nextButton.className, {
+						hidden: nextButton.hidden || isLastStep,
+					})}
+				>
+					{nextButton.label}
+				</Button>
 			</div>
 		</div>
 	);
