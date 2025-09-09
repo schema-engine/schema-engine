@@ -13,9 +13,6 @@ import type {
 	StepperValidationMode,
 } from './types/form';
 
-/**
- * Helper function to convert button variant to Button component variant
- */
 const getVariantForButton = (variant?: string): 'default' | 'outline' | 'secondary' | 'ghost' | 'destructive' => {
 	switch (variant) {
 		case 'primary':
@@ -33,14 +30,8 @@ const getVariantForButton = (variant?: string): 'default' | 'outline' | 'seconda
 	}
 };
 
-/**
- * Stepper context for managing step state and navigation
- */
 const StepperContext = createContext<StepperContextData | null>(null);
 
-/**
- * Hook to access stepper context
- */
 export function useStepper() {
 	const context = useContext(StepperContext);
 	if (!context) {
@@ -49,9 +40,6 @@ export function useStepper() {
 	return context;
 }
 
-/**
- * Props for the main Stepper component
- */
 export interface StepperProps {
 	children: React.ReactNode;
 	steps: FormStep[];
@@ -67,9 +55,6 @@ export interface StepperProps {
 	className?: string;
 }
 
-/**
- * Main Stepper component providing step management context
- */
 export function Stepper({
 	children,
 	steps,
@@ -87,7 +72,6 @@ export function Stepper({
 	const isFirstStep = currentStep === 0;
 	const isLastStep = currentStep === totalSteps - 1;
 
-	// Check if navigation is allowed based on constraints
 	const formData = getFormData?.() || {};
 	const canGoNext = currentStep < totalSteps - 1;
 	const canGoPrevious = currentStep > 0;
@@ -97,10 +81,10 @@ export function Stepper({
 			return await validateStep(currentStep);
 		}
 
-		// Call custom step validation handler if defined
 		const step = steps[currentStep];
-		if (step.onStepValidate && handlers?.customNavigationHandlers?.[step.onStepValidate]) {
-			const result = await handlers.customNavigationHandlers[step.onStepValidate](step.id, currentStep, formData);
+
+		if (handlers?.onStepValidate) {
+			const result = await handlers.onStepValidate(step.id, currentStep, formData);
 			return Boolean(result);
 		}
 
@@ -111,8 +95,6 @@ export function Stepper({
 		async (step: number) => {
 			if (step < 0 || step >= totalSteps) return;
 
-			// In wizard mode, validate current step before moving forward
-			// In free mode, allow jumping without validation
 			if (validationMode === 'wizard' && step > currentStep) {
 				const isValid = await validateCurrentStep();
 				if (!isValid) {
@@ -123,7 +105,7 @@ export function Stepper({
 
 			// Call step leave handler
 			const currentStep_data = steps[currentStep];
-			if (currentStep_data.onStepLeave && handlers?.onStepLeave) {
+			if (handlers?.onStepLeave) {
 				const canLeave = await handlers.onStepLeave(currentStep_data.id, currentStep, formData);
 				if (!canLeave) return;
 			}
@@ -132,7 +114,7 @@ export function Stepper({
 
 			// Call step enter handler
 			const newStep = steps[step];
-			if (newStep.onStepEnter && handlers?.onStepEnter) {
+			if (handlers?.onStepEnter) {
 				await handlers.onStepEnter(newStep.id, step, formData);
 			}
 
@@ -192,17 +174,11 @@ export function Stepper({
 	);
 }
 
-/**
- * Props for StepperHeader component
- */
 export interface StepperHeaderProps {
 	navigation?: StepNavigationConfig;
 	className?: string;
 }
 
-/**
- * Stepper header component displaying step indicators
- */
 export function StepperHeader({ navigation, className }: StepperHeaderProps) {
 	const { steps, goToStep, getStepData, validationMode, currentStep } = useStepper();
 
@@ -233,8 +209,6 @@ export function StepperHeader({ navigation, className }: StepperHeaderProps) {
 				const isActive = stepData.isActive;
 				const isCompleted = stepData.isCompleted;
 
-				// In wizard mode, only allow clicking on completed steps or current step
-				// In free mode, allow clicking on any step if jumping is enabled
 				const canClickStep =
 					allowJumping && (validationMode === 'free' || isCompleted || isActive || index < currentStep);
 
@@ -263,7 +237,6 @@ export function StepperHeader({ navigation, className }: StepperHeaderProps) {
 						role={canClickStep ? 'button' : undefined}
 						tabIndex={canClickStep ? 0 : undefined}
 					>
-						{/* Step Indicator */}
 						<div
 							className={cn(
 								'step-indicator flex items-center justify-center',
@@ -291,7 +264,6 @@ export function StepperHeader({ navigation, className }: StepperHeaderProps) {
 							)}
 						</div>
 
-						{/* Step Title */}
 						{showTitles && variant !== 'dots' && (
 							<div
 								className={cn(
@@ -313,7 +285,6 @@ export function StepperHeader({ navigation, className }: StepperHeaderProps) {
 							</div>
 						)}
 
-						{/* Connector Line */}
 						{index < steps.length - 1 && orientation === 'vertical' && (
 							<div
 								className={cn(
@@ -324,7 +295,6 @@ export function StepperHeader({ navigation, className }: StepperHeaderProps) {
 							/>
 						)}
 
-						{/* Horizontal Connector */}
 						{index < steps.length - 1 && orientation === 'horizontal' && (
 							<div className={cn('flex-1 h-0.5 mx-4 bg-gray-200', isCompleted && 'bg-green-500')} />
 						)}
@@ -335,41 +305,28 @@ export function StepperHeader({ navigation, className }: StepperHeaderProps) {
 	);
 }
 
-/**
- * Props for StepperContent component
- */
 export interface StepperContentProps {
 	children: React.ReactNode;
 	className?: string;
 }
 
-/**
- * Stepper content component for displaying current step content
- */
 export function StepperContent({ children, className }: StepperContentProps) {
 	return <div className={cn('stepper-content', className)}>{children}</div>;
 }
 
-/**
- * Props for StepperNavigation component
- */
 export interface StepperNavigationProps {
 	navigation?: StepNavigationConfig;
 	onSubmit?: () => void;
 	className?: string;
 }
 
-/**
- * Stepper navigation component with customizable buttons
- */
 export function StepperNavigation({ navigation, onSubmit, className }: StepperNavigationProps) {
 	const { currentStep, isFirstStep, isLastStep, canGoNext, canGoPrevious, goToNext, goToPrevious, steps, handlers } =
 		useStepper();
 
 	const currentStep_data = steps[currentStep];
-	const formData = {}; // This should be passed from form context
+	const formData = {};
 
-	// Get button configurations with defaults
 	const buttons = navigation?.buttons || {};
 	const previousButton: StepNavigationButton = {
 		label: 'Previous',
@@ -404,7 +361,6 @@ export function StepperNavigation({ navigation, onSubmit, className }: StepperNa
 
 	return (
 		<div className={cn('stepper-navigation flex justify-between items-center pt-6', className)}>
-			{/* Previous Button */}
 			<div>
 				{!isFirstStep && !previousButton.hidden && (
 					<Button
@@ -419,7 +375,6 @@ export function StepperNavigation({ navigation, onSubmit, className }: StepperNa
 				)}
 			</div>
 
-			{/* Custom Buttons */}
 			<div className="flex space-x-2">
 				{buttons.custom &&
 					Object.entries(buttons.custom).map(([key, button]) => {
@@ -440,7 +395,6 @@ export function StepperNavigation({ navigation, onSubmit, className }: StepperNa
 					})}
 			</div>
 
-			{/* Next/Submit Button */}
 			<div>
 				{isLastStep
 					? !submitButton.hidden && (
@@ -470,9 +424,6 @@ export function StepperNavigation({ navigation, onSubmit, className }: StepperNa
 	);
 }
 
-/**
- * Compound component exports
- */
 Stepper.Header = StepperHeader;
 Stepper.Content = StepperContent;
 Stepper.Navigation = StepperNavigation;

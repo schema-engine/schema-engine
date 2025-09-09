@@ -192,7 +192,7 @@ export function submitPlugin(config: SubmitPluginConfig = {}) {
 	return {
 		type: "submit" as const,
 		schema: SubmitActionSchema,
-		defaultTriggers: ["form_submit", "step_submit"] as const,
+		defaultTriggers: ["form_submit"] as const,
 		handler: async (
 			action: SubmitAction,
 			context: ActionExecutionContext

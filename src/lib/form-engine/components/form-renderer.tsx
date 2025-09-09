@@ -120,7 +120,7 @@ function MultiStepFormFields({ config }: { config: FormConfig }) {
 			getFormData={getValues}
 			validateStep={validateStep}
 		>
-			<StepperLayout config={config} validateStepFn={validateStep} getValuesFn={getValues} />
+			<StepperLayout config={config} />
 		</Stepper>
 	);
 }
@@ -128,31 +128,7 @@ function MultiStepFormFields({ config }: { config: FormConfig }) {
 /**
  * Layout component that handles different stepper orientations
  */
-function StepperLayout({
-	config,
-	validateStepFn,
-	getValuesFn,
-}: {
-	config: FormConfig;
-	validateStepFn: (stepIndex: number) => Promise<boolean>;
-	getValuesFn: () => any;
-}) {
-	const { currentStep } = useStepper();
-
-	const handleSubmit = async () => {
-		const isValid = await validateStepFn(currentStep);
-
-		if (!isValid) {
-			logger.debug('Final step validation failed, cannot submit');
-			return;
-		}
-
-		const formData = getValuesFn();
-		logger.debug('Multi-step form completed:', formData);
-
-		alert('Form submitted successfully!');
-	};
-
+function StepperLayout({ config }: { config: FormConfig }) {
 	const orientation = config.stepper?.orientation || 'horizontal';
 
 	if (orientation === 'vertical') {
@@ -170,7 +146,7 @@ function StepperLayout({
 					</Stepper.Content>
 
 					<div className="mt-8">
-						<Stepper.Navigation navigation={config.stepper} onSubmit={handleSubmit} />
+						<Stepper.Navigation navigation={config.stepper} />
 					</div>
 				</div>
 			</div>
@@ -185,7 +161,7 @@ function StepperLayout({
 				<StepperFormContent config={config} />
 			</Stepper.Content>
 
-			<Stepper.Navigation navigation={config.stepper} onSubmit={handleSubmit} />
+			<Stepper.Navigation navigation={config.stepper} />
 		</>
 	);
 }

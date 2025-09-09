@@ -73,34 +73,38 @@ export class ActionExecutor {
 				if (result.success) {
 					logger.debug(`Action ${action.id} executed successfully`);
 
-					// Handle submit lifecycle for submit actions
 					if (action.type === "submit" && trigger === "form_submit") {
-						// Execute submit_success actions
 						const successResults = await this.executeTrigger(
 							actions,
 							"submit_success",
 							{
 								...context,
-								formState: {
-									...context.formState,
-									isSubmitting: false,
-									isSubmitSuccessful: true,
+
+								form: {
+									...context.form,
+									formState: {
+										...context.form.formState,
+										isSubmitting: false,
+										isSubmitSuccessful: true,
+									},
 								},
 							},
 							action
 						);
 						results.push(...successResults);
 
-						// Execute submit_complete actions
 						const completeResults = await this.executeTrigger(
 							actions,
 							"submit_complete",
 							{
 								...context,
-								formState: {
-									...context.formState,
-									isSubmitting: false,
-									isSubmitSuccessful: true,
+								form: {
+									...context.form,
+									formState: {
+										...context.form.formState,
+										isSubmitting: false,
+										isSubmitSuccessful: true,
+									},
 								},
 							},
 							action
@@ -110,34 +114,37 @@ export class ActionExecutor {
 				} else {
 					logger.warn(`Action ${action.id} failed`, result);
 
-					// Handle submit error lifecycle for submit actions
 					if (action.type === "submit" && trigger === "form_submit") {
-						// Execute submit_error actions
 						const errorResults = await this.executeTrigger(
 							actions,
 							"submit_error",
 							{
 								...context,
-								formState: {
-									...context.formState,
-									isSubmitting: false,
-									isSubmitSuccessful: false,
+								form: {
+									...context.form,
+									formState: {
+										...context.form.formState,
+										isSubmitting: false,
+										isSubmitSuccessful: false,
+									},
 								},
 							},
 							action
 						);
 						results.push(...errorResults);
 
-						// Execute submit_complete actions
 						const completeResults = await this.executeTrigger(
 							actions,
 							"submit_complete",
 							{
 								...context,
-								formState: {
-									...context.formState,
-									isSubmitting: false,
-									isSubmitSuccessful: false,
+								form: {
+									...context.form,
+									formState: {
+										...context.form.formState,
+										isSubmitting: false,
+										isSubmitSuccessful: false,
+									},
 								},
 							},
 							action
@@ -146,7 +153,6 @@ export class ActionExecutor {
 					}
 				}
 
-				// Stop execution if action explicitly requests it
 				if (!result.success && result.shouldContinue === false) {
 					logger.warn(`Stopping action execution due to failure in action: ${action.id}`);
 					break;
@@ -173,7 +179,6 @@ export class ActionExecutor {
 		action: FormActionConfig,
 		context: ActionExecutionContext
 	): Promise<ActionExecutionResult> {
-		// All actions are now plugins - delegate to registry
 		if (actionRegistry.has(action.type)) {
 			return actionRegistry.execute(action, context);
 		}
@@ -185,9 +190,6 @@ export class ActionExecutor {
 		};
 	}
 
-	/**
-	 * Cleanup any resources
-	 */
 	cleanup(): void {
 		logger.debug("Action executor cleanup completed");
 	}

@@ -156,6 +156,7 @@ const stepperDemoConfig = {
 			method: 'POST' as const,
 			successMessage: 'Demo completed successfully! Thanks for trying it out.',
 			errorMessage: 'Demo submission failed. Please try again.',
+			triggers: ['form_submit'],
 		},
 	],
 };
@@ -200,7 +201,7 @@ export function MultiStepDemo() {
 
 	const handleSubmit = (data: any) => {
 		console.log('Multi-step form submitted:', data);
-		alert('Multi-step form completed! Check the console for details.');
+		alert('This is the alert added manually in the demo! Form submitted successfully!');
 	};
 
 	return (
