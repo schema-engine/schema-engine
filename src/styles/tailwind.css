@@ -222,48 +222,48 @@
 }
 
 .prose {
-	h1 {
+	h1:not(form h1):not(form * h1) {
 		@apply text-4xl font-bold text-foreground my-6;
 	}
 
-	h2 {
+	h2:not(form h2):not(form * h2) {
 		@apply text-3xl font-bold text-foreground my-6;
 	}
 
-	h3 {
+	h3:not(form h3):not(form * h3) {
 		@apply text-2xl font-bold text-foreground my-5;
 	}
 
-	h4 {
+	h4:not(form h4):not(form * h4) {
 		@apply text-xl font-bold text-foreground my-5;
 	}
 
-	h5 {
+	h5:not(form h5):not(form * h5) {
 		@apply text-lg font-bold text-foreground my-4;
 	}
 
-	h6 {
+	h6:not(form h6):not(form * h6) {
 		@apply text-base font-bold text-foreground my-4;
 	}
 
-	p {
+	p:not(form p):not(form * p) {
 		@apply text-base text-foreground my-4;
 	}
 
-	a {
+	a:not(form a):not(form * a) {
 		@apply text-blue-700 underline;
 	}
 
-	ul,
-	ol {
+	ul:not(form ul):not(form * ul),
+	ol:not(form ol):not(form * ol) {
 		@apply list-disc pl-8 my-4;
 	}
 
-	code {
+	code:not(form code):not(form * code) {
 		@apply bg-muted text-sm text-foreground rounded px-1.5 py-0.5;
 	}
 
-	pre {
+	pre:not(form pre):not(form * pre) {
 		@apply bg-muted rounded-lg p-4 overflow-x-auto;
 
 		code {
