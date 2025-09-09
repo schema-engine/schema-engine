@@ -1,6 +1,6 @@
 import type React from 'react';
 import { useState } from 'react';
-import { type Breakpoint, BreakpointOverrideProvider } from './grid-hooks';
+import { type Breakpoint, BreakpointOverrideProvider } from './hooks/grid-hooks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

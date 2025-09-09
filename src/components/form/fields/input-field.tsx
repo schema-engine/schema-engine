@@ -1,7 +1,7 @@
-import { Input } from '../../ui/input';
-import { FieldGroup } from '../../field-group';
-import { useControlledFormElement, combineHandlers } from '../../../lib/form-engine/hooks/use-field';
-import type { InputFieldConfig } from '../../../lib/form-engine/types/form';
+import { Input } from '@/components/ui/input';
+import { FieldGroup } from '@/components/field-group';
+import { useControlledFormElement, combineHandlers } from '@/lib/form-engine/hooks';
+import type { InputFieldConfig } from '@/lib/form-engine/types/form';
 
 interface InputFieldProps {
 	config: InputFieldConfig;

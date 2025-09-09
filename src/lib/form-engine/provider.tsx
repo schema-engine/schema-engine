@@ -1,9 +1,10 @@
-import { createContext, useContext, useMemo, useCallback, useState, type ReactNode } from 'react';
-import { FormProvider, useForm, useFormContext } from 'react-hook-form';
+import { createContext, useMemo, useCallback, useState, type ReactNode } from 'react';
+import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { type FormComponentRegistryImpl, defaultFormRegistry } from './registry';
+import { useActionExecutor } from './hooks';
 import { generateFormSchema } from './validation';
-import { ActionExecutor, type ActionExecutionContext, type FormActionConfig } from './actions/index';
+import { type FormComponentRegistryImpl, defaultFormRegistry } from './registry';
+import type { ActionExecutionContext, FormActionConfig } from './actions/index';
 import type { FormConfig } from './types/form';
 
 /**
@@ -17,7 +18,7 @@ export interface FormEngineContextValue {
 /**
  * Form Engine context
  */
-const FormEngineContext = createContext<FormEngineContextValue | null>(null);
+export const FormEngineContext = createContext<FormEngineContextValue | null>(null);
 
 /**
  * Form Instance context value - includes action execution
@@ -35,7 +36,7 @@ export interface FormInstanceContextValue {
 /**
  * Form Instance context
  */
-const FormInstanceContext = createContext<FormInstanceContextValue | null>(null);
+export const FormInstanceContext = createContext<FormInstanceContextValue | null>(null);
 
 /**
  * Props for FormEngineProvider
@@ -54,17 +55,6 @@ export function FormEngineProvider({ children, registry = defaultFormRegistry }:
 	};
 
 	return <FormEngineContext.Provider value={contextValue}>{children}</FormEngineContext.Provider>;
-}
-
-/**
- * Hook to access the form engine context
- */
-export function useFormEngine(): FormEngineContextValue {
-	const context = useContext(FormEngineContext);
-	if (!context) {
-		throw new Error('useFormEngine must be used within a FormEngineProvider');
-	}
-	return context;
 }
 
 /**
@@ -92,21 +82,13 @@ export function FormEngineFormProvider({
 	onAction,
 	onValidationError,
 }: FormProviderProps) {
-	/**
-	 * Track current step for multi-step forms
-	 */
 	const [currentStep, setCurrentStep] = useState(0);
+	const actionExecutor = useActionExecutor();
 
-	/**
-	 * Get all fields from config - only from steps since that's the only way to define fields
-	 */
 	const allFields = useMemo(() => {
 		return config.steps.flatMap((step) => step.fields || []);
 	}, [config.steps]);
 
-	/**
-	 * Prepare default values from field configs
-	 */
 	const formDefaultValues = useMemo(() => {
 		const fieldDefaults = allFields.reduce(
 			(acc, field) => {
@@ -121,16 +103,11 @@ export function FormEngineFormProvider({
 		return { ...fieldDefaults, ...defaultValues };
 	}, [allFields, defaultValues]);
 
-	/**
-	 * Generate or use provided validation schema
-	 */
 	const validationSchema = useMemo(() => {
-		// Use custom validation if provided
 		if (config.validation) {
 			return config.validation;
 		}
 
-		// Auto-generate schema from field configurations
 		if (config.autoGenerateSchema !== false) {
 			return generateFormSchema(allFields);
 		}
@@ -138,9 +115,6 @@ export function FormEngineFormProvider({
 		return undefined;
 	}, [config.validation, config.autoGenerateSchema, allFields]);
 
-	/**
-	 * Initialize form with Zod resolver if validation schema is provided
-	 */
 	const form = useForm({
 		resolver: validationSchema ? zodResolver(validationSchema as any) : undefined,
 		defaultValues: formDefaultValues,
@@ -148,16 +122,6 @@ export function FormEngineFormProvider({
 		reValidateMode: config.reValidateMode,
 	});
 
-	/**
-	 * Initialize ActionExecutor with form context
-	 */
-	const actionExecutor = useMemo(() => {
-		return new ActionExecutor();
-	}, []);
-
-	/**
-	 * Build action execution context from current form state
-	 */
 	const buildActionContext = useCallback((): ActionExecutionContext => {
 		const formData = form.getValues();
 		const formState = form.formState;
@@ -200,7 +164,7 @@ export function FormEngineFormProvider({
 				return { success: false, error: errorMessage };
 			}
 		},
-		[actionExecutor, buildActionContext, form, onAction, onValidationError],
+		[buildActionContext, form, onAction, onValidationError, actionExecutor],
 	);
 
 	/**
@@ -221,7 +185,7 @@ export function FormEngineFormProvider({
 
 			if (config.onChange) config.onChange(data);
 		},
-		[config.actions, config.onChange, onChange, actionExecutor, buildActionContext],
+		[config.actions, config.onChange, onChange, buildActionContext, actionExecutor],
 	);
 
 	/**
@@ -234,7 +198,9 @@ export function FormEngineFormProvider({
 					const context = buildActionContext();
 					const results = await actionExecutor.executeTrigger(config.actions, 'form_submit', context);
 
-					const failedAction = results.find((result) => !result.success && result.shouldContinue === false);
+					const failedAction = results.find(
+						(result: any) => !result.success && result.shouldContinue === false,
+					);
 
 					if (failedAction) {
 						if (onValidationError) {
@@ -256,7 +222,7 @@ export function FormEngineFormProvider({
 				config.onSubmit(data);
 			}
 		},
-		[config.actions, config.onSubmit, onSubmit, actionExecutor, buildActionContext, onValidationError],
+		[config.actions, config.onSubmit, onSubmit, buildActionContext, onValidationError, actionExecutor],
 	);
 
 	/**
@@ -284,26 +250,4 @@ export function FormEngineFormProvider({
 			</FormInstanceContext.Provider>
 		</FormProvider>
 	);
-}
-
-/**
- * Hook to get the current form instance
- */
-export function useFormInstance() {
-	const form = useFormContext();
-	if (!form) {
-		throw new Error('useFormInstance must be used within a FormEngineFormProvider');
-	}
-	return form;
-}
-
-/**
- * Hook to access form actions and navigation
- */
-export function useFormActions() {
-	const context = useContext(FormInstanceContext);
-	if (!context) {
-		throw new Error('useFormActions must be used within a FormEngineFormProvider');
-	}
-	return context;
 }

@@ -13,6 +13,10 @@
 - Template literals are preferred over string concatenation.
 - Do not use emoji, symbols, or other non-standard characters. Instead you can use plain text (i.e. `[what-emoji-represent]`)
 
+## Imports
+
+- Use absolute imports with `@/` for project files.
+
 ## TypeScript
 
 - Avoid TypeScript hacks and anti-patterns.

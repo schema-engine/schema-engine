@@ -1,41 +1,49 @@
-// Core types
-export * from "./types";
+export * from './types';
 
-// Actions system
-export { ActionExecutor } from "./actions";
-export type { ActionExecutionContext, ActionExecutionResult, FormActionConfig } from "./actions";
+/**
+ * Form actions
+ */
+export { ActionExecutor } from './actions';
+export type { ActionExecutionContext, ActionExecutionResult, FormActionConfig } from './actions';
 
-// Registry
-export * from "./registry";
+/**
+ * Form registry
+ */
+export * from './registry';
 
-// Provider and context
-export * from "./provider";
+/**
+ * Form provider and context
+ */
+export * from './provider';
 
 // Field rendering
-export * from "./field-renderer";
+export * from './components/field-renderer';
 
 // Dynamic fieldset rendering
-export * from "./dynamic-fieldset";
+export * from './components/dynamic-fieldset';
 
 // Grid system hooks
-export * from "./grid-hooks";
+export * from './hooks/grid-hooks';
 
 // Stepper components
-export * from "./stepper";
+export * from './stepper';
 
 // Viewport preview
-export * from "../../components/viewport-preview";
+export * from '../../components/viewport-preview';
 
 // Shared hooks
-export * from "./hooks/use-constraint-logic";
-export * from "./hooks/use-field";
-export { useControlledFormElement, combineHandlers } from "./hooks/use-field";
+export * from './hooks/use-constraint-logic';
+export * from './hooks/use-field';
+export { useControlledFormElement, combineHandlers } from './hooks/use-field';
+export { useFormActions } from '@/lib/form-engine/hooks';
+export { useGDPRConsent } from '@/lib/form-engine/hooks';
+export { useGTMTracker } from '@/lib/form-engine/hooks';
 
 // Form rendering
-export * from "./form-renderer";
+export * from './components/form-renderer';
 
 // Validation system
-export * from "./validation";
+export * from './validation';
 
 // Serialization utilities
-export * from "./serialization";
+export * from './serialization';

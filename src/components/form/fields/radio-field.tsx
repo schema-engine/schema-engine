@@ -1,7 +1,7 @@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { FieldGroup } from '../../field-group';
-import { useControlledFormElement, combineHandlers } from '../../../lib/form-engine/hooks/use-field';
+import { FieldGroup } from '@/components/field-group';
+import { useControlledFormElement, combineHandlers } from '@/lib/form-engine/hooks';
 import type { RadioFieldConfig } from '@/lib/form-engine/types/form';
 
 interface RadioFieldProps {

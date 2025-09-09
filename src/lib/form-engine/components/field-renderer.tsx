@@ -1,7 +1,6 @@
-import { useFormEngine } from './provider';
-import { useConstraintLogic } from './hooks/use-constraint-logic';
-import { isFieldRequired } from './validation';
-import type { FieldConfig } from './types/form';
+import { useFormEngine, useConstraintLogic } from '@/lib/form-engine/hooks';
+import { isFieldRequired } from '../validation';
+import type { FieldConfig } from '../types/form';
 
 export interface DynamicFieldProps {
 	config: FieldConfig;
@@ -40,18 +39,15 @@ function DirectField({ config, className, style }: DynamicFieldProps) {
  * Handles constraints to control field visibility and properties
  */
 export function FormField({ config, className, style }: DynamicFieldProps) {
-	// Apply constraint logic if constraints exist
 	const { shouldShow, shouldDisable, isRequired } = useConstraintLogic(
 		config.constraints,
 		isFieldRequired(config.validation),
 	);
 
-	// If field should not be shown, return null early
 	if (!shouldShow) {
 		return null;
 	}
 
-	// Create enhanced config with constraint-based properties
 	const enhancedConfig = {
 		...config,
 		disabled: config.disabled || shouldDisable,

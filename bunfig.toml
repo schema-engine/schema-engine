@@ -1,2 +1,5 @@
 # Configuration for Bun
 # MDX processing is handled by the @mdx-js/esbuild plugin in eco.config.ts
+
+[test]
+preload = ["./happydom.ts", "./testing-library.ts"]

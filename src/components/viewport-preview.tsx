@@ -1,6 +1,6 @@
 import type React from 'react';
 import { useState } from 'react';
-import { type Breakpoint, BreakpointOverrideProvider } from '../lib/form-engine/grid-hooks';
+import { type Breakpoint, BreakpointOverrideProvider } from '@/lib/form-engine/hooks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

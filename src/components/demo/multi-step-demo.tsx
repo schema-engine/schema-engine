@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import '@/components/form/registry';
 
-// Stepper Demo Configuration - showcases different stepper features
 const stepperDemoConfig = {
 	id: 'stepper-demo',
 	title: 'Multi-Step Form Demo',
@@ -161,7 +160,6 @@ const stepperDemoConfig = {
 	],
 };
 
-// Vertical stepper variant
 const verticalStepperConfig = {
 	...stepperDemoConfig,
 	id: 'vertical-stepper-demo',
@@ -172,7 +170,6 @@ const verticalStepperConfig = {
 	},
 };
 
-// Minimal stepper variant
 const minimalStepperConfig = {
 	...stepperDemoConfig,
 	id: 'minimal-stepper-demo',

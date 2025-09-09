@@ -1,7 +1,7 @@
-import { useController } from "react-hook-form";
-import { isFieldRequired } from "../validation";
-import { useFieldGridStyles } from "../grid-hooks";
-import type { FieldConfig } from "../types/form";
+import { useController } from 'react-hook-form';
+import { isFieldRequired } from '../validation';
+import { useFieldGridStyles } from './grid-hooks';
+import type { FieldConfig } from '../types/form';
 
 /**
  * Creates a default value for a field configuration
@@ -12,32 +12,29 @@ function createFieldDefaultValue(config: FieldConfig): any {
 	}
 
 	switch (config.type) {
-		case "input":
-			return "";
-		case "number":
+		case 'input':
+			return '';
+		case 'number':
 			return 0;
-		case "textarea":
-			return "";
-		case "select":
-			return "";
-		case "checkbox":
+		case 'textarea':
+			return '';
+		case 'select':
+			return '';
+		case 'checkbox':
 			return false;
-		case "radio":
-			return "";
-		case "array":
+		case 'radio':
+			return '';
+		case 'array':
 			return [];
 		default:
-			return "";
+			return '';
 	}
 }
 
 /**
  * Combines handlers from props with controller handlers
  */
-export function combineHandlers<T>(
-	controllerHandler: (value: T) => void,
-	propsHandler?: (value: T) => void
-) {
+export function combineHandlers<T>(controllerHandler: (value: T) => void, propsHandler?: (value: T) => void) {
 	return (value: T) => {
 		controllerHandler(value);
 		propsHandler?.(value);
@@ -69,24 +66,24 @@ export function useControlledFormElement(config: FieldConfig) {
 		required: isRequired,
 		disabled: config.disabled,
 		readOnly: config.readonly,
-		"aria-invalid": fieldState.invalid,
-		"aria-describedby": fieldState.error ? `${config.id}-error` : undefined,
+		'aria-invalid': fieldState.invalid,
+		'aria-describedby': fieldState.error ? `${config.id}-error` : undefined,
 		ref: field.ref,
 	};
 
 	const labelProps = {
 		htmlFor: config.id,
 		className: `text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${
-			isRequired ? "after:content-['*'] after:text-red-500 after:ml-1" : ""
+			isRequired ? "after:content-['*'] after:text-red-500 after:ml-1" : ''
 		}`,
 	};
 
 	const errorProps = fieldState.error
 		? {
 				id: `${config.id}-error`,
-				role: "alert" as const,
-				className: "text-sm text-destructive",
-		  }
+				role: 'alert' as const,
+				className: 'text-sm text-destructive',
+			}
 		: null;
 
 	const containerStyles = {

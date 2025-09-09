@@ -1,6 +1,6 @@
-import { Checkbox } from '../../ui/checkbox';
-import { useControlledFormElement, combineHandlers } from '../../../lib/form-engine/hooks/use-field';
-import type { CheckboxFieldConfig } from '../../../lib/form-engine/types/form';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useControlledFormElement, combineHandlers } from '@/lib/form-engine/hooks';
+import type { CheckboxFieldConfig } from '@/lib/form-engine/types/form';
 
 interface CheckboxFieldProps {
 	config: CheckboxFieldConfig;

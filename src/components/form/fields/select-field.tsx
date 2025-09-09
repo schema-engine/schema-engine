@@ -1,7 +1,7 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
-import { FieldGroup } from '../../field-group';
-import { useControlledFormElement, combineHandlers } from '../../../lib/form-engine/hooks/use-field';
-import type { SelectFieldConfig } from '../../../lib/form-engine/types/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FieldGroup } from '@/components/field-group';
+import { useControlledFormElement, combineHandlers } from '@/lib/form-engine/hooks';
+import type { SelectFieldConfig } from '@/lib/form-engine/types/form';
 
 interface SelectFieldProps {
 	config: SelectFieldConfig;

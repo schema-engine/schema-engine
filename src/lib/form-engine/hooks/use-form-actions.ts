@@ -1,37 +1,25 @@
-import { useCallback, useEffect, useRef } from "react";
-import type { FieldValues, UseFormReturn } from "react-hook-form";
-import { ActionExecutor } from "../lib/form-engine/actions/index";
-import type {
-	ActionTrigger,
-	ActionExecutionContext,
-	FormActionConfig,
-} from "../lib/form-engine/actions/types";
-import type { FormConfig } from "../lib/form-engine/types/form";
-import { Logger } from "@ecopages/logger";
+import { Logger } from '@ecopages/logger';
+import { useCallback, useEffect, useRef } from 'react';
+import { useActionExecutor } from './use-action-executor';
+import type { FieldValues, UseFormReturn } from 'react-hook-form';
+import type { ActionTrigger, ActionExecutionContext, FormActionConfig } from '../actions/types';
+import type { FormConfig } from '../types/form';
 
-const logger = new Logger("[form-engine/hooks]", {
+const logger = new Logger('[form-engine/hooks]', {
 	debug: false,
 });
 
 /**
  * React hook for managing form actions with the new simplified system
  */
-export function useFormActions(
-	formConfig: FormConfig,
-	form: UseFormReturn<FieldValues>,
-	currentStep = 0
-) {
-	const executorRef = useRef<ActionExecutor | null>(null);
+export function useFormActions(formConfig: FormConfig, form: UseFormReturn<FieldValues>, currentStep = 0) {
+	const actionExecutor = useActionExecutor();
+
 	const metadataRef = useRef({
 		stepStartTime: Date.now(),
 		totalFormTime: Date.now(),
 		userInteractions: 0,
 	});
-
-	// Initialize executor
-	if (!executorRef.current) {
-		executorRef.current = new ActionExecutor();
-	}
 
 	const createContext = useCallback((): ActionExecutionContext => {
 		try {
@@ -44,9 +32,9 @@ export function useFormActions(
 				if (
 					value === null ||
 					value === undefined ||
-					typeof value === "string" ||
-					typeof value === "number" ||
-					typeof value === "boolean" ||
+					typeof value === 'string' ||
+					typeof value === 'number' ||
+					typeof value === 'boolean' ||
 					Array.isArray(value)
 				) {
 					sanitizedFormData[key] = value;
@@ -55,7 +43,7 @@ export function useFormActions(
 
 			const sanitizedErrors: Record<string, any> = {};
 			for (const [key, error] of Object.entries(errors)) {
-				if (error && typeof error === "object" && "message" in error) {
+				if (error && typeof error === 'object' && 'message' in error) {
 					sanitizedErrors[key] = { message: error.message };
 				}
 			}
@@ -75,14 +63,14 @@ export function useFormActions(
 				},
 			};
 		} catch (err) {
-			logger.warn("Failed to create context:", err instanceof Error ? err.message : String(err));
+			logger.warn('Failed to create context:', err instanceof Error ? err.message : String(err));
 			return {
 				formData: {},
 				formId: formConfig.id,
 				currentStep,
 				totalSteps: formConfig.steps?.length || 1,
 				isValid: false,
-				errors: { _contextError: "Failed to create context" },
+				errors: { _contextError: 'Failed to create context' },
 				form,
 				metadata: {
 					stepStartTime: metadataRef.current.stepStartTime,
@@ -95,8 +83,6 @@ export function useFormActions(
 
 	const executeTrigger = useCallback(
 		async (trigger: ActionTrigger) => {
-			if (!executorRef.current) return [];
-
 			const context = createContext();
 			const allActions: FormActionConfig[] = [];
 
@@ -108,9 +94,7 @@ export function useFormActions(
 			const stepActions = formConfig.steps?.[currentStep]?.actions;
 			if (stepActions) {
 				allActions.push(...stepActions);
-				logger.debug(
-					`Added ${stepActions.length} step actions for step ${currentStep}, trigger: ${trigger}`
-				);
+				logger.debug(`Added ${stepActions.length} step actions for step ${currentStep}, trigger: ${trigger}`);
 			}
 
 			logger.debug(`Executing trigger: ${trigger}`, {
@@ -120,9 +104,9 @@ export function useFormActions(
 				isValid: context.isValid,
 			});
 
-			return executorRef.current.executeTrigger(allActions, trigger, context);
+			return actionExecutor.executeTrigger(allActions, trigger, context);
 		},
-		[formConfig.actions, formConfig.steps, currentStep, createContext, formConfig.id]
+		[formConfig.actions, formConfig.steps, currentStep, createContext, formConfig.id, actionExecutor],
 	);
 
 	const trackInteraction = useCallback(() => {
@@ -140,12 +124,13 @@ export function useFormActions(
 	}, [currentStep]);
 
 	const hasTriggeredFormStart = useRef<Set<string>>(new Set());
+
 	useEffect(() => {
 		const formKey = `${formConfig.id}_${JSON.stringify(
-			formConfig.actions?.map((a: FormActionConfig) => a.id) || []
+			formConfig.actions?.map((a: FormActionConfig) => a.id) || [],
 		)}_${formConfig.steps?.length || 0}`;
 
-		if (!hasTriggeredFormStart.current.has(formKey) && executorRef.current) {
+		if (!hasTriggeredFormStart.current.has(formKey)) {
 			logger.debug(`Initializing form actions for: ${formConfig.id}`);
 
 			const initContext: ActionExecutionContext = {
@@ -174,16 +159,16 @@ export function useFormActions(
 				allActions.push(...stepActions);
 			}
 
-			executorRef.current.executeTrigger(allActions, "form_start", initContext);
+			actionExecutor.executeTrigger(allActions, 'form_start', initContext);
 			hasTriggeredFormStart.current.add(formKey);
 		}
-	}, [formConfig.id, formConfig.actions, formConfig.steps, form]);
+	}, [formConfig.id, formConfig.actions, formConfig.steps, form, actionExecutor]);
 
 	useEffect(() => {
 		logger.debug(`Setting up form watch for: ${formConfig.id}`);
 		const subscription = form.watch(() => {
 			trackInteraction();
-			executeTrigger("form_change");
+			executeTrigger('form_change');
 		});
 
 		return () => {
@@ -195,18 +180,18 @@ export function useFormActions(
 	useEffect(() => {
 		return () => {
 			logger.debug(`Cleaning up form actions hook for: ${formConfig.id}`);
-			if (executorRef.current) {
-				executorRef.current.cleanup();
+			if (actionExecutor) {
+				actionExecutor.cleanup();
 			}
 		};
-	}, [formConfig.id]);
+	}, [formConfig.id, actionExecutor]);
 
 	return {
-		triggerStepSubmit: () => executeTrigger("step_submit"),
-		triggerFormSubmit: () => executeTrigger("form_submit"),
-		triggerManualReset: () => executeTrigger("manual_reset"),
-		triggerStepChange: () => executeTrigger("step_change"),
-		triggerManualSave: () => executeTrigger("manual_save"),
+		triggerStepSubmit: () => executeTrigger('step_submit'),
+		triggerFormSubmit: () => executeTrigger('form_submit'),
+		triggerManualReset: () => executeTrigger('manual_reset'),
+		triggerStepChange: () => executeTrigger('step_change'),
+		triggerManualSave: () => executeTrigger('manual_save'),
 		trackInteraction,
 		executeTrigger,
 		getContext: () => {
@@ -223,45 +208,12 @@ export function useFormActions(
 				};
 			} catch (err) {
 				return {
-					error: "Failed to create context",
+					error: 'Failed to create context',
 					errorMessage: err instanceof Error ? err.message : String(err),
 					formId: formConfig.id,
 					currentStep,
 				};
 			}
 		},
-	};
-}
-
-/**
- * Helper hook for GDPR consent management
- */
-export function useGDPRConsent() {
-	const { GDPRConsent } = require("../lib/form-engine/gdpr-consent");
-
-	return {
-		hasConsent: () => GDPRConsent.hasConsent(),
-		grantConsent: () => GDPRConsent.grantConsent(),
-		revokeConsent: () => GDPRConsent.revokeConsent(),
-		needsUpdate: () => GDPRConsent.needsConsentUpdate(),
-		getConsent: () => GDPRConsent.getConsent(),
-	};
-}
-
-/**
- * Helper hook for GTM integration
- */
-export function useGTMTracker() {
-	const { GTMTracker } = require("../lib/form-engine/gtm-tracker");
-
-	return {
-		isAvailable: () => GTMTracker.isAvailable(),
-		push: (event: string, data?: Record<string, any>) => GTMTracker.push(event, data),
-		pushFormEvent: (
-			eventType: "form_start" | "form_step_complete" | "form_submit" | "form_abandon",
-			formData?: Record<string, any>,
-			metadata?: Record<string, any>
-		) => GTMTracker.pushFormEvent(eventType, formData, metadata),
-		initialize: (containerId: string) => GTMTracker.initialize(containerId),
 	};
 }

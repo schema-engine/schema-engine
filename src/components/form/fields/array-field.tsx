@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Trash2, Plus } from 'lucide-react';
 import type { ArrayFieldConfig, FieldConfig } from '@/lib/form-engine/types/form';
-import { DynamicField } from '@/lib/form-engine/field-renderer';
+import { DynamicField } from '@/lib/form-engine/components/field-renderer';
 
 interface ArrayFieldProps {
 	config: ArrayFieldConfig;
