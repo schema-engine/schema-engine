@@ -696,4 +696,95 @@ export const ValidationPresets = {
 		type: "uuid",
 		message: message || "Please enter a valid UUID",
 	}),
+
+	uuidv4: (message?: string): UuidRule => ({
+		type: "uuid",
+		version: "v4",
+		message: message || "Please enter a valid UUID v4",
+	}),
+
+	datetime: (message?: string): DateTimeRule => ({
+		type: "datetime",
+		message: message || "Please enter a valid ISO datetime",
+	}),
+
+	date: (message?: string): DateRule => ({
+		type: "date",
+		message: message || "Please enter a valid ISO date",
+	}),
+
+	time: (message?: string): TimeRule => ({
+		type: "time",
+		message: message || "Please enter a valid ISO time",
+	}),
+
+	ipv4: (message?: string): IpRule => ({
+		type: "ip",
+		version: "v4",
+		message: message || "Please enter a valid IPv4 address",
+	}),
+
+	ipv6: (message?: string): IpRule => ({
+		type: "ip",
+		version: "v6",
+		message: message || "Please enter a valid IPv6 address",
+	}),
+
+	jwt: (message?: string): JwtRule => ({
+		type: "jwt",
+		message: message || "Please enter a valid JWT",
+	}),
+
+	hash: (algorithm: "md5" | "sha1" | "sha256" | "sha384" | "sha512", message?: string): HashRule => ({
+		type: "hash",
+		algorithm,
+		message: message || `Please enter a valid ${algorithm} hash`,
+	}),
+
+	base64: (message?: string): Base64Rule => ({
+		type: "base64",
+		message: message || "Please enter a valid base64 string",
+	}),
+
+	base64url: (message?: string): Base64Rule => ({
+		type: "base64",
+		variant: "url",
+		message: message || "Please enter a valid base64url string",
+	}),
+
+	emoji: (message?: string): StringFormatRule => ({
+		type: "format",
+		format: "emoji",
+		message: message || "Please enter a valid emoji",
+	}),
+
+	nanoid: (message?: string): StringFormatRule => ({
+		type: "format",
+		format: "nanoid",
+		message: message || "Please enter a valid nanoid",
+	}),
+
+	cuid: (message?: string): StringFormatRule => ({
+		type: "format",
+		format: "cuid",
+		message: message || "Please enter a valid cuid",
+	}),
+
+	cuid2: (message?: string): StringFormatRule => ({
+		type: "format",
+		format: "cuid2",
+		message: message || "Please enter a valid cuid2",
+	}),
+
+	ulid: (message?: string): StringFormatRule => ({
+		type: "format",
+		format: "ulid",
+		message: message || "Please enter a valid ulid",
+	}),
+
+	hex: (message?: string): StringFormatRule => ({
+		type: "format",
+		format: "hex",
+		message: message || "Please enter a valid hex string",
+	}),
 };
