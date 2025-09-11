@@ -91,9 +91,13 @@ test('useDebouncedValue should handle zero delay', async () => {
 
 	expect(originalValue.textContent).toBe('immediate');
 	
+	/**
+	 * With zero delay, the debounced value should update immediately.
+	 * However, since state updates are asynchronous, we still need to wait for the next tick.
+	 */
 	await waitFor(() => {
 		expect(debouncedValue.textContent).toBe('immediate');
-	}, { timeout: 100 });
+	}, { timeout: 20 });
 });
 
 test('useDebouncedValue should reset timer on rapid changes', async () => {

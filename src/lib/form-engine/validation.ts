@@ -39,6 +39,7 @@ export interface MaxRule extends BaseValidationRule {
 
 export interface EmailRule extends BaseValidationRule {
 	type: "email";
+	pattern?: string; // custom email regex pattern
 	message?: string;
 }
 
@@ -50,11 +51,71 @@ export interface PatternRule extends BaseValidationRule {
 
 export interface UrlRule extends BaseValidationRule {
 	type: "url";
+	protocol?: string; // protocol regex pattern
+	hostname?: string; // hostname regex pattern
+	normalize?: boolean; // normalize URLs
 	message?: string;
 }
 
 export interface UuidRule extends BaseValidationRule {
 	type: "uuid";
+	version?: "v1" | "v2" | "v3" | "v4" | "v5" | "v6" | "v7" | "v8"; // UUID version
+	message?: string;
+}
+
+export interface DateTimeRule extends BaseValidationRule {
+	type: "datetime";
+	offset?: boolean; // allow timezone offsets
+	local?: boolean; // allow local (unqualified) datetimes
+	precision?: number; // time precision (-1 for minutes, 0 for seconds, 1+ for sub-seconds)
+	message?: string;
+}
+
+export interface DateRule extends BaseValidationRule {
+	type: "date";
+	message?: string;
+}
+
+export interface TimeRule extends BaseValidationRule {
+	type: "time";
+	precision?: number; // time precision (-1 for minutes, 0 for seconds, 1+ for sub-seconds)
+	message?: string;
+}
+
+export interface IpRule extends BaseValidationRule {
+	type: "ip";
+	version: "v4" | "v6";
+	message?: string;
+}
+
+export interface CidrRule extends BaseValidationRule {
+	type: "cidr";
+	version: "v4" | "v6";
+	message?: string;
+}
+
+export interface JwtRule extends BaseValidationRule {
+	type: "jwt";
+	alg?: string; // JWT algorithm
+	message?: string;
+}
+
+export interface HashRule extends BaseValidationRule {
+	type: "hash";
+	algorithm: "md5" | "sha1" | "sha256" | "sha384" | "sha512";
+	encoding?: "hex" | "base64" | "base64url";
+	message?: string;
+}
+
+export interface Base64Rule extends BaseValidationRule {
+	type: "base64";
+	variant?: "standard" | "url"; // standard base64 or base64url
+	message?: string;
+}
+
+export interface StringFormatRule extends BaseValidationRule {
+	type: "format";
+	format: "emoji" | "nanoid" | "cuid" | "cuid2" | "ulid" | "hex";
 	message?: string;
 }
 
@@ -77,6 +138,15 @@ export type ValidationRule =
 	| PatternRule
 	| UrlRule
 	| UuidRule
+	| DateTimeRule
+	| DateRule
+	| TimeRule
+	| IpRule
+	| CidrRule
+	| JwtRule
+	| HashRule
+	| Base64Rule
+	| StringFormatRule
 	| CustomRule;
 
 /**
@@ -113,6 +183,7 @@ export const MaxRuleSchema = z.object({
 
 export const EmailRuleSchema = z.object({
 	type: z.literal("email"),
+	pattern: z.string().optional(),
 	message: z.string().optional(),
 });
 
@@ -124,11 +195,71 @@ export const PatternRuleSchema = z.object({
 
 export const UrlRuleSchema = z.object({
 	type: z.literal("url"),
+	protocol: z.string().optional(),
+	hostname: z.string().optional(),
+	normalize: z.boolean().optional(),
 	message: z.string().optional(),
 });
 
 export const UuidRuleSchema = z.object({
 	type: z.literal("uuid"),
+	version: z.enum(["v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8"]).optional(),
+	message: z.string().optional(),
+});
+
+export const DateTimeRuleSchema = z.object({
+	type: z.literal("datetime"),
+	offset: z.boolean().optional(),
+	local: z.boolean().optional(),
+	precision: z.number().optional(),
+	message: z.string().optional(),
+});
+
+export const DateRuleSchema = z.object({
+	type: z.literal("date"),
+	message: z.string().optional(),
+});
+
+export const TimeRuleSchema = z.object({
+	type: z.literal("time"),
+	precision: z.number().optional(),
+	message: z.string().optional(),
+});
+
+export const IpRuleSchema = z.object({
+	type: z.literal("ip"),
+	version: z.enum(["v4", "v6"]),
+	message: z.string().optional(),
+});
+
+export const CidrRuleSchema = z.object({
+	type: z.literal("cidr"),
+	version: z.enum(["v4", "v6"]),
+	message: z.string().optional(),
+});
+
+export const JwtRuleSchema = z.object({
+	type: z.literal("jwt"),
+	alg: z.string().optional(),
+	message: z.string().optional(),
+});
+
+export const HashRuleSchema = z.object({
+	type: z.literal("hash"),
+	algorithm: z.enum(["md5", "sha1", "sha256", "sha384", "sha512"]),
+	encoding: z.enum(["hex", "base64", "base64url"]).optional(),
+	message: z.string().optional(),
+});
+
+export const Base64RuleSchema = z.object({
+	type: z.literal("base64"),
+	variant: z.enum(["standard", "url"]).optional(),
+	message: z.string().optional(),
+});
+
+export const StringFormatRuleSchema = z.object({
+	type: z.literal("format"),
+	format: z.enum(["emoji", "nanoid", "cuid", "cuid2", "ulid", "hex"]),
 	message: z.string().optional(),
 });
 
@@ -151,6 +282,15 @@ export const ValidationRuleSchema = z.discriminatedUnion("type", [
 	PatternRuleSchema,
 	UrlRuleSchema,
 	UuidRuleSchema,
+	DateTimeRuleSchema,
+	DateRuleSchema,
+	TimeRuleSchema,
+	IpRuleSchema,
+	CidrRuleSchema,
+	JwtRuleSchema,
+	HashRuleSchema,
+	Base64RuleSchema,
+	StringFormatRuleSchema,
 	CustomRuleSchema,
 ]);
 
@@ -265,21 +405,162 @@ export function createZodSchema(
 
 			case "email":
 				if (fieldType === "string") {
-					schema = (schema as z.ZodString).email(
-						rule.message || "Please enter a valid email address"
-					);
+					if (rule.pattern) {
+						schema = z.email({
+							pattern: new RegExp(rule.pattern),
+						});
+					} else {
+						schema = z.email();
+					}
 				}
 				break;
 
 			case "url":
 				if (fieldType === "string") {
-					schema = (schema as z.ZodString).url(rule.message || "Please enter a valid URL");
+					const urlOptions: any = {};
+					if (rule.protocol) {
+						urlOptions.protocol = new RegExp(rule.protocol);
+					}
+					if (rule.hostname) {
+						urlOptions.hostname = new RegExp(rule.hostname);
+					}
+
+					if (Object.keys(urlOptions).length > 0) {
+						schema = z.url(urlOptions);
+					} else {
+						schema = z.url();
+					}
 				}
 				break;
 
 			case "uuid":
 				if (fieldType === "string") {
-					schema = (schema as z.ZodString).uuid(rule.message || "Please enter a valid UUID");
+					if (rule.version) {
+						schema = z.uuid({
+							version: rule.version,
+						});
+					} else {
+						schema = z.uuid();
+					}
+				}
+				break;
+
+			case "datetime":
+				if (fieldType === "string") {
+					const datetimeOptions: any = {};
+					if (rule.offset !== undefined) {
+						datetimeOptions.offset = rule.offset;
+					}
+					if (rule.local !== undefined) {
+						datetimeOptions.local = rule.local;
+					}
+					if (rule.precision !== undefined) {
+						datetimeOptions.precision = rule.precision;
+					}
+
+					if (Object.keys(datetimeOptions).length > 0) {
+						schema = z.iso.datetime(datetimeOptions);
+					} else {
+						schema = z.iso.datetime();
+					}
+				}
+				break;
+
+			case "date":
+				if (fieldType === "string") {
+					schema = z.iso.date();
+				}
+				break;
+
+			case "time":
+				if (fieldType === "string") {
+					if (rule.precision !== undefined) {
+						schema = z.iso.time({
+							precision: rule.precision,
+						});
+					} else {
+						schema = z.iso.time();
+					}
+				}
+				break;
+
+			case "ip":
+				if (fieldType === "string") {
+					if (rule.version === "v4") {
+						schema = z.ipv4();
+					} else if (rule.version === "v6") {
+						schema = z.ipv6();
+					}
+				}
+				break;
+
+			case "cidr":
+				if (fieldType === "string") {
+					if (rule.version === "v4") {
+						schema = z.cidrv4();
+					} else if (rule.version === "v6") {
+						schema = z.cidrv6();
+					}
+				}
+				break;
+
+			case "jwt":
+				if (fieldType === "string") {
+					if (rule.alg) {
+						schema = z.jwt({ alg: rule.alg });
+					} else {
+						schema = z.jwt();
+					}
+				}
+				break;
+
+			case "hash":
+				if (fieldType === "string") {
+					const hashOptions: any = {};
+					if (rule.encoding) {
+						hashOptions.enc = rule.encoding;
+					}
+
+					if (Object.keys(hashOptions).length > 0) {
+						schema = z.hash(rule.algorithm, hashOptions);
+					} else {
+						schema = z.hash(rule.algorithm);
+					}
+				}
+				break;
+
+			case "base64":
+				if (fieldType === "string") {
+					if (rule.variant === "url") {
+						schema = z.base64url();
+					} else {
+						schema = z.base64();
+					}
+				}
+				break;
+
+			case "format":
+				if (fieldType === "string") {
+					switch (rule.format) {
+						case "emoji":
+							schema = z.emoji();
+							break;
+						case "nanoid":
+							schema = z.nanoid();
+							break;
+						case "cuid":
+							schema = z.cuid();
+							break;
+						case "cuid2":
+							schema = z.cuid2();
+							break;
+						case "ulid":
+							schema = z.ulid();
+							break;
+						case "hex":
+							schema = z.hex();
+							break;
+					}
 				}
 				break;
 
