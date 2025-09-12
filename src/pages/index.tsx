@@ -1,107 +1,165 @@
-import { Card, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
-import { Separator } from '../components/ui/separator';
+import { CodePreview } from '../components/code-preview';
+import { FormRenderer } from '@/lib/form-engine';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import type { FormConfig } from '@/lib/form-engine/types';
 import type { EcoComponent } from '@ecopages/core';
 import type { JSX } from 'react';
+import '@/lib/form-engine/components/form/registry';
+
+const contactFormConfig: FormConfig = {
+	id: 'contact-form',
+	title: 'Contact Form',
+	autoGenerateSchema: true,
+	mode: 'free',
+	steps: [
+		{
+			id: 'contact-step',
+			title: 'Contact Information',
+			fields: [
+				{
+					id: 'email',
+					name: 'email',
+					type: 'input',
+					inputType: 'email',
+					label: 'Email Address',
+					placeholder: 'Enter your email',
+					validation: [
+						{
+							type: 'required',
+							message: 'Email is required',
+						},
+						{
+							type: 'email',
+							message: 'Please enter a valid email address',
+						},
+					],
+				},
+				{
+					id: 'message',
+					name: 'message',
+					type: 'textarea',
+					label: 'Message',
+					placeholder: 'Your message...',
+					validation: [
+						{
+							type: 'minLength',
+							value: 10,
+							message: 'Message must be at least 10 characters long',
+						},
+					],
+				},
+			],
+		},
+	],
+	actions: [
+		{
+			id: 'contact-submit',
+			type: 'submit',
+			description: 'Submit contact form',
+			successMessage: 'Message sent! Thanks for reaching out.',
+			errorMessage: 'Failed to send message. Please try again.',
+			enabled: true,
+			endpoint: '/api/submit-demo',
+			method: 'POST',
+		},
+	],
+};
+
+const features = [
+	{
+		title: 'JSON Configuration',
+		description: 'Define forms entirely in JSON with automatic validation generation',
+		icon: (
+			<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<title>Document icon</title>
+				<path
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					strokeWidth={1.5}
+					d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+				/>
+			</svg>
+		),
+	},
+	{
+		title: 'Responsive Grids',
+		description: 'Advanced layout system with device emulation and breakpoint management',
+		icon: (
+			<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<title>Grid icon</title>
+				<path
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					strokeWidth={1.5}
+					d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+				/>
+			</svg>
+		),
+	},
+	{
+		title: 'Conditional Logic',
+		description: 'Dynamic field rendering based on real-time form state',
+		icon: (
+			<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<title>Conditional logic icon</title>
+				<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+			</svg>
+		),
+	},
+	{
+		title: 'Type Safety',
+		description: 'Zod validation schemas created automatically from configuration',
+		icon: (
+			<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<title>Validation check icon</title>
+				<path
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					strokeWidth={1.5}
+					d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+				/>
+			</svg>
+		),
+	},
+];
+
+const demoPages = [
+	{
+		title: 'Basic Form',
+		description: 'Start with JSON-based form validation fundamentals',
+		path: '/docs/examples/basic-form',
+		level: 'Beginner',
+	},
+	{
+		title: 'Contact Form',
+		description: 'Complete contact form with validation',
+		path: '/docs/examples/contact-form',
+		level: 'Intermediate',
+	},
+	{
+		title: 'Registration Flow',
+		description: 'Multi-step registration with complex validation',
+		path: '/docs/examples/registration-flow',
+		level: 'Advanced',
+	},
+	{
+		title: 'Survey Form',
+		description: 'Dynamic survey with conditional fields',
+		path: '/docs/examples/survey-form',
+		level: 'Advanced',
+	},
+	{
+		title: 'Sequential Actions',
+		description: 'Complex workflows with chained actions',
+		path: '/docs/examples/sequential-actions',
+		level: 'Advanced',
+	},
+];
 
 const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
-	const features = [
-		{
-			title: 'JSON Configuration',
-			description: 'Define forms entirely in JSON with automatic validation generation',
-			icon: (
-				<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<title>Document icon</title>
-					<path
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						strokeWidth={1.5}
-						d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-					/>
-				</svg>
-			),
-		},
-		{
-			title: 'Responsive Grids',
-			description: 'Advanced layout system with device emulation and breakpoint management',
-			icon: (
-				<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<title>Grid icon</title>
-					<path
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						strokeWidth={1.5}
-						d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-					/>
-				</svg>
-			),
-		},
-		{
-			title: 'Conditional Logic',
-			description: 'Dynamic field rendering based on real-time form state',
-			icon: (
-				<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<title>Conditional logic icon</title>
-					<path
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						strokeWidth={1.5}
-						d="M8 9l4-4 4 4m0 6l-4 4-4-4"
-					/>
-				</svg>
-			),
-		},
-		{
-			title: 'Type Safety',
-			description: 'Zod validation schemas created automatically from configuration',
-			icon: (
-				<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<title>Validation check icon</title>
-					<path
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						strokeWidth={1.5}
-						d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-					/>
-				</svg>
-			),
-		},
-	];
-
-	const demoPages = [
-		{
-			title: 'Basic Form',
-			description: 'Start with JSON-based form validation fundamentals',
-			path: '/docs/examples/basic-form',
-			level: 'Beginner',
-		},
-		{
-			title: 'Contact Form',
-			description: 'Complete contact form with validation',
-			path: '/docs/examples/contact-form',
-			level: 'Intermediate',
-		},
-		{
-			title: 'Registration Flow',
-			description: 'Multi-step registration with complex validation',
-			path: '/docs/examples/registration-flow',
-			level: 'Advanced',
-		},
-		{
-			title: 'Survey Form',
-			description: 'Dynamic survey with conditional fields',
-			path: '/docs/examples/survey-form',
-			level: 'Advanced',
-		},
-		{
-			title: 'Sequential Actions',
-			description: 'Complex workflows with chained actions',
-			path: '/docs/examples/sequential-actions',
-			level: 'Advanced',
-		},
-	];
-
 	return (
 		<div className="min-h-screen bg-white">
 			<header className="border-b border-gray-200">
@@ -168,8 +226,7 @@ const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 						</Button>
 					</div>
 
-					{/* Feature highlights */}
-					<div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
+					<div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500 mb-16">
 						<span className="flex items-center gap-2">
 							<div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
 							100% Serializable
@@ -188,6 +245,11 @@ const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 						</span>
 					</div>
 				</div>
+				<CodePreview
+					code={JSON.stringify(contactFormConfig, null, 2)}
+					example={<FormRenderer config={contactFormConfig} />}
+					fileName="contact-form.json"
+				/>
 			</section>
 
 			<Separator className="max-w-6xl mx-auto" />
@@ -303,7 +365,6 @@ const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 				</div>
 			</section>
 
-			{/* Footer */}
 			<footer className="border-t border-gray-200 py-12 px-6">
 				<div className="max-w-6xl mx-auto text-center">
 					<p className="text-gray-500 text-sm">
