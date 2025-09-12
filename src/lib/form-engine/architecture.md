@@ -431,22 +431,20 @@ import "@/components/form/registries/select.registry";
 
 ### Memory Management
 
-Proper cleanup prevents memory leaks:
+Proper cleanup prevents memory leaks and is handled automatically by the ActionExecutor:
 
 ```typescript
-function useFormActions(config: FormConfig, form: UseFormReturn, currentStep: number) {
-	useEffect(() => {
-		const intervals: NodeJS.Timeout[] = [];
-		const timeouts: NodeJS.Timeout[] = [];
+function useActionExecutor() {
+	const actionExecutorRef = useRef<ActionExecutor | null>(null);
 
-		// Set up action triggers
+	if (!actionExecutorRef.current) {
+		actionExecutorRef.current = new ActionExecutor();
+	}
 
-		return () => {
-			// Cleanup intervals and timeouts
-			intervals.forEach(clearInterval);
-			timeouts.forEach(clearTimeout);
-		};
-	}, [config, currentStep]);
+	// Cleanup is handled automatically when components unmount
+	// via the ActionExecutor's internal cleanup methods
+
+	return actionExecutorRef.current;
 }
 ```
 

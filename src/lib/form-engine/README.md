@@ -808,9 +808,10 @@ import "@/components/form/registries"; // All field types
 
 ### Core Hooks
 
+````typescript
 ```typescript
 import {
-	useFormActions,
+	useActionExecutor,
 	useConstraintLogic,
 	useGDPRConsent,
 	useFormGridStyles,
@@ -818,11 +819,10 @@ import {
 } from "@/lib/form-engine";
 
 // Action management
-const actions = useFormActions(formConfig, form, currentStep);
-actions.triggerStepSubmit();
-actions.triggerFormSubmit();
-actions.triggerManualSave();
-actions.getContext(); // For debugging
+const actionExecutor = useActionExecutor();
+// Actions are now handled automatically by the form provider
+// or can be executed directly via actionExecutor.executeTrigger()
+````
 
 // Conditional logic evaluation
 const { isVisible, isEnabled, isRequired } = useConstraintLogic(fieldConfig.constraints, formWatch);
@@ -830,13 +830,14 @@ const { isVisible, isEnabled, isRequired } = useConstraintLogic(fieldConfig.cons
 // GDPR consent management
 const gdpr = useGDPRConsent();
 if (gdpr.hasConsent()) {
-	// Enable data storage features
+// Enable data storage features
 }
 
 // Grid system styling
 const containerStyles = useFormGridStyles(gridConfig);
 const fieldStyles = useFieldGridStyles(fieldConfig.grid);
-```
+
+````
 
 ### Type Definitions
 
@@ -850,7 +851,7 @@ import type {
 	ConstraintLogic,
 	ValidationRule,
 } from "@/lib/form-engine";
-```
+````
 
 ### Components
 

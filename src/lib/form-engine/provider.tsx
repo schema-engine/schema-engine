@@ -9,6 +9,7 @@ import type { FormConfig } from './types/form';
 
 /**
  * Form Engine context value
+ * It includes the component registry and action execution function
  */
 export interface FormEngineContextValue {
 	registry: FormComponentRegistryImpl;
@@ -17,11 +18,12 @@ export interface FormEngineContextValue {
 
 /**
  * Form Engine context
+ * Provides access to the component registry and action execution function
  */
 export const FormEngineContext = createContext<FormEngineContextValue | null>(null);
 
 /**
- * Form Instance context value - includes action execution
+ * Form Instance context value - includes action execution and form navigation functions
  */
 export interface FormInstanceContextValue {
 	executeAction: (action: FormActionConfig) => Promise<{ success: boolean; error?: string }>;
@@ -35,6 +37,7 @@ export interface FormInstanceContextValue {
 
 /**
  * Form Instance context
+ * Provides access to action execution and form navigation functions
  */
 export const FormInstanceContext = createContext<FormInstanceContextValue | null>(null);
 
@@ -142,9 +145,6 @@ export function FormEngineFormProvider({
 		};
 	}, [form, config.id, config.steps.length, currentStep]);
 
-	/**
-	 * Execute an action configuration using the new plugin-based system
-	 */
 	const executeAction = useCallback(
 		async (action: FormActionConfig) => {
 			try {
@@ -167,9 +167,6 @@ export function FormEngineFormProvider({
 		[buildActionContext, form, onAction, onValidationError, actionExecutor],
 	);
 
-	/**
-	 * Handle form changes - triggers actions for specific change events
-	 */
 	const handleFormChange = useCallback(
 		async (data: any) => {
 			if (config.actions && config.actions.length > 0) {
@@ -188,9 +185,6 @@ export function FormEngineFormProvider({
 		[config.actions, config.onChange, onChange, buildActionContext, actionExecutor],
 	);
 
-	/**
-	 * Handle form submission - supports both legacy callbacks and new action system
-	 */
 	const handleSubmit = useCallback(
 		async (data: any) => {
 			if (config.actions && config.actions.length > 0) {
@@ -225,9 +219,6 @@ export function FormEngineFormProvider({
 		[config.actions, config.onSubmit, onSubmit, buildActionContext, onValidationError, actionExecutor],
 	);
 
-	/**
-	 * Form instance context value
-	 */
 	const formInstanceContextValue: FormInstanceContextValue = useMemo(
 		() => ({
 			executeAction,

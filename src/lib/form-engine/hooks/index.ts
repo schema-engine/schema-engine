@@ -1,5 +1,4 @@
 export { useActionExecutor } from '@/lib/form-engine/hooks/use-action-executor';
-export { useFormActions } from '@/lib/form-engine/hooks/use-form-actions';
 export { useGDPRConsent } from '@/lib/form-engine/hooks/use-gdpr-consent';
 export { useGTMTracker } from '@/lib/form-engine/hooks/use-gtm-tracker';
 export { combineHandlers, useControlledFormElement } from '@/lib/form-engine/hooks/use-field';

@@ -35,7 +35,6 @@ export * from '../../components/viewport-preview';
 export * from './hooks/use-constraint-logic';
 export * from './hooks/use-field';
 export { useControlledFormElement, combineHandlers } from './hooks/use-field';
-export { useFormActions } from '@/lib/form-engine/hooks';
 export { useGDPRConsent } from '@/lib/form-engine/hooks';
 export { useGTMTracker } from '@/lib/form-engine/hooks';
 
