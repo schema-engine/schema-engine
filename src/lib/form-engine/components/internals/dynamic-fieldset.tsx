@@ -1,6 +1,6 @@
 import type React from 'react';
 import { FormField } from './field-renderer';
-import type { FieldConfig, ConstraintLogic } from '../types/form';
+import type { FieldConfig, ConstraintLogic } from '../../types/form';
 import { useConstraintLogic } from '@/lib/form-engine/hooks';
 
 interface DynamicFieldsetProps {

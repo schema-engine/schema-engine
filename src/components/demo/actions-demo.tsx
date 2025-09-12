@@ -6,10 +6,10 @@ import { useGDPRConsent, useGTMTracker } from '@/lib/form-engine/hooks';
 import { actionsFormConfig, simpleActionsFormConfig } from '@/configs/forms/actions-forms';
 
 // Import field registries to ensure components are available
-import '@/components/form/fields/input-field.registry';
-import '../form/fields/select-field.registry';
-import '../form/fields/checkbox-field.registry';
-import '../form/fields/textarea-field.registry';
+import '@/lib/form-engine/components/form/fields/input-field.registry';
+import '../../lib/form-engine/components/form/fields/select-field.registry';
+import '../../lib/form-engine/components/form/fields/checkbox-field.registry';
+import '../../lib/form-engine/components/form/fields/textarea-field.registry';
 
 /**
  * Demo component showcasing the simplified action system

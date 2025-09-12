@@ -1,18 +1,18 @@
-import { Input } from '@/components/ui/input';
-import { FieldGroup } from '@/components/field-group';
+import { Textarea } from '@/components/ui/textarea';
+import { FieldGroup } from '@/lib/form-engine/components/form/field-group';
 import { useControlledFormElement, combineHandlers } from '@/lib/form-engine/hooks';
-import type { InputFieldConfig } from '@/lib/form-engine/types/form';
+import type { TextareaFieldConfig } from '@/lib/form-engine/types/form';
 
-interface InputFieldProps {
-	config: InputFieldConfig;
+interface TextareaFieldProps {
+	config: TextareaFieldConfig;
 	onChange?: (value: string) => void;
 	onBlur?: () => void;
 }
 
 /**
- * Input field component for text, email, password, etc.
+ * Textarea field component
  */
-export function InputField({ config, onChange: propsOnChange, onBlur: propsOnBlur }: InputFieldProps) {
+export function TextareaField({ config, onChange: propsOnChange, onBlur: propsOnBlur }: TextareaFieldProps) {
 	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
 		useControlledFormElement(config);
 
@@ -26,19 +26,16 @@ export function InputField({ config, onChange: propsOnChange, onBlur: propsOnBlu
 				error={error}
 			>
 				{config.description && <p className="text-sm text-muted-foreground mb-2">{config.description}</p>}
-				<Input
+				<Textarea
 					{...fieldProps}
-					type={config.inputType}
 					value={value || ''}
 					onChange={(e) => combineHandlers(onChange, propsOnChange)(e.target.value)}
 					onBlur={combineHandlers(onBlur, propsOnBlur)}
 					placeholder={config.placeholder}
+					rows={config.rows}
 					maxLength={config.maxLength}
 					minLength={config.minLength}
-					pattern={config.pattern}
-					autoComplete={config.autoComplete}
-					autoFocus={config.autoFocus}
-					className={config.className}
+					className={`${config.className || ''} resize-${config.resize || 'both'}`}
 					style={config.style}
 				/>
 			</FieldGroup>

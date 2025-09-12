@@ -1,7 +1,7 @@
 import { FormRenderer } from '../../lib/form-engine';
 import { demoFormConfig } from '../../configs/forms/demo-forms';
 // Import to register components
-import '../form/registry';
+import '../../lib/form-engine/components/form/registry';
 
 /**
  * Demo component to test the form engine with JSON-based validation

@@ -1,7 +1,7 @@
 import { FormRenderer, ViewportPreview } from '@/lib/form-engine';
 import { responsiveFormConfig } from '@/configs/forms/responsive-forms';
 // Import to register components
-import '@/components/form/registry';
+import '@/lib/form-engine/components/form/registry';
 
 /**
  * Responsive grid demo showcasing the grid layout system

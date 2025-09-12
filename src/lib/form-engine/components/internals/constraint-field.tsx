@@ -1,6 +1,6 @@
 import { useForm, useWatch } from 'react-hook-form';
 import { FormField } from './field-renderer';
-import type { FieldConfig, ConstraintLogic } from '../types/form';
+import type { FieldConfig, ConstraintLogic } from '../../types/form';
 import { useMemo } from 'react';
 
 interface ConstraintFieldProps {

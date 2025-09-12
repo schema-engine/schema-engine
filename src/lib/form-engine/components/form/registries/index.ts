@@ -19,9 +19,9 @@
  * ```
  */
 
-import "../fields/input-field.registry";
-import "../fields/textarea-field.registry";
-import "../fields/select-field.registry";
-import "../fields/checkbox-field.registry";
-import "../fields/number-field.registry";
-import "../fields/array-field.registry";
+import '../fields/input-field.registry';
+import '../fields/textarea-field.registry';
+import '../fields/select-field.registry';
+import '../fields/checkbox-field.registry';
+import '../fields/number-field.registry';
+import '../fields/array-field.registry';

@@ -1,7 +1,7 @@
 import { FormRenderer } from '@/lib/form-engine';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { conditionalFormConfig } from '@/configs/forms/conditional-forms';
-import '@/components/form/registry';
+import '@/lib/form-engine/components/form/registry';
 
 /**
  * This demo showcases the form engine's advanced conditional logic capabilities:

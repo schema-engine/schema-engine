@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ValidationPresets } from '@/lib/form-engine/validation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import '@/components/form/registry';
+import '@/lib/form-engine/components/form/registry';
 
 const stepperDemoConfig = {
 	id: 'stepper-demo',

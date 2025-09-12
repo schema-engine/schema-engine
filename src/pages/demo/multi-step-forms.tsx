@@ -1,4 +1,4 @@
-import '@/components/form/registries';
+import '@/lib/form-engine/components/form/registries';
 import { FormRenderer } from '@/lib/form-engine';
 import { FormEngineLayout } from '@/layouts/form-engine-layout';
 import {

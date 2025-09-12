@@ -17,10 +17,10 @@ export * from './registry';
 export * from './provider';
 
 // Field rendering
-export * from './components/field-renderer';
+export * from './components/internals/field-renderer';
 
 // Dynamic fieldset rendering
-export * from './components/dynamic-fieldset';
+export * from './components/internals/dynamic-fieldset';
 
 // Grid system hooks
 export * from './hooks/grid-hooks';
@@ -40,7 +40,7 @@ export { useGDPRConsent } from '@/lib/form-engine/hooks';
 export { useGTMTracker } from '@/lib/form-engine/hooks';
 
 // Form rendering
-export * from './components/form-renderer';
+export * from './components/internals/form-renderer';
 
 // Validation system
 export * from './validation';

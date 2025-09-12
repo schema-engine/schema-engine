@@ -1,5 +1,5 @@
 import { Input } from '@/components/ui/input';
-import { FieldGroup } from '@/components/field-group';
+import { FieldGroup } from '@/lib/form-engine/components/form/field-group';
 import { useControlledFormElement, combineHandlers } from '@/lib/form-engine/hooks';
 import type { NumberFieldConfig } from '@/lib/form-engine/types/form';
 

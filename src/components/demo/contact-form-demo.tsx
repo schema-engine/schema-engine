@@ -1,7 +1,7 @@
 import { FormRenderer } from '@/lib/form-engine';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ValidationPresets } from '@/lib/form-engine/validation';
-import '@/components/form/registry';
+import '@/lib/form-engine/components/form/registry';
 
 const contactFormConfig = {
 	id: 'contact-form',

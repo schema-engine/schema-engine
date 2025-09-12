@@ -1,6 +1,6 @@
 import { useFormEngine, useConstraintLogic } from '@/lib/form-engine/hooks';
-import { isFieldRequired } from '../validation';
-import type { FieldConfig } from '../types/form';
+import { isFieldRequired } from '../../validation';
+import type { FieldConfig } from '../../types/form';
 
 export interface DynamicFieldProps {
 	config: FieldConfig;

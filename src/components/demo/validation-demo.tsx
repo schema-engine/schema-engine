@@ -1,7 +1,7 @@
 import { FormRenderer } from '@/lib/form-engine';
 import type { FormConfig } from '@/lib/form-engine/types';
 import { ValidationPresets } from '@/lib/form-engine/validation';
-import '@/components/form/registry';
+import '@/lib/form-engine/components/form/registry';
 
 /**
  * Simple validation demo showing different validation rules

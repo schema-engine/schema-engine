@@ -1,4 +1,4 @@
-import { defaultFormRegistry } from '../../../lib/form-engine';
+import { defaultFormRegistry } from '../../..';
 import { SwitchField } from './switch-field';
 
 /**

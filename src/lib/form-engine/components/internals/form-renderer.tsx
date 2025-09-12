@@ -4,12 +4,12 @@ import {
 	type FormProviderProps,
 	type FormEngineProviderProps,
 	FormEngineProvider,
-} from '../provider';
+} from '../../provider';
 import { FormField } from './field-renderer';
 import { useFormGridStyles } from '@/lib/form-engine/hooks';
-import { Stepper, useStepper } from '../stepper';
+import { Stepper, useStepper } from '../../stepper';
 import { useFormContext } from 'react-hook-form';
-import type { FormConfig, FormStep, FieldConfig } from '../types/form';
+import type { FormConfig, FormStep, FieldConfig } from '../../types/form';
 import { logger } from '@/lib/logger';
 
 /**
