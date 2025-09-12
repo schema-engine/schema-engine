@@ -1,10 +1,54 @@
 import { useState } from 'react';
 
+interface CodeBlockProps {
+	code: string;
+	fileName?: string;
+	className?: string;
+}
+
+interface LivePreviewProps {
+	children: React.ReactNode;
+	title?: string;
+	className?: string;
+}
+
 interface CodePreviewProps {
 	code: string;
 	example: React.ReactNode;
 	fileName?: string;
 	className?: string;
+}
+
+export function CodeBlock({ code, fileName = 'config.json', className = '' }: CodeBlockProps) {
+	return (
+		<div className={`bg-gray-900 rounded-xl shadow-2xl overflow-hidden ${className}`}>
+			<div className="flex items-center gap-2 px-6 py-4 border-b border-gray-700">
+				<div className="w-3 h-3 bg-red-500 rounded-full"></div>
+				<div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+				<div className="w-3 h-3 bg-green-500 rounded-full"></div>
+				<span className="ml-auto text-xs text-gray-400">{fileName}</span>
+			</div>
+			<div className="p-6 text-left">
+				<pre className="text-sm text-gray-300 overflow-x-auto text-left">
+					<code>{code}</code>
+				</pre>
+			</div>
+		</div>
+	);
+}
+
+export function LivePreview({ children, title = 'Live Preview', className = '' }: LivePreviewProps) {
+	return (
+		<div className={`bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden ${className}`}>
+			<div className="flex items-center gap-2 px-6 py-4 border-b border-gray-200 bg-gray-50">
+				<div className="w-3 h-3 bg-gray-300 rounded-full"></div>
+				<div className="w-3 h-3 bg-gray-300 rounded-full"></div>
+				<div className="w-3 h-3 bg-gray-300 rounded-full"></div>
+				<span className="ml-auto text-xs text-gray-500">{title}</span>
+			</div>
+			<div className="p-6 text-left">{children}</div>
+		</div>
+	);
 }
 
 export function CodePreview({ code, example, fileName = 'config.json', className = '' }: CodePreviewProps) {
@@ -13,28 +57,8 @@ export function CodePreview({ code, example, fileName = 'config.json', className
 	return (
 		<div className={`mx-auto ${className}`}>
 			<div className="hidden md:grid md:grid-cols-2 gap-6">
-				<div className="bg-gray-900 rounded-xl shadow-2xl overflow-hidden">
-					<div className="flex items-center gap-2 px-6 py-4 border-b border-gray-700">
-						<div className="w-3 h-3 bg-red-500 rounded-full"></div>
-						<div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-						<div className="w-3 h-3 bg-green-500 rounded-full"></div>
-						<span className="ml-auto text-xs text-gray-400">{fileName}</span>
-					</div>
-					<div className="p-6 text-left">
-						<pre className="text-sm text-gray-300 overflow-x-auto text-left">
-							<code>{code}</code>
-						</pre>
-					</div>
-				</div>
-				<div className="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden">
-					<div className="flex items-center gap-2 px-6 py-4 border-b border-gray-200 bg-gray-50">
-						<div className="w-3 h-3 bg-gray-300 rounded-full"></div>
-						<div className="w-3 h-3 bg-gray-300 rounded-full"></div>
-						<div className="w-3 h-3 bg-gray-300 rounded-full"></div>
-						<span className="ml-auto text-xs text-gray-500">Live Preview</span>
-					</div>
-					<div className="p-6 text-left">{example}</div>
-				</div>
+				<CodeBlock code={code} fileName={fileName} />
+				<LivePreview title="Live Preview">{example}</LivePreview>
 			</div>
 
 			<div className="md:hidden">
@@ -64,29 +88,11 @@ export function CodePreview({ code, example, fileName = 'config.json', className
 				</div>
 
 				{activeTab === 'code' ? (
-					<div className="bg-gray-900 rounded-xl shadow-2xl overflow-hidden mt-3">
-						<div className="flex items-center gap-2 px-6 py-3 border-b border-gray-700">
-							<div className="w-2 h-2 bg-red-500 rounded-full"></div>
-							<div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-							<div className="w-2 h-2 bg-green-500 rounded-full"></div>
-							<span className="ml-auto text-xs text-gray-400">{fileName}</span>
-						</div>
-						<div className="p-4 text-left">
-							<pre className="text-sm text-gray-300 overflow-x-auto text-left">
-								<code>{code}</code>
-							</pre>
-						</div>
-					</div>
+					<CodeBlock code={code} fileName={fileName} className="mt-3" />
 				) : (
-					<div className="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden mt-3">
-						<div className="flex items-center gap-2 px-6 py-3 border-b border-gray-200 bg-gray-50">
-							<div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-							<div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-							<div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-							<span className="ml-auto text-xs text-gray-500">Live Preview</span>
-						</div>
-						<div className="p-4 text-left">{example}</div>
-					</div>
+					<LivePreview title="Live Preview" className="mt-3">
+						{example}
+					</LivePreview>
 				)}
 			</div>
 		</div>

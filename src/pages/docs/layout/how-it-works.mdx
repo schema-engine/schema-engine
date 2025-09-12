@@ -1,0 +1,395 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+import { LivePreview, CodePreview } from '@/components/code-preview';
+import { SimpleGridDemo } from '@/components/demo/simple-grid-demo';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'How Layout & Styles Work | Form Engine Documentation',
+    description: 'Learn about Form Engine\'s responsive grid system and how to style your forms.',
+})
+
+# How Layout & Styles Work
+
+Form Engine includes a powerful responsive grid system that automatically handles form layout across different screen sizes. Built on CSS Grid with a mobile-first approach, it ensures your forms look great everywhere without manual responsive coding.
+
+## Responsive Grid System
+
+The grid system uses a 12-column layout with five responsive breakpoints:
+
+```typescript
+// Responsive breakpoints
+const breakpoints = {
+  xs: '0px',      // Mobile (default)
+  sm: '640px',    // Large mobile
+  md: '768px',    // Tablet  
+  lg: '1024px',   // Desktop
+  xl: '1280px'    // Large desktop
+};
+
+// Column system (1-12 columns)
+const gridColumns = {
+  1: '8.333333%',   // 1/12
+  2: '16.666667%',  // 2/12  
+  3: '25%',         // 3/12
+  4: '33.333333%',  // 4/12
+  6: '50%',         // 6/12
+  8: '66.666667%',  // 8/12
+  12: '100%'        // 12/12 (full width)
+};
+```
+
+## Layout Adaptation Principles
+
+### Mobile-First Design
+Form Engine starts with mobile layouts and progressively enhances for larger screens:
+
+<CodePreview 
+className='unprose'
+  fileName="responsive-form.json"
+  code={`{
+  "id": "contact-form",
+  "grid": {
+    "columns": 12,
+    "gap": { "xs": "1rem", "md": "2rem" }
+  },
+  "steps": [{
+    "id": "contact",
+    "fields": [
+      {
+        "type": "input",
+        "id": "name",
+        "label": "Full Name",
+        "grid": {
+          "column": { "xs": 12, "md": 6 }
+        }
+      },
+      {
+        "type": "input", 
+        "id": "email",
+        "label": "Email",
+        "grid": {
+          "column": { "xs": 12, "md": 6 }
+        }
+      },
+      {
+        "type": "textarea",
+        "id": "message", 
+        "label": "Message",
+        "grid": {
+          "column": { "xs": 12 }
+        }
+      }
+    ]
+  }]
+}`}
+  example={<SimpleGridDemo />}
+/>
+
+### Automatic Column Calculation
+When you don't specify grid positions, Form Engine automatically arranges fields:
+
+```typescript
+// These fields will automatically flow in the grid
+const autoLayoutFields = [
+  { type: 'input', id: 'firstName', label: 'First Name' },
+  { type: 'input', id: 'lastName', label: 'Last Name' },  
+  { type: 'input', id: 'email', label: 'Email' },
+  { type: 'textarea', id: 'bio', label: 'Bio' }
+];
+
+// Result: firstName and lastName side-by-side on desktop,
+// email and bio full-width, all stacked on mobile
+```
+
+## Grid Configuration Options
+
+### Form-Level Grid Settings
+
+```typescript
+const formConfig = {
+  id: 'my-form',
+  
+  // Grid configuration
+  grid: {
+    columns: 12,                    // Total columns (1-12)
+    gap: {                          // Spacing between fields
+      xs: '1rem',                   // Mobile gap
+      md: '1.5rem',                 // Desktop gap  
+      lg: '2rem'                    // Large screen gap
+    },
+    padding: {                      // Container padding
+      xs: '1rem',
+      md: '2rem'
+    },
+    maxWidth: '800px',              // Maximum form width
+    align: 'center'                 // Form alignment
+  }
+};
+```
+
+### Field-Level Grid Positioning
+
+```typescript
+const fieldWithGridPosition = {
+  type: 'input',
+  id: 'address',
+  label: 'Street Address',
+  
+  // Responsive grid positioning
+  grid: {
+    column: {
+      xs: 12,        // Full width on mobile
+      sm: 8,         // 8/12 columns on large mobile
+      md: 6,         // Half width on tablet+
+      lg: 4          // Third width on desktop+
+    },
+    row: {
+      xs: 'auto',    // Auto-flow on mobile
+      md: 1          // Specific row on desktop
+    },
+    order: {
+      xs: 0,         // Default order on mobile  
+      md: -1         // Move up on desktop
+    }
+  }
+};
+```
+
+## CSS-in-JS vs External Styles
+
+Form Engine supports multiple styling approaches:
+
+### Built-in Tailwind Classes (Default)
+
+```tsx
+// Default field components use Tailwind
+const DefaultInput = ({ label, error, field, ...props }) => (
+  <div className="mb-6">
+    <label className="block text-sm font-medium text-gray-700 mb-2">
+      {label}
+    </label>
+    <input
+      className={`
+        w-full px-3 py-2 border border-gray-300 rounded-md 
+        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+        ${error ? 'border-red-500' : ''}
+      `}
+      {...field}
+      {...props}
+    />
+    {error && (
+      <p className="mt-1 text-sm text-red-600">{error}</p>
+    )}
+  </div>
+);
+```
+
+### Custom CSS Classes
+
+```tsx
+// Use your own CSS classes
+const CustomInput = ({ label, error, field, ...props }) => (
+  <div className="form-field">
+    <label className="form-label">{label}</label>
+    <input 
+      className={`form-input ${error ? 'form-input--error' : ''}`}
+      {...field}
+      {...props}
+    />
+    {error && <span className="form-error">{error}</span>}
+  </div>
+);
+
+// Corresponding CSS
+`.form-field {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-color-alpha);
+}
+
+.form-input--error {
+  border-color: var(--error-color);
+}`
+```
+
+### CSS-in-JS with Styled Components
+
+```typescript
+import styled from 'styled-components';
+
+const StyledFieldContainer = styled.div\`
+  margin-bottom: 1.5rem;
+\`;
+
+const StyledLabel = styled.label\`
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: \${props => props.theme.colors.text.primary};
+\`;
+
+const StyledInput = styled.input<{ hasError?: boolean }>\`
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid \${props => props.hasError 
+    ? props.theme.colors.error 
+    : props.theme.colors.border};
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+  
+  &:focus {
+    outline: none;
+    border-color: \${props => props.theme.colors.primary};
+    box-shadow: 0 0 0 3px \${props => props.theme.colors.primary}20;
+  }
+\`;
+
+const StyledInput = ({ label, error, field, ...props }) => (
+  <StyledFieldContainer>
+    <StyledLabel>{label}</StyledLabel>
+    <StyledInput hasError={!!error} {...field} {...props} />
+    {error && <ErrorMessage>{error}</ErrorMessage>}
+  </StyledFieldContainer>
+);
+```
+
+## Theme System Integration
+
+Form Engine can integrate with popular theme systems:
+
+### Material-UI Integration
+
+```typescript
+import { useTheme } from '@mui/material/styles';
+import { TextField } from '@mui/material';
+
+const MUIInput = ({ label, error, field, config }) => {
+  const theme = useTheme();
+  
+  return (
+    <TextField
+      label={label}
+      error={!!error}
+      helperText={error}
+      fullWidth
+      margin="normal" 
+      variant="outlined"
+      {...field}
+      sx={{
+        '& .MuiOutlinedInput-root': {
+          '&:hover fieldset': {
+            borderColor: theme.palette.primary.main,
+          },
+        },
+      }}
+    />
+  );
+};
+
+import { defaultFormRegistry } from '@/lib/form-engine';
+
+defaultFormRegistry.register({
+  name: 'input',
+  component: MUIInput,
+  category: 'input',
+  description: 'Material-UI input field'
+});
+```
+
+### Chakra UI Integration
+
+```typescript  
+import { FormControl, FormLabel, Input, FormErrorMessage } from '@chakra-ui/react';
+
+const ChakraInput = ({ label, error, field, isRequired }) => (
+  <FormControl isInvalid={!!error} isRequired={isRequired}>
+    <FormLabel>{label}</FormLabel>
+    <Input {...field} />
+    <FormErrorMessage>{error}</FormErrorMessage>
+  </FormControl>
+);
+
+defaultFormRegistry.register({
+  name: 'input',
+  component: ChakraInput,
+  category: 'input',
+  description: 'Chakra UI input field'
+});
+```
+
+## CSS Custom Properties
+
+Form Engine provides CSS custom properties for consistent theming:
+
+```css
+:root {
+  /* Colors */
+  --form-primary: #3b82f6;
+  --form-primary-alpha: #3b82f620;
+  --form-error: #ef4444;
+  --form-success: #10b981;
+  --form-warning: #f59e0b;
+  
+  /* Typography */ 
+  --form-font-family: system-ui, -apple-system, sans-serif;
+  --form-font-size-sm: 0.875rem;
+  --form-font-size-base: 1rem;
+  --form-font-size-lg: 1.125rem;
+  
+  /* Spacing */
+  --form-spacing-xs: 0.25rem;
+  --form-spacing-sm: 0.5rem;
+  --form-spacing-md: 1rem;
+  --form-spacing-lg: 1.5rem;
+  --form-spacing-xl: 2rem;
+  
+  /* Borders */
+  --form-border-width: 1px;
+  --form-border-radius: 0.375rem;
+  --form-border-color: #d1d5db;
+  
+  /* Shadows */
+  --form-shadow-focus: 0 0 0 3px var(--form-primary-alpha);
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --form-border-color: #374151;
+    --form-bg: #1f2937;
+    --form-text: #f9fafb;
+  }
+}
+```
+
+## What's Next?
+
+Explore more about styling and layout:
+
+- **[Layout Examples](/docs/layout/examples)** - Real-world grid layouts  
+- **[Component Examples](/docs/components/examples)** - Styled component integrations
+- **[Advanced Styling](/docs/advanced/custom-themes)** - Custom theme systems
+
+---
+
+*The grid system handles complexity so you can focus on creating beautiful, responsive forms.*

@@ -4,137 +4,133 @@ import { SimpleInputDemo } from '@/components/demo/simple-input-demo';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-  title: 'Introduction | Form Engine Documentation',
-  description: 'Learn about Form Engine - a comprehensive, type-safe form rendering system for React applications.',
+    title: 'Introduction - Why Form Engine? | Form Engine Documentation',
+    description: 'Discover the story behind Form Engine - born from frustration with existing form solutions and refined through real-world use.',
 })
 
-# Introduction
+# Why Form Engine?
 
-Form Engine is a powerful, type-safe form rendering system built for React applications. It provides a declarative, configuration-driven approach to building complex forms while maintaining full type safety and extensibility.
+After years of wrestling with form libraries, building custom solutions, and hitting the same walls over and over again, I realized something: **forms shouldn't be this hard**.
 
-## See It In Action
+Every project had different requirements, different designs, different validation needs, and different actions to perform. Yet, most form libraries force you into their way of thinking. They make assumptions about your UI, your validation strategy, your data flow - and when your needs don't align with their assumptions, you're stuck.
 
-Here's a simple example showing Form Engine's core concept - configuration-driven forms with built-in validation:
+## The Frustration
+
+I've been there. You probably have too:
+
+- **"This form library is great, but I need custom validation..."** - End up writing workarounds
+- **"I love this UI kit, but the form library doesn't integrate well..."** - Choose between good forms or good design
+- **"We need conditional logic, multi-step flows, auto-save..."** - Build everything from scratch again
+- **"The form works on desktop, but mobile is a mess..."** - Responsive forms are surprisingly hard
+
+Sound familiar? This is exactly why Form Engine exists.
+
+## The Solution
+
+Form Engine was born from this frustration and refined through real-world use. It's not just another form library—it's a **JSON-driven UI system** that adapts to your needs, not the other way around.
 
 <SimpleInputDemo />
 
-## What Makes Form Engine Different?
+## What Makes It Different?
 
-**Configuration-Driven**: Define forms using JSON-like configuration objects instead of writing repetitive JSX components.
-
-**Type-Safe**: Full TypeScript support with automatic type inference and validation using Zod schemas.
-
-**Responsive by Design**: Built-in CSS Grid system with mobile-first responsive breakpoints.
-
-**Action-Oriented**: Extensible action system for handling submissions, auto-saving, analytics, and custom behaviors.
-
-**Conditional Logic**: Dynamic field visibility and behavior based on other field values.
-
-## Current Implementation Status
-
-Form Engine is currently in active development within this project. Here's what's available:
-
-### ✅ Implemented Features
-
-- **Core Form Rendering**: `FormRenderer` component with full configuration support
-- **Field Types**: Input, textarea, select, checkbox, radio, date, number, switch, file, and dynamic arrays
-- **Validation System**: Zod-based validation with convenient presets
-- **Multi-Step Forms**: Built-in stepper navigation with step validation
-- **Responsive Grid**: CSS Grid-based responsive layouts with breakpoint support
-- **Conditional Logic**: Show/hide/enable/disable fields based on other field values
-- **Action System**: Submit, reset, auto-save, GTM tracking, and notification actions
-- **Type Safety**: Complete TypeScript definitions and runtime type checking
-
-### 🚧 In Development
-
-- Package distribution setup (will be available as `@andeeplus/form-engine`)
-- Additional field types and validation options
-- Enhanced accessibility features
-- Performance optimizations
-- Extended action plugins
-
-## Architecture Overview
-
-Form Engine uses a modular architecture with several key components:
-
-```
-Form Engine
-├── Core
-│   ├── FormRenderer - Main rendering component
-│   ├── FieldRenderer - Individual field rendering
-│   └── Provider - Context and state management
-├── Grid System
-│   ├── GridContainer - Responsive grid layout
-│   └── Grid Hooks - Responsive behavior logic
-├── Validation
-│   ├── Zod Integration - Schema validation
-│   └── ValidationPresets - Common validation rules
-├── Actions
-│   ├── ActionExecutor - Action orchestration
-│   └── Plugins - Submit, reset, auto-save, analytics
-└── Types
-    ├── Form Configuration - Type definitions
-    └── Field Configurations - Field-specific types
-```
-
-## Design Principles
-
-**Developer Experience**: Minimal boilerplate with maximum flexibility. Define complex forms with simple configuration objects.
-
-**Type Safety**: Comprehensive TypeScript support with automatic type inference from Zod schemas.
-
-**Performance**: Efficient rendering with React Hook Form integration and optimized re-renders.
-
-**Accessibility**: Built-in ARIA support and keyboard navigation (expanding).
-
-**Extensibility**: Plugin-based architecture for custom field types, validation rules, and actions.
-
-## Getting Started
-
-The fastest way to understand Form Engine is through examples. Here's a simple contact form:
+### Complete Customization
+Bring your existing component library. Wrap it with our tools, and it instantly adapts to form schemas while getting all the React Hook Form goodness.
 
 ```typescript
-import { FormRenderer } from "@/lib/form-engine";
-import { ValidationPresets } from "@/lib/form-engine/validation";
+// Your existing input component
+const MyCustomInput = ({ label, error, ...props }) => (
+  <div className="my-custom-style">
+    <label>{label}</label>
+    <input {...props} />
+    {error && <span className="error">{error}</span>}
+  </div>
+);
 
-const contactForm = {
-  id: "contact",
-  title: "Contact Us",
-  autoGenerateSchema: true,
-  steps: [{
-    id: "details",
-    fields: [
+// Register with the actual Form Engine registry
+import { defaultFormRegistry } from '@/lib/form-engine';
+
+defaultFormRegistry.register({
+  name: 'input',
+  component: MyCustomInput,
+  category: 'input',
+  description: 'Custom input field'
+});
+```
+
+### JSON-Driven Everything
+Define complex forms with simple JSON schemas. No more writing repetitive JSX for similar forms.
+
+```json
+{
+  "id": "contact",
+  "title": "Get In Touch",
+  "autoGenerateSchema": true,
+  "steps": [{
+    "id": "details",
+    "title": "Contact Details",
+    "fields": [
       {
-        type: "input",
-        inputType: "text",
-        id: "name",
-        name: "name",
-        label: "Full Name",
-        validation: [ValidationPresets.required("Name is required")]
+        "type": "input",
+        "inputType": "text",
+        "id": "name",
+        "name": "name", 
+        "label": "Full Name",
+        "validation": [
+          { "type": "required", "message": "Name is required" }
+        ]
       },
       {
-        type: "input", 
-        inputType: "email",
-        id: "email",
-        name: "email",
-        label: "Email",
-        validation: [
-          ValidationPresets.required("Email is required"),
-          ValidationPresets.email("Please enter a valid email")
+        "type": "input",
+        "inputType": "email", 
+        "id": "email",
+        "name": "email",
+        "label": "Email",
+        "validation": [
+          { "type": "required", "message": "Email is required" },
+          { "type": "email", "message": "Please enter a valid email" }
         ]
       }
     ]
-  }]
-};
-
-export function ContactForm() {
-  return (
-    <FormRenderer 
-      config={contactForm}
-      onSubmit={(data) => console.log("Submitted:", data)}
-    />
-  );
+  }],
+  "actions": [
+    {
+      "id": "submit-contact",
+      "type": "submit",
+      "endpoint": "/api/contact",
+      "method": "POST",
+      "successMessage": "Thank you for contacting us!"
+    }
+  ]
 }
 ```
 
-This creates a fully functional form with validation, accessibility, and responsive design - all from a simple configuration object.
+### Registrable Everything
+Not just components—actions, validations, layouts. Build your own plugins and solutions that fit your exact needs.
+
+### Zod Integration That Just Works
+Type-safe validation that just works. Define your schema once, get validation everywhere.
+
+### Powerful Action System
+Perform complex operations at any point in your form lifecycle. Auto-save, analytics tracking, multi-step navigation—all through a pluggable action system.
+
+## Philosophy
+
+Form Engine believes in a few core principles:
+
+**Configuration over Code**: Define what you want, not how to build it. Let the library handle the complexity.
+
+**Composition over Inheritance**: Build complex forms by combining simple, focused components.
+
+**Flexibility over Opinions**: The library should adapt to your patterns, not force you into ours.
+
+**Developer Experience**: If it's frustrating to use, it's wrong. Every API decision prioritizes clarity and ease of use.
+
+## What's Next?
+
+Ready to see what Form Engine can do? Let's start with installation and your first form.
+
+- **[Installation](/docs/installation)** - Get up and running in minutes
+- **[Components](/docs/components/how-it-works)** - Learn the registration system
+- **[Actions](/docs/actions/how-it-works)** - Discover the action architecture
+- **[Examples](/docs/examples/basic-forms)** - See real-world implementations
+

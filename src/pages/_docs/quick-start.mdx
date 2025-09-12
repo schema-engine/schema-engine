@@ -1,0 +1,392 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+import { SimpleInputDemo } from '@/components/demo/simple-input-demo';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+  title: 'Quick Start | Form Engine Documentation',
+  description: 'Get up and running with Form Engine in just a few minutes.',
+})
+
+# Quick Start
+
+Get started with Form Engine using the current development setup.
+
+<div className="banner banner--alert mt-4" role="alert">
+  <p className="banner__title">Development Setup</p>
+  <p>This guide shows how to use Form Engine within the current project structure. Package installation will be available in future releases.</p>
+</div>
+
+## Try It Out First
+
+Before diving into the code, try this simple example to see what Form Engine can do:
+
+<SimpleInputDemo />
+
+## Basic Form Example
+
+Here's how to create and render a simple form using Form Engine:
+
+```typescript
+import { FormRenderer } from "@/lib/form-engine";
+import { ValidationPresets } from "@/lib/form-engine/validation";
+import type { FormConfig } from "@/lib/form-engine/types";
+
+const contactFormConfig: FormConfig = {
+  id: "contact-form", 
+  title: "Contact Us",
+  autoGenerateSchema: true, // Automatically generates Zod schema from field validation
+  steps: [{
+    id: "contact-details",
+    title: "Contact Information", 
+    fields: [
+      {
+        type: "input",
+        inputType: "text",
+        id: "name",
+        name: "name",
+        label: "Full Name",
+        placeholder: "Enter your full name",
+        validation: [
+          ValidationPresets.required("Name is required"),
+          ValidationPresets.minLength(2, "Name must be at least 2 characters")
+        ]
+      },
+      {
+        type: "input", 
+        inputType: "email",
+        id: "email",
+        name: "email", 
+        label: "Email Address",
+        placeholder: "Enter your email",
+        validation: [
+          ValidationPresets.required("Email is required"),
+          ValidationPresets.email("Please enter a valid email")
+        ]
+      },
+      {
+        type: "textarea",
+        id: "message", 
+        name: "message",
+        label: "Message",
+        placeholder: "Your message...",
+        rows: 4,
+        validation: [
+          ValidationPresets.required("Message is required"),
+          ValidationPresets.minLength(10, "Message must be at least 10 characters")
+        ]
+      }
+    ]
+  }],
+  actions: [
+    {
+      id: "contact-submit",
+      type: "submit",
+      description: "Submit contact form", 
+      endpoint: "/api/contact",
+      method: "POST",
+      successMessage: "Thank you for your message!",
+      errorMessage: "Failed to send message. Please try again.",
+      enabled: true
+    }
+  ]
+};
+
+export function ContactForm() {
+  const handleSubmit = (data: any) => {
+    console.log("Form submitted:", data);
+    // Handle form submission here
+  };
+
+  return (
+    <FormRenderer 
+      config={contactFormConfig} 
+      onSubmit={handleSubmit}
+    />
+  );
+}
+```
+
+## Configuration Structure
+
+Understanding the basic structure of a form configuration:
+
+### Required Properties
+
+- `id` - Unique identifier for the form
+- `steps` - Array of form steps (at least one required)
+
+### Optional Properties
+
+- `title` - Form title
+- `description` - Form description
+- `stepper` - Multi-step configuration
+- `actions` - Form actions (submit, auto-save, etc.)
+- `layout` - Responsive grid configuration
+
+## Validation Rules
+
+Built-in validation rules with automatic Zod schema generation:
+
+### Basic Rules
+
+- `required` - Field is required
+- `email` - Valid email format
+- `minLength` - Minimum string length
+- `maxLength` - Maximum string length
+
+### Advanced Rules
+
+- `pattern` - Custom regex pattern
+- `custom` - Custom validation function
+- `min` - Minimum number value
+- `max` - Maximum number value
+
+### Example Validation
+
+## Validation
+
+Form Engine uses Zod for type-safe validation with convenient presets:
+
+```typescript
+import { ValidationPresets } from "@/lib/form-engine/validation";
+
+// Field with validation
+{
+  type: "input",
+  inputType: "text",
+  name: "username",
+  label: "Username", 
+  validation: [
+    ValidationPresets.required("Username is required"),
+    ValidationPresets.minLength(3, "Username must be at least 3 characters"),
+    ValidationPresets.regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores")
+  ]
+}
+```
+
+## Field Types
+
+Form Engine supports comprehensive field types with full TypeScript support:
+
+```typescript
+// Text Input
+{
+  type: "input",
+  inputType: "text" | "email" | "password" | "url" | "tel" | "search",
+  id: "fieldId",
+  name: "fieldName",
+  label: "Field Label",
+  placeholder: "Enter text...",
+  validation: [...]
+}
+
+// Select Dropdown
+{
+  type: "select",
+  id: "country",
+  name: "country",
+  label: "Country",
+  placeholder: "Select country",
+  options: [
+    { value: "us", label: "United States" },
+    { value: "ca", label: "Canada" }
+  ],
+  validation: [...]
+}
+
+// Number Input
+{
+  type: "number",
+  id: "age",
+  name: "age", 
+  label: "Age",
+  placeholder: "Enter age",
+  validation: [
+    ValidationPresets.min(18, "Must be at least 18"),
+    ValidationPresets.max(120, "Age must be realistic")
+  ]
+}
+
+// Textarea
+{
+  type: "textarea",
+  id: "message",
+  name: "message",
+  label: "Message",
+  rows: 4,
+  placeholder: "Your message...",
+  validation: [...]
+}
+
+// Checkbox
+{
+  type: "checkbox",
+  id: "newsletter",
+  name: "newsletter", 
+  label: "Subscribe to newsletter"
+}
+
+// Radio Group
+{
+  type: "radio",
+  id: "theme",
+  name: "theme",
+  label: "Preferred Theme",
+  options: [
+    { value: "light", label: "Light" },
+    { value: "dark", label: "Dark" }
+  ]
+}
+
+// Date Input
+{
+  type: "date",
+  id: "birthdate",
+  name: "birthdate",
+  label: "Birth Date",
+  dateType: "date" | "datetime-local" | "time"
+}
+
+// Switch Toggle
+{
+  type: "switch",
+  id: "notifications",
+  name: "notifications",
+  label: "Enable notifications"
+}
+```
+
+## Form Actions
+
+Add powerful actions for submissions and side effects:
+
+```typescript
+// In your form config
+{
+  id: "my-form",
+  // ... other config
+  actions: [
+    // Submit action
+    {
+      id: "form-submit",
+      type: "submit",
+      description: "Submit form data",
+      endpoint: "/api/submit",
+      method: "POST",
+      successMessage: "Form submitted successfully!",
+      errorMessage: "Submission failed. Please try again.",
+      enabled: true
+    },
+    // Reset after successful submission
+    {
+      id: "reset-after-success", 
+      type: "reset",
+      enabled: true,
+      triggers: ["submit_success"],
+      resetToDefaults: true
+    }
+  ]
+}
+```
+
+## Multi-Step Forms
+
+Create multi-step forms by adding multiple steps:
+
+```typescript
+const multiStepConfig: FormConfig = {
+  id: "registration",
+  title: "User Registration",
+  autoGenerateSchema: true,
+  steps: [
+    {
+      id: "personal-info",
+      title: "Personal Information",
+      fields: [
+        // Step 1 fields...
+      ]
+    },
+    {
+      id: "preferences", 
+      title: "Preferences",
+      fields: [
+        // Step 2 fields...
+      ]
+    }
+  ]
+};
+
+// The FormRenderer automatically detects multi-step configuration
+// <FormRenderer config={multiStepConfig} onSubmit={handleSubmit} />
+```
+
+## Conditional Logic
+
+Show/hide fields based on other field values:
+
+```typescript
+{
+  type: "input",
+  name: "address",
+  label: "Address",
+  constraints: [
+    {
+      field: "attendanceType",
+      operator: "equals", 
+      value: "in-person",
+      action: "show"
+    }
+  ]
+}
+```
+
+## Responsive Grid
+
+Create responsive layouts with CSS Grid:
+
+```typescript
+const responsiveConfig: FormConfig = {
+  id: "responsive-form",
+  grid: {
+    columns: 1,
+    responsive: {
+      default: { columns: 1, gap: "1rem" },    // Mobile
+      md: { columns: 2, gap: "1.5rem" },       // Tablet
+      lg: { columns: 3, gap: "2rem" }          // Desktop  
+    }
+  },
+  steps: [{
+    fields: [
+      {
+        type: "input",
+        name: "firstName",
+        grid: {
+          responsive: {
+            default: { column: "1 / -1" },  // Full width mobile
+            md: { column: "1 / 2" }         // First column tablet+
+          }
+        }
+      }
+    ]
+  }]
+};
+```
+
+## Next Steps
+
+- Check out [Examples](/docs/examples) for comprehensive real-world examples
+- Read the [API Reference](/docs/api) for detailed documentation  
+- Explore [Field Types](/docs/concepts/field-types) for all available field options
+- Learn about [Conditional Logic](/docs/concepts/conditional-logic) for dynamic forms
+- See [Responsive Grid](/docs/concepts/responsive-grid) for layout examples
+
+## Live Examples
+
+Try these working examples to see Form Engine in action:
+
+- **[Basic Demo](/basic-demo)** - Simple contact form
+- **[Multi-Step Forms](/multi-step-forms)** - Registration wizard  
+- **[Responsive Grid](/responsive-grid)** - Device-adaptive layouts
+- **[Conditional Forms](/conditional-forms)** - Dynamic field logic
+- **[Actions System](/actions)** - Auto-save and tracking

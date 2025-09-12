@@ -1,0 +1,363 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+import { LivePreview, CodePreview } from '@/components/code-preview';
+import { SimpleInputDemo } from '@/components/demo/simple-input-demo';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+  title: 'Component Registration | Form Engine Documentation',
+  description: 'Step-by-step guide to registering your components with Form Engine\'s type-safe registry system.',
+})
+
+# Component Registration
+
+This guide walks you through registering your existing components with Form Engine, from simple inputs to complex custom field types.
+
+## Basic Registration
+
+The simplest way to register a component is with the `defaultFormRegistry`:
+
+```typescript
+import { defaultFormRegistry } from '@/lib/form-engine';
+
+// Your existing component
+const MyInput = ({ label, error, ...props }) => (
+  <div className="mb-4">
+    <label className="block font-medium mb-1">{label}</label>
+    <input 
+      className={`border rounded px-3 py-2 w-full ${error ? 'border-red-500' : 'border-gray-300'}`}
+      {...props} 
+    />
+    {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+  </div>
+);
+
+// Register with the Form Engine registry
+defaultFormRegistry.register({
+  name: 'input',
+  component: MyInput,
+  category: 'input',
+  description: 'Text input field'
+});
+```
+
+That's it! Your component is now available in any form configuration:
+
+```typescript
+import { ValidationPresets } from '@/lib/form-engine/validation';
+
+const formConfig = {
+  fields: [
+    {
+      type: 'input',        // References your registered component
+      id: 'name',
+      name: 'name', 
+      label: 'Full Name',
+      validation: [
+        ValidationPresets.required("Name is required")
+      ]
+    }
+  ]
+};
+```
+
+## Registry Patterns
+
+### 1. Centralized Registry
+
+Create a central registry file to organize all your component registrations:
+
+```typescript
+import { defaultFormRegistry } from '@/lib/form-engine';
+import { 
+  MyInput,
+  MyTextarea, 
+  MySelect,
+  MyCheckbox,
+  MyRadioGroup,
+  MyDatePicker 
+} from './form-components';
+
+// Register all components in one place
+export function registerAllComponents() {
+  defaultFormRegistry.register({
+    name: 'input',
+    component: MyInput,
+    category: 'input',
+    description: 'Text input field'
+  });
+
+  defaultFormRegistry.register({
+    name: 'textarea',
+    component: MyTextarea,
+    category: 'input',
+    description: 'Multi-line text input'
+  });
+
+  defaultFormRegistry.register({
+    name: 'select', 
+    component: MySelect,
+    category: 'select',
+    description: 'Dropdown select field'
+  });
+  // Register remaining components
+  defaultFormRegistry.register({
+    name: 'checkbox',
+    component: MyCheckbox,
+    category: 'input',
+    description: 'Checkbox field'
+  });
+
+  defaultFormRegistry.register({
+    name: 'radio',
+    component: MyRadioGroup,
+    category: 'select',
+    description: 'Radio button group'
+  });
+
+  defaultFormRegistry.register({
+    name: 'date',
+    component: MyDatePicker,
+    category: 'input',
+    description: 'Date picker field'
+  });
+}
+
+// Call once in your app initialization
+registerAllComponents();
+```
+
+### 2. Component-Specific Registry Files
+
+For larger applications, create separate registry files for each component type:
+
+```typescript
+import { defaultFormRegistry } from '@/lib/form-engine';
+import { Input } from './input.component';
+import type { InputFieldConfig } from '@/lib/form-engine/types';
+
+// Define the configuration interface
+export interface MyInputConfig extends InputFieldConfig {
+  placeholder?: string;
+  maxLength?: number;
+  autoComplete?: string;
+}
+
+// Register with full TypeScript support
+defaultFormRegistry.register({
+  name: 'input',
+  component: Input,
+  category: 'input',
+  description: 'Text input field',
+  example: {
+    type: 'input',
+    inputType: 'text',
+    id: 'example-input',
+    name: 'example',
+    label: 'Example Input',
+    placeholder: 'Enter text...'
+  }
+});
+```
+
+## Best Practices for Form Engine Components
+
+### 1. Use the Required Hooks
+
+Form Engine components must use specific hooks to integrate properly:
+
+```typescript
+import { useControlledFormElement, combineHandlers } from '@/lib/form-engine/hooks';
+import { FieldGroup } from '@/lib/form-engine/components/form/field-group';
+import type { InputFieldConfig } from '@/lib/form-engine/types/form';
+
+interface MyInputProps {
+  config: InputFieldConfig;
+  onChange?: (value: string) => void;
+  onBlur?: () => void;
+}
+
+export function MyInput({ config, onChange: propsOnChange, onBlur: propsOnBlur }: MyInputProps) {
+  // This hook provides all form integration
+  const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
+    useControlledFormElement(config);
+
+  return (
+    <div style={containerStyles}>
+      <FieldGroup
+        label={config.label || config.name}
+        htmlFor={config.id}
+        hiddenLabel={!config.label}
+        required={isRequired}
+        error={error}
+      >
+        {config.description && (
+          <p className="text-sm text-muted-foreground mb-2">
+            {config.description}
+          </p>
+        )}
+        <input
+          {...fieldProps}
+          type={config.inputType}
+          value={value || ''}
+          onChange={(e) => combineHandlers(onChange, propsOnChange)(e.target.value)}
+          onBlur={combineHandlers(onBlur, propsOnBlur)}
+          placeholder={config.placeholder}
+          maxLength={config.maxLength}
+          className={config.className}
+          style={config.style}
+        />
+      </FieldGroup>
+    </div>
+  );
+}
+```
+
+### 2. Required Component Interface
+
+Each Form Engine component must follow this interface pattern:
+
+```typescript
+interface FieldComponentProps {
+  config: FieldConfig;           // Field configuration object
+  onChange?: (value: any) => void; // Optional external change handler
+  onBlur?: () => void;            // Optional external blur handler
+}
+```
+
+The key parts are:
+- **`useControlledFormElement(config)`** - Provides form integration
+- **`FieldGroup`** - Handles labels, errors, and accessibility 
+- **`combineHandlers`** - Merges internal and external event handlers
+- **`containerStyles`** - Grid positioning styles
+
+### 3. Registration Pattern
+
+Once your component is built, register it:
+
+```typescript
+import { defaultFormRegistry } from '@/lib/form-engine';
+import { MyInput } from './my-input';
+
+defaultFormRegistry.register({
+  name: 'input',
+  component: MyInput,
+  category: 'input',
+  description: 'Text input field',
+  example: {
+    type: 'input',
+    inputType: 'text',
+    id: 'example',
+    name: 'example',
+    label: 'Example Input',
+    placeholder: 'Enter text...'
+  }
+});
+```
+
+## Type Safety with TypeScript
+
+Form Engine provides full TypeScript support for custom components:
+
+### 1. Field Configuration Types
+
+```typescript
+import type { BaseFieldConfig } from '@/lib/form-engine/types';
+
+// Extend the base configuration for your specific component
+export interface CustomInputConfig extends BaseFieldConfig {
+  type: 'input';
+  inputType: 'text' | 'email' | 'password' | 'tel' | 'url';
+  placeholder?: string;
+  maxLength?: number;
+  minLength?: number;
+  autoComplete?: string;
+  pattern?: string;
+}
+
+export interface CustomSelectConfig extends BaseFieldConfig {
+  type: 'select';
+  options: Array<{ label: string; value: any; disabled?: boolean }>;
+  placeholder?: string;
+  multiple?: boolean;
+}
+```
+
+### 2. Component Props Interface
+
+```typescript
+interface MyInputProps {
+  config: CustomInputConfig;
+  onChange?: (value: string) => void;
+  onBlur?: () => void;
+}
+
+export function MyInput({ config, onChange: propsOnChange, onBlur: propsOnBlur }: MyInputProps) {
+  const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
+    useControlledFormElement(config);
+  
+  // Implementation here...
+}
+```
+/>
+
+## Advanced Registration
+
+The registry system supports additional metadata and examples:
+
+```typescript
+import { defaultFormRegistry } from '@/lib/form-engine';
+
+defaultFormRegistry.register({
+  name: 'input',
+  component: MyInput,
+  category: 'input',
+  description: 'Text input field for various input types',
+  
+  // Example configuration for documentation/tooling
+  example: {
+    type: 'input',
+    inputType: 'text',
+    id: 'sample-input',
+    name: 'sampleInput',
+    label: 'Sample Input',
+    placeholder: 'Enter text...',
+    validation: [
+      ValidationPresets.required("This field is required"),
+      ValidationPresets.minLength(3, "Must be at least 3 characters")
+    ]
+  }
+});
+```
+
+## Tree-Shakable Imports
+
+For optimal bundle size, create separate registry files:
+
+```typescript
+// components/form/fields/my-input.registry.ts
+import { defaultFormRegistry } from '@/lib/form-engine';
+import { MyInput } from './my-input';
+
+defaultFormRegistry.register({
+  name: 'input',
+  component: MyInput,
+  category: 'input',
+  description: 'Custom input field'
+});
+
+// Then import only what you need:
+// import './components/form/fields/my-input.registry';
+```
+
+## What's Next?
+
+Now that you know how to register components, explore:
+
+- **[Component Examples](/docs/components/examples)** - Real-world registration examples
+- **[Custom Field Types](/docs/advanced/custom-fields)** - Build completely custom field types  
+- **[Layout System](/docs/layout/how-it-works)** - How components integrate with the grid system
+
+---
+
+*The registration system is designed to work with **any React component** that follows the Form Engine component interface.*

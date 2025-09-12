@@ -1,0 +1,405 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+import { FormRenderer } from '@/lib/form-engine';
+import '@/lib/form-engine/components/form/registry';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+  title: 'Survey Form Example | Form Engine Documentation',
+  description: 'A comprehensive survey form demonstrating advanced Form Engine features including multi-step navigation, complex branching logic, and data collection patterns.',
+})
+
+# Survey Form Example
+
+An advanced survey form showcasing Form Engine's sophisticated features including multi-step navigation, complex conditional logic, various question types, and comprehensive data collection patterns.
+
+## Interactive Demo
+
+<div className="my-8">
+  <FormRenderer
+    config={{
+      id: 'customer-survey',
+      title: 'Customer Satisfaction Survey',
+      description: 'Help us improve our services',
+      mode: 'stepped',
+      steps: [
+        {
+          id: 'experience',
+          title: 'Your Experience',
+          fields: [
+            {
+              id: 'satisfaction',
+              type: 'select',
+              name: 'satisfaction',
+              label: 'Overall Satisfaction',
+              required: true,
+              options: [
+                { label: 'Very Satisfied', value: '5' },
+                { label: 'Satisfied', value: '4' },
+                { label: 'Neutral', value: '3' },
+                { label: 'Dissatisfied', value: '2' },
+                { label: 'Very Dissatisfied', value: '1' }
+              ]
+            },
+            {
+              id: 'recommendation',
+              type: 'radio',
+              name: 'recommendation',
+              label: 'Would you recommend us?',
+              required: true,
+              options: [
+                { label: 'Definitely', value: 'yes' },
+                { label: 'Probably', value: 'maybe' },
+                { label: 'No', value: 'no' }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'feedback',
+          title: 'Feedback',
+          fields: [
+            {
+              id: 'improvements',
+              type: 'textarea',
+              name: 'improvements',
+              label: 'What could we improve?',
+              placeholder: 'Share your suggestions...',
+              props: { rows: 3 }
+            },
+            {
+              id: 'contact',
+              type: 'checkbox',
+              name: 'contact',
+              label: 'I agree to be contacted for follow-up',
+              required: false
+            }
+          ]
+        }
+      ]
+    }}
+    onSubmit={(data) => {
+      console.log('Survey submitted:', data);
+      alert('Thank you for your feedback!');
+    }}
+  />
+</div>
+
+## Key Features Demonstrated
+
+This survey example showcases several important Form Engine features:
+
+### 1. Multi-Step Navigation
+- **Step-by-Step Flow**: Breaks complex surveys into manageable sections
+- **Progress Indication**: Users can see their progress through the survey
+- **Step Validation**: Each step must be completed before proceeding
+
+### 2. Various Field Types
+- **Select Dropdowns**: For structured rating scales
+- **Radio Buttons**: For exclusive choice questions
+- **Textarea Fields**: For open-ended feedback
+- **Checkboxes**: For opt-in preferences
+
+### 3. Survey Best Practices
+- **Clear Labels**: Each question is clearly labeled and easy to understand
+- **Logical Flow**: Questions progress from general to specific
+- **Optional Fields**: Not every question needs to be required
+- **User-Friendly**: Simple, intuitive interface reduces survey abandonment
+
+## Implementation Tips
+
+When building surveys with Form Engine:
+
+1. **Keep Steps Focused**: Each step should have a clear purpose and limited number of questions
+2. **Use Appropriate Field Types**: Match the field type to the question format for better UX
+3. **Progressive Disclosure**: Start with basic questions and get more specific
+4. **Provide Context**: Use step descriptions to explain what information you're collecting
+5. **Make It Optional**: Only mark fields as required when truly necessary
+
+## Configuration Example
+
+Here's how to structure a basic survey configuration:
+
+```typescript
+import { FormRenderer } from '@/lib/form-engine';
+
+const surveyConfig = {
+  id: 'customer-survey',
+  title: 'Customer Satisfaction Survey',
+  description: 'Help us improve our services',
+  mode: 'stepped',
+  steps: [
+    {
+      id: 'experience',
+      title: 'Your Experience',
+      fields: [
+        {
+          id: 'satisfaction',
+          type: 'select',
+          name: 'satisfaction',
+          label: 'Overall Satisfaction',
+          required: true,
+          options: [
+            { label: 'Very Satisfied', value: '5' },
+            { label: 'Satisfied', value: '4' },
+            { label: 'Neutral', value: '3' },
+            { label: 'Dissatisfied', value: '2' },
+            { label: 'Very Dissatisfied', value: '1' }
+          ]
+        }
+      ]
+    }
+  ]
+};
+
+// Render the survey
+<FormRenderer 
+  config={surveyConfig}
+  onSubmit={(data) => console.log('Survey results:', data)}
+/>
+```
+
+```typescript
+import { FormConfig } from '@/lib/form-engine/types';
+
+```
+
+## Advanced Survey Patterns
+
+For more complex surveys, you can extend this basic pattern with:
+
+### Conditional Logic
+Show or hide questions based on previous answers:
+
+```typescript
+{
+  id: 'followup',
+  type: 'input',
+  name: 'followup',
+  label: 'Please explain your dissatisfaction',
+  conditions: [
+    {
+      field: 'satisfaction',
+      operator: 'in',
+      value: ['1', '2'] // Show only for dissatisfied users
+    }
+  ]
+}
+```
+
+### Rating Scales
+Use number or range fields for numeric ratings:
+
+```typescript
+{
+  id: 'nps',
+  type: 'number',
+  name: 'nps',
+  label: 'How likely are you to recommend us? (0-10)',
+  props: { min: 0, max: 10 }
+}
+```
+
+### Matrix Questions
+Group related questions using field groups:
+
+```typescript
+{
+  id: 'service-ratings',
+  type: 'group',
+  label: 'Rate our services',
+  fields: [
+    { id: 'support', type: 'select', name: 'support', label: 'Customer Support' },
+    { id: 'delivery', type: 'select', name: 'delivery', label: 'Delivery Speed' },
+    { id: 'quality', type: 'select', name: 'quality', label: 'Product Quality' }
+  ]
+}
+```
+
+## Next Steps
+
+- Explore [Multi-Step Forms](/docs/examples/registration-flow) for complex workflows
+- Learn about [Conditional Logic](/docs/concepts/conditional-logic) for dynamic surveys  
+- Check out [Form Actions](/docs/actions) for advanced survey behaviors
+- See [Validation](/docs/concepts/validation) for robust data collection
+
+This survey example demonstrates how Form Engine makes it easy to create professional, user-friendly surveys that collect valuable feedback while providing an excellent user experience.
+```
+
+## Implementation
+
+### React Component
+
+```typescript
+import React from 'react';
+import { FormRenderer } from '@/lib/form-engine';
+import surveyConfig from './survey-config';
+
+function CustomerSurvey() {
+  const handleSurveySubmit = async (data: any) => {
+    // Process survey data
+    console.log('Survey data:', data);
+    
+    // Calculate NPS category
+    const npsScore = data.recommendationScore;
+    const npsCategory = npsScore >= 9 ? 'promoter' : 
+                       npsScore >= 7 ? 'passive' : 'detractor';
+    
+    // Submit to analytics
+    await submitSurveyResults({
+      ...data,
+      npsCategory,
+      submittedAt: new Date().toISOString()
+    });
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto p-6">
+      <FormRenderer 
+        config={surveyConfig}
+        onSubmit={handleSurveySubmit}
+      />
+    </div>
+  );
+}
+
+export default CustomerSurvey;
+```
+
+### API Handler
+
+```typescript
+// pages/api/survey.ts
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { z } from 'zod';
+
+const surveySchema = z.object({
+  // Demographics
+  age: z.string(),
+  location: z.string(),
+  customerType: z.string(),
+  
+  // Experience
+  overallSatisfaction: z.number().min(1).max(5),
+  recommendationScore: z.number().min(0).max(10),
+  recommendationReason: z.string().optional(),
+  serviceAspects: z.array(z.string()).optional(),
+  
+  // Detailed feedback
+  productQuality: z.number().min(1).max(5).optional(),
+  customerService: z.number().min(1).max(5).optional(),
+  valueForMoney: z.number().min(1).max(5).optional(),
+  easeOfUse: z.number().min(1).max(5).optional(),
+  improvements: z.string().optional(),
+  featuresWanted: z.array(z.string()).optional(),
+  
+  // Additional info
+  heardAboutUs: z.string().optional(),
+  competitorComparison: z.string().optional(),
+  futureInterest: z.string(),
+  churnReason: z.array(z.string()).optional(),
+  additionalComments: z.string().optional(),
+  followUp: z.boolean().optional(),
+  email: z.string().email().optional(),
+});
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const validatedData = surveySchema.parse(req.body);
+    
+    // Calculate metrics
+    const metrics = calculateSurveyMetrics(validatedData);
+    
+    // Store in database
+    await storeSurveyResponse({
+      ...validatedData,
+      ...metrics,
+      submittedAt: new Date(),
+      id: generateSurveyId()
+    });
+    
+    // Update analytics
+    await updateCustomerAnalytics(validatedData);
+    
+    res.status(200).json({
+      success: true,
+      message: 'Survey submitted successfully'
+    });
+  } catch (error) {
+    console.error('Survey submission error:', error);
+    res.status(500).json({ error: 'Failed to submit survey' });
+  }
+}
+
+function calculateSurveyMetrics(data: any) {
+  const npsScore = data.recommendationScore;
+  const npsCategory = npsScore >= 9 ? 'promoter' : 
+                     npsScore >= 7 ? 'passive' : 'detractor';
+  
+  const satisfactionScore = data.overallSatisfaction;
+  const averageRating = [
+    data.productQuality,
+    data.customerService,
+    data.valueForMoney,
+    data.easeOfUse
+  ].filter(Boolean).reduce((sum, rating) => sum + rating, 0) / 4;
+
+  return {
+    npsCategory,
+    averageRating,
+    satisfactionLevel: satisfactionScore >= 4 ? 'satisfied' : 'dissatisfied'
+  };
+}
+```
+
+## Key Features Demonstrated
+
+### 1. Multi-Step Navigation
+
+- Progress indication
+- Step validation
+- Navigation controls
+- Step-specific actions
+
+### 2. Advanced Field Types
+
+- Rating scales with custom labels
+- Range sliders with live values
+- Multi-select checkboxes
+- Conditional field display
+
+### 3. Complex Branching Logic
+
+- Fields that appear based on previous answers
+- Conditional validation rules
+- Dynamic question flow
+
+### 4. Data Collection Patterns
+
+- Net Promoter Score (NPS) measurement
+- Customer satisfaction metrics
+- Demographic segmentation
+- Feature prioritization
+
+### 5. User Experience
+
+- Clear step progression
+- Helpful descriptions
+- Optional vs. required fields
+- Thank you messaging
+
+### 6. Analytics Integration
+
+- NPS categorization
+- Satisfaction scoring
+- Response time tracking
+- Customer segmentation
+
+This survey example shows how Form Engine can handle sophisticated data collection scenarios while maintaining excellent user experience and providing actionable business insights.

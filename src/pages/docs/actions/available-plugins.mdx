@@ -1,0 +1,440 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+import { CodeBlock, CodePreview } from '@/components/code-preview';
+import { Badge } from '@/components/ui/badge';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'Available Plugins | Form Engine Actions',
+    description: 'Complete list of pre-built action plugins you can use in your forms - submit, notifications, reset, auto-save, and more.',
+})
+
+# Available Plugins
+
+Form Engine comes with several pre-built action plugins that handle common form behaviors. Just register the ones you need and use them in your form configs.
+
+## Submit Plugin
+
+Handles form submissions to API endpoints.
+
+```typescript
+import { registerAction } from '@/lib/form-engine/actions/action-registry';
+import { submitPlugin } from '@/lib/form-engine/actions/plugins';
+
+// Register with custom configuration
+registerAction(submitPlugin({
+  onSuccess: (data, context) => {
+    console.log('Form submitted:', data);
+    // Custom success handling
+  },
+  onError: (error, context) => {
+    console.error('Submit failed:', error);
+    // Custom error handling
+  },
+  // Transform data before sending
+  transformData: (data, context) => ({
+    ...data,
+    timestamp: new Date().toISOString(),
+    formId: context.formId
+  })
+}));
+```
+
+### Form Configuration
+
+```typescript
+// Use in your form config
+{
+  id: 'submit-contact',
+  type: 'submit',
+  endpoint: '/api/contact',
+  method: 'POST',
+  successMessage: 'Message sent successfully!',
+  errorMessage: 'Failed to send message. Please try again.',
+  redirectUrl: '/thank-you' // Optional redirect after success
+}
+```
+
+### Configuration Options
+
+- **`endpoint`** (string) - API endpoint URL
+- **`method`** ('POST' | 'PUT' | 'PATCH') - HTTP method
+- **`successMessage`** (string) - Message shown on success
+- **`errorMessage`** (string) - Message shown on error
+- **`redirectUrl`** (string) - URL to redirect to after success
+
+## Notification Plugin
+
+Shows user feedback messages using your preferred notification system.
+
+```typescript
+import { registerAction } from '@/lib/form-engine/actions/action-registry';
+import { notificationPlugin } from '@/lib/form-engine/actions/plugins';
+
+// Register with your notification system
+registerAction(notificationPlugin({
+  onSuccess: (message) => toast.success(message),
+  onError: (message) => toast.error(message),
+  onWarning: (message) => toast.warning(message),
+  onInfo: (message) => toast.info(message)
+}));
+```
+
+### Form Configuration
+
+```typescript
+// Use in your form config
+{
+  id: 'success-notification',
+  type: 'show_notification',
+  message: 'Form submitted successfully!',
+  variant: 'success',
+  duration: 3000,
+  triggers: ['submit_success'] // Only show after successful submit
+}
+```
+
+### Configuration Options
+
+- **`message`** (string) - Notification message text
+- **`variant`** ('success' | 'error' | 'warning' | 'info') - Notification type
+- **`duration`** (number) - How long to show notification (ms)
+- **`triggers`** (string[]) - Custom triggers (optional)
+
+## Reset Plugin
+
+Resets form data with optional confirmation.
+
+```typescript
+import { registerAction } from '@/lib/form-engine/actions/action-registry';
+import { resetPlugin } from '@/lib/form-engine/actions/plugins';
+
+// Register with custom confirmation
+registerAction(resetPlugin({
+  // Custom confirmation handler
+  confirm: async (message) => {
+    const result = await showCustomDialog({
+      title: 'Reset Form?',
+      message,
+      type: 'warning'
+    });
+    return result.confirmed;
+  },
+  // Called after successful reset
+  onReset: (context) => {
+    console.log(`Form ${context.formId} has been reset`);
+    toast.success('Form reset successfully');
+  },
+  // Custom draft clearing
+  clearDraft: (formId) => {
+    localStorage.removeItem(`draft_${formId}`);
+    // Also clear from your API if needed
+  }
+}));
+```
+
+### Form Configuration
+
+```typescript
+// Use in your form config
+{
+  id: 'reset-form',
+  type: 'reset',
+  resetToDefaults: true,
+  confirmMessage: 'Are you sure you want to clear all form data?',
+  triggers: ['manual_reset'] // or ['submit_success'] to reset after submit
+}
+```
+
+### Configuration Options
+
+- **`resetToDefaults`** (boolean) - Reset to default values vs empty
+- **`confirmMessage`** (string) - Confirmation dialog message
+- **`clearDraft`** (boolean) - Whether to clear saved drafts
+
+## Auto-Save Plugin
+
+Automatically saves form progress to prevent data loss.
+
+```typescript
+import { registerAction } from '@/lib/form-engine/actions/action-registry';
+import { autoSavePlugin } from '@/lib/form-engine/actions/plugins';
+
+// Register with custom storage
+registerAction(autoSavePlugin({
+  // Custom storage backend
+  storage: {
+    save: async (key, data) => {
+      await fetch('/api/drafts', {
+        method: 'POST',
+        body: JSON.stringify({ key, data })
+      });
+    },
+    load: async (key) => {
+      const response = await fetch(`/api/drafts/${key}`);
+      return response.ok ? await response.json() : null;
+    },
+    remove: async (key) => {
+      await fetch(`/api/drafts/${key}`, { method: 'DELETE' });
+    }
+  },
+  // Called after successful save
+  onSave: (data, context) => {
+    console.log(`Draft saved for form ${context.formId}`);
+    showQuietNotification('Draft saved');
+  },
+  // Error handling
+  onError: (error, context) => {
+    console.error('Auto-save failed:', error);
+    // Fallback to localStorage
+    localStorage.setItem(
+      `backup_${context.formId}`, 
+      JSON.stringify(context.formData)
+    );
+  }
+}));
+```
+
+### Form Configuration
+
+```typescript
+// Use in your form config
+{
+  id: 'auto-save-draft',
+  type: 'auto_save',
+  storageKey: 'contact_form_draft',
+  debounceMs: 2000, // Wait 2s after last change
+  triggers: ['form_change'] // Save on any field change
+}
+```
+
+### Configuration Options
+
+- **`storageKey`** (string) - Key to store draft under
+- **`debounceMs`** (number) - Delay before saving (prevents spam)
+- **`clearOnSuccess`** (boolean) - Clear draft when form submits successfully
+
+## GTM Plugin
+
+<Badge variant="outline">Analytics</Badge>
+
+Tracks form interactions with Google Tag Manager.
+
+```typescript
+import { registerAction } from '@/lib/form-engine/actions/action-registry';
+import { gtmPlugin } from '@/lib/form-engine/actions/plugins';
+
+// Register GTM tracking
+registerAction(gtmPlugin({
+  // Custom event data transformation
+  transformEventData: (action, context) => ({
+    event: action.event,
+    form_id: context.formId,
+    form_step: context.currentStep,
+    user_id: getCurrentUserId(),
+    // Add any custom properties
+  }),
+  // Called after event is sent
+  onEventSent: (eventData) => {
+    console.log('GTM event sent:', eventData);
+  }
+}));
+```
+
+### Form Configuration
+
+```typescript
+// Use in your form config
+{
+  id: 'track-form-start',
+  type: 'gtm_event',
+  event: 'form_started',
+  eventCategory: 'Forms',
+  eventAction: 'Started',
+  eventLabel: 'Contact Form',
+  triggers: ['form_start']
+},
+{
+  id: 'track-submission',
+  type: 'gtm_event', 
+  event: 'form_submitted',
+  eventCategory: 'Forms',
+  eventAction: 'Submitted',
+  triggers: ['submit_success']
+}
+```
+
+### Configuration Options
+
+- **`event`** (string) - GTM event name
+- **`eventCategory`** (string) - Event category
+- **`eventAction`** (string) - Event action
+- **`eventLabel`** (string) - Event label
+- **`customParameters`** (object) - Additional event data
+
+## Plugin Registration Patterns
+
+### Basic Registration
+
+```typescript
+import { registerAction } from '@/lib/form-engine/actions/action-registry';
+import { submitPlugin, notificationPlugin } from '@/lib/form-engine/actions/plugins';
+
+// Register plugins at app startup
+function setupFormActions() {
+  registerAction(submitPlugin());
+  registerAction(notificationPlugin({
+    onSuccess: (message) => toast.success(message),
+    onError: (message) => toast.error(message)
+  }));
+}
+
+// Call once when your app starts
+setupFormActions();
+```
+
+### Environment-Specific Registration
+
+```typescript
+// Register different plugins based on environment
+function setupFormActions() {
+  // Always register core plugins
+  registerAction(submitPlugin({
+    onSuccess: (data, context) => {
+      console.log('Submit success:', data);
+    }
+  }));
+  
+  registerAction(notificationPlugin({
+    onSuccess: (message) => toast.success(message)
+  }));
+  
+  // Only register analytics in production
+  if (process.env.NODE_ENV === 'production') {
+    registerAction(gtmPlugin({
+      transformEventData: (action, context) => ({
+        event: action.event,
+        form_id: context.formId,
+        environment: 'production'
+      })
+    }));
+  }
+  
+  // Only register auto-save if user is logged in
+  if (isUserLoggedIn()) {
+    registerAction(autoSavePlugin({
+      storage: apiStorage // Custom API storage
+    }));
+  }
+}
+```
+
+### Plugin Registration with Error Handling
+
+```typescript
+function registerPluginSafely(pluginFactory: () => any, name: string) {
+  try {
+    registerAction(pluginFactory());
+    console.log(`${name} plugin registered successfully`);
+  } catch (error) {
+    console.error(`Failed to register ${name} plugin:`, error);
+    // App continues without this plugin
+  }
+}
+
+// Safe registration
+registerPluginSafely(
+  () => submitPlugin({ 
+    onError: (error, context) => {
+      Sentry.captureException(error, { contexts: { form: context } });
+    }
+  }),
+  'Submit'
+);
+
+registerPluginSafely(
+  () => notificationPlugin({
+    onSuccess: (message) => toast.success(message)
+  }),
+  'Notification'
+);
+```
+
+## Plugin Dependencies
+
+Some plugins work better together. Here are common combinations:
+
+### Submit + Notifications + Reset
+
+```typescript
+// Complete submit flow
+registerAction(submitPlugin({
+  onSuccess: (data, context) => {
+    analytics.track('form_submitted', { formId: context.formId });
+  }
+}));
+
+registerAction(notificationPlugin({
+  onSuccess: (message) => toast.success(message),
+  onError: (message) => toast.error(message)
+}));
+
+registerAction(resetPlugin({
+  onReset: (context) => {
+    toast.info('Form has been reset');
+  }
+}));
+
+// Form config uses all three
+const formConfig = {
+  actions: [
+    { id: 'submit', type: 'submit', endpoint: '/api/contact' },
+    { 
+      id: 'success-msg', 
+      type: 'show_notification', 
+      message: 'Thanks for your message!',
+      triggers: ['submit_success'] 
+    },
+    { 
+      id: 'reset', 
+      type: 'reset', 
+      triggers: ['submit_success'] 
+    }
+  ]
+};
+```
+
+### Auto-Save + Submit
+
+```typescript
+// Auto-save with submit cleanup
+registerAction(autoSavePlugin({
+  storage: localStorageAdapter
+}));
+
+registerAction(submitPlugin({
+  onSuccess: (data, context) => {
+    // Clear the draft on successful submit
+    localStorage.removeItem(`draft_${context.formId}`);
+  }
+}));
+
+// Form config
+const formConfig = {
+  actions: [
+    { 
+      id: 'auto-save', 
+      type: 'auto_save', 
+      storageKey: 'contact_draft',
+      triggers: ['form_change'] 
+    },
+    { 
+      id: 'submit', 
+      type: 'submit', 
+      endpoint: '/api/contact' 
+    }
+  ]
+};
+```
+
+That's all the pre-built plugins available. Each one is designed to handle specific form behaviors while being configurable for your needs.
