@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Trash2, Plus } from 'lucide-react';
 import type { ArrayFieldConfig, FieldConfig } from '@/lib/form-engine/types/form';
-import { DynamicField } from '@/lib/form-engine/components/internals/field-renderer';
+import { FormElement } from '@/lib/form-engine/components/internals/field-renderer';
 
 interface ArrayFieldProps {
 	config: ArrayFieldConfig;
@@ -44,7 +44,7 @@ export function ArrayField({ config }: ArrayFieldProps) {
 						<div className="flex items-start gap-3">
 							<div className="flex-1">
 								{isSingleField && firstElement ? (
-									<DynamicField
+									<FormElement
 										config={{
 											...firstElement,
 											name: `${config.name}.${index}`,
@@ -54,7 +54,7 @@ export function ArrayField({ config }: ArrayFieldProps) {
 								) : (
 									<div className="space-y-4">
 										{config.elements.map((elementConfig, elementIndex) => (
-											<DynamicField
+											<FormElement
 												key={`${elementConfig.id}_${index}_${elementIndex}`}
 												config={{
 													...elementConfig,

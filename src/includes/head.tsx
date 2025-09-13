@@ -11,6 +11,7 @@ export const Head: EcoComponent<PageHeadProps, JSX.Element> = ({ metadata, child
 			<meta charSet="UTF-8" />
 			<meta name="viewport" content="width=device-width, initial-scale=1" />
 			<Seo {...metadata} />
+			<script src="/assets/includes/theme.script.js"></script>
 			{children}
 		</head>
 	);
@@ -19,6 +20,7 @@ export const Head: EcoComponent<PageHeadProps, JSX.Element> = ({ metadata, child
 Head.config = {
 	importMeta: import.meta,
 	dependencies: {
+		scripts: ['theme.script.ts?exclude-from-html=true'],
 		stylesheets: ['../styles/tailwind.css'],
 	},
 };

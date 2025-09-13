@@ -1,9 +1,9 @@
-import { FormRenderer } from '@/lib/form-engine';
+import { FormRenderer, type FormConfig } from '@/lib/form-engine';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ValidationPresets } from '@/lib/form-engine/validation';
 import '@/lib/form-engine/components/form/registry';
 
-const contactFormConfig = {
+const contactFormConfig: FormConfig = {
 	id: 'contact-form',
 	title: 'Contact Us',
 	description: "Get in touch with our team. We'll get back to you within 24 hours.",
@@ -14,7 +14,7 @@ const contactFormConfig = {
 		{
 			id: 'contact-info',
 			title: 'Contact Information',
-			fields: [
+			elements: [
 				{
 					id: 'firstName',
 					type: 'input' as const,
@@ -22,8 +22,7 @@ const contactFormConfig = {
 					name: 'firstName',
 					label: 'First Name',
 					placeholder: 'Enter your first name',
-					required: true,
-					validation: [
+					rules: [
 						ValidationPresets.required('First name is required'),
 						ValidationPresets.minLength(2, 'First name must be at least 2 characters'),
 					],
@@ -35,8 +34,7 @@ const contactFormConfig = {
 					name: 'lastName',
 					label: 'Last Name',
 					placeholder: 'Enter your last name',
-					required: true,
-					validation: [
+					rules: [
 						ValidationPresets.required('Last name is required'),
 						ValidationPresets.minLength(2, 'Last name must be at least 2 characters'),
 					],
@@ -48,8 +46,7 @@ const contactFormConfig = {
 					name: 'email',
 					label: 'Email Address',
 					placeholder: 'your.email@example.com',
-					required: true,
-					validation: [
+					rules: [
 						ValidationPresets.required('Email is required'),
 						ValidationPresets.email('Please enter a valid email address'),
 					],
@@ -60,7 +57,6 @@ const contactFormConfig = {
 					name: 'inquiryType',
 					label: 'Inquiry Type',
 					placeholder: 'Select inquiry type',
-					required: true,
 					options: [
 						{ label: 'General Question', value: 'general' },
 						{ label: 'Technical Support', value: 'support' },
@@ -69,7 +65,7 @@ const contactFormConfig = {
 						{ label: 'Media/Press', value: 'media' },
 						{ label: 'Other', value: 'other' },
 					],
-					validation: [ValidationPresets.required('Please select an inquiry type')],
+					rules: [ValidationPresets.required('Please select an inquiry type')],
 				},
 				{
 					id: 'priority',
@@ -84,20 +80,22 @@ const contactFormConfig = {
 						{ label: 'Urgent', value: 'urgent' },
 					],
 					defaultValue: 'medium',
-					validation: [ValidationPresets.required('Please select a priority level')],
+					rules: [ValidationPresets.required('Please select a priority level')],
 				},
 				{
 					id: 'budget',
-					type: 'select' as const,
+					type: 'select',
 					name: 'budget',
 					label: 'Project Budget',
 					placeholder: 'Select budget range',
-					conditional: {
-						field: 'inquiryType',
-						operator: 'in' as const,
-						value: ['sales', 'partnership'],
-						action: 'show' as const,
-					},
+					constraints: [
+						{
+							field: 'inquiryType',
+							operator: 'contains',
+							value: ['sales', 'partnership'],
+							action: 'show',
+						},
+					],
 					options: [
 						{ label: 'Under $10,000', value: 'under-10k' },
 						{ label: '$10,000 - $25,000', value: '10k-25k' },
@@ -114,8 +112,7 @@ const contactFormConfig = {
 					name: 'subject',
 					label: 'Subject',
 					placeholder: 'Brief subject line',
-					required: true,
-					validation: [
+					rules: [
 						ValidationPresets.required('Subject is required'),
 						ValidationPresets.minLength(5, 'Subject must be at least 5 characters'),
 						ValidationPresets.maxLength(100, 'Subject must be less than 100 characters'),
@@ -127,12 +124,11 @@ const contactFormConfig = {
 					name: 'message',
 					label: 'Message',
 					placeholder: 'Please provide details about your inquiry...',
-					required: true,
-					props: {
+					defaultProps: {
 						rows: 6,
 						maxLength: 2000,
 					},
-					validation: [
+					rules: [
 						ValidationPresets.required('Message is required'),
 						ValidationPresets.minLength(20, 'Please provide more details (minimum 20 characters)'),
 					],
@@ -149,8 +145,7 @@ const contactFormConfig = {
 					type: 'checkbox' as const,
 					name: 'terms',
 					label: 'I agree to the terms and conditions',
-					required: true,
-					validation: [ValidationPresets.required('You must agree to the terms and conditions')],
+					rules: [ValidationPresets.required('You must agree to the terms and conditions')],
 				},
 			],
 		},
@@ -160,7 +155,7 @@ const contactFormConfig = {
 		columns: 2,
 		gap: '1rem',
 		responsive: {
-			xs: { columns: 1 },
+			default: { columns: 1 },
 			md: { columns: 2 },
 		},
 	},

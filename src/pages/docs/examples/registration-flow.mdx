@@ -35,7 +35,7 @@ const registrationFlowConfig: FormConfig = {
       id: "personal-information",
       title: "Personal Information",
       description: "Tell us about yourself",
-      fields: [
+      elements: [
         {
           type: "input",
           inputType: "text",
@@ -43,7 +43,7 @@ const registrationFlowConfig: FormConfig = {
           name: "firstName",
           label: "First Name",
           placeholder: "Enter your first name",
-          validation: [
+          rules: [
             ValidationPresets.required("First name is required"),
             ValidationPresets.minLength(2, "First name must be at least 2 characters")
           ],
@@ -61,7 +61,7 @@ const registrationFlowConfig: FormConfig = {
           name: "lastName", 
           label: "Last Name",
           placeholder: "Enter your last name",
-          validation: [
+          rules:
             ValidationPresets.required("Last name is required"),
             ValidationPresets.minLength(2, "Last name must be at least 2 characters")
           ],
@@ -79,7 +79,7 @@ const registrationFlowConfig: FormConfig = {
           name: "email",
           label: "Email Address",
           placeholder: "Enter your email address",
-          validation: [
+          rules:
             ValidationPresets.required("Email is required"),
             ValidationPresets.email("Please enter a valid email address")
           ]
@@ -90,7 +90,7 @@ const registrationFlowConfig: FormConfig = {
           name: "age",
           label: "Age",
           placeholder: "Enter your age",
-          validation: [
+          rules:
             ValidationPresets.required("Age is required"),
             ValidationPresets.min(18, "You must be at least 18 years old"),
             ValidationPresets.max(120, "Please enter a valid age")
@@ -114,7 +114,7 @@ const registrationFlowConfig: FormConfig = {
       id: "account-details",
       title: "Account Details", 
       description: "Set up your account credentials",
-      fields: [
+      elements: [
         {
           type: "input",
           inputType: "text",
@@ -122,7 +122,7 @@ const registrationFlowConfig: FormConfig = {
           name: "username",
           label: "Username",
           placeholder: "Choose a username",
-          validation: [
+          rules:
             ValidationPresets.required("Username is required"),
             ValidationPresets.minLength(3, "Username must be at least 3 characters"),
             ValidationPresets.maxLength(20, "Username cannot exceed 20 characters"),
@@ -136,7 +136,7 @@ const registrationFlowConfig: FormConfig = {
           name: "password",
           label: "Password",
           placeholder: "Create a strong password",
-          validation: [
+          rules:
             ValidationPresets.required("Password is required"),
             ValidationPresets.minLength(8, "Password must be at least 8 characters"),
             ValidationPresets.regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, "Password must contain uppercase, lowercase, and number")
@@ -149,7 +149,7 @@ const registrationFlowConfig: FormConfig = {
           name: "confirmPassword",
           label: "Confirm Password", 
           placeholder: "Confirm your password",
-          validation: [
+          rules:
             ValidationPresets.required("Please confirm your password")
           ]
         }
@@ -159,14 +159,14 @@ const registrationFlowConfig: FormConfig = {
       id: "preferences-settings",
       title: "Preferences & Settings",
       description: "Customize your experience",
-      fields: [
+      elements: [
         {
           type: "select",
           id: "country",
           name: "country",
           label: "Country",
           placeholder: "Select your country",
-          validation: [ValidationPresets.required("Please select your country")],
+          rules:idationPresets.required("Please select your country")],
           options: [
             { value: "us", label: "United States" },
             { value: "ca", label: "Canada" },
@@ -184,7 +184,7 @@ const registrationFlowConfig: FormConfig = {
           name: "timezone",
           label: "Timezone",
           placeholder: "Select your timezone",
-          validation: [ValidationPresets.required("Please select your timezone")],
+          rules:idationPresets.required("Please select your timezone")],
           options: [
             { value: "UTC-8", label: "Pacific Time (UTC-8)" },
             { value: "UTC-7", label: "Mountain Time (UTC-7)" },
@@ -224,20 +224,20 @@ const registrationFlowConfig: FormConfig = {
       id: "terms-confirmation",
       title: "Terms & Confirmation",
       description: "Review and accept our terms",
-      fields: [
+      elements: [
         {
           type: "checkbox",
           id: "terms",
           name: "terms",
           label: "I agree to the Terms of Service and Privacy Policy",
-          validation: [ValidationPresets.required("You must accept the terms and privacy policy")]
+          rules:idationPresets.required("You must accept the terms and privacy policy")]
         },
         {
           type: "checkbox", 
           id: "ageConfirmation",
           name: "ageConfirmation",
           label: "I confirm that I am at least 18 years old",
-          validation: [ValidationPresets.required("You must confirm you are at least 18 years old")]
+          rules:idationPresets.required("You must confirm you are at least 18 years old")]
         }
       ]
     }

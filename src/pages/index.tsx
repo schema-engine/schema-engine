@@ -18,7 +18,7 @@ const contactFormConfig: FormConfig = {
 		{
 			id: 'contact-step',
 			title: 'Contact Information',
-			fields: [
+			elements: [
 				{
 					id: 'email',
 					name: 'email',
@@ -26,7 +26,7 @@ const contactFormConfig: FormConfig = {
 					inputType: 'email',
 					label: 'Email Address',
 					placeholder: 'Enter your email',
-					validation: [
+					rules: [
 						{
 							type: 'required',
 							message: 'Email is required',
@@ -43,7 +43,7 @@ const contactFormConfig: FormConfig = {
 					type: 'textarea',
 					label: 'Message',
 					placeholder: 'Your message...',
-					validation: [
+					rules: [
 						{
 							type: 'minLength',
 							value: 10,

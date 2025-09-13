@@ -6,7 +6,7 @@ import { SelectField } from '.';
  * Tree-shakable: Only imported when needed
  */
 defaultFormRegistry.register({
-	name: 'select',
+	componentId: 'select',
 	component: SelectField,
 	category: 'select',
 	description: 'Dropdown selection field',

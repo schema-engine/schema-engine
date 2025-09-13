@@ -116,7 +116,7 @@ Form Engine eliminates boilerplate code by allowing developers to define complex
 
 ## Quick Example
 
-Here's how easy it is to create a contact form with validation:
+Here's how easy it is to create a contact form with rules:
 
 ```typescript
 import { FormRenderer } from "@/lib/form-engine";
@@ -127,12 +127,12 @@ const contactFormConfig = {
   steps: [{
     id: "contact-details",
     title: "Contact Information",
-    fields: [
+    elements: [
       {
         type: "input",
         name: "name",
         label: "Full Name",
-        validation: [
+        rules:
           { type: "required", message: "Name is required" }
         ]
       },
@@ -141,7 +141,7 @@ const contactFormConfig = {
         name: "email",
         label: "Email",
         inputType: "email",
-        validation: [
+        rules:
           { type: "required", message: "Email is required" },
           { type: "email", message: "Invalid email format" }
         ]
@@ -151,7 +151,7 @@ const contactFormConfig = {
         name: "message",
         label: "Message",
         rows: 4,
-        validation: [
+        rules:
           { type: "required", message: "Message is required" }
         ]
       }

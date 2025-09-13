@@ -3,8 +3,8 @@ import { DocsLayout } from '@/layouts/docs-layout';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'Performance Guide | Form Engine Documentation',
-    description: 'Learn how to optimize Form Engine for maximum performance in production applications.',
+  title: 'Performance Guide | Form Engine Documentation',
+  description: 'Learn how to optimize Form Engine for maximum performance in production applications.',
 })
 
 # Performance Guide
@@ -105,7 +105,7 @@ const AdvancedFormRenderer = lazy(async () => {
 
 export function DynamicFormRenderer({ config, ...props }) {
   const hasAdvancedFields = config.steps.some(step =>
-    step.fields.some(field => 
+    step.elements.some(field => 
       ['array', 'file', 'date'].includes(field.type)
     )
   );

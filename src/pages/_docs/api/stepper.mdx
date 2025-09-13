@@ -3,8 +3,8 @@ import { DocsLayout } from '@/layouts/docs-layout';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'Stepper API | Form Engine Documentation',
-    description: 'API reference for the Stepper component used in multi-step forms.',
+  title: 'Stepper API | Form Engine Documentation',
+  description: 'API reference for the Stepper component used in multi-step forms.',
 })
 
 # Stepper API
@@ -245,7 +245,7 @@ const stepsWithValidation = [
   {
     id: 'personal',
     title: 'Personal Information',
-    validation: [
+    rules: [
       { field: 'firstName', required: true },
       { field: 'lastName', required: true },
       { field: 'email', required: true, type: 'email' }
@@ -254,7 +254,7 @@ const stepsWithValidation = [
   {
     id: 'address',
     title: 'Address Information',
-    validation: [
+    rules:
       { field: 'street', required: true },
       { field: 'city', required: true },
       { field: 'zipCode', required: true }
@@ -372,12 +372,12 @@ const multiStepConfig: FormConfig = {
     {
       id: 'step1',
       title: 'Personal Info',
-      fields: [/* ... */]
+      elements: [/* ... */]
     },
     {
       id: 'step2', 
       title: 'Contact Info',
-      fields: [/* ... */]
+      elements: [/* ... */]
     }
   ]
 };

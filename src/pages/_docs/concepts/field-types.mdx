@@ -65,7 +65,7 @@ interface InputFieldConfig {
   name: "fullName",
   label: "Full Name",
   placeholder: "Enter your full name",
-  validation: [{ type: "required" }]
+  rules: [{ type: "required" }]
 }
 
 // Email input with validation
@@ -76,7 +76,7 @@ interface InputFieldConfig {
   inputType: "email",
   placeholder: "john@example.com",
   autoComplete: "email",
-  validation: [
+  rules:
     { type: "required" },
     { type: "email" }
   ]
@@ -88,7 +88,7 @@ interface InputFieldConfig {
   name: "password",
   label: "Password",
   inputType: "password",
-  validation: [
+  rules:
     { type: "required" },
     { type: "minLength", value: 8 },
     {
@@ -106,7 +106,7 @@ interface InputFieldConfig {
   label: "Phone Number",
   inputType: "tel",
   placeholder: "+1 (555) 123-4567",
-  validation: [
+  rules:
     {
       type: "pattern",
       value: "^\\+?[1-9]\\d{1,14}$",
@@ -158,7 +158,7 @@ interface SelectOption {
     { value: "uk", label: "United Kingdom" },
     { value: "au", label: "Australia" }
   ],
-  validation: [{ type: "required" }]
+  rules:ype: "required" }]
 }
 
 // Multi-select with search
@@ -239,7 +239,7 @@ interface NumberFieldConfig {
   min: 0,
   max: 120,
   placeholder: "Enter your age",
-  validation: [{ type: "required" }]
+  rules:ype: "required" }]
 }
 
 // Currency input
@@ -251,7 +251,7 @@ interface NumberFieldConfig {
   step: 1000,
   prefix: "$",
   placeholder: "50000",
-  validation: [
+  rules:
     { type: "required" },
     { type: "min", value: 0 }
   ]
@@ -279,7 +279,7 @@ interface NumberFieldConfig {
   max: 99,
   step: 1,
   defaultValue: 1,
-  validation: [{ type: "required" }]
+  rules:ype: "required" }]
 }
 ```
 
@@ -313,7 +313,7 @@ interface TextareaFieldConfig {
   label: "Message",
   rows: 4,
   placeholder: "Enter your message here...",
-  validation: [
+  rules:
     { type: "required" },
     { type: "minLength", value: 10 }
   ]
@@ -337,7 +337,7 @@ interface TextareaFieldConfig {
   label: "Project Description",
   rows: 8,
   placeholder: "Describe your project goals, timeline, and requirements...",
-  validation: [
+  rules:
     { type: "required" },
     { type: "minLength", value: 50 },
     { type: "maxLength", value: 1000 }
@@ -378,7 +378,7 @@ interface CheckboxFieldConfig {
   type: "checkbox",
   name: "terms",
   label: "I agree to the Terms of Service and Privacy Policy",
-  validation: [
+  rules:
     {
       type: "custom",
       message: "You must agree to the terms to continue",
@@ -435,7 +435,7 @@ interface RadioOption {
     { value: "other", label: "Other" },
     { value: "prefer-not-to-say", label: "Prefer not to say" }
   ],
-  validation: [{ type: "required" }]
+  rules:ype: "required" }]
 }
 
 // Horizontal radio group with descriptions
@@ -474,7 +474,7 @@ interface RadioOption {
     { value: "high", label: "High", description: "Urgent" },
     { value: "critical", label: "Critical", description: "Emergency" }
   ],
-  validation: [{ type: "required" }]
+  rules:ype: "required" }]
 }
 ```
 
@@ -557,7 +557,7 @@ interface DateFieldConfig {
   label: "Date of Birth",
   dateType: "date",
   max: new Date().toISOString().split('T')[0], // Today's date
-  validation: [{ type: "required" }]
+  rules:ype: "required" }]
 }
 
 // Date range with constraints
@@ -568,7 +568,7 @@ interface DateFieldConfig {
   dateType: "date",
   min: new Date().toISOString().split('T')[0], // Today
   max: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // One year from now
-  validation: [{ type: "required" }]
+  rules:ype: "required" }]
 }
 
 // DateTime picker
@@ -578,7 +578,7 @@ interface DateFieldConfig {
   label: "Appointment Date & Time",
   dateType: "datetime-local",
   min: new Date().toISOString().slice(0, 16),
-  validation: [{ type: "required" }]
+  rules:ype: "required" }]
 }
 
 // Time picker
@@ -620,7 +620,7 @@ interface FileFieldConfig {
   label: "Resume",
   accept: ".pdf,.doc,.docx",
   maxSize: 5242880, // 5MB
-  validation: [{ type: "required" }]
+  rules:ype: "required" }]
 }
 
 // Multiple image upload
@@ -679,7 +679,7 @@ interface ArrayFieldConfig {
       type: "input",
       name: "skill",
       label: "Skill",
-      validation: [{ type: "required" }]
+      rules:ype: "required" }]
     }
   ],
   minItems: 1,
@@ -697,7 +697,7 @@ interface ArrayFieldConfig {
       type: "input",
       name: "name",
       label: "Name",
-      validation: [{ type: "required" }],
+      rules:ype: "required" }],
       grid: { colSpan: 1 }
     },
     {
@@ -705,7 +705,7 @@ interface ArrayFieldConfig {
       name: "phone",
       label: "Phone",
       inputType: "tel",
-      validation: [{ type: "required" }],
+      rules:ype: "required" }],
       grid: { colSpan: 1 }
     },
     {
@@ -719,7 +719,7 @@ interface ArrayFieldConfig {
         { value: "friend", label: "Friend" },
         { value: "other", label: "Other" }
       ],
-      validation: [{ type: "required" }],
+      rules:ype: "required" }],
       grid: { colSpan: 2 }
     }
   ],
@@ -742,20 +742,20 @@ interface ArrayFieldConfig {
       type: "input",
       name: "company",
       label: "Company",
-      validation: [{ type: "required" }]
+      rules:ype: "required" }]
     },
     {
       type: "input",
       name: "position",
       label: "Position",
-      validation: [{ type: "required" }]
+      rules:ype: "required" }]
     },
     {
       type: "date",
       name: "startDate",
       label: "Start Date",
       dateType: "date",
-      validation: [{ type: "required" }]
+      rules:ype: "required" }]
     },
     {
       type: "date",
@@ -868,7 +868,7 @@ interface FieldGridConfig {
 {
   type: "number",
   name: "age",
-  validation: [
+  rules:
     { type: "required" },
     { type: "min", value: 0, message: "Age must be positive" },
     { type: "max", value: 120, message: "Please enter a valid age" }

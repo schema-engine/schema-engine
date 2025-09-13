@@ -14,7 +14,7 @@ Form Engine is a powerful, type-safe form rendering system built for React appli
 
 ## See It In Action
 
-Here's a simple example showing Form Engine's core concept - configuration-driven forms with built-in validation:
+Here's a simple example showing Form Engine's core concept - configuration-driven forms with built-in rules:
 
 <SimpleInputDemo />
 
@@ -103,14 +103,14 @@ const contactForm = {
   autoGenerateSchema: true,
   steps: [{
     id: "details",
-    fields: [
+    elements: [
       {
         type: "input",
         inputType: "text",
         id: "name",
         name: "name",
         label: "Full Name",
-        validation: [ValidationPresets.required("Name is required")]
+        rules:idationPresets.required("Name is required")]
       },
       {
         type: "input", 
@@ -118,7 +118,7 @@ const contactForm = {
         id: "email",
         name: "email",
         label: "Email",
-        validation: [
+        rules:
           ValidationPresets.required("Email is required"),
           ValidationPresets.email("Please enter a valid email")
         ]

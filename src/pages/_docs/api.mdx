@@ -146,7 +146,7 @@ ValidationPresets.regex(pattern: RegExp, message?: string)
 {
   type: "input",
   name: "email",
-  validation: [
+  rules: [
     ValidationPresets.required("Email is required"),
     ValidationPresets.email("Please enter a valid email")
   ]
@@ -297,7 +297,7 @@ interface FormStepConfig {
   id: string;
   title?: string;
   description?: string;
-  fields: FieldConfig[];
+  elements: FieldConfig[];
   validation?: z.ZodSchema<any>;
   actions?: FormActionConfig[];
 }
@@ -661,7 +661,7 @@ interface FormStep {
   id: string;
   title: string;
   description?: string;
-  fields: FieldConfig[];
+  elements: FieldConfig[];
   layout?: GridLayoutConfig;
   constraints?: ConstraintLogic[];
 }

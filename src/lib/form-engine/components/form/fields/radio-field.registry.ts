@@ -6,7 +6,7 @@ import { RadioField } from './radio-field';
  * Tree-shakable: Only imported when needed
  */
 defaultFormRegistry.register({
-	name: 'radio',
+	componentId: 'radio',
 	component: RadioField,
 	category: 'select',
 	description: 'Radio button group for single selection',

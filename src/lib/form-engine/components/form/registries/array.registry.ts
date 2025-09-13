@@ -7,7 +7,7 @@ import { ArrayField } from '../fields/array-field';
  */
 export function registerArrayField() {
 	defaultFormRegistry.register({
-		name: 'array',
+		componentId: 'array',
 		component: ArrayField,
 		category: 'layout',
 		description: 'Dynamic array field for repeating elements',

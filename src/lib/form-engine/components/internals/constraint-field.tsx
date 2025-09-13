@@ -1,5 +1,5 @@
 import { useForm, useWatch } from 'react-hook-form';
-import { FormField } from './field-renderer';
+import { FormElement } from './field-renderer';
 import type { FieldConfig, ConstraintLogic } from '../../types/form';
 import { useMemo } from 'react';
 
@@ -103,12 +103,10 @@ export function ConstraintField({ field }: ConstraintFieldProps) {
 
 		// Check if field has required validation rule
 		const hasRequiredValidation =
-			field.validation?.some(
-				(validation: any) => validation?.type === 'required' || validation?.rule === 'required',
-			) || false;
+			field.rules?.some((rules: any) => rules?.type === 'required' || rules?.rule === 'required') || false;
 
 		return hasRequiredValidation || hasRequireAction;
-	}, [constraints, watchedValuesMap, field.validation]);
+	}, [constraints, watchedValuesMap, field.rules]);
 
 	if (!shouldShow) {
 		return null;
@@ -120,5 +118,5 @@ export function ConstraintField({ field }: ConstraintFieldProps) {
 		required: isRequired,
 	};
 
-	return <FormField config={enhancedField} />;
+	return <FormElement config={enhancedField} />;
 }

@@ -18,7 +18,7 @@ const formConfigWithActions: FormConfig = {
 			id: 'demo-step',
 			title: 'Contact Form',
 			description: 'Fill out the form below to see the action system in action',
-			fields: [
+			elements: [
 				{
 					type: 'input' as const,
 					inputType: 'text' as const,
@@ -26,7 +26,7 @@ const formConfigWithActions: FormConfig = {
 					name: 'name',
 					label: 'Full Name',
 					placeholder: 'Enter your full name',
-					validation: [
+					rules: [
 						{ type: 'required', message: 'Name is required' },
 						{ type: 'minLength', value: 2, message: 'Name must be at least 2 characters' },
 					],
@@ -38,7 +38,7 @@ const formConfigWithActions: FormConfig = {
 					name: 'email',
 					label: 'Email Address',
 					placeholder: 'Enter your email',
-					validation: [
+					rules: [
 						{ type: 'required', message: 'Email is required' },
 						{ type: 'email', message: 'Please enter a valid email address' },
 					],
@@ -49,7 +49,7 @@ const formConfigWithActions: FormConfig = {
 					name: 'message',
 					label: 'Message',
 					placeholder: 'Enter your message...',
-					validation: [{ type: 'required', message: 'Message is required' }],
+					rules: [{ type: 'required', message: 'Message is required' }],
 				},
 				{
 					type: 'checkbox' as const,

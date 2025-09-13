@@ -1,26 +1,27 @@
 import { useFormEngine, useConstraintLogic } from '@/lib/form-engine/hooks';
-import { isFieldRequired } from '../../validation';
-import type { FieldConfig } from '../../types/form';
+import { isFieldRequired } from '@/lib/form-engine/validation';
+import type { FieldConfig } from '@/lib/form-engine/types/form';
 
-export interface DynamicFieldProps {
+export interface FormElementProps {
 	config: FieldConfig;
 	className?: string;
 	style?: React.CSSProperties;
 }
 
 /**
- * Dynamic field renderer that loads components from the registry
- * Supports conditional rendering based on other field values
+ * Complete field component that handles constraints, rendering, and error states
  */
-export function DynamicField({ config, className, style }: DynamicFieldProps) {
-	return <DirectField config={config} className={className} style={style} />;
-}
-
-/**
- * Direct field renderer without conditional logic
- */
-function DirectField({ config, className, style }: DynamicFieldProps) {
+export function FormElement({ config, className, style }: FormElementProps) {
 	const { registry } = useFormEngine();
+	const { shouldShow, shouldDisable, isRequired } = useConstraintLogic(
+		config.constraints,
+		isFieldRequired(config.rules),
+	);
+
+	if (!shouldShow) {
+		return null;
+	}
+
 	const Component = registry.getComponent(config.type);
 
 	if (!Component) {
@@ -31,28 +32,11 @@ function DirectField({ config, className, style }: DynamicFieldProps) {
 		);
 	}
 
-	return <Component config={config} />;
-}
-
-/**
- * Complete field component that applies constraints and renders the field
- * Handles constraints to control field visibility and properties
- */
-export function FormField({ config, className, style }: DynamicFieldProps) {
-	const { shouldShow, shouldDisable, isRequired } = useConstraintLogic(
-		config.constraints,
-		isFieldRequired(config.validation),
-	);
-
-	if (!shouldShow) {
-		return null;
-	}
-
 	const enhancedConfig = {
 		...config,
 		disabled: config.disabled || shouldDisable,
 		required: isRequired,
 	};
 
-	return <DynamicField config={enhancedConfig} className={className} style={style} />;
+	return <Component config={enhancedConfig} />;
 }

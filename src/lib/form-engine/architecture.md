@@ -324,7 +324,7 @@ function generateZodSchema(fieldConfigs: FieldConfig[]): z.ZodSchema {
 	for (const field of fieldConfigs) {
 		let fieldSchema = z.string();
 
-		for (const rule of field.validation || []) {
+		for (const rule of field.rules || []) {
 			switch (rule.type) {
 				case "required":
 					fieldSchema = fieldSchema.min(1, rule.message);

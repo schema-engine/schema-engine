@@ -5,8 +5,8 @@ import { SimpleInputDemo } from '@/components/demo/simple-input-demo';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'How Components Work | Form Engine Documentation',
-    description: 'Learn how Form Engine\'s component registration system works and how to integrate your existing components.',
+  title: 'How Components Work | Form Engine Documentation',
+  description: 'Learn how Form Engine\'s component registration system works and how to integrate your existing components.',
 })
 
 # How Components Work
@@ -22,6 +22,7 @@ At its core, the registration system does three things:
 3. **Makes them available** to the FormRenderer through a type-safe registry
 
 <CodePreview 
+  className='unprose'
   fileName="component-registration.ts"
   code={`// Your existing input component
 const MyInput = ({ label, error, className, ...props }) => (
@@ -49,12 +50,12 @@ defaultFormRegistry.register({
 import { ValidationPresets } from '@/lib/form-engine/validation';
 
 const formConfig = {
-  fields: [
+  elements: [
     {
       type: 'input',          // References your registered component
       id: 'name',
       label: 'Full Name',
-      validation: [
+      rules: [
         ValidationPresets.required("Name is required")
       ]
     }
@@ -187,7 +188,7 @@ function FieldWrapper({ component: Component, config, ...props }) {
   } = useController({
     name: config.name,
     control: formContext.control,
-    rules: convertZodToRules(config.validation)
+    rules: convertZodToRules(config.rules)
   });
 
   return (
@@ -245,41 +246,12 @@ interface InputFieldConfig extends BaseFieldConfig {
 
 // Form configurations get full type checking
 const typedForm: FormConfig = {
-  fields: [
+  elements: [
     {
       type: 'input',           // ✅ Valid
       inputType: 'email',      // ✅ Valid  
       placeholder: 'Enter...' // ✅ Valid
       // invalid: 'property'   // ❌ TypeScript error
-    }
-  ]
-};
-```
-
-## Multiple Component Variants
-
-You can register multiple variants of the same component type:
-
-```typescript
-// Register different input variants
-registerFieldComponent('input', {
-  component: StandardInput,
-  variant: 'standard'
-});
-
-registerFieldComponent('input', {
-  component: FloatingLabelInput, 
-  variant: 'floating'
-});
-
-// Use specific variants in your forms
-const formConfig = {
-  fields: [
-    {
-      type: 'input',
-      variant: 'floating',  // Uses FloatingLabelInput
-      id: 'email',
-      label: 'Email'
     }
   ]
 };

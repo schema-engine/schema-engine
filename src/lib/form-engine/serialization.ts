@@ -1,5 +1,5 @@
-import type { FormConfig, FieldConfig, ConstraintLogic } from "./types/form";
-import { ValidationRuleSchema, type ValidationRule } from "./validation";
+import type { FormConfig, FieldConfig, ConstraintLogic } from './types/form';
+import { ValidationRuleSchema, type ValidationRule } from './validation';
 
 /**
  * Serializable form configuration (JSON-safe)
@@ -11,7 +11,7 @@ export interface SerializableFormConfig {
 	steps: SerializableStepConfig[];
 	layout?: any[];
 	autoGenerateSchema?: boolean;
-	mode?: "wizard" | "free";
+	mode?: 'wizard' | 'free';
 	className?: string;
 	style?: Record<string, any>;
 }
@@ -24,7 +24,7 @@ export interface SerializableStepConfig {
 	title?: string;
 	description?: string;
 	icon?: string;
-	fields: SerializableFieldConfig[];
+	elements: SerializableFieldConfig[];
 }
 
 /**
@@ -41,7 +41,7 @@ export interface SerializableFieldConfig {
 	readonly?: boolean;
 	placeholder?: string;
 	defaultValue?: any;
-	validation?: ValidationRule[];
+	rules?: ValidationRule[];
 	className?: string;
 	style?: React.CSSProperties;
 	constraints?: ConstraintLogic[];
@@ -59,19 +59,19 @@ export interface SerializableFieldConfig {
 	pattern?: string;
 	autoComplete?: string;
 	autoFocus?: boolean;
-	resize?: "none" | "both" | "horizontal" | "vertical";
+	resize?: 'none' | 'both' | 'horizontal' | 'vertical';
 	options?: Array<{ value: string | number; label: string; disabled?: boolean }>;
 	multiple?: boolean;
 	searchable?: boolean;
 	clearable?: boolean;
 	checked?: boolean;
-	orientation?: "horizontal" | "vertical";
-	dateType?: "date" | "datetime-local" | "time";
+	orientation?: 'horizontal' | 'vertical';
+	dateType?: 'date' | 'datetime-local' | 'time';
 	showCalendar?: boolean;
 	accept?: string;
 	maxSize?: number;
 	maxFiles?: number;
-	size?: "sm" | "md" | "lg";
+	size?: 'sm' | 'md' | 'lg';
 	elements?: SerializableFieldConfig[];
 	minItems?: number;
 	maxItems?: number;
@@ -98,7 +98,7 @@ export function serializeFormConfig(config: FormConfig): string {
 			title: step.title,
 			description: step.description,
 			icon: step.icon,
-			fields: step.fields?.map(serializeFieldConfig) || [],
+			elements: step.elements?.map(serializeFieldConfig) || [],
 		})),
 	};
 
@@ -110,10 +110,7 @@ export function serializeFormConfig(config: FormConfig): string {
  */
 function serializeFieldConfig(field: FieldConfig): SerializableFieldConfig {
 	// Helper function to determine if field is required from validation rules
-	const isRequired =
-		field.validation?.some(
-			(validation: any) => validation?.type === "required" || validation?.rule === "required"
-		) || false;
+	const isRequired = field.rules?.some((rule) => rule?.type === 'required') || false;
 
 	const base: SerializableFieldConfig = {
 		type: field.type,
@@ -126,7 +123,7 @@ function serializeFieldConfig(field: FieldConfig): SerializableFieldConfig {
 		readonly: field.readonly,
 		placeholder: field.placeholder,
 		defaultValue: field.defaultValue,
-		validation: field.validation,
+		rules: field.rules,
 		className: field.className,
 		style: field.style,
 		constraints: field.constraints,
@@ -134,7 +131,7 @@ function serializeFieldConfig(field: FieldConfig): SerializableFieldConfig {
 
 	// Add type-specific properties
 	switch (field.type) {
-		case "input":
+		case 'input':
 			return {
 				...base,
 				inputType: field.inputType,
@@ -145,7 +142,7 @@ function serializeFieldConfig(field: FieldConfig): SerializableFieldConfig {
 				autoFocus: field.autoFocus,
 			};
 
-		case "number":
+		case 'number':
 			return {
 				...base,
 				min: field.min,
@@ -154,7 +151,7 @@ function serializeFieldConfig(field: FieldConfig): SerializableFieldConfig {
 				precision: field.precision,
 			};
 
-		case "textarea":
+		case 'textarea':
 			return {
 				...base,
 				rows: field.rows,
@@ -164,7 +161,7 @@ function serializeFieldConfig(field: FieldConfig): SerializableFieldConfig {
 				resize: field.resize,
 			};
 
-		case "select":
+		case 'select':
 			return {
 				...base,
 				options: field.options?.map((opt) => ({
@@ -177,13 +174,13 @@ function serializeFieldConfig(field: FieldConfig): SerializableFieldConfig {
 				clearable: field.clearable,
 			};
 
-		case "checkbox":
+		case 'checkbox':
 			return {
 				...base,
 				checked: field.checked,
 			};
 
-		case "radio":
+		case 'radio':
 			return {
 				...base,
 				options: field.options?.map((opt) => ({
@@ -194,7 +191,7 @@ function serializeFieldConfig(field: FieldConfig): SerializableFieldConfig {
 				orientation: field.orientation,
 			};
 
-		case "date":
+		case 'date':
 			return {
 				...base,
 				dateType: field.dateType,
@@ -203,7 +200,7 @@ function serializeFieldConfig(field: FieldConfig): SerializableFieldConfig {
 				showCalendar: field.showCalendar,
 			};
 
-		case "file":
+		case 'file':
 			return {
 				...base,
 				accept: field.accept,
@@ -212,14 +209,14 @@ function serializeFieldConfig(field: FieldConfig): SerializableFieldConfig {
 				maxFiles: field.maxFiles,
 			};
 
-		case "switch":
+		case 'switch':
 			return {
 				...base,
 				checked: field.checked,
 				size: field.size,
 			};
 
-		case "array":
+		case 'array':
 			return {
 				...base,
 				elements: field.elements.map(serializeFieldConfig), // Map over array elements
@@ -243,24 +240,24 @@ export function deserializeFormConfig(json: string): FormConfig {
 
 	// Validate the structure
 	if (!parsed.id || !parsed.steps || !Array.isArray(parsed.steps)) {
-		throw new Error("Invalid form configuration: missing required fields");
+		throw new Error('Invalid form configuration: missing required fields');
 	}
 
 	// Validate step configurations
 	for (const step of parsed.steps) {
-		if (!step.id || !step.fields || !Array.isArray(step.fields)) {
+		if (!step.id || !step.elements || !Array.isArray(step.elements)) {
 			throw new Error(`Invalid step configuration: ${JSON.stringify(step)}`);
 		}
 
 		// Validate field configurations
-		for (const field of step.fields) {
+		for (const field of step.elements) {
 			if (!field.type || !field.id || !field.name) {
 				throw new Error(`Invalid field configuration: ${JSON.stringify(field)}`);
 			}
 
 			// Validate validation rules if present
-			if (field.validation) {
-				for (const rule of field.validation) {
+			if (field.rules) {
+				for (const rule of field.rules) {
 					const result = ValidationRuleSchema.safeParse(rule);
 					if (!result.success) {
 						throw new Error(`Invalid validation rule: ${JSON.stringify(rule)}`);
@@ -275,7 +272,7 @@ export function deserializeFormConfig(json: string): FormConfig {
 		title: parsed.title,
 		description: parsed.description,
 		autoGenerateSchema: parsed.autoGenerateSchema ?? true,
-		mode: parsed.mode ?? "free",
+		mode: parsed.mode ?? 'free',
 		className: parsed.className,
 		style: parsed.style,
 		layout: parsed.layout,
@@ -284,7 +281,7 @@ export function deserializeFormConfig(json: string): FormConfig {
 			title: step.title || step.id, // Use id as fallback title
 			description: step.description,
 			icon: step.icon,
-			fields: step.fields as FieldConfig[],
+			elements: step.elements as FieldConfig[],
 		})),
 	};
 }
@@ -299,11 +296,11 @@ export function validateSerializableConfig(config: SerializableFormConfig): {
 	const errors: string[] = [];
 
 	if (!config.id) {
-		errors.push("Form configuration must have an id");
+		errors.push('Form configuration must have an id');
 	}
 
 	if (!config.steps || !Array.isArray(config.steps)) {
-		errors.push("Form configuration must have a steps array");
+		errors.push('Form configuration must have a steps array');
 		return { valid: false, errors };
 	}
 
@@ -311,12 +308,12 @@ export function validateSerializableConfig(config: SerializableFormConfig): {
 		if (!step.id) {
 			errors.push(`Step at index ${stepIndex} must have an id`);
 		}
-		if (!step.fields || !Array.isArray(step.fields)) {
+		if (!step.elements || !Array.isArray(step.elements)) {
 			errors.push(`Step at index ${stepIndex} must have a fields array`);
 			continue;
 		}
 
-		for (const [fieldIndex, field] of step.fields.entries()) {
+		for (const [fieldIndex, field] of step.elements.entries()) {
 			if (!field.type) {
 				errors.push(`Field at step ${stepIndex}, field index ${fieldIndex} must have a type`);
 			}
@@ -328,12 +325,12 @@ export function validateSerializableConfig(config: SerializableFormConfig): {
 			}
 
 			// Validate validation rules
-			if (field.validation) {
-				for (const [ruleIndex, rule] of field.validation.entries()) {
+			if (field.rules) {
+				for (const [ruleIndex, rule] of field.rules.entries()) {
 					const result = ValidationRuleSchema.safeParse(rule);
 					if (!result.success) {
 						errors.push(
-							`Invalid validation rule at step ${stepIndex}, field ${fieldIndex}, rule ${ruleIndex}: ${result.error.message}`
+							`Invalid validation rule at step ${stepIndex}, field ${fieldIndex}, rule ${ruleIndex}: ${result.error.message}`,
 						);
 					}
 				}

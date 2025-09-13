@@ -1,5 +1,5 @@
-import type { ComponentType } from "react";
-import type { FormComponentDefinition, FormComponentRegistry } from "./types/registry";
+import type { ComponentType } from 'react';
+import type { FormComponentDefinition, FormComponentRegistry } from './types/registry';
 
 /**
  * Simplified form component registry without lazy loading
@@ -8,10 +8,10 @@ export class FormComponentRegistryImpl implements FormComponentRegistry {
 	private components = new Map<string, FormComponentDefinition>();
 
 	register(definition: FormComponentDefinition): void {
-		if (this.components.has(definition.name)) {
-			console.warn(`Component "${definition.name}" is already registered. Overwriting.`);
+		if (this.components.has(definition.componentId)) {
+			console.warn(`Component "${definition.componentId}" is already registered. Overwriting.`);
 		}
-		this.components.set(definition.name, definition);
+		this.components.set(definition.componentId, definition);
 	}
 
 	unregister(name: string): void {
@@ -32,9 +32,7 @@ export class FormComponentRegistryImpl implements FormComponentRegistry {
 	}
 
 	getByCategory(category: string): FormComponentDefinition[] {
-		return Array.from(this.components.values()).filter(
-			(component) => component.category === category
-		);
+		return Array.from(this.components.values()).filter((component) => component.category === category);
 	}
 
 	has(name: string): boolean {

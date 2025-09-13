@@ -58,18 +58,18 @@ const multiStepFormConfig = {
       title: "Personal Information",
       description: "Tell us about yourself",
       icon: "👤",
-      fields: [
+      elements: [
         {
           type: "input",
           name: "firstName",
           label: "First Name",
-          validation: [{ type: "required" }]
+          rules: [{ type: "required" }]
         },
         {
           type: "input",
           name: "lastName", 
           label: "Last Name",
-          validation: [{ type: "required" }]
+          rules:ype: "required" }]
         }
       ]
     },
@@ -78,13 +78,13 @@ const multiStepFormConfig = {
       title: "Contact Details",
       description: "How can we reach you?",
       icon: "📧",
-      fields: [
+      elements: [
         {
           type: "input",
           inputType: "email",
           name: "email",
           label: "Email Address",
-          validation: [
+          rules:
             { type: "required" },
             { type: "email" }
           ]
@@ -94,7 +94,7 @@ const multiStepFormConfig = {
           inputType: "tel",
           name: "phone",
           label: "Phone Number",
-          validation: [{ type: "required" }]
+          rules:ype: "required" }]
         }
       ]
     }
@@ -175,7 +175,7 @@ stepper: {
 The stepper system provides several navigation control options:
 
 ### Controlled Navigation
-Enforce step-by-step progression with validation:
+Enforce step-by-step progression with rules:
 
 ```typescript
 stepper: {
@@ -253,12 +253,12 @@ const validatedFormConfig = {
   steps: [
     {
       title: "Step 1",
-      fields: [
+      elements: [
         {
           type: "input",
           name: "email",
           label: "Email",
-          validation: [
+          rules:
             { type: "required" },
             { type: "email" }
           ]
@@ -267,12 +267,12 @@ const validatedFormConfig = {
     },
     {
       title: "Step 2", 
-      fields: [
+      elements: [
         {
           type: "input",
           name: "phone",
           label: "Phone Number",
-          validation: [
+          rules:
             { type: "required" },
             {
               type: "custom",
@@ -303,7 +303,7 @@ const customBehaviorForm = {
   steps: [
     {
       title: "Account Type",
-      fields: [
+      elements: [
         {
           type: "radio",
           name: "accountType",
@@ -312,18 +312,18 @@ const customBehaviorForm = {
             { value: "personal", label: "Personal" },
             { value: "business", label: "Business" }
           ],
-          validation: [{ type: "required" }]
+          rules:ype: "required" }]
         }
       ]
     },
     {
       title: "Personal Details",
-      fields: [
+      elements: [
         {
           type: "input",
           name: "fullName",
           label: "Full Name",
-          validation: [{ type: "required" }]
+          rules:ype: "required" }]
         }
       ],
       // Show only for personal accounts
@@ -338,18 +338,18 @@ const customBehaviorForm = {
     },
     {
       title: "Business Details",
-      fields: [
+      elements: [
         {
           type: "input",
           name: "companyName",
           label: "Company Name",
-          validation: [{ type: "required" }]
+          rules:ype: "required" }]
         },
         {
           type: "input",
           name: "taxId",
           label: "Tax ID",
-          validation: [{ type: "required" }]
+          rules:ype: "required" }]
         }
       ],
       // Show only for business accounts
@@ -456,19 +456,19 @@ const progressTrackingForm = {
       title: "Basic Information",
       description: "Required personal details",
       completionWeight: 30,    // This step represents 30% of completion
-      fields: [/* ... */]
+      elements: [/* ... */]
     },
     {
       title: "Documentation",
       description: "Upload required documents", 
       completionWeight: 40,    // This step represents 40% of completion
-      fields: [/* ... */]
+      elements: [/* ... */]
     },
     {
       title: "Review & Submit",
       description: "Review your application",
       completionWeight: 30,    // This step represents 30% of completion
-      fields: [/* ... */]
+      elements: [/* ... */]
     }
   ],
   stepper: {
@@ -488,7 +488,7 @@ const conditionalFlowForm = {
   steps: [
     {
       title: "User Type",
-      fields: [
+      elements: [
         {
           type: "radio",
           name: "userType",
@@ -499,19 +499,19 @@ const conditionalFlowForm = {
             { value: "parent", label: "Parent" },
             { value: "admin", label: "Administrator" }
           ],
-          validation: [{ type: "required" }]
+          rules:ype: "required" }]
         }
       ]
     },
     // Student-specific steps
     {
       title: "Student Information",
-      fields: [
+      elements: [
         {
           type: "input",
           name: "studentId",
           label: "Student ID",
-          validation: [{ type: "required" }]
+          rules:ype: "required" }]
         },
         {
           type: "select",
@@ -537,12 +537,12 @@ const conditionalFlowForm = {
     // Teacher-specific steps
     {
       title: "Teacher Information",
-      fields: [
+      elements: [
         {
           type: "input",
           name: "employeeId",
           label: "Employee ID",
-          validation: [{ type: "required" }]
+          rules:ype: "required" }]
         },
         {
           type: "array",
@@ -553,7 +553,7 @@ const conditionalFlowForm = {
               type: "input",
               name: "subject",
               label: "Subject",
-              validation: [{ type: "required" }]
+              rules:ype: "required" }]
             }
           ],
           minItems: 1
@@ -571,13 +571,13 @@ const conditionalFlowForm = {
     // Common final step
     {
       title: "Contact Information",
-      fields: [
+      elements: [
         {
           type: "input",
           name: "email",
           label: "Email Address",
           inputType: "email",
-          validation: [
+          rules:
             { type: "required" },
             { type: "email" }
           ]
@@ -686,15 +686,15 @@ function CustomMultiStepForm() {
 const steps = [
   {
     title: "Personal Information",
-    fields: [/* name, email, phone */]
+    elements: [/* name, email, phone */]
   },
   {
     title: "Address Details", 
-    fields: [/* street, city, country */]
+    elements: [/* street, city, country */]
   },
   {
     title: "Preferences",
-    fields: [/* settings, notifications */]
+    elements: [/* settings, notifications */]
   }
 ];
 ```
@@ -762,11 +762,11 @@ const steps = [
 const registrationFlow = {
   id: "user-registration",
   steps: [
-    { title: "Account Type", fields: [/* account selection */] },
-    { title: "Personal Info", fields: [/* name, email */] },
-    { title: "Security", fields: [/* password setup */] },
-    { title: "Verification", fields: [/* email/phone verification */] },
-    { title: "Welcome", fields: [/* onboarding preferences */] }
+    { title: "Account Type", elements: [/* account selection */] },
+    { title: "Personal Info", elements: [/* name, email */] },
+    { title: "Security", elements: [/* password setup */] },
+    { title: "Verification", elements: [/* email/phone verification */] },
+    { title: "Welcome", elements: [/* onboarding preferences */] }
   ]
 };
 ```
@@ -777,10 +777,10 @@ const registrationFlow = {
 const surveyForm = {
   id: "customer-survey",
   steps: [
-    { title: "Demographics", fields: [/* age, location */] },
-    { title: "Experience", fields: [/* satisfaction ratings */] },
-    { title: "Feedback", fields: [/* open-ended questions */] },
-    { title: "Contact", fields: [/* follow-up preferences */] }
+    { title: "Demographics", elements: [/* age, location */] },
+    { title: "Experience", elements: [/* satisfaction ratings */] },
+    { title: "Feedback", elements: [/* open-ended questions */] },
+    { title: "Contact", elements: [/* follow-up preferences */] }
   ]
 };
 ```
@@ -791,10 +791,10 @@ const surveyForm = {
 const checkoutProcess = {
   id: "order-checkout",
   steps: [
-    { title: "Cart Review", fields: [/* order summary */] },
-    { title: "Shipping", fields: [/* address, delivery options */] },
-    { title: "Payment", fields: [/* payment method, billing */] },
-    { title: "Confirmation", fields: [/* final review */] }
+    { title: "Cart Review", elements: [/* order summary */] },
+    { title: "Shipping", elements: [/* address, delivery options */] },
+    { title: "Payment", elements: [/* payment method, billing */] },
+    { title: "Confirmation", elements: [/* final review */] }
   ]
 };
 ```

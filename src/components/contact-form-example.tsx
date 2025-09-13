@@ -13,7 +13,7 @@ export function ContactFormExample() {
 			{
 				id: 'contact-step',
 				title: 'Contact Information',
-				fields: [
+				elements: [
 					{
 						id: 'email',
 						name: 'email',
@@ -21,7 +21,7 @@ export function ContactFormExample() {
 						inputType: 'email',
 						label: 'Email Address',
 						placeholder: 'Enter your email',
-						validation: [
+						rules: [
 							{
 								type: 'required',
 								message: 'Email is required',
@@ -34,7 +34,7 @@ export function ContactFormExample() {
 						type: 'textarea',
 						label: 'Message',
 						placeholder: 'Your message...',
-						validation: [
+						rules: [
 							{
 								type: 'minLength',
 								value: 10,

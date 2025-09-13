@@ -5,7 +5,7 @@ import {
 	type FormEngineProviderProps,
 	FormEngineProvider,
 } from '../../provider';
-import { FormField } from './field-renderer';
+import { FormElement } from './field-renderer';
 import { useFormGridStyles } from '@/lib/form-engine/hooks';
 import { Stepper, useStepper } from '../../stepper';
 import { useFormContext } from 'react-hook-form';
@@ -16,7 +16,7 @@ import { logger } from '@/lib/logger';
  * Helper to get fields for a specific step - now fields are directly in steps
  */
 function getFieldsForStep(step: FormStep): FieldConfig[] {
-	return step.fields || [];
+	return step.elements || [];
 }
 
 /**
@@ -29,27 +29,27 @@ function isMultiStepForm(config: FormConfig): boolean {
 /**
  * Internal component that renders fields with access to form context and grid layout
  */
-function FormFields({ config }: { config: FormConfig }) {
+function FormElementsRenderer({ config }: { config: FormConfig }) {
 	if (isMultiStepForm(config)) {
-		return <MultiStepFormFields config={config} />;
+		return <MultiStepFormElementsRenderer config={config} />;
 	}
 
-	return <SingleStepFormFields config={config} />;
+	return <SingleStepFormElementsRenderer config={config} />;
 }
 
 /**
  * Component for single-step forms (only one step in the steps array)
  */
-function SingleStepFormFields({ config }: { config: FormConfig }) {
+function SingleStepFormElementsRenderer({ config }: { config: FormConfig }) {
 	const gridStyles = useFormGridStyles(config.grid);
 	const singleStep = config.steps[0];
 
-	if (!singleStep?.fields) return null;
+	if (!singleStep?.elements) return null;
 
 	return (
 		<div style={gridStyles}>
-			{singleStep.fields.map((field) => (
-				<FormField key={field.id} config={field} className={field.className} style={field.style} />
+			{singleStep.elements.map((field) => (
+				<FormElement key={field.id} config={field} className={field.className} style={field.style} />
 			))}
 		</div>
 	);
@@ -79,7 +79,7 @@ function SubmitButton({
 /**
  * Internal component for multi-step form rendering
  */
-function MultiStepFormFields({ config }: { config: FormConfig }) {
+function MultiStepFormElementsRenderer({ config }: { config: FormConfig }) {
 	const { trigger, getValues, setFocus, formState } = useFormContext();
 
 	const handleStepChange = (stepIndex: number, step: FormStep) => {
@@ -88,9 +88,9 @@ function MultiStepFormFields({ config }: { config: FormConfig }) {
 
 	const validateStep = async (stepIndex: number): Promise<boolean> => {
 		const step = config.steps[stepIndex];
-		if (!step?.fields) return true;
+		if (!step?.elements) return true;
 
-		const fieldNames = step.fields.map((field) => field.name);
+		const fieldNames = step.elements.map((field) => field.name);
 
 		try {
 			const isValid = await trigger(fieldNames);
@@ -188,7 +188,7 @@ function StepperFormContent({ config }: { config: FormConfig }) {
 
 			<div style={gridStyles}>
 				{stepFields.map((field: FieldConfig) => (
-					<FormField key={field.id} config={field} className={field.className} style={field.style} />
+					<FormElement key={field.id} config={field} className={field.className} style={field.style} />
 				))}
 			</div>
 		</div>
@@ -244,7 +244,7 @@ export function FormRenderer({
 						</div>
 					)}
 
-					<FormFields config={config} />
+					<FormElementsRenderer config={config} />
 
 					{!isMultiStep && showSubmitButton && (
 						<SubmitButton

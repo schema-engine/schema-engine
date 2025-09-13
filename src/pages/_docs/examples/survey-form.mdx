@@ -26,7 +26,7 @@ An advanced survey form showcasing Form Engine's sophisticated features includin
         {
           id: 'experience',
           title: 'Your Experience',
-          fields: [
+          elements: [
             {
               id: 'satisfaction',
               type: 'select',
@@ -58,7 +58,7 @@ An advanced survey form showcasing Form Engine's sophisticated features includin
         {
           id: 'feedback',
           title: 'Feedback',
-          fields: [
+          elements: [
             {
               id: 'improvements',
               type: 'textarea',
@@ -132,7 +132,7 @@ const surveyConfig = {
     {
       id: 'experience',
       title: 'Your Experience',
-      fields: [
+      elements: [
         {
           id: 'satisfaction',
           type: 'select',
@@ -208,7 +208,7 @@ Group related questions using field groups:
   id: 'service-ratings',
   type: 'group',
   label: 'Rate our services',
-  fields: [
+  elements: [
     { id: 'support', type: 'select', name: 'support', label: 'Customer Support' },
     { id: 'delivery', type: 'select', name: 'delivery', label: 'Delivery Speed' },
     { id: 'quality', type: 'select', name: 'quality', label: 'Product Quality' }

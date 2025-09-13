@@ -79,7 +79,7 @@ const { formState, control, setValue } = useFormContext();
 
 // Create a field
 const nameField = useField('name', {
-  validation: [
+  rules: [
     ValidationPresets.required("Name is required")
   ],
   defaultValue: ''

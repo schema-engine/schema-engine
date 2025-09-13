@@ -23,7 +23,7 @@ export function FieldTypesDemo() {
 			{
 				id: 'field-types-step',
 				title: 'Explore Different Field Types',
-				fields: [
+				elements: [
 					{
 						type: 'input',
 						inputType: 'text',
@@ -39,7 +39,7 @@ export function FieldTypesDemo() {
 						name: 'emailField',
 						label: 'Email Input',
 						placeholder: 'user@example.com',
-						validation: [ValidationPresets.email('Invalid email')],
+						rules: [ValidationPresets.email('Invalid email')],
 					},
 					{
 						type: 'number',

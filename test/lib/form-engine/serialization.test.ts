@@ -17,10 +17,10 @@ describe('Serialization', () => {
 			{
 				id: 'step1',
 				title: 'Step 1',
-				fields: [
-					{ type: 'input', inputType: 'text', id: 'name', name: 'name', label: 'Name', validation: [] },
-					{ type: 'input', inputType: 'email', id: 'email', name: 'email', label: 'Email', validation: [] },
-					{ type: 'number', id: 'age', name: 'age', label: 'Age', validation: [] },
+				elements: [
+					{ type: 'input', inputType: 'text', id: 'name', name: 'name', label: 'Name', rules: [] },
+					{ type: 'input', inputType: 'email', id: 'email', name: 'email', label: 'Email', rules: [] },
+					{ type: 'number', id: 'age', name: 'age', label: 'Age', rules: [] },
 				],
 			},
 		],

@@ -16,7 +16,7 @@ export function SimpleInputDemo() {
 			{
 				id: 'demo-step',
 				title: 'Input Fields',
-				fields: [
+				elements: [
 					{
 						type: 'input',
 						inputType: 'text',
@@ -24,7 +24,7 @@ export function SimpleInputDemo() {
 						name: 'name',
 						label: 'Your Name',
 						placeholder: 'Enter your name',
-						validation: [
+						rules: [
 							ValidationPresets.required('Name is required'),
 							ValidationPresets.minLength(2, 'Must be at least 2 characters'),
 						],
@@ -36,7 +36,7 @@ export function SimpleInputDemo() {
 						name: 'email',
 						label: 'Email',
 						placeholder: 'your@email.com',
-						validation: [
+						rules: [
 							ValidationPresets.required('Email is required'),
 							ValidationPresets.email('Please enter a valid email'),
 						],
@@ -59,7 +59,7 @@ export function SimpleInputDemo() {
 	};
 
 	return (
-		<div className="border rounded-lg p-4 bg-gray-50/50">
+		<div className="border rounded-lg p-4">
 			<FormRenderer config={config} />
 		</div>
 	);

@@ -5,8 +5,8 @@ import { SimpleGridDemo } from '@/components/demo/simple-grid-demo';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'How Layout & Styles Work | Form Engine Documentation',
-    description: 'Learn about Form Engine\'s responsive grid system and how to style your forms.',
+  title: 'How Layout & Styles Work | Form Engine Documentation',
+  description: 'Learn about Form Engine\'s responsive grid system and how to style your forms.',
 })
 
 # How Layout & Styles Work
@@ -55,7 +55,7 @@ className='unprose'
   },
   "steps": [{
     "id": "contact",
-    "fields": [
+    "elements": [
       {
         "type": "input",
         "id": "name",
@@ -87,7 +87,7 @@ className='unprose'
 />
 
 ### Automatic Column Calculation
-When you don't specify grid positions, Form Engine automatically arranges fields:
+When you don't specify grid positions, Form Engine automatically arranges elements:
 
 ```typescript
 // These fields will automatically flow in the grid

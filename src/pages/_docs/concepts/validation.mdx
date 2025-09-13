@@ -30,7 +30,7 @@ Define validation rules once in your field configuration - Zod schemas are autom
   type: "input",
   name: "email",
   label: "Email Address",
-  validation: [
+  rules: [
     { type: "required", message: "Email is required" },
     { type: "email", message: "Please enter a valid email" },
     { type: "minLength", value: 5, message: "Email too short" }
@@ -296,7 +296,7 @@ Create custom validation logic for complex requirements:
 
 ### Conditional Validation
 
-Validation rules that depend on other fields:
+Validation rules that depend on other elements:
 
 ```typescript
 {
@@ -324,11 +324,11 @@ const formConfig = {
   steps: [
     {
       title: "User Info",
-      fields: [
+      elements: [
         {
           type: "input",
           name: "email",
-          validation: [
+          rules:
             { type: "required" },
             { type: "email" }
           ]
@@ -336,7 +336,7 @@ const formConfig = {
         {
           type: "number",
           name: "age",
-          validation: [
+          rules:
             { type: "required" },
             { type: "min", value: 18 },
             { type: "max", value: 120 }
@@ -388,7 +388,7 @@ Control when validation occurs:
 ```typescript
 const formConfig = {
   id: "validation-timing-form",
-  validation: {
+  rules:
     strategy: "onSubmit",     // "onChange" | "onBlur" | "onSubmit"
     revalidateMode: "onChange", // When to revalidate after first error
     shouldFocusError: true,   // Focus first error field
@@ -404,7 +404,7 @@ const formConfig = {
 {
   type: "input",
   name: "username",
-  validation: [
+  rules:
     {
       type: "custom",
       message: "Username is already taken",
@@ -458,7 +458,7 @@ Comprehensive error handling and display:
 {
   type: "input",
   name: "email",
-  validation: [{ type: "email" }],
+  rules:ype: "email" }],
   errorDisplay: {
     position: "bottom",      // "bottom" | "top" | "inline"
     style: "tooltip",        // "tooltip" | "text" | "icon"
@@ -479,12 +479,12 @@ const registrationFormConfig = {
   steps: [
     {
       title: "Account Information",
-      fields: [
+      elements: [
         {
           type: "input",
           name: "username",
           label: "Username",
-          validation: [
+          rules:
             { type: "required", message: "Username is required" },
             { type: "minLength", value: 3, message: "Username must be at least 3 characters" },
             { type: "maxLength", value: 20, message: "Username cannot exceed 20 characters" },
@@ -510,7 +510,7 @@ const registrationFormConfig = {
           name: "email",
           label: "Email Address",
           inputType: "email",
-          validation: [
+          rules:
             { type: "required", message: "Email is required" },
             { type: "email", message: "Please enter a valid email address" },
             {
@@ -530,7 +530,7 @@ const registrationFormConfig = {
           name: "password",
           label: "Password",
           inputType: "password",
-          validation: [
+          rules:
             { type: "required", message: "Password is required" },
             { type: "minLength", value: 8, message: "Password must be at least 8 characters" },
             {
@@ -552,7 +552,7 @@ const registrationFormConfig = {
           name: "confirmPassword",
           label: "Confirm Password",
           inputType: "password",
-          validation: [
+          rules:
             { type: "required", message: "Please confirm your password" },
             {
               type: "custom",
@@ -578,12 +578,12 @@ const contactFormConfig = {
   steps: [
     {
       title: "Contact Information",
-      fields: [
+      elements: [
         {
           type: "input",
           name: "name",
           label: "Full Name",
-          validation: [
+          rules:
             { type: "required", message: "Name is required" },
             { type: "minLength", value: 2, message: "Name must be at least 2 characters" },
             {
@@ -598,7 +598,7 @@ const contactFormConfig = {
           name: "email",
           label: "Email Address",
           inputType: "email",
-          validation: [
+          rules:
             { type: "required", message: "Email is required" },
             { type: "email", message: "Please enter a valid email address" }
           ]
@@ -608,7 +608,7 @@ const contactFormConfig = {
           name: "phone",
           label: "Phone Number",
           inputType: "tel",
-          validation: [
+          rules:
             {
               type: "pattern",
               value: "phone",  // Built-in phone pattern
@@ -620,7 +620,7 @@ const contactFormConfig = {
           type: "textarea",
           name: "message",
           label: "Message",
-          validation: [
+          rules:
             { type: "required", message: "Message is required" },
             { type: "minLength", value: 10, message: "Message must be at least 10 characters" },
             { type: "maxLength", value: 1000, message: "Message cannot exceed 1000 characters" }

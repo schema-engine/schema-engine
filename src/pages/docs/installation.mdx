@@ -3,14 +3,14 @@ import { DocsLayout } from '@/layouts/docs-layout';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'Installation | Form Engine Documentation',
-    description: 'Install and set up Form Engine in your project.',
+  title: 'Installation | Form Engine Documentation',
+  description: 'Install and set up Form Engine in your project.',
 })
 
 # Installation
 
 <div className="banner banner--alert unprose mt-4" role="alert">
-  <h3 className="banner__title">Development Phase</h3>
+  <p className="banner__title">Development Phase</p>
   <p>Form Engine is currently in development. Installation as a standalone package is not yet available. The library exists within this project and will be packaged for distribution in the future.</p>
 </div>
 
@@ -59,7 +59,7 @@ The development server will start at `http://localhost:3000` with:
 bun dev
 
 # Build for production
-bun build  
+bun run build  
 
 # Start production server
 bun start
@@ -67,7 +67,7 @@ bun start
 # Preview production build
 bun preview
 
-# Run tests (when available)
+# Run tests
 bun test
 ```
 

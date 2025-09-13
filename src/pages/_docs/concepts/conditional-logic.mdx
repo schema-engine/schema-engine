@@ -272,7 +272,7 @@ const progressiveForm = {
   steps: [
     {
       title: "User Information",
-      fields: [
+      elements: [
         {
           type: "radio",
           name: "userType",
@@ -283,7 +283,7 @@ const progressiveForm = {
             { value: "parent", label: "Parent" },
             { value: "other", label: "Other" }
           ],
-          validation: [{ type: "required" }]
+          rules: [{ type: "required" }]
         },
         
         // Student-specific fields
@@ -299,7 +299,7 @@ const progressiveForm = {
               action: "show"
             }
           ],
-          validation: [{ type: "required" }]
+          rules:ype: "required" }]
         },
         {
           type: "select",
@@ -334,7 +334,7 @@ const progressiveForm = {
               action: "show"
             }
           ],
-          validation: [{ type: "required" }]
+          rules:ype: "required" }]
         },
         {
           type: "array",
@@ -345,7 +345,7 @@ const progressiveForm = {
               type: "input",
               name: "subject",
               label: "Subject",
-              validation: [{ type: "required" }]
+              rules:ype: "required" }]
             }
           ],
           constraints: [
@@ -369,7 +369,7 @@ const progressiveForm = {
               type: "input",
               name: "childName",
               label: "Child's Name",
-              validation: [{ type: "required" }],
+              rules:ype: "required" }],
               grid: { colSpan: 1 }
             },
             {
@@ -446,7 +446,7 @@ Create validation rules that depend on form state:
       action: "require"
     }
   ],
-  validation: [
+  rules:
     {
       type: "custom",
       message: "Passwords must match",
@@ -489,7 +489,7 @@ const conditionalStepsForm = {
   steps: [
     {
       title: "Account Type",
-      fields: [
+      elements: [
         {
           type: "radio",
           name: "plan",
@@ -499,7 +499,7 @@ const conditionalStepsForm = {
             { value: "premium", label: "Premium Plan" },
             { value: "enterprise", label: "Enterprise Plan" }
           ],
-          validation: [{ type: "required" }]
+          rules:ype: "required" }]
         }
       ]
     },
@@ -514,7 +514,7 @@ const conditionalStepsForm = {
           action: "show"
         }
       ],
-      fields: [
+      elements: [
         {
           type: "checkbox",
           name: "advancedAnalytics",
@@ -538,18 +538,18 @@ const conditionalStepsForm = {
           action: "show"
         }
       ],
-      fields: [
+      elements: [
         {
           type: "input",
           name: "enterpriseContact",
           label: "Enterprise Contact",
-          validation: [{ type: "required" }]
+          rules:ype: "required" }]
         },
         {
           type: "number",
           name: "userCount",
           label: "Number of Users",
-          validation: [{ type: "required" }, { type: "min", value: 1 }]
+          rules:ype: "required" }, { type: "min", value: 1 }]
         }
       ]
     }
@@ -593,7 +593,7 @@ function DynamicOptionsForm() {
     ...baseFormConfig,
     steps: baseFormConfig.steps.map(step => ({
       ...step,
-      fields: step.fields.map(field => 
+      elements: step.elements.map(field => 
         field.name === 'state' 
           ? { ...field, options: stateOptions }
           : field

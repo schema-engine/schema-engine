@@ -25,7 +25,7 @@ export function SimpleGridDemo() {
 			{
 				id: 'grid-step',
 				title: 'Responsive Grid Layout',
-				fields: [
+				elements: [
 					{
 						type: 'input',
 						inputType: 'text',
@@ -33,7 +33,7 @@ export function SimpleGridDemo() {
 						name: 'firstName',
 						label: 'First Name',
 						placeholder: 'John',
-						validation: [ValidationPresets.required('First name required')],
+						rules: [ValidationPresets.required('First name required')],
 					},
 					{
 						type: 'input',
@@ -42,7 +42,7 @@ export function SimpleGridDemo() {
 						name: 'lastName',
 						label: 'Last Name',
 						placeholder: 'Doe',
-						validation: [ValidationPresets.required('Last name required')],
+						rules: [ValidationPresets.required('Last name required')],
 					},
 					{
 						type: 'input',
@@ -51,10 +51,7 @@ export function SimpleGridDemo() {
 						name: 'email',
 						label: 'Email Address',
 						placeholder: 'john@example.com',
-						validation: [
-							ValidationPresets.required('Email required'),
-							ValidationPresets.email('Invalid email'),
-						],
+						rules: [ValidationPresets.required('Email required'), ValidationPresets.email('Invalid email')],
 					},
 					{
 						type: 'input',

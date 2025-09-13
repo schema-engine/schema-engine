@@ -6,7 +6,7 @@ import { NumberField } from '.';
  * Tree-shakable: Only imported when needed
  */
 defaultFormRegistry.register({
-	name: 'number',
+	componentId: 'number',
 	component: NumberField,
 	category: 'input',
 	description: 'Numeric input field',

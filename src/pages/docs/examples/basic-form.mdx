@@ -40,7 +40,7 @@ Each field requires an `id`, `type`, `name`, and `label`:
 Add validation rules to each field:
 
 ```typescript
-validation: [
+rules: [
   { type: 'required', message: 'Name is required' },
   { type: 'minLength', value: 2, message: 'Name must be at least 2 characters' }
 ]
@@ -58,7 +58,7 @@ actions: [
     label: 'Send Message',
     endpoint: '/api/contact',
     method: 'POST',
-    validation: true,
+    rules:,
     onSuccess: {
       type: 'message',
       title: 'Message Sent!',
@@ -76,7 +76,7 @@ import { FormConfig } from '@/lib/form-engine/types';
 const basicFormConfig: FormConfig = {
   id: 'basic-contact-form',
   title: 'Contact Us',
-  fields: [
+  elements: [
     {
       id: 'name',
       type: 'text',
@@ -84,7 +84,7 @@ const basicFormConfig: FormConfig = {
       label: 'Name',
       placeholder: 'Enter your name',
       required: true,
-      validation: [
+      rules:
         { type: 'required', message: 'Name is required' },
         { type: 'minLength', value: 2, message: 'Name must be at least 2 characters' }
       ]
@@ -96,7 +96,7 @@ const basicFormConfig: FormConfig = {
       label: 'Email',
       placeholder: 'your.email@example.com',
       required: true,
-      validation: [
+      rules:
         { type: 'required', message: 'Email is required' },
         { type: 'email', message: 'Please enter a valid email address' }
       ]
@@ -109,7 +109,7 @@ const basicFormConfig: FormConfig = {
       placeholder: 'Tell us how we can help...',
       required: true,
       props: { rows: 4 },
-      validation: [
+      rules:
         { type: 'required', message: 'Message is required' },
         { type: 'minLength', value: 10, message: 'Message must be at least 10 characters' }
       ]
@@ -122,7 +122,7 @@ const basicFormConfig: FormConfig = {
       label: 'Send Message',
       endpoint: '/api/contact',
       method: 'POST',
-      validation: true,
+      rules:,
       onSuccess: {
         type: 'message',
         title: 'Message Sent!',
@@ -172,13 +172,13 @@ export const contactFormConfig: FormConfig = {
   steps: [
     {
       title: "Contact Information",
-      fields: [
+      elements: [
         {
           type: "input",
           name: "firstName",
           label: "First Name",
           placeholder: "Enter your first name",
-          validation: [
+          rules:
             { type: "required", message: "First name is required" },
             { type: "minLength", value: 2, message: "Must be at least 2 characters" }
           ],
@@ -189,7 +189,7 @@ export const contactFormConfig: FormConfig = {
           name: "lastName",
           label: "Last Name",
           placeholder: "Enter your last name",
-          validation: [
+          rules:
             { type: "required", message: "Last name is required" },
             { type: "minLength", value: 2, message: "Must be at least 2 characters" }
           ],
@@ -202,7 +202,7 @@ export const contactFormConfig: FormConfig = {
           inputType: "email",
           placeholder: "you@example.com",
           autoComplete: "email",
-          validation: [
+          rules:
             { type: "required", message: "Email is required" },
             { type: "email", message: "Please enter a valid email address" }
           ],
@@ -220,7 +220,7 @@ export const contactFormConfig: FormConfig = {
           inputType: "tel", 
           placeholder: "+1 (555) 123-4567",
           autoComplete: "tel",
-          validation: [
+          rules:
             {
               type: "pattern",
               value: "^[\\+]?[1-9][\\d\\s\\-\\(\\)]{7,15}$",
@@ -247,7 +247,7 @@ export const contactFormConfig: FormConfig = {
             { value: "feedback", label: "Feedback" },
             { value: "other", label: "Other" }
           ],
-          validation: [
+          rules:
             { type: "required", message: "Please select a subject" }
           ],
           grid: { colSpan: 2 }
@@ -258,7 +258,7 @@ export const contactFormConfig: FormConfig = {
           label: "Message",
           placeholder: "Tell us about your project, question, or how we can help you...",
           rows: 5,
-          validation: [
+          rules:
             { type: "required", message: "Message is required" },
             { type: "minLength", value: 10, message: "Please provide at least 10 characters" },
             { type: "maxLength", value: 1000, message: "Message cannot exceed 1000 characters" }
@@ -302,7 +302,7 @@ export const contactFormConfig: FormConfig = {
           type: "checkbox",
           name: "privacy",
           label: "I agree to the Privacy Policy and Terms of Service",
-          validation: [
+          rules:
             {
               type: "custom",
               message: "You must agree to the privacy policy to continue",

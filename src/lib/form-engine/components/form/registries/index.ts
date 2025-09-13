@@ -10,7 +10,7 @@
  * import "../components/form/fields/select-field.registry";
  * ```
  *
- * For development convenience, you can import this file to get all fields:
+ * For development convenience, you can import this file to get all elements:
  *
  * @example
  * ```typescript

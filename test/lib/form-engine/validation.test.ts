@@ -442,12 +442,12 @@ describe("Validation", () => {
 	});
 
 	describe("generateFormSchema", () => {
-		test("should generate schema for multiple fields", () => {
-			const fields = [
-				{ name: "username", type: "input", validation: [ValidationPresets.required()] },
-				{ name: "age", type: "number", validation: [ValidationPresets.min(18)] },
+		test("should generate schema for multiple elements", () => {
+			const elements = [
+				{ name: "username", type: "input", rules: [ValidationPresets.required()] },
+				{ name: "age", type: "number", rules: [ValidationPresets.min(18)] },
 			];
-			const schema = generateFormSchema(fields);
+			const schema = generateFormSchema(elements);
 			expect(() => schema.parse({ username: "", age: 17 })).toThrow();
 			expect(schema.parse({ username: "user", age: 18 })).toEqual({ username: "user", age: 18 });
 		});

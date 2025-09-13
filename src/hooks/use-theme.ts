@@ -1,9 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 export type Theme = 'light' | 'dark';
 
 export function useTheme() {
 	const [theme, setTheme] = useState<Theme>('light');
+
+	/**
+	 * Set the current theme and persist to localStorage
+	 */
+	const setThemeInternal = useCallback((newTheme: Theme) => {
+		setTheme(newTheme);
+		localStorage.setItem('theme', newTheme);
+		document.documentElement.classList.toggle('dark', newTheme === 'dark');
+	}, []);
 
 	/**
 	 * Initialize theme from localStorage or system preference
@@ -12,22 +21,11 @@ export function useTheme() {
 		if (typeof window === 'undefined') return;
 
 		const savedTheme = localStorage.getItem('theme') as Theme | null;
-		const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
-			? 'dark'
-			: 'light';
+		const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 		const initialTheme = savedTheme || systemTheme;
 
 		setThemeInternal(initialTheme);
-	}, []);
-
-	/**
-	 * Set the current theme and persist to localStorage
-	 */
-	const setThemeInternal = (newTheme: Theme) => {
-		setTheme(newTheme);
-		localStorage.setItem('theme', newTheme);
-		document.documentElement.classList.toggle('dark', newTheme === 'dark');
-	};
+	}, [setThemeInternal]);
 
 	/**
 	 * Toggle between light and dark themes

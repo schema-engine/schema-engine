@@ -48,7 +48,7 @@ You write this:
 {
 	"id": "contact-form",
 	"title": "Contact Information",
-	"fields": [
+	"elements": [
 		{
 			"id": "firstName",
 			"type": "input",

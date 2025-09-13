@@ -39,7 +39,7 @@ const contactFormConfig: FormConfig = {
   steps: [{
     id: "contact-details",
     title: "Contact Information", 
-    fields: [
+    elements: [
       {
         type: "input",
         inputType: "text",
@@ -47,7 +47,7 @@ const contactFormConfig: FormConfig = {
         name: "name",
         label: "Full Name",
         placeholder: "Enter your full name",
-        validation: [
+        rules: [
           ValidationPresets.required("Name is required"),
           ValidationPresets.minLength(2, "Name must be at least 2 characters")
         ]
@@ -59,7 +59,7 @@ const contactFormConfig: FormConfig = {
         name: "email", 
         label: "Email Address",
         placeholder: "Enter your email",
-        validation: [
+        rules:
           ValidationPresets.required("Email is required"),
           ValidationPresets.email("Please enter a valid email")
         ]
@@ -71,7 +71,7 @@ const contactFormConfig: FormConfig = {
         label: "Message",
         placeholder: "Your message...",
         rows: 4,
-        validation: [
+        rules:
           ValidationPresets.required("Message is required"),
           ValidationPresets.minLength(10, "Message must be at least 10 characters")
         ]
@@ -157,7 +157,7 @@ import { ValidationPresets } from "@/lib/form-engine/validation";
   inputType: "text",
   name: "username",
   label: "Username", 
-  validation: [
+  rules:
     ValidationPresets.required("Username is required"),
     ValidationPresets.minLength(3, "Username must be at least 3 characters"),
     ValidationPresets.regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores")
@@ -178,7 +178,7 @@ Form Engine supports comprehensive field types with full TypeScript support:
   name: "fieldName",
   label: "Field Label",
   placeholder: "Enter text...",
-  validation: [...]
+  rules:]
 }
 
 // Select Dropdown
@@ -192,7 +192,7 @@ Form Engine supports comprehensive field types with full TypeScript support:
     { value: "us", label: "United States" },
     { value: "ca", label: "Canada" }
   ],
-  validation: [...]
+  rules:]
 }
 
 // Number Input
@@ -202,7 +202,7 @@ Form Engine supports comprehensive field types with full TypeScript support:
   name: "age", 
   label: "Age",
   placeholder: "Enter age",
-  validation: [
+  rules:
     ValidationPresets.min(18, "Must be at least 18"),
     ValidationPresets.max(120, "Age must be realistic")
   ]
@@ -216,7 +216,7 @@ Form Engine supports comprehensive field types with full TypeScript support:
   label: "Message",
   rows: 4,
   placeholder: "Your message...",
-  validation: [...]
+  rules:]
 }
 
 // Checkbox
@@ -303,14 +303,14 @@ const multiStepConfig: FormConfig = {
     {
       id: "personal-info",
       title: "Personal Information",
-      fields: [
+      elements: [
         // Step 1 fields...
       ]
     },
     {
       id: "preferences", 
       title: "Preferences",
-      fields: [
+      elements: [
         // Step 2 fields...
       ]
     }
@@ -357,7 +357,7 @@ const responsiveConfig: FormConfig = {
     }
   },
   steps: [{
-    fields: [
+    elements: [
       {
         type: "input",
         name: "firstName",

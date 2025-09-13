@@ -16,14 +16,14 @@ export function SimpleConditionalDemo() {
 			{
 				id: 'conditional-step',
 				title: 'Conditional Fields Example',
-				fields: [
+				elements: [
 					{
 						type: 'select',
 						id: 'hasCompany',
 						name: 'hasCompany',
 						label: 'Do you have a company?',
 						placeholder: 'Select option',
-						validation: [ValidationPresets.required('Please select an option')],
+						rules: [ValidationPresets.required('Please select an option')],
 						options: [
 							{ value: 'yes', label: 'Yes, I have a company' },
 							{ value: 'no', label: "No, I'm an individual" },
@@ -36,7 +36,7 @@ export function SimpleConditionalDemo() {
 						name: 'companyName',
 						label: 'Company Name',
 						placeholder: 'Enter your company name',
-						validation: [ValidationPresets.required('Company name is required')],
+						rules: [ValidationPresets.required('Company name is required')],
 						constraints: [
 							{
 								field: 'hasCompany',

@@ -1,5 +1,5 @@
 import type React from 'react';
-import { FormField } from './field-renderer';
+import { FormElement } from './field-renderer';
 import type { FieldConfig, ConstraintLogic } from '../../types/form';
 import { useConstraintLogic } from '@/lib/form-engine/hooks';
 
@@ -44,7 +44,12 @@ export function DynamicFieldset({
 
 			<div className="space-y-4">
 				{elements.map((element) => (
-					<FormField key={element.id} config={element} className={element.className} style={element.style} />
+					<FormElement
+						key={element.id}
+						config={element}
+						className={element.className}
+						style={element.style}
+					/>
 				))}
 			</div>
 		</fieldset>

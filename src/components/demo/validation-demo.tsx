@@ -15,7 +15,7 @@ export function ValidationDemo() {
 			{
 				id: 'validation-step',
 				title: 'Try Different Validation Rules',
-				fields: [
+				elements: [
 					{
 						type: 'input',
 						inputType: 'text',
@@ -23,7 +23,7 @@ export function ValidationDemo() {
 						name: 'username',
 						label: 'Username (3-20 characters)',
 						placeholder: 'Enter username',
-						validation: [
+						rules: [
 							ValidationPresets.required('Username is required'),
 							ValidationPresets.minLength(3, 'Minimum 3 characters'),
 							ValidationPresets.maxLength(20, 'Maximum 20 characters'),
@@ -35,7 +35,7 @@ export function ValidationDemo() {
 						name: 'age',
 						label: 'Age (18-100)',
 						placeholder: 'Enter your age',
-						validation: [
+						rules: [
 							ValidationPresets.required('Age is required'),
 							ValidationPresets.min(18, 'Must be at least 18'),
 							ValidationPresets.max(100, 'Must be less than 100'),
@@ -48,7 +48,7 @@ export function ValidationDemo() {
 						name: 'website',
 						label: 'Website (optional)',
 						placeholder: 'https://example.com',
-						validation: [ValidationPresets.url('Please enter a valid URL')],
+						rules: [ValidationPresets.url('Please enter a valid URL')],
 					},
 				],
 			},

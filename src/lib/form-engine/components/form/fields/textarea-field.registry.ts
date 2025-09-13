@@ -6,7 +6,7 @@ import { TextareaField } from '.';
  * Tree-shakable: Only imported when needed
  */
 defaultFormRegistry.register({
-	name: 'textarea',
+	componentId: 'textarea',
 	component: TextareaField,
 	category: 'input',
 	description: 'Multi-line text input field',

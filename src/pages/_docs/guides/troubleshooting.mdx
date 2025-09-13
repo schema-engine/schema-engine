@@ -3,8 +3,8 @@ import { DocsLayout } from '@/layouts/docs-layout';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'Troubleshooting Guide | Form Engine Documentation',
-    description: 'Common issues and solutions when working with Form Engine, including debugging tips and error resolution.',
+  title: 'Troubleshooting Guide | Form Engine Documentation',
+  description: 'Common issues and solutions when working with Form Engine, including debugging tips and error resolution.',
 })
 
 # Troubleshooting Guide
@@ -224,7 +224,7 @@ const formConfig = {
 {
   type: "input",
   name: "email",
-  validation: [
+  rules: [
     { type: "required", message: "Email is required" },
     { type: "email", message: "Invalid email format" }
   ]
@@ -274,7 +274,7 @@ TypeError: validator is not a function
 }
 ```
 
-2. **Handle async validation:**
+2. **Handle async rules:
 ```typescript
 // ✅ Correct async validator
 {
@@ -422,12 +422,12 @@ function MyForm() {
 <FormRenderer config={formConfig} />
 ```
 
-2. **Verify form validation:**
+2. **Verify form rules:
 ```typescript
 // Check if validation is blocking submission
 const formConfig = {
   id: "form",
-  validation: {
+  rules:
     strategy: "onSubmit",
     shouldFocusError: true  // Will focus first error
   },
@@ -669,12 +669,12 @@ const minimalConfig = {
   steps: [
     {
       title: "Test",
-      fields: [
+      elements: [
         {
           type: "input",
           name: "test",
           label: "Test Field",
-          validation: [{ type: "required" }]
+          rules:ype: "required" }]
         }
       ]
     }

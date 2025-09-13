@@ -8,20 +8,20 @@ describe('Registry', () => {
 	});
 	describe('register', () => {
 		test('should register a component definition', () => {
-			const mockDef: FormComponentDefinition = { name: 'text', component: () => null, category: 'custom' };
+			const mockDef: FormComponentDefinition = { componentId: 'text', component: () => null, category: 'custom' };
 			defaultFormRegistry.register(mockDef);
 			expect(defaultFormRegistry.get('text')).toBe(mockDef);
 		});
 		test('should overwrite existing component definition', () => {
-			const def1: FormComponentDefinition = { name: 'text', component: () => 'component1', category: 'custom' };
-			const def2: FormComponentDefinition = { name: 'text', component: () => 'component2', category: 'custom' };
+			const def1: FormComponentDefinition = { componentId: 'text', component: () => 'component1', category: 'custom' };
+			const def2: FormComponentDefinition = { componentId: 'text', component: () => 'component2', category: 'custom' };
 			defaultFormRegistry.register(def1);
 			defaultFormRegistry.register(def2);
 			expect(defaultFormRegistry.get('text')).toBe(def2);
 		});
 		test('should register multiple component definitions', () => {
-			const textDef: FormComponentDefinition = { name: 'text', component: () => 'text', category: 'custom' };
-			const emailDef: FormComponentDefinition = { name: 'email', component: () => 'email', category: 'custom' };
+			const textDef: FormComponentDefinition = { componentId: 'text', component: () => 'text', category: 'custom' };
+			const emailDef: FormComponentDefinition = { componentId: 'email', component: () => 'email', category: 'custom' };
 			defaultFormRegistry.register(textDef);
 			defaultFormRegistry.register(emailDef);
 			expect(defaultFormRegistry.get('text')).toBe(textDef);
@@ -30,7 +30,7 @@ describe('Registry', () => {
 	});
 	describe('get', () => {
 		test('should return registered component definition', () => {
-			const mockDef: FormComponentDefinition = { name: 'test', component: () => 'mock', category: 'custom' };
+			const mockDef: FormComponentDefinition = { componentId: 'test', component: () => 'mock', category: 'custom' };
 			defaultFormRegistry.register(mockDef);
 			expect(defaultFormRegistry.get('test')).toBe(mockDef);
 		});
@@ -40,8 +40,8 @@ describe('Registry', () => {
 	});
 	describe('getAll', () => {
 		test('should return all registered component definitions', () => {
-			const def1: FormComponentDefinition = { name: 'type1', component: () => '1', category: 'custom' };
-			const def2: FormComponentDefinition = { name: 'type2', component: () => '2', category: 'custom' };
+			const def1: FormComponentDefinition = { componentId: 'type1', component: () => '1', category: 'custom' };
+			const def2: FormComponentDefinition = { componentId: 'type2', component: () => '2', category: 'custom' };
 			defaultFormRegistry.register(def1);
 			defaultFormRegistry.register(def2);
 			const all = defaultFormRegistry.getAll();
@@ -54,7 +54,7 @@ describe('Registry', () => {
 	});
 	describe('defaultFormRegistry', () => {
 		test('should clear all components', () => {
-			const def: FormComponentDefinition = { name: 'test', component: () => 'mock', category: 'custom' };
+			const def: FormComponentDefinition = { componentId: 'test', component: () => 'mock', category: 'custom' };
 			defaultFormRegistry.register(def);
 			expect(defaultFormRegistry.get('test')).toBe(def);
 			defaultFormRegistry.clear();
@@ -62,8 +62,8 @@ describe('Registry', () => {
 		});
 		test('should get component names', () => {
 			expect(defaultFormRegistry.getComponentNames()).toEqual([]);
-			defaultFormRegistry.register({ name: 'test1', component: () => '1', category: 'custom' });
-			defaultFormRegistry.register({ name: 'test2', component: () => '2', category: 'custom' });
+			defaultFormRegistry.register({ componentId: 'test1', component: () => '1', category: 'custom' });
+			defaultFormRegistry.register({ componentId: 'test2', component: () => '2', category: 'custom' });
 			expect(defaultFormRegistry.getComponentNames().sort()).toEqual(['test1', 'test2']);
 		});
 	});

@@ -31,14 +31,14 @@ const formConfig: FormConfig = {
     {
       id: 'step-1',
       title: 'Basic Information',
-      fields: [
+      elements: [
         {
           type: 'input',
           inputType: 'text',
           id: 'name',
           name: 'name',
           label: 'Full Name',
-          validation: [{ type: 'required', message: 'Name is required' }]
+          rules: [{ type: 'required', message: 'Name is required' }]
         }
       ]
     }

@@ -24,7 +24,7 @@ interface FormConfig {
   description?: string;
   mode?: FormMode;
   layout?: LayoutConfig;
-  fields: FieldConfig[];
+  elements: FieldConfig[];
   steps?: StepConfig[];
   validation?: ValidationConfig;
   actions?: ActionConfig[];
@@ -305,7 +305,7 @@ interface StepConfig {
   title: string;
   description?: string;
   icon?: string;
-  fields: FieldConfig[];
+  elements: FieldConfig[];
   validation?: ValidationRule[];
   actions?: ActionConfig[];
   conditional?: ConditionalRule;
@@ -700,7 +700,7 @@ Many interfaces support generic type parameters for better type safety.
 ```typescript
 interface TypedFormConfig<T extends Record<string, any> = FormData> {
   id: string;
-  fields: TypedFieldConfig<T>[];
+  elements: TypedFieldConfig<T>[];
   validation?: TypedValidationConfig<T>;
   onSubmit?: (data: T) => void | Promise<void>;
 }
@@ -721,11 +721,11 @@ interface UserFormData {
 
 const userFormConfig: TypedFormConfig<UserFormData> = {
   id: 'user-form',
-  fields: [
+  elements: [
     {
       name: 'firstName', // Type-safe field names
       type: 'text',
-      validation: [/* type-safe validation */]
+      rules: [/* type-safe validation */]
     }
   ]
 };

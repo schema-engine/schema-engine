@@ -89,7 +89,7 @@ export function FormEngineFormProvider({
 	const actionExecutor = useActionExecutor();
 
 	const allFields = useMemo(() => {
-		return config.steps.flatMap((step) => step.fields || []);
+		return config.steps.flatMap((step) => step.elements || []);
 	}, [config.steps]);
 
 	const formDefaultValues = useMemo(() => {
@@ -107,8 +107,8 @@ export function FormEngineFormProvider({
 	}, [allFields, defaultValues]);
 
 	const validationSchema = useMemo(() => {
-		if (config.validation) {
-			return config.validation;
+		if (config.rules) {
+			return config.rules;
 		}
 
 		if (config.autoGenerateSchema !== false) {
@@ -116,7 +116,7 @@ export function FormEngineFormProvider({
 		}
 
 		return undefined;
-	}, [config.validation, config.autoGenerateSchema, allFields]);
+	}, [config.rules, config.autoGenerateSchema, allFields]);
 
 	const form = useForm({
 		resolver: validationSchema ? zodResolver(validationSchema as any) : undefined,
@@ -235,7 +235,12 @@ export function FormEngineFormProvider({
 	return (
 		<FormProvider {...form}>
 			<FormInstanceContext.Provider value={formInstanceContextValue}>
-				<form onSubmit={form.handleSubmit(handleSubmit)} className={config.className} style={config.style}>
+				<form
+					onSubmit={form.handleSubmit(handleSubmit)}
+					className={config.className}
+					style={config.style}
+					noValidate
+				>
 					{children}
 				</form>
 			</FormInstanceContext.Provider>

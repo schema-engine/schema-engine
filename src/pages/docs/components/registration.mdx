@@ -47,13 +47,13 @@ That's it! Your component is now available in any form configuration:
 import { ValidationPresets } from '@/lib/form-engine/validation';
 
 const formConfig = {
-  fields: [
+  elements: [
     {
       type: 'input',        // References your registered component
       id: 'name',
       name: 'name', 
       label: 'Full Name',
-      validation: [
+      rules: [
         ValidationPresets.required("Name is required")
       ]
     }
@@ -322,7 +322,7 @@ defaultFormRegistry.register({
     name: 'sampleInput',
     label: 'Sample Input',
     placeholder: 'Enter text...',
-    validation: [
+    rules:
       ValidationPresets.required("This field is required"),
       ValidationPresets.minLength(3, "Must be at least 3 characters")
     ]

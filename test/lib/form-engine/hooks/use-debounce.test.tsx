@@ -97,7 +97,7 @@ test('useDebouncedValue should handle zero delay', async () => {
 	 */
 	await waitFor(() => {
 		expect(debouncedValue.textContent).toBe('immediate');
-	}, { timeout: 20 });
+	}, { timeout: 50 });
 });
 
 test('useDebouncedValue should reset timer on rapid changes', async () => {

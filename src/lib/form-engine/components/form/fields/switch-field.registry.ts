@@ -6,7 +6,7 @@ import { SwitchField } from './switch-field';
  * Tree-shakable: Only imported when needed
  */
 defaultFormRegistry.register({
-	name: 'switch',
+	componentId: 'switch',
 	component: SwitchField,
 	category: 'input',
 	description: 'Boolean switch/toggle field',

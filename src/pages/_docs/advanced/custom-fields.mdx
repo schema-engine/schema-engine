@@ -3,8 +3,8 @@ import { DocsLayout } from '@/layouts/docs-layout';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'Custom Fields | Form Engine Documentation',
-    description: 'Learn how to create custom field types and extend Form Engine with your own components.',
+  title: 'Custom Fields | Form Engine Documentation',
+  description: 'Learn how to create custom field types and extend Form Engine with your own components.',
 })
 
 # Custom Fields
@@ -78,7 +78,7 @@ interface SliderFieldConfig extends BaseFieldConfig {
   min: 1,
   max: 10,
   step: 1,
-  validation: [
+  rules: [
     ValidationPresets.required('Please provide a rating'),
     ValidationPresets.min(1, 'Rating must be at least 1'),
     ValidationPresets.max(10, 'Rating cannot exceed 10')
@@ -120,7 +120,7 @@ export function CustomColorField({ field, value, onChange, error }: CustomFieldP
   type: 'color',
   name: 'themeColor',
   label: 'Theme Color',
-  validation: [
+  rules:
     ValidationPresets.required('Please select a color'),
     ValidationPresets.pattern(/^#[0-9A-Fa-f]{6}$/, 'Please enter a valid hex color')
   ]

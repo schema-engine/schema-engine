@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { FieldPath, FieldValues, UseFormReturn } from 'react-hook-form';
-import type { ValidationRule } from '../validation';
+import { ValidationRuleSchema } from '../validation';
 import { FormActionConfigSchema, type FormActionConfig } from '../actions/types';
 
 export type { FormActionConfig } from '../actions/types';
@@ -23,8 +23,8 @@ export type FormStepConfig = {
 	id: string;
 	title?: string;
 	description?: string;
-	fields: FieldConfig[];
-	validation?: z.ZodSchema<any>;
+	elements: FieldConfig[];
+	rules?: z.ZodSchema<any>;
 	actions?: FormActionConfig[]; // Use unified action type
 };
 
@@ -75,7 +75,7 @@ export const GridLayoutConfigSchema = z.object({
 /**
  * Field-level grid positioning configuration schema
  */
-export const FieldGridConfigSchema = z.object({
+export const ElementGridConfigSchema = z.object({
 	column: z.union([z.number(), z.string()]).optional(),
 	row: z.union([z.number(), z.string()]).optional(),
 	responsive: z
@@ -124,11 +124,12 @@ export const BaseFieldConfigSchema = z.object({
 	readonly: z.boolean().optional(),
 	placeholder: z.string().optional(),
 	defaultValue: z.any().optional(),
-	validation: z.array(z.any()).optional(), // Will be validated by ValidationRuleSchema
+	rules: z.array(ValidationRuleSchema).optional(),
 	className: z.string().optional(),
 	style: z.record(z.string(), z.any()).optional(),
 	constraints: z.array(z.lazy(() => ConstraintLogicSchema)).optional(),
-	grid: FieldGridConfigSchema.optional(),
+	grid: ElementGridConfigSchema.optional(),
+	defaultProps: z.record(z.string(), z.any()).optional(),
 });
 
 /**
@@ -238,9 +239,7 @@ export const SwitchFieldConfigSchema = BaseFieldConfigSchema.extend({
 /**
  * Inferred types from schemas (define types first to avoid circular references)
  */
-export type BaseFieldConfig = z.infer<typeof BaseFieldConfigSchema> & {
-	validation?: ValidationRule[];
-};
+export type BaseFieldConfig = z.infer<typeof BaseFieldConfigSchema>;
 export type InputFieldConfig = z.infer<typeof InputFieldConfigSchema>;
 export type NumberFieldConfig = z.infer<typeof NumberFieldConfigSchema>;
 export type TextareaFieldConfig = z.infer<typeof TextareaFieldConfigSchema>;
@@ -257,7 +256,7 @@ export type SwitchFieldConfig = z.infer<typeof SwitchFieldConfigSchema>;
  */
 export interface ArrayFieldConfig extends BaseFieldConfig {
 	type: 'array';
-	elements: FieldConfig[]; // Changed to array to support multiple field types
+	elements: FieldConfig[];
 	minItems?: number;
 	maxItems?: number;
 	addButtonText?: string;
@@ -389,8 +388,8 @@ export const FormStepSchema = z.object({
 	title: z.string(),
 	description: z.string().optional(),
 	icon: z.string().optional(),
-	fields: z.array(FieldConfigSchema),
-	validation: z.any().optional(),
+	elements: z.array(FieldConfigSchema),
+	rules: z.any().optional(),
 	constraints: z.array(ConstraintLogicSchema).optional(),
 	className: z.string().optional(),
 	style: z.record(z.string(), z.any()).optional(),
@@ -424,7 +423,7 @@ export const FormConfigSchema = z.object({
 	validationMode: z.enum(['onSubmit', 'onChange', 'onBlur', 'all']).optional(),
 	reValidateMode: z.enum(['onSubmit', 'onChange', 'onBlur']).optional(),
 	autoGenerateSchema: z.boolean().optional().default(true),
-	validation: z.any().optional(),
+	rules: z.any().optional(),
 	onSubmit: z.any().optional(),
 	onChange: z.any().optional(),
 	className: z.string().optional(),
@@ -438,7 +437,7 @@ export const FormConfigSchema = z.object({
 export type GridBreakpointConfig = z.infer<typeof GridBreakpointConfigSchema>;
 export type FieldGridBreakpoint = z.infer<typeof FieldGridBreakpointSchema>;
 export type GridLayoutConfig = z.infer<typeof GridLayoutConfigSchema>;
-export type FieldGridConfig = z.infer<typeof FieldGridConfigSchema>;
+export type FieldGridConfig = z.infer<typeof ElementGridConfigSchema>;
 export type ConstraintLogic = z.infer<typeof ConstraintLogicSchema>;
 export type LayoutConfig = z.infer<typeof LayoutConfigSchema>;
 export type StepNavigationButton = z.infer<typeof StepNavigationButtonSchema>;

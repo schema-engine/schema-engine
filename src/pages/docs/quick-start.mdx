@@ -3,8 +3,8 @@ import { DocsLayout } from '@/layouts/docs-layout';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'Quick Start | Form Engine Documentation',
-    description: 'Get started with Form Engine - build your first form in minutes.',
+  title: 'Quick Start | Form Engine Documentation',
+  description: 'Get started with Form Engine - build your first form in minutes.',
 })
 
 # Quick Start
@@ -28,7 +28,7 @@ import '@/lib/form-engine/components/form/fields/input-field.registry';
 import '@/lib/form-engine/components/form/fields/textarea-field.registry';
 import '@/lib/form-engine/components/form/fields/select-field.registry';
 
-// Or for development, import all fields:
+// Or for development, import all elements:
 // import '@/lib/form-engine/components/form/registries';
 ```
 
@@ -47,7 +47,7 @@ const contactFormConfig: FormConfig = {
     {
       id: 'contact-details',
       title: 'Contact Information',
-      fields: [
+      elements: [
         {
           type: 'input',
           inputType: 'text',
@@ -55,7 +55,7 @@ const contactFormConfig: FormConfig = {
           name: 'firstName',
           label: 'First Name',
           placeholder: 'Enter your first name',
-          validation: [
+          rules: [
             { type: 'required', message: 'First name is required' }
           ]
         },
@@ -66,7 +66,7 @@ const contactFormConfig: FormConfig = {
           name: 'lastName',
           label: 'Last Name',
           placeholder: 'Enter your last name',
-          validation: [
+          rules: [
             { type: 'required', message: 'Last name is required' }
           ]
         },
@@ -77,7 +77,7 @@ const contactFormConfig: FormConfig = {
           name: 'email',
           label: 'Email Address',
           placeholder: 'your.email@example.com',
-          validation: [
+          rules: [
             { type: 'required', message: 'Email is required' },
             { type: 'email', message: 'Please enter a valid email address' }
           ]
@@ -94,7 +94,7 @@ const contactFormConfig: FormConfig = {
             { value: 'billing', label: 'Billing Question' },
             { value: 'feature', label: 'Feature Request' }
           ],
-          validation: [
+          rules: [
             { type: 'required', message: 'Please select a subject' }
           ]
         },
@@ -105,7 +105,7 @@ const contactFormConfig: FormConfig = {
           label: 'Message',
           placeholder: 'Tell us more about your inquiry...',
           rows: 4,
-          validation: [
+          rules: [
             { type: 'required', message: 'Message is required' },
             { type: 'minLength', value: 10, message: 'Message must be at least 10 characters' }
           ]
@@ -196,7 +196,7 @@ interface FormConfig {
 interface StepConfig {
   id: string;                   // Step identifier
   title?: string;              // Step title
-  fields: FieldConfig[];       // Fields in this step
+  elements: FieldConfig[];       // Fields in this step
 }
 ```
 
@@ -220,24 +220,24 @@ Form Engine uses a declarative validation system. Here are common validation rul
 
 ```typescript
 // Required field
-validation: [
+rules: [
   { type: 'required', message: 'This field is required' }
 ]
 
 // Email validation
-validation: [
+rules: [
   { type: 'required', message: 'Email is required' },
   { type: 'email', message: 'Please enter a valid email' }
 ]
 
 // Length validation
-validation: [
+rules: [
   { type: 'minLength', value: 3, message: 'Must be at least 3 characters' },
   { type: 'maxLength', value: 100, message: 'Must be less than 100 characters' }
 ]
 
 // Pattern validation
-validation: [
+rules: [
   { 
     type: 'pattern', 
     value: /^[A-Za-z\s]+$/, 
@@ -289,7 +289,7 @@ defaultFormRegistry.register({
   id: 'satisfaction',
   name: 'satisfaction',
   label: 'Rate your experience',
-  validation: [
+  rules: [
     { type: 'required', message: 'Please provide a rating' }
   ]
 }
@@ -307,21 +307,21 @@ const multiStepConfig: FormConfig = {
     {
       id: 'personal-info',
       title: 'Personal Information',
-      fields: [
+      elements: [
         // Personal info fields
       ]
     },
     {
       id: 'account-details',
       title: 'Account Details',
-      fields: [
+      elements: [
         // Account fields
       ]
     },
     {
       id: 'preferences',
       title: 'Preferences',
-      fields: [
+      elements: [
         // Preference fields
       ]
     }

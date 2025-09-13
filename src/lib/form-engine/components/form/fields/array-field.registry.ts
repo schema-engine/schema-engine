@@ -6,7 +6,7 @@ import { ArrayField } from './array-field';
  * Tree-shakable: Only imported when needed
  */
 defaultFormRegistry.register({
-	name: 'array',
+	componentId: 'array',
 	component: ArrayField,
 	category: 'layout',
 	description: 'Dynamic array field for repeating elements',

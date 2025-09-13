@@ -136,7 +136,7 @@ const formConfig = {
   steps: [
     {
       title: "Contact Information",
-      fields: [
+      elements: [
         {
           type: "input",
           name: "firstName",
@@ -187,7 +187,7 @@ const multiStepForm = {
     {
       title: "Personal Info",
       // Use default grid (2 columns on md+)
-      fields: [
+      elements: [
         { type: "input", name: "firstName", label: "First Name" },
         { type: "input", name: "lastName", label: "Last Name" }
       ]
@@ -201,7 +201,7 @@ const multiStepForm = {
           lg: { columns: 3 }  // 3 columns only on large screens
         }
       },
-      fields: [
+      elements: [
         { type: "input", name: "street", label: "Street Address" },
         { type: "input", name: "city", label: "City" },
         { type: "input", name: "zipCode", label: "ZIP Code" }
@@ -320,7 +320,7 @@ const dashboardFormConfig = {
   steps: [
     {
       title: "Dashboard Settings",
-      fields: [
+      elements: [
         {
           type: "input",
           name: "title",
@@ -425,7 +425,7 @@ const cardLayoutConfig = {
   steps: [
     {
       title: "User Preferences",
-      fields: [
+      elements: [
         // Profile Card
         {
           type: "input",

@@ -47,7 +47,7 @@ export function combineHandlers<T>(controllerHandler: (value: T) => void, propsH
  * over their rendering, errors, and semantic HTML
  */
 export function useControlledFormElement(config: FieldConfig) {
-	const isRequired = isFieldRequired(config.validation);
+	const isRequired = isFieldRequired(config.rules);
 
 	const { field, fieldState, formState } = useController({
 		name: config.name,

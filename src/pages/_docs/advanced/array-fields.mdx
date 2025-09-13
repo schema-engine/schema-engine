@@ -33,7 +33,7 @@ Here's a simple array field for collecting multiple email addresses:
       name: "email",
       label: "Email Address",
       placeholder: "Enter email address",
-      validation: [
+      rules: [
         ValidationPresets.required("Email is required"),
         ValidationPresets.email("Please enter a valid email")
       ]
@@ -63,7 +63,7 @@ Array fields can contain multiple field types within each item:
       id: "name",
       name: "name",
       label: "Full Name",
-      validation: [ValidationPresets.required("Name is required")]
+      rules:idationPresets.required("Name is required")]
     },
     {
       type: "input",
@@ -71,7 +71,7 @@ Array fields can contain multiple field types within each item:
       id: "phone",
       name: "phone",
       label: "Phone Number",
-      validation: [ValidationPresets.required("Phone is required")]
+      rules:idationPresets.required("Phone is required")]
     },
     {
       type: "select",
@@ -85,7 +85,7 @@ Array fields can contain multiple field types within each item:
         { value: "colleague", label: "Colleague" },
         { value: "other", label: "Other" }
       ],
-      validation: [ValidationPresets.required("Please select relationship")]
+      rules:idationPresets.required("Please select relationship")]
     }
   ]
 }
@@ -119,7 +119,7 @@ Array fields support validation at both the array level and individual item leve
   label: "Addresses",
   minItems: 1,
   maxItems: 3,
-  validation: [
+  rules:
     ValidationPresets.required("At least one address is required")
   ],
   elements: [
@@ -127,13 +127,13 @@ Array fields support validation at both the array level and individual item leve
       type: "input",
       name: "street",
       label: "Street Address",
-      validation: [ValidationPresets.required("Street address is required")]
+      rules:idationPresets.required("Street address is required")]
     },
     {
       type: "input", 
       name: "city",
       label: "City",
-      validation: [ValidationPresets.required("City is required")]
+      rules:idationPresets.required("City is required")]
     }
   ]
 }

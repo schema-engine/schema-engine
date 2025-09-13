@@ -308,12 +308,12 @@ export const ValidationRuleSchema = z.discriminatedUnion('type', [
 	CustomRuleSchema,
 ]);
 
-export function isFieldRequired(validation?: ValidationRule[]): boolean {
-	if (!validation || !Array.isArray(validation)) {
+export function isFieldRequired(rules?: ValidationRule[]): boolean {
+	if (!rules || !Array.isArray(rules)) {
 		return false;
 	}
 
-	return validation.some((rule: ValidationRule) => rule.type === 'required');
+	return rules.some((rule: ValidationRule) => rule.type === 'required');
 }
 
 export class ValidationRegistry {
@@ -594,11 +594,11 @@ export function createZodSchema(
 /**
  * Generate Zod schema from form configuration
  */
-export function generateFormSchema(fields: any[]): z.ZodObject<any> {
+export function generateFormSchema(elements: any[]): z.ZodObject<any> {
 	const schemaFields: Record<string, z.ZodTypeAny> = {};
 
 	function processField(field: any) {
-		const { name, type, validation = [] } = field;
+		const { name, type, rules = [] } = field;
 
 		let fieldType: 'string' | 'number' | 'boolean' | 'array';
 
@@ -622,17 +622,17 @@ export function generateFormSchema(fields: any[]): z.ZodObject<any> {
 				fieldType = 'string';
 		}
 
-		const isRequired = isFieldRequired(validation);
+		const isRequired = isFieldRequired(rules);
 
-		schemaFields[name] = createZodSchema(fieldType, validation, !isRequired);
+		schemaFields[name] = createZodSchema(fieldType, rules, !isRequired);
 	}
 
-	for (const field of fields) {
-		processField(field);
+	for (const element of elements) {
+		processField(element);
 
-		if (field.type === 'array' && field.elements) {
-			for (const element of field.elements) {
-				processField(element);
+		if (element.type === 'array' && element.elements) {
+			for (const childElement of element.elements) {
+				processField(childElement);
 			}
 		}
 	}

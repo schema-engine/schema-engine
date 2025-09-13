@@ -39,7 +39,7 @@ export function CodeBlock({ code, fileName = 'config.json', className = '' }: Co
 
 export function LivePreview({ children, title = 'Live Preview', className = '' }: LivePreviewProps) {
 	return (
-		<div className={`bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden ${className}`}>
+		<div className={`bg-backgorund rounded-xl shadow-2xl border border-gray-200 overflow-hidden ${className}`}>
 			<div className="flex items-center gap-2 px-6 py-4 border-b border-gray-200 bg-gray-50">
 				<div className="w-3 h-3 bg-gray-300 rounded-full"></div>
 				<div className="w-3 h-3 bg-gray-300 rounded-full"></div>
@@ -67,7 +67,7 @@ export function CodePreview({ code, example, fileName = 'config.json', className
 						type="button"
 						className={`relative flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
 							activeTab === 'code'
-								? 'bg-white text-gray-900 shadow-sm border border-gray-200'
+								? 'bg-backgorund text-gray-900 shadow-sm border border-gray-200'
 								: 'text-gray-500 hover:text-gray-700'
 						}`}
 						onClick={() => setActiveTab('code')}
@@ -78,7 +78,7 @@ export function CodePreview({ code, example, fileName = 'config.json', className
 						type="button"
 						className={`relative flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
 							activeTab === 'example'
-								? 'bg-white text-gray-900 shadow-sm border border-gray-200'
+								? 'bg-backgorund text-gray-900 shadow-sm border border-gray-200'
 								: 'text-gray-500 hover:text-gray-700'
 						}`}
 						onClick={() => setActiveTab('example')}

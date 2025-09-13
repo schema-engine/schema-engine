@@ -16,19 +16,19 @@ const basicFormConfig = {
 		{
 			id: "contact-details",
 			title: "Contact Details",
-			fields: [
+			elements: [
 				{
 					type: "input",
 					name: "firstName",
 					label: "First Name",
-					validation: [{ type: "required", message: "First name is required" }],
+					rules: [{ type: "required", message: "First name is required" }],
 				},
 				{
 					type: "input",
 					name: "email",
 					label: "Email",
 					inputType: "email",
-					validation: [
+					rules: [
 						{ type: "required", message: "Email is required" },
 						{ type: "email", message: "Invalid email format" },
 					],
@@ -72,7 +72,7 @@ The Form Engine supports a comprehensive set of field types with full TypeScript
   inputType: "text" | "email" | "password" | "url" | "tel" | "search",
   name: "fieldName",
   label: "Field Label",
-  validation: [...]
+  rules: [...]
 }
 
 // Select dropdowns
@@ -148,7 +148,7 @@ The Form Engine supports a comprehensive set of field types with full TypeScript
 
 ## Multi-Step Forms
 
-Create complex multi-step forms with built-in navigation and validation:
+Create complex multi-step forms with built-in navigation and rules:
 
 ```typescript
 const multiStepFormConfig = {
@@ -158,7 +158,7 @@ const multiStepFormConfig = {
 		{
 			id: "personal-info",
 			title: "Personal Information",
-			fields: [
+			elements: [
 				{ type: "input", name: "firstName", label: "First Name" },
 				{ type: "input", name: "lastName", label: "Last Name" },
 				{ type: "input", name: "email", label: "Email", inputType: "email" },
@@ -167,7 +167,7 @@ const multiStepFormConfig = {
 		{
 			id: "preferences",
 			title: "Preferences",
-			fields: [
+			elements: [
 				{
 					type: "select",
 					name: "theme",
@@ -225,7 +225,7 @@ const responsiveFormConfig = {
 		{
 			id: "contact",
 			title: "Contact Information",
-			fields: [
+			elements: [
 				{
 					type: "input",
 					name: "firstName",
@@ -365,7 +365,7 @@ const formWithAnalytics = {
   steps: [
     {
       id: "lead-info",
-      fields: [...],
+      elements: [...],
       actions: [
         // Track step completion
         {
@@ -425,7 +425,7 @@ const conditionalFormConfig = {
 	steps: [
 		{
 			id: "preferences",
-			fields: [
+			elements: [
 				{
 					type: "select",
 					name: "userType",
@@ -521,7 +521,7 @@ const arrayFormConfig = {
 		{
 			id: "contacts",
 			title: "Contact Information",
-			fields: [
+			elements: [
 				{
 					type: "array",
 					name: "contacts",
@@ -531,14 +531,14 @@ const arrayFormConfig = {
 							type: "input",
 							name: "name",
 							label: "Full Name",
-							validation: [{ type: "required", message: "Name is required" }],
+							rules: [{ type: "required", message: "Name is required" }],
 						},
 						{
 							type: "input",
 							name: "email",
 							label: "Email Address",
 							inputType: "email",
-							validation: [
+							rules: [
 								{ type: "required", message: "Email is required" },
 								{ type: "email", message: "Invalid email format" },
 							],
@@ -606,12 +606,12 @@ const validatedFormConfig = {
 	steps: [
 		{
 			id: "user-info",
-			fields: [
+			elements: [
 				{
 					type: "input",
 					name: "username",
 					label: "Username",
-					validation: [
+					rules: [
 						{ type: "required", message: "Username is required" },
 						{ type: "minLength", value: 3, message: "Username must be at least 3 characters" },
 						{ type: "maxLength", value: 20, message: "Username cannot exceed 20 characters" },
@@ -627,7 +627,7 @@ const validatedFormConfig = {
 					name: "email",
 					label: "Email",
 					inputType: "email",
-					validation: [
+					rules: [
 						{ type: "required", message: "Email is required" },
 						{ type: "email", message: "Please enter a valid email address" },
 					],
@@ -637,7 +637,7 @@ const validatedFormConfig = {
 					name: "password",
 					label: "Password",
 					inputType: "password",
-					validation: [
+					rules: [
 						{ type: "required", message: "Password is required" },
 						{ type: "minLength", value: 8, message: "Password must be at least 8 characters" },
 						{
@@ -654,7 +654,7 @@ const validatedFormConfig = {
 					type: "number",
 					name: "age",
 					label: "Age",
-					validation: [
+					rules: [
 						{ type: "required", message: "Age is required" },
 						{ type: "min", value: 18, message: "You must be at least 18 years old" },
 						{ type: "max", value: 120, message: "Please enter a valid age" },
@@ -681,7 +681,7 @@ The validation rules automatically generate equivalent Zod schemas:
 
 ```typescript
 // This validation config:
-validation: [
+rules: [
 	{ type: "required", message: "Email is required" },
 	{ type: "email", message: "Invalid email" },
 	{ type: "minLength", value: 5, message: "Too short" },

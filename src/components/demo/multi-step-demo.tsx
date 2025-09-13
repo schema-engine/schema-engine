@@ -1,46 +1,43 @@
-import { FormRenderer } from '@/lib/form-engine';
+import { FormRenderer, type FormConfig } from '@/lib/form-engine';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ValidationPresets } from '@/lib/form-engine/validation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import '@/lib/form-engine/components/form/registry';
 
-const stepperDemoConfig = {
+const stepperDemoConfig: FormConfig = {
 	id: 'stepper-demo',
 	title: 'Multi-Step Form Demo',
 	description: 'Experience different stepper styles and navigation patterns',
-	mode: 'wizard' as const,
+	mode: 'wizard',
 	autoGenerateSchema: true,
-
 	steps: [
 		{
 			id: 'basic-info',
 			title: 'Basic Information',
 			description: "Let's start with the basics",
 			icon: '👤',
-			fields: [
+			elements: [
 				{
 					id: 'name',
-					type: 'input' as const,
-					inputType: 'text' as const,
+					type: 'input',
+					inputType: 'text',
 					name: 'name',
 					label: 'Full Name',
 					placeholder: 'Enter your full name',
-					required: true,
-					validation: [
+					rules: [
 						ValidationPresets.required('Name is required'),
 						ValidationPresets.minLength(2, 'Name must be at least 2 characters'),
 					],
 				},
 				{
 					id: 'email',
-					type: 'input' as const,
-					inputType: 'email' as const,
+					type: 'input',
+					inputType: 'email',
 					name: 'email',
 					label: 'Email Address',
 					placeholder: 'your@email.com',
-					required: true,
-					validation: [
+					rules: [
 						ValidationPresets.required('Email is required'),
 						ValidationPresets.email('Please enter a valid email address'),
 					],
@@ -52,25 +49,26 @@ const stepperDemoConfig = {
 			title: 'Preferences',
 			description: 'Tell us about your preferences',
 			icon: '⚙️',
-			fields: [
+			elements: [
 				{
 					id: 'role',
-					type: 'select' as const,
+					type: 'select',
 					name: 'role',
 					label: 'Your Role',
 					placeholder: 'Select your role',
-					required: true,
+
 					options: [
 						{ label: 'Developer', value: 'developer' },
 						{ label: 'Designer', value: 'designer' },
 						{ label: 'Product Manager', value: 'pm' },
 						{ label: 'Other', value: 'other' },
 					],
-					validation: [ValidationPresets.required('Please select your role')],
+					rules: [ValidationPresets.required('Please select your role')],
 				},
+
 				{
 					id: 'experience',
-					type: 'select' as const,
+					type: 'select',
 					name: 'experience',
 					label: 'Experience Level',
 					placeholder: 'Select your experience',
@@ -88,28 +86,28 @@ const stepperDemoConfig = {
 			title: 'Additional Details',
 			description: 'Optional additional information',
 			icon: '📝',
-			fields: [
+			elements: [
 				{
 					id: 'company',
-					type: 'input' as const,
-					inputType: 'text' as const,
+					type: 'input',
+					inputType: 'text',
 					name: 'company',
 					label: 'Company (Optional)',
 					placeholder: 'Your company name',
 				},
 				{
 					id: 'feedback',
-					type: 'textarea' as const,
+					type: 'textarea',
 					name: 'feedback',
 					label: 'Feedback',
 					placeholder: 'Any feedback about this demo? (Optional)',
-					props: {
+					defaultProps: {
 						rows: 4,
 					},
 				},
 				{
 					id: 'newsletter',
-					type: 'checkbox' as const,
+					type: 'checkbox',
 					name: 'newsletter',
 					label: 'Subscribe to newsletter for updates',
 					defaultValue: true,
@@ -119,9 +117,9 @@ const stepperDemoConfig = {
 	],
 
 	stepper: {
-		variant: 'default' as const,
-		orientation: 'horizontal' as const,
-		position: 'top' as const,
+		variant: 'default',
+		orientation: 'horizontal',
+		position: 'top',
 		showStepNumbers: true,
 		showStepTitles: true,
 		allowStepJumping: false,
@@ -129,15 +127,15 @@ const stepperDemoConfig = {
 		buttons: {
 			previous: {
 				label: 'Back',
-				variant: 'outline' as const,
+				variant: 'outline',
 			},
 			next: {
 				label: 'Continue',
-				variant: 'primary' as const,
+				variant: 'primary',
 			},
 			submit: {
 				label: 'Complete Demo',
-				variant: 'primary' as const,
+				variant: 'primary',
 			},
 		},
 	},
@@ -150,10 +148,10 @@ const stepperDemoConfig = {
 	actions: [
 		{
 			id: 'submit',
-			type: 'submit' as const,
+			type: 'submit',
 			enabled: true,
 			endpoint: '/api/submit-demo',
-			method: 'POST' as const,
+			method: 'POST',
 			successMessage: 'Demo completed successfully! Thanks for trying it out.',
 			errorMessage: 'Demo submission failed. Please try again.',
 			triggers: ['form_submit'],
@@ -161,27 +159,59 @@ const stepperDemoConfig = {
 	],
 };
 
-const verticalStepperConfig = {
+const verticalStepperConfig: FormConfig = {
 	...stepperDemoConfig,
 	id: 'vertical-stepper-demo',
 	stepper: {
-		...stepperDemoConfig.stepper,
-		orientation: 'vertical' as const,
-		position: 'left' as const,
+		variant: 'default',
+		orientation: 'vertical',
+		position: 'left',
+		showStepNumbers: true,
+		showStepTitles: true,
+		allowStepJumping: false,
+		validateOnNext: true,
+		buttons: {
+			previous: {
+				label: 'Back',
+				variant: 'outline',
+			},
+			next: {
+				label: 'Continue',
+				variant: 'primary',
+			},
+			submit: {
+				label: 'Complete Demo',
+				variant: 'primary',
+			},
+		},
 	},
 };
 
-const minimalStepperConfig = {
+const minimalStepperConfig: FormConfig = {
 	...stepperDemoConfig,
 	id: 'minimal-stepper-demo',
 	stepper: {
-		variant: 'minimal' as const,
-		orientation: 'horizontal' as const,
-		position: 'top' as const,
+		variant: 'minimal',
+		orientation: 'horizontal',
+		position: 'top',
 		showStepNumbers: false,
 		showStepTitles: false,
 		allowStepJumping: true,
 		validateOnNext: false,
+		buttons: {
+			previous: {
+				label: 'Back',
+				variant: 'outline',
+			},
+			next: {
+				label: 'Continue',
+				variant: 'primary',
+			},
+			submit: {
+				label: 'Complete Demo',
+				variant: 'primary',
+			},
+		},
 	},
 };
 

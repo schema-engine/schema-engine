@@ -6,7 +6,7 @@ import { InputField } from '.';
  * Tree-shakable: Only imported when needed
  */
 defaultFormRegistry.register({
-	name: 'input',
+	componentId: 'input',
 	component: InputField,
 	category: 'input',
 	description: 'Text input field for various input types',

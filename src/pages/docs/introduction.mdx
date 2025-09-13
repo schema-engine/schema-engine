@@ -4,28 +4,26 @@ import { SimpleInputDemo } from '@/components/demo/simple-input-demo';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'Introduction - Why Form Engine? | Form Engine Documentation',
-    description: 'Discover the story behind Form Engine - born from frustration with existing form solutions and refined through real-world use.',
+  title: 'Introduction - Why Form Engine? | Form Engine Documentation',
+  description: 'Discover the story behind Form Engine - born from frustration with existing form solutions and refined through real-world use.',
 })
 
 # Why Form Engine?
 
-After years of wrestling with form libraries, building custom solutions, and hitting the same walls over and over again, I realized something: **forms shouldn't be this hard**.
+Modern web development requires sophisticated form handling capabilities, yet existing solutions often present significant limitations. Each project brings unique requirements for validation, design integration, user experience patterns, and data flow management. Traditional form libraries typically impose rigid architectural constraints that can conflict with project-specific needs.
 
-Every project had different requirements, different designs, different validation needs, and different actions to perform. Yet, most form libraries force you into their way of thinking. They make assumptions about your UI, your validation strategy, your data flow - and when your needs don't align with their assumptions, you're stuck.
+## Common Challenges
 
-## The Frustration
+Development teams frequently encounter several recurring issues when implementing form solutions:
 
-I've been there. You probably have too:
+- **Limited Validation Flexibility** - Existing validation systems may not accommodate custom business logic or complex validation rules
+- **UI Library Integration** - Form libraries often conflict with established design systems or preferred component libraries
+- **Advanced Feature Requirements** - Implementing conditional logic, multi-step workflows, or auto-save functionality typically requires extensive custom development
+- **Responsive Design Complexity** - Creating forms that work seamlessly across different screen sizes and input methods presents ongoing challenges
 
-- **"This form library is great, but I need custom validation..."** - End up writing workarounds
-- **"I love this UI kit, but the form library doesn't integrate well..."** - Choose between good forms or good design
-- **"We need conditional logic, multi-step flows, auto-save..."** - Build everything from scratch again
-- **"The form works on desktop, but mobile is a mess..."** - Responsive forms are surprisingly hard
+These limitations motivated the development of Form Engine as a more adaptable solution.
 
-Sound familiar? This is exactly why Form Engine exists.
-
-## The Solution
+## The Approach
 
 Form Engine was born from this frustration and refined through real-world use. It's not just another form library—it's a **JSON-driven UI system** that adapts to your needs, not the other way around.
 
@@ -68,7 +66,7 @@ Define complex forms with simple JSON schemas. No more writing repetitive JSX fo
   "steps": [{
     "id": "details",
     "title": "Contact Details",
-    "fields": [
+    "elements": [
       {
         "type": "input",
         "inputType": "text",

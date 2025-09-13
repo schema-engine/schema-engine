@@ -6,7 +6,7 @@ import { CheckboxField } from '.';
  * Tree-shakable: Only imported when needed
  */
 defaultFormRegistry.register({
-	name: 'checkbox',
+	componentId: 'checkbox',
 	component: CheckboxField,
 	category: 'input',
 	description: 'Boolean checkbox field',

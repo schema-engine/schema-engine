@@ -156,17 +156,17 @@ export function FormEngineDemo() {
 									{
 										id: 'demo-form',
 										autoGenerateSchema: true,
-										fields: [
+										elements: [
 											{
 												type: 'input',
 												name: 'email',
 												label: 'Email',
-												validation: [{ type: 'email', message: 'Valid email required' }],
+												rules: [{ type: 'email', message: 'Valid email required' }],
 											},
 											{
 												type: 'number',
 												name: 'age',
-												validation: [
+												rules: [
 													{ type: 'min', value: 18, message: 'Must be 18+' },
 													{ type: 'max', value: 120, message: 'Age must be realistic' },
 												],
