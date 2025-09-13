@@ -17,8 +17,8 @@ const contactFormConfig: FormConfig = {
 			elements: [
 				{
 					id: 'firstName',
-					type: 'input' as const,
-					inputType: 'text' as const,
+					componentId: 'input',
+					inputType: 'text',
 					name: 'firstName',
 					label: 'First Name',
 					placeholder: 'Enter your first name',
@@ -29,8 +29,8 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'lastName',
-					type: 'input' as const,
-					inputType: 'text' as const,
+					componentId: 'input',
+					inputType: 'text',
 					name: 'lastName',
 					label: 'Last Name',
 					placeholder: 'Enter your last name',
@@ -41,8 +41,8 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'email',
-					type: 'input' as const,
-					inputType: 'email' as const,
+					componentId: 'input',
+					inputType: 'email',
 					name: 'email',
 					label: 'Email Address',
 					placeholder: 'your.email@example.com',
@@ -53,7 +53,7 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'inquiryType',
-					type: 'select' as const,
+					componentId: 'select',
 					name: 'inquiryType',
 					label: 'Inquiry Type',
 					placeholder: 'Select inquiry type',
@@ -69,7 +69,7 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'priority',
-					type: 'select' as const,
+					componentId: 'select',
 					name: 'priority',
 					label: 'Priority Level',
 					placeholder: 'Select priority',
@@ -84,7 +84,7 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'budget',
-					type: 'select',
+					componentId: 'select',
 					name: 'budget',
 					label: 'Project Budget',
 					placeholder: 'Select budget range',
@@ -107,8 +107,8 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'subject',
-					type: 'input' as const,
-					inputType: 'text' as const,
+					componentId: 'input',
+					inputType: 'text',
 					name: 'subject',
 					label: 'Subject',
 					placeholder: 'Brief subject line',
@@ -120,7 +120,7 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'message',
-					componentId: 'textarea' as const,
+					componentId: 'textarea',
 					name: 'message',
 					label: 'Message',
 					placeholder: 'Please provide details about your inquiry...',
@@ -133,14 +133,14 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'newsletter',
-					type: 'checkbox' as const,
+					componentId: 'checkbox',
 					name: 'newsletter',
 					label: 'Subscribe to our newsletter',
 					defaultValue: false,
 				},
 				{
 					id: 'terms',
-					type: 'checkbox' as const,
+					componentId: 'checkbox',
 					name: 'terms',
 					label: 'I agree to the terms and conditions',
 					rules: [ValidationPresets.required('You must agree to the terms and conditions')],

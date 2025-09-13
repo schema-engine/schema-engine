@@ -1,14 +1,12 @@
 import { describe, test, expect } from 'bun:test';
 import type { FieldConfig, ComponentId, GetFieldConfig } from '@/lib/form-engine/schemas/field-config';
 
-// Import field types to register them in the global registry
 import '@/lib/form-engine/components/form/fields/form-input.types';
 import '@/lib/form-engine/components/form/fields/form-textarea.types';
 import '@/lib/form-engine/components/form/fields/form-select.types';
 
 describe('Extensible Field Configuration System', () => {
 	test('provides proper type safety for field configurations', () => {
-		// Test that FieldConfig is a proper union of all registered field types
 		const inputField: FieldConfig = {
 			componentId: 'input',
 			id: 'test-input',
@@ -43,7 +41,6 @@ describe('Extensible Field Configuration System', () => {
 	});
 
 	test('component ID type includes all registered field types', () => {
-		// This test ensures ComponentId is properly typed
 		const validIds: ComponentId[] = ['input', 'textarea', 'select'];
 		
 		validIds.forEach(id => {
@@ -80,11 +77,21 @@ describe('Extensible Field Configuration System', () => {
  * Example of how a library user would extend the system
  */
 
-// Define a custom field type
 interface CustomFieldConfig {
 	componentId: 'customField';
 	id: string;
 	name: string;
+	label?: string;
+	description?: string;
+	placeholder?: string;
+	disabled?: boolean;
+	readonly?: boolean;
+	defaultValue?: any;
+	rules?: any[];
+	className?: string;
+	style?: Record<string, any>;
+	grid?: any;
+	constraints?: any[];
 	customProperty: string;
 	customOptions?: {
 		feature1: boolean;
@@ -92,7 +99,6 @@ interface CustomFieldConfig {
 	};
 }
 
-// Register it in the global type system
 declare global {
 	namespace FormEngine {
 		interface FieldConfigRegistry {

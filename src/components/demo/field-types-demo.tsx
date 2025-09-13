@@ -25,7 +25,7 @@ export function FieldTypesDemo() {
 				title: 'Explore Different Field Types',
 				elements: [
 					{
-						type: 'input',
+						componentId: 'input',
 						inputType: 'text',
 						id: 'textField',
 						name: 'textField',
@@ -33,7 +33,7 @@ export function FieldTypesDemo() {
 						placeholder: 'Enter any text',
 					},
 					{
-						type: 'input',
+						componentId: 'input',
 						inputType: 'email',
 						id: 'emailField',
 						name: 'emailField',
@@ -49,7 +49,7 @@ export function FieldTypesDemo() {
 						placeholder: '42',
 					},
 					{
-						type: 'textarea',
+						componentId: 'textarea',
 						id: 'textareaField',
 						name: 'textareaField',
 						label: 'Textarea',
@@ -57,7 +57,7 @@ export function FieldTypesDemo() {
 						rows: 3,
 					},
 					{
-						type: 'select',
+						componentId: 'select',
 						id: 'selectField',
 						name: 'selectField',
 						label: 'Select Dropdown',
@@ -69,7 +69,7 @@ export function FieldTypesDemo() {
 						],
 					},
 					{
-						type: 'radio',
+						componentId: 'radio',
 						id: 'radioField',
 						name: 'radioField',
 						label: 'Radio Group',
@@ -80,7 +80,7 @@ export function FieldTypesDemo() {
 						],
 					},
 					{
-						type: 'checkbox',
+						componentId: 'checkbox',
 						id: 'checkboxField',
 						name: 'checkboxField',
 						label: 'Checkbox Option',

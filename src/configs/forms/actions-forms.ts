@@ -26,7 +26,7 @@ export const actionsFormConfig: FormConfig = {
 				{
 					id: 'firstName',
 					name: 'firstName',
-					type: 'input',
+					componentId: 'input',
 					inputType: 'text',
 					label: 'First Name',
 					placeholder: 'Enter your first name',
@@ -35,7 +35,7 @@ export const actionsFormConfig: FormConfig = {
 				{
 					id: 'lastName',
 					name: 'lastName',
-					type: 'input',
+					componentId: 'input',
 					inputType: 'text',
 					label: 'Last Name',
 					placeholder: 'Enter your last name',
@@ -44,7 +44,7 @@ export const actionsFormConfig: FormConfig = {
 				{
 					id: 'email',
 					name: 'email',
-					type: 'input',
+					componentId: 'input',
 					inputType: 'email',
 					label: 'Email Address',
 					placeholder: 'Enter your email address',
@@ -53,7 +53,7 @@ export const actionsFormConfig: FormConfig = {
 				{
 					id: 'dateOfBirth',
 					name: 'dateOfBirth',
-					type: 'input',
+					componentId: 'input',
 					inputType: 'text',
 					label: 'Date of Birth',
 					rules: [ValidationPresets.required('Date of Birth is required')],
@@ -83,7 +83,7 @@ export const actionsFormConfig: FormConfig = {
 				{
 					id: 'phone',
 					name: 'phone',
-					type: 'input',
+					componentId: 'input',
 					inputType: 'tel',
 					label: 'Phone Number',
 					placeholder: 'Enter your phone number',
@@ -92,7 +92,7 @@ export const actionsFormConfig: FormConfig = {
 				{
 					id: 'address',
 					name: 'address',
-					type: 'input',
+					componentId: 'input',
 					inputType: 'text',
 					label: 'Street Address',
 					placeholder: 'Enter your street address',
@@ -101,7 +101,7 @@ export const actionsFormConfig: FormConfig = {
 				{
 					id: 'city',
 					name: 'city',
-					type: 'input',
+					componentId: 'input',
 					inputType: 'text',
 					label: 'City',
 					placeholder: 'Enter your city',
@@ -110,7 +110,7 @@ export const actionsFormConfig: FormConfig = {
 				{
 					id: 'zipCode',
 					name: 'zipCode',
-					type: 'input',
+					componentId: 'input',
 					inputType: 'text',
 					label: 'ZIP Code',
 					placeholder: 'Enter your ZIP code',
@@ -141,14 +141,14 @@ export const actionsFormConfig: FormConfig = {
 				{
 					id: 'newsletter',
 					name: 'newsletter',
-					type: 'checkbox',
+					componentId: 'checkbox',
 					label: 'Subscribe to Newsletter',
 					description: 'Receive updates about new features and content',
 				},
 				{
 					id: 'notifications',
 					name: 'notifications',
-					type: 'select',
+					componentId: 'select',
 					label: 'Notification Preferences',
 					options: [
 						{ value: 'email', label: 'Email Only' },
@@ -161,7 +161,7 @@ export const actionsFormConfig: FormConfig = {
 				{
 					id: 'interests',
 					name: 'interests',
-					type: 'checkbox',
+					componentId: 'checkbox',
 					label: 'Areas of Interest',
 					description:
 						'Select your areas of interest. Note: This uses individual checkboxes instead of a group.',
@@ -252,7 +252,7 @@ export const simpleActionsFormConfig: FormConfig = {
 				{
 					id: 'name',
 					name: 'name',
-					type: 'input',
+					componentId: 'input',
 					inputType: 'text',
 					label: 'Name',
 					placeholder: 'Enter your name',
@@ -261,7 +261,7 @@ export const simpleActionsFormConfig: FormConfig = {
 				{
 					id: 'email',
 					name: 'email',
-					type: 'input',
+					componentId: 'input',
 					inputType: 'email',
 					label: 'Email',
 					placeholder: 'Enter your email',
@@ -270,7 +270,7 @@ export const simpleActionsFormConfig: FormConfig = {
 				{
 					id: 'message',
 					name: 'message',
-					type: 'textarea',
+					componentId: 'textarea',
 					label: 'Message',
 					placeholder: 'Enter your message',
 					rules: [ValidationPresets.required('Message is required')],

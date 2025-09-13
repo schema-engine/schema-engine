@@ -3,7 +3,7 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useActionExecutor } from './hooks';
 import { generateFormSchema } from './validation';
-import { type FormComponentRegistryImpl, defaultFormRegistry } from './registry';
+import { type FormFieldComponentRegistry, defaultFormFieldRegistry } from './schemas/registry';
 import type { ActionExecutionContext, FormActionConfig } from './actions/index';
 import type { FormConfig } from './types/form';
 
@@ -12,7 +12,7 @@ import type { FormConfig } from './types/form';
  * It includes the component registry and action execution function
  */
 export interface FormEngineContextValue {
-	registry: FormComponentRegistryImpl;
+	registry: FormFieldComponentRegistry;
 	executeAction?: (action: FormActionConfig) => Promise<{ success: boolean; error?: string }>;
 }
 
@@ -46,13 +46,13 @@ export const FormInstanceContext = createContext<FormInstanceContextValue | null
  */
 export interface FormEngineProviderProps {
 	children: ReactNode;
-	registry?: FormComponentRegistryImpl;
+	registry?: FormFieldComponentRegistry;
 }
 
 /**
  * Provider component for the form engine
  */
-export function FormEngineProvider({ children, registry = defaultFormRegistry }: FormEngineProviderProps) {
+export function FormEngineProvider({ children, registry = defaultFormFieldRegistry }: FormEngineProviderProps) {
 	const contextValue: FormEngineContextValue = {
 		registry,
 	};

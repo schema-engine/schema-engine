@@ -24,6 +24,39 @@ export const FieldGridBreakpointSchema = z.object({
 });
 
 /**
+ * Grid layout configuration schema
+ */
+export const GridLayoutConfigSchema = z.object({
+	columns: z.union([z.number(), z.literal('auto')]).optional(),
+	rows: z.union([z.number(), z.literal('auto')]).optional(),
+	gap: z.union([z.number(), z.string()]).optional(),
+	responsive: z
+		.object({
+			default: GridBreakpointConfigSchema.optional(),
+			sm: GridBreakpointConfigSchema.optional(),
+			md: GridBreakpointConfigSchema.optional(),
+			lg: GridBreakpointConfigSchema.optional(),
+			xl: GridBreakpointConfigSchema.optional(),
+			'2xl': GridBreakpointConfigSchema.optional(),
+		})
+		.optional(),
+	autoFit: z.boolean().optional(),
+	autoFill: z.boolean().optional(),
+	minColumnWidth: z.string().optional(),
+	maxColumnWidth: z.string().optional(),
+	justifyItems: z.enum(['start', 'end', 'center', 'stretch']).optional(),
+	alignItems: z.enum(['start', 'end', 'center', 'stretch']).optional(),
+	placeItems: z.string().optional(),
+	justifyContent: z
+		.enum(['start', 'end', 'center', 'stretch', 'space-around', 'space-between', 'space-evenly'])
+		.optional(),
+	alignContent: z
+		.enum(['start', 'end', 'center', 'stretch', 'space-around', 'space-between', 'space-evenly'])
+		.optional(),
+	placeContent: z.string().optional(),
+});
+
+/**
  * Element grid configuration schema
  */
 export const ElementGridConfigSchema = z.object({
@@ -100,4 +133,5 @@ export type BaseField = z.infer<typeof BaseFieldSchema>;
 export type GridBreakpointConfig = z.infer<typeof GridBreakpointConfigSchema>;
 export type FieldGridBreakpointConfig = z.infer<typeof FieldGridBreakpointSchema>;
 export type ElementGridConfig = z.infer<typeof ElementGridConfigSchema>;
+export type GridLayoutConfig = z.infer<typeof GridLayoutConfigSchema>;
 export type ConstraintLogic = z.infer<typeof ConstraintLogicSchema>;

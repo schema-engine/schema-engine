@@ -16,11 +16,11 @@ export type { NumberFieldConfig } from './form-number.types';
 export type { SwitchFieldConfig } from './form-switch.types';
 export type { ArrayElementsConfig } from './form-array-elements.types';
 
-import './form-input.registry';
-import './form-textarea.registry';
-import './form-select.registry';
-import './form-checkbox.registry';
-import './form-radio.registry';
-import './form-number.registry';
-import './form-switch.registry';
 import './form-array-elements.registry';
+import './form-checkbox.registry';
+import './form-input.registry';
+import './form-number.registry';
+import './form-radio.registry';
+import './form-select.registry';
+import './form-switch.registry';
+import './form-textarea.registry';

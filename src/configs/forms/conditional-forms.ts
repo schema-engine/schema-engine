@@ -16,7 +16,7 @@ export const conditionalFormConfig: FormConfig = {
 			title: 'Form with Conditional Logic',
 			elements: [
 				{
-					type: 'select',
+					componentId: 'select',
 					id: 'user-type',
 					name: 'userType',
 					label: 'User Type',
@@ -30,7 +30,7 @@ export const conditionalFormConfig: FormConfig = {
 				},
 
 				{
-					type: 'input',
+					componentId: 'input',
 					inputType: 'text',
 					id: 'first-name',
 					name: 'firstName',
@@ -46,7 +46,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					type: 'input',
+					componentId: 'input',
 					inputType: 'text',
 					id: 'last-name',
 					name: 'lastName',
@@ -62,7 +62,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					type: 'input',
+					componentId: 'input',
 					inputType: 'text',
 					id: 'company-name',
 					name: 'companyName',
@@ -78,7 +78,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					type: 'select',
+					componentId: 'select',
 					id: 'company-size',
 					name: 'companySize',
 					label: 'Company Size',
@@ -98,7 +98,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					type: 'input',
+					componentId: 'input',
 					inputType: 'text',
 					id: 'organization-name',
 					name: 'organizationName',
@@ -114,7 +114,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					type: 'input',
+					componentId: 'input',
 					inputType: 'text',
 					id: 'tax-id',
 					name: 'taxId',
@@ -129,7 +129,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					type: 'input',
+					componentId: 'input',
 					inputType: 'email',
 					id: 'email',
 					name: 'email',
@@ -140,7 +140,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					type: 'input',
+					componentId: 'input',
 					inputType: 'tel',
 					id: 'phone',
 					name: 'phone',
@@ -148,7 +148,7 @@ export const conditionalFormConfig: FormConfig = {
 					rules: [ValidationPresets.required('Phone number is required')],
 				},
 				{
-					type: 'checkbox',
+					componentId: 'checkbox',
 					id: 'premium-features',
 					name: 'premiumFeatures',
 					label: 'Enable Premium Features',
@@ -162,7 +162,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					type: 'select',
+					componentId: 'select',
 					id: 'premium-plan',
 					name: 'premiumPlan',
 					label: 'Premium Plan',
@@ -198,7 +198,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 					elements: [
 						{
-							type: 'input',
+							componentId: 'input',
 							inputType: 'text',
 							id: 'member-name',
 							name: 'name',
@@ -206,7 +206,7 @@ export const conditionalFormConfig: FormConfig = {
 							rules: [ValidationPresets.required('Name is required')],
 						},
 						{
-							type: 'input',
+							componentId: 'input',
 							inputType: 'email',
 							id: 'member-email',
 							name: 'email',
@@ -217,7 +217,7 @@ export const conditionalFormConfig: FormConfig = {
 							],
 						},
 						{
-							type: 'select',
+							componentId: 'select',
 							id: 'member-role',
 							name: 'role',
 							label: 'Role',
@@ -231,7 +231,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					type: 'checkbox',
+					componentId: 'checkbox',
 					id: 'terms-agreement',
 					name: 'termsAgreement',
 					label: 'I agree to the Terms of Service and Privacy Policy',

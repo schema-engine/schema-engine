@@ -11,7 +11,7 @@ export const formFieldRegistry = z.registry<FormEngine.FieldMetadata>();
  * Component registry for field components
  * Maps field type to React component and schemas
  */
-class FormFieldComponentRegistry {
+export class FormFieldComponentRegistry {
 	private components = new Map<string, FormEngine.FieldRegistration>();
 	private schemas = new Map<string, { runtime: z.ZodSchema<any>; serializable: z.ZodSchema<any> }>();
 

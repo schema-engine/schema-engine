@@ -158,7 +158,7 @@ export function FormEngineDemo() {
 										autoGenerateSchema: true,
 										elements: [
 											{
-												type: 'input',
+												componentId: 'input',
 												name: 'email',
 												label: 'Email',
 												rules: [{ type: 'email', message: 'Valid email required' }],

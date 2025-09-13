@@ -1,6 +1,5 @@
 import { FormRenderer, ViewportPreview } from '@/lib/form-engine';
 import { responsiveFormConfig } from '@/configs/forms/responsive-forms';
-// Import to register components
 import '@/lib/form-engine/components/form/registry';
 
 /**

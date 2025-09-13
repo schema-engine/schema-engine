@@ -28,14 +28,20 @@ export { FormArrayElements } from './components/form/fields/form-array-elements'
 export type * from './components/form/fields/form-array-elements.types';
 
 /**
- * Form schemas
+ * Form schemas - specific exports to avoid conflicts
  */
-export * from './schemas';
+export { ValidationPresets, generateFormSchema } from './validation';
+export {
+	BaseFieldSchema,
+	GridLayoutConfigSchema,
+	type ElementGridConfig,
+} from './schemas/base-field';
+export { FormConfigSchema } from './schemas/form-config';
 
 /**
  * Form registry
  */
-export * from './registry';
+export { defaultFormFieldRegistry, FormFieldComponentRegistry, registerFieldType } from './schemas/registry';
 
 /**
  * Form provider and context

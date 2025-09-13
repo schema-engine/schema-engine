@@ -92,10 +92,10 @@ When you don't specify grid positions, Form Engine automatically arranges elemen
 ```typescript
 // These fields will automatically flow in the grid
 const autoLayoutFields = [
-  { type: 'input', id: 'firstName', label: 'First Name' },
-  { type: 'input', id: 'lastName', label: 'Last Name' },  
-  { type: 'input', id: 'email', label: 'Email' },
-  { type: 'textarea', id: 'bio', label: 'Bio' }
+  { componentId: 'input', id: 'firstName', label: 'First Name' },
+  { componentId: 'input', id: 'lastName', label: 'Last Name' },  
+  { componentId: 'input', id: 'email', label: 'Email' },
+  { componentId: 'textarea', id: 'bio', label: 'Bio' }
 ];
 
 // Result: firstName and lastName side-by-side on desktop,
@@ -132,7 +132,7 @@ const formConfig = {
 
 ```typescript
 const fieldWithGridPosition = {
-  type: 'input',
+  componentId: 'input',
   id: 'address',
   label: 'Street Address',
   

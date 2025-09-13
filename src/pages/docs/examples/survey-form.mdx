@@ -29,7 +29,7 @@ An advanced survey form showcasing Form Engine's sophisticated features includin
           elements: [
             {
               id: 'satisfaction',
-              type: 'select',
+              componentId: 'select',
               name: 'satisfaction',
               label: 'Overall Satisfaction',
               required: true,
@@ -43,7 +43,7 @@ An advanced survey form showcasing Form Engine's sophisticated features includin
             },
             {
               id: 'recommendation',
-              type: 'radio',
+              componentId: 'radio',
               name: 'recommendation',
               label: 'Would you recommend us?',
               required: true,
@@ -61,7 +61,7 @@ An advanced survey form showcasing Form Engine's sophisticated features includin
           elements: [
             {
               id: 'improvements',
-              type: 'textarea',
+              componentId: 'textarea',
               name: 'improvements',
               label: 'What could we improve?',
               placeholder: 'Share your suggestions...',
@@ -69,7 +69,7 @@ An advanced survey form showcasing Form Engine's sophisticated features includin
             },
             {
               id: 'contact',
-              type: 'checkbox',
+              componentId: 'checkbox',
               name: 'contact',
               label: 'I agree to be contacted for follow-up',
               required: false
@@ -135,7 +135,7 @@ const surveyConfig = {
       elements: [
         {
           id: 'satisfaction',
-          type: 'select',
+          componentId: 'select',
           name: 'satisfaction',
           label: 'Overall Satisfaction',
           required: true,
@@ -174,7 +174,7 @@ Show or hide questions based on previous answers:
 ```typescript
 {
   id: 'followup',
-  type: 'input',
+  componentId: 'input',
   name: 'followup',
   label: 'Please explain your dissatisfaction',
   conditions: [
@@ -209,9 +209,9 @@ Group related questions using field groups:
   type: 'group',
   label: 'Rate our services',
   elements: [
-    { id: 'support', type: 'select', name: 'support', label: 'Customer Support' },
-    { id: 'delivery', type: 'select', name: 'delivery', label: 'Delivery Speed' },
-    { id: 'quality', type: 'select', name: 'quality', label: 'Product Quality' }
+    { id: 'support', componentId: 'select', name: 'support', label: 'Customer Support' },
+    { id: 'delivery', componentId: 'select', name: 'delivery', label: 'Delivery Speed' },
+    { id: 'quality', componentId: 'select', name: 'quality', label: 'Product Quality' }
   ]
 }
 ```

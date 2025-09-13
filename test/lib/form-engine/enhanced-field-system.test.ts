@@ -228,7 +228,7 @@ describe('Enhanced Form Field System', () => {
 
 		test('uses default input type when not specified', () => {
 			const configWithoutType = {
-				componentId: 'input' as const,
+				componentId: 'input',
 				id: 'default-test',
 				name: 'defaultTest',
 			};

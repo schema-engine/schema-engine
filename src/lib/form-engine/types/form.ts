@@ -1,58 +1,19 @@
-import { z } from 'zod';
 import type { FieldPath, FieldValues, UseFormReturn } from 'react-hook-form';
 
-// Import enhanced schemas - this is the single source of truth
-import { InputFieldSchema, type InputFieldConfig } from '../components/form/fields/form-input.types';
+// Re-export the modern namespace-based field configuration
+export type FieldConfig = FormEngine.FieldConfig;
+export type ComponentId = FormEngine.ComponentId;
 
-import { TextareaFieldSchema, type TextareaFieldConfig } from '../components/form/fields/form-textarea.types';
+// Re-export form configuration types from schemas
+export type { FormConfig, FormStep } from '../schemas/form-config';
 
-import { SelectFieldConfigSchema, type SelectFieldConfig } from '../components/form/fields/form-select.types';
-
-import { CheckboxFieldConfigSchema, type CheckboxFieldConfig } from '../components/form/fields/form-checkbox.types';
-
-import { RadioFieldConfigSchema, type RadioFieldConfig } from '../components/form/fields/form-radio.types';
-
-import { NumberFieldConfigSchema, type NumberFieldConfig } from '../components/form/fields/form-number.types';
-
-import { SwitchFieldConfigSchema, type SwitchFieldConfig } from '../components/form/fields/form-switch.types';
-
-import {
-	ArrayElementConfigSchema,
-	type ArrayElementsConfig,
-} from '../components/form/fields/form-array-elements.types';
-
-/**
- * Union type for all field configurations
- * Extended as we add more field types
- */
-export type FieldConfig =
-	| InputFieldConfig
-	| TextareaFieldConfig
-	| SelectFieldConfig
-	| CheckboxFieldConfig
-	| RadioFieldConfig
-	| NumberFieldConfig
-	| SwitchFieldConfig
-	| ArrayElementsConfig;
-
-/**
- * Union schema for all field configurations
- */
-export const FieldConfigSchema = z.discriminatedUnion('componentId', [
-	InputFieldSchema,
-	TextareaFieldSchema,
-	SelectFieldConfigSchema,
-	CheckboxFieldConfigSchema,
-	RadioFieldConfigSchema,
-	NumberFieldConfigSchema,
-	SwitchFieldConfigSchema,
-	ArrayElementConfigSchema,
-]);
+// Re-export grid-related types from base-field schemas
+export type { GridLayoutConfig, ElementGridConfig as FieldGridConfig } from '../schemas/base-field';
 
 /**
  * Common props that all field components receive
  */
-export interface FieldProps<T extends FieldConfig = FieldConfig> {
+export interface FieldProps<T extends FormEngine.FieldConfig = FormEngine.FieldConfig> {
 	config: T;
 	form: UseFormReturn<FieldValues>;
 	value?: any;
@@ -66,7 +27,7 @@ export interface FieldProps<T extends FieldConfig = FieldConfig> {
  * Props for field wrapper component
  */
 export interface FieldWrapperConfig {
-	config: FieldConfig;
+	config: FormEngine.FieldConfig;
 	children: React.ReactNode;
 	error?: string;
 	showLabel?: boolean;

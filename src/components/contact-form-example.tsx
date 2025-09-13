@@ -1,6 +1,5 @@
 import { FormRenderer } from '@/lib/form-engine';
 import type { FormConfig } from '@/lib/form-engine/types';
-// Import to register components
 import '@/lib/form-engine/components/form/registry';
 
 export function ContactFormExample() {
@@ -17,7 +16,7 @@ export function ContactFormExample() {
 					{
 						id: 'email',
 						name: 'email',
-						type: 'input',
+						componentId: 'input',
 						inputType: 'email',
 						label: 'Email Address',
 						placeholder: 'Enter your email',
@@ -31,7 +30,7 @@ export function ContactFormExample() {
 					{
 						id: 'message',
 						name: 'message',
-						type: 'textarea',
+						componentId: 'textarea',
 						label: 'Message',
 						placeholder: 'Your message...',
 						rules: [

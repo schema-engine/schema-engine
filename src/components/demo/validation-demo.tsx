@@ -17,7 +17,7 @@ export function ValidationDemo() {
 				title: 'Try Different Validation Rules',
 				elements: [
 					{
-						type: 'input',
+						componentId: 'input',
 						inputType: 'text',
 						id: 'username',
 						name: 'username',
@@ -42,7 +42,7 @@ export function ValidationDemo() {
 						],
 					},
 					{
-						type: 'input',
+						componentId: 'input',
 						inputType: 'url',
 						id: 'website',
 						name: 'website',
