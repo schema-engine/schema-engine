@@ -62,6 +62,19 @@ describe('Compile-Time Type Safety', () => {
 					{ value: 'b', label: 'Option B' },
 				],
 			},
+            {
+                componentId:'arrayElements',
+                id:'nestedArray',
+                name:'nestedArray',
+                elements:[
+                    {
+                        componentId:'input',
+                        id:'nestedInput',
+                        name:'nestedInput',
+                        inputType:'text'
+                    }
+                ]
+            }
 		];
 
 		for (const element of elements) {
@@ -69,7 +82,9 @@ describe('Compile-Time Type Safety', () => {
 				expect(typeof element.inputType).toBe('string');
 			} else if (element.componentId === 'select') {
 				expect(Array.isArray(element.options)).toBe(true);
-			}
+			} else if (element.componentId === 'arrayElements') {
+                expect(Array.isArray(element.elements)).toBe(true);
+            } 
 		}
 	});
 

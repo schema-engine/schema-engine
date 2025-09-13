@@ -21,7 +21,7 @@
  *
  * ### 2. TYPE LAYER (Compile-time Safety)
  * - `ArrayElementsConfig`: Uses FormEngine.FieldConfig union for compile-time type safety
- * - `Exclude<FormEngine.FieldConfig, ArrayElementsConfig>`: Prevents infinite type recursion
+ * - Full recursive support: Arrays can contain other arrays (nested arrays)
  * - Global namespace extension for registry typing
  * - Full TypeScript IntelliSense and type checking
  *
@@ -32,10 +32,11 @@
  * - Registry dependency injection for testability
  * - Graceful degradation when registry is empty
  *
- * ### Recursion Prevention
- * - Schema level: Filter out 'arrayElements' componentId from field types
- * - Type level: Exclude<> utility type prevents circular references
- * - Both approaches ensure arrays can't contain themselves
+ * ### Recursive Support
+ * - Schema level: Includes ALL field types including 'arrayElements'
+ * - Type level: Uses full FormEngine.FieldConfig union
+ * - Enables nested arrays: arrays containing arrays containing arrays...
+ * - Zod handles recursive validation automatically
  *
  * ### Extensibility Model
  * - Custom fields registered via defaultFormFieldRegistry work automatically
@@ -50,25 +51,25 @@
  * elements: BaseFieldConfig[]         // Limited type safety
  * ```
  *
- * ### AFTER (Extensible)
+ * ### AFTER (Extensible & Recursive)
  * ```typescript
- * // Runtime: Dynamic union from registry
- * elements: z.array(fieldUnion)  // All registered field types
+ * // Runtime: Dynamic union from registry (includes arrayElements)
+ * elements: z.array(fieldUnion)  // All registered field types + nested arrays
  *
- * // Types: Full FormEngine.FieldConfig union
- * elements: Exclude<FormEngine.FieldConfig, ArrayElementsConfig>[]
+ * // Types: Full FormEngine.FieldConfig union (supports recursion)
+ * elements: FormEngine.FieldConfig[]  // Supports nested arrays
  * ```
  *
  * ## BENEFITS ACHIEVED
- * Custom field types work in arrays automatically
- * Compile-time TypeScript safety maintained
- * Runtime Zod validation with registry integration
- * Infinite recursion prevention (both schema & type levels)
- * Backward compatibility preserved
- * Testable architecture with dependency injection
- * Graceful handling of empty registries
+ * ✅ Custom field types work in arrays automatically
+ * ✅ Compile-time TypeScript safety maintained
+ * ✅ Runtime Zod validation with registry integration
+ * ✅ Recursive arrays support (nested arrays of any depth)
+ * ✅ Backward compatibility preserved
+ * ✅ Testable architecture with dependency injection
+ * ✅ Graceful handling of empty registries
  *
- * This transformation enables the form engine to be truly extensible while maintaining
+ * This transformation enables the form engine to be truly extensible and recursive while maintaining
  * both runtime safety and compile-time type checking.
  */
 
@@ -101,14 +102,14 @@ const COMPONENT_ID = 'arrayElements';
 /**
  * Factory function to create a runtime validation schema with proper field union
  * This uses the registry to create the actual validation schema at runtime
- * Excludes arrayElements to prevent infinite recursion
+ * Supports recursive arrays (arrays containing other arrays)
  */
 export function createArrayElementsRuntimeSchema(registry: {
 	createFieldUnionSchema: () => z.ZodSchema<any> | z.ZodNever;
 	getFieldTypes: () => any[];
 	getRuntimeSchema: (fieldType: any) => z.ZodSchema<any> | undefined;
 }): z.ZodSchema<ArrayElementsConfig> {
-	const fieldTypes = registry.getFieldTypes().filter((type) => type !== COMPONENT_ID);
+	const fieldTypes = registry.getFieldTypes();
 	const schemas = fieldTypes.map((type) => registry.getRuntimeSchema(type)).filter(Boolean) as z.ZodSchema<any>[];
 
 	let fieldUnion: z.ZodSchema<any>;
@@ -137,15 +138,14 @@ export function createArrayElementsRuntimeSchema(registry: {
 
 /**
  * Type definitions for array elements
- * These explicitly use the FormEngine.FieldConfig union but exclude arrayElements
- * to prevent infinite recursion
+ * These use the full FormEngine.FieldConfig union to support recursive arrays
  */
 export interface ArrayElementsExtension {
 	minItems?: number;
 	maxItems?: number;
 	addButtonText?: string;
 	removeButtonText?: string;
-	elements: Exclude<FormEngine.FieldConfig, ArrayElementsConfig>[];
+	elements: FormEngine.FieldConfig[];
 }
 
 export interface ArrayElementsConfig extends Omit<z.infer<typeof BaseFieldSchema>, never> {
@@ -154,7 +154,7 @@ export interface ArrayElementsConfig extends Omit<z.infer<typeof BaseFieldSchema
 	maxItems?: number;
 	addButtonText?: string;
 	removeButtonText?: string;
-	elements: Exclude<FormEngine.FieldConfig, ArrayElementsConfig>[];
+	elements: FormEngine.FieldConfig[];
 }
 
 /**

@@ -34,8 +34,26 @@ class FormFieldComponentRegistry {
 				id: componentId,
 			};
 
-			runtimeSchema.register(formFieldRegistry, enhancedMetadata);
+			formFieldRegistry.add(runtimeSchema, enhancedMetadata);
 		}
+	}
+
+	/**
+	 * Unregister a field type and remove it from all registries
+	 */
+	unregister(componentId: ComponentId | string): boolean {
+		const registration = this.components.get(componentId);
+		if (!registration) return false;
+
+		this.components.delete(componentId);
+		this.schemas.delete(componentId);
+
+		const runtimeSchema = registration.runtimeSchema;
+		if (runtimeSchema && formFieldRegistry.has(runtimeSchema)) {
+			formFieldRegistry.remove(runtimeSchema);
+		}
+
+		return true;
 	}
 
 	/**
@@ -81,6 +99,32 @@ class FormFieldComponentRegistry {
 	 */
 	hasFieldType(fieldType: ComponentId): boolean {
 		return this.components.has(fieldType);
+	}
+
+	/**
+	 * Clear specific registered fields by their component IDs
+	 * More flexible and explicit than clearing by assumption
+	 */
+	clearFields(componentIds: (ComponentId | string)[]): void {
+		componentIds.forEach((componentId) => this.unregister(componentId));
+	}
+
+	/**
+	 * Clear all registered field types from the registry
+	 * Equivalent to Zod's registry.clear() but also clears our component map
+	 */
+	clear(): void {
+		formFieldRegistry.clear();
+		this.components.clear();
+		this.schemas.clear();
+	}
+
+	/**
+	 * Get all registered field component IDs as strings
+	 * Useful for inspection and selective operations
+	 */
+	getRegisteredFields(): string[] {
+		return Array.from(this.components.keys());
 	}
 
 	/**

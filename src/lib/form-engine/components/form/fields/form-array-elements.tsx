@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Trash2, Plus } from 'lucide-react';
 import { Label } from '@/components/ui/label';
-import { useControlledFormElement } from '@/lib/form-engine/hooks/use-field';
+import { createFieldDefaultValue, useControlledFormElement } from '@/lib/form-engine/hooks/use-field';
 import { FormElement } from '@/lib/form-engine/components/internals/field-renderer';
 import type { ArrayElementsConfig } from './form-array-elements.types';
 
@@ -120,32 +120,4 @@ export function FormArrayElements({ config, onChange }: FormArrayElementsProps) 
 			{errorProps && <div {...errorProps}>{fieldState.error?.message}</div>}
 		</div>
 	);
-}
-
-/**
- * Creates a default value for a single field configuration
- */
-function createFieldDefaultValue(config: Exclude<FormEngine.FieldConfig, ArrayElementsConfig>): any {
-	if ('defaultValue' in config && config.defaultValue !== undefined) {
-		return config.defaultValue;
-	}
-
-	switch (config.componentId) {
-		case 'input':
-			return '';
-		case 'number':
-			return 0;
-		case 'textarea':
-			return '';
-		case 'select':
-			return 'multiple' in config && config.multiple ? [] : '';
-		case 'checkbox':
-			return false;
-		case 'radio':
-			return '';
-		case 'switch':
-			return false;
-		default:
-			return '';
-	}
 }

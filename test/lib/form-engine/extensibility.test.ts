@@ -1,7 +1,7 @@
-import { test, expect, describe, beforeEach } from 'bun:test';
+import { test, expect, describe, beforeEach, afterEach } from 'bun:test';
 import { z } from 'zod';
 import { BaseFieldSchema } from '@/lib/form-engine/schemas/base-field';
-import { defaultFormFieldRegistry } from '@/lib/form-engine/schemas/registry';
+import { defaultFormFieldRegistry, formFieldRegistry } from '@/lib/form-engine/schemas/registry';
 import { 
 	createArrayElementsRuntimeSchema, 
 	type ArrayElementsConfig 
@@ -14,6 +14,7 @@ import '@/lib/form-engine/components/form/fields/form-checkbox.registry';
 import '@/lib/form-engine/components/form/fields/form-radio.registry';
 import '@/lib/form-engine/components/form/fields/form-number.registry';
 import '@/lib/form-engine/components/form/fields/form-switch.registry';
+import '@/lib/form-engine/components/form/fields/form-array-elements.registry';
 
 describe('Form Field Registry Extensibility', () => {
 	const createCustomRatingSchema = (suffix: string = '') => BaseFieldSchema.extend({
@@ -49,9 +50,13 @@ describe('Form Field Registry Extensibility', () => {
 		};
 	};
 
-	beforeEach(() => {
-		defaultFormFieldRegistry.getFieldTypes().filter(id => id.startsWith('customRating'));
-	});	describe('Custom Field Registration', () => {
+
+
+	afterEach(() => {
+		defaultFormFieldRegistry.unregister('customRating');
+	});
+    
+    describe('Custom Field Registration', () => {
 		test('should allow registering a custom field type', () => {
 			const { componentId, registration } = createFieldRegistration('1')
 			
@@ -105,10 +110,23 @@ describe('Form Field Registry Extensibility', () => {
 				expect(typeof result.error).toBe('string');
 			}
 		});
+
+		test('should unregister custom field type', () => {
+			const { componentId, registration } = createFieldRegistration('unregister');
+			
+			defaultFormFieldRegistry.register(registration);
+			expect(defaultFormFieldRegistry.hasFieldType(componentId as any)).toBe(true);
+			
+			const wasRemoved = defaultFormFieldRegistry.unregister(componentId);
+			expect(wasRemoved).toBe(true);
+			expect(defaultFormFieldRegistry.hasFieldType(componentId as any)).toBe(false);
+			expect(defaultFormFieldRegistry.getComponent(componentId as any)).toBeUndefined();
+			expect(defaultFormFieldRegistry.getMetadata(componentId as any)).toBeUndefined();
+		});
 	});
 
 	describe('Array Elements with Custom Fields', () => {
-		test('should create runtime schema including custom fields', () => {
+		test('should create runtime schema including custom fields and array elements', () => {
 			const { componentId, registration } = createFieldRegistration('4');
 			
 			// Register the custom field
@@ -120,7 +138,7 @@ describe('Form Field Registry Extensibility', () => {
 			expect(fieldTypes).toContain(componentId);
 			expect(fieldTypes).toContain('input');
 			expect(fieldTypes).toContain('textarea');
-			expect(fieldTypes).not.toContain('arrayElements');
+			expect(fieldTypes).toContain('arrayElements');
 		});
 
 		test('should validate array elements containing custom fields', () => {
@@ -179,8 +197,8 @@ describe('Form Field Registry Extensibility', () => {
 			}
 		});
 
-		test('should prevent infinite recursion by excluding arrayElements from its own elements', () => {
-			const arrayConfig: ArrayElementsConfig = {
+		test('should support recursive arrays (nested arrays)', () => {
+			const nestedArrayConfig: ArrayElementsConfig = {
 				componentId: 'arrayElements',
 				id: 'nested',
 				name: 'nested',
@@ -188,9 +206,23 @@ describe('Form Field Registry Extensibility', () => {
 				elements: [
 					{
 						componentId: 'input',
-						id: 'test',
-						name: 'test',
+						id: 'title',
+						name: 'title',
 						inputType: 'text',
+					},
+					{
+						componentId: 'arrayElements',
+						id: 'subArray',
+						name: 'subArray',
+						label: 'Sub Array',
+						elements: [
+							{
+								componentId: 'input',
+								id: 'subField',
+								name: 'subField',
+								inputType: 'text',
+							},
+						],
 					},
 				],
 			};
@@ -198,9 +230,9 @@ describe('Form Field Registry Extensibility', () => {
 			const runtimeSchema = createArrayElementsRuntimeSchema(defaultFormFieldRegistry);
 			const fieldTypes = defaultFormFieldRegistry.getFieldTypes();
 			
-			expect(fieldTypes).not.toContain('arrayElements');
+			expect(fieldTypes).toContain('arrayElements');
 			
-			const result = runtimeSchema.safeParse(arrayConfig);
+			const result = runtimeSchema.safeParse(nestedArrayConfig);
 			expect(result.success).toBe(true);
 		});
 	});

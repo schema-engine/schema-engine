@@ -6,12 +6,12 @@ import type { FieldConfig } from '../types/form';
 /**
  * Creates a default value for a field configuration
  */
-function createFieldDefaultValue(config: FieldConfig): any {
-	if (config.defaultValue !== undefined) {
+export function createFieldDefaultValue(config: FormEngine.FieldConfig): any {
+	if ('defaultValue' in config && config.defaultValue !== undefined) {
 		return config.defaultValue;
 	}
 
-	switch (config.type) {
+	switch (config.componentId) {
 		case 'input':
 			return '';
 		case 'number':
@@ -24,7 +24,7 @@ function createFieldDefaultValue(config: FieldConfig): any {
 			return false;
 		case 'radio':
 			return '';
-		case 'array':
+		case 'arrayElements':
 			return [];
 		default:
 			return '';
