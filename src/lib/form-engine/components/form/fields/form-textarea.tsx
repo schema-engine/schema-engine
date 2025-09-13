@@ -1,18 +1,13 @@
 import { Textarea } from '@/components/ui/textarea';
 import { FieldGroup } from '@/lib/form-engine/components/form/field-group';
 import { useControlledFormElement, combineHandlers } from '@/lib/form-engine/hooks';
-import type { TextareaFieldConfig } from '@/lib/form-engine/types/form';
-
-interface TextareaFieldProps {
-	config: TextareaFieldConfig;
-	onChange?: (value: string) => void;
-	onBlur?: () => void;
-}
+import type { TextareaFieldProps } from './form-textarea.types';
 
 /**
- * Textarea field component
+ * Enhanced Textarea field component for the form engine.
+ * Integrates with React Hook Form and provides validation, state management, etc.
  */
-export function TextareaField({ config, onChange: propsOnChange, onBlur: propsOnBlur }: TextareaFieldProps) {
+export function FormTextarea({ config, onChange: propsOnChange, onBlur: propsOnBlur }: TextareaFieldProps) {
 	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
 		useControlledFormElement(config);
 
@@ -28,15 +23,10 @@ export function TextareaField({ config, onChange: propsOnChange, onBlur: propsOn
 				{config.description && <p className="text-sm text-muted-foreground mb-2">{config.description}</p>}
 				<Textarea
 					{...fieldProps}
+					{...config}
 					value={value || ''}
 					onChange={(e) => combineHandlers(onChange, propsOnChange)(e.target.value)}
 					onBlur={combineHandlers(onBlur, propsOnBlur)}
-					placeholder={config.placeholder}
-					rows={config.rows}
-					maxLength={config.maxLength}
-					minLength={config.minLength}
-					className={`${config.className || ''} resize-${config.resize || 'both'}`}
-					style={config.style}
 				/>
 			</FieldGroup>
 		</div>

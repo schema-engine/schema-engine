@@ -97,13 +97,11 @@ const stepperDemoConfig: FormConfig = {
 				},
 				{
 					id: 'feedback',
-					type: 'textarea',
+					componentId: 'textarea',
 					name: 'feedback',
 					label: 'Feedback',
 					placeholder: 'Any feedback about this demo? (Optional)',
-					defaultProps: {
-						rows: 4,
-					},
+					rows: 4,
 				},
 				{
 					id: 'newsletter',

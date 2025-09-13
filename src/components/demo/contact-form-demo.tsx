@@ -120,17 +120,15 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'message',
-					type: 'textarea' as const,
+					componentId: 'textarea' as const,
 					name: 'message',
 					label: 'Message',
 					placeholder: 'Please provide details about your inquiry...',
-					defaultProps: {
-						rows: 6,
-						maxLength: 2000,
-					},
+					rows: 6,
 					rules: [
 						ValidationPresets.required('Message is required'),
 						ValidationPresets.minLength(20, 'Please provide more details (minimum 20 characters)'),
+						ValidationPresets.maxLength(2000, 'Message is too long (maximum 2000 characters)'),
 					],
 				},
 				{

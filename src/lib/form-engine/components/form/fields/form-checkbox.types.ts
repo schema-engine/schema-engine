@@ -1,0 +1,38 @@
+import { z } from 'zod';
+import { BaseFieldSchema } from '@/lib/form-engine/schemas/base-field';
+
+/**
+ * Checkbox field extension schema - defines checkbox-specific properties
+ * Validation is handled through the rules property on the base field
+ */
+export const CheckboxFieldExtensionSchema = z.object({
+	autoFocus: z.boolean().optional(),
+	checked: z.boolean().optional(),
+	indeterminate: z.boolean().optional(),
+	form: z.string().optional(),
+});
+
+/**
+ * Complete checkbox field configuration schema
+ */
+export const CheckboxFieldConfigSchema = BaseFieldSchema.extend({
+	componentId: z.literal('checkbox'),
+	...CheckboxFieldExtensionSchema.shape,
+});
+
+/**
+ * Inferred types from schemas
+ */
+export type CheckboxFieldExtension = z.infer<typeof CheckboxFieldExtensionSchema>;
+export type CheckboxFieldConfig = z.infer<typeof CheckboxFieldConfigSchema>;
+
+/**
+ * Global registration for extensible field system
+ */
+declare global {
+	namespace FormEngine {
+		interface FieldConfigRegistry {
+			checkbox: CheckboxFieldConfig;
+		}
+	}
+}

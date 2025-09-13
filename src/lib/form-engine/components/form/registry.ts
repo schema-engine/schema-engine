@@ -1,11 +1,11 @@
-import '@/lib/form-engine/components/form/fields/array-field.registry';
-import '@/lib/form-engine/components/form/fields/checkbox-field.registry';
-import '@/lib/form-engine/components/form/fields/input-field.registry';
-import '@/lib/form-engine/components/form/fields/number-field.registry';
-import '@/lib/form-engine/components/form/fields/radio-field.registry';
-import '@/lib/form-engine/components/form/fields/select-field.registry';
-import '@/lib/form-engine/components/form/fields/textarea-field.registry';
-import '@/lib/form-engine/components/form/fields/switch-field.registry';
+import '@/lib/form-engine/components/form/fields/form-array-elements.registry';
+import '@/lib/form-engine/components/form/fields/form-checkbox.registry';
+import '@/lib/form-engine/components/form/fields/form-input.registry';
+import '@/lib/form-engine/components/form/fields/form-number.registry';
+import '@/lib/form-engine/components/form/fields/form-radio.registry';
+import '@/lib/form-engine/components/form/fields/form-select.registry';
+import '@/lib/form-engine/components/form/fields/form-textarea.registry';
+import '@/lib/form-engine/components/form/fields/form-switch.registry';
 
 import { registerAction } from '@/lib/form-engine/actions/action-registry';
 import { submitPlugin, resetPlugin, notificationPlugin, autoSavePlugin } from '@/lib/form-engine/actions/plugins';

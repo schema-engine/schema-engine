@@ -10,11 +10,11 @@ import {
 } from '@/configs/forms/showcase-forms';
 
 // Import only the needed registries for tree-shaking demonstration
-import '@/lib/form-engine/components/form/fields/input-field.registry';
-import '@/lib/form-engine/components/form/fields/select-field.registry';
-import '@/lib/form-engine/components/form/fields/checkbox-field.registry';
-import '@/lib/form-engine/components/form/fields/number-field.registry';
-import '@/lib/form-engine/components/form/fields/array-field.registry';
+import '@/lib/form-engine/components/form/_fields/input-field.registry';
+import '@/lib/form-engine/components/form/_fields/select-field.registry';
+import '@/lib/form-engine/components/form/_fields/checkbox-field.registry';
+import '@/lib/form-engine/components/form/_fields/number-field.registry';
+import '@/lib/form-engine/components/form/_fields/array-field.registry';
 
 /**
  * Complete showcase of all Form Engine features including:

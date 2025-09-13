@@ -7,6 +7,32 @@ export { ActionExecutor } from './actions';
 export type { ActionExecutionContext, ActionExecutionResult, FormActionConfig } from './actions';
 
 /**
+ * Form components
+ */
+
+export { FormNumber } from './components/form/fields/form-number';
+export type * from './components/form/fields/form-number.types';
+export { FormInput } from './components/form/fields/form-input';
+export type * from './components/form/fields/form-input.types';
+export { FormSelect } from './components/form/fields/form-select';
+export type * from './components/form/fields/form-select.types';
+export { FormTextarea } from './components/form/fields/form-textarea';
+export type * from './components/form/fields/form-textarea.types';
+export { FormCheckbox } from './components/form/fields/form-checkbox';
+export type * from './components/form/fields/form-checkbox.types';
+export { FormRadio } from './components/form/fields/form-radio';
+export type * from './components/form/fields/form-radio.types';
+export { FormSwitch } from './components/form/fields/form-switch';
+export type * from './components/form/fields/form-switch.types';
+export { FormArrayElements } from './components/form/fields/form-array-elements';
+export type * from './components/form/fields/form-array-elements.types';
+
+/**
+ * Form schemas
+ */
+export * from './schemas';
+
+/**
  * Form registry
  */
 export * from './registry';
@@ -43,6 +69,3 @@ export * from './components/internals/form-renderer';
 
 // Validation system
 export * from './validation';
-
-// Serialization utilities
-export * from './serialization';

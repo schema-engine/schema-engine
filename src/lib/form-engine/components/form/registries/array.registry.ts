@@ -1,5 +1,5 @@
 import { defaultFormRegistry } from '../../..';
-import { ArrayField } from '../fields/array-field';
+import { ArrayField } from '../_fields/array-field';
 
 /**
  * Register array field component
