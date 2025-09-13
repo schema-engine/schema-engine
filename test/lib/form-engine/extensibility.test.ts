@@ -1,7 +1,7 @@
-import { test, expect, describe, beforeEach, afterEach } from 'bun:test';
+import { test, expect, describe, afterEach } from 'bun:test';
 import { z } from 'zod';
 import { BaseFieldSchema } from '@/lib/form-engine/schemas/base-field';
-import { defaultFormFieldRegistry, formFieldRegistry } from '@/lib/form-engine/schemas/registry';
+import { defaultFormFieldRegistry } from '@/lib/form-engine/schemas/registry';
 import { 
 	createArrayElementsRuntimeSchema, 
 	type ArrayElementsConfig 
