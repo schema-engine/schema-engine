@@ -1,9 +1,8 @@
 import { useFormEngine, useConstraintLogic } from '@/lib/form-engine/hooks';
 import { isFieldRequired } from '@/lib/form-engine/validation';
-import type { FieldConfig } from '@/lib/form-engine/types/form';
 
 export interface FormElementProps {
-	config: FieldConfig;
+	config: FormEngine.FieldConfig;
 	className?: string;
 	style?: React.CSSProperties;
 }
@@ -14,27 +13,27 @@ export interface FormElementProps {
 export function FormElement({ config, className, style }: FormElementProps) {
 	const { registry } = useFormEngine();
 	const { shouldShow, shouldDisable, isRequired } = useConstraintLogic(
-		config.constraints,
-		isFieldRequired(config.rules),
+		'constraints' in config ? config.constraints : undefined,
+		isFieldRequired('rules' in config ? config.rules : undefined),
 	);
 
 	if (!shouldShow) {
 		return null;
 	}
 
-	const Component = registry.getComponent(config.type);
+	const Component = registry.getComponent(config.componentId);
 
 	if (!Component) {
 		return (
 			<div className={`text-red-500 text-sm ${className || ''}`} style={style}>
-				Error: Component "{config.type}" not found in registry
+				Error: Component "{config.componentId}" not found in registry
 			</div>
 		);
 	}
 
 	const enhancedConfig = {
 		...config,
-		disabled: config.disabled || shouldDisable,
+		disabled: ('disabled' in config ? config.disabled : false) || shouldDisable,
 		required: isRequired,
 	};
 

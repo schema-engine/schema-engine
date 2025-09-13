@@ -84,6 +84,59 @@ class FormFieldComponentRegistry {
 	}
 
 	/**
+	 * Create a union schema of all registered field types
+	 * This is used for dynamic schemas like array elements
+	 */
+	createFieldUnionSchema(): z.ZodSchema<FieldConfig> | z.ZodNever {
+		const schemas = Array.from(this.schemas.values()).map((s) => s.runtime);
+
+		if (schemas.length === 0) {
+			return z.never();
+		}
+
+		if (schemas.length === 1) {
+			return schemas[0];
+		}
+
+		// Create union schema from all registered runtime schemas
+		return z.union(schemas as [z.ZodSchema<any>, z.ZodSchema<any>, ...z.ZodSchema<any>[]]);
+	}
+
+	/**
+	 * Create a union schema of serializable field types
+	 * This is used for JSON schema generation and serialization
+	 */
+	createSerializableFieldUnionSchema(): z.ZodSchema<FieldConfig> | z.ZodNever {
+		const schemas = Array.from(this.schemas.values()).map((s) => s.serializable);
+
+		if (schemas.length === 0) {
+			return z.never();
+		}
+
+		if (schemas.length === 1) {
+			return schemas[0];
+		}
+
+		// Create union schema from all registered serializable schemas
+		return z.union(schemas as [z.ZodSchema<any>, z.ZodSchema<any>, ...z.ZodSchema<any>[]]);
+	}
+
+	/**
+	 * Update array element schemas to use registered fields
+	 * This should be called after all fields are registered
+	 */
+	updateArrayElementSchemas(): void {
+		const fieldUnion = this.createFieldUnionSchema();
+
+		// Find and update array elements extension schema
+		if (typeof global !== 'undefined' && (global as any).FormEngine?.ArrayElementsExtensionSchema) {
+			const arraySchema = (global as any).FormEngine.ArrayElementsExtensionSchema;
+			// Update the elements property to use the union schema
+			arraySchema.shape.elements = z.lazy(() => z.array(fieldUnion).min(1));
+		}
+	}
+
+	/**
 	 * Validate a field configuration against its schema
 	 */
 	validateField(fieldConfig: unknown): { success: boolean; data?: FieldConfig; error?: string } {

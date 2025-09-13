@@ -1,6 +1,10 @@
 import { defaultFormFieldRegistry } from '@/lib/form-engine/schemas/registry';
 import { FormArrayElements } from './form-array-elements';
-import { ArrayElementsExtensionSchema, type ArrayElementsConfig } from './form-array-elements.types';
+import {
+	ArrayElementConfigSchema,
+	createArrayElementsRuntimeSchema,
+	type ArrayElementsConfig,
+} from './form-array-elements.types';
 
 export const arrayElementsExample: ArrayElementsConfig = {
 	componentId: 'arrayElements',
@@ -15,6 +19,7 @@ export const arrayElementsExample: ArrayElementsConfig = {
 			name: 'skill',
 			label: 'Skill Name',
 			placeholder: 'Enter skill...',
+			inputType: 'text',
 		},
 		{
 			componentId: 'select',
@@ -22,7 +27,6 @@ export const arrayElementsExample: ArrayElementsConfig = {
 			name: 'skillLevel',
 			label: 'Skill Level',
 			placeholder: 'Select level...',
-			//@ts-expect-error Need to fix typing, elements should be defined and test at compiletime
 			options: [
 				{ value: 'beginner', label: 'Beginner' },
 				{ value: 'intermediate', label: 'Intermediate' },
@@ -37,15 +41,14 @@ export const arrayElementsExample: ArrayElementsConfig = {
 };
 
 /**
- * Register array field with compile-time type safety
- * Uses explicit TypeScript types instead of z.infer for strict compile-time checking
+ * Register array field with compile-time type safety and runtime validation
+ * Uses a factory function to create proper runtime schema with field unions
  */
-
 defaultFormFieldRegistry.register({
 	componentId: 'arrayElements',
 	component: FormArrayElements,
-	runtimeSchema: ArrayElementsExtensionSchema,
-	serializableSchema: ArrayElementsExtensionSchema,
+	runtimeSchema: createArrayElementsRuntimeSchema(defaultFormFieldRegistry),
+	serializableSchema: ArrayElementConfigSchema,
 	metadata: {
 		title: 'Array Field',
 		description: 'Dynamic array field for repeating elements with compile-time type safety',

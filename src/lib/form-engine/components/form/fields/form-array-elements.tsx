@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label';
 import { useControlledFormElement } from '@/lib/form-engine/hooks/use-field';
 import { FormElement } from '@/lib/form-engine/components/internals/field-renderer';
 import type { ArrayElementsConfig } from './form-array-elements.types';
-import type { FieldConfig } from '@/lib/form-engine/types/form';
 
 interface FormArrayElementsProps {
 	config: ArrayElementsConfig;
@@ -32,7 +31,7 @@ export function FormArrayElements({ config, onChange }: FormArrayElementsProps) 
 	const handleAdd = () => {
 		const defaultValue = config.elements.reduce(
 			(acc, element) => {
-				acc[element.name] = createFieldDefaultValue(element as FieldConfig);
+				acc[element.name] = createFieldDefaultValue(element);
 				return acc;
 			},
 			{} as Record<string, any>,
@@ -67,7 +66,6 @@ export function FormArrayElements({ config, onChange }: FormArrayElementsProps) 
 								<div className="flex-1">
 									{isSingleField && firstElement ? (
 										<FormElement
-											//@ts-expect-error Need to fix typing, elements should be defined and test at compiletime
 											config={{
 												...firstElement,
 												name: `${config.name}.${index}`,
@@ -79,7 +77,6 @@ export function FormArrayElements({ config, onChange }: FormArrayElementsProps) 
 											{config.elements.map((elementConfig, elementIndex) => (
 												<FormElement
 													key={`${elementConfig.id}_${index}_${elementIndex}`}
-													//@ts-expect-error Need to fix typing, elements should be defined and test at compiletime
 													config={{
 														...elementConfig,
 														name: `${config.name}.${index}.${elementConfig.name}`,
@@ -128,8 +125,8 @@ export function FormArrayElements({ config, onChange }: FormArrayElementsProps) 
 /**
  * Creates a default value for a single field configuration
  */
-function createFieldDefaultValue(config: FieldConfig): any {
-	if (config.defaultValue !== undefined) {
+function createFieldDefaultValue(config: Exclude<FormEngine.FieldConfig, ArrayElementsConfig>): any {
+	if ('defaultValue' in config && config.defaultValue !== undefined) {
 		return config.defaultValue;
 	}
 
@@ -141,15 +138,13 @@ function createFieldDefaultValue(config: FieldConfig): any {
 		case 'textarea':
 			return '';
 		case 'select':
-			return config.multiple ? [] : '';
+			return 'multiple' in config && config.multiple ? [] : '';
 		case 'checkbox':
 			return false;
 		case 'radio':
 			return '';
 		case 'switch':
 			return false;
-		case 'arrayElements':
-			return [];
 		default:
 			return '';
 	}
