@@ -14,6 +14,11 @@ export const formFieldRegistry = z.registry<FormEngine.FieldMetadata>();
 export class FormFieldComponentRegistry {
 	private components = new Map<string, FormEngine.FieldRegistration>();
 	private schemas = new Map<string, { runtime: z.ZodSchema<any>; serializable: z.ZodSchema<any> }>();
+	private zodRegistry: ReturnType<typeof z.registry<FormEngine.FieldMetadata>>;
+
+	constructor(zodRegistry: ReturnType<typeof z.registry<FormEngine.FieldMetadata>> = formFieldRegistry) {
+		this.zodRegistry = zodRegistry;
+	}
 
 	/**
 	 * Register a new field type with its component and schemas
@@ -34,7 +39,7 @@ export class FormFieldComponentRegistry {
 				id: componentId,
 			};
 
-			formFieldRegistry.add(runtimeSchema, enhancedMetadata);
+			this.zodRegistry.add(runtimeSchema, enhancedMetadata);
 		}
 	}
 
@@ -49,8 +54,8 @@ export class FormFieldComponentRegistry {
 		this.schemas.delete(componentId);
 
 		const runtimeSchema = registration.runtimeSchema;
-		if (runtimeSchema && formFieldRegistry.has(runtimeSchema)) {
-			formFieldRegistry.remove(runtimeSchema);
+		if (runtimeSchema && this.zodRegistry.has(runtimeSchema)) {
+			this.zodRegistry.remove(runtimeSchema);
 		}
 
 		return true;
@@ -91,10 +96,8 @@ export class FormFieldComponentRegistry {
 		const schema = this.getRuntimeSchema(fieldType);
 		if (!schema) return undefined;
 
-		return formFieldRegistry.get(schema);
-	}
-
-	/**
+		return this.zodRegistry.get(schema);
+	} /**
 	 * Check if a field type is registered
 	 */
 	hasFieldType(fieldType: ComponentId): boolean {
@@ -114,12 +117,10 @@ export class FormFieldComponentRegistry {
 	 * Equivalent to Zod's registry.clear() but also clears our component map
 	 */
 	clear(): void {
-		formFieldRegistry.clear();
+		this.zodRegistry.clear();
 		this.components.clear();
 		this.schemas.clear();
-	}
-
-	/**
+	} /**
 	 * Get all registered field component IDs as strings
 	 * Useful for inspection and selective operations
 	 */
@@ -234,15 +235,13 @@ export class FormFieldComponentRegistry {
 
 		try {
 			return z.toJSONSchema(schema, {
-				metadata: formFieldRegistry,
+				metadata: this.zodRegistry,
 				target: 'draft-2020-12',
 			});
 		} catch {
 			return null;
 		}
-	}
-
-	/**
+	} /**
 	 * Generate JSON schema for all registered field types
 	 */
 	toJSONSchemaRegistry(): Record<string, unknown> {

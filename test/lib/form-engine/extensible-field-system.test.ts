@@ -34,7 +34,6 @@ describe('Extensible Field Configuration System', () => {
 			],
 		};
 
-		// These should all be valid
 		expect(inputField.componentId).toBe('input');
 		expect(textareaField.componentId).toBe('textarea');
 		expect(selectField.componentId).toBe('select');

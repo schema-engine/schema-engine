@@ -38,9 +38,8 @@ import {
 	SwitchFieldConfigSchema,
 	type SwitchFieldConfig
 } from '@/lib/form-engine/components/form/fields/form-switch.types';
+import type { FieldConfig } from '@/lib/form-engine/schemas';
 
-// Updated form types
-import { FieldConfigSchema, type FieldConfig } from '@/lib/form-engine/types/form';
 
 describe('Clean Enhanced Field System', () => {
 	test('should use componentId-based configuration for input', () => {
@@ -98,8 +97,8 @@ describe('Clean Enhanced Field System', () => {
 			wrap: 'soft'
 		};
 
-		expect(FieldConfigSchema.safeParse(inputConfig).success).toBe(true);
-		expect(FieldConfigSchema.safeParse(textareaConfig).success).toBe(true);
+		expect(InputFieldSchema.safeParse(inputConfig).success).toBe(true);
+		expect(TextareaFieldSchema.safeParse(textareaConfig).success).toBe(true);
 	});
 
 	test('should validate input field configuration with all properties', () => {
@@ -342,7 +341,30 @@ describe('Clean Enhanced Field System', () => {
 		];
 
 		for (const field of fields) {
-			const result = FieldConfigSchema.safeParse(field);
+			let result;
+			switch (field.componentId) {
+				case 'input':
+					result = InputFieldSchema.safeParse(field);
+					break;
+				case 'select':
+					result = SelectFieldConfigSchema.safeParse(field);
+					break;
+				case 'checkbox':
+					result = CheckboxFieldConfigSchema.safeParse(field);
+					break;
+				case 'radio':
+					result = RadioFieldConfigSchema.safeParse(field);
+					break;
+				case 'number':
+					result = NumberFieldConfigSchema.safeParse(field);
+					break;
+				case 'switch':
+					result = SwitchFieldConfigSchema.safeParse(field);
+					break;
+				default:
+					continue;
+			}
+			
 			expect(result.success).toBe(true);
 			if (result.success) {
 				expect(result.data.componentId).toBe(field.componentId);

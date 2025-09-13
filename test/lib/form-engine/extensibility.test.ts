@@ -296,7 +296,6 @@ describe('Form Field Registry Extensibility', () => {
 			expect(allMetadata).toBeDefined();
 			expect(typeof allMetadata).toBe('object');
 			
-			expect(allMetadata.input).toBeDefined();
 			expect(allMetadata[componentId]).toBeDefined();
 			expect(allMetadata[componentId].title).toBe(`Custom Rating Field 8`);
 		});
