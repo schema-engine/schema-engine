@@ -14,15 +14,16 @@ const switchFieldExample = {
  * Register switch field component with enhanced type system
  * Tree-shakable: Only imported when needed
  */
-defaultFormFieldRegistry.register({
+export const switchFieldRegistration: FormEngine.FieldRegistration = {
 	componentId: 'switch',
 	component: FormSwitch,
-	runtimeSchema: SwitchFieldConfigSchema,
-	serializableSchema: SwitchFieldConfigSchema,
+	schema: SwitchFieldConfigSchema,
 	metadata: {
 		title: 'Switch',
 		description: 'Toggle switch for boolean values',
 		category: 'input',
 		example: switchFieldExample,
 	},
-});
+};
+
+defaultFormFieldRegistry.register(switchFieldRegistration);

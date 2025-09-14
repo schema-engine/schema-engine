@@ -18,15 +18,16 @@ const selectFieldExample = {
  * Register select field component with enhanced type system
  * Tree-shakable: Only imported when needed
  */
-defaultFormFieldRegistry.register({
+export const selectFieldRegistration: FormEngine.FieldRegistration = {
 	componentId: 'select',
 	component: FormSelect,
-	runtimeSchema: SelectFieldConfigSchema,
-	serializableSchema: SelectFieldConfigSchema,
+	schema: SelectFieldConfigSchema,
 	metadata: {
 		title: 'Select Field',
 		description: 'Dropdown selection field with multiple options',
 		category: 'input',
 		example: selectFieldExample,
 	},
-});
+};
+
+defaultFormFieldRegistry.register(selectFieldRegistration);

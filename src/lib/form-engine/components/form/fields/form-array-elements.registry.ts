@@ -1,10 +1,6 @@
 import { defaultFormFieldRegistry } from '@/lib/form-engine/schemas/registry';
 import { FormArrayElements } from './form-array-elements';
-import {
-	ArrayElementConfigSchema,
-	createArrayElementsRuntimeSchema,
-	type ArrayElementsConfig,
-} from './form-array-elements.types';
+import { createArrayElementsRuntimeSchema, type ArrayElementsConfig } from './form-array-elements.types';
 
 export const arrayElementsExample: ArrayElementsConfig = {
 	componentId: 'arrayElements',
@@ -41,18 +37,19 @@ export const arrayElementsExample: ArrayElementsConfig = {
 };
 
 /**
- * Register array field with compile-time type safety and runtime validation
- * Uses a factory function to create proper runtime schema with field unions
+ * Register array elements field component with enhanced type system
+ * Uses static serializable schema for consistency
  */
-defaultFormFieldRegistry.register({
+export const arrayElementsFieldRegistration: FormEngine.FieldRegistration = {
 	componentId: 'arrayElements',
 	component: FormArrayElements,
-	runtimeSchema: createArrayElementsRuntimeSchema(defaultFormFieldRegistry),
-	serializableSchema: ArrayElementConfigSchema,
+	schema: createArrayElementsRuntimeSchema(defaultFormFieldRegistry),
 	metadata: {
 		title: 'Array Field',
 		description: 'Dynamic array field for repeating elements with compile-time type safety',
 		category: 'layout',
 		example: arrayElementsExample,
 	},
-});
+};
+
+defaultFormFieldRegistry.register(arrayElementsFieldRegistration);

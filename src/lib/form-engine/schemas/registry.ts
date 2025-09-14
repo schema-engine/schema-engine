@@ -13,7 +13,7 @@ export const formFieldRegistry = z.registry<FormEngine.FieldMetadata>();
  */
 export class FormFieldComponentRegistry {
 	private components = new Map<string, FormEngine.FieldRegistration>();
-	private schemas = new Map<string, { runtime: z.ZodSchema<any>; serializable: z.ZodSchema<any> }>();
+	private schemas = new Map<string, z.ZodSchema<any>>();
 	private zodRegistry: ReturnType<typeof z.registry<FormEngine.FieldMetadata>>;
 
 	constructor(zodRegistry: ReturnType<typeof z.registry<FormEngine.FieldMetadata>> = formFieldRegistry) {
@@ -21,17 +21,13 @@ export class FormFieldComponentRegistry {
 	}
 
 	/**
-	 * Register a new field type with its component and schemas
+	 * Register a new field type with its component and schema
 	 */
 	register(registration: FormEngine.FieldRegistration): void {
-		const { componentId, runtimeSchema, serializableSchema, metadata } = registration;
+		const { componentId, schema, metadata } = registration;
 
 		this.components.set(componentId, registration);
-
-		this.schemas.set(componentId, {
-			runtime: runtimeSchema,
-			serializable: serializableSchema,
-		});
+		this.schemas.set(componentId, schema);
 
 		if (metadata) {
 			const enhancedMetadata: FormEngine.FieldMetadata = {
@@ -39,7 +35,7 @@ export class FormFieldComponentRegistry {
 				id: componentId,
 			};
 
-			this.zodRegistry.add(runtimeSchema, enhancedMetadata);
+			this.zodRegistry.add(schema, enhancedMetadata);
 		}
 	}
 
@@ -53,9 +49,9 @@ export class FormFieldComponentRegistry {
 		this.components.delete(componentId);
 		this.schemas.delete(componentId);
 
-		const runtimeSchema = registration.runtimeSchema;
-		if (runtimeSchema && this.zodRegistry.has(runtimeSchema)) {
-			this.zodRegistry.remove(runtimeSchema);
+		const schema = registration.schema;
+		if (schema && this.zodRegistry.has(schema)) {
+			this.zodRegistry.remove(schema);
 		}
 
 		return true;
@@ -69,17 +65,24 @@ export class FormFieldComponentRegistry {
 	}
 
 	/**
-	 * Get runtime schema for a field type
+	 * Get schema for a field type
 	 */
-	getRuntimeSchema(fieldType: ComponentId): z.ZodSchema<any> | undefined {
-		return this.schemas.get(fieldType)?.runtime;
+	getSchema(fieldType: ComponentId): z.ZodSchema<any> | undefined {
+		return this.schemas.get(fieldType);
 	}
 
 	/**
-	 * Get serializable schema for a field type
+	 * Get runtime schema for a field type (alias for getSchema for backward compatibility)
+	 */
+	getRuntimeSchema(fieldType: ComponentId): z.ZodSchema<any> | undefined {
+		return this.schemas.get(fieldType);
+	}
+
+	/**
+	 * Get serializable schema for a field type (alias for getSchema for backward compatibility)
 	 */
 	getSerializableSchema(fieldType: ComponentId): z.ZodSchema<any> | undefined {
-		return this.schemas.get(fieldType)?.serializable;
+		return this.schemas.get(fieldType);
 	}
 
 	/**
@@ -97,7 +100,9 @@ export class FormFieldComponentRegistry {
 		if (!schema) return undefined;
 
 		return this.zodRegistry.get(schema);
-	} /**
+	}
+
+	/**
 	 * Check if a field type is registered
 	 */
 	hasFieldType(fieldType: ComponentId): boolean {
@@ -133,7 +138,7 @@ export class FormFieldComponentRegistry {
 	 * This is used for dynamic schemas like array elements
 	 */
 	createFieldUnionSchema(): z.ZodSchema<FieldConfig> | z.ZodNever {
-		const schemas = Array.from(this.schemas.values()).map((s) => s.runtime);
+		const schemas = Array.from(this.schemas.values());
 
 		if (schemas.length === 0) {
 			return z.never();
@@ -143,27 +148,16 @@ export class FormFieldComponentRegistry {
 			return schemas[0];
 		}
 
-		// Create union schema from all registered runtime schemas
+		// Create union schema from all registered schemas
 		return z.union(schemas as [z.ZodSchema<any>, z.ZodSchema<any>, ...z.ZodSchema<any>[]]);
 	}
 
 	/**
 	 * Create a union schema of serializable field types
-	 * This is used for JSON schema generation and serialization
+	 * This is used for JSON schema generation and serialization (alias for createFieldUnionSchema for backward compatibility)
 	 */
 	createSerializableFieldUnionSchema(): z.ZodSchema<FieldConfig> | z.ZodNever {
-		const schemas = Array.from(this.schemas.values()).map((s) => s.serializable);
-
-		if (schemas.length === 0) {
-			return z.never();
-		}
-
-		if (schemas.length === 1) {
-			return schemas[0];
-		}
-
-		// Create union schema from all registered serializable schemas
-		return z.union(schemas as [z.ZodSchema<any>, z.ZodSchema<any>, ...z.ZodSchema<any>[]]);
+		return this.createFieldUnionSchema();
 	}
 
 	/**

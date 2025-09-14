@@ -19,15 +19,16 @@ const radioFieldExample = {
  * Register radio field component with enhanced type system
  * Tree-shakable: Only imported when needed
  */
-defaultFormFieldRegistry.register({
+export const radioFieldRegistration: FormEngine.FieldRegistration = {
 	componentId: 'radio',
 	component: FormRadio,
-	runtimeSchema: RadioFieldConfigSchema,
-	serializableSchema: RadioFieldConfigSchema,
+	schema: RadioFieldConfigSchema,
 	metadata: {
 		title: 'Radio Group',
 		description: 'Radio button group for single selection',
 		category: 'input',
 		example: radioFieldExample,
 	},
-});
+};
+
+defaultFormFieldRegistry.register(radioFieldRegistration);

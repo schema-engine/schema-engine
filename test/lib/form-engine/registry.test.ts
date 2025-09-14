@@ -101,16 +101,14 @@ const testSelectMetadata: FormEngine.FieldMetadata = {
 const testInputRegistration: FormEngine.FieldRegistration = {
 	componentId: "test-input",
 	component: MockComponent,
-	runtimeSchema: testInputRuntimeSchema,
-	serializableSchema: testInputSerializableSchema,
+	schema: testInputSerializableSchema, 
 	metadata: testInputMetadata,
 };
 
 const testSelectRegistration: FormEngine.FieldRegistration = {
 	componentId: "test-select",
 	component: MockSelectComponent,
-	runtimeSchema: testSelectRuntimeSchema,
-	serializableSchema: testSelectSerializableSchema,
+	schema: testSelectRuntimeSchema, 
 	metadata: testSelectMetadata,
 };
 
@@ -166,10 +164,7 @@ describe("FormFieldComponentRegistry", () => {
 			const registrationWithoutMetadata: FormEngine.FieldRegistration = {
 				componentId: "no-metadata",
 				component: MockComponent,
-				runtimeSchema: testInputRuntimeSchema.extend({
-					componentId: z.literal("no-metadata")
-				}),
-				serializableSchema: testInputSerializableSchema.extend({
+				schema: testInputSerializableSchema.extend({
 					componentId: z.literal("no-metadata")
 				}),
 			};
@@ -190,13 +185,13 @@ describe("FormFieldComponentRegistry", () => {
 		test("should return correct runtime schema", () => {
 			const schema = registry.getRuntimeSchema(asComponentId("test-input"));
 			expect(schema).toBeDefined();
-			expect(schema).toBe(testInputRuntimeSchema);
+			expect(schema).toBe(testInputSerializableSchema); // Now using serializable schema as the single schema
 		});
 
 		test("should return correct serializable schema", () => {
 			const schema = registry.getSerializableSchema(asComponentId("test-input"));
 			expect(schema).toBeDefined();
-			expect(schema).toBe(testInputSerializableSchema);
+			expect(schema).toBe(testInputSerializableSchema); // Now returns the single schema
 		});
 
 		test("should return undefined for non-existent field type", () => {
@@ -463,8 +458,7 @@ describe("FormFieldComponentRegistry", () => {
 				registry.register({
 					componentId: "test",
 					component: MockComponent,
-					runtimeSchema: testInputRuntimeSchema,
-					serializableSchema: testInputSerializableSchema,
+					schema: testInputSerializableSchema,
 					metadata: undefined,
 				});
 			}).not.toThrow();
@@ -474,8 +468,7 @@ describe("FormFieldComponentRegistry", () => {
 			const emptyIdRegistration: FormEngine.FieldRegistration = {
 				componentId: "",
 				component: MockComponent,
-				runtimeSchema: testInputRuntimeSchema,
-				serializableSchema: testInputSerializableSchema,
+				schema: testInputSerializableSchema,
 			};
 			
 			registry.register(emptyIdRegistration);
@@ -494,10 +487,7 @@ describe("FormFieldComponentRegistry", () => {
 			const registrations = Array.from({ length: 10 }, (_, i) => ({
 				componentId: `test-${i}`,
 				component: MockComponent,
-				runtimeSchema: testInputRuntimeSchema.extend({
-					componentId: z.literal(`test-${i}`)
-				}),
-				serializableSchema: testInputSerializableSchema.extend({
+				schema: testInputSerializableSchema.extend({
 					componentId: z.literal(`test-${i}`)
 				}),
 			}));

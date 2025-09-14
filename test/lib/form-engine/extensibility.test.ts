@@ -39,8 +39,7 @@ describe('Form Field Registry Extensibility', () => {
 			registration: {
 				componentId,
 				component: createMockComponent(componentId),
-				runtimeSchema: schema,
-				serializableSchema: schema,
+				schema: schema,
 				metadata: {
 					title: `Custom Rating Field ${suffix}`,
 					description: `A custom rating field component ${suffix}`,

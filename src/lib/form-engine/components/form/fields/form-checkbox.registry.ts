@@ -14,15 +14,16 @@ const checkboxFieldExample = {
  * Register checkbox field component with enhanced type system
  * Tree-shakable: Only imported when needed
  */
-defaultFormFieldRegistry.register({
+export const checkboxFieldRegistration: FormEngine.FieldRegistration = {
 	componentId: 'checkbox',
 	component: FormCheckbox,
-	runtimeSchema: CheckboxFieldConfigSchema,
-	serializableSchema: CheckboxFieldConfigSchema,
+	schema: CheckboxFieldConfigSchema,
 	metadata: {
 		title: 'Checkbox',
 		description: 'Single checkbox for boolean values',
 		category: 'input',
 		example: checkboxFieldExample,
 	},
-});
+};
+
+defaultFormFieldRegistry.register(checkboxFieldRegistration);

@@ -67,10 +67,8 @@ declare global {
 			componentId: string;
 			/** React component for rendering the field */
 			component: React.ComponentType<any>;
-			/** Runtime schema for validation and type checking */
-			runtimeSchema: z.ZodSchema<any>;
-			/** Serializable schema for JSON export/import */
-			serializableSchema: z.ZodSchema<any>;
+			/** Schema for validation, serialization and type checking */
+			schema: z.ZodSchema<any>;
 			/** Metadata for documentation and tooling */
 			metadata?: FieldMetadata;
 		}

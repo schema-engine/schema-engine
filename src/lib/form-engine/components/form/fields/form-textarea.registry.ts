@@ -6,15 +6,16 @@ import { FormTextarea } from './form-textarea';
  * Register textarea field component with enhanced type system
  * Tree-shakable: Only imported when needed
  */
-defaultFormFieldRegistry.register({
+export const textareaFieldRegistration: FormEngine.FieldRegistration = {
 	componentId: 'textarea',
 	component: FormTextarea,
-	runtimeSchema: TextareaFieldSchema,
-	serializableSchema: TextareaFieldSchema,
+	schema: TextareaFieldSchema,
 	metadata: {
 		title: 'Textarea Field',
 		description: 'Multi-line text input field',
 		category: 'input',
 		example: textareaFieldExample,
 	},
-});
+};
+
+defaultFormFieldRegistry.register(textareaFieldRegistration);

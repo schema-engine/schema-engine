@@ -16,15 +16,16 @@ const numberFieldExample = {
  * Register number field component with enhanced type system
  * Tree-shakable: Only imported when needed
  */
-defaultFormFieldRegistry.register({
+export const numberFieldRegistration: FormEngine.FieldRegistration = {
 	componentId: 'number',
 	component: FormNumber,
-	runtimeSchema: NumberFieldConfigSchema,
-	serializableSchema: NumberFieldConfigSchema,
+	schema: NumberFieldConfigSchema,
 	metadata: {
 		title: 'Number',
 		description: 'Numeric input with validation',
 		category: 'input',
 		example: numberFieldExample,
 	},
-});
+};
+
+defaultFormFieldRegistry.register(numberFieldRegistration);
