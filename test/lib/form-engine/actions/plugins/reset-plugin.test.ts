@@ -3,41 +3,16 @@ import { actionRegistry } from "@/lib/form-engine/actions/action-registry";
 import { resetPlugin, ResetActionSchema, type ResetAction } from "@/lib/form-engine/actions/plugins/reset-plugin";
 import type { ActionExecutionContext } from "@/lib/form-engine/actions/types";
 import { GDPRConsent } from "@/lib/form-engine/gdpr-consent";
-
-const mockGDPRConsent = {
-	hasConsent: () => true,
-	clearDraft: () => {},
-};
+import { createMockContext, setupTestEnvironment } from "../__tools";
 
 describe("ResetPlugin", () => {
 	let mockContext: ActionExecutionContext;
 
 	beforeEach(() => {
-		mockContext = {
-			formId: "test-form",
-			form: {
-				reset: () => {},
-				watch: () => ({}),
-				getValues: () => ({ name: "John", email: "john@example.com" }),
-				setValue: () => {},
-				clearErrors: () => {},
-				setError: () => {},
-				trigger: async () => true,
-			} as any,
+		setupTestEnvironment();
+		mockContext = createMockContext({
 			formData: { name: "John", email: "john@example.com" },
-			currentStep: 1,
-			totalSteps: 1,
-			isValid: true,
-			errors: {},
-			metadata: {
-				stepStartTime: Date.now(),
-				totalFormTime: 1000,
-				userInteractions: 5,
-			},
-		};
-
-		(GDPRConsent as any).hasConsent = mockGDPRConsent.hasConsent;
-		(GDPRConsent as any).clearDraft = mockGDPRConsent.clearDraft;
+		});
 	});
 
 	afterEach(() => {

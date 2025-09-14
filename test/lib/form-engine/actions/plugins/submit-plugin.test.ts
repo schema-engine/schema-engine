@@ -7,63 +7,23 @@ import {
 } from "@/lib/form-engine/actions/plugins/submit-plugin";
 import { actionRegistry } from "@/lib/form-engine/actions/action-registry";
 import type { ActionExecutionContext } from "@/lib/form-engine/actions/types";
+import { createMockContext, setupTestEnvironment, createMockFetch, createFailingMockFetch } from "../__tools";
 
-// Mock fetch for testing
-const createMockFetch = (shouldFail = false, responseData: any = { success: true, id: "123" }) => {
-	const mockFetch = async (url: string, options?: any): Promise<Response> => {
-		if (shouldFail) {
-			return new Response(JSON.stringify({ error: "Server error" }), {
-				status: 500,
-				statusText: "Internal Server Error",
-				headers: { "Content-Type": "application/json" },
-			});
-		}
-		return new Response(JSON.stringify(responseData), {
-			status: 200,
-			statusText: "OK",
-			headers: { "Content-Type": "application/json" },
-		});
-	};
-	// Add the preconnect property to satisfy TypeScript
-	(mockFetch as any).preconnect = () => {};
-	return mockFetch as typeof fetch;
-};
-
-const mockFetch = createMockFetch();
-const mockFailingFetch = createMockFetch(true);
-
-const mockContext: ActionExecutionContext = {
-	formId: "test-form",
-	currentStep: 0,
-	totalSteps: 1,
-	isValid: true,
-	errors: {},
-	form: {
-		getValues: () => ({ name: "John", email: "john@example.com" }),
-		setValue: () => {},
-		formState: {
-			isValid: true,
-			isSubmitting: false,
-			isSubmitSuccessful: false,
-			errors: {},
-		},
-	} as any,
+const mockContext = createMockContext({
 	formData: { name: "John", email: "john@example.com" },
-	metadata: {
-		stepStartTime: Date.now(),
-		totalFormTime: 1000,
-		userInteractions: 5,
-	},
-};
+});
 
 describe("SubmitPlugin", () => {
 	// Store original fetch for cleanup
 	let originalFetch: typeof fetch;
 
 	beforeEach(() => {
-		actionRegistry.clear();
+		setupTestEnvironment();
 		originalFetch = global.fetch;
-		global.fetch = mockFetch as any;
+		// Set default successful fetch mock
+		global.fetch = createMockFetch({ 
+			"/api/submit": { ok: true, data: { success: true, id: "123" } } 
+		});
 	});
 
 	afterEach(() => {
@@ -179,6 +139,9 @@ describe("SubmitPlugin", () => {
 			const plugin = submitPlugin({
 				request: async (url, options) => {
 					customRequestCalled = true;
+					const mockFetch = createMockFetch({ 
+						[url]: { ok: true, data: { success: true, id: "123" } } 
+					});
 					return mockFetch(url, options);
 				},
 			});
@@ -208,7 +171,7 @@ describe("SubmitPlugin", () => {
 		});
 
 		test("should handle submit failure", async () => {
-			global.fetch = mockFailingFetch;
+			global.fetch = createFailingMockFetch();
 
 			const plugin = submitPlugin();
 			actionRegistry.register(plugin);
@@ -255,7 +218,7 @@ describe("SubmitPlugin", () => {
 		});
 
 		test("should call custom error handler", async () => {
-			global.fetch = mockFailingFetch;
+			global.fetch = createFailingMockFetch();
 
 			let errorData: any = null;
 			let errorContext: ActionExecutionContext | null = null;
@@ -288,6 +251,9 @@ describe("SubmitPlugin", () => {
 
 			(global.fetch as any) = async (url: string, options: any) => {
 				requestBody = JSON.parse(options.body);
+				const mockFetch = createMockFetch({ 
+					[url]: { ok: true, data: { success: true, id: "123" } } 
+				});
 				return mockFetch(url, options);
 			};
 
@@ -333,6 +299,9 @@ describe("SubmitPlugin", () => {
 					customRequestCalled = true;
 					requestUrl = url;
 					requestOptions = options;
+					const mockFetch = createMockFetch({ 
+						[url]: { ok: true, data: { success: true, id: "123" } } 
+					});
 					return mockFetch(url, options);
 				},
 			});
@@ -398,6 +367,9 @@ describe("SubmitPlugin", () => {
 
 			(global.fetch as any) = async (url: string, options: any) => {
 				requestUrl = url;
+				const mockFetch = createMockFetch({ 
+					[url]: { ok: true, data: { success: true, id: "123" } } 
+				});
 				return mockFetch(url, options);
 			};
 

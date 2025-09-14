@@ -7,107 +7,39 @@ import {
 	type AutoSaveStorage,
 } from "@/lib/form-engine/actions/plugins/auto-save-plugin";
 import type { ActionExecutionContext } from "@/lib/form-engine/actions/types";
-
-class MockStorage implements AutoSaveStorage {
-	private data: Record<string, unknown> = {};
-
-	async save(key: string, data: unknown): Promise<void> {
-		this.data[key] = data;
-	}
-
-	async load(key: string): Promise<unknown> {
-		return this.data[key] || null;
-	}
-
-	async remove(key: string): Promise<void> {
-		delete this.data[key];
-	}
-
-	getStoredData(key: string): unknown {
-		return this.data[key];
-	}
-
-	clear(): void {
-		this.data = {};
-	}
-
-	getAllKeys(): string[] {
-		return Object.keys(this.data);
-	}
-}
-
-const mockLocalStorage = {
-	data: {} as Record<string, string>,
-	setItem(key: string, value: string) {
-		this.data[key] = value;
-	},
-	getItem(key: string): string | null {
-		return this.data[key] || null;
-	},
-	removeItem(key: string) {
-		delete this.data[key];
-	},
-	clear() {
-		this.data = {};
-	},
-};
-
-describe("AutoSavePlugin", () => {
+import {
+	createMockContext,
+	setupTestEnvironment,
+	MockLocalStorage,
+} from "../__tools";
+import {
+	MockAutoSaveStorage,
+	createFailingStorage,
+} from "../__tools/storage-utils";describe("AutoSavePlugin", () => {
 	let mockContext: ActionExecutionContext;
-	let mockStorage: MockStorage;
-	let originalLocalStorage: Storage | undefined;
+	let mockStorage: MockAutoSaveStorage;
+	let mockLocalStorage: MockLocalStorage;
 
 	beforeEach(() => {
-		mockStorage = new MockStorage();
-
-		mockContext = {
-			formId: "test-form",
-			form: {
-				getValues: () => ({ name: "John", email: "john@example.com" }),
-				setValue: () => {},
-				clearErrors: () => {},
-				setError: () => {},
-				trigger: async () => true,
-			} as any,
+		mockLocalStorage = setupTestEnvironment();
+		mockStorage = new MockAutoSaveStorage();
+		mockContext = createMockContext({
 			formData: {
+				field1: "value1",
 				name: "John",
 				email: "john@example.com",
+				preferences: {
+					theme: "dark",
+				},
 				password: "secret123",
-				preferences: { theme: "dark" },
 			},
-			currentStep: 1,
-			totalSteps: 1,
-			isValid: true,
-			errors: {},
-			metadata: {
-				stepStartTime: Date.now(),
-				totalFormTime: 1000,
-				userInteractions: 5,
-			},
-		};
-
-		// Save original localStorage and mock it
-		originalLocalStorage = globalThis.localStorage;
-		Object.defineProperty(globalThis, 'localStorage', {
-			value: mockLocalStorage,
-			writable: true,
-			configurable: true,
 		});
-		mockLocalStorage.clear();
-	});
-
-	afterEach(() => {
-		actionRegistry.clear();
-		mockStorage.clear();
-		mockLocalStorage.clear();
-		
-		// Restore original localStorage
-		if (originalLocalStorage) {
-			Object.defineProperty(globalThis, 'localStorage', {
-				value: originalLocalStorage,
-				writable: true,
-				configurable: true,
-			});
+	});	afterEach(() => {
+		if (mockLocalStorage) {
+			mockLocalStorage.clear();
+		}
+		if (mockStorage) {
+			mockStorage.clear();
 		}
 	});
 
@@ -256,9 +188,9 @@ describe("AutoSavePlugin", () => {
 
 			const savedData = mockStorage.getStoredData("autosave_test-form");
 			expect(savedData).toEqual({
+				field1: "value1",
 				name: "John",
 				email: "john@example.com",
-				// password should be filtered out by default
 				preferences: { theme: "dark" },
 			});
 		});
@@ -296,7 +228,7 @@ describe("AutoSavePlugin", () => {
 
 			await actionRegistry.execute(action, mockContext);
 
-			const savedData = mockStorage.getStoredData("generated_test-form_1");
+			const savedData = mockStorage.getStoredData("generated_test-form_0");
 			expect(savedData).toBeDefined();
 		});
 
@@ -407,14 +339,7 @@ describe("AutoSavePlugin", () => {
 		});
 
 		test("should handle storage errors", async () => {
-			// Create a failing storage implementation
-			const failingStorage: AutoSaveStorage = {
-				save: async () => {
-					throw new Error("Storage failed");
-				},
-				load: async () => null,
-				remove: async () => {},
-			};
+			const failingStorage = createFailingStorage("Storage failed");
 
 			let errorMessage: string | null = null;
 			let errorContext: ActionExecutionContext | null = null;
@@ -470,13 +395,7 @@ describe("AutoSavePlugin", () => {
 		});
 
 		test("should handle async onError handler", async () => {
-			const failingStorage: AutoSaveStorage = {
-				save: async () => {
-					throw new Error("Async storage error");
-				},
-				load: async () => null,
-				remove: async () => {},
-			};
+			const failingStorage = createFailingStorage("Async storage error");
 
 			let asyncErrorCalled = false;
 
@@ -516,20 +435,37 @@ describe("AutoSavePlugin", () => {
 			const result = await actionRegistry.execute(action, mockContext);
 
 			expect(result.success).toBe(true);
-			expect(mockLocalStorage.data["autosave_test-form"]).toBeDefined();
-
-			const savedData = JSON.parse(mockLocalStorage.data["autosave_test-form"]);
-			expect(savedData.name).toBe("John");
-			expect(savedData.password).toBeUndefined(); // Sensitive data filtered
+			
+			// Check that data was saved to localStorage
+			const savedData = mockLocalStorage.getItem("autosave_test-form");
+			expect(savedData).toBeDefined();
+			
+			const parsedData = JSON.parse(savedData!);
+			expect(parsedData.field1).toBe("value1");
+			expect(parsedData.name).toBe("John");
+			expect(parsedData.password).toBeUndefined(); // Sensitive data filtered by default
 		});
 
-		test("should handle localStorage save", () => {
-			// Test the localStorage mock directly
+		test("should handle localStorage save and load operations", () => {
+			// Test localStorage save
 			mockLocalStorage.setItem("test-key", JSON.stringify({ test: "data" }));
 
-			expect(mockLocalStorage.data["test-key"]).toBeDefined();
-			const saved = JSON.parse(mockLocalStorage.data["test-key"]);
+			expect(mockLocalStorage.getItem("test-key")).toBeDefined();
+			const saved = JSON.parse(mockLocalStorage.getItem("test-key")!);
 			expect(saved.test).toBe("data");
+			
+			// Test localStorage remove
+			mockLocalStorage.removeItem("test-key");
+			expect(mockLocalStorage.getItem("test-key")).toBeNull();
+			
+			// Test localStorage clear
+			mockLocalStorage.setItem("key1", "value1");
+			mockLocalStorage.setItem("key2", "value2");
+			expect(mockLocalStorage.length).toBe(2);
+			
+			mockLocalStorage.clear();
+			expect(mockLocalStorage.length).toBe(0);
+			expect(mockLocalStorage.getItem("key1")).toBeNull();
 		});
 	});
 
@@ -553,11 +489,11 @@ describe("AutoSavePlugin", () => {
 
 		test("should work with different storage backends", async () => {
 			// Test with different storage implementations
-			const memoryStorage = new MockStorage();
+			const memoryStorage = new MockAutoSaveStorage();
 			const apiCalls: Array<{ key: string; data: any }> = [];
 
 			const apiStorage: AutoSaveStorage = {
-				save: async (key, data) => {
+				save: async (key: string, data: unknown) => {
 					apiCalls.push({ key, data });
 				},
 				load: async () => null,
@@ -577,16 +513,13 @@ describe("AutoSavePlugin", () => {
 
 			await actionRegistry.execute(action, mockContext);
 
-			// Check memory storage
 			expect(memoryStorage.getAllKeys()).toContain("autosave_test-form");
 
-			// Clear and test API storage
 			actionRegistry.clear();
 			actionRegistry.register(apiPlugin);
 
 			await actionRegistry.execute(action, mockContext);
 
-			// Check API calls
 			expect(apiCalls).toHaveLength(1);
 			expect(apiCalls[0].key).toBe("autosave_test-form");
 		});

@@ -6,34 +6,13 @@ import {
 } from "@/lib/form-engine/actions/plugins/notification-plugin";
 import { actionRegistry } from "@/lib/form-engine/actions/action-registry";
 import type { ActionExecutionContext } from "@/lib/form-engine/actions/types";
+import { createMockContext, setupTestEnvironment } from "../__tools";
 
-const mockContext: ActionExecutionContext = {
-	formId: "test-form",
-	currentStep: 0,
-	totalSteps: 1,
-	isValid: true,
-	errors: {},
-	form: {
-		getValues: () => ({ field1: "value1" }),
-		setValue: () => {},
-		formState: {
-			isValid: true,
-			isSubmitting: false,
-			isSubmitSuccessful: false,
-			errors: {},
-		},
-	} as any,
-	formData: { field1: "value1" },
-	metadata: {
-		stepStartTime: Date.now(),
-		totalFormTime: 1000,
-		userInteractions: 5,
-	},
-};
+const mockContext = createMockContext();
 
 describe("NotificationPlugin", () => {
 	beforeEach(() => {
-		actionRegistry.clear();
+		setupTestEnvironment();
 	});
 
 	afterEach(() => {

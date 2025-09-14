@@ -6,6 +6,7 @@ import type {
 	ActionExecutionResult, 
 	ActionTrigger 
 } from "@/lib/form-engine/actions/types";
+import { createMockContext, setupTestEnvironment } from "./__tools";
 
 type TestActionConfig = {
 	id: string;
@@ -15,29 +16,7 @@ type TestActionConfig = {
 	[key: string]: any;
 };
 
-const mockContext: ActionExecutionContext = {
-	formId: "test-form",
-	currentStep: 0,
-	totalSteps: 1,
-	isValid: true,
-	errors: {},
-	form: {
-		getValues: () => ({ field1: "value1" }),
-		setValue: () => {},
-		formState: {
-			isValid: true,
-			isSubmitting: false,
-			isSubmitSuccessful: false,
-			errors: {},
-		},
-	} as any,
-	formData: { field1: "value1" },
-	metadata: {
-		stepStartTime: Date.now(),
-		totalFormTime: 1000,
-		userInteractions: 5,
-	},
-};
+const mockContext = createMockContext();
 
 const createMockHandler = (name: string, shouldFail = false, delay = 0) => {
 	return async (action: any, context: ActionExecutionContext): Promise<ActionExecutionResult> => {
@@ -93,8 +72,8 @@ describe("ActionExecutor", () => {
 	let executor: ActionExecutor;
 
 	beforeEach(() => {
+		setupTestEnvironment();
 		executor = new ActionExecutor();
-		actionRegistry.clear();
 		executionOrder = [];
 	});
 

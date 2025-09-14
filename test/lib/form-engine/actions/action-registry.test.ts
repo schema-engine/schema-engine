@@ -2,6 +2,7 @@ import { test, expect, describe, beforeEach, afterEach } from "bun:test";
 import { z } from "zod";
 import { actionRegistry, registerAction, type ActionHandler, type RegisteredAction } from "@/lib/form-engine/actions/action-registry";
 import type { ActionExecutionContext, ActionExecutionResult, ActionTrigger } from "@/lib/form-engine/actions/types";
+import { createMockContext, setupTestEnvironment } from "./__tools";
 
 const mockActionHandler: ActionHandler = async (action, context) => ({
 	success: true,
@@ -24,33 +25,11 @@ const TestActionSchema = z.object({
 	optionalField: z.string().optional(),
 });
 
-const mockContext: ActionExecutionContext = {
-	formId: "test-form",
-	currentStep: 0,
-	form: {
-		getValues: () => ({ field1: "value1" }),
-		setValue: () => {},
-		formState: {
-			isValid: true,
-			isSubmitting: false,
-			isSubmitSuccessful: false,
-			errors: {},
-		},
-	} as any,
-	formData: { field1: "value1" },
-    isValid: true,
-    totalSteps: 1,
-    errors: {},
-    metadata: {
-        stepStartTime: Date.now(),
-        totalFormTime: 1000,
-        userInteractions: 5,
-    },
-};
+const mockContext = createMockContext();
 
 describe("ActionRegistry", () => {
 	beforeEach(() => {
-		actionRegistry.clear();
+		setupTestEnvironment();
 	});
 
 	afterEach(() => {

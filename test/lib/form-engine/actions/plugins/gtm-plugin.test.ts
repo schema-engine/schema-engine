@@ -3,6 +3,7 @@ import { actionRegistry, registerAction } from "@/lib/form-engine/actions/action
 import { GTMEventActionSchema, type GTMEventAction } from "@/lib/form-engine/actions/plugins/gtm-plugin";
 import { GTMTracker } from "@/lib/form-engine/gtm-tracker";
 import type { ActionExecutionContext, ActionExecutionResult } from "@/lib/form-engine/actions/types";
+import { createMockContext, setupTestEnvironment } from "../__tools";
 
 type GTMEventActionInput = {
 	id: string;
@@ -30,15 +31,8 @@ describe("GTMPlugin", () => {
 	let originalWindow: any;
 
 	beforeEach(() => {
-		mockContext = {
-			formId: "test-form",
-			form: {
-				getValues: () => ({ name: "John", email: "john@example.com" }),
-				setValue: () => {},
-				clearErrors: () => {},
-				setError: () => {},
-				trigger: async () => true,
-			} as any,
+		setupTestEnvironment();
+		mockContext = createMockContext({
 			formData: {
 				name: "John",
 				email: "john@example.com",
@@ -46,14 +40,12 @@ describe("GTMPlugin", () => {
 			},
 			currentStep: 2,
 			totalSteps: 3,
-			isValid: true,
-			errors: {},
 			metadata: {
 				stepStartTime: Date.now(),
 				totalFormTime: 5000,
 				userInteractions: 10,
 			},
-		};
+		});
 
 		originalWindow = globalThis.window;
 		globalThis.window = {
