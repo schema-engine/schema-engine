@@ -1,0 +1,783 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+  title: 'Migration Guide | Form Engine Documentation',
+  description: 'Comprehensive guide for migrating from other form libraries to Form Engine, including code examples and best practices.',
+})
+
+# Migration Guide
+
+This guide helps you migrate from popular form libraries to Form Engine, providing step-by-step instructions and code examples.
+
+## From React Hook Form
+
+React Hook Form is a popular form library. Here's how to migrate your existing forms to Form Engine.
+
+### Before (React Hook Form)
+
+```typescript
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+const schema = z.object({
+  firstName: z.string().min(2, 'First name must be at least 2 characters'),
+  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
+  email: z.string().email('Invalid email address'),
+  age: z.number().min(18, 'Must be at least 18 years old'),
+});
+
+function ContactForm() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(schema),
+  });
+
+  const onSubmit = async (data) => {
+    try {
+      const response = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      // Handle response
+    } catch (error) {
+      // Handle error
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <div>
+        <label htmlFor="firstName">First Name</label>
+        <input
+          {...register('firstName')}
+          type="text"
+          id="firstName"
+          placeholder="Enter first name"
+        />
+        {errors.firstName && <span>{errors.firstName.message}</span>}
+      </div>
+
+      <div>
+        <label htmlFor="lastName">Last Name</label>
+        <input
+          {...register('lastName')}
+          type="text"
+          id="lastName"
+          placeholder="Enter last name"
+        />
+        {errors.lastName && <span>{errors.lastName.message}</span>}
+      </div>
+
+      <div>
+        <label htmlFor="email">Email</label>
+        <input
+          {...register('email')}
+          type="email"
+          id="email"
+          placeholder="Enter email"
+        />
+        {errors.email && <span>{errors.email.message}</span>}
+      </div>
+
+      <div>
+        <label htmlFor="age">Age</label>
+        <input
+          {...register('age', { valueAsNumber: true })}
+          type="number"
+          id="age"
+          placeholder="Enter age"
+        />
+        {errors.age && <span>{errors.age.message}</span>}
+      </div>
+
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
+```
+
+### After (Form Engine)
+
+```typescript
+import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
+import { FormConfig } from '@/lib/form-engine/types';
+
+const formConfig: FormConfig = {
+  id: 'contact-form',
+  title: 'Contact Form',
+  elements: [
+    {
+      id: 'firstName',
+      type: 'text',
+      name: 'firstName',
+      label: 'First Name',
+      placeholder: 'Enter first name',
+      required: true,
+      rules: [
+        { type: 'required', message: 'First name is required' },
+        { type: 'minLength', value: 2, message: 'First name must be at least 2 characters' }
+      ]
+    },
+    {
+      id: 'lastName',
+      type: 'text',
+      name: 'lastName',
+      label: 'Last Name',
+      placeholder: 'Enter last name',
+      required: true,
+      rules:
+        { type: 'required', message: 'Last name is required' },
+        { type: 'minLength', value: 2, message: 'Last name must be at least 2 characters' }
+      ]
+    },
+    {
+      id: 'email',
+      type: 'email',
+      name: 'email',
+      label: 'Email',
+      placeholder: 'Enter email',
+      required: true,
+      rules:
+        { type: 'required', message: 'Email is required' },
+        { type: 'email', message: 'Invalid email address' }
+      ]
+    },
+    {
+      id: 'age',
+      type: 'number',
+      name: 'age',
+      label: 'Age',
+      placeholder: 'Enter age',
+      required: true,
+      rules:
+        { type: 'required', message: 'Age is required' },
+        { type: 'min', value: 18, message: 'Must be at least 18 years old' }
+      ]
+    }
+  ],
+  actions: [
+    {
+      id: 'submit',
+      type: 'submit',
+      label: 'Submit',
+      endpoint: '/api/submit',
+      method: 'POST',
+      rules:,
+      onSuccess: {
+        type: 'message',
+        title: 'Success!',
+        message: 'Form submitted successfully'
+      },
+      onError: {
+        type: 'message',
+        title: 'Error',
+        message: 'Failed to submit form',
+        variant: 'destructive'
+      }
+    }
+  ]
+};
+
+function ContactForm() {
+  return <FormRenderer config={formConfig} />;
+}
+```
+
+## From Formik
+
+Formik is another popular choice. Here's the migration path:
+
+### Before (Formik)
+
+```typescript
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
+
+const validationSchema = Yup.object({
+  username: Yup.string()
+    .min(3, 'Username must be at least 3 characters')
+    .required('Username is required'),
+  password: Yup.string()
+    .min(8, 'Password must be at least 8 characters')
+    .required('Password is required'),
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref('password')], 'Passwords must match')
+    .required('Confirm password is required'),
+  acceptTerms: Yup.boolean()
+    .oneOf([true], 'You must accept the terms and conditions'),
+});
+
+function SignupForm() {
+  const handleSubmit = async (values, { setSubmitting, setStatus }) => {
+    try {
+      await fetch('/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      });
+      setStatus('success');
+    } catch (error) {
+      setStatus('error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Formik
+      initialValues={{
+        username: '',
+        password: '',
+        confirmPassword: '',
+        acceptTerms: false,
+      }}
+      validationSchema={validationSchema}
+      onSubmit={handleSubmit}
+    >
+      {({ isSubmitting, status }) => (
+        <Form>
+          <div>
+            <label htmlFor="username">Username</label>
+            <Field
+              type="text"
+              id="username"
+              name="username"
+              placeholder="Enter username"
+            />
+            <ErrorMessage name="username" component="div" />
+          </div>
+
+          <div>
+            <label htmlFor="password">Password</label>
+            <Field
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Enter password"
+            />
+            <ErrorMessage name="password" component="div" />
+          </div>
+
+          <div>
+            <label htmlFor="confirmPassword">Confirm Password</label>
+            <Field
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              placeholder="Confirm password"
+            />
+            <ErrorMessage name="confirmPassword" component="div" />
+          </div>
+
+          <div>
+            <Field type="checkbox" id="acceptTerms" name="acceptTerms" />
+            <label htmlFor="acceptTerms">
+              I accept the terms and conditions
+            </label>
+            <ErrorMessage name="acceptTerms" component="div" />
+          </div>
+
+          <button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Signing up...' : 'Sign Up'}
+          </button>
+
+          {status === 'success' && <div>Signup successful!</div>}
+          {status === 'error' && <div>Signup failed. Please try again.</div>}
+        </Form>
+      )}
+    </Formik>
+  );
+}
+```
+
+### After (Form Engine)
+
+```typescript
+import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
+import { FormConfig } from '@/lib/form-engine/types';
+
+const signupConfig: FormConfig = {
+  id: 'signup-form',
+  title: 'Create Account',
+  elements: [
+    {
+      id: 'username',
+      type: 'text',
+      name: 'username',
+      label: 'Username',
+      placeholder: 'Enter username',
+      required: true,
+      rules:
+        { type: 'required', message: 'Username is required' },
+        { type: 'minLength', value: 3, message: 'Username must be at least 3 characters' }
+      ]
+    },
+    {
+      id: 'password',
+      type: 'password',
+      name: 'password',
+      label: 'Password',
+      placeholder: 'Enter password',
+      required: true,
+      rules:
+        { type: 'required', message: 'Password is required' },
+        { type: 'minLength', value: 8, message: 'Password must be at least 8 characters' }
+      ]
+    },
+    {
+      id: 'confirmPassword',
+      type: 'password',
+      name: 'confirmPassword',
+      label: 'Confirm Password',
+      placeholder: 'Confirm password',
+      required: true,
+      rules:
+        { type: 'required', message: 'Confirm password is required' },
+        { 
+          type: 'custom', 
+          message: 'Passwords must match',
+          validator: (value, data) => value === data.password
+        }
+      ]
+    },
+    {
+      id: 'acceptTerms',
+      componentId: 'checkbox',
+      name: 'acceptTerms',
+      label: 'I accept the terms and conditions',
+      required: true,
+      rules:
+        { type: 'required', message: 'You must accept the terms and conditions' }
+      ]
+    }
+  ],
+  actions: [
+    {
+      id: 'submit',
+      type: 'submit',
+      label: 'Sign Up',
+      endpoint: '/api/signup',
+      method: 'POST',
+      rules:,
+      loading: {
+        text: 'Signing up...'
+      },
+      onSuccess: {
+        type: 'message',
+        title: 'Success!',
+        message: 'Signup successful!'
+      },
+      onError: {
+        type: 'message',
+        title: 'Error',
+        message: 'Signup failed. Please try again.',
+        variant: 'destructive'
+      }
+    }
+  ]
+};
+
+function SignupForm() {
+  return <FormRenderer config={signupConfig} />;
+}
+```
+
+## From Native HTML Forms
+
+If you're upgrading from basic HTML forms:
+
+### Before (Native HTML)
+
+```html
+<form id="newsletter-form" onsubmit="handleSubmit(event)">
+  <div>
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" required minlength="2">
+    <span class="error" id="name-error"></span>
+  </div>
+
+  <div>
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required>
+    <span class="error" id="email-error"></span>
+  </div>
+
+  <div>
+    <label for="interests">Interests:</label>
+    <select id="interests" name="interests" multiple>
+      <option value="technology">Technology</option>
+      <option value="design">Design</option>
+      <option value="business">Business</option>
+      <option value="marketing">Marketing</option>
+    </select>
+  </div>
+
+  <div>
+    <input type="checkbox" id="subscribe" name="subscribe" required>
+    <label for="subscribe">I want to receive newsletters</label>
+    <span class="error" id="subscribe-error"></span>
+  </div>
+
+  <button type="submit">Subscribe</button>
+</form>
+
+<script>
+function handleSubmit(event) {
+  event.preventDefault();
+  const formData = new FormData(event.target);
+  
+  // Manual validation
+  const name = formData.get('name');
+  const email = formData.get('email');
+  const subscribe = formData.get('subscribe');
+  
+  if (!name || name.length < 2) {
+    document.getElementById('name-error').textContent = 'Name must be at least 2 characters';
+    return;
+  }
+  
+  if (!email || !email.includes('@')) {
+    document.getElementById('email-error').textContent = 'Please enter a valid email';
+    return;
+  }
+  
+  if (!subscribe) {
+    document.getElementById('subscribe-error').textContent = 'You must agree to receive newsletters';
+    return;
+  }
+  
+  // Submit form
+  fetch('/api/newsletter', {
+    method: 'POST',
+    body: formData
+  }).then(response => {
+    if (response.ok) {
+      alert('Subscription successful!');
+    } else {
+      alert('Subscription failed!');
+    }
+  });
+}
+</script>
+```
+
+### After (Form Engine)
+
+```typescript
+import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
+import { FormConfig } from '@/lib/form-engine/types';
+
+const newsletterConfig: FormConfig = {
+  id: 'newsletter-form',
+  title: 'Newsletter Subscription',
+  elements: [
+    {
+      id: 'name',
+      type: 'text',
+      name: 'name',
+      label: 'Name',
+      required: true,
+      rules:
+        { type: 'required', message: 'Name is required' },
+        { type: 'minLength', value: 2, message: 'Name must be at least 2 characters' }
+      ]
+    },
+    {
+      id: 'email',
+      type: 'email',
+      name: 'email',
+      label: 'Email',
+      required: true,
+      rules:
+        { type: 'required', message: 'Email is required' },
+        { type: 'email', message: 'Please enter a valid email' }
+      ]
+    },
+    {
+      id: 'interests',
+      type: 'multiselect',
+      name: 'interests',
+      label: 'Interests',
+      options: [
+        { label: 'Technology', value: 'technology' },
+        { label: 'Design', value: 'design' },
+        { label: 'Business', value: 'business' },
+        { label: 'Marketing', value: 'marketing' }
+      ]
+    },
+    {
+      id: 'subscribe',
+      componentId: 'checkbox',
+      name: 'subscribe',
+      label: 'I want to receive newsletters',
+      required: true,
+      rules:
+        { type: 'required', message: 'You must agree to receive newsletters' }
+      ]
+    }
+  ],
+  actions: [
+    {
+      id: 'submit',
+      type: 'submit',
+      label: 'Subscribe',
+      endpoint: '/api/newsletter',
+      method: 'POST',
+      rules:,
+      onSuccess: {
+        type: 'message',
+        title: 'Success!',
+        message: 'Subscription successful!'
+      },
+      onError: {
+        type: 'message',
+        title: 'Error',
+        message: 'Subscription failed!',
+        variant: 'destructive'
+      }
+    }
+  ]
+};
+
+function NewsletterForm() {
+  return <FormRenderer config={newsletterConfig} />;
+}
+```
+
+## Migration Steps
+
+### 1. Analyze Current Form Structure
+
+First, identify the components of your existing form:
+
+- **Fields**: What input types do you use?
+- **Validation**: What validation rules are applied?
+- **Submission**: How is form data submitted?
+- **Error Handling**: How are errors displayed?
+- **Layout**: How are fields arranged?
+
+### 2. Map Field Types
+
+| Other Libraries | Form Engine |
+|----------------|-------------|
+| `<input type="text">` | `type: 'text'` |
+| `<input type="email">` | `type: 'email'` |
+| `<input type="password">` | `type: 'password'` |
+| `<input type="number">` | `type: 'number'` |
+| `<textarea>` | `type: 'textarea'` |
+| `<select>` | `type: 'select'` |
+| `<select multiple>` | `type: 'multiselect'` |
+| `<input type="checkbox">` | `type: 'checkbox'` |
+| `<input type="radio">` | `type: 'radio'` |
+| `<input type="file">` | `type: 'file'` |
+| `<input type="date">` | `type: 'date'` |
+
+### 3. Convert Validation Rules
+
+| Validation Type | Form Engine Config |
+|----------------|-------------------|
+| Required | `{ type: 'required', message: 'Field is required' }` |
+| Min Length | `{ type: 'minLength', value: 3, message: 'Too short' }` |
+| Max Length | `{ type: 'maxLength', value: 100, message: 'Too long' }` |
+| Email | `{ type: 'email', message: 'Invalid email' }` |
+| Pattern/Regex | `{ type: 'pattern', value: /regex/, message: 'Invalid format' }` |
+| Custom | `{ type: 'custom', validator: (value) => boolean, message: 'Custom error' }` |
+
+### 4. Configure Actions
+
+Replace submission handlers with action configurations:
+
+```typescript
+// Instead of manual fetch
+const handleSubmit = async (data) => {
+  const response = await fetch('/api/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+};
+
+// Use action config
+actions: [
+  {
+    id: 'submit',
+    type: 'submit',
+    endpoint: '/api/submit',
+    method: 'POST',
+    onSuccess: { /* success config */ },
+    onError: { /* error config */ }
+  }
+]
+```
+
+### 5. Migrate Layout
+
+Convert CSS layouts to Form Engine grid system:
+
+```typescript
+// Instead of CSS Grid/Flexbox
+.form-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+// Use layout config
+layout: {
+  type: 'grid',
+  columns: 2,
+  gap: '1rem'
+}
+```
+
+## Common Migration Patterns
+
+### Dynamic Fields
+
+**Before:**
+```typescript
+const [fields, setFields] = useState([{ id: 1, value: '' }]);
+
+const addField = () => {
+  setFields([...elements, { id: Date.now(), value: '' }]);
+};
+```
+
+**After:**
+```typescript
+// Use field arrays
+{
+  id: 'items',
+  type: 'group',
+  name: 'items',
+  label: 'Items',
+  elements: [
+    {
+      id: 'item',
+      type: 'text',
+      name: 'item',
+      label: 'Item'
+    }
+  ],
+  props: {
+    repeatable: true,
+    addLabel: 'Add Item',
+    removeLabel: 'Remove'
+  }
+}
+```
+
+### Conditional Fields
+
+**Before:**
+```typescript
+const [showField, setShowField] = useState(false);
+
+useEffect(() => {
+  setShowField(watchValue === 'trigger');
+}, [watchValue]);
+```
+
+**After:**
+```typescript
+// Use conditional config
+{
+  id: 'conditionalField',
+  type: 'text',
+  name: 'conditionalField',
+  label: 'Conditional Field',
+  conditional: {
+    field: 'triggerField',
+    operator: 'equals',
+    value: 'trigger',
+    action: 'show'
+  }
+}
+```
+
+### Multi-Step Forms
+
+**Before:**
+```typescript
+const [currentStep, setCurrentStep] = useState(0);
+const [formData, setFormData] = useState({});
+
+const nextStep = () => {
+  if (validateCurrentStep()) {
+    setCurrentStep(prev => prev + 1);
+  }
+};
+```
+
+**After:**
+```typescript
+// Use stepped mode
+{
+  id: 'multi-step-form',
+  mode: 'stepped',
+  steps: [
+    {
+      id: 'step1',
+      title: 'Step 1',
+      elements: [/* step 1 fields */]
+    },
+    {
+      id: 'step2',
+      title: 'Step 2',
+      elements: [/* step 2 fields */]
+    }
+  ]
+}
+```
+
+## Benefits After Migration
+
+### 1. Reduced Code
+- Less boilerplate code
+- No manual field registration
+- Automatic error handling
+
+### 2. Better Maintainability
+- Declarative configuration
+- Centralized validation rules
+- Consistent styling
+
+### 3. Enhanced Features
+- Built-in accessibility
+- Responsive layouts
+- Advanced field types
+
+### 4. Improved Developer Experience
+- TypeScript support
+- Hot reload support
+- Comprehensive documentation
+
+## Migration Checklist
+
+- [ ] Inventory existing forms and their complexity
+- [ ] Map field types to Form Engine equivalents
+- [ ] Convert validation rules to Form Engine format
+- [ ] Replace submission handlers with actions
+- [ ] Test form functionality
+- [ ] Verify styling and layout
+- [ ] Check accessibility compliance
+- [ ] Update tests
+- [ ] Deploy and monitor
+
+## Getting Help
+
+If you encounter issues during migration:
+
+1. Check our [examples](/docs/examples) for similar use cases
+2. Review the [API documentation](/docs/api) for detailed configuration options
+3. Join our community discussions
+4. Open an issue on GitHub
+
+The migration process is designed to be gradual - you can migrate forms one at a time while keeping existing forms functional.
