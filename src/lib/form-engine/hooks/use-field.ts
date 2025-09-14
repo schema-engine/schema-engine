@@ -1,17 +1,17 @@
 import { useController } from 'react-hook-form';
-import { isFieldRequired } from '../validation';
+import { isFieldRequired } from '../schemas/validation';
 import { useFieldGridStyles } from './grid-hooks';
-import type { FieldConfig } from '../types/form';
+import type { FieldConfig } from '@/lib/form-engine/schemas';
 
 /**
  * Creates a default value for a field configuration
  */
-function createFieldDefaultValue(config: FieldConfig): any {
-	if (config.defaultValue !== undefined) {
+export function createFieldDefaultValue(config: FormEngine.FieldConfig): any {
+	if ('defaultValue' in config && config.defaultValue !== undefined) {
 		return config.defaultValue;
 	}
 
-	switch (config.type) {
+	switch (config.componentId) {
 		case 'input':
 			return '';
 		case 'number':
@@ -24,7 +24,7 @@ function createFieldDefaultValue(config: FieldConfig): any {
 			return false;
 		case 'radio':
 			return '';
-		case 'array':
+		case 'arrayElements':
 			return [];
 		default:
 			return '';

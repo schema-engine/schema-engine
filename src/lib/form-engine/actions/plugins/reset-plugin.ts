@@ -1,6 +1,6 @@
-import { z } from "zod";
-import type { ActionExecutionContext, ActionExecutionResult } from "../types";
-import { GDPRConsent } from "../../gdpr-consent";
+import { z } from 'zod';
+import type { ActionExecutionContext, ActionExecutionResult } from '../types';
+import { GDPRConsent } from '../../tools/gdpr-consent';
 
 /**
  * Reset Plugin Configuration
@@ -28,8 +28,8 @@ export interface ResetPluginConfig {
  * ```
  */
 export const ResetActionSchema = z.object({
-	id: z.string().min(1, "Action ID cannot be empty"),
-	type: z.literal("reset"),
+	id: z.string().min(1, 'Action ID cannot be empty'),
+	type: z.literal('reset'),
 	description: z.string().optional(),
 	enabled: z.boolean().default(true),
 	triggers: z.array(z.string()).optional(),
@@ -39,7 +39,7 @@ export const ResetActionSchema = z.object({
 
 export type ResetAction = z.infer<typeof ResetActionSchema>;
 
-declare module "../types" {
+declare module '../types' {
 	interface PluginActions {
 		reset: ResetAction;
 	}
@@ -111,20 +111,17 @@ export function resetPlugin(config: ResetPluginConfig = {}) {
 	} = config;
 
 	return {
-		type: "reset" as const,
+		type: 'reset' as const,
 		schema: ResetActionSchema,
-		defaultTriggers: ["manual_reset", "submit_success"] as const,
-		handler: async (
-			action: ResetAction,
-			context: ActionExecutionContext
-		): Promise<ActionExecutionResult> => {
+		defaultTriggers: ['manual_reset', 'submit_success'] as const,
+		handler: async (action: ResetAction, context: ActionExecutionContext): Promise<ActionExecutionResult> => {
 			try {
 				if (action.confirmMessage) {
 					const confirmed = await confirm(action.confirmMessage);
 					if (!confirmed) {
 						return {
 							success: false,
-							error: "Reset cancelled by user",
+							error: 'Reset cancelled by user',
 							shouldContinue: true,
 						};
 					}
@@ -136,13 +133,13 @@ export function resetPlugin(config: ResetPluginConfig = {}) {
 
 				return {
 					success: true,
-					message: "Form reset successfully",
+					message: 'Form reset successfully',
 					shouldContinue: true,
 				};
 			} catch (error) {
 				return {
 					success: false,
-					error: error instanceof Error ? error.message : "Reset failed",
+					error: error instanceof Error ? error.message : 'Reset failed',
 					shouldContinue: true,
 				};
 			}

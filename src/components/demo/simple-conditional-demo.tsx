@@ -1,7 +1,6 @@
 import { FormRenderer } from '@/lib/form-engine';
 import type { FormConfig } from '@/lib/form-engine/types';
-import { ValidationPresets } from '@/lib/form-engine/validation';
-// Import to register components
+import { ValidationPresets } from '@/lib/form-engine/schemas/validation';
 import '@/lib/form-engine/components/form/registry';
 
 /**
@@ -18,7 +17,7 @@ export function SimpleConditionalDemo() {
 				title: 'Conditional Fields Example',
 				elements: [
 					{
-						type: 'select',
+						componentId: 'select',
 						id: 'hasCompany',
 						name: 'hasCompany',
 						label: 'Do you have a company?',
@@ -30,7 +29,7 @@ export function SimpleConditionalDemo() {
 						],
 					},
 					{
-						type: 'input',
+						componentId: 'input',
 						inputType: 'text',
 						id: 'companyName',
 						name: 'companyName',

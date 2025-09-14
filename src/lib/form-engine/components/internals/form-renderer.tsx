@@ -4,13 +4,13 @@ import {
 	type FormProviderProps,
 	type FormEngineProviderProps,
 	FormEngineProvider,
-} from '../../provider';
+} from '../provider';
 import { FormElement } from './field-renderer';
 import { useFormGridStyles } from '@/lib/form-engine/hooks';
-import { Stepper, useStepper } from '../../stepper';
+import { Stepper, useStepper } from '../stepper';
 import { useFormContext } from 'react-hook-form';
-import type { FormConfig, FormStep, FieldConfig } from '../../types/form';
 import { logger } from '@/lib/logger';
+import type { FieldConfig, FormConfig, FormStep } from '@/lib/form-engine/schemas';
 
 /**
  * Helper to get fields for a specific step - now fields are directly in steps

@@ -1,4 +1,4 @@
-import { GDPRConsent } from '@/lib/form-engine/gdpr-consent';
+import { GDPRConsent } from '@/lib/form-engine/tools/gdpr-consent';
 
 /**
  * Helper hook for GDPR consent management

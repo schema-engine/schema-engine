@@ -22,7 +22,7 @@ const contactFormConfig: FormConfig = {
 				{
 					id: 'email',
 					name: 'email',
-					type: 'input',
+					componentId: 'input',
 					inputType: 'email',
 					label: 'Email Address',
 					placeholder: 'Enter your email',
@@ -40,7 +40,7 @@ const contactFormConfig: FormConfig = {
 				{
 					id: 'message',
 					name: 'message',
-					type: 'textarea',
+					componentId: 'textarea',
 					label: 'Message',
 					placeholder: 'Your message...',
 					rules: [

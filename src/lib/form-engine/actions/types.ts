@@ -1,10 +1,10 @@
-import { z } from "zod";
-import { SubmitActionSchema } from "./plugins/submit-plugin";
-import { ResetActionSchema } from "./plugins/reset-plugin";
-import { NotificationActionSchema } from "./plugins/notification-plugin";
-import { AutoSaveActionSchema } from "./plugins/auto-save-plugin";
-import { GTMEventActionSchema } from "./plugins/gtm-plugin";
-import type { UseFormReturn } from "react-hook-form";
+import { z } from 'zod';
+import { SubmitActionSchema } from './plugins/submit-plugin';
+import { ResetActionSchema } from './plugins/reset-plugin';
+import { NotificationActionSchema } from './plugins/notification-plugin';
+import { AutoSaveActionSchema } from './plugins/auto-save-plugin';
+import { GTMEventActionSchema } from './plugins/gtm-plugin';
+import type { UseFormReturn } from 'react-hook-form';
 
 /**
  * Action Triggers
@@ -32,20 +32,20 @@ import type { UseFormReturn } from "react-hook-form";
  * @submit_complete - When submit process finishes, regardless of outcome (internal lifecycle)
  */
 export type ActionTrigger =
-	| "form_start"
-	| "form_change"
-	| "form_submit"
-	| "submit_start"
-	| "submit_success"
-	| "submit_error"
-	| "submit_complete"
-	| "step_change"
-	| "step_submit"
-	| "step_enter"
-	| "step_leave"
-	| "step_view"
-	| "manual_save"
-	| "manual_reset";
+	| 'form_start'
+	| 'form_change'
+	| 'form_submit'
+	| 'submit_start'
+	| 'submit_success'
+	| 'submit_error'
+	| 'submit_complete'
+	| 'step_change'
+	| 'step_submit'
+	| 'step_enter'
+	| 'step_leave'
+	| 'step_view'
+	| 'manual_save'
+	| 'manual_reset';
 
 /**
  * Plugin Actions Interface
@@ -158,6 +158,16 @@ export interface ActionExecutionResult {
 }
 
 /**
+ * Action Handler Function Type
+ *
+ * Function signature for action handlers that execute specific action types.
+ */
+export type ActionHandler<T extends Record<string, any> = any> = (
+	action: T,
+	context: ActionExecutionContext,
+) => Promise<ActionExecutionResult> | ActionExecutionResult;
+
+/**
  * Registered Action Configuration
  *
  * Configuration object for registering actions in the action registry.
@@ -180,7 +190,7 @@ export interface RegisteredAction {
  * Union schema for all registered plugin action schemas.
  * This creates a discriminated union based on the 'type' field.
  */
-export const FormActionConfigSchema = z.discriminatedUnion("type", [
+export const FormActionConfigSchema = z.discriminatedUnion('type', [
 	SubmitActionSchema,
 	ResetActionSchema,
 	NotificationActionSchema,

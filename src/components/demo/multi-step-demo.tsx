@@ -1,6 +1,6 @@
 import { FormRenderer, type FormConfig } from '@/lib/form-engine';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ValidationPresets } from '@/lib/form-engine/validation';
+import { ValidationPresets } from '@/lib/form-engine/schemas/validation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import '@/lib/form-engine/components/form/registry';
@@ -20,7 +20,7 @@ const stepperDemoConfig: FormConfig = {
 			elements: [
 				{
 					id: 'name',
-					type: 'input',
+					componentId: 'input',
 					inputType: 'text',
 					name: 'name',
 					label: 'Full Name',
@@ -32,7 +32,7 @@ const stepperDemoConfig: FormConfig = {
 				},
 				{
 					id: 'email',
-					type: 'input',
+					componentId: 'input',
 					inputType: 'email',
 					name: 'email',
 					label: 'Email Address',
@@ -52,7 +52,7 @@ const stepperDemoConfig: FormConfig = {
 			elements: [
 				{
 					id: 'role',
-					type: 'select',
+					componentId: 'select',
 					name: 'role',
 					label: 'Your Role',
 					placeholder: 'Select your role',
@@ -68,7 +68,7 @@ const stepperDemoConfig: FormConfig = {
 
 				{
 					id: 'experience',
-					type: 'select',
+					componentId: 'select',
 					name: 'experience',
 					label: 'Experience Level',
 					placeholder: 'Select your experience',
@@ -89,7 +89,7 @@ const stepperDemoConfig: FormConfig = {
 			elements: [
 				{
 					id: 'company',
-					type: 'input',
+					componentId: 'input',
 					inputType: 'text',
 					name: 'company',
 					label: 'Company (Optional)',
@@ -97,17 +97,15 @@ const stepperDemoConfig: FormConfig = {
 				},
 				{
 					id: 'feedback',
-					type: 'textarea',
+					componentId: 'textarea',
 					name: 'feedback',
 					label: 'Feedback',
 					placeholder: 'Any feedback about this demo? (Optional)',
-					defaultProps: {
-						rows: 4,
-					},
+					rows: 4,
 				},
 				{
 					id: 'newsletter',
-					type: 'checkbox',
+					componentId: 'checkbox',
 					name: 'newsletter',
 					label: 'Subscribe to newsletter for updates',
 					defaultValue: true,

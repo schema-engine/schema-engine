@@ -52,7 +52,7 @@ import { ValidationPresets } from '@/lib/form-engine/validation';
 const formConfig = {
   elements: [
     {
-      type: 'input',          // References your registered component
+      componentId: 'input',          // References your registered component
       id: 'name',
       label: 'Full Name',
       rules: [
@@ -210,7 +210,7 @@ Every component automatically participates in Form Engine's responsive grid syst
 
 ```typescript
 const responsiveField = {
-  type: 'input',
+  componentId: 'input',
   id: 'description',
   label: 'Description',
   
@@ -248,7 +248,7 @@ interface InputFieldConfig extends BaseFieldConfig {
 const typedForm: FormConfig = {
   elements: [
     {
-      type: 'input',           // ✅ Valid
+      componentId: 'input',           // ✅ Valid
       inputType: 'email',      // ✅ Valid  
       placeholder: 'Enter...' // ✅ Valid
       // invalid: 'property'   // ❌ TypeScript error

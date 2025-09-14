@@ -1,7 +1,6 @@
 import { FormRenderer } from '@/lib/form-engine';
 import type { FormConfig } from '@/lib/form-engine/types';
-import { ValidationPresets } from '@/lib/form-engine/validation';
-// Import to register components
+import { ValidationPresets } from '@/lib/form-engine/schemas/validation';
 import '@/lib/form-engine/components/form/registry';
 
 /**
@@ -27,7 +26,7 @@ export function SimpleGridDemo() {
 				title: 'Responsive Grid Layout',
 				elements: [
 					{
-						type: 'input',
+						componentId: 'input',
 						inputType: 'text',
 						id: 'firstName',
 						name: 'firstName',
@@ -36,7 +35,7 @@ export function SimpleGridDemo() {
 						rules: [ValidationPresets.required('First name required')],
 					},
 					{
-						type: 'input',
+						componentId: 'input',
 						inputType: 'text',
 						id: 'lastName',
 						name: 'lastName',
@@ -45,7 +44,7 @@ export function SimpleGridDemo() {
 						rules: [ValidationPresets.required('Last name required')],
 					},
 					{
-						type: 'input',
+						componentId: 'input',
 						inputType: 'email',
 						id: 'email',
 						name: 'email',
@@ -54,7 +53,7 @@ export function SimpleGridDemo() {
 						rules: [ValidationPresets.required('Email required'), ValidationPresets.email('Invalid email')],
 					},
 					{
-						type: 'input',
+						componentId: 'input',
 						inputType: 'tel',
 						id: 'phone',
 						name: 'phone',
@@ -62,7 +61,7 @@ export function SimpleGridDemo() {
 						placeholder: '+1 (555) 123-4567',
 					},
 					{
-						type: 'select',
+						componentId: 'select',
 						id: 'country',
 						name: 'country',
 						label: 'Country',
@@ -74,7 +73,7 @@ export function SimpleGridDemo() {
 						],
 					},
 					{
-						type: 'input',
+						componentId: 'input',
 						inputType: 'text',
 						id: 'city',
 						name: 'city',

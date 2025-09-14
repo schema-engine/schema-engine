@@ -1,4 +1,4 @@
-import { ValidationPresets } from '@/lib/form-engine/validation';
+import { ValidationPresets } from '@/lib/form-engine/schemas/validation';
 import type { FormConfig } from '@/lib/form-engine/types/form';
 
 /**
@@ -18,7 +18,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 			icon: '👤',
 			elements: [
 				{
-					type: 'input',
+					componentId: 'input',
 					inputType: 'text',
 					id: 'firstName',
 					name: 'firstName',
@@ -30,7 +30,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					],
 				},
 				{
-					type: 'input',
+					componentId: 'input',
 					inputType: 'text',
 					id: 'lastName',
 					name: 'lastName',
@@ -42,7 +42,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					],
 				},
 				{
-					type: 'input',
+					componentId: 'input',
 					inputType: 'email',
 					id: 'email',
 					name: 'email',
@@ -54,7 +54,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					],
 				},
 				{
-					type: 'input',
+					componentId: 'input',
 					inputType: 'text',
 					id: 'dateOfBirth',
 					name: 'dateOfBirth',
@@ -71,7 +71,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 			icon: '📞',
 			elements: [
 				{
-					type: 'input',
+					componentId: 'input',
 					inputType: 'tel',
 					id: 'phone',
 					name: 'phone',
@@ -83,7 +83,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					],
 				},
 				{
-					type: 'input',
+					componentId: 'input',
 					inputType: 'text',
 					id: 'address',
 					name: 'address',
@@ -92,7 +92,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					rules: [ValidationPresets.required('Street address is required')],
 				},
 				{
-					type: 'input',
+					componentId: 'input',
 					inputType: 'text',
 					id: 'city',
 					name: 'city',
@@ -101,7 +101,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					rules: [ValidationPresets.required('City is required')],
 				},
 				{
-					type: 'input',
+					componentId: 'input',
 					inputType: 'text',
 					id: 'zipCode',
 					name: 'zipCode',
@@ -118,7 +118,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 			icon: '⚙️',
 			elements: [
 				{
-					type: 'select',
+					componentId: 'select',
 					id: 'language',
 					name: 'language',
 					label: 'Preferred Language',
@@ -131,7 +131,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					defaultValue: 'en',
 				},
 				{
-					type: 'textarea',
+					componentId: 'textarea',
 					id: 'bio',
 					name: 'bio',
 					label: 'Bio',

@@ -1,34 +1,7 @@
-import type { ActionExecutionContext, ActionExecutionResult, ActionTrigger } from "./types";
-import type { z } from "zod";
-import { Logger } from "@ecopages/logger";
+import type { ActionExecutionContext, ActionExecutionResult, ActionTrigger, RegisteredAction } from './types';
+import { Logger } from '@ecopages/logger';
 
-const logger = new Logger("[form-engine/actions/registry]", { debug: false });
-
-/**
- * Action Handler Function Type
- *
- * Function signature for action handlers that execute specific action types.
- */
-export type ActionHandler<T extends Record<string, any> = any> = (
-	action: T,
-	context: ActionExecutionContext
-) => Promise<ActionExecutionResult> | ActionExecutionResult;
-
-/**
- * Registered Action Definition
- *
- * Complete definition of a registered action including handler, schema, and default triggers.
- */
-export interface RegisteredAction {
-	/** Unique action type identifier */
-	type: string;
-	/** Function that executes this action type */
-	handler: ActionHandler<any>;
-	/** Optional Zod schema for runtime validation of action config */
-	schema?: z.ZodTypeAny;
-	/** Optional default triggers this action responds to */
-	defaultTriggers?: readonly ActionTrigger[];
-}
+const logger = new Logger('[form-engine/actions/registry]', { debug: false });
 
 /**
  * Action Registry
@@ -103,7 +76,6 @@ class ActionRegistry {
 			};
 		}
 
-		// Validate action configuration if schema is provided
 		if (def.schema) {
 			try {
 				def.schema.parse(action);
@@ -154,7 +126,7 @@ class ActionRegistry {
 	 */
 	clear(): void {
 		this.actions.clear();
-		logger.debug("Action registry cleared");
+		logger.debug('Action registry cleared');
 	}
 }
 

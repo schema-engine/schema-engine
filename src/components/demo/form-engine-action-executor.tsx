@@ -20,8 +20,8 @@ const formConfigWithActions: FormConfig = {
 			description: 'Fill out the form below to see the action system in action',
 			elements: [
 				{
-					type: 'input' as const,
-					inputType: 'text' as const,
+					componentId: 'input',
+					inputType: 'text',
 					id: 'name',
 					name: 'name',
 					label: 'Full Name',
@@ -32,8 +32,8 @@ const formConfigWithActions: FormConfig = {
 					],
 				},
 				{
-					type: 'input' as const,
-					inputType: 'email' as const,
+					componentId: 'input',
+					inputType: 'email',
 					id: 'email',
 					name: 'email',
 					label: 'Email Address',
@@ -44,7 +44,7 @@ const formConfigWithActions: FormConfig = {
 					],
 				},
 				{
-					type: 'textarea' as const,
+					componentId: 'textarea',
 					id: 'message',
 					name: 'message',
 					label: 'Message',
@@ -52,7 +52,7 @@ const formConfigWithActions: FormConfig = {
 					rules: [{ type: 'required', message: 'Message is required' }],
 				},
 				{
-					type: 'checkbox' as const,
+					componentId: 'checkbox',
 					id: 'subscribe',
 					name: 'subscribe',
 					label: 'Subscribe to newsletter',

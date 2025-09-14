@@ -1,6 +1,6 @@
 import { FormRenderer } from '@/lib/form-engine';
 import type { FormConfig } from '@/lib/form-engine/types';
-import { ValidationPresets } from '@/lib/form-engine/validation';
+import { ValidationPresets } from '@/lib/form-engine/schemas/validation';
 import '@/lib/form-engine/components/form/registry';
 
 /**
@@ -17,7 +17,7 @@ export function ValidationDemo() {
 				title: 'Try Different Validation Rules',
 				elements: [
 					{
-						type: 'input',
+						componentId: 'input',
 						inputType: 'text',
 						id: 'username',
 						name: 'username',
@@ -42,7 +42,7 @@ export function ValidationDemo() {
 						],
 					},
 					{
-						type: 'input',
+						componentId: 'input',
 						inputType: 'url',
 						id: 'website',
 						name: 'website',

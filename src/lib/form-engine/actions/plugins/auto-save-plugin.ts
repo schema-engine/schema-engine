@@ -1,5 +1,5 @@
-import { z } from "zod";
-import type { ActionExecutionContext, ActionExecutionResult } from "../types";
+import { z } from 'zod';
+import type { ActionExecutionContext, ActionExecutionResult } from '../types';
 
 /**
  * Storage Interface for Auto-Save Plugin
@@ -53,9 +53,9 @@ export interface AutoSavePluginConfig {
  */
 export const AutoSaveActionSchema = z.object({
 	/** Unique identifier for this action within the form */
-	id: z.string().min(1, "Action ID cannot be empty"),
+	id: z.string().min(1, 'Action ID cannot be empty'),
 	/** Action type identifier */
-	type: z.literal("auto_save"),
+	type: z.literal('auto_save'),
 	/** Optional description for documentation and debugging purposes */
 	description: z.string().optional(),
 	/** Whether this action is enabled and should be executed */
@@ -65,13 +65,13 @@ export const AutoSaveActionSchema = z.object({
 	/** Storage key to use (will use generated key if not provided) */
 	storageKey: z.string().optional(),
 	/** Whether to include sensitive fields in auto-save */
-	includeSensitive: z.boolean().default(false),
+	includeSensitive: z.boolean().default(false).optional(),
 });
 
 export type AutoSaveAction = z.infer<typeof AutoSaveActionSchema>;
 
 // Module augmentation to add auto-save action to PluginActions
-declare module "../types" {
+declare module '../types' {
 	interface PluginActions {
 		auto_save: AutoSaveAction;
 	}
@@ -147,17 +147,13 @@ export function autoSavePlugin(config: AutoSavePluginConfig = {}) {
 	const storage = config.storage || defaultStorage;
 
 	return {
-		type: "auto_save" as const,
+		type: 'auto_save' as const,
 		schema: AutoSaveActionSchema,
-		defaultTriggers: ["form_change"] as const,
-		handler: async (
-			action: AutoSaveAction,
-			context: ActionExecutionContext
-		): Promise<ActionExecutionResult> => {
+		defaultTriggers: ['form_change'] as const,
+		handler: async (action: AutoSaveAction, context: ActionExecutionContext): Promise<ActionExecutionResult> => {
 			try {
 				// Get storage key
-				const storageKey =
-					action.storageKey || config.getStorageKey?.(context) || `autosave_${context.formId}`;
+				const storageKey = action.storageKey || config.getStorageKey?.(context) || `autosave_${context.formId}`;
 
 				// Get form data
 				const formData = context.formData;
@@ -165,7 +161,7 @@ export function autoSavePlugin(config: AutoSavePluginConfig = {}) {
 				if (!formData || Object.keys(formData).length === 0) {
 					return {
 						success: false,
-						error: "No form data available for auto-save",
+						error: 'No form data available for auto-save',
 						shouldContinue: true,
 					};
 				}
@@ -177,10 +173,10 @@ export function autoSavePlugin(config: AutoSavePluginConfig = {}) {
 					dataToSave = Object.fromEntries(
 						Object.entries(formData).filter(
 							([key]) =>
-								!key.toLowerCase().includes("password") &&
-								!key.toLowerCase().includes("secret") &&
-								!key.toLowerCase().includes("token")
-						)
+								!key.toLowerCase().includes('password') &&
+								!key.toLowerCase().includes('secret') &&
+								!key.toLowerCase().includes('token'),
+						),
 					);
 				}
 
@@ -198,7 +194,7 @@ export function autoSavePlugin(config: AutoSavePluginConfig = {}) {
 					shouldContinue: true,
 				};
 			} catch (error) {
-				const errorMessage = error instanceof Error ? error.message : "Failed to auto-save";
+				const errorMessage = error instanceof Error ? error.message : 'Failed to auto-save';
 
 				// Call error handler
 				if (config.onError) {

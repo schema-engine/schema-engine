@@ -1,7 +1,5 @@
-import { FormRenderer } from '@/lib/form-engine';
-import type { FormConfig } from '@/lib/form-engine/types';
-import { ValidationPresets } from '@/lib/form-engine/validation';
-// Import to register components
+import { FormRenderer, type FormConfig } from '@/lib/form-engine';
+import { ValidationPresets } from '@/lib/form-engine/schemas/validation';
 import '@/lib/form-engine/components/form/registry';
 
 /**
@@ -18,7 +16,7 @@ export function SimpleInputDemo() {
 				title: 'Input Fields',
 				elements: [
 					{
-						type: 'input',
+						componentId: 'input',
 						inputType: 'text',
 						id: 'name',
 						name: 'name',
@@ -30,7 +28,7 @@ export function SimpleInputDemo() {
 						],
 					},
 					{
-						type: 'input',
+						componentId: 'input',
 						inputType: 'email',
 						id: 'email',
 						name: 'email',
