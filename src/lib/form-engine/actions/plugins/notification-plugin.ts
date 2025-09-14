@@ -1,5 +1,5 @@
-import { z } from "zod";
-import type { ActionExecutionContext, ActionExecutionResult } from "../types";
+import { z } from 'zod';
+import type { ActionExecutionContext, ActionExecutionResult } from '../types';
 
 /**
  * Notification Plugin Configuration
@@ -14,11 +14,7 @@ export interface NotificationPluginConfig {
 	/** Custom info handler */
 	onInfo?: (message: string, context: ActionExecutionContext) => void | Promise<void>;
 	/** Global handler for all notification types */
-	onNotification?: (
-		message: string,
-		variant: string,
-		context: ActionExecutionContext
-	) => void | Promise<void>;
+	onNotification?: (message: string, variant: string, context: ActionExecutionContext) => void | Promise<void>;
 }
 
 /**
@@ -38,9 +34,9 @@ export interface NotificationPluginConfig {
  */
 export const NotificationActionSchema = z.object({
 	/** Unique identifier for this action within the form */
-	id: z.string().min(1, "Action ID cannot be empty"),
+	id: z.string().min(1, 'Action ID cannot be empty'),
 	/** Action type identifier */
-	type: z.literal("show_notification"),
+	type: z.literal('show_notification'),
 	/** Optional description for documentation and debugging purposes */
 	description: z.string().optional(),
 	/** Whether this action is enabled and should be executed */
@@ -48,17 +44,17 @@ export const NotificationActionSchema = z.object({
 	/** Custom triggers that override the default triggers for this action */
 	triggers: z.array(z.string()).optional(),
 	/** Message to display in the notification */
-	message: z.string().min(1, "Message cannot be empty"),
+	message: z.string().min(1, 'Message cannot be empty'),
 	/** Visual style of the notification */
-	variant: z.enum(["success", "error", "warning", "info"]).default("info"),
+	variant: z.enum(['success', 'error', 'warning', 'info']).default('info'),
 	/** Duration in milliseconds to show the notification (0 = permanent) */
-	duration: z.number().min(0).default(3000),
+	duration: z.number().min(0).default(3000).optional(),
 });
 
 export type NotificationAction = z.infer<typeof NotificationActionSchema>;
 
 // Module augmentation to add notification action to PluginActions
-declare module "../types" {
+declare module '../types' {
 	interface PluginActions {
 		show_notification: NotificationAction;
 	}
@@ -119,12 +115,12 @@ declare module "../types" {
  */
 export function notificationPlugin(config: NotificationPluginConfig = {}) {
 	return {
-		type: "show_notification" as const,
+		type: 'show_notification' as const,
 		schema: NotificationActionSchema,
-		defaultTriggers: ["submit_success", "submit_error"] as const,
+		defaultTriggers: ['submit_success', 'submit_error'] as const,
 		handler: async (
 			action: NotificationAction,
-			context: ActionExecutionContext
+			context: ActionExecutionContext,
 		): Promise<ActionExecutionResult> => {
 			try {
 				const { message, variant } = action;
@@ -133,32 +129,32 @@ export function notificationPlugin(config: NotificationPluginConfig = {}) {
 					await config.onNotification(message, variant, context);
 				} else {
 					switch (variant) {
-						case "success":
+						case 'success':
 							if (config.onSuccess) {
 								await config.onSuccess(message, context);
 							} else {
-								console.log("success", { formId: context.formId, message });
+								console.log('success', { formId: context.formId, message });
 							}
 							break;
-						case "error":
+						case 'error':
 							if (config.onError) {
 								await config.onError(message, context);
 							} else {
-								console.error("error", { formId: context.formId, message });
+								console.error('error', { formId: context.formId, message });
 							}
 							break;
-						case "warning":
+						case 'warning':
 							if (config.onWarning) {
 								await config.onWarning(message, context);
 							} else {
-								console.warn("warning", { formId: context.formId, message });
+								console.warn('warning', { formId: context.formId, message });
 							}
 							break;
-						case "info":
+						case 'info':
 							if (config.onInfo) {
 								await config.onInfo(message, context);
 							} else {
-								console.info("ℹ️", { formId: context.formId, message });
+								console.info('info', { formId: context.formId, message });
 							}
 							break;
 					}
@@ -172,7 +168,7 @@ export function notificationPlugin(config: NotificationPluginConfig = {}) {
 			} catch (error) {
 				return {
 					success: false,
-					error: error instanceof Error ? error.message : "Failed to show notification",
+					error: error instanceof Error ? error.message : 'Failed to show notification',
 					shouldContinue: true,
 				};
 			}

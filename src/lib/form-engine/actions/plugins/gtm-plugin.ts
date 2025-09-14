@@ -1,7 +1,7 @@
-import { z } from "zod";
-import { registerAction } from "../action-registry";
-import type { ActionExecutionContext, ActionExecutionResult } from "../types";
-import { GTMTracker } from "../../gtm-tracker";
+import { z } from 'zod';
+import { registerAction } from '../action-registry';
+import type { ActionExecutionContext, ActionExecutionResult } from '../types';
+import { GTMTracker } from '../../gtm-tracker';
 
 /**
  * GTM Event Action Schema
@@ -38,15 +38,15 @@ import { GTMTracker } from "../../gtm-tracker";
  */
 export const GTMEventActionSchema = z.object({
 	/** Unique identifier for this action within the form */
-	id: z.string().min(1, "Action ID cannot be empty"),
+	id: z.string().min(1, 'Action ID cannot be empty'),
 	/** Action type identifier */
-	type: z.literal("gtm_event"),
+	type: z.literal('gtm_event'),
 	/** Optional description for documentation and debugging purposes */
 	description: z.string().optional(),
 	/** Whether this action is enabled and should be executed */
 	enabled: z.boolean().default(true),
 	/** Name of the GTM event to push to dataLayer */
-	eventName: z.string().min(1, "Event name cannot be empty"),
+	eventName: z.string().min(1, 'Event name cannot be empty'),
 	/** Static data to include with the event */
 	eventData: z.record(z.string(), z.any()).optional().default({}),
 	/**
@@ -58,7 +58,7 @@ export const GTMEventActionSchema = z.object({
 	includeFormData: z
 		.union([
 			z.boolean(), // true = all data, false = no data
-			z.array(z.string().min(1, "Field name cannot be empty")), // array = specific fields
+			z.array(z.string().min(1, 'Field name cannot be empty')), // array = specific fields
 		])
 		.default(false),
 	/**
@@ -69,17 +69,17 @@ export const GTMEventActionSchema = z.object({
 	triggers: z
 		.array(
 			z.enum([
-				"form_start",
-				"form_change",
-				"form_submit",
-				"step_change",
-				"step_submit",
-				"step_enter",
-				"step_leave",
-				"step_view",
-				"manual_save",
-				"manual_reset",
-			])
+				'form_start',
+				'form_change',
+				'form_submit',
+				'step_change',
+				'step_submit',
+				'step_enter',
+				'step_leave',
+				'step_view',
+				'manual_save',
+				'manual_reset',
+			]),
 		)
 		.optional(),
 });
@@ -87,21 +87,17 @@ export const GTMEventActionSchema = z.object({
 export type GTMEventAction = z.infer<typeof GTMEventActionSchema>;
 
 // Module augmentation to add GTM action to PluginActions
-declare module "../types" {
+declare module '../types' {
 	interface PluginActions {
 		gtm_event: GTMEventAction;
 	}
 }
 
-// Register the GTM event action
 registerAction({
-	type: "gtm_event",
+	type: 'gtm_event',
 	schema: GTMEventActionSchema,
-	defaultTriggers: ["form_start", "form_submit", "step_change", "step_submit"],
-	handler: async (
-		action: GTMEventAction,
-		context: ActionExecutionContext
-	): Promise<ActionExecutionResult> => {
+	defaultTriggers: ['form_start', 'form_submit', 'step_change', 'step_submit'],
+	handler: async (action: GTMEventAction, context: ActionExecutionContext): Promise<ActionExecutionResult> => {
 		try {
 			const eventData: Record<string, any> = {
 				...action.eventData,
@@ -135,7 +131,7 @@ registerAction({
 		} catch (error) {
 			return {
 				success: false,
-				error: error instanceof Error ? error.message : "GTM event push failed",
+				error: error instanceof Error ? error.message : 'GTM event push failed',
 				shouldContinue: true,
 			};
 		}
