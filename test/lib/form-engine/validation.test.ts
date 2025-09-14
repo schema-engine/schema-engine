@@ -16,7 +16,7 @@ import {
 	type HashRule,
 	type Base64Rule,
 	type StringFormatRule,
-} from "@/lib/form-engine/validation";
+} from "@/lib/form-engine/schemas/validation";
 
 describe("Validation", () => {
 	describe("ValidationPresets", () => {

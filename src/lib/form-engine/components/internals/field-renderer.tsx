@@ -1,5 +1,5 @@
 import { useFormEngine, useConstraintLogic } from '@/lib/form-engine/hooks';
-import { isFieldRequired } from '@/lib/form-engine/validation';
+import { isFieldRequired } from '@/lib/form-engine/schemas/validation';
 
 export interface FormElementProps {
 	config: FormEngine.FieldConfig;

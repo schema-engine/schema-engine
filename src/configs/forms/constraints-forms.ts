@@ -1,4 +1,4 @@
-import { ValidationPresets } from '@/lib/form-engine/validation';
+import { ValidationPresets } from '@/lib/form-engine/schemas/validation';
 import type { FormConfig } from '@/lib/form-engine/types/form';
 
 /**

@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { actionRegistry, registerAction } from "@/lib/form-engine/actions/action-registry";
 import { GTMEventActionSchema, type GTMEventAction } from "@/lib/form-engine/actions/plugins/gtm-plugin";
-import { GTMTracker } from "@/lib/form-engine/gtm-tracker";
+import { GTMTracker } from "@/lib/form-engine/tools/gtm-tracker";
 import type { ActionExecutionContext, ActionExecutionResult } from "@/lib/form-engine/actions/types";
 import { createMockContext, setupTestEnvironment } from "../__tools";
 

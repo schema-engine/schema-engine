@@ -22,17 +22,8 @@
  * ```
  */
 
-export { notificationPlugin } from "./notification-plugin";
-export { autoSavePlugin } from "./auto-save-plugin";
-export { resetPlugin } from "./reset-plugin";
-export { submitPlugin } from "./submit-plugin";
-
-export { NotificationActionSchema, type NotificationAction } from "./notification-plugin";
-export { AutoSaveActionSchema, type AutoSaveAction } from "./auto-save-plugin";
-export { ResetActionSchema, type ResetAction } from "./reset-plugin";
-export { SubmitActionSchema, type SubmitAction } from "./submit-plugin";
-
-export type { NotificationPluginConfig } from "./notification-plugin";
-export type { AutoSavePluginConfig, AutoSaveStorage } from "./auto-save-plugin";
-export type { ResetPluginConfig } from "./reset-plugin";
-export type { SubmitPluginConfig } from "./submit-plugin";
+export * from './auto-save-plugin';
+export * from './gtm-plugin';
+export * from './notification-plugin';
+export * from './reset-plugin';
+export * from './submit-plugin';

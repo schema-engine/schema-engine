@@ -3,19 +3,19 @@
  * Handles user consent for auto-save functionality
  */
 export class GDPRConsent {
-	private static readonly CONSENT_KEY = "gdpr_consent_form_autosave";
-	private static readonly CONSENT_VERSION = "1.0";
+	private static readonly CONSENT_KEY = 'gdpr_consent_form_autosave';
+	private static readonly CONSENT_VERSION = '1.0';
 
 	/**
 	 * Check if localStorage is available
 	 */
 	static isLocalStorageAvailable(): boolean {
 		try {
-			if (typeof window === "undefined" || !window.localStorage) {
+			if (typeof window === 'undefined' || !window.localStorage) {
 				return false;
 			}
-			const test = "__localStorage_test__";
-			window.localStorage.setItem(test, "test");
+			const test = '__localStorage_test__';
+			window.localStorage.setItem(test, 'test');
 			window.localStorage.removeItem(test);
 			return true;
 		} catch {
@@ -53,7 +53,7 @@ export class GDPRConsent {
 	 */
 	static grantConsent(): void {
 		if (!GDPRConsent.isLocalStorageAvailable()) {
-			console.warn("[GDPR] localStorage not available - cannot store consent");
+			console.warn('[GDPR] localStorage not available - cannot store consent');
 			return;
 		}
 
@@ -65,9 +65,9 @@ export class GDPRConsent {
 
 		try {
 			window.localStorage.setItem(GDPRConsent.CONSENT_KEY, JSON.stringify(consent));
-			console.log("[GDPR] Consent granted for auto-save");
+			console.log('[GDPR] Consent granted for auto-save');
 		} catch (error) {
-			console.error("[GDPR] Failed to store consent:", error);
+			console.error('[GDPR] Failed to store consent:', error);
 		}
 	}
 
@@ -86,14 +86,14 @@ export class GDPRConsent {
 			// Clear all auto-saved form data
 			const keys = Object.keys(window.localStorage);
 			for (const key of keys) {
-				if (key.startsWith("form_draft_")) {
+				if (key.startsWith('form_draft_')) {
 					window.localStorage.removeItem(key);
 				}
 			}
 
-			console.log("[GDPR] Consent revoked and auto-saved data cleared");
+			console.log('[GDPR] Consent revoked and auto-saved data cleared');
 		} catch (error) {
-			console.error("[GDPR] Failed to revoke consent:", error);
+			console.error('[GDPR] Failed to revoke consent:', error);
 		}
 	}
 
@@ -112,12 +112,12 @@ export class GDPRConsent {
 	 */
 	static saveDraft(formId: string, data: Record<string, any>): boolean {
 		if (!GDPRConsent.hasConsent()) {
-			console.log("[GDPR] No consent - skipping draft save");
+			console.log('[GDPR] No consent - skipping draft save');
 			return false;
 		}
 
 		if (!GDPRConsent.isLocalStorageAvailable()) {
-			console.warn("[GDPR] localStorage not available - cannot save draft");
+			console.warn('[GDPR] localStorage not available - cannot save draft');
 			return false;
 		}
 
@@ -130,10 +130,10 @@ export class GDPRConsent {
 			};
 
 			window.localStorage.setItem(draftKey, JSON.stringify(draftData));
-			console.log("[GDPR] Draft saved for form:", formId);
+			console.log('[GDPR] Draft saved for form:', formId);
 			return true;
 		} catch (error) {
-			console.error("[GDPR] Failed to save draft:", error);
+			console.error('[GDPR] Failed to save draft:', error);
 			return false;
 		}
 	}
@@ -169,10 +169,10 @@ export class GDPRConsent {
 				return null;
 			}
 
-			console.log("[GDPR] Draft loaded for form:", formId);
+			console.log('[GDPR] Draft loaded for form:', formId);
 			return draftData.data;
 		} catch (error) {
-			console.error("[GDPR] Failed to load draft:", error);
+			console.error('[GDPR] Failed to load draft:', error);
 			return null;
 		}
 	}
@@ -189,9 +189,9 @@ export class GDPRConsent {
 		try {
 			const draftKey = `form_draft_${formId}`;
 			window.localStorage.removeItem(draftKey);
-			console.log("[GDPR] Draft cleared for form:", formId);
+			console.log('[GDPR] Draft cleared for form:', formId);
 		} catch (error) {
-			console.error("[GDPR] Failed to clear draft:", error);
+			console.error('[GDPR] Failed to clear draft:', error);
 		}
 	}
 }

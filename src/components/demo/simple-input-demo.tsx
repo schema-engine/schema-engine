@@ -1,6 +1,5 @@
-import { FormRenderer } from '@/lib/form-engine';
-import type { FormConfig } from '@/lib/form-engine/types';
-import { ValidationPresets } from '@/lib/form-engine/validation';
+import { FormRenderer, type FormConfig } from '@/lib/form-engine';
+import { ValidationPresets } from '@/lib/form-engine/schemas/validation';
 import '@/lib/form-engine/components/form/registry';
 
 /**

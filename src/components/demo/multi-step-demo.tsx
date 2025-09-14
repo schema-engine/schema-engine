@@ -1,6 +1,6 @@
 import { FormRenderer, type FormConfig } from '@/lib/form-engine';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ValidationPresets } from '@/lib/form-engine/validation';
+import { ValidationPresets } from '@/lib/form-engine/schemas/validation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import '@/lib/form-engine/components/form/registry';

@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { FormEngineContext, FormInstanceContext } from '../provider';
-import type { FormEngineContextValue, FormInstanceContextValue } from '../provider';
+import { FormEngineContext, FormInstanceContext } from '../components/provider';
+import type { FormEngineContextValue, FormInstanceContextValue } from '../components/provider';
 
 /**
  * Hook to get the current form instance from React Hook Form

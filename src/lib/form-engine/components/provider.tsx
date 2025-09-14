@@ -1,11 +1,11 @@
 import { createContext, useMemo, useCallback, useState, type ReactNode } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useActionExecutor } from './hooks';
-import { generateFormSchema } from './validation';
-import { type FormFieldComponentRegistry, defaultFormFieldRegistry } from './schemas/registry';
-import type { ActionExecutionContext, FormActionConfig } from './actions/index';
-import type { FormConfig } from './types/form';
+import { useActionExecutor } from '../hooks';
+import { generateFormSchema } from '../schemas/validation';
+import { type FormFieldComponentRegistry, defaultFormFieldRegistry } from '../schemas/registry';
+import type { ActionExecutionContext, FormActionConfig } from '../actions/index';
+import type { FormConfig } from '../schemas';
 
 /**
  * Form Engine context value

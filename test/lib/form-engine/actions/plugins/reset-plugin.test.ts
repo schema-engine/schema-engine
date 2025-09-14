@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { actionRegistry } from "@/lib/form-engine/actions/action-registry";
 import { resetPlugin, ResetActionSchema, type ResetAction } from "@/lib/form-engine/actions/plugins/reset-plugin";
 import type { ActionExecutionContext } from "@/lib/form-engine/actions/types";
-import { GDPRConsent } from "@/lib/form-engine/gdpr-consent";
+import { GDPRConsent } from "@/lib/form-engine/tools/gdpr-consent";
 import { createMockContext, setupTestEnvironment } from "../__tools";
 
 describe("ResetPlugin", () => {

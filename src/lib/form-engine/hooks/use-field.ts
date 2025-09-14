@@ -1,7 +1,7 @@
 import { useController } from 'react-hook-form';
-import { isFieldRequired } from '../validation';
+import { isFieldRequired } from '../schemas/validation';
 import { useFieldGridStyles } from './grid-hooks';
-import type { FieldConfig } from '../types/form';
+import type { FieldConfig } from '@/lib/form-engine/schemas';
 
 /**
  * Creates a default value for a field configuration

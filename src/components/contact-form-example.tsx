@@ -1,5 +1,4 @@
-import { FormRenderer } from '@/lib/form-engine';
-import type { FormConfig } from '@/lib/form-engine/types';
+import { FormRenderer, type FormConfig } from '@/lib/form-engine';
 import '@/lib/form-engine/components/form/registry';
 
 export function ContactFormExample() {

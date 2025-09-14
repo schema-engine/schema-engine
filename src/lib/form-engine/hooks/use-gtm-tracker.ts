@@ -1,4 +1,4 @@
-import { GTMTracker } from '@/lib/form-engine/gtm-tracker';
+import { GTMTracker } from '@/lib/form-engine/tools/gtm-tracker';
 
 /**
  * Helper hook for GTM integration

@@ -3,15 +3,15 @@ import { createContext, useContext, useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import type {
-	StepperContextData,
 	FormStep,
-	StepNavigationConfig,
-	StepNavigationButton,
 	StepHandlers,
-	StepperVariant,
+	StepNavigationButton,
+	StepNavigationConfig,
+	StepperContextData,
 	StepperOrientation,
 	StepperValidationMode,
-} from './types/form';
+	StepperVariant,
+} from '../schemas';
 
 const getVariantForButton = (variant?: string): 'default' | 'outline' | 'secondary' | 'ghost' | 'destructive' => {
 	switch (variant) {
