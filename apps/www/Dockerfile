@@ -39,3 +39,4 @@ RUN chown -R bun:bun /usr/src/app
 # run the app
 USER bun
 EXPOSE 3000/tcp
+CMD ["bun", "run", "start"]
