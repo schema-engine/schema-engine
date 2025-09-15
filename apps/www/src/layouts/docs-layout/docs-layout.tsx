@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Github, Sun, Moon, ChevronRight, ChevronDown, Code2 } from 'lucide-react';
+import { Github, Sun, Moon, ChevronRight, ChevronDown, Code2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -122,7 +122,7 @@ interface DocsLayoutProps {
 function DocsSidebar({ currentPath }: { currentPath?: string }) {
 	return (
 		<Sidebar variant="sidebar">
-			<SidebarHeader className="p-4 border-b">
+			<SidebarHeader className="p-4 border-b h-16">
 				<div className="space-y-4">
 					<a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
 						<div className="bg-primary text-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
@@ -133,14 +133,6 @@ function DocsSidebar({ currentPath }: { currentPath?: string }) {
 							<span className="text-xs text-muted-foreground">v{pkg.version}</span>
 						</div>
 					</a>
-					<div className="relative">
-						<Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-						<input
-							type="text"
-							placeholder="Search docs..."
-							className="w-full pl-8 pr-3 py-2 text-sm bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
-						/>
-					</div>
 				</div>
 			</SidebarHeader>
 			<SidebarContent className="gap-0">
@@ -242,7 +234,7 @@ export const DocsLayout: EcoComponent<DocsLayoutProps, ReactNode> = ({ children,
 		<SidebarProvider defaultOpen>
 			<DocsSidebar currentPath={currentPath} />
 			<SidebarInset>
-				<header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-[width,height] ease-linear">
+				<header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
 					<div className="flex items-center gap-2">
 						<SidebarTrigger className="-ml-1" />
 						<div className="flex items-center gap-4 ml-2">
@@ -279,17 +271,6 @@ export const DocsLayout: EcoComponent<DocsLayoutProps, ReactNode> = ({ children,
 							</DropdownMenuContent>
 						</DropdownMenu>
 
-						<Button
-							variant="outline"
-							className="hidden md:flex relative h-8 w-full max-w-sm justify-start rounded-[0.5rem] bg-background text-sm font-normal text-muted-foreground shadow-none sm:pr-12"
-						>
-							<Search className="mr-2 h-4 w-4" />
-							Search docs...
-							<kbd className="pointer-events-none absolute right-[0.3rem] top-[0.3rem] hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
-								<span className="text-xs">⌘</span>K
-							</kbd>
-						</Button>
-
 						<nav className="flex items-center space-x-1">
 							<Button variant="ghost" className="w-9 px-0" onClick={toggleTheme}>
 								<Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
@@ -304,33 +285,37 @@ export const DocsLayout: EcoComponent<DocsLayoutProps, ReactNode> = ({ children,
 					</div>
 				</header>
 
-				<div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-					<div className="space-y-2 pt-4">
-						<Breadcrumb>
-							<BreadcrumbList>
-								<BreadcrumbItem>
-									<BreadcrumbLink href="/docs">Docs</BreadcrumbLink>
-								</BreadcrumbItem>
-								<BreadcrumbSeparator />
-								<BreadcrumbItem>
-									<BreadcrumbPage>Current Page</BreadcrumbPage>
-								</BreadcrumbItem>
-							</BreadcrumbList>
-						</Breadcrumb>
-					</div>
-
-					<div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-10">
-						<div className="min-w-0">
-							<div className={cn('prose prose-slate max-w-none dark:prose-invert', className)}>
-								{children}
+				<div className="flex-1">
+					<div className="w-full px-4 py-4">
+						<div className="">
+							<div className="space-y-2">
+								<Breadcrumb>
+									<BreadcrumbList>
+										<BreadcrumbItem>
+											<BreadcrumbLink href="/docs">Docs</BreadcrumbLink>
+										</BreadcrumbItem>
+										<BreadcrumbSeparator />
+										<BreadcrumbItem>
+											<BreadcrumbPage>Current Page</BreadcrumbPage>
+										</BreadcrumbItem>
+									</BreadcrumbList>
+								</Breadcrumb>
 							</div>
-						</div>
 
-						<div className="hidden xl:block">
-							<div className="sticky top-6">
-								<ScrollArea className="h-[calc(100vh-8rem)]">
-									<TableOfContents toc={toc} />
-								</ScrollArea>
+							<div className="mt-6 grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-10">
+								<div className="min-w-0">
+									<div className={cn('prose max-w-none', className)}>
+										{children}
+									</div>
+								</div>
+
+								<div className="hidden xl:block">
+									<div className="sticky top-6">
+										<ScrollArea className="h-[calc(100vh-8rem)]">
+											<TableOfContents toc={toc} />
+										</ScrollArea>
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>

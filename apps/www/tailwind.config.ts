@@ -6,6 +6,11 @@ const config: Config = {
 	darkMode: "selector",
 	theme: {
 		extend: {
+			fontFamily: {
+				sans: ["IBM Plex Sans", "ui-sans-serif", "system-ui", "sans-serif"],
+				serif: ["IBM Plex Serif", "ui-serif", "Georgia", "serif"],
+				mono: ["IBM Plex Mono", "ui-monospace", "SFMono-Regular", "monospace"],
+			},
 			colors: {
 				background: "hsl(var(--background))",
 				foreground: "hsl(var(--foreground))",

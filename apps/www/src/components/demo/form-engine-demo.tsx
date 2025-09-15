@@ -7,7 +7,7 @@ import { demoFormConfig } from '../../configs/forms/demo-forms';
  */
 export function FormEngineDemo() {
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+		<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 prose">
 			<div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600">
 				<div className="absolute inset-0 bg-black/20"></div>
 				<div className="relative max-w-4xl mx-auto px-6 py-16 text-center">

@@ -123,6 +123,7 @@
 	}
 
 	body {
+		@apply font-sans;
 	}
 	* {
 		@apply border-border outline-ring/50;
@@ -227,51 +228,51 @@
 
 .prose {
 	h1:not(form h1):not(form * h1):not(.unprose h1):not(.unprose * h1) {
-		@apply text-4xl font-bold text-foreground my-6;
+		@apply text-5xl font-bold text-foreground my-6 font-serif;
 	}
 
 	h2:not(form h2):not(form * h2):not(.unprose h2):not(.unprose * h2) {
-		@apply text-3xl font-bold text-foreground my-6;
+		@apply text-3xl font-bold text-foreground my-6 font-serif;
 	}
 
 	h3:not(form h3):not(form * h3):not(.unprose h3):not(.unprose * h3) {
-		@apply text-2xl font-bold text-foreground my-5;
+		@apply text-2xl font-bold text-foreground my-5 font-serif;
 	}
 
 	h4:not(form h4):not(form * h4):not(.unprose h4):not(.unprose * h4) {
-		@apply text-xl font-bold text-foreground my-5;
+		@apply text-xl font-bold text-foreground my-5 font-serif;
 	}
 
 	h5:not(form h5):not(form * h5):not(.unprose h5):not(.unprose * h5) {
-		@apply text-lg font-bold text-foreground my-4;
+		@apply text-lg font-bold text-foreground my-4 font-serif;
 	}
 
 	h6:not(form h6):not(form * h6):not(.unprose h6):not(.unprose * h6) {
-		@apply text-base font-bold text-foreground my-4;
+		@apply text-base font-bold text-foreground my-4 font-serif;
 	}
 
 	p:not(form p):not(form * p):not(.unprose p):not(.unprose * p) {
-		@apply text-base text-foreground my-4;
+		@apply text-base text-foreground my-4 font-sans;
 	}
 
-	a:not(form a):not(form * a):not(.unprose a):not(.unprose * a) {
+	a:not(form a):not(form * a):not(.unprose a):not(.unprose * a):not([data-slot]) {
 		@apply text-blue-700 underline;
 	}
 
 	ul:not(form ul):not(form * ul):not(.unprose ul):not(.unprose * ul),
 	ol:not(form ol):not(form * ol):not(.unprose ol):not(.unprose * ol) {
-		@apply list-disc pl-8 my-4;
+		@apply list-disc pl-8 my-4 font-sans;
 	}
 
 	code:not(form code):not(form * code):not(.unprose code):not(.unprose * code) {
-		@apply bg-muted text-sm text-foreground rounded px-1.5 py-0.5;
+		@apply bg-muted text-sm text-foreground rounded px-1.5 py-0.5 font-mono;
 	}
 
 	pre:not(form pre):not(form * pre):not(.unprose pre):not(.unprose * pre) {
-		@apply bg-muted rounded-lg p-4 overflow-x-auto;
+		@apply bg-muted rounded-lg p-4 overflow-x-auto font-mono;
 
 		code {
-			@apply bg-transparent text-inherit rounded-none p-0;
+			@apply bg-transparent text-inherit rounded-none p-0 font-mono;
 		}
 	}
 }

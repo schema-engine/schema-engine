@@ -204,7 +204,7 @@ const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 				</div>
 			</header>
 
-			<section className="py-24 px-6">
+			<section className="py-24 px-6 prose">
 				<div className="max-w-4xl mx-auto text-center">
 					<h1 className="text-5xl md:text-7xl font-bold tracking-tight text-foreground mb-6">
 						JSON-Based
@@ -248,6 +248,7 @@ const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 					</div>
 				</div>
 				<CodePreview
+					className="unprose"
 					code={JSON.stringify(contactFormConfig, null, 2)}
 					example={<FormRenderer config={contactFormConfig} />}
 					fileName="contact-form.json"
