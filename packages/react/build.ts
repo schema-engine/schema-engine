@@ -22,6 +22,9 @@ const build = await Bun.build({
   splitting: !watchMode,
   sourcemap: 'external',
   external: ['react', 'react-dom'],
+  define: {
+    'process.env.NODE_ENV': watchMode ? '"development"' : '"production"',
+  },
 });
 
 if (!build.success) {

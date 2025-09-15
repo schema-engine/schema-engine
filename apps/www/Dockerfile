@@ -30,6 +30,7 @@ COPY packages/ packages/
 COPY apps/www/ apps/www/
 
 # Build the workspace packages
+ENV NODE_ENV=production
 RUN bun run --filter @json-form-engine/core build:lib
 RUN bun run --filter @json-form-engine/react build:lib
 
