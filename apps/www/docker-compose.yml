@@ -1,0 +1,13 @@
+services:
+  app:
+    build:
+      context: .
+    command: bun run start
+    environment:
+      - ECOPAGES_BASE_URL=${ECOPAGES_BASE_URL}
+      - ECOPAGES_HOSTNAME=${ECOPAGES_HOSTNAME}
+      - ECOPAGES_PORT=${ECOPAGES_PORT}
+
+volumes:
+  valkey_data:
+    driver: local
