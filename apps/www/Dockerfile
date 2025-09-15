@@ -7,19 +7,31 @@ WORKDIR /usr/src/app
 # this will cache them and speed up future builds
 FROM base AS install
 RUN mkdir -p /temp/dev
-COPY apps/www/package.json bun.lock /temp/dev/
+COPY package.json bun.lock /temp/dev/
+COPY apps/www/package.json /temp/dev/apps/www/package.json
+COPY packages/core/package.json /temp/dev/packages/core/package.json
+COPY packages/react/package.json /temp/dev/packages/react/package.json
 RUN cd /temp/dev && bun install --frozen-lockfile
 
 # install with --production (exclude devDependencies)
 RUN mkdir -p /temp/prod
-COPY apps/www/package.json bun.lock /temp/prod/
+COPY package.json bun.lock /temp/prod/
+COPY apps/www/package.json /temp/prod/apps/www/package.json
+COPY packages/core/package.json /temp/prod/packages/core/package.json
+COPY packages/react/package.json /temp/prod/packages/react/package.json
 RUN cd /temp/prod && bun install --frozen-lockfile --production
 
 # copy node_modules from temp directory
 # then copy all (non-ignored) project files into the image
 FROM base AS prerelease
 COPY --from=install /temp/dev/node_modules node_modules
-COPY apps/www/ .
+COPY package.json bun.lock ./
+COPY packages/ packages/
+COPY apps/www/ apps/www/
+
+# Build the workspace packages
+RUN bun run --filter @json-form-engine/core build:lib
+RUN bun run --filter @json-form-engine/react build:lib
 
 # [optional] tests & build
 # ENV NODE_ENV=production
@@ -29,8 +41,13 @@ COPY apps/www/ .
 # copy production dependencies and source code into final image
 FROM base AS release
 COPY --from=install /temp/prod/node_modules node_modules
-COPY --from=prerelease /usr/src/app .
+COPY --from=prerelease /usr/src/app/packages packages/
+COPY --from=prerelease /usr/src/app/apps/www apps/www/
 COPY --from=prerelease /usr/src/app/package.json .
+COPY --from=prerelease /usr/src/app/bun.lock .
+
+# Set working directory to the www app
+WORKDIR /usr/src/app/apps/www
 
 # Set proper permissions for the bun user
 # Security best practice: avoid running as root
