@@ -19,7 +19,7 @@ COPY package.json bun.lock .npmrc /temp/prod/
 COPY apps/www/package.json apps/www/.npmrc /temp/prod/apps/www/
 COPY packages/core/package.json /temp/prod/packages/core/package.json
 COPY packages/react/package.json /temp/prod/packages/react/package.json
-RUN cd /temp/prod && bun install --frozen-lockfile --production
+RUN cd /temp/prod && bun install --frozen-lockfile --production --ignore-scripts
 
 # copy node_modules from temp directory
 # then copy all (non-ignored) project files into the image
@@ -40,7 +40,8 @@ RUN bun run --filter @json-form-engine/react build:lib
 
 # copy production dependencies and source code into final image
 FROM base AS release
-COPY --from=install /temp/prod/node_modules node_modules
+# Copy dev node_modules (which has working aliases) instead of prod
+COPY --from=install /temp/dev/node_modules node_modules
 COPY --from=prerelease /usr/src/app/packages packages/
 COPY --from=prerelease /usr/src/app/apps/www apps/www/
 COPY --from=prerelease /usr/src/app/package.json .
