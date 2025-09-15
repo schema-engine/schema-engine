@@ -18,6 +18,8 @@
 	--muted-foreground: 264 4% 45%; /* Muted deep space blue text */
 	--accent: 280 15% 70%; /* Nebula purple accent */
 	--accent-foreground: 0 0% 98%; /* Light text on accent */
+	--background-accent: 280 20% 95%; /* Light accent background */
+	--foreground-accent: 280 15% 40%; /* Dark accent foreground */
 	--destructive: 27 85% 58%; /* Red for errors */
 	--destructive-foreground: 0 0% 100%; /* White text on destructive */
 	/* Improved border visibility for better accessibility */
@@ -92,6 +94,8 @@
 	--muted-foreground: 0 0% 65%; /* Muted light text */
 	--accent: 280 15% 70%; /* Nebula purple accent */
 	--accent-foreground: 0 0% 95%; /* Bright white on accent */
+	--background-accent: 280 15% 15%; /* Dark accent background */
+	--foreground-accent: 280 15% 85%; /* Light accent foreground */
 	--destructive: 25 85% 60%; /* Cosmic red for errors */
 	--destructive-foreground: 0 0% 95%; /* Bright white on destructive */
 	/* Improved dark mode border visibility for better accessibility */

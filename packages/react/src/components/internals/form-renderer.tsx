@@ -237,15 +237,7 @@ export function FormRenderer({
 				onValidationError={onValidationError}
 			>
 				<div className={`space-y-6 ${className}`} style={style}>
-					{config.title && (!isMultiStep || !config.stepper?.showStepTitles) && (
-						<div className="mb-6">
-							<h2 className="text-2xl font-bold text-gray-900">{config.title}</h2>
-							{config.description && <p className="mt-2 text-gray-600">{config.description}</p>}
-						</div>
-					)}
-
 					<FormElementsRenderer config={config} />
-
 					{!isMultiStep && showSubmitButton && (
 						<SubmitButton
 							submitButtonText={submitButtonText}

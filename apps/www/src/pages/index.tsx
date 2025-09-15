@@ -5,6 +5,7 @@ import { FormRenderer } from '@json-form-engine/react/components/internals/form-
 import { Badge } from '@/components/ui/badge';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { ThemeToggle } from '@/components/theme-toggle';
 import type { FormConfig } from '@json-form-engine/core/schemas';
 import type { EcoComponent } from '@ecopages/core';
 import type { JSX } from 'react';
@@ -161,32 +162,33 @@ const demoPages = [
 
 const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 	return (
-		<div className="min-h-screen bg-white">
-			<header className="border-b border-gray-200">
+		<div className="min-h-screen bg-background">
+			<header className="border-b border-border">
 				<div className="max-w-7xl mx-auto px-6 py-4">
 					<div className="flex items-center justify-between">
 						<div className="flex items-center space-x-8">
 							<div className="flex items-center space-x-3">
-								<div className="w-8 h-8 bg-black rounded-md flex items-center justify-center">
-									<svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+								<div className="w-8 h-8 bg-foreground rounded-md flex items-center justify-center">
+									<svg className="w-5 h-5 text-background" fill="currentColor" viewBox="0 0 24 24">
 										<title>Form Engine logo</title>
 										<path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
 									</svg>
 								</div>
-								<span className="font-semibold text-xl">Form Engine</span>
+								<span className="font-semibold text-xl text-foreground">Form Engine</span>
 							</div>
 							<nav className="hidden md:flex items-center space-x-6">
-								<a href="/docs" className="text-gray-600 hover:text-black transition-colors">
+								<a href="/docs" className="text-muted-foreground hover:text-foreground transition-colors">
 									Docs
 								</a>
 							</nav>
 						</div>
 						<div className="flex items-center space-x-4">
+							<ThemeToggle />
 							<a
 								href="https://github.com/andeeplus"
 								target="_blank"
 								rel="noopener noreferrer"
-								className="text-gray-600 hover:text-black transition-colors"
+								className="text-muted-foreground hover:text-foreground transition-colors"
 							>
 								<svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
 									<title>GitHub logo</title>
@@ -204,17 +206,17 @@ const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 
 			<section className="py-24 px-6">
 				<div className="max-w-4xl mx-auto text-center">
-					<h1 className="text-5xl md:text-7xl font-bold tracking-tight text-black mb-6">
+					<h1 className="text-5xl md:text-7xl font-bold tracking-tight text-foreground mb-6">
 						JSON-Based
 						<br />
-						<span className="text-gray-500">Form Engine</span>
+						<span className="text-muted-foreground">Form Engine</span>
 					</h1>
-					<p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
+					<p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
 						Build dynamic, type-safe forms with automatic validation. Configure everything in JSON, get Zod
 						schemas for free.
 					</p>
 					<div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-						<Button size="lg" className="bg-black hover:bg-gray-800 text-white px-8">
+						<Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8">
 							<a href="/docs/examples/basic-form" className="no-underline">
 								View Examples
 							</a>
@@ -226,21 +228,21 @@ const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 						</Button>
 					</div>
 
-					<div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500 mb-16">
+					<div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground mb-16">
 						<span className="flex items-center gap-2">
-							<div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+							<div className="w-1.5 h-1.5 bg-accent rounded-full"></div>
 							100% Serializable
 						</span>
 						<span className="flex items-center gap-2">
-							<div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+							<div className="w-1.5 h-1.5 bg-accent rounded-full"></div>
 							Auto-Generated Schemas
 						</span>
 						<span className="flex items-center gap-2">
-							<div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+							<div className="w-1.5 h-1.5 bg-accent rounded-full"></div>
 							Real-time Validation
 						</span>
 						<span className="flex items-center gap-2">
-							<div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+							<div className="w-1.5 h-1.5 bg-accent rounded-full"></div>
 							Tree-Shakable
 						</span>
 					</div>
@@ -249,6 +251,7 @@ const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 					code={JSON.stringify(contactFormConfig, null, 2)}
 					example={<FormRenderer config={contactFormConfig} />}
 					fileName="contact-form.json"
+					maxHeight='400px'
 				/>
 			</section>
 
@@ -257,21 +260,21 @@ const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 			<section className="py-24 px-6">
 				<div className="max-w-6xl mx-auto">
 					<div className="text-center mb-16">
-						<h2 className="text-3xl font-bold text-black mb-4">Core Features</h2>
-						<p className="text-gray-600 max-w-2xl mx-auto">
+						<h2 className="text-3xl font-bold text-foreground mb-4">Core Features</h2>
+						<p className="text-muted-foreground max-w-2xl mx-auto">
 							Everything you need to build powerful, maintainable forms with minimal code.
 						</p>
 					</div>
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 						{features.map((feature, index) => (
 							<div key={index} className="group">
-								<div className="flex items-start space-x-4 p-6 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
-									<div className="flex-shrink-0 text-gray-400 group-hover:text-gray-600 transition-colors">
+								<div className="flex items-start space-x-4 p-6 rounded-lg border border-border hover:border-accent transition-colors bg-card">
+									<div className="flex-shrink-0 text-muted-foreground group-hover:text-accent transition-colors">
 										{feature.icon}
 									</div>
 									<div>
-										<h3 className="font-semibold text-lg text-black mb-2">{feature.title}</h3>
-										<p className="text-gray-600">{feature.description}</p>
+										<h3 className="font-semibold text-lg text-card-foreground mb-2">{feature.title}</h3>
+										<p className="text-muted-foreground">{feature.description}</p>
 									</div>
 								</div>
 							</div>
@@ -285,8 +288,8 @@ const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 			<section className="py-24 px-6">
 				<div className="max-w-6xl mx-auto">
 					<div className="text-center mb-16">
-						<h2 className="text-3xl font-bold text-black mb-4">Explore the Examples</h2>
-						<p className="text-gray-600 max-w-2xl mx-auto">
+						<h2 className="text-3xl font-bold text-foreground mb-4">Explore the Examples</h2>
+						<p className="text-muted-foreground max-w-2xl mx-auto">
 							Real-world examples showcasing different form patterns and use cases.
 						</p>
 					</div>
@@ -294,7 +297,7 @@ const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 						{demoPages.map((demo, index) => (
 							<Card
 								key={index}
-								className="group cursor-pointer hover:shadow-lg transition-all duration-200 border-gray-200 hover:border-gray-300"
+								className="group cursor-pointer hover:shadow-lg transition-all duration-200 border-border hover:border-accent bg-card"
 								onClick={() => {
 									window.location.href = demo.path;
 								}}
@@ -314,10 +317,10 @@ const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 											{demo.level}
 										</Badge>
 									</div>
-									<CardTitle className="text-lg group-hover:text-gray-600 transition-colors">
+									<CardTitle className="text-lg group-hover:text-accent transition-colors text-card-foreground">
 										{demo.title}
 									</CardTitle>
-									<CardDescription className="text-gray-500">{demo.description}</CardDescription>
+									<CardDescription className="text-muted-foreground">{demo.description}</CardDescription>
 								</CardHeader>
 							</Card>
 						))}
@@ -330,34 +333,34 @@ const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 			<section className="py-24 px-6">
 				<div className="max-w-4xl mx-auto">
 					<div className="text-center mb-16">
-						<h2 className="text-3xl font-bold text-black mb-4">Quick Start</h2>
-						<p className="text-gray-600">Get up and running in three simple steps</p>
+						<h2 className="text-3xl font-bold text-foreground mb-4">Quick Start</h2>
+						<p className="text-muted-foreground">Get up and running in three simple steps</p>
 					</div>
 					<div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 						<div className="text-center">
-							<div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center mx-auto mb-4 font-bold">
+							<div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 font-bold">
 								1
 							</div>
-							<h3 className="font-semibold text-lg mb-2">Define Structure</h3>
-							<p className="text-gray-600 text-sm">
+							<h3 className="font-semibold text-lg mb-2 text-foreground">Define Structure</h3>
+							<p className="text-muted-foreground text-sm">
 								Create your form configuration in JSON format with field definitions
 							</p>
 						</div>
 						<div className="text-center">
-							<div className="w-12 h-12 bg-gray-700 text-white rounded-full flex items-center justify-center mx-auto mb-4 font-bold">
+							<div className="w-12 h-12 bg-secondary text-secondary-foreground rounded-full flex items-center justify-center mx-auto mb-4 font-bold">
 								2
 							</div>
-							<h3 className="font-semibold text-lg mb-2">Auto-Generate</h3>
-							<p className="text-gray-600 text-sm">
+							<h3 className="font-semibold text-lg mb-2 text-foreground">Auto-Generate</h3>
+							<p className="text-muted-foreground text-sm">
 								Validation schemas and types are automatically created from your config
 							</p>
 						</div>
 						<div className="text-center">
-							<div className="w-12 h-12 bg-gray-500 text-white rounded-full flex items-center justify-center mx-auto mb-4 font-bold">
+							<div className="w-12 h-12 bg-accent text-accent-foreground rounded-full flex items-center justify-center mx-auto mb-4 font-bold">
 								3
 							</div>
-							<h3 className="font-semibold text-lg mb-2">Render & Validate</h3>
-							<p className="text-gray-600 text-sm">
+							<h3 className="font-semibold text-lg mb-2 text-foreground">Render & Validate</h3>
+							<p className="text-muted-foreground text-sm">
 								Display your form with real-time validation and error handling
 							</p>
 						</div>
@@ -365,9 +368,9 @@ const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 				</div>
 			</section>
 
-			<footer className="border-t border-gray-200 py-12 px-6">
+			<footer className="border-t border-border py-12 px-6">
 				<div className="max-w-6xl mx-auto text-center">
-					<p className="text-gray-500 text-sm">
+					<p className="text-muted-foreground text-sm">
 						Built with React, TypeScript, and Zod. Open source and MIT licensed.
 					</p>
 				</div>

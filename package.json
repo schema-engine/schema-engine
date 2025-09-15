@@ -24,7 +24,7 @@
     "dev:www": "bun run --elide-lines 0 --filter @json-form-engine/www dev",
     "build:www": "bun run --filter @json-form-engine/www build",
     "start:www": "bun run --filter @json-form-engine/www start",
-    "test:all": "bun run --elide-lines 0 --filter '*' test:all",
+    "test:all": "bun run --filter '*' test:all",
     "clean": "clear && bunx npkill -D -y && rm -rf bun.lock && bun install"
   },
   "workspaces": [
