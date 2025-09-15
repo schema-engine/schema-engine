@@ -1,3 +1,4 @@
+import '@json-form-engine/react/components/form/registry';
 import { Button } from '../components/ui/button';
 import { CodePreview } from '../components/code-preview';
 import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
@@ -7,7 +8,6 @@ import { Separator } from '@/components/ui/separator';
 import type { FormConfig } from '@json-form-engine/core/schemas';
 import type { EcoComponent } from '@ecopages/core';
 import type { JSX } from 'react';
-import '@/lib/form-engine/components/form/registry';
 
 const contactFormConfig: FormConfig = {
 	id: 'contact-form',

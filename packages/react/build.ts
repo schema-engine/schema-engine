@@ -1,8 +1,14 @@
 import { $ } from 'bun';
 import { watch } from 'node:fs';
 import path from 'node:path';
+
 const glob = new Bun.Glob('src/**/*.ts');
+const tsxGlob = new Bun.Glob('src/**/*.tsx');
+
 const files = await Array.fromAsync(glob.scan({ cwd: '.' }));
+const tsxFiles = await Array.fromAsync(tsxGlob.scan({ cwd: '.' }));
+
+files.push(...tsxFiles);
 
 const watchMode = process.argv.includes('--watch');
 
@@ -15,6 +21,7 @@ const build = await Bun.build({
   format: 'esm',
   splitting: !watchMode,
   sourcemap: 'external',
+  external: ['react', 'react-dom'],
 });
 
 if (!build.success) {

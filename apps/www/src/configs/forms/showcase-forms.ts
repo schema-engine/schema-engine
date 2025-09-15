@@ -1,6 +1,6 @@
 import type { FormConfig } from '@json-form-engine/core/schemas';
 import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
-import '@/lib/form-engine/components/form/registry';
+import '@json-form-engine/react/components/form/registry';
 
 /**
  * Basic form example configuration
