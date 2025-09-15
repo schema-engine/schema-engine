@@ -3,10 +3,6 @@ import { FieldGroup } from '@/components/form/field-group';
 import { useControlledFormElement, combineHandlers } from '@/hooks';
 import type { TextareaFieldProps } from './form-textarea.types';
 
-/**
- * Enhanced Textarea field component for the form engine.
- * Integrates with React Hook Form and provides validation, state management, etc.
- */
 export function FormTextarea({ config, onChange: propsOnChange, onBlur: propsOnBlur }: TextareaFieldProps) {
 	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
 		useControlledFormElement(config);

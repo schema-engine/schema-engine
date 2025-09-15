@@ -154,7 +154,6 @@ export function FormEngineDemo() {
 								{JSON.stringify(
 									{
 										id: 'demo-form',
-										autoGenerateSchema: true,
 										elements: [
 											{
 												componentId: 'input',

@@ -10,7 +10,7 @@ export function SimpleConditionalDemo() {
 	const config: FormConfig = {
 		id: 'simple-conditional-demo',
 		mode: 'free',
-		autoGenerateSchema: true,
+		
 		steps: [
 			{
 				id: 'conditional-step',

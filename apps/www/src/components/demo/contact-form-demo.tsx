@@ -9,7 +9,7 @@ const contactFormConfig: FormConfig = {
 	title: 'Contact Us',
 	description: "Get in touch with our team. We'll get back to you within 24 hours.",
 	mode: 'free' as const,
-	autoGenerateSchema: true,
+	
 
 	steps: [
 		{

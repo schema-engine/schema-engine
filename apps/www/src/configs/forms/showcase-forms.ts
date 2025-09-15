@@ -8,7 +8,7 @@ import '@json-form-engine/react/components/form/registry';
 export const basicFormConfig: FormConfig = {
 	id: 'basic-demo',
 	title: 'Basic Form Example',
-	autoGenerateSchema: true,
+	
 	mode: 'free',
 	steps: [
 		{
@@ -77,7 +77,7 @@ export const basicFormConfig: FormConfig = {
 export const conditionalFormConfig: FormConfig = {
 	id: 'conditional-demo',
 	title: 'Advanced Conditional Logic Demo',
-	autoGenerateSchema: true,
+	
 	mode: 'free',
 	steps: [
 		{
@@ -238,7 +238,7 @@ export const conditionalFormConfig: FormConfig = {
 export const arrayFormConfig: FormConfig = {
 	id: 'array-demo',
 	title: 'Dynamic Array Fields Demo',
-	autoGenerateSchema: true,
+	
 	mode: 'free',
 	steps: [
 		{
@@ -342,7 +342,7 @@ export const arrayFormConfig: FormConfig = {
 export const complexFormConfig: FormConfig = {
 	id: 'complex-demo',
 	title: 'Complex Form with All Features',
-	autoGenerateSchema: true,
+	
 	mode: 'free',
 	steps: [
 		{

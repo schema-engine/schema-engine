@@ -10,7 +10,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 	title: 'User Registration',
 	description: 'Complete your registration by filling out all required information.',
 	mode: 'wizard',
-	autoGenerateSchema: true,
+	
 	steps: [
 		{
 			id: 'personal-info',

@@ -10,7 +10,7 @@ export function ValidationDemo() {
 	const config: FormConfig = {
 		id: 'validation-demo',
 		mode: 'free',
-		autoGenerateSchema: true,
+		
 		steps: [
 			{
 				id: 'validation-step',

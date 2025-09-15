@@ -9,7 +9,7 @@ export const demoFormConfig: FormConfig = {
 	id: 'demo-form',
 	title: 'Interactive Form Demo',
 	description: 'Try out different field types and configurations',
-	autoGenerateSchema: true,
+	
 	mode: 'free',
 	steps: [
 		{

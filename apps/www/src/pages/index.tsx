@@ -13,7 +13,7 @@ import type { JSX } from 'react';
 const contactFormConfig: FormConfig = {
 	id: 'contact-form',
 	title: 'Contact Form',
-	autoGenerateSchema: true,
+	
 	mode: 'free',
 	steps: [
 		{
@@ -216,12 +216,12 @@ const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 						schemas for free.
 					</p>
 					<div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-						<Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8">
+						<Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8">
 							<a href="/docs/examples/basic-form" className="no-underline">
 								View Examples
 							</a>
 						</Button>
-						<Button variant="outline" size="lg" className="px-8">
+						<Button asChild variant="outline" size="lg" className="px-8">
 							<a href="/docs" className="no-underline">
 								Read Docs
 							</a>

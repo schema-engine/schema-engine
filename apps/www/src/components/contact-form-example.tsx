@@ -6,7 +6,7 @@ export function ContactFormExample() {
 	const config: FormConfig = {
 		id: 'contact-form',
 		title: 'Contact Form',
-		autoGenerateSchema: true,
+		
 		mode: 'free',
 		steps: [
 			{

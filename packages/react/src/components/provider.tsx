@@ -111,12 +111,8 @@ export function FormEngineFormProvider({
 			return config.rules;
 		}
 
-		if (config.autoGenerateSchema !== false) {
-			return generateFormSchema(allFields);
-		}
-
-		return undefined;
-	}, [config.rules, config.autoGenerateSchema, allFields]);
+		return generateFormSchema(allFields);
+	}, [config.rules, allFields]);
 
 	const form = useForm({
 		resolver: validationSchema ? zodResolver(validationSchema as any) : undefined,

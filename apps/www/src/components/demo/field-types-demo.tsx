@@ -10,7 +10,7 @@ export function FieldTypesDemo() {
 	const config: FormConfig = {
 		id: 'field-types-demo',
 		mode: 'free',
-		autoGenerateSchema: true,
+		
 		grid: {
 			columns: 1,
 			gap: '1rem',

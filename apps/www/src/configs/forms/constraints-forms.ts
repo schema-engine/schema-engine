@@ -8,7 +8,7 @@ export const constraintsDemoConfig: FormConfig = {
 	id: 'constraints-demo',
 	title: 'Constraints Demo',
 	description: 'Showcasing field constraints and conditional logic',
-	autoGenerateSchema: true,
+	
 	mode: 'free',
 	steps: [
 		{

@@ -10,7 +10,6 @@ export function SimpleInputDemo() {
 	const config: FormConfig = {
 		id: 'simple-input-demo',
 		mode: 'free',
-		autoGenerateSchema: true,
 		steps: [
 			{
 				id: 'demo-step',

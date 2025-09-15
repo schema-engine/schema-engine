@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { FormActionConfigSchema, type FormActionConfig } from '../actions/types';
 import type { FieldConfig } from './field-config';
-import type { GridLayoutConfig, ConstraintLogic } from './base-field';
+import { GridLayoutConfigSchema, type ConstraintLogic } from './base-field';
+import { ValidationRuleSchema } from './validation';
 
 export type { FormActionConfig } from '../actions/types';
 
@@ -81,15 +82,12 @@ export const FormConfigSchema = z.object({
 	description: z.string().optional(),
 	steps: z.array(FormStepSchema),
 	layout: z.array(LayoutConfigSchema).optional(),
-	grid: z.any().optional(), // GridLayoutConfigSchema from base-field
+	grid: z.lazy(() => GridLayoutConfigSchema).optional(),
 	stepper: StepNavigationConfigSchema.optional(),
 	mode: z.enum(['wizard', 'free']).optional().default('wizard'),
 	validationMode: z.enum(['onSubmit', 'onChange', 'onBlur', 'all']).optional(),
 	reValidateMode: z.enum(['onSubmit', 'onChange', 'onBlur']).optional(),
-	autoGenerateSchema: z.boolean().optional().default(true),
-	rules: z.any().optional(),
-	onSubmit: z.any().optional(),
-	onChange: z.any().optional(),
+	rules: ValidationRuleSchema.array().optional(),
 	className: z.string().optional(),
 	style: z.record(z.string(), z.any()).optional(),
 	actions: z.array(FormActionConfigSchema).optional(),
@@ -122,29 +120,10 @@ export interface FormStep {
 	actions?: FormActionConfig[];
 }
 
-/**
- * Form configuration type
- * We define this with proper typing to avoid circular references
- */
-export interface FormConfig {
-	id: string;
-	title?: string;
-	description?: string;
-	steps: FormStep[];
-	layout?: LayoutConfig[];
-	grid?: GridLayoutConfig;
-	stepper?: StepNavigationConfig;
-	mode?: 'wizard' | 'free';
-	validationMode?: 'onSubmit' | 'onChange' | 'onBlur' | 'all';
-	reValidateMode?: 'onSubmit' | 'onChange' | 'onBlur';
-	autoGenerateSchema?: boolean;
-	rules?: any;
-	onSubmit?: any;
-	onChange?: any;
-	className?: string;
-	style?: Record<string, any>;
-	actions?: FormActionConfig[];
-}
+export type FormConfig = z.infer<typeof FormConfigSchema> & {
+	onSubmit?: (data: any) => void | Promise<void>;
+	onChange?: (data: any) => void;
+};
 
 /**
  * Stepper variant options

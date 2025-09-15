@@ -11,7 +11,7 @@ const stepperDemoConfig: FormConfig = {
 	title: 'Multi-Step Form Demo',
 	description: 'Experience different stepper styles and navigation patterns',
 	mode: 'wizard',
-	autoGenerateSchema: true,
+	
 	steps: [
 		{
 			id: 'basic-info',

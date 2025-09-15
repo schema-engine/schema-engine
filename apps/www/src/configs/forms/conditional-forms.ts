@@ -8,7 +8,7 @@ export const conditionalFormConfig: FormConfig = {
 	id: 'conditional-demo-form',
 	title: 'Advanced Form Engine Demo',
 	description: 'Showcasing conditional logic, array fields, and tree-shakable registries',
-	autoGenerateSchema: true,
+	
 	mode: 'free',
 	steps: [
 		{

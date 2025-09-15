@@ -21,18 +21,20 @@ export function FormElement({ config, className, style }: FormElementProps) {
 		return null;
 	}
 
-	const Component = registry.getComponent(config.componentId);
+	const { componentId, ...componentConfig } = config;
+
+	const Component = registry.getComponent(componentId);
 
 	if (!Component) {
 		return (
 			<div className={`text-red-500 text-sm ${className || ''}`} style={style}>
-				Error: Component "{config.componentId}" not found in registry
+				Error: Component "{componentId}" not found in registry
 			</div>
 		);
 	}
 
 	const enhancedConfig = {
-		...config,
+		...componentConfig,
 		disabled: ('disabled' in config ? config.disabled : false) || shouldDisable,
 		required: isRequired,
 	};

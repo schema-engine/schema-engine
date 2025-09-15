@@ -9,7 +9,7 @@ export const responsiveFormConfig: FormConfig = {
 	id: 'responsive-demo-form',
 	title: 'Responsive Contact Form',
 	description: 'A demonstration of the responsive grid layout system',
-	autoGenerateSchema: true,
+	
 	mode: 'free',
 	grid: {
 		columns: 12,

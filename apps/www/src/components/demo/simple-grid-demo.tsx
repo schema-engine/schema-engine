@@ -10,7 +10,7 @@ export function SimpleGridDemo() {
 	const config: FormConfig = {
 		id: 'simple-grid-demo',
 		mode: 'free',
-		autoGenerateSchema: true,
+		
 		grid: {
 			columns: 1,
 			gap: '1rem',
