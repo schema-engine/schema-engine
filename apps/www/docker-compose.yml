@@ -4,7 +4,10 @@ services:
       context: .
       dockerfile: apps/www/Dockerfile
     command: bun run start
+    ports:
+      - "3000:3000"
     environment:
       - ECOPAGES_BASE_URL=${ECOPAGES_BASE_URL}
-      - ECOPAGES_HOSTNAME=${ECOPAGES_HOSTNAME}
-      - ECOPAGES_PORT=${ECOPAGES_PORT}
+      - ECOPAGES_HOSTNAME=${ECOPAGES_HOSTNAME:-0.0.0.0}
+      - ECOPAGES_PORT=${ECOPAGES_PORT:-3000}
+      - NODE_ENV=production

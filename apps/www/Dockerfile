@@ -47,8 +47,8 @@ COPY --from=prerelease /usr/src/app/package.json .
 COPY --from=prerelease /usr/src/app/bun.lock .
 COPY --from=prerelease /usr/src/app/.npmrc .
 
-# Set working directory to the www app
-WORKDIR /usr/src/app/apps/www
+# Set working directory to the root for monorepo scripts
+WORKDIR /usr/src/app
 
 # Set proper permissions for the bun user
 # Security best practice: avoid running as root
@@ -57,4 +57,5 @@ RUN chown -R bun:bun /usr/src/app
 # run the app
 USER bun
 EXPOSE 3000/tcp
-CMD ["bun", "run", "start"]
+
+CMD ["bun", "run", "start:www"]
