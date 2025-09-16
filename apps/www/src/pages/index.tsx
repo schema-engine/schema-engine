@@ -168,12 +168,14 @@ const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 					<div className="flex items-center justify-between">
 						<div className="flex items-center space-x-8">
 							<div className="flex items-center space-x-3">
-								<div className="w-8 h-8 bg-foreground rounded-md flex items-center justify-center">
-									<svg className="w-5 h-5 text-background" fill="currentColor" viewBox="0 0 24 24">
-										<title>Form Engine logo</title>
-										<path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-									</svg>
-								</div>
+								<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" >
+									<title>Form Engine logo</title>
+									<rect width="32" height="32" rx="6" fill="hsl(var(--foreground))"/>
+									<rect x="6" y="6" width="20" height="20" rx="2" fill="hsl(var(--background))"/>
+									<rect x="10" y="12" width="12" height="2" fill="hsl(var(--foreground))"/>
+									<rect x="10" y="16" width="12" height="2" fill="hsl(var(--foreground))"/>
+									<rect x="10" y="20" width="8" height="2" fill="hsl(var(--foreground))"/>
+								</svg>
 								<span className="font-semibold text-xl text-foreground">Form Engine</span>
 							</div>
 							<nav className="hidden md:flex items-center space-x-6">

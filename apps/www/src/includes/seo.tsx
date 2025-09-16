@@ -10,7 +10,7 @@ export function Seo({
 	return (
 		<>
 			<title>{title}</title>
-			<link rel="icon" type="image/x-icon" href="/public/assets/favicon.svg" />
+			<link rel="icon" type="image/svg+xml" href="/public/favicon.svg" />
 			<link rel="robots" href="/robots.txt" />
 			<meta name="description" content={description} />
 			{keywords?.length ? <meta name="keywords" content={keywords.join(',')} /> : null}
