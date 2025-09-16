@@ -3,8 +3,8 @@
   "module": "index.ts",
   "type": "module",
   "devDependencies": {
-    "@changesets/changelog-github": "^0.5.0",
-    "@changesets/cli": "^2.27.7",
+    "@changesets/changelog-github": "^0.5.1",
+    "@changesets/cli": "^2.29.7",
     "@types/bun": "latest",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.7",
@@ -25,7 +25,8 @@
     "build:www": "bun run --filter @json-form-engine/www build",
     "start:www": "bun run --filter @json-form-engine/www start",
     "test:all": "bun run --filter '*' test:all",
-    "clean": "clear && bunx npkill -D -y && rm -rf bun.lock && bun install"
+    "clean": "clear && bunx npkill -D -y && rm -rf bun.lock && bun install",
+    "changeset": "changeset"
   },
   "workspaces": [
     "apps/*",

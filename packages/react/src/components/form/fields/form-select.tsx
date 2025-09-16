@@ -1,6 +1,6 @@
-import { Label } from '@/components/ui/label';
+import { Label } from '@/shadcn/ui/label';
 import { useControlledFormElement } from '@/hooks';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shadcn/ui/select';
 import type { SelectFieldConfig } from './form-select.types';
 
 interface FormSelectProps {

@@ -2,13 +2,13 @@ import { $ } from 'bun';
 import { watch } from 'node:fs';
 import path from 'node:path';
 
-const glob = new Bun.Glob('src/**/*.ts');
-const tsxGlob = new Bun.Glob('src/**/*.tsx');
 
-const files = await Array.fromAsync(glob.scan({ cwd: '.' }));
-const tsxFiles = await Array.fromAsync(tsxGlob.scan({ cwd: '.' }));
+const directories = ['src/components', 'src/hooks'];
 
-files.push(...tsxFiles);
+const files = await Promise.all(directories.flatMap((dir) => {
+  const glob = new Bun.Glob(`${dir}/**/*.{ts,tsx}`);
+  return Array.fromAsync(glob.scan({ cwd: '.' }));
+})).then((files) => files.flat());
 
 const watchMode = process.argv.includes('--watch');
 

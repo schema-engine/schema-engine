@@ -1,6 +1,8 @@
 {
   "name": "@json-form-engine/react",
   "type": "module",
+  "version": "0.1.0",
+  "license": "MIT",
   "sideEffects": [
     "./dist/components/form/registry.js",
     "./dist/components/form/fields/*.registry.js"

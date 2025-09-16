@@ -4,9 +4,4 @@
  */
 
 export * from '@/components';
-
 export * from '@/hooks';
-
-export * from '@/ui-hooks';
-
-export * from '@/lib';

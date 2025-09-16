@@ -1,6 +1,8 @@
 {
   "name": "@json-form-engine/core",
   "type": "module",
+  "version": "0.1.0",
+  "license": "MIT",
   "sideEffects": false,
   "main": "dist/index.js",
   "module": "dist/index.js",

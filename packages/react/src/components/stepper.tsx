@@ -1,7 +1,7 @@
 import type React from 'react';
 import { createContext, useContext, useState, useCallback } from 'react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { cn } from '@/shadcn/lib/utils';
+import { Button } from '@/shadcn/ui/button';
 import type {
 	FormStep,
 	StepHandlers,

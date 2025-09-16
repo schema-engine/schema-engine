@@ -1,4 +1,4 @@
-import { Input } from '@/components/ui/input';
+import { Input } from '@/shadcn/ui/input';
 import { FieldGroup } from '@/components/form/field-group';
 import { useControlledFormElement, combineHandlers } from '@/hooks';
 import type { InputFieldProps } from './form-input.types';

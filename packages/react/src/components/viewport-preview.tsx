@@ -1,10 +1,10 @@
 import type React from 'react';
 import { useState } from 'react';
 import { type Breakpoint, BreakpointOverrideProvider } from '../hooks/grid-hooks';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shadcn/ui/card';
+import { Button } from '@/shadcn/ui/button';
+import { Badge } from '@/shadcn/ui/badge';
+import { cn } from '@/shadcn/lib/utils';
 
 /**
  * Viewport preview props

@@ -1,4 +1,4 @@
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from '@/shadcn/ui/textarea';
 import { FieldGroup } from '@/components/form/field-group';
 import { useControlledFormElement, combineHandlers } from '@/hooks';
 import type { TextareaFieldProps } from './form-textarea.types';

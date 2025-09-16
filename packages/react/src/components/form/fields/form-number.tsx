@@ -1,5 +1,5 @@
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+import { Label } from '@/shadcn/ui/label';
+import { Input } from '@/shadcn/ui/input';
 import { useControlledFormElement } from '@/hooks';
 import type { NumberFieldConfig } from './form-number.types';
 

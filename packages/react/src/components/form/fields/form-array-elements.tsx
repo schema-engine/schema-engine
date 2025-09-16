@@ -1,8 +1,8 @@
 import { useFieldArray, useFormContext } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Button } from '@/shadcn/ui/button';
+import { Card } from '@/shadcn/ui/card';
 import { Trash2, Plus } from 'lucide-react';
-import { Label } from '@/components/ui/label';
+import { Label } from '@/shadcn/ui/label';
 import { createFieldDefaultValue, useControlledFormElement } from '@/hooks/use-field';
 import { FormElement } from '@/components/internals/field-renderer';
 import type { ArrayElementsConfig } from './form-array-elements.types';

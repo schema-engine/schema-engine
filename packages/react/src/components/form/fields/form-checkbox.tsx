@@ -1,5 +1,5 @@
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/shadcn/ui/label';
+import { Checkbox } from '@/shadcn/ui/checkbox';
 import { useControlledFormElement } from '@/hooks';
 import type { CheckboxFieldConfig } from './form-checkbox.types';
 

@@ -1,5 +1,5 @@
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { Label } from '@/shadcn/ui/label';
+import { Switch } from '@/shadcn/ui/switch';
 import { useControlledFormElement } from '@/hooks';
 import type { SwitchFieldConfig } from './form-switch.types';
 

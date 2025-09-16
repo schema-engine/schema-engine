@@ -1,5 +1,5 @@
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/shadcn/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/shadcn/ui/radio-group';
 import { useControlledFormElement } from '@/hooks';
 import type { RadioFieldConfig } from './form-radio.types';
 
