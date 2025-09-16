@@ -1,81 +1,132 @@
-# Form Engine
+# JSON Form Engine
 
-> **A JSON-driven, highly customizable React form library that adapts to your needs, not the other way around.**
+> http://json-form-engine.andeeplus.com
 
-## Why Form Engine?
+**JSON Form Engine** is a JSON-based, type-safe form builder for React. Define your forms entirely in JSON, and get automatic validation, real-time error handling, and Zod schemas for free.
 
-After years of wrestling with form libraries, building custom solutions, and hitting the same walls over and over again, I realized something: **forms shouldn't be this hard**. Every project had different requirements, different designs, different validation needs, and different actions to perform. Yet, most form libraries force you into their way of thinking.
+## Features
 
-Form Engine was born from frustration and refined through real-world use. It's not just another form library—it's a **JSON-driven UI system** that lets you create complex, interactive forms using simple schemas while maintaining complete control over your components and logic.
+- **JSON Configuration**: Define forms in JSON with automatic validation generation.
+- **Responsive Grids**: Advanced layout system with device emulation and breakpoint management.
+- **Conditional Logic**: Dynamic field rendering based on real-time form state.
+- **Type Safety**: Zod validation schemas are created automatically from your configuration.
+- **100% Serializable**: All form configs are serializable and portable.
+- **Auto-Generated Schemas**: Validation and types are generated from your config.
+- **Real-time Validation**: Instant feedback as users fill out forms.
+- **Tree-Shakable**: Optimized for modern bundlers.
 
-## What Makes It Different?
+## Quick Start
 
-**Complete Customization**: Bring your existing component library. Wrap it with our tools, and it instantly adapts to form schemas while getting all the React Hook Form goodness.
+Get up and running in three simple steps:
 
-**JSON-Driven**: Define complex forms with simple JSON schemas. No more writing repetitive JSX for similar forms.
+1. **Define Structure**  
+   Create your form configuration in JSON format with field definitions.
+2. **Auto-Generate**  
+   Validation schemas and types are automatically created from your config.
+3. **Render & Validate**  
+   Display your form with real-time validation and error handling.
 
-**Registrable Everything**: Not just components—actions, validations, layouts. Build your own plugins and solutions that fit your exact needs.
+## Example
 
-**Zod Integration**: Type-safe validation that just works. Define your schema once, get validation everywhere.
-
-**Action System**: Perform complex operations at any point in your form lifecycle. Auto-save, analytics tracking, multi-step navigation—all through a pluggable action system.
-
-## Repository Structure
-
-This repository contains both the **library source code** and a **comprehensive documentation site**:
-
+```json
+{
+	"id": "contact-form",
+	"title": "Contact Form",
+	"mode": "free",
+	"steps": [
+		{
+			"id": "contact-step",
+			"title": "Contact Information",
+			"elements": [
+				{
+					"id": "email",
+					"name": "email",
+					"componentId": "input",
+					"inputType": "email",
+					"label": "Email Address",
+					"placeholder": "Enter your email",
+					"rules": [
+						{ "type": "required", "message": "Email is required" },
+						{ "type": "email", "message": "Please enter a valid email address" }
+					]
+				},
+				{
+					"id": "message",
+					"name": "message",
+					"componentId": "textarea",
+					"label": "Message",
+					"placeholder": "Your message...",
+					"rules": [
+						{
+							"type": "minLength",
+							"value": 10,
+							"message": "Message must be at least 10 characters long"
+						}
+					]
+				}
+			]
+		}
+	],
+	"actions": [
+		{
+			"id": "contact-submit",
+			"type": "submit",
+			"description": "Submit contact form",
+			"successMessage": "Message sent! Thanks for reaching out.",
+			"errorMessage": "Failed to send message. Please try again.",
+			"enabled": true,
+			"endpoint": "/api/submit-demo",
+			"method": "POST"
+		}
+	]
+}
 ```
-├── src/lib/form-engine/     # Core library code
-├── src/pages/_docs/         # Legacy documentation (being restructured)
-├── src/components/demo/     # Live examples and demos
-├── docs/                    # New documentation structure
-└── test/                    # Test suites
-```
 
-## Development
+## Registry System
 
-This project uses [Bun](https://bun.com) as the JavaScript runtime.
+The **Registry** is the core mechanism that allows you to register and manage custom form components, field types, and plugins. It enables extensibility and modularity, letting you:
 
-### Getting Started
+- Register new input components (e.g., custom selects, date pickers)
+- Register custom validation rules
+- Register layout or UI plugins (@todo)
 
-```bash
-# Install dependencies
-bun install
+This system ensures that your forms can be extended and customized for any use case, while keeping configuration fully serializable and type-safe.
 
-# Start development server (with hot reload)
-bun dev
+## Actions System
 
-# Build for production
-bun build
+The **Actions System** enables you to define what happens when a form is submitted or when certain events occur. Actions are declared in the form configuration and can include:
 
-# Start production server
-bun start
-```
+- Submitting data to an API endpoint
+- Triggering custom logic or side effects
+- Chaining multiple actions (sequential workflows)
 
-### Available Scripts
-
-- `bun dev` - Development server with file watching
-- `bun hot` - Development server with hot module replacement
-- `bun build` - Build the project for production
-- `bun start` - Start production server
-- `bun preview` - Preview production build
+Actions are fully configurable and support custom plugins, making it easy to implement complex workflows directly from your JSON config.
 
 ## Documentation
 
-The documentation is being restructured to better reflect the vision and capabilities of Form Engine.
+- [Introduction](./apps/www/src/pages/docs/introduction.mdx)
+- [Installation](./apps/www/src/pages/docs/installation.mdx)
+- [Quick Start](./apps/www/src/pages/docs/quick-start.mdx)
+- [Actions](./apps/www/src/pages/docs/actions/how-it-works.mdx)
+- [Components](./apps/www/src/pages/docs/components/how-it-works.mdx)
+- [Examples](./apps/www/src/pages/docs/examples/basic-form.mdx)
+- [Hooks](./apps/www/src/pages/docs/hooks/index.mdx)
+- [Layouts](./apps/www/src/pages/docs/layout/how-it-works.mdx)
 
-- **Live Examples**: Visit the development server to see interactive demos
-- **API Reference**: Comprehensive API documentation in `/docs`
-- **Migration Guide**: Coming soon for existing users
+See the [`/docs`](./apps/www/src/pages/docs/) folder for more.
 
-## Status
+## Example Pages
 
-**Work In Progress** - Form Engine is currently in active development. The core API is stabilizing, but breaking changes may still occur before the first stable release.
+- **[Basic Form](./apps/www/src/pages/docs/examples/basic-form.mdx)**: JSON-based form validation fundamentals.
+- **[Contact Form](./apps/www/src/pages/docs/examples/contact-form.mdx)**: Complete contact form with validation.
+- **[Registration Flow](./apps/www/src/pages/docs/examples/registration-flow.mdx)**: Multi-step registration with complex validation.
+- **[Survey Form](./apps/www/src/pages/docs/examples/survey-form.mdx)**: Dynamic survey with conditional fields.
+- **[Sequential Actions](./apps/www/src/pages/docs/examples/sequential-actions.mdx)**: Complex workflows with chained actions.
 
-## Contributing
+## License
 
-This is a passion project born from real-world needs. Contributions, feedback, and ideas are welcome! See the documentation for contribution guidelines.
+MIT
 
 ---
 
-_Built with ❤️ by developers who believe forms should be powerful, not painful._
+Built with React, TypeScript, and Zod. Open source and MIT licensed.
