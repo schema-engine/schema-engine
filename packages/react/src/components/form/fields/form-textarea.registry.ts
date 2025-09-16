@@ -1,4 +1,4 @@
-import { defaultFormFieldRegistry } from '@json-form-engine/core/schemas/registry';
+import { registerFieldType } from '@/registry';
 import { TextareaFieldSchema, textareaFieldExample } from './form-textarea.types';
 import { FormTextarea } from './form-textarea';
 
@@ -18,4 +18,4 @@ export const textareaFieldRegistration: FormEngine.FieldRegistration = {
 	},
 };
 
-defaultFormFieldRegistry.register(textareaFieldRegistration);
+registerFieldType(textareaFieldRegistration);

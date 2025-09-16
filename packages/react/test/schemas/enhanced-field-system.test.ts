@@ -1,13 +1,13 @@
 import { describe, test, expect } from 'bun:test';
 import { z } from 'zod';
-import { defaultFormFieldRegistry, formFieldRegistry } from '@json-form-engine/core/schemas/registry';
+import { formFieldRegistry } from '@json-form-engine/core/schemas/registry';
+import { defaultFormFieldRegistry } from '@/registry';
 import { 
 	InputFieldSchema, 
 	inputFieldExample,
 	type InputFieldConfig 
 } from '@/components/form/fields/form-input.types';
 
-// Import the registry to ensure input field is registered
 import '@/components/form/fields/form-input.registry';
 
 describe('Enhanced Form Field System', () => {
@@ -34,7 +34,6 @@ describe('Enhanced Form Field System', () => {
 		test('rejects invalid input field configuration', () => {
 			const invalidConfig = {
 				componentId: 'input',
-				// missing required id and name
 				inputType: 'invalid-type',
 			};
 
@@ -119,7 +118,6 @@ describe('Enhanced Form Field System', () => {
 		test('rejects invalid field configuration through registry', () => {
 			const invalidConfig = {
 				componentId: 'input',
-				// missing required fields
 				inputType: 'invalid',
 			};
 
@@ -171,7 +169,6 @@ describe('Enhanced Form Field System', () => {
 		test('returns null for invalid serialization', () => {
 			const invalidConfig = {
 				componentId: 'input',
-				// invalid configuration
 			};
 
 			const serializable = defaultFormFieldRegistry.toSerializable(invalidConfig);
@@ -191,6 +188,7 @@ describe('Enhanced Form Field System', () => {
 		});
 
 		test('returns null for unknown field type JSON schema', () => {
+			//@ts-expect-error
 			const jsonSchema = defaultFormFieldRegistry.toJSONSchema('unknown');
 			expect(jsonSchema).toBeNull();
 		});
@@ -296,7 +294,6 @@ describe('Type Safety and Integration', () => {
 			label: 'Type Test',
 		};
 
-		// These assertions verify the type system at compile time
 		expect(config.componentId).toBe('input');
 		expect(typeof config.inputType).toBe('string');
 		expect(typeof config.id).toBe('string');
@@ -308,9 +305,8 @@ describe('Type Safety and Integration', () => {
 		expect(validation.success).toBe(true);
 		
 		if (validation.success) {
-			// Verify that the validated data maintains type safety
 			expect(validation.data?.componentId).toBe('input');
-			expect(validation.data?.inputType).toBe('text');
+			expect((validation.data as FormEngine.FieldConfigRegistry['input']).inputType).toBe('text');
 		}
 	});
 });

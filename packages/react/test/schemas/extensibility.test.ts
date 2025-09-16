@@ -1,7 +1,7 @@
 import { test, expect, describe, afterEach } from 'bun:test';
 import { z } from 'zod';
 import { BaseFieldSchema } from '@json-form-engine/core/schemas/base-field';
-import { defaultFormFieldRegistry } from '@json-form-engine/core/schemas/registry';
+import { defaultFormFieldRegistry } from '@/registry';
 import { 
 	createArrayElementsRuntimeSchema, 
 	type ArrayElementsConfig 
@@ -128,13 +128,12 @@ describe('Form Field Registry Extensibility', () => {
 		test('should create runtime schema including custom fields and array elements', () => {
 			const { componentId, registration } = createFieldRegistration('4');
 			
-			// Register the custom field
 			defaultFormFieldRegistry.register(registration);
 
-			const runtimeSchema = createArrayElementsRuntimeSchema(defaultFormFieldRegistry);
+			createArrayElementsRuntimeSchema(defaultFormFieldRegistry);
 			
 			const fieldTypes = defaultFormFieldRegistry.getFieldTypes();
-			expect(fieldTypes).toContain(componentId);
+			expect(fieldTypes).toContain(componentId as FormEngine.ComponentId);
 			expect(fieldTypes).toContain('input');
 			expect(fieldTypes).toContain('textarea');
 			expect(fieldTypes).toContain('arrayElements');

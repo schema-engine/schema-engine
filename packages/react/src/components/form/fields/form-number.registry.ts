@@ -1,4 +1,4 @@
-import { defaultFormFieldRegistry } from '@json-form-engine/core/schemas/registry';
+import { registerFieldType } from '@/registry';
 import { NumberFieldConfigSchema } from './form-number.types';
 import { FormNumber } from './form-number';
 
@@ -28,4 +28,4 @@ export const numberFieldRegistration: FormEngine.FieldRegistration = {
 	},
 };
 
-defaultFormFieldRegistry.register(numberFieldRegistration);
+registerFieldType(numberFieldRegistration);

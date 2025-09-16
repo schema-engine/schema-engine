@@ -1,27 +1,21 @@
 
 import { test, expect, describe, beforeEach, afterEach } from "bun:test";
 import { z } from "zod";
-import React from "react";
 import {
 	FormFieldComponentRegistry,
 	formFieldRegistry,
-	defaultFormFieldRegistry,
-	registerFieldType,
-} from "@/schemas/registry";
+} from "../../src/schemas/registry";
 
-const MockComponent: React.ComponentType<any> = ({ config, onChange }) => {
-	return React.createElement("input", {
-		type: "text",
-		value: config.value || "",
-		onChange: (e: any) => onChange?.(e.target.value),
-	});
+type MockComponent = { name: string; render: (props: any) => any };
+
+const MockComponent: MockComponent = { 
+	name: "MockComponent", 
+	render: (props: any) => props 
 };
 
-const MockSelectComponent: React.ComponentType<any> = ({ config, onChange }) => {
-	return React.createElement("select", {
-		value: config.value || "",
-		onChange: (e: any) => onChange?.(e.target.value),
-	});
+const MockSelectComponent: MockComponent = { 
+	name: "MockSelectComponent", 
+	render: (props: any) => props 
 };
 
 
@@ -79,14 +73,14 @@ const testSelectMetadata: FormEngine.FieldMetadata = {
 	},
 };
 
-const testInputRegistration: FormEngine.FieldRegistration = {
+const testInputRegistration: FormEngine.FieldRegistration<MockComponent> = {
 	componentId: "test-input",
 	component: MockComponent,
 	schema: testInputSchema, 
 	metadata: testInputMetadata,
 };
 
-const testSelectRegistration: FormEngine.FieldRegistration = {
+const testSelectRegistration: FormEngine.FieldRegistration<MockComponent> = {
 	componentId: "test-select",
 	component: MockSelectComponent,
 	schema: testSelectSchema, 
@@ -105,14 +99,16 @@ declare global {
 const asComponentId = (value: string) => value as FormEngine.ComponentId;
 
 describe("FormFieldComponentRegistry", () => {
-	let registry: FormFieldComponentRegistry;
+	let registry: FormFieldComponentRegistry<MockComponent>;
 
 	beforeEach(() => {
-		registry = new FormFieldComponentRegistry(z.registry<FormEngine.FieldMetadata>());
+		registry = new FormFieldComponentRegistry<MockComponent>(z.registry<FormEngine.FieldMetadata>());
+		formFieldRegistry.clear(); // Clear the global registry to avoid conflicts
 	});
 
 	afterEach(() => {
 		registry.clear();
+		formFieldRegistry.clear(); // Also clear after each test for good measure
 	});
 
 	describe("Basic Registration", () => {
@@ -135,14 +131,14 @@ describe("FormFieldComponentRegistry", () => {
 			);
 		});
 
-		test("should overwrite existing registration with same componentId", () => {
+		test("should update existing field registration", () => {
 			registry.register(testInputRegistration);
 			
-			registry.unregister("test-input");
-			
-			const newRegistration: FormEngine.FieldRegistration = {
-				...testInputRegistration,
-				component: MockSelectComponent, 
+			// Register same componentId with different component and metadata
+			const newRegistration: FormEngine.FieldRegistration<MockComponent> = {
+				componentId: "test-input",
+				component: MockSelectComponent,
+				schema: testInputSchema.clone(), // Clone the schema for a fresh instance
 				metadata: {
 					...testInputMetadata,
 					id: "test-input-updated",
@@ -155,7 +151,22 @@ describe("FormFieldComponentRegistry", () => {
 		});
 
 		test("should register field without metadata", () => {
-			const registrationWithoutMetadata: FormEngine.FieldRegistration = {
+			const registrationWithoutMetadata: FormEngine.FieldRegistration<MockComponent> = {
+				componentId: "no-metadata",
+				component: MockComponent,
+				schema: testInputSchema.extend({
+					componentId: z.literal("no-metadata")
+				}),
+			};
+			
+			registry.register(registrationWithoutMetadata);
+			
+			expect(registry.hasFieldType(asComponentId("no-metadata"))).toBe(true);
+			expect(registry.getMetadata(asComponentId("no-metadata"))).toBeUndefined();
+		});
+
+		test("should register field without metadata", () => {
+			const registrationWithoutMetadata: FormEngine.FieldRegistration<MockComponent> = {
 				componentId: "no-metadata",
 				component: MockComponent,
 				schema: testInputSchema.extend({
@@ -459,7 +470,7 @@ describe("FormFieldComponentRegistry", () => {
 		});
 
 		test("should handle empty string componentId", () => {
-			const emptyIdRegistration: FormEngine.FieldRegistration = {
+			const emptyIdRegistration: FormEngine.FieldRegistration<MockComponent> = {
 				componentId: "",
 				component: MockComponent,
 				schema: testInputSchema,
@@ -512,65 +523,6 @@ describe("FormFieldComponentRegistry", () => {
 			const result = registry.validateField(deepObject);
 			expect(result.success).toBe(true);
 		});
-	});
-});
-
-describe("Default Registry Integration", () => {
-	// Store original registered fields to restore after our tests
-	let originalFieldTypes: string[] = [];
-	
-	beforeEach(() => {
-		// Capture the current state before our tests
-		originalFieldTypes = defaultFormFieldRegistry.getFieldTypes();
-	});
-
-	afterEach(() => {
-		// Clean up only the test fields we added, preserving original fields
-		const currentFieldTypes = defaultFormFieldRegistry.getFieldTypes();
-		for (const fieldType of currentFieldTypes) {
-			if (!originalFieldTypes.includes(fieldType)) {
-				defaultFormFieldRegistry.unregister(fieldType);
-			}
-		}
-		// Also clear any lingering metadata from the global Zod registry
-		formFieldRegistry.clear();
-	});
-
-	test("should use default registry instance", () => {
-		expect(defaultFormFieldRegistry).toBeInstanceOf(FormFieldComponentRegistry);
-	});
-
-	test("should register field using convenience function", () => {
-		registerFieldType(testInputRegistration);
-		
-		expect(defaultFormFieldRegistry.hasFieldType(asComponentId("test-input"))).toBe(true);
-		expect(defaultFormFieldRegistry.getComponent(asComponentId("test-input"))).toBe(MockComponent);
-	});
-
-	test("should maintain state across convenience function calls", () => {
-		// Use separate metadata objects to avoid ID conflicts
-		const inputReg = {
-			...testInputRegistration,
-			metadata: {
-				...testInputMetadata,
-				id: "test-input-default-reg-1",
-			},
-		};
-		const selectReg = {
-			...testSelectRegistration,
-			metadata: {
-				...testSelectMetadata,
-				id: "test-select-default-reg-1",
-			},
-		};
-		
-		registerFieldType(inputReg);
-		registerFieldType(selectReg);
-		
-		const fieldTypesAfterRegistration = defaultFormFieldRegistry.getFieldTypes();
-		expect(fieldTypesAfterRegistration.length).toBeGreaterThan(originalFieldTypes.length);
-		expect(defaultFormFieldRegistry.hasFieldType(asComponentId("test-input"))).toBe(true);
-		expect(defaultFormFieldRegistry.hasFieldType(asComponentId("test-select"))).toBe(true);
 	});
 });
 

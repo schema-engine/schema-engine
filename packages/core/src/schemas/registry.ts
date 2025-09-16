@@ -9,10 +9,17 @@ export const formFieldRegistry = z.registry<FormEngine.FieldMetadata>();
 
 /**
  * Component registry for field components
- * Maps field type to React component and schemas
+ * Generic registry that can work with any component type.
+ * @example
+ * ```ts
+ * const reactFormFieldRegistry = new FormFieldComponentRegistry<React.ComponentType<any>>();
+ * function registerFieldType(registration: FormEngine.FieldRegistration<React.ComponentType<any>>): void {
+ *   reactFormFieldRegistry.register(registration);
+ * }
+ * ```
  */
-export class FormFieldComponentRegistry {
-	private components = new Map<string, FormEngine.FieldRegistration>();
+export class FormFieldComponentRegistry<TComponent = any> {
+	private components = new Map<string, FormEngine.FieldRegistration<TComponent>>();
 	private schemas = new Map<string, z.ZodSchema<any>>();
 	private zodRegistry: ReturnType<typeof z.registry<FormEngine.FieldMetadata>>;
 
@@ -23,8 +30,13 @@ export class FormFieldComponentRegistry {
 	/**
 	 * Register a new field type with its component and schema
 	 */
-	register(registration: FormEngine.FieldRegistration): void {
+	register(registration: FormEngine.FieldRegistration<TComponent>): void {
 		const { componentId, schema, metadata } = registration;
+
+		const existingRegistration = this.components.get(componentId);
+		if (existingRegistration && existingRegistration.schema && this.zodRegistry.has(existingRegistration.schema)) {
+			this.zodRegistry.remove(existingRegistration.schema);
+		}
 
 		this.components.set(componentId, registration);
 		this.schemas.set(componentId, schema);
@@ -60,7 +72,7 @@ export class FormFieldComponentRegistry {
 	/**
 	 * Get component for a field type
 	 */
-	getComponent(fieldType: ComponentId): React.ComponentType<any> | undefined {
+	getComponent(fieldType: ComponentId): TComponent | undefined {
 		return this.components.get(fieldType)?.component;
 	}
 
@@ -148,7 +160,6 @@ export class FormFieldComponentRegistry {
 			return schemas[0];
 		}
 
-		// Create union schema from all registered schemas
 		return z.union(schemas as [z.ZodSchema<any>, z.ZodSchema<any>, ...z.ZodSchema<any>[]]);
 	}
 
@@ -167,10 +178,8 @@ export class FormFieldComponentRegistry {
 	updateArrayElementSchemas(): void {
 		const fieldUnion = this.createFieldUnionSchema();
 
-		// Find and update array elements extension schema
 		if (typeof global !== 'undefined' && (global as any).FormEngine?.ArrayElementsExtensionSchema) {
 			const arraySchema = (global as any).FormEngine.ArrayElementsExtensionSchema;
-			// Update the elements property to use the union schema
 			arraySchema.shape.elements = z.lazy(() => z.array(fieldUnion).min(1));
 		}
 	}
@@ -235,7 +244,9 @@ export class FormFieldComponentRegistry {
 		} catch {
 			return null;
 		}
-	} /**
+	}
+	
+	/**
 	 * Generate JSON schema for all registered field types
 	 */
 	toJSONSchemaRegistry(): Record<string, unknown> {
@@ -266,16 +277,4 @@ export class FormFieldComponentRegistry {
 
 		return metadata;
 	}
-}
-
-/**
- * Default form field registry instance
- */
-export const defaultFormFieldRegistry = new FormFieldComponentRegistry();
-
-/**
- * Convenience function for registering field types
- */
-export function registerFieldType(registration: FormEngine.FieldRegistration): void {
-	defaultFormFieldRegistry.register(registration);
 }

@@ -1,4 +1,4 @@
-import { defaultFormFieldRegistry } from '@json-form-engine/core/schemas/registry';
+import { registerFieldType } from '@/registry';
 import { CheckboxFieldConfigSchema } from './form-checkbox.types';
 import { FormCheckbox } from './form-checkbox';
 
@@ -26,4 +26,4 @@ export const checkboxFieldRegistration: FormEngine.FieldRegistration = {
 	},
 };
 
-defaultFormFieldRegistry.register(checkboxFieldRegistration);
+registerFieldType(checkboxFieldRegistration);

@@ -61,12 +61,13 @@ declare global {
 
 		/**
 		 * Field registration configuration
+		 * Generic interface that can work with any component type
 		 */
-		interface FieldRegistration {
+		interface FieldRegistration<TComponent = React.ComponentType<any>> {
 			/** Unique component identifier */
 			componentId: string;
-			/** React component for rendering the field */
-			component: React.ComponentType<any>;
+			/** Component for rendering the field */
+			component: TComponent;
 			/** Schema for validation, serialization and type checking */
 			schema: z.ZodSchema<any>;
 			/** Metadata for documentation and tooling */

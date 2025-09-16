@@ -1,4 +1,4 @@
-import { defaultFormFieldRegistry } from '@json-form-engine/core/schemas/registry';
+import { registerFieldType } from '@/registry';
 import { InputFieldSchema, inputFieldExample } from './form-input.types';
 import { FormInput } from './form-input';
 
@@ -18,4 +18,4 @@ export const inputFieldRegistration: FormEngine.FieldRegistration = {
 	},
 };
 
-defaultFormFieldRegistry.register(inputFieldRegistration);
+registerFieldType(inputFieldRegistration);

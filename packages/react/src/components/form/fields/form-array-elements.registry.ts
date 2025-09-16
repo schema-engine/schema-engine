@@ -1,4 +1,4 @@
-import { defaultFormFieldRegistry } from '@json-form-engine/core/schemas/registry';
+import { registerFieldType, reactFormFieldRegistry } from '@/registry';
 import { FormArrayElements } from './form-array-elements';
 import { createArrayElementsRuntimeSchema, type ArrayElementsConfig } from './form-array-elements.types';
 
@@ -43,7 +43,7 @@ export const arrayElementsExample: ArrayElementsConfig = {
 export const arrayElementsFieldRegistration: FormEngine.FieldRegistration = {
 	componentId: 'arrayElements',
 	component: FormArrayElements,
-	schema: createArrayElementsRuntimeSchema(defaultFormFieldRegistry),
+	schema: createArrayElementsRuntimeSchema(reactFormFieldRegistry),
 	metadata: {
 		title: 'Array Field',
 		description: 'Dynamic array field for repeating elements with compile-time type safety',
@@ -52,4 +52,4 @@ export const arrayElementsFieldRegistration: FormEngine.FieldRegistration = {
 	},
 };
 
-defaultFormFieldRegistry.register(arrayElementsFieldRegistration);
+registerFieldType(arrayElementsFieldRegistration);

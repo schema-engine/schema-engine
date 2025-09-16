@@ -1,4 +1,4 @@
-import { defaultFormFieldRegistry } from '@json-form-engine/core/schemas/registry';
+import { registerFieldType } from '@/registry';
 import { SwitchFieldConfigSchema } from './form-switch.types';
 import { FormSwitch } from './form-switch';
 
@@ -26,4 +26,4 @@ export const switchFieldRegistration: FormEngine.FieldRegistration = {
 	},
 };
 
-defaultFormFieldRegistry.register(switchFieldRegistration);
+registerFieldType(switchFieldRegistration);

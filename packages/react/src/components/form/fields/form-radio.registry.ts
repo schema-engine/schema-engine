@@ -1,4 +1,4 @@
-import { defaultFormFieldRegistry } from '@json-form-engine/core/schemas/registry';
+import { registerFieldType } from '@/registry';
 import { RadioFieldConfigSchema } from './form-radio.types';
 import { FormRadio } from './form-radio';
 
@@ -31,4 +31,4 @@ export const radioFieldRegistration: FormEngine.FieldRegistration = {
 	},
 };
 
-defaultFormFieldRegistry.register(radioFieldRegistration);
+registerFieldType(radioFieldRegistration);

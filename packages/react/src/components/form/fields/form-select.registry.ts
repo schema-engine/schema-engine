@@ -1,4 +1,4 @@
-import { defaultFormFieldRegistry } from '@json-form-engine/core/schemas/registry';
+import { registerFieldType } from '@/registry';
 import { SelectFieldConfigSchema } from './form-select.types';
 import { FormSelect } from './form-select';
 
@@ -30,4 +30,4 @@ export const selectFieldRegistration: FormEngine.FieldRegistration = {
 	},
 };
 
-defaultFormFieldRegistry.register(selectFieldRegistration);
+registerFieldType(selectFieldRegistration);
