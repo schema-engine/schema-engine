@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 import { FormFieldComponentRegistry } from '@json-form-engine/core/schemas/registry';
 
 /**

@@ -1,4 +1,11 @@
 {
 	"root": false,
-	"extends": "//"
+	"extends": "//",
+	"files": {
+		"includes": [
+			"src/**",
+			"!src/components/ui/**",
+			"!src/hooks/**"
+		]
+	}
 }

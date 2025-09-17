@@ -1,6 +1,6 @@
 import type React from 'react';
 import { useEffect, useState, useContext, createContext, useMemo } from 'react';
-import type { GridLayoutConfig, ElementGridConfig, FieldGridBreakpointConfig } from '@json-form-engine/core/schemas';
+import type { GridLayoutConfig, ElementGridConfig } from '@json-form-engine/core/schemas';
 import { useDebounce } from './use-debounce';
 
 export type Breakpoint = 'default' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';

@@ -1,5 +1,5 @@
-import { ValidationPresets } from "@json-form-engine/core/schemas/validation";	
-import type { FormConfig } from "@json-form-engine/core/schemas";
+import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
+import type { FormConfig } from '@json-form-engine/core/schemas';
 
 /**
  * Conditional form demo configuration
@@ -8,7 +8,7 @@ export const conditionalFormConfig: FormConfig = {
 	id: 'conditional-demo-form',
 	title: 'Advanced Form Engine Demo',
 	description: 'Showcasing conditional logic, array fields, and tree-shakable registries',
-	
+
 	mode: 'free',
 	steps: [
 		{

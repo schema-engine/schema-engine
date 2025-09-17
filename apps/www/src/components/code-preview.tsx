@@ -31,7 +31,7 @@ export function CodeBlock({ code, fileName = 'config.json', className = '', maxH
 				<div className="w-3 h-3 bg-green-500 rounded-full"></div>
 				<span className="ml-auto text-xs text-muted-foreground">{fileName}</span>
 			</div>
-			<div 
+			<div
 				className={`text-left overflow-x-auto ${maxHeight ? 'overflow-y-auto' : ''}`}
 				style={maxHeight ? { maxHeight } : undefined}
 			>
@@ -57,13 +57,13 @@ export function LivePreview({ children, title = 'Live Preview', className = '' }
 	);
 }
 
-export function CodePreview({ 
-	code, 
-	example, 
-	fileName = 'config.json', 
+export function CodePreview({
+	code,
+	example,
+	fileName = 'config.json',
 	className = '',
 	variant = 'split',
-	maxHeight
+	maxHeight,
 }: CodePreviewProps) {
 	const [activeTab, setActiveTab] = useState<'code' | 'example'>('code');
 

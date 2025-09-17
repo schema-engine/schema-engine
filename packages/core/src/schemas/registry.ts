@@ -34,7 +34,7 @@ export class FormFieldComponentRegistry<TComponent = any> {
 		const { componentId, schema, metadata } = registration;
 
 		const existingRegistration = this.components.get(componentId);
-		if (existingRegistration && existingRegistration.schema && this.zodRegistry.has(existingRegistration.schema)) {
+		if (existingRegistration?.schema && this.zodRegistry.has(existingRegistration.schema)) {
 			this.zodRegistry.remove(existingRegistration.schema);
 		}
 
@@ -126,7 +126,9 @@ export class FormFieldComponentRegistry<TComponent = any> {
 	 * More flexible and explicit than clearing by assumption
 	 */
 	clearFields(componentIds: (ComponentId | string)[]): void {
-		componentIds.forEach((componentId) => this.unregister(componentId));
+		for (const componentId of componentIds) {
+			this.unregister(componentId);
+		}
 	}
 
 	/**
@@ -245,7 +247,7 @@ export class FormFieldComponentRegistry<TComponent = any> {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Generate JSON schema for all registered field types
 	 */

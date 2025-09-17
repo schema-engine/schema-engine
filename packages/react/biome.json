@@ -1,7 +1,10 @@
 {
 	"root": false,
 	"extends": "//",
-	"formatter": {
-		"enabled": false
+	"files": {
+		"includes": [
+			"src/**",
+			"!src/shadcn/**"
+		]
 	}
 }

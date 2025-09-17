@@ -3,7 +3,7 @@
  * Uses module augmentation to allow library users to add their own field types
  */
 
-import type { BaseField } from "./base-field";
+import type { BaseField } from './base-field';
 
 /**
  * Global registry for field configurations
@@ -63,20 +63,19 @@ declare global {
 	}
 }
 
-
 /**
  * Type guard to check if a value is a valid field configuration
  */
 export function isFieldConfig(value: unknown): value is FormEngine.FieldConfig {
 	return (
-       typeof value === 'object' &&
-        value !== null &&
-        'componentId' in value &&
-        'id' in value &&
-        'name' in value &&
-        typeof value.componentId === 'string' &&
-        typeof value.id === 'string' &&
-        typeof value.name === 'string'
+		typeof value === 'object' &&
+		value !== null &&
+		'componentId' in value &&
+		'id' in value &&
+		'name' in value &&
+		typeof value.componentId === 'string' &&
+		typeof value.id === 'string' &&
+		typeof value.name === 'string'
 	);
 }
 

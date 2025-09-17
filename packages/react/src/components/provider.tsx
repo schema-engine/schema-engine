@@ -3,7 +3,7 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useActionExecutor } from '../hooks';
 import { generateFormSchema } from '@json-form-engine/core/schemas/validation';
-import { type FormFieldComponentRegistry } from '@json-form-engine/core/schemas/registry';
+import type { FormFieldComponentRegistry } from '@json-form-engine/core/schemas/registry';
 import { reactFormFieldRegistry } from '@/registry';
 import type { ActionExecutionContext, FormActionConfig } from '@json-form-engine/core/actions/index';
 import type { FormConfig } from '@json-form-engine/core/schemas';

@@ -1,6 +1,6 @@
-import { z } from "zod";
-import type { ActionExecutionContext, ActionExecutionResult } from "../types";
-import { ActionTriggerSchema } from "../triggers";
+import { z } from 'zod';
+import type { ActionExecutionContext, ActionExecutionResult } from '../types';
+import { ActionTriggerSchema } from '../triggers';
 
 /**
  * Submit Plugin Configuration
@@ -74,9 +74,9 @@ export interface SubmitPluginConfig {
  */
 export const SubmitActionSchema = z.object({
 	/** Unique identifier for this action within the form */
-	id: z.string().min(1, "Action ID cannot be empty"),
+	id: z.string().min(1, 'Action ID cannot be empty'),
 	/** Action type identifier */
-	type: z.literal("submit"),
+	type: z.literal('submit'),
 	/** Optional description for documentation and debugging purposes */
 	description: z.string().optional(),
 	/** Whether this action is enabled and should be executed */
@@ -84,21 +84,21 @@ export const SubmitActionSchema = z.object({
 	/** Custom triggers that override the default triggers for this action */
 	triggers: z.array(ActionTriggerSchema).optional(),
 	/** Target URL for form submission (supports both full URLs and relative paths) */
-	endpoint: z.string().min(1, "Endpoint cannot be empty"),
+	endpoint: z.string().min(1, 'Endpoint cannot be empty'),
 	/** HTTP method for the request */
-	method: z.enum(["POST", "PUT", "PATCH"]).default("POST"),
+	method: z.enum(['POST', 'PUT', 'PATCH']).default('POST'),
 	/** Message to show on successful submission */
 	successMessage: z.string().optional(),
 	/** Message to show on submission failure */
 	errorMessage: z.string().optional(),
 	/** URL to redirect to after successful submission (supports both full URLs and relative paths) */
-	redirectUrl: z.string().min(1, "Redirect URL cannot be empty").optional(),
+	redirectUrl: z.string().min(1, 'Redirect URL cannot be empty').optional(),
 });
 
 export type SubmitAction = z.infer<typeof SubmitActionSchema>;
 
 // Module augmentation to add submit action to PluginActions
-declare module "../types" {
+declare module '../types' {
 	interface PluginActions {
 		submit: SubmitAction;
 	}
@@ -191,20 +191,16 @@ export function submitPlugin(config: SubmitPluginConfig = {}) {
 	} = config;
 
 	return {
-		type: "submit" as const,
+		type: 'submit' as const,
 		schema: SubmitActionSchema,
-		defaultTriggers: ["form_submit"] as const,
-		handler: async (
-			action: SubmitAction,
-			context: ActionExecutionContext
-		): Promise<ActionExecutionResult> => {
+		defaultTriggers: ['form_submit'] as const,
+		handler: async (action: SubmitAction, context: ActionExecutionContext): Promise<ActionExecutionResult> => {
 			try {
 				const validationResult = validate(context);
 				if (validationResult !== true) {
 					return {
 						success: false,
-						error:
-							typeof validationResult === "string" ? validationResult : "Form validation failed",
+						error: typeof validationResult === 'string' ? validationResult : 'Form validation failed',
 						shouldContinue: false,
 					};
 				}
@@ -214,13 +210,13 @@ export function submitPlugin(config: SubmitPluginConfig = {}) {
 						...context.formData,
 						metadata: context.metadata,
 					},
-					context
+					context,
 				);
 
 				const requestOptions = {
 					method: action.method,
 					headers: {
-						"Content-Type": "application/json",
+						'Content-Type': 'application/json',
 					},
 					body: JSON.stringify(transformedData),
 				};
@@ -237,13 +233,13 @@ export function submitPlugin(config: SubmitPluginConfig = {}) {
 
 				return {
 					success: true,
-					message: action.successMessage || "Form submitted successfully",
+					message: action.successMessage || 'Form submitted successfully',
 					data: responseData,
 					redirectUrl: action.redirectUrl,
 					shouldContinue: true,
 				};
 			} catch (error) {
-				const err = error instanceof Error ? error : new Error("Submit failed");
+				const err = error instanceof Error ? error : new Error('Submit failed');
 
 				onError(err, context);
 

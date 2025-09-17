@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { UseFormReturn } from 'react-hook-form';
-import { type ActionTrigger } from './triggers';
+import type { ActionTrigger } from './triggers';
 
 import { SubmitActionSchema } from './plugins/submit-plugin';
 import { ResetActionSchema } from './plugins/reset-plugin';

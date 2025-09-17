@@ -1,5 +1,5 @@
-import { ValidationPresets } from "@json-form-engine/core/schemas/validation";	
-import type { FormConfig } from "@json-form-engine/core/schemas";
+import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
+import type { FormConfig } from '@json-form-engine/core/schemas';
 
 /**
  * Demo configuration showcasing the new constraint-based naming and DynamicFieldset functionality
@@ -8,7 +8,7 @@ export const constraintsDemoConfig: FormConfig = {
 	id: 'constraints-demo',
 	title: 'Constraints Demo',
 	description: 'Showcasing field constraints and conditional logic',
-	
+
 	mode: 'free',
 	steps: [
 		{

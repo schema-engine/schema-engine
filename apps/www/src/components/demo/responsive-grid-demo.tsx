@@ -1,6 +1,6 @@
 import '@/json-form-engine/react/components/form/registry';
 import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
-import { ViewportPreview } from '@json-form-engine/react/components/viewport-preview';
+import { ViewportPreview } from '@json-form-engine/react/components/viewport-preview';
 import { responsiveFormConfig } from '@/configs/forms/responsive-forms';
 
 /**

@@ -41,7 +41,6 @@ import type { EcoComponent } from '@ecopages/core';
 import type { ReactNode } from 'react';
 import pkg from '../../../package.json';
 import './docs-layout.css';
-
 export interface DocsSection {
 	id: string;
 	title: string;
@@ -193,7 +192,9 @@ function TableOfContents({ toc }: { toc?: DocsTocItem[] }) {
 		);
 
 		const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
-		headings.forEach((heading) => observer.observe(heading));
+		for (const heading of headings) {
+			observer.observe(heading);
+		}
 
 		return () => observer.disconnect();
 	}, []);
@@ -304,9 +305,7 @@ export const DocsLayout: EcoComponent<DocsLayoutProps, ReactNode> = ({ children,
 
 							<div className="mt-6 grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-10">
 								<div className="min-w-0">
-									<div className={cn('prose max-w-none', className)}>
-										{children}
-									</div>
+									<div className={cn('prose max-w-none', className)}>{children}</div>
 								</div>
 
 								<div className="hidden xl:block">

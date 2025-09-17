@@ -1,13 +1,9 @@
-import type {
-	FormActionConfig,
-	ActionExecutionContext,
-	ActionExecutionResult,
-} from "./types";
-import { actionRegistry } from "./action-registry";
-import { Logger } from "@ecopages/logger";
-import type { ActionTrigger } from "./triggers";
+import type { FormActionConfig, ActionExecutionContext, ActionExecutionResult } from './types';
+import { actionRegistry } from './action-registry';
+import { Logger } from '@ecopages/logger';
+import type { ActionTrigger } from './triggers';
 
-const logger = new Logger("[form-engine/actions]", { debug: false });
+const logger = new Logger('[form-engine/actions]', { debug: false });
 
 /**
  * Action Executor
@@ -40,14 +36,14 @@ export class ActionExecutor {
 		const results: ActionExecutionResult[] = [];
 
 		for (const action of actions) {
-			if (!action.enabled) {
+			if (action.enabled === false) {
 				logger.debug(`Skipping disabled action: ${action.id}`);
 				continue;
 			}
 
 			let shouldExecute = false;
 
-			if ("triggers" in action && Array.isArray(action.triggers)) {
+			if ('triggers' in action && Array.isArray(action.triggers)) {
 				shouldExecute = action.triggers.includes(trigger);
 			} else {
 				const registryTriggers = actionRegistry.getDefaultTriggers(action.type);
@@ -56,9 +52,7 @@ export class ActionExecutor {
 			}
 
 			if (!shouldExecute) {
-				logger.debug(
-					`Action ${action.id} (${action.type}) doesn't respond to trigger: ${trigger}`,
-				);
+				logger.debug(`Action ${action.id} (${action.type}) doesn't respond to trigger: ${trigger}`);
 				continue;
 			}
 
@@ -71,10 +65,10 @@ export class ActionExecutor {
 				if (result.success) {
 					logger.debug(`Action ${action.id} executed successfully`);
 
-					if (action.type === "submit" && trigger === "form_submit") {
+					if (action.type === 'submit' && trigger === 'form_submit') {
 						const successResults = await this.executeTrigger(
 							actions,
-							"submit_success",
+							'submit_success',
 							{
 								...context,
 
@@ -93,7 +87,7 @@ export class ActionExecutor {
 
 						const completeResults = await this.executeTrigger(
 							actions,
-							"submit_complete",
+							'submit_complete',
 							{
 								...context,
 								form: {
@@ -112,10 +106,10 @@ export class ActionExecutor {
 				} else {
 					logger.warn(`Action ${action.id} failed`, result);
 
-					if (action.type === "submit" && trigger === "form_submit") {
+					if (action.type === 'submit' && trigger === 'form_submit') {
 						const errorResults = await this.executeTrigger(
 							actions,
-							"submit_error",
+							'submit_error',
 							{
 								...context,
 								form: {
@@ -133,7 +127,7 @@ export class ActionExecutor {
 
 						const completeResults = await this.executeTrigger(
 							actions,
-							"submit_complete",
+							'submit_complete',
 							{
 								...context,
 								form: {
@@ -152,9 +146,7 @@ export class ActionExecutor {
 				}
 
 				if (!result.success && result.shouldContinue === false) {
-					logger.warn(
-						`Stopping action execution due to failure in action: ${action.id}`,
-					);
+					logger.warn(`Stopping action execution due to failure in action: ${action.id}`);
 					break;
 				}
 			} catch (error) {
@@ -163,7 +155,7 @@ export class ActionExecutor {
 				});
 				results.push({
 					success: false,
-					error: error instanceof Error ? error.message : "Unknown error",
+					error: error instanceof Error ? error.message : 'Unknown error',
 					shouldContinue: true,
 				});
 			}
@@ -191,6 +183,6 @@ export class ActionExecutor {
 	}
 
 	cleanup(): void {
-		logger.debug("Action executor cleanup completed");
+		logger.debug('Action executor cleanup completed');
 	}
 }
