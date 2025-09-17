@@ -11,7 +11,6 @@ const formConfigWithActions: FormConfig = {
 	id: 'form-engine-demo',
 	title: 'FormEngine + Action Executor Demo',
 	description: 'This uses the actual FormEngine with integrated action system',
-	
 	mode: 'wizard' as const,
 	steps: [
 		{

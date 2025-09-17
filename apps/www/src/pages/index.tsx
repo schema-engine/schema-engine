@@ -1,4 +1,5 @@
 import '@json-form-engine/react/components/form/registry';
+import '@json-form-engine/core/actions/debug-registry';
 import { Button } from '../components/ui/button';
 import { CodePreview } from '../components/code-preview';
 import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
@@ -13,7 +14,6 @@ import type { JSX } from 'react';
 const contactFormConfig: FormConfig = {
 	id: 'contact-form',
 	title: 'Contact Form',
-	
 	mode: 'free',
 	steps: [
 		{
@@ -168,18 +168,21 @@ const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 					<div className="flex items-center justify-between">
 						<div className="flex items-center space-x-8">
 							<div className="flex items-center space-x-3">
-								<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" >
+								<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
 									<title>Form Engine logo</title>
-									<rect width="32" height="32" rx="6" fill="hsl(var(--foreground))"/>
-									<rect x="6" y="6" width="20" height="20" rx="2" fill="hsl(var(--background))"/>
-									<rect x="10" y="12" width="12" height="2" fill="hsl(var(--foreground))"/>
-									<rect x="10" y="16" width="12" height="2" fill="hsl(var(--foreground))"/>
-									<rect x="10" y="20" width="8" height="2" fill="hsl(var(--foreground))"/>
+									<rect width="32" height="32" rx="6" fill="hsl(var(--foreground))" />
+									<rect x="6" y="6" width="20" height="20" rx="2" fill="hsl(var(--background))" />
+									<rect x="10" y="12" width="12" height="2" fill="hsl(var(--foreground))" />
+									<rect x="10" y="16" width="12" height="2" fill="hsl(var(--foreground))" />
+									<rect x="10" y="20" width="8" height="2" fill="hsl(var(--foreground))" />
 								</svg>
 								<span className="font-semibold text-xl text-foreground">Form Engine</span>
 							</div>
 							<nav className="hidden md:flex items-center space-x-6">
-								<a href="/docs" className="text-muted-foreground hover:text-foreground transition-colors">
+								<a
+									href="/docs"
+									className="text-muted-foreground hover:text-foreground transition-colors"
+								>
 									Docs
 								</a>
 							</nav>
@@ -218,7 +221,11 @@ const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 						schemas for free.
 					</p>
 					<div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-						<Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8">
+						<Button
+							asChild
+							size="lg"
+							className="bg-primary hover:bg-primary/90 text-primary-foreground px-8"
+						>
 							<a href="/docs/examples/basic-form" className="no-underline">
 								View Examples
 							</a>
@@ -254,7 +261,7 @@ const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 					code={JSON.stringify(contactFormConfig, null, 2)}
 					example={<FormRenderer config={contactFormConfig} />}
 					fileName="contact-form.json"
-					maxHeight='400px'
+					maxHeight="400px"
 				/>
 			</section>
 
@@ -276,7 +283,9 @@ const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 										{feature.icon}
 									</div>
 									<div>
-										<h3 className="font-semibold text-lg text-card-foreground mb-2">{feature.title}</h3>
+										<h3 className="font-semibold text-lg text-card-foreground mb-2">
+											{feature.title}
+										</h3>
 										<p className="text-muted-foreground">{feature.description}</p>
 									</div>
 								</div>
@@ -323,7 +332,9 @@ const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 									<CardTitle className="text-lg group-hover:text-accent transition-colors text-card-foreground">
 										{demo.title}
 									</CardTitle>
-									<CardDescription className="text-muted-foreground">{demo.description}</CardDescription>
+									<CardDescription className="text-muted-foreground">
+										{demo.description}
+									</CardDescription>
 								</CardHeader>
 							</Card>
 						))}

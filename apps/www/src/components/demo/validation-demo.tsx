@@ -2,6 +2,7 @@ import { FormRenderer } from '@json-form-engine/react/components/internals/form-
 import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
 import type { FormConfig } from '@json-form-engine/core/schemas';
 import '@json-form-engine/react/components/form/registry';
+import '@json-form-engine/core/actions/debug-registry';
 
 /**
  * Simple validation demo showing different validation rules
@@ -9,8 +10,8 @@ import '@json-form-engine/react/components/form/registry';
 export function ValidationDemo() {
 	const config: FormConfig = {
 		id: 'validation-demo',
-		mode: 'free',
-		
+		mode: 'fr',
+
 		steps: [
 			{
 				id: 'validation-step',

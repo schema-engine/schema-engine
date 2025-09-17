@@ -16,9 +16,6 @@ import type { SelectFieldConfig } from './fields/form-select.types';
 import type { SwitchFieldConfig } from './fields/form-switch.types';
 import type { ArrayElementsConfig } from './fields/form-array-elements.types';
 
-import { registerAction } from '@json-form-engine/core/actions/action-registry';
-import { submitPlugin, resetPlugin, notificationPlugin, autoSavePlugin } from '@json-form-engine/core/actions';
-
 declare global {
 	namespace FormEngine {
 		interface FieldConfigRegistry {
@@ -48,39 +45,3 @@ declare module '@json-form-engine/react' {
 		}
 	}
 }
-
-registerAction(
-	submitPlugin({
-		onSuccess: (data, context) => {
-			console.log('Form submitted successfully:', { formId: context.formId, data });
-		},
-		onError: (error, context) => {
-			console.error('Form submission failed:', { formId: context.formId, error });
-		},
-	}),
-);
-
-registerAction(
-	resetPlugin({
-		onReset: (context) => {
-			console.log('Form reset:', { formId: context.formId });
-		},
-	}),
-);
-
-registerAction(
-	notificationPlugin({
-		onSuccess: (message) => console.log('Success:', message),
-		onError: (message) => console.error('Error:', message),
-		onWarning: (message) => console.warn('Warning:', message),
-		onInfo: (message) => console.info('Info:', message),
-	}),
-);
-
-registerAction(
-	autoSavePlugin({
-		onSave: (data, context) => {
-			console.log('Auto-save:', { formId: context.formId, data });
-		},
-	}),
-);

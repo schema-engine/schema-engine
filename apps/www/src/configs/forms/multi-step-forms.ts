@@ -1,6 +1,7 @@
 import type { FormConfig } from '@json-form-engine/core/schemas';
 import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
 import '@json-form-engine/react/components/form/registry';
+import '@json-form-engine/core/actions/debug-registry';
 
 /**
  * Multi-step registration form configuration
@@ -10,7 +11,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 	title: 'User Registration',
 	description: 'Complete your registration by filling out all required information.',
 	mode: 'wizard',
-	
+
 	steps: [
 		{
 			id: 'personal-info',

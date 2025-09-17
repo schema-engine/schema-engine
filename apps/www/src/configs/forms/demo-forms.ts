@@ -1,6 +1,7 @@
 import type { FormConfig } from '@json-form-engine/core/schemas';
 import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
 import '@json-form-engine/react/components/form/registry';
+import '@json-form-engine/core/actions/debug-registry';
 
 /**
  * Interactive demo form configuration
@@ -9,7 +10,7 @@ export const demoFormConfig: FormConfig = {
 	id: 'demo-form',
 	title: 'Interactive Form Demo',
 	description: 'Try out different field types and configurations',
-	
+
 	mode: 'free',
 	steps: [
 		{

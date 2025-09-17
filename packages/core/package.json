@@ -16,7 +16,16 @@
     "build:types": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
     "watch:lib": "bun run ./build.ts --watch",
     "clean": "rm -rf ./dist",
-    "test:all": "bun test"
+    "test:all": "bun test",
+    "lint-staged": "lint-staged"
+  },
+  "lint-staged": {
+    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+      "biome check --write --no-errors-on-unmatched"
+    ],
+    "*": [
+      "biome check --no-errors-on-unmatched --files-ignore-unknown=true"
+    ]
   },
   "devDependencies": {
     "@types/bun": "latest",

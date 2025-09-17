@@ -5,6 +5,7 @@ import { useGDPRConsent, useGTMTracker } from '@json-form-engine/react/hooks';
 import { actionsFormConfig, simpleActionsFormConfig } from '@/configs/forms/actions-forms';
 import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
 import '@json-form-engine/react/components/form/registry';
+import '@json-form-engine/core/actions/debug-registry';
 
 /**
  * Demo component showcasing the simplified action system

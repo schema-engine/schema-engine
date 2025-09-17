@@ -2,6 +2,7 @@ import { FormRenderer } from '@json-form-engine/react/components/internals/form-
 import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
 import type { FormConfig } from '@json-form-engine/core/schemas';
 import '@json-form-engine/react/components/form/registry';
+import '@json-form-engine/core/actions/registry';
 
 /**
  * Comprehensive field types demo for documentation
@@ -10,7 +11,6 @@ export function FieldTypesDemo() {
 	const config: FormConfig = {
 		id: 'field-types-demo',
 		mode: 'free',
-		
 		grid: {
 			columns: 1,
 			gap: '1rem',
@@ -90,7 +90,7 @@ export function FieldTypesDemo() {
 						id: 'switchField',
 						name: 'switchField',
 						label: 'Toggle Switch',
-					}
+					},
 				],
 			},
 		],

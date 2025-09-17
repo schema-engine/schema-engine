@@ -1,6 +1,7 @@
 import type { FormConfig } from '@json-form-engine/core/schemas';
 import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
 import '@json-form-engine/react/components/form/registry';
+import '@json-form-engine/core/actions/debug-registry';
 
 /**
  * Responsive grid demo form configuration
@@ -9,7 +10,7 @@ export const responsiveFormConfig: FormConfig = {
 	id: 'responsive-demo-form',
 	title: 'Responsive Contact Form',
 	description: 'A demonstration of the responsive grid layout system',
-	
+
 	mode: 'free',
 	grid: {
 		columns: 12,

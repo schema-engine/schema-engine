@@ -598,11 +598,11 @@ export function generateFormSchema(elements: any[]): z.ZodObject<any> {
 	const schemaFields: Record<string, z.ZodTypeAny> = {};
 
 	function processField(field: any) {
-		const { name, type, rules = [] } = field;
+		const { name, componentId, rules = [] } = field;
 
 		let fieldType: 'string' | 'number' | 'boolean' | 'array';
 
-		switch (type) {
+		switch (componentId) {
 			case 'input':
 			case 'textarea':
 			case 'select':
@@ -615,7 +615,7 @@ export function generateFormSchema(elements: any[]): z.ZodObject<any> {
 			case 'switch':
 				fieldType = 'boolean';
 				break;
-			case 'array':
+			case 'arrayElements':
 				fieldType = 'array';
 				break;
 			default:
@@ -630,7 +630,7 @@ export function generateFormSchema(elements: any[]): z.ZodObject<any> {
 	for (const element of elements) {
 		processField(element);
 
-		if (element.type === 'array' && element.elements) {
+		if (element.componentId === 'arrayElements' && element.elements) {
 			for (const childElement of element.elements) {
 				processField(childElement);
 			}

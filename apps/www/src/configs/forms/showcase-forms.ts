@@ -1,6 +1,7 @@
 import type { FormConfig } from '@json-form-engine/core/schemas';
 import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
 import '@json-form-engine/react/components/form/registry';
+import '@json-form-engine/core/actions/registry';
 
 /**
  * Basic form example configuration
@@ -8,7 +9,6 @@ import '@json-form-engine/react/components/form/registry';
 export const basicFormConfig: FormConfig = {
 	id: 'basic-demo',
 	title: 'Basic Form Example',
-	
 	mode: 'free',
 	steps: [
 		{
@@ -77,7 +77,7 @@ export const basicFormConfig: FormConfig = {
 export const conditionalFormConfig: FormConfig = {
 	id: 'conditional-demo',
 	title: 'Advanced Conditional Logic Demo',
-	
+
 	mode: 'free',
 	steps: [
 		{
@@ -238,7 +238,7 @@ export const conditionalFormConfig: FormConfig = {
 export const arrayFormConfig: FormConfig = {
 	id: 'array-demo',
 	title: 'Dynamic Array Fields Demo',
-	
+
 	mode: 'free',
 	steps: [
 		{
@@ -342,7 +342,7 @@ export const arrayFormConfig: FormConfig = {
 export const complexFormConfig: FormConfig = {
 	id: 'complex-demo',
 	title: 'Complex Form with All Features',
-	
+
 	mode: 'free',
 	steps: [
 		{

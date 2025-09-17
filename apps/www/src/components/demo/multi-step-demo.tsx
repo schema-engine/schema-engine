@@ -2,6 +2,7 @@ import { FormRenderer } from '@json-form-engine/react/components/internals/form-
 import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
 import type { FormConfig } from '@json-form-engine/core/schemas';
 import '@json-form-engine/react/components/form/registry';
+import '@json-form-engine/core/actions/debug-registry';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ const stepperDemoConfig: FormConfig = {
 	title: 'Multi-Step Form Demo',
 	description: 'Experience different stepper styles and navigation patterns',
 	mode: 'wizard',
-	
+
 	steps: [
 		{
 			id: 'basic-info',

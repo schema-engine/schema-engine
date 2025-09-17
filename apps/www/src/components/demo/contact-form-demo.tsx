@@ -3,13 +3,13 @@ import { FormRenderer } from '@json-form-engine/react/components/internals/form-
 import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
 import type { FormConfig } from '@json-form-engine/core/schemas';
 import '@json-form-engine/react/components/form/registry';
+import '@json-form-engine/core/actions/debug-registry';
 
 const contactFormConfig: FormConfig = {
 	id: 'contact-form',
 	title: 'Contact Us',
 	description: "Get in touch with our team. We'll get back to you within 24 hours.",
 	mode: 'free' as const,
-	
 
 	steps: [
 		{
