@@ -20,7 +20,7 @@ export const conditionalFormConfig: FormConfig = {
 					id: 'user-type',
 					name: 'userType',
 					label: 'User Type',
-					rules: [ValidationPresets.required('Please select a user type')],
+					rules: [ValidationPresets.string.required('Please select a user type')],
 					options: [
 						{ value: 'individual', label: 'Individual' },
 						{ value: 'business', label: 'Business' },
@@ -35,7 +35,7 @@ export const conditionalFormConfig: FormConfig = {
 					id: 'first-name',
 					name: 'firstName',
 					label: 'First Name',
-					rules: [ValidationPresets.required('First name is required')],
+					rules: [ValidationPresets.string.required('First name is required')],
 					constraints: [
 						{
 							field: 'userType',
@@ -51,7 +51,7 @@ export const conditionalFormConfig: FormConfig = {
 					id: 'last-name',
 					name: 'lastName',
 					label: 'Last Name',
-					rules: [ValidationPresets.required('Last name is required')],
+					rules: [ValidationPresets.string.required('Last name is required')],
 					constraints: [
 						{
 							field: 'userType',
@@ -67,7 +67,7 @@ export const conditionalFormConfig: FormConfig = {
 					id: 'company-name',
 					name: 'companyName',
 					label: 'Company Name',
-					rules: [ValidationPresets.required('Company name is required')],
+					rules: [ValidationPresets.string.required('Company name is required')],
 					constraints: [
 						{
 							field: 'userType',
@@ -103,7 +103,7 @@ export const conditionalFormConfig: FormConfig = {
 					id: 'organization-name',
 					name: 'organizationName',
 					label: 'Organization Name',
-					rules: [ValidationPresets.required('Organization name is required')],
+					rules: [ValidationPresets.string.required('Organization name is required')],
 					constraints: [
 						{
 							field: 'userType',
@@ -135,8 +135,8 @@ export const conditionalFormConfig: FormConfig = {
 					name: 'email',
 					label: 'Email Address',
 					rules: [
-						ValidationPresets.required('Email is required'),
-						ValidationPresets.email('Please enter a valid email address'),
+						ValidationPresets.string.required('Email is required'),
+						ValidationPresets.string.email('Please enter a valid email address'),
 					],
 				},
 				{
@@ -145,7 +145,7 @@ export const conditionalFormConfig: FormConfig = {
 					id: 'phone',
 					name: 'phone',
 					label: 'Phone Number',
-					rules: [ValidationPresets.required('Phone number is required')],
+					rules: [ValidationPresets.string.required('Phone number is required')],
 				},
 				{
 					componentId: 'checkbox',
@@ -203,7 +203,7 @@ export const conditionalFormConfig: FormConfig = {
 							id: 'member-name',
 							name: 'name',
 							label: 'Full Name',
-							rules: [ValidationPresets.required('Name is required')],
+							rules: [ValidationPresets.string.required('Name is required')],
 						},
 						{
 							componentId: 'input',
@@ -212,8 +212,8 @@ export const conditionalFormConfig: FormConfig = {
 							name: 'email',
 							label: 'Email',
 							rules: [
-								ValidationPresets.required('Email is required'),
-								ValidationPresets.email('Please enter a valid email'),
+								ValidationPresets.string.required('Email is required'),
+								ValidationPresets.string.email('Please enter a valid email'),
 							],
 						},
 						{
@@ -235,7 +235,7 @@ export const conditionalFormConfig: FormConfig = {
 					id: 'terms-agreement',
 					name: 'termsAgreement',
 					label: 'I agree to the Terms of Service and Privacy Policy',
-					rules: [ValidationPresets.required('You must agree to the terms')],
+					rules: [ValidationPresets.string.required('You must agree to the terms')],
 				},
 			],
 		},

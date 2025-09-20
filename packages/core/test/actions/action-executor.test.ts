@@ -4,9 +4,9 @@ import { actionRegistry, registerAction } from "@/actions/action-registry";
 import type { 
 	ActionExecutionContext, 
 	ActionExecutionResult, 
-	ActionTrigger 
 } from "@/actions/types";
 import { createMockContext, setupTestEnvironment } from "./__tools";
+import type { ActionTrigger } from "@/actions";
 
 type TestActionConfig = {
 	id: string;

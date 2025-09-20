@@ -24,8 +24,8 @@ const contactFormConfig: FormConfig = {
 					label: 'First Name',
 					placeholder: 'Enter your first name',
 					rules: [
-						ValidationPresets.required('First name is required'),
-						ValidationPresets.minLength(2, 'First name must be at least 2 characters'),
+						ValidationPresets.string.required('First name is required'),
+						ValidationPresets.string.minLength(2, 'First name must be at least 2 characters'),
 					],
 				},
 				{
@@ -36,8 +36,8 @@ const contactFormConfig: FormConfig = {
 					label: 'Last Name',
 					placeholder: 'Enter your last name',
 					rules: [
-						ValidationPresets.required('Last name is required'),
-						ValidationPresets.minLength(2, 'Last name must be at least 2 characters'),
+						ValidationPresets.string.required('Last name is required'),
+						ValidationPresets.string.minLength(2, 'Last name must be at least 2 characters'),
 					],
 				},
 				{
@@ -48,8 +48,8 @@ const contactFormConfig: FormConfig = {
 					label: 'Email Address',
 					placeholder: 'your.email@example.com',
 					rules: [
-						ValidationPresets.required('Email is required'),
-						ValidationPresets.email('Please enter a valid email address'),
+						ValidationPresets.string.required('Email is required'),
+						ValidationPresets.string.email('Please enter a valid email address'),
 					],
 				},
 				{
@@ -66,7 +66,7 @@ const contactFormConfig: FormConfig = {
 						{ label: 'Media/Press', value: 'media' },
 						{ label: 'Other', value: 'other' },
 					],
-					rules: [ValidationPresets.required('Please select an inquiry type')],
+					rules: [ValidationPresets.string.required('Please select an inquiry type')],
 				},
 				{
 					id: 'priority',
@@ -81,7 +81,7 @@ const contactFormConfig: FormConfig = {
 						{ label: 'Urgent', value: 'urgent' },
 					],
 					defaultValue: 'medium',
-					rules: [ValidationPresets.required('Please select a priority level')],
+					rules: [ValidationPresets.string.required('Please select a priority level')],
 				},
 				{
 					id: 'budget',
@@ -114,9 +114,9 @@ const contactFormConfig: FormConfig = {
 					label: 'Subject',
 					placeholder: 'Brief subject line',
 					rules: [
-						ValidationPresets.required('Subject is required'),
-						ValidationPresets.minLength(5, 'Subject must be at least 5 characters'),
-						ValidationPresets.maxLength(100, 'Subject must be less than 100 characters'),
+						ValidationPresets.string.required('Subject is required'),
+						ValidationPresets.string.minLength(5, 'Subject must be at least 5 characters'),
+						ValidationPresets.string.maxLength(100, 'Subject must be less than 100 characters'),
 					],
 				},
 				{
@@ -127,9 +127,9 @@ const contactFormConfig: FormConfig = {
 					placeholder: 'Please provide details about your inquiry...',
 					rows: 6,
 					rules: [
-						ValidationPresets.required('Message is required'),
-						ValidationPresets.minLength(20, 'Please provide more details (minimum 20 characters)'),
-						ValidationPresets.maxLength(2000, 'Message is too long (maximum 2000 characters)'),
+						ValidationPresets.string.required('Message is required'),
+						ValidationPresets.string.minLength(20, 'Please provide more details (minimum 20 characters)'),
+						ValidationPresets.string.maxLength(2000, 'Message is too long (maximum 2000 characters)'),
 					],
 				},
 				{
@@ -144,7 +144,7 @@ const contactFormConfig: FormConfig = {
 					componentId: 'checkbox',
 					name: 'terms',
 					label: 'I agree to the terms and conditions',
-					rules: [ValidationPresets.required('You must agree to the terms and conditions')],
+					rules: [ValidationPresets.string.required('You must agree to the terms and conditions')],
 				},
 			],
 		},

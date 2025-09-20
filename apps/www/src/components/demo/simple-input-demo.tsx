@@ -24,8 +24,8 @@ export function SimpleInputDemo() {
 						label: 'Your Name',
 						placeholder: 'Enter your name',
 						rules: [
-							ValidationPresets.required('Name is required'),
-							ValidationPresets.minLength(2, 'Must be at least 2 characters'),
+							ValidationPresets.string.required('Name is required'),
+							ValidationPresets.string.minLength(2, 'Must be at least 2 characters'),
 						],
 					},
 					{
@@ -36,8 +36,8 @@ export function SimpleInputDemo() {
 						label: 'Email',
 						placeholder: 'your@email.com',
 						rules: [
-							ValidationPresets.required('Email is required'),
-							ValidationPresets.email('Please enter a valid email'),
+							ValidationPresets.string.required('Email is required'),
+							ValidationPresets.string.email('Please enter a valid email'),
 						],
 					},
 				],

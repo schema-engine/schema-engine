@@ -39,7 +39,7 @@ export function FieldTypesDemo() {
 						name: 'emailField',
 						label: 'Email Input',
 						placeholder: 'user@example.com',
-						rules: [ValidationPresets.email('Invalid email')],
+						rules: [ValidationPresets.string.email('Invalid email')],
 					},
 					{
 						componentId: 'number',

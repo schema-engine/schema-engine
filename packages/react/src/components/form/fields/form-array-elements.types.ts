@@ -1,76 +1,54 @@
 /**
- * ARRAY ELEMENTS EXTENSIBILITY TRANSFORMATION
+ * ARRAY ELEMENTS FIELD TYPE
  *
- * This file represents a major architectural shift from hardcoded field schemas to a fully
- * extensible registry-based system. Here's what was accomplished:
+ * Defines schemas and types for array fields that can contain any registered field type,
+ * including nested arrays for full recursive support.
  *
- * ## PROBLEM SOLVED
- * Previously, array elements were limited to hardcoded BaseFieldSchema, preventing developers
- * from using custom field types in arrays. The system needed to leverage the registry properly
- * to allow any registered field type as array elements.
+ * ## DUAL VALIDATION APPROACH
  *
- * ## DUAL APPROACH: SCHEMA vs TYPES
+ * ### Runtime Schema Validation
+ * - `ArrayElementConfigSchema`: Static schema for basic validation using BaseFieldSchema
+ * - `createArrayElementsRuntimeSchema()`: Dynamic factory that creates schemas at runtime
+ *   - Builds field union from registry to support all registered field types
+ *   - Supports nested arrays through recursive field inclusion
+ *   - Handles empty registries gracefully by falling back to BaseFieldSchema
  *
- * ### 1. SCHEMA LAYER (Runtime Validation)
- * - `ArrayElementConfigSchema`: Static schema using BaseFieldSchema (for basic validation)
- * - `createArrayElementsRuntimeSchema()`: Dynamic factory function that creates schemas at runtime
- *   - Uses registry.createFieldUnionSchema() to include ALL registered field types
- *   - Excludes 'arrayElements' to prevent infinite recursion
- *   - Supports empty registry gracefully
- *   - Enables custom field validation in arrays
+ * ### Compile-time Type Safety
+ * - `ArrayElementsConfig`: Uses FormEngine.FieldConfig union for full type safety
+ * - Supports recursive arrays (arrays containing arrays at any depth)
+ * - Provides complete TypeScript IntelliSense and type checking
+ * - Extends global FormEngine namespace for registry integration
  *
- * ### 2. TYPE LAYER (Compile-time Safety)
- * - `ArrayElementsConfig`: Uses FormEngine.FieldConfig union for compile-time type safety
- * - Full recursive support: Arrays can contain other arrays (nested arrays)
- * - Global namespace extension for registry typing
- * - Full TypeScript IntelliSense and type checking
- *
- * ## KEY ARCHITECTURAL DECISIONS
+ * ## ARCHITECTURE
  *
  * ### Registry Integration
- * - Factory function pattern allows runtime schema generation
- * - Registry dependency injection for testability
- * - Graceful degradation when registry is empty
+ * - Factory function pattern enables dynamic schema generation
+ * - Registry dependency injection provides testability
+ * - Custom fields registered in defaultFormFieldRegistry work automatically
+ * - No code changes needed when new field types are added
  *
  * ### Recursive Support
- * - Schema level: Includes ALL field types including 'arrayElements'
- * - Type level: Uses full FormEngine.FieldConfig union
- * - Enables nested arrays: arrays containing arrays containing arrays...
+ * - Schema validation includes all field types including 'arrayElements'
+ * - Type definitions use full FormEngine.FieldConfig union
+ * - Supports unlimited nesting depth
  * - Zod handles recursive validation automatically
  *
- * ### Extensibility Model
- * - Custom fields registered via defaultFormFieldRegistry work automatically
- * - No code changes needed when new field types are added
- * - Maintains backward compatibility with existing field types
- *
- * ## BEFORE vs AFTER
- *
- * ### BEFORE (Hardcoded)
+ * ## USAGE EXAMPLE
  * ```typescript
- * elements: z.array(BaseFieldSchema)  // Only basic fields allowed
- * elements: BaseFieldConfig[]         // Limited type safety
+ * const arrayField: ArrayElementsConfig = {
+ *   componentId: 'arrayElements',
+ *   name: 'contacts',
+ *   elements: [
+ *     { componentId: 'textInput', name: 'name' },
+ *     { componentId: 'email', name: 'email' },
+ *     {
+ *       componentId: 'arrayElements',
+ *       name: 'addresses',
+ *       elements: [{ componentId: 'textInput', name: 'street' }]
+ *     }
+ *   ]
+ * };
  * ```
- *
- * ### AFTER (Extensible & Recursive)
- * ```typescript
- * // Runtime: Dynamic union from registry (includes arrayElements)
- * elements: z.array(fieldUnion)  // All registered field types + nested arrays
- *
- * // Types: Full FormEngine.FieldConfig union (supports recursion)
- * elements: FormEngine.FieldConfig[]  // Supports nested arrays
- * ```
- *
- * ## BENEFITS ACHIEVED
- * ✅ Custom field types work in arrays automatically
- * ✅ Compile-time TypeScript safety maintained
- * ✅ Runtime Zod validation with registry integration
- * ✅ Recursive arrays support (nested arrays of any depth)
- * ✅ Backward compatibility preserved
- * ✅ Testable architecture with dependency injection
- * ✅ Graceful handling of empty registries
- *
- * This transformation enables the form engine to be truly extensible and recursive while maintaining
- * both runtime safety and compile-time type checking.
  */
 
 import { z } from 'zod';

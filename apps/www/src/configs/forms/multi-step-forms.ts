@@ -27,8 +27,8 @@ export const multiStepRegistrationConfig: FormConfig = {
 					label: 'First Name',
 					placeholder: 'Enter your first name',
 					rules: [
-						ValidationPresets.required('First name is required'),
-						ValidationPresets.minLength(2, 'First name must be at least 2 characters'),
+						ValidationPresets.string.required('First name is required'),
+						ValidationPresets.string.minLength(2, 'First name must be at least 2 characters'),
 					],
 				},
 				{
@@ -39,8 +39,8 @@ export const multiStepRegistrationConfig: FormConfig = {
 					label: 'Last Name',
 					placeholder: 'Enter your last name',
 					rules: [
-						ValidationPresets.required('Last name is required'),
-						ValidationPresets.minLength(2, 'Last name must be at least 2 characters'),
+						ValidationPresets.string.required('Last name is required'),
+						ValidationPresets.string.minLength(2, 'Last name must be at least 2 characters'),
 					],
 				},
 				{
@@ -51,8 +51,8 @@ export const multiStepRegistrationConfig: FormConfig = {
 					label: 'Email Address',
 					placeholder: 'Enter your email',
 					rules: [
-						ValidationPresets.required('Email is required'),
-						ValidationPresets.email('Please enter a valid email address'),
+						ValidationPresets.string.required('Email is required'),
+						ValidationPresets.string.email('Please enter a valid email address'),
 					],
 				},
 				{
@@ -62,7 +62,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					name: 'dateOfBirth',
 					label: 'Date of Birth',
 					placeholder: 'MM/DD/YYYY',
-					rules: [ValidationPresets.required('Date of birth is required')],
+					rules: [ValidationPresets.string.required('Date of birth is required')],
 				},
 			],
 		},
@@ -80,8 +80,8 @@ export const multiStepRegistrationConfig: FormConfig = {
 					label: 'Phone Number',
 					placeholder: 'Enter your phone number',
 					rules: [
-						ValidationPresets.required('Phone number is required'),
-						ValidationPresets.minLength(10, 'Phone number must be at least 10 digits'),
+						ValidationPresets.string.required('Phone number is required'),
+						ValidationPresets.string.minLength(10, 'Phone number must be at least 10 digits'),
 					],
 				},
 				{
@@ -91,7 +91,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					name: 'address',
 					label: 'Street Address',
 					placeholder: 'Enter your street address',
-					rules: [ValidationPresets.required('Street address is required')],
+					rules: [ValidationPresets.string.required('Street address is required')],
 				},
 				{
 					componentId: 'input',
@@ -100,7 +100,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					name: 'city',
 					label: 'City',
 					placeholder: 'Enter your city',
-					rules: [ValidationPresets.required('City is required')],
+					rules: [ValidationPresets.string.required('City is required')],
 				},
 				{
 					componentId: 'input',
@@ -109,7 +109,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					name: 'zipCode',
 					label: 'ZIP Code',
 					placeholder: 'Enter your ZIP code',
-					rules: [ValidationPresets.required('ZIP code is required')],
+					rules: [ValidationPresets.string.required('ZIP code is required')],
 				},
 			],
 		},

@@ -34,7 +34,7 @@ export const responsiveFormConfig: FormConfig = {
 					inputType: 'text',
 					label: 'First Name',
 					placeholder: 'Enter your first name',
-					rules: [ValidationPresets.required('First name is required')],
+					rules: [ValidationPresets.string.required('First name is required')],
 					grid: {
 						responsive: {
 							default: { column: '1 / -1' },
@@ -51,7 +51,7 @@ export const responsiveFormConfig: FormConfig = {
 					inputType: 'text',
 					label: 'Last Name',
 					placeholder: 'Enter your last name',
-					rules: [ValidationPresets.required('Last name is required')],
+					rules: [ValidationPresets.string.required('Last name is required')],
 					grid: {
 						responsive: {
 							default: { column: '1 / -1' },
@@ -69,14 +69,13 @@ export const responsiveFormConfig: FormConfig = {
 					label: 'Email Address',
 					placeholder: 'your.email@example.com',
 					rules: [
-						ValidationPresets.required('Email is required'),
-						ValidationPresets.email('Please enter a valid email address'),
+						ValidationPresets.string.required('Email is required'),
+						ValidationPresets.string.email('Please enter a valid email address'),
 					],
 					grid: {
 						responsive: {
 							default: { column: '1 / -1' },
 							lg: { column: '1 / 3' },
-							// Notice: no md or xl defined - they inherit from default and lg respectively
 						},
 					},
 				},
@@ -91,7 +90,6 @@ export const responsiveFormConfig: FormConfig = {
 						responsive: {
 							default: { column: '1 / -1' },
 							md: { column: '1 / 2' },
-							// Notice: lg and xl inherit from md
 						},
 					},
 				},
@@ -132,7 +130,7 @@ export const responsiveFormConfig: FormConfig = {
 					name: 'experience',
 					componentId: 'select',
 					label: 'Years of Experience',
-					rules: [ValidationPresets.required('Please select your experience level')],
+					rules: [ValidationPresets.string.required('Please select your experience level')],
 					options: [
 						{ value: '0-1', label: '0-1 years' },
 						{ value: '2-5', label: '2-5 years' },
@@ -203,7 +201,7 @@ export const responsiveFormConfig: FormConfig = {
 					name: 'terms',
 					componentId: 'checkbox',
 					label: 'I agree to the Terms and Conditions',
-					rules: [ValidationPresets.required('You must agree to the terms')],
+					rules: [ValidationPresets.string.required('You must agree to the terms')],
 					grid: {
 						responsive: {
 							default: { column: '1 / -1' },

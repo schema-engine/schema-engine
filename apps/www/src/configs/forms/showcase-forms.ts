@@ -21,7 +21,7 @@ export const basicFormConfig: FormConfig = {
 					id: 'name',
 					name: 'name',
 					label: 'Full Name',
-					rules: [ValidationPresets.required('Full name is required')],
+					rules: [ValidationPresets.string.required('Full name is required')],
 					placeholder: 'Enter your full name',
 				},
 				{
@@ -31,8 +31,8 @@ export const basicFormConfig: FormConfig = {
 					name: 'email',
 					label: 'Email Address',
 					rules: [
-						ValidationPresets.required('Email is required'),
-						ValidationPresets.email('Please enter a valid email address'),
+						ValidationPresets.string.required('Email is required'),
+						ValidationPresets.string.email('Please enter a valid email address'),
 					],
 					placeholder: 'your.email@example.com',
 				},
@@ -42,9 +42,9 @@ export const basicFormConfig: FormConfig = {
 					name: 'age',
 					label: 'Age',
 					rules: [
-						ValidationPresets.required('Age is required'),
-						ValidationPresets.min(18, 'Must be at least 18 years old'),
-						ValidationPresets.max(100, 'Age must be realistic'),
+						ValidationPresets.string.required('Age is required'),
+						ValidationPresets.number.min(18, 'Must be at least 18 years old'),
+						ValidationPresets.number.max(100, 'Age must be realistic'),
 					],
 				},
 			],
@@ -89,7 +89,7 @@ export const conditionalFormConfig: FormConfig = {
 					id: 'user-type',
 					name: 'userType',
 					label: 'User Type',
-					rules: [ValidationPresets.required('Please select a user type')],
+					rules: [ValidationPresets.string.required('Please select a user type')],
 					options: [
 						{ value: 'student', label: 'Student' },
 						{ value: 'professional', label: 'Professional' },
@@ -165,7 +165,7 @@ export const conditionalFormConfig: FormConfig = {
 					id: 'years-experience',
 					name: 'yearsExperience',
 					label: 'Years of Experience',
-					rules: [ValidationPresets.min(0, 'Experience cannot be negative')],
+					rules: [ValidationPresets.number.min(0, 'Experience cannot be negative')],
 					constraints: [
 						{
 							field: 'userType',
@@ -195,7 +195,7 @@ export const conditionalFormConfig: FormConfig = {
 					id: 'employee-count',
 					name: 'employeeCount',
 					label: 'Number of Employees',
-					rules: [ValidationPresets.min(1, 'Must have at least 1 employee')],
+					rules: [ValidationPresets.number.min(1, 'Must have at least 1 employee')],
 					constraints: [
 						{
 							field: 'userType',
@@ -251,7 +251,7 @@ export const arrayFormConfig: FormConfig = {
 					id: 'project-name',
 					name: 'projectName',
 					label: 'Project Name',
-					rules: [ValidationPresets.required('Project name is required')],
+					rules: [ValidationPresets.string.required('Project name is required')],
 				},
 				{
 					componentId: 'arrayElements',
@@ -259,7 +259,7 @@ export const arrayFormConfig: FormConfig = {
 					name: 'teamMembers',
 					label: 'Team Members',
 					description: 'Add team members to your project',
-					rules: [ValidationPresets.required('At least one team member is required')],
+					rules: [ValidationPresets.string.required('At least one team member is required')],
 					elements: [
 						{
 							componentId: 'input',
@@ -267,7 +267,7 @@ export const arrayFormConfig: FormConfig = {
 							id: 'member-name',
 							name: 'name',
 							label: 'Full Name',
-							rules: [ValidationPresets.required('Name is required')],
+							rules: [ValidationPresets.string.required('Name is required')],
 						},
 						{
 							componentId: 'input',
@@ -276,8 +276,8 @@ export const arrayFormConfig: FormConfig = {
 							name: 'email',
 							label: 'Email',
 							rules: [
-								ValidationPresets.required('Email is required'),
-								ValidationPresets.email('Please enter a valid email'),
+								ValidationPresets.string.required('Email is required'),
+								ValidationPresets.string.email('Please enter a valid email'),
 							],
 						},
 						{
@@ -285,7 +285,7 @@ export const arrayFormConfig: FormConfig = {
 							id: 'member-role',
 							name: 'role',
 							label: 'Role',
-							rules: [ValidationPresets.required('Role is required')],
+							rules: [ValidationPresets.string.required('Role is required')],
 							options: [
 								{ value: 'developer', label: 'Developer' },
 								{ value: 'designer', label: 'Designer' },
@@ -356,8 +356,8 @@ export const complexFormConfig: FormConfig = {
 					name: 'fullName',
 					label: 'Full Name',
 					rules: [
-						ValidationPresets.required('Full name is required'),
-						ValidationPresets.minLength(2, 'Name must be at least 2 characters'),
+						ValidationPresets.string.required('Full name is required'),
+						ValidationPresets.string.minLength(2, 'Name must be at least 2 characters'),
 					],
 					grid: {
 						column: 'span 2',
@@ -370,8 +370,8 @@ export const complexFormConfig: FormConfig = {
 					name: 'emailAddress',
 					label: 'Email Address',
 					rules: [
-						ValidationPresets.required('Email is required'),
-						ValidationPresets.email('Please enter a valid email'),
+						ValidationPresets.string.required('Email is required'),
+						ValidationPresets.string.email('Please enter a valid email'),
 					],
 				},
 				{
@@ -380,14 +380,14 @@ export const complexFormConfig: FormConfig = {
 					id: 'phone-number',
 					name: 'phoneNumber',
 					label: 'Phone Number',
-					rules: [ValidationPresets.required('Phone number is required')],
+					rules: [ValidationPresets.string.required('Phone number is required')],
 				},
 				{
 					componentId: 'select',
 					id: 'country',
 					name: 'country',
 					label: 'Country',
-					rules: [ValidationPresets.required('Please select your country')],
+					rules: [ValidationPresets.string.required('Please select your country')],
 					options: [
 						{ value: 'us', label: 'United States' },
 						{ value: 'ca', label: 'Canada' },
@@ -403,7 +403,7 @@ export const complexFormConfig: FormConfig = {
 					id: 'subscription-type',
 					name: 'subscriptionType',
 					label: 'Subscription Type',
-					rules: [ValidationPresets.required('Please select a subscription type')],
+					rules: [ValidationPresets.string.required('Please select a subscription type')],
 					options: [
 						{ value: 'basic', label: 'Basic - $9/month' },
 						{ value: 'pro', label: 'Pro - $29/month' },
@@ -421,7 +421,7 @@ export const complexFormConfig: FormConfig = {
 					id: 'terms-agreement',
 					name: 'termsAgreement',
 					label: 'I agree to the Terms of Service and Privacy Policy',
-					rules: [ValidationPresets.required('You must agree to the terms')],
+					rules: [ValidationPresets.string.required('You must agree to the terms')],
 				},
 			],
 		},

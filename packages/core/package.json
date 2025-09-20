@@ -62,6 +62,14 @@
       "types": "./dist/schemas/*.d.ts",
       "import": "./dist/schemas/*.js"
     },
+    "./schemas/validation": {
+      "types": "./dist/schemas/validation/index.d.ts",
+      "import": "./dist/schemas/validation/index.js"
+    },
+    "./schemas/validation/*": {
+      "types": "./dist/schemas/validation/*.d.ts",
+      "import": "./dist/schemas/validation/*.js"
+    },
     "./tools": {
       "types": "./dist/tools/index.d.ts",
       "import": "./dist/tools/index.js"

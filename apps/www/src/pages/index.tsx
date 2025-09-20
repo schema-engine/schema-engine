@@ -1,5 +1,6 @@
 import '@json-form-engine/react/components/form/registry';
 import '@json-form-engine/core/actions/debug-registry';
+import '@json-form-engine/core/schemas/validation/validation-registry';
 import { Button } from '../components/ui/button';
 import { CodePreview } from '../components/code-preview';
 import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';

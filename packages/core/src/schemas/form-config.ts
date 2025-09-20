@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { FormActionConfigSchema, type FormActionConfig } from '../actions/types';
 import type { FieldConfig } from './field-config';
 import { GridLayoutConfigSchema, type ConstraintLogic } from './base-field';
-import { ValidationRuleSchema } from './validation';
+import { ValidationRuleSchema } from './validation/';
 
 export type { FormActionConfig } from '../actions/types';
 

@@ -23,7 +23,7 @@ export function SimpleConditionalDemo() {
 						name: 'hasCompany',
 						label: 'Do you have a company?',
 						placeholder: 'Select option',
-						rules: [ValidationPresets.required('Please select an option')],
+						rules: [ValidationPresets.string.required('Please select an option')],
 						options: [
 							{ value: 'yes', label: 'Yes, I have a company' },
 							{ value: 'no', label: "No, I'm an individual" },
@@ -36,7 +36,7 @@ export function SimpleConditionalDemo() {
 						name: 'companyName',
 						label: 'Company Name',
 						placeholder: 'Enter your company name',
-						rules: [ValidationPresets.required('Company name is required')],
+						rules: [ValidationPresets.string.required('Company name is required')],
 						constraints: [
 							{
 								field: 'hasCompany',

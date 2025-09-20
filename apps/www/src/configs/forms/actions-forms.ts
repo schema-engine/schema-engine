@@ -30,7 +30,7 @@ export const actionsFormConfig: FormConfig = {
 					inputType: 'text',
 					label: 'First Name',
 					placeholder: 'Enter your first name',
-					rules: [ValidationPresets.required('First Name is required')],
+					rules: [ValidationPresets.string.required('First Name is required')],
 				},
 				{
 					id: 'lastName',
@@ -39,7 +39,7 @@ export const actionsFormConfig: FormConfig = {
 					inputType: 'text',
 					label: 'Last Name',
 					placeholder: 'Enter your last name',
-					rules: [ValidationPresets.required('Last Name is required')],
+					rules: [ValidationPresets.string.required('Last Name is required')],
 				},
 				{
 					id: 'email',
@@ -48,7 +48,10 @@ export const actionsFormConfig: FormConfig = {
 					inputType: 'email',
 					label: 'Email Address',
 					placeholder: 'Enter your email address',
-					rules: [ValidationPresets.required('Email Address is required'), ValidationPresets.email()],
+					rules: [
+						ValidationPresets.string.required('Email Address is required'),
+						ValidationPresets.string.email(),
+					],
 				},
 				{
 					id: 'dateOfBirth',
@@ -56,7 +59,7 @@ export const actionsFormConfig: FormConfig = {
 					componentId: 'input',
 					inputType: 'text',
 					label: 'Date of Birth',
-					rules: [ValidationPresets.required('Date of Birth is required')],
+					rules: [ValidationPresets.string.required('Date of Birth is required')],
 				},
 			],
 			actions: [
@@ -87,7 +90,7 @@ export const actionsFormConfig: FormConfig = {
 					inputType: 'tel',
 					label: 'Phone Number',
 					placeholder: 'Enter your phone number',
-					rules: [ValidationPresets.required('Phone Number is required')],
+					rules: [ValidationPresets.string.required('Phone Number is required')],
 				},
 				{
 					id: 'address',
@@ -96,7 +99,7 @@ export const actionsFormConfig: FormConfig = {
 					inputType: 'text',
 					label: 'Street Address',
 					placeholder: 'Enter your street address',
-					rules: [ValidationPresets.required('Street Address is required')],
+					rules: [ValidationPresets.string.required('Street Address is required')],
 				},
 				{
 					id: 'city',
@@ -105,7 +108,7 @@ export const actionsFormConfig: FormConfig = {
 					inputType: 'text',
 					label: 'City',
 					placeholder: 'Enter your city',
-					rules: [ValidationPresets.required('City is required')],
+					rules: [ValidationPresets.string.required('City is required')],
 				},
 				{
 					id: 'zipCode',
@@ -114,7 +117,7 @@ export const actionsFormConfig: FormConfig = {
 					inputType: 'text',
 					label: 'ZIP Code',
 					placeholder: 'Enter your ZIP code',
-					rules: [ValidationPresets.required('ZIP Code is required')],
+					rules: [ValidationPresets.string.required('ZIP Code is required')],
 				},
 			],
 			actions: [
@@ -156,7 +159,7 @@ export const actionsFormConfig: FormConfig = {
 						{ value: 'both', label: 'Email and SMS' },
 						{ value: 'none', label: 'No Notifications' },
 					],
-					rules: [ValidationPresets.required('Please select notification preferences')],
+					rules: [ValidationPresets.string.required('Please select notification preferences')],
 				},
 				{
 					id: 'interests',
@@ -165,7 +168,7 @@ export const actionsFormConfig: FormConfig = {
 					label: 'Areas of Interest',
 					description:
 						'Select your areas of interest. Note: This uses individual checkboxes instead of a group.',
-					rules: [ValidationPresets.required('Please select at least one area of interest')],
+					rules: [ValidationPresets.string.required('Please select at least one area of interest')],
 				},
 			],
 			actions: [
@@ -256,7 +259,7 @@ export const simpleActionsFormConfig: FormConfig = {
 					inputType: 'text',
 					label: 'Name',
 					placeholder: 'Enter your name',
-					rules: [ValidationPresets.required('Name is required')],
+					rules: [ValidationPresets.string.required('Name is required')],
 				},
 				{
 					id: 'email',
@@ -265,7 +268,7 @@ export const simpleActionsFormConfig: FormConfig = {
 					inputType: 'email',
 					label: 'Email',
 					placeholder: 'Enter your email',
-					rules: [ValidationPresets.required('Email is required'), ValidationPresets.email()],
+					rules: [ValidationPresets.string.required('Email is required'), ValidationPresets.string.email()],
 				},
 				{
 					id: 'message',
@@ -273,7 +276,7 @@ export const simpleActionsFormConfig: FormConfig = {
 					componentId: 'textarea',
 					label: 'Message',
 					placeholder: 'Enter your message',
-					rules: [ValidationPresets.required('Message is required')],
+					rules: [ValidationPresets.string.required('Message is required')],
 				},
 			],
 		},
