@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { ValidationRule, AsyncRule } from './types.js';
 import type { ValidationRegistration } from './validation-registry.js';
+import { createAsyncValidationHandler } from './async/index.js';
 
 /**
  * Default validation registrations for the ValidationRegistry
@@ -132,50 +133,31 @@ export const defaultValidations: ValidationRegistration[] = [
 		handler: () => z.string().time(),
 	},
 
+	/**
+	 * Async validation handler for server-side validation
+	 *
+	 * Performs HTTP requests to validate field values against server-side logic.
+	 * Supports dependency handling, custom headers, and flexible response formats.
+	 * With form data access, dependencies are automatically resolved.
+	 *
+	 * @example
+	 * ```typescript
+	 * {
+	 *   type: 'async',
+	 *   url: '/api/validate-username',
+	 *   method: 'POST',
+	 *   debounce: 500,
+	 *   dependencies: ['email'],
+	 *   body: { dependsOn: '{{email}}' }, // Will be replaced with actual email value
+	 *   expectedResponse: { valid: true }
+	 * }
+	 * ```
+	 */
 	{
 		type: 'async',
 		category: 'generic',
-		handler: (rule: ValidationRule) => {
-			const asyncRule = rule as AsyncRule;
-			return z.any().refine(
-				async (value: any) => {
-					const payload: any = { value };
-
-					if (asyncRule.dependencies?.length) {
-						// Implementation depends on form context - dependencies would be injected at form level
-					}
-
-					const response = await fetch(asyncRule.url, {
-						method: asyncRule.method || 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							...asyncRule.headers,
-						},
-						body: asyncRule.body
-							? JSON.stringify({ ...payload, ...asyncRule.body })
-							: JSON.stringify(payload),
-					});
-
-					if (!response.ok) {
-						return false;
-					}
-
-					const data = await response.json();
-
-					if (data.error || data.message) {
-						throw new Error(data.error || data.message);
-					}
-
-					if (asyncRule.expectedResponse) {
-						return JSON.stringify(data) === JSON.stringify(asyncRule.expectedResponse);
-					}
-
-					return data === true || data.success === true || data.valid === true;
-				},
-				{
-					message: asyncRule.message || 'Validation failed',
-				},
-			);
+		handler: (rule: ValidationRule, formData?: Record<string, any>) => {
+			return createAsyncValidationHandler(rule as AsyncRule, formData);
 		},
 	},
 ];

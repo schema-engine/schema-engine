@@ -129,10 +129,18 @@ export interface AsyncRule extends BaseValidationRule {
 	url: string;
 	method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 	headers?: Record<string, string>;
-	body?: any;
-	expectedResponse?: any;
+	body?: Record<string, unknown>;
+	expectedResponse?: {
+		valid?: boolean;
+		success?: boolean;
+		message?: string;
+		error?: string;
+	};
 	message?: string;
 	dependencies?: string[];
+	debounce?: number;
+	cacheTTL?: number;
+	disableCache?: boolean;
 }
 
 /**

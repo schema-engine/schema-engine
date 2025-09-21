@@ -20,7 +20,10 @@ export function isFieldRequired(rules?: ValidationRule[]): boolean {
 	return rules?.some((rule) => rule.type === 'required') ?? false;
 }
 
-export function createZodSchemaFromRules(rules: ValidationRuleType[] = []): z.ZodTypeAny {
+export function createZodSchemaFromRules(
+	rules: ValidationRuleType[] = [],
+	formData?: Record<string, any>,
+): z.ZodTypeAny {
 	if (!rules.length) {
 		return z.any();
 	}
@@ -28,7 +31,7 @@ export function createZodSchemaFromRules(rules: ValidationRuleType[] = []): z.Zo
 	let combinedSchema: z.ZodTypeAny = z.any();
 
 	for (const rule of rules) {
-		const ruleSchema = validationRegistry.createSchema(rule as ValidationRule);
+		const ruleSchema = validationRegistry.createSchema(rule as ValidationRule, formData);
 		if (ruleSchema) {
 			if (combinedSchema === z.any()) {
 				combinedSchema = ruleSchema;

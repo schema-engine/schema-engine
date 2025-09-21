@@ -70,6 +70,10 @@
       "types": "./dist/schemas/validation/*.d.ts",
       "import": "./dist/schemas/validation/*.js"
     },
+    "./schemas/validation/async/*": {
+      "types": "./dist/schemas/validation/async/*.d.ts",
+      "import": "./dist/schemas/validation/async/*.js"
+    },
     "./tools": {
       "types": "./dist/tools/index.d.ts",
       "import": "./dist/tools/index.js"

@@ -8,7 +8,13 @@ import { defaultValidations } from './defaults.js';
 export interface ValidationRegistration {
 	type: string;
 	category: 'string' | 'number' | 'array' | 'boolean' | 'date' | 'generic';
-	handler: (rule: ValidationRule) => z.ZodTypeAny;
+	/**
+	 * Validation handler function
+	 * @param rule - The validation rule configuration
+	 * @param formData - Optional form data for cross-field validation (available in custom resolver)
+	 * @returns Zod schema for validation
+	 */
+	handler: (rule: ValidationRule, formData?: Record<string, any>) => z.ZodTypeAny;
 }
 
 /**
@@ -60,15 +66,17 @@ export class ValidationRegistry {
 
 	/**
 	 * Create Zod schema from a validation rule
+	 * @param rule - The validation rule
+	 * @param formData - Optional form data for cross-field validation
 	 */
-	createSchema(rule: ValidationRule | Record<string, any>): z.ZodTypeAny | null {
+	createSchema(rule: ValidationRule | Record<string, any>, formData?: Record<string, any>): z.ZodTypeAny | null {
 		const registration = this.validations.get(rule.type);
 		if (!registration) {
 			return null;
 		}
 
 		try {
-			return registration.handler(rule as ValidationRule);
+			return registration.handler(rule as ValidationRule, formData);
 		} catch (error) {
 			console.error(`Failed to create schema for validation rule '${rule.type}':`, error);
 			return null;
