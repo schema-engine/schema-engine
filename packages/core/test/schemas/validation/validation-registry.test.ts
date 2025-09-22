@@ -188,12 +188,12 @@ describe('ValidationRegistry', () => {
 		it('should include dependencies in async validation rule', () => {
 			const asyncRule = registry.presets.custom.async('/api/validate-cross-field', {
 				dependencies: ['age', 'category'],
-				body: { validationType: 'cross-field' },
+				extraPayload: { validationType: 'cross-field' },
 				expectedResponse: { valid: true },
 			});
 
 			expect(asyncRule.dependencies).toEqual(['age', 'category']);
-			expect(asyncRule.body).toEqual({ validationType: 'cross-field' });
+			expect(asyncRule.extraPayload).toEqual({ validationType: 'cross-field' });
 			expect(asyncRule.expectedResponse).toEqual({ valid: true });
 		});
 	});

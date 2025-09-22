@@ -129,7 +129,7 @@ export interface AsyncRule extends BaseValidationRule {
 	url: string;
 	method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 	headers?: Record<string, string>;
-	body?: Record<string, unknown>;
+	extraPayload?: Record<string, unknown>;
 	expectedResponse?: {
 		valid?: boolean;
 		success?: boolean;
@@ -137,6 +137,11 @@ export interface AsyncRule extends BaseValidationRule {
 		error?: string;
 	};
 	message?: string;
+	/**
+	 * Field names this validation depends on for cross-field validation.
+	 * Async validation will be skipped if any dependency field is empty,
+	 * ensuring all required context is available before making API calls.
+	 */
 	dependencies?: string[];
 	debounce?: number;
 	cacheTTL?: number;

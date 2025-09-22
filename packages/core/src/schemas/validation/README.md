@@ -458,7 +458,7 @@ Specific rule types add their own properties (e.g., `value` for min/max rules, `
 Form configurations must use plain JSON objects. For custom validation logic, register it in the ValidationRegistry first:
 
 ```typescript
-// ✅ Correct approach - register custom validation during app initialization
+// Correct approach - register custom validation during app initialization
 validationRegistry.register({
 	type: "companyEmail",
 	category: "string",
@@ -473,7 +473,7 @@ const field = {
 	],
 };
 
-// ❌ Not possible - functions cannot be used in form configurations
+// Not possible - functions cannot be used in form configurations
 // { type: 'custom', handler: (value) => value.includes('@company.com') }
 ```
 
@@ -482,11 +482,11 @@ const field = {
 Provide clear, user-friendly error messages:
 
 ```typescript
-// ✅ Good - specific and helpful
+// Good - specific and helpful
 { type: 'minLength', value: 8, message: 'Password must be at least 8 characters' }
 { type: 'email', message: 'Please enter a valid email address' }
 
-// ❌ Poor - vague and unhelpful
+// Poor - vague and unhelpful
 { type: 'minLength', value: 8, message: 'Invalid' }
 { type: 'email', message: 'Error' }
 ```
@@ -496,13 +496,13 @@ Provide clear, user-friendly error messages:
 Use presets to reduce boilerplate and improve consistency:
 
 ```typescript
-// ✅ Clean and consistent using presets
+// Clean and consistent using presets
 const emailRules = [
 	ValidationPresets.string.required("Email is required"),
 	ValidationPresets.string.email("Please enter a valid email"),
 ];
 
-// ❌ Repetitive without presets
+// Repetitive without presets
 const emailRules = [
 	{ type: "required", message: "Email is required" },
 	{ type: "email", message: "Please enter a valid email" },

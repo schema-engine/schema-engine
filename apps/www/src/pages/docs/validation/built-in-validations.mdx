@@ -4,8 +4,8 @@ import { LivePreview, CodePreview } from '@/components/code-preview';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'Built-in Validations | Form Engine Documentation',
-    description: 'Complete reference of all built-in validation types available in Form Engine, with examples and usage patterns.',
+  title: 'Built-in Validations | Form Engine Documentation',
+  description: 'Complete reference of all built-in validation types available in Form Engine, with examples and usage patterns.',
 })
 
 # Built-in Validations
@@ -686,14 +686,14 @@ const emailRules = [
 Start with basic validations and add more specific ones:
 
 ```typescript
-// ✅ Good - logical progression
+// Good - logical progression
 [
   { type: 'required', message: 'Password is required' },           // First: ensure value exists
   { type: 'minLength', value: 8, message: 'At least 8 chars' },   // Then: basic constraints
   { type: 'pattern', value: '/complexity/', message: 'Complex' }  // Finally: advanced rules
 ]
 
-// ❌ Poor - confusing order
+// Poor - confusing order
 [
   { type: 'pattern', value: '/complexity/', message: 'Complex' },
   { type: 'required', message: 'Password is required' },
@@ -706,10 +706,10 @@ Start with basic validations and add more specific ones:
 Make errors actionable and user-friendly:
 
 ```typescript
-// ✅ Good - specific and helpful
+// Good - specific and helpful
 { type: 'minLength', value: 8, message: 'Password must be at least 8 characters long' }
 
-// ❌ Poor - vague and unhelpful  
+// Poor - vague and unhelpful  
 { type: 'minLength', value: 8, message: 'Too short' }
 ```
 
@@ -718,13 +718,13 @@ Make errors actionable and user-friendly:
 Choose validation types that match your field's purpose:
 
 ```typescript
-// ✅ Good - semantic validation
+// Good - semantic validation
 {
   inputType: 'email',
   rules: [{ type: 'email', message: 'Please enter a valid email' }]
 }
 
-// ❌ Poor - overly complex pattern for simple case
+// Poor - overly complex pattern for simple case
 {
   inputType: 'text',
   rules: [{ type: 'pattern', value: '/[complex-email-regex]/', message: 'Invalid email' }]
@@ -736,7 +736,7 @@ Choose validation types that match your field's purpose:
 Expensive validations (like async) should come last:
 
 ```typescript
-// ✅ Good - cheap validations first
+// Good - cheap validations first
 [
   { type: 'required' },
   { type: 'minLength', value: 3 },

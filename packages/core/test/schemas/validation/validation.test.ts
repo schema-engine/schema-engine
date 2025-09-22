@@ -95,7 +95,7 @@ describe("Validation", () => {
 				dependencies: ["field1", "field2"],
 				method: "POST",
 				headers: { Authorization: "Bearer token" },
-				body: { extra: "data" },
+				extraPayload: { extra: "data" },
 				expectedResponse: { valid: true },
 				message: "Custom validation failed",
 			});
@@ -105,7 +105,7 @@ describe("Validation", () => {
 			expect(asyncRule.dependencies).toEqual(["field1", "field2"]);
 			expect(asyncRule.method).toBe("POST");
 			expect(asyncRule.headers).toEqual({ Authorization: "Bearer token" });
-			expect(asyncRule.body).toEqual({ extra: "data" });
+			expect(asyncRule.extraPayload).toEqual({ extra: "data" });
 			expect(asyncRule.expectedResponse).toEqual({ valid: true });
 			expect(asyncRule.message).toBe("Custom validation failed");
 		});

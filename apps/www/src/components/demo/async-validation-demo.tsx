@@ -25,6 +25,7 @@ export function AsyncValidationDemo() {
 	const config: FormConfig = {
 		id: 'async-validation-demo',
 		mode: 'free',
+		validationMode: 'onChange',
 		steps: [
 			{
 				id: 'async-demo-step',
@@ -39,7 +40,7 @@ export function AsyncValidationDemo() {
 						name: 'username',
 						label: 'Username',
 						placeholder: 'Enter desired username',
-						helpText: 'Try typing "invalid" to see async validation error',
+						description: 'Try typing "invalid" to see async validation error',
 						rules: [
 							ValidationPresets.string.required('Username is required'),
 							ValidationPresets.string.minLength(3, 'Username must be at least 3 characters'),
@@ -54,13 +55,10 @@ export function AsyncValidationDemo() {
 								type: 'async',
 								url: '/api/async-validate',
 								method: 'POST',
-								body: {
-									field: 'username', // Field identifier for server validation logic
-								},
-								expectedResponse: { valid: true }, // Expected response for successful validation
-								dependencies: [], // No cross-field dependencies for username
-								debounce: 500, // Wait 500ms after user stops typing
-								message: 'This username is not available', // Fallback error message
+								expectedResponse: { valid: true },
+								dependencies: [],
+								debounce: 500,
+								message: 'This username is not available',
 							},
 						],
 					},
@@ -71,7 +69,7 @@ export function AsyncValidationDemo() {
 						name: 'email',
 						label: 'Email Address',
 						placeholder: 'your@email.com',
-						helpText: 'Email domain validation happens on the server',
+						description: 'Email domain validation happens on the server',
 						rules: [
 							ValidationPresets.string.required('Email is required'),
 							ValidationPresets.string.email('Please enter a valid email format'),
@@ -79,9 +77,6 @@ export function AsyncValidationDemo() {
 								type: 'async',
 								url: '/api/async-validate',
 								method: 'POST',
-								body: {
-									field: 'email',
-								},
 								expectedResponse: { valid: true },
 								dependencies: [],
 								debounce: 800,
@@ -96,7 +91,7 @@ export function AsyncValidationDemo() {
 						name: 'companyCode',
 						label: 'Company Code',
 						placeholder: 'Enter company identifier',
-						helpText: 'Company codes are validated against our database',
+						description: 'Company codes are validated against our database',
 						rules: [
 							ValidationPresets.string.required('Company code is required'),
 							ValidationPresets.string.pattern(
@@ -107,9 +102,6 @@ export function AsyncValidationDemo() {
 								type: 'async',
 								url: '/api/async-validate',
 								method: 'POST',
-								body: {
-									field: 'companyCode',
-								},
 								expectedResponse: { valid: true },
 								dependencies: [],
 								debounce: 1000,
@@ -124,17 +116,12 @@ export function AsyncValidationDemo() {
 						name: 'dependentField',
 						label: 'Dependent Field',
 						placeholder: 'This field depends on username',
-						helpText: 'This field re-validates when username changes',
+						description: 'This field re-validates when username changes',
 						rules: [
 							{
 								type: 'async',
 								url: '/api/async-validate',
 								method: 'POST',
-								body: {
-									field: 'dependentField',
-									// Template will be replaced with actual username value
-									// Plus dependsOn object will be added automatically
-								},
 								expectedResponse: { valid: true },
 								dependencies: ['username'],
 								debounce: 600,

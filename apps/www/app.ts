@@ -46,27 +46,12 @@ app.post("/api/async-validate", async (ctx) => {
 	appLogger.debug("Full body:", JSON.stringify(body, null, 2));
 
 	/**
-	 * Simulate realistic network delay for demonstration purposes
-	 * In production, this would be replaced by actual validation logic timing
-	 */
-	await new Promise(resolve => setTimeout(resolve, Math.random() * 500 + 200));
-
-	/**
 	 * Extract validation parameters from request
 	 * Form Engine automatically merges { value: fieldValue } with custom body params
 	 */
 	const { value, field } = body;
 	
 	appLogger.debug("Field:", field, "Value:", value);
-
-	/**
-	 * Handle empty values - typically considered valid for optional fields
-	 * Required field validation should be handled by separate required rules
-	 */
-	if (!value || value.trim() === '') {
-		appLogger.debug("Empty value, considering valid");
-		return ctx.response.json({ valid: true });
-	}
 
 	/**
 	 * Field-specific validation logic
@@ -146,7 +131,6 @@ app.post("/api/async-validate", async (ctx) => {
 			const dependsOn = body.dependsOn;
 			appLogger.debug("Dependent field validation - dependsOn object:", dependsOn);
 			
-			// Check if dependsOn is an object with username
 			if (dependsOn && typeof dependsOn === 'object' && dependsOn.username) {
 				const usernameValue = dependsOn.username;
 				if (usernameValue === 'admin' && value?.toLowerCase() === 'user') {
@@ -156,15 +140,6 @@ app.post("/api/async-validate", async (ctx) => {
 						message: 'Cannot use "user" value when username is "admin"'
 					});
 				}
-			}
-			
-			// Legacy support for old format
-			if (typeof dependsOn === 'string' && dependsOn === 'admin' && value?.toLowerCase() === 'user') {
-				appLogger.debug("Dependent field validation failed (legacy):", value, "depends on:", dependsOn);
-				return ctx.response.json({ 
-					valid: false,
-					message: 'Cannot use "user" value when username is "admin"'
-				});
 			}
 			
 			if (value?.toLowerCase() === 'invalid') {
@@ -200,12 +175,10 @@ app.post("/api/async-validate", async (ctx) => {
 	return ctx.response.json({ valid: true });
 });
 
-// Simple test endpoint for async validation
 app.post("/api/test-async", async (ctx) => {
 	const body = await ctx.request.json();
 	appLogger.debug("🧪 Test async endpoint:", body);
 	
-	// Always fail if value is "invalid"
 	if (body.value === "invalid") {
 		return ctx.response.json({ valid: false, message: "Test failed: value is invalid" });
 	}

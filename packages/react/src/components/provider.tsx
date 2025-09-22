@@ -1,7 +1,7 @@
 import { createContext, useMemo, useCallback, useState, type ReactNode } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { useActionExecutor } from '../hooks';
-import { useFormValidationResolver } from '../hooks/use-async-validation-resolver';
+import { useFormValidationResolver } from '../hooks/use-form-validation-resolver';
 import type { FormFieldComponentRegistry } from '@json-form-engine/core/schemas/registry';
 import { reactFormFieldRegistry } from '@/registry';
 import type { ActionExecutionContext, FormActionConfig } from '@json-form-engine/core/actions/index';

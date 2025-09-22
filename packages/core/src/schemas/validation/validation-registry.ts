@@ -68,14 +68,28 @@ export class ValidationRegistry {
 	 * Create Zod schema from a validation rule
 	 * @param rule - The validation rule
 	 * @param formData - Optional form data for cross-field validation
+	 * @param fieldName - Optional field name for context (used by async validation)
 	 */
-	createSchema(rule: ValidationRule | Record<string, any>, formData?: Record<string, any>): z.ZodTypeAny | null {
+	createSchema(
+		rule: ValidationRule | Record<string, any>,
+		formData?: Record<string, any>,
+		fieldName?: string,
+	): z.ZodTypeAny | null {
 		const registration = this.validations.get(rule.type);
 		if (!registration) {
 			return null;
 		}
 
 		try {
+			// Pass field name to handler for async validation
+			if (rule.type === 'async' && fieldName) {
+				const asyncHandler = registration.handler as (
+					rule: ValidationRule,
+					formData?: Record<string, any>,
+					fieldName?: string,
+				) => z.ZodTypeAny;
+				return asyncHandler(rule as ValidationRule, formData, fieldName);
+			}
 			return registration.handler(rule as ValidationRule, formData);
 		} catch (error) {
 			console.error(`Failed to create schema for validation rule '${rule.type}':`, error);
@@ -212,7 +226,7 @@ export class ValidationRegistry {
 				options?: {
 					method?: 'GET' | 'POST';
 					headers?: Record<string, string>;
-					body?: any;
+					extraPayload?: Record<string, unknown>;
 					expectedResponse?: any;
 					message?: string;
 					dependencies?: string[];
@@ -222,7 +236,7 @@ export class ValidationRegistry {
 				url,
 				method: options?.method || 'POST',
 				headers: options?.headers,
-				body: options?.body,
+				extraPayload: options?.extraPayload,
 				expectedResponse: options?.expectedResponse,
 				message: options?.message || 'Validation failed',
 				dependencies: options?.dependencies,

@@ -58,6 +58,10 @@
       "types": "./dist/schemas/index.d.ts",
       "import": "./dist/schemas/index.js"
     },
+    "./lib/debounce": {
+      "types": "./dist/lib/debounce.d.ts",
+      "import": "./dist/lib/debounce.js"
+    },
     "./schemas/*": {
       "types": "./dist/schemas/*.d.ts",
       "import": "./dist/schemas/*.js"

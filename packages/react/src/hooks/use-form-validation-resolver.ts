@@ -11,29 +11,36 @@ import type { ValidationRule } from '@json-form-engine/core/schemas/validation/t
  * form data during validation. This enables:
  * - Cross-field validation and dependencies
  * - Custom validation that needs context from other fields
- * - Async validation with dynamic request bodies based on form state
  * - Complex validation scenarios that require form-level awareness
+ * - All validation types with proper form context
  *
  * @param elements - Form elements containing validation rules
  * @returns Custom resolver function for react-hook-form
  *
  * @example
  * ```tsx
- * // For async validation with dependencies
+ * // Basic usage with form elements
  * const resolver = useFormValidationResolver(formElements);
  * const form = useForm({ resolver });
  *
- * // Usage in validation rules
+ * // Supports all validation types with form context
  * {
- *   type: 'async',
- *   body: { dependsOn: '{{username}}' }, // Will be replaced with actual username value
- *   dependencies: ['username']
+ *   type: 'required',
+ *   message: 'This field is required'
  * }
  *
- * // Custom validation that needs form data
+ * // Cross-field validation
  * {
  *   type: 'custom',
- *   // Custom validators can access form data through this resolver
+ *   dependencies: ['password'],
+ *   // Validator receives form data for cross-field logic
+ * }
+ *
+ * // Async validation with dependencies
+ * {
+ *   type: 'async',
+ *   url: '/api/validate',
+ *   dependencies: ['username']
  * }
  * ```
  */
@@ -62,16 +69,13 @@ export function useFormValidationResolver(elements: any[]) {
 				 */
 				if (rules.length > 0) {
 					try {
-						const fieldSchema = createZodSchemaFromRules(rules, values);
+						const fieldSchema = createZodSchemaFromRules(rules, values, element.name);
 						await fieldSchema.parseAsync(fieldValue);
 					} catch (zodError) {
 						if (zodError instanceof z.ZodError) {
-							// Find the most relevant error message
-							// Prioritize custom async validation messages over generic ones
 							const issues = zodError.issues;
 							let bestIssue = issues[0];
 
-							// Look for custom async validation errors first
 							for (const issue of issues) {
 								if (
 									issue.message &&

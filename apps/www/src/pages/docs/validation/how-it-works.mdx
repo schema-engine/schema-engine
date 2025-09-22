@@ -4,8 +4,8 @@ import { LivePreview, CodePreview } from '@/components/code-preview';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'How Validation Works | Form Engine Documentation',
-    description: 'Learn how Form Engine\'s validation system works with Zod schemas, validation rules, and the registry pattern.',
+  title: 'How Validation Works | Form Engine Documentation',
+  description: 'Learn how Form Engine\'s validation system works with Zod schemas, validation rules, and the registry pattern.',
 })
 
 # How Validation Works
@@ -237,10 +237,10 @@ if (!result.success) {
 Always provide user-friendly error messages:
 
 ```typescript
-// ✅ Good - specific and helpful
+// Good - specific and helpful
 { type: 'minLength', value: 8, message: 'Password must be at least 8 characters long' }
 
-// ❌ Poor - generic and unhelpful
+// Poor - generic and unhelpful
 { type: 'minLength', value: 8, message: 'Invalid input' }
 ```
 
@@ -323,7 +323,7 @@ Try typing "invalid" in any field above to see async validation errors, or exper
 Form configurations should always use plain objects:
 
 ```typescript
-// ✅ Correct - JSON serializable
+// Correct - JSON serializable
 {
   rules: [
     { type: 'required', message: 'Field is required' },
@@ -331,7 +331,7 @@ Form configurations should always use plain objects:
   ]
 }
 
-// ❌ Incorrect - functions cannot be serialized
+// Incorrect - functions cannot be serialized
 {
   rules: [
     { type: 'custom', validator: (value) => value.includes('@') }
@@ -344,10 +344,10 @@ Form configurations should always use plain objects:
 Users need to understand what went wrong:
 
 ```typescript
-// ✅ Clear and actionable
+// Clear and actionable
 { type: 'minLength', value: 8, message: 'Password must be at least 8 characters long' }
 
-// ❌ Vague and unhelpful
+// Vague and unhelpful
 { type: 'minLength', value: 8, message: 'Too short' }
 ```
 

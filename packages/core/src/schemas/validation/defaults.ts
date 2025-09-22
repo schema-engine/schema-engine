@@ -156,8 +156,8 @@ export const defaultValidations: ValidationRegistration[] = [
 	{
 		type: 'async',
 		category: 'generic',
-		handler: (rule: ValidationRule, formData?: Record<string, any>) => {
-			return createAsyncValidationHandler(rule as AsyncRule, formData);
+		handler: (rule: ValidationRule, formData?: Record<string, any>, fieldName?: string) => {
+			return createAsyncValidationHandler(rule as AsyncRule, formData, fieldName);
 		},
 	},
 ];

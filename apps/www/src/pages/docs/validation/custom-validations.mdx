@@ -4,8 +4,8 @@ import { LivePreview, CodePreview } from '@/components/code-preview';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'Custom Validations | Form Engine Documentation',
-    description: 'Learn how to create and register custom validation logic in Form Engine for specialized validation requirements.',
+  title: 'Custom Validations | Form Engine Documentation',
+  description: 'Learn how to create and register custom validation logic in Form Engine for specialized validation requirements.',
 })
 
 # Custom Validations
@@ -352,7 +352,9 @@ validationRegistry.register({
   type: 'async',
   url: '/api/check-username',
   method: 'POST',
-  // No need to specify body unless you need extra fields; value and dependsOn are sent automatically
+  // Field name, value, and dependencies are sent automatically
+  // Use extraPayload for additional custom data if needed
+  extraPayload: { validationType: 'premium' }, // Optional
   expectedResponse: { available: true },
   debounce: 500,
   cacheTTL: 300000, // 5 minutes
@@ -526,7 +528,7 @@ describe('Custom Phone Validation', () => {
 Place expensive validations last in the rule chain:
 
 ```typescript
-// ✅ Good - cheap validations first
+// Good - cheap validations first
 {
   rules: [
     { type: 'required' },                    // Fast
@@ -536,7 +538,7 @@ Place expensive validations last in the rule chain:
   ]
 }
 
-// ❌ Poor - expensive validation first
+// Poor - expensive validation first
 {
   rules: [
     { type: 'uniqueEmail' },                 // Slow (async)
@@ -589,11 +591,11 @@ validationRegistry.register({
 Choose descriptive type names that clearly indicate what the validation does:
 
 ```typescript
-// ✅ Good - clear and descriptive
+// Good - clear and descriptive
 validationRegistry.register({ type: 'socialSecurityNumber', ... });
 validationRegistry.register({ type: 'businessEmailDomain', ... });
 
-// ❌ Poor - vague or cryptic
+// Poor - vague or cryptic
 validationRegistry.register({ type: 'ssn', ... });
 validationRegistry.register({ type: 'customVal1', ... });
 ```
@@ -603,12 +605,12 @@ validationRegistry.register({ type: 'customVal1', ... });
 Always include meaningful default error messages:
 
 ```typescript
-// ✅ Good - helpful default message
+// Good - helpful default message
 handler: (rule) => {
   return z.string().regex(pattern, rule.message || 'Please enter a valid phone number in format: +1234567890');
 }
 
-// ❌ Poor - unhelpful default
+// Poor - unhelpful default
 handler: (rule) => {
   return z.string().regex(pattern, rule.message || 'Invalid format');
 }
@@ -748,10 +750,7 @@ Here's how the async validation is configured in the demo:
   type: 'async',
   url: '/api/async-validate',
   method: 'POST',
-  body: {
-    field: 'username',
-    value: '{{value}}'
-  },
+  // Field name, value, and dependencies are sent automatically
   expectedResponse: { valid: true },
   debounce: 500,
   message: 'This username is not available'
@@ -762,10 +761,8 @@ Here's how the async validation is configured in the demo:
   type: 'async',
   url: '/api/async-validate',
   method: 'POST',
-  body: {
-    field: 'dependentField'
-    // System automatically adds dependsOn object with actual field values
-  },
+  // System automatically sends { field, value, dependsOn } in request body
+  extraPayload: { validationType: 'complex' }, // Optional additional data
   expectedResponse: { valid: true },
   dependencies: ['username'], // Re-validate when username changes
   debounce: 600,

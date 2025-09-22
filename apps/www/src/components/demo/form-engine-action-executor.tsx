@@ -110,7 +110,7 @@ const FormEngineActionExecutor: React.FC = () => {
 			submitPlugin({
 				onSuccess: (data, context) => {
 					console.log('🎉 FormEngine Submit Success:', { data, formId: context.formId });
-					addToLog('✅ Submit plugin: Success callback executed');
+					addToLog('Submit plugin: Success callback executed');
 					addToLog(`📊 Submitted data keys: [${Object.keys(data || {}).join(', ')}]`);
 				},
 				onError: (error, context) => {

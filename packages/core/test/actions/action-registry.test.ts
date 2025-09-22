@@ -1,8 +1,9 @@
 import { test, expect, describe, beforeEach, afterEach } from "bun:test";
 import { z } from "zod";
 import { actionRegistry, registerAction}  from "@/actions/action-registry";
-import type {  ActionHandler, ActionTrigger, RegisteredAction } from "@/actions/types";
 import { createMockContext, setupTestEnvironment } from "./__tools";
+import type {  ActionHandler, RegisteredAction } from "@/actions/types";
+import type { ActionTrigger } from "@/actions/triggers";
 
 const mockActionHandler: ActionHandler = async (action, context) => ({
 	success: true,
