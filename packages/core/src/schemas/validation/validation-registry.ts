@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 import type { ValidationRule, AsyncRule } from './types.js';
 import { defaultValidations } from './defaults.js';
+import { logger } from '@/lib/logger.js';
 
 /**
  * Validation rule registration definition
@@ -35,7 +36,7 @@ export class ValidationRegistry {
 		const { type } = registration;
 
 		if (this.validations.has(type)) {
-			console.warn(`Validation type '${type}' is already registered. Overriding.`);
+			logger.warn(`Validation type '${type}' is already registered. Overriding.`);
 		}
 
 		this.validations.set(type, registration);

@@ -29,17 +29,21 @@ export function createZodSchemaFromRules(
 		return z.any();
 	}
 
-	let combinedSchema: z.ZodTypeAny = z.any();
-
+	const schemas: z.ZodTypeAny[] = [];
 	for (const rule of rules) {
 		const ruleSchema = validationRegistry.createSchema(rule as ValidationRule, formData, fieldName);
 		if (ruleSchema) {
-			if (combinedSchema === z.any()) {
-				combinedSchema = ruleSchema;
-			} else {
-				combinedSchema = combinedSchema.and(ruleSchema);
-			}
+			schemas.push(ruleSchema);
 		}
+	}
+
+	if (schemas.length === 0) {
+		return z.any();
+	}
+
+	let combinedSchema = schemas[0];
+	for (let i = 1; i < schemas.length; i++) {
+		combinedSchema = combinedSchema.and(schemas[i]);
 	}
 
 	return combinedSchema;

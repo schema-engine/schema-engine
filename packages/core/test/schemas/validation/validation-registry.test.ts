@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach, mock } from 'bun:test';
 import { z } from 'zod';
 import { ValidationRegistry, type ValidationRegistration } from '../../../src/schemas/validation/';
 import type { AsyncRule, ValidationRule, BaseValidationRule } from '../../../src/schemas/validation/';
+import { logger } from '../../../src/lib/logger.js';
 
 describe('ValidationRegistry', () => {
 	let registry: ValidationRegistry;
@@ -289,8 +290,9 @@ describe('ValidationRegistry', () => {
 		});
 
 		it('should warn when overriding existing validation types', () => {
-			const consoleSpy = mock(() => {});
-			console.warn = consoleSpy;
+			const loggerSpy = mock(() => {});
+			const originalWarn = (logger as any).warn;
+			(logger as any).warn = loggerSpy;
 
 			const validation1: ValidationRegistration = {
 				type: 'duplicate-test',
@@ -307,9 +309,11 @@ describe('ValidationRegistry', () => {
 			registry.register(validation1);
 			registry.register(validation2);
 
-			expect(consoleSpy).toHaveBeenCalledWith(
+			expect(loggerSpy).toHaveBeenCalledWith(
 				"Validation type 'duplicate-test' is already registered. Overriding."
 			);
+			
+			(logger as any).warn = originalWarn;
 		});
 	});
 });

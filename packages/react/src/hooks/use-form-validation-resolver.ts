@@ -2,7 +2,6 @@ import { useCallback } from 'react';
 import { z } from 'zod';
 import type { FieldValues, ResolverResult } from 'react-hook-form';
 import { createZodSchemaFromRules } from '@json-form-engine/core/schemas/validation/utils';
-import type { ValidationRule } from '@json-form-engine/core/schemas/validation/types';
 
 /**
  * Custom form validation resolver with form data access
@@ -52,14 +51,7 @@ export function useFormValidationResolver(elements: any[]) {
 			for (const element of elements) {
 				if (!element.name) continue;
 
-				let rules: ValidationRule[] | undefined;
-				if ('componentId' in element) {
-					rules = element.rules;
-				} else {
-					rules = element.rules;
-				}
-
-				if (!rules?.length) continue;
+				if (!element.rules?.length) continue;
 
 				const fieldValue = values[element.name];
 
@@ -67,9 +59,9 @@ export function useFormValidationResolver(elements: any[]) {
 				 * Process validation rules with form data access
 				 * Create a combined schema for all rules of this field to handle async validation properly
 				 */
-				if (rules.length > 0) {
+				if (element.rules.length > 0) {
 					try {
-						const fieldSchema = createZodSchemaFromRules(rules, values, element.name);
+						const fieldSchema = createZodSchemaFromRules(element.rules, values, element.name);
 						await fieldSchema.parseAsync(fieldValue);
 					} catch (zodError) {
 						if (zodError instanceof z.ZodError) {
