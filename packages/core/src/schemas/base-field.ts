@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ValidationRuleSchema } from './validation';
+import { ValidationRuleSchema } from './validation/';
 
 /**
  * Responsive breakpoint configuration for grid layout

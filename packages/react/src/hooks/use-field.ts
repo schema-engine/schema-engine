@@ -1,5 +1,5 @@
 import { useController } from 'react-hook-form';
-import { isFieldRequired } from '@json-form-engine/core/schemas/validation';
+import { isFieldRequired } from '@json-form-engine/core/schemas';
 import { useFieldGridStyles } from './grid-hooks';
 import type { FieldConfig } from '@json-form-engine/core/schemas';
 
@@ -53,9 +53,6 @@ export function useControlledFormElement(config: FieldConfig) {
 		name: config.name,
 		disabled: config.disabled,
 		defaultValue: createFieldDefaultValue(config),
-		rules: {
-			required: isRequired ? `${config.label || config.name} is required` : false,
-		},
 	});
 
 	const gridStyles = useFieldGridStyles(config.grid);

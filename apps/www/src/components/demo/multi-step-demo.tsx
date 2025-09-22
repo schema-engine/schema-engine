@@ -28,8 +28,8 @@ const stepperDemoConfig: FormConfig = {
 					label: 'Full Name',
 					placeholder: 'Enter your full name',
 					rules: [
-						ValidationPresets.required('Name is required'),
-						ValidationPresets.minLength(2, 'Name must be at least 2 characters'),
+						ValidationPresets.string.required('Name is required'),
+						ValidationPresets.string.minLength(2, 'Name must be at least 2 characters'),
 					],
 				},
 				{
@@ -40,8 +40,8 @@ const stepperDemoConfig: FormConfig = {
 					label: 'Email Address',
 					placeholder: 'your@email.com',
 					rules: [
-						ValidationPresets.required('Email is required'),
-						ValidationPresets.email('Please enter a valid email address'),
+						ValidationPresets.string.required('Email is required'),
+						ValidationPresets.string.email('Please enter a valid email address'),
 					],
 				},
 			],
@@ -65,7 +65,7 @@ const stepperDemoConfig: FormConfig = {
 						{ label: 'Product Manager', value: 'pm' },
 						{ label: 'Other', value: 'other' },
 					],
-					rules: [ValidationPresets.required('Please select your role')],
+					rules: [ValidationPresets.string.required('Please select your role')],
 				},
 
 				{

@@ -58,9 +58,25 @@
       "types": "./dist/schemas/index.d.ts",
       "import": "./dist/schemas/index.js"
     },
+    "./lib/debounce": {
+      "types": "./dist/lib/debounce.d.ts",
+      "import": "./dist/lib/debounce.js"
+    },
     "./schemas/*": {
       "types": "./dist/schemas/*.d.ts",
       "import": "./dist/schemas/*.js"
+    },
+    "./schemas/validation": {
+      "types": "./dist/schemas/validation/index.d.ts",
+      "import": "./dist/schemas/validation/index.js"
+    },
+    "./schemas/validation/*": {
+      "types": "./dist/schemas/validation/*.d.ts",
+      "import": "./dist/schemas/validation/*.js"
+    },
+    "./schemas/validation/async/*": {
+      "types": "./dist/schemas/validation/async/*.d.ts",
+      "import": "./dist/schemas/validation/async/*.js"
     },
     "./tools": {
       "types": "./dist/tools/index.d.ts",

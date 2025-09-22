@@ -2,7 +2,7 @@ import { FormRenderer } from '@json-form-engine/react/components/internals/form-
 import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
 import type { FormConfig } from '@json-form-engine/core/schemas';
 import '@json-form-engine/react/components/form/registry';
-import '@json-form-engine/core/actions/registry';
+import '@json-form-engine/core/actions/debug-registry';
 
 /**
  * Simple responsive grid demo for documentation
@@ -33,7 +33,7 @@ export function SimpleGridDemo() {
 						name: 'firstName',
 						label: 'First Name',
 						placeholder: 'John',
-						rules: [ValidationPresets.required('First name required')],
+						rules: [ValidationPresets.string.required('First name required')],
 					},
 					{
 						componentId: 'input',
@@ -42,7 +42,7 @@ export function SimpleGridDemo() {
 						name: 'lastName',
 						label: 'Last Name',
 						placeholder: 'Doe',
-						rules: [ValidationPresets.required('Last name required')],
+						rules: [ValidationPresets.string.required('Last name required')],
 					},
 					{
 						componentId: 'input',
@@ -51,7 +51,10 @@ export function SimpleGridDemo() {
 						name: 'email',
 						label: 'Email Address',
 						placeholder: 'john@example.com',
-						rules: [ValidationPresets.required('Email required'), ValidationPresets.email('Invalid email')],
+						rules: [
+							ValidationPresets.string.required('Email required'),
+							ValidationPresets.string.email('Invalid email'),
+						],
 					},
 					{
 						componentId: 'input',

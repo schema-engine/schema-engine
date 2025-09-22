@@ -103,12 +103,12 @@ describe("FormFieldComponentRegistry", () => {
 
 	beforeEach(() => {
 		registry = new FormFieldComponentRegistry<MockComponent>(z.registry<FormEngine.FieldMetadata>());
-		formFieldRegistry.clear(); // Clear the global registry to avoid conflicts
+		formFieldRegistry.clear();
 	});
 
 	afterEach(() => {
 		registry.clear();
-		formFieldRegistry.clear(); // Also clear after each test for good measure
+		formFieldRegistry.clear(); 
 	});
 
 	describe("Basic Registration", () => {
@@ -134,7 +134,6 @@ describe("FormFieldComponentRegistry", () => {
 		test("should update existing field registration", () => {
 			registry.register(testInputRegistration);
 			
-			// Register same componentId with different component and metadata
 			const newRegistration: FormEngine.FieldRegistration<MockComponent> = {
 				componentId: "test-input",
 				component: MockSelectComponent,

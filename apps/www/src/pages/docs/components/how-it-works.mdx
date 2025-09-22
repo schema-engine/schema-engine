@@ -56,7 +56,7 @@ const formConfig = {
       id: 'name',
       label: 'Full Name',
       rules: [
-        ValidationPresets.required("Name is required")
+        ValidationPresets.string.required("Name is required")
       ]
     }
   ]
@@ -248,10 +248,10 @@ interface InputFieldConfig extends BaseFieldConfig {
 const typedForm: FormConfig = {
   elements: [
     {
-      componentId: 'input',           // ✅ Valid
-      inputType: 'email',      // ✅ Valid  
-      placeholder: 'Enter...' // ✅ Valid
-      // invalid: 'property'   // ❌ TypeScript error
+      componentId: 'input',           // Valid
+      inputType: 'email',      // Valid  
+      placeholder: 'Enter...' // Valid
+      // invalid: 'property'   // TypeScript error
     }
   ]
 };

@@ -84,14 +84,14 @@ export class FormFieldComponentRegistry<TComponent = any> {
 	}
 
 	/**
-	 * Get runtime schema for a field type (alias for getSchema for backward compatibility)
+	 * Get runtime schema for a field type.
 	 */
-	getRuntimeSchema(fieldType: ComponentId): z.ZodSchema<any> | undefined {
-		return this.schemas.get(fieldType);
+	getRuntimeSchema(componentId: string): z.ZodTypeAny | undefined {
+		return this.schemas.get(componentId);
 	}
 
 	/**
-	 * Get serializable schema for a field type (alias for getSchema for backward compatibility)
+	 * Get serializable schema for a field type.
 	 */
 	getSerializableSchema(fieldType: ComponentId): z.ZodSchema<any> | undefined {
 		return this.schemas.get(fieldType);
@@ -166,8 +166,8 @@ export class FormFieldComponentRegistry<TComponent = any> {
 	}
 
 	/**
-	 * Create a union schema of serializable field types
-	 * This is used for JSON schema generation and serialization (alias for createFieldUnionSchema for backward compatibility)
+	 * Create a union schema of serializable field types.
+	 * This is used for JSON schema generation and serialization.
 	 */
 	createSerializableFieldUnionSchema(): z.ZodSchema<FieldConfig> | z.ZodNever {
 		return this.createFieldUnionSchema();

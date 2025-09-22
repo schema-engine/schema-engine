@@ -1,0 +1,386 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+import { LivePreview, CodePreview } from '@/components/code-preview';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+  title: 'How Validation Works | Form Engine Documentation',
+  description: 'Learn how Form Engine\'s validation system works with Zod schemas, validation rules, and the registry pattern.',
+})
+
+# How Validation Works
+
+The Form Engine validation system provides a flexible, extensible way to define and execute validation rules for form fields. It's built on [Zod](https://zod.dev/) and follows a registry pattern for maximum flexibility.
+
+## Core Concepts
+
+### Validation Rules
+
+Validation rules are plain JavaScript objects that describe how to validate a field value. This makes them JSON-serializable and perfect for form configurations:
+
+```typescript
+// Simple required validation
+{ type: 'required', message: 'This field is required' }
+
+// Email validation
+{ type: 'email', message: 'Please enter a valid email' }
+
+// String length validation
+{ type: 'minLength', value: 3, message: 'Must be at least 3 characters' }
+```
+
+### ValidationRegistry
+
+The `ValidationRegistry` is the central hub that manages all validation logic:
+
+- **Stores validation implementations** - Each validation type has a handler function
+- **Converts rules to Zod schemas** - JSON rules become executable Zod validators  
+- **Provides convenient presets** - Common patterns made easy
+- **Manages custom registrations** - Extend with your own validation logic
+
+### Rule-to-Schema Generation
+
+The system automatically converts validation rules into Zod schemas:
+
+```typescript
+const rules = [
+  { type: "required" }, 
+  { type: "email" }, 
+  { type: "minLength", value: 5 }
+];
+
+// Automatically generates: z.email().min(5)
+const schema = validationRegistry.createSchema(rules);
+```
+
+## Basic Usage
+
+### Method 1: Direct JSON Rules
+
+Perfect for form configurations and when you need maximum flexibility:
+
+```typescript
+const emailField = {
+  componentId: 'input',
+  name: 'email',
+  label: 'Email Address',
+  rules: [
+    { type: 'required', message: 'Email is required' },
+    { type: 'email', message: 'Please enter a valid email address' }
+  ]
+};
+```
+
+### Method 2: Using Validation Presets
+
+Great for programmatic usage and reducing boilerplate:
+
+```typescript
+import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
+
+const emailRules = [
+  ValidationPresets.string.required('Email is required'),
+  ValidationPresets.string.email('Please enter a valid email address')
+];
+```
+
+### Creating Schemas
+
+Convert rules to Zod schemas for validation:
+
+```typescript
+import { validationRegistry } from '@json-form-engine/core/schemas/validation';
+
+const rules = [
+  { type: 'required', message: 'Password is required' },
+  { type: 'minLength', value: 8, message: 'Password must be at least 8 characters' },
+  { type: 'pattern', value: '/(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)/', message: 'Password must contain uppercase, lowercase, and numbers' }
+];
+
+const schema = validationRegistry.createSchema(rules);
+
+// Validate user input
+const result = schema.safeParse('mypassword123');
+if (!result.success) {
+  console.log('Validation errors:', result.error.errors);
+}
+```
+
+## Form Integration
+
+### Individual Field Validation
+
+Define validation rules directly in field configurations:
+
+```typescript
+const formConfig = {
+  id: 'user-profile',
+  title: 'User Profile',
+  steps: [
+    {
+      id: 'personal-info',
+      title: 'Personal Information',
+      elements: [
+        {
+          componentId: 'input',
+          name: 'firstName',
+          label: 'First Name',
+          rules: [
+            { type: 'required', message: 'First name is required' },
+            { type: 'minLength', value: 2, message: 'First name must be at least 2 characters' },
+            { type: 'maxLength', value: 50, message: 'First name cannot exceed 50 characters' }
+          ]
+        },
+        {
+          componentId: 'input',
+          inputType: 'email',
+          name: 'email',
+          label: 'Email Address',
+          rules: [
+            { type: 'required', message: 'Email is required' },
+            { type: 'email', message: 'Please enter a valid email address' }
+          ]
+        },
+        {
+          componentId: 'input',
+          inputType: 'number',
+          name: 'age',
+          label: 'Age',
+          rules: [
+            { type: 'required', message: 'Age is required' },
+            { type: 'min', value: 18, message: 'You must be at least 18 years old' },
+            { type: 'max', value: 120, message: 'Please enter a valid age' }
+          ]
+        }
+      ]
+    }
+  ]
+};
+```
+
+### Full Form Schema Generation
+
+Generate a complete Zod schema for the entire form:
+
+```typescript
+import { generateFormSchema } from '@json-form-engine/core/schemas/validation';
+
+const formSchema = generateFormSchema(formConfig.steps[0].elements);
+
+// Validate entire form data
+const formData = {
+  firstName: 'John',
+  email: 'john@example.com',
+  age: 25
+};
+
+const result = formSchema.safeParse(formData);
+if (result.success) {
+  console.log('Form is valid:', result.data);
+} else {
+  console.log('Validation errors:', result.error.errors);
+}
+```
+
+## Validation Categories
+
+The validation system organizes validators by category:
+
+### String Validations
+- `required` - Field must have a value
+- `email` - Valid email address format
+- `url` - Valid URL format
+- `minLength` / `maxLength` - String length constraints
+- `pattern` - Regex pattern matching
+- `uuid` - UUID format validation
+
+### Number Validations
+- `min` / `max` - Numeric range validation
+- `int` - Integer validation
+- `positive` / `negative` - Sign validation
+
+### Array Validations
+- `minItems` / `maxItems` - Array length constraints
+- `unique` - Unique items validation
+
+### Network & Format Validations
+- `ip` - IP address validation (v4/v6)
+- `cidr` - CIDR notation validation
+- `jwt` - JWT token validation
+- `hash` - Hash format validation
+- `base64` - Base64 encoding validation
+
+### Date & Time Validations
+- `datetime` - ISO datetime validation
+- `date` - Date validation
+- `time` - Time validation
+
+## Error Handling
+
+### Validation Error Structure
+
+Zod provides detailed error information:
+
+```typescript
+const result = schema.safeParse(invalidData);
+if (!result.success) {
+  result.error.errors.forEach(error => {
+    console.log(`Field: ${error.path.join('.')}`);
+    console.log(`Message: ${error.message}`);
+    console.log(`Code: ${error.code}`);
+  });
+}
+```
+
+### Custom Error Messages
+
+Always provide user-friendly error messages:
+
+```typescript
+// Good - specific and helpful
+{ type: 'minLength', value: 8, message: 'Password must be at least 8 characters long' }
+
+// Poor - generic and unhelpful
+{ type: 'minLength', value: 8, message: 'Invalid input' }
+```
+
+## Enhanced Async Validation
+
+The Form Engine includes a powerful async validation system with caching, dependency resolution, and comprehensive error handling:
+
+```typescript
+{
+  type: 'async',
+  url: '/api/validate-username',
+  method: 'POST',
+  body: {
+    field: 'username'
+    // System automatically includes:
+    // - value: actualFieldValue
+    // - dependsOn: { email: actualEmailValue } (if dependencies specified)
+  },
+  dependencies: ['email'], // Re-validate when email changes
+  expectedResponse: { valid: true },
+  debounce: 500, // Wait 500ms after user stops typing
+  cacheTTL: 300000, // Cache for 5 minutes (default)
+  disableCache: false, // Enable caching (default)
+  message: 'Username is already taken'
+}
+```
+
+### Key Features
+
+The enhanced async validation system provides:
+
+1. **Intelligent Caching** - Reduces server load with configurable TTL
+2. **Dependency Resolution** - Automatic cross-field validation with `dependsOn` objects
+3. **Request Optimization** - Debouncing prevents excessive API calls
+4. **Error Recovery** - Graceful handling of network failures
+5. **Memory Management** - Automatic cleanup of expired cache entries
+
+### Dependency Resolution Process
+
+When you specify dependencies, the system automatically:
+
+1. **Monitors dependency fields** for changes
+2. **Creates `dependsOn` object** with actual field values:
+   ```json
+   {
+     "value": "userInput",
+     "field": "fieldName", 
+     "dependsOn": {
+       "username": "actualUsername",
+       "email": "actual@email.com"
+     }
+   }
+   ```
+3. **Re-validates dependent fields** when dependencies change
+4. **Caches results** based on complete request payload
+
+### Performance Optimization
+
+The async validator will:
+1. **Debounce requests** - Wait for user to stop typing before making API calls
+2. **Cache responses** - Store results to avoid duplicate requests (5min default TTL)
+3. **Batch dependency updates** - Efficient re-validation when multiple fields change
+4. **Handle failures gracefully** - Shorter cache TTL for errors (1min for HTTP errors, 30s for network)
+5. **Clean up memory** - Automatic removal of expired cache entries
+
+### Try It Live
+
+<LivePreview>
+import { AsyncValidationDemo } from '@/components/demo/async-validation-demo';
+
+<AsyncValidationDemo />
+</LivePreview>
+
+Try typing "invalid" in any field above to see async validation errors, or experiment with different usernames to see availability checking in action.
+
+## Best Practices
+
+### 1. Use JSON-Serializable Rules
+
+Form configurations should always use plain objects:
+
+```typescript
+// Correct - JSON serializable
+{
+  rules: [
+    { type: 'required', message: 'Field is required' },
+    { type: 'email', message: 'Invalid email format' }
+  ]
+}
+
+// Incorrect - functions cannot be serialized
+{
+  rules: [
+    { type: 'custom', validator: (value) => value.includes('@') }
+  ]
+}
+```
+
+### 2. Provide Clear Error Messages
+
+Users need to understand what went wrong:
+
+```typescript
+// Clear and actionable
+{ type: 'minLength', value: 8, message: 'Password must be at least 8 characters long' }
+
+// Vague and unhelpful
+{ type: 'minLength', value: 8, message: 'Too short' }
+```
+
+### 3. Combine Multiple Validations
+
+Layer validation rules for comprehensive checking:
+
+```typescript
+const passwordRules = [
+  { type: 'required', message: 'Password is required' },
+  { type: 'minLength', value: 8, message: 'Password must be at least 8 characters' },
+  { type: 'pattern', value: '/(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)/', message: 'Password must contain uppercase, lowercase, and numbers' }
+];
+```
+
+### 4. Use Presets for Consistency
+
+Leverage presets to maintain consistency across your application:
+
+```typescript
+import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
+
+// Consistent email validation across all forms
+const emailRules = [
+  ValidationPresets.string.required('Email is required'),
+  ValidationPresets.string.email('Please enter a valid email address')
+];
+```
+
+## Next Steps
+
+- **[Built-in Validations](./built-in-validations)** - Explore all available validation types
+- **[Custom Validations](./custom-validations)** - Learn to create custom validation logic
+- **[Examples](../examples/basic-form)** - See validation in action with real forms
+
+The validation system provides a solid foundation for ensuring data quality while maintaining flexibility. The JSON-based approach makes it easy to configure complex validation scenarios while keeping your form definitions clean and maintainable.

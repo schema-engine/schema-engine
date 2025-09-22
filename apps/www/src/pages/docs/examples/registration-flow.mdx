@@ -44,8 +44,8 @@ const registrationFlowConfig: FormConfig = {
           label: "First Name",
           placeholder: "Enter your first name",
           rules: [
-            ValidationPresets.required("First name is required"),
-            ValidationPresets.minLength(2, "First name must be at least 2 characters")
+            ValidationPresets.string.required("First name is required"),
+            ValidationPresets.string.minLength(2, "First name must be at least 2 characters")
           ],
           grid: {
             responsive: {
@@ -62,8 +62,8 @@ const registrationFlowConfig: FormConfig = {
           label: "Last Name",
           placeholder: "Enter your last name",
           rules:
-            ValidationPresets.required("Last name is required"),
-            ValidationPresets.minLength(2, "Last name must be at least 2 characters")
+            ValidationPresets.string.required("Last name is required"),
+            ValidationPresets.string.minLength(2, "Last name must be at least 2 characters")
           ],
           grid: {
             responsive: {
@@ -80,8 +80,8 @@ const registrationFlowConfig: FormConfig = {
           label: "Email Address",
           placeholder: "Enter your email address",
           rules:
-            ValidationPresets.required("Email is required"),
-            ValidationPresets.email("Please enter a valid email address")
+            ValidationPresets.string.required("Email is required"),
+            ValidationPresets.string.email("Please enter a valid email address")
           ]
         },
         {
@@ -91,9 +91,9 @@ const registrationFlowConfig: FormConfig = {
           label: "Age",
           placeholder: "Enter your age",
           rules:
-            ValidationPresets.required("Age is required"),
-            ValidationPresets.min(18, "You must be at least 18 years old"),
-            ValidationPresets.max(120, "Please enter a valid age")
+            ValidationPresets.string.required("Age is required"),
+            ValidationPresets.number.min(18, "You must be at least 18 years old"),
+            ValidationPresets.number.max(120, "Please enter a valid age")
           ]
         }
       ],
@@ -123,10 +123,10 @@ const registrationFlowConfig: FormConfig = {
           label: "Username",
           placeholder: "Choose a username",
           rules:
-            ValidationPresets.required("Username is required"),
-            ValidationPresets.minLength(3, "Username must be at least 3 characters"),
-            ValidationPresets.maxLength(20, "Username cannot exceed 20 characters"),
-            ValidationPresets.regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores")
+            ValidationPresets.string.required("Username is required"),
+            ValidationPresets.string.minLength(3, "Username must be at least 3 characters"),
+            ValidationPresets.string.maxLength(20, "Username cannot exceed 20 characters"),
+            ValidationPresets.string.regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores")
           ]
         },
         {
@@ -137,9 +137,9 @@ const registrationFlowConfig: FormConfig = {
           label: "Password",
           placeholder: "Create a strong password",
           rules:
-            ValidationPresets.required("Password is required"),
-            ValidationPresets.minLength(8, "Password must be at least 8 characters"),
-            ValidationPresets.regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, "Password must contain uppercase, lowercase, and number")
+            ValidationPresets.string.required("Password is required"),
+            ValidationPresets.string.minLength(8, "Password must be at least 8 characters"),
+            ValidationPresets.string.regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, "Password must contain uppercase, lowercase, and number")
           ]
         },
         {
@@ -150,7 +150,7 @@ const registrationFlowConfig: FormConfig = {
           label: "Confirm Password", 
           placeholder: "Confirm your password",
           rules:
-            ValidationPresets.required("Please confirm your password")
+            ValidationPresets.string.required("Please confirm your password")
           ]
         }
       ]
@@ -166,7 +166,7 @@ const registrationFlowConfig: FormConfig = {
           name: "country",
           label: "Country",
           placeholder: "Select your country",
-          rules:idationPresets.required("Please select your country")],
+          rules:idationPresets.string.required("Please select your country")],
           options: [
             { value: "us", label: "United States" },
             { value: "ca", label: "Canada" },
@@ -184,7 +184,7 @@ const registrationFlowConfig: FormConfig = {
           name: "timezone",
           label: "Timezone",
           placeholder: "Select your timezone",
-          rules:idationPresets.required("Please select your timezone")],
+          rules:idationPresets.string.required("Please select your timezone")],
           options: [
             { value: "UTC-8", label: "Pacific Time (UTC-8)" },
             { value: "UTC-7", label: "Mountain Time (UTC-7)" },
@@ -230,14 +230,14 @@ const registrationFlowConfig: FormConfig = {
           id: "terms",
           name: "terms",
           label: "I agree to the Terms of Service and Privacy Policy",
-          rules:idationPresets.required("You must accept the terms and privacy policy")]
+          rules:idationPresets.string.required("You must accept the terms and privacy policy")]
         },
         {
           type: "checkbox", 
           id: "ageConfirmation",
           name: "ageConfirmation",
           label: "I confirm that I am at least 18 years old",
-          rules:idationPresets.required("You must confirm you are at least 18 years old")]
+          rules:idationPresets.string.required("You must confirm you are at least 18 years old")]
         }
       ]
     }

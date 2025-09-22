@@ -54,7 +54,7 @@ const formConfig = {
       name: 'name', 
       label: 'Full Name',
       rules: [
-        ValidationPresets.required("Name is required")
+        ValidationPresets.string.required("Name is required")
       ]
     }
   ]
@@ -323,8 +323,8 @@ defaultFormRegistry.register({
     label: 'Sample Input',
     placeholder: 'Enter text...',
     rules:
-      ValidationPresets.required("This field is required"),
-      ValidationPresets.minLength(3, "Must be at least 3 characters")
+      ValidationPresets.string.required("This field is required"),
+      ValidationPresets.string.minLength(3, "Must be at least 3 characters")
     ]
   }
 });

@@ -26,8 +26,8 @@ export const demoFormConfig: FormConfig = {
 					label: 'Full Name',
 					placeholder: 'Enter your full name',
 					rules: [
-						ValidationPresets.minLength(2, 'Name must be at least 2 characters'),
-						ValidationPresets.maxLength(50, 'Name cannot exceed 50 characters'),
+						ValidationPresets.string.minLength(2, 'Name must be at least 2 characters'),
+						ValidationPresets.string.maxLength(50, 'Name cannot exceed 50 characters'),
 					],
 				},
 				{
@@ -37,7 +37,7 @@ export const demoFormConfig: FormConfig = {
 					name: 'email',
 					label: 'Email Address',
 					placeholder: 'Enter your email',
-					rules: [ValidationPresets.email('Please enter a valid email address')],
+					rules: [ValidationPresets.string.email('Please enter a valid email address')],
 				},
 				{
 					componentId: 'number',
@@ -46,8 +46,8 @@ export const demoFormConfig: FormConfig = {
 					label: 'Age',
 					placeholder: 'Enter your age',
 					rules: [
-						ValidationPresets.min(18, 'Must be at least 18 years old'),
-						ValidationPresets.max(120, 'Age must be realistic'),
+						ValidationPresets.number.min(18, 'Must be at least 18 years old'),
+						ValidationPresets.number.max(120, 'Age must be realistic'),
 					],
 				},
 				{
@@ -57,7 +57,7 @@ export const demoFormConfig: FormConfig = {
 					name: 'website',
 					label: 'Website (Optional)',
 					placeholder: 'https://example.com',
-					rules: [ValidationPresets.url('Please enter a valid URL')],
+					rules: [ValidationPresets.string.url('Please enter a valid URL')],
 				},
 				{
 					componentId: 'textarea',
@@ -66,7 +66,7 @@ export const demoFormConfig: FormConfig = {
 					label: 'Bio',
 					placeholder: 'Tell us about yourself...',
 					rows: 4,
-					rules: [ValidationPresets.maxLength(500, 'Bio cannot exceed 500 characters')],
+					rules: [ValidationPresets.string.maxLength(500, 'Bio cannot exceed 500 characters')],
 				},
 				{
 					componentId: 'select',

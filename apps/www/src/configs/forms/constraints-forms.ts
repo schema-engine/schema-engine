@@ -20,7 +20,7 @@ export const constraintsDemoConfig: FormConfig = {
 					name: 'userType',
 					componentId: 'select',
 					label: 'User Type',
-					rules: [ValidationPresets.required('Please select a user type')],
+					rules: [ValidationPresets.string.required('Please select a user type')],
 					options: [
 						{ value: '', label: 'Select user type...' },
 						{ value: 'individual', label: 'Individual' },
@@ -34,7 +34,7 @@ export const constraintsDemoConfig: FormConfig = {
 					componentId: 'input',
 					inputType: 'text',
 					label: 'First Name',
-					rules: [ValidationPresets.required('First name is required')],
+					rules: [ValidationPresets.string.required('First name is required')],
 					constraints: [
 						{
 							field: 'userType',
@@ -50,7 +50,7 @@ export const constraintsDemoConfig: FormConfig = {
 					componentId: 'input',
 					inputType: 'text',
 					label: 'Last Name',
-					rules: [ValidationPresets.required('Last name is required')],
+					rules: [ValidationPresets.string.required('Last name is required')],
 					constraints: [
 						{
 							field: 'userType',
@@ -66,7 +66,7 @@ export const constraintsDemoConfig: FormConfig = {
 					componentId: 'input',
 					inputType: 'text',
 					label: 'Company Name',
-					rules: [ValidationPresets.required('Company name is required')],
+					rules: [ValidationPresets.string.required('Company name is required')],
 					constraints: [
 						{
 							field: 'userType',
@@ -145,8 +145,8 @@ export const constraintsDemoConfig: FormConfig = {
 					inputType: 'email',
 					label: 'Email Address',
 					rules: [
-						ValidationPresets.required('Email is required'),
-						ValidationPresets.email('Please enter a valid email address'),
+						ValidationPresets.string.required('Email is required'),
+						ValidationPresets.string.email('Please enter a valid email address'),
 					],
 				},
 				{

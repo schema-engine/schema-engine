@@ -25,9 +25,9 @@ export function ValidationDemo() {
 						label: 'Username (3-20 characters)',
 						placeholder: 'Enter username',
 						rules: [
-							ValidationPresets.required('Username is required'),
-							ValidationPresets.minLength(3, 'Minimum 3 characters'),
-							ValidationPresets.maxLength(20, 'Maximum 20 characters'),
+							ValidationPresets.string.required('Username is required'),
+							ValidationPresets.string.minLength(3, 'Minimum 3 characters'),
+							ValidationPresets.string.maxLength(20, 'Maximum 20 characters'),
 						],
 					},
 					{
@@ -37,9 +37,9 @@ export function ValidationDemo() {
 						label: 'Age (18-100)',
 						placeholder: 'Enter your age',
 						rules: [
-							ValidationPresets.required('Age is required'),
-							ValidationPresets.min(18, 'Must be at least 18'),
-							ValidationPresets.max(100, 'Must be less than 100'),
+							ValidationPresets.string.required('Age is required'),
+							ValidationPresets.number.min(18, 'Must be at least 18'),
+							ValidationPresets.number.max(100, 'Must be less than 100'),
 						],
 					},
 					{

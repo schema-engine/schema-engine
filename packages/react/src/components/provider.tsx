@@ -1,8 +1,7 @@
 import { createContext, useMemo, useCallback, useState, type ReactNode } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useActionExecutor } from '../hooks';
-import { generateFormSchema } from '@json-form-engine/core/schemas/validation';
+import { useFormValidationResolver } from '../hooks/use-form-validation-resolver';
 import type { FormFieldComponentRegistry } from '@json-form-engine/core/schemas/registry';
 import { reactFormFieldRegistry } from '@/registry';
 import type { ActionExecutionContext, FormActionConfig } from '@json-form-engine/core/actions/index';
@@ -107,19 +106,21 @@ export function FormEngineFormProvider({
 		return { ...fieldDefaults, ...defaultValues };
 	}, [allFields, defaultValues]);
 
-	const validationSchema = useMemo(() => {
-		if (config.rules) {
-			return config.rules;
-		}
-
-		return generateFormSchema(allFields);
-	}, [config.rules, allFields]);
+	/**
+	 * Use custom form validation resolver with form data access
+	 *
+	 * This resolver handles all validation types and provides form context
+	 * when needed (e.g., for async validation dependencies, custom validation
+	 * that needs cross-field access). Regular validation rules that don't need
+	 * form data simply ignore the second parameter.
+	 */
+	const formValidationResolver = useFormValidationResolver(allFields);
 
 	const form = useForm({
-		resolver: validationSchema ? zodResolver(validationSchema as any) : undefined,
+		resolver: formValidationResolver,
 		defaultValues: formDefaultValues,
 		mode: config.validationMode || 'onBlur',
-		reValidateMode: config.reValidateMode,
+		reValidateMode: config.reValidateMode || 'onChange',
 	});
 
 	const buildActionContext = useCallback((): ActionExecutionContext => {

@@ -142,7 +142,6 @@ describe('Form Field Registry Extensibility', () => {
 		test('should validate array elements containing custom fields', () => {
 			const { componentId, registration } = createFieldRegistration('5');
 			
-			// Register the custom field
 			defaultFormFieldRegistry.register(registration);
 
 			const arrayConfig: ArrayElementsConfig = {
@@ -244,7 +243,6 @@ describe('Form Field Registry Extensibility', () => {
 			const unionSchema = defaultFormFieldRegistry.createFieldUnionSchema();
 			expect(unionSchema).toBeDefined();
 
-			// Test that the union accepts both built-in and custom field types
 			const inputConfig = {
 				componentId: 'input',
 				id: 'test',

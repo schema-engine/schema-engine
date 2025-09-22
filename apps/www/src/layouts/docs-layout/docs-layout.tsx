@@ -86,6 +86,20 @@ const docsNavigation: DocsSection[] = [
 		],
 	},
 	{
+		id: 'validation-system',
+		title: 'Validation System',
+		path: '/docs/validation',
+		children: [
+			{ id: 'how-it-works', title: 'How It Works', path: '/docs/validation/how-it-works' },
+			{
+				id: 'built-in-validations',
+				title: 'Built-in Validations',
+				path: '/docs/validation/built-in-validations',
+			},
+			{ id: 'custom-validations', title: 'Custom Validations', path: '/docs/validation/custom-validations' },
+		],
+	},
+	{
 		id: 'layout',
 		title: 'Layout System',
 		path: '/docs/layout',
