@@ -3,21 +3,27 @@ import { FormActionConfigSchema, type FormActionConfig } from '../actions/types'
 import type { FieldConfig } from './field-config';
 import { GridLayoutConfigSchema, type ConstraintLogic } from './base-field';
 import { ValidationRuleSchema } from './validation/';
+import type { StepperConfig } from '../steppers/types';
 
 export type { FormActionConfig } from '../actions/types';
 
 /**
- * Layout configuration schema
+ * Step layout configuration schema (for individual steps)
  */
-export const LayoutConfigSchema = z.object({
-	type: z.enum(['group', 'grid', 'tabs', 'accordion', 'collapsible']),
-	title: z.string().optional(),
-	description: z.string().optional(),
-	columns: z.number().optional(),
-	gap: z.number().optional(),
-	className: z.string().optional(),
-	constraints: z.array(z.any()).optional(), // Use any to avoid circular reference
-});
+export const StepLayoutConfigSchema = z
+	.object({
+		__layoutId: z.string(),
+	})
+	.catchall(z.any()); // Allow additional layout-specific options
+
+/**
+ * Form stepper configuration schema (for the entire form)
+ */
+export const FormStepperConfigSchema = z
+	.object({
+		__stepperId: z.string(),
+	})
+	.catchall(z.any()); // Allow additional stepper-specific options
 
 /**
  * Step navigation button configuration schema
@@ -62,6 +68,7 @@ export const FormStepSchema = z.object({
 	title: z.string(),
 	description: z.string().optional(),
 	icon: z.string().optional(),
+	layout: StepLayoutConfigSchema.optional(), // Step-specific layout configuration
 	elements: z.array(z.any()), // Will be typed as FieldConfig[] but avoiding circular reference
 	rules: z.any().optional(),
 	constraints: z.array(z.any()).optional(), // Use any to avoid circular reference
@@ -81,9 +88,9 @@ export const FormConfigSchema = z.object({
 	title: z.string().optional(),
 	description: z.string().optional(),
 	steps: z.array(FormStepSchema),
-	layout: z.array(LayoutConfigSchema).optional(),
-	grid: z.lazy(() => GridLayoutConfigSchema).optional(),
-	stepper: StepNavigationConfigSchema.optional(),
+	stepper: FormStepperConfigSchema.optional(), // Custom stepper configuration
+	grid: z.lazy(() => GridLayoutConfigSchema).optional(), // CSS Grid layout for elements
+	stepperNavigation: StepNavigationConfigSchema.optional(), // Keep original stepper navigation config
 	mode: z.enum(['wizard', 'free']).optional().default('wizard'),
 	validationMode: z.enum(['onSubmit', 'onChange', 'onBlur', 'all']).optional(),
 	reValidateMode: z.enum(['onSubmit', 'onChange', 'onBlur']).optional(),
@@ -96,7 +103,8 @@ export const FormConfigSchema = z.object({
 /**
  * Inferred types from schemas
  */
-export type LayoutConfig = z.infer<typeof LayoutConfigSchema>;
+export type StepLayoutConfig = z.infer<typeof StepLayoutConfigSchema>;
+export type FormStepperConfig = z.infer<typeof FormStepperConfigSchema>;
 export type StepNavigationButton = z.infer<typeof StepNavigationButtonSchema>;
 export type StepNavigationConfig = z.infer<typeof StepNavigationConfigSchema>;
 
@@ -109,6 +117,7 @@ export interface FormStep {
 	title: string;
 	description?: string;
 	icon?: string;
+	layout?: StepLayoutConfig; // Step-specific layout configuration
 	elements: FieldConfig[];
 	rules?: any;
 	constraints?: ConstraintLogic[];
@@ -121,6 +130,7 @@ export interface FormStep {
 }
 
 export type FormConfig = z.infer<typeof FormConfigSchema> & {
+	stepper?: StepperConfig; // Use our improved stepper configuration
 	onSubmit?: (data: any) => void | Promise<void>;
 	onChange?: (data: any) => void;
 };

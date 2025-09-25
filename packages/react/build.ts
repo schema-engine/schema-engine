@@ -5,15 +5,21 @@ import path from 'node:path';
 
 const directories = ['src/components', 'src/hooks'];
 
+// Add the main index file to the build
+const indexFiles = ['src/index.ts', 'src/registry.ts'];
+
 const files = await Promise.all(directories.flatMap((dir) => {
   const glob = new Bun.Glob(`${dir}/**/*.{ts,tsx}`);
   return Array.fromAsync(glob.scan({ cwd: '.' }));
 })).then((files) => files.flat());
 
+// Combine all files including the main entry points
+const allFiles = [...indexFiles, ...files];
+
 const watchMode = process.argv.includes('--watch');
 
 const build = await Bun.build({
-  entrypoints: files,
+  entrypoints: allFiles,
   outdir: 'dist',
   root: './src',
   target: 'browser',

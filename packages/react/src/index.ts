@@ -6,3 +6,6 @@
 export * from '@/components';
 export * from '@/hooks';
 export * from '@/registry';
+
+// Export layout and stepper registries
+export { registerLayout, registerStepper } from '@/components/layout-stepper-registry';

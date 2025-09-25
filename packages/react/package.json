@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "license": "MIT",
   "sideEffects": [
+    "./dist/components/examples/layout-stepper-examples.js",
     "./dist/components/form/registry.js",
     "./dist/components/form/fields/*.registry.js"
   ],

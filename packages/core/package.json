@@ -85,6 +85,22 @@
     "./tools/*": {
       "types": "./dist/tools/*.d.ts",
       "import": "./dist/tools/*.js"
+    },
+    "./layouts": {
+      "types": "./dist/layouts/index.d.ts",
+      "import": "./dist/layouts/index.js"
+    },
+    "./layouts/*": {
+      "types": "./dist/layouts/*.d.ts",
+      "import": "./dist/layouts/*.js"
+    },
+    "./steppers": {
+      "types": "./dist/steppers/index.d.ts",
+      "import": "./dist/steppers/index.js"
+    },
+    "./steppers/*": {
+      "types": "./dist/steppers/*.d.ts",
+      "import": "./dist/steppers/*.js"
     }
   }
 }
