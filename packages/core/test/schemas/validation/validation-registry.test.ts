@@ -1,8 +1,9 @@
 import { describe, expect, it, beforeEach, mock } from 'bun:test';
 import { z } from 'zod';
-import { ValidationRegistry, type ValidationRegistration } from '../../../src/schemas/validation/';
-import type { AsyncRule, ValidationRule, BaseValidationRule } from '../../../src/schemas/validation/';
-import { logger } from '../../../src/lib/logger.js';
+import { ValidationRegistry, type ValidationRegistration } from '@/schemas/validation/';
+import type { AsyncRule, ValidationRule, BaseValidationRule } from '@/schemas/validation/';
+import { logger } from '@/lib/logger.js';
+import { Logger} from '@ecopages/logger'
 
 describe('ValidationRegistry', () => {
 	let registry: ValidationRegistry;
@@ -100,7 +101,7 @@ describe('ValidationRegistry', () => {
 				type: 'min', 
 				value: 10, 
 				message: 'Must be at least 10' 
-			} as any;
+			};
 			const schema = registry.createSchema(minRule);
 			
 			expect(schema).toBeDefined();
@@ -113,7 +114,7 @@ describe('ValidationRegistry', () => {
 				type: 'minItems', 
 				value: 2, 
 				message: 'Must have at least 2 items' 
-			} as any;
+			};
 			const schema = registry.createSchema(minItemsRule);
 			
 			expect(schema).toBeDefined();
@@ -312,8 +313,8 @@ describe('ValidationRegistry', () => {
 			expect(loggerSpy).toHaveBeenCalledWith(
 				"Validation type 'duplicate-test' is already registered. Overriding."
 			);
-			
-			(logger as any).warn = originalWarn;
+
+			(logger as Logger).warn = originalWarn;
 		});
 	});
 });
