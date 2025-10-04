@@ -1,26 +1,21 @@
 import { FormEngineLayout } from '@/layouts/form-engine-layout';
 import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
 import type { FormConfig } from '@json-form-engine/core';
+import type { ReactNode } from 'react';
+import type { EcoComponent } from '@ecopages/core';
+import '@/lib/form-engine-setup';
 
-// Import registries - now marked as sideEffects in package.json
-import '@json-form-engine/react/components/form/registry';
-import '@json-form-engine/react/components/examples/layout-stepper-examples';
-
-// Simple wizard forms to test different steppers
 const progressBarStepperDemo: FormConfig = {
 	mode: 'wizard',
 	id: 'progress-stepper-demo',
 	title: 'Progress Bar Stepper Demo',
 	description: 'Testing the progress bar stepper system',
-
-	// Using registry-based stepper
 	stepper: {
 		__stepperId: 'progress-bar',
 		showStepNumbers: true,
 		showProgress: true,
 		theme: 'blue',
 	},
-
 	steps: [
 		{
 			id: 'step1',
@@ -52,7 +47,6 @@ const progressBarStepperDemo: FormConfig = {
 			id: 'step2',
 			title: 'Contact Details',
 			description: 'How can we reach you?',
-
 			elements: [
 				{
 					id: 'email',
@@ -77,7 +71,6 @@ const progressBarStepperDemo: FormConfig = {
 			id: 'step3',
 			title: 'Preferences',
 			description: 'Final settings',
-
 			elements: [
 				{
 					id: 'newsletter',
@@ -108,15 +101,12 @@ const verticalStepperDemo: FormConfig = {
 	id: 'vertical-stepper-demo',
 	title: 'Vertical Stepper Demo',
 	description: 'Testing the vertical stepper system',
-
-	// Using registry-based stepper
 	stepper: {
 		__stepperId: 'vertical',
 		showDescriptions: true,
 		allowClickNavigation: true,
 		connectorStyle: 'line',
 	},
-
 	steps: [
 		{
 			id: 'step1',
@@ -176,20 +166,16 @@ const minimalistStepperDemo: FormConfig = {
 	id: 'minimalist-stepper-demo',
 	title: 'Minimalist Stepper Demo',
 	description: 'Testing the minimalist stepper system',
-
-	// Using registry-based stepper
 	stepper: {
 		__stepperId: 'minimalist',
 		showOnlyActiveStep: true,
 		hideStepNumbers: true,
 		compactMode: true,
 	},
-
 	steps: [
 		{
 			id: 'step1',
 			title: 'Quick Survey',
-
 			elements: [
 				{
 					id: 'satisfaction',
@@ -225,25 +211,15 @@ const minimalistStepperDemo: FormConfig = {
 	],
 };
 
-// Traditional stepper (simpler stepper) for comparison
 const traditionalStepperDemo: FormConfig = {
 	mode: 'wizard',
 	id: 'traditional-stepper-demo',
 	title: 'Simple Stepper Demo',
 	description: 'Testing simple stepper configuration',
-
-	// Use minimalist stepper for simple configuration
-	stepper: {
-		__stepperId: 'minimalist',
-		variant: 'numbers',
-		size: 'medium',
-	},
-
 	steps: [
 		{
 			id: 'step1',
 			title: 'Basic Info',
-
 			elements: [
 				{
 					id: 'name',
@@ -259,7 +235,6 @@ const traditionalStepperDemo: FormConfig = {
 		{
 			id: 'step2',
 			title: 'Confirmation',
-
 			elements: [
 				{
 					id: 'confirm',
@@ -273,7 +248,7 @@ const traditionalStepperDemo: FormConfig = {
 	],
 };
 
-export default function SteppersPage() {
+const SteppersPage: EcoComponent<unknown, ReactNode> = () => {
 	return (
 		<FormEngineLayout>
 			<div className="min-h-screen bg-gray-50 py-12">
@@ -286,7 +261,6 @@ export default function SteppersPage() {
 					</div>
 
 					<div className="space-y-12">
-						{/* Traditional Stepper - Should Always Work */}
 						<div className="bg-white rounded-lg shadow-lg p-8">
 							<div className="mb-6">
 								<h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -297,7 +271,6 @@ export default function SteppersPage() {
 							<FormRenderer config={traditionalStepperDemo} />
 						</div>
 
-						{/* Progress Bar Stepper */}
 						<div className="bg-white rounded-lg shadow-lg p-8">
 							<div className="mb-6">
 								<h2 className="text-2xl font-bold text-gray-900 mb-2">2. Progress Bar Stepper</h2>
@@ -306,7 +279,6 @@ export default function SteppersPage() {
 							<FormRenderer config={progressBarStepperDemo} />
 						</div>
 
-						{/* Vertical Stepper */}
 						<div className="bg-white rounded-lg shadow-lg p-8">
 							<div className="mb-6">
 								<h2 className="text-2xl font-bold text-gray-900 mb-2">3. Vertical Stepper</h2>
@@ -315,7 +287,6 @@ export default function SteppersPage() {
 							<FormRenderer config={verticalStepperDemo} />
 						</div>
 
-						{/* Minimalist Stepper */}
 						<div className="bg-white rounded-lg shadow-lg p-8">
 							<div className="mb-6">
 								<h2 className="text-2xl font-bold text-gray-900 mb-2">4. Minimalist Stepper</h2>
@@ -325,7 +296,6 @@ export default function SteppersPage() {
 						</div>
 					</div>
 
-					{/* Debug Information */}
 					<div className="mt-12 bg-blue-50 border border-blue-200 rounded-lg p-6">
 						<h3 className="text-lg font-semibold text-blue-800 mb-3">Debug Information</h3>
 						<div className="text-sm text-blue-700 space-y-2">
@@ -357,4 +327,10 @@ export default function SteppersPage() {
 			</div>
 		</FormEngineLayout>
 	);
-}
+};
+
+SteppersPage.config = {
+	importMeta: import.meta,
+};
+
+export default SteppersPage;

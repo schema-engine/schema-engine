@@ -1,0 +1,64 @@
+/* Minimalist Stepper */
+.minimalist-stepper {
+	@apply w-full max-w-2xl mx-auto;
+
+	&__header {
+		@apply mb-8;
+	}
+
+	&__progress {
+		@apply mb-4;
+	}
+
+	&__progress-info {
+		@apply flex justify-between text-sm text-gray-600 mb-2;
+	}
+
+	&__progress-bar {
+		@apply w-full bg-gray-200 rounded-full h-2;
+	}
+
+	&__progress-fill {
+		@apply h-2 rounded-full transition-all duration-300;
+	}
+
+	&__step-info {
+		@apply text-sm text-gray-500 mb-1;
+	}
+
+	&__title {
+		@apply text-xl font-semibold text-gray-900;
+	}
+
+	&__description {
+		@apply text-gray-600 mt-1;
+	}
+
+	&__content {
+		@apply mb-8;
+	}
+
+	&__navigation {
+		@apply flex justify-between items-center pt-6 border-t border-gray-200;
+	}
+
+	&__nav-button {
+		@apply transition-colors duration-200;
+
+		&--text {
+			@apply text-sm hover:opacity-80;
+
+			&--disabled {
+				@apply opacity-50 cursor-not-allowed;
+			}
+		}
+
+		&--primary {
+			@apply px-6 py-2 text-sm text-white rounded-md hover:opacity-90;
+
+			&--disabled {
+				@apply opacity-50 cursor-not-allowed;
+			}
+		}
+	}
+}

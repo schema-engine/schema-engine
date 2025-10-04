@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
 import { notificationPlugin, registerAction, resetPlugin, submitPlugin } from '@json-form-engine/core/actions/index';
 import type { FormConfig } from '@json-form-engine/core/schemas';
-import '@json-form-engine/react/components/form/registry';
+import '@/lib/form-engine-setup';
 
 const formConfigWithActions: FormConfig = {
 	id: 'form-engine-demo',

@@ -1,4 +1,4 @@
-import { registerFieldType, reactFormFieldRegistry } from '@/registry';
+import { registerFieldType, reactFormFieldRegistry } from '@/registries/field-registry';
 import { FormArrayElements } from './form-array-elements';
 import { createArrayElementsRuntimeSchema, type ArrayElementsConfig } from './form-array-elements.types';
 

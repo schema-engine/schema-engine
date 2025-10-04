@@ -3,7 +3,7 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { useActionExecutor } from '../hooks';
 import { useFormValidationResolver } from '../hooks/use-form-validation-resolver';
 import type { FormFieldComponentRegistry } from '@json-form-engine/core/schemas/registry';
-import { reactFormFieldRegistry } from '@/registry';
+import { reactFormFieldRegistry } from '@/registries/field-registry';
 import type { ActionExecutionContext, FormActionConfig } from '@json-form-engine/core/actions/index';
 import type { FormConfig } from '@json-form-engine/core/schemas';
 

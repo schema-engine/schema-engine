@@ -2,8 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
 import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
 import type { FormConfig } from '@json-form-engine/core/schemas';
-import '@json-form-engine/react/components/form/registry';
-import '@json-form-engine/core/actions/debug-registry';
+import '@/lib/form-engine-setup';
 
 const contactFormConfig: FormConfig = {
 	id: 'contact-form',

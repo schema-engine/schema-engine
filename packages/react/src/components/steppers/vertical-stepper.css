@@ -1,0 +1,87 @@
+.vertical-stepper {
+	@apply flex gap-8 max-w-6xl mx-auto;
+
+	&__sidebar {
+		@apply w-80 flex-shrink-0;
+	}
+
+	&__steps {
+		@apply relative;
+	}
+
+	&__connector-line {
+		@apply absolute left-6 top-0 w-px h-full;
+	}
+
+	&__steps-list {
+		@apply space-y-6;
+	}
+
+	&__step {
+		@apply flex items-start w-full text-left transition-all duration-200;
+
+		&--disabled {
+			@apply opacity-50 cursor-not-allowed;
+		}
+
+		&--clickable {
+			@apply cursor-pointer hover:bg-gray-50 hover:bg-opacity-50 rounded-lg;
+		}
+	}
+
+	&__indicator {
+		@apply w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-200 flex-shrink-0 z-10;
+	}
+
+	&__step-content {
+		@apply ml-4 min-w-0 flex-1;
+	}
+
+	&__step-title {
+		@apply text-sm font-medium mb-1;
+
+		&--active {
+			@apply text-gray-900;
+		}
+
+		&--inactive {
+			@apply text-gray-600;
+		}
+	}
+
+	&__step-description {
+		@apply text-sm text-gray-500 leading-tight;
+	}
+
+	&__current-label {
+		@apply text-xs font-medium mt-1;
+	}
+
+	&__navigation {
+		@apply mt-8 space-y-3;
+	}
+
+	&__nav-button {
+		@apply w-full py-2 px-4 text-sm rounded-md transition-all duration-200;
+
+		&--primary {
+			@apply text-white hover:opacity-90;
+		}
+
+		&--secondary {
+			@apply border border-gray-300 hover:bg-gray-50;
+		}
+
+		&--disabled {
+			@apply opacity-50 cursor-not-allowed;
+		}
+	}
+
+	&__main-content {
+		@apply flex-1 min-w-0;
+	}
+
+	&__content-card {
+		@apply bg-white rounded-lg border border-gray-200 p-6;
+	}
+}

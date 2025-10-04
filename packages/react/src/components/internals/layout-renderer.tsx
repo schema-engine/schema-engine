@@ -1,8 +1,8 @@
 import type React from 'react';
 import type { FormStep } from '@json-form-engine/core';
 import type { StepLayoutConfig } from '@json-form-engine/core/schemas/form-config';
-import type { SharedLayoutComponentProps } from '../layouts/shared-types';
-import { reactLayoutRegistry } from '../layout-stepper-registry';
+import type { BaseLayoutProps } from '../layouts/fundamentals';
+import { reactLayoutRegistry } from '@/registries/layout-registry';
 
 interface LayoutRendererProps {
 	/**
@@ -36,7 +36,7 @@ interface LayoutRendererProps {
 /**
  * Default layout component that simply renders children
  */
-const DefaultLayout: React.FC<SharedLayoutComponentProps> = ({ children }) => {
+const DefaultLayout: React.FC<BaseLayoutProps> = ({ children }) => {
 	return <div className="form-step-content">{children}</div>;
 };
 
@@ -71,7 +71,7 @@ export const LayoutRenderer: React.FC<LayoutRendererProps> = ({ step, stepMeta, 
 	const { component: LayoutComponent, config } = layoutResult;
 
 	// Prepare props for the layout component
-	const layoutProps: SharedLayoutComponentProps = {
+	const layoutProps: BaseLayoutProps = {
 		children,
 		config,
 		step: {

@@ -1,0 +1,51 @@
+.hero-background-layout {
+	@apply min-h-screen flex items-center justify-center relative;
+
+	&__video {
+		@apply absolute inset-0 w-full h-full object-cover -z-10;
+	}
+
+	&__overlay {
+		@apply absolute inset-0 z-0;
+	}
+
+	&__content {
+		@apply relative z-10 w-full px-8 text-center;
+
+		&--sm {
+			@apply max-w-sm;
+		}
+
+		&--md {
+			@apply max-w-md;
+		}
+
+		&--lg {
+			@apply max-w-lg;
+		}
+
+		&--xl {
+			@apply max-w-xl;
+		}
+	}
+
+	&__header {
+		@apply mb-8;
+	}
+
+	&__title {
+		@apply text-4xl font-bold mb-4;
+	}
+
+	&__description {
+		@apply text-lg mb-2;
+	}
+
+	&__step-counter {
+		@apply text-sm opacity-80;
+	}
+
+	&__form {
+		@apply bg-white bg-opacity-95 text-gray-800 p-8 rounded-lg shadow-lg;
+	}
+}

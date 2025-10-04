@@ -1,4 +1,4 @@
-import { registerFieldType } from '@/registry';
+import { registerFieldType } from '@/registries/field-registry';
 import { RadioFieldConfigSchema } from './form-radio.types';
 import { FormRadio } from './form-radio';
 

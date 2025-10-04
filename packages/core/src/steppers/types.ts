@@ -9,12 +9,7 @@ export interface BaseStepperConfig {
  * Registry of specific stepper configurations
  * This can be extended via module augmentation to add typed configurations for specific steppers
  */
-export interface StepperConfigRegistry {
-	// Add default steppers here
-	'progress-bar': ProgressBarStepperConfig;
-	vertical: VerticalStepperConfig;
-	minimalist: MinimalistStepperConfig;
-}
+export interface StepperConfigRegistry {}
 
 /**
  * Configuration for progress bar stepper

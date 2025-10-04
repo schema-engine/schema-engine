@@ -1,7 +1,6 @@
 import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
 import type { FormConfig } from '@json-form-engine/core/schemas';
-import '@json-form-engine/react/components/form/registry';
-import '@json-form-engine/core/actions/debug-registry';
+import '@/lib/form-engine-setup';
 
 export function ContactFormExample() {
 	const config: FormConfig = {

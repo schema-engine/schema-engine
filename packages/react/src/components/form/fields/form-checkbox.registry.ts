@@ -1,4 +1,4 @@
-import { registerFieldType } from '@/registry';
+import { registerFieldType } from '@/registries/field-registry';
 import { CheckboxFieldConfigSchema } from './form-checkbox.types';
 import { FormCheckbox } from './form-checkbox';
 

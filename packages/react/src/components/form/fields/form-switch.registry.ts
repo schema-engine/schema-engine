@@ -1,4 +1,4 @@
-import { registerFieldType } from '@/registry';
+import { registerFieldType } from '@/registries/field-registry';
 import { SwitchFieldConfigSchema } from './form-switch.types';
 import { FormSwitch } from './form-switch';
 

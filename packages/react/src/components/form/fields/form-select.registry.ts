@@ -1,4 +1,4 @@
-import { registerFieldType } from '@/registry';
+import { registerFieldType } from '@/registries/field-registry';
 import { SelectFieldConfigSchema } from './form-select.types';
 import { FormSelect } from './form-select';
 

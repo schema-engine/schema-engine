@@ -1,8 +1,8 @@
 import type React from 'react';
 import type { FormConfig, FormStep } from '@json-form-engine/core';
 import type { FormStepperConfig } from '@json-form-engine/core/schemas/form-config';
-import type { SharedStepperComponentProps, SharedStepInfo, SharedStepperNavigation } from '../steppers/shared-types';
-import { reactStepperRegistry } from '../layout-stepper-registry';
+import type { BaseStepperProps, StepData, StepperNavigation } from '../steppers/types';
+import { reactStepperRegistry } from '@/registries/stepper-registry';
 
 interface StepperRendererProps {
 	/**
@@ -32,7 +32,7 @@ interface StepperRendererProps {
 	/**
 	 * Navigation functions
 	 */
-	navigation: SharedStepperNavigation;
+	navigation: StepperNavigation;
 
 	/**
 	 * Form submission state
@@ -43,7 +43,7 @@ interface StepperRendererProps {
 /**
  * Default stepper component that renders a simple step navigation
  */
-const DefaultStepper: React.FC<SharedStepperComponentProps> = ({ steps, navigation }) => {
+const DefaultStepper: React.FC<BaseStepperProps> = ({ steps, navigation }) => {
 	return (
 		<div className="flex flex-col gap-4">
 			<div className="flex gap-2">
@@ -111,7 +111,7 @@ export const StepperRenderer: React.FC<StepperRendererProps> = ({
 	navigation,
 	isSubmitting = false,
 }) => {
-	const stepInfos: SharedStepInfo[] = steps.map((step: FormStep, index: number) => ({
+	const stepInfos: StepData[] = steps.map((step: FormStep, index: number) => ({
 		id: step.id,
 		title: step.title,
 		description: step.description,
@@ -123,7 +123,7 @@ export const StepperRenderer: React.FC<StepperRendererProps> = ({
 		isVisited: stepStates.visited[index] || false,
 	}));
 
-	const navigationControls: SharedStepperNavigation = {
+	const navigationControls: StepperNavigation = {
 		canGoNext: navigation.canGoNext,
 		canGoPrevious: navigation.canGoPrevious,
 		isFirstStep: currentStepIndex === 0,
@@ -174,7 +174,7 @@ export const StepperRenderer: React.FC<StepperRendererProps> = ({
 
 	const { component: StepperComponent, config } = stepperResult;
 
-	const stepperProps: SharedStepperComponentProps = {
+	const stepperProps: BaseStepperProps = {
 		steps: stepInfos,
 		currentStepIndex,
 		navigation: navigationControls,

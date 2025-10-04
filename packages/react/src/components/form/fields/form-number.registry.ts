@@ -1,4 +1,4 @@
-import { registerFieldType } from '@/registry';
+import { registerFieldType } from '@/registries/field-registry';
 import { NumberFieldConfigSchema } from './form-number.types';
 import { FormNumber } from './form-number';
 

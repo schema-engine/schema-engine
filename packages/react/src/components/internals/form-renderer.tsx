@@ -11,7 +11,7 @@ import { Stepper, useStepper } from '../stepper';
 import { useFormContext } from 'react-hook-form';
 import { logger } from '@/lib/logger';
 import { LayoutRenderer } from './layout-renderer';
-import { reactStepperRegistry } from '../layout-stepper-registry';
+import { reactStepperRegistry } from '@/registries/stepper-registry';
 import type {
 	FieldConfig,
 	FormConfig,

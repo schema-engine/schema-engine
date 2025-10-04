@@ -2,9 +2,7 @@ import { FormEngineLayout } from '@/layouts/form-engine-layout';
 import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
 import type { FormConfig } from '@json-form-engine/core';
 
-// Import registries - now marked as sideEffects in package.json
-import '@json-form-engine/react/components/form/registry';
-import '@json-form-engine/react/components/examples/layout-stepper-examples';
+import '@/lib/form-engine-setup';
 
 // Register layouts directly
 // Simple form configurations to test different layouts

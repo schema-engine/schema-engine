@@ -1,8 +1,7 @@
 import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
 import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
 import type { FormConfig } from '@json-form-engine/core/schemas';
-import '@json-form-engine/react/components/form/registry';
-import '@json-form-engine/core/actions/debug-registry';
+import '@/lib/form-engine-setup';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -117,6 +116,7 @@ const stepperDemoConfig: FormConfig = {
 	],
 
 	stepper: {
+		__stepperId: 'default',
 		variant: 'default',
 		orientation: 'horizontal',
 		position: 'top',
@@ -163,6 +163,7 @@ const verticalStepperConfig: FormConfig = {
 	...stepperDemoConfig,
 	id: 'vertical-stepper-demo',
 	stepper: {
+		__stepperId: 'default',
 		variant: 'default',
 		orientation: 'vertical',
 		position: 'left',
@@ -191,7 +192,8 @@ const minimalStepperConfig: FormConfig = {
 	...stepperDemoConfig,
 	id: 'minimal-stepper-demo',
 	stepper: {
-		variant: 'minimal',
+		__stepperId: 'minimalist',
+		variant: 'dots',
 		orientation: 'horizontal',
 		position: 'top',
 		showStepNumbers: false,

@@ -1,6 +1,6 @@
 import type { FormConfig } from '@json-form-engine/core';
 import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
-import '@json-form-engine/react/components/form/registry';
+import '@json-form-engine/react/registrations';
 
 /**
  * CONCEPT DEMO: Layout and Stepper Registry System

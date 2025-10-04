@@ -1,4 +1,4 @@
-import { registerFieldType } from '@/registry';
+import { registerFieldType } from '@/registries/field-registry';
 import { InputFieldSchema, inputFieldExample } from './form-input.types';
 import { FormInput } from './form-input';
 
