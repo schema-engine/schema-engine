@@ -4,6 +4,8 @@
 
 The FormEngine uses a simple, consistent registration pattern for all components (fields, layouts, steppers). Each component has its own `.registry` file that handles the registration when imported.
 
+Form Engine uses an adapter architecture designed to support multiple form libraries. Currently implemented with React Hook Form, providing automatic integration with all registered components.
+
 ## Quick Start
 
 ### Simple: Register Everything
@@ -32,6 +34,49 @@ import "@json-form-engine/react/components/layouts/split-screen-layout.registry"
 import "@json-form-engine/react/components/steppers/default-stepper.registry";
 import "@json-form-engine/react/components/steppers/progress-bar-stepper.registry";
 ```
+
+## Usage with FormRenderer
+
+After registering components, use the FormRenderer component:
+
+```typescript
+import { FormRenderer } from "@json-form-engine/react/components/internals/form-renderer";
+import "@json-form-engine/react/registrations"; // Register all components
+
+function MyForm() {
+	return <FormRenderer config={formConfig} onSubmit={handleSubmit} />;
+}
+```
+
+The FormRenderer automatically:
+
+- Sets up form library integration (currently React Hook Form)
+- Handles constraint logic evaluation using the adapter's watch mechanism
+- Manages component registration and rendering
+- Provides validation and error handling through the adapter layer
+
+## Advanced: Using FormEngine with Explicit Adapter
+
+For more control over the adapter, you can use FormEngine directly:
+
+```typescript
+import { FormEngine, FormProvider, rhfAdapter } from "@json-form-engine/react";
+import "@json-form-engine/react/registrations";
+
+function MyForm() {
+	return (
+		<FormEngine adapter={rhfAdapter}>
+			<FormProvider config={formConfig} onSubmit={handleSubmit} />
+		</FormEngine>
+	);
+}
+```
+
+This approach allows you to:
+
+- Use custom adapters for other form libraries
+- Pass a specific adapter configuration
+- Have explicit control over which adapter is used
 
 ## Available Components
 

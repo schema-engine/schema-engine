@@ -114,7 +114,7 @@ async function build(): Promise<void> {
 	  format: "esm",
 	  splitting: !watchMode,
 	  sourcemap: "external",
-	  external: ["react", "react-dom"],
+	  external: ["react", "react-dom", "@json-form-engine/core"],
 	  plugins: [postcssPlugin],
 	  define: {
 		"process.env.NODE_ENV": watchMode ? '"development"' : '"production"',

@@ -1,10 +1,7 @@
 import type React from 'react';
-import {
-	FormEngineFormProvider,
-	type FormProviderProps,
-	type FormEngineProviderProps,
-	FormEngineProvider,
-} from '../provider';
+import { type FormEngineProps, FormEngine } from '../adapter-provider';
+import { FormProvider } from '../form-provider';
+import type { FormProviderProps } from '../adapters/types';
 import { FormElement } from './field-renderer';
 import { useFormGridStyles } from '@/hooks';
 import { Stepper, useStepper } from '../stepper';
@@ -409,7 +406,7 @@ export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
 	showSubmitButton?: boolean;
 	submitButtonText?: string;
 	submitButtonClassName?: string;
-	registry?: FormEngineProviderProps['registry'];
+	registry?: FormEngineProps['registry'];
 }
 
 /**
@@ -432,8 +429,8 @@ export function FormRenderer({
 	const isMultiStep = isMultiStepForm(config);
 
 	return (
-		<FormEngineProvider registry={registry}>
-			<FormEngineFormProvider
+		<FormEngine registry={registry}>
+			<FormProvider
 				config={config}
 				defaultValues={defaultValues}
 				onSubmit={onSubmit}
@@ -450,7 +447,7 @@ export function FormRenderer({
 						/>
 					)}
 				</div>
-			</FormEngineFormProvider>
-		</FormEngineProvider>
+			</FormProvider>
+		</FormEngine>
 	);
 }

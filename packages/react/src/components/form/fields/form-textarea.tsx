@@ -1,11 +1,11 @@
 import { Textarea } from '@/shadcn/ui/textarea';
 import { FieldGroup } from '@/components/form/field-group';
-import { useControlledFormElement, combineHandlers } from '@/hooks';
+import { useAdapterControlledFormElement } from '@/hooks/use-controlled-form-element';
 import type { TextareaFieldProps } from './form-textarea.types';
 
 export function FormTextarea({ config, onChange: propsOnChange, onBlur: propsOnBlur }: TextareaFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
-		useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles, combineHandlers } =
+		useAdapterControlledFormElement(config);
 
 	return (
 		<div style={containerStyles}>
@@ -20,7 +20,7 @@ export function FormTextarea({ config, onChange: propsOnChange, onBlur: propsOnB
 				<Textarea
 					{...fieldProps}
 					{...config}
-					value={value || ''}
+					value={(value as string) || ''}
 					onChange={(e) => combineHandlers(onChange, propsOnChange)(e.target.value)}
 					onBlur={combineHandlers(onBlur, propsOnBlur)}
 				/>

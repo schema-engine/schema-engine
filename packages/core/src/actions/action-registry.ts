@@ -152,6 +152,4 @@ export const actionRegistry = new ActionRegistry();
  * });
  * ```
  */
-export function registerAction(def: RegisteredAction): void {
-	actionRegistry.register(def);
-}
+export const registerAction = actionRegistry.register.bind(actionRegistry);
