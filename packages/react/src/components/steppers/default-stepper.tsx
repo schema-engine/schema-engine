@@ -1,188 +1,254 @@
+import type React from 'react';
 import { cn } from '@/shadcn/lib/utils';
-import { Button } from '@/shadcn/ui/button';
 import type { StepperComponent } from './types';
 import type { BaseStepperConfig } from '@json-form-engine/core';
+import { StepperProvider, useStepperContext } from './context';
+import { useEffect, useRef } from 'react';
 
 export interface DefaultStepperConfig extends BaseStepperConfig {
 	__stepperId: 'default';
-	orientation?: 'horizontal' | 'vertical';
-	variant?: 'default' | 'dots' | 'pills';
 	showStepNumbers?: boolean;
 	showStepTitles?: boolean;
-	allowStepJumping?: boolean;
-	primaryColor?: string;
-	completedColor?: string;
+	showStepDescriptions?: boolean;
+}
+
+interface DefaultStepperComposition {
+	Progress: typeof DefaultStepperProgress;
+	Content: typeof DefaultStepperContent;
+	Navigation: typeof DefaultStepperNavigation;
 }
 
 /**
- * Default Stepper
- * Versatile stepper with horizontal/vertical layouts and multiple styles
+ * Default Stepper Root Component
+ * Provides context for all child components
  */
-export const DefaultStepper: StepperComponent<DefaultStepperConfig> = ({
+const DefaultStepperRoot: StepperComponent<DefaultStepperConfig> = ({
 	steps,
 	currentStepIndex,
 	navigation,
 	config,
 	form,
 	children,
+	className,
 }) => {
-	const {
-		orientation = 'horizontal',
-		variant = 'default',
-		showStepNumbers = true,
-		showStepTitles = true,
-		allowStepJumping = false,
-	} = config || {};
+	return (
+		<StepperProvider
+			value={{
+				steps,
+				currentStepIndex,
+				navigation,
+				config,
+				form,
+				children,
+				className,
+			}}
+		>
+			<div className={cn('default-stepper', className)}>{children}</div>
+		</StepperProvider>
+	);
+};
 
-	const isHorizontal = orientation === 'horizontal';
-	const isVertical = orientation === 'vertical';
+/**
+ * Default Stepper Progress Component
+ * Displays steps with connecting lines and clickable step indicators
+ */
+function DefaultStepperProgress({ className }: { className?: string }) {
+	const { steps, currentStepIndex, navigation, config } = useStepperContext<DefaultStepperConfig>();
+	const { showStepNumbers = true, showStepTitles = true, showStepDescriptions = false } = config || {};
+	const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
+	const containerRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		const currentStepElement = stepRefs.current[currentStepIndex];
+		if (currentStepElement && containerRef.current) {
+			currentStepElement.scrollIntoView({
+				behavior: 'smooth',
+				block: 'nearest',
+				inline: 'start',
+			});
+		}
+	}, [currentStepIndex]);
 
 	return (
-		<div className="stepper">
-			<div
-				className={cn(
-					'stepper__header',
-					isHorizontal && 'stepper__header--horizontal',
-					isVertical && 'stepper__header--vertical',
-				)}
-			>
-				{steps.map((step, index) => {
-					const canClick = allowStepJumping && (step.isVisited || index <= currentStepIndex);
-
-					return (
+		<div ref={containerRef} className={cn('default-stepper__container', className)}>
+			<div className="default-stepper__stepper-wrapper">
+				<div className="default-stepper__steps">
+					{steps.map((step, index: number) => (
 						<div
 							key={step.id}
-							className={cn(
-								'stepper__step',
-								isHorizontal && 'stepper__step--horizontal',
-								isVertical && 'stepper__step--vertical',
-								isVertical && step.isActive && 'stepper__step--active',
-								isVertical && step.isCompleted && !step.isActive && 'stepper__step--completed',
-								canClick && 'stepper__step--clickable',
-							)}
-							onClick={canClick ? () => navigation.goToStep(index) : undefined}
-							onKeyDown={
-								canClick
-									? (e) => {
-											if (e.key === 'Enter' || e.key === ' ') {
-												e.preventDefault();
-												navigation.goToStep(index);
-											}
-										}
-									: undefined
-							}
-							role={canClick ? 'button' : undefined}
-							tabIndex={canClick ? 0 : undefined}
+							ref={(el) => {
+								stepRefs.current[index] = el;
+							}}
+							className="default-stepper__step"
 						>
-							<div
-								className={cn(
-									'stepper__indicator',
-									variant === 'dots' && 'stepper__indicator--dots',
-									step.isCompleted && 'stepper__indicator--completed',
-									step.isActive && !step.isCompleted && 'stepper__indicator--active',
-									!step.isActive && !step.isCompleted && 'stepper__indicator--inactive',
-								)}
+							<button
+								type="button"
+								onClick={() => navigation.goToStep(index)}
+								disabled={!step.isVisited && index > currentStepIndex}
+								className={`default-stepper__step-content ${
+									!step.isVisited && index > currentStepIndex
+										? 'default-stepper__step--disabled'
+										: 'default-stepper__step--clickable'
+								}`}
 							>
-								{variant !== 'dots' && step.isCompleted ? (
-									<svg
-										className="w-4 h-4"
-										fill="currentColor"
-										viewBox="0 0 20 20"
-										role="img"
-										aria-label="Completed"
-									>
-										<path
-											fillRule="evenodd"
-											d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-											clipRule="evenodd"
-										/>
-									</svg>
-								) : showStepNumbers && variant !== 'dots' ? (
-									<span className="text-sm font-medium">{index + 1}</span>
-								) : null}
-							</div>
-
-							{showStepTitles && variant !== 'dots' && step.title && (
 								<div
-									className={cn(
-										isHorizontal && 'stepper__title--horizontal',
-										isVertical && 'stepper__title--vertical',
-									)}
+									className={`default-stepper__circle ${
+										step.isCompleted
+											? 'default-stepper__circle--completed'
+											: step.isActive
+												? 'default-stepper__circle--active'
+												: 'default-stepper__circle--inactive'
+									}`}
 								>
-									<span
-										className={cn(
-											'stepper__title',
-											step.isActive ? 'stepper__title--active' : 'stepper__title--inactive',
-										)}
-									>
-										{step.title}
-									</span>
-									{step.description && isVertical && (
-										<p className="stepper__description">{step.description}</p>
+									{step.isCompleted ? (
+										<svg
+											className="h-5 w-5"
+											fill="currentColor"
+											viewBox="0 0 20 20"
+											role="img"
+											aria-label="Completed"
+										>
+											<path
+												fillRule="evenodd"
+												d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+												clipRule="evenodd"
+											/>
+										</svg>
+									) : showStepNumbers ? (
+										<span>{index + 1}</span>
+									) : null}
+								</div>
+
+								<div className="default-stepper__step-info">
+									{showStepTitles && step.title && (
+										<h3
+											className={`default-stepper__title ${
+												step.isActive
+													? 'default-stepper__title--active'
+													: step.isCompleted
+														? 'default-stepper__title--completed'
+														: 'default-stepper__title--inactive'
+											}`}
+										>
+											{step.title}
+										</h3>
+									)}
+									{showStepDescriptions && step.description && (
+										<p
+											className={`default-stepper__description ${
+												step.isActive
+													? 'default-stepper__description--active'
+													: step.isCompleted
+														? 'default-stepper__description--completed'
+														: 'default-stepper__description--inactive'
+											}`}
+										>
+											{step.description}
+										</p>
 									)}
 								</div>
-							)}
+							</button>
 
-							{/* Connecting lines */}
 							{index < steps.length - 1 && (
-								<>
-									{isVertical && (
-										<div
-											className={cn(
-												'stepper__connector stepper__connector--vertical',
-												step.isCompleted && 'stepper__connector--completed',
-											)}
-										/>
-									)}
-									{isHorizontal && (
-										<div
-											className={cn(
-												'stepper__connector stepper__connector--horizontal',
-												step.isCompleted && 'stepper__connector--completed',
-											)}
-										/>
-									)}
-								</>
+								<div className="default-stepper__connector">
+									<div
+										className={`default-stepper__connector-line ${
+											step.isCompleted
+												? 'default-stepper__connector-line--completed'
+												: 'default-stepper__connector-line--inactive'
+										}`}
+									/>
+								</div>
 							)}
 						</div>
-					);
-				})}
-			</div>
-
-			<div className="stepper__content">{children}</div>
-
-			<div className="stepper__navigation">
-				<div>
-					{!navigation.isFirstStep && (
-						<Button
-							type="button"
-							variant="outline"
-							onClick={navigation.goToPreviousStep}
-							disabled={!navigation.canGoPrevious}
-						>
-							Previous
-						</Button>
-					)}
-				</div>
-
-				<div className="stepper__navigation-buttons">
-					<div className="text-sm text-gray-500">
-						Step {currentStepIndex + 1} of {steps.length}
-					</div>
-				</div>
-
-				<div>
-					{navigation.isLastStep ? (
-						<Button type="submit" disabled={form.isSubmitting}>
-							{form.isSubmitting ? 'Submitting...' : 'Submit'}
-						</Button>
-					) : (
-						<Button type="button" onClick={navigation.goToNextStep} disabled={!navigation.canGoNext}>
-							Next
-						</Button>
-					)}
+					))}
 				</div>
 			</div>
 		</div>
+	);
+}
+
+/**
+ * Default Stepper Content
+ * Wraps the form content for each step
+ */
+function DefaultStepperContent({ children, className }: { children: React.ReactNode; className?: string }) {
+	const { steps, currentStepIndex } = useStepperContext<DefaultStepperConfig>();
+	const currentStep = steps[currentStepIndex];
+
+	return (
+		<div className={cn('default-stepper__content', className)}>
+			<div className="default-stepper__step-header">
+				<h2 className="default-stepper__step-title">{currentStep?.title || `Step ${currentStepIndex + 1}`}</h2>
+				{currentStep?.description && (
+					<p className="default-stepper__step-description">{currentStep.description}</p>
+				)}
+			</div>
+			{children}
+		</div>
+	);
+}
+
+/**
+ * Default Stepper Navigation
+ * Provides Previous/Next/Submit buttons with step counter
+ */
+function DefaultStepperNavigation({ className }: { className?: string }) {
+	const { steps, currentStepIndex, navigation, form } = useStepperContext();
+
+	return (
+		<div className={cn('default-stepper__navigation', className)}>
+			<button
+				type="button"
+				onClick={() => navigation.goToPreviousStep()}
+				disabled={navigation.isFirstStep}
+				className={`default-stepper__nav-button default-stepper__nav-button--secondary ${
+					navigation.isFirstStep ? 'default-stepper__nav-button--disabled' : ''
+				}`}
+			>
+				Previous
+			</button>
+
+			<div className="default-stepper__step-counter">
+				Step {currentStepIndex + 1} of {steps.length}
+			</div>
+
+			{navigation.isLastStep ? (
+				<button type="submit" className="default-stepper__nav-button default-stepper__nav-button--primary">
+					{form.isSubmitting ? 'Submitting...' : 'Submit'}
+				</button>
+			) : (
+				<button
+					type="button"
+					onClick={() => navigation.goToNextStep()}
+					disabled={!navigation.canGoNext}
+					className={`default-stepper__nav-button default-stepper__nav-button--primary ${
+						!navigation.canGoNext ? 'default-stepper__nav-button--disabled' : ''
+					}`}
+				>
+					Next
+				</button>
+			)}
+		</div>
+	);
+}
+
+export const DefaultStepper = DefaultStepperRoot as StepperComponent<DefaultStepperConfig> & DefaultStepperComposition;
+
+DefaultStepper.Progress = DefaultStepperProgress;
+DefaultStepper.Content = DefaultStepperContent;
+DefaultStepper.Navigation = DefaultStepperNavigation;
+
+/**
+ * Default Stepper Composed
+ * Pre-built composition with default layout (used by registry)
+ */
+export const DefaultStepperComposed: StepperComponent<DefaultStepperConfig> = (props) => {
+	return (
+		<DefaultStepper {...props}>
+			<DefaultStepper.Progress />
+			<DefaultStepper.Content>{props.children}</DefaultStepper.Content>
+			<DefaultStepper.Navigation />
+		</DefaultStepper>
 	);
 };

@@ -1,19 +1,16 @@
-import { DefaultStepper, type DefaultStepperConfig } from './default-stepper';
-import { registerStepper } from '@/registries';
+import { registerStepper } from '@/registries/stepper-registry';
+import { DefaultStepperComposed } from './default-stepper';
+import type { DefaultStepperConfig } from './default-stepper';
 
 registerStepper({
 	stepperId: 'default',
 	name: 'Default Stepper',
-	description: 'Standard stepper with horizontal or vertical layout',
-	component: DefaultStepper,
+	description: 'Default horizontal stepper with step indicators and connecting lines',
+	component: DefaultStepperComposed,
 	defaultConfig: {
-		orientation: 'horizontal',
-		variant: 'default',
 		showStepNumbers: true,
 		showStepTitles: true,
-		allowStepJumping: false,
-		primaryColor: '#3b82f6',
-		completedColor: '#10b981',
+		showStepDescriptions: false,
 	},
 });
 

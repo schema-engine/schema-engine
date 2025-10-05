@@ -28,6 +28,7 @@ export interface BaseLayoutProps {
 	config: Record<string, unknown>;
 	step: LayoutStepData;
 	form: LayoutFormData;
+	className?: string;
 }
 
 /**

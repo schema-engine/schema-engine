@@ -1,15 +1,16 @@
 import { registerStepper } from '@/registries/stepper-registry';
-import { MinimalistStepper } from './minimalist-stepper';
+import { MinimalistStepperComposed } from './minimalist-stepper';
 import type { MinimalistStepperConfig } from './minimalist-stepper';
 
 registerStepper({
 	stepperId: 'minimalist',
 	name: 'Minimalist Stepper',
-	description: 'Simple text-based navigation',
-	component: MinimalistStepper,
+	description: 'Simple text-based navigation with compound pattern support',
+	component: MinimalistStepperComposed,
 	defaultConfig: {
-		showProgress: true,
-		primaryColor: '#3b82f6',
+		showLabels: true,
+		variant: 'lines',
+		size: 'medium',
 	},
 });
 

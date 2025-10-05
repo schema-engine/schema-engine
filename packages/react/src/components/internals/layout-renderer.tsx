@@ -1,7 +1,7 @@
 import type React from 'react';
 import type { FormStep } from '@json-form-engine/core';
 import type { StepLayoutConfig } from '@json-form-engine/core/schemas/form-config';
-import type { BaseLayoutProps } from '../layouts/fundamentals';
+import type { BaseLayoutProps } from '../layouts/types';
 import { reactLayoutRegistry } from '@/registries/layout-registry';
 
 interface LayoutRendererProps {

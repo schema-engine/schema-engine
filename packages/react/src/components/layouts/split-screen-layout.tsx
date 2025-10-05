@@ -1,25 +1,20 @@
 import type React from 'react';
-import type { BaseLayoutProps } from './fundamentals';
+import { cn } from '@/shadcn/lib/utils';
+import type { BaseLayoutProps } from './types';
 
 interface SplitScreenLayoutConfig {
 	sideContent?: string;
 	sidePlacement?: 'left' | 'right';
 	sideWidth?: 'narrow' | 'normal' | 'wide';
-	backgroundColor?: string;
 }
 
 /**
  * Split Screen Layout
  * Displays the form content alongside additional information or media
  */
-export const SplitScreenLayout: React.FC<BaseLayoutProps> = ({ children, config, step }) => {
+export const SplitScreenLayout: React.FC<BaseLayoutProps> = ({ children, config, step, className }) => {
 	const splitConfig = config as SplitScreenLayoutConfig | undefined;
-	const {
-		sideContent = 'Welcome!',
-		sidePlacement = 'left',
-		sideWidth = 'normal',
-		backgroundColor = '#f8f9fa',
-	} = splitConfig || {};
+	const { sideContent = 'Welcome!', sidePlacement = 'left', sideWidth = 'normal' } = splitConfig || {};
 
 	const isLeftSide = sidePlacement === 'left';
 
@@ -31,9 +26,9 @@ export const SplitScreenLayout: React.FC<BaseLayoutProps> = ({ children, config,
 		}[sideWidth] || 'split-screen-layout__side--normal';
 
 	return (
-		<div className="split-screen-layout">
+		<div className={cn('split-screen-layout', className)}>
 			{isLeftSide && (
-				<div className={`split-screen-layout__side ${widthClass}`} style={{ backgroundColor }}>
+				<div className={cn('split-screen-layout__side', widthClass)}>
 					<h2 className="split-screen-layout__step-counter">
 						Step {step.index + 1} of {step.total}
 					</h2>
@@ -46,7 +41,7 @@ export const SplitScreenLayout: React.FC<BaseLayoutProps> = ({ children, config,
 			<div className="split-screen-layout__main">{children}</div>
 
 			{!isLeftSide && (
-				<div className={`split-screen-layout__side ${widthClass}`} style={{ backgroundColor }}>
+				<div className={cn('split-screen-layout__side', widthClass)}>
 					<h2 className="split-screen-layout__step-counter">
 						Step {step.index + 1} of {step.total}
 					</h2>

@@ -12,40 +12,6 @@ export interface BaseStepperConfig {
 export interface StepperConfigRegistry {}
 
 /**
- * Configuration for progress bar stepper
- */
-export interface ProgressBarStepperConfig extends BaseStepperConfig {
-	__stepperId: 'progress-bar';
-	showLabels?: boolean;
-	variant?: 'default' | 'compact' | 'minimal';
-	showProgress?: boolean;
-	animate?: boolean;
-}
-
-/**
- * Configuration for vertical stepper
- */
-export interface VerticalStepperConfig extends BaseStepperConfig {
-	__stepperId: 'vertical';
-	showLabels?: boolean;
-	showDescription?: boolean;
-	variant?: 'default' | 'compact';
-	position?: 'left' | 'right';
-	width?: string;
-}
-
-/**
- * Configuration for minimalist stepper
- */
-export interface MinimalistStepperConfig extends BaseStepperConfig {
-	__stepperId: 'minimalist';
-	showLabels?: boolean;
-	variant?: 'dots' | 'lines' | 'numbers';
-	allowStepJumping?: boolean;
-	size?: 'small' | 'medium' | 'large';
-}
-
-/**
  * Union type of all stepper configurations
  * This provides type safety while allowing extensions
  */

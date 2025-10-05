@@ -383,11 +383,6 @@ function StepperFormContent({ config }: { config: FormConfig }) {
 
 	return (
 		<div className="min-h-[400px]">
-			<div className="mb-6">
-				<h3 className="text-xl font-semibold text-gray-900">{currentStep_data.title}</h3>
-				{currentStep_data.description && <p className="mt-2 text-gray-600">{currentStep_data.description}</p>}
-			</div>
-
 			<div style={gridStyles}>
 				{stepFields.map((field: FieldConfig) => (
 					<FormElement key={field.id} config={field} className={field.className} style={field.style} />

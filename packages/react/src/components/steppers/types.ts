@@ -52,6 +52,7 @@ export interface BaseStepperProps {
 	form: StepperFormContext;
 	children?: React.ReactNode;
 	config?: Record<string, unknown>;
+	className?: string;
 }
 
 /**
@@ -59,3 +60,10 @@ export interface BaseStepperProps {
  * The signature that all stepper components must follow
  */
 export type StepperComponent<T = Record<string, unknown>> = React.FC<BaseStepperProps & { config?: T }>;
+
+/**
+ * Base stepper configuration that will be stored in the form configuration
+ */
+export interface BaseStepperConfig {
+	__stepperId: string;
+}

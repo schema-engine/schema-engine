@@ -1,27 +1,20 @@
 import type React from 'react';
-import type { BaseLayoutProps } from './fundamentals';
+import { cn } from '@/shadcn/lib/utils';
+import type { BaseLayoutProps } from './types';
 
 interface HeroBackgroundLayoutConfig {
 	backgroundImage?: string;
-	backgroundColor?: string;
 	backgroundVideo?: string;
 	contentWidth?: 'sm' | 'md' | 'lg' | 'xl';
-	textColor?: string;
 }
 
 /**
  * Hero Background Layout
  * Displays form content over a background image or video
  */
-export const HeroBackgroundLayout: React.FC<BaseLayoutProps> = ({ children, config, step }) => {
+export const HeroBackgroundLayout: React.FC<BaseLayoutProps> = ({ children, config, step, className }) => {
 	const heroConfig = config as HeroBackgroundLayoutConfig | undefined;
-	const {
-		backgroundImage,
-		backgroundColor = 'rgba(0, 0, 0, 0.5)',
-		backgroundVideo,
-		contentWidth = 'md',
-		textColor = 'white',
-	} = heroConfig || {};
+	const { backgroundImage, backgroundVideo, contentWidth = 'md' } = heroConfig || {};
 
 	const contentWidthClass =
 		{
@@ -33,9 +26,8 @@ export const HeroBackgroundLayout: React.FC<BaseLayoutProps> = ({ children, conf
 
 	return (
 		<div
-			className="hero-background-layout"
+			className={cn('hero-background-layout', className)}
 			style={{
-				color: textColor,
 				...(backgroundImage && {
 					backgroundImage: `url(${backgroundImage})`,
 					backgroundSize: 'cover',
@@ -49,7 +41,7 @@ export const HeroBackgroundLayout: React.FC<BaseLayoutProps> = ({ children, conf
 				</video>
 			)}
 
-			<div className="hero-background-layout__overlay" style={{ backgroundColor }} />
+			<div className="hero-background-layout__overlay" />
 
 			<div className={`hero-background-layout__content ${contentWidthClass}`}>
 				<div className="hero-background-layout__header">

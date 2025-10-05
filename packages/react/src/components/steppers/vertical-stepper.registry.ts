@@ -1,17 +1,15 @@
 import { registerStepper } from '@/registries/stepper-registry';
-import { VerticalStepsStepper } from './vertical-stepper';
 import type { VerticalStepsStepperConfig } from './vertical-stepper';
+import { VerticalStepsStepperComposed } from './vertical-stepper';
 
 registerStepper({
 	stepperId: 'vertical',
 	name: 'Vertical Steps Stepper',
 	description: 'Show steps as a vertical timeline',
-	component: VerticalStepsStepper,
+	component: VerticalStepsStepperComposed,
 	defaultConfig: {
+		__stepperId: 'vertical',
 		showConnectors: true,
-		primaryColor: '#3b82f6',
-		completedColor: '#10b981',
-		backgroundColor: '#e5e7eb',
 	},
 });
 

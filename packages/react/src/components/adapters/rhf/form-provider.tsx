@@ -4,7 +4,7 @@ import type { FormActionConfig } from '@json-form-engine/core/schemas';
 import type { ActionExecutionContext } from '@json-form-engine/core';
 import type { FormProviderProps } from '../types';
 import { useActionExecutor } from '@/hooks/use-action-executor';
-import { useFormValidationResolver } from '@/hooks/use-form-validation-resolver';
+import { useFormValidationResolver } from './hooks/use-form-validation-resolver';
 import { FormInstanceContext, type FormInstanceContextValue } from '@/components/provider';
 
 /**

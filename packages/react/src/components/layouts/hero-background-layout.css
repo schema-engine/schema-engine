@@ -1,5 +1,13 @@
+:root {
+	--hero-background-overlay: rgba(0, 0, 0, 0.5);
+	--hero-background-text: theme("colors.white");
+	--hero-background-form-bg: theme("colors.white");
+	--hero-background-form-text: theme("colors.gray.800");
+}
+
 .hero-background-layout {
 	@apply min-h-screen flex items-center justify-center relative;
+	color: var(--hero-background-text);
 
 	&__video {
 		@apply absolute inset-0 w-full h-full object-cover -z-10;
@@ -7,6 +15,7 @@
 
 	&__overlay {
 		@apply absolute inset-0 z-0;
+		background-color: var(--hero-background-overlay);
 	}
 
 	&__content {
@@ -46,6 +55,8 @@
 	}
 
 	&__form {
-		@apply bg-white bg-opacity-95 text-gray-800 p-8 rounded-lg shadow-lg;
+		@apply bg-opacity-95 p-8 rounded-lg shadow-lg;
+		background-color: var(--hero-background-form-bg);
+		color: var(--hero-background-form-text);
 	}
 }
