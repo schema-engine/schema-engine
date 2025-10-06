@@ -27,7 +27,7 @@ export type SwitchFieldConfig = z.infer<typeof SwitchFieldConfigSchema>;
 /**
  * Global registration for extensible field system
  */
-declare global {
+declare module '@json-form-engine/core/schemas/field-config' {
 	namespace FormEngine {
 		interface FieldConfigRegistry {
 			switch: SwitchFieldConfig;

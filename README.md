@@ -191,14 +191,24 @@ Actions are fully configurable and support custom plugins, making it easy to imp
 
 ## Documentation
 
+### Getting Started
+
 - [Introduction](./apps/www/src/pages/docs/introduction.mdx)
 - [Installation](./apps/www/src/pages/docs/installation.mdx)
 - [Quick Start](./apps/www/src/pages/docs/quick-start.mdx)
+
+### Core Concepts
+
+- [Type System & Augmentation](./packages/core/TYPE_SYSTEM.md) - **Learn how to create custom field types**
 - [Actions](./apps/www/src/pages/docs/actions/how-it-works.mdx)
 - [Components](./apps/www/src/pages/docs/components/how-it-works.mdx)
-- [Examples](./apps/www/src/pages/docs/examples/basic-form.mdx)
 - [Hooks](./apps/www/src/pages/docs/hooks/index.mdx)
 - [Layouts](./apps/www/src/pages/docs/layout/how-it-works.mdx)
+
+### Package Documentation
+
+- [@json-form-engine/core README](./packages/core/README.md)
+- [@json-form-engine/react REGISTRATION](./packages/react/REGISTRATION.md)
 
 See the [`/docs`](./apps/www/src/pages/docs/) folder for more.
 

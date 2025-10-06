@@ -68,7 +68,7 @@ export const inputFieldExample: InputFieldConfig = {
 /**
  * Register input field type in the global registry
  */
-declare global {
+declare module '@json-form-engine/core/schemas/field-config' {
 	namespace FormEngine {
 		interface FieldConfigRegistry {
 			input: InputFieldConfig;

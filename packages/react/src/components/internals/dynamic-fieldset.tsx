@@ -1,6 +1,6 @@
 import type React from 'react';
 import { FormElement } from './field-renderer';
-import type { FieldConfig, ConstraintLogic } from '@json-form-engine/core/schemas';
+import type { ConstraintLogic } from '@json-form-engine/core/schemas';
 import { useConstraintLogic } from '@/hooks';
 
 interface DynamicFieldsetProps {
@@ -8,7 +8,7 @@ interface DynamicFieldsetProps {
 	label?: string;
 	description?: string;
 	constraints: ConstraintLogic[];
-	elements: FieldConfig[];
+	elements: FormEngine.FieldConfig[];
 	className?: string;
 	style?: React.CSSProperties;
 }

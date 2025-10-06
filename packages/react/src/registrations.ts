@@ -10,13 +10,21 @@
  * ```
  */
 
+import './components/form/fields/form-checkbox.types';
 import './components/form/fields/form-checkbox.registry';
+import './components/form/fields/form-input.types';
 import './components/form/fields/form-input.registry';
+import './components/form/fields/form-number.types';
 import './components/form/fields/form-number.registry';
+import './components/form/fields/form-radio.types';
 import './components/form/fields/form-radio.registry';
+import './components/form/fields/form-select.types';
 import './components/form/fields/form-select.registry';
+import './components/form/fields/form-textarea.types';
 import './components/form/fields/form-textarea.registry';
+import './components/form/fields/form-switch.types';
 import './components/form/fields/form-switch.registry';
+import './components/form/fields/form-array-elements.types';
 import './components/form/fields/form-array-elements.registry';
 
 import './components/layouts/card-layout.registry';
@@ -42,26 +50,6 @@ import type { ArrayElementsConfig } from './components/form/fields/form-array-el
  * without explicit imports (e.g., FormEngine.FieldConfig, FormEngine.FieldRegistration).
  */
 declare global {
-	namespace FormEngine {
-		interface FieldConfigRegistry {
-			input: InputFieldConfig;
-			textarea: TextareaFieldConfig;
-			checkbox: CheckboxFieldConfig;
-			number: NumberFieldConfig;
-			radio: RadioFieldConfig;
-			select: SelectFieldConfig;
-			switch: SwitchFieldConfig;
-			arrayElements: ArrayElementsConfig;
-		}
-	}
-}
-
-/**
- * Module augmentation for external consumers.
- * This allows users of the library to extend the FieldConfigRegistry
- * with their own custom field types when using @json-form-engine/react.
- */
-declare module '@json-form-engine/react' {
 	namespace FormEngine {
 		interface FieldConfigRegistry {
 			input: InputFieldConfig;

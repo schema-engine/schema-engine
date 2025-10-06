@@ -1,7 +1,6 @@
 import { z } from 'zod';
-import { FormActionConfigSchema, type FormActionConfig } from '../actions/types';
-import type { FieldConfig } from './field-config';
-import { GridLayoutConfigSchema, type ConstraintLogic } from './base-field';
+import { FormActionConfigSchema } from '../actions/types';
+import { GridLayoutConfigSchema } from './base-field';
 import { ValidationRuleSchema } from './validation/';
 import type { StepperConfig } from '../steppers/types';
 
@@ -109,28 +108,22 @@ export type StepNavigationButton = z.infer<typeof StepNavigationButtonSchema>;
 export type StepNavigationConfig = z.infer<typeof StepNavigationConfigSchema>;
 
 /**
- * Form step configuration type
- * We define this with proper FieldConfig typing to avoid circular references
+ * Form step configuration type with properly typed elements array.
+ *
+ * The Zod schema uses z.any() for elements to avoid circular references,
+ * but we override it here to provide strict type checking for field configurations.
  */
-export interface FormStep {
-	id: string;
-	title: string;
-	description?: string;
-	icon?: string;
-	layout?: StepLayoutConfig; // Step-specific layout configuration
-	elements: FieldConfig[];
-	rules?: any;
-	constraints?: ConstraintLogic[];
-	className?: string;
-	style?: Record<string, any>;
-	onStepEnter?: FormActionConfig[];
-	onStepLeave?: FormActionConfig[];
-	onStepValidate?: FormActionConfig[];
-	actions?: FormActionConfig[];
-}
+export type FormStep = Omit<z.infer<typeof FormStepSchema>, 'elements'> & {
+	elements: FormEngine.FieldConfig[];
+};
 
-export type FormConfig = z.infer<typeof FormConfigSchema> & {
-	stepper?: StepperConfig; // Use our improved stepper configuration
+/**
+ * Form configuration type with strict typing for steps.
+ * Includes additional properties not in the Zod schema for runtime handlers.
+ */
+export type FormConfig = Omit<z.infer<typeof FormConfigSchema>, 'steps'> & {
+	steps: FormStep[];
+	stepper?: StepperConfig;
 	onSubmit?: (data: any) => void | Promise<void>;
 	onChange?: (data: any) => void;
 };

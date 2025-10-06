@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { useFormField } from '@/components/adapters/context';
 import { useFieldGridStyles } from './grid-hooks';
-import type { FieldConfig } from '@json-form-engine/core/schemas';
 
 /**
  * Helper function to check if a field is required based on validation rules
@@ -31,7 +30,7 @@ function combineHandlers<T = any>(adapterHandler?: (value: T) => void, propsHand
  * Adapter-aware hook that provides all the field functionality for form fields
  * This replaces the RHF-specific useControlledFormElement and works with any adapter
  */
-export function useAdapterControlledFormElement(config: FieldConfig) {
+export function useAdapterControlledFormElement(config: FormEngine.FieldConfig) {
 	const isRequired = isFieldRequired(config.rules);
 	const { value, error, onChange, onBlur, name } = useFormField(config);
 	const gridStyles = useFieldGridStyles(config.grid);

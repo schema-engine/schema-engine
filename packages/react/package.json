@@ -106,6 +106,9 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./types": {
+      "types": "./dist/types.d.ts"
+    },
     "./registrations": {
       "types": "./dist/registrations.d.ts",
       "import": "./dist/registrations.js"

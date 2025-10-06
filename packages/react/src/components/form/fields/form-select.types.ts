@@ -40,7 +40,7 @@ export type SelectFieldConfig = z.infer<typeof SelectFieldConfigSchema>;
 /**
  * Register select field type in the global registry
  */
-declare global {
+declare module '@json-form-engine/core/schemas/field-config' {
 	namespace FormEngine {
 		interface FieldConfigRegistry {
 			select: SelectFieldConfig;

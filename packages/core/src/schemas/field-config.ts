@@ -1,6 +1,6 @@
 /**
  * Extensible field configuration system
- * Uses module augmentation to allow library users to add their own field types
+ * Uses global namespace augmentation to allow library users to add their own field types
  */
 
 import type { BaseField } from './base-field';
@@ -27,7 +27,14 @@ declare global {
 		 * ```
 		 */
 		interface FieldConfigRegistry {
-			// Core field types will be added by their respective type files
+			/**
+			 * This is a placeholder to ensure the interface is not empty.
+			 * It is needed in order to do not get compiler errors when no fields are registered yet.
+			 * Do not use this in your code.
+			 */
+			__TYPE_DEF_INIT__: {
+				componentId: '__TYPE_DEF_INIT__';
+			} & BaseField;
 		}
 
 		/**
@@ -45,21 +52,6 @@ declare global {
 		 * Get field configuration by component ID
 		 */
 		type GetFieldConfig<T extends ComponentId> = Extract<FieldConfig, { componentId: T }>;
-	}
-}
-
-declare global {
-	namespace FormEngine {
-		interface FieldConfigRegistry {
-			/**
-			 * This is a placeholder to ensure the interface is not empty.
-			 * It is needed in order to do not get compiler errors when no fields are registered yet.
-			 * Do not use this in your code.
-			 */
-			__TYPE_DEF_INIT__: {
-				componentId: '__TYPE_DEF_INIT__';
-			} & BaseField;
-		}
 	}
 }
 
@@ -85,7 +77,3 @@ export function isFieldConfig(value: unknown): value is FormEngine.FieldConfig {
 export function getFieldType(config: FormEngine.FieldConfig): FormEngine.ComponentId {
 	return config.componentId;
 }
-
-export type FieldConfig = FormEngine.FieldConfig;
-export type ComponentId = FormEngine.ComponentId;
-export type GetFieldConfig<T extends ComponentId> = FormEngine.GetFieldConfig<T>;

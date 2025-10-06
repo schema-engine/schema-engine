@@ -1,5 +1,5 @@
 import type React from 'react';
-import { type FormEngineProps, FormEngine } from '../adapter-provider';
+import { type FormEngineProps, FormEngine as FormEngineComponent } from '../adapter-provider';
 import { FormProvider } from '../form-provider';
 import type { FormProviderProps } from '../adapters/types';
 import { FormElement } from './field-renderer';
@@ -9,13 +9,7 @@ import { useFormContext } from 'react-hook-form';
 import { logger } from '@/lib/logger';
 import { LayoutRenderer } from './layout-renderer';
 import { reactStepperRegistry } from '@/registries/stepper-registry';
-import type {
-	FieldConfig,
-	FormConfig,
-	FormStep,
-	StepNavigationConfig,
-	FormStepperConfig,
-} from '@json-form-engine/core/schemas';
+import type { FormConfig, FormStep, StepNavigationConfig, FormStepperConfig } from '@json-form-engine/core/schemas';
 
 /**
  * Helper function to create default step navigation config
@@ -33,7 +27,6 @@ function createStepNavigationConfig(stepperConfig?: FormStepperConfig): StepNavi
 		};
 	}
 
-	// Extract navigation-relevant properties, provide defaults for required fields
 	return {
 		showStepNumbers: true,
 		showStepTitles: true,
@@ -42,7 +35,6 @@ function createStepNavigationConfig(stepperConfig?: FormStepperConfig): StepNavi
 		position: 'top',
 		allowStepJumping: false,
 		validateOnNext: true,
-		// Pass through any other properties that might be relevant
 		...stepperConfig,
 	};
 }
@@ -94,7 +86,7 @@ interface SharedStepperComponentProps {
 /**
  * Helper to get fields for a specific step - now fields are directly in steps
  */
-function getFieldsForStep(step: FormStep): FieldConfig[] {
+function getFieldsForStep(step: FormStep): FormEngine.FieldConfig[] {
 	return step.elements || [];
 }
 
@@ -384,7 +376,7 @@ function StepperFormContent({ config }: { config: FormConfig }) {
 	return (
 		<div className="min-h-[400px]">
 			<div style={gridStyles}>
-				{stepFields.map((field: FieldConfig) => (
+				{stepFields.map((field: FormEngine.FieldConfig) => (
 					<FormElement key={field.id} config={field} className={field.className} style={field.style} />
 				))}
 			</div>
@@ -424,7 +416,7 @@ export function FormRenderer({
 	const isMultiStep = isMultiStepForm(config);
 
 	return (
-		<FormEngine registry={registry}>
+		<FormEngineComponent registry={registry}>
 			<FormProvider
 				config={config}
 				defaultValues={defaultValues}
@@ -443,6 +435,6 @@ export function FormRenderer({
 					)}
 				</div>
 			</FormProvider>
-		</FormEngine>
+		</FormEngineComponent>
 	);
 }

@@ -138,7 +138,7 @@ export interface ArrayElementsConfig extends Omit<z.infer<typeof BaseFieldSchema
 /**
  * Extend the global FormEngine interface
  */
-declare global {
+declare module '@json-form-engine/core/schemas/field-config' {
 	namespace FormEngine {
 		interface FieldConfigRegistry {
 			arrayElements: ArrayElementsConfig;

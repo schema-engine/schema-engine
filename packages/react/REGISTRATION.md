@@ -6,6 +6,16 @@ The FormEngine uses a simple, consistent registration pattern for all components
 
 Form Engine uses an adapter architecture designed to support multiple form libraries. Currently implemented with React Hook Form, providing automatic integration with all registered components.
 
+## Type System
+
+This package extends `@json-form-engine/core` with React-specific field types. All field types are automatically registered in the global `FormEngine.FieldConfigRegistry` namespace, providing full TypeScript support.
+
+**📖 For detailed information about the type system and creating custom field types, see:**
+
+- [@json-form-engine/core/TYPE_SYSTEM.md](../core/TYPE_SYSTEM.md)
+
+The type registration happens automatically when you import the package or its types.
+
 ## Quick Start
 
 ### Simple: Register Everything

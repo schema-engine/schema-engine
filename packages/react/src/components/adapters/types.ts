@@ -1,4 +1,4 @@
-import type { FieldConfig, FormActionConfig, FormConfig } from '@json-form-engine/core/schemas';
+import type { FormActionConfig, FormConfig } from '@json-form-engine/core/schemas';
 import type { ReactNode } from 'react';
 
 export interface FormContextValue<TFormData = Record<string, unknown>> {
@@ -37,7 +37,7 @@ export interface FormProviderProps<TFormData = Record<string, unknown>> {
 
 export interface FormAdapter<TFormData = Record<string, unknown>> {
 	useFormContext: () => FormContextValue<TFormData>;
-	useFormField: <TFieldValue = unknown>(config: FieldConfig) => FormFieldValue<TFieldValue>;
+	useFormField: <TFieldValue = unknown>(config: FormEngine.FieldConfig) => FormFieldValue<TFieldValue>;
 	useWatchField: <TWatchValue = unknown>(name: string | string[]) => TWatchValue;
 	FormProvider: React.ComponentType<FormProviderProps<TFormData>>;
 	validateField: (name: string) => Promise<boolean>;
