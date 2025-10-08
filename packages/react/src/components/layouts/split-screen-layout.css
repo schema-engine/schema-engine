@@ -26,7 +26,19 @@
 	}
 
 	&__main {
-		@apply flex-1 p-8 overflow-auto;
+		@apply flex-1 p-8 overflow-auto flex flex-col;
+
+		&--top {
+			@apply justify-start;
+		}
+
+		&--center {
+			@apply justify-center;
+		}
+
+		&--bottom {
+			@apply justify-end;
+		}
 	}
 
 	&__step-counter {

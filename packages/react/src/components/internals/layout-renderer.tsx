@@ -35,6 +35,7 @@ interface LayoutRendererProps {
 
 /**
  * Default layout component that simply renders children
+ * Supports both single-step and multi-step forms
  */
 const DefaultLayout: React.FC<BaseLayoutProps> = ({ children }) => {
 	return <div className="form-step-content">{children}</div>;

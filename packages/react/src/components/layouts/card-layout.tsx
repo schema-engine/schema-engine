@@ -1,6 +1,5 @@
-import type React from 'react';
 import { cn } from '@/shadcn/lib/utils';
-import type { BaseLayoutProps } from './types';
+import type { LayoutComponent } from './types';
 
 interface CardLayoutConfig {
 	maxWidth?: 'sm' | 'md' | 'lg' | 'xl';
@@ -11,10 +10,10 @@ interface CardLayoutConfig {
 /**
  * Card Layout
  * Displays form content in a centered card
+ * Supports both single-step and multi-step forms
  */
-export const CardLayout: React.FC<BaseLayoutProps> = ({ children, config, step, className }) => {
-	const cardConfig = config as CardLayoutConfig | undefined;
-	const { maxWidth = 'md', padding = 'md', shadowSize = 'md' } = cardConfig || {};
+export const CardLayout: LayoutComponent<CardLayoutConfig> = ({ children, config, step, form, className }) => {
+	const { maxWidth = 'md', padding = 'md', shadowSize = 'md' } = config || {};
 
 	const maxWidthClass =
 		{
@@ -39,16 +38,23 @@ export const CardLayout: React.FC<BaseLayoutProps> = ({ children, config, step, 
 			xl: 'card-layout__shadow--xl',
 		}[shadowSize] || 'card-layout__shadow--md';
 
+	const title = step?.title || form.title;
+	const description = step?.description || form.description;
+
 	return (
 		<div className={cn('card-layout', className)}>
 			<div className={cn('card-layout__card', maxWidthClass, shadowClass)}>
-				<div className={`card-layout__header ${paddingClass}`}>
-					<h2 className="card-layout__title">{step.title}</h2>
-					{step.description && <p className="card-layout__description">{step.description}</p>}
-					<small className="card-layout__step-counter">
-						Step {step.index + 1} of {step.total}
-					</small>
-				</div>
+				{(title || description || step) && (
+					<div className={`card-layout__header ${paddingClass}`}>
+						{title && <h2 className="card-layout__title">{title}</h2>}
+						{description && <p className="card-layout__description">{description}</p>}
+						{step && (
+							<small className="card-layout__step-counter">
+								Step {step.index + 1} of {step.total}
+							</small>
+						)}
+					</div>
+				)}
 
 				<div className={`card-layout__content ${paddingClass}`}>{children}</div>
 			</div>

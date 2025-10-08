@@ -1,6 +1,5 @@
-import type React from 'react';
 import { cn } from '@/shadcn/lib/utils';
-import type { BaseLayoutProps } from './types';
+import type { LayoutComponent } from './types';
 
 interface HeroBackgroundLayoutConfig {
 	backgroundImage?: string;
@@ -11,10 +10,16 @@ interface HeroBackgroundLayoutConfig {
 /**
  * Hero Background Layout
  * Displays form content over a background image or video
+ * Supports both single-step and multi-step forms
  */
-export const HeroBackgroundLayout: React.FC<BaseLayoutProps> = ({ children, config, step, className }) => {
-	const heroConfig = config as HeroBackgroundLayoutConfig | undefined;
-	const { backgroundImage, backgroundVideo, contentWidth = 'md' } = heroConfig || {};
+export const HeroBackgroundLayout: LayoutComponent<HeroBackgroundLayoutConfig> = ({
+	children,
+	config,
+	step,
+	form,
+	className,
+}) => {
+	const { backgroundImage, backgroundVideo, contentWidth = 'md' } = config || {};
 
 	const contentWidthClass =
 		{
@@ -23,6 +28,9 @@ export const HeroBackgroundLayout: React.FC<BaseLayoutProps> = ({ children, conf
 			lg: 'hero-background-layout__content--lg',
 			xl: 'hero-background-layout__content--xl',
 		}[contentWidth] || 'hero-background-layout__content--md';
+
+	const title = step?.title || form.title;
+	const description = step?.description || form.description;
 
 	return (
 		<div
@@ -44,13 +52,17 @@ export const HeroBackgroundLayout: React.FC<BaseLayoutProps> = ({ children, conf
 			<div className="hero-background-layout__overlay" />
 
 			<div className={`hero-background-layout__content ${contentWidthClass}`}>
-				<div className="hero-background-layout__header">
-					<h1 className="hero-background-layout__title">{step.title}</h1>
-					{step.description && <p className="hero-background-layout__description">{step.description}</p>}
-					<p className="hero-background-layout__step-counter">
-						Step {step.index + 1} of {step.total}
-					</p>
-				</div>
+				{(title || description || step) && (
+					<div className="hero-background-layout__header">
+						{title && <h1 className="hero-background-layout__title">{title}</h1>}
+						{description && <p className="hero-background-layout__description">{description}</p>}
+						{step && (
+							<p className="hero-background-layout__step-counter">
+								Step {step.index + 1} of {step.total}
+							</p>
+						)}
+					</div>
+				)}
 
 				<div className="hero-background-layout__form">{children}</div>
 			</div>

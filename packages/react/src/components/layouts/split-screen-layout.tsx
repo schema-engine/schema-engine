@@ -1,20 +1,31 @@
-import type React from 'react';
 import { cn } from '@/shadcn/lib/utils';
-import type { BaseLayoutProps } from './types';
+import type { LayoutComponent } from './types';
 
 interface SplitScreenLayoutConfig {
 	sideContent?: string;
 	sidePlacement?: 'left' | 'right';
 	sideWidth?: 'narrow' | 'normal' | 'wide';
+	contentAlignment?: 'top' | 'center' | 'bottom';
 }
 
 /**
  * Split Screen Layout
  * Displays the form content alongside additional information or media
+ * Supports both single-step and multi-step forms
  */
-export const SplitScreenLayout: React.FC<BaseLayoutProps> = ({ children, config, step, className }) => {
-	const splitConfig = config as SplitScreenLayoutConfig | undefined;
-	const { sideContent = 'Welcome!', sidePlacement = 'left', sideWidth = 'normal' } = splitConfig || {};
+export const SplitScreenLayout: LayoutComponent<SplitScreenLayoutConfig> = ({
+	children,
+	config,
+	step,
+	form,
+	className,
+}) => {
+	const {
+		sideContent = 'Welcome!',
+		sidePlacement = 'left',
+		sideWidth = 'normal',
+		contentAlignment = 'top',
+	} = config || {};
 
 	const isLeftSide = sidePlacement === 'left';
 
@@ -25,31 +36,34 @@ export const SplitScreenLayout: React.FC<BaseLayoutProps> = ({ children, config,
 			wide: 'split-screen-layout__side--wide',
 		}[sideWidth] || 'split-screen-layout__side--normal';
 
+	const alignmentClass =
+		{
+			top: 'split-screen-layout__main--top',
+			center: 'split-screen-layout__main--center',
+			bottom: 'split-screen-layout__main--bottom',
+		}[contentAlignment] || 'split-screen-layout__main--top';
+
+	const title = step?.title || form.title;
+	const description = step?.description || form.description;
+
+	const sidePanel = (
+		<div className={cn('split-screen-layout__side', widthClass)}>
+			{step && (
+				<h2 className="split-screen-layout__step-counter">
+					Step {step.index + 1} of {step.total}
+				</h2>
+			)}
+			{title && <h3 className="split-screen-layout__step-title">{title}</h3>}
+			{description && <p className="split-screen-layout__step-description">{description}</p>}
+			<div className="split-screen-layout__side-content">{sideContent}</div>
+		</div>
+	);
+
 	return (
 		<div className={cn('split-screen-layout', className)}>
-			{isLeftSide && (
-				<div className={cn('split-screen-layout__side', widthClass)}>
-					<h2 className="split-screen-layout__step-counter">
-						Step {step.index + 1} of {step.total}
-					</h2>
-					{step.title && <h3 className="split-screen-layout__step-title">{step.title}</h3>}
-					{step.description && <p className="split-screen-layout__step-description">{step.description}</p>}
-					<div className="split-screen-layout__side-content">{sideContent}</div>
-				</div>
-			)}
-
-			<div className="split-screen-layout__main">{children}</div>
-
-			{!isLeftSide && (
-				<div className={cn('split-screen-layout__side', widthClass)}>
-					<h2 className="split-screen-layout__step-counter">
-						Step {step.index + 1} of {step.total}
-					</h2>
-					{step.title && <h3 className="split-screen-layout__step-title">{step.title}</h3>}
-					{step.description && <p className="split-screen-layout__step-description">{step.description}</p>}
-					<div className="split-screen-layout__side-content">{sideContent}</div>
-				</div>
-			)}
+			{isLeftSide && sidePanel}
+			<div className={cn('split-screen-layout__main', alignmentClass)}>{children}</div>
+			{!isLeftSide && sidePanel}
 		</div>
 	);
 };

@@ -25,14 +25,22 @@
     "watch:lib": "bun run ./build.ts --watch",
     "clean": "rm -rf ./dist",
     "test:all": "bun test",
-    "lint-staged": "lint-staged"
+    "lint-staged": "lint-staged",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "devDependencies": {
-    "@types/bun": "latest",
     "@happy-dom/global-registrator": "^18.0.1",
+    "@storybook/addon-docs": "^9.1.10",
+    "@storybook/react-vite": "^9.1.10",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.3.0",
+    "@types/bun": "latest",
+    "autoprefixer": "^10.4.21",
+    "postcss-import": "^16.1.1",
+    "storybook": "^9.1.10",
+    "tailwindcss": "^3",
     "tsc-alias": "^1.8.16"
   },
   "peerDependencies": {

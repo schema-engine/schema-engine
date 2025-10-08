@@ -55,7 +55,8 @@ async function discoverSourceFiles(): Promise<string[]> {
   const rootSrcGlob = new Bun.Glob("src/*.{ts,tsx,css}");
   const rootSrcFiles = await Array.fromAsync(rootSrcGlob.scan({ cwd: "." }));
   
-  return [...new Set([...indexFiles, ...directoryFiles, ...rootSrcFiles])];
+  const allFiles = [...new Set([...indexFiles, ...directoryFiles, ...rootSrcFiles])];
+  return allFiles.filter(file => !file.includes("/stories/"));
 }
 
 function ensureDirectoryExists(dirPath: string, forceCleanup = false): void {

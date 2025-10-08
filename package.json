@@ -23,6 +23,7 @@
     "watch:dev:www": "bun run --elide-lines 0 --filter @json-form-engine/www watch:dev",
     "hot:dev:www": "bun run --elide-lines 0 --filter @json-form-engine/www hot:dev",
     "dev:www": "bun run --elide-lines 0 --filter @json-form-engine/www dev",
+    "dev:react-storybook": "bun run --elide-lines 0 --filter @json-form-engine/react storybook",
     "build:www": "bun run --filter @json-form-engine/www build",
     "start:www": "bun run --filter @json-form-engine/www start",
     "test:all": "bun run --filter '*' test:all",

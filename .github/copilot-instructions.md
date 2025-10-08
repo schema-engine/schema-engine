@@ -16,6 +16,10 @@
 ## Imports
 
 - Use absolute imports with `@/` for project files.
+- Avoid barrel files; import directly from the source file.
+- Group imports: external libraries first, then internal modules, then styles.
+- Do not use wildcard imports (e.g., `import * as ...`) unless absolutely necessary.
+- Do not include unused imports; remove them.
 
 ## TypeScript
 
