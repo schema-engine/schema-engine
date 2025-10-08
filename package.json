@@ -3,16 +3,16 @@
   "module": "index.ts",
   "type": "module",
   "devDependencies": {
+    "@biomejs/biome": "^2.2.4",
     "@changesets/changelog-github": "^0.5.1",
     "@changesets/cli": "^2.29.7",
-    "@types/bun": "latest",
-    "@biomejs/biome": "^2.2.4",
-    "husky": "^9.0.11",
-    "lint-staged": "^15.2.7",
     "@happy-dom/global-registrator": "^18.0.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.8.0",
-    "@testing-library/react": "^16.3.0"
+    "@testing-library/react": "^16.3.0",
+    "@types/bun": "latest",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.7"
   },
   "peerDependencies": {
     "typescript": "^5"
