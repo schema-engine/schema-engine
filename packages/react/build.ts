@@ -7,6 +7,10 @@ const watchMode = process.argv.includes("--watch");
 const outputDir = "dist";
 const sourceDir = "src";
 
+const SOURCE_FILE_EXTENSIONS = ["ts", "tsx", "css"];
+const EXCLUDED_CSS_FILES = ["styles.css"];
+const EXCLUDED_DIRECTORIES = ["/stories/"];
+
 function getFileAsBuffer(filePath: string): Buffer {
   try {
 	if (!existsSync(filePath)) {
@@ -44,19 +48,20 @@ const postcssPlugin: BunPlugin = {
 async function discoverSourceFiles(): Promise<string[]> {
   const entryDirs = ["src/components", "src/hooks", "src/registries", "src/types"];
   const indexFiles = ["src/index.ts"];
+  const extensionPattern = `{${SOURCE_FILE_EXTENSIONS.join(",")}}`;
 
   const directoryFiles = await Promise.all(
 	entryDirs.map(async (dir) => {
-	  const glob = new Bun.Glob(`${dir}/**/*.{ts,tsx,css}`);
+	  const glob = new Bun.Glob(`${dir}/**/*.${extensionPattern}`);
 	  return Array.fromAsync(glob.scan({ cwd: "." }));
 	})
   ).then((files) => files.flat());
 
-  const rootSrcGlob = new Bun.Glob("src/*.{ts,tsx,css}");
+  const rootSrcGlob = new Bun.Glob(`src/*.${extensionPattern}`);
   const rootSrcFiles = await Array.fromAsync(rootSrcGlob.scan({ cwd: "." }));
   
   const allFiles = [...new Set([...indexFiles, ...directoryFiles, ...rootSrcFiles])];
-  return allFiles.filter(file => !file.includes("/stories/"));
+  return allFiles.filter(file => !EXCLUDED_DIRECTORIES.some(excluded => file.includes(excluded)));
 }
 
 function ensureDirectoryExists(dirPath: string, forceCleanup = false): void {
@@ -80,7 +85,7 @@ async function generateGlobalCSS(): Promise<void> {
   ];
 
   const sortedFiles = cssFiles
-    .filter(file => !file.endsWith("global.css") && !file.endsWith("styles.css"))
+    .filter(file => !EXCLUDED_CSS_FILES.some(excluded => file.endsWith(excluded)))
     .sort();
 
   if (sortedFiles.length > 0) {

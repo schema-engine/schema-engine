@@ -8,9 +8,7 @@ registerStepper({
 	description: 'Simple text-based navigation with compound pattern support',
 	component: MinimalistStepperComposed,
 	defaultConfig: {
-		showLabels: true,
-		variant: 'lines',
-		size: 'medium',
+		showProgress: true,
 	},
 });
 
