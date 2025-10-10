@@ -11,7 +11,7 @@ const minimalistStepperDemo: FormConfig = {
 	title: 'User Registration',
 	description: 'Complete your profile setup in 3 simple steps',
 	stepper: {
-		__stepperId: 'minimalist',
+		stepperId: 'minimalist',
 		showProgress: true,
 	},
 	steps: [
@@ -145,7 +145,7 @@ const verticalStepperDemo: FormConfig = {
 	title: 'Event Registration',
 	description: 'Register for our upcoming conference',
 	stepper: {
-		__stepperId: 'vertical',
+		stepperId: 'vertical',
 		showDescriptions: true,
 		allowClickNavigation: true,
 		connectorStyle: 'line',
@@ -263,7 +263,7 @@ const defaultStepperDemo: FormConfig = {
 	title: 'Project Setup Wizard',
 	description: 'Configure your new project step by step',
 	stepper: {
-		__stepperId: 'default',
+		stepperId: 'default',
 		showStepNumbers: true,
 		showStepTitles: true,
 		showStepDescriptions: false,

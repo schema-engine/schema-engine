@@ -18,7 +18,7 @@ const cardLayoutDemo: FormConfig = {
 			title: 'Card Layout Test',
 
 			layout: {
-				__layoutId: 'card',
+				layoutId: 'card',
 				padding: 'large',
 				shadow: true,
 				borderRadius: 'medium',
@@ -58,7 +58,7 @@ const splitScreenLayoutDemo: FormConfig = {
 			title: 'Split Screen Test',
 
 			layout: {
-				__layoutId: 'split-screen',
+				layoutId: 'split-screen',
 				leftWidth: '40%',
 				rightWidth: '60%',
 				gap: '2rem',
@@ -106,7 +106,7 @@ const heroLayoutDemo: FormConfig = {
 			title: 'Hero Layout Test',
 
 			layout: {
-				__layoutId: 'hero-background',
+				layoutId: 'hero-background',
 				backgroundStyle: 'gradient',
 				textAlign: 'center',
 				maxWidth: '500px',
@@ -190,7 +190,7 @@ export default function LayoutsPage() {
 						<div className="bg-white rounded-lg shadow-lg p-8">
 							<div className="mb-6">
 								<h2 className="text-2xl font-bold text-gray-900 mb-2">2. Card Layout</h2>
-								<p className="text-gray-600">Form with card-style layout using __layoutId: 'card'</p>
+								<p className="text-gray-600">Form with card-style layout using layoutId: 'card'</p>
 							</div>
 							<FormRenderer config={cardLayoutDemo} />
 						</div>
@@ -199,7 +199,7 @@ export default function LayoutsPage() {
 							<div className="mb-6">
 								<h2 className="text-2xl font-bold text-gray-900 mb-2">3. Split Screen Layout</h2>
 								<p className="text-gray-600">
-									Form with split screen layout using __layoutId: 'split-screen'
+									Form with split screen layout using layoutId: 'split-screen'
 								</p>
 							</div>
 							<FormRenderer config={splitScreenLayoutDemo} />
@@ -209,7 +209,7 @@ export default function LayoutsPage() {
 							<div className="mb-6">
 								<h2 className="text-2xl font-bold text-gray-900 mb-2">4. Hero Background Layout</h2>
 								<p className="text-gray-600">
-									Form with hero-style layout using __layoutId: 'hero-background'
+									Form with hero-style layout using layoutId: 'hero-background'
 								</p>
 							</div>
 							<FormRenderer config={heroLayoutDemo} />

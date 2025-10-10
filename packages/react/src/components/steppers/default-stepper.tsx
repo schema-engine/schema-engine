@@ -1,48 +1,26 @@
 import type React from 'react';
 import { cn } from '@/shadcn/lib/utils';
-import type { StepperComponent } from './types';
 import type { BaseStepperConfig } from '@json-form-engine/core';
 import { StepperProvider, useStepperContext } from './context';
 import { useEffect, useRef } from 'react';
+import { useStepperContext as useGlobalStepperContext } from '@/contexts/stepper-context';
 
 export interface DefaultStepperConfig extends BaseStepperConfig {
-	__stepperId: 'default';
+	stepperId: 'default';
 	showStepNumbers?: boolean;
 	showStepTitles?: boolean;
 	showStepDescriptions?: boolean;
 }
 
-interface DefaultStepperComposition {
-	Progress: typeof DefaultStepperProgress;
-	Content: typeof DefaultStepperContent;
-	Navigation: typeof DefaultStepperNavigation;
-}
-
 /**
  * Default Stepper Root Component
- * Provides context for all child components
+ * Loads data from global context and provides it to child components via local context
  */
-const DefaultStepperRoot: StepperComponent<DefaultStepperConfig> = ({
-	steps,
-	currentStepIndex,
-	navigation,
-	config,
-	form,
-	children,
-	className,
-}) => {
+const DefaultStepperRoot: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => {
+	const globalContext = useGlobalStepperContext();
+
 	return (
-		<StepperProvider
-			value={{
-				steps,
-				currentStepIndex,
-				navigation,
-				config,
-				form,
-				children,
-				className,
-			}}
-		>
+		<StepperProvider value={globalContext}>
 			<div className={cn('default-stepper', className)}>{children}</div>
 		</StepperProvider>
 	);
@@ -233,22 +211,37 @@ function DefaultStepperNavigation({ className }: { className?: string }) {
 	);
 }
 
-export const DefaultStepper = DefaultStepperRoot as StepperComponent<DefaultStepperConfig> & DefaultStepperComposition;
-
-DefaultStepper.Progress = DefaultStepperProgress;
-DefaultStepper.Content = DefaultStepperContent;
-DefaultStepper.Navigation = DefaultStepperNavigation;
+export const DefaultStepper = Object.assign(DefaultStepperRoot, {
+	Progress: DefaultStepperProgress,
+	Content: DefaultStepperContent,
+	Navigation: DefaultStepperNavigation,
+});
 
 /**
  * Default Stepper Composed
  * Pre-built composition with default layout (used by registry)
+ * Loads data from global context (provided by StepperRenderer)
  */
-export const DefaultStepperComposed: StepperComponent<DefaultStepperConfig> = (props) => {
+export const DefaultStepperComposed: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
 	return (
-		<DefaultStepper {...props}>
+		<DefaultStepper>
 			<DefaultStepper.Progress />
-			<DefaultStepper.Content>{props.children}</DefaultStepper.Content>
+			<DefaultStepper.Content>{children}</DefaultStepper.Content>
 			<DefaultStepper.Navigation />
 		</DefaultStepper>
 	);
+};
+
+import type { ReactStepperRegistration } from '@/registries/builder-registry';
+import { DefaultStepperConfigSchema } from './default-stepper.types';
+
+export const DefaultStepperRegistration: ReactStepperRegistration = {
+	stepperId: 'default',
+	component: DefaultStepperComposed,
+	schema: DefaultStepperConfigSchema,
+	metadata: {
+		name: 'Default Stepper',
+		description: 'Horizontal stepper with progress indicators and navigation buttons',
+		icon: 'steps',
+	},
 };

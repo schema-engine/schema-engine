@@ -1,4 +1,4 @@
-export { FormInput } from './form-input';
+export { FormInput, InputElement } from './form-input';
 export { FormTextarea } from './form-textarea';
 export { FormSelect } from './form-select';
 export { FormCheckbox } from './form-checkbox';
@@ -15,12 +15,3 @@ export type { RadioFieldConfig, RadioOption } from './form-radio.types';
 export type { NumberFieldConfig } from './form-number.types';
 export type { SwitchFieldConfig } from './form-switch.types';
 export type { ArrayElementsConfig } from './form-array-elements.types';
-
-import './form-array-elements.registry';
-import './form-checkbox.registry';
-import './form-input.registry';
-import './form-number.registry';
-import './form-radio.registry';
-import './form-select.registry';
-import './form-switch.registry';
-import './form-textarea.registry';

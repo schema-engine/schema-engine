@@ -17,4 +17,4 @@ export {
 	type FormProviderProps,
 } from './adapters';
 export { FormProvider } from './form-provider';
-export { FormEngine, type FormEngineProps } from './adapter-provider';
+export { FormEngineProvider, type FormEngineProviderProps } from './adapter-provider';

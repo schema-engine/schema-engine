@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { multiStepRegistrationForm } from '../shared/sample-forms';
-import '../../components/steppers/vertical-stepper.css';
+import { FormTemplates } from '../shared/form-builder';
+import { StoryWrapper } from '../shared/story-wrapper';
+
+const multiStepRegistrationForm = FormTemplates.registrationForm();
 
 const meta = {
 	title: 'Steppers/VerticalStepper',
@@ -9,6 +11,13 @@ const meta = {
 	parameters: {
 		layout: 'padded',
 	},
+	decorators: [
+		(Story) => (
+			<StoryWrapper>
+				<Story />
+			</StoryWrapper>
+		),
+	],
 	tags: ['autodocs'],
 	argTypes: {
 		config: {
@@ -26,7 +35,7 @@ export const Default: Story = {
 		config: {
 			...multiStepRegistrationForm,
 			stepper: {
-				__stepperId: 'vertical',
+				stepperId: 'vertical',
 				showConnectors: true,
 			},
 		},
@@ -38,7 +47,7 @@ export const WithConnectors: Story = {
 		config: {
 			...multiStepRegistrationForm,
 			stepper: {
-				__stepperId: 'vertical',
+				stepperId: 'vertical',
 				showConnectors: true,
 			},
 		},
@@ -50,7 +59,7 @@ export const WithoutConnectors: Story = {
 		config: {
 			...multiStepRegistrationForm,
 			stepper: {
-				__stepperId: 'vertical',
+				stepperId: 'vertical',
 				showConnectors: false,
 			},
 		},
@@ -64,7 +73,7 @@ export const LongForm: Story = {
 			title: 'Extended Registration Form',
 			description: 'A longer multi-step form with vertical navigation',
 			stepper: {
-				__stepperId: 'vertical',
+				stepperId: 'vertical',
 				showConnectors: true,
 			},
 		},

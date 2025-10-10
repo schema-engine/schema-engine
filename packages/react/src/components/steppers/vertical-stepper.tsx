@@ -1,44 +1,27 @@
 import type React from 'react';
 import { cn } from '@/shadcn/lib/utils';
-import type { StepperComponent } from './types';
 import type { BaseStepperConfig } from '@json-form-engine/core';
 import { StepperProvider, useStepperContext } from './context';
+import { useStepperContext as useGlobalStepperContext } from '@/contexts/stepper-context';
 
 export interface VerticalStepsStepperConfig extends BaseStepperConfig {
-	__stepperId: 'vertical';
+	stepperId: 'vertical';
 	showConnectors?: boolean;
-}
-
-interface VerticalStepsStepperComposition {
-	Sidebar: typeof VerticalStepsSidebar;
-	Content: typeof VerticalStepsContent;
 }
 
 /**
  * Vertical Steps Stepper Root Component
  * Shows steps as a vertical timeline with content on the right
+ * Loads data from global context and provides it to child components via local context
  */
-const VerticalStepsStepperRoot: StepperComponent<VerticalStepsStepperConfig> = ({
-	steps,
-	currentStepIndex,
-	navigation,
-	config,
-	form,
+const VerticalStepsStepperRoot: React.FC<{ children: React.ReactNode; className?: string }> = ({
 	children,
 	className,
 }) => {
+	const globalContext = useGlobalStepperContext();
+
 	return (
-		<StepperProvider
-			value={{
-				steps,
-				currentStepIndex,
-				navigation,
-				config,
-				form,
-				children,
-				className,
-			}}
-		>
+		<StepperProvider value={globalContext}>
 			<div className={cn('vertical-stepper', className)}>{children}</div>
 		</StepperProvider>
 	);
@@ -190,21 +173,35 @@ function VerticalStepsContent({ children, className }: { children: React.ReactNo
 	);
 }
 
-export const VerticalStepsStepper = VerticalStepsStepperRoot as StepperComponent<VerticalStepsStepperConfig> &
-	VerticalStepsStepperComposition;
-
-VerticalStepsStepper.Sidebar = VerticalStepsSidebar;
-VerticalStepsStepper.Content = VerticalStepsContent;
+export const VerticalStepsStepper = Object.assign(VerticalStepsStepperRoot, {
+	Sidebar: VerticalStepsSidebar,
+	Content: VerticalStepsContent,
+});
 
 /**
  * Vertical Steps Stepper Composed
  * Pre-built composition with default layout (used by registry)
+ * Loads data from global context (provided by StepperRenderer)
  */
-export const VerticalStepsStepperComposed: StepperComponent<VerticalStepsStepperConfig> = (props) => {
+export const VerticalStepsStepperComposed: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
 	return (
-		<VerticalStepsStepper {...props}>
+		<VerticalStepsStepper>
 			<VerticalStepsStepper.Sidebar />
-			<VerticalStepsStepper.Content>{props.children}</VerticalStepsStepper.Content>
+			<VerticalStepsStepper.Content>{children}</VerticalStepsStepper.Content>
 		</VerticalStepsStepper>
 	);
+};
+
+import type { ReactStepperRegistration } from '@/registries/builder-registry';
+import { VerticalStepperConfigSchema } from './vertical-stepper.types';
+
+export const VerticalStepperRegistration: ReactStepperRegistration = {
+	stepperId: 'vertical',
+	component: VerticalStepsStepperComposed,
+	schema: VerticalStepperConfigSchema,
+	metadata: {
+		name: 'Vertical Stepper',
+		description: 'Vertical sidebar stepper with step indicators and content area',
+		icon: 'layout-sidebar',
+	},
 };

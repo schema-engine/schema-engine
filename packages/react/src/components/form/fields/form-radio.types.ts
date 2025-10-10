@@ -34,14 +34,3 @@ export const RadioFieldConfigSchema = BaseFieldSchema.extend({
 export type RadioOption = z.infer<typeof RadioOptionSchema>;
 export type RadioFieldExtension = z.infer<typeof RadioFieldExtensionSchema>;
 export type RadioFieldConfig = z.infer<typeof RadioFieldConfigSchema>;
-
-/**
- * Global registration for extensible field system
- */
-declare module '@json-form-engine/core/schemas/field-config' {
-	namespace FormEngine {
-		interface FieldConfigRegistry {
-			radio: RadioFieldConfig;
-		}
-	}
-}

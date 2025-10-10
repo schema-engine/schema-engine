@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { multiStepRegistrationForm } from '../shared/sample-forms';
-import '../../components/steppers/default-stepper.css';
+import { FormTemplates } from '../shared/form-builder';
+import { StoryWrapper } from '../shared/story-wrapper';
+
+const multiStepRegistrationForm = FormTemplates.registrationForm();
 
 const meta = {
 	title: 'Steppers/DefaultStepper',
@@ -9,6 +11,13 @@ const meta = {
 	parameters: {
 		layout: 'padded',
 	},
+	decorators: [
+		(Story) => (
+			<StoryWrapper>
+				<Story />
+			</StoryWrapper>
+		),
+	],
 	tags: ['autodocs'],
 	argTypes: {
 		config: {
@@ -26,7 +35,7 @@ export const Default: Story = {
 		config: {
 			...multiStepRegistrationForm,
 			stepper: {
-				__stepperId: 'default',
+				stepperId: 'default',
 				showStepNumbers: true,
 				showStepTitles: true,
 				showStepDescriptions: false,
@@ -40,7 +49,7 @@ export const WithDescriptions: Story = {
 		config: {
 			...multiStepRegistrationForm,
 			stepper: {
-				__stepperId: 'default',
+				stepperId: 'default',
 				showStepNumbers: true,
 				showStepTitles: true,
 				showStepDescriptions: true,
@@ -54,7 +63,7 @@ export const NumbersOnly: Story = {
 		config: {
 			...multiStepRegistrationForm,
 			stepper: {
-				__stepperId: 'default',
+				stepperId: 'default',
 				showStepNumbers: true,
 				showStepTitles: false,
 				showStepDescriptions: false,
@@ -68,7 +77,7 @@ export const TitlesOnly: Story = {
 		config: {
 			...multiStepRegistrationForm,
 			stepper: {
-				__stepperId: 'default',
+				stepperId: 'default',
 				showStepNumbers: false,
 				showStepTitles: true,
 				showStepDescriptions: false,
@@ -82,7 +91,7 @@ export const MinimalInfo: Story = {
 		config: {
 			...multiStepRegistrationForm,
 			stepper: {
-				__stepperId: 'default',
+				stepperId: 'default',
 				showStepNumbers: false,
 				showStepTitles: false,
 				showStepDescriptions: false,
@@ -96,7 +105,7 @@ export const FullInfo: Story = {
 		config: {
 			...multiStepRegistrationForm,
 			stepper: {
-				__stepperId: 'default',
+				stepperId: 'default',
 				showStepNumbers: true,
 				showStepTitles: true,
 				showStepDescriptions: true,

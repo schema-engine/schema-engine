@@ -63,14 +63,3 @@ export const textareaFieldExample: TextareaFieldConfig = {
 	resize: 'vertical',
 	spellCheck: true,
 };
-
-/**
- * Register textarea field type in the global registry
- */
-declare module '@json-form-engine/core/schemas/field-config' {
-	namespace FormEngine {
-		interface FieldConfigRegistry {
-			textarea: TextareaFieldConfig;
-		}
-	}
-}

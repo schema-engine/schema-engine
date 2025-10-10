@@ -1,9 +1,42 @@
 import { z } from 'zod';
+
+/**
+ * Field configuration metadata for registries
+ */
+export interface FieldMetadata {
+	/** Human-readable display name */
+	name: string;
+	/** Description of what this field type does */
+	description: string;
+	/** Category for grouping field types */
+	category?: string;
+	/** Whether this field type is deprecated */
+	deprecated?: boolean;
+	/** Example configuration for this field type */
+	example?: any;
+	/** Tags for filtering and searching */
+	tags?: string[];
+}
+
+/**
+ * Field registration configuration
+ */
+export interface FieldRegistration<TComponent = any> {
+	/** Unique component identifier */
+	componentId: string;
+	/** Component for rendering the field */
+	component: TComponent;
+	/** Schema for validation, serialization and type checking */
+	schema: z.ZodSchema<any>;
+	/** Metadata for documentation and tooling (includes name and description) */
+	metadata?: FieldMetadata;
+}
+
 /**
  * Global registry for form field types using Zod 4 registries
  * This provides metadata storage and JSON schema generation capabilities
  */
-export const formFieldRegistry = z.registry<FormEngine.FieldMetadata>();
+export const formFieldRegistry = z.registry<FieldMetadata>();
 
 /**
  * Component registry for field components
@@ -17,18 +50,18 @@ export const formFieldRegistry = z.registry<FormEngine.FieldMetadata>();
  * ```
  */
 export class FormFieldComponentRegistry<TComponent = any> {
-	private components = new Map<string, FormEngine.FieldRegistration<TComponent>>();
+	private components = new Map<string, FieldRegistration<TComponent>>();
 	private schemas = new Map<string, z.ZodSchema<any>>();
-	private zodRegistry: ReturnType<typeof z.registry<FormEngine.FieldMetadata>>;
+	private zodRegistry: ReturnType<typeof z.registry<FieldMetadata>>;
 
-	constructor(zodRegistry: ReturnType<typeof z.registry<FormEngine.FieldMetadata>> = formFieldRegistry) {
+	constructor(zodRegistry: ReturnType<typeof z.registry<FieldMetadata>> = formFieldRegistry) {
 		this.zodRegistry = zodRegistry;
 	}
 
 	/**
 	 * Register a new field type with its component and schema
 	 */
-	register(registration: FormEngine.FieldRegistration<TComponent>): void {
+	register(registration: FieldRegistration<TComponent>): void {
 		const { componentId, schema, metadata } = registration;
 
 		const existingRegistration = this.components.get(componentId);
@@ -38,21 +71,15 @@ export class FormFieldComponentRegistry<TComponent = any> {
 
 		this.components.set(componentId, registration);
 		this.schemas.set(componentId, schema);
-
 		if (metadata) {
-			const enhancedMetadata: FormEngine.FieldMetadata = {
-				...metadata,
-				id: componentId,
-			};
-
-			this.zodRegistry.add(schema, enhancedMetadata);
+			this.zodRegistry.add(schema, metadata);
 		}
 	}
 
 	/**
 	 * Unregister a field type and remove it from all registries
 	 */
-	unregister(componentId: FormEngine.ComponentId | string): boolean {
+	unregister(componentId: string | string): boolean {
 		const registration = this.components.get(componentId);
 		if (!registration) return false;
 
@@ -70,14 +97,14 @@ export class FormFieldComponentRegistry<TComponent = any> {
 	/**
 	 * Get component for a field type
 	 */
-	getComponent(fieldType: FormEngine.ComponentId): TComponent | undefined {
+	getComponent(fieldType: string): TComponent | undefined {
 		return this.components.get(fieldType)?.component;
 	}
 
 	/**
 	 * Get schema for a field type
 	 */
-	getSchema(fieldType: FormEngine.ComponentId): z.ZodSchema<any> | undefined {
+	getSchema(fieldType: string): z.ZodSchema<any> | undefined {
 		return this.schemas.get(fieldType);
 	}
 
@@ -91,21 +118,21 @@ export class FormFieldComponentRegistry<TComponent = any> {
 	/**
 	 * Get serializable schema for a field type.
 	 */
-	getSerializableSchema(fieldType: FormEngine.ComponentId): z.ZodSchema<any> | undefined {
+	getSerializableSchema(fieldType: string): z.ZodSchema<any> | undefined {
 		return this.schemas.get(fieldType);
 	}
 
 	/**
 	 * Get all registered field types
 	 */
-	getFieldTypes(): FormEngine.ComponentId[] {
-		return Array.from(this.components.keys()) as FormEngine.ComponentId[];
+	getFieldTypes(): string[] {
+		return Array.from(this.components.keys()) as string[];
 	}
 
 	/**
 	 * Get metadata for a field type
 	 */
-	getMetadata(fieldType: FormEngine.ComponentId): FormEngine.FieldMetadata | undefined {
+	getMetadata(fieldType: string): FieldMetadata | undefined {
 		const schema = this.getRuntimeSchema(fieldType);
 		if (!schema) return undefined;
 
@@ -115,7 +142,7 @@ export class FormFieldComponentRegistry<TComponent = any> {
 	/**
 	 * Check if a field type is registered
 	 */
-	hasFieldType(fieldType: FormEngine.ComponentId): boolean {
+	hasFieldType(fieldType: string): boolean {
 		return this.components.has(fieldType);
 	}
 
@@ -123,7 +150,7 @@ export class FormFieldComponentRegistry<TComponent = any> {
 	 * Clear specific registered fields by their component IDs
 	 * More flexible and explicit than clearing by assumption
 	 */
-	clearFields(componentIds: (FormEngine.ComponentId | string)[]): void {
+	clearFields(componentIds: (string | string)[]): void {
 		for (const componentId of componentIds) {
 			this.unregister(componentId);
 		}
@@ -232,7 +259,7 @@ export class FormFieldComponentRegistry<TComponent = any> {
 	/**
 	 * Generate JSON schema for a field type
 	 */
-	toJSONSchema(fieldType: FormEngine.ComponentId): unknown {
+	toJSONSchema(fieldType: string): unknown {
 		const schema = this.getRuntimeSchema(fieldType);
 		if (!schema) return null;
 
@@ -265,8 +292,8 @@ export class FormFieldComponentRegistry<TComponent = any> {
 	/**
 	 * Export registry metadata as JSON
 	 */
-	exportMetadata(): Record<string, FormEngine.FieldMetadata> {
-		const metadata: Record<string, FormEngine.FieldMetadata> = {};
+	exportMetadata(): Record<string, FieldMetadata> {
+		const metadata: Record<string, FieldMetadata> = {};
 
 		for (const fieldType of this.getFieldTypes()) {
 			const meta = this.getMetadata(fieldType);

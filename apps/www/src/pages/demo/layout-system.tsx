@@ -87,7 +87,7 @@ export default function LayoutSystemDemoPage() {
 								</p>
 								<p className="text-sm text-gray-600 dark:text-gray-300">
 									<strong>Usage:</strong>{' '}
-									<code className="text-xs">step.layout = &#123;__layoutId: 'card'&#125;</code>
+									<code className="text-xs">step.layout = &#123;layoutId: 'card'&#125;</code>
 								</p>
 							</div>
 
@@ -105,7 +105,7 @@ export default function LayoutSystemDemoPage() {
 								<p className="text-sm text-gray-600 dark:text-gray-300">
 									<strong>Usage:</strong>{' '}
 									<code className="text-xs">
-										form.stepper = &#123;__stepperId: 'progress-bar'&#125;
+										form.stepper = &#123;stepperId: 'progress-bar'&#125;
 									</code>
 								</p>
 							</div>

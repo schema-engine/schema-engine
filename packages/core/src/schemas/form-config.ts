@@ -2,7 +2,6 @@ import { z } from 'zod';
 import { FormActionConfigSchema } from '../actions/types';
 import { GridLayoutConfigSchema } from './base-field';
 import { ValidationRuleSchema } from './validation/';
-import type { StepperConfig } from '../steppers/types';
 
 export type { FormActionConfig } from '../actions/types';
 
@@ -11,7 +10,7 @@ export type { FormActionConfig } from '../actions/types';
  */
 export const StepLayoutConfigSchema = z
 	.object({
-		__layoutId: z.string(),
+		layoutId: z.string(),
 	})
 	.catchall(z.any()); // Allow additional layout-specific options
 
@@ -20,7 +19,7 @@ export const StepLayoutConfigSchema = z
  */
 export const FormStepperConfigSchema = z
 	.object({
-		__stepperId: z.string(),
+		stepperId: z.string(),
 	})
 	.catchall(z.any()); // Allow additional stepper-specific options
 
@@ -123,7 +122,7 @@ export type FormStep = Omit<z.infer<typeof FormStepSchema>, 'elements'> & {
  */
 export type FormConfig = Omit<z.infer<typeof FormConfigSchema>, 'steps'> & {
 	steps: FormStep[];
-	stepper?: StepperConfig;
+	stepper?: FormStepperConfig;
 	onSubmit?: (data: any) => void | Promise<void>;
 	onChange?: (data: any) => void;
 };

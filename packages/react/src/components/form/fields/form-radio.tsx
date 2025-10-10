@@ -2,6 +2,8 @@ import { Label } from '@/shadcn/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/shadcn/ui/radio-group';
 import { useControlledFormElement } from '@/hooks';
 import type { RadioFieldConfig } from './form-radio.types';
+import { RadioFieldConfigSchema } from './form-radio.types';
+import type { ReactElementRegistration } from '@/registries/builder-registry';
 
 interface FormRadioProps {
 	config: RadioFieldConfig;
@@ -40,3 +42,14 @@ export function FormRadio({ config }: FormRadioProps) {
 		</div>
 	);
 }
+
+export const RadioElement: ReactElementRegistration = {
+	componentId: 'radio',
+	component: FormRadio,
+	schema: RadioFieldConfigSchema,
+	metadata: {
+		name: 'Radio Group Field',
+		description: 'Radio button group for selecting one option from multiple choices',
+		category: 'input',
+	},
+};

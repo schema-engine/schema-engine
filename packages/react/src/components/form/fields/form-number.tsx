@@ -2,6 +2,8 @@ import { Label } from '@/shadcn/ui/label';
 import { Input } from '@/shadcn/ui/input';
 import { useControlledFormElement } from '@/hooks';
 import type { NumberFieldConfig } from './form-number.types';
+import { NumberFieldConfigSchema } from './form-number.types';
+import type { ReactElementRegistration } from '@/registries/builder-registry';
 
 interface FormNumberProps {
 	config: NumberFieldConfig;
@@ -32,3 +34,14 @@ export function FormNumber({ config }: FormNumberProps) {
 		</div>
 	);
 }
+
+export const NumberElement: ReactElementRegistration = {
+	componentId: 'number',
+	component: FormNumber,
+	schema: NumberFieldConfigSchema,
+	metadata: {
+		name: 'Number Field',
+		description: 'Numeric input field with min, max, and step controls',
+		category: 'input',
+	},
+};

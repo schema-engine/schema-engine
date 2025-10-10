@@ -1,94 +1,15 @@
 import type React from 'react';
-import { type FormEngineProps, FormEngine as FormEngineComponent } from '../adapter-provider';
 import { FormProvider } from '../form-provider';
 import type { FormProviderProps } from '../adapters/types';
 import { FormElement } from './field-renderer';
 import { useFormGridStyles } from '@/hooks';
-import { Stepper, useStepper } from '../stepper';
 import { useFormContext } from 'react-hook-form';
 import { logger } from '@/lib/logger';
 import { LayoutRenderer } from './layout-renderer';
-import { reactStepperRegistry } from '@/registries/stepper-registry';
-import type { FormConfig, FormStep, StepNavigationConfig, FormStepperConfig } from '@json-form-engine/core/schemas';
+import { StepperRenderer } from './stepper-renderer';
+import { useState, useCallback } from 'react';
 
-/**
- * Helper function to create default step navigation config
- */
-function createStepNavigationConfig(stepperConfig?: FormStepperConfig): StepNavigationConfig {
-	if (!stepperConfig) {
-		return {
-			showStepNumbers: true,
-			showStepTitles: true,
-			orientation: 'horizontal',
-			variant: 'default',
-			position: 'top',
-			allowStepJumping: false,
-			validateOnNext: true,
-		};
-	}
-
-	return {
-		showStepNumbers: true,
-		showStepTitles: true,
-		orientation: (stepperConfig.orientation as 'horizontal' | 'vertical') || 'horizontal',
-		variant: 'default',
-		position: 'top',
-		allowStepJumping: false,
-		validateOnNext: true,
-		...stepperConfig,
-	};
-}
-
-/**
- * Shared stepper navigation interface used by all stepper components
- */
-interface SharedStepperNavigation {
-	canGoNext: boolean;
-	canGoPrevious: boolean;
-	isFirstStep: boolean;
-	isLastStep: boolean;
-	goToStep: (stepIndex: number) => void;
-	goToNextStep: () => void;
-	goToPreviousStep: () => void;
-}
-
-/**
- * Shared step info interface used by all stepper components
- */
-interface SharedStepInfo {
-	id: string;
-	title?: string;
-	description?: string;
-	index: number;
-	total: number;
-	isActive: boolean;
-	isCompleted: boolean;
-	isValid: boolean;
-	isVisited: boolean;
-}
-
-/**
- * Shared stepper component props interface
- */
-interface SharedStepperComponentProps {
-	steps: SharedStepInfo[];
-	currentStepIndex: number;
-	navigation: SharedStepperNavigation;
-	config?: Record<string, unknown>;
-	form: {
-		id: string;
-		title?: string;
-		description?: string;
-	};
-	children?: React.ReactNode;
-}
-
-/**
- * Helper to get fields for a specific step - now fields are directly in steps
- */
-function getFieldsForStep(step: FormStep): FormEngine.FieldConfig[] {
-	return step.elements || [];
-}
+import type { FormConfig, FormStep } from '@json-form-engine/core/schemas';
 
 /**
  * Helper to determine if form has multiple steps
@@ -110,6 +31,7 @@ function FormElementsRenderer({ config }: { config: FormConfig }) {
 
 /**
  * Component for single-step forms (only one step in the steps array)
+ * Note: We don't pass stepMeta for single-step forms since step navigation is meaningless
  */
 function SingleStepFormElementsRenderer({ config }: { config: FormConfig }) {
 	const gridStyles = useFormGridStyles(config.grid);
@@ -117,14 +39,11 @@ function SingleStepFormElementsRenderer({ config }: { config: FormConfig }) {
 
 	if (!singleStep?.elements) return null;
 
-	if (singleStep.layout && '__layoutId' in singleStep.layout) {
+	if (singleStep.layout && 'layoutId' in singleStep.layout) {
 		return (
 			<LayoutRenderer
 				step={singleStep}
-				stepMeta={{
-					index: 0,
-					total: 1,
-				}}
+				stepMeta={undefined} // No step metadata for single-step forms
 				formMeta={{
 					id: config.id,
 					title: config.title,
@@ -174,209 +93,137 @@ function SubmitButton({
  * Internal component for multi-step form rendering
  */
 function MultiStepFormElementsRenderer({ config }: { config: FormConfig }) {
-	const { trigger, getValues, setFocus, formState } = useFormContext();
+	const { trigger, setFocus, formState } = useFormContext();
+	const [currentStepIndex, setCurrentStepIndex] = useState(0);
+	const [stepStates, setStepStates] = useState({
+		completed: config.steps.map(() => false),
+		valid: config.steps.map(() => false),
+		visited: config.steps.map(() => false),
+	});
 
-	const handleStepChange = (stepIndex: number, step: FormStep) => {
-		logger.debug(`Navigated to step ${stepIndex}: ${step.title}`);
-	};
+	const validateStep = useCallback(
+		async (stepIndex: number): Promise<boolean> => {
+			const step = config.steps[stepIndex];
+			if (!step?.elements) return true;
 
-	const validateStep = async (stepIndex: number): Promise<boolean> => {
-		const step = config.steps[stepIndex];
-		if (!step?.elements) return true;
+			const fieldNames = step.elements.map((field) => field.name);
 
-		const fieldNames = step.elements.map((field) => field.name);
+			try {
+				const isValid = await trigger(fieldNames);
 
-		try {
-			const isValid = await trigger(fieldNames);
+				if (!isValid) {
+					const fieldsWithErrors = fieldNames.filter((fieldName) => formState.errors[fieldName]);
 
-			if (!isValid) {
-				const fieldsWithErrors = fieldNames.filter((fieldName) => formState.errors[fieldName]);
-
-				if (fieldsWithErrors.length > 0) {
-					setFocus(fieldsWithErrors[0]);
-					logger.debug(`Validation failed. Focused on field: ${fieldsWithErrors[0]}`);
+					if (fieldsWithErrors.length > 0) {
+						setFocus(fieldsWithErrors[0]);
+						logger.debug(`Validation failed. Focused on field: ${fieldsWithErrors[0]}`);
+					}
 				}
+
+				setStepStates((prev) => ({
+					...prev,
+					valid: prev.valid.map((v, i) => (i === stepIndex ? isValid : v)),
+				}));
+
+				return isValid;
+			} catch (error) {
+				logger.error('Validation error:', error as Error);
+				return false;
 			}
+		},
+		[config.steps, trigger, setFocus, formState.errors],
+	);
 
-			return isValid;
-		} catch (error) {
-			logger.error('Validation error:', error as Error);
-			return false;
+	const goToStep = useCallback(
+		(stepIndex: number) => {
+			if (stepIndex >= 0 && stepIndex < config.steps.length) {
+				setCurrentStepIndex(stepIndex);
+				setStepStates((prev) => ({
+					...prev,
+					visited: prev.visited.map((v, i) => (i === stepIndex ? true : v)),
+				}));
+				logger.debug(`Navigated to step ${stepIndex}: ${config.steps[stepIndex]?.title}`);
+			}
+		},
+		[config.steps],
+	);
+
+	const goToNextStep = useCallback(async () => {
+		const isValid = await validateStep(currentStepIndex);
+		if (isValid && currentStepIndex < config.steps.length - 1) {
+			setStepStates((prev) => ({
+				...prev,
+				completed: prev.completed.map((c, i) => (i === currentStepIndex ? true : c)),
+			}));
+			goToStep(currentStepIndex + 1);
 		}
+	}, [currentStepIndex, config.steps.length, validateStep, goToStep]);
+
+	const goToPreviousStep = useCallback(() => {
+		if (currentStepIndex > 0) {
+			goToStep(currentStepIndex - 1);
+		}
+	}, [currentStepIndex, goToStep]);
+
+	const navigation = {
+		canGoNext: currentStepIndex < config.steps.length - 1,
+		canGoPrevious: currentStepIndex > 0,
+		isFirstStep: currentStepIndex === 0,
+		isLastStep: currentStepIndex === config.steps.length - 1,
+		goToStep,
+		goToNextStep,
+		goToPreviousStep,
 	};
-
-	const hasRegistryStepperConfig = config.stepper && '__stepperId' in config.stepper;
-
-	if (hasRegistryStepperConfig) {
-		const stepperConfig = config.stepper as { __stepperId: string } & Record<string, unknown>;
-
-		const stepperResult = reactStepperRegistry.get(stepperConfig.__stepperId);
-
-		if (stepperResult) {
-			const navigationConfig = createStepNavigationConfig(config.stepper);
-
-			return (
-				<Stepper
-					steps={config.steps}
-					navigation={navigationConfig}
-					validationMode={config.mode}
-					onStepChange={handleStepChange}
-					getFormData={getValues}
-					validateStep={validateStep}
-				>
-					<RegistryStepperLayout
-						config={config}
-						stepperComponent={stepperResult.component}
-						stepperConfig={stepperResult.defaultConfig}
-					>
-						<StepperFormContent config={config} />
-					</RegistryStepperLayout>
-				</Stepper>
-			);
-		}
-
-		console.warn(`Stepper '${stepperConfig.__stepperId}' not found in registry. Using fallback.`);
-	}
-
-	const navigationConfig = createStepNavigationConfig(config.stepper);
 
 	return (
-		<Stepper
+		<StepperRenderer
+			form={config}
 			steps={config.steps}
-			navigation={navigationConfig}
-			validationMode={config.mode}
-			onStepChange={handleStepChange}
-			getFormData={getValues}
-			validateStep={validateStep}
+			currentStepIndex={currentStepIndex}
+			stepStates={stepStates}
+			navigation={navigation}
+			isSubmitting={formState.isSubmitting}
 		>
-			<StepperLayout config={config} />
-		</Stepper>
+			<StepContent step={config.steps[currentStepIndex]} config={config} />
+		</StepperRenderer>
 	);
 }
 
 /**
- * Layout component that handles different stepper orientations
+ * Component that renders the current step's content
  */
-function StepperLayout({ config }: { config: FormConfig }) {
-	const orientation = config.stepper?.orientation || 'horizontal';
-	const navigationConfig = createStepNavigationConfig(config.stepper);
+function StepContent({ step, config }: { step: FormStep; config: FormConfig }) {
+	const gridStyles = useFormGridStyles(config.grid);
 
-	if (orientation === 'vertical') {
+	if (!step?.elements) return null;
+
+	if (step.layout && 'layoutId' in step.layout) {
 		return (
-			<div className="flex gap-12">
-				<div className="w-72 flex-shrink-0">
-					<div className="sticky top-8">
-						<Stepper.Header navigation={navigationConfig} />
-					</div>
+			<LayoutRenderer
+				step={step}
+				stepMeta={{
+					index: config.steps.indexOf(step),
+					total: config.steps.length,
+				}}
+				formMeta={{
+					id: config.id,
+					title: config.title,
+					description: config.description,
+				}}
+			>
+				<div style={gridStyles}>
+					{step.elements.map((field) => (
+						<FormElement key={field.id} config={field} className={field.className} style={field.style} />
+					))}
 				</div>
-
-				<div className="flex-1 min-w-0">
-					<Stepper.Content>
-						<StepperFormContent config={config} />
-					</Stepper.Content>
-
-					<div className="mt-8">
-						<Stepper.Navigation navigation={navigationConfig} />
-					</div>
-				</div>
-			</div>
+			</LayoutRenderer>
 		);
 	}
 
 	return (
-		<>
-			<Stepper.Header navigation={navigationConfig} className="mb-8" />
-
-			<Stepper.Content>
-				<StepperFormContent config={config} />
-			</Stepper.Content>
-
-			<Stepper.Navigation navigation={navigationConfig} />
-		</>
-	);
-}
-
-interface RegistryStepperComponent {
-	component: React.ComponentType<SharedStepperComponentProps>;
-	config?: Record<string, unknown>;
-}
-
-/**
- * Layout component for registry-based steppers that uses actual stepper hook
- */
-function RegistryStepperLayout({
-	config,
-	stepperComponent: StepperComponent,
-	stepperConfig,
-	children,
-}: {
-	config: FormConfig;
-	stepperComponent: RegistryStepperComponent['component'];
-	stepperConfig: Record<string, unknown> | undefined;
-	children: React.ReactNode;
-}) {
-	const { currentStep, steps, goToStep, goToNext, goToPrevious, canGoNext, canGoPrevious, isFirstStep, isLastStep } =
-		useStepper();
-
-	// Create step info for stepper component using real stepper state
-	const stepInfos = steps.map((step, index) => ({
-		id: step.id,
-		title: step.title,
-		description: step.description,
-		index,
-		total: steps.length,
-		isActive: index === currentStep,
-		isCompleted: index < currentStep,
-		isValid: true, // TODO: integrate with validation state
-		isVisited: index <= currentStep,
-	}));
-
-	// Use real navigation controls from stepper hook
-	const navigation = {
-		canGoNext,
-		canGoPrevious,
-		isFirstStep,
-		isLastStep,
-		goToStep,
-		goToNextStep: goToNext,
-		goToPreviousStep: goToPrevious,
-	};
-
-	// Let the stepper component handle its own layout - just pass children through
-	return (
-		<StepperComponent
-			steps={stepInfos}
-			currentStepIndex={currentStep}
-			navigation={navigation}
-			config={stepperConfig}
-			form={{
-				id: config.id,
-				title: config.title,
-				description: config.description,
-			}}
-		>
-			{children}
-		</StepperComponent>
-	);
-}
-
-/**
- * Component that renders the current step's fields
- */
-function StepperFormContent({ config }: { config: FormConfig }) {
-	const { currentStep, steps } = useStepper();
-	const currentStep_data = steps[currentStep];
-
-	const gridStyles = useFormGridStyles(config.grid);
-
-	if (!currentStep_data) return null;
-
-	const stepFields = getFieldsForStep(currentStep_data);
-
-	return (
-		<div className="min-h-[400px]">
+		<div className="mt-8">
 			<div style={gridStyles}>
-				{stepFields.map((field: FormEngine.FieldConfig) => (
+				{step.elements.map((field) => (
 					<FormElement key={field.id} config={field} className={field.className} style={field.style} />
 				))}
 			</div>
@@ -393,7 +240,6 @@ export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
 	showSubmitButton?: boolean;
 	submitButtonText?: string;
 	submitButtonClassName?: string;
-	registry?: FormEngineProps['registry'];
 }
 
 /**
@@ -411,30 +257,24 @@ export function FormRenderer({
 	showSubmitButton = true,
 	submitButtonText = 'Submit',
 	submitButtonClassName = 'px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500',
-	registry,
 }: FormRendererProps) {
 	const isMultiStep = isMultiStepForm(config);
 
 	return (
-		<FormEngineComponent registry={registry}>
-			<FormProvider
-				config={config}
-				defaultValues={defaultValues}
-				onSubmit={onSubmit}
-				onChange={onChange}
-				onAction={onAction}
-				onValidationError={onValidationError}
-			>
-				<div className={`space-y-6 ${className}`} style={style}>
-					<FormElementsRenderer config={config} />
-					{!isMultiStep && showSubmitButton && (
-						<SubmitButton
-							submitButtonText={submitButtonText}
-							submitButtonClassName={submitButtonClassName}
-						/>
-					)}
-				</div>
-			</FormProvider>
-		</FormEngineComponent>
+		<FormProvider
+			config={config}
+			defaultValues={defaultValues}
+			onSubmit={onSubmit}
+			onChange={onChange}
+			onAction={onAction}
+			onValidationError={onValidationError}
+		>
+			<div className={`space-y-6 ${className}`} style={style}>
+				<FormElementsRenderer config={config} />
+				{!isMultiStep && showSubmitButton && (
+					<SubmitButton submitButtonText={submitButtonText} submitButtonClassName={submitButtonClassName} />
+				)}
+			</div>
+		</FormProvider>
 	);
 }

@@ -23,14 +23,3 @@ export const SwitchFieldConfigSchema = BaseFieldSchema.extend({
  */
 export type SwitchFieldExtension = z.infer<typeof SwitchFieldExtensionSchema>;
 export type SwitchFieldConfig = z.infer<typeof SwitchFieldConfigSchema>;
-
-/**
- * Global registration for extensible field system
- */
-declare module '@json-form-engine/core/schemas/field-config' {
-	namespace FormEngine {
-		interface FieldConfigRegistry {
-			switch: SwitchFieldConfig;
-		}
-	}
-}

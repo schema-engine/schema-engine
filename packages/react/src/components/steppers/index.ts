@@ -4,6 +4,7 @@
 export { DefaultStepper } from './default-stepper';
 export { VerticalStepsStepper } from './vertical-stepper';
 export { MinimalistStepper } from './minimalist-stepper';
+export { DebuggerStepper } from './debugger-stepper';
 
 /**
  * Pre-built Composed Layouts - ready-to-use implementations
@@ -11,6 +12,7 @@ export { MinimalistStepper } from './minimalist-stepper';
 export { DefaultStepperComposed } from './default-stepper';
 export { VerticalStepsStepperComposed } from './vertical-stepper';
 export { MinimalistStepperComposed as DefaultMinimalistStepper } from './minimalist-stepper';
+export { DebuggerStepperComposed } from './debugger-stepper';
 
 /**
  * Stepper CSS
@@ -18,6 +20,7 @@ export { MinimalistStepperComposed as DefaultMinimalistStepper } from './minimal
 import './default-stepper.css';
 import './vertical-stepper.css';
 import './minimalist-stepper.css';
+import './debugger-stepper.css';
 
 /**
  * Types
@@ -26,3 +29,4 @@ export type { BaseStepperProps, StepperNavigation, StepData, StepperComponent } 
 export type { DefaultStepperConfig } from './default-stepper';
 export type { VerticalStepsStepperConfig } from './vertical-stepper';
 export type { MinimalistStepperConfig } from './minimalist-stepper';
+export type { DebuggerStepperConfig } from './debugger-stepper';

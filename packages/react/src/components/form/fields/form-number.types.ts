@@ -27,14 +27,3 @@ export const NumberFieldConfigSchema = BaseFieldSchema.extend({
  */
 export type NumberFieldExtension = z.infer<typeof NumberFieldExtensionSchema>;
 export type NumberFieldConfig = z.infer<typeof NumberFieldConfigSchema>;
-
-/**
- * Global registration for extensible field system
- */
-declare module '@json-form-engine/core/schemas/field-config' {
-	namespace FormEngine {
-		interface FieldConfigRegistry {
-			number: NumberFieldConfig;
-		}
-	}
-}

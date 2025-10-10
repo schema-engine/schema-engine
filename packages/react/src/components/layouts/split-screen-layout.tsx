@@ -1,7 +1,10 @@
 import { cn } from '@/shadcn/lib/utils';
-import type { LayoutComponent } from './types';
+import type { BaseLayoutConfig } from './types';
+import { useLayoutContext } from '@/contexts/layout-context';
+import type React from 'react';
 
-interface SplitScreenLayoutConfig {
+export interface SplitScreenLayoutConfig extends BaseLayoutConfig {
+	layoutId: 'split-screen';
 	sideContent?: string;
 	sidePlacement?: 'left' | 'right';
 	sideWidth?: 'narrow' | 'normal' | 'wide';
@@ -12,20 +15,15 @@ interface SplitScreenLayoutConfig {
  * Split Screen Layout
  * Displays the form content alongside additional information or media
  * Supports both single-step and multi-step forms
+ * Loads configuration from global context
  */
-export const SplitScreenLayout: LayoutComponent<SplitScreenLayoutConfig> = ({
+export const SplitScreenLayout: React.FC<{ children: React.ReactNode; className?: string }> = ({
 	children,
-	config,
-	step,
-	form,
 	className,
 }) => {
-	const {
-		sideContent = 'Welcome!',
-		sidePlacement = 'left',
-		sideWidth = 'normal',
-		contentAlignment = 'top',
-	} = config || {};
+	const { step, form, config } = useLayoutContext<SplitScreenLayoutConfig>();
+
+	const { sideContent, sidePlacement = 'left', sideWidth = 'normal', contentAlignment = 'top' } = config;
 
 	const isLeftSide = sidePlacement === 'left';
 
@@ -48,13 +46,13 @@ export const SplitScreenLayout: LayoutComponent<SplitScreenLayoutConfig> = ({
 
 	const sidePanel = (
 		<div className={cn('split-screen-layout__side', widthClass)}>
-			{step && (
+			{typeof step.index === 'number' && typeof step.total === 'number' ? (
 				<h2 className="split-screen-layout__step-counter">
 					Step {step.index + 1} of {step.total}
 				</h2>
-			)}
-			{title && <h3 className="split-screen-layout__step-title">{title}</h3>}
-			{description && <p className="split-screen-layout__step-description">{description}</p>}
+			) : null}
+			{title ? <h3 className="split-screen-layout__step-title">{title}</h3> : null}
+			{description ? <p className="split-screen-layout__step-description">{description}</p> : null}
 			<div className="split-screen-layout__side-content">{sideContent}</div>
 		</div>
 	);
@@ -66,4 +64,18 @@ export const SplitScreenLayout: LayoutComponent<SplitScreenLayoutConfig> = ({
 			{!isLeftSide && sidePanel}
 		</div>
 	);
+};
+
+import type { ReactLayoutRegistration } from '@/registries/builder-registry';
+import { SplitScreenLayoutConfigSchema } from './split-screen-layout.types';
+
+export const SplitScreenLayoutRegistration: ReactLayoutRegistration = {
+	layoutId: 'split-screen',
+	component: SplitScreenLayout,
+	schema: SplitScreenLayoutConfigSchema,
+	metadata: {
+		name: 'Split Screen Layout',
+		description: 'Two-column layout with side content and main form area',
+		icon: 'layout-split',
+	},
 };

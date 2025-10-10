@@ -43,7 +43,7 @@ const formConfig = {
 
 			// Specify layout for this step
 			layout: {
-				__layoutId: "split-screen",
+				layoutId: "split-screen",
 				sidePlacement: "right",
 				sideWidth: "40%",
 				sideContent: "<h3>Security Tips</h3><p>Choose a strong password</p>",
@@ -63,7 +63,7 @@ const formConfig = {
 
 ```typescript
 layout: {
-  __layoutId: 'split-screen',
+  layoutId: 'split-screen',
   sidePlacement: 'left', // 'left' | 'right'
   sideWidth: '50%',
   backgroundColor: '#f8f9fa',
@@ -75,7 +75,7 @@ layout: {
 
 ```typescript
 layout: {
-  __layoutId: 'hero-background',
+  layoutId: 'hero-background',
   backgroundImage: 'https://example.com/hero.jpg',
   // or use backgroundVideo: 'https://example.com/hero.mp4'
   backgroundColor: 'rgba(0, 0, 0, 0.5)', // overlay
@@ -88,7 +88,7 @@ layout: {
 
 ```typescript
 layout: {
-  __layoutId: 'card',
+  layoutId: 'card',
   maxWidth: '500px',
   padding: '2rem',
   shadowSize: 'medium' // 'small' | 'medium' | 'large'
@@ -125,7 +125,7 @@ const formConfig = {
 
 	// Specify stepper for the entire form
 	stepper: {
-		__stepperId: "progress-bar",
+		stepperId: "progress-bar",
 		showStepTitles: true,
 		primaryColor: "#6366f1",
 		completedColor: "#059669",
@@ -143,7 +143,7 @@ const formConfig = {
 
 ```typescript
 stepper: {
-  __stepperId: 'progress-bar',
+  stepperId: 'progress-bar',
   showStepNumbers: true,
   showStepTitles: true,
   primaryColor: '#3b82f6',
@@ -156,7 +156,7 @@ stepper: {
 
 ```typescript
 stepper: {
-  __stepperId: 'vertical-steps',
+  stepperId: 'vertical-steps',
   showConnectors: true, // show lines between steps
   primaryColor: '#3b82f6',
   completedColor: '#10b981'
@@ -167,7 +167,7 @@ stepper: {
 
 ```typescript
 stepper: {
-  __stepperId: 'minimalist',
+  stepperId: 'minimalist',
   showProgress: true,
   primaryColor: '#3b82f6'
 }
@@ -296,7 +296,7 @@ const formConfig = {
 
 	// Custom stepper for the entire form
 	stepper: {
-		__stepperId: "progress-bar",
+		stepperId: "progress-bar",
 		primaryColor: "#6366f1",
 	},
 
@@ -307,7 +307,7 @@ const formConfig = {
 
 			// Custom layout for this step
 			layout: {
-				__layoutId: "card",
+				layoutId: "card",
 				maxWidth: "600px",
 				shadowSize: "large",
 			},

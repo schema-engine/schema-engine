@@ -25,14 +25,3 @@ export const CheckboxFieldConfigSchema = BaseFieldSchema.extend({
  */
 export type CheckboxFieldExtension = z.infer<typeof CheckboxFieldExtensionSchema>;
 export type CheckboxFieldConfig = z.infer<typeof CheckboxFieldConfigSchema>;
-
-/**
- * Global registration for extensible field system
- */
-declare module '@json-form-engine/core/schemas/field-config' {
-	namespace FormEngine {
-		interface FieldConfigRegistry {
-			checkbox: CheckboxFieldConfig;
-		}
-	}
-}

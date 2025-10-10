@@ -7,11 +7,6 @@
 import { test, expect, describe } from 'bun:test';
 import type { ArrayElementsConfig } from '@/components/form/fields/form-array-elements.types';
 
-import '@/components/form/fields/form-input.registry';
-import '@/components/form/fields/form-textarea.registry';
-import '@/components/form/fields/form-select.registry';
-import '@/components/form/fields/form-array-elements.registry';
-
 describe('Compile-Time Type Safety', () => {
 	test('should provide type safety for array elements configuration', () => {
 		const arrayConfig: ArrayElementsConfig = {

@@ -9,7 +9,7 @@ const sourceDir = "src";
 
 const SOURCE_FILE_EXTENSIONS = ["ts", "tsx", "css"];
 const EXCLUDED_CSS_FILES = ["styles.css"];
-const EXCLUDED_DIRECTORIES = ["/stories/"];
+const EXCLUDED_INCLUDES = [".stories"];
 
 function getFileAsBuffer(filePath: string): Buffer {
   try {
@@ -61,7 +61,7 @@ async function discoverSourceFiles(): Promise<string[]> {
   const rootSrcFiles = await Array.fromAsync(rootSrcGlob.scan({ cwd: "." }));
   
   const allFiles = [...new Set([...indexFiles, ...directoryFiles, ...rootSrcFiles])];
-  return allFiles.filter(file => !EXCLUDED_DIRECTORIES.some(excluded => file.includes(excluded)));
+  return allFiles.filter(file => !EXCLUDED_INCLUDES.some(excluded => file.includes(excluded)));
 }
 
 function ensureDirectoryExists(dirPath: string, forceCleanup = false): void {

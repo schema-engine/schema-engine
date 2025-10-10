@@ -62,8 +62,14 @@ export interface BaseStepperProps {
 export type StepperComponent<T = Record<string, unknown>> = React.FC<BaseStepperProps & { config?: T }>;
 
 /**
+ * Extract config type from a StepperComponent
+ * Useful for type-safe registration
+ */
+export type ExtractStepperConfig<T> = T extends StepperComponent<infer C> ? C : never;
+
+/**
  * Base stepper configuration that will be stored in the form configuration
  */
 export interface BaseStepperConfig {
-	__stepperId: string;
+	stepperId: string;
 }

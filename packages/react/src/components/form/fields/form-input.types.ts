@@ -64,14 +64,3 @@ export const inputFieldExample: InputFieldConfig = {
 	autoComplete: 'off',
 	spellCheck: true,
 };
-
-/**
- * Register input field type in the global registry
- */
-declare module '@json-form-engine/core/schemas/field-config' {
-	namespace FormEngine {
-		interface FieldConfigRegistry {
-			input: InputFieldConfig;
-		}
-	}
-}

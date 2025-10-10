@@ -11,7 +11,7 @@ export interface FormElementProps {
  * Complete field component that handles constraints, rendering, and error states
  */
 export function FormElement({ config, className, style }: FormElementProps) {
-	const { registry } = useFormEngine();
+	const { engine } = useFormEngine();
 	const { shouldShow, shouldDisable, isRequired } = useConstraintLogic(
 		'constraints' in config ? config.constraints : undefined,
 		isFieldRequired('rules' in config ? config.rules : undefined),
@@ -23,15 +23,17 @@ export function FormElement({ config, className, style }: FormElementProps) {
 
 	const { componentId, ...componentConfig } = config;
 
-	const Component = registry.getComponent(componentId);
+	const elementRegistration = engine.getElement(componentId);
 
-	if (!Component) {
+	if (!elementRegistration) {
 		return (
 			<div className={`text-red-500 text-sm ${className || ''}`} style={style}>
 				Error: Component "{componentId}" not found in registry
 			</div>
 		);
 	}
+
+	const Component = elementRegistration.render as React.ComponentType<any>;
 
 	const enhancedConfig = {
 		...componentConfig,

@@ -2,6 +2,8 @@ import { Label } from '@/shadcn/ui/label';
 import { Checkbox } from '@/shadcn/ui/checkbox';
 import { useControlledFormElement } from '@/hooks';
 import type { CheckboxFieldConfig } from './form-checkbox.types';
+import { CheckboxFieldConfigSchema } from './form-checkbox.types';
+import type { ReactElementRegistration } from '@/registries/builder-registry';
 
 interface FormCheckboxProps {
 	config: CheckboxFieldConfig;
@@ -34,3 +36,14 @@ export function FormCheckbox({ config }: FormCheckboxProps) {
 		</div>
 	);
 }
+
+export const CheckboxElement: ReactElementRegistration = {
+	componentId: 'checkbox',
+	component: FormCheckbox,
+	schema: CheckboxFieldConfigSchema,
+	metadata: {
+		name: 'Checkbox Field',
+		description: 'Single checkbox input for boolean values',
+		category: 'input',
+	},
+};

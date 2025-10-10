@@ -20,7 +20,7 @@ export const conceptStepLayoutDemo: FormConfig = {
 
 	// This would use a custom stepper (when registered)
 	// stepper: {
-	// 	__stepperId: 'progress-bar',
+	// 	stepperId: 'progress-bar',
 	// 	primaryColor: '#6366f1'
 	// },
 
@@ -32,7 +32,7 @@ export const conceptStepLayoutDemo: FormConfig = {
 
 			// This would use a custom layout (when registered)
 			// layout: {
-			// 	__layoutId: 'card',
+			// 	layoutId: 'card',
 			// 	maxWidth: '500px',
 			// 	shadowSize: 'large'
 			// },
@@ -68,7 +68,7 @@ export const conceptStepLayoutDemo: FormConfig = {
 
 			// This would use a different layout
 			// layout: {
-			// 	__layoutId: 'split-screen',
+			// 	layoutId: 'split-screen',
 			// 	sidePlacement: 'right',
 			// 	sideContent: 'Help content and tips would go here'
 			// },
@@ -202,7 +202,7 @@ export const currentGridSystemDemo: FormConfig = {
  *
  * 2. **Step Layout** (StepLayoutConfig) - NEW ✅
  *    - Used for wrapping entire step content (card, split-screen, hero background)
- *    - Works at the step level: step.layout = { __layoutId: 'card' }
+ *    - Works at the step level: step.layout = { layoutId: 'card' }
  *    - Registry pattern: registerLayout({ layoutId: 'card', component: CardLayout })
  *
  * 3. **Form Element Layout** (LayoutConfig) - DELETE ❌
@@ -212,6 +212,6 @@ export const currentGridSystemDemo: FormConfig = {
  *
  * 4. **Stepper Layout** (FormStepperConfig) - NEW ✅
  *    - Used for customizing the step navigation UI
- *    - Works at the form level: form.stepper = { __stepperId: 'progress-bar' }
+ *    - Works at the form level: form.stepper = { stepperId: 'progress-bar' }
  *    - Registry pattern: registerStepper({ stepperId: 'progress-bar', component: ProgressBarStepper })
  */

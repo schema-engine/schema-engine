@@ -2,6 +2,8 @@ import { Label } from '@/shadcn/ui/label';
 import { Switch } from '@/shadcn/ui/switch';
 import { useControlledFormElement } from '@/hooks';
 import type { SwitchFieldConfig } from './form-switch.types';
+import { SwitchFieldConfigSchema } from './form-switch.types';
+import type { ReactElementRegistration } from '@/registries/builder-registry';
 
 interface FormSwitchProps {
 	config: SwitchFieldConfig;
@@ -33,3 +35,14 @@ export function FormSwitch({ config }: FormSwitchProps) {
 		</div>
 	);
 }
+
+export const SwitchElement: ReactElementRegistration = {
+	componentId: 'switch',
+	component: FormSwitch,
+	schema: SwitchFieldConfigSchema,
+	metadata: {
+		name: 'Switch Field',
+		description: 'Toggle switch for boolean values',
+		category: 'input',
+	},
+};

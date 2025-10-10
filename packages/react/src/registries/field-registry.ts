@@ -1,5 +1,5 @@
 import type React from 'react';
-import { FormFieldComponentRegistry } from '@json-form-engine/core/schemas/registry';
+import { FormFieldComponentRegistry, type FieldRegistration } from '@json-form-engine/core/schemas/registry';
 
 /**
  * React-specific form field registry instance
@@ -11,7 +11,7 @@ export const reactFormFieldRegistry = new FormFieldComponentRegistry<React.Compo
  * Convenience function for registering React field types
  * This provides a clean API for registering field components in React applications
  */
-export function registerFieldType(registration: FormEngine.FieldRegistration<React.ComponentType<any>>): void {
+export function registerFieldType(registration: FieldRegistration<React.ComponentType<any>>): void {
 	reactFormFieldRegistry.register(registration);
 }
 

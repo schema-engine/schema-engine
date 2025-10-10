@@ -6,6 +6,8 @@ import { Label } from '@/shadcn/ui/label';
 import { createFieldDefaultValue, useControlledFormElement } from '@/hooks/use-field';
 import { FormElement } from '@/components/internals/field-renderer';
 import type { ArrayElementsConfig } from './form-array-elements.types';
+import { ArrayElementConfigSchema } from './form-array-elements.types';
+import type { ReactElementRegistration } from '@/registries/builder-registry';
 
 interface FormArrayElementsProps {
 	config: ArrayElementsConfig;
@@ -121,3 +123,14 @@ export function FormArrayElements({ config, onChange }: FormArrayElementsProps) 
 		</div>
 	);
 }
+
+export const ArrayElement: ReactElementRegistration = {
+	componentId: 'arrayElements',
+	component: FormArrayElements,
+	schema: ArrayElementConfigSchema,
+	metadata: {
+		name: 'Array Field',
+		description: 'Dynamic array field for managing lists of repeatable form elements',
+		category: 'input',
+	},
+};

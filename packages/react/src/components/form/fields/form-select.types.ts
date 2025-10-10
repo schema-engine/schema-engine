@@ -36,14 +36,3 @@ export const SelectFieldConfigSchema = BaseFieldSchema.extend({
 export type SelectOption = z.infer<typeof SelectOptionSchema>;
 export type SelectFieldExtension = z.infer<typeof SelectFieldExtensionSchema>;
 export type SelectFieldConfig = z.infer<typeof SelectFieldConfigSchema>;
-
-/**
- * Register select field type in the global registry
- */
-declare module '@json-form-engine/core/schemas/field-config' {
-	namespace FormEngine {
-		interface FieldConfigRegistry {
-			select: SelectFieldConfig;
-		}
-	}
-}

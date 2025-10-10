@@ -142,7 +142,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 		},
 	],
 	stepper: {
-		__stepperId: 'default',
+		stepperId: 'default',
 		orientation: 'horizontal',
 		variant: 'default',
 		position: 'top',
@@ -201,7 +201,7 @@ export const verticalStepperConfig: FormConfig = {
 	...multiStepRegistrationConfig,
 	id: 'vertical-stepper-demo',
 	stepper: {
-		__stepperId: 'default',
+		stepperId: 'default',
 		variant: 'default',
 		orientation: 'vertical',
 		position: 'left',
@@ -234,7 +234,7 @@ export const minimalStepperConfig: FormConfig = {
 	id: 'minimal-stepper-demo',
 	mode: 'free',
 	stepper: {
-		__stepperId: 'minimalist',
+		stepperId: 'minimalist',
 		variant: 'dots',
 		orientation: 'horizontal',
 		position: 'top',

@@ -1,19 +1,19 @@
 import { createContext } from 'react';
-import type { FormFieldComponentRegistry } from '@json-form-engine/core/schemas/registry';
+import type { FormEngine } from '@json-form-engine/core/engine/form-engine';
 import type { FormActionConfig } from '@json-form-engine/core/schemas';
 
 /**
  * Form Engine context value
- * It includes the component registry and action execution function
+ * It includes the FormEngine instance and action execution function
  */
 export interface FormEngineContextValue {
-	registry: FormFieldComponentRegistry;
+	engine: FormEngine;
 	executeAction?: (action: FormActionConfig) => Promise<{ success: boolean; error?: string }>;
 }
 
 /**
  * Form Engine context
- * Provides access to the component registry and action execution function
+ * Provides access to the FormEngine instance and action execution function
  */
 export const FormEngineContext = createContext<FormEngineContextValue | null>(null);
 

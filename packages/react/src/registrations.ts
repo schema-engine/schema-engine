@@ -1,39 +1,20 @@
 /**
- * Default registrations for @json-form-engine/react
+ * Default element registrations for @json-form-engine/react
  *
- * This file registers all default form components, layouts, and steppers.
- * Import this once in your application to have access to all built-in components.
+ * This file exports all default form components that can be used with the new builder pattern.
+ * Import these to add them to your form engine instance.
  *
  * @example
  * ```typescript
- * import '@json-form-engine/react/registrations';
+ * import { createReactFormEngine, toElementRegistration } from '@json-form-engine/react';
+ * import { InputElement, TextareaElement } from '@json-form-engine/react/registrations';
+ *
+ * const engine = createReactFormEngine()
+ *   .addElement(toElementRegistration(InputElement))
+ *   .addElement(toElementRegistration(TextareaElement))
+ *   .build();
  * ```
  */
-
-import './components/form/fields/form-checkbox.types';
-import './components/form/fields/form-checkbox.registry';
-import './components/form/fields/form-input.types';
-import './components/form/fields/form-input.registry';
-import './components/form/fields/form-number.types';
-import './components/form/fields/form-number.registry';
-import './components/form/fields/form-radio.types';
-import './components/form/fields/form-radio.registry';
-import './components/form/fields/form-select.types';
-import './components/form/fields/form-select.registry';
-import './components/form/fields/form-textarea.types';
-import './components/form/fields/form-textarea.registry';
-import './components/form/fields/form-switch.types';
-import './components/form/fields/form-switch.registry';
-import './components/form/fields/form-array-elements.types';
-import './components/form/fields/form-array-elements.registry';
-
-import './components/layouts/card-layout.registry';
-import './components/layouts/split-screen-layout.registry';
-import './components/layouts/hero-background-layout.registry';
-
-import './components/steppers/default-stepper.registry';
-import './components/steppers/vertical-stepper.registry';
-import './components/steppers/minimalist-stepper.registry';
 
 import type { InputFieldConfig } from './components/form/fields/form-input.types';
 import type { TextareaFieldConfig } from './components/form/fields/form-textarea.types';
@@ -43,6 +24,25 @@ import type { RadioFieldConfig } from './components/form/fields/form-radio.types
 import type { SelectFieldConfig } from './components/form/fields/form-select.types';
 import type { SwitchFieldConfig } from './components/form/fields/form-switch.types';
 import type { ArrayElementsConfig } from './components/form/fields/form-array-elements.types';
+
+export { InputElement } from './components/form/fields/form-input';
+
+export { CardLayoutRegistration } from './components/layouts/card-layout';
+export { SplitScreenLayoutRegistration } from './components/layouts/split-screen-layout';
+export { HeroBackgroundLayoutRegistration } from './components/layouts/hero-background-layout';
+
+export { DefaultStepperRegistration } from './components/steppers/default-stepper';
+export { VerticalStepperRegistration } from './components/steppers/vertical-stepper';
+export { MinimalistStepperRegistration } from './components/steppers/minimalist-stepper';
+export { DebuggerStepperRegistration } from './components/steppers/debugger-stepper';
+
+import type { CardLayoutConfig } from './components/layouts/card-layout.types';
+import type { SplitScreenLayoutConfig } from './components/layouts/split-screen-layout.types';
+import type { HeroBackgroundLayoutConfig } from './components/layouts/hero-background-layout.types';
+import type { DefaultStepperConfig } from './components/steppers/default-stepper.types';
+import type { MinimalistStepperConfig } from './components/steppers/minimalist-stepper.types';
+import type { VerticalStepsStepperConfig } from './components/steppers/vertical-stepper.types';
+import type { DebuggerStepperConfig } from './components/steppers/debugger-stepper.types';
 
 /**
  * Global namespace augmentation for internal package usage.
@@ -60,6 +60,19 @@ declare global {
 			select: SelectFieldConfig;
 			switch: SwitchFieldConfig;
 			arrayElements: ArrayElementsConfig;
+		}
+
+		interface LayoutConfigRegistry {
+			card: CardLayoutConfig;
+			'split-screen': SplitScreenLayoutConfig;
+			'hero-background': HeroBackgroundLayoutConfig;
+		}
+
+		interface StepperConfigRegistry {
+			default: DefaultStepperConfig;
+			minimalist: MinimalistStepperConfig;
+			vertical: VerticalStepsStepperConfig;
+			debugger: DebuggerStepperConfig;
 		}
 	}
 }

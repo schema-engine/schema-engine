@@ -28,6 +28,10 @@
   - If you must use `any`, add a comment explaining why.
 - Prefer `unknown` over `any` when possible.
 
+## React
+
+- Always prefer ternary operators over `&&` for conditional rendering to avoid rendering unintended falsy values.
+
 ## JS Runtime
 
 - Please remember we are using bun js
@@ -57,7 +61,7 @@
 
 ## Readmes
 
-- When creating a new feature or a new module, please remember to add a README file explaining how to use it.
+- When creating a new feature or a new module, please remember to add a README file explaining how to use it.This should be doen sparely, not in every file and at the end of the development. I dont' want to see a README file in every folder for every small change or fixes. Just for big features or modules.
 - The README file should be in the root of the module or feature folder.
 - It should not explain how we get there, but how to use it.
 - Use markdown formatting.

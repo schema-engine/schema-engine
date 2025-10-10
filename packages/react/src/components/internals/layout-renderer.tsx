@@ -1,8 +1,8 @@
 import type React from 'react';
 import type { FormStep } from '@json-form-engine/core';
 import type { StepLayoutConfig } from '@json-form-engine/core/schemas/form-config';
-import type { BaseLayoutProps } from '../layouts/types';
-import { reactLayoutRegistry } from '@/registries/layout-registry';
+import { useFormEngine } from '@/hooks';
+import { LayoutProvider } from '@/contexts/layout-context';
 
 interface LayoutRendererProps {
 	/**
@@ -11,9 +11,9 @@ interface LayoutRendererProps {
 	step: FormStep & { layout?: StepLayoutConfig };
 
 	/**
-	 * Current step metadata
+	 * Current step metadata (undefined for single-step forms where navigation is not needed)
 	 */
-	stepMeta: {
+	stepMeta?: {
 		index: number;
 		total: number;
 	};
@@ -37,7 +37,7 @@ interface LayoutRendererProps {
  * Default layout component that simply renders children
  * Supports both single-step and multi-step forms
  */
-const DefaultLayout: React.FC<BaseLayoutProps> = ({ children }) => {
+const DefaultLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 	return <div className="form-step-content">{children}</div>;
 };
 
@@ -48,44 +48,54 @@ const DefaultLayout: React.FC<BaseLayoutProps> = ({ children }) => {
  * Falls back to a default layout if none is specified or if the layout is not found.
  */
 export const LayoutRenderer: React.FC<LayoutRendererProps> = ({ step, stepMeta, formMeta, children }) => {
-	if (!step.layout?.__layoutId) {
-		return (
-			<DefaultLayout config={{}} step={{ ...step, ...stepMeta }} form={formMeta}>
-				{children}
-			</DefaultLayout>
-		);
-	}
+	const { engine } = useFormEngine();
 
-	const { __layoutId, ...layoutConfig } = step.layout;
-
-	const layoutResult = reactLayoutRegistry.getLayoutWithConfig(__layoutId, layoutConfig);
-
-	if (!layoutResult) {
-		console.warn(`Layout '${__layoutId}' not found in registry. Using default layout.`);
-		return (
-			<DefaultLayout config={layoutConfig} step={{ ...step, ...stepMeta }} form={formMeta}>
-				{children}
-			</DefaultLayout>
-		);
-	}
-
-	const { component: LayoutComponent, config } = layoutResult;
-
-	// Prepare props for the layout component
-	const layoutProps: BaseLayoutProps = {
-		children,
-		config,
-		step: {
-			id: step.id,
-			title: step.title,
-			description: step.description,
-			index: stepMeta.index,
-			total: stepMeta.total,
-		},
+	const contextValue = {
+		step: stepMeta
+			? {
+					id: step.id,
+					title: step.title,
+					description: step.description,
+					index: stepMeta.index,
+					total: stepMeta.total,
+				}
+			: {
+					id: step.id,
+					title: step.title,
+					description: step.description,
+				},
 		form: formMeta,
+		config: step.layout || {},
 	};
 
-	return <LayoutComponent {...layoutProps} />;
+	if (!step.layout?.layoutId) {
+		return (
+			<LayoutProvider value={contextValue}>
+				<DefaultLayout>{children}</DefaultLayout>
+			</LayoutProvider>
+		);
+	}
+
+	const { layoutId, ...layoutConfig } = step.layout;
+
+	const layoutRegistration = engine.getLayout(layoutId);
+
+	if (!layoutRegistration) {
+		console.warn(`Layout '${layoutId}' not found in registry. Using default layout.`);
+		return (
+			<LayoutProvider value={{ ...contextValue, config: layoutConfig }}>
+				<DefaultLayout>{children}</DefaultLayout>
+			</LayoutProvider>
+		);
+	}
+
+	const LayoutComponent = layoutRegistration.render as React.ComponentType<{ children: React.ReactNode }>;
+
+	return (
+		<LayoutProvider value={{ ...contextValue, config: layoutConfig }}>
+			<LayoutComponent>{children}</LayoutComponent>
+		</LayoutProvider>
+	);
 };
 
 export default LayoutRenderer;

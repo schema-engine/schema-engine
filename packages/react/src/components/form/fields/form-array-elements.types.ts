@@ -134,14 +134,3 @@ export interface ArrayElementsConfig extends Omit<z.infer<typeof BaseFieldSchema
 	removeButtonText?: string;
 	elements: FormEngine.FieldConfig[];
 }
-
-/**
- * Extend the global FormEngine interface
- */
-declare module '@json-form-engine/core/schemas/field-config' {
-	namespace FormEngine {
-		interface FieldConfigRegistry {
-			arrayElements: ArrayElementsConfig;
-		}
-	}
-}

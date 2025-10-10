@@ -2,6 +2,8 @@ import { Input } from '@/shadcn/ui/input';
 import { FieldGroup } from '@/components/form/field-group';
 import { useControlledFormElement, combineHandlers } from '@/hooks';
 import type { InputFieldProps } from './form-input.types';
+import { InputFieldSchema } from './form-input.types';
+import type { ReactElementRegistration } from '@/registries/builder-registry';
 
 export function FormInput({ config, onChange: propsOnChange, onBlur: propsOnBlur }: InputFieldProps) {
 	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
@@ -31,3 +33,14 @@ export function FormInput({ config, onChange: propsOnChange, onBlur: propsOnBlur
 		</div>
 	);
 }
+
+export const InputElement: ReactElementRegistration = {
+	componentId: 'input',
+	component: FormInput,
+	schema: InputFieldSchema,
+	metadata: {
+		name: 'Text Input Field',
+		description: 'Text input field for various input types (text, email, password, etc.)',
+		category: 'input',
+	},
+};

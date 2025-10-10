@@ -15,7 +15,7 @@ export const cardWithProgressBarForm: FormConfig = {
 
 	// Registry-based stepper configuration - now strongly typed!
 	stepper: {
-		__stepperId: 'progress-bar', // TypeScript knows this must be a valid stepper ID
+		stepperId: 'progress-bar', // TypeScript knows this must be a valid stepper ID
 		showLabels: true, // IntelliSense suggests valid options for progress-bar
 		variant: 'default', // 'default' | 'compact' | 'minimal'
 		showProgress: true, // Specific to progress-bar stepper
@@ -29,7 +29,7 @@ export const cardWithProgressBarForm: FormConfig = {
 
 			// Registry-based layout configuration for this step
 			layout: {
-				__layoutId: 'card',
+				layoutId: 'card',
 				padding: '1rem',
 				shadow: true,
 			},
@@ -60,7 +60,7 @@ export const cardWithProgressBarForm: FormConfig = {
 			title: 'Contact Information',
 
 			layout: {
-				__layoutId: 'card',
+				layoutId: 'card',
 				padding: '1rem',
 				shadow: true,
 			},
@@ -104,7 +104,7 @@ export const splitScreenWithVerticalForm: FormConfig = {
 	description: 'A multi-step form using split screen layout and vertical stepper',
 
 	stepper: {
-		__stepperId: 'vertical', // TypeScript enforces valid stepper IDs
+		stepperId: 'vertical', // TypeScript enforces valid stepper IDs
 		showLabels: true,
 		showDescription: true,
 		variant: 'default', // 'default' | 'compact' (specific to vertical)
@@ -119,7 +119,7 @@ export const splitScreenWithVerticalForm: FormConfig = {
 			description: 'Create your account credentials',
 
 			layout: {
-				__layoutId: 'split-screen',
+				layoutId: 'split-screen',
 				leftWidth: '50%',
 				rightWidth: '50%',
 			},
@@ -151,7 +151,7 @@ export const splitScreenWithVerticalForm: FormConfig = {
 			description: 'Tell us about yourself',
 
 			layout: {
-				__layoutId: 'split-screen',
+				layoutId: 'split-screen',
 				leftWidth: '40%',
 				rightWidth: '60%',
 			},
@@ -194,7 +194,7 @@ export const heroWithMinimalistForm: FormConfig = {
 	description: 'A multi-step form using hero layout and minimalist stepper',
 
 	stepper: {
-		__stepperId: 'minimalist', // Type-safe stepper selection
+		stepperId: 'minimalist', // Type-safe stepper selection
 		showLabels: false,
 		variant: 'dots', // 'dots' | 'lines' | 'numbers' (minimalist-specific)
 		allowStepJumping: true, // Specific to minimalist stepper
@@ -207,7 +207,7 @@ export const heroWithMinimalistForm: FormConfig = {
 			title: 'Welcome',
 
 			layout: {
-				__layoutId: 'hero',
+				layoutId: 'hero',
 				backgroundStyle: 'gradient',
 				textAlign: 'center',
 			},
@@ -229,7 +229,7 @@ export const heroWithMinimalistForm: FormConfig = {
 			title: 'Preferences',
 
 			layout: {
-				__layoutId: 'hero',
+				layoutId: 'hero',
 				backgroundStyle: 'solid',
 				textAlign: 'center',
 			},
@@ -264,7 +264,7 @@ export const heroWithMinimalistForm: FormConfig = {
 			title: 'Complete',
 
 			layout: {
-				__layoutId: 'hero',
+				layoutId: 'hero',
 				backgroundStyle: 'success',
 				textAlign: 'center',
 			},
@@ -373,7 +373,7 @@ export const layoutStepperForms = {
  * }
  *
  * interface MyCustomStepperConfig extends BaseStepperConfig {
- *   __stepperId: 'my-custom-stepper';
+ *   stepperId: 'my-custom-stepper';
  *   customOption?: boolean;
  *   theme?: 'light' | 'dark';
  *   // ... other custom options
