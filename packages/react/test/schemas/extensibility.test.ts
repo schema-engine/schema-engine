@@ -1,7 +1,7 @@
 import { test, expect, describe, afterEach } from 'bun:test';
 import { z } from 'zod';
 import { BaseFieldSchema } from '@json-form-engine/core/schemas/base-field';
-import { defaultFormFieldRegistry } from '@/registry';
+import { defaultFormFieldRegistry } from '@/registries/field-registry';
 import { 
 	createArrayElementsRuntimeSchema, 
 	type ArrayElementsConfig 

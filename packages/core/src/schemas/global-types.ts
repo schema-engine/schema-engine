@@ -2,9 +2,8 @@ import type { z } from 'zod';
 import type { BaseField } from './base-field';
 
 /**
- * Global form field elements registry
- * This interface will be extended by each field type registration
- * to provide strict typing for field configurations
+ * Global FormEngine namespace containing all core types
+ * This is the single source of truth for all form engine types
  */
 declare global {
 	/**

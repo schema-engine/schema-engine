@@ -50,6 +50,10 @@
       "types": "./dist/actions/*.d.ts",
       "import": "./dist/actions/*.js"
     },
+    "./actions/debug-registry": {
+      "types": "./dist/actions/debug-registry.d.ts",
+      "import": "./dist/actions/debug-registry.js"
+    },
     "./actions/plugins/*": {
       "types": "./dist/actions/plugins/*.d.ts",
       "import": "./dist/actions/plugins/*.js"
@@ -74,6 +78,10 @@
       "types": "./dist/schemas/validation/*.d.ts",
       "import": "./dist/schemas/validation/*.js"
     },
+    "./schemas/validation/validation-registry": {
+      "types": "./dist/schemas/validation/validation-registry.d.ts",
+      "import": "./dist/schemas/validation/validation-registry.js"
+    },
     "./schemas/validation/async/*": {
       "types": "./dist/schemas/validation/async/*.d.ts",
       "import": "./dist/schemas/validation/async/*.js"
@@ -85,6 +93,22 @@
     "./tools/*": {
       "types": "./dist/tools/*.d.ts",
       "import": "./dist/tools/*.js"
+    },
+    "./layouts": {
+      "types": "./dist/layouts/index.d.ts",
+      "import": "./dist/layouts/index.js"
+    },
+    "./layouts/*": {
+      "types": "./dist/layouts/*.d.ts",
+      "import": "./dist/layouts/*.js"
+    },
+    "./steppers": {
+      "types": "./dist/steppers/index.d.ts",
+      "import": "./dist/steppers/index.js"
+    },
+    "./steppers/*": {
+      "types": "./dist/steppers/*.d.ts",
+      "import": "./dist/steppers/*.js"
     }
   }
 }

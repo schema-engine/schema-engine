@@ -88,8 +88,15 @@ export function useFormValidationResolver(elements: any[]) {
 				}
 			}
 
+			if (Object.keys(errors).length === 0) {
+				return {
+					values,
+					errors: {},
+				};
+			}
+
 			return {
-				values: Object.keys(errors).length === 0 ? values : {},
+				values: {},
 				errors,
 			};
 		},

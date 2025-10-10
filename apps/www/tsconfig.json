@@ -18,7 +18,9 @@
     "strict": true,
     "target": "esnext",
     "types": [
-      "bun-types"
+      "bun-types",
+      "@json-form-engine/core",
+      "@json-form-engine/react"
     ],
     "useDefineForClassFields": true,
     "verbatimModuleSyntax": true

@@ -1,11 +1,12 @@
-import React from 'react';
+import { useState, useEffect, type FC } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
-import { notificationPlugin, registerAction, resetPlugin, submitPlugin } from '@json-form-engine/core/actions/index';
+import { notificationPlugin, resetPlugin, submitPlugin } from '@json-form-engine/core/actions';
+import { registerAction } from '@json-form-engine/core/actions/action-registry';
 import type { FormConfig } from '@json-form-engine/core/schemas';
-import '@json-form-engine/react/components/form/registry';
+import '@/lib/form-engine-setup';
 
 const formConfigWithActions: FormConfig = {
 	id: 'form-engine-demo',
@@ -64,6 +65,7 @@ const formConfigWithActions: FormConfig = {
 			id: 'submit-contact',
 			type: 'submit' as const,
 			enabled: true,
+			triggers: ['form_submit'],
 			endpoint: '/api/submit-demo',
 			method: 'POST' as const,
 			successMessage: 'Contact form submitted successfully!',
@@ -97,10 +99,10 @@ const formConfigWithActions: FormConfig = {
 	],
 };
 
-const FormEngineActionExecutor: React.FC = () => {
-	const [executionLog, setExecutionLog] = React.useState<string[]>([]);
+const FormEngineActionExecutor: FC = () => {
+	const [executionLog, setExecutionLog] = useState<string[]>([]);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		const addToLog = (message: string) => {
 			const timestamp = new Date().toLocaleTimeString();
 			setExecutionLog((prev) => [...prev, `[${timestamp}] ${message}`]);
@@ -109,14 +111,14 @@ const FormEngineActionExecutor: React.FC = () => {
 		registerAction(
 			submitPlugin({
 				onSuccess: (data, context) => {
-					console.log('🎉 FormEngine Submit Success:', { data, formId: context.formId });
+					console.log('FormEngine Submit Success:', { data, formId: context.formId });
 					addToLog('Submit plugin: Success callback executed');
-					addToLog(`📊 Submitted data keys: [${Object.keys(data || {}).join(', ')}]`);
+					addToLog(`Submitted data keys: [${Object.keys(data || {}).join(', ')}]`);
 				},
 				onError: (error, context) => {
-					console.error('💥 FormEngine Submit Error:', { error, formId: context.formId });
-					addToLog('❌ Submit plugin: Error callback executed');
-					addToLog(`💥 Error: ${error instanceof Error ? error.message : String(error)}`);
+					console.error('FormEngine Submit Error:', { error, formId: context.formId });
+					addToLog('Submit plugin: Error callback executed');
+					addToLog(`Error: ${error instanceof Error ? error.message : String(error)}`);
 				},
 			}),
 		);
@@ -124,9 +126,9 @@ const FormEngineActionExecutor: React.FC = () => {
 		registerAction(
 			resetPlugin({
 				onReset: (context) => {
-					console.log('🔄 FormEngine Form Reset:', { formId: context.formId });
-					addToLog('🔄 Reset plugin: Form reset callback executed');
-					addToLog('🧹 Form has been reset to default values');
+					console.log('FormEngine Form Reset:', { formId: context.formId });
+					addToLog('Reset plugin: Form reset callback executed');
+					addToLog('Form has been reset to default values');
 				},
 			}),
 		);
@@ -134,12 +136,12 @@ const FormEngineActionExecutor: React.FC = () => {
 		registerAction(
 			notificationPlugin({
 				onSuccess: (message, context) => {
-					console.log('📢 FormEngine Success Notification:', message, { formId: context.formId });
-					addToLog(`📢 Success notification displayed: "${message}"`);
+					console.log('FormEngine Success Notification:', message, { formId: context.formId });
+					addToLog(`Success notification displayed: "${message}"`);
 				},
 				onError: (message, context) => {
-					console.error('📢 FormEngine Error Notification:', message, { formId: context.formId });
-					addToLog(`📢 Error notification displayed: "${message}"`);
+					console.error('FormEngine Error Notification:', message, { formId: context.formId });
+					addToLog(`Error notification displayed: "${message}"`);
 				},
 			}),
 		);
@@ -152,7 +154,7 @@ const FormEngineActionExecutor: React.FC = () => {
 			<Card>
 				<CardHeader>
 					<CardTitle className="flex items-center gap-2">
-						🚀 FormEngine + Action System Demo
+						FormEngine + Action System Demo
 						<Badge variant="secondary">New Architecture</Badge>
 					</CardTitle>
 					<CardDescription>
@@ -162,13 +164,11 @@ const FormEngineActionExecutor: React.FC = () => {
 				</CardHeader>
 				<CardContent>
 					<div className="grid md:grid-cols-2 gap-6">
-						{/* Form Section */}
 						<div className="space-y-4">
 							<h3 className="text-lg font-semibold">Interactive Form</h3>
 							<FormRenderer config={formConfigWithActions} />
 						</div>
 
-						{/* Execution Log Section */}
 						<div className="space-y-4">
 							<div className="flex items-center justify-between">
 								<h3 className="text-lg font-semibold">Action Execution Log</h3>
@@ -196,7 +196,6 @@ const FormEngineActionExecutor: React.FC = () => {
 				</CardContent>
 			</Card>
 
-			{/* Technical Details */}
 			<Card>
 				<CardHeader>
 					<CardTitle>🔧 Technical Implementation</CardTitle>

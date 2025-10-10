@@ -1,8 +1,7 @@
 import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
 import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
 import type { FormConfig } from '@json-form-engine/core/schemas';
-import '@json-form-engine/react/components/form/registry';
-import '@json-form-engine/core/actions/debug-registry';
+import '@/lib/form-engine-setup';
 
 /**
  * Simple validation demo showing different validation rules
@@ -10,8 +9,7 @@ import '@json-form-engine/core/actions/debug-registry';
 export function ValidationDemo() {
 	const config: FormConfig = {
 		id: 'validation-demo',
-		mode: 'fr',
-
+		mode: 'free',
 		steps: [
 			{
 				id: 'validation-step',
@@ -49,7 +47,7 @@ export function ValidationDemo() {
 						name: 'website',
 						label: 'Website (optional)',
 						placeholder: 'https://example.com',
-						rules: [ValidationPresets.url('Please enter a valid URL')],
+						rules: [ValidationPresets.string.url('Please enter a valid URL')],
 					},
 				],
 			},

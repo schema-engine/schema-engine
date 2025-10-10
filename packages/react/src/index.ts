@@ -5,4 +5,9 @@
 
 export * from '@/components';
 export * from '@/hooks';
-export * from '@/registry';
+export * from '@/registries';
+
+/**
+ * Import types to ensure module augmentations are loaded
+ */
+export * from './types';

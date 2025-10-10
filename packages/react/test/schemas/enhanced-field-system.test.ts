@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'bun:test';
 import { z } from 'zod';
 import { formFieldRegistry } from '@json-form-engine/core/schemas/registry';
-import { defaultFormFieldRegistry } from '@/registry';
+import { defaultFormFieldRegistry } from '@/registries/field-registry';
 import { 
 	InputFieldSchema, 
 	inputFieldExample,

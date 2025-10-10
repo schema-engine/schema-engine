@@ -81,21 +81,26 @@ export function useConstraintLogic(
 	const watchedFields = useMemo(() => {
 		return constraints.map((constraint) => {
 			const constraintField = constraint.field;
-
-			// If a fieldPath is provided (e.g. when rendering array items) and the
-			// constraint refers to a local sibling field (no dot in the name),
-			// resolve it relative to the current fieldPath so the array index is
-			// preserved (e.g. `validationRules.0.type`).
+			/**
+			 * If a fieldPath is provided (e.g. when rendering array items) and the
+			 * constraint refers to a local sibling field (no dot in the name),
+			 * resolve it relative to the current fieldPath so the array index is
+			 * preserved (e.g. `validationRules.0.type`).
+			 */
 			if (fieldPath && !constraintField.includes('.')) {
 				const parts = fieldPath.split('.');
 				const last = parts[parts.length - 1];
-				// If last segment is a numeric index (array item root), keep it
-				// e.g. fieldPath = 'validationRules.0' -> 'validationRules.0.type'
+				/**
+				 * If last segment is a numeric index (array item root), keep it
+				 * e.g. fieldPath = 'validationRules.0' -> 'validationRules.0.type'
+				 */
 				if (!Number.isNaN(Number(last))) {
 					return `${fieldPath}.${constraintField}`;
 				}
-				// Otherwise assume fieldPath ends with the element's field name
-				// and resolve relative to its parent so we preserve the index
+				/**
+				 * Otherwise assume fieldPath ends with the element's field name
+				 * and resolve relative to its parent so we preserve the index
+				 */
 				parts.pop();
 				const parentPath = parts.join('.');
 				return parentPath ? `${parentPath}.${constraintField}` : constraintField;
@@ -121,14 +126,14 @@ export function useConstraintLogic(
 
 	const shouldShow = useMemo(() => {
 		if (constraints.length === 0) return true;
-
-		// Separate show/hide constraints. Multiple 'show' constraints should be
-		// treated as OR (show if any show-condition is met). Hide constraints
-		// are applied afterward to allow explicit hiding.
+		/**
+		 * Separate show/hide constraints. Multiple 'show' constraints should be
+		 * treated as OR (show if any show-condition is met). Hide constraints
+		 * are applied afterward to allow explicit hiding.
+		 */
 		const showConstraints = constraints.filter((c) => c.action === 'show');
 		const hideConstraints = constraints.filter((c) => c.action === 'hide');
 
-		// If there are show constraints, at least one must be satisfied to show
 		if (showConstraints.length > 0) {
 			const anyShow = showConstraints.some((constraint) => {
 				const watchedValue = watchedValuesMap[constraint.field];
@@ -138,7 +143,6 @@ export function useConstraintLogic(
 			if (!anyShow) return false;
 		}
 
-		// If any hide constraint is satisfied, the field should be hidden
 		if (hideConstraints.length > 0) {
 			const anyHide = hideConstraints.some((constraint) => {
 				const watchedValue = watchedValuesMap[constraint.field];
@@ -148,8 +152,6 @@ export function useConstraintLogic(
 			if (anyHide) return false;
 		}
 
-		// If no show constraints or show constraints passed and no hide applied,
-		// the field should be visible.
 		return true;
 	}, [constraints, watchedValuesMap]);
 

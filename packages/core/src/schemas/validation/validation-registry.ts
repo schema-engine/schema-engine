@@ -1,5 +1,23 @@
 import type { z } from 'zod';
-import type { ValidationRule, AsyncRule } from './types.js';
+import type {
+	ValidationRule,
+	AsyncRule,
+	RequiredRule,
+	EmailRule,
+	MinLengthRule,
+	MaxLengthRule,
+	PatternRule,
+	UrlRule,
+	UuidRule,
+	MinRule,
+	MaxRule,
+	MinItemsRule,
+	MaxItemsRule,
+	IpRule,
+	DateTimeRule,
+	DateRule,
+	TimeRule,
+} from './types.js';
 import { defaultValidations } from './defaults.js';
 import { logger } from '@/lib/logger.js';
 
@@ -131,29 +149,29 @@ export class ValidationRegistry {
 	 */
 	presets = {
 		string: {
-			required: (message?: string) => ({ type: 'required', message }),
-			email: (message?: string) => ({
+			required: (message?: string): RequiredRule => ({ type: 'required', message }),
+			email: (message?: string): EmailRule => ({
 				type: 'email',
 				message: message || 'Please enter a valid email address',
 			}),
-			minLength: (value: number, message?: string) => ({
+			minLength: (value: number, message?: string): MinLengthRule => ({
 				type: 'minLength',
 				value,
 				message: message || `Must be at least ${value} characters`,
 			}),
-			maxLength: (value: number, message?: string) => ({
+			maxLength: (value: number, message?: string): MaxLengthRule => ({
 				type: 'maxLength',
 				value,
 				message: message || `Must be no more than ${value} characters`,
 			}),
-			pattern: (pattern: string, message?: string) => ({
+			pattern: (pattern: string, message?: string): PatternRule => ({
 				type: 'pattern',
 				value: pattern,
 				message: message || 'Invalid format',
 			}),
-			url: (message?: string) => ({ type: 'url', message: message || 'Please enter a valid URL' }),
-			uuid: (message?: string) => ({ type: 'uuid', message: message || 'Please enter a valid UUID' }),
-			uuidv4: (message?: string) => ({
+			url: (message?: string): UrlRule => ({ type: 'url', message: message || 'Please enter a valid URL' }),
+			uuid: (message?: string): UuidRule => ({ type: 'uuid', message: message || 'Please enter a valid UUID' }),
+			uuidv4: (message?: string): UuidRule => ({
 				type: 'uuid',
 				version: 'v4',
 				message: message || 'Please enter a valid UUID v4',
@@ -161,13 +179,13 @@ export class ValidationRegistry {
 		},
 
 		number: {
-			required: (message?: string) => ({ type: 'required', message }),
-			min: (value: number, message?: string) => ({
+			required: (message?: string): RequiredRule => ({ type: 'required', message }),
+			min: (value: number, message?: string): MinRule => ({
 				type: 'min',
 				value,
 				message: message || `Must be at least ${value}`,
 			}),
-			max: (value: number, message?: string) => ({
+			max: (value: number, message?: string): MaxRule => ({
 				type: 'max',
 				value,
 				message: message || `Must be no more than ${value}`,
@@ -175,18 +193,18 @@ export class ValidationRegistry {
 		},
 
 		array: {
-			required: (message?: string) => ({ type: 'required', message }),
-			minItems: (value: number, message?: string) => ({
+			required: (message?: string): RequiredRule => ({ type: 'required', message }),
+			minItems: (value: number, message?: string): MinItemsRule => ({
 				type: 'minItems',
 				value,
 				message: message || `Must have at least ${value} items`,
 			}),
-			maxItems: (value: number, message?: string) => ({
+			maxItems: (value: number, message?: string): MaxItemsRule => ({
 				type: 'maxItems',
 				value,
 				message: message || `Must have no more than ${value} items`,
 			}),
-			nonEmpty: (message?: string) => ({
+			nonEmpty: (message?: string): MinItemsRule => ({
 				type: 'minItems',
 				value: 1,
 				message: message || 'Cannot be empty',
@@ -194,12 +212,12 @@ export class ValidationRegistry {
 		},
 
 		network: {
-			ipv4: (message?: string) => ({
+			ipv4: (message?: string): IpRule => ({
 				type: 'ip',
 				version: 'v4',
 				message: message || 'Please enter a valid IPv4 address',
 			}),
-			ipv6: (message?: string) => ({
+			ipv6: (message?: string): IpRule => ({
 				type: 'ip',
 				version: 'v6',
 				message: message || 'Please enter a valid IPv6 address',
@@ -207,15 +225,15 @@ export class ValidationRegistry {
 		},
 
 		date: {
-			datetime: (message?: string) => ({
+			datetime: (message?: string): DateTimeRule => ({
 				type: 'datetime',
 				message: message || 'Please enter a valid ISO datetime',
 			}),
-			date: (message?: string) => ({
+			date: (message?: string): DateRule => ({
 				type: 'date',
 				message: message || 'Please enter a valid ISO date',
 			}),
-			time: (message?: string) => ({
+			time: (message?: string): TimeRule => ({
 				type: 'time',
 				message: message || 'Please enter a valid ISO time',
 			}),

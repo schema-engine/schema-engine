@@ -186,44 +186,37 @@ export function StepperHeader({ navigation, className }: StepperHeaderProps) {
 	const showTitles = navigation?.showStepTitles !== false;
 	const allowJumping = navigation?.allowStepJumping || false;
 
-	const containerClass = cn(
-		'stepper-header',
-		orientation === 'horizontal' ? 'flex items-center justify-center' : 'flex flex-col',
-		orientation === 'horizontal' ? 'space-x-4' : 'space-y-2',
-		className,
-	);
-
-	const stepClass = cn(
-		'stepper-step flex items-start transition-all duration-200',
-		orientation === 'horizontal' ? 'flex-row' : 'flex-row w-full p-3 rounded-lg hover:bg-gray-50',
-		allowJumping && 'cursor-pointer hover:opacity-80',
-		orientation === 'vertical' && 'w-full',
-	);
+	const isHorizontal = orientation === 'horizontal';
+	const isVertical = orientation === 'vertical';
 
 	return (
-		<div className={containerClass}>
+		<div
+			className={cn(
+				'stepper__header',
+				isHorizontal && 'stepper__header--horizontal',
+				isVertical && 'stepper__header--vertical',
+				className,
+			)}
+		>
 			{steps.map((step, index) => {
-				const stepData = getStepData(index);
-				const isActive = stepData.isActive;
-				const isCompleted = stepData.isCompleted;
-
-				const canClickStep =
+				const { isActive, isCompleted } = getStepData(index);
+				const canClick =
 					allowJumping && (validationMode === 'free' || isCompleted || isActive || index < currentStep);
-
-				const dynamicStepClass = cn(
-					stepClass,
-					orientation === 'vertical' && 'relative',
-					orientation === 'vertical' && isActive && 'bg-blue-50 border-l-4 border-blue-500',
-					orientation === 'vertical' && isCompleted && !isActive && 'bg-green-50',
-				);
 
 				return (
 					<div
 						key={step.id}
-						className={dynamicStepClass}
-						onClick={canClickStep ? () => goToStep(index) : undefined}
+						className={cn(
+							'stepper__step',
+							isHorizontal && 'stepper__step--horizontal',
+							isVertical && 'stepper__step--vertical',
+							isVertical && isActive && 'stepper__step--active',
+							isVertical && isCompleted && !isActive && 'stepper__step--completed',
+							canClick && 'stepper__step--clickable',
+						)}
+						onClick={canClick ? () => goToStep(index) : undefined}
 						onKeyDown={
-							canClickStep
+							canClick
 								? (e) => {
 										if (e.key === 'Enter' || e.key === ' ') {
 											e.preventDefault();
@@ -232,69 +225,80 @@ export function StepperHeader({ navigation, className }: StepperHeaderProps) {
 									}
 								: undefined
 						}
-						role={canClickStep ? 'button' : undefined}
-						tabIndex={canClickStep ? 0 : undefined}
+						role={canClick ? 'button' : undefined}
+						tabIndex={canClick ? 0 : undefined}
 					>
 						<div
 							className={cn(
-								'step-indicator flex items-center justify-center',
-								'w-8 h-8 rounded-full border-2 transition-all',
-								isCompleted && 'bg-green-500 border-green-500 text-white',
-								isActive && !isCompleted && 'border-blue-500 bg-blue-500 text-white',
-								!isActive && !isCompleted && 'border-gray-300 bg-gray-100 text-gray-500',
-								variant === 'pills' && 'rounded-full',
-								variant === 'dots' && 'w-3 h-3',
+								'stepper__indicator',
+								variant === 'dots' && 'stepper__indicator--dots',
+								isCompleted && 'stepper__indicator--completed',
+								isActive && !isCompleted && 'stepper__indicator--active',
+								!isActive && !isCompleted && 'stepper__indicator--inactive',
 							)}
 						>
 							{variant !== 'dots' && isCompleted ? (
-								<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-									<title>Completed</title>
+								<svg
+									className="w-4 h-4"
+									fill="currentColor"
+									viewBox="0 0 20 20"
+									role="img"
+									aria-label="Completed"
+								>
 									<path
 										fillRule="evenodd"
 										d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
 										clipRule="evenodd"
 									/>
 								</svg>
-							) : showNumbers ? (
+							) : showNumbers && variant !== 'dots' ? (
 								<span className="text-sm font-medium">{index + 1}</span>
-							) : (
-								step.icon && <span className="text-sm">{step.icon}</span>
-							)}
+							) : step.icon ? (
+								<span className="text-sm">{step.icon}</span>
+							) : null}
 						</div>
 
 						{showTitles && variant !== 'dots' && (
 							<div
 								className={cn(
-									'step-title',
-									orientation === 'horizontal' ? 'ml-3' : 'mt-2 text-left w-full',
+									isHorizontal && 'stepper__title--horizontal',
+									isVertical && 'stepper__title--vertical',
 								)}
 							>
 								<span
 									className={cn(
-										'text-sm font-medium block',
-										isActive ? 'text-blue-600' : 'text-gray-500',
+										'stepper__title',
+										isActive ? 'stepper__title--active' : 'stepper__title--inactive',
 									)}
 								>
 									{step.title}
 								</span>
-								{step.description && orientation === 'vertical' && (
-									<p className="text-xs text-gray-400 mt-1">{step.description}</p>
+								{step.description && isVertical && (
+									<p className="stepper__description">{step.description}</p>
 								)}
 							</div>
 						)}
 
-						{index < steps.length - 1 && orientation === 'vertical' && (
-							<div
-								className={cn(
-									'absolute left-6 w-0.5 bg-gray-200',
-									'top-16 h-6',
-									isCompleted && 'bg-green-500',
+						{/* Connecting lines */}
+						{index < steps.length - 1 && (
+							<>
+								{isVertical && (
+									<div
+										className={cn(
+											'stepper__connector stepper__connector--vertical',
+											isCompleted && 'stepper__connector--completed',
+										)}
+									/>
 								)}
-							/>
-						)}
-
-						{index < steps.length - 1 && orientation === 'horizontal' && (
-							<div className={cn('flex-1 h-0.5 mx-4 bg-gray-200', isCompleted && 'bg-green-500')} />
+								{isHorizontal && (
+									<div
+										className={cn(
+											'stepper__connector stepper__connector--horizontal',
+											isCompleted && 'stepper__connector--completed',
+										)}
+									/>
+								)}
+							</>
 						)}
 					</div>
 				);
@@ -309,7 +313,7 @@ export interface StepperContentProps {
 }
 
 export function StepperContent({ children, className }: StepperContentProps) {
-	return <div className={cn('stepper-content', className)}>{children}</div>;
+	return <div className={cn('stepper__content', className)}>{children}</div>;
 }
 
 export interface StepperNavigationProps {
@@ -357,7 +361,7 @@ export function StepperNavigation({ navigation, onSubmit, className }: StepperNa
 	);
 
 	return (
-		<div className={cn('stepper-navigation flex justify-between items-center pt-6', className)}>
+		<div className={cn('stepper__navigation', className)}>
 			<div>
 				{!isFirstStep && !previousButton.hidden && (
 					<Button
@@ -372,7 +376,7 @@ export function StepperNavigation({ navigation, onSubmit, className }: StepperNa
 				)}
 			</div>
 
-			<div className="flex space-x-2">
+			<div className="stepper__navigation-buttons">
 				{buttons.custom &&
 					Object.entries(buttons.custom).map(([key, button]) => {
 						if (button.hidden) return null;

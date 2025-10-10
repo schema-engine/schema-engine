@@ -7,26 +7,56 @@
 ## Features
 
 - **JSON Configuration**: Define forms in JSON with automatic validation generation.
+- **Form Library Adapters**: Currently uses React Hook Form, with architecture designed for TanStack Form, Formik, and more.
 - **Responsive Grids**: Advanced layout system with device emulation and breakpoint management.
-- **Conditional Logic**: Dynamic field rendering based on real-time form state.
+- **Constraint-Based Logic**: Dynamic field visibility, validation, and state based on real-time conditions.
 - **Type Safety**: Zod validation schemas are created automatically from your configuration.
 - **100% Serializable**: All form configs are serializable and portable.
 - **Auto-Generated Schemas**: Validation and types are generated from your config.
 - **Real-time Validation**: Instant feedback as users fill out forms.
-- **Tree-Shakable**: Optimized for modern bundlers.
+- **Tree-Shakable**: Optimized for modern bundlers with individual component imports.
 
 ## Quick Start
 
 Get up and running in three simple steps:
 
-1. **Define Structure**  
-   Create your form configuration in JSON format with field definitions.
-2. **Auto-Generate**  
-   Validation schemas and types are automatically created from your config.
+1. **Setup Form Engine**  
+   Import FormRenderer and register the components you need.
+2. **Define Structure**  
+   Create your form configuration in JSON format with field definitions and constraint logic.
 3. **Render & Validate**  
-   Display your form with real-time validation and error handling.
+   Display your form with real-time validation, dynamic field behavior, and error handling.
 
 ## Example
+
+````typescript
+```typescript
+// Simple setup with React Hook Form
+import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
+import { FormEngine, rhfAdapter } from '@json-form-engine/react';
+import '@json-form-engine/react/registrations'; // Register all components
+
+function MyForm() {
+  const handleSubmit = (data: any) => {
+    console.log('Form submitted:', data);
+  };
+
+  return (
+    // Option 1: Use FormRenderer directly (simpler)
+    <FormRenderer
+      config={formConfig}
+      onSubmit={handleSubmit}
+    />
+
+    // Option 2: Use FormEngine with explicit adapter (more control)
+    // <FormEngine adapter={rhfAdapter}>
+    //   <FormProvider config={formConfig} onSubmit={handleSubmit} />
+    // </FormEngine>
+  );
+}
+````
+
+````
 
 ```json
 {
@@ -39,6 +69,18 @@ Get up and running in three simple steps:
 			"title": "Contact Information",
 			"elements": [
 				{
+					"id": "contact-type",
+					"name": "contactType",
+					"componentId": "select",
+					"label": "Contact Type",
+					"options": [
+						{ "value": "support", "label": "Support" },
+						{ "value": "sales", "label": "Sales" },
+						{ "value": "general", "label": "General Inquiry" }
+					],
+					"rules": [{ "type": "required", "message": "Please select a contact type" }]
+				},
+				{
 					"id": "email",
 					"name": "email",
 					"componentId": "input",
@@ -48,6 +90,25 @@ Get up and running in three simple steps:
 					"rules": [
 						{ "type": "required", "message": "Email is required" },
 						{ "type": "email", "message": "Please enter a valid email address" }
+					]
+				},
+				{
+					"id": "priority",
+					"name": "priority",
+					"componentId": "select",
+					"label": "Priority Level",
+					"options": [
+						{ "value": "low", "label": "Low" },
+						{ "value": "high", "label": "High" },
+						{ "value": "urgent", "label": "Urgent" }
+					],
+					"constraints": [
+						{
+							"field": "contactType",
+							"operator": "equals",
+							"value": "support",
+							"action": "show"
+						}
 					]
 				},
 				{
@@ -80,7 +141,19 @@ Get up and running in three simple steps:
 		}
 	]
 }
-```
+````
+
+## Form Library Adapter Architecture
+
+**Form Engine** uses a flexible adapter system designed to work with your favorite form library. Currently implemented with React Hook Form, but architected for extensibility:
+
+- **Current Adapter**: React Hook Form - providing excellent performance and developer experience
+- **Flexible Architecture**: Built with adapter pattern to support TanStack Form, Formik, and others
+- **Consistent API**: Same `FormRenderer` interface regardless of underlying form library
+- **Future-Ready**: Easy to add support for new form libraries as they emerge
+- **JSON-Driven**: Declarative configuration works with any adapter
+
+The adapter system is seamless - Form Engine handles all form library integration automatically while maintaining consistent behavior across different implementations.
 
 ## Registry System
 
@@ -88,9 +161,23 @@ The **Registry** is the core mechanism that allows you to register and manage cu
 
 - Register new input components (e.g., custom selects, date pickers)
 - Register custom validation rules
-- Register layout or UI plugins (@todo)
+- Register layout components for responsive design
+- Register stepper components for multi-step forms
+- Use tree-shaking to import only the components you need
 
 This system ensures that your forms can be extended and customized for any use case, while keeping configuration fully serializable and type-safe.
+
+## Constraint-Based Logic
+
+The **Constraint System** enables sophisticated form behavior through JSON configuration:
+
+- **Dynamic Visibility**: Show/hide fields based on other field values
+- **Conditional Validation**: Make fields required based on conditions
+- **State Management**: Enable/disable fields dynamically
+- **Array Field Support**: Constraint logic works within dynamic arrays
+- **Performance Optimized**: Uses React Hook Form's `useWatch` for efficient updates
+
+All constraint logic is defined in JSON and evaluated in real-time as users interact with the form.
 
 ## Actions System
 
@@ -104,14 +191,24 @@ Actions are fully configurable and support custom plugins, making it easy to imp
 
 ## Documentation
 
+### Getting Started
+
 - [Introduction](./apps/www/src/pages/docs/introduction.mdx)
 - [Installation](./apps/www/src/pages/docs/installation.mdx)
 - [Quick Start](./apps/www/src/pages/docs/quick-start.mdx)
+
+### Core Concepts
+
+- [Type System & Augmentation](./packages/core/TYPE_SYSTEM.md) - **Learn how to create custom field types**
 - [Actions](./apps/www/src/pages/docs/actions/how-it-works.mdx)
 - [Components](./apps/www/src/pages/docs/components/how-it-works.mdx)
-- [Examples](./apps/www/src/pages/docs/examples/basic-form.mdx)
 - [Hooks](./apps/www/src/pages/docs/hooks/index.mdx)
 - [Layouts](./apps/www/src/pages/docs/layout/how-it-works.mdx)
+
+### Package Documentation
+
+- [@json-form-engine/core README](./packages/core/README.md)
+- [@json-form-engine/react REGISTRATION](./packages/react/REGISTRATION.md)
 
 See the [`/docs`](./apps/www/src/pages/docs/) folder for more.
 

@@ -1,6 +1,4 @@
 import { z } from 'zod';
-import type { FieldConfig, ComponentId } from './field-config';
-
 /**
  * Global registry for form field types using Zod 4 registries
  * This provides metadata storage and JSON schema generation capabilities
@@ -54,7 +52,7 @@ export class FormFieldComponentRegistry<TComponent = any> {
 	/**
 	 * Unregister a field type and remove it from all registries
 	 */
-	unregister(componentId: ComponentId | string): boolean {
+	unregister(componentId: FormEngine.ComponentId | string): boolean {
 		const registration = this.components.get(componentId);
 		if (!registration) return false;
 
@@ -72,14 +70,14 @@ export class FormFieldComponentRegistry<TComponent = any> {
 	/**
 	 * Get component for a field type
 	 */
-	getComponent(fieldType: ComponentId): TComponent | undefined {
+	getComponent(fieldType: FormEngine.ComponentId): TComponent | undefined {
 		return this.components.get(fieldType)?.component;
 	}
 
 	/**
 	 * Get schema for a field type
 	 */
-	getSchema(fieldType: ComponentId): z.ZodSchema<any> | undefined {
+	getSchema(fieldType: FormEngine.ComponentId): z.ZodSchema<any> | undefined {
 		return this.schemas.get(fieldType);
 	}
 
@@ -93,21 +91,21 @@ export class FormFieldComponentRegistry<TComponent = any> {
 	/**
 	 * Get serializable schema for a field type.
 	 */
-	getSerializableSchema(fieldType: ComponentId): z.ZodSchema<any> | undefined {
+	getSerializableSchema(fieldType: FormEngine.ComponentId): z.ZodSchema<any> | undefined {
 		return this.schemas.get(fieldType);
 	}
 
 	/**
 	 * Get all registered field types
 	 */
-	getFieldTypes(): ComponentId[] {
-		return Array.from(this.components.keys()) as ComponentId[];
+	getFieldTypes(): FormEngine.ComponentId[] {
+		return Array.from(this.components.keys()) as FormEngine.ComponentId[];
 	}
 
 	/**
 	 * Get metadata for a field type
 	 */
-	getMetadata(fieldType: ComponentId): FormEngine.FieldMetadata | undefined {
+	getMetadata(fieldType: FormEngine.ComponentId): FormEngine.FieldMetadata | undefined {
 		const schema = this.getRuntimeSchema(fieldType);
 		if (!schema) return undefined;
 
@@ -117,7 +115,7 @@ export class FormFieldComponentRegistry<TComponent = any> {
 	/**
 	 * Check if a field type is registered
 	 */
-	hasFieldType(fieldType: ComponentId): boolean {
+	hasFieldType(fieldType: FormEngine.ComponentId): boolean {
 		return this.components.has(fieldType);
 	}
 
@@ -125,7 +123,7 @@ export class FormFieldComponentRegistry<TComponent = any> {
 	 * Clear specific registered fields by their component IDs
 	 * More flexible and explicit than clearing by assumption
 	 */
-	clearFields(componentIds: (ComponentId | string)[]): void {
+	clearFields(componentIds: (FormEngine.ComponentId | string)[]): void {
 		for (const componentId of componentIds) {
 			this.unregister(componentId);
 		}
@@ -151,7 +149,7 @@ export class FormFieldComponentRegistry<TComponent = any> {
 	 * Create a union schema of all registered field types
 	 * This is used for dynamic schemas like array elements
 	 */
-	createFieldUnionSchema(): z.ZodSchema<FieldConfig> | z.ZodNever {
+	createFieldUnionSchema(): z.ZodSchema<FormEngine.FieldConfig> | z.ZodNever {
 		const schemas = Array.from(this.schemas.values());
 
 		if (schemas.length === 0) {
@@ -169,7 +167,7 @@ export class FormFieldComponentRegistry<TComponent = any> {
 	 * Create a union schema of serializable field types.
 	 * This is used for JSON schema generation and serialization.
 	 */
-	createSerializableFieldUnionSchema(): z.ZodSchema<FieldConfig> | z.ZodNever {
+	createSerializableFieldUnionSchema(): z.ZodSchema<FormEngine.FieldConfig> | z.ZodNever {
 		return this.createFieldUnionSchema();
 	}
 
@@ -189,7 +187,7 @@ export class FormFieldComponentRegistry<TComponent = any> {
 	/**
 	 * Validate a field configuration against its schema
 	 */
-	validateField(fieldConfig: unknown): { success: boolean; data?: FieldConfig; error?: string } {
+	validateField(fieldConfig: unknown): { success: boolean; data?: FormEngine.FieldConfig; error?: string } {
 		if (!fieldConfig || typeof fieldConfig !== 'object') {
 			return { success: false, error: 'Field configuration must be an object' };
 		}
@@ -205,7 +203,7 @@ export class FormFieldComponentRegistry<TComponent = any> {
 		}
 
 		try {
-			const result = schema.parse(fieldConfig) as FieldConfig;
+			const result = schema.parse(fieldConfig) as FormEngine.FieldConfig;
 			return { success: true, data: result };
 		} catch (error) {
 			return { success: false, error: error instanceof Error ? error.message : 'Validation failed' };
@@ -215,7 +213,7 @@ export class FormFieldComponentRegistry<TComponent = any> {
 	/**
 	 * Convert field configuration to serializable format
 	 */
-	toSerializable(fieldConfig: unknown): FieldConfig | null {
+	toSerializable(fieldConfig: unknown): FormEngine.FieldConfig | null {
 		if (!fieldConfig || typeof fieldConfig !== 'object') {
 			return null;
 		}
@@ -225,7 +223,7 @@ export class FormFieldComponentRegistry<TComponent = any> {
 		if (!schema) return null;
 
 		try {
-			return schema.parse(fieldConfig) as FieldConfig;
+			return schema.parse(fieldConfig) as FormEngine.FieldConfig;
 		} catch {
 			return null;
 		}
@@ -234,7 +232,7 @@ export class FormFieldComponentRegistry<TComponent = any> {
 	/**
 	 * Generate JSON schema for a field type
 	 */
-	toJSONSchema(fieldType: ComponentId): unknown {
+	toJSONSchema(fieldType: FormEngine.ComponentId): unknown {
 		const schema = this.getRuntimeSchema(fieldType);
 		if (!schema) return null;
 

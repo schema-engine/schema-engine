@@ -13,18 +13,24 @@ export const getMetadata = () => ({
 
 Form Engine's component system is built around a simple but powerful idea: **bring your own components**. Instead of forcing you to use our components or rebuild your UI, Form Engine provides a registration system that wraps your existing components with form-aware functionality.
 
+The **adapter architecture** ensures your registered components work seamlessly with any form library we support, starting with React Hook Form and designed for TanStack Form, Formik, and others.
+
 ## The Registration System
 
 At its core, the registration system does three things:
 
 1. **Takes your existing components** (inputs, selects, checkboxes, etc.)
-2. **Wraps them with form logic** (validation, state management, grid positioning)
-3. **Makes them available** to the FormRenderer through a type-safe registry
+2. **Wraps them with form logic** (validation, state management, constraint evaluation)
+3. **Makes them available** to the FormRenderer through a type-safe registry that works with any form library adapter
+
+## Adapter-Aware Component Wrapping
+
+With the adapter system, components are automatically wrapped with the appropriate form library hooks:
 
 <CodePreview 
   className='unprose'
   fileName="component-registration.ts"
-  code={`// Your existing input component
+  code={`// Your existing input component (unchanged!)
 const MyInput = ({ label, error, className, ...props }) => (
   <div className={\`form-field \${className}\`}>
     <label className="form-label">{label}</label>
@@ -36,8 +42,8 @@ const MyInput = ({ label, error, className, ...props }) => (
   </div>
 );
 
-// Register it with the actual registry
-import { defaultFormRegistry } from '@/lib/form-engine';
+// Register it with the registry (works with any adapter)
+import { defaultFormRegistry } from '@json-form-engine/react';
 
 defaultFormRegistry.register({
   name: 'input',
@@ -46,8 +52,14 @@ defaultFormRegistry.register({
   description: 'Text input field'
 });
 
-// Use it everywhere in your form configs
-import { ValidationPresets } from '@/lib/form-engine/validation';
+// Use it with any supported form library
+import { FormRenderer } from '@json-form-engine/react';
+
+function MyForm() {
+  return (
+    <FormRenderer config={formConfig} /> {/* Currently uses React Hook Form adapter */}
+  );
+}
 
 const formConfig = {
   elements: [
@@ -57,6 +69,14 @@ const formConfig = {
       label: 'Full Name',
       rules: [
         ValidationPresets.string.required("Name is required")
+      ],
+      constraints: [                 // New: constraint-based logic
+        {
+          field: 'userType',
+          operator: 'equals',
+          value: 'individual',
+          action: 'show'
+        }
       ]
     }
   ]
@@ -64,15 +84,20 @@ const formConfig = {
   example={<SimpleInputDemo />}
 />
 
-## The Adaptation Mechanism
+## The Adapter Integration
 
-When you create a field component, Form Engine provides several utilities to make integration seamless:
+The adapter system provides automatic integration with different form libraries:
 
-### Form Integration Hooks
-- **`useControlledFormElement`** - Main hook that provides field state, validation, and grid positioning
+### Current Implementation (React Hook Form)
+- **`useAdapterControlledFormElement`** - Uses React Hook Form's `useController` for optimal performance
+- **`useConstraintLogic`** - Leverages React Hook Form's `useWatch` for efficient constraint evaluation
 - **`combineHandlers`** - Utility to combine your event handlers with Form Engine's
 
-### UI Components
+### Future Form Library Support
+The architecture is designed to easily support:
+- **TanStack Form** - Modern form library with excellent TypeScript support
+- **Formik** - Popular form library with wide ecosystem
+- **Custom Libraries** - Easy to add adapters for any form library
 - **`FieldGroup`** - Wrapper component that handles labels, errors, and accessibility
 - **Grid positioning** - Automatic layout within the responsive grid system
 

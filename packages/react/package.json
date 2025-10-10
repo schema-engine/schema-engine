@@ -4,12 +4,16 @@
   "version": "0.1.0",
   "license": "MIT",
   "sideEffects": [
+    "./dist/registrations.js",
     "./dist/components/form/registry.js",
-    "./dist/components/form/fields/*.registry.js"
+    "./dist/components/form/fields/*.registry.js",
+    "./dist/components/layouts/*.registry.js",
+    "./dist/components/steppers/*.registry.js"
   ],
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "style": "dist/global.css",
   "files": [
     "/dist/*"
   ],
@@ -21,14 +25,22 @@
     "watch:lib": "bun run ./build.ts --watch",
     "clean": "rm -rf ./dist",
     "test:all": "bun test",
-    "lint-staged": "lint-staged"
+    "lint-staged": "lint-staged",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "devDependencies": {
-    "@types/bun": "latest",
     "@happy-dom/global-registrator": "^18.0.1",
+    "@storybook/addon-docs": "^9.1.10",
+    "@storybook/react-vite": "^9.1.10",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.3.0",
+    "@types/bun": "latest",
+    "autoprefixer": "^10.4.21",
+    "postcss-import": "^16.1.1",
+    "storybook": "^9.1.10",
+    "tailwindcss": "^3",
     "tsc-alias": "^1.8.16"
   },
   "peerDependencies": {
@@ -39,6 +51,7 @@
   },
   "dependencies": {
     "@ecopages/logger": "^0.2.2",
+    "@ecopages/postcss-processor": "npm:@jsr/ecopages__postcss-processor@latest",
     "@hookform/resolvers": "^5.2.1",
     "@radix-ui/react-accordion": "^1.2.2",
     "@radix-ui/react-alert-dialog": "^1.1.4",
@@ -101,9 +114,16 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./registry": {
-      "types": "./dist/registry.d.ts",
-      "import": "./dist/registry.js"
+    "./types": {
+      "types": "./dist/types.d.ts"
+    },
+    "./registrations": {
+      "types": "./dist/registrations.d.ts",
+      "import": "./dist/registrations.js"
+    },
+    "./registries/*": {
+      "types": "./dist/registries/*.d.ts",
+      "import": "./dist/registries/*.js"
     },
     "./hooks": {
       "types": "./dist/hooks/index.d.ts",
@@ -129,6 +149,10 @@
       "types": "./dist/components/form/registry.d.ts",
       "import": "./dist/components/form/registry.js"
     },
+    "./components/core-registrations": {
+      "types": "./dist/registrations.d.ts",
+      "import": "./dist/registrations.js"
+    },
     "./components/form/fields/*": {
       "types": "./dist/components/form/fields/*.d.ts",
       "import": "./dist/components/form/fields/*.js"
@@ -140,6 +164,30 @@
     "./components/internals/*": {
       "types": "./dist/components/internals/*.d.ts",
       "import": "./dist/components/internals/*.js"
-    }
+    },
+    "./components/internals/form-renderer": {
+      "types": "./dist/components/internals/form-renderer.d.ts",
+      "import": "./dist/components/internals/form-renderer.js"
+    },
+    "./components/steppers": {
+      "types": "./dist/components/steppers.d.ts",
+      "import": "./dist/components/steppers.js"
+    },
+    "./components/steppers/*": {
+      "types": "./dist/components/steppers/*.d.ts",
+      "import": "./dist/components/steppers/*.js"
+    },
+    "./components/steppers/*.css": "./dist/components/steppers/*.css",
+    "./components/layouts": {
+      "types": "./dist/components/layouts/index.d.ts",
+      "import": "./dist/components/layouts/index.js"
+    },
+    "./components/layouts/*": {
+      "types": "./dist/components/layouts/*.d.ts",
+      "import": "./dist/components/layouts/*.js"
+    },
+    "./components/layouts/*.css": "./dist/components/layouts/*.css",
+    "./global.css": "./dist/global.css",
+    "./dist/*.css": "./dist/*.css"
   }
 }

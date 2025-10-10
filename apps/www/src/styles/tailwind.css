@@ -1,3 +1,6 @@
+/* Import all styles at once */
+@import "@json-form-engine/react/dist/global.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

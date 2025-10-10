@@ -1,7 +1,6 @@
 import type { FormConfig } from '@json-form-engine/core/schemas';
 import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
-import '@json-form-engine/react/components/form/registry';
-import '@json-form-engine/core/actions/debug-registry';
+import '@/lib/form-engine-setup';
 
 /**
  * Multi-step registration form configuration
@@ -143,6 +142,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 		},
 	],
 	stepper: {
+		__stepperId: 'default',
 		orientation: 'horizontal',
 		variant: 'default',
 		position: 'top',
@@ -201,6 +201,7 @@ export const verticalStepperConfig: FormConfig = {
 	...multiStepRegistrationConfig,
 	id: 'vertical-stepper-demo',
 	stepper: {
+		__stepperId: 'default',
 		variant: 'default',
 		orientation: 'vertical',
 		position: 'left',
@@ -233,7 +234,8 @@ export const minimalStepperConfig: FormConfig = {
 	id: 'minimal-stepper-demo',
 	mode: 'free',
 	stepper: {
-		variant: 'minimal',
+		__stepperId: 'minimalist',
+		variant: 'dots',
 		orientation: 'horizontal',
 		position: 'top',
 		showStepNumbers: false,

@@ -1,0 +1,90 @@
+:root {
+	--card-layout-bg: theme("colors.gray.50");
+	--card-layout-card-bg: theme("colors.white");
+	--card-layout-border: theme("colors.gray.200");
+	--card-layout-text-primary: theme("colors.gray.900");
+	--card-layout-text-secondary: theme("colors.gray.600");
+	--card-layout-text-muted: theme("colors.gray.500");
+}
+
+.card-layout {
+	@apply min-h-screen flex items-center justify-center p-8;
+	background-color: var(--card-layout-bg);
+
+	&__card {
+		@apply w-full rounded-xl overflow-hidden;
+		background-color: var(--card-layout-card-bg);
+
+		&--sm {
+			@apply max-w-sm;
+		}
+
+		&--md {
+			@apply max-w-md;
+		}
+
+		&--lg {
+			@apply max-w-lg;
+		}
+
+		&--xl {
+			@apply max-w-xl;
+		}
+	}
+
+	&__shadow {
+		&--sm {
+			@apply shadow-sm;
+		}
+
+		&--md {
+			@apply shadow-md;
+		}
+
+		&--lg {
+			@apply shadow-lg;
+		}
+
+		&--xl {
+			@apply shadow-xl;
+		}
+	}
+
+	&__header {
+		@apply text-center border-b;
+		border-color: var(--card-layout-border);
+	}
+
+	&__title {
+		@apply text-2xl font-semibold mb-2;
+		color: var(--card-layout-text-primary);
+	}
+
+	&__description {
+		@apply mb-2;
+		color: var(--card-layout-text-secondary);
+	}
+
+	&__step-counter {
+		@apply text-sm;
+		color: var(--card-layout-text-muted);
+	}
+
+	&__content {
+		/* Content area styling */
+	}
+
+	&__padding {
+		&--sm {
+			@apply p-4;
+		}
+
+		&--md {
+			@apply p-6;
+		}
+
+		&--lg {
+			@apply p-8;
+		}
+	}
+}

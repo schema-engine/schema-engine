@@ -13,28 +13,28 @@ Build your first form with Form Engine in just a few steps. This guide assumes y
 
 ## Your First Form
 
-Let's create a simple contact form to demonstrate the core concepts:
+Let's create a simple contact form to demonstrate the core concepts including the new adapter architecture and constraint logic:
 
-### 1. Import and Register Field Components
+### 1. Import Form Engine Components
 
-First, import the field components you need:
+First, import the Form Engine components you need:
 
 ```typescript
-// Import the core renderer
+// Import the Form Renderer
 import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
 
-// Import only the field types you need (tree-shakable)
-import '@/lib/form-engine/components/form/fields/input-field.registry';
-import '@/lib/form-engine/components/form/fields/textarea-field.registry';
-import '@/lib/form-engine/components/form/fields/select-field.registry';
+// Import all default components (recommended for most use cases)
+import '@json-form-engine/react/registrations';
 
-// Or for development, import all elements:
-// import '@/lib/form-engine/components/form/registries';
+// Or for tree-shaking, import only the field types you need:
+// import '@json-form-engine/react/components/form/fields/form-input.registry';
+// import '@json-form-engine/react/components/form/fields/form-textarea.registry';
+// import '@json-form-engine/react/components/form/fields/form-select.registry';
 ```
 
 ### 2. Create the Form Configuration
 
-Define your form structure using a JSON configuration:
+Define your form structure using a JSON configuration with constraint logic:
 
 ```typescript
 import type { FormConfig } from '@json-form-engine/core/schemas';
@@ -96,6 +96,25 @@ const contactFormConfig: FormConfig = {
           ],
           rules: [
             { type: 'required', message: 'Please select a subject' }
+          ]
+        },
+        {
+          componentId: 'select',
+          id: 'priority',
+          name: 'priority',
+          label: 'Priority Level',
+          options: [
+            { value: 'low', label: 'Low' },
+            { value: 'medium', label: 'Medium' },
+            { value: 'high', label: 'High' }
+          ],
+          constraints: [
+            {
+              field: 'subject',
+              operator: 'equals',
+              value: 'support',
+              action: 'show'
+            }
           ]
         },
         {
@@ -174,6 +193,47 @@ function App() {
   );
 }
 ```
+
+## Understanding the Architecture
+
+Form Engine uses a **clean, simple API** with a powerful adapter system under the hood:
+
+- **Single Component**: Use `FormRenderer` for all your forms
+- **Adapter Architecture**: Currently uses React Hook Form, designed to support TanStack Form, Formik, and others
+- **Constraint Logic**: Dynamic field behavior through JSON configuration, optimized for each form library
+- **Type Safety**: Full TypeScript support with automatic type inference
+- **Future-Proof**: Add new form library support without changing your form configurations
+- **Tree-Shakable**: Import only the components you need
+
+## Understanding Constraint Logic
+
+Notice the `priority` field in our example includes a `constraints` array:
+
+```json
+{
+  "id": "priority",
+  "name": "priority", 
+  "componentId": "select",
+  "label": "Priority Level",
+  "constraints": [
+    {
+      "field": "subject",
+      "operator": "equals", 
+      "value": "support",
+      "action": "show"
+    }
+  ]
+}
+```
+
+This creates **conditional logic** where:
+- The priority field is only **shown** when the subject field equals "support"
+- Users only see priority options for technical support requests
+- The field automatically hides/shows as users change the subject
+
+Available constraint operators: `equals`, `not_equals`, `contains`, `not_contains`, `greater_than`, `less_than`, `is_empty`, `is_not_empty`
+
+Available constraint actions: `show`, `hide`, `enable`, `disable`, `require`
 
 ## Understanding the Structure
 

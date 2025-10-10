@@ -1,4 +1,4 @@
-import { registerFieldType } from '@/registry';
+import { registerFieldType } from '@/registries/field-registry';
 import { TextareaFieldSchema, textareaFieldExample } from './form-textarea.types';
 import { FormTextarea } from './form-textarea';
 

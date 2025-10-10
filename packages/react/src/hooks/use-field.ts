@@ -1,7 +1,6 @@
 import { useController } from 'react-hook-form';
 import { isFieldRequired } from '@json-form-engine/core/schemas';
 import { useFieldGridStyles } from './grid-hooks';
-import type { FieldConfig } from '@json-form-engine/core/schemas';
 
 /**
  * Creates a default value for a field configuration
@@ -46,7 +45,7 @@ export function combineHandlers<T>(controllerHandler: (value: T) => void, propsH
  * This replaces the FieldGroup wrapper and gives fields full control
  * over their rendering, errors, and semantic HTML
  */
-export function useControlledFormElement(config: FieldConfig) {
+export function useControlledFormElement(config: FormEngine.FieldConfig) {
 	const isRequired = isFieldRequired(config.rules);
 
 	const { field, fieldState, formState } = useController({

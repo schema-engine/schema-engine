@@ -1,6 +1,5 @@
 import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
-import '@json-form-engine/react/components/form/registry';
-import '@json-form-engine/core/actions/debug-registry';
+import '@/lib/form-engine-setup';
 import { demoFormConfig } from '../../configs/forms/demo-forms';
 
 /**

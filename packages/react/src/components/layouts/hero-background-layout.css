@@ -1,0 +1,62 @@
+:root {
+	--hero-background-overlay: rgba(0, 0, 0, 0.5);
+	--hero-background-text: theme("colors.white");
+	--hero-background-form-bg: theme("colors.white");
+	--hero-background-form-text: theme("colors.gray.800");
+}
+
+.hero-background-layout {
+	@apply min-h-screen flex items-center justify-center relative;
+	color: var(--hero-background-text);
+
+	&__video {
+		@apply absolute inset-0 w-full h-full object-cover -z-10;
+	}
+
+	&__overlay {
+		@apply absolute inset-0 z-0;
+		background-color: var(--hero-background-overlay);
+	}
+
+	&__content {
+		@apply relative z-10 w-full px-8 text-center;
+
+		&--sm {
+			@apply max-w-sm;
+		}
+
+		&--md {
+			@apply max-w-md;
+		}
+
+		&--lg {
+			@apply max-w-lg;
+		}
+
+		&--xl {
+			@apply max-w-xl;
+		}
+	}
+
+	&__header {
+		@apply mb-8;
+	}
+
+	&__title {
+		@apply text-4xl font-bold mb-4;
+	}
+
+	&__description {
+		@apply text-lg mb-2;
+	}
+
+	&__step-counter {
+		@apply text-sm opacity-80;
+	}
+
+	&__form {
+		@apply bg-opacity-95 p-8 rounded-lg shadow-lg;
+		background-color: var(--hero-background-form-bg);
+		color: var(--hero-background-form-text);
+	}
+}
