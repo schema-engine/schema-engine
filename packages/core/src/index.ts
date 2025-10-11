@@ -8,7 +8,12 @@
 // New builder pattern exports (v2.0)
 export { FormEngineBuilder } from './builder';
 export { FormEngine } from './engine';
-export type { EngineRegistries, SerializableFormConfig } from './engine';
+export type { EngineRegistries, SerializableFormConfig, FormEngineSchemaMetadata } from './engine';
+export { SchemaGenerator } from './engine/schema-generator';
+export type {
+	JSONSchemaOptions,
+	FormConfigSchemaOptions,
+} from './engine/schema-generator';
 
 // Registry exports for standalone usage
 export {

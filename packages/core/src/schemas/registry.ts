@@ -4,6 +4,8 @@ import { z } from 'zod';
  * Field configuration metadata for registries
  */
 export interface FieldMetadata {
+	/** Unique identifier for JSON Schema generation */
+	id?: string;
 	/** Human-readable display name */
 	name: string;
 	/** Description of what this field type does */
@@ -72,7 +74,10 @@ export class FormFieldComponentRegistry<TComponent = any> {
 		this.components.set(id, registration);
 		this.schemas.set(id, schema);
 		if (metadata) {
-			this.zodRegistry.add(schema, metadata);
+			this.zodRegistry.add(schema, {
+				...metadata,
+				id,
+			});
 		}
 	}
 

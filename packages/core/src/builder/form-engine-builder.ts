@@ -1,6 +1,8 @@
 import type { ElementRegistration, LayoutRegistration, StepperRegistration, BuilderActionRegistration } from '@/types';
+import type { FormEngineSchemaMetadata } from '@/engine/form-engine';
 import { logger } from '@/lib/logger';
 import { ElementRegistry, LayoutRegistry, StepperRegistry, ActionRegistry } from '@/registries';
+import { z } from 'zod';
 
 /**
  * FormEngineBuilder - Builder pattern for configuring the form engine.
@@ -193,7 +195,6 @@ export class FormEngineBuilder<
 		const newStepperRegistry = new StepperRegistry();
 		const newActionRegistry = new ActionRegistry();
 
-		// Copy all registrations to new registries
 		for (const item of this.elementRegistry.getAll()) {
 			newElementRegistry.register(item);
 		}
@@ -226,6 +227,7 @@ export class FormEngineBuilder<
 
 	/**
 	 * Build the immutable FormEngine instance.
+	 * Creates a unified schema registry for JSON Schema generation.
 	 *
 	 * @returns FormEngine configured with all registered components and actions
 	 */
@@ -237,7 +239,89 @@ export class FormEngineBuilder<
 			actions: this.actionRegistry.size,
 		});
 
-		// Import FormEngine dynamically to avoid circular dependency
+		const schemaRegistry = z.registry<FormEngineSchemaMetadata>();
+
+		for (const element of this.elementRegistry.getAll()) {
+			element.schema.register(schemaRegistry, {
+				id: `element:${element.__id}`,
+				componentType: 'element',
+				title: element.metadata.name,
+				description: element.metadata.description,
+				category: element.metadata.category,
+			});
+		}
+
+		for (const layout of this.layoutRegistry.getAll()) {
+			layout.schema.register(schemaRegistry, {
+				id: `layout:${layout.__id}`,
+				componentType: 'layout',
+				title: layout.metadata.name,
+				description: layout.metadata.description,
+			});
+		}
+
+		for (const stepper of this.stepperRegistry.getAll()) {
+			stepper.schema.register(schemaRegistry, {
+				id: `stepper:${stepper.__id}`,
+				componentType: 'stepper',
+				title: stepper.metadata.name,
+				description: stepper.metadata.description,
+			});
+		}
+
+		for (const action of this.actionRegistry.getAll()) {
+			action.schema.register(schemaRegistry, {
+				id: `action:${action.__id}`,
+				componentType: 'action',
+				title: action.metadata.name,
+				description: action.metadata.description,
+			});
+		}
+
+		const elementSchemas = this.elementRegistry.getAll().map((el) => el.schema);
+		const layoutSchemas = this.layoutRegistry.getAll().map((layout) => layout.schema);
+		const stepperSchemas = this.stepperRegistry.getAll().map((stepper) => stepper.schema);
+		const actionSchemas = this.actionRegistry.getAll().map((action) => action.schema);
+
+		const elementsUnion =
+			elementSchemas.length > 0
+				? elementSchemas.length === 1
+					? elementSchemas[0]
+					: z.union(elementSchemas as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]])
+				: z.never();
+
+		const layoutsUnion =
+			layoutSchemas.length > 0
+				? layoutSchemas.length === 1
+					? layoutSchemas[0]
+					: z.union(layoutSchemas as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]])
+				: z.never();
+
+		const steppersUnion =
+			stepperSchemas.length > 0
+				? stepperSchemas.length === 1
+					? stepperSchemas[0]
+					: z.union(stepperSchemas as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]])
+				: z.never();
+
+		const actionsUnion =
+			actionSchemas.length > 0
+				? actionSchemas.length === 1
+					? actionSchemas[0]
+					: z.union(actionSchemas as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]])
+				: z.never();
+
+		const formConfigSchema = z.object({
+			id: z.string().describe('Unique identifier for the form'),
+			title: z.string().optional().describe('Display title of the form'),
+			description: z.string().optional().describe('Description of the form purpose'),
+			elements: z.array(elementsUnion).min(1).describe('Array of form elements to render'),
+			layout: layoutSchemas.length > 0 ? layoutsUnion.optional() : z.object({}).optional(),
+			stepper: stepperSchemas.length > 0 ? steppersUnion.optional() : z.object({}).optional(),
+			actions: actionSchemas.length > 0 ? z.array(actionsUnion).optional() : z.array(z.object({})).optional(),
+			metadata: z.object({}).catchall(z.unknown()).optional().describe('Additional metadata for the form'),
+		});
+
 		const { FormEngine: FormEngineClass } = require('@/engine/form-engine');
 
 		return new FormEngineClass({
@@ -245,6 +329,8 @@ export class FormEngineBuilder<
 			layouts: this.layoutRegistry.getMap(),
 			steppers: this.stepperRegistry.getMap(),
 			actions: this.actionRegistry.getMap(),
+			schemaRegistry,
+			formConfigSchema,
 		}) as import('@/engine/form-engine').FormEngine<TElements, TLayouts, TSteppers, TActions>;
 	}
 }
