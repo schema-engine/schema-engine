@@ -29,13 +29,13 @@ Types are automatically derived from three global registries in `registrations.t
 ```typescript
 declare global {
 	namespace FormEngine {
-		interface FieldConfigRegistry {
+		interface ElementRegistry {
 			/* auto-populated */
 		}
-		interface LayoutConfigRegistry {
+		interface LayoutRegistry {
 			/* auto-populated */
 		}
-		interface StepperConfigRegistry {
+		interface StepperRegistry {
 			/* auto-populated */
 		}
 	}
@@ -245,7 +245,7 @@ To add more field types to the default engine:
 ```tsx
 // In the component file (e.g., form-textarea.tsx)
 export const TextareaElement: ReactElementRegistration = {
-	componentId: "textarea",
+	id: "textarea",
 	component: FormTextarea,
 	schema: TextareaFieldSchema,
 	metadata: {
@@ -275,7 +275,7 @@ const form = {
 		{
 			elements: [
 				{
-					componentId: "textarea", // Now available!
+					id: "textarea", // Now available!
 					name: "description",
 					label: "Description",
 				},

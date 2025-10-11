@@ -1,9 +1,7 @@
 import { Input } from '@/shadcn/ui/input';
 import { FieldGroup } from '@/components/form/field-group';
 import { useControlledFormElement, combineHandlers } from '@/hooks';
-import type { InputFieldConfig, InputFieldProps } from './form-input.types';
-import { InputFieldSchema } from './form-input.types';
-import type { ElementRegistration } from '@json-form-engine/core';
+import type { InputFieldProps } from './form-input.types';
 
 export function FormInput({
 	onChange: propsOnChange,
@@ -39,14 +37,3 @@ export function FormInput({
 		</div>
 	);
 }
-
-export const InputElement: ElementRegistration<InputFieldConfig, InputFieldProps> = {
-	componentId: 'input',
-	render: FormInput,
-	schema: InputFieldSchema,
-	metadata: {
-		name: 'Text Input Field',
-		description: 'Text input field for various input types (text, email, password, etc.)',
-		category: 'input',
-	},
-};

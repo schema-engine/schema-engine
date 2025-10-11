@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import type { FormEngine as CoreFormEngine } from '@json-form-engine/core/engine/form-engine';
-import { FormAdapterContext } from './adapters/context';
-import { rhfAdapter } from './adapters/rhf';
-import type { FormAdapter } from './adapters/types';
+import { FormAdapterContext } from '../adapters/context';
+import { rhfAdapter } from '../adapters/rhf';
+import type { FormAdapter } from '../adapters/types';
 import { FormEngineContext } from './provider';
 
 /**

@@ -14,7 +14,7 @@ export const SwitchFieldExtensionSchema = z.object({
  * Complete switch field configuration schema
  */
 export const SwitchFieldConfigSchema = BaseFieldSchema.extend({
-	componentId: z.literal('switch'),
+	__id: z.literal('switch'),
 	...SwitchFieldExtensionSchema.shape,
 });
 

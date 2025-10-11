@@ -24,7 +24,7 @@ This RFC proposes a complete redesign of the form engine using a **builder patte
 ```typescript
 // ✅ Simple, clean type annotation - infer config from schema
 export const textInputRegistration: ElementRegistration<z.infer<typeof TextInputConfigSchema>> = {
-	componentId: "text",
+	id: "text",
 	render: TextInput, // Framework-agnostic renderer
 	schema: TextInputConfigSchema,
 	metadata: {
@@ -119,9 +119,9 @@ const formEngine = new FormEngineBuilder()
 // Usage is simple and typed
 const config = formEngine.createForm({
 	fields: [
-		{ id: "email", componentId: "email" }, // Autocomplete works!
+		{ id: "email", id: "email" }, // Autocomplete works!
 	],
-	layout: { layoutId: "card" }, // Only registered layouts!
+	layout: { id: "card" }, // Only registered layouts!
 });
 ```
 
@@ -151,7 +151,7 @@ Elements are organized into **four closed categories** that define their behavio
 
 **Key Rules**:
 
-- ✅ **Unique IDs**: `componentId` must be unique across ALL elements
+- ✅ **Unique IDs**: `id` must be unique across ALL elements
 - ✅ **'name' validation**: Only `'input'` category elements require `name` field in config schema
 - ✅ **Closed set**: Category must be one of the four values above
 - ✅ **Type safety**: Category is enforced at TypeScript compile-time via explicit type annotation
@@ -161,7 +161,7 @@ Elements are organized into **four closed categories** that define their behavio
 ```typescript
 // ✅ Simple, clean type annotation - infer from schema
 export const textInputRegistration: ElementRegistration<z.infer<typeof TextInputConfigSchema>> = {
-	componentId: "text",
+	id: "text",
 	component: TextInput,
 	schema: TextInputConfigSchema,
 	metadata: {
@@ -178,7 +178,7 @@ export const textInputRegistration: ElementRegistration<z.infer<typeof TextInput
 - ✅ **Self-documenting** - Type shows exactly what config shape is expected
 - ✅ **Full IntelliSense** - Type system provides autocomplete for `category: ElementCategory`
 - ✅ **No `as const` needed** - Type system handles everything
-- ✅ **DRY principle** - Don't repeat componentId, category, etc. in the type
+- ✅ **DRY principle** - Don't repeat id, category, etc. in the type
 
 **Benefits**:
 
@@ -240,7 +240,7 @@ export type ComponentCategory = (typeof ComponentCategory)[keyof typeof Componen
  * Framework-agnostic: 'render' can be React component, Vue component, Svelte, etc.
  */
 interface ElementRegistration<TConfig = any> {
-	componentId: string; // MUST be unique across all elements
+	id: string; // MUST be unique across all elements
 	render: (props: TConfig) => any; // Framework-agnostic renderer (React, Vue, Svelte, etc.)
 	schema: z.ZodType<TConfig>; // Zod schema is the source of truth
 	metadata: ElementMetadata; // Element metadata with category
@@ -283,7 +283,7 @@ interface ElementMetadata extends ComponentMetadata {
  * Layouts are container components that organize child elements.
  */
 interface LayoutRegistration<TConfig = any> {
-	componentId: string;
+	id: string;
 	render: (props: TConfig) => any;
 	schema: z.ZodType<TConfig>;
 	metadata: LayoutMetadata;
@@ -299,7 +299,7 @@ interface LayoutMetadata extends ComponentMetadata {
  * Steppers handle multi-step form navigation and progression.
  */
 interface StepperRegistration<TConfig = any> {
-	componentId: string;
+	id: string;
 	render: (props: TConfig) => any;
 	schema: z.ZodType<TConfig>;
 	metadata: StepperMetadata;
@@ -317,7 +317,7 @@ interface StepperMetadata extends ComponentMetadata {
  * Actions are NOT components - they are pure logic handlers.
  */
 interface ActionRegistration<TConfig = any> {
-	actionType: string; // MUST be unique across all actions (e.g., 'submit', 'reset')
+	id: string; // MUST be unique across all actions (e.g., 'submit', 'reset')
 	execute: (config: TConfig, context: ActionExecutionContext) => Promise<ActionExecutionResult>;
 	schema: z.ZodType<TConfig>;
 	metadata: ActionMetadata;
@@ -388,7 +388,7 @@ interface ActionExecutionResult {
  * Framework-agnostic: 'render' can be React component, Vue component, Svelte, etc.
  */
 interface LayoutRegistration<TConfig = any> {
-	layoutId: string;
+	id: string;
 	render: (props: TConfig) => any; // Framework-agnostic renderer
 	schema: z.ZodType<TConfig>;
 	metadata: ComponentMetadata; // Universal component metadata
@@ -401,7 +401,7 @@ interface LayoutRegistration<TConfig = any> {
  * Framework-agnostic: 'render' can be React component, Vue component, Svelte, etc.
  */
 interface StepperRegistration<TConfig = any> {
-	stepperId: string;
+	id: string;
 	render: (props: TConfig) => any; // Framework-agnostic renderer
 	schema: z.ZodType<TConfig>;
 	metadata: ComponentMetadata; // Universal component metadata
@@ -426,7 +426,7 @@ interface StepperRegistration<TConfig = any> {
 type FormEngineSchemaMetadata = {
 	id: string; // Unique ID (e.g., 'element:text', 'element:heading')
 	componentType: "element" | "layout" | "stepper"; // Component type
-	componentId: string; // Component identifier (MUST be unique)
+	id: string; // Component identifier (MUST be unique)
 	title: string; // Human-readable name
 	description?: string; // Component description
 	category?: ElementCategory | string; // Element category ('input', 'content', 'decoration', 'interactive')
@@ -449,35 +449,35 @@ class FormEngineBuilder<
 	 * Register an element component (input, heading, image, button, etc.)
 	 * Also registers the schema in the custom registry for JSON Schema generation
 	 *
-	 * @throws Error if componentId is already registered (must be unique)
+	 * @throws Error if id is already registered (must be unique)
 	 */
 	addElement<TReg extends ElementRegistration>(
 		registration: TReg
 	): FormEngineBuilder<
 		TElements & {
-			[K in TReg["componentId"]]: z.infer<TReg["schema"]>;
+			[K in TReg["id"]]: z.infer<TReg["schema"]>;
 		},
 		TLayouts,
 		TSteppers
 	> {
-		const { componentId, render, schema, metadata } = registration;
+		const { id, render, schema, metadata } = registration;
 
 		// Enforce uniqueness
-		if (this.elements.has(componentId)) {
+		if (this.elements.has(id)) {
 			throw new Error(
-				`Element componentId "${componentId}" is already registered. ` +
+				`Element id "${id}" is already registered. ` +
 					`Component IDs must be unique across all elements.`
 			);
 		}
 
 		// Store registration (renderer is framework-agnostic)
-		this.elements.set(componentId, { render, schema, metadata });
+		this.elements.set(id, { render, schema, metadata });
 
 		// Register schema in custom registry for JSON Schema generation
 		schema.register(this.schemaRegistry, {
-			id: `element:${componentId}`,
+			id: `element:${id}`,
 			componentType: "element",
-			componentId: componentId,
+			id: id,
 			title: metadata.name,
 			description: metadata.description,
 			category: metadata.category,
@@ -490,38 +490,36 @@ class FormEngineBuilder<
 	/**
 	 * Register multiple elements at once
 	 *
-	 * @throws Error if any componentId is already registered (must be unique)
+	 * @throws Error if any id is already registered (must be unique)
 	 */
 	addElements<TRegs extends readonly ElementRegistration[]>(
 		registrations: TRegs
 	): FormEngineBuilder<
 		TElements & {
-			[K in TRegs[number]["componentId"]]: z.infer<
-				Extract<TRegs[number], { componentId: K }>["schema"]
-			>;
+			[K in TRegs[number]["id"]]: z.infer<Extract<TRegs[number], { id: K }>["schema"]>;
 		},
 		TLayouts,
 		TSteppers
 	> {
 		for (const registration of registrations) {
-			const { componentId, render, schema, metadata } = registration;
+			const { id, render, schema, metadata } = registration;
 
 			// Enforce uniqueness
-			if (this.elements.has(componentId)) {
+			if (this.elements.has(id)) {
 				throw new Error(
-					`Element componentId "${componentId}" is already registered. ` +
+					`Element id "${id}" is already registered. ` +
 						`Component IDs must be unique across all elements.`
 				);
 			}
 
 			// Store registration (renderer is framework-agnostic)
-			this.elements.set(componentId, { render, schema, metadata });
+			this.elements.set(id, { render, schema, metadata });
 
 			// Register schema in custom registry
 			schema.register(this.schemaRegistry, {
-				id: `element:${componentId}`,
+				id: `element:${id}`,
 				componentType: "element",
-				componentId: componentId,
+				id: id,
 				title: metadata.name,
 				description: metadata.description,
 				category: metadata.category,
@@ -540,20 +538,20 @@ class FormEngineBuilder<
 	): FormEngineBuilder<
 		TFields,
 		TLayouts & {
-			[K in TReg["layoutId"]]: z.infer<TReg["schema"]>;
+			[K in TReg["id"]]: z.infer<TReg["schema"]>;
 		},
 		TSteppers
 	> {
-		const { layoutId, render, schema, metadata } = registration;
+		const { id, render, schema, metadata } = registration;
 
 		// Store registration (renderer is framework-agnostic)
-		this.layouts.set(layoutId, { render, schema, metadata });
+		this.layouts.set(id, { render, schema, metadata });
 
 		// Register schema in custom registry for JSON Schema generation
 		schema.register(this.schemaRegistry, {
-			id: `layout:${layoutId}`,
+			id: `layout:${id}`,
 			componentType: "layout",
-			componentId: layoutId,
+			id: id,
 			title: metadata.name,
 			description: metadata.description,
 			category: metadata.category,
@@ -571,21 +569,21 @@ class FormEngineBuilder<
 	): FormEngineBuilder<
 		TFields,
 		TLayouts & {
-			[K in TRegs[number]["layoutId"]]: z.infer<Extract<TRegs[number], { layoutId: K }>["schema"]>;
+			[K in TRegs[number]["id"]]: z.infer<Extract<TRegs[number], { id: K }>["schema"]>;
 		},
 		TSteppers
 	> {
 		for (const registration of registrations) {
-			const { layoutId, render, schema, metadata } = registration;
+			const { id, render, schema, metadata } = registration;
 
 			// Store registration (renderer is framework-agnostic)
-			this.layouts.set(layoutId, { render, schema, metadata });
+			this.layouts.set(id, { render, schema, metadata });
 
 			// Register schema in custom registry
 			schema.register(this.schemaRegistry, {
-				id: `layout:${layoutId}`,
+				id: `layout:${id}`,
 				componentType: "layout",
-				componentId: layoutId,
+				id: id,
 				title: metadata.name,
 				description: metadata.description,
 				category: metadata.category,
@@ -605,19 +603,19 @@ class FormEngineBuilder<
 		TFields,
 		TLayouts,
 		TSteppers & {
-			[K in TReg["stepperId"]]: z.infer<TReg["schema"]>;
+			[K in TReg["id"]]: z.infer<TReg["schema"]>;
 		}
 	> {
-		const { stepperId, render, schema, metadata } = registration;
+		const { id, render, schema, metadata } = registration;
 
 		// Store registration (renderer is framework-agnostic)
-		this.steppers.set(stepperId, { render, schema, metadata });
+		this.steppers.set(id, { render, schema, metadata });
 
 		// Register schema in custom registry for JSON Schema generation
 		schema.register(this.schemaRegistry, {
-			id: `stepper:${stepperId}`,
+			id: `stepper:${id}`,
 			componentType: "stepper",
-			componentId: stepperId,
+			id: id,
 			title: metadata.name,
 			description: metadata.description,
 			category: metadata.category,
@@ -636,22 +634,20 @@ class FormEngineBuilder<
 		TFields,
 		TLayouts,
 		TSteppers & {
-			[K in TRegs[number]["stepperId"]]: z.infer<
-				Extract<TRegs[number], { stepperId: K }>["schema"]
-			>;
+			[K in TRegs[number]["id"]]: z.infer<Extract<TRegs[number], { id: K }>["schema"]>;
 		}
 	> {
 		for (const registration of registrations) {
-			const { stepperId, render, schema, metadata } = registration;
+			const { id, render, schema, metadata } = registration;
 
 			// Store registration (renderer is framework-agnostic)
-			this.steppers.set(stepperId, { render, schema, metadata });
+			this.steppers.set(id, { render, schema, metadata });
 
 			// Register schema in custom registry
 			schema.register(this.schemaRegistry, {
-				id: `stepper:${stepperId}`,
+				id: `stepper:${id}`,
 				componentType: "stepper",
-				componentId: stepperId,
+				id: id,
 				title: metadata.name,
 				description: metadata.description,
 				category: metadata.category,
@@ -668,24 +664,24 @@ class FormEngineBuilder<
 	addAction<TReg extends ActionRegistration>(
 		registration: TReg
 	): FormEngineBuilder<TElements, TLayouts, TSteppers> {
-		const { actionType, execute, schema, metadata } = registration;
+		const { id, execute, schema, metadata } = registration;
 
 		// Enforce uniqueness
-		if (this.actions.has(actionType)) {
+		if (this.actions.has(id)) {
 			throw new Error(
-				`Action type "${actionType}" is already registered. ` +
+				`Action type "${id}" is already registered. ` +
 					`Action types must be unique across all actions.`
 			);
 		}
 
 		// Store registration
-		this.actions.set(actionType, { execute, schema, metadata });
+		this.actions.set(id, { execute, schema, metadata });
 
 		// Register schema in custom registry for JSON Schema generation
 		schema.register(this.schemaRegistry, {
-			id: `action:${actionType}`,
+			id: `action:${id}`,
 			componentType: "action",
-			componentId: actionType,
+			id: id,
 			title: metadata.name,
 			description: metadata.description,
 			category: metadata.category,
@@ -702,24 +698,24 @@ class FormEngineBuilder<
 		registrations: TRegs
 	): FormEngineBuilder<TElements, TLayouts, TSteppers> {
 		for (const registration of registrations) {
-			const { actionType, execute, schema, metadata } = registration;
+			const { id, execute, schema, metadata } = registration;
 
 			// Enforce uniqueness
-			if (this.actions.has(actionType)) {
+			if (this.actions.has(id)) {
 				throw new Error(
-					`Action type "${actionType}" is already registered. ` +
+					`Action type "${id}" is already registered. ` +
 						`Action types must be unique across all actions.`
 				);
 			}
 
 			// Store registration
-			this.actions.set(actionType, { execute, schema, metadata });
+			this.actions.set(id, { execute, schema, metadata });
 
 			// Register schema in custom registry
 			schema.register(this.schemaRegistry, {
-				id: `action:${actionType}`,
+				id: `action:${id}`,
 				componentType: "action",
-				componentId: actionType,
+				id: id,
 				title: metadata.name,
 				description: metadata.description,
 				category: metadata.category,
@@ -770,30 +766,30 @@ class FormEngine<
 	 * Works for all element types: inputs, headings, images, buttons, etc.
 	 * Returns the render function registered for this element
 	 */
-	getElement<K extends keyof TElements>(componentId: K) {
-		return this.elements.get(componentId as string);
+	getElement<K extends keyof TElements>(id: K) {
+		return this.elements.get(id as string);
 	}
 
 	/**
 	 * Get a layout renderer (framework-agnostic, not serializable)
 	 */
-	getLayout<K extends keyof TLayouts>(layoutId: K) {
-		return this.layouts.get(layoutId as string);
+	getLayout<K extends keyof TLayouts>(id: K) {
+		return this.layouts.get(id as string);
 	}
 
 	/**
 	 * Get a stepper renderer (framework-agnostic, not serializable)
 	 */
-	getStepper<K extends keyof TSteppers>(stepperId: K) {
-		return this.steppers.get(stepperId as string);
+	getStepper<K extends keyof TSteppers>(id: K) {
+		return this.steppers.get(id as string);
 	}
 
 	/**
 	 * Get an action handler (not serializable)
 	 * Actions execute logic when triggered (submit, reset, notification, etc.)
 	 */
-	getAction(actionType: string) {
-		return this.actions.get(actionType);
+	getAction(id: string) {
+		return this.actions.get(id);
 	}
 
 	/**
@@ -801,15 +797,15 @@ class FormEngine<
 	 * Validates the config against the action's schema before execution
 	 */
 	async executeAction(
-		actionType: string,
+		id: string,
 		config: any,
 		context: ActionExecutionContext
 	): Promise<ActionExecutionResult> {
-		const registration = this.actions.get(actionType);
+		const registration = this.actions.get(id);
 		if (!registration) {
 			return {
 				success: false,
-				error: `Unknown action type: ${actionType}`,
+				error: `Unknown action type: ${id}`,
 			};
 		}
 
@@ -848,16 +844,16 @@ class FormEngine<
 		description?: string;
 		elements: Array<{
 			id: string;
-			componentId: keyof TElements; // Only registered elements!
+			id: keyof TElements; // Only registered elements!
 			config?: TElements[keyof TElements]; // Config is serializable
 			validation?: any; // Additional validation rules (for inputs)
 		}>;
 		layout?: {
-			layoutId: keyof TLayouts; // Only registered layouts!
+			id: keyof TLayouts; // Only registered layouts!
 			config?: TLayouts[keyof TLayouts];
 		};
 		stepper?: {
-			stepperId: keyof TSteppers; // Only registered steppers!
+			id: keyof TSteppers; // Only registered steppers!
 			config?: TSteppers[keyof TSteppers];
 		};
 	}): SerializableFormConfig<TFormData> {
@@ -871,19 +867,19 @@ class FormEngine<
 			description: config.description,
 			elements: config.elements.map((element) => ({
 				id: element.id,
-				componentId: element.componentId as string,
+				id: element.id as string,
 				config: element.config,
 				validation: element.validation,
 			})),
 			layout: config.layout
 				? {
-						layoutId: config.layout.layoutId as string,
+						id: config.layout.id as string,
 						config: config.layout.config,
 				  }
 				: undefined,
 			stepper: config.stepper
 				? {
-						stepperId: config.stepper.stepperId as string,
+						id: config.stepper.id as string,
 						config: config.stepper.config,
 				  }
 				: undefined,
@@ -896,9 +892,9 @@ class FormEngine<
 	private validateFormConfig(config: any): void {
 		// Validate each element's config against its schema
 		for (const element of config.elements) {
-			const registration = this.elements.get(element.componentId);
+			const registration = this.elements.get(element.id);
 			if (!registration) {
-				throw new Error(`Unknown element component: ${element.componentId}`);
+				throw new Error(`Unknown element component: ${element.id}`);
 			}
 			if (element.config) {
 				registration.schema.parse(element.config);
@@ -907,9 +903,9 @@ class FormEngine<
 
 		// Validate layout config
 		if (config.layout) {
-			const registration = this.layouts.get(config.layout.layoutId);
+			const registration = this.layouts.get(config.layout.id);
 			if (!registration) {
-				throw new Error(`Unknown layout: ${config.layout.layoutId}`);
+				throw new Error(`Unknown layout: ${config.layout.id}`);
 			}
 			if (config.layout.config) {
 				registration.schema.parse(config.layout.config);
@@ -918,9 +914,9 @@ class FormEngine<
 
 		// Validate stepper config
 		if (config.stepper) {
-			const registration = this.steppers.get(config.stepper.stepperId);
+			const registration = this.steppers.get(config.stepper.id);
 			if (!registration) {
-				throw new Error(`Unknown stepper: ${config.stepper.stepperId}`);
+				throw new Error(`Unknown stepper: ${config.stepper.id}`);
 			}
 			if (config.stepper.config) {
 				registration.schema.parse(config.stepper.config);
@@ -943,19 +939,16 @@ class FormEngine<
 	 * No hardcoding - the schema reflects what's actually registered!
 	 */
 	private getFormConfigSchema() {
-		// Build union schema for all registered element componentIds
-		const elementComponentIds = Array.from(this.elements.keys());
-		const elementComponentIdSchema =
-			elementComponentIds.length > 0
-				? z.enum(elementComponentIds as [string, ...string[]])
-				: z.never();
+		// Build union schema for all registered element ids
+		const elementids = Array.from(this.elements.keys());
+		const elementidSchema =
+			elementids.length > 0 ? z.enum(elementids as [string, ...string[]]) : z.never();
 
 		// Build discriminated union for element configs
-		const elementConfigSchemas = elementComponentIds.map((componentId) => {
-			const registration = this.elements.get(componentId)!;
+		const elementConfigSchemas = elementids.map((id) => {
+			const registration = this.elements.get(id)!;
 			return z.object({
-				id: z.string(),
-				componentId: z.literal(componentId),
+				__id: z.literal(id),
 				config: registration.schema.optional(),
 				validation: z.any().optional(),
 			});
@@ -963,55 +956,53 @@ class FormEngine<
 
 		const elementSchema =
 			elementConfigSchemas.length > 0
-				? z.discriminatedUnion("componentId", elementConfigSchemas as any)
+				? z.discriminatedUnion("__id", elementConfigSchemas as any)
 				: z.object({
-						id: z.string(),
-						componentId: z.never(),
+						__id: z.string(),
+						__id: z.never(),
 						config: z.any().optional(),
 						validation: z.any().optional(),
 				  });
 
-		// Build union schema for all registered layout layoutIds
-		const layoutIds = Array.from(this.layouts.keys());
-		const layoutIdSchema =
-			layoutIds.length > 0 ? z.enum(layoutIds as [string, ...string[]]) : z.never();
+		// Build union schema for all registered layout ids
+		const ids = Array.from(this.layouts.keys());
+		const idSchema = ids.length > 0 ? z.enum(ids as [string, ...string[]]) : z.never();
 
 		// Build discriminated union for layout configs
-		const layoutConfigSchemas = layoutIds.map((layoutId) => {
-			const registration = this.layouts.get(layoutId)!;
+		const layoutConfigSchemas = ids.map((id) => {
+			const registration = this.layouts.get(id)!;
 			return z.object({
-				layoutId: z.literal(layoutId),
+				__id: z.literal(id),
 				config: registration.schema.optional(),
 			});
 		});
 
 		const layoutSchema =
 			layoutConfigSchemas.length > 0
-				? z.discriminatedUnion("layoutId", layoutConfigSchemas as any)
+				? z.discriminatedUnion("id", layoutConfigSchemas as any)
 				: z.object({
-						layoutId: z.never(),
+						id: z.never(),
 						config: z.any().optional(),
 				  });
 
-		// Build union schema for all registered stepper stepperIds
-		const stepperIds = Array.from(this.steppers.keys());
-		const stepperIdSchema =
-			stepperIds.length > 0 ? z.enum(stepperIds as [string, ...string[]]) : z.never();
+		// Build union schema for all registered stepper ids
+		const ids = Array.from(this.steppers.keys());
+		const idSchema = ids.length > 0 ? z.enum(ids as [string, ...string[]]) : z.never();
 
 		// Build discriminated union for stepper configs
-		const stepperConfigSchemas = stepperIds.map((stepperId) => {
-			const registration = this.steppers.get(stepperId)!;
+		const stepperConfigSchemas = ids.map((id) => {
+			const registration = this.steppers.get(id)!;
 			return z.object({
-				stepperId: z.literal(stepperId),
+				__id: z.literal(id),
 				config: registration.schema.optional(),
 			});
 		});
 
 		const stepperSchema =
 			stepperConfigSchemas.length > 0
-				? z.discriminatedUnion("stepperId", stepperConfigSchemas as any)
+				? z.discriminatedUnion("id", stepperConfigSchemas as any)
 				: z.object({
-						stepperId: z.never(),
+						id: z.never(),
 						config: z.any().optional(),
 				  });
 
@@ -1129,10 +1120,10 @@ class FormEngine<
 	 * const headingConfig = { text: 'Welcome', level: 'h1' };
 	 * const validConfig = formEngine.parseElementConfig('heading', headingConfig);
 	 */
-	parseElementConfig<K extends keyof TElements>(componentId: K, config: unknown): TElements[K] {
-		const registration = this.elements.get(componentId as string);
+	parseElementConfig<K extends keyof TElements>(id: K, config: unknown): TElements[K] {
+		const registration = this.elements.get(id as string);
 		if (!registration) {
-			throw new Error(`Unknown element component: ${componentId as string}`);
+			throw new Error(`Unknown element component: ${id as string}`);
 		}
 		return registration.schema.parse(config);
 	}
@@ -1144,10 +1135,10 @@ class FormEngine<
 	 * const layoutConfig = { maxWidth: 'md', padding: 'lg' };
 	 * const validConfig = formEngine.parseLayoutConfig('card', layoutConfig);
 	 */
-	parseLayoutConfig<K extends keyof TLayouts>(layoutId: K, config: unknown): TLayouts[K] {
-		const registration = this.layouts.get(layoutId as string);
+	parseLayoutConfig<K extends keyof TLayouts>(id: K, config: unknown): TLayouts[K] {
+		const registration = this.layouts.get(id as string);
 		if (!registration) {
-			throw new Error(`Unknown layout: ${layoutId as string}`);
+			throw new Error(`Unknown layout: ${id as string}`);
 		}
 		return registration.schema.parse(config);
 	}
@@ -1159,10 +1150,10 @@ class FormEngine<
 	 * const stepperConfig = { showProgress: true };
 	 * const validConfig = formEngine.parseStepperConfig('default', stepperConfig);
 	 */
-	parseStepperConfig<K extends keyof TSteppers>(stepperId: K, config: unknown): TSteppers[K] {
-		const registration = this.steppers.get(stepperId as string);
+	parseStepperConfig<K extends keyof TSteppers>(id: K, config: unknown): TSteppers[K] {
+		const registration = this.steppers.get(id as string);
 		if (!registration) {
-			throw new Error(`Unknown stepper: ${stepperId as string}`);
+			throw new Error(`Unknown stepper: ${id as string}`);
 		}
 		return registration.schema.parse(config);
 	}
@@ -1177,7 +1168,7 @@ class FormEngine<
 	 * const errors = formEngine.getValidationErrors(invalidConfig);
 	 * console.log(errors);
 	 * // [
-	 * //   { path: ['fields', 0, 'componentId'], message: 'Invalid enum value. Expected "text" | "email", received "invalid"' },
+	 * //   { path: ['fields', 0, 'id'], message: 'Invalid enum value. Expected "text" | "email", received "invalid"' },
 	 * //   { path: ['layout', 'config', 'maxWidth'], message: 'Invalid enum value. Expected "sm" | "md" | "lg", received "xl"' }
 	 * // ]
 	 */
@@ -1247,17 +1238,17 @@ class FormEngine<
 			const uri = options?.uri?.(metadata.id) || `#/components/schemas/${metadata.id}`;
 
 			if (metadata.componentType === "element") {
-				byType.elements[metadata.componentId] = {
+				byType.elements[metadata.id] = {
 					schemaRef: uri,
 					metadata,
 				};
 			} else if (metadata.componentType === "layout") {
-				byType.layouts[metadata.componentId] = {
+				byType.layouts[metadata.id] = {
 					schemaRef: uri,
 					metadata,
 				};
 			} else if (metadata.componentType === "stepper") {
-				byType.steppers[metadata.componentId] = {
+				byType.steppers[metadata.id] = {
 					schemaRef: uri,
 					metadata,
 				};
@@ -1290,7 +1281,7 @@ class FormEngine<
 				(type === "steppers" && metadata.componentType === "stepper");
 
 			if (isMatchingType) {
-				result[metadata.componentId] = {
+				result[metadata.id] = {
 					schema: z.toJSONSchema(schema, options),
 					metadata,
 				};
@@ -1339,15 +1330,15 @@ class FormEngine<
 	 * const content = formEngine.getElementsByCategory(ElementCategory.CONTENT);
 	 */
 	getElementsByCategory(category: ElementCategory): ReadonlyArray<{
-		componentId: string;
+		id: string;
 		metadata: ElementMetadata;
 	}> {
-		const result: Array<{ componentId: string; metadata: ElementMetadata }> = [];
+		const result: Array<{ id: string; metadata: ElementMetadata }> = [];
 
-		for (const [componentId, registration] of this.elements.entries()) {
+		for (const [id, registration] of this.elements.entries()) {
 			if (registration.metadata.category === category) {
 				result.push({
-					componentId,
+					id,
 					metadata: registration.metadata,
 				});
 			}
@@ -1371,20 +1362,20 @@ class FormEngine<
 	/**
 	 * Get component metadata (no React components, serializable)
 	 */
-	getElementMetadata<K extends keyof TElements>(componentId: K): ElementMetadata {
-		return this.elements.get(componentId as string)?.metadata;
+	getElementMetadata<K extends keyof TElements>(id: K): ElementMetadata {
+		return this.elements.get(id as string)?.metadata;
 	}
 
-	getLayoutMetadata<K extends keyof TLayouts>(layoutId: K): LayoutMetadata {
-		return this.layouts.get(layoutId as string)?.metadata;
+	getLayoutMetadata<K extends keyof TLayouts>(id: K): LayoutMetadata {
+		return this.layouts.get(id as string)?.metadata;
 	}
 
-	getStepperMetadata<K extends keyof TSteppers>(stepperId: K): StepperMetadata {
-		return this.steppers.get(stepperId as string)?.metadata;
+	getStepperMetadata<K extends keyof TSteppers>(id: K): StepperMetadata {
+		return this.steppers.get(id as string)?.metadata;
 	}
 
-	getActionMetadata(actionType: string): ActionMetadata | undefined {
-		return this.actions.get(actionType)?.metadata;
+	getActionMetadata(id: string): ActionMetadata | undefined {
+		return this.actions.get(id)?.metadata;
 	}
 }
 
@@ -1398,16 +1389,16 @@ interface SerializableFormConfig<TFormData = any> {
 	description?: string;
 	elements: Array<{
 		id: string;
-		componentId: string; // Can be: 'text', 'email', 'heading', 'image', 'button', etc.
+		id: string; // Can be: 'text', 'email', 'heading', 'image', 'button', etc.
 		config?: Record<string, any>; // Plain object
 		validation?: any; // Only for input elements
 	}>;
 	layout?: {
-		layoutId: string;
+		id: string;
 		config?: Record<string, any>;
 	};
 	stepper?: {
-		stepperId: string;
+		id: string;
 		config?: Record<string, any>;
 	};
 	// Future: actions, conditional logic, etc.
@@ -1421,7 +1412,7 @@ Each element/layout/stepper uses a Zod schema to define and validate its configu
 ```typescript
 export const TextInputConfigSchema = z
 	.object({
-		componentId: z.literal("text"),
+		__id: z.literal("text"),
 		name: z.string(),
 		label: z.string().optional(),
 		placeholder: z.string().optional(),
@@ -1495,7 +1486,7 @@ type ValidationRule =
 // Example: Input field with validation rules
 export const EmailInputConfigSchema = z
 	.object({
-		componentId: z.literal("email"),
+		__id: z.literal("email"),
 		name: z.string(),
 		label: z.string().optional(),
 		placeholder: z.string().optional(),
@@ -1506,7 +1497,7 @@ export const EmailInputConfigSchema = z
 
 // In form configuration (serializable JSON, but type-checked!)
 {
-	componentId: "email",
+	id: "email",
 	name: "email",
 	label: "Email Address",
 	rules: [
@@ -1658,7 +1649,7 @@ import { z } from "zod";
 // INPUT ELEMENTS REQUIRE 'name' FIELD
 export const TextInputConfigSchema = z
 	.object({
-		componentId: z.literal("text"),
+		__id: z.literal("text"),
 		name: z.string().describe("Form field name (required for inputs)"), // ✅ REQUIRED for 'input' category
 		label: z.string().optional().describe("Field label"),
 		placeholder: z.string().optional(),
@@ -1675,7 +1666,7 @@ export const TextInputConfigSchema = z
 
 // Registration object - component metadata separate from schema
 export const textInputRegistration: ElementRegistration<z.infer<typeof TextInputConfigSchema>> = {
-	componentId: "text", // ✅ Must be unique
+	id: "text", // ✅ Must be unique
 	render: TextInput, // Framework-agnostic (React, Vue, Svelte, etc.)
 	schema: TextInputConfigSchema,
 	metadata: {
@@ -1689,7 +1680,7 @@ export const textInputRegistration: ElementRegistration<z.infer<typeof TextInput
 // elements/email-input.ts
 export const EmailInputConfigSchema = z
 	.object({
-		componentId: z.literal("email"),
+		__id: z.literal("email"),
 		name: z.string().describe("Form field name (required for inputs)"), // ✅ REQUIRED for 'input' category
 		label: z.string().optional().describe("Field label"),
 		placeholder: z.string().optional(),
@@ -1703,7 +1694,7 @@ export const EmailInputConfigSchema = z
 		title: "Email Input Configuration",
 		examples: [
 			{
-				componentId: "email",
+				id: "email",
 				name: "email",
 				label: "Email Address",
 				placeholder: "you@example.com",
@@ -1716,7 +1707,7 @@ export const EmailInputConfigSchema = z
 	});
 
 export const emailInputRegistration: ElementRegistration<z.infer<typeof EmailInputConfigSchema>> = {
-	componentId: "email", // ✅ Must be unique
+	id: "email", // ✅ Must be unique
 	render: EmailInput, // Framework-agnostic (React, Vue, Svelte, etc.)
 	schema: EmailInputConfigSchema,
 	metadata: {
@@ -1735,7 +1726,7 @@ export const emailInputRegistration: ElementRegistration<z.infer<typeof EmailInp
 // elements/heading.ts
 export const HeadingConfigSchema = z
 	.object({
-		componentId: z.literal("heading"),
+		__id: z.literal("heading"),
 		text: z.string().describe("Heading text"),
 		level: z.enum(["h1", "h2", "h3", "h4", "h5", "h6"]).default("h2"),
 		align: z.enum(["left", "center", "right"]).optional(),
@@ -1746,13 +1737,13 @@ export const HeadingConfigSchema = z
 		id: "heading-config",
 		title: "Heading Configuration",
 		examples: [
-			{ componentId: "heading", text: "Welcome", level: "h1" },
-			{ componentId: "heading", text: "Personal Information", level: "h2" },
+			{ id: "heading", text: "Welcome", level: "h1" },
+			{ id: "heading", text: "Personal Information", level: "h2" },
 		],
 	});
 
 export const headingRegistration: ElementRegistration<z.infer<typeof HeadingConfigSchema>> = {
-	componentId: "heading", // ✅ Must be unique
+	id: "heading", // ✅ Must be unique
 	render: Heading, // Framework-agnostic (React, Vue, Svelte, etc.)
 	schema: HeadingConfigSchema,
 	metadata: {
@@ -1766,7 +1757,7 @@ export const headingRegistration: ElementRegistration<z.infer<typeof HeadingConf
 // elements/image.ts
 export const ImageConfigSchema = z
 	.object({
-		componentId: z.literal("image"),
+		__id: z.literal("image"),
 		src: z.string().url().describe("Image URL"),
 		alt: z.string().describe("Alt text for accessibility"),
 		width: z.number().optional(),
@@ -1781,7 +1772,7 @@ export const ImageConfigSchema = z
 	});
 
 export const imageRegistration: ElementRegistration<z.infer<typeof ImageConfigSchema>> = {
-	componentId: "image", // ✅ Must be unique
+	id: "image", // ✅ Must be unique
 	render: Image, // Framework-agnostic (React, Vue, Svelte, etc.)
 	schema: ImageConfigSchema,
 	metadata: {
@@ -1800,7 +1791,7 @@ export const imageRegistration: ElementRegistration<z.infer<typeof ImageConfigSc
 // elements/divider.ts
 export const DividerConfigSchema = z
 	.object({
-		componentId: z.literal("divider"),
+		__id: z.literal("divider"),
 		thickness: z.enum(["thin", "medium", "thick"]).optional(),
 		color: z.string().optional(),
 		spacing: z.enum(["sm", "md", "lg"]).optional(),
@@ -1813,7 +1804,7 @@ export const DividerConfigSchema = z
 	});
 
 export const dividerRegistration: ElementRegistration<z.infer<typeof DividerConfigSchema>> = {
-	componentId: "divider", // ✅ Must be unique
+	id: "divider", // ✅ Must be unique
 	render: Divider, // Framework-agnostic (React, Vue, Svelte, etc.)
 	schema: DividerConfigSchema,
 	metadata: {
@@ -1827,7 +1818,7 @@ export const dividerRegistration: ElementRegistration<z.infer<typeof DividerConf
 // layouts/card-layout.ts
 export const CardLayoutConfigSchema = z
 	.object({
-		layoutId: z.literal("card"),
+		__id: z.literal("card"),
 		maxWidth: z.enum(["sm", "md", "lg", "xl"]).optional(),
 		padding: z.enum(["sm", "md", "lg"]).optional(),
 		shadowSize: z.enum(["sm", "md", "lg", "xl"]).optional(),
@@ -1839,7 +1830,7 @@ export const CardLayoutConfigSchema = z
 	});
 
 export const cardLayoutRegistration: LayoutRegistration<z.infer<typeof CardLayoutConfigSchema>> = {
-	layoutId: "card",
+	id: "card",
 	render: CardLayout, // Framework-agnostic (React, Vue, Svelte, etc.)
 	schema: CardLayoutConfigSchema,
 	metadata: {
@@ -1901,7 +1892,7 @@ export const SubmitActionConfigSchema = z
 export const submitActionRegistration: ActionRegistration<
 	z.infer<typeof SubmitActionConfigSchema>
 > = {
-	actionType: "submit",
+	id: "submit",
 	execute: async (config, context) => {
 		// Submit logic here
 		const response = await fetch(config.endpoint, {
@@ -1946,7 +1937,7 @@ export const ResetActionConfigSchema = z
 
 export const resetActionRegistration: ActionRegistration<z.infer<typeof ResetActionConfigSchema>> =
 	{
-		actionType: "reset",
+		id: "reset",
 		execute: async (config, context) => {
 			if (config.confirmMessage) {
 				const confirmed = window.confirm(config.confirmMessage);
@@ -1989,7 +1980,7 @@ export const NotificationActionConfigSchema = z
 export const notificationActionRegistration: ActionRegistration<
 	z.infer<typeof NotificationActionConfigSchema>
 > = {
-	actionType: "show_notification",
+	id: "show_notification",
 	execute: async (config, context) => {
 		// Notification logic here (toast, alert, etc.)
 		console.log(`[${config.variant}] ${config.message}`);
@@ -2027,7 +2018,7 @@ import { ElementRegistration, ElementCategory } from "@json-form-engine/core";
 // 1. Define the config schema
 const TextInputConfigSchema = z
 	.object({
-		componentId: z.literal("text"),
+		__id: z.literal("text"),
 		name: z.string(), // Required for 'input' category
 		label: z.string().optional(),
 		placeholder: z.string().optional(),
@@ -2053,7 +2044,7 @@ const TextInput: React.FC<z.infer<typeof TextInputConfigSchema>> = (props) => {
 
 // 3. Export the registration - Clean, simple, type-safe!
 export const textInputRegistration: ElementRegistration<z.infer<typeof TextInputConfigSchema>> = {
-	componentId: "text",
+	id: "text",
 	render: TextInput, // ✅ Framework-agnostic (React, Vue, Svelte, etc.)
 	schema: TextInputConfigSchema,
 	metadata: {
@@ -2067,7 +2058,7 @@ export const textInputRegistration: ElementRegistration<z.infer<typeof TextInput
 // That's it! No:
 // ❌ as const
 // ❌ satisfies ElementRegistration<...>
-// ❌ Repeating componentId/category in generics
+// ❌ Repeating id/category in generics
 // ✅ Just clean, simple, type-safe code
 // ✅ Framework-agnostic - works with React, Vue, Svelte, etc.
 ```
@@ -2088,7 +2079,7 @@ The `render` property accepts any function that takes props and returns rendered
 ```typescript
 // React
 export const ReactTextInput: ElementRegistration<z.infer<typeof TextInputConfigSchema>> = {
-	componentId: "text",
+	id: "text",
 	render: (props) => <input {...props} />, // ✅ React JSX
 	schema: TextInputConfigSchema,
 	metadata: {
@@ -2098,7 +2089,7 @@ export const ReactTextInput: ElementRegistration<z.infer<typeof TextInputConfigS
 
 // Vue
 export const VueTextInput: ElementRegistration<z.infer<typeof TextInputConfigSchema>> = {
-	componentId: "text",
+	id: "text",
 	render: (props) => h("input", props), // ✅ Vue render function
 	schema: TextInputConfigSchema,
 	metadata: {
@@ -2108,7 +2099,7 @@ export const VueTextInput: ElementRegistration<z.infer<typeof TextInputConfigSch
 
 // Svelte (with adapter)
 export const SvelteTextInput: ElementRegistration<z.infer<typeof TextInputConfigSchema>> = {
-	componentId: "text",
+	id: "text",
 	render: (props) => new TextInput({ target: el, props }), // ✅ Svelte component
 	schema: TextInputConfigSchema,
 	metadata: {
@@ -2118,7 +2109,7 @@ export const SvelteTextInput: ElementRegistration<z.infer<typeof TextInputConfig
 
 // Solid.js
 export const SolidTextInput: ElementRegistration<z.infer<typeof TextInputConfigSchema>> = {
-	componentId: "text",
+	id: "text",
 	render: (props) => <input {...props} />, // ✅ Solid JSX
 	schema: TextInputConfigSchema,
 	metadata: {
@@ -2128,7 +2119,7 @@ export const SolidTextInput: ElementRegistration<z.infer<typeof TextInputConfigS
 
 // Even plain HTML strings!
 export const HTMLTextInput: ElementRegistration<z.infer<typeof TextInputConfigSchema>> = {
-	componentId: "text",
+	id: "text",
 	render: (props) => `<input type="${props.type}" name="${props.name}" />`, // ✅ HTML string
 	schema: TextInputConfigSchema,
 	metadata: {
@@ -2229,7 +2220,7 @@ const loginForm = formEngine.createForm({
 	elements: [
 		{
 			id: "title",
-			componentId: "heading", // ✅ Content element - no 'name' needed
+			id: "heading", // ✅ Content element - no 'name' needed
 			config: {
 				text: "Welcome Back",
 				level: "h1",
@@ -2238,14 +2229,14 @@ const loginForm = formEngine.createForm({
 		},
 		{
 			id: "divider1",
-			componentId: "divider", // ✅ Decoration element - no 'name' needed
+			id: "divider", // ✅ Decoration element - no 'name' needed
 			config: {
 				spacing: "md",
 			},
 		},
 		{
 			id: "email-field",
-			componentId: "email", // ✅ Input element - 'name' is REQUIRED
+			id: "email", // ✅ Input element - 'name' is REQUIRED
 			config: {
 				name: "email", // ✅ Required for 'input' category (form data collection)
 				label: "Email Address",
@@ -2261,7 +2252,7 @@ const loginForm = formEngine.createForm({
 		},
 		{
 			id: "password-field",
-			componentId: "text", // ✅ Input element - 'name' is REQUIRED
+			id: "text", // ✅ Input element - 'name' is REQUIRED
 			config: {
 				name: "password", // ✅ Required for 'input' category (form data collection)
 				label: "Password",
@@ -2281,7 +2272,7 @@ const loginForm = formEngine.createForm({
 		},
 	],
 	layout: {
-		layoutId: "card", // ✅ Autocomplete: 'card' | 'split'
+		id: "card", // ✅ Autocomplete: 'card' | 'split'
 		config: {
 			maxWidth: "md",
 			padding: "lg",
@@ -2453,13 +2444,13 @@ console.log(formConfigSchema);
 //     elements: {
 //       type: 'array',
 //       items: {
-//         discriminator: { propertyName: 'componentId' },
+//         discriminator: { propertyName: 'id' },
 //         oneOf: [  // Discriminated union - one schema per registered element!
 //           {
 //             type: 'object',
 //             properties: {
 //               id: { type: 'string' },
-//               componentId: { const: 'text' },
+//               id: { const: 'text' },
 //               config: { $ref: 'https://api.example.com/schemas/element:text.json' }
 //             }
 //           },
@@ -2467,7 +2458,7 @@ console.log(formConfigSchema);
 //             type: 'object',
 //             properties: {
 //               id: { type: 'string' },
-//               componentId: { const: 'email' },
+//               id: { const: 'email' },
 //               config: { $ref: 'https://api.example.com/schemas/element:email.json' }
 //             }
 //           },
@@ -2475,7 +2466,7 @@ console.log(formConfigSchema);
 //             type: 'object',
 //             properties: {
 //               id: { type: 'string' },
-//               componentId: { const: 'heading' },
+//               id: { const: 'heading' },
 //               config: { $ref: 'https://api.example.com/schemas/element:heading.json' }
 //             }
 //           },
@@ -2483,7 +2474,7 @@ console.log(formConfigSchema);
 //             type: 'object',
 //             properties: {
 //               id: { type: 'string' },
-//               componentId: { const: 'image' },
+//               id: { const: 'image' },
 //               config: { $ref: 'https://api.example.com/schemas/element:image.json' }
 //             }
 //           }
@@ -2491,12 +2482,12 @@ console.log(formConfigSchema);
 //       }
 //     },
 //     layout: {
-//       discriminator: { propertyName: 'layoutId' },
+//       discriminator: { propertyName: 'id' },
 //       oneOf: [  // One schema per registered layout!
 //         {
 //           type: 'object',
 //           properties: {
-//             layoutId: { const: 'card' },
+//             id: { const: 'card' },
 //             config: { $ref: 'https://api.example.com/schemas/layout:card.json' }
 //           }
 //         }
@@ -2562,7 +2553,7 @@ const formConfig = formEngine.createForm({
 	fields: [
 		{
 			id: "email",
-			componentId: "email",
+			id: "email",
 			config: {
 				label: "Email Address",
 				required: true,
@@ -2571,7 +2562,7 @@ const formConfig = formEngine.createForm({
 		},
 	],
 	layout: {
-		layoutId: "card",
+		id: "card",
 		config: { maxWidth: "md" },
 	},
 });
@@ -2601,8 +2592,8 @@ const jsonSchema = formEngine.toJSONSchema();
 // Builder generates serializable config
 const formConfig = {
   fields: [
-    { id: 'field1', componentId: 'text', config: {...} },
-    { id: 'field2', componentId: 'email', config: {...} },
+    { id: 'field1', id: 'text', config: {...} },
+    { id: 'field2', id: 'email', config: {...} },
   ]
 };
 
@@ -2663,8 +2654,8 @@ import signupFormTemplate from "./templates/signup-form.json";
   "title": "Contact Us",
   "fields":
     [
-      { "id": "name", "componentId": "text", "config": { ... } },
-      { "id": "email", "componentId": "email", "config": { ... } },
+      { "id": "name", "id": "text", "config": { ... } },
+      { "id": "email", "id": "email", "config": { ... } },
     ],
 }
 ```
@@ -2716,7 +2707,7 @@ try {
 		console.error("Invalid config:", error.errors);
 		// [
 		//   {
-		//     path: ['fields', 0, 'componentId'],
+		//     path: ['fields', 0, 'id'],
 		//     message: 'Unknown field component: invalid-component'
 		//   }
 		// ]
@@ -2755,7 +2746,7 @@ const errors = formEngine.getValidationErrors(invalidConfig);
 errors.forEach((err) => {
 	console.log(`Error at ${err.path.join(".")}: ${err.message}`);
 });
-// Error at fields.0.componentId: Unknown field component: invalid
+// Error at fields.0.id: Unknown field component: invalid
 // Error at layout.config.maxWidth: Invalid enum value. Expected 'sm' | 'md' | 'lg' | 'xl', received 'xxl'
 
 // ============================================
@@ -2901,16 +2892,16 @@ The parser provides detailed, actionable error messages:
 const invalidConfig = {
 	id: "test",
 	fields: [
-		{ id: "email", componentId: "invalid-component", config: {} },
-		{ id: "name", componentId: "text", config: { maxLength: "not-a-number" } },
+		{ id: "email", id: "invalid-component", config: {} },
+		{ id: "name", id: "text", config: { maxLength: "not-a-number" } },
 	],
-	layout: { layoutId: "unknown-layout", config: {} },
+	layout: { id: "unknown-layout", config: {} },
 };
 
 const errors = formEngine.getValidationErrors(invalidConfig);
 // [
 //   {
-//     path: ['fields', 0, 'componentId'],
+//     path: ['fields', 0, 'id'],
 //     message: 'Unknown field component: invalid-component'
 //   },
 //   {
@@ -2918,7 +2909,7 @@ const errors = formEngine.getValidationErrors(invalidConfig);
 //     message: 'Expected number, received string'
 //   },
 //   {
-//     path: ['layout', 'layoutId'],
+//     path: ['layout', 'id'],
 //     message: 'Unknown layout: unknown-layout'
 //   }
 // ]
@@ -2969,7 +2960,7 @@ const jsonSchema = z.toJSONSchema(fieldSchema);
   "title": "Text Input Configuration",
   "type": "object",
   "properties": {
-    "componentId": {
+    "id": {
       "type": "string",
       "const": "text"
     },
@@ -2982,7 +2973,7 @@ const jsonSchema = z.toJSONSchema(fieldSchema);
       "default": false
     }
   },
-  "required": ["componentId"],
+  "required": ["id"],
   "additionalProperties": false
 }
 
@@ -3023,7 +3014,7 @@ const allSchemas = formEngine.toJSONSchema({ target: 'openapi-3.0' });
 ```typescript
 // Clear categorization with validation rules
 export const textInputRegistration: ElementRegistration<z.infer<typeof TextInputConfigSchema>> = {
-	componentId: "text", // ✅ Must be unique
+	id: "text", // ✅ Must be unique
 	render: TextInput, // ✅ Framework-agnostic
 	schema: z.object({
 		name: z.string(), // ✅ Required for 'input' category
@@ -3039,10 +3030,10 @@ export const textInputRegistration: ElementRegistration<z.infer<typeof TextInput
 
 // Filter by category (with IntelliSense)
 const inputs = formEngine.getElementsByCategory(ElementCategory.INPUT);
-// [{ componentId: 'text', ... }, { componentId: 'email', ... }]
+// [{ id: 'text', ... }, { id: 'email', ... }]
 
 const content = formEngine.getElementsByCategory(ElementCategory.CONTENT);
-// [{ componentId: 'heading', ... }, { componentId: 'image', ... }]
+// [{ id: 'heading', ... }, { id: 'image', ... }]
 ```
 
 **Benefits**:
@@ -3052,14 +3043,14 @@ const content = formEngine.getElementsByCategory(ElementCategory.CONTENT);
 - ✅ **UI organization** - Form builders can group elements by category
 - ✅ **Filtering** - Easy to find inputs vs content vs decoration elements
 - ✅ **Type safety** - Category enforced at compile-time with `satisfies`
-- ✅ **Unique IDs** - componentId uniqueness enforced at registration time
+- ✅ **Unique IDs** - id uniqueness enforced at registration time
 
 ### 2. Action System (Event Handlers)
 
 ```typescript
 // Actions are NOT components - they're event handlers
 export const submitActionRegistration: ActionRegistration<z.infer<typeof SubmitActionSchema>> = {
-	actionType: "submit",
+	id: "submit",
 	execute: async (config, context) => {
 		const response = await fetch(config.endpoint, {
 			method: config.method,
@@ -3100,7 +3091,7 @@ await engine.executeAction("submit", submitConfig, context);
 ```typescript
 // Validation rules are plain JSON
 {
-	componentId: "email",
+	id: "email",
 	name: "email",
 	rules: [
 		{ type: "required", message: "Email is required" },
@@ -3136,7 +3127,7 @@ validationRegistry.register({
 ```typescript
 // Components export registration objects
 export const textInputRegistration = {
-  componentId: 'text',
+  id: 'text',
   component: TextInput,
   schema: TextInputSchema,
   metadata: { name: 'Text Input', category: 'input', ... }
@@ -3216,10 +3207,10 @@ const { formConfigSchema } = engine.toJSONSchema();
 //   elements: {
 //     items: {
 //       oneOf: [
-//         { componentId: { const: 'text' }, config: { $ref: '...' } },
-//         { componentId: { const: 'email' }, config: { $ref: '...' } },
-//         { componentId: { const: 'heading' }, config: { $ref: '...' } },
-//         { componentId: { const: 'image' }, config: { $ref: '...' } }
+//         { id: { const: 'text' }, config: { $ref: '...' } },
+//         { id: { const: 'email' }, config: { $ref: '...' } },
+//         { id: { const: 'heading' }, config: { $ref: '...' } },
+//         { id: { const: 'image' }, config: { $ref: '...' } }
 //       ]
 //     }
 //   }
@@ -3306,7 +3297,7 @@ const errors = formEngine.getValidationErrors(invalidData);
 ```typescript
 // Before (current)
 registerField({
-  componentId: 'text',
+  id: 'text',
   component: TextInput,
   schema: TextInputSchema,
   metadata: { ... }
@@ -3337,7 +3328,7 @@ const formConfig = await db.forms.find({ id: "contact-form" });
 />;
 
 // Renderer looks up components by ID and renders them
-// formConfig.fields[0].componentId -> 'email' -> formEngine.getField('email').component
+// formConfig.fields[0].id -> 'email' -> formEngine.getField('email').component
 ```
 
 **Flow**:
@@ -3465,7 +3456,7 @@ const componentRegistry = z.registry<ComponentMeta>();
 // Examples are type-checked against the schema
 const TextSchema = z
 	.object({
-		componentId: z.literal("text"),
+		__id: z.literal("text"),
 		label: z.string(),
 		value: z.string(),
 	})
@@ -3474,13 +3465,13 @@ const TextSchema = z
 		title: "Text Field",
 		examples: [
 			// ✅ Valid - matches schema
-			{ componentId: "text", label: "Name", value: "John" },
+			{ id: "text", label: "Name", value: "John" },
 
 			// ❌ Type error - missing required fields
 			{ label: "Name" },
 
 			// ❌ Type error - wrong type
-			{ componentId: "text", label: 123, value: "John" },
+			{ id: "text", label: 123, value: "John" },
 		],
 	});
 ```
@@ -3502,7 +3493,7 @@ const BaseFieldConfigSchema = z.object({
 
 // 2. Define schemas that extend the base
 const TextInputConfigSchema = BaseFieldConfigSchema.extend({
-  componentId: z.literal('text'),
+  __id: z.literal('text'),
   placeholder: z.string().optional(),
   minLength: z.number().optional(),
   maxLength: z.number().optional(),
@@ -3512,7 +3503,7 @@ const TextInputConfigSchema = BaseFieldConfigSchema.extend({
 });
 
 const EmailInputConfigSchema = BaseFieldConfigSchema.extend({
-  componentId: z.literal('email'),
+  __id: z.literal('email'),
   placeholder: z.string().optional(),
 }).strict().meta({
   id: 'email-input-config',
@@ -3545,7 +3536,7 @@ const { schemas } = z.toJSONSchema(z.globalRegistry, {
       {
         "type": "object",
         "properties": {
-          "componentId": { "type": "string", "const": "text" },
+          "id": { "type": "string", "const": "text" },
           "placeholder": { "type": "string" },
           "minLength": { "type": "number" },
           "maxLength": { "type": "number" }
@@ -3561,7 +3552,7 @@ const { schemas } = z.toJSONSchema(z.globalRegistry, {
       {
         "type": "object",
         "properties": {
-          "componentId": { "type": "string", "const": "email" },
+          "id": { "type": "string", "const": "email" },
           "placeholder": { "type": "string" }
         }
       }

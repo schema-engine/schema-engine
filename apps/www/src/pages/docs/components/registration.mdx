@@ -49,7 +49,7 @@ import { ValidationPresets } from '@/lib/form-engine/validation';
 const formConfig = {
   elements: [
     {
-      componentId: 'input',        // References your registered component
+      id: 'input',        // References your registered component
       id: 'name',
       name: 'name', 
       label: 'Full Name',
@@ -150,7 +150,7 @@ defaultFormRegistry.register({
   category: 'input',
   description: 'Text input field',
   example: {
-    componentId: 'input',
+    id: 'input',
     inputType: 'text',
     id: 'example-input',
     name: 'example',
@@ -245,7 +245,7 @@ defaultFormRegistry.register({
   category: 'input',
   description: 'Text input field',
   example: {
-    componentId: 'input',
+    id: 'input',
     inputType: 'text',
     id: 'example',
     name: 'example',
@@ -316,7 +316,7 @@ defaultFormRegistry.register({
   
   // Example configuration for documentation/tooling
   example: {
-    componentId: 'input',
+    id: 'input',
     inputType: 'text',
     id: 'sample-input',
     name: 'sampleInput',

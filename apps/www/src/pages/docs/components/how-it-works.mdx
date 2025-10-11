@@ -64,7 +64,7 @@ function MyForm() {
 const formConfig = {
   elements: [
     {
-      componentId: 'input',          // References your registered component
+      id: 'input',          // References your registered component
       id: 'name',
       label: 'Full Name',
       rules: [
@@ -235,7 +235,7 @@ Every component automatically participates in Form Engine's responsive grid syst
 
 ```typescript
 const responsiveField = {
-  componentId: 'input',
+  id: 'input',
   id: 'description',
   label: 'Description',
   
@@ -273,7 +273,7 @@ interface InputFieldConfig extends BaseFieldConfig {
 const typedForm: FormConfig = {
   elements: [
     {
-      componentId: 'input',           // Valid
+      id: 'input',           // Valid
       inputType: 'email',      // Valid  
       placeholder: 'Enter...' // Valid
       // invalid: 'property'   // TypeScript error

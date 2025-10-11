@@ -5,7 +5,7 @@ import { StepperProvider, useStepperContext } from './context';
 import { useStepperContext as useGlobalStepperContext } from '@/contexts/stepper-context';
 
 export interface VerticalStepsStepperConfig extends BaseStepperConfig {
-	stepperId: 'vertical';
+	__id: 'vertical';
 	showConnectors?: boolean;
 }
 
@@ -199,7 +199,7 @@ export const VerticalStepperRegistration: StepperRegistration<
 	VerticalStepsStepperConfig,
 	{ children?: React.ReactNode }
 > = {
-	stepperId: 'vertical',
+	__id: 'vertical',
 	render: VerticalStepsStepperComposed,
 	schema: VerticalStepperConfigSchema,
 	metadata: {

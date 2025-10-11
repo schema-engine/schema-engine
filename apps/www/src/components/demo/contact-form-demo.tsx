@@ -1,5 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
+import { FormEngineProvider } from '@json-form-engine/react/components/adapter-provider';
+import { rhfAdapter } from '@json-form-engine/react/adapters/rhf';
+import { formEngine } from '@/lib/form-engine-setup';
 import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
 import type { FormConfig } from '@json-form-engine/core/schemas';
 import '@/lib/form-engine-setup';
@@ -17,7 +20,7 @@ const contactFormConfig: FormConfig = {
 			elements: [
 				{
 					id: 'firstName',
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					name: 'firstName',
 					label: 'First Name',
@@ -29,7 +32,7 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'lastName',
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					name: 'lastName',
 					label: 'Last Name',
@@ -41,7 +44,7 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'email',
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'email',
 					name: 'email',
 					label: 'Email Address',
@@ -53,7 +56,7 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'inquiryType',
-					componentId: 'select',
+					__id: 'select',
 					name: 'inquiryType',
 					label: 'Inquiry Type',
 					placeholder: 'Select inquiry type',
@@ -69,7 +72,7 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'priority',
-					componentId: 'select',
+					__id: 'select',
 					name: 'priority',
 					label: 'Priority Level',
 					placeholder: 'Select priority',
@@ -84,7 +87,7 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'budget',
-					componentId: 'select',
+					__id: 'select',
 					name: 'budget',
 					label: 'Project Budget',
 					placeholder: 'Select budget range',
@@ -107,7 +110,7 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'subject',
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					name: 'subject',
 					label: 'Subject',
@@ -120,7 +123,7 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'message',
-					componentId: 'textarea',
+					__id: 'textarea',
 					name: 'message',
 					label: 'Message',
 					placeholder: 'Please provide details about your inquiry...',
@@ -133,14 +136,14 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'newsletter',
-					componentId: 'checkbox',
+					__id: 'checkbox',
 					name: 'newsletter',
 					label: 'Subscribe to our newsletter',
 					defaultValue: false,
 				},
 				{
 					id: 'terms',
-					componentId: 'checkbox',
+					__id: 'checkbox',
 					name: 'terms',
 					label: 'I agree to the terms and conditions',
 					rules: [ValidationPresets.string.required('You must agree to the terms and conditions')],
@@ -170,7 +173,6 @@ const contactFormConfig: FormConfig = {
 		},
 	],
 };
-
 export function ContactFormDemo() {
 	const handleSubmit = (data: any) => {
 		console.log('Contact form submitted:', data);
@@ -178,21 +180,23 @@ export function ContactFormDemo() {
 	};
 
 	return (
-		<div className="container mx-auto py-8 space-y-8">
-			<div className="max-w-4xl mx-auto">
-				<Card>
-					<CardHeader>
-						<CardTitle>Contact Form Example</CardTitle>
-						<CardDescription>
-							A comprehensive contact form with conditional fields, validation, and responsive design. Try
-							selecting different inquiry types to see conditional budget fields appear.
-						</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<FormRenderer config={contactFormConfig} onSubmit={handleSubmit} />
-					</CardContent>
-				</Card>
+		<FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
+			<div className="container mx-auto py-8 space-y-8">
+				<div className="max-w-4xl mx-auto">
+					<Card>
+						<CardHeader>
+							<CardTitle>Contact Form Example</CardTitle>
+							<CardDescription>
+								A comprehensive contact form with conditional fields, validation, and responsive design.
+								Try selecting different inquiry types to see conditional budget fields appear.
+							</CardDescription>
+						</CardHeader>
+						<CardContent>
+							<FormRenderer config={contactFormConfig} onSubmit={handleSubmit} />
+						</CardContent>
+					</Card>
+				</div>
 			</div>
-		</div>
+		</FormEngineProvider>
 	);
 }

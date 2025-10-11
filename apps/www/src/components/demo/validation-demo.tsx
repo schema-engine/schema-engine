@@ -16,7 +16,7 @@ export function ValidationDemo() {
 				title: 'Try Different Validation Rules',
 				elements: [
 					{
-						componentId: 'input',
+						__id: 'input',
 						inputType: 'text',
 						id: 'username',
 						name: 'username',
@@ -29,7 +29,7 @@ export function ValidationDemo() {
 						],
 					},
 					{
-						componentId: 'number',
+						__id: 'number',
 						id: 'age',
 						name: 'age',
 						label: 'Age (18-100)',
@@ -41,7 +41,7 @@ export function ValidationDemo() {
 						],
 					},
 					{
-						componentId: 'input',
+						__id: 'input',
 						inputType: 'url',
 						id: 'website',
 						name: 'website',

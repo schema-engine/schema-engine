@@ -1,6 +1,6 @@
 import type React from 'react';
 import { FormProvider } from '../form-provider';
-import type { FormProviderProps } from '../adapters/types';
+import type { FormProviderProps } from '../../adapters/types';
 import { FormElement } from './field-renderer';
 import { useFormGridStyles } from '@/hooks';
 import { useFormContext } from 'react-hook-form';
@@ -39,7 +39,7 @@ function SingleStepFormElementsRenderer({ config }: { config: FormConfig }) {
 
 	if (!singleStep?.elements) return null;
 
-	if (singleStep.layout && 'layoutId' in singleStep.layout) {
+	if (singleStep.layout && 'id' in singleStep.layout) {
 		return (
 			<LayoutRenderer
 				step={singleStep}
@@ -197,7 +197,7 @@ function StepContent({ step, config }: { step: FormStep; config: FormConfig }) {
 
 	if (!step?.elements) return null;
 
-	if (step.layout && 'layoutId' in step.layout) {
+	if (step.layout && 'id' in step.layout) {
 		return (
 			<LayoutRenderer
 				step={step}

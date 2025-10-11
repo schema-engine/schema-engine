@@ -1,6 +1,9 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import type { EcoComponent } from '@ecopages/core';
 import { Badge } from '@/components/ui/badge';
+import { FormEngineProvider } from '@json-form-engine/react/components/adapter-provider';
+import { rhfAdapter } from '@json-form-engine/react/adapters/rhf';
+import { formEngine } from '@/lib/form-engine-setup';
 
 export type FormEngineLayoutProps = {
 	children: ReactNode;
@@ -140,10 +143,12 @@ export const FormEngineLayout: EcoComponent<FormEngineLayoutProps, ReactNode> = 
 
 	return (
 		<body>
-			<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-				<Navigation currentPath={currentPath} />
-				<main className={className}>{children}</main>
-			</div>
+			<FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
+				<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+					<Navigation currentPath={currentPath} />
+					<main className={className}>{children}</main>
+				</div>
+			</FormEngineProvider>
 		</body>
 	);
 };

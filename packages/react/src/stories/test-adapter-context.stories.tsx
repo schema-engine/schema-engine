@@ -5,7 +5,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { StoryWrapper } from './shared/story-wrapper';
 import { FormEngineProvider } from '@/components/adapter-provider';
-import { rhfAdapter } from '@/components/adapters/rhf';
+import { rhfAdapter } from '@/adapters/rhf';
 import { defaultFormEngine } from './shared/form-engine-setup';
 
 function AdapterTestInner() {

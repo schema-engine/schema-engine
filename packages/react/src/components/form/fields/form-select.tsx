@@ -1,9 +1,7 @@
 import { Label } from '@/shadcn/ui/label';
 import { useControlledFormElement, combineHandlers } from '@/hooks';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shadcn/ui/select';
-import type { SelectFieldConfig, SelectFieldProps } from './form-select.types';
-import { SelectFieldConfigSchema } from './form-select.types';
-import type { ElementRegistration } from '@json-form-engine/core/types';
+import type { SelectFieldProps } from './form-select.types';
 
 export function FormSelect({
 	onChange: propsOnChange,
@@ -41,14 +39,3 @@ export function FormSelect({
 		</div>
 	);
 }
-
-export const SelectElement: ElementRegistration<SelectFieldConfig, SelectFieldProps> = {
-	componentId: 'select',
-	render: FormSelect,
-	schema: SelectFieldConfigSchema,
-	metadata: {
-		name: 'Select Field',
-		description: 'Dropdown select field for choosing from predefined options',
-		category: 'input',
-	},
-};

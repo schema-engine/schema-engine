@@ -257,6 +257,9 @@ export const ValidationRuleSchema = z.union([
 		body: z.record(z.string(), z.any()).optional(),
 		expectedResponse: z.record(z.string(), z.any()).optional(),
 		dependencies: z.array(z.string()).optional(),
+		debounce: z.number().optional(),
+		cacheTTL: z.number().optional(),
+		disableCache: z.boolean().optional(),
 		message: z.string().optional(),
 	}),
 	z.object({

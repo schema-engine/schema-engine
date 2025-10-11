@@ -51,4 +51,6 @@ export interface ActionMetadata {
 	tags?: string[];
 	/** Version of the action */
 	version?: string;
+	/** Default triggers for this action type */
+	defaultTriggers?: string[];
 }

@@ -22,12 +22,12 @@ export interface SerializableFormConfig {
 	fields: SerializableFieldConfig[];
 	/** Layout configuration */
 	layout?: {
-		layoutId: string;
+		id: string;
 		config?: Record<string, unknown>;
 	};
 	/** Stepper configuration for multi-step forms */
 	stepper?: {
-		stepperId: string;
+		id: string;
 		config?: Record<string, unknown>;
 	};
 	/** Actions to execute on various triggers */
@@ -41,7 +41,7 @@ export interface SerializableFormConfig {
  */
 export interface SerializableFieldConfig {
 	/** Element component ID */
-	componentId: string;
+	id: string;
 	/** Element configuration */
 	config: Record<string, unknown>;
 }
@@ -51,7 +51,7 @@ export interface SerializableFieldConfig {
  */
 export interface SerializableActionConfig {
 	/** Action type */
-	actionType: string;
+	id: string;
 	/** Action configuration */
 	config: Record<string, unknown>;
 	/** Triggers that execute this action */
@@ -86,7 +86,7 @@ export function isSerializable(config: unknown): config is SerializableFormConfi
 			return false;
 		}
 		const f = field as Record<string, unknown>;
-		if (typeof f.componentId !== 'string' || typeof f.config !== 'object') {
+		if (typeof f.id !== 'string' || typeof f.config !== 'object') {
 			return false;
 		}
 	}

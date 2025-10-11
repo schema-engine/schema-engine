@@ -8,18 +8,18 @@
  */
 
 import { createReactFormEngine } from '@/registries/builder-registry';
-import { InputElement } from '@/components/form/fields/form-input';
-import { NumberElement } from '@/components/form/fields/form-number';
+import { InputElementRegistration } from '@/components/form/fields/form-input.registration';
+import { NumberElementRegistration } from '@/components/form/fields/form-number.registration';
 
 /**
  * Build the form engine with React components
  *
- * Element registrations are imported directly from their component files.
- * Each component file exports both the component and its registration.
+ * Element registrations are imported directly from their registration files.
+ * Each registration file exports the full registration object with type augmentation.
  */
 export const reactFormEngine = createReactFormEngine()
-	.addElement(InputElement)
-	.addElement(NumberElement)
+	.addElement(InputElementRegistration)
+	.addElement(NumberElementRegistration)
 	// Add more elements, layouts, steppers, actions...
 	.build();
 

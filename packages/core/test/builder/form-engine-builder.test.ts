@@ -17,7 +17,7 @@ describe('FormEngineBuilder', () => {
 			});
 
 			const textInputRegistration: ElementRegistration<z.infer<typeof textInputSchema>> = {
-				componentId: 'text',
+				__id: 'text',
 				schema: textInputSchema,
 				metadata: {
 					name: 'Text Input',
@@ -36,7 +36,7 @@ describe('FormEngineBuilder', () => {
 
 		test('should register multiple elements', () => {
 			const textInputRegistration: ElementRegistration = {
-				componentId: 'text',
+				__id: 'text',
 				schema: z.object({ name: z.string() }),
 				metadata: {
 					name: 'Text Input',
@@ -46,7 +46,7 @@ describe('FormEngineBuilder', () => {
 			};
 
 			const emailInputRegistration: ElementRegistration = {
-				componentId: 'email',
+				__id: 'email',
 				schema: z.object({ name: z.string() }),
 				metadata: {
 					name: 'Email Input',
@@ -63,9 +63,9 @@ describe('FormEngineBuilder', () => {
 			expect(engine.hasElement('email')).toBe(true);
 		});
 
-		test('should throw error for duplicate element componentId', () => {
-			const registration: ElementRegistration = {
-				componentId: 'text',
+		test('should override duplicate element id with warning', () => {
+			const registration1: ElementRegistration = {
+				__id: 'text',
 				schema: z.object({}),
 				metadata: {
 					name: 'Text Input',
@@ -74,38 +74,49 @@ describe('FormEngineBuilder', () => {
 				render: (props) => props,
 			};
 
-			const builder = new FormEngineBuilder();
-			builder.addElement(registration);
+			const registration2: ElementRegistration = {
+				__id: 'text',
+				schema: z.object({}),
+				metadata: {
+					name: 'Custom Text Input',
+					category: 'input',
+				},
+				render: (props) => props,
+			};
 
-			expect(() => {
-				builder.addElement(registration);
-			}).toThrow('Element with componentId "text" is already registered');
+			const builder = new FormEngineBuilder();
+			builder.addElement(registration1);
+			builder.addElement(registration2);
+
+			const engine = builder.build();
+			const element = engine.getElement('text');
+			expect(element?.metadata.name).toBe('Custom Text Input');
 		});
 
 		test('should support all element categories', () => {
 			const inputElement: ElementRegistration = {
-				componentId: 'text',
+				__id: 'text',
 				schema: z.object({ name: z.string() }),
 				metadata: { name: 'Text', category: 'input' },
 				render: (props) => props,
 			};
 
 			const contentElement: ElementRegistration = {
-				componentId: 'heading',
+				__id: 'heading',
 				schema: z.object({ text: z.string() }),
 				metadata: { name: 'Heading', category: 'content' },
 				render: (props) => props,
 			};
 
 			const decorationElement: ElementRegistration = {
-				componentId: 'divider',
+				__id: 'divider',
 				schema: z.object({}),
 				metadata: { name: 'Divider', category: 'decoration' },
 				render: (props) => props,
 			};
 
 			const interactiveElement: ElementRegistration = {
-				componentId: 'button',
+				__id: 'button',
 				schema: z.object({ label: z.string() }),
 				metadata: { name: 'Button', category: 'interactive' },
 				render: (props) => props,
@@ -129,7 +140,7 @@ describe('FormEngineBuilder', () => {
 	describe('Layout Registration', () => {
 		test('should register a single layout', () => {
 			const cardLayoutRegistration: LayoutRegistration = {
-				layoutId: 'card',
+				__id: 'card',
 				schema: z.object({ maxWidth: z.string().optional() }),
 				metadata: {
 					name: 'Card Layout',
@@ -146,14 +157,14 @@ describe('FormEngineBuilder', () => {
 
 		test('should register multiple layouts', () => {
 			const cardLayout: LayoutRegistration = {
-				layoutId: 'card',
+				__id: 'card',
 				schema: z.object({}),
 				metadata: { name: 'Card Layout' },
 				render: (props) => props,
 			};
 
 			const gridLayout: LayoutRegistration = {
-				layoutId: 'grid',
+				__id: 'grid',
 				schema: z.object({}),
 				metadata: { name: 'Grid Layout' },
 				render: (props) => props,
@@ -167,27 +178,35 @@ describe('FormEngineBuilder', () => {
 			expect(engine.hasLayout('grid')).toBe(true);
 		});
 
-		test('should throw error for duplicate layout layoutId', () => {
-			const registration: LayoutRegistration = {
-				layoutId: 'card',
+		test('should override duplicate layout id with warning', () => {
+			const registration1: LayoutRegistration = {
+				__id: 'card',
 				schema: z.object({}),
 				metadata: { name: 'Card Layout' },
 				render: (props) => props,
 			};
 
-			const builder = new FormEngineBuilder();
-			builder.addLayout(registration);
+			const registration2: LayoutRegistration = {
+				__id: 'card',
+				schema: z.object({}),
+				metadata: { name: 'Custom Card Layout' },
+				render: (props) => props,
+			};
 
-			expect(() => {
-				builder.addLayout(registration);
-			}).toThrow('Layout with layoutId "card" is already registered');
+			const builder = new FormEngineBuilder();
+			builder.addLayout(registration1);
+			builder.addLayout(registration2);
+
+			const engine = builder.build();
+			const layout = engine.getLayout('card');
+			expect(layout?.metadata.name).toBe('Custom Card Layout');
 		});
 	});
 
 	describe('Stepper Registration', () => {
 		test('should register a single stepper', () => {
 			const wizardStepperRegistration: StepperRegistration = {
-				stepperId: 'wizard',
+				__id: 'wizard',
 				schema: z.object({}),
 				metadata: {
 					name: 'Wizard Stepper',
@@ -204,14 +223,14 @@ describe('FormEngineBuilder', () => {
 
 		test('should register multiple steppers', () => {
 			const wizardStepper: StepperRegistration = {
-				stepperId: 'wizard',
+				__id: 'wizard',
 				schema: z.object({}),
 				metadata: { name: 'Wizard' },
 				render: (props) => props,
 			};
 
 			const tabsStepper: StepperRegistration = {
-				stepperId: 'tabs',
+				__id: 'tabs',
 				schema: z.object({}),
 				metadata: { name: 'Tabs' },
 				render: (props) => props,
@@ -225,27 +244,35 @@ describe('FormEngineBuilder', () => {
 			expect(engine.hasStepper('tabs')).toBe(true);
 		});
 
-		test('should throw error for duplicate stepper stepperId', () => {
-			const registration: StepperRegistration = {
-				stepperId: 'wizard',
+		test('should override duplicate stepper id with warning', () => {
+			const registration1: StepperRegistration = {
+				__id: 'wizard',
 				schema: z.object({}),
 				metadata: { name: 'Wizard' },
 				render: (props) => props,
 			};
 
-			const builder = new FormEngineBuilder();
-			builder.addStepper(registration);
+			const registration2: StepperRegistration = {
+				__id: 'wizard',
+				schema: z.object({}),
+				metadata: { name: 'Custom Wizard' },
+				render: (props) => props,
+			};
 
-			expect(() => {
-				builder.addStepper(registration);
-			}).toThrow('Stepper with stepperId "wizard" is already registered');
+			const builder = new FormEngineBuilder();
+			builder.addStepper(registration1);
+			builder.addStepper(registration2);
+
+			const engine = builder.build();
+			const stepper = engine.getStepper('wizard');
+			expect(stepper?.metadata.name).toBe('Custom Wizard');
 		});
 	});
 
 	describe('Action Registration', () => {
 		test('should register a single action', () => {
 			const submitActionRegistration: BuilderActionRegistration = {
-				actionType: 'submit',
+				__id: 'submit',
 				schema: z.object({ endpoint: z.string() }),
 				metadata: {
 					name: 'Submit Form',
@@ -262,14 +289,14 @@ describe('FormEngineBuilder', () => {
 
 		test('should register multiple actions', () => {
 			const submitAction: BuilderActionRegistration = {
-				actionType: 'submit',
+				__id: 'submit',
 				schema: z.object({}),
 				metadata: { name: 'Submit' },
 				execute: async () => ({ success: true }),
 			};
 
 			const resetAction: BuilderActionRegistration = {
-				actionType: 'reset',
+				__id: 'reset',
 				schema: z.object({}),
 				metadata: { name: 'Reset' },
 				execute: async () => ({ success: true }),
@@ -283,48 +310,56 @@ describe('FormEngineBuilder', () => {
 			expect(engine.hasAction('reset')).toBe(true);
 		});
 
-		test('should throw error for duplicate action actionType', () => {
-			const registration: BuilderActionRegistration = {
-				actionType: 'submit',
+		test('should override duplicate action id with warning', () => {
+			const registration1: BuilderActionRegistration = {
+				__id: 'submit',
 				schema: z.object({}),
 				metadata: { name: 'Submit' },
 				execute: async () => ({ success: true }),
 			};
 
-			const builder = new FormEngineBuilder();
-			builder.addAction(registration);
+			const registration2: BuilderActionRegistration = {
+				__id: 'submit',
+				schema: z.object({}),
+				metadata: { name: 'Custom Submit' },
+				execute: async () => ({ success: true, custom: true }),
+			};
 
-			expect(() => {
-				builder.addAction(registration);
-			}).toThrow('Action with actionType "submit" is already registered');
+			const builder = new FormEngineBuilder();
+			builder.addAction(registration1);
+			builder.addAction(registration2);
+
+			const engine = builder.build();
+			const action = engine.getAction('submit');
+			expect(action?.metadata.name).toBe('Custom Submit');
 		});
 	});
 
 	describe('Fluent API / Method Chaining', () => {
 		test('should support method chaining', () => {
 			const element: ElementRegistration = {
-				componentId: 'text',
+				__id: 'text',
 				schema: z.object({}),
 				metadata: { name: 'Text', category: 'input' },
 				render: (props) => props,
 			};
 
 			const layout: LayoutRegistration = {
-				layoutId: 'card',
+				__id: 'card',
 				schema: z.object({}),
 				metadata: { name: 'Card' },
 				render: (props) => props,
 			};
 
 			const stepper: StepperRegistration = {
-				stepperId: 'wizard',
+				__id: 'wizard',
 				schema: z.object({}),
 				metadata: { name: 'Wizard' },
 				render: (props) => props,
 			};
 
 			const action: BuilderActionRegistration = {
-				actionType: 'submit',
+				__id: 'submit',
 				schema: z.object({}),
 				metadata: { name: 'Submit' },
 				execute: async () => ({ success: true }),
@@ -367,19 +402,19 @@ describe('FormEngineBuilder', () => {
 
 		test('should preserve all registrations after build', () => {
 			const element: ElementRegistration = {
-				componentId: 'text',
+				__id: 'text',
 				schema: z.object({}),
 				metadata: { name: 'Text', category: 'input' },
 				render: (props) => props,
 			};
 
-			const builder = new FormEngineBuilder().addElement(element);
-			const engine = builder.build();
+		const builder = new FormEngineBuilder().addElement(element);
+		const engine = builder.build();
 
-			const retrieved = engine.getElement('text');
-			expect(retrieved).toBeDefined();
-			expect(retrieved?.componentId).toBe('text');
-			expect(retrieved?.metadata.name).toBe('Text');
+		const retrieved = engine.getElement('text');
+		expect(retrieved).toBeDefined();
+		expect(retrieved?.__id).toBe('text');
+		expect(retrieved?.metadata.name).toBe('Text');
 		});
 	});
 
@@ -387,7 +422,7 @@ describe('FormEngineBuilder', () => {
 		test('should create fully configured form engine', () => {
 			// Elements
 			const textInput: ElementRegistration = {
-				componentId: 'text',
+				__id: 'text',
 				schema: z.object({ name: z.string(), label: z.string() }),
 				metadata: {
 					name: 'Text Input',
@@ -399,7 +434,7 @@ describe('FormEngineBuilder', () => {
 			};
 
 			const emailInput: ElementRegistration = {
-				componentId: 'email',
+				__id: 'email',
 				schema: z.object({ name: z.string(), label: z.string() }),
 				metadata: {
 					name: 'Email Input',
@@ -411,7 +446,7 @@ describe('FormEngineBuilder', () => {
 			};
 
 			const heading: ElementRegistration = {
-				componentId: 'heading',
+				__id: 'heading',
 				schema: z.object({ text: z.string(), level: z.number() }),
 				metadata: {
 					name: 'Heading',
@@ -424,7 +459,7 @@ describe('FormEngineBuilder', () => {
 
 			// Layouts
 			const cardLayout: LayoutRegistration = {
-				layoutId: 'card',
+				__id: 'card',
 				schema: z.object({ maxWidth: z.string().optional() }),
 				metadata: {
 					name: 'Card Layout',
@@ -436,7 +471,7 @@ describe('FormEngineBuilder', () => {
 
 			// Steppers
 			const wizardStepper: StepperRegistration = {
-				stepperId: 'wizard',
+				__id: 'wizard',
 				schema: z.object({ showProgress: z.boolean().optional() }),
 				metadata: {
 					name: 'Wizard Stepper',
@@ -448,7 +483,7 @@ describe('FormEngineBuilder', () => {
 
 			// Actions
 			const submitAction: BuilderActionRegistration = {
-				actionType: 'submit',
+				__id: 'submit',
 				schema: z.object({ endpoint: z.string(), method: z.string() }),
 				metadata: {
 					name: 'Submit Form',

@@ -20,7 +20,7 @@ export const conceptStepLayoutDemo: FormConfig = {
 
 	// This would use a custom stepper (when registered)
 	// stepper: {
-	// 	stepperId: 'progress-bar',
+	// 	__stepperId: 'progress-bar',
 	// 	primaryColor: '#6366f1'
 	// },
 
@@ -32,14 +32,14 @@ export const conceptStepLayoutDemo: FormConfig = {
 
 			// This would use a custom layout (when registered)
 			// layout: {
-			// 	layoutId: 'card',
+			// 	__layoutId: 'card',
 			// 	maxWidth: '500px',
 			// 	shadowSize: 'large'
 			// },
 
 			elements: [
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					id: 'name',
 					name: 'name',
@@ -48,7 +48,7 @@ export const conceptStepLayoutDemo: FormConfig = {
 					rules: [ValidationPresets.string.required('Name is required')],
 				},
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'email',
 					id: 'email',
 					name: 'email',
@@ -68,14 +68,14 @@ export const conceptStepLayoutDemo: FormConfig = {
 
 			// This would use a different layout
 			// layout: {
-			// 	layoutId: 'split-screen',
+			// 	__layoutId: 'split-screen',
 			// 	sidePlacement: 'right',
 			// 	sideContent: 'Help content and tips would go here'
 			// },
 
 			elements: [
 				{
-					componentId: 'textarea',
+					__id: 'textarea',
 					id: 'message',
 					name: 'message',
 					label: 'Your Message',
@@ -83,7 +83,7 @@ export const conceptStepLayoutDemo: FormConfig = {
 					rules: [ValidationPresets.string.required('Message is required')],
 				},
 				{
-					componentId: 'select',
+					__id: 'select',
 					id: 'category',
 					name: 'category',
 					label: 'Category',
@@ -127,13 +127,12 @@ export const currentGridSystemDemo: FormConfig = {
 
 			elements: [
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					id: 'firstName',
 					name: 'firstName',
 					label: 'First Name',
 					rules: [ValidationPresets.string.required()],
-					// Grid positioning for this element
 					grid: {
 						responsive: {
 							default: { column: '1 / -1' },
@@ -143,7 +142,7 @@ export const currentGridSystemDemo: FormConfig = {
 					},
 				},
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					id: 'lastName',
 					name: 'lastName',
@@ -158,7 +157,7 @@ export const currentGridSystemDemo: FormConfig = {
 					},
 				},
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'email',
 					id: 'email',
 					name: 'email',
@@ -172,7 +171,7 @@ export const currentGridSystemDemo: FormConfig = {
 					},
 				},
 				{
-					componentId: 'textarea',
+					__id: 'textarea',
 					id: 'bio',
 					name: 'bio',
 					label: 'Bio',
@@ -188,30 +187,3 @@ export const currentGridSystemDemo: FormConfig = {
 		},
 	],
 };
-
-/**
- * LAYOUT SYSTEM SUMMARY
- *
- * We have THREE different layout concepts:
- *
- * 1. **CSS Grid Layout** (GridLayoutConfig) - KEEP ✅
- *    - Used for positioning form elements within a step
- *    - Responsive grid system
- *    - Works at the element level: element.grid = { responsive: {...} }
- *    - Used in form config: config.grid = { columns: 12, gap: '1rem' }
- *
- * 2. **Step Layout** (StepLayoutConfig) - NEW ✅
- *    - Used for wrapping entire step content (card, split-screen, hero background)
- *    - Works at the step level: step.layout = { layoutId: 'card' }
- *    - Registry pattern: registerLayout({ layoutId: 'card', component: CardLayout })
- *
- * 3. **Form Element Layout** (LayoutConfig) - DELETE ❌
- *    - Was intended for tabs/accordion grouping of elements
- *    - Never implemented, unused
- *    - Remove from schema
- *
- * 4. **Stepper Layout** (FormStepperConfig) - NEW ✅
- *    - Used for customizing the step navigation UI
- *    - Works at the form level: form.stepper = { stepperId: 'progress-bar' }
- *    - Registry pattern: registerStepper({ stepperId: 'progress-bar', component: ProgressBarStepper })
- */

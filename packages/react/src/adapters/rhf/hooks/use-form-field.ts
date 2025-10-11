@@ -1,7 +1,7 @@
 import { useController, useFormContext } from 'react-hook-form';
 import type { FormFieldValue } from '../../types';
 
-export function useFormField<TFieldValue = unknown>(config: FormEngine.FieldConfig): FormFieldValue<TFieldValue> {
+export function useFormField<TFieldValue = unknown>(config: FormEngine.ElementConfig): FormFieldValue<TFieldValue> {
 	const { formState } = useFormContext();
 
 	const {

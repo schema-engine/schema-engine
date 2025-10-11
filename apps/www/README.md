@@ -11,10 +11,7 @@ This app uses the new **Builder Pattern** to configure the form engine.
 The form engine is configured once in `/src/lib/form-engine-setup.ts`:
 
 ```typescript
-import {
-	createReactFormEngine,
-	
-} from "@json-form-engine/react/registries/builder-registry";
+import { createReactFormEngine } from "@json-form-engine/react/registries/builder-registry";
 import {
 	InputElement,
 	TextareaElement,
@@ -130,7 +127,7 @@ export function CustomInput({ config }: { config: z.infer<typeof CustomInputSche
 }
 
 export const CustomInputElement: ReactElementRegistration = {
-	componentId: "custom-input",
+	id: "custom-input",
 	component: CustomInput,
 	schema: CustomInputSchema,
 	metadata: {
@@ -161,7 +158,7 @@ const formConfig = {
 		{
 			elements: [
 				{
-					componentId: "custom-input",
+					id: "custom-input",
 					id: "myField",
 					name: "myField",
 					label: "My Custom Field",

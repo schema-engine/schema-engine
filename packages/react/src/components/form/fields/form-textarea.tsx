@@ -1,9 +1,7 @@
 import { Textarea } from '@/shadcn/ui/textarea';
 import { FieldGroup } from '@/components/form/field-group';
 import { useControlledFormElement, combineHandlers } from '@/hooks';
-import type { TextareaFieldProps, TextareaFieldConfig } from './form-textarea.types';
-import { TextareaFieldSchema } from './form-textarea.types';
-import type { ElementRegistration } from '@json-form-engine/core/types';
+import type { TextareaFieldProps } from './form-textarea.types';
 
 export function FormTextarea({
 	onChange: propsOnChange,
@@ -41,14 +39,3 @@ export function FormTextarea({
 		</div>
 	);
 }
-
-export const TextareaElement: ElementRegistration<TextareaFieldConfig, TextareaFieldProps> = {
-	componentId: 'textarea',
-	render: FormTextarea,
-	schema: TextareaFieldSchema,
-	metadata: {
-		name: 'Textarea Field',
-		description: 'Multi-line text input field',
-		category: 'input',
-	},
-};

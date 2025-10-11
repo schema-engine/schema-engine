@@ -1,9 +1,7 @@
 import { Label } from '@/shadcn/ui/label';
 import { Switch } from '@/shadcn/ui/switch';
 import { useControlledFormElement, combineHandlers } from '@/hooks';
-import type { SwitchFieldConfig, SwitchFieldProps } from './form-switch.types';
-import { SwitchFieldConfigSchema } from './form-switch.types';
-import type { ElementRegistration } from '@json-form-engine/core/types';
+import type { SwitchFieldProps } from './form-switch.types';
 
 export function FormSwitch({
 	onChange: propsOnChange,
@@ -38,14 +36,3 @@ export function FormSwitch({
 		</div>
 	);
 }
-
-export const SwitchElement: ElementRegistration<SwitchFieldConfig, SwitchFieldProps> = {
-	componentId: 'switch',
-	render: FormSwitch,
-	schema: SwitchFieldConfigSchema,
-	metadata: {
-		name: 'Switch Field',
-		description: 'Toggle switch for boolean values',
-		category: 'input',
-	},
-};

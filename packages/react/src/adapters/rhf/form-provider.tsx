@@ -4,6 +4,7 @@ import type { FormActionConfig } from '@json-form-engine/core/schemas';
 import type { ActionExecutionContext } from '@json-form-engine/core';
 import type { FormProviderProps } from '../types';
 import { useActionExecutor } from '@/hooks/use-action-executor';
+import { useFormEngine } from '@/hooks/use-form-context';
 import { useFormValidationResolver } from './hooks/use-form-validation-resolver';
 import { FormInstanceContext, type FormInstanceContextValue } from '@/components/provider';
 
@@ -20,7 +21,8 @@ export function FormProvider({
 	onValidationError,
 }: FormProviderProps) {
 	const [currentStep, setCurrentStep] = useState(0);
-	const actionExecutor = useActionExecutor();
+	const { engine } = useFormEngine();
+	const actionExecutor = useActionExecutor(engine);
 
 	const allFields = useMemo(() => {
 		return config.steps.flatMap((step) => step.elements || []);

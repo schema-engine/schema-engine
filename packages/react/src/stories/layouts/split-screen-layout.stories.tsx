@@ -65,7 +65,7 @@ export const LeftSide: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'split-screen',
+						id: 'split-screen',
 						sideContent: 'Welcome to our platform! Fill out the form to get started.',
 						sidePlacement: 'left',
 						sideWidth: 'normal',
@@ -84,7 +84,7 @@ export const RightSide: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'split-screen',
+						id: 'split-screen',
 						sideContent: 'Welcome to our platform! Fill out the form to get started.',
 						sidePlacement: 'right',
 						sideWidth: 'normal',
@@ -103,7 +103,7 @@ export const NarrowSide: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'split-screen',
+						id: 'split-screen',
 						sideContent: 'Quick tip: Complete all required fields marked with an asterisk.',
 						sidePlacement: 'left',
 						sideWidth: 'narrow',
@@ -122,7 +122,7 @@ export const NormalSide: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'split-screen',
+						id: 'split-screen',
 						sideContent:
 							'Our platform helps you manage your projects efficiently. Get started by creating your account and exploring our features.',
 						sidePlacement: 'left',
@@ -142,7 +142,7 @@ export const WideSide: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'split-screen',
+						id: 'split-screen',
 						sideContent:
 							'Welcome to our comprehensive platform! Here you can manage all aspects of your projects, collaborate with team members, track progress, and much more. Take your time filling out the form.',
 						sidePlacement: 'left',
@@ -162,7 +162,7 @@ export const RightNarrowSide: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'split-screen',
+						id: 'split-screen',
 						sideContent: 'Quick tip: Save your progress regularly.',
 						sidePlacement: 'right',
 						sideWidth: 'narrow',
@@ -181,7 +181,7 @@ export const RightWideSide: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'split-screen',
+						id: 'split-screen',
 						sideContent:
 							'Thank you for choosing our service! We are committed to providing you with the best experience. Complete the form to unlock all features and benefits of our platform.',
 						sidePlacement: 'right',
@@ -201,7 +201,7 @@ export const MinimalContent: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'split-screen',
+						id: 'split-screen',
 						sideContent: 'Get started',
 						sidePlacement: 'left',
 						sideWidth: 'narrow',
@@ -222,7 +222,7 @@ export const DetailedContent: Story = {
 					title: 'Comprehensive Account Setup',
 					description: 'Please provide all the required information to create your complete profile',
 					layout: {
-						layoutId: 'split-screen',
+						id: 'split-screen',
 						sideContent:
 							'Complete Guide: Fill out each section carefully. Your information is secure and will be used only for account creation. If you need help, contact our support team.',
 						sidePlacement: 'left',
@@ -242,7 +242,7 @@ export const LongContent: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'split-screen',
+						id: 'split-screen',
 						sideContent:
 							'This example demonstrates how the split-screen layout handles longer form content. The side panel remains fixed while the main content area is scrollable, ensuring consistent branding and messaging throughout the form completion process. This is particularly useful for forms that collect detailed information across multiple fields.',
 						sidePlacement: 'left',
@@ -262,7 +262,7 @@ export const TopAligned: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'split-screen',
+						id: 'split-screen',
 						sideContent: 'Content aligned to the top of the main area',
 						sidePlacement: 'left',
 						contentAlignment: 'start',
@@ -281,7 +281,7 @@ export const ContentAlignedCenter: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'split-screen',
+						id: 'split-screen',
 						sideContent: 'Content vertically centered in the main area',
 						sidePlacement: 'left',
 						sideWidth: 'normal',
@@ -301,7 +301,7 @@ export const ContentAlignedBottom: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'split-screen',
+						id: 'split-screen',
 						sideContent: 'Content aligned to the bottom of the main area',
 						sidePlacement: 'left',
 						sideWidth: 'normal',
@@ -321,7 +321,7 @@ export const RightSideCentered: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'split-screen',
+						id: 'split-screen',
 						sideContent: 'Side content on the right with centered main content',
 						sidePlacement: 'right',
 						sideWidth: 'normal',
@@ -341,7 +341,7 @@ export const ContactFormExample: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'split-screen',
+						id: 'split-screen',
 						sideContent: 'Our team is here to help you with any questions or concerns you may have.',
 						sidePlacement: 'left',
 						sideWidth: 'normal',
@@ -360,7 +360,7 @@ export const NewsletterSignupExample: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'split-screen',
+						id: 'split-screen',
 						sideContent: 'Join thousands of subscribers who receive weekly insights and exclusive content.',
 						sidePlacement: 'right',
 						sideWidth: 'normal',
@@ -379,7 +379,7 @@ export const FeedbackFormExample: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'split-screen',
+						id: 'split-screen',
 						sideContent: 'Your opinion matters',
 						sidePlacement: 'left',
 						sideWidth: 'narrow',
@@ -391,7 +391,7 @@ export const FeedbackFormExample: Story = {
 	},
 };
 
-const multiStepForm = { ...FormTemplates.registrationForm(), stepper: { stepperId: 'debugger' as const } };
+const multiStepForm = { ...FormTemplates.registrationForm(), stepper: { id: 'debugger' as const } };
 
 export const MultiStepLeftSide: Story = {
 	args: {
@@ -400,7 +400,7 @@ export const MultiStepLeftSide: Story = {
 			steps: multiStepForm.steps.map((step) => ({
 				...step,
 				layout: {
-					layoutId: 'split-screen',
+					id: 'split-screen',
 					sideContent: 'Welcome to our platform. Complete each step to set up your account.',
 					sidePlacement: 'left',
 					sideWidth: 'normal',
@@ -417,7 +417,7 @@ export const MultiStepRightSide: Story = {
 			steps: multiStepForm.steps.map((step) => ({
 				...step,
 				layout: {
-					layoutId: 'split-screen',
+					id: 'split-screen',
 					sideContent: 'Step-by-step setup guide. Your progress will be saved automatically.',
 					sidePlacement: 'right',
 					sideWidth: 'normal',
@@ -434,7 +434,7 @@ export const MultiStepWidePanel: Story = {
 			steps: multiStepForm.steps.map((step) => ({
 				...step,
 				layout: {
-					layoutId: 'split-screen',
+					id: 'split-screen',
 					sideContent:
 						'Comprehensive onboarding process. Take your time to fill out each section carefully. Your information is secure and will be used to personalize your experience.',
 					sidePlacement: 'left',
@@ -452,7 +452,7 @@ export const MultiStepNarrowPanel: Story = {
 			steps: multiStepForm.steps.map((step) => ({
 				...step,
 				layout: {
-					layoutId: 'split-screen',
+					id: 'split-screen',
 					sideContent: 'Quick Setup',
 					sidePlacement: 'left',
 					sideWidth: 'narrow',

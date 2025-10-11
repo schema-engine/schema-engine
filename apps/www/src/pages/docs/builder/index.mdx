@@ -41,7 +41,7 @@ const formEngine = createReactFormEngine()
 
 Each component (element, layout, or stepper) is defined as a **registration object** that contains:
 
-- `componentId` / `layoutId` / `stepperId`: Unique identifier
+- `id` / `id` / `id`: Unique identifier
 - `component`: React component to render
 - `schema`: Zod schema for configuration validation
 - `metadata`: Human-readable information (name, description, category, etc.)
@@ -53,7 +53,7 @@ import type { ReactElementRegistration } from '@json-form-engine/react';
 import { z } from 'zod';
 
 export const CustomInputElement: ReactElementRegistration = {
-  componentId: 'custom-input',
+  id: 'custom-input',
   component: CustomInput,
   schema: z.object({
     id: z.string(),
@@ -136,7 +136,7 @@ function MyForm() {
     steps: [{
       id: 'step-1',
       elements: [{
-        componentId: 'input',
+        id: 'input',
         id: 'email',
         name: 'email',
         label: 'Email Address',
@@ -225,7 +225,7 @@ function RatingInput({ config }: { config: RatingConfig }) {
 }
 
 export const RatingElement: ReactElementRegistration = {
-  componentId: 'rating',
+  id: 'rating',
   component: RatingInput,
   schema: RatingConfigSchema,
   metadata: {
@@ -254,7 +254,7 @@ const formConfig: FormConfig = {
   id: 'feedback-form',
   steps: [{
     elements: [{
-      componentId: 'rating',
+      id: 'rating',
       id: 'satisfaction',
       name: 'satisfaction',
       label: 'How satisfied are you?',
@@ -317,12 +317,12 @@ Create custom registration builders:
 
 ```typescript
 function createInputElement(
-  componentId: string,
+  id: string,
   displayName: string,
   inputType: string
 ): ReactElementRegistration {
   return {
-    componentId,
+    id,
     component: FormInput,
     schema: InputFieldSchema,
     metadata: {
@@ -357,8 +357,8 @@ const unknownElement = formEngine.getElement('unknown'); // Compile error if str
 const config: FormConfig = {
   steps: [{
     elements: [{
-      componentId: 'input', // [check-mark] Valid
-      // componentId: 'invalid', // [x-mark] Would cause runtime error
+      id: 'input', // [check-mark] Valid
+      // id: 'invalid', // [x-mark] Would cause runtime error
     }],
   }],
 };

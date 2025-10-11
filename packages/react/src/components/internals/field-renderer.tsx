@@ -2,7 +2,7 @@ import { useFormEngine, useConstraintLogic } from '@/hooks';
 import { isFieldRequired } from '@json-form-engine/core/schemas/validation/utils';
 
 export interface FormElementProps {
-	config: FormEngine.FieldConfig;
+	config: FormEngine.ElementConfig;
 	className?: string;
 	style?: React.CSSProperties;
 }
@@ -21,14 +21,14 @@ export function FormElement({ config, className, style }: FormElementProps) {
 		return null;
 	}
 
-	const { componentId, ...componentConfig } = config;
+	const { __id, ...componentConfig } = config;
 
-	const elementRegistration = engine.getElement(componentId);
+	const elementRegistration = engine.getElement(__id);
 
 	if (!elementRegistration) {
 		return (
 			<div className={`text-red-500 text-sm ${className || ''}`} style={style}>
-				Error: Component "{componentId}" not found in registry
+				Error: Component "{__id}" not found in registry
 			</div>
 		);
 	}
@@ -37,7 +37,7 @@ export function FormElement({ config, className, style }: FormElementProps) {
 
 	const enhancedConfig = {
 		...componentConfig,
-		componentId,
+		__id,
 		disabled: ('disabled' in config ? config.disabled : false) || shouldDisable,
 		required: isRequired,
 	};

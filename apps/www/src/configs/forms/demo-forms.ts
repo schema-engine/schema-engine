@@ -18,7 +18,7 @@ export const demoFormConfig: FormConfig = {
 			description: 'Fill out the form below',
 			elements: [
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					id: 'name',
 					name: 'name',
@@ -30,7 +30,7 @@ export const demoFormConfig: FormConfig = {
 					],
 				},
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'email',
 					id: 'email',
 					name: 'email',
@@ -39,7 +39,7 @@ export const demoFormConfig: FormConfig = {
 					rules: [ValidationPresets.string.email('Please enter a valid email address')],
 				},
 				{
-					componentId: 'number',
+					__id: 'number',
 					id: 'age',
 					name: 'age',
 					label: 'Age',
@@ -50,7 +50,7 @@ export const demoFormConfig: FormConfig = {
 					],
 				},
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'url',
 					id: 'website',
 					name: 'website',
@@ -59,7 +59,7 @@ export const demoFormConfig: FormConfig = {
 					rules: [ValidationPresets.string.url('Please enter a valid URL')],
 				},
 				{
-					componentId: 'textarea',
+					__id: 'textarea',
 					id: 'bio',
 					name: 'bio',
 					label: 'Bio',
@@ -68,7 +68,7 @@ export const demoFormConfig: FormConfig = {
 					rules: [ValidationPresets.string.maxLength(500, 'Bio cannot exceed 500 characters')],
 				},
 				{
-					componentId: 'select',
+					__id: 'select',
 					id: 'country',
 					name: 'country',
 					label: 'Country',
@@ -85,13 +85,13 @@ export const demoFormConfig: FormConfig = {
 					],
 				},
 				{
-					componentId: 'checkbox',
+					__id: 'checkbox',
 					id: 'newsletter',
 					name: 'newsletter',
 					label: 'Subscribe to newsletter',
 				},
 				{
-					componentId: 'checkbox',
+					__id: 'checkbox',
 					id: 'terms',
 					name: 'terms',
 					label: 'I agree to the terms and conditions',

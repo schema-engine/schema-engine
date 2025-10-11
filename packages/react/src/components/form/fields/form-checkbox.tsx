@@ -1,9 +1,7 @@
 import { Label } from '@/shadcn/ui/label';
 import { Checkbox } from '@/shadcn/ui/checkbox';
 import { useControlledFormElement, combineHandlers } from '@/hooks';
-import type { CheckboxFieldConfig, CheckboxFieldProps } from './form-checkbox.types';
-import { CheckboxFieldConfigSchema } from './form-checkbox.types';
-import type { ElementRegistration } from '@json-form-engine/core/types';
+import type { CheckboxFieldProps } from './form-checkbox.types';
 
 export function FormCheckbox({
 	onChange: propsOnChange,
@@ -39,14 +37,3 @@ export function FormCheckbox({
 		</div>
 	);
 }
-
-export const CheckboxElement: ElementRegistration<CheckboxFieldConfig, CheckboxFieldProps> = {
-	componentId: 'checkbox',
-	render: FormCheckbox,
-	schema: CheckboxFieldConfigSchema,
-	metadata: {
-		name: 'Checkbox Field',
-		description: 'Single checkbox input for boolean values',
-		category: 'input',
-	},
-};

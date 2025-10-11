@@ -19,14 +19,14 @@
  */
 
 import { createReactFormEngine } from '@/registries/builder-registry';
-import { InputElement } from '@/components/form/fields/form-input';
-import { TextareaElement } from '@/components/form/fields/form-textarea';
-import { CheckboxElement } from '@/components/form/fields/form-checkbox';
-import { SelectElement } from '@/components/form/fields/form-select';
-import { RadioElement } from '@/components/form/fields/form-radio';
-import { SwitchElement } from '@/components/form/fields/form-switch';
-import { NumberElement } from '@/components/form/fields/form-number';
-import { ArrayElement } from '@/components/form/fields/form-array-elements';
+import { InputElementRegistration } from '@/components/form/fields/form-input.registration';
+import { TextareaElementRegistration } from '@/components/form/fields/form-textarea.registration';
+import { CheckboxElementRegistration } from '@/components/form/fields/form-checkbox.registration';
+import { SelectElementRegistration } from '@/components/form/fields/form-select.registration';
+import { RadioElementRegistration } from '@/components/form/fields/form-radio.registration';
+import { SwitchElementRegistration } from '@/components/form/fields/form-switch.registration';
+import { NumberElementRegistration } from '@/components/form/fields/form-number.registration';
+import { ArrayElementRegistration } from '@/components/form/fields/form-array-elements.registration';
 import { CardLayoutRegistration } from '@/components/layouts/card-layout';
 import { SplitScreenLayoutRegistration } from '@/components/layouts/split-screen-layout';
 import { HeroBackgroundLayoutRegistration } from '@/components/layouts/hero-background-layout';
@@ -53,14 +53,14 @@ import '@/components/layouts/hero-background-layout.css';
  * - Steppers: default, vertical, minimalist, debugger
  */
 export const defaultFormEngine = createReactFormEngine()
-	.addElement(InputElement)
-	.addElement(TextareaElement)
-	.addElement(CheckboxElement)
-	.addElement(SelectElement)
-	.addElement(RadioElement)
-	.addElement(SwitchElement)
-	.addElement(NumberElement)
-	.addElement(ArrayElement)
+	.addElement(InputElementRegistration)
+	.addElement(TextareaElementRegistration)
+	.addElement(CheckboxElementRegistration)
+	.addElement(SelectElementRegistration)
+	.addElement(RadioElementRegistration)
+	.addElement(SwitchElementRegistration)
+	.addElement(NumberElementRegistration)
+	.addElement(ArrayElementRegistration)
 	.addLayout(CardLayoutRegistration)
 	.addLayout(SplitScreenLayoutRegistration)
 	.addLayout(HeroBackgroundLayoutRegistration)
@@ -91,14 +91,14 @@ export function createCustomEngine() {
  * Re-export commonly used registrations for convenience
  */
 export {
-	InputElement,
-	TextareaElement,
-	CheckboxElement,
-	SelectElement,
-	RadioElement,
-	SwitchElement,
-	NumberElement,
-	ArrayElement,
+	InputElementRegistration,
+	TextareaElementRegistration,
+	CheckboxElementRegistration,
+	SelectElementRegistration,
+	RadioElementRegistration,
+	SwitchElementRegistration,
+	NumberElementRegistration,
+	ArrayElementRegistration,
 	CardLayoutRegistration,
 	SplitScreenLayoutRegistration,
 	HeroBackgroundLayoutRegistration,

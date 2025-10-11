@@ -25,11 +25,11 @@ export function generateElementsSchema(engine: FormEngine): Record<string, unkno
 			// Use Zod's native JSON schema generation (v4)
 			const zodSchema = element.schema as any;
 			if (zodSchema && typeof zodSchema.toJsonSchema === 'function') {
-				schemas[element.componentId] = zodSchema.toJsonSchema();
+				schemas[element.__id] = zodSchema.toJsonSchema();
 			}
 		} catch (_error) {
 			// Schema generation failed - skip this element
-			console.warn(`Failed to generate schema for element: ${element.componentId}`);
+			console.warn(`Failed to generate schema for element: ${element.__id}`);
 		}
 	}
 
@@ -50,10 +50,10 @@ export function generateLayoutsSchema(engine: FormEngine): Record<string, unknow
 		try {
 			const zodSchema = layout.schema as any;
 			if (zodSchema && typeof zodSchema.toJsonSchema === 'function') {
-				schemas[layout.layoutId] = zodSchema.toJsonSchema();
+				schemas[layout.__id] = zodSchema.toJsonSchema();
 			}
 		} catch (_error) {
-			console.warn(`Failed to generate schema for layout: ${layout.layoutId}`);
+			console.warn(`Failed to generate schema for layout: ${layout.__id}`);
 		}
 	}
 
@@ -74,10 +74,10 @@ export function generateSteppersSchema(engine: FormEngine): Record<string, unkno
 		try {
 			const zodSchema = stepper.schema as any;
 			if (zodSchema && typeof zodSchema.toJsonSchema === 'function') {
-				schemas[stepper.stepperId] = zodSchema.toJsonSchema();
+				schemas[stepper.__id] = zodSchema.toJsonSchema();
 			}
 		} catch (_error) {
-			console.warn(`Failed to generate schema for stepper: ${stepper.stepperId}`);
+			console.warn(`Failed to generate schema for stepper: ${stepper.__id}`);
 		}
 	}
 
@@ -119,9 +119,9 @@ export function generateFormEngineSchema(engine: FormEngine): Record<string, unk
 				description: 'Form fields',
 				items: {
 					type: 'object',
-					required: ['componentId', 'config'],
+					required: ['id', 'config'],
 					properties: {
-						componentId: {
+						id: {
 							type: 'string',
 							enum: engine.getElementIds(),
 						},
@@ -134,7 +134,7 @@ export function generateFormEngineSchema(engine: FormEngine): Record<string, unk
 			layout: {
 				type: 'object',
 				properties: {
-					layoutId: {
+					id: {
 						type: 'string',
 						enum: engine.getLayoutIds(),
 					},
@@ -146,7 +146,7 @@ export function generateFormEngineSchema(engine: FormEngine): Record<string, unk
 			stepper: {
 				type: 'object',
 				properties: {
-					stepperId: {
+					id: {
 						type: 'string',
 						enum: engine.getStepperIds(),
 					},

@@ -71,7 +71,7 @@ function MyForm() {
 				{
 					"id": "contact-type",
 					"name": "contactType",
-					"componentId": "select",
+					"id": "select",
 					"label": "Contact Type",
 					"options": [
 						{ "value": "support", "label": "Support" },
@@ -83,7 +83,7 @@ function MyForm() {
 				{
 					"id": "email",
 					"name": "email",
-					"componentId": "input",
+					"id": "input",
 					"inputType": "email",
 					"label": "Email Address",
 					"placeholder": "Enter your email",
@@ -95,7 +95,7 @@ function MyForm() {
 				{
 					"id": "priority",
 					"name": "priority",
-					"componentId": "select",
+					"id": "select",
 					"label": "Priority Level",
 					"options": [
 						{ "value": "low", "label": "Low" },
@@ -114,7 +114,7 @@ function MyForm() {
 				{
 					"id": "message",
 					"name": "message",
-					"componentId": "textarea",
+					"id": "textarea",
 					"label": "Message",
 					"placeholder": "Your message...",
 					"rules": [

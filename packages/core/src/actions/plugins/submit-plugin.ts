@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ActionExecutionContext, ActionExecutionResult } from '../types';
+import type { BuilderActionExecutionContext, BuilderActionExecutionResult, BuilderActionRegistration } from '@/types';
 import { ActionTriggerSchema } from '../triggers';
 
 /**
@@ -9,13 +9,13 @@ export interface SubmitPluginConfig {
 	/** Custom request adapter (fetch, axios, etc.) */
 	request?: (url: string, options: any) => Promise<Response>;
 	/** Transform data before sending */
-	transformData?: (data: any, context: ActionExecutionContext) => any;
+	transformData?: (data: any, context: BuilderActionExecutionContext<any>) => any;
 	/** Handle successful response */
-	onSuccess?: (data: any, context: ActionExecutionContext) => void;
+	onSuccess?: (data: any, context: BuilderActionExecutionContext<any>) => void;
 	/** Handle error response */
-	onError?: (error: Error, context: ActionExecutionContext) => void;
+	onError?: (error: Error, context: BuilderActionExecutionContext<any>) => void;
 	/** Custom validation before submit */
-	validate?: (context: ActionExecutionContext) => boolean | string;
+	validate?: (context: BuilderActionExecutionContext<any>) => boolean | string;
 }
 
 /**
@@ -97,33 +97,28 @@ export const SubmitActionSchema = z.object({
 
 export type SubmitAction = z.infer<typeof SubmitActionSchema>;
 
-// Module augmentation to add submit action to PluginActions
-declare module '../types' {
-	interface PluginActions {
-		submit: SubmitAction;
-	}
-}
-
 /**
  * Submit Plugin Factory
  *
  * Returns a configured action registration object for form submission.
+ * Use with the FormEngineBuilder pattern.
  *
- * @example Basic Submit
+ * @example Basic Usage
  * ```typescript
- * import { submitPlugin } from "@/actions/plugins";
- * import { registerAction } from "@/actions/action-registry";
+ * import { submitPlugin } from "@json-form-engine/core/actions";
+ * import { FormEngineBuilder } from "@json-form-engine/core/builder";
  *
- * const submit = submitPlugin({
- *   onSuccess: (data, context) => {
- *     console.log("Form submitted successfully:", data);
- *   },
- *   onError: (error, context) => {
- *     console.error("Submit failed:", error);
- *   }
- * });
- *
- * registerAction(submit);
+ * const engine = new FormEngineBuilder()
+ *   .addElement(InputElement)
+ *   .addAction(submitPlugin({
+ *     onSuccess: (data, context) => {
+ *       console.log("Form submitted successfully:", data);
+ *     },
+ *     onError: (error, context) => {
+ *       console.error("Submit failed:", error);
+ *     }
+ *   }))
+ *   .build();
  * ```
  *
  * @example Axios Integration
@@ -181,7 +176,7 @@ declare module '../types' {
  * });
  * ```
  */
-export function submitPlugin(config: SubmitPluginConfig = {}) {
+export function submitPlugin(config: SubmitPluginConfig = {}): BuilderActionRegistration<SubmitAction> {
 	const {
 		request = fetch,
 		transformData = (data) => data,
@@ -190,65 +185,76 @@ export function submitPlugin(config: SubmitPluginConfig = {}) {
 		validate = () => true,
 	} = config;
 
-	return {
-		type: 'submit' as const,
-		schema: SubmitActionSchema,
-		defaultTriggers: ['form_submit'] as const,
-		handler: async (action: SubmitAction, context: ActionExecutionContext): Promise<ActionExecutionResult> => {
-			try {
-				const validationResult = validate(context);
-				if (validationResult !== true) {
-					return {
-						success: false,
-						error: typeof validationResult === 'string' ? validationResult : 'Form validation failed',
-						shouldContinue: false,
-					};
-				}
+	const handler = async (
+		context: BuilderActionExecutionContext<SubmitAction>,
+	): Promise<BuilderActionExecutionResult> => {
+		const action = context.config;
 
-				const transformedData = transformData(
-					{
-						...context.formData,
-						metadata: context.metadata,
-					},
-					context,
-				);
-
-				const requestOptions = {
-					method: action.method,
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify(transformedData),
-				};
-
-				const response = await request(action.endpoint, requestOptions);
-
-				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-				}
-
-				const responseData = await response.json();
-
-				onSuccess(responseData, context);
-
-				return {
-					success: true,
-					message: action.successMessage || 'Form submitted successfully',
-					data: responseData,
-					redirectUrl: action.redirectUrl,
-					shouldContinue: true,
-				};
-			} catch (error) {
-				const err = error instanceof Error ? error : new Error('Submit failed');
-
-				onError(err, context);
-
+		try {
+			const validationResult = validate(context);
+			if (validationResult !== true) {
 				return {
 					success: false,
-					error: action.errorMessage || err.message,
+					error: typeof validationResult === 'string' ? validationResult : 'Form validation failed',
 					shouldContinue: false,
 				};
 			}
+
+			const transformedData = transformData(
+				{
+					...context.formData,
+					metadata: context.metadata,
+				},
+				context,
+			);
+
+			const requestOptions = {
+				method: action.method,
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(transformedData),
+			};
+
+			const response = await request(action.endpoint, requestOptions);
+
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+			}
+
+			const responseData = await response.json();
+
+			onSuccess(responseData, context);
+
+			return {
+				success: true,
+				message: action.successMessage || 'Form submitted successfully',
+				data: responseData,
+				redirectUrl: action.redirectUrl,
+				shouldContinue: true,
+			};
+		} catch (error) {
+			const err = error instanceof Error ? error : new Error('Submit failed');
+
+			onError(err, context);
+
+			return {
+				success: false,
+				error: action.errorMessage || err.message,
+				shouldContinue: false,
+			};
+		}
+	};
+
+	return {
+		__id: 'submit',
+		schema: SubmitActionSchema,
+		metadata: {
+			name: 'Submit Form',
+			description: 'Submit form data to an endpoint',
+			icon: 'send',
+			defaultTriggers: ['form_submit'],
 		},
+		execute: handler,
 	};
 }

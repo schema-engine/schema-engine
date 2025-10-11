@@ -1,5 +1,5 @@
-import { useFormAdapter } from './adapters/context';
-import type { FormProviderProps } from './adapters/types';
+import { useFormAdapter } from '../adapters/context';
+import type { FormProviderProps } from '../adapters/types';
 
 /**
  * Form provider that delegates to the selected adapter

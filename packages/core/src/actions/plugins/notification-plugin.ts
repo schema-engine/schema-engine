@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ActionExecutionContext, ActionExecutionResult } from '../types';
+import type { BuilderActionExecutionContext, BuilderActionExecutionResult, BuilderActionRegistration } from '@/types';
 import { ActionTriggerSchema } from '../triggers';
 
 /**
@@ -7,15 +7,19 @@ import { ActionTriggerSchema } from '../triggers';
  */
 export interface NotificationPluginConfig {
 	/** Custom success handler */
-	onSuccess?: (message: string, context: ActionExecutionContext) => void | Promise<void>;
+	onSuccess?: (message: string, context: BuilderActionExecutionContext<any>) => void | Promise<void>;
 	/** Custom error handler */
-	onError?: (message: string, context: ActionExecutionContext) => void | Promise<void>;
+	onError?: (message: string, context: BuilderActionExecutionContext<any>) => void | Promise<void>;
 	/** Custom warning handler */
-	onWarning?: (message: string, context: ActionExecutionContext) => void | Promise<void>;
+	onWarning?: (message: string, context: BuilderActionExecutionContext<any>) => void | Promise<void>;
 	/** Custom info handler */
-	onInfo?: (message: string, context: ActionExecutionContext) => void | Promise<void>;
+	onInfo?: (message: string, context: BuilderActionExecutionContext<any>) => void | Promise<void>;
 	/** Global handler for all notification types */
-	onNotification?: (message: string, variant: string, context: ActionExecutionContext) => void | Promise<void>;
+	onNotification?: (
+		message: string,
+		variant: string,
+		context: BuilderActionExecutionContext<any>,
+	) => void | Promise<void>;
 }
 
 /**
@@ -53,13 +57,6 @@ export const NotificationActionSchema = z.object({
 });
 
 export type NotificationAction = z.infer<typeof NotificationActionSchema>;
-
-// Module augmentation to add notification action to PluginActions
-declare module '../types' {
-	interface PluginActions {
-		show_notification: NotificationAction;
-	}
-}
 
 /**
  * Notification Plugin Factory
@@ -114,65 +111,75 @@ declare module '../types' {
  * }
  * ```
  */
-export function notificationPlugin(config: NotificationPluginConfig = {}) {
-	return {
-		type: 'show_notification' as const,
-		schema: NotificationActionSchema,
-		defaultTriggers: ['submit_success', 'submit_error'] as const,
-		handler: async (
-			action: NotificationAction,
-			context: ActionExecutionContext,
-		): Promise<ActionExecutionResult> => {
-			try {
-				const { message, variant } = action;
+export function notificationPlugin(
+	config: NotificationPluginConfig = {},
+): BuilderActionRegistration<NotificationAction> {
+	const handler = async (
+		context: BuilderActionExecutionContext<NotificationAction>,
+	): Promise<BuilderActionExecutionResult> => {
+		const action = context.config;
 
-				if (config.onNotification) {
-					await config.onNotification(message, variant, context);
-				} else {
-					switch (variant) {
-						case 'success':
-							if (config.onSuccess) {
-								await config.onSuccess(message, context);
-							} else {
-								console.log('success', { formId: context.formId, message });
-							}
-							break;
-						case 'error':
-							if (config.onError) {
-								await config.onError(message, context);
-							} else {
-								console.error('error', { formId: context.formId, message });
-							}
-							break;
-						case 'warning':
-							if (config.onWarning) {
-								await config.onWarning(message, context);
-							} else {
-								console.warn('warning', { formId: context.formId, message });
-							}
-							break;
-						case 'info':
-							if (config.onInfo) {
-								await config.onInfo(message, context);
-							} else {
-								console.info('info', { formId: context.formId, message });
-							}
-							break;
-					}
+		try {
+			const { message, variant } = action;
+
+			if (config.onNotification) {
+				await config.onNotification(message, variant, context);
+			} else {
+				switch (variant) {
+					case 'success':
+						if (config.onSuccess) {
+							await config.onSuccess(message, context);
+						} else {
+							console.log('success', { formId: context.formId, message });
+						}
+						break;
+					case 'error':
+						if (config.onError) {
+							await config.onError(message, context);
+						} else {
+							console.error('error', { formId: context.formId, message });
+						}
+						break;
+					case 'warning':
+						if (config.onWarning) {
+							await config.onWarning(message, context);
+						} else {
+							console.warn('warning', { formId: context.formId, message });
+						}
+						break;
+					case 'info':
+						if (config.onInfo) {
+							await config.onInfo(message, context);
+						} else {
+							console.info('info', { formId: context.formId, message });
+						}
+						break;
 				}
-
-				return {
-					success: true,
-					message: `Notification '${message}' shown`,
-					shouldContinue: true,
-				};
-			} catch (error) {
-				return {
-					success: false,
-					error: error instanceof Error ? error.message : 'Failed to show notification',
-					shouldContinue: true,
-				};
 			}
+
+			return {
+				success: true,
+				message: `Notification '${message}' shown`,
+				shouldContinue: true,
+			};
+		} catch (error) {
+			return {
+				success: false,
+				error: error instanceof Error ? error.message : 'Failed to show notification',
+				shouldContinue: true,
+			};
+		}
+	};
+
+	return {
+		__id: 'show_notification',
+		schema: NotificationActionSchema,
+		metadata: {
+			name: 'Show Notification',
+			description: 'Display notifications to users with different variants',
+			icon: 'bell',
+			defaultTriggers: ['submit_success', 'submit_error'],
 		},
+		execute: handler,
 	};
 }

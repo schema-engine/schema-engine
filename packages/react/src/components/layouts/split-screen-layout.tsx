@@ -59,7 +59,7 @@ import type { LayoutRegistration } from '@json-form-engine/core/types';
 import { SplitScreenLayoutConfigSchema } from './split-screen-layout.types';
 
 export const SplitScreenLayoutRegistration: LayoutRegistration<SplitScreenLayoutConfig, SplitScreenLayoutProps> = {
-	layoutId: 'split-screen',
+	__id: 'split-screen',
 	render: SplitScreenLayout,
 	schema: SplitScreenLayoutConfigSchema,
 	metadata: {

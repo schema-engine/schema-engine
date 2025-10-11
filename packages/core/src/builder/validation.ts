@@ -12,40 +12,40 @@ import { ElementCategory } from '@/types';
  * @throws Error if validation fails
  */
 export function validateElementRegistration(registration: ElementRegistration): void {
-	// Validate componentId
-	if (!registration.componentId || typeof registration.componentId !== 'string') {
-		throw new Error('Element registration must have a valid componentId');
+	// Validate id
+	if (!registration.__id || typeof registration.__id !== 'string') {
+		throw new Error('Element registration must have a valid __id');
 	}
 
 	// Validate schema
 	if (!registration.schema) {
-		throw new Error(`Element "${registration.componentId}" must have a schema`);
+		throw new Error(`Element "${registration.__id}" must have a schema`);
 	}
 
 	// Validate metadata
 	if (!registration.metadata) {
-		throw new Error(`Element "${registration.componentId}" must have metadata`);
+		throw new Error(`Element "${registration.__id}" must have metadata`);
 	}
 
 	if (!registration.metadata.name) {
-		throw new Error(`Element "${registration.componentId}" must have metadata.name`);
+		throw new Error(`Element "${registration.__id}" must have metadata.name`);
 	}
 
 	// Validate category
 	if (!registration.metadata.category) {
-		throw new Error(`Element "${registration.componentId}" must have metadata.category`);
+		throw new Error(`Element "${registration.__id}" must have metadata.category`);
 	}
 
 	if (!Object.values(ElementCategory).includes(registration.metadata.category)) {
 		throw new Error(
-			`Element "${registration.componentId}" has invalid category "${registration.metadata.category}". ` +
+			`Element "${registration.__id}" has invalid category "${registration.metadata.category}". ` +
 				`Must be one of: ${Object.values(ElementCategory).join(', ')}`,
 		);
 	}
 
 	// Validate render function
 	if (!registration.render || typeof registration.render !== 'function') {
-		throw new Error(`Element "${registration.componentId}" must have a render function`);
+		throw new Error(`Element "${registration.__id}" must have a render function`);
 	}
 }
 
@@ -66,10 +66,10 @@ export function validateInputElementSchema(registration: ElementRegistration): v
 	try {
 		const testConfig = registration.schema.parse({ name: 'test' });
 		if (testConfig && typeof testConfig === 'object' && !('name' in testConfig)) {
-			throw new Error(`Input element "${registration.componentId}" must have 'name' field in schema`);
+			throw new Error(`Input element "${registration.__id}" must have 'name' field in schema`);
 		}
 	} catch {
 		// If parsing fails, we can't validate - log warning but don't throw
-		console.warn(`Could not validate 'name' field for input element "${registration.componentId}"`);
+		console.warn(`Could not validate 'name' field for input element "${registration.__id}"`);
 	}
 }

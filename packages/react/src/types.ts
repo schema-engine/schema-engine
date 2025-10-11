@@ -5,7 +5,7 @@
  * when the package is referenced in tsconfig "types" array.
  *
  * By importing these type files, their module augmentations are applied,
- * extending FormEngine.FieldConfigRegistry with all built-in field types.
+ * extending FormEngine.ElementRegistry with all built-in field types.
  */
 
 import type { InputFieldConfig } from './components/form/fields/form-input.types';

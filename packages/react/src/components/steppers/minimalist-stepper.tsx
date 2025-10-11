@@ -5,7 +5,7 @@ import { useStepperContext as useGlobalStepperContext } from '@/contexts/stepper
 import type React from 'react';
 
 export interface MinimalistStepperConfig extends BaseStepperConfig {
-	stepperId: 'minimalist';
+	__id: 'minimalist';
 	showProgress?: boolean;
 }
 
@@ -160,7 +160,7 @@ export const MinimalistStepperRegistration: StepperRegistration<
 	MinimalistStepperConfig,
 	{ children?: React.ReactNode }
 > = {
-	stepperId: 'minimalist',
+	__id: 'minimalist',
 	render: MinimalistStepperComposed,
 	schema: MinimalistStepperConfigSchema,
 	metadata: {

@@ -78,7 +78,7 @@ const contactFormConfig: FormConfig = {
       title: 'Contact Information',
       elements: [
         {
-          componentId: 'input',
+          id: 'input',
           inputType: 'text',
           id: 'firstName',
           name: 'firstName',
@@ -89,7 +89,7 @@ const contactFormConfig: FormConfig = {
           ]
         },
         {
-          componentId: 'input',
+          id: 'input',
           inputType: 'text',
           id: 'lastName',
           name: 'lastName',
@@ -100,7 +100,7 @@ const contactFormConfig: FormConfig = {
           ]
         },
         {
-          componentId: 'input',
+          id: 'input',
           inputType: 'email',
           id: 'email',
           name: 'email',
@@ -112,7 +112,7 @@ const contactFormConfig: FormConfig = {
           ]
         },
         {
-          componentId: 'select',
+          id: 'select',
           id: 'subject',
           name: 'subject',
           label: 'Subject',
@@ -128,7 +128,7 @@ const contactFormConfig: FormConfig = {
           ]
         },
         {
-          componentId: 'select',
+          id: 'select',
           id: 'priority',
           name: 'priority',
           label: 'Priority Level',
@@ -147,7 +147,7 @@ const contactFormConfig: FormConfig = {
           ]
         },
         {
-          componentId: 'textarea',
+          id: 'textarea',
           id: 'message',
           name: 'message',
           label: 'Message',
@@ -235,7 +235,7 @@ Notice the `priority` field in our example includes a `constraints` array:
 {
   "id": "priority",
   "name": "priority", 
-  "componentId": "select",
+  "id": "select",
   "label": "Priority Level",
   "constraints": [
     {

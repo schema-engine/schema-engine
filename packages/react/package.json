@@ -133,6 +133,30 @@
       "types": "./dist/hooks/*.d.ts",
       "import": "./dist/hooks/*.js"
     },
+    "./adapters": {
+      "types": "./dist/adapters/index.d.ts",
+      "import": "./dist/adapters/index.js"
+    },
+    "./adapters/*": {
+      "types": "./dist/adapters/*.d.ts",
+      "import": "./dist/adapters/*.js"
+    },
+    "./adapters/rhf": {
+      "types": "./dist/adapters/rhf/index.d.ts",
+      "import": "./dist/adapters/rhf/index.js"
+    },
+    "./adapters/rhf/*": {
+      "types": "./dist/adapters/rhf/*.d.ts",
+      "import": "./dist/adapters/rhf/*.js"
+    },
+    "./adapters/rhf/hooks": {
+      "types": "./dist/adapters/rhf/hooks.d.ts",
+      "import": "./dist/adapters/rhf/hooks.js"
+    },
+    "./adapters/rhf/hooks/*": {
+      "types": "./dist/adapters/rhf/hooks/*.d.ts",
+      "import": "./dist/adapters/rhf/hooks/*.js"
+    },
     "./components": {
       "types": "./dist/components/index.d.ts",
       "import": "./dist/components/index.js"

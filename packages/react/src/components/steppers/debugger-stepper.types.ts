@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { BaseStepperConfigSchema } from '@json-form-engine/core/steppers/types';
 
 export const DebuggerStepperConfigSchema = BaseStepperConfigSchema.extend({
-	stepperId: z.literal('debugger'),
+	__id: z.literal('debugger'),
 	showStepDetails: z.boolean().optional().describe('Display detailed step information'),
 	defaultExpanded: z.boolean().optional().describe('Start with widget expanded'),
 	showFormState: z.boolean().optional().describe('Display form state information'),
@@ -11,7 +11,7 @@ export const DebuggerStepperConfigSchema = BaseStepperConfigSchema.extend({
 export type DebuggerStepperConfig = z.infer<typeof DebuggerStepperConfigSchema>;
 
 export const debuggerStepperExample: DebuggerStepperConfig = {
-	stepperId: 'debugger',
+	__id: 'debugger',
 	showStepDetails: true,
 	defaultExpanded: false,
 	showFormState: true,

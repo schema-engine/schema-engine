@@ -27,7 +27,7 @@ export const TextareaFieldExtensionSchema = z.object({
  * Complete textarea field schema
  */
 export const TextareaFieldSchema = BaseFieldSchema.extend({
-	componentId: z.literal('textarea'),
+	__id: z.literal('textarea'),
 	...TextareaFieldExtensionSchema.shape,
 });
 
@@ -50,7 +50,7 @@ export type TextareaFieldProps = TextareaFieldConfig & {
  * Example textarea field configuration for documentation
  */
 export const textareaFieldExample: TextareaFieldConfig = {
-	componentId: 'textarea',
+	__id: 'textarea',
 	id: 'example-textarea',
 	name: 'exampleTextarea',
 	label: 'Example Textarea',

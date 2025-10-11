@@ -6,7 +6,7 @@ import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
 
 export interface DebuggerStepperConfig extends BaseStepperConfig {
-	stepperId: 'debugger';
+	__id: 'debugger';
 	showStepDetails?: boolean;
 	defaultExpanded?: boolean;
 	showFormState?: boolean;
@@ -447,7 +447,7 @@ import type { StepperRegistration } from '@json-form-engine/core/types';
 import { DebuggerStepperConfigSchema } from './debugger-stepper.types';
 
 export const DebuggerStepperRegistration: StepperRegistration<DebuggerStepperConfig, { children?: React.ReactNode }> = {
-	stepperId: 'debugger',
+	__id: 'debugger',
 	render: DebuggerStepperComposed,
 	schema: DebuggerStepperConfigSchema,
 	metadata: {

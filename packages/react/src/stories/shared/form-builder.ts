@@ -7,9 +7,9 @@
 import type { FormConfig, FormStep } from '@json-form-engine/core/schemas';
 import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
 
-type ComponentId = keyof FormEngine.FieldConfigRegistry;
-type LayoutId = keyof FormEngine.LayoutConfigRegistry;
-type StepperId = keyof FormEngine.StepperConfigRegistry;
+type ElementId = keyof FormEngine.ElementRegistry;
+type LayoutId = keyof FormEngine.LayoutRegistry;
+type StepperId = keyof FormEngine.StepperRegistry;
 type InputType = 'text' | 'email' | 'password' | 'tel' | 'url' | 'search';
 
 /**
@@ -98,7 +98,7 @@ export class FormBuilder {
 		}
 
 		this.currentStep.elements.push({
-			componentId: 'input',
+			__id: 'input',
 			inputType: options.inputType || 'text',
 			id: options.name,
 			name: options.name,
@@ -139,7 +139,7 @@ export class FormBuilder {
 	/**
 	 * Add any field type with full type safety
 	 */
-	addField<T extends ComponentId>(field: FormEngine.FieldConfigRegistry[T]): this {
+	addField<T extends ElementId>(field: FormEngine.ElementRegistry[T]): this {
 		if (!this.currentStep) {
 			throw new Error('Must call addStep() before adding fields');
 		}
@@ -150,12 +150,12 @@ export class FormBuilder {
 	/**
 	 * Set the layout for the current step with full type safety
 	 */
-	withLayout<T extends LayoutId>(layoutId: T, config?: Omit<FormEngine.LayoutConfigRegistry[T], 'layoutId'>): this {
+	withLayout<T extends LayoutId>(id: T, config?: Omit<FormEngine.LayoutRegistry[T], '__id'>): this {
 		if (!this.currentStep) {
 			throw new Error('Must call addStep() before setting layout');
 		}
 		this.currentStep.layout = {
-			layoutId,
+			id,
 			...config,
 		} as any;
 		return this;
@@ -164,12 +164,9 @@ export class FormBuilder {
 	/**
 	 * Set the stepper configuration with full type safety
 	 */
-	withStepper<T extends StepperId>(
-		stepperId: T,
-		config?: Omit<FormEngine.StepperConfigRegistry[T], 'stepperId'>,
-	): this {
+	withStepper<T extends StepperId>(id: T, config?: Omit<FormEngine.StepperRegistry[T], '__id'>): this {
 		this.config.stepper = {
-			stepperId,
+			id,
 			...config,
 		} as any;
 		return this;

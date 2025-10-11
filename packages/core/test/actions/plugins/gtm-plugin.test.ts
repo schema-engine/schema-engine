@@ -1,9 +1,11 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { actionRegistry, registerAction } from "@/actions/action-registry";
-import { GTMEventActionSchema, type GTMEventAction } from "@/actions/plugins/gtm-plugin";
+import { FormEngineBuilder } from "@/builder";
+import { ActionExecutor } from "@/actions/action-executor";
+import type { FormEngine } from "@/engine/form-engine";
+import type { BuilderActionExecutionContext } from "@/types";
+import { gtmPlugin, GTMEventActionSchema, type GTMEventAction } from "@/actions/plugins/gtm-plugin";
 import { GTMTracker } from "@/tools/gtm-tracker";
-import type { ActionExecutionContext, ActionExecutionResult } from "@/actions/types";
-import { createMockContext, setupTestEnvironment } from "../__tools";
+import { createMockBuilderContext, setupTestEnvironment } from "../__tools";
 
 type GTMEventActionInput = {
 	id: string;
@@ -26,36 +28,46 @@ const mockDataLayer: GTMEvent[] = [];
 
 const originalGTMTracker = { ...GTMTracker };
 
+function createGTMContext(action: GTMEventActionInput, overrides?: Partial<BuilderActionExecutionContext<GTMEventAction>>) {
+	const normalizedAction: GTMEventAction = {
+		...action,
+		enabled: action.enabled ?? true,
+		eventData: action.eventData ?? {},
+		includeFormData: action.includeFormData ?? false,
+	};
+	
+	const context = createMockBuilderContext(normalizedAction, {
+		formData: {
+			name: "John",
+			email: "john@example.com",
+			userType: "premium",
+		},
+	});
+	context.currentStep = 2;
+	context.totalSteps = 3;
+	context.metadata = {
+		stepStartTime: Date.now(),
+		totalFormTime: 5000,
+		userInteractions: 10,
+	};
+	return { ...context, ...overrides };
+}
+
 describe("GTMPlugin", () => {
-	let mockContext: ActionExecutionContext;
+	let engine: FormEngine;
+	let executor: ActionExecutor;
 	let originalWindow: any;
 
 	beforeEach(() => {
 		setupTestEnvironment();
-		mockContext = createMockContext({
-			formData: {
-				name: "John",
-				email: "john@example.com",
-				userType: "premium",
-			},
-			currentStep: 2,
-			totalSteps: 3,
-			metadata: {
-				stepStartTime: Date.now(),
-				totalFormTime: 5000,
-				userInteractions: 10,
-			},
-		});
 
 		originalWindow = globalThis.window;
 		globalThis.window = {
 			dataLayer: mockDataLayer,
 		} as any;
 
-		// Clear mock data
 		mockDataLayer.length = 0;
 
-		// Mock GTMTracker methods
 		GTMTracker.push = (event: string, data: Record<string, any> = {}) => {
 			mockDataLayer.push({
 				event,
@@ -65,59 +77,9 @@ describe("GTMPlugin", () => {
 		};
 
 		GTMTracker.isAvailable = () => true;
-
-		// Register the GTM plugin since it gets cleared in afterEach
-		registerAction({
-			type: "gtm_event",
-			schema: GTMEventActionSchema,
-			defaultTriggers: ["form_start", "form_submit", "step_change", "step_submit"],
-			handler: async (
-				action: GTMEventAction,
-				context: ActionExecutionContext
-			): Promise<ActionExecutionResult> => {
-				try {
-					const eventData: Record<string, any> = {
-						...action.eventData,
-						form_id: context.formId,
-						current_step: context.currentStep,
-						total_steps: context.totalSteps,
-						is_valid: context.isValid,
-						...context.metadata,
-					};
-
-					// Handle form data inclusion
-					if (action.includeFormData === true) {
-						eventData.form_data = context.formData;
-					} else if (Array.isArray(action.includeFormData)) {
-						const selectedData: Record<string, any> = {};
-						for (const fieldName of action.includeFormData) {
-							if (fieldName in context.formData) {
-								selectedData[fieldName] = context.formData[fieldName];
-							}
-						}
-						eventData.form_data = selectedData;
-					}
-
-					GTMTracker.push(action.eventName, eventData);
-
-					return {
-						success: true,
-						message: `GTM event '${action.eventName}' pushed successfully`,
-						shouldContinue: true,
-					};
-				} catch (error) {
-					return {
-						success: false,
-						error: error instanceof Error ? error.message : "GTM event push failed",
-						shouldContinue: true,
-					};
-				}
-			},
-		});
 	});
 
 	afterEach(() => {
-		actionRegistry.clear();
 		mockDataLayer.length = 0;
 		globalThis.window = originalWindow;
 		
@@ -265,6 +227,8 @@ describe("GTMPlugin", () => {
 
 	describe("Action Execution", () => {
 		test("should execute basic GTM event", async () => {
+			const plugin = gtmPlugin();
+
 			const action: GTMEventActionInput = {
 				id: "test-gtm",
 				type: "gtm_event",
@@ -272,7 +236,8 @@ describe("GTMPlugin", () => {
 				eventName: "form_start",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createGTMContext(action);
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
 			expect(result.message).toBe("GTM event 'form_start' pushed successfully");
@@ -286,6 +251,7 @@ describe("GTMPlugin", () => {
 		});
 
 		test("should include static event data", async () => {
+			const plugin = gtmPlugin();
 			const action: GTMEventActionInput = {
 				id: "test-gtm",
 				type: "gtm_event",
@@ -298,7 +264,7 @@ describe("GTMPlugin", () => {
 				},
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			await plugin.execute(createGTMContext(action));
 
 			expect(mockDataLayer).toHaveLength(1);
 			const pushedEvent = mockDataLayer[0];
@@ -308,6 +274,7 @@ describe("GTMPlugin", () => {
 		});
 
 		test("should include all form data when includeFormData is true", async () => {
+			const plugin = gtmPlugin();
 			const action: GTMEventActionInput = {
 				id: "test-gtm",
 				type: "gtm_event",
@@ -316,7 +283,7 @@ describe("GTMPlugin", () => {
 				includeFormData: true,
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			await plugin.execute(createGTMContext(action));
 
 			expect(mockDataLayer).toHaveLength(1);
 			const pushedEvent = mockDataLayer[0];
@@ -328,6 +295,7 @@ describe("GTMPlugin", () => {
 		});
 
 		test("should include specific form fields when includeFormData is array", async () => {
+			const plugin = gtmPlugin();
 			const action: GTMEventActionInput = {
 				id: "test-gtm",
 				type: "gtm_event",
@@ -336,7 +304,7 @@ describe("GTMPlugin", () => {
 				includeFormData: ["email", "userType"],
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			await plugin.execute(createGTMContext(action));
 
 			expect(mockDataLayer).toHaveLength(1);
 			const pushedEvent = mockDataLayer[0];
@@ -347,6 +315,7 @@ describe("GTMPlugin", () => {
 		});
 
 		test("should exclude non-existent fields from specific inclusion", async () => {
+			const plugin = gtmPlugin();
 			const action: GTMEventActionInput = {
 				id: "test-gtm",
 				type: "gtm_event",
@@ -355,7 +324,7 @@ describe("GTMPlugin", () => {
 				includeFormData: ["email", "nonExistentField", "userType"],
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			await plugin.execute(createGTMContext(action));
 
 			expect(mockDataLayer).toHaveLength(1);
 			const pushedEvent = mockDataLayer[0];
@@ -366,6 +335,7 @@ describe("GTMPlugin", () => {
 		});
 
 		test("should not include form data when includeFormData is false", async () => {
+			const plugin = gtmPlugin();
 			const action: GTMEventActionInput = {
 				id: "test-gtm",
 				type: "gtm_event",
@@ -374,7 +344,7 @@ describe("GTMPlugin", () => {
 				includeFormData: false,
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			await plugin.execute(createGTMContext(action));
 
 			expect(mockDataLayer).toHaveLength(1);
 			const pushedEvent = mockDataLayer[0];
@@ -382,6 +352,7 @@ describe("GTMPlugin", () => {
 		});
 
 		test("should include context metadata", async () => {
+			const plugin = gtmPlugin();
 			const action: GTMEventActionInput = {
 				id: "test-gtm",
 				type: "gtm_event",
@@ -389,22 +360,18 @@ describe("GTMPlugin", () => {
 				eventName: "step_change",
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			const context = createGTMContext(action);
+			await plugin.execute(context);
 
 			expect(mockDataLayer).toHaveLength(1);
 			const pushedEvent = mockDataLayer[0];
-			expect(pushedEvent.stepStartTime).toBe(mockContext.metadata.stepStartTime);
+			expect(pushedEvent.stepStartTime).toBe(context.metadata.stepStartTime);
 			expect(pushedEvent.totalFormTime).toBe(5000);
 			expect(pushedEvent.userInteractions).toBe(10);
 		});
 
 		test("should include form validation state", async () => {
-			const invalidContext = {
-				...mockContext,
-				isValid: false,
-				errors: { name: "Name is required" },
-			};
-
+			const plugin = gtmPlugin();
 			const action: GTMEventActionInput = {
 				id: "test-gtm",
 				type: "gtm_event",
@@ -412,7 +379,9 @@ describe("GTMPlugin", () => {
 				eventName: "form_error",
 			};
 
-			await actionRegistry.execute(action, invalidContext);
+			const invalidContext = createGTMContext(action, { isValid: false, errors: { name: "Name is required" } as any });
+
+			await plugin.execute(invalidContext);
 
 			expect(mockDataLayer).toHaveLength(1);
 			const pushedEvent = mockDataLayer[0];
@@ -424,6 +393,7 @@ describe("GTMPlugin", () => {
 				throw new Error("GTM push failed");
 			};
 
+			const plugin = gtmPlugin();
 			const action: GTMEventActionInput = {
 				id: "test-gtm",
 				type: "gtm_event",
@@ -431,7 +401,7 @@ describe("GTMPlugin", () => {
 				eventName: "form_start",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const result = await plugin.execute(createGTMContext(action));
 
 			expect(result.success).toBe(false);
 			expect(result.error).toBe("GTM push failed");
@@ -443,6 +413,7 @@ describe("GTMPlugin", () => {
 				throw "String error";
 			};
 
+			const plugin = gtmPlugin();
 			const action: GTMEventActionInput = {
 				id: "test-gtm",
 				type: "gtm_event",
@@ -450,7 +421,7 @@ describe("GTMPlugin", () => {
 				eventName: "form_start",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const result = await plugin.execute(createGTMContext(action));
 
 			expect(result.success).toBe(false);
 			expect(result.error).toBe("GTM event push failed");
@@ -460,6 +431,7 @@ describe("GTMPlugin", () => {
 
 	describe("Complex Event Scenarios", () => {
 		test("should handle multi-step form progress tracking", async () => {
+			const plugin = gtmPlugin();
 			const stepActions: GTMEventActionInput[] = [
 				{
 					id: "step-1-enter",
@@ -486,7 +458,7 @@ describe("GTMPlugin", () => {
 			];
 
 			for (const action of stepActions) {
-				await actionRegistry.execute(action, mockContext);
+				await plugin.execute(createGTMContext(action));
 			}
 
 			expect(mockDataLayer).toHaveLength(3);
@@ -505,6 +477,12 @@ describe("GTMPlugin", () => {
 		});
 
 		test("should handle conversion tracking with complete user journey", async () => {
+			const plugin = gtmPlugin();
+			const formData = {
+				name: "John",
+				email: "john@example.com",
+				userType: "premium",
+			};
 			const conversionActions: GTMEventActionInput[] = [
 				{
 					id: "form-start",
@@ -541,32 +519,30 @@ describe("GTMPlugin", () => {
 			];
 
 			for (const action of conversionActions) {
-				await actionRegistry.execute(action, mockContext);
+				await plugin.execute(createGTMContext(action));
 			}
 
 			expect(mockDataLayer).toHaveLength(3);
 			
-			// Form start event
 			expect(mockDataLayer[0].event).toBe("form_start");
 			expect(mockDataLayer[0].form_type).toBe("lead_gen");
 			expect(mockDataLayer[0].campaign).toBe("q4_promo");
 			
-			// Progress event
 			expect(mockDataLayer[1].event).toBe("form_progress");
 			expect(mockDataLayer[1].progress_percent).toBe(66);
 			expect(mockDataLayer[1].form_data).toEqual({ userType: "premium" });
 			
-			// Conversion event
 			expect(mockDataLayer[2].event).toBe("conversion");
 			expect(mockDataLayer[2].value).toBe(25.00);
 			expect(mockDataLayer[2].currency).toBe("USD");
-			expect(mockDataLayer[2].form_data).toEqual(mockContext.formData);
+			expect(mockDataLayer[2].form_data).toEqual(formData);
 		});
 	});
 
 	describe("Integration", () => {
 		test("should register GTM plugin and execute successfully", async () => {
-			expect(actionRegistry.has("gtm_event")).toBe(true);
+			const plugin = gtmPlugin();
+			expect(plugin.__id).toBe("gtm_event");
 
 			const action: GTMEventActionInput = {
 				id: "integration-test",
@@ -575,13 +551,16 @@ describe("GTMPlugin", () => {
 				eventName: "integration_test",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createGTMContext(action);
+			const result = await plugin.execute(context);
+			
 			expect(result.success).toBe(true);
 			expect(mockDataLayer).toHaveLength(1);
 			expect(mockDataLayer[0].event).toBe("integration_test");
 		});
 
 		test("should work with different GTM environments", async () => {
+			const plugin = gtmPlugin();
 			const originalConsoleLog = console.log;
 			const consoleMessages: string[] = [];
 			
@@ -604,7 +583,8 @@ describe("GTMPlugin", () => {
 				eventName: "ssr_event",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createGTMContext(action);
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
 			expect(consoleMessages.some(msg => msg.includes("Server-side event"))).toBe(true);
@@ -613,6 +593,7 @@ describe("GTMPlugin", () => {
 		});
 
 		test("should handle missing dataLayer gracefully", async () => {
+			const plugin = gtmPlugin();
 			globalThis.window = {} as any;
 
 			const originalPush = GTMTracker.push;
@@ -637,7 +618,8 @@ describe("GTMPlugin", () => {
 				eventName: "test_event",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createGTMContext(action);
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
 			expect(pushCalled).toBe(true);

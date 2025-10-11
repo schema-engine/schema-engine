@@ -151,29 +151,7 @@ export function FormEngineDemo() {
 					<div className="p-8">
 						<div className="bg-slate-900 rounded-xl p-6 overflow-x-auto">
 							<pre className="text-sm text-slate-300 leading-relaxed">
-								{JSON.stringify(
-									{
-										id: 'demo-form',
-										elements: [
-											{
-												componentId: 'input',
-												name: 'email',
-												label: 'Email',
-												rules: [{ type: 'email', message: 'Valid email required' }],
-											},
-											{
-												type: 'number',
-												name: 'age',
-												rules: [
-													{ type: 'min', value: 18, message: 'Must be 18+' },
-													{ type: 'max', value: 120, message: 'Age must be realistic' },
-												],
-											},
-										],
-									},
-									null,
-									2,
-								)}
+								{JSON.stringify(demoFormConfig, null, 2)}
 							</pre>
 						</div>
 					</div>

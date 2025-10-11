@@ -24,7 +24,7 @@ export const RadioFieldExtensionSchema = z.object({
  * Complete radio field configuration schema
  */
 export const RadioFieldConfigSchema = BaseFieldSchema.extend({
-	componentId: z.literal('radio'),
+	__id: z.literal('radio'),
 	...RadioFieldExtensionSchema.shape,
 });
 

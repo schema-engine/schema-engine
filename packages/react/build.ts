@@ -45,8 +45,9 @@ const postcssPlugin: BunPlugin = {
   }
 }
 
+const entryDirs = ["src/adapters", "src/components", "src/hooks", "src/registries", "src/types"];
+
 async function discoverSourceFiles(): Promise<string[]> {
-  const entryDirs = ["src/components", "src/hooks", "src/registries", "src/types"];
   const indexFiles = ["src/index.ts"];
   const extensionPattern = `{${SOURCE_FILE_EXTENSIONS.join(",")}}`;
 
@@ -85,7 +86,11 @@ async function generateGlobalCSS(): Promise<void> {
   ];
 
   const sortedFiles = cssFiles
-    .filter(file => !EXCLUDED_CSS_FILES.some(excluded => file.endsWith(excluded)))
+    .filter(file => {
+      const isExcluded = EXCLUDED_CSS_FILES.some(excluded => file.endsWith(excluded));
+      const isInEntryDir = entryDirs.some(dir => file.startsWith(dir));
+      return !isExcluded && isInEntryDir;
+    })
     .sort();
 
   if (sortedFiles.length > 0) {

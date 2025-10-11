@@ -18,7 +18,7 @@ const cardLayoutDemo: FormConfig = {
 			title: 'Card Layout Test',
 
 			layout: {
-				layoutId: 'card',
+				id: 'card',
 				padding: 'large',
 				shadow: true,
 				borderRadius: 'medium',
@@ -27,7 +27,7 @@ const cardLayoutDemo: FormConfig = {
 			elements: [
 				{
 					id: 'name',
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					name: 'name',
 					label: 'Full Name',
@@ -35,7 +35,7 @@ const cardLayoutDemo: FormConfig = {
 				},
 				{
 					id: 'email',
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'email',
 					name: 'email',
 					label: 'Email',
@@ -58,7 +58,7 @@ const splitScreenLayoutDemo: FormConfig = {
 			title: 'Split Screen Test',
 
 			layout: {
-				layoutId: 'split-screen',
+				id: 'split-screen',
 				leftWidth: '40%',
 				rightWidth: '60%',
 				gap: '2rem',
@@ -67,7 +67,7 @@ const splitScreenLayoutDemo: FormConfig = {
 			elements: [
 				{
 					id: 'firstName',
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					name: 'firstName',
 					label: 'First Name',
@@ -75,7 +75,7 @@ const splitScreenLayoutDemo: FormConfig = {
 				},
 				{
 					id: 'lastName',
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					name: 'lastName',
 					label: 'Last Name',
@@ -83,7 +83,7 @@ const splitScreenLayoutDemo: FormConfig = {
 				},
 				{
 					id: 'bio',
-					componentId: 'textarea',
+					__id: 'textarea',
 					name: 'bio',
 					label: 'Biography',
 					placeholder: 'Tell us about yourself...',
@@ -106,7 +106,7 @@ const heroLayoutDemo: FormConfig = {
 			title: 'Hero Layout Test',
 
 			layout: {
-				layoutId: 'hero-background',
+				id: 'hero-background',
 				backgroundStyle: 'gradient',
 				textAlign: 'center',
 				maxWidth: '500px',
@@ -114,7 +114,7 @@ const heroLayoutDemo: FormConfig = {
 			elements: [
 				{
 					id: 'message',
-					componentId: 'textarea',
+					__id: 'textarea',
 					name: 'message',
 					label: 'Your Message',
 					placeholder: 'What would you like to say?',
@@ -122,7 +122,7 @@ const heroLayoutDemo: FormConfig = {
 				},
 				{
 					id: 'priority',
-					componentId: 'radio',
+					__id: 'radio',
 					name: 'priority',
 					label: 'Priority Level',
 					options: [
@@ -151,7 +151,7 @@ const simpleLayoutDemo: FormConfig = {
 			elements: [
 				{
 					id: 'testField',
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					name: 'testField',
 					label: 'Test Field',
@@ -190,7 +190,7 @@ export default function LayoutsPage() {
 						<div className="bg-white rounded-lg shadow-lg p-8">
 							<div className="mb-6">
 								<h2 className="text-2xl font-bold text-gray-900 mb-2">2. Card Layout</h2>
-								<p className="text-gray-600">Form with card-style layout using layoutId: 'card'</p>
+								<p className="text-gray-600">Form with card-style layout using id: 'card'</p>
 							</div>
 							<FormRenderer config={cardLayoutDemo} />
 						</div>
@@ -198,9 +198,7 @@ export default function LayoutsPage() {
 						<div className="bg-white rounded-lg shadow-lg p-8">
 							<div className="mb-6">
 								<h2 className="text-2xl font-bold text-gray-900 mb-2">3. Split Screen Layout</h2>
-								<p className="text-gray-600">
-									Form with split screen layout using layoutId: 'split-screen'
-								</p>
+								<p className="text-gray-600">Form with split screen layout using id: 'split-screen' </p>
 							</div>
 							<FormRenderer config={splitScreenLayoutDemo} />
 						</div>
@@ -209,7 +207,7 @@ export default function LayoutsPage() {
 							<div className="mb-6">
 								<h2 className="text-2xl font-bold text-gray-900 mb-2">4. Hero Background Layout</h2>
 								<p className="text-gray-600">
-									Form with hero-style layout using layoutId: 'hero-background'
+									Form with hero-style layout using id: 'hero-background'{' '}
 								</p>
 							</div>
 							<FormRenderer config={heroLayoutDemo} />

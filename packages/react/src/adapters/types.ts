@@ -37,7 +37,7 @@ export interface FormProviderProps<TFormData = Record<string, unknown>> {
 
 export interface FormAdapter<TFormData = Record<string, unknown>> {
 	useFormContext: () => FormContextValue<TFormData>;
-	useFormField: <TFieldValue = unknown>(config: FormEngine.FieldConfig) => FormFieldValue<TFieldValue>;
+	useFormField: <TFieldValue = unknown>(config: FormEngine.ElementConfig) => FormFieldValue<TFieldValue>;
 	useWatchField: <TWatchValue = unknown>(name: string | string[]) => TWatchValue;
 	FormProvider: React.ComponentType<FormProviderProps<TFormData>>;
 	validateField: (name: string) => Promise<boolean>;

@@ -66,7 +66,7 @@ import type { LayoutRegistration } from '@json-form-engine/core/types';
 import { CardLayoutConfigSchema } from './card-layout.types';
 
 export const CardLayoutRegistration: LayoutRegistration<CardLayoutConfig, CardLayoutProps> = {
-	layoutId: 'card',
+	__id: 'card',
 	render: CardLayout,
 	schema: CardLayoutConfigSchema,
 	metadata: {

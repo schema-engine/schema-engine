@@ -10,7 +10,7 @@ export type { FormActionConfig } from '../actions/types';
  */
 export const StepLayoutConfigSchema = z
 	.object({
-		layoutId: z.string(),
+		id: z.string(),
 	})
 	.catchall(z.any()); // Allow additional layout-specific options
 
@@ -19,7 +19,7 @@ export const StepLayoutConfigSchema = z
  */
 export const FormStepperConfigSchema = z
 	.object({
-		stepperId: z.string(),
+		id: z.string(),
 	})
 	.catchall(z.any()); // Allow additional stepper-specific options
 
@@ -113,7 +113,7 @@ export type StepNavigationConfig = z.infer<typeof StepNavigationConfigSchema>;
  * but we override it here to provide strict type checking for field configurations.
  */
 export type FormStep = Omit<z.infer<typeof FormStepSchema>, 'elements'> & {
-	elements: FormEngine.FieldConfig[];
+	elements: FormEngine.ElementConfig[];
 };
 
 /**

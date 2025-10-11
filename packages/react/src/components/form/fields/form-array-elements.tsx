@@ -5,9 +5,7 @@ import { Trash2, Plus } from 'lucide-react';
 import { Label } from '@/shadcn/ui/label';
 import { createFieldDefaultValue, useControlledFormElement } from '@/hooks/use-field';
 import { FormElement } from '@/components/internals/field-renderer';
-import type { ArrayElementsConfig, ArrayElementsProps } from './form-array-elements.types';
-import { ArrayElementConfigSchema } from './form-array-elements.types';
-import type { ElementRegistration } from '@json-form-engine/core/types';
+import type { ArrayElementsProps } from './form-array-elements.types';
 
 /**
  * Array field component that manages dynamic arrays of form fields
@@ -68,22 +66,28 @@ export function FormArrayElements({
 								<div className="flex-1">
 									{isSingleField && firstElement ? (
 										<FormElement
-											config={{
-												...firstElement,
-												name: `${config.name}.${index}`,
-												id: `${firstElement.id}_${index}`,
-											}}
+											config={
+												{
+													...firstElement,
+													name: `${config.name}.${index}`,
+													id: firstElement.id ? `${firstElement.id}_${index}` : undefined,
+												} as FormEngine.ElementConfig
+											}
 										/>
 									) : (
 										<div className="space-y-4">
 											{config.elements.map((elementConfig, elementIndex) => (
 												<FormElement
-													key={`${elementConfig.id}_${index}_${elementIndex}`}
-													config={{
-														...elementConfig,
-														name: `${config.name}.${index}.${elementConfig.name}`,
-														id: `${elementConfig.id}_${index}_${elementIndex}`,
-													}}
+													key={`${elementConfig.id || elementConfig.__id}_${index}_${elementIndex}`}
+													config={
+														{
+															...elementConfig,
+															name: `${config.name}.${index}.${elementConfig.name}`,
+															id: elementConfig.id
+																? `${elementConfig.id}_${index}_${elementIndex}`
+																: undefined,
+														} as FormEngine.ElementConfig
+													}
 												/>
 											))}
 										</div>
@@ -123,14 +127,3 @@ export function FormArrayElements({
 		</div>
 	);
 }
-
-export const ArrayElement: ElementRegistration<ArrayElementsConfig, ArrayElementsProps> = {
-	componentId: 'arrayElements',
-	render: FormArrayElements,
-	schema: ArrayElementConfigSchema,
-	metadata: {
-		name: 'Array Field',
-		description: 'Dynamic array field for managing lists of repeatable form elements',
-		category: 'input',
-	},
-};

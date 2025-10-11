@@ -14,7 +14,7 @@
  *   - Handles empty registries gracefully by falling back to BaseFieldSchema
  *
  * ### Compile-time Type Safety
- * - `ArrayElementsConfig`: Uses FormEngine.FieldConfig union for full type safety
+ * - `ArrayElementsConfig`: Uses FormEngine.ElementConfig union for full type safety
  * - Supports recursive arrays (arrays containing arrays at any depth)
  * - Provides complete TypeScript IntelliSense and type checking
  * - Extends global FormEngine namespace for registry integration
@@ -29,22 +29,22 @@
  *
  * ### Recursive Support
  * - Schema validation includes all field types including 'arrayElements'
- * - Type definitions use full FormEngine.FieldConfig union
+ * - Type definitions use full FormEngine.ElementConfig union
  * - Supports unlimited nesting depth
  * - Zod handles recursive validation automatically
  *
  * ## USAGE EXAMPLE
  * ```typescript
  * const arrayField: ArrayElementsConfig = {
- *   componentId: 'arrayElements',
+ *   id: 'arrayElements',
  *   name: 'contacts',
  *   elements: [
- *     { componentId: 'textInput', name: 'name' },
- *     { componentId: 'email', name: 'email' },
+ *     { id: 'textInput', name: 'name' },
+ *     { id: 'email', name: 'email' },
  *     {
- *       componentId: 'arrayElements',
+ *       id: 'arrayElements',
  *       name: 'addresses',
- *       elements: [{ componentId: 'textInput', name: 'street' }]
+ *       elements: [{ id: 'textInput', name: 'street' }]
  *     }
  *   ]
  * };
@@ -69,16 +69,16 @@ export const ArrayElementsExtensionSchema = z.object({
 
 /**
  * Complete array field configuration schema
- * Uses z.any() for elements to match the TypeScript type FormEngine.FieldConfig[]
+ * Uses z.any() for elements to match the TypeScript type FormEngine.ElementConfig[]
  * Runtime validation should use createArrayElementsRuntimeSchema() instead
  */
 export const ArrayElementConfigSchema: z.ZodType<ArrayElementsConfig> = BaseFieldSchema.extend({
-	componentId: z.literal('arrayElements'),
+	__id: z.literal('arrayElements'),
 	minItems: z.number().min(0).optional(),
 	maxItems: z.number().min(1).optional(),
 	addButtonText: z.string().optional(),
 	removeButtonText: z.string().optional(),
-	elements: z.array(z.any()).min(1) as z.ZodType<FormEngine.FieldConfig[]>,
+	elements: z.array(z.any()).min(1) as z.ZodType<FormEngine.ElementConfig[]>,
 }) as z.ZodType<ArrayElementsConfig>;
 
 const COMPONENT_ID = 'arrayElements';
@@ -115,30 +115,30 @@ export function createArrayElementsRuntimeSchema(registry: {
 	});
 
 	return BaseFieldSchema.extend({
-		componentId: z.literal(COMPONENT_ID),
+		__id: z.literal(COMPONENT_ID),
 		...runtimeExtensionSchema.shape,
 	});
 }
 
 /**
  * Type definitions for array elements
- * These use the full FormEngine.FieldConfig union to support recursive arrays
+ * These use the full FormEngine.ElementConfig union to support recursive arrays
  */
 export interface ArrayElementsExtension {
 	minItems?: number;
 	maxItems?: number;
 	addButtonText?: string;
 	removeButtonText?: string;
-	elements: FormEngine.FieldConfig[];
+	elements: FormEngine.ElementConfig[];
 }
 
 export interface ArrayElementsConfig extends Omit<z.infer<typeof BaseFieldSchema>, never> {
-	componentId: 'arrayElements';
+	__id: 'arrayElements';
 	minItems?: number;
 	maxItems?: number;
 	addButtonText?: string;
 	removeButtonText?: string;
-	elements: FormEngine.FieldConfig[];
+	elements: FormEngine.ElementConfig[];
 }
 
 /**

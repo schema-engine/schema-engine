@@ -14,7 +14,7 @@ describe('Form Serialization', () => {
 				title: 'Contact Form',
 				fields: [
 					{
-						componentId: 'text',
+						id: 'text',
 						config: {
 							name: 'username',
 							label: 'Username',
@@ -53,7 +53,7 @@ describe('Form Serialization', () => {
 			expect(isSerializable(config)).toBe(false);
 		});
 
-		test('should reject fields without componentId', () => {
+		test('should reject fields without id', () => {
 			const config = {
 				id: 'form',
 				fields: [
@@ -71,7 +71,7 @@ describe('Form Serialization', () => {
 				id: 'form',
 				fields: [
 					{
-						componentId: 'text',
+						id: 'text',
 					},
 				],
 			};
@@ -86,16 +86,16 @@ describe('Form Serialization', () => {
 				description: 'A test form',
 				fields: [],
 				layout: {
-					layoutId: 'card',
+					id: 'card',
 					config: { maxWidth: '600px' },
 				},
 				stepper: {
-					stepperId: 'wizard',
+					id: 'wizard',
 					config: { showProgress: true },
 				},
 				actions: [
 					{
-						actionType: 'submit',
+						id: 'submit',
 						config: { endpoint: '/api/submit' },
 						triggers: ['form_submit'],
 					},
@@ -117,7 +117,7 @@ describe('Form Serialization', () => {
 				title: 'Test Form',
 				fields: [
 					{
-						componentId: 'text',
+						id: 'text',
 						config: {
 							name: 'username',
 							label: 'Username',
@@ -154,7 +154,7 @@ describe('Form Serialization', () => {
 				description: 'A complex form with all features',
 				fields: [
 					{
-						componentId: 'text',
+						id: 'text',
 						config: {
 							name: 'name',
 							label: 'Name',
@@ -162,7 +162,7 @@ describe('Form Serialization', () => {
 						},
 					},
 					{
-						componentId: 'email',
+						id: 'email',
 						config: {
 							name: 'email',
 							label: 'Email',
@@ -174,12 +174,12 @@ describe('Form Serialization', () => {
 					},
 				],
 				layout: {
-					layoutId: 'card',
+					id: 'card',
 					config: { maxWidth: '600px' },
 				},
 				actions: [
 					{
-						actionType: 'submit',
+						id: 'submit',
 						config: { endpoint: '/api/submit' },
 						triggers: ['form_submit'],
 					},
@@ -191,7 +191,7 @@ describe('Form Serialization', () => {
 
 			expect(parsed.id).toBe('complex-form');
 			expect(parsed.fields).toHaveLength(2);
-			expect(parsed.layout.layoutId).toBe('card');
+			expect(parsed.layout.id).toBe('card');
 			expect(parsed.actions).toHaveLength(1);
 		});
 	});
@@ -202,7 +202,7 @@ describe('Form Serialization', () => {
 				id: 'test-form',
 				fields: [
 					{
-						componentId: 'text',
+						id: 'text',
 						config: { name: 'test' },
 					},
 				],
@@ -212,7 +212,7 @@ describe('Form Serialization', () => {
 
 			expect(config.id).toBe('test-form');
 			expect(config.fields).toHaveLength(1);
-			expect(config.fields[0].componentId).toBe('text');
+			expect(config.fields[0].id).toBe('text');
 		});
 
 		test('should throw error for invalid JSON', () => {
@@ -241,16 +241,16 @@ describe('Form Serialization', () => {
 				description: 'Description',
 				fields: [],
 				layout: {
-					layoutId: 'card',
+					id: 'card',
 					config: {},
 				},
 				stepper: {
-					stepperId: 'wizard',
+					id: 'wizard',
 					config: {},
 				},
 				actions: [
 					{
-						actionType: 'submit',
+						id: 'submit',
 						config: {},
 					},
 				],
@@ -279,7 +279,7 @@ describe('Form Serialization', () => {
 				description: 'Get in touch with us',
 				fields: [
 					{
-						componentId: 'text',
+						id: 'text',
 						config: {
 							name: 'name',
 							label: 'Your Name',
@@ -287,7 +287,7 @@ describe('Form Serialization', () => {
 						},
 					},
 					{
-						componentId: 'email',
+						id: 'email',
 						config: {
 							name: 'email',
 							label: 'Email Address',
@@ -295,7 +295,7 @@ describe('Form Serialization', () => {
 						},
 					},
 					{
-						componentId: 'textarea',
+						id: 'textarea',
 						config: {
 							name: 'message',
 							label: 'Message',
@@ -304,7 +304,7 @@ describe('Form Serialization', () => {
 					},
 				],
 				layout: {
-					layoutId: 'card',
+					id: 'card',
 					config: {
 						maxWidth: '600px',
 						padding: '2rem',
@@ -312,7 +312,7 @@ describe('Form Serialization', () => {
 				},
 				actions: [
 					{
-						actionType: 'submit',
+						id: 'submit',
 						config: {
 							endpoint: '/api/contact',
 							method: 'POST',
@@ -320,7 +320,7 @@ describe('Form Serialization', () => {
 						triggers: ['form_submit'],
 					},
 					{
-						actionType: 'reset',
+						id: 'reset',
 						config: {
 							confirmMessage: 'Are you sure?',
 						},
@@ -345,7 +345,7 @@ describe('Form Serialization', () => {
 			expect(deserialized.title).toBe(original.title);
 			expect(deserialized.description).toBe(original.description);
 			expect(deserialized.fields).toHaveLength(original.fields.length);
-			expect(deserialized.layout?.layoutId).toBe(original.layout?.layoutId);
+			expect(deserialized.layout?.id).toBe(original.layout?.id);
 			expect(deserialized.actions).toHaveLength(original.actions?.length || 0);
 			expect(deserialized.metadata?.version).toBe(original.metadata?.version);
 		});
@@ -368,7 +368,7 @@ describe('Form Serialization', () => {
 				id: 'nested-form',
 				fields: [
 					{
-						componentId: 'complex',
+						id: 'complex',
 						config: {
 							name: 'complex',
 							nested: {

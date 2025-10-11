@@ -3,8 +3,6 @@
  * Uses global namespace augmentation to allow library users to add their own field types
  */
 
-import type { BaseField } from './base-field';
-
 /**
  * Global registry for field configurations
  * This interface can be extended by library users to add their own field types
@@ -12,68 +10,99 @@ import type { BaseField } from './base-field';
 declare global {
 	namespace FormEngine {
 		/**
-		 * Field configuration registry
-		 * Library users can extend this interface to add their own field types:
+		 * Element/Field configuration registry
+		 * Augment this interface to register element types.
+		 * Each registration file imports its type and augments this interface.
 		 *
 		 * @example
 		 * ```ts
 		 * declare global {
 		 *   namespace FormEngine {
-		 *     interface FieldConfigRegistry {
+		 *     interface ElementRegistry {
 		 *       myCustomField: MyCustomFieldConfig;
 		 *     }
 		 *   }
 		 * }
 		 * ```
 		 */
-		interface FieldConfigRegistry {
-			/**
-			 * This is a placeholder to ensure the interface is not empty.
-			 * It is needed in order to do not get compiler errors when no fields are registered yet.
-			 * Do not use this in your code.
-			 */
-			__TYPE_DEF_INIT__: {
-				componentId: '__TYPE_DEF_INIT__';
-			} & BaseField;
-		}
+		interface ElementRegistry {}
 
 		/**
-		 * Union of all registered field configurations
-		 * This type is automatically updated when new field types are registered
+		 * Layout configuration registry
+		 * Augment this interface to register layout types.
 		 */
-		type FieldConfig = FieldConfigRegistry[keyof FieldConfigRegistry];
+		interface LayoutRegistry {}
 
 		/**
-		 * Extract component ID from field configuration
+		 * Stepper configuration registry
+		 * Augment this interface to register stepper types.
 		 */
-		type ComponentId = FieldConfig['componentId'];
+		interface StepperRegistry {}
 
 		/**
-		 * Get field configuration by component ID
+		 * Union of all registered element configurations
+		 * This type is automatically updated when new element types are registered
 		 */
-		type GetFieldConfig<T extends ComponentId> = Extract<FieldConfig, { componentId: T }>;
+		type ElementConfig = ElementRegistry[keyof ElementRegistry];
+
+		/**
+		 * Union of all registered layout configurations
+		 */
+		type LayoutConfig = LayoutRegistry[keyof LayoutRegistry];
+
+		/**
+		 * Union of all registered stepper configurations
+		 */
+		type StepperConfig = StepperRegistry[keyof StepperRegistry];
+
+		/**
+		 * Union of all registered element IDs
+		 * This creates a union type like: "input" | "textarea" | "select" | ...
+		 */
+		type ElementId = ElementConfig['__id'];
+
+		/**
+		 * Union of all registered layout IDs
+		 */
+		type LayoutId = LayoutConfig['__id'];
+
+		/**
+		 * Union of all registered stepper IDs
+		 */
+		type StepperId = StepperConfig['__id'];
+
+		/**
+		 * Get element configuration by element ID
+		 */
+		type GetElementConfig<T extends ElementId> = Extract<ElementConfig, { __id: T }>;
+
+		/**
+		 * Get layout configuration by layout ID
+		 */
+		type GetLayoutConfig<T extends LayoutId> = Extract<LayoutConfig, { __id: T }>;
+
+		/**
+		 * Get stepper configuration by stepper ID
+		 */
+		type GetStepperConfig<T extends StepperId> = Extract<StepperConfig, { __id: T }>;
 	}
-}
-
-/**
- * Type guard to check if a value is a valid field configuration
+} /**
+ * Type guard to check if a value is a valid element configuration
  */
-export function isFieldConfig(value: unknown): value is FormEngine.FieldConfig {
+export function isElementConfig(value: unknown): value is { __id: string; name: string } {
 	return (
 		typeof value === 'object' &&
 		value !== null &&
-		'componentId' in value &&
-		'id' in value &&
+		'__id' in value &&
 		'name' in value &&
-		typeof value.componentId === 'string' &&
-		typeof value.id === 'string' &&
+		typeof value.__id === 'string' &&
 		typeof value.name === 'string'
 	);
 }
 
 /**
- * Extract field type from configuration
+ * Extract element ID from configuration
  */
-export function getFieldType(config: FormEngine.FieldConfig): FormEngine.ComponentId {
-	return config.componentId;
+export function getElementId<T extends { __id: string }>(config: T): T['__id'] {
+	return config.__id;
 }

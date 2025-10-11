@@ -1,11 +1,17 @@
 import type { ElementRegistration, LayoutRegistration, StepperRegistration, BuilderActionRegistration } from '@/types';
 import { logger } from '@/lib/logger';
+import { ElementRegistry, LayoutRegistry, StepperRegistry, ActionRegistry } from '@/registries';
 
 /**
  * FormEngineBuilder - Builder pattern for configuring the form engine.
  *
  * Provides a fluent API for registering elements, layouts, steppers, and actions.
  * Once configured, calling `build()` creates an immutable FormEngine instance.
+ *
+ * Registries are injected as dependencies (with defaults), allowing for:
+ * - Custom registry implementations
+ * - Standalone registry usage
+ * - Easy testing with mock registries
  *
  * @example
  * ```typescript
@@ -16,6 +22,15 @@ import { logger } from '@/lib/logger';
  *   .addAction(submitActionRegistration)
  *   .build();
  * ```
+ *
+ * @example Custom registries
+ * ```typescript
+ * const customElements = new ElementRegistry();
+ * customElements.register(myCustomElement);
+ *
+ * const engine = new FormEngineBuilder(customElements)
+ *   .build();
+ * ```
  */
 export class FormEngineBuilder<
 	TElements extends Record<string, unknown> = Record<string, never>,
@@ -23,37 +38,26 @@ export class FormEngineBuilder<
 	TSteppers extends Record<string, unknown> = Record<string, never>,
 	TActions extends Record<string, unknown> = Record<string, never>,
 > {
-	private elements = new Map<string, ElementRegistration<any>>();
-	private layouts = new Map<string, LayoutRegistration<any>>();
-	private steppers = new Map<string, StepperRegistration<any>>();
-	private actions = new Map<string, BuilderActionRegistration<any>>();
+	constructor(
+		private elementRegistry = new ElementRegistry(),
+		private layoutRegistry = new LayoutRegistry(),
+		private stepperRegistry = new StepperRegistry(),
+		private actionRegistry = new ActionRegistry(),
+	) {}
 
 	/**
 	 * Register a single element.
 	 *
 	 * @param registration - Element registration object
-	 * @throws Error if componentId is already registered
+	 * @note If id is already registered, it will be overridden with a warning
 	 */
 	addElement<TConfig>(
 		registration: ElementRegistration<TConfig>,
-	): FormEngineBuilder<
-		TElements & { [K in typeof registration.componentId]: TConfig },
-		TLayouts,
-		TSteppers,
-		TActions
-	> {
-		if (this.elements.has(registration.componentId)) {
-			throw new Error(`Element with componentId "${registration.componentId}" is already registered`);
-		}
-
-		this.elements.set(registration.componentId, registration);
-		logger.debug(`Registered element: ${registration.componentId}`, {
-			category: registration.metadata.category,
-			name: registration.metadata.name,
-		});
+	): FormEngineBuilder<TElements & { [K in typeof registration.__id]: TConfig }, TLayouts, TSteppers, TActions> {
+		this.elementRegistry.register(registration);
 
 		return this as unknown as FormEngineBuilder<
-			TElements & { [K in typeof registration.componentId]: TConfig },
+			TElements & { [K in typeof registration.__id]: TConfig },
 			TLayouts,
 			TSteppers,
 			TActions
@@ -76,23 +80,16 @@ export class FormEngineBuilder<
 	 * Register a single layout.
 	 *
 	 * @param registration - Layout registration object
-	 * @throws Error if layoutId is already registered
+	 * @note If id is already registered, it will be overridden with a warning
 	 */
 	addLayout<TConfig>(
 		registration: LayoutRegistration<TConfig>,
-	): FormEngineBuilder<TElements, TLayouts & { [K in typeof registration.layoutId]: TConfig }, TSteppers, TActions> {
-		if (this.layouts.has(registration.layoutId)) {
-			throw new Error(`Layout with layoutId "${registration.layoutId}" is already registered`);
-		}
-
-		this.layouts.set(registration.layoutId, registration);
-		logger.debug(`Registered layout: ${registration.layoutId}`, {
-			name: registration.metadata.name,
-		});
+	): FormEngineBuilder<TElements, TLayouts & { [K in typeof registration.__id]: TConfig }, TSteppers, TActions> {
+		this.layoutRegistry.register(registration);
 
 		return this as unknown as FormEngineBuilder<
 			TElements,
-			TLayouts & { [K in typeof registration.layoutId]: TConfig },
+			TLayouts & { [K in typeof registration.__id]: TConfig },
 			TSteppers,
 			TActions
 		>;
@@ -114,24 +111,17 @@ export class FormEngineBuilder<
 	 * Register a single stepper.
 	 *
 	 * @param registration - Stepper registration object
-	 * @throws Error if stepperId is already registered
+	 * @note If id is already registered, it will be overridden with a warning
 	 */
 	addStepper<TConfig>(
 		registration: StepperRegistration<TConfig>,
-	): FormEngineBuilder<TElements, TLayouts, TSteppers & { [K in typeof registration.stepperId]: TConfig }, TActions> {
-		if (this.steppers.has(registration.stepperId)) {
-			throw new Error(`Stepper with stepperId "${registration.stepperId}" is already registered`);
-		}
-
-		this.steppers.set(registration.stepperId, registration);
-		logger.debug(`Registered stepper: ${registration.stepperId}`, {
-			name: registration.metadata.name,
-		});
+	): FormEngineBuilder<TElements, TLayouts, TSteppers & { [K in typeof registration.__id]: TConfig }, TActions> {
+		this.stepperRegistry.register(registration);
 
 		return this as unknown as FormEngineBuilder<
 			TElements,
 			TLayouts,
-			TSteppers & { [K in typeof registration.stepperId]: TConfig },
+			TSteppers & { [K in typeof registration.__id]: TConfig },
 			TActions
 		>;
 	}
@@ -152,30 +142,18 @@ export class FormEngineBuilder<
 	 * Register a single action.
 	 *
 	 * @param registration - Action registration object
-	 * @throws Error if actionType is already registered
+	 * @note If id is already registered, it will be overridden with a warning
 	 */
 	addAction<TConfig>(
 		registration: BuilderActionRegistration<TConfig>,
-	): FormEngineBuilder<
-		TElements,
-		TLayouts,
-		TSteppers,
-		TActions & { [K in typeof registration.actionType]: TConfig }
-	> {
-		if (this.actions.has(registration.actionType)) {
-			throw new Error(`Action with actionType "${registration.actionType}" is already registered`);
-		}
-
-		this.actions.set(registration.actionType, registration);
-		logger.debug(`Registered action: ${registration.actionType}`, {
-			name: registration.metadata.name,
-		});
+	): FormEngineBuilder<TElements, TLayouts, TSteppers, TActions & { [K in typeof registration.__id]: TConfig }> {
+		this.actionRegistry.register(registration);
 
 		return this as unknown as FormEngineBuilder<
 			TElements,
 			TLayouts,
 			TSteppers,
-			TActions & { [K in typeof registration.actionType]: TConfig }
+			TActions & { [K in typeof registration.__id]: TConfig }
 		>;
 	}
 
@@ -192,26 +170,81 @@ export class FormEngineBuilder<
 	}
 
 	/**
+	 * Create a new builder extending this one with additional registrations.
+	 * This allows for composition and creating specialized builders.
+	 *
+	 * @example
+	 * ```typescript
+	 * const baseEngine = new FormEngineBuilder()
+	 *   .addElement(InputElement)
+	 *   .addElement(TextareaElement)
+	 *   .build();
+	 *
+	 * // Later, extend with actions
+	 * const extendedEngine = baseEngine.extend()
+	 *   .addAction(submitAction)
+	 *   .addAction(notificationAction)
+	 *   .build();
+	 * ```
+	 */
+	extend(): FormEngineBuilder<TElements, TLayouts, TSteppers, TActions> {
+		const newElementRegistry = new ElementRegistry();
+		const newLayoutRegistry = new LayoutRegistry();
+		const newStepperRegistry = new StepperRegistry();
+		const newActionRegistry = new ActionRegistry();
+
+		// Copy all registrations to new registries
+		for (const item of this.elementRegistry.getAll()) {
+			newElementRegistry.register(item);
+		}
+		for (const item of this.layoutRegistry.getAll()) {
+			newLayoutRegistry.register(item);
+		}
+		for (const item of this.stepperRegistry.getAll()) {
+			newStepperRegistry.register(item);
+		}
+		for (const item of this.actionRegistry.getAll()) {
+			newActionRegistry.register(item);
+		}
+
+		const newBuilder = new FormEngineBuilder<TElements, TLayouts, TSteppers, TActions>(
+			newElementRegistry,
+			newLayoutRegistry,
+			newStepperRegistry,
+			newActionRegistry,
+		);
+
+		logger.debug('Extended FormEngineBuilder', {
+			elements: newBuilder.elementRegistry.size,
+			layouts: newBuilder.layoutRegistry.size,
+			steppers: newBuilder.stepperRegistry.size,
+			actions: newBuilder.actionRegistry.size,
+		});
+
+		return newBuilder;
+	}
+
+	/**
 	 * Build the immutable FormEngine instance.
 	 *
 	 * @returns FormEngine configured with all registered components and actions
 	 */
-	build() {
+	build(): import('@/engine/form-engine').FormEngine<TElements, TLayouts, TSteppers, TActions> {
 		logger.debug('Building FormEngine', {
-			elements: this.elements.size,
-			layouts: this.layouts.size,
-			steppers: this.steppers.size,
-			actions: this.actions.size,
+			elements: this.elementRegistry.size,
+			layouts: this.layoutRegistry.size,
+			steppers: this.stepperRegistry.size,
+			actions: this.actionRegistry.size,
 		});
 
 		// Import FormEngine dynamically to avoid circular dependency
 		const { FormEngine: FormEngineClass } = require('@/engine/form-engine');
 
 		return new FormEngineClass({
-			elements: this.elements,
-			layouts: this.layouts,
-			steppers: this.steppers,
-			actions: this.actions,
-		});
+			elements: this.elementRegistry.getMap(),
+			layouts: this.layoutRegistry.getMap(),
+			steppers: this.stepperRegistry.getMap(),
+			actions: this.actionRegistry.getMap(),
+		}) as import('@/engine/form-engine').FormEngine<TElements, TLayouts, TSteppers, TActions>;
 	}
 }

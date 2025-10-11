@@ -5,29 +5,25 @@ import {
 	SubmitActionSchema,
 	type SubmitAction,
 } from "@/actions/plugins/submit-plugin";
-import { actionRegistry } from "@/actions/action-registry";
-import type { ActionExecutionContext } from "@/actions/types";
-import { createMockContext, setupTestEnvironment, createMockFetch, createFailingMockFetch } from "../__tools";
-
-const mockContext = createMockContext({
-	formData: { name: "John", email: "john@example.com" },
-});
+import { FormEngineBuilder } from "@/builder";
+import { ActionExecutor } from "@/actions/action-executor";
+import type { FormEngine } from "@/engine/form-engine";
+import { createMockBuilderContext, setupTestEnvironment, createMockFetch, createFailingMockFetch } from "../__tools";
 
 describe("SubmitPlugin", () => {
-	// Store original fetch for cleanup
+	let engine: FormEngine;
+	let executor: ActionExecutor;
 	let originalFetch: typeof fetch;
 
 	beforeEach(() => {
 		setupTestEnvironment();
 		originalFetch = global.fetch;
-		// Set default successful fetch mock
 		global.fetch = createMockFetch({ 
 			"/api/submit": { ok: true, data: { success: true, id: "123" } } 
 		});
 	});
 
 	afterEach(() => {
-		actionRegistry.clear();
 		global.fetch = originalFetch;
 	});
 
@@ -101,14 +97,14 @@ describe("SubmitPlugin", () => {
 		});
 	});
 
-	describe("Plugin Factory", () => {
-		test("should create plugin with default configuration", () => {
+	describe('Plugin Factory', () => {
+		test('should create plugin with default configuration', () => {
 			const plugin = submitPlugin();
 
-			expect(plugin.type).toBe("submit");
-			expect(plugin.handler).toBeDefined();
+			expect(plugin.__id).toBe('submit');
+			expect(plugin.execute).toBeDefined();
 			expect(plugin.schema).toBe(SubmitActionSchema);
-			expect(plugin.defaultTriggers).toEqual(["form_submit"]);
+			expect(plugin.metadata.defaultTriggers).toEqual(["form_submit"]);
 		});
 
 		test("should create plugin with custom configuration", () => {
@@ -129,8 +125,8 @@ describe("SubmitPlugin", () => {
 				},
 			});
 
-			expect(plugin.type).toBe("submit");
-			expect(plugin.handler).toBeDefined();
+			expect(plugin.__id).toBe("submit");
+			expect(plugin.execute).toBeDefined();
 		});
 
 		test("should create plugin with custom request adapter", () => {
@@ -146,15 +142,14 @@ describe("SubmitPlugin", () => {
 				},
 			});
 
-			expect(plugin.type).toBe("submit");
-			expect(plugin.handler).toBeDefined();
+			expect(plugin.__id).toBe('submit');
+			expect(typeof plugin.execute).toBe('function');
 		});
 	});
 
-	describe("Action Execution", () => {
+	describe('Action Execution', () => {
 		test("should execute successful submit action", async () => {
 			const plugin = submitPlugin();
-			actionRegistry.register(plugin);
 
 			const action: SubmitAction = {
 				id: "test-submit",
@@ -164,7 +159,10 @@ describe("SubmitPlugin", () => {
 				method: "POST",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: { name: "John", email: "john@example.com" },
+			});
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
 			expect(result.message).toContain("Form submitted successfully");
@@ -174,7 +172,6 @@ describe("SubmitPlugin", () => {
 			global.fetch = createFailingMockFetch();
 
 			const plugin = submitPlugin();
-			actionRegistry.register(plugin);
 
 			const action: SubmitAction = {
 				id: "test-submit",
@@ -184,7 +181,10 @@ describe("SubmitPlugin", () => {
 				method: "POST",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: { name: "John", email: "john@example.com" },
+			});
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(false);
 			expect(result.error).toBeDefined();
@@ -192,7 +192,7 @@ describe("SubmitPlugin", () => {
 
 		test("should call custom success handler", async () => {
 			let successData: any = null;
-			let successContext: ActionExecutionContext | null = null;
+			let successContext: any = null;
 
 			const plugin = submitPlugin({
 				onSuccess: (data, context) => {
@@ -200,7 +200,6 @@ describe("SubmitPlugin", () => {
 					successContext = context;
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: SubmitAction = {
 				id: "test-submit",
@@ -210,18 +209,20 @@ describe("SubmitPlugin", () => {
 				method: "POST",
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: { name: "John", email: "john@example.com" },
+			});
+			await plugin.execute(context);
 
 			expect(successData).toEqual({ success: true, id: "123" });
 			expect(successContext).not.toBeNull();
-			expect(successContext!).toEqual(mockContext);
 		});
 
 		test("should call custom error handler", async () => {
 			global.fetch = createFailingMockFetch();
 
 			let errorData: any = null;
-			let errorContext: ActionExecutionContext | null = null;
+			let errorContext: any = null;
 
 			const plugin = submitPlugin({
 				onError: (error, context) => {
@@ -229,7 +230,6 @@ describe("SubmitPlugin", () => {
 					errorContext = context;
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: SubmitAction = {
 				id: "test-submit",
@@ -239,11 +239,13 @@ describe("SubmitPlugin", () => {
 				method: "POST",
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: { name: "John", email: "john@example.com" },
+			});
+			await plugin.execute(context);
 
 			expect(errorData).toBeDefined();
 			expect(errorContext).not.toBeNull();
-			expect(errorContext!).toEqual(mockContext);
 		});
 
 		test("should transform data before sending", async () => {
@@ -264,7 +266,6 @@ describe("SubmitPlugin", () => {
 					formId: context.formId,
 				}),
 			});
-			actionRegistry.register(plugin);
 
 			const action: SubmitAction = {
 				id: "test-submit",
@@ -274,7 +275,10 @@ describe("SubmitPlugin", () => {
 				method: "POST",
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: { name: "John", email: "john@example.com" },
+			});
+			await plugin.execute(context);
 
 			expect(requestBody).toEqual({
 				name: "John",
@@ -305,7 +309,6 @@ describe("SubmitPlugin", () => {
 					return mockFetch(url, options);
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: SubmitAction = {
 				id: "test-submit",
@@ -315,7 +318,10 @@ describe("SubmitPlugin", () => {
 				method: "PUT",
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: { name: "John", email: "john@example.com" },
+			});
+			await plugin.execute(context);
 
 			expect(customRequestCalled).toBe(true);
 			expect(requestUrl).not.toBeNull();
@@ -327,7 +333,6 @@ describe("SubmitPlugin", () => {
 			const plugin = submitPlugin({
 				validate: (context) => "Custom validation failed",
 			});
-			actionRegistry.register(plugin);
 
 			const action: SubmitAction = {
 				id: "test-submit",
@@ -337,7 +342,10 @@ describe("SubmitPlugin", () => {
 				method: "POST",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: { name: "John", email: "john@example.com" },
+			});
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(false);
 			expect(result.error).toBe("Custom validation failed");
@@ -347,7 +355,6 @@ describe("SubmitPlugin", () => {
 			const plugin = submitPlugin({
 				validate: (context) => true,
 			});
-			actionRegistry.register(plugin);
 
 			const action: SubmitAction = {
 				id: "test-submit",
@@ -357,7 +364,10 @@ describe("SubmitPlugin", () => {
 				method: "POST",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: { name: "John", email: "john@example.com" },
+			});
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
 		});
@@ -374,7 +384,6 @@ describe("SubmitPlugin", () => {
 			};
 
 			const plugin = submitPlugin();
-			actionRegistry.register(plugin);
 
 			const action: SubmitAction = {
 				id: "test-submit",
@@ -384,7 +393,10 @@ describe("SubmitPlugin", () => {
 				method: "POST",
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: { name: "John", email: "john@example.com" },
+			});
+			await plugin.execute(context);
 
 			expect(requestUrl).not.toBeNull();
 			expect(requestUrl!).toBe("https://api.example.com/submit");
@@ -392,7 +404,6 @@ describe("SubmitPlugin", () => {
 
 		test("should include custom success and error messages", async () => {
 			const plugin = submitPlugin();
-			actionRegistry.register(plugin);
 
 			const action: SubmitAction = {
 				id: "test-submit",
@@ -404,7 +415,10 @@ describe("SubmitPlugin", () => {
 				errorMessage: "Custom error message",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: { name: "John", email: "john@example.com" },
+			});
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
 			expect(result.message).toBe("Custom success message");
@@ -416,7 +430,6 @@ describe("SubmitPlugin", () => {
 			};
 
 			const plugin = submitPlugin();
-			actionRegistry.register(plugin);
 
 			const action: SubmitAction = {
 				id: "test-submit",
@@ -426,7 +439,10 @@ describe("SubmitPlugin", () => {
 				method: "POST",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: { name: "John", email: "john@example.com" },
+			});
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(false);
 			expect(result.error).toContain("Network error");
@@ -436,9 +452,6 @@ describe("SubmitPlugin", () => {
 	describe("Integration", () => {
 		test("should register plugin and execute successfully", async () => {
 			const plugin = submitPlugin();
-			actionRegistry.register(plugin);
-
-			expect(actionRegistry.has("submit")).toBe(true);
 
 			const action: SubmitAction = {
 				id: "integration-test",
@@ -448,7 +461,11 @@ describe("SubmitPlugin", () => {
 				method: "POST",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: { name: "John", email: "john@example.com" },
+			});
+			const result = await plugin.execute(context);
+			
 			expect(result.success).toBe(true);
 		});
 	});

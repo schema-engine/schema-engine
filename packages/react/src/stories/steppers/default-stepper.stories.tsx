@@ -35,7 +35,7 @@ export const Default: Story = {
 		config: {
 			...multiStepRegistrationForm,
 			stepper: {
-				stepperId: 'default',
+				id: 'default',
 				showStepNumbers: true,
 				showStepTitles: true,
 				showStepDescriptions: false,
@@ -49,7 +49,7 @@ export const WithDescriptions: Story = {
 		config: {
 			...multiStepRegistrationForm,
 			stepper: {
-				stepperId: 'default',
+				id: 'default',
 				showStepNumbers: true,
 				showStepTitles: true,
 				showStepDescriptions: true,
@@ -63,7 +63,7 @@ export const NumbersOnly: Story = {
 		config: {
 			...multiStepRegistrationForm,
 			stepper: {
-				stepperId: 'default',
+				id: 'default',
 				showStepNumbers: true,
 				showStepTitles: false,
 				showStepDescriptions: false,
@@ -77,7 +77,7 @@ export const TitlesOnly: Story = {
 		config: {
 			...multiStepRegistrationForm,
 			stepper: {
-				stepperId: 'default',
+				id: 'default',
 				showStepNumbers: false,
 				showStepTitles: true,
 				showStepDescriptions: false,
@@ -91,7 +91,7 @@ export const MinimalInfo: Story = {
 		config: {
 			...multiStepRegistrationForm,
 			stepper: {
-				stepperId: 'default',
+				id: 'default',
 				showStepNumbers: false,
 				showStepTitles: false,
 				showStepDescriptions: false,
@@ -105,7 +105,7 @@ export const FullInfo: Story = {
 		config: {
 			...multiStepRegistrationForm,
 			stepper: {
-				stepperId: 'default',
+				id: 'default',
 				showStepNumbers: true,
 				showStepTitles: true,
 				showStepDescriptions: true,

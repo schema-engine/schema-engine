@@ -15,7 +15,7 @@ export const cardWithProgressBarForm: FormConfig = {
 
 	// Registry-based stepper configuration - now strongly typed!
 	stepper: {
-		stepperId: 'progress-bar', // TypeScript knows this must be a valid stepper ID
+		id: 'progress-bar', // TypeScript knows this must be a valid stepper ID
 		showLabels: true, // IntelliSense suggests valid options for progress-bar
 		variant: 'default', // 'default' | 'compact' | 'minimal'
 		showProgress: true, // Specific to progress-bar stepper
@@ -29,7 +29,7 @@ export const cardWithProgressBarForm: FormConfig = {
 
 			// Registry-based layout configuration for this step
 			layout: {
-				layoutId: 'card',
+				id: 'card',
 				padding: '1rem',
 				shadow: true,
 			},
@@ -37,7 +37,7 @@ export const cardWithProgressBarForm: FormConfig = {
 			elements: [
 				{
 					id: 'firstName',
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					name: 'firstName',
 					label: 'First Name',
@@ -46,7 +46,7 @@ export const cardWithProgressBarForm: FormConfig = {
 				},
 				{
 					id: 'lastName',
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					name: 'lastName',
 					label: 'Last Name',
@@ -60,7 +60,7 @@ export const cardWithProgressBarForm: FormConfig = {
 			title: 'Contact Information',
 
 			layout: {
-				layoutId: 'card',
+				id: 'card',
 				padding: '1rem',
 				shadow: true,
 			},
@@ -68,7 +68,7 @@ export const cardWithProgressBarForm: FormConfig = {
 			elements: [
 				{
 					id: 'email',
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'email',
 					name: 'email',
 					label: 'Email Address',
@@ -80,7 +80,7 @@ export const cardWithProgressBarForm: FormConfig = {
 				},
 				{
 					id: 'phone',
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'tel',
 					name: 'phone',
 					label: 'Phone Number',
@@ -104,7 +104,7 @@ export const splitScreenWithVerticalForm: FormConfig = {
 	description: 'A multi-step form using split screen layout and vertical stepper',
 
 	stepper: {
-		stepperId: 'vertical', // TypeScript enforces valid stepper IDs
+		id: 'vertical', // TypeScript enforces valid stepper IDs
 		showLabels: true,
 		showDescription: true,
 		variant: 'default', // 'default' | 'compact' (specific to vertical)
@@ -119,7 +119,7 @@ export const splitScreenWithVerticalForm: FormConfig = {
 			description: 'Create your account credentials',
 
 			layout: {
-				layoutId: 'split-screen',
+				id: 'split-screen',
 				leftWidth: '50%',
 				rightWidth: '50%',
 			},
@@ -127,7 +127,7 @@ export const splitScreenWithVerticalForm: FormConfig = {
 			elements: [
 				{
 					id: 'username',
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					name: 'username',
 					label: 'Username',
@@ -136,7 +136,7 @@ export const splitScreenWithVerticalForm: FormConfig = {
 				},
 				{
 					id: 'password',
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'password',
 					name: 'password',
 					label: 'Password',
@@ -151,7 +151,7 @@ export const splitScreenWithVerticalForm: FormConfig = {
 			description: 'Tell us about yourself',
 
 			layout: {
-				layoutId: 'split-screen',
+				id: 'split-screen',
 				leftWidth: '40%',
 				rightWidth: '60%',
 			},
@@ -159,15 +159,15 @@ export const splitScreenWithVerticalForm: FormConfig = {
 			elements: [
 				{
 					id: 'bio',
-					componentId: 'textarea',
+					__id: 'textarea',
 					name: 'bio',
 					label: 'Biography',
 					placeholder: 'Tell us about yourself...',
 					rows: 4,
 				},
 				{
-					id: 'interests',
-					componentId: 'checkbox',
+					id: 'main_interests',
+					__id: 'radio',
 					name: 'interests',
 					label: 'Interests',
 					options: [
@@ -194,7 +194,7 @@ export const heroWithMinimalistForm: FormConfig = {
 	description: 'A multi-step form using hero layout and minimalist stepper',
 
 	stepper: {
-		stepperId: 'minimalist', // Type-safe stepper selection
+		id: 'minimalist', // Type-safe stepper selection
 		showLabels: false,
 		variant: 'dots', // 'dots' | 'lines' | 'numbers' (minimalist-specific)
 		allowStepJumping: true, // Specific to minimalist stepper
@@ -207,7 +207,7 @@ export const heroWithMinimalistForm: FormConfig = {
 			title: 'Welcome',
 
 			layout: {
-				layoutId: 'hero',
+				id: 'hero',
 				backgroundStyle: 'gradient',
 				textAlign: 'center',
 			},
@@ -215,7 +215,7 @@ export const heroWithMinimalistForm: FormConfig = {
 			elements: [
 				{
 					id: 'name',
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					name: 'name',
 					label: 'Your Name',
@@ -229,7 +229,7 @@ export const heroWithMinimalistForm: FormConfig = {
 			title: 'Preferences',
 
 			layout: {
-				layoutId: 'hero',
+				id: 'hero',
 				backgroundStyle: 'solid',
 				textAlign: 'center',
 			},
@@ -237,7 +237,7 @@ export const heroWithMinimalistForm: FormConfig = {
 			elements: [
 				{
 					id: 'theme',
-					componentId: 'radio',
+					__id: 'radio',
 					name: 'theme',
 					label: 'Preferred Theme',
 					options: [
@@ -249,7 +249,7 @@ export const heroWithMinimalistForm: FormConfig = {
 				},
 				{
 					id: 'notifications',
-					componentId: 'checkbox',
+					__id: 'radio',
 					name: 'notifications',
 					label: 'Email Notifications',
 					options: [
@@ -264,7 +264,7 @@ export const heroWithMinimalistForm: FormConfig = {
 			title: 'Complete',
 
 			layout: {
-				layoutId: 'hero',
+				id: 'hero',
 				backgroundStyle: 'success',
 				textAlign: 'center',
 			},
@@ -272,7 +272,7 @@ export const heroWithMinimalistForm: FormConfig = {
 			elements: [
 				{
 					id: 'confirmation',
-					componentId: 'checkbox',
+					__id: 'checkbox',
 					name: 'confirmation',
 					label: 'I agree to the terms and conditions',
 					rules: [{ type: 'required', message: 'Please accept the terms' }],
@@ -324,7 +324,7 @@ export const traditionalStepperForm: FormConfig = {
 			elements: [
 				{
 					id: 'name',
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					name: 'name',
 					label: 'Full Name',
@@ -338,7 +338,7 @@ export const traditionalStepperForm: FormConfig = {
 			elements: [
 				{
 					id: 'email',
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'email',
 					name: 'email',
 					label: 'Email',
@@ -373,7 +373,7 @@ export const layoutStepperForms = {
  * }
  *
  * interface MyCustomStepperConfig extends BaseStepperConfig {
- *   stepperId: 'my-custom-stepper';
+ *   id: 'my-custom-stepper';
  *   customOption?: boolean;
  *   theme?: 'light' | 'dark';
  *   // ... other custom options

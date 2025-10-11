@@ -6,7 +6,7 @@ import { z } from 'zod';
  */
 export const BaseStepperConfigSchema = z
 	.object({
-		stepperId: z.string().describe('Unique identifier for the stepper type'),
+		__id: z.string().describe('Unique identifier for the stepper type'),
 	})
 	.strict();
 
@@ -14,7 +14,7 @@ export const BaseStepperConfigSchema = z
  * Base stepper configuration that will be stored in the form configuration
  */
 export interface BaseStepperConfig {
-	stepperId: string;
+	__id: string;
 }
 
 /**
@@ -51,9 +51,9 @@ export interface StepperConfigExtensions {}
 // Type helpers for better IntelliSense
 export type StepperConfigForId<T extends string> = T extends keyof StepperConfigRegistry
 	? StepperConfigRegistry[T]
-	: BaseStepperConfig & { stepperId: T };
+	: BaseStepperConfig & { id: T };
 
-export type ValidStepperIds = keyof StepperConfigRegistry;
+export type Validids = keyof StepperConfigRegistry;
 
 /**
  * Individual step information for stepper components

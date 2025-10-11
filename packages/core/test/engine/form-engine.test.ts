@@ -5,9 +5,9 @@ import type { ElementRegistration, LayoutRegistration } from '@/types';
 
 describe('FormEngine', () => {
 	describe('Element Retrieval', () => {
-		test('should get element by componentId', () => {
+		test('should get element by id', () => {
 			const textInput: ElementRegistration = {
-				componentId: 'text',
+				__id: 'text',
 				schema: z.object({ name: z.string() }),
 				metadata: { name: 'Text Input', category: 'input' },
 				render: (props) => props,
@@ -15,10 +15,10 @@ describe('FormEngine', () => {
 
 			const engine = new FormEngineBuilder().addElement(textInput).build();
 
-			const element = engine.getElement('text');
-			expect(element).toBeDefined();
-			expect(element?.componentId).toBe('text');
-			expect(element?.metadata.name).toBe('Text Input');
+		const element = engine.getElement('text');
+		expect(element).toBeDefined();
+		expect(element?.__id).toBe('text');
+		expect(element?.metadata.name).toBe('Text Input');
 		});
 
 		test('should return undefined for non-existent element', () => {
@@ -29,14 +29,14 @@ describe('FormEngine', () => {
 
 		test('should get all elements', () => {
 			const textInput: ElementRegistration = {
-				componentId: 'text',
+				__id: 'text',
 				schema: z.object({}),
 				metadata: { name: 'Text', category: 'input' },
 				render: (props) => props,
 			};
 
 			const emailInput: ElementRegistration = {
-				componentId: 'email',
+				__id: 'email',
 				schema: z.object({}),
 				metadata: { name: 'Email', category: 'input' },
 				render: (props) => props,
@@ -46,22 +46,22 @@ describe('FormEngine', () => {
 				.addElements([textInput, emailInput])
 				.build();
 
-			const elements = engine.getAllElements();
-			expect(elements).toHaveLength(2);
-			expect(elements[0].componentId).toBe('text');
-			expect(elements[1].componentId).toBe('email');
+		const elements = engine.getAllElements();
+		expect(elements).toHaveLength(2);
+		expect(elements[0].__id).toBe('text');
+		expect(elements[1].__id).toBe('email');
 		});
 
 		test('should get all element IDs', () => {
 			const textInput: ElementRegistration = {
-				componentId: 'text',
+				__id: 'text',
 				schema: z.object({}),
 				metadata: { name: 'Text', category: 'input' },
 				render: (props) => props,
 			};
 
 			const emailInput: ElementRegistration = {
-				componentId: 'email',
+				__id: 'email',
 				schema: z.object({}),
 				metadata: { name: 'Email', category: 'input' },
 				render: (props) => props,
@@ -79,7 +79,7 @@ describe('FormEngine', () => {
 
 		test('should check if element exists', () => {
 			const textInput: ElementRegistration = {
-				componentId: 'text',
+				__id: 'text',
 				schema: z.object({}),
 				metadata: { name: 'Text', category: 'input' },
 				render: (props) => props,
@@ -93,9 +93,9 @@ describe('FormEngine', () => {
 	});
 
 	describe('Layout Retrieval', () => {
-		test('should get layout by layoutId', () => {
+		test('should get layout by id', () => {
 			const cardLayout: LayoutRegistration = {
-				layoutId: 'card',
+				__id: 'card',
 				schema: z.object({}),
 				metadata: { name: 'Card Layout' },
 				render: (props) => props,
@@ -103,10 +103,10 @@ describe('FormEngine', () => {
 
 			const engine = new FormEngineBuilder().addLayout(cardLayout).build();
 
-			const layout = engine.getLayout('card');
-			expect(layout).toBeDefined();
-			expect(layout?.layoutId).toBe('card');
-			expect(layout?.metadata.name).toBe('Card Layout');
+		const layout = engine.getLayout('card');
+		expect(layout).toBeDefined();
+		expect(layout?.__id).toBe('card');
+		expect(layout?.metadata.name).toBe('Card Layout');
 		});
 
 		test('should return undefined for non-existent layout', () => {
@@ -117,14 +117,14 @@ describe('FormEngine', () => {
 
 		test('should get all layouts', () => {
 			const cardLayout: LayoutRegistration = {
-				layoutId: 'card',
+				__id: 'card',
 				schema: z.object({}),
 				metadata: { name: 'Card' },
 				render: (props) => props,
 			};
 
 			const gridLayout: LayoutRegistration = {
-				layoutId: 'grid',
+				__id: 'grid',
 				schema: z.object({}),
 				metadata: { name: 'Grid' },
 				render: (props) => props,
@@ -140,22 +140,22 @@ describe('FormEngine', () => {
 
 		test('should get all layout IDs', () => {
 			const cardLayout: LayoutRegistration = {
-				layoutId: 'card',
+				__id: 'card',
 				schema: z.object({}),
 				metadata: { name: 'Card' },
 				render: (props) => props,
 			};
 
-			const engine = new FormEngineBuilder().addLayout(cardLayout).build();
+		const engine = new FormEngineBuilder().addLayout(cardLayout).build();
 
-			const ids = engine.getLayoutIds();
-			expect(ids).toHaveLength(1);
-			expect(ids).toContain('card');
+		const ids = engine.getLayoutIds();
+		expect(ids).toHaveLength(1);
+		expect(ids).toContain('card');
 		});
 
 		test('should check if layout exists', () => {
 			const cardLayout: LayoutRegistration = {
-				layoutId: 'card',
+				__id: 'card',
 				schema: z.object({}),
 				metadata: { name: 'Card' },
 				render: (props) => props,
@@ -169,9 +169,9 @@ describe('FormEngine', () => {
 	});
 
 	describe('Stepper Retrieval', () => {
-		test('should get stepper by stepperId', () => {
+		test('should get stepper by id', () => {
 			const wizardStepper = {
-				stepperId: 'wizard',
+				__id: 'wizard',
 				schema: z.object({}),
 				metadata: { name: 'Wizard Stepper' },
 				render: (props: any) => props,
@@ -179,14 +179,14 @@ describe('FormEngine', () => {
 
 			const engine = new FormEngineBuilder().addStepper(wizardStepper).build();
 
-			const stepper = engine.getStepper('wizard');
-			expect(stepper).toBeDefined();
-			expect(stepper?.stepperId).toBe('wizard');
+		const stepper = engine.getStepper('wizard');
+		expect(stepper).toBeDefined();
+		expect(stepper?.__id).toBe('wizard');
 		});
 
 		test('should check if stepper exists', () => {
 			const wizardStepper = {
-				stepperId: 'wizard',
+				__id: 'wizard',
 				schema: z.object({}),
 				metadata: { name: 'Wizard' },
 				render: (props: any) => props,
@@ -200,9 +200,9 @@ describe('FormEngine', () => {
 	});
 
 	describe('Action Retrieval', () => {
-		test('should get action by actionType', () => {
+		test('should get action by id', () => {
 			const submitAction = {
-				actionType: 'submit',
+				__id: 'submit',
 				schema: z.object({}),
 				metadata: { name: 'Submit' },
 				execute: async () => ({ success: true }),
@@ -210,14 +210,14 @@ describe('FormEngine', () => {
 
 			const engine = new FormEngineBuilder().addAction(submitAction).build();
 
-			const action = engine.getAction('submit');
-			expect(action).toBeDefined();
-			expect(action?.actionType).toBe('submit');
+		const action = engine.getAction('submit');
+		expect(action).toBeDefined();
+		expect(action?.__id).toBe('submit');
 		});
 
 		test('should check if action exists', () => {
 			const submitAction = {
-				actionType: 'submit',
+				__id: 'submit',
 				schema: z.object({}),
 				metadata: { name: 'Submit' },
 				execute: async () => ({ success: true }),
@@ -231,55 +231,55 @@ describe('FormEngine', () => {
 
 		test('should get all action types', () => {
 			const submitAction = {
-				actionType: 'submit',
+				__id: 'submit',
 				schema: z.object({}),
 				metadata: { name: 'Submit' },
 				execute: async () => ({ success: true }),
 			};
 
 			const resetAction = {
-				actionType: 'reset',
+				__id: 'reset',
 				schema: z.object({}),
 				metadata: { name: 'Reset' },
 				execute: async () => ({ success: true }),
 			};
 
-			const engine = new FormEngineBuilder()
-				.addActions([submitAction, resetAction])
-				.build();
+		const engine = new FormEngineBuilder()
+			.addActions([submitAction, resetAction])
+			.build();
 
-			const types = engine.getActionTypes();
-			expect(types).toHaveLength(2);
-			expect(types).toContain('submit');
-			expect(types).toContain('reset');
+		const types = engine.getActionTypes();
+		expect(types).toHaveLength(2);
+		expect(types).toContain('submit');
+		expect(types).toContain('reset');
 		});
 	});
 
 	describe('Summary', () => {
 		test('should provide complete summary', () => {
 			const textInput: ElementRegistration = {
-				componentId: 'text',
+				__id: 'text',
 				schema: z.object({}),
 				metadata: { name: 'Text', category: 'input' },
 				render: (props) => props,
 			};
 
 			const cardLayout: LayoutRegistration = {
-				layoutId: 'card',
+				__id: 'card',
 				schema: z.object({}),
 				metadata: { name: 'Card' },
 				render: (props) => props,
 			};
 
 			const wizardStepper = {
-				stepperId: 'wizard',
+				__id: 'wizard',
 				schema: z.object({}),
 				metadata: { name: 'Wizard' },
 				render: (props: any) => props,
 			};
 
 			const submitAction = {
-				actionType: 'submit',
+				__id: 'submit',
 				schema: z.object({}),
 				metadata: { name: 'Submit' },
 				execute: async () => ({ success: true }),
@@ -321,7 +321,7 @@ describe('FormEngine', () => {
 	describe('Immutability', () => {
 		test('should not allow modifications after build', () => {
 			const textInput: ElementRegistration = {
-				componentId: 'text',
+				__id: 'text',
 				schema: z.object({}),
 				metadata: { name: 'Text', category: 'input' },
 				render: (props) => props,
@@ -335,7 +335,7 @@ describe('FormEngine', () => {
 
 			// Attempting to add more to builder shouldn't affect built engine
 			const emailInput: ElementRegistration = {
-				componentId: 'email',
+				__id: 'email',
 				schema: z.object({}),
 				metadata: { name: 'Email', category: 'input' },
 				render: (props) => props,
@@ -367,7 +367,7 @@ describe('FormEngine', () => {
 			});
 
 			const textInput: ElementRegistration<z.infer<typeof textInputSchema>> = {
-				componentId: 'text',
+				__id: 'text',
 				schema: textInputSchema,
 				metadata: {
 					name: 'Text Input',

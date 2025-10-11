@@ -7,7 +7,7 @@
 
 import type { ReactNode } from 'react';
 import { FormEngineProvider } from '@/components/adapter-provider';
-import { rhfAdapter } from '@/components/adapters/rhf';
+import { rhfAdapter } from '@/adapters/rhf';
 import { defaultFormEngine } from './form-engine-setup';
 import type { FormEngine } from '@json-form-engine/core/engine/form-engine';
 

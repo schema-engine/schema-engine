@@ -11,11 +11,6 @@ import { FormRenderer } from '@/components/internals/form-renderer';
 import type { FormConfig } from '@json-form-engine/core/schemas';
 import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
 
-// Import stepper CSS for multi-step forms
-import '../../components/steppers/default-stepper.css';
-import '../../components/steppers/vertical-stepper.css';
-import '../../components/steppers/minimalist-stepper.css';
-
 const simpleForm: FormConfig = {
 	id: 'simple-example',
 	title: 'Simple Contact Form',
@@ -27,7 +22,7 @@ const simpleForm: FormConfig = {
 			title: 'Contact Information',
 			elements: [
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					id: 'name',
 					name: 'name',
@@ -36,7 +31,7 @@ const simpleForm: FormConfig = {
 					rules: [ValidationPresets.string.minLength(2, 'Name must be at least 2 characters')],
 				},
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'email',
 					id: 'email',
 					name: 'email',
@@ -56,7 +51,7 @@ const formWithCardLayout: FormConfig = {
 		{
 			...simpleForm.steps[0],
 			layout: {
-				layoutId: 'card',
+				id: 'card',
 				maxWidth: 'md',
 				padding: 'md',
 				shadowSize: 'lg',
@@ -77,9 +72,8 @@ const multiStepForm: FormConfig = {
 			description: 'Tell us about yourself',
 			elements: [
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
-					id: 'firstName',
 					name: 'firstName',
 					label: 'First Name',
 					placeholder: 'John',
@@ -92,9 +86,8 @@ const multiStepForm: FormConfig = {
 			description: 'How can we reach you?',
 			elements: [
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'email',
-					id: 'email',
 					name: 'email',
 					label: 'Email',
 					placeholder: 'john@example.com',
@@ -109,7 +102,7 @@ const multiStepForm: FormConfig = {
 		},
 	],
 	stepper: {
-		stepperId: 'default',
+		id: 'default',
 		showStepNumbers: true,
 		showStepTitles: true,
 	} as any,
@@ -177,7 +170,7 @@ export const WithVerticalStepper: Story = {
 		config: {
 			...multiStepForm,
 			stepper: {
-				stepperId: 'vertical',
+				id: 'vertical',
 				showConnectors: true,
 			} as any,
 		},
@@ -192,7 +185,7 @@ export const WithMinimalistStepper: Story = {
 		config: {
 			...multiStepForm,
 			stepper: {
-				stepperId: 'minimalist',
+				id: 'minimalist',
 				showProgress: true,
 			} as any,
 		},
@@ -211,7 +204,7 @@ export const WithSplitScreenLayout: Story = {
 				{
 					...simpleForm.steps[0],
 					layout: {
-						layoutId: 'split-screen',
+						id: 'split-screen',
 						sideContent: '<h3>Welcome!</h3><p>Please fill out the form to continue.</p>',
 						sidePlacement: 'left',
 						sideWidth: 'normal',
@@ -234,7 +227,7 @@ export const WithHeroBackgroundLayout: Story = {
 				{
 					...simpleForm.steps[0],
 					layout: {
-						layoutId: 'hero-background',
+						id: 'hero-background',
 						backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920',
 						contentWidth: 'md',
 					},

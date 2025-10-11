@@ -1,9 +1,7 @@
 import { Label } from '@/shadcn/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/shadcn/ui/radio-group';
 import { useControlledFormElement, combineHandlers } from '@/hooks';
-import type { RadioFieldConfig, RadioFieldProps } from './form-radio.types';
-import { RadioFieldConfigSchema } from './form-radio.types';
-import type { ElementRegistration } from '@json-form-engine/core/types';
+import type { RadioFieldProps } from './form-radio.types';
 
 export function FormRadio({
 	onChange: propsOnChange,
@@ -45,14 +43,3 @@ export function FormRadio({
 		</div>
 	);
 }
-
-export const RadioElement: ElementRegistration<RadioFieldConfig, RadioFieldProps> = {
-	componentId: 'radio',
-	render: FormRadio,
-	schema: RadioFieldConfigSchema,
-	metadata: {
-		name: 'Radio Group Field',
-		description: 'Radio button group for selecting one option from multiple choices',
-		category: 'input',
-	},
-};

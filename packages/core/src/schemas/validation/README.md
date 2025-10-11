@@ -87,13 +87,13 @@ if (result.success) {
 const formConfig = {
 	elements: [
 		{
-			componentId: "input",
+			id: "input",
 			name: "email",
 			label: "Email Address",
 			rules: [{ type: "required" }, { type: "email" }],
 		},
 		{
-			componentId: "input",
+			id: "input",
 			name: "age",
 			label: "Age",
 			rules: [{ type: "required" }, { type: "min", value: 18 }, { type: "max", value: 120 }],
@@ -250,7 +250,7 @@ validationRegistry.register({
 
 // Use in form configuration
 const field = {
-	componentId: "input",
+	id: "input",
 	name: "phone",
 	rules: [{ type: "phone", message: "Please enter a valid phone number" }],
 };
@@ -304,17 +304,17 @@ import { generateFormSchema } from "@json-form-engine/core/schemas/validation";
 const formElements = [
 	{
 		name: "firstName",
-		componentId: "input",
+		id: "input",
 		rules: [{ type: "required" }, { type: "minLength", value: 2 }],
 	},
 	{
 		name: "email",
-		componentId: "input",
+		id: "input",
 		rules: [{ type: "required" }, { type: "email" }],
 	},
 	{
 		name: "age",
-		componentId: "number",
+		id: "number",
 		rules: [{ type: "min", value: 18 }],
 	},
 ];

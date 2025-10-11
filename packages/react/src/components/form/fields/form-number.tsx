@@ -1,9 +1,7 @@
 import { Label } from '@/shadcn/ui/label';
 import { Input } from '@/shadcn/ui/input';
 import { useControlledFormElement, combineHandlers } from '@/hooks';
-import type { NumberFieldConfig, NumberFieldProps } from './form-number.types';
-import { NumberFieldConfigSchema } from './form-number.types';
-import type { ElementRegistration } from '@json-form-engine/core/types';
+import type { NumberFieldProps } from './form-number.types';
 
 export function FormNumber({
 	onChange: propsOnChange,
@@ -39,14 +37,3 @@ export function FormNumber({
 		</div>
 	);
 }
-
-export const NumberElement: ElementRegistration<NumberFieldConfig, NumberFieldProps> = {
-	componentId: 'number',
-	render: FormNumber,
-	schema: NumberFieldConfigSchema,
-	metadata: {
-		name: 'Number Field',
-		description: 'Numeric input field with min, max, and step controls',
-		category: 'input',
-	},
-};

@@ -31,7 +31,7 @@ const formConfig: FormConfig = {
 			title: "Your Information",
 			elements: [
 				{
-					componentId: "input", // Autocomplete shows all available field types
+					id: "input", // Autocomplete shows all available field types
 					id: "email",
 					name: "email",
 					label: "Email Address",
@@ -60,7 +60,7 @@ const config: FormConfig = {
 			title: "Step 1",
 			elements: [
 				{
-					componentId: "input", // ✅ Autocomplete works here
+					id: "input", // ✅ Autocomplete works here
 					id: "field1",
 					name: "field1",
 					// ✅ TypeScript validates field-specific properties

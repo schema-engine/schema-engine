@@ -7,28 +7,26 @@ import {
 
 describe('Enhanced Form Field System', () => {
 	describe('Input Field Schema', () => {
-		test('validates valid input field configuration', () => {
-			const validConfig: InputFieldConfig = {
-				componentId: 'input',
-				id: 'test-input',
-				name: 'testField',
-				label: 'Test Input',
-				inputType: 'email',
-				placeholder: 'Enter email...',
-				autoComplete: 'email',
-			};
+	test('validates valid input field configuration', () => {
+		const validConfig: InputFieldConfig = {
+			__id: 'input',
+			id: 'test-input',
+			name: 'testField',
+			label: 'Test Input',
+			inputType: 'email',
+			placeholder: 'Enter email...',
+			autoComplete: 'email',
+		};
 
-			const result = InputFieldSchema.safeParse(validConfig);
-			expect(result.success).toBe(true);
-			if (result.success) {
-				expect(result.data.componentId).toBe('input');
-				expect(result.data.inputType).toBe('email');
-			}
-		});
-
-		test('rejects invalid input field configuration', () => {
+		const result = InputFieldSchema.safeParse(validConfig);
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.__id).toBe('input');
+			expect(result.data.inputType).toBe('email');
+		}
+	});		test('rejects invalid input field configuration', () => {
 			const invalidConfig = {
-				componentId: 'input',
+				__id: 'input',
 				inputType: 'invalid-type',
 			};
 
@@ -41,7 +39,7 @@ describe('Enhanced Form Field System', () => {
 
 		test('validates serializable input field schema', () => {
 			const validConfig: InputFieldConfig = {
-				componentId: 'input',
+				__id: 'input',
 				id: 'serializable-input',
 				name: 'serializableField',
 				inputType: 'text',
@@ -64,7 +62,7 @@ describe('Enhanced Form Field System', () => {
 			
 			for (const inputType of inputTypes) {
 				const config: InputFieldConfig = {
-					componentId: 'input',
+					__id: 'input',
 					id: `test-${inputType}`,
 					name: `test${inputType}`,
 					inputType,
@@ -77,7 +75,7 @@ describe('Enhanced Form Field System', () => {
 
 		test('uses default input type when not specified', () => {
 			const configWithoutType = {
-				componentId: 'input',
+				__id: 'input',
 				id: 'default-test',
 				name: 'defaultTest',
 			};
@@ -91,7 +89,7 @@ describe('Enhanced Form Field System', () => {
 
 		test('validates optional properties', () => {
 			const configWithOptionals: InputFieldConfig = {
-				componentId: 'input',
+				__id: 'input',
 				id: 'optional-test',
 				name: 'optionalTest',
 				inputType: 'text',

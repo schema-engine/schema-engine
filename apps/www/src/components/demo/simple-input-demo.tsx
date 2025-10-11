@@ -1,4 +1,7 @@
 import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
+import { FormEngineProvider } from '@json-form-engine/react/components/adapter-provider';
+import { rhfAdapter } from '@json-form-engine/react/adapters/rhf';
+import { formEngine } from '@/lib/form-engine-setup';
 import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
 import type { FormConfig } from '@json-form-engine/core/schemas';
 import '@/lib/form-engine-setup';
@@ -16,7 +19,7 @@ export function SimpleInputDemo() {
 				title: 'Input Fields',
 				elements: [
 					{
-						componentId: 'input',
+						__id: 'input',
 						inputType: 'text',
 						id: 'name',
 						name: 'name',
@@ -28,7 +31,7 @@ export function SimpleInputDemo() {
 						],
 					},
 					{
-						componentId: 'input',
+						__id: 'input',
 						inputType: 'email',
 						id: 'email',
 						name: 'email',
@@ -57,8 +60,10 @@ export function SimpleInputDemo() {
 	};
 
 	return (
-		<div className="border rounded-lg p-4">
-			<FormRenderer config={config} />
-		</div>
+		<FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
+			<div className="border rounded-lg p-4">
+				<FormRenderer config={config} />
+			</div>
+		</FormEngineProvider>
 	);
 }

@@ -16,7 +16,7 @@ export const CheckboxFieldExtensionSchema = z.object({
  * Complete checkbox field configuration schema
  */
 export const CheckboxFieldConfigSchema = BaseFieldSchema.extend({
-	componentId: z.literal('checkbox'),
+	__id: z.literal('checkbox'),
 	...CheckboxFieldExtensionSchema.shape,
 });
 

@@ -54,5 +54,5 @@ export type ExtractLayoutConfig<T> = T extends LayoutComponent<infer C> ? C : ne
  * Base layout configuration that will be stored in the form configuration
  */
 export interface BaseLayoutConfig {
-	layoutId: string;
+	id: string;
 }

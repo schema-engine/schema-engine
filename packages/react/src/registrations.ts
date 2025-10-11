@@ -1,85 +1,43 @@
 /**
- * Default element registrations for @json-form-engine/react
+ * Per-component registration re-exports with type augmentation
  *
- * This file exports all default form components that can be used with the new builder pattern.
- * Import these to add them to your form engine instance.
+ * Each import triggers type augmentation for that specific component only.
+ * This ensures that only the components you actually use are registered in the type system.
  *
- * @example
+ * @example Individual Import (Recommended)
  * ```typescript
- * import { createReactFormEngine } from '@json-form-engine/react';
- * import { InputElement, TextareaElement } from '@json-form-engine/react/registrations';
- *
- * const engine = createReactFormEngine()
- *   .addElement(InputElement)
- *   .addElement(TextareaElement)
- *   .build();
+ * import { InputElementRegistration } from '@json-form-engine/react/components/form/fields/form-input.registration';
  * ```
+ *
+ * @example Multiple Imports from this file
+ * ```typescript
+ * import {
+ *   InputElementRegistration,
+ *   TextareaElementRegistration
+ * } from '@json-form-engine/react/registrations';
+ * ```
+ *
+ * Benefits:
+ * - Only imported components are type-registered
+ * - Multiple builders with different components work correctly
+ * - No "scary magic" - explicit is better than implicit
+ * - Tree-shakeable - unused components don't affect bundle size or types
  */
 
-import type { InputFieldConfig } from './components/form/fields/form-input.types';
-import type { TextareaFieldConfig } from './components/form/fields/form-textarea.types';
-import type { CheckboxFieldConfig } from './components/form/fields/form-checkbox.types';
-import type { NumberFieldConfig } from './components/form/fields/form-number.types';
-import type { RadioFieldConfig } from './components/form/fields/form-radio.types';
-import type { SelectFieldConfig } from './components/form/fields/form-select.types';
-import type { SwitchFieldConfig } from './components/form/fields/form-switch.types';
-import type { ArrayElementsConfig } from './components/form/fields/form-array-elements.types';
+export { InputElementRegistration } from './components/form/fields/form-input.registration';
+export { TextareaElementRegistration } from './components/form/fields/form-textarea.registration';
+export { CheckboxElementRegistration } from './components/form/fields/form-checkbox.registration';
+export { RadioElementRegistration } from './components/form/fields/form-radio.registration';
+export { SelectElementRegistration } from './components/form/fields/form-select.registration';
+export { SwitchElementRegistration } from './components/form/fields/form-switch.registration';
+export { NumberElementRegistration } from './components/form/fields/form-number.registration';
+export { ArrayElementRegistration } from './components/form/fields/form-array-elements.registration';
 
-export { InputElement } from './components/form/fields/form-input';
-export { TextareaElement } from './components/form/fields/form-textarea';
-export { CheckboxElement } from './components/form/fields/form-checkbox';
-export { RadioElement } from './components/form/fields/form-radio';
-export { SelectElement } from './components/form/fields/form-select';
-export { SwitchElement } from './components/form/fields/form-switch';
-export { NumberElement } from './components/form/fields/form-number';
-export { ArrayElement } from './components/form/fields/form-array-elements';
+export { CardLayoutRegistration } from './components/layouts/card-layout.registration';
+export { SplitScreenLayoutRegistration } from './components/layouts/split-screen-layout.registration';
+export { HeroBackgroundLayoutRegistration } from './components/layouts/hero-background-layout.registration';
 
-export { CardLayoutRegistration } from './components/layouts/card-layout';
-export { SplitScreenLayoutRegistration } from './components/layouts/split-screen-layout';
-export { HeroBackgroundLayoutRegistration } from './components/layouts/hero-background-layout';
-
-export { DefaultStepperRegistration } from './components/steppers/default-stepper';
-export { VerticalStepperRegistration } from './components/steppers/vertical-stepper';
-export { MinimalistStepperRegistration } from './components/steppers/minimalist-stepper';
-export { DebuggerStepperRegistration } from './components/steppers/debugger-stepper';
-
-import type { CardLayoutConfig } from './components/layouts/card-layout.types';
-import type { SplitScreenLayoutConfig } from './components/layouts/split-screen-layout.types';
-import type { HeroBackgroundLayoutConfig } from './components/layouts/hero-background-layout.types';
-import type { DefaultStepperConfig } from './components/steppers/default-stepper.types';
-import type { MinimalistStepperConfig } from './components/steppers/minimalist-stepper.types';
-import type { VerticalStepsStepperConfig } from './components/steppers/vertical-stepper.types';
-import type { DebuggerStepperConfig } from './components/steppers/debugger-stepper.types';
-
-/**
- * Global namespace augmentation for internal package usage.
- * This allows components within the package to reference FormEngine types
- * without explicit imports (e.g., FormEngine.FieldConfig, FormEngine.FieldRegistration).
- */
-declare global {
-	namespace FormEngine {
-		interface FieldConfigRegistry {
-			input: InputFieldConfig;
-			textarea: TextareaFieldConfig;
-			checkbox: CheckboxFieldConfig;
-			number: NumberFieldConfig;
-			radio: RadioFieldConfig;
-			select: SelectFieldConfig;
-			switch: SwitchFieldConfig;
-			arrayElements: ArrayElementsConfig;
-		}
-
-		interface LayoutConfigRegistry {
-			card: CardLayoutConfig;
-			'split-screen': SplitScreenLayoutConfig;
-			'hero-background': HeroBackgroundLayoutConfig;
-		}
-
-		interface StepperConfigRegistry {
-			default: DefaultStepperConfig;
-			minimalist: MinimalistStepperConfig;
-			vertical: VerticalStepsStepperConfig;
-			debugger: DebuggerStepperConfig;
-		}
-	}
-}
+export { DefaultStepperRegistration } from './components/steppers/default-stepper.registration';
+export { VerticalStepperRegistration } from './components/steppers/vertical-stepper.registration';
+export { MinimalistStepperRegistration } from './components/steppers/minimalist-stepper.registration';
+export { DebuggerStepperRegistration } from './components/steppers/debugger-stepper.registration';

@@ -34,7 +34,7 @@ export const Default: Story = {
 	args: {
 		config: {
 			...baseForm,
-			steps: [{ ...baseForm.steps[0], layout: { layoutId: 'hero-background' } }],
+			steps: [{ ...baseForm.steps[0], layout: { id: 'hero-background' } }],
 		},
 	},
 };
@@ -47,7 +47,7 @@ export const WithBackgroundImage: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'hero-background',
+						id: 'hero-background',
 						backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
 						contentWidth: 'md',
 					},
@@ -65,7 +65,7 @@ export const SmallContent: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'hero-background',
+						id: 'hero-background',
 						backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
 						contentWidth: 'sm',
 					},
@@ -83,7 +83,7 @@ export const MediumContent: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'hero-background',
+						id: 'hero-background',
 						backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
 						contentWidth: 'md',
 					},
@@ -101,7 +101,7 @@ export const LargeContent: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'hero-background',
+						id: 'hero-background',
 						backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
 						contentWidth: 'lg',
 					},
@@ -119,7 +119,7 @@ export const ExtraLargeContent: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'hero-background',
+						id: 'hero-background',
 						backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
 						contentWidth: 'xl',
 					},
@@ -137,7 +137,7 @@ export const GradientBackground: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'hero-background',
+						id: 'hero-background',
 						backgroundImage: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1920&q=80',
 						contentWidth: 'md',
 					},
@@ -155,7 +155,7 @@ export const NatureBackground: Story = {
 				{
 					...baseForm.steps[0],
 					layout: {
-						layoutId: 'hero-background',
+						id: 'hero-background',
 						backgroundImage: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=80',
 						contentWidth: 'lg',
 					},
@@ -165,7 +165,7 @@ export const NatureBackground: Story = {
 	},
 };
 
-const multiStepForm = { ...FormTemplates.registrationForm(), stepper: { stepperId: 'debugger' as const } };
+const multiStepForm = { ...FormTemplates.registrationForm(), stepper: { id: 'debugger' as const } };
 
 export const MultiStepWithBackground: Story = {
 	args: {
@@ -174,7 +174,7 @@ export const MultiStepWithBackground: Story = {
 			steps: multiStepForm.steps.map((step) => ({
 				...step,
 				layout: {
-					layoutId: 'hero-background',
+					id: 'hero-background',
 					backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
 					contentWidth: 'md',
 				},
@@ -190,7 +190,7 @@ export const MultiStepNatureBackground: Story = {
 			steps: multiStepForm.steps.map((step) => ({
 				...step,
 				layout: {
-					layoutId: 'hero-background',
+					id: 'hero-background',
 					backgroundImage: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=80',
 					contentWidth: 'lg',
 				},
@@ -206,7 +206,7 @@ export const MultiStepSmallContent: Story = {
 			steps: multiStepForm.steps.map((step) => ({
 				...step,
 				layout: {
-					layoutId: 'hero-background',
+					id: 'hero-background',
 					backgroundImage: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1920&q=80',
 					contentWidth: 'sm',
 				},
@@ -222,7 +222,7 @@ export const MultiStepLargeContent: Story = {
 			steps: multiStepForm.steps.map((step) => ({
 				...step,
 				layout: {
-					layoutId: 'hero-background',
+					id: 'hero-background',
 					backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
 					contentWidth: 'xl',
 				},

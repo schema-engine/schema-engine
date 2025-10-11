@@ -3,6 +3,23 @@ import type { ComponentMetadata, ElementMetadata, ActionMetadata } from './metad
 import type { BuilderActionExecutionContext, BuilderActionExecutionResult } from './actions.js';
 
 /**
+ * Base registration interface - common fields for all registration types.
+ *
+ * All registration objects (elements, layouts, steppers, actions) extend this base.
+ *
+ * @template TConfig - The serializable configuration type (from schema)
+ * @template TMeta - The metadata type (ComponentMetadata, ElementMetadata, or ActionMetadata)
+ */
+export interface BaseRegistration<TConfig = unknown, TMeta extends ComponentMetadata = ComponentMetadata> {
+	/** Unique identifier - MUST be unique within its registry type. Uses __id to avoid conflicts with common 'id' properties. */
+	__id: string;
+	/** Zod schema for config validation and type inference */
+	schema: z.ZodType<TConfig>;
+	/** Component or action metadata */
+	metadata: TMeta;
+}
+
+/**
  * Element registration object for the new builder pattern.
  *
  * Elements are the building blocks of forms (inputs, content, decorations, interactive).
@@ -17,7 +34,7 @@ import type { BuilderActionExecutionContext, BuilderActionExecutionResult } from
  *   InputFieldConfig,
  *   InputFieldProps
  * > = {
- *   componentId: 'text',
+ *   __id: 'text',
  *   schema: TextInputConfigSchema,
  *   metadata: {
  *     name: 'Text Input',
@@ -29,13 +46,8 @@ import type { BuilderActionExecutionContext, BuilderActionExecutionResult } from
  * };
  * ```
  */
-export interface ElementRegistration<TConfig = unknown, TProps = TConfig & { onChange?: (value: unknown) => void }> {
-	/** Unique identifier - MUST be unique across all elements */
-	componentId: string;
-	/** Zod schema for config validation and type inference */
-	schema: z.ZodType<TConfig>;
-	/** Element metadata with category for filtering/validation */
-	metadata: ElementMetadata;
+export interface ElementRegistration<TConfig = unknown, TProps = TConfig & { onChange?: (value: unknown) => void }>
+	extends BaseRegistration<TConfig, ElementMetadata> {
 	/** Framework-agnostic render function */
 	render: (props: TProps) => unknown;
 }
@@ -55,7 +67,7 @@ export interface ElementRegistration<TConfig = unknown, TProps = TConfig & { onC
  *   CardLayoutConfig,
  *   CardLayoutProps
  * > = {
- *   layoutId: 'card',
+ *   __id: 'card',
  *   schema: CardLayoutConfigSchema,
  *   metadata: {
  *     name: 'Card Layout',
@@ -66,13 +78,8 @@ export interface ElementRegistration<TConfig = unknown, TProps = TConfig & { onC
  * };
  * ```
  */
-export interface LayoutRegistration<TConfig = unknown, TProps = any> {
-	/** Unique identifier - MUST be unique across all layouts */
-	layoutId: string;
-	/** Zod schema for config validation and type inference */
-	schema: z.ZodType<TConfig>;
-	/** Component metadata (no category for layouts) */
-	metadata: ComponentMetadata;
+export interface LayoutRegistration<TConfig = unknown, TProps = any>
+	extends BaseRegistration<TConfig, ComponentMetadata> {
 	/** Framework-agnostic render function */
 	render: (props: TProps) => unknown;
 }
@@ -92,7 +99,7 @@ export interface LayoutRegistration<TConfig = unknown, TProps = any> {
  *   WizardStepperConfig,
  *   WizardStepperProps
  * > = {
- *   stepperId: 'wizard',
+ *   __id: 'wizard',
  *   schema: WizardStepperConfigSchema,
  *   metadata: {
  *     name: 'Wizard Stepper',
@@ -103,13 +110,8 @@ export interface LayoutRegistration<TConfig = unknown, TProps = any> {
  * };
  * ```
  */
-export interface StepperRegistration<TConfig = unknown, TProps = any> {
-	/** Unique identifier - MUST be unique across all steppers */
-	stepperId: string;
-	/** Zod schema for config validation and type inference */
-	schema: z.ZodType<TConfig>;
-	/** Component metadata (no category for steppers) */
-	metadata: ComponentMetadata;
+export interface StepperRegistration<TConfig = unknown, TProps = any>
+	extends BaseRegistration<TConfig, ComponentMetadata> {
 	/** Framework-agnostic render function */
 	render: (props: TProps) => unknown;
 }
@@ -123,7 +125,7 @@ export interface StepperRegistration<TConfig = unknown, TProps = any> {
  * @example
  * ```typescript
  * export const submitActionRegistration: BuilderActionRegistration<z.infer<typeof SubmitActionConfigSchema>> = {
- *   actionType: 'submit',
+ *   __id: 'submit',
  *   schema: SubmitActionConfigSchema,
  *   metadata: {
  *     name: 'Submit Form',
@@ -137,13 +139,7 @@ export interface StepperRegistration<TConfig = unknown, TProps = any> {
  * };
  * ```
  */
-export interface BuilderActionRegistration<TConfig = unknown> {
-	/** Unique action type identifier - MUST be unique across all actions */
-	actionType: string;
-	/** Zod schema for config validation and type inference */
-	schema: z.ZodType<TConfig>;
-	/** Action metadata (separate from component metadata) */
-	metadata: ActionMetadata;
+export interface BuilderActionRegistration<TConfig = unknown> extends BaseRegistration<TConfig, ActionMetadata> {
 	/** Action execution handler */
 	execute: (context: BuilderActionExecutionContext<TConfig>) => Promise<BuilderActionExecutionResult>;
 }

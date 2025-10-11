@@ -28,7 +28,7 @@ const formConfig = {
 		// ... your steps
 	],
 	stepper: {
-		stepperId: "debugger",
+		id: "debugger",
 		showStepDetails: true,
 		defaultExpanded: false,
 		showFormState: true,
@@ -42,7 +42,7 @@ const formConfig = {
 
 ```typescript
 interface DebuggerStepperConfig {
-	stepperId: "debugger";
+	id: "debugger";
 	showStepDetails?: boolean; // Show detailed step info (default: true)
 	defaultExpanded?: boolean; // Start with panel expanded (default: false)
 	showFormState?: boolean; // Show form state section (default: true)
@@ -156,7 +156,7 @@ import "@json-form-engine/react/steppers/debugger-stepper.css";
 
 ```tsx
 stepper: {
-  stepperId: 'debugger',
+  id: 'debugger',
   showStepDetails: true,
   defaultExpanded: true,
   showFormState: true,
@@ -167,7 +167,7 @@ stepper: {
 
 ```tsx
 stepper: {
-  stepperId: 'debugger',
+  id: 'debugger',
   showStepDetails: true,
   defaultExpanded: false,
   showFormState: false,
@@ -178,7 +178,7 @@ stepper: {
 
 ```tsx
 stepper: {
-  stepperId: 'debugger',
+  id: 'debugger',
   showStepDetails: false,
   defaultExpanded: false,
   showFormState: false,

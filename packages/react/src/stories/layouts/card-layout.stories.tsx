@@ -36,7 +36,7 @@ export const Default: Story = {
 			...contactFormBase,
 			steps: contactFormBase.steps.map((step) => ({
 				...step,
-				layout: { layoutId: 'card' },
+				layout: { id: 'card' },
 			})),
 		},
 	},
@@ -48,7 +48,7 @@ export const SmallCard: Story = {
 			...contactFormBase,
 			steps: contactFormBase.steps.map((step) => ({
 				...step,
-				layout: { layoutId: 'card', maxWidth: 'sm', padding: 'sm', shadowSize: 'sm' },
+				layout: { id: 'card', maxWidth: 'sm', padding: 'sm', shadowSize: 'sm' },
 			})),
 		},
 	},
@@ -60,7 +60,7 @@ export const MediumCard: Story = {
 			...contactFormBase,
 			steps: contactFormBase.steps.map((step) => ({
 				...step,
-				layout: { layoutId: 'card', maxWidth: 'md', padding: 'md', shadowSize: 'md' },
+				layout: { id: 'card', maxWidth: 'md', padding: 'md', shadowSize: 'md' },
 			})),
 		},
 	},
@@ -72,7 +72,7 @@ export const LargeCard: Story = {
 			...contactFormBase,
 			steps: contactFormBase.steps.map((step) => ({
 				...step,
-				layout: { layoutId: 'card', maxWidth: 'lg', padding: 'lg', shadowSize: 'lg' },
+				layout: { id: 'card', maxWidth: 'lg', padding: 'lg', shadowSize: 'lg' },
 			})),
 		},
 	},
@@ -84,7 +84,7 @@ export const ExtraLargeCard: Story = {
 			...contactFormBase,
 			steps: contactFormBase.steps.map((step) => ({
 				...step,
-				layout: { layoutId: 'card', maxWidth: 'xl', padding: 'lg', shadowSize: 'xl' },
+				layout: { id: 'card', maxWidth: 'xl', padding: 'lg', shadowSize: 'xl' },
 			})),
 		},
 	},
@@ -94,10 +94,10 @@ export const MultiStep: Story = {
 	args: {
 		config: {
 			...FormTemplates.registrationForm(),
-			stepper: { stepperId: 'debugger' },
+			stepper: { id: 'debugger' },
 			steps: FormTemplates.registrationForm().steps.map((step) => ({
 				...step,
-				layout: { layoutId: 'card', maxWidth: 'md', padding: 'md', shadowSize: 'md' },
+				layout: { id: 'card', maxWidth: 'md', padding: 'md', shadowSize: 'md' },
 			})),
 		},
 	},

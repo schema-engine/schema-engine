@@ -55,10 +55,10 @@ export class FormEngine<
 	}
 
 	/**
-	 * Get a registered element by componentId.
+	 * Get a registered element by id.
 	 */
-	getElement(componentId: string): ElementRegistration<any> | undefined {
-		return this.registries.elements.get(componentId);
+	getElement(id: string): ElementRegistration<any> | undefined {
+		return this.registries.elements.get(id);
 	}
 
 	/**
@@ -78,15 +78,15 @@ export class FormEngine<
 	/**
 	 * Check if an element is registered.
 	 */
-	hasElement(componentId: string): boolean {
-		return this.registries.elements.has(componentId);
+	hasElement(id: string): boolean {
+		return this.registries.elements.has(id);
 	}
 
 	/**
-	 * Get a registered layout by layoutId.
+	 * Get a registered layout by id.
 	 */
-	getLayout(layoutId: string): LayoutRegistration<any> | undefined {
-		return this.registries.layouts.get(layoutId);
+	getLayout(id: string): LayoutRegistration<any> | undefined {
+		return this.registries.layouts.get(id);
 	}
 
 	/**
@@ -106,15 +106,15 @@ export class FormEngine<
 	/**
 	 * Check if a layout is registered.
 	 */
-	hasLayout(layoutId: string): boolean {
-		return this.registries.layouts.has(layoutId);
+	hasLayout(id: string): boolean {
+		return this.registries.layouts.has(id);
 	}
 
 	/**
-	 * Get a registered stepper by stepperId.
+	 * Get a registered stepper by id.
 	 */
-	getStepper(stepperId: string): StepperRegistration<any> | undefined {
-		return this.registries.steppers.get(stepperId);
+	getStepper(id: string): StepperRegistration<any> | undefined {
+		return this.registries.steppers.get(id);
 	}
 
 	/**
@@ -134,15 +134,15 @@ export class FormEngine<
 	/**
 	 * Check if a stepper is registered.
 	 */
-	hasStepper(stepperId: string): boolean {
-		return this.registries.steppers.has(stepperId);
+	hasStepper(id: string): boolean {
+		return this.registries.steppers.has(id);
 	}
 
 	/**
-	 * Get a registered action by actionType.
+	 * Get a registered action by id.
 	 */
-	getAction(actionType: string): BuilderActionRegistration<any> | undefined {
-		return this.registries.actions.get(actionType);
+	getAction(id: string): BuilderActionRegistration<any> | undefined {
+		return this.registries.actions.get(id);
 	}
 
 	/**
@@ -162,8 +162,8 @@ export class FormEngine<
 	/**
 	 * Check if an action is registered.
 	 */
-	hasAction(actionType: string): boolean {
-		return this.registries.actions.has(actionType);
+	hasAction(id: string): boolean {
+		return this.registries.actions.has(id);
 	}
 
 	/**
@@ -188,5 +188,60 @@ export class FormEngine<
 				types: this.getActionTypes(),
 			},
 		};
+	}
+
+	/**
+	 * Create a new builder with all current registrations.
+	 * This allows extending an existing FormEngine with additional components or overriding actions.
+	 *
+	 * @example
+	 * ```typescript
+	 * const baseEngine = new FormEngineBuilder()
+	 *   .addElement(InputElement)
+	 *   .addAction(submitPlugin())
+	 *   .build();
+	 *
+	 * const extendedEngine = baseEngine.extend()
+	 *   .addAction(submitPlugin({ onSuccess: customHandler }))
+	 *   .build();
+	 * ```
+	 */
+	extend(): import('@/builder/form-engine-builder').FormEngineBuilder<_TElements, _TLayouts, _TSteppers, _TActions> {
+		const { FormEngineBuilder } = require('@/builder/form-engine-builder');
+		const { ElementRegistry, LayoutRegistry, StepperRegistry, ActionRegistry } = require('@/registries');
+
+		const elementRegistry = new ElementRegistry();
+		const layoutRegistry = new LayoutRegistry();
+		const stepperRegistry = new StepperRegistry();
+		const actionRegistry = new ActionRegistry();
+
+		for (const [_key, value] of this.registries.elements.entries()) {
+			elementRegistry.register(value);
+		}
+		for (const [_key, value] of this.registries.layouts.entries()) {
+			layoutRegistry.register(value);
+		}
+		for (const [_key, value] of this.registries.steppers.entries()) {
+			stepperRegistry.register(value);
+		}
+		for (const [_key, value] of this.registries.actions.entries()) {
+			actionRegistry.register(value);
+		}
+
+		const builder = new FormEngineBuilder(elementRegistry, layoutRegistry, stepperRegistry, actionRegistry);
+
+		logger.debug('Extended FormEngine to builder', {
+			elements: this.registries.elements.size,
+			layouts: this.registries.layouts.size,
+			steppers: this.registries.steppers.size,
+			actions: this.registries.actions.size,
+		});
+
+		return builder as import('@/builder/form-engine-builder').FormEngineBuilder<
+			_TElements,
+			_TLayouts,
+			_TSteppers,
+			_TActions
+		>;
 	}
 }

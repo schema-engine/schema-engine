@@ -18,7 +18,7 @@ import { registerLayout } from "@json-form-engine/react";
 
 // Register a custom layout
 registerLayout({
-	layoutId: "split-screen",
+	id: "split-screen",
 	name: "Split Screen Layout",
 	description: "Display form content alongside additional information",
 	component: SplitScreenLayout,
@@ -43,7 +43,7 @@ const formConfig = {
 
 			// Specify layout for this step
 			layout: {
-				layoutId: "split-screen",
+				id: "split-screen",
 				sidePlacement: "right",
 				sideWidth: "40%",
 				sideContent: "<h3>Security Tips</h3><p>Choose a strong password</p>",
@@ -63,7 +63,7 @@ const formConfig = {
 
 ```typescript
 layout: {
-  layoutId: 'split-screen',
+  id: 'split-screen',
   sidePlacement: 'left', // 'left' | 'right'
   sideWidth: '50%',
   backgroundColor: '#f8f9fa',
@@ -75,7 +75,7 @@ layout: {
 
 ```typescript
 layout: {
-  layoutId: 'hero-background',
+  id: 'hero-background',
   backgroundImage: 'https://example.com/hero.jpg',
   // or use backgroundVideo: 'https://example.com/hero.mp4'
   backgroundColor: 'rgba(0, 0, 0, 0.5)', // overlay
@@ -88,7 +88,7 @@ layout: {
 
 ```typescript
 layout: {
-  layoutId: 'card',
+  id: 'card',
   maxWidth: '500px',
   padding: '2rem',
   shadowSize: 'medium' // 'small' | 'medium' | 'large'
@@ -104,7 +104,7 @@ import { registerStepper } from "@json-form-engine/react";
 
 // Register a custom stepper
 registerStepper({
-	stepperId: "progress-bar",
+	id: "progress-bar",
 	name: "Progress Bar Stepper",
 	description: "Show progress as a horizontal bar with step indicators",
 	component: ProgressBarStepper,
@@ -125,7 +125,7 @@ const formConfig = {
 
 	// Specify stepper for the entire form
 	stepper: {
-		stepperId: "progress-bar",
+		id: "progress-bar",
 		showStepTitles: true,
 		primaryColor: "#6366f1",
 		completedColor: "#059669",
@@ -143,7 +143,7 @@ const formConfig = {
 
 ```typescript
 stepper: {
-  stepperId: 'progress-bar',
+  id: 'progress-bar',
   showStepNumbers: true,
   showStepTitles: true,
   primaryColor: '#3b82f6',
@@ -156,7 +156,7 @@ stepper: {
 
 ```typescript
 stepper: {
-  stepperId: 'vertical-steps',
+  id: 'vertical-steps',
   showConnectors: true, // show lines between steps
   primaryColor: '#3b82f6',
   completedColor: '#10b981'
@@ -167,7 +167,7 @@ stepper: {
 
 ```typescript
 stepper: {
-  stepperId: 'minimalist',
+  id: 'minimalist',
   showProgress: true,
   primaryColor: '#3b82f6'
 }
@@ -199,7 +199,7 @@ const MyCustomLayout: React.FC<LayoutComponentProps> = ({ children, config, step
 
 // Register it
 registerLayout({
-	layoutId: "my-custom-layout",
+	id: "my-custom-layout",
 	name: "My Custom Layout",
 	component: MyCustomLayout,
 	defaultConfig: {
@@ -249,7 +249,7 @@ const MyCustomStepper: React.FC<StepperComponentProps> = ({
 
 // Register it
 registerStepper({
-	stepperId: "my-custom-stepper",
+	id: "my-custom-stepper",
 	name: "My Custom Stepper",
 	component: MyCustomStepper,
 	defaultConfig: {
@@ -276,14 +276,14 @@ import { FormEngine } from "@json-form-engine/react";
 
 // Register your components (usually done once at app startup)
 registerLayout({
-	layoutId: "card",
+	id: "card",
 	name: "Card Layout",
 	component: CardLayout,
 	defaultConfig: { maxWidth: "500px" },
 });
 
 registerStepper({
-	stepperId: "progress-bar",
+	id: "progress-bar",
 	name: "Progress Bar Stepper",
 	component: ProgressBarStepper,
 	defaultConfig: { showStepTitles: true },
@@ -296,7 +296,7 @@ const formConfig = {
 
 	// Custom stepper for the entire form
 	stepper: {
-		stepperId: "progress-bar",
+		id: "progress-bar",
 		primaryColor: "#6366f1",
 	},
 
@@ -307,7 +307,7 @@ const formConfig = {
 
 			// Custom layout for this step
 			layout: {
-				layoutId: "card",
+				id: "card",
 				maxWidth: "600px",
 				shadowSize: "large",
 			},

@@ -19,7 +19,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 			icon: '👤',
 			elements: [
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					id: 'firstName',
 					name: 'firstName',
@@ -31,7 +31,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					],
 				},
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					id: 'lastName',
 					name: 'lastName',
@@ -43,7 +43,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					],
 				},
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'email',
 					id: 'email',
 					name: 'email',
@@ -55,7 +55,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					],
 				},
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					id: 'dateOfBirth',
 					name: 'dateOfBirth',
@@ -72,7 +72,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 			icon: '📞',
 			elements: [
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'tel',
 					id: 'phone',
 					name: 'phone',
@@ -84,7 +84,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					],
 				},
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					id: 'address',
 					name: 'address',
@@ -93,7 +93,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					rules: [ValidationPresets.string.required('Street address is required')],
 				},
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					id: 'city',
 					name: 'city',
@@ -102,7 +102,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					rules: [ValidationPresets.string.required('City is required')],
 				},
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					id: 'zipCode',
 					name: 'zipCode',
@@ -119,7 +119,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 			icon: '⚙️',
 			elements: [
 				{
-					componentId: 'select',
+					__id: 'select',
 					id: 'language',
 					name: 'language',
 					label: 'Preferred Language',
@@ -132,7 +132,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					defaultValue: 'en',
 				},
 				{
-					componentId: 'textarea',
+					__id: 'textarea',
 					id: 'bio',
 					name: 'bio',
 					label: 'Bio',
@@ -142,7 +142,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 		},
 	],
 	stepper: {
-		stepperId: 'default',
+		id: 'default',
 		orientation: 'horizontal',
 		variant: 'default',
 		position: 'top',
@@ -201,7 +201,7 @@ export const verticalStepperConfig: FormConfig = {
 	...multiStepRegistrationConfig,
 	id: 'vertical-stepper-demo',
 	stepper: {
-		stepperId: 'default',
+		id: 'default',
 		variant: 'default',
 		orientation: 'vertical',
 		position: 'left',
@@ -234,7 +234,7 @@ export const minimalStepperConfig: FormConfig = {
 	id: 'minimal-stepper-demo',
 	mode: 'free',
 	stepper: {
-		stepperId: 'minimalist',
+		id: 'minimalist',
 		variant: 'dots',
 		orientation: 'horizontal',
 		position: 'top',

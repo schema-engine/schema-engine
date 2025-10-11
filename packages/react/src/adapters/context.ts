@@ -16,7 +16,7 @@ export function useFormContext<TFormData = Record<string, unknown>>() {
 	return adapter.useFormContext();
 }
 
-export function useFormField<TFieldValue = unknown>(config: FormEngine.FieldConfig) {
+export function useFormField<TFieldValue = unknown>(config: FormEngine.ElementConfig) {
 	const adapter = useFormAdapter();
 	return adapter.useFormField<TFieldValue>(config);
 }

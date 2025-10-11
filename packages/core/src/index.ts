@@ -9,6 +9,17 @@
 export { FormEngineBuilder } from './builder';
 export { FormEngine } from './engine';
 export type { EngineRegistries, SerializableFormConfig } from './engine';
+
+// Registry exports for standalone usage
+export {
+	BaseRegistry,
+	ElementRegistry,
+	LayoutRegistry,
+	StepperRegistry,
+	ActionRegistry,
+} from './registries';
+
+// Type exports
 export type {
 	ElementCategory,
 	ComponentMetadata,

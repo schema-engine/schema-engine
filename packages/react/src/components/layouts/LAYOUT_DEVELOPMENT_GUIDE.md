@@ -112,7 +112,7 @@ import type { ReactLayoutRegistration } from "@/registries/builder-registry";
 import { MyLayoutConfigSchema } from "./my-layout.types";
 
 export const MyLayoutRegistration: ReactLayoutRegistration = {
-	layoutId: "my-layout",
+	id: "my-layout",
 	component: MyLayout,
 	schema: MyLayoutConfigSchema,
 	metadata: {
@@ -220,7 +220,7 @@ const singleStepForm = {
 			elements: [
 				/* fields */
 			],
-			layout: { layoutId: "my-layout" },
+			layout: { id: "my-layout" },
 		},
 	],
 };
@@ -236,7 +236,7 @@ const multiStepForm = {
 			elements: [
 				/* fields */
 			],
-			layout: { layoutId: "my-layout" },
+			layout: { id: "my-layout" },
 		},
 		{
 			id: "step-2",
@@ -244,7 +244,7 @@ const multiStepForm = {
 			elements: [
 				/* fields */
 			],
-			layout: { layoutId: "my-layout" },
+			layout: { id: "my-layout" },
 		},
 	],
 };
