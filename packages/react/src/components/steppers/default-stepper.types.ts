@@ -10,6 +10,12 @@ export const DefaultStepperConfigSchema = BaseStepperConfigSchema.extend({
 
 export type DefaultStepperConfig = z.infer<typeof DefaultStepperConfigSchema>;
 
+/**
+ * Default stepper component props interface
+ * Matches StepperRegistration render signature
+ */
+export type DefaultStepperProps = DefaultStepperConfig;
+
 export const defaultStepperExample: DefaultStepperConfig = {
 	stepperId: 'default',
 	showStepNumbers: true,

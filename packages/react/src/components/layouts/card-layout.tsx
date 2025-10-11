@@ -1,5 +1,5 @@
 import { cn } from '@/shadcn/lib/utils';
-import type { CardLayoutConfig } from './card-layout.types';
+import type { CardLayoutConfig, CardLayoutProps } from './card-layout.types';
 import { useLayoutContext } from '@/contexts/layout-context';
 import type React from 'react';
 
@@ -9,7 +9,7 @@ import type React from 'react';
  * Supports both single-step and multi-step forms
  * Loads configuration from global context
  */
-export const CardLayout: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => {
+export const CardLayout: React.FC<CardLayoutProps> = ({ children, className }) => {
 	const { step, form, config } = useLayoutContext<CardLayoutConfig>();
 
 	const { maxWidth = 'md', padding = 'md', shadowSize = 'md' } = config;
@@ -61,12 +61,13 @@ export const CardLayout: React.FC<{ children: React.ReactNode; className?: strin
 		</div>
 	);
 };
-import type { ReactLayoutRegistration } from '@/registries/builder-registry';
+
+import type { LayoutRegistration } from '@json-form-engine/core/types';
 import { CardLayoutConfigSchema } from './card-layout.types';
 
-export const CardLayoutRegistration: ReactLayoutRegistration = {
+export const CardLayoutRegistration: LayoutRegistration<CardLayoutConfig, CardLayoutProps> = {
 	layoutId: 'card',
-	component: CardLayout,
+	render: CardLayout,
 	schema: CardLayoutConfigSchema,
 	metadata: {
 		name: 'Card Layout',

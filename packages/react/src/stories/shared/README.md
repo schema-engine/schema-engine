@@ -4,7 +4,16 @@ This directory contains shared utilities for creating Storybook stories with the
 
 ## Type-Safe Form Builder
 
-The `form-builder.ts` module provides a fluent API with **automatic type inference** from registered components.
+The `form-build### Custom Engine
+
+````tsx
+import { createCustomEngine, InputElement } from "../shared/form-engine-setup";
+import { MyCustomComponent } from "./my-custom";
+
+const customEngine = createCustomEngine()
+	.addElement(InputElement)
+	.addElement(MyCustomComponent)
+	.build();le provides a fluent API with **automatic type inference** from registered components.
 
 ### Key Features
 
@@ -31,7 +40,7 @@ declare global {
 		}
 	}
 }
-```
+````
 
 When you use `withLayout('card', { ... })`, TypeScript automatically knows what options are valid for the card layout. Same for steppers and field components.
 
@@ -188,12 +197,11 @@ export const Default: Story = {
 
 ```tsx
 import { createCustomEngine, InputElement } from "../shared/form-engine-setup";
-import { toElementRegistration } from "@/registries/builder-registry";
 import { MyCustomComponent } from "./my-custom";
 
 const customEngine = createCustomEngine()
-	.addElement(toElementRegistration(InputElement))
-	.addElement(toElementRegistration(MyCustomComponent))
+	.addElement(InputElement)
+	.addElement(MyCustomComponent)
 	.build();
 
 export const WithCustomEngine: Story = {
@@ -254,8 +262,8 @@ export const TextareaElement: ReactElementRegistration = {
 import { TextareaElement } from "@/components/form/fields/form-textarea";
 
 export const defaultFormEngine = createReactFormEngine()
-	.addElement(toElementRegistration(InputElement))
-	.addElement(toElementRegistration(TextareaElement)) // Add this
+	.addElement(InputElement)
+	.addElement(TextareaElement) // Add this
 	.build();
 ```
 

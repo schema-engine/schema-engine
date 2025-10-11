@@ -46,6 +46,10 @@ export function combineHandlers<T>(controllerHandler: (value: T) => void, propsH
  * over their rendering, errors, and semantic HTML
  */
 export function useControlledFormElement(config: FormEngine.FieldConfig) {
+	if (!config.name) {
+		throw new Error(`Field configuration is missing required "name" property. Config: ${JSON.stringify(config)}`);
+	}
+
 	const isRequired = isFieldRequired(config.rules);
 
 	const { field, fieldState, formState } = useController({

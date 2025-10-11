@@ -6,12 +6,12 @@
  *
  * @example
  * ```typescript
- * import { createReactFormEngine, toElementRegistration } from '@json-form-engine/react';
+ * import { createReactFormEngine } from '@json-form-engine/react';
  * import { InputElement, TextareaElement } from '@json-form-engine/react/registrations';
  *
  * const engine = createReactFormEngine()
- *   .addElement(toElementRegistration(InputElement))
- *   .addElement(toElementRegistration(TextareaElement))
+ *   .addElement(InputElement)
+ *   .addElement(TextareaElement)
  *   .build();
  * ```
  */
@@ -26,6 +26,13 @@ import type { SwitchFieldConfig } from './components/form/fields/form-switch.typ
 import type { ArrayElementsConfig } from './components/form/fields/form-array-elements.types';
 
 export { InputElement } from './components/form/fields/form-input';
+export { TextareaElement } from './components/form/fields/form-textarea';
+export { CheckboxElement } from './components/form/fields/form-checkbox';
+export { RadioElement } from './components/form/fields/form-radio';
+export { SelectElement } from './components/form/fields/form-select';
+export { SwitchElement } from './components/form/fields/form-switch';
+export { NumberElement } from './components/form/fields/form-number';
+export { ArrayElement } from './components/form/fields/form-array-elements';
 
 export { CardLayoutRegistration } from './components/layouts/card-layout';
 export { SplitScreenLayoutRegistration } from './components/layouts/split-screen-layout';

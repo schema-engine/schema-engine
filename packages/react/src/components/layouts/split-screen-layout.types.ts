@@ -11,6 +11,15 @@ export const SplitScreenLayoutConfigSchema = BaseLayoutConfigSchema.extend({
 
 export type SplitScreenLayoutConfig = z.infer<typeof SplitScreenLayoutConfigSchema>;
 
+/**
+ * Split screen layout component props interface
+ * Includes children for React component rendering
+ */
+export type SplitScreenLayoutProps = SplitScreenLayoutConfig & {
+	children: React.ReactNode;
+	className?: string;
+};
+
 export const splitScreenLayoutExample: SplitScreenLayoutConfig = {
 	layoutId: 'split-screen',
 	sideContent: '<h3>Welcome!</h3><p>Please fill out this form to continue.</p>',

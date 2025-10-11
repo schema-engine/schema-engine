@@ -153,12 +153,15 @@ export const MinimalistStepperComposed: React.FC<{ children?: React.ReactNode }>
 	);
 };
 
-import type { ReactStepperRegistration } from '@/registries/builder-registry';
+import type { StepperRegistration } from '@json-form-engine/core/types';
 import { MinimalistStepperConfigSchema } from './minimalist-stepper.types';
 
-export const MinimalistStepperRegistration: ReactStepperRegistration = {
+export const MinimalistStepperRegistration: StepperRegistration<
+	MinimalistStepperConfig,
+	{ children?: React.ReactNode }
+> = {
 	stepperId: 'minimalist',
-	component: MinimalistStepperComposed,
+	render: MinimalistStepperComposed,
 	schema: MinimalistStepperConfigSchema,
 	metadata: {
 		name: 'Minimalist Stepper',

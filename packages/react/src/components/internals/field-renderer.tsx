@@ -37,9 +37,10 @@ export function FormElement({ config, className, style }: FormElementProps) {
 
 	const enhancedConfig = {
 		...componentConfig,
+		componentId,
 		disabled: ('disabled' in config ? config.disabled : false) || shouldDisable,
 		required: isRequired,
 	};
 
-	return <Component config={enhancedConfig} />;
+	return <Component {...enhancedConfig} />;
 }

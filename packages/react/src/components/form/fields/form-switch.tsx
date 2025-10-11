@@ -1,15 +1,16 @@
 import { Label } from '@/shadcn/ui/label';
 import { Switch } from '@/shadcn/ui/switch';
-import { useControlledFormElement } from '@/hooks';
-import type { SwitchFieldConfig } from './form-switch.types';
+import { useControlledFormElement, combineHandlers } from '@/hooks';
+import type { SwitchFieldConfig, SwitchFieldProps } from './form-switch.types';
 import { SwitchFieldConfigSchema } from './form-switch.types';
-import type { ReactElementRegistration } from '@/registries/builder-registry';
+import type { ElementRegistration } from '@json-form-engine/core/types';
 
-interface FormSwitchProps {
-	config: SwitchFieldConfig;
-}
-
-export function FormSwitch({ config }: FormSwitchProps) {
+export function FormSwitch({
+	onChange: propsOnChange,
+	onBlur: propsOnBlur,
+	onFocus: propsOnFocus,
+	...config
+}: SwitchFieldProps) {
 	const { fieldState, field, fieldProps, labelProps, errorProps, containerStyles } = useControlledFormElement(config);
 
 	return (
@@ -19,8 +20,10 @@ export function FormSwitch({ config }: FormSwitchProps) {
 				<Switch
 					{...fieldProps}
 					checked={Boolean(field.value)}
-					onCheckedChange={field.onChange}
-					{...(config.autoFocus && { autoFocus: config.autoFocus })}
+					onCheckedChange={(checked) => combineHandlers(field.onChange, propsOnChange)(checked)}
+					onBlur={combineHandlers(field.onBlur, propsOnBlur)}
+					onFocus={propsOnFocus}
+					autoFocus={config.autoFocus}
 				/>
 				{config.label && (
 					<Label
@@ -36,9 +39,9 @@ export function FormSwitch({ config }: FormSwitchProps) {
 	);
 }
 
-export const SwitchElement: ReactElementRegistration = {
+export const SwitchElement: ElementRegistration<SwitchFieldConfig, SwitchFieldProps> = {
 	componentId: 'switch',
-	component: FormSwitch,
+	render: FormSwitch,
 	schema: SwitchFieldConfigSchema,
 	metadata: {
 		name: 'Switch Field',

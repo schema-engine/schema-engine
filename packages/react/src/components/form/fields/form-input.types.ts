@@ -38,17 +38,13 @@ export type InputFieldConfig = z.infer<typeof InputFieldSchema>;
 
 /**
  * Input field component props interface
- * All field-specific properties are accessed through config
+ * Adds optional handlers for standalone usage
  */
-export interface InputFieldProps {
-	config: InputFieldConfig;
-	/** Change handler */
+export type InputFieldProps = InputFieldConfig & {
 	onChange?: (value: string) => void;
-	/** Blur handler */
 	onBlur?: () => void;
-	/** Focus handler */
 	onFocus?: () => void;
-}
+};
 
 /**
  * Example input field configuration for documentation

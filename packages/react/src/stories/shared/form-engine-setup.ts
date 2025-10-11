@@ -18,12 +18,7 @@
  * ```
  */
 
-import {
-	createReactFormEngine,
-	toElementRegistration,
-	toLayoutRegistration,
-	toStepperRegistration,
-} from '@/registries/builder-registry';
+import { createReactFormEngine } from '@/registries/builder-registry';
 import { InputElement } from '@/components/form/fields/form-input';
 import { TextareaElement } from '@/components/form/fields/form-textarea';
 import { CheckboxElement } from '@/components/form/fields/form-checkbox';
@@ -58,21 +53,21 @@ import '@/components/layouts/hero-background-layout.css';
  * - Steppers: default, vertical, minimalist, debugger
  */
 export const defaultFormEngine = createReactFormEngine()
-	.addElement(toElementRegistration(InputElement))
-	.addElement(toElementRegistration(TextareaElement))
-	.addElement(toElementRegistration(CheckboxElement))
-	.addElement(toElementRegistration(SelectElement))
-	.addElement(toElementRegistration(RadioElement))
-	.addElement(toElementRegistration(SwitchElement))
-	.addElement(toElementRegistration(NumberElement))
-	.addElement(toElementRegistration(ArrayElement))
-	.addLayout(toLayoutRegistration(CardLayoutRegistration))
-	.addLayout(toLayoutRegistration(SplitScreenLayoutRegistration))
-	.addLayout(toLayoutRegistration(HeroBackgroundLayoutRegistration))
-	.addStepper(toStepperRegistration(DefaultStepperRegistration))
-	.addStepper(toStepperRegistration(VerticalStepperRegistration))
-	.addStepper(toStepperRegistration(MinimalistStepperRegistration))
-	.addStepper(toStepperRegistration(DebuggerStepperRegistration))
+	.addElement(InputElement)
+	.addElement(TextareaElement)
+	.addElement(CheckboxElement)
+	.addElement(SelectElement)
+	.addElement(RadioElement)
+	.addElement(SwitchElement)
+	.addElement(NumberElement)
+	.addElement(ArrayElement)
+	.addLayout(CardLayoutRegistration)
+	.addLayout(SplitScreenLayoutRegistration)
+	.addLayout(HeroBackgroundLayoutRegistration)
+	.addStepper(DefaultStepperRegistration)
+	.addStepper(VerticalStepperRegistration)
+	.addStepper(MinimalistStepperRegistration)
+	.addStepper(DebuggerStepperRegistration)
 	.build();
 
 /**
@@ -84,7 +79,7 @@ export const defaultFormEngine = createReactFormEngine()
  * import { MyCustomElement } from './my-custom-element';
  *
  * const myEngine = createCustomEngine()
- *   .addElement(toElementRegistration(MyCustomElement))
+ *   .addElement(MyCustomElement)
  *   .build();
  * ```
  */

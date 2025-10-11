@@ -9,7 +9,7 @@ const meta = {
 	title: 'Layouts/HeroBackgroundLayout',
 	component: FormRenderer,
 	parameters: {
-		layout: 'padded',
+		layout: 'fullscreen',
 	},
 	decorators: [
 		(Story) => (

@@ -1,15 +1,7 @@
 import { cn } from '@/shadcn/lib/utils';
-import type { BaseLayoutConfig } from './types';
+import type { SplitScreenLayoutConfig, SplitScreenLayoutProps } from './split-screen-layout.types';
 import { useLayoutContext } from '@/contexts/layout-context';
 import type React from 'react';
-
-export interface SplitScreenLayoutConfig extends BaseLayoutConfig {
-	layoutId: 'split-screen';
-	sideContent?: string;
-	sidePlacement?: 'left' | 'right';
-	sideWidth?: 'narrow' | 'normal' | 'wide';
-	contentAlignment?: 'top' | 'center' | 'bottom';
-}
 
 /**
  * Split Screen Layout
@@ -17,10 +9,7 @@ export interface SplitScreenLayoutConfig extends BaseLayoutConfig {
  * Supports both single-step and multi-step forms
  * Loads configuration from global context
  */
-export const SplitScreenLayout: React.FC<{ children: React.ReactNode; className?: string }> = ({
-	children,
-	className,
-}) => {
+export const SplitScreenLayout: React.FC<SplitScreenLayoutProps> = ({ children, className }) => {
 	const { step, form, config } = useLayoutContext<SplitScreenLayoutConfig>();
 
 	const { sideContent, sidePlacement = 'left', sideWidth = 'normal', contentAlignment = 'top' } = config;
@@ -60,18 +49,18 @@ export const SplitScreenLayout: React.FC<{ children: React.ReactNode; className?
 	return (
 		<div className={cn('split-screen-layout', className)}>
 			{isLeftSide && sidePanel}
-			<div className={cn('split-screen-layout__main', alignmentClass)}>{children}</div>
+			<div className={cn('split-screen-layout__main', alignmentClass)}>{children as React.ReactNode}</div>
 			{!isLeftSide && sidePanel}
 		</div>
 	);
 };
 
-import type { ReactLayoutRegistration } from '@/registries/builder-registry';
+import type { LayoutRegistration } from '@json-form-engine/core/types';
 import { SplitScreenLayoutConfigSchema } from './split-screen-layout.types';
 
-export const SplitScreenLayoutRegistration: ReactLayoutRegistration = {
+export const SplitScreenLayoutRegistration: LayoutRegistration<SplitScreenLayoutConfig, SplitScreenLayoutProps> = {
 	layoutId: 'split-screen',
-	component: SplitScreenLayout,
+	render: SplitScreenLayout,
 	schema: SplitScreenLayoutConfigSchema,
 	metadata: {
 		name: 'Split Screen Layout',

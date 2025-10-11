@@ -1,15 +1,20 @@
 import { Input } from '@/shadcn/ui/input';
 import { FieldGroup } from '@/components/form/field-group';
 import { useControlledFormElement, combineHandlers } from '@/hooks';
-import type { InputFieldProps } from './form-input.types';
+import type { InputFieldConfig, InputFieldProps } from './form-input.types';
 import { InputFieldSchema } from './form-input.types';
-import type { ReactElementRegistration } from '@/registries/builder-registry';
+import type { ElementRegistration } from '@json-form-engine/core';
 
-export function FormInput({ config, onChange: propsOnChange, onBlur: propsOnBlur }: InputFieldProps) {
+export function FormInput({
+	onChange: propsOnChange,
+	onBlur: propsOnBlur,
+	onFocus: propsOnFocus,
+	...config
+}: InputFieldProps) {
 	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
 		useControlledFormElement(config);
 
-	const { inputType = 'text', ...htmlConfig } = config;
+	const { inputType = 'text' } = config;
 
 	return (
 		<div style={containerStyles}>
@@ -23,20 +28,21 @@ export function FormInput({ config, onChange: propsOnChange, onBlur: propsOnBlur
 				{config.description && <p className="text-sm text-muted-foreground mb-2">{config.description}</p>}
 				<Input
 					{...fieldProps}
-					{...htmlConfig}
 					type={inputType}
 					value={value || ''}
 					onChange={(e) => combineHandlers(onChange, propsOnChange)(e.target.value)}
 					onBlur={combineHandlers(onBlur, propsOnBlur)}
+					onFocus={propsOnFocus}
+					{...config}
 				/>
 			</FieldGroup>
 		</div>
 	);
 }
 
-export const InputElement: ReactElementRegistration = {
+export const InputElement: ElementRegistration<InputFieldConfig, InputFieldProps> = {
 	componentId: 'input',
-	component: FormInput,
+	render: FormInput,
 	schema: InputFieldSchema,
 	metadata: {
 		name: 'Text Input Field',

@@ -36,3 +36,13 @@ export const SelectFieldConfigSchema = BaseFieldSchema.extend({
 export type SelectOption = z.infer<typeof SelectOptionSchema>;
 export type SelectFieldExtension = z.infer<typeof SelectFieldExtensionSchema>;
 export type SelectFieldConfig = z.infer<typeof SelectFieldConfigSchema>;
+
+/**
+ * Select field component props interface
+ * Adds optional handlers for standalone usage
+ */
+export type SelectFieldProps = SelectFieldConfig & {
+	onChange?: (value: string) => void;
+	onBlur?: () => void;
+	onFocus?: () => void;
+};

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { BaseLayoutConfigSchema } from '@json-form-engine/core/layouts/types';
+import type { ReactNode } from 'react';
 
 export const CardLayoutConfigSchema = BaseLayoutConfigSchema.extend({
 	layoutId: z.literal('card'),
@@ -9,6 +10,15 @@ export const CardLayoutConfigSchema = BaseLayoutConfigSchema.extend({
 });
 
 export type CardLayoutConfig = z.infer<typeof CardLayoutConfigSchema>;
+
+/**
+ * Card layout component props interface
+ * Includes children for React component rendering
+ */
+export type CardLayoutProps = CardLayoutConfig & {
+	children: ReactNode;
+	className?: string;
+};
 
 export const cardLayoutExample: CardLayoutConfig = {
 	layoutId: 'card',

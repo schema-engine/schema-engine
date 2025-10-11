@@ -38,16 +38,13 @@ export type TextareaFieldConfig = z.infer<typeof TextareaFieldSchema>;
 
 /**
  * Textarea field component props interface
+ * Adds optional handlers for standalone usage
  */
-export interface TextareaFieldProps {
-	config: TextareaFieldConfig;
-	/** Change handler */
+export type TextareaFieldProps = TextareaFieldConfig & {
 	onChange?: (value: string) => void;
-	/** Blur handler */
 	onBlur?: () => void;
-	/** Focus handler */
 	onFocus?: () => void;
-}
+};
 
 /**
  * Example textarea field configuration for documentation

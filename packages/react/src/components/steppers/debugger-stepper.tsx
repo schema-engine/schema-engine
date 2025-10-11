@@ -443,12 +443,12 @@ export const DebuggerStepperComposed: React.FC<{ children?: React.ReactNode }> =
 	);
 };
 
-import type { ReactStepperRegistration } from '@/registries/builder-registry';
+import type { StepperRegistration } from '@json-form-engine/core/types';
 import { DebuggerStepperConfigSchema } from './debugger-stepper.types';
 
-export const DebuggerStepperRegistration: ReactStepperRegistration = {
+export const DebuggerStepperRegistration: StepperRegistration<DebuggerStepperConfig, { children?: React.ReactNode }> = {
 	stepperId: 'debugger',
-	component: DebuggerStepperComposed,
+	render: DebuggerStepperComposed,
 	schema: DebuggerStepperConfigSchema,
 	metadata: {
 		name: 'Debugger Stepper',

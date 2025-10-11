@@ -26,7 +26,7 @@ import './debugger-stepper.css';
  * Types
  */
 export type { BaseStepperProps, StepperNavigation, StepData, StepperComponent } from './types';
-export type { DefaultStepperConfig } from './default-stepper';
+export type { DefaultStepperConfig } from './default-stepper.types';
 export type { VerticalStepsStepperConfig } from './vertical-stepper';
 export type { MinimalistStepperConfig } from './minimalist-stepper';
 export type { DebuggerStepperConfig } from './debugger-stepper';

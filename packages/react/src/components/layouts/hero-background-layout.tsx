@@ -1,14 +1,7 @@
 import { cn } from '@/shadcn/lib/utils';
-import type { BaseLayoutConfig } from './types';
+import type { HeroBackgroundLayoutConfig, HeroBackgroundLayoutProps } from './hero-background-layout.types';
 import { useLayoutContext } from '@/contexts/layout-context';
 import type React from 'react';
-
-export interface HeroBackgroundLayoutConfig extends BaseLayoutConfig {
-	layoutId: 'hero-background';
-	backgroundImage?: string;
-	backgroundVideo?: string;
-	contentWidth?: 'sm' | 'md' | 'lg' | 'xl';
-}
 
 /**
  * Hero Background Layout
@@ -16,11 +9,8 @@ export interface HeroBackgroundLayoutConfig extends BaseLayoutConfig {
  * Supports both single-step and multi-step forms
  * Loads configuration from global context
  */
-export const HeroBackgroundLayout: React.FC<{ children: React.ReactNode; className?: string }> = ({
-	children,
-	className,
-}) => {
-	const { config, step, form } = useLayoutContext<HeroBackgroundLayoutConfig>();
+export const HeroBackgroundLayout: React.FC<HeroBackgroundLayoutProps> = ({ children, className }) => {
+	const { step, form, config } = useLayoutContext<HeroBackgroundLayoutConfig>();
 	const { backgroundImage, backgroundVideo, contentWidth = 'md' } = config;
 
 	const contentWidthClass =
@@ -63,18 +53,21 @@ export const HeroBackgroundLayout: React.FC<{ children: React.ReactNode; classNa
 						) : null}
 					</div>
 				) : null}{' '}
-				<div className="hero-background-layout__form">{children}</div>
+				<div className="hero-background-layout__form">{children as React.ReactNode}</div>
 			</div>
 		</div>
 	);
 };
 
-import type { ReactLayoutRegistration } from '@/registries/builder-registry';
+import type { LayoutRegistration } from '@json-form-engine/core/types';
 import { HeroBackgroundLayoutConfigSchema } from './hero-background-layout.types';
 
-export const HeroBackgroundLayoutRegistration: ReactLayoutRegistration = {
+export const HeroBackgroundLayoutRegistration: LayoutRegistration<
+	HeroBackgroundLayoutConfig,
+	HeroBackgroundLayoutProps
+> = {
 	layoutId: 'hero-background',
-	component: HeroBackgroundLayout,
+	render: HeroBackgroundLayout,
 	schema: HeroBackgroundLayoutConfigSchema,
 	metadata: {
 		name: 'Hero Background Layout',

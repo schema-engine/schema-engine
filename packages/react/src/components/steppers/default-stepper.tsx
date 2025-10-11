@@ -1,16 +1,9 @@
 import type React from 'react';
 import { cn } from '@/shadcn/lib/utils';
-import type { BaseStepperConfig } from '@json-form-engine/core';
+import type { DefaultStepperConfig } from './default-stepper.types';
 import { StepperProvider, useStepperContext } from './context';
 import { useEffect, useRef } from 'react';
 import { useStepperContext as useGlobalStepperContext } from '@/contexts/stepper-context';
-
-export interface DefaultStepperConfig extends BaseStepperConfig {
-	stepperId: 'default';
-	showStepNumbers?: boolean;
-	showStepTitles?: boolean;
-	showStepDescriptions?: boolean;
-}
 
 /**
  * Default Stepper Root Component
@@ -232,12 +225,12 @@ export const DefaultStepperComposed: React.FC<{ children?: React.ReactNode }> = 
 	);
 };
 
-import type { ReactStepperRegistration } from '@/registries/builder-registry';
+import type { StepperRegistration } from '@json-form-engine/core/types';
 import { DefaultStepperConfigSchema } from './default-stepper.types';
 
-export const DefaultStepperRegistration: ReactStepperRegistration = {
+export const DefaultStepperRegistration: StepperRegistration<DefaultStepperConfig, { children?: React.ReactNode }> = {
 	stepperId: 'default',
-	component: DefaultStepperComposed,
+	render: DefaultStepperComposed,
 	schema: DefaultStepperConfigSchema,
 	metadata: {
 		name: 'Default Stepper',

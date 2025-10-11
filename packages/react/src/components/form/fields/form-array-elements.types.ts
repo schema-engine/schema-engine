@@ -69,11 +69,17 @@ export const ArrayElementsExtensionSchema = z.object({
 
 /**
  * Complete array field configuration schema
+ * Uses z.any() for elements to match the TypeScript type FormEngine.FieldConfig[]
+ * Runtime validation should use createArrayElementsRuntimeSchema() instead
  */
-export const ArrayElementConfigSchema = BaseFieldSchema.extend({
+export const ArrayElementConfigSchema: z.ZodType<ArrayElementsConfig> = BaseFieldSchema.extend({
 	componentId: z.literal('arrayElements'),
-	...ArrayElementsExtensionSchema.shape,
-});
+	minItems: z.number().min(0).optional(),
+	maxItems: z.number().min(1).optional(),
+	addButtonText: z.string().optional(),
+	removeButtonText: z.string().optional(),
+	elements: z.array(z.any()).min(1) as z.ZodType<FormEngine.FieldConfig[]>,
+}) as z.ZodType<ArrayElementsConfig>;
 
 const COMPONENT_ID = 'arrayElements';
 
@@ -134,3 +140,13 @@ export interface ArrayElementsConfig extends Omit<z.infer<typeof BaseFieldSchema
 	removeButtonText?: string;
 	elements: FormEngine.FieldConfig[];
 }
+
+/**
+ * Array elements field component props interface
+ * Adds optional handlers for form integration
+ */
+export type ArrayElementsProps = ArrayElementsConfig & {
+	onChange?: (value: unknown) => void;
+	onBlur?: () => void;
+	onFocus?: () => void;
+};

@@ -27,3 +27,13 @@ export const NumberFieldConfigSchema = BaseFieldSchema.extend({
  */
 export type NumberFieldExtension = z.infer<typeof NumberFieldExtensionSchema>;
 export type NumberFieldConfig = z.infer<typeof NumberFieldConfigSchema>;
+
+/**
+ * Number field component props interface
+ * Adds optional handlers for standalone usage
+ */
+export type NumberFieldProps = NumberFieldConfig & {
+	onChange?: (value: number | '') => void;
+	onBlur?: () => void;
+	onFocus?: () => void;
+};

@@ -34,3 +34,13 @@ export const RadioFieldConfigSchema = BaseFieldSchema.extend({
 export type RadioOption = z.infer<typeof RadioOptionSchema>;
 export type RadioFieldExtension = z.infer<typeof RadioFieldExtensionSchema>;
 export type RadioFieldConfig = z.infer<typeof RadioFieldConfigSchema>;
+
+/**
+ * Radio field component props interface
+ * Adds optional handlers for standalone usage
+ */
+export type RadioFieldProps = RadioFieldConfig & {
+	onChange?: (value: string) => void;
+	onBlur?: () => void;
+	onFocus?: () => void;
+};

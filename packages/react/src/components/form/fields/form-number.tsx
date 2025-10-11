@@ -1,15 +1,16 @@
 import { Label } from '@/shadcn/ui/label';
 import { Input } from '@/shadcn/ui/input';
-import { useControlledFormElement } from '@/hooks';
-import type { NumberFieldConfig } from './form-number.types';
+import { useControlledFormElement, combineHandlers } from '@/hooks';
+import type { NumberFieldConfig, NumberFieldProps } from './form-number.types';
 import { NumberFieldConfigSchema } from './form-number.types';
-import type { ReactElementRegistration } from '@/registries/builder-registry';
+import type { ElementRegistration } from '@json-form-engine/core/types';
 
-interface FormNumberProps {
-	config: NumberFieldConfig;
-}
-
-export function FormNumber({ config }: FormNumberProps) {
+export function FormNumber({
+	onChange: propsOnChange,
+	onBlur: propsOnBlur,
+	onFocus: propsOnFocus,
+	...config
+}: NumberFieldProps) {
 	const { fieldState, field, fieldProps, labelProps, errorProps, containerStyles } = useControlledFormElement(config);
 
 	return (
@@ -20,24 +21,28 @@ export function FormNumber({ config }: FormNumberProps) {
 				{...fieldProps}
 				type="number"
 				value={field.value || ''}
-				onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : '')}
-				onBlur={field.onBlur}
+				onChange={(e) => {
+					const value = e.target.value ? Number(e.target.value) : '';
+					combineHandlers(field.onChange, propsOnChange)(value);
+				}}
+				onBlur={combineHandlers(field.onBlur, propsOnBlur)}
+				onFocus={propsOnFocus}
 				placeholder={config.placeholder}
-				{...(config.min !== undefined && { min: config.min })}
-				{...(config.max !== undefined && { max: config.max })}
-				{...(config.step !== undefined && { step: config.step })}
-				{...(config.autoComplete && { autoComplete: config.autoComplete })}
-				{...(config.autoFocus && { autoFocus: config.autoFocus })}
-				{...(config.inputMode && { inputMode: config.inputMode })}
+				min={config.min}
+				max={config.max}
+				step={config.step}
+				autoComplete={config.autoComplete}
+				autoFocus={config.autoFocus}
+				inputMode={config.inputMode}
 			/>
 			{errorProps && <div {...errorProps}>{fieldState.error?.message}</div>}
 		</div>
 	);
 }
 
-export const NumberElement: ReactElementRegistration = {
+export const NumberElement: ElementRegistration<NumberFieldConfig, NumberFieldProps> = {
 	componentId: 'number',
-	component: FormNumber,
+	render: FormNumber,
 	schema: NumberFieldConfigSchema,
 	metadata: {
 		name: 'Number Field',

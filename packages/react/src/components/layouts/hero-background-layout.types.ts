@@ -10,6 +10,15 @@ export const HeroBackgroundLayoutConfigSchema = BaseLayoutConfigSchema.extend({
 
 export type HeroBackgroundLayoutConfig = z.infer<typeof HeroBackgroundLayoutConfigSchema>;
 
+/**
+ * Hero background layout component props interface
+ * Includes children for React component rendering
+ */
+export type HeroBackgroundLayoutProps = HeroBackgroundLayoutConfig & {
+	children: React.ReactNode;
+	className?: string;
+};
+
 export const heroBackgroundLayoutExample: HeroBackgroundLayoutConfig = {
 	layoutId: 'hero-background',
 	backgroundImage: '/images/hero.jpg',

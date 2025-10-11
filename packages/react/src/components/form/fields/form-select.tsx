@@ -1,15 +1,16 @@
 import { Label } from '@/shadcn/ui/label';
-import { useControlledFormElement } from '@/hooks';
+import { useControlledFormElement, combineHandlers } from '@/hooks';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shadcn/ui/select';
-import type { SelectFieldConfig } from './form-select.types';
+import type { SelectFieldConfig, SelectFieldProps } from './form-select.types';
 import { SelectFieldConfigSchema } from './form-select.types';
-import type { ReactElementRegistration } from '@/registries/builder-registry';
+import type { ElementRegistration } from '@json-form-engine/core/types';
 
-interface FormSelectProps {
-	config: SelectFieldConfig;
-}
-
-export function FormSelect({ config }: FormSelectProps) {
+export function FormSelect({
+	onChange: propsOnChange,
+	onBlur: propsOnBlur,
+	onFocus: propsOnFocus,
+	...config
+}: SelectFieldProps) {
 	const { fieldState, field, fieldProps, labelProps, errorProps, containerStyles } = useControlledFormElement(config);
 
 	return (
@@ -18,13 +19,14 @@ export function FormSelect({ config }: FormSelectProps) {
 			{config.description && <p className="text-sm text-muted-foreground">{config.description}</p>}
 			<Select
 				value={field.value || ''}
-				onValueChange={field.onChange}
+				onValueChange={(value) => combineHandlers(field.onChange, propsOnChange)(value)}
 				disabled={fieldProps.disabled}
-				{...(config.multiple && { multiple: config.multiple })}
-				{...(config.autoFocus && { autoFocus: config.autoFocus })}
-				{...(config.autoComplete && { autoComplete: config.autoComplete })}
 			>
-				<SelectTrigger {...fieldProps}>
+				<SelectTrigger
+					{...fieldProps}
+					onBlur={combineHandlers(field.onBlur, propsOnBlur)}
+					onFocus={propsOnFocus}
+				>
 					<SelectValue placeholder={config.placeholder} />
 				</SelectTrigger>
 				<SelectContent>
@@ -40,9 +42,9 @@ export function FormSelect({ config }: FormSelectProps) {
 	);
 }
 
-export const SelectElement: ReactElementRegistration = {
+export const SelectElement: ElementRegistration<SelectFieldConfig, SelectFieldProps> = {
 	componentId: 'select',
-	component: FormSelect,
+	render: FormSelect,
 	schema: SelectFieldConfigSchema,
 	metadata: {
 		name: 'Select Field',

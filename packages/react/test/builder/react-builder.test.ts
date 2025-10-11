@@ -5,9 +5,9 @@
 import { describe, test, expect } from 'bun:test';
 import { 
 	createReactFormEngine, 
-	toElementRegistration, 
-	toLayoutRegistration, 
-	toStepperRegistration,
+	
+	
+	
 	type ReactElementRegistration 
 } from '@/registries/builder-registry';
 import { InputElement } from '@/components/form/fields/form-input';
@@ -32,7 +32,7 @@ describe('React Form Engine Builder', () => {
 	describe('Element Registration', () => {
 		test('should register input element', () => {
 			const builder = createReactFormEngine();
-			const elementReg = toElementRegistration(InputElement);
+			const elementReg = InputElement;
 			
 			builder.addElement(elementReg);
 			const engine = builder.build();
@@ -57,8 +57,8 @@ describe('React Form Engine Builder', () => {
 
 			const builder = createReactFormEngine();
 			builder
-				.addElement(toElementRegistration(InputElement))
-				.addElement(toElementRegistration(textareaElement));
+				.addElement(InputElement)
+				.addElement(textareaElement);
 
 			const engine = builder.build();
 			
@@ -72,7 +72,7 @@ describe('React Form Engine Builder', () => {
 
 		test('should include element schema', () => {
 			const builder = createReactFormEngine();
-			builder.addElement(toElementRegistration(InputElement));
+			builder.addElement(InputElement);
 			
 			const engine = builder.build();
 			const element = engine.getElement('input');
@@ -83,7 +83,7 @@ describe('React Form Engine Builder', () => {
 
 		test('should include element metadata', () => {
 			const builder = createReactFormEngine();
-			builder.addElement(toElementRegistration(InputElement));
+			builder.addElement(InputElement);
 			
 			const engine = builder.build();
 			const element = engine.getElement('input');
@@ -95,10 +95,10 @@ describe('React Form Engine Builder', () => {
 
 		test('should throw error for duplicate element componentId', () => {
 			const builder = createReactFormEngine();
-			builder.addElement(toElementRegistration(InputElement));
+			builder.addElement(InputElement);
 			
 			expect(() => {
-				builder.addElement(toElementRegistration(InputElement));
+				builder.addElement(InputElement);
 			}).toThrow();
 		});
 	});
@@ -106,7 +106,7 @@ describe('React Form Engine Builder', () => {
 	describe('Layout Registration', () => {
 		test('should register layout', () => {
 			const builder = createReactFormEngine();
-			builder.addLayout(toLayoutRegistration(CardLayoutRegistration));
+			builder.addLayout(CardLayoutRegistration);
 			
 			const engine = builder.build();
 			
@@ -118,7 +118,7 @@ describe('React Form Engine Builder', () => {
 
 		test('should include layout metadata', () => {
 			const builder = createReactFormEngine();
-			builder.addLayout(toLayoutRegistration(CardLayoutRegistration));
+			builder.addLayout(CardLayoutRegistration);
 			
 			const engine = builder.build();
 			const layout = engine.getLayout('card');
@@ -131,7 +131,7 @@ describe('React Form Engine Builder', () => {
 	describe('Stepper Registration', () => {
 		test('should register stepper', () => {
 			const builder = createReactFormEngine();
-			builder.addStepper(toStepperRegistration(DefaultStepperRegistration));
+			builder.addStepper(DefaultStepperRegistration);
 			
 			const engine = builder.build();
 			
@@ -147,9 +147,9 @@ describe('React Form Engine Builder', () => {
 			const builder = createReactFormEngine();
 			
 			const engine = builder
-				.addElement(toElementRegistration(InputElement))
-				.addLayout(toLayoutRegistration(CardLayoutRegistration))
-				.addStepper(toStepperRegistration(DefaultStepperRegistration))
+				.addElement(InputElement)
+				.addLayout(CardLayoutRegistration)
+				.addStepper(DefaultStepperRegistration)
 				.build();
 			
 			expect(engine.hasElement('input')).toBe(true);
@@ -161,7 +161,7 @@ describe('React Form Engine Builder', () => {
 	describe('Engine Build', () => {
 		test('should build engine with registrations', () => {
 			const builder = createReactFormEngine();
-			builder.addElement(toElementRegistration(InputElement));
+			builder.addElement(InputElement);
 			
 			const engine = builder.build();
 			
@@ -172,9 +172,9 @@ describe('React Form Engine Builder', () => {
 		test('should build engine summary', () => {
 			const builder = createReactFormEngine();
 			builder
-				.addElement(toElementRegistration(InputElement))
-				.addLayout(toLayoutRegistration(CardLayoutRegistration))
-				.addStepper(toStepperRegistration(DefaultStepperRegistration));
+				.addElement(InputElement)
+				.addLayout(CardLayoutRegistration)
+				.addStepper(DefaultStepperRegistration);
 			
 			const engine = builder.build();
 			const summary = engine.getSummary();
@@ -208,8 +208,8 @@ describe('React Form Engine Builder', () => {
 
 			const builder = createReactFormEngine();
 			builder
-				.addElement(toElementRegistration(InputElement))
-				.addElement(toElementRegistration(textareaElement));
+				.addElement(InputElement)
+				.addElement(textareaElement);
 			
 			const engine = builder.build();
 			const elements = engine.getAllElements();
@@ -231,7 +231,7 @@ describe('React Form Engine Builder', () => {
 	describe('Type Safety', () => {
 		test('should maintain type safety through builder', () => {
 			const builder = createReactFormEngine();
-			const elementReg = toElementRegistration(InputElement);
+			const elementReg = InputElement;
 			
 			expect(elementReg.componentId).toBe('input');
 			expect(elementReg.render).toBeDefined();
@@ -239,7 +239,7 @@ describe('React Form Engine Builder', () => {
 		});
 
 		test('should convert React component to render function', () => {
-			const elementReg = toElementRegistration(InputElement);
+			const elementReg = InputElement;
 			
 			expect(elementReg.render).toBeDefined();
 			expect(typeof elementReg.render).toBe('function');
@@ -251,9 +251,9 @@ describe('React Form Engine Builder', () => {
 			const builder = createReactFormEngine();
 			
 			const engine = builder
-				.addElement(toElementRegistration(InputElement))
-				.addLayout(toLayoutRegistration(CardLayoutRegistration))
-				.addStepper(toStepperRegistration(DefaultStepperRegistration))
+				.addElement(InputElement)
+				.addLayout(CardLayoutRegistration)
+				.addStepper(DefaultStepperRegistration)
 				.build();
 			
 			expect(engine.hasElement('input')).toBe(true);

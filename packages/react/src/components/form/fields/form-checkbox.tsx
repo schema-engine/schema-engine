@@ -1,15 +1,16 @@
 import { Label } from '@/shadcn/ui/label';
 import { Checkbox } from '@/shadcn/ui/checkbox';
-import { useControlledFormElement } from '@/hooks';
-import type { CheckboxFieldConfig } from './form-checkbox.types';
+import { useControlledFormElement, combineHandlers } from '@/hooks';
+import type { CheckboxFieldConfig, CheckboxFieldProps } from './form-checkbox.types';
 import { CheckboxFieldConfigSchema } from './form-checkbox.types';
-import type { ReactElementRegistration } from '@/registries/builder-registry';
+import type { ElementRegistration } from '@json-form-engine/core/types';
 
-interface FormCheckboxProps {
-	config: CheckboxFieldConfig;
-}
-
-export function FormCheckbox({ config }: FormCheckboxProps) {
+export function FormCheckbox({
+	onChange: propsOnChange,
+	onBlur: propsOnBlur,
+	onFocus: propsOnFocus,
+	...config
+}: CheckboxFieldProps) {
 	const { fieldState, field, fieldProps, labelProps, errorProps, containerStyles } = useControlledFormElement(config);
 
 	return (
@@ -19,9 +20,11 @@ export function FormCheckbox({ config }: FormCheckboxProps) {
 				<Checkbox
 					{...fieldProps}
 					checked={Boolean(field.value)}
-					onCheckedChange={field.onChange}
-					{...(config.autoFocus && { autoFocus: config.autoFocus })}
-					{...(config.indeterminate && { 'data-state': 'indeterminate' })}
+					onCheckedChange={(checked) => combineHandlers(field.onChange, propsOnChange)(checked)}
+					onBlur={combineHandlers(field.onBlur, propsOnBlur)}
+					onFocus={propsOnFocus}
+					autoFocus={config.autoFocus}
+					data-state={config.indeterminate ? 'indeterminate' : undefined}
 				/>
 				{config.label && (
 					<Label
@@ -37,9 +40,9 @@ export function FormCheckbox({ config }: FormCheckboxProps) {
 	);
 }
 
-export const CheckboxElement: ReactElementRegistration = {
+export const CheckboxElement: ElementRegistration<CheckboxFieldConfig, CheckboxFieldProps> = {
 	componentId: 'checkbox',
-	component: FormCheckbox,
+	render: FormCheckbox,
 	schema: CheckboxFieldConfigSchema,
 	metadata: {
 		name: 'Checkbox Field',

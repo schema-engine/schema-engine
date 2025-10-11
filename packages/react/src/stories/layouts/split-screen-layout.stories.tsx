@@ -9,7 +9,7 @@ const meta = {
 	title: 'Layouts/SplitScreenLayout',
 	component: FormRenderer,
 	parameters: {
-		layout: 'padded',
+		layout: 'fullscreen',
 	},
 	decorators: [
 		(Story) => (

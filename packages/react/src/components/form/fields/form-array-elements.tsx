@@ -5,15 +5,9 @@ import { Trash2, Plus } from 'lucide-react';
 import { Label } from '@/shadcn/ui/label';
 import { createFieldDefaultValue, useControlledFormElement } from '@/hooks/use-field';
 import { FormElement } from '@/components/internals/field-renderer';
-import type { ArrayElementsConfig } from './form-array-elements.types';
+import type { ArrayElementsConfig, ArrayElementsProps } from './form-array-elements.types';
 import { ArrayElementConfigSchema } from './form-array-elements.types';
-import type { ReactElementRegistration } from '@/registries/builder-registry';
-
-interface FormArrayElementsProps {
-	config: ArrayElementsConfig;
-	onChange?: (value: any[]) => void;
-	onBlur?: () => void;
-}
+import type { ElementRegistration } from '@json-form-engine/core/types';
 
 /**
  * Array field component that manages dynamic arrays of form fields
@@ -21,7 +15,12 @@ interface FormArrayElementsProps {
  * Supports both single field type arrays and complex multi-field objects
  * Follows the enhanced field system pattern
  */
-export function FormArrayElements({ config, onChange }: FormArrayElementsProps) {
+export function FormArrayElements({
+	onChange: propsOnChange,
+	onBlur: propsOnBlur,
+	onFocus: propsOnFocus,
+	...config
+}: ArrayElementsProps) {
 	const { control } = useFormContext();
 	const { fields, append, remove } = useFieldArray({
 		control,
@@ -39,13 +38,14 @@ export function FormArrayElements({ config, onChange }: FormArrayElementsProps) 
 			{} as Record<string, any>,
 		);
 		append(defaultValue);
-		onChange?.(fields.concat(defaultValue));
+		const newValues = fields.concat(defaultValue);
+		propsOnChange?.(newValues);
 	};
 
 	const handleRemove = (index: number) => {
 		remove(index);
 		const newValues = fields.filter((_, i) => i !== index);
-		onChange?.(newValues);
+		propsOnChange?.(newValues);
 	};
 
 	const canAdd = !config.maxItems || fields.length < config.maxItems;
@@ -124,9 +124,9 @@ export function FormArrayElements({ config, onChange }: FormArrayElementsProps) 
 	);
 }
 
-export const ArrayElement: ReactElementRegistration = {
+export const ArrayElement: ElementRegistration<ArrayElementsConfig, ArrayElementsProps> = {
 	componentId: 'arrayElements',
-	component: FormArrayElements,
+	render: FormArrayElements,
 	schema: ArrayElementConfigSchema,
 	metadata: {
 		name: 'Array Field',

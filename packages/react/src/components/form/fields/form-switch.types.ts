@@ -23,3 +23,13 @@ export const SwitchFieldConfigSchema = BaseFieldSchema.extend({
  */
 export type SwitchFieldExtension = z.infer<typeof SwitchFieldExtensionSchema>;
 export type SwitchFieldConfig = z.infer<typeof SwitchFieldConfigSchema>;
+
+/**
+ * Switch field component props interface
+ * Adds optional handlers for standalone usage
+ */
+export type SwitchFieldProps = SwitchFieldConfig & {
+	onChange?: (checked: boolean) => void;
+	onBlur?: () => void;
+	onFocus?: () => void;
+};

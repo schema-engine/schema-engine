@@ -192,12 +192,15 @@ export const VerticalStepsStepperComposed: React.FC<{ children?: React.ReactNode
 	);
 };
 
-import type { ReactStepperRegistration } from '@/registries/builder-registry';
+import type { StepperRegistration } from '@json-form-engine/core/types';
 import { VerticalStepperConfigSchema } from './vertical-stepper.types';
 
-export const VerticalStepperRegistration: ReactStepperRegistration = {
+export const VerticalStepperRegistration: StepperRegistration<
+	VerticalStepsStepperConfig,
+	{ children?: React.ReactNode }
+> = {
 	stepperId: 'vertical',
-	component: VerticalStepsStepperComposed,
+	render: VerticalStepsStepperComposed,
 	schema: VerticalStepperConfigSchema,
 	metadata: {
 		name: 'Vertical Stepper',

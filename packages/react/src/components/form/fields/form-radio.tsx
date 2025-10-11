@@ -1,15 +1,16 @@
 import { Label } from '@/shadcn/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/shadcn/ui/radio-group';
-import { useControlledFormElement } from '@/hooks';
-import type { RadioFieldConfig } from './form-radio.types';
+import { useControlledFormElement, combineHandlers } from '@/hooks';
+import type { RadioFieldConfig, RadioFieldProps } from './form-radio.types';
 import { RadioFieldConfigSchema } from './form-radio.types';
-import type { ReactElementRegistration } from '@/registries/builder-registry';
+import type { ElementRegistration } from '@json-form-engine/core/types';
 
-interface FormRadioProps {
-	config: RadioFieldConfig;
-}
-
-export function FormRadio({ config }: FormRadioProps) {
+export function FormRadio({
+	onChange: propsOnChange,
+	onBlur: propsOnBlur,
+	onFocus: propsOnFocus,
+	...config
+}: RadioFieldProps) {
 	const { fieldState, field, fieldProps, labelProps, errorProps, containerStyles } = useControlledFormElement(config);
 
 	return (
@@ -19,9 +20,11 @@ export function FormRadio({ config }: FormRadioProps) {
 			<RadioGroup
 				{...fieldProps}
 				value={field.value || ''}
-				onValueChange={field.onChange}
+				onValueChange={(value) => combineHandlers(field.onChange, propsOnChange)(value)}
+				onBlur={combineHandlers(field.onBlur, propsOnBlur)}
+				onFocus={propsOnFocus}
 				className={config.orientation === 'horizontal' ? 'flex space-x-4' : 'space-y-2'}
-				{...(config.autoFocus && { autoFocus: config.autoFocus })}
+				autoFocus={config.autoFocus}
 			>
 				{config.options.map((option) => (
 					<div key={option.value} className="flex items-center space-x-2">
@@ -43,9 +46,9 @@ export function FormRadio({ config }: FormRadioProps) {
 	);
 }
 
-export const RadioElement: ReactElementRegistration = {
+export const RadioElement: ElementRegistration<RadioFieldConfig, RadioFieldProps> = {
 	componentId: 'radio',
-	component: FormRadio,
+	render: FormRadio,
 	schema: RadioFieldConfigSchema,
 	metadata: {
 		name: 'Radio Group Field',

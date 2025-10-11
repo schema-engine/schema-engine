@@ -8,9 +8,15 @@ import type { BuilderActionExecutionContext, BuilderActionExecutionResult } from
  * Elements are the building blocks of forms (inputs, content, decorations, interactive).
  * Registration objects can be exported from component libraries and passed to the builder.
  *
+ * @template TConfig - The serializable configuration type (from schema)
+ * @template TProps - The component props type (TConfig + runtime props like onChange)
+ *
  * @example
  * ```typescript
- * export const textInputRegistration: ElementRegistration<z.infer<typeof TextInputConfigSchema>> = {
+ * export const textInputRegistration: ElementRegistration<
+ *   InputFieldConfig,
+ *   InputFieldProps
+ * > = {
  *   componentId: 'text',
  *   schema: TextInputConfigSchema,
  *   metadata: {
@@ -19,11 +25,11 @@ import type { BuilderActionExecutionContext, BuilderActionExecutionResult } from
  *     category: 'input',
  *     icon: 'text',
  *   },
- *   render: (props) => <TextInput {...props} />,
+ *   render: TextInput,
  * };
  * ```
  */
-export interface ElementRegistration<TConfig = unknown> {
+export interface ElementRegistration<TConfig = unknown, TProps = TConfig & { onChange?: (value: unknown) => void }> {
 	/** Unique identifier - MUST be unique across all elements */
 	componentId: string;
 	/** Zod schema for config validation and type inference */
@@ -31,7 +37,7 @@ export interface ElementRegistration<TConfig = unknown> {
 	/** Element metadata with category for filtering/validation */
 	metadata: ElementMetadata;
 	/** Framework-agnostic render function */
-	render: (props: TConfig & { onChange?: (value: unknown) => void }) => unknown;
+	render: (props: TProps) => unknown;
 }
 
 /**
@@ -40,9 +46,15 @@ export interface ElementRegistration<TConfig = unknown> {
  * Layouts wrap form content and provide structural organization.
  * Uses base ComponentMetadata (no category needed).
  *
+ * @template TConfig - The serializable configuration type (from schema)
+ * @template TProps - The component props type (TConfig + children)
+ *
  * @example
  * ```typescript
- * export const cardLayoutRegistration: LayoutRegistration<z.infer<typeof CardLayoutConfigSchema>> = {
+ * export const cardLayoutRegistration: LayoutRegistration<
+ *   CardLayoutConfig,
+ *   CardLayoutProps
+ * > = {
  *   layoutId: 'card',
  *   schema: CardLayoutConfigSchema,
  *   metadata: {
@@ -50,11 +62,11 @@ export interface ElementRegistration<TConfig = unknown> {
  *     description: 'Display form in a centered card',
  *     icon: 'card',
  *   },
- *   render: (props) => <CardLayout {...props} />,
+ *   render: CardLayout,
  * };
  * ```
  */
-export interface LayoutRegistration<TConfig = unknown> {
+export interface LayoutRegistration<TConfig = unknown, TProps = any> {
 	/** Unique identifier - MUST be unique across all layouts */
 	layoutId: string;
 	/** Zod schema for config validation and type inference */
@@ -62,7 +74,7 @@ export interface LayoutRegistration<TConfig = unknown> {
 	/** Component metadata (no category for layouts) */
 	metadata: ComponentMetadata;
 	/** Framework-agnostic render function */
-	render: (props: TConfig & { children: unknown }) => unknown;
+	render: (props: TProps) => unknown;
 }
 
 /**
@@ -71,9 +83,15 @@ export interface LayoutRegistration<TConfig = unknown> {
  * Steppers control multi-step form navigation and state.
  * Uses base ComponentMetadata (no category needed).
  *
+ * @template TConfig - The serializable configuration type (from schema)
+ * @template TProps - The component props type (defaults to TConfig)
+ *
  * @example
  * ```typescript
- * export const wizardStepperRegistration: StepperRegistration<z.infer<typeof WizardStepperConfigSchema>> = {
+ * export const wizardStepperRegistration: StepperRegistration<
+ *   WizardStepperConfig,
+ *   WizardStepperProps
+ * > = {
  *   stepperId: 'wizard',
  *   schema: WizardStepperConfigSchema,
  *   metadata: {
@@ -81,11 +99,11 @@ export interface LayoutRegistration<TConfig = unknown> {
  *     description: 'Step-by-step wizard navigation',
  *     icon: 'wizard',
  *   },
- *   render: (props) => <WizardStepper {...props} />,
+ *   render: WizardStepper,
  * };
  * ```
  */
-export interface StepperRegistration<TConfig = unknown> {
+export interface StepperRegistration<TConfig = unknown, TProps = any> {
 	/** Unique identifier - MUST be unique across all steppers */
 	stepperId: string;
 	/** Zod schema for config validation and type inference */
@@ -93,7 +111,7 @@ export interface StepperRegistration<TConfig = unknown> {
 	/** Component metadata (no category for steppers) */
 	metadata: ComponentMetadata;
 	/** Framework-agnostic render function */
-	render: (props: TConfig) => unknown;
+	render: (props: TProps) => unknown;
 }
 
 /**
