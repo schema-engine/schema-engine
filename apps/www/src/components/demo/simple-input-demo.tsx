@@ -42,6 +42,11 @@ export function SimpleInputDemo() {
 							ValidationPresets.string.email('Please enter a valid email'),
 						],
 					},
+					{
+						__id: 'submit',
+						label: 'Submit Form',
+						name: 'submit',
+					},
 				],
 			},
 		],

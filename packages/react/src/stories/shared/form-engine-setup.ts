@@ -27,6 +27,7 @@ import { RadioElementRegistration } from '@/components/elements/inputs/form-radi
 import { SwitchElementRegistration } from '@/components/elements/inputs/form-switch.registration';
 import { NumberElementRegistration } from '@/components/elements/inputs/form-number.registration';
 import { ArrayElementRegistration } from '@/components/elements/inputs/form-array-elements.registration';
+import { SubmitButtonElementRegistration } from '@/components/elements/actions/submit-button.registration';
 import { CardLayoutRegistration } from '@/components/layouts/card-layout';
 import { SplitScreenLayoutRegistration } from '@/components/layouts/split-screen-layout';
 import { HeroBackgroundLayoutRegistration } from '@/components/layouts/hero-background-layout';
@@ -61,6 +62,7 @@ export const defaultFormEngine = createReactFormEngine()
 	.addElement(SwitchElementRegistration)
 	.addElement(NumberElementRegistration)
 	.addElement(ArrayElementRegistration)
+	.addElement(SubmitButtonElementRegistration)
 	.addLayout(CardLayoutRegistration)
 	.addLayout(SplitScreenLayoutRegistration)
 	.addLayout(HeroBackgroundLayoutRegistration)

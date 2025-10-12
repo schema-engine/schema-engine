@@ -210,6 +210,11 @@ export const responsiveFormConfig: FormConfig = {
 						},
 					},
 				},
+				{
+					__id: 'submit',
+					label: 'Submit Form',
+					name: 'submit',
+				},
 			],
 		},
 	],

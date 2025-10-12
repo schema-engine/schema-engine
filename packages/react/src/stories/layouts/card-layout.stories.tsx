@@ -7,7 +7,7 @@ const meta = {
 	title: 'Layouts/CardLayout',
 	component: FormRenderer,
 	parameters: {
-		layout: 'padded',
+		layout: 'fullscreen',
 	},
 	decorators: [
 		(Story) => (

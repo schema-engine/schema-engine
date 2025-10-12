@@ -53,6 +53,9 @@ export const Default: Story = {
 				label: 'Email',
 				placeholder: 'john@example.com',
 			})
+			.addSubmitButton({
+				label: 'Create Account',
+			})
 			.build(),
 	},
 };

@@ -82,6 +82,11 @@ const config: FormConfig = {
 					label: 'City',
 					placeholder: 'New York',
 				},
+				{
+					__id: 'submit',
+					label: 'Submit Form',
+					name: 'submit',
+				},
 			],
 		},
 	],

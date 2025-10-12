@@ -148,6 +148,11 @@ const contactFormConfig: FormConfig = {
 					label: 'I agree to the terms and conditions',
 					rules: [ValidationPresets.string.required('You must agree to the terms and conditions')],
 				},
+				{
+					__id: 'submit',
+					label: 'Submit Form',
+					name: 'submit',
+				},
 			],
 		},
 	],

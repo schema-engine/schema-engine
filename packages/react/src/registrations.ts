@@ -32,6 +32,7 @@ export { SelectElementRegistration } from './components/elements/inputs/form-sel
 export { SwitchElementRegistration } from './components/elements/inputs/form-switch.registration';
 export { NumberElementRegistration } from './components/elements/inputs/form-number.registration';
 export { ArrayElementRegistration } from './components/elements/inputs/form-array-elements.registration';
+export { SubmitButtonElementRegistration } from './components/elements/actions/submit-button.registration';
 
 export { CardLayoutRegistration } from './components/layouts/card-layout.registration';
 export { SplitScreenLayoutRegistration } from './components/layouts/split-screen-layout.registration';

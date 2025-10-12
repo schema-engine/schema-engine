@@ -186,6 +186,11 @@ export const constraintsDemoConfig: FormConfig = {
 						},
 					],
 				},
+				{
+					__id: 'submit',
+					label: 'Submit Form',
+					name: 'submit',
+				},
 			],
 		},
 	],

@@ -90,6 +90,11 @@ export function FieldTypesDemo() {
 						name: 'switchField',
 						label: 'Toggle Switch',
 					},
+					{
+						__id: 'submit',
+						label: 'Submit Form',
+						name: 'submit',
+					},
 				],
 			},
 		],

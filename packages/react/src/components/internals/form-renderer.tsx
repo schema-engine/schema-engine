@@ -69,27 +69,6 @@ function SingleStepFormElementsRenderer({ config }: { config: FormConfig }) {
 }
 
 /**
- * Submit button component that has access to form context for proper validation
- */
-function SubmitButton({
-	submitButtonText = 'Submit',
-	submitButtonClassName = 'px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500',
-}: {
-	submitButtonText?: string;
-	submitButtonClassName?: string;
-}) {
-	const { formState } = useFormContext();
-
-	return (
-		<div className="pt-4">
-			<button type="submit" className={submitButtonClassName} disabled={formState.isSubmitting}>
-				{formState.isSubmitting ? 'Submitting...' : submitButtonText}
-			</button>
-		</div>
-	);
-}
-
-/**
  * Internal component for multi-step form rendering
  */
 function MultiStepFormElementsRenderer({ config }: { config: FormConfig }) {
@@ -237,9 +216,6 @@ function StepContent({ step, config }: { step: FormStep; config: FormConfig }) {
 export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
 	className?: string;
 	style?: React.CSSProperties;
-	showSubmitButton?: boolean;
-	submitButtonText?: string;
-	submitButtonClassName?: string;
 }
 
 /**
@@ -254,12 +230,7 @@ export function FormRenderer({
 	onValidationError,
 	className = '',
 	style,
-	showSubmitButton = true,
-	submitButtonText = 'Submit',
-	submitButtonClassName = 'px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500',
 }: FormRendererProps) {
-	const isMultiStep = isMultiStepForm(config);
-
 	return (
 		<FormProvider
 			config={config}
@@ -271,9 +242,6 @@ export function FormRenderer({
 		>
 			<div className={`space-y-6 ${className}`} style={style}>
 				<FormElementsRenderer config={config} />
-				{!isMultiStep && showSubmitButton && (
-					<SubmitButton submitButtonText={submitButtonText} submitButtonClassName={submitButtonClassName} />
-				)}
 			</div>
 		</FormProvider>
 	);

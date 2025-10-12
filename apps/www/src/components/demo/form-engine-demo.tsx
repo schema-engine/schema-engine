@@ -132,11 +132,7 @@ export function FormEngineDemo() {
 					</div>
 
 					<div className="p-8">
-						<FormRenderer
-							config={demoFormConfig}
-							className="space-y-6"
-							submitButtonClassName="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-						/>
+						<FormRenderer config={demoFormConfig} className="space-y-6" />
 					</div>
 				</div>
 

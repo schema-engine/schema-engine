@@ -97,6 +97,11 @@ export const demoFormConfig: FormConfig = {
 					label: 'I agree to the terms and conditions',
 					rules: [{ type: 'required', message: 'You must accept the terms and conditions' }],
 				},
+				{
+					__id: 'submit',
+					label: 'Submit Form',
+					name: 'submit',
+				},
 			],
 		},
 	],

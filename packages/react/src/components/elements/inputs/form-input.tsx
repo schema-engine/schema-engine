@@ -12,7 +12,7 @@ export function FormInput({
 	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
 		useControlledFormElement(config);
 
-	const { inputType = 'text' } = config;
+	const { inputType = 'text', ...rest } = config;
 
 	return (
 		<div style={containerStyles}>
@@ -31,7 +31,7 @@ export function FormInput({
 					onChange={(e) => combineHandlers(onChange, propsOnChange)(e.target.value)}
 					onBlur={combineHandlers(onBlur, propsOnBlur)}
 					onFocus={propsOnFocus}
-					{...config}
+					{...rest}
 				/>
 			</FieldGroup>
 		</div>

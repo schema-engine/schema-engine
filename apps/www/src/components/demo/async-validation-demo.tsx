@@ -128,6 +128,11 @@ export function AsyncValidationDemo() {
 							},
 						],
 					},
+					{
+						__id: 'submit',
+						label: 'Submit Form',
+						name: 'submit',
+					},
 				],
 			},
 		],

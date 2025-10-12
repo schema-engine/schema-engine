@@ -45,6 +45,11 @@ export function SimpleConditionalDemo() {
 							},
 						],
 					},
+					{
+						__id: 'submit',
+						label: 'Submit Form',
+						name: 'submit',
+					},
 				],
 			},
 		],

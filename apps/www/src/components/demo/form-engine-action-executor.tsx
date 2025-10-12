@@ -58,6 +58,11 @@ const formConfigWithActions: FormConfig = {
 					name: 'subscribe',
 					label: 'Subscribe to newsletter',
 				},
+				{
+					__id: 'submit',
+					label: 'Submit Form',
+					name: 'submit',
+				},
 			],
 		},
 	],

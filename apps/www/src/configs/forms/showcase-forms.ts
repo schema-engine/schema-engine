@@ -47,6 +47,11 @@ export const basicFormConfig: FormConfig = {
 						ValidationPresets.number.max(100, 'Age must be realistic'),
 					],
 				},
+				{
+					__id: 'submit',
+					label: 'Submit Form',
+					name: 'submit',
+				},
 			],
 		},
 	],
@@ -226,6 +231,11 @@ export const conditionalFormConfig: FormConfig = {
 							action: 'show',
 						},
 					],
+				},
+				{
+					__id: 'submit',
+					label: 'Submit Form',
+					name: 'submit',
 				},
 			],
 		},

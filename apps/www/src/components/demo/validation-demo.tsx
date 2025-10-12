@@ -49,6 +49,12 @@ export function ValidationDemo() {
 						placeholder: 'https://example.com',
 						rules: [ValidationPresets.string.url('Please enter a valid URL')],
 					},
+					{
+						__id: 'submit',
+						id: 'validation-demo-submit',
+						label: 'Submit Form',
+						name: 'submit',
+					},
 				],
 			},
 		],

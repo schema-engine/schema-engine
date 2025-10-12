@@ -136,6 +136,19 @@ export class FormBuilder {
 		});
 	}
 
+	addSubmitButton(options?: { label?: string }): this {
+		if (!this.currentStep) {
+			throw new Error('Must call addStep() before adding fields');
+		}
+		this.currentStep.elements.push({
+			__id: 'submit',
+			label: options?.label || 'Submit',
+			id: 'submit-button',
+			name: 'submit-button',
+		});
+		return this;
+	}
+
 	/**
 	 * Add any field type with full type safety
 	 */
@@ -233,6 +246,9 @@ export const FormTemplates = {
 				label: 'Email Address',
 				placeholder: 'john@example.com',
 				required: true,
+			})
+			.addSubmitButton({
+				label: 'Send Message',
 			})
 			.build(),
 

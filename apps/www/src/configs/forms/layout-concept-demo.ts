@@ -94,6 +94,11 @@ export const conceptStepLayoutDemo: FormConfig = {
 					],
 					rules: [ValidationPresets.string.required('Please select a category')],
 				},
+				{
+					__id: 'submit',
+					label: 'Submit Form',
+					name: 'submit',
+				},
 			],
 		},
 	],
@@ -182,6 +187,11 @@ export const currentGridSystemDemo: FormConfig = {
 							lg: { column: '1 / -1' },
 						},
 					},
+				},
+				{
+					__id: 'submit',
+					label: 'Submit Form',
+					name: 'submit',
 				},
 			],
 		},

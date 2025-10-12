@@ -18,6 +18,7 @@ import {
 	SwitchElementRegistration,
 	NumberElementRegistration,
 	ArrayElementRegistration,
+	SubmitButtonElementRegistration,
 } from '@json-form-engine/react/registrations';
 
 /**
@@ -71,6 +72,7 @@ export const formEngine = createReactFormEngine()
 	.addElement(SwitchElementRegistration)
 	.addElement(NumberElementRegistration)
 	.addElement(ArrayElementRegistration)
+	.addElement(SubmitButtonElementRegistration)
 	.addLayout(CardLayoutRegistration)
 	.addLayout(SplitScreenLayoutRegistration)
 	.addLayout(HeroBackgroundLayoutRegistration)
