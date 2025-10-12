@@ -35,7 +35,7 @@ export const Default: Story = {
 		config: {
 			...multiStepRegistrationForm,
 			stepper: {
-				id: 'vertical',
+				__id: 'vertical',
 				showConnectors: true,
 			},
 		},
@@ -47,7 +47,7 @@ export const WithConnectors: Story = {
 		config: {
 			...multiStepRegistrationForm,
 			stepper: {
-				id: 'vertical',
+				__id: 'vertical',
 				showConnectors: true,
 			},
 		},
@@ -59,7 +59,7 @@ export const WithoutConnectors: Story = {
 		config: {
 			...multiStepRegistrationForm,
 			stepper: {
-				id: 'vertical',
+				__id: 'vertical',
 				showConnectors: false,
 			},
 		},
@@ -73,7 +73,7 @@ export const LongForm: Story = {
 			title: 'Extended Registration Form',
 			description: 'A longer multi-step form with vertical navigation',
 			stepper: {
-				id: 'vertical',
+				__id: 'vertical',
 				showConnectors: true,
 			},
 		},

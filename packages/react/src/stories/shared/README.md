@@ -287,37 +287,26 @@ const form = {
 
 ## Examples
 
-See `examples/builder-pattern.stories.tsx` for complete working examples showing:
+See the various `.stories.tsx` files for complete working examples showing:
 
-- Simple forms
-- Forms with layouts
-- Multi-step forms with different steppers
+- Simple forms with the builder pattern
+- Forms with layouts (card, split-screen, hero-background)
+- Multi-step forms with different steppers (default, vertical, minimalist, debugger)
 - Custom configurations
 
-## Migration from Old Pattern
+## Usage in Stories
 
-**Before (Old Pattern):**
-
-```tsx
-// Had to import side-effect files
-import "@json-form-engine/react/registrations";
-
-// Used global registry
-<FormEngine registry={reactFormFieldRegistry}>
-	<FormRenderer config={form} />
-</FormEngine>;
-```
-
-**After (New Pattern):**
+All stories should use the `StoryWrapper` component which provides the FormEngine context:
 
 ```tsx
-// Import the wrapper
 import { StoryWrapper } from "./shared/story-wrapper";
+import { FormRenderer } from "@/components/internals/form-renderer";
 
-// Wrap with StoryWrapper
-<StoryWrapper>
-	<FormRenderer config={form} />
-</StoryWrapper>;
+export const MyStory = () => (
+	<StoryWrapper>
+		<FormRenderer config={myFormConfig} />
+	</StoryWrapper>
+);
 ```
 
 Much cleaner! The `StoryWrapper` handles all the provider setup for you.

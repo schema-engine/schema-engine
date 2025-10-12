@@ -1,10 +1,8 @@
 /**
- * Example: Using the new Builder Pattern with React
+ * Example: Using the Builder Pattern with React
  *
- * This file demonstrates how to use the new FormEngineBuilder pattern
- * with React components. This is the recommended approach going forward.
- *
- * The old registry pattern (field-registry.ts) still works for backward compatibility.
+ * This file demonstrates how to use the FormEngineBuilder pattern
+ * with React components.
  */
 
 import { createReactFormEngine } from '@/registries/builder-registry';

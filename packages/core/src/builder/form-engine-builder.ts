@@ -2,7 +2,9 @@ import type { ElementRegistration, LayoutRegistration, StepperRegistration, Buil
 import type { FormEngineSchemaMetadata } from '@/engine/form-engine';
 import { logger } from '@/lib/logger';
 import { ElementRegistry, LayoutRegistry, StepperRegistry, ActionRegistry } from '@/registries';
+import { FormConfigBuilder } from './form-config-builder';
 import { z } from 'zod';
+import type { Merge } from './type-utils';
 
 /**
  * FormEngineBuilder - Builder pattern for configuring the form engine.
@@ -48,22 +50,31 @@ export class FormEngineBuilder<
 	) {}
 
 	/**
-	 * Register a single element.
+	 * Register a single element with explicit ID and type parameters.
 	 *
 	 * @param registration - Element registration object
 	 * @note If id is already registered, it will be overridden with a warning
+	 *
+	 * @example
+	 * ```typescript
+	 * // Explicit ID and type (recommended for best IntelliSense)
+	 * builder.addElement<'input', InputFieldConfig>(InputElementRegistration)
+	 *
+	 * // Without type params (no type tracking)
+	 * builder.addElement(InputElementRegistration)
+	 * ```
 	 */
-	addElement<TConfig>(
-		registration: ElementRegistration<TConfig>,
-	): FormEngineBuilder<TElements & { [K in typeof registration.__id]: TConfig }, TLayouts, TSteppers, TActions> {
+	addElement<TId extends string = string, TConfig = never>(
+		registration: ElementRegistration<any>,
+	): FormEngineBuilder<
+		TConfig extends never ? TElements : TElements & Record<TId, Omit<TConfig, '__id'>>,
+		TLayouts,
+		TSteppers,
+		TActions
+	> {
 		this.elementRegistry.register(registration);
 
-		return this as unknown as FormEngineBuilder<
-			TElements & { [K in typeof registration.__id]: TConfig },
-			TLayouts,
-			TSteppers,
-			TActions
-		>;
+		return this as any;
 	}
 
 	/**
@@ -79,22 +90,27 @@ export class FormEngineBuilder<
 	}
 
 	/**
-	 * Register a single layout.
+	 * Register a single layout with explicit ID and type parameters.
 	 *
 	 * @param registration - Layout registration object
 	 * @note If id is already registered, it will be overridden with a warning
+	 *
+	 * @example
+	 * ```typescript
+	 * builder.addLayout<'card', CardLayoutConfig>(CardLayoutRegistration)
+	 * ```
 	 */
-	addLayout<TConfig>(
-		registration: LayoutRegistration<TConfig>,
-	): FormEngineBuilder<TElements, TLayouts & { [K in typeof registration.__id]: TConfig }, TSteppers, TActions> {
+	addLayout<TId extends string = string, TConfig = never>(
+		registration: LayoutRegistration<any>,
+	): FormEngineBuilder<
+		TElements,
+		TConfig extends never ? TLayouts : TLayouts & Record<TId, Omit<TConfig, '__id'>>,
+		TSteppers,
+		TActions
+	> {
 		this.layoutRegistry.register(registration);
 
-		return this as unknown as FormEngineBuilder<
-			TElements,
-			TLayouts & { [K in typeof registration.__id]: TConfig },
-			TSteppers,
-			TActions
-		>;
+		return this as any;
 	}
 
 	/**
@@ -110,22 +126,26 @@ export class FormEngineBuilder<
 	}
 
 	/**
-	 * Register a single stepper.
+	 * Register a single stepper with explicit ID and type parameters.
 	 *
 	 * @param registration - Stepper registration object
 	 * @note If id is already registered, it will be overridden with a warning
+	 *
+	 * @example
+	 * ```typescript
+	 * builder.addStepper<'default', DefaultStepperConfig>(DefaultStepperRegistration)
+	 * ```
 	 */
-	addStepper<TConfig>(
-		registration: StepperRegistration<TConfig>,
-	): FormEngineBuilder<TElements, TLayouts, TSteppers & { [K in typeof registration.__id]: TConfig }, TActions> {
+	addStepper<TId extends string = string, TConfig = never>(
+		registration: StepperRegistration<any>,
+	): FormEngineBuilder<
+		TElements,
+		TLayouts,
+		TConfig extends never ? TSteppers : TSteppers & Record<TId, Omit<TConfig, '__id'>>,
+		TActions
+	> {
 		this.stepperRegistry.register(registration);
-
-		return this as unknown as FormEngineBuilder<
-			TElements,
-			TLayouts,
-			TSteppers & { [K in typeof registration.__id]: TConfig },
-			TActions
-		>;
+		return this as any;
 	}
 
 	/**
@@ -146,17 +166,25 @@ export class FormEngineBuilder<
 	 * @param registration - Action registration object
 	 * @note If id is already registered, it will be overridden with a warning
 	 */
-	addAction<TConfig>(
-		registration: BuilderActionRegistration<TConfig>,
-	): FormEngineBuilder<TElements, TLayouts, TSteppers, TActions & { [K in typeof registration.__id]: TConfig }> {
+	addAction<TConfig = never>(
+		registration: TConfig extends never ? BuilderActionRegistration<any> : BuilderActionRegistration<TConfig>,
+	): FormEngineBuilder<
+		TElements,
+		TLayouts,
+		TSteppers,
+		TConfig extends never
+			? Merge<
+					TActions,
+					{
+						[K in typeof registration.__id]: typeof registration extends BuilderActionRegistration<infer C>
+							? Omit<C, '__id'>
+							: never;
+					}
+				>
+			: Merge<TActions, { [K in typeof registration.__id]: Omit<TConfig, '__id'> }>
+	> {
 		this.actionRegistry.register(registration);
-
-		return this as unknown as FormEngineBuilder<
-			TElements,
-			TLayouts,
-			TSteppers,
-			TActions & { [K in typeof registration.__id]: TConfig }
-		>;
+		return this as any;
 	}
 
 	/**
@@ -169,6 +197,80 @@ export class FormEngineBuilder<
 			this.addAction(registration);
 		}
 		return this;
+	}
+
+	/**
+	 * Create a union schema from an array of schemas.
+	 * Handles edge cases: empty array, single schema, and multiple schemas.
+	 */
+	private createUnionSchema(schemas: z.ZodTypeAny[]): z.ZodTypeAny {
+		if (schemas.length === 0) {
+			return z.never();
+		}
+		if (schemas.length === 1) {
+			return schemas[0];
+		}
+		return z.union(schemas as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]]);
+	}
+
+	/**
+	 * Create a typed form configuration builder.
+	 * Provides a fluent API for building form configurations with type safety and validation.
+	 *
+	 * @example
+	 * ```typescript
+	 * const builder = new FormEngineBuilder()
+	 *   .addElement(inputRegistration)
+	 *   .addStepper(wizardStepperRegistration);
+	 *
+	 * const formConfig = builder.createForm()
+	 *   .setId('contact-form')
+	 *   .setTitle('Contact Us')
+	 *   .addStep({ id: 'step-1', title: 'Personal Info' })
+	 *   .addElement('input', { id: 'name', name: 'name', label: 'Name' })
+	 *   .addStepAction('submit', { url: '/api/submit' })
+	 *   .setStepper('wizard')
+	 *   .build();
+	 * ```
+	 *
+	 * @returns A FormConfigBuilder that uses the augmented FormEngine namespace for type inference
+	 */
+	createForm(): FormConfigBuilder<TElements, TLayouts, TSteppers, TActions> {
+		return new FormConfigBuilder<TElements, TLayouts, TSteppers, TActions>(
+			this.elementRegistry,
+			this.layoutRegistry,
+			this.stepperRegistry,
+			this.actionRegistry,
+		);
+	}
+
+	/**
+	 * Generate a Zod schema for form configurations based on registered components.
+	 * This schema can be used for runtime validation of form configs.
+	 *
+	 * @returns Zod schema for validating form configurations
+	 */
+	createFormConfigSchema() {
+		const elementSchemas = this.elementRegistry.getAll().map((el) => el.schema);
+		const layoutSchemas = this.layoutRegistry.getAll().map((layout) => layout.schema);
+		const stepperSchemas = this.stepperRegistry.getAll().map((stepper) => stepper.schema);
+		const actionSchemas = this.actionRegistry.getAll().map((action) => action.schema);
+
+		const elementsUnion = this.createUnionSchema(elementSchemas);
+		const layoutsUnion = this.createUnionSchema(layoutSchemas);
+		const steppersUnion = this.createUnionSchema(stepperSchemas);
+		const actionsUnion = this.createUnionSchema(actionSchemas);
+
+		return z.object({
+			id: z.string().describe('Unique identifier for the form'),
+			title: z.string().optional().describe('Display title of the form'),
+			description: z.string().optional().describe('Description of the form purpose'),
+			elements: z.array(elementsUnion).min(1).describe('Array of form elements to render'),
+			layout: layoutSchemas.length > 0 ? layoutsUnion.optional() : z.object({}).optional(),
+			stepper: stepperSchemas.length > 0 ? steppersUnion.optional() : z.object({}).optional(),
+			actions: actionSchemas.length > 0 ? z.array(actionsUnion).optional() : z.array(z.object({})).optional(),
+			metadata: z.object({}).catchall(z.unknown()).optional().describe('Additional metadata for the form'),
+		});
 	}
 
 	/**
@@ -278,49 +380,7 @@ export class FormEngineBuilder<
 			});
 		}
 
-		const elementSchemas = this.elementRegistry.getAll().map((el) => el.schema);
-		const layoutSchemas = this.layoutRegistry.getAll().map((layout) => layout.schema);
-		const stepperSchemas = this.stepperRegistry.getAll().map((stepper) => stepper.schema);
-		const actionSchemas = this.actionRegistry.getAll().map((action) => action.schema);
-
-		const elementsUnion =
-			elementSchemas.length > 0
-				? elementSchemas.length === 1
-					? elementSchemas[0]
-					: z.union(elementSchemas as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]])
-				: z.never();
-
-		const layoutsUnion =
-			layoutSchemas.length > 0
-				? layoutSchemas.length === 1
-					? layoutSchemas[0]
-					: z.union(layoutSchemas as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]])
-				: z.never();
-
-		const steppersUnion =
-			stepperSchemas.length > 0
-				? stepperSchemas.length === 1
-					? stepperSchemas[0]
-					: z.union(stepperSchemas as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]])
-				: z.never();
-
-		const actionsUnion =
-			actionSchemas.length > 0
-				? actionSchemas.length === 1
-					? actionSchemas[0]
-					: z.union(actionSchemas as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]])
-				: z.never();
-
-		const formConfigSchema = z.object({
-			id: z.string().describe('Unique identifier for the form'),
-			title: z.string().optional().describe('Display title of the form'),
-			description: z.string().optional().describe('Description of the form purpose'),
-			elements: z.array(elementsUnion).min(1).describe('Array of form elements to render'),
-			layout: layoutSchemas.length > 0 ? layoutsUnion.optional() : z.object({}).optional(),
-			stepper: stepperSchemas.length > 0 ? steppersUnion.optional() : z.object({}).optional(),
-			actions: actionSchemas.length > 0 ? z.array(actionsUnion).optional() : z.array(z.object({})).optional(),
-			metadata: z.object({}).catchall(z.unknown()).optional().describe('Additional metadata for the form'),
-		});
+		const formConfigSchema = this.createFormConfigSchema();
 
 		const { FormEngine: FormEngineClass } = require('@/engine/form-engine');
 

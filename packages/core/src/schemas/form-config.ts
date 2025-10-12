@@ -8,20 +8,16 @@ export type { FormActionConfig } from '../actions/types';
 /**
  * Step layout configuration schema (for individual steps)
  */
-export const StepLayoutConfigSchema = z
-	.object({
-		id: z.string(),
-	})
-	.catchall(z.any()); // Allow additional layout-specific options
+export const StepLayoutConfigSchema = z.looseObject({
+	__id: z.string(),
+});
 
 /**
  * Form stepper configuration schema (for the entire form)
  */
-export const FormStepperConfigSchema = z
-	.object({
-		id: z.string(),
-	})
-	.catchall(z.any()); // Allow additional stepper-specific options
+export const FormStepperConfigSchema = z.looseObject({
+	__id: z.string(),
+});
 
 /**
  * Step navigation button configuration schema

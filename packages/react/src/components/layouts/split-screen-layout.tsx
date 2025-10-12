@@ -12,7 +12,7 @@ import type React from 'react';
 export const SplitScreenLayout: React.FC<SplitScreenLayoutProps> = ({ children, className }) => {
 	const { step, form, config } = useLayoutContext<SplitScreenLayoutConfig>();
 
-	const { sideContent, sidePlacement = 'left', sideWidth = 'normal', contentAlignment = 'top' } = config;
+	const { sideContent, sidePlacement = 'left', sideWidth = 'normal', contentAlignment = 'center' } = config;
 
 	const isLeftSide = sidePlacement === 'left';
 

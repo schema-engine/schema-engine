@@ -68,7 +68,7 @@ export const LayoutRenderer: React.FC<LayoutRendererProps> = ({ step, stepMeta, 
 		config: step.layout || {},
 	};
 
-	if (!step.layout?.id) {
+	if (!step.layout?.__id) {
 		return (
 			<LayoutProvider value={contextValue}>
 				<DefaultLayout>{children}</DefaultLayout>
@@ -76,12 +76,12 @@ export const LayoutRenderer: React.FC<LayoutRendererProps> = ({ step, stepMeta, 
 		);
 	}
 
-	const { id, ...layoutConfig } = step.layout;
+	const { __id, ...layoutConfig } = step.layout;
 
-	const layoutRegistration = engine.getLayout(id);
+	const layoutRegistration = engine.getLayout(__id);
 
 	if (!layoutRegistration) {
-		console.warn(`Layout '${id}' not found in registry. Using default layout.`);
+		console.warn(`Layout '${__id}' not found in registry. Using default layout.`);
 		return (
 			<LayoutProvider value={{ ...contextValue, config: layoutConfig }}>
 				<DefaultLayout>{children}</DefaultLayout>

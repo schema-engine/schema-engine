@@ -39,7 +39,7 @@ function SingleStepFormElementsRenderer({ config }: { config: FormConfig }) {
 
 	if (!singleStep?.elements) return null;
 
-	if (singleStep.layout && 'id' in singleStep.layout) {
+	if (singleStep.layout && '__id' in singleStep.layout) {
 		return (
 			<LayoutRenderer
 				step={singleStep}
@@ -176,7 +176,7 @@ function StepContent({ step, config }: { step: FormStep; config: FormConfig }) {
 
 	if (!step?.elements) return null;
 
-	if (step.layout && 'id' in step.layout) {
+	if (step.layout && '__id' in step.layout) {
 		return (
 			<LayoutRenderer
 				step={step}
