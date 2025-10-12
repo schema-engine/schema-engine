@@ -110,6 +110,14 @@
       "types": "./dist/schemas/validation/async/*.d.ts",
       "import": "./dist/schemas/validation/async/*.js"
     },
+    "./constraints": {
+      "types": "./dist/constraints/index.d.ts",
+      "import": "./dist/constraints/index.js"
+    },
+    "./constraints/*": {
+      "types": "./dist/constraints/*.d.ts",
+      "import": "./dist/constraints/*.js"
+    },
     "./tools": {
       "types": "./dist/tools/index.d.ts",
       "import": "./dist/tools/index.js"

@@ -1,65 +1,17 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import type { ConstraintLogic } from '@json-form-engine/core/schemas';
+import { ConstraintEvaluator, type ConstraintEvaluationResult, type ConstraintLogic } from '@json-form-engine/core';
 
 /**
- * Evaluate a single constraint condition against a watched value.
- *
- * @param constraint - Constraint logic object describing the operator and value
- * @param watchedValue - Current value of the referenced field from the form
- * @returns true if the constraint condition is satisfied
+ * Result returned by `useConstraintLogic`
  */
-function evaluateConstraint(constraint: ConstraintLogic, watchedValue: any): boolean {
-	const { operator, value } = constraint;
-
-	switch (operator) {
-		case 'equals':
-			return watchedValue === value;
-		case 'not_equals':
-			return watchedValue !== value;
-		case 'contains':
-			return String(watchedValue || '').includes(String(value));
-		case 'not_contains':
-			return !String(watchedValue || '').includes(String(value));
-		case 'greater_than':
-			return Number(watchedValue) > Number(value);
-		case 'less_than':
-			return Number(watchedValue) < Number(value);
-		case 'is_empty':
-			return !watchedValue || watchedValue === '' || watchedValue === null || watchedValue === undefined;
-		case 'is_not_empty':
-			return watchedValue && watchedValue !== '' && watchedValue !== null && watchedValue !== undefined;
-		default:
-			return false;
-	}
-}
+export type UseConstraintLogicResult = ConstraintEvaluationResult;
 
 /**
- * Result returned by `useConstraintLogic`.
+ * React hook to evaluate constraint logic for a field
  *
- * shouldShow: whether the field should be rendered.
- * shouldDisable: whether the field should be disabled.
- * isRequired: whether the field should be treated as required.
- */
-export interface UseConstraintLogicResult {
-	shouldShow: boolean;
-	shouldDisable: boolean;
-	isRequired: boolean;
-}
-
-/**
- * Custom hook to handle constraint logic evaluation
- * Shared between DynamicField and DynamicFieldset components
- *
- * @param constraints - Array of constraint logic configurations
- * @param baseRequired - Base required state for the field
- * @param fieldPath - Current field path context for relative field resolution in arrays
- */
-/**
- * React hook to evaluate constraint logic for a field.
- *
- * Watches referenced form fields and computes whether the target field
- * should be shown, disabled, or marked required based on provided constraints.
+ * Watches referenced form fields and uses the ConstraintEvaluator from core
+ * to compute whether the target field should be shown, disabled, or marked required
  *
  * @param constraints - Array of constraint logic rules that reference other fields
  * @param baseRequired - Base required state for the field (OR'ed with require constraints)
@@ -72,6 +24,11 @@ export function useConstraintLogic(
 	fieldPath?: string,
 ): UseConstraintLogicResult {
 	const { control } = useFormContext();
+	const evaluatorRef = useRef<ConstraintEvaluator | null>(null);
+
+	if (!evaluatorRef.current) {
+		evaluatorRef.current = new ConstraintEvaluator();
+	}
 
 	/**
 	 * Get the watched fields based on the constraints
@@ -115,7 +72,7 @@ export function useConstraintLogic(
 		name: watchedFields,
 	});
 
-	const watchedValuesMap = useMemo(() => {
+	const fieldValues = useMemo(() => {
 		const map: Record<string, any> = {};
 		constraints.forEach((constraint, index) => {
 			const value = Array.isArray(watchedValues) ? watchedValues[index] : watchedValues;
@@ -124,67 +81,13 @@ export function useConstraintLogic(
 		return map;
 	}, [constraints, watchedValues]);
 
-	const shouldShow = useMemo(() => {
-		if (constraints.length === 0) return true;
-		/**
-		 * Separate show/hide constraints. Multiple 'show' constraints should be
-		 * treated as OR (show if any show-condition is met). Hide constraints
-		 * are applied afterward to allow explicit hiding.
-		 */
-		const showConstraints = constraints.filter((c) => c.action === 'show');
-		const hideConstraints = constraints.filter((c) => c.action === 'hide');
-
-		if (showConstraints.length > 0) {
-			const anyShow = showConstraints.some((constraint) => {
-				const watchedValue = watchedValuesMap[constraint.field];
-				return evaluateConstraint(constraint, watchedValue);
-			});
-
-			if (!anyShow) return false;
-		}
-
-		if (hideConstraints.length > 0) {
-			const anyHide = hideConstraints.some((constraint) => {
-				const watchedValue = watchedValuesMap[constraint.field];
-				return evaluateConstraint(constraint, watchedValue);
-			});
-
-			if (anyHide) return false;
-		}
-
-		return true;
-	}, [constraints, watchedValuesMap]);
-
-	const shouldDisable = useMemo(() => {
-		return constraints.some((constraint) => {
-			const watchedValue = watchedValuesMap[constraint.field];
-			const conditionMet = evaluateConstraint(constraint, watchedValue);
-
-			switch (constraint.action) {
-				case 'disable':
-					return conditionMet;
-				case 'enable':
-					return !conditionMet;
-				default:
-					return false;
-			}
-		});
-	}, [constraints, watchedValuesMap]);
-
-	const isRequired = useMemo(() => {
-		const hasRequireAction = constraints.some((constraint) => {
-			const watchedValue = watchedValuesMap[constraint.field];
-			const conditionMet = evaluateConstraint(constraint, watchedValue);
-
-			return constraint.action === 'require' && conditionMet;
-		});
-
-		return baseRequired || hasRequireAction;
-	}, [constraints, watchedValuesMap, baseRequired]);
-
-	return {
-		shouldShow,
-		shouldDisable,
-		isRequired,
-	};
+	return useMemo(
+		() =>
+			evaluatorRef.current!.evaluate({
+				constraints,
+				fieldValues,
+				baseRequired,
+			}),
+		[constraints, fieldValues, baseRequired],
+	);
 }

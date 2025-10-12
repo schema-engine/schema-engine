@@ -10,6 +10,7 @@
 export const ElementCategory = {
 	INPUT: 'input',
 	CONTENT: 'content',
+	ACTION: 'action',
 	DECORATION: 'decoration',
 	INTERACTIVE: 'interactive',
 } as const;
