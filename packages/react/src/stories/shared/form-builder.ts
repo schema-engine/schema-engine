@@ -220,7 +220,7 @@ export const FormTemplates = {
 			description: 'Send us a message',
 		})
 			.withStepper('debugger')
-			.addStep({ id: 'contact' })
+			.addStep({ id: 'contact', title: 'Contact Information', description: 'Your contact details' })
 			.addInputField({
 				name: 'name',
 				label: 'Full Name',
@@ -244,7 +244,7 @@ export const FormTemplates = {
 			id: 'login-form',
 			title: 'Sign In',
 		})
-			.addStep({ id: 'login' })
+			.addStep({ id: 'login', title: 'Login', description: 'Enter your credentials' })
 			.addEmailField({
 				name: 'email',
 				label: 'Email',
@@ -270,7 +270,7 @@ export const FormTemplates = {
 		})
 			.withMode('wizard')
 			.withStepper('default', { showStepNumbers: true, showStepTitles: true })
-			.addStep({ id: 'personal', title: 'Personal Info' })
+			.addStep({ id: 'personal', title: 'Personal Info', description: 'Your personal information' })
 			.addInputField({
 				name: 'firstName',
 				label: 'First Name',
@@ -281,7 +281,7 @@ export const FormTemplates = {
 				label: 'Last Name',
 				required: true,
 			})
-			.addStep({ id: 'account', title: 'Account Details' })
+			.addStep({ id: 'account', title: 'Account Details', description: 'Your account details' })
 			.addEmailField({
 				name: 'email',
 				label: 'Email',
@@ -303,7 +303,7 @@ export const FormTemplates = {
 			id: 'card-form',
 			title: 'Card Example',
 		})
-			.addStep({ id: 'step-1' })
+			.addStep({ id: 'step-1', title: 'Step 1', description: 'Description for step 1' })
 			.withLayout('card', { maxWidth: 'md', padding: 'lg', shadowSize: 'lg' })
 			.addInputField({
 				name: 'name',

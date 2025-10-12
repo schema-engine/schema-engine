@@ -6,7 +6,7 @@
  *
  * @example Individual Import (Recommended)
  * ```typescript
- * import { InputElementRegistration } from '@json-form-engine/react/components/form/fields/form-input.registration';
+ * import { InputElementRegistration } from '@json-form-engine/react/components/elements/inputs/form-input.registration';
  * ```
  *
  * @example Multiple Imports from this file
@@ -24,14 +24,14 @@
  * - Tree-shakeable - unused components don't affect bundle size or types
  */
 
-export { InputElementRegistration } from './components/form/fields/form-input.registration';
-export { TextareaElementRegistration } from './components/form/fields/form-textarea.registration';
-export { CheckboxElementRegistration } from './components/form/fields/form-checkbox.registration';
-export { RadioElementRegistration } from './components/form/fields/form-radio.registration';
-export { SelectElementRegistration } from './components/form/fields/form-select.registration';
-export { SwitchElementRegistration } from './components/form/fields/form-switch.registration';
-export { NumberElementRegistration } from './components/form/fields/form-number.registration';
-export { ArrayElementRegistration } from './components/form/fields/form-array-elements.registration';
+export { InputElementRegistration } from './components/elements/inputs/form-input.registration';
+export { TextareaElementRegistration } from './components/elements/inputs/form-textarea.registration';
+export { CheckboxElementRegistration } from './components/elements/inputs/form-checkbox.registration';
+export { RadioElementRegistration } from './components/elements/inputs/form-radio.registration';
+export { SelectElementRegistration } from './components/elements/inputs/form-select.registration';
+export { SwitchElementRegistration } from './components/elements/inputs/form-switch.registration';
+export { NumberElementRegistration } from './components/elements/inputs/form-number.registration';
+export { ArrayElementRegistration } from './components/elements/inputs/form-array-elements.registration';
 
 export { CardLayoutRegistration } from './components/layouts/card-layout.registration';
 export { SplitScreenLayoutRegistration } from './components/layouts/split-screen-layout.registration';

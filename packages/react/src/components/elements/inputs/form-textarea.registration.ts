@@ -5,7 +5,7 @@
  *
  * @example
  * ```typescript
- * import { TextareaElementRegistration } from '@json-form-engine/react/components/form/fields/form-textarea.registration';
+ * import { TextareaElementRegistration } from '@json-form-engine/react/components/elements/inputs/form-textarea.registration';
  * import { FormEngineBuilder } from '@json-form-engine/core/builder';
  *
  * const engine = new FormEngineBuilder()

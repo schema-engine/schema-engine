@@ -4,4 +4,5 @@
 
 export * from './form-engine';
 export * from './serialization';
-export * from './json-schema';
+export * from './schema-generator';
+export * from './serialization';

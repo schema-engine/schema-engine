@@ -335,7 +335,7 @@ defaultFormRegistry.register({
 For optimal bundle size, create separate registry files:
 
 ```typescript
-// components/form/fields/my-input.registry.ts
+// components/elements/inputs/my-input.registry.ts
 import { defaultFormRegistry } from '@/lib/form-engine';
 import { MyInput } from './my-input';
 
@@ -347,7 +347,7 @@ defaultFormRegistry.register({
 });
 
 // Then import only what you need:
-// import './components/form/fields/my-input.registry';
+// import './components/elements/inputs/my-input.registry';
 ```
 
 ## What's Next?

@@ -5,39 +5,39 @@ import { z } from 'zod';
 import { 
 	InputFieldSchema, 
 	type InputFieldConfig 
-} from '@/components/form/fields/form-input.types';
+} from '@/components/elements/inputs/form-input.types';
 
 import {
 	TextareaFieldSchema,
 	type TextareaFieldConfig
-} from '@/components/form/fields/form-textarea.types';
+} from '@/components/elements/inputs/form-textarea.types';
 
 import {
 	SelectFieldConfigSchema,
 	type SelectFieldConfig,
 	type SelectOption
-} from '@/components/form/fields/form-select.types';
+} from '@/components/elements/inputs/form-select.types';
 
 import {
 	CheckboxFieldConfigSchema,
 	type CheckboxFieldConfig
-} from '@/components/form/fields/form-checkbox.types';
+} from '@/components/elements/inputs/form-checkbox.types';
 
 import {
 	RadioFieldConfigSchema,
 	type RadioFieldConfig,
 	type RadioOption
-} from '@/components/form/fields/form-radio.types';
+} from '@/components/elements/inputs/form-radio.types';
 
 import {
 	NumberFieldConfigSchema,
 	type NumberFieldConfig
-} from '@/components/form/fields/form-number.types';
+} from '@/components/elements/inputs/form-number.types';
 
 import {
 	SwitchFieldConfigSchema,
 	type SwitchFieldConfig
-} from '@/components/form/fields/form-switch.types';
+} from '@/components/elements/inputs/form-switch.types';
 
 
 describe('Clean Enhanced Field System', () => {

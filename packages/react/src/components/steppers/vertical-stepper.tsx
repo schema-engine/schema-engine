@@ -166,9 +166,18 @@ function VerticalStepsSidebar({ className }: { className?: string }) {
  * Displays the form content for the current step
  */
 function VerticalStepsContent({ children, className }: { children: React.ReactNode; className?: string }) {
+	const { steps, currentStepIndex } = useStepperContext<VerticalStepsStepperConfig>();
 	return (
 		<div className={cn('vertical-stepper__main-content', className)}>
-			<div className="vertical-stepper__content-card">{children}</div>
+			<div className="vertical-stepper__content-card">
+				<h3 className="vertical-stepper__content-title">
+					{steps[currentStepIndex]?.title || `Step ${currentStepIndex + 1}`}
+				</h3>
+				{steps[currentStepIndex]?.description && (
+					<p className="vertical-stepper__content-description">{steps[currentStepIndex]?.description}</p>
+				)}
+				<div className="vertical-stepper__content-body">{children}</div>
+			</div>
 		</div>
 	);
 }

@@ -19,14 +19,14 @@
  */
 
 import { createReactFormEngine } from '@/registries/builder-registry';
-import { InputElementRegistration } from '@/components/form/fields/form-input.registration';
-import { TextareaElementRegistration } from '@/components/form/fields/form-textarea.registration';
-import { CheckboxElementRegistration } from '@/components/form/fields/form-checkbox.registration';
-import { SelectElementRegistration } from '@/components/form/fields/form-select.registration';
-import { RadioElementRegistration } from '@/components/form/fields/form-radio.registration';
-import { SwitchElementRegistration } from '@/components/form/fields/form-switch.registration';
-import { NumberElementRegistration } from '@/components/form/fields/form-number.registration';
-import { ArrayElementRegistration } from '@/components/form/fields/form-array-elements.registration';
+import { InputElementRegistration } from '@/components/elements/inputs/form-input.registration';
+import { TextareaElementRegistration } from '@/components/elements/inputs/form-textarea.registration';
+import { CheckboxElementRegistration } from '@/components/elements/inputs/form-checkbox.registration';
+import { SelectElementRegistration } from '@/components/elements/inputs/form-select.registration';
+import { RadioElementRegistration } from '@/components/elements/inputs/form-radio.registration';
+import { SwitchElementRegistration } from '@/components/elements/inputs/form-switch.registration';
+import { NumberElementRegistration } from '@/components/elements/inputs/form-number.registration';
+import { ArrayElementRegistration } from '@/components/elements/inputs/form-array-elements.registration';
 import { CardLayoutRegistration } from '@/components/layouts/card-layout';
 import { SplitScreenLayoutRegistration } from '@/components/layouts/split-screen-layout';
 import { HeroBackgroundLayoutRegistration } from '@/components/layouts/hero-background-layout';

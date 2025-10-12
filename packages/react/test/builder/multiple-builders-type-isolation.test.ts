@@ -13,10 +13,10 @@ import { createReactFormEngine } from '@/registries/builder-registry';
  * Import ONLY the registrations needed for each builder
  * This is the key: each import triggers type augmentation for that component only
  */
-import { InputElementRegistration } from '@/components/form/fields/form-input.registration';
-import { TextareaElementRegistration } from '@/components/form/fields/form-textarea.registration';
-import { CheckboxElementRegistration } from '@/components/form/fields/form-checkbox.registration';
-import { SelectElementRegistration } from '@/components/form/fields/form-select.registration';
+import { InputElementRegistration } from '@/components/elements/inputs/form-input.registration';
+import { TextareaElementRegistration } from '@/components/elements/inputs/form-textarea.registration';
+import { CheckboxElementRegistration } from '@/components/elements/inputs/form-checkbox.registration';
+import { SelectElementRegistration } from '@/components/elements/inputs/form-select.registration';
 
 import { CardLayoutRegistration } from '@/components/layouts/card-layout.registration';
 import { SplitScreenLayoutRegistration } from '@/components/layouts/split-screen-layout.registration';

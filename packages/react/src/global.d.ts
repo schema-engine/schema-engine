@@ -4,7 +4,7 @@
  * NOTE: This file no longer contains bulk type augmentation.
  * Type augmentation now happens per-component via individual registration files.
  *
- * See: ./components/form/fields/*-registration.ts
+ * See: ./components/elements/inputs/*-registration.ts
  *
  * This approach ensures:
  * - Only imported components are type-registered

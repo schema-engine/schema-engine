@@ -8,8 +8,8 @@
  */
 
 import { createReactFormEngine } from '@/registries/builder-registry';
-import { InputElementRegistration } from '@/components/form/fields/form-input.registration';
-import { NumberElementRegistration } from '@/components/form/fields/form-number.registration';
+import { InputElementRegistration } from '@/components/elements/inputs/form-input.registration';
+import { NumberElementRegistration } from '@/components/elements/inputs/form-number.registration';
 
 /**
  * Build the form engine with React components

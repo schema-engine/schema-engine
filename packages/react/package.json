@@ -6,7 +6,7 @@
   "sideEffects": [
     "./dist/registrations.js",
     "./dist/components/form/registry.js",
-    "./dist/components/form/fields/*.registry.js",
+    "./dist/components/elements/inputs/*.registry.js",
     "./dist/components/layouts/*.registry.js",
     "./dist/components/steppers/*.registry.js"
   ],
@@ -177,9 +177,9 @@
       "types": "./dist/registrations.d.ts",
       "import": "./dist/registrations.js"
     },
-    "./components/form/fields/*": {
-      "types": "./dist/components/form/fields/*.d.ts",
-      "import": "./dist/components/form/fields/*.js"
+    "./components/elements/inputs/*": {
+      "types": "./dist/components/elements/inputs/*.d.ts",
+      "import": "./dist/components/elements/inputs/*.js"
     },
     "./components/internals": {
       "types": "./dist/components/internals.d.ts",

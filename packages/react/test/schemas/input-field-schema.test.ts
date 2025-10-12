@@ -8,7 +8,7 @@ import {
 	InputFieldSchema, 
 	inputFieldExample,
 	type InputFieldConfig 
-} from '@/components/form/fields/form-input.types';
+} from '@/components/elements/inputs/form-input.types';
 
 describe('Input Field Schema', () => {
 	test('validates valid input field configuration', () => {

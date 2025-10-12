@@ -187,4 +187,14 @@
 		background-color: var(--vertical-stepper-card);
 		border-color: var(--vertical-stepper-border);
 	}
+
+	&__content-title {
+		@apply text-2xl font-semibold mb-1.5;
+		color: var(--vertical-stepper-text-primary);
+	}
+
+	&__content-description {
+		@apply text-sm text-muted-foreground mb-6;
+		color: var(--vertical-stepper-text-secondary);
+	}
 }

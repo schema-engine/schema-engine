@@ -8,14 +8,14 @@
  * extending FormEngine.ElementRegistry with all built-in field types.
  */
 
-import type { InputFieldConfig } from './components/form/fields/form-input.types';
-import type { TextareaFieldConfig } from './components/form/fields/form-textarea.types';
-import type { CheckboxFieldConfig } from './components/form/fields/form-checkbox.types';
-import type { NumberFieldConfig } from './components/form/fields/form-number.types';
-import type { RadioFieldConfig } from './components/form/fields/form-radio.types';
-import type { SelectFieldConfig } from './components/form/fields/form-select.types';
-import type { SwitchFieldConfig } from './components/form/fields/form-switch.types';
-import type { ArrayElementsConfig } from './components/form/fields/form-array-elements.types';
+import type { InputFieldConfig } from './components/elements/inputs/form-input.types';
+import type { TextareaFieldConfig } from './components/elements/inputs/form-textarea.types';
+import type { CheckboxFieldConfig } from './components/elements/inputs/form-checkbox.types';
+import type { NumberFieldConfig } from './components/elements/inputs/form-number.types';
+import type { RadioFieldConfig } from './components/elements/inputs/form-radio.types';
+import type { SelectFieldConfig } from './components/elements/inputs/form-select.types';
+import type { SwitchFieldConfig } from './components/elements/inputs/form-switch.types';
+import type { ArrayElementsConfig } from './components/elements/inputs/form-array-elements.types';
 
 /**
  * Re-export all field types to ensure imports are preserved in .d.ts output

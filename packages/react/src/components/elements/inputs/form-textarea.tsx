@@ -1,18 +1,16 @@
-import { Input } from '@/shadcn/ui/input';
-import { FieldGroup } from '@/components/form/field-group';
+import { Textarea } from '@/shadcn/ui/textarea';
+import { FieldGroup } from '@/components/elements/field-group';
 import { useControlledFormElement, combineHandlers } from '@/hooks';
-import type { InputFieldProps } from './form-input.types';
+import type { TextareaFieldProps } from './form-textarea.types';
 
-export function FormInput({
+export function FormTextarea({
 	onChange: propsOnChange,
 	onBlur: propsOnBlur,
 	onFocus: propsOnFocus,
 	...config
-}: InputFieldProps) {
+}: TextareaFieldProps) {
 	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
 		useControlledFormElement(config);
-
-	const { inputType = 'text' } = config;
 
 	return (
 		<div style={containerStyles}>
@@ -24,14 +22,18 @@ export function FormInput({
 				error={error}
 			>
 				{config.description && <p className="text-sm text-muted-foreground mb-2">{config.description}</p>}
-				<Input
+				<Textarea
 					{...fieldProps}
-					type={inputType}
-					value={value || ''}
+					value={(value as string) || ''}
 					onChange={(e) => combineHandlers(onChange, propsOnChange)(e.target.value)}
 					onBlur={combineHandlers(onBlur, propsOnBlur)}
 					onFocus={propsOnFocus}
-					{...config}
+					placeholder={config.placeholder}
+					rows={config.rows}
+					cols={config.cols}
+					spellCheck={config.spellCheck}
+					wrap={config.wrap}
+					style={{ resize: config.resize }}
 				/>
 			</FieldGroup>
 		</div>

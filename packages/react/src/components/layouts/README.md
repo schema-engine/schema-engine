@@ -48,7 +48,34 @@ const { step } = useLayoutContext();
 		</div>
 	);
 }
+
+// Alternative approach - check both in one condition
+{
+	typeof step.index === "number" && typeof step.total === "number" && (
+		<div className="step-counter">
+			Step {step.index + 1} of {step.total}
+		</div>
+	);
+}
 ```
+
+## Styling
+
+Layout styling is **optional** and implemented via CSS imports. Each layout can have its own CSS file that is explicitly imported:
+
+```tsx
+import "./my-layout.css";
+```
+
+This approach allows:
+- **Opt-in styling**: Only loaded when the layout is used
+- **Full customization**: Developers can skip the CSS import and use their own styling solution
+- **No global pollution**: Styles are scoped to the layout component
+
+You're free to:
+- Use the provided CSS structure (PostCSS with Tailwind)
+- Skip CSS imports entirely and use inline styles, CSS-in-JS, or utility classes
+- Create your own styling approach
 
 ## Layout Component Template
 
@@ -56,20 +83,18 @@ Here's a complete template for creating a new layout component:
 
 ```tsx
 import { useLayoutContext } from "@/contexts/layout-context";
-import { cn } from "@/lib/utils";
-import "./my-layout.css";
+import { cn } from "@/shadcn/lib/utils";
+import type React from "react";
+import "./my-layout.css"; // Optional: Remove if using custom styling
+import type { MyLayoutConfig, MyLayoutProps } from "./my-layout.types";
 
-interface MyLayoutConfig {
-	variant?: "default" | "compact" | "spacious";
-	backgroundColor?: string;
-	// ... other layout-specific config
-}
-
-export const MyLayout: React.FC<{ children: React.ReactNode; className?: string }> = ({
-	children,
-	className,
-}) => {
-	// Access layout context
+/**
+ * My Layout
+ * Description of what this layout does
+ * Supports both single-step and multi-step forms
+ * Loads configuration from global context
+ */
+export const MyLayout: React.FC<MyLayoutProps> = ({ children, className }) => {
 	const { step, form, config } = useLayoutContext<MyLayoutConfig>();
 
 	// Extract config with defaults
@@ -80,24 +105,24 @@ export const MyLayout: React.FC<{ children: React.ReactNode; className?: string 
 	const description = step?.description || form.description;
 
 	// Check if we have step navigation info
-	const showStepCounter = isMultiStepForm(step);
+	const showStepCounter = typeof step.index === "number" && typeof step.total === "number";
 
 	return (
 		<div className={cn("my-layout", `my-layout--${variant}`, className)}>
 			{/* Header - only render if there's content to show */}
-			{(title || description || showStepCounter) && (
+			{(title || description || showStepCounter) ? (
 				<div className="my-layout__header">
-					{title && <h2 className="my-layout__title">{title}</h2>}
-					{description && <p className="my-layout__description">{description}</p>}
+					{title ? <h2 className="my-layout__title">{title}</h2> : null}
+					{description ? <p className="my-layout__description">{description}</p> : null}
 
 					{/* Step counter - only for multi-step forms */}
-					{showStepCounter && step.index !== undefined && step.total !== undefined && (
+					{showStepCounter && step.index !== undefined && step.total !== undefined ? (
 						<div className="my-layout__step-counter">
 							Step {step.index + 1} of {step.total}
 						</div>
-					)}
+					) : null}
 				</div>
-			)}
+			) : null}
 
 			{/* Main content area */}
 			<div className="my-layout__content" style={{ backgroundColor }}>
@@ -107,20 +132,53 @@ export const MyLayout: React.FC<{ children: React.ReactNode; className?: string 
 	);
 };
 
-// Registration
-import type { ReactLayoutRegistration } from "@/registries/builder-registry";
+// Registration (in my-layout.tsx)
+import type { LayoutRegistration } from "@json-form-engine/core/types";
 import { MyLayoutConfigSchema } from "./my-layout.types";
 
-export const MyLayoutRegistration: ReactLayoutRegistration = {
-	id: "my-layout",
-	component: MyLayout,
+export const MyLayoutRegistration: LayoutRegistration<MyLayoutConfig, MyLayoutProps> = {
+	__id: "my-layout",
+	render: MyLayout,
 	schema: MyLayoutConfigSchema,
 	metadata: {
 		name: "My Layout",
 		description: "A custom layout for...",
-		version: "1.0.0",
+		icon: "layout",
 	},
 };
+
+// Types file (my-layout.types.ts)
+import { z } from "zod";
+import { BaseLayoutConfigSchema } from "@json-form-engine/core/layouts/types";
+import type { ReactNode } from "react";
+
+export const MyLayoutConfigSchema = BaseLayoutConfigSchema.extend({
+	__id: z.literal("my-layout"),
+	variant: z.enum(["default", "compact", "spacious"]).optional(),
+	backgroundColor: z.string().optional(),
+});
+
+export type MyLayoutConfig = z.infer<typeof MyLayoutConfigSchema>;
+
+export type MyLayoutProps = MyLayoutConfig & {
+	children: ReactNode;
+	className?: string;
+};
+
+// Registration with type augmentation (my-layout.registration.ts)
+import { MyLayoutRegistration } from "./my-layout";
+import type { MyLayoutConfig } from "./my-layout.types";
+
+declare global {
+	namespace FormEngine {
+		interface LayoutRegistry {
+			"my-layout": MyLayoutConfig;
+		}
+	}
+}
+
+export const MyLayoutRegistrationWithTypes = MyLayoutRegistration;
+export { MyLayoutRegistration };
 ```
 
 ## Common Patterns
@@ -129,12 +187,12 @@ export const MyLayoutRegistration: ReactLayoutRegistration = {
 
 ```tsx
 // Only show header if there's meaningful content
-const showStepCounter = isMultiStepForm(step);
+const showStepCounter = typeof step.index === "number" && typeof step.total === "number";
 
 {
-	(title || description || showStepCounter) && (
+	(title || description || showStepCounter) ? (
 		<div className="layout__header">{/* header content */}</div>
-	);
+	) : null;
 }
 ```
 
@@ -146,25 +204,21 @@ const title = step?.title || form.title;
 const description = step?.description || form.description;
 ```
 
-### Pattern 3: Using the Helper Function
+### Pattern 3: Inline Type Checking
 
 ```tsx
-import { isMultiStepForm } from "@/contexts/layout-context";
-
-// Use the helper function for cleaner, more readable code
-const showStepCounter = isMultiStepForm(step);
+// Check types inline for cleaner code
+const showStepCounter = typeof step.index === "number" && typeof step.total === "number";
 
 // Then use throughout component
 {
-	showStepCounter && step.index !== undefined && step.total !== undefined && (
+	showStepCounter && step.index !== undefined && step.total !== undefined ? (
 		<span>
 			Step {step.index + 1} of {step.total}
 		</span>
-	);
+	) : null;
 }
 ```
-
-### Pattern 4: Using the Hook
 
 ## Architecture: Why This Approach?
 
@@ -286,16 +340,23 @@ const multiStepForm = {
 ### ✅ Correct Approach
 
 ```tsx
-import { isMultiStepForm } from "@/contexts/layout-context";
-
-const showStepCounter = isMultiStepForm(step);
+const showStepCounter = typeof step.index === "number" && typeof step.total === "number";
 
 {
-	showStepCounter && step.index !== undefined && step.total !== undefined && (
+	showStepCounter && step.index !== undefined && step.total !== undefined ? (
 		<span>
 			Step {step.index + 1} of {step.total}
 		</span>
-	);
+	) : null;
+}
+
+// Or more concise
+{
+	typeof step.index === "number" && typeof step.total === "number" ? (
+		<span>
+			Step {step.index + 1} of {step.total}
+		</span>
+	) : null;
 }
 ```
 
@@ -326,15 +387,17 @@ const shouldShowCounter =
 
 ### Q: Can I detect if this is a multi-step form in my layout?
 
-**A:** Yes, check if `step.index` and `step.total` are numbers using a ternary operator:
+**A:** Yes, check if `step.index` and `step.total` are numbers:
 
 ```tsx
 import { useLayoutContext } from "@/contexts/layout-context";
 const { step } = useLayoutContext<YourLayoutConfig>();
 
 // Check if multi-step by testing if index and total are numbers
+const isMultiStep = typeof step.index === "number" && typeof step.total === "number";
+
 {
-	typeof step.index === "number" && typeof step.total === "number" ? (
+	isMultiStep ? (
 		<div>
 			Step {step.index + 1} of {step.total}
 		</div>
@@ -344,6 +407,6 @@ const { step } = useLayoutContext<YourLayoutConfig>();
 
 ## See Also
 
-- [Context Architecture Documentation](../../../CONTEXT_ARCHITECTURE.md)
 - [Existing Layout Examples](./card-layout.tsx)
 - [Layout Context API](../../../contexts/layout-context.tsx)
+- [Core Types](../../../../core/src/types/)

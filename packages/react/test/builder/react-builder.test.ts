@@ -4,12 +4,12 @@
 
 import { describe, test, expect } from "bun:test";
 import { createReactFormEngine } from "@/registries/builder-registry";
-import { InputElementRegistration } from "@/components/form/fields/form-input.registration";
-import { FormTextarea } from "@/components/form/fields/form-textarea";
+import { InputElementRegistration } from "@/components/elements/inputs/form-input.registration";
+import { FormTextarea } from "@/components/elements/inputs/form-textarea";
 import { CardLayoutRegistration } from "@/components/layouts/card-layout";
 import { DefaultStepperRegistration } from "@/components/steppers/default-stepper";
-import { InputFieldSchema } from "@/components/form/fields/form-input.types";
-import { TextareaFieldSchema } from "@/components/form/fields/form-textarea.types";
+import { InputFieldSchema } from "@/components/elements/inputs/form-input.types";
+import { TextareaFieldSchema } from "@/components/elements/inputs/form-textarea.types";
 
 describe("React Form Engine Builder", () => {
 	describe("Builder Creation", () => {

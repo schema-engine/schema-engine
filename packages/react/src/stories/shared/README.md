@@ -259,7 +259,7 @@ export const TextareaElement: ReactElementRegistration = {
 2. **Import and add to form-engine-setup.ts:**
 
 ```tsx
-import { TextareaElement } from "@/components/form/fields/form-textarea";
+import { TextareaElement } from "@/components/elements/inputs/form-textarea";
 
 export const defaultFormEngine = createReactFormEngine()
 	.addElement(InputElement)
