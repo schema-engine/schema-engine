@@ -27,7 +27,7 @@
     "test:all": "bun test",
     "lint-staged": "lint-staged",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build -o ./storybook-static"
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "^18.0.1",

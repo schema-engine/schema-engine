@@ -1,57 +1,44 @@
 import { z } from 'zod';
 import { FormActionConfigSchema } from '../actions/types';
 import { GridLayoutConfigSchema } from './base-field';
-import { ValidationRuleSchema } from './validation/';
 
 export type { FormActionConfig } from '../actions/types';
 
 /**
- * Step layout configuration schema (for individual steps)
+ * Step layout configuration schema
+ *
+ * Base schema for step-specific layout configurations. Layout components define their own
+ * extended schemas with specific configuration options.
+ *
+ * @example
+ * ```ts
+ * const MyLayoutConfigSchema = StepLayoutConfigSchema.extend({
+ *   __id: z.literal('my-layout'),
+ *   columns: z.number(),
+ *   gap: z.string()
+ * });
+ * ```
  */
 export const StepLayoutConfigSchema = z.looseObject({
 	__id: z.string(),
 });
 
 /**
- * Form stepper configuration schema (for the entire form)
+ * Form stepper configuration schema
+ *
+ * Base schema for stepper configurations. Each stepper component registers its own
+ * extended schema with specific configuration options via module augmentation.
+ *
+ * @example
+ * ```ts
+ * const MyStepperConfigSchema = BaseStepperConfigSchema.extend({
+ *   __id: z.literal('my-stepper'),
+ *   orientation: z.enum(['horizontal', 'vertical'])
+ * });
+ * ```
  */
 export const FormStepperConfigSchema = z.looseObject({
 	__id: z.string(),
-});
-
-/**
- * Step navigation button configuration schema
- */
-export const StepNavigationButtonSchema = z.object({
-	label: z.string(),
-	variant: z.enum(['primary', 'secondary', 'outline', 'ghost']).optional(),
-	className: z.string().optional(),
-	disabled: z.boolean().optional(),
-	hidden: z.boolean().optional(),
-	constraints: z.array(z.any()).optional(), // Use any to avoid circular reference
-	customHandler: z.string().optional(), // Function name or identifier for custom handlers
-});
-
-/**
- * Step navigation configuration schema
- */
-export const StepNavigationConfigSchema = z.object({
-	showStepNumbers: z.boolean().optional().default(true),
-	showStepTitles: z.boolean().optional().default(true),
-	orientation: z.enum(['horizontal', 'vertical']).optional().default('horizontal'),
-	variant: z.enum(['default', 'pills', 'arrows', 'dots', 'minimal', 'compact']).optional().default('default'),
-	position: z.enum(['top', 'bottom', 'left', 'right']).optional().default('top'),
-	buttons: z
-		.object({
-			previous: StepNavigationButtonSchema.optional(),
-			next: StepNavigationButtonSchema.optional(),
-			submit: StepNavigationButtonSchema.optional(),
-			custom: z.record(z.string(), StepNavigationButtonSchema).optional(),
-		})
-		.optional(),
-	allowStepJumping: z.boolean().optional().default(false),
-	validateOnNext: z.boolean().optional().default(true),
-	className: z.string().optional(),
 });
 
 /**
@@ -62,16 +49,16 @@ export const FormStepSchema = z.object({
 	title: z.string(),
 	description: z.string().optional(),
 	icon: z.string().optional(),
-	layout: StepLayoutConfigSchema.optional(), // Step-specific layout configuration
-	elements: z.array(z.any()), // Will be typed as FieldConfig[] but avoiding circular reference
+	layout: StepLayoutConfigSchema.optional(),
+	elements: z.array(z.any()),
 	rules: z.any().optional(),
-	constraints: z.array(z.any()).optional(), // Use any to avoid circular reference
+	constraints: z.array(z.any()).optional(),
 	className: z.string().optional(),
 	style: z.record(z.string(), z.any()).optional(),
-	onStepEnter: z.array(FormActionConfigSchema).optional(), // Actions to run when entering step
-	onStepLeave: z.array(FormActionConfigSchema).optional(), // Actions to run when leaving step
-	onStepValidate: z.array(FormActionConfigSchema).optional(), // Actions to run for step validation
-	actions: z.array(FormActionConfigSchema).optional(), // General step actions
+	onStepEnter: z.array(FormActionConfigSchema).optional(),
+	onStepLeave: z.array(FormActionConfigSchema).optional(),
+	onStepValidate: z.array(FormActionConfigSchema).optional(),
+	actions: z.array(FormActionConfigSchema).optional(),
 });
 
 /**
@@ -82,13 +69,11 @@ export const FormConfigSchema = z.object({
 	title: z.string().optional(),
 	description: z.string().optional(),
 	steps: z.array(FormStepSchema),
-	stepper: FormStepperConfigSchema.optional(), // Custom stepper configuration
-	grid: z.lazy(() => GridLayoutConfigSchema).optional(), // CSS Grid layout for elements
-	stepperNavigation: StepNavigationConfigSchema.optional(), // Keep original stepper navigation config
+	stepper: FormStepperConfigSchema.optional(),
+	grid: z.lazy(() => GridLayoutConfigSchema).optional(),
 	mode: z.enum(['wizard', 'free']).optional().default('wizard'),
 	validationMode: z.enum(['onSubmit', 'onChange', 'onBlur', 'all']).optional(),
 	reValidateMode: z.enum(['onSubmit', 'onChange', 'onBlur']).optional(),
-	rules: ValidationRuleSchema.array().optional(),
 	className: z.string().optional(),
 	style: z.record(z.string(), z.any()).optional(),
 	actions: z.array(FormActionConfigSchema).optional(),
@@ -99,8 +84,6 @@ export const FormConfigSchema = z.object({
  */
 export type StepLayoutConfig = z.infer<typeof StepLayoutConfigSchema>;
 export type FormStepperConfig = z.infer<typeof FormStepperConfigSchema>;
-export type StepNavigationButton = z.infer<typeof StepNavigationButtonSchema>;
-export type StepNavigationConfig = z.infer<typeof StepNavigationConfigSchema>;
 
 /**
  * Form step configuration type with properly typed elements array.
@@ -122,51 +105,3 @@ export type FormConfig = Omit<z.infer<typeof FormConfigSchema>, 'steps'> & {
 	onSubmit?: (data: any) => void | Promise<void>;
 	onChange?: (data: any) => void;
 };
-
-/**
- * Stepper variant options
- */
-export type StepperVariant = 'default' | 'minimal' | 'compact';
-
-/**
- * Stepper orientation options
- */
-export type StepperOrientation = 'horizontal' | 'vertical';
-
-/**
- * Stepper validation mode options
- */
-export type StepperValidationMode = 'wizard' | 'free';
-
-/**
- * Handler types for custom stepper functionality
- */
-export interface StepHandlers {
-	onStepEnter?: (stepId: string, stepIndex: number, formData: any) => void | Promise<void>;
-	onStepLeave?: (stepId: string, stepIndex: number, formData: any) => boolean | Promise<boolean>;
-	onStepValidate?: (stepId: string, stepIndex: number, formData: any) => boolean | Promise<boolean>;
-	customNavigationHandlers?: Record<
-		string,
-		(stepId: string, stepIndex: number, formData: any) => void | Promise<void>
-	>;
-}
-
-/**
- * Stepper context data
- */
-export interface StepperContextData {
-	currentStep: number;
-	totalSteps: number;
-	steps: FormStep[];
-	isFirstStep: boolean;
-	isLastStep: boolean;
-	canGoNext: boolean;
-	canGoPrevious: boolean;
-	goToStep: (step: number) => void | Promise<void>;
-	goToNext: () => void | Promise<void>;
-	goToPrevious: () => void | Promise<void>;
-	validateCurrentStep: () => boolean | Promise<boolean>;
-	getStepData: (stepIndex?: number) => any;
-	handlers?: StepHandlers;
-	validationMode?: StepperValidationMode;
-}

@@ -1,4 +1,5 @@
 import type { FormActionConfig } from '@/actions/types';
+import type { GridLayoutConfig } from '@/schemas/base-field';
 
 /**
  * Form step during building phase.
@@ -24,4 +25,9 @@ export type PartialFormConfig = {
 	mode?: 'wizard' | 'free';
 	stepper?: FormEngine.StepperConfig;
 	actions?: FormActionConfig[];
+	validationMode?: 'onSubmit' | 'onChange' | 'onBlur' | 'all';
+	reValidateMode?: 'onSubmit' | 'onChange' | 'onBlur';
+	grid?: GridLayoutConfig;
+	className?: string;
+	style?: Record<string, any>;
 };

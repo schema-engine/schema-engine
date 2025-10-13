@@ -89,6 +89,56 @@ export class FormConfigBuilder<
 	}
 
 	/**
+	 * Set the validation mode for the form.
+	 *
+	 * @param mode - When to trigger validation (onSubmit, onChange, onBlur, or all)
+	 */
+	setValidationMode(mode: 'onSubmit' | 'onChange' | 'onBlur' | 'all'): this {
+		this.config.validationMode = mode;
+		return this;
+	}
+
+	/**
+	 * Set the revalidation mode for the form.
+	 *
+	 * @param mode - When to trigger revalidation after initial validation (onSubmit, onChange, or onBlur)
+	 */
+	setReValidateMode(mode: 'onSubmit' | 'onChange' | 'onBlur'): this {
+		this.config.reValidateMode = mode;
+		return this;
+	}
+
+	/**
+	 * Set the grid configuration for the form.
+	 *
+	 * @param grid - Grid layout configuration
+	 */
+	setGrid(grid: import('@/schemas/base-field').GridLayoutConfig): this {
+		this.config.grid = grid;
+		return this;
+	}
+
+	/**
+	 * Set the CSS class name for the form.
+	 *
+	 * @param className - CSS class name
+	 */
+	setClassName(className: string): this {
+		this.config.className = className;
+		return this;
+	}
+
+	/**
+	 * Set the inline styles for the form.
+	 *
+	 * @param style - Inline style object
+	 */
+	setStyle(style: Record<string, any>): this {
+		this.config.style = style;
+		return this;
+	}
+
+	/**
 	 * Add a new step to the form.
 	 * This becomes the current step where elements will be added.
 	 *
@@ -324,6 +374,11 @@ export class FormConfigBuilder<
 			mode: this.config.mode || 'wizard',
 			stepper: this.config.stepper as any,
 			actions: this.config.actions,
+			validationMode: this.config.validationMode,
+			reValidateMode: this.config.reValidateMode,
+			grid: this.config.grid,
+			className: this.config.className,
+			style: this.config.style,
 		};
 	}
 }
