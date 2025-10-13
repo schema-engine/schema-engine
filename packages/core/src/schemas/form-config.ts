@@ -92,7 +92,7 @@ export type FormStepperConfig = z.infer<typeof FormStepperConfigSchema>;
  * but we override it here to provide strict type checking for field configurations.
  */
 export type FormStep = Omit<z.infer<typeof FormStepSchema>, 'elements'> & {
-	elements: FormEngine.ElementConfig[];
+	elements: Array<FormEngine.ElementConfig>;
 };
 
 /**
@@ -100,7 +100,7 @@ export type FormStep = Omit<z.infer<typeof FormStepSchema>, 'elements'> & {
  * Includes additional properties not in the Zod schema for runtime handlers.
  */
 export type FormConfig = Omit<z.infer<typeof FormConfigSchema>, 'steps'> & {
-	steps: FormStep[];
+	steps: Array<FormStep>;
 	stepper?: FormStepperConfig;
 	onSubmit?: (data: any) => void | Promise<void>;
 	onChange?: (data: any) => void;

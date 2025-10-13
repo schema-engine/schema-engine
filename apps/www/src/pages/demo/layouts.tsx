@@ -18,7 +18,7 @@ const cardLayoutDemo: FormConfig = {
 			title: 'Card Layout Test',
 
 			layout: {
-				id: 'card',
+				__id: 'card',
 				padding: 'large',
 				shadow: true,
 				borderRadius: 'medium',
@@ -58,7 +58,7 @@ const splitScreenLayoutDemo: FormConfig = {
 			title: 'Split Screen Test',
 
 			layout: {
-				id: 'split-screen',
+				__id: 'split-screen',
 				leftWidth: '40%',
 				rightWidth: '60%',
 				gap: '2rem',
@@ -106,7 +106,7 @@ const heroLayoutDemo: FormConfig = {
 			title: 'Hero Layout Test',
 
 			layout: {
-				id: 'hero-background',
+				__id: 'hero-background',
 				backgroundStyle: 'gradient',
 				textAlign: 'center',
 				maxWidth: '500px',
