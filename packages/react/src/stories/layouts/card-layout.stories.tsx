@@ -28,7 +28,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const contactFormBase = FormTemplates.contactForm();
+const contactFormBase = FormTemplates.loginForm();
 
 export const Default: Story = {
 	args: {

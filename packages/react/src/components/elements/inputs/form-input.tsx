@@ -21,9 +21,9 @@ export function FormInput({
 				htmlFor={config.id}
 				hiddenLabel={!config.label}
 				required={isRequired}
+				description={config.description}
 				error={error}
 			>
-				{config.description && <p className="text-sm text-muted-foreground mb-2">{config.description}</p>}
 				<Input
 					{...fieldProps}
 					type={inputType}

@@ -2,7 +2,7 @@ import { Button } from '@/shadcn/ui/button';
 import type { SubmitButtonProps } from './submit-button.types';
 import { useFormContext } from '@/adapters';
 
-export function SubmitButton({ label = 'Submit', disabled, onClick, ...config }: SubmitButtonProps) {
+export function SubmitButton({ label = 'Submit', disabled, onClick, className, ...config }: SubmitButtonProps) {
 	const { formState } = useFormContext();
 	const isSubmitting = formState?.isSubmitting;
 
@@ -12,6 +12,7 @@ export function SubmitButton({ label = 'Submit', disabled, onClick, ...config }:
 			disabled={isSubmitting || disabled}
 			aria-busy={isSubmitting}
 			onClick={onClick}
+			className={className}
 			{...config}
 		>
 			{isSubmitting ? 'Submitting...' : label}

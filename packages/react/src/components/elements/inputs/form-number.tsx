@@ -14,7 +14,6 @@ export function FormNumber({
 	return (
 		<div className="space-y-2" style={containerStyles}>
 			{config.label && <Label {...labelProps}>{config.label}</Label>}
-			{config.description && <p className="text-sm text-muted-foreground">{config.description}</p>}
 			<Input
 				{...fieldProps}
 				type="number"
@@ -33,6 +32,7 @@ export function FormNumber({
 				autoFocus={config.autoFocus}
 				inputMode={config.inputMode}
 			/>
+			{config.description && <p className="text-xs text-muted-foreground">{config.description}</p>}
 			{errorProps && <div {...errorProps}>{fieldState.error?.message}</div>}
 		</div>
 	);

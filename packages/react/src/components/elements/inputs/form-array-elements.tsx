@@ -56,8 +56,6 @@ export function FormArrayElements({
 		<div className="space-y-2" style={containerStyles}>
 			{config.label && <Label {...labelProps}>{config.label}</Label>}
 
-			{config.description && <p className="text-sm text-muted-foreground">{config.description}</p>}
-
 			<div className="space-y-4">
 				<div className="space-y-3">
 					{fields.map((field, index) => (
@@ -123,6 +121,7 @@ export function FormArrayElements({
 				)}
 			</div>
 
+			{config.description && <p className="text-xs text-muted-foreground">{config.description}</p>}
 			{errorProps && <div {...errorProps}>{fieldState.error?.message}</div>}
 		</div>
 	);

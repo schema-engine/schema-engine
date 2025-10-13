@@ -14,7 +14,6 @@ export function FormRadio({
 	return (
 		<div className="space-y-2" style={containerStyles}>
 			{config.label && <Label {...labelProps}>{config.label}</Label>}
-			{config.description && <p className="text-sm text-muted-foreground">{config.description}</p>}
 			<RadioGroup
 				{...fieldProps}
 				value={field.value || ''}
@@ -39,6 +38,7 @@ export function FormRadio({
 					</div>
 				))}
 			</RadioGroup>
+			{config.description && <p className="text-xs text-muted-foreground">{config.description}</p>}
 			{errorProps && <div {...errorProps}>{fieldState.error?.message}</div>}
 		</div>
 	);

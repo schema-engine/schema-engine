@@ -7,6 +7,7 @@ interface FieldGroupProps {
 	htmlFor?: string;
 	hiddenLabel?: boolean;
 	required?: boolean;
+	description?: string;
 	error?: string;
 	className?: string;
 	children: React.ReactNode;
@@ -17,6 +18,7 @@ export function FieldGroup({
 	htmlFor,
 	hiddenLabel = false,
 	required = false,
+	description,
 	error,
 	className,
 	children,
@@ -35,11 +37,13 @@ export function FieldGroup({
 			</Label>
 			<div className="space-y-1">
 				{children}
-				{error && (
+				{error ? (
 					<p className="text-sm text-destructive" role="alert">
 						{error}
 					</p>
-				)}
+				) : description ? (
+					<p className="text-sm text-muted-foreground">{description}</p>
+				) : null}
 			</div>
 		</div>
 	);

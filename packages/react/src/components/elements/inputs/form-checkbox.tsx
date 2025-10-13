@@ -13,7 +13,6 @@ export function FormCheckbox({
 
 	return (
 		<div className="space-y-2" style={containerStyles}>
-			{config.description && <p className="text-sm text-muted-foreground">{config.description}</p>}
 			<div className="flex items-center space-x-2">
 				<Checkbox
 					{...fieldProps}
@@ -33,6 +32,7 @@ export function FormCheckbox({
 					</Label>
 				)}
 			</div>
+			{config.description && <p className="text-xs text-muted-foreground">{config.description}</p>}
 			{errorProps && <div {...errorProps}>{fieldState.error?.message}</div>}
 		</div>
 	);

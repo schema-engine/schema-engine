@@ -14,7 +14,6 @@ export function FormSelect({
 	return (
 		<div className="space-y-2" style={containerStyles}>
 			{config.label && <Label {...labelProps}>{config.label}</Label>}
-			{config.description && <p className="text-sm text-muted-foreground">{config.description}</p>}
 			<Select
 				value={field.value || ''}
 				onValueChange={(value) => combineHandlers(field.onChange, propsOnChange)(value)}
@@ -35,6 +34,7 @@ export function FormSelect({
 					))}
 				</SelectContent>
 			</Select>
+			{config.description && <p className="text-xs text-muted-foreground">{config.description}</p>}
 			{errorProps && <div {...errorProps}>{fieldState.error?.message}</div>}
 		</div>
 	);

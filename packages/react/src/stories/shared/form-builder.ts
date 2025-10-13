@@ -60,6 +60,7 @@ export const FormTemplates = {
 				label: 'Email Address',
 				placeholder: 'john@example.com',
 				inputType: 'email',
+
 				rules: [ValidationPresets.string.email()],
 			})
 			.addElement('submit', { id: 'submit', label: 'Send Message', name: 'submit' })
@@ -86,9 +87,13 @@ export const FormTemplates = {
 				name: 'password',
 				label: 'Password',
 				inputType: 'password',
+				description: 'At least 6 characters with letters, numbers, and symbols.',
 				rules: [
 					ValidationPresets.string.required('Password is required'),
-					ValidationPresets.string.minLength(8),
+					ValidationPresets.string.pattern('(?=.*[A-Za-z])', 'Must include letters'),
+					ValidationPresets.string.pattern('(?=.*\\d)', 'Must include numbers'),
+					ValidationPresets.string.pattern('(?=.*[@$!%*#?&])', 'Must include special characters'),
+					ValidationPresets.string.minLength(6),
 				],
 			})
 			.addElement('submit', { id: 'submit', label: 'Send Message', name: 'submit' })
