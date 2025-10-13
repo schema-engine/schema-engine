@@ -32,7 +32,6 @@ import { CardLayoutRegistration } from '@/components/layouts/card-layout';
 import { SplitScreenLayoutRegistration } from '@/components/layouts/split-screen-layout';
 import { HeroBackgroundLayoutRegistration } from '@/components/layouts/hero-background-layout';
 import { DefaultStepperRegistration } from '@/components/steppers/default-stepper';
-import { VerticalStepperRegistration } from '@/components/steppers/vertical-stepper';
 import { MinimalistStepperRegistration } from '@/components/steppers/minimalist-stepper';
 import { DebuggerStepperRegistration } from '@/components/steppers/debugger-stepper';
 
@@ -49,12 +48,10 @@ import type { CardLayoutConfig } from '@/components/layouts/card-layout.types';
 import type { SplitScreenLayoutConfig } from '@/components/layouts/split-screen-layout.types';
 import type { HeroBackgroundLayoutConfig } from '@/components/layouts/hero-background-layout.types';
 import type { DefaultStepperConfig } from '@/components/steppers/default-stepper.types';
-import type { VerticalStepsStepperConfig } from '@/components/steppers/vertical-stepper.types';
 import type { MinimalistStepperConfig } from '@/components/steppers/minimalist-stepper.types';
 import type { DebuggerStepperConfig } from '@/components/steppers/debugger-stepper.types';
 
 import '@/components/steppers/default-stepper.css';
-import '@/components/steppers/vertical-stepper.css';
 import '@/components/steppers/minimalist-stepper.css';
 import '@/components/steppers/debugger-stepper.css';
 
@@ -69,7 +66,7 @@ import '@/components/layouts/hero-background-layout.css';
  * Components included:
  * - Elements: input, textarea, checkbox, select, radio, switch, number, arrayElements, submit
  * - Layouts: card, split-screen, hero-background
- * - Steppers: default, vertical, minimalist, debugger
+ * - Steppers: default (horizontal/sidebar), minimalist, debugger
  *
  * @example
  * ```typescript
@@ -100,7 +97,6 @@ export function createDefaultFormEngineBuilder() {
 		.addLayout<'split-screen', SplitScreenLayoutConfig>(SplitScreenLayoutRegistration)
 		.addLayout<'hero-background', HeroBackgroundLayoutConfig>(HeroBackgroundLayoutRegistration)
 		.addStepper<'default', DefaultStepperConfig>(DefaultStepperRegistration)
-		.addStepper<'vertical', VerticalStepsStepperConfig>(VerticalStepperRegistration)
 		.addStepper<'minimalist', MinimalistStepperConfig>(MinimalistStepperRegistration)
 		.addStepper<'debugger', DebuggerStepperConfig>(DebuggerStepperRegistration);
 }
@@ -144,7 +140,6 @@ export {
 	SplitScreenLayoutRegistration,
 	HeroBackgroundLayoutRegistration,
 	DefaultStepperRegistration,
-	VerticalStepperRegistration,
 	MinimalistStepperRegistration,
 	DebuggerStepperRegistration,
 };

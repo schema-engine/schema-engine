@@ -3,8 +3,6 @@ import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '../shared/story-wrapper';
 import { FormTemplates } from '../shared/form-builder';
 
-const baseForm = FormTemplates.contactForm();
-
 const meta = {
 	title: 'Layouts/HeroBackgroundLayout',
 	component: FormRenderer,
@@ -33,8 +31,8 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
 	args: {
 		config: {
-			...baseForm,
-			steps: [{ ...baseForm.steps[0], layout: { __id: 'hero-background' } }],
+			...FormTemplates.contactForm,
+			steps: [{ ...FormTemplates.contactForm.steps[0], layout: { __id: 'hero-background' } }],
 		},
 	},
 };
@@ -42,10 +40,10 @@ export const Default: Story = {
 export const WithBackgroundImage: Story = {
 	args: {
 		config: {
-			...baseForm,
+			...FormTemplates.contactForm,
 			steps: [
 				{
-					...baseForm.steps[0],
+					...FormTemplates.contactForm.steps[0],
 					layout: {
 						__id: 'hero-background',
 						backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
@@ -60,10 +58,10 @@ export const WithBackgroundImage: Story = {
 export const SmallContent: Story = {
 	args: {
 		config: {
-			...baseForm,
+			...FormTemplates.contactForm,
 			steps: [
 				{
-					...baseForm.steps[0],
+					...FormTemplates.contactForm.steps[0],
 					layout: {
 						__id: 'hero-background',
 						backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
@@ -78,10 +76,10 @@ export const SmallContent: Story = {
 export const MediumContent: Story = {
 	args: {
 		config: {
-			...baseForm,
+			...FormTemplates.contactForm,
 			steps: [
 				{
-					...baseForm.steps[0],
+					...FormTemplates.contactForm.steps[0],
 					layout: {
 						__id: 'hero-background',
 						backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
@@ -96,10 +94,10 @@ export const MediumContent: Story = {
 export const LargeContent: Story = {
 	args: {
 		config: {
-			...baseForm,
+			...FormTemplates.contactForm,
 			steps: [
 				{
-					...baseForm.steps[0],
+					...FormTemplates.contactForm.steps[0],
 					layout: {
 						__id: 'hero-background',
 						backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
@@ -114,10 +112,10 @@ export const LargeContent: Story = {
 export const ExtraLargeContent: Story = {
 	args: {
 		config: {
-			...baseForm,
+			...FormTemplates.contactForm,
 			steps: [
 				{
-					...baseForm.steps[0],
+					...FormTemplates.contactForm.steps[0],
 					layout: {
 						__id: 'hero-background',
 						backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
@@ -132,10 +130,10 @@ export const ExtraLargeContent: Story = {
 export const GradientBackground: Story = {
 	args: {
 		config: {
-			...baseForm,
+			...FormTemplates.contactForm,
 			steps: [
 				{
-					...baseForm.steps[0],
+					...FormTemplates.contactForm.steps[0],
 					layout: {
 						__id: 'hero-background',
 						backgroundImage: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1920&q=80',
@@ -150,10 +148,10 @@ export const GradientBackground: Story = {
 export const NatureBackground: Story = {
 	args: {
 		config: {
-			...baseForm,
+			...FormTemplates.contactForm,
 			steps: [
 				{
-					...baseForm.steps[0],
+					...FormTemplates.contactForm.steps[0],
 					layout: {
 						__id: 'hero-background',
 						backgroundImage: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=80',
@@ -165,7 +163,7 @@ export const NatureBackground: Story = {
 	},
 };
 
-const multiStepForm = { ...FormTemplates.registrationForm(), stepper: { __id: 'debugger' as const } };
+const multiStepForm = { ...FormTemplates.registrationForm, stepper: { __id: 'debugger' as const } };
 
 export const MultiStepWithBackground: Story = {
 	args: {

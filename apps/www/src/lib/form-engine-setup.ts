@@ -37,7 +37,6 @@ import {
  */
 import {
 	DefaultStepperRegistration,
-	VerticalStepperRegistration,
 	MinimalistStepperRegistration,
 	DebuggerStepperRegistration,
 } from '@json-form-engine/react/registrations';
@@ -77,7 +76,6 @@ export const formEngine = createReactFormEngine()
 	.addLayout(SplitScreenLayoutRegistration)
 	.addLayout(HeroBackgroundLayoutRegistration)
 	.addStepper(DefaultStepperRegistration)
-	.addStepper(VerticalStepperRegistration)
 	.addStepper(MinimalistStepperRegistration)
 	.addStepper(DebuggerStepperRegistration)
 	.addAction(

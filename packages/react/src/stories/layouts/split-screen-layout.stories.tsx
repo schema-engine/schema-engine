@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '../shared/story-wrapper';
-import { createForm, FormTemplates, ValidationPresets } from '../shared/form-builder';
+import { FormTemplates } from '../shared/form-builder';
 
-const baseForm = FormTemplates.contactForm();
+const baseForm = FormTemplates.contactForm;
 
 const meta = {
 	title: 'Layouts/SplitScreenLayout',
@@ -32,37 +32,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
 	args: {
-		config: createForm()
-			.setId('split-screen-demo')
-			.setTitle('Account Setup')
-			.setDescription('Create your account to get started')
-			.addStep({
-				id: 'account-step',
-				title: 'Account Setup',
-				description: 'Create your account to get started',
-			})
-			.setStepLayout('split-screen', {})
-			.addElement('input', {
-				id: 'username',
-				name: 'username',
-				label: 'Username',
-				placeholder: 'johndoe',
-				inputType: 'text',
-			})
-			.addElement('input', {
-				id: 'email',
-				name: 'email',
-				label: 'Email',
-				placeholder: 'john@example.com',
-				inputType: 'email',
-				rules: [ValidationPresets.string.email()],
-			})
-			.addElement('submit', {
-				id: 'submit',
-				name: 'submit',
-				label: 'Create Account',
-			})
-			.build(),
+		config: FormTemplates.splitScreenForm,
 	},
 };
 
@@ -400,7 +370,7 @@ export const FeedbackFormExample: Story = {
 	},
 };
 
-const multiStepForm = { ...FormTemplates.registrationForm(), stepper: { __id: 'debugger' as const } };
+const multiStepForm = { ...FormTemplates.registrationForm, stepper: { __id: 'debugger' as const } };
 
 export const MultiStepLeftSide: Story = {
 	args: {

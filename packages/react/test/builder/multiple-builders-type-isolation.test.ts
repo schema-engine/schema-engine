@@ -22,7 +22,7 @@ import { CardLayoutRegistration } from '@/components/layouts/card-layout.registr
 import { SplitScreenLayoutRegistration } from '@/components/layouts/split-screen-layout.registration';
 
 import { DefaultStepperRegistration } from '@/components/steppers/default-stepper.registration';
-import { VerticalStepperRegistration } from '@/components/steppers/vertical-stepper.registration';
+import { MinimalistStepperRegistration } from '@/components/steppers/minimalist-stepper.registration';
 
 describe('Multiple Builders Type Isolation', () => {
 	test('should create builder with only input and textarea', () => {
@@ -43,7 +43,7 @@ describe('Multiple Builders Type Isolation', () => {
 		expect(engine.hasLayout('split-screen')).toBe(false);
 		
 		expect(engine.hasStepper('default')).toBe(true);
-		expect(engine.hasStepper('vertical')).toBe(false);
+		expect(engine.hasStepper('minimalist')).toBe(false);
 	});
 
 	test('should create builder with different components', () => {
@@ -55,7 +55,7 @@ describe('Multiple Builders Type Isolation', () => {
 			.addLayout(CardLayoutRegistration)
 			.addLayout(SplitScreenLayoutRegistration)
 			.addStepper(DefaultStepperRegistration)
-			.addStepper(VerticalStepperRegistration);
+			.addStepper(MinimalistStepperRegistration);
 
 		const engine = fullBuilder.build();
 
@@ -68,7 +68,7 @@ describe('Multiple Builders Type Isolation', () => {
 		expect(engine.hasLayout('split-screen')).toBe(true);
 		
 		expect(engine.hasStepper('default')).toBe(true);
-		expect(engine.hasStepper('vertical')).toBe(true);
+		expect(engine.hasStepper('minimalist')).toBe(true);
 	});
 
 	test('should create two independent builders', () => {
@@ -128,8 +128,8 @@ describe('Multiple Builders Type Isolation', () => {
 		expect(defaultStepper).toBeDefined();
 		expect(defaultStepper?.__id).toBe('default');
 
-		const verticalStepper = engine.getStepper('vertical');
-		expect(verticalStepper).toBeUndefined();
+		const minimalistStepper = engine.getStepper('minimalist');
+		expect(minimalistStepper).toBeUndefined();
 	});
 
 	test('should allow method chaining', () => {

@@ -3,6 +3,11 @@ import { BaseStepperConfigSchema } from '@json-form-engine/core/steppers/types';
 
 export const DefaultStepperConfigSchema = BaseStepperConfigSchema.extend({
 	__id: z.literal('default'),
+	orientation: z
+		.enum(['horizontal', 'sidebar'])
+		.optional()
+		.default('horizontal')
+		.describe('Stepper layout orientation'),
 	showStepNumbers: z.boolean().optional().describe('Display step numbers in the indicator'),
 	showStepTitles: z.boolean().optional().describe('Display step titles below indicators'),
 	showStepDescriptions: z.boolean().optional().describe('Display step descriptions below titles'),
@@ -18,6 +23,7 @@ export type DefaultStepperProps = DefaultStepperConfig;
 
 export const defaultStepperExample: DefaultStepperConfig = {
 	__id: 'default',
+	orientation: 'horizontal',
 	showStepNumbers: true,
 	showStepTitles: true,
 	showStepDescriptions: false,

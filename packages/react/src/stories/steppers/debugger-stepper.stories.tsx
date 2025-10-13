@@ -3,8 +3,6 @@ import { FormRenderer } from '@/components/internals/form-renderer';
 import { FormTemplates } from '../shared/form-builder';
 import { StoryWrapper } from '../shared/story-wrapper';
 
-const multiStepRegistrationForm = FormTemplates.registrationForm();
-
 const meta = {
 	title: 'Steppers/DebuggerStepper',
 	component: FormRenderer,
@@ -39,7 +37,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
 	args: {
 		config: {
-			...multiStepRegistrationForm,
+			...FormTemplates.registrationForm,
 			stepper: {
 				__id: 'debugger',
 				showStepDetails: true,
@@ -53,7 +51,7 @@ export const Default: Story = {
 export const ExpandedByDefault: Story = {
 	args: {
 		config: {
-			...multiStepRegistrationForm,
+			...FormTemplates.registrationForm,
 			title: 'Product Survey',
 			description: 'Debugger starts expanded',
 			stepper: {
@@ -69,7 +67,7 @@ export const ExpandedByDefault: Story = {
 export const MinimalDebugInfo: Story = {
 	args: {
 		config: {
-			...multiStepRegistrationForm,
+			...FormTemplates.registrationForm,
 			title: 'Quick Survey',
 			description: 'Minimal debug information',
 			stepper: {
@@ -85,7 +83,7 @@ export const MinimalDebugInfo: Story = {
 export const WithComplexForm: Story = {
 	args: {
 		config: {
-			...multiStepRegistrationForm,
+			...FormTemplates.onboardingSurvey,
 			title: 'Complex Application Form',
 			description: 'Multi-step form with validation and many steps',
 			stepper: {

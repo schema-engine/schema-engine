@@ -3,8 +3,6 @@ import { FormRenderer } from '@/components/internals/form-renderer';
 import { FormTemplates } from '../shared/form-builder';
 import { StoryWrapper } from '../shared/story-wrapper';
 
-const multiStepRegistrationForm = FormTemplates.registrationForm();
-
 const meta = {
 	title: 'Steppers/MinimalistStepper',
 	component: FormRenderer,
@@ -33,7 +31,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
 	args: {
 		config: {
-			...multiStepRegistrationForm,
+			...FormTemplates.registrationForm,
 			stepper: {
 				__id: 'minimalist',
 				showProgress: true,
@@ -45,7 +43,7 @@ export const Default: Story = {
 export const WithProgress: Story = {
 	args: {
 		config: {
-			...multiStepRegistrationForm,
+			...FormTemplates.registrationForm,
 			stepper: {
 				__id: 'minimalist',
 				showProgress: true,
@@ -57,7 +55,7 @@ export const WithProgress: Story = {
 export const WithoutProgress: Story = {
 	args: {
 		config: {
-			...multiStepRegistrationForm,
+			...FormTemplates.registrationForm,
 			stepper: {
 				__id: 'minimalist',
 				showProgress: false,
@@ -69,7 +67,7 @@ export const WithoutProgress: Story = {
 export const LongForm: Story = {
 	args: {
 		config: {
-			...multiStepRegistrationForm,
+			...FormTemplates.registrationForm,
 			title: 'Extended Registration Form',
 			description: 'A longer multi-step form with more steps',
 			stepper: {

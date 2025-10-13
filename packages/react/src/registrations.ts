@@ -39,6 +39,5 @@ export { SplitScreenLayoutRegistration } from './components/layouts/split-screen
 export { HeroBackgroundLayoutRegistration } from './components/layouts/hero-background-layout.registration';
 
 export { DefaultStepperRegistration } from './components/steppers/default-stepper.registration';
-export { VerticalStepperRegistration } from './components/steppers/vertical-stepper.registration';
 export { MinimalistStepperRegistration } from './components/steppers/minimalist-stepper.registration';
 export { DebuggerStepperRegistration } from './components/steppers/debugger-stepper.registration';

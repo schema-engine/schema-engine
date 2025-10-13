@@ -3,13 +3,17 @@ import { FormRenderer } from '@/components/internals/form-renderer';
 import { FormTemplates } from '../shared/form-builder';
 import { StoryWrapper } from '../shared/story-wrapper';
 
-const multiStepRegistrationForm = FormTemplates.registrationForm();
-
 const meta = {
 	title: 'Steppers/DefaultStepper',
 	component: FormRenderer,
 	parameters: {
 		layout: 'padded',
+		docs: {
+			description: {
+				component:
+					'Flexible stepper supporting both horizontal (mobile-friendly, scrollable) and sidebar (desktop, vertical timeline) orientations. Features edge-to-edge connector design.',
+			},
+		},
 	},
 	decorators: [
 		(Story) => (
@@ -30,12 +34,13 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const HorizontalDefault: Story = {
 	args: {
 		config: {
-			...multiStepRegistrationForm,
+			...FormTemplates.registrationForm,
 			stepper: {
 				__id: 'default',
+				orientation: 'horizontal',
 				showStepNumbers: true,
 				showStepTitles: true,
 				showStepDescriptions: false,
@@ -44,12 +49,13 @@ export const Default: Story = {
 	},
 };
 
-export const WithDescriptions: Story = {
+export const HorizontalWithDescriptions: Story = {
 	args: {
 		config: {
-			...multiStepRegistrationForm,
+			...FormTemplates.registrationForm,
 			stepper: {
 				__id: 'default',
+				orientation: 'horizontal',
 				showStepNumbers: true,
 				showStepTitles: true,
 				showStepDescriptions: true,
@@ -58,12 +64,13 @@ export const WithDescriptions: Story = {
 	},
 };
 
-export const NumbersOnly: Story = {
+export const HorizontalNumbersOnly: Story = {
 	args: {
 		config: {
-			...multiStepRegistrationForm,
+			...FormTemplates.registrationForm,
 			stepper: {
 				__id: 'default',
+				orientation: 'horizontal',
 				showStepNumbers: true,
 				showStepTitles: false,
 				showStepDescriptions: false,
@@ -72,43 +79,54 @@ export const NumbersOnly: Story = {
 	},
 };
 
-export const TitlesOnly: Story = {
+export const HorizontalFourSteps: Story = {
 	args: {
 		config: {
-			...multiStepRegistrationForm,
+			...FormTemplates.onboardingSurvey,
 			stepper: {
 				__id: 'default',
-				showStepNumbers: false,
-				showStepTitles: true,
-				showStepDescriptions: false,
-			},
-		},
-	},
-};
-
-export const MinimalInfo: Story = {
-	args: {
-		config: {
-			...multiStepRegistrationForm,
-			stepper: {
-				__id: 'default',
-				showStepNumbers: false,
-				showStepTitles: false,
-				showStepDescriptions: false,
-			},
-		},
-	},
-};
-
-export const FullInfo: Story = {
-	args: {
-		config: {
-			...multiStepRegistrationForm,
-			stepper: {
-				__id: 'default',
+				orientation: 'horizontal',
 				showStepNumbers: true,
 				showStepTitles: true,
-				showStepDescriptions: true,
+				showStepDescriptions: false,
+			},
+		},
+	},
+};
+
+export const SidebarDefault: Story = {
+	args: {
+		config: {
+			...FormTemplates.registrationForm,
+			stepper: {
+				__id: 'default',
+				orientation: 'sidebar',
+			},
+		},
+	},
+};
+
+export const SidebarFourSteps: Story = {
+	args: {
+		config: {
+			...FormTemplates.onboardingSurvey,
+			stepper: {
+				__id: 'default',
+				orientation: 'sidebar',
+			},
+		},
+	},
+};
+
+export const SidebarWithLongContent: Story = {
+	args: {
+		config: {
+			...FormTemplates.onboardingSurvey,
+			title: 'Extended Onboarding',
+			description: 'Complete profile setup with detailed information',
+			stepper: {
+				__id: 'default',
+				orientation: 'sidebar',
 			},
 		},
 	},
