@@ -1,7 +1,22 @@
 import { cn } from '@/shadcn/lib/utils';
+import { cva } from 'class-variance-authority';
 import type { HeroBackgroundLayoutConfig, HeroBackgroundLayoutProps } from './hero-background-layout.types';
 import { useLayoutContext } from '@/contexts/layout-context';
 import type React from 'react';
+
+const contentVariants = cva('hero-background-layout__content', {
+	variants: {
+		width: {
+			sm: 'hero-background-layout__content--sm',
+			md: 'hero-background-layout__content--md',
+			lg: 'hero-background-layout__content--lg',
+			xl: 'hero-background-layout__content--xl',
+		},
+	},
+	defaultVariants: {
+		width: 'md',
+	},
+});
 
 /**
  * Hero Background Layout
@@ -12,14 +27,6 @@ import type React from 'react';
 export const HeroBackgroundLayout: React.FC<HeroBackgroundLayoutProps> = ({ children, className }) => {
 	const { step, form, config } = useLayoutContext<HeroBackgroundLayoutConfig>();
 	const { backgroundImage, backgroundVideo, contentWidth = 'md' } = config;
-
-	const contentWidthClass =
-		{
-			sm: 'hero-background-layout__content--sm',
-			md: 'hero-background-layout__content--md',
-			lg: 'hero-background-layout__content--lg',
-			xl: 'hero-background-layout__content--xl',
-		}[contentWidth] || 'hero-background-layout__content--md';
 
 	const title = step?.title || form.title;
 	const description = step?.description || form.description;
@@ -41,7 +48,7 @@ export const HeroBackgroundLayout: React.FC<HeroBackgroundLayoutProps> = ({ chil
 
 			<div className="hero-background-layout__overlay" />
 
-			<div className={`hero-background-layout__content ${contentWidthClass}`}>
+			<div className={contentVariants({ width: contentWidth })}>
 				{title || description || (typeof step.index === 'number' && typeof step.total === 'number') ? (
 					<div className="hero-background-layout__header">
 						{title ? <h1 className="hero-background-layout__title">{title}</h1> : null}

@@ -1,7 +1,39 @@
 import { cn } from '@/shadcn/lib/utils';
+import { cva } from 'class-variance-authority';
 import type { SplitScreenLayoutConfig, SplitScreenLayoutProps } from './split-screen-layout.types';
 import { useLayoutContext } from '@/contexts/layout-context';
 import type React from 'react';
+
+const sideVariants = cva('split-screen-layout__side', {
+	variants: {
+		width: {
+			narrow: 'split-screen-layout__side--narrow',
+			normal: 'split-screen-layout__side--normal',
+			wide: 'split-screen-layout__side--wide',
+		},
+		placement: {
+			left: '',
+			right: 'md:order-last',
+		},
+	},
+	defaultVariants: {
+		width: 'normal',
+		placement: 'left',
+	},
+});
+
+const mainVariants = cva('split-screen-layout__main', {
+	variants: {
+		alignment: {
+			top: 'split-screen-layout__main--top',
+			center: 'split-screen-layout__main--center',
+			bottom: 'split-screen-layout__main--bottom',
+		},
+	},
+	defaultVariants: {
+		alignment: 'center',
+	},
+});
 
 /**
  * Split Screen Layout
@@ -14,43 +46,22 @@ export const SplitScreenLayout: React.FC<SplitScreenLayoutProps> = ({ children, 
 
 	const { sideContent, sidePlacement = 'left', sideWidth = 'normal', contentAlignment = 'center' } = config;
 
-	const isLeftSide = sidePlacement === 'left';
-
-	const widthClass =
-		{
-			narrow: 'split-screen-layout__side--narrow',
-			normal: 'split-screen-layout__side--normal',
-			wide: 'split-screen-layout__side--wide',
-		}[sideWidth] || 'split-screen-layout__side--normal';
-
-	const alignmentClass =
-		{
-			top: 'split-screen-layout__main--top',
-			center: 'split-screen-layout__main--center',
-			bottom: 'split-screen-layout__main--bottom',
-		}[contentAlignment] || 'split-screen-layout__main--top';
-
 	const title = step?.title || form.title;
 	const description = step?.description || form.description;
 
-	const sidePanel = (
-		<div className={cn('split-screen-layout__side', widthClass)}>
-			{typeof step.index === 'number' && typeof step.total === 'number' ? (
-				<h2 className="split-screen-layout__step-counter">
-					Step {step.index + 1} of {step.total}
-				</h2>
-			) : null}
-			{title ? <h3 className="split-screen-layout__step-title">{title}</h3> : null}
-			{description ? <p className="split-screen-layout__step-description">{description}</p> : null}
-			<div className="split-screen-layout__side-content">{sideContent}</div>
-		</div>
-	);
-
 	return (
 		<div className={cn('split-screen-layout', className)}>
-			{isLeftSide && sidePanel}
-			<div className={cn('split-screen-layout__main', alignmentClass)}>{children as React.ReactNode}</div>
-			{!isLeftSide && sidePanel}
+			<div className={sideVariants({ width: sideWidth, placement: sidePlacement })}>
+				{typeof step.index === 'number' && typeof step.total === 'number' ? (
+					<h2 className="split-screen-layout__step-counter">
+						Step {step.index + 1} of {step.total}
+					</h2>
+				) : null}
+				{title ? <h3 className="split-screen-layout__step-title">{title}</h3> : null}
+				{description ? <p className="split-screen-layout__step-description">{description}</p> : null}
+				<div className="split-screen-layout__side-content">{sideContent}</div>
+			</div>
+			<div className={mainVariants({ alignment: contentAlignment })}>{children as React.ReactNode}</div>
 		</div>
 	);
 };
