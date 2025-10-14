@@ -2,6 +2,14 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '../shared/story-wrapper';
 import { createForm, ValidationPresets } from '../shared/form-builder';
+import { createDefaultFormEngineBuilder } from '../shared/form-engine-setup';
+import { z } from 'zod';
+import type {
+	BuilderActionExecutionContext,
+	BuilderActionExecutionResult,
+	BuilderActionRegistration,
+} from '@json-form-engine/core/types';
+import { ActionTriggerSchema } from '@json-form-engine/core';
 
 const meta = {
 	title: 'Elements/Actions/SubmitButton',
@@ -223,6 +231,128 @@ export const SubscriptionForm: Story = {
 				id: 'submit',
 				name: 'submit',
 				label: 'Subscribe Now',
+			})
+			.build(),
+	},
+};
+
+const ConfettiActionSchema = z.object({
+	id: z.string(),
+	type: z.literal('confetti'),
+	description: z.string().optional(),
+	enabled: z.boolean().default(true),
+	triggers: z.array(ActionTriggerSchema).optional(),
+	particleCount: z.number().default(100).optional(),
+	spread: z.number().default(70).optional(),
+	origin: z.object({ y: z.number() }).default({ y: 0.6 }).optional(),
+});
+
+type ConfettiAction = z.infer<typeof ConfettiActionSchema>;
+
+function confettiPlugin(): BuilderActionRegistration<ConfettiAction> {
+	return {
+		__id: 'confetti',
+		schema: ConfettiActionSchema,
+		metadata: {
+			name: 'Confetti',
+			description: 'Throw confetti on the screen',
+			icon: 'sparkles',
+			defaultTriggers: ['form_submit'],
+		},
+		execute: async (
+			context: BuilderActionExecutionContext<ConfettiAction>,
+		): Promise<BuilderActionExecutionResult> => {
+			const action = context.config;
+
+			try {
+				if (typeof window === 'undefined') {
+					return { success: true, message: 'Confetti skipped in SSR', shouldContinue: true };
+				}
+
+				const confetti = (window as any).confetti;
+				if (!confetti) {
+					return { success: false, error: 'Confetti library not available', shouldContinue: true };
+				}
+
+				await confetti({
+					particleCount: action.particleCount,
+					spread: action.spread,
+					origin: action.origin,
+				});
+
+				return { success: true, message: 'Confetti thrown successfully', shouldContinue: true };
+			} catch (error) {
+				return {
+					success: false,
+					error: error instanceof Error ? error.message : 'Failed to throw confetti',
+					shouldContinue: true,
+				};
+			}
+		},
+	};
+}
+
+const confettiBuilder = createDefaultFormEngineBuilder().extend().addAction(confettiPlugin());
+const confettiEngine = confettiBuilder.build();
+
+export const WithConfetti: Story = {
+	parameters: {
+		docs: {
+			description: {
+				story: 'Form with a custom confetti action that throws confetti on successful submission. Uses confetti-js loaded via CDN. The confetti action is registered via extend() method and a custom engine is provided.',
+			},
+		},
+	},
+	decorators: [
+		(Story) => {
+			if (typeof window !== 'undefined' && !(window as any).confetti) {
+				const script = document.createElement('script');
+				script.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js';
+				script.async = true;
+				document.head.appendChild(script);
+			}
+			return (
+				<StoryWrapper engine={confettiEngine}>
+					<Story />
+				</StoryWrapper>
+			);
+		},
+	],
+	args: {
+		config: confettiBuilder
+			.createForm()
+			.setId('submit-confetti')
+			.setTitle('Celebrate with Confetti')
+			.setDescription('Submit the form and watch the magic happen')
+			.addStep({ id: 'step-1', title: 'Contact Info' })
+			.addElement('input', {
+				id: 'name',
+				name: 'name',
+				label: 'Your Name',
+				placeholder: 'John Doe',
+				inputType: 'text',
+				rules: [ValidationPresets.string.required()],
+			})
+			.addElement('input', {
+				id: 'email',
+				name: 'email',
+				label: 'Email',
+				placeholder: 'john@example.com',
+				inputType: 'email',
+				rules: [ValidationPresets.string.email()],
+			})
+			.addElement('submit', {
+				id: 'submit',
+				name: 'submit',
+				label: 'Submit and Celebrate',
+			})
+			.addFormAction('confetti', {
+				id: 'throw-confetti',
+				type: 'confetti',
+				enabled: true,
+				particleCount: 200,
+				spread: 90,
+				origin: { y: 0.6 },
 			})
 			.build(),
 	},
