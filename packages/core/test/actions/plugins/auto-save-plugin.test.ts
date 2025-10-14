@@ -1,40 +1,36 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { actionRegistry } from "@/actions/action-registry";
+import { FormEngineBuilder } from "@/builder";
+import { ActionExecutor } from "@/actions/action-executor";
+import type { FormEngine } from "@/engine/form-engine";
+import type { BuilderActionExecutionContext } from "@/types";
 import {
 	autoSavePlugin,
 	type AutoSaveAction,
 	AutoSaveActionSchema,
 	type AutoSaveStorage,
 } from "@/actions/plugins/auto-save-plugin";
-import type { ActionExecutionContext } from "@/actions/types";
 import {
-	createMockContext,
+	createMockBuilderContext,
 	setupTestEnvironment,
 	MockLocalStorage,
 } from "../__tools";
 import {
 	MockAutoSaveStorage,
 	createFailingStorage,
-} from "../__tools/storage-utils";describe("AutoSavePlugin", () => {
-	let mockContext: ActionExecutionContext;
+} from "../__tools/storage-utils";
+
+describe("AutoSavePlugin", () => {
+	let engine: FormEngine;
+	let executor: ActionExecutor;
 	let mockStorage: MockAutoSaveStorage;
 	let mockLocalStorage: MockLocalStorage;
 
 	beforeEach(() => {
 		mockLocalStorage = setupTestEnvironment();
 		mockStorage = new MockAutoSaveStorage();
-		mockContext = createMockContext({
-			formData: {
-				field1: "value1",
-				name: "John",
-				email: "john@example.com",
-				preferences: {
-					theme: "dark",
-				},
-				password: "secret123",
-			},
-		});
-	});	afterEach(() => {
+	});
+
+	afterEach(() => {
 		if (mockLocalStorage) {
 			mockLocalStorage.clear();
 		}
@@ -113,10 +109,10 @@ import {
 		test("should create plugin with default configuration", () => {
 			const plugin = autoSavePlugin();
 
-			expect(plugin.type).toBe("auto_save");
+			expect(plugin.__id).toBe("auto_save");
 			expect(plugin.schema).toBe(AutoSaveActionSchema);
-			expect(plugin.defaultTriggers).toEqual(["form_change"]);
-			expect(plugin.handler).toBeDefined();
+			expect(plugin.metadata.defaultTriggers).toEqual(["form_change"]);
+			expect(plugin.execute).toBeDefined();
 		});
 
 		test("should create plugin with custom storage", () => {
@@ -124,8 +120,8 @@ import {
 				storage: mockStorage,
 			});
 
-			expect(plugin.type).toBe("auto_save");
-			expect(plugin.handler).toBeDefined();
+			expect(plugin.__id).toBe("auto_save");
+			expect(plugin.execute).toBeDefined();
 		});
 
 		test("should create plugin with custom handlers", () => {
@@ -142,8 +138,8 @@ import {
 				},
 			});
 
-			expect(plugin.type).toBe("auto_save");
-			expect(plugin.handler).toBeDefined();
+			expect(plugin.__id).toBe("auto_save");
+			expect(plugin.execute).toBeDefined();
 		});
 
 		test("should create plugin with custom storage key generator", () => {
@@ -152,31 +148,41 @@ import {
 				getStorageKey: (context) => `custom_${context.formId}_${context.currentStep}`,
 			});
 
-			expect(plugin.type).toBe("auto_save");
-			expect(plugin.handler).toBeDefined();
+			expect(plugin.__id).toBe("auto_save");
+			expect(plugin.execute).toBeDefined();
 		});
 	});
 
 	describe("Action Execution", () => {
 		test("should execute successful auto-save action", async () => {
-		const plugin = autoSavePlugin({ storage: mockStorage });
-		actionRegistry.register(plugin);
+			const plugin = autoSavePlugin({ storage: mockStorage });
 
-		const action: AutoSaveAction = {
-			id: "test-autosave",
-			type: "auto_save",
-			enabled: true,
-			includeSensitive: false,
-		};
+			const action: AutoSaveAction = {
+				id: "test-autosave",
+				type: "auto_save",
+				enabled: true,
+				includeSensitive: false,
+			};
 
-		const result = await actionRegistry.execute(action, mockContext);			expect(result.success).toBe(true);
+			const context = createMockBuilderContext(action, {
+				formData: {
+					field1: "value1",
+					name: "John",
+					email: "john@example.com",
+					preferences: { theme: "dark" },
+					password: "secret123",
+				},
+			});
+
+			const result = await plugin.execute(context);
+
+			expect(result.success).toBe(true);
 			expect(result.message).toBe("Form data auto-saved to autosave_test-form");
 			expect(result.shouldContinue).toBe(true);
 		});
 
 		test("should save data to storage with default key", async () => {
 			const plugin = autoSavePlugin({ storage: mockStorage });
-			actionRegistry.register(plugin);
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
@@ -184,7 +190,17 @@ import {
 				enabled: true,
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: {
+					field1: "value1",
+					name: "John",
+					email: "john@example.com",
+					preferences: { theme: "dark" },
+					password: "secret123",
+				},
+			});
+
+			await plugin.execute(context);
 
 			const savedData = mockStorage.getStoredData("autosave_test-form");
 			expect(savedData).toEqual({
@@ -197,7 +213,6 @@ import {
 
 		test("should use custom storage key", async () => {
 			const plugin = autoSavePlugin({ storage: mockStorage });
-			actionRegistry.register(plugin);
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
@@ -206,7 +221,17 @@ import {
 				storageKey: "custom_storage_key",
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: {
+					field1: "value1",
+					name: "John",
+					email: "john@example.com",
+					preferences: { theme: "dark" },
+					password: "secret123",
+				},
+			});
+
+			await plugin.execute(context);
 
 			const savedData = mockStorage.getStoredData("custom_storage_key");
 			expect(savedData).toBeDefined();
@@ -218,7 +243,6 @@ import {
 				storage: mockStorage,
 				getStorageKey: (context) => `generated_${context.formId}_${context.currentStep}`,
 			});
-			actionRegistry.register(plugin);
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
@@ -226,7 +250,17 @@ import {
 				enabled: true,
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: {
+					field1: "value1",
+					name: "John",
+					email: "john@example.com",
+					preferences: { theme: "dark" },
+					password: "secret123",
+				},
+			});
+
+			await plugin.execute(context);
 
 			const savedData = mockStorage.getStoredData("generated_test-form_0");
 			expect(savedData).toBeDefined();
@@ -237,7 +271,6 @@ import {
 				storage: mockStorage,
 				getStorageKey: (context) => `generated_${context.formId}`,
 			});
-			actionRegistry.register(plugin);
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
@@ -246,7 +279,17 @@ import {
 				storageKey: "action_key",
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: {
+					field1: "value1",
+					name: "John",
+					email: "john@example.com",
+					preferences: { theme: "dark" },
+					password: "secret123",
+				},
+			});
+
+			await plugin.execute(context);
 
 			const savedData = mockStorage.getStoredData("action_key");
 			expect(savedData).toBeDefined();
@@ -255,7 +298,6 @@ import {
 
 		test("should filter sensitive data by default", async () => {
 			const plugin = autoSavePlugin({ storage: mockStorage });
-			actionRegistry.register(plugin);
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
@@ -263,17 +305,26 @@ import {
 				enabled: true,
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: {
+					field1: "value1",
+					name: "John",
+					email: "john@example.com",
+					preferences: { theme: "dark" },
+					password: "secret123",
+				},
+			});
+
+			await plugin.execute(context);
 
 			const savedData = mockStorage.getStoredData("autosave_test-form") as Record<string, any>;
-			expect(savedData.password).toBeUndefined(); // Sensitive field filtered out
-			expect(savedData.name).toBe("John"); // Non-sensitive field preserved
+			expect(savedData.password).toBeUndefined();
+			expect(savedData.name).toBe("John");
 			expect(savedData.email).toBe("john@example.com");
 		});
 
 		test("should include sensitive data when specified", async () => {
 			const plugin = autoSavePlugin({ storage: mockStorage });
-			actionRegistry.register(plugin);
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
@@ -282,17 +333,27 @@ import {
 				includeSensitive: true,
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: {
+					field1: "value1",
+					name: "John",
+					email: "john@example.com",
+					preferences: { theme: "dark" },
+					password: "secret123",
+				},
+			});
+
+			await plugin.execute(context);
 
 			const savedData = mockStorage.getStoredData("autosave_test-form") as Record<string, any>;
-			expect(savedData.password).toBe("secret123"); // Sensitive field included
+			expect(savedData.password).toBe("secret123");
 			expect(savedData.name).toBe("John");
 			expect(savedData.email).toBe("john@example.com");
 		});
 
 		test("should call onSave handler when provided", async () => {
 			let savedData: unknown = null;
-			let savedContext: ActionExecutionContext | null = null;
+			let savedContext: BuilderActionExecutionContext<AutoSaveAction> | null = null;
 
 			const plugin = autoSavePlugin({
 				storage: mockStorage,
@@ -301,7 +362,6 @@ import {
 					savedContext = context;
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
@@ -309,21 +369,28 @@ import {
 				enabled: true,
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: {
+					field1: "value1",
+					name: "John",
+					email: "john@example.com",
+					preferences: { theme: "dark" },
+					password: "secret123",
+				},
+			});
+
+			await plugin.execute(context);
 
 			expect(savedData).toBeDefined();
 			expect(savedContext).not.toBeNull();
-			expect(savedContext!).toEqual(mockContext);
+			expect(savedContext).toMatchObject({
+				formId: context.formId,
+				formData: context.formData,
+			});
 		});
 
 		test("should handle empty form data", async () => {
-			const emptyContext = {
-				...mockContext,
-				formData: {},
-			};
-
 			const plugin = autoSavePlugin({ storage: mockStorage });
-			actionRegistry.register(plugin);
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
@@ -331,7 +398,11 @@ import {
 				enabled: true,
 			};
 
-			const result = await actionRegistry.execute(action, emptyContext);
+			const context = createMockBuilderContext(action, {
+				formData: {},
+			});
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(false);
 			expect(result.error).toBe("No form data available for auto-save");
@@ -341,8 +412,8 @@ import {
 		test("should handle storage errors", async () => {
 			const failingStorage = createFailingStorage("Storage failed");
 
-			let errorMessage: string | null = null;
-			let errorContext: ActionExecutionContext | null = null;
+			let errorMessage = "";
+			let errorContext: BuilderActionExecutionContext<AutoSaveAction> | null = null;
 
 			const plugin = autoSavePlugin({
 				storage: failingStorage,
@@ -351,7 +422,6 @@ import {
 					errorContext = context;
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
@@ -359,15 +429,27 @@ import {
 				enabled: true,
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: {
+					field1: "value1",
+					name: "John",
+					email: "john@example.com",
+					preferences: { theme: "dark" },
+					password: "secret123",
+				},
+			});
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(false);
 			expect(result.error).toBe("Storage failed");
 			expect(result.shouldContinue).toBe(true);
-			expect(errorMessage).not.toBeNull();
-			expect(errorMessage!).toBe("Storage failed");
+			expect(errorMessage).toBe("Storage failed");
 			expect(errorContext).not.toBeNull();
-			expect(errorContext!).toEqual(mockContext);
+			expect(errorContext).toMatchObject({
+				formId: context.formId,
+				formData: context.formData,
+			});
 		});
 
 		test("should handle async onSave handler", async () => {
@@ -380,7 +462,6 @@ import {
 					asyncSaveCalled = true;
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
@@ -388,7 +469,17 @@ import {
 				enabled: true,
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: {
+					field1: "value1",
+					name: "John",
+					email: "john@example.com",
+					preferences: { theme: "dark" },
+					password: "secret123",
+				},
+			});
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
 			expect(asyncSaveCalled).toBe(true);
@@ -406,7 +497,6 @@ import {
 					asyncErrorCalled = true;
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
@@ -414,7 +504,17 @@ import {
 				enabled: true,
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: {
+					field1: "value1",
+					name: "John",
+					email: "john@example.com",
+					preferences: { theme: "dark" },
+					password: "secret123",
+				},
+			});
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(false);
 			expect(asyncErrorCalled).toBe(true);
@@ -423,8 +523,7 @@ import {
 
 	describe("Default Storage (localStorage)", () => {
 		test("should use localStorage as default storage", async () => {
-			const plugin = autoSavePlugin(); // No storage provided
-			actionRegistry.register(plugin);
+			const plugin = autoSavePlugin();
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
@@ -432,37 +531,43 @@ import {
 				enabled: true,
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: {
+					field1: "value1",
+					name: "John",
+					email: "john@example.com",
+					preferences: { theme: "dark" },
+					password: "secret123",
+				},
+			});
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
-			
-			// Check that data was saved to localStorage
+
 			const savedData = mockLocalStorage.getItem("autosave_test-form");
 			expect(savedData).toBeDefined();
-			
+
 			const parsedData = JSON.parse(savedData!);
 			expect(parsedData.field1).toBe("value1");
 			expect(parsedData.name).toBe("John");
-			expect(parsedData.password).toBeUndefined(); // Sensitive data filtered by default
+			expect(parsedData.password).toBeUndefined();
 		});
 
 		test("should handle localStorage save and load operations", () => {
-			// Test localStorage save
 			mockLocalStorage.setItem("test-key", JSON.stringify({ test: "data" }));
 
 			expect(mockLocalStorage.getItem("test-key")).toBeDefined();
 			const saved = JSON.parse(mockLocalStorage.getItem("test-key")!);
 			expect(saved.test).toBe("data");
-			
-			// Test localStorage remove
+
 			mockLocalStorage.removeItem("test-key");
 			expect(mockLocalStorage.getItem("test-key")).toBeNull();
-			
-			// Test localStorage clear
+
 			mockLocalStorage.setItem("key1", "value1");
 			mockLocalStorage.setItem("key2", "value2");
 			expect(mockLocalStorage.length).toBe(2);
-			
+
 			mockLocalStorage.clear();
 			expect(mockLocalStorage.length).toBe(0);
 			expect(mockLocalStorage.getItem("key1")).toBeNull();
@@ -470,11 +575,8 @@ import {
 	});
 
 	describe("Integration", () => {
-		test("should register plugin and execute successfully", async () => {
+		test("should execute successfully with custom storage", async () => {
 			const plugin = autoSavePlugin({ storage: mockStorage });
-			actionRegistry.register(plugin);
-
-			expect(actionRegistry.has("auto_save")).toBe(true);
 
 			const action: AutoSaveAction = {
 				id: "integration-test",
@@ -482,13 +584,23 @@ import {
 				enabled: true,
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: {
+					field1: "value1",
+					name: "John",
+					email: "john@example.com",
+					preferences: { theme: "dark" },
+					password: "secret123",
+				},
+			});
+
+			const result = await plugin.execute(context);
+
 			expect(result.success).toBe(true);
 			expect(mockStorage.getAllKeys()).toContain("autosave_test-form");
 		});
 
 		test("should work with different storage backends", async () => {
-			// Test with different storage implementations
 			const memoryStorage = new MockAutoSaveStorage();
 			const apiCalls: Array<{ key: string; data: any }> = [];
 
@@ -503,22 +615,27 @@ import {
 			const memoryPlugin = autoSavePlugin({ storage: memoryStorage });
 			const apiPlugin = autoSavePlugin({ storage: apiStorage });
 
-			actionRegistry.register(memoryPlugin);
-
 			const action: AutoSaveAction = {
 				id: "memory-test",
 				type: "auto_save",
 				enabled: true,
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action, {
+				formData: {
+					field1: "value1",
+					name: "John",
+					email: "john@example.com",
+					preferences: { theme: "dark" },
+					password: "secret123",
+				},
+			});
+
+			await memoryPlugin.execute(context);
 
 			expect(memoryStorage.getAllKeys()).toContain("autosave_test-form");
 
-			actionRegistry.clear();
-			actionRegistry.register(apiPlugin);
-
-			await actionRegistry.execute(action, mockContext);
+			await apiPlugin.execute(context);
 
 			expect(apiCalls).toHaveLength(1);
 			expect(apiCalls[0].key).toBe("autosave_test-form");

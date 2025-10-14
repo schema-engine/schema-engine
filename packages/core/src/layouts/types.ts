@@ -1,39 +1,39 @@
-// Re-export types from form-config to avoid circular imports
+import { z } from 'zod';
+
 export type { StepLayoutConfig } from '../schemas/form-config';
 
 /**
- * Layout registration definition
+ * Base layout configuration schema
+ * Note: Using `.strict()` to enforce type safety and prevent excess properties
  */
-export interface LayoutRegistration<TComponent = any> {
-	/**
-	 * Unique identifier for the layout
-	 */
-	layoutId: string;
+export const BaseLayoutConfigSchema = z
+	.object({
+		__id: z.string().describe('Unique identifier for the layout type'),
+	})
+	.strict();
 
-	/**
-	 * Display name for the layout
-	 */
+/**
+ * Layout metadata for registries and tooling.
+ *
+ * Provides rich information for documentation generation, IDE tooling,
+ * form builders, and JSON schema generation. All fields are optional
+ * but providing comprehensive metadata improves developer experience.
+ */
+export interface LayoutMetadata {
+	/** Human-readable display name */
 	name: string;
-
-	/**
-	 * Description of what this layout does
-	 */
-	description?: string;
-
-	/**
-	 * The layout component
-	 */
-	component: TComponent;
-
-	/**
-	 * Default configuration for this layout
-	 */
-	defaultConfig?: Record<string, any>;
-
-	/**
-	 * Schema for validating layout-specific options
-	 */
-	optionsSchema?: any; // Can be Zod schema or similar
+	/** Detailed description of the layout's purpose and behavior */
+	description: string;
+	/** Category for grouping similar layouts (e.g., "containers", "fullscreen") */
+	category?: string;
+	/** Whether this layout is deprecated and should not be used in new forms */
+	deprecated?: boolean;
+	/** Example configuration showing typical usage */
+	example?: any;
+	/** URL to preview image or screenshot */
+	preview?: string;
+	/** Tags for filtering and searching */
+	tags?: string[];
 }
 
 /**

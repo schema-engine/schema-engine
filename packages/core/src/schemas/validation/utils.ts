@@ -11,7 +11,7 @@ interface ValidationElement {
 }
 
 interface FieldConfigElement extends BaseField {
-	componentId: string;
+	id: string;
 }
 
 type FormElement = ValidationElement | FieldConfigElement;
@@ -56,7 +56,7 @@ export function generateFormSchema(elements: FormElement[]): z.ZodObject<any> {
 		if (!element.name) continue;
 
 		let rules: ValidationRuleType[] | undefined;
-		if ('componentId' in element) {
+		if ('id' in element) {
 			rules = (element as FieldConfigElement).rules;
 		} else {
 			rules = (element as ValidationElement).rules;

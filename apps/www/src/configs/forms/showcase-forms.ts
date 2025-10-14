@@ -16,7 +16,7 @@ export const basicFormConfig: FormConfig = {
 			title: 'Basic Information',
 			elements: [
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					id: 'name',
 					name: 'name',
@@ -25,7 +25,7 @@ export const basicFormConfig: FormConfig = {
 					placeholder: 'Enter your full name',
 				},
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'email',
 					id: 'email',
 					name: 'email',
@@ -37,7 +37,7 @@ export const basicFormConfig: FormConfig = {
 					placeholder: 'your.email@example.com',
 				},
 				{
-					componentId: 'number',
+					__id: 'number',
 					id: 'age',
 					name: 'age',
 					label: 'Age',
@@ -46,6 +46,11 @@ export const basicFormConfig: FormConfig = {
 						ValidationPresets.number.min(18, 'Must be at least 18 years old'),
 						ValidationPresets.number.max(100, 'Age must be realistic'),
 					],
+				},
+				{
+					__id: 'submit',
+					label: 'Submit Form',
+					name: 'submit',
 				},
 			],
 		},
@@ -85,7 +90,7 @@ export const conditionalFormConfig: FormConfig = {
 			title: 'Conditional Fields',
 			elements: [
 				{
-					componentId: 'select',
+					__id: 'select',
 					id: 'user-type',
 					name: 'userType',
 					label: 'User Type',
@@ -97,7 +102,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					id: 'school-name',
 					name: 'schoolName',
@@ -112,7 +117,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					componentId: 'select',
+					__id: 'select',
 					id: 'degree-level',
 					name: 'degreeLevel',
 					label: 'Degree Level',
@@ -131,7 +136,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					id: 'company-name',
 					name: 'companyName',
@@ -146,7 +151,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					id: 'job-title',
 					name: 'jobTitle',
@@ -161,7 +166,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					componentId: 'number',
+					__id: 'number',
 					id: 'years-experience',
 					name: 'yearsExperience',
 					label: 'Years of Experience',
@@ -176,7 +181,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					id: 'organization-name',
 					name: 'organizationName',
@@ -191,7 +196,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					componentId: 'number',
+					__id: 'number',
 					id: 'employee-count',
 					name: 'employeeCount',
 					label: 'Number of Employees',
@@ -206,7 +211,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					componentId: 'select',
+					__id: 'select',
 					id: 'industry',
 					name: 'industry',
 					label: 'Industry',
@@ -227,6 +232,11 @@ export const conditionalFormConfig: FormConfig = {
 						},
 					],
 				},
+				{
+					__id: 'submit',
+					label: 'Submit Form',
+					name: 'submit',
+				},
 			],
 		},
 	],
@@ -246,7 +256,7 @@ export const arrayFormConfig: FormConfig = {
 			title: 'Array Fields',
 			elements: [
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					id: 'project-name',
 					name: 'projectName',
@@ -254,7 +264,7 @@ export const arrayFormConfig: FormConfig = {
 					rules: [ValidationPresets.string.required('Project name is required')],
 				},
 				{
-					componentId: 'arrayElements',
+					__id: 'arrayElements',
 					id: 'team-members',
 					name: 'teamMembers',
 					label: 'Team Members',
@@ -262,7 +272,7 @@ export const arrayFormConfig: FormConfig = {
 					rules: [ValidationPresets.string.required('At least one team member is required')],
 					elements: [
 						{
-							componentId: 'input',
+							__id: 'input',
 							inputType: 'text',
 							id: 'member-name',
 							name: 'name',
@@ -270,7 +280,7 @@ export const arrayFormConfig: FormConfig = {
 							rules: [ValidationPresets.string.required('Name is required')],
 						},
 						{
-							componentId: 'input',
+							__id: 'input',
 							inputType: 'email',
 							id: 'member-email',
 							name: 'email',
@@ -281,7 +291,7 @@ export const arrayFormConfig: FormConfig = {
 							],
 						},
 						{
-							componentId: 'select',
+							__id: 'select',
 							id: 'member-role',
 							name: 'role',
 							label: 'Role',
@@ -296,14 +306,14 @@ export const arrayFormConfig: FormConfig = {
 					],
 				},
 				{
-					componentId: 'arrayElements',
+					__id: 'arrayElements',
 					id: 'project-tags',
 					name: 'tags',
 					label: 'Project Tags',
 					description: 'Add relevant tags for your project',
 					elements: [
 						{
-							componentId: 'input',
+							__id: 'input',
 							inputType: 'text',
 							id: 'tag',
 							name: 'tag',
@@ -350,7 +360,7 @@ export const complexFormConfig: FormConfig = {
 			title: 'Complex Form',
 			elements: [
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					id: 'full-name',
 					name: 'fullName',
@@ -364,7 +374,7 @@ export const complexFormConfig: FormConfig = {
 					},
 				},
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'email',
 					id: 'email-address',
 					name: 'emailAddress',
@@ -375,7 +385,7 @@ export const complexFormConfig: FormConfig = {
 					],
 				},
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'tel',
 					id: 'phone-number',
 					name: 'phoneNumber',
@@ -383,7 +393,7 @@ export const complexFormConfig: FormConfig = {
 					rules: [ValidationPresets.string.required('Phone number is required')],
 				},
 				{
-					componentId: 'select',
+					__id: 'select',
 					id: 'country',
 					name: 'country',
 					label: 'Country',
@@ -399,7 +409,7 @@ export const complexFormConfig: FormConfig = {
 					],
 				},
 				{
-					componentId: 'select',
+					__id: 'select',
 					id: 'subscription-type',
 					name: 'subscriptionType',
 					label: 'Subscription Type',
@@ -411,13 +421,13 @@ export const complexFormConfig: FormConfig = {
 					],
 				},
 				{
-					componentId: 'checkbox',
+					__id: 'checkbox',
 					id: 'newsletter-subscribe',
 					name: 'newsletterSubscribe',
 					label: 'Subscribe to our newsletter for updates and promotions',
 				},
 				{
-					componentId: 'checkbox',
+					__id: 'checkbox',
 					id: 'terms-agreement',
 					name: 'termsAgreement',
 					label: 'I agree to the Terms of Service and Privacy Policy',

@@ -1,65 +1,56 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { HeroBackgroundLayout } from '@/components/layouts/hero-background-layout';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { simpleContactForm } from '../shared/sample-forms';
-import '../../components/layouts/hero-background-layout.css';
+import { StoryWrapper } from '../shared/story-wrapper';
+import { FormTemplates } from '../shared/form-builder';
 
 const meta = {
 	title: 'Layouts/HeroBackgroundLayout',
-	component: HeroBackgroundLayout,
+	component: FormRenderer,
 	parameters: {
 		layout: 'fullscreen',
 	},
+	decorators: [
+		(Story) => (
+			<StoryWrapper>
+				<Story />
+			</StoryWrapper>
+		),
+	],
 	tags: ['autodocs'],
 	argTypes: {
 		config: {
 			control: 'object',
-			description: 'Layout configuration options',
-		},
-		step: {
-			control: 'object',
-			description: 'Current step information',
-		},
-		form: {
-			control: 'object',
-			description: 'Form information',
-		},
-		className: {
-			control: 'text',
-			description: 'Additional CSS classes',
+			description: 'Form configuration with layout options',
 		},
 	},
-	args: {
-		children: <FormRenderer config={simpleContactForm} />,
-		step: {
-			id: 'step-1',
-			title: 'Welcome to Our Service',
-			description: 'Get started by filling out this form',
-			index: 0,
-			total: 3,
-		},
-		form: {
-			id: 'example-form',
-			title: 'Example Form',
-			description: 'This is an example form',
-		},
-	},
-} satisfies Meta<typeof HeroBackgroundLayout>;
+} satisfies Meta<typeof FormRenderer>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
 	args: {
-		config: {},
+		config: {
+			...FormTemplates.contactForm,
+			steps: [{ ...FormTemplates.contactForm.steps[0], layout: { __id: 'hero-background' } }],
+		},
 	},
 };
 
 export const WithBackgroundImage: Story = {
 	args: {
 		config: {
-			backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
-			contentWidth: 'md',
+			...FormTemplates.contactForm,
+			steps: [
+				{
+					...FormTemplates.contactForm.steps[0],
+					layout: {
+						__id: 'hero-background',
+						backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
+						contentWidth: 'md',
+					},
+				},
+			],
 		},
 	},
 };
@@ -67,8 +58,17 @@ export const WithBackgroundImage: Story = {
 export const SmallContent: Story = {
 	args: {
 		config: {
-			backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
-			contentWidth: 'sm',
+			...FormTemplates.contactForm,
+			steps: [
+				{
+					...FormTemplates.contactForm.steps[0],
+					layout: {
+						__id: 'hero-background',
+						backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
+						contentWidth: 'sm',
+					},
+				},
+			],
 		},
 	},
 };
@@ -76,8 +76,17 @@ export const SmallContent: Story = {
 export const MediumContent: Story = {
 	args: {
 		config: {
-			backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
-			contentWidth: 'md',
+			...FormTemplates.contactForm,
+			steps: [
+				{
+					...FormTemplates.contactForm.steps[0],
+					layout: {
+						__id: 'hero-background',
+						backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
+						contentWidth: 'md',
+					},
+				},
+			],
 		},
 	},
 };
@@ -85,8 +94,17 @@ export const MediumContent: Story = {
 export const LargeContent: Story = {
 	args: {
 		config: {
-			backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
-			contentWidth: 'lg',
+			...FormTemplates.contactForm,
+			steps: [
+				{
+					...FormTemplates.contactForm.steps[0],
+					layout: {
+						__id: 'hero-background',
+						backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
+						contentWidth: 'lg',
+					},
+				},
+			],
 		},
 	},
 };
@@ -94,8 +112,17 @@ export const LargeContent: Story = {
 export const ExtraLargeContent: Story = {
 	args: {
 		config: {
-			backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
-			contentWidth: 'xl',
+			...FormTemplates.contactForm,
+			steps: [
+				{
+					...FormTemplates.contactForm.steps[0],
+					layout: {
+						__id: 'hero-background',
+						backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
+						contentWidth: 'xl',
+					},
+				},
+			],
 		},
 	},
 };
@@ -103,8 +130,17 @@ export const ExtraLargeContent: Story = {
 export const GradientBackground: Story = {
 	args: {
 		config: {
-			backgroundImage: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1920&q=80',
-			contentWidth: 'md',
+			...FormTemplates.contactForm,
+			steps: [
+				{
+					...FormTemplates.contactForm.steps[0],
+					layout: {
+						__id: 'hero-background',
+						backgroundImage: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1920&q=80',
+						contentWidth: 'md',
+					},
+				},
+			],
 		},
 	},
 };
@@ -112,52 +148,83 @@ export const GradientBackground: Story = {
 export const NatureBackground: Story = {
 	args: {
 		config: {
-			backgroundImage: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=80',
-			contentWidth: 'lg',
+			...FormTemplates.contactForm,
+			steps: [
+				{
+					...FormTemplates.contactForm.steps[0],
+					layout: {
+						__id: 'hero-background',
+						backgroundImage: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=80',
+						contentWidth: 'lg',
+					},
+				},
+			],
 		},
 	},
 };
 
-export const SingleStepForm: Story = {
+const multiStepForm = { ...FormTemplates.registrationForm, stepper: { __id: 'debugger' as const } };
+
+export const MultiStepWithBackground: Story = {
 	args: {
-		step: undefined,
-		form: {
-			id: 'contact-form',
-			title: 'Contact Our Team',
-			description: 'We are here to help you succeed',
-		},
 		config: {
-			backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
-			contentWidth: 'md',
+			...multiStepForm,
+			steps: multiStepForm.steps.map((step) => ({
+				...step,
+				layout: {
+					__id: 'hero-background',
+					backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
+					contentWidth: 'md',
+				},
+			})),
 		},
 	},
 };
 
-export const SingleStepFormSmall: Story = {
+export const MultiStepNatureBackground: Story = {
 	args: {
-		step: undefined,
-		form: {
-			id: 'login-form',
-			title: 'Welcome Back',
-		},
 		config: {
-			backgroundImage: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1920&q=80',
-			contentWidth: 'sm',
+			...multiStepForm,
+			steps: multiStepForm.steps.map((step) => ({
+				...step,
+				layout: {
+					__id: 'hero-background',
+					backgroundImage: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=80',
+					contentWidth: 'lg',
+				},
+			})),
 		},
 	},
 };
 
-export const SingleStepFormLarge: Story = {
+export const MultiStepSmallContent: Story = {
 	args: {
-		step: undefined,
-		form: {
-			id: 'application-form',
-			title: 'Apply Now',
-			description: 'Join our team and make an impact',
-		},
 		config: {
-			backgroundImage: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=80',
-			contentWidth: 'xl',
+			...multiStepForm,
+			steps: multiStepForm.steps.map((step) => ({
+				...step,
+				layout: {
+					__id: 'hero-background',
+					backgroundImage: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1920&q=80',
+					contentWidth: 'sm',
+				},
+			})),
+		},
+	},
+};
+
+export const MultiStepLargeContent: Story = {
+	args: {
+		config: {
+			...multiStepForm,
+			steps: multiStepForm.steps.map((step) => ({
+				...step,
+				layout: {
+					__id: 'hero-background',
+					backgroundImage: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
+					contentWidth: 'xl',
+				},
+			})),
 		},
 	},
 };

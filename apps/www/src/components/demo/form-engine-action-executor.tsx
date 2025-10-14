@@ -1,12 +1,13 @@
-import { useState, useEffect, type FC } from 'react';
+import { useState, useMemo, type FC } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
-import { notificationPlugin, resetPlugin, submitPlugin } from '@json-form-engine/core/actions';
-import { registerAction } from '@json-form-engine/core/actions/action-registry';
+import { FormEngineProvider } from '@json-form-engine/react/components/adapter-provider';
+import { rhfAdapter } from '@json-form-engine/react/adapters/rhf';
+import { formEngine } from '@/lib/form-engine-setup';
+import { submitPlugin, notificationPlugin, resetPlugin } from '@json-form-engine/core/actions';
 import type { FormConfig } from '@json-form-engine/core/schemas';
-import '@/lib/form-engine-setup';
 
 const formConfigWithActions: FormConfig = {
 	id: 'form-engine-demo',
@@ -20,7 +21,7 @@ const formConfigWithActions: FormConfig = {
 			description: 'Fill out the form below to see the action system in action',
 			elements: [
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					id: 'name',
 					name: 'name',
@@ -32,7 +33,7 @@ const formConfigWithActions: FormConfig = {
 					],
 				},
 				{
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'email',
 					id: 'email',
 					name: 'email',
@@ -44,7 +45,7 @@ const formConfigWithActions: FormConfig = {
 					],
 				},
 				{
-					componentId: 'textarea',
+					__id: 'textarea',
 					id: 'message',
 					name: 'message',
 					label: 'Message',
@@ -52,10 +53,15 @@ const formConfigWithActions: FormConfig = {
 					rules: [{ type: 'required', message: 'Message is required' }],
 				},
 				{
-					componentId: 'checkbox',
+					__id: 'checkbox',
 					id: 'subscribe',
 					name: 'subscribe',
 					label: 'Subscribe to newsletter',
+				},
+				{
+					__id: 'submit',
+					label: 'Submit Form',
+					name: 'submit',
 				},
 			],
 		},
@@ -100,131 +106,142 @@ const formConfigWithActions: FormConfig = {
 };
 
 const FormEngineActionExecutor: FC = () => {
-	const [executionLog, setExecutionLog] = useState<string[]>([]);
-
-	useEffect(() => {
-		const addToLog = (message: string) => {
-			const timestamp = new Date().toLocaleTimeString();
-			setExecutionLog((prev) => [...prev, `[${timestamp}] ${message}`]);
-		};
-
-		registerAction(
-			submitPlugin({
-				onSuccess: (data, context) => {
-					console.log('FormEngine Submit Success:', { data, formId: context.formId });
-					addToLog('Submit plugin: Success callback executed');
-					addToLog(`Submitted data keys: [${Object.keys(data || {}).join(', ')}]`);
-				},
-				onError: (error, context) => {
-					console.error('FormEngine Submit Error:', { error, formId: context.formId });
-					addToLog('Submit plugin: Error callback executed');
-					addToLog(`Error: ${error instanceof Error ? error.message : String(error)}`);
-				},
-			}),
-		);
-
-		registerAction(
-			resetPlugin({
-				onReset: (context) => {
-					console.log('FormEngine Form Reset:', { formId: context.formId });
-					addToLog('Reset plugin: Form reset callback executed');
-					addToLog('Form has been reset to default values');
-				},
-			}),
-		);
-
-		registerAction(
-			notificationPlugin({
-				onSuccess: (message, context) => {
-					console.log('FormEngine Success Notification:', message, { formId: context.formId });
-					addToLog(`Success notification displayed: "${message}"`);
-				},
-				onError: (message, context) => {
-					console.error('FormEngine Error Notification:', message, { formId: context.formId });
-					addToLog(`Error notification displayed: "${message}"`);
-				},
-			}),
-		);
-	}, []);
+	const [executionLog, setExecutionLog] = useState<string[]>([
+		'[info] Actions are pre-configured in the global formEngine instance',
+		'[info] Submit your form to see the action system in action',
+	]);
 
 	const clearLog = () => setExecutionLog([]);
 
+	const customFormEngine = useMemo(() => {
+		const addLog = (message: string) => {
+			setExecutionLog((prev) => [...prev, `[${new Date().toLocaleTimeString()}] ${message}`]);
+		};
+
+		return formEngine
+			.extend()
+			.addAction(
+				submitPlugin({
+					onSuccess: (data, context) => {
+						addLog(`✅ Form submitted successfully: ${context.formId}`);
+						addLog(`[data] ${JSON.stringify(data, null, 2)}`);
+					},
+					onError: (error, context) => {
+						addLog(`❌ Form submission failed: ${context.formId}`);
+						addLog(`[error] ${error.message}`);
+					},
+				}),
+			)
+			.addAction(
+				notificationPlugin({
+					onSuccess: (message) => {
+						addLog(`[notification] ✅ ${message}`);
+					},
+					onError: (message) => {
+						addLog(`[notification] ❌ ${message}`);
+					},
+					onWarning: (message) => {
+						addLog(`[notification] ⚠️ ${message}`);
+					},
+					onInfo: (message) => {
+						addLog(`[notification] ℹ️ ${message}`);
+					},
+				}),
+			)
+			.addAction(
+				resetPlugin({
+					onReset: (context) => {
+						addLog(`🔄 Form reset: ${context.formId}`);
+					},
+				}),
+			)
+			.build();
+	}, []);
+
 	return (
-		<div className="space-y-6">
-			<Card>
-				<CardHeader>
-					<CardTitle className="flex items-center gap-2">
-						FormEngine + Action System Demo
-						<Badge variant="secondary">New Architecture</Badge>
-					</CardTitle>
-					<CardDescription>
-						Demonstrates the integration of FormEngine with the new plugin-based action system. Actions are
-						registered globally in the form registry.
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<div className="grid md:grid-cols-2 gap-6">
-						<div className="space-y-4">
-							<h3 className="text-lg font-semibold">Interactive Form</h3>
-							<FormRenderer config={formConfigWithActions} />
-						</div>
+		<FormEngineProvider engine={customFormEngine} adapter={rhfAdapter}>
+			<div className="space-y-6">
+				<Card>
+					<CardHeader>
+						<CardTitle className="flex items-center gap-2">
+							FormEngine + Action System Demo
+							<Badge variant="secondary">Extended Actions</Badge>
+						</CardTitle>
+						<CardDescription>
+							Demonstrates extending the base FormEngine with custom action handlers. This demo uses the
+							extend() method to override default actions with custom logging implementations.
+						</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<div className="grid md:grid-cols-2 gap-6">
+							<div className="space-y-4">
+								<h3 className="text-lg font-semibold">Interactive Form</h3>
+								<FormRenderer config={formConfigWithActions} />
+							</div>
 
-						<div className="space-y-4">
-							<div className="flex items-center justify-between">
-								<h3 className="text-lg font-semibold">Action Execution Log</h3>
-								<Button variant="outline" size="sm" onClick={clearLog}>
-									Clear Log
-								</Button>
-							</div>
-							<div className="border rounded-lg p-4 h-64 overflow-y-auto bg-gray-50 dark:bg-gray-900">
-								{executionLog.length === 0 ? (
-									<p className="text-muted-foreground text-sm">
-										Submit or reset the form to see action execution logs...
-									</p>
-								) : (
-									<div className="space-y-1">
-										{executionLog.map((log, index) => (
-											<div key={index} className="text-xs font-mono">
-												{log}
-											</div>
-										))}
-									</div>
-								)}
+							<div className="space-y-4">
+								<div className="flex items-center justify-between">
+									<h3 className="text-lg font-semibold">Action Execution Log</h3>
+									<Button variant="outline" size="sm" onClick={clearLog}>
+										Clear Log
+									</Button>
+								</div>
+								<div className="border rounded-lg p-4 h-64 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+									{executionLog.length === 0 ? (
+										<p className="text-muted-foreground text-sm">
+											Submit or reset the form to see action execution logs...
+										</p>
+									) : (
+										<div className="space-y-1">
+											{executionLog.map((log, index) => (
+												<div key={index} className="text-xs font-mono">
+													{log}
+												</div>
+											))}
+										</div>
+									)}
+								</div>
 							</div>
 						</div>
-					</div>
-				</CardContent>
-			</Card>
+					</CardContent>
+				</Card>
 
-			<Card>
-				<CardHeader>
-					<CardTitle>🔧 Technical Implementation</CardTitle>
-				</CardHeader>
-				<CardContent className="space-y-4">
-					<div className="grid md:grid-cols-2 gap-6">
-						<div>
-							<h4 className="font-medium mb-2">Action Configuration</h4>
-							<pre className="text-xs bg-gray-100 dark:bg-gray-800 p-3 rounded-lg overflow-x-auto">
-								{JSON.stringify(formConfigWithActions.actions, null, 2)}
-							</pre>
-						</div>
-						<div>
-							<h4 className="font-medium mb-2">Registered Plugins</h4>
-							<div className="space-y-2">
-								<Badge variant="outline">submit - Global Submit Handler</Badge>
-								<Badge variant="outline">notification - Global Notifications</Badge>
-								<Badge variant="outline">reset - Global Form Reset</Badge>
-								<Badge variant="outline">autoSave - Global Auto-save</Badge>
+				<Card>
+					<CardHeader>
+						<CardTitle>🔧 Technical Implementation</CardTitle>
+					</CardHeader>
+					<CardContent className="space-y-4">
+						<div className="grid md:grid-cols-2 gap-6">
+							<div>
+								<h4 className="font-medium mb-2">Action Configuration</h4>
+								<pre className="text-xs bg-gray-100 dark:bg-gray-800 p-3 rounded-lg overflow-x-auto">
+									{JSON.stringify(formConfigWithActions.actions, null, 2)}
+								</pre>
 							</div>
-							<p className="text-sm text-muted-foreground mt-2">
-								Plugins are registered globally in the form registry and available to all FormEngine
-								instances.
-							</p>
+							<div>
+								<h4 className="font-medium mb-2">Extended Action Plugins</h4>
+								<div className="space-y-2">
+									<Badge variant="outline">submit - Custom Logger</Badge>
+									<Badge variant="outline">notification - Custom Logger</Badge>
+									<Badge variant="outline">reset - Custom Logger</Badge>
+								</div>
+								<p className="text-sm text-muted-foreground mt-2">
+									This demo extends the base formEngine instance using the extend() method, overriding
+									the default action handlers with custom implementations that log execution details.
+								</p>
+								<pre className="text-xs bg-gray-100 dark:bg-gray-800 p-3 rounded-lg overflow-x-auto mt-3">
+									{`formEngine.extend()
+  .addAction(submitPlugin({ ... }))
+  .addAction(notificationPlugin({ ... }))
+  .addAction(resetPlugin({ ... }))
+  .build()`}
+								</pre>
+							</div>
 						</div>
-					</div>
-				</CardContent>
-			</Card>
-		</div>
+					</CardContent>
+				</Card>
+			</div>
+		</FormEngineProvider>
 	);
 };
 

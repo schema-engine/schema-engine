@@ -17,7 +17,7 @@ export function SimpleConditionalDemo() {
 				title: 'Conditional Fields Example',
 				elements: [
 					{
-						componentId: 'select',
+						__id: 'select',
 						id: 'hasCompany',
 						name: 'hasCompany',
 						label: 'Do you have a company?',
@@ -29,7 +29,7 @@ export function SimpleConditionalDemo() {
 						],
 					},
 					{
-						componentId: 'input',
+						__id: 'input',
 						inputType: 'text',
 						id: 'companyName',
 						name: 'companyName',
@@ -44,6 +44,11 @@ export function SimpleConditionalDemo() {
 								action: 'show',
 							},
 						],
+					},
+					{
+						__id: 'submit',
+						label: 'Submit Form',
+						name: 'submit',
 					},
 				],
 			},

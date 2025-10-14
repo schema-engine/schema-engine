@@ -58,6 +58,30 @@
       "types": "./dist/actions/plugins/*.d.ts",
       "import": "./dist/actions/plugins/*.js"
     },
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/types/index.js"
+    },
+    "./types/*": {
+      "types": "./dist/types/*.d.ts",
+      "import": "./dist/types/*.js"
+    },
+    "./builder": {
+      "types": "./dist/builder/index.d.ts",
+      "import": "./dist/builder/index.js"
+    },
+    "./builder/*": {
+      "types": "./dist/builder/*.d.ts",
+      "import": "./dist/builder/*.js"
+    },
+    "./engine": {
+      "types": "./dist/engine/index.d.ts",
+      "import": "./dist/engine/index.js"
+    },
+    "./engine/*": {
+      "types": "./dist/engine/*.d.ts",
+      "import": "./dist/engine/*.js"
+    },
     "./schemas": {
       "types": "./dist/schemas/index.d.ts",
       "import": "./dist/schemas/index.js"
@@ -85,6 +109,14 @@
     "./schemas/validation/async/*": {
       "types": "./dist/schemas/validation/async/*.d.ts",
       "import": "./dist/schemas/validation/async/*.js"
+    },
+    "./constraints": {
+      "types": "./dist/constraints/index.d.ts",
+      "import": "./dist/constraints/index.js"
+    },
+    "./constraints/*": {
+      "types": "./dist/constraints/*.d.ts",
+      "import": "./dist/constraints/*.js"
     },
     "./tools": {
       "types": "./dist/tools/index.d.ts",

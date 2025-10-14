@@ -1,7 +1,7 @@
 import type { FormActionConfig, ActionExecutionContext, ActionExecutionResult } from './types';
-import { actionRegistry } from './action-registry';
 import { Logger } from '@ecopages/logger';
 import type { ActionTrigger } from './triggers';
+import type { FormEngine } from '../engine/form-engine';
 
 const logger = new Logger('[form-engine/actions]', { debug: false });
 
@@ -9,10 +9,15 @@ const logger = new Logger('[form-engine/actions]', { debug: false });
  * Action Executor
  *
  * Handles sequential execution of actions with comprehensive lifecycle management.
- * All actions are now plugins - no core actions are hardcoded.
- * Delegates everything to the plugin registry for maximum flexibility.
+ * All actions are plugins registered in the FormEngine instance.
+ * No global registry - actions are fully self-contained per engine.
  */
 export class ActionExecutor {
+	private engine: FormEngine;
+
+	constructor(engine: FormEngine) {
+		this.engine = engine;
+	}
 	/**
 	 * Execute actions for a specific trigger (in sequence, not parallel)
 	 * @param actions - Array of actions to potentially execute
@@ -46,9 +51,10 @@ export class ActionExecutor {
 			if ('triggers' in action && Array.isArray(action.triggers)) {
 				shouldExecute = action.triggers.includes(trigger);
 			} else {
-				const registryTriggers = actionRegistry.getDefaultTriggers(action.type);
-				const actionTriggers = registryTriggers ?? [];
-				shouldExecute = actionTriggers.includes(trigger);
+				// Get default triggers from the action registration
+				const actionRegistration = this.engine.getAction(action.type);
+				const defaultTriggers = actionRegistration?.metadata?.defaultTriggers ?? [];
+				shouldExecute = defaultTriggers.includes(trigger);
 			}
 
 			if (!shouldExecute) {
@@ -165,15 +171,50 @@ export class ActionExecutor {
 	}
 
 	/**
-	 * Execute a single action by delegating to the plugin registry
+	 * Execute a single action by using the FormEngine's registered actions or falling back to global registry
 	 */
 	private async executeAction(
 		action: FormActionConfig,
 		context: ActionExecutionContext,
 	): Promise<ActionExecutionResult> {
-		if (actionRegistry.has(action.type)) {
-			return actionRegistry.execute(action, context);
+		// First, try to get the action from the FormEngine instance
+		if (this.engine) {
+			const actionRegistration = this.engine.getAction(action.type);
+			if (actionRegistration) {
+				try {
+					// Transform old context to new builder context
+					const builderContext = {
+						config: action,
+						formId: context.formId,
+						formData: context.formData,
+						currentStep: context.currentStep,
+						totalSteps: context.totalSteps,
+						isValid: context.isValid,
+						errors: context.errors,
+						metadata: context.metadata,
+						form: {
+							reset: () => context.form.reset(),
+							setValue: (name: string, value: unknown) => context.form.setValue(name, value as any),
+							getValue: (name: string) => context.form.getValues(name),
+							validate: async () => await context.form.trigger(),
+						},
+					};
+					return await actionRegistration.execute(builderContext);
+				} catch (error) {
+					return {
+						success: false,
+						error: error instanceof Error ? error.message : 'Unknown error',
+						shouldContinue: true,
+					};
+				}
+			}
 		}
+
+		// No action handler found
+		logger.error(`No handler registered for action type: ${action.type}`, {
+			actionId: action.id,
+			availableActions: this.engine.getActionTypes(),
+		});
 
 		return {
 			success: false,

@@ -1,8 +1,9 @@
 import type React from 'react';
 import type { FormConfig, FormStep } from '@json-form-engine/core';
 import type { FormStepperConfig } from '@json-form-engine/core/schemas/form-config';
-import type { BaseStepperProps, StepData, StepperNavigation } from '../steppers/types';
-import { reactStepperRegistry } from '@/registries/stepper-registry';
+import type { StepData, StepperNavigation } from '../steppers/types';
+import { useFormEngine } from '@/hooks';
+import { StepperProvider, useStepperContext } from '@/contexts/stepper-context';
 
 interface StepperRendererProps {
 	/**
@@ -38,12 +39,19 @@ interface StepperRendererProps {
 	 * Form submission state
 	 */
 	isSubmitting?: boolean;
+
+	/**
+	 * Children to render inside the stepper (form content)
+	 */
+	children?: React.ReactNode;
 }
 
 /**
  * Default stepper component that renders a simple step navigation
  */
-const DefaultStepper: React.FC<BaseStepperProps> = ({ steps, navigation }) => {
+const DefaultStepper: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
+	const { steps, navigation } = useStepperContext();
+
 	return (
 		<div className="flex flex-col gap-4">
 			<div className="flex gap-2">
@@ -65,6 +73,8 @@ const DefaultStepper: React.FC<BaseStepperProps> = ({ steps, navigation }) => {
 					</button>
 				))}
 			</div>
+
+			{children}
 
 			<div className="flex gap-2 justify-end">
 				{!navigation.isFirstStep && (
@@ -110,7 +120,10 @@ export const StepperRenderer: React.FC<StepperRendererProps> = ({
 	stepStates,
 	navigation,
 	isSubmitting = false,
+	children,
 }) => {
+	const { engine } = useFormEngine();
+
 	const stepInfos: StepData[] = steps.map((step: FormStep, index: number) => ({
 		id: step.id,
 		title: step.title,
@@ -133,61 +146,47 @@ export const StepperRenderer: React.FC<StepperRendererProps> = ({
 		goToPreviousStep: navigation.goToPreviousStep,
 	};
 
-	if (!form.stepper?.__stepperId) {
-		return (
-			<DefaultStepper
-				steps={stepInfos}
-				currentStepIndex={currentStepIndex}
-				navigation={navigationControls}
-				config={{}}
-				form={{
-					id: form.id,
-					title: form.title,
-					description: form.description,
-					isSubmitting,
-				}}
-			/>
-		);
-	}
-
-	const { __stepperId, ...stepperConfig } = form.stepper;
-
-	const stepperResult = reactStepperRegistry.getStepperWithConfig(__stepperId, stepperConfig);
-
-	if (!stepperResult) {
-		console.warn(`Stepper '${__stepperId}' not found in registry. Using default stepper.`);
-		return (
-			<DefaultStepper
-				steps={stepInfos}
-				currentStepIndex={currentStepIndex}
-				navigation={navigationControls}
-				config={stepperConfig}
-				form={{
-					id: form.id,
-					title: form.title,
-					description: form.description,
-					isSubmitting,
-				}}
-			/>
-		);
-	}
-
-	const { component: StepperComponent, config } = stepperResult;
-
-	const stepperProps: BaseStepperProps = {
+	const contextValue = {
 		steps: stepInfos,
 		currentStepIndex,
 		navigation: navigationControls,
-		config,
 		form: {
 			id: form.id,
 			title: form.title,
 			description: form.description,
 			isSubmitting,
 		},
+		config: form.stepper || {},
 	};
 
-	return <StepperComponent {...stepperProps} />;
+	if (!form.stepper?.__id) {
+		return (
+			<StepperProvider value={contextValue}>
+				<DefaultStepper>{children}</DefaultStepper>
+			</StepperProvider>
+		);
+	}
+
+	const { __id, ...stepperConfig } = form.stepper;
+
+	const stepperRegistration = engine.getStepper(__id);
+
+	if (!stepperRegistration) {
+		console.warn(`Stepper '${__id}' not found in registry. Using default stepper.`);
+		return (
+			<StepperProvider value={{ ...contextValue, config: stepperConfig }}>
+				<DefaultStepper>{children}</DefaultStepper>
+			</StepperProvider>
+		);
+	}
+
+	const StepperComponent = stepperRegistration.render as React.ComponentType<{ children?: React.ReactNode }>;
+
+	return (
+		<StepperProvider value={{ ...contextValue, config: stepperConfig }}>
+			<StepperComponent>{children}</StepperComponent>
+		</StepperProvider>
+	);
 };
 
 export default StepperRenderer;

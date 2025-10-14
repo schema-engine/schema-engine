@@ -1,22 +1,21 @@
-import { test, expect, describe, beforeEach, afterEach } from "bun:test";
+import { test, expect, describe, beforeEach } from "bun:test";
+import { FormEngineBuilder } from "@/builder";
+import { ActionExecutor } from "@/actions/action-executor";
+import type { FormEngine } from "@/engine/form-engine";
+import type { BuilderActionExecutionContext } from "@/types";
 import {
 	notificationPlugin,
 	NotificationActionSchema,
 	type NotificationAction,
 } from "@/actions/plugins/notification-plugin";
-import { actionRegistry } from "@/actions/action-registry";
-import type { ActionExecutionContext } from "@/actions/types";
-import { createMockContext, setupTestEnvironment } from "../__tools";
-
-const mockContext = createMockContext();
+import { createMockBuilderContext, setupTestEnvironment } from "../__tools";
 
 describe("NotificationPlugin", () => {
+	let engine: FormEngine;
+	let executor: ActionExecutor;
+
 	beforeEach(() => {
 		setupTestEnvironment();
-	});
-
-	afterEach(() => {
-		actionRegistry.clear();
 	});
 
 	describe("Schema Validation", () => {
@@ -117,10 +116,10 @@ describe("NotificationPlugin", () => {
 		test("should create plugin with default configuration", () => {
 			const plugin = notificationPlugin();
 
-			expect(plugin.type).toBe("show_notification");
-			expect(plugin.handler).toBeDefined();
+			expect(plugin.__id).toBe("show_notification");
+			expect(plugin.execute).toBeDefined();
 			expect(plugin.schema).toBe(NotificationActionSchema);
-			expect(plugin.defaultTriggers).toEqual([
+			expect(plugin.metadata.defaultTriggers).toEqual([
 				"submit_success",
 				"submit_error",
 			]);
@@ -147,8 +146,8 @@ describe("NotificationPlugin", () => {
 				},
 			});
 
-			expect(plugin.type).toBe("show_notification");
-			expect(plugin.handler).toBeDefined();
+			expect(plugin.__id).toBe("show_notification");
+			expect(plugin.execute).toBeDefined();
 		});
 
 		test("should create plugin with global notification handler", () => {
@@ -164,15 +163,15 @@ describe("NotificationPlugin", () => {
 				},
 			});
 
-			expect(plugin.type).toBe("show_notification");
-			expect(plugin.handler).toBeDefined();
+			expect(plugin.__id).toBe("show_notification");
+			expect(plugin.execute).toBeDefined();
 		});
 	});
 
 	describe("Action Execution", () => {
 		test("should execute success notification", async () => {
-			let successMessage: string = '';
-			let successContext: ActionExecutionContext | undefined = undefined;
+			let successMessage = "";
+			let successContext: BuilderActionExecutionContext<NotificationAction> | undefined = undefined;
 
 			const plugin = notificationPlugin({
 				onSuccess: (message, context) => {
@@ -180,7 +179,6 @@ describe("NotificationPlugin", () => {
 					successContext = context;
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: NotificationAction = {
 				id: "success-notify",
@@ -190,17 +188,22 @@ describe("NotificationPlugin", () => {
 				variant: "success",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
 			expect(successMessage).toBe("Form saved successfully!");
 			expect(successContext).not.toBeUndefined();
-			expect(successContext!).toEqual(mockContext);
+			expect(successContext).toMatchObject({
+				formId: context.formId,
+				formData: context.formData,
+			});
 		});
 
 		test("should execute error notification", async () => {
-			let errorMessage: string | null = null;
-			let errorContext: ActionExecutionContext | null = null;
+			let errorMessage = "";
+			let errorContext: BuilderActionExecutionContext<NotificationAction> | undefined = undefined;
 
 			const plugin = notificationPlugin({
 				onError: (message, context) => {
@@ -208,7 +211,6 @@ describe("NotificationPlugin", () => {
 					errorContext = context;
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: NotificationAction = {
 				id: "error-notify",
@@ -218,18 +220,22 @@ describe("NotificationPlugin", () => {
 				variant: "error",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
-			expect(errorMessage).not.toBeNull();
-			expect(errorMessage!).toBe("Form submission failed!");
-			expect(errorContext).not.toBeNull();
-			expect(errorContext!).toEqual(mockContext);
+			expect(errorMessage).toBe("Form submission failed!");
+			expect(errorContext).not.toBeUndefined();
+			expect(errorContext).toMatchObject({
+				formId: context.formId,
+				formData: context.formData,
+			});
 		});
 
 		test("should execute warning notification", async () => {
-			let warningMessage: string | null = null;
-			let warningContext: ActionExecutionContext | null = null;
+			let warningMessage = "";
+			let warningContext: BuilderActionExecutionContext<NotificationAction> | undefined = undefined;
 
 			const plugin = notificationPlugin({
 				onWarning: (message, context) => {
@@ -237,7 +243,6 @@ describe("NotificationPlugin", () => {
 					warningContext = context;
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: NotificationAction = {
 				id: "warning-notify",
@@ -247,18 +252,22 @@ describe("NotificationPlugin", () => {
 				variant: "warning",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
-			expect(warningMessage).not.toBeNull();
-			expect(warningMessage!).toBe("Please review your input");
-			expect(warningContext).not.toBeNull();
-			expect(warningContext!).toEqual(mockContext);
+			expect(warningMessage).toBe("Please review your input");
+			expect(warningContext).not.toBeUndefined();
+			expect(warningContext).toMatchObject({
+				formId: context.formId,
+				formData: context.formData,
+			});
 		});
 
 		test("should execute info notification", async () => {
-			let infoMessage: string | null = null;
-			let infoContext: ActionExecutionContext | null = null;
+			let infoMessage = "";
+			let infoContext: BuilderActionExecutionContext<NotificationAction> | undefined = undefined;
 
 			const plugin = notificationPlugin({
 				onInfo: (message, context) => {
@@ -266,7 +275,6 @@ describe("NotificationPlugin", () => {
 					infoContext = context;
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: NotificationAction = {
 				id: "info-notify",
@@ -276,19 +284,23 @@ describe("NotificationPlugin", () => {
 				variant: "info",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
-			expect(infoMessage).not.toBeNull();
-			expect(infoMessage!).toBe("Form auto-saved");
-			expect(infoContext).not.toBeNull();
-			expect(infoContext!).toEqual(mockContext);
+			expect(infoMessage).toBe("Form auto-saved");
+			expect(infoContext).not.toBeUndefined();
+			expect(infoContext).toMatchObject({
+				formId: context.formId,
+				formData: context.formData,
+			});
 		});
 
 		test("should use global notification handler when available", async () => {
-			let globalMessage: string | null = null;
-			let globalVariant: string | null = null;
-			let globalContext: ActionExecutionContext | null = null;
+			let globalMessage = "";
+			let globalVariant = "";
+			let globalContext: BuilderActionExecutionContext<NotificationAction> | undefined = undefined;
 
 			const plugin = notificationPlugin({
 				onNotification: (message, variant, context) => {
@@ -297,7 +309,6 @@ describe("NotificationPlugin", () => {
 					globalContext = context;
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: NotificationAction = {
 				id: "global-notify",
@@ -307,15 +318,18 @@ describe("NotificationPlugin", () => {
 				variant: "success",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
-			expect(globalMessage).not.toBeNull();
-			expect(globalMessage!).toBe("Global notification");
-			expect(globalVariant).not.toBeNull();
-			expect(globalVariant!).toBe("success");
-			expect(globalContext).not.toBeNull();
-			expect(globalContext!).toEqual(mockContext);
+			expect(globalMessage).toBe("Global notification");
+			expect(globalVariant).toBe("success");
+			expect(globalContext).not.toBeUndefined();
+			expect(globalContext).toMatchObject({
+				formId: context.formId,
+				formData: context.formData,
+			});
 		});
 
 		test("should prefer specific handlers over global handler", async () => {
@@ -326,9 +340,7 @@ describe("NotificationPlugin", () => {
 				onSuccess: (message, context) => {
 					specificCalled = true;
 				},
-				// Don't provide onNotification to allow specific handlers to be used
 			});
-			actionRegistry.register(plugin);
 
 			const action: NotificationAction = {
 				id: "prefer-specific",
@@ -338,7 +350,9 @@ describe("NotificationPlugin", () => {
 				variant: "success",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
 			expect(specificCalled).toBe(true);
@@ -348,7 +362,7 @@ describe("NotificationPlugin", () => {
 		test("should use global handler when provided (takes precedence)", async () => {
 			let specificCalled = false;
 			let globalCalled = false;
-			let globalMessage: string | null = null;
+			let globalMessage = "";
 
 			const plugin = notificationPlugin({
 				onSuccess: (message, context) => {
@@ -359,7 +373,6 @@ describe("NotificationPlugin", () => {
 					globalMessage = message;
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: NotificationAction = {
 				id: "global-precedence",
@@ -369,56 +382,51 @@ describe("NotificationPlugin", () => {
 				variant: "success",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
-			expect(specificCalled).toBe(false); // Global handler takes precedence
+			expect(specificCalled).toBe(false);
 			expect(globalCalled).toBe(true);
-			expect(globalMessage).not.toBeNull();
-			expect(globalMessage!).toBe("Global takes precedence");
+			expect(globalMessage).toBe("Global takes precedence");
 		});
 
 		test("should fall back to global handler when specific handler not available", async () => {
-			let globalMessage: string | null = null;
-			let globalVariant: string | null = null;
+			let globalMessage = "";
+			let globalVariant = "";
 
 			const plugin = notificationPlugin({
 				onSuccess: (message, context) => {
-					// Success handler provided
 				},
 				onNotification: (message, variant, context) => {
 					globalMessage = message;
 					globalVariant = variant;
 				},
-				// No onError handler
 			});
-			actionRegistry.register(plugin);
 
 			const action: NotificationAction = {
 				id: "fallback-global",
 				type: "show_notification",
 				enabled: true,
 				message: "Error message",
-				variant: "error", // No specific error handler
+				variant: "error",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
-			expect(globalMessage).not.toBeNull();
-			expect(globalMessage!).toBe("Error message");
-			expect(globalVariant).not.toBeNull();
-			expect(globalVariant!).toBe("error");
+			expect(globalMessage).toBe("Error message");
+			expect(globalVariant).toBe("error");
 		});
 
 		test("should handle action with message", async () => {
 			const plugin = notificationPlugin({
 				onSuccess: (message, context) => {
-					// In a real implementation, the handler would access the full action
-					// For testing, we'll assume the message is accessible through context
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: NotificationAction = {
 				id: "titled-notify",
@@ -428,7 +436,9 @@ describe("NotificationPlugin", () => {
 				variant: "success",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
 			expect(action.message).toBe("Success message");
@@ -436,7 +446,6 @@ describe("NotificationPlugin", () => {
 
 		test("should handle action with custom duration", async () => {
 			const plugin = notificationPlugin();
-			actionRegistry.register(plugin);
 
 			const action: NotificationAction = {
 				id: "custom-duration",
@@ -447,15 +456,16 @@ describe("NotificationPlugin", () => {
 				duration: 10000,
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
 			expect(action.duration).toBe(10000);
 		});
 
 		test("should return success when no handlers are configured", async () => {
-			const plugin = notificationPlugin(); // No handlers
-			actionRegistry.register(plugin);
+			const plugin = notificationPlugin();
 
 			const action: NotificationAction = {
 				id: "no-handlers",
@@ -465,7 +475,9 @@ describe("NotificationPlugin", () => {
 				variant: "info",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
 			expect(result.message).toBe("Notification 'No handlers configured' shown");
@@ -480,7 +492,6 @@ describe("NotificationPlugin", () => {
 					asyncHandlerCalled = true;
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: NotificationAction = {
 				id: "async-notify",
@@ -490,7 +501,9 @@ describe("NotificationPlugin", () => {
 				variant: "success",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
 			expect(asyncHandlerCalled).toBe(true);
@@ -498,11 +511,8 @@ describe("NotificationPlugin", () => {
 	});
 
 	describe("Integration", () => {
-		test("should register plugin and execute successfully", async () => {
+		test("should execute successfully with plugin", async () => {
 			const plugin = notificationPlugin();
-			actionRegistry.register(plugin);
-
-			expect(actionRegistry.has("show_notification")).toBe(true);
 
 			const action: NotificationAction = {
 				id: "integration-test",
@@ -512,14 +522,14 @@ describe("NotificationPlugin", () => {
 				variant: "info",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			const result = await plugin.execute(context);
 			expect(result.success).toBe(true);
 		});
 
 		test("should work with different notification systems", async () => {
-			// Mock different notification systems
 			const toastMessages: string[] = [];
-			const alertMessages: string[] = [];
 
 			const toastPlugin = notificationPlugin({
 				onSuccess: (message) => {
@@ -529,8 +539,6 @@ describe("NotificationPlugin", () => {
 					toastMessages.push(`TOAST ERROR: ${message}`);
 				},
 			});
-
-			actionRegistry.register(toastPlugin);
 
 			const successAction: NotificationAction = {
 				id: "toast-success",
@@ -548,8 +556,8 @@ describe("NotificationPlugin", () => {
 				variant: "error",
 			};
 
-			await actionRegistry.execute(successAction, mockContext);
-			await actionRegistry.execute(errorAction, mockContext);
+			await toastPlugin.execute(createMockBuilderContext(successAction));
+			await toastPlugin.execute(createMockBuilderContext(errorAction));
 
 			expect(toastMessages).toEqual([
 				"TOAST: Toast success message",

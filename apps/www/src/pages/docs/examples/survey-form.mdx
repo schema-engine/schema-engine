@@ -1,7 +1,9 @@
 import { DocsLayout } from '@/layouts/docs-layout';
 import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
+import { FormEngineProvider } from '@json-form-engine/react/components/adapter-provider';
+import { rhfAdapter } from '@json-form-engine/react/adapters/rhf';
+import { formEngine } from '@/lib/form-engine-setup';
 import '@json-form-engine/react/registrations';
-import '@json-form-engine/core/actions/debug-registry';
 
 export const layout = DocsLayout;
 
@@ -17,73 +19,79 @@ An advanced survey form showcasing Form Engine's sophisticated features includin
 ## Interactive Demo
 
 <div className="my-8">
-  <FormRenderer
-    config={{
-      id: 'customer-survey',
-      title: 'Customer Satisfaction Survey',
-      description: 'Help us improve our services',
-      mode: 'stepped',
-      steps: [
-        {
-          id: 'experience',
-          title: 'Your Experience',
-          elements: [
-            {
-              id: 'satisfaction',
-              componentId: 'select',
-              name: 'satisfaction',
-              label: 'Overall Satisfaction',
-              required: true,
-              options: [
-                { label: 'Very Satisfied', value: '5' },
-                { label: 'Satisfied', value: '4' },
-                { label: 'Neutral', value: '3' },
-                { label: 'Dissatisfied', value: '2' },
-                { label: 'Very Dissatisfied', value: '1' }
-              ]
-            },
-            {
-              id: 'recommendation',
-              componentId: 'radio',
-              name: 'recommendation',
-              label: 'Would you recommend us?',
-              required: true,
-              options: [
-                { label: 'Definitely', value: 'yes' },
-                { label: 'Probably', value: 'maybe' },
-                { label: 'No', value: 'no' }
-              ]
-            }
-          ]
+	<FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
+    <FormRenderer
+      config={{
+        id: 'customer-survey',
+        title: 'Customer Satisfaction Survey',
+        description: 'Help us improve our services',
+        mode: 'wizard',
+        stepper: {
+          __id: 'minimalist',
+          showProgress: true,
         },
-        {
-          id: 'feedback',
-          title: 'Feedback',
-          elements: [
-            {
-              id: 'improvements',
-              componentId: 'textarea',
-              name: 'improvements',
-              label: 'What could we improve?',
-              placeholder: 'Share your suggestions...',
-              props: { rows: 3 }
-            },
-            {
-              id: 'contact',
-              componentId: 'checkbox',
-              name: 'contact',
-              label: 'I agree to be contacted for follow-up',
-              required: false
-            }
-          ]
-        }
-      ]
-    }}
-    onSubmit={(data) => {
-      console.log('Survey submitted:', data);
-      alert('Thank you for your feedback!');
-    }}
-  />
+        steps: [
+          {
+            id: 'experience',
+            title: 'Your Experience',
+            elements: [
+              {
+                id: 'satisfaction',
+                __id: 'select',
+                name: 'satisfaction',
+                label: 'Overall Satisfaction',
+                required: true,
+                options: [
+                  { label: 'Very Satisfied', value: '5' },
+                  { label: 'Satisfied', value: '4' },
+                  { label: 'Neutral', value: '3' },
+                  { label: 'Dissatisfied', value: '2' },
+                  { label: 'Very Dissatisfied', value: '1' }
+                ]
+              },
+              {
+                id: 'recommendation',
+                __id: 'radio',
+                name: 'recommendation',
+                label: 'Would you recommend us?',
+                required: true,
+                options: [
+                  { label: 'Definitely', value: 'yes' },
+                  { label: 'Probably', value: 'maybe' },
+                  { label: 'No', value: 'no' }
+                ]
+              }
+            ]
+          },
+          {
+            id: 'feedback',
+            title: 'Feedback',
+            elements: [
+              {
+                id: 'improvements',
+                __id: 'textarea',
+                name: 'improvements',
+                label: 'What could we improve?',
+                placeholder: 'Share your suggestions...',
+                props: { rows: 3 }
+              },
+              {
+                id: 'contact',
+                __id: 'checkbox',
+                name: 'contact',
+                label: 'I agree to be contacted for follow-up',
+                required: false
+              }
+            ]
+          }
+        ]
+      }}
+      onSubmit={(data) => {
+        console.log('Survey submitted:', data);
+        alert('Thank you for your feedback!');
+      }}
+    />
+  </FormEngineProvider>
 </div>
 
 ## Key Features Demonstrated
@@ -136,7 +144,7 @@ const surveyConfig = {
       elements: [
         {
           id: 'satisfaction',
-          componentId: 'select',
+          __id: 'select',
           name: 'satisfaction',
           label: 'Overall Satisfaction',
           required: true,
@@ -175,7 +183,7 @@ Show or hide questions based on previous answers:
 ```typescript
 {
   id: 'followup',
-  componentId: 'input',
+  id: 'input',
   name: 'followup',
   label: 'Please explain your dissatisfaction',
   conditions: [
@@ -210,9 +218,9 @@ Group related questions using field groups:
   type: 'group',
   label: 'Rate our services',
   elements: [
-    { id: 'support', componentId: 'select', name: 'support', label: 'Customer Support' },
-    { id: 'delivery', componentId: 'select', name: 'delivery', label: 'Delivery Speed' },
-    { id: 'quality', componentId: 'select', name: 'quality', label: 'Product Quality' }
+    { id: 'support', id: 'select', name: 'support', label: 'Customer Support' },
+    { id: 'delivery', id: 'select', name: 'delivery', label: 'Delivery Speed' },
+    { id: 'quality', id: 'select', name: 'quality', label: 'Product Quality' }
   ]
 }
 ```

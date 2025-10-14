@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ["bun"]
+
+[phases.install]
+cmds = ["bun install && bun run build:lib"]
+
+[phases.build]
+cmds = ["bun run build:react-storybook"]

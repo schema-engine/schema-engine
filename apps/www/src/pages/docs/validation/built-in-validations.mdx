@@ -24,7 +24,7 @@ Ensures a field has a value (not empty, null, or undefined).
 
 // In form configuration
 {
-  componentId: 'input',
+  id: 'input',
   name: 'fullName',
   label: 'Full Name',
   rules: [
@@ -45,7 +45,7 @@ Validates email address format using Zod's built-in email validation.
 
 // Example form field
 {
-  componentId: 'input',
+  id: 'input',
   inputType: 'email',
   name: 'email',
   label: 'Email Address',
@@ -71,7 +71,7 @@ Control minimum and maximum string lengths.
 
 // Username field example
 {
-  componentId: 'input',
+  id: 'input',
   name: 'username',
   label: 'Username',
   rules: [
@@ -105,7 +105,7 @@ Validate against custom regular expression patterns.
 
 // Form field example
 {
-  componentId: 'input',
+  id: 'input',
   name: 'phoneNumber',
   label: 'Phone Number',
   rules: [
@@ -127,7 +127,7 @@ Validates URL format.
 
 // Website field example
 {
-  componentId: 'input',
+  id: 'input',
   inputType: 'url',
   name: 'website',
   label: 'Website',
@@ -152,7 +152,7 @@ Validates UUID format with optional version specification.
 
 // ID field example
 {
-  componentId: 'input',
+  id: 'input',
   name: 'resourceId',
   label: 'Resource ID',
   rules: [
@@ -179,7 +179,7 @@ Set minimum and maximum numeric values.
 
 // Age field example
 {
-  componentId: 'input',
+  id: 'input',
   inputType: 'number',
   name: 'age',
   label: 'Age',
@@ -192,7 +192,7 @@ Set minimum and maximum numeric values.
 
 // Rating field example
 {
-  componentId: 'input',
+  id: 'input',
   inputType: 'number',
   name: 'rating',
   label: 'Rating (1-5)',
@@ -221,7 +221,7 @@ Control array length constraints.
 
 // Multi-select field example
 {
-  componentId: 'checkbox-group',
+  id: 'checkbox-group',
   name: 'interests',
   label: 'Select your interests',
   options: [
@@ -256,7 +256,7 @@ Validate IP addresses with optional version specification.
 
 // Server IP field example
 {
-  componentId: 'input',
+  id: 'input',
   name: 'serverIp',
   label: 'Server IP Address',
   rules: [
@@ -281,7 +281,7 @@ Validate CIDR notation for network addresses.
 
 // Network field example
 {
-  componentId: 'input',
+  id: 'input',
   name: 'networkRange',
   label: 'Network Range',
   placeholder: '192.168.1.0/24',
@@ -305,7 +305,7 @@ Validate JSON Web Token format.
 
 // Token field example
 {
-  componentId: 'textarea',
+  id: 'textarea',
   name: 'apiToken',
   label: 'API Token',
   rules: [
@@ -328,7 +328,7 @@ Validate hash formats for various algorithms.
 
 // File hash field example
 {
-  componentId: 'input',
+  id: 'input',
   name: 'fileHash',
   label: 'File Hash (SHA-256)',
   rules: [
@@ -351,7 +351,7 @@ Validate Base64 encoded strings.
 
 // Encoded data field example
 {
-  componentId: 'textarea',
+  id: 'textarea',
   name: 'encodedData',
   label: 'Base64 Encoded Data',
   rules: [
@@ -380,7 +380,7 @@ Validate specific string formats.
 
 // ID field example
 {
-  componentId: 'input',
+  id: 'input',
   name: 'uniqueId',
   label: 'Unique ID',
   rules: [
@@ -411,7 +411,7 @@ Validate ISO datetime strings with various options.
 
 // Appointment field example
 {
-  componentId: 'input',
+  id: 'input',
   inputType: 'datetime-local',
   name: 'appointmentTime',
   label: 'Appointment Date & Time',
@@ -432,7 +432,7 @@ Validate date strings.
 
 // Birth date field example
 {
-  componentId: 'input',
+  id: 'input',
   inputType: 'date',
   name: 'birthDate',
   label: 'Date of Birth',
@@ -456,7 +456,7 @@ Validate time strings with optional precision.
 
 // Meeting time field example
 {
-  componentId: 'input',
+  id: 'input',
   inputType: 'time',
   name: 'meetingTime',
   label: 'Meeting Time',
@@ -525,7 +525,7 @@ For server-side validation that requires network requests, with built-in caching
 
 // Form field with async validation
 {
-  componentId: 'input',
+  id: 'input',
   name: 'username',
   label: 'Username',
   rules: [

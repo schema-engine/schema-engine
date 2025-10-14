@@ -1,4 +1,7 @@
 import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
+import { FormEngineProvider } from '@json-form-engine/react/components/adapter-provider';
+import { rhfAdapter } from '@json-form-engine/react/adapters/rhf';
+import { formEngine } from '@/lib/form-engine-setup';
 import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
 import type { FormConfig } from '@json-form-engine/core/schemas';
 import '@/lib/form-engine-setup';
@@ -21,7 +24,7 @@ const stepperDemoConfig: FormConfig = {
 			elements: [
 				{
 					id: 'name',
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					name: 'name',
 					label: 'Full Name',
@@ -33,7 +36,7 @@ const stepperDemoConfig: FormConfig = {
 				},
 				{
 					id: 'email',
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'email',
 					name: 'email',
 					label: 'Email Address',
@@ -53,7 +56,7 @@ const stepperDemoConfig: FormConfig = {
 			elements: [
 				{
 					id: 'role',
-					componentId: 'select',
+					__id: 'select',
 					name: 'role',
 					label: 'Your Role',
 					placeholder: 'Select your role',
@@ -69,7 +72,7 @@ const stepperDemoConfig: FormConfig = {
 
 				{
 					id: 'experience',
-					componentId: 'select',
+					__id: 'select',
 					name: 'experience',
 					label: 'Experience Level',
 					placeholder: 'Select your experience',
@@ -90,7 +93,7 @@ const stepperDemoConfig: FormConfig = {
 			elements: [
 				{
 					id: 'company',
-					componentId: 'input',
+					__id: 'input',
 					inputType: 'text',
 					name: 'company',
 					label: 'Company (Optional)',
@@ -98,7 +101,7 @@ const stepperDemoConfig: FormConfig = {
 				},
 				{
 					id: 'feedback',
-					componentId: 'textarea',
+					__id: 'textarea',
 					name: 'feedback',
 					label: 'Feedback',
 					placeholder: 'Any feedback about this demo? (Optional)',
@@ -106,7 +109,7 @@ const stepperDemoConfig: FormConfig = {
 				},
 				{
 					id: 'newsletter',
-					componentId: 'checkbox',
+					__id: 'checkbox',
 					name: 'newsletter',
 					label: 'Subscribe to newsletter for updates',
 					defaultValue: true,
@@ -116,7 +119,8 @@ const stepperDemoConfig: FormConfig = {
 	],
 
 	stepper: {
-		__stepperId: 'default',
+		id: 'default',
+		__id: 'default',
 		variant: 'default',
 		orientation: 'horizontal',
 		position: 'top',
@@ -158,12 +162,11 @@ const stepperDemoConfig: FormConfig = {
 		},
 	],
 };
-
 const verticalStepperConfig: FormConfig = {
 	...stepperDemoConfig,
 	id: 'vertical-stepper-demo',
 	stepper: {
-		__stepperId: 'default',
+		id: 'default',
 		variant: 'default',
 		orientation: 'vertical',
 		position: 'left',
@@ -192,7 +195,7 @@ const minimalStepperConfig: FormConfig = {
 	...stepperDemoConfig,
 	id: 'minimal-stepper-demo',
 	stepper: {
-		__stepperId: 'minimalist',
+		id: 'minimalist',
 		variant: 'dots',
 		orientation: 'horizontal',
 		position: 'top',
@@ -237,48 +240,51 @@ export function MultiStepDemo() {
 	};
 
 	return (
-		<div className="space-y-6">
-			<div className="flex justify-center space-x-2">
-				<Button
-					size="sm"
-					variant={activeVariant === 'default' ? 'default' : 'outline'}
-					onClick={() => setActiveVariant('default')}
-				>
-					Default Stepper
-				</Button>
-				<Button
-					size="sm"
-					variant={activeVariant === 'vertical' ? 'default' : 'outline'}
-					onClick={() => setActiveVariant('vertical')}
-				>
-					Vertical Stepper
-				</Button>
-				<Button
-					size="sm"
-					variant={activeVariant === 'minimal' ? 'default' : 'outline'}
-					onClick={() => setActiveVariant('minimal')}
-				>
-					Minimal Stepper
-				</Button>
-			</div>
+		<FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
+			<div className="space-y-6">
+				<div className="flex justify-center space-x-2">
+					<Button
+						size="sm"
+						variant={activeVariant === 'default' ? 'default' : 'outline'}
+						onClick={() => setActiveVariant('default')}
+					>
+						Default Stepper
+					</Button>
+					<Button
+						size="sm"
+						variant={activeVariant === 'vertical' ? 'default' : 'outline'}
+						onClick={() => setActiveVariant('vertical')}
+					>
+						Vertical Stepper
+					</Button>
+					<Button
+						size="sm"
+						variant={activeVariant === 'minimal' ? 'default' : 'outline'}
+						onClick={() => setActiveVariant('minimal')}
+					>
+						Minimal Stepper
+					</Button>
+				</div>
 
-			<Card>
-				<CardHeader>
-					<CardTitle>
-						{activeVariant === 'default' && 'Horizontal Stepper Demo'}
-						{activeVariant === 'vertical' && 'Vertical Stepper Demo'}
-						{activeVariant === 'minimal' && 'Minimal Stepper Demo'}
-					</CardTitle>
-					<CardDescription>
-						{activeVariant === 'default' && 'Traditional horizontal stepper with step numbers and titles'}
-						{activeVariant === 'vertical' && 'Space-efficient vertical stepper, perfect for mobile'}
-						{activeVariant === 'minimal' && 'Clean minimal stepper with free navigation between steps'}
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<FormRenderer config={getConfig()} onSubmit={handleSubmit} />
-				</CardContent>
-			</Card>
-		</div>
+				<Card>
+					<CardHeader>
+						<CardTitle>
+							{activeVariant === 'default' && 'Horizontal Stepper Demo'}
+							{activeVariant === 'vertical' && 'Vertical Stepper Demo'}
+							{activeVariant === 'minimal' && 'Minimal Stepper Demo'}
+						</CardTitle>
+						<CardDescription>
+							{activeVariant === 'default' &&
+								'Traditional horizontal stepper with step numbers and titles'}
+							{activeVariant === 'vertical' && 'Space-efficient vertical stepper, perfect for mobile'}
+							{activeVariant === 'minimal' && 'Clean minimal stepper with free navigation between steps'}
+						</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<FormRenderer config={getConfig()} onSubmit={handleSubmit} />
+					</CardContent>
+				</Card>
+			</div>
+		</FormEngineProvider>
 	);
 }

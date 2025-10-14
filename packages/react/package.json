@@ -6,7 +6,7 @@
   "sideEffects": [
     "./dist/registrations.js",
     "./dist/components/form/registry.js",
-    "./dist/components/form/fields/*.registry.js",
+    "./dist/components/elements/inputs/*.registry.js",
     "./dist/components/layouts/*.registry.js",
     "./dist/components/steppers/*.registry.js"
   ],
@@ -27,7 +27,7 @@
     "test:all": "bun test",
     "lint-staged": "lint-staged",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build -o ./storybook-static"
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "^18.0.1",
@@ -133,6 +133,30 @@
       "types": "./dist/hooks/*.d.ts",
       "import": "./dist/hooks/*.js"
     },
+    "./adapters": {
+      "types": "./dist/adapters/index.d.ts",
+      "import": "./dist/adapters/index.js"
+    },
+    "./adapters/*": {
+      "types": "./dist/adapters/*.d.ts",
+      "import": "./dist/adapters/*.js"
+    },
+    "./adapters/rhf": {
+      "types": "./dist/adapters/rhf/index.d.ts",
+      "import": "./dist/adapters/rhf/index.js"
+    },
+    "./adapters/rhf/*": {
+      "types": "./dist/adapters/rhf/*.d.ts",
+      "import": "./dist/adapters/rhf/*.js"
+    },
+    "./adapters/rhf/hooks": {
+      "types": "./dist/adapters/rhf/hooks.d.ts",
+      "import": "./dist/adapters/rhf/hooks.js"
+    },
+    "./adapters/rhf/hooks/*": {
+      "types": "./dist/adapters/rhf/hooks/*.d.ts",
+      "import": "./dist/adapters/rhf/hooks/*.js"
+    },
     "./components": {
       "types": "./dist/components/index.d.ts",
       "import": "./dist/components/index.js"
@@ -153,9 +177,9 @@
       "types": "./dist/registrations.d.ts",
       "import": "./dist/registrations.js"
     },
-    "./components/form/fields/*": {
-      "types": "./dist/components/form/fields/*.d.ts",
-      "import": "./dist/components/form/fields/*.js"
+    "./components/elements/inputs/*": {
+      "types": "./dist/components/elements/inputs/*.d.ts",
+      "import": "./dist/components/elements/inputs/*.js"
     },
     "./components/internals": {
       "types": "./dist/components/internals.d.ts",

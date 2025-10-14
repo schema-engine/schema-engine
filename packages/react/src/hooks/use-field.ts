@@ -5,12 +5,12 @@ import { useFieldGridStyles } from './grid-hooks';
 /**
  * Creates a default value for a field configuration
  */
-export function createFieldDefaultValue(config: FormEngine.FieldConfig): any {
+export function createFieldDefaultValue(config: FormEngine.ElementConfig): any {
 	if ('defaultValue' in config && config.defaultValue !== undefined) {
 		return config.defaultValue;
 	}
 
-	switch (config.componentId) {
+	switch (config.id) {
 		case 'input':
 			return '';
 		case 'number':
@@ -45,7 +45,11 @@ export function combineHandlers<T>(controllerHandler: (value: T) => void, propsH
  * This replaces the FieldGroup wrapper and gives fields full control
  * over their rendering, errors, and semantic HTML
  */
-export function useControlledFormElement(config: FormEngine.FieldConfig) {
+export function useControlledFormElement(config: FormEngine.ElementConfig) {
+	if (!config.name) {
+		throw new Error(`Field configuration is missing required "name" property. Config: ${JSON.stringify(config)}`);
+	}
+
 	const isRequired = isFieldRequired(config.rules);
 
 	const { field, fieldState, formState } = useController({

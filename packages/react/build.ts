@@ -9,7 +9,7 @@ const sourceDir = "src";
 
 const SOURCE_FILE_EXTENSIONS = ["ts", "tsx", "css"];
 const EXCLUDED_CSS_FILES = ["styles.css"];
-const EXCLUDED_DIRECTORIES = ["/stories/"];
+const EXCLUDED_INCLUDES = [".stories"];
 
 function getFileAsBuffer(filePath: string): Buffer {
   try {
@@ -45,8 +45,9 @@ const postcssPlugin: BunPlugin = {
   }
 }
 
+const entryDirs = ["src/adapters", "src/components", "src/hooks", "src/registries", "src/types"];
+
 async function discoverSourceFiles(): Promise<string[]> {
-  const entryDirs = ["src/components", "src/hooks", "src/registries", "src/types"];
   const indexFiles = ["src/index.ts"];
   const extensionPattern = `{${SOURCE_FILE_EXTENSIONS.join(",")}}`;
 
@@ -61,7 +62,7 @@ async function discoverSourceFiles(): Promise<string[]> {
   const rootSrcFiles = await Array.fromAsync(rootSrcGlob.scan({ cwd: "." }));
   
   const allFiles = [...new Set([...indexFiles, ...directoryFiles, ...rootSrcFiles])];
-  return allFiles.filter(file => !EXCLUDED_DIRECTORIES.some(excluded => file.includes(excluded)));
+  return allFiles.filter(file => !EXCLUDED_INCLUDES.some(excluded => file.includes(excluded)));
 }
 
 function ensureDirectoryExists(dirPath: string, forceCleanup = false): void {
@@ -85,7 +86,11 @@ async function generateGlobalCSS(): Promise<void> {
   ];
 
   const sortedFiles = cssFiles
-    .filter(file => !EXCLUDED_CSS_FILES.some(excluded => file.endsWith(excluded)))
+    .filter(file => {
+      const isExcluded = EXCLUDED_CSS_FILES.some(excluded => file.endsWith(excluded));
+      const isInEntryDir = entryDirs.some(dir => file.startsWith(dir));
+      return !isExcluded && isInEntryDir;
+    })
     .sort();
 
   if (sortedFiles.length > 0) {

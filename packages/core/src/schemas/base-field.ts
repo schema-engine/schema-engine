@@ -101,9 +101,9 @@ export const ConstraintLogicSchema = z.object({
  * This contains all common properties shared by all form fields
  */
 export const BaseFieldSchema = z.object({
-	id: z.string().describe('Unique identifier for the field'),
 	name: z.string().describe('Form field name used for form submission'),
-	componentId: z.string().describe('Field component identifier'),
+	id: z.string().optional().describe('HTML element ID'),
+	__id: z.string().describe('Field component identifier'),
 
 	label: z.string().optional().describe('Display label for the field'),
 	description: z.string().optional().describe('Help text or description'),

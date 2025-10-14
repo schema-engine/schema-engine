@@ -1,66 +1,56 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { SplitScreenLayout } from '@/components/layouts';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { simpleContactForm } from '../shared/sample-forms';
-import '../../components/layouts/split-screen-layout.css';
+import { StoryWrapper } from '../shared/story-wrapper';
+import { FormTemplates } from '../shared/form-builder';
+
+const baseForm = FormTemplates.contactForm;
 
 const meta = {
 	title: 'Layouts/SplitScreenLayout',
-	component: SplitScreenLayout,
+	component: FormRenderer,
 	parameters: {
 		layout: 'fullscreen',
 	},
+	decorators: [
+		(Story) => (
+			<StoryWrapper>
+				<Story />
+			</StoryWrapper>
+		),
+	],
 	tags: ['autodocs'],
 	argTypes: {
 		config: {
 			control: 'object',
-			description: 'Layout configuration options',
-		},
-		step: {
-			control: 'object',
-			description: 'Current step information',
-		},
-		form: {
-			control: 'object',
-			description: 'Form information',
-		},
-		className: {
-			control: 'text',
-			description: 'Additional CSS classes',
+			description: 'Form configuration with layout settings',
 		},
 	},
-	args: {
-		children: <FormRenderer config={simpleContactForm} />,
-		step: {
-			id: 'step-1',
-			title: 'Account Setup',
-			description: 'Create your account to get started',
-			index: 0,
-			total: 3,
-		},
-		form: {
-			id: 'example-form',
-			title: 'Example Form',
-			description: 'This is an example form',
-		},
-	},
-} satisfies Meta<typeof SplitScreenLayout>;
+} satisfies Meta<typeof FormRenderer>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
 	args: {
-		config: {},
+		config: FormTemplates.splitScreenForm,
 	},
 };
 
 export const LeftSide: Story = {
 	args: {
 		config: {
-			sideContent: 'Welcome to our platform! Fill out the form to get started.',
-			sidePlacement: 'left',
-			sideWidth: 'normal',
+			...baseForm,
+			steps: [
+				{
+					...baseForm.steps[0],
+					layout: {
+						__id: 'split-screen',
+						sideContent: 'Welcome to our platform! Fill out the form to get started.',
+						sidePlacement: 'left',
+						sideWidth: 'normal',
+					},
+				},
+			],
 		},
 	},
 };
@@ -68,9 +58,18 @@ export const LeftSide: Story = {
 export const RightSide: Story = {
 	args: {
 		config: {
-			sideContent: 'Welcome to our platform! Fill out the form to get started.',
-			sidePlacement: 'right',
-			sideWidth: 'normal',
+			...baseForm,
+			steps: [
+				{
+					...baseForm.steps[0],
+					layout: {
+						__id: 'split-screen',
+						sideContent: 'Welcome to our platform! Fill out the form to get started.',
+						sidePlacement: 'right',
+						sideWidth: 'normal',
+					},
+				},
+			],
 		},
 	},
 };
@@ -78,9 +77,18 @@ export const RightSide: Story = {
 export const NarrowSide: Story = {
 	args: {
 		config: {
-			sideContent: 'Quick tip: Complete all required fields marked with an asterisk.',
-			sidePlacement: 'left',
-			sideWidth: 'narrow',
+			...baseForm,
+			steps: [
+				{
+					...baseForm.steps[0],
+					layout: {
+						__id: 'split-screen',
+						sideContent: 'Quick tip: Complete all required fields marked with an asterisk.',
+						sidePlacement: 'left',
+						sideWidth: 'narrow',
+					},
+				},
+			],
 		},
 	},
 };
@@ -88,10 +96,19 @@ export const NarrowSide: Story = {
 export const NormalSide: Story = {
 	args: {
 		config: {
-			sideContent:
-				'Our platform helps you manage your projects efficiently. Get started by creating your account and exploring our features.',
-			sidePlacement: 'left',
-			sideWidth: 'normal',
+			...baseForm,
+			steps: [
+				{
+					...baseForm.steps[0],
+					layout: {
+						__id: 'split-screen',
+						sideContent:
+							'Our platform helps you manage your projects efficiently. Get started by creating your account and exploring our features.',
+						sidePlacement: 'left',
+						sideWidth: 'normal',
+					},
+				},
+			],
 		},
 	},
 };
@@ -99,10 +116,19 @@ export const NormalSide: Story = {
 export const WideSide: Story = {
 	args: {
 		config: {
-			sideContent:
-				'Welcome to our comprehensive platform! Here you can manage all aspects of your projects, collaborate with team members, track progress, and much more. Take your time filling out the form.',
-			sidePlacement: 'left',
-			sideWidth: 'wide',
+			...baseForm,
+			steps: [
+				{
+					...baseForm.steps[0],
+					layout: {
+						__id: 'split-screen',
+						sideContent:
+							'Welcome to our comprehensive platform! Here you can manage all aspects of your projects, collaborate with team members, track progress, and much more. Take your time filling out the form.',
+						sidePlacement: 'left',
+						sideWidth: 'wide',
+					},
+				},
+			],
 		},
 	},
 };
@@ -110,9 +136,18 @@ export const WideSide: Story = {
 export const RightNarrowSide: Story = {
 	args: {
 		config: {
-			sideContent: 'Quick tip: Save your progress regularly.',
-			sidePlacement: 'right',
-			sideWidth: 'narrow',
+			...baseForm,
+			steps: [
+				{
+					...baseForm.steps[0],
+					layout: {
+						__id: 'split-screen',
+						sideContent: 'Quick tip: Save your progress regularly.',
+						sidePlacement: 'right',
+						sideWidth: 'narrow',
+					},
+				},
+			],
 		},
 	},
 };
@@ -120,10 +155,19 @@ export const RightNarrowSide: Story = {
 export const RightWideSide: Story = {
 	args: {
 		config: {
-			sideContent:
-				'Thank you for choosing our service! We are committed to providing you with the best experience. Complete the form to unlock all features and benefits of our platform.',
-			sidePlacement: 'right',
-			sideWidth: 'wide',
+			...baseForm,
+			steps: [
+				{
+					...baseForm.steps[0],
+					layout: {
+						__id: 'split-screen',
+						sideContent:
+							'Thank you for choosing our service! We are committed to providing you with the best experience. Complete the form to unlock all features and benefits of our platform.',
+						sidePlacement: 'right',
+						sideWidth: 'wide',
+					},
+				},
+			],
 		},
 	},
 };
@@ -131,15 +175,18 @@ export const RightWideSide: Story = {
 export const MinimalContent: Story = {
 	args: {
 		config: {
-			sideContent: 'Get started',
-			sidePlacement: 'left',
-			sideWidth: 'narrow',
-		},
-		step: {
-			id: 'step-1',
-			title: 'Step 1',
-			index: 0,
-			total: 3,
+			...baseForm,
+			steps: [
+				{
+					...baseForm.steps[0],
+					layout: {
+						__id: 'split-screen',
+						sideContent: 'Get started',
+						sidePlacement: 'left',
+						sideWidth: 'narrow',
+					},
+				},
+			],
 		},
 	},
 };
@@ -147,28 +194,60 @@ export const MinimalContent: Story = {
 export const DetailedContent: Story = {
 	args: {
 		config: {
-			sideContent:
-				'Complete Guide: Fill out each section carefully. Your information is secure and will be used only for account creation. If you need help, contact our support team.',
-			sidePlacement: 'left',
-			sideWidth: 'wide',
-		},
-		step: {
-			id: 'step-1',
-			title: 'Comprehensive Account Setup',
-			description: 'Please provide all the required information to create your complete profile',
-			index: 0,
-			total: 5,
+			...baseForm,
+			steps: [
+				{
+					...baseForm.steps[0],
+					title: 'Comprehensive Account Setup',
+					description: 'Please provide all the required information to create your complete profile',
+					layout: {
+						__id: 'split-screen',
+						sideContent:
+							'Complete Guide: Fill out each section carefully. Your information is secure and will be used only for account creation. If you need help, contact our support team.',
+						sidePlacement: 'left',
+						sideWidth: 'wide',
+					},
+				},
+			],
 		},
 	},
 };
 
-export const ContentAlignedTop: Story = {
+export const LongContent: Story = {
 	args: {
 		config: {
-			sideContent: 'Content aligned to the top of the main area',
-			sidePlacement: 'left',
-			sideWidth: 'normal',
-			contentAlignment: 'top',
+			...baseForm,
+			steps: [
+				{
+					...baseForm.steps[0],
+					layout: {
+						__id: 'split-screen',
+						sideContent:
+							'This example demonstrates how the split-screen layout handles longer form content. The side panel remains fixed while the main content area is scrollable, ensuring consistent branding and messaging throughout the form completion process. This is particularly useful for forms that collect detailed information across multiple fields.',
+						sidePlacement: 'left',
+						sideWidth: 'normal',
+					},
+				},
+			],
+		},
+	},
+};
+
+export const TopAligned: Story = {
+	args: {
+		config: {
+			...baseForm,
+			steps: [
+				{
+					...baseForm.steps[0],
+					layout: {
+						__id: 'split-screen',
+						sideContent: 'Content aligned to the top of the main area',
+						sidePlacement: 'left',
+						contentAlignment: 'start',
+					},
+				},
+			],
 		},
 	},
 };
@@ -176,10 +255,19 @@ export const ContentAlignedTop: Story = {
 export const ContentAlignedCenter: Story = {
 	args: {
 		config: {
-			sideContent: 'Content vertically centered in the main area',
-			sidePlacement: 'left',
-			sideWidth: 'normal',
-			contentAlignment: 'center',
+			...baseForm,
+			steps: [
+				{
+					...baseForm.steps[0],
+					layout: {
+						__id: 'split-screen',
+						sideContent: 'Content vertically centered in the main area',
+						sidePlacement: 'left',
+						sideWidth: 'normal',
+						contentAlignment: 'center',
+					},
+				},
+			],
 		},
 	},
 };
@@ -187,10 +275,19 @@ export const ContentAlignedCenter: Story = {
 export const ContentAlignedBottom: Story = {
 	args: {
 		config: {
-			sideContent: 'Content aligned to the bottom of the main area',
-			sidePlacement: 'left',
-			sideWidth: 'normal',
-			contentAlignment: 'bottom',
+			...baseForm,
+			steps: [
+				{
+					...baseForm.steps[0],
+					layout: {
+						__id: 'split-screen',
+						sideContent: 'Content aligned to the bottom of the main area',
+						sidePlacement: 'left',
+						sideWidth: 'normal',
+						contentAlignment: 'bottom',
+					},
+				},
+			],
 		},
 	},
 };
@@ -198,60 +295,148 @@ export const ContentAlignedBottom: Story = {
 export const RightSideCentered: Story = {
 	args: {
 		config: {
-			sideContent: 'Side content on the right with centered main content',
-			sidePlacement: 'right',
-			sideWidth: 'normal',
-			contentAlignment: 'center',
+			...baseForm,
+			steps: [
+				{
+					...baseForm.steps[0],
+					layout: {
+						__id: 'split-screen',
+						sideContent: 'Side content on the right with centered main content',
+						sidePlacement: 'right',
+						sideWidth: 'normal',
+						contentAlignment: 'center',
+					},
+				},
+			],
 		},
 	},
 };
 
-export const SingleStepForm: Story = {
+export const ContactFormExample: Story = {
 	args: {
-		step: undefined,
-		form: {
-			id: 'contact-form',
-			title: 'Get In Touch',
-			description: 'Fill out the form and we will respond within 24 hours',
-		},
 		config: {
-			sideContent: 'Our team is here to help you with any questions or concerns you may have.',
-			sidePlacement: 'left',
-			sideWidth: 'normal',
-			contentAlignment: 'center',
+			...baseForm,
+			steps: [
+				{
+					...baseForm.steps[0],
+					layout: {
+						__id: 'split-screen',
+						sideContent: 'Our team is here to help you with any questions or concerns you may have.',
+						sidePlacement: 'left',
+						sideWidth: 'normal',
+					},
+				},
+			],
 		},
 	},
 };
 
-export const SingleStepFormRightSide: Story = {
+export const NewsletterSignupExample: Story = {
 	args: {
-		step: undefined,
-		form: {
-			id: 'newsletter-form',
-			title: 'Subscribe to Newsletter',
-			description: 'Get the latest updates delivered to your inbox',
-		},
 		config: {
-			sideContent: 'Join thousands of subscribers who receive weekly insights and exclusive content.',
-			sidePlacement: 'right',
-			sideWidth: 'wide',
-			contentAlignment: 'center',
+			...baseForm,
+			steps: [
+				{
+					...baseForm.steps[0],
+					layout: {
+						__id: 'split-screen',
+						sideContent: 'Join thousands of subscribers who receive weekly insights and exclusive content.',
+						sidePlacement: 'right',
+						sideWidth: 'normal',
+					},
+				},
+			],
 		},
 	},
 };
 
-export const SingleStepFormMinimal: Story = {
+export const FeedbackFormExample: Story = {
 	args: {
-		step: undefined,
-		form: {
-			id: 'feedback-form',
-			title: 'Share Your Feedback',
-		},
 		config: {
-			sideContent: 'Your opinion matters',
-			sidePlacement: 'left',
-			sideWidth: 'narrow',
-			contentAlignment: 'center',
+			...baseForm,
+			steps: [
+				{
+					...baseForm.steps[0],
+					layout: {
+						__id: 'split-screen',
+						sideContent: 'Your opinion matters',
+						sidePlacement: 'left',
+						sideWidth: 'narrow',
+						contentAlignment: 'center',
+					},
+				},
+			],
+		},
+	},
+};
+
+const multiStepForm = { ...FormTemplates.registrationForm, stepper: { __id: 'debugger' as const } };
+
+export const MultiStepLeftSide: Story = {
+	args: {
+		config: {
+			...multiStepForm,
+			steps: multiStepForm.steps.map((step) => ({
+				...step,
+				layout: {
+					__id: 'split-screen',
+					sideContent: 'Welcome to our platform. Complete each step to set up your account.',
+					sidePlacement: 'left',
+					sideWidth: 'normal',
+				},
+			})),
+		},
+	},
+};
+
+export const MultiStepRightSide: Story = {
+	args: {
+		config: {
+			...multiStepForm,
+			steps: multiStepForm.steps.map((step) => ({
+				...step,
+				layout: {
+					__id: 'split-screen',
+					sideContent: 'Step-by-step setup guide. Your progress will be saved automatically.',
+					sidePlacement: 'right',
+					sideWidth: 'normal',
+				},
+			})),
+		},
+	},
+};
+
+export const MultiStepWidePanel: Story = {
+	args: {
+		config: {
+			...multiStepForm,
+			steps: multiStepForm.steps.map((step) => ({
+				...step,
+				layout: {
+					__id: 'split-screen',
+					sideContent:
+						'Comprehensive onboarding process. Take your time to fill out each section carefully. Your information is secure and will be used to personalize your experience.',
+					sidePlacement: 'left',
+					sideWidth: 'wide',
+				},
+			})),
+		},
+	},
+};
+
+export const MultiStepNarrowPanel: Story = {
+	args: {
+		config: {
+			...multiStepForm,
+			steps: multiStepForm.steps.map((step) => ({
+				...step,
+				layout: {
+					__id: 'split-screen',
+					sideContent: 'Quick Setup',
+					sidePlacement: 'left',
+					sideWidth: 'narrow',
+				},
+			})),
 		},
 	},
 };

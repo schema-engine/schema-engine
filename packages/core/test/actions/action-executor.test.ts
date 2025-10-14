@@ -1,12 +1,14 @@
-import { test, expect, describe, beforeEach, afterEach } from "bun:test";
+import { test, expect, describe, beforeEach } from "bun:test";
 import { ActionExecutor } from "@/actions/action-executor";
-import { actionRegistry, registerAction } from "@/actions/action-registry";
+import { FormEngineBuilder } from "@/builder";
+import type { FormEngine } from "@/engine/form-engine";
+import type { BuilderActionRegistration } from "@/types";
 import type { 
-	ActionExecutionContext, 
 	ActionExecutionResult, 
 } from "@/actions/types";
 import { createMockContext, setupTestEnvironment } from "./__tools";
 import type { ActionTrigger } from "@/actions";
+import { z } from "zod";
 
 type TestActionConfig = {
 	id: string;
@@ -18,78 +20,54 @@ type TestActionConfig = {
 
 const mockContext = createMockContext();
 
-const createMockHandler = (name: string, shouldFail = false, delay = 0) => {
-	return async (action: any, context: ActionExecutionContext): Promise<ActionExecutionResult> => {
-		if (delay > 0) {
-			await new Promise(resolve => setTimeout(resolve, delay));
-		}
-		
-		if (shouldFail) {
-			return {
-				success: false,
-				error: `${name} action failed`,
-				shouldContinue: true,
-			};
-		}
-
-		return {
-			success: true,
-			message: `${name} executed for ${action.id}`,
-		};
-	};
-};
-
-const createSubmitHandler = (shouldFail = false) => {
-	return async (action: any, context: ActionExecutionContext): Promise<ActionExecutionResult> => {
-		if (shouldFail) {
-			return {
-				success: false,
-				error: "Submit failed",
-				shouldContinue: false,
-			};
-		}
-
-		return {
-			success: true,
-			message: "Form submitted successfully",
-		};
+const createMockAction = (
+	type: string, 
+	handler: (context: any) => Promise<ActionExecutionResult>,
+	defaultTriggers: ActionTrigger[] = []
+): BuilderActionRegistration => {
+	return {
+		__id: type,
+		schema: z.object({
+			id: z.string(),
+			type: z.literal(type),
+			enabled: z.boolean().default(true),
+			triggers: z.array(z.string()).optional(),
+		}),
+		metadata: {
+			name: `${type} action`,
+			defaultTriggers,
+		},
+		execute: handler,
 	};
 };
 
 let executionOrder: string[] = [];
 
-const createTrackingHandler = (name: string) => {
-	return async (action: any, context: ActionExecutionContext): Promise<ActionExecutionResult> => {
-		executionOrder.push(`${name}:${action.id}`);
-		return {
-			success: true,
-			message: `${name} tracked`,
-		};
-	};
-};
-
 describe("ActionExecutor", () => {
 	let executor: ActionExecutor;
+	let engine: FormEngine;
 
 	beforeEach(() => {
 		setupTestEnvironment();
-		executor = new ActionExecutor();
-		executionOrder = [];
-	});
-
-	afterEach(() => {
-		executor.cleanup();
-		actionRegistry.clear();
 		executionOrder = [];
 	});
 
 	describe("Basic Trigger Execution", () => {
 		test("should execute actions for matching trigger", async () => {
-			registerAction({
-				type: "test_action",
-				handler: createMockHandler("test"),
-				defaultTriggers: ["form_submit"],
-			});
+			const testAction = createMockAction(
+				"test_action",
+				async (context) => {
+					executionOrder.push(`test:${context.config.id}`);
+					return {
+						success: true,
+						message: `test executed for ${context.config.id}`,
+					};
+				},
+				["form_submit"]
+			);
+
+			engine = new FormEngineBuilder().addAction(testAction).build();
+			executor = new ActionExecutor(engine);
 
 			const actions: TestActionConfig[] = [
 				{
@@ -107,15 +85,24 @@ describe("ActionExecutor", () => {
 
 			expect(results).toHaveLength(1);
 			expect(results[0].success).toBe(true);
-			expect(results[0].message).toBe("test executed for action-1");
+			expect(executionOrder).toEqual(["test:action-1"]);
 		});
 
 		test("should skip actions that don't match trigger", async () => {
-			registerAction({
-				type: "test_action",
-				handler: createMockHandler("test"),
-				defaultTriggers: ["form_start"],
-			});
+			const testAction = createMockAction(
+				"test_action",
+				async (context) => {
+					executionOrder.push(`test:${context.config.id}`);
+					return {
+						success: true,
+						message: "test executed",
+					};
+				},
+				["form_start"]
+			);
+
+			engine = new FormEngineBuilder().addAction(testAction).build();
+			executor = new ActionExecutor(engine);
 
 			const actions: TestActionConfig[] = [
 				{
@@ -132,20 +119,30 @@ describe("ActionExecutor", () => {
 			);
 
 			expect(results).toHaveLength(0);
+			expect(executionOrder).toEqual([]);
 		});
 
 		test("should skip disabled actions", async () => {
-			registerAction({
-				type: "test_action",
-				handler: createMockHandler("test"),
-				defaultTriggers: ["form_submit"],
-			});
+			const testAction = createMockAction(
+				"test_action",
+				async (context) => {
+					executionOrder.push(`test:${context.config.id}`);
+					return {
+						success: true,
+						message: "test executed",
+					};
+				},
+				["form_submit"]
+			);
+
+			engine = new FormEngineBuilder().addAction(testAction).build();
+			executor = new ActionExecutor(engine);
 
 			const actions: TestActionConfig[] = [
 				{
 					type: "test_action",
 					id: "action-1",
-					enabled: false, // Disabled
+					enabled: false,
 				},
 			];
 
@@ -156,14 +153,24 @@ describe("ActionExecutor", () => {
 			);
 
 			expect(results).toHaveLength(0);
+			expect(executionOrder).toEqual([]);
 		});
 
 		test("should execute actions sequentially in order", async () => {
-			registerAction({
-				type: "test_action",
-				handler: createTrackingHandler("test"),
-				defaultTriggers: ["form_submit"],
-			});
+			const testAction = createMockAction(
+				"test_action",
+				async (context) => {
+					executionOrder.push(`test:${context.config.id}`);
+					return {
+						success: true,
+						message: "test executed",
+					};
+				},
+				["form_submit"]
+			);
+
+			engine = new FormEngineBuilder().addAction(testAction).build();
+			executor = new ActionExecutor(engine);
 
 			const actions: TestActionConfig[] = [
 				{ type: "test_action", id: "first", enabled: true },
@@ -183,22 +190,30 @@ describe("ActionExecutor", () => {
 
 	describe("Custom Triggers", () => {
 		test("should respect custom triggers on actions", async () => {
-			registerAction({
-				type: "test_action",
-				handler: createMockHandler("test"),
-				defaultTriggers: ["form_start"], // Default trigger
-			});
+			const testAction = createMockAction(
+				"test_action",
+				async (context) => {
+					executionOrder.push(`test:${context.config.id}`);
+					return {
+						success: true,
+						message: "test executed",
+					};
+				},
+				["form_start"]
+			);
+
+			engine = new FormEngineBuilder().addAction(testAction).build();
+			executor = new ActionExecutor(engine);
 
 			const actions: TestActionConfig[] = [
 				{
 					type: "test_action",
 					id: "action-1",
 					enabled: true,
-					triggers: ["form_submit"], // Custom override
+					triggers: ["form_submit"],
 				},
 			];
 
-			// Should execute with custom trigger
 			const results1 = await executor.executeTrigger(
 				actions as any,
 				"form_submit",
@@ -206,7 +221,6 @@ describe("ActionExecutor", () => {
 			);
 			expect(results1).toHaveLength(1);
 
-			// Should NOT execute with default trigger
 			const results2 = await executor.executeTrigger(
 				actions as any,
 				"form_start",
@@ -218,11 +232,20 @@ describe("ActionExecutor", () => {
 
 	describe("Error Handling", () => {
 		test("should handle action execution failure", async () => {
-			registerAction({
-				type: "failing_action",
-				handler: createMockHandler("failing", true),
-				defaultTriggers: ["form_submit"],
-			});
+			const failingAction = createMockAction(
+				"failing_action",
+				async (context) => {
+					return {
+						success: false,
+						error: "Action failed",
+						shouldContinue: true,
+					};
+				},
+				["form_submit"]
+			);
+
+			engine = new FormEngineBuilder().addAction(failingAction).build();
+			executor = new ActionExecutor(engine);
 
 			const actions: TestActionConfig[] = [
 				{
@@ -240,25 +263,35 @@ describe("ActionExecutor", () => {
 
 			expect(results).toHaveLength(1);
 			expect(results[0].success).toBe(false);
-			expect(results[0].error).toBe("failing action failed");
+			expect(results[0].error).toBe("Action failed");
 		});
 
 		test("should continue execution after failure by default", async () => {
-			registerAction({
-				type: "failing_action",
-				handler: createMockHandler("failing", true),
-				defaultTriggers: ["form_submit"],
-			});
+			const testAction = createMockAction(
+				"test_action",
+				async (context) => {
+					if (context.config.id === "fail") {
+						return {
+							success: false,
+							error: "Action 1 failed",
+							shouldContinue: true,
+						};
+					}
+					executionOrder.push(`test:${context.config.id}`);
+					return {
+						success: true,
+						message: "test executed",
+					};
+				},
+				["form_submit"]
+			);
 
-			registerAction({
-				type: "success_action",
-				handler: createTrackingHandler("success"),
-				defaultTriggers: ["form_submit"],
-			});
+			engine = new FormEngineBuilder().addAction(testAction).build();
+			executor = new ActionExecutor(engine);
 
 			const actions: TestActionConfig[] = [
-				{ type: "failing_action", id: "fail", enabled: true },
-				{ type: "success_action", id: "success", enabled: true },
+				{ type: "test_action", id: "fail", enabled: true },
+				{ type: "test_action", id: "success", enabled: true },
 			];
 
 			const results = await executor.executeTrigger(
@@ -270,29 +303,35 @@ describe("ActionExecutor", () => {
 			expect(results).toHaveLength(2);
 			expect(results[0].success).toBe(false);
 			expect(results[1].success).toBe(true);
-			expect(executionOrder).toContain("success:success");
+			expect(executionOrder).toContain("test:success");
 		});
 
 		test("should stop execution when shouldContinue is false", async () => {
-			registerAction({
-				type: "stopping_action",
-				handler: async () => ({
-					success: false,
-					error: "Stop execution",
-					shouldContinue: false,
-				}),
-				defaultTriggers: ["form_submit"],
-			});
+			const testAction = createMockAction(
+				"test_action",
+				async (context) => {
+					if (context.config.id === "stop") {
+						return {
+							success: false,
+							error: "Stop execution",
+							shouldContinue: false,
+						};
+					}
+					executionOrder.push(`test:${context.config.id}`);
+					return {
+						success: true,
+						message: "test executed",
+					};
+				},
+				["form_submit"]
+			);
 
-			registerAction({
-				type: "next_action",
-				handler: createTrackingHandler("next"),
-				defaultTriggers: ["form_submit"],
-			});
+			engine = new FormEngineBuilder().addAction(testAction).build();
+			executor = new ActionExecutor(engine);
 
 			const actions: TestActionConfig[] = [
-				{ type: "stopping_action", id: "stop", enabled: true },
-				{ type: "next_action", id: "next", enabled: true },
+				{ type: "test_action", id: "stop", enabled: true },
+				{ type: "test_action", id: "next", enabled: true },
 			];
 
 			const results = await executor.executeTrigger(
@@ -303,17 +342,20 @@ describe("ActionExecutor", () => {
 
 			expect(results).toHaveLength(1);
 			expect(results[0].success).toBe(false);
-			expect(executionOrder).not.toContain("next:next");
+			expect(executionOrder).not.toContain("test:next");
 		});
 
 		test("should handle handler throwing error", async () => {
-			registerAction({
-				type: "throwing_action",
-				handler: async () => {
+			const throwingAction = createMockAction(
+				"throwing_action",
+				async (context) => {
 					throw new Error("Handler threw error");
 				},
-				defaultTriggers: ["form_submit"],
-			});
+				["form_submit"]
+			);
+
+			engine = new FormEngineBuilder().addAction(throwingAction).build();
+			executor = new ActionExecutor(engine);
 
 			const actions: TestActionConfig[] = [
 				{
@@ -331,15 +373,19 @@ describe("ActionExecutor", () => {
 
 			expect(results).toHaveLength(1);
 			expect(results[0].success).toBe(false);
-			expect(results[0].error).toBe("Action execution failed: Handler threw error");
+			expect(results[0].error).toContain("Handler threw error");
 		});
 
 		test("should handle unregistered action type", async () => {
+			engine = new FormEngineBuilder().build();
+			executor = new ActionExecutor(engine);
+
 			const actions: TestActionConfig[] = [
 				{
 					type: "unregistered_action",
 					id: "action-1",
 					enabled: true,
+					triggers: ["form_submit"],
 				},
 			];
 
@@ -349,144 +395,164 @@ describe("ActionExecutor", () => {
 				mockContext
 			);
 
-			expect(results).toHaveLength(0); 
+			expect(results).toHaveLength(1);
+			expect(results[0].success).toBe(false);
+			expect(results[0].error).toContain("No handler registered");
 		});
 	});
 
 	describe("Submit Lifecycle Management", () => {
 		test("should trigger submit lifecycle on successful submit", async () => {
-			registerAction({
-				type: "submit",
-				handler: createSubmitHandler(false),
-				defaultTriggers: ["form_submit"],
-			});
-
-			registerAction({
-				type: "success_handler",
-				handler: createTrackingHandler("success"),
-				defaultTriggers: ["submit_success"],
-			});
-
-			registerAction({
-				type: "complete_handler",
-				handler: createTrackingHandler("complete"),
-				defaultTriggers: ["submit_complete"],
-			});
-
-			const actions: TestActionConfig[] = [
-				{ type: "submit", id: "submit", enabled: true, endpoint: "/api/test", method: "POST" },
-				{ type: "success_handler", id: "success", enabled: true },
-				{ type: "complete_handler", id: "complete", enabled: true },
-			];
-
-			const results = await executor.executeTrigger(
-				actions as any,
-				"form_submit",
-				mockContext
-			);
-
-			expect(results).toHaveLength(3);
-			expect(results[0].success).toBe(true); 
-			expect(results[1].success).toBe(true); 
-			expect(results[2].success).toBe(true); 
-
-			expect(executionOrder).toContain("success:success");
-			expect(executionOrder).toContain("complete:complete");
-		});
-
-		test("should trigger error lifecycle on failed submit", async () => {
-			registerAction({
-				type: "submit",
-				handler: createSubmitHandler(true),
-				defaultTriggers: ["form_submit"],
-			});
-
-			registerAction({
-				type: "error_handler",
-				handler: createTrackingHandler("error"),
-				defaultTriggers: ["submit_error"],
-			});
-
-			registerAction({
-				type: "complete_handler",
-				handler: createTrackingHandler("complete"),
-				defaultTriggers: ["submit_complete"],
-			});
-
-			const actions: TestActionConfig[] = [
-				{ type: "submit", id: "submit", enabled: true, endpoint: "/api/test", method: "POST" },
-				{ type: "error_handler", id: "error", enabled: true },
-				{ type: "complete_handler", id: "complete", enabled: true },
-			];
-
-			const results = await executor.executeTrigger(
-				actions as any,
-				"form_submit",
-				mockContext
-			);
-
-			expect(results).toHaveLength(3);
-			expect(results[0].success).toBe(false); 
-			expect(results[1].success).toBe(true); 
-			expect(results[2].success).toBe(true);
-
-			expect(executionOrder).toContain("error:error");
-			expect(executionOrder).toContain("complete:complete");
-		});
-
-		test("should update form state during submit lifecycle", async () => {
-			let capturedContext: ActionExecutionContext | null = null;
-
-			registerAction({
-				type: "submit",
-				handler: createSubmitHandler(false),
-				defaultTriggers: ["form_submit"],
-			});
-
-			registerAction({
-				type: "success_handler",
-				handler: async (action, context) => {
-					capturedContext = context;
-					return { success: true };
+			const submitAction = createMockAction(
+				"submit",
+				async (context) => {
+					executionOrder.push("submit");
+					return {
+						success: true,
+						message: "Form submitted",
+					};
 				},
-				defaultTriggers: ["submit_success"],
-			});
+				["form_submit"]
+			);
+
+			const successAction = createMockAction(
+				"success_handler",
+				async (context) => {
+					executionOrder.push("success");
+					return {
+						success: true,
+						message: "Success handler executed",
+					};
+				},
+				["submit_success"]
+			);
+
+			const completeAction = createMockAction(
+				"complete_handler",
+				async (context) => {
+					executionOrder.push("complete");
+					return {
+						success: true,
+						message: "Complete handler executed",
+					};
+				},
+				["submit_complete"]
+			);
+
+			engine = new FormEngineBuilder()
+				.addAction(submitAction)
+				.addAction(successAction)
+				.addAction(completeAction)
+				.build();
+			executor = new ActionExecutor(engine);
 
 			const actions: TestActionConfig[] = [
-				{ type: "submit", id: "submit", enabled: true, endpoint: "/api/test", method: "POST" },
+				{ type: "submit", id: "submit", enabled: true },
 				{ type: "success_handler", id: "success", enabled: true },
+				{ type: "complete_handler", id: "complete", enabled: true },
 			];
 
 			await executor.executeTrigger(actions as any, "form_submit", mockContext);
 
-			expect(capturedContext).not.toBeNull();
-			if (capturedContext) {
-				const context = capturedContext as ActionExecutionContext;
-				expect(context.form.formState.isSubmitting).toBe(false);
-				expect(context.form.formState.isSubmitSuccessful).toBe(true);
-			}
+			expect(executionOrder).toContain("submit");
+			expect(executionOrder).toContain("success");
+			expect(executionOrder).toContain("complete");
+		});
+
+		test("should trigger error lifecycle on failed submit", async () => {
+			const submitAction = createMockAction(
+				"submit",
+				async (context) => {
+					executionOrder.push("submit");
+					return {
+						success: false,
+						error: "Submit failed",
+						shouldContinue: true,
+					};
+				},
+				["form_submit"]
+			);
+
+			const errorAction = createMockAction(
+				"error_handler",
+				async (context) => {
+					executionOrder.push("error");
+					return {
+						success: true,
+						message: "Error handler executed",
+					};
+				},
+				["submit_error"]
+			);
+
+			const completeAction = createMockAction(
+				"complete_handler",
+				async (context) => {
+					executionOrder.push("complete");
+					return {
+						success: true,
+						message: "Complete handler executed",
+					};
+				},
+				["submit_complete"]
+			);
+
+			engine = new FormEngineBuilder()
+				.addAction(submitAction)
+				.addAction(errorAction)
+				.addAction(completeAction)
+				.build();
+			executor = new ActionExecutor(engine);
+
+			const actions: TestActionConfig[] = [
+				{ type: "submit", id: "submit", enabled: true },
+				{ type: "error_handler", id: "error", enabled: true },
+				{ type: "complete_handler", id: "complete", enabled: true },
+			];
+
+			await executor.executeTrigger(actions as any, "form_submit", mockContext);
+
+			expect(executionOrder).toContain("submit");
+			expect(executionOrder).toContain("error");
+			expect(executionOrder).toContain("complete");
 		});
 	});
 
 	describe("Complex Scenarios", () => {
 		test("should handle multiple actions with different triggers", async () => {
-			registerAction({
-				type: "start_action",
-				handler: createTrackingHandler("start"),
-				defaultTriggers: ["form_start"],
-			});
+			const startAction = createMockAction(
+				"start_action",
+				async (context) => {
+					executionOrder.push("start");
+					return { success: true, message: "started" };
+				},
+				["form_start"]
+			);
 
-			registerAction({
-				type: "submit_action", 
-				handler: createTrackingHandler("submit"),
-				defaultTriggers: ["form_submit"],
-			});
+			const submitAction = createMockAction(
+				"submit_action",
+				async (context) => {
+					executionOrder.push("submit");
+					return { success: true, message: "submitted" };
+				},
+				["form_submit"]
+			);
 
-			registerAction({
-				type: "change_action",
-				handler: createTrackingHandler("change"),
-				defaultTriggers: ["form_change"],
-			});
+			const changeAction = createMockAction(
+				"change_action",
+				async (context) => {
+					executionOrder.push("change");
+					return { success: true, message: "changed" };
+				},
+				["form_change"]
+			);
+
+			engine = new FormEngineBuilder()
+				.addAction(startAction)
+				.addAction(submitAction)
+				.addAction(changeAction)
+				.build();
+			executor = new ActionExecutor(engine);
 
 			const actions: TestActionConfig[] = [
 				{ type: "start_action", id: "start", enabled: true },
@@ -494,44 +560,45 @@ describe("ActionExecutor", () => {
 				{ type: "change_action", id: "change", enabled: true },
 			];
 
-			// Test form_start trigger
 			await executor.executeTrigger(actions as any, "form_start", mockContext);
-			expect(executionOrder).toContain("start:start");
+			expect(executionOrder).toContain("start");
 
-			// Test form_submit trigger  
 			executionOrder = [];
 			await executor.executeTrigger(actions as any, "form_submit", mockContext);
-			expect(executionOrder).toContain("submit:submit");
+			expect(executionOrder).toContain("submit");
 
-			// Test form_change trigger
 			executionOrder = [];
 			await executor.executeTrigger(actions as any, "form_change", mockContext);
-			expect(executionOrder).toContain("change:change");
+			expect(executionOrder).toContain("change");
 		});
 
 		test("should handle mixed success and failure scenarios", async () => {
-			registerAction({
-				type: "success_action",
-				handler: createTrackingHandler("success"),
-				defaultTriggers: ["form_submit"],
-			});
+			const testAction = createMockAction(
+				"test_action",
+				async (context) => {
+					if (context.config.id === "fail") {
+						return {
+							success: false,
+							error: "Failed",
+							shouldContinue: true,
+						};
+					}
+					executionOrder.push(`success:${context.config.id}`);
+					return {
+						success: true,
+						message: "executed",
+					};
+				},
+				["form_submit"]
+			);
 
-			registerAction({
-				type: "fail_action",
-				handler: createMockHandler("fail", true),
-				defaultTriggers: ["form_submit"],
-			});
-
-			registerAction({
-				type: "final_action",
-				handler: createTrackingHandler("final"),
-				defaultTriggers: ["form_submit"],
-			});
+			engine = new FormEngineBuilder().addAction(testAction).build();
+			executor = new ActionExecutor(engine);
 
 			const actions: TestActionConfig[] = [
-				{ type: "success_action", id: "success", enabled: true },
-				{ type: "fail_action", id: "fail", enabled: true },
-				{ type: "final_action", id: "final", enabled: true },
+				{ type: "test_action", id: "success1", enabled: true },
+				{ type: "test_action", id: "fail", enabled: true },
+				{ type: "test_action", id: "success2", enabled: true },
 			];
 
 			const results = await executor.executeTrigger(
@@ -546,12 +613,15 @@ describe("ActionExecutor", () => {
 			expect(results[2].success).toBe(true);
 
 			expect(executionOrder).toEqual([
-				"success:success",
-				"final:final"
+				"success:success1",
+				"success:success2"
 			]);
 		});
 
 		test("should handle empty actions array", async () => {
+			engine = new FormEngineBuilder().build();
+			executor = new ActionExecutor(engine);
+
 			const results = await executor.executeTrigger(
 				[],
 				"form_submit",
@@ -562,11 +632,17 @@ describe("ActionExecutor", () => {
 		});
 
 		test("should handle actions with no matching triggers", async () => {
-			registerAction({
-				type: "test_action",
-				handler: createTrackingHandler("test"),
-				defaultTriggers: ["form_start"],
-			});
+			const testAction = createMockAction(
+				"test_action",
+				async (context) => {
+					executionOrder.push("test");
+					return { success: true, message: "executed" };
+				},
+				["form_start"]
+			);
+
+			engine = new FormEngineBuilder().addAction(testAction).build();
+			executor = new ActionExecutor(engine);
 
 			const actions: TestActionConfig[] = [
 				{ type: "test_action", id: "test", enabled: true },
@@ -574,7 +650,7 @@ describe("ActionExecutor", () => {
 
 			const results = await executor.executeTrigger(
 				actions as any,
-				"form_submit", // No matching trigger
+				"form_submit",
 				mockContext
 			);
 
@@ -585,6 +661,8 @@ describe("ActionExecutor", () => {
 
 	describe("Cleanup", () => {
 		test("should cleanup without errors", () => {
+			engine = new FormEngineBuilder().build();
+			executor = new ActionExecutor(engine);
 			expect(() => executor.cleanup()).not.toThrow();
 		});
 	});

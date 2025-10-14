@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ActionExecutionContext, ActionExecutionResult } from '../types';
+import type { BuilderActionExecutionContext, BuilderActionExecutionResult, BuilderActionRegistration } from '@/types';
 import { ActionTriggerSchema } from '../triggers';
 
 /**
@@ -21,11 +21,11 @@ export interface AutoSavePluginConfig {
 	/** Custom storage implementation */
 	storage?: AutoSaveStorage;
 	/** Called when auto-save succeeds */
-	onSave?: (data: unknown, context: ActionExecutionContext) => void | Promise<void>;
+	onSave?: (data: unknown, context: BuilderActionExecutionContext<any>) => void | Promise<void>;
 	/** Called when auto-save fails */
-	onError?: (error: string, context: ActionExecutionContext) => void | Promise<void>;
+	onError?: (error: string, context: BuilderActionExecutionContext<any>) => void | Promise<void>;
 	/** Custom storage key generator */
-	getStorageKey?: (context: ActionExecutionContext) => string;
+	getStorageKey?: (context: BuilderActionExecutionContext<any>) => string;
 }
 
 /**
@@ -71,14 +71,6 @@ export const AutoSaveActionSchema = z.object({
 
 export type AutoSaveAction = z.infer<typeof AutoSaveActionSchema>;
 
-// Module augmentation to add auto-save action to PluginActions
-declare module '../types' {
-	interface PluginActions {
-		auto_save: AutoSaveAction;
-	}
-}
-
-// Default localStorage storage implementation
 const defaultStorage: AutoSaveStorage = {
 	save: (key: string, data: unknown) => {
 		localStorage.setItem(key, JSON.stringify(data));
@@ -144,70 +136,73 @@ const defaultStorage: AutoSaveStorage = {
  * });
  * ```
  */
-export function autoSavePlugin(config: AutoSavePluginConfig = {}) {
+export function autoSavePlugin(config: AutoSavePluginConfig = {}): BuilderActionRegistration<AutoSaveAction> {
 	const storage = config.storage || defaultStorage;
 
-	return {
-		type: 'auto_save' as const,
-		schema: AutoSaveActionSchema,
-		defaultTriggers: ['form_change'] as const,
-		handler: async (action: AutoSaveAction, context: ActionExecutionContext): Promise<ActionExecutionResult> => {
-			try {
-				// Get storage key
-				const storageKey = action.storageKey || config.getStorageKey?.(context) || `autosave_${context.formId}`;
+	const handler = async (
+		context: BuilderActionExecutionContext<AutoSaveAction>,
+	): Promise<BuilderActionExecutionResult> => {
+		const action = context.config;
+		try {
+			const storageKey = action.storageKey || config.getStorageKey?.(context) || `autosave_${context.formId}`;
 
-				// Get form data
-				const formData = context.formData;
+			const formData = context.formData;
 
-				if (!formData || Object.keys(formData).length === 0) {
-					return {
-						success: false,
-						error: 'No form data available for auto-save',
-						shouldContinue: true,
-					};
-				}
-
-				// Filter sensitive fields if needed
-				let dataToSave = formData;
-				if (!action.includeSensitive) {
-					// This is a simple implementation - you might want more sophisticated filtering
-					dataToSave = Object.fromEntries(
-						Object.entries(formData).filter(
-							([key]) =>
-								!key.toLowerCase().includes('password') &&
-								!key.toLowerCase().includes('secret') &&
-								!key.toLowerCase().includes('token'),
-						),
-					);
-				}
-
-				// Save to storage
-				await storage.save(storageKey, dataToSave);
-
-				// Call success handler
-				if (config.onSave) {
-					await config.onSave(dataToSave, context);
-				}
-
-				return {
-					success: true,
-					message: `Form data auto-saved to ${storageKey}`,
-					shouldContinue: true,
-				};
-			} catch (error) {
-				const errorMessage = error instanceof Error ? error.message : 'Failed to auto-save';
-
-				// Call error handler
-				if (config.onError) {
-					await config.onError(errorMessage, context);
-				}
-
+			if (!formData || Object.keys(formData).length === 0) {
 				return {
 					success: false,
-					error: errorMessage,
+					error: 'No form data available for auto-save',
 					shouldContinue: true,
 				};
 			}
+
+			let dataToSave = formData;
+			if (!action.includeSensitive) {
+				dataToSave = Object.fromEntries(
+					Object.entries(formData).filter(
+						([key]) =>
+							!key.toLowerCase().includes('password') &&
+							!key.toLowerCase().includes('secret') &&
+							!key.toLowerCase().includes('token'),
+					),
+				);
+			}
+
+			await storage.save(storageKey, dataToSave);
+
+			if (config.onSave) {
+				await config.onSave(dataToSave, context);
+			}
+
+			return {
+				success: true,
+				message: `Form data auto-saved to ${storageKey}`,
+				shouldContinue: true,
+			};
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : 'Failed to auto-save';
+
+			if (config.onError) {
+				await config.onError(errorMessage, context);
+			}
+
+			return {
+				success: false,
+				error: errorMessage,
+				shouldContinue: true,
+			};
+		}
+	};
+
+	return {
+		__id: 'auto_save',
+		schema: AutoSaveActionSchema,
+		metadata: {
+			name: 'Auto Save',
+			description: 'Automatically save form data to storage',
+			icon: 'save',
+			defaultTriggers: ['form_change'],
 		},
+		execute: handler,
 	};
 }

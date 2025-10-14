@@ -8,39 +8,52 @@ import { AutoSaveActionSchema } from './plugins/auto-save-plugin';
 import { GTMEventActionSchema } from './plugins/gtm-plugin';
 
 /**
- * Plugin Actions Interface
+ * Global Action Registry
  *
- * Extension point for registering custom action types via module augmentation.
+ * Extension point for registering custom action types via global namespace augmentation.
  * External packages can extend this interface to add their action schemas.
- * ALL actions are now plugins - there are no core actions.
  *
- * @example Plugin Registration
+ * To register actions, import the registration file which includes type augmentation:
+ * @example
  * ```typescript
- * declare module "../types" {
- *   interface PluginActions {
- *     my_custom_action: MyCustomActionType;
+ * import { SubmitActionRegistration } from '@json-form-engine/core/actions/plugins/submit-registration';
+ * // The import above automatically augments FormEngine.ActionRegistry with 'submit' type
+ * ```
+ *
+ * For custom actions:
+ * @example
+ * ```typescript
+ * declare global {
+ *   namespace FormEngine {
+ *     interface ActionRegistry {
+ *       my_custom_action: MyCustomid;
+ *     }
  *   }
  * }
  * ```
  */
-export interface PluginActions {}
+declare global {
+	namespace FormEngine {
+		interface ActionRegistry {}
+	}
+}
 
 /**
  * Form Action Configuration Union
  *
- * Union of all registered plugin actions.
+ * Union of all registered action types from FormEngine.ActionRegistry.
  * TypeScript can automatically infer the correct action type based on the 'type' field.
  *
  * @example Type Narrowing
  * ```typescript
  * function handleAction(action: FormActionConfig) {
  *   if (action.type === "submit") {
- *     // action is automatically typed as SubmitAction (if submit plugin is registered)
+ *     // action is automatically typed as SubmitAction (if submit registration is imported)
  *   }
  * }
  * ```
  */
-export type FormActionConfig = PluginActions[keyof PluginActions];
+export type FormActionConfig = FormEngine.ActionRegistry[keyof FormEngine.ActionRegistry];
 
 /**
  * Action Execution Context

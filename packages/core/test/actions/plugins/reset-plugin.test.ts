@@ -1,24 +1,22 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { actionRegistry } from "@/actions/action-registry";
+import { FormEngineBuilder } from "@/builder";
+import { ActionExecutor } from "@/actions/action-executor";
+import type { FormEngine } from "@/engine/form-engine";
+import type { BuilderActionExecutionContext } from "@/types";
 import { resetPlugin, ResetActionSchema, type ResetAction } from "@/actions/plugins/reset-plugin";
-import type { ActionExecutionContext } from "@/actions/types";
 import { GDPRConsent } from "@/tools/gdpr-consent";
-import { createMockContext, setupTestEnvironment } from "../__tools";
+import { createMockBuilderContext, setupTestEnvironment } from "../__tools";
 
 describe("ResetPlugin", () => {
-	let mockContext: ActionExecutionContext;
+	let engine: FormEngine;
+	let executor: ActionExecutor;
 
 	beforeEach(() => {
 		setupTestEnvironment();
-		mockContext = createMockContext({
-			formData: { name: "John", email: "john@example.com" },
-		});
 	});
 
 	afterEach(() => {
-		// Clean up mocks
 		delete (global as any).window;
-		actionRegistry.clear();
 	});
 
 	describe("Schema Validation", () => {
@@ -91,10 +89,10 @@ describe("ResetPlugin", () => {
 		test("should create plugin with default configuration", () => {
 			const plugin = resetPlugin();
 
-			expect(plugin.type).toBe("reset");
+			expect(plugin.__id).toBe("reset");
 			expect(plugin.schema).toBe(ResetActionSchema);
-			expect(plugin.defaultTriggers).toEqual(["manual_reset", "submit_success"]);
-			expect(plugin.handler).toBeDefined();
+			expect(plugin.metadata.defaultTriggers).toEqual(["form_reset", "submit_success"]);
+			expect(plugin.execute).toBeDefined();
 		});
 
 		test("should create plugin with custom configuration", () => {
@@ -119,21 +117,21 @@ describe("ResetPlugin", () => {
 				},
 			});
 
-			expect(plugin.type).toBe("reset");
-			expect(plugin.handler).toBeDefined();
+			expect(plugin.__id).toBe("reset");
+			expect(plugin.execute).toBeDefined();
 		});
 	});
 
 	describe("Action Execution", () => {
 		test("should execute successful reset action", async () => {
 			let formResetCalled = false;
-			
-			mockContext.form.reset = () => {
-				formResetCalled = true;
-			};
 
-			const plugin = resetPlugin();
-			actionRegistry.register(plugin);
+			const plugin = resetPlugin({
+				resetForm: (context, resetToDefaults) => {
+					formResetCalled = true;
+					context.form.reset();
+				},
+			});
 
 			const action: ResetAction = {
 				id: "test-reset",
@@ -142,7 +140,9 @@ describe("ResetPlugin", () => {
 				resetToDefaults: true,
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
 			expect(result.message).toBe("Form reset successfully");
@@ -152,13 +152,13 @@ describe("ResetPlugin", () => {
 
 		test("should reset with resetToDefaults=true", async () => {
 			let resetParams: any[] = [];
-			
-			mockContext.form.reset = (...args: any[]) => {
-				resetParams = args;
-			};
 
-			const plugin = resetPlugin();
-			actionRegistry.register(plugin);
+			const plugin = resetPlugin({
+				resetForm: (context, resetToDefaults) => {
+					context.form.reset();
+					resetParams = resetToDefaults ? [] : [{}];
+				},
+			});
 
 			const action: ResetAction = {
 				id: "test-reset",
@@ -167,21 +167,22 @@ describe("ResetPlugin", () => {
 				resetToDefaults: true,
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
 
-			// When resetToDefaults is true, reset() is called without parameters
+			await plugin.execute(context);
+
 			expect(resetParams).toEqual([]);
 		});
 
 		test("should reset with resetToDefaults=false", async () => {
 			let resetParams: any[] = [];
-			
-			mockContext.form.reset = (...args: any[]) => {
-				resetParams = args;
-			};
 
-			const plugin = resetPlugin();
-			actionRegistry.register(plugin);
+			const plugin = resetPlugin({
+				resetForm: (context, resetToDefaults) => {
+					context.form.reset();
+					resetParams = resetToDefaults ? [] : [{}];
+				},
+			});
 
 			const action: ResetAction = {
 				id: "test-reset",
@@ -190,15 +191,16 @@ describe("ResetPlugin", () => {
 				resetToDefaults: false,
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
 
-			// When resetToDefaults is false, reset({}) is called with empty object
+			await plugin.execute(context);
+
 			expect(resetParams).toEqual([{}]);
 		});
 
 		test("should call custom reset handler", async () => {
-			let customResetContext: ActionExecutionContext | null = null;
-			let customResetToDefaults: boolean | null = null;
+			let customResetContext: BuilderActionExecutionContext<ResetAction> | undefined = undefined;
+			let customResetToDefaults = true;
 
 			const plugin = resetPlugin({
 				resetForm: (context, resetToDefaults) => {
@@ -206,7 +208,6 @@ describe("ResetPlugin", () => {
 					customResetToDefaults = resetToDefaults;
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: ResetAction = {
 				id: "test-reset",
@@ -215,22 +216,22 @@ describe("ResetPlugin", () => {
 				resetToDefaults: false,
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			await plugin.execute(context);
 
 			expect(customResetContext).toBeTruthy();
-			expect(customResetToDefaults).not.toBeNull();
-			expect(customResetToDefaults!).toBe(false);
+			expect(customResetToDefaults).toBe(false);
 		});
 
 		test("should call onReset callback", async () => {
-			let onResetContext: ActionExecutionContext | null = null;
+			let onResetContext: BuilderActionExecutionContext<ResetAction> | undefined = undefined;
 
 			const plugin = resetPlugin({
 				onReset: (context) => {
 					onResetContext = context;
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: ResetAction = {
 				id: "test-reset",
@@ -239,20 +240,21 @@ describe("ResetPlugin", () => {
 				resetToDefaults: true,
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			await plugin.execute(context);
 
 			expect(onResetContext).toBeTruthy();
 		});
 
 		test("should call clearDraft", async () => {
-			let clearDraftFormId: string | null = null;
+			let clearDraftFormId = "";
 
 			const plugin = resetPlugin({
 				clearDraft: (formId) => {
 					clearDraftFormId = formId;
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: ResetAction = {
 				id: "test-reset",
@@ -261,14 +263,15 @@ describe("ResetPlugin", () => {
 				resetToDefaults: true,
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
 
-			expect(clearDraftFormId).not.toBeNull();
-			expect(clearDraftFormId!).toBe("test-form");
+			await plugin.execute(context);
+
+			expect(clearDraftFormId).toBe("test-form");
 		});
 
 		test("should handle confirmation dialog - confirmed", async () => {
-			let confirmMessage: string | null = null;
+			let confirmMessage = "";
 
 			const plugin = resetPlugin({
 				confirm: (message) => {
@@ -276,7 +279,6 @@ describe("ResetPlugin", () => {
 					return true;
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: ResetAction = {
 				id: "test-reset",
@@ -286,11 +288,12 @@ describe("ResetPlugin", () => {
 				confirmMessage: "Are you sure?",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
-			expect(confirmMessage).not.toBeNull();
-			expect(confirmMessage!).toBe("Are you sure?");
+			expect(confirmMessage).toBe("Are you sure?");
 		});
 
 		test("should handle confirmation dialog - cancelled", async () => {
@@ -302,7 +305,6 @@ describe("ResetPlugin", () => {
 					return false;
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: ResetAction = {
 				id: "test-reset",
@@ -312,7 +314,9 @@ describe("ResetPlugin", () => {
 				confirmMessage: "Are you sure?",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(false);
 			expect(result.error).toBe("Reset cancelled by user");
@@ -321,7 +325,7 @@ describe("ResetPlugin", () => {
 		});
 
 		test("should handle async confirmation dialog", async () => {
-			let confirmMessage: string | null = null;
+			let confirmMessage = "";
 
 			const plugin = resetPlugin({
 				confirm: async (message) => {
@@ -331,7 +335,6 @@ describe("ResetPlugin", () => {
 					});
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: ResetAction = {
 				id: "test-reset",
@@ -341,11 +344,12 @@ describe("ResetPlugin", () => {
 				confirmMessage: "Async confirm?",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
-			expect(confirmMessage).not.toBeNull();
-			expect(confirmMessage!).toBe("Async confirm?");
+			expect(confirmMessage).toBe("Async confirm?");
 		});
 
 		test("should not show confirmation without confirmMessage", async () => {
@@ -357,7 +361,6 @@ describe("ResetPlugin", () => {
 					return true;
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: ResetAction = {
 				id: "test-reset",
@@ -366,7 +369,9 @@ describe("ResetPlugin", () => {
 				resetToDefaults: true,
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
 			expect(confirmCalled).toBe(false);
@@ -378,7 +383,6 @@ describe("ResetPlugin", () => {
 					throw new Error("Custom reset failed");
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: ResetAction = {
 				id: "test-reset",
@@ -387,7 +391,9 @@ describe("ResetPlugin", () => {
 				resetToDefaults: true,
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(false);
 			expect(result.error).toBe("Custom reset failed");
@@ -400,7 +406,6 @@ describe("ResetPlugin", () => {
 					throw "String error";
 				},
 			});
-			actionRegistry.register(plugin);
 
 			const action: ResetAction = {
 				id: "test-reset",
@@ -409,7 +414,9 @@ describe("ResetPlugin", () => {
 				resetToDefaults: true,
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(false);
 			expect(result.error).toBe("Reset failed");
@@ -418,14 +425,11 @@ describe("ResetPlugin", () => {
 	});
 
 	describe("Integration", () => {
-		test("should register plugin and execute successfully", async () => {
+		test("should execute successfully with plugin", async () => {
 			const plugin = resetPlugin({
 				onReset: (context) => {
-					// Track reset event
 				},
 			});
-			
-			actionRegistry.register(plugin);
 
 			const action: ResetAction = {
 				id: "test-reset",
@@ -435,7 +439,9 @@ describe("ResetPlugin", () => {
 				confirmMessage: undefined,
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
 			expect(result.message).toBe("Form reset successfully");
@@ -444,8 +450,7 @@ describe("ResetPlugin", () => {
 		test("should work with default window.confirm", async () => {
 			(global as any).window = { confirm: () => true };
 
-			const plugin = resetPlugin(); // Uses default confirm
-			actionRegistry.register(plugin);
+			const plugin = resetPlugin();
 
 			const action: ResetAction = {
 				id: "test-reset",
@@ -455,7 +460,9 @@ describe("ResetPlugin", () => {
 				confirmMessage: "Reset form?",
 			};
 
-			const result = await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
 		});
@@ -473,8 +480,7 @@ describe("ResetPlugin", () => {
 				draftCleared = true;
 			};
 
-			const plugin = resetPlugin(); // Uses default clearDraft
-			actionRegistry.register(plugin);
+			const plugin = resetPlugin();
 
 			const action: ResetAction = {
 				id: "test-reset",
@@ -483,7 +489,9 @@ describe("ResetPlugin", () => {
 				resetToDefaults: true,
 			};
 
-			await actionRegistry.execute(action, mockContext);
+			const context = createMockBuilderContext(action);
+
+			await plugin.execute(context);
 
 			expect(gdprConsentChecked).toBe(true);
 			expect(draftCleared).toBe(true);

@@ -1,65 +1,43 @@
 /**
- * Default registrations for @json-form-engine/react
+ * Per-component registration re-exports with type augmentation
  *
- * This file registers all default form components, layouts, and steppers.
- * Import this once in your application to have access to all built-in components.
+ * Each import triggers type augmentation for that specific component only.
+ * This ensures that only the components you actually use are registered in the type system.
  *
- * @example
+ * @example Individual Import (Recommended)
  * ```typescript
- * import '@json-form-engine/react/registrations';
+ * import { InputElementRegistration } from '@json-form-engine/react/components/elements/inputs/form-input.registration';
  * ```
+ *
+ * @example Multiple Imports from this file
+ * ```typescript
+ * import {
+ *   InputElementRegistration,
+ *   TextareaElementRegistration
+ * } from '@json-form-engine/react/registrations';
+ * ```
+ *
+ * Benefits:
+ * - Only imported components are type-registered
+ * - Multiple builders with different components work correctly
+ * - No "scary magic" - explicit is better than implicit
+ * - Tree-shakeable - unused components don't affect bundle size or types
  */
 
-import './components/form/fields/form-checkbox.types';
-import './components/form/fields/form-checkbox.registry';
-import './components/form/fields/form-input.types';
-import './components/form/fields/form-input.registry';
-import './components/form/fields/form-number.types';
-import './components/form/fields/form-number.registry';
-import './components/form/fields/form-radio.types';
-import './components/form/fields/form-radio.registry';
-import './components/form/fields/form-select.types';
-import './components/form/fields/form-select.registry';
-import './components/form/fields/form-textarea.types';
-import './components/form/fields/form-textarea.registry';
-import './components/form/fields/form-switch.types';
-import './components/form/fields/form-switch.registry';
-import './components/form/fields/form-array-elements.types';
-import './components/form/fields/form-array-elements.registry';
+export { InputElementRegistration } from './components/elements/inputs/form-input.registration';
+export { TextareaElementRegistration } from './components/elements/inputs/form-textarea.registration';
+export { CheckboxElementRegistration } from './components/elements/inputs/form-checkbox.registration';
+export { RadioElementRegistration } from './components/elements/inputs/form-radio.registration';
+export { SelectElementRegistration } from './components/elements/inputs/form-select.registration';
+export { SwitchElementRegistration } from './components/elements/inputs/form-switch.registration';
+export { NumberElementRegistration } from './components/elements/inputs/form-number.registration';
+export { ArrayElementRegistration } from './components/elements/inputs/form-array-elements.registration';
+export { SubmitButtonElementRegistration } from './components/elements/actions/submit-button.registration';
 
-import './components/layouts/card-layout.registry';
-import './components/layouts/split-screen-layout.registry';
-import './components/layouts/hero-background-layout.registry';
+export { CardLayoutRegistration } from './components/layouts/card-layout.registration';
+export { SplitScreenLayoutRegistration } from './components/layouts/split-screen-layout.registration';
+export { HeroBackgroundLayoutRegistration } from './components/layouts/hero-background-layout.registration';
 
-import './components/steppers/default-stepper.registry';
-import './components/steppers/vertical-stepper.registry';
-import './components/steppers/minimalist-stepper.registry';
-
-import type { InputFieldConfig } from './components/form/fields/form-input.types';
-import type { TextareaFieldConfig } from './components/form/fields/form-textarea.types';
-import type { CheckboxFieldConfig } from './components/form/fields/form-checkbox.types';
-import type { NumberFieldConfig } from './components/form/fields/form-number.types';
-import type { RadioFieldConfig } from './components/form/fields/form-radio.types';
-import type { SelectFieldConfig } from './components/form/fields/form-select.types';
-import type { SwitchFieldConfig } from './components/form/fields/form-switch.types';
-import type { ArrayElementsConfig } from './components/form/fields/form-array-elements.types';
-
-/**
- * Global namespace augmentation for internal package usage.
- * This allows components within the package to reference FormEngine types
- * without explicit imports (e.g., FormEngine.FieldConfig, FormEngine.FieldRegistration).
- */
-declare global {
-	namespace FormEngine {
-		interface FieldConfigRegistry {
-			input: InputFieldConfig;
-			textarea: TextareaFieldConfig;
-			checkbox: CheckboxFieldConfig;
-			number: NumberFieldConfig;
-			radio: RadioFieldConfig;
-			select: SelectFieldConfig;
-			switch: SwitchFieldConfig;
-			arrayElements: ArrayElementsConfig;
-		}
-	}
-}
+export { DefaultStepperRegistration } from './components/steppers/default-stepper.registration';
+export { MinimalistStepperRegistration } from './components/steppers/minimalist-stepper.registration';
+export { DebuggerStepperRegistration } from './components/steppers/debugger-stepper.registration';

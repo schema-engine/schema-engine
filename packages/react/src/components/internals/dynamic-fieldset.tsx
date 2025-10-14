@@ -8,7 +8,7 @@ interface DynamicFieldsetProps {
 	label?: string;
 	description?: string;
 	constraints: ConstraintLogic[];
-	elements: FormEngine.FieldConfig[];
+	elements: FormEngine.ElementConfig[];
 	className?: string;
 	style?: React.CSSProperties;
 }

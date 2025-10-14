@@ -1,5 +1,5 @@
 import type { ActionExecutionContext } from "@/actions/types";
-import { actionRegistry } from "@/actions/action-registry";
+import type { BuilderActionExecutionContext } from "@/types/actions";
 import { GDPRConsent } from "@/tools/gdpr-consent";
 
 /**
@@ -9,6 +9,36 @@ export const mockGDPRConsent = {
 	hasConsent: () => true,
 	clearDraft: () => {},
 };
+
+/**
+ * Create a mock builder action execution context with sensible defaults
+ */
+export function createMockBuilderContext<TConfig = unknown>(
+	config: TConfig,
+	overrides: Partial<Omit<BuilderActionExecutionContext<TConfig>, 'config'>> = {}
+): BuilderActionExecutionContext<TConfig> {
+	return {
+		config,
+		formId: "test-form",
+		currentStep: 0,
+		totalSteps: 1,
+		isValid: true,
+		errors: {},
+		form: {
+			reset: () => {},
+			setValue: () => {},
+			getValue: () => undefined,
+			validate: async () => true,
+		},
+		formData: { field1: "value1" },
+		metadata: {
+			stepStartTime: Date.now(),
+			totalFormTime: 1000,
+			userInteractions: 5,
+		},
+		...overrides,
+	};
+}
 
 /**
  * Create a mock action execution context with sensible defaults
@@ -123,9 +153,9 @@ export class MockLocalStorage {
 
 /**
  * Set up the test environment by clearing registries and mocking global dependencies
+ * Note: No longer needs to clear actionRegistry since actions are now per-engine
  */
 export function setupTestEnvironment(): MockLocalStorage {
-	actionRegistry.clear();
 	setupGDPRMocks();
 	
 	// Clear any existing window/global mocks

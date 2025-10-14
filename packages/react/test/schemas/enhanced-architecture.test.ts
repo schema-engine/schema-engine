@@ -5,46 +5,45 @@ import { z } from 'zod';
 import { 
 	InputFieldSchema, 
 	type InputFieldConfig 
-} from '@/components/form/fields/form-input.types';
+} from '@/components/elements/inputs/form-input.types';
 
 import {
 	TextareaFieldSchema,
 	type TextareaFieldConfig
-} from '@/components/form/fields/form-textarea.types';
+} from '@/components/elements/inputs/form-textarea.types';
 
 import {
 	SelectFieldConfigSchema,
 	type SelectFieldConfig,
 	type SelectOption
-} from '@/components/form/fields/form-select.types';
+} from '@/components/elements/inputs/form-select.types';
 
 import {
 	CheckboxFieldConfigSchema,
 	type CheckboxFieldConfig
-} from '@/components/form/fields/form-checkbox.types';
+} from '@/components/elements/inputs/form-checkbox.types';
 
 import {
 	RadioFieldConfigSchema,
 	type RadioFieldConfig,
 	type RadioOption
-} from '@/components/form/fields/form-radio.types';
+} from '@/components/elements/inputs/form-radio.types';
 
 import {
 	NumberFieldConfigSchema,
 	type NumberFieldConfig
-} from '@/components/form/fields/form-number.types';
+} from '@/components/elements/inputs/form-number.types';
 
 import {
 	SwitchFieldConfigSchema,
 	type SwitchFieldConfig
-} from '@/components/form/fields/form-switch.types';
-import type { FieldConfig } from '@json-form-engine/core/schemas';
+} from '@/components/elements/inputs/form-switch.types';
 
 
 describe('Clean Enhanced Field System', () => {
-	test('should use componentId-based configuration for input', () => {
+	test('should use id-based configuration for input', () => {
 		const enhancedConfig: InputFieldConfig = {
-			componentId: 'input',
+			__id: 'input',
 			id: 'username',
 			name: 'username',
 			inputType: 'text',
@@ -55,14 +54,14 @@ describe('Clean Enhanced Field System', () => {
 		const result = InputFieldSchema.safeParse(enhancedConfig);
 		expect(result.success).toBe(true);
 		if (result.success) {
-			expect(result.data.componentId).toBe('input');
+			expect(result.data.__id).toBe('input');
 			expect(result.data.spellCheck).toBe(false);
 		}
 	});
 
-	test('should use componentId-based configuration for textarea', () => {
+	test('should use id-based configuration for textarea', () => {
 		const textareaConfig: TextareaFieldConfig = {
-			componentId: 'textarea',
+			__id: 'textarea',
 			id: 'description',
 			name: 'description',
 			label: 'Description',
@@ -74,23 +73,23 @@ describe('Clean Enhanced Field System', () => {
 		const result = TextareaFieldSchema.safeParse(textareaConfig);
 		expect(result.success).toBe(true);
 		if (result.success) {
-			expect(result.data.componentId).toBe('textarea');
+			expect(result.data.__id).toBe('textarea');
 			expect(result.data.rows).toBe(4);
 			expect(result.data.resize).toBe('vertical');
 		}
 	});
 
-	test('should work with FieldConfig union type', () => {
-		const inputConfig: FieldConfig = {
-			componentId: 'input',
+	test('should work with ElementConfig union type', () => {
+		const inputConfig: FormEngine.ElementConfig = {
+			__id: 'input',
 			id: 'email',
 			name: 'email',
 			inputType: 'email',
 			inputMode: 'email'
 		};
 
-		const textareaConfig: FieldConfig = {
-			componentId: 'textarea',
+		const textareaConfig: FormEngine.ElementConfig = {
+			__id: 'textarea',
 			id: 'bio',
 			name: 'bio',
 			rows: 6,
@@ -103,7 +102,7 @@ describe('Clean Enhanced Field System', () => {
 
 	test('should validate input field configuration with all properties', () => {
 		const fullInputConfig: InputFieldConfig = {
-			componentId: 'input',
+			__id: 'input',
 			id: 'full-test',
 			name: 'fullTest',
 			inputType: 'email',
@@ -125,7 +124,7 @@ describe('Clean Enhanced Field System', () => {
 		expect(result.success).toBe(true);
 		
 		if (result.success) {
-			expect(result.data.componentId).toBe('input');
+			expect(result.data.__id).toBe('input');
 			expect(result.data.inputType).toBe('email');
 			expect(result.data.label).toBe('Full Test Field');
 			expect(result.data.autoComplete).toBe('email');
@@ -135,7 +134,7 @@ describe('Clean Enhanced Field System', () => {
 
 	test('should validate textarea field configuration with all properties', () => {
 		const fullTextareaConfig: TextareaFieldConfig = {
-			componentId: 'textarea',
+			__id: 'textarea',
 			id: 'full-textarea-test',
 			name: 'fullTextareaTest',
 			label: 'Full Textarea Test',
@@ -154,7 +153,7 @@ describe('Clean Enhanced Field System', () => {
 		expect(result.success).toBe(true);
 		
 		if (result.success) {
-			expect(result.data.componentId).toBe('textarea');
+			expect(result.data.__id).toBe('textarea');
 			expect(result.data.rows).toBe(8);
 			expect(result.data.cols).toBe(50);
 			expect(result.data.resize).toBe('both');
@@ -165,7 +164,7 @@ describe('Clean Enhanced Field System', () => {
 	test('should enforce validation rules come from rules property only', () => {
 		// Input field should not have validation props like maxLength, minLength, pattern
 		const inputConfig: InputFieldConfig = {
-			componentId: 'input',
+			__id: 'input',
 			id: 'test-input',
 			name: 'testInput',
 			inputType: 'text',
@@ -188,7 +187,7 @@ describe('Clean Enhanced Field System', () => {
 
 	test('should validate select field with options', () => {
 		const selectConfig: SelectFieldConfig = {
-			componentId: 'select',
+			__id: 'select',
 			id: 'country',
 			name: 'country',
 			label: 'Country',
@@ -204,7 +203,7 @@ describe('Clean Enhanced Field System', () => {
 		const result = SelectFieldConfigSchema.safeParse(selectConfig);
 		expect(result.success).toBe(true);
 		if (result.success) {
-			expect(result.data.componentId).toBe('select');
+			expect(result.data.__id).toBe('select');
 			expect(result.data.options.length).toBe(3);
 			expect(result.data.options[0].value).toBe('us');
 			expect(result.data.options[1].disabled).toBe(true);
@@ -213,7 +212,7 @@ describe('Clean Enhanced Field System', () => {
 
 	test('should validate checkbox field configuration', () => {
 		const checkboxConfig: CheckboxFieldConfig = {
-			componentId: 'checkbox',
+			__id: 'checkbox',
 			id: 'terms',
 			name: 'terms',
 			label: 'I agree to the terms and conditions',
@@ -224,14 +223,14 @@ describe('Clean Enhanced Field System', () => {
 		const result = CheckboxFieldConfigSchema.safeParse(checkboxConfig);
 		expect(result.success).toBe(true);
 		if (result.success) {
-			expect(result.data.componentId).toBe('checkbox');
+			expect(result.data.__id).toBe('checkbox');
 			expect(result.data.autoFocus).toBe(true);
 		}
 	});
 
 	test('should validate radio field with options', () => {
 		const radioConfig: RadioFieldConfig = {
-			componentId: 'radio',
+			__id: 'radio',
 			id: 'size',
 			name: 'size',
 			label: 'Size',
@@ -247,7 +246,7 @@ describe('Clean Enhanced Field System', () => {
 		const result = RadioFieldConfigSchema.safeParse(radioConfig);
 		expect(result.success).toBe(true);
 		if (result.success) {
-			expect(result.data.componentId).toBe('radio');
+			expect(result.data.__id).toBe('radio');
 			expect(result.data.options.length).toBe(3);
 			expect(result.data.orientation).toBe('horizontal');
 			expect(result.data.options[2].disabled).toBe(true);
@@ -256,7 +255,7 @@ describe('Clean Enhanced Field System', () => {
 
 	test('should validate number field configuration', () => {
 		const numberConfig: NumberFieldConfig = {
-			componentId: 'number',
+			__id: 'number',
 			id: 'age',
 			name: 'age',
 			label: 'Age',
@@ -270,7 +269,7 @@ describe('Clean Enhanced Field System', () => {
 		const result = NumberFieldConfigSchema.safeParse(numberConfig);
 		expect(result.success).toBe(true);
 		if (result.success) {
-			expect(result.data.componentId).toBe('number');
+			expect(result.data.__id).toBe('number');
 			expect(result.data.min).toBe(0);
 			expect(result.data.max).toBe(120);
 			expect(result.data.step).toBe(1);
@@ -279,7 +278,7 @@ describe('Clean Enhanced Field System', () => {
 
 	test('should validate switch field configuration', () => {
 		const switchConfig: SwitchFieldConfig = {
-			componentId: 'switch',
+			__id: 'switch',
 			id: 'notifications',
 			name: 'notifications',
 			label: 'Enable notifications',
@@ -291,50 +290,50 @@ describe('Clean Enhanced Field System', () => {
 		const result = SwitchFieldConfigSchema.safeParse(switchConfig);
 		expect(result.success).toBe(true);
 		if (result.success) {
-			expect(result.data.componentId).toBe('switch');
+			expect(result.data.__id).toBe('switch');
 			expect(result.data.size).toBe('md');
 			expect(result.data.autoFocus).toBe(true);
 		}
 	});
 
 	test('should support discriminated union for all field types', () => {
-		const fields: FieldConfig[] = [
+		const fields: FormEngine.ElementConfig[] = [
 			{
-				componentId: 'input',
+				__id: 'input',
 				id: 'email',
 				name: 'email',
 				inputType: 'email'
 			},
 			{
-				componentId: 'textarea',
+				__id: 'textarea',
 				id: 'message',
 				name: 'message',
 				rows: 4
 			},
 			{
-				componentId: 'select',
+				__id: 'select',
 				id: 'category',
 				name: 'category',
 				options: [{ value: '1', label: 'Option 1' }]
 			},
 			{
-				componentId: 'checkbox',
+				__id: 'checkbox',
 				id: 'agree',
 				name: 'agree'
 			},
 			{
-				componentId: 'radio',
+				__id: 'radio',
 				id: 'size',
 				name: 'size',
 				options: [{ value: 'small', label: 'Small' }]
 			},
 			{
-				componentId: 'number',
+				__id: 'number',
 				id: 'quantity',
 				name: 'quantity'
 			},
 			{
-				componentId: 'switch',
+				__id: 'switch',
 				id: 'enabled',
 				name: 'enabled'
 			}
@@ -342,7 +341,7 @@ describe('Clean Enhanced Field System', () => {
 
 		for (const field of fields) {
 			let result;
-			switch (field.componentId) {
+			switch (field.__id) {
 				case 'input':
 					result = InputFieldSchema.safeParse(field);
 					break;
@@ -367,7 +366,7 @@ describe('Clean Enhanced Field System', () => {
 			
 			expect(result.success).toBe(true);
 			if (result.success) {
-				expect(result.data.componentId).toBe(field.componentId);
+				expect(result.data.__id).toBe(field.__id);
 			}
 		}
 	});

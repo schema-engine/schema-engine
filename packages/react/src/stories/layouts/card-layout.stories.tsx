@@ -1,66 +1,53 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { CardLayout } from '@/components/layouts/card-layout';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { simpleContactForm } from '../shared/sample-forms';
-import '../../components/layouts/card-layout.css';
+import { StoryWrapper } from '../shared/story-wrapper';
+import { FormTemplates } from '../shared/form-builder';
 
 const meta = {
 	title: 'Layouts/CardLayout',
-	component: CardLayout,
+	component: FormRenderer,
 	parameters: {
 		layout: 'fullscreen',
 	},
+	decorators: [
+		(Story) => (
+			<StoryWrapper>
+				<Story />
+			</StoryWrapper>
+		),
+	],
 	tags: ['autodocs'],
 	argTypes: {
 		config: {
 			control: 'object',
-			description: 'Layout configuration options',
-		},
-		step: {
-			control: 'object',
-			description: 'Current step information',
-		},
-		form: {
-			control: 'object',
-			description: 'Form information',
-		},
-		className: {
-			control: 'text',
-			description: 'Additional CSS classes',
+			description: 'Form configuration with layout settings',
 		},
 	},
-	args: {
-		children: <FormRenderer config={simpleContactForm} />,
-		step: {
-			id: 'step-1',
-			title: 'Personal Information',
-			description: 'Please provide your basic information',
-			index: 0,
-			total: 3,
-		},
-		form: {
-			id: 'example-form',
-			title: 'Example Form',
-			description: 'This is an example form',
-		},
-	},
-} satisfies Meta<typeof CardLayout>;
+} satisfies Meta<typeof FormRenderer>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
 	args: {
-		config: {},
+		config: {
+			...FormTemplates.loginForm,
+			steps: FormTemplates.loginForm.steps.map((step) => ({
+				...step,
+				layout: { __id: 'card' },
+			})),
+		},
 	},
 };
 
 export const SmallCard: Story = {
 	args: {
 		config: {
-			maxWidth: 'sm',
-			padding: 'md',
-			shadowSize: 'md',
+			...FormTemplates.loginForm,
+			steps: FormTemplates.loginForm.steps.map((step) => ({
+				...step,
+				layout: { __id: 'card', maxWidth: 'sm', padding: 'sm', shadowSize: 'sm' },
+			})),
 		},
 	},
 };
@@ -68,9 +55,11 @@ export const SmallCard: Story = {
 export const MediumCard: Story = {
 	args: {
 		config: {
-			maxWidth: 'md',
-			padding: 'md',
-			shadowSize: 'md',
+			...FormTemplates.loginForm,
+			steps: FormTemplates.loginForm.steps.map((step) => ({
+				...step,
+				layout: { __id: 'card', maxWidth: 'md', padding: 'md', shadowSize: 'md' },
+			})),
 		},
 	},
 };
@@ -78,9 +67,11 @@ export const MediumCard: Story = {
 export const LargeCard: Story = {
 	args: {
 		config: {
-			maxWidth: 'lg',
-			padding: 'lg',
-			shadowSize: 'lg',
+			...FormTemplates.loginForm,
+			steps: FormTemplates.loginForm.steps.map((step) => ({
+				...step,
+				layout: { __id: 'card', maxWidth: 'lg', padding: 'lg', shadowSize: 'lg' },
+			})),
 		},
 	},
 };
@@ -88,96 +79,24 @@ export const LargeCard: Story = {
 export const ExtraLargeCard: Story = {
 	args: {
 		config: {
-			maxWidth: 'xl',
-			padding: 'lg',
-			shadowSize: 'xl',
+			...FormTemplates.loginForm,
+			steps: FormTemplates.loginForm.steps.map((step) => ({
+				...step,
+				layout: { __id: 'card', maxWidth: 'xl', padding: 'lg', shadowSize: 'xl' },
+			})),
 		},
 	},
 };
 
-export const CompactPadding: Story = {
+export const MultiStep: Story = {
 	args: {
 		config: {
-			maxWidth: 'md',
-			padding: 'sm',
-			shadowSize: 'sm',
-		},
-	},
-};
-
-export const SpaciosPadding: Story = {
-	args: {
-		config: {
-			maxWidth: 'md',
-			padding: 'lg',
-			shadowSize: 'xl',
-		},
-	},
-};
-
-export const MinimalShadow: Story = {
-	args: {
-		config: {
-			maxWidth: 'md',
-			padding: 'md',
-			shadowSize: 'sm',
-		},
-	},
-};
-
-export const DramaticShadow: Story = {
-	args: {
-		config: {
-			maxWidth: 'md',
-			padding: 'md',
-			shadowSize: 'xl',
-		},
-	},
-};
-
-export const SingleStepForm: Story = {
-	args: {
-		step: undefined,
-		form: {
-			id: 'contact-form',
-			title: 'Contact Us',
-			description: 'Send us a message and we will get back to you soon',
-		},
-		config: {
-			maxWidth: 'md',
-			padding: 'md',
-			shadowSize: 'md',
-		},
-	},
-};
-
-export const SingleStepFormNoDescription: Story = {
-	args: {
-		step: undefined,
-		form: {
-			id: 'simple-form',
-			title: 'Quick Form',
-		},
-		config: {
-			maxWidth: 'sm',
-			padding: 'sm',
-			shadowSize: 'sm',
-		},
-	},
-};
-
-export const SingleStepFormLarge: Story = {
-	args: {
-		step: undefined,
-		form: {
-			id: 'registration-form',
-			title: 'Registration',
-			description: 'Create your account to access all features',
-		},
-		config: {
-			maxWidth: 'xl',
-			padding: 'lg',
-			shadowSize: 'xl',
+			...FormTemplates.registrationForm,
+			stepper: { __id: 'debugger' },
+			steps: FormTemplates.registrationForm.steps.map((step) => ({
+				...step,
+				layout: { __id: 'card', maxWidth: 'md', padding: 'md', shadowSize: 'md' },
+			})),
 		},
 	},
 };

@@ -43,3 +43,16 @@ export interface BaseLayoutProps {
  * The signature that all layout components must follow
  */
 export type LayoutComponent<T = Record<string, unknown>> = React.FC<BaseLayoutProps & { config?: T }>;
+
+/**
+ * Extract config type from a LayoutComponent
+ * Useful for type-safe registration
+ */
+export type ExtractLayoutConfig<T> = T extends LayoutComponent<infer C> ? C : never;
+
+/**
+ * Base layout configuration that will be stored in the form configuration
+ */
+export interface BaseLayoutConfig {
+	id: string;
+}

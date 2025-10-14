@@ -1,8 +1,20 @@
+import { z } from 'zod';
+
+/**
+ * Base stepper configuration schema
+ * Note: Using `.strict()` to enforce type safety and prevent excess properties
+ */
+export const BaseStepperConfigSchema = z
+	.object({
+		__id: z.string().describe('Unique identifier for the stepper type'),
+	})
+	.strict();
+
 /**
  * Base stepper configuration that will be stored in the form configuration
  */
 export interface BaseStepperConfig {
-	__stepperId: string;
+	__id: string;
 }
 
 /**
@@ -39,9 +51,9 @@ export interface StepperConfigExtensions {}
 // Type helpers for better IntelliSense
 export type StepperConfigForId<T extends string> = T extends keyof StepperConfigRegistry
 	? StepperConfigRegistry[T]
-	: BaseStepperConfig & { __stepperId: T };
+	: BaseStepperConfig & { id: T };
 
-export type ValidStepperIds = keyof StepperConfigRegistry;
+export type Validids = keyof StepperConfigRegistry;
 
 /**
  * Individual step information for stepper components
@@ -108,41 +120,24 @@ export interface StepperComponentProps {
 }
 
 /**
- * Stepper registration definition
+ * Stepper metadata for registries and tooling.
+ *
+ * Provides rich information for documentation generation, IDE tooling,
+ * form builders, and JSON schema generation.
  */
-export interface StepperRegistration<TComponent = any> {
-	/**
-	 * Unique identifier for the stepper
-	 */
-	stepperId: string;
-
-	/**
-	 * Display name for the stepper
-	 */
+export interface StepperMetadata {
+	/** Human-readable display name */
 	name: string;
-
-	/**
-	 * Description of what this stepper does
-	 */
-	description?: string;
-
-	/**
-	 * The stepper component
-	 */
-	component: TComponent;
-
-	/**
-	 * Default configuration for this stepper
-	 */
-	defaultConfig?: Record<string, any>;
-
-	/**
-	 * Schema for validating stepper-specific options
-	 */
-	optionsSchema?: any; // Can be Zod schema or similar
+	/** Detailed description of the stepper's purpose and behavior */
+	description: string;
+	/** Category for grouping similar steppers (e.g., "horizontal", "vertical", "minimal") */
+	category?: string;
+	/** Whether this stepper is deprecated and should not be used in new forms */
+	deprecated?: boolean;
+	/** Example configuration showing typical usage */
+	example?: any;
+	/** URL to preview image or screenshot */
+	preview?: string;
+	/** Tags for filtering and searching */
+	tags?: string[];
 }
-
-/**
- * Stepper component type definition
- */
-export type StepperComponent = React.ComponentType<StepperComponentProps>;

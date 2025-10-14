@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { multiStepRegistrationForm } from '../shared/sample-forms';
-import '../../components/steppers/minimalist-stepper.css';
+import { FormTemplates } from '../shared/form-builder';
+import { StoryWrapper } from '../shared/story-wrapper';
 
 const meta = {
 	title: 'Steppers/MinimalistStepper',
@@ -9,6 +9,13 @@ const meta = {
 	parameters: {
 		layout: 'padded',
 	},
+	decorators: [
+		(Story) => (
+			<StoryWrapper>
+				<Story />
+			</StoryWrapper>
+		),
+	],
 	tags: ['autodocs'],
 	argTypes: {
 		config: {
@@ -24,9 +31,9 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
 	args: {
 		config: {
-			...multiStepRegistrationForm,
+			...FormTemplates.registrationForm,
 			stepper: {
-				__stepperId: 'minimalist',
+				__id: 'minimalist',
 				showProgress: true,
 			},
 		},
@@ -36,9 +43,9 @@ export const Default: Story = {
 export const WithProgress: Story = {
 	args: {
 		config: {
-			...multiStepRegistrationForm,
+			...FormTemplates.registrationForm,
 			stepper: {
-				__stepperId: 'minimalist',
+				__id: 'minimalist',
 				showProgress: true,
 			},
 		},
@@ -48,9 +55,9 @@ export const WithProgress: Story = {
 export const WithoutProgress: Story = {
 	args: {
 		config: {
-			...multiStepRegistrationForm,
+			...FormTemplates.registrationForm,
 			stepper: {
-				__stepperId: 'minimalist',
+				__id: 'minimalist',
 				showProgress: false,
 			},
 		},
@@ -60,11 +67,11 @@ export const WithoutProgress: Story = {
 export const LongForm: Story = {
 	args: {
 		config: {
-			...multiStepRegistrationForm,
+			...FormTemplates.registrationForm,
 			title: 'Extended Registration Form',
 			description: 'A longer multi-step form with more steps',
 			stepper: {
-				__stepperId: 'minimalist',
+				__id: 'minimalist',
 				showProgress: true,
 			},
 		},

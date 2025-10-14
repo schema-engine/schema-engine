@@ -1,44 +1,26 @@
 import { cn } from '@/shadcn/lib/utils';
-import type { StepperComponent, BaseStepperConfig } from './types';
+import type { BaseStepperConfig } from './types';
 import { StepperProvider, useStepperContext } from './context';
+import { useStepperContext as useGlobalStepperContext } from '@/contexts/stepper-context';
+import type React from 'react';
 
 export interface MinimalistStepperConfig extends BaseStepperConfig {
-	__stepperId: 'minimalist';
+	__id: 'minimalist';
 	showProgress?: boolean;
-}
-
-interface MinimalistStepperComposition {
-	Progress: typeof MinimalistStepperProgress;
-	Header: typeof MinimalistStepperHeader;
-	Content: typeof MinimalistStepperContent;
-	Navigation: typeof MinimalistStepperNavigation;
 }
 
 /**
  * Minimalist Stepper Root Component
- * Provides context for all child components
+ * Loads data from global context and provides it to child components via local context
  */
-const MinimalistStepperRoot: StepperComponent<MinimalistStepperConfig> = ({
-	steps,
-	currentStepIndex,
-	navigation,
-	config,
-	form,
+const MinimalistStepperRoot: React.FC<{ children: React.ReactNode; className?: string }> = ({
 	children,
 	className,
 }) => {
+	const globalContext = useGlobalStepperContext();
+
 	return (
-		<StepperProvider
-			value={{
-				steps,
-				currentStepIndex,
-				navigation,
-				config,
-				form,
-				children,
-				className,
-			}}
-		>
+		<StepperProvider value={globalContext}>
 			<div className={cn('minimalist-stepper', className)}>{children}</div>
 		</StepperProvider>
 	);
@@ -146,27 +128,44 @@ function MinimalistStepperNavigation({ className }: { className?: string }) {
  * Minimalist Stepper with Compound Pattern
  * Simple text-based stepper with optional progress bar focused on clarity
  */
-export const MinimalistStepper = MinimalistStepperRoot as StepperComponent<MinimalistStepperConfig> &
-	MinimalistStepperComposition;
-
-MinimalistStepper.Progress = MinimalistStepperProgress;
-MinimalistStepper.Header = MinimalistStepperHeader;
-MinimalistStepper.Content = MinimalistStepperContent;
-MinimalistStepper.Navigation = MinimalistStepperNavigation;
+export const MinimalistStepper = Object.assign(MinimalistStepperRoot, {
+	Progress: MinimalistStepperProgress,
+	Header: MinimalistStepperHeader,
+	Content: MinimalistStepperContent,
+	Navigation: MinimalistStepperNavigation,
+});
 
 /**
  * Default Minimalist Stepper Layout
  * Pre-composed layout using the compound components directly
+ * Loads data from global context (provided by StepperRenderer)
  */
-export const MinimalistStepperComposed: StepperComponent<MinimalistStepperConfig> = (props) => {
+export const MinimalistStepperComposed: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
 	return (
-		<MinimalistStepper {...props}>
+		<MinimalistStepper>
 			<div className="minimalist-stepper__header">
 				<MinimalistStepper.Progress />
 				<MinimalistStepper.Header />
 			</div>
-			<MinimalistStepper.Content>{props.children}</MinimalistStepper.Content>
+			<MinimalistStepper.Content>{children}</MinimalistStepper.Content>
 			<MinimalistStepper.Navigation />
 		</MinimalistStepper>
 	);
+};
+
+import type { StepperRegistration } from '@json-form-engine/core/types';
+import { MinimalistStepperConfigSchema } from './minimalist-stepper.types';
+
+export const MinimalistStepperRegistration: StepperRegistration<
+	MinimalistStepperConfig,
+	{ children?: React.ReactNode }
+> = {
+	__id: 'minimalist',
+	render: MinimalistStepperComposed,
+	schema: MinimalistStepperConfigSchema,
+	metadata: {
+		name: 'Minimalist Stepper',
+		description: 'Clean minimalist stepper with progress bar and simple navigation',
+		icon: 'minimize',
+	},
 };
