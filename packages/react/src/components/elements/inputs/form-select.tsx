@@ -1,4 +1,4 @@
-import { Label } from '@/shadcn/ui/label';
+import { FieldGroup } from '@/components/elements/field-group';
 import { useControlledFormElement, combineHandlers } from '@/hooks';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shadcn/ui/select';
 import type { SelectFieldProps } from './form-select.types';
@@ -9,21 +9,25 @@ export function FormSelect({
 	onFocus: propsOnFocus,
 	...config
 }: SelectFieldProps) {
-	const { fieldState, field, fieldProps, labelProps, errorProps, containerStyles } = useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
+		useControlledFormElement(config);
 
 	return (
-		<div className="space-y-2" style={containerStyles}>
-			{config.label && <Label {...labelProps}>{config.label}</Label>}
+		<FieldGroup
+			label={config.label || config.name}
+			htmlFor={config.id}
+			hiddenLabel={!config.label}
+			required={isRequired}
+			description={config.description}
+			error={error}
+			style={containerStyles}
+		>
 			<Select
-				value={field.value || ''}
-				onValueChange={(value) => combineHandlers(field.onChange, propsOnChange)(value)}
+				value={value || ''}
+				onValueChange={(value) => combineHandlers(onChange, propsOnChange)(value)}
 				disabled={fieldProps.disabled}
 			>
-				<SelectTrigger
-					{...fieldProps}
-					onBlur={combineHandlers(field.onBlur, propsOnBlur)}
-					onFocus={propsOnFocus}
-				>
+				<SelectTrigger {...fieldProps} onBlur={combineHandlers(onBlur, propsOnBlur)} onFocus={propsOnFocus}>
 					<SelectValue placeholder={config.placeholder} />
 				</SelectTrigger>
 				<SelectContent>
@@ -34,8 +38,6 @@ export function FormSelect({
 					))}
 				</SelectContent>
 			</Select>
-			{config.description && <p className="text-xs text-muted-foreground">{config.description}</p>}
-			{errorProps && <div {...errorProps}>{fieldState.error?.message}</div>}
-		</div>
+		</FieldGroup>
 	);
 }

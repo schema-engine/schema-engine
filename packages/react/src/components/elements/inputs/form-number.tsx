@@ -1,5 +1,5 @@
-import { Label } from '@/shadcn/ui/label';
 import { Input } from '@/shadcn/ui/input';
+import { FieldGroup } from '@/components/elements/field-group';
 import { useControlledFormElement, combineHandlers } from '@/hooks';
 import type { NumberFieldProps } from './form-number.types';
 
@@ -9,20 +9,28 @@ export function FormNumber({
 	onFocus: propsOnFocus,
 	...config
 }: NumberFieldProps) {
-	const { fieldState, field, fieldProps, labelProps, errorProps, containerStyles } = useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
+		useControlledFormElement(config);
 
 	return (
-		<div className="space-y-2" style={containerStyles}>
-			{config.label && <Label {...labelProps}>{config.label}</Label>}
+		<FieldGroup
+			label={config.label || config.name}
+			htmlFor={config.id}
+			hiddenLabel={!config.label}
+			required={isRequired}
+			description={config.description}
+			error={error}
+			style={containerStyles}
+		>
 			<Input
 				{...fieldProps}
 				type="number"
-				value={field.value || ''}
+				value={value || ''}
 				onChange={(e) => {
 					const value = e.target.value ? Number(e.target.value) : '';
-					combineHandlers(field.onChange, propsOnChange)(value);
+					combineHandlers(onChange, propsOnChange)(value);
 				}}
-				onBlur={combineHandlers(field.onBlur, propsOnBlur)}
+				onBlur={combineHandlers(onBlur, propsOnBlur)}
 				onFocus={propsOnFocus}
 				placeholder={config.placeholder}
 				min={config.min}
@@ -32,8 +40,6 @@ export function FormNumber({
 				autoFocus={config.autoFocus}
 				inputMode={config.inputMode}
 			/>
-			{config.description && <p className="text-xs text-muted-foreground">{config.description}</p>}
-			{errorProps && <div {...errorProps}>{fieldState.error?.message}</div>}
-		</div>
+		</FieldGroup>
 	);
 }

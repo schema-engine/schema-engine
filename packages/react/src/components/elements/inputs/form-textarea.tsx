@@ -13,29 +13,28 @@ export function FormTextarea({
 		useControlledFormElement(config);
 
 	return (
-		<div style={containerStyles}>
-			<FieldGroup
-				label={config.label || config.name}
-				htmlFor={config.id}
-				hiddenLabel={!config.label}
-				required={isRequired}
-				description={config.description}
-				error={error}
-			>
-				<Textarea
-					{...fieldProps}
-					value={(value as string) || ''}
-					onChange={(e) => combineHandlers(onChange, propsOnChange)(e.target.value)}
-					onBlur={combineHandlers(onBlur, propsOnBlur)}
-					onFocus={propsOnFocus}
-					placeholder={config.placeholder}
-					rows={config.rows}
-					cols={config.cols}
-					spellCheck={config.spellCheck}
-					wrap={config.wrap}
-					style={{ resize: config.resize }}
-				/>
-			</FieldGroup>
-		</div>
+		<FieldGroup
+			label={config.label || config.name}
+			htmlFor={config.id}
+			hiddenLabel={!config.label}
+			required={isRequired}
+			description={config.description}
+			error={error}
+			style={containerStyles}
+		>
+			<Textarea
+				{...fieldProps}
+				value={(value as string) || ''}
+				onChange={(e) => combineHandlers(onChange, propsOnChange)(e.target.value)}
+				onBlur={combineHandlers(onBlur, propsOnBlur)}
+				onFocus={propsOnFocus}
+				placeholder={config.placeholder}
+				rows={config.rows}
+				cols={config.cols}
+				spellCheck={config.spellCheck}
+				wrap={config.wrap}
+				style={{ resize: config.resize }}
+			/>
+		</FieldGroup>
 	);
 }

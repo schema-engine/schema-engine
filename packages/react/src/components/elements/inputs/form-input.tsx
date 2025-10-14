@@ -15,25 +15,24 @@ export function FormInput({
 	const { inputType = 'text', ...rest } = config;
 
 	return (
-		<div style={containerStyles}>
-			<FieldGroup
-				label={config.label || config.name}
-				htmlFor={config.id}
-				hiddenLabel={!config.label}
-				required={isRequired}
-				description={config.description}
-				error={error}
-			>
-				<Input
-					{...fieldProps}
-					type={inputType}
-					value={value || ''}
-					onChange={(e) => combineHandlers(onChange, propsOnChange)(e.target.value)}
-					onBlur={combineHandlers(onBlur, propsOnBlur)}
-					onFocus={propsOnFocus}
-					{...rest}
-				/>
-			</FieldGroup>
-		</div>
+		<FieldGroup
+			label={config.label || config.name}
+			htmlFor={config.id}
+			hiddenLabel={!config.label}
+			required={isRequired}
+			description={config.description}
+			error={error}
+			style={containerStyles}
+		>
+			<Input
+				{...fieldProps}
+				type={inputType}
+				value={value || ''}
+				onChange={(e) => combineHandlers(onChange, propsOnChange)(e.target.value)}
+				onBlur={combineHandlers(onBlur, propsOnBlur)}
+				onFocus={propsOnFocus}
+				{...rest}
+			/>
+		</FieldGroup>
 	);
 }

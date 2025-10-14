@@ -11,6 +11,7 @@ interface FieldGroupProps {
 	error?: string;
 	className?: string;
 	children: React.ReactNode;
+	style?: React.CSSProperties;
 }
 
 export function FieldGroup({
@@ -22,9 +23,10 @@ export function FieldGroup({
 	error,
 	className,
 	children,
+	style,
 }: FieldGroupProps) {
 	return (
-		<div className={cn('space-y-2', className)}>
+		<div className={cn('space-y-2', className)} style={style}>
 			<Label
 				htmlFor={htmlFor}
 				className={cn(
