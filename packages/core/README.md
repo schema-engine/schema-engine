@@ -395,47 +395,6 @@ The schema generator uses Zod's native registry-based generation to handle:
 - Proper $ref resolution
 - Schema normalization (anyOf to oneOf)
 
-### Serialization
-
-Convert form configurations to/from JSON for storage or transmission:
-
-```typescript
-import type { SerializableFormConfig } from "@json-form-engine/core/engine";
-
-const formConfig: SerializableFormConfig = {
-	id: "contact-form",
-	title: "Contact Us",
-	fields: [
-		{
-			id: "text",
-			config: {
-				name: "email",
-				label: "Email Address",
-				placeholder: "you@example.com",
-			},
-		},
-	],
-	actions: [
-		{
-			id: "submit",
-			config: {
-				endpoint: "/api/contact",
-				method: "POST",
-			},
-			triggers: ["form_submit"],
-		},
-	],
-};
-
-// Validate serializability
-import { isSerializable } from "@json-form-engine/core/engine";
-
-if (isSerializable(formConfig)) {
-	// Safe to store or transmit
-	await saveToDatabase(formConfig);
-}
-```
-
 ## Built-in Action Plugins
 
 The core package includes production-ready action plugins:
@@ -680,7 +639,6 @@ import type {
 
 	// Engine
 	EngineRegistries,
-	SerializableFormConfig,
 	FormEngineSchemaMetadata,
 } from "@json-form-engine/core";
 ```
@@ -721,7 +679,6 @@ Comprehensive test suite covering:
 - Action execution and lifecycle management
 - Validation rule application
 - JSON schema generation
-- Serialization and deserialization
 
 Run tests:
 

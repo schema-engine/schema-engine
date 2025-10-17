@@ -13,4 +13,5 @@ export { SelectElementRegistration } from '@/components/elements/shadcn/inputs/f
 export { SwitchElementRegistration } from '@/components/elements/shadcn/inputs/form-switch.registration';
 export { NumberElementRegistration } from '@/components/elements/shadcn/inputs/form-number.registration';
 export { ArrayElementRegistration } from '@/components/elements/shadcn/inputs/form-array-elements.registration';
+export { FieldSetRegistration } from '@/components/elements/shadcn/inputs/form-fieldset.registration';
 export { SubmitButtonElementRegistration } from '@/components/elements/shadcn/actions/submit-button.registration';

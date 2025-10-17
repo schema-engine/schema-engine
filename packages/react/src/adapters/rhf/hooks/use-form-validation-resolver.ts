@@ -3,102 +3,94 @@ import { z } from 'zod';
 import type { FieldValues, ResolverResult } from 'react-hook-form';
 import { createZodSchemaFromRules } from '@json-form-engine/core/schemas/validation/utils';
 
-/**
- * Custom form validation resolver with form data access
- *
- * This resolver extends standard validation by providing access to the complete
- * form data during validation. This enables:
- * - Cross-field validation and dependencies
- * - Custom validation that needs context from other fields
- * - Complex validation scenarios that require form-level awareness
- * - All validation types with proper form context
- *
- * @param elements - Form elements containing validation rules
- * @returns Custom resolver function for react-hook-form
- *
- * @example
- * ```tsx
- * // Basic usage with form elements
- * const resolver = useFormValidationResolver(formElements);
- * const form = useForm({ resolver });
- *
- * // Supports all validation types with form context
- * {
- *   type: 'required',
- *   message: 'This field is required'
- * }
- *
- * // Cross-field validation
- * {
- *   type: 'custom',
- *   dependencies: ['password'],
- *   // Validator receives form data for cross-field logic
- * }
- *
- * // Async validation with dependencies
- * {
- *   type: 'async',
- *   url: '/api/validate',
- *   dependencies: ['username']
- * }
- * ```
- */
+function collectValidatableFields(elements: any[], basePath = ''): Array<{ path: string; rules: any[] }> {
+	const fields: Array<{ path: string; rules: any[] }> = [];
+
+	for (const element of elements) {
+		if (!element.name) continue;
+
+		const currentPath = basePath ? `${basePath}.${element.name}` : element.name;
+
+		if (element.elements?.length) {
+			const nestedFields = collectValidatableFields(element.elements, currentPath);
+			fields.push(...nestedFields);
+		}
+
+		if (element.rules?.length && !element.elements?.length) {
+			fields.push({ path: currentPath, rules: element.rules });
+		}
+	}
+
+	return fields;
+}
+
+function getAllFieldPaths(values: FieldValues, templatePath: string): string[] {
+	const parts = templatePath.split('.');
+	const paths: string[] = [];
+
+	function traverse(obj: any, currentParts: string[], remainingParts: string[]): void {
+		if (remainingParts.length === 0) {
+			paths.push(currentParts.join('.'));
+			return;
+		}
+
+		const [nextPart, ...rest] = remainingParts;
+		const nextValue = obj?.[nextPart];
+
+		if (Array.isArray(nextValue)) {
+			for (let i = 0; i < nextValue.length; i++) {
+				traverse(nextValue[i], [...currentParts, nextPart, String(i)], rest);
+			}
+		} else if (nextValue !== undefined) {
+			traverse(nextValue, [...currentParts, nextPart], rest);
+		}
+	}
+
+	traverse(values, [], parts);
+	return paths;
+}
+
+function getValueAtPath(obj: any, path: string): any {
+	return path.split('.').reduce((current, key) => current?.[key], obj);
+}
+
 export function useFormValidationResolver(elements: any[]) {
 	return useCallback(
 		async (values: FieldValues): Promise<ResolverResult<FieldValues>> => {
-			const errors: Record<string, any> = {};
+			const validatableFields = collectValidatableFields(elements);
+			const allValidations: Array<{ path: string; rules: any[] }> = [];
 
-			for (const element of elements) {
-				if (!element.name) continue;
-
-				if (!element.rules?.length) continue;
-
-				const fieldValue = values[element.name];
-
-				/**
-				 * Process validation rules with form data access
-				 * Create a combined schema for all rules of this field to handle async validation properly
-				 */
-				if (element.rules.length > 0) {
-					try {
-						const fieldSchema = createZodSchemaFromRules(element.rules, values, element.name);
-						await fieldSchema.parseAsync(fieldValue);
-					} catch (zodError) {
-						if (zodError instanceof z.ZodError) {
-							const issues = zodError.issues;
-							let bestIssue = issues[0];
-
-							for (const issue of issues) {
-								if (
-									issue.message &&
-									!issue.message.includes('Required') &&
-									!issue.message.includes('Invalid')
-								) {
-									bestIssue = issue;
-									break;
-								}
-							}
-
-							errors[element.name] = {
-								type: 'validation',
-								message: bestIssue?.message || 'Validation failed',
-							};
-						}
-					}
+			for (const { path: templatePath, rules } of validatableFields) {
+				const actualPaths = getAllFieldPaths(values, templatePath);
+				for (const actualPath of actualPaths) {
+					allValidations.push({ path: actualPath, rules });
 				}
 			}
 
+			const errors: Record<string, { type: string; message: string }> = {};
+
+			await Promise.all(
+				allValidations.map(async ({ path, rules }) => {
+					const value = getValueAtPath(values, path);
+					try {
+						const schema = createZodSchemaFromRules(rules, values, path);
+						await schema.parseAsync(value);
+					} catch (error) {
+						if (error instanceof z.ZodError) {
+							errors[path] = {
+								type: 'validation',
+								message: error.issues[0]?.message || 'Validation failed',
+							};
+						}
+					}
+				}),
+			);
+
 			if (Object.keys(errors).length === 0) {
-				return {
-					values,
-					errors: {},
-				};
+				return { values, errors: {} };
 			}
 
-			return {
-				values: {},
-				errors,
-			};
+			return { values: {}, errors };
 		},
 		[elements],
 	);

@@ -8,7 +8,7 @@ import { BaseFieldSchema } from '@json-form-engine/core/schemas/base-field';
  */
 export const InputFieldExtensionSchema = z.object({
 	/** Input type (text, email, password, etc.) */
-	inputType: z.enum(['text', 'email', 'password', 'url', 'tel', 'search']).default('text'),
+	inputType: z.enum(['text', 'email', 'password', 'url', 'tel', 'search', 'date']).default('text'),
 
 	/** Autocomplete attribute */
 	autoComplete: z.string().optional(),

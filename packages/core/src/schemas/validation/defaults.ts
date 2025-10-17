@@ -16,7 +16,7 @@ export const defaultValidations: ValidationRegistration[] = [
 	{
 		type: 'email',
 		category: 'string',
-		handler: (rule: ValidationRule) => z.string().email(rule.message || 'Please enter a valid email address'),
+		handler: (rule: ValidationRule) => z.email({ message: rule.message || 'Please enter a valid email address' }),
 	},
 
 	{
@@ -51,7 +51,7 @@ export const defaultValidations: ValidationRegistration[] = [
 	{
 		type: 'url',
 		category: 'string',
-		handler: (rule: ValidationRule) => z.string().url(rule.message || 'Please enter a valid URL'),
+		handler: (rule: ValidationRule) => z.url({ message: rule.message || 'Please enter a valid URL' }),
 	},
 
 	{
@@ -59,7 +59,8 @@ export const defaultValidations: ValidationRegistration[] = [
 		category: 'string',
 		handler: (rule: ValidationRule) => {
 			const uuidRule = rule as any;
-			return uuidRule.version ? z.string().uuid({ version: uuidRule.version }) : z.string().uuid();
+			const options = { message: rule.message || 'Please enter a valid UUID' };
+			return uuidRule.version ? z.uuid({ version: uuidRule.version, ...options }) : z.uuid(options);
 		},
 	},
 
@@ -118,19 +119,19 @@ export const defaultValidations: ValidationRegistration[] = [
 	{
 		type: 'datetime',
 		category: 'date',
-		handler: () => z.string().datetime(),
+		handler: (rule: ValidationRule) => z.iso.datetime({ message: rule.message || 'Please enter a valid datetime' }),
 	},
 
 	{
 		type: 'date',
 		category: 'date',
-		handler: () => z.string().date(),
+		handler: (rule: ValidationRule) => z.iso.date({ message: rule.message || 'Please enter a valid date' }),
 	},
 
 	{
 		type: 'time',
 		category: 'date',
-		handler: () => z.string().time(),
+		handler: (rule: ValidationRule) => z.iso.time({ message: rule.message || 'Please enter a valid time' }),
 	},
 
 	/**

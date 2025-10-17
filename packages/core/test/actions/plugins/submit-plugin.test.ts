@@ -329,49 +329,6 @@ describe("SubmitPlugin", () => {
 			expect(requestOptions?.method).toBe("PUT");
 		});
 
-		test("should handle validation failure", async () => {
-			const plugin = submitPlugin({
-				validate: (context) => "Custom validation failed",
-			});
-
-			const action: SubmitAction = {
-				id: "test-submit",
-				type: "submit",
-				enabled: true,
-				endpoint: "/api/submit",
-				method: "POST",
-			};
-
-			const context = createMockBuilderContext(action, {
-				formData: { name: "John", email: "john@example.com" },
-			});
-			const result = await plugin.execute(context);
-
-			expect(result.success).toBe(false);
-			expect(result.error).toBe("Custom validation failed");
-		});
-
-		test("should pass validation when validator returns true", async () => {
-			const plugin = submitPlugin({
-				validate: (context) => true,
-			});
-
-			const action: SubmitAction = {
-				id: "test-submit",
-				type: "submit",
-				enabled: true,
-				endpoint: "/api/submit",
-				method: "POST",
-			};
-
-			const context = createMockBuilderContext(action, {
-				formData: { name: "John", email: "john@example.com" },
-			});
-			const result = await plugin.execute(context);
-
-			expect(result.success).toBe(true);
-		});
-
 		test("should handle full URL endpoints", async () => {
 			let requestUrl: string | null = null;
 

@@ -14,8 +14,6 @@ export interface SubmitPluginConfig {
 	onSuccess?: (data: any, context: BuilderActionExecutionContext<any>) => void;
 	/** Handle error response */
 	onError?: (error: Error, context: BuilderActionExecutionContext<any>) => void;
-	/** Custom validation before submit */
-	validate?: (context: BuilderActionExecutionContext<any>) => boolean | string;
 }
 
 /**
@@ -155,18 +153,9 @@ export type SubmitAction = z.infer<typeof SubmitActionSchema>;
  * });
  * ```
  *
- * @example Validation and Error Handling
+ * @example Error Handling
  * ```typescript
- * const validatedSubmit = submitPlugin({
- *   validate: (context) => {
- *     if (context.formData.email?.includes("spam")) {
- *       return "Email domain not allowed";
- *     }
- *     if (!context.isValid) {
- *       return "Please fix form errors before submitting";
- *     }
- *     return true;
- *   },
+ * const errorAwareSubmit = submitPlugin({
  *   onError: (error, context) => {
  *     console.error("Submit failed:", error);
  *     Sentry.captureException(error, {
@@ -177,13 +166,7 @@ export type SubmitAction = z.infer<typeof SubmitActionSchema>;
  * ```
  */
 export function submitPlugin(config: SubmitPluginConfig = {}): BuilderActionRegistration<SubmitAction> {
-	const {
-		request = fetch,
-		transformData = (data) => data,
-		onSuccess = () => {},
-		onError = () => {},
-		validate = () => true,
-	} = config;
+	const { request = fetch, transformData = (data) => data, onSuccess = () => {}, onError = () => {} } = config;
 
 	const handler = async (
 		context: BuilderActionExecutionContext<SubmitAction>,
@@ -191,15 +174,6 @@ export function submitPlugin(config: SubmitPluginConfig = {}): BuilderActionRegi
 		const action = context.config;
 
 		try {
-			const validationResult = validate(context);
-			if (validationResult !== true) {
-				return {
-					success: false,
-					error: typeof validationResult === 'string' ? validationResult : 'Form validation failed',
-					shouldContinue: false,
-				};
-			}
-
 			const transformedData = transformData(
 				{
 					...context.formData,

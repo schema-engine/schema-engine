@@ -27,10 +27,14 @@ import { RadioElementRegistration } from '@/components/elements/shadcn/inputs/fo
 import { SwitchElementRegistration } from '@/components/elements/shadcn/inputs/form-switch.registration';
 import { NumberElementRegistration } from '@/components/elements/shadcn/inputs/form-number.registration';
 import { ArrayElementRegistration } from '@/components/elements/shadcn/inputs/form-array-elements.registration';
+import { FieldSetRegistration } from '@/components/elements/shadcn/inputs/form-fieldset.registration';
+
 import { SubmitButtonElementRegistration } from '@/components/elements/shadcn/actions/submit-button.registration';
+
 import { CardLayoutRegistration } from '@/components/layouts/card-layout';
 import { SplitScreenLayoutRegistration } from '@/components/layouts/split-screen-layout';
 import { HeroBackgroundLayoutRegistration } from '@/components/layouts/hero-background-layout';
+
 import { DefaultStepperRegistration } from '@/components/steppers/default-stepper';
 import { MinimalistStepperRegistration } from '@/components/steppers/minimalist-stepper';
 import { DebuggerStepperRegistration } from '@/components/steppers/debugger-stepper';
@@ -43,10 +47,14 @@ import type { RadioFieldConfig } from '@/components/elements/shadcn/inputs/form-
 import type { SwitchFieldConfig } from '@/components/elements/shadcn/inputs/form-switch.types';
 import type { NumberFieldConfig } from '@/components/elements/shadcn/inputs/form-number.types';
 import type { ArrayElementsConfig } from '@/components/elements/shadcn/inputs/form-array-elements.types';
+import type { FieldSetConfig } from '@/components/elements/shadcn/inputs/form-fieldset.types';
+
 import type { SubmitButtonConfig } from '@/components/elements/shadcn/actions/submit-button.types';
+
 import type { CardLayoutConfig } from '@/components/layouts/card-layout.types';
 import type { SplitScreenLayoutConfig } from '@/components/layouts/split-screen-layout.types';
 import type { HeroBackgroundLayoutConfig } from '@/components/layouts/hero-background-layout.types';
+
 import type { DefaultStepperConfig } from '@/components/steppers/default-stepper.types';
 import type { MinimalistStepperConfig } from '@/components/steppers/minimalist-stepper.types';
 import type { DebuggerStepperConfig } from '@/components/steppers/debugger-stepper.types';
@@ -92,6 +100,7 @@ export function createDefaultFormEngineBuilder() {
 		.addElement<'switch', SwitchFieldConfig>(SwitchElementRegistration)
 		.addElement<'number', NumberFieldConfig>(NumberElementRegistration)
 		.addElement<'arrayElements', ArrayElementsConfig>(ArrayElementRegistration)
+		.addElement<'fieldSet', FieldSetConfig>(FieldSetRegistration)
 		.addElement<'submit', SubmitButtonConfig>(SubmitButtonElementRegistration)
 		.addLayout<'card', CardLayoutConfig>(CardLayoutRegistration)
 		.addLayout<'split-screen', SplitScreenLayoutConfig>(SplitScreenLayoutRegistration)

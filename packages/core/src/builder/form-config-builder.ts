@@ -356,7 +356,7 @@ export class FormConfigBuilder<
 
 		const totalStepActions = this.config.steps.reduce((sum, step) => sum + (step.actions?.length || 0), 0);
 
-		logger.info('Built form configuration', {
+		logger.debug('Built form configuration', {
 			id: this.config.id,
 			stepCount: this.config.steps.length,
 			totalElements,

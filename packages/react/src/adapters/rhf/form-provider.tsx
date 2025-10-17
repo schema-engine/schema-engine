@@ -113,6 +113,8 @@ export function FormProvider({
 
 	const handleSubmit = useCallback(
 		async (data: any) => {
+			await form.trigger();
+
 			if (config.actions && config.actions.length > 0) {
 				try {
 					const context = buildActionContext();
@@ -142,7 +144,7 @@ export function FormProvider({
 				config.onSubmit(data);
 			}
 		},
-		[config.actions, config.onSubmit, onSubmit, buildActionContext, onValidationError, actionExecutor],
+		[config.actions, config.onSubmit, onSubmit, buildActionContext, onValidationError, actionExecutor, form],
 	);
 
 	const formInstanceContextValue: FormInstanceContextValue = useMemo(

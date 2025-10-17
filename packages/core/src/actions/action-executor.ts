@@ -171,56 +171,63 @@ export class ActionExecutor {
 	}
 
 	/**
-	 * Execute a single action by using the FormEngine's registered actions or falling back to global registry
+	 * Execute a single action using the FormEngine's registered action handlers
+	 *
+	 * Transforms the React Hook Form-specific context into a framework-agnostic
+	 * context that action plugins can use without depending on RHF directly.
 	 */
 	private async executeAction(
 		action: FormActionConfig,
 		context: ActionExecutionContext,
 	): Promise<ActionExecutionResult> {
-		// First, try to get the action from the FormEngine instance
-		if (this.engine) {
-			const actionRegistration = this.engine.getAction(action.type);
-			if (actionRegistration) {
-				try {
-					// Transform old context to new builder context
-					const builderContext = {
-						config: action,
-						formId: context.formId,
-						formData: context.formData,
-						currentStep: context.currentStep,
-						totalSteps: context.totalSteps,
-						isValid: context.isValid,
-						errors: context.errors,
-						metadata: context.metadata,
-						form: {
-							reset: () => context.form.reset(),
-							setValue: (name: string, value: unknown) => context.form.setValue(name, value as any),
-							getValue: (name: string) => context.form.getValues(name),
-							validate: async () => await context.form.trigger(),
-						},
-					};
-					return await actionRegistration.execute(builderContext);
-				} catch (error) {
-					return {
-						success: false,
-						error: error instanceof Error ? error.message : 'Unknown error',
-						shouldContinue: true,
-					};
-				}
-			}
+		const actionRegistration = this.engine.getAction(action.type);
+
+		if (!actionRegistration) {
+			logger.error(`No handler registered for action type: ${action.type}`, {
+				actionId: action.id,
+				availableActions: this.engine.getActionTypes(),
+			});
+
+			return {
+				success: false,
+				error: `No handler registered for action type: ${action.type}`,
+				shouldContinue: true,
+			};
 		}
 
-		// No action handler found
-		logger.error(`No handler registered for action type: ${action.type}`, {
-			actionId: action.id,
-			availableActions: this.engine.getActionTypes(),
-		});
+		try {
+			/**
+			 * Transform RHF-specific context to framework-agnostic context.
+			 * This allows action plugins to work without direct React Hook Form dependency.
+			 *
+			 * Note: The validate() method is provided as a utility but is NOT
+			 * automatically called. Actions decide if/when to validate.
+			 */
+			const builderContext = {
+				config: action,
+				formId: context.formId,
+				formData: context.formData,
+				currentStep: context.currentStep,
+				totalSteps: context.totalSteps,
+				isValid: context.isValid,
+				errors: context.errors,
+				metadata: context.metadata,
+				form: {
+					reset: () => context.form.reset(),
+					setValue: (name: string, value: unknown) => context.form.setValue(name, value as any),
+					getValue: (name: string) => context.form.getValues(name),
+					validate: async () => await context.form.trigger(),
+				},
+			};
 
-		return {
-			success: false,
-			error: `No handler registered for action type: ${action.type}`,
-			shouldContinue: true,
-		};
+			return await actionRegistration.execute(builderContext);
+		} catch (error) {
+			return {
+				success: false,
+				error: error instanceof Error ? error.message : 'Unknown error',
+				shouldContinue: true,
+			};
+		}
 	}
 
 	cleanup(): void {

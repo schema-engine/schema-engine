@@ -3,34 +3,6 @@ import { isFieldRequired } from '@json-form-engine/core/schemas';
 import { useFieldGridStyles } from './grid-hooks';
 
 /**
- * Creates a default value for a field configuration
- */
-export function createFieldDefaultValue(config: FormEngine.ElementConfig): any {
-	if ('defaultValue' in config && config.defaultValue !== undefined) {
-		return config.defaultValue;
-	}
-
-	switch (config.id) {
-		case 'input':
-			return '';
-		case 'number':
-			return 0;
-		case 'textarea':
-			return '';
-		case 'select':
-			return '';
-		case 'checkbox':
-			return false;
-		case 'radio':
-			return '';
-		case 'arrayElements':
-			return [];
-		default:
-			return '';
-	}
-}
-
-/**
  * Combines handlers from props with controller handlers
  */
 export function combineHandlers<T>(controllerHandler: (value: T) => void, propsHandler?: (value: T) => void) {
@@ -55,7 +27,7 @@ export function useControlledFormElement(config: FormEngine.ElementConfig) {
 	const { field, fieldState, formState } = useController({
 		name: config.name,
 		disabled: config.disabled,
-		defaultValue: createFieldDefaultValue(config),
+		defaultValue: 'defaultValue' in config ? config.defaultValue : '',
 	});
 
 	const gridStyles = useFieldGridStyles(config.grid);

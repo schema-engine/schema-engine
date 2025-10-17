@@ -3,7 +3,7 @@ import { Button } from '@/shadcn/ui/button';
 import { Card } from '@/shadcn/ui/card';
 import { Trash2, Plus } from 'lucide-react';
 import { Label } from '@/shadcn/ui/label';
-import { createFieldDefaultValue, useControlledFormElement } from '@/hooks/use-field';
+import { useControlledFormElement } from '@/hooks/use-field';
 import { FormElement } from '@/components/internals/field-renderer';
 import type { ArrayElementsProps } from './form-array-elements.types';
 
@@ -27,30 +27,37 @@ export function FormArrayElements({
 
 	const { fieldState, labelProps, errorProps, containerStyles } = useControlledFormElement(config);
 
-	const handleAdd = () => {
-		const defaultValue = config.elements.reduce(
+	const isSingleField = config.elements.length === 1;
+	const firstElement = config.elements[0];
+
+	const createDefaultValues = () => {
+		if (isSingleField && firstElement) {
+			return config.initialValues ?? '';
+		}
+
+		const defaults = config.elements.reduce(
 			(acc, element) => {
-				acc[element.name] = createFieldDefaultValue(element);
+				if (element.name) {
+					acc[element.name] = '';
+				}
 				return acc;
 			},
 			{} as Record<string, any>,
 		);
-		append(defaultValue);
-		const newValues = fields.concat(defaultValue);
-		propsOnChange?.(newValues);
+
+		return { ...defaults, ...config.initialValues };
+	};
+
+	const handleAdd = () => {
+		append(createDefaultValues());
 	};
 
 	const handleRemove = (index: number) => {
 		remove(index);
-		const newValues = fields.filter((_, i) => i !== index);
-		propsOnChange?.(newValues);
 	};
 
 	const canAdd = !config.maxItems || fields.length < config.maxItems;
 	const canRemove = !config.minItems || fields.length > config.minItems;
-
-	const isSingleField = config.elements.length === 1;
-	const firstElement = config.elements[0];
 
 	return (
 		<div className="space-y-2" style={containerStyles}>
