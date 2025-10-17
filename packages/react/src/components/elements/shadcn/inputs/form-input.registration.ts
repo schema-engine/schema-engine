@@ -5,7 +5,7 @@
  *
  * @example
  * ```typescript
- * import { InputElementRegistration } from '@json-form-engine/react/components/elements/inputs/form-input.registration';
+ * import { InputElementRegistration } from '@json-form-engine/react/components/elements/shadcn/inputs/form-input.registration';
  * import { FormEngineBuilder } from '@json-form-engine/core/builder';
  *
  * const engine = new FormEngineBuilder()

@@ -19,15 +19,15 @@
  */
 
 import { FormEngineBuilder } from '@json-form-engine/core/builder';
-import { InputElementRegistration } from '@/components/elements/inputs/form-input.registration';
-import { TextareaElementRegistration } from '@/components/elements/inputs/form-textarea.registration';
-import { CheckboxElementRegistration } from '@/components/elements/inputs/form-checkbox.registration';
-import { SelectElementRegistration } from '@/components/elements/inputs/form-select.registration';
-import { RadioElementRegistration } from '@/components/elements/inputs/form-radio.registration';
-import { SwitchElementRegistration } from '@/components/elements/inputs/form-switch.registration';
-import { NumberElementRegistration } from '@/components/elements/inputs/form-number.registration';
-import { ArrayElementRegistration } from '@/components/elements/inputs/form-array-elements.registration';
-import { SubmitButtonElementRegistration } from '@/components/elements/actions/submit-button.registration';
+import { InputElementRegistration } from '@/components/elements/shadcn/inputs/form-input.registration';
+import { TextareaElementRegistration } from '@/components/elements/shadcn/inputs/form-textarea.registration';
+import { CheckboxElementRegistration } from '@/components/elements/shadcn/inputs/form-checkbox.registration';
+import { SelectElementRegistration } from '@/components/elements/shadcn/inputs/form-select.registration';
+import { RadioElementRegistration } from '@/components/elements/shadcn/inputs/form-radio.registration';
+import { SwitchElementRegistration } from '@/components/elements/shadcn/inputs/form-switch.registration';
+import { NumberElementRegistration } from '@/components/elements/shadcn/inputs/form-number.registration';
+import { ArrayElementRegistration } from '@/components/elements/shadcn/inputs/form-array-elements.registration';
+import { SubmitButtonElementRegistration } from '@/components/elements/shadcn/actions/submit-button.registration';
 import { CardLayoutRegistration } from '@/components/layouts/card-layout';
 import { SplitScreenLayoutRegistration } from '@/components/layouts/split-screen-layout';
 import { HeroBackgroundLayoutRegistration } from '@/components/layouts/hero-background-layout';
@@ -35,15 +35,15 @@ import { DefaultStepperRegistration } from '@/components/steppers/default-steppe
 import { MinimalistStepperRegistration } from '@/components/steppers/minimalist-stepper';
 import { DebuggerStepperRegistration } from '@/components/steppers/debugger-stepper';
 
-import type { InputFieldConfig } from '@/components/elements/inputs/form-input.types';
-import type { TextareaFieldConfig } from '@/components/elements/inputs/form-textarea.types';
-import type { CheckboxFieldConfig } from '@/components/elements/inputs/form-checkbox.types';
-import type { SelectFieldConfig } from '@/components/elements/inputs/form-select.types';
-import type { RadioFieldConfig } from '@/components/elements/inputs/form-radio.types';
-import type { SwitchFieldConfig } from '@/components/elements/inputs/form-switch.types';
-import type { NumberFieldConfig } from '@/components/elements/inputs/form-number.types';
-import type { ArrayElementsConfig } from '@/components/elements/inputs/form-array-elements.types';
-import type { SubmitButtonConfig } from '@/components/elements/actions/submit-button.types';
+import type { InputFieldConfig } from '@/components/elements/shadcn/inputs/form-input.types';
+import type { TextareaFieldConfig } from '@/components/elements/shadcn/inputs/form-textarea.types';
+import type { CheckboxFieldConfig } from '@/components/elements/shadcn/inputs/form-checkbox.types';
+import type { SelectFieldConfig } from '@/components/elements/shadcn/inputs/form-select.types';
+import type { RadioFieldConfig } from '@/components/elements/shadcn/inputs/form-radio.types';
+import type { SwitchFieldConfig } from '@/components/elements/shadcn/inputs/form-switch.types';
+import type { NumberFieldConfig } from '@/components/elements/shadcn/inputs/form-number.types';
+import type { ArrayElementsConfig } from '@/components/elements/shadcn/inputs/form-array-elements.types';
+import type { SubmitButtonConfig } from '@/components/elements/shadcn/actions/submit-button.types';
 import type { CardLayoutConfig } from '@/components/layouts/card-layout.types';
 import type { SplitScreenLayoutConfig } from '@/components/layouts/split-screen-layout.types';
 import type { HeroBackgroundLayoutConfig } from '@/components/layouts/hero-background-layout.types';

@@ -3,7 +3,7 @@ import {
 	InputFieldSchema, 
 	inputFieldExample,
 	type InputFieldConfig 
-} from '@/components/elements/inputs/form-input.types';
+} from '@/components/elements/shadcn/inputs/form-input.types';
 
 describe('Enhanced Form Field System', () => {
 	describe('Input Field Schema', () => {

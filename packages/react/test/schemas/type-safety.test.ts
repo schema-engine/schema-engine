@@ -5,7 +5,7 @@
  */
 
 import { test, expect, describe } from 'bun:test';
-import type { ArrayElementsConfig } from '@/components/elements/inputs/form-array-elements.types';
+import type { ArrayElementsConfig } from '@/components/elements/shadcn/inputs/form-array-elements.types';
 
 describe('Compile-Time Type Safety', () => {
 	test('should provide type safety for array elements configuration', () => {

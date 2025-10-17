@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "license": "MIT",
   "sideEffects": [
-    "./dist/registrations.js",
-    "./dist/components/form/registry.js",
-    "./dist/components/elements/inputs/*.registry.js",
+    "./dist/registrations/*.js",
+    "./dist/registrations/elements/shadcn/*.registry.js",
+    "./dist/components/elements/shadcn/inputs/*.registry.js",
     "./dist/components/layouts/*.registry.js",
     "./dist/components/steppers/*.registry.js"
   ],
@@ -177,9 +177,13 @@
       "types": "./dist/registrations.d.ts",
       "import": "./dist/registrations.js"
     },
-    "./components/elements/inputs/*": {
-      "types": "./dist/components/elements/inputs/*.d.ts",
-      "import": "./dist/components/elements/inputs/*.js"
+    "./components/elements/shadcn/inputs/*": {
+      "types": "./dist/components/elements/shadcn/inputs/*.d.ts",
+      "import": "./dist/components/elements/shadcn/inputs/*.js"
+    },
+    "./components/elements/shadcn/actions/*": {
+      "types": "./dist/components/elements/shadcn/actions/*.d.ts",
+      "import": "./dist/components/elements/shadcn/actions/*.js"
     },
     "./components/internals": {
       "types": "./dist/components/internals.d.ts",
