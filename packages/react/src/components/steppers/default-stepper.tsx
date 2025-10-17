@@ -159,25 +159,25 @@ function DefaultStepperProgress({ className }: { className?: string }) {
 						Previous Step
 					</button>
 
-					{navigation.isLastStep ? (
-						<button
-							type="submit"
-							className="default-stepper__nav-button default-stepper__nav-button--primary"
-						>
-							{form.isSubmitting ? 'Submitting...' : 'Complete Form'}
-						</button>
-					) : (
-						<button
-							type="button"
-							onClick={() => navigation.goToNextStep()}
-							disabled={!navigation.canGoNext}
-							className={`default-stepper__nav-button default-stepper__nav-button--primary ${
-								!navigation.canGoNext ? 'default-stepper__nav-button--disabled' : ''
-							}`}
-						>
-							Next Step
-						</button>
-					)}
+					<button
+						type="submit"
+						style={{ display: navigation.isLastStep ? 'block' : 'none' }}
+						className="default-stepper__nav-button default-stepper__nav-button--primary"
+					>
+						{form.isSubmitting ? 'Submitting...' : 'Complete Form'}
+					</button>
+
+					<button
+						type="button"
+						onClick={() => navigation.goToNextStep()}
+						disabled={!navigation.canGoNext}
+						style={{ display: navigation.isLastStep ? 'none' : 'block' }}
+						className={`default-stepper__nav-button default-stepper__nav-button--primary ${
+							!navigation.canGoNext ? 'default-stepper__nav-button--disabled' : ''
+						}`}
+					>
+						Next Step
+					</button>
 				</div>
 			)}
 		</div>
@@ -247,22 +247,25 @@ function DefaultStepperNavigation({ className }: { className?: string }) {
 				Step {currentStepIndex + 1} of {steps.length}
 			</div>
 
-			{navigation.isLastStep ? (
-				<button type="submit" className="default-stepper__nav-button default-stepper__nav-button--primary">
-					{form.isSubmitting ? 'Submitting...' : 'Submit'}
-				</button>
-			) : (
-				<button
-					type="button"
-					onClick={() => navigation.goToNextStep()}
-					disabled={!navigation.canGoNext}
-					className={`default-stepper__nav-button default-stepper__nav-button--primary ${
-						!navigation.canGoNext ? 'default-stepper__nav-button--disabled' : ''
-					}`}
-				>
-					Next
-				</button>
-			)}
+			<button
+				type="submit"
+				style={{ display: navigation.isLastStep ? 'block' : 'none' }}
+				className="default-stepper__nav-button default-stepper__nav-button--primary"
+			>
+				{form.isSubmitting ? 'Submitting...' : 'Submit'}
+			</button>
+
+			<button
+				type="button"
+				onClick={() => navigation.goToNextStep()}
+				disabled={!navigation.canGoNext}
+				style={{ display: navigation.isLastStep ? 'none' : 'block' }}
+				className={`default-stepper__nav-button default-stepper__nav-button--primary ${
+					!navigation.canGoNext ? 'default-stepper__nav-button--disabled' : ''
+				}`}
+			>
+				Next
+			</button>
 		</div>
 	);
 }

@@ -101,25 +101,25 @@ function MinimalistStepperNavigation({ className }: { className?: string }) {
 				← Previous
 			</button>
 
-			{navigation.isLastStep ? (
-				<button
-					type="submit"
-					className="minimalist-stepper__nav-button minimalist-stepper__nav-button--primary"
-				>
-					{form.isSubmitting ? 'Submitting...' : 'Submit'}
-				</button>
-			) : (
-				<button
-					type="button"
-					onClick={() => navigation.goToNextStep()}
-					disabled={!navigation.canGoNext}
-					className={`minimalist-stepper__nav-button minimalist-stepper__nav-button--primary ${
-						!navigation.canGoNext ? 'minimalist-stepper__nav-button--primary--disabled' : ''
-					}`}
-				>
-					Next →
-				</button>
-			)}
+			<button
+				type="submit"
+				style={{ display: navigation.isLastStep ? 'block' : 'none' }}
+				className="minimalist-stepper__nav-button minimalist-stepper__nav-button--primary"
+			>
+				{form.isSubmitting ? 'Submitting...' : 'Submit'}
+			</button>
+
+			<button
+				type="button"
+				onClick={() => navigation.goToNextStep()}
+				disabled={!navigation.canGoNext}
+				style={{ display: navigation.isLastStep ? 'none' : 'block' }}
+				className={`minimalist-stepper__nav-button minimalist-stepper__nav-button--primary ${
+					!navigation.canGoNext ? 'minimalist-stepper__nav-button--primary--disabled' : ''
+				}`}
+			>
+				Next →
+			</button>
 		</div>
 	);
 }

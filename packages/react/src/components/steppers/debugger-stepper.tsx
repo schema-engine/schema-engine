@@ -366,55 +366,55 @@ function DebuggerStepperNavigation() {
 					))}
 				</div>
 
-				{navigation.isLastStep ? (
-					<button
-						type="submit"
-						className="debugger-stepper__nav-button debugger-stepper__nav-button--primary"
-						title="Submit Form"
+				<button
+					type="submit"
+					style={{ display: navigation.isLastStep ? 'flex' : 'none' }}
+					className="debugger-stepper__nav-button debugger-stepper__nav-button--primary"
+					title="Submit Form"
+				>
+					<span>{form.isSubmitting ? 'Submitting...' : 'Submit'}</span>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						aria-hidden="true"
+						role="presentation"
 					>
-						<span>{form.isSubmitting ? 'Submitting...' : 'Submit'}</span>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="16"
-							height="16"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							aria-hidden="true"
-							role="presentation"
-						>
-							<polyline points="20 6 9 17 4 12" />
-						</svg>
-					</button>
-				) : (
-					<button
-						type="button"
-						onClick={() => navigation.goToNextStep()}
-						disabled={!navigation.canGoNext}
-						className="debugger-stepper__nav-button debugger-stepper__nav-button--primary"
-						title="Next Step"
+						<polyline points="20 6 9 17 4 12" />
+					</svg>
+				</button>
+
+				<button
+					type="button"
+					onClick={() => navigation.goToNextStep()}
+					disabled={!navigation.canGoNext}
+					style={{ display: navigation.isLastStep ? 'none' : 'flex' }}
+					className="debugger-stepper__nav-button debugger-stepper__nav-button--primary"
+					title="Next Step"
+				>
+					<span>Next</span>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						aria-hidden="true"
+						role="presentation"
 					>
-						<span>Next</span>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="16"
-							height="16"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							aria-hidden="true"
-							role="presentation"
-						>
-							<path d="m9 18 6-6-6-6" />
-						</svg>
-					</button>
-				)}
+						<path d="m9 18 6-6-6-6" />
+					</svg>
+				</button>
 			</div>
 		</div>
 	);

@@ -77,31 +77,33 @@ const DefaultStepper: React.FC<{ children?: React.ReactNode }> = ({ children }) 
 			{children}
 
 			<div className="flex gap-2 justify-end">
-				{!navigation.isFirstStep && (
-					<button
-						type="button"
-						onClick={navigation.goToPreviousStep}
-						disabled={!navigation.canGoPrevious}
-						className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50"
-					>
-						Previous
-					</button>
-				)}
+				<button
+					type="button"
+					onClick={navigation.goToPreviousStep}
+					disabled={!navigation.canGoPrevious}
+					style={{ display: navigation.isFirstStep ? 'none' : 'block' }}
+					className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50"
+				>
+					Previous
+				</button>
 
-				{!navigation.isLastStep ? (
-					<button
-						type="button"
-						onClick={navigation.goToNextStep}
-						disabled={!navigation.canGoNext}
-						className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-					>
-						Next
-					</button>
-				) : (
-					<button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-						Submit
-					</button>
-				)}
+				<button
+					type="button"
+					onClick={navigation.goToNextStep}
+					disabled={!navigation.canGoNext}
+					style={{ display: navigation.isLastStep ? 'none' : 'block' }}
+					className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+				>
+					Next
+				</button>
+
+				<button
+					type="submit"
+					style={{ display: navigation.isLastStep ? 'block' : 'none' }}
+					className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+				>
+					Submit
+				</button>
 			</div>
 		</div>
 	);

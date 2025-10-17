@@ -1,6 +1,54 @@
 # Stepper Development Guide
 
-## Overview
+## ⚠️ IMPORTANT: Button Rendering Best Practice
+
+**Always keep Next/Submit buttons in the DOM and hide them with CSS instead of conditionally rendering them.**
+
+### Why This Matters
+
+When Next and Submit buttons are conditionally rendered (mounted/unmounted), React Hook Form detects the DOM change and automatically triggers validation for all form fields. This causes unintended validation errors on unvisited steps.
+
+### ❌ Wrong Approach (Conditional Rendering)
+
+```tsx
+{
+	navigation.isLastStep ? (
+		<button type="submit">Submit</button>
+	) : (
+		<button type="button" onClick={() => navigation.goToNextStep()}>
+			Next
+		</button>
+	);
+}
+```
+
+**Problem**: When `isLastStep` changes, buttons are unmounted/remounted → RHF validates all fields
+
+### ✅ Correct Approach (CSS Hiding)
+
+```tsx
+<button
+	type="submit"
+	style={{ display: navigation.isLastStep ? 'block' : 'none' }}
+	className="nav-button nav-button--primary"
+>
+	Submit
+</button>
+
+<button
+	type="button"
+	onClick={() => navigation.goToNextStep()}
+	disabled={!navigation.canGoNext}
+	style={{ display: navigation.isLastStep ? 'none' : 'block' }}
+	className="nav-button nav-button--primary"
+>
+	Next
+</button>
+```
+
+**Benefit**: Buttons stay in DOM but are invisible → No validation trigger on navigation
+
+---
 
 This guide explains best practices for creating custom stepper components in the form engine. Steppers provide navigation and progress visualization for multi-step forms.
 
@@ -190,6 +238,7 @@ function MyStepperContent({
 /**
  * My Stepper Navigation Component
  * Provides navigation controls (Previous/Next buttons)
+ * IMPORTANT: Keep both buttons in DOM, hide with CSS to prevent validation triggers
  */
 function MyStepperNavigation({ className }: { className?: string }) {
 	const { navigation, form } = useStepperContext<MyStepperConfig>();
@@ -208,23 +257,27 @@ function MyStepperNavigation({ className }: { className?: string }) {
 				Previous
 			</button>
 
-			{navigation.isLastStep ? (
-				<button type="submit" className="my-stepper__nav-button my-stepper__nav-button--primary">
-					{form.isSubmitting ? "Submitting..." : "Submit"}
-				</button>
-			) : (
-				<button
-					type="button"
-					onClick={() => navigation.goToNextStep()}
-					disabled={!navigation.canGoNext}
-					className={cn(
-						"my-stepper__nav-button my-stepper__nav-button--primary",
-						!navigation.canGoNext ? "my-stepper__nav-button--disabled" : null
-					)}
-				>
-					Next
-				</button>
-			)}
+			{/* ✅ Keep both buttons in DOM, hide with CSS */}
+			<button
+				type="submit"
+				style={{ display: navigation.isLastStep ? "block" : "none" }}
+				className="my-stepper__nav-button my-stepper__nav-button--primary"
+			>
+				{form.isSubmitting ? "Submitting..." : "Submit"}
+			</button>
+
+			<button
+				type="button"
+				onClick={() => navigation.goToNextStep()}
+				disabled={!navigation.canGoNext}
+				style={{ display: navigation.isLastStep ? "none" : "block" }}
+				className={cn(
+					"my-stepper__nav-button my-stepper__nav-button--primary",
+					!navigation.canGoNext ? "my-stepper__nav-button--disabled" : null
+				)}
+			>
+				Next
+			</button>
 		</div>
 	);
 }
@@ -428,7 +481,7 @@ function ProgressBar() {
 
 ### Pattern 3: Conditional Submit Button
 
-Show submit button only on the last step:
+**Use CSS display instead of conditional rendering to prevent validation triggers:**
 
 ```tsx
 function Navigation() {
@@ -442,19 +495,23 @@ function Navigation() {
 				</button>
 			) : null}
 
-			{navigation.isLastStep ? (
-				<button type="submit" disabled={form.isSubmitting}>
-					{form.isSubmitting ? "Submitting..." : "Submit"}
-				</button>
-			) : (
-				<button
-					type="button"
-					onClick={() => navigation.goToNextStep()}
-					disabled={!navigation.canGoNext}
-				>
-					Next
-				</button>
-			)}
+			{/* ✅ ALWAYS keep both buttons in DOM */}
+			<button
+				type="submit"
+				style={{ display: navigation.isLastStep ? "block" : "none" }}
+				disabled={form.isSubmitting}
+			>
+				{form.isSubmitting ? "Submitting..." : "Submit"}
+			</button>
+
+			<button
+				type="button"
+				onClick={() => navigation.goToNextStep()}
+				disabled={!navigation.canGoNext}
+				style={{ display: navigation.isLastStep ? "none" : "block" }}
+			>
+				Next
+			</button>
 		</div>
 	);
 }
@@ -649,6 +706,43 @@ const validatedSteps = {
 ```
 
 ## Common Mistakes to Avoid
+
+### ❌ Mistake 0: Conditionally Rendering Navigation Buttons
+
+**This is the most common and critical mistake.** When buttons are conditionally rendered, they trigger form validation on every state change.
+
+```tsx
+// ❌ WRONG: Causes validation on navigation
+{
+	navigation.isLastStep ? (
+		<button type="submit">Submit</button>
+	) : (
+		<button type="button" onClick={() => navigation.goToNextStep()}>
+			Next
+		</button>
+	);
+}
+```
+
+```tsx
+// ✅ CORRECT: Keep both buttons, hide with CSS
+<button
+	type="submit"
+	style={{ display: navigation.isLastStep ? 'block' : 'none' }}
+>
+	Submit
+</button>
+
+<button
+	type="button"
+	onClick={() => navigation.goToNextStep()}
+	style={{ display: navigation.isLastStep ? 'none' : 'block' }}
+>
+	Next
+</button>
+```
+
+**Why?** React Hook Form automatically validates when the form structure changes. Keeping buttons in the DOM with CSS `display` prevents this.
 
 ### ❌ Mistake 1: Using Global Context Directly in Child Components
 
