@@ -1,17 +1,147 @@
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { Button } from '@/shadcn/ui/button';
-import { Card } from '@/shadcn/ui/card';
 import { Trash2, Plus } from 'lucide-react';
-import { Label } from '@/shadcn/ui/label';
+import { FieldGroupRoot, FieldLabel, FieldContent, FieldHint, FieldSet } from '@/components/elements/field-group';
 import { useControlledFormElement } from '@/hooks/use-field';
 import { FormElement } from '@/components/internals/field-renderer';
-import type { ArrayElementsProps } from './form-array-elements.types';
+import type { ArrayElementsProps, ArrayElementsConfig } from './form-array-elements.types';
+
+interface ArrayItemProps {
+	index: number;
+	config: ArrayElementsConfig;
+	isSingleField: boolean;
+	firstElement?: FormEngine.ElementConfig;
+	canRemove: boolean;
+	removeButtonText?: string;
+	onRemove: (index: number) => void;
+}
+
+function ArrayItem({
+	index,
+	config,
+	isSingleField,
+	firstElement,
+	canRemove,
+	removeButtonText,
+	onRemove,
+}: ArrayItemProps) {
+	return (
+		<FieldSet className="space-y-3 p-4 border border-border rounded-lg">
+			<div className="flex items-start justify-between gap-3">
+				<div className="flex-1">
+					{isSingleField && firstElement ? (
+						<FormElement
+							config={
+								{
+									...firstElement,
+									name: `${config.name}.${index}`,
+									id: firstElement.id ? `${firstElement.id}_${index}` : undefined,
+								} as FormEngine.ElementConfig
+							}
+						/>
+					) : (
+						<div className="space-y-4">
+							{config.elements.map((elementConfig, elementIndex) => (
+								<FormElement
+									key={`${elementConfig.id || elementConfig.__id}_${index}_${elementIndex}`}
+									config={
+										{
+											...elementConfig,
+											name: `${config.name}.${index}.${elementConfig.name}`,
+											id: elementConfig.id
+												? `${elementConfig.id}_${index}_${elementIndex}`
+												: undefined,
+										} as FormEngine.ElementConfig
+									}
+								/>
+							))}
+						</div>
+					)}
+				</div>
+
+				{canRemove && (
+					<Button
+						type="button"
+						variant="outline"
+						size="sm"
+						onClick={() => onRemove(index)}
+						aria-label={removeButtonText || 'Remove item'}
+					>
+						<Trash2 className="h-4 w-4" />
+					</Button>
+				)}
+			</div>
+		</FieldSet>
+	);
+}
+
+interface ArrayItemsListProps {
+	fields: Array<{ id: string }>;
+	config: ArrayElementsConfig;
+	isSingleField: boolean;
+	firstElement?: FormEngine.ElementConfig;
+	canRemove: boolean;
+	removeButtonText?: string;
+	emptyStateMessage: string;
+	onRemove: (index: number) => void;
+}
+
+function ArrayItemsList({
+	fields,
+	config,
+	isSingleField,
+	firstElement,
+	canRemove,
+	removeButtonText,
+	emptyStateMessage,
+	onRemove,
+}: ArrayItemsListProps) {
+	if (fields.length === 0) {
+		return <div className="text-center py-8 text-muted-foreground text-sm">{emptyStateMessage}</div>;
+	}
+
+	return (
+		<div className="space-y-3">
+			{fields.map((field, index) => (
+				<ArrayItem
+					key={field.id}
+					index={index}
+					config={config}
+					isSingleField={isSingleField}
+					firstElement={firstElement}
+					canRemove={canRemove}
+					removeButtonText={removeButtonText}
+					onRemove={onRemove}
+				/>
+			))}
+		</div>
+	);
+}
+
+interface ArrayActionsProps {
+	canAdd: boolean;
+	addButtonText?: string;
+	onAdd: () => void;
+}
+
+function ArrayActions({ canAdd, addButtonText, onAdd }: ArrayActionsProps) {
+	if (!canAdd) {
+		return null;
+	}
+
+	return (
+		<Button type="button" variant="outline" onClick={onAdd} className="w-full">
+			<Plus className="h-4 w-4 mr-2" />
+			{addButtonText || 'Add item'}
+		</Button>
+	);
+}
 
 /**
  * Array field component that manages dynamic arrays of form fields
  * Uses React Hook Form's useFieldArray for proper array state management
  * Supports both single field type arrays and complex multi-field objects
- * Follows the enhanced field system pattern
+ * Follows the enhanced field system pattern with proper semantic HTML
  */
 export function FormArrayElements({
 	onChange: propsOnChange,
@@ -25,7 +155,7 @@ export function FormArrayElements({
 		name: config.name,
 	});
 
-	const { fieldState, labelProps, errorProps, containerStyles } = useControlledFormElement(config);
+	const { fieldState, containerStyles } = useControlledFormElement(config);
 
 	const isSingleField = config.elements.length === 1;
 	const firstElement = config.elements[0];
@@ -59,77 +189,32 @@ export function FormArrayElements({
 	const canAdd = !config.maxItems || fields.length < config.maxItems;
 	const canRemove = !config.minItems || fields.length > config.minItems;
 
+	const emptyStateMessage = config.emptyStateMessage || 'No items added yet';
+	const addButtonText = config.addButtonText || 'Add item';
+	const removeButtonText = config.removeButtonText || 'Remove item';
+
 	return (
-		<div className="space-y-2" style={containerStyles}>
-			{config.label && <Label {...labelProps}>{config.label}</Label>}
+		<FieldGroupRoot style={containerStyles}>
+			{config.label && <FieldLabel error={fieldState.error?.message}>{config.label}</FieldLabel>}
 
-			<div className="space-y-4">
-				<div className="space-y-3">
-					{fields.map((field, index) => (
-						<Card key={field.id} className="p-4">
-							<div className="flex items-start gap-3">
-								<div className="flex-1">
-									{isSingleField && firstElement ? (
-										<FormElement
-											config={
-												{
-													...firstElement,
-													name: `${config.name}.${index}`,
-													id: firstElement.id ? `${firstElement.id}_${index}` : undefined,
-												} as FormEngine.ElementConfig
-											}
-										/>
-									) : (
-										<div className="space-y-4">
-											{config.elements.map((elementConfig, elementIndex) => (
-												<FormElement
-													key={`${elementConfig.id || elementConfig.__id}_${index}_${elementIndex}`}
-													config={
-														{
-															...elementConfig,
-															name: `${config.name}.${index}.${elementConfig.name}`,
-															id: elementConfig.id
-																? `${elementConfig.id}_${index}_${elementIndex}`
-																: undefined,
-														} as FormEngine.ElementConfig
-													}
-												/>
-											))}
-										</div>
-									)}
-								</div>
+			<FieldContent>
+				<div className="space-y-4">
+					<ArrayItemsList
+						fields={fields}
+						config={config}
+						isSingleField={isSingleField}
+						firstElement={firstElement}
+						canRemove={canRemove}
+						removeButtonText={removeButtonText}
+						emptyStateMessage={emptyStateMessage}
+						onRemove={handleRemove}
+					/>
 
-								{canRemove && (
-									<Button
-										type="button"
-										variant="outline"
-										size="sm"
-										onClick={() => handleRemove(index)}
-										className="mt-1"
-										aria-label={config.removeButtonText || 'Remove item'}
-									>
-										<Trash2 className="h-4 w-4" />
-									</Button>
-								)}
-							</div>
-						</Card>
-					))}
+					<ArrayActions canAdd={canAdd} addButtonText={addButtonText} onAdd={handleAdd} />
 				</div>
 
-				{fields.length === 0 && (
-					<div className="text-center py-8 text-muted-foreground">No items added yet</div>
-				)}
-
-				{canAdd && (
-					<Button type="button" variant="outline" onClick={handleAdd} className="w-full">
-						<Plus className="h-4 w-4 mr-2" />
-						{config.addButtonText || 'Add item'}
-					</Button>
-				)}
-			</div>
-
-			{config.description && <p className="text-xs text-muted-foreground">{config.description}</p>}
-			{errorProps && <div {...errorProps}>{fieldState.error?.message}</div>}
-		</div>
+				<FieldHint error={fieldState.error?.message} description={config.description} display="alternate" />
+			</FieldContent>
+		</FieldGroupRoot>
 	);
 }

@@ -64,6 +64,7 @@ export const ArrayElementsExtensionSchema = z.object({
 	maxItems: z.number().min(1).optional().describe('Maximum number of items allowed'),
 	addButtonText: z.string().optional().describe('Text for the add button'),
 	removeButtonText: z.string().optional().describe('Text for the remove button'),
+	emptyStateMessage: z.string().optional().describe('Message shown when array is empty'),
 	initialValues: z.record(z.string(), z.any()).optional().describe('Default values for new items'),
 	elements: z.array(BaseFieldSchema).min(1).describe('Field definitions for each item in the array'),
 });
@@ -79,6 +80,7 @@ export const ArrayElementConfigSchema: z.ZodType<ArrayElementsConfig> = BaseFiel
 	maxItems: z.number().min(1).optional(),
 	addButtonText: z.string().optional(),
 	removeButtonText: z.string().optional(),
+	emptyStateMessage: z.string().optional(),
 	initialValues: z.record(z.string(), z.any()).optional(),
 	elements: z.array(z.any()).min(1) as z.ZodType<FormEngine.ElementConfig[]>,
 }) as z.ZodType<ArrayElementsConfig>;
@@ -113,6 +115,7 @@ export function createArrayElementsRuntimeSchema(registry: {
 		maxItems: z.number().min(1).optional(),
 		addButtonText: z.string().optional(),
 		removeButtonText: z.string().optional(),
+		emptyStateMessage: z.string().optional(),
 		initialValues: z.record(z.string(), z.any()).optional(),
 		elements: z.array(fieldUnion).min(1),
 	});
@@ -132,6 +135,7 @@ export interface ArrayElementsExtension {
 	maxItems?: number;
 	addButtonText?: string;
 	removeButtonText?: string;
+	emptyStateMessage?: string;
 	initialValues?: Record<string, any>;
 	elements: FormEngine.ElementConfig[];
 }
@@ -142,6 +146,7 @@ export interface ArrayElementsConfig extends Omit<z.infer<typeof BaseFieldSchema
 	maxItems?: number;
 	addButtonText?: string;
 	removeButtonText?: string;
+	emptyStateMessage?: string;
 	initialValues?: Record<string, any>;
 	elements: FormEngine.ElementConfig[];
 }

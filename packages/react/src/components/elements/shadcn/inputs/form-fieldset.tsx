@@ -1,5 +1,6 @@
 import { FormElement } from '@/components/internals/field-renderer';
-import type { FieldSetProps } from './form-fieldset.types';
+import { FieldSet } from '@/components/elements/field-group';
+import type { FieldSetProps as FieldSetConfigProps } from './form-fieldset.types';
 
 /**
  * FieldSet component that groups related form fields into a nested object
@@ -13,21 +14,10 @@ import type { FieldSetProps } from './form-fieldset.types';
  * - Supports validation on nested fields
  * - Styled with legend and border separator
  */
-export function FormFieldSet({ ...config }: FieldSetProps) {
+export function FormFieldSet({ ...config }: FieldSetConfigProps) {
 	return (
 		<div className="space-y-4" style={config.style}>
-			<fieldset className="border-0 p-0 m-0">
-				{config.legend && (
-					<legend className="text-base font-semibold mb-8 pb-3 border-b border-border w-full">
-						{config.legend}
-						{config.description && (
-							<span className="block text-sm font-normal text-muted-foreground mt-1">
-								{config.description}
-							</span>
-						)}
-					</legend>
-				)}
-
+			<FieldSet legend={config.legend} description={config.description}>
 				<div className="space-y-4">
 					{config.elements.map((elementConfig, elementIndex) => (
 						<FormElement
@@ -42,7 +32,7 @@ export function FormFieldSet({ ...config }: FieldSetProps) {
 						/>
 					))}
 				</div>
-			</fieldset>
+			</FieldSet>
 		</div>
 	);
 }

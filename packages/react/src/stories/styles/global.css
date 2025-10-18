@@ -20,7 +20,7 @@
 	--accent-foreground: 0 0% 98%; /* Light text on accent */
 	--background-accent: 280 20% 95%; /* Light accent background */
 	--foreground-accent: 280 15% 40%; /* Dark accent foreground */
-	--destructive: 27 85% 58%; /* Red for errors */
+	--destructive: 0 84% 60%; /* Red for errors */
 	--destructive-foreground: 0 0% 100%; /* White text on destructive */
 	/* Improved border visibility for better accessibility */
 	--border: 264 8% 75%; /* More visible light border */
