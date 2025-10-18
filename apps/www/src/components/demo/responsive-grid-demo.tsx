@@ -26,11 +26,7 @@ export function ResponsiveGridDemo() {
 					</div>
 
 					<ViewportPreview title="Interactive Responsive Preview">
-						<FormRenderer
-							config={responsiveFormConfig}
-							onSubmit={handleSubmit}
-							submitButtonText="Send Message"
-						/>
+						<FormRenderer config={responsiveFormConfig} onSubmit={handleSubmit} />
 					</ViewportPreview>
 
 					<div className="grid gap-6 md:grid-cols-2">

@@ -166,7 +166,7 @@ const verticalStepperConfig: FormConfig = {
 	...stepperDemoConfig,
 	id: 'vertical-stepper-demo',
 	stepper: {
-		id: 'default',
+		__id: 'default',
 		variant: 'default',
 		orientation: 'vertical',
 		position: 'left',
@@ -195,7 +195,7 @@ const minimalStepperConfig: FormConfig = {
 	...stepperDemoConfig,
 	id: 'minimal-stepper-demo',
 	stepper: {
-		id: 'minimalist',
+		__id: 'minimalist',
 		variant: 'dots',
 		orientation: 'horizontal',
 		position: 'top',
