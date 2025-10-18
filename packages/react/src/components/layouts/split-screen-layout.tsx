@@ -1,4 +1,4 @@
-import { cn } from '@/shadcn/lib/utils';
+import { cn } from '@/lib/utils';
 import { cva } from 'class-variance-authority';
 import type { SplitScreenLayoutConfig, SplitScreenLayoutProps } from './split-screen-layout.types';
 import { useLayoutContext } from '@/contexts/layout-context';

@@ -184,3 +184,51 @@ export const multiStepRegistrationForm: FormConfig = {
 		},
 	],
 };
+
+export const loginForm: FormConfig = {
+	id: 'login-form',
+	title: 'Sign In',
+	mode: 'free',
+	steps: [
+		{
+			id: 'login-step',
+			title: 'Sign In',
+			elements: [
+				{
+					__id: 'input',
+					inputType: 'email',
+					id: 'email',
+					name: 'email',
+					label: 'Email Address',
+					placeholder: 'your.email@example.com',
+					rules: [ValidationPresets.string.email('Please enter a valid email')],
+				},
+				{
+					__id: 'input',
+					inputType: 'password',
+					id: 'password',
+					name: 'password',
+					label: 'Password',
+					placeholder: 'Enter your password',
+					rules: [ValidationPresets.string.required('Password is required')],
+				},
+				{
+					__id: 'submit',
+					id: 'submit',
+					name: 'submit',
+					label: 'Sign In',
+				},
+			],
+		},
+	],
+};
+
+export const FormTemplates = {
+	contactForm: simpleContactForm,
+	simpleContactForm,
+	registrationForm: multiStepRegistrationForm,
+	multiStepRegistrationForm,
+	loginForm,
+	onboardingSurvey: multiStepRegistrationForm,
+	splitScreenForm: multiStepRegistrationForm,
+};

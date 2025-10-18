@@ -52,6 +52,7 @@
     "react-dom": "^19"
   },
   "dependencies": {
+    "@base-ui-components/react": "^1.0.0-beta.4",
     "@ecopages/logger": "^0.2.2",
     "@ecopages/postcss-processor": "npm:@jsr/ecopages__postcss-processor@latest",
     "@hookform/resolvers": "^5.2.1",
@@ -85,18 +86,20 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
+    "cmdk-base": "^0.0.8",
     "date-fns": "4.1.0",
     "embla-carousel-react": "8.5.1",
     "input-otp": "1.4.1",
     "lucide-react": "^0.539.0",
     "react": "^19",
-    "react-dom": "^19",
     "react-day-picker": "9.8.0",
+    "react-dom": "^19",
     "react-hook-form": "^7.60.0",
+    "react-phone-number-input": "^3.4.12",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.4",
     "remark-gfm": "^4.0.1",
-    "sonner": "^1.7.4",
+    "sonner": "^2.0.7",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
@@ -122,8 +125,20 @@
       "types": "./dist/types.d.ts"
     },
     "./registrations": {
-      "types": "./dist/registrations.d.ts",
-      "import": "./dist/registrations.js"
+      "types": "./dist/registrations/index.d.ts",
+      "import": "./dist/registrations/index.js"
+    },
+    "./registrations/*": {
+      "types": "./dist/registrations/*.d.ts",
+      "import": "./dist/registrations/*.js"
+    },
+    "./registrations/default-base-ui": {
+      "types": "./dist/registrations/default-base-ui.d.ts",
+      "import": "./dist/registrations/default-base-ui.js"
+    },
+    "./registrations/default-shadcn": {
+      "types": "./dist/registrations/default-shadcn.d.ts",
+      "import": "./dist/registrations/default-shadcn.js"
     },
     "./registries/*": {
       "types": "./dist/registries/*.d.ts",

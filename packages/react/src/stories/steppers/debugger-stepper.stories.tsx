@@ -1,10 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { FormTemplates } from '../shared/form-builder';
+import { FormTemplates } from '../shared/sample-forms';
 import { StoryWrapper } from '../shared/story-wrapper';
 
 const meta = {
-	title: 'Steppers/DebuggerStepper',
 	component: FormRenderer,
 	parameters: {
 		layout: 'padded',

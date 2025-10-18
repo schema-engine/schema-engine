@@ -1,5 +1,5 @@
 import type React from 'react';
-import { cn } from '@/shadcn/lib/utils';
+import { cn } from '@/lib/utils';
 import type { DefaultStepperConfig } from './default-stepper.types';
 import { StepperProvider, useStepperContext } from './context';
 import { useEffect, useRef } from 'react';

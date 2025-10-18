@@ -12,7 +12,7 @@ import {
 } from 'react-hook-form';
 
 import { Label } from '@/shadcn/ui/label';
-import { cn } from '@/shadcn/lib/utils';
+import { cn } from '@/lib/utils';
 
 const Form = FormProvider;
 

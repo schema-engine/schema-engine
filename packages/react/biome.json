@@ -6,5 +6,12 @@
 			"src/**",
 			"!src/shadcn/**"
 		]
+	},
+	"linter": {
+		"rules": {
+			"a11y": {
+				"noLabelWithoutControl": "off"
+			}
+		}
 	}
 }

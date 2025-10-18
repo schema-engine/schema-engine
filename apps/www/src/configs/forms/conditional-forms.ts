@@ -235,7 +235,7 @@ export const conditionalFormConfig: FormConfig = {
 					id: 'terms-agreement',
 					name: 'termsAgreement',
 					label: 'I agree to the Terms of Service and Privacy Policy',
-					rules: [ValidationPresets.string.required('You must agree to the terms')],
+					rules: [ValidationPresets.boolean.required('You must agree to the terms')],
 				},
 				{
 					__id: 'submit',

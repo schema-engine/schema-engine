@@ -1,4 +1,4 @@
-import { cn } from '@/shadcn/lib/utils';
+import { cn } from '@/lib/utils';
 import type { BaseStepperConfig } from './types';
 import { StepperProvider, useStepperContext } from './context';
 import { useStepperContext as useGlobalStepperContext } from '@/contexts/stepper-context';

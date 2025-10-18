@@ -1,6 +1,6 @@
 import type React from 'react';
 import { Label } from '@/shadcn/ui/label';
-import { cn } from '@/shadcn/lib/utils';
+import { cn } from '@/lib/utils';
 
 interface FieldErrorProps extends React.ComponentProps<'p'> {}
 

@@ -35,5 +35,8 @@
 	"workspaces": [
 		"apps/*",
 		"packages/*"
-	]
+	],
+	"dependencies": {
+		"frimousse": "^0.3.0"
+	}
 }

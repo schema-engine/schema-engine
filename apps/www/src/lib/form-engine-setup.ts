@@ -19,7 +19,7 @@ import {
 	NumberElementRegistration,
 	ArrayElementRegistration,
 	SubmitButtonElementRegistration,
-} from '@json-form-engine/react/registrations';
+} from '@json-form-engine/react/registrations/default-base-ui';
 
 /**
  * Layout Registrations (with type augmentation)
@@ -29,7 +29,7 @@ import {
 	CardLayoutRegistration,
 	SplitScreenLayoutRegistration,
 	HeroBackgroundLayoutRegistration,
-} from '@json-form-engine/react/registrations';
+} from '@json-form-engine/react/registrations/layouts';
 
 /**
  * Stepper Registrations (with type augmentation)
@@ -39,7 +39,7 @@ import {
 	DefaultStepperRegistration,
 	MinimalistStepperRegistration,
 	DebuggerStepperRegistration,
-} from '@json-form-engine/react/registrations';
+} from '@json-form-engine/react/registrations/stepper';
 
 /**
  * Action Registrations (with type augmentation)

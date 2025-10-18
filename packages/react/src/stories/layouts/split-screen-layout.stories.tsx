@@ -1,12 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '../shared/story-wrapper';
-import { FormTemplates } from '../shared/form-builder';
+import { FormTemplates } from '../shared/sample-forms';
 
 const baseForm = FormTemplates.contactForm;
 
 const meta = {
-	title: 'Layouts/SplitScreenLayout',
 	component: FormRenderer,
 	parameters: {
 		layout: 'fullscreen',

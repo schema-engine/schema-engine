@@ -192,6 +192,10 @@ export class ValidationRegistry {
 			}),
 		},
 
+		boolean: {
+			required: (message?: string): RequiredRule => ({ type: 'required', message }),
+		},
+
 		array: {
 			required: (message?: string): RequiredRule => ({ type: 'required', message }),
 			minItems: (value: number, message?: string): MinItemsRule => ({

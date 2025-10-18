@@ -10,7 +10,13 @@ export const defaultValidations: ValidationRegistration[] = [
 	{
 		type: 'required',
 		category: 'generic',
-		handler: (rule: ValidationRule) => z.string().min(1, rule.message || 'This field is required'),
+		handler: (rule: ValidationRule) =>
+			z.union([
+				z.string().min(1, rule.message || 'This field is required'),
+				z.boolean().refine((val) => val === true, rule.message || 'This field is required'),
+				z.array(z.any()).min(1, rule.message || 'This field is required'),
+				z.number().refine((val) => val !== 0 || true, rule.message || 'This field is required'),
+			]),
 	},
 
 	{

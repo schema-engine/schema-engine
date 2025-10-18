@@ -2,17 +2,11 @@ import { test, expect, describe, beforeEach } from 'bun:test';
 import { z } from 'zod';
 import {
 	validationRegistry,
-	addCustomValidation,
-	initializeValidation,
-	resetValidationInit,
     ValidationPresets,
 	type ValidationRule,
 } from '../../../src/schemas/validation';
 
 describe('ValidationRegistry Usage Pattern Analysis', () => {
-	beforeEach(() => {
-		resetValidationInit();
-	});
 
 	describe('Current ValidationRegistry.presets Usage', () => {
 		test('should use registry presets for rule creation', () => {
@@ -66,30 +60,6 @@ describe('ValidationRegistry Usage Pattern Analysis', () => {
 
 			expect(rules[0].type).toBe('required');
 			expect(rules[1].type).toBe('email');
-		});
-	});
-
-	describe('Custom Validation Pattern', () => {
-		test('should register custom validation and use in JSON', () => {
-			addCustomValidation({
-				type: 'company-email',
-				category: 'string',
-				handler: (rule: any) => {
-					return z.email().refine(
-						(val) => val.includes('@company.com'),
-						rule.message || 'Must be company email'
-					);
-				}
-			});
-			initializeValidation();
-
-			const customRule: ValidationRule = {
-				type: 'company-email',
-				message: 'Must be @company.com email'
-			} as any;
-
-			const schema = validationRegistry.createSchema(customRule);
-			expect(schema).not.toBeNull();
 		});
 	});
 

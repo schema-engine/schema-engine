@@ -4,7 +4,7 @@ import { type Breakpoint, BreakpointOverrideProvider } from '../hooks/grid-hooks
 import { Card, CardContent, CardHeader, CardTitle } from '@/shadcn/ui/card';
 import { Button } from '@/shadcn/ui/button';
 import { Badge } from '@/shadcn/ui/badge';
-import { cn } from '@/shadcn/lib/utils';
+import { cn } from '@/lib/utils';
 
 /**
  * Viewport preview props

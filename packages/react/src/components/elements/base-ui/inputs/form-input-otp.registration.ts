@@ -1,0 +1,23 @@
+import { FormInputOTP } from './form-input-otp';
+import type { InputOTPFieldConfig, InputOTPFieldProps } from './form-input-otp.types';
+import { InputOTPFieldConfigSchema } from './form-input-otp.types';
+import type { ElementRegistration } from '@json-form-engine/core';
+
+declare global {
+	namespace FormEngine {
+		interface ElementRegistry {
+			'input-otp': InputOTPFieldConfig;
+		}
+	}
+}
+
+export const InputOTPElementRegistration: ElementRegistration<InputOTPFieldConfig, InputOTPFieldProps> = {
+	__id: 'input-otp',
+	render: FormInputOTP,
+	schema: InputOTPFieldConfigSchema,
+	metadata: {
+		name: 'Input OTP Field',
+		description: 'One-time password input field with multiple slots',
+		category: 'input',
+	},
+};

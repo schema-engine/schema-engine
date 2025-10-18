@@ -146,7 +146,7 @@ const contactFormConfig: FormConfig = {
 					__id: 'checkbox',
 					name: 'terms',
 					label: 'I agree to the terms and conditions',
-					rules: [ValidationPresets.string.required('You must agree to the terms and conditions')],
+					rules: [ValidationPresets.boolean.required('You must agree to the terms and conditions')],
 				},
 				{
 					__id: 'submit',

@@ -8,8 +8,10 @@
 import type { ReactNode } from 'react';
 import { FormEngineProvider } from '@/components/adapter-provider';
 import { rhfAdapter } from '@/adapters/rhf';
-import { defaultFormEngine } from './form-engine-setup';
+import { getEngine as getDefaultEngine } from './form-builder.shadcn';
 import type { FormEngine } from '@json-form-engine/core/engine/form-engine';
+
+const defaultFormEngine = getDefaultEngine();
 
 interface StoryWrapperProps {
 	children: ReactNode;
