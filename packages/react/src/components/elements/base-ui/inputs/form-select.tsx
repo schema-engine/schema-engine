@@ -1,5 +1,5 @@
 import { FieldGroup } from '@/components/elements/field-group';
-import { useControlledFormElement, combineHandlers } from '@/hooks';
+import { useAdapterControlledFormElement, combineHandlers } from '@/hooks';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/base-ui/select';
 import type { SelectFieldProps } from './form-select.types';
 
@@ -10,7 +10,44 @@ export function FormSelect({
 	...config
 }: SelectFieldProps) {
 	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
-		useControlledFormElement(config);
+		useAdapterControlledFormElement(config);
+
+	const isMultiple = config.multiple;
+	const values = isMultiple && Array.isArray(value) ? value : isMultiple ? [] : value ? [value] : [];
+	const selectedLabels = values
+		.map((v) => config.options.find((opt) => String(opt.value) === String(v))?.label)
+		.filter(Boolean);
+
+	const renderDisplayValue = () => {
+		if (!selectedLabels.length) return null;
+
+		if (isMultiple) {
+			const firstLabel = selectedLabels[0];
+			const additionalCount = selectedLabels.length > 1 ? ` (+${selectedLabels.length - 1} more)` : '';
+			return firstLabel + additionalCount;
+		}
+
+		return selectedLabels[0];
+	};
+
+	const handleValueChange = (val: unknown) => {
+		const strVal = String(val);
+
+		if (isMultiple) {
+			const currentValues = Array.isArray(value) ? [...value] : [];
+			const index = currentValues.findIndex((v) => String(v) === strVal);
+
+			if (index > -1) {
+				currentValues.splice(index, 1);
+			} else {
+				currentValues.push(strVal);
+			}
+
+			combineHandlers(onChange, propsOnChange)(currentValues);
+		} else {
+			combineHandlers(onChange, propsOnChange)(strVal);
+		}
+	};
 
 	return (
 		<FieldGroup
@@ -23,12 +60,13 @@ export function FormSelect({
 			style={containerStyles}
 		>
 			<Select
-				value={value || ''}
-				onValueChange={(val: unknown) => combineHandlers(onChange, propsOnChange)(String(val))}
+				value={isMultiple ? (values.length > 0 ? values[values.length - 1] : '') : value ? String(value) : ''}
+				onValueChange={handleValueChange}
 				disabled={fieldProps.disabled}
+				multiple={isMultiple}
 			>
 				<SelectTrigger {...fieldProps} onBlur={combineHandlers(onBlur, propsOnBlur)} onFocus={propsOnFocus}>
-					<SelectValue />
+					<SelectValue>{renderDisplayValue()}</SelectValue>
 				</SelectTrigger>
 				<SelectContent>
 					{config.options.map((option) => (

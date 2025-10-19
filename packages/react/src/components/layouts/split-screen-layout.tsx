@@ -65,17 +65,3 @@ export const SplitScreenLayout: React.FC<SplitScreenLayoutProps> = ({ children, 
 		</div>
 	);
 };
-
-import type { LayoutRegistration } from '@json-form-engine/core/types';
-import { SplitScreenLayoutConfigSchema } from './split-screen-layout.types';
-
-export const SplitScreenLayoutRegistration: LayoutRegistration<SplitScreenLayoutConfig, SplitScreenLayoutProps> = {
-	$type: 'split-screen',
-	render: SplitScreenLayout,
-	schema: SplitScreenLayoutConfigSchema,
-	metadata: {
-		name: 'Split Screen Layout',
-		description: 'Two-column layout with side content and main form area',
-		icon: 'layout-split',
-	},
-};

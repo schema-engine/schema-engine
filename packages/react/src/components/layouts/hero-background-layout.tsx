@@ -66,19 +66,10 @@ export const HeroBackgroundLayout: React.FC<HeroBackgroundLayoutProps> = ({ chil
 	);
 };
 
-import type { LayoutRegistration } from '@json-form-engine/core/types';
-import { HeroBackgroundLayoutConfigSchema } from './hero-background-layout.types';
-
-export const HeroBackgroundLayoutRegistration: LayoutRegistration<
-	HeroBackgroundLayoutConfig,
-	HeroBackgroundLayoutProps
-> = {
-	$type: 'hero-background',
-	render: HeroBackgroundLayout,
-	schema: HeroBackgroundLayoutConfigSchema,
-	metadata: {
-		name: 'Hero Background Layout',
-		description: 'Full-screen layout with background image or video',
-		icon: 'image',
-	},
-};
+declare global {
+	namespace FormEngine {
+		interface LayoutRegistry {
+			'hero-background': HeroBackgroundLayoutConfig;
+		}
+	}
+}

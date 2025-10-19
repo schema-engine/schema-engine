@@ -5,7 +5,7 @@
 import { FormArrayElements } from './form-array-elements';
 import type { ArrayElementsConfig, ArrayElementsProps } from './form-array-elements.types';
 import { ArrayElementConfigSchema } from './form-array-elements.types';
-import type { ElementRegistration } from '@json-form-engine/core/types';
+import type { InputRegistration } from '@json-form-engine/core/types';
 
 declare global {
 	namespace FormEngine {
@@ -15,7 +15,7 @@ declare global {
 	}
 }
 
-export const ArrayElementRegistration: ElementRegistration<ArrayElementsConfig, ArrayElementsProps> = {
+export const ArrayElementRegistration: InputRegistration<'arrayElements', ArrayElementsConfig, ArrayElementsProps> = {
 	$type: 'arrayElements',
 	render: FormArrayElements,
 	schema: ArrayElementConfigSchema,

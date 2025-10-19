@@ -5,7 +5,6 @@
  * Tree-shakable library designed for maximum flexibility and performance.
  */
 
-// New builder pattern exports (v2.0)
 export { FormEngineBuilder } from './builder';
 export { FormEngine } from './engine';
 export type { EngineRegistries, FormEngineSchemaMetadata } from './engine';
@@ -15,7 +14,6 @@ export type {
 	FormConfigSchemaOptions,
 } from './engine/schema-generator';
 
-// Registry exports for standalone usage
 export {
 	BaseRegistry,
 	ElementRegistry,
@@ -24,22 +22,21 @@ export {
 	ActionRegistry,
 } from './registries';
 
-// Type exports
 export type {
-	ElementCategory,
 	ComponentMetadata,
 	ElementMetadata,
 	ActionMetadata,
-	ElementRegistration,
-	LayoutRegistration,
-	StepperRegistration,
 	BuilderActionRegistration,
 	BuilderActionTrigger,
 	BuilderActionExecutionContext,
 	BuilderActionExecutionResult,
+	ComponentRegistration,
+	InputRegistration,
+	StaticRegistration,
+	LayoutRegistration,
+	StepperRegistration,
 } from './types';
 
-// Existing exports (backwards compatibility)
 export * from './schemas';
 export * from './actions';
 export * from './layouts';

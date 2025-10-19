@@ -1,7 +1,7 @@
 import { FormInputOTP } from './form-input-otp';
 import type { InputOTPFieldConfig, InputOTPFieldProps } from './form-input-otp.types';
 import { InputOTPFieldConfigSchema } from './form-input-otp.types';
-import type { ElementRegistration } from '@json-form-engine/core';
+import type { InputRegistration } from '@json-form-engine/core/types';
 
 declare global {
 	namespace FormEngine {
@@ -11,7 +11,7 @@ declare global {
 	}
 }
 
-export const InputOTPElementRegistration: ElementRegistration<InputOTPFieldConfig, InputOTPFieldProps> = {
+export const InputOTPElementRegistration: InputRegistration<'input-otp', InputOTPFieldConfig, InputOTPFieldProps> = {
 	$type: 'input-otp',
 	render: FormInputOTP,
 	schema: InputOTPFieldConfigSchema,

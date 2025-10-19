@@ -26,3 +26,17 @@ export type Simplify<T> = { [K in keyof T]: T[K] } & {};
 export type Merge<T, U> = Simplify<{
 	[K in keyof T | keyof U]: K extends keyof U ? U[K] : K extends keyof T ? T[K] : never;
 }>;
+
+/**
+ * Extract config type from a Zod schema's parse return type.
+ * Since schema is z.ZodType<TConfig>, calling parse returns TConfig.
+ */
+export type ExtractSchemaType<TSchema> = TSchema extends { parse: (val: any) => infer TConfig }
+	? Omit<TConfig, '$type'>
+	: unknown;
+
+/**
+ * Extract type identifier from a registration object.
+ * Works by inferring from the $type property.
+ */
+export type ExtractTypeId<T> = T extends { $type: infer K } ? (K extends string ? K : never) : never;

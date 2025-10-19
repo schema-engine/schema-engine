@@ -1,7 +1,7 @@
 import { FormNumber } from './form-number';
 import type { NumberFieldConfig, NumberFieldProps } from './form-number.types';
 import { NumberFieldConfigSchema } from './form-number.types';
-import type { ElementRegistration } from '@json-form-engine/core';
+import type { InputRegistration } from '@json-form-engine/core/types';
 
 declare global {
 	namespace FormEngine {
@@ -11,7 +11,7 @@ declare global {
 	}
 }
 
-export const NumberElementRegistration: ElementRegistration<NumberFieldConfig, NumberFieldProps> = {
+export const NumberElementRegistration: InputRegistration<'number', NumberFieldConfig, NumberFieldProps> = {
 	$type: 'number',
 	render: FormNumber,
 	schema: NumberFieldConfigSchema,

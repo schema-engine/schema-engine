@@ -1,9 +1,7 @@
-/**
- * Minimalist Stepper Registration with Type Augmentation
- */
-
-import { MinimalistStepperRegistration } from './minimalist-stepper';
+import { MinimalistStepperComposed } from './minimalist-stepper';
 import type { MinimalistStepperConfig } from './minimalist-stepper.types';
+import { MinimalistStepperConfigSchema } from './minimalist-stepper.types';
+import type { StepperRegistration } from '@json-form-engine/core/types';
 
 declare global {
 	namespace FormEngine {
@@ -13,5 +11,17 @@ declare global {
 	}
 }
 
-export const MinimalistStepperRegistrationWithTypes = MinimalistStepperRegistration;
-export { MinimalistStepperRegistration };
+export const MinimalistStepperRegistration: StepperRegistration<
+	'minimalist',
+	MinimalistStepperConfig,
+	{ children?: React.ReactNode }
+> = {
+	$type: 'minimalist',
+	render: MinimalistStepperComposed,
+	schema: MinimalistStepperConfigSchema,
+	metadata: {
+		name: 'Minimalist Stepper',
+		description: 'Clean minimalist stepper with progress bar and simple navigation',
+		icon: 'minimize',
+	},
+};

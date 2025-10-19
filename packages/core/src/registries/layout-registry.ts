@@ -6,10 +6,10 @@ import { BaseRegistry } from './base-registry';
  *
  * Manages registration and retrieval of form layouts.
  *
- * Note: Uses LayoutRegistration<any, any> internally to support registrations with different
- * config types. Type safety is maintained at the registration site via the builder.
+ * Note: Uses LayoutRegistration (branded type) to support layout registrations. Type safety is maintained
+ * at the registration site via branded types.
  */
-export class LayoutRegistry extends BaseRegistry<string, LayoutRegistration<any, any>> {
+export class LayoutRegistry extends BaseRegistry<string, LayoutRegistration<any, any, any>> {
 	get registryName(): string {
 		return 'layout';
 	}

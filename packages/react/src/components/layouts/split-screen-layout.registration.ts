@@ -2,8 +2,10 @@
  * Split Screen Layout Registration with Type Augmentation
  */
 
-import { SplitScreenLayoutRegistration } from './split-screen-layout';
-import type { SplitScreenLayoutConfig } from './split-screen-layout.types';
+import { SplitScreenLayout } from './split-screen-layout';
+import type { SplitScreenLayoutConfig, SplitScreenLayoutProps } from './split-screen-layout.types';
+import { SplitScreenLayoutConfigSchema } from './split-screen-layout.types';
+import type { LayoutRegistration } from '@json-form-engine/core/types';
 
 declare global {
 	namespace FormEngine {
@@ -13,5 +15,17 @@ declare global {
 	}
 }
 
-export const SplitScreenLayoutRegistrationWithTypes = SplitScreenLayoutRegistration;
-export { SplitScreenLayoutRegistration };
+export const SplitScreenLayoutRegistration: LayoutRegistration<
+	'split-screen',
+	SplitScreenLayoutConfig,
+	SplitScreenLayoutProps
+> = {
+	$type: 'split-screen',
+	render: SplitScreenLayout,
+	schema: SplitScreenLayoutConfigSchema,
+	metadata: {
+		name: 'Split Screen Layout',
+		description: 'Two-column layout with side content and main form area',
+		icon: 'layout-split',
+	},
+};

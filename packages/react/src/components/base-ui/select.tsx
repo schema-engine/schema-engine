@@ -19,8 +19,16 @@ function SelectPositioner({ ...props }: ComponentProps<typeof BaseSelect.Positio
 	return <BaseSelect.Positioner data-slot="select-positioner" {...props} />;
 }
 
-function SelectValue({ className, ...props }: ComponentProps<typeof BaseSelect.Value>) {
-	return <BaseSelect.Value data-slot="select-value" className={cn('text-sm', className)} {...props} />;
+function SelectValue({
+	className,
+	children,
+	...props
+}: ComponentProps<typeof BaseSelect.Value> & { children?: React.ReactNode }) {
+	return (
+		<BaseSelect.Value data-slot="select-value" className={cn('text-sm', className)} {...props}>
+			{children}
+		</BaseSelect.Value>
+	);
 }
 
 function SelectTrigger({

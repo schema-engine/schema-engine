@@ -442,17 +442,3 @@ export const DebuggerStepperComposed: React.FC<{ children?: React.ReactNode }> =
 		</DebuggerStepper>
 	);
 };
-
-import type { StepperRegistration } from '@json-form-engine/core/types';
-import { DebuggerStepperConfigSchema } from './debugger-stepper.types';
-
-export const DebuggerStepperRegistration: StepperRegistration<DebuggerStepperConfig, { children?: React.ReactNode }> = {
-	$type: 'debugger',
-	render: DebuggerStepperComposed,
-	schema: DebuggerStepperConfigSchema,
-	metadata: {
-		name: 'Debugger Stepper',
-		description: 'Modern dev tool widget with FAB button for debugging multi-step forms',
-		icon: 'bug',
-	},
-};

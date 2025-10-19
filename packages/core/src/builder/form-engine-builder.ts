@@ -1,10 +1,16 @@
-import type { ElementRegistration, LayoutRegistration, StepperRegistration, BuilderActionRegistration } from '@/types';
+import type {
+	InputRegistration,
+	StaticRegistration,
+	LayoutRegistration,
+	StepperRegistration,
+	BuilderActionRegistration,
+} from '@/types';
 import type { FormEngineSchemaMetadata } from '@/engine/form-engine';
 import { logger } from '@/lib/logger';
 import { ElementRegistry, LayoutRegistry, StepperRegistry, ActionRegistry } from '@/registries';
 import { FormConfigBuilder } from './form-config-builder';
 import { z } from 'zod';
-import type { Merge } from './type-utils';
+import type { Merge, ExtractSchemaType, ExtractTypeId } from './type-utils';
 
 /**
  * FormEngineBuilder - Builder pattern for configuring the form engine.
@@ -50,24 +56,29 @@ export class FormEngineBuilder<
 	) {}
 
 	/**
-	 * Register a single element with explicit ID and type parameters.
+	 * Register a single element with type inference from registration.
 	 *
-	 * @param registration - Element registration object
+	 * @param registration - Element registration object with embedded type information
 	 * @note If id is already registered, it will be overridden with a warning
 	 *
 	 * @example
 	 * ```typescript
-	 * // Explicit ID and type (recommended for best IntelliSense)
-	 * builder.addElement<'input', InputFieldConfig>(InputElementRegistration)
-	 *
-	 * // Without type params (no type tracking)
+	 * // Type inferred from registration's $type property
 	 * builder.addElement(InputElementRegistration)
 	 * ```
 	 */
-	addElement<TId extends string = string, TConfig = never>(
-		registration: ElementRegistration<any>,
+	addElement<T extends InputRegistration<any, any, any> | StaticRegistration<any, any, any>>(
+		registration: T,
 	): FormEngineBuilder<
-		TConfig extends never ? TElements : TElements & Record<TId, Omit<TConfig, '$type'>>,
+		TElements & Record<ExtractTypeId<T>, ExtractSchemaType<T['schema']>>,
+		TLayouts,
+		TSteppers,
+		TActions
+	>;
+	addElement<T extends InputRegistration<any, any, any> | StaticRegistration<any, any, any>>(
+		registration: T,
+	): FormEngineBuilder<
+		TElements & Record<ExtractTypeId<T>, ExtractSchemaType<T['schema']>>,
 		TLayouts,
 		TSteppers,
 		TActions
@@ -82,7 +93,7 @@ export class FormEngineBuilder<
 	 *
 	 * @param registrations - Array of element registrations
 	 */
-	addElements(registrations: ElementRegistration[]): this {
+	addElements(registrations: (InputRegistration<any, any, any> | StaticRegistration<any, any, any>)[]): this {
 		for (const registration of registrations) {
 			this.addElement(registration);
 		}
@@ -90,21 +101,29 @@ export class FormEngineBuilder<
 	}
 
 	/**
-	 * Register a single layout with explicit ID and type parameters.
+	 * Register a single layout with type inference from registration.
 	 *
-	 * @param registration - Layout registration object
+	 * @param registration - Layout registration object with embedded type information
 	 * @note If id is already registered, it will be overridden with a warning
 	 *
 	 * @example
 	 * ```typescript
-	 * builder.addLayout<'card', CardLayoutConfig>(CardLayoutRegistration)
+	 * builder.addLayout(CardLayoutRegistration)
 	 * ```
 	 */
-	addLayout<TId extends string = string, TConfig = never>(
-		registration: LayoutRegistration<any>,
+	addLayout<T extends LayoutRegistration<any, any, any>>(
+		registration: T,
 	): FormEngineBuilder<
 		TElements,
-		TConfig extends never ? TLayouts : TLayouts & Record<TId, Omit<TConfig, '$type'>>,
+		TLayouts & Record<ExtractTypeId<T>, ExtractSchemaType<T['schema']>>,
+		TSteppers,
+		TActions
+	>;
+	addLayout<T extends LayoutRegistration<any, any, any>>(
+		registration: T,
+	): FormEngineBuilder<
+		TElements,
+		TLayouts & Record<ExtractTypeId<T>, ExtractSchemaType<T['schema']>>,
 		TSteppers,
 		TActions
 	> {
@@ -118,7 +137,7 @@ export class FormEngineBuilder<
 	 *
 	 * @param registrations - Array of layout registrations
 	 */
-	addLayouts(registrations: LayoutRegistration[]): this {
+	addLayouts(registrations: LayoutRegistration<any, any, any>[]): this {
 		for (const registration of registrations) {
 			this.addLayout(registration);
 		}
@@ -126,22 +145,30 @@ export class FormEngineBuilder<
 	}
 
 	/**
-	 * Register a single stepper with explicit ID and type parameters.
+	 * Register a single stepper with type inference from registration.
 	 *
-	 * @param registration - Stepper registration object
+	 * @param registration - Stepper registration object with embedded type information
 	 * @note If id is already registered, it will be overridden with a warning
 	 *
 	 * @example
 	 * ```typescript
-	 * builder.addStepper<'default', DefaultStepperConfig>(DefaultStepperRegistration)
+	 * builder.addStepper(DefaultStepperRegistration)
 	 * ```
 	 */
-	addStepper<TId extends string = string, TConfig = never>(
-		registration: StepperRegistration<any>,
+	addStepper<T extends StepperRegistration<any, any, any>>(
+		registration: T,
 	): FormEngineBuilder<
 		TElements,
 		TLayouts,
-		TConfig extends never ? TSteppers : TSteppers & Record<TId, Omit<TConfig, '$type'>>,
+		TSteppers & Record<ExtractTypeId<T>, ExtractSchemaType<T['schema']>>,
+		TActions
+	>;
+	addStepper<T extends StepperRegistration<any, any, any>>(
+		registration: T,
+	): FormEngineBuilder<
+		TElements,
+		TLayouts,
+		TSteppers & Record<ExtractTypeId<T>, ExtractSchemaType<T['schema']>>,
 		TActions
 	> {
 		this.stepperRegistry.register(registration);
@@ -153,7 +180,7 @@ export class FormEngineBuilder<
 	 *
 	 * @param registrations - Array of stepper registrations
 	 */
-	addSteppers(registrations: StepperRegistration[]): this {
+	addSteppers(registrations: StepperRegistration<any, any, any>[]): this {
 		for (const registration of registrations) {
 			this.addStepper(registration);
 		}
@@ -166,22 +193,20 @@ export class FormEngineBuilder<
 	 * @param registration - Action registration object
 	 * @note If id is already registered, it will be overridden with a warning
 	 */
-	addAction<TConfig = never>(
-		registration: TConfig extends never ? BuilderActionRegistration<any> : BuilderActionRegistration<TConfig>,
+	addAction<T extends BuilderActionRegistration<any>>(
+		registration: T,
 	): FormEngineBuilder<
 		TElements,
 		TLayouts,
 		TSteppers,
-		TConfig extends never
+		T extends BuilderActionRegistration<infer C>
 			? Merge<
 					TActions,
 					{
-						[K in typeof registration.$type]: typeof registration extends BuilderActionRegistration<infer C>
-							? Omit<C, '$type'>
-							: never;
+						[K in T['$type']]: Omit<C, '$type'>;
 					}
 				>
-			: Merge<TActions, { [K in typeof registration.$type]: Omit<TConfig, '$type'> }>
+			: TActions
 	> {
 		this.actionRegistry.register(registration);
 		return this as any;
@@ -192,7 +217,7 @@ export class FormEngineBuilder<
 	 *
 	 * @param registrations - Array of action registrations
 	 */
-	addActions(registrations: BuilderActionRegistration[]): this {
+	addActions(registrations: BuilderActionRegistration<any>[]): this {
 		for (const registration of registrations) {
 			this.addAction(registration);
 		}

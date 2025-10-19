@@ -1,7 +1,7 @@
 import { FormSelect } from './form-select';
 import type { SelectFieldConfig, SelectFieldProps } from './form-select.types';
 import { SelectFieldConfigSchema } from './form-select.types';
-import type { ElementRegistration } from '@json-form-engine/core';
+import type { InputRegistration } from '@json-form-engine/core/types';
 
 declare global {
 	namespace FormEngine {
@@ -11,7 +11,7 @@ declare global {
 	}
 }
 
-export const SelectElementRegistration: ElementRegistration<SelectFieldConfig, SelectFieldProps> = {
+export const SelectElementRegistration: InputRegistration<'select', SelectFieldConfig, SelectFieldProps> = {
 	$type: 'select',
 	render: FormSelect,
 	schema: SelectFieldConfigSchema,

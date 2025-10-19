@@ -1,7 +1,7 @@
 import { FormSlider } from './form-slider';
 import type { SliderFieldConfig, SliderFieldProps } from './form-slider.types';
 import { SliderFieldConfigSchema } from './form-slider.types';
-import type { ElementRegistration } from '@json-form-engine/core';
+import type { InputRegistration } from '@json-form-engine/core/types';
 
 declare global {
 	namespace FormEngine {
@@ -11,7 +11,7 @@ declare global {
 	}
 }
 
-export const SliderElementRegistration: ElementRegistration<SliderFieldConfig, SliderFieldProps> = {
+export const SliderElementRegistration: InputRegistration<'slider', SliderFieldConfig, SliderFieldProps> = {
 	$type: 'slider',
 	render: FormSlider,
 	schema: SliderFieldConfigSchema,

@@ -6,10 +6,10 @@ import { BaseRegistry } from './base-registry';
  *
  * Manages registration and retrieval of form steppers.
  *
- * Note: Uses StepperRegistration<any, any> internally to support registrations with different
- * config types. Type safety is maintained at the registration site via the builder.
+ * Note: Uses StepperRegistration (branded type) to support stepper registrations. Type safety is maintained
+ * at the registration site via branded types.
  */
-export class StepperRegistry extends BaseRegistry<string, StepperRegistration<any, any>> {
+export class StepperRegistry extends BaseRegistry<string, StepperRegistration<any, any, any>> {
 	get registryName(): string {
 		return 'stepper';
 	}

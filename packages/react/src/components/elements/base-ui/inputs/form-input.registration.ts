@@ -17,7 +17,7 @@
 import { FormInput } from './form-input';
 import type { InputFieldConfig, InputFieldProps } from './form-input.types';
 import { InputFieldSchema } from './form-input.types';
-import type { ElementRegistration } from '@json-form-engine/core';
+import type { InputRegistration } from '@json-form-engine/core/types';
 
 declare global {
 	namespace FormEngine {
@@ -27,7 +27,7 @@ declare global {
 	}
 }
 
-export const InputElementRegistration: ElementRegistration<InputFieldConfig, InputFieldProps> = {
+export const InputElementRegistration: InputRegistration<'input', InputFieldConfig, InputFieldProps> = {
 	$type: 'input',
 	render: FormInput,
 	schema: InputFieldSchema,

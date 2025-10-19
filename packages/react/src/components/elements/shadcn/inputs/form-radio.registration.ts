@@ -5,7 +5,7 @@
 import { FormRadio } from './form-radio';
 import type { RadioFieldConfig, RadioFieldProps } from './form-radio.types';
 import { RadioFieldConfigSchema } from './form-radio.types';
-import type { ElementRegistration } from '@json-form-engine/core/types';
+import type { InputRegistration } from '@json-form-engine/core/types';
 
 declare global {
 	namespace FormEngine {
@@ -15,7 +15,7 @@ declare global {
 	}
 }
 
-export const RadioElementRegistration: ElementRegistration<RadioFieldConfig, RadioFieldProps> = {
+export const RadioElementRegistration: InputRegistration<'radio', RadioFieldConfig, RadioFieldProps> = {
 	$type: 'radio',
 	render: FormRadio,
 	schema: RadioFieldConfigSchema,

@@ -5,7 +5,7 @@
 import { FormSwitch } from './form-switch';
 import type { SwitchFieldConfig, SwitchFieldProps } from './form-switch.types';
 import { SwitchFieldConfigSchema } from './form-switch.types';
-import type { ElementRegistration } from '@json-form-engine/core/types';
+import type { InputRegistration } from '@json-form-engine/core/types';
 
 declare global {
 	namespace FormEngine {
@@ -15,7 +15,7 @@ declare global {
 	}
 }
 
-export const SwitchElementRegistration: ElementRegistration<SwitchFieldConfig, SwitchFieldProps> = {
+export const SwitchElementRegistration: InputRegistration<'switch', SwitchFieldConfig, SwitchFieldProps> = {
 	$type: 'switch',
 	render: FormSwitch,
 	schema: SwitchFieldConfigSchema,

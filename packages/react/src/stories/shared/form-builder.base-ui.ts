@@ -23,35 +23,13 @@ import { ArrayElementRegistration as BaseUIArrayElementRegistration } from '@/co
 import { FieldSetRegistration as BaseUIFieldSetRegistration } from '@/components/elements/base-ui/inputs/form-fieldset.registration';
 import { SubmitButtonElementRegistration as BaseUISubmitButtonElementRegistration } from '@/components/elements/base-ui/actions/submit-button.registration';
 
-import { CardLayoutRegistration } from '@/components/layouts/card-layout';
-import { SplitScreenLayoutRegistration } from '@/components/layouts/split-screen-layout';
-import { HeroBackgroundLayoutRegistration } from '@/components/layouts/hero-background-layout';
+import { CardLayoutRegistration } from '@/components/layouts/card-layout.registration';
+import { SplitScreenLayoutRegistration } from '@/components/layouts/split-screen-layout.registration';
+import { HeroBackgroundLayoutRegistration } from '@/components/layouts/hero-background-layout.registration';
 
-import { DefaultStepperRegistration } from '@/components/steppers/default-stepper';
-import { MinimalistStepperRegistration } from '@/components/steppers/minimalist-stepper';
-import { DebuggerStepperRegistration } from '@/components/steppers/debugger-stepper';
-
-import type { InputFieldConfig as BaseUIInputFieldConfig } from '@/components/elements/base-ui/inputs/form-input.types';
-import type { TextareaFieldConfig as BaseUITextareaFieldConfig } from '@/components/elements/base-ui/inputs/form-textarea.types';
-import type { CheckboxFieldConfig as BaseUICheckboxFieldConfig } from '@/components/elements/base-ui/inputs/form-checkbox.types';
-import type { RadioFieldConfig as BaseUIRadioFieldConfig } from '@/components/elements/base-ui/inputs/form-radio.types';
-import type { SelectFieldConfig as BaseUISelectFieldConfig } from '@/components/elements/base-ui/inputs/form-select.types';
-import type { SwitchFieldConfig as BaseUISwitchFieldConfig } from '@/components/elements/base-ui/inputs/form-switch.types';
-import type { NumberFieldConfig as BaseUINumberFieldConfig } from '@/components/elements/base-ui/inputs/form-number.types';
-import type { SliderFieldConfig } from '@/components/elements/base-ui/inputs/form-slider.types';
-import type { CheckboxGroupFieldConfig } from '@/components/elements/base-ui/inputs/form-checkbox-group.types';
-import type { InputOTPFieldConfig } from '@/components/elements/base-ui/inputs/form-input-otp.types';
-import type { ArrayElementsConfig as BaseUIArrayElementsConfig } from '@/components/elements/base-ui/inputs/form-array-elements.types';
-import type { FieldSetConfig as BaseUIFieldSetConfig } from '@/components/elements/base-ui/inputs/form-fieldset.types';
-import type { SubmitButtonConfig as BaseUISubmitButtonConfig } from '@/components/elements/base-ui/actions/submit-button.types';
-
-import type { CardLayoutConfig } from '@/components/layouts/card-layout.types';
-import type { SplitScreenLayoutConfig } from '@/components/layouts/split-screen-layout.types';
-import type { HeroBackgroundLayoutConfig } from '@/components/layouts/hero-background-layout.types';
-
-import type { DefaultStepperConfig } from '@/components/steppers/default-stepper.types';
-import type { MinimalistStepperConfig } from '@/components/steppers/minimalist-stepper.types';
-import type { DebuggerStepperConfig } from '@/components/steppers/debugger-stepper.types';
+import { DefaultStepperRegistration } from '@/components/steppers/default-stepper.registration';
+import { MinimalistStepperRegistration } from '@/components/steppers/minimalist-stepper.registration';
+import { DebuggerStepperRegistration } from '@/components/steppers/debugger-stepper.registration';
 
 import '@/components/steppers/default-stepper.css';
 import '@/components/steppers/minimalist-stepper.css';
@@ -77,25 +55,25 @@ export { ValidationPresets };
  */
 function createBaseUIFormEngineBuilder() {
 	return new FormEngineBuilder()
-		.addElement<'input', BaseUIInputFieldConfig>(BaseUIInputElementRegistration)
-		.addElement<'textarea', BaseUITextareaFieldConfig>(BaseUITextareaElementRegistration)
-		.addElement<'checkbox', BaseUICheckboxFieldConfig>(BaseUICheckboxElementRegistration)
-		.addElement<'radio', BaseUIRadioFieldConfig>(BaseUIRadioElementRegistration)
-		.addElement<'select', BaseUISelectFieldConfig>(BaseUISelectElementRegistration)
-		.addElement<'switch', BaseUISwitchFieldConfig>(BaseUISwitchElementRegistration)
-		.addElement<'number', BaseUINumberFieldConfig>(BaseUINumberElementRegistration)
-		.addElement<'slider', SliderFieldConfig>(SliderElementRegistration)
-		.addElement<'checkbox-group', CheckboxGroupFieldConfig>(CheckboxGroupElementRegistration)
-		.addElement<'input-otp', InputOTPFieldConfig>(InputOTPElementRegistration)
-		.addElement<'arrayElements', BaseUIArrayElementsConfig>(BaseUIArrayElementRegistration)
-		.addElement<'fieldSet', BaseUIFieldSetConfig>(BaseUIFieldSetRegistration)
-		.addElement<'submit', BaseUISubmitButtonConfig>(BaseUISubmitButtonElementRegistration)
-		.addLayout<'card', CardLayoutConfig>(CardLayoutRegistration)
-		.addLayout<'split-screen', SplitScreenLayoutConfig>(SplitScreenLayoutRegistration)
-		.addLayout<'hero-background', HeroBackgroundLayoutConfig>(HeroBackgroundLayoutRegistration)
-		.addStepper<'default', DefaultStepperConfig>(DefaultStepperRegistration)
-		.addStepper<'minimalist', MinimalistStepperConfig>(MinimalistStepperRegistration)
-		.addStepper<'debugger', DebuggerStepperConfig>(DebuggerStepperRegistration);
+		.addElement(BaseUIInputElementRegistration)
+		.addElement(BaseUITextareaElementRegistration)
+		.addElement(BaseUICheckboxElementRegistration)
+		.addElement(BaseUIRadioElementRegistration)
+		.addElement(BaseUISelectElementRegistration)
+		.addElement(BaseUISwitchElementRegistration)
+		.addElement(BaseUINumberElementRegistration)
+		.addElement(SliderElementRegistration)
+		.addElement(CheckboxGroupElementRegistration)
+		.addElement(InputOTPElementRegistration)
+		.addElement(BaseUIArrayElementRegistration)
+		.addElement(BaseUIFieldSetRegistration)
+		.addElement(BaseUISubmitButtonElementRegistration)
+		.addLayout(CardLayoutRegistration)
+		.addLayout(SplitScreenLayoutRegistration)
+		.addLayout(HeroBackgroundLayoutRegistration)
+		.addStepper(DefaultStepperRegistration)
+		.addStepper(MinimalistStepperRegistration)
+		.addStepper(DebuggerStepperRegistration);
 }
 
 /**

@@ -5,7 +5,7 @@
 import { FormFieldSet } from './form-fieldset';
 import type { FieldSetConfig, FieldSetProps } from './form-fieldset.types';
 import { FieldSetConfigSchema } from './form-fieldset.types';
-import type { ElementRegistration } from '@json-form-engine/core/types';
+import type { InputRegistration } from '@json-form-engine/core/types';
 
 declare global {
 	namespace FormEngine {
@@ -15,7 +15,7 @@ declare global {
 	}
 }
 
-export const FieldSetRegistration: ElementRegistration<FieldSetConfig, FieldSetProps> = {
+export const FieldSetRegistration: InputRegistration<'fieldSet', FieldSetConfig, FieldSetProps> = {
 	$type: 'fieldSet',
 	render: FormFieldSet,
 	schema: FieldSetConfigSchema,

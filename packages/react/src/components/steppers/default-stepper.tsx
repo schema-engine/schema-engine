@@ -308,17 +308,3 @@ export const DefaultStepperComposed: React.FC<{ children?: React.ReactNode }> = 
 		</DefaultStepper>
 	);
 };
-
-import type { StepperRegistration } from '@json-form-engine/core/types';
-import { DefaultStepperConfigSchema } from './default-stepper.types';
-
-export const DefaultStepperRegistration: StepperRegistration<DefaultStepperConfig, { children?: React.ReactNode }> = {
-	$type: 'default',
-	render: DefaultStepperComposed,
-	schema: DefaultStepperConfigSchema,
-	metadata: {
-		name: 'Default Stepper',
-		description: 'Horizontal stepper with progress indicators and navigation buttons',
-		icon: 'steps',
-	},
-};

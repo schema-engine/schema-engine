@@ -1,7 +1,7 @@
 import { FormTextarea } from './form-textarea';
 import type { TextareaFieldConfig, TextareaFieldProps } from './form-textarea.types';
 import { TextareaFieldSchema } from './form-textarea.types';
-import type { ElementRegistration } from '@json-form-engine/core';
+import type { InputRegistration } from '@json-form-engine/core/types';
 
 declare global {
 	namespace FormEngine {
@@ -11,7 +11,7 @@ declare global {
 	}
 }
 
-export const TextareaElementRegistration: ElementRegistration<TextareaFieldConfig, TextareaFieldProps> = {
+export const TextareaElementRegistration: InputRegistration<'textarea', TextareaFieldConfig, TextareaFieldProps> = {
 	$type: 'textarea',
 	render: FormTextarea,
 	schema: TextareaFieldSchema,

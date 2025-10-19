@@ -3,9 +3,9 @@
  */
 
 import { SubmitButton } from './submit-button';
-import { SubmitButtonSchema } from './submit-button.types';
-import type { SubmitButtonConfig, SubmitButtonProps } from './submit-button.types';
-import type { ElementRegistration } from '@json-form-engine/core';
+import { SubmitButtonSchema, type SubmitButtonProps } from './submit-button.types';
+import type { SubmitButtonConfig } from './submit-button.types';
+import type { InputRegistration } from '@json-form-engine/core';
 
 declare global {
 	namespace FormEngine {
@@ -15,7 +15,7 @@ declare global {
 	}
 }
 
-export const SubmitButtonElementRegistration: ElementRegistration<SubmitButtonConfig, SubmitButtonProps> = {
+export const SubmitButtonElementRegistration: InputRegistration<'submit', SubmitButtonConfig, SubmitButtonProps> = {
 	$type: 'submit',
 	render: SubmitButton,
 	schema: SubmitButtonSchema,

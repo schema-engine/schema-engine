@@ -255,3 +255,36 @@ export const MixedStates: Story = {
 			.build(),
 	},
 };
+
+export const MultipleSelection: Story = {
+	args: {
+		config: createForm()
+			.setId('select-multiple-selection')
+			.setTitle('Programming Languages')
+			.setDescription('Select all languages you are proficient in')
+			.addStep({ id: 'step-1', title: 'Skills' })
+			.addElement('select', {
+				id: 'languages',
+				name: 'languages',
+				label: 'Programming Languages',
+				placeholder: 'Select languages',
+				multiple: true,
+				defaultValue: [],
+				options: [
+					{ value: 'javascript', label: 'JavaScript' },
+					{ value: 'typescript', label: 'TypeScript' },
+					{ value: 'python', label: 'Python' },
+					{ value: 'java', label: 'Java' },
+					{ value: 'csharp', label: 'C#' },
+					{ value: 'php', label: 'PHP' },
+					{ value: 'cpp', label: 'C++' },
+					{ value: 'rust', label: 'Rust' },
+					{ value: 'go', label: 'Go' },
+					{ value: 'swift', label: 'Swift' },
+				],
+				rules: [ValidationPresets.string.required('Please select at least one language')],
+			})
+			.addElement('submit', { id: 'submit', label: 'Continue', name: 'submit' })
+			.build(),
+	},
+};

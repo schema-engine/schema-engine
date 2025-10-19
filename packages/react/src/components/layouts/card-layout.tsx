@@ -72,17 +72,3 @@ export const CardLayout: React.FC<CardLayoutProps> = ({ children, className }) =
 		</div>
 	);
 };
-
-import type { LayoutRegistration } from '@json-form-engine/core/types';
-import { CardLayoutConfigSchema } from './card-layout.types';
-
-export const CardLayoutRegistration: LayoutRegistration<CardLayoutConfig, CardLayoutProps> = {
-	$type: 'card',
-	render: CardLayout,
-	schema: CardLayoutConfigSchema,
-	metadata: {
-		name: 'Card Layout',
-		description: 'Centered card layout with shadow and customizable padding',
-		icon: 'card',
-	},
-};

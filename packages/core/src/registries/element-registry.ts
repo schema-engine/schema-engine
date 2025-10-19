@@ -1,4 +1,4 @@
-import type { ElementRegistration } from '@/types';
+import type { InputRegistration, StaticRegistration } from '@/types';
 import { BaseRegistry } from './base-registry';
 
 /**
@@ -6,10 +6,13 @@ import { BaseRegistry } from './base-registry';
  *
  * Manages registration and retrieval of form elements (inputs, content, decorations, interactive).
  *
- * Note: Uses ElementRegistration<any, any> internally to support registrations with different
- * config types. Type safety is maintained at the registration site via the builder.
+ * Note: Uses union of InputRegistration and StaticRegistration to support both input elements
+ * with handlers and static elements. Type safety is maintained at the registration site via branded types.
  */
-export class ElementRegistry extends BaseRegistry<string, ElementRegistration<any, any>> {
+export class ElementRegistry extends BaseRegistry<
+	string,
+	InputRegistration<any, any, any> | StaticRegistration<any, any, any>
+> {
 	get registryName(): string {
 		return 'element';
 	}

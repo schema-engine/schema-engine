@@ -1,4 +1,10 @@
-import type { ElementRegistration, LayoutRegistration, StepperRegistration, BuilderActionRegistration } from '@/types';
+import type {
+	InputRegistration,
+	StaticRegistration,
+	LayoutRegistration,
+	StepperRegistration,
+	BuilderActionRegistration,
+} from '@/types';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
 import { SchemaGenerator } from '@/engine/schema-generator';
@@ -22,9 +28,9 @@ export interface FormEngineSchemaMetadata {
  * Engine registries - internal storage for all registered components.
  */
 export interface EngineRegistries {
-	elements: Map<string, ElementRegistration<any>>;
-	layouts: Map<string, LayoutRegistration<any>>;
-	steppers: Map<string, StepperRegistration<any>>;
+	elements: Map<string, InputRegistration<any, any, any> | StaticRegistration<any, any, any>>;
+	layouts: Map<string, LayoutRegistration<any, any, any>>;
+	steppers: Map<string, StepperRegistration<any, any, any>>;
 	actions: Map<string, BuilderActionRegistration<any>>;
 	schemaRegistry: ReturnType<typeof z.registry<FormEngineSchemaMetadata>>;
 	formConfigSchema: z.ZodObject<any>;
@@ -78,16 +84,16 @@ export class FormEngine<
 	}
 
 	/**
-	 * Get a registered element by id.
+	 * Get an element registration by ID.
 	 */
-	getElement(id: string): ElementRegistration<any> | undefined {
+	getElement(id: string): InputRegistration<any, any, any> | StaticRegistration<any, any, any> | undefined {
 		return this.registries.elements.get(id);
 	}
 
 	/**
-	 * Get all registered elements.
+	 * Get all element registrations.
 	 */
-	getAllElements(): ElementRegistration[] {
+	getAllElements(): (InputRegistration<any, any, any> | StaticRegistration<any, any, any>)[] {
 		return Array.from(this.registries.elements.values());
 	}
 
@@ -108,14 +114,14 @@ export class FormEngine<
 	/**
 	 * Get a registered layout by id.
 	 */
-	getLayout(id: string): LayoutRegistration<any> | undefined {
+	getLayout(id: string): LayoutRegistration<any, any, any> | undefined {
 		return this.registries.layouts.get(id);
 	}
 
 	/**
 	 * Get all registered layouts.
 	 */
-	getAllLayouts(): LayoutRegistration[] {
+	getAllLayouts(): LayoutRegistration<any, any, any>[] {
 		return Array.from(this.registries.layouts.values());
 	}
 
@@ -136,14 +142,14 @@ export class FormEngine<
 	/**
 	 * Get a registered stepper by id.
 	 */
-	getStepper(id: string): StepperRegistration<any> | undefined {
+	getStepper(id: string): StepperRegistration<any, any, any> | undefined {
 		return this.registries.steppers.get(id);
 	}
 
 	/**
 	 * Get all registered steppers.
 	 */
-	getAllSteppers(): StepperRegistration[] {
+	getAllSteppers(): StepperRegistration<any, any, any>[] {
 		return Array.from(this.registries.steppers.values());
 	}
 
