@@ -7,7 +7,7 @@ describe('LayoutRegistry', () => {
 	let registry: LayoutRegistry;
 
 	const mockLayout: LayoutRegistration<{ theme: string }, any> = {
-		__id: 'card-layout',
+		$type: 'card-layout',
 		schema: z.object({ theme: z.string() }),
 		metadata: {
 			name: 'Card Layout',
@@ -17,7 +17,7 @@ describe('LayoutRegistry', () => {
 	};
 
 	const anotherLayout: LayoutRegistration<{ width: number }, any> = {
-		__id: 'full-width-layout',
+		$type: 'full-width-layout',
 		schema: z.object({ width: z.number() }),
 		metadata: {
 			name: 'Full Width Layout',

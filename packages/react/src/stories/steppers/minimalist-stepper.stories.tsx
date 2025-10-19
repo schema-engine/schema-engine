@@ -32,7 +32,7 @@ export const Default: Story = {
 		config: {
 			...FormTemplates.registrationForm,
 			stepper: {
-				__id: 'minimalist',
+				$type: 'minimalist',
 				showProgress: true,
 			},
 		},
@@ -44,7 +44,7 @@ export const WithProgress: Story = {
 		config: {
 			...FormTemplates.registrationForm,
 			stepper: {
-				__id: 'minimalist',
+				$type: 'minimalist',
 				showProgress: true,
 			},
 		},
@@ -56,7 +56,7 @@ export const WithoutProgress: Story = {
 		config: {
 			...FormTemplates.registrationForm,
 			stepper: {
-				__id: 'minimalist',
+				$type: 'minimalist',
 				showProgress: false,
 			},
 		},
@@ -70,7 +70,7 @@ export const LongForm: Story = {
 			title: 'Extended Registration Form',
 			description: 'A longer multi-step form with more steps',
 			stepper: {
-				__id: 'minimalist',
+				$type: 'minimalist',
 				showProgress: true,
 			},
 		},

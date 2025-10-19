@@ -5,7 +5,7 @@ import { BaseFieldSchema } from '@json-form-engine/core/schemas/base-field';
  * Submit button field schema
  */
 export const SubmitButtonSchema = BaseFieldSchema.extend({
-	__id: z.literal('submit'),
+	$type: z.literal('submit'),
 	label: z.string().default('Submit'),
 });
 

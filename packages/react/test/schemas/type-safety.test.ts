@@ -10,20 +10,20 @@ import type { ArrayElementsConfig } from '@/components/elements/shadcn/inputs/fo
 describe('Compile-Time Type Safety', () => {
 	test('should provide type safety for array elements configuration', () => {
 		const arrayConfig: ArrayElementsConfig = {
-			__id: 'arrayElements',
+			$type: 'arrayElements',
 			id: 'testArray',
 			name: 'testArray',
 			label: 'Test Array',
 			elements: [
 				{
-					__id: 'input',
+					$type: 'input',
 					id: 'name',
 					name: 'name',
 					label: 'Name',
 					inputType: 'text', 
 				},
 				{
-					__id: 'select',
+					$type: 'select',
 					id: 'category',
 					name: 'category',
 					label: 'Category',
@@ -36,20 +36,20 @@ describe('Compile-Time Type Safety', () => {
 		};
 
 		expect(arrayConfig.elements).toHaveLength(2);
-		expect(arrayConfig.elements[0].__id).toBe('input');
-		expect(arrayConfig.elements[1].__id).toBe('select');
+		expect(arrayConfig.elements[0].$type).toBe('input');
+		expect(arrayConfig.elements[1].$type).toBe('select');
 	});
 
 	test('should provide discriminated union type checking', () => {
 		const elements: ArrayElementsConfig['elements'] = [
 			{
-				__id: 'input',
+				$type: 'input',
 				id: 'text',
 				name: 'text',
 				inputType: 'email', 
 			},
 			{
-				__id: 'select',
+				$type: 'select',
 				id: 'dropdown',
 				name: 'dropdown',
 				options: [
@@ -58,12 +58,12 @@ describe('Compile-Time Type Safety', () => {
 				],
 			},
             {
-                __id:'arrayElements',
+                $type:'arrayElements',
                 id:'nestedArray',
                 name:'nestedArray',
                 elements:[
                     {
-                        __id:'input',
+                        $type:'input',
                         id:'nestedInput',
                         name:'nestedInput',
                         inputType:'text'
@@ -73,11 +73,11 @@ describe('Compile-Time Type Safety', () => {
 		];
 
 		for (const element of elements) {
-			if (element.__id === 'input') {
+			if (element.$type === 'input') {
 				expect(typeof element.inputType).toBe('string');
-			} else if (element.__id === 'select') {
+			} else if (element.$type === 'select') {
 				expect(Array.isArray(element.options)).toBe(true);
-			} else if (element.__id === 'arrayElements') {
+			} else if (element.$type === 'arrayElements') {
                 expect(Array.isArray(element.elements)).toBe(true);
             } 
 		}
@@ -86,7 +86,7 @@ describe('Compile-Time Type Safety', () => {
 	test('should provide type-safe field configuration access', () => {
 		const elements: ArrayElementsConfig['elements'] = [
 			{
-				__id: 'input',
+				$type: 'input',
 				id: 'email',
 				name: 'email',
 				inputType: 'email',
@@ -94,21 +94,21 @@ describe('Compile-Time Type Safety', () => {
 				spellCheck: false,
 			},
 			{
-				__id: 'textarea',
+				$type: 'textarea',
 				id: 'description',
 				name: 'description',
 				rows: 4,
 				resize: 'vertical',
 			},
 			{
-				__id: 'checkbox',
+				$type: 'checkbox',
 				id: 'agree',
 				name: 'agree',
 			},
 		];
 
 		for (const element of elements) {
-			switch (element.__id) {
+			switch (element.$type) {
 				case 'input':
 					expect(typeof element.inputType).toBe('string');
 					if ('autoComplete' in element) {
@@ -123,11 +123,11 @@ describe('Compile-Time Type Safety', () => {
 					break;
 
 				case 'checkbox':
-					expect(element.__id).toBe('checkbox');
+					expect(element.$type).toBe('checkbox');
 					break;
 
 				default:
-					expect(typeof element.__id).toBe('string');
+					expect(typeof element.$type).toBe('string');
 					break;
 			}
 		}
@@ -135,14 +135,14 @@ describe('Compile-Time Type Safety', () => {
 
 	test('should maintain type safety across nested structures', () => {
 		const complexArray: ArrayElementsConfig = {
-			__id: 'arrayElements',
+			$type: 'arrayElements',
 			id: 'products',
 			name: 'products',
 			label: 'Products',
 			description: 'Add your products',
 			elements: [
 				{
-					__id: 'input',
+					$type: 'input',
 					id: 'productName',
 					name: 'name',
 					label: 'Product Name',
@@ -150,7 +150,7 @@ describe('Compile-Time Type Safety', () => {
 					placeholder: 'Enter product name...',
 				},
 				{
-					__id: 'select',
+					$type: 'select',
 					id: 'category',
 					name: 'category',
 					label: 'Category',
@@ -161,7 +161,7 @@ describe('Compile-Time Type Safety', () => {
 					],
 				},
 				{
-					__id: 'number',
+					$type: 'number',
 					id: 'price',
 					name: 'price',
 					label: 'Price',
@@ -175,24 +175,24 @@ describe('Compile-Time Type Safety', () => {
 			removeButtonText: 'Remove Product',
 		};
 
-		expect(complexArray.elements[0].__id).toBe('input');
-		expect(complexArray.elements[1].__id).toBe('select');
-		expect(complexArray.elements[2].__id).toBe('number');
+		expect(complexArray.elements[0].$type).toBe('input');
+		expect(complexArray.elements[1].$type).toBe('select');
+		expect(complexArray.elements[2].$type).toBe('number');
 
 		const inputElement = complexArray.elements[0];
-		if (inputElement.__id === 'input') {
+		if (inputElement.$type === 'input') {
 			expect(inputElement.inputType).toBe('text');
 			expect(inputElement.placeholder).toBe('Enter product name...');
 		}
 
 		const selectElement = complexArray.elements[1];
-		if (selectElement.__id === 'select') {
+		if (selectElement.$type === 'select') {
 			expect(selectElement.options).toHaveLength(3);
 			expect(selectElement.options![0].value).toBe('electronics');
 		}
 
 		const numberElement = complexArray.elements[2];
-		if (numberElement.__id === 'number') {
+		if (numberElement.$type === 'number') {
 			expect(numberElement.min).toBe(0);
 			expect(numberElement.step).toBe(0.01);
 		}

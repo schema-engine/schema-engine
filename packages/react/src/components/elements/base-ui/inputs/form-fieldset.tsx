@@ -21,7 +21,7 @@ export function FormFieldSet({ ...config }: FieldSetConfigProps) {
 				<div className="space-y-4">
 					{config.elements.map((elementConfig, elementIndex) => (
 						<FormElement
-							key={`${elementConfig.id || elementConfig.__id}_${elementIndex}`}
+							key={`${elementConfig.id || elementConfig.$type}_${elementIndex}`}
 							config={
 								{
 									...elementConfig,

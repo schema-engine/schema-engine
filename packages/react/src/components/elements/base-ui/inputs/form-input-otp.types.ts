@@ -9,7 +9,7 @@ export const InputOTPFieldExtensionSchema = z.object({
 });
 
 export const InputOTPFieldConfigSchema = BaseFieldSchema.extend({
-	__id: z.literal('input-otp'),
+	$type: z.literal('input-otp'),
 	...InputOTPFieldExtensionSchema.shape,
 });
 

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { BaseStepperConfigSchema } from '@json-form-engine/core/steppers/types';
 
 export const DefaultStepperConfigSchema = BaseStepperConfigSchema.extend({
-	__id: z.literal('default'),
+	$type: z.literal('default'),
 	orientation: z
 		.enum(['horizontal', 'sidebar'])
 		.optional()
@@ -22,7 +22,7 @@ export type DefaultStepperConfig = z.infer<typeof DefaultStepperConfigSchema>;
 export type DefaultStepperProps = DefaultStepperConfig;
 
 export const defaultStepperExample: DefaultStepperConfig = {
-	__id: 'default',
+	$type: 'default',
 	orientation: 'horizontal',
 	showStepNumbers: true,
 	showStepTitles: true,

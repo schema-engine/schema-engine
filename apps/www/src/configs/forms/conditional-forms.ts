@@ -16,7 +16,7 @@ export const conditionalFormConfig: FormConfig = {
 			title: 'Form with Conditional Logic',
 			elements: [
 				{
-					__id: 'select',
+					$type: 'select',
 					id: 'user-type',
 					name: 'userType',
 					label: 'User Type',
@@ -30,7 +30,7 @@ export const conditionalFormConfig: FormConfig = {
 				},
 
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'first-name',
 					name: 'firstName',
@@ -46,7 +46,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'last-name',
 					name: 'lastName',
@@ -62,7 +62,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'company-name',
 					name: 'companyName',
@@ -78,7 +78,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'select',
+					$type: 'select',
 					id: 'company-size',
 					name: 'companySize',
 					label: 'Company Size',
@@ -98,7 +98,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'organization-name',
 					name: 'organizationName',
@@ -114,7 +114,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'tax-id',
 					name: 'taxId',
@@ -129,7 +129,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'email',
 					id: 'email',
 					name: 'email',
@@ -140,7 +140,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'tel',
 					id: 'phone',
 					name: 'phone',
@@ -148,7 +148,7 @@ export const conditionalFormConfig: FormConfig = {
 					rules: [ValidationPresets.string.required('Phone number is required')],
 				},
 				{
-					__id: 'checkbox',
+					$type: 'checkbox',
 					id: 'premium-features',
 					name: 'premiumFeatures',
 					label: 'Enable Premium Features',
@@ -162,7 +162,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'select',
+					$type: 'select',
 					id: 'premium-plan',
 					name: 'premiumPlan',
 					label: 'Premium Plan',
@@ -181,7 +181,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'arrayElements',
+					$type: 'arrayElements',
 					id: 'team-members',
 					name: 'teamMembers',
 					label: 'Team Members',
@@ -198,7 +198,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 					elements: [
 						{
-							__id: 'input',
+							$type: 'input',
 							inputType: 'text',
 							id: 'member-name',
 							name: 'name',
@@ -206,7 +206,7 @@ export const conditionalFormConfig: FormConfig = {
 							rules: [ValidationPresets.string.required('Name is required')],
 						},
 						{
-							__id: 'input',
+							$type: 'input',
 							inputType: 'email',
 							id: 'member-email',
 							name: 'email',
@@ -217,7 +217,7 @@ export const conditionalFormConfig: FormConfig = {
 							],
 						},
 						{
-							__id: 'select',
+							$type: 'select',
 							id: 'member-role',
 							name: 'role',
 							label: 'Role',
@@ -231,14 +231,14 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'checkbox',
+					$type: 'checkbox',
 					id: 'terms-agreement',
 					name: 'termsAgreement',
 					label: 'I agree to the Terms of Service and Privacy Policy',
 					rules: [ValidationPresets.boolean.required('You must agree to the terms')],
 				},
 				{
-					__id: 'submit',
+					$type: 'submit',
 					label: 'Submit Form',
 					name: 'submit',
 				},

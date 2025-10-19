@@ -39,11 +39,10 @@ function SingleStepFormElementsRenderer({ config }: { config: FormConfig }) {
 
 	if (!singleStep?.elements) return null;
 
-	if (singleStep.layout && '__id' in singleStep.layout) {
+	if (singleStep.layout && '$type' in singleStep.layout) {
 		return (
 			<LayoutRenderer
 				step={singleStep}
-				stepMeta={undefined} // No step metadata for single-step forms
 				formMeta={{
 					id: config.id,
 					title: config.title,
@@ -51,8 +50,13 @@ function SingleStepFormElementsRenderer({ config }: { config: FormConfig }) {
 				}}
 			>
 				<div style={gridStyles}>
-					{singleStep.elements.map((field) => (
-						<FormElement key={field.id} config={field} className={field.className} style={field.style} />
+					{singleStep.elements.map((field, index) => (
+						<FormElement
+							key={`field-${index}`}
+							config={field}
+							className={field.className}
+							style={field.style}
+						/>
 					))}
 				</div>
 			</LayoutRenderer>
@@ -61,8 +65,8 @@ function SingleStepFormElementsRenderer({ config }: { config: FormConfig }) {
 
 	return (
 		<div style={gridStyles}>
-			{singleStep.elements.map((field) => (
-				<FormElement key={field.id} config={field} className={field.className} style={field.style} />
+			{singleStep.elements.map((field, index) => (
+				<FormElement key={`field-${index}`} config={field} className={field.className} style={field.style} />
 			))}
 		</div>
 	);
@@ -176,7 +180,7 @@ function StepContent({ step, config }: { step: FormStep; config: FormConfig }) {
 
 	if (!step?.elements) return null;
 
-	if (step.layout && '__id' in step.layout) {
+	if (step.layout && '$type' in step.layout) {
 		return (
 			<LayoutRenderer
 				step={step}

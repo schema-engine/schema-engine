@@ -44,7 +44,7 @@ import type { FormConfig } from "@json-form-engine/core";
 const formConfig: FormConfig = {
 	fields: [
 		{
-			__id: "input",
+			$type: "input",
 			name: "email",
 			label: "Email",
 			inputType: "email",
@@ -52,14 +52,14 @@ const formConfig: FormConfig = {
 			rules: [{ type: "required", message: "Email required" }],
 		},
 		{
-			__id: "textarea",
+			$type: "textarea",
 			name: "message",
 			label: "Message",
 			placeholder: "Enter message...",
 			rows: 5,
 		},
 		{
-			__id: "checkbox-group",
+			$type: "checkbox-group",
 			name: "interests",
 			label: "Interests",
 			options: [
@@ -69,7 +69,7 @@ const formConfig: FormConfig = {
 			],
 		},
 		{
-			__id: "slider",
+			$type: "slider",
 			name: "rating",
 			label: "Rating",
 			min: 0,
@@ -77,7 +77,7 @@ const formConfig: FormConfig = {
 			step: 1,
 		},
 		{
-			__id: "submit",
+			$type: "submit",
 			name: "submit",
 			label: "Submit",
 		},

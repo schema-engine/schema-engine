@@ -16,7 +16,7 @@ export const basicFormConfig: FormConfig = {
 			title: 'Basic Information',
 			elements: [
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'name',
 					name: 'name',
@@ -25,7 +25,7 @@ export const basicFormConfig: FormConfig = {
 					placeholder: 'Enter your full name',
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'email',
 					id: 'email',
 					name: 'email',
@@ -37,7 +37,7 @@ export const basicFormConfig: FormConfig = {
 					placeholder: 'your.email@example.com',
 				},
 				{
-					__id: 'number',
+					$type: 'number',
 					id: 'age',
 					name: 'age',
 					label: 'Age',
@@ -48,7 +48,7 @@ export const basicFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'submit',
+					$type: 'submit',
 					label: 'Submit Form',
 					name: 'submit',
 				},
@@ -90,7 +90,7 @@ export const conditionalFormConfig: FormConfig = {
 			title: 'Conditional Fields',
 			elements: [
 				{
-					__id: 'select',
+					$type: 'select',
 					id: 'user-type',
 					name: 'userType',
 					label: 'User Type',
@@ -102,7 +102,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'school-name',
 					name: 'schoolName',
@@ -117,7 +117,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'select',
+					$type: 'select',
 					id: 'degree-level',
 					name: 'degreeLevel',
 					label: 'Degree Level',
@@ -136,7 +136,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'company-name',
 					name: 'companyName',
@@ -151,7 +151,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'job-title',
 					name: 'jobTitle',
@@ -166,7 +166,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'number',
+					$type: 'number',
 					id: 'years-experience',
 					name: 'yearsExperience',
 					label: 'Years of Experience',
@@ -181,7 +181,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'organization-name',
 					name: 'organizationName',
@@ -196,7 +196,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'number',
+					$type: 'number',
 					id: 'employee-count',
 					name: 'employeeCount',
 					label: 'Number of Employees',
@@ -211,7 +211,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'select',
+					$type: 'select',
 					id: 'industry',
 					name: 'industry',
 					label: 'Industry',
@@ -233,7 +233,7 @@ export const conditionalFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'submit',
+					$type: 'submit',
 					label: 'Submit Form',
 					name: 'submit',
 				},
@@ -256,7 +256,7 @@ export const arrayFormConfig: FormConfig = {
 			title: 'Array Fields',
 			elements: [
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'project-name',
 					name: 'projectName',
@@ -264,7 +264,7 @@ export const arrayFormConfig: FormConfig = {
 					rules: [ValidationPresets.string.required('Project name is required')],
 				},
 				{
-					__id: 'arrayElements',
+					$type: 'arrayElements',
 					id: 'team-members',
 					name: 'teamMembers',
 					label: 'Team Members',
@@ -272,7 +272,7 @@ export const arrayFormConfig: FormConfig = {
 					rules: [ValidationPresets.string.required('At least one team member is required')],
 					elements: [
 						{
-							__id: 'input',
+							$type: 'input',
 							inputType: 'text',
 							id: 'member-name',
 							name: 'name',
@@ -280,7 +280,7 @@ export const arrayFormConfig: FormConfig = {
 							rules: [ValidationPresets.string.required('Name is required')],
 						},
 						{
-							__id: 'input',
+							$type: 'input',
 							inputType: 'email',
 							id: 'member-email',
 							name: 'email',
@@ -291,7 +291,7 @@ export const arrayFormConfig: FormConfig = {
 							],
 						},
 						{
-							__id: 'select',
+							$type: 'select',
 							id: 'member-role',
 							name: 'role',
 							label: 'Role',
@@ -306,14 +306,14 @@ export const arrayFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'arrayElements',
+					$type: 'arrayElements',
 					id: 'project-tags',
 					name: 'tags',
 					label: 'Project Tags',
 					description: 'Add relevant tags for your project',
 					elements: [
 						{
-							__id: 'input',
+							$type: 'input',
 							inputType: 'text',
 							id: 'tag',
 							name: 'tag',
@@ -360,7 +360,7 @@ export const complexFormConfig: FormConfig = {
 			title: 'Complex Form',
 			elements: [
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'full-name',
 					name: 'fullName',
@@ -374,7 +374,7 @@ export const complexFormConfig: FormConfig = {
 					},
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'email',
 					id: 'email-address',
 					name: 'emailAddress',
@@ -385,7 +385,7 @@ export const complexFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'tel',
 					id: 'phone-number',
 					name: 'phoneNumber',
@@ -393,7 +393,7 @@ export const complexFormConfig: FormConfig = {
 					rules: [ValidationPresets.string.required('Phone number is required')],
 				},
 				{
-					__id: 'select',
+					$type: 'select',
 					id: 'country',
 					name: 'country',
 					label: 'Country',
@@ -409,7 +409,7 @@ export const complexFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'select',
+					$type: 'select',
 					id: 'subscription-type',
 					name: 'subscriptionType',
 					label: 'Subscription Type',
@@ -421,13 +421,13 @@ export const complexFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'checkbox',
+					$type: 'checkbox',
 					id: 'newsletter-subscribe',
 					name: 'newsletterSubscribe',
 					label: 'Subscribe to our newsletter for updates and promotions',
 				},
 				{
-					__id: 'checkbox',
+					$type: 'checkbox',
 					id: 'terms-agreement',
 					name: 'termsAgreement',
 					label: 'I agree to the Terms of Service and Privacy Policy',

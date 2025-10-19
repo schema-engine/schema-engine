@@ -29,7 +29,7 @@ export const responsiveFormConfig: FormConfig = {
 				{
 					id: 'firstName',
 					name: 'firstName',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					label: 'First Name',
 					placeholder: 'Enter your first name',
@@ -46,7 +46,7 @@ export const responsiveFormConfig: FormConfig = {
 				{
 					id: 'lastName',
 					name: 'lastName',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					label: 'Last Name',
 					placeholder: 'Enter your last name',
@@ -63,7 +63,7 @@ export const responsiveFormConfig: FormConfig = {
 				{
 					id: 'email',
 					name: 'email',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'email',
 					label: 'Email Address',
 					placeholder: 'your.email@example.com',
@@ -81,7 +81,7 @@ export const responsiveFormConfig: FormConfig = {
 				{
 					id: 'phone',
 					name: 'phone',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'tel',
 					label: 'Phone Number',
 					placeholder: '+1 (555) 000-0000',
@@ -95,7 +95,7 @@ export const responsiveFormConfig: FormConfig = {
 				{
 					id: 'company',
 					name: 'company',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					label: 'Company',
 					placeholder: 'Your company name',
@@ -111,7 +111,7 @@ export const responsiveFormConfig: FormConfig = {
 				{
 					id: 'position',
 					name: 'position',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					label: 'Position',
 					placeholder: 'Your job title',
@@ -127,7 +127,7 @@ export const responsiveFormConfig: FormConfig = {
 				{
 					id: 'experience',
 					name: 'experience',
-					__id: 'select',
+					$type: 'select',
 					label: 'Years of Experience',
 					rules: [ValidationPresets.string.required('Please select your experience level')],
 					options: [
@@ -148,7 +148,7 @@ export const responsiveFormConfig: FormConfig = {
 				{
 					id: 'interests',
 					name: 'interests',
-					__id: 'radio',
+					$type: 'radio',
 					label: 'Primary Area of Interest',
 					options: [
 						{ value: 'frontend', label: 'Frontend Development' },
@@ -168,7 +168,7 @@ export const responsiveFormConfig: FormConfig = {
 				{
 					id: 'message',
 					name: 'message',
-					__id: 'textarea',
+					$type: 'textarea',
 					label: 'Message',
 					placeholder: 'Tell us about yourself and your goals...',
 					rows: 4,
@@ -184,7 +184,7 @@ export const responsiveFormConfig: FormConfig = {
 				{
 					id: 'newsletter',
 					name: 'newsletter',
-					__id: 'checkbox',
+					$type: 'checkbox',
 					label: 'Subscribe to newsletter',
 					grid: {
 						responsive: {
@@ -198,7 +198,7 @@ export const responsiveFormConfig: FormConfig = {
 				{
 					id: 'terms',
 					name: 'terms',
-					__id: 'checkbox',
+					$type: 'checkbox',
 					label: 'I agree to the Terms and Conditions',
 					rules: [ValidationPresets.string.required('You must agree to the terms')],
 					grid: {
@@ -211,7 +211,7 @@ export const responsiveFormConfig: FormConfig = {
 					},
 				},
 				{
-					__id: 'submit',
+					$type: 'submit',
 					label: 'Submit Form',
 					name: 'submit',
 				},

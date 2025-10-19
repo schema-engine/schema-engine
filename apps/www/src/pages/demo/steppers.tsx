@@ -11,7 +11,7 @@ const minimalistStepperDemo: FormConfig = {
 	title: 'User Registration',
 	description: 'Complete your profile setup in 3 simple steps',
 	stepper: {
-		__id: 'minimalist',
+		$type: 'minimalist',
 		showProgress: true,
 	},
 	steps: [
@@ -22,7 +22,7 @@ const minimalistStepperDemo: FormConfig = {
 			elements: [
 				{
 					id: 'email',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'email',
 					name: 'email',
 					label: 'Email Address',
@@ -34,7 +34,7 @@ const minimalistStepperDemo: FormConfig = {
 				},
 				{
 					id: 'password',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'password',
 					name: 'password',
 					label: 'Password',
@@ -51,7 +51,7 @@ const minimalistStepperDemo: FormConfig = {
 				},
 				{
 					id: 'confirmPassword',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'password',
 					name: 'confirmPassword',
 					label: 'Confirm Password',
@@ -67,7 +67,7 @@ const minimalistStepperDemo: FormConfig = {
 			elements: [
 				{
 					id: 'firstName',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					name: 'firstName',
 					label: 'First Name',
@@ -80,7 +80,7 @@ const minimalistStepperDemo: FormConfig = {
 				},
 				{
 					id: 'lastName',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					name: 'lastName',
 					label: 'Last Name',
@@ -93,7 +93,7 @@ const minimalistStepperDemo: FormConfig = {
 				},
 				{
 					id: 'age',
-					__id: 'number',
+					$type: 'number',
 					name: 'age',
 					label: 'Age',
 					placeholder: '25',
@@ -112,7 +112,7 @@ const minimalistStepperDemo: FormConfig = {
 			elements: [
 				{
 					id: 'website',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'url',
 					name: 'website',
 					label: 'Personal Website (Optional)',
@@ -121,14 +121,14 @@ const minimalistStepperDemo: FormConfig = {
 				},
 				{
 					id: 'newsletter',
-					__id: 'checkbox',
+					$type: 'checkbox',
 					name: 'newsletter',
 					label: 'Subscribe to our newsletter for updates',
 					defaultValue: true,
 				},
 				{
 					id: 'terms',
-					__id: 'checkbox',
+					$type: 'checkbox',
 					name: 'terms',
 					label: 'I agree to the Terms of Service and Privacy Policy',
 					rules: [{ type: 'required', message: 'You must accept the terms to continue' }],
@@ -144,7 +144,7 @@ const verticalStepperDemo: FormConfig = {
 	title: 'Event Registration',
 	description: 'Register for our upcoming conference',
 	stepper: {
-		__id: 'default',
+		$type: 'default',
 		orientation: 'vertical',
 		showDescriptions: true,
 		allowClickNavigation: true,
@@ -158,7 +158,7 @@ const verticalStepperDemo: FormConfig = {
 			elements: [
 				{
 					id: 'fullName',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					name: 'fullName',
 					label: 'Full Name',
@@ -175,7 +175,7 @@ const verticalStepperDemo: FormConfig = {
 				},
 				{
 					id: 'company',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					name: 'company',
 					label: 'Company/Organization',
@@ -187,7 +187,7 @@ const verticalStepperDemo: FormConfig = {
 				},
 				{
 					id: 'jobTitle',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					name: 'jobTitle',
 					label: 'Job Title',
@@ -203,7 +203,7 @@ const verticalStepperDemo: FormConfig = {
 			elements: [
 				{
 					id: 'sessions',
-					__id: 'radio',
+					$type: 'radio',
 					name: 'sessions',
 					label: 'Conference Sessions',
 					options: [
@@ -229,7 +229,7 @@ const verticalStepperDemo: FormConfig = {
 			elements: [
 				{
 					id: 'dietaryRestrictions',
-					__id: 'radio',
+					$type: 'radio',
 					name: 'dietaryRestrictions',
 					label: 'Dietary Restrictions',
 					options: [
@@ -243,7 +243,7 @@ const verticalStepperDemo: FormConfig = {
 				},
 				{
 					id: 'specialRequests',
-					__id: 'textarea',
+					$type: 'textarea',
 					name: 'specialRequests',
 					label: 'Special Requests or Allergies',
 					placeholder: 'Please describe any special dietary needs or allergies...',
@@ -263,7 +263,7 @@ const defaultStepperDemo: FormConfig = {
 	title: 'Project Setup Wizard',
 	description: 'Configure your new project step by step',
 	stepper: {
-		__id: 'default',
+		$type: 'default',
 		showStepNumbers: true,
 		showStepTitles: true,
 		showStepDescriptions: false,
@@ -276,7 +276,7 @@ const defaultStepperDemo: FormConfig = {
 			elements: [
 				{
 					id: 'projectName',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					name: 'projectName',
 					label: 'Project Name',
@@ -294,7 +294,7 @@ const defaultStepperDemo: FormConfig = {
 				},
 				{
 					id: 'description',
-					__id: 'textarea',
+					$type: 'textarea',
 					name: 'description',
 					label: 'Project Description',
 					placeholder: 'Describe what your project does...',
@@ -314,7 +314,7 @@ const defaultStepperDemo: FormConfig = {
 			elements: [
 				{
 					id: 'framework',
-					__id: 'select',
+					$type: 'select',
 					name: 'framework',
 					label: 'Frontend Framework',
 					options: [
@@ -328,7 +328,7 @@ const defaultStepperDemo: FormConfig = {
 				},
 				{
 					id: 'features',
-					__id: 'radio',
+					$type: 'radio',
 					name: 'features',
 					label: 'Additional Features',
 					options: [
@@ -348,7 +348,7 @@ const defaultStepperDemo: FormConfig = {
 			elements: [
 				{
 					id: 'environment',
-					__id: 'radio',
+					$type: 'radio',
 					name: 'environment',
 					label: 'Target Environment',
 					options: [
@@ -360,7 +360,7 @@ const defaultStepperDemo: FormConfig = {
 				},
 				{
 					id: 'domain',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'url',
 					name: 'domain',
 					label: 'Custom Domain (Optional)',

@@ -67,7 +67,6 @@ export function CodePreview({
 }: CodePreviewProps) {
 	const [activeTab, setActiveTab] = useState<'code' | 'example'>('code');
 
-	// Always use tabs layout if variant is 'tabs' or on mobile
 	const useTabs = variant === 'tabs';
 
 	if (useTabs) {

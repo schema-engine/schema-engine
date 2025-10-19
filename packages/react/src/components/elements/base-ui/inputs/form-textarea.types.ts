@@ -10,7 +10,7 @@ export const TextareaFieldExtensionSchema = z.object({
 });
 
 export const TextareaFieldSchema = BaseFieldSchema.extend({
-	__id: z.literal('textarea'),
+	$type: z.literal('textarea'),
 	...TextareaFieldExtensionSchema.shape,
 });
 
@@ -23,7 +23,7 @@ export type TextareaFieldProps = TextareaFieldConfig & {
 };
 
 export const textareaFieldExample: TextareaFieldConfig = {
-	__id: 'textarea',
+	$type: 'textarea',
 	name: 'exampleField',
 	label: 'Example Textarea',
 	description: 'This is an example textarea field',

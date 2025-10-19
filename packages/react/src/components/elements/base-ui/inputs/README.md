@@ -67,7 +67,7 @@ const engine = new FormEngineBuilder()
 const formConfig = {
 	fields: [
 		{
-			__id: "input",
+			$type: "input",
 			name: "email",
 			label: "Email Address",
 			inputType: "email",
@@ -75,14 +75,14 @@ const formConfig = {
 			rules: [{ type: "required", message: "Email is required" }],
 		},
 		{
-			__id: "textarea",
+			$type: "textarea",
 			name: "message",
 			label: "Message",
 			placeholder: "Enter your message",
 			rows: 5,
 		},
 		{
-			__id: "select",
+			$type: "select",
 			name: "country",
 			label: "Country",
 			options: [
@@ -92,7 +92,7 @@ const formConfig = {
 			],
 		},
 		{
-			__id: "checkbox-group",
+			$type: "checkbox-group",
 			name: "interests",
 			label: "Interests",
 			options: [
@@ -102,7 +102,7 @@ const formConfig = {
 			],
 		},
 		{
-			__id: "slider",
+			$type: "slider",
 			name: "rating",
 			label: "Rating",
 			min: 0,
@@ -110,7 +110,7 @@ const formConfig = {
 			step: 1,
 		},
 		{
-			__id: "input-otp",
+			$type: "input-otp",
 			name: "otp",
 			label: "Verification Code",
 			length: 6,
@@ -125,7 +125,7 @@ const formConfig = {
 
 ```typescript
 {
-	__id: 'input',
+	$type: 'input',
 	name: 'fieldName',
 	label: 'Field Label',
 	inputType: 'text', // text, email, password, url, tel, search, date
@@ -142,7 +142,7 @@ const formConfig = {
 
 ```typescript
 {
-	__id: 'textarea',
+	$type: 'textarea',
 	name: 'fieldName',
 	label: 'Field Label',
 	rows: 5,
@@ -158,7 +158,7 @@ const formConfig = {
 
 ```typescript
 {
-	__id: 'select',
+	$type: 'select',
 	name: 'fieldName',
 	label: 'Choose Option',
 	options: [
@@ -174,7 +174,7 @@ const formConfig = {
 
 ```typescript
 {
-	__id: 'radio',
+	$type: 'radio',
 	name: 'fieldName',
 	label: 'Choose One',
 	options: [
@@ -189,7 +189,7 @@ const formConfig = {
 
 ```typescript
 {
-	__id: 'checkbox-group',
+	$type: 'checkbox-group',
 	name: 'fieldName',
 	label: 'Select Multiple',
 	options: [
@@ -204,7 +204,7 @@ const formConfig = {
 
 ```typescript
 {
-	__id: 'slider',
+	$type: 'slider',
 	name: 'fieldName',
 	label: 'Select Range',
 	min: 0,
@@ -218,7 +218,7 @@ const formConfig = {
 
 ```typescript
 {
-	__id: 'input-otp',
+	$type: 'input-otp',
 	name: 'fieldName',
 	label: 'Enter Code',
 	length: 6,
@@ -245,7 +245,7 @@ All fields support validation through the `rules` property:
 
 ```typescript
 {
-	__id: 'input',
+	$type: 'input',
 	name: 'email',
 	label: 'Email',
 	rules: [
@@ -263,7 +263,7 @@ Fields support inline styles and CSS classes:
 
 ```typescript
 {
-	__id: 'input',
+	$type: 'input',
 	name: 'fieldName',
 	label: 'Field',
 	style: {
@@ -280,7 +280,7 @@ Position fields in a CSS Grid:
 
 ```typescript
 {
-	__id: 'input',
+	$type: 'input',
 	name: 'firstName',
 	label: 'First Name',
 	grid: {
@@ -302,7 +302,7 @@ Show/hide or enable/disable fields based on conditions:
 
 ```typescript
 {
-	__id: 'textarea',
+	$type: 'textarea',
 	name: 'otherReason',
 	label: 'Please explain',
 	constraints: [

@@ -18,7 +18,7 @@ const cardLayoutDemo: FormConfig = {
 			title: 'Card Layout Test',
 
 			layout: {
-				__id: 'card',
+				$type: 'card',
 				padding: 'large',
 				shadow: true,
 				borderRadius: 'medium',
@@ -27,7 +27,7 @@ const cardLayoutDemo: FormConfig = {
 			elements: [
 				{
 					id: 'name',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					name: 'name',
 					label: 'Full Name',
@@ -35,7 +35,7 @@ const cardLayoutDemo: FormConfig = {
 				},
 				{
 					id: 'email',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'email',
 					name: 'email',
 					label: 'Email',
@@ -58,7 +58,7 @@ const splitScreenLayoutDemo: FormConfig = {
 			title: 'Split Screen Test',
 
 			layout: {
-				__id: 'split-screen',
+				$type: 'split-screen',
 				leftWidth: '40%',
 				rightWidth: '60%',
 				gap: '2rem',
@@ -67,7 +67,7 @@ const splitScreenLayoutDemo: FormConfig = {
 			elements: [
 				{
 					id: 'firstName',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					name: 'firstName',
 					label: 'First Name',
@@ -75,7 +75,7 @@ const splitScreenLayoutDemo: FormConfig = {
 				},
 				{
 					id: 'lastName',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					name: 'lastName',
 					label: 'Last Name',
@@ -83,7 +83,7 @@ const splitScreenLayoutDemo: FormConfig = {
 				},
 				{
 					id: 'bio',
-					__id: 'textarea',
+					$type: 'textarea',
 					name: 'bio',
 					label: 'Biography',
 					placeholder: 'Tell us about yourself...',
@@ -106,7 +106,7 @@ const heroLayoutDemo: FormConfig = {
 			title: 'Hero Layout Test',
 
 			layout: {
-				__id: 'hero-background',
+				$type: 'hero-background',
 				backgroundStyle: 'gradient',
 				textAlign: 'center',
 				maxWidth: '500px',
@@ -114,7 +114,7 @@ const heroLayoutDemo: FormConfig = {
 			elements: [
 				{
 					id: 'message',
-					__id: 'textarea',
+					$type: 'textarea',
 					name: 'message',
 					label: 'Your Message',
 					placeholder: 'What would you like to say?',
@@ -122,7 +122,7 @@ const heroLayoutDemo: FormConfig = {
 				},
 				{
 					id: 'priority',
-					__id: 'radio',
+					$type: 'radio',
 					name: 'priority',
 					label: 'Priority Level',
 					options: [
@@ -151,7 +151,7 @@ const simpleLayoutDemo: FormConfig = {
 			elements: [
 				{
 					id: 'testField',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					name: 'testField',
 					label: 'Test Field',

@@ -13,7 +13,7 @@ declare global {
 
 export const CheckboxGroupElementRegistration: ElementRegistration<CheckboxGroupFieldConfig, CheckboxGroupFieldProps> =
 	{
-		__id: 'checkbox-group',
+		$type: 'checkbox-group',
 		render: FormCheckboxGroup,
 		schema: CheckboxGroupFieldConfigSchema,
 		metadata: {

@@ -16,7 +16,7 @@ declare global {
 }
 
 export const RadioElementRegistration: ElementRegistration<RadioFieldConfig, RadioFieldProps> = {
-	__id: 'radio',
+	$type: 'radio',
 	render: FormRadio,
 	schema: RadioFieldConfigSchema,
 	metadata: {

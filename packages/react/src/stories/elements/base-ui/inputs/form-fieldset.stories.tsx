@@ -52,7 +52,7 @@ export const AddressFieldSet: Story = {
 				description: 'Enter your billing address details',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'street',
 						name: 'street',
@@ -61,7 +61,7 @@ export const AddressFieldSet: Story = {
 						rules: [ValidationPresets.string.required()],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'city',
 						name: 'city',
@@ -70,7 +70,7 @@ export const AddressFieldSet: Story = {
 						rules: [ValidationPresets.string.required()],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'state',
 						name: 'state',
@@ -79,7 +79,7 @@ export const AddressFieldSet: Story = {
 						rules: [ValidationPresets.string.required()],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'postalCode',
 						name: 'postalCode',
@@ -113,7 +113,7 @@ export const CreditCardFieldSet: Story = {
 				legend: 'Payment Information',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'cardNumber',
 						name: 'cardNumber',
@@ -125,7 +125,7 @@ export const CreditCardFieldSet: Story = {
 						],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'cardholderName',
 						name: 'cardholderName',
@@ -134,7 +134,7 @@ export const CreditCardFieldSet: Story = {
 						rules: [ValidationPresets.string.required()],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'expirationDate',
 						name: 'expirationDate',
@@ -146,7 +146,7 @@ export const CreditCardFieldSet: Story = {
 						],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'cvv',
 						name: 'cvv',
@@ -181,7 +181,7 @@ export const ContactInformationFieldSet: Story = {
 				description: 'Provide at least one contact method',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'email',
 						id: 'email',
 						name: 'email',
@@ -193,7 +193,7 @@ export const ContactInformationFieldSet: Story = {
 						],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'tel',
 						id: 'phone',
 						name: 'phone',
@@ -202,7 +202,7 @@ export const ContactInformationFieldSet: Story = {
 						rules: [ValidationPresets.string.required()],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'website',
 						name: 'website',
@@ -233,7 +233,7 @@ export const DateRangeFieldSet: Story = {
 				description: 'Enter start and end dates of employment',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'date',
 						id: 'startDate',
 						name: 'startDate',
@@ -241,7 +241,7 @@ export const DateRangeFieldSet: Story = {
 						rules: [ValidationPresets.string.required('Start date is required')],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'date',
 						id: 'endDate',
 						name: 'endDate',
@@ -271,7 +271,7 @@ export const PersonalInfoFieldSet: Story = {
 				legend: 'Basic Information',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'firstName',
 						name: 'firstName',
@@ -280,7 +280,7 @@ export const PersonalInfoFieldSet: Story = {
 						rules: [ValidationPresets.string.required('First name is required')],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'lastName',
 						name: 'lastName',
@@ -289,7 +289,7 @@ export const PersonalInfoFieldSet: Story = {
 						rules: [ValidationPresets.string.required('Last name is required')],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'date',
 						id: 'dateOfBirth',
 						name: 'dateOfBirth',
@@ -297,7 +297,7 @@ export const PersonalInfoFieldSet: Story = {
 						rules: [ValidationPresets.string.required('Date of birth is required')],
 					},
 					{
-						__id: 'select',
+						$type: 'select',
 						id: 'gender',
 						name: 'gender',
 						label: 'Gender',
@@ -332,7 +332,7 @@ export const NestedFieldSets: Story = {
 				legend: 'Profile Information',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'fullName',
 						name: 'fullName',
@@ -341,13 +341,13 @@ export const NestedFieldSets: Story = {
 						rules: [ValidationPresets.string.required()],
 					},
 					{
-						__id: 'fieldSet',
+						$type: 'fieldSet',
 						id: 'primaryAddress',
 						name: 'primaryAddress',
 						legend: 'Primary Address',
 						elements: [
 							{
-								__id: 'input',
+								$type: 'input',
 								inputType: 'text',
 								id: 'street',
 								name: 'street',
@@ -356,7 +356,7 @@ export const NestedFieldSets: Story = {
 								rules: [ValidationPresets.string.required()],
 							},
 							{
-								__id: 'input',
+								$type: 'input',
 								inputType: 'text',
 								id: 'city',
 								name: 'city',
@@ -365,7 +365,7 @@ export const NestedFieldSets: Story = {
 								rules: [ValidationPresets.string.required()],
 							},
 							{
-								__id: 'input',
+								$type: 'input',
 								inputType: 'text',
 								id: 'zipCode',
 								name: 'zipCode',
@@ -376,13 +376,13 @@ export const NestedFieldSets: Story = {
 						],
 					},
 					{
-						__id: 'fieldSet',
+						$type: 'fieldSet',
 						id: 'secondaryAddress',
 						name: 'secondaryAddress',
 						legend: 'Secondary Address (Optional)',
 						elements: [
 							{
-								__id: 'input',
+								$type: 'input',
 								inputType: 'text',
 								id: 'street',
 								name: 'street',
@@ -390,7 +390,7 @@ export const NestedFieldSets: Story = {
 								placeholder: '456 Oak Ave',
 							},
 							{
-								__id: 'input',
+								$type: 'input',
 								inputType: 'text',
 								id: 'city',
 								name: 'city',
@@ -398,7 +398,7 @@ export const NestedFieldSets: Story = {
 								placeholder: 'Los Angeles',
 							},
 							{
-								__id: 'input',
+								$type: 'input',
 								inputType: 'text',
 								id: 'zipCode',
 								name: 'zipCode',
@@ -430,7 +430,7 @@ export const FieldSetWithTextarea: Story = {
 				legend: 'Application Details',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'position',
 						name: 'position',
@@ -439,7 +439,7 @@ export const FieldSetWithTextarea: Story = {
 						rules: [ValidationPresets.string.required()],
 					},
 					{
-						__id: 'textarea',
+						$type: 'textarea',
 						id: 'coverLetter',
 						name: 'coverLetter',
 						label: 'Cover Letter',
@@ -451,7 +451,7 @@ export const FieldSetWithTextarea: Story = {
 						],
 					},
 					{
-						__id: 'textarea',
+						$type: 'textarea',
 						id: 'experience',
 						name: 'experience',
 						label: 'Relevant Experience',

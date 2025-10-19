@@ -71,5 +71,5 @@ export type ExtractStepperConfig<T> = T extends StepperComponent<infer C> ? C : 
  * Base stepper configuration that will be stored in the form configuration
  */
 export interface BaseStepperConfig {
-	__id: string;
+	$type: string;
 }

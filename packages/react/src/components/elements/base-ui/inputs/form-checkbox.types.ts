@@ -9,7 +9,7 @@ export const CheckboxFieldExtensionSchema = z.object({
 });
 
 export const CheckboxFieldConfigSchema = BaseFieldSchema.extend({
-	__id: z.literal('checkbox'),
+	$type: z.literal('checkbox'),
 	...CheckboxFieldExtensionSchema.shape,
 });
 

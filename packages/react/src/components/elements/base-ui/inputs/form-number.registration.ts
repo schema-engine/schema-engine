@@ -12,7 +12,7 @@ declare global {
 }
 
 export const NumberElementRegistration: ElementRegistration<NumberFieldConfig, NumberFieldProps> = {
-	__id: 'number',
+	$type: 'number',
 	render: FormNumber,
 	schema: NumberFieldConfigSchema,
 	metadata: {

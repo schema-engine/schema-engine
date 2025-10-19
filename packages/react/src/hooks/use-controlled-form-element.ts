@@ -89,7 +89,7 @@ export function useAdapterControlledFormElement(config: FormEngine.ElementConfig
 		errorProps,
 		containerStyles,
 		gridStyles,
-		config,
+		config: { ...config },
 		combineHandlers,
 	};
 }

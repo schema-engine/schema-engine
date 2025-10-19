@@ -6,7 +6,7 @@ import { z } from 'zod';
  */
 export const BaseStepperConfigSchema = z
 	.object({
-		__id: z.string().describe('Unique identifier for the stepper type'),
+		$type: z.string().describe('Unique identifier for the stepper type'),
 	})
 	.strict();
 
@@ -14,7 +14,7 @@ export const BaseStepperConfigSchema = z
  * Base stepper configuration that will be stored in the form configuration
  */
 export interface BaseStepperConfig {
-	__id: string;
+	$type: string;
 }
 
 /**

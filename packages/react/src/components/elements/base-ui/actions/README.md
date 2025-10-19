@@ -24,7 +24,7 @@ The submit button component provides a button that submits the form while displa
 
 ```typescript
 {
-	__id: 'submit',
+	$type: 'submit',
 	name: 'submitBtn',
 	label: 'Submit Form', // Button text
 	disabled: false, // Optional: disable button
@@ -45,13 +45,13 @@ const engine = new FormEngineBuilder().addElement(SubmitButtonElementRegistratio
 const formConfig = {
 	fields: [
 		{
-			__id: "input",
+			$type: "input",
 			name: "email",
 			label: "Email",
 			// ... other config
 		},
 		{
-			__id: "submit",
+			$type: "submit",
 			name: "submit",
 			label: "Send Email",
 		},
@@ -89,7 +89,7 @@ const formConfig = {
 
 ```typescript
 {
-	__id: 'submit',
+	$type: 'submit',
 	name: 'submit',
 	label: 'Submit',
 	className: 'btn-large btn-primary',
@@ -106,7 +106,7 @@ Show submit button based on conditions:
 
 ```typescript
 {
-	__id: 'submit',
+	$type: 'submit',
 	name: 'submit',
 	label: 'Complete Registration',
 	constraints: [
@@ -130,7 +130,7 @@ export function MyForm() {
 		<form>
 			{/* Form fields */}
 			<SubmitButton
-				__id="submit"
+				$type="submit"
 				name="submit"
 				label="Save Changes"
 				onClick={() => console.log("Submitted")}

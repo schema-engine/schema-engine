@@ -137,7 +137,7 @@ export function resetPlugin(config: ResetPluginConfig = {}): BuilderActionRegist
 	};
 
 	return {
-		__id: 'reset',
+		$type: 'reset',
 		schema: ResetActionSchema,
 		metadata: {
 			name: 'Reset Form',

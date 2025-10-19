@@ -26,7 +26,7 @@ When you import a registration, TypeScript merges these declarations, making the
 
 Each registration exports a registration object that contains:
 
-- `__id`: Unique identifier for the component
+- `$type`: Unique identifier for the component
 - `render`: The React component to render
 - `schema`: Validation schema for the component's configuration
 - `metadata`: Human-readable information about the component
@@ -141,7 +141,7 @@ declare global {
 }
 
 export const NewElementRegistration: ElementRegistration<NewElementConfig, NewElementProps> = {
-	__id: "new-element",
+	$type: "new-element",
 	render: NewElement,
 	schema: NewElementSchema,
 	metadata: {

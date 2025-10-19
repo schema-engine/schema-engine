@@ -34,12 +34,12 @@ describe("React Form Engine Builder", () => {
 			expect(engine.hasElement("input")).toBe(true);
 			const element = engine.getElement("input");
 			expect(element).toBeDefined();
-			expect(element?.__id).toBe("input");
+			expect(element?.$type).toBe("input");
 		});
 
 		test("should register multiple elements", () => {
 			const textareaElement = {
-				__id: "textarea",
+				$type: "textarea",
 				render: FormTextarea,
 				schema: TextareaFieldSchema,
 				metadata: {
@@ -96,7 +96,7 @@ describe("React Form Engine Builder", () => {
 			expect(engine.hasLayout("card")).toBe(true);
 			const layout = engine.getLayout("card");
 			expect(layout).toBeDefined();
-			expect(layout?.__id).toBe("card");
+			expect(layout?.$type).toBe("card");
 		});
 
 		test("should include layout metadata", () => {
@@ -121,7 +121,7 @@ describe("React Form Engine Builder", () => {
 			expect(engine.hasStepper("default")).toBe(true);
 			const stepper = engine.getStepper("default");
 			expect(stepper).toBeDefined();
-			expect(stepper?.__id).toBe("default");
+			expect(stepper?.$type).toBe("default");
 		});
 	});
 
@@ -186,7 +186,7 @@ describe("React Form Engine Builder", () => {
 	describe("Engine Retrieval", () => {
 		test("should retrieve all elements", () => {
 			const textareaElement = {
-				__id: "textarea",
+				$type: "textarea",
 				render: FormTextarea,
 				schema: TextareaFieldSchema,
 				metadata: {
@@ -221,7 +221,7 @@ describe("React Form Engine Builder", () => {
 			const builder = createReactFormEngine();
 			const elementReg = InputElementRegistration;
 
-			expect(elementReg.__id).toBe("input");
+			expect(elementReg.$type).toBe("input");
 			expect(elementReg.render).toBeDefined();
 			expect(typeof elementReg.render).toBe("function");
 		});
@@ -249,7 +249,7 @@ describe("React Form Engine Builder", () => {
 			expect(engine.hasStepper("default")).toBe(true);
 
 			const element = engine.getElement("input");
-			expect(element?.__id).toBe("input");
+			expect(element?.$type).toBe("input");
 			expect(element?.schema).toBe(InputFieldSchema);
 			expect(element?.metadata.name).toBe("Text Input Field");
 		});

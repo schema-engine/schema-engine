@@ -12,7 +12,7 @@ declare global {
 }
 
 export const SubmitButtonElementRegistration: ElementRegistration<SubmitButtonConfig, SubmitButtonProps> = {
-	__id: 'submit',
+	$type: 'submit',
 	render: SubmitButton,
 	schema: SubmitButtonSchema,
 	metadata: {

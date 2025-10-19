@@ -26,7 +26,7 @@ export const SelectFieldExtensionSchema = z.object({
  * Complete select field configuration schema
  */
 export const SelectFieldConfigSchema = BaseFieldSchema.extend({
-	__id: z.literal('select'),
+	$type: z.literal('select'),
 	...SelectFieldExtensionSchema.shape,
 });
 

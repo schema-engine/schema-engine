@@ -12,7 +12,7 @@ declare global {
 }
 
 export const InputOTPElementRegistration: ElementRegistration<InputOTPFieldConfig, InputOTPFieldProps> = {
-	__id: 'input-otp',
+	$type: 'input-otp',
 	render: FormInputOTP,
 	schema: InputOTPFieldConfigSchema,
 	metadata: {

@@ -172,7 +172,7 @@ export function notificationPlugin(
 	};
 
 	return {
-		__id: 'show_notification',
+		$type: 'show_notification',
 		schema: NotificationActionSchema,
 		metadata: {
 			name: 'Show Notification',

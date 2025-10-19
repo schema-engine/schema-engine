@@ -38,7 +38,7 @@ export const HorizontalDefault: Story = {
 		config: {
 			...FormTemplates.registrationForm,
 			stepper: {
-				__id: 'default',
+				$type: 'default',
 				orientation: 'horizontal',
 				showStepNumbers: true,
 				showStepTitles: true,
@@ -53,7 +53,7 @@ export const HorizontalWithDescriptions: Story = {
 		config: {
 			...FormTemplates.registrationForm,
 			stepper: {
-				__id: 'default',
+				$type: 'default',
 				orientation: 'horizontal',
 				showStepNumbers: true,
 				showStepTitles: true,
@@ -68,7 +68,7 @@ export const HorizontalNumbersOnly: Story = {
 		config: {
 			...FormTemplates.registrationForm,
 			stepper: {
-				__id: 'default',
+				$type: 'default',
 				orientation: 'horizontal',
 				showStepNumbers: true,
 				showStepTitles: false,
@@ -83,7 +83,7 @@ export const HorizontalFourSteps: Story = {
 		config: {
 			...FormTemplates.onboardingSurvey,
 			stepper: {
-				__id: 'default',
+				$type: 'default',
 				orientation: 'horizontal',
 				showStepNumbers: true,
 				showStepTitles: true,
@@ -98,7 +98,7 @@ export const SidebarDefault: Story = {
 		config: {
 			...FormTemplates.registrationForm,
 			stepper: {
-				__id: 'default',
+				$type: 'default',
 				orientation: 'sidebar',
 			},
 		},
@@ -110,7 +110,7 @@ export const SidebarFourSteps: Story = {
 		config: {
 			...FormTemplates.onboardingSurvey,
 			stepper: {
-				__id: 'default',
+				$type: 'default',
 				orientation: 'sidebar',
 			},
 		},
@@ -124,7 +124,7 @@ export const SidebarWithLongContent: Story = {
 			title: 'Extended Onboarding',
 			description: 'Complete profile setup with detailed information',
 			stepper: {
-				__id: 'default',
+				$type: 'default',
 				orientation: 'sidebar',
 			},
 		},

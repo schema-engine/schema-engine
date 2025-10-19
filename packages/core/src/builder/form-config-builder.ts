@@ -176,7 +176,7 @@ export class FormConfigBuilder<
 		}
 
 		try {
-			const validated = registration.schema.parse({ ...(config as object), __id: id });
+			const validated = registration.schema.parse({ ...(config as object), $type: id });
 			this.currentStep.elements.push(validated as FormEngine.ElementConfig);
 
 			logger.debug(`Added element: ${id}`, { config: validated });
@@ -212,7 +212,7 @@ export class FormConfigBuilder<
 		}
 
 		try {
-			const validated = registration.schema.parse({ ...(config as object), __id: id });
+			const validated = registration.schema.parse({ ...(config as object), $type: id });
 			this.currentStep.layout = validated as FormEngine.LayoutConfig;
 
 			logger.debug(`Set step layout: ${id}`, { config: validated });
@@ -244,7 +244,7 @@ export class FormConfigBuilder<
 		}
 
 		try {
-			const validated = registration.schema.parse({ ...((config as object) || {}), __id: id });
+			const validated = registration.schema.parse({ ...((config as object) || {}), $type: id });
 			this.config.stepper = validated as FormEngine.StepperConfig;
 
 			logger.debug(`Set stepper: ${id}`, { config: validated });

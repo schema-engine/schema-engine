@@ -16,7 +16,7 @@ export function ValidationDemo() {
 				title: 'Try Different Validation Rules',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'username',
 						name: 'username',
@@ -29,7 +29,7 @@ export function ValidationDemo() {
 						],
 					},
 					{
-						__id: 'number',
+						$type: 'number',
 						id: 'age',
 						name: 'age',
 						label: 'Age (18-100)',
@@ -41,7 +41,7 @@ export function ValidationDemo() {
 						],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'url',
 						id: 'website',
 						name: 'website',
@@ -50,7 +50,7 @@ export function ValidationDemo() {
 						rules: [ValidationPresets.string.url('Please enter a valid URL')],
 					},
 					{
-						__id: 'submit',
+						$type: 'submit',
 						id: 'validation-demo-submit',
 						label: 'Submit Form',
 						name: 'submit',

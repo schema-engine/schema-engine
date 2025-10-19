@@ -93,27 +93,27 @@ const configSchema = generator.generateFormConfigSchema(
 ```typescript
 // Define nested schemas
 const addressSchema = z.object({
-	__id: z.literal("address"),
+	$type: z.literal("address"),
 	street: z.string(),
 	city: z.string(),
 	country: z.string(),
 });
 
 const personSchema = z.object({
-	__id: z.literal("person"),
+	$type: z.literal("person"),
 	name: z.string(),
 	address: addressSchema, // Nested reference
 });
 
 const engine = new FormEngineBuilder()
 	.addElement({
-		__id: "address",
+		$type: "address",
 		schema: addressSchema,
 		metadata: { name: "Address", category: "input" },
 		render: () => null,
 	})
 	.addElement({
-		__id: "person",
+		$type: "person",
 		schema: personSchema,
 		metadata: { name: "Person", category: "input" },
 		render: () => null,
@@ -132,7 +132,7 @@ const schema = engine.generateJSONSchemaCollection();
 			"$id": "#/definitions/element:address",
 			"type": "object",
 			"properties": {
-				"__id": { "type": "string", "const": "address" },
+				"$type": { "type": "string", "const": "address" },
 				"street": { "type": "string" },
 				"city": { "type": "string" },
 				"country": { "type": "string" }
@@ -142,7 +142,7 @@ const schema = engine.generateJSONSchemaCollection();
 			"$id": "#/definitions/element:person",
 			"type": "object",
 			"properties": {
-				"__id": { "type": "string", "const": "person" },
+				"$type": { "type": "string", "const": "person" },
 				"name": { "type": "string" },
 				"address": { "$ref": "#/definitions/element:address" }
 			}
@@ -157,7 +157,7 @@ const schema = engine.generateJSONSchemaCollection();
 // Define recursive schema (e.g., nested comments)
 const commentSchema: z.ZodType<Comment> = z.lazy(() =>
 	z.object({
-		__id: z.literal("comment"),
+		$type: z.literal("comment"),
 		text: z.string(),
 		author: z.string(),
 		replies: z.array(commentSchema).optional(), // Recursive reference
@@ -166,7 +166,7 @@ const commentSchema: z.ZodType<Comment> = z.lazy(() =>
 
 const engine = new FormEngineBuilder()
 	.addElement({
-		__id: "comment",
+		$type: "comment",
 		schema: commentSchema,
 		metadata: { name: "Comment Thread", category: "input" },
 		render: () => null,
@@ -185,7 +185,7 @@ const schema = engine.generateJSONSchemaCollection();
 			"$id": "#/definitions/element:comment",
 			"type": "object",
 			"properties": {
-				"__id": { "type": "string", "const": "comment" },
+				"$type": { "type": "string", "const": "comment" },
 				"text": { "type": "string" },
 				"author": { "type": "string" },
 				"replies": {

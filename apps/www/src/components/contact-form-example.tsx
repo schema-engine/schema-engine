@@ -17,7 +17,7 @@ export function ContactFormExample() {
 				title: 'Contact Information',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						id: 'email',
 						name: 'email',
 						inputType: 'email',
@@ -31,7 +31,7 @@ export function ContactFormExample() {
 						],
 					},
 					{
-						__id: 'textarea',
+						$type: 'textarea',
 						id: 'message',
 						name: 'message',
 						label: 'Message',

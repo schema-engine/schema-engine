@@ -33,7 +33,7 @@ export function AsyncValidationDemo() {
 					'Test async validation by trying these values:\n\n**Username**: Try "admin", "root", "invalid", or "test" to see errors\n**Email**: Try domains like "@invalid.com" or "@tempmail.com", or use "invalid" in the email\n**Company Code**: Try "invalid" or valid formats like "ABC999" (not in system)\n**Dependent Field**: Set username to "admin", then try "user" here',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'username',
 						name: 'username',
@@ -62,7 +62,7 @@ export function AsyncValidationDemo() {
 						],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'email',
 						id: 'email',
 						name: 'email',
@@ -84,7 +84,7 @@ export function AsyncValidationDemo() {
 						],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'companyCode',
 						name: 'companyCode',
@@ -109,7 +109,7 @@ export function AsyncValidationDemo() {
 						],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'dependentField',
 						name: 'dependentField',
@@ -129,7 +129,7 @@ export function AsyncValidationDemo() {
 						],
 					},
 					{
-						__id: 'submit',
+						$type: 'submit',
 						label: 'Submit Form',
 						name: 'submit',
 					},

@@ -195,7 +195,7 @@ export function autoSavePlugin(config: AutoSavePluginConfig = {}): BuilderAction
 	};
 
 	return {
-		__id: 'auto_save',
+		$type: 'auto_save',
 		schema: AutoSaveActionSchema,
 		metadata: {
 			name: 'Auto Save',

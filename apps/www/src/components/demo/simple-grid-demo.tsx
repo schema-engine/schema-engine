@@ -25,7 +25,7 @@ const config: FormConfig = {
 			title: 'Responsive Grid Layout',
 			elements: [
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'firstName',
 					name: 'firstName',
@@ -34,7 +34,7 @@ const config: FormConfig = {
 					rules: [ValidationPresets.string.required('First name required')],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'lastName',
 					name: 'lastName',
@@ -43,7 +43,7 @@ const config: FormConfig = {
 					rules: [ValidationPresets.string.required('Last name required')],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'email',
 					id: 'email',
 					name: 'email',
@@ -55,7 +55,7 @@ const config: FormConfig = {
 					],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'tel',
 					id: 'phone',
 					name: 'phone',
@@ -63,7 +63,7 @@ const config: FormConfig = {
 					placeholder: '+1 (555) 123-4567',
 				},
 				{
-					__id: 'select',
+					$type: 'select',
 					id: 'country',
 					name: 'country',
 					label: 'Country',
@@ -75,7 +75,7 @@ const config: FormConfig = {
 					],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'city',
 					name: 'city',
@@ -83,7 +83,7 @@ const config: FormConfig = {
 					placeholder: 'New York',
 				},
 				{
-					__id: 'submit',
+					$type: 'submit',
 					label: 'Submit Form',
 					name: 'submit',
 				},

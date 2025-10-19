@@ -221,7 +221,7 @@ export function submitPlugin(config: SubmitPluginConfig = {}): BuilderActionRegi
 	};
 
 	return {
-		__id: 'submit',
+		$type: 'submit',
 		schema: SubmitActionSchema,
 		metadata: {
 			name: 'Submit Form',

@@ -246,7 +246,7 @@ export function gtmPlugin(config: GTMPluginConfig = {}): BuilderActionRegistrati
 	};
 
 	return {
-		__id: 'gtm_event',
+		$type: 'gtm_event',
 		schema: GTMEventActionSchema,
 		metadata: {
 			name: 'GTM Event',

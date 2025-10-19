@@ -68,11 +68,13 @@ import "./my-layout.css";
 ```
 
 This approach allows:
+
 - **Opt-in styling**: Only loaded when the layout is used
 - **Full customization**: Developers can skip the CSS import and use their own styling solution
 - **No global pollution**: Styles are scoped to the layout component
 
 You're free to:
+
 - Use the provided CSS structure (PostCSS with Tailwind)
 - Skip CSS imports entirely and use inline styles, CSS-in-JS, or utility classes
 - Create your own styling approach
@@ -110,7 +112,7 @@ export const MyLayout: React.FC<MyLayoutProps> = ({ children, className }) => {
 	return (
 		<div className={cn("my-layout", `my-layout--${variant}`, className)}>
 			{/* Header - only render if there's content to show */}
-			{(title || description || showStepCounter) ? (
+			{title || description || showStepCounter ? (
 				<div className="my-layout__header">
 					{title ? <h2 className="my-layout__title">{title}</h2> : null}
 					{description ? <p className="my-layout__description">{description}</p> : null}
@@ -137,7 +139,7 @@ import type { LayoutRegistration } from "@json-form-engine/core/types";
 import { MyLayoutConfigSchema } from "./my-layout.types";
 
 export const MyLayoutRegistration: LayoutRegistration<MyLayoutConfig, MyLayoutProps> = {
-	__id: "my-layout",
+	$type: "my-layout",
 	render: MyLayout,
 	schema: MyLayoutConfigSchema,
 	metadata: {
@@ -153,7 +155,7 @@ import { BaseLayoutConfigSchema } from "@json-form-engine/core/layouts/types";
 import type { ReactNode } from "react";
 
 export const MyLayoutConfigSchema = BaseLayoutConfigSchema.extend({
-	__id: z.literal("my-layout"),
+	$type: z.literal("my-layout"),
 	variant: z.enum(["default", "compact", "spacious"]).optional(),
 	backgroundColor: z.string().optional(),
 });
@@ -190,7 +192,7 @@ export { MyLayoutRegistration };
 const showStepCounter = typeof step.index === "number" && typeof step.total === "number";
 
 {
-	(title || description || showStepCounter) ? (
+	title || description || showStepCounter ? (
 		<div className="layout__header">{/* header content */}</div>
 	) : null;
 }

@@ -16,7 +16,7 @@ declare global {
 }
 
 export const SelectElementRegistration: ElementRegistration<SelectFieldConfig, SelectFieldProps> = {
-	__id: 'select',
+	$type: 'select',
 	render: FormSelect,
 	schema: SelectFieldConfigSchema,
 	metadata: {

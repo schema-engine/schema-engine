@@ -66,7 +66,7 @@ const formConfig: FormConfig = {
 			title: "Your Information",
 			elements: [
 				{
-					__id: "input",
+					$type: "input",
 					id: "name",
 					name: "name",
 					label: "Full Name",
@@ -77,7 +77,7 @@ const formConfig: FormConfig = {
 					],
 				},
 				{
-					__id: "input",
+					$type: "input",
 					id: "email",
 					name: "email",
 					label: "Email Address",
@@ -88,7 +88,7 @@ const formConfig: FormConfig = {
 					],
 				},
 				{
-					__id: "textarea",
+					$type: "textarea",
 					id: "message",
 					name: "message",
 					label: "Message",
@@ -203,7 +203,7 @@ Pre-built form field components with validation and styling:
 
 ```typescript
 {
-  __id: 'select',
+  $type: 'select',
   id: 'country',
   name: 'country',
   label: 'Country',
@@ -290,7 +290,7 @@ For complete documentation on validation rules, custom validators, and advanced 
 
 ```typescript
 {
-  __id: 'input',
+  $type: 'input',
   id: 'phone',
   name: 'phone',
   label: 'Phone Number',
@@ -362,21 +362,21 @@ Forms support responsive grid layouts using CSS Grid:
   },
   elements: [
     {
-      __id: 'input',
+      $type: 'input',
       id: 'firstName',
       name: 'firstName',
       label: 'First Name',
       grid: { column: '1 / 7' } // Takes 6 columns
     },
     {
-      __id: 'input',
+      $type: 'input',
       id: 'lastName',
       name: 'lastName',
       label: 'Last Name',
       grid: { column: '7 / 13' } // Takes 6 columns
     },
     {
-      __id: 'input',
+      $type: 'input',
       id: 'email',
       name: 'email',
       label: 'Email',
@@ -506,7 +506,7 @@ Apply dynamic visibility and behavior based on form values:
 
 ```typescript
 {
-  __id: 'input',
+  $type: 'input',
   id: 'other-reason',
   name: 'otherReason',
   label: 'Please specify',
@@ -531,7 +531,7 @@ Track and manage user consent:
 
 ```typescript
 {
-  __id: 'checkbox',
+  $type: 'checkbox',
   id: 'gdpr-consent',
   name: 'gdprConsent',
   label: 'I agree to the privacy policy',
@@ -598,7 +598,7 @@ export function CustomDatePicker(props) {
 
 // 2. Create schema
 export const CustomDatePickerSchema = z.object({
-	__id: z.literal("custom-date-picker"),
+	$type: z.literal("custom-date-picker"),
 	id: z.string(),
 	name: z.string(),
 	label: z.string(),
@@ -608,7 +608,7 @@ export const CustomDatePickerSchema = z.object({
 
 // 3. Create registration
 export const CustomDatePickerRegistration = {
-	__id: "custom-date-picker",
+	$type: "custom-date-picker",
 	render: CustomDatePicker,
 	schema: CustomDatePickerSchema,
 	metadata: {
@@ -650,7 +650,7 @@ export const CustomLayoutConfigSchema = z.object({
 
 // 3. Create registration
 export const CustomLayoutRegistration = {
-	__id: "custom-layout",
+	$type: "custom-layout",
 	render: CustomLayout,
 	schema: CustomLayoutConfigSchema,
 	metadata: {
@@ -695,7 +695,7 @@ export const CustomStepperConfigSchema = z.object({
 
 // 3. Create registration
 export const CustomStepperRegistration = {
-	__id: "custom-stepper",
+	$type: "custom-stepper",
 	render: CustomStepper,
 	schema: CustomStepperConfigSchema,
 	metadata: {
@@ -730,7 +730,7 @@ const config: FormConfig = {
 			id: "step-1",
 			elements: [
 				{
-					__id: "input", // TypeScript validates this exists
+					$type: "input", // TypeScript validates this exists
 					id: "name",
 					name: "name",
 					inputType: "text", // TypeScript validates valid input types

@@ -57,19 +57,19 @@ describe('FormEngine Type Safety', () => {
 
 		const inputElement = engine.getElement('input');
 		expect(inputElement).toBeDefined();
-		expect(inputElement?.__id).toBe('input');
+		expect(inputElement?.$type).toBe('input');
 
 		const textareaElement = engine.getElement('textarea');
 		expect(textareaElement).toBeDefined();
-		expect(textareaElement?.__id).toBe('textarea');
+		expect(textareaElement?.$type).toBe('textarea');
 
 		const nonExistent = engine.getElement('nonexistent');
 		expect(nonExistent).toBeUndefined();
 
 		const allElements = engine.getAllElements();
 		expect(allElements).toHaveLength(2);
-		expect(allElements[0].__id).toMatch(/^(input|textarea)$/);
-		expect(allElements[1].__id).toMatch(/^(input|textarea)$/);
+		expect(allElements[0].$type).toMatch(/^(input|textarea)$/);
+		expect(allElements[1].$type).toMatch(/^(input|textarea)$/);
 
 		const elementIds = engine.getElementIds();
 		expect(elementIds).toContain('input');
@@ -85,14 +85,14 @@ describe('FormEngine Type Safety', () => {
 
 		const cardLayout = engine.getLayout('card');
 		expect(cardLayout).toBeDefined();
-		expect(cardLayout?.__id).toBe('card');
+		expect(cardLayout?.$type).toBe('card');
 
 		const nonExistent = engine.getLayout('nonexistent');
 		expect(nonExistent).toBeUndefined();
 
 		const allLayouts = engine.getAllLayouts();
 		expect(allLayouts).toHaveLength(1);
-		expect(allLayouts[0].__id).toBe('card');
+		expect(allLayouts[0].$type).toBe('card');
 
 		const layoutIds = engine.getLayoutIds();
 		expect(layoutIds).toContain('card');
@@ -107,14 +107,14 @@ describe('FormEngine Type Safety', () => {
 
 		const defaultStepper = engine.getStepper('default');
 		expect(defaultStepper).toBeDefined();
-		expect(defaultStepper?.__id).toBe('default');
+		expect(defaultStepper?.$type).toBe('default');
 
 		const nonExistent = engine.getStepper('nonexistent');
 		expect(nonExistent).toBeUndefined();
 
 		const allSteppers = engine.getAllSteppers();
 		expect(allSteppers).toHaveLength(1);
-		expect(allSteppers[0].__id).toBe('default');
+		expect(allSteppers[0].$type).toBe('default');
 
 		const stepperIds = engine.getStepperIds();
 		expect(stepperIds).toContain('default');

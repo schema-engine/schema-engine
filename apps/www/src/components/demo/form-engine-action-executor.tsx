@@ -21,7 +21,7 @@ const formConfigWithActions: FormConfig = {
 			description: 'Fill out the form below to see the action system in action',
 			elements: [
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'name',
 					name: 'name',
@@ -33,7 +33,7 @@ const formConfigWithActions: FormConfig = {
 					],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'email',
 					id: 'email',
 					name: 'email',
@@ -45,7 +45,7 @@ const formConfigWithActions: FormConfig = {
 					],
 				},
 				{
-					__id: 'textarea',
+					$type: 'textarea',
 					id: 'message',
 					name: 'message',
 					label: 'Message',
@@ -53,13 +53,13 @@ const formConfigWithActions: FormConfig = {
 					rules: [{ type: 'required', message: 'Message is required' }],
 				},
 				{
-					__id: 'checkbox',
+					$type: 'checkbox',
 					id: 'subscribe',
 					name: 'subscribe',
 					label: 'Subscribe to newsletter',
 				},
 				{
-					__id: 'submit',
+					$type: 'submit',
 					label: 'Submit Form',
 					name: 'submit',
 				},

@@ -315,7 +315,7 @@ export const MyStepperRegistration: StepperRegistration<
 	MyStepperConfig,
 	{ children?: React.ReactNode }
 > = {
-	__id: "my-stepper",
+	$type: "my-stepper",
 	render: MyStepperComposed,
 	schema: MyStepperConfigSchema,
 	metadata: {
@@ -332,7 +332,7 @@ import { z } from "zod";
 import { BaseStepperConfigSchema } from "@json-form-engine/core/steppers/types";
 
 export const MyStepperConfigSchema = BaseStepperConfigSchema.extend({
-	__id: z.literal("my-stepper"),
+	$type: z.literal("my-stepper"),
 	showProgress: z.boolean().optional().describe("Display progress bar"),
 	variant: z.enum(["default", "compact", "spacious"]).optional(),
 });
@@ -342,7 +342,7 @@ export type MyStepperConfig = z.infer<typeof MyStepperConfigSchema>;
 export type MyStepperProps = { children?: React.ReactNode };
 
 export const myStepperExample: MyStepperConfig = {
-	__id: "my-stepper",
+	$type: "my-stepper",
 	showProgress: true,
 	variant: "default",
 };
@@ -619,7 +619,7 @@ Register the composed component for default behavior:
 // Automatically used when stepper is referenced in form config
 {
 	"stepper": {
-		"__id": "my-stepper",
+		"$type": "my-stepper",
 		"showProgress": true
 	}
 }
@@ -634,7 +634,7 @@ Test your stepper with various scenarios:
 const multiStepForm = {
 	id: "test-form",
 	mode: "free",
-	stepper: { __id: "my-stepper" },
+	stepper: { $type: "my-stepper" },
 	steps: [
 		{
 			id: "step-1",
@@ -664,7 +664,7 @@ const multiStepForm = {
 const twoStepForm = {
 	id: "test-form",
 	mode: "free",
-	stepper: { __id: "my-stepper" },
+	stepper: { $type: "my-stepper" },
 	steps: [
 		{
 			id: "step-1",
@@ -687,7 +687,7 @@ const twoStepForm = {
 const validatedSteps = {
 	id: "test-form",
 	mode: "free",
-	stepper: { __id: "my-stepper" },
+	stepper: { $type: "my-stepper" },
 	steps: [
 		{
 			id: "step-1",

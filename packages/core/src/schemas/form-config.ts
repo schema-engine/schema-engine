@@ -13,14 +13,14 @@ export type { FormActionConfig } from '../actions/types';
  * @example
  * ```ts
  * const MyLayoutConfigSchema = StepLayoutConfigSchema.extend({
- *   __id: z.literal('my-layout'),
+ *   $type: z.literal('my-layout'),
  *   columns: z.number(),
  *   gap: z.string()
  * });
  * ```
  */
 export const StepLayoutConfigSchema = z.looseObject({
-	__id: z.string(),
+	$type: z.string(),
 });
 
 /**
@@ -32,13 +32,13 @@ export const StepLayoutConfigSchema = z.looseObject({
  * @example
  * ```ts
  * const MyStepperConfigSchema = BaseStepperConfigSchema.extend({
- *   __id: z.literal('my-stepper'),
+ *   $type: z.literal('my-stepper'),
  *   orientation: z.enum(['horizontal', 'vertical'])
  * });
  * ```
  */
 export const FormStepperConfigSchema = z.looseObject({
-	__id: z.string(),
+	$type: z.string(),
 });
 
 /**

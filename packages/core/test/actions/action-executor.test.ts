@@ -26,7 +26,7 @@ const createMockAction = (
 	defaultTriggers: ActionTrigger[] = []
 ): BuilderActionRegistration => {
 	return {
-		__id: type,
+		$type: type,
 		schema: z.object({
 			id: z.string(),
 			type: z.literal(type),

@@ -7,7 +7,7 @@ describe('ElementRegistry', () => {
 	let registry: ElementRegistry;
 
 	const mockElement: ElementRegistration<{ label: string }, any> = {
-		__id: 'text-input',
+		$type: 'text-input',
 		schema: z.object({ label: z.string() }),
 		metadata: {
 			name: 'Text Input',
@@ -18,7 +18,7 @@ describe('ElementRegistry', () => {
 	};
 
 	const anotherElement: ElementRegistration<{ placeholder: string }, any> = {
-		__id: 'email-input',
+		$type: 'email-input',
 		schema: z.object({ placeholder: z.string() }),
 		metadata: {
 			name: 'Email Input',

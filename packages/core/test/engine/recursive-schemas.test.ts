@@ -7,7 +7,7 @@ describe('Recursive Schema Handling', () => {
 	describe('Self-Referential Schemas', () => {
 		test('should handle nested comments without max call stack error', () => {
 			type Comment = {
-				__id: 'comment';
+				$type: 'comment';
 				text: string;
 				author: string;
 				replies?: Comment[];
@@ -15,7 +15,7 @@ describe('Recursive Schema Handling', () => {
 
 			const commentSchema: z.ZodType<Comment> = z.lazy(() =>
 				z.object({
-					__id: z.literal('comment'),
+					$type: z.literal('comment'),
 					text: z.string(),
 					author: z.string(),
 					replies: z.array(commentSchema).optional(),
@@ -23,7 +23,7 @@ describe('Recursive Schema Handling', () => {
 			) as z.ZodType<Comment>;
 
 			const commentReg: ElementRegistration = {
-				__id: 'comment',
+				$type: 'comment',
 				schema: commentSchema,
 				metadata: { name: 'Comment Thread', category: 'input' },
 				render: () => null,
@@ -39,21 +39,21 @@ describe('Recursive Schema Handling', () => {
 
 		test('should handle tree structure without infinite recursion', () => {
 			type TreeNode = {
-				__id: 'tree-node';
+				$type: 'tree-node';
 				value: string;
 				children?: TreeNode[];
 			};
 
 			const treeNodeSchema: z.ZodType<TreeNode> = z.lazy(() =>
 				z.object({
-					__id: z.literal('tree-node'),
+					$type: z.literal('tree-node'),
 					value: z.string(),
 					children: z.array(treeNodeSchema).optional(),
 				}),
 			) as z.ZodType<TreeNode>;
 
 			const treeReg: ElementRegistration = {
-				__id: 'tree-node',
+				$type: 'tree-node',
 				schema: treeNodeSchema,
 				metadata: { name: 'Tree Node', category: 'input' },
 				render: () => null,
@@ -71,13 +71,13 @@ describe('Recursive Schema Handling', () => {
 	describe('Mutual Recursion (User <-> Post pattern)', () => {
 		test('should handle User-Post circular reference without max call stack error', () => {
 			type User = {
-				__id: 'user';
+				$type: 'user';
 				name: string;
 				posts?: Post[];
 			};
 
 			type Post = {
-				__id: 'post';
+				$type: 'post';
 				title: string;
 				content: string;
 				author?: User;
@@ -85,7 +85,7 @@ describe('Recursive Schema Handling', () => {
 
 			const userSchema: z.ZodType<User> = z.lazy(() =>
 				z.object({
-					__id: z.literal('user'),
+					$type: z.literal('user'),
 					name: z.string(),
 					posts: z.array(postSchema).optional(),
 				}),
@@ -93,7 +93,7 @@ describe('Recursive Schema Handling', () => {
 
 			const postSchema: z.ZodType<Post> = z.lazy(() =>
 				z.object({
-					__id: z.literal('post'),
+					$type: z.literal('post'),
 					title: z.string(),
 					content: z.string(),
 					author: userSchema.optional(),
@@ -101,14 +101,14 @@ describe('Recursive Schema Handling', () => {
 			) as z.ZodType<Post>;
 
 			const userReg: ElementRegistration = {
-				__id: 'user',
+				$type: 'user',
 				schema: userSchema,
 				metadata: { name: 'User', category: 'input' },
 				render: () => null,
 			};
 
 			const postReg: ElementRegistration = {
-				__id: 'post',
+				$type: 'post',
 				schema: postSchema,
 				metadata: { name: 'Post', category: 'input' },
 				render: () => null,
@@ -125,13 +125,13 @@ describe('Recursive Schema Handling', () => {
 
 		test('should generate correct $ref for User-Post circular references', () => {
 			type User = {
-				__id: 'user';
+				$type: 'user';
 				name: string;
 				posts?: Post[];
 			};
 
 			type Post = {
-				__id: 'post';
+				$type: 'post';
 				title: string;
 				content: string;
 				author?: User;
@@ -139,7 +139,7 @@ describe('Recursive Schema Handling', () => {
 
 			const userSchema: z.ZodType<User> = z.lazy(() =>
 				z.object({
-					__id: z.literal('user'),
+					$type: z.literal('user'),
 					name: z.string(),
 					posts: z.array(postSchema).optional(),
 				}),
@@ -147,7 +147,7 @@ describe('Recursive Schema Handling', () => {
 
 			const postSchema: z.ZodType<Post> = z.lazy(() =>
 				z.object({
-					__id: z.literal('post'),
+					$type: z.literal('post'),
 					title: z.string(),
 					content: z.string(),
 					author: userSchema.optional(),
@@ -155,14 +155,14 @@ describe('Recursive Schema Handling', () => {
 			) as z.ZodType<Post>;
 
 			const userReg: ElementRegistration = {
-				__id: 'user',
+				$type: 'user',
 				schema: userSchema,
 				metadata: { name: 'User', category: 'input' },
 				render: () => null,
 			};
 
 			const postReg: ElementRegistration = {
-				__id: 'post',
+				$type: 'post',
 				schema: postSchema,
 				metadata: { name: 'Post', category: 'input' },
 				render: () => null,
@@ -190,38 +190,38 @@ describe('Recursive Schema Handling', () => {
 	describe('Deep Nesting', () => {
 		test('should handle deeply nested schemas without performance issues', () => {
 			type Organization = {
-				__id: 'organization';
+				$type: 'organization';
 				name: string;
 				departments?: Department[];
 			};
 
 			type Department = {
-				__id: 'department';
+				$type: 'department';
 				name: string;
 				teams?: Team[];
 			};
 
 			type Team = {
-				__id: 'team';
+				$type: 'team';
 				name: string;
 				members?: Member[];
 			};
 
 			type Member = {
-				__id: 'member';
+				$type: 'member';
 				name: string;
 				projects?: Project[];
 			};
 
 			type Project = {
-				__id: 'project';
+				$type: 'project';
 				name: string;
 				organization?: Organization; 
 			};
 
 			const organizationSchema: z.ZodType<Organization> = z.lazy(() =>
 				z.object({
-					__id: z.literal('organization'),
+					$type: z.literal('organization'),
 					name: z.string(),
 					departments: z.array(departmentSchema).optional(),
 				}),
@@ -229,7 +229,7 @@ describe('Recursive Schema Handling', () => {
 
 			const departmentSchema: z.ZodType<Department> = z.lazy(() =>
 				z.object({
-					__id: z.literal('department'),
+					$type: z.literal('department'),
 					name: z.string(),
 					teams: z.array(teamSchema).optional(),
 				}),
@@ -237,7 +237,7 @@ describe('Recursive Schema Handling', () => {
 
 			const teamSchema: z.ZodType<Team> = z.lazy(() =>
 				z.object({
-					__id: z.literal('team'),
+					$type: z.literal('team'),
 					name: z.string(),
 					members: z.array(memberSchema).optional(),
 				}),
@@ -245,7 +245,7 @@ describe('Recursive Schema Handling', () => {
 
 			const memberSchema: z.ZodType<Member> = z.lazy(() =>
 				z.object({
-					__id: z.literal('member'),
+					$type: z.literal('member'),
 					name: z.string(),
 					projects: z.array(projectSchema).optional(),
 				}),
@@ -253,7 +253,7 @@ describe('Recursive Schema Handling', () => {
 
 			const projectSchema: z.ZodType<Project> = z.lazy(() =>
 				z.object({
-					__id: z.literal('project'),
+					$type: z.literal('project'),
 					name: z.string(),
 					organization: organizationSchema.optional(),
 				}),
@@ -261,31 +261,31 @@ describe('Recursive Schema Handling', () => {
 
 			const engine = new FormEngineBuilder()
 				.addElement({
-					__id: 'organization',
+					$type: 'organization',
 					schema: organizationSchema,
 					metadata: { name: 'Organization', category: 'input' },
 					render: () => null,
 				})
 				.addElement({
-					__id: 'department',
+					$type: 'department',
 					schema: departmentSchema,
 					metadata: { name: 'Department', category: 'input' },
 					render: () => null,
 				})
 				.addElement({
-					__id: 'team',
+					$type: 'team',
 					schema: teamSchema,
 					metadata: { name: 'Team', category: 'input' },
 					render: () => null,
 				})
 				.addElement({
-					__id: 'member',
+					$type: 'member',
 					schema: memberSchema,
 					metadata: { name: 'Member', category: 'input' },
 					render: () => null,
 				})
 				.addElement({
-					__id: 'project',
+					$type: 'project',
 					schema: projectSchema,
 					metadata: { name: 'Project', category: 'input' },
 					render: () => null,
@@ -311,14 +311,14 @@ describe('Recursive Schema Handling', () => {
 	describe('Form Config Schema with Recursive Elements', () => {
 		test('should generate form config schema with recursive elements', () => {
 			type Comment = {
-				__id: 'comment';
+				$type: 'comment';
 				text: string;
 				replies?: Comment[];
 			};
 
 			const commentSchema: z.ZodType<Comment> = z.lazy(() =>
 				z.object({
-					__id: z.literal('comment'),
+					$type: z.literal('comment'),
 					text: z.string(),
 					replies: z.array(commentSchema).optional(),
 				}),
@@ -326,7 +326,7 @@ describe('Recursive Schema Handling', () => {
 
 			const engine = new FormEngineBuilder()
 				.addElement({
-					__id: 'comment',
+					$type: 'comment',
 					schema: commentSchema,
 					metadata: { name: 'Comment', category: 'input' },
 					render: () => null,
@@ -344,14 +344,14 @@ describe('Recursive Schema Handling', () => {
 	describe('Edge Cases', () => {
 		test('should handle empty optional arrays in recursive schemas', () => {
 			type Node = {
-				__id: 'node';
+				$type: 'node';
 				value: string;
 				children?: Node[];
 			};
 
 			const nodeSchema: z.ZodType<Node> = z.lazy(() =>
 				z.object({
-					__id: z.literal('node'),
+					$type: z.literal('node'),
 					value: z.string(),
 					children: z.array(nodeSchema).optional(),
 				}),
@@ -359,7 +359,7 @@ describe('Recursive Schema Handling', () => {
 
 			const engine = new FormEngineBuilder()
 				.addElement({
-					__id: 'node',
+					$type: 'node',
 					schema: nodeSchema,
 					metadata: { name: 'Node', category: 'input' },
 					render: () => null,
@@ -374,14 +374,14 @@ describe('Recursive Schema Handling', () => {
 
 		test('should handle nullable recursive references', () => {
 			type LinkedNode = {
-				__id: 'linked-node';
+				$type: 'linked-node';
 				value: string;
 				next: LinkedNode | null;
 			};
 
 			const linkedNodeSchema: z.ZodType<LinkedNode> = z.lazy(() =>
 				z.object({
-					__id: z.literal('linked-node'),
+					$type: z.literal('linked-node'),
 					value: z.string(),
 					next: z.union([linkedNodeSchema, z.null()]),
 				}),
@@ -389,7 +389,7 @@ describe('Recursive Schema Handling', () => {
 
 			const engine = new FormEngineBuilder()
 				.addElement({
-					__id: 'linked-node',
+					$type: 'linked-node',
 					schema: linkedNodeSchema,
 					metadata: { name: 'Linked Node', category: 'input' },
 					render: () => null,

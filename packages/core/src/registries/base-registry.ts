@@ -22,11 +22,11 @@ export abstract class BaseRegistry<TKey extends string, TValue extends BaseRegis
 
 	/**
 	 * Extract the key from an item.
-	 * Uses the unified '__id' field from BaseRegistration.
+	 * Uses the unified '$type' field from BaseRegistration.
 	 * @param item - The item to extract the key from
 	 */
 	protected getItemKey(item: TValue): TKey {
-		return item.__id as TKey;
+		return item.$type as TKey;
 	}
 
 	/**

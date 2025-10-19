@@ -11,8 +11,8 @@ import type { BuilderActionExecutionContext, BuilderActionExecutionResult } from
  * @template TMeta - The metadata type (ComponentMetadata, ElementMetadata, or ActionMetadata)
  */
 export interface BaseRegistration<TConfig = unknown, TMeta extends ComponentMetadata = ComponentMetadata> {
-	/** Unique identifier - MUST be unique within its registry type. Uses __id to avoid conflicts with common 'id' properties. */
-	__id: string;
+	/** Unique identifier - MUST be unique within its registry type. Uses $type to avoid conflicts with common 'id' properties. */
+	$type: string;
 	/** Zod schema for config validation and type inference */
 	schema: z.ZodType<TConfig>;
 	/** Component or action metadata */
@@ -34,7 +34,7 @@ export interface BaseRegistration<TConfig = unknown, TMeta extends ComponentMeta
  *   InputFieldConfig,
  *   InputFieldProps
  * > = {
- *   __id: 'text',
+ *   $type: 'text',
  *   schema: TextInputConfigSchema,
  *   metadata: {
  *     name: 'Text Input',
@@ -67,7 +67,7 @@ export interface ElementRegistration<TConfig = unknown, TProps = TConfig & { onC
  *   CardLayoutConfig,
  *   CardLayoutProps
  * > = {
- *   __id: 'card',
+ *   $type: 'card',
  *   schema: CardLayoutConfigSchema,
  *   metadata: {
  *     name: 'Card Layout',
@@ -99,7 +99,7 @@ export interface LayoutRegistration<TConfig = unknown, TProps = any>
  *   WizardStepperConfig,
  *   WizardStepperProps
  * > = {
- *   __id: 'wizard',
+ *   $type: 'wizard',
  *   schema: WizardStepperConfigSchema,
  *   metadata: {
  *     name: 'Wizard Stepper',
@@ -125,7 +125,7 @@ export interface StepperRegistration<TConfig = unknown, TProps = any>
  * @example
  * ```typescript
  * export const submitActionRegistration: BuilderActionRegistration<z.infer<typeof SubmitActionConfigSchema>> = {
- *   __id: 'submit',
+ *   $type: 'submit',
  *   schema: SubmitActionConfigSchema,
  *   metadata: {
  *     name: 'Submit Form',

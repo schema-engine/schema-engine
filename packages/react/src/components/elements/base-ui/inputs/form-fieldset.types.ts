@@ -22,7 +22,7 @@ export const FieldSetExtensionSchema = z.object({
  * Complete fieldset field configuration schema
  */
 export const FieldSetConfigSchema: z.ZodType<FieldSetConfig> = BaseFieldSchema.extend({
-	__id: z.literal('fieldSet'),
+	$type: z.literal('fieldSet'),
 	legend: z.string().optional(),
 	elements: z.array(z.any()).min(1) as z.ZodType<FormEngine.ElementConfig[]>,
 }) as z.ZodType<FieldSetConfig>;
@@ -56,7 +56,7 @@ export function createFieldSetRuntimeSchema(registry: {
 	});
 
 	return BaseFieldSchema.extend({
-		__id: z.literal(COMPONENT_ID),
+		$type: z.literal(COMPONENT_ID),
 		...runtimeExtensionSchema.shape,
 	});
 }
@@ -70,7 +70,7 @@ export interface FieldSetExtension {
 }
 
 export interface FieldSetConfig extends Omit<z.infer<typeof BaseFieldSchema>, never> {
-	__id: 'fieldSet';
+	$type: 'fieldSet';
 	legend?: string;
 	elements: FormEngine.ElementConfig[];
 }

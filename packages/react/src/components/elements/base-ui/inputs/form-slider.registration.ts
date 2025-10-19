@@ -12,7 +12,7 @@ declare global {
 }
 
 export const SliderElementRegistration: ElementRegistration<SliderFieldConfig, SliderFieldProps> = {
-	__id: 'slider',
+	$type: 'slider',
 	render: FormSlider,
 	schema: SliderFieldConfigSchema,
 	metadata: {

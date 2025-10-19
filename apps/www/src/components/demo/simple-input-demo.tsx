@@ -19,7 +19,7 @@ export function SimpleInputDemo() {
 				title: 'Input Fields',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'name',
 						name: 'name',
@@ -31,7 +31,7 @@ export function SimpleInputDemo() {
 						],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'email',
 						id: 'email',
 						name: 'email',
@@ -43,7 +43,7 @@ export function SimpleInputDemo() {
 						],
 					},
 					{
-						__id: 'submit',
+						$type: 'submit',
 						label: 'Submit Form',
 						name: 'submit',
 					},

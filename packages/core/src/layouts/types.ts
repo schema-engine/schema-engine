@@ -8,7 +8,7 @@ export type { StepLayoutConfig } from '../schemas/form-config';
  */
 export const BaseLayoutConfigSchema = z
 	.object({
-		__id: z.string().describe('Unique identifier for the layout type'),
+		$type: z.string().describe('Unique identifier for the layout type'),
 	})
 	.strict();
 

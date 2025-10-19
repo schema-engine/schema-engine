@@ -19,7 +19,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 			icon: '👤',
 			elements: [
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'firstName',
 					name: 'firstName',
@@ -31,7 +31,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'lastName',
 					name: 'lastName',
@@ -43,7 +43,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'email',
 					id: 'email',
 					name: 'email',
@@ -55,7 +55,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'dateOfBirth',
 					name: 'dateOfBirth',
@@ -72,7 +72,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 			icon: '📞',
 			elements: [
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'tel',
 					id: 'phone',
 					name: 'phone',
@@ -84,7 +84,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'address',
 					name: 'address',
@@ -93,7 +93,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					rules: [ValidationPresets.string.required('Street address is required')],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'city',
 					name: 'city',
@@ -102,7 +102,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					rules: [ValidationPresets.string.required('City is required')],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'zipCode',
 					name: 'zipCode',
@@ -119,7 +119,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 			icon: '⚙️',
 			elements: [
 				{
-					__id: 'select',
+					$type: 'select',
 					id: 'language',
 					name: 'language',
 					label: 'Preferred Language',
@@ -132,7 +132,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 					defaultValue: 'en',
 				},
 				{
-					__id: 'textarea',
+					$type: 'textarea',
 					id: 'bio',
 					name: 'bio',
 					label: 'Bio',

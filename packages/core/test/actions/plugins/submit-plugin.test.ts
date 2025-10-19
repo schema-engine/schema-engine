@@ -101,7 +101,7 @@ describe("SubmitPlugin", () => {
 		test('should create plugin with default configuration', () => {
 			const plugin = submitPlugin();
 
-			expect(plugin.__id).toBe('submit');
+			expect(plugin.$type).toBe('submit');
 			expect(plugin.execute).toBeDefined();
 			expect(plugin.schema).toBe(SubmitActionSchema);
 			expect(plugin.metadata.defaultTriggers).toEqual(["form_submit"]);
@@ -125,7 +125,7 @@ describe("SubmitPlugin", () => {
 				},
 			});
 
-			expect(plugin.__id).toBe("submit");
+			expect(plugin.$type).toBe("submit");
 			expect(plugin.execute).toBeDefined();
 		});
 
@@ -142,7 +142,7 @@ describe("SubmitPlugin", () => {
 				},
 			});
 
-			expect(plugin.__id).toBe('submit');
+			expect(plugin.$type).toBe('submit');
 			expect(typeof plugin.execute).toBe('function');
 		});
 	});

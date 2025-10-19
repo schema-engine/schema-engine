@@ -10,7 +10,7 @@ export const SliderFieldExtensionSchema = z.object({
 });
 
 export const SliderFieldConfigSchema = BaseFieldSchema.extend({
-	__id: z.literal('slider'),
+	$type: z.literal('slider'),
 	...SliderFieldExtensionSchema.shape,
 });
 

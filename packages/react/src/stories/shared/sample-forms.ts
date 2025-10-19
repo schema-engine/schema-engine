@@ -12,7 +12,7 @@ export const simpleContactForm: FormConfig = {
 			title: 'Contact Information',
 			elements: [
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'name',
 					name: 'name',
@@ -21,7 +21,7 @@ export const simpleContactForm: FormConfig = {
 					rules: [ValidationPresets.string.minLength(2, 'Name must be at least 2 characters')],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'email',
 					id: 'email',
 					name: 'email',
@@ -30,7 +30,7 @@ export const simpleContactForm: FormConfig = {
 					rules: [ValidationPresets.string.email('Please enter a valid email address')],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'tel',
 					id: 'phone',
 					name: 'phone',
@@ -38,7 +38,7 @@ export const simpleContactForm: FormConfig = {
 					placeholder: '+1 (555) 000-0000',
 				},
 				{
-					__id: 'textarea',
+					$type: 'textarea',
 					id: 'message',
 					name: 'message',
 					label: 'Message',
@@ -63,7 +63,7 @@ export const multiStepRegistrationForm: FormConfig = {
 			description: 'Tell us about yourself',
 			elements: [
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'firstName',
 					name: 'firstName',
@@ -72,7 +72,7 @@ export const multiStepRegistrationForm: FormConfig = {
 					rules: [ValidationPresets.string.minLength(2, 'First name must be at least 2 characters')],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'lastName',
 					name: 'lastName',
@@ -81,7 +81,7 @@ export const multiStepRegistrationForm: FormConfig = {
 					rules: [ValidationPresets.string.minLength(2, 'Last name must be at least 2 characters')],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'dateOfBirth',
 					name: 'dateOfBirth',
@@ -96,7 +96,7 @@ export const multiStepRegistrationForm: FormConfig = {
 			description: 'How can we reach you?',
 			elements: [
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'email',
 					id: 'email',
 					name: 'email',
@@ -105,7 +105,7 @@ export const multiStepRegistrationForm: FormConfig = {
 					rules: [ValidationPresets.string.email('Please enter a valid email address')],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'tel',
 					id: 'phone',
 					name: 'phone',
@@ -113,7 +113,7 @@ export const multiStepRegistrationForm: FormConfig = {
 					placeholder: '+1 (555) 000-0000',
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'address',
 					name: 'address',
@@ -128,7 +128,7 @@ export const multiStepRegistrationForm: FormConfig = {
 			description: 'Create your credentials',
 			elements: [
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'username',
 					name: 'username',
@@ -137,7 +137,7 @@ export const multiStepRegistrationForm: FormConfig = {
 					rules: [ValidationPresets.string.minLength(3, 'Username must be at least 3 characters')],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'password',
 					id: 'password',
 					name: 'password',
@@ -146,7 +146,7 @@ export const multiStepRegistrationForm: FormConfig = {
 					rules: [ValidationPresets.string.minLength(8, 'Password must be at least 8 characters')],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'password',
 					id: 'confirmPassword',
 					name: 'confirmPassword',
@@ -161,19 +161,19 @@ export const multiStepRegistrationForm: FormConfig = {
 			description: 'Customize your experience',
 			elements: [
 				{
-					__id: 'checkbox',
+					$type: 'checkbox',
 					id: 'newsletter',
 					name: 'newsletter',
 					label: 'Subscribe to newsletter',
 				},
 				{
-					__id: 'checkbox',
+					$type: 'checkbox',
 					id: 'notifications',
 					name: 'notifications',
 					label: 'Enable notifications',
 				},
 				{
-					__id: 'textarea',
+					$type: 'textarea',
 					id: 'bio',
 					name: 'bio',
 					label: 'Bio (optional)',
@@ -195,7 +195,7 @@ export const loginForm: FormConfig = {
 			title: 'Sign In',
 			elements: [
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'email',
 					id: 'email',
 					name: 'email',
@@ -204,7 +204,7 @@ export const loginForm: FormConfig = {
 					rules: [ValidationPresets.string.email('Please enter a valid email')],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'password',
 					id: 'password',
 					name: 'password',
@@ -213,7 +213,7 @@ export const loginForm: FormConfig = {
 					rules: [ValidationPresets.string.required('Password is required')],
 				},
 				{
-					__id: 'submit',
+					$type: 'submit',
 					id: 'submit',
 					name: 'submit',
 					label: 'Sign In',

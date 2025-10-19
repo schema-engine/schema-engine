@@ -542,7 +542,7 @@ describe("GTMPlugin", () => {
 	describe("Integration", () => {
 		test("should register GTM plugin and execute successfully", async () => {
 			const plugin = gtmPlugin();
-			expect(plugin.__id).toBe("gtm_event");
+			expect(plugin.$type).toBe("gtm_event");
 
 			const action: GTMEventActionInput = {
 				id: "integration-test",

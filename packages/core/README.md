@@ -75,7 +75,7 @@ All components share a common registration pattern:
 
 ```typescript
 export interface BaseRegistration<TConfig, TMeta> {
-	__id: string; // Unique identifier
+	$type: string; // Unique identifier
 	schema: z.ZodType<TConfig>; // Zod schema for validation
 	metadata: TMeta; // Component metadata
 }
@@ -104,7 +104,7 @@ const TextInputConfigSchema = z.object({
 });
 
 export const textInputRegistration: ElementRegistration<z.infer<typeof TextInputConfigSchema>> = {
-	__id: "text",
+	$type: "text",
 	schema: TextInputConfigSchema,
 	metadata: {
 		name: "Text Input",
@@ -135,7 +135,7 @@ const CardLayoutConfigSchema = z.object({
 });
 
 export const cardLayoutRegistration: LayoutRegistration<z.infer<typeof CardLayoutConfigSchema>> = {
-	__id: "card",
+	$type: "card",
 	schema: CardLayoutConfigSchema,
 	metadata: {
 		name: "Card Layout",
@@ -165,7 +165,7 @@ const WizardStepperConfigSchema = z.object({
 export const wizardStepperRegistration: StepperRegistration<
 	z.infer<typeof WizardStepperConfigSchema>
 > = {
-	__id: "wizard",
+	$type: "wizard",
 	schema: WizardStepperConfigSchema,
 	metadata: {
 		name: "Wizard Stepper",
@@ -198,7 +198,7 @@ const SubmitActionConfigSchema = z.object({
 export const submitActionRegistration: BuilderActionRegistration<
 	z.infer<typeof SubmitActionConfigSchema>
 > = {
-	__id: "submit",
+	$type: "submit",
 	schema: SubmitActionConfigSchema,
 	metadata: {
 		name: "Submit Form",

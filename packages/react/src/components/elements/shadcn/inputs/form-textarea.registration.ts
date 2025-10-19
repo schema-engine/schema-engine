@@ -28,7 +28,7 @@ declare global {
 }
 
 export const TextareaElementRegistration: ElementRegistration<TextareaFieldConfig, TextareaFieldProps> = {
-	__id: 'textarea',
+	$type: 'textarea',
 	render: FormTextarea,
 	schema: TextareaFieldSchema,
 	metadata: {

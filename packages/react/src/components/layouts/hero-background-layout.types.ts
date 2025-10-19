@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { BaseLayoutConfigSchema } from '@json-form-engine/core/layouts/types';
 
 export const HeroBackgroundLayoutConfigSchema = BaseLayoutConfigSchema.extend({
-	__id: z.literal('hero-background'),
+	$type: z.literal('hero-background'),
 	backgroundImage: z.string().optional().describe('URL of the background image'),
 	backgroundVideo: z.string().optional().describe('URL of the background video'),
 	contentWidth: z.enum(['sm', 'md', 'lg', 'xl']).optional().describe('Maximum width of the content area'),
@@ -20,7 +20,7 @@ export type HeroBackgroundLayoutProps = HeroBackgroundLayoutConfig & {
 };
 
 export const heroBackgroundLayoutExample: HeroBackgroundLayoutConfig = {
-	__id: 'hero-background',
+	$type: 'hero-background',
 	backgroundImage: '/images/hero.jpg',
 	contentWidth: 'md',
 };

@@ -7,7 +7,7 @@ describe('ActionRegistry', () => {
 	let registry: ActionRegistry;
 
 	const mockAction: BuilderActionRegistration<{ message: string }> = {
-		__id: 'log',
+		$type: 'log',
 		schema: z.object({ message: z.string() }),
 		metadata: {
 			name: 'Log Action',
@@ -21,7 +21,7 @@ describe('ActionRegistry', () => {
 	};
 
 	const anotherAction: BuilderActionRegistration<{ url: string }> = {
-		__id: 'submit',
+		$type: 'submit',
 		schema: z.object({ url: z.string() }),
 		metadata: {
 			name: 'Submit Action',
@@ -143,7 +143,7 @@ describe('ActionRegistry', () => {
 
 		test('should return undefined when action has no default triggers', () => {
 			const actionWithoutTriggers: BuilderActionRegistration = {
-				__id: 'custom',
+				$type: 'custom',
 				schema: z.object({}),
 				metadata: {
 					name: 'Custom Action',

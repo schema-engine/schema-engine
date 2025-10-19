@@ -11,7 +11,7 @@ export const NumberFieldExtensionSchema = z.object({
 });
 
 export const NumberFieldConfigSchema = BaseFieldSchema.extend({
-	__id: z.literal('number'),
+	$type: z.literal('number'),
 	...NumberFieldExtensionSchema.shape,
 });
 

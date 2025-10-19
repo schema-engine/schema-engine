@@ -9,7 +9,7 @@ describe('Enhanced Form Field System', () => {
 	describe('Input Field Schema', () => {
 	test('validates valid input field configuration', () => {
 		const validConfig: InputFieldConfig = {
-			__id: 'input',
+			$type: 'input',
 			id: 'test-input',
 			name: 'testField',
 			label: 'Test Input',
@@ -21,12 +21,12 @@ describe('Enhanced Form Field System', () => {
 		const result = InputFieldSchema.safeParse(validConfig);
 		expect(result.success).toBe(true);
 		if (result.success) {
-			expect(result.data.__id).toBe('input');
+			expect(result.data.$type).toBe('input');
 			expect(result.data.inputType).toBe('email');
 		}
 	});		test('rejects invalid input field configuration', () => {
 			const invalidConfig = {
-				__id: 'input',
+				$type: 'input',
 				inputType: 'invalid-type',
 			};
 
@@ -39,7 +39,7 @@ describe('Enhanced Form Field System', () => {
 
 		test('validates serializable input field schema', () => {
 			const validConfig: InputFieldConfig = {
-				__id: 'input',
+				$type: 'input',
 				id: 'serializable-input',
 				name: 'serializableField',
 				inputType: 'text',
@@ -62,7 +62,7 @@ describe('Enhanced Form Field System', () => {
 			
 			for (const inputType of inputTypes) {
 				const config: InputFieldConfig = {
-					__id: 'input',
+					$type: 'input',
 					id: `test-${inputType}`,
 					name: `test${inputType}`,
 					inputType,
@@ -75,7 +75,7 @@ describe('Enhanced Form Field System', () => {
 
 		test('uses default input type when not specified', () => {
 			const configWithoutType = {
-				__id: 'input',
+				$type: 'input',
 				id: 'default-test',
 				name: 'defaultTest',
 			};
@@ -89,7 +89,7 @@ describe('Enhanced Form Field System', () => {
 
 		test('validates optional properties', () => {
 			const configWithOptionals: InputFieldConfig = {
-				__id: 'input',
+				$type: 'input',
 				id: 'optional-test',
 				name: 'optionalTest',
 				inputType: 'text',

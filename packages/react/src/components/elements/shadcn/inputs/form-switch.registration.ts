@@ -16,7 +16,7 @@ declare global {
 }
 
 export const SwitchElementRegistration: ElementRegistration<SwitchFieldConfig, SwitchFieldProps> = {
-	__id: 'switch',
+	$type: 'switch',
 	render: FormSwitch,
 	schema: SwitchFieldConfigSchema,
 	metadata: {

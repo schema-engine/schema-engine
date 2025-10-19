@@ -261,7 +261,7 @@ type ConfettiAction = z.infer<typeof ConfettiActionSchema>;
 
 function confettiPlugin(): BuilderActionRegistration<ConfettiAction> {
 	return {
-		__id: 'confetti',
+		$type: 'confetti',
 		schema: ConfettiActionSchema,
 		metadata: {
 			name: 'Confetti',

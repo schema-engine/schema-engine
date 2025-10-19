@@ -313,7 +313,7 @@ import type { StepperRegistration } from '@json-form-engine/core/types';
 import { DefaultStepperConfigSchema } from './default-stepper.types';
 
 export const DefaultStepperRegistration: StepperRegistration<DefaultStepperConfig, { children?: React.ReactNode }> = {
-	__id: 'default',
+	$type: 'default',
 	render: DefaultStepperComposed,
 	schema: DefaultStepperConfigSchema,
 	metadata: {

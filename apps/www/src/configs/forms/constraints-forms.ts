@@ -18,7 +18,7 @@ export const constraintsDemoConfig: FormConfig = {
 				{
 					id: 'user-type',
 					name: 'userType',
-					__id: 'select',
+					$type: 'select',
 					label: 'User Type',
 					rules: [ValidationPresets.string.required('Please select a user type')],
 					options: [
@@ -31,7 +31,7 @@ export const constraintsDemoConfig: FormConfig = {
 				{
 					id: 'first-name',
 					name: 'firstName',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					label: 'First Name',
 					rules: [ValidationPresets.string.required('First name is required')],
@@ -47,7 +47,7 @@ export const constraintsDemoConfig: FormConfig = {
 				{
 					id: 'last-name',
 					name: 'lastName',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					label: 'Last Name',
 					rules: [ValidationPresets.string.required('Last name is required')],
@@ -63,7 +63,7 @@ export const constraintsDemoConfig: FormConfig = {
 				{
 					id: 'company-name',
 					name: 'companyName',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					label: 'Company Name',
 					rules: [ValidationPresets.string.required('Company name is required')],
@@ -79,7 +79,7 @@ export const constraintsDemoConfig: FormConfig = {
 				{
 					id: 'developer-level',
 					name: 'developerLevel',
-					__id: 'select',
+					$type: 'select',
 					label: 'Experience Level',
 					options: [
 						{ value: '', label: 'Select level...' },
@@ -99,13 +99,13 @@ export const constraintsDemoConfig: FormConfig = {
 				{
 					id: 'programming-languages',
 					name: 'programmingLanguages',
-					__id: 'arrayElements',
+					$type: 'arrayElements',
 					label: 'Programming Languages',
 					elements: [
 						{
 							id: 'language',
 							name: 'language',
-							__id: 'select',
+							$type: 'select',
 							label: 'Language',
 							options: [
 								{ value: 'javascript', label: 'JavaScript' },
@@ -119,7 +119,7 @@ export const constraintsDemoConfig: FormConfig = {
 						{
 							id: 'proficiency',
 							name: 'proficiency',
-							__id: 'select',
+							$type: 'select',
 							label: 'Proficiency',
 							options: [
 								{ value: 'beginner', label: 'Beginner' },
@@ -141,7 +141,7 @@ export const constraintsDemoConfig: FormConfig = {
 				{
 					id: 'email',
 					name: 'email',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'email',
 					label: 'Email Address',
 					rules: [
@@ -152,7 +152,7 @@ export const constraintsDemoConfig: FormConfig = {
 				{
 					id: 'phone',
 					name: 'phone',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'tel',
 					label: 'Phone Number',
 					constraints: [
@@ -167,14 +167,14 @@ export const constraintsDemoConfig: FormConfig = {
 				{
 					id: 'newsletter',
 					name: 'newsletter',
-					__id: 'checkbox',
+					$type: 'checkbox',
 					label: 'Subscribe to newsletter',
 					defaultValue: false,
 				},
 				{
 					id: 'special-offers',
 					name: 'specialOffers',
-					__id: 'checkbox',
+					$type: 'checkbox',
 					label: 'Receive special offers',
 					defaultValue: false,
 					constraints: [
@@ -187,7 +187,7 @@ export const constraintsDemoConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'submit',
+					$type: 'submit',
 					label: 'Submit Form',
 					name: 'submit',
 				},

@@ -26,7 +26,7 @@ const contactFormConfig: FormConfig = {
 				{
 					id: 'email',
 					name: 'email',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'email',
 					label: 'Email Address',
 					placeholder: 'Enter your email',
@@ -44,7 +44,7 @@ const contactFormConfig: FormConfig = {
 				{
 					id: 'message',
 					name: 'message',
-					__id: 'textarea',
+					$type: 'textarea',
 					label: 'Message',
 					placeholder: 'Your message...',
 					rules: [
@@ -56,7 +56,7 @@ const contactFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'submit',
+					$type: 'submit',
 					label: 'Submit Form',
 					name: 'submit',
 				},

@@ -15,7 +15,7 @@ import { z } from "zod";
 import { BaseFieldSchema } from "@json-form-engine/core/schemas/base-field";
 
 export const MyFieldSchema = BaseFieldSchema.extend({
-	__id: z.literal("my-field"),
+	$type: z.literal("my-field"),
 	// Add your field-specific properties
 	customProp: z.string().optional(),
 });
@@ -149,7 +149,7 @@ export const MyFieldExtensionSchema = z.object({
  * Complete field schema
  */
 export const MyFieldSchema = BaseFieldSchema.extend({
-	__id: z.literal("my-field"),
+	$type: z.literal("my-field"),
 	...MyFieldExtensionSchema.shape,
 });
 
@@ -172,7 +172,7 @@ export type MyFieldProps = MyFieldConfig & {
  * Example field configuration for documentation
  */
 export const myFieldExample: MyFieldConfig = {
-	__id: "my-field",
+	$type: "my-field",
 	name: "exampleField",
 	label: "Example Field",
 	description: "This is an example field",
@@ -198,7 +198,7 @@ declare global {
 }
 
 export const MyFieldRegistration: ElementRegistration<MyFieldConfig, MyFieldProps> = {
-	__id: "my-field",
+	$type: "my-field",
 	render: MyField,
 	schema: MyFieldSchema,
 	metadata: {
@@ -430,7 +430,7 @@ All fields inherit these properties:
 interface BaseField {
 	// Required
 	name: string; // Form field name for submission
-	__id: string; // Field component identifier
+	$type: string; // Field component identifier
 
 	// Common properties
 	id?: string; // HTML element ID
@@ -465,7 +465,7 @@ Fields support validation through the `rules` array:
 ```typescript
 {
 	name: 'email',
-	__id: 'input',
+	$type: 'input',
 	label: 'Email',
 	rules: [
 		{ type: 'required', message: 'Email is required' },
@@ -482,7 +482,7 @@ Fields support CSS Grid positioning:
 ```typescript
 {
 	name: 'firstName',
-	__id: 'input',
+	$type: 'input',
 	grid: {
 		column: '1 / 2',     // Grid column placement
 		row: 'auto',         // Grid row placement
@@ -503,7 +503,7 @@ Fields can be shown/hidden based on other field values:
 ```typescript
 {
 	name: 'otherReason',
-	__id: 'textarea',
+	$type: 'textarea',
 	constraints: [
 		{
 			field: 'reason',
@@ -579,7 +579,7 @@ Organize fields by category in metadata:
 
 ```typescript
 export const MyFieldRegistration: ElementRegistration = {
-	__id: "my-field",
+	$type: "my-field",
 	render: MyField,
 	schema: MyFieldSchema,
 	metadata: {
@@ -625,14 +625,14 @@ Test your field with various configurations:
 ```typescript
 // Test 1: Basic field
 const basicField = {
-	__id: "my-field",
+	$type: "my-field",
 	name: "testField",
 	label: "Test Field",
 };
 
 // Test 2: Required field with validation
 const requiredField = {
-	__id: "my-field",
+	$type: "my-field",
 	name: "requiredField",
 	label: "Required Field",
 	rules: [{ type: "required", message: "This field is required" }],
@@ -640,7 +640,7 @@ const requiredField = {
 
 // Test 3: Disabled field
 const disabledField = {
-	__id: "my-field",
+	$type: "my-field",
 	name: "disabledField",
 	label: "Disabled Field",
 	disabled: true,
@@ -648,7 +648,7 @@ const disabledField = {
 
 // Test 4: Field with conditional logic
 const conditionalField = {
-	__id: "my-field",
+	$type: "my-field",
 	name: "conditionalField",
 	label: "Conditional Field",
 	constraints: [
@@ -663,7 +663,7 @@ const conditionalField = {
 
 // Test 5: Field with grid layout
 const gridField = {
-	__id: "my-field",
+	$type: "my-field",
 	name: "gridField",
 	label: "Grid Field",
 	grid: {
@@ -736,14 +736,14 @@ const gridField = {
 ```tsx
 // Wrong: Creating schema from scratch
 export const MyFieldSchema = z.object({
-	__id: z.literal("my-field"),
+	$type: z.literal("my-field"),
 	name: z.string(),
 	// Missing all base properties
 });
 
 // Correct: Extend BaseFieldSchema
 export const MyFieldSchema = BaseFieldSchema.extend({
-	__id: z.literal("my-field"),
+	$type: z.literal("my-field"),
 	// Add field-specific properties
 });
 ```
@@ -753,7 +753,7 @@ export const MyFieldSchema = BaseFieldSchema.extend({
 ```tsx
 // 1. Extend BaseFieldSchema
 export const MyFieldSchema = BaseFieldSchema.extend({
-	__id: z.literal('my-field'),
+	$type: z.literal('my-field'),
 	customProp: z.string().optional(),
 });
 
@@ -797,7 +797,7 @@ onChange(["item1", "item2"]); // Array
 ```typescript
 {
 	name: 'password',
-	__id: 'input',
+	$type: 'input',
 	rules: [
 		{ type: 'required', message: 'Password required' },
 		{
@@ -816,13 +816,13 @@ onChange(["item1", "item2"]); // Array
 ```tsx
 // Standalone with React Hook Form
 <FormProvider {...methods}>
-	<MyField name="field" __id="my-field" label="Field" />
+	<MyField name="field" $type="my-field" label="Field" />
 </FormProvider>
 
 // Or manage state manually
 <MyField
 	name="field"
-	__id="my-field"
+	$type="my-field"
 	label="Field"
 	onChange={(value) => setState(value)}
 />
@@ -850,7 +850,7 @@ onChange(["item1", "item2"]); // Array
 ```typescript
 {
 	name: 'username',
-	__id: 'input',
+	$type: 'input',
 	rules: [
 		{
 			type: 'async',
@@ -871,11 +871,11 @@ onChange(["item1", "item2"]); // Array
 ```tsx
 // Array field with nested elements
 {
-	__id: 'array-elements',
+	$type: 'array-elements',
 	name: 'items',
 	elements: [
-		{ __id: 'input', name: 'title', label: 'Title' },
-		{ __id: 'textarea', name: 'description', label: 'Description' }
+		{ $type: 'input', name: 'title', label: 'Title' },
+		{ $type: 'textarea', name: 'description', label: 'Description' }
 	]
 }
 ```

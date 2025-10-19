@@ -31,7 +31,7 @@ export const ArrayElementsExtensionSchema = z.object({
  * Runtime validation should use createArrayElementsRuntimeSchema() instead
  */
 export const ArrayElementConfigSchema: z.ZodType<ArrayElementsConfig> = BaseFieldSchema.extend({
-	__id: z.literal('arrayElements'),
+	$type: z.literal('arrayElements'),
 	minItems: z.number().min(0).optional(),
 	maxItems: z.number().min(1).optional(),
 	addButtonText: z.string().optional(),
@@ -77,7 +77,7 @@ export function createArrayElementsRuntimeSchema(registry: {
 	});
 
 	return BaseFieldSchema.extend({
-		__id: z.literal(COMPONENT_ID),
+		$type: z.literal(COMPONENT_ID),
 		...runtimeExtensionSchema.shape,
 	});
 }
@@ -97,7 +97,7 @@ export interface ArrayElementsExtension {
 }
 
 export interface ArrayElementsConfig extends Omit<z.infer<typeof BaseFieldSchema>, never> {
-	__id: 'arrayElements';
+	$type: 'arrayElements';
 	minItems?: number;
 	maxItems?: number;
 	addButtonText?: string;

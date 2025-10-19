@@ -20,7 +20,7 @@ const contactFormConfig: FormConfig = {
 			elements: [
 				{
 					id: 'firstName',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					name: 'firstName',
 					label: 'First Name',
@@ -32,7 +32,7 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'lastName',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					name: 'lastName',
 					label: 'Last Name',
@@ -44,7 +44,7 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'email',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'email',
 					name: 'email',
 					label: 'Email Address',
@@ -56,7 +56,7 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'inquiryType',
-					__id: 'select',
+					$type: 'select',
 					name: 'inquiryType',
 					label: 'Inquiry Type',
 					placeholder: 'Select inquiry type',
@@ -72,7 +72,7 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'priority',
-					__id: 'select',
+					$type: 'select',
 					name: 'priority',
 					label: 'Priority Level',
 					placeholder: 'Select priority',
@@ -87,7 +87,7 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'budget',
-					__id: 'select',
+					$type: 'select',
 					name: 'budget',
 					label: 'Project Budget',
 					placeholder: 'Select budget range',
@@ -110,7 +110,7 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'subject',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					name: 'subject',
 					label: 'Subject',
@@ -123,7 +123,7 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'message',
-					__id: 'textarea',
+					$type: 'textarea',
 					name: 'message',
 					label: 'Message',
 					placeholder: 'Please provide details about your inquiry...',
@@ -136,20 +136,20 @@ const contactFormConfig: FormConfig = {
 				},
 				{
 					id: 'newsletter',
-					__id: 'checkbox',
+					$type: 'checkbox',
 					name: 'newsletter',
 					label: 'Subscribe to our newsletter',
 					defaultValue: false,
 				},
 				{
 					id: 'terms',
-					__id: 'checkbox',
+					$type: 'checkbox',
 					name: 'terms',
 					label: 'I agree to the terms and conditions',
 					rules: [ValidationPresets.boolean.required('You must agree to the terms and conditions')],
 				},
 				{
-					__id: 'submit',
+					$type: 'submit',
 					label: 'Submit Form',
 					name: 'submit',
 				},

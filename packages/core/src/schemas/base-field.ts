@@ -103,7 +103,7 @@ export const ConstraintLogicSchema = z.object({
 export const BaseFieldSchema = z.object({
 	name: z.string().describe('Form field name used for form submission'),
 	id: z.string().optional().describe('HTML element ID'),
-	__id: z.string().describe('Field component identifier'),
+	$type: z.string().describe('Field component identifier'),
 
 	label: z.string().optional().describe('Display label for the field'),
 	description: z.string().optional().describe('Help text or description'),

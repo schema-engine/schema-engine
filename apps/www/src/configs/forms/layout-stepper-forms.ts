@@ -15,7 +15,7 @@ export const cardWithProgressBarForm: FormConfig = {
 
 	// Registry-based stepper configuration - now strongly typed!
 	stepper: {
-		__id: 'progress-bar', // TypeScript knows this must be a valid stepper ID
+		$type: 'progress-bar', // TypeScript knows this must be a valid stepper ID
 		showLabels: true, // IntelliSense suggests valid options for progress-bar
 		variant: 'default', // 'default' | 'compact' | 'minimal'
 		showProgress: true, // Specific to progress-bar stepper
@@ -29,7 +29,7 @@ export const cardWithProgressBarForm: FormConfig = {
 
 			// Registry-based layout configuration for this step
 			layout: {
-				__id: 'card',
+				$type: 'card',
 				padding: '1rem',
 				shadow: true,
 			},
@@ -37,7 +37,7 @@ export const cardWithProgressBarForm: FormConfig = {
 			elements: [
 				{
 					id: 'firstName',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					name: 'firstName',
 					label: 'First Name',
@@ -46,7 +46,7 @@ export const cardWithProgressBarForm: FormConfig = {
 				},
 				{
 					id: 'lastName',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					name: 'lastName',
 					label: 'Last Name',
@@ -60,7 +60,7 @@ export const cardWithProgressBarForm: FormConfig = {
 			title: 'Contact Information',
 
 			layout: {
-				__id: 'card',
+				$type: 'card',
 				padding: '1rem',
 				shadow: true,
 			},
@@ -68,7 +68,7 @@ export const cardWithProgressBarForm: FormConfig = {
 			elements: [
 				{
 					id: 'email',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'email',
 					name: 'email',
 					label: 'Email Address',
@@ -80,7 +80,7 @@ export const cardWithProgressBarForm: FormConfig = {
 				},
 				{
 					id: 'phone',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'tel',
 					name: 'phone',
 					label: 'Phone Number',
@@ -104,7 +104,7 @@ export const splitScreenWithVerticalForm: FormConfig = {
 	description: 'A multi-step form using split screen layout and vertical stepper',
 
 	stepper: {
-		__id: 'default',
+		$type: 'default',
 		showLabels: true,
 		showDescription: true,
 		orientation: 'sidebar', // 'default' | 'compact' (specific to vertical)
@@ -119,7 +119,7 @@ export const splitScreenWithVerticalForm: FormConfig = {
 			description: 'Create your account credentials',
 
 			layout: {
-				__id: 'split-screen',
+				$type: 'split-screen',
 				leftWidth: '50%',
 				rightWidth: '50%',
 			},
@@ -127,7 +127,7 @@ export const splitScreenWithVerticalForm: FormConfig = {
 			elements: [
 				{
 					id: 'username',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					name: 'username',
 					label: 'Username',
@@ -136,7 +136,7 @@ export const splitScreenWithVerticalForm: FormConfig = {
 				},
 				{
 					id: 'password',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'password',
 					name: 'password',
 					label: 'Password',
@@ -151,7 +151,7 @@ export const splitScreenWithVerticalForm: FormConfig = {
 			description: 'Tell us about yourself',
 
 			layout: {
-				__id: 'split-screen',
+				$type: 'split-screen',
 				leftWidth: '40%',
 				rightWidth: '60%',
 			},
@@ -159,7 +159,7 @@ export const splitScreenWithVerticalForm: FormConfig = {
 			elements: [
 				{
 					id: 'bio',
-					__id: 'textarea',
+					$type: 'textarea',
 					name: 'bio',
 					label: 'Biography',
 					placeholder: 'Tell us about yourself...',
@@ -167,7 +167,7 @@ export const splitScreenWithVerticalForm: FormConfig = {
 				},
 				{
 					id: 'main_interests',
-					__id: 'radio',
+					$type: 'radio',
 					name: 'interests',
 					label: 'Interests',
 					options: [
@@ -194,7 +194,7 @@ export const heroWithMinimalistForm: FormConfig = {
 	description: 'A multi-step form using hero layout and minimalist stepper',
 
 	stepper: {
-		__id: 'minimalist', // Type-safe stepper selection
+		$type: 'minimalist', // Type-safe stepper selection
 		showLabels: false,
 		variant: 'dots', // 'dots' | 'lines' | 'numbers' (minimalist-specific)
 		allowStepJumping: true, // Specific to minimalist stepper
@@ -207,7 +207,7 @@ export const heroWithMinimalistForm: FormConfig = {
 			title: 'Welcome',
 
 			layout: {
-				__id: 'hero',
+				$type: 'hero',
 				backgroundStyle: 'gradient',
 				textAlign: 'center',
 			},
@@ -215,7 +215,7 @@ export const heroWithMinimalistForm: FormConfig = {
 			elements: [
 				{
 					id: 'name',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					name: 'name',
 					label: 'Your Name',
@@ -229,7 +229,7 @@ export const heroWithMinimalistForm: FormConfig = {
 			title: 'Preferences',
 
 			layout: {
-				__id: 'hero',
+				$type: 'hero',
 				backgroundStyle: 'solid',
 				textAlign: 'center',
 			},
@@ -237,7 +237,7 @@ export const heroWithMinimalistForm: FormConfig = {
 			elements: [
 				{
 					id: 'theme',
-					__id: 'radio',
+					$type: 'radio',
 					name: 'theme',
 					label: 'Preferred Theme',
 					options: [
@@ -249,7 +249,7 @@ export const heroWithMinimalistForm: FormConfig = {
 				},
 				{
 					id: 'notifications',
-					__id: 'radio',
+					$type: 'radio',
 					name: 'notifications',
 					label: 'Email Notifications',
 					options: [
@@ -264,7 +264,7 @@ export const heroWithMinimalistForm: FormConfig = {
 			title: 'Complete',
 
 			layout: {
-				__id: 'hero',
+				$type: 'hero',
 				backgroundStyle: 'success',
 				textAlign: 'center',
 			},
@@ -272,7 +272,7 @@ export const heroWithMinimalistForm: FormConfig = {
 			elements: [
 				{
 					id: 'confirmation',
-					__id: 'checkbox',
+					$type: 'checkbox',
 					name: 'confirmation',
 					label: 'I agree to the terms and conditions',
 					rules: [{ type: 'required', message: 'Please accept the terms' }],
@@ -324,7 +324,7 @@ export const traditionalStepperForm: FormConfig = {
 			elements: [
 				{
 					id: 'name',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					name: 'name',
 					label: 'Full Name',
@@ -338,7 +338,7 @@ export const traditionalStepperForm: FormConfig = {
 			elements: [
 				{
 					id: 'email',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'email',
 					name: 'email',
 					label: 'Email',

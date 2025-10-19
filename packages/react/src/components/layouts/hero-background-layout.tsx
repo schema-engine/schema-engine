@@ -73,7 +73,7 @@ export const HeroBackgroundLayoutRegistration: LayoutRegistration<
 	HeroBackgroundLayoutConfig,
 	HeroBackgroundLayoutProps
 > = {
-	__id: 'hero-background',
+	$type: 'hero-background',
 	render: HeroBackgroundLayout,
 	schema: HeroBackgroundLayoutConfigSchema,
 	metadata: {

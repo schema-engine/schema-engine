@@ -24,7 +24,7 @@ export function FieldTypesDemo() {
 				title: 'Explore Different Field Types',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'textField',
 						name: 'textField',
@@ -32,7 +32,7 @@ export function FieldTypesDemo() {
 						placeholder: 'Enter any text',
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'email',
 						id: 'emailField',
 						name: 'emailField',
@@ -41,14 +41,14 @@ export function FieldTypesDemo() {
 						rules: [ValidationPresets.string.email('Invalid email')],
 					},
 					{
-						__id: 'number',
+						$type: 'number',
 						id: 'numberField',
 						name: 'numberField',
 						label: 'Number Input',
 						placeholder: '42',
 					},
 					{
-						__id: 'textarea',
+						$type: 'textarea',
 						id: 'textareaField',
 						name: 'textareaField',
 						label: 'Textarea',
@@ -56,7 +56,7 @@ export function FieldTypesDemo() {
 						rows: 3,
 					},
 					{
-						__id: 'select',
+						$type: 'select',
 						id: 'selectField',
 						name: 'selectField',
 						label: 'Select Dropdown',
@@ -68,7 +68,7 @@ export function FieldTypesDemo() {
 						],
 					},
 					{
-						__id: 'radio',
+						$type: 'radio',
 						id: 'radioField',
 						name: 'radioField',
 						label: 'Radio Group',
@@ -79,19 +79,19 @@ export function FieldTypesDemo() {
 						],
 					},
 					{
-						__id: 'checkbox',
+						$type: 'checkbox',
 						id: 'checkboxField',
 						name: 'checkboxField',
 						label: 'Checkbox Option',
 					},
 					{
-						__id: 'switch',
+						$type: 'switch',
 						id: 'switchField',
 						name: 'switchField',
 						label: 'Toggle Switch',
 					},
 					{
-						__id: 'submit',
+						$type: 'submit',
 						label: 'Submit Form',
 						name: 'submit',
 					},

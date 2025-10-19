@@ -89,7 +89,7 @@ describe("ResetPlugin", () => {
 		test("should create plugin with default configuration", () => {
 			const plugin = resetPlugin();
 
-			expect(plugin.__id).toBe("reset");
+			expect(plugin.$type).toBe("reset");
 			expect(plugin.schema).toBe(ResetActionSchema);
 			expect(plugin.metadata.defaultTriggers).toEqual(["form_reset", "submit_success"]);
 			expect(plugin.execute).toBeDefined();
@@ -117,7 +117,7 @@ describe("ResetPlugin", () => {
 				},
 			});
 
-			expect(plugin.__id).toBe("reset");
+			expect(plugin.$type).toBe("reset");
 			expect(plugin.execute).toBeDefined();
 		});
 	});

@@ -44,7 +44,7 @@ function ArrayItem({
 						<div className="space-y-4">
 							{config.elements.map((elementConfig, elementIndex) => (
 								<FormElement
-									key={`${elementConfig.id || elementConfig.__id}_${index}_${elementIndex}`}
+									key={`${elementConfig.id || elementConfig.$type}_${index}_${elementIndex}`}
 									config={
 										{
 											...elementConfig,

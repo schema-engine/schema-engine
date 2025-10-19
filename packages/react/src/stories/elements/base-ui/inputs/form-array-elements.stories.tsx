@@ -49,7 +49,7 @@ export const Default: Story = {
 				description: 'Add one or more contacts',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'name',
 						name: 'name',
@@ -82,7 +82,7 @@ export const WithValidation: Story = {
 				],
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'refName',
 						name: 'refName',
@@ -94,7 +94,7 @@ export const WithValidation: Story = {
 						],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'email',
 						id: 'refEmail',
 						name: 'refEmail',
@@ -106,7 +106,7 @@ export const WithValidation: Story = {
 						],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'tel',
 						id: 'refPhone',
 						name: 'refPhone',
@@ -115,7 +115,7 @@ export const WithValidation: Story = {
 						rules: [ValidationPresets.string.required('Phone number is required')],
 					},
 					{
-						__id: 'select',
+						$type: 'select',
 						id: 'relationship',
 						name: 'relationship',
 						label: 'Relationship',
@@ -149,7 +149,7 @@ export const MultipleFields: Story = {
 				description: 'Add team members with their details',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'fullName',
 						name: 'fullName',
@@ -158,7 +158,7 @@ export const MultipleFields: Story = {
 						rules: [ValidationPresets.string.required('Name is required')],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'email',
 						id: 'email',
 						name: 'email',
@@ -170,7 +170,7 @@ export const MultipleFields: Story = {
 						],
 					},
 					{
-						__id: 'select',
+						$type: 'select',
 						id: 'role',
 						name: 'role',
 						label: 'Role',
@@ -210,7 +210,7 @@ export const WithMinMaxConstraints: Story = {
 				],
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'contactName',
 						name: 'contactName',
@@ -219,7 +219,7 @@ export const WithMinMaxConstraints: Story = {
 						rules: [ValidationPresets.string.required('Name is required')],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'tel',
 						id: 'contactPhone',
 						name: 'contactPhone',
@@ -228,7 +228,7 @@ export const WithMinMaxConstraints: Story = {
 						rules: [ValidationPresets.string.required('Phone is required')],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'relationship',
 						name: 'relationship',
@@ -260,7 +260,7 @@ export const SingleFieldArray: Story = {
 				emptyStateMessage: 'No skills added yet. Click "Add Skill" to get started.',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'skill',
 						name: 'skill',
@@ -291,7 +291,7 @@ export const NestedArrays: Story = {
 				removeButtonText: 'Remove Project',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'projectName',
 						name: 'projectName',
@@ -300,7 +300,7 @@ export const NestedArrays: Story = {
 						rules: [ValidationPresets.string.required('Project name is required')],
 					},
 					{
-						__id: 'textarea',
+						$type: 'textarea',
 						id: 'description',
 						name: 'description',
 						label: 'Description',
@@ -308,7 +308,7 @@ export const NestedArrays: Story = {
 						rows: 3,
 					},
 					{
-						__id: 'arrayElements',
+						$type: 'arrayElements',
 						id: 'tasks',
 						name: 'tasks',
 						label: 'Tasks',
@@ -316,7 +316,7 @@ export const NestedArrays: Story = {
 						addButtonText: 'Add Task',
 						elements: [
 							{
-								__id: 'input',
+								$type: 'input',
 								inputType: 'text',
 								id: 'taskName',
 								name: 'taskName',
@@ -352,7 +352,7 @@ export const WithCustomMessages: Story = {
 				emptyStateMessage: 'No education records added yet.',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'institution',
 						name: 'institution',
@@ -361,7 +361,7 @@ export const WithCustomMessages: Story = {
 						rules: [ValidationPresets.string.required('Institution is required')],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'degree',
 						name: 'degree',
@@ -370,7 +370,7 @@ export const WithCustomMessages: Story = {
 						rules: [ValidationPresets.string.required('Degree is required')],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'field',
 						name: 'field',
@@ -379,7 +379,7 @@ export const WithCustomMessages: Story = {
 						rules: [ValidationPresets.string.required('Field of study is required')],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'graduationYear',
 						name: 'graduationYear',

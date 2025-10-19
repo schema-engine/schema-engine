@@ -18,7 +18,7 @@ export const demoFormConfig: FormConfig = {
 			description: 'Fill out the form below',
 			elements: [
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					id: 'name',
 					name: 'name',
@@ -30,7 +30,7 @@ export const demoFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'email',
 					id: 'email',
 					name: 'email',
@@ -39,7 +39,7 @@ export const demoFormConfig: FormConfig = {
 					rules: [ValidationPresets.string.email('Please enter a valid email address')],
 				},
 				{
-					__id: 'number',
+					$type: 'number',
 					id: 'age',
 					name: 'age',
 					label: 'Age',
@@ -50,7 +50,7 @@ export const demoFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'input',
+					$type: 'input',
 					inputType: 'url',
 					id: 'website',
 					name: 'website',
@@ -59,7 +59,7 @@ export const demoFormConfig: FormConfig = {
 					rules: [ValidationPresets.string.url('Please enter a valid URL')],
 				},
 				{
-					__id: 'textarea',
+					$type: 'textarea',
 					id: 'bio',
 					name: 'bio',
 					label: 'Bio',
@@ -68,7 +68,7 @@ export const demoFormConfig: FormConfig = {
 					rules: [ValidationPresets.string.maxLength(500, 'Bio cannot exceed 500 characters')],
 				},
 				{
-					__id: 'select',
+					$type: 'select',
 					id: 'country',
 					name: 'country',
 					label: 'Country',
@@ -85,20 +85,20 @@ export const demoFormConfig: FormConfig = {
 					],
 				},
 				{
-					__id: 'checkbox',
+					$type: 'checkbox',
 					id: 'newsletter',
 					name: 'newsletter',
 					label: 'Subscribe to newsletter',
 				},
 				{
-					__id: 'checkbox',
+					$type: 'checkbox',
 					id: 'terms',
 					name: 'terms',
 					label: 'I agree to the terms and conditions',
 					rules: [{ type: 'required', message: 'You must accept the terms and conditions' }],
 				},
 				{
-					__id: 'submit',
+					$type: 'submit',
 					label: 'Submit Form',
 					name: 'submit',
 				},

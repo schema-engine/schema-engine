@@ -10,7 +10,7 @@ export const InputFieldExtensionSchema = z.object({
 });
 
 export const InputFieldSchema = BaseFieldSchema.extend({
-	__id: z.literal('input'),
+	$type: z.literal('input'),
 	...InputFieldExtensionSchema.shape,
 });
 
@@ -23,7 +23,7 @@ export type InputFieldProps = InputFieldConfig & {
 };
 
 export const inputFieldExample: InputFieldConfig = {
-	__id: 'input',
+	$type: 'input',
 	name: 'exampleField',
 	label: 'Example Input',
 	description: 'This is an example input field',

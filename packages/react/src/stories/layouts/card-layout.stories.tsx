@@ -33,7 +33,7 @@ export const Default: Story = {
 			...FormTemplates.loginForm,
 			steps: FormTemplates.loginForm.steps.map((step) => ({
 				...step,
-				layout: { __id: 'card' },
+				layout: { $type: 'card' },
 			})),
 		},
 	},
@@ -45,7 +45,7 @@ export const SmallCard: Story = {
 			...FormTemplates.loginForm,
 			steps: FormTemplates.loginForm.steps.map((step) => ({
 				...step,
-				layout: { __id: 'card', maxWidth: 'sm', padding: 'sm', shadowSize: 'sm' },
+				layout: { $type: 'card', maxWidth: 'sm', padding: 'sm', shadowSize: 'sm' },
 			})),
 		},
 	},
@@ -57,7 +57,7 @@ export const MediumCard: Story = {
 			...FormTemplates.loginForm,
 			steps: FormTemplates.loginForm.steps.map((step) => ({
 				...step,
-				layout: { __id: 'card', maxWidth: 'md', padding: 'md', shadowSize: 'md' },
+				layout: { $type: 'card', maxWidth: 'md', padding: 'md', shadowSize: 'md' },
 			})),
 		},
 	},
@@ -69,7 +69,7 @@ export const LargeCard: Story = {
 			...FormTemplates.loginForm,
 			steps: FormTemplates.loginForm.steps.map((step) => ({
 				...step,
-				layout: { __id: 'card', maxWidth: 'lg', padding: 'lg', shadowSize: 'lg' },
+				layout: { $type: 'card', maxWidth: 'lg', padding: 'lg', shadowSize: 'lg' },
 			})),
 		},
 	},
@@ -81,7 +81,7 @@ export const ExtraLargeCard: Story = {
 			...FormTemplates.loginForm,
 			steps: FormTemplates.loginForm.steps.map((step) => ({
 				...step,
-				layout: { __id: 'card', maxWidth: 'xl', padding: 'lg', shadowSize: 'xl' },
+				layout: { $type: 'card', maxWidth: 'xl', padding: 'lg', shadowSize: 'xl' },
 			})),
 		},
 	},
@@ -91,10 +91,10 @@ export const MultiStep: Story = {
 	args: {
 		config: {
 			...FormTemplates.registrationForm,
-			stepper: { __id: 'debugger' },
+			stepper: { $type: 'debugger' },
 			steps: FormTemplates.registrationForm.steps.map((step) => ({
 				...step,
-				layout: { __id: 'card', maxWidth: 'md', padding: 'md', shadowSize: 'md' },
+				layout: { $type: 'card', maxWidth: 'md', padding: 'md', shadowSize: 'md' },
 			})),
 		},
 	},

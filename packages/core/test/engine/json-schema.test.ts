@@ -16,13 +16,13 @@ describe('FormEngine JSON Schema Generation', () => {
 
 		test('should generate schema with single element', () => {
 			const textInputSchema = z.object({
-				__id: z.literal('text'),
+				$type: z.literal('text'),
 				label: z.string().optional(),
 				placeholder: z.string().optional(),
 			});
 
 			const textInputRegistration: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: textInputSchema,
 				metadata: {
 					name: 'Text Input',
@@ -42,17 +42,17 @@ describe('FormEngine JSON Schema Generation', () => {
 
 		test('should generate schemas for multiple component types', () => {
 			const textInputSchema = z.object({
-				__id: z.literal('text'),
+				$type: z.literal('text'),
 				label: z.string().optional(),
 			});
 
 			const cardLayoutSchema = z.object({
-				__id: z.literal('card'),
+				$type: z.literal('card'),
 				padding: z.enum(['sm', 'md', 'lg']).optional(),
 			});
 
 			const textInputRegistration: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: textInputSchema,
 				metadata: {
 					name: 'Text Input',
@@ -62,7 +62,7 @@ describe('FormEngine JSON Schema Generation', () => {
 			};
 
 			const cardLayoutRegistration: LayoutRegistration = {
-				__id: 'card',
+				$type: 'card',
 				schema: cardLayoutSchema,
 				metadata: {
 					name: 'Card Layout',
@@ -85,12 +85,12 @@ describe('FormEngine JSON Schema Generation', () => {
 	describe('Schema Metadata', () => {
 		test('should include metadata in generated schema', () => {
 			const textInputSchema = z.object({
-				__id: z.literal('text'),
+				$type: z.literal('text'),
 				label: z.string().optional(),
 			});
 
 			const textInputRegistration: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: textInputSchema,
 				metadata: {
 					name: 'Text Input',
@@ -116,15 +116,15 @@ describe('FormEngine JSON Schema Generation', () => {
 
 		test('should use namespaced IDs for different component types', () => {
 			const textInputSchema = z.object({
-				__id: z.literal('text'),
+				$type: z.literal('text'),
 			});
 
 			const textLayoutSchema = z.object({
-				__id: z.literal('text'),
+				$type: z.literal('text'),
 			});
 
 			const textInputRegistration: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: textInputSchema,
 				metadata: {
 					name: 'Text Input',
@@ -134,7 +134,7 @@ describe('FormEngine JSON Schema Generation', () => {
 			};
 
 			const textLayoutRegistration: LayoutRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: textLayoutSchema,
 				metadata: {
 					name: 'Text Layout',
@@ -158,34 +158,34 @@ describe('FormEngine JSON Schema Generation', () => {
 
 	describe('All Component Types', () => {
 		test('should generate schemas for elements, layouts, steppers, and actions', () => {
-			const elementSchema = z.object({ __id: z.literal('text') });
-			const layoutSchema = z.object({ __id: z.literal('card') });
-			const stepperSchema = z.object({ __id: z.literal('wizard') });
-			const actionSchema = z.object({ __id: z.literal('submit'), endpoint: z.string().url() });
+			const elementSchema = z.object({ $type: z.literal('text') });
+			const layoutSchema = z.object({ $type: z.literal('card') });
+			const stepperSchema = z.object({ $type: z.literal('wizard') });
+			const actionSchema = z.object({ $type: z.literal('submit'), endpoint: z.string().url() });
 
 			const elementReg: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: elementSchema,
 				metadata: { name: 'Text Input', category: 'input' },
 				render: () => null,
 			};
 
 			const layoutReg: LayoutRegistration = {
-				__id: 'card',
+				$type: 'card',
 				schema: layoutSchema,
 				metadata: { name: 'Card Layout' },
 				render: () => null,
 			};
 
 			const stepperReg: StepperRegistration = {
-				__id: 'wizard',
+				$type: 'wizard',
 				schema: stepperSchema,
 				metadata: { name: 'Wizard Stepper' },
 				render: () => null,
 			};
 
 			const actionReg: BuilderActionRegistration = {
-				__id: 'submit',
+				$type: 'submit',
 				schema: actionSchema,
 				metadata: { name: 'Submit Action' },
 				execute: async () => ({ success: true }),
@@ -212,12 +212,12 @@ describe('FormEngine JSON Schema Generation', () => {
 	describe('Schema Options', () => {
 		test('should support different JSON Schema versions', () => {
 			const textInputSchema = z.object({
-				__id: z.literal('text'),
+				$type: z.literal('text'),
 				label: z.string().optional(),
 			});
 
 			const textInputRegistration: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: textInputSchema,
 				metadata: { name: 'Text Input', category: 'input' },
 				render: () => null,
@@ -236,11 +236,11 @@ describe('FormEngine JSON Schema Generation', () => {
 
 		test('should support custom URI generation', () => {
 			const textInputSchema = z.object({
-				__id: z.literal('text'),
+				$type: z.literal('text'),
 			});
 
 			const textInputRegistration: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: textInputSchema,
 				metadata: { name: 'Text Input', category: 'input' },
 				render: () => null,
@@ -257,11 +257,11 @@ describe('FormEngine JSON Schema Generation', () => {
 
 		test('should use default options when none provided', () => {
 			const textInputSchema = z.object({
-				__id: z.literal('text'),
+				$type: z.literal('text'),
 			});
 
 			const textInputRegistration: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: textInputSchema,
 				metadata: { name: 'Text Input', category: 'input' },
 				render: () => null,
@@ -279,11 +279,11 @@ describe('FormEngine JSON Schema Generation', () => {
 	describe('Schema Registry Access', () => {
 		test('should provide access to schema registry', () => {
 			const textInputSchema = z.object({
-				__id: z.literal('text'),
+				$type: z.literal('text'),
 			});
 
 			const textInputRegistration: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: textInputSchema,
 				metadata: { name: 'Text Input', category: 'input' },
 				render: () => null,
@@ -299,22 +299,22 @@ describe('FormEngine JSON Schema Generation', () => {
 
 		test('should allow querying registered schemas', () => {
 			const textInputSchema = z.object({
-				__id: z.literal('text'),
+				$type: z.literal('text'),
 			});
 
 			const emailInputSchema = z.object({
-				__id: z.literal('email'),
+				$type: z.literal('email'),
 			});
 
 			const textInputReg: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: textInputSchema,
 				metadata: { name: 'Text Input', category: 'input' },
 				render: () => null,
 			};
 
 			const emailInputReg: ElementRegistration = {
-				__id: 'email',
+				$type: 'email',
 				schema: emailInputSchema,
 				metadata: { name: 'Email Input', category: 'input' },
 				render: () => null,
@@ -334,7 +334,7 @@ describe('FormEngine JSON Schema Generation', () => {
 	describe('Complex Schemas', () => {
 		test('should handle complex nested schemas', () => {
 			const complexSchema = z.object({
-				__id: z.literal('complex'),
+				$type: z.literal('complex'),
 				label: z.string(),
 				options: z.array(
 					z.object({
@@ -352,7 +352,7 @@ describe('FormEngine JSON Schema Generation', () => {
 			});
 
 			const complexRegistration: ElementRegistration = {
-				__id: 'complex',
+				$type: 'complex',
 				schema: complexSchema,
 				metadata: { name: 'Complex Input', category: 'input' },
 				render: () => null,
@@ -367,13 +367,13 @@ describe('FormEngine JSON Schema Generation', () => {
 
 		test('should handle schemas with enums and unions', () => {
 			const enumSchema = z.object({
-				__id: z.literal('select'),
+				$type: z.literal('select'),
 				size: z.enum(['sm', 'md', 'lg']).optional(),
 				variant: z.union([z.literal('primary'), z.literal('secondary'), z.literal('tertiary')]).optional(),
 			});
 
 			const enumRegistration: ElementRegistration = {
-				__id: 'select',
+				$type: 'select',
 				schema: enumSchema,
 				metadata: { name: 'Select Input', category: 'input' },
 				render: () => null,
@@ -389,26 +389,26 @@ describe('FormEngine JSON Schema Generation', () => {
 
 	describe('Multiple Elements', () => {
 		test('should handle multiple elements of the same category', () => {
-			const textSchema = z.object({ __id: z.literal('text') });
-			const emailSchema = z.object({ __id: z.literal('email') });
-			const passwordSchema = z.object({ __id: z.literal('password') });
+			const textSchema = z.object({ $type: z.literal('text') });
+			const emailSchema = z.object({ $type: z.literal('email') });
+			const passwordSchema = z.object({ $type: z.literal('password') });
 
 			const textReg: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: textSchema,
 				metadata: { name: 'Text Input', category: 'input' },
 				render: () => null,
 			};
 
 			const emailReg: ElementRegistration = {
-				__id: 'email',
+				$type: 'email',
 				schema: emailSchema,
 				metadata: { name: 'Email Input', category: 'input' },
 				render: () => null,
 			};
 
 			const passwordReg: ElementRegistration = {
-				__id: 'password',
+				$type: 'password',
 				schema: passwordSchema,
 				metadata: { name: 'Password Input', category: 'input' },
 				render: () => null,
@@ -428,18 +428,18 @@ describe('FormEngine JSON Schema Generation', () => {
 		});
 
 		test('should inspect actual schema structure', () => {
-			const textSchema = z.object({ __id: z.literal('text') });
-			const emailSchema = z.object({ __id: z.literal('email') });
+			const textSchema = z.object({ $type: z.literal('text') });
+			const emailSchema = z.object({ $type: z.literal('email') });
 
 			const textReg: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: textSchema,
 				metadata: { name: 'Text Input', category: 'input' },
 				render: () => null,
 			};
 
 			const emailReg: ElementRegistration = {
-				__id: 'email',
+				$type: 'email',
 				schema: emailSchema,
 				metadata: { name: 'Email Input', category: 'input' },
 				render: () => null,
@@ -459,34 +459,34 @@ describe('FormEngine JSON Schema Generation', () => {
 		});
 
 		test('should handle elements from different categories', () => {
-			const inputSchema = z.object({ __id: z.literal('text') });
-			const headingSchema = z.object({ __id: z.literal('heading') });
-			const dividerSchema = z.object({ __id: z.literal('divider') });
-			const buttonSchema = z.object({ __id: z.literal('button') });
+			const inputSchema = z.object({ $type: z.literal('text') });
+			const headingSchema = z.object({ $type: z.literal('heading') });
+			const dividerSchema = z.object({ $type: z.literal('divider') });
+			const buttonSchema = z.object({ $type: z.literal('button') });
 
 			const inputReg: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: inputSchema,
 				metadata: { name: 'Text Input', category: 'input' },
 				render: () => null,
 			};
 
 			const headingReg: ElementRegistration = {
-				__id: 'heading',
+				$type: 'heading',
 				schema: headingSchema,
 				metadata: { name: 'Heading', category: 'content' },
 				render: () => null,
 			};
 
 			const dividerReg: ElementRegistration = {
-				__id: 'divider',
+				$type: 'divider',
 				schema: dividerSchema,
 				metadata: { name: 'Divider', category: 'decoration' },
 				render: () => null,
 			};
 
 			const buttonReg: ElementRegistration = {
-				__id: 'button',
+				$type: 'button',
 				schema: buttonSchema,
 				metadata: { name: 'Button', category: 'interactive' },
 				render: () => null,
@@ -517,13 +517,13 @@ describe('FormEngine JSON Schema Generation', () => {
 	describe('Schema Structure and $ref Usage', () => {
 		test('should inspect schema output format', () => {
 			const textInputSchema = z.object({
-				__id: z.literal('text'),
+				$type: z.literal('text'),
 				label: z.string().optional(),
 				placeholder: z.string().optional(),
 			});
 
 			const textInputRegistration: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: textInputSchema,
 				metadata: {
 					name: 'Text Input',
@@ -547,26 +547,26 @@ describe('FormEngine JSON Schema Generation', () => {
 		test('should check if schemas are properly interlinked', () => {
 			// Create a schema that references another schema
 			const addressSchema = z.object({
-				__id: z.literal('address'),
+				$type: z.literal('address'),
 				street: z.string(),
 				city: z.string(),
 			});
 
 			const personSchema = z.object({
-				__id: z.literal('person'),
+				$type: z.literal('person'),
 				name: z.string(),
 				address: addressSchema, // This should create a $ref
 			});
 
 			const addressReg: ElementRegistration = {
-				__id: 'address',
+				$type: 'address',
 				schema: addressSchema,
 				metadata: { name: 'Address', category: 'input' },
 				render: () => null,
 			};
 
 			const personReg: ElementRegistration = {
-				__id: 'person',
+				$type: 'person',
 				schema: personSchema,
 				metadata: { name: 'Person', category: 'input' },
 				render: () => null,
@@ -586,12 +586,12 @@ describe('FormEngine JSON Schema Generation', () => {
 
 		test('should verify URI generation for $ref', () => {
 			const textInputSchema = z.object({
-				__id: z.literal('text'),
+				$type: z.literal('text'),
 				label: z.string().optional(),
 			});
 
 			const textInputRegistration: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: textInputSchema,
 				metadata: {
 					name: 'Text Input',
@@ -619,38 +619,38 @@ describe('FormEngine JSON Schema Generation', () => {
 		});
 
 		test('should generate proper JSON Schema format with all component types', () => {
-			const elementSchema = z.object({ __id: z.literal('text'), label: z.string().optional() });
-			const layoutSchema = z.object({ __id: z.literal('card'), padding: z.enum(['sm', 'md', 'lg']).optional() });
-			const stepperSchema = z.object({ __id: z.literal('wizard'), showProgress: z.boolean().optional() });
+			const elementSchema = z.object({ $type: z.literal('text'), label: z.string().optional() });
+			const layoutSchema = z.object({ $type: z.literal('card'), padding: z.enum(['sm', 'md', 'lg']).optional() });
+			const stepperSchema = z.object({ $type: z.literal('wizard'), showProgress: z.boolean().optional() });
 			const actionSchema = z.object({
-				__id: z.literal('submit'),
+				$type: z.literal('submit'),
 				endpoint: z.string().url(),
 				method: z.enum(['GET', 'POST']).optional(),
 			});
 
 			const elementReg: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: elementSchema,
 				metadata: { name: 'Text Input', category: 'input' },
 				render: () => null,
 			};
 
 			const layoutReg: LayoutRegistration = {
-				__id: 'card',
+				$type: 'card',
 				schema: layoutSchema,
 				metadata: { name: 'Card Layout' },
 				render: () => null,
 			};
 
 			const stepperReg: StepperRegistration = {
-				__id: 'wizard',
+				$type: 'wizard',
 				schema: stepperSchema,
 				metadata: { name: 'Wizard Stepper' },
 				render: () => null,
 			};
 
 			const actionReg: BuilderActionRegistration = {
-				__id: 'submit',
+				$type: 'submit',
 				schema: actionSchema,
 				metadata: { name: 'Submit Action' },
 				execute: async () => ({ success: true }),
@@ -681,24 +681,24 @@ describe('FormEngine JSON Schema Generation', () => {
 	describe('Unified JSON Schema Format', () => {
 		test('should generate unified schema with $defs', () => {
 			const textInputSchema = z.object({
-				__id: z.literal('text'),
+				$type: z.literal('text'),
 				label: z.string().optional(),
 			});
 
 			const emailInputSchema = z.object({
-				__id: z.literal('email'),
+				$type: z.literal('email'),
 				required: z.boolean().optional(),
 			});
 
 			const textReg: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: textInputSchema,
 				metadata: { name: 'Text Input', category: 'input' },
 				render: () => null,
 			};
 
 			const emailReg: ElementRegistration = {
-				__id: 'email',
+				$type: 'email',
 				schema: emailInputSchema,
 				metadata: { name: 'Email Input', category: 'input' },
 				render: () => null,
@@ -732,11 +732,11 @@ describe('FormEngine JSON Schema Generation', () => {
 
 		test('should use $ref in form schema for elements', () => {
 			const textInputSchema = z.object({
-				__id: z.literal('text'),
+				$type: z.literal('text'),
 			});
 
 			const textReg: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: textInputSchema,
 				metadata: { name: 'Text Input', category: 'input' },
 				render: () => null,
@@ -752,34 +752,34 @@ describe('FormEngine JSON Schema Generation', () => {
 		});
 
 		test('should generate schema for all component types with proper $ref', () => {
-			const elementSchema = z.object({ __id: z.literal('text') });
-			const layoutSchema = z.object({ __id: z.literal('card') });
-			const stepperSchema = z.object({ __id: z.literal('wizard') });
-			const actionSchema = z.object({ __id: z.literal('submit') });
+			const elementSchema = z.object({ $type: z.literal('text') });
+			const layoutSchema = z.object({ $type: z.literal('card') });
+			const stepperSchema = z.object({ $type: z.literal('wizard') });
+			const actionSchema = z.object({ $type: z.literal('submit') });
 
 			const elementReg: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: elementSchema,
 				metadata: { name: 'Text Input', category: 'input' },
 				render: () => null,
 			};
 
 			const layoutReg: LayoutRegistration = {
-				__id: 'card',
+				$type: 'card',
 				schema: layoutSchema,
 				metadata: { name: 'Card Layout' },
 				render: () => null,
 			};
 
 			const stepperReg: StepperRegistration = {
-				__id: 'wizard',
+				$type: 'wizard',
 				schema: stepperSchema,
 				metadata: { name: 'Wizard Stepper' },
 				render: () => null,
 			};
 
 			const actionReg: BuilderActionRegistration = {
-				__id: 'submit',
+				$type: 'submit',
 				schema: actionSchema,
 				metadata: { name: 'Submit Action' },
 				execute: async () => ({ success: true }),
@@ -813,11 +813,11 @@ describe('FormEngine JSON Schema Generation', () => {
 
 		test('should allow generating just component schemas without form structure', () => {
 			const textInputSchema = z.object({
-				__id: z.literal('text'),
+				$type: z.literal('text'),
 			});
 
 			const textReg: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: textInputSchema,
 				metadata: { name: 'Text Input', category: 'input' },
 				render: () => null,
@@ -840,11 +840,11 @@ describe('FormEngine JSON Schema Generation', () => {
 
 		test('should generate schema collection for external distribution', () => {
 			const textInputSchema = z.object({
-				__id: z.literal('text'),
+				$type: z.literal('text'),
 			});
 
 			const textReg: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: textInputSchema,
 				metadata: { name: 'Text Input', category: 'input' },
 				render: () => null,
@@ -868,13 +868,13 @@ describe('FormEngine JSON Schema Generation', () => {
 	describe('Form Config Schema', () => {
 		test('should generate schema for form configuration object', () => {
 			const textInputSchema = z.object({
-				__id: z.literal('text'),
+				$type: z.literal('text'),
 				label: z.string(),
 				required: z.boolean().optional(),
 			});
 
 			const textReg: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: textInputSchema,
 				metadata: { name: 'Text Input', category: 'input' },
 				render: () => null,
@@ -909,24 +909,24 @@ describe('FormEngine JSON Schema Generation', () => {
 
 		test('should validate actual form config structure', () => {
 			const textInputSchema = z.object({
-				__id: z.literal('text'),
+				$type: z.literal('text'),
 				label: z.string(),
 			});
 
 			const cardLayoutSchema = z.object({
-				__id: z.literal('card'),
+				$type: z.literal('card'),
 				padding: z.number().optional(),
 			});
 
 			const textReg: ElementRegistration = {
-				__id: 'text',
+				$type: 'text',
 				schema: textInputSchema,
 				metadata: { name: 'Text Input', category: 'input' },
 				render: () => null,
 			};
 
 			const cardReg: LayoutRegistration = {
-				__id: 'card',
+				$type: 'card',
 				schema: cardLayoutSchema,
 				metadata: { name: 'Card Layout' },
 				render: () => null,
@@ -941,10 +941,10 @@ describe('FormEngine JSON Schema Generation', () => {
 				id: 'contact-form',
 				title: 'Contact Form',
 				elements: [
-					{ __id: 'text', label: 'Name' },
-					{ __id: 'text', label: 'Email' },
+					{ $type: 'text', label: 'Name' },
+					{ $type: 'text', label: 'Email' },
 				],
-				layout: { __id: 'card', padding: 16 },
+				layout: { $type: 'card', padding: 16 },
 			};
 
 			// Verify schema has correct structure for this config
@@ -957,8 +957,8 @@ describe('FormEngine JSON Schema Generation', () => {
 
 		test('should include metadata field in config schema', () => {
 			const textReg: ElementRegistration = {
-				__id: 'text',
-				schema: z.object({ __id: z.literal('text') }),
+				$type: 'text',
+				schema: z.object({ $type: z.literal('text') }),
 				metadata: { name: 'Text', category: 'input' },
 				render: () => null,
 			};
@@ -973,8 +973,8 @@ describe('FormEngine JSON Schema Generation', () => {
 
 		test('should support additionalProperties option', () => {
 			const textReg: ElementRegistration = {
-				__id: 'text',
-				schema: z.object({ __id: z.literal('text') }),
+				$type: 'text',
+				schema: z.object({ $type: z.literal('text') }),
 				metadata: { name: 'Text', category: 'input' },
 				render: () => null,
 			};
@@ -989,39 +989,39 @@ describe('FormEngine JSON Schema Generation', () => {
 		});
 
 		test('should work with multiple elements and all component types', () => {
-			const textSchema = z.object({ __id: z.literal('text'), label: z.string() });
-			const numberSchema = z.object({ __id: z.literal('number'), min: z.number() });
-			const layoutSchema = z.object({ __id: z.literal('card') });
-			const stepperSchema = z.object({ __id: z.literal('wizard') });
-			const actionSchema = z.object({ __id: z.literal('submit') });
+			const textSchema = z.object({ $type: z.literal('text'), label: z.string() });
+			const numberSchema = z.object({ $type: z.literal('number'), min: z.number() });
+			const layoutSchema = z.object({ $type: z.literal('card') });
+			const stepperSchema = z.object({ $type: z.literal('wizard') });
+			const actionSchema = z.object({ $type: z.literal('submit') });
 
 			const engine = new FormEngineBuilder()
 				.addElement({
-					__id: 'text',
+					$type: 'text',
 					schema: textSchema,
 					metadata: { name: 'Text', category: 'input' },
 					render: () => null,
 				})
 				.addElement({
-					__id: 'number',
+					$type: 'number',
 					schema: numberSchema,
 					metadata: { name: 'Number', category: 'input' },
 					render: () => null,
 				})
 				.addLayout({
-					__id: 'card',
+					$type: 'card',
 					schema: layoutSchema,
 					metadata: { name: 'Card' },
 					render: () => null,
 				})
 				.addStepper({
-					__id: 'wizard',
+					$type: 'wizard',
 					schema: stepperSchema,
 					metadata: { name: 'Wizard' },
 					render: () => null,
 				})
 				.addAction({
-					__id: 'submit',
+					$type: 'submit',
 					schema: actionSchema,
 					metadata: { name: 'Submit' },
 					execute: async () => ({ success: true }),

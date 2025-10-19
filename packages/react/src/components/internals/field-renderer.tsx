@@ -21,14 +21,14 @@ export function FormElement({ config, className, style }: FormElementProps) {
 		return null;
 	}
 
-	const { __id, ...componentConfig } = config;
+	const { $type, ...componentConfig } = config;
 
-	const elementRegistration = engine.getElement(__id);
+	const elementRegistration = engine.getElement($type);
 
 	if (!elementRegistration) {
 		return (
 			<div className={`text-red-500 text-sm ${className || ''}`} style={style}>
-				Error: Component "{__id}" not found in registry
+				Error: Component "{$type}" not found in registry
 			</div>
 		);
 	}
@@ -37,7 +37,6 @@ export function FormElement({ config, className, style }: FormElementProps) {
 
 	const enhancedConfig = {
 		...componentConfig,
-		__id,
 		disabled: ('disabled' in config ? config.disabled : false) || shouldDisable,
 		required: isRequired,
 	};

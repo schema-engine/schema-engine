@@ -116,7 +116,7 @@ describe("NotificationPlugin", () => {
 		test("should create plugin with default configuration", () => {
 			const plugin = notificationPlugin();
 
-			expect(plugin.__id).toBe("show_notification");
+			expect(plugin.$type).toBe("show_notification");
 			expect(plugin.execute).toBeDefined();
 			expect(plugin.schema).toBe(NotificationActionSchema);
 			expect(plugin.metadata.defaultTriggers).toEqual([
@@ -146,7 +146,7 @@ describe("NotificationPlugin", () => {
 				},
 			});
 
-			expect(plugin.__id).toBe("show_notification");
+			expect(plugin.$type).toBe("show_notification");
 			expect(plugin.execute).toBeDefined();
 		});
 
@@ -163,7 +163,7 @@ describe("NotificationPlugin", () => {
 				},
 			});
 
-			expect(plugin.__id).toBe("show_notification");
+			expect(plugin.$type).toBe("show_notification");
 			expect(plugin.execute).toBeDefined();
 		});
 	});

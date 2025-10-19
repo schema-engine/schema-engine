@@ -28,7 +28,7 @@ declare global {
 }
 
 export const InputElementRegistration: ElementRegistration<InputFieldConfig, InputFieldProps> = {
-	__id: 'input',
+	$type: 'input',
 	render: FormInput,
 	schema: InputFieldSchema,
 	metadata: {

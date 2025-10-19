@@ -47,7 +47,7 @@ export const Default: Story = {
 				description: 'Add one or more contacts',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'name',
 						name: 'name',
@@ -80,7 +80,7 @@ export const WithValidation: Story = {
 				],
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'refName',
 						name: 'refName',
@@ -92,7 +92,7 @@ export const WithValidation: Story = {
 						],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'email',
 						id: 'refEmail',
 						name: 'refEmail',
@@ -104,7 +104,7 @@ export const WithValidation: Story = {
 						],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'tel',
 						id: 'refPhone',
 						name: 'refPhone',
@@ -113,7 +113,7 @@ export const WithValidation: Story = {
 						rules: [ValidationPresets.string.required('Phone number is required')],
 					},
 					{
-						__id: 'select',
+						$type: 'select',
 						id: 'relationship',
 						name: 'relationship',
 						label: 'Relationship',
@@ -147,7 +147,7 @@ export const MultipleFields: Story = {
 				description: 'Add team members with their details',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'fullName',
 						name: 'fullName',
@@ -156,7 +156,7 @@ export const MultipleFields: Story = {
 						rules: [ValidationPresets.string.required('Name is required')],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'email',
 						id: 'email',
 						name: 'email',
@@ -168,7 +168,7 @@ export const MultipleFields: Story = {
 						],
 					},
 					{
-						__id: 'select',
+						$type: 'select',
 						id: 'role',
 						name: 'role',
 						label: 'Role',
@@ -202,7 +202,7 @@ export const WithMinMaxConstraints: Story = {
 				maxItems: 3,
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'contactName',
 						name: 'contactName',
@@ -211,7 +211,7 @@ export const WithMinMaxConstraints: Story = {
 						rules: [ValidationPresets.string.required('Contact name is required')],
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'tel',
 						id: 'phone',
 						name: 'phone',
@@ -220,7 +220,7 @@ export const WithMinMaxConstraints: Story = {
 						rules: [ValidationPresets.string.required('Phone number is required')],
 					},
 					{
-						__id: 'select',
+						$type: 'select',
 						id: 'relationship',
 						name: 'relationship',
 						label: 'Relationship',
@@ -254,7 +254,7 @@ export const CustomButtonText: Story = {
 				removeButtonText: 'Remove Skill',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'skillName',
 						name: 'skillName',
@@ -262,7 +262,7 @@ export const CustomButtonText: Story = {
 						placeholder: 'e.g., JavaScript, Design, Project Management',
 					},
 					{
-						__id: 'select',
+						$type: 'select',
 						id: 'level',
 						name: 'level',
 						label: 'Proficiency Level',
@@ -297,7 +297,7 @@ export const ComplexForm: Story = {
 				addButtonText: 'Add Project',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'projectName',
 						name: 'projectName',
@@ -306,7 +306,7 @@ export const ComplexForm: Story = {
 						rules: [ValidationPresets.string.required('Project name is required')],
 					},
 					{
-						__id: 'textarea',
+						$type: 'textarea',
 						id: 'description',
 						name: 'description',
 						label: 'Description',
@@ -314,7 +314,7 @@ export const ComplexForm: Story = {
 						rows: 3,
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'url',
 						id: 'projectUrl',
 						name: 'projectUrl',
@@ -323,7 +323,7 @@ export const ComplexForm: Story = {
 						rules: [ValidationPresets.string.url('Please enter a valid URL')],
 					},
 					{
-						__id: 'select',
+						$type: 'select',
 						id: 'status',
 						name: 'status',
 						label: 'Status',
@@ -335,7 +335,7 @@ export const ComplexForm: Story = {
 						],
 					},
 					{
-						__id: 'checkbox',
+						$type: 'checkbox',
 						id: 'featured',
 						name: 'featured',
 						label: 'Featured Project',
@@ -363,7 +363,7 @@ export const NestedArrays: Story = {
 				maxItems: 3,
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'deptName',
 						name: 'deptName',
@@ -372,7 +372,7 @@ export const NestedArrays: Story = {
 						rules: [ValidationPresets.string.required('Department name is required')],
 					},
 					{
-						__id: 'arrayElements',
+						$type: 'arrayElements',
 						id: 'employees',
 						name: 'employees',
 						label: 'Employees',
@@ -381,7 +381,7 @@ export const NestedArrays: Story = {
 						addButtonText: 'Add Employee',
 						elements: [
 							{
-								__id: 'input',
+								$type: 'input',
 								inputType: 'text',
 								id: 'employeeName',
 								name: 'employeeName',
@@ -389,7 +389,7 @@ export const NestedArrays: Story = {
 								placeholder: 'Enter employee name',
 							},
 							{
-								__id: 'input',
+								$type: 'input',
 								inputType: 'email',
 								id: 'employeeEmail',
 								name: 'employeeEmail',
@@ -418,7 +418,7 @@ export const WithDifferentInputTypes: Story = {
 				addButtonText: 'Add Education',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'institution',
 						name: 'institution',
@@ -426,7 +426,7 @@ export const WithDifferentInputTypes: Story = {
 						placeholder: 'University or School name',
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'degree',
 						name: 'degree',
@@ -434,7 +434,7 @@ export const WithDifferentInputTypes: Story = {
 						placeholder: 'Bachelor of Science',
 					},
 					{
-						__id: 'number',
+						$type: 'number',
 						id: 'graduationYear',
 						name: 'graduationYear',
 						label: 'Graduation Year',
@@ -443,7 +443,7 @@ export const WithDifferentInputTypes: Story = {
 						max: 2030,
 					},
 					{
-						__id: 'number',
+						$type: 'number',
 						id: 'gpa',
 						name: 'gpa',
 						label: 'GPA',
@@ -453,7 +453,7 @@ export const WithDifferentInputTypes: Story = {
 						step: 0.1,
 					},
 					{
-						__id: 'switch',
+						$type: 'switch',
 						id: 'graduated',
 						name: 'graduated',
 						label: 'Graduated',
@@ -480,7 +480,7 @@ export const EmptyState: Story = {
 				addButtonText: 'Add Address',
 				elements: [
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'street',
 						name: 'street',
@@ -488,7 +488,7 @@ export const EmptyState: Story = {
 						placeholder: '123 Main St',
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'city',
 						name: 'city',
@@ -496,7 +496,7 @@ export const EmptyState: Story = {
 						placeholder: 'New York',
 					},
 					{
-						__id: 'input',
+						$type: 'input',
 						inputType: 'text',
 						id: 'zipCode',
 						name: 'zipCode',

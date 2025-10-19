@@ -109,7 +109,7 @@ describe("AutoSavePlugin", () => {
 		test("should create plugin with default configuration", () => {
 			const plugin = autoSavePlugin();
 
-			expect(plugin.__id).toBe("auto_save");
+			expect(plugin.$type).toBe("auto_save");
 			expect(plugin.schema).toBe(AutoSaveActionSchema);
 			expect(plugin.metadata.defaultTriggers).toEqual(["form_change"]);
 			expect(plugin.execute).toBeDefined();
@@ -120,7 +120,7 @@ describe("AutoSavePlugin", () => {
 				storage: mockStorage,
 			});
 
-			expect(plugin.__id).toBe("auto_save");
+			expect(plugin.$type).toBe("auto_save");
 			expect(plugin.execute).toBeDefined();
 		});
 
@@ -138,7 +138,7 @@ describe("AutoSavePlugin", () => {
 				},
 			});
 
-			expect(plugin.__id).toBe("auto_save");
+			expect(plugin.$type).toBe("auto_save");
 			expect(plugin.execute).toBeDefined();
 		});
 
@@ -148,7 +148,7 @@ describe("AutoSavePlugin", () => {
 				getStorageKey: (context) => `custom_${context.formId}_${context.currentStep}`,
 			});
 
-			expect(plugin.__id).toBe("auto_save");
+			expect(plugin.$type).toBe("auto_save");
 			expect(plugin.execute).toBeDefined();
 		});
 	});

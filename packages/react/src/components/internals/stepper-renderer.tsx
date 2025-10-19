@@ -161,7 +161,7 @@ export const StepperRenderer: React.FC<StepperRendererProps> = ({
 		config: form.stepper || {},
 	};
 
-	if (!form.stepper?.__id) {
+	if (!form.stepper?.$type) {
 		return (
 			<StepperProvider value={contextValue}>
 				<DefaultStepper>{children}</DefaultStepper>
@@ -169,12 +169,12 @@ export const StepperRenderer: React.FC<StepperRendererProps> = ({
 		);
 	}
 
-	const { __id, ...stepperConfig } = form.stepper;
+	const { $type, ...stepperConfig } = form.stepper;
 
-	const stepperRegistration = engine.getStepper(__id);
+	const stepperRegistration = engine.getStepper($type);
 
 	if (!stepperRegistration) {
-		console.warn(`Stepper '${__id}' not found in registry. Using default stepper.`);
+		console.warn(`Stepper '${$type}' not found in registry. Using default stepper.`);
 		return (
 			<StepperProvider value={{ ...contextValue, config: stepperConfig }}>
 				<DefaultStepper>{children}</DefaultStepper>

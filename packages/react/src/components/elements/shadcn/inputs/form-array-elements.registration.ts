@@ -16,7 +16,7 @@ declare global {
 }
 
 export const ArrayElementRegistration: ElementRegistration<ArrayElementsConfig, ArrayElementsProps> = {
-	__id: 'arrayElements',
+	$type: 'arrayElements',
 	render: FormArrayElements,
 	schema: ArrayElementConfigSchema,
 	metadata: {

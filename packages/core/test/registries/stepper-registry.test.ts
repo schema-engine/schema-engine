@@ -7,7 +7,7 @@ describe('StepperRegistry', () => {
 	let registry: StepperRegistry;
 
 	const mockStepper: StepperRegistration<{ showProgress: boolean }, any> = {
-		__id: 'wizard-stepper',
+		$type: 'wizard-stepper',
 		schema: z.object({ showProgress: z.boolean() }),
 		metadata: {
 			name: 'Wizard Stepper',
@@ -17,7 +17,7 @@ describe('StepperRegistry', () => {
 	};
 
 	const anotherStepper: StepperRegistration<{ vertical: boolean }, any> = {
-		__id: 'vertical-stepper',
+		$type: 'vertical-stepper',
 		schema: z.object({ vertical: z.boolean() }),
 		metadata: {
 			name: 'Vertical Stepper',

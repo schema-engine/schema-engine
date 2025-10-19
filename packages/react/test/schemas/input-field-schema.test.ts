@@ -13,7 +13,7 @@ import {
 describe('Input Field Schema', () => {
 	test('validates valid input field configuration', () => {
 		const validConfig: InputFieldConfig = {
-			__id: 'input',
+			$type: 'input',
 			id: 'test-input',
 			name: 'testField',
 			label: 'Test Input',
@@ -25,14 +25,14 @@ describe('Input Field Schema', () => {
 		const result = InputFieldSchema.safeParse(validConfig);
 		expect(result.success).toBe(true);
 		if (result.success) {
-			expect(result.data.__id).toBe('input');
+			expect(result.data.$type).toBe('input');
 			expect(result.data.inputType).toBe('email');
 		}
 	});
 
 	test('rejects invalid input field configuration', () => {
 		const invalidConfig = {
-			__id: 'input',
+			$type: 'input',
 			inputType: 'invalid-type',
 		};
 
@@ -45,7 +45,7 @@ describe('Input Field Schema', () => {
 
 	test('validates serializable input field schema', () => {
 		const validConfig: InputFieldConfig = {
-			__id: 'input',
+			$type: 'input',
 			id: 'serializable-input',
 			name: 'serializableField',
 			inputType: 'text',
@@ -66,7 +66,7 @@ describe('Input Field Schema', () => {
 		
 		for (const inputType of inputTypes) {
 			const config: InputFieldConfig = {
-				__id: 'input',
+				$type: 'input',
 				id: `test-${inputType}`,
 				name: `test${inputType}`,
 				inputType,
@@ -79,7 +79,7 @@ describe('Input Field Schema', () => {
 
 	test('uses default input type when not specified', () => {
 		const configWithoutType = {
-			__id: 'input',
+			$type: 'input',
 			id: 'default-test',
 			name: 'defaultTest',
 		};
@@ -93,7 +93,7 @@ describe('Input Field Schema', () => {
 
 	test('validates optional properties', () => {
 		const configWithOptionals: InputFieldConfig = {
-			__id: 'input',
+			$type: 'input',
 			id: 'optional-test',
 			name: 'optionalTest',
 			inputType: 'text',
@@ -116,7 +116,7 @@ describe('Input Field Schema', () => {
 
 	test('validates required fields with default inputType', () => {
 		const minimalConfig = {
-			__id: 'input',
+			$type: 'input',
 			id: 'minimal',
 			name: 'minimal',
 		};
@@ -130,7 +130,7 @@ describe('Input Field Schema', () => {
 
 	test('rejects missing required fields', () => {
 		const invalidConfig = {
-			__id: 'input',
+			$type: 'input',
 		};
 
 		const result = InputFieldSchema.safeParse(invalidConfig);
@@ -139,7 +139,7 @@ describe('Input Field Schema', () => {
 
 	test('validates HTML input attributes', () => {
 		const config: InputFieldConfig = {
-			__id: 'input',
+			$type: 'input',
 			id: 'html-attrs',
 			name: 'htmlAttrs',
 			inputType: 'email',
@@ -163,28 +163,28 @@ describe('Input Field Schema', () => {
 describe('Input Field Type Safety', () => {
 	test('input field configuration has correct type structure', () => {
 		const config: InputFieldConfig = {
-			__id: 'input',
+			$type: 'input',
 			id: 'type-test',
 			name: 'typeTest',
 			inputType: 'email',
 			label: 'Type Test',
 		};
 
-		expect(config.__id).toBe('input');
+		expect(config.$type).toBe('input');
 		expect(typeof config.inputType).toBe('string');
-		expect(typeof config.__id).toBe('string');
+		expect(typeof config.$type).toBe('string');
 		expect(typeof config.name).toBe('string');
 	});
 
 	test('id is correctly typed as literal', () => {
 		const config: InputFieldConfig = {
-			__id: 'input',
+			$type: 'input',
 			id: 'literal-test',
 			name: 'literalTest',
 			inputType: 'text',
 		};
 
-		const id: 'input' = config.__id;
+		const id: 'input' = config.$type;
 		expect(id).toBe('input');
 	});
 });

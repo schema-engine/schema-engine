@@ -24,7 +24,7 @@ const stepperDemoConfig: FormConfig = {
 			elements: [
 				{
 					id: 'name',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					name: 'name',
 					label: 'Full Name',
@@ -36,7 +36,7 @@ const stepperDemoConfig: FormConfig = {
 				},
 				{
 					id: 'email',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'email',
 					name: 'email',
 					label: 'Email Address',
@@ -56,7 +56,7 @@ const stepperDemoConfig: FormConfig = {
 			elements: [
 				{
 					id: 'role',
-					__id: 'select',
+					$type: 'select',
 					name: 'role',
 					label: 'Your Role',
 					placeholder: 'Select your role',
@@ -72,7 +72,7 @@ const stepperDemoConfig: FormConfig = {
 
 				{
 					id: 'experience',
-					__id: 'select',
+					$type: 'select',
 					name: 'experience',
 					label: 'Experience Level',
 					placeholder: 'Select your experience',
@@ -93,7 +93,7 @@ const stepperDemoConfig: FormConfig = {
 			elements: [
 				{
 					id: 'company',
-					__id: 'input',
+					$type: 'input',
 					inputType: 'text',
 					name: 'company',
 					label: 'Company (Optional)',
@@ -101,7 +101,7 @@ const stepperDemoConfig: FormConfig = {
 				},
 				{
 					id: 'feedback',
-					__id: 'textarea',
+					$type: 'textarea',
 					name: 'feedback',
 					label: 'Feedback',
 					placeholder: 'Any feedback about this demo? (Optional)',
@@ -109,7 +109,7 @@ const stepperDemoConfig: FormConfig = {
 				},
 				{
 					id: 'newsletter',
-					__id: 'checkbox',
+					$type: 'checkbox',
 					name: 'newsletter',
 					label: 'Subscribe to newsletter for updates',
 					defaultValue: true,
@@ -120,7 +120,7 @@ const stepperDemoConfig: FormConfig = {
 
 	stepper: {
 		id: 'default',
-		__id: 'default',
+		$type: 'default',
 		variant: 'default',
 		orientation: 'horizontal',
 		position: 'top',
@@ -166,7 +166,7 @@ const verticalStepperConfig: FormConfig = {
 	...stepperDemoConfig,
 	id: 'vertical-stepper-demo',
 	stepper: {
-		__id: 'default',
+		$type: 'default',
 		variant: 'default',
 		orientation: 'vertical',
 		position: 'left',
@@ -195,7 +195,7 @@ const minimalStepperConfig: FormConfig = {
 	...stepperDemoConfig,
 	id: 'minimal-stepper-demo',
 	stepper: {
-		__id: 'minimalist',
+		$type: 'minimalist',
 		variant: 'dots',
 		orientation: 'horizontal',
 		position: 'top',

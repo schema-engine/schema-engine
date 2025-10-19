@@ -16,7 +16,7 @@ declare global {
 }
 
 export const FieldSetRegistration: ElementRegistration<FieldSetConfig, FieldSetProps> = {
-	__id: 'fieldSet',
+	$type: 'fieldSet',
 	render: FormFieldSet,
 	schema: FieldSetConfigSchema,
 	metadata: {

@@ -38,7 +38,7 @@ export const Default: Story = {
 		config: {
 			...FormTemplates.registrationForm,
 			stepper: {
-				__id: 'debugger',
+				$type: 'debugger',
 				showStepDetails: true,
 				defaultExpanded: false,
 				showFormState: true,
@@ -54,7 +54,7 @@ export const ExpandedByDefault: Story = {
 			title: 'Product Survey',
 			description: 'Debugger starts expanded',
 			stepper: {
-				__id: 'debugger',
+				$type: 'debugger',
 				showStepDetails: true,
 				defaultExpanded: true,
 				showFormState: true,
@@ -70,7 +70,7 @@ export const MinimalDebugInfo: Story = {
 			title: 'Quick Survey',
 			description: 'Minimal debug information',
 			stepper: {
-				__id: 'debugger',
+				$type: 'debugger',
 				showStepDetails: false,
 				defaultExpanded: false,
 				showFormState: false,
@@ -86,7 +86,7 @@ export const WithComplexForm: Story = {
 			title: 'Complex Application Form',
 			description: 'Multi-step form with validation and many steps',
 			stepper: {
-				__id: 'debugger',
+				$type: 'debugger',
 				showStepDetails: true,
 				defaultExpanded: false,
 				showFormState: true,

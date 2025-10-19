@@ -224,9 +224,9 @@ export class FormFieldComponentRegistry<TComponent = any> {
 			return { success: false, error: 'Field configuration must be an object' };
 		}
 
-		const fieldType = (fieldConfig as any).__id;
+		const fieldType = (fieldConfig as any).$type;
 		if (!fieldType) {
-			return { success: false, error: 'Field __id is required' };
+			return { success: false, error: 'Field $type is required' };
 		}
 
 		const schema = this.getRuntimeSchema(fieldType);

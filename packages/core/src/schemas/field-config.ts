@@ -59,43 +59,43 @@ declare global {
 		 * Union of all registered element IDs
 		 * This creates a union type like: "input" | "textarea" | "select" | ...
 		 */
-		type ElementId = ElementConfig['__id'];
+		type ElementId = ElementConfig['$type'];
 
 		/**
 		 * Union of all registered layout IDs
 		 */
-		type LayoutId = LayoutConfig['__id'];
+		type LayoutId = LayoutConfig['$type'];
 
 		/**
 		 * Union of all registered stepper IDs
 		 */
-		type StepperId = StepperConfig['__id'];
+		type StepperId = StepperConfig['$type'];
 
 		/**
 		 * Get element configuration by element ID
 		 */
-		type GetElementConfig<T extends ElementId> = Extract<ElementConfig, { __id: T }>;
+		type GetElementConfig<T extends ElementId> = Extract<ElementConfig, { $type: T }>;
 
 		/**
 		 * Get layout configuration by layout ID
 		 */
-		type GetLayoutConfig<T extends LayoutId> = Extract<LayoutConfig, { __id: T }>;
+		type GetLayoutConfig<T extends LayoutId> = Extract<LayoutConfig, { $type: T }>;
 
 		/**
 		 * Get stepper configuration by stepper ID
 		 */
-		type GetStepperConfig<T extends StepperId> = Extract<StepperConfig, { __id: T }>;
+		type GetStepperConfig<T extends StepperId> = Extract<StepperConfig, { $type: T }>;
 	}
 } /**
  * Type guard to check if a value is a valid element configuration
  */
-export function isElementConfig(value: unknown): value is { __id: string; name: string } {
+export function isElementConfig(value: unknown): value is { $type: string; name: string } {
 	return (
 		typeof value === 'object' &&
 		value !== null &&
-		'__id' in value &&
+		'$type' in value &&
 		'name' in value &&
-		typeof value.__id === 'string' &&
+		typeof value.$type === 'string' &&
 		typeof value.name === 'string'
 	);
 }
@@ -103,6 +103,6 @@ export function isElementConfig(value: unknown): value is { __id: string; name: 
 /**
  * Extract element ID from configuration
  */
-export function getElementId<T extends { __id: string }>(config: T): T['__id'] {
-	return config.__id;
+export function getElementId<T extends { $type: string }>(config: T): T['$type'] {
+	return config.$type;
 }

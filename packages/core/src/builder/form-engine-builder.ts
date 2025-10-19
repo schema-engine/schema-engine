@@ -67,7 +67,7 @@ export class FormEngineBuilder<
 	addElement<TId extends string = string, TConfig = never>(
 		registration: ElementRegistration<any>,
 	): FormEngineBuilder<
-		TConfig extends never ? TElements : TElements & Record<TId, Omit<TConfig, '__id'>>,
+		TConfig extends never ? TElements : TElements & Record<TId, Omit<TConfig, '$type'>>,
 		TLayouts,
 		TSteppers,
 		TActions
@@ -104,7 +104,7 @@ export class FormEngineBuilder<
 		registration: LayoutRegistration<any>,
 	): FormEngineBuilder<
 		TElements,
-		TConfig extends never ? TLayouts : TLayouts & Record<TId, Omit<TConfig, '__id'>>,
+		TConfig extends never ? TLayouts : TLayouts & Record<TId, Omit<TConfig, '$type'>>,
 		TSteppers,
 		TActions
 	> {
@@ -141,7 +141,7 @@ export class FormEngineBuilder<
 	): FormEngineBuilder<
 		TElements,
 		TLayouts,
-		TConfig extends never ? TSteppers : TSteppers & Record<TId, Omit<TConfig, '__id'>>,
+		TConfig extends never ? TSteppers : TSteppers & Record<TId, Omit<TConfig, '$type'>>,
 		TActions
 	> {
 		this.stepperRegistry.register(registration);
@@ -176,12 +176,12 @@ export class FormEngineBuilder<
 			? Merge<
 					TActions,
 					{
-						[K in typeof registration.__id]: typeof registration extends BuilderActionRegistration<infer C>
-							? Omit<C, '__id'>
+						[K in typeof registration.$type]: typeof registration extends BuilderActionRegistration<infer C>
+							? Omit<C, '$type'>
 							: never;
 					}
 				>
-			: Merge<TActions, { [K in typeof registration.__id]: Omit<TConfig, '__id'> }>
+			: Merge<TActions, { [K in typeof registration.$type]: Omit<TConfig, '$type'> }>
 	> {
 		this.actionRegistry.register(registration);
 		return this as any;
@@ -345,7 +345,7 @@ export class FormEngineBuilder<
 
 		for (const element of this.elementRegistry.getAll()) {
 			element.schema.register(schemaRegistry, {
-				id: `element:${element.__id}`,
+				id: `element:${element.$type}`,
 				componentType: 'element',
 				title: element.metadata.name,
 				description: element.metadata.description,
@@ -355,7 +355,7 @@ export class FormEngineBuilder<
 
 		for (const layout of this.layoutRegistry.getAll()) {
 			layout.schema.register(schemaRegistry, {
-				id: `layout:${layout.__id}`,
+				id: `layout:${layout.$type}`,
 				componentType: 'layout',
 				title: layout.metadata.name,
 				description: layout.metadata.description,
@@ -364,7 +364,7 @@ export class FormEngineBuilder<
 
 		for (const stepper of this.stepperRegistry.getAll()) {
 			stepper.schema.register(schemaRegistry, {
-				id: `stepper:${stepper.__id}`,
+				id: `stepper:${stepper.$type}`,
 				componentType: 'stepper',
 				title: stepper.metadata.name,
 				description: stepper.metadata.description,
@@ -373,7 +373,7 @@ export class FormEngineBuilder<
 
 		for (const action of this.actionRegistry.getAll()) {
 			action.schema.register(schemaRegistry, {
-				id: `action:${action.__id}`,
+				id: `action:${action.$type}`,
 				componentType: 'action',
 				title: action.metadata.name,
 				description: action.metadata.description,
