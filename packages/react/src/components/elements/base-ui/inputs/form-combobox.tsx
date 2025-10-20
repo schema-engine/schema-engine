@@ -73,7 +73,6 @@ export function FormCombobox({
 						<ComboboxValue
 							chipData={chipData}
 							multiple
-							showInput
 							onRemoveChip={handleRemoveValue}
 							placeholder={config.placeholder}
 						/>

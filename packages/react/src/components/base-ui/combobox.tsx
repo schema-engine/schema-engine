@@ -46,7 +46,7 @@ function Combobox({
 		<BaseCombobox.Root
 			data-slot="combobox"
 			multiple={multiple}
-			value={multiple ? selectedValues : selectedSingleValue}
+			value={multiple ? selectedValues : selectedSingleValue || { value: '', label: '' }}
 			onValueChange={handleValueChange}
 			items={options || []}
 			itemToStringValue={(item: any) => String(item?.value ?? '')}
@@ -204,7 +204,6 @@ function ComboboxValue({
 	chipData,
 	multiple,
 	onRemoveChip: onRemoveValue,
-	showInput = false,
 	inputProps,
 	placeholder,
 	...props

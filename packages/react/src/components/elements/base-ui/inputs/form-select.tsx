@@ -13,7 +13,10 @@ export function FormSelect({
 		useAdapterControlledFormElement(config);
 
 	const isMultiple = config.multiple;
-	const values = isMultiple && Array.isArray(value) ? value : isMultiple ? [] : value ? [value] : [];
+
+	const normalizedValue = isMultiple ? (Array.isArray(value) ? value : []) : (value ?? '');
+
+	const values = isMultiple ? (normalizedValue as string[]) : normalizedValue ? [normalizedValue] : [];
 
 	const selectedLabels = values
 		.map((v) => config.options.find((opt) => String(opt.value) === String(v))?.label)
@@ -51,7 +54,7 @@ export function FormSelect({
 		>
 			<Select
 				multiple={isMultiple}
-				value={values}
+				value={normalizedValue}
 				onValueChange={handleValueChange}
 				options={config.options}
 				disabled={fieldProps.disabled}
