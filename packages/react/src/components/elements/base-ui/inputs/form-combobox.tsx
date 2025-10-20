@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { FieldGroup } from '@/components/elements/field-group';
-import { useAdapterControlledFormElement, combineHandlers } from '@/hooks';
+import { combineHandlers, useControlledFormElement } from '@/hooks';
 import {
 	Combobox,
 	ComboboxClear,
@@ -23,9 +23,8 @@ export function FormCombobox({
 	onFocus: propsOnFocus,
 	...config
 }: ComboboxFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } = useAdapterControlledFormElement(
-		config as any,
-	);
+	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
+		useControlledFormElement(config);
 
 	const isMultiple = config.multiple;
 	const values = isMultiple && Array.isArray(value) ? value : isMultiple ? [] : value ? [value] : [];

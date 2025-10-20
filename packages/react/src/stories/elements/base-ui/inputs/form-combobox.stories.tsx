@@ -102,3 +102,23 @@ export const WithValidation: Story = {
 			.build(),
 	},
 };
+
+export const WithMultipleValidation: Story = {
+	args: {
+		config: createForm()
+			.setId('combobox-validation')
+			.setTitle('Combobox with Validation')
+			.addStep({ id: 'step-1', title: 'Required Selection' })
+			.addElement('combobox', {
+				id: 'language',
+				name: 'language',
+				label: 'Favorite Language',
+				description: 'Choose your favorite programming language',
+				options: programmingLanguages,
+				multiple: true,
+				rules: [ValidationPresets.string.required('Please select a language')],
+			})
+			.addElement('submit', { id: 'submit', label: 'Continue', name: 'submit' })
+			.build(),
+	},
+};
