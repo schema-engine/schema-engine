@@ -14,38 +14,23 @@ export function FormSelect({
 
 	const isMultiple = config.multiple;
 	const values = isMultiple && Array.isArray(value) ? value : isMultiple ? [] : value ? [value] : [];
+
 	const selectedLabels = values
 		.map((v) => config.options.find((opt) => String(opt.value) === String(v))?.label)
 		.filter(Boolean);
 
-	const renderDisplayValue = () => {
-		if (!selectedLabels.length) return null;
-
-		if (isMultiple) {
-			const firstLabel = selectedLabels[0];
-			const additionalCount = selectedLabels.length > 1 ? ` (+${selectedLabels.length - 1} more)` : '';
-			return firstLabel + additionalCount;
-		}
-
-		return selectedLabels[0];
-	};
+	const displayLabel = selectedLabels.length
+		? isMultiple
+			? `${selectedLabels[0]}${selectedLabels.length > 1 ? ` (+${selectedLabels.length - 1} more)` : ''}`
+			: selectedLabels[0]
+		: null;
 
 	const handleValueChange = (val: unknown) => {
-		const strVal = String(val);
-
 		if (isMultiple) {
-			const currentValues = Array.isArray(value) ? [...value] : [];
-			const index = currentValues.findIndex((v) => String(v) === strVal);
-
-			if (index > -1) {
-				currentValues.splice(index, 1);
-			} else {
-				currentValues.push(strVal);
-			}
-
-			combineHandlers(onChange, propsOnChange)(currentValues);
+			const newValues = Array.isArray(val) ? val.map(String) : [String(val)];
+			combineHandlers(onChange, propsOnChange)(newValues);
 		} else {
-			combineHandlers(onChange, propsOnChange)(strVal);
+			combineHandlers(onChange, propsOnChange)(String(val));
 		}
 	};
 
@@ -60,13 +45,13 @@ export function FormSelect({
 			style={containerStyles}
 		>
 			<Select
-				value={isMultiple ? (values.length > 0 ? values[values.length - 1] : '') : value ? String(value) : ''}
+				value={values}
 				onValueChange={handleValueChange}
 				disabled={fieldProps.disabled}
 				multiple={isMultiple}
 			>
 				<SelectTrigger {...fieldProps} onBlur={combineHandlers(onBlur, propsOnBlur)} onFocus={propsOnFocus}>
-					<SelectValue>{renderDisplayValue()}</SelectValue>
+					<SelectValue>{displayLabel}</SelectValue>
 				</SelectTrigger>
 				<SelectContent>
 					{config.options.map((option) => (
