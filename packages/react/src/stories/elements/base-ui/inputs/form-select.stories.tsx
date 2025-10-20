@@ -12,7 +12,7 @@ const meta = {
 		docs: {
 			description: {
 				component:
-					'Dropdown select element for choosing a single option from a list with placeholder and validation support. Base UI implementation.',
+					'Dropdown select element for choosing single or multiple options with support for scrollable chip display in multiple mode. Includes placeholder, validation, and checkmark indicators. Base UI implementation.',
 			},
 		},
 	},

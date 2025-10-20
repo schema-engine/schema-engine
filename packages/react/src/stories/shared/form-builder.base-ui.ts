@@ -14,6 +14,7 @@ import { TextareaElementRegistration as BaseUITextareaElementRegistration } from
 import { CheckboxElementRegistration as BaseUICheckboxElementRegistration } from '@/components/elements/base-ui/inputs/form-checkbox.registration';
 import { RadioElementRegistration as BaseUIRadioElementRegistration } from '@/components/elements/base-ui/inputs/form-radio.registration';
 import { SelectElementRegistration as BaseUISelectElementRegistration } from '@/components/elements/base-ui/inputs/form-select.registration';
+import { ComboboxElementRegistration as BaseUIComboboxElementRegistration } from '@/components/elements/base-ui/inputs/form-combobox.registration';
 import { SwitchElementRegistration as BaseUISwitchElementRegistration } from '@/components/elements/base-ui/inputs/form-switch.registration';
 import { NumberElementRegistration as BaseUINumberElementRegistration } from '@/components/elements/base-ui/inputs/form-number.registration';
 import { SliderElementRegistration } from '@/components/elements/base-ui/inputs/form-slider.registration';
@@ -60,6 +61,7 @@ function createBaseUIFormEngineBuilder() {
 		.addElement(BaseUICheckboxElementRegistration)
 		.addElement(BaseUIRadioElementRegistration)
 		.addElement(BaseUISelectElementRegistration)
+		.addElement(BaseUIComboboxElementRegistration)
 		.addElement(BaseUISwitchElementRegistration)
 		.addElement(BaseUINumberElementRegistration)
 		.addElement(SliderElementRegistration)

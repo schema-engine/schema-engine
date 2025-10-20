@@ -25,13 +25,18 @@ export function FormSelect({
 			: selectedLabels[0]
 		: null;
 
+	const selectedOptions = values.map((v) => ({
+		value: String(v),
+		label: config.options.find((opt) => String(opt.value) === String(v))?.label || String(v),
+	}));
+
 	const handleValueChange = (val: unknown) => {
-		if (isMultiple) {
-			const newValues = Array.isArray(val) ? val.map(String) : [String(val)];
-			combineHandlers(onChange, propsOnChange)(newValues);
-		} else {
-			combineHandlers(onChange, propsOnChange)(String(val));
-		}
+		combineHandlers(onChange, propsOnChange)(val as string | string[]);
+	};
+
+	const handleRemoveValue = (valueToRemove: string) => {
+		const newValues = values.filter((v) => String(v) !== valueToRemove);
+		handleValueChange(newValues);
 	};
 
 	return (
@@ -45,13 +50,16 @@ export function FormSelect({
 			style={containerStyles}
 		>
 			<Select
+				multiple={isMultiple}
 				value={values}
 				onValueChange={handleValueChange}
+				options={config.options}
 				disabled={fieldProps.disabled}
-				multiple={isMultiple}
 			>
 				<SelectTrigger {...fieldProps} onBlur={combineHandlers(onBlur, propsOnBlur)} onFocus={propsOnFocus}>
-					<SelectValue>{displayLabel}</SelectValue>
+					<SelectValue onRemoveValue={handleRemoveValue} options={selectedOptions} multiple={isMultiple}>
+						{!isMultiple && displayLabel}
+					</SelectValue>
 				</SelectTrigger>
 				<SelectContent>
 					{config.options.map((option) => (

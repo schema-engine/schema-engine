@@ -1,10 +1,43 @@
 import { Select as BaseSelect } from '@base-ui-components/react/select';
-import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
+import { CheckIcon, ChevronDownIcon, ChevronUpIcon, XIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 
-function Select({ ...props }: ComponentProps<typeof BaseSelect.Root>) {
-	return <BaseSelect.Root data-slot="select" {...props} />;
+function Select({
+	multiple,
+	value,
+	onValueChange,
+	options,
+	children,
+	...props
+}: ComponentProps<typeof BaseSelect.Root> & {
+	multiple?: boolean;
+	value?: unknown;
+	onValueChange?: (value: unknown) => void;
+	options?: Array<{ value: string | number; label: string }>;
+}) {
+	const handleValueChange = (val: unknown) => {
+		if (multiple) {
+			const newValues = Array.isArray(val) ? val.map(String) : [String(val)];
+			onValueChange?.(newValues);
+		} else {
+			onValueChange?.(String(val));
+		}
+	};
+
+	const values = multiple && Array.isArray(value) ? value : multiple ? [] : value ? [value] : [];
+
+	return (
+		<BaseSelect.Root
+			data-slot="select"
+			multiple={multiple}
+			value={multiple ? values.map(String) : value ? String(value) : ''}
+			onValueChange={handleValueChange}
+			{...props}
+		>
+			{children}
+		</BaseSelect.Root>
+	);
 }
 
 function SelectGroup({ ...props }: ComponentProps<typeof BaseSelect.Group>) {
@@ -22,11 +55,31 @@ function SelectPositioner({ ...props }: ComponentProps<typeof BaseSelect.Positio
 function SelectValue({
 	className,
 	children,
+	options: chipData,
+	multiple,
+	values,
+	onRemoveValue,
 	...props
-}: ComponentProps<typeof BaseSelect.Value> & { children?: React.ReactNode }) {
+}: ComponentProps<typeof BaseSelect.Value> & {
+	children?: ReactNode;
+	options?: Array<{ value: string; label: string }>;
+	multiple?: boolean;
+	values?: string[];
+	onRemoveValue?: (value: string) => void;
+}) {
 	return (
 		<BaseSelect.Value data-slot="select-value" className={cn('text-sm', className)} {...props}>
-			{children}
+			{multiple && chipData && chipData.length > 0 ? (
+				<div className="flex w-full flex-wrap gap-1 overflow-hidden">
+					{chipData.map((chip) => (
+						<SelectChip key={chip.value} label={chip.label} onRemove={() => onRemoveValue?.(chip.value)} />
+					))}
+				</div>
+			) : multiple ? (
+				<span className="text-muted-foreground">Select options...</span>
+			) : (
+				children
+			)}
 		</BaseSelect.Value>
 	);
 }
@@ -44,7 +97,7 @@ function SelectTrigger({
 			data-slot="select-trigger"
 			data-size={size}
 			className={cn(
-				"group [&_svg:not([class*='text-'])]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/50 aria-invalid:border-destructive bg-input hover:border-ring/70 flex w-auto items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow,border-color] outline-none select-none focus-visible:ring-[3px] data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[size=default]:h-9 data-[size=sm]:h-8 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 data-[popup-open]:[&_*[data-slot=select-icon]]:rotate-180 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+				"group [&_svg:not([class*='text-'])]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/50 aria-invalid:border-destructive bg-input hover:border-ring/70 flex w-full items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm shadow-xs transition-[color,box-shadow,border-color] outline-none select-none focus-visible:ring-[3px] data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[size=default]:min-h-9 data-[size=sm]:min-h-8 data-[popup-open]:[&_*[data-slot=select-icon]]:rotate-180 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
 				className,
 			)}
 			{...props}
@@ -53,7 +106,7 @@ function SelectTrigger({
 			<BaseSelect.Icon>
 				<ChevronDownIcon
 					data-slot="select-icon"
-					className="size-4 opacity-50 transition-transform duration-200"
+					className="size-4 shrink-0 opacity-50 transition-transform duration-200"
 				/>
 			</BaseSelect.Icon>
 		</BaseSelect.Trigger>
@@ -96,17 +149,18 @@ function SelectItem({ className, children, ...props }: ComponentProps<typeof Bas
 		<BaseSelect.Item
 			data-slot="select-item"
 			className={cn(
-				"data-highlighted:bg-accent data-highlighted:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+				'grid cursor-default grid-cols-[1fr_0.75rem] items-center gap-2 py-2 pr-8 pl-4 text-base leading-4 outline-none select-none',
+				'[@media(hover:hover)]:[&[data-highlighted]]:relative [@media(hover:hover)]:[&[data-highlighted]]:z-0 [@media(hover:hover)]:[&[data-highlighted]]:text-gray-50',
+				'[@media(hover:hover)]:[&[data-highlighted]]:before:absolute [@media(hover:hover)]:[&[data-highlighted]]:before:inset-x-2 [@media(hover:hover)]:[&[data-highlighted]]:before:inset-y-0',
+				'[@media(hover:hover)]:[&[data-highlighted]]:before:z-[-1] [@media(hover:hover)]:[&[data-highlighted]]:before:rounded-sm [@media(hover:hover)]:[&[data-highlighted]]:before:bg-gray-900',
 				className,
 			)}
 			{...props}
 		>
-			<span className="absolute right-2 flex size-3.5 items-center justify-center">
-				<BaseSelect.ItemIndicator>
-					<CheckIcon className="size-4" />
-				</BaseSelect.ItemIndicator>
-			</span>
-			<BaseSelect.ItemText>{children}</BaseSelect.ItemText>
+			<BaseSelect.ItemText className="col-start-1">{children}</BaseSelect.ItemText>
+			<BaseSelect.ItemIndicator className="col-start-2">
+				<CheckIcon className="size-3" />
+			</BaseSelect.ItemIndicator>
 		</BaseSelect.Item>
 	);
 }
@@ -162,3 +216,31 @@ function SelectScrollDownButton({ className, ...props }: ComponentProps<typeof B
 }
 
 export { Select, SelectTrigger, SelectContent, SelectItem, SelectValue, SelectGroup, SelectLabel, SelectSeparator };
+
+function SelectChip({ label, onRemove, className }: { label: string; onRemove: () => void; className?: string }) {
+	return (
+		<div
+			className={cn(
+				'flex items-center gap-1 rounded-md bg-gray-100 px-1.5 py-0.5 text-sm text-gray-900 outline-none cursor-default',
+				'[@media(hover:hover)]:[&[data-highlighted]]:bg-blue-800 [@media(hover:hover)]:[&[data-highlighted]]:text-gray-50',
+				'focus-within:bg-blue-800 focus-within:text-gray-50',
+				className,
+			)}
+		>
+			<span>{label}</span>
+			<button
+				type="button"
+				onClick={(e) => {
+					e.stopPropagation();
+					onRemove();
+				}}
+				className="rounded-md p-1 text-inherit hover:bg-gray-200 transition-colors"
+				aria-label={`Remove ${label}`}
+			>
+				<XIcon className="size-3" />
+			</button>
+		</div>
+	);
+}
+
+export { SelectChip };
