@@ -29,7 +29,7 @@ export function FormCombobox({
 	const isMultiple = config.multiple;
 	const values = isMultiple && Array.isArray(value) ? value : isMultiple ? [] : value ? [value] : [];
 
-	const chipData = values.map((v) => ({
+	const selectedOptions = values.map((v) => ({
 		value: String(v),
 		label: config.options.find((opt) => String(opt.value) === String(v))?.label || String(v),
 	}));
@@ -70,7 +70,7 @@ export function FormCombobox({
 				{isMultiple ? (
 					<ComboboxChipsTrigger ref={containerRef} onBlur={handleBlur} onFocus={propsOnFocus}>
 						<ComboboxValue
-							chipData={chipData}
+							chipData={selectedOptions}
 							multiple
 							onRemoveChip={handleRemoveValue}
 							placeholder={config.placeholder}
