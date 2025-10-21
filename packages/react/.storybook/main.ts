@@ -26,12 +26,29 @@ const config: StorybookConfig = {
   async viteFinal(config) {
     return {
       ...config,
+      build: {
+        ...config.build,
+        rollupOptions: {
+          output: {
+            manualChunks: (id) => {
+              if (id.includes('node_modules/@storybook')) return '@storybook-vendor';
+              if (id.includes('node_modules/react')) return 'react-vendor';
+              if (id.includes('node_modules')) return 'vendor';
+            },
+          },
+        },
+        chunkSizeWarningLimit: 1000,
+      },
       resolve: {
         ...config.resolve,
         alias: {
           ...config.resolve?.alias,
           '@': resolve(__dirname, '../src'),
         },
+      },
+      esbuild: {
+        ...config.esbuild,
+        drop: ['console', 'debugger'],
       },
     };
   },
