@@ -4,55 +4,9 @@ import { CheckIcon, ChevronDownIcon, XIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ComponentProps } from 'react';
 
-function Combobox({
-	multiple,
-	value,
-	onValueChange,
-	options,
-	children,
-	...props
-}: Omit<ComponentProps<typeof BaseCombobox.Root>, 'items' | 'children' | 'defaultValue'> & {
-	multiple?: boolean;
-	value?: unknown;
-	onValueChange?: (value: unknown) => void;
-	options?: Array<{ value: string | number; label: string }>;
-	children?: React.ReactNode;
-}) {
-	const handleValueChange = (val: unknown) => {
-		if (multiple) {
-			const items = Array.isArray(val) ? val : [val];
-			const values = items.map((item: any) => String(item?.value ?? item));
-			onValueChange?.(values);
-		} else {
-			const itemValue = (val as any)?.value ?? val;
-			onValueChange?.(String(itemValue));
-		}
-	};
-
-	const findItemByValue = (val: unknown): { value: string | number; label: string } | undefined => {
-		if (!options || val === null || val === undefined) return undefined;
-		return options.find((opt) => String(opt.value) === String(val));
-	};
-
-	const selectedValues =
-		multiple && Array.isArray(value)
-			? value
-					.map((v) => findItemByValue(v))
-					.filter((item): item is { value: string | number; label: string } => item !== undefined)
-			: [];
-	const selectedSingleValue = !multiple && value ? findItemByValue(value) : undefined;
-
+function Combobox({ children, ...props }: Omit<ComponentProps<typeof BaseCombobox.Root>, 'defaultValue'>) {
 	return (
-		<BaseCombobox.Root
-			data-slot="combobox"
-			multiple={multiple}
-			value={multiple ? selectedValues : selectedSingleValue || { value: '', label: '' }}
-			onValueChange={handleValueChange}
-			items={options || []}
-			itemToStringValue={(item: any) => String(item?.value ?? '')}
-			itemToStringLabel={(item: any) => String(item?.label ?? '')}
-			{...props}
-		>
+		<BaseCombobox.Root data-slot="combobox" {...props}>
 			{children}
 		</BaseCombobox.Root>
 	);
@@ -63,8 +17,10 @@ function ComboboxInput({ ...props }: ComponentProps<typeof BaseCombobox.Input>) 
 		<BaseCombobox.Input
 			data-slot="combobox-input"
 			className={cn(
-				'h-10 w-full rounded-md font-normal border border-gray-200 pl-3.5 text-base text-gray-900 bg-[canvas]',
-				'focus:outline focus:outline-2 focus:-outline-offset-1 focus:outline-blue-800',
+				'placeholder:text-muted-foreground selection:bg-primary group-hover:border-ring/70 selection:text-primary-foreground bg-input flex h-9 w-full min-w-0 rounded-md border px-3 py-1 text-base shadow-xs transition-[color,box-shadow,border-color] outline-none disabled:pointer-events-none disabled:opacity-50 md:text-sm',
+				'file:text-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium',
+				'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+				'aria-invalid:ring-destructive/50 aria-invalid:border-destructive',
 				props.className,
 			)}
 			{...props}
@@ -219,7 +175,7 @@ function ComboboxValue({
 			{() => {
 				if (multiple) {
 					return (
-						<div className="flex flex-wrap gap-1 overflow-hidden items-center py-1.5 w-full">
+						<div className="flex flex-wrap gap-1 overflow-hidden items-center py-1 w-full">
 							{chipData && chipData.length > 0
 								? chipData.map((chip) => (
 										<ComboboxChip

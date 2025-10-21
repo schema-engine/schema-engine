@@ -3,38 +3,9 @@ import { CheckIcon, ChevronDownIcon, ChevronUpIcon, XIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ComponentProps, ReactNode } from 'react';
 
-function Select({
-	multiple,
-	value,
-	onValueChange,
-	options,
-	children,
-	...props
-}: ComponentProps<typeof BaseSelect.Root> & {
-	multiple?: boolean;
-	value?: unknown;
-	onValueChange?: (value: unknown) => void;
-	options?: Array<{ value: string | number; label: string }>;
-}) {
-	const handleValueChange = (val: unknown) => {
-		if (multiple) {
-			const newValues = Array.isArray(val) ? val.map(String) : [String(val)];
-			onValueChange?.(newValues);
-		} else {
-			onValueChange?.(String(val));
-		}
-	};
-
-	const values = multiple && Array.isArray(value) ? value : multiple ? [] : value ? [value] : [];
-
+function Select({ children, ...props }: ComponentProps<typeof BaseSelect.Root>) {
 	return (
-		<BaseSelect.Root
-			data-slot="select"
-			multiple={multiple}
-			value={multiple ? values.map(String) : value ? String(value) : ''}
-			onValueChange={handleValueChange}
-			{...props}
-		>
+		<BaseSelect.Root data-slot="select" {...props}>
 			{children}
 		</BaseSelect.Root>
 	);
@@ -68,7 +39,14 @@ function SelectValue({
 	onRemoveValue?: (value: string) => void;
 }) {
 	return (
-		<BaseSelect.Value data-slot="select-value" className={cn('text-sm', className)} {...props}>
+		<BaseSelect.Value
+			data-slot="select-value"
+			className={cn(
+				'placeholder:text-muted-foreground selection:bg-primar w-full min-w-0 text-base transition-[color,box-shadow,border-color] outline-none disabled:pointer-events-none disabled:opacity-50 md:text-sm',
+				className,
+			)}
+			{...props}
+		>
 			{multiple && chipData && chipData.length > 0 ? (
 				<div className="flex w-full flex-wrap gap-1 overflow-hidden">
 					{chipData.map((chip) => (
@@ -97,7 +75,7 @@ function SelectTrigger({
 			data-slot="select-trigger"
 			data-size={size}
 			className={cn(
-				"group [&_svg:not([class*='text-'])]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/50 aria-invalid:border-destructive bg-input hover:border-ring/70 flex w-full items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm shadow-xs transition-[color,box-shadow,border-color] outline-none select-none focus-visible:ring-[3px] data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[size=default]:min-h-9 data-[size=sm]:min-h-8 data-[popup-open]:[&_*[data-slot=select-icon]]:rotate-180 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+				"group [&_svg:not([class*='text-'])]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/50 aria-invalid:border-destructive bg-input hover:border-ring/70 flex w-full items-center justify-between gap-2 rounded-md border px-3 py-1 text-sm shadow-xs transition-[color,box-shadow,border-color] outline-none select-none focus-visible:ring-[3px] data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[size=default]:min-h-9 data-[size=sm]:min-h-8 data-[popup-open]:[&_*[data-slot=select-icon]]:rotate-180 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
 				className,
 			)}
 			{...props}
@@ -230,8 +208,13 @@ function SelectChip({ label, onRemove, className }: { label: string; onRemove: (
 			<span>{label}</span>
 			<button
 				type="button"
+				onPointerDown={(e) => {
+					e.stopPropagation();
+					e.preventDefault();
+				}}
 				onClick={(e) => {
 					e.stopPropagation();
+					e.preventDefault();
 					onRemove();
 				}}
 				className="rounded-md p-1 text-inherit hover:bg-gray-200 transition-colors"

@@ -29,13 +29,33 @@ export function FormCombobox({
 	const isMultiple = config.multiple;
 	const values = isMultiple && Array.isArray(value) ? value : isMultiple ? [] : value ? [value] : [];
 
+	const findItemByValue = (val: unknown): { value: string | number; label: string } | undefined => {
+		if (!config.options || val === null || val === undefined) return undefined;
+		return config.options.find((opt) => String(opt.value) === String(val));
+	};
+
+	const selectedValues = isMultiple
+		? values
+				.map((v) => findItemByValue(v))
+				.filter((item): item is { value: string | number; label: string } => item !== undefined)
+		: [];
+
+	const selectedSingleValue = !isMultiple && value ? findItemByValue(value) : undefined;
+
 	const selectedOptions = values.map((v) => ({
 		value: String(v),
 		label: config.options.find((opt) => String(opt.value) === String(v))?.label || String(v),
 	}));
 
 	const handleValueChange = (val: unknown) => {
-		combineHandlers(onChange, propsOnChange)(val as string | string[]);
+		if (isMultiple) {
+			const items = Array.isArray(val) ? val : [val];
+			const newValues = items.map((item: any) => String(item?.value ?? item));
+			combineHandlers(onChange, propsOnChange)(newValues);
+		} else {
+			const itemValue = (val as any)?.value ?? val;
+			combineHandlers(onChange, propsOnChange)(String(itemValue));
+		}
 	};
 
 	const handleRemoveValue = (valueToRemove: string) => {
@@ -63,9 +83,11 @@ export function FormCombobox({
 			<Combobox
 				{...fieldProps}
 				multiple={isMultiple}
-				value={isMultiple ? values : value}
+				value={isMultiple ? selectedValues : selectedSingleValue || { value: '', label: '' }}
 				onValueChange={handleValueChange}
-				options={config.options}
+				items={config.options}
+				itemToStringValue={(item: any) => String(item?.value ?? '')}
+				itemToStringLabel={(item: any) => String(item?.label ?? '')}
 			>
 				{isMultiple ? (
 					<ComboboxChipsTrigger ref={containerRef} onBlur={handleBlur} onFocus={propsOnFocus}>

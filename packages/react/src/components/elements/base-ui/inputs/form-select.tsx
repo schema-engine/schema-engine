@@ -34,13 +34,20 @@ export function FormSelect({
 	}));
 
 	const handleValueChange = (val: unknown) => {
-		combineHandlers(onChange, propsOnChange)(val as string | string[]);
+		if (isMultiple) {
+			const newValues = Array.isArray(val) ? val.map(String) : [String(val)];
+			combineHandlers(onChange, propsOnChange)(newValues);
+		} else {
+			combineHandlers(onChange, propsOnChange)(String(val));
+		}
 	};
 
 	const handleRemoveValue = (valueToRemove: string) => {
 		const newValues = values.filter((v) => String(v) !== valueToRemove);
 		handleValueChange(newValues);
 	};
+
+	const selectValue = isMultiple ? values.map(String) : normalizedValue ? String(normalizedValue) : '';
 
 	return (
 		<FieldGroup
@@ -54,9 +61,8 @@ export function FormSelect({
 		>
 			<Select
 				multiple={isMultiple}
-				value={normalizedValue}
+				value={selectValue}
 				onValueChange={handleValueChange}
-				options={config.options}
 				disabled={fieldProps.disabled}
 			>
 				<SelectTrigger {...fieldProps} onBlur={combineHandlers(onBlur, propsOnBlur)} onFocus={propsOnFocus}>
