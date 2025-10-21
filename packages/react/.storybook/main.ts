@@ -16,11 +16,13 @@ const config: StorybookConfig = {
   ],
   addons: [
     getAbsolutePath('@storybook/addon-docs'),
+    'msw-storybook-addon',
   ],
   framework: {
     name: getAbsolutePath('@storybook/react-vite'),
     options: {}
   },
+  staticDirs: ['../public'],
   async viteFinal(config) {
     return {
       ...config,

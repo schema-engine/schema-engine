@@ -127,18 +127,15 @@ function SelectItem({ className, children, ...props }: ComponentProps<typeof Bas
 		<BaseSelect.Item
 			data-slot="select-item"
 			className={cn(
-				'grid cursor-default grid-cols-[1fr_0.75rem] items-center gap-2 py-2 pr-8 pl-4 text-base leading-4 outline-none select-none',
-				'[@media(hover:hover)]:[&[data-highlighted]]:relative [@media(hover:hover)]:[&[data-highlighted]]:z-0 [@media(hover:hover)]:[&[data-highlighted]]:text-gray-50',
-				'[@media(hover:hover)]:[&[data-highlighted]]:before:absolute [@media(hover:hover)]:[&[data-highlighted]]:before:inset-x-2 [@media(hover:hover)]:[&[data-highlighted]]:before:inset-y-0',
-				'[@media(hover:hover)]:[&[data-highlighted]]:before:z-[-1] [@media(hover:hover)]:[&[data-highlighted]]:before:rounded-sm [@media(hover:hover)]:[&[data-highlighted]]:before:bg-gray-900',
+				'grid cursor-default grid-cols-[0.75rem_1fr] items-center gap-2 py-2 pr-8 pl-4 text-base leading-4 outline-none select-none [&[data-highlighted]]:relative [&[data-highlighted]]:z-0 [&[data-highlighted]]:text-gray-50 [&[data-highlighted]]:before:absolute [&[data-highlighted]]:before:inset-x-2 [&[data-highlighted]]:before:inset-y-0 [&[data-highlighted]]:before:z-[-1] [&[data-highlighted]]:before:rounded-sm [&[data-highlighted]]:before:bg-gray-900',
 				className,
 			)}
 			{...props}
 		>
-			<BaseSelect.ItemText className="col-start-1">{children}</BaseSelect.ItemText>
-			<BaseSelect.ItemIndicator className="col-start-2">
+			<BaseSelect.ItemIndicator className="col-start-1">
 				<CheckIcon className="size-3" />
 			</BaseSelect.ItemIndicator>
+			<BaseSelect.ItemText className="col-start-2">{children}</BaseSelect.ItemText>
 		</BaseSelect.Item>
 	);
 }
@@ -193,8 +190,6 @@ function SelectScrollDownButton({ className, ...props }: ComponentProps<typeof B
 	);
 }
 
-export { Select, SelectTrigger, SelectContent, SelectItem, SelectValue, SelectGroup, SelectLabel, SelectSeparator };
-
 function SelectChip({ label, onRemove, className }: { label: string; onRemove: () => void; className?: string }) {
 	return (
 		<div
@@ -226,4 +221,14 @@ function SelectChip({ label, onRemove, className }: { label: string; onRemove: (
 	);
 }
 
-export { SelectChip };
+export {
+	Select,
+	SelectTrigger,
+	SelectContent,
+	SelectItem,
+	SelectValue,
+	SelectGroup,
+	SelectLabel,
+	SelectSeparator,
+	SelectChip,
+};

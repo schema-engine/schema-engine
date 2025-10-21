@@ -182,12 +182,23 @@ export function submitPlugin(config: SubmitPluginConfig = {}): BuilderActionRegi
 				context,
 			);
 
+			const formData = new FormData();
+
+			for (const [key, value] of Object.entries(transformedData)) {
+				if (value !== null && value !== undefined) {
+					if (value instanceof File || value instanceof Blob) {
+						formData.append(key, value);
+					} else if (typeof value === 'object') {
+						formData.append(key, JSON.stringify(value));
+					} else {
+						formData.append(key, String(value));
+					}
+				}
+			}
+
 			const requestOptions = {
 				method: action.method,
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(transformedData),
+				body: formData,
 			};
 
 			const response = await request(action.endpoint, requestOptions);

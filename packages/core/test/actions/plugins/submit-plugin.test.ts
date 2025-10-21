@@ -249,10 +249,10 @@ describe("SubmitPlugin", () => {
 		});
 
 		test("should transform data before sending", async () => {
-			let requestBody: any = null;
+			let requestBody: FormData | null = null;
 
 			(global.fetch as any) = async (url: string, options: any) => {
-				requestBody = JSON.parse(options.body);
+				requestBody = options.body;
 				const mockFetch = createMockFetch({ 
 					[url]: { ok: true, data: { success: true, id: "123" } } 
 				});
@@ -280,16 +280,15 @@ describe("SubmitPlugin", () => {
 			});
 			await plugin.execute(context);
 
-			expect(requestBody).toEqual({
-				name: "John",
-				email: "john@example.com",
-				timestamp: "2024-01-01T00:00:00Z",
-				formId: "test-form",
-				metadata: {
-					stepStartTime: expect.any(Number),
-					totalFormTime: 1000,
-					userInteractions: 5,
-				},
+			expect(requestBody).toBeInstanceOf(FormData);
+			expect(requestBody!.get("name")).toBe("John");
+			expect(requestBody!.get("email")).toBe("john@example.com");
+			expect(requestBody!.get("timestamp")).toBe("2024-01-01T00:00:00Z");
+			expect(requestBody!.get("formId")).toBe("test-form");
+			expect(JSON.parse(requestBody!.get("metadata") as string)).toEqual({
+				stepStartTime: expect.any(Number),
+				totalFormTime: 1000,
+				userInteractions: 5,
 			});
 		});
 
@@ -403,6 +402,83 @@ describe("SubmitPlugin", () => {
 
 			expect(result.success).toBe(false);
 			expect(result.error).toContain("Network error");
+		});
+
+		test("should handle File objects in form data", async () => {
+			let requestBody: FormData | null = null;
+
+			(global.fetch as any) = async (url: string, options: any) => {
+				requestBody = options.body;
+				const mockFetch = createMockFetch({ 
+					[url]: { ok: true, data: { success: true, id: "123" } } 
+				});
+				return mockFetch(url, options);
+			};
+
+			const plugin = submitPlugin();
+
+			const mockFile = new File(["file content"], "test.txt", { type: "text/plain" });
+
+			const action: SubmitAction = {
+				id: "test-submit",
+				type: "submit",
+				enabled: true,
+				endpoint: "/api/submit",
+				method: "POST",
+			};
+
+			const context = createMockBuilderContext(action, {
+				formData: { 
+					name: "John", 
+					email: "john@example.com",
+					avatar: mockFile,
+				},
+			});
+			const result = await plugin.execute(context);
+
+			expect(result.success).toBe(true);
+			expect(requestBody).toBeInstanceOf(FormData);
+			expect(requestBody!.get("name")).toBe("John");
+			expect(requestBody!.get("email")).toBe("john@example.com");
+			expect(requestBody!.get("avatar")).toBeInstanceOf(File);
+			expect((requestBody!.get("avatar") as File).name).toBe("test.txt");
+		});
+
+		test("should handle Blob objects in form data", async () => {
+			let requestBody: FormData | null = null;
+
+			(global.fetch as any) = async (url: string, options: any) => {
+				requestBody = options.body;
+				const mockFetch = createMockFetch({ 
+					[url]: { ok: true, data: { success: true, id: "123" } } 
+				});
+				return mockFetch(url, options);
+			};
+
+			const plugin = submitPlugin();
+
+			const mockBlob = new Blob(["blob content"], { type: "application/octet-stream" });
+
+			const action: SubmitAction = {
+				id: "test-submit",
+				type: "submit",
+				enabled: true,
+				endpoint: "/api/submit",
+				method: "POST",
+			};
+
+			const context = createMockBuilderContext(action, {
+				formData: { 
+					name: "John",
+					document: mockBlob,
+				},
+			});
+			const result = await plugin.execute(context);
+
+			expect(result.success).toBe(true);
+			expect(requestBody).toBeInstanceOf(FormData);
+			expect(requestBody!.get("name")).toBe("John");
+			expect(requestBody!.get("document")).toBeInstanceOf(Blob);
 		});
 	});
 

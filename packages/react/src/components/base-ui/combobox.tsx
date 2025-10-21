@@ -113,7 +113,7 @@ function ComboboxEmpty({ ...props }: ComponentProps<typeof BaseCombobox.Empty>) 
 	return (
 		<BaseCombobox.Empty
 			data-slot="combobox-empty"
-			className={cn('text-muted-foreground px-2 py-1.5 text-xs font-medium', props.className)}
+			className={cn('text-muted-foreground px-2 text-base font-medium', props.className)}
 			{...props}
 		/>
 	);
@@ -128,18 +128,15 @@ function ComboboxItem({ className, children, ...props }: ComponentProps<typeof B
 		<BaseCombobox.Item
 			data-slot="combobox-item"
 			className={cn(
-				'grid cursor-default grid-cols-[1fr_0.75rem] items-center gap-2 py-2 pr-8 pl-4 text-base leading-4 outline-none select-none',
-				'[@media(hover:hover)]:[&[data-highlighted]]:relative [@media(hover:hover)]:[&[data-highlighted]]:z-0 [@media(hover:hover)]:[&[data-highlighted]]:text-gray-50',
-				'[@media(hover:hover)]:[&[data-highlighted]]:before:absolute [@media(hover:hover)]:[&[data-highlighted]]:before:inset-x-2 [@media(hover:hover)]:[&[data-highlighted]]:before:inset-y-0',
-				'[@media(hover:hover)]:[&[data-highlighted]]:before:z-[-1] [@media(hover:hover)]:[&[data-highlighted]]:before:rounded-sm [@media(hover:hover)]:[&[data-highlighted]]:before:bg-gray-900',
+				'grid cursor-default grid-cols-[0.75rem_1fr] items-center gap-2 py-2 pr-8 pl-4 text-base leading-4 outline-none select-none [&[data-highlighted]]:relative [&[data-highlighted]]:z-0 [&[data-highlighted]]:text-gray-50 [&[data-highlighted]]:before:absolute [&[data-highlighted]]:before:inset-x-2 [&[data-highlighted]]:before:inset-y-0 [&[data-highlighted]]:before:z-[-1] [&[data-highlighted]]:before:rounded-sm [&[data-highlighted]]:before:bg-gray-900',
 				className,
 			)}
 			{...props}
 		>
-			<div className="col-start-1">{children}</div>
-			<BaseCombobox.ItemIndicator className="col-start-2">
+			<BaseCombobox.ItemIndicator className="col-start-1">
 				<CheckIcon className="size-3" />
 			</BaseCombobox.ItemIndicator>
+			<div className="col-start-2">{children}</div>
 		</BaseCombobox.Item>
 	);
 }

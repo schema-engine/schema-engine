@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '@/stories/shared/story-wrapper';
 import { createForm, getEngine, ValidationPresets } from '@/stories/shared/form-builder.base-ui';
+import { SUBMIT_FORM_MOCK_URL, submitFormHandler } from '../msw/submit-form';
 
 const baseUIEngine = getEngine();
 
@@ -15,6 +16,9 @@ const meta = {
 					'Complete demo forms for Base UI components, ranging from simple contact forms to complex multi-step applications with various field types and validation rules.',
 			},
 		},
+		msw: {
+			handlers: [submitFormHandler],
+		},
 	},
 	decorators: [
 		(Story) => (
@@ -23,7 +27,6 @@ const meta = {
 			</StoryWrapper>
 		),
 	],
-	tags: ['autodocs'],
 	argTypes: {
 		config: {
 			control: 'object',
@@ -114,6 +117,19 @@ export const SimpleContactForm: Story = {
 				name: 'submit',
 				label: 'Send Message',
 			})
+			.addFormAction('submit', {
+				id: 'submit-contact',
+				enabled: true,
+				triggers: ['form_submit'],
+				endpoint: SUBMIT_FORM_MOCK_URL,
+				method: 'POST',
+			} as any)
+			.addFormAction('reset', {
+				id: 'reset-form',
+				enabled: true,
+				triggers: ['submit_success'],
+				resetToDefaults: true,
+			} as any)
 			.build(),
 	},
 };
@@ -223,6 +239,19 @@ export const ProductFeedbackForm: Story = {
 				name: 'submit',
 				label: 'Submit Feedback',
 			})
+			.addFormAction('submit', {
+				id: 'submit-feedback',
+				enabled: true,
+				triggers: ['form_submit'],
+				endpoint: SUBMIT_FORM_MOCK_URL,
+				method: 'POST',
+			} as any)
+			.addFormAction('reset', {
+				id: 'reset-form',
+				enabled: true,
+				triggers: ['submit_success'],
+				resetToDefaults: true,
+			} as any)
 			.build(),
 	},
 };
@@ -391,6 +420,13 @@ export const EventRegistrationForm: Story = {
 				name: 'submit',
 				label: 'Complete Registration',
 			})
+			.addFormAction('submit', {
+				id: 'submit-registration',
+				enabled: true,
+				triggers: ['form_submit'],
+				endpoint: SUBMIT_FORM_MOCK_URL,
+				method: 'POST',
+			} as any)
 			.build(),
 	},
 };
@@ -574,6 +610,13 @@ export const AdvancedSettingsPanel: Story = {
 				name: 'submit',
 				label: 'Save Settings',
 			})
+			.addFormAction('submit', {
+				id: 'submit-settings',
+				enabled: true,
+				triggers: ['form_submit'],
+				endpoint: SUBMIT_FORM_MOCK_URL,
+				method: 'POST',
+			} as any)
 			.build(),
 	},
 };
@@ -1005,6 +1048,13 @@ export const ComplexJobApplicationForm: Story = {
 				name: 'submit',
 				label: 'Submit Application',
 			})
+			.addFormAction('submit', {
+				id: 'submit-application',
+				enabled: true,
+				triggers: ['form_submit'],
+				endpoint: SUBMIT_FORM_MOCK_URL,
+				method: 'POST',
+			} as any)
 			.build(),
 	},
 };

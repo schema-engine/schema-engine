@@ -34,7 +34,6 @@ const meta = {
 			</StoryWrapper>
 		),
 	],
-	tags: ['autodocs'],
 	argTypes: {
 		config: {
 			control: 'object',

@@ -34,6 +34,7 @@ import '@/components/steppers/debugger-stepper.css';
 import '@/components/layouts/card-layout.css';
 import '@/components/layouts/split-screen-layout.css';
 import '@/components/layouts/hero-background-layout.css';
+import { resetPlugin, submitPlugin } from '@json-form-engine/core';
 
 /**
  * Re-export ValidationPresets for convenience
@@ -66,7 +67,24 @@ function createDefaultFormEngineBuilder() {
 		.addLayout(HeroBackgroundLayoutRegistration)
 		.addStepper(DefaultStepperRegistration)
 		.addStepper(MinimalistStepperRegistration)
-		.addStepper(DebuggerStepperRegistration);
+		.addStepper(DebuggerStepperRegistration)
+		.addAction(
+			submitPlugin({
+				onError(error, context) {
+					console.error('Form submission error:', error, context);
+				},
+				onSuccess(response, context) {
+					console.log('Form submitted successfully:', response, context);
+				},
+			}),
+		)
+		.addAction(
+			resetPlugin({
+				onReset(context) {
+					console.log('Form has been reset:', context);
+				},
+			}),
+		);
 }
 
 /**
