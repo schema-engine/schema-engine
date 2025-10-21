@@ -3,7 +3,7 @@
  *
  * Provides form creation helpers specifically for base-ui components.
  * Use createForm() to build base-ui-based forms with full TypeScript support.
- * Includes exclusive base-ui elements: slider, checkbox-group, input-otp
+ * Includes exclusive base-ui elements: slider, checkbox-group, input-otp, phone-input
  */
 
 import { FormEngineBuilder } from '@json-form-engine/core/builder';
@@ -20,6 +20,7 @@ import { NumberElementRegistration as BaseUINumberElementRegistration } from '@/
 import { SliderElementRegistration } from '@/components/elements/base-ui/inputs/form-slider.registration';
 import { CheckboxGroupElementRegistration } from '@/components/elements/base-ui/inputs/form-checkbox-group.registration';
 import { InputOTPElementRegistration } from '@/components/elements/base-ui/inputs/form-input-otp.registration';
+import { PhoneInputElementRegistration } from '@/components/elements/base-ui/inputs/form-phone-input.registration';
 import { ArrayElementRegistration as BaseUIArrayElementRegistration } from '@/components/elements/base-ui/inputs/form-array-elements.registration';
 import { FieldSetRegistration as BaseUIFieldSetRegistration } from '@/components/elements/base-ui/inputs/form-fieldset.registration';
 import { SubmitButtonElementRegistration as BaseUISubmitButtonElementRegistration } from '@/components/elements/base-ui/actions/submit-button.registration';
@@ -50,7 +51,7 @@ export { ValidationPresets };
  * Returns a fresh builder instance with proper type inference.
  *
  * Components included:
- * - Elements: input, textarea, checkbox, select, radio, switch, number, slider, checkbox-group, input-otp, arrayElements, fieldSet, submit
+ * - Elements: input, textarea, checkbox, select, radio, switch, number, slider, checkbox-group, input-otp, phone-input, arrayElements, fieldSet, submit
  * - Layouts: card, split-screen, hero-background
  * - Steppers: default, minimalist, debugger
  */
@@ -67,6 +68,7 @@ function createBaseUIFormEngineBuilder() {
 		.addElement(SliderElementRegistration)
 		.addElement(CheckboxGroupElementRegistration)
 		.addElement(InputOTPElementRegistration)
+		.addElement(PhoneInputElementRegistration)
 		.addElement(BaseUIArrayElementRegistration)
 		.addElement(BaseUIFieldSetRegistration)
 		.addElement(BaseUISubmitButtonElementRegistration)
@@ -81,7 +83,7 @@ function createBaseUIFormEngineBuilder() {
 /**
  * Create a form builder with all base-ui components registered.
  * Returns a FormConfigBuilder with full TypeScript IntelliSense for all registered components.
- * Includes exclusive elements: slider, checkbox-group, input-otp
+ * Includes exclusive elements: slider, checkbox-group, input-otp, phone-input
  *
  * @example
  * ```typescript
@@ -91,6 +93,7 @@ function createBaseUIFormEngineBuilder() {
  *   .addElement('slider', { ... })
  *   .addElement('checkbox-group', { ... })
  *   .addElement('input-otp', { ... })
+ *   .addElement('phone-input', { ... })
  *   .build();
  * ```
  */

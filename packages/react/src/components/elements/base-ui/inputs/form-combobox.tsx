@@ -70,6 +70,10 @@ export function FormCombobox({
 
 	const containerRef = React.useRef<HTMLDivElement | null>(null);
 
+	const comboboxValue = isMultiple ? selectedValues : selectedSingleValue || { value: '', label: '' };
+
+	const hasValue = isMultiple ? selectedValues.length > 0 : Boolean(selectedSingleValue);
+
 	return (
 		<FieldGroup
 			label={config.label || config.name}
@@ -83,7 +87,7 @@ export function FormCombobox({
 			<Combobox
 				{...fieldProps}
 				multiple={isMultiple}
-				value={isMultiple ? selectedValues : selectedSingleValue || { value: '', label: '' }}
+				value={comboboxValue}
 				onValueChange={handleValueChange}
 				items={config.options}
 				itemToStringValue={(item: any) => String(item?.value ?? '')}
@@ -108,8 +112,8 @@ export function FormCombobox({
 							onBlur={handleBlur}
 							onFocus={propsOnFocus}
 						/>
-						<div className="absolute right-2 bottom-0 flex h-10 items-center justify-center text-gray-600">
-							<ComboboxClear aria-label="Clear selection" />
+						<div className="absolute right-2 bottom-0 flex h-9 items-center justify-center text-gray-600">
+							{hasValue ? <ComboboxClear aria-label="Clear selection" /> : null}
 							<ComboboxTrigger aria-label="Open popup" />
 						</div>
 					</div>

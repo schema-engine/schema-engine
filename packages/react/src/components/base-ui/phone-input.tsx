@@ -56,14 +56,7 @@ type CountrySelectProps = {
 	onChange: (country: BasePhoneInput.Country) => void;
 };
 
-function CountrySelect({
-	disabled,
-	value: selectedCountry,
-	options: countryList,
-	onChange,
-	...other
-}: CountrySelectProps) {
-	console.log({ other });
+function CountrySelect({ disabled, value: selectedCountry, options: countryList, onChange }: CountrySelectProps) {
 	const scrollAreaRef = useRef<HTMLDivElement>(null);
 	const viewportRef = useRef<HTMLElement | null>(null);
 	const [searchValue, setSearchValue] = useState('');

@@ -33,7 +33,7 @@ function ComboboxTrigger({ ...props }: ComponentProps<typeof BaseCombobox.Trigge
 		<BaseCombobox.Trigger
 			data-slot="combobox-trigger"
 			className={cn(
-				'group flex h-10 w-6 items-center justify-center rounded bg-transparent p-0 text-gray-600',
+				'group flex h-6 w-6 items-center justify-center rounded bg-transparent p-0 text-gray-600',
 				'hover:bg-gray-100 transition-colors',
 				props.className,
 			)}
@@ -51,7 +51,7 @@ function ComboboxClear({ ...props }: ComponentProps<typeof BaseCombobox.Clear>) 
 		<BaseCombobox.Clear
 			data-slot="combobox-clear"
 			className={cn(
-				'flex h-10 w-6 items-center justify-center rounded bg-transparent p-0',
+				'flex h-6 w-6 items-center justify-center rounded bg-transparent p-0',
 				'text-gray-600 hover:bg-gray-100',
 				props.className,
 			)}

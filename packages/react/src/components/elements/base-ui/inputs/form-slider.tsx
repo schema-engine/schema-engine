@@ -31,8 +31,8 @@ export function FormSlider({
 					max={config.max || 100}
 					step={config.step || 1}
 					value={sliderValue}
-					onValueChange={(vals: number | readonly number[]) => {
-						const val = Array.isArray(vals) ? vals[0] : vals;
+					onValueChange={(values: number | readonly number[]) => {
+						const val = Array.isArray(values) ? values[0] : values;
 						combineHandlers(onChange, propsOnChange)(val);
 					}}
 					disabled={fieldProps.disabled}

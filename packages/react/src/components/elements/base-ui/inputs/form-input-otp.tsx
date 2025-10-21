@@ -29,7 +29,7 @@ export function FormInputOTP({
 				{...fieldProps}
 				maxLength={length}
 				value={otpValue}
-				onChange={(val: string) => combineHandlers(onChange, propsOnChange)(val)}
+				onChange={combineHandlers(onChange, propsOnChange)}
 				onBlur={combineHandlers(onBlur, propsOnBlur)}
 				onFocus={propsOnFocus}
 				disabled={fieldProps.disabled}
