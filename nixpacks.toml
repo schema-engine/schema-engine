@@ -5,4 +5,4 @@ nixPkgs = ["bun"]
 cmds = ["bun install && bun run build:lib"]
 
 [phases.build]
-cmds = ["NODE_OPTIONS='--max-old-space-size=4096' bun run build:react-storybook"]
+cmds = ["bun run build:react-storybook"]

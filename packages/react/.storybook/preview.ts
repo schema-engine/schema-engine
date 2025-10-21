@@ -16,9 +16,9 @@ const preview: Preview = {
 				date: /Date$/i,
 			},
 		},
-    msw:{
+		msw: {
 			handlers: [submitFormHandler],
-    },
+		},
 	},
 	loaders: [mswLoader],
 };
