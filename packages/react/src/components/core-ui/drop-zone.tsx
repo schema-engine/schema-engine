@@ -68,6 +68,7 @@ export const Dropzone = ({
 	return (
 		<DropzoneContext.Provider key={JSON.stringify(src)} value={{ src, accept, maxSize, minSize, maxFiles }}>
 			<Button
+				data-slot="dropzone"
 				className={cn(
 					'relative h-auto w-full flex-col overflow-hidden p-8 hover:no-underline border-dashed border-2 text-center justify-center transition-all hover:bg-foreground/5',
 					isDragActive && 'outline-none ring-1 ring-ring',

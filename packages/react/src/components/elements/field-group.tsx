@@ -129,10 +129,19 @@ export function FieldHint({ error, description, display = 'alternate', className
 	return null;
 }
 
-interface FieldGroupRootProps extends React.ComponentProps<'div'> {}
+interface FieldGroupRootProps extends React.ComponentProps<'div'> {
+	hasError?: boolean;
+}
 
-export function FieldGroupRoot({ className, ...props }: FieldGroupRootProps) {
-	return <div className={cn('space-y-2', className)} data-slot="field-group-root" {...props} />;
+export function FieldGroupRoot({ className, hasError, ...props }: FieldGroupRootProps) {
+	return (
+		<div
+			className={cn('space-y-2', className)}
+			data-slot="field-group-root"
+			data-error={hasError ? 'true' : 'false'}
+			{...props}
+		/>
+	);
 }
 
 interface FieldInputContainerProps extends React.ComponentProps<'div'> {}
@@ -177,9 +186,10 @@ export function FieldGroup({
 	showDescriptionWithError = false,
 }: FieldGroupProps) {
 	const display = showDescriptionWithError ? 'both' : 'alternate';
+	const hasError = !!error;
 
 	return (
-		<FieldGroupRoot className={className} style={style}>
+		<FieldGroupRoot className={className} style={style} hasError={hasError}>
 			<FieldLabel
 				htmlFor={htmlFor}
 				hiddenLabel={hiddenLabel}

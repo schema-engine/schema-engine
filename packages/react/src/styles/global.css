@@ -304,3 +304,18 @@
 		@apply hover:text-yellow-900 hover:bg-yellow-50;
 	}
 }
+
+/* Field group error state styling */
+[data-slot="field-group-root"][data-error="true"] input,
+[data-slot="field-group-root"][data-error="true"] textarea,
+[data-slot="field-group-root"][data-error="true"] [data-slot="select-trigger"],
+[data-slot="field-group-root"][data-error="true"] [data-slot="combobox-input-trigger"] {
+	border-color: hsl(var(--destructive)) !important;
+	outline: 1px solid hsl(var(--destructive));
+	outline-offset: 0;
+}
+
+[data-slot="field-group-root"][data-error="true"] [data-slot="dropzone"] {
+	border-color: hsl(var(--destructive)) !important;
+	color: hsl(var(--destructive));
+}
