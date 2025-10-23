@@ -32,6 +32,212 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Demo: Story = {
+	args: {
+		config: createForm()
+			.setId('demo-all-components')
+			.setTitle('Complete Component Showcase')
+			.setDescription('Test all available form components in a single view')
+			.addStep({
+				id: 'demo',
+				title: 'All Components',
+			})
+			.addElement('input', {
+				id: 'fullName',
+				name: 'fullName',
+				label: 'Full Name',
+				placeholder: 'John Doe',
+				inputType: 'text',
+				rules: [
+					ValidationPresets.string.required('Name is required'),
+					ValidationPresets.string.minLength(2, 'Name must be at least 2 characters'),
+				],
+			})
+			.addElement('input', {
+				id: 'email',
+				name: 'email',
+				label: 'Email Address',
+				placeholder: 'john@example.com',
+				inputType: 'email',
+				rules: [
+					ValidationPresets.string.required('Email is required'),
+					ValidationPresets.string.email('Invalid email address'),
+				],
+			})
+			.addElement('phone-input', {
+				id: 'phone',
+				name: 'phone',
+				label: 'Phone Number',
+				placeholder: 'Enter your phone number',
+				defaultCountry: 'US',
+				rules: [ValidationPresets.string.required('Phone is required')],
+			})
+			.addElement('input', {
+				id: 'website',
+				name: 'website',
+				label: 'Website (Optional)',
+				placeholder: 'https://example.com',
+				inputType: 'url',
+			})
+			.addElement('select', {
+				id: 'country',
+				name: 'country',
+				label: 'Country',
+				placeholder: 'Select a country...',
+				options: [
+					{ label: 'United States', value: 'us' },
+					{ label: 'Canada', value: 'ca' },
+					{ label: 'United Kingdom', value: 'uk' },
+					{ label: 'Germany', value: 'de' },
+					{ label: 'France', value: 'fr' },
+				],
+				rules: [ValidationPresets.string.required('Please select a country')],
+			})
+			.addElement('radio', {
+				id: 'accountType',
+				name: 'accountType',
+				label: 'Account Type',
+				options: [
+					{ label: 'Personal', value: 'personal' },
+					{ label: 'Business', value: 'business' },
+				],
+				rules: [ValidationPresets.string.required('Please select an account type')],
+			})
+			.addElement('combobox', {
+				id: 'industry',
+				name: 'industry',
+				label: 'Industry',
+				placeholder: 'Search or select your industry...',
+				options: [
+					{ label: 'Technology', value: 'tech' },
+					{ label: 'Finance', value: 'finance' },
+					{ label: 'Healthcare', value: 'healthcare' },
+					{ label: 'Manufacturing', value: 'manufacturing' },
+					{ label: 'Retail', value: 'retail' },
+					{ label: 'Other', value: 'other' },
+				],
+				rules: [ValidationPresets.string.required('Please select an industry')],
+			})
+			.addElement('checkbox-group', {
+				id: 'interests',
+				name: 'interests',
+				label: 'Areas of Interest',
+				options: [
+					{ label: 'Web Development', value: 'web' },
+					{ label: 'Mobile Apps', value: 'mobile' },
+					{ label: 'AI & Machine Learning', value: 'ai' },
+					{ label: 'Cloud Computing', value: 'cloud' },
+					{ label: 'Data Science', value: 'data' },
+				],
+				rules: [ValidationPresets.array.minItems(1, 'Please select at least one interest')],
+			})
+			.addElement('textarea', {
+				id: 'bio',
+				name: 'bio',
+				label: 'Bio / About You',
+				placeholder: 'Tell us about yourself...',
+				rows: 4,
+				rules: [
+					ValidationPresets.string.required('Bio is required'),
+					ValidationPresets.string.minLength(10, 'Bio must be at least 10 characters'),
+					ValidationPresets.string.maxLength(500, 'Bio must be less than 500 characters'),
+				],
+			})
+			.addElement('number', {
+				id: 'experience',
+				name: 'experience',
+				label: 'Years of Experience',
+				min: 0,
+				max: 60,
+				step: 1,
+				description: 'How many years of experience do you have?',
+				rules: [ValidationPresets.string.required('Years of experience is required')],
+			})
+			.addElement('slider', {
+				id: 'skillLevel',
+				name: 'skillLevel',
+				label: 'Skill Level',
+				min: 0,
+				max: 100,
+				step: 5,
+				defaultValue: 50,
+				description: 'Rate your skill level (0-100)',
+				rules: [ValidationPresets.string.required('Skill level is required')],
+			})
+			.addElement('switch', {
+				id: 'newsletters',
+				name: 'newsletters',
+				label: 'Subscribe to our newsletters',
+				defaultValue: true,
+				rules: [ValidationPresets.string.required('You must choose a preference')],
+			})
+			.addElement('switch', {
+				id: 'notifications',
+				name: 'notifications',
+				label: 'Enable notifications',
+				constraints: [
+					{
+						field: 'newsletters',
+						operator: 'equals',
+						value: true,
+						action: 'show',
+					},
+				],
+				rules: [ValidationPresets.string.required('Please select a notification preference')],
+			})
+			.addElement('input-otp', {
+				id: 'verificationCode',
+				name: 'verificationCode',
+				label: 'Verification Code',
+				description: 'Enter the 6-digit code',
+				length: 6,
+				rules: [ValidationPresets.string.required('Verification code is required')],
+			})
+			.addElement('checkbox', {
+				id: 'agreeToTerms',
+				name: 'agreeToTerms',
+				label: 'I agree to the terms and conditions',
+				rules: [ValidationPresets.string.required('You must agree to continue')],
+			})
+			.addElement('drop-zone', {
+				id: 'documents',
+				name: 'documents',
+				label: 'Upload Documents',
+				maxFiles: 3,
+				maxSize: 5 * 1024 * 1024,
+				rules: [
+					ValidationPresets.array.nonEmpty('Please upload at least one document'),
+					ValidationPresets.array.maxItems(3, 'Maximum 3 files allowed'),
+				],
+				accept: {
+					'application/pdf': ['.pdf'],
+					'image/*': ['.jpg', '.jpeg', '.png'],
+					'application/msword': ['.doc', '.docx'],
+				},
+				description: 'Upload up to 3 documents (PDF, Images, Word docs, max 5 MB each)',
+			})
+			.addElement('submit', {
+				id: 'submit',
+				name: 'submit',
+				label: 'Submit All',
+			})
+			.addFormAction('submit', {
+				id: 'submit-demo',
+				enabled: true,
+				triggers: ['form_submit'],
+				endpoint: SUBMIT_FORM_MOCK_URL,
+				method: 'POST',
+			} as any)
+			.addFormAction('reset', {
+				id: 'reset-demo',
+				enabled: true,
+				triggers: ['submit_success'],
+				resetToDefaults: true,
+			} as any)
+			.build(),
+	},
+};
+
 export const SimpleContactForm: Story = {
 	args: {
 		config: createForm()
@@ -228,6 +434,17 @@ export const ProductFeedbackForm: Story = {
 				placeholder: 'Tell us more about your experience...',
 				rows: 5,
 			})
+			.addElement('drop-zone', {
+				id: 'screenshots',
+				name: 'screenshots',
+				label: 'Attach Screenshots (Optional)',
+				maxFiles: 3,
+				maxSize: 5 * 1024 * 1024,
+				accept: {
+					'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
+				},
+				description: 'Up to 3 images, 5 MB each. Helps us understand the issue better',
+			})
 			.addElement('submit', {
 				id: 'submit',
 				name: 'submit',
@@ -390,6 +607,25 @@ export const EventRegistrationForm: Story = {
 						action: 'show',
 					},
 				],
+			})
+			.addElement('drop-zone', {
+				id: 'accessibilityDocumentation',
+				name: 'accessibilityDocumentation',
+				label: 'Supporting Documentation',
+				maxFiles: 1,
+				accept: {
+					'application/pdf': ['.pdf'],
+					'image/*': ['.jpg', '.jpeg', '.png'],
+				},
+				constraints: [
+					{
+						field: 'accessibility',
+						operator: 'equals',
+						value: true,
+						action: 'show',
+					},
+				],
+				description: 'Attach any relevant documentation (PDF or image)',
 			})
 			.addStep({
 				id: 'confirmation',
@@ -1036,6 +1272,147 @@ export const ComplexJobApplicationForm: Story = {
 				name: 'termsAccepted',
 				label: 'I agree to the terms and privacy policy',
 				rules: [ValidationPresets.string.required('This is required to proceed')],
+			})
+			.addElement('submit', {
+				id: 'submit',
+				name: 'submit',
+				label: 'Submit Application',
+			})
+			.addFormAction('submit', {
+				id: 'submit-application',
+				enabled: true,
+				triggers: ['form_submit'],
+				endpoint: SUBMIT_FORM_MOCK_URL,
+				method: 'POST',
+			} as any)
+			.build(),
+	},
+};
+
+export const JobApplicationForm: Story = {
+	args: {
+		config: createForm()
+			.setId('job-application')
+			.setTitle('Job Application')
+			.setDescription('Apply for an open position at our company')
+			.setStepper('default', {
+				orientation: 'horizontal',
+				showStepNumbers: true,
+				showStepTitles: true,
+				showStepDescriptions: true,
+			})
+			.addStep({
+				id: 'personal',
+				title: 'Personal Information',
+				description: 'Tell us about yourself',
+			})
+			.addElement('input', {
+				id: 'firstName',
+				name: 'firstName',
+				label: 'First Name',
+				placeholder: 'John',
+				inputType: 'text',
+				rules: [ValidationPresets.string.minLength(2)],
+			})
+			.addElement('input', {
+				id: 'lastName',
+				name: 'lastName',
+				label: 'Last Name',
+				placeholder: 'Doe',
+				inputType: 'text',
+				rules: [ValidationPresets.string.minLength(2)],
+			})
+			.addElement('input', {
+				id: 'email',
+				name: 'email',
+				label: 'Email',
+				placeholder: 'john@example.com',
+				inputType: 'email',
+				rules: [ValidationPresets.string.required('Email is required'), ValidationPresets.string.email()],
+			})
+			.addElement('phone-input', {
+				id: 'phone',
+				name: 'phone',
+				label: 'Phone Number',
+				placeholder: 'Enter phone number',
+				defaultCountry: 'US',
+			})
+			.addStep({
+				id: 'application',
+				title: 'Application Documents',
+				description: 'Upload your resume and cover letter',
+			})
+			.addElement('drop-zone', {
+				id: 'resume',
+				name: 'resume',
+				label: 'Resume',
+				maxFiles: 1,
+				rules: [ValidationPresets.array.nonEmpty('Resume is required')],
+				accept: {
+					'application/pdf': ['.pdf'],
+					'application/msword': ['.doc', '.docx'],
+				},
+				description: 'PDF, DOC, or DOCX format',
+			})
+			.addElement('drop-zone', {
+				id: 'coverLetter',
+				name: 'coverLetter',
+				label: 'Cover Letter (Optional)',
+				maxFiles: 1,
+				accept: {
+					'application/pdf': ['.pdf'],
+					'application/msword': ['.doc', '.docx'],
+				},
+				description: 'PDF, DOC, or DOCX format',
+			})
+			.addElement('drop-zone', {
+				id: 'portfolio',
+				name: 'portfolio',
+				label: 'Portfolio or Work Samples (Optional)',
+				maxFiles: 3,
+				maxSize: 10 * 1024 * 1024,
+				accept: {
+					'application/pdf': ['.pdf'],
+					'image/*': ['.jpg', '.jpeg', '.png'],
+				},
+				description: 'Up to 3 files, 10 MB each',
+			})
+			.addStep({
+				id: 'position',
+				title: 'Position Details',
+				description: 'Select the position you are applying for',
+			})
+			.addElement('select', {
+				id: 'position',
+				name: 'position',
+				label: 'Position',
+				placeholder: 'Select a position...',
+				options: [
+					{ label: 'Senior Software Engineer', value: 'senior-swe' },
+					{ label: 'Product Manager', value: 'pm' },
+					{ label: 'UX Designer', value: 'designer' },
+					{ label: 'Data Scientist', value: 'ds' },
+				],
+				rules: [ValidationPresets.string.required('Please select a position')],
+			})
+			.addElement('textarea', {
+				id: 'motivation',
+				name: 'motivation',
+				label: 'Why do you want to join our team?',
+				placeholder: 'Tell us about your interest in this position...',
+				rows: 4,
+				rules: [ValidationPresets.string.minLength(50, 'Please provide at least 50 characters')],
+			})
+			.addStep({
+				id: 'confirmation',
+				title: 'Review',
+				description: 'Confirm your application',
+			})
+			.addElement('checkbox', {
+				id: 'agreeToTerms',
+				name: 'agreeToTerms',
+				label: 'I agree to the terms and privacy policy',
+				rules: [ValidationPresets.string.required('You must agree to proceed')],
 			})
 			.addElement('submit', {
 				id: 'submit',

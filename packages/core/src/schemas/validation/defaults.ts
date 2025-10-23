@@ -9,6 +9,36 @@ import { createAsyncValidationHandler } from './async/index.js';
 export const defaultValidations: ValidationRegistration[] = [
 	{
 		type: 'required',
+		category: 'string',
+		handler: (rule: ValidationRule) => z.string().min(1, rule.message || 'This field is required'),
+	},
+
+	{
+		type: 'required',
+		category: 'number',
+		handler: (rule: ValidationRule) =>
+			z.number().refine((val) => val !== 0 || true, rule.message || 'This field is required'),
+	},
+
+	{
+		type: 'required',
+		category: 'boolean',
+		handler: (rule: ValidationRule) =>
+			z.boolean().refine((val) => val === true, rule.message || 'This field is required'),
+	},
+
+	{
+		type: 'required',
+		category: 'array',
+		handler: (rule: ValidationRule) =>
+			z
+				.any()
+				.transform((val) => (Array.isArray(val) ? val : typeof val === 'string' && val ? [val] : []))
+				.pipe(z.array(z.any()).min(1, rule.message || 'This field is required')),
+	},
+
+	{
+		type: 'required',
 		category: 'generic',
 		handler: (rule: ValidationRule) =>
 			z.union([
@@ -94,8 +124,13 @@ export const defaultValidations: ValidationRegistration[] = [
 		handler: (rule: ValidationRule) => {
 			const minItemsRule = rule as any;
 			return z
-				.array(z.any())
-				.min(minItemsRule.value, rule.message || `Must have at least ${minItemsRule.value} items`);
+				.any()
+				.transform((val) => (Array.isArray(val) ? val : typeof val === 'string' && val ? [val] : []))
+				.pipe(
+					z
+						.array(z.any())
+						.min(minItemsRule.value, rule.message || `Must have at least ${minItemsRule.value} items`),
+				);
 		},
 	},
 
@@ -105,8 +140,13 @@ export const defaultValidations: ValidationRegistration[] = [
 		handler: (rule: ValidationRule) => {
 			const maxItemsRule = rule as any;
 			return z
-				.array(z.any())
-				.max(maxItemsRule.value, rule.message || `Must have no more than ${maxItemsRule.value} items`);
+				.any()
+				.transform((val) => (Array.isArray(val) ? val : typeof val === 'string' && val ? [val] : []))
+				.pipe(
+					z
+						.array(z.any())
+						.max(maxItemsRule.value, rule.message || `Must have no more than ${maxItemsRule.value} items`),
+				);
 		},
 	},
 
