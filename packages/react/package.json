@@ -135,9 +135,9 @@
       "types": "./dist/registrations/*.d.ts",
       "import": "./dist/registrations/*.js"
     },
-    "./registrations/default-base-ui": {
-      "types": "./dist/registrations/default-base-ui.d.ts",
-      "import": "./dist/registrations/default-base-ui.js"
+    "./registrations/default-core-ui": {
+      "types": "./dist/registrations/default-core-ui.d.ts",
+      "import": "./dist/registrations/default-core-ui.js"
     },
     "./registrations/default-shadcn": {
       "types": "./dist/registrations/default-shadcn.d.ts",

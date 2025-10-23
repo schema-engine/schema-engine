@@ -30,12 +30,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
 	args: {
-		config: FormTemplates.splitScreenForm,
-	},
-};
-
-export const LeftSide: Story = {
-	args: {
 		config: {
 			...baseForm,
 			steps: [
@@ -44,8 +38,6 @@ export const LeftSide: Story = {
 					layout: {
 						$type: 'split-screen',
 						sideContent: 'Welcome to our platform! Fill out the form to get started.',
-						sidePlacement: 'left',
-						sideWidth: 'normal',
 					},
 				},
 			],

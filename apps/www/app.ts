@@ -1,6 +1,7 @@
 import { EcopagesApp } from "@ecopages/core/adapters/bun/create-app";
 import appConfig from "./eco.config";
 import { Logger } from "@ecopages/logger";
+import type { BunRequest } from "bun";
 
 const appLogger = new Logger("[form-engine-app]",{
 	debug: import.meta.env.ECOPAGES_LOGGER_DEBUG === "true",
@@ -9,7 +10,8 @@ const appLogger = new Logger("[form-engine-app]",{
 const app = new EcopagesApp({ appConfig });
 
 app.post("/api/submit-demo", async (ctx) => {
-	const body = await ctx.request.json();
+	const formData = await (ctx.request as BunRequest).formData();
+	const body = Object.fromEntries(formData);
 	appLogger.debug("Received data:", body);
 	return ctx.response.json({ success: true });
 });
@@ -41,7 +43,8 @@ app.post("/api/submit-demo", async (ctx) => {
  * { "valid": true }
  */
 app.post("/api/async-validate", async (ctx) => {
-	const body = await ctx.request.json();
+	const formData = await ctx.request.formData();
+	const body = Object.fromEntries(formData);
 	appLogger.debug("Async validation request:");
 	appLogger.debug("Full body:", JSON.stringify(body, null, 2));
 
@@ -176,7 +179,8 @@ app.post("/api/async-validate", async (ctx) => {
 });
 
 app.post("/api/test-async", async (ctx) => {
-	const body = await ctx.request.json();
+	const formData = await ctx.request.formData();
+	const body = Object.fromEntries(formData);
 	appLogger.debug("🧪 Test async endpoint:", body);
 	
 	if (body.value === "invalid") {
