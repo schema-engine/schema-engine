@@ -1,4 +1,4 @@
-import { Input } from '@/components/base-ui/input';
+import { Input } from '@/components/ui/input';
 import { FieldGroup } from '@/components/elements/field-group';
 import { useControlledFormElement, combineHandlers } from '@/hooks';
 import type { NumberFieldProps } from './form-number.types';

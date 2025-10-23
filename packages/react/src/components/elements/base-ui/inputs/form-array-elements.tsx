@@ -1,5 +1,5 @@
 import { useFieldArray, useFormContext } from 'react-hook-form';
-import { Button } from '@/components/base-ui/button';
+import { Button } from '@/components/ui/button';
 import { Trash2, Plus } from 'lucide-react';
 import { FieldGroup } from '@/components/elements/field-group';
 import { useControlledFormElement } from '@/hooks/use-field';

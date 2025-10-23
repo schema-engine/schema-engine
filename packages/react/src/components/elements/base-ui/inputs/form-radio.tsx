@@ -1,4 +1,4 @@
-import { RadioGroup, RadioGroupItem } from '@/components/base-ui/radio-group';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
 	FieldGroupRoot,
 	FieldLabel,
@@ -8,7 +8,7 @@ import {
 } from '@/components/elements/field-group';
 import { useControlledFormElement, combineHandlers } from '@/hooks';
 import type { RadioFieldProps } from './form-radio.types';
-import { Label } from '@/components/base-ui/label';
+import { Label } from '@/components/ui/label';
 
 export function FormRadio({
 	onChange: propsOnChange,

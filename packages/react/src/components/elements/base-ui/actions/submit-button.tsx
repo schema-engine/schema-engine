@@ -1,4 +1,4 @@
-import { Button } from '@/components/base-ui/button';
+import { Button } from '@/components/ui/button';
 import type { SubmitButtonProps } from './submit-button.types';
 import { useFormContext } from '@/adapters';
 

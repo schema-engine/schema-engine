@@ -1,4 +1,4 @@
-import { PhoneInput } from '@/components/base-ui/phone-input';
+import { PhoneInput } from '@/components/ui/phone-input';
 import { FieldGroup } from '@/components/elements/field-group';
 import { useControlledFormElement, combineHandlers } from '@/hooks';
 import type { PhoneInputFieldProps } from './form-phone-input.types';

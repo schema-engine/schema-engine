@@ -1,4 +1,4 @@
-import { Switch } from '@/components/base-ui/switch';
+import { Switch } from '@/components/ui/switch';
 import {
 	FieldGroupRoot,
 	FieldLabel,

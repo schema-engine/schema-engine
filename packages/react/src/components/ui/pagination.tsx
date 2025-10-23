@@ -2,7 +2,7 @@ import { mergeProps } from '@base-ui-components/react';
 import { useRender } from '@base-ui-components/react/use-render';
 import { ChevronLeftIcon, ChevronRightIcon, MoreHorizontalIcon } from 'lucide-react';
 
-import { type Button, buttonVariants } from '@/components/base-ui/button';
+import { type Button, buttonVariants } from '@/components/ui/button';
 
 import { cn } from '@/lib/utils';
 import type { ComponentProps } from 'react';

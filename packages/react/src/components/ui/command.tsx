@@ -3,7 +3,7 @@
 import { Command as CommandBase } from 'cmdk-base';
 import { SearchIcon } from 'lucide-react';
 
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/base-ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 import { cn } from '@/lib/utils';
 import type { ComponentProps } from 'react';

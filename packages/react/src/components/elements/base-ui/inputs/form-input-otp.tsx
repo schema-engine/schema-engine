@@ -1,6 +1,6 @@
 import { FieldGroup } from '@/components/elements/field-group';
 import { useControlledFormElement, combineHandlers } from '@/hooks';
-import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@/components/base-ui/input-otp';
+import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@/components/ui/input-otp';
 import type { InputOTPFieldProps } from './form-input-otp.types';
 
 export function FormInputOTP({

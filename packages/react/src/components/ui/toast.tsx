@@ -4,7 +4,7 @@ import { Toast } from '@base-ui-components/react/toast';
 
 import { CircleAlert, CircleCheck, Info, Loader, TriangleAlert } from 'lucide-react';
 
-import { buttonVariants } from '@/components/base-ui/button';
+import { buttonVariants } from '@/components/ui/button';
 
 import { cn } from '@/lib/utils';
 

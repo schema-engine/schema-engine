@@ -1,6 +1,6 @@
 import { FieldGroup } from '@/components/elements/field-group';
 import { combineHandlers, useControlledFormElement } from '@/hooks';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/base-ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { SelectFieldProps } from './form-select.types';
 
 export function FormSelect({

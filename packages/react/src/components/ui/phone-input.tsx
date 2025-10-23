@@ -2,18 +2,11 @@ import { CheckIcon, ChevronsUpDown } from 'lucide-react';
 import * as BasePhoneInput from 'react-phone-number-input';
 import flags from 'react-phone-number-input/flags';
 
-import { Button } from '@/components/base-ui/button';
-import {
-	Command,
-	CommandEmpty,
-	CommandGroup,
-	CommandInput,
-	CommandItem,
-	CommandList,
-} from '@/components/base-ui/command';
-import { Input } from '@/components/base-ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/base-ui/popover';
-import { ScrollArea } from '@/components/base-ui/scroll-area';
+import { Button } from '@/components/ui/button';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { cn } from '@/lib/utils';
 import { useRef, useState, type ComponentProps } from 'react';

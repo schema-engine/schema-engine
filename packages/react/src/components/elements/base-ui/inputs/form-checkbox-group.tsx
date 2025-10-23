@@ -6,8 +6,8 @@ import {
 	FieldHint,
 } from '@/components/elements/field-group';
 import { useControlledFormElement, combineHandlers } from '@/hooks';
-import { Checkbox } from '@/components/base-ui/checkbox';
-import { Label } from '@/components/base-ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import type { CheckboxGroupFieldProps } from './form-checkbox-group.types';
 
 export function FormCheckboxGroup({

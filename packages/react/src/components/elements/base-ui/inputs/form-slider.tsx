@@ -1,6 +1,6 @@
 import { FieldGroup } from '@/components/elements/field-group';
 import { useControlledFormElement, combineHandlers } from '@/hooks';
-import { Slider } from '@/components/base-ui/slider';
+import { Slider } from '@/components/ui/slider';
 import type { SliderFieldProps } from './form-slider.types';
 
 export function FormSlider({

@@ -2,7 +2,7 @@
 
 import { Toolbar as BaseToolbar } from '@base-ui-components/react/toolbar';
 
-import { type ButtonProps, buttonVariants } from '@/components/base-ui/button';
+import { type ButtonProps, buttonVariants } from '@/components/ui/button';
 
 import { cn } from '@/lib/utils';
 import type { ComponentProps } from 'react';

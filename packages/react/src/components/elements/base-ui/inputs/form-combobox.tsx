@@ -14,7 +14,7 @@ import {
 	ComboboxTrigger,
 	ComboboxValue,
 	ComboboxChipsTrigger,
-} from '@/components/base-ui/combobox';
+} from '@/components/ui/combobox';
 import type { ComboboxFieldProps } from './form-combobox.types';
 
 export function FormCombobox({

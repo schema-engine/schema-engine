@@ -1,4 +1,4 @@
-import { Checkbox } from '@/components/base-ui/checkbox';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
 	FieldGroupRoot,
 	FieldLabel,
