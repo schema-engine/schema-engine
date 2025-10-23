@@ -21,6 +21,7 @@ import { SliderElementRegistration } from '@/components/elements/base-ui/inputs/
 import { CheckboxGroupElementRegistration } from '@/components/elements/base-ui/inputs/form-checkbox-group.registration';
 import { InputOTPElementRegistration } from '@/components/elements/base-ui/inputs/form-input-otp.registration';
 import { PhoneInputElementRegistration } from '@/components/elements/base-ui/inputs/form-phone-input.registration';
+import { DropZoneElementRegistration } from '@/components/elements/base-ui/inputs/form-drop-zone.registration';
 import { ArrayElementRegistration as BaseUIArrayElementRegistration } from '@/components/elements/base-ui/inputs/form-array-elements.registration';
 import { FieldSetRegistration as BaseUIFieldSetRegistration } from '@/components/elements/base-ui/inputs/form-fieldset.registration';
 import { SubmitButtonElementRegistration as BaseUISubmitButtonElementRegistration } from '@/components/elements/base-ui/actions/submit-button.registration';
@@ -52,7 +53,7 @@ export { ValidationPresets };
  * Returns a fresh builder instance with proper type inference.
  *
  * Components included:
- * - Elements: input, textarea, checkbox, select, radio, switch, number, slider, checkbox-group, input-otp, phone-input, arrayElements, fieldSet, submit
+ * - Elements: input, textarea, checkbox, select, radio, switch, number, slider, checkbox-group, input-otp, phone-input, drop-zone, arrayElements, fieldSet, submit
  * - Layouts: card, split-screen, hero-background
  * - Steppers: default, minimalist, debugger
  */
@@ -70,6 +71,7 @@ function createBaseUIFormEngineBuilder() {
 		.addElement(CheckboxGroupElementRegistration)
 		.addElement(InputOTPElementRegistration)
 		.addElement(PhoneInputElementRegistration)
+		.addElement(DropZoneElementRegistration)
 		.addElement(BaseUIArrayElementRegistration)
 		.addElement(BaseUIFieldSetRegistration)
 		.addElement(BaseUISubmitButtonElementRegistration)
@@ -101,7 +103,7 @@ function createBaseUIFormEngineBuilder() {
 /**
  * Create a form builder with all base-ui components registered.
  * Returns a FormConfigBuilder with full TypeScript IntelliSense for all registered components.
- * Includes exclusive elements: slider, checkbox-group, input-otp, phone-input
+ * Includes exclusive elements: slider, checkbox-group, input-otp, phone-input, drop-zone
  *
  * @example
  * ```typescript
@@ -112,6 +114,7 @@ function createBaseUIFormEngineBuilder() {
  *   .addElement('checkbox-group', { ... })
  *   .addElement('input-otp', { ... })
  *   .addElement('phone-input', { ... })
+ *   .addElement('drop-zone', { ... })
  *   .build();
  * ```
  */

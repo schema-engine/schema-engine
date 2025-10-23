@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '@/stories/shared/story-wrapper';
-import { createForm, getEngine, ValidationPresets } from '@/stories/shared/form-builder.base-ui';
+import { createForm, getEngine, ValidationPresets } from '@/stories/shared/form-builder.ui';
 
 const baseUIEngine = getEngine();
 
