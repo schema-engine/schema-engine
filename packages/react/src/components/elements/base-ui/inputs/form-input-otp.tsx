@@ -1,6 +1,6 @@
 import { FieldGroup } from '@/components/elements/field-group';
 import { useControlledFormElement, combineHandlers } from '@/hooks';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/base-ui/input-otp';
+import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@/components/base-ui/input-otp';
 import type { InputOTPFieldProps } from './form-input-otp.types';
 
 export function FormInputOTP({
@@ -14,6 +14,8 @@ export function FormInputOTP({
 
 	const otpValue = String(value || '');
 	const length = config.length || 6;
+	const firstHalf = Math.ceil(length / 2);
+	const secondHalf = length - firstHalf;
 
 	return (
 		<FieldGroup
@@ -36,10 +38,20 @@ export function FormInputOTP({
 				autoFocus={config.autoFocus}
 			>
 				<InputOTPGroup>
-					{Array.from({ length }).map((_, i) => (
+					{Array.from({ length: firstHalf }).map((_, i) => (
 						<InputOTPSlot
 							key={i}
 							index={i}
+							className="border border-gray-300 rounded-md w-10 h-10 text-center"
+						/>
+					))}
+				</InputOTPGroup>
+				<InputOTPSeparator />
+				<InputOTPGroup>
+					{Array.from({ length: secondHalf }).map((_, i) => (
+						<InputOTPSlot
+							key={i}
+							index={i + firstHalf}
 							className="border border-gray-300 rounded-md w-10 h-10 text-center"
 						/>
 					))}
