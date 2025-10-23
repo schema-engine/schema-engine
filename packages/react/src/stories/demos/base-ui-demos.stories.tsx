@@ -10,12 +10,6 @@ const meta = {
 	component: FormRenderer,
 	parameters: {
 		layout: 'padded',
-		docs: {
-			description: {
-				component:
-					'Complete demo forms for Base UI components, ranging from simple contact forms to complex multi-step applications with various field types and validation rules.',
-			},
-		},
 		msw: {
 			handlers: [submitFormHandler],
 		},

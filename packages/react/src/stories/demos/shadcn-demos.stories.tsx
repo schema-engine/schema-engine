@@ -8,12 +8,6 @@ const meta = {
 	component: FormRenderer,
 	parameters: {
 		layout: 'padded',
-		docs: {
-			description: {
-				component:
-					'Complete demo forms for Shadcn components, ranging from simple contact forms to complex multi-step applications with polished UI and comprehensive validation.',
-			},
-		},
 	},
 	decorators: [
 		(Story) => (
