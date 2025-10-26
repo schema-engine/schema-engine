@@ -142,28 +142,8 @@ export const multiStepRegistrationConfig: FormConfig = {
 		},
 	],
 	stepper: {
-		id: 'default',
+		$type: 'default',
 		orientation: 'horizontal',
-		variant: 'default',
-		position: 'top',
-		showStepNumbers: true,
-		showStepTitles: true,
-		allowStepJumping: false,
-		validateOnNext: true,
-		buttons: {
-			previous: {
-				label: 'Previous',
-				variant: 'outline',
-			},
-			next: {
-				label: 'Next',
-				variant: 'primary',
-			},
-			submit: {
-				label: 'Complete Registration',
-				variant: 'primary',
-			},
-		},
 	},
 	grid: {
 		columns: 2,
@@ -201,28 +181,10 @@ export const verticalStepperConfig: FormConfig = {
 	...multiStepRegistrationConfig,
 	id: 'vertical-stepper-demo',
 	stepper: {
-		id: 'default',
-		variant: 'default',
-		orientation: 'vertical',
-		position: 'left',
+		$type: 'default',
 		showStepNumbers: true,
 		showStepTitles: true,
-		allowStepJumping: false,
-		validateOnNext: true,
-		buttons: {
-			previous: {
-				label: 'Back',
-				variant: 'outline',
-			},
-			next: {
-				label: 'Continue',
-				variant: 'primary',
-			},
-			submit: {
-				label: 'Complete Registration',
-				variant: 'primary',
-			},
-		},
+		orientation: 'horizontal',
 	},
 };
 
@@ -234,13 +196,7 @@ export const minimalStepperConfig: FormConfig = {
 	id: 'minimal-stepper-demo',
 	mode: 'free',
 	stepper: {
-		id: 'minimalist',
-		variant: 'dots',
-		orientation: 'horizontal',
-		position: 'top',
-		showStepNumbers: false,
-		showStepTitles: false,
-		allowStepJumping: true,
-		validateOnNext: false,
+		$type: 'minimalist',
+		showProgress: true,
 	},
 };

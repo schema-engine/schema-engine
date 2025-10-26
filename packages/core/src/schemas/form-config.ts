@@ -86,22 +86,23 @@ export type StepLayoutConfig = z.infer<typeof StepLayoutConfigSchema>;
 export type FormStepperConfig = z.infer<typeof FormStepperConfigSchema>;
 
 /**
- * Form step configuration type with properly typed elements array.
+ * Form step configuration type with properly typed elements and layout arrays.
  *
- * The Zod schema uses z.any() for elements to avoid circular references,
- * but we override it here to provide strict type checking for field configurations.
+ * The Zod schema uses z.any() for elements and z.looseObject() for layout to avoid circular references,
+ * but we override them here to provide strict type checking for field configurations.
  */
-export type FormStep = Omit<z.infer<typeof FormStepSchema>, 'elements'> & {
+export type FormStep = Omit<z.infer<typeof FormStepSchema>, 'elements' | 'layout'> & {
 	elements: Array<FormEngine.ElementConfig>;
+	layout?: FormEngine.LayoutConfig;
 };
 
 /**
- * Form configuration type with strict typing for steps.
+ * Form configuration type with strict typing for steps and stepper.
  * Includes additional properties not in the Zod schema for runtime handlers.
  */
-export type FormConfig = Omit<z.infer<typeof FormConfigSchema>, 'steps'> & {
+export type FormConfig = Omit<z.infer<typeof FormConfigSchema>, 'steps' | 'stepper'> & {
 	steps: Array<FormStep>;
-	stepper?: FormStepperConfig;
+	stepper?: FormEngine.StepperConfig;
 	onSubmit?: (data: any) => void | Promise<void>;
 	onChange?: (data: any) => void;
 };

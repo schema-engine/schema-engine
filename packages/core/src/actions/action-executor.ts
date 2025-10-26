@@ -51,7 +51,6 @@ export class ActionExecutor {
 			if ('triggers' in action && Array.isArray(action.triggers)) {
 				shouldExecute = action.triggers.includes(trigger);
 			} else {
-				// Get default triggers from the action registration
 				const actionRegistration = this.engine.getAction(action.type);
 				const defaultTriggers = actionRegistration?.metadata?.defaultTriggers ?? [];
 				shouldExecute = defaultTriggers.includes(trigger);
