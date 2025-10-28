@@ -292,8 +292,8 @@ describe('ValidationRegistry', () => {
 
 		it('should warn when overriding existing validation types', () => {
 			const loggerSpy = mock(() => {});
-			const originalWarn = (logger as any).warn;
-			(logger as any).warn = loggerSpy;
+			const originalDebug = (logger as any).debug;
+			(logger as any).debug = loggerSpy;
 
 			const validation1: ValidationRegistration = {
 				type: 'duplicate-test',
@@ -314,7 +314,7 @@ describe('ValidationRegistry', () => {
 				"Validation type 'duplicate-test' is already registered. Overriding."
 			);
 
-			(logger as Logger).warn = originalWarn;
+			(logger as Logger).debug = originalDebug;
 		});
 	});
 });

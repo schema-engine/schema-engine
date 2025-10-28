@@ -54,7 +54,7 @@ export class ValidationRegistry {
 		const { type } = registration;
 
 		if (this.validations.has(type)) {
-			logger.warn(`Validation type '${type}' is already registered. Overriding.`);
+			logger.debug(`Validation type '${type}' is already registered. Overriding.`);
 		}
 
 		this.validations.set(type, registration);
