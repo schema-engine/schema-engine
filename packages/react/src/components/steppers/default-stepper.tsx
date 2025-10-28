@@ -2,7 +2,7 @@ import type React from 'react';
 import { cn } from '@/lib/utils';
 import type { DefaultStepperConfig } from './default-stepper.types';
 import { StepperProvider, useStepperContext } from './context';
-import { useEffect, useRef, Activity } from 'react';
+import { useEffect, useRef } from 'react';
 import { useStepperContext as useGlobalStepperContext } from '@/contexts/stepper-context';
 import { useIsMobile } from '@/shadcn/ui-hooks/use-mobile';
 
@@ -211,7 +211,6 @@ export const DefaultStepper = Object.assign(DefaultStepperRoot, {
  * Loads data from global context (provided by StepperRenderer)
  * On desktop with sidebar orientation: shows sidebar layout with step indicators and navigation on the side
  * On mobile: shows horizontal layout regardless of orientation setting
- * Uses Activity component to maintain state when switching between layouts
  */
 export const DefaultStepperComposed: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
 	const globalContext = useGlobalStepperContext();
@@ -223,21 +222,21 @@ export const DefaultStepperComposed: React.FC<{ children?: React.ReactNode }> = 
 
 	return (
 		<StepperProvider value={globalContext}>
-			<div className={`default-stepper default-stepper--${isSidebarMode ? 'sidebar' : 'horizontal'}`}>
-				<Activity mode={isSidebarMode ? 'visible' : 'hidden'}>
+			{isSidebarMode ? (
+				<div className="default-stepper default-stepper--sidebar">
 					<DefaultStepperProgress />
 					<div className="default-stepper__content-wrapper">
 						<DefaultStepperContent>{children}</DefaultStepperContent>
 						<DefaultStepperNavigation className="default-stepper__mobile-navigation" />
 					</div>
-				</Activity>
-
-				<Activity mode={isSidebarMode ? 'hidden' : 'visible'}>
+				</div>
+			) : (
+				<div className="default-stepper default-stepper--horizontal">
 					<DefaultStepperProgress />
 					<DefaultStepperContent>{children}</DefaultStepperContent>
 					<DefaultStepperNavigation />
-				</Activity>
-			</div>
+				</div>
+			)}
 		</StepperProvider>
 	);
 };
