@@ -21,7 +21,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				placeholder: z.string().optional(),
 			});
 
-			const textInputRegistration: ElementRegistration = {
+			const textInputRegistration: InputRegistration = {
 				$type: 'text',
 				schema: textInputSchema,
 				metadata: {
@@ -51,7 +51,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				padding: z.enum(['sm', 'md', 'lg']).optional(),
 			});
 
-			const textInputRegistration: ElementRegistration = {
+			const textInputRegistration: InputRegistration = {
 				$type: 'text',
 				schema: textInputSchema,
 				metadata: {
@@ -89,7 +89,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				label: z.string().optional(),
 			});
 
-			const textInputRegistration: ElementRegistration = {
+			const textInputRegistration: InputRegistration = {
 				$type: 'text',
 				schema: textInputSchema,
 				metadata: {
@@ -123,7 +123,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				$type: z.literal('text'),
 			});
 
-			const textInputRegistration: ElementRegistration = {
+			const textInputRegistration: InputRegistration = {
 				$type: 'text',
 				schema: textInputSchema,
 				metadata: {
@@ -163,7 +163,7 @@ describe('FormEngine JSON Schema Generation', () => {
 			const stepperSchema = z.object({ $type: z.literal('wizard') });
 			const actionSchema = z.object({ $type: z.literal('submit'), endpoint: z.string().url() });
 
-			const elementReg: ElementRegistration = {
+			const elementReg: InputRegistration = {
 				$type: 'text',
 				schema: elementSchema,
 				metadata: { name: 'Text Input', category: 'input' },
@@ -215,7 +215,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				$type: z.literal('text'),
 			});
 
-			const textInputRegistration: ElementRegistration = {
+			const textInputRegistration: InputRegistration = {
 				$type: 'text',
 				schema: textInputSchema,
 				metadata: { name: 'Text Input', category: 'input' },
@@ -236,7 +236,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				$type: z.literal('text'),
 			});
 
-			const textInputRegistration: ElementRegistration = {
+			const textInputRegistration: InputRegistration = {
 				$type: 'text',
 				schema: textInputSchema,
 				metadata: { name: 'Text Input', category: 'input' },
@@ -258,7 +258,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				$type: z.literal('text'),
 			});
 
-			const textInputRegistration: ElementRegistration = {
+			const textInputRegistration: InputRegistration = {
 				$type: 'text',
 				schema: textInputSchema,
 				metadata: { name: 'Text Input', category: 'input' },
@@ -282,14 +282,14 @@ describe('FormEngine JSON Schema Generation', () => {
 				$type: z.literal('email'),
 			});
 
-			const textInputReg: ElementRegistration = {
+			const textInputReg: InputRegistration = {
 				$type: 'text',
 				schema: textInputSchema,
 				metadata: { name: 'Text Input', category: 'input' },
 				render: () => null,
 			};
 
-			const emailInputReg: ElementRegistration = {
+			const emailInputReg: InputRegistration = {
 				$type: 'email',
 				schema: emailInputSchema,
 				metadata: { name: 'Email Input', category: 'input' },
@@ -327,7 +327,7 @@ describe('FormEngine JSON Schema Generation', () => {
 					.optional(),
 			});
 
-			const complexRegistration: ElementRegistration = {
+			const complexRegistration: InputRegistration = {
 				$type: 'complex',
 				schema: complexSchema,
 				metadata: { name: 'Complex Input', category: 'input' },
@@ -348,7 +348,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				variant: z.union([z.literal('primary'), z.literal('secondary'), z.literal('tertiary')]).optional(),
 			});
 
-			const enumRegistration: ElementRegistration = {
+			const enumRegistration: InputRegistration = {
 				$type: 'select',
 				schema: enumSchema,
 				metadata: { name: 'Select Input', category: 'input' },
@@ -369,21 +369,21 @@ describe('FormEngine JSON Schema Generation', () => {
 			const emailSchema = z.object({ $type: z.literal('email') });
 			const passwordSchema = z.object({ $type: z.literal('password') });
 
-			const textReg: ElementRegistration = {
+			const textReg: InputRegistration = {
 				$type: 'text',
 				schema: textSchema,
 				metadata: { name: 'Text Input', category: 'input' },
 				render: () => null,
 			};
 
-			const emailReg: ElementRegistration = {
+			const emailReg: InputRegistration = {
 				$type: 'email',
 				schema: emailSchema,
 				metadata: { name: 'Email Input', category: 'input' },
 				render: () => null,
 			};
 
-			const passwordReg: ElementRegistration = {
+			const passwordReg: InputRegistration = {
 				$type: 'password',
 				schema: passwordSchema,
 				metadata: { name: 'Password Input', category: 'input' },
@@ -407,14 +407,14 @@ describe('FormEngine JSON Schema Generation', () => {
 			const textSchema = z.object({ $type: z.literal('text') });
 			const emailSchema = z.object({ $type: z.literal('email') });
 
-			const textReg: ElementRegistration = {
+			const textReg: InputRegistration = {
 				$type: 'text',
 				schema: textSchema,
 				metadata: { name: 'Text Input', category: 'input' },
 				render: () => null,
 			};
 
-			const emailReg: ElementRegistration = {
+			const emailReg: InputRegistration = {
 				$type: 'email',
 				schema: emailSchema,
 				metadata: { name: 'Email Input', category: 'input' },
@@ -440,28 +440,28 @@ describe('FormEngine JSON Schema Generation', () => {
 			const dividerSchema = z.object({ $type: z.literal('divider') });
 			const buttonSchema = z.object({ $type: z.literal('button') });
 
-			const inputReg: ElementRegistration = {
+			const inputReg: InputRegistration = {
 				$type: 'text',
 				schema: inputSchema,
 				metadata: { name: 'Text Input', category: 'input' },
 				render: () => null,
 			};
 
-			const headingReg: ElementRegistration = {
+			const headingReg: InputRegistration = {
 				$type: 'heading',
 				schema: headingSchema,
 				metadata: { name: 'Heading', category: 'content' },
 				render: () => null,
 			};
 
-			const dividerReg: ElementRegistration = {
+			const dividerReg: InputRegistration = {
 				$type: 'divider',
 				schema: dividerSchema,
 				metadata: { name: 'Divider', category: 'decoration' },
 				render: () => null,
 			};
 
-			const buttonReg: ElementRegistration = {
+			const buttonReg: InputRegistration = {
 				$type: 'button',
 				schema: buttonSchema,
 				metadata: { name: 'Button', category: 'interactive' },
@@ -498,7 +498,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				placeholder: z.string().optional(),
 			});
 
-			const textInputRegistration: ElementRegistration = {
+			const textInputRegistration: InputRegistration = {
 				$type: 'text',
 				schema: textInputSchema,
 				metadata: {
@@ -534,14 +534,14 @@ describe('FormEngine JSON Schema Generation', () => {
 				address: addressSchema, // This should create a $ref
 			});
 
-			const addressReg: ElementRegistration = {
+			const addressReg: InputRegistration = {
 				$type: 'address',
 				schema: addressSchema,
 				metadata: { name: 'Address', category: 'input' },
 				render: () => null,
 			};
 
-			const personReg: ElementRegistration = {
+			const personReg: InputRegistration = {
 				$type: 'person',
 				schema: personSchema,
 				metadata: { name: 'Person', category: 'input' },
@@ -566,7 +566,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				label: z.string().optional(),
 			});
 
-			const textInputRegistration: ElementRegistration = {
+			const textInputRegistration: InputRegistration = {
 				$type: 'text',
 				schema: textInputSchema,
 				metadata: {
@@ -604,7 +604,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				method: z.enum(['GET', 'POST']).optional(),
 			});
 
-			const elementReg: ElementRegistration = {
+			const elementReg: InputRegistration = {
 				$type: 'text',
 				schema: elementSchema,
 				metadata: { name: 'Text Input', category: 'input' },
@@ -662,7 +662,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				required: z.boolean().optional(),
 			});
 
-			const textReg: ElementRegistration = {
+			const textReg: InputRegistration = {
 				$type: 'text',
 				schema: textInputSchema,
 				metadata: { name: 'Text Input', category: 'input' },
@@ -708,7 +708,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				padding: z.number().optional(),
 			});
 
-			const textReg: ElementRegistration = {
+			const textReg: InputRegistration = {
 				$type: 'text',
 				schema: textInputSchema,
 				metadata: { name: 'Text Input', category: 'input' },
@@ -746,7 +746,7 @@ describe('FormEngine JSON Schema Generation', () => {
 		});
 
 		test('should include metadata field in config schema', () => {
-			const textReg: ElementRegistration = {
+			const textReg: InputRegistration = {
 				$type: 'text',
 				schema: z.object({ $type: z.literal('text') }),
 				metadata: { name: 'Text', category: 'input' },
