@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { ActionExecutor } from '@schema-engine/forms/actions/index';
-import type { FormEngine } from '@schema-engine/formsngine/form-engine';
+import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 
 /**
  * Custom hook to manage ActionExecutor instance
@@ -15,7 +15,6 @@ export function useActionExecutor(engine: FormEngine): ActionExecutor {
 	const actionExecutorRef = useRef<ActionExecutor | null>(null);
 	const engineRef = useRef<FormEngine | null>(null);
 
-	// Recreate executor if engine changes
 	if (!actionExecutorRef.current || engineRef.current !== engine) {
 		actionExecutorRef.current = new ActionExecutor(engine);
 		engineRef.current = engine;

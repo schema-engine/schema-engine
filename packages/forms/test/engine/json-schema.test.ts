@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from 'bun:test';
 import { z } from 'zod';
 import { FormEngineBuilder } from '@/builder/form-engine-builder';
-import type { ElementRegistration, LayoutRegistration, StepperRegistration, BuilderActionRegistration } from '@/types';
+import type { InputRegistration, LayoutRegistration, StepperRegistration, BuilderActionRegistration } from '@/types';
 
 describe('FormEngine JSON Schema Generation', () => {
 	describe('Basic Schema Generation', () => {
