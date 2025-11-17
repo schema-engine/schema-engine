@@ -7,7 +7,6 @@ import type {
 } from '@/types';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
-import { SchemaGenerator } from '@/engine/schema-generator';
 
 /**
  * Metadata for form engine JSON Schema generation.
@@ -62,10 +61,8 @@ export class FormEngine<
 	_TActions extends Record<string, unknown> = Record<string, never>,
 > {
 	private readonly registries: EngineRegistries;
-	private readonly schemaGenerator: SchemaGenerator;
 
 	constructor(registries: EngineRegistries) {
-		this.schemaGenerator = new SchemaGenerator();
 		this.registries = {
 			elements: new Map(registries.elements),
 			layouts: new Map(registries.layouts),
@@ -291,44 +288,45 @@ export class FormEngine<
 	/**
 	 * Generate a JSON Schema for form configuration objects.
 	 *
-	 * This schema represents the structure of the configuration object you pass to the form renderer.
-	 * It's dynamically built from your registered components, so any changes to the schema
-	 * (new properties, new component types, etc.) are automatically reflected.
+	 * Use this to:
+	 * - Store schemas in a database for versioning
+	 * - Export schemas as JSON files
+	 * - Validate form configs with external tools (Ajv, etc.)
+	 * - Generate API documentation (OpenAPI/Swagger)
+	 * - Provide IDE autocomplete for form config JSON
 	 *
-	 * Use this for:
-	 * - Validating form configs before saving to database
-	 * - Generating TypeScript types for form configs
-	 * - Providing validation in form builders
-	 * - API documentation
+	 * Returns a complete JSON Schema with all registered components in $defs.
 	 *
-	 * @param options - Configuration for JSON Schema generation
-	 * @param options.target - JSON Schema version to target (default: 'draft-2020-12')
-	 * @param options.additionalProperties - Allow additional properties in form config (default: false)
-	 * @returns JSON Schema for form configuration
+	 * @param options.target - JSON Schema version (default: 'draft-2020-12')
+	 * @returns JSON Schema object for form configuration
 	 *
 	 * @example
 	 * ```typescript
-	 * const engine = new FormEngineBuilder()
-	 *   .addElement(textInputRegistration)
-	 *   .build();
+	 * const schema = engine.generateFormConfigSchema();
 	 *
-	 * const configSchema = engine.generateFormConfigSchema();
+	 * // Store in database
+	 * await db.schemas.insert({ version: '1.0', schema });
 	 *
-	 * // Use with a validator like Ajv
+	 * // Export as file
+	 * fs.writeFileSync('form-schema.json', JSON.stringify(schema, null, 2));
+	 *
+	 * // Use with Ajv validator
 	 * const ajv = new Ajv();
-	 * const validate = ajv.compile(configSchema);
-	 * const isValid = validate(myFormConfig);
+	 * const validate = ajv.compile(schema);
+	 * validate(formConfig); // true/false
 	 * ```
 	 */
-	generateFormConfigSchema(options?: {
-		target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0';
-		additionalProperties?: boolean;
-	}) {
-		return this.schemaGenerator.generateFormConfigSchema(
-			this.registries.formConfigSchema,
-			this.registries.schemaRegistry,
-			options,
-		);
+	generateFormConfigSchema(options?: { target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0' }) {
+		const target = options?.target || 'draft-2020-12';
+
+		const schema = z.toJSONSchema(this.registries.formConfigSchema, {
+			target,
+			metadata: this.registries.schemaRegistry,
+		}) as any;
+
+		schema.$id = 'form-config-schema';
+
+		return schema;
 	}
 
 	/**

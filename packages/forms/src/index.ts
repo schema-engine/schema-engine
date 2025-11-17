@@ -8,11 +8,6 @@
 export { FormEngineBuilder } from './builder';
 export { FormEngine } from './engine';
 export type { EngineRegistries, FormEngineSchemaMetadata } from './engine';
-export { SchemaGenerator } from './engine/schema-generator';
-export type {
-	JSONSchemaOptions,
-	FormConfigSchemaOptions,
-} from './engine/schema-generator';
 
 export {
 	BaseRegistry,

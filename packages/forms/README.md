@@ -359,29 +359,63 @@ const ageRules = [
 
 ### JSON Schema Generation
 
-Generate JSON schemas for form builders, documentation, and API specifications:
+The engine provides comprehensive JSON Schema generation for validation, storage, and documentation:
 
 ```typescript
-// Collection of individual schemas (one per component)
+// 1. Generate schema for individual components (documentation)
 const collection = engine.generateJSONSchemaCollection({
 	target: "draft-2020-12",
 });
-// { schemas: { 'element:text': {...}, 'element:email': {...}, ... } }
+// Returns: { schemas: { 'element:text': {...}, 'element:email': {...}, ... } }
 
-// Schema for form configuration
+// 2. Generate schema for form configuration (validation & storage)
 const configSchema = engine.generateFormConfigSchema({
 	target: "draft-2020-12",
 });
-// JSON Schema for validating form configuration objects
+// Returns: Complete JSON Schema for form config objects
+
+// 3. Get Zod schema for runtime validation
+const zodSchema = engine.getFormConfigSchema();
+const result = zodSchema.safeParse(formConfig);
 ```
 
-The schema generator uses Zod's native registry-based generation to handle:
+**Use Cases:**
 
-- Nested component relationships
-- Recursive schemas
-- Discriminated unions for element types
-- Proper $ref resolution
-- Schema normalization (anyOf to oneOf)
+**Component Schemas** (`generateJSONSchemaCollection`)
+
+- API documentation
+- Component library docs
+- IDE autocomplete for individual components
+
+**Form Config Schema** (`generateFormConfigSchema`)
+
+- Store schemas in database for versioning
+- Export as JSON files for sharing
+- Validate configs with external tools (Ajv)
+- Generate OpenAPI/Swagger docs
+- Provide editor validation for form JSON
+
+**Zod Schema** (`getFormConfigSchema`)
+
+- Runtime validation before rendering
+- Type-safe parsing with TypeScript
+- Form builder validation
+
+```typescript
+// Example: Store schema in database
+const schema = engine.generateFormConfigSchema();
+await db.schemas.insert({
+	version: "1.0.0",
+	schema,
+	createdAt: new Date(),
+});
+
+// Example: Validate with Ajv
+import Ajv from "ajv";
+const ajv = new Ajv();
+const validate = ajv.compile(schema);
+const isValid = validate(userFormConfig);
+```
 
 ## Built-in Action Plugins
 

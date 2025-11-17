@@ -40,14 +40,13 @@ The `SchemaGenerator` delegates to Zod's native JSON Schema generation (`z.toJSO
 2. **Generates Schemas**: Zod automatically creates JSON schemas with proper `$ref` links
 3. **Handles Nesting**: When a schema references another (e.g., `person` contains `address`), Zod creates `$ref` pointers
 4. **Handles Recursion**: Circular references are resolved via the registry system
-5. **Post-Processing**: The generator normalizes output (e.g., `anyOf` → `oneOf`)
 
 ## Usage
 
 ### Basic Usage
 
 ```typescript
-import { FormEngineBuilder, SchemaGenerator } from "@schema-engine/forms";
+import { FormEngineBuilder } from "@schema-engine/forms";
 
 const engine = new FormEngineBuilder()
 	.addElement(textInputRegistration)
@@ -61,29 +60,11 @@ const configSchema = engine.generateFormConfigSchema();
 ### Advanced Usage
 
 ```typescript
-const generator = new SchemaGenerator();
-
-// Generate component schemas only
-const componentSchemas = generator.generateComponentSchemas(engine.getSchemaRegistry(), {
-	target: "draft-2020-12",
+// Generate schema with specific JSON Schema version
+const configSchema = engine.generateFormConfigSchema({
+	target: "openapi-3.0",
+	additionalProperties: false,
 });
-
-// Generate unified schema with $defs
-const unifiedSchema = generator.generateUnifiedSchema(engine.getSchemaRegistry(), {
-	id: "my-form-schema",
-	title: "My Custom Form",
-	target: "draft-2020-12",
-});
-
-// Generate form config schema with options
-const configSchema = generator.generateFormConfigSchema(
-	engine.getFormConfigSchema(),
-	engine.getSchemaRegistry(),
-	{
-		target: "openapi-3.0",
-		additionalProperties: false,
-	}
-);
 ```
 
 ## Nested and Recursive Properties
@@ -216,30 +197,29 @@ Generate individual JSON schemas for all registered components.
 
 #### `generateUnifiedSchema(schemaRegistry, options?)`
 
-Generate a single unified schema with all components in `$defs`.
+## API Reference
 
-**Parameters:**
+### FormEngine
 
-- `schemaRegistry`: Zod registry containing all component schemas
-- `options.id?`: Schema $id (default: 'form-configuration')
-- `options.title?`: Schema title
-- `options.description?`: Schema description
-- `options.target?`: JSON Schema version
-
-**Returns:** Unified JSON schema object
-
-#### `generateFormConfigSchema(formConfigSchema, schemaRegistry, options?)`
+#### `generateFormConfigSchema(options?)`
 
 Generate JSON schema for form configuration objects.
 
 **Parameters:**
 
-- `formConfigSchema`: Zod schema for the form configuration
-- `schemaRegistry`: Registry containing all component schemas
-- `options.target?`: JSON Schema version
-- `options.additionalProperties?`: Allow additional properties (default: false)
+- `options.target?`: JSON Schema version ('draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0')
+- `options.additionalProperties?`: Allow additional properties
 
 **Returns:** JSON Schema for form configuration
+
+**Example:**
+
+```typescript
+const schema = engine.generateFormConfigSchema({
+	target: "draft-2020-12",
+	additionalProperties: false,
+});
+```
 
 ## Testing
 
@@ -248,7 +228,6 @@ The schema generator is fully tested for:
 - ✅ Nested schema relationships
 - ✅ Recursive schema references
 - ✅ Multiple component types
-- ✅ Schema normalization
 - ✅ Custom URI generation
 - ✅ Different JSON Schema versions
 
@@ -256,13 +235,9 @@ See `test/engine/json-schema.test.ts` for comprehensive test coverage.
 
 ## Implementation Details
 
-### Schema Normalization
+### Metadata Handling
 
-The generator performs several normalization steps:
-
-1. **anyOf → oneOf**: Converts `anyOf` to `oneOf` for consistency
-2. **$ref wrapping**: Wraps single `$ref` in `oneOf` array for uniform structure
-3. **Metadata handling**: Ensures metadata field allows additional properties
+The generator ensures the metadata field allows additional properties for flexible form configuration.
 
 ### Zod Registry System
 
