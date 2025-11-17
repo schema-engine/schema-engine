@@ -1,0 +1,248 @@
+{
+  "name": "@schema-engine/forms-react",
+  "type": "module",
+  "version": "0.1.0",
+  "license": "MIT",
+  "sideEffects": [
+    "./dist/registrations/*.js",
+    "./dist/registrations/elements/shadcn/*.registry.js",
+    "./dist/components/elements/shadcn/inputs/*.registry.js",
+    "./dist/components/layouts/*.registry.js",
+    "./dist/components/steppers/*.registry.js"
+  ],
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "style": "dist/global.css",
+  "files": [
+    "/dist/*"
+  ],
+  "private": true,
+  "scripts": {
+    "build:lib": "bun run clean && bun run build:files && bun run build:types",
+    "build:files": "bun run ./build.ts",
+    "build:types": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
+    "watch:lib": "bun run ./build.ts --watch",
+    "clean": "rm -rf ./dist",
+    "test:all": "bun test",
+    "lint-staged": "lint-staged",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build -o ./storybook-static"
+  },
+  "devDependencies": {
+    "@happy-dom/global-registrator": "^18.0.1",
+    "@storybook/addon-docs": "^10.0.8",
+    "@storybook/react-vite": "^10.0.8",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
+    "@types/bun": "latest",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.21",
+    "msw": "^2.11.6",
+    "msw-storybook-addon": "^2.0.6",
+    "postcss-import": "^16.1.1",
+    "storybook": "^10.0.8",
+    "tailwindcss": "^3",
+    "tsc-alias": "^1.8.16"
+  },
+  "peerDependencies": {
+    "@schema-engine/forms": "workspace:*",
+    "typescript": "^5",
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "dependencies": {
+    "@base-ui-components/react": "^1.0.0-beta.4",
+    "@ecopages/logger": "^0.2.2",
+    "@ecopages/postcss-processor": "npm:@jsr/ecopages__postcss-processor@latest",
+    "@hookform/resolvers": "^5.2.1",
+    "@radix-ui/react-accordion": "^1.2.2",
+    "@radix-ui/react-alert-dialog": "^1.1.4",
+    "@radix-ui/react-aspect-ratio": "^1.1.1",
+    "@radix-ui/react-avatar": "^1.1.2",
+    "@radix-ui/react-checkbox": "^1.1.3",
+    "@radix-ui/react-collapsible": "^1.1.2",
+    "@radix-ui/react-context-menu": "^2.2.4",
+    "@radix-ui/react-dialog": "^1.1.4",
+    "@radix-ui/react-dropdown-menu": "^2.1.4",
+    "@radix-ui/react-hover-card": "^1.1.4",
+    "@radix-ui/react-label": "^2.1.1",
+    "@radix-ui/react-menubar": "^1.1.4",
+    "@radix-ui/react-navigation-menu": "^1.2.3",
+    "@radix-ui/react-popover": "^1.1.4",
+    "@radix-ui/react-progress": "^1.1.1",
+    "@radix-ui/react-radio-group": "^1.2.2",
+    "@radix-ui/react-scroll-area": "^1.2.2",
+    "@radix-ui/react-select": "^2.1.4",
+    "@radix-ui/react-separator": "^1.1.1",
+    "@radix-ui/react-slider": "^1.2.2",
+    "@radix-ui/react-slot": "^1.1.1",
+    "@radix-ui/react-switch": "^1.1.2",
+    "@radix-ui/react-tabs": "^1.1.13",
+    "@radix-ui/react-toast": "^1.2.4",
+    "@radix-ui/react-toggle": "^1.1.1",
+    "@radix-ui/react-toggle-group": "^1.1.1",
+    "@radix-ui/react-tooltip": "^1.1.6",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cmdk": "1.0.4",
+    "cmdk-base": "^0.0.8",
+    "date-fns": "4.1.0",
+    "embla-carousel-react": "8.5.1",
+    "input-otp": "1.4.1",
+    "lucide-react": "^0.539.0",
+    "react": "^19",
+    "react-day-picker": "9.8.0",
+    "react-dom": "^19",
+    "react-dropzone": "^14.3.8",
+    "react-hook-form": "^7.60.0",
+    "react-phone-number-input": "^3.4.12",
+    "react-resizable-panels": "^2.1.7",
+    "recharts": "2.15.4",
+    "remark-gfm": "^4.0.1",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^2.5.5",
+    "tailwindcss-animate": "^1.0.7",
+    "vaul": "^1.1.2",
+    "zod": "^4.0.17"
+  },
+  "lint-staged": {
+    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+      "biome check --write --no-errors-on-unmatched"
+    ],
+    "*": [
+      "biome check --no-errors-on-unmatched --files-ignore-unknown=true"
+    ]
+  },
+  "exports": {
+    "./package.json": {
+      "import": "./package.json"
+    },
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts"
+    },
+    "./registrations": {
+      "types": "./dist/registrations/index.d.ts",
+      "import": "./dist/registrations/index.js"
+    },
+    "./registrations/*": {
+      "types": "./dist/registrations/*.d.ts",
+      "import": "./dist/registrations/*.js"
+    },
+    "./registrations/default-core-ui": {
+      "types": "./dist/registrations/default-core-ui.d.ts",
+      "import": "./dist/registrations/default-core-ui.js"
+    },
+    "./registrations/default-shadcn": {
+      "types": "./dist/registrations/default-shadcn.d.ts",
+      "import": "./dist/registrations/default-shadcn.js"
+    },
+    "./registries/*": {
+      "types": "./dist/registries/*.d.ts",
+      "import": "./dist/registries/*.js"
+    },
+    "./hooks": {
+      "types": "./dist/hooks/index.d.ts",
+      "import": "./dist/hooks/index.js"
+    },
+    "./hooks/*": {
+      "types": "./dist/hooks/*.d.ts",
+      "import": "./dist/hooks/*.js"
+    },
+    "./adapters": {
+      "types": "./dist/adapters/index.d.ts",
+      "import": "./dist/adapters/index.js"
+    },
+    "./adapters/*": {
+      "types": "./dist/adapters/*.d.ts",
+      "import": "./dist/adapters/*.js"
+    },
+    "./adapters/rhf": {
+      "types": "./dist/adapters/rhf/index.d.ts",
+      "import": "./dist/adapters/rhf/index.js"
+    },
+    "./adapters/rhf/*": {
+      "types": "./dist/adapters/rhf/*.d.ts",
+      "import": "./dist/adapters/rhf/*.js"
+    },
+    "./adapters/rhf/hooks": {
+      "types": "./dist/adapters/rhf/hooks.d.ts",
+      "import": "./dist/adapters/rhf/hooks.js"
+    },
+    "./adapters/rhf/hooks/*": {
+      "types": "./dist/adapters/rhf/hooks/*.d.ts",
+      "import": "./dist/adapters/rhf/hooks/*.js"
+    },
+    "./components": {
+      "types": "./dist/components/index.d.ts",
+      "import": "./dist/components/index.js"
+    },
+    "./components/*": {
+      "types": "./dist/components/*.d.ts",
+      "import": "./dist/components/*.js"
+    },
+    "./components/form/*": {
+      "types": "./dist/components/form/*.d.ts",
+      "import": "./dist/components/form/*.js"
+    },
+    "./components/form/registry": {
+      "types": "./dist/components/form/registry.d.ts",
+      "import": "./dist/components/form/registry.js"
+    },
+    "./components/core-registrations": {
+      "types": "./dist/registrations.d.ts",
+      "import": "./dist/registrations.js"
+    },
+    "./components/elements/shadcn/inputs/*": {
+      "types": "./dist/components/elements/shadcn/inputs/*.d.ts",
+      "import": "./dist/components/elements/shadcn/inputs/*.js"
+    },
+    "./components/elements/shadcn/actions/*": {
+      "types": "./dist/components/elements/shadcn/actions/*.d.ts",
+      "import": "./dist/components/elements/shadcn/actions/*.js"
+    },
+    "./components/internals": {
+      "types": "./dist/components/internals.d.ts",
+      "import": "./dist/components/internals.js"
+    },
+    "./components/internals/*": {
+      "types": "./dist/components/internals/*.d.ts",
+      "import": "./dist/components/internals/*.js"
+    },
+    "./components/internals/form-renderer": {
+      "types": "./dist/components/internals/form-renderer.d.ts",
+      "import": "./dist/components/internals/form-renderer.js"
+    },
+    "./components/steppers": {
+      "types": "./dist/components/steppers.d.ts",
+      "import": "./dist/components/steppers.js"
+    },
+    "./components/steppers/*": {
+      "types": "./dist/components/steppers/*.d.ts",
+      "import": "./dist/components/steppers/*.js"
+    },
+    "./components/steppers/*.css": "./dist/components/steppers/*.css",
+    "./components/layouts": {
+      "types": "./dist/components/layouts/index.d.ts",
+      "import": "./dist/components/layouts/index.js"
+    },
+    "./components/layouts/*": {
+      "types": "./dist/components/layouts/*.d.ts",
+      "import": "./dist/components/layouts/*.js"
+    },
+    "./components/layouts/*.css": "./dist/components/layouts/*.css",
+    "./global.css": "./dist/global.css",
+    "./dist/*.css": "./dist/*.css"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
+  }
+}

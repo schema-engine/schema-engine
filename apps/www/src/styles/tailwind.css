@@ -1,5 +1,5 @@
 /* Import all styles at once */
-@import "@json-form-engine/react/dist/global.css";
+@import "@schema-engine/forms-react/dist/global.css";
 
 @tailwind base;
 @tailwind components;

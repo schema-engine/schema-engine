@@ -3,27 +3,27 @@
  * Uses the new Builder Pattern to configure and build the form engine instance
  */
 
-import { createReactFormEngine } from '@json-form-engine/react/registries/builder-registry';
+import { createReactFormEngine } from '@schema-engine/forms-react/registries/builder-registry';
 
-import { InputElementRegistration } from '@json-form-engine/react/components/elements/core-ui/inputs/form-input.registration';
-import { TextareaElementRegistration } from '@json-form-engine/react/components/elements/core-ui/inputs/form-textarea.registration';
-import { CheckboxElementRegistration } from '@json-form-engine/react/components/elements/core-ui/inputs/form-checkbox.registration';
-import { RadioElementRegistration } from '@json-form-engine/react/components/elements/core-ui/inputs/form-radio.registration';
-import { SelectElementRegistration } from '@json-form-engine/react/components/elements/core-ui/inputs/form-select.registration';
-import { SwitchElementRegistration } from '@json-form-engine/react/components/elements/core-ui/inputs/form-switch.registration';
-import { NumberElementRegistration } from '@json-form-engine/react/components/elements/core-ui/inputs/form-number.registration';
-import { ArrayElementRegistration } from '@json-form-engine/react/components/elements/core-ui/inputs/form-array-elements.registration';
-import { SubmitButtonElementRegistration } from '@json-form-engine/react/components/elements/core-ui/actions/submit-button.registration';
+import { InputElementRegistration } from '@schema-engine/forms-react/components/elements/core-ui/inputs/form-input.registration';
+import { TextareaElementRegistration } from '@schema-engine/forms-react/components/elements/core-ui/inputs/form-textarea.registration';
+import { CheckboxElementRegistration } from '@schema-engine/forms-react/components/elements/core-ui/inputs/form-checkbox.registration';
+import { RadioElementRegistration } from '@schema-engine/forms-react/components/elements/core-ui/inputs/form-radio.registration';
+import { SelectElementRegistration } from '@schema-engine/forms-react/components/elements/core-ui/inputs/form-select.registration';
+import { SwitchElementRegistration } from '@schema-engine/forms-react/components/elements/core-ui/inputs/form-switch.registration';
+import { NumberElementRegistration } from '@schema-engine/forms-react/components/elements/core-ui/inputs/form-number.registration';
+import { ArrayElementRegistration } from '@schema-engine/forms-react/components/elements/core-ui/inputs/form-array-elements.registration';
+import { SubmitButtonElementRegistration } from '@schema-engine/forms-react/components/elements/core-ui/actions/submit-button.registration';
 
-import { CardLayoutRegistration } from '@json-form-engine/react/components/layouts/card-layout.registration';
-import { SplitScreenLayoutRegistration } from '@json-form-engine/react/components/layouts/split-screen-layout.registration';
-import { HeroBackgroundLayoutRegistration } from '@json-form-engine/react/components/layouts/hero-background-layout.registration';
+import { CardLayoutRegistration } from '@schema-engine/forms-react/components/layouts/card-layout.registration';
+import { SplitScreenLayoutRegistration } from '@schema-engine/forms-react/components/layouts/split-screen-layout.registration';
+import { HeroBackgroundLayoutRegistration } from '@schema-engine/forms-react/components/layouts/hero-background-layout.registration';
 
-import { DefaultStepperRegistration } from '@json-form-engine/react/components/steppers/default-stepper.registration';
-import { MinimalistStepperRegistration } from '@json-form-engine/react/components/steppers/minimalist-stepper.registration';
-import { DebuggerStepperRegistration } from '@json-form-engine/react/components/steppers/debugger-stepper.registration';
+import { DefaultStepperRegistration } from '@schema-engine/forms-react/components/steppers/default-stepper.registration';
+import { MinimalistStepperRegistration } from '@schema-engine/forms-react/components/steppers/minimalist-stepper.registration';
+import { DebuggerStepperRegistration } from '@schema-engine/forms-react/components/steppers/debugger-stepper.registration';
 
-import { submitPlugin, notificationPlugin, resetPlugin, autoSavePlugin } from '@json-form-engine/core/actions';
+import { submitPlugin, notificationPlugin, resetPlugin, autoSavePlugin } from '@schema-engine/forms/actions';
 
 /**
  * Global form engine instance for the www app

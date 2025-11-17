@@ -1,7 +1,7 @@
-import type { FormConfig } from '@json-form-engine/core/schemas';
-import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
-import '@json-form-engine/react/registrations';
-import '@json-form-engine/core/actions/registry';
+import type { FormConfig } from '@schema-engine/forms/schemas';
+import { ValidationPresets } from '@schema-engine/formsemas/validation';
+import '@schema-engine/forms-react/registrations';
+import '@schema-engine/formsions/registry';
 
 /**
  * Basic form example configuration

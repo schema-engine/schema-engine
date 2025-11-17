@@ -1,16 +1,16 @@
 import '@/lib/form-engine-setup';
-import '@json-form-engine/core/schemas/validation/validation-registry';
+import '@schema-engine/forms/schemas/validation/validation-registry';
 import { Button } from '../components/ui/button';
 import { CodePreview } from '../components/code-preview';
-import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
+import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { FormEngineProvider } from '@json-form-engine/react/components/adapter-provider';
-import { rhfAdapter } from '@json-form-engine/react/adapters/rhf';
+import { FormEngineProvider } from '@schema-engine/forms-react/components/adapter-provider';
+import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
 import { formEngine } from '@/lib/form-engine-setup';
-import type { FormConfig } from '@json-form-engine/core/schemas';
+import type { FormConfig } from '@schema-engine/formsemas';
 import type { EcoComponent } from '@ecopages/core';
 import type { JSX } from 'react';
 

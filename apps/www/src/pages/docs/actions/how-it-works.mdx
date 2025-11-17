@@ -23,7 +23,7 @@ Actions work through a registry system. You register plugins, then define action
 ```typescript
 import { registerAction } from '@/lib/form-engine/actions/action-registry';
 import { submitPlugin, notificationPlugin } from '@/lib/form-engine/actions/plugins';
-import type { FormConfig } from '@json-form-engine/core/schemas';
+import type { FormConfig } from '@schema-engine/forms/schemas';
 
 // Register the plugins you need
 registerAction(submitPlugin({

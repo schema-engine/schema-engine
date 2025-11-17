@@ -43,7 +43,7 @@ const MyInput = ({ label, error, className, ...props }) => (
 );
 
 // Register it with the registry (works with any adapter)
-import { defaultFormRegistry } from '@json-form-engine/react';
+import { defaultFormRegistry } from '@schema-engine/forms-react';
 
 defaultFormRegistry.register({
   name: 'input',
@@ -53,7 +53,7 @@ defaultFormRegistry.register({
 });
 
 // Use it with any supported form library
-import { FormRenderer } from '@json-form-engine/react';
+import { FormRenderer } from '@schema-engine/forms-react';
 
 function MyForm() {
   return (

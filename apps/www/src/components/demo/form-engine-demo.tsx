@@ -1,4 +1,4 @@
-import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
+import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
 import '@/lib/form-engine-setup';
 import { demoFormConfig } from '../../configs/forms/demo-forms';
 

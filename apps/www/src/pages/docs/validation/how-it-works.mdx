@@ -76,7 +76,7 @@ const emailField = {
 Great for programmatic usage and reducing boilerplate:
 
 ```typescript
-import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
+import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
 
 const emailRules = [
   ValidationPresets.string.required('Email is required'),
@@ -89,7 +89,7 @@ const emailRules = [
 Convert rules to Zod schemas for validation:
 
 ```typescript
-import { validationRegistry } from '@json-form-engine/core/schemas/validation';
+import { validationRegistry } from '@schema-engine/forms/schemas/validation';
 
 const rules = [
   { type: 'required', message: 'Password is required' },
@@ -163,7 +163,7 @@ const formConfig = {
 Generate a complete Zod schema for the entire form:
 
 ```typescript
-import { generateFormSchema } from '@json-form-engine/core/schemas/validation';
+import { generateFormSchema } from '@schema-engine/forms/schemas/validation';
 
 const formSchema = generateFormSchema(formConfig.steps[0].elements);
 
@@ -368,7 +368,7 @@ const passwordRules = [
 Leverage presets to maintain consistency across your application:
 
 ```typescript
-import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
+import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
 
 // Consistent email validation across all forms
 const emailRules = [

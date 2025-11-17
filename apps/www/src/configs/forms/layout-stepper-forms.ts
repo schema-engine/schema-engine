@@ -1,4 +1,4 @@
-import type { FormConfig } from '@json-form-engine/core';
+import type { FormConfig } from '@schema-engine/forms';
 
 /**
  * Registry-based card layout with progress bar stepper
@@ -366,7 +366,7 @@ export const layoutStepperForms = {
  *
  * ```typescript
  * // In your custom stepper module or global types file:
- * declare module '@json-form-engine/core/steppers/types' {
+ * declare module '@schema-engine/formsteppers/types' {
  *   interface StepperConfigRegistry {
  *     'my-custom-stepper': MyCustomStepperConfig;
  *   }

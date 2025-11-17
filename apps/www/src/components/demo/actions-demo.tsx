@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useGDPRConsent, useGTMTracker } from '@json-form-engine/react/hooks';
+import { useGDPRConsent, useGTMTracker } from '@schema-engine/forms-react/hooks';
 import { actionsFormConfig, simpleActionsFormConfig } from '@/configs/forms/actions-forms';
-import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
+import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
 import '@/lib/form-engine-setup';
 
 /**

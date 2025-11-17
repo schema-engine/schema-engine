@@ -19,7 +19,7 @@ While Form Engine provides comprehensive built-in validations, you might need cu
 Here's how to create and register a basic custom validation:
 
 ```typescript
-import { validationRegistry } from '@json-form-engine/core/schemas/validation';
+import { validationRegistry } from '@schema-engine/forms/schemas/validation';
 import { z } from 'zod';
 
 // Register a phone number validator
@@ -474,7 +474,7 @@ Always test your custom validations thoroughly:
 
 ```typescript
 import { describe, it, expect } from 'bun:test';
-import { validationRegistry } from '@json-form-engine/core/schemas/validation';
+import { validationRegistry } from '@schema-engine/forms/schemas/validation';
 
 describe('Custom Phone Validation', () => {
   beforeAll(() => {
@@ -707,7 +707,7 @@ validationRegistry.clear();
 For different contexts or testing:
 
 ```typescript
-import { ValidationRegistry } from '@json-form-engine/core/schemas/validation';
+import { ValidationRegistry } from '@schema-engine/forms/schemas/validation';
 
 // Create a new registry for testing
 const testRegistry = new ValidationRegistry();

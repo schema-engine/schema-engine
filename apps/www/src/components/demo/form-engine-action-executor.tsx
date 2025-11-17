@@ -2,12 +2,12 @@ import { useState, useMemo, type FC } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
-import { FormEngineProvider } from '@json-form-engine/react/components/adapter-provider';
-import { rhfAdapter } from '@json-form-engine/react/adapters/rhf';
+import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
+import { FormEngineProvider } from '@schema-engine/forms-react/components/adapter-provider';
+import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
 import { formEngine } from '@/lib/form-engine-setup';
-import { submitPlugin, notificationPlugin, resetPlugin } from '@json-form-engine/core/actions';
-import type { FormConfig } from '@json-form-engine/core/schemas';
+import { submitPlugin, notificationPlugin, resetPlugin } from '@schema-engine/forms/actions';
+import type { FormConfig } from '@schema-engine/formsemas';
 
 const formConfigWithActions: FormConfig = {
 	id: 'form-engine-demo',
