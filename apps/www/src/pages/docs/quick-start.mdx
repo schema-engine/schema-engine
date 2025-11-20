@@ -36,13 +36,13 @@ import {
   createReactFormEngine,
   
   
-} from '@json-form-engine/react/registries/builder-registry';
+} from '@schema-engine/forms-react/registries/builder-registry';
 import {
   InputElement,
   TextareaElement,
   SelectElement,
   CardLayoutRegistration,
-} from '@json-form-engine/react/registrations';
+} from '@schema-engine/forms-react/registrations';
 
 export const formEngine = createReactFormEngine()
   .addElement(InputElement)
@@ -63,8 +63,8 @@ Define your form structure using a JSON configuration:
 
 ```typescript
 // components/contact-form.tsx
-import type { FormConfig } from '@json-form-engine/core/schemas';
-import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
+import type { FormConfig } from '@schema-engine/forms/schemas';
+import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
 import { formEngine } from './lib/form-engine';
 
 const contactFormConfig: FormConfig = {

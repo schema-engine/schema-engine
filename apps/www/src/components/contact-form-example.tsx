@@ -1,8 +1,8 @@
-import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
-import { FormEngineProvider } from '@json-form-engine/react/components/adapter-provider';
-import { rhfAdapter } from '@json-form-engine/react/adapters/rhf';
+import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
+import { FormEngineProvider } from '@schema-engine/forms-react/components/adapter-provider';
+import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
 import { formEngine } from '@/lib/form-engine-setup';
-import type { FormConfig } from '@json-form-engine/core/schemas';
+import type { FormConfig } from '@schema-engine/forms/schemas';
 import '@/lib/form-engine-setup';
 
 export function ContactFormExample() {

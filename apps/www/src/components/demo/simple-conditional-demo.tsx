@@ -1,6 +1,6 @@
-import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
-import { ValidationPresets } from '@json-form-engine/core/schemas/validation';
-import type { FormConfig } from '@json-form-engine/core/schemas';
+import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
+import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
+import type { FormConfig } from '@schema-engine/formsemas';
 import '@/lib/form-engine-setup';
 
 /**

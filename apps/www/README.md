@@ -11,12 +11,12 @@ This app uses the new **Builder Pattern** to configure the form engine.
 The form engine is configured once in `/src/lib/form-engine-setup.ts`:
 
 ```typescript
-import { createReactFormEngine } from "@json-form-engine/react/registries/builder-registry";
+import { createReactFormEngine } from "@schema-engine/forms-react/registries/builder-registry";
 import {
 	InputElement,
 	TextareaElement,
 	// ... other components
-} from "@json-form-engine/react/registrations";
+} from "@schema-engine/forms-react/registrations";
 
 export const formEngine = createReactFormEngine()
 	.addElement(InputElement)
@@ -30,7 +30,7 @@ export const formEngine = createReactFormEngine()
 Import the `formEngine` instance and pass it to `FormRenderer`:
 
 ```typescript
-import { FormRenderer } from "@json-form-engine/react/components/internals/form-renderer";
+import { FormRenderer } from "@schema-engine/forms-react/components/internals/form-renderer";
 import { formEngine } from "@/lib/form-engine-setup";
 
 function MyForm() {
@@ -113,7 +113,7 @@ Interactive demos showcasing:
 
 ```typescript
 // components/custom-input.tsx
-import type { ReactElementRegistration } from "@json-form-engine/react";
+import type { ReactElementRegistration } from "@schema-engine/forms-react";
 import { z } from "zod";
 
 const CustomInputSchema = z.object({
@@ -175,15 +175,15 @@ The old pattern used side-effect imports:
 
 ```typescript
 // [x-mark] OLD - Auto-registration via side effects
-import "@json-form-engine/react/registrations";
+import "@schema-engine/forms-react/registrations";
 ```
 
 The new pattern uses explicit registration:
 
 ```typescript
 // [check-mark] NEW - Explicit registration with Builder Pattern
-import { createReactFormEngine } from "@json-form-engine/react/registries/builder-registry";
-import { InputElement } from "@json-form-engine/react/registrations";
+import { createReactFormEngine } from "@schema-engine/forms-react/registries/builder-registry";
+import { InputElement } from "@schema-engine/forms-react/registrations";
 
 export const formEngine = createReactFormEngine().addElement(InputElement).build();
 ```

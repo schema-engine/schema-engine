@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
+import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
 import '@/lib/form-engine-setup';
 import { conditionalFormConfig } from '@/configs/forms/conditional-forms';
 

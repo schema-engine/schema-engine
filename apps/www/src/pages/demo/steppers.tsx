@@ -1,8 +1,8 @@
 import { FormEngineLayout } from '@/layouts/form-engine-layout';
-import type { FormConfig } from '@json-form-engine/core';
+import type { FormConfig } from '@schema-engine/forms';
 import type { ReactNode } from 'react';
 import type { EcoComponent } from '@ecopages/core';
-import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
+import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
 import '@/lib/form-engine-setup';
 
 const minimalistStepperDemo: FormConfig = {

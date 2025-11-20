@@ -1,9 +1,9 @@
 import '@/lib/form-engine-setup';
-import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
-import { FormEngineProvider } from '@json-form-engine/react/components/adapter-provider';
-import { rhfAdapter } from '@json-form-engine/react/adapters/rhf';
+import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
+import { FormEngineProvider } from '@schema-engine/forms-react/components/adapter-provider';
+import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
 import { formEngine } from '@/lib/form-engine-setup';
-import { ViewportPreview } from '@json-form-engine/react/components/viewport-preview';
+import { ViewportPreview } from '@schema-engine/forms-react/components/viewport-preview';
 import { responsiveFormConfig } from '@/configs/forms/responsive-forms';
 
 /**

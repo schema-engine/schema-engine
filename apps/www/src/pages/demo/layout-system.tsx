@@ -1,6 +1,6 @@
 import { FormEngineLayout } from '@/layouts/form-engine-layout';
 import { conceptStepLayoutDemo, currentGridSystemDemo } from '@/configs/forms/layout-concept-demo';
-import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
+import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
 
 export default function LayoutSystemDemoPage() {
 	return (

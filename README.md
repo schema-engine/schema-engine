@@ -32,9 +32,9 @@ Get up and running in three simple steps:
 ````typescript
 ```typescript
 // Simple setup with React Hook Form
-import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
-import { FormEngine, rhfAdapter } from '@json-form-engine/react';
-import '@json-form-engine/react/registrations'; // Register all components
+import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
+import { FormEngine, rhfAdapter } from '@schema-engine/forms-react';
+import '@schema-engine/forms-react/registrations'; // Register all components
 
 function MyForm() {
   const handleSubmit = (data: any) => {
@@ -207,8 +207,8 @@ Actions are fully configurable and support custom plugins, making it easy to imp
 
 ### Package Documentation
 
-- [@json-form-engine/core README](./packages/core/README.md)
-- [@json-form-engine/react REGISTRATION](./packages/react/REGISTRATION.md)
+- [@schema-engine/forms README](./packages/core/README.md)
+- [@schema-engine/forms-react REGISTRATION](./packages/react/REGISTRATION.md)
 
 See the [`/docs`](./apps/www/src/pages/docs/) folder for more.
 

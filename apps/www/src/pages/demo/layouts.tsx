@@ -1,6 +1,6 @@
 import { FormEngineLayout } from '@/layouts/form-engine-layout';
-import { FormRenderer } from '@json-form-engine/react/components/internals/form-renderer';
-import type { FormConfig } from '@json-form-engine/core';
+import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
+import type { FormConfig } from '@schema-engine/forms';
 
 import '@/lib/form-engine-setup';
 
