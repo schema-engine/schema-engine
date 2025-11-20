@@ -40,7 +40,7 @@ export interface ElementMetadata extends ComponentMetadata {
  *
  * Actions are separate from components and have their own metadata structure.
  */
-export interface ActionMetadata {
+export interface ActionMetadata<ActionTriggers extends string[] = string[]> {
 	/** Human-readable display name */
 	name: string;
 	/** Detailed description of the action's purpose */
@@ -52,5 +52,5 @@ export interface ActionMetadata {
 	/** Version of the action */
 	version?: string;
 	/** Default triggers for this action type */
-	defaultTriggers?: string[];
+	defaultTriggers?: ActionTriggers;
 }

@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 import type { ComponentMetadata, ElementMetadata, ActionMetadata } from './metadata';
-import type { BuilderActionExecutionContext, BuilderActionExecutionResult } from './actions.js';
+import type { BuilderActionExecutionContext, BuilderActionExecutionResult, BuilderActionTrigger } from './actions.js';
 
 declare global {
 	namespace FormEngine {
@@ -188,7 +188,8 @@ export type StepperRegistration<
  * };
  * ```
  */
-export interface BuilderActionRegistration<TConfig = unknown> extends BaseRegistration<TConfig, ActionMetadata> {
+export interface BuilderActionRegistration<TConfig = unknown>
+	extends BaseRegistration<TConfig, ActionMetadata<BuilderActionTrigger[]>> {
 	/** Action execution handler */
 	execute: (context: BuilderActionExecutionContext<TConfig>) => Promise<BuilderActionExecutionResult>;
 }
