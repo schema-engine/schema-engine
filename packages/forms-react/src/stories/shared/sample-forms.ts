@@ -46,6 +46,12 @@ export const simpleContactForm: FormConfig = {
 					rows: 4,
 					rules: [ValidationPresets.string.minLength(10, 'Message must be at least 10 characters')],
 				},
+				{
+					$type: 'submit',
+					id: 'submit',
+					name: 'submit',
+					label: 'Send Message',
+				},
 			],
 		},
 	],
