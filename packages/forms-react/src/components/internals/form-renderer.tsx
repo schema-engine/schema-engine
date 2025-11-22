@@ -2,10 +2,11 @@ import type React from 'react';
 import { FormProvider } from '../form-provider';
 import type { FormProviderProps } from '../../adapters/types';
 import { FormElement } from './field-renderer';
-import { useFormGridStyles, useMultiStepForm } from '@/hooks';
+import { useFormGridStyles } from '@/hooks';
 import { useFormContext } from 'react-hook-form';
 import { LayoutRenderer } from './layout-renderer';
 import { StepperRenderer } from './stepper-renderer';
+import { useFormInstanceActions } from '@/hooks/use-form-context';
 
 import type { FormConfig, FormStep } from '@schema-engine/forms/schemas';
 
@@ -70,23 +71,31 @@ function SingleStepFormElementsRenderer({ config }: { config: FormConfig }) {
 	);
 }
 
+function createInitialStepStates(config: FormConfig) {
+	return {
+		completed: config.steps.map(() => false),
+		valid: config.steps.map(() => false),
+		visited: config.steps.map(() => false),
+	};
+}
+
 /**
  * Internal component for multi-step form rendering
  */
 function MultiStepFormElementsRenderer({ config }: { config: FormConfig }) {
 	const { formState } = useFormContext();
-	const { currentStepIndex, stepStates, navigation } = useMultiStepForm(config);
+	const { stepStates, currentStep, navigation } = useFormInstanceActions();
 
 	return (
 		<StepperRenderer
 			form={config}
 			steps={config.steps}
-			currentStepIndex={currentStepIndex}
-			stepStates={stepStates}
+			currentStepIndex={currentStep}
+			stepStates={stepStates ?? createInitialStepStates(config)}
 			navigation={navigation}
 			isSubmitting={formState.isSubmitting}
 		>
-			<StepContent step={config.steps[currentStepIndex]} config={config} />
+			<StepContent step={config.steps[currentStep]} config={config} />
 		</StepperRenderer>
 	);
 }

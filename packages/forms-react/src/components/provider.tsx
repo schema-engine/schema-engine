@@ -1,6 +1,7 @@
 import { createContext } from 'react';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { FormActionConfig } from '@schema-engine/forms/schemas';
+import type { ActionExecutionResult, FormActionTrigger } from '@schema-engine/forms';
 
 /**
  * Form Engine context value
@@ -28,6 +29,25 @@ export interface FormInstanceContextValue {
 	goToStep: (step: number) => void;
 	goToNext: () => void;
 	goToPrevious: () => void;
+	stepStates?: {
+		completed: boolean[];
+		valid: boolean[];
+		visited: boolean[];
+	};
+	navigation: {
+		canGoNext: boolean;
+		canGoPrevious: boolean;
+		isFirstStep: boolean;
+		isLastStep: boolean;
+		goToStep: (step: number) => void;
+		goToNextStep: () => void;
+		goToPreviousStep: () => void;
+	};
+	dispatchTrigger: (
+		trigger: FormActionTrigger,
+		extraMetadata?: Record<string, unknown>,
+	) => Promise<ActionExecutionResult[]>;
+	dispatchTriggerSync: (trigger: FormActionTrigger, extraMetadata?: Record<string, unknown>) => void;
 }
 
 /**

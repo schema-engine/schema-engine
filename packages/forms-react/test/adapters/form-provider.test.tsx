@@ -1,22 +1,13 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { FormProvider } from '../../src/adapters/rhf/form-provider';
-import type { FormConfig, FormActionConfig } from '@schema-engine/forms/schemas';
-import type { FormActionTrigger, ActionExecutionResult, ActionExecutionContext } from '@schema-engine/forms';
+import type { FormConfig } from '@schema-engine/forms/schemas';
+import { mockExecuteTrigger, setupActionExecutorMock } from '../utils/use-action-executor.mock';
 
-const mockExecuteTrigger = mock((
-	_actions: FormActionConfig[],
-	_trigger: FormActionTrigger,
-	_context: ActionExecutionContext,
-	_triggeredBy?: FormActionConfig,
-): Promise<ActionExecutionResult[]> => Promise.resolve([{ success: true }]));
+setupActionExecutorMock();
 
 mock.module('@/hooks/use-form-context', () => ({
     useFormEngine: () => ({ engine: {} }),
-}));
-
-mock.module('@/hooks/use-action-executor', () => ({
-    useActionExecutor: () => ({ executeTrigger: mockExecuteTrigger }),
 }));
 
 
