@@ -1,10 +1,15 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { FormProvider } from '../../src/adapters/rhf/form-provider';
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { FormConfig, FormActionConfig } from '@schema-engine/forms/schemas';
+import type { FormActionTrigger, ActionExecutionResult, ActionExecutionContext } from '@schema-engine/forms';
 
-
-const mockExecuteTrigger = mock(() => Promise.resolve([{ success: true }]));
+const mockExecuteTrigger = mock((
+	_actions: FormActionConfig[],
+	_trigger: FormActionTrigger,
+	_context: ActionExecutionContext,
+	_triggeredBy?: FormActionConfig,
+): Promise<ActionExecutionResult[]> => Promise.resolve([{ success: true }]));
 
 mock.module('@/hooks/use-form-context', () => ({
     useFormEngine: () => ({ engine: {} }),
@@ -49,7 +54,7 @@ describe('FormProvider', () => {
             expect(mockExecuteTrigger).toHaveBeenCalled();
         });
 
-        const calls = mockExecuteTrigger.mock.calls as unknown as Array<[unknown, string]>;
+        const calls = mockExecuteTrigger.mock.calls;
         const formStartCall = calls.find(call => call[1] === 'form_mount');
         expect(formStartCall).toBeDefined();
     });
@@ -65,7 +70,7 @@ describe('FormProvider', () => {
         fireEvent.click(submitButton);
 
         await waitFor(() => {
-            const calls = mockExecuteTrigger.mock.calls as unknown as Array<[unknown, string]>;
+            const calls = mockExecuteTrigger.mock.calls;
             const submitStartCalls = calls.filter(call => call[1] === 'form_submit_start');
             const formSubmitCalls = calls.filter(call => call[1] === 'form_submit');
             
@@ -73,7 +78,7 @@ describe('FormProvider', () => {
             expect(formSubmitCalls.length).toBeGreaterThanOrEqual(1);
         });
 
-        const calls = mockExecuteTrigger.mock.calls as unknown as Array<[unknown, string]>;
+        const calls = mockExecuteTrigger.mock.calls;
         
         const submitRelatedCalls = calls.filter(call => ['form_submit_start', 'form_submit'].includes(call[1]));
         

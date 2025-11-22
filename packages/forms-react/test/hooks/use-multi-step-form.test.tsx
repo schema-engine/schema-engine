@@ -1,17 +1,26 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { renderHook, act } from '@testing-library/react';
 import { useMultiStepForm } from '../../src/hooks/use-multi-step-form';
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { FormConfig, FormActionConfig } from '@schema-engine/forms/schemas';
+import type { FormContextValue } from '@/adapters/types';
+import type { FormActionTrigger, ActionExecutionResult, ActionExecutionContext } from '@schema-engine/forms';
 
 const mockTrigger = mock(() => Promise.resolve(true));
 const mockSetFocus = mock(() => {});
 const mockGetValues = mock(() => ({}));
-const mockExecuteTrigger = mock(() => Promise.resolve([]));
+const mockExecuteTrigger = mock((
+	_actions: FormActionConfig[],
+	_trigger: FormActionTrigger,
+	_context: ActionExecutionContext,
+	_triggeredBy?: FormActionConfig,
+): Promise<ActionExecutionResult[]> => Promise.resolve([]));
+
 
 mock.module('react-hook-form', () => ({
-    useFormContext: () => ({
+    useFormContext: (): FormContextValue => ({
         trigger: mockTrigger,
         setFocus: mockSetFocus,
+        setValue: mock(() => {}),
         getValues: mockGetValues,
         formState: { errors: {}, isSubmitting: false, isValid: true, submitCount: 0, touchedFields: {} },
     }),
@@ -57,7 +66,7 @@ describe('useMultiStepForm', () => {
         expect(mockTrigger).toHaveBeenCalled();
         expect(result.current.currentStepIndex).toBe(1);
         
-        const calls = mockExecuteTrigger.mock.calls as unknown as Array<[unknown, string]>;
+        const calls = mockExecuteTrigger.mock.calls;
         expect(mockExecuteTrigger).toHaveBeenCalledTimes(3);
         expect(calls[0][1]).toBe('step_leave');
         expect(calls[1][1]).toBe('step_change');
