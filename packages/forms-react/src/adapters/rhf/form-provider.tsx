@@ -1,5 +1,5 @@
-import { FormProvider as RHFFormProvider, useForm } from 'react-hook-form';
-import { useCallback, useMemo, useState } from 'react';
+import { FormProvider as RHFFormProvider, useForm, useWatch } from 'react-hook-form';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FormActionConfig } from '@schema-engine/forms/schemas';
 import type { ActionExecutionContext } from '@schema-engine/forms';
 import type { FormProviderProps } from '../types';
@@ -71,6 +71,19 @@ export function FormProvider({
 		};
 	}, [form, config.id, config.steps.length, currentStep]);
 
+	/**
+	 * Execute 'form_mount' actions on mount
+	 * This effect runs only once when the component mounts
+	 */
+	useEffect(() => {
+		if (config.actions && config.actions.length > 0) {
+			const context = buildActionContext();
+			actionExecutor.executeTrigger(config.actions, 'form_mount', context).catch((error) => {
+				console.error('Form mount action execution failed:', error);
+			});
+		}
+	}, [config.actions, buildActionContext, actionExecutor]);
+
 	const executeAction = useCallback(
 		async (action: FormActionConfig) => {
 			try {
@@ -111,6 +124,23 @@ export function FormProvider({
 		[config.actions, config.onChange, onChange, buildActionContext, actionExecutor],
 	);
 
+	/**
+	 * Watch form changes and trigger form_change actions
+	 */
+	const watchedData = useWatch({ control: form.control });
+	const isFirstRender = useRef(true);
+
+	useEffect(() => {
+		if (isFirstRender.current) {
+			isFirstRender.current = false;
+			return;
+		}
+
+		if (watchedData && Object.keys(watchedData).length > 0) {
+			handleFormChange(watchedData);
+		}
+	}, [watchedData, handleFormChange]);
+
 	const handleSubmit = useCallback(
 		async (data: any) => {
 			await form.trigger();
@@ -118,6 +148,9 @@ export function FormProvider({
 			if (config.actions && config.actions.length > 0) {
 				try {
 					const context = buildActionContext();
+
+					await actionExecutor.executeTrigger(config.actions, 'form_submit_start', context);
+
 					const results = await actionExecutor.executeTrigger(config.actions, 'form_submit', context);
 
 					const failedAction = results.find(

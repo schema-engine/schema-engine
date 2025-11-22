@@ -8,7 +8,7 @@ import type {
 	BuilderActionExecutionResult,
 	BuilderActionRegistration,
 } from '@schema-engine/forms/types';
-import { ActionTriggerSchema } from '@schema-engine/forms';
+import { FormActionTriggerSchema } from '@schema-engine/forms';
 const meta = {
 	component: FormRenderer,
 	parameters: {
@@ -237,7 +237,7 @@ const ConfettiActionSchema = z.object({
 	type: z.literal('confetti'),
 	description: z.string().optional(),
 	enabled: z.boolean().default(true),
-	triggers: z.array(ActionTriggerSchema).optional(),
+	triggers: z.array(FormActionTriggerSchema).optional(),
 	particleCount: z.number().default(100).optional(),
 	spread: z.number().default(70).optional(),
 	origin: z.object({ y: z.number() }).default({ y: 0.6 }).optional(),

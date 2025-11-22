@@ -243,16 +243,16 @@ Actions execute in response to lifecycle triggers:
 
 **Form Triggers:**
 
-- `form_start` - Form initialization
+- `form_mount` - Form initialization
 - `form_change` - Any field change
 - `form_submit` - Form submission initiated
 
 **Submit Lifecycle:**
 
-- `submit_start` - Submit process begins
-- `submit_success` - Submit completed successfully
-- `submit_error` - Submit failed
-- `submit_complete` - Submit finished (success or failure)
+- `form_submit_start` - Submit process begins
+- `form_submit_success` - Submit completed successfully
+- `form_submit_error` - Submit failed
+- `form_submit_complete` - Submit finished (success or failure)
 
 **Step Triggers:**
 
@@ -261,24 +261,19 @@ Actions execute in response to lifecycle triggers:
 - `step_leave` - Leaving a step
 - `step_view` - Step becomes visible (analytics)
 
-**Manual Triggers:**
-
-- `manual_save` - Explicit save action
-- `manual_reset` - Explicit reset action
-
 Actions can specify default triggers in metadata or be configured per-form:
 
 ```typescript
 // Default triggers from registration
 metadata: {
-  defaultTriggers: ['form_submit', 'submit_success']
+  defaultTriggers: ['form_submit', 'form_submit_success']
 }
 
 // Override in form config
 {
   id: 'custom-action',
   type: 'submit',
-  triggers: ['form_change', 'manual_save']
+  triggers: ['form_change']
 }
 ```
 
@@ -481,7 +476,7 @@ const engine = new FormEngineBuilder()
   type: 'notification',
   message: 'Form submitted successfully!',
   variant: 'success',
-  triggers: ['submit_success'],
+  triggers: ['form_submit_success'],
 }
 ```
 

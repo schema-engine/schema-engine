@@ -7,14 +7,14 @@ import type {
 	ActionExecutionResult, 
 } from "@/actions/types";
 import { createMockContext, setupTestEnvironment } from "./__tools";
-import type { ActionTrigger } from "@/actions";
+import type { FormActionTrigger } from "@/actions";
 import { z } from "zod";
 
 type TestActionConfig = {
 	id: string;
 	type: string;
 	enabled: boolean;
-	triggers?: ActionTrigger[];
+	triggers?: FormActionTrigger[];
 	[key: string]: any;
 };
 
@@ -23,7 +23,7 @@ const mockContext = createMockContext();
 const createMockAction = (
 	type: string, 
 	handler: (context: any) => Promise<ActionExecutionResult>,
-	defaultTriggers: ActionTrigger[] = []
+	defaultTriggers: FormActionTrigger[] = []
 ): BuilderActionRegistration => {
 	return {
 		$type: type,
@@ -98,7 +98,7 @@ describe("ActionExecutor", () => {
 						message: "test executed",
 					};
 				},
-				["form_start"]
+				["form_mount"]
 			);
 
 			engine = new FormEngineBuilder().addAction(testAction).build();
@@ -199,7 +199,7 @@ describe("ActionExecutor", () => {
 						message: "test executed",
 					};
 				},
-				["form_start"]
+				["form_mount"]
 			);
 
 			engine = new FormEngineBuilder().addAction(testAction).build();
@@ -223,7 +223,7 @@ describe("ActionExecutor", () => {
 
 			const results2 = await executor.executeTrigger(
 				actions as any,
-				"form_start",
+				"form_mount",
 				mockContext
 			);
 			expect(results2).toHaveLength(0);
@@ -424,7 +424,7 @@ describe("ActionExecutor", () => {
 						message: "Success handler executed",
 					};
 				},
-				["submit_success"]
+				["form_submit_success"]
 			);
 
 			const completeAction = createMockAction(
@@ -436,7 +436,7 @@ describe("ActionExecutor", () => {
 						message: "Complete handler executed",
 					};
 				},
-				["submit_complete"]
+				["form_submit_complete"]
 			);
 
 			engine = new FormEngineBuilder()
@@ -482,7 +482,7 @@ describe("ActionExecutor", () => {
 						message: "Error handler executed",
 					};
 				},
-				["submit_error"]
+				["form_submit_error"]
 			);
 
 			const completeAction = createMockAction(
@@ -494,7 +494,7 @@ describe("ActionExecutor", () => {
 						message: "Complete handler executed",
 					};
 				},
-				["submit_complete"]
+				["form_submit_complete"]
 			);
 
 			engine = new FormEngineBuilder()
@@ -526,7 +526,7 @@ describe("ActionExecutor", () => {
 					executionOrder.push("start");
 					return { success: true, message: "started" };
 				},
-				["form_start"]
+				["form_mount"]
 			);
 
 			const submitAction = createMockAction(
@@ -560,7 +560,7 @@ describe("ActionExecutor", () => {
 				{ type: "change_action", id: "change", enabled: true },
 			];
 
-			await executor.executeTrigger(actions as any, "form_start", mockContext);
+			await executor.executeTrigger(actions as any, "form_mount", mockContext);
 			expect(executionOrder).toContain("start");
 
 			executionOrder = [];
@@ -638,7 +638,7 @@ describe("ActionExecutor", () => {
 					executionOrder.push("test");
 					return { success: true, message: "executed" };
 				},
-				["form_start"]
+				["form_mount"]
 			);
 
 			engine = new FormEngineBuilder().addAction(testAction).build();

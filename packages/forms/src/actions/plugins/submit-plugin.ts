@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { BuilderActionExecutionContext, BuilderActionExecutionResult, BuilderActionRegistration } from '@/types';
-import { ActionTriggerSchema } from '../triggers';
+import { FormActionTriggerSchema } from '../triggers';
 
 /**
  * Submit Plugin Configuration
@@ -80,7 +80,7 @@ export const SubmitActionSchema = z.object({
 	/** Whether this action is enabled and should be executed */
 	enabled: z.boolean().default(true),
 	/** Custom triggers that override the default triggers for this action */
-	triggers: z.array(ActionTriggerSchema).optional(),
+	triggers: z.array(FormActionTriggerSchema).optional(),
 	/** Target URL for form submission (supports both full URLs and relative paths) */
 	endpoint: z.string().min(1, 'Endpoint cannot be empty'),
 	/** HTTP method for the request */

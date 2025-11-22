@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { BuilderActionExecutionContext, BuilderActionExecutionResult, BuilderActionRegistration } from '@/types';
-import { ActionTriggerSchema } from '../triggers';
+import { FormActionTriggerSchema } from '../triggers';
 
 /**
  * Storage Interface for Auto-Save Plugin
@@ -62,7 +62,7 @@ export const AutoSaveActionSchema = z.object({
 	/** Whether this action is enabled and should be executed */
 	enabled: z.boolean().default(true),
 	/** Custom triggers that override the default triggers for this action */
-	triggers: z.array(ActionTriggerSchema).optional(),
+	triggers: z.array(FormActionTriggerSchema).optional(),
 	/** Storage key to use (will use generated key if not provided) */
 	storageKey: z.string().optional(),
 	/** Whether to include sensitive fields in auto-save */

@@ -1,32 +1,19 @@
-/**
- * Action triggers for the new builder pattern - events that can trigger action execution.
- *
- * These events define when actions should be executed in the form lifecycle.
- *
- * NOTE: This is the new v2.0 type. The old ActionTrigger from ./actions/triggers is deprecated.
- */
-export type BuilderActionTrigger =
-	| 'form_start' // When form is initialized
-	| 'form_mount' // When form is mounted in the DOM
-	| 'form_unmount' // When form is unmounted from the DOM
-	| 'step_start' // When a new step begins (multi-step forms)
-	| 'step_end' // When a step is completed
-	| 'field_change' // When any field value changes
-	| 'field_blur' // When any field loses focus
-	| 'field_focus' // When any field gains focus
-	| 'validation_error' // When validation fails
-	| 'validation_success' // When validation succeeds
-	| 'form_submit' // When form is submitted
-	| 'form_submit_success' // When form submission succeeds
-	| 'form_submit_error' // When form submission fails
-	| 'manual_reset'; // When form is manually reset
+import type { FormActionTrigger } from '../actions/triggers';
+import type { ActionExecutionResult } from '../actions/types';
 
 /**
- * Action execution context for the new builder pattern.
+ * Action triggers for the builder pattern - events that can trigger action execution.
+ *
+ * These events define when actions should be executed in the form lifecycle.
+ * This is an alias for ActionTrigger from ./actions/triggers for backward compatibility.
+ */
+export type BuilderActionTrigger = FormActionTrigger;
+
+/**
+ * Action execution context for the builder pattern.
  *
  * Contains all information about the form state, validation, and metadata.
- *
- * NOTE: This is the new v2.0 type. The old ActionExecutionContext from ./actions/types is deprecated.
+ * This is the context passed to builder action execute functions.
  */
 export interface BuilderActionExecutionContext<TConfig = unknown> {
 	/** The action configuration */
@@ -43,6 +30,8 @@ export interface BuilderActionExecutionContext<TConfig = unknown> {
 	isValid: boolean;
 	/** Validation errors by field name */
 	errors: Record<string, unknown>;
+	/** The trigger event that caused this action to execute */
+	trigger: FormActionTrigger;
 	/** Form metadata and timing information */
 	metadata: {
 		/** Timestamp when current step started */
@@ -52,7 +41,7 @@ export interface BuilderActionExecutionContext<TConfig = unknown> {
 		/** Number of user interactions */
 		userInteractions: number;
 	};
-	/** Form controller methods (framework-specific) */
+	/** Form controller methods (framework-agnostic) */
 	form: {
 		/** Reset form to initial values */
 		reset: () => void;
@@ -67,23 +56,9 @@ export interface BuilderActionExecutionContext<TConfig = unknown> {
 }
 
 /**
- * Action execution result for the new builder pattern.
+ * Action execution result for the builder pattern.
  *
  * Provides standardized response format for action execution.
- *
- * NOTE: This is the new v2.0 type. The old ActionExecutionResult from ./actions/types is deprecated.
+ * This is an alias for ActionExecutionResult from ./actions/types for backward compatibility.
  */
-export interface BuilderActionExecutionResult {
-	/** Whether the action executed successfully */
-	success: boolean;
-	/** Success message to display or log */
-	message?: string;
-	/** Error message if action failed */
-	error?: string;
-	/** Data returned by the action (e.g., API response) */
-	data?: unknown;
-	/** Whether to continue executing subsequent actions */
-	shouldContinue?: boolean;
-	/** URL to redirect to after action completion */
-	redirectUrl?: string;
-}
+export type BuilderActionExecutionResult = ActionExecutionResult;

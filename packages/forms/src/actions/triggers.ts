@@ -7,10 +7,10 @@ import { z } from 'zod';
  * Actions can respond to one or more triggers, and some triggers form lifecycle chains.
  *
  * Lifecycle Chains:
- * - Submit: form_submit → submit_success/submit_error → submit_complete
+ * - Submit: form_submit → form_submit_start → form_submit_success/form_submit_error → form_submit_complete
  * - Step: step_change → step_enter/step_leave
  *
- * @form_start - When form is initialized
+ * @form_mount - When form is initialized
  * @form_change - When any form field changes
  * @form_submit - When form submission is initiated
  * @step_change - When navigating between steps in multi-step forms
@@ -18,28 +18,24 @@ import { z } from 'zod';
  * @step_enter - When entering a specific step
  * @step_leave - When leaving a specific step
  * @step_view - When a step becomes visible (for analytics)
- * @manual_save - When user explicitly saves progress (e.g., "Save Draft" button)
- * @manual_reset - When user explicitly resets form (e.g., "Reset" button)
- * @submit_start - When submit process begins (internal lifecycle)
- * @submit_success - When submit completes successfully (internal lifecycle)
- * @submit_error - When submit fails (internal lifecycle)
- * @submit_complete - When submit process finishes, regardless of outcome (internal lifecycle)
+ * @form_submit_start - When submit process begins (after validation, before network request)
+ * @form_submit_success - When submit completes successfully (internal lifecycle)
+ * @form_submit_error - When submit fails (internal lifecycle)
+ * @form_submit_complete - When submit process finishes, regardless of outcome (internal lifecycle)
  */
-export const ActionTriggerSchema = z.enum([
-	'form_start',
+export const FormActionTriggerSchema = z.enum([
+	'form_mount',
 	'form_change',
 	'form_submit',
-	'submit_start',
-	'submit_success',
-	'submit_error',
-	'submit_complete',
+	'form_submit_start',
+	'form_submit_success',
+	'form_submit_error',
+	'form_submit_complete',
 	'step_change',
 	'step_submit',
 	'step_enter',
 	'step_leave',
 	'step_view',
-	'manual_save',
-	'manual_reset',
 ]);
 
-export type ActionTrigger = z.infer<typeof ActionTriggerSchema>;
+export type FormActionTrigger = z.infer<typeof FormActionTriggerSchema>;

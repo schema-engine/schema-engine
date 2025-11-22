@@ -47,7 +47,7 @@ export class GTMTracker {
 	 * @param metadata - Additional event metadata
 	 */
 	static pushFormEvent(
-		eventType: 'form_start' | 'form_step_complete' | 'form_submit' | 'form_abandon',
+		eventType: 'form_mount' | 'form_step_complete' | 'form_submit' | 'form_abandon',
 		formData?: Record<string, any>,
 		metadata?: Record<string, any>,
 	): void {

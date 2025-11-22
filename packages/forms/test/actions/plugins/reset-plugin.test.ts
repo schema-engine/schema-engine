@@ -36,7 +36,7 @@ describe("ResetPlugin", () => {
 				type: "reset",
 				description: "Reset form to initial state",
 				enabled: true,
-				triggers: ["manual_reset", "submit_error"],
+				triggers: ["form_submit_error"],
 				confirmMessage: "Are you sure you want to reset?",
 				resetToDefaults: false,
 			};
@@ -87,15 +87,13 @@ describe("ResetPlugin", () => {
 
 	describe("Plugin Factory", () => {
 		test("should create plugin with default configuration", () => {
-			const plugin = resetPlugin();
+		const plugin = resetPlugin();
 
-			expect(plugin.$type).toBe("reset");
-			expect(plugin.schema).toBe(ResetActionSchema);
-			expect(plugin.metadata.defaultTriggers).toEqual(["form_reset", "submit_success"]);
-			expect(plugin.execute).toBeDefined();
-		});
-
-		test("should create plugin with custom configuration", () => {
+		expect(plugin.$type).toBe("reset");
+		expect(plugin.schema).toBe(ResetActionSchema);
+		expect(plugin.metadata.defaultTriggers).toEqual(["form_submit_success"]);
+		expect(plugin.execute).toBeDefined();
+	});		test("should create plugin with custom configuration", () => {
 			let resetCalled = false;
 			let clearDraftCalled = false;
 			let confirmCalled = false;

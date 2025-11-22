@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { BuilderActionExecutionContext, BuilderActionExecutionResult, BuilderActionRegistration } from '@/types';
-import { ActionTriggerSchema } from '../triggers';
+import { FormActionTriggerSchema } from '../triggers';
 
 /**
  * Notification Plugin Configuration
@@ -47,7 +47,7 @@ export const NotificationActionSchema = z.object({
 	/** Whether this action is enabled and should be executed */
 	enabled: z.boolean().default(true),
 	/** Custom triggers that override the default triggers for this action */
-	triggers: z.array(ActionTriggerSchema).optional(),
+	triggers: z.array(FormActionTriggerSchema).optional(),
 	/** Message to display in the notification */
 	message: z.string().min(1, 'Message cannot be empty'),
 	/** Visual style of the notification */
@@ -178,7 +178,7 @@ export function notificationPlugin(
 			name: 'Show Notification',
 			description: 'Display notifications to users with different variants',
 			icon: 'bell',
-			defaultTriggers: ['submit_success', 'submit_error'],
+			defaultTriggers: ['form_submit_success', 'form_submit_error'],
 		},
 		execute: handler,
 	};

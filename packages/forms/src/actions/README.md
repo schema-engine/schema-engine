@@ -8,7 +8,7 @@ The Form Engine action system has been redesigned with a **pure plugin architect
 - **Factory Pattern**: Configurable plugin creation with sensible defaults
 - **Type Safety**: Full TypeScript support with module augmentation
 - **Sequential Execution**: Actions run one after another, preventing race conditions
-- **Submit Lifecycle**: Complete submit_start → submit_success/error → submit_complete flow
+- **Submit Lifecycle**: Complete form_submit_start → form_submit_success/form_submit_error → form_submit_complete flow
 - **Maximum Configurability**: Every aspect of behavior can be customized
 
 ## Architecture
@@ -19,7 +19,7 @@ The Form Engine action system has been redesigned with a **pure plugin architect
 
 - Minimal executor with pure registry delegation
 - Sequential action execution for predictable behavior
-- Submit lifecycle management (submit_start/success/error/complete)
+- Submit lifecycle management (form_submit_start/success/error/complete)
 - No hardcoded action logic - everything goes through plugins
 
 #### 2. Action Registry (`action-registry.ts`)
@@ -86,13 +86,13 @@ const actions = [
 		type: "show_notification",
 		message: "Thank you for your submission!",
 		variant: "success",
-		triggers: ["submit_success"], // Only runs after successful submit
+		triggers: ["form_submit_success"], // Only runs after successful submit
 	},
 	{
 		id: "auto-reset",
 		type: "reset",
 		resetToDefaults: true,
-		triggers: ["submit_success"], // Reset form after successful submit
+		triggers: ["form_submit_success"], // Reset form after successful submit
 	},
 ];
 ```
@@ -233,17 +233,15 @@ autoSavePlugin({
 
 Actions can respond to various trigger events:
 
-- `form_start` - Form initialization
+- `form_mount` - Form initialization
 - `form_change` - Any form field changes
 - `form_submit` - Form submission initiated
 - `step_change` - Multi-step form navigation
 - `step_submit` - Step-specific submission
-- `submit_start` - Submit process begins
-- `submit_success` - Submit completed successfully
-- `submit_error` - Submit failed
-- `submit_complete` - Submit process finished (success or error)
-- `manual_save` - User manually saves draft
-- `manual_reset` - User manually resets form
+- `form_submit_start` - Submit process begins
+- `form_submit_success` - Submit completed successfully
+- `form_submit_error` - Submit failed
+- `form_submit_complete` - Submit process finished (success or error)
 
 ## Creating Custom Plugins
 

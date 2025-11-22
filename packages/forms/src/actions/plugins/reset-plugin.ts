@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { BuilderActionExecutionContext, BuilderActionExecutionResult, BuilderActionRegistration } from '@/types';
-import { ActionTriggerSchema } from '../triggers';
+import { FormActionTriggerSchema } from '../triggers';
 import { GDPRConsent } from '../../tools/gdpr-consent';
 
 /**
@@ -34,7 +34,7 @@ export const ResetActionSchema = z.object({
 	description: z.string().optional(),
 	enabled: z.boolean().default(true),
 	/** Custom triggers that override the default triggers for this action */
-	triggers: z.array(ActionTriggerSchema).optional(),
+	triggers: z.array(FormActionTriggerSchema).optional(),
 	confirmMessage: z.string().optional(),
 	resetToDefaults: z.boolean().default(true),
 });
@@ -143,7 +143,7 @@ export function resetPlugin(config: ResetPluginConfig = {}): BuilderActionRegist
 			name: 'Reset Form',
 			description: 'Reset form to initial state or defaults',
 			icon: 'refresh',
-			defaultTriggers: ['form_reset', 'submit_success'],
+			defaultTriggers: ['form_submit_success'],
 		},
 		execute: handler,
 	};

@@ -1,6 +1,6 @@
 import type { FormActionConfig, ActionExecutionContext, ActionExecutionResult } from './types';
 import { Logger } from '@ecopages/logger';
-import type { ActionTrigger } from './triggers';
+import type { FormActionTrigger } from './triggers';
 import type { FormEngine } from '../engine/form-engine';
 
 const logger = new Logger('[form-engine/actions]', { debug: false });
@@ -27,7 +27,7 @@ export class ActionExecutor {
 	 */
 	async executeTrigger(
 		actions: FormActionConfig[],
-		trigger: ActionTrigger,
+		trigger: FormActionTrigger,
 		context: ActionExecutionContext,
 		triggeredBy?: FormActionConfig,
 	): Promise<ActionExecutionResult[]> {
@@ -64,7 +64,7 @@ export class ActionExecutor {
 			logger.debug(`Executing action: ${action.id} (${action.type})`);
 
 			try {
-				const result = await this.executeAction(action, context);
+				const result = await this.executeAction(action, context, trigger);
 				results.push(result);
 
 				if (result.success) {
@@ -73,7 +73,7 @@ export class ActionExecutor {
 					if (action.type === 'submit' && trigger === 'form_submit') {
 						const successResults = await this.executeTrigger(
 							actions,
-							'submit_success',
+							'form_submit_success',
 							{
 								...context,
 
@@ -92,7 +92,7 @@ export class ActionExecutor {
 
 						const completeResults = await this.executeTrigger(
 							actions,
-							'submit_complete',
+							'form_submit_complete',
 							{
 								...context,
 								form: {
@@ -114,7 +114,7 @@ export class ActionExecutor {
 					if (action.type === 'submit' && trigger === 'form_submit') {
 						const errorResults = await this.executeTrigger(
 							actions,
-							'submit_error',
+							'form_submit_error',
 							{
 								...context,
 								form: {
@@ -132,7 +132,7 @@ export class ActionExecutor {
 
 						const completeResults = await this.executeTrigger(
 							actions,
-							'submit_complete',
+							'form_submit_complete',
 							{
 								...context,
 								form: {
@@ -178,6 +178,7 @@ export class ActionExecutor {
 	private async executeAction(
 		action: FormActionConfig,
 		context: ActionExecutionContext,
+		trigger: FormActionTrigger,
 	): Promise<ActionExecutionResult> {
 		const actionRegistration = this.engine.getAction(action.type);
 
@@ -210,6 +211,7 @@ export class ActionExecutor {
 				totalSteps: context.totalSteps,
 				isValid: context.isValid,
 				errors: context.errors,
+				trigger,
 				metadata: context.metadata,
 				form: {
 					reset: () => context.form.reset(),

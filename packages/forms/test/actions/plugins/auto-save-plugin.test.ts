@@ -56,7 +56,7 @@ describe("AutoSavePlugin", () => {
 				type: "auto_save",
 				description: "Auto-save form data",
 				enabled: true,
-				triggers: ["form_change", "manual_save"],
+				triggers: ["form_change"],
 				storageKey: "custom_key",
 				includeSensitive: true,
 			};

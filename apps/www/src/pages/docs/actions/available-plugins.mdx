@@ -90,7 +90,7 @@ registerAction(notificationPlugin({
   message: 'Form submitted successfully!',
   variant: 'success',
   duration: 3000,
-  triggers: ['submit_success'] // Only show after successful submit
+  triggers: ['form_submit_success'] // Only show after successful submit
 }
 ```
 
@@ -142,7 +142,7 @@ registerAction(resetPlugin({
   type: 'reset',
   resetToDefaults: true,
   confirmMessage: 'Are you sure you want to clear all form data?',
-  triggers: ['manual_reset'] // or ['submit_success'] to reset after submit
+  triggers: ['form_submit_success'] // Reset after submit
 }
 ```
 
@@ -252,7 +252,7 @@ registerAction(gtmPlugin({
   eventCategory: 'Forms',
   eventAction: 'Started',
   eventLabel: 'Contact Form',
-  triggers: ['form_start']
+  triggers: ['form_mount']
 },
 {
   id: 'track-submission',
@@ -260,7 +260,7 @@ registerAction(gtmPlugin({
   event: 'form_submitted',
   eventCategory: 'Forms',
   eventAction: 'Submitted',
-  triggers: ['submit_success']
+  triggers: ['form_submit_success']
 }
 ```
 
@@ -393,12 +393,12 @@ const formConfig = {
       id: 'success-msg', 
       type: 'show_notification', 
       message: 'Thanks for your message!',
-      triggers: ['submit_success'] 
+      triggers: ['form_submit_success'] 
     },
     { 
       id: 'reset', 
       type: 'reset', 
-      triggers: ['submit_success'] 
+      triggers: ['form_submit_success'] 
     }
   ]
 };

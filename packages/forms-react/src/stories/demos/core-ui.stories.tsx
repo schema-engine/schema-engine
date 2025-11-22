@@ -231,7 +231,7 @@ export const Demo: Story = {
 			.addFormAction('reset', {
 				id: 'reset-demo',
 				enabled: true,
-				triggers: ['submit_success'],
+				triggers: ['form_submit_success'],
 				resetToDefaults: true,
 			} as any)
 			.build(),
@@ -327,7 +327,7 @@ export const SimpleContactForm: Story = {
 			.addFormAction('reset', {
 				id: 'reset-form',
 				enabled: true,
-				triggers: ['submit_success'],
+				triggers: ['form_submit_success'],
 				resetToDefaults: true,
 			} as any)
 			.build(),
@@ -460,7 +460,7 @@ export const ProductFeedbackForm: Story = {
 			.addFormAction('reset', {
 				id: 'reset-form',
 				enabled: true,
-				triggers: ['submit_success'],
+				triggers: ['form_submit_success'],
 				resetToDefaults: true,
 			} as any)
 			.build(),

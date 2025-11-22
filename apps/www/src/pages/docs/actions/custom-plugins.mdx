@@ -272,7 +272,7 @@ const formWithLogging: FormConfig = {
       message: 'User started contact form',
       includeUserAgent: true,
       tags: ['contact', 'form-start'],
-      triggers: ['form_start']
+      triggers: ['form_mount']
     },
     {
       id: 'log-form-submit',
@@ -289,7 +289,7 @@ const formWithLogging: FormConfig = {
       logLevel: 'error',
       message: 'Contact form submission failed',
       tags: ['contact', 'error'],
-      triggers: ['submit_error']
+      triggers: ['form_submit_error']
     }
   ]
 };
@@ -314,7 +314,7 @@ export function analyticsPlugin(config: AnalyticsConfig = {}) {
   return {
     type: 'analytics' as const,
     schema: AnalyticsActionSchema,
-    defaultTriggers: ['form_start', 'form_change', 'form_submit'] as const,
+    defaultTriggers: ['form_mount', 'form_change', 'form_submit'] as const,
     handler: async (action, context) => {
       const { formId, trigger } = context;
       
@@ -331,7 +331,7 @@ export function analyticsPlugin(config: AnalyticsConfig = {}) {
       
       // Update state based on trigger
       switch (trigger) {
-        case 'form_start':
+        case 'form_mount':
           session.startTime = Date.now();
           break;
         case 'form_change':
@@ -371,7 +371,7 @@ export function integrationPlugin(config: IntegrationConfig) {
   return {
     type: 'integration' as const,
     schema: IntegrationActionSchema,
-    defaultTriggers: ['submit_success'] as const,
+    defaultTriggers: ['form_submit_success'] as const,
     handler: async (action, context) => {
       try {
         // Use external service

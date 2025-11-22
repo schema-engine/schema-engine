@@ -71,7 +71,7 @@ const contactForm: FormConfig = {
       type: 'show_notification',
       message: 'Thanks for contacting us!',
       variant: 'success',
-      triggers: ['submit_success'] // Only show after successful submit
+      triggers: ['form_submit_success'] // Only show after successful submit
     }
   ]
 };
@@ -82,24 +82,15 @@ const contactForm: FormConfig = {
 Actions respond to specific events. Here are the actual triggers you can use:
 
 ### Form Events
-- **`form_start`** - Form initialization  
-- **`form_change`** - Any field changes
-- **`form_submit`** - Form submission starts
-
-## Available Triggers
-
-Actions respond to specific events. Here are the actual triggers you can use:
-
-### Form Events
-- **`form_start`** - Form initialization  
+- **`form_mount`** - Form initialization  
 - **`form_change`** - Any field changes
 - **`form_submit`** - Form submission starts
 
 ### Submit Events  
-- **`submit_start`** - Submit begins (internal)
-- **`submit_success`** - Submit succeeded (internal)
-- **`submit_error`** - Submit failed (internal)
-- **`submit_complete`** - Submit finished (internal)
+- **`form_submit_start`** - Submit begins (internal)
+- **`form_submit_success`** - Submit succeeded (internal)
+- **`form_submit_error`** - Submit failed (internal)
+- **`form_submit_complete`** - Submit finished (internal)
 
 ### Multi-step Events
 - **`step_change`** - Navigation between steps
@@ -107,10 +98,6 @@ Actions respond to specific events. Here are the actual triggers you can use:
 - **`step_enter`** - Entering a step
 - **`step_leave`** - Leaving a step  
 - **`step_view`** - Step becomes visible
-
-### Manual Events
-- **`manual_save`** - User clicks save
-- **`manual_reset`** - User clicks reset
 
 <CodePreview 
   className="unprose"
@@ -130,7 +117,7 @@ const formWithTriggers: FormConfig = {
       id: 'success-message',
       type: 'show_notification',
       message: 'Submitted successfully!',
-      triggers: ['submit_success'] // Only after success
+      triggers: ['form_submit_success'] // Only after success
     },
     {
       id: 'step-analytics',
@@ -170,7 +157,7 @@ Show messages to users:
   message: 'Form submitted successfully!',
   variant: 'success',
   duration: 3000,
-  triggers: ['submit_success']
+  triggers: ['form_submit_success']
 }
 ```
 
@@ -263,13 +250,13 @@ When a form event occurs (like submission), the FormEngine:
 // 1. User clicks submit
 // 2. FormEngine finds actions with 'form_submit' trigger  
 // 3. Executes submit action
-// 4. On success, triggers 'submit_success' actions
+// 4. On success, triggers 'form_submit_success' actions
 // 5. Notification and reset actions run
 
 const executionFlow = {
   'form_submit': ['submit-form'],           // Submit to API
-  'submit_success': ['show-notification', 'reset-form'], // Follow-up actions
-  'submit_error': ['show-error']            // Error handling
+  'form_submit_success': ['show-notification', 'reset-form'], // Follow-up actions
+  'form_submit_error': ['show-error']            // Error handling
 };
 ```
 
@@ -331,14 +318,14 @@ Actions execute sequentially in the order they're defined. This prevents race co
 const formConfig: FormConfig = {
   actions: [
     { id: 'submit-form', type: 'submit', endpoint: '/api/submit' },
-    { id: 'show-success', type: 'show_notification', triggers: ['submit_success'] },
-    { id: 'reset-form', type: 'reset', triggers: ['submit_success'] }
+    { id: 'show-success', type: 'show_notification', triggers: ['form_submit_success'] },
+    { id: 'reset-form', type: 'reset', triggers: ['form_submit_success'] }
   ]
 };
 
 // Execution flow:
 // 1. Submit action runs first
-// 2. If successful, triggers 'submit_success' 
+// 2. If successful, triggers 'form_submit_success' 
 // 3. Success notification shows
 // 4. Form resets
 // All happen sequentially, not in parallel
@@ -363,14 +350,14 @@ const formWithNotifications: FormConfig = {
       type: 'show_notification',
       message: 'Thanks for contacting us!',
       variant: 'success',
-      triggers: ['submit_success']
+      triggers: ['form_submit_success']
     },
     {
       id: 'error-notification', 
       type: 'show_notification',
       message: 'Please try again',
       variant: 'error',
-      triggers: ['submit_error']
+      triggers: ['form_submit_error']
     }
   ]
 };`}
@@ -398,7 +385,7 @@ const formWithAutoSave: FormConfig = {
       type: 'auto_save',
       storageKey: 'contact_draft',
       clearOnSuccess: true,
-      triggers: ['submit_success']
+      triggers: ['form_submit_success']
     }
   ]
 };

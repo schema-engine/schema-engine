@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { UseFormReturn } from 'react-hook-form';
-import type { ActionTrigger } from './triggers';
+import type { FormActionTrigger } from './triggers';
 import { SubmitActionSchema } from './plugins/submit-plugin';
 import { ResetActionSchema } from './plugins/reset-plugin';
 import { NotificationActionSchema } from './plugins/notification-plugin';
@@ -152,7 +152,7 @@ export interface RegisteredAction {
 	/** Zod schema for validating action configuration */
 	schema?: z.ZodSchema<any>;
 	/** Default triggers that this action responds to */
-	defaultTriggers?: readonly ActionTrigger[];
+	defaultTriggers?: readonly FormActionTrigger[];
 	/** Action execution handler function */
 	handler: ActionHandler<any>;
 }

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { BuilderActionExecutionContext, BuilderActionExecutionResult, BuilderActionRegistration } from '@/types';
-import { ActionTriggerSchema } from '../triggers';
+import { FormActionTriggerSchema } from '../triggers';
 import { GTMTracker } from '../../tools/gtm-tracker';
 
 /**
@@ -71,13 +71,13 @@ export interface GTMPluginConfig {
  * {
  *   id: "form-start-tracking",
  *   type: "gtm_event",
- *   eventName: "form_start",
+ *   eventName: "form_mount",
  *   eventData: {
  *     form_type: "contact",
  *     page_section: "footer"
  *   },
  *   includeFormData: false,
- *   triggers: ["form_start"]
+ *   triggers: ["form_mount"]
  * }
  * ```
  *
@@ -89,7 +89,8 @@ export interface GTMPluginConfig {
  *   eventName: "form_submit_success",
  *   eventData: { conversion_event: true },
  *   includeFormData: ["email", "user_type"], // Only specific fields
- *   triggers: ["form_submit"]
+ *   triggers: ["form_submit_success"]
+ * }
  * }
  * ```
  */
@@ -123,7 +124,7 @@ export const GTMEventActionSchema = z.object({
 	 * If not provided, uses default GTM trigger mapping.
 	 * Allows fine-grained control over when events fire.
 	 */
-	triggers: z.array(ActionTriggerSchema).optional(),
+	triggers: z.array(FormActionTriggerSchema).optional(),
 });
 
 export type GTMEventAction = z.infer<typeof GTMEventActionSchema>;
@@ -252,7 +253,7 @@ export function gtmPlugin(config: GTMPluginConfig = {}): BuilderActionRegistrati
 			name: 'GTM Event',
 			description: 'Push events to Google Tag Manager',
 			icon: 'analytics',
-			defaultTriggers: ['form_submit', 'submit_success'],
+			defaultTriggers: ['form_submit', 'form_submit_success'],
 		},
 		execute: handler,
 	};

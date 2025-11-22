@@ -120,8 +120,8 @@ describe("NotificationPlugin", () => {
 			expect(plugin.execute).toBeDefined();
 			expect(plugin.schema).toBe(NotificationActionSchema);
 			expect(plugin.metadata.defaultTriggers).toEqual([
-				"submit_success",
-				"submit_error",
+				"form_submit_success",
+				"form_submit_error",
 			]);
 		});
 

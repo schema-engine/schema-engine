@@ -10,3 +10,4 @@ export {
 	useAdapterControlledFormElement,
 	type UseAdapterControlledFormElementReturn,
 } from '@/hooks/use-controlled-form-element';
+export * from '@/hooks/use-multi-step-form';

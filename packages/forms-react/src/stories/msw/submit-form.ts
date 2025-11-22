@@ -5,7 +5,7 @@ export const SUBMIT_FORM_MOCK_URL = '/api/submit-form';
 export const submitFormHandler = http.post(SUBMIT_FORM_MOCK_URL, async ({ request }) => {
 	const data = await request.formData();
 
-	await delay();
+	await delay(1500);
 
 	const formData: Record<string, unknown> = {};
 

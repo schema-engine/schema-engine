@@ -8,7 +8,7 @@ export function useGTMTracker() {
 		isAvailable: () => GTMTracker.isAvailable(),
 		push: (event: string, data?: Record<string, any>) => GTMTracker.push(event, data),
 		pushFormEvent: (
-			eventType: 'form_start' | 'form_step_complete' | 'form_submit' | 'form_abandon',
+			eventType: 'form_mount' | 'form_step_complete' | 'form_submit' | 'form_abandon',
 			formData?: Record<string, any>,
 			metadata?: Record<string, any>,
 		) => GTMTracker.pushFormEvent(eventType, formData, metadata),

@@ -15,7 +15,7 @@ type GTMEventActionInput = {
 	description?: string;
 	eventData?: Record<string, any>;
 	includeFormData?: boolean | string[];
-	triggers?: ("form_start" | "form_change" | "form_submit" | "step_change" | "step_submit" | "step_enter" | "step_leave" | "step_view" | "manual_save" | "manual_reset")[];
+	triggers?: ("form_mount" | "form_change" | "form_submit" | "step_change" | "step_submit" | "step_enter" | "step_leave" | "step_view")[];
 };
 
 interface GTMEvent {
@@ -205,8 +205,8 @@ describe("GTMPlugin", () => {
 				id: "test-gtm",
 				type: "gtm_event",
 				enabled: true,
-				eventName: "form_start",
-				triggers: ["form_start", "step_change", "manual_save"],
+				eventName: "form_mount",
+				triggers: ["form_mount", "step_change"],
 			};
 
 			expect(() => GTMEventActionSchema.parse(validAction)).not.toThrow();
