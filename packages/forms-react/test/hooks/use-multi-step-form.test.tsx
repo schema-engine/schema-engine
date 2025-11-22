@@ -3,7 +3,6 @@ import { renderHook, act } from '@testing-library/react';
 import { useMultiStepForm } from '../../src/hooks/use-multi-step-form';
 import type { FormConfig } from '@schema-engine/forms/schemas';
 
-// Mocks
 const mockTrigger = mock(() => Promise.resolve(true));
 const mockSetFocus = mock(() => {});
 const mockGetValues = mock(() => ({}));
@@ -30,11 +29,12 @@ describe('useMultiStepForm', () => {
     const config: FormConfig = {
         id: 'test-form',
         title: 'Test Form',
+        mode: 'wizard',
         steps: [
-            { title: 'Step 1', elements: [{ name: 'field1', type: 'text' }] },
-            { title: 'Step 2', elements: [{ name: 'field2', type: 'text' }] },
+            { id: 'step-1', title: 'Step 1', elements: [{ name: 'field1', $type: 'input', inputType: 'text' }] },
+            { id: 'step-2', title: 'Step 2', elements: [{ name: 'field2', $type: 'input', inputType: 'text' }] },
         ],
-        actions: [{ type: 'test-action', trigger: 'step_change' }],
+        actions: [{ id: 'action-1', type: 'submit', enabled: true, endpoint: '/submit', method: 'POST', triggers: ['step_change'] }],
     };
 
     beforeEach(() => {
@@ -57,10 +57,10 @@ describe('useMultiStepForm', () => {
         expect(mockTrigger).toHaveBeenCalled();
         expect(result.current.currentStepIndex).toBe(1);
         
-        // Should call executeTrigger 3 times: step_leave, step_change, step_enter
+        const calls = mockExecuteTrigger.mock.calls as unknown as Array<[unknown, string]>;
         expect(mockExecuteTrigger).toHaveBeenCalledTimes(3);
-        expect(mockExecuteTrigger.mock.calls[0][1]).toBe('step_leave');
-        expect(mockExecuteTrigger.mock.calls[1][1]).toBe('step_change');
-        expect(mockExecuteTrigger.mock.calls[2][1]).toBe('step_enter');
+        expect(calls[0][1]).toBe('step_leave');
+        expect(calls[1][1]).toBe('step_change');
+        expect(calls[2][1]).toBe('step_enter');
     });
 });
