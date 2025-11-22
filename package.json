@@ -11,6 +11,7 @@
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.3.0",
     "@types/bun": "latest",
+    "better-commits": "^1.18.1",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.7"
   },
@@ -18,19 +19,22 @@
     "typescript": "^5"
   },
   "scripts": {
-    "prepare": "husky",
-    "build:lib": "bun run --filter @schema-engine/forms build:lib && bun run --filter @schema-engine/forms-react build:lib",
-    "watch:dev:www": "bun run --filter @json-form-engine/www watch:dev",
-    "hot:dev:www": "bun run --filter @json-form-engine/www hot:dev",
-    "dev:www": "bun run --filter @json-form-engine/www dev",
-    "dev:react-storybook": "bun run --elide-lines 0 --filter @schema-engine/forms-react storybook",
+    "build:lib": "bun build:lib:forms && bun build:lib:forms-react",
+    "build:lib:forms": "bun run --filter @schema-engine/forms build:lib",
+    "build:lib:forms-react": "bun run --filter @schema-engine/forms-react build:lib",
     "build:react-storybook": "NODE_OPTIONS='--max-old-space-size=4096' bun run --filter @schema-engine/forms-react build-storybook",
     "build:www": "bun run --filter @json-form-engine/www build",
+    "changeset": "changeset",
+    "clean": "clear && bunx npkill -D -y && rm -rf bun.lock && bun install",
+    "commit": "better-commits",
+    "dev:react-storybook": "bun run --elide-lines 0 --filter @schema-engine/forms-react storybook",
+    "dev:www": "bun run --filter @json-form-engine/www dev",
+    "hot:dev:www": "bun run --filter @json-form-engine/www hot:dev",
+    "lint-staged:all": "bun run --filter '*' lint-staged",
+    "prepare": "husky",
     "start:www": "bun run --filter @json-form-engine/www start",
     "test:all": "bun run --filter '*' test:all",
-    "lint-staged:all": "bun run --filter '*' lint-staged",
-    "clean": "clear && bunx npkill -D -y && rm -rf bun.lock && bun install",
-    "changeset": "changeset"
+    "watch:dev:www": "bun run --filter @json-form-engine/www watch:dev"
   },
   "workspaces": [
     "apps/*",
