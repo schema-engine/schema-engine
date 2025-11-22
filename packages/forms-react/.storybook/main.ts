@@ -23,6 +23,7 @@ const config: StorybookConfig = {
   ],
   addons: [
     getAbsolutePath('@storybook/addon-docs'),
+    getAbsolutePath('@storybook/addon-vitest'),
     "msw-storybook-addon",
   ],
   framework: {

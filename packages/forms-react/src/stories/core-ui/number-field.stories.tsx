@@ -32,9 +32,9 @@ export const Playground: Story = {
 
 export const WithScrubArea: Story = {
 	render: () => (
-		<NumberFieldScrubArea>
-			<NumberField defaultValue={5} />
-		</NumberFieldScrubArea>
+		<NumberField defaultValue={5}>
+			<NumberFieldScrubArea />
+		</NumberField>
 	),
 };
 
