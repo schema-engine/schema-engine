@@ -4,7 +4,6 @@ import { Toggle } from '@/components/core-ui/toggle';
 import { Bold, Italic, Underline } from 'lucide-react';
 
 const meta = {
-	title: 'Core UI/ToggleGroup',
 	component: ToggleGroup,
 	parameters: {
 		layout: 'centered',

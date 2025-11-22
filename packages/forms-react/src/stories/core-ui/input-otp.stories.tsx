@@ -3,7 +3,6 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/core-ui/inpu
 import { Label } from '@/components/core-ui/label';
 
 const meta = {
-	title: 'Core UI/InputOTP',
 	parameters: {
 		layout: 'centered',
 	},

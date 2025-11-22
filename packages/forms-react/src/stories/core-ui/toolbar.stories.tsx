@@ -5,7 +5,6 @@ import { Toggle } from '@/components/core-ui/toggle';
 import { Bold, Italic, Underline, Link2 } from 'lucide-react';
 
 const meta = {
-	title: 'Core UI/Toolbar',
 	component: Toolbar,
 	parameters: {
 		layout: 'centered',

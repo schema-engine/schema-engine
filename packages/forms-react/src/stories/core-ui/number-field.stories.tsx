@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { NumberField, NumberFieldScrubArea } from '@/components/core-ui/number-field';
 
 const meta = {
-	title: 'Core UI/NumberField',
 	component: NumberField,
 	parameters: {
 		layout: 'centered',
