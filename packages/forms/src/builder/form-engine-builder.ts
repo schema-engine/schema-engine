@@ -10,7 +10,7 @@ import { logger } from '@/lib/logger';
 import { ElementRegistry, LayoutRegistry, StepperRegistry, ActionRegistry } from '@/registries';
 import { FormConfigBuilder } from './form-config-builder';
 import { z } from 'zod';
-import type { Merge, ExtractSchemaType, ExtractTypeId } from './type-utils';
+import type { ExtractSchemaType, ExtractTypeId, Merge } from './type-utils';
 
 /**
  * FormEngineBuilder - Builder pattern for configuring the form engine.
@@ -43,10 +43,10 @@ import type { Merge, ExtractSchemaType, ExtractTypeId } from './type-utils';
  * ```
  */
 export class FormEngineBuilder<
-	TElements extends Record<string, unknown> = Record<string, never>,
-	TLayouts extends Record<string, unknown> = Record<string, never>,
-	TSteppers extends Record<string, unknown> = Record<string, never>,
-	TActions extends Record<string, unknown> = Record<string, never>,
+	TElements extends Record<string, unknown> = Record<never, unknown>,
+	TLayouts extends Record<string, unknown> = Record<never, unknown>,
+	TSteppers extends Record<string, unknown> = Record<never, unknown>,
+	TActions extends Record<string, unknown> = Record<never, unknown>,
 > {
 	constructor(
 		private elementRegistry = new ElementRegistry(),
@@ -193,23 +193,14 @@ export class FormEngineBuilder<
 	 * @param registration - Action registration object
 	 * @note If id is already registered, it will be overridden with a warning
 	 */
-	addAction<T extends BuilderActionRegistration<any>>(
-		registration: T,
-	): FormEngineBuilder<
-		TElements,
-		TLayouts,
-		TSteppers,
-		T extends BuilderActionRegistration<infer C>
-			? Merge<
-					TActions,
-					{
-						[K in T['$type']]: Omit<C, '$type'>;
-					}
-				>
-			: TActions
-	> {
-		this.actionRegistry.register(registration);
-		return this as any;
+	addAction<TType extends string, TConfig>(
+		registration: BuilderActionRegistration<TType, TConfig>,
+	): FormEngineBuilder<TElements, TLayouts, TSteppers, Merge<TActions, Record<TType, TConfig>>>;
+	addAction<TType extends string, TConfig>(
+		registration: BuilderActionRegistration<TType, TConfig>,
+	): FormEngineBuilder<TElements, TLayouts, TSteppers, TActions & Record<TType, TConfig>> {
+		this.actionRegistry.register(registration as any);
+		return this;
 	}
 
 	/**
@@ -217,7 +208,7 @@ export class FormEngineBuilder<
 	 *
 	 * @param registrations - Array of action registrations
 	 */
-	addActions(registrations: BuilderActionRegistration<any>[]): this {
+	addActions(registrations: BuilderActionRegistration<any, any>[]): this {
 		for (const registration of registrations) {
 			this.addAction(registration);
 		}

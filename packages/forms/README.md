@@ -518,7 +518,7 @@ const engine = new FormEngineBuilder()
 // Usage in form config
 {
   id: 'reset-form',
-  type: 'reset',
+  $type: 'reset',
   triggers: ['manual_reset'],
 }
 ```

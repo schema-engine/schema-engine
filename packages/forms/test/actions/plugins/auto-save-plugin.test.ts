@@ -43,7 +43,7 @@ describe("AutoSavePlugin", () => {
 		test("should validate valid auto-save action", () => {
 			const validAction = {
 				id: "test-autosave",
-				type: "auto_save",
+				$type: "auto_save",
 				enabled: true,
 			};
 
@@ -53,7 +53,7 @@ describe("AutoSavePlugin", () => {
 		test("should validate auto-save action with all optional fields", () => {
 			const fullAction = {
 				id: "test-autosave",
-				type: "auto_save",
+				$type: "auto_save",
 				description: "Auto-save form data",
 				enabled: true,
 				triggers: ["form_change"],
@@ -76,7 +76,7 @@ describe("AutoSavePlugin", () => {
 
 		test("should require ID", () => {
 			const invalidAction = {
-				type: "auto_save",
+				$type: "auto_save",
 				enabled: true,
 			};
 
@@ -86,7 +86,7 @@ describe("AutoSavePlugin", () => {
 		test("should default enabled to true", () => {
 			const action = {
 				id: "test-autosave",
-				type: "auto_save",
+				$type: "auto_save",
 			};
 
 			const parsed = AutoSaveActionSchema.parse(action);
@@ -96,7 +96,7 @@ describe("AutoSavePlugin", () => {
 		test("should default includeSensitive to false", () => {
 			const action = {
 				id: "test-autosave",
-				type: "auto_save",
+				$type: "auto_save",
 				enabled: true,
 			};
 
@@ -159,7 +159,7 @@ describe("AutoSavePlugin", () => {
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
-				type: "auto_save",
+				$type: "auto_save",
 				enabled: true,
 				includeSensitive: false,
 			};
@@ -186,7 +186,7 @@ describe("AutoSavePlugin", () => {
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
-				type: "auto_save",
+				$type: "auto_save",
 				enabled: true,
 			};
 
@@ -216,7 +216,7 @@ describe("AutoSavePlugin", () => {
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
-				type: "auto_save",
+				$type: "auto_save",
 				enabled: true,
 				storageKey: "custom_storage_key",
 			};
@@ -246,7 +246,7 @@ describe("AutoSavePlugin", () => {
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
-				type: "auto_save",
+				$type: "auto_save",
 				enabled: true,
 			};
 
@@ -274,7 +274,7 @@ describe("AutoSavePlugin", () => {
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
-				type: "auto_save",
+				$type: "auto_save",
 				enabled: true,
 				storageKey: "action_key",
 			};
@@ -301,7 +301,7 @@ describe("AutoSavePlugin", () => {
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
-				type: "auto_save",
+				$type: "auto_save",
 				enabled: true,
 			};
 
@@ -328,7 +328,7 @@ describe("AutoSavePlugin", () => {
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
-				type: "auto_save",
+				$type: "auto_save",
 				enabled: true,
 				includeSensitive: true,
 			};
@@ -365,7 +365,7 @@ describe("AutoSavePlugin", () => {
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
-				type: "auto_save",
+				$type: "auto_save",
 				enabled: true,
 			};
 
@@ -394,7 +394,7 @@ describe("AutoSavePlugin", () => {
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
-				type: "auto_save",
+				$type: "auto_save",
 				enabled: true,
 			};
 
@@ -425,7 +425,7 @@ describe("AutoSavePlugin", () => {
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
-				type: "auto_save",
+				$type: "auto_save",
 				enabled: true,
 			};
 
@@ -465,7 +465,7 @@ describe("AutoSavePlugin", () => {
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
-				type: "auto_save",
+				$type: "auto_save",
 				enabled: true,
 			};
 
@@ -500,7 +500,7 @@ describe("AutoSavePlugin", () => {
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
-				type: "auto_save",
+				$type: "auto_save",
 				enabled: true,
 			};
 
@@ -527,7 +527,7 @@ describe("AutoSavePlugin", () => {
 
 			const action: AutoSaveAction = {
 				id: "test-autosave",
-				type: "auto_save",
+				$type: "auto_save",
 				enabled: true,
 			};
 
@@ -580,7 +580,7 @@ describe("AutoSavePlugin", () => {
 
 			const action: AutoSaveAction = {
 				id: "integration-test",
-				type: "auto_save",
+				$type: "auto_save",
 				enabled: true,
 			};
 
@@ -617,7 +617,7 @@ describe("AutoSavePlugin", () => {
 
 			const action: AutoSaveAction = {
 				id: "memory-test",
-				type: "auto_save",
+				$type: "auto_save",
 				enabled: true,
 			};
 

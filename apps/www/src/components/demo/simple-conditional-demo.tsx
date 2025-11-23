@@ -56,7 +56,7 @@ export function SimpleConditionalDemo() {
 		actions: [
 			{
 				id: 'conditional-demo-submit',
-				type: 'submit',
+				$type: 'submit',
 				description: 'Submit conditional demo',
 				successMessage: 'Conditional form submitted successfully! 🚀',
 				errorMessage: 'Failed to submit form. Please try again.',

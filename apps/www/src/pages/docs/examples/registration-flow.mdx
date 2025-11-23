@@ -100,7 +100,7 @@ const registrationFlowConfig: FormConfig = {
       actions: [
         {
           id: "track-personal-info-step",
-          type: "gtm_event",
+          $type: "gtm_event",
           description: "Track personal info step completion",
           eventName: "registration_step_complete",
           eventData: { step: "personal-information" },
@@ -254,7 +254,7 @@ const registrationFlowConfig: FormConfig = {
     // Track registration start
     {
       id: "track-registration-start",
-      type: "gtm_event",
+      $type: "gtm_event",
       description: "Track registration flow start",
       eventName: "registration_started",
       eventData: { source: "main_cta" },
@@ -277,7 +277,7 @@ const registrationFlowConfig: FormConfig = {
     // Submit registration
     {
       id: "submit-registration",
-      type: "submit",
+      $type: "submit",
       description: "Submit user registration",
       endpoint: "/api/auth/register",
       method: "POST",
@@ -292,7 +292,7 @@ const registrationFlowConfig: FormConfig = {
     // Track successful registration
     {
       id: "track-registration-success",
-      type: "gtm_event",
+      $type: "gtm_event",
       description: "Track successful registration",
       eventName: "registration_completed",
       eventData: {
@@ -308,7 +308,7 @@ const registrationFlowConfig: FormConfig = {
     // Show success notification
     {
       id: "registration-success-notification",
-      type: "notification",
+      $type: "notification",
       description: "Show registration success message",
       message: "Account created! Check your email to verify your account.",
       variant: "success", 

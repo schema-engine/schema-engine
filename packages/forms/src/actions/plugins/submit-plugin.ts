@@ -32,7 +32,7 @@ export interface SubmitPluginConfig {
  * // Usage in form config
  * {
  *   id: "submit-form",
- *   type: "submit",
+ *   $type: "submit",
  *   endpoint: "/api/forms",  // Relative path
  *   method: "POST"
  * }
@@ -48,7 +48,7 @@ export interface SubmitPluginConfig {
  * // Usage in form config
  * {
  *   id: "submit-form",
- *   type: "submit",
+ *   $type: "submit",
  *   endpoint: "https://api.example.com/submit",  // Full URL
  *   method: "POST"
  * }
@@ -74,7 +74,7 @@ export const SubmitActionSchema = z.object({
 	/** Unique identifier for this action within the form */
 	id: z.string().min(1, 'Action ID cannot be empty'),
 	/** Action type identifier */
-	type: z.literal('submit'),
+	$type: z.literal('submit'),
 	/** Optional description for documentation and debugging purposes */
 	description: z.string().optional(),
 	/** Whether this action is enabled and should be executed */
@@ -165,7 +165,7 @@ export type SubmitAction = z.infer<typeof SubmitActionSchema>;
  * });
  * ```
  */
-export function submitPlugin(config: SubmitPluginConfig = {}): BuilderActionRegistration<SubmitAction> {
+export function submitPlugin(config: SubmitPluginConfig = {}): BuilderActionRegistration<'submit', SubmitAction> {
 	const { request = fetch, transformData = (data) => data, onSuccess = () => {}, onError = () => {} } = config;
 
 	const handler = async (

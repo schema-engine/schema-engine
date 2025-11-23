@@ -61,7 +61,7 @@ export function ValidationDemo() {
 		actions: [
 			{
 				id: 'validation-demo-submit',
-				type: 'submit',
+				$type: 'submit',
 				description: 'Submit validation demo',
 				successMessage: 'All validations passed! ✅',
 				errorMessage: 'Please fix the validation errors above.',

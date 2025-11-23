@@ -62,13 +62,13 @@ const contactForm: FormConfig = {
   actions: [
     {
       id: 'submit-form',
-      type: 'submit',
+      $type: 'submit',
       endpoint: '/api/contact',
       method: 'POST'
     },
     {
       id: 'success-notification',
-      type: 'show_notification',
+      $type: 'show_notification',
       message: 'Thanks for contacting us!',
       variant: 'success',
       triggers: ['form_submit_success'] // Only show after successful submit
@@ -109,19 +109,19 @@ const formWithTriggers: FormConfig = {
   actions: [
     {
       id: 'submit-form',
-      type: 'submit',
+      $type: 'submit',
       endpoint: '/api/submit',
       // Uses default triggers: ['form_submit']
     },
     {
       id: 'success-message',
-      type: 'show_notification',
+      $type: 'show_notification',
       message: 'Submitted successfully!',
       triggers: ['form_submit_success'] // Only after success
     },
     {
       id: 'step-analytics',
-      type: 'gtm_event',
+      $type: 'gtm_event',
       event: 'step_viewed', 
       triggers: ['step_view'] // Track step views
     }
@@ -139,7 +139,7 @@ Handle form submissions to APIs:
 ```typescript
 {
   id: 'submit-contact',
-  type: 'submit',
+  $type: 'submit',
   endpoint: '/api/contact',
   method: 'POST',
   successMessage: 'Message sent!',
@@ -153,7 +153,7 @@ Show messages to users:
 ```typescript
 {
   id: 'show-success',
-  type: 'show_notification',
+  $type: 'show_notification',
   message: 'Form submitted successfully!',
   variant: 'success',
   duration: 3000,
@@ -167,7 +167,7 @@ Clear form data:
 ```typescript
 {
   id: 'clear-form',
-  type: 'reset',
+  $type: 'reset',
   resetToDefaults: true,
   confirmMessage: 'Clear all data?'
 }
@@ -180,7 +180,7 @@ Save drafts automatically:
 ```typescript
 {
   id: 'save-draft',
-  type: 'auto_save',
+  $type: 'auto_save',
   storageKey: 'contact_form_draft',
   triggers: ['form_change']
 }
@@ -317,9 +317,9 @@ Actions execute sequentially in the order they're defined. This prevents race co
 // Actions run in order
 const formConfig: FormConfig = {
   actions: [
-    { id: 'submit-form', type: 'submit', endpoint: '/api/submit' },
-    { id: 'show-success', type: 'show_notification', triggers: ['form_submit_success'] },
-    { id: 'reset-form', type: 'reset', triggers: ['form_submit_success'] }
+    { id: 'submit-form', $type: 'submit', endpoint: '/api/submit' },
+    { id: 'show-success', $type: 'show_notification', triggers: ['form_submit_success'] },
+    { id: 'reset-form', $type: 'reset', triggers: ['form_submit_success'] }
   ]
 };
 
@@ -340,21 +340,21 @@ const formWithNotifications: FormConfig = {
   actions: [
     {
       id: 'submit-contact',
-      type: 'submit',
+      $type: 'submit',
       endpoint: '/api/contact',
       successMessage: 'Message sent successfully!',
       errorMessage: 'Failed to send message'
     },
     {
       id: 'success-notification',
-      type: 'show_notification',
+      $type: 'show_notification',
       message: 'Thanks for contacting us!',
       variant: 'success',
       triggers: ['form_submit_success']
     },
     {
       id: 'error-notification', 
-      type: 'show_notification',
+      $type: 'show_notification',
       message: 'Please try again',
       variant: 'error',
       triggers: ['form_submit_error']
@@ -370,19 +370,19 @@ const formWithAutoSave: FormConfig = {
   actions: [
     {
       id: 'auto-save-draft',
-      type: 'auto_save',
+      $type: 'auto_save',
       storageKey: 'contact_draft',
       debounceMs: 1000,
       triggers: ['form_change']
     },
     {
       id: 'submit-form',
-      type: 'submit', 
+      $type: 'submit', 
       endpoint: '/api/contact'
     },
     {
       id: 'clear-draft',
-      type: 'auto_save',
+      $type: 'auto_save',
       storageKey: 'contact_draft',
       clearOnSuccess: true,
       triggers: ['form_submit_success']

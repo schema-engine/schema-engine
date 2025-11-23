@@ -169,7 +169,7 @@ const contactFormConfig: FormConfig = {
 	actions: [
 		{
 			id: 'submit',
-			type: 'submit' as const,
+			$type: 'submit' as const,
 			enabled: true,
 			endpoint: '/api/submit-demo',
 			method: 'POST' as const,

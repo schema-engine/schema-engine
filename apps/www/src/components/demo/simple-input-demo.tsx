@@ -53,7 +53,7 @@ export function SimpleInputDemo() {
 		actions: [
 			{
 				id: 'demo-submit',
-				type: 'submit',
+				$type: 'submit',
 				description: 'Submit demo form',
 				successMessage: 'Form submitted successfully! 🎉',
 				errorMessage: 'Failed to submit form. Please try again.',

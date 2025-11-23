@@ -31,7 +31,7 @@ describe("SubmitPlugin", () => {
 		test("should validate valid submit action", () => {
 			const validAction: SubmitAction = {
 				id: "submit-form",
-				type: "submit",
+				$type: "submit",
 				enabled: true,
 				endpoint: "/api/submit",
 				method: "POST",
@@ -44,7 +44,7 @@ describe("SubmitPlugin", () => {
 		test("should validate submit action with all optional fields", () => {
 			const fullAction: SubmitAction = {
 				id: "submit-form",
-				type: "submit",
+				$type: "submit",
 				description: "Submit the form data",
 				enabled: true,
 				triggers: ["form_submit"],
@@ -62,7 +62,7 @@ describe("SubmitPlugin", () => {
 		test("should reject invalid endpoint", () => {
 			const invalidAction = {
 				id: "submit-form",
-				type: "submit",
+				$type: "submit",
 				enabled: true,
 				endpoint: "", // Empty endpoint
 				method: "POST",
@@ -74,7 +74,7 @@ describe("SubmitPlugin", () => {
 		test("should reject invalid method", () => {
 			const invalidAction = {
 				id: "submit-form",
-				type: "submit",
+				$type: "submit",
 				enabled: true,
 				endpoint: "/api/submit",
 				method: "DELETE", // Invalid method
@@ -86,7 +86,7 @@ describe("SubmitPlugin", () => {
 		test("should default method to POST", () => {
 			const action = {
 				id: "submit-form",
-				type: "submit",
+				$type: "submit",
 				enabled: true,
 				endpoint: "/api/submit",
 				// No method specified
@@ -153,7 +153,7 @@ describe("SubmitPlugin", () => {
 
 			const action: SubmitAction = {
 				id: "test-submit",
-				type: "submit",
+				$type: "submit",
 				enabled: true,
 				endpoint: "/api/submit",
 				method: "POST",
@@ -175,7 +175,7 @@ describe("SubmitPlugin", () => {
 
 			const action: SubmitAction = {
 				id: "test-submit",
-				type: "submit",
+				$type: "submit",
 				enabled: true,
 				endpoint: "/api/submit",
 				method: "POST",
@@ -203,7 +203,7 @@ describe("SubmitPlugin", () => {
 
 			const action: SubmitAction = {
 				id: "test-submit",
-				type: "submit",
+				$type: "submit",
 				enabled: true,
 				endpoint: "/api/submit",
 				method: "POST",
@@ -233,7 +233,7 @@ describe("SubmitPlugin", () => {
 
 			const action: SubmitAction = {
 				id: "test-submit",
-				type: "submit",
+				$type: "submit",
 				enabled: true,
 				endpoint: "/api/submit",
 				method: "POST",
@@ -269,7 +269,7 @@ describe("SubmitPlugin", () => {
 
 			const action: SubmitAction = {
 				id: "test-submit",
-				type: "submit",
+				$type: "submit",
 				enabled: true,
 				endpoint: "/api/submit",
 				method: "POST",
@@ -311,7 +311,7 @@ describe("SubmitPlugin", () => {
 
 			const action: SubmitAction = {
 				id: "test-submit",
-				type: "submit",
+				$type: "submit",
 				enabled: true,
 				endpoint: "/api/custom",
 				method: "PUT",
@@ -343,7 +343,7 @@ describe("SubmitPlugin", () => {
 
 			const action: SubmitAction = {
 				id: "test-submit",
-				type: "submit",
+				$type: "submit",
 				enabled: true,
 				endpoint: "https://api.example.com/submit",
 				method: "POST",
@@ -363,7 +363,7 @@ describe("SubmitPlugin", () => {
 
 			const action: SubmitAction = {
 				id: "test-submit",
-				type: "submit",
+				$type: "submit",
 				enabled: true,
 				endpoint: "/api/submit",
 				method: "POST",
@@ -389,7 +389,7 @@ describe("SubmitPlugin", () => {
 
 			const action: SubmitAction = {
 				id: "test-submit",
-				type: "submit",
+				$type: "submit",
 				enabled: true,
 				endpoint: "/api/submit",
 				method: "POST",
@@ -421,7 +421,7 @@ describe("SubmitPlugin", () => {
 
 			const action: SubmitAction = {
 				id: "test-submit",
-				type: "submit",
+				$type: "submit",
 				enabled: true,
 				endpoint: "/api/submit",
 				method: "POST",
@@ -461,7 +461,7 @@ describe("SubmitPlugin", () => {
 
 			const action: SubmitAction = {
 				id: "test-submit",
-				type: "submit",
+				$type: "submit",
 				enabled: true,
 				endpoint: "/api/submit",
 				method: "POST",
@@ -488,7 +488,7 @@ describe("SubmitPlugin", () => {
 
 			const action: SubmitAction = {
 				id: "integration-test",
-				type: "submit",
+				$type: "submit",
 				enabled: true,
 				endpoint: "/api/integration",
 				method: "POST",

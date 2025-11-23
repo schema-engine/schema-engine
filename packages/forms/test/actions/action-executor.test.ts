@@ -3,16 +3,14 @@ import { ActionExecutor } from "@/actions/action-executor";
 import { FormEngineBuilder } from "@/builder";
 import type { FormEngine } from "@/engine/form-engine";
 import type { BuilderActionRegistration } from "@/types";
-import type { 
-	ActionExecutionResult, 
-} from "@/actions/types";
+import type { ActionExecutionResult } from "@/actions/types";
 import { createMockContext, setupTestEnvironment } from "./__tools";
 import type { FormActionTrigger } from "@/actions";
 import { z } from "zod";
 
 type TestActionConfig = {
 	id: string;
-	type: string;
+	$type: string;
 	enabled: boolean;
 	triggers?: FormActionTrigger[];
 	[key: string]: any;
@@ -21,15 +19,15 @@ type TestActionConfig = {
 const mockContext = createMockContext();
 
 const createMockAction = (
-	type: string, 
+	type: string,
 	handler: (context: any) => Promise<ActionExecutionResult>,
 	defaultTriggers: FormActionTrigger[] = []
-): BuilderActionRegistration => {
+): BuilderActionRegistration<any, any> => {
 	return {
 		$type: type,
 		schema: z.object({
 			id: z.string(),
-			type: z.literal(type),
+			$type: z.literal(type),
 			enabled: z.boolean().default(true),
 			triggers: z.array(z.string()).optional(),
 		}),
@@ -71,17 +69,13 @@ describe("ActionExecutor", () => {
 
 			const actions: TestActionConfig[] = [
 				{
-					type: "test_action",
+					$type: "test_action",
 					id: "action-1",
 					enabled: true,
 				},
 			];
 
-			const results = await executor.executeTrigger(
-				actions as any,
-				"form_submit",
-				mockContext
-			);
+			const results = await executor.executeTrigger(actions as any, "form_submit", mockContext);
 
 			expect(results).toHaveLength(1);
 			expect(results[0].success).toBe(true);
@@ -106,17 +100,13 @@ describe("ActionExecutor", () => {
 
 			const actions: TestActionConfig[] = [
 				{
-					type: "test_action",
+					$type: "test_action",
 					id: "action-1",
 					enabled: true,
 				},
 			];
 
-			const results = await executor.executeTrigger(
-				actions as any,
-				"form_submit", 
-				mockContext
-			);
+			const results = await executor.executeTrigger(actions as any, "form_submit", mockContext);
 
 			expect(results).toHaveLength(0);
 			expect(executionOrder).toEqual([]);
@@ -140,17 +130,13 @@ describe("ActionExecutor", () => {
 
 			const actions: TestActionConfig[] = [
 				{
-					type: "test_action",
+					$type: "test_action",
 					id: "action-1",
 					enabled: false,
 				},
 			];
 
-			const results = await executor.executeTrigger(
-				actions as any,
-				"form_submit",
-				mockContext
-			);
+			const results = await executor.executeTrigger(actions as any, "form_submit", mockContext);
 
 			expect(results).toHaveLength(0);
 			expect(executionOrder).toEqual([]);
@@ -173,18 +159,14 @@ describe("ActionExecutor", () => {
 			executor = new ActionExecutor(engine);
 
 			const actions: TestActionConfig[] = [
-				{ type: "test_action", id: "first", enabled: true },
-				{ type: "test_action", id: "second", enabled: true },
-				{ type: "test_action", id: "third", enabled: true },
+				{ $type: "test_action", id: "first", enabled: true },
+				{ $type: "test_action", id: "second", enabled: true },
+				{ $type: "test_action", id: "third", enabled: true },
 			];
 
 			await executor.executeTrigger(actions as any, "form_submit", mockContext);
 
-			expect(executionOrder).toEqual([
-				"test:first",
-				"test:second", 
-				"test:third"
-			]);
+			expect(executionOrder).toEqual(["test:first", "test:second", "test:third"]);
 		});
 	});
 
@@ -207,25 +189,17 @@ describe("ActionExecutor", () => {
 
 			const actions: TestActionConfig[] = [
 				{
-					type: "test_action",
+					$type: "test_action",
 					id: "action-1",
 					enabled: true,
 					triggers: ["form_submit"],
 				},
 			];
 
-			const results1 = await executor.executeTrigger(
-				actions as any,
-				"form_submit",
-				mockContext
-			);
+			const results1 = await executor.executeTrigger(actions as any, "form_submit", mockContext);
 			expect(results1).toHaveLength(1);
 
-			const results2 = await executor.executeTrigger(
-				actions as any,
-				"form_mount",
-				mockContext
-			);
+			const results2 = await executor.executeTrigger(actions as any, "form_mount", mockContext);
 			expect(results2).toHaveLength(0);
 		});
 	});
@@ -249,17 +223,13 @@ describe("ActionExecutor", () => {
 
 			const actions: TestActionConfig[] = [
 				{
-					type: "failing_action",
+					$type: "failing_action",
 					id: "action-1",
 					enabled: true,
 				},
 			];
 
-			const results = await executor.executeTrigger(
-				actions as any,
-				"form_submit",
-				mockContext
-			);
+			const results = await executor.executeTrigger(actions as any, "form_submit", mockContext);
 
 			expect(results).toHaveLength(1);
 			expect(results[0].success).toBe(false);
@@ -290,15 +260,11 @@ describe("ActionExecutor", () => {
 			executor = new ActionExecutor(engine);
 
 			const actions: TestActionConfig[] = [
-				{ type: "test_action", id: "fail", enabled: true },
-				{ type: "test_action", id: "success", enabled: true },
+				{ $type: "test_action", id: "fail", enabled: true },
+				{ $type: "test_action", id: "success", enabled: true },
 			];
 
-			const results = await executor.executeTrigger(
-				actions as any,
-				"form_submit",
-				mockContext
-			);
+			const results = await executor.executeTrigger(actions as any, "form_submit", mockContext);
 
 			expect(results).toHaveLength(2);
 			expect(results[0].success).toBe(false);
@@ -330,15 +296,11 @@ describe("ActionExecutor", () => {
 			executor = new ActionExecutor(engine);
 
 			const actions: TestActionConfig[] = [
-				{ type: "test_action", id: "stop", enabled: true },
-				{ type: "test_action", id: "next", enabled: true },
+				{ $type: "test_action", id: "stop", enabled: true },
+				{ $type: "test_action", id: "next", enabled: true },
 			];
 
-			const results = await executor.executeTrigger(
-				actions as any,
-				"form_submit",
-				mockContext
-			);
+			const results = await executor.executeTrigger(actions as any, "form_submit", mockContext);
 
 			expect(results).toHaveLength(1);
 			expect(results[0].success).toBe(false);
@@ -359,17 +321,13 @@ describe("ActionExecutor", () => {
 
 			const actions: TestActionConfig[] = [
 				{
-					type: "throwing_action",
+					$type: "throwing_action",
 					id: "action-1",
 					enabled: true,
 				},
 			];
 
-			const results = await executor.executeTrigger(
-				actions as any,
-				"form_submit",
-				mockContext
-			);
+			const results = await executor.executeTrigger(actions as any, "form_submit", mockContext);
 
 			expect(results).toHaveLength(1);
 			expect(results[0].success).toBe(false);
@@ -382,18 +340,14 @@ describe("ActionExecutor", () => {
 
 			const actions: TestActionConfig[] = [
 				{
-					type: "unregistered_action",
+					$type: "unregistered_action",
 					id: "action-1",
 					enabled: true,
 					triggers: ["form_submit"],
 				},
 			];
 
-			const results = await executor.executeTrigger(
-				actions as any,
-				"form_submit",
-				mockContext
-			);
+			const results = await executor.executeTrigger(actions as any, "form_submit", mockContext);
 
 			expect(results).toHaveLength(1);
 			expect(results[0].success).toBe(false);
@@ -447,11 +401,10 @@ describe("ActionExecutor", () => {
 			executor = new ActionExecutor(engine);
 
 			const actions: TestActionConfig[] = [
-				{ type: "submit", id: "submit", enabled: true },
-				{ type: "success_handler", id: "success", enabled: true },
-				{ type: "complete_handler", id: "complete", enabled: true },
+				{ $type: "submit", id: "submit", enabled: true },
+				{ $type: "success_handler", id: "success", enabled: true },
+				{ $type: "complete_handler", id: "complete", enabled: true },
 			];
-
 			await executor.executeTrigger(actions as any, "form_submit", mockContext);
 
 			expect(executionOrder).toContain("submit");
@@ -505,11 +458,10 @@ describe("ActionExecutor", () => {
 			executor = new ActionExecutor(engine);
 
 			const actions: TestActionConfig[] = [
-				{ type: "submit", id: "submit", enabled: true },
-				{ type: "error_handler", id: "error", enabled: true },
-				{ type: "complete_handler", id: "complete", enabled: true },
+				{ $type: "submit", id: "submit", enabled: true },
+				{ $type: "error_handler", id: "error", enabled: true },
+				{ $type: "complete_handler", id: "complete", enabled: true },
 			];
-
 			await executor.executeTrigger(actions as any, "form_submit", mockContext);
 
 			expect(executionOrder).toContain("submit");
@@ -555,9 +507,9 @@ describe("ActionExecutor", () => {
 			executor = new ActionExecutor(engine);
 
 			const actions: TestActionConfig[] = [
-				{ type: "start_action", id: "start", enabled: true },
-				{ type: "submit_action", id: "submit", enabled: true },
-				{ type: "change_action", id: "change", enabled: true },
+				{ $type: "start_action", id: "start", enabled: true },
+				{ $type: "submit_action", id: "submit", enabled: true },
+				{ $type: "change_action", id: "change", enabled: true },
 			];
 
 			await executor.executeTrigger(actions as any, "form_mount", mockContext);
@@ -596,37 +548,26 @@ describe("ActionExecutor", () => {
 			executor = new ActionExecutor(engine);
 
 			const actions: TestActionConfig[] = [
-				{ type: "test_action", id: "success1", enabled: true },
-				{ type: "test_action", id: "fail", enabled: true },
-				{ type: "test_action", id: "success2", enabled: true },
+				{ $type: "test_action", id: "success1", enabled: true },
+				{ $type: "test_action", id: "fail", enabled: true },
+				{ $type: "test_action", id: "success2", enabled: true },
 			];
 
-			const results = await executor.executeTrigger(
-				actions as any,
-				"form_submit",
-				mockContext
-			);
+			const results = await executor.executeTrigger(actions as any, "form_submit", mockContext);
 
 			expect(results).toHaveLength(3);
 			expect(results[0].success).toBe(true);
 			expect(results[1].success).toBe(false);
 			expect(results[2].success).toBe(true);
 
-			expect(executionOrder).toEqual([
-				"success:success1",
-				"success:success2"
-			]);
+			expect(executionOrder).toEqual(["success:success1", "success:success2"]);
 		});
 
 		test("should handle empty actions array", async () => {
 			engine = new FormEngineBuilder().build();
 			executor = new ActionExecutor(engine);
 
-			const results = await executor.executeTrigger(
-				[],
-				"form_submit",
-				mockContext
-			);
+			const results = await executor.executeTrigger([], "form_submit", mockContext);
 
 			expect(results).toHaveLength(0);
 		});
@@ -644,15 +585,9 @@ describe("ActionExecutor", () => {
 			engine = new FormEngineBuilder().addAction(testAction).build();
 			executor = new ActionExecutor(engine);
 
-			const actions: TestActionConfig[] = [
-				{ type: "test_action", id: "test", enabled: true },
-			];
+			const actions: TestActionConfig[] = [{ $type: "test_action", id: "test", enabled: true }];
 
-			const results = await executor.executeTrigger(
-				actions as any,
-				"form_submit",
-				mockContext
-			);
+			const results = await executor.executeTrigger(actions as any, "form_submit", mockContext);
 
 			expect(results).toHaveLength(0);
 			expect(executionOrder).toHaveLength(0);

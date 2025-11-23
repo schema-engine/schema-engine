@@ -221,7 +221,7 @@ export const responsiveFormConfig: FormConfig = {
 	actions: [
 		{
 			id: 'responsive-forms-submit',
-			type: 'submit',
+			$type: 'submit',
 			description: 'Submit responsive form',
 			endpoint: '/api/submit-demo',
 			method: 'POST',
@@ -231,7 +231,7 @@ export const responsiveFormConfig: FormConfig = {
 		},
 		{
 			id: 'reset-after-success',
-			type: 'reset',
+			$type: 'reset',
 			enabled: true,
 			triggers: ['submit_success'],
 			resetToDefaults: true,

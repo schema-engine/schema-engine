@@ -9,7 +9,7 @@ import { createMockBuilderContext, setupTestEnvironment } from "../__tools";
 
 type GTMEventActionInput = {
 	id: string;
-	type: "gtm_event";
+	$type: "gtm_event";
 	enabled?: boolean;
 	eventName: string;
 	description?: string;
@@ -90,7 +90,7 @@ describe("GTMPlugin", () => {
 		test("should validate valid GTM event action", () => {
 			const validAction = {
 				id: "test-gtm",
-				type: "gtm_event",
+				$type: "gtm_event",
 				enabled: true,
 				eventName: "form_start",
 			};
@@ -101,7 +101,7 @@ describe("GTMPlugin", () => {
 		test("should validate GTM action with all optional fields", () => {
 			const fullAction = {
 				id: "test-gtm",
-				type: "gtm_event",
+				$type: "gtm_event",
 				description: "Track form submission",
 				enabled: true,
 				eventName: "form_submit",
@@ -119,7 +119,7 @@ describe("GTMPlugin", () => {
 		test("should reject empty event name", () => {
 			const invalidAction = {
 				id: "test-gtm",
-				type: "gtm_event",
+				$type: "gtm_event",
 				enabled: true,
 				eventName: "",
 			};
@@ -141,7 +141,7 @@ describe("GTMPlugin", () => {
 		test("should default includeFormData to false", () => {
 			const action = {
 				id: "test-gtm",
-				type: "gtm_event",
+				$type: "gtm_event",
 				enabled: true,
 				eventName: "form_start",
 			};
@@ -153,7 +153,7 @@ describe("GTMPlugin", () => {
 		test("should default eventData to empty object", () => {
 			const action = {
 				id: "test-gtm",
-				type: "gtm_event",
+				$type: "gtm_event",
 				enabled: true,
 				eventName: "form_start",
 			};
@@ -165,7 +165,7 @@ describe("GTMPlugin", () => {
 		test("should accept boolean includeFormData", () => {
 			const action = {
 				id: "test-gtm",
-				type: "gtm_event",
+				$type: "gtm_event",
 				enabled: true,
 				eventName: "form_start",
 				includeFormData: true,
@@ -178,7 +178,7 @@ describe("GTMPlugin", () => {
 		test("should accept array includeFormData", () => {
 			const action = {
 				id: "test-gtm",
-				type: "gtm_event",
+				$type: "gtm_event",
 				enabled: true,
 				eventName: "form_start",
 				includeFormData: ["name", "email"],
@@ -191,7 +191,7 @@ describe("GTMPlugin", () => {
 		test("should reject empty field names in includeFormData array", () => {
 			const invalidAction = {
 				id: "test-gtm",
-				type: "gtm_event",
+				$type: "gtm_event",
 				enabled: true,
 				eventName: "form_start",
 				includeFormData: ["name", ""],
@@ -203,7 +203,7 @@ describe("GTMPlugin", () => {
 		test("should validate trigger enum values", () => {
 			const validAction = {
 				id: "test-gtm",
-				type: "gtm_event",
+				$type: "gtm_event",
 				enabled: true,
 				eventName: "form_mount",
 				triggers: ["form_mount", "step_change"],
@@ -215,7 +215,7 @@ describe("GTMPlugin", () => {
 		test("should reject invalid trigger values", () => {
 			const invalidAction = {
 				id: "test-gtm",
-				type: "gtm_event",
+				$type: "gtm_event",
 				enabled: true,
 				eventName: "form_start",
 				triggers: ["invalid_trigger"],
@@ -231,7 +231,7 @@ describe("GTMPlugin", () => {
 
 			const action: GTMEventActionInput = {
 				id: "test-gtm",
-				type: "gtm_event",
+				$type: "gtm_event",
 				enabled: true,
 				eventName: "form_start",
 			};
@@ -254,7 +254,7 @@ describe("GTMPlugin", () => {
 			const plugin = gtmPlugin();
 			const action: GTMEventActionInput = {
 				id: "test-gtm",
-				type: "gtm_event",
+				$type: "gtm_event",
 				enabled: true,
 				eventName: "form_submit",
 				eventData: {
@@ -277,7 +277,7 @@ describe("GTMPlugin", () => {
 			const plugin = gtmPlugin();
 			const action: GTMEventActionInput = {
 				id: "test-gtm",
-				type: "gtm_event",
+				$type: "gtm_event",
 				enabled: true,
 				eventName: "form_submit",
 				includeFormData: true,
@@ -298,7 +298,7 @@ describe("GTMPlugin", () => {
 			const plugin = gtmPlugin();
 			const action: GTMEventActionInput = {
 				id: "test-gtm",
-				type: "gtm_event",
+				$type: "gtm_event",
 				enabled: true,
 				eventName: "form_submit",
 				includeFormData: ["email", "userType"],
@@ -318,7 +318,7 @@ describe("GTMPlugin", () => {
 			const plugin = gtmPlugin();
 			const action: GTMEventActionInput = {
 				id: "test-gtm",
-				type: "gtm_event",
+				$type: "gtm_event",
 				enabled: true,
 				eventName: "form_submit",
 				includeFormData: ["email", "nonExistentField", "userType"],
@@ -338,7 +338,7 @@ describe("GTMPlugin", () => {
 			const plugin = gtmPlugin();
 			const action: GTMEventActionInput = {
 				id: "test-gtm",
-				type: "gtm_event",
+				$type: "gtm_event",
 				enabled: true,
 				eventName: "form_start",
 				includeFormData: false,
@@ -355,7 +355,7 @@ describe("GTMPlugin", () => {
 			const plugin = gtmPlugin();
 			const action: GTMEventActionInput = {
 				id: "test-gtm",
-				type: "gtm_event",
+				$type: "gtm_event",
 				enabled: true,
 				eventName: "step_change",
 			};
@@ -374,7 +374,7 @@ describe("GTMPlugin", () => {
 			const plugin = gtmPlugin();
 			const action: GTMEventActionInput = {
 				id: "test-gtm",
-				type: "gtm_event",
+				$type: "gtm_event",
 				enabled: true,
 				eventName: "form_error",
 			};
@@ -396,7 +396,7 @@ describe("GTMPlugin", () => {
 			const plugin = gtmPlugin();
 			const action: GTMEventActionInput = {
 				id: "test-gtm",
-				type: "gtm_event",
+				$type: "gtm_event",
 				enabled: true,
 				eventName: "form_start",
 			};
@@ -416,7 +416,7 @@ describe("GTMPlugin", () => {
 			const plugin = gtmPlugin();
 			const action: GTMEventActionInput = {
 				id: "test-gtm",
-				type: "gtm_event",
+				$type: "gtm_event",
 				enabled: true,
 				eventName: "form_start",
 			};
@@ -435,14 +435,14 @@ describe("GTMPlugin", () => {
 			const stepActions: GTMEventActionInput[] = [
 				{
 					id: "step-1-enter",
-					type: "gtm_event",
+					$type: "gtm_event",
 					enabled: true,
 					eventName: "step_enter",
 					eventData: { step_name: "personal_info" },
 				},
 				{
 					id: "step-1-complete",
-					type: "gtm_event",
+					$type: "gtm_event",
 					enabled: true,
 					eventName: "step_complete",
 					eventData: { step_name: "personal_info" },
@@ -450,7 +450,7 @@ describe("GTMPlugin", () => {
 				},
 				{
 					id: "step-2-enter",
-					type: "gtm_event",
+					$type: "gtm_event",
 					enabled: true,
 					eventName: "step_enter",
 					eventData: { step_name: "preferences" },
@@ -486,7 +486,7 @@ describe("GTMPlugin", () => {
 			const conversionActions: GTMEventActionInput[] = [
 				{
 					id: "form-start",
-					type: "gtm_event",
+					$type: "gtm_event",
 					enabled: true,
 					eventName: "form_start",
 					eventData: { 
@@ -496,7 +496,7 @@ describe("GTMPlugin", () => {
 				},
 				{
 					id: "form-progress",
-					type: "gtm_event",
+					$type: "gtm_event",
 					enabled: true,
 					eventName: "form_progress",
 					eventData: { 
@@ -506,7 +506,7 @@ describe("GTMPlugin", () => {
 				},
 				{
 					id: "form-conversion",
-					type: "gtm_event",
+					$type: "gtm_event",
 					enabled: true,
 					eventName: "conversion",
 					eventData: { 
@@ -546,7 +546,7 @@ describe("GTMPlugin", () => {
 
 			const action: GTMEventActionInput = {
 				id: "integration-test",
-				type: "gtm_event",
+				$type: "gtm_event",
 				enabled: true,
 				eventName: "integration_test",
 			};
@@ -578,7 +578,7 @@ describe("GTMPlugin", () => {
 
 			const action: GTMEventActionInput = {
 				id: "ssr-test",
-				type: "gtm_event",
+				$type: "gtm_event",
 				enabled: true,
 				eventName: "ssr_event",
 			};
@@ -613,7 +613,7 @@ describe("GTMPlugin", () => {
 
 			const action: GTMEventActionInput = {
 				id: "no-datalayer-test",
-				type: "gtm_event",
+				$type: "gtm_event",
 				enabled: true,
 				eventName: "test_event",
 			};

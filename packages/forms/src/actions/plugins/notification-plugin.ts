@@ -41,7 +41,7 @@ export const NotificationActionSchema = z.object({
 	/** Unique identifier for this action within the form */
 	id: z.string().min(1, 'Action ID cannot be empty'),
 	/** Action type identifier */
-	type: z.literal('show_notification'),
+	$type: z.literal('show_notification'),
 	/** Optional description for documentation and debugging purposes */
 	description: z.string().optional(),
 	/** Whether this action is enabled and should be executed */
@@ -113,7 +113,7 @@ export type NotificationAction = z.infer<typeof NotificationActionSchema>;
  */
 export function notificationPlugin(
 	config: NotificationPluginConfig = {},
-): BuilderActionRegistration<NotificationAction> {
+): BuilderActionRegistration<'show_notification', NotificationAction> {
 	const handler = async (
 		context: BuilderActionExecutionContext<NotificationAction>,
 	): Promise<BuilderActionExecutionResult> => {

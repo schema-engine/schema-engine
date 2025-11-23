@@ -69,7 +69,7 @@ const formConfigWithActions: FormConfig = {
 	actions: [
 		{
 			id: 'submit-contact',
-			type: 'submit' as const,
+			$type: 'submit' as const,
 			enabled: true,
 			triggers: ['form_submit'],
 			endpoint: '/api/submit-demo',
@@ -79,7 +79,7 @@ const formConfigWithActions: FormConfig = {
 		},
 		{
 			id: 'notify-success',
-			type: 'show_notification' as const,
+			$type: 'show_notification' as const,
 			enabled: true,
 			triggers: ['submit_success'],
 			message: 'Contact form submitted successfully via FormEngine!',
@@ -88,7 +88,7 @@ const formConfigWithActions: FormConfig = {
 		},
 		{
 			id: 'notify-error',
-			type: 'show_notification' as const,
+			$type: 'show_notification' as const,
 			enabled: true,
 			triggers: ['submit_error'],
 			message: 'Failed to submit contact form via FormEngine.',
@@ -97,7 +97,7 @@ const formConfigWithActions: FormConfig = {
 		},
 		{
 			id: 'reset-form',
-			type: 'reset' as const,
+			$type: 'reset' as const,
 			enabled: true,
 			triggers: ['submit_success'],
 			resetToDefaults: true,

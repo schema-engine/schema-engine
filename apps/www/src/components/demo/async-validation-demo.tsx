@@ -139,7 +139,7 @@ export function AsyncValidationDemo() {
 		actions: [
 			{
 				id: 'async-demo-submit',
-				type: 'submit',
+				$type: 'submit',
 				description: 'Submit form with async validation',
 				successMessage: 'All validations passed! Form submitted successfully! 🎉',
 				errorMessage: 'Please fix validation errors before submitting.',

@@ -50,7 +50,7 @@ export function ContactFormExample() {
 		actions: [
 			{
 				id: 'contact-submit',
-				type: 'submit',
+				$type: 'submit',
 				description: 'Submit contact form',
 				successMessage: 'Message sent! Thanks for reaching out.',
 				errorMessage: 'Failed to send message. Please try again.',

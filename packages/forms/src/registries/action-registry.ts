@@ -10,10 +10,10 @@ import { BaseRegistry } from './base-registry';
  * Note: This registry only handles storage. Action execution logic
  * is handled by ActionExecutor.
  *
- * Note: Uses BuilderActionRegistration<any> internally to support registrations with different
+ * Note: Uses BuilderActionRegistration<any, any> internally to support registrations with different
  * config types. Type safety is maintained at the registration site via the builder.
  */
-export class ActionRegistry extends BaseRegistry<string, BuilderActionRegistration<any>> {
+export class ActionRegistry extends BaseRegistry<string, BuilderActionRegistration<any, any>> {
 	get registryName(): string {
 		return 'action';
 	}

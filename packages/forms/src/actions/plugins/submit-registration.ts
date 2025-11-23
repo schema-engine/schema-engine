@@ -17,6 +17,7 @@
 
 import { submitPlugin } from './submit-plugin';
 import type { SubmitAction } from './submit-plugin';
+import type { BuilderActionRegistration } from '@/types';
 
 declare global {
 	namespace FormEngine {
@@ -30,7 +31,7 @@ declare global {
  * Default Submit Action Registration
  * Handles basic form submission with console logging
  */
-export const SubmitActionRegistration = submitPlugin({
+export const SubmitActionRegistration: BuilderActionRegistration<'submit', SubmitAction> = submitPlugin({
 	onSuccess: (data, context) => {
 		console.log('[Submit] Form submitted successfully:', { formId: context.formId, data });
 	},

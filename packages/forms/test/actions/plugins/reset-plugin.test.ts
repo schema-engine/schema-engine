@@ -1,5 +1,4 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { FormEngineBuilder } from "@/builder";
 import { ActionExecutor } from "@/actions/action-executor";
 import type { FormEngine } from "@/engine/form-engine";
 import type { BuilderActionExecutionContext } from "@/types";
@@ -8,9 +7,6 @@ import { GDPRConsent } from "@/tools/gdpr-consent";
 import { createMockBuilderContext, setupTestEnvironment } from "../__tools";
 
 describe("ResetPlugin", () => {
-	let engine: FormEngine;
-	let executor: ActionExecutor;
-
 	beforeEach(() => {
 		setupTestEnvironment();
 	});
@@ -23,7 +19,7 @@ describe("ResetPlugin", () => {
 		test("should validate valid reset action", () => {
 			const validAction = {
 				id: "test-reset",
-				type: "reset",
+				$type: "reset",
 				enabled: true,
 			};
 
@@ -33,7 +29,7 @@ describe("ResetPlugin", () => {
 		test("should validate reset action with all optional fields", () => {
 			const validAction = {
 				id: "test-reset",
-				type: "reset",
+				$type: "reset",
 				description: "Reset form to initial state",
 				enabled: true,
 				triggers: ["form_submit_error"],
@@ -47,7 +43,7 @@ describe("ResetPlugin", () => {
 		test("should reject invalid type", () => {
 			const invalidAction = {
 				id: "test-reset",
-				type: "invalid",
+				$type: "invalid",
 				enabled: true,
 			};
 
@@ -56,7 +52,7 @@ describe("ResetPlugin", () => {
 
 		test("should require ID", () => {
 			const invalidAction = {
-				type: "reset",
+				$type: "reset",
 				enabled: true,
 			};
 
@@ -66,7 +62,7 @@ describe("ResetPlugin", () => {
 		test("should default resetToDefaults to true", () => {
 			const action = {
 				id: "test-reset",
-				type: "reset",
+				$type: "reset",
 				enabled: true,
 			};
 
@@ -77,7 +73,7 @@ describe("ResetPlugin", () => {
 		test("should default enabled to true", () => {
 			const action = {
 				id: "test-reset",
-				type: "reset",
+				$type: "reset",
 			};
 
 			const parsed = ResetActionSchema.parse(action);
@@ -87,13 +83,14 @@ describe("ResetPlugin", () => {
 
 	describe("Plugin Factory", () => {
 		test("should create plugin with default configuration", () => {
-		const plugin = resetPlugin();
+			const plugin = resetPlugin();
 
-		expect(plugin.$type).toBe("reset");
-		expect(plugin.schema).toBe(ResetActionSchema);
-		expect(plugin.metadata.defaultTriggers).toEqual(["form_submit_success"]);
-		expect(plugin.execute).toBeDefined();
-	});		test("should create plugin with custom configuration", () => {
+			expect(plugin.$type).toBe("reset");
+			expect(plugin.schema).toBe(ResetActionSchema);
+			expect(plugin.metadata.defaultTriggers).toEqual(["form_submit_success"]);
+			expect(plugin.execute).toBeDefined();
+		});
+		test("should create plugin with custom configuration", () => {
 			let resetCalled = false;
 			let clearDraftCalled = false;
 			let confirmCalled = false;
@@ -133,7 +130,7 @@ describe("ResetPlugin", () => {
 
 			const action: ResetAction = {
 				id: "test-reset",
-				type: "reset",
+				$type: "reset",
 				enabled: true,
 				resetToDefaults: true,
 			};
@@ -160,7 +157,7 @@ describe("ResetPlugin", () => {
 
 			const action: ResetAction = {
 				id: "test-reset",
-				type: "reset",
+				$type: "reset",
 				enabled: true,
 				resetToDefaults: true,
 			};
@@ -184,7 +181,7 @@ describe("ResetPlugin", () => {
 
 			const action: ResetAction = {
 				id: "test-reset",
-				type: "reset",
+				$type: "reset",
 				enabled: true,
 				resetToDefaults: false,
 			};
@@ -209,7 +206,7 @@ describe("ResetPlugin", () => {
 
 			const action: ResetAction = {
 				id: "test-reset",
-				type: "reset",
+				$type: "reset",
 				enabled: true,
 				resetToDefaults: false,
 			};
@@ -233,7 +230,7 @@ describe("ResetPlugin", () => {
 
 			const action: ResetAction = {
 				id: "test-reset",
-				type: "reset",
+				$type: "reset",
 				enabled: true,
 				resetToDefaults: true,
 			};
@@ -256,7 +253,7 @@ describe("ResetPlugin", () => {
 
 			const action: ResetAction = {
 				id: "test-reset",
-				type: "reset",
+				$type: "reset",
 				enabled: true,
 				resetToDefaults: true,
 			};
@@ -280,7 +277,7 @@ describe("ResetPlugin", () => {
 
 			const action: ResetAction = {
 				id: "test-reset",
-				type: "reset",
+				$type: "reset",
 				enabled: true,
 				resetToDefaults: true,
 				confirmMessage: "Are you sure?",
@@ -306,7 +303,7 @@ describe("ResetPlugin", () => {
 
 			const action: ResetAction = {
 				id: "test-reset",
-				type: "reset",
+				$type: "reset",
 				enabled: true,
 				resetToDefaults: true,
 				confirmMessage: "Are you sure?",
@@ -336,7 +333,7 @@ describe("ResetPlugin", () => {
 
 			const action: ResetAction = {
 				id: "test-reset",
-				type: "reset",
+				$type: "reset",
 				enabled: true,
 				resetToDefaults: true,
 				confirmMessage: "Async confirm?",
@@ -362,7 +359,7 @@ describe("ResetPlugin", () => {
 
 			const action: ResetAction = {
 				id: "test-reset",
-				type: "reset",
+				$type: "reset",
 				enabled: true,
 				resetToDefaults: true,
 			};
@@ -384,7 +381,7 @@ describe("ResetPlugin", () => {
 
 			const action: ResetAction = {
 				id: "test-reset",
-				type: "reset",
+				$type: "reset",
 				enabled: true,
 				resetToDefaults: true,
 			};
@@ -407,7 +404,7 @@ describe("ResetPlugin", () => {
 
 			const action: ResetAction = {
 				id: "test-reset",
-				type: "reset",
+				$type: "reset",
 				enabled: true,
 				resetToDefaults: true,
 			};
@@ -425,13 +422,12 @@ describe("ResetPlugin", () => {
 	describe("Integration", () => {
 		test("should execute successfully with plugin", async () => {
 			const plugin = resetPlugin({
-				onReset: (context) => {
-				},
+				onReset: (context) => {},
 			});
 
 			const action: ResetAction = {
 				id: "test-reset",
-				type: "reset",
+				$type: "reset",
 				enabled: true,
 				resetToDefaults: true,
 				confirmMessage: undefined,
@@ -452,7 +448,7 @@ describe("ResetPlugin", () => {
 
 			const action: ResetAction = {
 				id: "test-reset",
-				type: "reset",
+				$type: "reset",
 				enabled: true,
 				resetToDefaults: true,
 				confirmMessage: "Reset form?",
@@ -482,7 +478,7 @@ describe("ResetPlugin", () => {
 
 			const action: ResetAction = {
 				id: "test-reset",
-				type: "reset",
+				$type: "reset",
 				enabled: true,
 				resetToDefaults: true,
 			};

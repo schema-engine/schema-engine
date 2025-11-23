@@ -227,14 +227,13 @@ export const Demo: Story = {
 				triggers: ['form_submit'],
 				endpoint: SUBMIT_FORM_MOCK_URL,
 				method: 'POST',
-			} as any)
+			})
 			.addFormAction('reset', {
 				id: 'reset-demo',
-				type: 'reset',
 				enabled: true,
 				triggers: ['form_submit_success'],
 				resetToDefaults: true,
-			} as any)
+			})
 			.build(),
 	},
 };
@@ -324,14 +323,13 @@ export const SimpleContactForm: Story = {
 				triggers: ['form_submit'],
 				endpoint: SUBMIT_FORM_MOCK_URL,
 				method: 'POST',
-			} as any)
+			})
 			.addFormAction('reset', {
 				id: 'reset-form',
-				type: 'reset',
 				enabled: true,
 				triggers: ['form_submit_success'],
 				resetToDefaults: true,
-			} as any)
+			})
 			.build(),
 	},
 };
@@ -458,14 +456,13 @@ export const ProductFeedbackForm: Story = {
 				triggers: ['form_submit'],
 				endpoint: SUBMIT_FORM_MOCK_URL,
 				method: 'POST',
-			} as any)
+			})
 			.addFormAction('reset', {
 				id: 'reset-form',
-				type: 'reset',
 				enabled: true,
 				triggers: ['form_submit_success'],
 				resetToDefaults: true,
-			} as any)
+			})
 			.build(),
 	},
 };
@@ -659,7 +656,7 @@ export const EventRegistrationForm: Story = {
 				triggers: ['form_submit'],
 				endpoint: SUBMIT_FORM_MOCK_URL,
 				method: 'POST',
-			} as any)
+			})
 			.build(),
 	},
 };
@@ -849,7 +846,7 @@ export const AdvancedSettingsPanel: Story = {
 				triggers: ['form_submit'],
 				endpoint: SUBMIT_FORM_MOCK_URL,
 				method: 'POST',
-			} as any)
+			})
 			.build(),
 	},
 };
@@ -1287,7 +1284,7 @@ export const ComplexJobApplicationForm: Story = {
 				triggers: ['form_submit'],
 				endpoint: SUBMIT_FORM_MOCK_URL,
 				method: 'POST',
-			} as any)
+			})
 			.build(),
 	},
 };
@@ -1428,7 +1425,7 @@ export const JobApplicationForm: Story = {
 				triggers: ['form_submit'],
 				endpoint: SUBMIT_FORM_MOCK_URL,
 				method: 'POST',
-			} as any)
+			})
 			.build(),
 	},
 };

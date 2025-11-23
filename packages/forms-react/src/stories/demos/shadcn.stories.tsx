@@ -162,14 +162,14 @@ export const Demo: Story = {
 				triggers: ['form_submit'],
 				endpoint: SUBMIT_FORM_MOCK_URL,
 				method: 'POST',
-			} as any)
+			})
 			.addFormAction('reset', {
 				id: 'reset-demo',
-				type: 'reset',
+
 				enabled: true,
 				triggers: ['form_submit_success'],
 				resetToDefaults: true,
-			} as any)
+			})
 			.build(),
 	},
 };
@@ -268,14 +268,13 @@ export const SimpleContactForm: Story = {
 				triggers: ['form_submit'],
 				endpoint: SUBMIT_FORM_MOCK_URL,
 				method: 'POST',
-			} as any)
+			})
 			.addFormAction('reset', {
 				id: 'reset-form',
-				type: 'reset',
 				enabled: true,
 				triggers: ['form_submit_success'],
 				resetToDefaults: true,
-			} as any)
+			})
 			.build(),
 	},
 };
@@ -390,14 +389,14 @@ export const NewsletterSignupForm: Story = {
 				triggers: ['form_submit'],
 				endpoint: SUBMIT_FORM_MOCK_URL,
 				method: 'POST',
-			} as any)
+			})
 			.addFormAction('reset', {
 				id: 'reset-form',
-				type: 'reset',
+
 				enabled: true,
 				triggers: ['form_submit_success'],
 				resetToDefaults: true,
-			} as any)
+			})
 			.build(),
 	},
 };
@@ -636,7 +635,7 @@ export const HotelBookingForm: Story = {
 				triggers: ['form_submit'],
 				endpoint: SUBMIT_FORM_MOCK_URL,
 				method: 'POST',
-			} as any)
+			})
 			.build(),
 	},
 };
@@ -930,7 +929,7 @@ export const ComprehensiveUserOnboarding: Story = {
 				triggers: ['form_submit'],
 				endpoint: SUBMIT_FORM_MOCK_URL,
 				method: 'POST',
-			} as any)
+			})
 			.build(),
 	},
 };
@@ -1260,7 +1259,7 @@ export const SoftwareProjectCreation: Story = {
 				triggers: ['form_submit'],
 				endpoint: SUBMIT_FORM_MOCK_URL,
 				method: 'POST',
-			} as any)
+			})
 			.build(),
 	},
 };

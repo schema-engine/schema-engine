@@ -24,9 +24,9 @@ describe('FormProvider', () => {
             { id: 'step-1', title: 'Step 1', elements: [{ name: 'field1', $type: 'input', inputType: 'text' }] },
         ],
         actions: [
-            { id: 'action-1', type: 'submit', enabled: true, endpoint: '/submit', method: 'POST', triggers: ['form_mount'] },
-            { id: 'action-2', type: 'submit', enabled: true, endpoint: '/submit', method: 'POST', triggers: ['form_submit_start'] },
-            { id: 'action-3', type: 'submit', enabled: true, endpoint: '/submit', method: 'POST', triggers: ['form_submit'] }
+            { id: 'action-1', $type: 'submit', enabled: true, endpoint: '/submit', method: 'POST', triggers: ['form_mount'] },
+            { id: 'action-2', $type: 'submit', enabled: true, endpoint: '/submit', method: 'POST', triggers: ['form_submit_start'] },
+            { id: 'action-3', $type: 'submit', enabled: true, endpoint: '/submit', method: 'POST', triggers: ['form_submit'] }
         ],
     };
 

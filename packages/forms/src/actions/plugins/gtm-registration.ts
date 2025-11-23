@@ -17,6 +17,7 @@
 
 import { gtmPlugin } from './gtm-plugin';
 import type { GTMEventAction } from './gtm-plugin';
+import type { BuilderActionRegistration } from '@/types';
 
 declare global {
 	namespace FormEngine {
@@ -30,7 +31,7 @@ declare global {
  * Default GTM Action Registration
  * Pushes events to dataLayer with console logging
  */
-export const GTMActionRegistration = gtmPlugin({
+export const GTMActionRegistration: BuilderActionRegistration<'gtm_event', GTMEventAction> = gtmPlugin({
 	onPush: (eventName, eventData, context) => {
 		console.log('[GTM] Event pushed:', { eventName, formId: context.formId, eventData });
 	},

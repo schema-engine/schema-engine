@@ -234,7 +234,7 @@ export const SubscriptionForm: Story = {
 
 const ConfettiActionSchema = z.object({
 	id: z.string(),
-	type: z.literal('confetti'),
+	$type: z.literal('confetti'),
 	description: z.string().optional(),
 	enabled: z.boolean().default(true),
 	triggers: z.array(FormActionTriggerSchema).optional(),
@@ -245,7 +245,7 @@ const ConfettiActionSchema = z.object({
 
 type ConfettiAction = z.infer<typeof ConfettiActionSchema>;
 
-function confettiPlugin(): BuilderActionRegistration<ConfettiAction> {
+function confettiPlugin(): BuilderActionRegistration<'confetti', ConfettiAction> {
 	return {
 		$type: 'confetti',
 		schema: ConfettiActionSchema,
@@ -344,7 +344,7 @@ export const WithConfetti: Story = {
 			})
 			.addFormAction('confetti', {
 				id: 'throw-confetti',
-				type: 'confetti',
+
 				enabled: true,
 				particleCount: 200,
 				spread: 90,

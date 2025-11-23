@@ -30,7 +30,7 @@ export interface ResetPluginConfig {
  */
 export const ResetActionSchema = z.object({
 	id: z.string().min(1, 'Action ID cannot be empty'),
-	type: z.literal('reset'),
+	$type: z.literal('reset'),
 	description: z.string().optional(),
 	enabled: z.boolean().default(true),
 	/** Custom triggers that override the default triggers for this action */
@@ -94,7 +94,7 @@ function defaultResetForm(context: BuilderActionExecutionContext<any>, _resetToD
  * });
  * ```
  */
-export function resetPlugin(config: ResetPluginConfig = {}): BuilderActionRegistration<ResetAction> {
+export function resetPlugin(config: ResetPluginConfig = {}): BuilderActionRegistration<'reset', ResetAction> {
 	const {
 		confirm = (message: string) => window.confirm(message),
 		clearDraft = (formId: string) => GDPRConsent.hasConsent() && GDPRConsent.clearDraft(formId),

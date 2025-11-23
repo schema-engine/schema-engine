@@ -8,6 +8,7 @@
 
 import { FormEngineBuilder } from '@schema-engine/forms/builder';
 import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
+import { SubmitActionRegistration, ResetActionRegistration } from '@schema-engine/forms';
 
 import { InputElementRegistration as BaseUIInputElementRegistration } from '@/components/elements/core-ui/inputs/form-input.registration';
 import { TextareaElementRegistration as BaseUITextareaElementRegistration } from '@/components/elements/core-ui/inputs/form-textarea.registration';
@@ -41,7 +42,6 @@ import '@/components/steppers/debugger-stepper.css';
 import '@/components/layouts/card-layout.css';
 import '@/components/layouts/split-screen-layout.css';
 import '@/components/layouts/hero-background-layout.css';
-import { resetPlugin, submitPlugin } from '@schema-engine/forms';
 
 /**
  * Re-export ValidationPresets for convenience
@@ -56,6 +56,7 @@ export { ValidationPresets };
  * - Elements: input, textarea, checkbox, select, radio, switch, number, slider, checkbox-group, input-otp, phone-input, drop-zone, arrayElements, fieldSet, submit
  * - Layouts: card, split-screen, hero-background
  * - Steppers: default, minimalist, debugger
+ * - Actions: submit, reset
  */
 function createBaseUIFormEngineBuilder() {
 	return new FormEngineBuilder()
@@ -81,23 +82,8 @@ function createBaseUIFormEngineBuilder() {
 		.addStepper(DefaultStepperRegistration)
 		.addStepper(MinimalistStepperRegistration)
 		.addStepper(DebuggerStepperRegistration)
-		.addAction(
-			submitPlugin({
-				onError(error, context) {
-					console.error('Form submission error:', error, context);
-				},
-				onSuccess(_, context) {
-					console.log('Form submitted successfully:', context);
-				},
-			}),
-		)
-		.addAction(
-			resetPlugin({
-				onReset(context) {
-					console.log('Form has been reset:', context);
-				},
-			}),
-		);
+		.addAction(SubmitActionRegistration)
+		.addAction(ResetActionRegistration);
 }
 
 /**

@@ -29,10 +29,10 @@ import { z } from 'zod';
  * ```
  */
 export class FormConfigBuilder<
-	TElements extends Record<string, unknown> = Record<string, never>,
-	TLayouts extends Record<string, unknown> = Record<string, never>,
-	TSteppers extends Record<string, unknown> = Record<string, never>,
-	TActions extends Record<string, unknown> = Record<string, never>,
+	TElements extends Record<string, unknown> = Record<never, unknown>,
+	TLayouts extends Record<string, unknown> = Record<never, unknown>,
+	TSteppers extends Record<string, unknown> = Record<never, unknown>,
+	TActions extends Record<string, unknown> = Record<never, unknown>,
 > {
 	private config: PartialFormConfig;
 	private currentStep: BuilderFormStep | null = null;
@@ -280,7 +280,7 @@ export class FormConfigBuilder<
 		}
 
 		try {
-			const validated = registration.schema.parse({ ...((config as object) || {}), type });
+			const validated = registration.schema.parse({ ...((config as object) || {}), $type: type });
 
 			if (!this.currentStep.actions) {
 				this.currentStep.actions = [];
@@ -308,7 +308,7 @@ export class FormConfigBuilder<
 	 * @param config - Action configuration (validated against registration schema)
 	 * @throws Error if action type is not registered or config is invalid
 	 */
-	addFormAction<K extends keyof TActions & string>(type: K, config: TActions[K]): this {
+	addFormAction<K extends keyof TActions & string>(type: K, config: Omit<TActions[K], '$type'>): this {
 		const registration = this.actionRegistry.get(type);
 
 		if (!registration) {
@@ -316,7 +316,7 @@ export class FormConfigBuilder<
 		}
 
 		try {
-			const validated = registration.schema.parse({ ...((config as object) || {}), type });
+			const validated = registration.schema.parse({ ...((config as object) || {}), $type: type });
 
 			if (!this.config.actions) {
 				this.config.actions = [];

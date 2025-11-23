@@ -85,18 +85,18 @@ registerAction(notificationPlugin({
 					<code>{`const actions: FormActionConfig[] = [
   {
     id: "submit-form",
-    type: "submit", // Now handled by registered submit plugin
+    $type: "submit", // Now handled by registered submit plugin
     endpoint: "/api/submit",
     method: "POST"
   },
   {
     id: "reset-after-success", 
-    type: "reset", // Handled by registered reset plugin
+    $type: "reset", // Handled by registered reset plugin
     triggers: ["submit_success"], // Runs AFTER successful submit
   },
   {
     id: "success-notification",
-    type: "show_notification", // Handled by registered notification plugin
+    $type: "show_notification", // Handled by registered notification plugin
     triggers: ["submit_success"],
     message: "Form submitted successfully!",
     variant: "success"
@@ -123,14 +123,14 @@ registerAction(notificationPlugin({
   },
   {
     id: "submit-data",
-    type: "submit", // Submit plugin
+    $type: "submit", // Submit plugin
     endpoint: "/api/submit",
     method: "POST",
     triggers: ["validate_success"] // Runs after validation succeeds
   },
   {
     id: "show-success-notification",
-    type: "show_notification", // Notification plugin
+    $type: "show_notification", // Notification plugin
     message: "Form submitted successfully!",
     variant: "success",
     triggers: ["submit_success"] // Runs after successful submission

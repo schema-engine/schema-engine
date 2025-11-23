@@ -66,20 +66,20 @@ registerAction(notificationPlugin({
 const actions = [
   {
     id: "submit-form",
-    type: "submit",
+    $type: "submit",
     endpoint: "/api/submit",
     method: "POST"
   },
   {
     id: "success-notification",
-    type: "show_notification",
+    $type: "show_notification",
     message: "Form submitted successfully!",
     variant: "success",
     triggers: ["submit_success"]
   },
   {
     id: "reset-after-success",
-    type: "reset",
+    $type: "reset",
     resetToDefaults: true,
     triggers: ["submit_success"]
   }

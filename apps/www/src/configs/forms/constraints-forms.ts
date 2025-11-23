@@ -197,7 +197,7 @@ export const constraintsDemoConfig: FormConfig = {
 	actions: [
 		{
 			id: 'constraints-forms-submit',
-			type: 'submit',
+			$type: 'submit',
 			description: 'Submit constraints form',
 			endpoint: '/api/submit-demo',
 			method: 'POST',
@@ -207,7 +207,7 @@ export const constraintsDemoConfig: FormConfig = {
 		},
 		{
 			id: 'reset-after-success',
-			type: 'reset',
+			$type: 'reset',
 			enabled: true,
 			triggers: ['submit_success'],
 			resetToDefaults: true,

@@ -58,7 +58,7 @@ export const actionEventDispatcher = new ActionEventDispatcher();
 
 const LoggerActionSchema = z.object({
 	id: z.string(),
-	type: z.literal('event_logger'),
+	$type: z.literal('event_logger'),
 	description: z.string().optional(),
 	enabled: z.boolean().default(true),
 	triggers: z.array(z.string()).optional(),
@@ -66,7 +66,7 @@ const LoggerActionSchema = z.object({
 
 type LoggerAction = z.infer<typeof LoggerActionSchema>;
 
-function loggerPlugin(dispatcher: ActionEventDispatcher): BuilderActionRegistration<LoggerAction> {
+function loggerPlugin(dispatcher: ActionEventDispatcher): BuilderActionRegistration<'event_logger', LoggerAction> {
 	let previousFormData: Record<string, any> = {};
 
 	return {
@@ -198,14 +198,12 @@ export const demoFormConfig = createExtendableBuilder()
 	})
 	.addFormAction('submit', {
 		id: 'submit-action',
-		type: 'submit',
 		enabled: true,
 		endpoint: SUBMIT_FORM_MOCK_URL,
 		method: 'POST',
-	} as any)
+	})
 	.addFormAction('event_logger', {
 		id: 'log-all-events',
-		type: 'event_logger',
 		enabled: true,
 		triggers: [
 			'form_mount',
@@ -216,13 +214,12 @@ export const demoFormConfig = createExtendableBuilder()
 			'form_submit_error',
 			'form_submit_complete',
 		],
-	} as any)
+	})
 	.addFormAction('reset', {
 		id: 'reset-action',
-		type: 'reset',
 		enabled: true,
 		resetToDefaults: true,
-	} as any)
+	})
 	.build();
 
 const ActionDashboard = ({ logs }: { logs: ActionLogEntry[] }) => {

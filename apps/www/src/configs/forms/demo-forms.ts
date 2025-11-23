@@ -108,7 +108,7 @@ export const demoFormConfig: FormConfig = {
 	actions: [
 		{
 			id: 'demo-form-submit',
-			type: 'submit',
+			$type: 'submit',
 			description: 'Submit demo form',
 			endpoint: '/api/submit-demo',
 			method: 'POST',
@@ -118,7 +118,7 @@ export const demoFormConfig: FormConfig = {
 		},
 		{
 			id: 'reset-after-success',
-			type: 'reset',
+			$type: 'reset',
 			enabled: true,
 			triggers: ['submit_success'],
 			resetToDefaults: true,

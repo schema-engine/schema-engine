@@ -70,7 +70,7 @@ export interface GTMPluginConfig {
  * ```typescript
  * {
  *   id: "form-start-tracking",
- *   type: "gtm_event",
+ *   $type: "gtm_event",
  *   eventName: "form_mount",
  *   eventData: {
  *     form_type: "contact",
@@ -85,7 +85,7 @@ export interface GTMPluginConfig {
  * ```typescript
  * {
  *   id: "submit-tracking",
- *   type: "gtm_event",
+ *   $type: "gtm_event",
  *   eventName: "form_submit_success",
  *   eventData: { conversion_event: true },
  *   includeFormData: ["email", "user_type"], // Only specific fields
@@ -98,7 +98,7 @@ export const GTMEventActionSchema = z.object({
 	/** Unique identifier for this action within the form */
 	id: z.string().min(1, 'Action ID cannot be empty'),
 	/** Action type identifier */
-	type: z.literal('gtm_event'),
+	$type: z.literal('gtm_event'),
 	/** Optional description for documentation and debugging purposes */
 	description: z.string().optional(),
 	/** Whether this action is enabled and should be executed */
@@ -190,7 +190,7 @@ const defaultTracker: GTMTrackerInterface = {
  * });
  * ```
  */
-export function gtmPlugin(config: GTMPluginConfig = {}): BuilderActionRegistration<GTMEventAction> {
+export function gtmPlugin(config: GTMPluginConfig = {}): BuilderActionRegistration<'gtm_event', GTMEventAction> {
 	const tracker = config.tracker || defaultTracker;
 
 	const handler = async (

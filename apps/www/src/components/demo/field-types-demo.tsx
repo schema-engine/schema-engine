@@ -101,7 +101,7 @@ export function FieldTypesDemo() {
 		actions: [
 			{
 				id: 'field-types-demo-submit',
-				type: 'submit',
+				$type: 'submit',
 				description: 'Submit field types demo',
 				successMessage: 'All field types submitted successfully! 🎯',
 				errorMessage: 'Failed to submit form. Please check the fields above.',

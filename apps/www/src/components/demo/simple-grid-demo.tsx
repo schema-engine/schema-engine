@@ -93,7 +93,7 @@ const config: FormConfig = {
 	actions: [
 		{
 			id: 'grid-demo-submit',
-			type: 'submit',
+			$type: 'submit',
 			description: 'Submit responsive grid demo',
 			successMessage: 'Responsive form submitted successfully! 📱💻',
 			errorMessage: 'Failed to submit form. Please try again.',

@@ -248,7 +248,7 @@ export const conditionalFormConfig: FormConfig = {
 	actions: [
 		{
 			id: 'conditional-form-submit',
-			type: 'submit',
+			$type: 'submit',
 			description: 'Submit conditional form',
 			endpoint: '/api/submit-demo',
 			method: 'POST',
@@ -258,7 +258,7 @@ export const conditionalFormConfig: FormConfig = {
 		},
 		{
 			id: 'reset-after-success',
-			type: 'reset',
+			$type: 'reset',
 			enabled: true,
 			triggers: ['submit_success'],
 			resetToDefaults: true,

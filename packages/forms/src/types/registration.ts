@@ -188,11 +188,13 @@ export type StepperRegistration<
  * };
  * ```
  */
-export interface BuilderActionRegistration<TConfig = unknown>
+export interface BuilderActionRegistration<TType extends string, TConfig>
 	extends BaseRegistration<TConfig, ActionMetadata<BuilderActionTrigger[]>> {
+	/** Action type identifier */
+	$type: TType;
 	/** Action execution handler */
 	execute: (context: BuilderActionExecutionContext<TConfig>) => Promise<BuilderActionExecutionResult>;
 }
 
 // Backward compatibility aliases
-export type ActionRegistration<TConfig = unknown> = BuilderActionRegistration<TConfig>;
+export type ActionRegistration<TConfig = unknown> = BuilderActionRegistration<string, TConfig>;

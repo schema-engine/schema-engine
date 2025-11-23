@@ -51,18 +51,17 @@ export class ActionExecutor {
 			if ('triggers' in action && Array.isArray(action.triggers)) {
 				shouldExecute = action.triggers.includes(trigger);
 			} else {
-				const actionRegistration = this.engine.getAction(action.type);
+				const actionRegistration = this.engine.getAction(action.$type);
 				const defaultTriggers = actionRegistration?.metadata?.defaultTriggers ?? [];
 				shouldExecute = defaultTriggers.includes(trigger);
 			}
 
 			if (!shouldExecute) {
-				logger.debug(`Action ${action.id} (${action.type}) doesn't respond to trigger: ${trigger}`);
+				logger.debug(`Action ${action.id} (${action.$type}) doesn't respond to trigger: ${trigger}`);
 				continue;
 			}
 
-			logger.debug(`Executing action: ${action.id} (${action.type})`);
-
+			logger.debug(`Executing action: ${action.id} (${action.$type})`);
 			try {
 				const result = await this.executeAction(action, context, trigger);
 				results.push(result);
@@ -70,7 +69,7 @@ export class ActionExecutor {
 				if (result.success) {
 					logger.debug(`Action ${action.id} executed successfully`);
 
-					if (action.type === 'submit' && trigger === 'form_submit') {
+					if (action.$type === 'submit' && trigger === 'form_submit') {
 						const successResults = await this.executeTrigger(
 							actions,
 							'form_submit_success',
@@ -111,7 +110,7 @@ export class ActionExecutor {
 				} else {
 					logger.warn(`Action ${action.id} failed`, result);
 
-					if (action.type === 'submit' && trigger === 'form_submit') {
+					if (action.$type === 'submit' && trigger === 'form_submit') {
 						const errorResults = await this.executeTrigger(
 							actions,
 							'form_submit_error',
@@ -180,17 +179,17 @@ export class ActionExecutor {
 		context: ActionExecutionContext,
 		trigger: FormActionTrigger,
 	): Promise<ActionExecutionResult> {
-		const actionRegistration = this.engine.getAction(action.type);
+		const actionRegistration = this.engine.getAction(action.$type);
 
 		if (!actionRegistration) {
-			logger.error(`No handler registered for action type: ${action.type}`, {
+			logger.error(`No handler registered for action type: ${action.$type}`, {
 				actionId: action.id,
 				availableActions: this.engine.getActionTypes(),
 			});
 
 			return {
 				success: false,
-				error: `No handler registered for action type: ${action.type}`,
+				error: `No handler registered for action type: ${action.$type}`,
 				shouldContinue: true,
 			};
 		}

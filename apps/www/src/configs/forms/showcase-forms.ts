@@ -58,7 +58,7 @@ export const basicFormConfig: FormConfig = {
 	actions: [
 		{
 			id: 'responsive-forms-submit',
-			type: 'submit',
+			$type: 'submit',
 			description: 'Submit responsive form',
 			endpoint: '/api/submit-demo',
 			method: 'POST',
@@ -68,7 +68,7 @@ export const basicFormConfig: FormConfig = {
 		},
 		{
 			id: 'reset-after-success',
-			type: 'reset',
+			$type: 'reset',
 			enabled: true,
 			triggers: ['submit_success'],
 			resetToDefaults: true,
@@ -328,7 +328,7 @@ export const arrayFormConfig: FormConfig = {
 	actions: [
 		{
 			id: 'array-forms-submit',
-			type: 'submit',
+			$type: 'submit',
 			description: 'Submit array form',
 			endpoint: '/api/submit-demo',
 			method: 'POST',
@@ -338,7 +338,7 @@ export const arrayFormConfig: FormConfig = {
 		},
 		{
 			id: 'reset-after-success',
-			type: 'reset',
+			$type: 'reset',
 			enabled: true,
 			triggers: ['submit_success'],
 			resetToDefaults: true,
@@ -439,7 +439,7 @@ export const complexFormConfig: FormConfig = {
 	actions: [
 		{
 			id: 'array-forms-submit',
-			type: 'submit',
+			$type: 'submit',
 			description: 'Submit array form',
 			endpoint: '/api/submit-demo',
 			method: 'POST',
@@ -449,7 +449,7 @@ export const complexFormConfig: FormConfig = {
 		},
 		{
 			id: 'reset-after-success',
-			type: 'reset',
+			$type: 'reset',
 			enabled: true,
 			triggers: ['submit_success'],
 			resetToDefaults: true,

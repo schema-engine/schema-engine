@@ -17,6 +17,7 @@
 
 import { autoSavePlugin } from './auto-save-plugin';
 import type { AutoSaveAction } from './auto-save-plugin';
+import type { BuilderActionRegistration } from '@/types';
 
 declare global {
 	namespace FormEngine {
@@ -30,7 +31,7 @@ declare global {
  * Default Auto-Save Action Registration
  * Saves to localStorage with console logging
  */
-export const AutoSaveActionRegistration = autoSavePlugin({
+export const AutoSaveActionRegistration: BuilderActionRegistration<'auto_save', AutoSaveAction> = autoSavePlugin({
 	onSave: (data, context) => {
 		console.log('[AutoSave] Form data saved:', { data, formId: context.formId });
 	},

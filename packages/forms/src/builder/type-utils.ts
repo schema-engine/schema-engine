@@ -39,4 +39,4 @@ export type ExtractSchemaType<TSchema> = TSchema extends { parse: (val: any) => 
  * Extract type identifier from a registration object.
  * Works by inferring from the $type property.
  */
-export type ExtractTypeId<T> = T extends { $type: infer K } ? (K extends string ? K : never) : never;
+export type ExtractTypeId<T> = T extends { $type: infer K } ? K : never;

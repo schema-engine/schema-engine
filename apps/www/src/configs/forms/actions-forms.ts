@@ -65,7 +65,7 @@ export const actionsFormConfig: FormConfig = {
 			actions: [
 				{
 					id: 'step1-completion-tracking',
-					type: 'gtm_event',
+					$type: 'gtm_event',
 					description: 'Track completion of user info step',
 					eventName: 'form_step_complete',
 					eventData: {
@@ -123,7 +123,7 @@ export const actionsFormConfig: FormConfig = {
 			actions: [
 				{
 					id: 'step2-completion-tracking',
-					type: 'gtm_event',
+					$type: 'gtm_event',
 					description: 'Track completion of contact info step',
 					eventName: 'form_step_complete',
 					eventData: {
@@ -174,7 +174,7 @@ export const actionsFormConfig: FormConfig = {
 			actions: [
 				{
 					id: 'step3-completion-tracking',
-					type: 'gtm_event',
+					$type: 'gtm_event',
 					description: 'Track completion of preferences step',
 					eventName: 'form_step_complete',
 					eventData: {
@@ -192,7 +192,7 @@ export const actionsFormConfig: FormConfig = {
 	actions: [
 		{
 			id: 'global-auto-save',
-			type: 'auto_save',
+			$type: 'auto_save',
 			description: 'Automatically save form progress',
 			storageKey: 'enhanced-actions-demo-autosave',
 			includeSensitive: false,
@@ -200,7 +200,7 @@ export const actionsFormConfig: FormConfig = {
 		},
 		{
 			id: 'global-form-start-tracking',
-			type: 'gtm_event',
+			$type: 'gtm_event',
 			description: 'Track when user starts the form',
 			eventName: 'form_mount',
 			eventData: {
@@ -213,7 +213,7 @@ export const actionsFormConfig: FormConfig = {
 		},
 		{
 			id: 'global-form-submit-tracking',
-			type: 'gtm_event',
+			$type: 'gtm_event',
 			description: 'Track successful form submission',
 			eventName: 'form_submit_success',
 			eventData: {
@@ -226,7 +226,7 @@ export const actionsFormConfig: FormConfig = {
 		},
 		{
 			id: 'global-submit',
-			type: 'submit',
+			$type: 'submit',
 			description: 'Submit form data to server',
 			endpoint: '/api/submit-demo',
 			method: 'POST',
@@ -284,7 +284,7 @@ export const simpleActionsFormConfig: FormConfig = {
 	actions: [
 		{
 			id: 'simple-auto-save',
-			type: 'auto_save',
+			$type: 'auto_save',
 			description: 'Auto-save form progress',
 			storageKey: 'simple-actions-demo-autosave',
 			includeSensitive: false,
@@ -292,7 +292,7 @@ export const simpleActionsFormConfig: FormConfig = {
 		},
 		{
 			id: 'simple-interval-save',
-			type: 'auto_save',
+			$type: 'auto_save',
 			description: 'Interval-based auto-save',
 			storageKey: 'simple-actions-demo-interval-autosave',
 			includeSensitive: false,
@@ -300,7 +300,7 @@ export const simpleActionsFormConfig: FormConfig = {
 		},
 		{
 			id: 'simple-start-tracking',
-			type: 'gtm_event',
+			$type: 'gtm_event',
 			description: 'Track when form is loaded',
 			eventName: 'simple_form_mount',
 			eventData: {
@@ -312,7 +312,7 @@ export const simpleActionsFormConfig: FormConfig = {
 		},
 		{
 			id: 'simple-submit-tracking',
-			type: 'gtm_event',
+			$type: 'gtm_event',
 			description: 'Track form submission',
 			eventName: 'simple_form_submit',
 			eventData: {
@@ -325,7 +325,7 @@ export const simpleActionsFormConfig: FormConfig = {
 		},
 		{
 			id: 'simple-submit',
-			type: 'submit',
+			$type: 'submit',
 			description: 'Submit simple form',
 			endpoint: '/api/submit-demo',
 			method: 'POST',
@@ -335,7 +335,7 @@ export const simpleActionsFormConfig: FormConfig = {
 		},
 		{
 			id: 'reset-after-success',
-			type: 'reset',
+			$type: 'reset',
 			enabled: true,
 			triggers: ['form_submit_success'],
 			resetToDefaults: true,

@@ -56,7 +56,7 @@ export const AutoSaveActionSchema = z.object({
 	/** Unique identifier for this action within the form */
 	id: z.string().min(1, 'Action ID cannot be empty'),
 	/** Action type identifier */
-	type: z.literal('auto_save'),
+	$type: z.literal('auto_save'),
 	/** Optional description for documentation and debugging purposes */
 	description: z.string().optional(),
 	/** Whether this action is enabled and should be executed */
@@ -136,7 +136,9 @@ const defaultStorage: AutoSaveStorage = {
  * });
  * ```
  */
-export function autoSavePlugin(config: AutoSavePluginConfig = {}): BuilderActionRegistration<AutoSaveAction> {
+export function autoSavePlugin(
+	config: AutoSavePluginConfig = {},
+): BuilderActionRegistration<'auto_save', AutoSaveAction> {
 	const storage = config.storage || defaultStorage;
 
 	const handler = async (

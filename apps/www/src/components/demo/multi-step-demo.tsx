@@ -152,7 +152,7 @@ const stepperDemoConfig: FormConfig = {
 	actions: [
 		{
 			id: 'submit',
-			type: 'submit',
+			$type: 'submit',
 			enabled: true,
 			endpoint: '/api/submit-demo',
 			method: 'POST',

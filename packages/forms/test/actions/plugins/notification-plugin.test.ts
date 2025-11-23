@@ -22,7 +22,7 @@ describe("NotificationPlugin", () => {
 		test("should validate valid notification action", () => {
 			const validAction: NotificationAction = {
 				id: "show-success",
-				type: "show_notification",
+				$type: "show_notification",
 				enabled: true,
 				message: "Form submitted successfully!",
 				variant: "success",
@@ -36,7 +36,7 @@ describe("NotificationPlugin", () => {
 		test("should validate notification action with all optional fields", () => {
 			const fullAction: NotificationAction = {
 				id: "show-warning",
-				type: "show_notification",
+				$type: "show_notification",
 				description: "Show a warning message",
 				enabled: true,
 				triggers: ["form_submit"],
@@ -52,7 +52,7 @@ describe("NotificationPlugin", () => {
 		test("should default variant to info", () => {
 			const action = {
 				id: "show-info",
-				type: "show_notification",
+				$type: "show_notification",
 				enabled: true,
 				message: "Information message",
 			};
@@ -64,7 +64,7 @@ describe("NotificationPlugin", () => {
 		test("should default duration to 3000ms", () => {
 			const action = {
 				id: "show-success",
-				type: "show_notification",
+				$type: "show_notification",
 				enabled: true,
 				message: "Success message",
 				variant: "success",
@@ -77,7 +77,7 @@ describe("NotificationPlugin", () => {
 		test("should reject invalid variant", () => {
 			const invalidAction = {
 				id: "show-invalid",
-				type: "show_notification",
+				$type: "show_notification",
 				enabled: true,
 				message: "Invalid message",
 				variant: "invalid",
@@ -89,7 +89,7 @@ describe("NotificationPlugin", () => {
 		test("should reject empty message", () => {
 			const invalidAction = {
 				id: "show-empty",
-				type: "show_notification",
+				$type: "show_notification",
 				enabled: true,
 				message: "", // Empty message
 				variant: "info",
@@ -101,7 +101,7 @@ describe("NotificationPlugin", () => {
 		test("should reject negative duration", () => {
 			const invalidAction = {
 				id: "show-negative",
-				type: "show_notification",
+				$type: "show_notification",
 				enabled: true,
 				message: "Message",
 				variant: "info",
@@ -182,7 +182,7 @@ describe("NotificationPlugin", () => {
 
 			const action: NotificationAction = {
 				id: "success-notify",
-				type: "show_notification",
+				$type: "show_notification",
 				enabled: true,
 				message: "Form saved successfully!",
 				variant: "success",
@@ -214,7 +214,7 @@ describe("NotificationPlugin", () => {
 
 			const action: NotificationAction = {
 				id: "error-notify",
-				type: "show_notification",
+				$type: "show_notification",
 				enabled: true,
 				message: "Form submission failed!",
 				variant: "error",
@@ -246,7 +246,7 @@ describe("NotificationPlugin", () => {
 
 			const action: NotificationAction = {
 				id: "warning-notify",
-				type: "show_notification",
+				$type: "show_notification",
 				enabled: true,
 				message: "Please review your input",
 				variant: "warning",
@@ -278,7 +278,7 @@ describe("NotificationPlugin", () => {
 
 			const action: NotificationAction = {
 				id: "info-notify",
-				type: "show_notification",
+				$type: "show_notification",
 				enabled: true,
 				message: "Form auto-saved",
 				variant: "info",
@@ -312,7 +312,7 @@ describe("NotificationPlugin", () => {
 
 			const action: NotificationAction = {
 				id: "global-notify",
-				type: "show_notification",
+				$type: "show_notification",
 				enabled: true,
 				message: "Global notification",
 				variant: "success",
@@ -344,7 +344,7 @@ describe("NotificationPlugin", () => {
 
 			const action: NotificationAction = {
 				id: "prefer-specific",
-				type: "show_notification",
+				$type: "show_notification",
 				enabled: true,
 				message: "Success message",
 				variant: "success",
@@ -376,7 +376,7 @@ describe("NotificationPlugin", () => {
 
 			const action: NotificationAction = {
 				id: "global-precedence",
-				type: "show_notification",
+				$type: "show_notification",
 				enabled: true,
 				message: "Global takes precedence",
 				variant: "success",
@@ -407,7 +407,7 @@ describe("NotificationPlugin", () => {
 
 			const action: NotificationAction = {
 				id: "fallback-global",
-				type: "show_notification",
+				$type: "show_notification",
 				enabled: true,
 				message: "Error message",
 				variant: "error",
@@ -430,7 +430,7 @@ describe("NotificationPlugin", () => {
 
 			const action: NotificationAction = {
 				id: "titled-notify",
-				type: "show_notification",
+				$type: "show_notification",
 				enabled: true,
 				message: "Success message",
 				variant: "success",
@@ -449,7 +449,7 @@ describe("NotificationPlugin", () => {
 
 			const action: NotificationAction = {
 				id: "custom-duration",
-				type: "show_notification",
+				$type: "show_notification",
 				enabled: true,
 				message: "Custom duration message",
 				variant: "info",
@@ -469,7 +469,7 @@ describe("NotificationPlugin", () => {
 
 			const action: NotificationAction = {
 				id: "no-handlers",
-				type: "show_notification",
+				$type: "show_notification",
 				enabled: true,
 				message: "No handlers configured",
 				variant: "info",
@@ -495,7 +495,7 @@ describe("NotificationPlugin", () => {
 
 			const action: NotificationAction = {
 				id: "async-notify",
-				type: "show_notification",
+				$type: "show_notification",
 				enabled: true,
 				message: "Async notification",
 				variant: "success",
@@ -516,7 +516,7 @@ describe("NotificationPlugin", () => {
 
 			const action: NotificationAction = {
 				id: "integration-test",
-				type: "show_notification",
+				$type: "show_notification",
 				enabled: true,
 				message: "Integration test message",
 				variant: "info",
@@ -542,7 +542,7 @@ describe("NotificationPlugin", () => {
 
 			const successAction: NotificationAction = {
 				id: "toast-success",
-				type: "show_notification",
+				$type: "show_notification",
 				enabled: true,
 				message: "Toast success message",
 				variant: "success",
@@ -550,7 +550,7 @@ describe("NotificationPlugin", () => {
 
 			const errorAction: NotificationAction = {
 				id: "toast-error",
-				type: "show_notification",
+				$type: "show_notification",
 				enabled: true,
 				message: "Toast error message",
 				variant: "error",

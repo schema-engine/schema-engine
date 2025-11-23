@@ -46,7 +46,7 @@ registerAction(submitPlugin({
 // Use in your form config
 {
   id: 'submit-contact',
-  type: 'submit',
+  $type: 'submit',
   endpoint: '/api/contact',
   method: 'POST',
   successMessage: 'Message sent successfully!',
@@ -86,7 +86,7 @@ registerAction(notificationPlugin({
 // Use in your form config
 {
   id: 'success-notification',
-  type: 'show_notification',
+  $type: 'show_notification',
   message: 'Form submitted successfully!',
   variant: 'success',
   duration: 3000,
@@ -139,7 +139,7 @@ registerAction(resetPlugin({
 // Use in your form config
 {
   id: 'reset-form',
-  type: 'reset',
+  $type: 'reset',
   resetToDefaults: true,
   confirmMessage: 'Are you sure you want to clear all form data?',
   triggers: ['form_submit_success'] // Reset after submit
@@ -201,7 +201,7 @@ registerAction(autoSavePlugin({
 // Use in your form config
 {
   id: 'auto-save-draft',
-  type: 'auto_save',
+  $type: 'auto_save',
   storageKey: 'contact_form_draft',
   debounceMs: 2000, // Wait 2s after last change
   triggers: ['form_change'] // Save on any field change
@@ -247,7 +247,7 @@ registerAction(gtmPlugin({
 // Use in your form config
 {
   id: 'track-form-start',
-  type: 'gtm_event',
+  $type: 'gtm_event',
   event: 'form_started',
   eventCategory: 'Forms',
   eventAction: 'Started',
@@ -256,7 +256,7 @@ registerAction(gtmPlugin({
 },
 {
   id: 'track-submission',
-  type: 'gtm_event', 
+  $type: 'gtm_event', 
   event: 'form_submitted',
   eventCategory: 'Forms',
   eventAction: 'Submitted',
@@ -388,16 +388,16 @@ registerAction(resetPlugin({
 // Form config uses all three
 const formConfig = {
   actions: [
-    { id: 'submit', type: 'submit', endpoint: '/api/contact' },
+    { id: 'submit', $type: 'submit', endpoint: '/api/contact' },
     { 
       id: 'success-msg', 
-      type: 'show_notification', 
+      $type: 'show_notification', 
       message: 'Thanks for your message!',
       triggers: ['form_submit_success'] 
     },
     { 
       id: 'reset', 
-      type: 'reset', 
+      $type: 'reset', 
       triggers: ['form_submit_success'] 
     }
   ]
@@ -424,13 +424,13 @@ const formConfig = {
   actions: [
     { 
       id: 'auto-save', 
-      type: 'auto_save', 
+      $type: 'auto_save', 
       storageKey: 'contact_draft',
       triggers: ['form_change'] 
     },
     { 
       id: 'submit', 
-      type: 'submit', 
+      $type: 'submit', 
       endpoint: '/api/contact' 
     }
   ]

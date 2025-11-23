@@ -156,7 +156,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 	actions: [
 		{
 			id: 'multi-step-forms-submit',
-			type: 'submit',
+			$type: 'submit',
 			description: 'Submit multi-step form',
 			endpoint: '/api/submit-demo',
 			method: 'POST',
@@ -166,7 +166,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 		},
 		{
 			id: 'reset-after-success',
-			type: 'reset',
+			$type: 'reset',
 			enabled: true,
 			triggers: ['submit_success'],
 			resetToDefaults: true,

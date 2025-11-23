@@ -30,7 +30,7 @@ export interface EngineRegistries {
 	elements: Map<string, InputRegistration<any, any, any> | StaticRegistration<any, any, any>>;
 	layouts: Map<string, LayoutRegistration<any, any, any>>;
 	steppers: Map<string, StepperRegistration<any, any, any>>;
-	actions: Map<string, BuilderActionRegistration<any>>;
+	actions: Map<string, BuilderActionRegistration<any, any>>;
 	schemaRegistry: ReturnType<typeof z.registry<FormEngineSchemaMetadata>>;
 	formConfigSchema: z.ZodObject<any>;
 }
@@ -55,10 +55,10 @@ export interface EngineRegistries {
  * ```
  */
 export class FormEngine<
-	_TElements extends Record<string, unknown> = Record<string, never>,
-	_TLayouts extends Record<string, unknown> = Record<string, never>,
-	_TSteppers extends Record<string, unknown> = Record<string, never>,
-	_TActions extends Record<string, unknown> = Record<string, never>,
+	_TElements extends Record<string, unknown> = Record<never, unknown>,
+	_TLayouts extends Record<string, unknown> = Record<never, unknown>,
+	_TSteppers extends Record<string, unknown> = Record<never, unknown>,
+	_TActions extends Record<string, unknown> = Record<never, unknown>,
 > {
 	private readonly registries: EngineRegistries;
 
@@ -167,14 +167,14 @@ export class FormEngine<
 	/**
 	 * Get a registered action by id.
 	 */
-	getAction(id: string): BuilderActionRegistration<any> | undefined {
+	getAction(id: string): BuilderActionRegistration<any, any> | undefined {
 		return this.registries.actions.get(id);
 	}
 
 	/**
 	 * Get all registered actions.
 	 */
-	getAllActions(): BuilderActionRegistration[] {
+	getAllActions(): BuilderActionRegistration<any, any>[] {
 		return Array.from(this.registries.actions.values());
 	}
 
