@@ -25,6 +25,7 @@
     "watch:lib": "bun run ./build.ts --watch",
     "clean": "rm -rf ./dist",
     "test:all": "bun test",
+    "test:storybook": "vitest run",
     "lint-staged": "lint-staged",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build -o ./storybook-static"

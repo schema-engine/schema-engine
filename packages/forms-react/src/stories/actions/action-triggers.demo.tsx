@@ -8,13 +8,10 @@ import { Badge } from '@/shadcn/ui/badge';
 import { Button } from '@/shadcn/ui/button';
 import { ScrollArea } from '@/shadcn/ui/scroll-area';
 import { SUBMIT_FORM_MOCK_URL } from '../msw/submit-form';
-import { resetPlugin, submitPlugin } from '@schema-engine/forms/actions';
+import { formResetPlugin, formSubmitPlugin } from '@schema-engine/forms/actions';
 import { z } from 'zod';
-import type {
-	BuilderActionExecutionContext,
-	BuilderActionExecutionResult,
-	BuilderActionRegistration,
-} from '@schema-engine/forms/types';
+import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@schema-engine/forms/types';
+import type { ActionExecutionResult } from '@schema-engine/forms';
 
 export interface ActionLogEntry {
 	id: string;
@@ -91,9 +88,7 @@ function loggerPlugin(dispatcher: ActionEventDispatcher): BuilderActionRegistrat
 				'step_view',
 			],
 		},
-		execute: async (
-			context: BuilderActionExecutionContext<LoggerAction>,
-		): Promise<BuilderActionExecutionResult> => {
+		execute: async (context: BuilderActionExecutionContext<LoggerAction>): Promise<ActionExecutionResult> => {
 			const currentFormData = context.formData;
 			const trigger = context.trigger;
 
@@ -135,7 +130,7 @@ function loggerPlugin(dispatcher: ActionEventDispatcher): BuilderActionRegistrat
 	};
 }
 
-const customSubmitPlugin = submitPlugin({
+const customSubmitPlugin = formSubmitPlugin({
 	onError(error, context) {
 		console.error('Submit action error', { error, context });
 	},
@@ -146,7 +141,7 @@ const customSubmitPlugin = submitPlugin({
 
 const customLoggerPlugin = loggerPlugin(actionEventDispatcher);
 
-const customResetPlugin = resetPlugin({
+const customResetPlugin = formResetPlugin({
 	onReset(context) {
 		console.log('Form has been reset:', context);
 	},
@@ -219,6 +214,7 @@ export const demoFormConfig = createExtendableBuilder()
 		id: 'reset-action',
 		enabled: true,
 		resetToDefaults: true,
+		triggers: ['form_submit_success'],
 	})
 	.build();
 

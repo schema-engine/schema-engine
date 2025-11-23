@@ -1,11 +1,11 @@
 import { z } from 'zod';
-import type { BuilderActionExecutionContext, BuilderActionExecutionResult, BuilderActionRegistration } from '@/types';
+import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
 import { FormActionTriggerSchema } from '../triggers';
 
 /**
- * Submit Plugin Configuration
+ * Form Submit Plugin Configuration
  */
-export interface SubmitPluginConfig {
+export interface FormSubmitPluginConfig {
 	/** Custom request adapter (fetch, axios, etc.) */
 	request?: (url: string, options: any) => Promise<Response>;
 	/** Transform data before sending */
@@ -70,7 +70,7 @@ export interface SubmitPluginConfig {
  * });
  * ```
  */
-export const SubmitActionSchema = z.object({
+export const FormSubmitActionSchema = z.object({
 	/** Unique identifier for this action within the form */
 	id: z.string().min(1, 'Action ID cannot be empty'),
 	/** Action type identifier */
@@ -93,7 +93,7 @@ export const SubmitActionSchema = z.object({
 	redirectUrl: z.string().min(1, 'Redirect URL cannot be empty').optional(),
 });
 
-export type SubmitAction = z.infer<typeof SubmitActionSchema>;
+export type FormSubmitAction = z.infer<typeof FormSubmitActionSchema>;
 
 /**
  * Submit Plugin Factory
@@ -165,12 +165,12 @@ export type SubmitAction = z.infer<typeof SubmitActionSchema>;
  * });
  * ```
  */
-export function submitPlugin(config: SubmitPluginConfig = {}): BuilderActionRegistration<'submit', SubmitAction> {
+export function formSubmitPlugin(
+	config: FormSubmitPluginConfig = {},
+): BuilderActionRegistration<'submit', FormSubmitAction> {
 	const { request = fetch, transformData = (data) => data, onSuccess = () => {}, onError = () => {} } = config;
 
-	const handler = async (
-		context: BuilderActionExecutionContext<SubmitAction>,
-	): Promise<BuilderActionExecutionResult> => {
+	const handler = async (context: BuilderActionExecutionContext<FormSubmitAction>) => {
 		const action = context.config;
 
 		try {
@@ -233,7 +233,7 @@ export function submitPlugin(config: SubmitPluginConfig = {}): BuilderActionRegi
 
 	return {
 		$type: 'submit',
-		schema: SubmitActionSchema,
+		schema: FormSubmitActionSchema,
 		metadata: {
 			name: 'Submit Form',
 			description: 'Submit form data to an endpoint',

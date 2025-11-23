@@ -9,28 +9,22 @@ export { FormEngineBuilder } from './builder';
 export { FormEngine } from './engine';
 export type { EngineRegistries, FormEngineSchemaMetadata } from './engine';
 
-export {
-	BaseRegistry,
-	ElementRegistry,
-	LayoutRegistry,
-	StepperRegistry,
-	ActionRegistry,
-} from './registries';
+export { BaseRegistry, ElementRegistry, LayoutRegistry, StepperRegistry } from './registries';
 
 export type {
 	ComponentMetadata,
 	ElementMetadata,
-	ActionMetadata,
 	BuilderActionRegistration,
 	BuilderActionTrigger,
 	BuilderActionExecutionContext,
-	BuilderActionExecutionResult,
 	ComponentRegistration,
 	InputRegistration,
 	StaticRegistration,
 	LayoutRegistration,
 	StepperRegistration,
 } from './types';
+
+export type { ActionExecutionResult } from '@schema-engine/actions';
 
 export * from './schemas';
 export * from './actions';

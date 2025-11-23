@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { BuilderActionExecutionContext, BuilderActionExecutionResult, BuilderActionRegistration } from '@/types';
+import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
 import { FormActionTriggerSchema } from '../triggers';
 
 /**
@@ -141,9 +141,7 @@ export function autoSavePlugin(
 ): BuilderActionRegistration<'auto_save', AutoSaveAction> {
 	const storage = config.storage || defaultStorage;
 
-	const handler = async (
-		context: BuilderActionExecutionContext<AutoSaveAction>,
-	): Promise<BuilderActionExecutionResult> => {
+	const handler = async (context: BuilderActionExecutionContext<AutoSaveAction>) => {
 		const action = context.config;
 		try {
 			const storageKey = action.storageKey || config.getStorageKey?.(context) || `autosave_${context.formId}`;

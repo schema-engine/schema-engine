@@ -41,7 +41,7 @@ function CommandDialog({
 				<DialogDescription>{description}</DialogDescription>
 			</DialogHeader>
 			<DialogContent className={cn('overflow-hidden p-0', className)} showCloseButton={showCloseButton}>
-				<Command>{children}</Command>
+				<Command>{children as React.ReactNode}</Command>
 			</DialogContent>
 		</Dialog>
 	);

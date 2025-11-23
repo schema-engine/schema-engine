@@ -7,6 +7,7 @@
 
 import { FormEngineBuilder } from '@schema-engine/forms/builder';
 import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
+import { formResetPlugin, formSubmitPlugin } from '@schema-engine/forms';
 
 import { InputElementRegistration } from '@/components/elements/shadcn/inputs/form-input.registration';
 import { TextareaElementRegistration } from '@/components/elements/shadcn/inputs/form-textarea.registration';
@@ -34,7 +35,6 @@ import '@/components/steppers/debugger-stepper.css';
 import '@/components/layouts/card-layout.css';
 import '@/components/layouts/split-screen-layout.css';
 import '@/components/layouts/hero-background-layout.css';
-import { resetPlugin, submitPlugin } from '@schema-engine/forms';
 /**
  * Re-export ValidationPresets for convenience
  */
@@ -68,7 +68,7 @@ function createDefaultFormEngineBuilder() {
 		.addStepper(MinimalistStepperRegistration)
 		.addStepper(DebuggerStepperRegistration)
 		.addAction(
-			submitPlugin({
+			formSubmitPlugin({
 				onError(error, context) {
 					console.error('Form submission error:', error, context);
 				},
@@ -78,7 +78,7 @@ function createDefaultFormEngineBuilder() {
 			}),
 		)
 		.addAction(
-			resetPlugin({
+			formResetPlugin({
 				onReset(context) {
 					console.log('Form has been reset:', context);
 				},

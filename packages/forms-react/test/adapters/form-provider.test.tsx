@@ -2,7 +2,7 @@ import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { FormProvider } from '../../src/adapters/rhf/form-provider';
 import type { FormConfig } from '@schema-engine/forms/schemas';
-import { mockExecuteTrigger, setupActionExecutorMock } from '../utils/use-action-executor.mock';
+import { mockDispatch, setupActionExecutorMock } from '../utils/use-action-executor.mock';
 
 setupActionExecutorMock();
 
@@ -31,7 +31,7 @@ describe('FormProvider', () => {
     };
 
     beforeEach(() => {
-        mockExecuteTrigger.mockClear();
+        mockDispatch.mockClear();
     });
 
     it('should fire form_mount on mount', async () => {
@@ -42,10 +42,10 @@ describe('FormProvider', () => {
         );
 
         await waitFor(() => {
-            expect(mockExecuteTrigger).toHaveBeenCalled();
+            expect(mockDispatch).toHaveBeenCalled();
         });
 
-        const calls = mockExecuteTrigger.mock.calls;
+        const calls = mockDispatch.mock.calls;
         const formStartCall = calls.find(call => call[1] === 'form_mount');
         expect(formStartCall).toBeDefined();
     });
@@ -61,7 +61,7 @@ describe('FormProvider', () => {
         fireEvent.click(submitButton);
 
         await waitFor(() => {
-            const calls = mockExecuteTrigger.mock.calls;
+            const calls = mockDispatch.mock.calls;
             const submitStartCalls = calls.filter(call => call[1] === 'form_submit_start');
             const formSubmitCalls = calls.filter(call => call[1] === 'form_submit');
             
@@ -69,7 +69,7 @@ describe('FormProvider', () => {
             expect(formSubmitCalls.length).toBeGreaterThanOrEqual(1);
         });
 
-        const calls = mockExecuteTrigger.mock.calls;
+        const calls = mockDispatch.mock.calls;
         
         const submitRelatedCalls = calls.filter(call => ['form_submit_start', 'form_submit'].includes(call[1]));
         

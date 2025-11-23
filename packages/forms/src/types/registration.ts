@@ -1,6 +1,8 @@
 import type { z } from 'zod';
-import type { ComponentMetadata, ElementMetadata, ActionMetadata } from './metadata';
-import type { BuilderActionExecutionContext, BuilderActionExecutionResult, BuilderActionTrigger } from './actions.js';
+import type { ComponentMetadata, ElementMetadata } from './metadata';
+import type { BuilderActionExecutionContext, BuilderActionTrigger } from './actions.js';
+import type { ActionExecutionResult } from '@schema-engine/actions';
+import type { ActionMetadata } from '@schema-engine/actions';
 
 declare global {
 	namespace FormEngine {
@@ -166,35 +168,40 @@ export type StepperRegistration<
 > = Brand<ComponentRegistration<TType, TConfig, TProps, ComponentMetadata>, 'Stepper'>;
 
 /**
- * Action registration object for the new builder pattern.
+ * Action registration object for forms.
  *
- * Actions are event handlers that execute in response to form events.
- * They are separate from components and have their own execution context.
+ * This is the ActionRegistration from @schema-engine/actions specialized
+ * with form-specific context and trigger types.
+ *
+ * @template TType - The action type identifier
+ * @template TConfig - The action configuration type
  *
  * @example
  * ```typescript
- * export const submitActionRegistration: BuilderActionRegistration<z.infer<typeof SubmitActionConfigSchema>> = {
+ * export const submitAction: BuilderActionRegistration<'submit', SubmitConfig> = {
  *   $type: 'submit',
  *   schema: SubmitActionConfigSchema,
  *   metadata: {
  *     name: 'Submit Form',
  *     description: 'Submit form data to an endpoint',
- *     icon: 'send',
+ *     defaultTriggers: ['form_submit'],
  *   },
- *   execute: async (context) => {
- *     // Implementation
+ *   handler: async (executionContext, config) => {
+ *     const { context, trigger } = executionContext;
+ *     // context has formId, formData, isValid, etc.
+ *     // config has the action configuration
  *     return { success: true };
  *   },
  * };
  * ```
  */
-export interface BuilderActionRegistration<TType extends string, TConfig>
-	extends BaseRegistration<TConfig, ActionMetadata<BuilderActionTrigger[]>> {
-	/** Action type identifier */
+export type BuilderActionRegistration<TType extends string = string, TConfig = unknown> = BaseRegistration<
+	TConfig,
+	ActionMetadata<BuilderActionTrigger>
+> & {
 	$type: TType;
-	/** Action execution handler */
-	execute: (context: BuilderActionExecutionContext<TConfig>) => Promise<BuilderActionExecutionResult>;
-}
+	execute: (context: BuilderActionExecutionContext<TConfig>) => Promise<ActionExecutionResult>;
+};
 
-// Backward compatibility aliases
+// Backward compatibility alias
 export type ActionRegistration<TConfig = unknown> = BuilderActionRegistration<string, TConfig>;

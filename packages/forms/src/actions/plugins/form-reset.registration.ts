@@ -15,14 +15,14 @@
  * ```
  */
 
-import { resetPlugin } from './reset-plugin';
-import type { ResetAction } from './reset-plugin';
+import { formResetPlugin } from './form-reset.plugin';
+import type { FormResetAction } from './form-reset.plugin';
 import type { BuilderActionRegistration } from '@/types';
 
 declare global {
 	namespace FormEngine {
 		interface ActionRegistry {
-			reset: ResetAction;
+			reset: FormResetAction;
 		}
 	}
 }
@@ -31,7 +31,7 @@ declare global {
  * Default Reset Action Registration
  * Resets form with browser confirmation
  */
-export const ResetActionRegistration: BuilderActionRegistration<'reset', ResetAction> = resetPlugin({
+export const ResetActionRegistration: BuilderActionRegistration<'reset', FormResetAction> = formResetPlugin({
 	confirm: (message) => window.confirm(message),
 	onReset: (context) => {
 		console.log('[Reset] Form reset completed:', { formId: context.formId });

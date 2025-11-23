@@ -1,0 +1,41 @@
+{
+  "name": "@schema-engine/actions",
+  "type": "module",
+  "version": "0.1.0",
+  "license": "MIT",
+  "sideEffects": false,
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist/*"
+  ],
+  "scripts": {
+    "build:lib": "bun run clean && bun run build:files && bun run build:types",
+    "build:files": "bun run ./build.ts",
+    "build:types": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
+    "watch:lib": "bun run ./build.ts --watch",
+    "clean": "rm -rf ./dist",
+    "test:all": "bun test",
+    "lint-staged": "lint-staged"
+  },
+  "lint-staged": {
+    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+      "biome check --write --no-errors-on-unmatched"
+    ],
+    "*": [
+      "biome check --no-errors-on-unmatched --files-ignore-unknown=true"
+    ]
+  },
+  "dependencies": {
+    "zod": "^4.0.17"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "tsc-alias": "^1.8.16"
+  },
+  "peerDependencies": {
+    "typescript": "^5",
+    "zod": "^4.0.17"
+  }
+}

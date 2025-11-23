@@ -1,4 +1,4 @@
-import type { AutoSaveStorage } from "@/actions/plugins/auto-save-plugin";
+import type { AutoSaveStorage } from '@/actions/plugins/auto-save.plugin';
 
 /**
  * Mock storage implementation for testing auto-save functionality
@@ -42,7 +42,7 @@ export class MockAutoSaveStorage implements AutoSaveStorage {
 /**
  * Creates a failing storage implementation for error testing
  */
-export const createFailingStorage = (errorMessage: string = "Storage failed"): AutoSaveStorage => {
+export const createFailingStorage = (errorMessage: string = 'Storage failed'): AutoSaveStorage => {
 	return {
 		save: async () => {
 			throw new Error(errorMessage);
@@ -59,19 +59,25 @@ export const createPartiallyFailingStorage = (
 	failOnSave = false,
 	failOnLoad = false,
 	failOnRemove = false,
-	errorMessage = "Operation failed"
+	errorMessage = 'Operation failed'
 ): AutoSaveStorage => {
 	const mockStorage = new MockAutoSaveStorage();
 
 	return {
-		save: failOnSave 
-			? async () => { throw new Error(errorMessage); }
+		save: failOnSave
+			? async () => {
+					throw new Error(errorMessage);
+			  }
 			: mockStorage.save.bind(mockStorage),
-		load: failOnLoad 
-			? async () => { throw new Error(errorMessage); }
+		load: failOnLoad
+			? async () => {
+					throw new Error(errorMessage);
+			  }
 			: mockStorage.load.bind(mockStorage),
-		remove: failOnRemove 
-			? async () => { throw new Error(errorMessage); }
+		remove: failOnRemove
+			? async () => {
+					throw new Error(errorMessage);
+			  }
 			: mockStorage.remove.bind(mockStorage),
 	};
 };

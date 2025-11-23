@@ -56,9 +56,9 @@ The immutable runtime engine created by the builder. Provides methods for:
 - Creating type-safe form instances
 
 ```typescript
-const element = engine.getElement("text");
+const element = engine.getElement('text');
 const allElements = engine.getAllElements();
-const hasEmail = engine.hasElement("email");
+const hasEmail = engine.hasElement('email');
 
 const summary = engine.getSummary();
 // {
@@ -188,7 +188,7 @@ import type { BuilderActionRegistration } from "@schema-engine/forms
 
 const SubmitActionConfigSchema = z.object({
 	id: z.string(),
-	type: z.literal("submit"),
+	$type: z.literal("submit"),
 	endpoint: z.string(),
 	method: z.enum(["POST", "PUT", "PATCH"]),
 	successMessage: z.string().optional(),
@@ -272,7 +272,7 @@ metadata: {
 // Override in form config
 {
   id: 'custom-action',
-  type: 'submit',
+  $type: 'submit',
   triggers: ['form_change']
 }
 ```
@@ -280,12 +280,12 @@ metadata: {
 The `ActionExecutor` handles sequential execution with comprehensive lifecycle management:
 
 ```typescript
-import { ActionExecutor } from "@schema-engine/formsctions";
+import { ActionExecutor } from '@schema-engine/formsctions';
 
 const executor = new ActionExecutor(engine);
 
-await executor.executeTrigger(formConfig.actions, "form_submit", {
-	formId: "contact-form",
+await executor.executeTrigger(formConfig.actions, 'form_submit', {
+	formId: 'contact-form',
 	form: formInstance,
 	currentStep: 0,
 });
@@ -296,27 +296,27 @@ await executor.executeTrigger(formConfig.actions, "form_submit", {
 The validation system provides 15+ built-in rules with support for custom validation:
 
 ```typescript
-import { ValidationPresets } from "@schema-engine/formschemas/validation";
+import { ValidationPresets } from '@schema-engine/formschemas/validation';
 
 const emailRules = [
-	ValidationPresets.string.required("Email is required"),
-	ValidationPresets.string.email("Invalid email address"),
-	ValidationPresets.string.maxLength(100, "Email too long"),
+	ValidationPresets.string.required('Email is required'),
+	ValidationPresets.string.email('Invalid email address'),
+	ValidationPresets.string.maxLength(100, 'Email too long'),
 ];
 
 const passwordRules = [
-	ValidationPresets.string.required("Password is required"),
-	ValidationPresets.string.minLength(8, "At least 8 characters"),
+	ValidationPresets.string.required('Password is required'),
+	ValidationPresets.string.minLength(8, 'At least 8 characters'),
 	ValidationPresets.string.pattern(
-		"^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)",
-		"Must contain uppercase, lowercase, and number"
+		'^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)',
+		'Must contain uppercase, lowercase, and number'
 	),
 ];
 
 const ageRules = [
-	ValidationPresets.number.required("Age is required"),
-	ValidationPresets.number.min(18, "Must be 18 or older"),
-	ValidationPresets.number.max(120, "Invalid age"),
+	ValidationPresets.number.required('Age is required'),
+	ValidationPresets.number.min(18, 'Must be 18 or older'),
+	ValidationPresets.number.max(120, 'Invalid age'),
 ];
 ```
 
@@ -359,13 +359,13 @@ The engine provides comprehensive JSON Schema generation for validation, storage
 ```typescript
 // 1. Generate schema for individual components (documentation)
 const collection = engine.generateJSONSchemaCollection({
-	target: "draft-2020-12",
+	target: 'draft-2020-12',
 });
 // Returns: { schemas: { 'element:text': {...}, 'element:email': {...}, ... } }
 
 // 2. Generate schema for form configuration (validation & storage)
 const configSchema = engine.generateFormConfigSchema({
-	target: "draft-2020-12",
+	target: 'draft-2020-12',
 });
 // Returns: Complete JSON Schema for form config objects
 
@@ -400,13 +400,13 @@ const result = zodSchema.safeParse(formConfig);
 // Example: Store schema in database
 const schema = engine.generateFormConfigSchema();
 await db.schemas.insert({
-	version: "1.0.0",
+	version: '1.0.0',
 	schema,
 	createdAt: new Date(),
 });
 
 // Example: Validate with Ajv
-import Ajv from "ajv";
+import Ajv from 'ajv';
 const ajv = new Ajv();
 const validate = ajv.compile(schema);
 const isValid = validate(userFormConfig);
@@ -530,13 +530,13 @@ const engine = new FormEngineBuilder()
 Inject custom registry implementations for specialized behavior:
 
 ```typescript
-import { ElementRegistry } from "@schema-engine/formsegistries";
+import { ElementRegistry } from '@schema-engine/formsegistries';
 
 class CustomElementRegistry extends ElementRegistry {
 	register(registration) {
 		// Custom validation or transformation
 		if (!this.validateCustomRules(registration)) {
-			throw new Error("Invalid registration");
+			throw new Error('Invalid registration');
 		}
 		super.register(registration);
 	}
@@ -593,12 +593,12 @@ type MyEngineElements = typeof builder extends FormEngineBuilder<infer E, any, a
 Manage GDPR consent with localStorage persistence:
 
 ```typescript
-import { GDPRConsent } from "@schema-engine/formsools";
+import { GDPRConsent } from '@schema-engine/formsools';
 
 const consent = new GDPRConsent();
 
 // Check consent
-if (consent.hasConsent("analytics")) {
+if (consent.hasConsent('analytics')) {
 	// Track analytics
 }
 
@@ -618,13 +618,13 @@ const marketingEnabled = consent.hasMarketingConsent();
 Wrapper for Google Tag Manager integration:
 
 ```typescript
-import { GTMTracker } from "@schema-engine/formsools";
+import { GTMTracker } from '@schema-engine/formsools';
 
 const tracker = new GTMTracker();
 
-tracker.track("form_submit", {
-	formId: "contact-form",
-	category: "engagement",
+tracker.track('form_submit', {
+	formId: 'contact-form',
+	category: 'engagement',
 	value: 1,
 });
 ```

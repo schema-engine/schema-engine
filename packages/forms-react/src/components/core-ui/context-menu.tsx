@@ -162,7 +162,7 @@ function ContextMenuShortcut({ className, ...props }: ComponentProps<'span'>) {
 }
 
 function ContextMenuSub({ ...props }: ComponentProps<typeof BaseContextMenu.SubmenuRoot>) {
-	return <BaseContextMenu.SubmenuRoot delay={0} closeDelay={0} data-slot="context-menu-sub" {...props} />;
+	return <BaseContextMenu.SubmenuRoot data-slot="context-menu-sub" {...props} />;
 }
 
 function ContextMenuSubTrigger({

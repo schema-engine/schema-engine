@@ -30,6 +30,7 @@ export function FormCheckbox({
 						onFocus={propsOnFocus}
 						autoFocus={config.autoFocus}
 						data-state={config.indeterminate ? 'indeterminate' : undefined}
+						aria-label={config.label}
 					/>
 					{config.label && (
 						<FieldLabel htmlFor={config.id} error={error}>

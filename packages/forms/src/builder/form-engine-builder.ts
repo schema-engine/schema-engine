@@ -7,10 +7,11 @@ import type {
 } from '@/types';
 import type { FormEngineSchemaMetadata } from '@/engine/form-engine';
 import { logger } from '@/lib/logger';
-import { ElementRegistry, LayoutRegistry, StepperRegistry, ActionRegistry } from '@/registries';
+import { ElementRegistry, LayoutRegistry, StepperRegistry } from '@/registries';
+import { ActionRegistry } from '@schema-engine/actions';
 import { FormConfigBuilder } from './form-config-builder';
 import { z } from 'zod';
-import type { ExtractSchemaType, ExtractTypeId, Merge } from './type-utils';
+import type { ExtractSchemaType, ExtractTypeId, Merge } from './types.utils';
 
 /**
  * FormEngineBuilder - Builder pattern for configuring the form engine.
@@ -270,7 +271,7 @@ export class FormEngineBuilder<
 		const elementSchemas = this.elementRegistry.getAll().map((el) => el.schema);
 		const layoutSchemas = this.layoutRegistry.getAll().map((layout) => layout.schema);
 		const stepperSchemas = this.stepperRegistry.getAll().map((stepper) => stepper.schema);
-		const actionSchemas = this.actionRegistry.getAll().map((action) => action.schema);
+		const actionSchemas = this.actionRegistry.getAll().map((action: any) => action.schema);
 
 		const elementsUnion = this.createUnionSchema(elementSchemas);
 		const layoutsUnion = this.createUnionSchema(layoutSchemas);

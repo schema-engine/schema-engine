@@ -1,9 +1,12 @@
 import { FormProvider as RHFFormProvider, useForm, useWatch } from 'react-hook-form';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { FormActionConfig } from '@schema-engine/forms/schemas';
-import type { ActionExecutionContext, ActionExecutionResult, FormActionTrigger } from '@schema-engine/forms';
+import type { FormActionTrigger, BuilderActionExecutionContext } from '@schema-engine/forms';
+import type { ActionExecutionResult } from '@schema-engine/actions';
+
+type BaseFormContext = Omit<BuilderActionExecutionContext, 'config' | 'trigger'>;
 import type { FormProviderProps } from '../types';
-import { useActionExecutor } from '@/hooks/use-action-executor';
+import { useActionDispatcher } from '@/hooks/use-action-dispatcher';
 import { useFormEngine } from '@/hooks/use-form-context';
 import { useFormValidationResolver } from './hooks/use-form-validation-resolver';
 import { FormInstanceContext, type FormInstanceContextValue } from '@/components/provider';
@@ -22,7 +25,7 @@ export function FormProvider({
 	onValidationError,
 }: FormProviderProps) {
 	const { engine } = useFormEngine();
-	const actionExecutor = useActionExecutor(engine);
+	const actionExecutor = useActionDispatcher(engine);
 
 	const allFields = useMemo(() => {
 		return config.steps.flatMap((step) => step.elements || []);
@@ -51,7 +54,7 @@ export function FormProvider({
 		reValidateMode: config.reValidateMode || 'onChange',
 	});
 
-	const buildActionContext = useCallback((): ActionExecutionContext => {
+	const buildActionContext = useCallback((): BaseFormContext => {
 		const formData = form.getValues();
 		const formState = form.formState;
 
@@ -76,14 +79,14 @@ export function FormProvider({
 			trigger: FormActionTrigger,
 			extraMetadata?: Record<string, unknown>,
 		): Promise<ActionExecutionResult[]> => {
-			return actionExecutor.dispatchTrigger(config.actions || [], trigger, buildActionContext(), extraMetadata);
+			return actionExecutor.dispatch(config.actions || [], trigger, buildActionContext(), extraMetadata);
 		},
 		[config.actions, buildActionContext, actionExecutor],
 	);
 
 	const dispatchTriggerSync = useCallback(
 		(trigger: FormActionTrigger, extraMetadata?: Record<string, unknown>) => {
-			actionExecutor.dispatchTriggerSync(config.actions || [], trigger, buildActionContext(), extraMetadata);
+			actionExecutor.dispatchSync(config.actions || [], trigger, buildActionContext(), extraMetadata);
 		},
 		[config.actions, buildActionContext, actionExecutor],
 	);
@@ -118,6 +121,7 @@ export function FormProvider({
 
 					if (result.success) {
 						onAction?.(action, form.getValues());
+						console.log('Action executed successfully:', action);
 					} else {
 						onValidationError?.({ _actionError: result.error || 'Unknown action error' });
 					}
@@ -182,11 +186,18 @@ export function FormProvider({
 						if (onValidationError) {
 							onValidationError({ _actionError: failedAction.error || 'Action execution failed' });
 						}
+						await dispatchTrigger('form_submit_error');
+						await dispatchTrigger('form_submit_complete');
 						return;
 					}
+
+					await dispatchTrigger('form_submit_success');
+					await dispatchTrigger('form_submit_complete');
 				} catch (error) {
 					console.error('Form action execution failed:', error);
 					onValidationError?.({ _actionError: error instanceof Error ? error.message : 'Unknown error' });
+					await dispatchTrigger('form_submit_error');
+					await dispatchTrigger('form_submit_complete');
 					return;
 				}
 			}

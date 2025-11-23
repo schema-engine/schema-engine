@@ -15,14 +15,14 @@
  * ```
  */
 
-import { submitPlugin } from './submit-plugin';
-import type { SubmitAction } from './submit-plugin';
+import { formSubmitPlugin } from './form-submit.plugin';
+import type { FormSubmitAction } from './form-submit.plugin';
 import type { BuilderActionRegistration } from '@/types';
 
 declare global {
 	namespace FormEngine {
 		interface ActionRegistry {
-			submit: SubmitAction;
+			submit: FormSubmitAction;
 		}
 	}
 }
@@ -31,11 +31,14 @@ declare global {
  * Default Submit Action Registration
  * Handles basic form submission with console logging
  */
-export const SubmitActionRegistration: BuilderActionRegistration<'submit', SubmitAction> = submitPlugin({
+export const SubmitActionRegistration: BuilderActionRegistration<'submit', FormSubmitAction> = formSubmitPlugin({
 	onSuccess: (data, context) => {
 		console.log('[Submit] Form submitted successfully:', { formId: context.formId, data });
 	},
 	onError: (error, context) => {
-		console.error('[Submit] Form submission failed:', { formId: context.formId, error: error.message });
+		console.error('[Submit] Form submission failed:', {
+			formId: context.formId,
+			error: error.message,
+		});
 	},
 });

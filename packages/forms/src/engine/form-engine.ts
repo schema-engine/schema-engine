@@ -347,7 +347,8 @@ export class FormEngine<
 	 */
 	extend(): import('@/builder/form-engine-builder').FormEngineBuilder<_TElements, _TLayouts, _TSteppers, _TActions> {
 		const { FormEngineBuilder } = require('@/builder/form-engine-builder');
-		const { ElementRegistry, LayoutRegistry, StepperRegistry, ActionRegistry } = require('@/registries');
+		const { ElementRegistry, LayoutRegistry, StepperRegistry } = require('@/registries');
+		const { ActionRegistry } = require('@schema-engine/actions');
 
 		const elementRegistry = new ElementRegistry();
 		const layoutRegistry = new LayoutRegistry();

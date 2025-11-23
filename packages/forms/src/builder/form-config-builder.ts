@@ -1,5 +1,6 @@
 import { logger } from '@/lib/logger';
-import type { ElementRegistry, LayoutRegistry, StepperRegistry, ActionRegistry } from '@/registries';
+import type { ElementRegistry, LayoutRegistry, StepperRegistry } from '@/registries';
+import type { ActionRegistry } from '@schema-engine/actions';
 import type { FormConfig } from '@/schemas/form-config';
 import type { PartialFormConfig, BuilderFormStep } from './types';
 import { z } from 'zod';
@@ -273,9 +274,9 @@ export class FormConfigBuilder<
 			throw new Error('Must call addStep() before adding step actions');
 		}
 
-		const registration = this.actionRegistry.get(type);
+		const registration = this.actionRegistry.getAction(type);
 
-		if (!registration) {
+		if (!registration?.schema) {
 			throw new Error(`Action type "${type}" is not registered`);
 		}
 
@@ -309,9 +310,9 @@ export class FormConfigBuilder<
 	 * @throws Error if action type is not registered or config is invalid
 	 */
 	addFormAction<K extends keyof TActions & string>(type: K, config: Omit<TActions[K], '$type'>): this {
-		const registration = this.actionRegistry.get(type);
+		const registration = this.actionRegistry.getAction(type);
 
-		if (!registration) {
+		if (!registration || !registration.schema) {
 			throw new Error(`Action type "${type}" is not registered`);
 		}
 

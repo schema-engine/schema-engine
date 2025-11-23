@@ -5,7 +5,7 @@ import { createForm, ValidationPresets, createExtendableBuilder } from '@/storie
 import { z } from 'zod';
 import type {
 	BuilderActionExecutionContext,
-	BuilderActionExecutionResult,
+	ActionExecutionResult,
 	BuilderActionRegistration,
 } from '@schema-engine/forms/types';
 import { FormActionTriggerSchema } from '@schema-engine/forms';
@@ -255,9 +255,7 @@ function confettiPlugin(): BuilderActionRegistration<'confetti', ConfettiAction>
 			icon: 'sparkles',
 			defaultTriggers: ['form_submit'],
 		},
-		execute: async (
-			context: BuilderActionExecutionContext<ConfettiAction>,
-		): Promise<BuilderActionExecutionResult> => {
+		execute: async (context: BuilderActionExecutionContext<ConfettiAction>): Promise<ActionExecutionResult> => {
 			const action = context.config;
 
 			try {

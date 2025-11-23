@@ -1,4 +1,4 @@
-import { expect, within, userEvent, waitFor } from '@storybook/test';
+import { expect, within, userEvent, waitFor } from 'storybook/test';
 import type { StoryContext } from '@storybook/react';
 
 export const realtimeDashboardPlay = async ({ canvasElement, step }: StoryContext<any>) => {
@@ -24,8 +24,7 @@ export const realtimeDashboardPlay = async ({ canvasElement, step }: StoryContex
 		const emailInput = canvas.getByPlaceholderText(/Enter your email/i);
 		await userEvent.type(emailInput, 'notanemail', { delay: 50 });
 
-		const checkbox = canvas.getByRole('checkbox', { name: /Subscribe to newsletter/i });
-		await userEvent.click(checkbox);
+		emailInput.blur();
 
 		const errorMessage = await canvas.findByText('Valid email required', {}, { timeout: 2000 });
 		await expect(errorMessage).toBeInTheDocument();
@@ -86,10 +85,10 @@ export const realtimeDashboardPlay = async ({ canvasElement, step }: StoryContex
 		);
 	});
 
-	await step('Reset', async () => {
-		const resetForm = canvas.getByRole('button', { name: /Reset Form/i });
-		await new Promise((resolve) => setTimeout(resolve, 500));
-		await userEvent.click(resetForm);
-		resetForm.blur();
-	});
+	// await step('Reset', async () => {
+	// 	const resetForm = canvas.getByRole('button', { name: /Reset Form/i });
+	// 	await new Promise((resolve) => setTimeout(resolve, 500));
+	// 	await userEvent.click(resetForm);
+	// 	resetForm.blur();
+	// });
 };

@@ -15,8 +15,8 @@
  * ```
  */
 
-import { notificationPlugin } from './notification-plugin';
-import type { NotificationAction } from './notification-plugin';
+import { notificationPlugin } from './notification.plugin';
+import type { NotificationAction } from './notification.plugin';
 import type { BuilderActionRegistration } from '@/types';
 
 declare global {

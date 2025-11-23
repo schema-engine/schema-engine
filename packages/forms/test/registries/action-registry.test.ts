@@ -1,12 +1,12 @@
 import { describe, test, expect, beforeEach } from 'bun:test';
-import { ActionRegistry } from '@/registries';
-import type { BuilderActionRegistration } from '@/types';
+import { ActionRegistry } from '@schema-engine/actions';
+import type { BuilderActionRegistration, BuilderActionExecutionContext } from '@/types';
 import { z } from 'zod';
 
 describe('ActionRegistry', () => {
 	let registry: ActionRegistry;
 
-	const mockAction: BuilderActionRegistration<{ message: string }> = {
+	const mockAction: BuilderActionRegistration<'log', { message: string }> = {
 		$type: 'log',
 		schema: z.object({ message: z.string() }),
 		metadata: {
@@ -14,13 +14,13 @@ describe('ActionRegistry', () => {
 			description: 'Logs a message',
 			defaultTriggers: ['form_submit'],
 		},
-		execute: async (context) => {
-			console.log(context.config.message);
+		handler: async (executionContext, config) => {
+			console.log(config.message);
 			return { success: true };
 		},
 	};
 
-	const anotherAction: BuilderActionRegistration<{ url: string }> = {
+	const anotherAction: BuilderActionRegistration<'submit', { url: string }> = {
 		$type: 'submit',
 		schema: z.object({ url: z.string() }),
 		metadata: {
@@ -28,7 +28,7 @@ describe('ActionRegistry', () => {
 			description: 'Submits form data',
 			defaultTriggers: ['form_submit'],
 		},
-		execute: async (context) => {
+		handler: async () => {
 			return { success: true };
 		},
 	};
@@ -42,7 +42,10 @@ describe('ActionRegistry', () => {
 			registry.register(mockAction);
 
 			expect(registry.has('log')).toBe(true);
-			expect(registry.get('log')).toEqual(mockAction);
+			const retrieved = registry.getAction('log');
+			expect(retrieved?.$type).toBe('log');
+			expect(retrieved?.metadata.name).toBe('Log Action');
+			expect(retrieved?.metadata.description).toBe('Logs a message');
 		});
 
 		test('should allow registering multiple actions', () => {
@@ -55,7 +58,7 @@ describe('ActionRegistry', () => {
 		});
 
 		test('should override when registering duplicate id', () => {
-			const updated: BuilderActionRegistration<{ message: string }> = {
+			const updated: BuilderActionRegistration<'log', { message: string }> = {
 				...mockAction,
 				metadata: {
 					...mockAction.metadata,
@@ -67,7 +70,7 @@ describe('ActionRegistry', () => {
 			registry.register(updated);
 
 			expect(registry.size).toBe(1);
-			expect(registry.get('log')?.metadata.name).toBe('Updated Log Action');
+			expect(registry.getAction('log')?.metadata.name).toBe('Updated Log Action');
 		});
 	});
 
@@ -82,16 +85,19 @@ describe('ActionRegistry', () => {
 		});
 	});
 
-	describe('get', () => {
+	describe('getAction', () => {
 		test('should retrieve registered action', () => {
 			registry.register(mockAction);
-			const retrieved = registry.get('log');
+			const retrieved = registry.getAction('log');
 
-			expect(retrieved).toEqual(mockAction);
+			expect(retrieved?.$type).toBe('log');
+			expect(retrieved?.metadata.name).toBe('Log Action');
+			expect(retrieved?.metadata.description).toBe('Logs a message');
+			expect(retrieved?.metadata.defaultTriggers).toEqual(['form_submit']);
 		});
 
 		test('should return undefined for unregistered action', () => {
-			const retrieved = registry.get('non-existent');
+			const retrieved = registry.getAction('non-existent');
 			expect(retrieved).toBeUndefined();
 		});
 	});
@@ -107,21 +113,22 @@ describe('ActionRegistry', () => {
 
 			const all = registry.getAll();
 			expect(all).toHaveLength(2);
-			expect(all).toContain(mockAction);
-			expect(all).toContain(anotherAction);
+			expect(all.map((a) => a.$type).sort()).toEqual(['log', 'submit']);
+			expect(all.find((a) => a.$type === 'log')?.metadata.name).toBe('Log Action');
+			expect(all.find((a) => a.$type === 'submit')?.metadata.name).toBe('Submit Action');
 		});
 	});
 
-	describe('getAllKeys', () => {
+	describe('getActionTypes', () => {
 		test('should return empty array when no actions registered', () => {
-			expect(registry.getAllKeys()).toEqual([]);
+			expect(registry.getActionTypes()).toEqual([]);
 		});
 
 		test('should return all registered ids', () => {
 			registry.register(mockAction);
 			registry.register(anotherAction);
 
-			const keys = registry.getAllKeys();
+			const keys = registry.getActionTypes();
 			expect(keys).toHaveLength(2);
 			expect(keys).toContain('log');
 			expect(keys).toContain('submit');
@@ -142,14 +149,14 @@ describe('ActionRegistry', () => {
 		});
 
 		test('should return undefined when action has no default triggers', () => {
-			const actionWithoutTriggers: BuilderActionRegistration = {
+			const actionWithoutTriggers: BuilderActionRegistration<'custom', Record<string, never>> = {
 				$type: 'custom',
 				schema: z.object({}),
 				metadata: {
 					name: 'Custom Action',
 					description: 'A custom action',
 				},
-				execute: async () => ({ success: true }),
+				handler: async () => ({ success: true }),
 			};
 
 			registry.register(actionWithoutTriggers);
@@ -184,12 +191,6 @@ describe('ActionRegistry', () => {
 			expect(registry.size).toBe(0);
 			expect(registry.has('log')).toBe(false);
 			expect(registry.has('submit')).toBe(false);
-		});
-	});
-
-	describe('registryName', () => {
-		test('should return correct registry name', () => {
-			expect(registry.registryName).toBe('action');
 		});
 	});
 });

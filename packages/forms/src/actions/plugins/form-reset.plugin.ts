@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import type { BuilderActionExecutionContext, BuilderActionExecutionResult, BuilderActionRegistration } from '@/types';
+import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
 import { FormActionTriggerSchema } from '../triggers';
 import { GDPRConsent } from '../../tools/gdpr-consent';
 
 /**
  * Reset Plugin Configuration
  */
-export interface ResetPluginConfig {
+export interface FormResetPluginConfig {
 	confirm?: (message: string) => boolean | Promise<boolean>;
 	clearDraft?: (formId: string) => void;
 	resetForm?: (context: BuilderActionExecutionContext<any>, resetToDefaults: boolean) => void;
@@ -28,7 +28,7 @@ export interface ResetPluginConfig {
  * });
  * ```
  */
-export const ResetActionSchema = z.object({
+export const FormResetActionSchema = z.object({
 	id: z.string().min(1, 'Action ID cannot be empty'),
 	$type: z.literal('reset'),
 	description: z.string().optional(),
@@ -39,7 +39,7 @@ export const ResetActionSchema = z.object({
 	resetToDefaults: z.boolean().default(true),
 });
 
-export type ResetAction = z.infer<typeof ResetActionSchema>;
+export type FormResetAction = z.infer<typeof FormResetActionSchema>;
 
 /**
  * Default form reset implementation using React Hook Form methods
@@ -94,7 +94,9 @@ function defaultResetForm(context: BuilderActionExecutionContext<any>, _resetToD
  * });
  * ```
  */
-export function resetPlugin(config: ResetPluginConfig = {}): BuilderActionRegistration<'reset', ResetAction> {
+export function formResetPlugin(
+	config: FormResetPluginConfig = {},
+): BuilderActionRegistration<'reset', FormResetAction> {
 	const {
 		confirm = (message: string) => window.confirm(message),
 		clearDraft = (formId: string) => GDPRConsent.hasConsent() && GDPRConsent.clearDraft(formId),
@@ -102,49 +104,45 @@ export function resetPlugin(config: ResetPluginConfig = {}): BuilderActionRegist
 		onReset = () => {},
 	} = config;
 
-	const handler = async (
-		context: BuilderActionExecutionContext<ResetAction>,
-	): Promise<BuilderActionExecutionResult> => {
-		const action = context.config;
-		try {
-			if (action.confirmMessage) {
-				const confirmed = await confirm(action.confirmMessage);
-				if (!confirmed) {
-					return {
-						success: false,
-						error: 'Reset cancelled by user',
-						shouldContinue: true,
-					};
-				}
-			}
-
-			clearDraft(context.formId);
-			resetForm(context, action.resetToDefaults);
-			onReset(context);
-
-			return {
-				success: true,
-				message: 'Form reset successfully',
-				shouldContinue: true,
-			};
-		} catch (error) {
-			return {
-				success: false,
-				error: error instanceof Error ? error.message : 'Reset failed',
-				shouldContinue: true,
-			};
-		}
-	};
-
 	return {
 		$type: 'reset',
-		schema: ResetActionSchema,
+		schema: FormResetActionSchema,
 		metadata: {
 			name: 'Reset Form',
 			description: 'Reset form to initial state or defaults',
 			icon: 'refresh',
 			defaultTriggers: ['form_submit_success'],
 		},
-		execute: handler,
+		execute: async (context: BuilderActionExecutionContext<FormResetAction>) => {
+			const action = context.config;
+			try {
+				if (action.confirmMessage) {
+					const confirmed = await confirm(action.confirmMessage);
+					if (!confirmed) {
+						return {
+							success: false,
+							error: 'Reset cancelled by user',
+							shouldContinue: true,
+						};
+					}
+				}
+
+				clearDraft(context.formId);
+				resetForm(context, action.resetToDefaults);
+				onReset(context);
+
+				return {
+					success: true,
+					message: 'Form reset successfully',
+					shouldContinue: true,
+				};
+			} catch (error) {
+				return {
+					success: false,
+					error: error instanceof Error ? error.message : 'Reset failed',
+					shouldContinue: true,
+				};
+			}
+		},
 	};
 }

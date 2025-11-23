@@ -34,23 +34,3 @@ export interface ElementMetadata extends ComponentMetadata {
 	/** Element category for semantic grouping and validation */
 	category: ElementCategory;
 }
-
-/**
- * Action metadata for action registrations.
- *
- * Actions are separate from components and have their own metadata structure.
- */
-export interface ActionMetadata<ActionTriggers extends string[] = string[]> {
-	/** Human-readable display name */
-	name: string;
-	/** Detailed description of the action's purpose */
-	description?: string;
-	/** Icon identifier for UI display */
-	icon?: string;
-	/** Tags for filtering and searching */
-	tags?: string[];
-	/** Version of the action */
-	version?: string;
-	/** Default triggers for this action type */
-	defaultTriggers?: ActionTriggers;
-}

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { BuilderActionExecutionContext, BuilderActionExecutionResult, BuilderActionRegistration } from '@/types';
+import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
 import { FormActionTriggerSchema } from '../triggers';
 
 /**
@@ -114,9 +114,7 @@ export type NotificationAction = z.infer<typeof NotificationActionSchema>;
 export function notificationPlugin(
 	config: NotificationPluginConfig = {},
 ): BuilderActionRegistration<'show_notification', NotificationAction> {
-	const handler = async (
-		context: BuilderActionExecutionContext<NotificationAction>,
-	): Promise<BuilderActionExecutionResult> => {
+	const handler = async (context: BuilderActionExecutionContext<NotificationAction>) => {
 		const action = context.config;
 
 		try {

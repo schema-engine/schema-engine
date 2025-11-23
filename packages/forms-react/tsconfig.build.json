@@ -1,6 +1,11 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
+        "lib": [
+            "ESNext",
+            "DOM",
+            "DOM.Iterable"
+        ],
         "rootDir": "./src",
         "outDir": "./dist",
         "noEmit": false,
@@ -11,9 +16,12 @@
         "src"
     ],
     "exclude": [
+        "./test/**",
+        "./src/stories/**",
         "**/*.test.ts",
         "**/*.test.tsx",
         "**/*.stories.ts",
-        "**/*.stories.tsx"
+        "**/*.stories.tsx",
+        "**/*.play.ts"
     ]
 }

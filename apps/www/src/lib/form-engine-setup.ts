@@ -23,7 +23,7 @@ import { DefaultStepperRegistration } from '@schema-engine/forms-react/component
 import { MinimalistStepperRegistration } from '@schema-engine/forms-react/components/steppers/minimalist-stepper.registration';
 import { DebuggerStepperRegistration } from '@schema-engine/forms-react/components/steppers/debugger-stepper.registration';
 
-import { submitPlugin, notificationPlugin, resetPlugin, autoSavePlugin } from '@schema-engine/forms/actions';
+import { formSubmitPlugin, notificationPlugin, formResetPlugin, autoSavePlugin } from '@schema-engine/forms/actions';
 
 /**
  * Global form engine instance for the www app
@@ -46,7 +46,7 @@ export const formEngine = createReactFormEngine()
 	.addStepper(MinimalistStepperRegistration)
 	.addStepper(DebuggerStepperRegistration)
 	.addAction(
-		submitPlugin({
+		formSubmitPlugin({
 			onSuccess: (data, context) => {
 				console.log('[submit] success:', { formId: context.formId, data });
 			},
@@ -64,7 +64,7 @@ export const formEngine = createReactFormEngine()
 		}),
 	)
 	.addAction(
-		resetPlugin({
+		formResetPlugin({
 			onReset: (context) => {
 				console.log('[reset] form reset:', { formId: context.formId });
 			},

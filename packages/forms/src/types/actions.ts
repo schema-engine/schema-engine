@@ -1,5 +1,4 @@
 import type { FormActionTrigger } from '../actions/triggers';
-import type { ActionExecutionResult } from '../actions/types';
 
 /**
  * Action triggers for the builder pattern - events that can trigger action execution.
@@ -47,18 +46,10 @@ export interface BuilderActionExecutionContext<TConfig = unknown> {
 		reset: () => void;
 		/** Set field value */
 		setValue: (name: string, value: unknown) => void;
-		/** Get field value */
-		getValue: (name: string) => unknown;
-		/** Trigger validation */
-		validate: () => Promise<boolean>;
+		/** Get field value (optional - use getValues if not available) */
+		getValue?: (name: string) => unknown;
+		/** Trigger validation (optional - use trigger if not available) */
+		validate?: () => Promise<boolean>;
 		[key: string]: unknown;
 	};
 }
-
-/**
- * Action execution result for the builder pattern.
- *
- * Provides standardized response format for action execution.
- * This is an alias for ActionExecutionResult from ./actions/types for backward compatibility.
- */
-export type BuilderActionExecutionResult = ActionExecutionResult;

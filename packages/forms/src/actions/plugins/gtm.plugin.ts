@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { BuilderActionExecutionContext, BuilderActionExecutionResult, BuilderActionRegistration } from '@/types';
+import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
 import { FormActionTriggerSchema } from '../triggers';
 import { GTMTracker } from '../../tools/gtm-tracker';
 
@@ -193,59 +193,6 @@ const defaultTracker: GTMTrackerInterface = {
 export function gtmPlugin(config: GTMPluginConfig = {}): BuilderActionRegistration<'gtm_event', GTMEventAction> {
 	const tracker = config.tracker || defaultTracker;
 
-	const handler = async (
-		context: BuilderActionExecutionContext<GTMEventAction>,
-	): Promise<BuilderActionExecutionResult> => {
-		const action = context.config;
-		try {
-			const eventData: Record<string, any> = {
-				...action.eventData,
-				form_id: context.formId,
-				current_step: context.currentStep,
-				total_steps: context.totalSteps,
-				is_valid: context.isValid,
-				...context.metadata,
-			};
-
-			// Handle form data inclusion
-			if (action.includeFormData === true) {
-				eventData.form_data = context.formData;
-			} else if (Array.isArray(action.includeFormData)) {
-				const selectedData: Record<string, any> = {};
-				for (const fieldName of action.includeFormData) {
-					if (fieldName in context.formData) {
-						selectedData[fieldName] = context.formData[fieldName];
-					}
-				}
-				eventData.form_data = selectedData;
-			}
-
-			await tracker.push(action.eventName, eventData);
-
-			if (config.onPush) {
-				await config.onPush(action.eventName, eventData, context);
-			}
-
-			return {
-				success: true,
-				message: `GTM event '${action.eventName}' pushed successfully`,
-				shouldContinue: true,
-			};
-		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : 'GTM event push failed';
-
-			if (config.onError) {
-				await config.onError(errorMessage, context);
-			}
-
-			return {
-				success: false,
-				error: errorMessage,
-				shouldContinue: true,
-			};
-		}
-	};
-
 	return {
 		$type: 'gtm_event',
 		schema: GTMEventActionSchema,
@@ -255,6 +202,54 @@ export function gtmPlugin(config: GTMPluginConfig = {}): BuilderActionRegistrati
 			icon: 'analytics',
 			defaultTriggers: ['form_submit', 'form_submit_success'],
 		},
-		execute: handler,
+		execute: async (context: BuilderActionExecutionContext<GTMEventAction>) => {
+			const action = context.config;
+			try {
+				const eventData: Record<string, any> = {
+					...action.eventData,
+					form_id: context.formId,
+					current_step: context.currentStep,
+					total_steps: context.totalSteps,
+					is_valid: context.isValid,
+					...context.metadata,
+				};
+
+				if (action.includeFormData === true) {
+					eventData.form_data = context.formData;
+				} else if (Array.isArray(action.includeFormData)) {
+					const selectedData: Record<string, any> = {};
+					for (const fieldName of action.includeFormData) {
+						if (fieldName in context.formData) {
+							selectedData[fieldName] = context.formData[fieldName];
+						}
+					}
+					eventData.form_data = selectedData;
+				}
+
+				await tracker.push(action.eventName, eventData);
+
+				if (config.onPush) {
+					await config.onPush(action.eventName, eventData, context);
+				}
+
+				return {
+					success: true,
+					message: `GTM event '${action.eventName}' pushed successfully`,
+					shouldContinue: true,
+				};
+			} catch (error) {
+				const errorMessage = error instanceof Error ? error.message : 'GTM event push failed';
+
+				if (config.onError) {
+					await config.onError(errorMessage, context);
+				}
+
+				return {
+					success: false,
+					error: errorMessage,
+					shouldContinue: true,
+				};
+			}
+		},
 	};
 }

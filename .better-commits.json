@@ -66,6 +66,10 @@
                 "label": "www"
             },
             {
+                "value": "actions",
+                "label": "actions"
+            },
+            {
                 "value": "forms",
                 "label": "forms"
             },

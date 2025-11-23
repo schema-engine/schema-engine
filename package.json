@@ -19,7 +19,8 @@
     "typescript": "^5"
   },
   "scripts": {
-    "build:lib": "bun build:lib:forms && bun build:lib:forms-react",
+    "build:lib": "bun run build:lib:actions && bun run build:lib:forms && bun run build:lib:forms-react",
+    "build:lib:actions": "bun run --filter @schema-engine/actions build:lib",
     "build:lib:forms": "bun run --filter @schema-engine/forms build:lib",
     "build:lib:forms-react": "bun run --filter @schema-engine/forms-react build:lib",
     "build:react-storybook": "NODE_OPTIONS='--max-old-space-size=4096' bun run --filter @schema-engine/forms-react build-storybook",

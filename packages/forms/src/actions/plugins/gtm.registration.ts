@@ -15,8 +15,8 @@
  * ```
  */
 
-import { gtmPlugin } from './gtm-plugin';
-import type { GTMEventAction } from './gtm-plugin';
+import { gtmPlugin } from './gtm.plugin';
+import type { GTMEventAction } from './gtm.plugin';
 import type { BuilderActionRegistration } from '@/types';
 
 declare global {

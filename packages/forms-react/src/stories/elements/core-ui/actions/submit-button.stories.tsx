@@ -3,12 +3,8 @@ import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '@/stories/shared/story-wrapper';
 import { createForm, getEngine, ValidationPresets, createExtendableBuilder } from '@/stories/shared/form-builder.ui';
 import { z } from 'zod';
-import type {
-	BuilderActionExecutionContext,
-	BuilderActionExecutionResult,
-	BuilderActionRegistration,
-} from '@schema-engine/forms/types';
-import { FormActionTriggerSchema } from '@schema-engine/forms';
+import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@schema-engine/forms/types';
+import { FormActionTriggerSchema, type ActionExecutionResult } from '@schema-engine/forms';
 const baseUIEngine = getEngine();
 
 const meta = {
@@ -262,9 +258,7 @@ function confettiPlugin(): BuilderActionRegistration<'confetti', ConfettiAction>
 			icon: 'sparkles',
 			defaultTriggers: ['form_submit'],
 		},
-		execute: async (
-			context: BuilderActionExecutionContext<ConfettiAction>,
-		): Promise<BuilderActionExecutionResult> => {
+		execute: async (context: BuilderActionExecutionContext<ConfettiAction>): Promise<ActionExecutionResult> => {
 			const action = context.config;
 
 			try {

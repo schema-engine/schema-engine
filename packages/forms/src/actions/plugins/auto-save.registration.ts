@@ -15,8 +15,8 @@
  * ```
  */
 
-import { autoSavePlugin } from './auto-save-plugin';
-import type { AutoSaveAction } from './auto-save-plugin';
+import { autoSavePlugin } from './auto-save.plugin';
+import type { AutoSaveAction } from './auto-save.plugin';
 import type { BuilderActionRegistration } from '@/types';
 
 declare global {
