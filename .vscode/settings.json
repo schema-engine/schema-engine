@@ -1,0 +1,13 @@
+{
+	"oxc.enable": true,
+	"editor.defaultFormatter": "oxc.oxc-vscode",
+	"biome.requireConfiguration": true,
+	"oxc.requireConfig": false,
+	"oxc.typeAware": true,
+	"[typescript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[typescriptreact]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+}

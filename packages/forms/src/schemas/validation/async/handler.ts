@@ -177,22 +177,20 @@ function handleErrorWithCache(
  * Includes debouncing, dependency resolution, and performance optimizations.
  */
 export function createAsyncValidationHandler(rule: AsyncRule, formData?: Record<string, unknown>, fieldName?: string) {
-	const asyncRule = rule as AsyncRule;
-
 	return z.any().superRefine(async (value: unknown, ctx) => {
 		/** Skip validation for empty values to prevent unnecessary API calls */
 		if (value === '' || value === null || value === undefined) {
 			return;
 		}
 
-		const dependsOn = resolveDependencies(asyncRule.dependencies, formData);
+		const dependsOn = resolveDependencies(rule.dependencies, formData);
 
 		/**
 		 * Skip validation if any dependency field is empty.
 		 * This ensures all required context is available before making API calls.
 		 */
-		if (asyncRule.dependencies?.length) {
-			const hasEmptyDependencies = asyncRule.dependencies.some((dep) => {
+		if (rule.dependencies?.length) {
+			const hasEmptyDependencies = rule.dependencies.some((dep) => {
 				const depValue = formData?.[dep];
 				return depValue === '' || depValue === null || depValue === undefined;
 			});
@@ -203,11 +201,11 @@ export function createAsyncValidationHandler(rule: AsyncRule, formData?: Record<
 		}
 
 		const field = fieldName || 'unknown';
-		const payload = createValidationPayload(field, value, dependsOn, asyncRule.extraPayload);
+		const payload = createValidationPayload(field, value, dependsOn, rule.extraPayload);
 
 		/** Check cache first to avoid unnecessary delays for cached results */
-		if (!asyncRule.disableCache) {
-			const cachedResult = asyncValidationCache.get(asyncRule.url, payload) as CachedValidationResult | null;
+		if (!rule.disableCache) {
+			const cachedResult = asyncValidationCache.get(rule.url, payload) as CachedValidationResult | null;
 			if (cachedResult !== null) {
 				if (!cachedResult.valid && cachedResult.message) {
 					handleValidationFailure(ctx, cachedResult.message);
@@ -219,17 +217,17 @@ export function createAsyncValidationHandler(rule: AsyncRule, formData?: Record<
 		/**
 		 * Create unique debounce key excluding the changing value to ensure proper debouncing.
 		 */
-		const stablePayload = { field, dependsOn, ...(asyncRule.extraPayload || {}) };
-		const debounceKey = `async-validation:${asyncRule.url}:${JSON.stringify(stablePayload)}`;
+		const stablePayload = { field, dependsOn, ...rule.extraPayload };
+		const debounceKey = `async-validation:${rule.url}:${JSON.stringify(stablePayload)}`;
 
 		/** Core validation function that performs the HTTP request and processes the response */
 		const performValidation = async () => {
 			try {
-				const response = await fetch(asyncRule.url, {
-					method: asyncRule.method || 'POST',
+				const response = await fetch(rule.url, {
+					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
-						...asyncRule.headers,
+						...rule.headers,
 					},
 					body: JSON.stringify(payload),
 				});
@@ -239,25 +237,25 @@ export function createAsyncValidationHandler(rule: AsyncRule, formData?: Record<
 					handleErrorWithCache(
 						ctx,
 						asyncValidationCache,
-						asyncRule.url,
+						rule.url,
 						payload,
 						errorMessage,
 						CACHE_TTL.HTTP_ERROR,
-						asyncRule.disableCache,
+						rule.disableCache,
 					);
 					return;
 				}
 
 				const data = await response.json();
-				const isValid = isValidationSuccessful(data, asyncRule.expectedResponse);
+				const isValid = isValidationSuccessful(data, rule.expectedResponse);
 
 				const cacheResult: CachedValidationResult = {
 					valid: isValid,
-					message: isValid ? undefined : getErrorMessage(data, asyncRule.message),
+					message: isValid ? undefined : getErrorMessage(data, rule.message),
 				};
 
-				if (!asyncRule.disableCache) {
-					asyncValidationCache.set(asyncRule.url, payload, cacheResult, asyncRule.cacheTTL);
+				if (!rule.disableCache) {
+					asyncValidationCache.set(rule.url, payload, cacheResult, rule.cacheTTL);
 				}
 
 				if (!isValid && cacheResult.message) {
@@ -268,18 +266,18 @@ export function createAsyncValidationHandler(rule: AsyncRule, formData?: Record<
 				handleErrorWithCache(
 					ctx,
 					asyncValidationCache,
-					asyncRule.url,
+					rule.url,
 					payload,
 					errorMessage,
 					CACHE_TTL.NETWORK_ERROR,
-					asyncRule.disableCache,
+					rule.disableCache,
 				);
 			}
 		};
 
 		/** Execute validation with optional debouncing based on rule configuration */
-		if (asyncRule.debounce && asyncRule.debounce > 0) {
-			await debounce(performValidation, asyncRule.debounce, debounceKey);
+		if (rule.debounce && rule.debounce > 0) {
+			await debounce(performValidation, rule.debounce, debounceKey);
 		} else {
 			await performValidation();
 		}

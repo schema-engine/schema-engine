@@ -110,7 +110,8 @@
 			background-color: var(--default-stepper-primary);
 			color: var(--default-stepper-primary-foreground);
 			border-color: var(--default-stepper-primary);
-			box-shadow: 0 0 0 4px color-mix(in srgb, var(--default-stepper-primary) 15%, transparent),
+			box-shadow:
+				0 0 0 4px color-mix(in srgb, var(--default-stepper-primary) 15%, transparent),
 				0 8px 20px -4px color-mix(in srgb, var(--default-stepper-primary) 40%, transparent);
 		}
 
@@ -181,7 +182,8 @@
 			background-color: var(--default-stepper-primary);
 
 			&:hover:not(&--disabled) {
-				box-shadow: 0 0 0 3px color-mix(in srgb, var(--default-stepper-primary) 20%, transparent),
+				box-shadow:
+					0 0 0 3px color-mix(in srgb, var(--default-stepper-primary) 20%, transparent),
 					0 8px 16px -4px color-mix(in srgb, var(--default-stepper-primary) 40%, transparent);
 				transform: translateY(-1px);
 			}

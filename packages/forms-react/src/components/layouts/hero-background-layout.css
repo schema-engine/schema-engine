@@ -1,8 +1,8 @@
 :root {
 	--hero-background-overlay: rgba(0, 0, 0, 0.5);
-	--hero-background-text: theme("colors.white");
-	--hero-background-form-bg: theme("colors.white");
-	--hero-background-form-text: theme("colors.gray.800");
+	--hero-background-text: theme('colors.white');
+	--hero-background-form-bg: theme('colors.white');
+	--hero-background-form-text: theme('colors.gray.800');
 }
 
 .hero-background-layout {

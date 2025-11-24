@@ -33,13 +33,13 @@ bun add @schema-engine/forms-react @schema-engine/forms react-hook-form zod
 Import component registrations and build your engine:
 
 ```typescript
-import { createReactFormEngine } from "@schema-engine/forms-react";
+import { createReactFormEngine } from '@schema-engine/forms-react';
 import {
 	InputElementRegistration,
 	TextareaElementRegistration,
 	CardLayoutRegistration,
 	DefaultStepperRegistration,
-} from "@schema-engine/forms-react/registrations";
+} from '@schema-engine/forms-react/registrations';
 
 const formEngine = createReactFormEngine()
 	.addElement(InputElementRegistration)
@@ -54,55 +54,55 @@ const formEngine = createReactFormEngine()
 Create a JSON configuration:
 
 ```typescript
-import type { FormConfig } from "@schema-engine/forms";
+import type { FormConfig } from '@schema-engine/forms';
 
 const formConfig: FormConfig = {
-	id: "contact-form",
-	title: "Contact Us",
-	description: "Get in touch with our team",
+	id: 'contact-form',
+	title: 'Contact Us',
+	description: 'Get in touch with our team',
 	steps: [
 		{
-			id: "step-1",
-			title: "Your Information",
+			id: 'step-1',
+			title: 'Your Information',
 			elements: [
 				{
-					$type: "input",
-					id: "name",
-					name: "name",
-					label: "Full Name",
-					inputType: "text",
+					$type: 'input',
+					id: 'name',
+					name: 'name',
+					label: 'Full Name',
+					inputType: 'text',
 					validation: [
-						{ rule: "required", message: "Name is required" },
-						{ rule: "minLength", value: 2, message: "Name must be at least 2 characters" },
+						{ rule: 'required', message: 'Name is required' },
+						{ rule: 'minLength', value: 2, message: 'Name must be at least 2 characters' },
 					],
 				},
 				{
-					$type: "input",
-					id: "email",
-					name: "email",
-					label: "Email Address",
-					inputType: "email",
+					$type: 'input',
+					id: 'email',
+					name: 'email',
+					label: 'Email Address',
+					inputType: 'email',
 					validation: [
-						{ rule: "required", message: "Email is required" },
-						{ rule: "email", message: "Invalid email format" },
+						{ rule: 'required', message: 'Email is required' },
+						{ rule: 'email', message: 'Invalid email format' },
 					],
 				},
 				{
-					$type: "textarea",
-					id: "message",
-					name: "message",
-					label: "Message",
+					$type: 'textarea',
+					id: 'message',
+					name: 'message',
+					label: 'Message',
 					rows: 5,
 					validation: [
-						{ rule: "required", message: "Message is required" },
-						{ rule: "maxLength", value: 500, message: "Maximum 500 characters" },
+						{ rule: 'required', message: 'Message is required' },
+						{ rule: 'maxLength', value: 500, message: 'Maximum 500 characters' },
 					],
 				},
 			],
 			layout: {
-				id: "card",
-				padding: "md",
-				shadowSize: "md",
+				id: 'card',
+				padding: 'md',
+				shadowSize: 'md',
 			},
 		},
 	],
@@ -112,12 +112,12 @@ const formConfig: FormConfig = {
 ### 3. Render the Form
 
 ```tsx
-import { FormEngineProvider, FormRenderer } from "@schema-engine/forms-react";
-import { rhfAdapter } from "@schema-engine/forms-react/adapters/rhf";
+import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
+import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
 
 function ContactForm() {
 	const handleSubmit = (data) => {
-		console.log("Form submitted:", data);
+		console.log('Form submitted:', data);
 	};
 
 	return (
@@ -140,7 +140,7 @@ import {
 	InputElementRegistration,
 	CheckboxElementRegistration,
 	SelectElementRegistration,
-} from "@schema-engine/forms-react/registrations";
+} from '@schema-engine/forms-react/registrations';
 
 const engine = createReactFormEngine()
 	.addElement(InputElementRegistration)
@@ -163,8 +163,8 @@ Adapters bridge the gap between the form engine and form libraries. The package 
 **Using the RHF Adapter:**
 
 ```tsx
-import { FormEngineProvider } from "@schema-engine/forms-react";
-import { rhfAdapter } from "@schema-engine/forms-react/adapters/rhf";
+import { FormEngineProvider } from '@schema-engine/forms-react';
+import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
 
 <FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
 	{/* Your form */}
@@ -395,13 +395,13 @@ The package provides several hooks for form interactions:
 Access the form engine instance:
 
 ```tsx
-import { useFormEngine } from "@schema-engine/forms-react";
+import { useFormEngine } from '@schema-engine/forms-react';
 
 function MyComponent() {
 	const { engine } = useFormEngine();
 
 	// Access registered components
-	const inputElement = engine.getElement("input");
+	const inputElement = engine.getElement('input');
 	const allElements = engine.getAllElements();
 
 	return <div>{/* ... */}</div>;
@@ -413,7 +413,7 @@ function MyComponent() {
 Access the React Hook Form instance:
 
 ```tsx
-import { useFormInstance } from "@schema-engine/forms-react";
+import { useFormInstance } from '@schema-engine/forms-react';
 
 function MyComponent() {
 	const { getValues, setValue, trigger, formState } = useFormInstance();
@@ -429,11 +429,10 @@ function MyComponent() {
 Access form actions and navigation:
 
 ```tsx
-import { useFormInstanceActions } from "@schema-engine/forms-react";
+import { useFormInstanceActions } from '@schema-engine/forms-react';
 
 function MyComponent() {
-	const { executeAction, currentStep, totalSteps, goToNext, goToPrevious, goToStep } =
-		useFormInstanceActions();
+	const { executeAction, currentStep, totalSteps, goToNext, goToPrevious, goToStep } = useFormInstanceActions();
 
 	return (
 		<div>
@@ -452,7 +451,7 @@ function MyComponent() {
 Create custom field components:
 
 ```tsx
-import { useField } from "@schema-engine/forms-react";
+import { useField } from '@schema-engine/forms-react';
 
 function CustomField(config) {
 	const { value, error, onChange, onBlur, isRequired } = useField(config);
@@ -460,7 +459,7 @@ function CustomField(config) {
 	return (
 		<div>
 			<input
-				value={value || ""}
+				value={value || ''}
 				onChange={(e) => onChange(e.target.value)}
 				onBlur={onBlur}
 				required={isRequired}
@@ -476,7 +475,7 @@ function CustomField(config) {
 Execute form actions manually:
 
 ```tsx
-import { useActionExecutor } from "@schema-engine/forms-react";
+import { useActionExecutor } from '@schema-engine/forms-react';
 
 function MyComponent() {
 	const { engine } = useFormEngine();
@@ -484,13 +483,13 @@ function MyComponent() {
 
 	const handleCustomAction = async () => {
 		const result = await actionExecutor.executeTrigger(
-			[{ type: "custom", id: "my-action" }],
-			"form_submit",
-			context
+			[{ type: 'custom', id: 'my-action' }],
+			'form_submit',
+			context,
 		);
 
 		if (result[0].success) {
-			console.log("Action executed successfully");
+			console.log('Action executed successfully');
 		}
 	};
 
@@ -549,12 +548,12 @@ Track and manage user consent:
 Use the `useGdprConsent` hook to access consent state:
 
 ```tsx
-import { useGdprConsent } from "@schema-engine/forms-react";
+import { useGdprConsent } from '@schema-engine/forms-react';
 
 function ConsentStatus() {
 	const { consents, hasConsent, updateConsent } = useGdprConsent();
 
-	return <div>{hasConsent("marketing") ? "Consented" : "Not consented"}</div>;
+	return <div>{hasConsent('marketing') ? 'Consented' : 'Not consented'}</div>;
 }
 ```
 
@@ -563,7 +562,7 @@ function ConsentStatus() {
 Integrate Google Tag Manager for form analytics:
 
 ```tsx
-import { useGtmTracker } from "@schema-engine/forms-react";
+import { useGtmTracker } from '@schema-engine/forms-react';
 
 function MyForm() {
 	const tracker = useGtmTracker({
@@ -571,7 +570,7 @@ function MyForm() {
 		trackFieldInteractions: true,
 		trackValidationErrors: true,
 		customDimensions: {
-			formVersion: "2.0",
+			formVersion: '2.0',
 		},
 	});
 
@@ -714,26 +713,26 @@ The package provides full TypeScript support with automatic type inference:
 
 ```typescript
 // Type augmentation happens automatically when importing registrations
-import { InputElementRegistration } from "@schema-engine/forms-react/registrations";
+import { InputElementRegistration } from '@schema-engine/forms-react/registrations';
 
 const engine = createReactFormEngine().addElement(InputElementRegistration).build();
 
 // TypeScript knows about registered components
-const element = engine.getElement("input"); // Type: InputElementRegistration | undefined
+const element = engine.getElement('input'); // Type: InputElementRegistration | undefined
 const allElements = engine.getAllElements(); // Type: Array<InputElementRegistration>
 
 // Configuration is type-safe
 const config: FormConfig = {
-	id: "my-form",
+	id: 'my-form',
 	steps: [
 		{
-			id: "step-1",
+			id: 'step-1',
 			elements: [
 				{
-					$type: "input", // TypeScript validates this exists
-					id: "name",
-					name: "name",
-					inputType: "text", // TypeScript validates valid input types
+					$type: 'input', // TypeScript validates this exists
+					id: 'name',
+					name: 'name',
+					inputType: 'text', // TypeScript validates valid input types
 				},
 			],
 		},

@@ -3,8 +3,7 @@ import { FormEngineProvider } from '@schema-engine/forms-react/components/adapte
 import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
 import { formEngine } from '@/lib/form-engine-setup';
 import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
-import type { FormConfig } from '@schema-engine/formsemas';
-import '@/lib/form-engine-setup';
+import type { FormConfig } from '@schema-engine/forms/schemas';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -119,29 +118,10 @@ const stepperDemoConfig: FormConfig = {
 	],
 
 	stepper: {
-		id: 'default',
 		$type: 'default',
-		variant: 'default',
-		orientation: 'horizontal',
-		position: 'top',
 		showStepNumbers: true,
 		showStepTitles: true,
-		allowStepJumping: false,
-		validateOnNext: true,
-		buttons: {
-			previous: {
-				label: 'Back',
-				variant: 'outline',
-			},
-			next: {
-				label: 'Continue',
-				variant: 'primary',
-			},
-			submit: {
-				label: 'Complete Demo',
-				variant: 'primary',
-			},
-		},
+		orientation: 'horizontal',
 	},
 
 	grid: {
@@ -167,27 +147,7 @@ const verticalStepperConfig: FormConfig = {
 	id: 'vertical-stepper-demo',
 	stepper: {
 		$type: 'default',
-		variant: 'default',
-		orientation: 'vertical',
-		position: 'left',
-		showStepNumbers: true,
-		showStepTitles: true,
-		allowStepJumping: false,
-		validateOnNext: true,
-		buttons: {
-			previous: {
-				label: 'Back',
-				variant: 'outline',
-			},
-			next: {
-				label: 'Continue',
-				variant: 'primary',
-			},
-			submit: {
-				label: 'Complete Demo',
-				variant: 'primary',
-			},
-		},
+		orientation: 'sidebar',
 	},
 };
 
@@ -196,28 +156,13 @@ const minimalStepperConfig: FormConfig = {
 	id: 'minimal-stepper-demo',
 	stepper: {
 		$type: 'minimalist',
-		variant: 'dots',
-		orientation: 'horizontal',
-		position: 'top',
-		showStepNumbers: false,
-		showStepTitles: false,
-		allowStepJumping: true,
-		validateOnNext: false,
-		buttons: {
-			previous: {
-				label: 'Back',
-				variant: 'outline',
-			},
-			next: {
-				label: 'Continue',
-				variant: 'primary',
-			},
-			submit: {
-				label: 'Complete Demo',
-				variant: 'primary',
-			},
-		},
+		showProgress: true,
 	},
+};
+
+const handleSubmit = (data: any) => {
+	console.log('Multi-step form submitted:', data);
+	alert('This is the alert added manually in the demo! Form submitted successfully!');
 };
 
 export function MultiStepDemo() {
@@ -232,11 +177,6 @@ export function MultiStepDemo() {
 			default:
 				return stepperDemoConfig;
 		}
-	};
-
-	const handleSubmit = (data: any) => {
-		console.log('Multi-step form submitted:', data);
-		alert('This is the alert added manually in the demo! Form submitted successfully!');
 	};
 
 	return (

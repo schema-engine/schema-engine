@@ -191,11 +191,10 @@ export function formSubmitPlugin(
 					} else if (typeof value === 'object') {
 						formData.append(key, JSON.stringify(value));
 					} else {
-						formData.append(key, String(value));
+						formData.append(key, String(value as string | number | boolean | bigint));
 					}
 				}
 			}
-
 			const requestOptions = {
 				method: action.method,
 				body: formData,

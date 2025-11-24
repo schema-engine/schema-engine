@@ -1,11 +1,8 @@
 import { FormEngineLayout } from '@/layouts/form-engine-layout';
 import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
 import type { FormConfig } from '@schema-engine/forms';
-
 import '@/lib/form-engine-setup';
 
-// Register layouts directly
-// Simple form configurations to test different layouts
 const cardLayoutDemo: FormConfig = {
 	mode: 'free',
 	id: 'card-layout-demo',
@@ -19,9 +16,7 @@ const cardLayoutDemo: FormConfig = {
 
 			layout: {
 				$type: 'card',
-				padding: 'large',
-				shadow: true,
-				borderRadius: 'medium',
+				padding: 'lg',
 			},
 
 			elements: [
@@ -59,9 +54,6 @@ const splitScreenLayoutDemo: FormConfig = {
 
 			layout: {
 				$type: 'split-screen',
-				leftWidth: '40%',
-				rightWidth: '60%',
-				gap: '2rem',
 			},
 
 			elements: [
@@ -107,9 +99,7 @@ const heroLayoutDemo: FormConfig = {
 
 			layout: {
 				$type: 'hero-background',
-				backgroundStyle: 'gradient',
-				textAlign: 'center',
-				maxWidth: '500px',
+				contentWidth: 'md',
 			},
 			elements: [
 				{

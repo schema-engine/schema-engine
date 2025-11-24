@@ -12,7 +12,7 @@ A complete set of form field components built using [Base UI](https://base-ui.co
 ### Option 1: Using Helper Function (Recommended)
 
 ```typescript
-import { createBaseUIFormEngineBuilder } from "@/stories/shared/form-engine-setup";
+import { createBaseUIFormEngineBuilder } from '@/stories/shared/form-engine-setup';
 
 const engine = createBaseUIFormEngineBuilder().build();
 ```
@@ -20,13 +20,13 @@ const engine = createBaseUIFormEngineBuilder().build();
 ### Option 2: Manual Registration
 
 ```typescript
-import { FormEngineBuilder } from "@schema-engine/forms/builder";
+import { FormEngineBuilder } from '@schema-engine/forms/builder';
 import {
 	InputElementRegistration,
 	TextareaElementRegistration,
 	CheckboxGroupElementRegistration,
 	// ... import others as needed
-} from "@schema-engine/forms-react/components/elements/core-ui";
+} from '@schema-engine/forms-react/components/elements/core-ui';
 
 const engine = new FormEngineBuilder()
 	.addElement(InputElementRegistration)
@@ -39,47 +39,47 @@ const engine = new FormEngineBuilder()
 ### Option 3: Direct Configuration Object (No Builder)
 
 ```typescript
-import type { FormConfig } from "@schema-engine/forms";
+import type { FormConfig } from '@schema-engine/forms';
 
 const formConfig: FormConfig = {
 	fields: [
 		{
-			$type: "input",
-			name: "email",
-			label: "Email",
-			inputType: "email",
-			placeholder: "Enter email...",
-			rules: [{ type: "required", message: "Email required" }],
+			$type: 'input',
+			name: 'email',
+			label: 'Email',
+			inputType: 'email',
+			placeholder: 'Enter email...',
+			rules: [{ type: 'required', message: 'Email required' }],
 		},
 		{
-			$type: "textarea",
-			name: "message",
-			label: "Message",
-			placeholder: "Enter message...",
+			$type: 'textarea',
+			name: 'message',
+			label: 'Message',
+			placeholder: 'Enter message...',
 			rows: 5,
 		},
 		{
-			$type: "checkbox-group",
-			name: "interests",
-			label: "Interests",
+			$type: 'checkbox-group',
+			name: 'interests',
+			label: 'Interests',
 			options: [
-				{ value: "sports", label: "Sports" },
-				{ value: "music", label: "Music" },
-				{ value: "reading", label: "Reading" },
+				{ value: 'sports', label: 'Sports' },
+				{ value: 'music', label: 'Music' },
+				{ value: 'reading', label: 'Reading' },
 			],
 		},
 		{
-			$type: "slider",
-			name: "rating",
-			label: "Rating",
+			$type: 'slider',
+			name: 'rating',
+			label: 'Rating',
 			min: 0,
 			max: 10,
 			step: 1,
 		},
 		{
-			$type: "submit",
-			name: "submit",
-			label: "Submit",
+			$type: 'submit',
+			name: 'submit',
+			label: 'Submit',
 		},
 	],
 };

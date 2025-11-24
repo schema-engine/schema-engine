@@ -3,9 +3,9 @@ import { DocsLayout } from '@/layouts/docs-layout';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-  title: 'Quick Start | Form Engine Documentation',
-  description: 'Get started with Form Engine - build your first form in minutes.',
-})
+	title: 'Quick Start | Form Engine Documentation',
+	description: 'Get started with Form Engine - build your first form in minutes.',
+});
 
 # Quick Start
 
@@ -32,29 +32,28 @@ First, create a form engine instance with the components you need:
 
 ```typescript
 // lib/form-engine.ts
+import { createReactFormEngine } from '@schema-engine/forms-react/registries/builder-registry';
 import {
-  createReactFormEngine,
-  
-  
-} from '@schema-engine/forms-react/registries/builder-registry';
-import {
-  InputElement,
-  TextareaElement,
-  SelectElement,
-  CardLayoutRegistration,
+	InputElement,
+	TextareaElement,
+	SelectElement,
+	CardLayoutRegistration,
 } from '@schema-engine/forms-react/registrations';
 
 export const formEngine = createReactFormEngine()
-  .addElement(InputElement)
-  .addElement(TextareaElement)
-  .addElement(SelectElement)
-  .addLayout(CardLayoutRegistration)
-  .build();
+	.addElement(InputElement)
+	.addElement(TextareaElement)
+	.addElement(SelectElement)
+	.addLayout(CardLayoutRegistration)
+	.build();
 ```
 
 <div className="banner banner--info unprose mt-4" role="note">
-  <p className="banner__title">One Engine, Many Forms</p>
-  <p>Create the form engine once and reuse it across your entire application. The engine instance is immutable after calling <code>build()</code>.</p>
+	<p className="banner__title">One Engine, Many Forms</p>
+	<p>
+		Create the form engine once and reuse it across your entire application. The engine instance is immutable after
+		calling <code>build()</code>.
+	</p>
 </div>
 
 ### 2. Create the Form Configuration
@@ -68,99 +67,93 @@ import { FormRenderer } from '@schema-engine/forms-react/components/internals/fo
 import { formEngine } from './lib/form-engine';
 
 const contactFormConfig: FormConfig = {
-  id: 'contact-form',
-  title: 'Get In Touch',
-  description: 'We would love to hear from you. Send us a message',
-  mode: 'free',
-  steps: [
-    {
-      id: 'contact-details',
-      title: 'Contact Information',
-      elements: [
-        {
-          id: 'input',
-          inputType: 'text',
-          id: 'firstName',
-          name: 'firstName',
-          label: 'First Name',
-          placeholder: 'Enter your first name',
-          rules: [
-            { type: 'required', message: 'First name is required' }
-          ]
-        },
-        {
-          id: 'input',
-          inputType: 'text',
-          id: 'lastName',
-          name: 'lastName',
-          label: 'Last Name',
-          placeholder: 'Enter your last name',
-          rules: [
-            { type: 'required', message: 'Last name is required' }
-          ]
-        },
-        {
-          id: 'input',
-          inputType: 'email',
-          id: 'email',
-          name: 'email',
-          label: 'Email Address',
-          placeholder: 'your.email@example.com',
-          rules: [
-            { type: 'required', message: 'Email is required' },
-            { type: 'email', message: 'Please enter a valid email address' }
-          ]
-        },
-        {
-          id: 'select',
-          id: 'subject',
-          name: 'subject',
-          label: 'Subject',
-          placeholder: 'Choose a subject',
-          options: [
-            { value: 'general', label: 'General Inquiry' },
-            { value: 'support', label: 'Technical Support' },
-            { value: 'billing', label: 'Billing Question' },
-            { value: 'feature', label: 'Feature Request' }
-          ],
-          rules: [
-            { type: 'required', message: 'Please select a subject' }
-          ]
-        },
-        {
-          id: 'select',
-          id: 'priority',
-          name: 'priority',
-          label: 'Priority Level',
-          options: [
-            { value: 'low', label: 'Low' },
-            { value: 'medium', label: 'Medium' },
-            { value: 'high', label: 'High' }
-          ],
-          constraints: [
-            {
-              field: 'subject',
-              operator: 'equals',
-              value: 'support',
-              action: 'show'
-            }
-          ]
-        },
-        {
-          id: 'textarea',
-          id: 'message',
-          name: 'message',
-          label: 'Message',
-          placeholder: 'Tell us more about your inquiry...',
-          rows: 4,
-          rules: [
-            { type: 'required', message: 'Message is required' },
-            { type: 'minLength', value: 10, message: 'Message must be at least 10 characters' }
-          ]
-        }
-      ]
-    }
-  ]
+	id: 'contact-form',
+	title: 'Get In Touch',
+	description: 'We would love to hear from you. Send us a message',
+	mode: 'free',
+	steps: [
+		{
+			id: 'contact-details',
+			title: 'Contact Information',
+			elements: [
+				{
+					id: 'input',
+					inputType: 'text',
+					id: 'firstName',
+					name: 'firstName',
+					label: 'First Name',
+					placeholder: 'Enter your first name',
+					rules: [{ type: 'required', message: 'First name is required' }],
+				},
+				{
+					id: 'input',
+					inputType: 'text',
+					id: 'lastName',
+					name: 'lastName',
+					label: 'Last Name',
+					placeholder: 'Enter your last name',
+					rules: [{ type: 'required', message: 'Last name is required' }],
+				},
+				{
+					id: 'input',
+					inputType: 'email',
+					id: 'email',
+					name: 'email',
+					label: 'Email Address',
+					placeholder: 'your.email@example.com',
+					rules: [
+						{ type: 'required', message: 'Email is required' },
+						{ type: 'email', message: 'Please enter a valid email address' },
+					],
+				},
+				{
+					id: 'select',
+					id: 'subject',
+					name: 'subject',
+					label: 'Subject',
+					placeholder: 'Choose a subject',
+					options: [
+						{ value: 'general', label: 'General Inquiry' },
+						{ value: 'support', label: 'Technical Support' },
+						{ value: 'billing', label: 'Billing Question' },
+						{ value: 'feature', label: 'Feature Request' },
+					],
+					rules: [{ type: 'required', message: 'Please select a subject' }],
+				},
+				{
+					id: 'select',
+					id: 'priority',
+					name: 'priority',
+					label: 'Priority Level',
+					options: [
+						{ value: 'low', label: 'Low' },
+						{ value: 'medium', label: 'Medium' },
+						{ value: 'high', label: 'High' },
+					],
+					constraints: [
+						{
+							field: 'subject',
+							operator: 'equals',
+							value: 'support',
+							action: 'show',
+						},
+					],
+				},
+				{
+					id: 'textarea',
+					id: 'message',
+					name: 'message',
+					label: 'Message',
+					placeholder: 'Tell us more about your inquiry...',
+					rows: 4,
+					rules: [
+						{ type: 'required', message: 'Message is required' },
+						{ type: 'minLength', value: 10, message: 'Message must be at least 10 characters' },
+					],
+				},
+			],
+		},
+	],
 };
 ```
 
@@ -172,7 +165,7 @@ Now create a React component that renders the form using the engine instance:
 export function ContactForm() {
   const handleSubmit = (data: any) => {
     console.log('Form submitted with data:', data);
-    
+
     // Send data to your API
     // try {
     //   await fetch('/api/contact', {
@@ -233,22 +226,23 @@ Notice the `priority` field in our example includes a `constraints` array:
 
 ```json
 {
-  "id": "priority",
-  "name": "priority", 
-  "id": "select",
-  "label": "Priority Level",
-  "constraints": [
-    {
-      "field": "subject",
-      "operator": "equals", 
-      "value": "support",
-      "action": "show"
-    }
-  ]
+	"id": "priority",
+	"name": "priority",
+	"id": "select",
+	"label": "Priority Level",
+	"constraints": [
+		{
+			"field": "subject",
+			"operator": "equals",
+			"value": "support",
+			"action": "show"
+		}
+	]
 }
 ```
 
 This creates **conditional logic** where:
+
 - The priority field is only **shown** when the subject field equals "support"
 - Users only see priority options for technical support requests
 - The field automatically hides/shows as users change the subject
@@ -265,10 +259,10 @@ Let's break down the key parts of the form configuration:
 
 ```typescript
 interface FormConfig {
-  id: string;                    // Unique identifier
-  title?: string;               // Form title
-  description?: string;         // Form description
-  steps: StepConfig[];          // Form steps (even single-step forms need this)
+	id: string; // Unique identifier
+	title?: string; // Form title
+	description?: string; // Form description
+	steps: StepConfig[]; // Form steps (even single-step forms need this)
 }
 ```
 
@@ -276,9 +270,9 @@ interface FormConfig {
 
 ```typescript
 interface StepConfig {
-  id: string;                   // Step identifier
-  title?: string;              // Step title
-  elements: FieldConfig[];       // Fields in this step
+	id: string; // Step identifier
+	title?: string; // Step title
+	elements: FieldConfig[]; // Fields in this step
 }
 ```
 
@@ -286,13 +280,13 @@ interface StepConfig {
 
 ```typescript
 interface FieldConfig {
-  type: string;                 // Field type (input, select, textarea, etc.)
-  id: string;                  // DOM element ID
-  name: string;                // Form field name
-  label?: string;              // Field label
-  placeholder?: string;        // Placeholder text
-  validation?: ValidationRule[];// Validation rules
-  // ... type-specific properties
+	type: string; // Field type (input, select, textarea, etc.)
+	id: string; // DOM element ID
+	name: string; // Form field name
+	label?: string; // Field label
+	placeholder?: string; // Placeholder text
+	validation?: ValidationRule[]; // Validation rules
+	// ... type-specific properties
 }
 ```
 
@@ -302,30 +296,28 @@ Form Engine uses a declarative validation system. Here are common validation rul
 
 ```typescript
 // Required field
-rules: [
-  { type: 'required', message: 'This field is required' }
-]
+rules: [{ type: 'required', message: 'This field is required' }];
 
 // Email validation
 rules: [
-  { type: 'required', message: 'Email is required' },
-  { type: 'email', message: 'Please enter a valid email' }
-]
+	{ type: 'required', message: 'Email is required' },
+	{ type: 'email', message: 'Please enter a valid email' },
+];
 
 // Length validation
 rules: [
-  { type: 'minLength', value: 3, message: 'Must be at least 3 characters' },
-  { type: 'maxLength', value: 100, message: 'Must be less than 100 characters' }
-]
+	{ type: 'minLength', value: 3, message: 'Must be at least 3 characters' },
+	{ type: 'maxLength', value: 100, message: 'Must be less than 100 characters' },
+];
 
 // Pattern validation
 rules: [
-  { 
-    type: 'pattern', 
-    value: /^[A-Za-z\s]+$/, 
-    message: 'Only letters and spaces allowed' 
-  }
-]
+	{
+		type: 'pattern',
+		value: /^[A-Za-z\s]+$/,
+		message: 'Only letters and spaces allowed',
+	},
+];
 ```
 
 ## Custom Field Registration
@@ -383,31 +375,31 @@ Create multi-step forms by adding multiple steps:
 
 ```typescript
 const multiStepConfig: FormConfig = {
-  id: 'multi-step-form',
-  title: 'User Registration',
-  steps: [
-    {
-      id: 'personal-info',
-      title: 'Personal Information',
-      elements: [
-        // Personal info fields
-      ]
-    },
-    {
-      id: 'account-details',
-      title: 'Account Details',
-      elements: [
-        // Account fields
-      ]
-    },
-    {
-      id: 'preferences',
-      title: 'Preferences',
-      elements: [
-        // Preference fields
-      ]
-    }
-  ]
+	id: 'multi-step-form',
+	title: 'User Registration',
+	steps: [
+		{
+			id: 'personal-info',
+			title: 'Personal Information',
+			elements: [
+				// Personal info fields
+			],
+		},
+		{
+			id: 'account-details',
+			title: 'Account Details',
+			elements: [
+				// Account fields
+			],
+		},
+		{
+			id: 'preferences',
+			title: 'Preferences',
+			elements: [
+				// Preference fields
+			],
+		},
+	],
 };
 ```
 

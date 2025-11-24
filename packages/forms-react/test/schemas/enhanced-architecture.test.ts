@@ -1,44 +1,14 @@
 import { describe, test, expect } from 'bun:test';
-import { z } from 'zod';
-
-// Enhanced system - single unified system
-import { 
-	InputFieldSchema, 
-	type InputFieldConfig 
-} from '@/components/elements/shadcn/inputs/form-input.types';
-
-import {
-	TextareaFieldSchema,
-	type TextareaFieldConfig
-} from '@/components/elements/shadcn/inputs/form-textarea.types';
-
-import {
-	SelectFieldConfigSchema,
-	type SelectFieldConfig,
-	type SelectOption
-} from '@/components/elements/shadcn/inputs/form-select.types';
-
+import { InputFieldSchema, type InputFieldConfig } from '@/components/elements/shadcn/inputs/form-input.types';
+import { TextareaFieldSchema, type TextareaFieldConfig } from '@/components/elements/shadcn/inputs/form-textarea.types';
+import { SelectFieldConfigSchema, type SelectFieldConfig } from '@/components/elements/shadcn/inputs/form-select.types';
+import { RadioFieldConfigSchema, type RadioFieldConfig } from '@/components/elements/shadcn/inputs/form-radio.types';
+import { NumberFieldConfigSchema, type NumberFieldConfig } from '@/components/elements/shadcn/inputs/form-number.types';
+import { SwitchFieldConfigSchema, type SwitchFieldConfig } from '@/components/elements/shadcn/inputs/form-switch.types';
 import {
 	CheckboxFieldConfigSchema,
-	type CheckboxFieldConfig
+	type CheckboxFieldConfig,
 } from '@/components/elements/shadcn/inputs/form-checkbox.types';
-
-import {
-	RadioFieldConfigSchema,
-	type RadioFieldConfig,
-	type RadioOption
-} from '@/components/elements/shadcn/inputs/form-radio.types';
-
-import {
-	NumberFieldConfigSchema,
-	type NumberFieldConfig
-} from '@/components/elements/shadcn/inputs/form-number.types';
-
-import {
-	SwitchFieldConfigSchema,
-	type SwitchFieldConfig
-} from '@/components/elements/shadcn/inputs/form-switch.types';
-
 
 describe('Clean Enhanced Field System', () => {
 	test('should use id-based configuration for input', () => {
@@ -48,7 +18,7 @@ describe('Clean Enhanced Field System', () => {
 			name: 'username',
 			inputType: 'text',
 			label: 'Username',
-			spellCheck: false
+			spellCheck: false,
 		};
 
 		const result = InputFieldSchema.safeParse(enhancedConfig);
@@ -67,7 +37,7 @@ describe('Clean Enhanced Field System', () => {
 			label: 'Description',
 			rows: 4,
 			resize: 'vertical',
-			spellCheck: true
+			spellCheck: true,
 		};
 
 		const result = TextareaFieldSchema.safeParse(textareaConfig);
@@ -85,7 +55,7 @@ describe('Clean Enhanced Field System', () => {
 			id: 'email',
 			name: 'email',
 			inputType: 'email',
-			inputMode: 'email'
+			inputMode: 'email',
 		};
 
 		const textareaConfig: FormEngine.ElementConfig = {
@@ -93,7 +63,7 @@ describe('Clean Enhanced Field System', () => {
 			id: 'bio',
 			name: 'bio',
 			rows: 6,
-			wrap: 'soft'
+			wrap: 'soft',
 		};
 
 		expect(InputFieldSchema.safeParse(inputConfig).success).toBe(true);
@@ -117,12 +87,12 @@ describe('Clean Enhanced Field System', () => {
 			autoComplete: 'email',
 			autoFocus: true,
 			inputMode: 'email',
-			spellCheck: false
+			spellCheck: false,
 		};
 
 		const result = InputFieldSchema.safeParse(fullInputConfig);
 		expect(result.success).toBe(true);
-		
+
 		if (result.success) {
 			expect(result.data.$type).toBe('input');
 			expect(result.data.inputType).toBe('email');
@@ -146,12 +116,12 @@ describe('Clean Enhanced Field System', () => {
 			spellCheck: true,
 			wrap: 'hard',
 			className: 'textarea-test-class',
-			style: { backgroundColor: 'lightgray' }
+			style: { backgroundColor: 'lightgray' },
 		};
 
 		const result = TextareaFieldSchema.safeParse(fullTextareaConfig);
 		expect(result.success).toBe(true);
-		
+
 		if (result.success) {
 			expect(result.data.$type).toBe('textarea');
 			expect(result.data.rows).toBe(8);
@@ -171,8 +141,8 @@ describe('Clean Enhanced Field System', () => {
 			// These would be validation and should come from rules, not direct props
 			rules: [
 				{ type: 'required', message: 'This field is required' },
-				{ type: 'maxLength', value: 50, message: 'Maximum 50 characters' }
-			]
+				{ type: 'maxLength', value: 50, message: 'Maximum 50 characters' },
+			],
 		};
 
 		const result = InputFieldSchema.safeParse(inputConfig);
@@ -194,10 +164,10 @@ describe('Clean Enhanced Field System', () => {
 			options: [
 				{ value: 'us', label: 'United States' },
 				{ value: 'ca', label: 'Canada', disabled: true },
-				{ value: 'uk', label: 'United Kingdom' }
+				{ value: 'uk', label: 'United Kingdom' },
 			],
 			placeholder: 'Select a country...',
-			autoComplete: 'country'
+			autoComplete: 'country',
 		};
 
 		const result = SelectFieldConfigSchema.safeParse(selectConfig);
@@ -217,7 +187,7 @@ describe('Clean Enhanced Field System', () => {
 			name: 'terms',
 			label: 'I agree to the terms and conditions',
 			autoFocus: true,
-			defaultValue: false
+			defaultValue: false,
 		};
 
 		const result = CheckboxFieldConfigSchema.safeParse(checkboxConfig);
@@ -237,10 +207,10 @@ describe('Clean Enhanced Field System', () => {
 			options: [
 				{ value: 'small', label: 'Small' },
 				{ value: 'medium', label: 'Medium' },
-				{ value: 'large', label: 'Large', disabled: true }
+				{ value: 'large', label: 'Large', disabled: true },
 			],
 			orientation: 'horizontal',
-			autoFocus: true
+			autoFocus: true,
 		};
 
 		const result = RadioFieldConfigSchema.safeParse(radioConfig);
@@ -263,7 +233,7 @@ describe('Clean Enhanced Field System', () => {
 			max: 120,
 			step: 1,
 			inputMode: 'numeric',
-			autoComplete: 'age'
+			autoComplete: 'age',
 		};
 
 		const result = NumberFieldConfigSchema.safeParse(numberConfig);
@@ -284,7 +254,7 @@ describe('Clean Enhanced Field System', () => {
 			label: 'Enable notifications',
 			size: 'md',
 			autoFocus: true,
-			defaultValue: true
+			defaultValue: true,
 		};
 
 		const result = SwitchFieldConfigSchema.safeParse(switchConfig);
@@ -302,41 +272,41 @@ describe('Clean Enhanced Field System', () => {
 				$type: 'input',
 				id: 'email',
 				name: 'email',
-				inputType: 'email'
+				inputType: 'email',
 			},
 			{
 				$type: 'textarea',
 				id: 'message',
 				name: 'message',
-				rows: 4
+				rows: 4,
 			},
 			{
 				$type: 'select',
 				id: 'category',
 				name: 'category',
-				options: [{ value: '1', label: 'Option 1' }]
+				options: [{ value: '1', label: 'Option 1' }],
 			},
 			{
 				$type: 'checkbox',
 				id: 'agree',
-				name: 'agree'
+				name: 'agree',
 			},
 			{
 				$type: 'radio',
 				id: 'size',
 				name: 'size',
-				options: [{ value: 'small', label: 'Small' }]
+				options: [{ value: 'small', label: 'Small' }],
 			},
 			{
 				$type: 'number',
 				id: 'quantity',
-				name: 'quantity'
+				name: 'quantity',
 			},
 			{
 				$type: 'switch',
 				id: 'enabled',
-				name: 'enabled'
-			}
+				name: 'enabled',
+			},
 		];
 
 		for (const field of fields) {
@@ -363,7 +333,7 @@ describe('Clean Enhanced Field System', () => {
 				default:
 					continue;
 			}
-			
+
 			expect(result.success).toBe(true);
 			if (result.success) {
 				expect(result.data.$type).toBe(field.$type);

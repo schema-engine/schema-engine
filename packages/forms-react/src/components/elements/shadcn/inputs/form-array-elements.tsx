@@ -143,12 +143,7 @@ function ArrayActions({ canAdd, addButtonText, onAdd }: ArrayActionsProps) {
  * Supports both single field type arrays and complex multi-field objects
  * Follows the enhanced field system pattern with proper semantic HTML
  */
-export function FormArrayElements({
-	onChange: propsOnChange,
-	onBlur: propsOnBlur,
-	onFocus: propsOnFocus,
-	...config
-}: ArrayElementsProps) {
+export function FormArrayElements(config: ArrayElementsProps) {
 	const { control } = useFormContext();
 	const { fields, append, remove } = useFieldArray({
 		control,

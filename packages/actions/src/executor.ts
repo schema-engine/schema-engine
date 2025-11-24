@@ -152,7 +152,7 @@ export class ActionExecutor<
 	 */
 	private shouldExecute(action: TConfig, trigger: TTrigger): boolean {
 		if ('triggers' in action && Array.isArray(action.triggers)) {
-			return action.triggers.includes(trigger as string);
+			return action.triggers.includes(trigger);
 		}
 
 		const actionRegistration = this.registry.getAction(action.$type);

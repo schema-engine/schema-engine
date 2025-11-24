@@ -5,6 +5,13 @@ import { createForm, getEngine, ValidationPresets, createExtendableBuilder } fro
 import { z } from 'zod';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@schema-engine/forms/types';
 import { FormActionTriggerSchema, type ActionExecutionResult } from '@schema-engine/forms';
+
+declare global {
+	interface Window {
+		confetti?: (options: unknown) => Promise<void>;
+	}
+}
+
 const baseUIEngine = getEngine();
 
 const meta = {
@@ -266,12 +273,11 @@ function confettiPlugin(): BuilderActionRegistration<'confetti', ConfettiAction>
 					return { success: true, message: 'Confetti skipped in SSR', shouldContinue: true };
 				}
 
-				const confetti = (window as any).confetti;
-				if (!confetti) {
+				if (!window.confetti) {
 					return { success: false, error: 'Confetti library not available', shouldContinue: true };
 				}
 
-				await confetti({
+				await window.confetti({
 					particleCount: action.particleCount,
 					spread: action.spread,
 					origin: action.origin,
@@ -302,7 +308,7 @@ export const WithConfetti: Story = {
 	},
 	decorators: [
 		(Story) => {
-			if (typeof window !== 'undefined' && !(window as any).confetti) {
+			if (typeof window !== 'undefined' && !window.confetti) {
 				const script = document.createElement('script');
 				script.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js';
 				script.async = true;

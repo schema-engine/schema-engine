@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test';
+import { describe, test, expect } from 'bun:test';
 import { z } from 'zod';
 import { FormEngineBuilder } from '@/builder/form-engine-builder';
 import type { InputRegistration, LayoutRegistration, StepperRegistration, BuilderActionRegistration } from '@/types';
@@ -200,7 +200,7 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const schema = engine.generateJSONSchemaCollection();
 
-            console.log(schema);
+			console.log(schema);
 
 			expect(schema.schemas['element:text']).toBeDefined();
 			expect(schema.schemas['layout:card']).toBeDefined();
@@ -691,7 +691,7 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			// Elements should reference component schemas
 			// When there's only one element, Zod uses direct $ref instead of anyOf
-			const elementsItems = (configSchema.properties as any).elements.items;
+			const elementsItems = configSchema.properties.elements.items;
 			const hasDirectRef = elementsItems.$ref === '#/$defs/element:text';
 			const hasAnyOf = elementsItems.anyOf?.[0]?.$ref === '#/$defs/element:text';
 			expect(hasDirectRef || hasAnyOf).toBe(true);
@@ -726,23 +726,11 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const configSchema = engine.generateFormConfigSchema();
 
-			// Schema should describe this structure:
-			const expectedConfig = {
-				id: 'contact-form',
-				title: 'Contact Form',
-				elements: [
-					{ $type: 'text', label: 'Name' },
-					{ $type: 'text', label: 'Email' },
-				],
-				layout: { $type: 'card', padding: 16 },
-			};
-
-			// Verify schema has correct structure for this config
 			expect(configSchema.properties).toHaveProperty('id');
 			expect(configSchema.properties).toHaveProperty('title');
 			expect(configSchema.properties).toHaveProperty('elements');
 			expect(configSchema.properties).toHaveProperty('layout');
-			expect((configSchema.properties as any).elements.type).toBe('array');
+			expect(configSchema.properties.elements.type).toBe('array');
 		});
 
 		test('should include metadata field in config schema', () => {
@@ -757,7 +745,7 @@ describe('FormEngine JSON Schema Generation', () => {
 			const configSchema = engine.generateFormConfigSchema();
 
 			expect(configSchema.properties).toHaveProperty('metadata');
-			expect((configSchema.properties as any).metadata.type).toBe('object');
+			expect(configSchema.properties.metadata.type).toBe('object');
 		});
 
 		test('should work with multiple elements and all component types', () => {
@@ -802,32 +790,21 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const configSchema = engine.generateFormConfigSchema();
 
-			console.log('\n=== Complete Form Config Schema ===');
-			console.log(JSON.stringify(configSchema, null, 2));
-			console.log('===================================\n');
+			expect(configSchema.properties.elements.items.anyOf).toHaveLength(2);
 
-			// Should have all component types
-			// Zod generates anyOf when there are multiple options
-			expect((configSchema.properties as any).elements.items.anyOf).toHaveLength(2);
-			
-			// Single options use direct $ref
 			expect(
-				(configSchema.properties as any).layout.$ref || 
-				(configSchema.properties as any).layout.anyOf?.[0]?.$ref
+				configSchema.properties.layout.$ref || configSchema.properties.layout.anyOf?.[0]?.$ref,
 			).toBeDefined();
 			expect(
-				(configSchema.properties as any).stepper.$ref || 
-				(configSchema.properties as any).stepper.anyOf?.[0]?.$ref
+				configSchema.properties.stepper.$ref || configSchema.properties.stepper.anyOf?.[0]?.$ref,
 			).toBeDefined();
-			
-			// Actions with single option
-			const actionsItems = (configSchema.properties as any).actions.items;
+
+			const actionsItems = configSchema.properties.actions.items;
 			expect(
 				actionsItems.$ref === '#/$defs/action:submit' ||
-				actionsItems.anyOf?.[0]?.$ref === '#/$defs/action:submit'
+					actionsItems.anyOf?.[0]?.$ref === '#/$defs/action:submit',
 			).toBe(true);
 
-			// Should have all defs
 			expect(configSchema.$defs['element:text']).toBeDefined();
 			expect(configSchema.$defs['element:number']).toBeDefined();
 			expect(configSchema.$defs['layout:card']).toBeDefined();

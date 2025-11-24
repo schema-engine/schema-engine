@@ -4,9 +4,10 @@ import { LivePreview, CodePreview } from '@/components/code-preview';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-  title: 'Built-in Validations | Form Engine Documentation',
-  description: 'Complete reference of all built-in validation types available in Form Engine, with examples and usage patterns.',
-})
+	title: 'Built-in Validations | Form Engine Documentation',
+	description:
+		'Complete reference of all built-in validation types available in Form Engine, with examples and usage patterns.',
+});
 
 # Built-in Validations
 
@@ -66,7 +67,7 @@ Control minimum and maximum string lengths.
 // Minimum length
 { type: 'minLength', value: 3, message: 'Must be at least 3 characters' }
 
-// Maximum length  
+// Maximum length
 { type: 'maxLength', value: 100, message: 'Cannot exceed 100 characters' }
 
 // Username field example
@@ -90,10 +91,10 @@ Validate against custom regular expression patterns.
 
 ```typescript
 // Phone number pattern
-{ 
-  type: 'pattern', 
-  value: '/^\\+?[1-9]\\d{1,14}$/', 
-  message: 'Please enter a valid phone number' 
+{
+  type: 'pattern',
+  value: '/^\\+?[1-9]\\d{1,14}$/',
+  message: 'Please enter a valid phone number'
 }
 
 // Password strength pattern
@@ -497,7 +498,7 @@ For server-side validation that requires network requests, with built-in caching
   method: 'POST',
   body: {
     field: 'email'
-    // Automatically creates dependsOn: { username: actualUsernameValue } 
+    // Automatically creates dependsOn: { username: actualUsernameValue }
   },
   dependencies: ['username'], // Re-validate when username changes
   expectedResponse: { valid: true },
@@ -555,25 +556,26 @@ import { AsyncValidationDemo } from '@/components/demo/async-validation-demo';
 </LivePreview>
 
 The demo above shows:
+
 - **Debounced validation**: API calls only happen after user stops typing
-- **Cross-field dependencies**: Fields that re-validate when other fields change  
+- **Cross-field dependencies**: Fields that re-validate when other fields change
 - **Error handling**: Graceful handling of network errors
 - **Real-time feedback**: Immediate validation results
 
 ### Async Validation Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `url` | `string` | API endpoint for validation |
-| `method` | `string` | HTTP method (GET, POST, PUT, PATCH, DELETE) |
-| `headers` | `object` | Optional HTTP headers |
-| `body` | `object` | Request body template - field value automatically included |
-| `expectedResponse` | `object` | Expected response format for success |
-| `dependencies` | `string[]` | Fields that trigger re-validation when changed |
-| `debounce` | `number` | Delay in ms before making API call |
-| `cacheTTL` | `number` | Cache time-to-live in milliseconds (default: 5 minutes) |
-| `disableCache` | `boolean` | Whether to disable request caching (default: false) |
-| `message` | `string` | Error message to show on validation failure |
+| Property           | Type       | Description                                                |
+| ------------------ | ---------- | ---------------------------------------------------------- |
+| `url`              | `string`   | API endpoint for validation                                |
+| `method`           | `string`   | HTTP method (GET, POST, PUT, PATCH, DELETE)                |
+| `headers`          | `object`   | Optional HTTP headers                                      |
+| `body`             | `object`   | Request body template - field value automatically included |
+| `expectedResponse` | `object`   | Expected response format for success                       |
+| `dependencies`     | `string[]` | Fields that trigger re-validation when changed             |
+| `debounce`         | `number`   | Delay in ms before making API call                         |
+| `cacheTTL`         | `number`   | Cache time-to-live in milliseconds (default: 5 minutes)    |
+| `disableCache`     | `boolean`  | Whether to disable request caching (default: false)        |
+| `message`          | `string`   | Error message to show on validation failure                |
 
 ### Dependency Resolution
 
@@ -593,7 +595,7 @@ When using `dependencies`, the system automatically creates a `dependsOn` object
   "value": "userInputValue",
   "field": "dependentField",
   "dependsOn": {
-    "username": "actualUsernameValue", 
+    "username": "actualUsernameValue",
     "email": "actual@email.com"
   }
 }
@@ -616,35 +618,35 @@ import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
 
 // String presets
 const nameRules = [
-  ValidationPresets.string.required('Name is required'),
-  ValidationPresets.string.minLength(2, 'Name must be at least 2 characters'),
-  ValidationPresets.string.maxLength(50, 'Name cannot exceed 50 characters')
+	ValidationPresets.string.required('Name is required'),
+	ValidationPresets.string.minLength(2, 'Name must be at least 2 characters'),
+	ValidationPresets.string.maxLength(50, 'Name cannot exceed 50 characters'),
 ];
 
 // Number presets
 const ageRules = [
-  ValidationPresets.number.min(0, 'Age cannot be negative'),
-  ValidationPresets.number.max(150, 'Please enter a valid age')
+	ValidationPresets.number.min(0, 'Age cannot be negative'),
+	ValidationPresets.number.max(150, 'Please enter a valid age'),
 ];
 
 // Network presets
 const urlRules = [
-  ValidationPresets.network.url('Please enter a valid URL'),
-  ValidationPresets.network.ip('v4', 'Please enter a valid IPv4 address')
+	ValidationPresets.network.url('Please enter a valid URL'),
+	ValidationPresets.network.ip('v4', 'Please enter a valid IPv4 address'),
 ];
 
 // Array presets
 const tagsRules = [
-  ValidationPresets.array.minItems(1, 'Please select at least one tag'),
-  ValidationPresets.array.maxItems(10, 'You can select up to 10 tags')
+	ValidationPresets.array.minItems(1, 'Please select at least one tag'),
+	ValidationPresets.array.maxItems(10, 'You can select up to 10 tags'),
 ];
 
 // Async presets
 const usernameRules = [
-  ValidationPresets.custom.async('/api/check-username', {
-    method: 'POST',
-    message: 'Username is already taken'
-  })
+	ValidationPresets.custom.async('/api/check-username', {
+		method: 'POST',
+		message: 'Username is already taken',
+	}),
 ];
 ```
 
@@ -655,27 +657,27 @@ You can combine multiple validation rules for comprehensive field validation:
 ```typescript
 // Complex password validation
 const passwordRules = [
-  { type: 'required', message: 'Password is required' },
-  { type: 'minLength', value: 8, message: 'Password must be at least 8 characters' },
-  { type: 'maxLength', value: 128, message: 'Password cannot exceed 128 characters' },
-  { 
-    type: 'pattern', 
-    value: '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]/',
-    message: 'Password must contain uppercase, lowercase, number, and special character'
-  }
+	{ type: 'required', message: 'Password is required' },
+	{ type: 'minLength', value: 8, message: 'Password must be at least 8 characters' },
+	{ type: 'maxLength', value: 128, message: 'Password cannot exceed 128 characters' },
+	{
+		type: 'pattern',
+		value: '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]/',
+		message: 'Password must contain uppercase, lowercase, number, and special character',
+	},
 ];
 
 // Email with async verification
 const emailRules = [
-  { type: 'required', message: 'Email is required' },
-  { type: 'email', message: 'Please enter a valid email address' },
-  { type: 'maxLength', value: 254, message: 'Email address is too long' },
-  {
-    type: 'async',
-    url: '/api/verify-email-domain',
-    method: 'POST',
-    message: 'Email domain is not supported'
-  }
+	{ type: 'required', message: 'Email is required' },
+	{ type: 'email', message: 'Please enter a valid email address' },
+	{ type: 'maxLength', value: 254, message: 'Email address is too long' },
+	{
+		type: 'async',
+		url: '/api/verify-email-domain',
+		method: 'POST',
+		message: 'Email domain is not supported',
+	},
 ];
 ```
 
@@ -688,17 +690,15 @@ Start with basic validations and add more specific ones:
 ```typescript
 // Good - logical progression
 [
-  { type: 'required', message: 'Password is required' },           // First: ensure value exists
-  { type: 'minLength', value: 8, message: 'At least 8 chars' },   // Then: basic constraints
-  { type: 'pattern', value: '/complexity/', message: 'Complex' }  // Finally: advanced rules
-]
-
-// Poor - confusing order
-[
-  { type: 'pattern', value: '/complexity/', message: 'Complex' },
-  { type: 'required', message: 'Password is required' },
-  { type: 'minLength', value: 8, message: 'At least 8 chars' }
-]
+	{ type: 'required', message: 'Password is required' }, // First: ensure value exists
+	{ type: 'minLength', value: 8, message: 'At least 8 chars' }, // Then: basic constraints
+	{ type: 'pattern', value: '/complexity/', message: 'Complex' }, // Finally: advanced rules
+][
+	// Poor - confusing order
+	({ type: 'pattern', value: '/complexity/', message: 'Complex' },
+	{ type: 'required', message: 'Password is required' },
+	{ type: 'minLength', value: 8, message: 'At least 8 chars' })
+];
 ```
 
 ### 2. Provide Helpful Error Messages
@@ -709,7 +709,7 @@ Make errors actionable and user-friendly:
 // Good - specific and helpful
 { type: 'minLength', value: 8, message: 'Password must be at least 8 characters long' }
 
-// Poor - vague and unhelpful  
+// Poor - vague and unhelpful
 { type: 'minLength', value: 8, message: 'Too short' }
 ```
 
@@ -738,10 +738,10 @@ Expensive validations (like async) should come last:
 ```typescript
 // Good - cheap validations first
 [
-  { type: 'required' },
-  { type: 'minLength', value: 3 },
-  { type: 'async', url: '/api/check-availability' }  // Expensive validation last
-]
+	{ type: 'required' },
+	{ type: 'minLength', value: 3 },
+	{ type: 'async', url: '/api/check-availability' }, // Expensive validation last
+];
 ```
 
 ## Next Steps

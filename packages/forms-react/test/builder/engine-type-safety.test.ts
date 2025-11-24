@@ -1,6 +1,6 @@
 /**
  * Type Safety Tests for FormEngine
- * 
+ *
  * These tests verify that the FormEngine returned by build() is properly typed
  * and provides type-safe access to registered components.
  */
@@ -28,22 +28,22 @@ describe('FormEngine Type Safety', () => {
 		expect(typeof engine.getAllElements).toBe('function');
 		expect(typeof engine.getElementIds).toBe('function');
 		expect(typeof engine.hasElement).toBe('function');
-		
+
 		expect(typeof engine.getLayout).toBe('function');
 		expect(typeof engine.getAllLayouts).toBe('function');
 		expect(typeof engine.getLayoutIds).toBe('function');
 		expect(typeof engine.hasLayout).toBe('function');
-		
+
 		expect(typeof engine.getStepper).toBe('function');
 		expect(typeof engine.getAllSteppers).toBe('function');
 		expect(typeof engine.getStepperIds).toBe('function');
 		expect(typeof engine.hasStepper).toBe('function');
-		
+
 		expect(typeof engine.getAction).toBe('function');
 		expect(typeof engine.getAllActions).toBe('function');
 		expect(typeof engine.getActionTypes).toBe('function');
 		expect(typeof engine.hasAction).toBe('function');
-		
+
 		expect(typeof engine.getSummary).toBe('function');
 	});
 
@@ -148,9 +148,7 @@ describe('FormEngine Type Safety', () => {
 	});
 
 	test('should maintain type safety across different builders', () => {
-		const engine1 = createReactFormEngine()
-			.addElement(InputElementRegistration)
-			.build();
+		const engine1 = createReactFormEngine().addElement(InputElementRegistration).build();
 
 		const engine2 = createReactFormEngine()
 			.addElement(TextareaElementRegistration)
@@ -188,15 +186,15 @@ describe('FormEngine Type Safety', () => {
 		expect(typeof engine.hasElement).toBe('function');
 		expect(typeof engine.getAllElements).toBe('function');
 		expect(typeof engine.getElementIds).toBe('function');
-		
+
 		expect(typeof engine.getLayout).toBe('function');
 		expect(typeof engine.hasLayout).toBe('function');
-		
+
 		expect(typeof engine.getStepper).toBe('function');
 		expect(typeof engine.hasStepper).toBe('function');
-		
+
 		expect(typeof engine.getSummary).toBe('function');
-		
+
 		/**
 		 * The key assertion is expectTypeOf(engine).toMatchTypeOf<FormEngine>()
 		 * If engine were 'any', this would not provide proper type checking.

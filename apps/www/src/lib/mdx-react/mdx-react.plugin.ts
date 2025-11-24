@@ -39,14 +39,13 @@ export class MDXPlugin extends IntegrationPlugin {
 
 		this.renderer = createMDXReactRenderer(finalCompilerOptions);
 
-		this.setupBunPlugin(finalCompilerOptions);
+		void this.setupBunPlugin(finalCompilerOptions);
 
 		this.integrationDependencies.unshift(...this.getDependencies());
 	}
-
 	async setupBunPlugin(options?: Readonly<CompileOptions>): Promise<void> {
 		// @ts-expect-error: esbuild plugin vs bun plugin
-		Bun.plugin(mdx(deepMerge(options, defaultOptions)));
+		await Bun.plugin(mdx(deepMerge(options, defaultOptions)));
 	}
 
 	private buildImportMapSourceUrl(fileName: string): string {

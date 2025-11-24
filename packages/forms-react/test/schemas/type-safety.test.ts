@@ -20,7 +20,7 @@ describe('Compile-Time Type Safety', () => {
 					id: 'name',
 					name: 'name',
 					label: 'Name',
-					inputType: 'text', 
+					inputType: 'text',
 				},
 				{
 					$type: 'select',
@@ -46,7 +46,7 @@ describe('Compile-Time Type Safety', () => {
 				$type: 'input',
 				id: 'text',
 				name: 'text',
-				inputType: 'email', 
+				inputType: 'email',
 			},
 			{
 				$type: 'select',
@@ -57,19 +57,19 @@ describe('Compile-Time Type Safety', () => {
 					{ value: 'b', label: 'Option B' },
 				],
 			},
-            {
-                $type:'arrayElements',
-                id:'nestedArray',
-                name:'nestedArray',
-                elements:[
-                    {
-                        $type:'input',
-                        id:'nestedInput',
-                        name:'nestedInput',
-                        inputType:'text'
-                    }
-                ]
-            }
+			{
+				$type: 'arrayElements',
+				id: 'nestedArray',
+				name: 'nestedArray',
+				elements: [
+					{
+						$type: 'input',
+						id: 'nestedInput',
+						name: 'nestedInput',
+						inputType: 'text',
+					},
+				],
+			},
 		];
 
 		for (const element of elements) {
@@ -78,8 +78,8 @@ describe('Compile-Time Type Safety', () => {
 			} else if (element.$type === 'select') {
 				expect(Array.isArray(element.options)).toBe(true);
 			} else if (element.$type === 'arrayElements') {
-                expect(Array.isArray(element.elements)).toBe(true);
-            } 
+				expect(Array.isArray(element.elements)).toBe(true);
+			}
 		}
 	});
 
@@ -188,7 +188,7 @@ describe('Compile-Time Type Safety', () => {
 		const selectElement = complexArray.elements[1];
 		if (selectElement.$type === 'select') {
 			expect(selectElement.options).toHaveLength(3);
-			expect(selectElement.options![0].value).toBe('electronics');
+			expect(selectElement.options[0].value).toBe('electronics');
 		}
 
 		const numberElement = complexArray.elements[2];

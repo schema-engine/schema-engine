@@ -305,12 +305,7 @@ interface WorkflowContext {
 	data: Record<string, unknown>;
 }
 
-const transitionAction: ActionRegistration<
-	'transition',
-	TransitionConfig,
-	WorkflowContext,
-	WorkflowTrigger
-> = {
+const transitionAction: ActionRegistration<'transition', TransitionConfig, WorkflowContext, WorkflowTrigger> = {
 	$type: 'transition',
 	metadata: {
 		name: 'State Transition',
@@ -387,16 +382,13 @@ class ActionRegistry<TConfig, TContext, TTrigger> {
 
 ```typescript
 class ActionExecutor<TConfig, TContext, TTrigger> {
-	constructor(
-		registry: ActionRegistryProvider<TConfig, TContext, TTrigger>,
-		options?: { debug?: boolean }
-	);
+	constructor(registry: ActionRegistryProvider<TConfig, TContext, TTrigger>, options?: { debug?: boolean });
 
 	execute(
 		actions: TConfig[],
 		trigger: TTrigger,
 		context: TContext,
-		triggeredBy?: TConfig
+		triggeredBy?: TConfig,
 	): Promise<ActionExecutionResult[]>;
 
 	cleanup(): void;

@@ -39,13 +39,13 @@ import {
 	SliderElementRegistration,
 	CheckboxGroupElementRegistration,
 	InputOTPElementRegistration,
-} from "@schema-engine/forms-react/components/elements/core-ui/inputs";
+} from '@schema-engine/forms-react/components/elements/core-ui/inputs';
 ```
 
 ### Register in Form Engine
 
 ```typescript
-import { FormEngineBuilder } from "@schema-engine/forms/builder";
+import { FormEngineBuilder } from '@schema-engine/forms/builder';
 
 const engine = new FormEngineBuilder()
 	.addElement(InputElementRegistration)
@@ -67,52 +67,52 @@ const engine = new FormEngineBuilder()
 const formConfig = {
 	fields: [
 		{
-			$type: "input",
-			name: "email",
-			label: "Email Address",
-			inputType: "email",
-			placeholder: "Enter your email",
-			rules: [{ type: "required", message: "Email is required" }],
+			$type: 'input',
+			name: 'email',
+			label: 'Email Address',
+			inputType: 'email',
+			placeholder: 'Enter your email',
+			rules: [{ type: 'required', message: 'Email is required' }],
 		},
 		{
-			$type: "textarea",
-			name: "message",
-			label: "Message",
-			placeholder: "Enter your message",
+			$type: 'textarea',
+			name: 'message',
+			label: 'Message',
+			placeholder: 'Enter your message',
 			rows: 5,
 		},
 		{
-			$type: "select",
-			name: "country",
-			label: "Country",
+			$type: 'select',
+			name: 'country',
+			label: 'Country',
 			options: [
-				{ value: "us", label: "United States" },
-				{ value: "ca", label: "Canada" },
-				{ value: "uk", label: "United Kingdom" },
+				{ value: 'us', label: 'United States' },
+				{ value: 'ca', label: 'Canada' },
+				{ value: 'uk', label: 'United Kingdom' },
 			],
 		},
 		{
-			$type: "checkbox-group",
-			name: "interests",
-			label: "Interests",
+			$type: 'checkbox-group',
+			name: 'interests',
+			label: 'Interests',
 			options: [
-				{ value: "sports", label: "Sports" },
-				{ value: "music", label: "Music" },
-				{ value: "reading", label: "Reading" },
+				{ value: 'sports', label: 'Sports' },
+				{ value: 'music', label: 'Music' },
+				{ value: 'reading', label: 'Reading' },
 			],
 		},
 		{
-			$type: "slider",
-			name: "rating",
-			label: "Rating",
+			$type: 'slider',
+			name: 'rating',
+			label: 'Rating',
 			min: 0,
 			max: 10,
 			step: 1,
 		},
 		{
-			$type: "input-otp",
-			name: "otp",
-			label: "Verification Code",
+			$type: 'input-otp',
+			name: 'otp',
+			label: 'Verification Code',
 			length: 6,
 		},
 	],

@@ -1,6 +1,4 @@
 import { test, expect, describe, beforeEach } from 'bun:test';
-import { FormEngineBuilder } from '@/builder';
-import type { FormEngine } from '@/engine/form-engine';
 import type { BuilderActionExecutionContext } from '@/types';
 import {
 	notificationPlugin,
@@ -10,8 +8,6 @@ import {
 import { createMockBuilderContext, setupTestEnvironment } from '../__tools';
 
 describe('NotificationPlugin', () => {
-	let engine: FormEngine;
-
 	beforeEach(() => {
 		setupTestEnvironment();
 	});
@@ -93,9 +89,7 @@ describe('NotificationPlugin', () => {
 				variant: 'info',
 			};
 
-			expect(() => NotificationActionSchema.parse(invalidAction)).toThrow(
-				'Message cannot be empty'
-			);
+			expect(() => NotificationActionSchema.parse(invalidAction)).toThrow('Message cannot be empty');
 		});
 
 		test('should reject negative duration', () => {
@@ -120,48 +114,6 @@ describe('NotificationPlugin', () => {
 			expect(plugin.execute).toBeDefined();
 			expect(plugin.schema).toBe(NotificationActionSchema);
 			expect(plugin.metadata.defaultTriggers).toEqual(['form_submit_success', 'form_submit_error']);
-		});
-
-		test('should create plugin with custom handlers', () => {
-			let successCalled = false;
-			let errorCalled = false;
-			let warningCalled = false;
-			let infoCalled = false;
-
-			const plugin = notificationPlugin({
-				onSuccess: (message, context) => {
-					successCalled = true;
-				},
-				onError: (message, context) => {
-					errorCalled = true;
-				},
-				onWarning: (message, context) => {
-					warningCalled = true;
-				},
-				onInfo: (message, context) => {
-					infoCalled = true;
-				},
-			});
-
-			expect(plugin.$type).toBe('show_notification');
-			expect(plugin.execute).toBeDefined();
-		});
-
-		test('should create plugin with global notification handler', () => {
-			let notificationCalled = false;
-			let capturedMessage: string | null = null;
-			let capturedVariant: string | null = null;
-
-			const plugin = notificationPlugin({
-				onNotification: (message, variant, context) => {
-					notificationCalled = true;
-					capturedMessage = message;
-					capturedVariant = variant;
-				},
-			});
-
-			expect(plugin.$type).toBe('show_notification');
-			expect(plugin.execute).toBeDefined();
 		});
 	});
 
@@ -334,7 +286,7 @@ describe('NotificationPlugin', () => {
 			let globalCalled = false;
 
 			const plugin = notificationPlugin({
-				onSuccess: (message, context) => {
+				onSuccess: () => {
 					specificCalled = true;
 				},
 			});
@@ -362,10 +314,10 @@ describe('NotificationPlugin', () => {
 			let globalMessage = '';
 
 			const plugin = notificationPlugin({
-				onSuccess: (message, context) => {
+				onSuccess: () => {
 					specificCalled = true;
 				},
-				onNotification: (message, variant, context) => {
+				onNotification: (message) => {
 					globalCalled = true;
 					globalMessage = message;
 				},
@@ -394,8 +346,8 @@ describe('NotificationPlugin', () => {
 			let globalVariant = '';
 
 			const plugin = notificationPlugin({
-				onSuccess: (message, context) => {},
-				onNotification: (message, variant, context) => {
+				onSuccess: () => {},
+				onNotification: (message, variant) => {
 					globalMessage = message;
 					globalVariant = variant;
 				},
@@ -420,7 +372,7 @@ describe('NotificationPlugin', () => {
 
 		test('should handle action with message', async () => {
 			const plugin = notificationPlugin({
-				onSuccess: (message, context) => {},
+				onSuccess: () => {},
 			});
 
 			const action: NotificationAction = {
@@ -482,7 +434,7 @@ describe('NotificationPlugin', () => {
 			let asyncHandlerCalled = false;
 
 			const plugin = notificationPlugin({
-				onSuccess: async (message, context) => {
+				onSuccess: async () => {
 					await new Promise((resolve) => setTimeout(resolve, 10));
 					asyncHandlerCalled = true;
 				},
@@ -554,10 +506,7 @@ describe('NotificationPlugin', () => {
 			await toastPlugin.execute(createMockBuilderContext(successAction));
 			await toastPlugin.execute(createMockBuilderContext(errorAction));
 
-			expect(toastMessages).toEqual([
-				'TOAST: Toast success message',
-				'TOAST ERROR: Toast error message',
-			]);
+			expect(toastMessages).toEqual(['TOAST: Toast success message', 'TOAST ERROR: Toast error message']);
 		});
 	});
 });

@@ -11,12 +11,12 @@ This app uses the new **Builder Pattern** to configure the form engine.
 The form engine is configured once in `/src/lib/form-engine-setup.ts`:
 
 ```typescript
-import { createReactFormEngine } from "@schema-engine/forms-react/registries/builder-registry";
+import { createReactFormEngine } from '@schema-engine/forms-react/registries/builder-registry';
 import {
 	InputElement,
 	TextareaElement,
 	// ... other components
-} from "@schema-engine/forms-react/registrations";
+} from '@schema-engine/forms-react/registrations';
 
 export const formEngine = createReactFormEngine()
 	.addElement(InputElement)
@@ -142,7 +142,7 @@ export const CustomInputElement: ReactElementRegistration = {
 
 ```typescript
 // lib/form-engine-setup.ts
-import { CustomInputElement } from "@/components/custom-input";
+import { CustomInputElement } from '@/components/custom-input';
 
 export const formEngine = createReactFormEngine()
 	.addElement(CustomInputElement)
@@ -158,10 +158,10 @@ const formConfig = {
 		{
 			elements: [
 				{
-					id: "custom-input",
-					id: "myField",
-					name: "myField",
-					label: "My Custom Field",
+					id: 'custom-input',
+					id: 'myField',
+					name: 'myField',
+					label: 'My Custom Field',
 				},
 			],
 		},
@@ -175,15 +175,15 @@ The old pattern used side-effect imports:
 
 ```typescript
 // [x-mark] OLD - Auto-registration via side effects
-import "@schema-engine/forms-react/registrations";
+import '@schema-engine/forms-react/registrations';
 ```
 
 The new pattern uses explicit registration:
 
 ```typescript
 // [check-mark] NEW - Explicit registration with Builder Pattern
-import { createReactFormEngine } from "@schema-engine/forms-react/registries/builder-registry";
-import { InputElement } from "@schema-engine/forms-react/registrations";
+import { createReactFormEngine } from '@schema-engine/forms-react/registries/builder-registry';
+import { InputElement } from '@schema-engine/forms-react/registrations';
 
 export const formEngine = createReactFormEngine().addElement(InputElement).build();
 ```

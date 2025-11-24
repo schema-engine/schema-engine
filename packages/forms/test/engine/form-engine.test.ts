@@ -15,10 +15,10 @@ describe('FormEngine', () => {
 
 			const engine = new FormEngineBuilder().addElement(textInput).build();
 
-		const element = engine.getElement('text');
-		expect(element).toBeDefined();
-		expect(element?.$type).toBe('text');
-		expect(element?.metadata.name).toBe('Text Input');
+			const element = engine.getElement('text');
+			expect(element).toBeDefined();
+			expect(element?.$type).toBe('text');
+			expect(element?.metadata.name).toBe('Text Input');
 		});
 
 		test('should return undefined for non-existent element', () => {
@@ -42,14 +42,12 @@ describe('FormEngine', () => {
 				render: (props) => props,
 			};
 
-			const engine = new FormEngineBuilder()
-				.addElements([textInput, emailInput])
-				.build();
+			const engine = new FormEngineBuilder().addElements([textInput, emailInput]).build();
 
-		const elements = engine.getAllElements();
-		expect(elements).toHaveLength(2);
-		expect(elements[0].$type).toBe('text');
-		expect(elements[1].$type).toBe('email');
+			const elements = engine.getAllElements();
+			expect(elements).toHaveLength(2);
+			expect(elements[0].$type).toBe('text');
+			expect(elements[1].$type).toBe('email');
 		});
 
 		test('should get all element IDs', () => {
@@ -67,9 +65,7 @@ describe('FormEngine', () => {
 				render: (props) => props,
 			};
 
-			const engine = new FormEngineBuilder()
-				.addElements([textInput, emailInput])
-				.build();
+			const engine = new FormEngineBuilder().addElements([textInput, emailInput]).build();
 
 			const ids = engine.getElementIds();
 			expect(ids).toHaveLength(2);
@@ -103,10 +99,10 @@ describe('FormEngine', () => {
 
 			const engine = new FormEngineBuilder().addLayout(cardLayout).build();
 
-		const layout = engine.getLayout('card');
-		expect(layout).toBeDefined();
-		expect(layout?.$type).toBe('card');
-		expect(layout?.metadata.name).toBe('Card Layout');
+			const layout = engine.getLayout('card');
+			expect(layout).toBeDefined();
+			expect(layout?.$type).toBe('card');
+			expect(layout?.metadata.name).toBe('Card Layout');
 		});
 
 		test('should return undefined for non-existent layout', () => {
@@ -130,9 +126,7 @@ describe('FormEngine', () => {
 				render: (props) => props,
 			};
 
-			const engine = new FormEngineBuilder()
-				.addLayouts([cardLayout, gridLayout])
-				.build();
+			const engine = new FormEngineBuilder().addLayouts([cardLayout, gridLayout]).build();
 
 			const layouts = engine.getAllLayouts();
 			expect(layouts).toHaveLength(2);
@@ -146,11 +140,11 @@ describe('FormEngine', () => {
 				render: (props) => props,
 			};
 
-		const engine = new FormEngineBuilder().addLayout(cardLayout).build();
+			const engine = new FormEngineBuilder().addLayout(cardLayout).build();
 
-		const ids = engine.getLayoutIds();
-		expect(ids).toHaveLength(1);
-		expect(ids).toContain('card');
+			const ids = engine.getLayoutIds();
+			expect(ids).toHaveLength(1);
+			expect(ids).toContain('card');
 		});
 
 		test('should check if layout exists', () => {
@@ -179,9 +173,9 @@ describe('FormEngine', () => {
 
 			const engine = new FormEngineBuilder().addStepper(wizardStepper).build();
 
-		const stepper = engine.getStepper('wizard');
-		expect(stepper).toBeDefined();
-		expect(stepper?.$type).toBe('wizard');
+			const stepper = engine.getStepper('wizard');
+			expect(stepper).toBeDefined();
+			expect(stepper?.$type).toBe('wizard');
 		});
 
 		test('should check if stepper exists', () => {
@@ -210,9 +204,9 @@ describe('FormEngine', () => {
 
 			const engine = new FormEngineBuilder().addAction(submitAction).build();
 
-		const action = engine.getAction('submit');
-		expect(action).toBeDefined();
-		expect(action?.$type).toBe('submit');
+			const action = engine.getAction('submit');
+			expect(action).toBeDefined();
+			expect(action?.$type).toBe('submit');
 		});
 
 		test('should check if action exists', () => {
@@ -244,14 +238,12 @@ describe('FormEngine', () => {
 				execute: async () => ({ success: true }),
 			};
 
-		const engine = new FormEngineBuilder()
-			.addActions([submitAction, resetAction])
-			.build();
+			const engine = new FormEngineBuilder().addActions([submitAction, resetAction]).build();
 
-		const types = engine.getActionTypes();
-		expect(types).toHaveLength(2);
-		expect(types).toContain('submit');
-		expect(types).toContain('reset');
+			const types = engine.getActionTypes();
+			expect(types).toHaveLength(2);
+			expect(types).toContain('submit');
+			expect(types).toContain('reset');
 		});
 	});
 

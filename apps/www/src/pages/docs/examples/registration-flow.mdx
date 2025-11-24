@@ -4,9 +4,9 @@ import { MultiStepDemo } from '@/components/demo/multi-step-demo';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-  title: 'Registration Flow Example | Form Engine Documentation',
-  description: 'Complete example of a multi-step registration flow using Form Engine.',
-})
+	title: 'Registration Flow Example | Form Engine Documentation',
+	description: 'Complete example of a multi-step registration flow using Form Engine.',
+});
 
 # Registration Flow Example
 
@@ -29,7 +29,7 @@ const registrationFlowConfig: FormConfig = {
   id: "user-registration-flow",
   title: "Create Your Account",
   description: "Join our platform in just a few simple steps",
-  
+
   steps: [
     {
       id: "personal-information",
@@ -58,7 +58,7 @@ const registrationFlowConfig: FormConfig = {
           type: "input",
           inputType: "text",
           id: "lastName",
-          name: "lastName", 
+          name: "lastName",
           label: "Last Name",
           placeholder: "Enter your last name",
           rules:
@@ -112,7 +112,7 @@ const registrationFlowConfig: FormConfig = {
     },
     {
       id: "account-details",
-      title: "Account Details", 
+      title: "Account Details",
       description: "Set up your account credentials",
       elements: [
         {
@@ -132,7 +132,7 @@ const registrationFlowConfig: FormConfig = {
         {
           type: "input",
           inputType: "password",
-          id: "password", 
+          id: "password",
           name: "password",
           label: "Password",
           placeholder: "Create a strong password",
@@ -147,7 +147,7 @@ const registrationFlowConfig: FormConfig = {
           inputType: "password",
           id: "confirmPassword",
           name: "confirmPassword",
-          label: "Confirm Password", 
+          label: "Confirm Password",
           placeholder: "Confirm your password",
           rules:
             ValidationPresets.string.required("Please confirm your password")
@@ -215,7 +215,7 @@ const registrationFlowConfig: FormConfig = {
         {
           type: "checkbox",
           id: "marketing",
-          name: "marketing", 
+          name: "marketing",
           label: "Receive marketing emails about new features"
         }
       ]
@@ -233,7 +233,7 @@ const registrationFlowConfig: FormConfig = {
           rules:idationPresets.string.required("You must accept the terms and privacy policy")]
         },
         {
-          type: "checkbox", 
+          type: "checkbox",
           id: "ageConfirmation",
           name: "ageConfirmation",
           label: "I confirm that I am at least 18 years old",
@@ -261,19 +261,19 @@ const registrationFlowConfig: FormConfig = {
       triggers: ["form_mount"],
       enabled: true
     },
-    
+
     // Auto-save progress
     {
       id: "auto-save-registration",
       type: "auto_save_draft",
       description: "Auto save registration progress",
-      mode: "debounced", 
+      mode: "debounced",
       debounceMs: 3000,
       formId: "user-registration-flow",
       enabled: true,
       showNotification: false
     },
-    
+
     // Submit registration
     {
       id: "submit-registration",
@@ -288,7 +288,7 @@ const registrationFlowConfig: FormConfig = {
       errorMessage: "Registration failed. Please check your information and try again.",
       enabled: true
     },
-    
+
     // Track successful registration
     {
       id: "track-registration-success",
@@ -304,14 +304,14 @@ const registrationFlowConfig: FormConfig = {
       triggers: ["submit_success"],
       enabled: true
     },
-    
+
     // Show success notification
     {
       id: "registration-success-notification",
       $type: "notification",
       description: "Show registration success message",
       message: "Account created! Check your email to verify your account.",
-      variant: "success", 
+      variant: "success",
       duration: 8000,
       triggers: ["submit_success"],
       enabled: true
@@ -325,7 +325,7 @@ export function RegistrationFlow() {
     // Handle successful registration
     // Redirect to dashboard or verification page
   };
-  
+
   const handleStepChange = (step: number) => {
     console.log("Step changed to:", step);
     // Optional: Handle step navigation
@@ -333,7 +333,7 @@ export function RegistrationFlow() {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <FormRenderer 
+      <FormRenderer
         config={registrationFlowConfig}
         onSubmit={handleSubmit}
         onChange={handleStepChange}
@@ -346,28 +346,33 @@ export function RegistrationFlow() {
 ## Key Features Demonstrated
 
 ### Multi-Step Navigation
+
 - 4-step registration flow with clear progression
 - Step validation before navigation
 - Progress indication
 
 ### Responsive Grid Layout
+
 - Mobile-first responsive design
 - Fields adapt to screen size
 - Optimized for both desktop and mobile
 
 ### Comprehensive Validation
+
 - Field-level validation with real-time feedback
 - Password strength requirements
 - Email format validation
 - Username format restrictions
 
 ### Form Actions
+
 - Analytics tracking at form and step level
 - Auto-save functionality for long forms
 - Success notifications and error handling
 - API submission with proper error handling
 
 ### Advanced Field Types
+
 - Text inputs with various types
 - Select dropdowns with comprehensive options
 - Radio buttons for single choices
@@ -381,22 +386,22 @@ The completed registration produces this data structure:
 {
   // Personal Information
   firstName: "John",
-  lastName: "Doe", 
+  lastName: "Doe",
   email: "john.doe@example.com",
   age: 28,
-  
+
   // Account Details
   username: "johndoe123",
   password: "SecurePass123!",
   confirmPassword: "SecurePass123!",
-  
+
   // Preferences
   country: "us",
   timezone: "UTC-5",
   theme: "auto",
   newsletter: true,
   marketing: false,
-  
+
   // Confirmations
   terms: true,
   ageConfirmation: true
@@ -406,19 +411,23 @@ The completed registration produces this data structure:
 ## Implementation Tips
 
 ### Progressive Enhancement
+
 Start with a simple single-step form and gradually add steps as needed.
 
 ### Validation Strategy
+
 - Use client-side validation for immediate feedback
 - Implement server-side validation for security
 - Consider async validation for username availability
 
 ### User Experience
+
 - Provide clear progress indication
 - Allow users to go back and edit previous steps
 - Save progress automatically to prevent data loss
 
 ### Performance Optimization
+
 - Lazy load non-critical steps
 - Optimize validation to run only when necessary
 - Consider splitting very long forms into separate pages

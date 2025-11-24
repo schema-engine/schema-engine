@@ -1,150 +1,151 @@
 {
-  "name": "@schema-engine/forms",
-  "type": "module",
-  "version": "0.1.0",
-  "license": "MIT",
-  "sideEffects": false,
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "/dist/*"
-  ],
-  "scripts": {
-    "build:lib": "bun run clean && bun run build:files && bun run build:types",
-    "build:files": "bun run ./build.ts",
-    "build:types": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
-    "watch:lib": "bun run ./build.ts --watch",
-    "clean": "rm -rf ./dist",
-    "test:all": "bun test",
-    "lint-staged": "lint-staged"
-  },
-  "lint-staged": {
-    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
-      "biome check --write --no-errors-on-unmatched"
-    ],
-    "*": [
-      "biome check --no-errors-on-unmatched --files-ignore-unknown=true"
-    ]
-  },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "tsc-alias": "^1.8.16"
-  },
-  "dependencies": {
-    "@schema-engine/actions": "workspace:*"
-  },
-  "peerDependencies": {
-    "typescript": "^5",
-    "zod": "^4.0.17"
-  },
-  "exports": {
-    "./package.json": {
-      "import": "./package.json"
-    },
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./actions": {
-      "types": "./dist/actions/index.d.ts",
-      "import": "./dist/actions/index.js"
-    },
-    "./actions/*": {
-      "types": "./dist/actions/*.d.ts",
-      "import": "./dist/actions/*.js"
-    },
-    "./actions/debug-registry": {
-      "types": "./dist/actions/debug-registry.d.ts",
-      "import": "./dist/actions/debug-registry.js"
-    },
-    "./actions/plugins/*": {
-      "types": "./dist/actions/plugins/*.d.ts",
-      "import": "./dist/actions/plugins/*.js"
-    },
-    "./types": {
-      "types": "./dist/types/index.d.ts",
-      "import": "./dist/types/index.js"
-    },
-    "./types/*": {
-      "types": "./dist/types/*.d.ts",
-      "import": "./dist/types/*.js"
-    },
-    "./builder": {
-      "types": "./dist/builder/index.d.ts",
-      "import": "./dist/builder/index.js"
-    },
-    "./builder/*": {
-      "types": "./dist/builder/*.d.ts",
-      "import": "./dist/builder/*.js"
-    },
-    "./engine": {
-      "types": "./dist/engine/index.d.ts",
-      "import": "./dist/engine/index.js"
-    },
-    "./engine/*": {
-      "types": "./dist/engine/*.d.ts",
-      "import": "./dist/engine/*.js"
-    },
-    "./schemas": {
-      "types": "./dist/schemas/index.d.ts",
-      "import": "./dist/schemas/index.js"
-    },
-    "./lib/debounce": {
-      "types": "./dist/lib/debounce.d.ts",
-      "import": "./dist/lib/debounce.js"
-    },
-    "./schemas/*": {
-      "types": "./dist/schemas/*.d.ts",
-      "import": "./dist/schemas/*.js"
-    },
-    "./schemas/validation": {
-      "types": "./dist/schemas/validation/index.d.ts",
-      "import": "./dist/schemas/validation/index.js"
-    },
-    "./schemas/validation/*": {
-      "types": "./dist/schemas/validation/*.d.ts",
-      "import": "./dist/schemas/validation/*.js"
-    },
-    "./schemas/validation/validation-registry": {
-      "types": "./dist/schemas/validation/validation-registry.d.ts",
-      "import": "./dist/schemas/validation/validation-registry.js"
-    },
-    "./schemas/validation/async/*": {
-      "types": "./dist/schemas/validation/async/*.d.ts",
-      "import": "./dist/schemas/validation/async/*.js"
-    },
-    "./constraints": {
-      "types": "./dist/constraints/index.d.ts",
-      "import": "./dist/constraints/index.js"
-    },
-    "./constraints/*": {
-      "types": "./dist/constraints/*.d.ts",
-      "import": "./dist/constraints/*.js"
-    },
-    "./tools": {
-      "types": "./dist/tools/index.d.ts",
-      "import": "./dist/tools/index.js"
-    },
-    "./tools/*": {
-      "types": "./dist/tools/*.d.ts",
-      "import": "./dist/tools/*.js"
-    },
-    "./layouts": {
-      "types": "./dist/layouts/index.d.ts",
-      "import": "./dist/layouts/index.js"
-    },
-    "./layouts/*": {
-      "types": "./dist/layouts/*.d.ts",
-      "import": "./dist/layouts/*.js"
-    },
-    "./steppers": {
-      "types": "./dist/steppers/index.d.ts",
-      "import": "./dist/steppers/index.js"
-    },
-    "./steppers/*": {
-      "types": "./dist/steppers/*.d.ts",
-      "import": "./dist/steppers/*.js"
-    }
-  }
+	"name": "@schema-engine/forms",
+	"type": "module",
+	"version": "0.1.0",
+	"license": "MIT",
+	"sideEffects": false,
+	"main": "dist/index.js",
+	"module": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"files": [
+		"/dist/*"
+	],
+	"scripts": {
+		"build:lib": "bun run clean && bun run build:files && bun run build:types",
+		"build:files": "bun run ./build.ts",
+		"build:types": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
+		"watch:lib": "bun run ./build.ts --watch",
+		"clean": "rm -rf ./dist",
+		"test:all": "bun test",
+		"lint-staged": "lint-staged"
+	},
+	"lint-staged": {
+		"**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}": [
+			"oxlint",
+			"prettier --write"
+		],
+		"**/*.{json,jsonc,md,yml,yaml}": [
+			"prettier --write"
+		]
+	},
+	"devDependencies": {
+		"@types/bun": "latest",
+		"tsc-alias": "^1.8.16"
+	},
+	"dependencies": {
+		"@schema-engine/actions": "workspace:*"
+	},
+	"peerDependencies": {
+		"typescript": "^5",
+		"zod": "^4.0.17"
+	},
+	"exports": {
+		"./package.json": {
+			"import": "./package.json"
+		},
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./actions": {
+			"types": "./dist/actions/index.d.ts",
+			"import": "./dist/actions/index.js"
+		},
+		"./actions/*": {
+			"types": "./dist/actions/*.d.ts",
+			"import": "./dist/actions/*.js"
+		},
+		"./actions/debug-registry": {
+			"types": "./dist/actions/debug-registry.d.ts",
+			"import": "./dist/actions/debug-registry.js"
+		},
+		"./actions/plugins/*": {
+			"types": "./dist/actions/plugins/*.d.ts",
+			"import": "./dist/actions/plugins/*.js"
+		},
+		"./types": {
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/types/index.js"
+		},
+		"./types/*": {
+			"types": "./dist/types/*.d.ts",
+			"import": "./dist/types/*.js"
+		},
+		"./builder": {
+			"types": "./dist/builder/index.d.ts",
+			"import": "./dist/builder/index.js"
+		},
+		"./builder/*": {
+			"types": "./dist/builder/*.d.ts",
+			"import": "./dist/builder/*.js"
+		},
+		"./engine": {
+			"types": "./dist/engine/index.d.ts",
+			"import": "./dist/engine/index.js"
+		},
+		"./engine/*": {
+			"types": "./dist/engine/*.d.ts",
+			"import": "./dist/engine/*.js"
+		},
+		"./schemas": {
+			"types": "./dist/schemas/index.d.ts",
+			"import": "./dist/schemas/index.js"
+		},
+		"./lib/debounce": {
+			"types": "./dist/lib/debounce.d.ts",
+			"import": "./dist/lib/debounce.js"
+		},
+		"./schemas/*": {
+			"types": "./dist/schemas/*.d.ts",
+			"import": "./dist/schemas/*.js"
+		},
+		"./schemas/validation": {
+			"types": "./dist/schemas/validation/index.d.ts",
+			"import": "./dist/schemas/validation/index.js"
+		},
+		"./schemas/validation/*": {
+			"types": "./dist/schemas/validation/*.d.ts",
+			"import": "./dist/schemas/validation/*.js"
+		},
+		"./schemas/validation/validation-registry": {
+			"types": "./dist/schemas/validation/validation-registry.d.ts",
+			"import": "./dist/schemas/validation/validation-registry.js"
+		},
+		"./schemas/validation/async/*": {
+			"types": "./dist/schemas/validation/async/*.d.ts",
+			"import": "./dist/schemas/validation/async/*.js"
+		},
+		"./constraints": {
+			"types": "./dist/constraints/index.d.ts",
+			"import": "./dist/constraints/index.js"
+		},
+		"./constraints/*": {
+			"types": "./dist/constraints/*.d.ts",
+			"import": "./dist/constraints/*.js"
+		},
+		"./tools": {
+			"types": "./dist/tools/index.d.ts",
+			"import": "./dist/tools/index.js"
+		},
+		"./tools/*": {
+			"types": "./dist/tools/*.d.ts",
+			"import": "./dist/tools/*.js"
+		},
+		"./layouts": {
+			"types": "./dist/layouts/index.d.ts",
+			"import": "./dist/layouts/index.js"
+		},
+		"./layouts/*": {
+			"types": "./dist/layouts/*.d.ts",
+			"import": "./dist/layouts/*.js"
+		},
+		"./steppers": {
+			"types": "./dist/steppers/index.d.ts",
+			"import": "./dist/steppers/index.js"
+		},
+		"./steppers/*": {
+			"types": "./dist/steppers/*.d.ts",
+			"import": "./dist/steppers/*.js"
+		}
+	}
 }

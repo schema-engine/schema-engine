@@ -34,17 +34,17 @@ class BaseRegistry<TKey, TValue> {
 Use `ActionRegistry` independently for event-driven workflows:
 
 ```typescript
-import { ActionRegistry, type BuilderActionRegistration } from "@schema-engine/forms";
+import { ActionRegistry, type BuilderActionRegistration } from '@schema-engine/forms';
 
 const actionRegistry = new ActionRegistry();
 
 const logAction: BuilderActionRegistration = {
-	id: "log",
+	id: 'log',
 	schema: z.object({ message: z.string() }),
 	metadata: {
-		name: "Log Action",
-		description: "Logs a message",
-		defaultTriggers: ["custom_event"],
+		name: 'Log Action',
+		description: 'Logs a message',
+		defaultTriggers: ['custom_event'],
 	},
 	execute: async (context) => {
 		console.log(context.actionConfig.message);
@@ -54,11 +54,11 @@ const logAction: BuilderActionRegistration = {
 
 actionRegistry.register(logAction);
 
-const action = actionRegistry.get("log");
+const action = actionRegistry.get('log');
 if (action) {
 	await action.execute({
-		formId: "my-form",
-		actionConfig: { message: "Hello World" },
+		formId: 'my-form',
+		actionConfig: { message: 'Hello World' },
 	});
 }
 ```
@@ -230,12 +230,7 @@ const builder = new FormEngineBuilder();
 But you can provide custom instances:
 
 ```typescript
-const builder = new FormEngineBuilder(
-	myElementRegistry,
-	myLayoutRegistry,
-	myStepperRegistry,
-	myActionRegistry
-);
+const builder = new FormEngineBuilder(myElementRegistry, myLayoutRegistry, myStepperRegistry, myActionRegistry);
 ```
 
 This pattern enables:

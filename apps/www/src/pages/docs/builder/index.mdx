@@ -3,9 +3,9 @@ import { DocsLayout } from '@/layouts/docs-layout';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-  title: 'Builder Pattern | Form Engine Documentation',
-  description: 'Learn how to use the Builder Pattern to configure and instantiate the Form Engine.',
-})
+	title: 'Builder Pattern | Form Engine Documentation',
+	description: 'Learn how to use the Builder Pattern to configure and instantiate the Form Engine.',
+});
 
 # Builder Pattern
 
@@ -30,11 +30,7 @@ The `FormEngineBuilder` class is your entry point for configuring the form engin
 ```typescript
 import { createReactFormEngine } from '@schema-engine/forms-react/registries/builder-registry';
 
-const formEngine = createReactFormEngine()
-  .addElement(/* ... */)
-  .addLayout(/* ... */)
-  .addStepper(/* ... */)
-  .build();
+const formEngine = createReactFormEngine().addElement(/* ... */).addLayout(/* ... */).addStepper(/* ... */).build();
 ```
 
 ### Registration Objects
@@ -53,19 +49,19 @@ import type { ReactElementRegistration } from '@schema-engine/forms-react';
 import { z } from 'zod';
 
 export const CustomInputElement: ReactElementRegistration = {
-  id: 'custom-input',
-  component: CustomInput,
-  schema: z.object({
-    id: z.string(),
-    name: z.string(),
-    label: z.string().optional(),
-    placeholder: z.string().optional(),
-  }),
-  metadata: {
-    name: 'Custom Input',
-    description: 'A customized input field',
-    category: 'input',
-  },
+	id: 'custom-input',
+	component: CustomInput,
+	schema: z.object({
+		id: z.string(),
+		name: z.string(),
+		label: z.string().optional(),
+		placeholder: z.string().optional(),
+	}),
+	metadata: {
+		name: 'Custom Input',
+		description: 'A customized input field',
+		category: 'input',
+	},
 };
 ```
 
@@ -78,15 +74,10 @@ Since React uses a `component` property but the core engine expects a `render` f
 - ``: Convert React stepper to core format
 
 ```typescript
-import {
-  createReactFormEngine,
-  
-} from '@schema-engine/forms-react/registries/builder-registry';
+import { createReactFormEngine } from '@schema-engine/forms-react/registries/builder-registry';
 import { CustomInputElement } from './custom-input';
 
-const formEngine = createReactFormEngine()
-  .addElement(CustomInputElement)
-  .build();
+const formEngine = createReactFormEngine().addElement(CustomInputElement).build();
 ```
 
 ## Basic Usage
@@ -97,27 +88,22 @@ Create a central form engine instance for your application:
 
 ```typescript
 // lib/form-engine.ts
+import { createReactFormEngine } from '@schema-engine/forms-react/registries/builder-registry';
 import {
-  createReactFormEngine,
-  
-  
-  
-} from '@schema-engine/forms-react/registries/builder-registry';
-import {
-  InputElement,
-  TextareaElement,
-  SelectElement,
-  CardLayoutRegistration,
-  DefaultStepperRegistration,
+	InputElement,
+	TextareaElement,
+	SelectElement,
+	CardLayoutRegistration,
+	DefaultStepperRegistration,
 } from '@schema-engine/forms-react/registrations';
 
 export const formEngine = createReactFormEngine()
-  .addElement(InputElement)
-  .addElement(TextareaElement)
-  .addElement(SelectElement)
-  .addLayout(CardLayoutRegistration)
-  .addStepper(DefaultStepperRegistration)
-  .build();
+	.addElement(InputElement)
+	.addElement(TextareaElement)
+	.addElement(SelectElement)
+	.addLayout(CardLayoutRegistration)
+	.addStepper(DefaultStepperRegistration)
+	.build();
 ```
 
 ### Step 2: Use in Your Components
@@ -205,7 +191,7 @@ type RatingConfig = z.infer<typeof RatingConfigSchema>;
 
 function RatingInput({ config }: { config: RatingConfig }) {
   const [rating, setRating] = useState(0);
-  
+
   return (
     <div>
       {config.label && <label>{config.label}</label>}
@@ -242,28 +228,30 @@ export const RatingElement: ReactElementRegistration = {
 import { RatingElement } from './components/custom-rating';
 
 const formEngine = createReactFormEngine()
-  .addElement(RatingElement)
-  // ... other components
-  .build();
+	.addElement(RatingElement)
+	// ... other components
+	.build();
 ```
 
 ### 3. Use in Form Config
 
 ```typescript
 const formConfig: FormConfig = {
-  id: 'feedback-form',
-  steps: [{
-    elements: [{
-      id: 'rating',
-      id: 'satisfaction',
-      name: 'satisfaction',
-      label: 'How satisfied are you?',
-      maxRating: 5,
-      rules: [
-        { type: 'required', message: 'Please rate your experience' }
-      ],
-    }],
-  }],
+	id: 'feedback-form',
+	steps: [
+		{
+			elements: [
+				{
+					id: 'rating',
+					id: 'satisfaction',
+					name: 'satisfaction',
+					label: 'How satisfied are you?',
+					maxRating: 5,
+					rules: [{ type: 'required', message: 'Please rate your experience' }],
+				},
+			],
+		},
+	],
 };
 ```
 
@@ -274,14 +262,10 @@ const formConfig: FormConfig = {
 Register components based on feature flags or environment:
 
 ```typescript
-const formEngine = createReactFormEngine()
-  .addElement(InputElement)
-  .addElement(TextareaElement);
+const formEngine = createReactFormEngine().addElement(InputElement).addElement(TextareaElement);
 
 if (process.env.ENABLE_ADVANCED_FIELDS) {
-  formEngine
-    .addElement(RichTextElement)
-    .addElement(CodeEditorElement);
+	formEngine.addElement(RichTextElement).addElement(CodeEditorElement);
 }
 
 export const finalEngine = formEngine.build();
@@ -294,21 +278,21 @@ Create different engine instances for different use cases:
 ```typescript
 // Simple contact form engine
 export const contactFormEngine = createReactFormEngine()
-  .addElement(InputElement)
-  .addElement(TextareaElement)
-  .addLayout(CardLayoutRegistration)
-  .build();
+	.addElement(InputElement)
+	.addElement(TextareaElement)
+	.addLayout(CardLayoutRegistration)
+	.build();
 
 // Complex survey engine
 export const surveyEngine = createReactFormEngine()
-  .addElement(InputElement)
-  .addElement(SelectElement)
-  .addElement(RadioElement)
-  .addElement(CheckboxElement)
-  .addElement(RatingElement)
-  .addLayout(SplitScreenLayoutRegistration)
-  .addStepper(DefaultStepperRegistration)
-  .build();
+	.addElement(InputElement)
+	.addElement(SelectElement)
+	.addElement(RadioElement)
+	.addElement(CheckboxElement)
+	.addElement(RatingElement)
+	.addLayout(SplitScreenLayoutRegistration)
+	.addStepper(DefaultStepperRegistration)
+	.build();
 ```
 
 ### Extending Registration Objects
@@ -316,27 +300,23 @@ export const surveyEngine = createReactFormEngine()
 Create custom registration builders:
 
 ```typescript
-function createInputElement(
-  id: string,
-  displayName: string,
-  inputType: string
-): ReactElementRegistration {
-  return {
-    id,
-    component: FormInput,
-    schema: InputFieldSchema,
-    metadata: {
-      name: displayName,
-      description: `${displayName} input field`,
-      category: 'input',
-    },
-  };
+function createInputElement(id: string, displayName: string, inputType: string): ReactElementRegistration {
+	return {
+		id,
+		component: FormInput,
+		schema: InputFieldSchema,
+		metadata: {
+			name: displayName,
+			description: `${displayName} input field`,
+			category: 'input',
+		},
+	};
 }
 
 const formEngine = createReactFormEngine()
-  .addElement(createInputElement('email', 'Email', 'email'))
-  .addElement(createInputElement('phone', 'Phone', 'tel'))
-  .build();
+	.addElement(createInputElement('email', 'Email', 'email'))
+	.addElement(createInputElement('phone', 'Phone', 'tel'))
+	.build();
 ```
 
 ## Type Safety
@@ -345,9 +325,7 @@ The Builder Pattern provides full type safety throughout:
 
 ```typescript
 // TypeScript knows about all registered components
-const formEngine = createReactFormEngine()
-  .addElement(InputElement)
-  .build();
+const formEngine = createReactFormEngine().addElement(InputElement).build();
 
 // Type-safe retrieval
 const inputElement = formEngine.getElement('input'); // Type: ElementRegistration<InputFieldConfig>
@@ -355,12 +333,16 @@ const unknownElement = formEngine.getElement('unknown'); // Compile error if str
 
 // Type-safe form configs
 const config: FormConfig = {
-  steps: [{
-    elements: [{
-      id: 'input', // [check-mark] Valid
-      // id: 'invalid', // [x-mark] Would cause runtime error
-    }],
-  }],
+	steps: [
+		{
+			elements: [
+				{
+					id: 'input', // [check-mark] Valid
+					// id: 'invalid', // [x-mark] Would cause runtime error
+				},
+			],
+		},
+	],
 };
 ```
 
@@ -383,19 +365,19 @@ const config: FormConfig = {
 If you're migrating from the old registry pattern:
 
 **Old Pattern**:
+
 ```typescript
 import '@schema-engine/forms-react/registrations';
 // Components auto-registered via side effects
 ```
 
 **New Pattern**:
+
 ```typescript
 import { createReactFormEngine } from '@schema-engine/forms-react/registries/builder-registry';
 import { InputElement } from '@schema-engine/forms-react/registrations';
 
-export const formEngine = createReactFormEngine()
-  .addElement(InputElement)
-  .build();
+export const formEngine = createReactFormEngine().addElement(InputElement).build();
 ```
 
 See the [Migration Guide](/docs/migration/v2) for detailed instructions.

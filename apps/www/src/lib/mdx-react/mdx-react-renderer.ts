@@ -6,7 +6,6 @@
 import {
 	type EcoComponentConfig,
 	type EcoPageFile,
-	type EcoPagesElement,
 	type GetMetadata,
 	IntegrationRenderer,
 	type IntegrationRendererRenderOptions,
@@ -25,7 +24,7 @@ import {
 } from '@ecopages/core/services/asset-processing-service';
 import fs from 'node:fs/promises';
 import { compile, type CompileOptions } from '@mdx-js/mdx';
-import type { EcoPagesAppConfig } from 'node_modules/@ecopages/core/_dist/src/internal-types';
+import type { EcoPagesAppConfig } from '../../../../../node_modules/@ecopages/core/_dist/src/internal-types';
 
 /**
  * Error thrown when an error occurs while rendering a React component.
@@ -176,7 +175,7 @@ export default WrappedMDXComponent;
 /**
  * A renderer for the MDX integration.
  */
-export class MDXReactRenderer extends IntegrationRenderer<EcoPagesElement> {
+export class MDXReactRenderer extends IntegrationRenderer {
 	name = PLUGIN_NAME;
 	private scriptsGenerator: ScriptsGenerator;
 
@@ -265,7 +264,8 @@ export class MDXReactRenderer extends IntegrationRenderer<EcoPagesElement> {
 				config: config as EcoComponentConfig | undefined,
 			};
 		} catch (error) {
-			invariant(false, `Error importing MDX file: ${error}`);
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			invariant(false, `Error importing MDX file: ${errorMessage}`);
 		}
 	}
 
@@ -307,7 +307,8 @@ export class MDXReactRenderer extends IntegrationRenderer<EcoPagesElement> {
 
 			return this.DOC_TYPE + body;
 		} catch (error) {
-			throw new Error(`[ecopages] Error rendering page: ${error}`);
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			throw new Error(`[ecopages] Error rendering page: ${errorMessage}`, { cause: error });
 		}
 	}
 }

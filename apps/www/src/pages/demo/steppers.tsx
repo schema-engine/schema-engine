@@ -145,10 +145,7 @@ const verticalStepperDemo: FormConfig = {
 	description: 'Register for our upcoming conference',
 	stepper: {
 		$type: 'default',
-		orientation: 'vertical',
-		showDescriptions: true,
-		allowClickNavigation: true,
-		connectorStyle: 'line',
+		orientation: 'horizontal',
 	},
 	steps: [
 		{
@@ -264,9 +261,7 @@ const defaultStepperDemo: FormConfig = {
 	description: 'Configure your new project step by step',
 	stepper: {
 		$type: 'default',
-		showStepNumbers: true,
-		showStepTitles: true,
-		showStepDescriptions: false,
+		orientation: 'horizontal',
 	},
 	steps: [
 		{

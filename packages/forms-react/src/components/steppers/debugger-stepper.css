@@ -41,11 +41,7 @@
 .debugger-stepper__fab {
 	@apply flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all duration-200;
 	@apply hover:scale-110 active:scale-95;
-	background: linear-gradient(
-		135deg,
-		var(--debugger-stepper-primary) 0%,
-		hsl(var(--primary) / 0.8) 100%
-	);
+	background: linear-gradient(135deg, var(--debugger-stepper-primary) 0%, hsl(var(--primary) / 0.8) 100%);
 	color: var(--debugger-stepper-primary-foreground);
 	box-shadow: var(--debugger-stepper-shadow);
 	animation: debugger-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -149,11 +145,7 @@
 
 .debugger-stepper__progress-fill {
 	@apply h-full rounded-full transition-all duration-500 ease-out;
-	background: linear-gradient(
-		90deg,
-		var(--debugger-stepper-primary) 0%,
-		hsl(var(--primary) / 0.8) 100%
-	);
+	background: linear-gradient(90deg, var(--debugger-stepper-primary) 0%, hsl(var(--primary) / 0.8) 100%);
 	box-shadow: 0 0 10px var(--debugger-stepper-primary);
 }
 
@@ -166,7 +158,7 @@
 	@apply flex gap-3 relative;
 
 	&::before {
-		content: "";
+		content: '';
 		@apply absolute top-8 w-0.5 h-[calc(100%+0.5rem)];
 		left: 0.9375rem;
 		background-color: var(--debugger-stepper-border);
@@ -181,11 +173,7 @@
 	}
 
 	&--active &::before {
-		background: linear-gradient(
-			to bottom,
-			var(--debugger-stepper-primary),
-			var(--debugger-stepper-border)
-		);
+		background: linear-gradient(to bottom, var(--debugger-stepper-primary), var(--debugger-stepper-border));
 	}
 }
 

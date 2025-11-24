@@ -11,11 +11,11 @@ This guide explains best practices for creating custom field components in the f
 **Important**: All field types **must extend** `BaseFieldSchema` from `@schema-engine/forms/schemas/base-field`.
 
 ```typescript
-import { z } from "zod";
-import { BaseFieldSchema } from "@schema-engine/formschemas/base-field";
+import { z } from 'zod';
+import { BaseFieldSchema } from '@schema-engine/formschemas/base-field';
 
 export const MyFieldSchema = BaseFieldSchema.extend({
-	$type: z.literal("my-field"),
+	$type: z.literal('my-field'),
 	// Add your field-specific properties
 	customProp: z.string().optional(),
 });
@@ -28,7 +28,7 @@ export const MyFieldSchema = BaseFieldSchema.extend({
 All fields should use the `useControlledFormElement` hook (or `useAdapterControlledFormElement` for adapter-aware fields) to integrate with the form system:
 
 ```tsx
-import { useControlledFormElement, combineHandlers } from "@/hooks";
+import { useControlledFormElement, combineHandlers } from '@/hooks';
 
 export function MyField({ onChange: propsOnChange, onBlur: propsOnBlur, ...config }: MyFieldProps) {
 	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
@@ -79,9 +79,9 @@ Here's a complete template for creating a new field component:
 
 ```tsx
 // my-field.tsx
-import { useControlledFormElement, combineHandlers } from "@/hooks";
-import { FieldGroup } from "@/components/form/field-group";
-import type { MyFieldProps } from "./my-field.types";
+import { useControlledFormElement, combineHandlers } from '@/hooks';
+import { FieldGroup } from '@/components/form/field-group';
+import type { MyFieldProps } from './my-field.types';
 
 /**
  * My Field Component
@@ -97,7 +97,7 @@ export function MyField({
 		useControlledFormElement(config);
 
 	// Extract field-specific config with defaults
-	const { variant = "default", showHelper = true } = config;
+	const { variant = 'default', showHelper = true } = config;
 
 	return (
 		<div style={containerStyles}>
@@ -116,7 +116,7 @@ export function MyField({
 				<input
 					{...fieldProps}
 					type="text"
-					value={value || ""}
+					value={value || ''}
 					onChange={(e) => combineHandlers(onChange, propsOnChange)(e.target.value)}
 					onBlur={combineHandlers(onBlur, propsOnBlur)}
 					onFocus={propsOnFocus}
@@ -131,8 +131,8 @@ export function MyField({
 
 ```typescript
 // my-field.types.ts
-import { z } from "zod";
-import { BaseFieldSchema } from "@schema-engine/formschemas/base-field";
+import { z } from 'zod';
+import { BaseFieldSchema } from '@schema-engine/formschemas/base-field';
 
 /**
  * My field specific properties schema
@@ -140,7 +140,7 @@ import { BaseFieldSchema } from "@schema-engine/formschemas/base-field";
  * Validation is handled by the rules key in BaseFieldSchema
  */
 export const MyFieldExtensionSchema = z.object({
-	variant: z.enum(["default", "outline", "ghost"]).default("default"),
+	variant: z.enum(['default', 'outline', 'ghost']).default('default'),
 	showHelper: z.boolean().optional(),
 	maxLength: z.number().optional(),
 });
@@ -149,7 +149,7 @@ export const MyFieldExtensionSchema = z.object({
  * Complete field schema
  */
 export const MyFieldSchema = BaseFieldSchema.extend({
-	$type: z.literal("my-field"),
+	$type: z.literal('my-field'),
 	...MyFieldExtensionSchema.shape,
 });
 
@@ -172,12 +172,12 @@ export type MyFieldProps = MyFieldConfig & {
  * Example field configuration for documentation
  */
 export const myFieldExample: MyFieldConfig = {
-	$type: "my-field",
-	name: "exampleField",
-	label: "Example Field",
-	description: "This is an example field",
-	placeholder: "Enter value...",
-	variant: "default",
+	$type: 'my-field',
+	name: 'exampleField',
+	label: 'Example Field',
+	description: 'This is an example field',
+	placeholder: 'Enter value...',
+	variant: 'default',
 	showHelper: true,
 };
 ```
@@ -214,15 +214,11 @@ export const MyFieldRegistration: ElementRegistration<MyFieldConfig, MyFieldProp
 ### Pattern 1: Simple Text Input
 
 ```tsx
-import { Input } from "@/shadcn/ui/input";
-import { FieldGroup } from "@/components/form/field-group";
-import { useControlledFormElement, combineHandlers } from "@/hooks";
+import { Input } from '@/shadcn/ui/input';
+import { FieldGroup } from '@/components/form/field-group';
+import { useControlledFormElement, combineHandlers } from '@/hooks';
 
-export function FormInput({
-	onChange: propsOnChange,
-	onBlur: propsOnBlur,
-	...config
-}: InputFieldProps) {
+export function FormInput({ onChange: propsOnChange, onBlur: propsOnBlur, ...config }: InputFieldProps) {
 	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
 		useControlledFormElement(config);
 
@@ -237,15 +233,13 @@ export function FormInput({
 			>
 				<Input
 					{...fieldProps}
-					type={config.inputType || "text"}
-					value={value || ""}
+					type={config.inputType || 'text'}
+					value={value || ''}
 					onChange={(e) => combineHandlers(onChange, propsOnChange)(e.target.value)}
 					onBlur={combineHandlers(onBlur, propsOnBlur)}
 					placeholder={config.placeholder}
 				/>
-				{config.description ? (
-					<p className="text-sm text-muted-foreground mb-2">{config.description}</p>
-				) : null}
+				{config.description ? <p className="text-sm text-muted-foreground mb-2">{config.description}</p> : null}
 			</FieldGroup>
 		</div>
 	);
@@ -255,23 +249,16 @@ export function FormInput({
 ### Pattern 2: Checkbox/Switch (Boolean)
 
 ```tsx
-import { Checkbox } from "@/shadcn/ui/checkbox";
-import { Label } from "@/shadcn/ui/label";
-import { useControlledFormElement, combineHandlers } from "@/hooks";
+import { Checkbox } from '@/shadcn/ui/checkbox';
+import { Label } from '@/shadcn/ui/label';
+import { useControlledFormElement, combineHandlers } from '@/hooks';
 
-export function FormCheckbox({
-	onChange: propsOnChange,
-	onBlur: propsOnBlur,
-	...config
-}: CheckboxFieldProps) {
-	const { fieldState, field, fieldProps, labelProps, errorProps, containerStyles } =
-		useControlledFormElement(config);
+export function FormCheckbox({ onChange: propsOnChange, onBlur: propsOnBlur, ...config }: CheckboxFieldProps) {
+	const { fieldState, field, fieldProps, labelProps, errorProps, containerStyles } = useControlledFormElement(config);
 
 	return (
 		<div className="space-y-2" style={containerStyles}>
-			{config.description ? (
-				<p className="text-sm text-muted-foreground">{config.description}</p>
-			) : null}
+			{config.description ? <p className="text-sm text-muted-foreground">{config.description}</p> : null}
 			<div className="flex items-center space-x-2">
 				<Checkbox
 					{...fieldProps}
@@ -290,26 +277,19 @@ export function FormCheckbox({
 ### Pattern 3: Select/Dropdown with Options
 
 ```tsx
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shadcn/ui/select";
-import { Label } from "@/shadcn/ui/label";
-import { useControlledFormElement, combineHandlers } from "@/hooks";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shadcn/ui/select';
+import { Label } from '@/shadcn/ui/label';
+import { useControlledFormElement, combineHandlers } from '@/hooks';
 
-export function FormSelect({
-	onChange: propsOnChange,
-	onBlur: propsOnBlur,
-	...config
-}: SelectFieldProps) {
-	const { fieldState, field, fieldProps, labelProps, errorProps, containerStyles } =
-		useControlledFormElement(config);
+export function FormSelect({ onChange: propsOnChange, onBlur: propsOnBlur, ...config }: SelectFieldProps) {
+	const { fieldState, field, fieldProps, labelProps, errorProps, containerStyles } = useControlledFormElement(config);
 
 	return (
 		<div className="space-y-2" style={containerStyles}>
 			{config.label ? <Label {...labelProps}>{config.label}</Label> : null}
-			{config.description ? (
-				<p className="text-sm text-muted-foreground">{config.description}</p>
-			) : null}
+			{config.description ? <p className="text-sm text-muted-foreground">{config.description}</p> : null}
 			<Select
-				value={field.value || ""}
+				value={field.value || ''}
 				onValueChange={(value) => combineHandlers(field.onChange, propsOnChange)(value)}
 				disabled={fieldProps.disabled}
 			>
@@ -333,30 +313,23 @@ export function FormSelect({
 ### Pattern 4: Radio Group
 
 ```tsx
-import { RadioGroup, RadioGroupItem } from "@/shadcn/ui/radio-group";
-import { Label } from "@/shadcn/ui/label";
-import { useControlledFormElement, combineHandlers } from "@/hooks";
+import { RadioGroup, RadioGroupItem } from '@/shadcn/ui/radio-group';
+import { Label } from '@/shadcn/ui/label';
+import { useControlledFormElement, combineHandlers } from '@/hooks';
 
-export function FormRadio({
-	onChange: propsOnChange,
-	onBlur: propsOnBlur,
-	...config
-}: RadioFieldProps) {
-	const { fieldState, field, fieldProps, labelProps, errorProps, containerStyles } =
-		useControlledFormElement(config);
+export function FormRadio({ onChange: propsOnChange, onBlur: propsOnBlur, ...config }: RadioFieldProps) {
+	const { fieldState, field, fieldProps, labelProps, errorProps, containerStyles } = useControlledFormElement(config);
 
 	return (
 		<div className="space-y-2" style={containerStyles}>
 			{config.label ? <Label {...labelProps}>{config.label}</Label> : null}
-			{config.description ? (
-				<p className="text-sm text-muted-foreground">{config.description}</p>
-			) : null}
+			{config.description ? <p className="text-sm text-muted-foreground">{config.description}</p> : null}
 			<RadioGroup
 				{...fieldProps}
-				value={field.value || ""}
+				value={field.value || ''}
 				onValueChange={(value) => combineHandlers(field.onChange, propsOnChange)(value)}
 				onBlur={combineHandlers(field.onBlur, propsOnBlur)}
-				className={config.orientation === "horizontal" ? "flex space-x-4" : "space-y-2"}
+				className={config.orientation === 'horizontal' ? 'flex space-x-4' : 'space-y-2'}
 			>
 				{config.options.map((option) => (
 					<div key={option.value} className="flex items-center space-x-2">
@@ -376,9 +349,9 @@ export function FormRadio({
 For fields that manage arrays of values:
 
 ```tsx
-import { useFieldArray, useFormContext } from "react-hook-form";
-import { Button } from "@/shadcn/ui/button";
-import { Plus, Trash2 } from "lucide-react";
+import { useFieldArray, useFormContext } from 'react-hook-form';
+import { Button } from '@/shadcn/ui/button';
+import { Plus, Trash2 } from 'lucide-react';
 
 export function FormArrayElements({ onChange: propsOnChange, ...config }: ArrayElementsProps) {
 	const { control } = useFormContext();
@@ -389,7 +362,7 @@ export function FormArrayElements({ onChange: propsOnChange, ...config }: ArrayE
 
 	const handleAdd = () => {
 		const defaultValue = config.elements.reduce((acc, element) => {
-			acc[element.name] = element.defaultValue || "";
+			acc[element.name] = element.defaultValue || '';
 			return acc;
 		}, {});
 		append(defaultValue);
@@ -579,13 +552,13 @@ Organize fields by category in metadata:
 
 ```typescript
 export const MyFieldRegistration: ElementRegistration = {
-	$type: "my-field",
+	$type: 'my-field',
 	render: MyField,
 	schema: MyFieldSchema,
 	metadata: {
-		name: "My Field",
-		description: "Description",
-		category: "input", // or 'selection', 'layout', 'advanced', etc.
+		name: 'My Field',
+		description: 'Description',
+		category: 'input', // or 'selection', 'layout', 'advanced', etc.
 	},
 };
 ```
@@ -606,7 +579,7 @@ Extend the global `ElementRegistry` to get type safety:
 declare global {
 	namespace FormEngine {
 		interface ElementRegistry {
-			"my-field": MyFieldConfig;
+			'my-field': MyFieldConfig;
 		}
 	}
 }
@@ -625,51 +598,51 @@ Test your field with various configurations:
 ```typescript
 // Test 1: Basic field
 const basicField = {
-	$type: "my-field",
-	name: "testField",
-	label: "Test Field",
+	$type: 'my-field',
+	name: 'testField',
+	label: 'Test Field',
 };
 
 // Test 2: Required field with validation
 const requiredField = {
-	$type: "my-field",
-	name: "requiredField",
-	label: "Required Field",
-	rules: [{ type: "required", message: "This field is required" }],
+	$type: 'my-field',
+	name: 'requiredField',
+	label: 'Required Field',
+	rules: [{ type: 'required', message: 'This field is required' }],
 };
 
 // Test 3: Disabled field
 const disabledField = {
-	$type: "my-field",
-	name: "disabledField",
-	label: "Disabled Field",
+	$type: 'my-field',
+	name: 'disabledField',
+	label: 'Disabled Field',
 	disabled: true,
 };
 
 // Test 4: Field with conditional logic
 const conditionalField = {
-	$type: "my-field",
-	name: "conditionalField",
-	label: "Conditional Field",
+	$type: 'my-field',
+	name: 'conditionalField',
+	label: 'Conditional Field',
 	constraints: [
 		{
-			field: "showField",
-			operator: "equals",
+			field: 'showField',
+			operator: 'equals',
 			value: true,
-			action: "show",
+			action: 'show',
 		},
 	],
 };
 
 // Test 5: Field with grid layout
 const gridField = {
-	$type: "my-field",
-	name: "gridField",
-	label: "Grid Field",
+	$type: 'my-field',
+	name: 'gridField',
+	label: 'Grid Field',
 	grid: {
-		column: "1 / 3",
+		column: '1 / 3',
 		responsive: {
-			sm: { column: "1 / 2" },
+			sm: { column: '1 / 2' },
 		},
 	},
 };
@@ -736,14 +709,14 @@ const gridField = {
 ```tsx
 // Wrong: Creating schema from scratch
 export const MyFieldSchema = z.object({
-	$type: z.literal("my-field"),
+	$type: z.literal('my-field'),
 	name: z.string(),
 	// Missing all base properties
 });
 
 // Correct: Extend BaseFieldSchema
 export const MyFieldSchema = BaseFieldSchema.extend({
-	$type: z.literal("my-field"),
+	$type: z.literal('my-field'),
 	// Add field-specific properties
 });
 ```
@@ -786,8 +759,8 @@ const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles 
 const { value, onChange } = useControlledFormElement(config);
 // value can be any type: string, number, boolean, object, array, etc.
 
-onChange({ nested: "value" }); // Object
-onChange(["item1", "item2"]); // Array
+onChange({ nested: 'value' }); // Object
+onChange(['item1', 'item2']); // Array
 ```
 
 ### Q: How do I add custom validation?

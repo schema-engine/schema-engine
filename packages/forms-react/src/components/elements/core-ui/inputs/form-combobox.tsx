@@ -31,7 +31,8 @@ export function FormCombobox({
 
 	const findItemByValue = (val: unknown): { value: string | number; label: string } | undefined => {
 		if (!config.options || val === null || val === undefined) return undefined;
-		return config.options.find((opt) => String(opt.value) === String(val));
+		const compareValue = typeof val === 'object' && val !== null && 'value' in val ? val.value : val;
+		return config.options.find((opt) => String(opt.value) === String(compareValue));
 	};
 
 	const selectedValues = isMultiple

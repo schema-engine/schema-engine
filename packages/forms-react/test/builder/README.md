@@ -26,12 +26,12 @@ const engine1 = builder1.build();
 const engine2 = builder2.build();
 
 // ✅ engine1 only has input
-expect(engine1.hasElement("input")).toBe(true);
-expect(engine1.hasElement("textarea")).toBe(false);
+expect(engine1.hasElement('input')).toBe(true);
+expect(engine1.hasElement('textarea')).toBe(false);
 
 // ✅ engine2 only has textarea
-expect(engine2.hasElement("input")).toBe(false);
-expect(engine2.hasElement("textarea")).toBe(true);
+expect(engine2.hasElement('input')).toBe(false);
+expect(engine2.hasElement('textarea')).toBe(true);
 ```
 
 ### 2. No Type Leakage

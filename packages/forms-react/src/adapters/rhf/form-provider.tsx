@@ -116,11 +116,11 @@ export function FormProvider({
 	const executeAction = useCallback(
 		async (action: FormActionConfig) => {
 			return dispatchTrigger('form_submit')
-				.then((results) => {
+				.then(async (results) => {
 					const result = results[0] || { success: false, error: 'No result returned' };
 
 					if (result.success) {
-						onAction?.(action, form.getValues());
+						await onAction?.(action, form.getValues());
 						console.log('Action executed successfully:', action);
 					} else {
 						onValidationError?.({ _actionError: result.error || 'Unknown action error' });
@@ -148,7 +148,7 @@ export function FormProvider({
 
 			if (config.onChange) config.onChange(data);
 		},
-		[config.actions, config.onChange, onChange, dispatchTrigger],
+		[config, onChange, dispatchTrigger],
 	);
 
 	/**
@@ -164,7 +164,7 @@ export function FormProvider({
 		}
 
 		if (watchedData && Object.keys(watchedData).length > 0) {
-			handleFormChange(watchedData);
+			void handleFormChange(watchedData);
 		}
 	}, [watchedData, handleFormChange]);
 
@@ -203,13 +203,13 @@ export function FormProvider({
 			}
 
 			if (onSubmit) {
-				onSubmit(data);
+				await onSubmit(data);
 			}
 			if (config.onSubmit) {
-				config.onSubmit(data);
+				await config.onSubmit(data);
 			}
 		},
-		[config.actions, config.onSubmit, onSubmit, onValidationError, form, dispatchTrigger],
+		[config, onSubmit, onValidationError, form, dispatchTrigger],
 	);
 
 	const formInstanceContextValue: FormInstanceContextValue = useMemo(

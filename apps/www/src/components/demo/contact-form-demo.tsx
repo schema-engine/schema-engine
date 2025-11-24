@@ -4,8 +4,7 @@ import { FormEngineProvider } from '@schema-engine/forms-react/components/adapte
 import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
 import { formEngine } from '@/lib/form-engine-setup';
 import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
-import type { FormConfig } from '@schema-engine/formsemas';
-import '@/lib/form-engine-setup';
+import type { FormConfig } from '@schema-engine/forms/schemas';
 
 const contactFormConfig: FormConfig = {
 	id: 'contact-form',
@@ -178,12 +177,13 @@ const contactFormConfig: FormConfig = {
 		},
 	],
 };
-export function ContactFormDemo() {
-	const handleSubmit = (data: any) => {
-		console.log('Contact form submitted:', data);
-		alert('Form submitted successfully! Check the console for details.');
-	};
 
+const handleSubmit = (data: any) => {
+	console.log('Contact form submitted:', data);
+	alert('Form submitted successfully! Check the console for details.');
+};
+
+export function ContactFormDemo() {
 	return (
 		<FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
 			<div className="container mx-auto py-8 space-y-8">

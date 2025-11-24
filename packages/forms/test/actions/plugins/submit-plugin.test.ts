@@ -1,21 +1,8 @@
 import { test, expect, describe, beforeEach, afterEach } from 'bun:test';
-import { z } from 'zod';
-import {
-	formSubmitPlugin,
-	FormSubmitActionSchema,
-	type FormSubmitAction,
-} from '@/actions/plugins/form-submit.plugin';
-import { FormEngineBuilder } from '@/builder';
-import type { FormEngine } from '@/engine/form-engine';
-import {
-	createMockBuilderContext,
-	setupTestEnvironment,
-	createMockFetch,
-	createFailingMockFetch,
-} from '../__tools';
+import { formSubmitPlugin, FormSubmitActionSchema, type FormSubmitAction } from '@/actions/plugins/form-submit.plugin';
+import { createMockBuilderContext, setupTestEnvironment, createMockFetch, createFailingMockFetch } from '../__tools';
 
 describe('SubmitPlugin', () => {
-	let engine: FormEngine;
 	let originalFetch: typeof fetch;
 
 	beforeEach(() => {
@@ -108,45 +95,6 @@ describe('SubmitPlugin', () => {
 			expect(plugin.execute).toBeDefined();
 			expect(plugin.schema).toBe(FormSubmitActionSchema);
 			expect(plugin.metadata.defaultTriggers).toEqual(['form_submit']);
-		});
-
-		test('should create plugin with custom configuration', () => {
-			let successCalled = false;
-			let errorCalled = false;
-			let transformCalled = false;
-
-			const plugin = formSubmitPlugin({
-				onSuccess: (data, context) => {
-					successCalled = true;
-				},
-				onError: (error, context) => {
-					errorCalled = true;
-				},
-				transformData: (data, context) => {
-					transformCalled = true;
-					return { ...data, transformed: true };
-				},
-			});
-
-			expect(plugin.$type).toBe('submit');
-			expect(plugin.execute).toBeDefined();
-		});
-
-		test('should create plugin with custom request adapter', () => {
-			let customRequestCalled = false;
-
-			const plugin = formSubmitPlugin({
-				request: async (url, options) => {
-					customRequestCalled = true;
-					const mockFetch = createMockFetch({
-						[url]: { ok: true, data: { success: true, id: '123' } },
-					});
-					return mockFetch(url, options);
-				},
-			});
-
-			expect(plugin.$type).toBe('submit');
-			expect(typeof plugin.execute).toBe('function');
 		});
 	});
 
@@ -450,7 +398,8 @@ describe('SubmitPlugin', () => {
 		test('should handle Blob objects in form data', async () => {
 			let requestBody: FormData | null = null;
 
-			(global.fetch as any) = async (url: string, options: any) => {
+			// @ts-expect-error: Testing in Bun environment
+			global.fetch = async (url: string, options: any) => {
 				requestBody = options.body;
 				const mockFetch = createMockFetch({
 					[url]: { ok: true, data: { success: true, id: '123' } },

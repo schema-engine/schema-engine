@@ -3,8 +3,7 @@ import { FormEngineProvider } from '@schema-engine/forms-react/components/adapte
 import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
 import { formEngine } from '@/lib/form-engine-setup';
 import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
-import type { FormConfig } from '@schema-engine/formsemas';
-import '@/lib/form-engine-setup';
+import type { FormConfig } from '@schema-engine/forms/schemas';
 
 const config: FormConfig = {
 	id: 'simple-grid-demo',

@@ -59,7 +59,7 @@ export const createPartiallyFailingStorage = (
 	failOnSave = false,
 	failOnLoad = false,
 	failOnRemove = false,
-	errorMessage = 'Operation failed'
+	errorMessage = 'Operation failed',
 ): AutoSaveStorage => {
 	const mockStorage = new MockAutoSaveStorage();
 
@@ -67,17 +67,17 @@ export const createPartiallyFailingStorage = (
 		save: failOnSave
 			? async () => {
 					throw new Error(errorMessage);
-			  }
+				}
 			: mockStorage.save.bind(mockStorage),
 		load: failOnLoad
 			? async () => {
 					throw new Error(errorMessage);
-			  }
+				}
 			: mockStorage.load.bind(mockStorage),
 		remove: failOnRemove
 			? async () => {
 					throw new Error(errorMessage);
-			  }
+				}
 			: mockStorage.remove.bind(mockStorage),
 	};
 };

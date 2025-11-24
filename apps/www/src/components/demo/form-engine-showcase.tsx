@@ -36,12 +36,12 @@ interface FeatureHighlight {
 	description: string;
 }
 
-export function FormEngineShowcase() {
-	const handleSubmit = (data: any) => {
-		console.log('Form submitted:', data);
-		alert('Form submitted successfully! Check the console for details.');
-	};
+const handleSubmit = (data: any) => {
+	console.log('Form submitted:', data);
+	alert('Form submitted successfully! Check the console for details.');
+};
 
+export function FormEngineShowcase() {
 	const tabs: TabConfig[] = [
 		{
 			id: 'basic',

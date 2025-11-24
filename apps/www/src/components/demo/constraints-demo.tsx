@@ -2,22 +2,21 @@ import { FormRenderer } from '@schema-engine/forms-react/components/internals/fo
 import { FormEngineProvider } from '@schema-engine/forms-react/components/adapter-provider';
 import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
 import { formEngine } from '@/lib/form-engine-setup';
-import '@/lib/form-engine-setup';
 import { constraintsDemoConfig } from '@/configs/forms/constraints-forms';
+
+const handleSubmit = (data: any) => {
+	console.log('Form submitted:', data);
+	alert('Form submitted! Check console for data.');
+};
+
+const handleChange = (data: any) => {
+	console.log('Form changed:', data);
+};
 
 /**
  * Comprehensive demo component showcasing all the new features
  */
 export function ConstraintsDemo() {
-	const handleSubmit = (data: any) => {
-		console.log('Form submitted:', data);
-		alert('Form submitted! Check console for data.');
-	};
-
-	const handleChange = (data: any) => {
-		console.log('Form changed:', data);
-	};
-
 	return (
 		<FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
 			<div className="max-w-4xl mx-auto p-6 space-y-8">

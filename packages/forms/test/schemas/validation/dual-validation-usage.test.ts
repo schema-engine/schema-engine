@@ -1,9 +1,5 @@
 import { test, expect, describe } from 'bun:test';
-import {
-	ValidationPresets,
-	validationRegistry,
-	type ValidationRule,
-} from '../../../src/schemas/validation';
+import { ValidationPresets, validationRegistry, type ValidationRule } from '../../../src/schemas/validation';
 
 describe('Dual Usage Pattern: JSON + Presets', () => {
 	describe('OPTION 1: Direct JSON (Simple & Flexible)', () => {
@@ -17,7 +13,7 @@ describe('Dual Usage Pattern: JSON + Presets', () => {
 			const json = JSON.stringify(rules);
 			expect(json).toContain('"type":"required"');
 
-			rules.forEach(rule => {
+			rules.forEach((rule) => {
 				const schema = validationRegistry.createSchema(rule);
 				expect(schema).not.toBeNull();
 			});
@@ -26,24 +22,26 @@ describe('Dual Usage Pattern: JSON + Presets', () => {
 		test('should work in form configurations', () => {
 			const formConfig = {
 				id: 'contact-form',
-				steps: [{
-					elements: [
-						{
-							name: 'email',
-							rules: [
-								{ type: 'required', message: 'Email required' },
-								{ type: 'email', message: 'Must be valid email' },
-							] as ValidationRule[]
-						},
-						{
-							name: 'age', 
-							rules: [
-								{ type: 'min', value: 18, message: 'Must be 18+' },
-								{ type: 'max', value: 120, message: 'Invalid age' },
-							] as ValidationRule[]
-						}
-					]
-				}]
+				steps: [
+					{
+						elements: [
+							{
+								name: 'email',
+								rules: [
+									{ type: 'required', message: 'Email required' },
+									{ type: 'email', message: 'Must be valid email' },
+								] as ValidationRule[],
+							},
+							{
+								name: 'age',
+								rules: [
+									{ type: 'min', value: 18, message: 'Must be 18+' },
+									{ type: 'max', value: 120, message: 'Invalid age' },
+								] as ValidationRule[],
+							},
+						],
+					},
+				],
 			};
 
 			const serialized = JSON.stringify(formConfig);
@@ -54,7 +52,7 @@ describe('Dual Usage Pattern: JSON + Presets', () => {
 
 	describe('OPTION 2: ValidationPresets (Convenient & Discoverable)', () => {
 		test('should use ValidationPresets for easy rule creation', () => {
-			const rules= [
+			const rules = [
 				ValidationPresets.string.required('Name is required'),
 				ValidationPresets.string.minLength(2, 'Too short'),
 				ValidationPresets.string.email('Invalid email'),
@@ -66,7 +64,7 @@ describe('Dual Usage Pattern: JSON + Presets', () => {
 			expect(rules[2].type).toBe('email');
 			expect(rules[3].type).toBe('min');
 
-			rules.forEach(rule => {
+			rules.forEach((rule) => {
 				const schema = validationRegistry.createSchema(rule);
 				expect(schema).not.toBeNull();
 			});
@@ -93,10 +91,10 @@ describe('Dual Usage Pattern: JSON + Presets', () => {
 					ValidationPresets.string.required('Profile name required'),
 					{ type: 'maxLength', value: 50, message: 'Too long' } satisfies ValidationRule,
 					ValidationPresets.string.pattern('[a-zA-Z0-9_]+', 'Only letters, numbers, underscore'),
-				]
+				],
 			};
 
-			formField.rules.forEach(rule => {
+			formField.rules.forEach((rule) => {
 				const schema = validationRegistry.createSchema(rule);
 				expect(schema).not.toBeNull();
 			});
@@ -110,10 +108,7 @@ describe('Dual Usage Pattern: JSON + Presets', () => {
 	describe('Developer Experience Comparison', () => {
 		test('JSON approach: minimal and direct', () => {
 			const field = {
-				rules: [
-					{ type: 'required' },
-					{ type: 'email' },
-				] as ValidationRule[]
+				rules: [{ type: 'required' }, { type: 'email' }] as ValidationRule[],
 			};
 
 			expect(field.rules).toHaveLength(2);
@@ -121,10 +116,7 @@ describe('Dual Usage Pattern: JSON + Presets', () => {
 
 		test('Presets approach: discoverable and guided', () => {
 			const field = {
-				rules: [
-					ValidationPresets.string.required(),
-					ValidationPresets.string.email(),
-				]
+				rules: [ValidationPresets.string.required(), ValidationPresets.string.email()],
 			};
 
 			expect(field.rules).toHaveLength(2);

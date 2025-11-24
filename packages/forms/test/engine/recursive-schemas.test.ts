@@ -216,7 +216,7 @@ describe('Recursive Schema Handling', () => {
 			type Project = {
 				$type: 'project';
 				name: string;
-				organization?: Organization; 
+				organization?: Organization;
 			};
 
 			const organizationSchema: z.ZodType<Organization> = z.lazy(() =>

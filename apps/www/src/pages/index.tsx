@@ -1,5 +1,3 @@
-import '@/lib/form-engine-setup';
-import '@schema-engine/forms/schemas/validation/validation-registry';
 import { Button } from '../components/ui/button';
 import { CodePreview } from '../components/code-preview';
 import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
@@ -10,7 +8,8 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { FormEngineProvider } from '@schema-engine/forms-react/components/adapter-provider';
 import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
 import { formEngine } from '@/lib/form-engine-setup';
-import type { FormConfig } from '@schema-engine/formsemas';
+import '@schema-engine/forms/schemas/validation/validation-registry';
+import type { FormConfig } from '@schema-engine/forms/schemas';
 import type { EcoComponent } from '@ecopages/core';
 import type { JSX } from 'react';
 

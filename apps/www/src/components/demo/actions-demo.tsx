@@ -6,6 +6,14 @@ import { actionsFormConfig, simpleActionsFormConfig } from '@/configs/forms/acti
 import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
 import '@/lib/form-engine-setup';
 
+const onChange = (data: any) => {
+	console.log('Form changed:', data);
+};
+
+const onAction = (action: any) => {
+	console.log('Action executed:', action);
+};
+
 /**
  * Demo component showcasing the simplified action system
  */
@@ -21,14 +29,6 @@ export function ActionsDemo() {
 	const onSubmit = async (data: any) => {
 		console.log('Form submitted:', data);
 		setSubmitResults([data]);
-	};
-
-	const onChange = (data: any) => {
-		console.log('Form changed:', data);
-	};
-
-	const onAction = (action: any) => {
-		console.log('Action executed:', action);
 	};
 
 	return (

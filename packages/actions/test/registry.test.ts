@@ -25,13 +25,13 @@ describe('ActionRegistry', () => {
 			id: z.string(),
 			$type: z.literal('log'),
 			message: z.string(),
-		}) as any,
+		}),
 		metadata: {
 			name: 'Log Action',
 			description: 'Logs a message',
 			defaultTriggers: ['submit' as TestTrigger],
 		},
-		handler: async (context) => {
+		execute: async (context) => {
 			console.log(context);
 			return { success: true };
 		},
@@ -43,13 +43,13 @@ describe('ActionRegistry', () => {
 			id: z.string(),
 			$type: z.literal('api'),
 			url: z.string(),
-		}) as any,
+		}),
 		metadata: {
 			name: 'API Action',
 			description: 'Calls an API',
 			defaultTriggers: ['submit' as TestTrigger],
 		},
-		handler: async () => {
+		execute: async () => {
 			return { success: true };
 		},
 	};
@@ -163,19 +163,14 @@ describe('ActionRegistry', () => {
 		});
 
 		test('should return undefined when action has no default triggers', () => {
-			const actionWithoutTriggers: ActionRegistration<
-				'custom',
-				TestConfig,
-				TestContext,
-				TestTrigger
-			> = {
+			const actionWithoutTriggers: ActionRegistration<'custom', TestConfig, TestContext, TestTrigger> = {
 				$type: 'custom',
-				schema: z.object({}) as any,
+				schema: z.any(),
 				metadata: {
 					name: 'Custom Action',
 					description: 'A custom action',
 				},
-				handler: async () => ({ success: true }),
+				execute: async () => ({ success: true }),
 			};
 
 			registry.register(actionWithoutTriggers);

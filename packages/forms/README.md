@@ -309,7 +309,7 @@ const passwordRules = [
 	ValidationPresets.string.minLength(8, 'At least 8 characters'),
 	ValidationPresets.string.pattern(
 		'^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)',
-		'Must contain uppercase, lowercase, and number'
+		'Must contain uppercase, lowercase, and number',
 	),
 ];
 
@@ -553,10 +553,7 @@ const engine = new FormEngineBuilder(customRegistry).build();
 Create specialized engines by extending existing configurations:
 
 ```typescript
-const baseEngine = new FormEngineBuilder()
-	.addElement(textInputRegistration)
-	.addElement(emailInputRegistration)
-	.build();
+const baseEngine = new FormEngineBuilder().addElement(textInputRegistration).addElement(emailInputRegistration).build();
 
 // Later, extend with additional components
 const extendedEngine = new FormEngineBuilder()
@@ -576,9 +573,7 @@ const builder = new FormEngineBuilder()
 	.addElement(emailInputRegistration)
 	.addAction(submitActionRegistration);
 
-type MyEngineElements = typeof builder extends FormEngineBuilder<infer E, any, any, any>
-	? E
-	: never;
+type MyEngineElements = typeof builder extends FormEngineBuilder<infer E, any, any, any> ? E : never;
 
 // MyEngineElements = {
 //   text: TextInputConfig;

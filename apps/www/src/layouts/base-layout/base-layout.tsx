@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { EcoComponent } from '@ecopages/core';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 
 export type BaseLayoutProps = {
 	children: ReactNode;

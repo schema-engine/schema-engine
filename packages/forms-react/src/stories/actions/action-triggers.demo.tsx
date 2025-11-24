@@ -218,14 +218,14 @@ export const demoFormConfig = createExtendableBuilder()
 	})
 	.build();
 
-const ActionDashboard = ({ logs }: { logs: ActionLogEntry[] }) => {
-	const getTriggerColor = (trigger: string) => {
-		if (trigger.includes('submit')) return 'bg-blue-500';
-		if (trigger === 'form_mount') return 'bg-green-500';
-		if (trigger === 'form_change') return 'bg-yellow-500';
-		return 'bg-gray-500';
-	};
+const getTriggerColor = (trigger: string) => {
+	if (trigger.includes('submit')) return 'bg-blue-500';
+	if (trigger === 'form_mount') return 'bg-green-500';
+	if (trigger === 'form_change') return 'bg-yellow-500';
+	return 'bg-gray-500';
+};
 
+const ActionDashboard = ({ logs }: { logs: ActionLogEntry[] }) => {
 	const groupedLogs = logs.reduce(
 		(acc, log) => {
 			if (!acc[log.trigger]) {

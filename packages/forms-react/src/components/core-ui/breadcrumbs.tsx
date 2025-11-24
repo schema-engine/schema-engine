@@ -42,14 +42,16 @@ function BreadcrumbLink({
 	);
 }
 
-function BreadcrumbPage({ className, ...props }: ComponentProps<'a'>) {
+function BreadcrumbPage({ className, children, ...props }: ComponentProps<'a'>) {
 	return (
 		<a
 			data-slot="breadcrumb-page"
 			aria-current="page"
 			className={cn('text-foreground font-normal', className)}
 			{...props}
-		/>
+		>
+			{children}
+		</a>
 	);
 }
 

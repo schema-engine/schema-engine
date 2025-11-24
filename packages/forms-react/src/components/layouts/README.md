@@ -27,13 +27,13 @@ interface StepContext {
 Use `typeof` checks with ternary operators to ensure step index and total are numbers before rendering:
 
 ```tsx
-import { useLayoutContext } from "@/contexts/layout-context";
+import { useLayoutContext } from '@/contexts/layout-context';
 
 // ✅ CORRECT - Type-safe with ternary operator (avoids rendering falsy values)
 const { step } = useLayoutContext();
 
 {
-	typeof step.index === "number" && typeof step.total === "number" ? (
+	typeof step.index === 'number' && typeof step.total === 'number' ? (
 		<div className="step-counter">
 			Step {step.index + 1} of {step.total}
 		</div>
@@ -51,7 +51,7 @@ const { step } = useLayoutContext();
 
 // Alternative approach - check both in one condition
 {
-	typeof step.index === "number" && typeof step.total === "number" && (
+	typeof step.index === 'number' && typeof step.total === 'number' && (
 		<div className="step-counter">
 			Step {step.index + 1} of {step.total}
 		</div>
@@ -64,7 +64,7 @@ const { step } = useLayoutContext();
 Layout styling is **optional** and implemented via CSS imports. Each layout can have its own CSS file that is explicitly imported:
 
 ```tsx
-import "./my-layout.css";
+import './my-layout.css';
 ```
 
 This approach allows:
@@ -84,11 +84,11 @@ You're free to:
 Here's a complete template for creating a new layout component:
 
 ```tsx
-import { useLayoutContext } from "@/contexts/layout-context";
-import { cn } from "@/shadcn/lib/utils";
-import type React from "react";
-import "./my-layout.css"; // Optional: Remove if using custom styling
-import type { MyLayoutConfig, MyLayoutProps } from "./my-layout.types";
+import { useLayoutContext } from '@/contexts/layout-context';
+import { cn } from '@/shadcn/lib/utils';
+import type React from 'react';
+import './my-layout.css'; // Optional: Remove if using custom styling
+import type { MyLayoutConfig, MyLayoutProps } from './my-layout.types';
 
 /**
  * My Layout
@@ -100,17 +100,17 @@ export const MyLayout: React.FC<MyLayoutProps> = ({ children, className }) => {
 	const { step, form, config } = useLayoutContext<MyLayoutConfig>();
 
 	// Extract config with defaults
-	const { variant = "default", backgroundColor } = config;
+	const { variant = 'default', backgroundColor } = config;
 
 	// Get title and description (step overrides form)
 	const title = step?.title || form.title;
 	const description = step?.description || form.description;
 
 	// Check if we have step navigation info
-	const showStepCounter = typeof step.index === "number" && typeof step.total === "number";
+	const showStepCounter = typeof step.index === 'number' && typeof step.total === 'number';
 
 	return (
-		<div className={cn("my-layout", `my-layout--${variant}`, className)}>
+		<div className={cn('my-layout', `my-layout--${variant}`, className)}>
 			{/* Header - only render if there's content to show */}
 			{title || description || showStepCounter ? (
 				<div className="my-layout__header">
@@ -135,28 +135,28 @@ export const MyLayout: React.FC<MyLayoutProps> = ({ children, className }) => {
 };
 
 // Registration (in my-layout.tsx)
-import type { LayoutRegistration } from "@schema-engine/forms/types";
-import { MyLayoutConfigSchema } from "./my-layout.types";
+import type { LayoutRegistration } from '@schema-engine/forms/types';
+import { MyLayoutConfigSchema } from './my-layout.types';
 
 export const MyLayoutRegistration: LayoutRegistration<MyLayoutConfig, MyLayoutProps> = {
-	$type: "my-layout",
+	$type: 'my-layout',
 	render: MyLayout,
 	schema: MyLayoutConfigSchema,
 	metadata: {
-		name: "My Layout",
-		description: "A custom layout for...",
-		icon: "layout",
+		name: 'My Layout',
+		description: 'A custom layout for...',
+		icon: 'layout',
 	},
 };
 
 // Types file (my-layout.types.ts)
-import { z } from "zod";
-import { BaseLayoutConfigSchema } from "@schema-engine/formsayouts/types";
-import type { ReactNode } from "react";
+import { z } from 'zod';
+import { BaseLayoutConfigSchema } from '@schema-engine/formsayouts/types';
+import type { ReactNode } from 'react';
 
 export const MyLayoutConfigSchema = BaseLayoutConfigSchema.extend({
-	$type: z.literal("my-layout"),
-	variant: z.enum(["default", "compact", "spacious"]).optional(),
+	$type: z.literal('my-layout'),
+	variant: z.enum(['default', 'compact', 'spacious']).optional(),
 	backgroundColor: z.string().optional(),
 });
 
@@ -168,13 +168,13 @@ export type MyLayoutProps = MyLayoutConfig & {
 };
 
 // Registration with type augmentation (my-layout.registration.ts)
-import { MyLayoutRegistration } from "./my-layout";
-import type { MyLayoutConfig } from "./my-layout.types";
+import { MyLayoutRegistration } from './my-layout';
+import type { MyLayoutConfig } from './my-layout.types';
 
 declare global {
 	namespace FormEngine {
 		interface LayoutRegistry {
-			"my-layout": MyLayoutConfig;
+			'my-layout': MyLayoutConfig;
 		}
 	}
 }
@@ -189,12 +189,10 @@ export { MyLayoutRegistration };
 
 ```tsx
 // Only show header if there's meaningful content
-const showStepCounter = typeof step.index === "number" && typeof step.total === "number";
+const showStepCounter = typeof step.index === 'number' && typeof step.total === 'number';
 
 {
-	title || description || showStepCounter ? (
-		<div className="layout__header">{/* header content */}</div>
-	) : null;
+	title || description || showStepCounter ? <div className="layout__header">{/* header content */}</div> : null;
 }
 ```
 
@@ -210,7 +208,7 @@ const description = step?.description || form.description;
 
 ```tsx
 // Check types inline for cleaner code
-const showStepCounter = typeof step.index === "number" && typeof step.total === "number";
+const showStepCounter = typeof step.index === 'number' && typeof step.total === 'number';
 
 // Then use throughout component
 {
@@ -267,40 +265,40 @@ Test your layout with both scenarios:
 ```tsx
 // Test 1: Single-step form (should NOT show step counter)
 const singleStepForm = {
-	id: "test-form",
-	mode: "free",
+	id: 'test-form',
+	mode: 'free',
 	steps: [
 		{
-			id: "step-1",
-			title: "Contact Info",
+			id: 'step-1',
+			title: 'Contact Info',
 			elements: [
 				/* fields */
 			],
-			layout: { id: "my-layout" },
+			layout: { id: 'my-layout' },
 		},
 	],
 };
 
 // Test 2: Multi-step form (SHOULD show step counter)
 const multiStepForm = {
-	id: "test-form",
-	mode: "free",
+	id: 'test-form',
+	mode: 'free',
 	steps: [
 		{
-			id: "step-1",
-			title: "Personal Info",
+			id: 'step-1',
+			title: 'Personal Info',
 			elements: [
 				/* fields */
 			],
-			layout: { id: "my-layout" },
+			layout: { id: 'my-layout' },
 		},
 		{
-			id: "step-2",
-			title: "Address",
+			id: 'step-2',
+			title: 'Address',
 			elements: [
 				/* fields */
 			],
-			layout: { id: "my-layout" },
+			layout: { id: 'my-layout' },
 		},
 	],
 };
@@ -342,7 +340,7 @@ const multiStepForm = {
 ### ✅ Correct Approach
 
 ```tsx
-const showStepCounter = typeof step.index === "number" && typeof step.total === "number";
+const showStepCounter = typeof step.index === 'number' && typeof step.total === 'number';
 
 {
 	showStepCounter && step.index !== undefined && step.total !== undefined ? (
@@ -354,7 +352,7 @@ const showStepCounter = typeof step.index === "number" && typeof step.total === 
 
 // Or more concise
 {
-	typeof step.index === "number" && typeof step.total === "number" ? (
+	typeof step.index === 'number' && typeof step.total === 'number' ? (
 		<span>
 			Step {step.index + 1} of {step.total}
 		</span>
@@ -383,8 +381,7 @@ interface MyLayoutConfig {
 
 // Then in your component:
 const shouldShowCounter =
-	config.forceShowStepCounter ||
-	(typeof step?.index === "number" && typeof step?.total === "number");
+	config.forceShowStepCounter || (typeof step?.index === 'number' && typeof step?.total === 'number');
 ```
 
 ### Q: Can I detect if this is a multi-step form in my layout?
@@ -392,11 +389,11 @@ const shouldShowCounter =
 **A:** Yes, check if `step.index` and `step.total` are numbers:
 
 ```tsx
-import { useLayoutContext } from "@/contexts/layout-context";
+import { useLayoutContext } from '@/contexts/layout-context';
 const { step } = useLayoutContext<YourLayoutConfig>();
 
 // Check if multi-step by testing if index and total are numbers
-const isMultiStep = typeof step.index === "number" && typeof step.total === "number";
+const isMultiStep = typeof step.index === 'number' && typeof step.total === 'number';
 
 {
 	isMultiStep ? (

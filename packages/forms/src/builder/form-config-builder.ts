@@ -186,11 +186,11 @@ export class FormConfigBuilder<
 				logger.error(`Invalid config for element "${id}"`, { errors: error.issues });
 				throw new Error(
 					`Invalid configuration for element "${id}": ${error.issues.map((e) => e.message).join(', ')}`,
+					{ cause: error },
 				);
 			}
 			throw error;
 		}
-
 		return this;
 	}
 
@@ -222,11 +222,11 @@ export class FormConfigBuilder<
 				logger.error(`Invalid config for layout "${id}"`, { errors: error.issues });
 				throw new Error(
 					`Invalid configuration for layout "${id}": ${error.issues.map((e) => e.message).join(', ')}`,
+					{ cause: error },
 				);
 			}
 			throw error;
 		}
-
 		return this;
 	}
 
@@ -245,7 +245,7 @@ export class FormConfigBuilder<
 		}
 
 		try {
-			const validated = registration.schema.parse({ ...((config as object) || {}), $type: id });
+			const validated = registration.schema.parse({ ...(config as object), $type: id });
 			this.config.stepper = validated as FormEngine.StepperConfig;
 
 			logger.debug(`Set stepper: ${id}`, { config: validated });
@@ -254,11 +254,11 @@ export class FormConfigBuilder<
 				logger.error(`Invalid config for stepper "${id}"`, { errors: error.issues });
 				throw new Error(
 					`Invalid configuration for stepper "${id}": ${error.issues.map((e) => e.message).join(', ')}`,
+					{ cause: error },
 				);
 			}
 			throw error;
 		}
-
 		return this;
 	}
 
@@ -281,7 +281,7 @@ export class FormConfigBuilder<
 		}
 
 		try {
-			const validated = registration.schema.parse({ ...((config as object) || {}), $type: type });
+			const validated = registration.schema.parse({ ...(config as object), $type: type });
 
 			if (!this.currentStep.actions) {
 				this.currentStep.actions = [];
@@ -294,11 +294,11 @@ export class FormConfigBuilder<
 				logger.error(`Invalid config for action "${type}"`, { errors: error.issues });
 				throw new Error(
 					`Invalid configuration for action "${type}": ${error.issues.map((e) => e.message).join(', ')}`,
+					{ cause: error },
 				);
 			}
 			throw error;
 		}
-
 		return this;
 	}
 
@@ -317,7 +317,7 @@ export class FormConfigBuilder<
 		}
 
 		try {
-			const validated = registration.schema.parse({ ...((config as object) || {}), $type: type });
+			const validated = registration.schema.parse({ ...(config as object), $type: type });
 
 			if (!this.config.actions) {
 				this.config.actions = [];
@@ -330,11 +330,11 @@ export class FormConfigBuilder<
 				logger.error(`Invalid config for action "${type}"`, { errors: error.issues });
 				throw new Error(
 					`Invalid configuration for action "${type}": ${error.issues.map((e) => e.message).join(', ')}`,
+					{ cause: error },
 				);
 			}
 			throw error;
 		}
-
 		return this;
 	}
 

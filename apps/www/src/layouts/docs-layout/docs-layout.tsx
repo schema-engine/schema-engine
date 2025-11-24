@@ -41,6 +41,7 @@ import type { EcoComponent } from '@ecopages/core';
 import type { ReactNode } from 'react';
 import pkg from '../../../package.json';
 import './docs-layout.css';
+
 export interface DocsSection {
 	id: string;
 	title: string;

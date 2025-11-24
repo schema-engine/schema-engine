@@ -9,7 +9,7 @@ export interface AutoSaveStorage {
 	/** Save form data to storage */
 	save: (key: string, data: unknown) => Promise<void> | void;
 	/** Load form data from storage */
-	load: (key: string) => Promise<unknown> | unknown;
+	load: (key: string) => Promise<unknown> | void;
 	/** Remove form data from storage */
 	remove: (key: string) => Promise<void> | void;
 }

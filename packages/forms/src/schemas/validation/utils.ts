@@ -55,16 +55,9 @@ export function generateFormSchema(elements: FormElement[]): z.ZodObject<any> {
 	for (const element of elements) {
 		if (!element.name) continue;
 
-		let rules: ValidationRuleType[] | undefined;
-		if ('id' in element) {
-			rules = (element as FieldConfigElement).rules;
-		} else {
-			rules = (element as ValidationElement).rules;
-		}
+		if (!element.rules?.length) continue;
 
-		if (!rules?.length) continue;
-
-		const fieldSchema = createZodSchemaFromRules(rules, undefined, element.name);
+		const fieldSchema = createZodSchemaFromRules(element.rules, undefined, element.name);
 		schemaFields[element.name] = fieldSchema;
 	}
 
