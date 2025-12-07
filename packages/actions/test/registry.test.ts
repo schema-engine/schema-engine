@@ -17,9 +17,9 @@ interface TestConfig {
 }
 
 describe('ActionRegistry', () => {
-	let registry: ActionRegistry<TestConfig, TestContext, TestTrigger>;
+	let registry: ActionRegistry<TestContext, TestTrigger>;
 
-	const mockAction: ActionRegistration<'log', TestConfig, TestContext, TestTrigger> = {
+	const mockAction: ActionRegistration<'log', TestContext, TestTrigger> = {
 		$type: 'log',
 		schema: z.object({
 			id: z.string(),
@@ -37,7 +37,7 @@ describe('ActionRegistry', () => {
 		},
 	};
 
-	const anotherAction: ActionRegistration<'api', TestConfig, TestContext, TestTrigger> = {
+	const anotherAction: ActionRegistration<'api', TestContext, TestTrigger> = {
 		$type: 'api',
 		schema: z.object({
 			id: z.string(),
@@ -76,7 +76,7 @@ describe('ActionRegistry', () => {
 		});
 
 		test('should override when registering duplicate type', () => {
-			const updated: ActionRegistration<'log', TestConfig, TestContext, TestTrigger> = {
+			const updated: ActionRegistration<'log', TestContext, TestTrigger> = {
 				...mockAction,
 				metadata: {
 					...mockAction.metadata,
@@ -163,7 +163,7 @@ describe('ActionRegistry', () => {
 		});
 
 		test('should return undefined when action has no default triggers', () => {
-			const actionWithoutTriggers: ActionRegistration<'custom', TestConfig, TestContext, TestTrigger> = {
+			const actionWithoutTriggers: ActionRegistration<'custom', TestContext, TestTrigger> = {
 				$type: 'custom',
 				schema: z.any(),
 				metadata: {

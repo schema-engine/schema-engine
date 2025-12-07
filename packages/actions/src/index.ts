@@ -20,17 +20,16 @@
  * // Define your domain-specific types
  * type MyTrigger = 'submit' | 'change' | 'mount';
  * type MyContext = { formId: string; data: Record<string, unknown> };
- * type MyConfig = { id: string; $type: string; enabled: boolean };
  *
  * // Create action registrations
- * const logAction: ActionRegistration<'log', MyConfig, MyContext, MyTrigger> = {
+ * const logAction: ActionRegistration<'log', MyContext, MyTrigger> = {
  *   $type: 'log',
  *   metadata: {
  *     name: 'Log Action',
  *     description: 'Logs data',
  *     defaultTriggers: ['change'],
  *   },
- *   handler: async (context, config) => {
+ *   execute: async (context) => {
  *     console.log(context);
  *     return { success: true };
  *   },

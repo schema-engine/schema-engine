@@ -18,14 +18,14 @@ interface TestActionConfig extends ActionConfigBase {
 	value?: unknown;
 }
 
-class MockActionRegistry implements ActionRegistryProvider<TestActionConfig, TestContext, TestTrigger> {
-	private actions = new Map<string, ActionRegistration<string, TestActionConfig, TestContext, TestTrigger>>();
+class MockActionRegistry implements ActionRegistryProvider<TestContext, TestTrigger> {
+	private actions = new Map<string, ActionRegistration<string, TestContext, TestTrigger>>();
 
-	register(action: ActionRegistration<string, TestActionConfig, TestContext, TestTrigger>): void {
+	register(action: ActionRegistration<string, TestContext, TestTrigger>): void {
 		this.actions.set(action.$type, action);
 	}
 
-	getAction(type: string): ActionRegistration<string, TestActionConfig, TestContext, TestTrigger> | undefined {
+	getAction(type: string): ActionRegistration<string, TestContext, TestTrigger> | undefined {
 		return this.actions.get(type);
 	}
 
@@ -76,7 +76,7 @@ describe('ActionExecutor', () => {
 				execute: async () => ({ success: true }),
 			});
 
-			const executor = new ActionExecutor(registry, { debug: false });
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry, { debug: false });
 			await executor.execute([{ id: 'action-1', $type: 'test-action', name: 'test' }], 'submit', {
 				config: { id: 'config-1', $type: 'test', name: 'test' },
 				id: 'test-1',
@@ -103,7 +103,7 @@ describe('ActionExecutor', () => {
 				execute: async () => ({ success: true }),
 			});
 
-			const executor = new ActionExecutor(registry, { debug: true });
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry, { debug: true });
 			await executor.execute([{ id: 'action-1', $type: 'test-action', name: 'test' }], 'submit', {
 				config: { id: 'config-1', $type: 'test', name: 'test' },
 				id: 'test-1',
@@ -133,7 +133,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			const actions: TestActionConfig[] = [{ id: 'action-1', $type: 'test-action', name: 'First Action' }];
 
 			const results = await executor.execute(actions, 'submit', {
@@ -164,7 +164,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			const actions: TestActionConfig[] = [
 				{ id: 'action-1', $type: 'log-action', name: 'first' },
 				{ id: 'action-2', $type: 'log-action', name: 'second' },
@@ -224,7 +224,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			const actions: TestActionConfig[] = [
 				{ id: 'action-3', $type: 'action-c', name: 'third' },
 				{ id: 'action-1', $type: 'action-a', name: 'first' },
@@ -258,7 +258,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			const testContext: TestContext = {
 				config: { id: 'config-1', $type: 'test', name: 'test' },
 				id: 'ctx-123',
@@ -292,7 +292,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			const testConfig: TestActionConfig = {
 				id: 'action-1',
 				$type: 'config-test',
@@ -327,7 +327,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			await executor.execute([{ id: 'action-1', $type: 'mount-action', name: 'test' }], 'mount', {
 				config: { id: 'config-1', $type: 'test', name: 'test' },
 				id: 'test-1',
@@ -353,7 +353,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			await executor.execute([{ id: 'action-1', $type: 'mount-action', name: 'test' }], 'submit', {
 				config: { id: 'config-1', $type: 'test', name: 'test' },
 				id: 'test-1',
@@ -379,7 +379,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 
 			await executor.execute(
 				[
@@ -438,7 +438,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			const action = { id: 'action-1', $type: 'multi-trigger', name: 'test' };
 			const context = {
 				config: { id: 'config-1', $type: 'test', name: 'test' },
@@ -471,7 +471,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			await executor.execute([{ id: 'action-1', $type: 'test-action', name: 'test', enabled: false }], 'submit', {
 				config: { id: 'config-1', $type: 'test', name: 'test' },
 				id: 'test-1',
@@ -497,7 +497,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			await executor.execute([{ id: 'action-1', $type: 'test-action', name: 'test' }], 'submit', {
 				config: { id: 'config-1', $type: 'test', name: 'test' },
 				id: 'test-1',
@@ -523,7 +523,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			await executor.execute([{ id: 'action-1', $type: 'test-action', name: 'test', enabled: true }], 'submit', {
 				config: { id: 'config-1', $type: 'test', name: 'test' },
 				id: 'test-1',
@@ -551,7 +551,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			const results = await executor.execute(
 				[{ id: 'action-1', $type: 'failing-action', name: 'test' }],
 				'submit',
@@ -583,7 +583,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			const results = await executor.execute(
 				[{ id: 'action-1', $type: 'throwing-action', name: 'test' }],
 				'submit',
@@ -614,7 +614,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			const results = await executor.execute(
 				[{ id: 'action-1', $type: 'throwing-string', name: 'test' }],
 				'submit',
@@ -646,7 +646,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			const results = await executor.execute(
 				[
 					{ id: 'action-1', $type: 'mixed-action', name: 'success1' },
@@ -683,7 +683,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			const results = await executor.execute(
 				[
 					{ id: 'action-1', $type: 'stop-action', name: 'first' },
@@ -704,7 +704,7 @@ describe('ActionExecutor', () => {
 		});
 
 		test('should handle unregistered action type', async () => {
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			const results = await executor.execute(
 				[{ id: 'action-1', $type: 'non-existent', name: 'test' }],
 				'submit',
@@ -738,7 +738,7 @@ describe('ActionExecutor', () => {
 				}),
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			const results = await executor.execute(
 				[{ id: 'action-1', $type: 'message-action', name: 'test' }],
 				'submit',
@@ -768,7 +768,7 @@ describe('ActionExecutor', () => {
 				}),
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			const results = await executor.execute([{ id: 'action-1', $type: 'data-action', name: 'test' }], 'submit', {
 				config: { id: 'config-1', $type: 'test', name: 'test' },
 				id: 'test-1',
@@ -794,7 +794,7 @@ describe('ActionExecutor', () => {
 				}),
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			const results = await executor.execute(
 				[{ id: 'action-1', $type: 'redirect-action', name: 'test' }],
 				'submit',
@@ -824,7 +824,7 @@ describe('ActionExecutor', () => {
 				}),
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			const results = await executor.execute(
 				[
 					{ id: 'action-1', $type: 'result-action', name: 'first' },
@@ -847,7 +847,7 @@ describe('ActionExecutor', () => {
 
 	describe('Empty and Edge Cases', () => {
 		test('should handle empty actions array', async () => {
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			const results = await executor.execute([], 'submit', {
 				config: { id: 'config-1', $type: 'test', name: 'test' },
 				id: 'test-1',
@@ -873,7 +873,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			const results = await executor.execute([{ id: 'action-1', $type: 'mount-only', name: 'test' }], 'submit', {
 				config: { id: 'config-1', $type: 'test', name: 'test' },
 				id: 'test-1',
@@ -899,7 +899,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			const results = await executor.execute([{ id: 'action-1', $type: 'no-triggers', name: 'test' }], 'submit', {
 				config: { id: 'config-1', $type: 'test', name: 'test' },
 				id: 'test-1',
@@ -925,7 +925,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			const results = await executor.execute(
 				[{ id: 'action-1', $type: 'empty-triggers', name: 'test', triggers: [] }],
 				'submit',
@@ -943,7 +943,7 @@ describe('ActionExecutor', () => {
 
 	describe('Cleanup', () => {
 		test('should cleanup without errors', () => {
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			expect(() => executor.cleanup()).not.toThrow();
 		});
 	});
@@ -965,7 +965,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			const start = Date.now();
 			await executor.execute(
 				[
@@ -1006,7 +1006,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			await executor.execute(
 				[
 					{ id: 'action-1', $type: 'sequential-action', name: 'first' },
@@ -1043,7 +1043,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			const results = await executor.execute([{ id: 'action-1', $type: 'sync-action', name: 'test' }], 'submit', {
 				config: { id: 'config-1', $type: 'test', name: 'test' },
 				id: 'test-1',
@@ -1073,7 +1073,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			await executor.execute(
 				[
 					{ id: 'action-1', $type: 'complex-action', name: 'enabled-match' },
@@ -1122,7 +1122,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			await executor.execute(
 				[
 					{ id: 'action-1', $type: 'type-a', name: 'a1' },
@@ -1161,7 +1161,7 @@ describe('ActionExecutor', () => {
 				},
 			});
 
-			const executor = new ActionExecutor(registry);
+			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
 			await executor.execute(
 				[
 					{ id: 'action-1', $type: 'stateful-action', name: 'first', value: 'one' },

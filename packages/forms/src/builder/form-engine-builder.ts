@@ -4,6 +4,7 @@ import type {
 	LayoutRegistration,
 	StepperRegistration,
 	BuilderActionRegistration,
+	BuilderActionExecutionContext,
 } from '@/types';
 import type { FormEngineSchemaMetadata } from '@/engine/form-engine';
 import { logger } from '@/lib/logger';
@@ -12,6 +13,7 @@ import { ActionRegistry } from '@schema-engine/actions';
 import { FormConfigBuilder } from './form-config-builder';
 import { z } from 'zod';
 import type { ExtractSchemaType, ExtractTypeId, Merge } from './types.utils';
+import type { FormActionTrigger } from '@/actions';
 
 /**
  * FormEngineBuilder - Builder pattern for configuring the form engine.
@@ -53,7 +55,7 @@ export class FormEngineBuilder<
 		private elementRegistry = new ElementRegistry(),
 		private layoutRegistry = new LayoutRegistry(),
 		private stepperRegistry = new StepperRegistry(),
-		private actionRegistry = new ActionRegistry(),
+		private actionRegistry = new ActionRegistry<BuilderActionExecutionContext, FormActionTrigger>(),
 	) {}
 
 	/**
@@ -312,7 +314,7 @@ export class FormEngineBuilder<
 		const newElementRegistry = new ElementRegistry();
 		const newLayoutRegistry = new LayoutRegistry();
 		const newStepperRegistry = new StepperRegistry();
-		const newActionRegistry = new ActionRegistry();
+		const newActionRegistry = new ActionRegistry<BuilderActionExecutionContext, FormActionTrigger>();
 
 		for (const item of this.elementRegistry.getAll()) {
 			newElementRegistry.register(item);

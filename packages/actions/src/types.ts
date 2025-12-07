@@ -128,13 +128,12 @@ export interface ActionMetadata<TTrigger = string> {
  * Used to define action behavior, validation, and metadata.
  *
  * @template TType - The action type identifier
- * @template TConfig - The action configuration type
  * @template TContext - Domain-specific context data
  * @template TTrigger - The trigger/event type
  *
  * @example
  * ```typescript
- * const logAction: ActionRegistration<'log', LogConfig, AppContext, AppTrigger> = {
+ * const logAction: ActionRegistration<'log', AppContext, AppTrigger> = {
  *   $type: 'log',
  *   schema: z.object({
  *     id: z.string(),
@@ -154,12 +153,7 @@ export interface ActionMetadata<TTrigger = string> {
  * };
  * ```
  */
-export interface ActionRegistration<
-	TType extends string = string,
-	_TConfiggg = unknown,
-	TContext = unknown,
-	TTrigger = string,
-> {
+export interface ActionRegistration<TType extends string = string, TContext = unknown, TTrigger = string> {
 	/** Unique action type identifier */
 	$type: TType;
 	/** Zod schema for validating action configuration (validates TConfig type) */
@@ -168,8 +162,7 @@ export interface ActionRegistration<
 	metadata: ActionMetadata<TTrigger>;
 	/**
 	 * Action execution function - accepts the domain-specific context directly.
-	 * Note: TContext typically includes the validated TConfig within it (e.g., as a 'config' property).
-	 * TConfig generic parameter is preserved for schema validation typing.
+	 * Note: TContext typically includes the validated action configuration within it (e.g., as a 'config' property).
 	 */
 	execute: (context: TContext) => Promise<ActionExecutionResult> | ActionExecutionResult;
 }

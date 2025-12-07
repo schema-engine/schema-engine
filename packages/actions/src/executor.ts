@@ -24,7 +24,7 @@ export interface ActionExecutorOptions {
  *
  * @example
  * ```typescript
- * const registry: ActionRegistryProvider<MyConfig, MyContext, MyTrigger> = new MyRegistry();
+ * const registry: ActionRegistryProvider<MyContext, MyTrigger> = new MyRegistry();
  * const executor = new ActionExecutor(registry, { debug: true });
  *
  * const results = await executor.execute(
@@ -39,10 +39,10 @@ export class ActionExecutor<
 	TContext = unknown,
 	TTrigger = string,
 > {
-	private registry: ActionRegistryProvider<TConfig, TContext, TTrigger>;
+	private registry: ActionRegistryProvider<TContext, TTrigger>;
 	private debug: boolean;
 
-	constructor(registry: ActionRegistryProvider<TConfig, TContext, TTrigger>, options: ActionExecutorOptions = {}) {
+	constructor(registry: ActionRegistryProvider<TContext, TTrigger>, options: ActionExecutorOptions = {}) {
 		this.registry = registry;
 		this.debug = options.debug ?? false;
 	}

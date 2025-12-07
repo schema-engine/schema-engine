@@ -4,7 +4,7 @@ Domain-agnostic action execution system for event-driven architectures.
 
 ## Overview
 
-`@schema-engine/actions` provides a generic, serializable, type-safe action execution framework that can be used in any domain - forms, workflows, state machines, UI interactions, and more. It's completely independent of React, forms, or any specific framework.
+`@schema-engine/actions` provides a generic, serializable, type-safe action execution framework that can be used in any domain - forms, workflows, state machines, UI interactions, and more. It's completely independent from any specific framework.
 
 **Key Features:**
 
@@ -59,7 +59,7 @@ const LogActionSchema = z.object({
 
 type LogAction = z.infer<typeof LogActionSchema>;
 
-const logAction: ActionRegistration<'log', LogAction, MyContext, MyTrigger> = {
+const logAction: ActionRegistration<'log', MyContext, MyTrigger> = {
 	$type: 'log',
 	schema: LogActionSchema,
 	metadata: {
@@ -88,10 +88,10 @@ Or implement your own custom registry:
 ```typescript
 import type { ActionRegistryProvider } from '@schema-engine/actions';
 
-class MyActionRegistry implements ActionRegistryProvider<MyActionConfig, MyContext, MyTrigger> {
+class MyActionRegistry implements ActionRegistryProvider<MyContext, MyTrigger> {
 	private actions = new Map();
 
-	register(action: ActionRegistration<string, MyActionConfig, MyContext, MyTrigger>) {
+	register(action: ActionRegistration<string, MyContext, MyTrigger>) {
 		this.actions.set(action.$type, action);
 	}
 
@@ -167,11 +167,11 @@ interface ActionExecutionResult {
 Define how your action behaves:
 
 ```typescript
-interface ActionRegistration<TType, TConfig, TContext, TTrigger> {
+interface ActionRegistration<TType, TContext, TTrigger> {
 	$type: TType;
 	schema?: z.ZodSchema<TConfig>;
 	metadata: ActionMetadata<TTrigger>;
-	handler: ActionHandler<TConfig, TContext, TTrigger>;
+	execute: (context: TContext) => Promise<ActionExecutionResult> | ActionExecutionResult;
 }
 ```
 
@@ -264,7 +264,7 @@ interface FormContext {
 	isValid: boolean;
 }
 
-const submitAction: ActionRegistration<'submit', SubmitConfig, FormContext, FormTrigger> = {
+const submitAction: ActionRegistration<'submit', FormContext, FormTrigger> = {
 	$type: 'submit',
 	metadata: {
 		name: 'Submit Form',
@@ -305,7 +305,7 @@ interface WorkflowContext {
 	data: Record<string, unknown>;
 }
 
-const transitionAction: ActionRegistration<'transition', TransitionConfig, WorkflowContext, WorkflowTrigger> = {
+const transitionAction: ActionRegistration<'transition', WorkflowContext, WorkflowTrigger> = {
 	$type: 'transition',
 	metadata: {
 		name: 'State Transition',
@@ -336,7 +336,7 @@ interface UIContext {
 	state: Record<string, unknown>;
 }
 
-const toggleAction: ActionRegistration<'toggle', ToggleConfig, UIContext, UITrigger> = {
+const toggleAction: ActionRegistration<'toggle', UIContext, UITrigger> = {
 	$type: 'toggle',
 	metadata: {
 		name: 'Toggle State',
@@ -366,12 +366,12 @@ This package is used by:
 ### ActionRegistry
 
 ```typescript
-class ActionRegistry<TConfig, TContext, TTrigger> {
-	register(action: ActionRegistration<string, TConfig, TContext, TTrigger>): void;
+class ActionRegistry<TContext, TTrigger> {
+	register(action: ActionRegistration<string, TContext, TTrigger>): void;
 	has(type: string): boolean;
-	getAction(type: string): ActionRegistration<string, TConfig, TContext, TTrigger> | undefined;
+	getAction(type: string): ActionRegistration<string, TContext, TTrigger> | undefined;
 	getActionTypes(): string[];
-	getAll(): ActionRegistration<string, TConfig, TContext, TTrigger>[];
+	getAll(): ActionRegistration<string, TContext, TTrigger>[];
 	getDefaultTriggers(type: string): readonly TTrigger[] | undefined;
 	get size(): number;
 	clear(): void;
@@ -398,8 +398,8 @@ class ActionExecutor<TConfig, TContext, TTrigger> {
 ### ActionRegistryProvider
 
 ```typescript
-interface ActionRegistryProvider<TConfig, TContext, TTrigger> {
-	getAction(type: string): ActionRegistration<string, TConfig, TContext, TTrigger> | undefined;
+interface ActionRegistryProvider<TContext, TTrigger> {
+	getAction(type: string): ActionRegistration<string, TContext, TTrigger> | undefined;
 	getActionTypes(): string[];
 }
 ```

@@ -7,21 +7,20 @@ import type { ActionRegistration } from './types';
  * This allows the ActionExecutor to look up action handlers without
  * depending on a specific registry implementation.
  *
- * @template TConfig - The action configuration type
  * @template TContext - Domain-specific context data
  * @template TTrigger - The trigger/event type
  * @template TRegistration - The registration type (defaults to ActionRegistration)
  *
  * @example
  * ```typescript
- * class MyActionRegistry implements ActionRegistryProvider<MyConfig, MyContext, MyTrigger> {
- *   private actions = new Map<string, ActionRegistration<string, MyConfig, MyContext, MyTrigger>>();
+ * class MyActionRegistry implements ActionRegistryProvider<MyContext, MyTrigger> {
+ *   private actions = new Map<string, ActionRegistration<string, MyContext, MyTrigger>>();
  *
- *   register(action: ActionRegistration<string, MyConfig, MyContext, MyTrigger>): void {
+ *   register(action: ActionRegistration<string, MyContext, MyTrigger>): void {
  *     this.actions.set(action.$type, action);
  *   }
  *
- *   getAction(type: string): ActionRegistration<string, MyConfig, MyContext, MyTrigger> | undefined {
+ *   getAction(type: string): ActionRegistration<string, MyContext, MyTrigger> | undefined {
  *     return this.actions.get(type);
  *   }
  *
@@ -32,12 +31,10 @@ import type { ActionRegistration } from './types';
  * ```
  */
 export interface ActionRegistryProvider<
-	TConfig = unknown,
 	TContext = unknown,
 	TTrigger = string,
-	TRegistration extends ActionRegistration<string, TConfig, TContext, TTrigger> = ActionRegistration<
+	TRegistration extends ActionRegistration<string, TContext, TTrigger> = ActionRegistration<
 		string,
-		TConfig,
 		TContext,
 		TTrigger
 	>,
@@ -64,7 +61,6 @@ export interface ActionRegistryProvider<
  * Generic, domain-agnostic registry for managing action registrations.
  * Provides storage, retrieval, and lookup capabilities for actions.
  *
- * @template TConfig - The action configuration type
  * @template TContext - Domain-specific context data
  * @template TTrigger - The trigger/event type
  *
@@ -74,9 +70,8 @@ export interface ActionRegistryProvider<
  *
  * type MyTrigger = 'submit' | 'change';
  * type MyContext = { formId: string; data: Record<string, unknown> };
- * type MyConfig = { id: string; $type: string };
  *
- * const registry = new ActionRegistry<MyConfig, MyContext, MyTrigger>();
+ * const registry = new ActionRegistry<MyContext, MyTrigger>();
  *
  * registry.register({
  *   $type: 'log',
@@ -94,17 +89,17 @@ export interface ActionRegistryProvider<
  * const action = registry.getAction('log');
  * ```
  */
-export class ActionRegistry<TConfig = unknown, TContext = unknown, TTrigger = string>
-	implements ActionRegistryProvider<TConfig, TContext, TTrigger>
+export class ActionRegistry<TContext = unknown, TTrigger = string>
+	implements ActionRegistryProvider<TContext, TTrigger>
 {
-	private actions = new Map<string, ActionRegistration<string, TConfig, TContext, TTrigger>>();
+	private actions = new Map<string, ActionRegistration<string, TContext, TTrigger>>();
 
 	/**
 	 * Register an action
 	 *
 	 * @param action - The action registration to register
 	 */
-	register(action: ActionRegistration<string, TConfig, TContext, TTrigger>): void {
+	register(action: ActionRegistration<string, TContext, TTrigger>): void {
 		this.actions.set(action.$type, action);
 	}
 
@@ -124,7 +119,7 @@ export class ActionRegistry<TConfig = unknown, TContext = unknown, TTrigger = st
 	 * @param type - The action type identifier
 	 * @returns The action registration or undefined if not found
 	 */
-	getAction(type: string): ActionRegistration<string, TConfig, TContext, TTrigger> | undefined {
+	getAction(type: string): ActionRegistration<string, TContext, TTrigger> | undefined {
 		return this.actions.get(type);
 	}
 
@@ -142,7 +137,7 @@ export class ActionRegistry<TConfig = unknown, TContext = unknown, TTrigger = st
 	 *
 	 * @returns Array of all action registrations
 	 */
-	getAll(): ActionRegistration<string, TConfig, TContext, TTrigger>[] {
+	getAll(): ActionRegistration<string, TContext, TTrigger>[] {
 		return Array.from(this.actions.values());
 	}
 
@@ -170,7 +165,7 @@ export class ActionRegistry<TConfig = unknown, TContext = unknown, TTrigger = st
 	 *
 	 * @returns The actions map
 	 */
-	getMap(): Map<string, ActionRegistration<string, TConfig, TContext, TTrigger>> {
+	getMap(): Map<string, ActionRegistration<string, TContext, TTrigger>> {
 		return this.actions;
 	}
 
