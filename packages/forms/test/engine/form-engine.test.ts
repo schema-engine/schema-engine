@@ -1,12 +1,12 @@
 import { test, expect, describe } from 'bun:test';
 import { z } from 'zod';
 import { FormEngineBuilder } from '@/builder';
-import type { ElementRegistration, LayoutRegistration } from '@/types';
+import type { InputRegistration, LayoutRegistration, StepperRegistration } from '@/types';
 
 describe('FormEngine', () => {
 	describe('Element Retrieval', () => {
 		test('should get element by id', () => {
-			const textInput: ElementRegistration = {
+			const textInput: InputRegistration = {
 				$type: 'text',
 				schema: z.object({ name: z.string() }),
 				metadata: { name: 'Text Input', category: 'input' },
@@ -28,14 +28,14 @@ describe('FormEngine', () => {
 		});
 
 		test('should get all elements', () => {
-			const textInput: ElementRegistration = {
+			const textInput: InputRegistration = {
 				$type: 'text',
 				schema: z.object({}),
 				metadata: { name: 'Text', category: 'input' },
 				render: (props) => props,
 			};
 
-			const emailInput: ElementRegistration = {
+			const emailInput: InputRegistration = {
 				$type: 'email',
 				schema: z.object({}),
 				metadata: { name: 'Email', category: 'input' },
@@ -51,14 +51,14 @@ describe('FormEngine', () => {
 		});
 
 		test('should get all element IDs', () => {
-			const textInput: ElementRegistration = {
+			const textInput: InputRegistration = {
 				$type: 'text',
 				schema: z.object({}),
 				metadata: { name: 'Text', category: 'input' },
 				render: (props) => props,
 			};
 
-			const emailInput: ElementRegistration = {
+			const emailInput: InputRegistration = {
 				$type: 'email',
 				schema: z.object({}),
 				metadata: { name: 'Email', category: 'input' },
@@ -74,7 +74,7 @@ describe('FormEngine', () => {
 		});
 
 		test('should check if element exists', () => {
-			const textInput: ElementRegistration = {
+			const textInput: InputRegistration = {
 				$type: 'text',
 				schema: z.object({}),
 				metadata: { name: 'Text', category: 'input' },
@@ -249,7 +249,7 @@ describe('FormEngine', () => {
 
 	describe('Summary', () => {
 		test('should provide complete summary', () => {
-			const textInput: ElementRegistration = {
+			const textInput: InputRegistration = {
 				$type: 'text',
 				schema: z.object({}),
 				metadata: { name: 'Text', category: 'input' },
@@ -312,7 +312,7 @@ describe('FormEngine', () => {
 
 	describe('Immutability', () => {
 		test('should not allow modifications after build', () => {
-			const textInput: ElementRegistration = {
+			const textInput: InputRegistration = {
 				$type: 'text',
 				schema: z.object({}),
 				metadata: { name: 'Text', category: 'input' },
@@ -326,7 +326,7 @@ describe('FormEngine', () => {
 			expect(engine.hasElement('text')).toBe(true);
 
 			// Attempting to add more to builder shouldn't affect built engine
-			const emailInput: ElementRegistration = {
+			const emailInput: InputRegistration = {
 				$type: 'email',
 				schema: z.object({}),
 				metadata: { name: 'Email', category: 'input' },
@@ -358,7 +358,7 @@ describe('FormEngine', () => {
 					.optional(),
 			});
 
-			const textInput: ElementRegistration<z.infer<typeof textInputSchema>> = {
+			const textInput: InputRegistration = {
 				$type: 'text',
 				schema: textInputSchema,
 				metadata: {
@@ -370,7 +370,6 @@ describe('FormEngine', () => {
 					version: '1.0.0',
 				},
 				render: (props) => {
-					// Mock render function
 					return { type: 'input', props };
 				},
 			};
@@ -382,7 +381,6 @@ describe('FormEngine', () => {
 			expect(retrieved?.metadata.version).toBe('1.0.0');
 			expect(retrieved?.metadata.tags).toContain('input');
 
-			// Test schema validation
 			const validConfig = {
 				name: 'username',
 				label: 'Username',
@@ -391,6 +389,196 @@ describe('FormEngine', () => {
 
 			const result = retrieved?.schema.safeParse(validConfig);
 			expect(result?.success).toBe(true);
+		});
+	});
+
+	describe('toBuilder()', () => {
+		test('should convert engine back to builder with all registrations', () => {
+			const textInput: InputRegistration = {
+				$type: 'text',
+				schema: z.object({ name: z.string() }),
+				metadata: { name: 'Text Input', category: 'input' },
+				render: () => {},
+			};
+
+			const cardLayout: LayoutRegistration = {
+				$type: 'card',
+				schema: z.object({ padding: z.number() }),
+				metadata: { name: 'Card Layout' },
+				render: () => {},
+			};
+
+			const originalEngine = new FormEngineBuilder().addElement(textInput).addLayout(cardLayout).build();
+
+			const builder = originalEngine.toBuilder();
+			const rebuiltEngine = builder.build();
+
+			expect(rebuiltEngine.getAllElements()).toHaveLength(1);
+			expect(rebuiltEngine.getElement('text')).toBeDefined();
+			expect(rebuiltEngine.getAllLayouts()).toHaveLength(1);
+			expect(rebuiltEngine.getLayout('card')).toBeDefined();
+		});
+
+		test('should allow extending engine through toBuilder', () => {
+			const textInput: InputRegistration = {
+				$type: 'text',
+				schema: z.object({ name: z.string() }),
+				metadata: { name: 'Text Input', category: 'input' },
+				render: () => {},
+			};
+
+			const emailInput: InputRegistration = {
+				$type: 'email',
+				schema: z.object({ name: z.string() }),
+				metadata: { name: 'Email Input', category: 'input' },
+				render: () => {},
+			};
+
+			const originalEngine = new FormEngineBuilder().addElement(textInput).build();
+
+			const extendedEngine = originalEngine.toBuilder().addElement(emailInput).build();
+
+			expect(originalEngine.getAllElements()).toHaveLength(1);
+			expect(originalEngine.getElement('text')).toBeDefined();
+			expect(originalEngine.getElement('email')).toBeUndefined();
+
+			expect(extendedEngine.getAllElements()).toHaveLength(2);
+			expect(extendedEngine.getElement('text')).toBeDefined();
+			expect(extendedEngine.getElement('email')).toBeDefined();
+		});
+
+		test('should preserve all registry types when converting to builder', () => {
+			const textInput: InputRegistration = {
+				$type: 'text',
+				schema: z.object({ name: z.string() }),
+				metadata: { name: 'Text Input', category: 'input' },
+				render: () => {},
+			};
+
+			const cardLayout: LayoutRegistration = {
+				$type: 'card',
+				schema: z.object({ padding: z.number() }),
+				metadata: { name: 'Card Layout' },
+				render: () => {},
+			};
+
+			const wizardStepper: StepperRegistration = {
+				$type: 'wizard',
+				schema: z.object({ showProgress: z.boolean() }),
+				metadata: { name: 'Wizard' },
+				render: () => {},
+			};
+
+			const submitAction = {
+				$type: 'submit',
+				schema: z.object({ url: z.string() }),
+				metadata: { name: 'Submit' },
+				execute: async () => ({ success: true as const }),
+			};
+
+			const originalEngine = new FormEngineBuilder()
+				.addElement(textInput)
+				.addLayout(cardLayout)
+				.addStepper(wizardStepper)
+				.addAction(submitAction)
+				.build();
+
+			const builder = originalEngine.toBuilder();
+			const rebuiltEngine = builder.build();
+
+			const summary = rebuiltEngine.getSummary();
+			expect(summary.elements.count).toBe(1);
+			expect(summary.layouts.count).toBe(1);
+			expect(summary.steppers.count).toBe(1);
+			expect(summary.actions.count).toBe(1);
+
+			expect(summary.elements.ids).toContain('text');
+			expect(summary.layouts.ids).toContain('card');
+			expect(summary.steppers.ids).toContain('wizard');
+			expect(summary.actions.types).toContain('submit');
+		});
+
+		test('should support builder modification workflow', () => {
+			const textInput: InputRegistration = {
+				$type: 'text',
+				schema: z.object({ name: z.string() }),
+				metadata: { name: 'Text Input', category: 'input' },
+				render: () => {},
+			};
+
+			const submitAction = {
+				$type: 'submit',
+				schema: z.object({ url: z.string() }),
+				metadata: { name: 'Submit' },
+				execute: async () => ({ success: true as const }),
+			};
+
+			const logAction = {
+				$type: 'log',
+				schema: z.object({ message: z.string() }),
+				metadata: { name: 'Log' },
+				execute: async () => ({ success: true as const }),
+			};
+
+			const baseEngine = new FormEngineBuilder().addElement(textInput).addAction(submitAction).build();
+
+			const modifiedEngine = baseEngine.toBuilder().addAction(logAction).build();
+
+			expect(baseEngine.getAllActions()).toHaveLength(1);
+			expect(baseEngine.getAction('submit')).toBeDefined();
+			expect(baseEngine.getAction('log')).toBeUndefined();
+
+			expect(modifiedEngine.getAllActions()).toHaveLength(2);
+			expect(modifiedEngine.getAction('submit')).toBeDefined();
+			expect(modifiedEngine.getAction('log')).toBeDefined();
+		});
+
+		test('should work with empty engine', () => {
+			const emptyEngine = new FormEngineBuilder().build();
+			const builder = emptyEngine.toBuilder();
+			const rebuiltEngine = builder.build();
+
+			expect(rebuiltEngine.getAllElements()).toHaveLength(0);
+			expect(rebuiltEngine.getAllLayouts()).toHaveLength(0);
+			expect(rebuiltEngine.getAllSteppers()).toHaveLength(0);
+			expect(rebuiltEngine.getAllActions()).toHaveLength(0);
+		});
+
+		test('should allow chaining toBuilder multiple times', () => {
+			const textInput: InputRegistration = {
+				$type: 'text',
+				schema: z.object({ name: z.string() }),
+				metadata: { name: 'Text Input', category: 'input' },
+				render: () => {},
+			};
+
+			const emailInput: InputRegistration = {
+				$type: 'email',
+				schema: z.object({ name: z.string() }),
+				metadata: { name: 'Email Input', category: 'input' },
+				render: () => {},
+			};
+
+			const numberInput: InputRegistration = {
+				$type: 'number',
+				schema: z.object({ name: z.string() }),
+				metadata: { name: 'Number Input', category: 'input' },
+				render: () => {},
+			};
+
+			const engine1 = new FormEngineBuilder().addElement(textInput).build();
+
+			const engine2 = engine1.toBuilder().addElement(emailInput).build();
+
+			const engine3 = engine2.toBuilder().addElement(numberInput).build();
+
+			expect(engine1.getAllElements()).toHaveLength(1);
+			expect(engine2.getAllElements()).toHaveLength(2);
+			expect(engine3.getAllElements()).toHaveLength(3);
+
+			expect(engine3.getElement('text')).toBeDefined();
+			expect(engine3.getElement('email')).toBeDefined();
+			expect(engine3.getElement('number')).toBeDefined();
 		});
 	});
 });

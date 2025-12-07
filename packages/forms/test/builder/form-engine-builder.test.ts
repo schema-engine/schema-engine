@@ -508,4 +508,153 @@ describe('FormEngineBuilder', () => {
 			expect(summary.actions.types).toContain('submit');
 		});
 	});
+
+	describe('clone()', () => {
+		test('should create independent copy of builder with all registrations', () => {
+			const textInput: InputRegistration = {
+				$type: 'text',
+				schema: z.object({ name: z.string() }),
+				metadata: { name: 'Text Input', category: 'input' },
+				render: () => {},
+			};
+
+			const cardLayout: LayoutRegistration = {
+				$type: 'card',
+				schema: z.object({ padding: z.number() }),
+				metadata: { name: 'Card Layout' },
+				render: () => {},
+			};
+
+			const wizardStepper: StepperRegistration = {
+				$type: 'wizard',
+				schema: z.object({ showProgress: z.boolean() }),
+				metadata: { name: 'Wizard' },
+				render: () => {},
+			};
+
+			const submitAction: BuilderActionRegistration = {
+				$type: 'submit',
+				schema: z.object({ url: z.string() }),
+				metadata: { name: 'Submit' },
+				execute: async () => ({ success: true }),
+			};
+
+			const originalBuilder = new FormEngineBuilder()
+				.addElement(textInput)
+				.addLayout(cardLayout)
+				.addStepper(wizardStepper)
+				.addAction(submitAction);
+
+			const clonedBuilder = originalBuilder.clone();
+
+			const originalEngine = originalBuilder.build();
+			const clonedEngine = clonedBuilder.build();
+
+			expect(originalEngine.getAllElements()).toHaveLength(1);
+			expect(clonedEngine.getAllElements()).toHaveLength(1);
+			expect(originalEngine.getAllLayouts()).toHaveLength(1);
+			expect(clonedEngine.getAllLayouts()).toHaveLength(1);
+			expect(originalEngine.getAllSteppers()).toHaveLength(1);
+			expect(clonedEngine.getAllSteppers()).toHaveLength(1);
+			expect(originalEngine.getAllActions()).toHaveLength(1);
+			expect(clonedEngine.getAllActions()).toHaveLength(1);
+		});
+
+		test('should create independent registries that do not affect original', () => {
+			const textInput: InputRegistration = {
+				$type: 'text',
+				schema: z.object({ name: z.string() }),
+				metadata: { name: 'Text Input', category: 'input' },
+				render: () => {},
+			};
+
+			const emailInput: InputRegistration = {
+				$type: 'email',
+				schema: z.object({ name: z.string() }),
+				metadata: { name: 'Email Input', category: 'input' },
+				render: () => {},
+			};
+
+			const originalBuilder = new FormEngineBuilder().addElement(textInput);
+
+			const clonedBuilder = originalBuilder.clone().addElement(emailInput);
+
+			const originalEngine = originalBuilder.build();
+			const clonedEngine = clonedBuilder.build();
+
+			expect(originalEngine.getAllElements()).toHaveLength(1);
+			expect(originalEngine.getElement('text')).toBeDefined();
+			expect(originalEngine.getElement('email')).toBeUndefined();
+
+			expect(clonedEngine.getAllElements()).toHaveLength(2);
+			expect(clonedEngine.getElement('text')).toBeDefined();
+			expect(clonedEngine.getElement('email')).toBeDefined();
+		});
+
+		test('should allow composition pattern with clone', () => {
+			const textInput: InputRegistration = {
+				$type: 'text',
+				schema: z.object({ name: z.string() }),
+				metadata: { name: 'Text Input', category: 'input' },
+				render: () => {},
+			};
+
+			const numberInput: InputRegistration = {
+				$type: 'number',
+				schema: z.object({ name: z.string() }),
+				metadata: { name: 'Number Input', category: 'input' },
+				render: () => {},
+			};
+
+			const submitAction: BuilderActionRegistration = {
+				$type: 'submit',
+				schema: z.object({ url: z.string() }),
+				metadata: { name: 'Submit' },
+				execute: async () => ({ success: true }),
+			};
+
+			const logAction: BuilderActionRegistration = {
+				$type: 'log',
+				schema: z.object({ message: z.string() }),
+				metadata: { name: 'Log' },
+				execute: async () => ({ success: true }),
+			};
+
+			const baseBuilder = new FormEngineBuilder().addElement(textInput).addElement(numberInput);
+
+			const formBuilderWithSubmit = baseBuilder.clone().addAction(submitAction);
+
+			const formBuilderWithLog = baseBuilder.clone().addAction(logAction);
+
+			const engineWithSubmit = formBuilderWithSubmit.build();
+			const engineWithLog = formBuilderWithLog.build();
+
+			expect(engineWithSubmit.getAllElements()).toHaveLength(2);
+			expect(engineWithSubmit.getAllActions()).toHaveLength(1);
+			expect(engineWithSubmit.getAction('submit')).toBeDefined();
+			expect(engineWithSubmit.getAction('log')).toBeUndefined();
+
+			expect(engineWithLog.getAllElements()).toHaveLength(2);
+			expect(engineWithLog.getAllActions()).toHaveLength(1);
+			expect(engineWithLog.getAction('log')).toBeDefined();
+			expect(engineWithLog.getAction('submit')).toBeUndefined();
+		});
+
+		test('should clone empty builder correctly', () => {
+			const originalBuilder = new FormEngineBuilder();
+			const clonedBuilder = originalBuilder.clone();
+
+			const originalEngine = originalBuilder.build();
+			const clonedEngine = clonedBuilder.build();
+
+			expect(originalEngine.getAllElements()).toHaveLength(0);
+			expect(clonedEngine.getAllElements()).toHaveLength(0);
+			expect(originalEngine.getAllLayouts()).toHaveLength(0);
+			expect(clonedEngine.getAllLayouts()).toHaveLength(0);
+			expect(originalEngine.getAllSteppers()).toHaveLength(0);
+			expect(clonedEngine.getAllSteppers()).toHaveLength(0);
+			expect(originalEngine.getAllActions()).toHaveLength(0);
+			expect(clonedEngine.getAllActions()).toHaveLength(0);
+		});
+	});
 });

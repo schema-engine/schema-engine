@@ -3,8 +3,13 @@ import type {
 	StaticRegistration,
 	LayoutRegistration,
 	StepperRegistration,
-	BuilderActionRegistration,
+	BuilderActionExecutionContext,
 } from '@/types';
+import type { ActionRegistration } from '@schema-engine/actions';
+import type { FormActionTrigger } from '@/actions';
+import { FormEngineBuilder } from '@/builder/form-engine-builder';
+import { ElementRegistry, LayoutRegistry, StepperRegistry } from '@/registries';
+import { ActionRegistry } from '@schema-engine/actions';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
 
@@ -30,7 +35,7 @@ export interface EngineRegistries {
 	elements: Map<string, InputRegistration<any, any, any> | StaticRegistration<any, any, any>>;
 	layouts: Map<string, LayoutRegistration<any, any, any>>;
 	steppers: Map<string, StepperRegistration<any, any, any>>;
-	actions: Map<string, BuilderActionRegistration<any, any>>;
+	actions: Map<string, ActionRegistration<string, BuilderActionExecutionContext, FormActionTrigger>>;
 	schemaRegistry: ReturnType<typeof z.registry<FormEngineSchemaMetadata>>;
 	formConfigSchema: z.ZodObject<any>;
 }
@@ -54,12 +59,7 @@ export interface EngineRegistries {
  * const allElements = engine.getAllElements();
  * ```
  */
-export class FormEngine<
-	_TElements extends Record<string, unknown> = Record<never, unknown>,
-	_TLayouts extends Record<string, unknown> = Record<never, unknown>,
-	_TSteppers extends Record<string, unknown> = Record<never, unknown>,
-	_TActions extends Record<string, unknown> = Record<never, unknown>,
-> {
+export class FormEngine {
 	private readonly registries: EngineRegistries;
 
 	constructor(registries: EngineRegistries) {
@@ -167,14 +167,14 @@ export class FormEngine<
 	/**
 	 * Get a registered action by id.
 	 */
-	getAction(id: string): BuilderActionRegistration<any, any> | undefined {
+	getAction(id: string): ActionRegistration<string, BuilderActionExecutionContext, FormActionTrigger> | undefined {
 		return this.registries.actions.get(id);
 	}
 
 	/**
 	 * Get all registered actions.
 	 */
-	getAllActions(): BuilderActionRegistration<any, any>[] {
+	getAllActions(): ActionRegistration<string, BuilderActionExecutionContext, FormActionTrigger>[] {
 		return Array.from(this.registries.actions.values());
 	}
 
@@ -330,30 +330,25 @@ export class FormEngine<
 	}
 
 	/**
-	 * Create a new builder with all current registrations.
-	 * This allows extending an existing FormEngine with additional components or overriding actions.
+	 * Convert this FormEngine back to a FormEngineBuilder.
+	 * Useful for extending an existing engine with additional components.
 	 *
 	 * @example
 	 * ```typescript
 	 * const baseEngine = new FormEngineBuilder()
 	 *   .addElement(InputElement)
-	 *   .addAction(submitPlugin())
 	 *   .build();
 	 *
-	 * const extendedEngine = baseEngine.extend()
+	 * const extendedEngine = baseEngine.toBuilder()
 	 *   .addAction(submitPlugin({ onSuccess: customHandler }))
 	 *   .build();
 	 * ```
 	 */
-	extend(): import('@/builder/form-engine-builder').FormEngineBuilder<_TElements, _TLayouts, _TSteppers, _TActions> {
-		const { FormEngineBuilder } = require('@/builder/form-engine-builder');
-		const { ElementRegistry, LayoutRegistry, StepperRegistry } = require('@/registries');
-		const { ActionRegistry } = require('@schema-engine/actions');
-
+	toBuilder(): FormEngineBuilder {
 		const elementRegistry = new ElementRegistry();
 		const layoutRegistry = new LayoutRegistry();
 		const stepperRegistry = new StepperRegistry();
-		const actionRegistry = new ActionRegistry();
+		const actionRegistry = new ActionRegistry<BuilderActionExecutionContext, FormActionTrigger>();
 
 		for (const [_key, value] of this.registries.elements.entries()) {
 			elementRegistry.register(value);
@@ -364,24 +359,19 @@ export class FormEngine<
 		for (const [_key, value] of this.registries.steppers.entries()) {
 			stepperRegistry.register(value);
 		}
-		for (const [_key, value] of this.registries.actions.entries()) {
+		for (const value of this.registries.actions.values()) {
 			actionRegistry.register(value);
 		}
 
 		const builder = new FormEngineBuilder(elementRegistry, layoutRegistry, stepperRegistry, actionRegistry);
 
-		logger.debug('Extended FormEngine to builder', {
+		logger.debug('Converted FormEngine to builder', {
 			elements: this.registries.elements.size,
 			layouts: this.registries.layouts.size,
 			steppers: this.registries.steppers.size,
 			actions: this.registries.actions.size,
 		});
 
-		return builder as import('@/builder/form-engine-builder').FormEngineBuilder<
-			_TElements,
-			_TLayouts,
-			_TSteppers,
-			_TActions
-		>;
+		return builder;
 	}
 }

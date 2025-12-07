@@ -17,12 +17,12 @@ export const mockDispatch = mock(
 
 export const mockDispatchSync = mock(
 	(
-		_actions: FormActionConfig[],
-		_trigger: FormActionTrigger,
-		_context: BuilderActionExecutionContext,
-		_metadata?: Record<string, unknown>,
+		actions: FormActionConfig[],
+		trigger: FormActionTrigger,
+		context: BuilderActionExecutionContext,
+		metadata?: Record<string, unknown>,
 	): void => {
-		void mockDispatch(_actions, _trigger, _context, _metadata);
+		void mockDispatch(actions, trigger, context, metadata);
 	},
 );
 

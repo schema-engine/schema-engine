@@ -553,14 +553,20 @@ const engine = new FormEngineBuilder(customRegistry).build();
 Create specialized engines by extending existing configurations:
 
 ```typescript
-const baseEngine = new FormEngineBuilder().addElement(textInputRegistration).addElement(emailInputRegistration).build();
+// Create a base builder
+const baseBuilder = new FormEngineBuilder().addElement(textInputRegistration).addElement(emailInputRegistration);
 
-// Later, extend with additional components
-const extendedEngine = new FormEngineBuilder()
-	.addElements(baseEngine.getAllElements())
+// Clone and extend the builder
+const extendedBuilder = baseBuilder
+	.clone()
 	.addAction(submitActionRegistration)
-	.addAction(notificationActionRegistration)
-	.build();
+	.addAction(notificationActionRegistration);
+
+const engine = extendedBuilder.build();
+
+// Or convert an existing engine back to a builder
+const baseEngine = baseBuilder.build();
+const modifiedEngine = baseEngine.toBuilder().addAction(customActionRegistration).build();
 ```
 
 ### Type-Safe Configurations

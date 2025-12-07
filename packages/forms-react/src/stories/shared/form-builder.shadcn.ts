@@ -114,5 +114,5 @@ export function getEngine() {
  * Create an extendable form engine builder (for adding custom actions, etc.)
  */
 export function createExtendableBuilder() {
-	return createDefaultFormEngineBuilder().extend();
+	return createDefaultFormEngineBuilder().clone();
 }
