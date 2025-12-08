@@ -5,7 +5,7 @@
  * Use createForm() to build shadcn-based forms with full TypeScript support.
  */
 
-import { FormEngineBuilder } from '@schema-engine/forms/builder';
+import { FormComposer } from '@schema-engine/forms/builder';
 import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
 import { formResetPlugin, formSubmitPlugin } from '@schema-engine/forms';
 
@@ -41,16 +41,16 @@ import '@/components/layouts/hero-background-layout.css';
 export { ValidationPresets };
 
 /**
- * Create a FormEngineBuilder with all default (shadcn) components registered.
- * Returns a fresh builder instance with proper type inference.
+ * Create a FormComposer with all default (shadcn) components registered.
+ * Returns a fresh composer instance with proper type inference.
  *
  * Components included:
  * - Elements: input, textarea, checkbox, select, radio, switch, number, arrayElements, fieldSet, submit
  * - Layouts: card, split-screen, hero-background
  * - Steppers: default, minimalist, debugger
  */
-function createDefaultFormEngineBuilder() {
-	return new FormEngineBuilder()
+function createDefaultFormComposer() {
+	return new FormComposer()
 		.addElement(InputElementRegistration)
 		.addElement(TextareaElementRegistration)
 		.addElement(CheckboxElementRegistration)
@@ -100,19 +100,19 @@ function createDefaultFormEngineBuilder() {
  * ```
  */
 export function createForm() {
-	return createDefaultFormEngineBuilder().createForm();
+	return createDefaultFormComposer().build().createFormDefinition();
 }
 
 /**
  * Get the shadcn form engine instance
  */
 export function getEngine() {
-	return createDefaultFormEngineBuilder().build();
+	return createDefaultFormComposer().build();
 }
 
 /**
- * Create an extendable form engine builder (for adding custom actions, etc.)
+ * Create an extendable form composer (for adding custom actions, etc.)
  */
-export function createExtendableBuilder() {
-	return createDefaultFormEngineBuilder().clone();
+export function createExtendableComposer() {
+	return createDefaultFormComposer().clone();
 }

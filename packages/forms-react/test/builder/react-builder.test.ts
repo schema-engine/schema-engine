@@ -3,7 +3,7 @@
  */
 
 import { describe, test, expect } from 'bun:test';
-import { createReactFormEngine } from '@/registries/builder-registry';
+import { createReactFormComposer } from '@/registries/builder-registry';
 import { InputElementRegistration } from '@/components/elements/shadcn/inputs/form-input.registration';
 import { FormTextarea } from '@/components/elements/shadcn/inputs/form-textarea';
 import { CardLayoutRegistration } from '@/components/layouts/card-layout.registration';
@@ -14,7 +14,7 @@ import { TextareaFieldSchema } from '@/components/elements/shadcn/inputs/form-te
 describe('React Form Engine Builder', () => {
 	describe('Builder Creation', () => {
 		test('should create a new builder instance', () => {
-			const builder = createReactFormEngine();
+			const builder = createReactFormComposer();
 			expect(builder).toBeDefined();
 			expect(typeof builder.addElement).toBe('function');
 			expect(typeof builder.addLayout).toBe('function');
@@ -25,7 +25,7 @@ describe('React Form Engine Builder', () => {
 
 	describe('Element Registration', () => {
 		test('should register input element', () => {
-			const builder = createReactFormEngine();
+			const builder = createReactFormComposer();
 			const elementReg = InputElementRegistration;
 
 			builder.addElement(elementReg);
@@ -49,7 +49,7 @@ describe('React Form Engine Builder', () => {
 				},
 			};
 
-			const builder = createReactFormEngine();
+			const builder = createReactFormComposer();
 			builder.addElement(InputElementRegistration).addElement(textareaElement);
 
 			const engine = builder.build();
@@ -63,7 +63,7 @@ describe('React Form Engine Builder', () => {
 		});
 
 		test('should include element schema', () => {
-			const builder = createReactFormEngine();
+			const builder = createReactFormComposer();
 			builder.addElement(InputElementRegistration);
 
 			const engine = builder.build();
@@ -74,7 +74,7 @@ describe('React Form Engine Builder', () => {
 		});
 
 		test('should include element metadata', () => {
-			const builder = createReactFormEngine();
+			const builder = createReactFormComposer();
 			builder.addElement(InputElementRegistration);
 
 			const engine = builder.build();
@@ -88,7 +88,7 @@ describe('React Form Engine Builder', () => {
 
 	describe('Layout Registration', () => {
 		test('should register layout', () => {
-			const builder = createReactFormEngine();
+			const builder = createReactFormComposer();
 			builder.addLayout(CardLayoutRegistration);
 
 			const engine = builder.build();
@@ -100,7 +100,7 @@ describe('React Form Engine Builder', () => {
 		});
 
 		test('should include layout metadata', () => {
-			const builder = createReactFormEngine();
+			const builder = createReactFormComposer();
 			builder.addLayout(CardLayoutRegistration);
 
 			const engine = builder.build();
@@ -113,7 +113,7 @@ describe('React Form Engine Builder', () => {
 
 	describe('Stepper Registration', () => {
 		test('should register stepper', () => {
-			const builder = createReactFormEngine();
+			const builder = createReactFormComposer();
 			builder.addStepper(DefaultStepperRegistration);
 
 			const engine = builder.build();
@@ -127,7 +127,7 @@ describe('React Form Engine Builder', () => {
 
 	describe('Method Chaining', () => {
 		test('should support fluent API', () => {
-			const builder = createReactFormEngine();
+			const builder = createReactFormComposer();
 
 			const engine = builder
 				.addElement(InputElementRegistration)
@@ -143,7 +143,7 @@ describe('React Form Engine Builder', () => {
 
 	describe('Engine Build', () => {
 		test('should build engine with registrations', () => {
-			const builder = createReactFormEngine();
+			const builder = createReactFormComposer();
 			builder.addElement(InputElementRegistration);
 
 			const engine = builder.build();
@@ -153,7 +153,7 @@ describe('React Form Engine Builder', () => {
 		});
 
 		test('should build engine summary', () => {
-			const builder = createReactFormEngine();
+			const builder = createReactFormComposer();
 			builder
 				.addElement(InputElementRegistration)
 				.addLayout(CardLayoutRegistration)
@@ -168,7 +168,7 @@ describe('React Form Engine Builder', () => {
 		});
 
 		test('should allow building empty engine', () => {
-			const builder = createReactFormEngine();
+			const builder = createReactFormComposer();
 			const engine = builder.build();
 
 			expect(engine.getElementIds()).toHaveLength(0);
@@ -196,7 +196,7 @@ describe('React Form Engine Builder', () => {
 				},
 			};
 
-			const builder = createReactFormEngine();
+			const builder = createReactFormComposer();
 			builder.addElement(InputElementRegistration).addElement(textareaElement);
 
 			const engine = builder.build();
@@ -208,7 +208,7 @@ describe('React Form Engine Builder', () => {
 		});
 
 		test('should return undefined for non-existent element', () => {
-			const builder = createReactFormEngine();
+			const builder = createReactFormComposer();
 			const engine = builder.build();
 
 			expect(engine.getElement('nonexistent')).toBeUndefined();
@@ -235,7 +235,7 @@ describe('React Form Engine Builder', () => {
 
 	describe('Integration', () => {
 		test('should create a fully configured form engine', () => {
-			const builder = createReactFormEngine();
+			const builder = createReactFormComposer();
 
 			const engine = builder
 				.addElement(InputElementRegistration)

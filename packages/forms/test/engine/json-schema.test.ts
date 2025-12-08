@@ -1,12 +1,12 @@
 import { describe, test, expect } from 'bun:test';
 import { z } from 'zod';
-import { FormEngineBuilder } from '@/builder/form-engine-builder';
+import { FormComposer } from '@/builder/form-composer';
 import type { InputRegistration, LayoutRegistration, StepperRegistration, BuilderActionRegistration } from '@/types';
 
 describe('FormEngine JSON Schema Generation', () => {
 	describe('Basic Schema Generation', () => {
 		test('should generate JSON schema from empty engine', () => {
-			const engine = new FormEngineBuilder().build();
+			const engine = new FormComposer().build();
 
 			const schema = engine.generateJSONSchemaCollection();
 
@@ -32,7 +32,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder().addElement(textInputRegistration).build();
+			const engine = new FormComposer().addElement(textInputRegistration).build();
 
 			const schema = engine.generateJSONSchemaCollection();
 
@@ -70,7 +70,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder()
+			const engine = new FormComposer()
 				.addElement(textInputRegistration)
 				.addLayout(cardLayoutRegistration)
 				.build();
@@ -101,7 +101,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder().addElement(textInputRegistration).build();
+			const engine = new FormComposer().addElement(textInputRegistration).build();
 
 			const schemaRegistry = engine.getSchemaRegistry();
 			const registeredMetadata = schemaRegistry.get(textInputSchema);
@@ -142,7 +142,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder()
+			const engine = new FormComposer()
 				.addElement(textInputRegistration)
 				.addLayout(textLayoutRegistration)
 				.build();
@@ -191,7 +191,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				execute: async () => ({ success: true }),
 			};
 
-			const engine = new FormEngineBuilder()
+			const engine = new FormComposer()
 				.addElement(elementReg)
 				.addLayout(layoutReg)
 				.addStepper(stepperReg)
@@ -222,7 +222,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder().addElement(textInputRegistration).build();
+			const engine = new FormComposer().addElement(textInputRegistration).build();
 
 			const schema = engine.generateJSONSchemaCollection({
 				uri: (id: string) => `https://api.example.com/schemas/${id}.json`,
@@ -243,7 +243,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder().addElement(textInputRegistration).build();
+			const engine = new FormComposer().addElement(textInputRegistration).build();
 
 			const schema = engine.generateJSONSchemaCollection();
 
@@ -265,7 +265,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder().addElement(textInputRegistration).build();
+			const engine = new FormComposer().addElement(textInputRegistration).build();
 
 			const registry = engine.getSchemaRegistry();
 
@@ -296,7 +296,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder().addElement(textInputReg).addElement(emailInputReg).build();
+			const engine = new FormComposer().addElement(textInputReg).addElement(emailInputReg).build();
 
 			const registry = engine.getSchemaRegistry();
 			const textMetadata = registry.get(textInputSchema);
@@ -334,7 +334,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder().addElement(complexRegistration).build();
+			const engine = new FormComposer().addElement(complexRegistration).build();
 
 			const schema = engine.generateJSONSchemaCollection();
 
@@ -355,7 +355,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder().addElement(enumRegistration).build();
+			const engine = new FormComposer().addElement(enumRegistration).build();
 
 			const schema = engine.generateJSONSchemaCollection();
 
@@ -390,11 +390,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder()
-				.addElement(textReg)
-				.addElement(emailReg)
-				.addElement(passwordReg)
-				.build();
+			const engine = new FormComposer().addElement(textReg).addElement(emailReg).addElement(passwordReg).build();
 
 			const schema = engine.generateJSONSchemaCollection();
 
@@ -421,7 +417,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder().addElement(textReg).addElement(emailReg).build();
+			const engine = new FormComposer().addElement(textReg).addElement(emailReg).build();
 
 			const schema = engine.generateJSONSchemaCollection();
 
@@ -468,7 +464,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder()
+			const engine = new FormComposer()
 				.addElement(inputReg)
 				.addElement(headingReg)
 				.addElement(dividerReg)
@@ -509,7 +505,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder().addElement(textInputRegistration).build();
+			const engine = new FormComposer().addElement(textInputRegistration).build();
 
 			const schema = engine.generateJSONSchemaCollection();
 
@@ -548,7 +544,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder().addElement(addressReg).addElement(personReg).build();
+			const engine = new FormComposer().addElement(addressReg).addElement(personReg).build();
 
 			const schema = engine.generateJSONSchemaCollection();
 
@@ -576,7 +572,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder().addElement(textInputRegistration).build();
+			const engine = new FormComposer().addElement(textInputRegistration).build();
 
 			const schemaWithDefaultURI = engine.generateJSONSchemaCollection();
 
@@ -632,7 +628,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				execute: async () => ({ success: true }),
 			};
 
-			const engine = new FormEngineBuilder()
+			const engine = new FormComposer()
 				.addElement(elementReg)
 				.addLayout(layoutReg)
 				.addStepper(stepperReg)
@@ -669,7 +665,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder().addElement(textReg).build();
+			const engine = new FormComposer().addElement(textReg).build();
 
 			const configSchema = engine.generateFormConfigSchema();
 
@@ -722,7 +718,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder().addElement(textReg).addLayout(cardReg).build();
+			const engine = new FormComposer().addElement(textReg).addLayout(cardReg).build();
 
 			const configSchema = engine.generateFormConfigSchema();
 
@@ -741,7 +737,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder().addElement(textReg).build();
+			const engine = new FormComposer().addElement(textReg).build();
 			const configSchema = engine.generateFormConfigSchema();
 
 			expect(configSchema.properties).toHaveProperty('metadata');
@@ -755,7 +751,7 @@ describe('FormEngine JSON Schema Generation', () => {
 			const stepperSchema = z.object({ $type: z.literal('wizard') });
 			const actionSchema = z.object({ $type: z.literal('submit') });
 
-			const engine = new FormEngineBuilder()
+			const engine = new FormComposer()
 				.addElement({
 					$type: 'text',
 					schema: textSchema,

@@ -24,7 +24,7 @@
  * ### Registry Integration
  * - Factory function pattern enables dynamic schema generation
  * - Registry dependency injection provides testability
- * - Custom fields registered via FormEngineBuilder work automatically
+ * - Custom fields registered via FormComposer work automatically
  * - No code changes needed when new field types are added
  *
  * ### Recursive Support

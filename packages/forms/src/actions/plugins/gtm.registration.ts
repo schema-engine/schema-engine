@@ -7,9 +7,9 @@
  * @example
  * ```typescript
  * import { GTMActionRegistration } from '@schema-engine/forms/actions/plugins/gtm-registration';
- * import { FormEngineBuilder } from '@schema-engine/formsuilder';
+ * import { FormComposer } from '@schema-engine/formsuilder';
  *
- * const engine = new FormEngineBuilder()
+ * const engine = new FormComposer()
  *   .addAction(GTMActionRegistration)
  *   .build();
  * ```

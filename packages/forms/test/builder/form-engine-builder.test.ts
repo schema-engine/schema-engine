@@ -1,9 +1,9 @@
 import { test, expect, describe } from 'bun:test';
 import { z } from 'zod';
-import { FormEngineBuilder } from '@/builder';
+import { FormComposer } from '@/builder';
 import type { InputRegistration, LayoutRegistration, StepperRegistration, BuilderActionRegistration } from '@/types';
 
-describe('FormEngineBuilder', () => {
+describe('FormComposer', () => {
 	describe('Element Registration', () => {
 		test('should register a single element', () => {
 			const textInputSchema = z.object({
@@ -23,10 +23,10 @@ describe('FormEngineBuilder', () => {
 				render: () => {},
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			const result = builder.addElement(textInputRegistration);
 
-			expect(result).toBeInstanceOf(FormEngineBuilder);
+			expect(result).toBeInstanceOf(FormComposer);
 		});
 
 		test('should register multiple elements', () => {
@@ -50,7 +50,7 @@ describe('FormEngineBuilder', () => {
 				render: () => {},
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			builder.addElements([textInputRegistration, emailInputRegistration]);
 
 			const engine = builder.build();
@@ -79,7 +79,7 @@ describe('FormEngineBuilder', () => {
 				render: () => {},
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			builder.addElement(registration1);
 			builder.addElement(registration2);
 
@@ -117,7 +117,7 @@ describe('FormEngineBuilder', () => {
 				render: () => {},
 			};
 
-			const builder = new FormEngineBuilder()
+			const builder = new FormComposer()
 				.addElement(inputElement)
 				.addElement(contentElement)
 				.addElement(decorationElement)
@@ -144,10 +144,10 @@ describe('FormEngineBuilder', () => {
 				render: () => {},
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			const result = builder.addLayout(cardLayoutRegistration);
 
-			expect(result).toBeInstanceOf(FormEngineBuilder);
+			expect(result).toBeInstanceOf(FormComposer);
 		});
 
 		test('should register multiple layouts', () => {
@@ -165,7 +165,7 @@ describe('FormEngineBuilder', () => {
 				render: () => {},
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			builder.addLayouts([cardLayout, gridLayout]);
 
 			const engine = builder.build();
@@ -188,7 +188,7 @@ describe('FormEngineBuilder', () => {
 				render: () => {},
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			builder.addLayout(registration1);
 			builder.addLayout(registration2);
 
@@ -210,10 +210,10 @@ describe('FormEngineBuilder', () => {
 				render: () => {},
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			const result = builder.addStepper(wizardStepperRegistration);
 
-			expect(result).toBeInstanceOf(FormEngineBuilder);
+			expect(result).toBeInstanceOf(FormComposer);
 		});
 
 		test('should register multiple steppers', () => {
@@ -231,7 +231,7 @@ describe('FormEngineBuilder', () => {
 				render: () => {},
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			builder.addSteppers([wizardStepper, tabsStepper]);
 
 			const engine = builder.build();
@@ -254,7 +254,7 @@ describe('FormEngineBuilder', () => {
 				render: () => {},
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			builder.addStepper(registration1);
 			builder.addStepper(registration2);
 
@@ -276,10 +276,10 @@ describe('FormEngineBuilder', () => {
 				execute: async () => ({ success: true }),
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			const result = builder.addAction(submitActionRegistration);
 
-			expect(result).toBeInstanceOf(FormEngineBuilder);
+			expect(result).toBeInstanceOf(FormComposer);
 		});
 
 		test('should register multiple actions', () => {
@@ -297,7 +297,7 @@ describe('FormEngineBuilder', () => {
 				execute: async () => ({ success: true }),
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			builder.addActions([submitAction, resetAction]);
 
 			const engine = builder.build();
@@ -320,7 +320,7 @@ describe('FormEngineBuilder', () => {
 				execute: async () => ({ success: true, custom: true }),
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			builder.addAction(registration1);
 			builder.addAction(registration2);
 
@@ -360,7 +360,7 @@ describe('FormEngineBuilder', () => {
 				execute: async () => ({ success: true }),
 			};
 
-			const builder = new FormEngineBuilder()
+			const builder = new FormComposer()
 				.addElement(element)
 				.addLayout(layout)
 				.addStepper(stepper)
@@ -377,7 +377,7 @@ describe('FormEngineBuilder', () => {
 
 	describe('Build Method', () => {
 		test('should create immutable FormEngine instance', () => {
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			const engine = builder.build();
 
 			expect(engine).toBeDefined();
@@ -386,7 +386,7 @@ describe('FormEngineBuilder', () => {
 		});
 
 		test('should build empty engine', () => {
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			const engine = builder.build();
 
 			expect(engine.getAllElements()).toHaveLength(0);
@@ -403,7 +403,7 @@ describe('FormEngineBuilder', () => {
 				render: () => {},
 			};
 
-			const builder = new FormEngineBuilder().addElement(element);
+			const builder = new FormComposer().addElement(element);
 			const engine = builder.build();
 
 			const retrieved = engine.getElement('text');
@@ -486,7 +486,7 @@ describe('FormEngineBuilder', () => {
 				},
 			};
 
-			const engine = new FormEngineBuilder()
+			const engine = new FormComposer()
 				.addElements([textInput, emailInput, heading])
 				.addLayout(cardLayout)
 				.addStepper(wizardStepper)
@@ -539,7 +539,7 @@ describe('FormEngineBuilder', () => {
 				execute: async () => ({ success: true }),
 			};
 
-			const originalBuilder = new FormEngineBuilder()
+			const originalBuilder = new FormComposer()
 				.addElement(textInput)
 				.addLayout(cardLayout)
 				.addStepper(wizardStepper)
@@ -575,7 +575,7 @@ describe('FormEngineBuilder', () => {
 				render: () => {},
 			};
 
-			const originalBuilder = new FormEngineBuilder().addElement(textInput);
+			const originalBuilder = new FormComposer().addElement(textInput);
 
 			const clonedBuilder = originalBuilder.clone().addElement(emailInput);
 
@@ -620,7 +620,7 @@ describe('FormEngineBuilder', () => {
 				execute: async () => ({ success: true }),
 			};
 
-			const baseBuilder = new FormEngineBuilder().addElement(textInput).addElement(numberInput);
+			const baseBuilder = new FormComposer().addElement(textInput).addElement(numberInput);
 
 			const formBuilderWithSubmit = baseBuilder.clone().addAction(submitAction);
 
@@ -641,7 +641,7 @@ describe('FormEngineBuilder', () => {
 		});
 
 		test('should clone empty builder correctly', () => {
-			const originalBuilder = new FormEngineBuilder();
+			const originalBuilder = new FormComposer();
 			const clonedBuilder = originalBuilder.clone();
 
 			const originalEngine = originalBuilder.build();

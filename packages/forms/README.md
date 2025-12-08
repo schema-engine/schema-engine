@@ -23,14 +23,14 @@ bun add @schema-engine/formsod
 
 ## Core Concepts
 
-### FormEngineBuilder
+### FormComposer
 
 The builder provides a fluent API for registering components and creating immutable engine instances.
 
 ```typescript
-import { FormEngineBuilder } from "@schema-engine/forms
+import { FormComposer } from "@schema-engine/forms
 
-const engine = new FormEngineBuilder()
+const engine = new FormComposer()
 	.addElement(textInputRegistration)
 	.addElement(emailInputRegistration)
 	.addLayout(cardLayoutRegistration)
@@ -423,7 +423,7 @@ Submit form data to an endpoint with configurable request handling:
 ```typescript
 import { SubmitActionRegistration } from '@schema-engine/formsctions/plugins';
 
-const engine = new FormEngineBuilder()
+const engine = new FormComposer()
   .addAction(SubmitActionRegistration)
   .build();
 
@@ -445,7 +445,7 @@ Automatically save form progress with configurable debouncing:
 ```typescript
 import { AutoSaveActionRegistration } from '@schema-engine/formsctions/plugins';
 
-const engine = new FormEngineBuilder()
+const engine = new FormComposer()
   .addAction(AutoSaveActionRegistration)
   .build();
 
@@ -466,7 +466,7 @@ Display user notifications for form events:
 ```typescript
 import { NotificationActionRegistration } from '@schema-engine/formsctions/plugins';
 
-const engine = new FormEngineBuilder()
+const engine = new FormComposer()
   .addAction(NotificationActionRegistration)
   .build();
 
@@ -487,7 +487,7 @@ Track form events in Google Tag Manager:
 ```typescript
 import { GTMActionRegistration } from '@schema-engine/formsctions/plugins';
 
-const engine = new FormEngineBuilder()
+const engine = new FormComposer()
   .addAction(GTMActionRegistration)
   .build();
 
@@ -511,7 +511,7 @@ Reset form to initial state:
 ```typescript
 import { ResetActionRegistration } from '@schema-engine/formsctions/plugins';
 
-const engine = new FormEngineBuilder()
+const engine = new FormComposer()
   .addAction(ResetActionRegistration)
   .build();
 
@@ -545,7 +545,7 @@ class CustomElementRegistry extends ElementRegistry {
 const customRegistry = new CustomElementRegistry();
 customRegistry.register(textInputRegistration);
 
-const engine = new FormEngineBuilder(customRegistry).build();
+const engine = new FormComposer(customRegistry).build();
 ```
 
 ### Extending Engines
@@ -554,7 +554,7 @@ Create specialized engines by extending existing configurations:
 
 ```typescript
 // Create a base builder
-const baseBuilder = new FormEngineBuilder().addElement(textInputRegistration).addElement(emailInputRegistration);
+const baseBuilder = new FormComposer().addElement(textInputRegistration).addElement(emailInputRegistration);
 
 // Clone and extend the builder
 const extendedBuilder = baseBuilder
@@ -564,9 +564,9 @@ const extendedBuilder = baseBuilder
 
 const engine = extendedBuilder.build();
 
-// Or convert an existing engine back to a builder
+// Or convert an existing engine back to a composer
 const baseEngine = baseBuilder.build();
-const modifiedEngine = baseEngine.toBuilder().addAction(customActionRegistration).build();
+const modifiedEngine = baseEngine.toComposer().addAction(customActionRegistration).build();
 ```
 
 ### Type-Safe Configurations
@@ -574,12 +574,12 @@ const modifiedEngine = baseEngine.toBuilder().addAction(customActionRegistration
 Leverage TypeScript's inference for type-safe form configurations:
 
 ```typescript
-const builder = new FormEngineBuilder()
+const builder = new FormComposer()
 	.addElement(textInputRegistration)
 	.addElement(emailInputRegistration)
 	.addAction(submitActionRegistration);
 
-type MyEngineElements = typeof builder extends FormEngineBuilder<infer E, any, any, any> ? E : never;
+type MyEngineElements = typeof builder extends FormComposer<infer E, any, any, any> ? E : never;
 
 // MyEngineElements = {
 //   text: TextInputConfig;
@@ -666,7 +666,7 @@ import type {
 ```
 @schema-engine/forms
 ├── index.ts                    # Main exports
-├── builder/                    # FormEngineBuilder
+├── builder/                    # FormComposer
 ├── engine/                     # FormEngine + schema generation
 ├── registries/                 # Component registries
 ├── actions/                    # Action system + built-in plugins
@@ -683,7 +683,7 @@ The package is designed for maximum tree-shaking:
 
 ```typescript
 // Only import what you need
-import { FormEngineBuilder } from "@schema-engine/forms
+import { FormComposer } from "@schema-engine/forms
 import { ValidationPresets } from "@schema-engine/formschemas/validation";
 import { SubmitActionRegistration } from "@schema-engine/formsctions/plugins";
 ```

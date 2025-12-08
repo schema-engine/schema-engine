@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'bun:test';
 import { z } from 'zod';
-import { FormEngineBuilder } from '@/builder/form-engine-builder';
-import type { ElementRegistration } from '@/types';
+import { FormComposer } from '@/builder/form-composer';
+import type { StaticRegistration } from '@/types';
 
 describe('Recursive Schema Handling', () => {
 	describe('Self-Referential Schemas', () => {
@@ -22,14 +22,14 @@ describe('Recursive Schema Handling', () => {
 				}),
 			) as z.ZodType<Comment>;
 
-			const commentReg: ElementRegistration = {
+			const commentReg: StaticRegistration = {
 				$type: 'comment',
 				schema: commentSchema,
 				metadata: { name: 'Comment Thread', category: 'input' },
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder().addElement(commentReg).build();
+			const engine = new FormComposer().addElement(commentReg).build();
 
 			expect(() => {
 				const schema = engine.generateJSONSchemaCollection();
@@ -52,14 +52,14 @@ describe('Recursive Schema Handling', () => {
 				}),
 			) as z.ZodType<TreeNode>;
 
-			const treeReg: ElementRegistration = {
+			const treeReg: StaticRegistration = {
 				$type: 'tree-node',
 				schema: treeNodeSchema,
 				metadata: { name: 'Tree Node', category: 'input' },
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder().addElement(treeReg).build();
+			const engine = new FormComposer().addElement(treeReg).build();
 
 			const schema = engine.generateJSONSchemaCollection();
 
@@ -100,21 +100,21 @@ describe('Recursive Schema Handling', () => {
 				}),
 			) as z.ZodType<Post>;
 
-			const userReg: ElementRegistration = {
+			const userReg: StaticRegistration = {
 				$type: 'user',
 				schema: userSchema,
 				metadata: { name: 'User', category: 'input' },
 				render: () => null,
 			};
 
-			const postReg: ElementRegistration = {
+			const postReg: StaticRegistration = {
 				$type: 'post',
 				schema: postSchema,
 				metadata: { name: 'Post', category: 'input' },
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder().addElement(userReg).addElement(postReg).build();
+			const engine = new FormComposer().addElement(userReg).addElement(postReg).build();
 
 			expect(() => {
 				const schema = engine.generateJSONSchemaCollection();
@@ -154,27 +154,23 @@ describe('Recursive Schema Handling', () => {
 				}),
 			) as z.ZodType<Post>;
 
-			const userReg: ElementRegistration = {
+			const userReg: StaticRegistration = {
 				$type: 'user',
 				schema: userSchema,
 				metadata: { name: 'User', category: 'input' },
 				render: () => null,
 			};
 
-			const postReg: ElementRegistration = {
+			const postReg: StaticRegistration = {
 				$type: 'post',
 				schema: postSchema,
 				metadata: { name: 'Post', category: 'input' },
 				render: () => null,
 			};
 
-			const engine = new FormEngineBuilder().addElement(userReg).addElement(postReg).build();
+			const engine = new FormComposer().addElement(userReg).addElement(postReg).build();
 
 			const schema = engine.generateJSONSchemaCollection();
-
-			console.log('\n=== User-Post Circular Reference ===');
-			console.log(JSON.stringify(schema, null, 2));
-			console.log('====================================\n');
 
 			expect(schema.schemas['element:user']).toBeDefined();
 			expect(schema.schemas['element:post']).toBeDefined();
@@ -259,7 +255,7 @@ describe('Recursive Schema Handling', () => {
 				}),
 			) as z.ZodType<Project>;
 
-			const engine = new FormEngineBuilder()
+			const engine = new FormComposer()
 				.addElement({
 					$type: 'organization',
 					schema: organizationSchema,
@@ -324,7 +320,7 @@ describe('Recursive Schema Handling', () => {
 				}),
 			) as z.ZodType<Comment>;
 
-			const engine = new FormEngineBuilder()
+			const engine = new FormComposer()
 				.addElement({
 					$type: 'comment',
 					schema: commentSchema,
@@ -357,7 +353,7 @@ describe('Recursive Schema Handling', () => {
 				}),
 			) as z.ZodType<Node>;
 
-			const engine = new FormEngineBuilder()
+			const engine = new FormComposer()
 				.addElement({
 					$type: 'node',
 					schema: nodeSchema,
@@ -387,7 +383,7 @@ describe('Recursive Schema Handling', () => {
 				}),
 			) as z.ZodType<LinkedNode>;
 
-			const engine = new FormEngineBuilder()
+			const engine = new FormComposer()
 				.addElement({
 					$type: 'linked-node',
 					schema: linkedNodeSchema,

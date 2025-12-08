@@ -15,12 +15,13 @@ import { z } from 'zod';
  *
  * @example
  * ```typescript
- * const builder = new FormEngineBuilder()
+ * const engine = new FormComposer()
  *   .addElement(inputRegistration)
  *   .addStepper(wizardStepperRegistration)
- *   .addAction(submitActionRegistration);
+ *   .addAction(submitActionRegistration)
+ *   .build();
  *
- * const formConfig = builder.createForm()
+ * const formConfig = engine.createFormDefinition()
  *   .setId('contact-form')
  *   .setTitle('Contact Us')
  *   .addStep({ id: 'step-1', title: 'Personal Info' })

@@ -1,6 +1,6 @@
 # Registry System - Standalone Usage
 
-The Form Engine's registry system is fully modular and can be used independently of the FormEngineBuilder. This allows you to leverage specific parts of the system without pulling in the entire form engine.
+The Form Engine's registry system is fully modular and can be used independently of the FormComposer. This allows you to leverage specific parts of the system without pulling in the entire form engine.
 
 ## Available Registries
 
@@ -118,12 +118,12 @@ class ValidatorRegistry extends BaseRegistry<string, ValidatorRegistration> {
 }
 ```
 
-### 4. Dependency Injection with FormEngineBuilder
+### 4. Dependency Injection with FormComposer
 
 Inject pre-configured registries:
 
 ```typescript
-import { FormEngineBuilder, ElementRegistry, ActionRegistry } from "@schema-engine/forms
+import { FormComposer, ElementRegistry, ActionRegistry } from "@schema-engine/forms
 
 const customElements = new ElementRegistry();
 customElements.register(myCustomInput);
@@ -132,7 +132,7 @@ customElements.register(myCustomTextarea);
 const customActions = new ActionRegistry();
 customActions.register(mySubmitAction);
 
-const engine = new FormEngineBuilder(customElements, undefined, undefined, customActions).build();
+const engine = new FormComposer(customElements, undefined, undefined, customActions).build();
 ```
 
 ### 5. Testing with Mock Registries
@@ -219,18 +219,18 @@ Build custom registry implementations for domain-specific requirements.
 
 Lighter imports mean faster load times and smaller bundle sizes.
 
-## Integration with FormEngineBuilder
+## Integration with FormComposer
 
 The builder uses these registries internally via dependency injection. The default behavior creates new instances automatically:
 
 ```typescript
-const builder = new FormEngineBuilder();
+const builder = new FormComposer();
 ```
 
 But you can provide custom instances:
 
 ```typescript
-const builder = new FormEngineBuilder(myElementRegistry, myLayoutRegistry, myStepperRegistry, myActionRegistry);
+const builder = new FormComposer(myElementRegistry, myLayoutRegistry, myStepperRegistry, myActionRegistry);
 ```
 
 This pattern enables:
@@ -329,7 +329,7 @@ import { ActionRegistry } from "@schema-engine/forms
 const actionRegistry = new ActionRegistry();
 actionRegistry.register(myAction);
 
-const builder = new FormEngineBuilder(undefined, undefined, undefined, actionRegistry);
+const builder = new FormComposer(undefined, undefined, undefined, actionRegistry);
 ```
 
 ### From Builder-Embedded Storage
@@ -337,14 +337,14 @@ const builder = new FormEngineBuilder(undefined, undefined, undefined, actionReg
 **Before:**
 
 ```typescript
-const builder = new FormEngineBuilder();
+const builder = new FormComposer();
 builder.addElement(textInput);
 ```
 
 **After (same syntax, now with registries):**
 
 ```typescript
-const builder = new FormEngineBuilder();
+const builder = new FormComposer();
 builder.addElement(textInput);
 ```
 

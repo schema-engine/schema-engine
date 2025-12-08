@@ -11,14 +11,14 @@ This app uses the new **Builder Pattern** to configure the form engine.
 The form engine is configured once in `/src/lib/form-engine-setup.ts`:
 
 ```typescript
-import { createReactFormEngine } from '@schema-engine/forms-react/registries/builder-registry';
+import { createReactFormComposer } from '@schema-engine/forms-react/registries/builder-registry';
 import {
 	InputElement,
 	TextareaElement,
 	// ... other components
 } from '@schema-engine/forms-react/registrations';
 
-export const formEngine = createReactFormEngine()
+export const formEngine = createReactFormComposer()
 	.addElement(InputElement)
 	.addElement(TextareaElement)
 	// ... register all components
@@ -144,7 +144,7 @@ export const CustomInputElement: ReactElementRegistration = {
 // lib/form-engine-setup.ts
 import { CustomInputElement } from '@/components/custom-input';
 
-export const formEngine = createReactFormEngine()
+export const formEngine = createReactFormComposer()
 	.addElement(CustomInputElement)
 	// ... other components
 	.build();
@@ -182,10 +182,10 @@ The new pattern uses explicit registration:
 
 ```typescript
 // [check-mark] NEW - Explicit registration with Builder Pattern
-import { createReactFormEngine } from '@schema-engine/forms-react/registries/builder-registry';
+import { createReactFormComposer } from '@schema-engine/forms-react/registries/builder-registry';
 import { InputElement } from '@schema-engine/forms-react/registrations';
 
-export const formEngine = createReactFormEngine().addElement(InputElement).build();
+export const formEngine = createReactFormComposer().addElement(InputElement).build();
 ```
 
 See `MIGRATION_TIMELINE.md` for detailed migration steps.

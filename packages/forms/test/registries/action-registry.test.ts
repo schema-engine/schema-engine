@@ -1,11 +1,11 @@
 import { describe, test, expect, beforeEach } from 'bun:test';
-import { FormEngineBuilder } from '@/builder/form-engine-builder';
+import { FormComposer } from '@/builder/form-composer';
 import type { BuilderActionRegistration, BuilderActionExecutionContext } from '@/types';
 import { z } from 'zod';
 import type { ActionExecutionResult } from '@schema-engine/actions';
 
 describe('ActionRegistry', () => {
-	let builder: FormEngineBuilder;
+	let builder: FormComposer;
 
 	const mockAction: BuilderActionRegistration<'log', { message: string }> = {
 		$type: 'log',
@@ -34,7 +34,7 @@ describe('ActionRegistry', () => {
 	};
 
 	beforeEach(() => {
-		builder = new FormEngineBuilder();
+		builder = new FormComposer();
 	});
 
 	describe('register', () => {

@@ -6,7 +6,7 @@
  * Includes exclusive base-ui elements: slider, checkbox-group, input-otp, phone-input
  */
 
-import { FormEngineBuilder } from '@schema-engine/forms/builder';
+import { FormComposer } from '@schema-engine/forms/builder';
 import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
 import { SubmitActionRegistration, ResetActionRegistration } from '@schema-engine/forms';
 
@@ -49,8 +49,8 @@ import '@/components/layouts/hero-background-layout.css';
 export { ValidationPresets };
 
 /**
- * Create a FormEngineBuilder with all base-ui components registered.
- * Returns a fresh builder instance with proper type inference.
+ * Create a FormComposer with all base-ui components registered.
+ * Returns a fresh composer instance with proper type inference.
  *
  * Components included:
  * - Elements: input, textarea, checkbox, select, radio, switch, number, slider, checkbox-group, input-otp, phone-input, drop-zone, arrayElements, fieldSet, submit
@@ -58,8 +58,8 @@ export { ValidationPresets };
  * - Steppers: default, minimalist, debugger
  * - Actions: submit, reset
  */
-function createBaseUIFormEngineBuilder() {
-	return new FormEngineBuilder()
+function createBaseUIFormComposer() {
+	return new FormComposer()
 		.addElement(BaseUIInputElementRegistration)
 		.addElement(BaseUITextareaElementRegistration)
 		.addElement(BaseUICheckboxElementRegistration)
@@ -105,19 +105,19 @@ function createBaseUIFormEngineBuilder() {
  * ```
  */
 export function createForm() {
-	return createBaseUIFormEngineBuilder().createForm();
+	return createBaseUIFormComposer().build().createFormDefinition();
 }
 
 /**
  * Get the base-ui form engine instance
  */
 export function getEngine() {
-	return createBaseUIFormEngineBuilder().build();
+	return createBaseUIFormComposer().build();
 }
 
 /**
- * Create an extendable form engine builder (for adding custom actions, etc.)
+ * Create an extendable form composer (for adding custom actions, etc.)
  */
-export function createExtendableBuilder() {
-	return createBaseUIFormEngineBuilder().clone();
+export function createExtendableComposer() {
+	return createBaseUIFormComposer().clone();
 }

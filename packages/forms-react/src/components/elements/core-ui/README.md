@@ -12,15 +12,15 @@ A complete set of form field components built using [Base UI](https://base-ui.co
 ### Option 1: Using Helper Function (Recommended)
 
 ```typescript
-import { createBaseUIFormEngineBuilder } from '@/stories/shared/form-engine-setup';
+import { createBaseUIFormComposer } from '@/stories/shared/form-engine-setup';
 
-const engine = createBaseUIFormEngineBuilder().build();
+const engine = createBaseUIFormComposer().build();
 ```
 
 ### Option 2: Manual Registration
 
 ```typescript
-import { FormEngineBuilder } from '@schema-engine/forms/builder';
+import { FormComposer } from '@schema-engine/forms/builder';
 import {
 	InputElementRegistration,
 	TextareaElementRegistration,
@@ -28,7 +28,7 @@ import {
 	// ... import others as needed
 } from '@schema-engine/forms-react/components/elements/core-ui';
 
-const engine = new FormEngineBuilder()
+const engine = new FormComposer()
 	.addElement(InputElementRegistration)
 	.addElement(TextareaElementRegistration)
 	.addElement(CheckboxGroupElementRegistration)

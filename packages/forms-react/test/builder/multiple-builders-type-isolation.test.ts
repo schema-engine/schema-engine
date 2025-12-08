@@ -2,12 +2,12 @@
  * Tests for Multiple Builders with Different Components (Type Isolation)
  *
  * This test verifies that the per-component registration pattern allows
- * multiple FormEngineBuilder instances in the same codebase with different
+ * multiple FormComposer instances in the same codebase with different
  * component sets, where types accurately reflect what each builder has registered.
  */
 
 import { describe, test, expect } from 'bun:test';
-import { createReactFormEngine } from '@/registries/builder-registry';
+import { createReactFormComposer } from '@/registries/builder-registry';
 
 /**
  * Import ONLY the registrations needed for each builder
@@ -26,7 +26,7 @@ import { MinimalistStepperRegistration } from '@/components/steppers/minimalist-
 
 describe('Multiple Builders Type Isolation', () => {
 	test('should create builder with only input and textarea', () => {
-		const minimalBuilder = createReactFormEngine()
+		const minimalBuilder = createReactFormComposer()
 			.addElement(InputElementRegistration)
 			.addElement(TextareaElementRegistration)
 			.addLayout(CardLayoutRegistration)
@@ -47,7 +47,7 @@ describe('Multiple Builders Type Isolation', () => {
 	});
 
 	test('should create builder with different components', () => {
-		const fullBuilder = createReactFormEngine()
+		const fullBuilder = createReactFormComposer()
 			.addElement(InputElementRegistration)
 			.addElement(TextareaElementRegistration)
 			.addElement(CheckboxElementRegistration)
@@ -72,9 +72,11 @@ describe('Multiple Builders Type Isolation', () => {
 	});
 
 	test('should create two independent builders', () => {
-		const builder1 = createReactFormEngine().addElement(InputElementRegistration).addLayout(CardLayoutRegistration);
+		const builder1 = createReactFormComposer()
+			.addElement(InputElementRegistration)
+			.addLayout(CardLayoutRegistration);
 
-		const builder2 = createReactFormEngine()
+		const builder2 = createReactFormComposer()
 			.addElement(TextareaElementRegistration)
 			.addElement(CheckboxElementRegistration)
 			.addLayout(SplitScreenLayoutRegistration);
@@ -96,7 +98,7 @@ describe('Multiple Builders Type Isolation', () => {
 	});
 
 	test('should allow retrieving registered components', () => {
-		const builder = createReactFormEngine()
+		const builder = createReactFormComposer()
 			.addElement(InputElementRegistration)
 			.addElement(CheckboxElementRegistration)
 			.addLayout(CardLayoutRegistration)
@@ -131,7 +133,7 @@ describe('Multiple Builders Type Isolation', () => {
 	});
 
 	test('should allow method chaining', () => {
-		const engine = createReactFormEngine()
+		const engine = createReactFormComposer()
 			.addElement(InputElementRegistration)
 			.addElement(TextareaElementRegistration)
 			.addLayout(CardLayoutRegistration)
@@ -145,7 +147,7 @@ describe('Multiple Builders Type Isolation', () => {
 	});
 
 	test('should handle empty builder', () => {
-		const engine = createReactFormEngine().build();
+		const engine = createReactFormComposer().build();
 
 		expect(engine.hasElement('input')).toBe(false);
 		expect(engine.hasLayout('card')).toBe(false);
@@ -157,8 +159,8 @@ describe('Multiple Builders Type Isolation', () => {
 	});
 
 	test('should not share registrations between builders', () => {
-		const builder1 = createReactFormEngine().addElement(InputElementRegistration);
-		const builder2 = createReactFormEngine().addElement(TextareaElementRegistration);
+		const builder1 = createReactFormComposer().addElement(InputElementRegistration);
+		const builder2 = createReactFormComposer().addElement(TextareaElementRegistration);
 
 		const engine1 = builder1.build();
 		const engine2 = builder2.build();
@@ -178,7 +180,7 @@ describe('Type Safety Verification', () => {
 		 * TypeScript will catch errors if you try to use components
 		 * that weren't imported for type augmentation.
 		 */
-		const builder = createReactFormEngine()
+		const builder = createReactFormComposer()
 			.addElement(InputElementRegistration)
 			.addElement(CheckboxElementRegistration);
 
@@ -210,7 +212,7 @@ describe('Type Safety Verification', () => {
 		 *
 		 * This makes the codebase predictable and debuggable.
 		 */
-		const engine = createReactFormEngine()
+		const engine = createReactFormComposer()
 			.addElement(InputElementRegistration)
 			.addElement(CheckboxElementRegistration)
 			.build();

@@ -6,7 +6,7 @@
  *
  * @example Custom Configuration
  * ```typescript
- * import { FormEngineBuilder } from "@schema-engine/forms/builder";
+ * import { FormComposer } from "@schema-engine/forms/builder";
  * import { submitPlugin } from "@schema-engine/formsctions/plugins/submit-plugin";
  * import type { SubmitAction } from "@schema-engine/formsctions/plugins/submit-plugin";
  *
@@ -19,7 +19,7 @@
  *   }
  * }
  *
- * const engine = new FormEngineBuilder()
+ * const engine = new FormComposer()
  *   .addAction(submitPlugin({
  *     onSuccess: (data) => myCustomHandler(data)
  *   }))
@@ -31,11 +31,11 @@
  *
  * @example Using Registrations
  * ```typescript
- * import { FormEngineBuilder } from "@schema-engine/formsuilder";
+ * import { FormComposer } from "@schema-engine/formsuilder";
  * import { SubmitActionRegistration } from "@schema-engine/formsctions/plugins/submit-registration";
  * // ↑ Type is automatically registered when you import this
  *
- * const engine = new FormEngineBuilder()
+ * const engine = new FormComposer()
  *   .addAction(SubmitActionRegistration)
  *   .build();
  * ```

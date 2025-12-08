@@ -119,7 +119,7 @@ const FormEngineActionExecutor: FC = () => {
 		};
 
 		return formEngine
-			.toBuilder()
+			.toComposer()
 			.addAction(
 				submitPlugin({
 					onSuccess: (data, context) => {
@@ -226,12 +226,12 @@ const FormEngineActionExecutor: FC = () => {
 									<Badge variant="outline">reset - Custom Logger</Badge>
 								</div>
 								<p className="text-sm text-muted-foreground mt-2">
-									This demo extends the base formEngine instance using the toBuilder() method,
+									This demo extends the base formEngine instance using the toComposer() method,
 									overriding the default action handlers with custom implementations that log
 									execution details.
 								</p>
 								<pre className="text-xs bg-gray-100 dark:bg-gray-800 p-3 rounded-lg overflow-x-auto mt-3">
-									{`formEngine.toBuilder()
+									{`formEngine.toComposer()
   .addAction(submitPlugin({ ... }))
   .addAction(notificationPlugin({ ... }))
   .addAction(resetPlugin({ ... }))

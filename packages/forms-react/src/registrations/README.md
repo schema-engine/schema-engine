@@ -42,7 +42,7 @@ import { InputElementRegistration } from '@schema-engine/forms-react/registratio
 import { CardLayoutRegistration } from '@schema-engine/forms-react/registrations/layouts';
 import { DefaultStepperRegistration } from '@schema-engine/forms-react/registrations/stepper';
 
-const engine = new FormEngineBuilder()
+const engine = new FormComposer()
 	.addElement(InputElementRegistration)
 	.addLayout(CardLayoutRegistration)
 	.addStepper(DefaultStepperRegistration)
@@ -104,10 +104,10 @@ Different form builders can have different sets of registered components without
 
 ```typescript
 // Builder A with basic inputs
-const builderA = new FormEngineBuilder().addElement(InputElementRegistration).addElement(TextareaElementRegistration);
+const builderA = new FormComposer().addElement(InputElementRegistration).addElement(TextareaElementRegistration);
 
 // Builder B with advanced inputs
-const builderB = new FormEngineBuilder().addElement(SelectElementRegistration).addElement(RadioElementRegistration);
+const builderB = new FormComposer().addElement(SelectElementRegistration).addElement(RadioElementRegistration);
 ```
 
 ## Adding New Registrations

@@ -6,9 +6,9 @@
  * @example
  * ```typescript
  * import { InputElementRegistration } from '@schema-engine/forms-react/components/core-ui/inputs/form-input.registration';
- * import { FormEngineBuilder } from '@schema-engine/forms/builder';
+ * import { FormComposer } from '@schema-engine/forms/builder';
  *
- * const engine = new FormEngineBuilder()
+ * const engine = new FormComposer()
  *   .addElement(InputElementRegistration)
  *   .build();
  * ```

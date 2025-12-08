@@ -45,9 +45,9 @@ import {
 ### Register in Form Engine
 
 ```typescript
-import { FormEngineBuilder } from '@schema-engine/forms/builder';
+import { FormComposer } from '@schema-engine/forms/builder';
 
-const engine = new FormEngineBuilder()
+const engine = new FormComposer()
 	.addElement(InputElementRegistration)
 	.addElement(TextareaElementRegistration)
 	.addElement(SelectElementRegistration)

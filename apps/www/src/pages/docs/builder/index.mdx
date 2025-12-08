@@ -23,14 +23,14 @@ The Builder Pattern offers several key advantages:
 
 ## Core Concepts
 
-### FormEngineBuilder
+### FormComposer
 
-The `FormEngineBuilder` class is your entry point for configuring the form engine. It provides a fluent API for registering components:
+The `FormComposer` class is your entry point for configuring the form engine. It provides a fluent API for registering components:
 
 ```typescript
-import { createReactFormEngine } from '@schema-engine/forms-react/registries/builder-registry';
+import { createReactFormComposer } from '@schema-engine/forms-react/registries/builder-registry';
 
-const formEngine = createReactFormEngine().addElement(/* ... */).addLayout(/* ... */).addStepper(/* ... */).build();
+const formEngine = createReactFormComposer().addElement(/* ... */).addLayout(/* ... */).addStepper(/* ... */).build();
 ```
 
 ### Registration Objects
@@ -74,10 +74,10 @@ Since React uses a `component` property but the core engine expects a `render` f
 - ``: Convert React stepper to core format
 
 ```typescript
-import { createReactFormEngine } from '@schema-engine/forms-react/registries/builder-registry';
+import { createReactFormComposer } from '@schema-engine/forms-react/registries/builder-registry';
 import { CustomInputElement } from './custom-input';
 
-const formEngine = createReactFormEngine().addElement(CustomInputElement).build();
+const formEngine = createReactFormComposer().addElement(CustomInputElement).build();
 ```
 
 ## Basic Usage
@@ -88,7 +88,7 @@ Create a central form engine instance for your application:
 
 ```typescript
 // lib/form-engine.ts
-import { createReactFormEngine } from '@schema-engine/forms-react/registries/builder-registry';
+import { createReactFormComposer } from '@schema-engine/forms-react/registries/builder-registry';
 import {
 	InputElement,
 	TextareaElement,
@@ -97,7 +97,7 @@ import {
 	DefaultStepperRegistration,
 } from '@schema-engine/forms-react/registrations';
 
-export const formEngine = createReactFormEngine()
+export const formEngine = createReactFormComposer()
 	.addElement(InputElement)
 	.addElement(TextareaElement)
 	.addElement(SelectElement)
@@ -227,7 +227,7 @@ export const RatingElement: ReactElementRegistration = {
 ```typescript
 import { RatingElement } from './components/custom-rating';
 
-const formEngine = createReactFormEngine()
+const formEngine = createReactFormComposer()
 	.addElement(RatingElement)
 	// ... other components
 	.build();
@@ -262,7 +262,7 @@ const formConfig: FormConfig = {
 Register components based on feature flags or environment:
 
 ```typescript
-const formEngine = createReactFormEngine().addElement(InputElement).addElement(TextareaElement);
+const formEngine = createReactFormComposer().addElement(InputElement).addElement(TextareaElement);
 
 if (process.env.ENABLE_ADVANCED_FIELDS) {
 	formEngine.addElement(RichTextElement).addElement(CodeEditorElement);
@@ -277,14 +277,14 @@ Create different engine instances for different use cases:
 
 ```typescript
 // Simple contact form engine
-export const contactFormEngine = createReactFormEngine()
+export const contactFormEngine = createReactFormComposer()
 	.addElement(InputElement)
 	.addElement(TextareaElement)
 	.addLayout(CardLayoutRegistration)
 	.build();
 
 // Complex survey engine
-export const surveyEngine = createReactFormEngine()
+export const surveyEngine = createReactFormComposer()
 	.addElement(InputElement)
 	.addElement(SelectElement)
 	.addElement(RadioElement)
@@ -313,7 +313,7 @@ function createInputElement(id: string, displayName: string, inputType: string):
 	};
 }
 
-const formEngine = createReactFormEngine()
+const formEngine = createReactFormComposer()
 	.addElement(createInputElement('email', 'Email', 'email'))
 	.addElement(createInputElement('phone', 'Phone', 'tel'))
 	.build();
@@ -325,7 +325,7 @@ The Builder Pattern provides full type safety throughout:
 
 ```typescript
 // TypeScript knows about all registered components
-const formEngine = createReactFormEngine().addElement(InputElement).build();
+const formEngine = createReactFormComposer().addElement(InputElement).build();
 
 // Type-safe retrieval
 const inputElement = formEngine.getElement('input'); // Type: ElementRegistration<InputFieldConfig>
@@ -374,10 +374,10 @@ import '@schema-engine/forms-react/registrations';
 **New Pattern**:
 
 ```typescript
-import { createReactFormEngine } from '@schema-engine/forms-react/registries/builder-registry';
+import { createReactFormComposer } from '@schema-engine/forms-react/registries/builder-registry';
 import { InputElement } from '@schema-engine/forms-react/registrations';
 
-export const formEngine = createReactFormEngine().addElement(InputElement).build();
+export const formEngine = createReactFormComposer().addElement(InputElement).build();
 ```
 
 See the [Migration Guide](/docs/migration/v2) for detailed instructions.

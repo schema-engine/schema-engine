@@ -27,7 +27,9 @@ export function FormEngineProvider({ children, engine, adapter = rhfAdapter }: F
 	}
 
 	if (!engine) {
-		throw new Error('FormEngineProvider requires a FormEngine instance. Create one using createReactFormEngine()');
+		throw new Error(
+			'FormEngineProvider requires a FormEngine instance. Create one using createReactFormComposer()',
+		);
 	}
 
 	return (

@@ -258,7 +258,7 @@ export const TextareaElement: ReactElementRegistration = {
 ```tsx
 import { TextareaElement } from '@/components/elements/shadcn/inputs/form-textarea';
 
-export const defaultFormEngine = createReactFormEngine()
+export const defaultFormEngine = createReactFormComposer()
 	.addElement(InputElement)
 	.addElement(TextareaElement) // Add this
 	.build();

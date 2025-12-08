@@ -33,7 +33,7 @@ bun add @schema-engine/forms-react @schema-engine/forms react-hook-form zod
 Import component registrations and build your engine:
 
 ```typescript
-import { createReactFormEngine } from '@schema-engine/forms-react';
+import { createReactFormComposer } from '@schema-engine/forms-react';
 import {
 	InputElementRegistration,
 	TextareaElementRegistration,
@@ -41,7 +41,7 @@ import {
 	DefaultStepperRegistration,
 } from '@schema-engine/forms-react/registrations';
 
-const formEngine = createReactFormEngine()
+const formEngine = createReactFormComposer()
 	.addElement(InputElementRegistration)
 	.addElement(TextareaElementRegistration)
 	.addLayout(CardLayoutRegistration)
@@ -142,7 +142,7 @@ import {
 	SelectElementRegistration,
 } from '@schema-engine/forms-react/registrations';
 
-const engine = createReactFormEngine()
+const engine = createReactFormComposer()
 	.addElement(InputElementRegistration)
 	.addElement(CheckboxElementRegistration)
 	.addElement(SelectElementRegistration)
@@ -618,7 +618,7 @@ export const CustomDatePickerRegistration = {
 };
 
 // 4. Register with engine
-const engine = createReactFormEngine().addElement(CustomDatePickerRegistration).build();
+const engine = createReactFormComposer().addElement(CustomDatePickerRegistration).build();
 ```
 
 ### Custom Layouts
@@ -659,7 +659,7 @@ export const CustomLayoutRegistration = {
 };
 
 // 4. Register with engine
-const engine = createReactFormEngine().addLayout(CustomLayoutRegistration).build();
+const engine = createReactFormComposer().addLayout(CustomLayoutRegistration).build();
 ```
 
 ### Custom Steppers
@@ -704,7 +704,7 @@ export const CustomStepperRegistration = {
 };
 
 // 4. Register with engine
-const engine = createReactFormEngine().addStepper(CustomStepperRegistration).build();
+const engine = createReactFormComposer().addStepper(CustomStepperRegistration).build();
 ```
 
 ## Type Safety
@@ -715,7 +715,7 @@ The package provides full TypeScript support with automatic type inference:
 // Type augmentation happens automatically when importing registrations
 import { InputElementRegistration } from '@schema-engine/forms-react/registrations';
 
-const engine = createReactFormEngine().addElement(InputElementRegistration).build();
+const engine = createReactFormComposer().addElement(InputElementRegistration).build();
 
 // TypeScript knows about registered components
 const element = engine.getElement('input'); // Type: InputElementRegistration | undefined

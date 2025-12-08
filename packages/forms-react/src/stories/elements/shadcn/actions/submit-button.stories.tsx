@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '@/stories/shared/story-wrapper';
-import { createForm, ValidationPresets, createExtendableBuilder } from '@/stories/shared/form-builder.shadcn';
+import { createForm, ValidationPresets, createExtendableComposer } from '@/stories/shared/form-builder.shadcn';
 import { z } from 'zod';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@schema-engine/forms/types';
 import { FormActionTriggerSchema, type ActionExecutionResult } from '@schema-engine/forms';
@@ -282,7 +282,7 @@ function confettiPlugin(): BuilderActionRegistration<'confetti', ConfettiAction>
 	};
 }
 
-const confettiBuilder = createExtendableBuilder().addAction(confettiPlugin());
+const confettiBuilder = createExtendableComposer().addAction(confettiPlugin());
 const confettiEngine = confettiBuilder.build();
 
 export const WithConfetti: Story = {
@@ -310,7 +310,8 @@ export const WithConfetti: Story = {
 	],
 	args: {
 		config: confettiBuilder
-			.createForm()
+			.build()
+			.createFormDefinition()
 			.setId('submit-confetti')
 			.setTitle('Celebrate with Confetti')
 			.setDescription('Submit the form and watch the magic happen')

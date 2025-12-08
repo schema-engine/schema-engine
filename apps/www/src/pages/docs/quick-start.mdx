@@ -32,7 +32,7 @@ First, create a form engine instance with the components you need:
 
 ```typescript
 // lib/form-engine.ts
-import { createReactFormEngine } from '@schema-engine/forms-react/registries/builder-registry';
+import { createReactFormComposer } from '@schema-engine/forms-react/registries/builder-registry';
 import {
 	InputElement,
 	TextareaElement,
@@ -40,7 +40,7 @@ import {
 	CardLayoutRegistration,
 } from '@schema-engine/forms-react/registrations';
 
-export const formEngine = createReactFormEngine()
+export const formEngine = createReactFormComposer()
 	.addElement(InputElement)
 	.addElement(TextareaElement)
 	.addElement(SelectElement)

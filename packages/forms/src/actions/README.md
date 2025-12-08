@@ -21,11 +21,11 @@ The forms package includes several ready-to-use action plugins:
 ### 1. Register Plugins
 
 ```typescript
-import { FormEngineBuilder } from '@schema-engine/forms';
+import { FormComposer } from '@schema-engine/forms';
 import { submitPlugin, resetPlugin, notificationPlugin } from '@schema-engine/forms/actions/plugins';
 import { toast } from 'react-hot-toast';
 
-const engine = new FormEngineBuilder()
+const engine = new FormComposer()
 	// Configure submit behavior
 	.addAction(
 		submitPlugin({
