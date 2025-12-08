@@ -1,8 +1,8 @@
 :root {
-	--split-screen-side-bg: theme("colors.gray.100");
-	--split-screen-text-primary: theme("colors.gray.900");
-	--split-screen-text-secondary: theme("colors.gray.600");
-	--split-screen-text-muted: theme("colors.gray.700");
+	--split-screen-side-bg: theme('colors.gray.100');
+	--split-screen-text-primary: theme('colors.gray.900');
+	--split-screen-text-secondary: theme('colors.gray.600');
+	--split-screen-text-muted: theme('colors.gray.700');
 }
 
 .split-screen-layout {

@@ -3,8 +3,7 @@
  */
 
 import { SubmitButton } from './submit-button';
-import { SubmitButtonSchema, type SubmitButtonProps } from './submit-button.types';
-import type { SubmitButtonConfig } from './submit-button.types';
+import { SubmitButtonSchema, type SubmitButtonProps, type SubmitButtonConfig } from './submit-button.types';
 import type { InputRegistration } from '@schema-engine/forms';
 
 declare global {

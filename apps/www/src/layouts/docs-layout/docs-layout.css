@@ -5,7 +5,7 @@
 }
 
 /* Override body grid layout for docs pages */
-body:has([data-slot="sidebar-wrapper"]) {
+body:has([data-slot='sidebar-wrapper']) {
 	display: block !important;
 	place-items: unset !important;
 	margin: 0 !important;

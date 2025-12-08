@@ -1,13 +1,7 @@
-import { test, expect, describe, beforeEach } from 'bun:test';
-import { z } from 'zod';
-import {
-	validationRegistry,
-    ValidationPresets,
-	type ValidationRule,
-} from '../../../src/schemas/validation';
+import { test, expect, describe } from 'bun:test';
+import { validationRegistry, ValidationPresets, type ValidationRule } from '@/schemas/validation';
 
 describe('ValidationRegistry Usage Pattern Analysis', () => {
-
 	describe('Current ValidationRegistry.presets Usage', () => {
 		test('should use registry presets for rule creation', () => {
 			const emailRule = validationRegistry.presets.string.email();
@@ -22,7 +16,7 @@ describe('ValidationRegistry Usage Pattern Analysis', () => {
 		test('should create schemas from preset-generated rules', () => {
 			const rule = validationRegistry.presets.string.email('Invalid email');
 			const schema = validationRegistry.createSchema(rule);
-			
+
 			expect(schema).not.toBeNull();
 			expect(() => schema?.parse('test@example.com')).not.toThrow();
 			expect(() => schema?.parse('invalid-email')).toThrow();
@@ -46,17 +40,14 @@ describe('ValidationRegistry Usage Pattern Analysis', () => {
 				{ type: 'email', message: 'Invalid email' },
 			];
 
-			rules.forEach(rule => {
+			rules.forEach((rule) => {
 				const schema = validationRegistry.createSchema(rule);
 				expect(schema).not.toBeNull();
 			});
 		});
 
-		test('APPROACH C: ValidationPresets', () => {			
-			const rules = [
-				ValidationPresets.string.required('Required'),
-				ValidationPresets.string.email('Invalid'),
-			];
+		test('APPROACH C: ValidationPresets', () => {
+			const rules = [ValidationPresets.string.required('Required'), ValidationPresets.string.email('Invalid')];
 
 			expect(rules[0].type).toBe('required');
 			expect(rules[1].type).toBe('email');
@@ -74,8 +65,8 @@ describe('ValidationRegistry Usage Pattern Analysis', () => {
 			const deserialized: ValidationRule[] = JSON.parse(serialized);
 
 			expect(deserialized).toEqual(rules);
-			
-			deserialized.forEach(rule => {
+
+			deserialized.forEach((rule) => {
 				expect(validationRegistry.createSchema(rule)).not.toBeNull();
 			});
 		});
@@ -88,9 +79,9 @@ describe('ValidationRegistry Usage Pattern Analysis', () => {
 						rules: [
 							{ type: 'required', message: 'Required' },
 							{ type: 'email', message: 'Invalid email' },
-						] as ValidationRule[]
-					}
-				]
+						] as ValidationRule[],
+					},
+				],
 			};
 
 			expect(JSON.stringify(formConfig)).toContain('"type":"required"');

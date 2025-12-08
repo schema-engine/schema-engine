@@ -910,7 +910,8 @@ describe('ConstraintEvaluator', () => {
 			const constraints: ConstraintLogic[] = [
 				{
 					field: 'test',
-					operator: 'invalid_operator' as any,
+					// @ts-expect-error: Testing invalid operator handling
+					operator: 'invalid_operator',
 					value: 'test',
 					action: 'show',
 				},

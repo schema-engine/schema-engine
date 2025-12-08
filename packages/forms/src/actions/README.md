@@ -21,35 +21,31 @@ The forms package includes several ready-to-use action plugins:
 ### 1. Register Plugins
 
 ```typescript
-import { FormEngineBuilder } from '@schema-engine/forms';
-import {
-	submitPlugin,
-	resetPlugin,
-	notificationPlugin,
-} from '@schema-engine/forms/actions/plugins';
+import { FormComposer } from '@schema-engine/forms';
+import { submitPlugin, resetPlugin, notificationPlugin } from '@schema-engine/forms/actions/plugins';
 import { toast } from 'react-hot-toast';
 
-const engine = new FormEngineBuilder()
+const engine = new FormComposer()
 	// Configure submit behavior
 	.addAction(
 		submitPlugin({
 			onSuccess: (data, context) => console.log('Submitted:', data),
 			onError: (error, context) => console.error('Submit failed:', error),
-		})
+		}),
 	)
 	// Configure reset behavior
 	.addAction(
 		resetPlugin({
 			confirm: (message) => window.confirm(message),
 			onReset: () => toast.success('Form reset!'),
-		})
+		}),
 	)
 	// Configure notifications
 	.addAction(
 		notificationPlugin({
 			onSuccess: (message) => toast.success(message),
 			onError: (message) => toast.error(message),
-		})
+		}),
 	)
 	.build();
 ```
@@ -258,9 +254,7 @@ export interface MyPluginConfig {
 }
 
 // 3. Create plugin factory function
-export function myPlugin(
-	config: MyPluginConfig = {}
-): BuilderActionRegistration<'my_action', MyActionConfig> {
+export function myPlugin(config: MyPluginConfig = {}): BuilderActionRegistration<'my_action', MyActionConfig> {
 	return {
 		$type: 'my_action',
 		schema: MyActionSchema,

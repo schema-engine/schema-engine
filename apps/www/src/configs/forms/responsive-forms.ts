@@ -233,7 +233,7 @@ export const responsiveFormConfig: FormConfig = {
 			id: 'reset-after-success',
 			$type: 'reset',
 			enabled: true,
-			triggers: ['submit_success'],
+			triggers: ['form_submit_success'],
 			resetToDefaults: true,
 		},
 	],

@@ -1,6 +1,6 @@
 import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
-import '@/lib/form-engine-setup';
 import { demoFormConfig } from '../../configs/forms/demo-forms';
+import '@/lib/form-engine-setup';
 
 /**
  * Demo component to test the form engine with JSON-based validation

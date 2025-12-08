@@ -6,9 +6,9 @@
  * @example
  * ```typescript
  * import { TextareaElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-textarea.registration';
- * import { FormEngineBuilder } from '@schema-engine/forms/builder';
+ * import { FormComposer } from '@schema-engine/forms/builder';
  *
- * const engine = new FormEngineBuilder()
+ * const engine = new FormComposer()
  *   .addElement(TextareaElementRegistration)
  *   .build();
  * ```

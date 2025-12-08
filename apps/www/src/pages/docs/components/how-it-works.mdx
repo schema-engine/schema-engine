@@ -5,9 +5,10 @@ import { SimpleInputDemo } from '@/components/demo/simple-input-demo';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-  title: 'How Components Work | Form Engine Documentation',
-  description: 'Learn how Form Engine\'s component registration system works and how to integrate your existing components.',
-})
+	title: 'How Components Work | Form Engine Documentation',
+	description:
+		"Learn how Form Engine's component registration system works and how to integrate your existing components.",
+});
 
 # How Components Work
 
@@ -46,42 +47,42 @@ const MyInput = ({ label, error, className, ...props }) => (
 import { defaultFormRegistry } from '@schema-engine/forms-react';
 
 defaultFormRegistry.register({
-  name: 'input',
-  component: MyInput,
-  category: 'input',
-  description: 'Text input field'
+name: 'input',
+component: MyInput,
+category: 'input',
+description: 'Text input field'
 });
 
 // Use it with any supported form library
 import { FormRenderer } from '@schema-engine/forms-react';
 
 function MyForm() {
-  return (
-    <FormRenderer config={formConfig} /> {/* Currently uses React Hook Form adapter */}
-  );
-}
+return (
+
+<FormRenderer config={formConfig} /> {/* Currently uses React Hook Form adapter */}
+); }
 
 const formConfig = {
-  elements: [
-    {
-      id: 'input',          // References your registered component
-      id: 'name',
-      label: 'Full Name',
-      rules: [
-        ValidationPresets.string.required("Name is required")
-      ],
-      constraints: [                 // New: constraint-based logic
-        {
-          field: 'userType',
-          operator: 'equals',
-          value: 'individual',
-          action: 'show'
-        }
-      ]
-    }
-  ]
+elements: [
+{
+id: 'input', // References your registered component
+id: 'name',
+label: 'Full Name',
+rules: [
+ValidationPresets.string.required("Name is required")
+],
+constraints: [ // New: constraint-based logic
+{
+field: 'userType',
+operator: 'equals',
+value: 'individual',
+action: 'show'
+}
+]
+}
+]
 };`}
-  example={<SimpleInputDemo />}
+example={<SimpleInputDemo />}
 />
 
 ## The Adapter Integration
@@ -89,12 +90,15 @@ const formConfig = {
 The adapter system provides automatic integration with different form libraries:
 
 ### Current Implementation (React Hook Form)
+
 - **`useAdapterControlledFormElement`** - Uses React Hook Form's `useController` for optimal performance
 - **`useConstraintLogic`** - Leverages React Hook Form's `useWatch` for efficient constraint evaluation
 - **`combineHandlers`** - Utility to combine your event handlers with Form Engine's
 
 ### Future Form Library Support
+
 The architecture is designed to easily support:
+
 - **TanStack Form** - Modern form library with excellent TypeScript support
 - **Formik** - Popular form library with wide ecosystem
 - **Custom Libraries** - Easy to add adapters for any form library
@@ -161,37 +165,38 @@ The `useControlledFormElement` hook provides everything your component needs:
 ```typescript
 // What the hook returns
 interface ControlledFormElementReturn {
-  // Current field value
-  value: any;
-  // Validation error message
-  error?: string;
-  // Change handler for the field
-  onChange: (value: any) => void;
-  // Blur handler for the field
-  onBlur: () => void;
-  // Standard field props (id, name, etc.)
-  fieldProps: {
-    id: string;
-    name: string;
-  };
-  // Whether field is required
-  isRequired: boolean;
-  // Grid positioning styles
-  containerStyles: React.CSSProperties;
+	// Current field value
+	value: any;
+	// Validation error message
+	error?: string;
+	// Change handler for the field
+	onChange: (value: any) => void;
+	// Blur handler for the field
+	onBlur: () => void;
+	// Standard field props (id, name, etc.)
+	fieldProps: {
+		id: string;
+		name: string;
+	};
+	// Whether field is required
+	isRequired: boolean;
+	// Grid positioning styles
+	containerStyles: React.CSSProperties;
 }
 
 // Your component props interface
 interface YourFieldProps {
-  config: FieldConfig; // The field configuration
-  onChange?: (value: any) => void; // Optional external handler
-  onBlur?: () => void; // Optional external handler
+	config: FieldConfig; // The field configuration
+	onChange?: (value: any) => void; // Optional external handler
+	onBlur?: () => void; // Optional external handler
 }
 ```
 
 The `FieldGroup` component handles the common UI patterns:
+
 - Label display and accessibility
 - Required field indicators
-- Error message display  
+- Error message display
 - Proper form semantics
 
 ## Integration with React Hook Form
@@ -206,7 +211,7 @@ Under the hood, Form Engine uses React Hook Form for state management. Your comp
 ```typescript
 // This happens automatically when you register a component
 function FieldWrapper({ component: Component, config, ...props }) {
-  const { 
+  const {
     field,           // { value, onChange, onBlur, name }
     fieldState,      // { error, invalid, isDirty, isTouched }
     formState        // { isSubmitting, isValid, errors }
@@ -235,19 +240,20 @@ Every component automatically participates in Form Engine's responsive grid syst
 
 ```typescript
 const responsiveField = {
-  id: 'input',
-  id: 'description',
-  label: 'Description',
-  
-  // Responsive grid positioning
-  grid: {
-    column: { xs: 12, md: 8 },    // Full width on mobile, 8/12 on desktop
-    row: { xs: 2, md: 1 }         // Row 2 on mobile, row 1 on desktop
-  }
+	id: 'input',
+	id: 'description',
+	label: 'Description',
+
+	// Responsive grid positioning
+	grid: {
+		column: { xs: 12, md: 8 }, // Full width on mobile, 8/12 on desktop
+		row: { xs: 2, md: 1 }, // Row 2 on mobile, row 1 on desktop
+	},
 };
 ```
 
 The grid system handles:
+
 - **Responsive breakpoints** (xs, sm, md, lg, xl)
 - **Automatic column calculation** based on content
 - **Row and column spanning**
@@ -263,22 +269,22 @@ type RegisteredFieldTypes = 'input' | 'textarea' | 'select' | 'checkbox';
 
 // Field configurations are typed based on the component
 interface InputFieldConfig extends BaseFieldConfig {
-  type: 'input';
-  inputType: 'text' | 'email' | 'password' | 'number';
-  placeholder?: string;
-  maxLength?: number;
+	type: 'input';
+	inputType: 'text' | 'email' | 'password' | 'number';
+	placeholder?: string;
+	maxLength?: number;
 }
 
 // Form configurations get full type checking
 const typedForm: FormConfig = {
-  elements: [
-    {
-      id: 'input',           // Valid
-      inputType: 'email',      // Valid  
-      placeholder: 'Enter...' // Valid
-      // invalid: 'property'   // TypeScript error
-    }
-  ]
+	elements: [
+		{
+			id: 'input', // Valid
+			inputType: 'email', // Valid
+			placeholder: 'Enter...', // Valid
+			// invalid: 'property'   // TypeScript error
+		},
+	],
 };
 ```
 
@@ -292,4 +298,4 @@ Now that you understand how the component system works, let's explore:
 
 ---
 
-*The registration system is designed to be **zero-config** for simple cases and **infinitely customizable** for complex needs.*
+_The registration system is designed to be **zero-config** for simple cases and **infinitely customizable** for complex needs._

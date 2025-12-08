@@ -1,10 +1,10 @@
 :root {
-	--card-layout-bg: theme("colors.gray.50");
-	--card-layout-card-bg: theme("colors.white");
-	--card-layout-border: theme("colors.gray.200");
-	--card-layout-text-primary: theme("colors.gray.900");
-	--card-layout-text-secondary: theme("colors.gray.600");
-	--card-layout-text-muted: theme("colors.gray.500");
+	--card-layout-bg: theme('colors.gray.50');
+	--card-layout-card-bg: theme('colors.white');
+	--card-layout-border: theme('colors.gray.200');
+	--card-layout-text-primary: theme('colors.gray.900');
+	--card-layout-text-secondary: theme('colors.gray.600');
+	--card-layout-text-muted: theme('colors.gray.500');
 }
 
 .card-layout {

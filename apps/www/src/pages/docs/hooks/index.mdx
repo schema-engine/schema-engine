@@ -3,9 +3,9 @@ import { DocsLayout } from '@/layouts/docs-layout';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-  title: 'Form Engine Hooks | Form Engine Documentation',
-  description: 'Complete reference for all Form Engine hooks and utilities.',
-})
+	title: 'Form Engine Hooks | Form Engine Documentation',
+	description: 'Complete reference for all Form Engine hooks and utilities.',
+});
 
 # Form Engine Hooks
 
@@ -14,16 +14,19 @@ Form Engine provides a comprehensive set of React hooks that give you direct acc
 ## Core Hooks
 
 ### useFormContext
+
 Access the complete form context and state from any component within a Form Engine form.
 
 **[Learn more →](/docs/hooks/use-form-context)**
 
-### useField  
+### useField
+
 Create and manage individual field state with automatic validation and grid integration.
 
 **[Learn more →](/docs/hooks/use-field)**
 
 ### useActionExecutor
+
 Execute actions programmatically and integrate with the action system.
 
 **[Learn more →](/docs/hooks/use-action-executor)**
@@ -31,11 +34,13 @@ Execute actions programmatically and integrate with the action system.
 ## State Management Hooks
 
 ### useConstraintLogic
+
 Evaluate conditional logic and manage dynamic field visibility.
 
 **[Learn more →](/docs/hooks/use-constraint-logic)**
 
 ### useFormActions
+
 Access form-level actions like submit, reset, and validation.
 
 **[Learn more →](/docs/hooks/use-form-actions)**
@@ -43,6 +48,7 @@ Access form-level actions like submit, reset, and validation.
 ## Utility Hooks
 
 ### useDebounce
+
 Debounce values for optimized auto-save and validation performance.
 
 **[Learn more →](/docs/hooks/use-debounce)**
@@ -50,11 +56,13 @@ Debounce values for optimized auto-save and validation performance.
 ## Integration Hooks
 
 ### useGdprConsent
+
 Handle GDPR consent management within forms.
 
 **[Learn more →](/docs/hooks/use-gdpr-consent)**
 
 ### useGtmTracker
+
 Integrate Google Tag Manager tracking with form events.
 
 **[Learn more →](/docs/hooks/use-gtm-tracker)**
@@ -63,14 +71,14 @@ Integrate Google Tag Manager tracking with form events.
 
 ```typescript
 import {
-  useFormContext,
-  useField,
-  useActionExecutor,
-  useConstraintLogic,
-  useFormActions,
-  useDebounce,
-  useGdprConsent,
-  useGtmTracker
+	useFormContext,
+	useField,
+	useActionExecutor,
+	useConstraintLogic,
+	useFormActions,
+	useDebounce,
+	useGdprConsent,
+	useGtmTracker,
 } from '@/lib/form-engine/hooks';
 import { ValidationPresets } from '@/lib/form-engine/validation';
 
@@ -79,10 +87,8 @@ const { formState, control, setValue } = useFormContext();
 
 // Create a field
 const nameField = useField('name', {
-  rules: [
-    ValidationPresets.string.required("Name is required")
-  ],
-  defaultValue: ''
+	rules: [ValidationPresets.string.required('Name is required')],
+	defaultValue: '',
 });
 
 // Execute actions
@@ -90,12 +96,12 @@ const { executeAction, isExecuting } = useActionExecutor();
 
 // Handle conditional logic
 const isVisible = useConstraintLogic({
-  field: 'userType',
-  operator: 'equals',
-  value: 'premium'
+	field: 'userType',
+	operator: 'equals',
+	value: 'premium',
 });
 ```
 
 ---
 
-*Each hook is designed to solve specific form challenges while maintaining type safety and performance.*
+_Each hook is designed to solve specific form challenges while maintaining type safety and performance._

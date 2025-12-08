@@ -8,9 +8,10 @@ import '@/lib/form-engine-setup';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-  title: 'Survey Form Example | Form Engine Documentation',
-  description: 'A comprehensive survey form demonstrating advanced Form Engine features including multi-step navigation, complex branching logic, and data collection patterns.',
-})
+	title: 'Survey Form Example | Form Engine Documentation',
+	description:
+		'A comprehensive survey form demonstrating advanced Form Engine features including multi-step navigation, complex branching logic, and data collection patterns.',
+});
 
 # Survey Form Example
 
@@ -20,78 +21,78 @@ An advanced survey form showcasing Form Engine's sophisticated features includin
 
 <div className="my-8">
 	<FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
-    <FormRenderer
-      config={{
-        id: 'customer-survey',
-        title: 'Customer Satisfaction Survey',
-        description: 'Help us improve our services',
-        mode: 'wizard',
-        stepper: {
-          $type: 'minimalist',
-          showProgress: true,
-        },
-        steps: [
-          {
-            id: 'experience',
-            title: 'Your Experience',
-            elements: [
-              {
-                id: 'satisfaction',
-                $type: 'select',
-                name: 'satisfaction',
-                label: 'Overall Satisfaction',
-                required: true,
-                options: [
-                  { label: 'Very Satisfied', value: '5' },
-                  { label: 'Satisfied', value: '4' },
-                  { label: 'Neutral', value: '3' },
-                  { label: 'Dissatisfied', value: '2' },
-                  { label: 'Very Dissatisfied', value: '1' }
-                ]
-              },
-              {
-                id: 'recommendation',
-                $type: 'radio',
-                name: 'recommendation',
-                label: 'Would you recommend us?',
-                required: true,
-                options: [
-                  { label: 'Definitely', value: 'yes' },
-                  { label: 'Probably', value: 'maybe' },
-                  { label: 'No', value: 'no' }
-                ]
-              }
-            ]
-          },
-          {
-            id: 'feedback',
-            title: 'Feedback',
-            elements: [
-              {
-                id: 'improvements',
-                $type: 'textarea',
-                name: 'improvements',
-                label: 'What could we improve?',
-                placeholder: 'Share your suggestions...',
-                props: { rows: 3 }
-              },
-              {
-                id: 'contact',
-                $type: 'checkbox',
-                name: 'contact',
-                label: 'I agree to be contacted for follow-up',
-                required: false
-              }
-            ]
-          }
-        ]
-      }}
-      onSubmit={(data) => {
-        console.log('Survey submitted:', data);
-        alert('Thank you for your feedback!');
-      }}
-    />
-  </FormEngineProvider>
+		<FormRenderer
+			config={{
+				id: 'customer-survey',
+				title: 'Customer Satisfaction Survey',
+				description: 'Help us improve our services',
+				mode: 'wizard',
+				stepper: {
+					$type: 'minimalist',
+					showProgress: true,
+				},
+				steps: [
+					{
+						id: 'experience',
+						title: 'Your Experience',
+						elements: [
+							{
+								id: 'satisfaction',
+								$type: 'select',
+								name: 'satisfaction',
+								label: 'Overall Satisfaction',
+								required: true,
+								options: [
+									{ label: 'Very Satisfied', value: '5' },
+									{ label: 'Satisfied', value: '4' },
+									{ label: 'Neutral', value: '3' },
+									{ label: 'Dissatisfied', value: '2' },
+									{ label: 'Very Dissatisfied', value: '1' },
+								],
+							},
+							{
+								id: 'recommendation',
+								$type: 'radio',
+								name: 'recommendation',
+								label: 'Would you recommend us?',
+								required: true,
+								options: [
+									{ label: 'Definitely', value: 'yes' },
+									{ label: 'Probably', value: 'maybe' },
+									{ label: 'No', value: 'no' },
+								],
+							},
+						],
+					},
+					{
+						id: 'feedback',
+						title: 'Feedback',
+						elements: [
+							{
+								id: 'improvements',
+								$type: 'textarea',
+								name: 'improvements',
+								label: 'What could we improve?',
+								placeholder: 'Share your suggestions...',
+								props: { rows: 3 },
+							},
+							{
+								id: 'contact',
+								$type: 'checkbox',
+								name: 'contact',
+								label: 'I agree to be contacted for follow-up',
+								required: false,
+							},
+						],
+					},
+				],
+			}}
+			onSubmit={(data) => {
+				console.log('Survey submitted:', data);
+				alert('Thank you for your feedback!');
+			}}
+		/>
+	</FormEngineProvider>
 </div>
 
 ## Key Features Demonstrated
@@ -99,17 +100,20 @@ An advanced survey form showcasing Form Engine's sophisticated features includin
 This survey example showcases several important Form Engine features:
 
 ### 1. Multi-Step Navigation
+
 - **Step-by-Step Flow**: Breaks complex surveys into manageable sections
 - **Progress Indication**: Users can see their progress through the survey
 - **Step Validation**: Each step must be completed before proceeding
 
 ### 2. Various Field Types
+
 - **Select Dropdowns**: For structured rating scales
 - **Radio Buttons**: For exclusive choice questions
 - **Textarea Fields**: For open-ended feedback
 - **Checkboxes**: For opt-in preferences
 
 ### 3. Survey Best Practices
+
 - **Clear Labels**: Each question is clearly labeled and easy to understand
 - **Logical Flow**: Questions progress from general to specific
 - **Optional Fields**: Not every question needs to be required
@@ -162,7 +166,7 @@ const surveyConfig = {
 };
 
 // Render the survey
-<FormRenderer 
+<FormRenderer
   config={surveyConfig}
   onSubmit={(data) => console.log('Survey results:', data)}
 />
@@ -170,7 +174,6 @@ const surveyConfig = {
 
 ```typescript
 import { FormConfig } from '@/lib/form-engine/types';
-
 ```
 
 ## Advanced Survey Patterns
@@ -178,6 +181,7 @@ import { FormConfig } from '@/lib/form-engine/types';
 For more complex surveys, you can extend this basic pattern with:
 
 ### Conditional Logic
+
 Show or hide questions based on previous answers:
 
 ```typescript
@@ -197,6 +201,7 @@ Show or hide questions based on previous answers:
 ```
 
 ### Rating Scales
+
 Use number or range fields for numeric ratings:
 
 ```typescript
@@ -210,6 +215,7 @@ Use number or range fields for numeric ratings:
 ```
 
 ### Matrix Questions
+
 Group related questions using field groups:
 
 ```typescript
@@ -228,12 +234,13 @@ Group related questions using field groups:
 ## Next Steps
 
 - Explore [Multi-Step Forms](/docs/examples/registration-flow) for complex workflows
-- Learn about [Conditional Logic](/docs/concepts/conditional-logic) for dynamic surveys  
+- Learn about [Conditional Logic](/docs/concepts/conditional-logic) for dynamic surveys
 - Check out [Form Actions](/docs/actions) for advanced survey behaviors
 - See [Validation](/docs/concepts/validation) for robust data collection
 
 This survey example demonstrates how Form Engine makes it easy to create professional, user-friendly surveys that collect valuable feedback while providing an excellent user experience.
-```
+
+````
 
 ## Implementation
 
@@ -248,12 +255,12 @@ function CustomerSurvey() {
   const handleSurveySubmit = async (data: any) => {
     // Process survey data
     console.log('Survey data:', data);
-    
+
     // Calculate NPS category
     const npsScore = data.recommendationScore;
-    const npsCategory = npsScore >= 9 ? 'promoter' : 
+    const npsCategory = npsScore >= 9 ? 'promoter' :
                        npsScore >= 7 ? 'passive' : 'detractor';
-    
+
     // Submit to analytics
     await submitSurveyResults({
       ...data,
@@ -264,7 +271,7 @@ function CustomerSurvey() {
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <FormRenderer 
+      <FormRenderer
         config={surveyConfig}
         onSubmit={handleSurveySubmit}
       />
@@ -273,7 +280,7 @@ function CustomerSurvey() {
 }
 
 export default CustomerSurvey;
-```
+````
 
 ### API Handler
 
@@ -283,88 +290,82 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { z } from 'zod';
 
 const surveySchema = z.object({
-  // Demographics
-  age: z.string(),
-  location: z.string(),
-  customerType: z.string(),
-  
-  // Experience
-  overallSatisfaction: z.number().min(1).max(5),
-  recommendationScore: z.number().min(0).max(10),
-  recommendationReason: z.string().optional(),
-  serviceAspects: z.array(z.string()).optional(),
-  
-  // Detailed feedback
-  productQuality: z.number().min(1).max(5).optional(),
-  customerService: z.number().min(1).max(5).optional(),
-  valueForMoney: z.number().min(1).max(5).optional(),
-  easeOfUse: z.number().min(1).max(5).optional(),
-  improvements: z.string().optional(),
-  featuresWanted: z.array(z.string()).optional(),
-  
-  // Additional info
-  heardAboutUs: z.string().optional(),
-  competitorComparison: z.string().optional(),
-  futureInterest: z.string(),
-  churnReason: z.array(z.string()).optional(),
-  additionalComments: z.string().optional(),
-  followUp: z.boolean().optional(),
-  email: z.string().email().optional(),
+	// Demographics
+	age: z.string(),
+	location: z.string(),
+	customerType: z.string(),
+
+	// Experience
+	overallSatisfaction: z.number().min(1).max(5),
+	recommendationScore: z.number().min(0).max(10),
+	recommendationReason: z.string().optional(),
+	serviceAspects: z.array(z.string()).optional(),
+
+	// Detailed feedback
+	productQuality: z.number().min(1).max(5).optional(),
+	customerService: z.number().min(1).max(5).optional(),
+	valueForMoney: z.number().min(1).max(5).optional(),
+	easeOfUse: z.number().min(1).max(5).optional(),
+	improvements: z.string().optional(),
+	featuresWanted: z.array(z.string()).optional(),
+
+	// Additional info
+	heardAboutUs: z.string().optional(),
+	competitorComparison: z.string().optional(),
+	futureInterest: z.string(),
+	churnReason: z.array(z.string()).optional(),
+	additionalComments: z.string().optional(),
+	followUp: z.boolean().optional(),
+	email: z.string().email().optional(),
 });
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+	if (req.method !== 'POST') {
+		return res.status(405).json({ error: 'Method not allowed' });
+	}
 
-  try {
-    const validatedData = surveySchema.parse(req.body);
-    
-    // Calculate metrics
-    const metrics = calculateSurveyMetrics(validatedData);
-    
-    // Store in database
-    await storeSurveyResponse({
-      ...validatedData,
-      ...metrics,
-      submittedAt: new Date(),
-      id: generateSurveyId()
-    });
-    
-    // Update analytics
-    await updateCustomerAnalytics(validatedData);
-    
-    res.status(200).json({
-      success: true,
-      message: 'Survey submitted successfully'
-    });
-  } catch (error) {
-    console.error('Survey submission error:', error);
-    res.status(500).json({ error: 'Failed to submit survey' });
-  }
+	try {
+		const validatedData = surveySchema.parse(req.body);
+
+		// Calculate metrics
+		const metrics = calculateSurveyMetrics(validatedData);
+
+		// Store in database
+		await storeSurveyResponse({
+			...validatedData,
+			...metrics,
+			submittedAt: new Date(),
+			id: generateSurveyId(),
+		});
+
+		// Update analytics
+		await updateCustomerAnalytics(validatedData);
+
+		res.status(200).json({
+			success: true,
+			message: 'Survey submitted successfully',
+		});
+	} catch (error) {
+		console.error('Survey submission error:', error);
+		res.status(500).json({ error: 'Failed to submit survey' });
+	}
 }
 
 function calculateSurveyMetrics(data: any) {
-  const npsScore = data.recommendationScore;
-  const npsCategory = npsScore >= 9 ? 'promoter' : 
-                     npsScore >= 7 ? 'passive' : 'detractor';
-  
-  const satisfactionScore = data.overallSatisfaction;
-  const averageRating = [
-    data.productQuality,
-    data.customerService,
-    data.valueForMoney,
-    data.easeOfUse
-  ].filter(Boolean).reduce((sum, rating) => sum + rating, 0) / 4;
+	const npsScore = data.recommendationScore;
+	const npsCategory = npsScore >= 9 ? 'promoter' : npsScore >= 7 ? 'passive' : 'detractor';
 
-  return {
-    npsCategory,
-    averageRating,
-    satisfactionLevel: satisfactionScore >= 4 ? 'satisfied' : 'dissatisfied'
-  };
+	const satisfactionScore = data.overallSatisfaction;
+	const averageRating =
+		[data.productQuality, data.customerService, data.valueForMoney, data.easeOfUse]
+			.filter(Boolean)
+			.reduce((sum, rating) => sum + rating, 0) / 4;
+
+	return {
+		npsCategory,
+		averageRating,
+		satisfactionLevel: satisfactionScore >= 4 ? 'satisfied' : 'dissatisfied',
+	};
 }
 ```
 

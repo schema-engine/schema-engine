@@ -23,8 +23,7 @@ export const defaultValidations: ValidationRegistration[] = [
 	{
 		type: 'required',
 		category: 'boolean',
-		handler: (rule: ValidationRule) =>
-			z.boolean().refine((val) => val === true, rule.message || 'This field is required'),
+		handler: (rule: ValidationRule) => z.boolean().refine((val) => val, rule.message || 'This field is required'),
 	},
 
 	{
@@ -43,7 +42,7 @@ export const defaultValidations: ValidationRegistration[] = [
 		handler: (rule: ValidationRule) =>
 			z.union([
 				z.string().min(1, rule.message || 'This field is required'),
-				z.boolean().refine((val) => val === true, rule.message || 'This field is required'),
+				z.boolean().refine((val) => val, rule.message || 'This field is required'),
 				z.array(z.any()).min(1, rule.message || 'This field is required'),
 				z.number().refine((val) => val !== 0 || true, rule.message || 'This field is required'),
 			]),

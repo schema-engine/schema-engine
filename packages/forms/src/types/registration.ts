@@ -1,8 +1,8 @@
+// oxlint-disable no-redundant-type-constituents
 import type { z } from 'zod';
 import type { ComponentMetadata, ElementMetadata } from './metadata';
 import type { BuilderActionExecutionContext, BuilderActionTrigger } from './actions.js';
-import type { ActionExecutionResult } from '@schema-engine/actions';
-import type { ActionMetadata } from '@schema-engine/actions';
+import type { ActionRegistration } from '@schema-engine/actions';
 
 declare global {
 	namespace FormEngine {
@@ -141,7 +141,7 @@ export type LayoutRegistration<
 	TType extends keyof FormEngine.LayoutRegistry | string = keyof FormEngine.LayoutRegistry | string,
 	TConfig = unknown,
 	TProps = unknown,
-> = Brand<ComponentRegistration<TType, TConfig, TProps, ComponentMetadata>, 'Layout'>;
+> = Brand<ComponentRegistration<TType, TConfig, TProps>, 'Layout'>;
 
 /**
  * Stepper component registration - multi-step navigation components.
@@ -165,13 +165,13 @@ export type StepperRegistration<
 	TType extends keyof FormEngine.StepperRegistry | string = keyof FormEngine.StepperRegistry | string,
 	TConfig = unknown,
 	TProps = unknown,
-> = Brand<ComponentRegistration<TType, TConfig, TProps, ComponentMetadata>, 'Stepper'>;
+> = Brand<ComponentRegistration<TType, TConfig, TProps>, 'Stepper'>;
 
 /**
  * Action registration object for forms.
  *
- * This is the ActionRegistration from @schema-engine/actions specialized
- * with form-specific context and trigger types.
+ * This extends the base ActionRegistration from @schema-engine/actions,
+ * specialized with form-specific context (BuilderActionExecutionContext) and trigger types.
  *
  * @template TType - The action type identifier
  * @template TConfig - The action configuration type
@@ -186,22 +186,16 @@ export type StepperRegistration<
  *     description: 'Submit form data to an endpoint',
  *     defaultTriggers: ['form_submit'],
  *   },
- *   handler: async (executionContext, config) => {
- *     const { context, trigger } = executionContext;
- *     // context has formId, formData, isValid, etc.
- *     // config has the action configuration
+ *   execute: async (executionContext) => {
+ *     // executionContext is BuilderActionExecutionContext<SubmitConfig>
+ *     // which includes formId, formData, isValid, config, etc.
  *     return { success: true };
  *   },
  * };
  * ```
  */
-export type BuilderActionRegistration<TType extends string = string, TConfig = unknown> = BaseRegistration<
-	TConfig,
-	ActionMetadata<BuilderActionTrigger>
-> & {
-	$type: TType;
-	execute: (context: BuilderActionExecutionContext<TConfig>) => Promise<ActionExecutionResult>;
-};
-
-// Backward compatibility alias
-export type ActionRegistration<TConfig = unknown> = BuilderActionRegistration<string, TConfig>;
+export type BuilderActionRegistration<TType extends string = string, TConfig = unknown> = ActionRegistration<
+	TType,
+	BuilderActionExecutionContext<TConfig>,
+	BuilderActionTrigger
+>;

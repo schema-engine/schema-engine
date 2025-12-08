@@ -1,6 +1,6 @@
-import type { ActionExecutionContext } from "@/actions/types";
-import type { BuilderActionExecutionContext } from "@/types/actions";
-import { GDPRConsent } from "@/tools/gdpr-consent";
+import type { BuilderActionExecutionContext } from '@/types/actions';
+import { GDPRConsent } from '@/tools/gdpr-consent';
+import type { ActionExecutionContext } from '@schema-engine/actions';
 
 /**
  * Mock GDPR consent for testing
@@ -15,22 +15,23 @@ export const mockGDPRConsent = {
  */
 export function createMockBuilderContext<TConfig = unknown>(
 	config: TConfig,
-	overrides: Partial<Omit<BuilderActionExecutionContext<TConfig>, 'config'>> = {}
+	overrides: Partial<Omit<BuilderActionExecutionContext<TConfig>, 'config'>> = {},
 ): BuilderActionExecutionContext<TConfig> {
 	return {
 		config,
-		formId: "test-form",
+		formId: 'test-form',
 		currentStep: 0,
 		totalSteps: 1,
 		isValid: true,
 		errors: {},
+		trigger: 'form_submit',
 		form: {
 			reset: () => {},
 			setValue: () => {},
 			getValue: () => undefined,
 			validate: async () => true,
 		},
-		formData: { field1: "value1" },
+		formData: { field1: 'value1' },
 		metadata: {
 			stepStartTime: Date.now(),
 			totalFormTime: 1000,
@@ -45,13 +46,8 @@ export function createMockBuilderContext<TConfig = unknown>(
  */
 export function createMockContext(overrides: Partial<ActionExecutionContext> = {}): ActionExecutionContext {
 	return {
-		formId: "test-form",
-		currentStep: 0,
-		totalSteps: 1,
-		isValid: true,
-		errors: {},
 		form: {
-			getValues: () => ({ field1: "value1" }),
+			getValues: () => ({ field1: 'value1' }),
 			setValue: () => {},
 			reset: () => {},
 			watch: () => ({}),
@@ -65,29 +61,8 @@ export function createMockContext(overrides: Partial<ActionExecutionContext> = {
 				errors: {},
 			},
 		} as any,
-		formData: { field1: "value1" },
-		metadata: {
-			stepStartTime: Date.now(),
-			totalFormTime: 1000,
-			userInteractions: 5,
-		},
 		...overrides,
-	};
-}
-
-/**
- * Create a mock context for multi-step forms
- */
-export function createMultiStepMockContext(currentStep = 0, totalSteps = 3): ActionExecutionContext {
-	return createMockContext({
-		currentStep,
-		totalSteps,
-		metadata: {
-			stepStartTime: Date.now(),
-			totalFormTime: 2000,
-			userInteractions: 10,
-		},
-	});
+	} as ActionExecutionContext;
 }
 
 /**
@@ -100,7 +75,7 @@ export function createMockHandler<T extends any[]>(): {
 	callCount: number;
 } {
 	const calls: T[] = [];
-	
+
 	return {
 		handler: (...args: T) => {
 			calls.push(args);
@@ -157,13 +132,13 @@ export class MockLocalStorage {
  */
 export function setupTestEnvironment(): MockLocalStorage {
 	setupGDPRMocks();
-	
+
 	// Clear any existing window/global mocks
 	delete (global as any).window;
-	
+
 	// Set up localStorage mock
 	const mockLocalStorage = new MockLocalStorage();
-	
+
 	// Use Object.defineProperty to override readonly global.localStorage
 	Object.defineProperty(global, 'localStorage', {
 		value: mockLocalStorage,
@@ -180,7 +155,7 @@ export function setupTestEnvironment(): MockLocalStorage {
 			origin: 'http://localhost:3000',
 		},
 	};
-	
+
 	return mockLocalStorage;
 }
 
@@ -196,41 +171,41 @@ export function setupGDPRMocks(): void {
  * Create a mock fetch function for testing
  */
 export function createMockFetch(responses: Record<string, any> = {}, shouldFail = false): any {
-	const mockFetch = function(url: string, options?: RequestInit) {
+	const mockFetch = function (url: string) {
 		if (shouldFail) {
 			return Promise.resolve({
 				ok: false,
 				status: 500,
-				statusText: "Internal Server Error",
-				json: () => Promise.resolve({ error: "Server error" }),
-				text: () => Promise.resolve("Server error"),
+				statusText: 'Internal Server Error',
+				json: () => Promise.resolve({ error: 'Server error' }),
+				text: () => Promise.resolve('Server error'),
 			});
 		}
-		
-		const response = responses[url] || { ok: true, status: 200, data: { success: true, id: "123" } };
+
+		const response = responses[url] || { ok: true, status: 200, data: { success: true, id: '123' } };
 		return Promise.resolve({
 			ok: response.ok ?? true,
 			status: response.status ?? 200,
-			statusText: response.statusText ?? "OK",
+			statusText: response.statusText ?? 'OK',
 			json: () => Promise.resolve(response.data || {}),
-			text: () => Promise.resolve(response.text || ""),
+			text: () => Promise.resolve(response.text || ''),
 			headers: {
 				get: (name: string) => {
-					if (name.toLowerCase() === "content-type") return "application/json";
+					if (name.toLowerCase() === 'content-type') return 'application/json';
 					return null;
-				}
+				},
 			},
 			...response,
 		});
 	};
-	
+
 	return mockFetch;
 }
 
 /**
  * Create a failing mock fetch function for testing error scenarios
  */
-export function createFailingMockFetch(errorResponse = { error: "Server error" }): any {
+export function createFailingMockFetch(): any {
 	return createMockFetch({}, true);
 }
 

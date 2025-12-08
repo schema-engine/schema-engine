@@ -30,7 +30,7 @@ class AsyncValidationCache {
 	 * Generates cache key from validation parameters
 	 */
 	private generateCacheKey(url: string, payload: Record<string, unknown>): string {
-		const sortedKeys = Object.keys(payload).sort();
+		const sortedKeys = Object.keys(payload).toSorted();
 		const normalizedPayload = sortedKeys.reduce(
 			(acc, key) => {
 				acc[key] = payload[key];
@@ -69,7 +69,7 @@ class AsyncValidationCache {
 		}
 	}
 
-	get(url: string, payload: Record<string, unknown>): unknown | null {
+	get(url: string, payload: Record<string, unknown>): unknown {
 		const key = this.generateCacheKey(url, payload);
 		const entry = this.cache.get(key);
 

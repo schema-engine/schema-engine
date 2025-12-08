@@ -1,6 +1,4 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
-import { FormEngineBuilder } from '@/builder';
-import type { FormEngine } from '@/engine/form-engine';
 import type { BuilderActionExecutionContext } from '@/types';
 import {
 	autoSavePlugin,
@@ -12,7 +10,6 @@ import { createMockBuilderContext, setupTestEnvironment, MockLocalStorage } from
 import { MockAutoSaveStorage, createFailingStorage } from '../__tools/storage-utils';
 
 describe('AutoSavePlugin', () => {
-	let engine: FormEngine;
 	let mockStorage: MockAutoSaveStorage;
 	let mockLocalStorage: MockLocalStorage;
 
@@ -105,45 +102,7 @@ describe('AutoSavePlugin', () => {
 			expect(plugin.metadata.defaultTriggers).toEqual(['form_change']);
 			expect(plugin.execute).toBeDefined();
 		});
-
-		test('should create plugin with custom storage', () => {
-			const plugin = autoSavePlugin({
-				storage: mockStorage,
-			});
-
-			expect(plugin.$type).toBe('auto_save');
-			expect(plugin.execute).toBeDefined();
-		});
-
-		test('should create plugin with custom handlers', () => {
-			let saveCalled = false;
-			let errorCalled = false;
-
-			const plugin = autoSavePlugin({
-				storage: mockStorage,
-				onSave: (data, context) => {
-					saveCalled = true;
-				},
-				onError: (error, context) => {
-					errorCalled = true;
-				},
-			});
-
-			expect(plugin.$type).toBe('auto_save');
-			expect(plugin.execute).toBeDefined();
-		});
-
-		test('should create plugin with custom storage key generator', () => {
-			const plugin = autoSavePlugin({
-				storage: mockStorage,
-				getStorageKey: (context) => `custom_${context.formId}_${context.currentStep}`,
-			});
-
-			expect(plugin.$type).toBe('auto_save');
-			expect(plugin.execute).toBeDefined();
-		});
 	});
-
 	describe('Action Execution', () => {
 		test('should execute successful auto-save action', async () => {
 			const plugin = autoSavePlugin({ storage: mockStorage });
@@ -448,7 +407,7 @@ describe('AutoSavePlugin', () => {
 
 			const plugin = autoSavePlugin({
 				storage: mockStorage,
-				onSave: async (data, context) => {
+				onSave: async () => {
 					await new Promise((resolve) => setTimeout(resolve, 10));
 					asyncSaveCalled = true;
 				},
@@ -483,7 +442,7 @@ describe('AutoSavePlugin', () => {
 
 			const plugin = autoSavePlugin({
 				storage: failingStorage,
-				onError: async (error, context) => {
+				onError: async () => {
 					await new Promise((resolve) => setTimeout(resolve, 10));
 					asyncErrorCalled = true;
 				},

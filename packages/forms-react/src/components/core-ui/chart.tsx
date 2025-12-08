@@ -134,10 +134,7 @@ function ChartTooltipContent({
 		const [item] = payload;
 		const key = `${labelKey || item?.dataKey || item?.name || 'value'}`;
 		const itemConfig = getPayloadConfigFromPayload(config, item, key);
-		const value =
-			!labelKey && typeof label === 'string'
-				? config[label as keyof typeof config]?.label || label
-				: itemConfig?.label;
+		const value = !labelKey && typeof label === 'string' ? config[label]?.label || label : itemConfig?.label;
 
 		if (labelFormatter) {
 			return <div className={cn('font-medium', labelClassName)}>{labelFormatter(value, payload)}</div>;
@@ -262,9 +259,8 @@ function ChartLegendContent({
 			)}
 		>
 			{payload.map((item) => {
-				const key = `${nameKey || item.dataKey || 'value'}`;
+				const key = String(nameKey || item.dataKey || 'value');
 				const itemConfig = getPayloadConfigFromPayload(config, item, key);
-
 				return (
 					<div
 						key={item.value}
@@ -303,17 +299,19 @@ function getPayloadConfigFromPayload(config: ChartConfig, payload: unknown, key:
 
 	let configLabelKey: string = key;
 
-	if (key in payload && typeof payload[key as keyof typeof payload] === 'string') {
-		configLabelKey = payload[key as keyof typeof payload] as string;
-	} else if (
-		payloadPayload &&
-		key in payloadPayload &&
-		typeof payloadPayload[key as keyof typeof payloadPayload] === 'string'
-	) {
-		configLabelKey = payloadPayload[key as keyof typeof payloadPayload] as string;
+	if (key in payload) {
+		const value = (payload as Record<string, unknown>)[key];
+		if (typeof value === 'string') {
+			configLabelKey = value;
+		}
+	} else if (payloadPayload && key in payloadPayload) {
+		const value = (payloadPayload as Record<string, unknown>)[key];
+		if (typeof value === 'string') {
+			configLabelKey = value;
+		}
 	}
 
-	return configLabelKey in config ? config[configLabelKey] : config[key as keyof typeof config];
+	return configLabelKey in config ? config[configLabelKey] : config[key];
 }
 
 export { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, ChartStyle };

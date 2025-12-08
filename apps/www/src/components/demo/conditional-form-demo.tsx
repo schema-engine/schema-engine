@@ -1,7 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
-import '@/lib/form-engine-setup';
 import { conditionalFormConfig } from '@/configs/forms/conditional-forms';
+import '@/lib/form-engine-setup';
+
+const handleSubmit = (data: any) => {
+	console.log('Form submitted:', data);
+	alert('Form submitted successfully! Check the console for details.');
+};
 
 /**
  * This demo showcases the form engine's advanced conditional logic capabilities:
@@ -11,11 +16,6 @@ import { conditionalFormConfig } from '@/configs/forms/conditional-forms';
  * 4. Tree-shakable field registry system
  */
 export function ConditionalFormDemo() {
-	const handleSubmit = (data: any) => {
-		console.log('Form submitted:', data);
-		alert('Form submitted successfully! Check the console for details.');
-	};
-
 	return (
 		<div className="container mx-auto py-8 space-y-8">
 			<div className="max-w-4xl mx-auto">

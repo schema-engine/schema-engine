@@ -4,20 +4,22 @@ import type {
 	LayoutRegistration,
 	StepperRegistration,
 	BuilderActionRegistration,
+	BuilderActionExecutionContext,
 } from '@/types';
 import type { FormEngineSchemaMetadata } from '@/engine/form-engine';
+import { FormEngine } from '@/engine/form-engine';
 import { logger } from '@/lib/logger';
 import { ElementRegistry, LayoutRegistry, StepperRegistry } from '@/registries';
 import { ActionRegistry } from '@schema-engine/actions';
-import { FormConfigBuilder } from './form-config-builder';
 import { z } from 'zod';
-import type { ExtractSchemaType, ExtractTypeId, Merge } from './types.utils';
+import type { ExtractSchemaType, ExtractTypeId } from './types.utils';
+import type { FormActionTrigger } from '@/actions';
 
 /**
- * FormEngineBuilder - Builder pattern for configuring the form engine.
+ * FormComposer - Composes the capabilities of the Form Engine.
  *
  * Provides a fluent API for registering elements, layouts, steppers, and actions.
- * Once configured, calling `build()` creates an immutable FormEngine instance.
+ * Once composed, calling `build()` creates an immutable FormEngine instance.
  *
  * Registries are injected as dependencies (with defaults), allowing for:
  * - Custom registry implementations
@@ -26,7 +28,7 @@ import type { ExtractSchemaType, ExtractTypeId, Merge } from './types.utils';
  *
  * @example
  * ```typescript
- * const engine = new FormEngineBuilder()
+ * const engine = new FormComposer()
  *   .addElement(textInputRegistration)
  *   .addElement(emailInputRegistration)
  *   .addLayout(cardLayoutRegistration)
@@ -39,11 +41,11 @@ import type { ExtractSchemaType, ExtractTypeId, Merge } from './types.utils';
  * const customElements = new ElementRegistry();
  * customElements.register(myCustomElement);
  *
- * const engine = new FormEngineBuilder(customElements)
+ * const engine = new FormComposer(customElements)
  *   .build();
  * ```
  */
-export class FormEngineBuilder<
+export class FormComposer<
 	TElements extends Record<string, unknown> = Record<never, unknown>,
 	TLayouts extends Record<string, unknown> = Record<never, unknown>,
 	TSteppers extends Record<string, unknown> = Record<never, unknown>,
@@ -53,7 +55,7 @@ export class FormEngineBuilder<
 		private elementRegistry = new ElementRegistry(),
 		private layoutRegistry = new LayoutRegistry(),
 		private stepperRegistry = new StepperRegistry(),
-		private actionRegistry = new ActionRegistry(),
+		private actionRegistry = new ActionRegistry<BuilderActionExecutionContext, FormActionTrigger>(),
 	) {}
 
 	/**
@@ -70,15 +72,7 @@ export class FormEngineBuilder<
 	 */
 	addElement<T extends InputRegistration<any, any, any> | StaticRegistration<any, any, any>>(
 		registration: T,
-	): FormEngineBuilder<
-		TElements & Record<ExtractTypeId<T>, ExtractSchemaType<T['schema']>>,
-		TLayouts,
-		TSteppers,
-		TActions
-	>;
-	addElement<T extends InputRegistration<any, any, any> | StaticRegistration<any, any, any>>(
-		registration: T,
-	): FormEngineBuilder<
+	): FormComposer<
 		TElements & Record<ExtractTypeId<T>, ExtractSchemaType<T['schema']>>,
 		TLayouts,
 		TSteppers,
@@ -86,7 +80,7 @@ export class FormEngineBuilder<
 	> {
 		this.elementRegistry.register(registration);
 
-		return this as any;
+		return this;
 	}
 
 	/**
@@ -114,15 +108,7 @@ export class FormEngineBuilder<
 	 */
 	addLayout<T extends LayoutRegistration<any, any, any>>(
 		registration: T,
-	): FormEngineBuilder<
-		TElements,
-		TLayouts & Record<ExtractTypeId<T>, ExtractSchemaType<T['schema']>>,
-		TSteppers,
-		TActions
-	>;
-	addLayout<T extends LayoutRegistration<any, any, any>>(
-		registration: T,
-	): FormEngineBuilder<
+	): FormComposer<
 		TElements,
 		TLayouts & Record<ExtractTypeId<T>, ExtractSchemaType<T['schema']>>,
 		TSteppers,
@@ -130,7 +116,7 @@ export class FormEngineBuilder<
 	> {
 		this.layoutRegistry.register(registration);
 
-		return this as any;
+		return this;
 	}
 
 	/**
@@ -158,22 +144,14 @@ export class FormEngineBuilder<
 	 */
 	addStepper<T extends StepperRegistration<any, any, any>>(
 		registration: T,
-	): FormEngineBuilder<
-		TElements,
-		TLayouts,
-		TSteppers & Record<ExtractTypeId<T>, ExtractSchemaType<T['schema']>>,
-		TActions
-	>;
-	addStepper<T extends StepperRegistration<any, any, any>>(
-		registration: T,
-	): FormEngineBuilder<
+	): FormComposer<
 		TElements,
 		TLayouts,
 		TSteppers & Record<ExtractTypeId<T>, ExtractSchemaType<T['schema']>>,
 		TActions
 	> {
 		this.stepperRegistry.register(registration);
-		return this as any;
+		return this;
 	}
 
 	/**
@@ -196,11 +174,8 @@ export class FormEngineBuilder<
 	 */
 	addAction<TType extends string, TConfig>(
 		registration: BuilderActionRegistration<TType, TConfig>,
-	): FormEngineBuilder<TElements, TLayouts, TSteppers, Merge<TActions, Record<TType, TConfig>>>;
-	addAction<TType extends string, TConfig>(
-		registration: BuilderActionRegistration<TType, TConfig>,
-	): FormEngineBuilder<TElements, TLayouts, TSteppers, TActions & Record<TType, TConfig>> {
-		this.actionRegistry.register(registration as any);
+	): FormComposer<TElements, TLayouts, TSteppers, TActions & Record<TType, TConfig>> {
+		this.actionRegistry.register(registration as BuilderActionRegistration<string, unknown>);
 		return this;
 	}
 
@@ -228,37 +203,6 @@ export class FormEngineBuilder<
 			return schemas[0];
 		}
 		return z.union(schemas as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]]);
-	}
-
-	/**
-	 * Create a typed form configuration builder.
-	 * Provides a fluent API for building form configurations with type safety and validation.
-	 *
-	 * @example
-	 * ```typescript
-	 * const builder = new FormEngineBuilder()
-	 *   .addElement(inputRegistration)
-	 *   .addStepper(wizardStepperRegistration);
-	 *
-	 * const formConfig = builder.createForm()
-	 *   .setId('contact-form')
-	 *   .setTitle('Contact Us')
-	 *   .addStep({ id: 'step-1', title: 'Personal Info' })
-	 *   .addElement('input', { id: 'name', name: 'name', label: 'Name' })
-	 *   .addStepAction('submit', { url: '/api/submit' })
-	 *   .setStepper('wizard')
-	 *   .build();
-	 * ```
-	 *
-	 * @returns A FormConfigBuilder that uses the augmented FormEngine namespace for type inference
-	 */
-	createForm(): FormConfigBuilder<TElements, TLayouts, TSteppers, TActions> {
-		return new FormConfigBuilder<TElements, TLayouts, TSteppers, TActions>(
-			this.elementRegistry,
-			this.layoutRegistry,
-			this.stepperRegistry,
-			this.actionRegistry,
-		);
 	}
 
 	/**
@@ -291,28 +235,28 @@ export class FormEngineBuilder<
 	}
 
 	/**
-	 * Create a new builder extending this one with additional registrations.
+	 * Create a new builder by cloning this one with all current registrations.
 	 * This allows for composition and creating specialized builders.
 	 *
 	 * @example
 	 * ```typescript
-	 * const baseEngine = new FormEngineBuilder()
+	 * const baseBuilder = new FormComposer()
 	 *   .addElement(InputElement)
-	 *   .addElement(TextareaElement)
-	 *   .build();
+	 *   .addElement(TextareaElement);
 	 *
-	 * // Later, extend with actions
-	 * const extendedEngine = baseEngine.extend()
+	 * // Clone and extend with actions
+	 * const extendedBuilder = baseBuilder.clone()
 	 *   .addAction(submitAction)
-	 *   .addAction(notificationAction)
-	 *   .build();
+	 *   .addAction(notificationAction);
+	 *
+	 * const engine = extendedBuilder.build();
 	 * ```
 	 */
-	extend(): FormEngineBuilder<TElements, TLayouts, TSteppers, TActions> {
+	clone(): FormComposer<TElements, TLayouts, TSteppers, TActions> {
 		const newElementRegistry = new ElementRegistry();
 		const newLayoutRegistry = new LayoutRegistry();
 		const newStepperRegistry = new StepperRegistry();
-		const newActionRegistry = new ActionRegistry();
+		const newActionRegistry = new ActionRegistry<BuilderActionExecutionContext, FormActionTrigger>();
 
 		for (const item of this.elementRegistry.getAll()) {
 			newElementRegistry.register(item);
@@ -327,14 +271,14 @@ export class FormEngineBuilder<
 			newActionRegistry.register(item);
 		}
 
-		const newBuilder = new FormEngineBuilder<TElements, TLayouts, TSteppers, TActions>(
+		const newBuilder = new FormComposer<TElements, TLayouts, TSteppers, TActions>(
 			newElementRegistry,
 			newLayoutRegistry,
 			newStepperRegistry,
 			newActionRegistry,
 		);
 
-		logger.debug('Extended FormEngineBuilder', {
+		logger.debug('Cloned FormComposer', {
 			elements: newBuilder.elementRegistry.size,
 			layouts: newBuilder.layoutRegistry.size,
 			steppers: newBuilder.stepperRegistry.size,
@@ -350,7 +294,7 @@ export class FormEngineBuilder<
 	 *
 	 * @returns FormEngine configured with all registered components and actions
 	 */
-	build(): import('@/engine/form-engine').FormEngine<TElements, TLayouts, TSteppers, TActions> {
+	build(): FormEngine<TElements, TLayouts, TSteppers, TActions> {
 		logger.debug('Building FormEngine', {
 			elements: this.elementRegistry.size,
 			layouts: this.layoutRegistry.size,
@@ -399,15 +343,13 @@ export class FormEngineBuilder<
 
 		const formConfigSchema = this.createFormConfigSchema();
 
-		const { FormEngine: FormEngineClass } = require('@/engine/form-engine');
-
-		return new FormEngineClass({
+		return new FormEngine({
 			elements: this.elementRegistry.getMap(),
 			layouts: this.layoutRegistry.getMap(),
 			steppers: this.stepperRegistry.getMap(),
 			actions: this.actionRegistry.getMap(),
 			schemaRegistry,
 			formConfigSchema,
-		}) as import('@/engine/form-engine').FormEngine<TElements, TLayouts, TSteppers, TActions>;
+		});
 	}
 }

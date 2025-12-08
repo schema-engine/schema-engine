@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { FormEngineProvider } from '@/components/adapter-provider';
 import { rhfAdapter } from '@/adapters/rhf';
-import { createExtendableBuilder, ValidationPresets } from '@/stories/shared/form-builder.ui';
+import { createExtendableComposer, ValidationPresets } from '@/stories/shared/form-builder.ui';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shadcn/ui/card';
 import { Badge } from '@/shadcn/ui/badge';
 import { Button } from '@/shadcn/ui/button';
@@ -147,17 +147,18 @@ const customResetPlugin = formResetPlugin({
 	},
 });
 
-export const demoEngine = createExtendableBuilder()
+export const demoEngine = createExtendableComposer()
 	.addAction(customLoggerPlugin)
 	.addAction(customSubmitPlugin)
 	.addAction(customResetPlugin)
 	.build();
 
-export const demoFormConfig = createExtendableBuilder()
+export const demoFormConfig = createExtendableComposer()
 	.addAction(customLoggerPlugin)
 	.addAction(customSubmitPlugin)
 	.addAction(customResetPlugin)
-	.createForm()
+	.build()
+	.createFormDefinition()
 	.setId('action-demo-form')
 	.setTitle('Action Triggers Demo')
 	.setDescription('Interact with the form to see actions trigger in real-time')
@@ -218,14 +219,14 @@ export const demoFormConfig = createExtendableBuilder()
 	})
 	.build();
 
-const ActionDashboard = ({ logs }: { logs: ActionLogEntry[] }) => {
-	const getTriggerColor = (trigger: string) => {
-		if (trigger.includes('submit')) return 'bg-blue-500';
-		if (trigger === 'form_mount') return 'bg-green-500';
-		if (trigger === 'form_change') return 'bg-yellow-500';
-		return 'bg-gray-500';
-	};
+const getTriggerColor = (trigger: string) => {
+	if (trigger.includes('submit')) return 'bg-blue-500';
+	if (trigger === 'form_mount') return 'bg-green-500';
+	if (trigger === 'form_change') return 'bg-yellow-500';
+	return 'bg-gray-500';
+};
 
+const ActionDashboard = ({ logs }: { logs: ActionLogEntry[] }) => {
 	const groupedLogs = logs.reduce(
 		(acc, log) => {
 			if (!acc[log.trigger]) {

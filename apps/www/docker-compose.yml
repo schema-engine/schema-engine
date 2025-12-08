@@ -1,14 +1,14 @@
 services:
-  app:
-    build:
-      context: .
-      dockerfile: apps/www/Dockerfile
-    command: bun run start:www
-    ports:
-      - "3000:3000"
-    environment:
-      - ECOPAGES_BASE_URL=${ECOPAGES_BASE_URL}
-      - ECOPAGES_HOSTNAME=${ECOPAGES_HOSTNAME:-0.0.0.0}
-      - ECOPAGES_PORT=${ECOPAGES_PORT:-3000}
-      - NODE_ENV=production
-      - ECOPAGES_LOGGER_DEBUG=true
+    app:
+        build:
+            context: .
+            dockerfile: apps/www/Dockerfile
+        command: bun run start:www
+        ports:
+            - '3000:3000'
+        environment:
+            - ECOPAGES_BASE_URL=${ECOPAGES_BASE_URL}
+            - ECOPAGES_HOSTNAME=${ECOPAGES_HOSTNAME:-0.0.0.0}
+            - ECOPAGES_PORT=${ECOPAGES_PORT:-3000}
+            - NODE_ENV=production
+            - ECOPAGES_LOGGER_DEBUG=true

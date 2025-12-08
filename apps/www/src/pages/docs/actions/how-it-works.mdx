@@ -4,9 +4,10 @@ import { LivePreview, CodePreview } from '@/components/code-preview';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-  title: 'How Actions Work | Form Engine Documentation',
-  description: 'Learn how Form Engine\'s action system handles form submissions, notifications, and other behaviors through plugins.',
-})
+	title: 'How Actions Work | Form Engine Documentation',
+	description:
+		"Learn how Form Engine's action system handles form submissions, notifications, and other behaviors through plugins.",
+});
 
 # How Actions Work
 
@@ -26,54 +27,58 @@ import { submitPlugin, notificationPlugin } from '@/lib/form-engine/actions/plug
 import type { FormConfig } from '@schema-engine/forms/schemas';
 
 // Register the plugins you need
-registerAction(submitPlugin({
-  onSuccess: (data, context) => {
-    console.log('Form submitted:', data);
-  },
-  onError: (error, context) => {
-    console.error('Submit failed:', error);
-  }
-}));
+registerAction(
+	submitPlugin({
+		onSuccess: (data, context) => {
+			console.log('Form submitted:', data);
+		},
+		onError: (error, context) => {
+			console.error('Submit failed:', error);
+		},
+	}),
+);
 
-registerAction(notificationPlugin({
-  onSuccess: (message) => alert(message),
-  onError: (message) => alert(message)
-}));
+registerAction(
+	notificationPlugin({
+		onSuccess: (message) => alert(message),
+		onError: (message) => alert(message),
+	}),
+);
 
 // Define actions in your form config
 const contactForm: FormConfig = {
-  id: 'contact-form',
-  title: 'Contact Us',
-  steps: [
-    {
-      id: 'contact-step',
-      title: 'Your Details',
-      elements: [
-        {
-          id: 'input',
-          inputType: 'email',
-          id: 'email',
-          name: 'email',
-          label: 'Email'
-        }
-      ]
-    }
-  ],
-  actions: [
-    {
-      id: 'submit-form',
-      $type: 'submit',
-      endpoint: '/api/contact',
-      method: 'POST'
-    },
-    {
-      id: 'success-notification',
-      $type: 'show_notification',
-      message: 'Thanks for contacting us!',
-      variant: 'success',
-      triggers: ['form_submit_success'] // Only show after successful submit
-    }
-  ]
+	id: 'contact-form',
+	title: 'Contact Us',
+	steps: [
+		{
+			id: 'contact-step',
+			title: 'Your Details',
+			elements: [
+				{
+					id: 'input',
+					inputType: 'email',
+					id: 'email',
+					name: 'email',
+					label: 'Email',
+				},
+			],
+		},
+	],
+	actions: [
+		{
+			id: 'submit-form',
+			$type: 'submit',
+			endpoint: '/api/contact',
+			method: 'POST',
+		},
+		{
+			id: 'success-notification',
+			$type: 'show_notification',
+			message: 'Thanks for contacting us!',
+			variant: 'success',
+			triggers: ['form_submit_success'], // Only show after successful submit
+		},
+	],
 };
 ```
 
@@ -82,27 +87,30 @@ const contactForm: FormConfig = {
 Actions respond to specific events. Here are the actual triggers you can use:
 
 ### Form Events
-- **`form_mount`** - Form initialization  
+
+- **`form_mount`** - Form initialization
 - **`form_change`** - Any field changes
 - **`form_submit`** - Form submission starts
 
-### Submit Events  
+### Submit Events
+
 - **`form_submit_start`** - Submit begins (internal)
 - **`form_submit_success`** - Submit succeeded (internal)
 - **`form_submit_error`** - Submit failed (internal)
 - **`form_submit_complete`** - Submit finished (internal)
 
 ### Multi-step Events
+
 - **`step_change`** - Navigation between steps
 - **`step_submit`** - Step submission
 - **`step_enter`** - Entering a step
-- **`step_leave`** - Leaving a step  
+- **`step_leave`** - Leaving a step
 - **`step_view`** - Step becomes visible
 
-<CodePreview 
-  className="unprose"
-  fileName="action-triggers.ts"
-  code={`// Actions can specify custom triggers
+<CodePreview
+	className="unprose"
+	fileName="action-triggers.ts"
+	code={`// Actions can specify custom triggers
 const formWithTriggers: FormConfig = {
   id: 'multi-step-form',
   // ... form config
@@ -134,6 +142,7 @@ const formWithTriggers: FormConfig = {
 The system comes with several plugin types:
 
 ### Submit Actions
+
 Handle form submissions to APIs:
 
 ```typescript
@@ -147,7 +156,8 @@ Handle form submissions to APIs:
 }
 ```
 
-### Notification Actions  
+### Notification Actions
+
 Show messages to users:
 
 ```typescript
@@ -162,6 +172,7 @@ Show messages to users:
 ```
 
 ### Reset Actions
+
 Clear form data:
 
 ```typescript
@@ -172,9 +183,11 @@ Clear form data:
   confirmMessage: 'Clear all data?'
 }
 ```
+
 />
 
 ### Auto-save Actions
+
 Save drafts automatically:
 
 ```typescript
@@ -195,44 +208,48 @@ import { registerAction } from '@/lib/form-engine/actions/action-registry';
 import { submitPlugin, notificationPlugin } from '@/lib/form-engine/actions/plugins';
 
 // Configure submit behavior
-registerAction(submitPlugin({
-  // Custom request handling
-  request: async (url, options) => {
-    return fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        'Authorization': 'Bearer ' + getAuthToken()
-      }
-    });
-  },
-  
-  // Transform data before sending
-  transformData: (data, context) => ({
-    ...data,
-    timestamp: new Date().toISOString(),
-    formId: context.formId
-  }),
-  
-  // Success callback
-  onSuccess: (data, context) => {
-    console.log('Form submitted:', data);
-    gtag('event', 'form_submit', { form_id: context.formId });
-  },
-  
-  // Error callback  
-  onError: (error, context) => {
-    console.error('Submit failed:', error);
-    // Could send to error tracking service
-  }
-}));
+registerAction(
+	submitPlugin({
+		// Custom request handling
+		request: async (url, options) => {
+			return fetch(url, {
+				...options,
+				headers: {
+					...options.headers,
+					Authorization: 'Bearer ' + getAuthToken(),
+				},
+			});
+		},
+
+		// Transform data before sending
+		transformData: (data, context) => ({
+			...data,
+			timestamp: new Date().toISOString(),
+			formId: context.formId,
+		}),
+
+		// Success callback
+		onSuccess: (data, context) => {
+			console.log('Form submitted:', data);
+			gtag('event', 'form_submit', { form_id: context.formId });
+		},
+
+		// Error callback
+		onError: (error, context) => {
+			console.error('Submit failed:', error);
+			// Could send to error tracking service
+		},
+	}),
+);
 
 // Configure notifications
-registerAction(notificationPlugin({
-  onSuccess: (message) => toast.success(message),
-  onError: (message) => toast.error(message),
-  onWarning: (message) => toast.warning(message)
-}));
+registerAction(
+	notificationPlugin({
+		onSuccess: (message) => toast.success(message),
+		onError: (message) => toast.error(message),
+		onWarning: (message) => toast.warning(message),
+	}),
+);
 ```
 
 ## How It Works Internally
@@ -240,7 +257,7 @@ registerAction(notificationPlugin({
 When a form event occurs (like submission), the FormEngine:
 
 1. **Finds matching actions** - Looks for actions with matching triggers
-2. **Validates configuration** - Uses Zod schemas to validate action config  
+2. **Validates configuration** - Uses Zod schemas to validate action config
 3. **Executes sequentially** - Runs actions one after another
 4. **Handles results** - Processes success/error outcomes
 5. **Triggers follow-up** - May trigger additional actions (like `submit_success`)
@@ -248,15 +265,15 @@ When a form event occurs (like submission), the FormEngine:
 ```typescript
 // Example: Form submission flow
 // 1. User clicks submit
-// 2. FormEngine finds actions with 'form_submit' trigger  
+// 2. FormEngine finds actions with 'form_submit' trigger
 // 3. Executes submit action
 // 4. On success, triggers 'form_submit_success' actions
 // 5. Notification and reset actions run
 
 const executionFlow = {
-  'form_submit': ['submit-form'],           // Submit to API
-  'form_submit_success': ['show-notification', 'reset-form'], // Follow-up actions
-  'form_submit_error': ['show-error']            // Error handling
+	form_submit: ['submit-form'], // Submit to API
+	form_submit_success: ['show-notification', 'reset-form'], // Follow-up actions
+	form_submit_error: ['show-error'], // Error handling
 };
 ```
 
@@ -270,42 +287,42 @@ import { z } from 'zod';
 
 // Define your action schema
 const MyActionSchema = z.object({
-  id: z.string(),
-  type: z.literal('my_action'),
-  customProperty: z.string(),
-  enabled: z.boolean().default(true)
+	id: z.string(),
+	type: z.literal('my_action'),
+	customProperty: z.string(),
+	enabled: z.boolean().default(true),
 });
 
 // Register the action handler
 registerAction({
-  type: 'my_action',
-  schema: MyActionSchema,
-  defaultTriggers: ['form_submit'],
-  handler: async (action, context) => {
-    console.log('Custom action executed!', {
-      action: action.customProperty,
-      formId: context.formId,
-      formData: context.formData
-    });
-    
-    // Do your custom logic here
-    
-    return {
-      success: true,
-      message: 'Custom action completed'
-    };
-  }
+	type: 'my_action',
+	schema: MyActionSchema,
+	defaultTriggers: ['form_submit'],
+	handler: async (action, context) => {
+		console.log('Custom action executed!', {
+			action: action.customProperty,
+			formId: context.formId,
+			formData: context.formData,
+		});
+
+		// Do your custom logic here
+
+		return {
+			success: true,
+			message: 'Custom action completed',
+		};
+	},
 });
 
 // Use in form config
 const formWithCustomAction: FormConfig = {
-  actions: [
-    {
-      id: 'my-custom-action',
-      type: 'my_action',
-      customProperty: 'Hello World'
-    }
-  ]
+	actions: [
+		{
+			id: 'my-custom-action',
+			type: 'my_action',
+			customProperty: 'Hello World',
+		},
+	],
 };
 ```
 
@@ -316,16 +333,16 @@ Actions execute sequentially in the order they're defined. This prevents race co
 ```typescript
 // Actions run in order
 const formConfig: FormConfig = {
-  actions: [
-    { id: 'submit-form', $type: 'submit', endpoint: '/api/submit' },
-    { id: 'show-success', $type: 'show_notification', triggers: ['form_submit_success'] },
-    { id: 'reset-form', $type: 'reset', triggers: ['form_submit_success'] }
-  ]
+	actions: [
+		{ id: 'submit-form', $type: 'submit', endpoint: '/api/submit' },
+		{ id: 'show-success', $type: 'show_notification', triggers: ['form_submit_success'] },
+		{ id: 'reset-form', $type: 'reset', triggers: ['form_submit_success'] },
+	],
 };
 
 // Execution flow:
 // 1. Submit action runs first
-// 2. If successful, triggers 'form_submit_success' 
+// 2. If successful, triggers 'form_submit_success'
 // 3. Success notification shows
 // 4. Form resets
 // All happen sequentially, not in parallel
@@ -335,7 +352,7 @@ const formConfig: FormConfig = {
 
 ### Submit with Notifications
 
-```typescript
+````typescript
 const formWithNotifications: FormConfig = {
   actions: [
     {
@@ -353,7 +370,7 @@ const formWithNotifications: FormConfig = {
       triggers: ['form_submit_success']
     },
     {
-      id: 'error-notification', 
+      id: 'error-notification',
       $type: 'show_notification',
       message: 'Please try again',
       variant: 'error',
@@ -377,7 +394,7 @@ const formWithAutoSave: FormConfig = {
     },
     {
       id: 'submit-form',
-      $type: 'submit', 
+      $type: 'submit',
       endpoint: '/api/contact'
     },
     {
@@ -389,6 +406,6 @@ const formWithAutoSave: FormConfig = {
     }
   ]
 };
-```
+````
 
 That's how Form Engine actions work - register the plugins you need, define actions in your form config, and let the system handle the execution flow. The plugin system keeps things flexible while the sequential execution ensures predictable behavior.

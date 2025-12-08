@@ -28,14 +28,12 @@ function SelectValue({
 	children,
 	options: chipData,
 	multiple,
-	values,
 	onRemoveValue,
 	...props
 }: ComponentProps<typeof BaseSelect.Value> & {
 	children?: ReactNode;
 	options?: Array<{ value: string; label: string }>;
 	multiple?: boolean;
-	values?: string[];
 	onRemoveValue?: (value: string) => void;
 }) {
 	return (

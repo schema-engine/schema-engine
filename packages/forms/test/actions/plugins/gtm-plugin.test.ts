@@ -1,6 +1,4 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
-import { FormEngineBuilder } from '@/builder';
-import type { FormEngine } from '@/engine/form-engine';
 import type { BuilderActionExecutionContext } from '@/types';
 import { gtmPlugin, GTMEventActionSchema, type GTMEventAction } from '@/actions/plugins/gtm.plugin';
 import { GTMTracker } from '@/tools/gtm-tracker';
@@ -34,11 +32,11 @@ interface GTMEvent {
 
 const mockDataLayer: GTMEvent[] = [];
 
-const originalGTMTracker = { ...GTMTracker };
+const originalGTMTracker = GTMTracker;
 
 function createGTMContext(
 	action: GTMEventActionInput,
-	overrides?: Partial<BuilderActionExecutionContext<GTMEventAction>>
+	overrides?: Partial<BuilderActionExecutionContext<GTMEventAction>>,
 ) {
 	const normalizedAction: GTMEventAction = {
 		...action,
@@ -65,7 +63,6 @@ function createGTMContext(
 }
 
 describe('GTMPlugin', () => {
-	let engine: FormEngine;
 	let originalWindow: any;
 
 	beforeEach(() => {
@@ -609,7 +606,7 @@ describe('GTMPlugin', () => {
 			const plugin = gtmPlugin();
 			globalThis.window = {} as any;
 
-			const originalPush = GTMTracker.push;
+			const originalPush = GTMTracker.push.bind(GTMTracker);
 			let pushCalled = false;
 
 			GTMTracker.push = (event: string, data: Record<string, any> = {}) => {
@@ -623,7 +620,6 @@ describe('GTMPlugin', () => {
 					timestamp: new Date().toISOString(),
 				});
 			};
-
 			const action: GTMEventActionInput = {
 				id: 'no-datalayer-test',
 				$type: 'gtm_event',

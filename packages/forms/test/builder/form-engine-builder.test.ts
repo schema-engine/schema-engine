@@ -1,14 +1,9 @@
-import { test, expect, describe, beforeEach } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { z } from 'zod';
-import { FormEngineBuilder } from '@/builder';
-import type {
-	ElementRegistration,
-	LayoutRegistration,
-	StepperRegistration,
-	BuilderActionRegistration,
-} from '@/types';
+import { FormComposer } from '@/builder';
+import type { InputRegistration, LayoutRegistration, StepperRegistration, BuilderActionRegistration } from '@/types';
 
-describe('FormEngineBuilder', () => {
+describe('FormComposer', () => {
 	describe('Element Registration', () => {
 		test('should register a single element', () => {
 			const textInputSchema = z.object({
@@ -16,7 +11,7 @@ describe('FormEngineBuilder', () => {
 				label: z.string(),
 			});
 
-			const textInputRegistration: ElementRegistration<z.infer<typeof textInputSchema>> = {
+			const textInputRegistration: InputRegistration<'text', z.infer<typeof textInputSchema>> = {
 				$type: 'text',
 				schema: textInputSchema,
 				metadata: {
@@ -25,37 +20,37 @@ describe('FormEngineBuilder', () => {
 					category: 'input',
 					icon: 'text',
 				},
-				render: (props) => props,
+				render: () => {},
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			const result = builder.addElement(textInputRegistration);
 
-			expect(result).toBeInstanceOf(FormEngineBuilder);
+			expect(result).toBeInstanceOf(FormComposer);
 		});
 
 		test('should register multiple elements', () => {
-			const textInputRegistration: ElementRegistration = {
+			const textInputRegistration: InputRegistration = {
 				$type: 'text',
 				schema: z.object({ name: z.string() }),
 				metadata: {
 					name: 'Text Input',
 					category: 'input',
 				},
-				render: (props) => props,
+				render: () => {},
 			};
 
-			const emailInputRegistration: ElementRegistration = {
+			const emailInputRegistration: InputRegistration = {
 				$type: 'email',
 				schema: z.object({ name: z.string() }),
 				metadata: {
 					name: 'Email Input',
 					category: 'input',
 				},
-				render: (props) => props,
+				render: () => {},
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			builder.addElements([textInputRegistration, emailInputRegistration]);
 
 			const engine = builder.build();
@@ -64,27 +59,27 @@ describe('FormEngineBuilder', () => {
 		});
 
 		test('should override duplicate element id with warning', () => {
-			const registration1: ElementRegistration = {
+			const registration1: InputRegistration = {
 				$type: 'text',
 				schema: z.object({}),
 				metadata: {
 					name: 'Text Input',
 					category: 'input',
 				},
-				render: (props) => props,
+				render: () => {},
 			};
 
-			const registration2: ElementRegistration = {
+			const registration2: InputRegistration = {
 				$type: 'text',
 				schema: z.object({}),
 				metadata: {
 					name: 'Custom Text Input',
 					category: 'input',
 				},
-				render: (props) => props,
+				render: () => {},
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			builder.addElement(registration1);
 			builder.addElement(registration2);
 
@@ -94,35 +89,35 @@ describe('FormEngineBuilder', () => {
 		});
 
 		test('should support all element categories', () => {
-			const inputElement: ElementRegistration = {
+			const inputElement: InputRegistration = {
 				$type: 'text',
 				schema: z.object({ name: z.string() }),
 				metadata: { name: 'Text', category: 'input' },
-				render: (props) => props,
+				render: () => {},
 			};
 
-			const contentElement: ElementRegistration = {
+			const contentElement: InputRegistration = {
 				$type: 'heading',
 				schema: z.object({ text: z.string() }),
 				metadata: { name: 'Heading', category: 'content' },
-				render: (props) => props,
+				render: () => {},
 			};
 
-			const decorationElement: ElementRegistration = {
+			const decorationElement: InputRegistration = {
 				$type: 'divider',
 				schema: z.object({}),
 				metadata: { name: 'Divider', category: 'decoration' },
-				render: (props) => props,
+				render: () => {},
 			};
 
-			const interactiveElement: ElementRegistration = {
+			const interactiveElement: InputRegistration = {
 				$type: 'button',
 				schema: z.object({ label: z.string() }),
 				metadata: { name: 'Button', category: 'interactive' },
-				render: (props) => props,
+				render: () => {},
 			};
 
-			const builder = new FormEngineBuilder()
+			const builder = new FormComposer()
 				.addElement(inputElement)
 				.addElement(contentElement)
 				.addElement(decorationElement)
@@ -146,13 +141,13 @@ describe('FormEngineBuilder', () => {
 					name: 'Card Layout',
 					description: 'Display form in a card',
 				},
-				render: (props) => props,
+				render: () => {},
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			const result = builder.addLayout(cardLayoutRegistration);
 
-			expect(result).toBeInstanceOf(FormEngineBuilder);
+			expect(result).toBeInstanceOf(FormComposer);
 		});
 
 		test('should register multiple layouts', () => {
@@ -160,17 +155,17 @@ describe('FormEngineBuilder', () => {
 				$type: 'card',
 				schema: z.object({}),
 				metadata: { name: 'Card Layout' },
-				render: (props) => props,
+				render: () => {},
 			};
 
 			const gridLayout: LayoutRegistration = {
 				$type: 'grid',
 				schema: z.object({}),
 				metadata: { name: 'Grid Layout' },
-				render: (props) => props,
+				render: () => {},
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			builder.addLayouts([cardLayout, gridLayout]);
 
 			const engine = builder.build();
@@ -183,17 +178,17 @@ describe('FormEngineBuilder', () => {
 				$type: 'card',
 				schema: z.object({}),
 				metadata: { name: 'Card Layout' },
-				render: (props) => props,
+				render: () => {},
 			};
 
 			const registration2: LayoutRegistration = {
 				$type: 'card',
 				schema: z.object({}),
 				metadata: { name: 'Custom Card Layout' },
-				render: (props) => props,
+				render: () => {},
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			builder.addLayout(registration1);
 			builder.addLayout(registration2);
 
@@ -212,13 +207,13 @@ describe('FormEngineBuilder', () => {
 					name: 'Wizard Stepper',
 					description: 'Step-by-step wizard',
 				},
-				render: (props) => props,
+				render: () => {},
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			const result = builder.addStepper(wizardStepperRegistration);
 
-			expect(result).toBeInstanceOf(FormEngineBuilder);
+			expect(result).toBeInstanceOf(FormComposer);
 		});
 
 		test('should register multiple steppers', () => {
@@ -226,17 +221,17 @@ describe('FormEngineBuilder', () => {
 				$type: 'wizard',
 				schema: z.object({}),
 				metadata: { name: 'Wizard' },
-				render: (props) => props,
+				render: () => {},
 			};
 
 			const tabsStepper: StepperRegistration = {
 				$type: 'tabs',
 				schema: z.object({}),
 				metadata: { name: 'Tabs' },
-				render: (props) => props,
+				render: () => {},
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			builder.addSteppers([wizardStepper, tabsStepper]);
 
 			const engine = builder.build();
@@ -249,17 +244,17 @@ describe('FormEngineBuilder', () => {
 				$type: 'wizard',
 				schema: z.object({}),
 				metadata: { name: 'Wizard' },
-				render: (props) => props,
+				render: () => {},
 			};
 
 			const registration2: StepperRegistration = {
 				$type: 'wizard',
 				schema: z.object({}),
 				metadata: { name: 'Custom Wizard' },
-				render: (props) => props,
+				render: () => {},
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			builder.addStepper(registration1);
 			builder.addStepper(registration2);
 
@@ -281,10 +276,10 @@ describe('FormEngineBuilder', () => {
 				execute: async () => ({ success: true }),
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			const result = builder.addAction(submitActionRegistration);
 
-			expect(result).toBeInstanceOf(FormEngineBuilder);
+			expect(result).toBeInstanceOf(FormComposer);
 		});
 
 		test('should register multiple actions', () => {
@@ -302,7 +297,7 @@ describe('FormEngineBuilder', () => {
 				execute: async () => ({ success: true }),
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			builder.addActions([submitAction, resetAction]);
 
 			const engine = builder.build();
@@ -325,7 +320,7 @@ describe('FormEngineBuilder', () => {
 				execute: async () => ({ success: true, custom: true }),
 			};
 
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			builder.addAction(registration1);
 			builder.addAction(registration2);
 
@@ -337,25 +332,25 @@ describe('FormEngineBuilder', () => {
 
 	describe('Fluent API / Method Chaining', () => {
 		test('should support method chaining', () => {
-			const element: ElementRegistration = {
+			const element: InputRegistration = {
 				$type: 'text',
 				schema: z.object({}),
 				metadata: { name: 'Text', category: 'input' },
-				render: (props) => props,
+				render: () => {},
 			};
 
 			const layout: LayoutRegistration = {
 				$type: 'card',
 				schema: z.object({}),
 				metadata: { name: 'Card' },
-				render: (props) => props,
+				render: () => {},
 			};
 
 			const stepper: StepperRegistration = {
 				$type: 'wizard',
 				schema: z.object({}),
 				metadata: { name: 'Wizard' },
-				render: (props) => props,
+				render: () => {},
 			};
 
 			const action: BuilderActionRegistration = {
@@ -365,7 +360,7 @@ describe('FormEngineBuilder', () => {
 				execute: async () => ({ success: true }),
 			};
 
-			const builder = new FormEngineBuilder()
+			const builder = new FormComposer()
 				.addElement(element)
 				.addLayout(layout)
 				.addStepper(stepper)
@@ -382,7 +377,7 @@ describe('FormEngineBuilder', () => {
 
 	describe('Build Method', () => {
 		test('should create immutable FormEngine instance', () => {
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			const engine = builder.build();
 
 			expect(engine).toBeDefined();
@@ -391,7 +386,7 @@ describe('FormEngineBuilder', () => {
 		});
 
 		test('should build empty engine', () => {
-			const builder = new FormEngineBuilder();
+			const builder = new FormComposer();
 			const engine = builder.build();
 
 			expect(engine.getAllElements()).toHaveLength(0);
@@ -401,27 +396,26 @@ describe('FormEngineBuilder', () => {
 		});
 
 		test('should preserve all registrations after build', () => {
-			const element: ElementRegistration = {
+			const element: InputRegistration = {
 				$type: 'text',
 				schema: z.object({}),
 				metadata: { name: 'Text', category: 'input' },
-				render: (props) => props,
+				render: () => {},
 			};
 
-		const builder = new FormEngineBuilder().addElement(element);
-		const engine = builder.build();
+			const builder = new FormComposer().addElement(element);
+			const engine = builder.build();
 
-		const retrieved = engine.getElement('text');
-		expect(retrieved).toBeDefined();
-		expect(retrieved?.$type).toBe('text');
-		expect(retrieved?.metadata.name).toBe('Text');
+			const retrieved = engine.getElement('text');
+			expect(retrieved).toBeDefined();
+			expect(retrieved?.$type).toBe('text');
+			expect(retrieved?.metadata.name).toBe('Text');
 		});
 	});
 
 	describe('Complete Integration', () => {
 		test('should create fully configured form engine', () => {
-			// Elements
-			const textInput: ElementRegistration = {
+			const textInput: InputRegistration = {
 				$type: 'text',
 				schema: z.object({ name: z.string(), label: z.string() }),
 				metadata: {
@@ -430,10 +424,10 @@ describe('FormEngineBuilder', () => {
 					category: 'input',
 					icon: 'text',
 				},
-				render: (props) => props,
+				render: () => {},
 			};
 
-			const emailInput: ElementRegistration = {
+			const emailInput: InputRegistration = {
 				$type: 'email',
 				schema: z.object({ name: z.string(), label: z.string() }),
 				metadata: {
@@ -442,10 +436,10 @@ describe('FormEngineBuilder', () => {
 					category: 'input',
 					icon: 'email',
 				},
-				render: (props) => props,
+				render: () => {},
 			};
 
-			const heading: ElementRegistration = {
+			const heading: InputRegistration = {
 				$type: 'heading',
 				schema: z.object({ text: z.string(), level: z.number() }),
 				metadata: {
@@ -454,10 +448,9 @@ describe('FormEngineBuilder', () => {
 					category: 'content',
 					icon: 'heading',
 				},
-				render: (props) => props,
+				render: () => {},
 			};
 
-			// Layouts
 			const cardLayout: LayoutRegistration = {
 				$type: 'card',
 				schema: z.object({ maxWidth: z.string().optional() }),
@@ -466,10 +459,9 @@ describe('FormEngineBuilder', () => {
 					description: 'Card-based layout',
 					icon: 'card',
 				},
-				render: (props) => props,
+				render: () => {},
 			};
 
-			// Steppers
 			const wizardStepper: StepperRegistration = {
 				$type: 'wizard',
 				schema: z.object({ showProgress: z.boolean().optional() }),
@@ -478,10 +470,9 @@ describe('FormEngineBuilder', () => {
 					description: 'Step-by-step wizard',
 					icon: 'wizard',
 				},
-				render: (props) => props,
+				render: () => {},
 			};
 
-			// Actions
 			const submitAction: BuilderActionRegistration = {
 				$type: 'submit',
 				schema: z.object({ endpoint: z.string(), method: z.string() }),
@@ -490,13 +481,12 @@ describe('FormEngineBuilder', () => {
 					description: 'Submit form to endpoint',
 					icon: 'send',
 				},
-				execute: async (context) => {
+				execute: async () => {
 					return { success: true, message: 'Form submitted' };
 				},
 			};
 
-			// Build engine
-			const engine = new FormEngineBuilder()
+			const engine = new FormComposer()
 				.addElements([textInput, emailInput, heading])
 				.addLayout(cardLayout)
 				.addStepper(wizardStepper)
@@ -516,6 +506,155 @@ describe('FormEngineBuilder', () => {
 			expect(summary.layouts.ids).toContain('card');
 			expect(summary.steppers.ids).toContain('wizard');
 			expect(summary.actions.types).toContain('submit');
+		});
+	});
+
+	describe('clone()', () => {
+		test('should create independent copy of builder with all registrations', () => {
+			const textInput: InputRegistration = {
+				$type: 'text',
+				schema: z.object({ name: z.string() }),
+				metadata: { name: 'Text Input', category: 'input' },
+				render: () => {},
+			};
+
+			const cardLayout: LayoutRegistration = {
+				$type: 'card',
+				schema: z.object({ padding: z.number() }),
+				metadata: { name: 'Card Layout' },
+				render: () => {},
+			};
+
+			const wizardStepper: StepperRegistration = {
+				$type: 'wizard',
+				schema: z.object({ showProgress: z.boolean() }),
+				metadata: { name: 'Wizard' },
+				render: () => {},
+			};
+
+			const submitAction: BuilderActionRegistration = {
+				$type: 'submit',
+				schema: z.object({ url: z.string() }),
+				metadata: { name: 'Submit' },
+				execute: async () => ({ success: true }),
+			};
+
+			const originalBuilder = new FormComposer()
+				.addElement(textInput)
+				.addLayout(cardLayout)
+				.addStepper(wizardStepper)
+				.addAction(submitAction);
+
+			const clonedBuilder = originalBuilder.clone();
+
+			const originalEngine = originalBuilder.build();
+			const clonedEngine = clonedBuilder.build();
+
+			expect(originalEngine.getAllElements()).toHaveLength(1);
+			expect(clonedEngine.getAllElements()).toHaveLength(1);
+			expect(originalEngine.getAllLayouts()).toHaveLength(1);
+			expect(clonedEngine.getAllLayouts()).toHaveLength(1);
+			expect(originalEngine.getAllSteppers()).toHaveLength(1);
+			expect(clonedEngine.getAllSteppers()).toHaveLength(1);
+			expect(originalEngine.getAllActions()).toHaveLength(1);
+			expect(clonedEngine.getAllActions()).toHaveLength(1);
+		});
+
+		test('should create independent registries that do not affect original', () => {
+			const textInput: InputRegistration = {
+				$type: 'text',
+				schema: z.object({ name: z.string() }),
+				metadata: { name: 'Text Input', category: 'input' },
+				render: () => {},
+			};
+
+			const emailInput: InputRegistration = {
+				$type: 'email',
+				schema: z.object({ name: z.string() }),
+				metadata: { name: 'Email Input', category: 'input' },
+				render: () => {},
+			};
+
+			const originalBuilder = new FormComposer().addElement(textInput);
+
+			const clonedBuilder = originalBuilder.clone().addElement(emailInput);
+
+			const originalEngine = originalBuilder.build();
+			const clonedEngine = clonedBuilder.build();
+
+			expect(originalEngine.getAllElements()).toHaveLength(1);
+			expect(originalEngine.getElement('text')).toBeDefined();
+			expect(originalEngine.getElement('email')).toBeUndefined();
+
+			expect(clonedEngine.getAllElements()).toHaveLength(2);
+			expect(clonedEngine.getElement('text')).toBeDefined();
+			expect(clonedEngine.getElement('email')).toBeDefined();
+		});
+
+		test('should allow composition pattern with clone', () => {
+			const textInput: InputRegistration = {
+				$type: 'text',
+				schema: z.object({ name: z.string() }),
+				metadata: { name: 'Text Input', category: 'input' },
+				render: () => {},
+			};
+
+			const numberInput: InputRegistration = {
+				$type: 'number',
+				schema: z.object({ name: z.string() }),
+				metadata: { name: 'Number Input', category: 'input' },
+				render: () => {},
+			};
+
+			const submitAction: BuilderActionRegistration = {
+				$type: 'submit',
+				schema: z.object({ url: z.string() }),
+				metadata: { name: 'Submit' },
+				execute: async () => ({ success: true }),
+			};
+
+			const logAction: BuilderActionRegistration = {
+				$type: 'log',
+				schema: z.object({ message: z.string() }),
+				metadata: { name: 'Log' },
+				execute: async () => ({ success: true }),
+			};
+
+			const baseBuilder = new FormComposer().addElement(textInput).addElement(numberInput);
+
+			const formBuilderWithSubmit = baseBuilder.clone().addAction(submitAction);
+
+			const formBuilderWithLog = baseBuilder.clone().addAction(logAction);
+
+			const engineWithSubmit = formBuilderWithSubmit.build();
+			const engineWithLog = formBuilderWithLog.build();
+
+			expect(engineWithSubmit.getAllElements()).toHaveLength(2);
+			expect(engineWithSubmit.getAllActions()).toHaveLength(1);
+			expect(engineWithSubmit.getAction('submit')).toBeDefined();
+			expect(engineWithSubmit.getAction('log')).toBeUndefined();
+
+			expect(engineWithLog.getAllElements()).toHaveLength(2);
+			expect(engineWithLog.getAllActions()).toHaveLength(1);
+			expect(engineWithLog.getAction('log')).toBeDefined();
+			expect(engineWithLog.getAction('submit')).toBeUndefined();
+		});
+
+		test('should clone empty builder correctly', () => {
+			const originalBuilder = new FormComposer();
+			const clonedBuilder = originalBuilder.clone();
+
+			const originalEngine = originalBuilder.build();
+			const clonedEngine = clonedBuilder.build();
+
+			expect(originalEngine.getAllElements()).toHaveLength(0);
+			expect(clonedEngine.getAllElements()).toHaveLength(0);
+			expect(originalEngine.getAllLayouts()).toHaveLength(0);
+			expect(clonedEngine.getAllLayouts()).toHaveLength(0);
+			expect(originalEngine.getAllSteppers()).toHaveLength(0);
+			expect(clonedEngine.getAllSteppers()).toHaveLength(0);
+			expect(originalEngine.getAllActions()).toHaveLength(0);
+			expect(clonedEngine.getAllActions()).toHaveLength(0);
 		});
 	});
 });

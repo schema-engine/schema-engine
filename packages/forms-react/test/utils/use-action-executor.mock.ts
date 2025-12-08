@@ -11,23 +11,23 @@ export const mockDispatch = mock(
 		_actions: FormActionConfig[],
 		_trigger: FormActionTrigger,
 		_context: BuilderActionExecutionContext,
-		_metadata?: Record<string, unknown>
-	): Promise<ActionExecutionResult[]> => Promise.resolve([{ success: true }])
+		_metadata?: Record<string, unknown>,
+	): Promise<ActionExecutionResult[]> => Promise.resolve([{ success: true }]),
 );
 
 export const mockDispatchSync = mock(
 	(
-		_actions: FormActionConfig[],
-		_trigger: FormActionTrigger,
-		_context: BuilderActionExecutionContext,
-		_metadata?: Record<string, unknown>
+		actions: FormActionConfig[],
+		trigger: FormActionTrigger,
+		context: BuilderActionExecutionContext,
+		metadata?: Record<string, unknown>,
 	): void => {
-		void mockDispatch(_actions, _trigger, _context, _metadata);
-	}
+		void mockDispatch(actions, trigger, context, metadata);
+	},
 );
 
 export function setupActionExecutorMock() {
-	mock.module('@/hooks/use-action-dispatcher', () => ({
+	void mock.module('@/hooks/use-action-dispatcher', () => ({
 		useActionDispatcher: () => ({
 			dispatch: mockDispatch,
 			dispatchSync: mockDispatchSync,

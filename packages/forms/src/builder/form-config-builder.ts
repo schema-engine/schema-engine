@@ -3,6 +3,8 @@ import type { ElementRegistry, LayoutRegistry, StepperRegistry } from '@/registr
 import type { ActionRegistry } from '@schema-engine/actions';
 import type { FormConfig } from '@/schemas/form-config';
 import type { PartialFormConfig, BuilderFormStep } from './types';
+import type { BuilderActionExecutionContext } from '@/types';
+import type { FormActionTrigger } from '@/actions/triggers';
 import { z } from 'zod';
 
 /**
@@ -13,12 +15,13 @@ import { z } from 'zod';
  *
  * @example
  * ```typescript
- * const builder = new FormEngineBuilder()
+ * const engine = new FormComposer()
  *   .addElement(inputRegistration)
  *   .addStepper(wizardStepperRegistration)
- *   .addAction(submitActionRegistration);
+ *   .addAction(submitActionRegistration)
+ *   .build();
  *
- * const formConfig = builder.createForm()
+ * const formConfig = engine.createFormDefinition()
  *   .setId('contact-form')
  *   .setTitle('Contact Us')
  *   .addStep({ id: 'step-1', title: 'Personal Info' })
@@ -42,7 +45,7 @@ export class FormConfigBuilder<
 		private elementRegistry: ElementRegistry,
 		private layoutRegistry: LayoutRegistry,
 		private stepperRegistry: StepperRegistry,
-		private actionRegistry: ActionRegistry,
+		private actionRegistry: ActionRegistry<BuilderActionExecutionContext, FormActionTrigger>,
 	) {
 		this.config = {
 			steps: [],
@@ -186,11 +189,11 @@ export class FormConfigBuilder<
 				logger.error(`Invalid config for element "${id}"`, { errors: error.issues });
 				throw new Error(
 					`Invalid configuration for element "${id}": ${error.issues.map((e) => e.message).join(', ')}`,
+					{ cause: error },
 				);
 			}
 			throw error;
 		}
-
 		return this;
 	}
 
@@ -222,11 +225,11 @@ export class FormConfigBuilder<
 				logger.error(`Invalid config for layout "${id}"`, { errors: error.issues });
 				throw new Error(
 					`Invalid configuration for layout "${id}": ${error.issues.map((e) => e.message).join(', ')}`,
+					{ cause: error },
 				);
 			}
 			throw error;
 		}
-
 		return this;
 	}
 
@@ -245,7 +248,7 @@ export class FormConfigBuilder<
 		}
 
 		try {
-			const validated = registration.schema.parse({ ...((config as object) || {}), $type: id });
+			const validated = registration.schema.parse({ ...(config as object), $type: id });
 			this.config.stepper = validated as FormEngine.StepperConfig;
 
 			logger.debug(`Set stepper: ${id}`, { config: validated });
@@ -254,11 +257,11 @@ export class FormConfigBuilder<
 				logger.error(`Invalid config for stepper "${id}"`, { errors: error.issues });
 				throw new Error(
 					`Invalid configuration for stepper "${id}": ${error.issues.map((e) => e.message).join(', ')}`,
+					{ cause: error },
 				);
 			}
 			throw error;
 		}
-
 		return this;
 	}
 
@@ -281,7 +284,7 @@ export class FormConfigBuilder<
 		}
 
 		try {
-			const validated = registration.schema.parse({ ...((config as object) || {}), $type: type });
+			const validated = registration.schema.parse({ ...(config as object), $type: type });
 
 			if (!this.currentStep.actions) {
 				this.currentStep.actions = [];
@@ -294,11 +297,11 @@ export class FormConfigBuilder<
 				logger.error(`Invalid config for action "${type}"`, { errors: error.issues });
 				throw new Error(
 					`Invalid configuration for action "${type}": ${error.issues.map((e) => e.message).join(', ')}`,
+					{ cause: error },
 				);
 			}
 			throw error;
 		}
-
 		return this;
 	}
 
@@ -317,7 +320,7 @@ export class FormConfigBuilder<
 		}
 
 		try {
-			const validated = registration.schema.parse({ ...((config as object) || {}), $type: type });
+			const validated = registration.schema.parse({ ...(config as object), $type: type });
 
 			if (!this.config.actions) {
 				this.config.actions = [];
@@ -330,11 +333,11 @@ export class FormConfigBuilder<
 				logger.error(`Invalid config for action "${type}"`, { errors: error.issues });
 				throw new Error(
 					`Invalid configuration for action "${type}": ${error.issues.map((e) => e.message).join(', ')}`,
+					{ cause: error },
 				);
 			}
 			throw error;
 		}
-
 		return this;
 	}
 

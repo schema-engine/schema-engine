@@ -17,39 +17,39 @@ interface TestConfig {
 }
 
 describe('ActionRegistry', () => {
-	let registry: ActionRegistry<TestConfig, TestContext, TestTrigger>;
+	let registry: ActionRegistry<TestContext, TestTrigger>;
 
-	const mockAction: ActionRegistration<'log', TestConfig, TestContext, TestTrigger> = {
+	const mockAction: ActionRegistration<'log', TestContext, TestTrigger> = {
 		$type: 'log',
 		schema: z.object({
 			id: z.string(),
 			$type: z.literal('log'),
 			message: z.string(),
-		}) as any,
+		}),
 		metadata: {
 			name: 'Log Action',
 			description: 'Logs a message',
 			defaultTriggers: ['submit' as TestTrigger],
 		},
-		handler: async (context) => {
+		execute: async (context) => {
 			console.log(context);
 			return { success: true };
 		},
 	};
 
-	const anotherAction: ActionRegistration<'api', TestConfig, TestContext, TestTrigger> = {
+	const anotherAction: ActionRegistration<'api', TestContext, TestTrigger> = {
 		$type: 'api',
 		schema: z.object({
 			id: z.string(),
 			$type: z.literal('api'),
 			url: z.string(),
-		}) as any,
+		}),
 		metadata: {
 			name: 'API Action',
 			description: 'Calls an API',
 			defaultTriggers: ['submit' as TestTrigger],
 		},
-		handler: async () => {
+		execute: async () => {
 			return { success: true };
 		},
 	};
@@ -76,7 +76,7 @@ describe('ActionRegistry', () => {
 		});
 
 		test('should override when registering duplicate type', () => {
-			const updated: ActionRegistration<'log', TestConfig, TestContext, TestTrigger> = {
+			const updated: ActionRegistration<'log', TestContext, TestTrigger> = {
 				...mockAction,
 				metadata: {
 					...mockAction.metadata,
@@ -163,19 +163,14 @@ describe('ActionRegistry', () => {
 		});
 
 		test('should return undefined when action has no default triggers', () => {
-			const actionWithoutTriggers: ActionRegistration<
-				'custom',
-				TestConfig,
-				TestContext,
-				TestTrigger
-			> = {
+			const actionWithoutTriggers: ActionRegistration<'custom', TestContext, TestTrigger> = {
 				$type: 'custom',
-				schema: z.object({}) as any,
+				schema: z.any(),
 				metadata: {
 					name: 'Custom Action',
 					description: 'A custom action',
 				},
-				handler: async () => ({ success: true }),
+				execute: async () => ({ success: true }),
 			};
 
 			registry.register(actionWithoutTriggers);

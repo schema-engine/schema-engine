@@ -4,9 +4,10 @@ import { SimpleInputDemo } from '@/components/demo/simple-input-demo';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-  title: 'Introduction - Why Form Engine? | Form Engine Documentation',
-  description: 'Discover the story behind Form Engine - born from frustration with existing form solutions and refined through real-world use.',
-})
+	title: 'Introduction - Why Form Engine? | Form Engine Documentation',
+	description:
+		'Discover the story behind Form Engine - born from frustration with existing form solutions and refined through real-world use.',
+});
 
 # Why Form Engine?
 
@@ -32,6 +33,7 @@ Form Engine was born from this frustration and refined through real-world use. I
 ## What Makes It Different?
 
 ### Complete Customization
+
 Bring your existing component library. Wrap it with our tools, and it instantly adapts to form schemas while getting all the React Hook Form goodness.
 
 ```typescript
@@ -56,58 +58,62 @@ defaultFormRegistry.register({
 ```
 
 ### JSON-Driven Everything
+
 Define complex forms with simple JSON schemas. No more writing repetitive JSX for similar forms.
 
 ```json
 {
-  "id": "contact",
-  "title": "Get In Touch",
-  "steps": [{
-    "id": "details",
-    "title": "Contact Details",
-    "elements": [
-      {
-        "type": "input",
-        "inputType": "text",
-        "id": "name",
-        "name": "name", 
-        "label": "Full Name",
-        "validation": [
-          { "type": "required", "message": "Name is required" }
-        ]
-      },
-      {
-        "type": "input",
-        "inputType": "email", 
-        "id": "email",
-        "name": "email",
-        "label": "Email",
-        "validation": [
-          { "type": "required", "message": "Email is required" },
-          { "type": "email", "message": "Please enter a valid email" }
-        ]
-      }
-    ]
-  }],
-  "actions": [
-    {
-      "id": "submit-contact",
-      "type": "submit",
-      "endpoint": "/api/contact",
-      "method": "POST",
-      "successMessage": "Thank you for contacting us!"
-    }
-  ]
+	"id": "contact",
+	"title": "Get In Touch",
+	"steps": [
+		{
+			"id": "details",
+			"title": "Contact Details",
+			"elements": [
+				{
+					"type": "input",
+					"inputType": "text",
+					"id": "name",
+					"name": "name",
+					"label": "Full Name",
+					"validation": [{ "type": "required", "message": "Name is required" }]
+				},
+				{
+					"type": "input",
+					"inputType": "email",
+					"id": "email",
+					"name": "email",
+					"label": "Email",
+					"validation": [
+						{ "type": "required", "message": "Email is required" },
+						{ "type": "email", "message": "Please enter a valid email" }
+					]
+				}
+			]
+		}
+	],
+	"actions": [
+		{
+			"id": "submit-contact",
+			"type": "submit",
+			"endpoint": "/api/contact",
+			"method": "POST",
+			"successMessage": "Thank you for contacting us!"
+		}
+	]
 }
 ```
 
 ### Registrable Everything
+
 Not just components—actions, validations, layouts. Build your own plugins and solutions that fit your exact needs.
 
 ### Zod Integration That Just Works
+
 Type-safe validation that just works. Define your schema once, get validation everywhere.
 
 ### Powerful Action System
+
 Perform complex operations at any point in your form lifecycle. Auto-save, analytics tracking, multi-step navigation—all through a pluggable action system.
 
 ## Philosophy
@@ -130,4 +136,3 @@ Ready to see what Form Engine can do? Let's start with installation and your fir
 - **[Components](/docs/components/how-it-works)** - Learn the registration system
 - **[Actions](/docs/actions/how-it-works)** - Discover the action architecture
 - **[Examples](/docs/examples/basic-forms)** - See real-world implementations
-

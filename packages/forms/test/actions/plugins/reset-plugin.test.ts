@@ -1,11 +1,6 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
-import type { FormEngine } from '@/engine/form-engine';
 import type { BuilderActionExecutionContext } from '@/types';
-import {
-	formResetPlugin,
-	FormResetActionSchema,
-	type FormResetAction,
-} from '@/actions/plugins/form-reset.plugin';
+import { formResetPlugin, FormResetActionSchema, type FormResetAction } from '@/actions/plugins/form-reset.plugin';
 import { GDPRConsent } from '@/tools/gdpr-consent';
 import { createMockBuilderContext, setupTestEnvironment } from '../__tools';
 
@@ -93,31 +88,6 @@ describe('ResetPlugin', () => {
 			expect(plugin.metadata.defaultTriggers).toEqual(['form_submit_success']);
 			expect(plugin.execute).toBeDefined();
 		});
-		test('should create plugin with custom configuration', () => {
-			let resetCalled = false;
-			let clearDraftCalled = false;
-			let confirmCalled = false;
-			let customResetCalled = false;
-
-			const plugin = formResetPlugin({
-				confirm: (message) => {
-					confirmCalled = true;
-					return true;
-				},
-				clearDraft: (formId) => {
-					clearDraftCalled = true;
-				},
-				resetForm: (context, resetToDefaults) => {
-					customResetCalled = true;
-				},
-				onReset: (context) => {
-					resetCalled = true;
-				},
-			});
-
-			expect(plugin.$type).toBe('reset');
-			expect(plugin.execute).toBeDefined();
-		});
 	});
 
 	describe('Action Execution', () => {
@@ -125,7 +95,7 @@ describe('ResetPlugin', () => {
 			let formResetCalled = false;
 
 			const plugin = formResetPlugin({
-				resetForm: (context, resetToDefaults) => {
+				resetForm: (context) => {
 					formResetCalled = true;
 					context.form.reset();
 				},
@@ -197,8 +167,7 @@ describe('ResetPlugin', () => {
 		});
 
 		test('should call custom reset handler', async () => {
-			let customResetContext: BuilderActionExecutionContext<FormResetAction> | undefined =
-				undefined;
+			let customResetContext: BuilderActionExecutionContext<FormResetAction> | undefined = undefined;
 			let customResetToDefaults = true;
 
 			const plugin = formResetPlugin({
@@ -299,7 +268,7 @@ describe('ResetPlugin', () => {
 			let confirmCalled = false;
 
 			const plugin = formResetPlugin({
-				confirm: (message) => {
+				confirm: () => {
 					confirmCalled = true;
 					return false;
 				},
@@ -355,7 +324,7 @@ describe('ResetPlugin', () => {
 			let confirmCalled = false;
 
 			const plugin = formResetPlugin({
-				confirm: (message) => {
+				confirm: () => {
 					confirmCalled = true;
 					return true;
 				},
@@ -426,7 +395,7 @@ describe('ResetPlugin', () => {
 	describe('Integration', () => {
 		test('should execute successfully with plugin', async () => {
 			const plugin = formResetPlugin({
-				onReset: (context) => {},
+				onReset: () => {},
 			});
 
 			const action: FormResetAction = {

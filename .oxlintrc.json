@@ -1,0 +1,73 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"categories": {
+		"correctness": "error",
+		"suspicious": "warn",
+		"pedantic": "off"
+	},
+	"plugins": [
+		"typescript",
+		"react",
+		"unicorn",
+		"jsx-a11y",
+		"import"
+	],
+	"ignorePatterns": [
+		"**/node_modules",
+		"**/dist",
+		"**/build",
+		"**/coverage",
+		"**/.eco",
+		"**/.next",
+		"**/.turbo",
+		"**/storybook-static",
+		"**/public/mockServiceWorker.js",
+		"apps/www/src/components/ui/**",
+		"apps/www/src/hooks/**",
+		"packages/forms-react/src/shadcn/**"
+	],
+	"rules": {
+		"typescript/no-explicit-any": "off",
+		"typescript/no-empty-interface": "off",
+		"typescript/no-namespace": "off",
+		"typescript/no-unsafe-type-assertion": "off",
+		"typescript/no-unnecessary-type-assertion": "off",
+		"typescript/no-extraneous-class": "off",
+		"react/no-children-prop": "off",
+		"react/jsx-key": "off",
+		"react/react-in-jsx-scope": "off",
+		"unicorn/no-static-only-class": "off",
+		"jsx-a11y/no-static-element-interactions": "off",
+		"jsx-a11y/label-has-associated-control": "off",
+		"jsx-a11y/no-autofocus": "off",
+		"import/no-duplicates": "error",
+		"import/no-unassigned-import": [
+			"error",
+			{
+				"allow": [
+					"**/*.css",
+					"**/node_modules/**",
+					"@/lib/form-engine-setup",
+					"@schema-engine/forms/schemas/validation/validation-registry",
+				]
+			}
+		]
+	},
+	"overrides": [
+		{
+			"files": [
+				"**/*.test.{ts,tsx,js,jsx}",
+				"**/*.stories.{ts,tsx,js,jsx}",
+				"**/test/**"
+			],
+			"rules": {
+				"max-lines-per-function": "off"
+			}
+		}
+	],
+	"env": {
+		"browser": true,
+		"node": true,
+		"es2022": true
+	}
+}

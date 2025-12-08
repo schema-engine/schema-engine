@@ -5,7 +5,7 @@
  * Tree-shakable library designed for maximum flexibility and performance.
  */
 
-export { FormEngineBuilder } from './builder';
+export { FormComposer } from './builder';
 export { FormEngine } from './engine';
 export type { EngineRegistries, FormEngineSchemaMetadata } from './engine';
 

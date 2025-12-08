@@ -61,7 +61,7 @@ export const SplitScreenLayout: React.FC<SplitScreenLayoutProps> = ({ children, 
 				{description ? <p className="split-screen-layout__step-description">{description}</p> : null}
 				<div className="split-screen-layout__side-content">{sideContent}</div>
 			</div>
-			<div className={mainVariants({ alignment: contentAlignment })}>{children as React.ReactNode}</div>
+			<div className={mainVariants({ alignment: contentAlignment })}>{children}</div>
 		</div>
 	);
 };

@@ -55,6 +55,25 @@ function BreakpointControls({ currentBreakpoint, onBreakpointChange }: Breakpoin
 	);
 }
 
+const getContainerWidth = (breakpoint: Breakpoint): string => {
+	switch (breakpoint) {
+		case 'default':
+			return '375px';
+		case 'sm':
+			return '640px';
+		case 'md':
+			return '768px';
+		case 'lg':
+			return '1024px';
+		case 'xl':
+			return '1280px';
+		case '2xl':
+			return '1536px';
+		default:
+			return '375px';
+	}
+};
+
 /**
  * Viewport preview wrapper component
  * Provides a responsive preview by simulating different viewport sizes
@@ -67,26 +86,6 @@ export function ViewportPreview({
 	title = 'Responsive Preview',
 }: ViewportPreviewProps) {
 	const [currentBreakpoint, setCurrentBreakpoint] = useState<Breakpoint>(defaultBreakpoint);
-
-	const getContainerWidth = (breakpoint: Breakpoint): string => {
-		// For device simulation, use exact breakpoint widths
-		switch (breakpoint) {
-			case 'default':
-				return '375px';
-			case 'sm':
-				return '640px';
-			case 'md':
-				return '768px';
-			case 'lg':
-				return '1024px';
-			case 'xl':
-				return '1280px';
-			case '2xl':
-				return '1536px';
-			default:
-				return '375px';
-		}
-	};
 
 	const containerStyle: React.CSSProperties = {
 		width: getContainerWidth(currentBreakpoint),

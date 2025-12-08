@@ -178,7 +178,7 @@
 
 	/* Enhanced focus states for better keyboard navigation */
 	button:focus-visible,
-	[role="button"]:focus-visible,
+	[role='button']:focus-visible,
 	input:focus-visible,
 	select:focus-visible,
 	textarea:focus-visible {
@@ -186,8 +186,8 @@
 	}
 
 	/* Improved checkbox and radio button visibility with consistent sizing */
-	input[type="checkbox"],
-	input[type="radio"] {
+	input[type='checkbox'],
+	input[type='radio'] {
 		@apply bg-input;
 		border: 2px solid oklch(from var(--foreground) l c h / 0.7);
 		@apply focus:ring-2 focus:ring-ring/30;
@@ -323,16 +323,16 @@
 }
 
 /* Field group error state styling */
-[data-slot="field-group-root"][data-error="true"] input,
-[data-slot="field-group-root"][data-error="true"] textarea,
-[data-slot="field-group-root"][data-error="true"] [data-slot="select-trigger"],
-[data-slot="field-group-root"][data-error="true"] [data-slot="combobox-input-trigger"] {
+[data-slot='field-group-root'][data-error='true'] input,
+[data-slot='field-group-root'][data-error='true'] textarea,
+[data-slot='field-group-root'][data-error='true'] [data-slot='select-trigger'],
+[data-slot='field-group-root'][data-error='true'] [data-slot='combobox-input-trigger'] {
 	border-color: hsl(var(--destructive)) !important;
 	outline: 1px solid hsl(var(--destructive));
 	outline-offset: 0;
 }
 
-[data-slot="field-group-root"][data-error="true"] [data-slot="dropzone"] {
+[data-slot='field-group-root'][data-error='true'] [data-slot='dropzone'] {
 	border-color: hsl(var(--destructive)) !important;
 	color: hsl(var(--destructive));
 }

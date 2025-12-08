@@ -3,7 +3,7 @@
  * Uses the new Builder Pattern to configure and build the form engine instance
  */
 
-import { createReactFormEngine } from '@schema-engine/forms-react/registries/builder-registry';
+import { createReactFormComposer } from '@schema-engine/forms-react/registries/builder-registry';
 
 import { InputElementRegistration } from '@schema-engine/forms-react/components/elements/core-ui/inputs/form-input.registration';
 import { TextareaElementRegistration } from '@schema-engine/forms-react/components/elements/core-ui/inputs/form-textarea.registration';
@@ -29,7 +29,7 @@ import { formSubmitPlugin, notificationPlugin, formResetPlugin, autoSavePlugin }
  * Global form engine instance for the www app
  * All components and demos use this single instance
  */
-export const formEngine = createReactFormEngine()
+export const formEngine = createReactFormComposer()
 	.addElement(InputElementRegistration)
 	.addElement(TextareaElementRegistration)
 	.addElement(CheckboxElementRegistration)

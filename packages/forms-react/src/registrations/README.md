@@ -38,11 +38,11 @@ Each registration exports a registration object that contains:
 Import only the components you need for maximum tree-shaking and type safety:
 
 ```typescript
-import { InputElementRegistration } from "@schema-engine/forms-react/registrations/elements/shadcn";
-import { CardLayoutRegistration } from "@schema-engine/forms-react/registrations/layouts";
-import { DefaultStepperRegistration } from "@schema-engine/forms-react/registrations/stepper";
+import { InputElementRegistration } from '@schema-engine/forms-react/registrations/elements/shadcn';
+import { CardLayoutRegistration } from '@schema-engine/forms-react/registrations/layouts';
+import { DefaultStepperRegistration } from '@schema-engine/forms-react/registrations/stepper';
 
-const engine = new FormEngineBuilder()
+const engine = new FormComposer()
 	.addElement(InputElementRegistration)
 	.addLayout(CardLayoutRegistration)
 	.addStepper(DefaultStepperRegistration)
@@ -58,7 +58,7 @@ import {
 	InputElementRegistration,
 	TextareaElementRegistration,
 	SelectElementRegistration,
-} from "@schema-engine/forms-react/registrations/elements/shadcn";
+} from '@schema-engine/forms-react/registrations/elements/shadcn';
 ```
 
 ### Direct Component Imports
@@ -66,7 +66,7 @@ import {
 You can also import directly from the component file:
 
 ```typescript
-import { InputElementRegistration } from "@schema-engine/forms-react/components/elements/shadcn/inputs/form-input.registration";
+import { InputElementRegistration } from '@schema-engine/forms-react/components/elements/shadcn/inputs/form-input.registration';
 ```
 
 ## File Organization
@@ -104,14 +104,10 @@ Different form builders can have different sets of registered components without
 
 ```typescript
 // Builder A with basic inputs
-const builderA = new FormEngineBuilder()
-	.addElement(InputElementRegistration)
-	.addElement(TextareaElementRegistration);
+const builderA = new FormComposer().addElement(InputElementRegistration).addElement(TextareaElementRegistration);
 
 // Builder B with advanced inputs
-const builderB = new FormEngineBuilder()
-	.addElement(SelectElementRegistration)
-	.addElement(RadioElementRegistration);
+const builderB = new FormComposer().addElement(SelectElementRegistration).addElement(RadioElementRegistration);
 ```
 
 ## Adding New Registrations
@@ -126,7 +122,7 @@ Example for a new element:
 
 ```typescript
 // In elements/shadcn.ts
-export { NewElementRegistration } from "@/components/elements/shadcn/inputs/new-element.registration";
+export { NewElementRegistration } from '@/components/elements/shadcn/inputs/new-element.registration';
 ```
 
 The registration file should follow this pattern:
@@ -135,19 +131,19 @@ The registration file should follow this pattern:
 declare global {
 	namespace FormEngine {
 		interface ElementRegistry {
-			"new-element": NewElementConfig;
+			'new-element': NewElementConfig;
 		}
 	}
 }
 
 export const NewElementRegistration: ElementRegistration<NewElementConfig, NewElementProps> = {
-	$type: "new-element",
+	$type: 'new-element',
 	render: NewElement,
 	schema: NewElementSchema,
 	metadata: {
-		name: "New Element",
-		description: "Description of the new element",
-		category: "input",
+		name: 'New Element',
+		description: 'Description of the new element',
+		category: 'input',
 	},
 };
 ```

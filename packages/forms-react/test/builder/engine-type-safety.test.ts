@@ -1,12 +1,12 @@
 /**
  * Type Safety Tests for FormEngine
- * 
+ *
  * These tests verify that the FormEngine returned by build() is properly typed
  * and provides type-safe access to registered components.
  */
 
 import { describe, test, expect, expectTypeOf } from 'bun:test';
-import { createReactFormEngine } from '@/registries/builder-registry';
+import { createReactFormComposer } from '@/registries/builder-registry';
 import type { FormEngine } from '@schema-engine/forms/engine';
 
 import { InputElementRegistration } from '@/components/elements/shadcn/inputs/form-input.registration';
@@ -18,7 +18,7 @@ import { DefaultStepperRegistration } from '@/components/steppers/default-steppe
 
 describe('FormEngine Type Safety', () => {
 	test('should have properly typed engine instance', () => {
-		const builder = createReactFormEngine()
+		const builder = createReactFormComposer()
 			.addElement(InputElementRegistration)
 			.addElement(TextareaElementRegistration);
 
@@ -28,27 +28,27 @@ describe('FormEngine Type Safety', () => {
 		expect(typeof engine.getAllElements).toBe('function');
 		expect(typeof engine.getElementIds).toBe('function');
 		expect(typeof engine.hasElement).toBe('function');
-		
+
 		expect(typeof engine.getLayout).toBe('function');
 		expect(typeof engine.getAllLayouts).toBe('function');
 		expect(typeof engine.getLayoutIds).toBe('function');
 		expect(typeof engine.hasLayout).toBe('function');
-		
+
 		expect(typeof engine.getStepper).toBe('function');
 		expect(typeof engine.getAllSteppers).toBe('function');
 		expect(typeof engine.getStepperIds).toBe('function');
 		expect(typeof engine.hasStepper).toBe('function');
-		
+
 		expect(typeof engine.getAction).toBe('function');
 		expect(typeof engine.getAllActions).toBe('function');
 		expect(typeof engine.getActionTypes).toBe('function');
 		expect(typeof engine.hasAction).toBe('function');
-		
+
 		expect(typeof engine.getSummary).toBe('function');
 	});
 
 	test('should correctly type element retrieval', () => {
-		const engine = createReactFormEngine()
+		const engine = createReactFormComposer()
 			.addElement(InputElementRegistration)
 			.addElement(TextareaElementRegistration)
 			.addLayout(CardLayoutRegistration)
@@ -78,7 +78,7 @@ describe('FormEngine Type Safety', () => {
 	});
 
 	test('should correctly type layout retrieval', () => {
-		const engine = createReactFormEngine()
+		const engine = createReactFormComposer()
 			.addElement(InputElementRegistration)
 			.addLayout(CardLayoutRegistration)
 			.build();
@@ -100,7 +100,7 @@ describe('FormEngine Type Safety', () => {
 	});
 
 	test('should correctly type stepper retrieval', () => {
-		const engine = createReactFormEngine()
+		const engine = createReactFormComposer()
 			.addElement(InputElementRegistration)
 			.addStepper(DefaultStepperRegistration)
 			.build();
@@ -122,7 +122,7 @@ describe('FormEngine Type Safety', () => {
 	});
 
 	test('should provide comprehensive summary', () => {
-		const engine = createReactFormEngine()
+		const engine = createReactFormComposer()
 			.addElement(InputElementRegistration)
 			.addElement(TextareaElementRegistration)
 			.addElement(CheckboxElementRegistration)
@@ -148,11 +148,9 @@ describe('FormEngine Type Safety', () => {
 	});
 
 	test('should maintain type safety across different builders', () => {
-		const engine1 = createReactFormEngine()
-			.addElement(InputElementRegistration)
-			.build();
+		const engine1 = createReactFormComposer().addElement(InputElementRegistration).build();
 
-		const engine2 = createReactFormEngine()
+		const engine2 = createReactFormComposer()
 			.addElement(TextareaElementRegistration)
 			.addElement(CheckboxElementRegistration)
 			.build();
@@ -171,7 +169,7 @@ describe('FormEngine Type Safety', () => {
 	});
 
 	test('engine should not be any type', () => {
-		const builder = createReactFormEngine()
+		const builder = createReactFormComposer()
 			.addElement(InputElementRegistration)
 			.addElement(TextareaElementRegistration);
 
@@ -188,15 +186,15 @@ describe('FormEngine Type Safety', () => {
 		expect(typeof engine.hasElement).toBe('function');
 		expect(typeof engine.getAllElements).toBe('function');
 		expect(typeof engine.getElementIds).toBe('function');
-		
+
 		expect(typeof engine.getLayout).toBe('function');
 		expect(typeof engine.hasLayout).toBe('function');
-		
+
 		expect(typeof engine.getStepper).toBe('function');
 		expect(typeof engine.hasStepper).toBe('function');
-		
+
 		expect(typeof engine.getSummary).toBe('function');
-		
+
 		/**
 		 * The key assertion is expectTypeOf(engine).toMatchTypeOf<FormEngine>()
 		 * If engine were 'any', this would not provide proper type checking.
@@ -205,7 +203,7 @@ describe('FormEngine Type Safety', () => {
 	});
 
 	test('should handle empty engine gracefully', () => {
-		const engine = createReactFormEngine().build();
+		const engine = createReactFormComposer().build();
 
 		expect(engine.getAllElements()).toHaveLength(0);
 		expect(engine.getElementIds()).toHaveLength(0);

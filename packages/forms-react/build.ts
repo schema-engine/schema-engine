@@ -22,7 +22,7 @@ function getFileAsBuffer(filePath: string): Buffer {
 		return readFileSync(filePath);
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
-		throw new Error(`Error reading file: ${filePath}, ${errorMessage}`);
+		throw new Error(`Error reading file: ${filePath}, ${errorMessage}`, { cause: error });
 	}
 }
 
@@ -47,7 +47,7 @@ const postcssPlugin: BunPlugin = {
 					logger.error(`Error processing CSS file ${args.path}: ${errorMessage}`);
 					throw error;
 				}
-			}
+			},
 		);
 	},
 };
@@ -62,7 +62,7 @@ async function discoverSourceFiles(): Promise<string[]> {
 		entryDirs.map(async (dir) => {
 			const glob = new Bun.Glob(`${dir}/**/*.${extensionPattern}`);
 			return Array.fromAsync(glob.scan({ cwd: '.' }));
-		})
+		}),
 	).then((files) => files.flat());
 
 	const rootSrcGlob = new Bun.Glob(`src/*.${extensionPattern}`);
@@ -98,7 +98,7 @@ async function generateGlobalCSS(): Promise<void> {
 			const isInEntryDir = entryDirs.some((dir) => file.startsWith(dir));
 			return !isExcluded && isInEntryDir;
 		})
-		.sort();
+		.toSorted();
 
 	if (sortedFiles.length > 0) {
 		imports.push('');
@@ -152,7 +152,8 @@ async function build(): Promise<void> {
 		const duration = Math.round(performance.now() - startTime);
 		logger.info(`✓ Build completed successfully in ${duration}ms`);
 	} catch (error) {
-		logger.error('Build failed:', error as Error);
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		logger.error(`Build failed: ${errorMessage}`);
 		process.exit(1);
 	}
 }
@@ -160,19 +161,15 @@ async function build(): Promise<void> {
 function startWatch(): void {
 	logger.info('Starting watch mode...');
 
-	const watcher = watch(
-		path.resolve(process.cwd(), sourceDir),
-		{ recursive: true },
-		async (eventType, filename) => {
-			logger.info(`File ${eventType}: ${filename}`);
-			try {
-				await build();
-			} catch (error) {
-				const errorMessage = error instanceof Error ? error.message : String(error);
-				logger.error(`Watch build failed: ${errorMessage}`);
-			}
+	const watcher = watch(path.resolve(process.cwd(), sourceDir), { recursive: true }, async (eventType, filename) => {
+		logger.info(`File ${eventType}: ${filename}`);
+		try {
+			await build();
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			logger.error(`Watch build failed: ${errorMessage}`);
 		}
-	);
+	});
 
 	process.on('SIGINT', () => {
 		console.log('Closing watcher...');

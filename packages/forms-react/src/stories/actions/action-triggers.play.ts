@@ -77,9 +77,9 @@ export const realtimeDashboardPlay = async ({ canvasElement, step }: StoryContex
 				const submitComplete = await within(actionDashboard).findByTestId('form_submit_complete');
 				const formSubmit = await within(actionDashboard).findByTestId('form_submit');
 
-				expect(formSubmit).toBeVisible();
-				expect(submitComplete).toBeVisible();
-				expect(submitSuccess).toBeVisible();
+				await expect(formSubmit).toBeVisible();
+				await expect(submitComplete).toBeVisible();
+				await expect(submitSuccess).toBeVisible();
 			},
 			{ timeout: 1000 },
 		);

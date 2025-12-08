@@ -47,20 +47,20 @@ When you use `withLayout('card', { ... })`, TypeScript automatically knows what 
 ### Quick Example
 
 ```typescript
-import { createForm } from "./shared/form-builder";
+import { createForm } from './shared/form-builder';
 
-const form = createForm({ id: "demo", title: "Demo Form" })
-	.addStep({ id: "step1" })
-	.withLayout("card", {
-		maxWidth: "md", // ✓ TypeScript suggests valid options
-		padding: "lg", // ✓ IntelliSense works automatically
+const form = createForm({ id: 'demo', title: 'Demo Form' })
+	.addStep({ id: 'step1' })
+	.withLayout('card', {
+		maxWidth: 'md', // ✓ TypeScript suggests valid options
+		padding: 'lg', // ✓ IntelliSense works automatically
 		// @ts-expect-error
 		invalidProp: true, // ✗ TypeScript catches this error
 	})
 	.addInputField({
-		name: "email",
-		label: "Email",
-		inputType: "email",
+		name: 'email',
+		label: 'Email',
+		inputType: 'email',
 		required: true,
 	})
 	.build();
@@ -83,8 +83,8 @@ Pre-configured FormEngine instances for use in stories.
 **Usage:**
 
 ```tsx
-import { defaultFormEngine } from "./shared/form-engine-setup";
-import { FormEngineProvider } from "@schema-engine/forms-react";
+import { defaultFormEngine } from './shared/form-engine-setup';
+import { FormEngineProvider } from '@schema-engine/forms-react';
 
 <FormEngineProvider engine={defaultFormEngine}>
 	<FormRenderer config={myForm} />
@@ -143,14 +143,14 @@ Fluent API for creating form configurations quickly.
 **Usage:**
 
 ```tsx
-import { createForm, FormTemplates } from "./shared/form-builder";
+import { createForm, FormTemplates } from './shared/form-builder';
 
 // Create custom form
-const form = createForm({ id: "my-form", title: "My Form" })
-	.addStep({ id: "step-1", title: "Personal Info" })
-	.addInputField({ name: "name", label: "Name", required: true })
-	.addEmailField({ name: "email", label: "Email" })
-	.withLayout("card", { maxWidth: "md" })
+const form = createForm({ id: 'my-form', title: 'My Form' })
+	.addStep({ id: 'step-1', title: 'Personal Info' })
+	.addInputField({ name: 'name', label: 'Name', required: true })
+	.addEmailField({ name: 'email', label: 'Email' })
+	.withLayout('card', { maxWidth: 'md' })
 	.build();
 
 // Or use template
@@ -166,13 +166,13 @@ Complete guide for using the new builder pattern in Storybook stories.
 ### Basic Story
 
 ```tsx
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { StoryWrapper } from "../shared/story-wrapper";
-import { FormRenderer } from "@/components/internals/form-renderer";
-import { simpleContactForm } from "../shared/sample-forms";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { StoryWrapper } from '../shared/story-wrapper';
+import { FormRenderer } from '@/components/internals/form-renderer';
+import { simpleContactForm } from '../shared/sample-forms';
 
 const meta = {
-	title: "My Stories/Example",
+	title: 'My Stories/Example',
 	component: FormRenderer,
 	decorators: [
 		(Story) => (
@@ -196,13 +196,10 @@ export const Default: Story = {
 ### Custom Engine
 
 ```tsx
-import { createCustomEngine, InputElement } from "../shared/form-engine-setup";
-import { MyCustomComponent } from "./my-custom";
+import { createCustomEngine, InputElement } from '../shared/form-engine-setup';
+import { MyCustomComponent } from './my-custom';
 
-const customEngine = createCustomEngine()
-	.addElement(InputElement)
-	.addElement(MyCustomComponent)
-	.build();
+const customEngine = createCustomEngine().addElement(InputElement).addElement(MyCustomComponent).build();
 
 export const WithCustomEngine: Story = {
 	render: (args) => (
@@ -245,13 +242,13 @@ To add more field types to the default engine:
 ```tsx
 // In the component file (e.g., form-textarea.tsx)
 export const TextareaElement: ReactElementRegistration = {
-	id: "textarea",
+	id: 'textarea',
 	component: FormTextarea,
 	schema: TextareaFieldSchema,
 	metadata: {
-		name: "Textarea Field",
-		description: "Multi-line text input",
-		category: "input",
+		name: 'Textarea Field',
+		description: 'Multi-line text input',
+		category: 'input',
 	},
 };
 ```
@@ -259,9 +256,9 @@ export const TextareaElement: ReactElementRegistration = {
 2. **Import and add to form-engine-setup.ts:**
 
 ```tsx
-import { TextareaElement } from "@/components/elements/shadcn/inputs/form-textarea";
+import { TextareaElement } from '@/components/elements/shadcn/inputs/form-textarea';
 
-export const defaultFormEngine = createReactFormEngine()
+export const defaultFormEngine = createReactFormComposer()
 	.addElement(InputElement)
 	.addElement(TextareaElement) // Add this
 	.build();
@@ -275,9 +272,9 @@ const form = {
 		{
 			elements: [
 				{
-					id: "textarea", // Now available!
-					name: "description",
-					label: "Description",
+					id: 'textarea', // Now available!
+					name: 'description',
+					label: 'Description',
 				},
 			],
 		},
@@ -299,8 +296,8 @@ See the various `.stories.tsx` files for complete working examples showing:
 All stories should use the `StoryWrapper` component which provides the FormEngine context:
 
 ```tsx
-import { StoryWrapper } from "./shared/story-wrapper";
-import { FormRenderer } from "@/components/internals/form-renderer";
+import { StoryWrapper } from './shared/story-wrapper';
+import { FormRenderer } from '@/components/internals/form-renderer';
 
 export const MyStory = () => (
 	<StoryWrapper>

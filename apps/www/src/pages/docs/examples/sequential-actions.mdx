@@ -4,8 +4,9 @@ import FormEngineActionExecutor from '@/components/demo/form-engine-action-execu
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'Sequential Actions Example | Form Engine Documentation',
-    description: 'Learn how to configure and execute sequential actions in the FormEngine action system with an interactive demo.',
+	title: 'Sequential Actions Example | Form Engine Documentation',
+	description:
+		'Learn how to configure and execute sequential actions in the FormEngine action system with an interactive demo.',
 });
 
 # Sequential Actions Example
@@ -19,21 +20,25 @@ A demonstration of sequential actions in the FormEngine action system. Sequentia
 ## Key Features Demonstrated
 
 ### 1. Submit Plugin
+
 - **Form Submission**: Handles sending form data to specified endpoints
 - **Configurable Request Handling**: Custom request adapters and data transformation
 - **Lifecycle Management**: Triggers `submit_start`, `submit_success`, and `submit_error` events
 
 ### 2. Reset Plugin
+
 - **Form State Reset**: Clears all fields and validation errors
 - **Optional Confirmation**: Prompts users before resetting with customizable confirmation dialogs
 - **Draft Cleanup**: Removes saved drafts from storage
 
 ### 3. Notification Plugin
+
 - **User Feedback**: Displays messages with different variants (success, error, warning, info)
 - **Customizable Handlers**: Configure how notifications are displayed (toast, modal, etc.)
 - **Duration Control**: Set how long notifications remain visible
 
 ### 4. Auto-Save Plugin
+
 - **Draft Persistence**: Automatically saves form data to prevent data loss
 - **Configurable Storage**: Use localStorage, API endpoints, or custom storage backends
 - **Error Recovery**: Fallback mechanisms when primary storage fails
@@ -44,45 +49,51 @@ Here's how the actual plugins are configured and used in the demo:
 
 ```typescript
 // Register plugins first
-import { registerAction } from "@/lib/form-engine/actions/action-registry";
-import { submitPlugin, resetPlugin, notificationPlugin } from "@/lib/form-engine/actions/plugins";
+import { registerAction } from '@/lib/form-engine/actions/action-registry';
+import { submitPlugin, resetPlugin, notificationPlugin } from '@/lib/form-engine/actions/plugins';
 
-registerAction(submitPlugin({
-  onSuccess: (data, context) => console.log("Submitted:", data),
-  onError: (error, context) => console.error("Submit failed:", error)
-}));
+registerAction(
+	submitPlugin({
+		onSuccess: (data, context) => console.log('Submitted:', data),
+		onError: (error, context) => console.error('Submit failed:', error),
+	}),
+);
 
-registerAction(resetPlugin({
-  confirm: (message) => window.confirm(message),
-  onReset: (context) => console.log("Form reset!")
-}));
+registerAction(
+	resetPlugin({
+		confirm: (message) => window.confirm(message),
+		onReset: (context) => console.log('Form reset!'),
+	}),
+);
 
-registerAction(notificationPlugin({
-  onSuccess: (message) => toast.success(message),
-  onError: (message) => toast.error(message)
-}));
+registerAction(
+	notificationPlugin({
+		onSuccess: (message) => toast.success(message),
+		onError: (message) => toast.error(message),
+	}),
+);
 
 // Then define actions in form configuration
 const actions = [
-  {
-    id: "submit-form",
-    $type: "submit",
-    endpoint: "/api/submit",
-    method: "POST"
-  },
-  {
-    id: "success-notification",
-    $type: "show_notification",
-    message: "Form submitted successfully!",
-    variant: "success",
-    triggers: ["submit_success"]
-  },
-  {
-    id: "reset-after-success",
-    $type: "reset",
-    resetToDefaults: true,
-    triggers: ["submit_success"]
-  }
+	{
+		id: 'submit-form',
+		$type: 'submit',
+		endpoint: '/api/submit',
+		method: 'POST',
+	},
+	{
+		id: 'success-notification',
+		$type: 'show_notification',
+		message: 'Form submitted successfully!',
+		variant: 'success',
+		triggers: ['submit_success'],
+	},
+	{
+		id: 'reset-after-success',
+		$type: 'reset',
+		resetToDefaults: true,
+		triggers: ['submit_success'],
+	},
 ];
 ```
 

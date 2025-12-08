@@ -56,9 +56,9 @@ function defaultResetForm(context: BuilderActionExecutionContext<any>, _resetToD
  * @example Builder Usage
  * ```typescript
  * import { resetPlugin } from "@/actions/plugins";
- * import { FormEngineBuilder } from "@/builder";
+ * import { FormComposer } from "@/builder";
  *
- * const engine = new FormEngineBuilder()
+ * const engine = new FormComposer()
  *   .addAction(resetPlugin({
  *     confirm: (message) => window.confirm(message),
  *     onReset: (context) => {

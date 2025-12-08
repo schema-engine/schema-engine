@@ -36,24 +36,24 @@ The submit button component provides a button that submits the form while displa
 ### Usage Example
 
 ```typescript
-import { SubmitButtonElementRegistration } from "@schema-engine/forms-react/components/core-ui/actions";
-import { FormEngineBuilder } from "@schema-engine/forms/builder";
+import { SubmitButtonElementRegistration } from '@schema-engine/forms-react/components/core-ui/actions';
+import { FormComposer } from '@schema-engine/forms/builder';
 
-const engine = new FormEngineBuilder().addElement(SubmitButtonElementRegistration).build();
+const engine = new FormComposer().addElement(SubmitButtonElementRegistration).build();
 
 // In your form config
 const formConfig = {
 	fields: [
 		{
-			$type: "input",
-			name: "email",
-			label: "Email",
+			$type: 'input',
+			name: 'email',
+			label: 'Email',
 			// ... other config
 		},
 		{
-			$type: "submit",
-			name: "submit",
-			label: "Send Email",
+			$type: 'submit',
+			name: 'submit',
+			label: 'Send Email',
 		},
 	],
 };
@@ -123,18 +123,13 @@ Show submit button based on conditions:
 ### Standalone Usage
 
 ```tsx
-import { SubmitButton } from "@schema-engine/forms-react/components/core-ui/actions";
+import { SubmitButton } from '@schema-engine/forms-react/components/core-ui/actions';
 
 export function MyForm() {
 	return (
 		<form>
 			{/* Form fields */}
-			<SubmitButton
-				$type="submit"
-				name="submit"
-				label="Save Changes"
-				onClick={() => console.log("Submitted")}
-			/>
+			<SubmitButton $type="submit" name="submit" label="Save Changes" onClick={() => console.log('Submitted')} />
 		</form>
 	);
 }

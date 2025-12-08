@@ -1,6 +1,6 @@
 # Multiple Builders Type Isolation Tests
 
-This test suite verifies that the per-component registration pattern works correctly, allowing multiple FormEngineBuilder instances in the same codebase with different component sets.
+This test suite verifies that the per-component registration pattern works correctly, allowing multiple FormComposer instances in the same codebase with different component sets.
 
 ## Running the Tests
 
@@ -19,19 +19,19 @@ cd packages/react && bun test test/builder/multiple-builders-type-isolation.test
 Verifies that two builders in the same application can have completely different component sets:
 
 ```typescript
-const builder1 = createReactFormEngine().addElement(InputElementRegistration);
-const builder2 = createReactFormEngine().addElement(TextareaElementRegistration);
+const builder1 = createReactFormComposer().addElement(InputElementRegistration);
+const builder2 = createReactFormComposer().addElement(TextareaElementRegistration);
 
 const engine1 = builder1.build();
 const engine2 = builder2.build();
 
 // ✅ engine1 only has input
-expect(engine1.hasElement("input")).toBe(true);
-expect(engine1.hasElement("textarea")).toBe(false);
+expect(engine1.hasElement('input')).toBe(true);
+expect(engine1.hasElement('textarea')).toBe(false);
 
 // ✅ engine2 only has textarea
-expect(engine2.hasElement("input")).toBe(false);
-expect(engine2.hasElement("textarea")).toBe(true);
+expect(engine2.hasElement('input')).toBe(false);
+expect(engine2.hasElement('textarea')).toBe(true);
 ```
 
 ### 2. No Type Leakage

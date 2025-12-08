@@ -4,10 +4,10 @@
  */
 
 import { describe, test, expect } from 'bun:test';
-import { 
-	InputFieldSchema, 
+import {
+	InputFieldSchema,
 	inputFieldExample,
-	type InputFieldConfig 
+	type InputFieldConfig,
 } from '@/components/elements/shadcn/inputs/form-input.types';
 
 describe('Input Field Schema', () => {
@@ -63,7 +63,7 @@ describe('Input Field Schema', () => {
 
 	test('validates all supported input types', () => {
 		const inputTypes = ['text', 'email', 'password', 'url', 'tel', 'search'] as const;
-		
+
 		for (const inputType of inputTypes) {
 			const config: InputFieldConfig = {
 				$type: 'input',

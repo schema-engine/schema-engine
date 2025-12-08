@@ -1,30 +1,31 @@
 import { describe, test, expect } from 'bun:test';
-import { 
-	InputFieldSchema, 
+import {
+	InputFieldSchema,
 	inputFieldExample,
-	type InputFieldConfig 
+	type InputFieldConfig,
 } from '@/components/elements/shadcn/inputs/form-input.types';
 
 describe('Enhanced Form Field System', () => {
 	describe('Input Field Schema', () => {
-	test('validates valid input field configuration', () => {
-		const validConfig: InputFieldConfig = {
-			$type: 'input',
-			id: 'test-input',
-			name: 'testField',
-			label: 'Test Input',
-			inputType: 'email',
-			placeholder: 'Enter email...',
-			autoComplete: 'email',
-		};
+		test('validates valid input field configuration', () => {
+			const validConfig: InputFieldConfig = {
+				$type: 'input',
+				id: 'test-input',
+				name: 'testField',
+				label: 'Test Input',
+				inputType: 'email',
+				placeholder: 'Enter email...',
+				autoComplete: 'email',
+			};
 
-		const result = InputFieldSchema.safeParse(validConfig);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data.$type).toBe('input');
-			expect(result.data.inputType).toBe('email');
-		}
-	});		test('rejects invalid input field configuration', () => {
+			const result = InputFieldSchema.safeParse(validConfig);
+			expect(result.success).toBe(true);
+			if (result.success) {
+				expect(result.data.$type).toBe('input');
+				expect(result.data.inputType).toBe('email');
+			}
+		});
+		test('rejects invalid input field configuration', () => {
 			const invalidConfig = {
 				$type: 'input',
 				inputType: 'invalid-type',
@@ -59,7 +60,7 @@ describe('Enhanced Form Field System', () => {
 	describe('Input Field Specific Properties', () => {
 		test('validates all supported input types', () => {
 			const inputTypes = ['text', 'email', 'password', 'url', 'tel', 'search'] as const;
-			
+
 			for (const inputType of inputTypes) {
 				const config: InputFieldConfig = {
 					$type: 'input',
@@ -110,5 +111,4 @@ describe('Enhanced Form Field System', () => {
 			}
 		});
 	});
-
 });

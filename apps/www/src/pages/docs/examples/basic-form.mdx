@@ -4,9 +4,9 @@ import { SimpleInputDemo } from '@/components/demo/simple-input-demo';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-  title: 'Basic Form Example | Form Engine Documentation',
-  description: 'Simple contact form example showing Form Engine fundamentals: fields, validation, and actions.',
-})
+	title: 'Basic Form Example | Form Engine Documentation',
+	description: 'Simple contact form example showing Form Engine fundamentals: fields, validation, and actions.',
+});
 
 # Basic Form Example
 
@@ -41,9 +41,9 @@ Add validation rules to each field:
 
 ```typescript
 rules: [
-  { type: 'required', message: 'Name is required' },
-  { type: 'minLength', value: 2, message: 'Name must be at least 2 characters' }
-]
+	{ type: 'required', message: 'Name is required' },
+	{ type: 'minLength', value: 2, message: 'Name must be at least 2 characters' },
+];
 ```
 
 ### 3. Actions System
@@ -168,7 +168,7 @@ export const contactFormConfig: FormConfig = {
   id: "contact-form",
   title: "Get in Touch",
   description: "We'd love to hear from you. Send us a message and we'll respond as soon as possible.",
-  
+
   steps: [
     {
       title: "Contact Information",
@@ -185,7 +185,7 @@ export const contactFormConfig: FormConfig = {
           grid: { colSpan: 1 }
         },
         {
-          type: "input", 
+          type: "input",
           name: "lastName",
           label: "Last Name",
           placeholder: "Enter your last name",
@@ -206,7 +206,7 @@ export const contactFormConfig: FormConfig = {
             { type: "required", message: "Email is required" },
             { type: "email", message: "Please enter a valid email address" }
           ],
-          grid: { 
+          grid: {
             colSpan: 2,
             responsive: {
               sm: { colSpan: 1 }
@@ -217,7 +217,7 @@ export const contactFormConfig: FormConfig = {
           type: "input",
           name: "phone",
           label: "Phone Number",
-          inputType: "tel", 
+          inputType: "tel",
           placeholder: "+1 (555) 123-4567",
           autoComplete: "tel",
           rules:
@@ -227,7 +227,7 @@ export const contactFormConfig: FormConfig = {
               message: "Please enter a valid phone number"
             }
           ],
-          grid: { 
+          grid: {
             colSpan: 2,
             responsive: {
               sm: { colSpan: 1 }
@@ -283,7 +283,7 @@ export const contactFormConfig: FormConfig = {
           label: "Urgency",
           options: [
             { value: "low", label: "Low - Response within 5 business days" },
-            { value: "medium", label: "Medium - Response within 2 business days" }, 
+            { value: "medium", label: "Medium - Response within 2 business days" },
             { value: "high", label: "High - Response within 1 business day" },
             { value: "urgent", label: "Urgent - Response within 4 hours" }
           ],
@@ -331,7 +331,7 @@ export const contactFormConfig: FormConfig = {
   },
 
   // Auto-generate Zod schema from validation rules
-  
+
 
   // Form actions
   actions: [
@@ -396,7 +396,7 @@ export function ContactForm() {
 
   const handleSubmit = async (data: ContactFormData) => {
     setIsSubmitting(true);
-    
+
     try {
       // Transform data for API
       const payload = {
@@ -420,10 +420,10 @@ export function ContactForm() {
       }
 
       const result = await response.json();
-      
+
       // Success handling
       toast.success("Thank you for your message! We'll get back to you soon.");
-      
+
       // Analytics tracking
       if (typeof gtag !== 'undefined') {
         gtag('event', 'contact_form_submitted', {
@@ -520,78 +520,74 @@ import { z } from 'zod';
 
 // Validation schema
 const ContactFormSchema = z.object({
-  firstName: z.string().min(2),
-  lastName: z.string().min(2), 
-  email: z.string().email(),
-  phone: z.string().optional(),
-  subject: z.enum(['general', 'support', 'sales', 'partnership', 'feedback', 'other']),
-  message: z.string().min(10).max(1000),
-  preferredContact: z.enum(['email', 'phone', 'either']),
-  urgency: z.enum(['low', 'medium', 'high', 'urgent']),
-  newsletter: z.boolean(),
-  privacy: z.boolean().refine(val => val === true, {
-    message: "Privacy policy must be accepted"
-  }),
-  fullName: z.string(),
-  timestamp: z.string(),
-  source: z.string()
+	firstName: z.string().min(2),
+	lastName: z.string().min(2),
+	email: z.string().email(),
+	phone: z.string().optional(),
+	subject: z.enum(['general', 'support', 'sales', 'partnership', 'feedback', 'other']),
+	message: z.string().min(10).max(1000),
+	preferredContact: z.enum(['email', 'phone', 'either']),
+	urgency: z.enum(['low', 'medium', 'high', 'urgent']),
+	newsletter: z.boolean(),
+	privacy: z.boolean().refine((val) => val === true, {
+		message: 'Privacy policy must be accepted',
+	}),
+	fullName: z.string(),
+	timestamp: z.string(),
+	source: z.string(),
 });
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+	if (req.method !== 'POST') {
+		return res.status(405).json({ error: 'Method not allowed' });
+	}
 
-  try {
-    // Validate request data
-    const data = ContactFormSchema.parse(req.body);
+	try {
+		// Validate request data
+		const data = ContactFormSchema.parse(req.body);
 
-    // Process the form submission
-    await processContactForm(data);
+		// Process the form submission
+		await processContactForm(data);
 
-    // Send notification emails
-    await sendNotifications(data);
+		// Send notification emails
+		await sendNotifications(data);
 
-    // Add to CRM/database
-    await saveToDatabase(data);
+		// Add to CRM/database
+		await saveToDatabase(data);
 
-    return res.status(200).json({ 
-      success: true, 
-      message: 'Contact form submitted successfully' 
-    });
+		return res.status(200).json({
+			success: true,
+			message: 'Contact form submitted successfully',
+		});
+	} catch (error) {
+		console.error('Contact form error:', error);
 
-  } catch (error) {
-    console.error('Contact form error:', error);
-    
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        error: 'Invalid form data', 
-        details: error.errors 
-      });
-    }
+		if (error instanceof z.ZodError) {
+			return res.status(400).json({
+				error: 'Invalid form data',
+				details: error.errors,
+			});
+		}
 
-    return res.status(500).json({ 
-      error: 'Internal server error' 
-    });
-  }
+		return res.status(500).json({
+			error: 'Internal server error',
+		});
+	}
 }
 
 async function processContactForm(data: z.infer<typeof ContactFormSchema>) {
-  // Your business logic here
-  console.log('Processing contact form:', data);
+	// Your business logic here
+	console.log('Processing contact form:', data);
 }
 
 async function sendNotifications(data: z.infer<typeof ContactFormSchema>) {
-  // Send email notifications
-  // Could use SendGrid, Mailgun, etc.
+	// Send email notifications
+	// Could use SendGrid, Mailgun, etc.
 }
 
 async function saveToDatabase(data: z.infer<typeof ContactFormSchema>) {
-  // Save to your database
-  // Could use Prisma, Supabase, etc.
+	// Save to your database
+	// Could use Prisma, Supabase, etc.
 }
 ```
 
@@ -602,47 +598,47 @@ Custom styling for the contact form:
 ```css
 /* src/styles/contact-form.css */
 .contact-form {
-  @apply max-w-4xl mx-auto;
+	@apply max-w-4xl mx-auto;
 }
 
 .contact-form .form-field {
-  @apply transition-all duration-200;
+	@apply transition-all duration-200;
 }
 
 .contact-form .form-field:focus-within {
-  @apply transform scale-[1.02];
+	@apply transform scale-[1.02];
 }
 
 .contact-form .form-label {
-  @apply font-medium text-gray-700;
+	@apply font-medium text-gray-700;
 }
 
 .contact-form .form-input {
-  @apply border-gray-300 focus:border-blue-500 focus:ring-blue-500;
+	@apply border-gray-300 focus:border-blue-500 focus:ring-blue-500;
 }
 
 .contact-form .form-textarea {
-  @apply resize-none;
+	@apply resize-none;
 }
 
 .contact-form .form-select {
-  @apply cursor-pointer;
+	@apply cursor-pointer;
 }
 
 .contact-form .form-checkbox {
-  @apply text-blue-600 focus:ring-blue-500;
+	@apply text-blue-600 focus:ring-blue-500;
 }
 
 .contact-form .form-error {
-  @apply text-red-600 text-sm mt-1;
+	@apply text-red-600 text-sm mt-1;
 }
 
 .contact-form .submit-button {
-  @apply w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200;
+	@apply w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200;
 }
 
 .contact-form .submit-button:disabled {
-  @apply opacity-50 cursor-not-allowed;
+	@apply opacity-50 cursor-not-allowed;
 }
 ```
 
@@ -666,7 +662,7 @@ describe('ContactForm', () => {
 
   it('renders all form fields', () => {
     render(<ContactForm />);
-    
+
     expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/last name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
@@ -677,10 +673,10 @@ describe('ContactForm', () => {
   it('validates required fields', async () => {
     const user = userEvent.setup();
     render(<ContactForm />);
-    
+
     const submitButton = screen.getByRole('button', { name: /submit/i });
     await user.click(submitButton);
-    
+
     await waitFor(() => {
       expect(screen.getByText(/first name is required/i)).toBeInTheDocument();
       expect(screen.getByText(/email is required/i)).toBeInTheDocument();
@@ -695,7 +691,7 @@ describe('ContactForm', () => {
     });
 
     render(<ContactForm />);
-    
+
     // Fill out form
     await user.type(screen.getByLabelText(/first name/i), 'John');
     await user.type(screen.getByLabelText(/last name/i), 'Doe');
@@ -703,10 +699,10 @@ describe('ContactForm', () => {
     await user.selectOptions(screen.getByLabelText(/subject/i), 'general');
     await user.type(screen.getByLabelText(/message/i), 'This is a test message');
     await user.click(screen.getByLabelText(/privacy policy/i));
-    
+
     // Submit form
     await user.click(screen.getByRole('button', { name: /submit/i }));
-    
+
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith('/api/contact', expect.objectContaining({
         method: 'POST',

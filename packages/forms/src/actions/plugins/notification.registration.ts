@@ -7,9 +7,9 @@
  * @example
  * ```typescript
  * import { NotificationActionRegistration } from '@schema-engine/forms/actions/plugins/notification-registration';
- * import { FormEngineBuilder } from '@schema-engine/formsuilder';
+ * import { FormComposer } from '@schema-engine/formsuilder';
  *
- * const engine = new FormEngineBuilder()
+ * const engine = new FormComposer()
  *   .addAction(NotificationActionRegistration)
  *   .build();
  * ```

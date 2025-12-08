@@ -60,7 +60,7 @@ export const HeroBackgroundLayout: React.FC<HeroBackgroundLayoutProps> = ({ chil
 						) : null}
 					</div>
 				) : null}{' '}
-				<div className="hero-background-layout__form">{children as React.ReactNode}</div>
+				<div className="hero-background-layout__form">{children}</div>
 			</div>
 		</div>
 	);

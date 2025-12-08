@@ -133,7 +133,7 @@ export const MyStepperComposed: React.FC<{ children?: React.ReactNode }> = ({ ch
 Stepper styling is **optional** and implemented via CSS imports. Each stepper can have its own CSS file:
 
 ```tsx
-import "./my-stepper.css";
+import './my-stepper.css';
 ```
 
 This approach allows:
@@ -154,26 +154,23 @@ Here's a complete template for creating a new stepper component:
 
 ```tsx
 // my-stepper.tsx
-import { cn } from "@/shadcn/lib/utils";
-import type React from "react";
-import { StepperProvider, useStepperContext } from "./context";
-import { useStepperContext as useGlobalStepperContext } from "@/contexts/stepper-context";
-import "./my-stepper.css"; // Optional: Remove if using custom styling
-import type { MyStepperConfig } from "./my-stepper.types";
+import { cn } from '@/shadcn/lib/utils';
+import type React from 'react';
+import { StepperProvider, useStepperContext } from './context';
+import { useStepperContext as useGlobalStepperContext } from '@/contexts/stepper-context';
+import './my-stepper.css'; // Optional: Remove if using custom styling
+import type { MyStepperConfig } from './my-stepper.types';
 
 /**
  * My Stepper Root Component
  * Loads data from global context and provides it to child components via local context
  */
-const MyStepperRoot: React.FC<{ children: React.ReactNode; className?: string }> = ({
-	children,
-	className,
-}) => {
+const MyStepperRoot: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => {
 	const globalContext = useGlobalStepperContext();
 
 	return (
 		<StepperProvider value={globalContext}>
-			<div className={cn("my-stepper", className)}>{children}</div>
+			<div className={cn('my-stepper', className)}>{children}</div>
 		</StepperProvider>
 	);
 };
@@ -191,7 +188,7 @@ function MyStepperProgress({ className }: { className?: string }) {
 	const progressPercentage = ((currentStepIndex + 1) / steps.length) * 100;
 
 	return (
-		<div className={cn("my-stepper__progress", className)}>
+		<div className={cn('my-stepper__progress', className)}>
 			<div className="my-stepper__progress-bar">
 				<div className="my-stepper__progress-fill" style={{ width: `${progressPercentage}%` }} />
 			</div>
@@ -209,14 +206,12 @@ function MyStepperHeader({ className }: { className?: string }) {
 	const currentStep = steps[currentStepIndex];
 
 	return (
-		<div className={cn("my-stepper__header", className)}>
+		<div className={cn('my-stepper__header', className)}>
 			<div className="my-stepper__step-counter">
 				Step {currentStepIndex + 1} of {steps.length}
 			</div>
 			{currentStep?.title ? <h2 className="my-stepper__title">{currentStep.title}</h2> : null}
-			{currentStep?.description ? (
-				<p className="my-stepper__description">{currentStep.description}</p>
-			) : null}
+			{currentStep?.description ? <p className="my-stepper__description">{currentStep.description}</p> : null}
 		</div>
 	);
 }
@@ -225,14 +220,8 @@ function MyStepperHeader({ className }: { className?: string }) {
  * My Stepper Content Component
  * Wraps the form content for each step
  */
-function MyStepperContent({
-	children,
-	className,
-}: {
-	children: React.ReactNode;
-	className?: string;
-}) {
-	return <div className={cn("my-stepper__content", className)}>{children}</div>;
+function MyStepperContent({ children, className }: { children: React.ReactNode; className?: string }) {
+	return <div className={cn('my-stepper__content', className)}>{children}</div>;
 }
 
 /**
@@ -244,14 +233,14 @@ function MyStepperNavigation({ className }: { className?: string }) {
 	const { navigation, form } = useStepperContext<MyStepperConfig>();
 
 	return (
-		<div className={cn("my-stepper__navigation", className)}>
+		<div className={cn('my-stepper__navigation', className)}>
 			<button
 				type="button"
 				onClick={() => navigation.goToPreviousStep()}
 				disabled={navigation.isFirstStep}
 				className={cn(
-					"my-stepper__nav-button my-stepper__nav-button--secondary",
-					navigation.isFirstStep ? "my-stepper__nav-button--disabled" : null
+					'my-stepper__nav-button my-stepper__nav-button--secondary',
+					navigation.isFirstStep ? 'my-stepper__nav-button--disabled' : null,
 				)}
 			>
 				Previous
@@ -260,20 +249,20 @@ function MyStepperNavigation({ className }: { className?: string }) {
 			{/* ✅ Keep both buttons in DOM, hide with CSS */}
 			<button
 				type="submit"
-				style={{ display: navigation.isLastStep ? "block" : "none" }}
+				style={{ display: navigation.isLastStep ? 'block' : 'none' }}
 				className="my-stepper__nav-button my-stepper__nav-button--primary"
 			>
-				{form.isSubmitting ? "Submitting..." : "Submit"}
+				{form.isSubmitting ? 'Submitting...' : 'Submit'}
 			</button>
 
 			<button
 				type="button"
 				onClick={() => navigation.goToNextStep()}
 				disabled={!navigation.canGoNext}
-				style={{ display: navigation.isLastStep ? "none" : "block" }}
+				style={{ display: navigation.isLastStep ? 'none' : 'block' }}
 				className={cn(
-					"my-stepper__nav-button my-stepper__nav-button--primary",
-					!navigation.canGoNext ? "my-stepper__nav-button--disabled" : null
+					'my-stepper__nav-button my-stepper__nav-button--primary',
+					!navigation.canGoNext ? 'my-stepper__nav-button--disabled' : null,
 				)}
 			>
 				Next
@@ -308,33 +297,30 @@ export const MyStepperComposed: React.FC<{ children?: React.ReactNode }> = ({ ch
 };
 
 // Registration
-import type { StepperRegistration } from "@schema-engine/forms/types";
-import { MyStepperConfigSchema } from "./my-stepper.types";
+import type { StepperRegistration } from '@schema-engine/forms/types';
+import { MyStepperConfigSchema } from './my-stepper.types';
 
-export const MyStepperRegistration: StepperRegistration<
-	MyStepperConfig,
-	{ children?: React.ReactNode }
-> = {
-	$type: "my-stepper",
+export const MyStepperRegistration: StepperRegistration<MyStepperConfig, { children?: React.ReactNode }> = {
+	$type: 'my-stepper',
 	render: MyStepperComposed,
 	schema: MyStepperConfigSchema,
 	metadata: {
-		name: "My Stepper",
-		description: "A custom stepper for multi-step forms",
-		icon: "steps",
+		name: 'My Stepper',
+		description: 'A custom stepper for multi-step forms',
+		icon: 'steps',
 	},
 };
 ```
 
 ```typescript
 // my-stepper.types.ts
-import { z } from "zod";
-import { BaseStepperConfigSchema } from "@schema-engine/formsteppers/types";
+import { z } from 'zod';
+import { BaseStepperConfigSchema } from '@schema-engine/formsteppers/types';
 
 export const MyStepperConfigSchema = BaseStepperConfigSchema.extend({
-	$type: z.literal("my-stepper"),
-	showProgress: z.boolean().optional().describe("Display progress bar"),
-	variant: z.enum(["default", "compact", "spacious"]).optional(),
+	$type: z.literal('my-stepper'),
+	showProgress: z.boolean().optional().describe('Display progress bar'),
+	variant: z.enum(['default', 'compact', 'spacious']).optional(),
 });
 
 export type MyStepperConfig = z.infer<typeof MyStepperConfigSchema>;
@@ -342,21 +328,21 @@ export type MyStepperConfig = z.infer<typeof MyStepperConfigSchema>;
 export type MyStepperProps = { children?: React.ReactNode };
 
 export const myStepperExample: MyStepperConfig = {
-	$type: "my-stepper",
+	$type: 'my-stepper',
 	showProgress: true,
-	variant: "default",
+	variant: 'default',
 };
 ```
 
 ```typescript
 // my-stepper.registration.ts
-import { MyStepperRegistration } from "./my-stepper";
-import type { MyStepperConfig } from "./my-stepper.types";
+import { MyStepperRegistration } from './my-stepper';
+import type { MyStepperConfig } from './my-stepper.types';
 
 declare global {
 	namespace FormEngine {
 		interface StepperRegistry {
-			"my-stepper": MyStepperConfig;
+			'my-stepper': MyStepperConfig;
 		}
 	}
 }
@@ -391,7 +377,7 @@ interface StepperContextValue {
 Distributes global context data to compound components with type safety:
 
 ```typescript
-import { useStepperContext } from "./context";
+import { useStepperContext } from './context';
 
 // Use with your config type
 const { steps, navigation, config } = useStepperContext<MyStepperConfig>();
@@ -446,13 +432,13 @@ function StepIndicators() {
 					onClick={() => navigation.goToStep(index)}
 					disabled={!step.isVisited && index > currentStepIndex}
 					className={cn(
-						"step-indicator",
-						step.isActive ? "step-indicator--active" : null,
-						step.isCompleted ? "step-indicator--completed" : null,
-						!step.isVisited && index > currentStepIndex ? "step-indicator--disabled" : null
+						'step-indicator',
+						step.isActive ? 'step-indicator--active' : null,
+						step.isCompleted ? 'step-indicator--completed' : null,
+						!step.isVisited && index > currentStepIndex ? 'step-indicator--disabled' : null,
 					)}
 				>
-					{step.isCompleted ? "✓" : index + 1}
+					{step.isCompleted ? '✓' : index + 1}
 				</button>
 			))}
 		</div>
@@ -498,17 +484,17 @@ function Navigation() {
 			{/* ✅ ALWAYS keep both buttons in DOM */}
 			<button
 				type="submit"
-				style={{ display: navigation.isLastStep ? "block" : "none" }}
+				style={{ display: navigation.isLastStep ? 'block' : 'none' }}
 				disabled={form.isSubmitting}
 			>
-				{form.isSubmitting ? "Submitting..." : "Submit"}
+				{form.isSubmitting ? 'Submitting...' : 'Submit'}
 			</button>
 
 			<button
 				type="button"
 				onClick={() => navigation.goToNextStep()}
 				disabled={!navigation.canGoNext}
-				style={{ display: navigation.isLastStep ? "none" : "block" }}
+				style={{ display: navigation.isLastStep ? 'none' : 'block' }}
 			>
 				Next
 			</button>
@@ -526,10 +512,10 @@ function StepIndicator({ step }: { step: StepData }) {
 	return (
 		<div
 			className={cn(
-				"step-indicator",
-				step.isActive ? "step-indicator--active" : null,
-				step.isCompleted ? "step-indicator--completed" : null,
-				step.isVisited && !step.isValid ? "step-indicator--invalid" : null
+				'step-indicator',
+				step.isActive ? 'step-indicator--active' : null,
+				step.isCompleted ? 'step-indicator--completed' : null,
+				step.isVisited && !step.isValid ? 'step-indicator--invalid' : null,
 			)}
 		>
 			{step.isCompleted ? (
@@ -551,15 +537,14 @@ function StepIndicator({ step }: { step: StepData }) {
 The dual-context architecture provides both flexibility and type safety:
 
 1. **Global Context**: Single source of truth
-
-   - Managed by `StepperRenderer`
-   - Contains all stepper state
-   - Available to all stepper components
+    - Managed by `StepperRenderer`
+    - Contains all stepper state
+    - Available to all stepper components
 
 2. **Local Context**: Type-safe distribution
-   - Wraps compound components
-   - Provides typed access to config
-   - Enables flexible composition
+    - Wraps compound components
+    - Provides typed access to config
+    - Enables flexible composition
 
 ### How It Works
 
@@ -596,7 +581,7 @@ const Progress = () => {
 Export the compound component for users who want custom layouts:
 
 ```tsx
-import { MyStepper } from "@/components/steppers";
+import { MyStepper } from '@/components/steppers';
 
 // Custom composition
 <MyStepper>
@@ -632,27 +617,27 @@ Test your stepper with various scenarios:
 ```tsx
 // Test 1: Multi-step form (normal case)
 const multiStepForm = {
-	id: "test-form",
-	mode: "free",
-	stepper: { $type: "my-stepper" },
+	id: 'test-form',
+	mode: 'free',
+	stepper: { $type: 'my-stepper' },
 	steps: [
 		{
-			id: "step-1",
-			title: "Personal Info",
+			id: 'step-1',
+			title: 'Personal Info',
 			elements: [
 				/* fields */
 			],
 		},
 		{
-			id: "step-2",
-			title: "Address",
+			id: 'step-2',
+			title: 'Address',
 			elements: [
 				/* fields */
 			],
 		},
 		{
-			id: "step-3",
-			title: "Review",
+			id: 'step-3',
+			title: 'Review',
 			elements: [
 				/* fields */
 			],
@@ -662,20 +647,20 @@ const multiStepForm = {
 
 // Test 2: Two-step form (minimum for stepper)
 const twoStepForm = {
-	id: "test-form",
-	mode: "free",
-	stepper: { $type: "my-stepper" },
+	id: 'test-form',
+	mode: 'free',
+	stepper: { $type: 'my-stepper' },
 	steps: [
 		{
-			id: "step-1",
-			title: "Info",
+			id: 'step-1',
+			title: 'Info',
 			elements: [
 				/* fields */
 			],
 		},
 		{
-			id: "step-2",
-			title: "Confirm",
+			id: 'step-2',
+			title: 'Confirm',
 			elements: [
 				/* fields */
 			],
@@ -685,18 +670,18 @@ const twoStepForm = {
 
 // Test 3: Steps with validation
 const validatedSteps = {
-	id: "test-form",
-	mode: "free",
-	stepper: { $type: "my-stepper" },
+	id: 'test-form',
+	mode: 'free',
+	stepper: { $type: 'my-stepper' },
 	steps: [
 		{
-			id: "step-1",
-			title: "Required Fields",
-			elements: [{ id: "email", type: "input", validation: { required: true } }],
+			id: 'step-1',
+			title: 'Required Fields',
+			elements: [{ id: 'email', type: 'input', validation: { required: true } }],
 		},
 		{
-			id: "step-2",
-			title: "Optional",
+			id: 'step-2',
+			title: 'Optional',
 			elements: [
 				/* fields */
 			],
@@ -854,11 +839,7 @@ console.log(form.title, form.description);
 **A:** Yes, use `navigation.isFirstStep`:
 
 ```tsx
-<button
-	type="button"
-	onClick={() => navigation.goToPreviousStep()}
-	disabled={navigation.isFirstStep}
->
+<button type="button" onClick={() => navigation.goToPreviousStep()} disabled={navigation.isFirstStep}>
 	Previous
 </button>
 ```
@@ -869,7 +850,7 @@ console.log(form.title, form.description);
 
 ```tsx
 <button type="submit" disabled={form.isSubmitting}>
-	{form.isSubmitting ? "Submitting..." : "Submit"}
+	{form.isSubmitting ? 'Submitting...' : 'Submit'}
 </button>
 ```
 

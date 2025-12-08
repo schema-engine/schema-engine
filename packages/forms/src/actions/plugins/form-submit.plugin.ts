@@ -99,14 +99,14 @@ export type FormSubmitAction = z.infer<typeof FormSubmitActionSchema>;
  * Submit Plugin Factory
  *
  * Returns a configured action registration object for form submission.
- * Use with the FormEngineBuilder pattern.
+ * Use with the FormComposer pattern.
  *
  * @example Basic Usage
  * ```typescript
  * import { submitPlugin } from "@schema-engine/forms/actions";
- * import { FormEngineBuilder } from "@schema-engine/formsuilder";
+ * import { FormComposer } from "@schema-engine/formsuilder";
  *
- * const engine = new FormEngineBuilder()
+ * const engine = new FormComposer()
  *   .addElement(InputElement)
  *   .addAction(submitPlugin({
  *     onSuccess: (data, context) => {
@@ -191,11 +191,10 @@ export function formSubmitPlugin(
 					} else if (typeof value === 'object') {
 						formData.append(key, JSON.stringify(value));
 					} else {
-						formData.append(key, String(value));
+						formData.append(key, String(value as string | number | boolean | bigint));
 					}
 				}
 			}
-
 			const requestOptions = {
 				method: action.method,
 				body: formData,

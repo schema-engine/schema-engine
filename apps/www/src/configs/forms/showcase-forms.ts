@@ -1,7 +1,5 @@
-import type { FormConfig } from '@schema-engine/forms/schemas';
-import { ValidationPresets } from '@schema-engine/formsemas/validation';
-import '@schema-engine/forms-react/registrations';
-import '@schema-engine/formsions/registry';
+import { ValidationPresets, type FormConfig } from '@schema-engine/forms/schemas';
+import '@/lib/form-engine-setup';
 
 /**
  * Basic form example configuration
@@ -70,7 +68,7 @@ export const basicFormConfig: FormConfig = {
 			id: 'reset-after-success',
 			$type: 'reset',
 			enabled: true,
-			triggers: ['submit_success'],
+			triggers: ['form_submit_success'],
 			resetToDefaults: true,
 		},
 	],
@@ -340,7 +338,7 @@ export const arrayFormConfig: FormConfig = {
 			id: 'reset-after-success',
 			$type: 'reset',
 			enabled: true,
-			triggers: ['submit_success'],
+			triggers: ['form_submit_success'],
 			resetToDefaults: true,
 		},
 	],
@@ -451,7 +449,7 @@ export const complexFormConfig: FormConfig = {
 			id: 'reset-after-success',
 			$type: 'reset',
 			enabled: true,
-			triggers: ['submit_success'],
+			triggers: ['form_submit_success'],
 			resetToDefaults: true,
 		},
 	],

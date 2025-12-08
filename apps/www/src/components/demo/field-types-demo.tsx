@@ -1,6 +1,6 @@
 import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
 import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
-import type { FormConfig } from '@schema-engine/formsemas';
+import type { FormConfig } from '@schema-engine/forms/schemas';
 import '@/lib/form-engine-setup';
 
 /**

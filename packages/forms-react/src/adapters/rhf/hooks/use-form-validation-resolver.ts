@@ -56,7 +56,7 @@ function getValueAtPath(obj: any, path: string): any {
 
 export function useFormValidationResolver(elements: any[]) {
 	return useCallback(
-		async (values: FieldValues): Promise<ResolverResult<FieldValues>> => {
+		async (values: FieldValues): Promise<ResolverResult> => {
 			const validatableFields = collectValidatableFields(elements);
 			const allValidations: Array<{ path: string; rules: any[] }> = [];
 

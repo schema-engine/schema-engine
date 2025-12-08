@@ -27,23 +27,27 @@ function Alert({ className, variant, ...props }: ComponentProps<'div'> & Variant
 	return <div data-slot="alert" role="alert" className={cn(alertVariants({ variant }), className)} {...props} />;
 }
 
-function AlertTitle({ className, ...props }: ComponentProps<'h4'>) {
+function AlertTitle({ className, children, ...props }: ComponentProps<'h4'>) {
 	return (
 		<h4
 			data-slot="alert-title"
 			className={cn('col-start-2 min-h-4 font-medium tracking-tight', className)}
 			{...props}
-		/>
+		>
+			{children}
+		</h4>
 	);
 }
 
-function AlertDescription({ className, ...props }: ComponentProps<'div'>) {
+function AlertDescription({ className, children, ...props }: ComponentProps<'div'>) {
 	return (
 		<div
 			data-slot="alert-description"
 			className={cn('col-start-2 grid justify-items-start gap-1 text-sm [&_p]:leading-relaxed', className)}
 			{...props}
-		/>
+		>
+			{children}
+		</div>
 	);
 }
 

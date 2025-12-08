@@ -1,4 +1,3 @@
-import '@/lib/form-engine-setup';
 import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
 import { FormEngineProvider } from '@schema-engine/forms-react/components/adapter-provider';
 import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
@@ -6,14 +5,14 @@ import { formEngine } from '@/lib/form-engine-setup';
 import { ViewportPreview } from '@schema-engine/forms-react/components/viewport-preview';
 import { responsiveFormConfig } from '@/configs/forms/responsive-forms';
 
+const handleSubmit = (data: any) => {
+	console.log('Form submitted:', data);
+};
+
 /**
  * Responsive grid demo showcasing the grid layout system
  */
 export function ResponsiveGridDemo() {
-	const handleSubmit = (data: any) => {
-		console.log('Form submitted:', data);
-	};
-
 	return (
 		<FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
 			<div className="container mx-auto px-4 py-8 max-w-7xl">
