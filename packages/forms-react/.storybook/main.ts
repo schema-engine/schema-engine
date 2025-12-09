@@ -21,7 +21,7 @@ const config: StorybookConfig = {
 	addons: [
 		getAbsolutePath('@storybook/addon-docs'),
 		getAbsolutePath('@storybook/addon-vitest'),
-		'msw-storybook-addon',
+		getAbsolutePath('msw-storybook-addon'),
 	],
 	framework: {
 		name: getAbsolutePath('@storybook/react-vite'),
