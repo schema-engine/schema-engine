@@ -1,5 +1,6 @@
 import { useFormEngine, useConstraintLogic } from '@/hooks';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
+import { ElementError } from './element-error';
 
 export interface FormElementProps {
 	config: FormEngine.ElementConfig;
@@ -27,12 +28,30 @@ export function FormElement({ config, className, style }: FormElementProps) {
 
 	if (!elementRegistration) {
 		return (
-			<div className={`text-red-500 text-sm ${className || ''}`} style={style}>
-				Error: Component "{$type}" not found in registry
-			</div>
+			<ElementError
+				title="Component not found"
+				message={`The component type "${$type}" is not registered in the form engine.`}
+				componentType={$type}
+				className={className}
+				style={style}
+			/>
 		);
 	}
 
+	try {
+		elementRegistration.schema.parse(config);
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : 'Invalid configuration';
+		return (
+			<ElementError
+				title="Invalid element configuration"
+				message={errorMessage}
+				componentType={$type}
+				className={className}
+				style={style}
+			/>
+		);
+	}
 	const Component = elementRegistration.render as React.ComponentType<any>;
 
 	const enhancedConfig = {

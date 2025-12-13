@@ -1429,3 +1429,45 @@ export const JobApplicationForm: Story = {
 			.build(),
 	},
 };
+
+export const WithInvalidElementConfig: Story = {
+	args: {
+		config: {
+			id: 'invalid-element-demo',
+			title: 'Invalid Element Config Demo',
+			description: 'Shows error handling for invalid element configurations',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'Invalid Element',
+					elements: [
+						{
+							$type: 'input',
+							id: 'valid-input',
+							name: 'validField',
+							label: 'Valid Input',
+							placeholder: 'This is valid',
+							inputType: 'text',
+						},
+						// @ts-expect-error: Intentionally invalid configuration for testing, name is missing
+						{
+							$type: 'input',
+							id: 'invalid-input',
+							label: 'Invalid Input (missing name)',
+							placeholder: 'This should fail',
+							inputType: 'text',
+						},
+						{
+							$type: 'input',
+							id: 'another-valid',
+							name: 'anotherField',
+							label: 'Another Valid Input',
+							placeholder: 'This is also valid',
+							inputType: 'email',
+						},
+					],
+				},
+			],
+		},
+	},
+};
