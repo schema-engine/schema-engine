@@ -33,7 +33,8 @@
 		"tsc-alias": "^1.8.16"
 	},
 	"dependencies": {
-		"@schema-engine/actions": "workspace:*"
+		"@schema-engine/actions": "workspace:*",
+		"@schema-engine/registry": "workspace:*"
 	},
 	"peerDependencies": {
 		"typescript": "^5",

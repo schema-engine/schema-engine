@@ -1,26 +1,5 @@
+import type { ComponentMetadata } from '@schema-engine/registry';
 import type { ElementCategory } from './categories';
-
-/**
- * Universal metadata for all components (elements, layouts, steppers).
- *
- * This metadata is used for:
- * - Documentation generation
- * - Form builder UI
- * - IDE tooltips and autocomplete
- * - JSON schema generation
- */
-export interface ComponentMetadata {
-	/** Human-readable display name */
-	name: string;
-	/** Detailed description of the component's purpose */
-	description?: string;
-	/** Icon identifier for UI display */
-	icon?: string;
-	/** Tags for filtering and searching */
-	tags?: string[];
-	/** Version of the component */
-	version?: string;
-}
 
 /**
  * Element-specific metadata extends the base metadata with category.

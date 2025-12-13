@@ -9,15 +9,15 @@ export { FormComposer } from './builder';
 export { FormEngine } from './engine';
 export type { EngineRegistries, FormEngineSchemaMetadata } from './engine';
 
-export { BaseRegistry, ElementRegistry, LayoutRegistry, StepperRegistry } from './registries';
+export { BaseRegistry } from '@schema-engine/registry';
+export { ElementRegistry, LayoutRegistry, StepperRegistry } from './registries';
 
+export type { ComponentMetadata, ComponentRegistration } from '@schema-engine/registry';
 export type {
-	ComponentMetadata,
 	ElementMetadata,
 	BuilderActionRegistration,
 	BuilderActionTrigger,
 	BuilderActionExecutionContext,
-	ComponentRegistration,
 	InputRegistration,
 	StaticRegistration,
 	LayoutRegistration,

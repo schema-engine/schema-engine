@@ -58,16 +58,12 @@
 		"infer_scope_from_branch": true,
 		"options": [
 			{
-				"value": "app",
-				"label": "app"
-			},
-			{
-				"value": "www",
-				"label": "www"
-			},
-			{
 				"value": "actions",
 				"label": "actions"
+			},
+			{
+				"value": "app",
+				"label": "app"
 			},
 			{
 				"value": "forms",
@@ -80,6 +76,14 @@
 			{
 				"value": "global",
 				"label": "global"
+			},
+			{
+				"value": "registry",
+				"label": "registry"
+			},
+			{
+				"value": "www",
+				"label": "www"
 			}
 		]
 	},

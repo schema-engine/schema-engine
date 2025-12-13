@@ -1,6 +1,6 @@
 // oxlint-disable no-redundant-type-constituents
-import type { z } from 'zod';
-import type { ComponentMetadata, ElementMetadata } from './metadata';
+import type { ComponentRegistration, Brand } from '@schema-engine/registry';
+import type { ElementMetadata } from './metadata';
 import type { BuilderActionExecutionContext, BuilderActionTrigger } from './actions.js';
 import type { ActionRegistration } from '@schema-engine/actions';
 
@@ -10,58 +10,6 @@ declare global {
 		interface LayoutRegistry {}
 		interface StepperRegistry {}
 	}
-}
-
-/** Brand symbol for compile-time type discrimination (erased at runtime) */
-declare const __brand: unique symbol;
-/**
- * Phantom type brand - adds compile-time type identity without runtime cost.
- * Brand properties are optional and never exist at runtime, used only by TypeScript
- * to provide semantic discrimination between structurally identical types.
- */
-type Brand<T, TBrand> = T & { readonly [__brand]?: TBrand };
-
-/**
- * Base registration interface - common fields for all registration types.
- *
- * All registration objects (elements, layouts, steppers, actions) extend this base.
- *
- * @template TConfig - The serializable configuration type (from schema)
- * @template TMeta - The metadata type (ComponentMetadata, ElementMetadata, or ActionMetadata)
- */
-export interface BaseRegistration<TConfig = unknown, TMeta extends ComponentMetadata = ComponentMetadata> {
-	/** Unique identifier - MUST be unique within its registry type. Uses $type to avoid conflicts with common 'id' properties. */
-	$type: string;
-	/** Zod schema for config validation and type inference */
-	schema: z.ZodType<TConfig>;
-	/** Component or action metadata */
-	metadata: TMeta;
-}
-
-/**
- * Component registration interface.
- *
- * Foundation for all component registrations (elements, layouts, steppers).
- * Components are the building blocks of forms and layouts.
- *
- * Use branded type aliases (`InputRegistration`, `LayoutRegistration`, etc.) for
- * semantic clarity and compile-time type safety.
- *
- * @template TType - The component type identifier (must match a registry key)
- * @template TConfig - The serializable configuration type (from schema)
- * @template TProps - The component props type (passed to render function)
- * @template TMeta - The metadata type (ElementMetadata, ComponentMetadata, etc.)
- */
-export interface ComponentRegistration<
-	TType extends string = string,
-	TConfig = unknown,
-	TProps = unknown,
-	TMeta extends ComponentMetadata = ComponentMetadata,
-> extends BaseRegistration<TConfig, TMeta> {
-	/** Framework-agnostic render function */
-	render: (props: TProps) => unknown;
-	/** Type identifier - enforced to match registry key */
-	$type: TType;
 }
 
 /**

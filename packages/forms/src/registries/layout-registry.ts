@@ -1,5 +1,5 @@
 import type { LayoutRegistration } from '@/types';
-import { BaseRegistry } from './base-registry';
+import { ComponentRegistry } from '@schema-engine/registry';
 import { ComponentType } from '@/engine';
 
 /**
@@ -10,7 +10,7 @@ import { ComponentType } from '@/engine';
  * Note: Uses LayoutRegistration (branded type) to support layout registrations. Type safety is maintained
  * at the registration site via branded types.
  */
-export class LayoutRegistry extends BaseRegistry<string, LayoutRegistration<any, any, any>> {
+export class LayoutRegistry extends ComponentRegistry<string, LayoutRegistration<any, any, any>> {
 	get registryName(): string {
 		return ComponentType.Layout;
 	}

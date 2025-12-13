@@ -107,6 +107,7 @@
       "name": "@schema-engine/actions",
       "version": "0.1.0",
       "dependencies": {
+        "@schema-engine/registry": "workspace:*",
         "zod": "^4.0.17",
       },
       "devDependencies": {
@@ -123,6 +124,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@schema-engine/actions": "workspace:*",
+        "@schema-engine/registry": "workspace:*",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -219,6 +221,21 @@
         "react": "^19",
         "react-dom": "^19",
         "typescript": "^5",
+      },
+    },
+    "packages/registry": {
+      "name": "@schema-engine/registry",
+      "version": "0.1.0",
+      "dependencies": {
+        "@ecopages/logger": "latest",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "tsc-alias": "^1.8.16",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+        "zod": "^4.0.17",
       },
     },
   },
@@ -640,6 +657,8 @@
     "@schema-engine/forms": ["@schema-engine/forms@workspace:packages/forms"],
 
     "@schema-engine/forms-react": ["@schema-engine/forms-react@workspace:packages/forms-react"],
+
+    "@schema-engine/registry": ["@schema-engine/registry@workspace:packages/registry"],
 
     "@standard-schema/spec": ["@standard-schema/spec@1.0.0", "", {}, "sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA=="],
 
@@ -1921,6 +1940,8 @@
 
     "@schema-engine/forms-react/sonner": ["sonner@2.0.7", "", { "peerDependencies": { "react": "^18.0.0 || ^19.0.0 || ^19.0.0-rc", "react-dom": "^18.0.0 || ^19.0.0 || ^19.0.0-rc" } }, "sha512-W6ZN4p58k8aDKA4XPcx2hpIQXBRAgyiWVkYhT7CvK6D3iAu7xjvVyhQHg2/iaKJZ1XVJ4r7XuwGL+WGEK37i9w=="],
 
+    "@schema-engine/registry/@types/bun": ["@types/bun@1.3.4", "", { "dependencies": { "bun-types": "1.3.4" } }, "sha512-EEPTKXHP+zKGPkhRLv+HI0UEX8/o+65hqARxLy8Ov5rIxMBPNTjeZww00CIihrIQGEQBYg+0roO5qOnS/7boGA=="],
+
     "@storybook/builder-vite/@vitest/mocker": ["@vitest/mocker@3.2.4", "", { "dependencies": { "@vitest/spy": "3.2.4", "estree-walker": "^3.0.3", "magic-string": "^0.30.17" }, "peerDependencies": { "msw": "^2.4.9", "vite": "^5.0.0 || ^6.0.0 || ^7.0.0-0" }, "optionalPeers": ["msw", "vite"] }, "sha512-46ryTE9RZO/rfDd7pEqFl7etuyzekzEhUbTW3BvmeO/BcCMEgq59BKhek3dXDWgAj4oMK6OZi+vRr1wPW6qjEQ=="],
 
     "@testing-library/jest-dom/dom-accessibility-api": ["dom-accessibility-api@0.6.3", "", {}, "sha512-7ZgogeTnjuHbo+ct10G9Ffp0mif17idi0IyWNVA/wcwcm7NPOD/WEHVP3n7n3MhXqxoIYm8d6MuZohYWIZ4T3w=="],
@@ -2030,6 +2051,8 @@
     "@schema-engine/forms-react/@types/bun/bun-types": ["bun-types@1.3.4", "", { "dependencies": { "@types/node": "*" } }, "sha512-5ua817+BZPZOlNaRgGBpZJOSAQ9RQ17pkwPD0yR7CfJg+r8DgIILByFifDTa+IPDDxzf5VNhtNlcKqFzDgJvlQ=="],
 
     "@schema-engine/forms/@types/bun/bun-types": ["bun-types@1.3.4", "", { "dependencies": { "@types/node": "*" } }, "sha512-5ua817+BZPZOlNaRgGBpZJOSAQ9RQ17pkwPD0yR7CfJg+r8DgIILByFifDTa+IPDDxzf5VNhtNlcKqFzDgJvlQ=="],
+
+    "@schema-engine/registry/@types/bun/bun-types": ["bun-types@1.3.4", "", { "dependencies": { "@types/node": "*" } }, "sha512-5ua817+BZPZOlNaRgGBpZJOSAQ9RQ17pkwPD0yR7CfJg+r8DgIILByFifDTa+IPDDxzf5VNhtNlcKqFzDgJvlQ=="],
 
     "@vitest/expect/@vitest/utils/@vitest/pretty-format": ["@vitest/pretty-format@3.2.4", "", { "dependencies": { "tinyrainbow": "^2.0.0" } }, "sha512-IVNZik8IVRJRTr9fxlitMKeJeXFFFN0JaB9PHPGQ8NKQbGpfjlTx9zO4RefN8gp7eqjNy8nyK3NZmBzOPeIxtA=="],
 

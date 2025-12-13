@@ -1,6 +1,8 @@
 import { z } from 'zod';
-import { logger } from '@/lib/logger';
-import type { BaseRegistration } from '@/types';
+import { Logger } from '@ecopages/logger';
+import type { BaseRegistration } from './types.js';
+
+const logger = new Logger('[@schema-engine/registry]');
 
 /**
  * Base Registry - Abstract class for all registries
@@ -134,18 +136,6 @@ export abstract class BaseRegistry<TKey extends string, TValue extends BaseRegis
 	 *
 	 * @param zodRegistry - The Zod registry to register schemas to
 	 * @param metadataBuilder - Function to build metadata for each item
-	 *
-	 * @example
-	 * ```typescript
-	 * const schemaRegistry = z.registry<FormEngineSchemaMetadata>();
-	 * elementRegistry.registerSchemas(schemaRegistry, (item) => ({
-	 *   id: `element:${item.$type}`,
-	 *   componentType: 'element',
-	 *   title: item.metadata.name,
-	 *   description: item.metadata.description,
-	 *   category: (item.metadata as ElementMetadata).category,
-	 * }));
-	 * ```
 	 */
 	registerSchemas(
 		zodRegistry: ReturnType<typeof z.registry>,

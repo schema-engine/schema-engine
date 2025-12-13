@@ -29,7 +29,8 @@
 		]
 	},
 	"dependencies": {
-		"zod": "^4.0.17"
+		"zod": "^4.0.17",
+		"@schema-engine/registry": "workspace:*"
 	},
 	"devDependencies": {
 		"@types/bun": "latest",

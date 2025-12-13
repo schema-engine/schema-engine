@@ -1,5 +1,5 @@
 import type { StepperRegistration } from '@/types';
-import { BaseRegistry } from './base-registry';
+import { ComponentRegistry } from '@schema-engine/registry';
 import { ComponentType } from '@/engine';
 
 /**
@@ -10,7 +10,7 @@ import { ComponentType } from '@/engine';
  * Note: Uses StepperRegistration (branded type) to support stepper registrations. Type safety is maintained
  * at the registration site via branded types.
  */
-export class StepperRegistry extends BaseRegistry<string, StepperRegistration<any, any, any>> {
+export class StepperRegistry extends ComponentRegistry<string, StepperRegistration<any, any, any>> {
 	get registryName(): string {
 		return ComponentType.Stepper;
 	}

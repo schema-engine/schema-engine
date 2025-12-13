@@ -1,5 +1,5 @@
 import type { ActionRegistration } from './types';
-import { z } from 'zod';
+import { BaseRegistry } from '@schema-engine/registry';
 
 /**
  * Action Registry Provider
@@ -90,117 +90,38 @@ export interface ActionRegistryProvider<
  * const action = registry.getAction('log');
  * ```
  */
+/**
+ * Action Registry
+ *
+ * Generic, domain-agnostic registry for managing action registrations.
+ * Provides storage, retrieval, and lookup capabilities for actions.
+ */
 export class ActionRegistry<TContext = unknown, TTrigger = string>
+	extends BaseRegistry<string, ActionRegistration<string, TContext, TTrigger>>
 	implements ActionRegistryProvider<TContext, TTrigger>
 {
-	private actions = new Map<string, ActionRegistration<string, TContext, TTrigger>>();
-
-	/**
-	 * Register an action
-	 *
-	 * @param action - The action registration to register
-	 */
-	register(action: ActionRegistration<string, TContext, TTrigger>): void {
-		this.actions.set(action.$type, action);
-	}
-
-	/**
-	 * Check if an action type is registered
-	 *
-	 * @param type - The action type to check
-	 * @returns True if the action type is registered
-	 */
-	has(type: string): boolean {
-		return this.actions.has(type);
+	get registryName(): string {
+		return 'ActionRegistry';
 	}
 
 	/**
 	 * Get an action registration by type
-	 *
-	 * @param type - The action type identifier
-	 * @returns The action registration or undefined if not found
 	 */
 	getAction(type: string): ActionRegistration<string, TContext, TTrigger> | undefined {
-		return this.actions.get(type);
+		return this.get(type);
 	}
 
 	/**
 	 * Get all registered action types
-	 *
-	 * @returns Array of action type identifiers
 	 */
 	getActionTypes(): string[] {
-		return Array.from(this.actions.keys());
-	}
-
-	/**
-	 * Get all registered actions
-	 *
-	 * @returns Array of all action registrations
-	 */
-	getAll(): ActionRegistration<string, TContext, TTrigger>[] {
-		return Array.from(this.actions.values());
+		return this.getAllKeys();
 	}
 
 	/**
 	 * Get default triggers for an action type
-	 *
-	 * @param type - Action type to get triggers for
-	 * @returns Array of default triggers or undefined if not found
 	 */
 	getDefaultTriggers(type: string): readonly TTrigger[] | undefined {
-		return this.getAction(type)?.metadata?.defaultTriggers;
-	}
-
-	/**
-	 * Get the number of registered actions
-	 *
-	 * @returns The number of registered actions
-	 */
-	get size(): number {
-		return this.actions.size;
-	}
-
-	/**
-	 * Get the underlying actions map
-	 *
-	 * @returns The actions map
-	 */
-	getMap(): Map<string, ActionRegistration<string, TContext, TTrigger>> {
-		return this.actions;
-	}
-
-	/**
-	 * Clear all registered actions
-	 */
-	clear(): void {
-		this.actions.clear();
-	}
-
-	/**
-	 * Register all items' schemas to a Zod registry using a metadata builder function.
-	 * Pure function - registry is passed in, allowing for composition and testing.
-	 *
-	 * @param zodRegistry - The Zod registry to register schemas to
-	 * @param metadataBuilder - Function to build metadata for each action registration
-	 *
-	 * @example
-	 * ```typescript
-	 * const schemaRegistry = z.registry<FormEngineSchemaMetadata>();
-	 * actionRegistry.registerSchemas(schemaRegistry, (item) => ({
-	 *   id: `action:${item.$type}`,
-	 *   componentType: 'action',
-	 *   title: item.metadata.name,
-	 *   description: item.metadata.description,
-	 * }));
-	 * ```
-	 */
-	registerSchemas(
-		zodRegistry: ReturnType<typeof z.registry>,
-		metadataBuilder: (item: ActionRegistration<string, TContext, TTrigger>) => Record<string, unknown>,
-	): void {
-		for (const item of this.getAll()) {
-			item.schema.register(zodRegistry, metadataBuilder(item));
-		}
+		return this.get(type)?.metadata?.defaultTriggers;
 	}
 }
