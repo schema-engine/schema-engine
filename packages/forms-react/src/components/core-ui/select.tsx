@@ -40,7 +40,7 @@ function SelectValue({
 		<BaseSelect.Value
 			data-slot="select-value"
 			className={cn(
-				'placeholder:text-muted-foreground selection:bg-primar w-full min-w-0 text-base transition-[color,box-shadow,border-color] outline-none disabled:pointer-events-none disabled:opacity-50 md:text-sm',
+				'placeholder:text-muted-foreground selection:bg-primar w-full min-w-0 text-base transition-[color,box-shadow,border-color] outline-none disabled:pointer-events-none disabled:opacity-50 md:text-sm text-start',
 				className,
 			)}
 			{...props}

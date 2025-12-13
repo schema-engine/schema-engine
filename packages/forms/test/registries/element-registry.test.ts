@@ -1,12 +1,13 @@
 import { describe, test, expect, beforeEach } from 'bun:test';
 import { ElementRegistry } from '@/registries';
-import type { ElementRegistration } from '@/types';
+import type { InputRegistration } from '@/types';
 import { z } from 'zod';
+import { ComponentType } from '@/engine';
 
 describe('ElementRegistry', () => {
 	let registry: ElementRegistry;
 
-	const mockElement: ElementRegistration<{ label: string }, any> = {
+	const mockElement: InputRegistration<'text-input', { label: string }, any> = {
 		$type: 'text-input',
 		schema: z.object({ label: z.string() }),
 		metadata: {
@@ -17,7 +18,7 @@ describe('ElementRegistry', () => {
 		render: (props) => props,
 	};
 
-	const anotherElement: ElementRegistration<{ placeholder: string }, any> = {
+	const anotherElement: InputRegistration<'email-input', { placeholder: string }, any> = {
 		$type: 'email-input',
 		schema: z.object({ placeholder: z.string() }),
 		metadata: {
@@ -50,7 +51,7 @@ describe('ElementRegistry', () => {
 		});
 
 		test('should override when registering duplicate id', () => {
-			const updated: ElementRegistration = {
+			const updated: InputRegistration = {
 				...mockElement,
 				metadata: {
 					...mockElement.metadata,
@@ -153,7 +154,7 @@ describe('ElementRegistry', () => {
 
 	describe('registryName', () => {
 		test('should return correct registry name', () => {
-			expect(registry.registryName).toBe('element');
+			expect(registry.registryName).toBe(ComponentType.Element);
 		});
 	});
 });

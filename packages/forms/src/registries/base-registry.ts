@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import type { BaseRegistration } from '@/types';
 
@@ -125,5 +126,33 @@ export abstract class BaseRegistry<TKey extends string, TValue extends BaseRegis
 	 */
 	getMap(): Map<TKey, TValue> {
 		return this.items;
+	}
+
+	/**
+	 * Register all items' schemas to a Zod registry using a metadata builder function.
+	 * Pure function - registry is passed in, allowing for composition and testing.
+	 *
+	 * @param zodRegistry - The Zod registry to register schemas to
+	 * @param metadataBuilder - Function to build metadata for each item
+	 *
+	 * @example
+	 * ```typescript
+	 * const schemaRegistry = z.registry<FormEngineSchemaMetadata>();
+	 * elementRegistry.registerSchemas(schemaRegistry, (item) => ({
+	 *   id: `element:${item.$type}`,
+	 *   componentType: 'element',
+	 *   title: item.metadata.name,
+	 *   description: item.metadata.description,
+	 *   category: (item.metadata as ElementMetadata).category,
+	 * }));
+	 * ```
+	 */
+	registerSchemas(
+		zodRegistry: ReturnType<typeof z.registry>,
+		metadataBuilder: (item: TValue) => Record<string, unknown>,
+	): void {
+		for (const item of this.getAll()) {
+			item.schema.register(zodRegistry, metadataBuilder(item));
+		}
 	}
 }

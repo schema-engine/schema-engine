@@ -1,5 +1,6 @@
 import type { InputRegistration, StaticRegistration } from '@/types';
 import { BaseRegistry } from './base-registry';
+import { ComponentType } from '@/engine';
 
 /**
  * Element Registry
@@ -14,6 +15,6 @@ export class ElementRegistry extends BaseRegistry<
 	InputRegistration<any, any, any> | StaticRegistration<any, any, any>
 > {
 	get registryName(): string {
-		return 'element';
+		return ComponentType.Element;
 	}
 }

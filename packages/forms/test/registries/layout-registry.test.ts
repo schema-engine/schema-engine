@@ -2,11 +2,12 @@ import { describe, test, expect, beforeEach } from 'bun:test';
 import { LayoutRegistry } from '@/registries';
 import type { LayoutRegistration } from '@/types';
 import { z } from 'zod';
+import { ComponentType } from '@/engine';
 
 describe('LayoutRegistry', () => {
 	let registry: LayoutRegistry;
 
-	const mockLayout: LayoutRegistration<{ theme: string }, any> = {
+	const mockLayout: LayoutRegistration<'card-layout', { theme: string }, any> = {
 		$type: 'card-layout',
 		schema: z.object({ theme: z.string() }),
 		metadata: {
@@ -16,7 +17,7 @@ describe('LayoutRegistry', () => {
 		render: (props) => props,
 	};
 
-	const anotherLayout: LayoutRegistration<{ width: number }, any> = {
+	const anotherLayout: LayoutRegistration<'full-width-layout', { width: number }, any> = {
 		$type: 'full-width-layout',
 		schema: z.object({ width: z.number() }),
 		metadata: {
@@ -59,7 +60,7 @@ describe('LayoutRegistry', () => {
 
 	describe('registryName', () => {
 		test('should return correct registry name', () => {
-			expect(registry.registryName).toBe('layout');
+			expect(registry.registryName).toBe(ComponentType.Layout);
 		});
 	});
 });

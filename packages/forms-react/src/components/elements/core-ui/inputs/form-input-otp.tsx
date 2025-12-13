@@ -37,7 +37,7 @@ export function FormInputOTP({
 				disabled={fieldProps.disabled}
 				autoFocus={config.autoFocus}
 			>
-				<InputOTPGroup>
+				<InputOTPGroup className="gap-2">
 					{Array.from({ length: firstHalf }).map((_, i) => (
 						<InputOTPSlot
 							key={i}
@@ -47,7 +47,7 @@ export function FormInputOTP({
 					))}
 				</InputOTPGroup>
 				<InputOTPSeparator />
-				<InputOTPGroup>
+				<InputOTPGroup className="gap-2">
 					{Array.from({ length: secondHalf }).map((_, i) => (
 						<InputOTPSlot
 							key={i}

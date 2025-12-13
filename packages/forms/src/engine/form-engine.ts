@@ -11,22 +11,26 @@ import { FormComposer } from '@/builder/form-composer';
 import { ElementRegistry, LayoutRegistry, StepperRegistry } from '@/registries';
 import { ActionRegistry } from '@schema-engine/actions';
 import { logger } from '@/lib/logger';
-import { z } from 'zod';
+import { z, type GlobalMeta } from 'zod';
 import { FormConfigBuilder } from '@/builder/form-config-builder';
+
+export const ComponentType = {
+	Element: 'element',
+	Layout: 'layout',
+	Stepper: 'stepper',
+	Action: 'action',
+} as const;
+
+export type ComponentType = (typeof ComponentType)[keyof typeof ComponentType];
 
 /**
  * Metadata for form engine JSON Schema generation.
  * Used across all component types (elements, layouts, steppers, actions).
  */
-export interface FormEngineSchemaMetadata {
-	id: string;
-	componentType: 'element' | 'layout' | 'stepper' | 'action';
-	title?: string;
-	description?: string;
+export interface FormEngineSchemaMetadata extends GlobalMeta {
+	componentType: ComponentType;
 	category?: string;
-	deprecated?: boolean;
 	examples?: unknown[];
-	[key: string]: unknown;
 }
 
 /**

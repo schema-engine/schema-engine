@@ -7,7 +7,7 @@ import type {
 	BuilderActionExecutionContext,
 } from '@/types';
 import type { FormEngineSchemaMetadata } from '@/engine/form-engine';
-import { FormEngine } from '@/engine/form-engine';
+import { ComponentType, FormEngine } from '@/engine/form-engine';
 import { logger } from '@/lib/logger';
 import { ElementRegistry, LayoutRegistry, StepperRegistry } from '@/registries';
 import { ActionRegistry } from '@schema-engine/actions';
@@ -175,7 +175,7 @@ export class FormComposer<
 	addAction<TType extends string, TConfig>(
 		registration: BuilderActionRegistration<TType, TConfig>,
 	): FormComposer<TElements, TLayouts, TSteppers, TActions & Record<TType, TConfig>> {
-		this.actionRegistry.register(registration as BuilderActionRegistration<string, unknown>);
+		this.actionRegistry.register(registration as BuilderActionRegistration);
 		return this;
 	}
 
@@ -294,7 +294,9 @@ export class FormComposer<
 	 *
 	 * @returns FormEngine configured with all registered components and actions
 	 */
-	build(): FormEngine<TElements, TLayouts, TSteppers, TActions> {
+	build(
+		zodRegistry?: ReturnType<typeof z.registry<FormEngineSchemaMetadata>>,
+	): FormEngine<TElements, TLayouts, TSteppers, TActions> {
 		logger.debug('Building FormEngine', {
 			elements: this.elementRegistry.size,
 			layouts: this.layoutRegistry.size,
@@ -302,44 +304,36 @@ export class FormComposer<
 			actions: this.actionRegistry.size,
 		});
 
-		const schemaRegistry = z.registry<FormEngineSchemaMetadata>();
+		const schemaRegistry = zodRegistry ?? z.registry<FormEngineSchemaMetadata>();
 
-		for (const element of this.elementRegistry.getAll()) {
-			element.schema.register(schemaRegistry, {
-				id: `element:${element.$type}`,
-				componentType: 'element',
-				title: element.metadata.name,
-				description: element.metadata.description,
-				category: element.metadata.category,
-			});
-		}
+		this.elementRegistry.registerSchemas(schemaRegistry, (item) => ({
+			id: `element:${item.$type}`,
+			componentType: ComponentType.Element,
+			title: item.metadata.name,
+			description: item.metadata.description,
+			category: (item.metadata as any).category,
+		}));
 
-		for (const layout of this.layoutRegistry.getAll()) {
-			layout.schema.register(schemaRegistry, {
-				id: `layout:${layout.$type}`,
-				componentType: 'layout',
-				title: layout.metadata.name,
-				description: layout.metadata.description,
-			});
-		}
+		this.layoutRegistry.registerSchemas(schemaRegistry, (item) => ({
+			id: `layout:${item.$type}`,
+			componentType: ComponentType.Layout,
+			title: item.metadata.name,
+			description: item.metadata.description,
+		}));
 
-		for (const stepper of this.stepperRegistry.getAll()) {
-			stepper.schema.register(schemaRegistry, {
-				id: `stepper:${stepper.$type}`,
-				componentType: 'stepper',
-				title: stepper.metadata.name,
-				description: stepper.metadata.description,
-			});
-		}
+		this.stepperRegistry.registerSchemas(schemaRegistry, (item) => ({
+			id: `stepper:${item.$type}`,
+			componentType: ComponentType.Stepper,
+			title: item.metadata.name,
+			description: item.metadata.description,
+		}));
 
-		for (const action of this.actionRegistry.getAll()) {
-			action.schema.register(schemaRegistry, {
-				id: `action:${action.$type}`,
-				componentType: 'action',
-				title: action.metadata.name,
-				description: action.metadata.description,
-			});
-		}
+		this.actionRegistry.registerSchemas(schemaRegistry, (item) => ({
+			id: `action:${item.$type}`,
+			componentType: ComponentType.Action,
+			title: item.metadata.name,
+			description: item.metadata.description,
+		}));
 
 		const formConfigSchema = this.createFormConfigSchema();
 

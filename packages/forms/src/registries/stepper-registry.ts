@@ -1,5 +1,6 @@
 import type { StepperRegistration } from '@/types';
 import { BaseRegistry } from './base-registry';
+import { ComponentType } from '@/engine';
 
 /**
  * Stepper Registry
@@ -11,6 +12,6 @@ import { BaseRegistry } from './base-registry';
  */
 export class StepperRegistry extends BaseRegistry<string, StepperRegistration<any, any, any>> {
 	get registryName(): string {
-		return 'stepper';
+		return ComponentType.Stepper;
 	}
 }

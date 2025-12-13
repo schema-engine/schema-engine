@@ -2,11 +2,12 @@ import { describe, test, expect, beforeEach } from 'bun:test';
 import { StepperRegistry } from '@/registries';
 import type { StepperRegistration } from '@/types';
 import { z } from 'zod';
+import { ComponentType } from '@/engine';
 
 describe('StepperRegistry', () => {
 	let registry: StepperRegistry;
 
-	const mockStepper: StepperRegistration<{ showProgress: boolean }, any> = {
+	const mockStepper: StepperRegistration<'wizard-stepper', { showProgress: boolean }, any> = {
 		$type: 'wizard-stepper',
 		schema: z.object({ showProgress: z.boolean() }),
 		metadata: {
@@ -16,7 +17,7 @@ describe('StepperRegistry', () => {
 		render: (props) => props,
 	};
 
-	const anotherStepper: StepperRegistration<{ vertical: boolean }, any> = {
+	const anotherStepper: StepperRegistration<'vertical-stepper', { vertical: boolean }, any> = {
 		$type: 'vertical-stepper',
 		schema: z.object({ vertical: z.boolean() }),
 		metadata: {
@@ -59,7 +60,7 @@ describe('StepperRegistry', () => {
 
 	describe('registryName', () => {
 		test('should return correct registry name', () => {
-			expect(registry.registryName).toBe('stepper');
+			expect(registry.registryName).toBe(ComponentType.Stepper);
 		});
 	});
 });

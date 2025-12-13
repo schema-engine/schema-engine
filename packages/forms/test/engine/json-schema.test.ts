@@ -2,6 +2,7 @@ import { describe, test, expect } from 'bun:test';
 import { z } from 'zod';
 import { FormComposer } from '@/builder/form-composer';
 import type { InputRegistration, LayoutRegistration, StepperRegistration, BuilderActionRegistration } from '@/types';
+import { ComponentType } from '@/engine/form-engine';
 
 describe('FormEngine JSON Schema Generation', () => {
 	describe('Basic Schema Generation', () => {
@@ -107,8 +108,8 @@ describe('FormEngine JSON Schema Generation', () => {
 			const registeredMetadata = schemaRegistry.get(textInputSchema);
 
 			expect(registeredMetadata).toBeDefined();
-			expect(registeredMetadata?.id).toBe('element:text');
-			expect(registeredMetadata?.componentType).toBe('element');
+			expect(registeredMetadata?.id).toBe(`${ComponentType.Element}:text`);
+			expect(registeredMetadata?.componentType).toBe(ComponentType.Element);
 			expect(registeredMetadata?.title).toBe('Text Input');
 			expect(registeredMetadata?.description).toBe('A text input field for collecting user data');
 			expect(registeredMetadata?.category).toBe('input');

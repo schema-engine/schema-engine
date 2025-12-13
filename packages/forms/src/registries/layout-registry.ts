@@ -1,5 +1,6 @@
 import type { LayoutRegistration } from '@/types';
 import { BaseRegistry } from './base-registry';
+import { ComponentType } from '@/engine';
 
 /**
  * Layout Registry
@@ -11,6 +12,6 @@ import { BaseRegistry } from './base-registry';
  */
 export class LayoutRegistry extends BaseRegistry<string, LayoutRegistration<any, any, any>> {
 	get registryName(): string {
-		return 'layout';
+		return ComponentType.Layout;
 	}
 }
