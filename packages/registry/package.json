@@ -17,16 +17,7 @@
 		"watch:lib": "bun run ./build.ts --watch",
 		"clean": "rm -rf ./dist",
 		"test:all": "bun test",
-		"lint-staged": "lint-staged"
-	},
-	"lint-staged": {
-		"**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}": [
-			"oxlint",
-			"prettier --write"
-		],
-		"**/*.{json,jsonc,md,yml,yaml}": [
-			"prettier --write"
-		]
+		"check-types": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@ecopages/logger": "latest"

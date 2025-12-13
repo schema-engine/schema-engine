@@ -17,7 +17,8 @@
 		"watch:lib": "bun run ./build.ts --watch",
 		"clean": "rm -rf ./dist",
 		"test:all": "bun test",
-		"lint-staged": "lint-staged"
+		"lint-staged": "lint-staged",
+		"check-types": "tsc --noEmit"
 	},
 	"lint-staged": {
 		"**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}": [
