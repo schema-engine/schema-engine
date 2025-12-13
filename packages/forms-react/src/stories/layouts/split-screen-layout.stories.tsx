@@ -234,7 +234,7 @@ export const TopAligned: Story = {
 						$type: 'split-screen',
 						sideContent: 'Content aligned to the top of the main area',
 						sidePlacement: 'left',
-						contentAlignment: 'start',
+						contentAlignment: 'top',
 					},
 				},
 			],
