@@ -26,7 +26,7 @@
 		"build:lib": "turbo build:lib check-types",
 		"build:lib:actions": "turbo run @schema-engine/actions#build:lib",
 		"build:lib:forms": "turbo run @schema-engine/forms#build:lib",
-		"build:lib:forms-react": "turbo run @schema-engine/forms#react build:lib",
+		"build:lib:forms-react": "turbo run @schema-engine/forms-react#build:lib",
 		"build:lib:registry": "turbo run @schema-engine/registry#build:lib",
 		"build:react-storybook": "NODE_OPTIONS='--max-old-space-size=4096' turbo run @schema-engine/forms-react#build-storybook",
 		"build:www": "turbo run @json-form-engine/www#build",
