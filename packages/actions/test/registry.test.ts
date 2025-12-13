@@ -10,12 +10,6 @@ interface TestContext {
 	data: Record<string, unknown>;
 }
 
-interface TestConfig {
-	id: string;
-	$type: string;
-	enabled?: boolean;
-}
-
 describe('ActionRegistry', () => {
 	let registry: ActionRegistry<TestContext, TestTrigger>;
 
@@ -55,7 +49,7 @@ describe('ActionRegistry', () => {
 	};
 
 	beforeEach(() => {
-		registry = new ActionRegistry<TestConfig, TestContext, TestTrigger>();
+		registry = new ActionRegistry<TestContext, TestTrigger>();
 	});
 
 	describe('register', () => {
