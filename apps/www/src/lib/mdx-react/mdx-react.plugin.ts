@@ -35,6 +35,8 @@ const defaultOptions: CompileOptions = {
 export class MDXPlugin extends IntegrationPlugin {
 	renderer: RendererClass<EcoPagesElement>;
 
+	private dependencies: AssetDefinition[] | undefined;
+
 	/**
 	 * Creates a new instance of the MDXPlugin.
 	 *
@@ -85,7 +87,9 @@ export class MDXPlugin extends IntegrationPlugin {
 	 * 2. **Node Module Scripts** for exposing `react` and `react-dom` ESM modules to the browser.
 	 */
 	private getDependencies(): AssetDefinition[] {
-		return [
+		if (this.dependencies) return this.dependencies;
+
+		this.dependencies = [
 			AssetFactory.createInlineContentScript({
 				position: 'head',
 				bundle: false,
@@ -124,6 +128,8 @@ export class MDXPlugin extends IntegrationPlugin {
 				},
 			}),
 		];
+
+		return this.dependencies;
 	}
 }
 
