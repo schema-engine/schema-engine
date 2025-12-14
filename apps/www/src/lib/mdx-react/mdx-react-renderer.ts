@@ -1,8 +1,31 @@
 /**
- * This module contains the MDX renderer
+ * This module contains the MDX renderer for Ecopages.
+ *
+ * # MDX React Renderer Walkthrough
+ *
+ * This renderer handles the processing, bundling, and rendering of .mdx files within the Ecopages framework.
+ * Unlike standard React rendering, MDX requires a compile step to transform markdown content into a React component.
+ *
+ * ## Architecture Overview
+ *
+ * 1. **Global Plugin Registration**:
+ *    The `MDXPlugin` (defined in `mdx-react.plugin.ts`) registers a global Bun plugin (`@mdx-js/esbuild`).
+ *    This allows Bun to understand how to import and bundle `.mdx` files natively.
+ *
+ * 2. **File-Based Bundling**:
+ *    Instead of manually compiling MDX strings, this renderer uses `AssetFactory.createFileScript` to point directly
+ *    to the source `.mdx` file. The `AssetProcessingService` then bundles this file. Because the Bun plugin is
+ *    registered globally, the bundler automatically transforms the MDX syntax into a JavaScript module.
+ *
+ * 3. **Client-Side Hydration & Layouts**:
+ *    The hydration script is generated dynamically. It imports the bundled MDX component and checks for a `layout` export.
+ *    If a layout is present, it wraps the page component within the layout before hydration. This moves the composition
+ *    logic to the client, simplifying the server-side asset generation.
+ *
  * @module
  */
 
+import path from 'node:path';
 import {
 	type EcoComponentConfig,
 	type EcoPageFile,
@@ -13,6 +36,7 @@ import {
 	type PageMetadataProps,
 	type RouteRendererBody,
 } from '@ecopages/core';
+import { RESOLVED_ASSETS_DIR } from '@ecopages/core/constants';
 import { rapidhash } from '@ecopages/core/hash';
 import React, { type ReactNode } from 'react';
 import { renderToString } from 'react-dom/server';
@@ -22,9 +46,8 @@ import {
 	type AssetProcessingService,
 	type ProcessedAsset,
 } from '@ecopages/core/services/asset-processing-service';
-import fs from 'node:fs/promises';
-import { compile, type CompileOptions } from '@mdx-js/mdx';
-import type { EcoPagesAppConfig } from '../../../../../node_modules/@ecopages/core/_dist/src/internal-types';
+import type { CompileOptions } from '@mdx-js/mdx';
+import mdx from '@mdx-js/esbuild';
 
 /**
  * Error thrown when an error occurs while rendering a React component.
@@ -50,68 +73,69 @@ export class BundleError extends Error {
 }
 
 /**
- * A structure representing an MDX file
+ * A structure representing an MDX file export.
  */
 export type MDXReactFile = {
+	/** The default export which is the converted MDX content as a React component. */
 	default: ReactNode;
+	/** Optional layout component to wrap the content. */
 	layout?: React.ComponentType<{ children: ReactNode }>;
+	/** Optional page-specific configuration. */
 	config?: EcoComponentConfig;
+	/** Function to retrieve page metadata. */
 	getMetadata: GetMetadata;
 };
 
 /**
- * Options for the MDX renderer
+ * Options for the MDX integration renderer.
  */
 interface MDXReactIntegrationRendererOptions<C = ReactNode> extends IntegrationRendererRenderOptions<C> {
+	/** Optional layout component to wrap the content. */
 	layout?: React.ComponentType<{ children: ReactNode }>;
+	/** Optional page-specific configuration. */
 	config?: EcoComponentConfig;
 }
 
 /**
- * Constructor options for MDXReactRenderer
+ * The MDXReactRenderer Class.
+ *
+ * This class extends the base `IntegrationRenderer` to provide specialized handling for MDX files.
+ * It is responsible for:
+ * - Server-Side Rendering (SSR) of the MDX content to HTML.
+ * - Generating client-side assets (bundled JS) for hydration.
+ * - Importing and parsing page files to extract metadata and configuration.
  */
-interface MDXReactRendererConstructorOptions {
-	appConfig: EcoPagesAppConfig;
-	assetProcessingService: AssetProcessingService;
-	resolvedIntegrationDependencies: ProcessedAsset[];
-	runtimeOrigin: string;
-	compilerOptions: CompileOptions;
-}
-
-/**
- * Generates scripts for MDX components and hydration
- */
-class ScriptsGenerator {
-	private compilerOptions: CompileOptions;
-
-	constructor(compilerOptions: CompileOptions) {
-		this.compilerOptions = compilerOptions;
-	}
+export class MDXReactRenderer extends IntegrationRenderer {
+	name = PLUGIN_NAME;
 
 	/**
-	 * Creates a hydration script for client-side React component mounting
+	 * Creates a client-side hydration script.
+	 *
+	 * This script is responsible for:
+	 * 1. Importing the bundled MDX component.
+	 * 2. Checking if a `layout` export exists.
+	 * 3. Composing the Page within the Layout if present.
+	 * 4. Hydrating the React root.
+	 *
+	 * @param importPath - The public path to the bundled component file.
 	 */
-	createHydrationScript(componentName: string): string {
+	private createHydrationScript(importPath: string): string {
 		return `
-import { hydrateRoot, createElement } from "react";
+import { createElement, hydrateRoot } from "react";
+import * as MDXComponent from "${importPath}";
+
+const { default: Page, layout } = MDXComponent;
 
 async function hydrate() {
     try {
         const root = document.querySelector('[data-react-root]');
-        if (!root) {
-            console.warn('[MDX React] No hydration root found');
-            return;
-        }
+        if (!root) return;
         
-        const module = await import("/assets/${componentName}.js");
-        const Component = module.default;
-        
-        if (typeof Component !== 'function') {
-            console.error('[MDX React] Component is not a function:', typeof Component, Component);
-            return;
-        }
-        
-        hydrateRoot(root, createElement(Component));
+        const element = layout 
+            ? createElement(layout, null, createElement(Page))
+            : createElement(Page);
+            
+        hydrateRoot(root, element);
     } catch (error) {
         console.error('[MDX React] Hydration failed:', error);
     }
@@ -126,79 +150,40 @@ if (document.readyState === 'loading') {
 	}
 
 	/**
-	 * Creates a wrapper script for MDX content with layout support
+	 * Builds values for the route.
+	 *
+	 * This method prepares the assets needed for the client-side hydration of the MDX page.
+	 * It creates two main assets:
+	 *
+	 * 1. **Content Script**: The bundled MDX file itself.
+	 *    We use \`AssetFactory.createFileScript\` to reference the source file directly.
+	 *    The `AssetProcessingService` bundles this file using the globally registered MDX plugin.
+	 *
+	 * 2. **Hydration Script**: A small inline script (generated by \`createHydrationScript\`)
+	 *    that imports the bundled file and initializes the React app on the client.
+	 *
+	 * @param pagePath - The absolute path to the MDX page file.
+	 * @returns A promise resolving to the list of processed assets.
 	 */
-	async createMDXWrapperScript(pagePath: string): Promise<string> {
-		try {
-			const mdxContent = await fs.readFile(pagePath, 'utf-8');
-
-			const compiledMDX = await compile(mdxContent, this.compilerOptions);
-
-			const compiledCode = compiledMDX.toString();
-
-			const modifiedCode = compiledCode
-				.replace(/export default function (\w+)/g, 'function $1')
-				.replace(/export default /g, 'const MDXContent = ')
-				.replace(/export const layout/g, 'const layout')
-				.replace(/export\s*{[^}]*}/g, '')
-				.replace(/export\s+/g, '');
-
-			return `
-import React from 'react';
-${modifiedCode}
-
-function WrappedMDXComponent(props) {
-    const pageElement = React.createElement(MDXContent || (() => React.createElement('div', null, 'No content')));
-    
-    if (typeof layout !== 'undefined') {
-        return React.createElement(layout, { children: pageElement });
-    }
-    
-    return pageElement;
-}
-
-export default WrappedMDXComponent;
-        `.trim();
-		} catch (error) {
-			console.error('[MDX React] Failed to compile MDX file:', error);
-			return `
-import React from 'react';
-function WrappedMDXComponent(props) {
-    return React.createElement('div', null, 'Error: Failed to compile MDX content');
-}
-export default WrappedMDXComponent;
-        `.trim();
-		}
-	}
-}
-
-/**
- * A renderer for the MDX integration.
- */
-export class MDXReactRenderer extends IntegrationRenderer {
-	name = PLUGIN_NAME;
-	private scriptsGenerator: ScriptsGenerator;
-
-	constructor(options: MDXReactRendererConstructorOptions) {
-		super(options);
-		this.scriptsGenerator = new ScriptsGenerator(options.compilerOptions);
-	}
-
 	override async buildRouteRenderAssets(pagePath: string): Promise<ProcessedAsset[]> {
 		try {
 			const pathHash = rapidhash(pagePath);
 			const componentName = `ecopages-react-${pathHash}`;
 
-			const wrapperScript = await this.scriptsGenerator.createMDXWrapperScript(pagePath);
+			const resolvedAssetImportFilename = `/${path
+				.join(RESOLVED_ASSETS_DIR, path.relative(this.appConfig.srcDir, pagePath))
+				.replace(path.basename(pagePath), `${componentName}.js`)
+				.replace(/\\/g, '/')}`;
 
 			const dependencies = [
-				AssetFactory.createContentScript({
+				AssetFactory.createFileScript({
 					position: 'head',
-					content: wrapperScript,
+					filepath: pagePath,
 					name: componentName,
 					excludeFromHtml: true,
 					bundle: true,
 					bundleOptions: {
+						loading: 'lazy',
 						external: [
 							'react',
 							'react-dom',
@@ -206,12 +191,14 @@ export class MDXReactRenderer extends IntegrationRenderer {
 							'react/jsx-dev-runtime',
 							'react-dom/client',
 						],
+						naming: `${componentName}.[ext]`,
+						plugins: [mdx({})], // Explicitly inject plugin
 						...(import.meta.env.NODE_ENV === 'production' && {
 							minify: true,
 							splitting: false,
 							treeshaking: true,
 						}),
-					},
+					} as any,
 					attributes: {
 						type: 'module',
 						defer: '',
@@ -220,7 +207,7 @@ export class MDXReactRenderer extends IntegrationRenderer {
 
 				AssetFactory.createContentScript({
 					position: 'head',
-					content: this.scriptsGenerator.createHydrationScript(componentName),
+					content: this.createHydrationScript(resolvedAssetImportFilename),
 					name: `${componentName}-hydration`,
 					bundle: false,
 					attributes: {
@@ -314,9 +301,16 @@ export class MDXReactRenderer extends IntegrationRenderer {
 }
 
 /**
- * Factory function to create an MDX React renderer class with specific compiler options
+ * Factory function to create an MDX React renderer class with specific compiler options.
+ *
+ * @param _compilerOptions - Compiler options for MDX compilation.
+ * Note: These are passed to ensure strict typing adherence to the interface expected by `mdx-react.plugin.ts`.
+ * In the current implementation, the compilation is handled by the global plugin registered in `MDXPlugin`,
+ * so these options are not directly used in the renderer logic but are consistent with the plugin configuration.
+ *
+ * @returns A new MDXReactRenderer class extended with the provided context.
  */
-export function createMDXReactRenderer(compilerOptions: CompileOptions) {
+export function createMDXReactRenderer(_compilerOptions: CompileOptions) {
 	return class extends MDXReactRenderer {
 		constructor(options: {
 			appConfig: any;
@@ -326,7 +320,6 @@ export function createMDXReactRenderer(compilerOptions: CompileOptions) {
 		}) {
 			super({
 				...options,
-				compilerOptions,
 			});
 		}
 	};

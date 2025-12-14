@@ -22,12 +22,26 @@ const defaultOptions: CompileOptions = {
 };
 
 /**
- * The MDX plugin class
- * This plugin provides support for MDX components in Ecopages
+ * The MDX Plugin class.
+ *
+ * This plugin handles the integration of MDX with the Ecopages framework.
+ * Its primary responsibilities are:
+ * 1. **Global Plugin Registration**: Registers the `@mdx-js/esbuild` plugin with Bun.
+ *    This enables the entire runtime (and bundler) to natively process `.mdx` files.
+ * 2. **Renderer Initialization**: Creates and provides the `MDXReactRenderer` instance.
+ * 3. **Dependency Injection**: Injects necessary React dependencies (react, react-dom)
+ *    into the page head via import maps and module scripts.
  */
 export class MDXPlugin extends IntegrationPlugin {
 	renderer: RendererClass<EcoPagesElement>;
 
+	/**
+	 * Creates a new instance of the MDXPlugin.
+	 *
+	 * @param options - Configuration options for the MDX plugin.
+	 * @param options.compilerOptions - Options passed to the MDX compiler (e.g. remark/rehype plugins).
+	 * @param options.extensions - File extensions to handle (defaults to ['.mdx']).
+	 */
 	constructor({ compilerOptions, ...options }: MDXPluginConfig = { extensions: ['.mdx'] }) {
 		super({
 			...options,
@@ -43,15 +57,33 @@ export class MDXPlugin extends IntegrationPlugin {
 
 		this.integrationDependencies.unshift(...this.getDependencies());
 	}
+	/**
+	 * Registers the MDX plugin with Bun globally.
+	 *
+	 * This is a critical step that allows Bun's bundler and runtime to transpile MDX files on the fly.
+	 * It uses the `@mdx-js/esbuild` plugin, adapted for Bun.
+	 *
+	 * @param options - Compile options for the MDX processor.
+	 */
 	async setupBunPlugin(options?: Readonly<CompileOptions>): Promise<void> {
 		// @ts-expect-error: esbuild plugin vs bun plugin
 		await Bun.plugin(mdx(deepMerge(options, defaultOptions)));
 	}
 
+	/**
+	 * Helper to construct the source URL for import maps.
+	 */
 	private buildImportMapSourceUrl(fileName: string): string {
 		return `/${AssetFactory.RESOLVED_ASSETS_VENDORS_DIR}/${fileName}`;
 	}
 
+	/**
+	 * Retrieves the integration dependencies (assets) required for MDX React pages.
+	 *
+	 * This includes:
+	 * 1. An **Import Map** to define where `react` and `react-dom` can be loaded from.
+	 * 2. **Node Module Scripts** for exposing `react` and `react-dom` ESM modules to the browser.
+	 */
 	private getDependencies(): AssetDefinition[] {
 		return [
 			AssetFactory.createInlineContentScript({
@@ -64,7 +96,6 @@ export class MDXPlugin extends IntegrationPlugin {
 							'react/jsx-runtime': this.buildImportMapSourceUrl('react-esm.js'),
 							'react/jsx-dev-runtime': this.buildImportMapSourceUrl('react-esm.js'),
 							'react-dom': this.buildImportMapSourceUrl('react-dom-esm.js'),
-							'react-dom/client': this.buildImportMapSourceUrl('react-dom-esm.js'),
 						},
 					},
 					null,
