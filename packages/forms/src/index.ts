@@ -8,11 +8,7 @@
 export { FormComposer } from './builder';
 export { FormEngine } from './engine';
 export type { EngineRegistries, FormEngineSchemaMetadata } from './engine';
-
-export { BaseRegistry } from '@schema-engine/registry';
 export { ElementRegistry, LayoutRegistry, StepperRegistry } from './registries';
-
-export type { ComponentMetadata, ComponentRegistration } from '@schema-engine/registry';
 export type {
 	ElementMetadata,
 	BuilderActionRegistration,
@@ -23,9 +19,7 @@ export type {
 	LayoutRegistration,
 	StepperRegistration,
 } from './types';
-
 export type { ActionExecutionResult } from '@schema-engine/actions';
-
 export * from './schemas';
 export * from './actions';
 export * from './layouts';
