@@ -351,7 +351,7 @@ type MyExecutor = ActionExecutor<MyConfig, MyContext, MyTrigger>;
 
 Forms package provides:
 
-1. **Form-specific types**: `FormActionConfig`, `FormActionContext`, `FormActionTrigger`
+1. **Form-specific types**: `FormActionConfig`, `BuilderActionExecutionContext`, `FormActionTrigger`
 2. **Form plugins**: Submit, Reset, Notification, Auto-Save, GTM
 3. **Integration with FormEngine**: Automatic action execution
 
@@ -369,17 +369,17 @@ interface ActionExecutionContext<TContext, TTrigger> {
 For forms, the context includes:
 
 ```typescript
-interface FormActionContext {
+interface BuilderActionExecutionContext<TConfig> {
+	config: TConfig;
 	formId: string;
 	formData: Record<string, unknown>;
 	currentStep: number;
 	totalSteps: number;
 	isValid: boolean;
 	errors: Record<string, unknown>;
-	form: UseFormReturn<any>; // React Hook Form controller
-	metadata: {
-		/* timing info */
-	};
+	trigger: FormActionTrigger;
+	metadata: { stepStartTime: number; totalFormTime: number; userInteractions: number };
+	form: { reset: () => void; setValue: (name: string, value: unknown) => void };
 }
 ```
 

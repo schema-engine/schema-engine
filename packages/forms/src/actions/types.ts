@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { UseFormReturn } from 'react-hook-form';
 import { FormSubmitActionSchema } from './plugins/form-submit.plugin';
 import { FormResetActionSchema } from './plugins/form-reset.plugin';
 import { NotificationActionSchema } from './plugins/notification.plugin';
@@ -36,27 +35,6 @@ declare global {
  * TypeScript can automatically infer the correct action type based on the '$type' field.
  */
 export type FormActionConfig = FormEngine.ActionRegistry[keyof FormEngine.ActionRegistry];
-
-/**
- * Form-specific context for action execution
- *
- * This is the domain-specific context passed to form action handlers.
- * It contains all form state, validation info, and React Hook Form controller.
- */
-export interface FormActionContext {
-	formId: string;
-	formData: Record<string, any>;
-	currentStep: number;
-	totalSteps: number;
-	isValid: boolean;
-	errors: Record<string, any>;
-	form: UseFormReturn<any>;
-	metadata: {
-		stepStartTime: number;
-		totalFormTime: number;
-		userInteractions: number;
-	};
-}
 
 /**
  * Form Action Configuration Schema
