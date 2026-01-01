@@ -1,6 +1,5 @@
-import type { z } from 'zod';
+import { z } from 'zod';
 import type {
-	ValidationRule,
 	AsyncRule,
 	RequiredRule,
 	EmailRule,
@@ -13,45 +12,33 @@ import type {
 	MaxRule,
 	MinItemsRule,
 	MaxItemsRule,
-	IpRule,
+	Ipv4Rule,
+	Ipv6Rule,
 	DateTimeRule,
 	DateRule,
 	TimeRule,
+	CuidRule,
+	Cuid2Rule,
+	UlidRule,
+	HexRule,
+	AnyValidationRegistration,
+	ValidationRegistration,
+	ValidationRegistrationMap,
 } from './types.js';
-import { defaultValidations } from './defaults.js';
 import { logger } from '@/lib/logger.js';
-
-/**
- * Validation rule registration definition
- */
-export interface ValidationRegistration {
-	type: string;
-	category: 'string' | 'number' | 'array' | 'boolean' | 'date' | 'generic';
-	/**
-	 * Validation handler function
-	 * @param rule - The validation rule configuration
-	 * @param formData - Optional form data for cross-field validation (available in custom resolver)
-	 * @returns Zod schema for validation
-	 */
-	handler: (rule: ValidationRule, formData?: Record<string, any>) => z.ZodTypeAny;
-}
 
 /**
  * Registry for validation rules
  * Provides registration, validation, and execution capabilities for validation types.
  */
 export class ValidationRegistry {
-	private validations = new Map<string, ValidationRegistration>();
-
-	constructor() {
-		this.registerBuiltInValidations();
-	}
+	private validations = new Map<string, ValidationRegistration<any>>();
 
 	/**
 	 * Register a new validation type
 	 */
-	register(registration: ValidationRegistration): void {
-		const { type } = registration;
+	register(registration: ValidationRegistration<any>): void {
+		const type = registration.type;
 
 		if (this.validations.has(type)) {
 			logger.debug(`Validation type '${type}' is already registered. Overriding.`);
@@ -63,7 +50,7 @@ export class ValidationRegistry {
 	/**
 	 * Register multiple validation types at once
 	 */
-	registerMultiple(registrations: ValidationRegistration[]): void {
+	registerMultiple(registrations: ValidationRegistration<any>[]): void {
 		for (const registration of registrations) {
 			this.register(registration);
 		}
@@ -77,43 +64,17 @@ export class ValidationRegistry {
 	}
 
 	/**
-	 * Get a registered validation
+	 * Get a registration by type
 	 */
-	get(type: string): ValidationRegistration | undefined {
-		return this.validations.get(type);
+	get<K extends keyof ValidationRegistrationMap>(type: K): ValidationRegistrationMap[K] | undefined {
+		return this.validations.get(type as string) as ValidationRegistrationMap[K] | undefined;
 	}
 
 	/**
-	 * Create Zod schema from a validation rule
-	 * @param rule - The validation rule
-	 * @param formData - Optional form data for cross-field validation
-	 * @param fieldName - Optional field name for context (used by async validation)
+	 * Remove a validation type
 	 */
-	createSchema(
-		rule: ValidationRule | Record<string, any>,
-		formData?: Record<string, any>,
-		fieldName?: string,
-	): z.ZodTypeAny | null {
-		const registration = this.validations.get(rule.type);
-		if (!registration) {
-			return null;
-		}
-
-		try {
-			// Pass field name to handler for async validation
-			if (rule.type === 'async' && fieldName) {
-				const asyncHandler = registration.handler as (
-					rule: ValidationRule,
-					formData?: Record<string, any>,
-					fieldName?: string,
-				) => z.ZodTypeAny;
-				return asyncHandler(rule as ValidationRule, formData, fieldName);
-			}
-			return registration.handler(rule as ValidationRule, formData);
-		} catch (error) {
-			console.error(`Failed to create schema for validation rule '${rule.type}':`, error);
-			return null;
-		}
+	unregister(type: string): boolean {
+		return this.validations.delete(type);
 	}
 
 	/**
@@ -126,26 +87,33 @@ export class ValidationRegistry {
 	/**
 	 * Get validations by category
 	 */
-	getByCategory(category: 'string' | 'number' | 'array' | 'boolean' | 'date' | 'generic'): ValidationRegistration[] {
-		return Array.from(this.validations.values()).filter((v) => v.category === category);
+	getByCategory(category: string): AnyValidationRegistration[] {
+		return Array.from(this.validations.values()).filter(
+			(v) => v.category === category,
+		) as AnyValidationRegistration[];
 	}
 
 	/**
-	 * Clear all registered validations
+	 * Create Zod schema from a validation rule
+	 * @param rule - The validation rule
+	 * @param formData - Optional form data for cross-field validation
 	 */
-	clear(): void {
-		this.validations.clear();
+	createSchema<T extends { type: string }>(rule: T, formData?: Record<string, any>): z.ZodTypeAny | null {
+		const registration = this.validations.get(rule.type) as ValidationRegistration<T> | undefined;
+		if (!registration) {
+			return null;
+		}
+
+		try {
+			return registration.handler(rule, formData);
+		} catch (error) {
+			console.error(`Failed to create schema for validation rule '${rule.type}':`, error);
+			return null;
+		}
 	}
 
 	/**
-	 * Unregister a validation type
-	 */
-	unregister(type: string): boolean {
-		return this.validations.delete(type);
-	}
-
-	/**
-	 * Built-in validation presets organized by type
+	 * Common validation presets
 	 */
 	presets = {
 		string: {
@@ -176,6 +144,10 @@ export class ValidationRegistry {
 				version: 'v4',
 				message: message || 'Please enter a valid UUID v4',
 			}),
+			cuid: (message?: string): CuidRule => ({ type: 'cuid', message }),
+			cuid2: (message?: string): Cuid2Rule => ({ type: 'cuid2', message }),
+			ulid: (message?: string): UlidRule => ({ type: 'ulid', message }),
+			hex: (message?: string): HexRule => ({ type: 'hex', message }),
 		},
 
 		number: {
@@ -216,14 +188,12 @@ export class ValidationRegistry {
 		},
 
 		network: {
-			ipv4: (message?: string): IpRule => ({
-				type: 'ip',
-				version: 'v4',
+			ipv4: (message?: string): Ipv4Rule => ({
+				type: 'ipv4',
 				message: message || 'Please enter a valid IPv4 address',
 			}),
-			ipv6: (message?: string): IpRule => ({
-				type: 'ip',
-				version: 'v6',
+			ipv6: (message?: string): Ipv6Rule => ({
+				type: 'ipv6',
 				message: message || 'Please enter a valid IPv6 address',
 			}),
 		},
@@ -269,21 +239,26 @@ export class ValidationRegistry {
 
 	/**
 	 * Register all built-in validation handlers
+	 * @param defaultValidations - The default validations to register
 	 */
-	private registerBuiltInValidations(): void {
+	initialize(defaultValidations: AnyValidationRegistration[]): void {
 		this.registerMultiple(defaultValidations);
 	}
 }
+
+import { defaultValidations } from './defaults.js';
 
 /**
  * Global validation registry instance
  */
 export const validationRegistry = new ValidationRegistry();
 
+validationRegistry.initialize(defaultValidations);
+
 /**
  * Helper function to register a validation
  */
-export function registerValidation(registration: ValidationRegistration): void {
+export function registerValidation(registration: AnyValidationRegistration): void {
 	validationRegistry.register(registration);
 }
 

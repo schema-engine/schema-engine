@@ -23,7 +23,6 @@ export function isFieldRequired(rules?: ValidationRule[]): boolean {
 export function createZodSchemaFromRules(
 	rules: ValidationRuleType[] = [],
 	formData?: Record<string, any>,
-	fieldName?: string,
 ): z.ZodTypeAny {
 	if (!rules.length) {
 		return z.any();
@@ -31,7 +30,7 @@ export function createZodSchemaFromRules(
 
 	const schemas: z.ZodTypeAny[] = [];
 	for (const rule of rules) {
-		const ruleSchema = validationRegistry.createSchema(rule as ValidationRule, formData, fieldName);
+		const ruleSchema = validationRegistry.createSchema(rule as ValidationRule, formData);
 		if (ruleSchema) {
 			schemas.push(ruleSchema);
 		}
@@ -57,7 +56,7 @@ export function generateFormSchema(elements: FormElement[]): z.ZodObject<any> {
 
 		if (!element.rules?.length) continue;
 
-		const fieldSchema = createZodSchemaFromRules(element.rules, undefined, element.name);
+		const fieldSchema = createZodSchemaFromRules(element.rules, undefined);
 		schemaFields[element.name] = fieldSchema;
 	}
 

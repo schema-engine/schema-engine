@@ -89,16 +89,14 @@ function resolveDependencies(
 }
 
 /**
- * Creates the validation request payload with field, value, dependencies, and extra payload.
+ * Creates the validation request payload with value, dependencies, and extra payload.
  */
 function createValidationPayload(
-	field: string,
 	value: unknown,
 	dependsOn: Record<string, unknown>,
 	extraPayload?: Record<string, unknown>,
 ): Record<string, unknown> {
 	const payload: Record<string, unknown> = {
-		field,
 		value,
 	};
 
@@ -176,7 +174,7 @@ function handleErrorWithCache(
  * Creates a Zod async validation handler for server-side validation.
  * Includes debouncing, dependency resolution, and performance optimizations.
  */
-export function createAsyncValidationHandler(rule: AsyncRule, formData?: Record<string, unknown>, fieldName?: string) {
+export function createAsyncValidationHandler(rule: AsyncRule, formData?: Record<string, unknown>) {
 	return z.any().superRefine(async (value: unknown, ctx) => {
 		/** Skip validation for empty values to prevent unnecessary API calls */
 		if (value === '' || value === null || value === undefined) {
@@ -200,8 +198,7 @@ export function createAsyncValidationHandler(rule: AsyncRule, formData?: Record<
 			}
 		}
 
-		const field = fieldName || 'unknown';
-		const payload = createValidationPayload(field, value, dependsOn, rule.extraPayload);
+		const payload = createValidationPayload(value, dependsOn, rule.extraPayload);
 
 		/** Check cache first to avoid unnecessary delays for cached results */
 		if (!rule.disableCache) {
@@ -217,7 +214,7 @@ export function createAsyncValidationHandler(rule: AsyncRule, formData?: Record<
 		/**
 		 * Create unique debounce key excluding the changing value to ensure proper debouncing.
 		 */
-		const stablePayload = { field, dependsOn, ...rule.extraPayload };
+		const stablePayload = { dependsOn, ...rule.extraPayload };
 		const debounceKey = `async-validation:${rule.url}:${JSON.stringify(stablePayload)}`;
 
 		/** Core validation function that performs the HTTP request and processes the response */

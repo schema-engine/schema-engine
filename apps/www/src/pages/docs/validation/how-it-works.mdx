@@ -47,7 +47,8 @@ The system automatically converts validation rules into Zod schemas:
 const rules = [{ type: 'required' }, { type: 'email' }, { type: 'minLength', value: 5 }];
 
 // Automatically generates: z.email().min(5)
-const schema = validationRegistry.createSchema(rules);
+import { createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation';
+const schema = createZodSchemaFromRules(rules);
 ```
 
 ## Basic Usage
@@ -98,7 +99,8 @@ const rules = [
 	},
 ];
 
-const schema = validationRegistry.createSchema(rules);
+import { createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation';
+const schema = createZodSchemaFromRules(rules);
 
 // Validate user input
 const result = schema.safeParse('mypassword123');
@@ -260,7 +262,6 @@ The Form Engine includes a powerful async validation system with caching, depend
   url: '/api/validate-username',
   method: 'POST',
   body: {
-    field: 'username'
     // System automatically includes:
     // - value: actualFieldValue
     // - dependsOn: { email: actualEmailValue } (if dependencies specified)
@@ -293,7 +294,6 @@ When you specify dependencies, the system automatically:
     ```json
     {
     	"value": "userInput",
-    	"field": "fieldName",
     	"dependsOn": {
     		"username": "actualUsername",
     		"email": "actual@email.com"

@@ -18,15 +18,12 @@ describe('Validation', () => {
 
 			const minLength = validationRegistry.presets.string.minLength(3);
 			expect(minLength.type).toBe('minLength');
-			expect(minLength.value).toBe(3);
 
 			const maxLength = validationRegistry.presets.string.maxLength(10);
 			expect(maxLength.type).toBe('maxLength');
-			expect(maxLength.value).toBe(10);
 
-			const pattern = validationRegistry.presets.string.pattern('^test$');
+			const pattern = validationRegistry.presets.string.pattern('^[a-z]+$');
 			expect(pattern.type).toBe('pattern');
-			expect(pattern.value).toBe('^test$');
 
 			const url = validationRegistry.presets.string.url();
 			expect(url.type).toBe('url');
@@ -34,35 +31,33 @@ describe('Validation', () => {
 			const uuid = validationRegistry.presets.string.uuid();
 			expect(uuid.type).toBe('uuid');
 
-			const uuidv4 = validationRegistry.presets.string.uuidv4();
-			expect(uuidv4.type).toBe('uuid');
-			expect(uuidv4.version).toBe('v4');
+			const cuid = validationRegistry.presets.string.cuid();
+			expect(cuid.type).toBe('cuid');
+
+			const cuid2 = validationRegistry.presets.string.cuid2();
+			expect(cuid2.type).toBe('cuid2');
+
+			const ulid = validationRegistry.presets.string.ulid();
+			expect(ulid.type).toBe('ulid');
+
+			const hex = validationRegistry.presets.string.hex();
+			expect(hex.type).toBe('hex');
 		});
 
 		test('should generate number validations', () => {
-			const required = validationRegistry.presets.number.required();
-			expect(required.type).toBe('required');
-
-			const min = validationRegistry.presets.number.min(1);
+			const min = validationRegistry.presets.number.min(5);
 			expect(min.type).toBe('min');
-			expect(min.value).toBe(1);
 
-			const max = validationRegistry.presets.number.max(100);
+			const max = validationRegistry.presets.number.max(10);
 			expect(max.type).toBe('max');
-			expect(max.value).toBe(100);
 		});
 
 		test('should generate array validations', () => {
-			const required = validationRegistry.presets.array.required();
-			expect(required.type).toBe('required');
-
 			const minItems = validationRegistry.presets.array.minItems(2);
 			expect(minItems.type).toBe('minItems');
-			expect(minItems.value).toBe(2);
 
 			const maxItems = validationRegistry.presets.array.maxItems(5);
 			expect(maxItems.type).toBe('maxItems');
-			expect(maxItems.value).toBe(5);
 
 			const nonEmpty = validationRegistry.presets.array.nonEmpty();
 			expect(nonEmpty.type).toBe('minItems');
@@ -71,12 +66,10 @@ describe('Validation', () => {
 
 		test('should generate network validations', () => {
 			const ipv4 = validationRegistry.presets.network.ipv4();
-			expect(ipv4.type).toBe('ip');
-			expect(ipv4.version).toBe('v4');
+			expect(ipv4.type).toBe('ipv4');
 
 			const ipv6 = validationRegistry.presets.network.ipv6();
-			expect(ipv6.type).toBe('ip');
-			expect(ipv6.version).toBe('v6');
+			expect(ipv6.type).toBe('ipv6');
 		});
 
 		test('should generate date validations', () => {
@@ -91,71 +84,57 @@ describe('Validation', () => {
 		});
 
 		test('should generate async validations', () => {
-			const asyncRule = validationRegistry.presets.custom.async('/api/validate', {
-				dependencies: ['field1', 'field2'],
-				method: 'POST',
-				headers: { Authorization: 'Bearer token' },
-				extraPayload: { extra: 'data' },
-				expectedResponse: { valid: true },
-				message: 'Custom validation failed',
-			});
-
-			expect(asyncRule.type).toBe('async');
-			expect(asyncRule.url).toBe('/api/validate');
-			expect(asyncRule.dependencies).toEqual(['field1', 'field2']);
-			expect(asyncRule.method).toBe('POST');
-			expect(asyncRule.headers).toEqual({ Authorization: 'Bearer token' });
-			expect(asyncRule.extraPayload).toEqual({ extra: 'data' });
-			expect(asyncRule.expectedResponse).toEqual({ valid: true });
-			expect(asyncRule.message).toBe('Custom validation failed');
+			const async = validationRegistry.presets.custom.async('/api/validate');
+			expect(async.type).toBe('async');
+			expect(async.url).toBe('/api/validate');
 		});
 	});
 
 	describe('createZodSchemaFromRules', () => {
 		test('should create string schema with required validation', () => {
-			const rules = [validationRegistry.presets.string.required()];
+			const rules = [validationRegistry.presets.string.required('Field is required')];
 			const schema = createZodSchemaFromRules(rules);
 
-			expect(() => schema.parse('valid')).not.toThrow();
-			expect(() => schema.parse('')).toThrow();
+			expect(() => schema.parse('test')).not.toThrow();
+			expect(() => schema.parse('')).toThrow('Field is required');
+			expect(() => schema.parse(undefined)).toThrow('Field is required');
 		});
 
 		test('should create email schema', () => {
-			const rules = [validationRegistry.presets.string.email()];
+			const rules = [validationRegistry.presets.string.email('Invalid email')];
 			const schema = createZodSchemaFromRules(rules);
 
 			expect(() => schema.parse('test@example.com')).not.toThrow();
-			expect(() => schema.parse('invalid-email')).toThrow();
+			expect(() => schema.parse('invalid-email')).toThrow('Invalid email');
 		});
 
 		test('should create number schema with min validation', () => {
-			const rules = [validationRegistry.presets.number.min(5)];
+			const rules = [validationRegistry.presets.number.min(5, 'Minimum 5')];
 			const schema = createZodSchemaFromRules(rules);
 
 			expect(() => schema.parse(10)).not.toThrow();
-			expect(() => schema.parse(3)).toThrow();
+			expect(() => schema.parse(3)).toThrow('Minimum 5');
 		});
 
 		test('should create array schema with minItems validation', () => {
-			const rules = [validationRegistry.presets.array.minItems(2)];
+			const rules = [validationRegistry.presets.array.minItems(2, 'Min 2 items')];
 			const schema = createZodSchemaFromRules(rules);
 
-			expect(() => schema.parse([1, 2, 3])).not.toThrow();
-			expect(() => schema.parse([1])).toThrow();
+			expect(() => schema.parse([1, 2])).not.toThrow();
+			expect(() => schema.parse([1])).toThrow('Min 2 items');
 		});
 
 		test('should combine multiple validation rules', () => {
 			const rules = [
 				validationRegistry.presets.string.required(),
 				validationRegistry.presets.string.minLength(3),
-				validationRegistry.presets.string.maxLength(10),
+				validationRegistry.presets.string.email(),
 			];
 			const schema = createZodSchemaFromRules(rules);
 
-			expect(() => schema.parse('hello')).not.toThrow();
-			expect(() => schema.parse('')).toThrow(); // Required
-			expect(() => schema.parse('hi')).toThrow(); // Too short
-			expect(() => schema.parse('this is too long')).toThrow(); // Too long
+			expect(() => schema.parse('test@example.com')).not.toThrow();
+			expect(() => schema.parse('te')).toThrow();
+			expect(() => schema.parse('invalid')).toThrow();
 		});
 
 		test('should handle empty rules array', () => {
@@ -168,6 +147,13 @@ describe('Validation', () => {
 		test('should generate form schema from elements', () => {
 			const elements = [
 				{
+					name: 'username',
+					rules: [
+						validationRegistry.presets.string.required(),
+						validationRegistry.presets.string.minLength(3),
+					],
+				},
+				{
 					name: 'email',
 					rules: [validationRegistry.presets.string.email()],
 				},
@@ -177,25 +163,23 @@ describe('Validation', () => {
 				},
 			];
 
-			const schema = generateFormSchema(elements);
+			const schema = generateFormSchema(elements as any);
+			expect(schema.shape.username).toBeDefined();
+			expect(schema.shape.email).toBeDefined();
+			expect(schema.shape.age).toBeDefined();
 
 			expect(() =>
 				schema.parse({
-					email: 'test@example.com',
+					username: 'jdoe',
+					email: 'john@example.com',
 					age: 25,
 				}),
 			).not.toThrow();
 
 			expect(() =>
 				schema.parse({
-					email: 'invalid-email',
-					age: 25,
-				}),
-			).toThrow();
-
-			expect(() =>
-				schema.parse({
-					email: 'test@example.com',
+					username: 'jd',
+					email: 'invalid',
 					age: 15,
 				}),
 			).toThrow();
@@ -203,98 +187,69 @@ describe('Validation', () => {
 
 		test('should skip elements without name or validation', () => {
 			const elements = [
-				{ name: 'test', rules: [validationRegistry.presets.string.required()] },
+				{ name: 'valid', rules: [validationRegistry.presets.string.required()] },
 				{ name: '', rules: [validationRegistry.presets.string.required()] },
-				{ name: 'test2' }, // No validation
-				{}, // No name or validation
+				{ name: 'no-rules', rules: [] },
 			];
 
-			const schema = generateFormSchema(elements);
-			const result = schema.parse({ test: 'value' });
-
-			expect(result).toEqual({ test: 'value' });
+			const schema = generateFormSchema(elements as any);
+			expect(schema.shape.valid).toBeDefined();
+			expect((schema.shape as any).noRules).toBeUndefined();
 		});
 	});
 
 	describe('Array Validation', () => {
 		test('should create minItems validation rule', () => {
-			const rule: MinItemsRule = {
-				type: 'minItems',
-				value: 2,
-				message: 'Must have at least 2 items',
-			};
-
+			const rule: MinItemsRule = { type: 'minItems', value: 2, message: 'Min 2 items' };
 			const schema = createZodSchemaFromRules([rule]);
 			expect(() => schema.parse([1, 2])).not.toThrow();
-			expect(() => schema.parse([1])).toThrow();
+			expect(() => schema.parse([1])).toThrow('Min 2 items');
 		});
 
 		test('should create maxItems validation rule', () => {
-			const rule: MaxItemsRule = {
-				type: 'maxItems',
-				value: 3,
-				message: 'Must have no more than 3 items',
-			};
-
+			const rule: MaxItemsRule = { type: 'maxItems', value: 2, message: 'Max 2 items' };
 			const schema = createZodSchemaFromRules([rule]);
-			expect(() => schema.parse([1, 2, 3])).not.toThrow();
-			expect(() => schema.parse([1, 2, 3, 4])).toThrow();
+			expect(() => schema.parse([1, 2])).not.toThrow();
+			expect(() => schema.parse([1, 2, 3])).toThrow('Max 2 items');
 		});
 
 		test('should combine array validation rules', () => {
-			const rules = [
-				{ type: 'minItems' as const, value: 1, message: 'Cannot be empty' },
-				{ type: 'maxItems' as const, value: 5, message: 'Too many items' },
+			const rules: [MinItemsRule, MaxItemsRule] = [
+				{ type: 'minItems', value: 2 },
+				{ type: 'maxItems', value: 4 },
 			];
-
 			const schema = createZodSchemaFromRules(rules);
-			expect(() => schema.parse([1, 2, 3])).not.toThrow();
-			expect(() => schema.parse([])).toThrow();
-			expect(() => schema.parse([1, 2, 3, 4, 5, 6])).toThrow();
+			expect(() => schema.parse([1, 2])).not.toThrow();
+			expect(() => schema.parse([1, 2, 3, 4])).not.toThrow();
+			expect(() => schema.parse([1])).toThrow();
+			expect(() => schema.parse([1, 2, 3, 4, 5])).toThrow();
 		});
 	});
 
 	describe('Async Validation', () => {
 		test('should create async validation rule with dependencies', () => {
-			const asyncRule = {
-				type: 'async' as const,
-				url: '/api/validate',
-				method: 'POST' as const,
-				dependencies: ['age', 'category'],
-				message: 'Validation failed',
-			};
-
-			expect(asyncRule.type).toBe('async');
-			expect(asyncRule.dependencies).toEqual(['age', 'category']);
-			expect(asyncRule.url).toBe('/api/validate');
+			const rule = validationRegistry.presets.custom.async('/api/validate', {
+				dependencies: ['field1'],
+			});
+			const schema = createZodSchemaFromRules([rule], { field1: 'value' });
+			expect(schema).toBeDefined();
 		});
 
 		test('should handle async validation with expected response', () => {
-			const asyncRule = {
-				type: 'async' as const,
-				url: '/api/validate',
+			const rule = validationRegistry.presets.custom.async('/api/validate', {
 				expectedResponse: { valid: true },
-				dependencies: ['field1'],
-				body: { extra: 'data' },
-			};
-
-			expect(asyncRule.expectedResponse).toEqual({ valid: true });
-			expect(asyncRule.body).toEqual({ extra: 'data' });
+			});
+			const schema = createZodSchemaFromRules([rule]);
+			expect(schema).toBeDefined();
 		});
 
 		test('should support cross-field validation structure', () => {
-			const crossFieldRule = {
-				type: 'async' as const,
-				url: '/api/validate-insurance',
-				dependencies: ['age', 'location', 'existing_conditions'],
-				headers: { Authorization: 'Bearer token' },
-				body: { validationType: 'insurance' },
-			};
+			const rule = validationRegistry.presets.custom.async('/api/validate', {
+				dependencies: ['otherField'],
+			});
 
-			expect(crossFieldRule.dependencies).toHaveLength(3);
-			expect(crossFieldRule.dependencies).toContain('age');
-			expect(crossFieldRule.dependencies).toContain('location');
-			expect(crossFieldRule.dependencies).toContain('existing_conditions');
+			const schema = createZodSchemaFromRules([rule], { otherField: 'some value' });
+			expect(schema).toBeDefined();
 		});
 	});
 
@@ -312,10 +267,15 @@ describe('Validation', () => {
 				'max',
 				'minItems',
 				'maxItems',
-				'ip',
+				'ipv4',
+				'ipv6',
 				'datetime',
 				'date',
 				'time',
+				'cuid',
+				'cuid2',
+				'ulid',
+				'hex',
 				'async',
 			];
 

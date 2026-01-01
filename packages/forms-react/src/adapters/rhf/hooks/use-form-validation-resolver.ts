@@ -73,7 +73,7 @@ export function useFormValidationResolver(elements: any[]) {
 				allValidations.map(async ({ path, rules }) => {
 					const value = getValueAtPath(values, path);
 					try {
-						const schema = createZodSchemaFromRules(rules, values, path);
+						const schema = createZodSchemaFromRules(rules, values);
 						await schema.parseAsync(value);
 					} catch (error) {
 						if (error instanceof z.ZodError) {
