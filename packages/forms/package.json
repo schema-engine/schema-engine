@@ -57,10 +57,6 @@
 			"types": "./dist/actions/*.d.ts",
 			"import": "./dist/actions/*.js"
 		},
-		"./actions/debug-registry": {
-			"types": "./dist/actions/debug-registry.d.ts",
-			"import": "./dist/actions/debug-registry.js"
-		},
 		"./actions/plugins/*": {
 			"types": "./dist/actions/plugins/*.d.ts",
 			"import": "./dist/actions/plugins/*.js"
@@ -108,10 +104,6 @@
 		"./schemas/validation/*": {
 			"types": "./dist/schemas/validation/*.d.ts",
 			"import": "./dist/schemas/validation/*.js"
-		},
-		"./schemas/validation/validation-registry": {
-			"types": "./dist/schemas/validation/validation-registry.d.ts",
-			"import": "./dist/schemas/validation/validation-registry.js"
 		},
 		"./schemas/validation/async/*": {
 			"types": "./dist/schemas/validation/async/*.d.ts",
