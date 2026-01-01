@@ -1,269 +1,196 @@
-export interface BaseValidationRule {
-	type: string;
-	message?: string;
-}
-
-export interface RequiredRule extends BaseValidationRule {
-	type: 'required';
-	message?: string;
-}
-
-export interface MinItemsRule extends BaseValidationRule {
-	type: 'minItems';
-	value: number;
-	message?: string;
-}
-
-export interface MaxItemsRule extends BaseValidationRule {
-	type: 'maxItems';
-	value: number;
-	message?: string;
-}
-
-export interface MinLengthRule extends BaseValidationRule {
-	type: 'minLength';
-	value: number;
-	message?: string;
-}
-
-export interface MaxLengthRule extends BaseValidationRule {
-	type: 'maxLength';
-	value: number;
-	message?: string;
-}
-
-export interface MinRule extends BaseValidationRule {
-	type: 'min';
-	value: number;
-	message?: string;
-}
-
-export interface MaxRule extends BaseValidationRule {
-	type: 'max';
-	value: number;
-	message?: string;
-}
-
-export interface EmailRule extends BaseValidationRule {
-	type: 'email';
-	pattern?: string;
-	message?: string;
-}
-
-export interface PatternRule extends BaseValidationRule {
-	type: 'pattern';
-	value: string;
-	message?: string;
-}
-
-export interface UrlRule extends BaseValidationRule {
-	type: 'url';
-	protocol?: string;
-	hostname?: string;
-	message?: string;
-}
-
-export interface UuidRule extends BaseValidationRule {
-	type: 'uuid';
-	version?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5';
-	message?: string;
-}
-
-export interface DateTimeRule extends BaseValidationRule {
-	type: 'datetime';
-	precision?: number;
-	offset?: boolean;
-	local?: boolean;
-	message?: string;
-}
-
-export interface DateRule extends BaseValidationRule {
-	type: 'date';
-	message?: string;
-}
-
-export interface TimeRule extends BaseValidationRule {
-	type: 'time';
-	precision?: number;
-	message?: string;
-}
-
-export interface IpRule extends BaseValidationRule {
-	type: 'ip';
-	version?: 'v4' | 'v6';
-	message?: string;
-}
-
-export interface CidrRule extends BaseValidationRule {
-	type: 'cidr';
-	version?: 'v4' | 'v6';
-	message?: string;
-}
-
-export interface JwtRule extends BaseValidationRule {
-	type: 'jwt';
-	alg?: string;
-	message?: string;
-}
-
-export interface HashRule extends BaseValidationRule {
-	type: 'hash';
-	algorithm: 'md5' | 'sha1' | 'sha256' | 'sha384' | 'sha512';
-	message?: string;
-}
-
-export interface Base64Rule extends BaseValidationRule {
-	type: 'base64';
-	urlSafe?: boolean;
-	message?: string;
-}
-
-export interface StringFormatRule extends BaseValidationRule {
-	type: 'format';
-	format: 'cuid' | 'cuid2' | 'ulid' | 'hex';
-	message?: string;
-}
-
-export interface AsyncRule extends BaseValidationRule {
-	type: 'async';
-	url: string;
-	method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-	headers?: Record<string, string>;
-	extraPayload?: Record<string, unknown>;
-	expectedResponse?: {
-		valid?: boolean;
-		success?: boolean;
-		message?: string;
-		error?: string;
-	};
-	message?: string;
-	/**
-	 * Field names this validation depends on for cross-field validation.
-	 * Async validation will be skipped if any dependency field is empty,
-	 * ensuring all required context is available before making API calls.
-	 */
-	dependencies?: string[];
-	debounce?: number;
-	cacheTTL?: number;
-	disableCache?: boolean;
-}
-
-/**
- * Union type for all validation rules
- */
-export type ValidationRule =
-	| RequiredRule
-	| MinItemsRule
-	| MaxItemsRule
-	| MinLengthRule
-	| MaxLengthRule
-	| MinRule
-	| MaxRule
-	| EmailRule
-	| UrlRule
-	| UuidRule
-	| DateTimeRule
-	| DateRule
-	| TimeRule
-	| IpRule
-	| CidrRule
-	| JwtRule
-	| HashRule
-	| Base64Rule
-	| StringFormatRule
-	| PatternRule
-	| AsyncRule;
-
 import { z } from 'zod';
 
-/**
- * Zod schema for runtime validation of ValidationRule objects
- */
+const BaseValidationRuleSchema = z.object({
+	type: z.string(),
+	message: z.string().optional(),
+});
+
+const RequiredRuleSchema = z.object({
+	type: z.literal('required'),
+	message: z.string().optional(),
+});
+
+const MinLengthRuleSchema = z.object({
+	type: z.literal('minLength'),
+	value: z.number(),
+	message: z.string().optional(),
+});
+
+const MaxLengthRuleSchema = z.object({
+	type: z.literal('maxLength'),
+	value: z.number(),
+	message: z.string().optional(),
+});
+
+const EmailRuleSchema = z.object({
+	type: z.literal('email'),
+	pattern: z.string().optional(),
+	message: z.string().optional(),
+});
+
+const PatternRuleSchema = z.object({
+	type: z.literal('pattern'),
+	value: z.string(),
+	message: z.string().optional(),
+});
+
+const UrlRuleSchema = z.object({
+	type: z.literal('url'),
+	protocol: z.string().optional(),
+	hostname: z.string().optional(),
+	message: z.string().optional(),
+});
+
+const UuidRuleSchema = z.object({
+	type: z.literal('uuid'),
+	version: z.enum(['v1', 'v2', 'v3', 'v4', 'v5']).optional(),
+	message: z.string().optional(),
+});
+
+const IpRuleSchema = z.object({
+	type: z.literal('ip'),
+	version: z.enum(['v4', 'v6']).optional(),
+	message: z.string().optional(),
+});
+
+const CidrRuleSchema = z.object({
+	type: z.literal('cidr'),
+	version: z.enum(['v4', 'v6']).optional(),
+	message: z.string().optional(),
+});
+
+const JwtRuleSchema = z.object({
+	type: z.literal('jwt'),
+	alg: z.string().optional(),
+	message: z.string().optional(),
+});
+
+const HashRuleSchema = z.object({
+	type: z.literal('hash'),
+	algorithm: z.enum(['md5', 'sha1', 'sha256', 'sha384', 'sha512']),
+	message: z.string().optional(),
+});
+
+const Base64RuleSchema = z.object({
+	type: z.literal('base64'),
+	urlSafe: z.boolean().optional(),
+	message: z.string().optional(),
+});
+
+const StringFormatRuleSchema = z.object({
+	type: z.literal('format'),
+	format: z.enum(['cuid', 'cuid2', 'ulid', 'hex']),
+	message: z.string().optional(),
+});
+
+const MinRuleSchema = z.object({
+	type: z.literal('min'),
+	value: z.number(),
+	message: z.string().optional(),
+});
+
+const MaxRuleSchema = z.object({
+	type: z.literal('max'),
+	value: z.number(),
+	message: z.string().optional(),
+});
+
+const MinItemsRuleSchema = z.object({
+	type: z.literal('minItems'),
+	value: z.number(),
+	message: z.string().optional(),
+});
+
+const MaxItemsRuleSchema = z.object({
+	type: z.literal('maxItems'),
+	value: z.number(),
+	message: z.string().optional(),
+});
+
+const DateTimeRuleSchema = z.object({
+	type: z.literal('datetime'),
+	precision: z.number().optional(),
+	offset: z.boolean().optional(),
+	local: z.boolean().optional(),
+	message: z.string().optional(),
+});
+
+const DateRuleSchema = z.object({
+	type: z.literal('date'),
+	message: z.string().optional(),
+});
+
+const TimeRuleSchema = z.object({
+	type: z.literal('time'),
+	precision: z.number().optional(),
+	message: z.string().optional(),
+});
+
+const AsyncRuleSchema = z.object({
+	type: z.literal('async'),
+	url: z.string(),
+	method: z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']).default('POST'),
+	headers: z.record(z.string(), z.string()).optional(),
+	extraPayload: z.record(z.string(), z.unknown()).optional(),
+	expectedResponse: z
+		.object({
+			valid: z.boolean().optional(),
+			success: z.boolean().optional(),
+			message: z.string().optional(),
+			error: z.string().optional(),
+		})
+		.optional(),
+	message: z.string().optional(),
+	dependencies: z.array(z.string()).optional(),
+	debounce: z.number().optional(),
+	cacheTTL: z.number().optional(),
+	disableCache: z.boolean().optional(),
+});
+
 export const ValidationRuleSchema = z.union([
-	z.object({
-		type: z.literal('required'),
-		message: z.string().optional(),
-	}),
-	z.object({
-		type: z.literal('minLength'),
-		value: z.number(),
-		message: z.string().optional(),
-	}),
-	z.object({
-		type: z.literal('maxLength'),
-		value: z.number(),
-		message: z.string().optional(),
-	}),
-	z.object({
-		type: z.literal('min'),
-		value: z.number(),
-		message: z.string().optional(),
-	}),
-	z.object({
-		type: z.literal('max'),
-		value: z.number(),
-		message: z.string().optional(),
-	}),
-	z.object({
-		type: z.literal('minItems'),
-		value: z.number(),
-		message: z.string().optional(),
-	}),
-	z.object({
-		type: z.literal('maxItems'),
-		value: z.number(),
-		message: z.string().optional(),
-	}),
-	z.object({
-		type: z.literal('email'),
-		message: z.string().optional(),
-	}),
-	z.object({
-		type: z.literal('url'),
-		message: z.string().optional(),
-	}),
-	z.object({
-		type: z.literal('uuid'),
-		version: z.enum(['v1', 'v3', 'v4', 'v5']).optional(),
-		message: z.string().optional(),
-	}),
-	z.object({
-		type: z.literal('ip'),
-		version: z.enum(['v4', 'v6']).optional(),
-		message: z.string().optional(),
-	}),
-	z.object({
-		type: z.literal('datetime'),
-		message: z.string().optional(),
-	}),
-	z.object({
-		type: z.literal('date'),
-		message: z.string().optional(),
-	}),
-	z.object({
-		type: z.literal('time'),
-		message: z.string().optional(),
-	}),
-	z.object({
-		type: z.literal('pattern'),
-		value: z.string(),
-		message: z.string().optional(),
-	}),
-	z.object({
-		type: z.literal('async'),
-		url: z.string(),
-		method: z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']).default('POST'),
-		headers: z.record(z.string(), z.string()).optional(),
-		body: z.record(z.string(), z.any()).optional(),
-		expectedResponse: z.record(z.string(), z.any()).optional(),
-		dependencies: z.array(z.string()).optional(),
-		debounce: z.number().optional(),
-		cacheTTL: z.number().optional(),
-		disableCache: z.boolean().optional(),
-		message: z.string().optional(),
-	}),
-	z.object({
-		type: z.literal('base64'),
-		message: z.string().optional(),
-	}),
+	RequiredRuleSchema,
+	MinLengthRuleSchema,
+	MaxLengthRuleSchema,
+	MinRuleSchema,
+	MaxRuleSchema,
+	MinItemsRuleSchema,
+	MaxItemsRuleSchema,
+	EmailRuleSchema,
+	PatternRuleSchema,
+	UrlRuleSchema,
+	UuidRuleSchema,
+	DateTimeRuleSchema,
+	DateRuleSchema,
+	TimeRuleSchema,
+	IpRuleSchema,
+	CidrRuleSchema,
+	JwtRuleSchema,
+	HashRuleSchema,
+	Base64RuleSchema,
+	StringFormatRuleSchema,
+	AsyncRuleSchema,
 ]);
+
+export type BaseValidationRule = z.infer<typeof BaseValidationRuleSchema>;
+export type RequiredRule = z.infer<typeof RequiredRuleSchema>;
+export type MinLengthRule = z.infer<typeof MinLengthRuleSchema>;
+export type MaxLengthRule = z.infer<typeof MaxLengthRuleSchema>;
+export type MinRule = z.infer<typeof MinRuleSchema>;
+export type MaxRule = z.infer<typeof MaxRuleSchema>;
+export type MinItemsRule = z.infer<typeof MinItemsRuleSchema>;
+export type MaxItemsRule = z.infer<typeof MaxItemsRuleSchema>;
+export type EmailRule = z.infer<typeof EmailRuleSchema>;
+export type PatternRule = z.infer<typeof PatternRuleSchema>;
+export type UrlRule = z.infer<typeof UrlRuleSchema>;
+export type UuidRule = z.infer<typeof UuidRuleSchema>;
+export type DateTimeRule = z.infer<typeof DateTimeRuleSchema>;
+export type DateRule = z.infer<typeof DateRuleSchema>;
+export type TimeRule = z.infer<typeof TimeRuleSchema>;
+export type IpRule = z.infer<typeof IpRuleSchema>;
+export type CidrRule = z.infer<typeof CidrRuleSchema>;
+export type JwtRule = z.infer<typeof JwtRuleSchema>;
+export type HashRule = z.infer<typeof HashRuleSchema>;
+export type Base64Rule = z.infer<typeof Base64RuleSchema>;
+export type StringFormatRule = z.infer<typeof StringFormatRuleSchema>;
+export type AsyncRule = z.infer<typeof AsyncRuleSchema>;
+export type ValidationRule = z.infer<typeof ValidationRuleSchema>;
