@@ -31,7 +31,6 @@ export function setupActionExecutorMock() {
 		useActionDispatcher: () => ({
 			dispatch: mockDispatch,
 			dispatchSync: mockDispatchSync,
-			getExecutor: () => ({}),
 		}),
 	}));
 }

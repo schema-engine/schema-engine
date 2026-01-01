@@ -192,11 +192,4 @@ export class ActionExecutor<
 			};
 		}
 	}
-
-	/**
-	 * Cleanup resources
-	 */
-	cleanup(): void {
-		this.log('debug', 'Cleanup completed');
-	}
 }

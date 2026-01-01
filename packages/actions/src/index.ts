@@ -15,7 +15,7 @@
  *
  * @example
  * ```typescript
- * import { ActionExecutor, ActionRegistration, ActionRegistryProvider } from '@schema-engine/actions';
+ * import { ActionExecutor, ActionRegistration, ActionRegistry } from '@schema-engine/actions';
  *
  * // Define your domain-specific types
  * type MyTrigger = 'submit' | 'change' | 'mount';
@@ -41,15 +41,7 @@
  * ```
  */
 
-export type {
-	ActionExecutionContext,
-	ActionExecutionResult,
-	ActionHandler,
-	ActionMetadata,
-	ActionRegistration,
-	ActionConfigBase,
-} from './types';
-export type { ActionRegistryProvider } from './registry';
+export type { ActionExecutionContext, ActionExecutionResult, ActionRegistration } from './types';
 export { ActionRegistry } from './registry';
 export { ActionExecutor } from './executor';
 export type { ActionExecutorOptions } from './executor';

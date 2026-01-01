@@ -1,4 +1,5 @@
 import type { ActionConfigBase, ActionExecutionResult } from './types';
+import type { ActionRegistryProvider } from './registry';
 import { ActionExecutor } from './executor';
 
 /**
@@ -45,14 +46,8 @@ export class ActionDispatcher<
 > {
 	private executor: ActionExecutor<TConfig, TContext, TTrigger>;
 
-	constructor(
-		registry: {
-			getAction(type: string): unknown;
-			getActionTypes(): string[];
-		},
-		options: ActionDispatcherOptions = {},
-	) {
-		this.executor = new ActionExecutor(registry as any, options);
+	constructor(registry: ActionRegistryProvider<TContext, TTrigger>, options: ActionDispatcherOptions = {}) {
+		this.executor = new ActionExecutor(registry, options);
 	}
 
 	/**
@@ -120,23 +115,5 @@ export class ActionDispatcher<
 				...metadata,
 			},
 		} as TContext;
-	}
-
-	/**
-	 * Get the underlying executor instance
-	 *
-	 * Provides access to the raw executor for advanced use cases.
-	 *
-	 * @returns The ActionExecutor instance
-	 */
-	getExecutor(): ActionExecutor<TConfig, TContext, TTrigger> {
-		return this.executor;
-	}
-
-	/**
-	 * Cleanup resources
-	 */
-	cleanup(): void {
-		this.executor.cleanup();
 	}
 }

@@ -117,11 +117,4 @@ export class ActionRegistry<TContext = unknown, TTrigger = string>
 	getActionTypes(): string[] {
 		return this.getAllKeys();
 	}
-
-	/**
-	 * Get default triggers for an action type
-	 */
-	getDefaultTriggers(type: string): readonly TTrigger[] | undefined {
-		return this.get(type)?.metadata?.defaultTriggers;
-	}
 }

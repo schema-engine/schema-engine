@@ -8,7 +8,7 @@ import { Badge } from '@/shadcn/ui/badge';
 import { Button } from '@/shadcn/ui/button';
 import { ScrollArea } from '@/shadcn/ui/scroll-area';
 import { SUBMIT_FORM_MOCK_URL } from '../msw/submit-form';
-import { formResetPlugin, formSubmitPlugin } from '@schema-engine/forms/actions';
+import { FormActionTriggerSchema, formResetPlugin, formSubmitPlugin } from '@schema-engine/forms/actions';
 import { z } from 'zod';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@schema-engine/forms/types';
 import type { ActionExecutionResult } from '@schema-engine/forms';
@@ -58,7 +58,7 @@ const LoggerActionSchema = z.object({
 	$type: z.literal('event_logger'),
 	description: z.string().optional(),
 	enabled: z.boolean().default(true),
-	triggers: z.array(z.string()).optional(),
+	triggers: FormActionTriggerSchema.array().optional(),
 });
 
 type LoggerAction = z.infer<typeof LoggerActionSchema>;

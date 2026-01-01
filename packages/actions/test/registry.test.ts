@@ -143,37 +143,6 @@ describe('ActionRegistry', () => {
 		});
 	});
 
-	describe('getDefaultTriggers', () => {
-		test('should return default triggers for registered action', () => {
-			registry.register(mockAction);
-			const triggers = registry.getDefaultTriggers('log');
-
-			expect(triggers).toEqual(['submit']);
-		});
-
-		test('should return undefined for unregistered action', () => {
-			const triggers = registry.getDefaultTriggers('non-existent');
-			expect(triggers).toBeUndefined();
-		});
-
-		test('should return undefined when action has no default triggers', () => {
-			const actionWithoutTriggers: ActionRegistration<'custom', TestContext, TestTrigger> = {
-				$type: 'custom',
-				schema: z.any(),
-				metadata: {
-					name: 'Custom Action',
-					description: 'A custom action',
-				},
-				execute: async () => ({ success: true }),
-			};
-
-			registry.register(actionWithoutTriggers);
-			const triggers = registry.getDefaultTriggers('custom');
-
-			expect(triggers).toBeUndefined();
-		});
-	});
-
 	describe('size', () => {
 		test('should return 0 for empty registry', () => {
 			expect(registry.size).toBe(0);

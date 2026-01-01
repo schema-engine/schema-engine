@@ -941,13 +941,6 @@ describe('ActionExecutor', () => {
 		});
 	});
 
-	describe('Cleanup', () => {
-		test('should cleanup without errors', () => {
-			const executor = new ActionExecutor<TestActionConfig, TestContext, TestTrigger>(registry);
-			expect(() => executor.cleanup()).not.toThrow();
-		});
-	});
-
 	describe('Async Actions', () => {
 		test('should handle async actions with delays', async () => {
 			registry.register({
