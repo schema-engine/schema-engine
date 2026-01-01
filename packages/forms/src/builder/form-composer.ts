@@ -311,7 +311,7 @@ export class FormComposer<
 			componentType: ComponentType.Element,
 			title: item.metadata.name,
 			description: item.metadata.description,
-			category: (item.metadata as any).category,
+			category: item.metadata.category,
 		}));
 
 		this.layoutRegistry.registerSchemas(schemaRegistry, (item) => ({
