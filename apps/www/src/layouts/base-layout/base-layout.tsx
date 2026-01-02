@@ -17,7 +17,6 @@ export const BaseLayout: EcoComponent<BaseLayoutProps, ReactNode> = ({ children,
 };
 
 BaseLayout.config = {
-	importMeta: import.meta,
 	dependencies: {
 		stylesheets: ['./base-layout.css', '../../styles/tailwind.css'],
 		scripts: ['./base-layout.script.ts'],

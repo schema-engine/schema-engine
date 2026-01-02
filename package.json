@@ -17,7 +17,7 @@
 		"oxlint": "latest",
 		"oxlint-tsgolint": "latest",
 		"prettier": "^3.4.2",
-		"turbo": "^2.6.3"
+		"turbo": "^2.7.2"
 	},
 	"peerDependencies": {
 		"typescript": "^5"
@@ -29,22 +29,22 @@
 		"build:lib:forms-react": "turbo run @schema-engine/forms-react#build:lib",
 		"build:lib:registry": "turbo run @schema-engine/registry#build:lib",
 		"build:react-storybook": "NODE_OPTIONS='--max-old-space-size=4096' turbo run @schema-engine/forms-react#build-storybook",
-		"build:www": "turbo run @json-form-engine/www#build",
+		"build:www": "turbo run @schema-engine/www#build",
 		"changeset": "changeset",
 		"clean": "clear && bunx npkill -D -y && rm -rf bun.lock && bun install",
 		"commit": "better-commits",
 		"dev:react-storybook": "turbo run @schema-engine/forms-react#storybook",
-		"dev:www": "turbo run @json-form-engine/www#dev",
+		"dev:www": "turbo run @schema-engine/www#dev",
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
-		"hot:dev:www": "turbo run @json-form-engine/www#hot:dev",
+		"hot:dev:www": "turbo run @schema-engine/www#hot:dev",
 		"lint": "oxlint --type-aware",
 		"lint-staged": "lint-staged",
 		"lint-staged:all": "turbo lint-staged",
 		"prepare": "husky",
-		"start:www": "turbo run @json-form-engine/www#start",
+		"start:www": "turbo run @schema-engine/www#start",
 		"test:all": "turbo test:all",
-		"watch:dev:www": "turbo run @json-form-engine/www#watch:dev"
+		"watch:dev:www": "turbo run @schema-engine/www#watch:dev"
 	},
 	"workspaces": [
 		"apps/*",

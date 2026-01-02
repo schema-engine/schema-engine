@@ -1,8 +1,10 @@
-import { mdxPlugin } from './src/lib/mdx-react/mdx-react.plugin';
+import { mdxPlugin } from '@ecopages/mdx';
 import { ConfigBuilder } from '@ecopages/core';
 import { postcssProcessorPlugin } from '@ecopages/postcss-processor';
+import { tailwindV4Preset } from '@ecopages/postcss-processor/presets/tailwind-v4';
 import { reactPlugin } from '@ecopages/react';
 import remarkGfm from 'remark-gfm';
+import path from 'node:path';
 
 const config = await new ConfigBuilder()
 	.setRootDir(import.meta.dir)
@@ -20,7 +22,13 @@ const config = await new ConfigBuilder()
 		}),
 		reactPlugin(),
 	])
-	.setProcessors([postcssProcessorPlugin()])
+	.setProcessors([
+		postcssProcessorPlugin(
+			tailwindV4Preset({
+				referencePath: path.join(import.meta.dir, 'src/styles/tailwind.css'),
+			}),
+		),
+	])
 	.setDefaultMetadata({
 		title: 'JSON Form Engine',
 		description:

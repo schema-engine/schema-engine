@@ -26,7 +26,6 @@ export const Head: EcoComponent<PageHeadProps, JSX.Element> = ({ metadata, child
 };
 
 Head.config = {
-	importMeta: import.meta,
 	dependencies: {
 		scripts: ['theme.script.ts?exclude-from-html=true'],
 		stylesheets: ['../styles/tailwind.css'],

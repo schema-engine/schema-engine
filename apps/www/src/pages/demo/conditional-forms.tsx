@@ -12,7 +12,6 @@ const ConditionalForms: EcoComponent<unknown, JSX.Element> = () => {
 };
 
 ConditionalForms.config = {
-	importMeta: import.meta,
 	dependencies: {
 		components: [FormEngineLayout],
 	},

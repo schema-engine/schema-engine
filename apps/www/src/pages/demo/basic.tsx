@@ -12,7 +12,6 @@ const BasicDemo: EcoComponent<unknown, JSX.Element> = () => {
 };
 
 BasicDemo.config = {
-	importMeta: import.meta,
 	dependencies: {
 		components: [FormEngineLayout],
 	},

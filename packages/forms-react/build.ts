@@ -132,7 +132,7 @@ async function build(): Promise<void> {
 			format: 'esm',
 			splitting: !watchMode,
 			sourcemap: 'external',
-			external: ['react', 'react-dom', '@schema-engine/forms'],
+			external: ['react', 'react-dom', '@schema-engine/forms', '@ecopages/logger'],
 			plugins: [postcssPlugin],
 			define: {
 				'process.env.NODE_ENV': watchMode ? '"development"' : '"production"',

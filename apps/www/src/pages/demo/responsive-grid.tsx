@@ -12,7 +12,6 @@ const ResponsiveGrid: EcoComponent<unknown, JSX.Element> = () => {
 };
 
 ResponsiveGrid.config = {
-	importMeta: import.meta,
 	dependencies: {
 		components: [FormEngineLayout],
 	},

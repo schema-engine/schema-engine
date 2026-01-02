@@ -476,8 +476,6 @@ const SteppersPage: EcoComponent<unknown, ReactNode> = () => {
 	);
 };
 
-SteppersPage.config = {
-	importMeta: import.meta,
-};
+SteppersPage.config = {};
 
 export default SteppersPage;

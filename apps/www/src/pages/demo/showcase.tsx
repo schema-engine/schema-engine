@@ -12,7 +12,6 @@ const Showcase: EcoComponent<unknown, JSX.Element> = () => {
 };
 
 Showcase.config = {
-	importMeta: import.meta,
 	dependencies: {
 		components: [FormEngineLayout],
 	},

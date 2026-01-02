@@ -403,7 +403,6 @@ const FormEngine: EcoComponent<unknown, JSX.Element> = () => {
 };
 
 FormEngine.config = {
-	importMeta: import.meta,
 	dependencies: {
 		stylesheets: ['./index.css'],
 	},

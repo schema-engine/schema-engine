@@ -340,7 +340,6 @@ export const DocsLayout: EcoComponent<DocsLayoutProps, ReactNode> = ({ children,
 };
 
 DocsLayout.config = {
-	importMeta: import.meta,
 	dependencies: {
 		stylesheets: ['./docs-layout.css', '../../styles/tailwind.css'],
 	},

@@ -1,18 +1,20 @@
+'use client';
+
+import * as React from 'react';
 import type * as LabelPrimitive from '@radix-ui/react-label';
 import { Slot } from '@radix-ui/react-slot';
-import * as React from 'react';
 import {
 	Controller,
-	type ControllerProps,
-	type FieldPath,
-	type FieldValues,
 	FormProvider,
 	useFormContext,
 	useFormState,
+	type ControllerProps,
+	type FieldPath,
+	type FieldValues,
 } from 'react-hook-form';
 
-import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
 
 const Form = FormProvider;
 
@@ -120,22 +122,17 @@ function FormDescription({ className, ...props }: React.ComponentProps<'p'>) {
 
 function FormMessage({ className, ...props }: React.ComponentProps<'p'>) {
 	const { error, formMessageId } = useFormField();
-	const body = error ? String(error?.message) : props.children;
+	const body = error ? String(error?.message ?? '') : props.children;
 
 	if (!body) {
 		return null;
 	}
 
 	return (
-		<p
-			data-slot="form-message"
-			id={formMessageId}
-			className={cn('text-destructive text-sm font-medium', className)}
-			{...props}
-		>
+		<p data-slot="form-message" id={formMessageId} className={cn('text-destructive text-sm', className)} {...props}>
 			{body}
 		</p>
 	);
 }
 
-export { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, useFormField };
+export { useFormField, Form, FormItem, FormLabel, FormControl, FormDescription, FormMessage, FormField };

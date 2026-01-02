@@ -154,7 +154,6 @@ export const FormEngineLayout: EcoComponent<FormEngineLayoutProps, ReactNode> = 
 };
 
 FormEngineLayout.config = {
-	importMeta: import.meta,
 	dependencies: {
 		stylesheets: ['./form-engine-layout.css', '../../styles/tailwind.css'],
 	},

@@ -1,49 +1,81 @@
-/* Import all styles at once */
-@import '@schema-engine/forms-react/dist/global.css';
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@custom-variant dark (&:is(.dark *));
 
 :root {
-	/* Updated design tokens to match the design brief for developer-focused Zod playground */
-	--background: 0 0% 98%; /* Light cosmic background */
-	--foreground: 264 8% 15%; /* Deep space blue text */
-	--card: 0 0% 99%; /* Glassmorphism card with transparency */
-	--card-foreground: 264 8% 15%; /* Deep space blue card text */
-	--popover: 0 0% 99%; /* Light popover with transparency */
-	--popover-foreground: 264 8% 15%; /* Deep space blue popover text */
-	--primary: 264 8% 15%; /* Deep space blue primary */
-	--primary-foreground: 0 0% 98%; /* Light text on primary */
-	--secondary: 0 0% 92%; /* Light secondary background */
-	--secondary-foreground: 264 8% 15%; /* Deep space blue secondary text */
-	--muted: 0 0% 95%; /* Muted light background */
-	--muted-foreground: 264 4% 45%; /* Muted deep space blue text */
-	--accent: 280 15% 70%; /* Nebula purple accent */
-	--accent-foreground: 0 0% 98%; /* Light text on accent */
-	--background-accent: 280 20% 95%; /* Light accent background */
-	--foreground-accent: 280 15% 40%; /* Dark accent foreground */
-	--destructive: 0 84% 60%; /* Red for errors */
-	--destructive-foreground: 0 0% 100%; /* White text on destructive */
-	/* Improved border visibility for better accessibility */
-	--border: 264 8% 75%; /* More visible light border */
-	--input: 0 0% 98%; /* Less transparent input background */
-	--ring: 280 15% 70%; /* More visible focus ring */
-	--chart-1: 41 85% 65%;
-	--chart-2: 0 0% 21%;
-	--chart-3: 227 20% 40%;
-	--chart-4: 280 85% 65%;
-	--chart-5: 27 85% 58%;
-	--radius: 0.5rem; /* Increased border radius for modern look */
-	--sidebar: 0 0% 97%;
-	--sidebar-foreground: 0 0% 27%;
-	--sidebar-primary: 0 0% 21%;
-	--sidebar-primary-foreground: 0 0% 100%;
-	--sidebar-accent: 280 85% 65%;
-	--sidebar-accent-foreground: 0 0% 100%;
-	--sidebar-border: 0 0% 85%;
-	--sidebar-ring: 280 85% 65%;
+	@apply font-sans;
+	--background: oklch(1 0 0);
+	--foreground: oklch(0.145 0 0);
+	--card: oklch(1 0 0);
+	--card-foreground: oklch(0.145 0 0);
+	--popover: oklch(1 0 0);
+	--popover-foreground: oklch(0.145 0 0);
+	--primary: oklch(0.205 0 0);
+	--primary-foreground: oklch(0.985 0 0);
+	--secondary: oklch(0.97 0 0);
+	--secondary-foreground: oklch(0.205 0 0);
+	--muted: oklch(0.97 0 0);
+	--muted-foreground: oklch(0.556 0 0);
+	--accent: oklch(0.97 0 0);
+	--accent-foreground: oklch(0.205 0 0);
+	--destructive: oklch(0.577 0.245 27.325);
+	--destructive-foreground: oklch(0.577 0.245 27.325);
+	--border: oklch(0.922 0 0);
+	--input: oklch(0.922 0 0);
+	--ring: oklch(0.708 0 0);
+	--chart-1: oklch(0.646 0.222 41.116);
+	--chart-2: oklch(0.6 0.118 184.704);
+	--chart-3: oklch(0.398 0.07 227.392);
+	--chart-4: oklch(0.828 0.189 84.429);
+	--chart-5: oklch(0.769 0.188 70.08);
+	--radius: 0.625rem;
+	--sidebar: oklch(0.985 0 0);
+	--sidebar-foreground: oklch(0.145 0 0);
+	--sidebar-primary: oklch(0.205 0 0);
+	--sidebar-primary-foreground: oklch(0.985 0 0);
+	--sidebar-accent: oklch(0.97 0 0);
+	--sidebar-accent-foreground: oklch(0.205 0 0);
+	--sidebar-border: oklch(0.922 0 0);
+	--sidebar-ring: oklch(0.708 0 0);
+}
 
+.dark {
+	--background: oklch(0.145 0 0);
+	--foreground: oklch(0.985 0 0);
+	--card: oklch(0.145 0 0);
+	--card-foreground: oklch(0.985 0 0);
+	--popover: oklch(0.145 0 0);
+	--popover-foreground: oklch(0.985 0 0);
+	--primary: oklch(0.985 0 0);
+	--primary-foreground: oklch(0.205 0 0);
+	--secondary: oklch(0.269 0 0);
+	--secondary-foreground: oklch(0.985 0 0);
+	--muted: oklch(0.269 0 0);
+	--muted-foreground: oklch(0.708 0 0);
+	--accent: oklch(0.269 0 0);
+	--accent-foreground: oklch(0.985 0 0);
+	--destructive: oklch(0.396 0.141 25.723);
+	--destructive-foreground: oklch(0.637 0.237 25.331);
+	--border: oklch(0.269 0 0);
+	--input: oklch(0.269 0 0);
+	--ring: oklch(0.439 0 0);
+	--chart-1: oklch(0.488 0.243 264.376);
+	--chart-2: oklch(0.696 0.17 162.48);
+	--chart-3: oklch(0.769 0.188 70.08);
+	--chart-4: oklch(0.627 0.265 303.9);
+	--chart-5: oklch(0.645 0.246 16.439);
+	--sidebar: oklch(0.205 0 0);
+	--sidebar-foreground: oklch(0.985 0 0);
+	--sidebar-primary: oklch(0.488 0.243 264.376);
+	--sidebar-primary-foreground: oklch(0.985 0 0);
+	--sidebar-accent: oklch(0.269 0 0);
+	--sidebar-accent-foreground: oklch(0.985 0 0);
+	--sidebar-border: oklch(0.269 0 0);
+	--sidebar-ring: oklch(0.439 0 0);
+}
+
+@theme inline {
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
 	--color-card: var(--card);
@@ -82,56 +114,12 @@
 	--color-sidebar-ring: var(--sidebar-ring);
 }
 
-.dark {
-	--background: 264 8% 8%; /* Deep space background */
-	--foreground: 0 0% 95%; /* Bright white text */
-	--card: 264 8% 12%; /* Dark glassmorphism card */
-	--card-foreground: 0 0% 95%; /* Bright white card text */
-	--popover: 264 8% 12%; /* Dark popover with transparency */
-	--popover-foreground: 0 0% 95%; /* Bright white popover text */
-	--primary: 280 15% 70%; /* Nebula purple primary */
-	--primary-foreground: 0 0% 95%; /* Bright white on primary */
-	--secondary: 264 8% 15%; /* Dark secondary background */
-	--secondary-foreground: 0 0% 85%; /* Light secondary text */
-	--muted: 264 8% 18%; /* Muted dark background */
-	--muted-foreground: 0 0% 65%; /* Muted light text */
-	--accent: 280 15% 70%; /* Nebula purple accent */
-	--accent-foreground: 0 0% 95%; /* Bright white on accent */
-	--background-accent: 280 15% 15%; /* Dark accent background */
-	--foreground-accent: 280 15% 85%; /* Light accent foreground */
-	--destructive: 0 84% 60%; /* Red for errors */
-	--destructive-foreground: 0 0% 95%; /* Bright white on destructive */
-	/* Improved dark mode border visibility for better accessibility */
-	--border: 264 8% 35%; /* More visible dark border */
-	--input: 264 8% 15%; /* Less transparent dark input */
-	--ring: 280 15% 70%; /* More visible dark focus ring */
-	--chart-1: 264 85% 49%;
-	--chart-2: 162 70% 70%;
-	--chart-3: 70 85% 77%;
-	--chart-4: 304 85% 63%;
-	--chart-5: 16 85% 65%;
-	--sidebar: 264 8% 12%;
-	--sidebar-foreground: 0 0% 95%;
-	--sidebar-primary: 280 15% 70%;
-	--sidebar-primary-foreground: 0 0% 95%;
-	--sidebar-accent: 264 8% 18%;
-	--sidebar-accent-foreground: 0 0% 95%;
-	--sidebar-border: 264 8% 25%;
-	--sidebar-ring: 280 15% 70%;
-}
-
 @layer base {
-	:root {
-		@apply font-sans;
-	}
-
-	body {
-		@apply font-sans;
-	}
 	* {
 		@apply border-border outline-ring/50;
 	}
 	body {
+		@apply bg-background text-foreground font-sans;
 		@apply grid place-items-center min-w-[320px] min-h-screen relative m-0 bg-background text-foreground;
 	}
 
@@ -304,5 +292,14 @@
 	&__link {
 		@apply underline self-end inline-flex items-center gap-2 rounded-md p-2;
 		@apply hover:text-yellow-900 hover:bg-yellow-50;
+	}
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+	}
+  body {
+    @apply bg-background text-foreground;
 	}
 }
