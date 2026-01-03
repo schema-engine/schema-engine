@@ -68,49 +68,58 @@ const docsNavigation: DocsSection[] = [
 		],
 	},
 	{
-		id: 'core-concepts',
-		title: 'Components',
-		path: '/docs/components',
+		id: 'pkg-forms',
+		title: '@schema-engine/forms',
+		path: '/docs/packages/forms',
 		children: [
-			{ id: 'how-it-works', title: 'How It Works', path: '/docs/components/how-it-works' },
-			{ id: 'registration', title: 'Registration', path: '/docs/components/registration' },
+			{ id: 'forms-overview', title: 'Overview', path: '/docs/packages/forms' },
+			{ id: 'forms-getting-started', title: 'Getting Started', path: '/docs/packages/forms/getting-started' },
+			{ id: 'forms-core-concepts', title: 'Core Concepts', path: '/docs/packages/forms/core-concepts' },
+			{ id: 'forms-validation', title: 'Validation', path: '/docs/packages/forms/validation' },
+			{ id: 'forms-actions', title: 'Actions', path: '/docs/packages/forms/actions' },
+			{ id: 'forms-api-reference', title: 'API Reference', path: '/docs/packages/forms/api-reference' },
 		],
 	},
 	{
-		id: 'actions-system',
-		title: 'Actions System',
-		path: '/docs/actions',
+		id: 'pkg-forms-react',
+		title: '@schema-engine/forms-react',
+		path: '/docs/packages/forms-react',
 		children: [
-			{ id: 'how-it-works', title: 'How It Works', path: '/docs/actions/how-it-works' },
-			{ id: 'available-plugins', title: 'Available Plugins', path: '/docs/actions/available-plugins' },
-			{ id: 'custom-plugins', title: 'Creating Plugins', path: '/docs/actions/custom-plugins' },
-		],
-	},
-	{
-		id: 'validation-system',
-		title: 'Validation System',
-		path: '/docs/validation',
-		children: [
-			{ id: 'how-it-works', title: 'How It Works', path: '/docs/validation/how-it-works' },
+			{ id: 'react-overview', title: 'Overview', path: '/docs/packages/forms-react' },
 			{
-				id: 'built-in-validations',
-				title: 'Built-in Validations',
-				path: '/docs/validation/built-in-validations',
+				id: 'react-getting-started',
+				title: 'Getting Started',
+				path: '/docs/packages/forms-react/getting-started',
 			},
-			{ id: 'custom-validations', title: 'Custom Validations', path: '/docs/validation/custom-validations' },
+			{ id: 'react-components', title: 'Components', path: '/docs/packages/forms-react/components' },
+			{ id: 'react-layouts', title: 'Layouts', path: '/docs/packages/forms-react/layouts' },
+			{ id: 'react-steppers', title: 'Steppers', path: '/docs/packages/forms-react/steppers' },
+			{ id: 'react-hooks', title: 'Hooks', path: '/docs/packages/forms-react/hooks' },
+			{ id: 'react-api-reference', title: 'API Reference', path: '/docs/packages/forms-react/api-reference' },
 		],
 	},
 	{
-		id: 'layout',
-		title: 'Layout System',
-		path: '/docs/layout',
-		children: [{ id: 'how-it-works', title: 'How It Works', path: '/docs/layout/how-it-works' }],
+		id: 'pkg-actions',
+		title: '@schema-engine/actions',
+		path: '/docs/packages/actions',
+		children: [
+			{ id: 'actions-overview', title: 'Overview', path: '/docs/packages/actions' },
+			{ id: 'actions-getting-started', title: 'Getting Started', path: '/docs/packages/actions/getting-started' },
+			{ id: 'actions-core-concepts', title: 'Core Concepts', path: '/docs/packages/actions/core-concepts' },
+			{ id: 'actions-advanced', title: 'Advanced Usage', path: '/docs/packages/actions/advanced' },
+			{ id: 'actions-api-reference', title: 'API Reference', path: '/docs/packages/actions/api-reference' },
+		],
 	},
 	{
-		id: 'hooks',
-		title: 'Hooks',
-		path: '/docs/hooks',
-		children: [{ id: 'overview', title: 'Overview', path: '/docs/hooks' }],
+		id: 'pkg-registry',
+		title: '@schema-engine/registry',
+		path: '/docs/packages/registry',
+		children: [
+			{ id: 'reg-overview', title: 'Overview', path: '/docs/packages/registry' },
+			{ id: 'reg-core-concepts', title: 'Core Concepts', path: '/docs/packages/registry/core-concepts' },
+			{ id: 'reg-api-reference', title: 'API Reference', path: '/docs/packages/registry/api-reference' },
+			{ id: 'reg-examples', title: 'Examples', path: '/docs/packages/registry/examples' },
+		],
 	},
 	{
 		id: 'examples',
@@ -143,7 +152,7 @@ function DocsSidebar({ currentPath }: { currentPath?: string }) {
 							<Code2 className="h-4 w-4" />
 						</div>
 						<div className="flex flex-col gap-0.5 leading-none">
-							<span className="font-medium">Form Engine</span>
+							<span className="font-medium">Schema Engine</span>
 							<span className="text-xs text-muted-foreground">v{pkg.version}</span>
 						</div>
 					</a>

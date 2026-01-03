@@ -1,0 +1,106 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+	title: 'Advanced Usage | @schema-engine/actions',
+	description: 'Advanced patterns and techniques for the action system.',
+});
+
+# Advanced Usage
+
+This page covers advanced patterns and techniques.
+
+## Sequential Execution
+
+Actions always execute sequentially, never in parallel:
+
+```typescript
+const results = await executor.execute([action1, action2, action3], 'submit', context);
+// action2 starts only after action1 completes
+// action3 starts only after action2 completes
+```
+
+## Stop on Failure
+
+Return `shouldContinue: false` to stop the execution chain:
+
+```typescript
+execute: async (context) => {
+	if (!context.isValid) {
+		return {
+			success: false,
+			error: 'Validation failed',
+			shouldContinue: false,
+		};
+	}
+	return { success: true };
+};
+```
+
+## Disabled Actions
+
+Set `enabled: false` to skip an action:
+
+```typescript
+const action = {
+	id: 'my-action',
+	$type: 'log',
+	enabled: false, // Will be skipped
+};
+```
+
+## Debug Logging
+
+Enable debug mode to see execution details:
+
+```typescript
+const executor = new ActionExecutor(registry, { debug: true });
+// Logs:
+// [ActionExecutor] Executing trigger: submit
+// [ActionExecutor] Executing action: my-action (log)
+// [ActionExecutor] Action my-action executed successfully
+```
+
+## Custom Registry
+
+You can implement your own registry by implementing the `ActionRegistryProvider` interface:
+
+```typescript
+import type { ActionRegistryProvider } from '@schema-engine/actions';
+
+class MyActionRegistry implements ActionRegistryProvider<MyContext, MyTrigger> {
+	private actions = new Map();
+
+	register(action: ActionRegistration<string, MyContext, MyTrigger>) {
+		this.actions.set(action.$type, action);
+	}
+
+	getAction(type: string) {
+		return this.actions.get(type);
+	}
+
+	getActionTypes(): string[] {
+		return Array.from(this.actions.keys());
+	}
+}
+```
+
+## Testing Actions
+
+The action system is designed for easy testing:
+
+```typescript
+import { describe, test, expect } from 'bun:test';
+
+describe('LogAction', () => {
+	test('should log message', async () => {
+		const context = { id: 'test', data: {}, isValid: true };
+		const config = { id: 'log-1', $type: 'log', message: 'test' };
+
+		const result = await logAction.execute({ trigger: 'submit', ...context, config });
+
+		expect(result.success).toBe(true);
+	});
+});
+```

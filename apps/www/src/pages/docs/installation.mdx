@@ -3,32 +3,36 @@ import { DocsLayout } from '@/layouts/docs-layout';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-	title: 'Installation | Form Engine Documentation',
-	description: 'Install and set up Form Engine in your project.',
+	title: 'Installation | Schema Engine Documentation',
+	description: 'Install and set up Schema Engine in your project.',
 });
 
 # Installation
 
-<div className="banner banner--alert unprose mt-4" role="alert">
-	<p className="banner__title">Development Phase</p>
-	<p>
-		Form Engine is currently in development. Installation as a standalone package is not yet available. The library
-		exists within this project and will be packaged for distribution in the future.
-	</p>
-</div>
-
 ## Package Installation
 
-Once released, Form Engine will be available as an npm package:
+Schema Engine is a monorepo with multiple packages. Install only what you need:
 
 ```bash
-# Using npm (coming soon)
-npm install form-engine
+# Core packages
+bun add @schema-engine/forms @schema-engine/forms-react zod
+
+# Optional: standalone actions package
+bun add @schema-engine/actions
 ```
+
+### Package Overview
+
+| Package | Description |
+|---------|-------------|
+| `@schema-engine/forms` | Core form engine (framework-agnostic) |
+| `@schema-engine/forms-react` | React components and hooks |
+| `@schema-engine/actions` | Domain-agnostic action system |
+| `@schema-engine/registry` | Base registry (internal dependency) |
 
 ## Development Setup
 
-Currently, to explore and contribute to Form Engine, you'll need to run the development environment:
+To contribute or explore the source code:
 
 ### Prerequisites
 
@@ -40,61 +44,51 @@ Currently, to explore and contribute to Form Engine, you'll need to run the deve
 
 ```bash
 # Clone the repository
-git clone https://github.com/andeeplus/form-engine.git
-cd form-engine
+git clone https://github.com/andeeplus/schema-engine.git
+cd schema-engine
 
 # Install dependencies
 bun install
 
-# Start development server
-bun dev
+# Start documentation site
+bun dev:www
 ```
 
-The development server will start at `http://localhost:3000` with:
-
-- **Live examples** and interactive demos
-- **Documentation** with real-time updates
-- **Component playground** for testing configurations
+The development server will start at `http://localhost:3000`.
 
 ### Development Scripts
 
 ```bash
-# Start development server with hot reload
-bun dev
+# Start documentation site
+bun dev:www
 
-# Build for production
+# Build all packages
 bun run build
-
-# Start production server
-bun start
-
-# Preview production build
-bun preview
 
 # Run tests
 bun test
+
+# Type check
+bun run typecheck
 ```
 
 ## Project Structure
 
-When exploring the codebase, here's how it's organized:
-
 ```
-form-engine/
-├── src/lib/form-engine/         # Core library source
-│   ├── actions/                 # Action system
-│   ├── components/              # Form components
-│   ├── hooks/                   # Shared hooks
-│   ├── types/                   # TypeScript definitions
-│   └── index.ts                 # Public API
-├── src/components/demo/         # Live examples
-├── src/pages/docs/              # Documentation
-└── test/                        # Test suites
+schema-engine/
+├── packages/
+│   ├── forms/           # @schema-engine/forms
+│   ├── forms-react/     # @schema-engine/forms-react
+│   ├── actions/         # @schema-engine/actions
+│   └── registry/        # @schema-engine/registry
+├── apps/
+│   └── www/             # Documentation site
+└── package.json
 ```
 
 ## TypeScript Configuration
 
-Form Engine is built with TypeScript-first approach. If you're using TypeScript, add these types to your `tsconfig.json`:
+Schema Engine is built with TypeScript. Recommended `tsconfig.json`:
 
 ```json
 {
@@ -102,37 +96,22 @@ Form Engine is built with TypeScript-first approach. If you're using TypeScript,
 		"strict": true,
 		"esModuleInterop": true,
 		"skipLibCheck": true,
-		"forceConsistentCasingInFileNames": true,
 		"moduleResolution": "bundler",
 		"jsx": "react-jsx"
 	}
 }
 ```
 
-## Styling Requirements
+## Peer Dependencies
 
-Form Engine is designed to work with your existing styling solution:
+The packages require the following peer dependencies:
 
-### With Tailwind CSS (Recommended)
-
-The default components use Tailwind CSS classes. Install Tailwind and include the base styles:
-
-```bash
-npm install tailwindcss @tailwindcss/forms
-```
-
-### With Custom CSS
-
-Override the default styles by providing your own CSS classes or styled components.
-
-### With Component Libraries
-
-Use your existing component library by registering custom field components through the registry system.
+- `zod` >= 3.23
+- `react` >= 18 (for forms-react)
+- `react-hook-form` >= 7 (for forms-react)
 
 ## What's Next?
 
-Now that you have Form Engine installed, check out the [Quick Start Guide](/docs/quick-start) to build your first form or dive into:
-
-- **[Quick Start](/docs/quick-start)** - Build your first form step-by-step
-- **[Components](/docs/components/how-it-works)** - Learn about the component registration system
-- **[Actions](/docs/actions/how-it-works)** - Discover the powerful action system
+- **[Quick Start](/docs/quick-start)** - Build your first form
+- **[Forms Package](/docs/packages/forms)** - Core engine documentation
+- **[Forms React](/docs/packages/forms-react)** - React integration

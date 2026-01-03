@@ -12,6 +12,7 @@ export function useTheme() {
 		setTheme(newTheme);
 		localStorage.setItem('theme', newTheme);
 		document.documentElement.classList.toggle('dark', newTheme === 'dark');
+		document.documentElement.setAttribute('data-theme', newTheme);
 	}, []);
 
 	/**

@@ -1,9 +1,43 @@
-.error404 {
-	@apply flex flex-col gap-4 items-center justify-center bg-slate-200 rounded-md p-4 my-20 max-w-fit mx-auto shadow-md;
-	h1 {
-		@apply text-4xl font-bold text-slate-900;
+.error404-container {
+	animation: fade-in 0.5s ease-out;
+}
+
+/* Gradient 404 number */
+.error404-number {
+	background: linear-gradient(
+		135deg,
+		oklch(from var(--foreground) l c h / 0.15) 0%,
+		oklch(from var(--foreground) l c h / 0.05) 100%
+	);
+	background-clip: text;
+	-webkit-background-clip: text;
+	color: oklch(from var(--foreground) l c h / 0.12);
+}
+
+/* Dark mode adjustment */
+.dark .error404-number {
+	background: linear-gradient(
+		135deg,
+		oklch(from var(--foreground) l c h / 0.12) 0%,
+		oklch(from var(--foreground) l c h / 0.04) 100%
+	);
+	color: oklch(from var(--foreground) l c h / 0.1);
+}
+
+@keyframes fade-in {
+	from {
+		opacity: 0;
+		transform: translateY(20px);
 	}
-	p {
-		@apply text-lg text-slate-700 p-8 bg-slate-100 rounded-md;
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+	.error404-container {
+		animation: none;
 	}
 }

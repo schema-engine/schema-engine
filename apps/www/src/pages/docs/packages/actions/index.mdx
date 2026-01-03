@@ -1,0 +1,38 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: '@schema-engine/actions | Schema Engine Documentation',
+    description: 'Domain-agnostic action execution system for event-driven architectures.',
+});
+
+# @schema-engine/actions
+
+Domain-agnostic action execution system for event-driven architectures.
+
+## Overview
+
+`@schema-engine/actions` provides a generic, serializable, type-safe action execution framework. It can be used in any domai or forms, workflows, state machines, UI interactions and is completely independent from any specific framework.
+
+**Key Features:**
+
+- **Domain Agnostic**: No dependencies on specific frameworks or domains
+- **Type Safe**: Full TypeScript support with generic constraints
+- **Sequential Execution**: Actions execute in order, preventing race conditions
+- **Pluggable**: Registry-based architecture for extensibility
+- **Testable**: Clean separation of concerns makes testing straightforward
+- **Zero Dependencies**: Only requires Zod for schema validation
+
+## Installation
+
+```bash
+bun add @schema-engine/actions zod
+```
+
+## Next Steps
+
+- [Getting Started](/docs/packages/actions/getting-started) - Build your first action
+- [Core Concepts](/docs/packages/actions/core-concepts) - Understand contexts, results, and triggers
+- [Advanced Usage](/docs/packages/actions/advanced) - Sequential execution, debugging, and more
+- [API Reference](/docs/packages/actions/api-reference) - Complete API documentation

@@ -1,0 +1,106 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+	title: 'Getting Started | @schema-engine/actions',
+	description: 'Learn how to create and execute your first action.',
+});
+
+# Getting Started
+
+This guide walks you through creating and executing your first action.
+
+## 1. Define Your Domain Types
+
+Start by defining the types that describe your domain:
+
+```typescript
+import type { ActionConfigBase } from '@schema-engine/actions';
+
+// Your triggers - events that can fire actions
+type MyTrigger = 'submit' | 'change' | 'mount' | 'unmount';
+
+// Your context - data available to all actions
+interface MyContext {
+	id: string;
+	data: Record<string, unknown>;
+	isValid: boolean;
+}
+
+// Your action config - the shape of action instances
+interface MyActionConfig extends ActionConfigBase {
+	$type: string;
+	// ... your custom properties
+}
+```
+
+## 2. Create an Action Registration
+
+An action registration defines how an action type behaves:
+
+```typescript
+import { z } from 'zod';
+import type { ActionRegistration } from '@schema-engine/actions';
+
+const LogActionSchema = z.object({
+	id: z.string(),
+	$type: z.literal('log'),
+	message: z.string(),
+});
+
+const logAction: ActionRegistration<'log', MyContext, MyTrigger> = {
+	$type: 'log',
+	schema: LogActionSchema,
+	metadata: {
+		name: 'Log Action',
+		description: 'Logs a message to console',
+		defaultTriggers: ['change', 'submit'],
+	},
+	execute: async (context) => {
+		// context includes: trigger, formData, config, etc.
+		console.log(context.config.message);
+		return { success: true };
+	},
+};
+```
+
+## 3. Create a Registry
+
+The registry holds all your action types:
+
+```typescript
+import { ActionRegistry } from '@schema-engine/actions';
+
+const registry = new ActionRegistry<MyContext, MyTrigger>();
+registry.register(logAction);
+```
+
+## 4. Execute Actions
+
+Use the executor to run actions:
+
+```typescript
+import { ActionExecutor } from '@schema-engine/actions';
+
+const executor = new ActionExecutor<MyActionConfig, MyContext, MyTrigger>(registry, {
+	debug: true,
+});
+
+const actions: MyActionConfig[] = [
+	{ id: 'log-1', $type: 'log', message: 'Hello world' },
+];
+
+const context: MyContext = {
+	id: 'my-instance',
+	data: { foo: 'bar' },
+	isValid: true,
+};
+
+const results = await executor.execute(actions, 'submit', context);
+```
+
+## Next Steps
+
+- [Core Concepts](/docs/packages/actions/core-concepts) - Understand contexts, results, and triggers
+- [Advanced Usage](/docs/packages/actions/advanced) - Sequential execution, debugging, and more

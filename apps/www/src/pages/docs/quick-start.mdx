@@ -3,125 +3,89 @@ import { DocsLayout } from '@/layouts/docs-layout';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-	title: 'Quick Start | Form Engine Documentation',
-	description: 'Get started with Form Engine - build your first form in minutes.',
+	title: 'Quick Start | Schema Engine Documentation',
+	description: 'Get started with Schema Engine - build your first form in minutes.',
 });
 
 # Quick Start
 
-Build your first form with Form Engine in just a few steps. This guide assumes you have already [installed Form Engine](/docs/installation).
+Build your first form with Schema Engine in just a few steps.
 
-## Understanding the Builder Pattern
+## 1. Create Your Form Engine
 
-Form Engine uses a **Builder Pattern** to configure and instantiate the form engine. This approach provides:
-
-- **Type Safety**: Full TypeScript support with autocomplete
-- **Explicit Configuration**: See exactly what's registered
-- **Tree-Shaking**: Only bundle what you use
-- **Flexibility**: Easy to add custom components
-
-Learn more about the [Builder Pattern](/docs/builder).
-
-## Your First Form
-
-Let's create a simple contact form to demonstrate the core concepts.
-
-### 1. Create Your Form Engine
-
-First, create a form engine instance with the components you need:
+Use the `createReactFormComposer` to register components and build an immutable engine:
 
 ```typescript
 // lib/form-engine.ts
-import { createReactFormComposer } from '@schema-engine/forms-react/registries/builder-registry';
+import { createReactFormComposer } from '@schema-engine/forms-react';
 import {
-	InputElement,
-	TextareaElement,
-	SelectElement,
+	InputElementRegistration,
+	TextareaElementRegistration,
+	SelectElementRegistration,
 	CardLayoutRegistration,
+	DefaultStepperRegistration,
 } from '@schema-engine/forms-react/registrations';
 
 export const formEngine = createReactFormComposer()
-	.addElement(InputElement)
-	.addElement(TextareaElement)
-	.addElement(SelectElement)
+	.addElement(InputElementRegistration)
+	.addElement(TextareaElementRegistration)
+	.addElement(SelectElementRegistration)
 	.addLayout(CardLayoutRegistration)
+	.addStepper(DefaultStepperRegistration)
 	.build();
 ```
 
-<div className="banner banner--info unprose mt-4" role="note">
-	<p className="banner__title">One Engine, Many Forms</p>
-	<p>
-		Create the form engine once and reuse it across your entire application. The engine instance is immutable after
-		calling <code>build()</code>.
-	</p>
-</div>
+> **Note:** Create the form engine once and reuse it across your entire application. The engine instance is immutable after calling `build()`.
 
-### 2. Create the Form Configuration
+## 2. Create the Form Configuration
 
 Define your form structure using a JSON configuration:
 
 ```typescript
-// components/contact-form.tsx
-import type { FormConfig } from '@schema-engine/forms/schemas';
-import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
-import { formEngine } from './lib/form-engine';
+import type { FormConfig } from '@schema-engine/forms';
 
 const contactFormConfig: FormConfig = {
 	id: 'contact-form',
 	title: 'Get In Touch',
-	description: 'We would love to hear from you. Send us a message',
-	mode: 'free',
+	description: 'We would love to hear from you',
 	steps: [
 		{
 			id: 'contact-details',
 			title: 'Contact Information',
 			elements: [
 				{
-					id: 'input',
-					inputType: 'text',
+					$type: 'input',
 					id: 'firstName',
 					name: 'firstName',
 					label: 'First Name',
-					placeholder: 'Enter your first name',
-					rules: [{ type: 'required', message: 'First name is required' }],
-				},
-				{
-					id: 'input',
 					inputType: 'text',
-					id: 'lastName',
-					name: 'lastName',
-					label: 'Last Name',
-					placeholder: 'Enter your last name',
-					rules: [{ type: 'required', message: 'Last name is required' }],
+					rules: [{ rule: 'required', message: 'First name is required' }],
 				},
 				{
-					id: 'input',
-					inputType: 'email',
+					$type: 'input',
 					id: 'email',
 					name: 'email',
 					label: 'Email Address',
-					placeholder: 'your.email@example.com',
+					inputType: 'email',
 					rules: [
-						{ type: 'required', message: 'Email is required' },
-						{ type: 'email', message: 'Please enter a valid email address' },
+						{ rule: 'required', message: 'Email is required' },
+						{ rule: 'email', message: 'Please enter a valid email address' },
 					],
 				},
 				{
-					id: 'select',
+					$type: 'select',
 					id: 'subject',
 					name: 'subject',
 					label: 'Subject',
-					placeholder: 'Choose a subject',
 					options: [
 						{ value: 'general', label: 'General Inquiry' },
 						{ value: 'support', label: 'Technical Support' },
 						{ value: 'billing', label: 'Billing Question' },
-						{ value: 'feature', label: 'Feature Request' },
 					],
-					rules: [{ type: 'required', message: 'Please select a subject' }],
+					rules: [{ rule: 'required', message: 'Please select a subject' }],
 				},
 				{
-					id: 'select',
+					$type: 'select',
 					id: 'priority',
 					name: 'priority',
 					label: 'Priority Level',
@@ -140,95 +104,58 @@ const contactFormConfig: FormConfig = {
 					],
 				},
 				{
-					id: 'textarea',
+					$type: 'textarea',
 					id: 'message',
 					name: 'message',
 					label: 'Message',
-					placeholder: 'Tell us more about your inquiry...',
 					rows: 4,
 					rules: [
-						{ type: 'required', message: 'Message is required' },
-						{ type: 'minLength', value: 10, message: 'Message must be at least 10 characters' },
+						{ rule: 'required', message: 'Message is required' },
+						{ rule: 'minLength', value: 10, message: 'Message must be at least 10 characters' },
 					],
 				},
 			],
+			layout: {
+				$type: 'card',
+				padding: 'md',
+				shadowSize: 'md',
+			},
 		},
 	],
 };
 ```
 
-### 3. Render the Form
+## 3. Render the Form
 
-Now create a React component that renders the form using the engine instance:
+```tsx
+import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
+import { formEngine } from './lib/form-engine';
 
-```typescript
 export function ContactForm() {
-  const handleSubmit = (data: any) => {
-    console.log('Form submitted with data:', data);
+	const handleSubmit = (data: any) => {
+		console.log('Form submitted:', data);
+	};
 
-    // Send data to your API
-    // try {
-    //   await fetch('/api/contact', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify(data),
-    //   });
-    // } catch (error) {
-    //   console.error('Submission failed:', error);
-    // }
-  };
-
-  return (
-    <div className="max-w-2xl mx-auto p-6">
-      <FormRenderer
-        config={contactFormConfig}
-        engine={formEngine}
-        onSubmit={handleSubmit}
-        onChange={handleFormChange}
-        className="space-y-4"
-      />
-    </div>
-  );
+	return (
+		<FormEngineProvider engine={formEngine}>
+			<FormRenderer
+				config={contactFormConfig}
+				onSubmit={handleSubmit}
+			/>
+		</FormEngineProvider>
+	);
 }
 ```
-
-### 4. Use the Form
-
-Add the form to your application:
-
-```typescript
-// In your App.tsx or page component
-import { ContactForm } from './ContactForm';
-
-function App() {
-  return (
-    <div className="container mx-auto py-8">
-      <ContactForm />
-    </div>
-  );
-}
-```
-
-## Understanding the Architecture
-
-Form Engine uses a **clean, simple API** with a powerful adapter system under the hood:
-
-- **Single Component**: Use `FormRenderer` for all your forms
-- **Adapter Architecture**: Currently uses React Hook Form, designed to support TanStack Form, Formik, and others
-- **Constraint Logic**: Dynamic field behavior through JSON configuration, optimized for each form library
-- **Type Safety**: Full TypeScript support with automatic type inference
-- **Future-Proof**: Add new form library support without changing your form configurations
-- **Tree-Shakable**: Import only the components you need
 
 ## Understanding Constraint Logic
 
-Notice the `priority` field in our example includes a `constraints` array:
+Notice the `priority` field includes a `constraints` array:
 
 ```json
 {
+	"$type": "select",
 	"id": "priority",
 	"name": "priority",
-	"id": "select",
 	"label": "Priority Level",
 	"constraints": [
 		{
@@ -244,173 +171,78 @@ Notice the `priority` field in our example includes a `constraints` array:
 This creates **conditional logic** where:
 
 - The priority field is only **shown** when the subject field equals "support"
-- Users only see priority options for technical support requests
 - The field automatically hides/shows as users change the subject
 
-Available constraint operators: `equals`, `not_equals`, `contains`, `not_contains`, `greater_than`, `less_than`, `is_empty`, `is_not_empty`
+**Available operators:** `equals`, `not_equals`, `contains`, `not_contains`, `greater_than`, `less_than`, `is_empty`, `is_not_empty`
 
-Available constraint actions: `show`, `hide`, `enable`, `disable`, `require`
+**Available actions:** `show`, `hide`, `enable`, `disable`, `require`
 
-## Understanding the Structure
-
-Let's break down the key parts of the form configuration:
+## Key Concepts
 
 ### Form Config Structure
 
 ```typescript
 interface FormConfig {
-	id: string; // Unique identifier
-	title?: string; // Form title
+	id: string;           // Unique identifier
+	title?: string;       // Form title
 	description?: string; // Form description
-	steps: StepConfig[]; // Form steps (even single-step forms need this)
+	steps: StepConfig[];  // Form steps (even single-step forms need this)
+	stepper?: StepperConfig; // Optional stepper configuration
+	actions?: ActionConfig[]; // Optional form actions
 }
 ```
 
-### Step Configuration
+### Element Configuration
 
 ```typescript
-interface StepConfig {
-	id: string; // Step identifier
-	title?: string; // Step title
-	elements: FieldConfig[]; // Fields in this step
-}
-```
-
-### Field Configuration
-
-```typescript
-interface FieldConfig {
-	type: string; // Field type (input, select, textarea, etc.)
-	id: string; // DOM element ID
-	name: string; // Form field name
-	label?: string; // Field label
-	placeholder?: string; // Placeholder text
-	validation?: ValidationRule[]; // Validation rules
+interface ElementConfig {
+	$type: string;        // Element type (input, select, textarea, etc.)
+	id?: string;          // DOM element ID
+	name: string;         // Form field name
+	label?: string;       // Field label
+	rules?: ValidationRule[]; // Validation rules
+	constraints?: ConstraintLogic[]; // Conditional logic
+	grid?: ElementGridConfig; // Grid positioning
 	// ... type-specific properties
 }
 ```
 
-## Adding Validation
+## Validation Rules
 
-Form Engine uses a declarative validation system. Here are common validation rules:
+Schema Engine uses a declarative validation system:
 
 ```typescript
 // Required field
-rules: [{ type: 'required', message: 'This field is required' }];
+rules: [{ rule: 'required', message: 'This field is required' }]
 
 // Email validation
 rules: [
-	{ type: 'required', message: 'Email is required' },
-	{ type: 'email', message: 'Please enter a valid email' },
-];
+	{ rule: 'required', message: 'Email is required' },
+	{ rule: 'email', message: 'Please enter a valid email' },
+]
 
 // Length validation
 rules: [
-	{ type: 'minLength', value: 3, message: 'Must be at least 3 characters' },
-	{ type: 'maxLength', value: 100, message: 'Must be less than 100 characters' },
-];
+	{ rule: 'minLength', value: 3, message: 'Must be at least 3 characters' },
+	{ rule: 'maxLength', value: 100, message: 'Must be less than 100 characters' },
+]
 
 // Pattern validation
 rules: [
 	{
-		type: 'pattern',
-		value: /^[A-Za-z\s]+$/,
+		rule: 'pattern',
+		value: '^[A-Za-z\\s]+$',
 		message: 'Only letters and spaces allowed',
 	},
-];
-```
-
-## Custom Field Registration
-
-You can register your own custom field components:
-
-```typescript
-import { defaultFormRegistry } from '@/lib/form-engine';
-
-// Create a custom component
-const CustomRatingField = ({ config, value, onChange, error }) => {
-  return (
-    <div>
-      <label>{config.label}</label>
-      <div className="flex gap-1">
-        {[1, 2, 3, 4, 5].map(rating => (
-          <button
-            key={rating}
-            type="button"
-            onClick={() => onChange(rating)}
-            className={value >= rating ? "text-yellow-500" : "text-gray-300"}
-          >
-            ★
-          </button>
-        ))}
-      </div>
-      {error && <span className="text-red-500 text-sm">{error}</span>}
-    </div>
-  );
-};
-
-// Register the custom field
-defaultFormRegistry.register({
-  name: 'rating',
-  component: CustomRatingField,
-  category: 'input',
-  description: 'Star rating field'
-});
-
-// Use in your form config
-{
-  type: 'rating',
-  id: 'satisfaction',
-  name: 'satisfaction',
-  label: 'Rate your experience',
-  rules: [
-    { type: 'required', message: 'Please provide a rating' }
-  ]
-}
-```
-
-## Multi-Step Forms
-
-Create multi-step forms by adding multiple steps:
-
-```typescript
-const multiStepConfig: FormConfig = {
-	id: 'multi-step-form',
-	title: 'User Registration',
-	steps: [
-		{
-			id: 'personal-info',
-			title: 'Personal Information',
-			elements: [
-				// Personal info fields
-			],
-		},
-		{
-			id: 'account-details',
-			title: 'Account Details',
-			elements: [
-				// Account fields
-			],
-		},
-		{
-			id: 'preferences',
-			title: 'Preferences',
-			elements: [
-				// Preference fields
-			],
-		},
-	],
-};
+]
 ```
 
 ## What's Next?
 
-Now that you've built your first form, explore these advanced features:
+Now that you've built your first form, explore these topics:
 
-- **[Form Actions](/docs/actions/how-it-works)** - Handle form submission, auto-save, and more
-- **[Conditional Logic](/docs/components/conditional-logic)** - Show/hide fields based on values
-- **[Multi-Step Forms](/docs/examples/multi-step)** - Build complex multi-step workflows
-- **[Custom Components](/docs/advanced/custom-fields)** - Create your own field types
-- **[Grid Layouts](/docs/components/responsive-grid)** - Create responsive form layouts
-
-Ready to dive deeper? Check out the [API Reference](/docs/api) for complete documentation of all available options.
+- **[Components](/docs/packages/forms-react/components)** - Pre-built elements and custom components
+- **[Layouts](/docs/packages/forms-react/layouts)** - Visual structure for forms
+- **[Steppers](/docs/packages/forms-react/steppers)** - Multi-step form navigation
+- **[Hooks](/docs/packages/forms-react/hooks)** - React hooks for form interactions
+- **[Actions](/docs/packages/forms/actions)** - Handle form submission and lifecycle events

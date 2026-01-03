@@ -1,0 +1,99 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+	title: 'Validation | @schema-engine/forms',
+	description: 'Built-in validation rules and custom validation support.',
+});
+
+# Validation
+
+The validation system provides 15+ built-in rules with support for custom validation.
+
+## Using Validation Presets
+
+```typescript
+import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
+
+const emailRules = [
+	ValidationPresets.string.required('Email is required'),
+	ValidationPresets.string.email('Invalid email address'),
+	ValidationPresets.string.maxLength(100, 'Email too long'),
+];
+
+const passwordRules = [
+	ValidationPresets.string.required('Password is required'),
+	ValidationPresets.string.minLength(8, 'At least 8 characters'),
+	ValidationPresets.string.pattern(
+		'^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)',
+		'Must contain uppercase, lowercase, and number',
+	),
+];
+
+const ageRules = [
+	ValidationPresets.number.required('Age is required'),
+	ValidationPresets.number.min(18, 'Must be 18 or older'),
+	ValidationPresets.number.max(120, 'Invalid age'),
+];
+```
+
+## Available Presets
+
+### String
+
+| Preset | Description |
+|--------|-------------|
+| `required(message)` | Non-empty string |
+| `email(message)` | Valid email format |
+| `url(message)` | Valid URL format |
+| `uuid(message)` | Valid UUID |
+| `uuidv4(message)` | Valid UUID v4 |
+| `minLength(min, message)` | Minimum string length |
+| `maxLength(max, message)` | Maximum string length |
+| `pattern(regex, message)` | Regex pattern match |
+| `ip(message)` | Valid IP address |
+
+### Number
+
+| Preset | Description |
+|--------|-------------|
+| `required(message)` | Non-null number |
+| `min(min, message)` | Minimum value |
+| `max(max, message)` | Maximum value |
+
+### Array
+
+| Preset | Description |
+|--------|-------------|
+| `required(message)` | Non-empty array |
+| `minItems(min, message)` | Minimum array length |
+| `maxItems(max, message)` | Maximum array length |
+
+### Date
+
+| Preset | Description |
+|--------|-------------|
+| `date(message)` | Valid date |
+| `dateTime(message)` | Valid datetime |
+| `time(message)` | Valid time |
+
+## In Form Configurations
+
+Validation rules are applied to elements using the `rules` property:
+
+```json
+{
+	"$type": "input",
+	"id": "email",
+	"name": "email",
+	"label": "Email Address",
+	"inputType": "email",
+	"rules": [
+		{ "rule": "required", "message": "Email is required" },
+		{ "rule": "email", "message": "Invalid email format" }
+	]
+}
+```
+
+> **Note:** The property is `rules`, not `validation`.

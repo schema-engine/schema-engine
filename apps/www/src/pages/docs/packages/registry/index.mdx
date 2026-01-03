@@ -1,0 +1,35 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: '@schema-engine/registry | Schema Engine Documentation',
+    description: 'Base registry system for managing named resources in an extensible architecture.',
+});
+
+# @schema-engine/registry
+
+Base registry system for managing named resources in an extensible architecture.
+
+## Overview
+
+`@schema-engine/registry` provides the foundational classes for creating registry-based plugin systems. It is used internally by `@schema-engine/forms` and `@schema-engine/actions` to manage elements, layouts, steppers, and actions.
+
+**Key Features:**
+
+- **Type Safe**: Full TypeScript support with generic constraints
+- **Extensible**: Abstract base class designed for extension
+- **Logging**: Built-in debug logging for registration events
+- **Zod Integration**: Register schemas to a Zod registry for validation
+
+## Installation
+
+```bash
+bun add @schema-engine/registry zod
+```
+
+## Next Steps
+
+- [Core Concepts](/docs/packages/registry/core-concepts) - Understand BaseRegistry and ComponentRegistry
+- [API Reference](/docs/packages/registry/api-reference) - Complete API documentation
+- [Examples](/docs/packages/registry/examples) - Build your own registry

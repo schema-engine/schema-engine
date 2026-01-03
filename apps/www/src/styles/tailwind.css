@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@import './vendor/shiki.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -40,6 +41,7 @@
 	--sidebar-ring: oklch(0.708 0 0);
 }
 
+[data-theme='dark'],
 .dark {
 	--background: oklch(0.145 0 0);
 	--foreground: oklch(0.985 0 0);
@@ -254,18 +256,6 @@
 	ol:not(form ol):not(form * ol):not(.unprose ol):not(.unprose * ol) {
 		@apply list-disc pl-8 my-4 font-sans;
 	}
-
-	code:not(form code):not(form * code):not(.unprose code):not(.unprose * code) {
-		@apply bg-muted text-sm text-foreground rounded px-1.5 py-0.5 font-mono;
-	}
-
-	pre:not(form pre):not(form * pre):not(.unprose pre):not(.unprose * pre) {
-		@apply bg-muted rounded-lg p-4 overflow-x-auto font-mono;
-
-		code {
-			@apply bg-transparent text-inherit rounded-none p-0 font-mono;
-		}
-	}
 }
 
 .banner {
@@ -296,10 +286,10 @@
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
+	* {
+		@apply border-border outline-ring/50;
 	}
-  body {
-    @apply bg-background text-foreground;
+	body {
+		@apply bg-background text-foreground;
 	}
 }

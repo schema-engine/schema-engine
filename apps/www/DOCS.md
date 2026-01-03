@@ -4,7 +4,7 @@ This document outlines the new documentation structure for Form Engine, designed
 
 ## Philosophy
 
-The documentation should reflect the **why** behind Form Engine, not just the **how**. It should feel personal, passionate, and practical—born from real frustration and refined through real solutions.
+The documentation should reflect the **why** behind Form Engine, not just the **how**. It should feel personal, passionate, and practical, born from real frustration and refined through real solutions.
 
 ## Proposed Structure
 

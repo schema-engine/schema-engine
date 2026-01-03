@@ -1,0 +1,167 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+	title: 'API Reference | @schema-engine/forms',
+	description: 'Complete API reference for the forms package.',
+});
+
+# API Reference
+
+Complete API documentation for `@schema-engine/forms`.
+
+## FormComposer
+
+```typescript
+class FormComposer<TElements, TLayouts, TSteppers, TActions> {
+	constructor(elementRegistry?: ElementRegistry);
+
+	addElement<T>(registration: ElementRegistration<T>): FormComposer<...>;
+	addLayout<T>(registration: LayoutRegistration<T>): FormComposer<...>;
+	addStepper<T>(registration: StepperRegistration<T>): FormComposer<...>;
+	addAction<T>(registration: BuilderActionRegistration<T>): FormComposer<...>;
+
+	clone(): FormComposer<...>;
+	build(): FormEngine<...>;
+}
+```
+
+## FormEngine
+
+```typescript
+class FormEngine<TElements, TLayouts, TSteppers, TActions> {
+	// Elements
+	getElement(id: string): ElementRegistration | undefined;
+	getAllElements(): ElementRegistration[];
+	hasElement(id: string): boolean;
+
+	// Layouts
+	getLayout(id: string): LayoutRegistration | undefined;
+	getAllLayouts(): LayoutRegistration[];
+	hasLayout(id: string): boolean;
+
+	// Steppers
+	getStepper(id: string): StepperRegistration | undefined;
+	getAllSteppers(): StepperRegistration[];
+	hasStepper(id: string): boolean;
+
+	// Actions
+	getAction(type: string): BuilderActionRegistration | undefined;
+	getAllActions(): BuilderActionRegistration[];
+	hasAction(type: string): boolean;
+
+	// Schema
+	getFormConfigSchema(): z.ZodType<FormConfig>;
+	generateJSONSchemaCollection(opts?: { target?: string }): object;
+	generateFormConfigSchema(opts?: { target?: string }): object;
+
+	// Utilities
+	getSummary(): EngineSummary;
+	toComposer(): FormComposer<...>;
+}
+```
+
+## Types
+
+### ElementRegistration
+
+```typescript
+interface ElementRegistration<TConfig> {
+	$type: string;
+	schema: z.ZodType<TConfig>;
+	metadata: ElementMetadata;
+	render: (props: ElementRenderProps<TConfig>) => unknown;
+}
+```
+
+### LayoutRegistration
+
+```typescript
+interface LayoutRegistration<TConfig> {
+	$type: string;
+	schema: z.ZodType<TConfig>;
+	metadata: ComponentMetadata;
+	render: (props: LayoutRenderProps<TConfig>) => unknown;
+}
+```
+
+### StepperRegistration
+
+```typescript
+interface StepperRegistration<TConfig> {
+	$type: string;
+	schema: z.ZodType<TConfig>;
+	metadata: ComponentMetadata;
+	render: (props: StepperRenderProps<TConfig>) => unknown;
+}
+```
+
+### BuilderActionRegistration
+
+```typescript
+interface BuilderActionRegistration<TConfig> {
+	$type: string;
+	schema: z.ZodType<TConfig>;
+	metadata: ActionMetadata<BuilderActionTrigger>;
+	execute: (context: BuilderActionExecutionContext) => Promise<BuilderActionExecutionResult>;
+}
+```
+
+### ElementMetadata
+
+```typescript
+interface ElementMetadata extends ComponentMetadata {
+	category: 'input' | 'content' | 'decoration' | 'interactive';
+}
+```
+
+### ActionMetadata
+
+```typescript
+interface ActionMetadata<TTrigger> {
+	name: string;
+	description?: string;
+	icon?: string;
+	defaultTriggers?: readonly TTrigger[];
+}
+```
+
+## Tools
+
+### GDPRConsent
+
+Static class for GDPR-compliant consent management:
+
+```typescript
+class GDPRConsent {
+	static isLocalStorageAvailable(): boolean;
+	static getConsent(): { granted: boolean; version: string; timestamp: string } | null;
+	static hasConsent(): boolean;
+	static grantConsent(): void;
+	static revokeConsent(): void;
+	static needsConsentUpdate(): boolean;
+	static saveDraft(formId: string, data: Record<string, any>): boolean;
+	static loadDraft(formId: string): Record<string, any> | null;
+	static clearDraft(formId: string): void;
+}
+```
+
+### GTMTracker
+
+Static class for Google Tag Manager integration:
+
+```typescript
+class GTMTracker {
+	static isAvailable(): boolean;
+	static push(event: string, data?: Record<string, any>): void;
+	static pushFormEvent(
+		eventType: 'form_mount' | 'form_step_complete' | 'form_submit' | 'form_abandon',
+		formData?: Record<string, any>,
+		metadata?: Record<string, any>
+	): void;
+	static initialize(containerId: string): void;
+}
+```
+
+> **Note:** Both tools are static classes. Call methods directly on the class (e.g., `GDPRConsent.hasConsent()`).

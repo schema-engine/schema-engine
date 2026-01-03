@@ -1,0 +1,77 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'Getting Started | @schema-engine/forms',
+    description: 'Build your first form engine with the builder pattern.',
+});
+
+# Getting Started
+
+This guide walks you through creating your first form engine using the builder pattern.
+
+## 1. Create a Form Engine
+
+Use the `FormComposer` to register components and build an immutable engine:
+
+```typescript
+import { FormComposer } from '@schema-engine/forms';
+
+const engine = new FormComposer()
+	.addElement(textInputRegistration)
+	.addElement(emailInputRegistration)
+	.addLayout(cardLayoutRegistration)
+	.addAction(submitActionRegistration)
+	.build();
+```
+
+## 2. Query the Engine
+
+The built engine provides methods to retrieve and inspect registered components:
+
+```typescript
+const element = engine.getElement('text');
+const allElements = engine.getAllElements();
+const hasEmail = engine.hasElement('email');
+
+const summary = engine.getSummary();
+// {
+//   elements: { count: 2, ids: ['text', 'email'] },
+//   layouts: { count: 1, ids: ['card'] },
+//   steppers: { count: 0, ids: [] },
+//   actions: { count: 1, types: ['submit'] }
+// }
+```
+
+## 3. Validate Form Configurations
+
+Get a Zod schema to validate form configurations at runtime:
+
+```typescript
+const zodSchema = engine.getFormConfigSchema();
+const result = zodSchema.safeParse(formConfig);
+
+if (!result.success) {
+	console.error(result.error);
+}
+```
+
+## 4. Generate JSON Schemas
+
+Generate JSON Schemas for documentation, storage, or external validation tools:
+
+```typescript
+const collection = engine.generateJSONSchemaCollection({
+	target: 'draft-2020-12',
+});
+
+const configSchema = engine.generateFormConfigSchema({
+	target: 'draft-2020-12',
+});
+```
+
+## Next Steps
+
+- [Core Concepts](/docs/packages/forms/core-concepts) - Understand registrations and the engine
+- [Validation](/docs/packages/forms/validation) - Built-in rules and custom validation

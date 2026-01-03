@@ -1,0 +1,177 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+	title: 'API Reference | @schema-engine/actions',
+	description: 'Complete API reference for the action system.',
+});
+
+# API Reference
+
+Complete API documentation for `@schema-engine/actions`.
+
+## ActionRegistry
+
+The built-in registry for managing action registrations. Extends `BaseRegistry` from `@schema-engine/registry`.
+
+```typescript
+class ActionRegistry<TContext, TTrigger>
+	extends BaseRegistry<string, ActionRegistration<string, TContext, TTrigger>>
+	implements ActionRegistryProvider<TContext, TTrigger> {
+
+	get registryName(): string;
+	getAction(type: string): ActionRegistration | undefined;
+	getActionTypes(): string[];
+}
+```
+
+### Inherited Methods (from BaseRegistry)
+
+| Method | Description |
+|--------|-------------|
+| `register(item)` | Registers an action type |
+| `has(type)` | Checks if an action type exists |
+| `get(type)` | Gets an action registration by type |
+| `getAll()` | Returns all action registrations |
+| `getAllKeys()` | Returns all registered action types |
+| `size` | Number of registered actions |
+| `clear()` | Removes all registered actions |
+| `getMap()` | Returns the internal Map (use sparingly) |
+| `registerSchemas(zodRegistry, metadataBuilder)` | Registers all schemas to a Zod registry |
+
+### ActionRegistry-Specific Methods
+
+| Method | Description |
+|--------|-------------|
+| `getAction(type)` | Gets an action registration by type (alias for `get`) |
+| `getActionTypes()` | Returns all action types (alias for `getAllKeys`) |
+
+## ActionExecutor
+
+Executes actions based on triggers. Sequential execution with lifecycle management.
+
+```typescript
+class ActionExecutor<TConfig extends ActionConfigBase, TContext, TTrigger> {
+	constructor(
+		registry: ActionRegistryProvider<TContext, TTrigger>,
+		options?: ActionExecutorOptions
+	);
+
+	execute(
+		actions: TConfig[],
+		trigger: TTrigger,
+		context: TContext,
+		triggeredBy?: TConfig
+	): Promise<ActionExecutionResult[]>;
+}
+
+interface ActionExecutorOptions {
+	debug?: boolean;
+}
+```
+
+## ActionDispatcher
+
+High-level orchestration layer with convenience methods.
+
+```typescript
+class ActionDispatcher<TConfig extends ActionConfigBase, TContext, TTrigger> {
+	constructor(
+		registry: ActionRegistryProvider<TContext, TTrigger>,
+		options?: ActionDispatcherOptions
+	);
+
+	dispatch(
+		actions: TConfig[],
+		trigger: TTrigger,
+		context: TContext,
+		metadata?: Record<string, unknown>
+	): Promise<ActionExecutionResult[]>;
+
+	dispatchSync(
+		actions: TConfig[],
+		trigger: TTrigger,
+		context: TContext,
+		metadata?: Record<string, unknown>
+	): void;
+}
+
+interface ActionDispatcherOptions {
+	debug?: boolean;
+}
+```
+
+| Method | Description |
+|--------|-------------|
+| `dispatch(...)` | Async dispatch with metadata merging |
+| `dispatchSync(...)` | Fire-and-forget dispatch (does not await results) |
+
+## ActionRegistryProvider
+
+Interface for implementing custom registries or adapters.
+
+```typescript
+interface ActionRegistryProvider<TContext, TTrigger> {
+	getAction(type: string): ActionRegistration | undefined;
+	getActionTypes(): string[];
+}
+```
+
+## Types
+
+### ActionRegistration
+
+```typescript
+interface ActionRegistration<TType extends string, TContext, TTrigger> {
+	$type: TType;
+	schema: z.ZodTypeAny;
+	metadata: ActionMetadata<TTrigger>;
+	execute: (context: TContext) => Promise<ActionExecutionResult> | ActionExecutionResult;
+}
+```
+
+### ActionMetadata
+
+```typescript
+interface ActionMetadata<TTrigger> {
+	name: string;
+	description?: string;
+	icon?: string;
+	defaultTriggers?: readonly TTrigger[];
+	category?: string;
+}
+```
+
+### ActionConfigBase
+
+```typescript
+interface ActionConfigBase<TType extends string = string> {
+	id: string;
+	$type: TType;
+	enabled?: boolean;
+	triggers?: readonly string[];
+}
+```
+
+### ActionExecutionContext
+
+```typescript
+interface ActionExecutionContext<TContext, TTrigger> {
+	trigger: TTrigger;
+	context: TContext;
+}
+```
+
+### ActionExecutionResult
+
+```typescript
+interface ActionExecutionResult<TData = unknown> {
+	success: boolean;
+	message?: string;
+	error?: string;
+	data?: TData;
+	shouldContinue?: boolean;
+	redirectUrl?: string;
+}
+```

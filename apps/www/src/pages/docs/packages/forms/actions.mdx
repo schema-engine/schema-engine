@@ -1,0 +1,130 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'Actions | @schema-engine/forms',
+    description: 'Action system and built-in plugins for form lifecycle events.',
+});
+
+# Actions
+
+Actions execute in response to form lifecycle triggers.
+
+## Triggers
+
+### Form Triggers
+
+- `form_mount` - Form initialization
+- `form_change` - Any field change
+- `form_submit` - Form submission initiated
+
+### Submit Lifecycle
+
+- `form_submit_start` - Submit process begins
+- `form_submit_success` - Submit completed successfully
+- `form_submit_error` - Submit failed
+- `form_submit_complete` - Submit finished (success or failure)
+
+### Step Triggers
+
+- `step_change` - Navigation between steps
+- `step_enter` - Entering a step
+- `step_leave` - Leaving a step
+- `step_view` - Step becomes visible (for analytics)
+
+## Configuring Triggers
+
+Actions can specify default triggers in metadata or be configured per-form:
+
+```typescript
+// Default triggers from registration
+metadata: {
+	defaultTriggers: ['form_submit', 'form_submit_success']
+}
+
+// Override in form config
+{
+	id: 'custom-action',
+	$type: 'submit',
+	triggers: ['form_change']
+}
+```
+
+## Built-in Plugins
+
+### Submit
+
+Submit form data to an endpoint:
+
+```json
+{
+	"id": "submit-form",
+	"$type": "submit",
+	"endpoint": "/api/forms",
+	"method": "POST",
+	"successMessage": "Form submitted successfully!",
+	"redirectUrl": "/thank-you"
+}
+```
+
+### Auto-save
+
+Automatically save form progress with debouncing:
+
+```json
+{
+	"id": "auto-save",
+	"$type": "auto-save",
+	"storageKey": "contact-form-draft",
+	"debounceMs": 1000,
+	"triggers": ["form_change"]
+}
+```
+
+### Notification
+
+Display user notifications for form events:
+
+```json
+{
+	"id": "success-notification",
+	"$type": "notification",
+	"message": "Form submitted successfully!",
+	"variant": "success",
+	"triggers": ["form_submit_success"]
+}
+```
+
+### GTM
+
+Track form events in Google Tag Manager:
+
+```json
+{
+	"id": "track-submit",
+	"$type": "gtm",
+	"event": "form_submit",
+	"data": {
+		"formId": "contact-form",
+		"category": "engagement"
+	},
+	"triggers": ["form_submit"]
+}
+```
+
+### Reset
+
+Reset form to initial state:
+
+```json
+{
+	"id": "reset-form",
+	"$type": "reset",
+	"triggers": ["manual_reset"]
+}
+```
+
+## Creating Custom Actions
+
+See the [Actions package](/docs/packages/actions) for creating domain-agnostic actions.

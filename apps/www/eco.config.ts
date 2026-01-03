@@ -5,6 +5,9 @@ import { tailwindV4Preset } from '@ecopages/postcss-processor/presets/tailwind-v
 import { reactPlugin } from '@ecopages/react';
 import remarkGfm from 'remark-gfm';
 import path from 'node:path';
+import rehypePrettyCode from 'rehype-pretty-code';
+// import { rehypeSimpleTableWrapper } from './src/plugins/rehype-simple-table-wrapper';
+// import { transformerEscapeHtml } from './src/plugins/transformer-escape-html';
 
 const config = await new ConfigBuilder()
 	.setRootDir(import.meta.dir)
@@ -18,6 +21,19 @@ const config = await new ConfigBuilder()
 				jsxRuntime: 'automatic',
 				development: import.meta.env.NODE_ENV === 'development',
 				remarkPlugins: [remarkGfm],
+				rehypePlugins: [
+					[
+						rehypePrettyCode,
+						{
+							theme: {
+								light: 'light-plus',
+								dark: 'dark-plus',
+							},
+							// transformers: [transformerEscapeHtml],
+						},
+					],
+					// rehypeSimpleTableWrapper,
+				],
 			},
 		}),
 		reactPlugin(),

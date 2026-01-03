@@ -1,0 +1,45 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: '@schema-engine/forms-react | Schema Engine Documentation',
+    description: 'React implementation of the JSON Form Engine with type-safe components and hooks.',
+});
+
+# @schema-engine/forms-react
+
+React implementation of the JSON Form Engine with type-safe components, form adapters, and comprehensive validation support.
+
+## Overview
+
+The React package provides production-ready components and hooks for building dynamic, JSON-configured forms. It integrates seamlessly with `@schema-engine/forms` and supports popular form libraries through an adapter system.
+
+**Key Features:**
+
+- Type-safe form builder with full TypeScript inference
+- Built-in React Hook Form adapter with extensibility for other form libraries
+- Pre-built form elements (input, textarea, checkbox, radio, select, switch, number, array)
+- Layout components for visual organization (card, split-screen, hero-background)
+- Stepper components for multi-step forms (default, vertical, minimalist, debugger)
+- Comprehensive validation with 15+ built-in rules
+- Action execution system for form lifecycle events
+- Grid-based responsive layouts
+- GDPR consent tracking
+- GTM analytics integration
+- Constraint logic and dynamic field behavior
+
+## Installation
+
+```bash
+bun add @schema-engine/forms-react @schema-engine/forms react-hook-form zod
+```
+
+## Next Steps
+
+- [Getting Started](/docs/packages/forms-react/getting-started) - Build your first React form
+- [Components](/docs/packages/forms-react/components) - Pre-built elements with examples
+- [Layouts](/docs/packages/forms-react/layouts) - Visual structure for forms
+- [Steppers](/docs/packages/forms-react/steppers) - Multi-step navigation
+- [Hooks](/docs/packages/forms-react/hooks) - React hooks for form interactions
+- [API Reference](/docs/packages/forms-react/api-reference) - Complete API documentation

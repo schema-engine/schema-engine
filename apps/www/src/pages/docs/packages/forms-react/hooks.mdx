@@ -1,0 +1,292 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+	title: 'Hooks | @schema-engine/forms-react',
+	description: 'React hooks for form interactions and customization.',
+});
+
+# Hooks
+
+The package provides hooks for accessing form state and building custom components.
+
+## useFormEngine
+
+Access the form engine context:
+
+```tsx
+import { useFormEngine } from '@schema-engine/forms-react';
+
+function MyComponent() {
+	const { engine, executeAction } = useFormEngine();
+
+	const inputElement = engine.getElement('input');
+	const allElements = engine.getAllElements();
+
+	return <div>{/* ... */}</div>;
+}
+```
+
+## useFormInstance
+
+Access the React Hook Form instance directly:
+
+```tsx
+import { useFormInstance } from '@schema-engine/forms-react';
+
+function MyComponent() {
+	const form = useFormInstance();
+
+	const { getValues, setValue, trigger, formState } = form;
+	const currentValues = getValues();
+	const { errors, isDirty, isValid } = formState;
+
+	return <div>{/* ... */}</div>;
+}
+```
+
+## useFormInstanceActions
+
+Access form actions and step navigation:
+
+```tsx
+import { useFormInstanceActions } from '@schema-engine/forms-react';
+
+function StepNavigation() {
+	const {
+		currentStep,
+		totalSteps,
+		goToStep,
+		goToNext,
+		goToPrevious,
+		navigation,
+		dispatchTrigger,
+	} = useFormInstanceActions();
+
+	return (
+		<div>
+			<span>Step {currentStep + 1} of {totalSteps}</span>
+			<button
+				onClick={goToPrevious}
+				disabled={!navigation.canGoPrevious}
+			>
+				Back
+			</button>
+			<button
+				onClick={goToNext}
+				disabled={!navigation.canGoNext}
+			>
+				{navigation.isLastStep ? 'Submit' : 'Next'}
+			</button>
+		</div>
+	);
+}
+```
+
+### FormInstanceContextValue
+
+```typescript
+interface FormInstanceContextValue {
+	currentStep: number;
+	totalSteps: number;
+	goToStep: (step: number) => void;
+	goToNext: () => void;
+	goToPrevious: () => void;
+	stepStates?: {
+		completed: boolean[];
+		valid: boolean[];
+		visited: boolean[];
+	};
+	navigation: {
+		canGoNext: boolean;
+		canGoPrevious: boolean;
+		isFirstStep: boolean;
+		isLastStep: boolean;
+		goToStep: (step: number) => void;
+		goToNextStep: () => void;
+		goToPreviousStep: () => void;
+	};
+	dispatchTrigger: (trigger: FormActionTrigger, extraMetadata?: Record<string, unknown>) => Promise<ActionExecutionResult[]>;
+	dispatchTriggerSync: (trigger: FormActionTrigger, extraMetadata?: Record<string, unknown>) => void;
+}
+```
+
+## useControlledFormElement
+
+Build custom field components with full form integration:
+
+```tsx
+import { useControlledFormElement } from '@schema-engine/forms-react';
+
+function CustomInput(config: FormEngine.ElementConfig) {
+	const {
+		field,
+		fieldState,
+		value,
+		error,
+		isRequired,
+		onChange,
+		onBlur,
+		fieldProps,
+		labelProps,
+		errorProps,
+		containerStyles,
+	} = useControlledFormElement(config);
+
+	return (
+		<div style={containerStyles}>
+			<label {...labelProps}>{config.label}</label>
+			<input
+				{...fieldProps}
+				value={value || ''}
+				onChange={(e) => onChange(e.target.value)}
+				onBlur={onBlur}
+			/>
+			{errorProps && <span {...errorProps}>{error}</span>}
+		</div>
+	);
+}
+```
+
+### Return Value
+
+```typescript
+interface UseControlledFormElementReturn {
+	field: ControllerRenderProps;
+	fieldState: ControllerFieldState;
+	formState: UseFormStateReturn;
+	value: any;
+	error: string | undefined;
+	isDirty: boolean;
+	isTouched: boolean;
+	isRequired: boolean;
+	onChange: (value: any) => void;
+	onBlur: () => void;
+	fieldProps: object;
+	labelProps: object;
+	errorProps: object | null;
+	containerStyles: object;
+	gridStyles: object;
+	config: FormEngine.ElementConfig;
+	combineHandlers: <T>(controllerHandler: (value: T) => void, propsHandler?: (value: T) => void) => (value: T) => void;
+}
+```
+
+## useActionDispatcher
+
+Get an ActionDispatcher instance for executing actions:
+
+```tsx
+import { useFormEngine, useActionDispatcher } from '@schema-engine/forms-react';
+
+function MyComponent() {
+	const { engine } = useFormEngine();
+	const dispatcher = useActionDispatcher(engine);
+
+	const handleClick = async () => {
+		const results = await dispatcher.dispatch('form_submit', context);
+		console.log(results);
+	};
+
+	return <button onClick={handleClick}>Submit</button>;
+}
+```
+
+## useConstraintLogic
+
+Evaluate constraint logic for conditional visibility/disabled/required states:
+
+```tsx
+import { useConstraintLogic } from '@schema-engine/forms-react';
+
+function ConditionalField({ constraints, baseRequired, fieldPath }) {
+	const result = useConstraintLogic(constraints, baseRequired, fieldPath);
+
+	if (!result.isVisible) {
+		return null;
+	}
+
+	return (
+		<input
+			disabled={result.isDisabled}
+			required={result.isRequired}
+		/>
+	);
+}
+```
+
+### Return Value
+
+```typescript
+interface ConstraintEvaluationResult {
+	isVisible: boolean;
+	isDisabled: boolean;
+	isRequired: boolean;
+}
+```
+
+## useGDPRConsent
+
+Manage GDPR consent state:
+
+```tsx
+import { useGDPRConsent } from '@schema-engine/forms-react';
+
+function ConsentStatus() {
+	const consent = useGDPRConsent();
+
+	return (
+		<div>
+			<p>Has consent: {consent.hasConsent() ? 'Yes' : 'No'}</p>
+			<button onClick={consent.grantConsent}>Accept</button>
+			<button onClick={consent.revokeConsent}>Decline</button>
+		</div>
+	);
+}
+```
+
+### Return Value
+
+```typescript
+{
+	hasConsent: () => boolean;
+	grantConsent: () => void;
+	revokeConsent: () => void;
+	needsUpdate: () => boolean;
+	getConsent: () => ConsentData;
+}
+```
+
+## useGTMTracker
+
+Integrate with Google Tag Manager:
+
+```tsx
+import { useGTMTracker } from '@schema-engine/forms-react';
+
+function MyForm() {
+	const gtm = useGTMTracker();
+
+	const handleSubmit = () => {
+		gtm.pushFormEvent('form_submit', formData, { formId: 'contact' });
+	};
+
+	return <form onSubmit={handleSubmit}>{/* ... */}</form>;
+}
+```
+
+### Return Value
+
+```typescript
+{
+	isAvailable: () => boolean;
+	push: (event: string, data?: Record<string, any>) => void;
+	pushFormEvent: (
+		eventType: 'form_mount' | 'form_step_complete' | 'form_submit' | 'form_abandon',
+		formData?: Record<string, any>,
+		metadata?: Record<string, any>
+	) => void;
+	initialize: (containerId: string) => void;
+}
+```
