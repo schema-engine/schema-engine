@@ -6,8 +6,6 @@ import { reactPlugin } from '@ecopages/react';
 import remarkGfm from 'remark-gfm';
 import path from 'node:path';
 import rehypePrettyCode from 'rehype-pretty-code';
-// import { rehypeSimpleTableWrapper } from './src/plugins/rehype-simple-table-wrapper';
-// import { transformerEscapeHtml } from './src/plugins/transformer-escape-html';
 
 const config = await new ConfigBuilder()
 	.setRootDir(import.meta.dir)
@@ -29,10 +27,8 @@ const config = await new ConfigBuilder()
 								light: 'light-plus',
 								dark: 'dark-plus',
 							},
-							// transformers: [transformerEscapeHtml],
 						},
 					],
-					// rehypeSimpleTableWrapper,
 				],
 			},
 		}),
@@ -41,7 +37,7 @@ const config = await new ConfigBuilder()
 	.setProcessors([
 		postcssProcessorPlugin(
 			tailwindV4Preset({
-				referencePath: path.join(import.meta.dir, 'src/styles/tailwind.css'),
+				referencePath: path.resolve(import.meta.dir, 'src/styles/tailwind.css'),
 			}),
 		),
 	])

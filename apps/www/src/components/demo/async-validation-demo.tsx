@@ -1,7 +1,9 @@
 import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
+import { FormEngineProvider } from '@schema-engine/forms-react/components/adapter-provider';
+import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
 import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
 import type { FormConfig } from '@schema-engine/forms/schemas';
-import '@/lib/form-engine-setup';
+import { formEngine } from '@/lib/form-engine-setup';
 
 /**
  * Interactive demo component showcasing Form Engine's async validation capabilities
@@ -151,34 +153,37 @@ export function AsyncValidationDemo() {
 	};
 
 	return (
-		<div className="space-y-4">
-			<div className="bg-blue-50 border border-blue-200 rounded-lg p-4 dark:bg-blue-900/20 dark:border-blue-800">
-				<h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Async Validation Demo</h4>
-				<p className="text-sm text-blue-700 dark:text-blue-200">
-					This demo shows server-side validation in action. Each field validates against a backend API with
-					different debounce delays. Try entering "invalid" in any field to trigger validation errors.
-				</p>
+		<FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
+			<div className="space-y-4">
+				<div className="bg-blue-50 border border-blue-200 rounded-lg p-4 dark:bg-blue-900/20 dark:border-blue-800">
+					<h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Async Validation Demo</h4>
+					<p className="text-sm text-blue-700 dark:text-blue-200">
+						This demo shows server-side validation in action. Each field validates against a backend API
+						with different debounce delays. Try entering "invalid" in any field to trigger validation
+						errors.
+					</p>
+				</div>
+				<div className="border rounded-lg p-6 bg-white dark:bg-gray-900">
+					<FormRenderer config={config} />
+				</div>
+				<div className="bg-gray-50 border border-gray-200 rounded-lg p-4 dark:bg-gray-800 dark:border-gray-700">
+					<h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">How it works:</h4>
+					<ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+						<li>
+							• <strong>Debouncing:</strong> API calls are delayed until user stops typing
+						</li>
+						<li>
+							• <strong>Dependencies:</strong> Some fields re-validate when other fields change
+						</li>
+						<li>
+							• <strong>Error Handling:</strong> Network errors are handled gracefully
+						</li>
+						<li>
+							• <strong>Expected Response:</strong> Server response is validated against expected format
+						</li>
+					</ul>
+				</div>
 			</div>
-			<div className="border rounded-lg p-6 bg-white dark:bg-gray-900">
-				<FormRenderer config={config} />
-			</div>
-			<div className="bg-gray-50 border border-gray-200 rounded-lg p-4 dark:bg-gray-800 dark:border-gray-700">
-				<h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">How it works:</h4>
-				<ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-					<li>
-						• <strong>Debouncing:</strong> API calls are delayed until user stops typing
-					</li>
-					<li>
-						• <strong>Dependencies:</strong> Some fields re-validate when other fields change
-					</li>
-					<li>
-						• <strong>Error Handling:</strong> Network errors are handled gracefully
-					</li>
-					<li>
-						• <strong>Expected Response:</strong> Server response is validated against expected format
-					</li>
-				</ul>
-			</div>
-		</div>
+		</FormEngineProvider>
 	);
 }

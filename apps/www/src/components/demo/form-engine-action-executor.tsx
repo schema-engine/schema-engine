@@ -6,8 +6,8 @@ import { FormRenderer } from '@schema-engine/forms-react/components/internals/fo
 import { FormEngineProvider } from '@schema-engine/forms-react/components/adapter-provider';
 import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
 import { formEngine } from '@/lib/form-engine-setup';
-import { submitPlugin, notificationPlugin, resetPlugin } from '@schema-engine/forms/actions';
-import type { FormConfig } from '@schema-engine/formsemas';
+import { formSubmitPlugin, notificationPlugin, formResetPlugin } from '@schema-engine/forms/actions';
+import type { FormConfig } from '@schema-engine/forms/schemas';
 
 const formConfigWithActions: FormConfig = {
 	id: 'form-engine-demo',
@@ -81,7 +81,7 @@ const formConfigWithActions: FormConfig = {
 			id: 'notify-success',
 			$type: 'show_notification' as const,
 			enabled: true,
-			triggers: ['submit_success'],
+			triggers: ['form_submit_success'],
 			message: 'Contact form submitted successfully via FormEngine!',
 			variant: 'success' as const,
 			duration: 3000,
@@ -90,7 +90,7 @@ const formConfigWithActions: FormConfig = {
 			id: 'notify-error',
 			$type: 'show_notification' as const,
 			enabled: true,
-			triggers: ['submit_error'],
+			triggers: ['form_submit_error'],
 			message: 'Failed to submit contact form via FormEngine.',
 			variant: 'error' as const,
 			duration: 5000,
@@ -99,7 +99,7 @@ const formConfigWithActions: FormConfig = {
 			id: 'reset-form',
 			$type: 'reset' as const,
 			enabled: true,
-			triggers: ['submit_success'],
+			triggers: ['form_submit_success'],
 			resetToDefaults: true,
 		},
 	],
@@ -121,7 +121,7 @@ const FormEngineActionExecutor: FC = () => {
 		return formEngine
 			.toComposer()
 			.addAction(
-				submitPlugin({
+				formSubmitPlugin({
 					onSuccess: (data, context) => {
 						addLog(`✅ Form submitted successfully: ${context.formId}`);
 						addLog(`[data] ${JSON.stringify(data, null, 2)}`);
@@ -149,7 +149,7 @@ const FormEngineActionExecutor: FC = () => {
 				}),
 			)
 			.addAction(
-				resetPlugin({
+				formResetPlugin({
 					onReset: (context) => {
 						addLog(`🔄 Form reset: ${context.formId}`);
 					},
