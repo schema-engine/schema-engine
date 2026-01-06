@@ -40,3 +40,13 @@ export const submitFormDelayErrorHandler = http.post(SUBMIT_FORM_DELAY_ERROR_URL
 
 	return HttpResponse.json({ error: 'Simulated server error' }, { status: 500 });
 });
+
+export const SUBMIT_FORM_CUSTOM_ERROR_URL = '/api/submit-form-custom-error';
+
+/**
+ * MSW handler that simulates a custom backend error message
+ */
+export const submitFormCustomErrorHandler = http.post(SUBMIT_FORM_CUSTOM_ERROR_URL, async () => {
+	await delay(1000);
+	return HttpResponse.json({ error: 'This username is already taken. Please choose another.' }, { status: 400 });
+});

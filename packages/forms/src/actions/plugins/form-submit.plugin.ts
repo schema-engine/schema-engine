@@ -203,7 +203,21 @@ export function formSubmitPlugin(
 			const response = await request(action.endpoint, requestOptions);
 
 			if (!response.ok) {
-				throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+				let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+				const contentType = response.headers.get('content-type');
+
+				if (contentType?.includes('application/json')) {
+					try {
+						const errorData = await response.json();
+						const message = errorData.error || errorData.message;
+						if (typeof message === 'string' && message) {
+							errorMessage = message;
+						}
+					} catch (parseError) {
+						console.warn('Failed to parse JSON error response:', parseError);
+					}
+				}
+				throw new Error(errorMessage);
 			}
 
 			const responseData = await response.json();

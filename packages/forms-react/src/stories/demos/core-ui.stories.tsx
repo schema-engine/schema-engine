@@ -8,6 +8,8 @@ import {
 	SUBMIT_FORM_DELAY_ERROR_URL,
 	submitFormDelaySuccessHandler,
 	submitFormDelayErrorHandler,
+	SUBMIT_FORM_CUSTOM_ERROR_URL,
+	submitFormCustomErrorHandler,
 } from '../msw/submit-form-delayed';
 
 const baseUIEngine = getEngine();
@@ -1584,6 +1586,49 @@ export const SubmissionAwareFormError: Story = {
 				enabled: true,
 				triggers: ['form_submit'],
 				endpoint: SUBMIT_FORM_DELAY_ERROR_URL,
+				method: 'POST',
+			})
+			.build(),
+	},
+};
+
+/**
+ * Submission-Aware Form - Custom Backend Error
+ */
+export const SubmissionAwareFormCustomError: Story = {
+	parameters: {
+		msw: {
+			handlers: [submitFormCustomErrorHandler],
+		},
+	},
+	args: {
+		config: createForm()
+			.setId('submission-aware-custom-error')
+			.setTitle('Submission-Aware Form (Custom Error)')
+			.setDescription('This form returns a specific backend error message')
+			.addStep({ id: 'contact', title: 'Contact' })
+			.addElement('submission-alert', {
+				id: 'submission-status',
+				name: 'submissionStatus',
+				showOn: ['pending', 'success', 'error'],
+			})
+			.addElement('input', {
+				id: 'username',
+				name: 'username',
+				label: 'Username',
+				placeholder: 'johndoe',
+				inputType: 'text',
+			})
+			.addElement('submit', {
+				id: 'submit',
+				name: 'submit',
+				label: 'Check Availability',
+			})
+			.addFormAction('submit', {
+				id: 'submit-custom-error',
+				enabled: true,
+				triggers: ['form_submit'],
+				endpoint: SUBMIT_FORM_CUSTOM_ERROR_URL,
 				method: 'POST',
 			})
 			.build(),
