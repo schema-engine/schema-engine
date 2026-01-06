@@ -159,7 +159,6 @@ export function FormRenderer({
 	onSubmit,
 	onChange,
 	onAction,
-	onValidationError,
 	className = '',
 	style,
 }: FormRendererProps) {
@@ -170,7 +169,6 @@ export function FormRenderer({
 			onSubmit={onSubmit}
 			onChange={onChange}
 			onAction={onAction}
-			onValidationError={onValidationError}
 		>
 			<div className={`space-y-6 ${className}`} style={style}>
 				<FormElementsRenderer config={config} />

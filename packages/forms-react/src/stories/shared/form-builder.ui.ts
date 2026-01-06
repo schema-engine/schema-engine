@@ -26,6 +26,7 @@ import { DropZoneElementRegistration } from '@/components/elements/core-ui/input
 import { ArrayElementRegistration as BaseUIArrayElementRegistration } from '@/components/elements/core-ui/inputs/form-array-elements.registration';
 import { FieldSetRegistration as BaseUIFieldSetRegistration } from '@/components/elements/core-ui/inputs/form-fieldset.registration';
 import { SubmitButtonElementRegistration as BaseUISubmitButtonElementRegistration } from '@/components/elements/core-ui/actions/submit-button.registration';
+import { SubmissionAlertElementRegistration as BaseUISubmissionAlertElementRegistration } from '@/components/elements/core-ui/content';
 
 import { CardLayoutRegistration } from '@/components/layouts/card-layout.registration';
 import { SplitScreenLayoutRegistration } from '@/components/layouts/split-screen-layout.registration';
@@ -76,6 +77,7 @@ function createBaseUIFormComposer() {
 		.addElement(BaseUIArrayElementRegistration)
 		.addElement(BaseUIFieldSetRegistration)
 		.addElement(BaseUISubmitButtonElementRegistration)
+		.addElement(BaseUISubmissionAlertElementRegistration)
 		.addLayout(CardLayoutRegistration)
 		.addLayout(SplitScreenLayoutRegistration)
 		.addLayout(HeroBackgroundLayoutRegistration)

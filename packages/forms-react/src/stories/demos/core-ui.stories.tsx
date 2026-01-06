@@ -3,6 +3,12 @@ import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '@/stories/shared/story-wrapper';
 import { createForm, getEngine, ValidationPresets } from '@/stories/shared/form-builder.ui';
 import { SUBMIT_FORM_MOCK_URL, submitFormHandler } from '../msw/submit-form';
+import {
+	SUBMIT_FORM_DELAY_SUCCESS_URL,
+	SUBMIT_FORM_DELAY_ERROR_URL,
+	submitFormDelaySuccessHandler,
+	submitFormDelayErrorHandler,
+} from '../msw/submit-form-delayed';
 
 const baseUIEngine = getEngine();
 
@@ -1469,5 +1475,117 @@ export const WithInvalidElementConfig: Story = {
 				},
 			],
 		},
+	},
+};
+
+/**
+ * Submission-Aware Form Demo
+ *
+ * Demonstrates the submission-alert element with delayed API responses.
+ * Shows pending and success states using the delayed success handler.
+ */
+export const SubmissionAwareForm: Story = {
+	parameters: {
+		msw: {
+			handlers: [submitFormDelaySuccessHandler],
+		},
+	},
+	args: {
+		config: createForm()
+			.setId('submission-aware-form')
+			.setTitle('Submission-Aware Form')
+			.setDescription('Watch the submission alert respond to form state')
+			.addStep({ id: 'contact', title: 'Contact' })
+			.addElement('submission-alert', {
+				id: 'submission-status',
+				name: 'submissionStatus',
+				showOn: ['pending', 'success', 'error'],
+				autoDismiss: 5000,
+			})
+			.addElement('input', {
+				id: 'name',
+				name: 'name',
+				label: 'Name',
+				placeholder: 'John Doe',
+				inputType: 'text',
+				rules: [ValidationPresets.string.required('Name is required')],
+			})
+			.addElement('input', {
+				id: 'email',
+				name: 'email',
+				label: 'Email',
+				placeholder: 'john@example.com',
+				inputType: 'email',
+				rules: [ValidationPresets.string.email('Invalid email')],
+			})
+			.addElement('submit', {
+				id: 'submit',
+				name: 'submit',
+				label: 'Submit',
+			})
+			.addFormAction('submit', {
+				id: 'submit-success',
+				enabled: true,
+				triggers: ['form_submit'],
+				endpoint: SUBMIT_FORM_DELAY_SUCCESS_URL,
+				method: 'POST',
+			})
+			.addFormAction('reset', {
+				id: 'reset-form',
+				enabled: true,
+				triggers: ['form_submit_success'],
+				resetToDefaults: true,
+			})
+			.build(),
+	},
+};
+
+/**
+ * Submission-Aware Form - Error Scenario
+ */
+export const SubmissionAwareFormError: Story = {
+	parameters: {
+		msw: {
+			handlers: [submitFormDelayErrorHandler],
+		},
+	},
+	args: {
+		config: createForm()
+			.setId('submission-aware-error')
+			.setTitle('Submission-Aware Form (Error)')
+			.setDescription('This form will fail to demonstrate error state')
+			.addStep({ id: 'contact', title: 'Contact' })
+			.addElement('submission-alert', {
+				id: 'submission-status',
+				name: 'submissionStatus',
+				showOn: ['pending', 'success', 'error'],
+			})
+			.addElement('input', {
+				id: 'name',
+				name: 'name',
+				label: 'Name',
+				placeholder: 'John Doe',
+				inputType: 'text',
+			})
+			.addElement('input', {
+				id: 'email',
+				name: 'email',
+				label: 'Email',
+				placeholder: 'john@example.com',
+				inputType: 'email',
+			})
+			.addElement('submit', {
+				id: 'submit',
+				name: 'submit',
+				label: 'Submit',
+			})
+			.addFormAction('submit', {
+				id: 'submit-error',
+				enabled: true,
+				triggers: ['form_submit'],
+				endpoint: SUBMIT_FORM_DELAY_ERROR_URL,
+				method: 'POST',
+			})
+			.build(),
 	},
 };

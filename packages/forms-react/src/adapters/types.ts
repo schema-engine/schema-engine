@@ -25,21 +25,38 @@ export interface FormFieldValue<TFieldValue = unknown> {
 	required: boolean;
 }
 
+/**
+ * Props for the FormProvider component
+ */
 export interface FormProviderProps<TFormData = Record<string, unknown>> {
+	/** Form configuration object defining structure, rules, and actions */
 	config: FormConfig;
+	/** Optional default values for form fields */
 	defaultValues?: Partial<TFormData>;
+	/** React children to render inside the form context */
 	children: ReactNode;
+	/** Callback function executed on successful form submission */
 	onSubmit?: (data: TFormData) => void | Promise<void>;
+	/** Callback function executed whenever form data changes */
 	onChange?: (data: Partial<TFormData>) => void;
+	/** Callback function executed when a form action is triggered */
 	onAction?: (action: FormActionConfig, data: TFormData) => void | Promise<void>;
-	onValidationError?: (errors: Record<string, string>) => void;
 }
 
+/**
+ * Interface for form adapter implementation
+ */
 export interface FormAdapter<TFormData = Record<string, unknown>> {
+	/** Hook to access form context (values, errors, state) */
 	useFormContext: () => FormContextValue<TFormData>;
+	/** Hook to register and manage a specific form field */
 	useFormField: <TFieldValue = unknown>(config: FormEngine.ElementConfig) => FormFieldValue<TFieldValue>;
+	/** Hook to watch a specific field value */
 	useWatchField: <TWatchValue = unknown>(name: string | string[]) => TWatchValue;
+	/** The FormProvider component to wrap the form */
 	FormProvider: React.ComponentType<FormProviderProps<TFormData>>;
+	/** Function to validate a single field */
 	validateField: (name: string) => Promise<boolean>;
+	/** Function to validate multiple fields */
 	validateFields: (names: string[]) => Promise<boolean>;
 }

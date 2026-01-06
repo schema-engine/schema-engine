@@ -19,6 +19,7 @@ import { NumberElementRegistration } from '@/components/elements/shadcn/inputs/f
 import { ArrayElementRegistration } from '@/components/elements/shadcn/inputs/form-array-elements.registration';
 import { FieldSetRegistration } from '@/components/elements/shadcn/inputs/form-fieldset.registration';
 import { SubmitButtonElementRegistration } from '@/components/elements/shadcn/actions/submit-button.registration';
+import { SubmissionAlertElementRegistration } from '@/components/elements/shadcn/content';
 
 import { CardLayoutRegistration } from '@/components/layouts/card-layout.registration';
 import { SplitScreenLayoutRegistration } from '@/components/layouts/split-screen-layout.registration';
@@ -61,6 +62,7 @@ function createDefaultFormComposer() {
 		.addElement(ArrayElementRegistration)
 		.addElement(FieldSetRegistration)
 		.addElement(SubmitButtonElementRegistration)
+		.addElement(SubmissionAlertElementRegistration)
 		.addLayout(CardLayoutRegistration)
 		.addLayout(SplitScreenLayoutRegistration)
 		.addLayout(HeroBackgroundLayoutRegistration)
