@@ -11,6 +11,7 @@ import { useFormEngine } from '@/hooks/use-form-context';
 import { useFormValidationResolver } from './hooks/use-form-validation-resolver';
 import { FormInstanceContext, type FormInstanceContextValue } from '@/components/provider';
 import { useRHFMultiStep } from './hooks/use-rhf-multi-step';
+import { useSubmissionStateManager } from '@/hooks/use-submission-state';
 
 /**
  * React Hook Form adapter implementation
@@ -22,10 +23,11 @@ export function FormProvider({
 	onSubmit,
 	onChange,
 	onAction,
-	onValidationError,
 }: FormProviderProps) {
 	const { engine } = useFormEngine();
 	const actionExecutor = useActionDispatcher(engine);
+	const { submissionState, setSubmissionPending, setSubmissionSuccess, setSubmissionError, clearSubmission } =
+		useSubmissionStateManager();
 
 	const allFields = useMemo(() => {
 		return config.steps.flatMap((step) => step.elements || []);
@@ -115,25 +117,28 @@ export function FormProvider({
 
 	const executeAction = useCallback(
 		async (action: FormActionConfig) => {
+			setSubmissionPending();
 			return dispatchTrigger('form_submit')
 				.then(async (results) => {
 					const result = results[0] || { success: false, error: 'No result returned' };
 
 					if (result.success) {
 						await onAction?.(action, form.getValues());
-						console.log('Action executed successfully:', action);
+						setSubmissionSuccess();
 					} else {
-						onValidationError?.({ _actionError: result.error || 'Unknown action error' });
+						setSubmissionError({
+							errors: [{ actionId: action.id, message: result.error || 'Unknown action error' }],
+						});
 					}
 					return result;
 				})
 				.catch((error) => {
 					const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-					onValidationError?.({ _actionError: errorMessage });
+					setSubmissionError({ errors: [{ actionId: action.id, message: errorMessage }] });
 					return { success: false, error: errorMessage };
 				});
 		},
-		[form, onAction, onValidationError, dispatchTrigger],
+		[form, onAction, dispatchTrigger, setSubmissionPending, setSubmissionSuccess, setSubmissionError],
 	);
 
 	const handleFormChange = useCallback(
@@ -171,6 +176,7 @@ export function FormProvider({
 	const handleSubmit = useCallback(
 		async (data: any) => {
 			await form.trigger();
+			setSubmissionPending();
 
 			if (config.actions && config.actions.length > 0) {
 				try {
@@ -178,14 +184,18 @@ export function FormProvider({
 
 					const results = await dispatchTrigger('form_submit');
 
-					const failedAction = results.find(
+					// Collect all failed actions for error reporting
+					const failedActions = results.filter(
 						(result: any) => !result.success && result.shouldContinue === false,
 					);
 
-					if (failedAction) {
-						if (onValidationError) {
-							onValidationError({ _actionError: failedAction.error || 'Action execution failed' });
-						}
+					if (failedActions.length > 0) {
+						setSubmissionError({
+							errors: failedActions.map((r: any, i: number) => ({
+								actionId: `action-${i}`,
+								message: r.error || 'Action execution failed',
+							})),
+						});
 						await dispatchTrigger('form_submit_error');
 						await dispatchTrigger('form_submit_complete');
 						return;
@@ -193,13 +203,20 @@ export function FormProvider({
 
 					await dispatchTrigger('form_submit_success');
 					await dispatchTrigger('form_submit_complete');
+					setSubmissionSuccess();
 				} catch (error) {
 					console.error('Form action execution failed:', error);
-					onValidationError?.({ _actionError: error instanceof Error ? error.message : 'Unknown error' });
+					setSubmissionError({
+						errors: [
+							{ actionId: 'unknown', message: error instanceof Error ? error.message : 'Unknown error' },
+						],
+					});
 					await dispatchTrigger('form_submit_error');
 					await dispatchTrigger('form_submit_complete');
 					return;
 				}
+			} else {
+				setSubmissionSuccess();
 			}
 
 			if (onSubmit) {
@@ -209,7 +226,7 @@ export function FormProvider({
 				await config.onSubmit(data);
 			}
 		},
-		[config, onSubmit, onValidationError, form, dispatchTrigger],
+		[config, onSubmit, form, dispatchTrigger, setSubmissionPending, setSubmissionSuccess, setSubmissionError],
 	);
 
 	const formInstanceContextValue: FormInstanceContextValue = useMemo(
@@ -245,8 +262,19 @@ export function FormProvider({
 			},
 			dispatchTrigger,
 			dispatchTriggerSync,
+			submissionState,
+			clearSubmission,
 		}),
-		[executeAction, handleFormChange, multiStep, config.steps.length, dispatchTrigger, dispatchTriggerSync],
+		[
+			executeAction,
+			handleFormChange,
+			multiStep,
+			config.steps.length,
+			dispatchTrigger,
+			dispatchTriggerSync,
+			submissionState,
+			clearSubmission,
+		],
 	);
 
 	return (
