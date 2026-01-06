@@ -22,9 +22,6 @@ export const FormEngineContext = createContext<FormEngineContextValue | null>(nu
 /**
  * Form Instance context value - includes action execution and form navigation functions
  */
-/**
- * Form Instance context value - includes action execution and form navigation functions
- */
 export interface FormInstanceContextValue {
 	/** Executes a specific form action */
 	executeAction: (action: any) => Promise<any>;
@@ -70,7 +67,7 @@ export interface FormInstanceContextValue {
 	) => Promise<ActionExecutionResult[]>;
 	/** Synchronously dispatches an action trigger event */
 	dispatchTriggerSync: (trigger: FormActionTrigger, extraMetadata?: Record<string, unknown>) => void;
-	/** current lifecycle state of form submission */
+	/** Current lifecycle state of form submission */
 	submissionState: SubmissionState;
 	/** Resets submission state to 'idle' */
 	clearSubmission: () => void;

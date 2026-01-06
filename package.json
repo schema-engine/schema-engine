@@ -17,7 +17,7 @@
 		"oxlint": "latest",
 		"oxlint-tsgolint": "latest",
 		"prettier": "^3.4.2",
-		"turbo": "^2.7.2"
+		"turbo": "^2.7.3"
 	},
 	"peerDependencies": {
 		"typescript": "^5"

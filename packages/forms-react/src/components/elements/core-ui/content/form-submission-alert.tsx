@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { useSubmissionState } from '@/hooks/use-submission-state';
 import type { SubmissionError } from '@/hooks/use-submission-state';
@@ -24,18 +24,18 @@ export function FormSubmissionAlert({
 	className,
 }: SubmissionAlertProps) {
 	const { submissionState, clearSubmission } = useSubmissionState();
-	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
 	useEffect(() => {
+		let timer: ReturnType<typeof setTimeout>;
+
 		if (autoDismiss > 0 && submissionState.status === 'success') {
-			timerRef.current = setTimeout(() => {
+			timer = setTimeout(() => {
 				clearSubmission();
 			}, autoDismiss);
 		}
 
 		return () => {
-			if (timerRef.current) {
-				clearTimeout(timerRef.current);
+			if (timer) {
+				clearTimeout(timer);
 			}
 		};
 	}, [submissionState.status, autoDismiss, clearSubmission]);

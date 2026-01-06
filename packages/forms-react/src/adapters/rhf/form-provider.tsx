@@ -3,15 +3,15 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { FormActionConfig } from '@schema-engine/forms/schemas';
 import type { FormActionTrigger, BuilderActionExecutionContext } from '@schema-engine/forms';
 import type { ActionExecutionResult } from '@schema-engine/actions';
-
-type BaseFormContext = Omit<BuilderActionExecutionContext, 'config' | 'trigger'>;
 import type { FormProviderProps } from '../types';
 import { useActionDispatcher } from '@/hooks/use-action-dispatcher';
 import { useFormEngine } from '@/hooks/use-form-context';
 import { useFormValidationResolver } from './hooks/use-form-validation-resolver';
 import { FormInstanceContext, type FormInstanceContextValue } from '@/components/provider';
 import { useRHFMultiStep } from './hooks/use-rhf-multi-step';
-import { useSubmissionStateManager } from '@/hooks/use-submission-state';
+import { useSubmissionStateManager, type SubmissionError } from '@/hooks/use-submission-state';
+
+type BaseFormContext = Omit<BuilderActionExecutionContext, 'config' | 'trigger'>;
 
 /**
  * React Hook Form adapter implementation
@@ -123,8 +123,13 @@ export function FormProvider({
 					const result = results[0] || { success: false, error: 'No result returned' };
 
 					if (result.success) {
-						await onAction?.(action, form.getValues());
-						setSubmissionSuccess();
+						try {
+							await onAction?.(action, form.getValues());
+							setSubmissionSuccess();
+						} catch (actionError) {
+							console.error('Action callback failed:', actionError);
+							throw actionError;
+						}
 					} else {
 						setSubmissionError({
 							errors: [{ actionId: action.id, message: result.error || 'Unknown action error' }],
@@ -184,18 +189,18 @@ export function FormProvider({
 
 					const results = await dispatchTrigger('form_submit');
 
-					// Collect all failed actions for error reporting
-					const failedActions = results.filter(
-						(result: any) => !result.success && result.shouldContinue === false,
-					);
+					const executionErrors = results.reduce<SubmissionError[]>((acc, result, index) => {
+						if (!result.success && result.shouldContinue === false) {
+							acc.push({
+								actionId: config.actions?.[index]?.id ?? `action-${index}`,
+								message: result.error || 'Action execution failed',
+							});
+						}
+						return acc;
+					}, []);
 
-					if (failedActions.length > 0) {
-						setSubmissionError({
-							errors: failedActions.map((r: any, i: number) => ({
-								actionId: `action-${i}`,
-								message: r.error || 'Action execution failed',
-							})),
-						});
+					if (executionErrors.length > 0) {
+						setSubmissionError({ errors: executionErrors });
 						await dispatchTrigger('form_submit_error');
 						await dispatchTrigger('form_submit_complete');
 						return;
@@ -203,7 +208,6 @@ export function FormProvider({
 
 					await dispatchTrigger('form_submit_success');
 					await dispatchTrigger('form_submit_complete');
-					setSubmissionSuccess();
 				} catch (error) {
 					console.error('Form action execution failed:', error);
 					setSubmissionError({
@@ -215,15 +219,21 @@ export function FormProvider({
 					await dispatchTrigger('form_submit_complete');
 					return;
 				}
-			} else {
-				setSubmissionSuccess();
 			}
 
-			if (onSubmit) {
-				await onSubmit(data);
-			}
-			if (config.onSubmit) {
-				await config.onSubmit(data);
+			try {
+				if (onSubmit) {
+					await onSubmit(data);
+				}
+				if (config.onSubmit) {
+					await config.onSubmit(data);
+				}
+				setSubmissionSuccess();
+			} catch (error) {
+				console.error('Form submission failed:', error);
+				setSubmissionError({
+					errors: [{ actionId: 'submit', message: error instanceof Error ? error.message : 'Unknown error' }],
+				});
 			}
 		},
 		[config, onSubmit, form, dispatchTrigger, setSubmissionPending, setSubmissionSuccess, setSubmissionError],

@@ -1274,7 +1274,7 @@ export const SoftwareProjectCreation: Story = {
  * Submission-Aware Form Demo
  *
  * Demonstrates the submission-alert element with delayed API responses.
- * Shows pending, success, and error states.
+ * Shows pending and success states using the delayed success handler.
  */
 export const SubmissionAwareForm: Story = {
 	parameters: {

@@ -1482,13 +1482,12 @@ export const WithInvalidElementConfig: Story = {
  * Submission-Aware Form Demo
  *
  * Demonstrates the submission-alert element with delayed API responses.
- * Shows pending, success, and error states. Try with success handler first,
- * then switch to error handler in storybook.
+ * Shows pending and success states using the delayed success handler.
  */
 export const SubmissionAwareForm: Story = {
 	parameters: {
 		msw: {
-			handlers: [submitFormDelaySuccessHandler, submitFormDelayErrorHandler],
+			handlers: [submitFormDelaySuccessHandler],
 		},
 	},
 	args: {
