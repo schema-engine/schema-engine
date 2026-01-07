@@ -3,6 +3,9 @@ import { z } from 'zod';
 import type { FieldValues, ResolverResult } from 'react-hook-form';
 import { createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation/utils';
 
+/**
+ * Recursively collects all fields with validation rules from the element tree
+ */
 function collectValidatableFields(elements: any[], basePath = ''): Array<{ path: string; rules: any[] }> {
 	const fields: Array<{ path: string; rules: any[] }> = [];
 
@@ -24,6 +27,10 @@ function collectValidatableFields(elements: any[], basePath = ''): Array<{ path:
 	return fields;
 }
 
+/**
+ * Expands a template path (e.g. "contacts.name") into actual paths
+ * based on the values in the form (e.g. "contacts.0.name", "contacts.1.name")
+ */
 function getAllFieldPaths(values: FieldValues, templatePath: string): string[] {
 	const parts = templatePath.split('.');
 	const paths: string[] = [];
@@ -50,10 +57,17 @@ function getAllFieldPaths(values: FieldValues, templatePath: string): string[] {
 	return paths;
 }
 
+/**
+ * Gets a value from an object using a dot-notation path
+ */
 function getValueAtPath(obj: any, path: string): any {
 	return path.split('.').reduce((current, key) => current?.[key], obj);
 }
 
+/**
+ * Creates a React Hook Form resolver that validates fields using Zod schemas.
+ * Handles both simple fields and nested array fields with dynamic indices.
+ */
 export function useFormValidationResolver(elements: any[]) {
 	return useCallback(
 		async (values: FieldValues): Promise<ResolverResult> => {
@@ -62,8 +76,12 @@ export function useFormValidationResolver(elements: any[]) {
 
 			for (const { path: templatePath, rules } of validatableFields) {
 				const actualPaths = getAllFieldPaths(values, templatePath);
-				for (const actualPath of actualPaths) {
-					allValidations.push({ path: actualPath, rules });
+				if (actualPaths.length > 0) {
+					for (const actualPath of actualPaths) {
+						allValidations.push({ path: actualPath, rules });
+					}
+				} else {
+					allValidations.push({ path: templatePath, rules });
 				}
 			}
 
