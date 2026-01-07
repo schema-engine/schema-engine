@@ -25,8 +25,6 @@ export const FormEngineContext = createContext<FormEngineContextValue | null>(nu
 export interface FormInstanceContextValue {
 	/** Executes a specific form action */
 	executeAction: (action: any) => Promise<any>;
-	/** Handles changes to form data */
-	handleFormChange: (data: any) => Promise<void>;
 	/** Index of the current step (0-based) */
 	currentStep: number;
 	/** Total number of steps in the form */

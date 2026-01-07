@@ -1,3 +1,8 @@
 export { useFormContext } from './use-form-context';
 export { useFormField } from './use-form-field';
 export { useWatchField } from './use-watch-field';
+export { useFormDefaultValues } from './use-form-default-values';
+export { useFormActionDispatchers } from './use-form-action-dispatchers';
+export { useFormMountEffect } from './use-form-mount-effect';
+export { useFormWatcher } from './use-form-watcher';
+export { useFormSubmitHandler } from './use-form-submit-handler';

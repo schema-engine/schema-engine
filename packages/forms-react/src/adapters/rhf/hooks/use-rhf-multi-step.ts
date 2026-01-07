@@ -10,16 +10,24 @@ type StepStates = {
 	visited: boolean[];
 };
 
-type RHFMultiStepNavigation = {
-	goToStep: (stepIndex: number) => Promise<void>;
-	goToNextStep: () => Promise<void>;
-	goToPreviousStep: () => Promise<void>;
+type Navigation = {
+	canGoNext: boolean;
+	canGoPrevious: boolean;
+	isFirstStep: boolean;
+	isLastStep: boolean;
+	goToStep: (step: number) => void;
+	goToNextStep: () => void;
+	goToPreviousStep: () => void;
 };
 
-export type RHFMultiStepController = {
-	currentStepIndex: number;
+export type MultiStepContextValue = {
+	currentStep: number;
+	totalSteps: number;
+	goToStep: (step: number) => void;
+	goToNext: () => void;
+	goToPrevious: () => void;
 	stepStates: StepStates;
-	navigation: RHFMultiStepNavigation;
+	navigation: Navigation;
 };
 
 type DispatchTrigger = (
@@ -29,10 +37,11 @@ type DispatchTrigger = (
 
 export function useRHFMultiStep(
 	config: FormConfig,
-	form: UseFormReturn<FieldValues, any, undefined>,
+	form: UseFormReturn<FieldValues, any, FieldValues>,
 	dispatchTrigger: DispatchTrigger,
-): RHFMultiStepController {
+): MultiStepContextValue {
 	const { trigger, setFocus, formState, getValues } = form;
+	const totalSteps = config.steps.length;
 
 	const [currentStepIndex, setCurrentStepIndex] = useState(0);
 	const [stepStates, setStepStates] = useState<StepStates>(() => ({
@@ -103,7 +112,7 @@ export function useRHFMultiStep(
 		[config.actions, config.id, config.steps.length, getValues, formState, form, dispatchTrigger],
 	);
 
-	const goToStep = useCallback(
+	const goToStepAsync = useCallback(
 		async (stepIndex: number) => {
 			if (stepIndex < 0 || stepIndex >= config.steps.length) {
 				return;
@@ -127,35 +136,41 @@ export function useRHFMultiStep(
 		[config.steps, currentStepIndex, executeStepTrigger],
 	);
 
-	const goToNextStep = useCallback(async () => {
+	const goToNextStepAsync = useCallback(async () => {
 		const isValid = await validateStep(currentStepIndex);
 		if (isValid && currentStepIndex < config.steps.length - 1) {
 			setStepStates((prev) => ({
 				...prev,
 				completed: prev.completed.map((c, i) => (i === currentStepIndex ? true : c)),
 			}));
-			await goToStep(currentStepIndex + 1);
+			await goToStepAsync(currentStepIndex + 1);
 		}
-	}, [currentStepIndex, config.steps.length, validateStep, goToStep]);
+	}, [currentStepIndex, config.steps.length, validateStep, goToStepAsync]);
 
-	const goToPreviousStep = useCallback(async () => {
+	const goToPreviousStepAsync = useCallback(async () => {
 		if (currentStepIndex > 0) {
-			await goToStep(currentStepIndex - 1);
+			await goToStepAsync(currentStepIndex - 1);
 		}
-	}, [currentStepIndex, goToStep]);
+	}, [currentStepIndex, goToStepAsync]);
 
-	const navigation: RHFMultiStepNavigation = useMemo(
+	return useMemo(
 		() => ({
-			goToStep,
-			goToNextStep,
-			goToPreviousStep,
+			currentStep: currentStepIndex,
+			totalSteps,
+			goToStep: (step: number) => void goToStepAsync(step),
+			goToNext: () => void goToNextStepAsync(),
+			goToPrevious: () => void goToPreviousStepAsync(),
+			stepStates,
+			navigation: {
+				canGoNext: currentStepIndex < totalSteps - 1,
+				canGoPrevious: currentStepIndex > 0,
+				isFirstStep: currentStepIndex === 0,
+				isLastStep: currentStepIndex === totalSteps - 1,
+				goToStep: (step: number) => void goToStepAsync(step),
+				goToNextStep: () => void goToNextStepAsync(),
+				goToPreviousStep: () => void goToPreviousStepAsync(),
+			},
 		}),
-		[goToStep, goToNextStep, goToPreviousStep],
+		[currentStepIndex, totalSteps, stepStates, goToStepAsync, goToNextStepAsync, goToPreviousStepAsync],
 	);
-
-	return {
-		currentStepIndex,
-		stepStates,
-		navigation,
-	};
 }
