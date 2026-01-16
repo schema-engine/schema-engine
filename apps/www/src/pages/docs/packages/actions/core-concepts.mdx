@@ -51,6 +51,24 @@ interface ActionRegistration<TType extends string, TContext, TTrigger> {
 ```
 
 Note: The `execute` function receives the domain context directly. The executor merges the action config into this context.
+	
+### Critical Concept: The Merge
+
+When an action executes, the `ActionExecutor` merges the specific **Action Config** (id, message, etc.) *into* your **Domain Context**.
+
+```typescript
+// 1. Your Domain Context
+const domainContext = { userId: "123", db: "..." };
+
+// 2. The Specific Action Config
+const actionConfig = { id: "action-1", message: "Hello" };
+
+// 3. What execute() receives
+execute: async (mergedContext) => {
+  console.log(mergedContext.userId);  // from Domain Context
+  console.log(mergedContext.message); // from Action Config
+}
+```
 
 ## ActionConfigBase
 

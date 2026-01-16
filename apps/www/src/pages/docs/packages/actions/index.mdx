@@ -9,7 +9,7 @@ export const getMetadata = () => ({
 
 # @schema-engine/actions
 
-Domain-agnostic action execution system for event-driven architectures.
+
 
 ## Overview
 
@@ -28,6 +28,52 @@ Domain-agnostic action execution system for event-driven architectures.
 
 ```bash
 bun add @schema-engine/actions zod
+```
+
+## Quick Start
+
+```typescript
+import { ActionExecutor, ActionRegistration, ActionRegistry } from '@schema-engine/actions';
+import { z } from 'zod';
+
+// 1. Define your domain context and triggers
+type AppContext = {
+  userId: string;
+  metadata?: Record<string, unknown>;
+};
+type AppTrigger = 'click' | 'submit' | 'auto';
+
+// 2. Create the registry
+const registry = new ActionRegistry<AppContext, AppTrigger>();
+
+// 3. Register an action
+const logAction: ActionRegistration<'log', AppContext, AppTrigger> = {
+  $type: 'log',
+  schema: z.object({
+    $type: z.literal('log'),
+    message: z.string(),
+  }),
+  metadata: {
+    name: 'Log Message',
+    description: 'Logs a message to stdout',
+    defaultTriggers: ['click'],
+  },
+  execute: (context) => {
+    console.log(`[${context.userId}]`, context);
+    return { success: true };
+  },
+};
+
+registry.register(logAction);
+
+// 4. Execute
+const executor = new ActionExecutor(registry);
+
+await executor.execute(
+  [{ id: '1', $type: 'log', enabled: true }],
+  'click',
+  { userId: 'user_123' }
+);
 ```
 
 ## Next Steps

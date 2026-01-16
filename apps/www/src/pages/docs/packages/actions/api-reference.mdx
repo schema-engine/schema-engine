@@ -104,7 +104,7 @@ interface ActionDispatcherOptions {
 
 | Method | Description |
 |--------|-------------|
-| `dispatch(...)` | Async dispatch with metadata merging |
+| `dispatch(...)` | Async dispatch. Updates context with shallow merge: `{ ...context, metadata: { ...context.metadata, ...metadata } }` |
 | `dispatchSync(...)` | Fire-and-forget dispatch (does not await results) |
 
 ## ActionRegistryProvider
