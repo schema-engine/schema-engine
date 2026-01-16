@@ -20,7 +20,7 @@ A plugin is a factory function that returns an action registration object:
 
 ```typescript
 import { z } from 'zod';
-import type { ActionExecutionContext, ActionExecutionResult } from '@/lib/form-engine/actions/types';
+import type { ActionExecutionContext, ActionExecutionResult } from '@schema-engine/actions';
 
 // 1. Define the action schema
 const MyActionSchema = z.object({
@@ -81,7 +81,7 @@ export type LoggerAction = z.infer<typeof LoggerActionSchema>;
 ### Step 2: Define Configuration Interface
 
 ```typescript
-import type { ActionExecutionContext } from '@/lib/form-engine/actions/types';
+import type { ActionExecutionContext } from '@schema-engine/actions';
 
 export interface LoggerPluginConfig {
 	// Custom log transport
@@ -118,7 +118,7 @@ export interface LogEntry {
 ````typescript
 import { LoggerActionSchema, type LoggerAction } from './logger-schema';
 import type { LoggerPluginConfig, LogEntry } from './logger-config';
-import type { ActionExecutionContext, ActionExecutionResult } from '@/lib/form-engine/actions/types';
+import type { ActionExecutionContext, ActionExecutionResult } from '@schema-engine/actions';
 
 export function loggerPlugin(config: LoggerPluginConfig = {}) {
   const {
@@ -213,7 +213,7 @@ For TypeScript support, add module augmentation:
 
 ```typescript
 // Add to your types file or at the end of the plugin file
-declare module '@/lib/form-engine/actions/types' {
+declare module '@schema-engine/actions' {
   interface PluginActions {
     logger: LoggerAction;
   }
@@ -223,7 +223,7 @@ declare module '@/lib/form-engine/actions/types' {
 ### Step 5: Register and Use the Plugin
 
 ```typescript
-import { registerAction } from '@/lib/form-engine/actions/action-registry';
+import { registerAction } from './my-registry';
 import { loggerPlugin } from './logger-plugin';
 
 // Register with custom configuration
@@ -544,8 +544,8 @@ describe('loggerPlugin', () => {
 
 ```typescript
 import { describe, test, expect, beforeEach } from 'vitest';
-import { registerAction, actionRegistry } from '@/lib/form-engine/actions/action-registry';
-import { ActionExecutor } from '@/lib/form-engine/actions/action-executor';
+import { describe, test, expect, beforeEach } from 'vitest';
+import { ActionRegistry, ActionExecutor } from '@schema-engine/actions';
 import { loggerPlugin } from './logger-plugin';
 
 describe('Logger Plugin Integration', () => {
@@ -673,7 +673,7 @@ export interface MyPluginConfig {
 export type MyAction = z.infer<typeof MyActionSchema>;
 
 // Module augmentation for global types
-declare module '@/lib/form-engine/actions/types' {
+declare module '@schema-engine/actions' {
 	interface PluginActions {
 		my_action: MyAction;
 	}

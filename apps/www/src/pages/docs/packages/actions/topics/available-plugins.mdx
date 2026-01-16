@@ -19,8 +19,9 @@ Form Engine comes with several pre-built action plugins that handle common form 
 Handles form submissions to API endpoints.
 
 ```typescript
-import { registerAction } from '@/lib/form-engine/actions/action-registry';
-import { submitPlugin } from '@/lib/form-engine/actions/plugins';
+import { ActionRegistry, ActionRegistration } from '@schema-engine/actions';
+// These are examples of hypothetical plugins you could build
+import { submitPlugin } from './my-custom-plugins';
 
 // Register with custom configuration
 registerAction(
@@ -71,8 +72,8 @@ registerAction(
 Shows user feedback messages using your preferred notification system.
 
 ```typescript
-import { registerAction } from '@/lib/form-engine/actions/action-registry';
-import { notificationPlugin } from '@/lib/form-engine/actions/plugins';
+import { ActionRegistry } from '@schema-engine/actions';
+import { notificationPlugin } from './plugins';
 
 // Register with your notification system
 registerAction(
@@ -111,8 +112,8 @@ registerAction(
 Resets form data with optional confirmation.
 
 ```typescript
-import { registerAction } from '@/lib/form-engine/actions/action-registry';
-import { resetPlugin } from '@/lib/form-engine/actions/plugins';
+import { ActionRegistry } from '@schema-engine/actions';
+import { resetPlugin } from './plugins';
 
 // Register with custom confirmation
 registerAction(
@@ -164,8 +165,8 @@ registerAction(
 Automatically saves form progress to prevent data loss.
 
 ```typescript
-import { registerAction } from '@/lib/form-engine/actions/action-registry';
-import { autoSavePlugin } from '@/lib/form-engine/actions/plugins';
+import { ActionRegistry } from '@schema-engine/actions';
+import { autoSavePlugin } from './plugins';
 
 // Register with custom storage
 registerAction(
@@ -227,8 +228,8 @@ registerAction(
 Tracks form interactions with Google Tag Manager.
 
 ```typescript
-import { registerAction } from '@/lib/form-engine/actions/action-registry';
-import { gtmPlugin } from '@/lib/form-engine/actions/plugins';
+import { ActionRegistry } from '@schema-engine/actions';
+import { gtmPlugin } from './plugins';
 
 // Register GTM tracking
 registerAction(
@@ -285,8 +286,8 @@ registerAction(
 ### Basic Registration
 
 ```typescript
-import { registerAction } from '@/lib/form-engine/actions/action-registry';
-import { submitPlugin, notificationPlugin } from '@/lib/form-engine/actions/plugins';
+import { ActionRegistry } from '@schema-engine/actions';
+import { submitPlugin, notificationPlugin } from './plugins';
 
 // Register plugins at app startup
 function setupFormActions() {

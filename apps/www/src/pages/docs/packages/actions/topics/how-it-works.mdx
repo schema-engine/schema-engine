@@ -19,68 +19,12 @@ Actions work through a registry system. You register plugins, then define action
 
 ## Basic Setup
 
-Actions work through a registry system. You register plugins, then define actions in your form config:
+Actions work through a registry system. For a complete guide on setup, see [Getting Started](/docs/packages/actions/getting-started).
 
-```typescript
-import { registerAction } from '@/lib/form-engine/actions/action-registry';
-import { submitPlugin, notificationPlugin } from '@/lib/form-engine/actions/plugins';
-import type { FormConfig } from '@schema-engine/forms/schemas';
-
-// Register the plugins you need
-registerAction(
-	submitPlugin({
-		onSuccess: (data, context) => {
-			console.log('Form submitted:', data);
-		},
-		onError: (error, context) => {
-			console.error('Submit failed:', error);
-		},
-	}),
-);
-
-registerAction(
-	notificationPlugin({
-		onSuccess: (message) => alert(message),
-		onError: (message) => alert(message),
-	}),
-);
-
-// Define actions in your form config
-const contactForm: FormConfig = {
-	id: 'contact-form',
-	title: 'Contact Us',
-	steps: [
-		{
-			id: 'contact-step',
-			title: 'Your Details',
-			elements: [
-				{
-					id: 'input',
-					inputType: 'email',
-					id: 'email',
-					name: 'email',
-					label: 'Email',
-				},
-			],
-		},
-	],
-	actions: [
-		{
-			id: 'submit-form',
-			$type: 'submit',
-			endpoint: '/api/contact',
-			method: 'POST',
-		},
-		{
-			id: 'success-notification',
-			$type: 'show_notification',
-			message: 'Thanks for contacting us!',
-			variant: 'success',
-			triggers: ['form_submit_success'], // Only show after successful submit
-		},
-	],
-};
-```
+The core lifecycle is:
+1.  **Register Plugins**: Add capabilities (submit, log, etc.) to the `ActionRegistry`.
+2.  **Define Config**: Describe *what* you want to do in your JSON/Object config.
+3.  **Execute**: The `ActionExecutor` matches config to plugins and runs them.
 
 ## Available Triggers
 
