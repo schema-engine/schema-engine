@@ -66,9 +66,11 @@ Abstract class for component registries. Extends `BaseRegistry`.
 ```typescript
 abstract class ComponentRegistry<
 	TKey extends string,
-	TValue extends ComponentRegistration
+	TValue extends ComponentRegistration<any, any, any>
 > extends BaseRegistry<TKey, TValue> {
-	// Inherits all BaseRegistry methods
+// Inherits all BaseRegistry methods
+	// Specialized component behavior can be added here in the future.
+	// For now, it provides stronger type safety for renderable items.
 }
 ```
 
@@ -93,8 +95,10 @@ interface ComponentRegistration<
 	TProps = unknown,
 	TMeta extends ComponentMetadata = ComponentMetadata
 > extends BaseRegistration<TConfig, TMeta> {
-	$type: TType;
+	/** Framework-agnostic render function */
 	render: (props: TProps) => unknown;
+	/** Type identifier - enforced to match registry key */
+	$type: TType;
 }
 ```
 

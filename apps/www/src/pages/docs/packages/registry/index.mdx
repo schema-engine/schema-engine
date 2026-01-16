@@ -11,16 +11,45 @@ export const getMetadata = () => ({
 
 Base registry system for managing named resources in an extensible architecture.
 
+## Quick Look
+
+```typescript
+import { BaseRegistry, type BaseRegistration } from '@schema-engine/registry';
+import { z } from 'zod';
+
+// 1. Define your item type
+interface Feature extends BaseRegistration {
+  $type: string;
+  execute: () => void;
+}
+
+// 2. Create your registry
+class FeatureRegistry extends BaseRegistry<string, Feature> {
+  get registryName() { return 'Feature'; }
+}
+
+// 3. Register and use
+const registry = new FeatureRegistry();
+registry.register({
+  $type: 'dark-mode',
+  schema: z.object({}), 
+  metadata: { name: 'Dark Mode' },
+  execute: () => console.log('Dark mode active')
+});
+
+registry.get('dark-mode')?.execute();
+```
+
 ## Overview
 
 `@schema-engine/registry` provides the foundational classes for creating registry-based plugin systems. It is used internally by `@schema-engine/forms` and `@schema-engine/actions` to manage elements, layouts, steppers, and actions.
 
 **Key Features:**
 
-- **Type Safe**: Full TypeScript support with generic constraints
-- **Extensible**: Abstract base class designed for extension
-- **Logging**: Built-in debug logging for registration events
-- **Zod Integration**: Register schemas to a Zod registry for validation
+- **Type Safe**: Full TypeScript support with generic constraints for keys and values.
+- **Extensible**: Abstract `BaseRegistry` and `ComponentRegistry` classes designed for domain-specific extension.
+- **Logging**: Built-in debug logging for registration lifecycle events.
+- **Zod Integration**: Native support for registering item schemas to a centralized Zod registry for validation and inference.
 
 ## Installation
 

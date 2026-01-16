@@ -3,8 +3,8 @@ import { DocsLayout } from '@/layouts/docs-layout';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'Examples | @schema-engine/registry',
-    description: 'Build your own registry using the base classes.',
+	title: 'Examples | @schema-engine/registry',
+	description: 'Build your own registry using the base classes.',
 });
 
 # Examples
@@ -62,6 +62,7 @@ if (plugin) {
 For visual components that need a render method:
 
 ```typescript
+import React from 'react';
 import { z } from 'zod';
 import { ComponentRegistry } from '@schema-engine/registry';
 import type { ComponentRegistration, ComponentMetadata } from '@schema-engine/registry';
