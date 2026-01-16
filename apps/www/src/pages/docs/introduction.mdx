@@ -37,6 +37,11 @@ Bring your existing component library. Register it with the engine, and it insta
 ```typescript
 import { createReactFormComposer } from '@schema-engine/forms-react';
 import type { ElementRegistration } from '@schema-engine/forms';
+import { z } from 'zod';
+
+// Mock definitions for example purposes
+const MyInputComponent = (props: any) => <input {...props} className="my-custom-input" />;
+const MyInputConfigSchema = z.object({});
 
 // Your custom component registration
 const MyInputRegistration: ElementRegistration = {

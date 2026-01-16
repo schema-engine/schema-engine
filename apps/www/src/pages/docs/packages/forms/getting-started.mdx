@@ -3,8 +3,8 @@ import { DocsLayout } from '@/layouts/docs-layout';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'Getting Started | @schema-engine/forms',
-    description: 'Build your first form engine with the builder pattern.',
+	title: 'Getting Started | @schema-engine/forms',
+	description: 'Build your first form engine with the builder pattern.',
 });
 
 # Getting Started
@@ -17,6 +17,12 @@ Use the `FormComposer` to register components and build an immutable engine:
 
 ```typescript
 import { FormComposer } from '@schema-engine/forms';
+
+// Mock registrations for this example
+const textInputRegistration = { $type: 'text', schema: {}, metadata: {}, render: () => null } as any;
+const emailInputRegistration = { $type: 'email', schema: {}, metadata: {}, render: () => null } as any;
+const cardLayoutRegistration = { $type: 'card', schema: {}, metadata: {}, render: () => null } as any;
+const submitActionRegistration = { $type: 'submit', schema: {}, metadata: {}, execute: async () => ({}) } as any;
 
 const engine = new FormComposer()
 	.addElement(textInputRegistration)

@@ -3,8 +3,8 @@ import { DocsLayout } from '@/layouts/docs-layout';
 export const layout = DocsLayout;
 
 export const getMetadata = () => ({
-    title: 'Core Concepts | @schema-engine/forms',
-    description: 'Understand FormComposer, FormEngine, and component registrations.',
+	title: 'Core Concepts | @schema-engine/forms',
+	description: 'Understand FormComposer, FormEngine, and component registrations.',
 });
 
 # Core Concepts
@@ -17,6 +17,12 @@ The builder provides a fluent API for registering components and creating immuta
 
 ```typescript
 import { FormComposer } from '@schema-engine/forms';
+
+// Mock registrations for this example
+const textInputRegistration = { $type: 'text', schema: {}, metadata: {}, render: () => null } as any;
+const cardLayoutRegistration = { $type: 'card', schema: {}, metadata: {}, render: () => null } as any;
+const wizardStepperRegistration = { $type: 'wizard', schema: {}, metadata: {}, render: () => null } as any;
+const submitActionRegistration = { $type: 'submit', schema: {}, metadata: {}, execute: async () => ({}) } as any;
 
 const engine = new FormComposer()
 	.addElement(textInputRegistration)

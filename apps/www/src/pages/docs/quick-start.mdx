@@ -44,6 +44,7 @@ Define your form structure using a JSON configuration:
 ```typescript
 import type { FormConfig } from '@schema-engine/forms';
 
+// config/contact-form.ts
 const contactFormConfig: FormConfig = {
 	id: 'contact-form',
 	title: 'Get In Touch',
@@ -129,7 +130,8 @@ const contactFormConfig: FormConfig = {
 
 ```tsx
 import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
-import { formEngine } from './lib/form-engine';
+import { formEngine } from './lib/form-engine'; // Adjust path as needed
+import { contactFormConfig } from './config/contact-form'; // Import the config created above
 
 export function ContactForm() {
 	const handleSubmit = (data: any) => {

@@ -1,0 +1,132 @@
+import { DocsLayout } from '@/layouts/docs-layout';
+
+export const layout = DocsLayout;
+
+export const getMetadata = () => ({
+    title: 'Advanced Features | @schema-engine/forms-react',
+    description: 'Advanced capabilities including constraint logic, GDPR consent, and analytics integration.',
+});
+
+# Advanced Features
+
+The `@schema-engine/forms-react` package includes powerful features for handling complex form requirements.
+
+## Constraint Logic
+
+Constraint logic allows you to apply dynamic visibility and behavior based on form values. This is useful for conditional fields, dependent questions, and complex validation workflows.
+
+### Configuration
+
+Add a `constraints` array to any field configuration.
+
+```typescript
+{
+  $type: 'input',
+  id: 'other-reason',
+  name: 'otherReason',
+  label: 'Please specify',
+  constraints: [
+    {
+      type: 'visibility',
+      conditions: [
+        {
+          field: 'reason',
+          operator: 'equals',
+          value: 'other'
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Supported Operators
+
+- `equals`
+- `not_equals`
+- `contains`
+- `not_contains`
+- `greater_than`
+- `less_than`
+- `is_empty`
+- `is_not_empty`
+
+### Actions
+
+You can control multiple aspects of a field based on conditions:
+
+- `show` / `hide` - Toggle visibility
+- `enable` / `disable` - Toggle interaction
+- `require` - Toggle validation requirement
+
+## GDPR Consent
+
+The package includes a built-in system for tracking and managing user consent, critical for compliance in modern web applications.
+
+### Configuration
+
+Add a `gdpr` object to checkbox or switch fields.
+
+```typescript
+{
+  $type: 'checkbox',
+  id: 'gdpr-consent',
+  name: 'gdprConsent',
+  label: 'I agree to the privacy policy',
+  gdpr: {
+    purpose: 'marketing',
+    required: true,
+    category: 'analytics'
+  },
+  rules: [
+    { rule: 'required', message: 'You must accept the privacy policy' }
+  ]
+}
+```
+
+### Managing Consent State
+
+Use the `useGdprConsent` hook to access and modify consent state programmatically.
+
+```tsx
+import { useGdprConsent } from '@schema-engine/forms-react';
+
+function ConsentStatus() {
+  const { consents, hasConsent, updateConsent } = useGdprConsent();
+
+  return <div>{hasConsent('marketing') ? 'Consented' : 'Not consented'}</div>;
+}
+```
+
+## GTM Tracking
+
+Integrate Google Tag Manager (GTM) to track form interactions and events automatically.
+
+### Usage
+
+Use the `useGtmTracker` hook within your form component.
+
+```tsx
+import { useGtmTracker } from '@schema-engine/forms-react';
+
+function MyForm() {
+  const tracker = useGtmTracker({
+    enabled: true,
+    trackFieldInteractions: true,
+    trackValidationErrors: true,
+    customDimensions: {
+      formVersion: '2.0',
+    },
+  });
+
+  return <FormRenderer config={config} />;
+}
+```
+
+### Tracked Events
+
+- `form_load`: When the form is mounted
+- `field_focus`: When a user interacts with a field
+- `field_blur`: When a user leaves a field
+- `validation_error`: When a validation rule fails
+- `form_submit`: When the form is submitted successfully
