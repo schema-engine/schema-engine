@@ -5,6 +5,7 @@ import { createForm, getEngine, ValidationPresets, createExtendableComposer } fr
 import { z } from 'zod';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@schema-engine/forms/types';
 import { FormActionTriggerSchema, type ActionExecutionResult } from '@schema-engine/forms';
+import { SUBMIT_FORM_MOCK_URL } from '@/stories/msw/submit-form';
 
 declare global {
 	interface Window {
@@ -263,7 +264,7 @@ function confettiPlugin(): BuilderActionRegistration<'confetti', ConfettiAction>
 			name: 'Confetti',
 			description: 'Throw confetti on the screen',
 			icon: 'sparkles',
-			defaultTriggers: ['form_submit'],
+			defaultTriggers: ['form_submit_success'],
 		},
 		execute: async (context: BuilderActionExecutionContext<ConfettiAction>): Promise<ActionExecutionResult> => {
 			const action = context.config;
@@ -277,7 +278,7 @@ function confettiPlugin(): BuilderActionRegistration<'confetti', ConfettiAction>
 					return { success: false, error: 'Confetti library not available', shouldContinue: true };
 				}
 
-				await window.confetti({
+				window.confetti({
 					particleCount: action.particleCount,
 					spread: action.spread,
 					origin: action.origin,
@@ -349,6 +350,12 @@ export const WithConfetti: Story = {
 				id: 'submit',
 				name: 'submit',
 				label: 'Submit and Celebrate',
+			})
+			.addFormAction('submit', {
+				id: 'submit-form',
+				endpoint: SUBMIT_FORM_MOCK_URL,
+				method: 'POST',
+				enabled: true,
 			})
 			.addFormAction('confetti', {
 				id: 'throw-confetti',
