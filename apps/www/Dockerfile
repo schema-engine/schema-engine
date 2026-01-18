@@ -9,16 +9,20 @@ FROM base AS install
 RUN mkdir -p /temp/dev
 COPY package.json bun.lock .npmrc /temp/dev/
 COPY apps/www/package.json apps/www/.npmrc /temp/dev/apps/www/
-COPY packages/core/package.json /temp/dev/packages/core/package.json
-COPY packages/react/package.json /temp/dev/packages/react/package.json
+COPY packages/forms/package.json /temp/dev/packages/forms/package.json
+COPY packages/forms-react/package.json /temp/dev/packages/forms-react/package.json
+COPY packages/actions/package.json /temp/dev/packages/actions/package.json
+COPY packages/registry/package.json /temp/dev/packages/registry/package.json
 RUN cd /temp/dev && bun install --frozen-lockfile --ignore-scripts
 
 # install with --production (exclude devDependencies)
 RUN mkdir -p /temp/prod
 COPY package.json bun.lock .npmrc /temp/prod/
 COPY apps/www/package.json apps/www/.npmrc /temp/prod/apps/www/
-COPY packages/core/package.json /temp/prod/packages/core/package.json
-COPY packages/react/package.json /temp/prod/packages/react/package.json
+COPY packages/forms/package.json /temp/prod/packages/forms/package.json
+COPY packages/forms-react/package.json /temp/prod/packages/forms-react/package.json
+COPY packages/actions/package.json /temp/prod/packages/actions/package.json
+COPY packages/registry/package.json /temp/prod/packages/registry/package.json
 RUN cd /temp/prod && bun install --frozen-lockfile --production --ignore-scripts
 
 # copy node_modules from temp directory
@@ -31,6 +35,8 @@ COPY apps/www/ apps/www/
 
 # Build the workspace packages
 ENV NODE_ENV=production
+RUN bun run --filter @schema-engine/registry build:lib
+RUN bun run --filter @schema-engine/actions build:lib
 RUN bun run --filter @schema-engine/forms build:lib
 RUN bun run --filter @schema-engine/forms-react build:lib
 

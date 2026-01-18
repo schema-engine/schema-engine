@@ -1,7 +1,9 @@
 import { DocsLayout } from '@/layouts/docs-layout';
 import { LivePreview, CodePreview } from '@/components/code-preview';
 
-export const layout = DocsLayout;
+export const config = {
+	layout: DocsLayout,
+};
 
 export const getMetadata = () => ({
 	title: 'How Validation Works | Form Engine Documentation',

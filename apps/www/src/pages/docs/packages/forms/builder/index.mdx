@@ -1,6 +1,8 @@
 import { DocsLayout } from '@/layouts/docs-layout';
 
-export const layout = DocsLayout;
+export const config = {
+	layout: DocsLayout,
+};
 
 export const getMetadata = () => ({
 	title: 'Builder Pattern | Form Engine Documentation',
@@ -111,7 +113,7 @@ export const formEngine = createReactFormComposer()
 Import and use the form engine in your components:
 
 ```typescript
-import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
+import { FormRenderer } from '@schema-engine/forms-react';
 import { formEngine } from './lib/form-engine';
 import type { FormConfig } from '@schema-engine/forms/schemas';
 

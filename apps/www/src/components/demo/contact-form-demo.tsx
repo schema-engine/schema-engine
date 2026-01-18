@@ -1,6 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
-import { FormEngineProvider } from '@schema-engine/forms-react/components/adapter-provider';
+import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
 import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
 import { formEngine } from '@/lib/form-engine-setup';
 import { ValidationPresets } from '@schema-engine/forms/schemas/validation';

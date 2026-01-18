@@ -42,6 +42,7 @@
 		"lint-staged": "lint-staged",
 		"lint-staged:all": "turbo lint-staged",
 		"prepare": "husky",
+		"preview:www": "turbo run @schema-engine/www#preview",
 		"start:www": "turbo run @schema-engine/www#start",
 		"test:all": "turbo test:all",
 		"watch:dev:www": "turbo run @schema-engine/www#watch:dev"
@@ -61,5 +62,9 @@
 		"**/*.{json,jsonc,md,yml,yaml}": [
 			"prettier --write"
 		]
+	},
+	"overrides": {
+		"react": "canary",
+		"react-dom": "canary"
 	}
 }

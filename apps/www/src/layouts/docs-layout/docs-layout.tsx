@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { ClientOnly } from '@ecopages/react/utils/client-only';
 import { Github, Sun, Moon, ChevronRight, ChevronDown, Code2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -142,6 +143,81 @@ interface DocsLayoutProps {
 	className?: string;
 }
 
+function SidebarNavSection({ section, currentPath }: { section: DocsSection; currentPath?: string }) {
+	return (
+		<Collapsible defaultOpen className="group/collapsible">
+			<SidebarGroup>
+				<SidebarGroupLabel
+					render={
+						<CollapsibleTrigger className="group/label text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm w-full flex items-center justify-between px-2 py-2 font-medium transition-colors">
+							{section.title}
+							<ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90 size-4" />
+						</CollapsibleTrigger>
+					}
+				/>
+				<CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+					<SidebarGroupContent>
+						<SidebarMenu>
+							{section.children?.map((item) => (
+								<SidebarMenuItem key={item.id}>
+									<SidebarMenuButton
+										isActive={currentPath === item.path}
+										render={
+											<a href={item.path}>
+												{item.title}
+												{section.badge && item.title === 'Overview' && (
+													<Badge
+														variant="secondary"
+														className="text-[10px] ml-auto h-5 px-1.5"
+													>
+														{section.badge}
+													</Badge>
+												)}
+											</a>
+										}
+									/>
+								</SidebarMenuItem>
+							))}
+						</SidebarMenu>
+					</SidebarGroupContent>
+				</CollapsibleContent>
+			</SidebarGroup>
+		</Collapsible>
+	);
+}
+
+function SidebarNavSectionFallback({ section, currentPath }: { section: DocsSection; currentPath?: string }) {
+	return (
+		<SidebarGroup>
+			<SidebarGroupLabel className="group/label text-sidebar-foreground text-sm w-full flex items-center justify-between px-2 py-2 font-medium">
+				{section.title}
+				<ChevronRight className="ml-auto rotate-90 size-4" />
+			</SidebarGroupLabel>
+			<SidebarGroupContent>
+				<SidebarMenu>
+					{section.children?.map((item) => (
+						<SidebarMenuItem key={item.id}>
+							<SidebarMenuButton
+								isActive={currentPath === item.path}
+								render={
+									<a href={item.path}>
+										{item.title}
+										{section.badge && item.title === 'Overview' && (
+											<Badge variant="secondary" className="text-[10px] ml-auto h-5 px-1.5">
+												{section.badge}
+											</Badge>
+										)}
+									</a>
+								}
+							/>
+						</SidebarMenuItem>
+					))}
+				</SidebarMenu>
+			</SidebarGroupContent>
+		</SidebarGroup>
+	);
+}
+
 function DocsSidebar({ currentPath }: { currentPath?: string }) {
 	return (
 		<Sidebar variant="sidebar">
@@ -160,38 +236,12 @@ function DocsSidebar({ currentPath }: { currentPath?: string }) {
 			</SidebarHeader>
 			<SidebarContent className="gap-0">
 				{docsNavigation.map((section) => (
-					<Collapsible key={section.id} defaultOpen className="group/collapsible">
-						<SidebarGroup>
-							<SidebarGroupLabel asChild>
-								<CollapsibleTrigger className="[&[data-state=open]>svg]:rotate-90 w-full flex items-center justify-between px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors">
-									<div className="flex items-center gap-2">
-										<span>{section.title}</span>
-										{section.badge && (
-											<Badge variant="secondary" className="text-xs">
-												{section.badge}
-											</Badge>
-										)}
-									</div>
-									<ChevronRight className="h-4 w-4 transition-transform duration-200" />
-								</CollapsibleTrigger>
-							</SidebarGroupLabel>
-							<CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
-								<SidebarGroupContent>
-									<SidebarMenu>
-										{section.children?.map((item) => (
-											<SidebarMenuItem key={item.id}>
-												<SidebarMenuButton asChild isActive={currentPath === item.path}>
-													<a href={item.path} className="pl-6">
-														{item.title}
-													</a>
-												</SidebarMenuButton>
-											</SidebarMenuItem>
-										))}
-									</SidebarMenu>
-								</SidebarGroupContent>
-							</CollapsibleContent>
-						</SidebarGroup>
-					</Collapsible>
+					<ClientOnly
+						key={section.id}
+						fallback={<SidebarNavSectionFallback section={section} currentPath={currentPath} />}
+					>
+						<SidebarNavSection section={section} currentPath={currentPath} />
+					</ClientOnly>
 				))}
 			</SidebarContent>
 			<SidebarRail />
@@ -283,18 +333,35 @@ export const DocsLayout: EcoComponent<DocsLayoutProps, ReactNode> = ({ children,
 					</div>
 
 					<div className="flex flex-1 items-center justify-end space-x-2">
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<Button variant="outline" size="sm" className="h-8 gap-1">
+						<ClientOnly
+							fallback={
+								<button
+									className={buttonVariants({
+										variant: 'outline',
+										size: 'sm',
+									})}
+								>
 									v{pkg.version}
 									<ChevronDown className="h-3 w-3" />
-								</Button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end">
-								<DropdownMenuItem>v{pkg.version}</DropdownMenuItem>
-								<DropdownMenuItem disabled>v1.1.0 (coming soon)</DropdownMenuItem>
-							</DropdownMenuContent>
-						</DropdownMenu>
+								</button>
+							}
+						>
+							<DropdownMenu>
+								<DropdownMenuTrigger
+									className={buttonVariants({
+										variant: 'outline',
+										size: 'sm',
+									})}
+								>
+									v{pkg.version}
+									<ChevronDown className="h-3 w-3" />
+								</DropdownMenuTrigger>
+								<DropdownMenuContent align="end">
+									<DropdownMenuItem>v{pkg.version}</DropdownMenuItem>
+									<DropdownMenuItem disabled>v1.1.0 (coming soon)</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
+						</ClientOnly>
 
 						<nav className="flex items-center space-x-1">
 							<Button variant="ghost" className="w-9 px-0" onClick={toggleTheme}>
@@ -334,9 +401,11 @@ export const DocsLayout: EcoComponent<DocsLayoutProps, ReactNode> = ({ children,
 
 								<div className="hidden xl:block">
 									<div className="sticky top-6">
-										<ScrollArea className="h-[calc(100vh-8rem)]">
-											<TableOfContents toc={toc} />
-										</ScrollArea>
+										<ClientOnly fallback={<TableOfContents toc={toc} />}>
+											<ScrollArea className="h-[calc(100vh-8rem)]">
+												<TableOfContents toc={toc} />
+											</ScrollArea>
+										</ClientOnly>
 									</div>
 								</div>
 							</div>
@@ -353,3 +422,5 @@ DocsLayout.config = {
 		stylesheets: ['./docs-layout.css', '../../styles/tailwind.css'],
 	},
 };
+
+(DocsLayout as any).displayName = 'DocsLayout';

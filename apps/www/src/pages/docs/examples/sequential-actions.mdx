@@ -1,7 +1,9 @@
 import { DocsLayout } from '@/layouts/docs-layout';
 import FormEngineActionExecutor from '@/components/demo/form-engine-action-executor';
 
-export const layout = DocsLayout;
+export const config = {
+	layout: DocsLayout,
+};
 
 export const getMetadata = () => ({
 	title: 'Sequential Actions Example | Form Engine Documentation',

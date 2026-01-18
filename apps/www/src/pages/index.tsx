@@ -1,11 +1,9 @@
-import { Button } from '../components/ui/button';
+import { buttonVariants } from '../components/ui/button';
 import { CodePreview } from '../components/code-preview';
-import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
-
+import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
+import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
 import { Separator } from '@/components/ui/separator';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { FormEngineProvider } from '@schema-engine/forms-react/components/adapter-provider';
-import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
 import { formEngine } from '@/lib/form-engine-setup';
 import '@schema-engine/forms/schemas/validation/validation-registry';
 import type { FormConfig } from '@schema-engine/forms/schemas';
@@ -383,16 +381,19 @@ function HeroSection() {
 				</p>
 
 				<div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-					<Button asChild size="lg" className="px-8 shadow-lg shadow-primary/20">
-						<a href="/docs/packages/forms" className="no-underline">
-							Get Started
-						</a>
-					</Button>
-					<Button asChild variant="outline" size="lg" className="px-8">
-						<a href="/docs" className="no-underline">
-							View Documentation
-						</a>
-					</Button>
+					<a
+						href="/docs/packages/forms"
+						className={buttonVariants({
+							variant: 'default',
+							size: 'lg',
+							className: 'px-8 shadow-lg shadow-primary/20',
+						})}
+					>
+						Get Started
+					</a>
+					<a href="/docs" className={buttonVariants({ variant: 'outline', size: 'lg', className: 'px-8' })}>
+						View Documentation
+					</a>
 				</div>
 
 				<div className="flex flex-wrap justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">

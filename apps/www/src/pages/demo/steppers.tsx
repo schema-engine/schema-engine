@@ -2,7 +2,7 @@ import { FormEngineLayout } from '@/layouts/form-engine-layout';
 import type { FormConfig } from '@schema-engine/forms';
 import type { ReactNode } from 'react';
 import type { EcoComponent } from '@ecopages/core';
-import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
+import { FormRenderer } from '@schema-engine/forms-react';
 import '@/lib/form-engine-setup';
 
 const minimalistStepperDemo: FormConfig = {
@@ -441,7 +441,7 @@ const SteppersPage: EcoComponent<unknown, ReactNode> = () => {
 						</div>
 					</div>
 
-					<div className="mt-16 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-8">
+					<div className="mt-16 bg-linear-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-8">
 						<h3 className="text-xl font-semibold text-blue-900 mb-4">Wizard Mode Testing Guide</h3>
 						<div className="grid md:grid-cols-2 gap-6 text-sm">
 							<div>

@@ -1,7 +1,9 @@
 import { DocsLayout } from '@/layouts/docs-layout';
 import { ContactFormDemo } from '@/components/demo/contact-form-demo';
 
-export const layout = DocsLayout;
+export const config = {
+	layout: DocsLayout,
+};
 
 export const getMetadata = () => ({
 	title: 'Contact Form Example | Form Engine Documentation',

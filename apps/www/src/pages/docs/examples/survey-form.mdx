@@ -1,11 +1,12 @@
 import { DocsLayout } from '@/layouts/docs-layout';
-import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
-import { FormEngineProvider } from '@schema-engine/forms-react/components/adapter-provider';
+import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
 import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
 import { formEngine } from '@/lib/form-engine-setup';
 import '@/lib/form-engine-setup';
 
-export const layout = DocsLayout;
+export const config = {
+	layout: DocsLayout,
+};
 
 export const getMetadata = () => ({
 	title: 'Survey Form Example | Form Engine Documentation',
@@ -134,7 +135,7 @@ When building surveys with Form Engine:
 Here's how to structure a basic survey configuration:
 
 ```typescript
-import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
+import { FormRenderer } from '@schema-engine/forms-react';
 
 const surveyConfig = {
   id: 'customer-survey',
@@ -248,7 +249,7 @@ This survey example demonstrates how Form Engine makes it easy to create profess
 
 ```typescript
 import React from 'react';
-import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
+import { FormRenderer } from '@schema-engine/forms-react';
 import surveyConfig from './survey-config';
 
 function CustomerSurvey() {

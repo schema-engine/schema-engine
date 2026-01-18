@@ -1,11 +1,12 @@
 import { FormEngineLayout } from '@/layouts/form-engine-layout';
-import { conceptStepLayoutDemo, currentGridSystemDemo } from '@/configs/forms/layout-concept-demo';
-import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
+import { FormRenderer } from '@schema-engine/forms-react';
+import { cardWithProgressBarForm } from '@/configs/forms/layout-stepper-forms';
+import { responsiveFormConfig } from '@/configs/forms/responsive-forms';
 
 export default function LayoutSystemDemoPage() {
 	return (
 		<FormEngineLayout>
-			<div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 py-12 px-4">
+			<div className="min-h-screen bg-linear-to-br from-slate-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 py-12 px-4">
 				<div className="max-w-6xl mx-auto">
 					<div className="text-center mb-12">
 						<h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -29,7 +30,7 @@ export default function LayoutSystemDemoPage() {
 							</div>
 
 							<div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-								<FormRenderer config={conceptStepLayoutDemo} />
+								<FormRenderer config={cardWithProgressBarForm} />
 							</div>
 						</div>
 
@@ -44,7 +45,7 @@ export default function LayoutSystemDemoPage() {
 							</div>
 
 							<div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-								<FormRenderer config={currentGridSystemDemo} />
+								<FormRenderer config={responsiveFormConfig} />
 							</div>
 						</div>
 					</div>

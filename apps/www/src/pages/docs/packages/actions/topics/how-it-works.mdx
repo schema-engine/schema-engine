@@ -1,12 +1,14 @@
 import { DocsLayout } from '@/layouts/docs-layout';
 import { LivePreview, CodePreview } from '@/components/code-preview';
 
-export const layout = DocsLayout;
+export const config = {
+  layout: DocsLayout,
+};
 
 export const getMetadata = () => ({
-	title: 'How Actions Work | Form Engine Documentation',
-	description:
-		"Learn how Form Engine's action system handles form submissions, notifications, and other behaviors through plugins.",
+  title: 'How Actions Work | Form Engine Documentation',
+  description:
+    "Learn how Form Engine's action system handles form submissions, notifications, and other behaviors through plugins.",
 });
 
 # How Actions Work

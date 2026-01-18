@@ -1,5 +1,4 @@
-import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
-import { FormEngineProvider } from '@schema-engine/forms-react/components/adapter-provider';
+import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
 import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
 import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
 import type { FormConfig } from '@schema-engine/forms/schemas';

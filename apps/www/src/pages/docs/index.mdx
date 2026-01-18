@@ -2,7 +2,9 @@ import { DocsLayout } from '@/layouts/docs-layout';
 import { SimpleInputDemo } from '@/components/demo/simple-input-demo';
 import { CodeBlock } from '@/components/code-preview';
 
-export const layout = DocsLayout;
+export const config = {
+	layout: DocsLayout,
+};
 
 export const getMetadata = () => ({
 	title: 'Form Engine Documentation',

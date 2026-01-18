@@ -1,11 +1,13 @@
 import { DocsLayout } from '@/layouts/docs-layout';
 import { MultiStepDemo } from '@/components/demo/multi-step-demo';
 
-export const layout = DocsLayout;
+export const config = {
+  layout: DocsLayout,
+};
 
 export const getMetadata = () => ({
-	title: 'Registration Flow Example | Form Engine Documentation',
-	description: 'Complete example of a multi-step registration flow using Form Engine.',
+  title: 'Registration Flow Example | Form Engine Documentation',
+  description: 'Complete example of a multi-step registration flow using Form Engine.',
 });
 
 # Registration Flow Example

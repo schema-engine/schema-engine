@@ -1,5 +1,5 @@
 import '@/lib/form-engine-setup';
-import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
+import { FormRenderer } from '@schema-engine/forms-react';
 import { FormEngineLayout } from '@/layouts/form-engine-layout';
 import {
 	multiStepRegistrationConfig,

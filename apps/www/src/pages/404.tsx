@@ -1,5 +1,5 @@
 import type { EcoComponent, Error404TemplateProps } from '@ecopages/core';
-import { Button } from '../components/ui/button';
+import { buttonVariants } from '../components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import type { JSX } from 'react';
 
@@ -42,16 +42,12 @@ const Error404: EcoComponent<Error404TemplateProps, JSX.Element> = () => {
 
 					{/* Action buttons */}
 					<div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-						<Button asChild size="lg" className="px-8">
-							<a href="/" className="no-underline">
-								Go Home
-							</a>
-						</Button>
-						<Button asChild variant="outline" size="lg" className="px-8">
-							<a href="/docs" className="no-underline">
-								View Documentation
-							</a>
-						</Button>
+						<a href="/" className={buttonVariants({ size: 'lg' })}>
+							Go Home
+						</a>
+						<a href="/docs" className={buttonVariants({ size: 'lg', variant: 'outline' })}>
+							View Documentation
+						</a>
 					</div>
 				</div>
 			</main>

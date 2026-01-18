@@ -2,7 +2,9 @@ import { DocsLayout } from '@/layouts/docs-layout';
 import { CodeBlock, CodePreview } from '@/components/code-preview';
 import { Badge } from '@/components/ui/badge';
 
-export const layout = DocsLayout;
+export const config = {
+	layout: DocsLayout,
+};
 
 export const getMetadata = () => ({
 	title: 'Available Plugins | Form Engine Actions',

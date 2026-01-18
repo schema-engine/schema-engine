@@ -1,11 +1,13 @@
 import { DocsLayout } from '@/layouts/docs-layout';
 import { SimpleInputDemo } from '@/components/demo/simple-input-demo';
 
-export const layout = DocsLayout;
+export const config = {
+  layout: DocsLayout,
+};
 
 export const getMetadata = () => ({
-	title: 'Basic Form Example | Form Engine Documentation',
-	description: 'Simple contact form example showing Form Engine fundamentals: fields, validation, and actions.',
+  title: 'Basic Form Example | Form Engine Documentation',
+  description: 'Simple contact form example showing Form Engine fundamentals: fields, validation, and actions.',
 });
 
 # Basic Form Example
@@ -142,7 +144,7 @@ const basicFormConfig: FormConfig = {
 ## Usage
 
 ```typescript
-import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
+import { FormRenderer } from '@schema-engine/forms-react';
 
 function ContactPage() {
   return (

@@ -1,38 +1,39 @@
-import { mdxPlugin } from '@ecopages/mdx';
-import { ConfigBuilder } from '@ecopages/core';
+import path from 'node:path';
+import remarkGfm from 'remark-gfm';
+import { ConfigBuilder } from '@ecopages/core/config-builder';
 import { postcssProcessorPlugin } from '@ecopages/postcss-processor';
 import { tailwindV4Preset } from '@ecopages/postcss-processor/presets/tailwind-v4';
+import { rehypePrettyCode } from 'rehype-pretty-code';
 import { reactPlugin } from '@ecopages/react';
-import remarkGfm from 'remark-gfm';
-import path from 'node:path';
-import rehypePrettyCode from 'rehype-pretty-code';
+import { ecoRouter } from '@ecopages/react-router';
 
 const config = await new ConfigBuilder()
 	.setRootDir(import.meta.dir)
 	.setBaseUrl(import.meta.env.ECOPAGES_BASE_URL)
 	.setIntegrations([
-		mdxPlugin({
-			compilerOptions: {
-				format: 'detect',
-				outputFormat: 'program',
-				jsxImportSource: 'react',
-				jsxRuntime: 'automatic',
-				development: import.meta.env.NODE_ENV === 'development',
-				remarkPlugins: [remarkGfm],
-				rehypePlugins: [
-					[
-						rehypePrettyCode,
-						{
-							theme: {
-								light: 'light-plus',
-								dark: 'dark-plus',
+		reactPlugin({
+			router: ecoRouter(),
+			mdx: {
+				enabled: true,
+				compilerOptions: {
+					format: 'detect',
+					outputFormat: 'program',
+					development: import.meta.env.NODE_ENV === 'development',
+					remarkPlugins: [remarkGfm],
+					rehypePlugins: [
+						[
+							rehypePrettyCode,
+							{
+								theme: {
+									light: 'light-plus',
+									dark: 'dark-plus',
+								},
 							},
-						},
+						],
 					],
-				],
+				},
 			},
 		}),
-		reactPlugin(),
 	])
 	.setProcessors([
 		postcssProcessorPlugin(

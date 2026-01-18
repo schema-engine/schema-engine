@@ -1,4 +1,4 @@
-import { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
+import { FormRenderer } from '@schema-engine/forms-react';
 import { demoFormConfig } from '../../configs/forms/demo-forms';
 import '@/lib/form-engine-setup';
 
@@ -7,8 +7,8 @@ import '@/lib/form-engine-setup';
  */
 export function FormEngineDemo() {
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 prose">
-			<div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600">
+		<div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50 prose">
+			<div className="relative overflow-hidden bg-linear-to-r from-blue-600 via-purple-600 to-indigo-600">
 				<div className="absolute inset-0 bg-black/20"></div>
 				<div className="relative max-w-4xl mx-auto px-6 py-16 text-center">
 					<div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl mb-6">
@@ -54,7 +54,7 @@ export function FormEngineDemo() {
 			<div className="max-w-4xl mx-auto px-6 py-12">
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
 					<div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-						<div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-4">
+						<div className="w-12 h-12 bg-linear-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-4">
 							<svg
 								className="w-6 h-6 text-white"
 								fill="none"
@@ -77,7 +77,7 @@ export function FormEngineDemo() {
 					</div>
 
 					<div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-						<div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-4">
+						<div className="w-12 h-12 bg-linear-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-4">
 							<svg
 								className="w-6 h-6 text-white"
 								fill="none"
@@ -100,7 +100,7 @@ export function FormEngineDemo() {
 					</div>
 
 					<div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-						<div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center mb-4">
+						<div className="w-12 h-12 bg-linear-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center mb-4">
 							<svg
 								className="w-6 h-6 text-white"
 								fill="none"
@@ -124,7 +124,7 @@ export function FormEngineDemo() {
 				</div>
 
 				<div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-					<div className="bg-gradient-to-r from-gray-50 to-gray-100 px-8 py-6 border-b border-gray-200">
+					<div className="bg-linear-to-r from-gray-50 to-gray-100 px-8 py-6 border-b border-gray-200">
 						<h2 className="text-2xl font-bold text-gray-900 mb-2">Interactive Demo</h2>
 						<p className="text-gray-600">
 							Try filling out this form to see real-time validation and error handling in action.
@@ -137,7 +137,7 @@ export function FormEngineDemo() {
 				</div>
 
 				<div className="mt-12 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-					<div className="bg-gradient-to-r from-slate-50 to-gray-100 px-8 py-6 border-b border-gray-200">
+					<div className="bg-linear-to-r from-slate-50 to-gray-100 px-8 py-6 border-b border-gray-200">
 						<h3 className="text-xl font-bold text-gray-900 mb-2">Configuration Preview</h3>
 						<p className="text-gray-600">
 							This is how the form is defined in JSON with embedded validation rules.
@@ -154,11 +154,11 @@ export function FormEngineDemo() {
 				</div>
 
 				<div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
-					<div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-100">
+					<div className="bg-linear-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-100">
 						<h3 className="text-xl font-bold text-blue-900 mb-4">For Developers</h3>
 						<ul className="space-y-3 text-blue-800">
 							<li className="flex items-start gap-3">
-								<div className="w-5 h-5 bg-blue-600 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center">
+								<div className="w-5 h-5 bg-blue-600 rounded-full shrink-0 mt-0.5 flex items-center justify-center">
 									<svg
 										className="w-3 h-3 text-white"
 										fill="currentColor"
@@ -175,7 +175,7 @@ export function FormEngineDemo() {
 								<span>No more duplicate validation logic</span>
 							</li>
 							<li className="flex items-start gap-3">
-								<div className="w-5 h-5 bg-blue-600 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center">
+								<div className="w-5 h-5 bg-blue-600 rounded-full shrink-0 mt-0.5 flex items-center justify-center">
 									<svg
 										className="w-3 h-3 text-white"
 										fill="currentColor"
@@ -192,7 +192,7 @@ export function FormEngineDemo() {
 								<span>Type-safe configuration with TypeScript</span>
 							</li>
 							<li className="flex items-start gap-3">
-								<div className="w-5 h-5 bg-blue-600 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center">
+								<div className="w-5 h-5 bg-blue-600 rounded-full shrink-0 mt-0.5 flex items-center justify-center">
 									<svg
 										className="w-3 h-3 text-white"
 										fill="currentColor"
@@ -211,11 +211,11 @@ export function FormEngineDemo() {
 						</ul>
 					</div>
 
-					<div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 border border-purple-100">
+					<div className="bg-linear-to-br from-purple-50 to-pink-50 rounded-2xl p-8 border border-purple-100">
 						<h3 className="text-xl font-bold text-purple-900 mb-4">For Product Teams</h3>
 						<ul className="space-y-3 text-purple-800">
 							<li className="flex items-start gap-3">
-								<div className="w-5 h-5 bg-purple-600 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center">
+								<div className="w-5 h-5 bg-purple-600 rounded-full shrink-0 mt-0.5 flex items-center justify-center">
 									<svg
 										className="w-3 h-3 text-white"
 										fill="currentColor"
@@ -232,7 +232,7 @@ export function FormEngineDemo() {
 								<span>Forms can be configured via API</span>
 							</li>
 							<li className="flex items-start gap-3">
-								<div className="w-5 h-5 bg-purple-600 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center">
+								<div className="w-5 h-5 bg-purple-600 rounded-full shrink-0 mt-0.5 flex items-center justify-center">
 									<svg
 										className="w-3 h-3 text-white"
 										fill="currentColor"
@@ -249,7 +249,7 @@ export function FormEngineDemo() {
 								<span>Human-readable form configurations</span>
 							</li>
 							<li className="flex items-start gap-3">
-								<div className="w-5 h-5 bg-purple-600 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center">
+								<div className="w-5 h-5 bg-purple-600 rounded-full shrink-0 mt-0.5 flex items-center justify-center">
 									<svg
 										className="w-3 h-3 text-white"
 										fill="currentColor"

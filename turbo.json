@@ -6,7 +6,7 @@
 			"outputs": ["dist/**"]
 		},
 		"build": {
-			"dependsOn": ["^build"],
+			"dependsOn": ["^build", "^build:lib"],
 			"outputs": [".eco/**"]
 		},
 		"check-types": {
@@ -26,11 +26,19 @@
 		"build-storybook": {
 			"outputs": ["storybook-static/**"]
 		},
-		"test:storybook": {
+		"test:0storybook": {
 			"dependsOn": ["^build:lib"]
 		},
 		"test:all": {
 			"dependsOn": ["^test:all"]
+		},
+		"preview:www": {
+			"cache": false,
+			"persistent": true
+		},
+		"@schema-engine/www#preview": {
+			"cache": false,
+			"persistent": true
 		}
 	}
 }
