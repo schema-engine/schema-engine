@@ -1,0 +1,106 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Introduction" />
+
+# @schema-engine/forms-react
+
+The official React SDK for [Schema Engine](https://schema-engine.com). This package provides a type-safe, performant, and reliable way to render complex forms using JSON definitions.
+
+## Key Features
+
+- **End-to-End Type Safety**: Full TypeScript inference for form configurations, components, and actions.
+- **Universal Adapter System**: Includes a built-in React Hook Form adapter and supports custom adapters for any form library.
+- **Production-Ready Components**: A rich library of accessible, pre-styled form elements.
+- **Flexible Layouts**: Varied visual organizations including Cards, Split Screens, and Steppers.
+- **Dynamic Lifecycle Actions**: Declaratively execute HTTP requests, redirects, and state updates based on form events.
+
+## Core Concepts
+
+Understanding the architecture of Schema Engine is key to leveraging its full potential. The system allows you to define complex forms as serializable JSON data structures.
+
+### 1. Form Configuration
+The root object that defines the form's identity, behavior, and structure.
+
+```ts
+interface FormConfig {
+  id: string;              // Unique identifier
+  title?: string;          // Form title
+  mode?: 'wizard' | 'free'; // Navigation mode
+  steps: FormStep[];       // Array of steps (pages)
+  actions?: FormAction[];  // Global actions (e.g., submit)
+}
+```
+
+### 2. Steps & Elements
+Forms are divided into one or more **Steps**. Each step contains **Elements** (inputs, buttons, etc.).
+
+```ts
+interface FormStep {
+  id: string;
+  title: string;
+  elements: FormElement[]; // The fields within this step
+  layout?: StepLayout;     // Visual arrangement (e.g., card, split)
+}
+```
+
+## Basic Usage
+
+Render a form by passing a configuration object to the `FormRenderer`.
+
+```tsx
+import { FormRenderer } from '@schema-engine/forms-react';
+
+const schema = {
+  id: 'contact-form',
+  title: 'Contact Us',
+  steps: [
+    {
+      id: 'contact-step',
+      title: 'Contact Details',
+      elements: [
+        {
+          $type: 'input',
+          name: 'email',
+          label: 'Email Address',
+          rules: [{ type: 'required' }, { type: 'email' }]
+        },
+        {
+          $type: 'submit',
+          label: 'Send Message'
+        }
+      ]
+    }
+  ],
+  actions: [
+    {
+      id: 'submit-action',
+      $type: 'submit',
+      endpoint: '/api/contact',
+      triggers: ['form_submit']
+    }
+  ]
+};
+
+export default function Page() {
+  return (
+    <FormRenderer 
+      config={schema} 
+      onSubmit={(data) => console.log(data)} 
+    />
+  );
+}
+```
+
+## Documentation
+
+This Storybook serves as an interactive component playground. For detailed guides, API references, and tutorials, please visit our official documentation:
+
+[**schema-engine.com/docs/packages/forms-react**](https://schema-engine.com/docs/packages/forms-react)
+
+## Philosophy
+
+Schema Engine adheres to **Configuration over Code**. Define *what* you want, not *how* to build it. Decoupling form definition from implementation ensures:
+
+- **Portability**: Persist forms in databases and serve them dynamically to any client.
+- **Consistency**: Enforce design systems and validation rules uniformly across applications.
+- **Adaptability**: Switch underlying frameworks or platforms without rewriting business logic.

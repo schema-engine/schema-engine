@@ -13,7 +13,7 @@ COPY packages/forms/package.json /temp/dev/packages/forms/package.json
 COPY packages/forms-react/package.json /temp/dev/packages/forms-react/package.json
 COPY packages/actions/package.json /temp/dev/packages/actions/package.json
 COPY packages/registry/package.json /temp/dev/packages/registry/package.json
-RUN cd /temp/dev && bun install --frozen-lockfile --ignore-scripts
+RUN cd /temp/dev && bun install --frozen-lockfile --ignore-scripts --backend=copyfile
 
 # install with --production (exclude devDependencies)
 RUN mkdir -p /temp/prod
@@ -23,7 +23,7 @@ COPY packages/forms/package.json /temp/prod/packages/forms/package.json
 COPY packages/forms-react/package.json /temp/prod/packages/forms-react/package.json
 COPY packages/actions/package.json /temp/prod/packages/actions/package.json
 COPY packages/registry/package.json /temp/prod/packages/registry/package.json
-RUN cd /temp/prod && bun install --frozen-lockfile --production --ignore-scripts
+RUN cd /temp/prod && bun install --frozen-lockfile --production --ignore-scripts --backend=copyfile
 
 # copy node_modules from temp directory
 # then copy all (non-ignored) project files into the image
