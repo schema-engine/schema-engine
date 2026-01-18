@@ -5,15 +5,16 @@
 
 import { createReactFormComposer } from '@schema-engine/forms-react/registries/builder-registry';
 
-import { InputElementRegistration } from '@schema-engine/forms-react/components/elements/core-ui/inputs/form-input.registration';
-import { TextareaElementRegistration } from '@schema-engine/forms-react/components/elements/core-ui/inputs/form-textarea.registration';
-import { CheckboxElementRegistration } from '@schema-engine/forms-react/components/elements/core-ui/inputs/form-checkbox.registration';
-import { RadioElementRegistration } from '@schema-engine/forms-react/components/elements/core-ui/inputs/form-radio.registration';
-import { SelectElementRegistration } from '@schema-engine/forms-react/components/elements/core-ui/inputs/form-select.registration';
-import { SwitchElementRegistration } from '@schema-engine/forms-react/components/elements/core-ui/inputs/form-switch.registration';
-import { NumberElementRegistration } from '@schema-engine/forms-react/components/elements/core-ui/inputs/form-number.registration';
-import { ArrayElementRegistration } from '@schema-engine/forms-react/components/elements/core-ui/inputs/form-array-elements.registration';
-import { SubmitButtonElementRegistration } from '@schema-engine/forms-react/components/elements/core-ui/actions/submit-button.registration';
+import { InputElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-input.registration';
+import { TextareaElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-textarea.registration';
+import { CheckboxElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-checkbox.registration';
+import { RadioElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-radio.registration';
+import { SelectElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-select.registration';
+import { SwitchElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-switch.registration';
+import { NumberElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-number.registration';
+import { ArrayElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-array-elements.registration';
+import { SubmitButtonElementRegistration } from '@schema-engine/forms-react/components/elements/actions/submit-button.registration';
+import { SubmissionAlertElementRegistration } from '@schema-engine/forms-react/components/elements/content/form-submission-alert.registration';
 
 import { CardLayoutRegistration } from '@schema-engine/forms-react/components/layouts/card-layout.registration';
 import { SplitScreenLayoutRegistration } from '@schema-engine/forms-react/components/layouts/split-screen-layout.registration';
@@ -39,6 +40,7 @@ export const formEngine = createReactFormComposer()
 	.addElement(NumberElementRegistration)
 	.addElement(ArrayElementRegistration)
 	.addElement(SubmitButtonElementRegistration)
+	.addElement(SubmissionAlertElementRegistration)
 	.addLayout(CardLayoutRegistration)
 	.addLayout(SplitScreenLayoutRegistration)
 	.addLayout(HeroBackgroundLayoutRegistration)

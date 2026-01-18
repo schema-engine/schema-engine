@@ -39,7 +39,7 @@ import {
 	SliderElementRegistration,
 	CheckboxGroupElementRegistration,
 	InputOTPElementRegistration,
-} from '@schema-engine/forms-react/components/elements/core-ui/inputs';
+} from '@schema-engine/forms-react/components/elements/inputs';
 ```
 
 ### Register in Form Engine

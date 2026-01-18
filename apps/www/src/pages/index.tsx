@@ -20,6 +20,14 @@ const contactFormConfig: FormConfig = {
 			title: 'Contact Information',
 			elements: [
 				{
+					id: 'submission-status',
+					name: 'submissionStatus',
+					$type: 'submission-alert',
+					showOn: ['pending', 'success'],
+					pendingMessage: 'Pending Submission',
+					successMessage: 'Submission Successful',
+				},
+				{
 					id: 'email',
 					name: 'email',
 					$type: 'input',
@@ -70,10 +78,15 @@ const contactFormConfig: FormConfig = {
 			endpoint: '/api/submit-demo',
 			method: 'POST',
 		},
+		{
+			id: 'reset-form',
+			$type: 'reset',
+			enabled: true,
+			resetToDefaults: true,
+		},
 	],
 };
 
-// Feature icons as reusable components
 const icons = {
 	json: (
 		<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,7 +146,6 @@ const icons = {
 	),
 };
 
-// Product feature data
 const productFeatures = [
 	{
 		title: 'JSON Configuration',
@@ -173,7 +185,6 @@ const productFeatures = [
 	},
 ];
 
-// Packages data
 const packages = [
 	{
 		title: '@schema-engine/forms',
@@ -197,7 +208,6 @@ const packages = [
 	},
 ];
 
-// Quick start steps
 const quickStartSteps = [
 	{
 		step: 1,
@@ -219,7 +229,6 @@ const quickStartSteps = [
 	},
 ];
 
-// Reusable components
 function FeatureCard({
 	title,
 	description,
@@ -302,7 +311,6 @@ function StepCard({
 	);
 }
 
-// Page sections
 function Header() {
 	return (
 		<header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
@@ -497,7 +505,6 @@ function Footer() {
 		<footer className="border-t border-border py-16 px-6">
 			<div className="max-w-6xl mx-auto">
 				<div className="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8">
-					{/* Brand */}
 					<div className="md:col-span-2">
 						<div className="flex items-center gap-3 mb-4 text-foreground">
 							<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 32 32">
@@ -515,7 +522,6 @@ function Footer() {
 						</p>
 					</div>
 
-					{/* Documentation */}
 					<div>
 						<h4 className="font-semibold text-foreground mb-4">Documentation</h4>
 						<ul className="space-y-3 text-sm">
@@ -546,7 +552,6 @@ function Footer() {
 						</ul>
 					</div>
 
-					{/* Packages */}
 					<div>
 						<h4 className="font-semibold text-foreground mb-4">Packages</h4>
 						<ul className="space-y-3 text-sm">
@@ -629,6 +634,7 @@ const SchemaEngine: EcoComponent<unknown, JSX.Element> = () => {
 SchemaEngine.config = {
 	dependencies: {
 		stylesheets: ['./index.css'],
+		scripts: ['./index.script.ts'],
 	},
 };
 
