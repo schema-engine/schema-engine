@@ -9,9 +9,9 @@ import { describe, test, expect, expectTypeOf } from 'bun:test';
 import { createReactFormComposer } from '@/registries/builder-registry';
 import type { FormEngine } from '@schema-engine/forms/engine';
 
-import { InputElementRegistration } from '@/components/elements/shadcn/inputs/form-input.registration';
-import { TextareaElementRegistration } from '@/components/elements/shadcn/inputs/form-textarea.registration';
-import { CheckboxElementRegistration } from '@/components/elements/shadcn/inputs/form-checkbox.registration';
+import { InputElementRegistration } from '@/components/elements/inputs/form-input.registration';
+import { TextareaElementRegistration } from '@/components/elements/inputs/form-textarea.registration';
+import { CheckboxElementRegistration } from '@/components/elements/inputs/form-checkbox.registration';
 
 import { CardLayoutRegistration } from '@/components/layouts/card-layout.registration';
 import { DefaultStepperRegistration } from '@/components/steppers/default-stepper.registration';

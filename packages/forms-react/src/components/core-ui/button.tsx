@@ -1,8 +1,8 @@
 'use client';
 
 import type { ButtonHTMLAttributes } from 'react';
-import { mergeProps } from '@base-ui-components/react';
-import { useRender } from '@base-ui-components/react/use-render';
+import { mergeProps } from '@base-ui/react';
+import { useRender } from '@base-ui/react/use-render';
 import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cn } from '@/lib/utils';
@@ -38,7 +38,8 @@ const buttonVariants = cva(
 );
 
 export interface ButtonProps
-	extends VariantProps<typeof buttonVariants>,
+	extends
+		VariantProps<typeof buttonVariants>,
 		ButtonHTMLAttributes<HTMLButtonElement>,
 		useRender.ComponentProps<'button'> {}
 

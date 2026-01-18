@@ -1,6 +1,6 @@
 'use client';
 
-import { Dialog as BaseDialog } from '@base-ui-components/react';
+import { Dialog as BaseDialog } from '@base-ui/react';
 import { XIcon } from 'lucide-react';
 
 import { cn } from '@/lib/utils';

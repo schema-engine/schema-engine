@@ -4,7 +4,7 @@ import type { DefaultStepperConfig } from './default-stepper.types';
 import { StepperProvider, useStepperContext } from './context';
 import { useEffect, useRef } from 'react';
 import { useStepperContext as useGlobalStepperContext } from '@/contexts/stepper-context';
-import { useIsMobile } from '@/shadcn/ui-hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const DefaultStepperRoot: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => {
 	const globalContext = useGlobalStepperContext();

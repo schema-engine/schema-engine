@@ -1,11 +1,11 @@
 :root {
-	--debugger-stepper-primary: hsl(var(--primary));
-	--debugger-stepper-primary-foreground: hsl(var(--primary-foreground));
-	--debugger-stepper-background: hsl(var(--background));
-	--debugger-stepper-card: hsl(var(--card));
-	--debugger-stepper-border: hsl(var(--border));
-	--debugger-stepper-text-primary: hsl(var(--foreground));
-	--debugger-stepper-text-secondary: hsl(var(--muted-foreground));
+	--debugger-stepper-primary: var(--primary);
+	--debugger-stepper-primary-foreground: var(--primary-foreground);
+	--debugger-stepper-background: var(--background);
+	--debugger-stepper-card: var(--card);
+	--debugger-stepper-border: var(--border);
+	--debugger-stepper-text-primary: var(--foreground);
+	--debugger-stepper-text-secondary: var(--muted-foreground);
 	--debugger-stepper-success: hsl(142 76% 36%);
 	--debugger-stepper-error: hsl(0 84% 60%);
 	--debugger-stepper-warning: hsl(38 92% 50%);
@@ -41,7 +41,7 @@
 .debugger-stepper__fab {
 	@apply flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all duration-200;
 	@apply hover:scale-110 active:scale-95;
-	background: linear-gradient(135deg, var(--debugger-stepper-primary) 0%, hsl(var(--primary) / 0.8) 100%);
+	background: linear-gradient(135deg, var(--debugger-stepper-primary) 0%, color-mix(in srgb, var(--primary) 0.8, transparent) 100%);
 	color: var(--debugger-stepper-primary-foreground);
 	box-shadow: var(--debugger-stepper-shadow);
 	animation: debugger-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -140,12 +140,12 @@
 
 .debugger-stepper__progress-track {
 	@apply relative w-full h-2 rounded-full overflow-hidden;
-	background-color: hsl(var(--muted));
+	background-color: var(--muted);
 }
 
 .debugger-stepper__progress-fill {
 	@apply h-full rounded-full transition-all duration-500 ease-out;
-	background: linear-gradient(90deg, var(--debugger-stepper-primary) 0%, hsl(var(--primary) / 0.8) 100%);
+	background: linear-gradient(90deg, var(--debugger-stepper-primary) 0%, color-mix(in srgb, var(--primary) 0.8, transparent) 100%);
 	box-shadow: 0 0 10px var(--debugger-stepper-primary);
 }
 
@@ -188,7 +188,7 @@
 		border-color: var(--debugger-stepper-primary);
 		background-color: var(--debugger-stepper-primary);
 		color: var(--debugger-stepper-primary-foreground);
-		box-shadow: 0 0 0 4px hsl(var(--primary) / 0.1);
+		box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 0.1, transparent);
 		animation: debugger-marker-pulse 2s ease-in-out infinite;
 	}
 
@@ -199,19 +199,19 @@
 	}
 
 	.debugger-stepper__timeline-item--pending & {
-		border-color: hsl(var(--border) / 0.5);
+		border-color: color-mix(in srgb, var(--border) 0.5, transparent);
 		background-color: var(--debugger-stepper-background);
-		color: hsl(var(--muted-foreground) / 0.4);
+		color: color-mix(in srgb, var(--muted-foreground) 0.4, transparent);
 	}
 }
 
 @keyframes debugger-marker-pulse {
 	0%,
 	100% {
-		box-shadow: 0 0 0 4px hsl(var(--primary) / 0.1);
+		box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 0.1, transparent);
 	}
 	50% {
-		box-shadow: 0 0 0 8px hsl(var(--primary) / 0.05);
+		box-shadow: 0 0 0 8px color-mix(in srgb, var(--primary) 0.05, transparent);
 	}
 }
 
@@ -258,7 +258,7 @@
 
 	&--visited {
 		@apply inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium;
-		background-color: hsl(var(--muted));
+		background-color: var(--muted);
 		color: var(--debugger-stepper-text-secondary);
 	}
 }
@@ -267,7 +267,7 @@
 .debugger-stepper__details {
 	@apply rounded-lg border p-3 space-y-2;
 	border-color: var(--debugger-stepper-border);
-	background-color: hsl(var(--muted) / 0.3);
+	background-color: color-mix(in srgb, var(--muted) 0.3, transparent);
 }
 
 .debugger-stepper__details-header {
@@ -289,7 +289,7 @@
 
 .debugger-stepper__detail-value {
 	@apply px-1.5 py-0.5 rounded font-mono text-[10px];
-	background-color: hsl(var(--muted));
+	background-color: var(--muted);
 	color: var(--debugger-stepper-text-primary);
 }
 
@@ -319,7 +319,7 @@
 	}
 
 	&--secondary {
-		background-color: hsl(var(--muted));
+		background-color: var(--muted);
 		color: var(--debugger-stepper-text-primary);
 		@apply hover:bg-muted/80;
 

@@ -154,7 +154,7 @@ Here's a complete template for creating a new stepper component:
 
 ```tsx
 // my-stepper.tsx
-import { cn } from '@/shadcn/lib/utils';
+import { cn } from '@/lib/utils';
 import type React from 'react';
 import { StepperProvider, useStepperContext } from './context';
 import { useStepperContext as useGlobalStepperContext } from '@/contexts/stepper-context';

@@ -1,11 +1,11 @@
 :root {
-	--minimalist-stepper-primary: hsl(var(--primary));
-	--minimalist-stepper-primary-foreground: hsl(var(--primary-foreground));
-	--minimalist-stepper-accent: hsl(var(--accent));
-	--minimalist-stepper-muted: hsl(var(--muted));
-	--minimalist-stepper-border: hsl(var(--border));
-	--minimalist-stepper-text-primary: hsl(var(--foreground));
-	--minimalist-stepper-text-secondary: hsl(var(--muted-foreground));
+	--minimalist-stepper-primary: var(--primary);
+	--minimalist-stepper-primary-foreground: var(--primary-foreground);
+	--minimalist-stepper-accent: var(--accent);
+	--minimalist-stepper-muted: var(--muted);
+	--minimalist-stepper-border: var(--border);
+	--minimalist-stepper-text-primary: var(--foreground);
+	--minimalist-stepper-text-secondary: var(--muted-foreground);
 }
 
 /* Minimalist Stepper */

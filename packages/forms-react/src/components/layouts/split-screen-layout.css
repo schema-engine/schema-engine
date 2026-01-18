@@ -1,8 +1,8 @@
 :root {
-	--split-screen-side-bg: theme('colors.gray.100');
-	--split-screen-text-primary: theme('colors.gray.900');
-	--split-screen-text-secondary: theme('colors.gray.600');
-	--split-screen-text-muted: theme('colors.gray.700');
+	--split-screen-side-bg: oklch(0.967 0.001 286.375);
+	--split-screen-text-primary: oklch(0.21 0.006 285.885);
+	--split-screen-text-secondary: oklch(0.446 0.03 256.8);
+	--split-screen-text-muted: oklch(0.373 0.034 257.287);
 }
 
 .split-screen-layout {

@@ -1,8 +1,8 @@
 :root {
 	--hero-background-overlay: rgba(0, 0, 0, 0.5);
-	--hero-background-text: theme('colors.white');
-	--hero-background-form-bg: theme('colors.white');
-	--hero-background-form-text: theme('colors.gray.800');
+	--hero-background-text: white;
+	--hero-background-form-bg: white;
+	--hero-background-form-text: oklch(0.274 0.006 286.033);
 }
 
 .hero-background-layout {
@@ -55,8 +55,8 @@
 	}
 
 	&__form {
-		@apply bg-opacity-95 p-8 rounded-lg shadow-lg;
-		background-color: var(--hero-background-form-bg);
+		@apply p-8 rounded-lg shadow-lg;
+		background-color: color-mix(in srgb, var(--hero-background-form-bg) 95%, transparent);
 		color: var(--hero-background-form-text);
 	}
 }

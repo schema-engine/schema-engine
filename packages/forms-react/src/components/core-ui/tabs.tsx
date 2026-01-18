@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, type ComponentProps } from 'react';
-import { Tabs as BaseTabs } from '@base-ui-components/react/tabs';
+import { Tabs as BaseTabs } from '@base-ui/react/tabs';
 
 import { cn } from '@/lib/utils';
 

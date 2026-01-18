@@ -1,8 +1,11 @@
-// This file has been automatically migrated to valid ESM format by Storybook.
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import type { StorybookConfig } from '@storybook/react-vite';
 import { join, dirname, resolve } from 'path';
+import tailwindcss from '@tailwindcss/vite';
+import { tailwindReferencePlugin } from './tailwind-reference-plugin.ts';
+import { mergeConfig } from 'vite';
+import path from 'node:path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -29,15 +32,17 @@ const config: StorybookConfig = {
 	},
 	staticDirs: ['../public'],
 	async viteFinal(config) {
-		return {
-			...config,
+		return mergeConfig(config, {
 			resolve: {
-				...config.resolve,
 				alias: Object.assign({}, config.resolve?.alias ?? {}, {
 					'@': resolve(__dirname, '../src'),
 				}),
 			},
-		};
+			plugins: [
+				tailwindReferencePlugin({ globalCssPath: path.join(__dirname, '../src/styles/global.css') }),
+				tailwindcss(),
+			],
+		});
 	},
 };
 export default config;

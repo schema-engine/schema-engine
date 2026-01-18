@@ -4,12 +4,12 @@
 
 import { describe, test, expect } from 'bun:test';
 import { createReactFormComposer } from '@/registries/builder-registry';
-import { InputElementRegistration } from '@/components/elements/shadcn/inputs/form-input.registration';
-import { FormTextarea } from '@/components/elements/shadcn/inputs/form-textarea';
+import { InputElementRegistration } from '@/components/elements/inputs/form-input.registration';
+import { FormTextarea } from '@/components/elements/inputs/form-textarea';
 import { CardLayoutRegistration } from '@/components/layouts/card-layout.registration';
 import { DefaultStepperRegistration } from '@/components/steppers/default-stepper.registration';
-import { InputFieldSchema } from '@/components/elements/shadcn/inputs/form-input.types';
-import { TextareaFieldSchema } from '@/components/elements/shadcn/inputs/form-textarea.types';
+import { InputFieldSchema } from '@/components/elements/inputs/form-input.types';
+import { TextareaFieldSchema } from '@/components/elements/inputs/form-textarea.types';
 
 describe('React Form Engine Builder', () => {
 	describe('Builder Creation', () => {

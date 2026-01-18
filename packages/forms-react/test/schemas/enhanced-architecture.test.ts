@@ -1,14 +1,11 @@
 import { describe, test, expect } from 'bun:test';
-import { InputFieldSchema, type InputFieldConfig } from '@/components/elements/shadcn/inputs/form-input.types';
-import { TextareaFieldSchema, type TextareaFieldConfig } from '@/components/elements/shadcn/inputs/form-textarea.types';
-import { SelectFieldConfigSchema, type SelectFieldConfig } from '@/components/elements/shadcn/inputs/form-select.types';
-import { RadioFieldConfigSchema, type RadioFieldConfig } from '@/components/elements/shadcn/inputs/form-radio.types';
-import { NumberFieldConfigSchema, type NumberFieldConfig } from '@/components/elements/shadcn/inputs/form-number.types';
-import { SwitchFieldConfigSchema, type SwitchFieldConfig } from '@/components/elements/shadcn/inputs/form-switch.types';
-import {
-	CheckboxFieldConfigSchema,
-	type CheckboxFieldConfig,
-} from '@/components/elements/shadcn/inputs/form-checkbox.types';
+import { InputFieldSchema, type InputFieldConfig } from '@/components/elements/inputs/form-input.types';
+import { TextareaFieldSchema, type TextareaFieldConfig } from '@/components/elements/inputs/form-textarea.types';
+import { SelectFieldConfigSchema, type SelectFieldConfig } from '@/components/elements/inputs/form-select.types';
+import { RadioFieldConfigSchema, type RadioFieldConfig } from '@/components/elements/inputs/form-radio.types';
+import { NumberFieldConfigSchema, type NumberFieldConfig } from '@/components/elements/inputs/form-number.types';
+import { SwitchFieldConfigSchema, type SwitchFieldConfig } from '@/components/elements/inputs/form-switch.types';
+import { CheckboxFieldConfigSchema, type CheckboxFieldConfig } from '@/components/elements/inputs/form-checkbox.types';
 
 describe('Clean Enhanced Field System', () => {
 	test('should use id-based configuration for input', () => {

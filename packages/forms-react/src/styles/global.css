@@ -1,45 +1,108 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+	/* Fonts */
+	--font-sans: 'Inter', sans-serif;
+	--font-serif: 'Merriweather', serif;
+	--font-mono: 'Fira Code', monospace;
+
+	/* Colors */
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-card: var(--card);
+	--color-card-foreground: var(--card-foreground);
+	--color-popover: var(--popover);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-secondary: var(--secondary);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-muted: var(--muted);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-accent: var(--accent);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-destructive: var(--destructive);
+	--color-destructive-foreground: var(--destructive-foreground);
+	--color-border: var(--border);
+	--color-input: var(--input);
+	--color-ring: var(--ring);
+	--color-chart-1: var(--chart-1);
+	--color-chart-2: var(--chart-2);
+	--color-chart-3: var(--chart-3);
+	--color-chart-4: var(--chart-4);
+	--color-chart-5: var(--chart-5);
+	--color-sidebar: var(--sidebar);
+	--color-sidebar-foreground: var(--sidebar-foreground);
+	--color-sidebar-primary: var(--sidebar-primary);
+	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+	--color-sidebar-accent: var(--sidebar-accent);
+	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+	--color-sidebar-border: var(--sidebar-border);
+	--color-sidebar-ring: var(--sidebar-ring);
+	--color-success: var(--success);
+	--color-success-foreground: var(--success-foreground);
+	--color-warning: var(--warning);
+	--color-warning-foreground: var(--warning-foreground);
+	--color-info: var(--info);
+	--color-info-foreground: var(--info-foreground);
+	--color-danger: var(--danger);
+	--color-danger-foreground: var(--danger-foreground);
+
+	/* Border radius */
+	--radius-sm: calc(var(--radius) - 4px);
+	--radius-md: calc(var(--radius) - 2px);
+	--radius-lg: var(--radius);
+	--radius-xl: calc(var(--radius) + 4px);
+
+	/* Breakpoints */
+	--breakpoint-sm: 640px;
+	--breakpoint-md: 768px;
+	--breakpoint-lg: 1024px;
+	--breakpoint-xl: 1280px;
+	--breakpoint-2xl: 1536px;
+}
 
 :root {
 	/* Updated design tokens to match the design brief for developer-focused Zod playground */
-	--background: 0 0% 98%; /* Light cosmic background */
-	--foreground: 264 8% 15%; /* Deep space blue text */
-	--card: 0 0% 99%; /* Glassmorphism card with transparency */
-	--card-foreground: 264 8% 15%; /* Deep space blue card text */
-	--popover: 0 0% 99%; /* Light popover with transparency */
-	--popover-foreground: 264 8% 15%; /* Deep space blue popover text */
-	--primary: 264 8% 15%; /* Deep space blue primary */
-	--primary-foreground: 0 0% 98%; /* Light text on primary */
-	--secondary: 0 0% 92%; /* Light secondary background */
-	--secondary-foreground: 264 8% 15%; /* Deep space blue secondary text */
-	--muted: 0 0% 95%; /* Muted light background */
-	--muted-foreground: 264 4% 45%; /* Muted deep space blue text */
-	--accent: 280 15% 70%; /* Nebula purple accent */
-	--accent-foreground: 0 0% 98%; /* Light text on accent */
-	--background-accent: 280 20% 95%; /* Light accent background */
-	--foreground-accent: 280 15% 40%; /* Dark accent foreground */
-	--destructive: 0 84% 60%; /* Red for errors */
-	--destructive-foreground: 0 0% 100%; /* White text on destructive */
+	--background: hsl(0 0% 98%); /* Light cosmic background */
+	--foreground: hsl(264 8% 15%); /* Deep space blue text */
+	--card: hsl(0 0% 99%); /* Glassmorphism card with transparency */
+	--card-foreground: hsl(264 8% 15%); /* Deep space blue card text */
+	--popover: hsl(0 0% 99%); /* Light popover with transparency */
+	--popover-foreground: hsl(264 8% 15%); /* Deep space blue popover text */
+	--primary: hsl(264 8% 15%); /* Deep space blue primary */
+	--primary-foreground: hsl(0 0% 98%); /* Light text on primary */
+	--secondary: hsl(0 0% 92%); /* Light secondary background */
+	--secondary-foreground: hsl(264 8% 15%); /* Deep space blue secondary text */
+	--muted: hsl(0 0% 95%); /* Muted light background */
+	--muted-foreground: hsl(264 4% 45%); /* Muted deep space blue text */
+	--accent: hsl(280 15% 70%); /* Nebula purple accent */
+	--accent-foreground: hsl(0 0% 98%); /* Light text on accent */
+	--background-accent: hsl(280 20% 95%); /* Light accent background */
+	--foreground-accent: hsl(280 15% 40%); /* Dark accent foreground */
+	--destructive: hsl(0 84% 60%); /* Red for errors */
+	--destructive-foreground: hsl(0 0% 100%); /* White text on destructive */
 	/* Improved border visibility for better accessibility */
-	--border: 264 8% 75%; /* More visible light border */
-	--input: 0 0% 98%; /* Less transparent input background */
-	--ring: 280 15% 70%; /* More visible focus ring */
-	--chart-1: 41 85% 65%;
-	--chart-2: 0 0% 21%;
-	--chart-3: 227 20% 40%;
-	--chart-4: 280 85% 65%;
-	--chart-5: 27 85% 58%;
+	--border: hsl(264 8% 75%); /* More visible light border */
+	--input: hsl(0 0% 98%); /* Less transparent input background */
+	--ring: hsl(280 15% 70%); /* More visible focus ring */
+	--chart-1: hsl(41 85% 65%);
+	--chart-2: hsl(0 0% 21%);
+	--chart-3: hsl(227 20% 40%);
+	--chart-4: hsl(280 85% 65%);
+	--chart-5: hsl(27 85% 58%);
 	--radius: 0.5rem; /* Increased border radius for modern look */
-	--sidebar: 0 0% 97%;
-	--sidebar-foreground: 0 0% 27%;
-	--sidebar-primary: 0 0% 21%;
-	--sidebar-primary-foreground: 0 0% 100%;
-	--sidebar-accent: 280 85% 65%;
-	--sidebar-accent-foreground: 0 0% 100%;
-	--sidebar-border: 0 0% 85%;
-	--sidebar-ring: 280 85% 65%;
+	--sidebar: hsl(0 0% 97%);
+	--sidebar-foreground: hsl(0 0% 27%);
+	--sidebar-primary: hsl(0 0% 21%);
+	--sidebar-primary-foreground: hsl(0 0% 100%);
+	--sidebar-accent: hsl(280 85% 65%);
+	--sidebar-accent-foreground: hsl(0 0% 100%);
+	--sidebar-border: hsl(0 0% 85%);
+	--sidebar-ring: hsl(280 85% 65%);
 
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
@@ -78,60 +141,60 @@
 	--color-sidebar-border: var(--sidebar-border);
 	--color-sidebar-ring: var(--sidebar-ring);
 	--spacing: 0.25rem;
-	--success: 158 100% 86.2%;
-	--success-foreground: 158 100% 20.9%;
-	--warning: 83 85% 86.5%;
-	--warning-foreground: 82 85% 24.3%;
-	--info: 252 65% 95.8%;
-	--info-foreground: 252 65% 24.5%;
-	--danger: 29 85% 85.6%;
-	--danger-foreground: 28 85% 22.8%;
+	--success: hsl(158 100% 86.2%);
+	--success-foreground: hsl(158 100% 20.9%);
+	--warning: hsl(83 85% 86.5%);
+	--warning-foreground: hsl(82 85% 24.3%);
+	--info: hsl(252 65% 95.8%);
+	--info-foreground: hsl(252 65% 24.5%);
+	--danger: hsl(29 85% 85.6%);
+	--danger-foreground: hsl(28 85% 22.8%);
 }
 
 .dark {
-	--background: 264 8% 8%; /* Deep space background */
-	--foreground: 0 0% 95%; /* Bright white text */
-	--card: 264 8% 12%; /* Dark glassmorphism card */
-	--card-foreground: 0 0% 95%; /* Bright white card text */
-	--popover: 264 8% 12%; /* Dark popover with transparency */
-	--popover-foreground: 0 0% 95%; /* Bright white popover text */
-	--primary: 280 15% 70%; /* Nebula purple primary */
-	--primary-foreground: 0 0% 95%; /* Bright white on primary */
-	--secondary: 264 8% 15%; /* Dark secondary background */
-	--secondary-foreground: 0 0% 85%; /* Light secondary text */
-	--muted: 264 8% 18%; /* Muted dark background */
-	--muted-foreground: 0 0% 65%; /* Muted light text */
-	--accent: 280 15% 70%; /* Nebula purple accent */
-	--accent-foreground: 0 0% 95%; /* Bright white on accent */
-	--background-accent: 280 15% 15%; /* Dark accent background */
-	--foreground-accent: 280 15% 85%; /* Light accent foreground */
-	--destructive: 25 85% 60%; /* Cosmic red for errors */
-	--destructive-foreground: 0 0% 95%; /* Bright white on destructive */
+	--background: hsl(264 8% 8%); /* Deep space background */
+	--foreground: hsl(0 0% 95%); /* Bright white text */
+	--card: hsl(264 8% 12%); /* Dark glassmorphism card */
+	--card-foreground: hsl(0 0% 95%); /* Bright white card text */
+	--popover: hsl(264 8% 12%); /* Dark popover with transparency */
+	--popover-foreground: hsl(0 0% 95%); /* Bright white popover text */
+	--primary: hsl(280 15% 70%); /* Nebula purple primary */
+	--primary-foreground: hsl(0 0% 95%); /* Bright white on primary */
+	--secondary: hsl(264 8% 15%); /* Dark secondary background */
+	--secondary-foreground: hsl(0 0% 85%); /* Light secondary text */
+	--muted: hsl(264 8% 18%); /* Muted dark background */
+	--muted-foreground: hsl(0 0% 65%); /* Muted light text */
+	--accent: hsl(280 15% 70%); /* Nebula purple accent */
+	--accent-foreground: hsl(0 0% 95%); /* Bright white on accent */
+	--background-accent: hsl(280 15% 15%); /* Dark accent background */
+	--foreground-accent: hsl(280 15% 85%); /* Light accent foreground */
+	--destructive: hsl(25 85% 60%); /* Cosmic red for errors */
+	--destructive-foreground: hsl(0 0% 95%); /* Bright white on destructive */
 	/* Improved dark mode border visibility for better accessibility */
-	--border: 264 8% 35%; /* More visible dark border */
-	--input: 264 8% 15%; /* Less transparent dark input */
-	--ring: 280 15% 70%; /* More visible dark focus ring */
-	--chart-1: 264 85% 49%;
-	--chart-2: 162 70% 70%;
-	--chart-3: 70 85% 77%;
-	--chart-4: 304 85% 63%;
-	--chart-5: 16 85% 65%;
-	--sidebar: 264 8% 12%;
-	--sidebar-foreground: 0 0% 95%;
-	--sidebar-primary: 280 15% 70%;
-	--sidebar-primary-foreground: 0 0% 95%;
-	--sidebar-accent: 264 8% 18%;
-	--sidebar-accent-foreground: 0 0% 95%;
-	--sidebar-border: 264 8% 25%;
-	--sidebar-ring: 280 15% 70%;
-	--success: 158 100% 86.2%;
-	--success-foreground: 158 100% 20.9%;
-	--warning: 83 85% 86.5%;
-	--warning-foreground: 82 85% 24.3%;
-	--info: 252 65% 85.8%;
-	--info-foreground: 252 65% 24.5%;
-	--danger: 29 85% 85.6%;
-	--danger-foreground: 28 85% 22.8%;
+	--border: hsl(264 8% 35%); /* More visible dark border */
+	--input: hsl(264 8% 15%); /* Less transparent dark input */
+	--ring: hsl(280 15% 70%); /* More visible dark focus ring */
+	--chart-1: hsl(264 85% 49%);
+	--chart-2: hsl(162 70% 70%);
+	--chart-3: hsl(70 85% 77%);
+	--chart-4: hsl(304 85% 63%);
+	--chart-5: hsl(16 85% 65%);
+	--sidebar: hsl(264 8% 12%);
+	--sidebar-foreground: hsl(0 0% 95%);
+	--sidebar-primary: hsl(280 15% 70%);
+	--sidebar-primary-foreground: hsl(0 0% 95%);
+	--sidebar-accent: hsl(264 8% 18%);
+	--sidebar-accent-foreground: hsl(0 0% 95%);
+	--sidebar-border: hsl(264 8% 25%);
+	--sidebar-ring: hsl(280 15% 70%);
+	--success: hsl(158 100% 86.2%);
+	--success-foreground: hsl(158 100% 20.9%);
+	--warning: hsl(83 85% 86.5%);
+	--warning-foreground: hsl(82 85% 24.3%);
+	--info: hsl(252 65% 85.8%);
+	--info-foreground: hsl(252 65% 24.5%);
+	--danger: hsl(29 85% 85.6%);
+	--danger-foreground: hsl(28 85% 22.8%);
 }
 
 @layer base {
@@ -209,7 +272,7 @@
 	}
 
 	.cosmic-gradient {
-		background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%);
+		background: linear-gradient(135deg, var(--card) 0%, var(--muted) 100%);
 	}
 
 	/* Added border-input class to use proper border color instead of input background */
@@ -327,12 +390,12 @@
 [data-slot='field-group-root'][data-error='true'] textarea,
 [data-slot='field-group-root'][data-error='true'] [data-slot='select-trigger'],
 [data-slot='field-group-root'][data-error='true'] [data-slot='combobox-input-trigger'] {
-	border-color: hsl(var(--destructive)) !important;
-	outline: 1px solid hsl(var(--destructive));
+	border-color: var(--destructive) !important;
+	outline: 1px solid var(--destructive);
 	outline-offset: 0;
 }
 
 [data-slot='field-group-root'][data-error='true'] [data-slot='dropzone'] {
-	border-color: hsl(var(--destructive)) !important;
-	color: hsl(var(--destructive));
+	border-color: var(--destructive) !important;
+	color: var(--destructive);
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { Toolbar as BaseToolbar } from '@base-ui-components/react/toolbar';
+import { Toolbar as BaseToolbar } from '@base-ui/react/toolbar';
 
 import { type ButtonProps, buttonVariants } from '@/components/core-ui/button';
 

@@ -1,18 +1,18 @@
 :root {
-	--default-stepper-primary: hsl(var(--primary));
-	--default-stepper-primary-foreground: hsl(var(--primary-foreground));
-	--default-stepper-foreground: hsl(var(--foreground));
-	--default-stepper-muted-foreground: hsl(var(--muted-foreground));
-	--default-stepper-border: hsl(var(--border));
-	--default-stepper-background: hsl(var(--background));
-	--default-stepper-card: hsl(var(--card));
-	--default-stepper-muted: hsl(var(--muted));
+	--default-stepper-primary: var(--primary);
+	--default-stepper-primary-foreground: var(--primary-foreground);
+	--default-stepper-foreground: var(--foreground);
+	--default-stepper-muted-foreground: var(--muted-foreground);
+	--default-stepper-border: var(--border);
+	--default-stepper-background: var(--background);
+	--default-stepper-card: var(--card);
+	--default-stepper-muted: var(--muted);
 	--default-stepper-indicator-bg: #fff;
 }
 
 @media (prefers-color-scheme: dark) {
 	:root {
-		--default-stepper-indicator-bg: hsl(var(--card) / 1);
+		--default-stepper-indicator-bg: color-mix(in srgb, var(--card) 1, transparent);
 	}
 }
 

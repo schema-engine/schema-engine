@@ -85,7 +85,7 @@ Here's a complete template for creating a new layout component:
 
 ```tsx
 import { useLayoutContext } from '@/contexts/layout-context';
-import { cn } from '@/shadcn/lib/utils';
+import { cn } from '@/lib/utils';
 import type React from 'react';
 import './my-layout.css'; // Optional: Remove if using custom styling
 import type { MyLayoutConfig, MyLayoutProps } from './my-layout.types';

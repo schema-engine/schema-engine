@@ -1,9 +1,9 @@
 import type React from 'react';
 import { useState } from 'react';
 import { type Breakpoint, BreakpointOverrideProvider } from '../hooks/grid-hooks';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shadcn/ui/card';
-import { Button } from '@/shadcn/ui/button';
-import { Badge } from '@/shadcn/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/core-ui/card';
+import { Button } from '@/components/core-ui/button';
+import { Badge } from '@/components/core-ui/badge';
 import { cn } from '@/lib/utils';
 
 /**

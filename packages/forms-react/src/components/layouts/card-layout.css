@@ -1,17 +1,17 @@
 :root {
-	--card-layout-bg: theme('colors.gray.50');
-	--card-layout-card-bg: theme('colors.white');
-	--card-layout-border: theme('colors.gray.200');
-	--card-layout-text-primary: theme('colors.gray.900');
-	--card-layout-text-secondary: theme('colors.gray.600');
-	--card-layout-text-muted: theme('colors.gray.500');
+	--card-layout-bg: hsl(252 20% 98%);
+	--card-layout-card-bg: white;
+	--card-layout-border: hsl(252 10% 92%);
+	--card-layout-text-primary: hsl(252 80% 10%);
+	--card-layout-text-secondary: hsl(252 4% 45%);
+	--card-layout-text-muted: hsl(252 4% 55%);
 }
 
 .card-layout {
 	@apply flex;
 	background-color: var(--card-layout-bg);
 
-	@screen md {
+	@media (--breakpoint-md) {
 		@apply min-h-screen items-center justify-center p-8;
 	}
 
@@ -19,30 +19,30 @@
 		@apply w-full overflow-hidden;
 		background-color: var(--card-layout-card-bg);
 
-		@screen md {
+		@media (--breakpoint-md) {
 			@apply rounded-xl;
 		}
 
 		&--sm {
-			@screen md {
+			@media (--breakpoint-md) {
 				@apply max-w-sm;
 			}
 		}
 
 		&--md {
-			@screen md {
+			@media (--breakpoint-md) {
 				@apply max-w-md;
 			}
 		}
 
 		&--lg {
-			@screen md {
+			@media (--breakpoint-md) {
 				@apply max-w-lg;
 			}
 		}
 
 		&--xl {
-			@screen md {
+			@media (--breakpoint-md) {
 				@apply max-w-xl;
 			}
 		}
@@ -50,25 +50,25 @@
 
 	&__shadow {
 		&--sm {
-			@screen md {
+			@media (--breakpoint-md) {
 				@apply shadow-sm;
 			}
 		}
 
 		&--md {
-			@screen md {
+			@media (--breakpoint-md) {
 				@apply shadow-md;
 			}
 		}
 
 		&--lg {
-			@screen md {
+			@media (--breakpoint-md) {
 				@apply shadow-lg;
 			}
 		}
 
 		&--xl {
-			@screen md {
+			@media (--breakpoint-md) {
 				@apply shadow-xl;
 			}
 		}
@@ -102,7 +102,7 @@
 		&--sm {
 			@apply p-3;
 
-			@screen md {
+			@media (--breakpoint-md) {
 				@apply p-4;
 			}
 		}
@@ -110,7 +110,7 @@
 		&--md {
 			@apply p-4;
 
-			@screen md {
+			@media (--breakpoint-md) {
 				@apply p-6;
 			}
 		}
@@ -118,7 +118,7 @@
 		&--lg {
 			@apply p-5;
 
-			@screen md {
+			@media (--breakpoint-md) {
 				@apply p-8;
 			}
 		}
