@@ -36,7 +36,15 @@
 			"cache": false,
 			"persistent": true
 		},
+		"start:www": {
+			"dependsOn": ["^build:lib"],
+			"persistent": true
+		},
 		"@schema-engine/www#preview": {
+			"cache": false,
+			"persistent": true
+		},
+		"@schema-engine/www#start": {
 			"cache": false,
 			"persistent": true
 		}
