@@ -13,7 +13,8 @@ export interface FormEngineProviderProps {
 	engine: CoreFormEngine;
 	/**
 	 * Form library adapter - must be an adapter object implementing FormAdapter interface.
-	 * Import the adapter you want to use (e.g., rhfAdapter for React Hook Form)
+	 * Import the adapter you want to use (e.g., rhfAdapter for React Hook Form).
+	 * This is the supported extension point for integrating another form library.
 	 */
 	adapter?: FormAdapter;
 }

@@ -7,7 +7,7 @@
 
 export { FormComposer } from './builder';
 export { FormEngine } from './engine';
-export type { EngineRegistries, FormEngineSchemaMetadata } from './engine';
+export type { EngineRegistries, FormEngineSchemaArtifacts, FormEngineSchemaMetadata } from './engine';
 export { ElementRegistry, LayoutRegistry, StepperRegistry } from './registries';
 export type {
 	BuilderActionBaseContext,

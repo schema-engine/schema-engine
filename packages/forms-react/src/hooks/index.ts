@@ -1,4 +1,3 @@
-export * from '@/hooks/use-action-dispatcher';
 export * from '@/hooks/use-gdpr-consent';
 export * from '@/hooks/use-gtm-tracker';
 export * from '@/hooks/use-field';

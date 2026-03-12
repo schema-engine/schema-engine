@@ -175,40 +175,85 @@ interface UseControlledFormElementReturn {
 }
 ```
 
-## useActionDispatcher
+## useAdapterControlledFormElement
 
-Get an ActionDispatcher instance for executing actions:
+Use the adapter-aware field hook when you want the same field ergonomics without depending directly on React Hook Form internals:
 
 ```tsx
-import { useFormEngine, useActionDispatcher, useFormInstance } from '@schema-engine/forms-react';
+import { useAdapterControlledFormElement } from '@schema-engine/forms-react';
+
+function CustomField(config: FormEngine.ElementConfig) {
+	const { value, error, onChange, onBlur, fieldProps, labelProps } = useAdapterControlledFormElement(config);
+
+	return (
+		<div>
+			<label {...labelProps}>{config.label}</label>
+			<input
+				{...fieldProps}
+				value={String(value ?? '')}
+				onChange={(event) => onChange(event.target.value)}
+				onBlur={onBlur}
+			/>
+			{error ? <p>{error}</p> : null}
+		</div>
+	);
+}
+```
+
+This is the adapter-safe alternative to `useControlledFormElement()`.
+
+## useFormInstanceActions
+
+Dispatch form lifecycle actions from inside a rendered form:
+
+```tsx
+import { useFormInstanceActions } from '@schema-engine/forms-react';
 
 function MyComponent() {
-	const { engine } = useFormEngine();
-	const form = useFormInstance();
-	const dispatcher = useActionDispatcher(engine);
+	const { dispatchTrigger } = useFormInstanceActions();
 
 	const handleClick = async () => {
-		const results = await dispatcher.dispatch({
-			actions: config.actions || [],
-			trigger: 'form_submit',
-			context: {
-				formId: config.id,
-				formData: form.getValues(),
-				currentStep: 0,
-				totalSteps: config.steps.length,
-				isValid: form.formState.isValid,
-				errors: form.formState.errors,
-				form,
-			},
-		});
-		console.log(results);
+		const results = await dispatchTrigger('form_submit');
+		return results.some((result) => result.success);
 	};
 
 	return <button onClick={handleClick}>Submit</button>;
 }
 ```
 
-Inside a rendered form, prefer `useFormInstanceActions().dispatchTrigger(...)` for normal lifecycle dispatch. `useActionDispatcher` is the lower-level escape hatch when you need to build the base context yourself.
+This is the supported manual dispatch path inside rendered forms because the provider builds the execution context consistently for each trigger.
+
+## useSubmissionState
+
+Read submission lifecycle state that the provider keeps in sync with action execution:
+
+```tsx
+import { useSubmissionState } from '@schema-engine/forms-react';
+
+function SubmissionFeedback() {
+	const { submissionState, clearSubmission } = useSubmissionState();
+
+	return submissionState.status === 'error' ? (
+		<div>
+			<p>{submissionState.errors[0]?.message}</p>
+			<button onClick={clearSubmission}>Dismiss</button>
+		</div>
+	) : null;
+}
+```
+
+### Return Value
+
+```typescript
+{
+	submissionState: {
+		status: 'idle' | 'pending' | 'success' | 'error';
+		errors: Array<{ actionId: string; message: string }>;
+		successMessage: string | null;
+	};
+	clearSubmission: () => void;
+}
+```
 
 ## useConstraintLogic
 
@@ -242,6 +287,90 @@ interface ConstraintEvaluationResult {
 	isRequired: boolean;
 }
 ```
+
+## Utility Hooks
+
+### useDebounce
+
+```tsx
+import { useDebounce } from '@schema-engine/forms-react';
+
+const debouncedSearch = useDebounce((term: string) => {
+	void fetch(`/api/search?q=${encodeURIComponent(term)}`);
+}, 250);
+```
+
+### useDebouncedValue
+
+```tsx
+import { useDebouncedValue } from '@schema-engine/forms-react';
+
+const debouncedQuery = useDebouncedValue(query, 250);
+```
+
+## Grid Hooks
+
+### useBreakpoint
+
+```tsx
+import { useBreakpoint } from '@schema-engine/forms-react';
+
+const breakpoint = useBreakpoint();
+```
+
+### useFormGridStyles
+
+```tsx
+import { useFormGridStyles } from '@schema-engine/forms-react';
+
+const styles = useFormGridStyles(config.grid);
+```
+
+### useFieldGridStyles
+
+```tsx
+import { useFieldGridStyles } from '@schema-engine/forms-react';
+
+const styles = useFieldGridStyles(config.grid);
+```
+
+These hooks resolve responsive grid settings against the current breakpoint and return inline CSS style objects.
+
+## Layout And Stepper Contexts
+
+### useLayoutContext
+
+```tsx
+import { useLayoutContext } from '@schema-engine/forms-react';
+
+function CardLayout() {
+	const { step, form, config } = useLayoutContext<{ accent?: string }>();
+
+	return <section data-step={step.id} data-form={form.id} data-accent={config.accent} />;
+}
+```
+
+### useStepperContext
+
+```tsx
+import { useStepperContext } from '@schema-engine/forms-react';
+
+function CustomStepper() {
+	const { steps, currentStepIndex, navigation } = useStepperContext();
+
+	return (
+		<nav>
+			<span>{currentStepIndex + 1} / {steps.length}</span>
+			<button onClick={navigation.goToPreviousStep}>Back</button>
+			<button onClick={navigation.goToNextStep}>Next</button>
+		</nav>
+	);
+}
+```
+
+### Providers
+
+`LayoutProvider` and `StepperProvider` are also exported for custom composition scenarios, but most consumers will only use the hooks inside custom layout and stepper components.
 
 ## useGDPRConsent
 

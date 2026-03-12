@@ -102,7 +102,16 @@ const collection = engine.generateJSONSchemaCollection({
 const configSchema = engine.generateFormConfigSchema({
 	target: 'draft-2020-12',
 });
+
+const actionSchema = engine.generateActionConfigSchema('submit', {
+	target: 'draft-2020-12',
+});
+
+const standardFormSchema = engine.getFormConfigStandardSchema();
+const standardSubmitSchema = engine.getActionConfigStandardSchema('submit');
 ```
+
+The Standard JSON Schema wrappers expose the `~standard.jsonSchema.input(...)` API, which is useful when you need a validator-agnostic schema publishing surface.
 
 ## Next Steps
 

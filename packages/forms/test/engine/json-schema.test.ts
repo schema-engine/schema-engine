@@ -2,7 +2,13 @@ import { describe, test, expect } from 'bun:test';
 import { z } from 'zod';
 import { FormComposer } from '@/builder/form-composer';
 import type { InputRegistration, LayoutRegistration, StepperRegistration, BuilderActionRegistration } from '@/types';
-import { ComponentType } from '@/engine/form-engine';
+import { FormEngine } from '@/engine/form-engine';
+import { ComponentType } from '@/engine/component-type';
+import {
+	createActionConfigValidatorMap,
+	createFormEngineSchemaArtifacts,
+	type FormEngineSchemaMetadata,
+} from '@/engine/schema-artifacts';
 
 function createActionSchema<TType extends string>(type: TType, shape: z.ZodRawShape = {}) {
 	return z.object({
@@ -208,8 +214,6 @@ describe('FormEngine JSON Schema Generation', () => {
 				.build();
 
 			const schema = engine.generateJSONSchemaCollection();
-
-			console.log(schema);
 
 			expect(schema.schemas['element:text']).toBeDefined();
 			expect(schema.schemas['layout:card']).toBeDefined();
@@ -430,11 +434,6 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const schema = engine.generateJSONSchemaCollection();
 
-			console.log('\n=== Generated Schema Structure ===');
-			console.log(JSON.stringify(schema, null, 2));
-			console.log('===================================\n');
-
-			// Schema should be an object with 'schemas' property
 			expect(schema).toHaveProperty('schemas');
 			expect(typeof schema.schemas).toBe('object');
 		});
@@ -518,15 +517,10 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const schema = engine.generateJSONSchemaCollection();
 
-			console.log('\n=== Single Element Schema ===');
-			console.log(JSON.stringify(schema, null, 2));
-			console.log('============================\n');
-
 			expect(schema).toBeDefined();
 		});
 
 		test('should check if schemas are properly interlinked', () => {
-			// Create a schema that references another schema
 			const addressSchema = z.object({
 				$type: z.literal('address'),
 				street: z.string(),
@@ -536,7 +530,7 @@ describe('FormEngine JSON Schema Generation', () => {
 			const personSchema = z.object({
 				$type: z.literal('person'),
 				name: z.string(),
-				address: addressSchema, // This should create a $ref
+				address: addressSchema,
 			});
 
 			const addressReg: InputRegistration = {
@@ -556,10 +550,6 @@ describe('FormEngine JSON Schema Generation', () => {
 			const engine = new FormComposer().addElement(addressReg).addElement(personReg).build();
 
 			const schema = engine.generateJSONSchemaCollection();
-
-			console.log('\n=== Nested Schema with References ===');
-			console.log(JSON.stringify(schema, null, 2));
-			console.log('=====================================\n');
 
 			expect(schema.schemas['element:address']).toBeDefined();
 			expect(schema.schemas['element:person']).toBeDefined();
@@ -588,12 +578,6 @@ describe('FormEngine JSON Schema Generation', () => {
 			const schemaWithCustomURI = engine.generateJSONSchemaCollection({
 				uri: (id) => `https://api.example.com/schemas/${id}.json`,
 			});
-
-			console.log('\n=== Schema with Default URI ===');
-			console.log(JSON.stringify(schemaWithDefaultURI, null, 2));
-			console.log('\n=== Schema with Custom URI ===');
-			console.log(JSON.stringify(schemaWithCustomURI, null, 2));
-			console.log('===============================\n');
 
 			expect(schemaWithDefaultURI).toBeDefined();
 			expect(schemaWithCustomURI).toBeDefined();
@@ -645,11 +629,6 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const schema = engine.generateJSONSchemaCollection();
 
-			console.log('\n=== Complete Schema with All Types ===');
-			console.log(JSON.stringify(schema, null, 2));
-			console.log('======================================\n');
-
-			// Check structure
 			expect(schema).toHaveProperty('schemas');
 			expect(Object.keys(schema.schemas)).toContain('element:text');
 			expect(Object.keys(schema.schemas)).toContain('layout:card');
@@ -677,28 +656,182 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const configSchema = engine.generateFormConfigSchema();
 
-			console.log('\n=== Form Config Schema ===');
-			console.log(JSON.stringify(configSchema, null, 2));
-			console.log('==========================\n');
-
-			// Should have form structure
 			expect(configSchema.$id).toBe('form-config-schema');
 			expect(configSchema.type).toBe('object');
 			expect(configSchema.properties).toHaveProperty('id');
-			expect(configSchema.properties).toHaveProperty('elements');
+			expect(configSchema.properties).toHaveProperty('steps');
 			expect(configSchema.required).toContain('id');
-			expect(configSchema.required).toContain('elements');
+			expect(configSchema.required).toContain('steps');
 
-			// Should have $defs with components
 			expect(configSchema.$defs).toBeDefined();
 			expect(configSchema.$defs['element:text']).toBeDefined();
 
-			// Elements should reference component schemas
-			// When there's only one element, Zod uses direct $ref instead of anyOf
-			const elementsItems = configSchema.properties.elements.items;
+			const elementsItems = configSchema.properties.steps.items.properties.elements.items;
 			const hasDirectRef = elementsItems.$ref === '#/$defs/element:text';
 			const hasAnyOf = elementsItems.anyOf?.[0]?.$ref === '#/$defs/element:text';
 			expect(hasDirectRef || hasAnyOf).toBe(true);
+		});
+
+		test('should expose schema artifacts through the engine API', () => {
+			const textInputSchema = z.object({
+				$type: z.literal('text'),
+				label: z.string(),
+			});
+
+			const engine = new FormComposer()
+				.addElement({
+					$type: 'text',
+					schema: textInputSchema,
+					metadata: { name: 'Text Input', category: 'input' },
+					render: () => null,
+				})
+				.build();
+
+			const artifacts = engine.getSchemaArtifacts();
+
+			expect(artifacts.metadataRegistry).toBe(engine.getSchemaRegistry());
+			expect(artifacts.formConfigValidator).toBe(engine.getFormConfigSchema());
+			expect(artifacts.jsonSchema.formConfigStandardSchema).toBe(engine.getFormConfigStandardSchema());
+		});
+
+		test('should expose form config as Standard JSON Schema', () => {
+			const textInputSchema = z.object({
+				$type: z.literal('text'),
+				label: z.string(),
+			});
+
+			const engine = new FormComposer()
+				.addElement({
+					$type: 'text',
+					schema: textInputSchema,
+					metadata: { name: 'Text Input', category: 'input' },
+					render: () => null,
+				})
+				.build();
+
+			const standardSchema = engine.getFormConfigStandardSchema();
+			const schema = standardSchema['~standard'].jsonSchema.input({
+				target: 'draft-2020-12',
+			});
+
+			expect(standardSchema['~standard'].version).toBe(1);
+			expect(standardSchema['~standard'].vendor).toBe('@schema-engine/forms');
+			expect(schema).toHaveProperty('$id', 'form-config-schema');
+			expect(schema).toHaveProperty('properties.steps');
+		});
+
+		test('should expose registered action configs as Standard JSON Schema', () => {
+			const actionSchema = createActionSchema('submit', {
+				endpoint: z.url(),
+				method: z.enum(['GET', 'POST']).optional(),
+			});
+
+			const engine = new FormComposer()
+				.addAction({
+					$type: 'submit',
+					schema: actionSchema,
+					metadata: { name: 'Submit Action' },
+					execute: async () => ({ success: true }),
+				})
+				.build();
+
+			const standardSchema = engine.getActionConfigStandardSchema('submit');
+			const schema = standardSchema?.['~standard'].jsonSchema.input({
+				target: 'draft-2020-12',
+			});
+
+			expect(standardSchema?.['~standard'].version).toBe(1);
+			expect(standardSchema?.['~standard'].vendor).toBe('@schema-engine/forms');
+			expect(schema).toHaveProperty('$id', 'action:submit');
+			expect(schema).toHaveProperty('properties.$type.const', 'submit');
+			expect(engine.generateActionConfigSchema('submit')).toHaveProperty('$id', 'action:submit');
+		});
+
+		test('should preserve action schema support when resolving legacy engine registries', () => {
+			const actionSchema = createActionSchema('submit', {
+				endpoint: z.string().url(),
+			});
+
+			const schemaRegistry = z.registry<FormEngineSchemaMetadata>();
+			schemaRegistry.add(actionSchema, {
+				id: 'action:submit',
+				componentType: ComponentType.Action,
+				title: 'Submit Action',
+			});
+
+			const engine = new FormEngine({
+				elements: new Map(),
+				layouts: new Map(),
+				steppers: new Map(),
+				actions: new Map([
+					[
+						'submit',
+						{
+							$type: 'submit',
+							schema: actionSchema,
+							metadata: { name: 'Submit Action' },
+							execute: async () => ({ success: true }),
+						} satisfies BuilderActionRegistration,
+					],
+				]),
+				schemaRegistry,
+				formConfigSchema: z.object({
+					id: z.string(),
+					steps: z.array(z.object({ id: z.string(), title: z.string(), elements: z.array(z.any()) })),
+				}),
+			});
+
+			expect(engine.getActionConfigStandardSchema('submit')).toBeDefined();
+			expect(engine.generateActionConfigSchema('submit')).toHaveProperty('$id', 'action:submit');
+		});
+
+		test('should allow custom schema artifact naming conventions', () => {
+			const actionSchema = createActionSchema('submit', {
+				endpoint: z.string().url(),
+			});
+			const formConfigSchema = z.object({
+				id: z.string(),
+				steps: z.array(z.object({ id: z.string(), title: z.string(), elements: z.array(z.any()) })),
+			});
+			const schemaRegistry = z.registry<FormEngineSchemaMetadata>();
+			schemaRegistry.add(actionSchema, {
+				id: 'action:submit',
+				componentType: ComponentType.Action,
+				title: 'Submit Action',
+			});
+
+			const schemaArtifacts = createFormEngineSchemaArtifacts(
+				schemaRegistry,
+				formConfigSchema,
+				{
+					vendor: 'internal-test-vendor',
+					formConfigSchemaId: 'custom-form-config',
+					actionSchemaId: (actionType) => `custom-action:${actionType}`,
+				},
+				createActionConfigValidatorMap([
+					{
+						$type: 'submit',
+						schema: actionSchema,
+						metadata: { name: 'Submit Action' },
+						execute: async () => ({ success: true }),
+					} satisfies BuilderActionRegistration,
+				]),
+			);
+
+			const formSchema = schemaArtifacts.jsonSchema.formConfigStandardSchema['~standard'].jsonSchema.input({
+				target: 'draft-2020-12',
+			});
+			const actionStandardSchema = schemaArtifacts.jsonSchema.actionConfigStandardSchemas.submit;
+			const actionConfigSchema = actionStandardSchema['~standard'].jsonSchema.input({
+				target: 'draft-2020-12',
+			});
+
+			expect(schemaArtifacts.jsonSchema.formConfigStandardSchema['~standard'].vendor).toBe(
+				'internal-test-vendor',
+			);
+			expect(formSchema).toHaveProperty('$id', 'custom-form-config');
+			expect(actionStandardSchema['~standard'].vendor).toBe('internal-test-vendor');
+			expect(actionConfigSchema).toHaveProperty('$id', 'custom-action:submit');
 		});
 
 		test('should validate actual form config structure', () => {
@@ -732,12 +865,13 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			expect(configSchema.properties).toHaveProperty('id');
 			expect(configSchema.properties).toHaveProperty('title');
-			expect(configSchema.properties).toHaveProperty('elements');
-			expect(configSchema.properties).toHaveProperty('layout');
-			expect(configSchema.properties.elements.type).toBe('array');
+			expect(configSchema.properties).toHaveProperty('steps');
+			expect(configSchema.properties.steps.type).toBe('array');
+			expect(configSchema.properties.steps.items.properties).toHaveProperty('layout');
+			expect(configSchema.properties.steps.items.properties).toHaveProperty('elements');
 		});
 
-		test('should include metadata field in config schema', () => {
+		test('should not expose legacy top-level form fields in config schema', () => {
 			const textReg: InputRegistration = {
 				$type: 'text',
 				schema: z.object({ $type: z.literal('text') }),
@@ -748,8 +882,9 @@ describe('FormEngine JSON Schema Generation', () => {
 			const engine = new FormComposer().addElement(textReg).build();
 			const configSchema = engine.generateFormConfigSchema();
 
-			expect(configSchema.properties).toHaveProperty('metadata');
-			expect(configSchema.properties.metadata.type).toBe('object');
+			expect(configSchema.properties).not.toHaveProperty('metadata');
+			expect(configSchema.properties).not.toHaveProperty('elements');
+			expect(configSchema.properties).not.toHaveProperty('layout');
 		});
 
 		test('should work with multiple elements and all component types', () => {
@@ -794,16 +929,17 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const configSchema = engine.generateFormConfigSchema();
 
-			expect(configSchema.properties.elements.items.anyOf).toHaveLength(2);
+			expect(configSchema.properties.steps.items.properties.elements.items.anyOf).toHaveLength(2);
 
 			expect(
-				configSchema.properties.layout.$ref || configSchema.properties.layout.anyOf?.[0]?.$ref,
+				configSchema.properties.steps.items.properties.layout.$ref ||
+					configSchema.properties.steps.items.properties.layout.anyOf?.[0]?.$ref,
 			).toBeDefined();
 			expect(
 				configSchema.properties.stepper.$ref || configSchema.properties.stepper.anyOf?.[0]?.$ref,
 			).toBeDefined();
 
-			const actionsItems = configSchema.properties.actions.items;
+			const actionsItems = configSchema.properties.steps.items.properties.actions.items;
 			expect(
 				actionsItems.$ref === '#/$defs/action:submit' ||
 					actionsItems.anyOf?.[0]?.$ref === '#/$defs/action:submit',

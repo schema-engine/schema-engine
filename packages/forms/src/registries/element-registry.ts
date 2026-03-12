@@ -1,7 +1,7 @@
 import type { InputRegistration, StaticRegistration, ElementMetadata } from '@/types';
 import type { ComponentRegistration } from '@schema-engine/registry';
 import { ComponentRegistry } from '@schema-engine/registry';
-import { ComponentType } from '@/engine';
+import { ComponentType } from '@/engine/component-type';
 
 /**
  * Base type for all element registrations.

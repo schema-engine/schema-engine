@@ -469,32 +469,18 @@ function CustomField(config) {
 }
 ```
 
-### useActionDispatcher
+### useFormInstanceActions
 
-Execute form actions manually:
+Execute form lifecycle actions manually from inside a rendered form:
 
 ```tsx
-import { useActionDispatcher, useFormEngine, useFormInstance } from '@schema-engine/forms-react';
+import { useFormInstanceActions } from '@schema-engine/forms-react';
 
 function MyComponent() {
-	const { engine } = useFormEngine();
-	const form = useFormInstance();
-	const dispatcher = useActionDispatcher(engine);
+	const { dispatchTrigger } = useFormInstanceActions();
 
 	const handleCustomAction = async () => {
-		const result = await dispatcher.dispatch({
-			actions: [{ $type: 'submit', id: 'my-action', triggers: ['form_submit'] }],
-			trigger: 'form_submit',
-			context: {
-				formId: 'demo-form',
-				formData: form.getValues(),
-				currentStep: 0,
-				totalSteps: 1,
-				isValid: form.formState.isValid,
-				errors: form.formState.errors,
-				form,
-			},
-		});
+		const result = await dispatchTrigger('form_submit');
 
 		if (result[0]?.success) {
 			console.log('Action executed successfully');

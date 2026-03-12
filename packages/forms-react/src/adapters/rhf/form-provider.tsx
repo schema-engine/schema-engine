@@ -1,7 +1,6 @@
 import { FormProvider as RHFFormProvider, useForm } from 'react-hook-form';
 import { useMemo } from 'react';
 import type { FormProviderProps } from '../types';
-import { useActionDispatcher } from '@/hooks/use-action-dispatcher';
 import { useFormEngine } from '@/hooks/use-form-context';
 import { useFormValidationResolver } from './hooks/use-form-validation-resolver';
 import { FormInstanceContext, type FormInstanceContextValue } from '@/components/provider';
@@ -12,6 +11,7 @@ import { useFormActionDispatchers } from './hooks/use-form-action-dispatchers';
 import { useFormMountEffect } from './hooks/use-form-mount-effect';
 import { useFormWatcher } from './hooks/use-form-watcher';
 import { useFormSubmitHandler } from './hooks/use-form-submit-handler';
+import { ActionDispatcher } from '@schema-engine/actions';
 
 /**
  * React Hook Form adapter implementation
@@ -25,7 +25,7 @@ export function FormProvider({
 	onAction,
 }: FormProviderProps) {
 	const { engine } = useFormEngine();
-	const actionExecutor = useActionDispatcher(engine);
+	const actionExecutor = useMemo(() => new ActionDispatcher(engine), [engine]);
 	const submission = useSubmissionStateManager();
 
 	const allFields = useMemo(() => {

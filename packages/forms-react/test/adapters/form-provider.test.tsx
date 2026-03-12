@@ -1,8 +1,9 @@
-import { describe, it, expect, mock, beforeEach } from 'bun:test';
+import { describe, it, expect, mock, beforeEach, spyOn } from 'bun:test';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { FormProvider } from '../../src/adapters/rhf/form-provider';
 import type { FormConfig } from '@schema-engine/forms/schemas';
 import { mockDispatch, setupActionExecutorMock } from '../utils/use-action-executor.mock';
+import { useFormContext as useReactHookFormContext } from 'react-hook-form';
 
 setupActionExecutorMock();
 
@@ -51,6 +52,11 @@ describe('FormProvider', () => {
 	beforeEach(() => {
 		mockDispatch.mockClear();
 	});
+
+	function RegisteredInput() {
+		const form = useReactHookFormContext();
+		return <input data-testid="field1" {...form.register('field1')} />;
+	}
 
 	it('should fire form_mount on mount', async () => {
 		render(
@@ -103,5 +109,36 @@ describe('FormProvider', () => {
 		const formSubmitIndex = calls.findIndex((call) => call[0]?.trigger === 'form_submit');
 
 		expect(submitStartIndex).toBeLessThan(formSubmitIndex);
+	});
+
+	it('should keep consumer onChange callbacks non-blocking when form_change actions fail', async () => {
+		const consoleError = spyOn(console, 'error').mockImplementation(() => undefined);
+		const onChange = mock(() => undefined);
+
+		mockDispatch.mockImplementation((input) => {
+			if (input.trigger === 'form_change') {
+				return Promise.reject(new Error('form_change failed'));
+			}
+
+			return Promise.resolve([{ success: true }]);
+		});
+
+		render(
+			<FormProvider config={config} onChange={onChange}>
+				<RegisteredInput />
+			</FormProvider>,
+		);
+
+		fireEvent.change(screen.getByTestId('field1'), { target: { value: 'new value' } });
+
+		await waitFor(() => {
+			expect(onChange).toHaveBeenCalled();
+		});
+
+		await waitFor(() => {
+			expect(consoleError).toHaveBeenCalledWith('Form change action execution failed:', expect.any(Error));
+		});
+
+		consoleError.mockRestore();
 	});
 });

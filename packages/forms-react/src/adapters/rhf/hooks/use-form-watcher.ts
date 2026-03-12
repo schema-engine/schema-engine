@@ -14,6 +14,9 @@ interface UseFormWatcherOptions {
 /**
  * Watches form changes and triggers form_change actions.
  * Handles both action dispatching and user-provided onChange callbacks.
+ *
+ * Policy: form_change actions are best-effort. Failures are logged but do not
+ * block consumer onChange callbacks or form state updates.
  */
 export function useFormWatcher({ control, config, onChange, dispatchTrigger }: UseFormWatcherOptions): void {
 	const handleFormChange = useCallback(

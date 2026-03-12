@@ -1,6 +1,6 @@
 import type { LayoutRegistration } from '@/types';
 import { ComponentRegistry } from '@schema-engine/registry';
-import { ComponentType } from '@/engine';
+import { ComponentType } from '@/engine/component-type';
 
 /**
  * Layout Registry

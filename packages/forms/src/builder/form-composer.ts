@@ -6,10 +6,17 @@ import type {
 	BuilderActionRegistration,
 	BuilderActionBaseContext,
 } from '@/types';
-import type { FormEngineSchemaMetadata } from '@/engine/form-engine';
-import { ComponentType, FormEngine } from '@/engine/form-engine';
+import { FormEngine } from '@/engine/form-engine';
+import { ComponentType } from '@/engine/component-type';
+import {
+	createActionConfigValidatorMap,
+	createFormEngineSchemaArtifacts,
+	type FormEngineSchemaMetadata,
+	type FormEngineSchemaMetadataRegistry,
+} from '@/engine/schema-artifacts';
 import { logger } from '@/lib/logger';
 import { ElementRegistry, LayoutRegistry, StepperRegistry } from '@/registries';
+import { GridLayoutConfigSchema } from '@/schemas/base-field';
 import { ActionRegistry, type ActionConfigBase } from '@schema-engine/actions';
 import { z } from 'zod';
 import type { ExtractSchemaType, ExtractTypeId } from './types.utils';
@@ -66,7 +73,6 @@ export class FormComposer<
 	 *
 	 * @example
 	 * ```typescript
-	 * // Type inferred from registration's $type property
 	 * builder.addElement(InputElementRegistration)
 	 * ```
 	 */
@@ -222,15 +228,36 @@ export class FormComposer<
 		const steppersUnion = this.createUnionSchema(stepperSchemas);
 		const actionsUnion = this.createUnionSchema(actionSchemas);
 
+		const formStepSchema = z.object({
+			id: z.string(),
+			title: z.string(),
+			description: z.string().optional(),
+			icon: z.string().optional(),
+			layout: z.optional(layoutSchemas.length > 0 ? layoutsUnion : z.never()),
+			elements: z.array(elementsUnion),
+			rules: z.any().optional(),
+			constraints: z.array(z.any()).optional(),
+			className: z.string().optional(),
+			style: z.record(z.string(), z.any()).optional(),
+			onStepEnter: z.array(actionsUnion).optional(),
+			onStepLeave: z.array(actionsUnion).optional(),
+			onStepValidate: z.array(actionsUnion).optional(),
+			actions: z.array(actionsUnion).optional(),
+		});
+
 		return z.object({
 			id: z.string().describe('Unique identifier for the form'),
 			title: z.string().optional().describe('Display title of the form'),
 			description: z.string().optional().describe('Description of the form purpose'),
-			elements: z.array(elementsUnion).min(1).describe('Array of form elements to render'),
-			layout: layoutSchemas.length > 0 ? layoutsUnion.optional() : z.object({}).optional(),
-			stepper: stepperSchemas.length > 0 ? steppersUnion.optional() : z.object({}).optional(),
-			actions: actionSchemas.length > 0 ? z.array(actionsUnion).optional() : z.array(z.object({})).optional(),
-			metadata: z.object({}).catchall(z.unknown()).optional().describe('Additional metadata for the form'),
+			steps: z.array(formStepSchema),
+			stepper: z.optional(stepperSchemas.length > 0 ? steppersUnion : z.never()),
+			grid: z.lazy(() => GridLayoutConfigSchema).optional(),
+			mode: z.enum(['wizard', 'free']).optional().default('wizard'),
+			validationMode: z.enum(['onSubmit', 'onChange', 'onBlur', 'all']).optional(),
+			reValidateMode: z.enum(['onSubmit', 'onChange', 'onBlur']).optional(),
+			className: z.string().optional(),
+			style: z.record(z.string(), z.any()).optional(),
+			actions: z.array(actionsUnion).optional(),
 		});
 	}
 
@@ -243,8 +270,6 @@ export class FormComposer<
 	 * const baseBuilder = new FormComposer()
 	 *   .addElement(InputElement)
 	 *   .addElement(TextareaElement);
-	 *
-	 * // Clone and extend with actions
 	 * const extendedBuilder = baseBuilder.clone()
 	 *   .addAction(submitAction)
 	 *   .addAction(notificationAction);
@@ -294,9 +319,7 @@ export class FormComposer<
 	 *
 	 * @returns FormEngine configured with all registered components and actions
 	 */
-	build(
-		zodRegistry?: ReturnType<typeof z.registry<FormEngineSchemaMetadata>>,
-	): FormEngine<TElements, TLayouts, TSteppers, TActions> {
+	build(zodRegistry?: FormEngineSchemaMetadataRegistry): FormEngine<TElements, TLayouts, TSteppers, TActions> {
 		logger.debug('Building FormEngine', {
 			elements: this.elementRegistry.size,
 			layouts: this.layoutRegistry.size,
@@ -336,12 +359,20 @@ export class FormComposer<
 		}));
 
 		const formConfigSchema = this.createFormConfigSchema();
+		const actionConfigValidators = createActionConfigValidatorMap(this.actionRegistry.getAll());
+		const schemaArtifacts = createFormEngineSchemaArtifacts(
+			schemaRegistry,
+			formConfigSchema,
+			undefined,
+			actionConfigValidators,
+		);
 
 		return new FormEngine({
 			elements: this.elementRegistry.getMap(),
 			layouts: this.layoutRegistry.getMap(),
 			steppers: this.stepperRegistry.getMap(),
 			actions: this.actionRegistry.getMap(),
+			schemaArtifacts,
 			schemaRegistry,
 			formConfigSchema,
 		});

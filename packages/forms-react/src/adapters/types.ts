@@ -44,7 +44,12 @@ export interface FormProviderProps<TFormData = Record<string, unknown>> {
 }
 
 /**
- * Interface for form adapter implementation
+ * Interface for form adapter implementation.
+ *
+ * Adapters are the stable integration boundary for form libraries.
+ * Field-level validation should be driven through the adapter's form context
+ * (`trigger`, `setValue`, `setFocus`) rather than adapter-specific helper
+ * methods so different implementations can stay aligned.
  */
 export interface FormAdapter<TFormData = Record<string, unknown>> {
 	/** Hook to access form context (values, errors, state) */
@@ -55,8 +60,4 @@ export interface FormAdapter<TFormData = Record<string, unknown>> {
 	useWatchField: <TWatchValue = unknown>(name: string | string[]) => TWatchValue;
 	/** The FormProvider component to wrap the form */
 	FormProvider: React.ComponentType<FormProviderProps<TFormData>>;
-	/** Function to validate a single field */
-	validateField: (name: string) => Promise<boolean>;
-	/** Function to validate multiple fields */
-	validateFields: (names: string[]) => Promise<boolean>;
 }

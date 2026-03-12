@@ -40,16 +40,19 @@ class FormEngine<TElements, TLayouts, TSteppers, TActions> {
 	// Elements
 	getElement(type: string): ElementRegistration | undefined;
 	getAllElements(): ElementRegistration[];
+	getElementIds(): string[];
 	hasElement(type: string): boolean;
 
 	// Layouts
 	getLayout(type: string): LayoutRegistration | undefined;
 	getAllLayouts(): LayoutRegistration[];
+	getLayoutIds(): string[];
 	hasLayout(type: string): boolean;
 
 	// Steppers
 	getStepper(type: string): StepperRegistration | undefined;
 	getAllSteppers(): StepperRegistration[];
+	getStepperIds(): string[];
 	hasStepper(type: string): boolean;
 
 	// Actions
@@ -59,15 +62,56 @@ class FormEngine<TElements, TLayouts, TSteppers, TActions> {
 	hasAction(type: string): boolean;
 
 	// Schema
+	getSchemaArtifacts(): FormEngineSchemaArtifacts;
+	getSchemaRegistry(): FormEngineSchemaMetadataRegistry;
 	getFormConfigSchema(): z.ZodType<FormConfig>;
-	generateJSONSchemaCollection(opts?: { target?: string }): object;
-	generateFormConfigSchema(opts?: { target?: string }): object;
+	getFormConfigStandardSchema(): StandardJSONSchemaV1;
+	getActionConfigStandardSchema(actionType: string): StandardJSONSchemaV1 | undefined;
+	generateJSONSchemaCollection(opts?: {
+		target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0';
+		uri?: (id: string) => string;
+	}): JSONSchemaObject;
+	generateFormConfigSchema(opts?: {
+		target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0';
+	}): JSONSchemaObject;
+	generateActionConfigSchema(
+		actionType: string,
+		opts?: { target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0' },
+	): JSONSchemaObject | undefined;
 
 	// Utilities
 	getSummary(): EngineSummary;
 	toComposer(): FormComposer<...>;
 }
 ```
+
+### Schema Artifact Types
+
+```typescript
+interface FormEngineSchemaArtifacts {
+	metadataRegistry: FormEngineSchemaMetadataRegistry;
+	formConfigValidator: z.ZodTypeAny;
+	jsonSchema: FormEngineJSONSchemaSerializer;
+}
+
+interface FormEngineJSONSchemaSerializer {
+	generateCollection(options?: {
+		target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0';
+		uri?: (id: string) => string;
+	}): JSONSchemaObject;
+	generateFormConfig(options?: {
+		target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0';
+	}): JSONSchemaObject;
+	generateActionConfig(
+		actionType: string,
+		options?: { target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0' },
+	): JSONSchemaObject | undefined;
+	formConfigStandardSchema: StandardJSONSchemaV1;
+	actionConfigStandardSchemas: Record<string, StandardJSONSchemaV1>;
+}
+```
+
+Use `getSchemaArtifacts()` when you want the raw validator registry plus the JSON Schema and Standard JSON Schema serializer surface from one place.
 
 ## Types
 

@@ -103,13 +103,13 @@ const formConfig: FormConfig = {
 
 ## Creating a Custom Layout
 
-Custom layouts use the internal `useLayoutContext` hook to access form and step data.
+Custom layouts use the exported `useLayoutContext` hook to access form and step data.
 
 ### Step 1: Create the Layout Component
 
 ```tsx
 // my-layout.tsx
-import { useLayoutContext } from '@schema-engine/forms-react/contexts';
+import { useLayoutContext } from '@schema-engine/forms-react';
 
 interface MyLayoutConfig {
 	$type: 'my-layout';

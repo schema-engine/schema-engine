@@ -125,11 +125,26 @@ function useControlledFormElement(config: ElementConfig): {
 };
 ```
 
-### useActionDispatcher
+### useAdapterControlledFormElement
 
 ```typescript
-function useActionDispatcher(engine: FormEngine): ActionDispatcher;
+function useAdapterControlledFormElement(config: ElementConfig): {
+	value: unknown;
+	error: string | undefined;
+	isRequired: boolean;
+	onChange: (value: unknown) => void;
+	onBlur: () => void;
+	fieldProps: object;
+	labelProps: object;
+	errorProps: object | null;
+	containerStyles: object;
+	gridStyles: object;
+	config: ElementConfig;
+	combineHandlers: <T>(adapter: (v: T) => void, props?: (v: T) => void) => (v: T) => void;
+};
 ```
+
+Adapter-aware alternative to `useControlledFormElement()` for non-RHF adapters.
 
 ### useConstraintLogic
 
@@ -142,6 +157,19 @@ function useConstraintLogic(
 	isVisible: boolean;
 	isDisabled: boolean;
 	isRequired: boolean;
+};
+```
+
+### useSubmissionState
+
+```typescript
+function useSubmissionState(): {
+	submissionState: {
+		status: 'idle' | 'pending' | 'success' | 'error';
+		errors: Array<{ actionId: string; message: string }>;
+		successMessage: string | null;
+	};
+	clearSubmission: () => void;
 };
 ```
 
@@ -166,6 +194,92 @@ function useGTMTracker(): {
 	pushFormEvent: (eventType: string, formData?: Record<string, any>, metadata?: Record<string, any>) => void;
 	initialize: (containerId: string) => void;
 };
+```
+
+### useDebounce
+
+```typescript
+function useDebounce<T extends (...args: any[]) => void>(
+	callback: T,
+	delay: number,
+): (...args: Parameters<T>) => void;
+```
+
+### useDebouncedValue
+
+```typescript
+function useDebouncedValue<T>(value: T, delay: number): T;
+```
+
+### useBreakpoint
+
+```typescript
+type Breakpoint = 'default' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+
+function useBreakpoint(breakpoints?: Record<Breakpoint, number>): Breakpoint;
+```
+
+### useFormGridStyles
+
+```typescript
+function useFormGridStyles(gridConfig?: GridLayoutConfig): React.CSSProperties;
+```
+
+### useFieldGridStyles
+
+```typescript
+function useFieldGridStyles(fieldGridConfig?: ElementGridConfig): React.CSSProperties;
+```
+
+## Context Helpers
+
+### useLayoutContext
+
+```typescript
+function useLayoutContext<TConfig = Record<string, any>>(): {
+	step: {
+		id: string;
+		title?: string;
+		description?: string;
+		index?: number;
+		total?: number;
+	};
+	form: {
+		id: string;
+		title?: string;
+		description?: string;
+	};
+	config: TConfig;
+};
+```
+
+### useStepperContext
+
+```typescript
+function useStepperContext(): {
+	steps: StepData[];
+	currentStepIndex: number;
+	navigation: StepperNavigation;
+	form: {
+		id: string;
+		title?: string;
+		description?: string;
+		isSubmitting?: boolean;
+	};
+	config: Record<string, any>;
+};
+```
+
+### LayoutProvider
+
+```tsx
+<LayoutProvider value={layoutContextValue}>{children}</LayoutProvider>
+```
+
+### StepperProvider
+
+```tsx
+<StepperProvider value={stepperContextValue}>{children}</StepperProvider>
 ```
 
 ## Types

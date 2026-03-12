@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { z } from 'zod';
 import type { FieldValues, ResolverResult } from 'react-hook-form';
 import { createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation/utils';
+import { getValueAtPath } from '@/lib/path-utils';
 
 /**
  * Recursively collects all fields with validation rules from the element tree
@@ -55,13 +56,6 @@ function getAllFieldPaths(values: FieldValues, templatePath: string): string[] {
 
 	traverse(values, [], parts);
 	return paths;
-}
-
-/**
- * Gets a value from an object using a dot-notation path
- */
-function getValueAtPath(obj: any, path: string): any {
-	return path.split('.').reduce((current, key) => current?.[key], obj);
 }
 
 /**

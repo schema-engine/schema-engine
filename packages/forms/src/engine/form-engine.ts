@@ -11,27 +11,12 @@ import { FormComposer } from '@/builder/form-composer';
 import { ElementRegistry, LayoutRegistry, StepperRegistry } from '@/registries';
 import { ActionRegistry } from '@schema-engine/actions';
 import { logger } from '@/lib/logger';
-import { z, type GlobalMeta } from 'zod';
+import type { StandardJSONSchemaV1 } from '@/lib/standard-json-schema';
+import { z } from 'zod';
 import { FormConfigBuilder } from '@/builder/form-config-builder';
-
-export const ComponentType = {
-	Element: 'element',
-	Layout: 'layout',
-	Stepper: 'stepper',
-	Action: 'action',
-} as const;
-
-export type ComponentType = (typeof ComponentType)[keyof typeof ComponentType];
-
-/**
- * Metadata for form engine JSON Schema generation.
- * Used across all component types (elements, layouts, steppers, actions).
- */
-export interface FormEngineSchemaMetadata extends GlobalMeta {
-	componentType: ComponentType;
-	category?: string;
-	examples?: unknown[];
-}
+import type { FormEngineSchemaArtifacts, FormEngineSchemaMetadataRegistry } from './schema-artifacts';
+import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from './schema-artifacts';
+export * from './component-type';
 
 /**
  * Engine registries - internal storage for all registered components.
@@ -41,8 +26,26 @@ export interface EngineRegistries {
 	layouts: Map<string, LayoutRegistration<any, any, any>>;
 	steppers: Map<string, StepperRegistration<any, any, any>>;
 	actions: Map<string, BuilderActionRegistration>;
-	schemaRegistry: ReturnType<typeof z.registry<FormEngineSchemaMetadata>>;
-	formConfigSchema: z.ZodObject<any>;
+	schemaArtifacts?: FormEngineSchemaArtifacts;
+	schemaRegistry?: FormEngineSchemaMetadataRegistry;
+	formConfigSchema?: z.ZodTypeAny;
+}
+
+function resolveSchemaArtifacts(registries: EngineRegistries): FormEngineSchemaArtifacts {
+	if (registries.schemaArtifacts) {
+		return registries.schemaArtifacts;
+	}
+
+	if (!registries.schemaRegistry || !registries.formConfigSchema) {
+		throw new Error('FormEngine requires schemaArtifacts or both schemaRegistry and formConfigSchema');
+	}
+
+	return createFormEngineSchemaArtifacts(
+		registries.schemaRegistry,
+		registries.formConfigSchema,
+		undefined,
+		createActionConfigValidatorMap(registries.actions.values()),
+	);
 }
 
 /**
@@ -71,16 +74,21 @@ export class FormEngine<
 	TActions extends Record<string, unknown> = Record<never, unknown>,
 > {
 	private readonly registries: EngineRegistries;
+	private readonly schemaArtifacts: FormEngineSchemaArtifacts;
 
 	constructor(registries: EngineRegistries) {
+		const schemaArtifacts = resolveSchemaArtifacts(registries);
+
 		this.registries = {
 			elements: new Map(registries.elements),
 			layouts: new Map(registries.layouts),
 			steppers: new Map(registries.steppers),
 			actions: new Map(registries.actions),
-			schemaRegistry: registries.schemaRegistry,
-			formConfigSchema: registries.formConfigSchema,
+			schemaArtifacts,
+			schemaRegistry: schemaArtifacts.metadataRegistry,
+			formConfigSchema: schemaArtifacts.formConfigValidator,
 		};
+		this.schemaArtifacts = schemaArtifacts;
 
 		logger.debug('FormEngine initialized', {
 			elements: this.registries.elements.size,
@@ -227,10 +235,35 @@ export class FormEngine<
 	}
 
 	/**
+	 * Get the schema artifacts used by the engine.
+	 * This exposes the serializer boundary as a single object so callers can use
+	 * advanced schema capabilities without the engine leaking implementation details.
+	 */
+	getSchemaArtifacts() {
+		return this.schemaArtifacts;
+	}
+
+	/**
+	 * Get the Standard JSON Schema-compatible form-config schema object.
+	 * The returned wrapper follows the `~standard.jsonSchema.input/output` shape.
+	 */
+	getFormConfigStandardSchema(): StandardJSONSchemaV1 {
+		return this.schemaArtifacts.jsonSchema.formConfigStandardSchema;
+	}
+
+	/**
+	 * Get the Standard JSON Schema-compatible config schema object for a registered action.
+	 * Returns `undefined` when the action type is not registered in this engine.
+	 */
+	getActionConfigStandardSchema(actionType: string): StandardJSONSchemaV1 | undefined {
+		return this.schemaArtifacts.jsonSchema.actionConfigStandardSchemas[actionType];
+	}
+
+	/**
 	 * Get the schema registry for JSON Schema generation.
 	 */
 	getSchemaRegistry() {
-		return this.registries.schemaRegistry;
+		return this.schemaArtifacts.metadataRegistry;
 	}
 
 	/**
@@ -252,17 +285,13 @@ export class FormEngine<
 	 *   .build();
 	 *
 	 * const collection = engine.generateJSONSchemaCollection();
-	 * // { schemas: { 'element:text': {...}, ... } }
 	 * ```
 	 */
 	generateJSONSchemaCollection(options?: {
 		target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0';
 		uri?: (id: string) => string;
 	}) {
-		return z.toJSONSchema(this.registries.schemaRegistry, {
-			target: options?.target || 'draft-2020-12',
-			uri: options?.uri || ((id: string) => `#/definitions/${id}`),
-		});
+		return this.schemaArtifacts.jsonSchema.generateCollection(options);
 	}
 
 	/**
@@ -281,8 +310,6 @@ export class FormEngine<
 	 *   .build();
 	 *
 	 * const schema = engine.getFormConfigSchema();
-	 *
-	 * // Validate a form config
 	 * const result = schema.safeParse(myFormConfig);
 	 * if (result.success) {
 	 *   console.log('Valid config:', result.data);
@@ -292,7 +319,7 @@ export class FormEngine<
 	 * ```
 	 */
 	getFormConfigSchema() {
-		return this.registries.formConfigSchema;
+		return this.schemaArtifacts.formConfigValidator;
 	}
 
 	/**
@@ -313,30 +340,26 @@ export class FormEngine<
 	 * @example
 	 * ```typescript
 	 * const schema = engine.generateFormConfigSchema();
-	 *
-	 * // Store in database
 	 * await db.schemas.insert({ version: '1.0', schema });
-	 *
-	 * // Export as file
 	 * fs.writeFileSync('form-schema.json', JSON.stringify(schema, null, 2));
-	 *
-	 * // Use with Ajv validator
 	 * const ajv = new Ajv();
 	 * const validate = ajv.compile(schema);
-	 * validate(formConfig); // true/false
+	 * validate(formConfig);
 	 * ```
 	 */
 	generateFormConfigSchema(options?: { target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0' }) {
-		const target = options?.target || 'draft-2020-12';
+		return this.schemaArtifacts.jsonSchema.generateFormConfig(options);
+	}
 
-		const schema = z.toJSONSchema(this.registries.formConfigSchema, {
-			target,
-			metadata: this.registries.schemaRegistry,
-		}) as any;
-
-		schema.$id = 'form-config-schema';
-
-		return schema;
+	/**
+	 * Generate a JSON Schema for a registered action configuration object.
+	 * Returns `undefined` when the action type is not registered in this engine.
+	 */
+	generateActionConfigSchema(
+		actionType: string,
+		options?: { target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0' },
+	) {
+		return this.schemaArtifacts.jsonSchema.generateActionConfig(actionType, options);
 	}
 
 	/**

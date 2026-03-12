@@ -292,8 +292,6 @@ describe('Recursive Schema Handling', () => {
 			const schema = engine.generateJSONSchemaCollection();
 			const duration = performance.now() - start;
 
-			console.log(`\nDeep nesting schema generation took: ${duration.toFixed(2)}ms\n`);
-
 			expect(duration).toBeLessThan(1000);
 
 			expect(schema.schemas['element:organization']).toBeDefined();
@@ -333,7 +331,7 @@ describe('Recursive Schema Handling', () => {
 
 			expect(configSchema.$id).toBe('form-config-schema');
 			expect(configSchema.$defs['element:comment']).toBeDefined();
-			expect(configSchema.properties.elements).toBeDefined();
+			expect(configSchema.properties.steps).toBeDefined();
 		});
 	});
 

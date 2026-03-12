@@ -19,11 +19,16 @@ export const mockDispatchSync = mock(
 	},
 );
 
+/**
+ * Replace the ActionDispatcher runtime used by FormProvider with a test double.
+ */
 export function setupActionExecutorMock() {
-	void mock.module('@/hooks/use-action-dispatcher', () => ({
-		useActionDispatcher: () => ({
-			dispatch: mockDispatch,
-			dispatchSync: mockDispatchSync,
-		}),
-	}));
+	void mock.module('@schema-engine/actions', () => {
+		return {
+			ActionDispatcher: class {
+				dispatch = mockDispatch;
+				dispatchSync = mockDispatchSync;
+			},
+		};
+	});
 }

@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { mergePathValues } from '@/lib/path-utils';
 
 interface FieldWithDefault {
 	name: string;
@@ -13,17 +14,5 @@ export function useFormDefaultValues(
 	fields: FieldWithDefault[],
 	userDefaults: Record<string, any> = {},
 ): Record<string, any> {
-	return useMemo(() => {
-		const fieldDefaults = fields.reduce(
-			(acc, field) => {
-				if (field.defaultValue !== undefined) {
-					acc[field.name] = field.defaultValue;
-				}
-				return acc;
-			},
-			{} as Record<string, any>,
-		);
-
-		return { ...fieldDefaults, ...userDefaults };
-	}, [fields, userDefaults]);
+	return useMemo(() => mergePathValues(fields, userDefaults), [fields, userDefaults]);
 }
