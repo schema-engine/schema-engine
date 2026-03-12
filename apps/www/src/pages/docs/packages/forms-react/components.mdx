@@ -77,8 +77,8 @@ const engine = createReactFormComposer()
 	"inputType": "email",
 	"placeholder": "you@example.com",
 	"rules": [
-		{ "rule": "required", "message": "Email is required" },
-		{ "rule": "email", "message": "Invalid email format" }
+		{ "type": "required", "message": "Email is required" },
+		{ "type": "email", "message": "Invalid email format" }
 	]
 }
 ```
@@ -97,7 +97,7 @@ const engine = createReactFormComposer()
 		{ "value": "uk", "label": "United Kingdom" }
 	],
 	"rules": [
-		{ "rule": "required", "message": "Please select a country" }
+		{ "type": "required", "message": "Please select a country" }
 	]
 }
 ```

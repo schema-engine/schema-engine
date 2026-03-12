@@ -230,8 +230,8 @@ The `defaultFormEngine` includes:
 **Steppers:**
 
 - `default` - Horizontal progress stepper
-- `vertical` - Vertical sidebar stepper
 - `minimalist` - Clean minimalist stepper
+- `debugger` - Debugging-focused stepper
 
 ## Adding More Components
 
@@ -288,7 +288,7 @@ See the various `.stories.tsx` files for complete working examples showing:
 
 - Simple forms with the builder pattern
 - Forms with layouts (card, split-screen, hero-background)
-- Multi-step forms with different steppers (default, vertical, minimalist, debugger)
+- Multi-step forms with different steppers (default, minimalist, debugger)
 - Custom configurations
 
 ## Usage in Stories

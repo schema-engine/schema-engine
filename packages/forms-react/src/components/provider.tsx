@@ -6,16 +6,14 @@ import type { SubmissionState } from '@/hooks/use-submission-state';
 
 /**
  * Form Engine context value
- * It includes the FormEngine instance and action execution function
  */
 export interface FormEngineContextValue {
 	engine: FormEngine;
-	executeAction?: (action: FormActionConfig) => Promise<{ success: boolean; error?: string }>;
 }
 
 /**
  * Form Engine context
- * Provides access to the FormEngine instance and action execution function
+ * Provides access to the FormEngine instance
  */
 export const FormEngineContext = createContext<FormEngineContextValue | null>(null);
 
@@ -24,7 +22,7 @@ export const FormEngineContext = createContext<FormEngineContextValue | null>(nu
  */
 export interface FormInstanceContextValue {
 	/** Executes a specific form action */
-	executeAction: (action: any) => Promise<any>;
+	executeAction: (action: FormActionConfig) => Promise<ActionExecutionResult>;
 	/** Index of the current step (0-based) */
 	currentStep: number;
 	/** Total number of steps in the form */

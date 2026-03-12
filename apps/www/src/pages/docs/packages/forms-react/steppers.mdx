@@ -60,7 +60,7 @@ Custom steppers use compound components with a local context pattern.
 ```tsx
 // my-stepper/context.ts
 import { createContext, useContext } from 'react';
-import { useStepperContext as useGlobalStepperContext } from '@schema-engine/forms-react/contexts/stepper-context';
+import { useStepperContext as useGlobalStepperContext } from '@schema-engine/forms-react/contexts';
 
 interface MyStepperContextValue {
 	steps: StepData[];

@@ -12,7 +12,7 @@ The React package provides production-ready components and hooks for building dy
 - Built-in React Hook Form adapter with extensibility for other form libraries
 - Pre-built form elements (input, textarea, checkbox, radio, select, switch, number, array)
 - Layout components for visual organization (card, split-screen, hero-background)
-- Stepper components for multi-step forms (default, vertical, minimalist, debugger)
+- Stepper components for multi-step forms (default, minimalist, debugger)
 - Comprehensive validation with 15+ built-in rules
 - Action execution system for form lifecycle events
 - Grid-based responsive layouts
@@ -71,9 +71,9 @@ const formConfig: FormConfig = {
 					name: 'name',
 					label: 'Full Name',
 					inputType: 'text',
-					validation: [
-						{ rule: 'required', message: 'Name is required' },
-						{ rule: 'minLength', value: 2, message: 'Name must be at least 2 characters' },
+					rules: [
+						{ type: 'required', message: 'Name is required' },
+						{ type: 'minLength', value: 2, message: 'Name must be at least 2 characters' },
 					],
 				},
 				{
@@ -82,9 +82,9 @@ const formConfig: FormConfig = {
 					name: 'email',
 					label: 'Email Address',
 					inputType: 'email',
-					validation: [
-						{ rule: 'required', message: 'Email is required' },
-						{ rule: 'email', message: 'Invalid email format' },
+					rules: [
+						{ type: 'required', message: 'Email is required' },
+						{ type: 'email', message: 'Invalid email format' },
 					],
 				},
 				{
@@ -93,14 +93,14 @@ const formConfig: FormConfig = {
 					name: 'message',
 					label: 'Message',
 					rows: 5,
-					validation: [
-						{ rule: 'required', message: 'Message is required' },
-						{ rule: 'maxLength', value: 500, message: 'Maximum 500 characters' },
+					rules: [
+						{ type: 'required', message: 'Message is required' },
+						{ type: 'maxLength', value: 500, message: 'Maximum 500 characters' },
 					],
 				},
 			],
 			layout: {
-				id: 'card',
+				$type: 'card',
 				padding: 'md',
 				shadowSize: 'md',
 			},
@@ -212,8 +212,8 @@ Pre-built form field components with validation and styling:
     { value: 'ca', label: 'Canada' },
     { value: 'uk', label: 'United Kingdom' }
   ],
-  validation: [
-    { rule: 'required', message: 'Please select a country' }
+	rules: [
+		{ type: 'required', message: 'Please select a country' }
   ]
 }
 ```
@@ -233,7 +233,7 @@ Layouts provide visual structure and styling for form steps:
   id: 'step-1',
   elements: [...],
   layout: {
-    id: 'card',
+		$type: 'card',
     maxWidth: 'md',
     padding: 'lg',
     shadowSize: 'lg'
@@ -246,7 +246,6 @@ Layouts provide visual structure and styling for form steps:
 Steppers control navigation in multi-step forms:
 
 - `default` - Horizontal progress indicator
-- `vertical` - Vertical navigation sidebar
 - `minimalist` - Clean, minimal progress bar
 - `debugger` - Development debugging tool
 
@@ -273,7 +272,7 @@ const multiStepConfig: FormConfig = {
     }
   ],
   stepper: {
-    id: 'default',
+		$type: 'default',
     showStepNumbers: true,
     showStepTitles: true
   }
@@ -284,7 +283,7 @@ const multiStepConfig: FormConfig = {
 
 Validation rules are defined in the field configuration. The React package uses the validation system provided by `@schema-engine/forms`.
 
-For complete documentation on validation rules, custom validators, and advanced validation patterns, see the [@schema-engine/forms documentation](../core/README.md#validation).
+For complete documentation on validation rules, custom validators, and advanced validation patterns, see the [@schema-engine/forms documentation](../forms/README.md#validation).
 
 **Quick Example:**
 
@@ -294,10 +293,10 @@ For complete documentation on validation rules, custom validators, and advanced 
   id: 'phone',
   name: 'phone',
   label: 'Phone Number',
-  validation: [
-    { rule: 'required', message: 'Phone is required' },
+	rules: [
+		{ type: 'required', message: 'Phone is required' },
     {
-      rule: 'pattern',
+			type: 'pattern',
       value: /^\+?[\d\s-()]+$/,
       message: 'Invalid phone format'
     }
@@ -314,8 +313,8 @@ Actions execute in response to form lifecycle events:
 - `form_submit` - Form submission
 - `form_change` - Field value changes
 - `step_change` - Step navigation
-- `field_focus` - Field receives focus
-- `field_blur` - Field loses focus
+- `step_submit` - Step submission
+- `step_enter` / `step_leave` - Step lifecycle transitions
 
 **Example - Submit Action:**
 
@@ -446,15 +445,15 @@ function MyComponent() {
 }
 ```
 
-### useField
+### useControlledFormElement
 
 Create custom field components:
 
 ```tsx
-import { useField } from '@schema-engine/forms-react';
+import { useControlledFormElement } from '@schema-engine/forms-react';
 
 function CustomField(config) {
-	const { value, error, onChange, onBlur, isRequired } = useField(config);
+	const { value, error, onChange, onBlur, isRequired } = useControlledFormElement(config);
 
 	return (
 		<div>
@@ -470,25 +469,34 @@ function CustomField(config) {
 }
 ```
 
-### useActionExecutor
+### useActionDispatcher
 
 Execute form actions manually:
 
 ```tsx
-import { useActionExecutor } from '@schema-engine/forms-react';
+import { useActionDispatcher, useFormEngine, useFormInstance } from '@schema-engine/forms-react';
 
 function MyComponent() {
 	const { engine } = useFormEngine();
-	const actionExecutor = useActionExecutor(engine);
+	const form = useFormInstance();
+	const dispatcher = useActionDispatcher(engine);
 
 	const handleCustomAction = async () => {
-		const result = await actionExecutor.executeTrigger(
-			[{ type: 'custom', id: 'my-action' }],
-			'form_submit',
-			context,
-		);
+		const result = await dispatcher.dispatch({
+			actions: [{ $type: 'submit', id: 'my-action', triggers: ['form_submit'] }],
+			trigger: 'form_submit',
+			context: {
+				formId: 'demo-form',
+				formData: form.getValues(),
+				currentStep: 0,
+				totalSteps: 1,
+				isValid: form.formState.isValid,
+				errors: form.formState.errors,
+				form,
+			},
+		});
 
-		if (result[0].success) {
+		if (result[0]?.success) {
 			console.log('Action executed successfully');
 		}
 	};
@@ -539,21 +547,21 @@ Track and manage user consent:
     required: true,
     category: 'analytics'
   },
-  validation: [
-    { rule: 'required', message: 'You must accept the privacy policy' }
+	rules: [
+		{ type: 'required', message: 'You must accept the privacy policy' }
   ]
 }
 ```
 
-Use the `useGdprConsent` hook to access consent state:
+Use the `useGDPRConsent` hook to access consent state:
 
 ```tsx
-import { useGdprConsent } from '@schema-engine/forms-react';
+import { useGDPRConsent } from '@schema-engine/forms-react';
 
 function ConsentStatus() {
-	const { consents, hasConsent, updateConsent } = useGdprConsent();
+	const consent = useGDPRConsent();
 
-	return <div>{hasConsent('marketing') ? 'Consented' : 'Not consented'}</div>;
+	return <div>{consent.hasConsent() ? 'Consented' : 'Not consented'}</div>;
 }
 ```
 
@@ -562,19 +570,16 @@ function ConsentStatus() {
 Integrate Google Tag Manager for form analytics:
 
 ```tsx
-import { useGtmTracker } from '@schema-engine/forms-react';
+import { useGTMTracker } from '@schema-engine/forms-react';
 
 function MyForm() {
-	const tracker = useGtmTracker({
-		enabled: true,
-		trackFieldInteractions: true,
-		trackValidationErrors: true,
-		customDimensions: {
-			formVersion: '2.0',
-		},
-	});
+	const tracker = useGTMTracker();
 
-	return <FormRenderer config={config} />;
+	const handleSubmit = () => {
+		tracker.pushFormEvent('form_submit', { email: 'user@example.com' }, { formId: 'contact-form' });
+	};
+
+	return <button onClick={handleSubmit}>Track submit</button>;
 }
 ```
 
@@ -585,7 +590,7 @@ Register custom field components:
 ```typescript
 // 1. Define your component
 export function CustomDatePicker(props) {
-	const { value, error, onChange, onBlur } = useField(props);
+	const { value, error, onChange, onBlur } = useControlledFormElement(props);
 
 	return (
 		<div>
@@ -626,6 +631,8 @@ const engine = createReactFormComposer().addElement(CustomDatePickerRegistration
 Create custom layout components:
 
 ```typescript
+import { useLayoutContext } from '@schema-engine/forms-react/contexts';
+
 // 1. Define layout component
 export function CustomLayout({ children, className }) {
 	const { step, form, config } = useLayoutContext();
@@ -642,7 +649,7 @@ export function CustomLayout({ children, className }) {
 
 // 2. Create schema
 export const CustomLayoutConfigSchema = z.object({
-	id: z.literal("custom-layout"),
+	$type: z.literal("custom-layout"),
 	headerColor: z.string().optional(),
 	footerText: z.string().optional(),
 });
@@ -667,6 +674,8 @@ const engine = createReactFormComposer().addLayout(CustomLayoutRegistration).bui
 Create custom stepper components:
 
 ```typescript
+import { useStepperContext } from '@schema-engine/forms-react/contexts';
+
 // 1. Define stepper component
 export function CustomStepper() {
 	const { steps, currentStepIndex, navigation, config } = useStepperContext();
@@ -688,7 +697,7 @@ export function CustomStepper() {
 
 // 2. Create schema
 export const CustomStepperConfigSchema = z.object({
-	id: z.literal("custom-stepper"),
+	$type: z.literal("custom-stepper"),
 	showIcons: z.boolean().optional(),
 });
 

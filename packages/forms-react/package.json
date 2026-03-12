@@ -120,6 +120,14 @@
 			"types": "./dist/registries/*.d.ts",
 			"import": "./dist/registries/*.js"
 		},
+		"./contexts": {
+			"types": "./dist/contexts/index.d.ts",
+			"import": "./dist/contexts/index.js"
+		},
+		"./contexts/*": {
+			"types": "./dist/contexts/*.d.ts",
+			"import": "./dist/contexts/*.js"
+		},
 		"./hooks": {
 			"types": "./dist/hooks/index.d.ts",
 			"import": "./dist/hooks/index.js"

@@ -81,22 +81,22 @@ Add a `gdpr` object to checkbox or switch fields.
     category: 'analytics'
   },
   rules: [
-    { rule: 'required', message: 'You must accept the privacy policy' }
+    { type: 'required', message: 'You must accept the privacy policy' }
   ]
 }
 ```
 
 ### Managing Consent State
 
-Use the `useGdprConsent` hook to access and modify consent state programmatically.
+Use the `useGDPRConsent` hook to access consent state programmatically.
 
 ```tsx
-import { useGdprConsent } from '@schema-engine/forms-react';
+import { useGDPRConsent } from '@schema-engine/forms-react';
 
 function ConsentStatus() {
-  const { consents, hasConsent, updateConsent } = useGdprConsent();
+  const consent = useGDPRConsent();
 
-  return <div>{hasConsent('marketing') ? 'Consented' : 'Not consented'}</div>;
+  return <div>{consent.hasConsent() ? 'Consented' : 'Not consented'}</div>;
 }
 ```
 
@@ -106,29 +106,25 @@ Integrate Google Tag Manager (GTM) to track form interactions and events automat
 
 ### Usage
 
-Use the `useGtmTracker` hook within your form component.
+Use the `useGTMTracker` hook within your form component.
 
 ```tsx
-import { useGtmTracker } from '@schema-engine/forms-react';
+import { useGTMTracker } from '@schema-engine/forms-react';
 
 function MyForm() {
-  const tracker = useGtmTracker({
-    enabled: true,
-    trackFieldInteractions: true,
-    trackValidationErrors: true,
-    customDimensions: {
-      formVersion: '2.0',
-    },
-  });
+  const tracker = useGTMTracker();
 
-  return <FormRenderer config={config} />;
+  const handleSubmit = () => {
+    tracker.pushFormEvent('form_submit', { email: 'user@example.com' }, { formId: 'contact-form' });
+  };
+
+  return <button onClick={handleSubmit}>Track submit</button>;
 }
 ```
 
 ### Tracked Events
 
-- `form_load`: When the form is mounted
-- `field_focus`: When a user interacts with a field
-- `field_blur`: When a user leaves a field
-- `validation_error`: When a validation rule fails
-- `form_submit`: When the form is submitted successfully
+- `form_mount`: When the form is mounted
+- `form_step_complete`: When a step is completed
+- `form_submit`: When the form is submitted
+- `form_abandon`: When a form is abandoned

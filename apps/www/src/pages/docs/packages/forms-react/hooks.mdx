@@ -21,7 +21,7 @@ Access the form engine context:
 import { useFormEngine } from '@schema-engine/forms-react';
 
 function MyComponent() {
-	const { engine, executeAction } = useFormEngine();
+	const { engine } = useFormEngine();
 
 	const inputElement = engine.getElement('input');
 	const allElements = engine.getAllElements();
@@ -180,20 +180,35 @@ interface UseControlledFormElementReturn {
 Get an ActionDispatcher instance for executing actions:
 
 ```tsx
-import { useFormEngine, useActionDispatcher } from '@schema-engine/forms-react';
+import { useFormEngine, useActionDispatcher, useFormInstance } from '@schema-engine/forms-react';
 
 function MyComponent() {
 	const { engine } = useFormEngine();
+	const form = useFormInstance();
 	const dispatcher = useActionDispatcher(engine);
 
 	const handleClick = async () => {
-		const results = await dispatcher.dispatch('form_submit', context);
+		const results = await dispatcher.dispatch({
+			actions: config.actions || [],
+			trigger: 'form_submit',
+			context: {
+				formId: config.id,
+				formData: form.getValues(),
+				currentStep: 0,
+				totalSteps: config.steps.length,
+				isValid: form.formState.isValid,
+				errors: form.formState.errors,
+				form,
+			},
+		});
 		console.log(results);
 	};
 
 	return <button onClick={handleClick}>Submit</button>;
 }
 ```
+
+Inside a rendered form, prefer `useFormInstanceActions().dispatchTrigger(...)` for normal lifecycle dispatch. `useActionDispatcher` is the lower-level escape hatch when you need to build the base context yourself.
 
 ## useConstraintLogic
 

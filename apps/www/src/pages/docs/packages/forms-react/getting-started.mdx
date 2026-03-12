@@ -57,7 +57,7 @@ const formConfig: FormConfig = {
 					label: 'Full Name',
 					inputType: 'text',
 					rules: [
-						{ rule: 'required', message: 'Name is required' },
+						{ type: 'required', message: 'Name is required' },
 					],
 				},
 				{
@@ -67,8 +67,8 @@ const formConfig: FormConfig = {
 					label: 'Email Address',
 					inputType: 'email',
 					rules: [
-						{ rule: 'required', message: 'Email is required' },
-						{ rule: 'email', message: 'Invalid email format' },
+						{ type: 'required', message: 'Email is required' },
+						{ type: 'email', message: 'Invalid email format' },
 					],
 				},
 				{
