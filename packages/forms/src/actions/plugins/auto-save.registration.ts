@@ -6,8 +6,7 @@
  *
  * @example
  * ```typescript
- * import { AutoSaveActionRegistration } from '@schema-engine/forms/actions/plugins/auto-save-registration';
- * import { FormComposer } from '@schema-engine/formsuilder';
+ * import { AutoSaveActionRegistration, FormComposer } from '@schema-engine/forms';
  *
  * const engine = new FormComposer()
  *   .addAction(AutoSaveActionRegistration)

@@ -6,8 +6,7 @@
  *
  * @example
  * ```typescript
- * import { ResetActionRegistration } from '@schema-engine/forms/actions/plugins/reset-registration';
- * import { FormComposer } from '@schema-engine/formsuilder';
+ * import { FormComposer, ResetActionRegistration } from '@schema-engine/forms';
  *
  * const engine = new FormComposer()
  *   .addAction(ResetActionRegistration)

@@ -184,7 +184,15 @@ export const wizardStepperRegistration: StepperRegistration<
 Actions are event handlers that execute in response to form lifecycle events:
 
 ```typescript
-import type { BuilderActionRegistration } from "@schema-engine/forms
+import { z } from 'zod';
+import { defineAction } from '@schema-engine/actions';
+import type {
+	BuilderActionBaseContext,
+	BuilderActionRegistration,
+	BuilderActionTrigger,
+} from '@schema-engine/forms';
+
+const defineFormAction = defineAction<BuilderActionBaseContext, BuilderActionTrigger>();
 
 const SubmitActionConfigSchema = z.object({
 	id: z.string(),
@@ -196,8 +204,9 @@ const SubmitActionConfigSchema = z.object({
 });
 
 export const submitActionRegistration: BuilderActionRegistration<
+	'submit',
 	z.infer<typeof SubmitActionConfigSchema>
-> = {
+> = defineFormAction({
 	$type: "submit",
 	schema: SubmitActionConfigSchema,
 	metadata: {
@@ -207,18 +216,18 @@ export const submitActionRegistration: BuilderActionRegistration<
 		defaultTriggers: ["form_submit"],
 	},
 	execute: async (context) => {
-		const { config, form, formId } = context;
+		const { config, formData, formId } = context;
 
 		try {
 			const response = await fetch(config.endpoint, {
 				method: config.method,
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(form.getValues()),
+				body: JSON.stringify(formData),
 			});
 
 			if (!response.ok) {
 				return {
-					success: false,
+});
 					error: `HTTP ${response.status}: ${response.statusText}`,
 				};
 			}
@@ -277,19 +286,7 @@ metadata: {
 }
 ```
 
-The `ActionExecutor` handles sequential execution with comprehensive lifecycle management:
-
-```typescript
-import { ActionExecutor } from '@schema-engine/formsctions';
-
-const executor = new ActionExecutor(engine);
-
-await executor.executeTrigger(formConfig.actions, 'form_submit', {
-	formId: 'contact-form',
-	form: formInstance,
-	currentStep: 0,
-});
-```
+Custom actions should usually be defined with `defineAction<BuilderActionBaseContext, BuilderActionTrigger>()` so handlers get the full forms runtime context with `formData`, `errors`, `metadata`, `config`, and `trigger` typed correctly.
 
 ### Validation System
 
@@ -421,7 +418,7 @@ The core package includes production-ready action plugins:
 Submit form data to an endpoint with configurable request handling:
 
 ```typescript
-import { SubmitActionRegistration } from '@schema-engine/formsctions/plugins';
+import { FormComposer, SubmitActionRegistration } from '@schema-engine/forms';
 
 const engine = new FormComposer()
   .addAction(SubmitActionRegistration)
@@ -429,12 +426,12 @@ const engine = new FormComposer()
 
 // Usage in form config
 {
-  id: 'submit-form',
-  type: 'submit',
-  endpoint: '/api/forms',
-  method: 'POST',
-  successMessage: 'Form submitted successfully!',
-  redirectUrl: '/thank-you',
+	id: 'submit-form',
+	$type: 'submit',
+	endpoint: '/api/forms',
+	method: 'POST',
+	successMessage: 'Form submitted successfully!',
+	redirectUrl: '/thank-you',
 }
 ```
 
@@ -443,7 +440,7 @@ const engine = new FormComposer()
 Automatically save form progress with configurable debouncing:
 
 ```typescript
-import { AutoSaveActionRegistration } from '@schema-engine/formsctions/plugins';
+import { FormComposer, AutoSaveActionRegistration } from '@schema-engine/forms';
 
 const engine = new FormComposer()
   .addAction(AutoSaveActionRegistration)
@@ -451,11 +448,11 @@ const engine = new FormComposer()
 
 // Usage in form config
 {
-  id: 'auto-save',
-  type: 'auto-save',
-  storageKey: 'contact-form-draft',
-  debounceMs: 1000,
-  triggers: ['form_change'],
+	id: 'auto-save',
+	$type: 'auto_save',
+	storageKey: 'contact-form-draft',
+	debounceMs: 1000,
+	triggers: ['form_change'],
 }
 ```
 
@@ -464,7 +461,7 @@ const engine = new FormComposer()
 Display user notifications for form events:
 
 ```typescript
-import { NotificationActionRegistration } from '@schema-engine/formsctions/plugins';
+import { FormComposer, NotificationActionRegistration } from '@schema-engine/forms';
 
 const engine = new FormComposer()
   .addAction(NotificationActionRegistration)
@@ -472,11 +469,11 @@ const engine = new FormComposer()
 
 // Usage in form config
 {
-  id: 'success-notification',
-  type: 'notification',
-  message: 'Form submitted successfully!',
-  variant: 'success',
-  triggers: ['form_submit_success'],
+	id: 'success-notification',
+	$type: 'show_notification',
+	message: 'Form submitted successfully!',
+	variant: 'success',
+	triggers: ['form_submit_success'],
 }
 ```
 
@@ -485,7 +482,7 @@ const engine = new FormComposer()
 Track form events in Google Tag Manager:
 
 ```typescript
-import { GTMActionRegistration } from '@schema-engine/formsctions/plugins';
+import { FormComposer, GTMActionRegistration } from '@schema-engine/forms';
 
 const engine = new FormComposer()
   .addAction(GTMActionRegistration)
@@ -494,8 +491,8 @@ const engine = new FormComposer()
 // Usage in form config
 {
   id: 'track-submit',
-  type: 'gtm',
-  event: 'form_submit',
+	$type: 'gtm_event',
+	eventName: 'form_submit',
   data: {
     formId: 'contact-form',
     category: 'engagement',
@@ -509,7 +506,7 @@ const engine = new FormComposer()
 Reset form to initial state:
 
 ```typescript
-import { ResetActionRegistration } from '@schema-engine/formsctions/plugins';
+import { FormComposer, ResetActionRegistration } from '@schema-engine/forms';
 
 const engine = new FormComposer()
   .addAction(ResetActionRegistration)
@@ -652,7 +649,7 @@ import type {
 
 	// Actions
 	BuilderActionExecutionContext,
-	BuilderActionExecutionResult,
+	BuilderActionRuntimeContext,
 	BuilderActionTrigger,
 
 	// Engine
@@ -685,7 +682,7 @@ The package is designed for maximum tree-shaking:
 // Only import what you need
 import { FormComposer } from "@schema-engine/forms
 import { ValidationPresets } from "@schema-engine/formschemas/validation";
-import { SubmitActionRegistration } from "@schema-engine/formsctions/plugins";
+import { SubmitActionRegistration } from "@schema-engine/forms";
 ```
 
 ## Testing

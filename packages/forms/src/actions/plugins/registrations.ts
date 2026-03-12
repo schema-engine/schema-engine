@@ -4,13 +4,13 @@
  * Import individual registrations for tree-shaking:
  * @example
  * ```typescript
- * import { SubmitActionRegistration } from '@schema-engine/forms/actions/plugins/submit-registration';
+ * import { SubmitActionRegistration } from '@schema-engine/forms';
  * ```
  *
  * Or import multiple from this file:
  * @example
  * ```typescript
- * import { SubmitActionRegistration, ResetActionRegistration } from '@schema-engine/formsctions/plugins/registrations';
+ * import { SubmitActionRegistration, ResetActionRegistration } from '@schema-engine/forms';
  * ```
  */
 

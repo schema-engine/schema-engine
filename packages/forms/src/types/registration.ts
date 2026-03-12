@@ -127,7 +127,12 @@ export type StepperRegistration<
  *
  * @example
  * ```typescript
- * export const submitAction: BuilderActionRegistration<'submit', SubmitConfig> = {
+ * import { defineAction } from '@schema-engine/actions';
+ * import type { BuilderActionBaseContext, BuilderActionTrigger } from '@schema-engine/forms';
+ *
+ * const defineFormAction = defineAction<BuilderActionBaseContext, BuilderActionTrigger>();
+ *
+ * export const submitAction: BuilderActionRegistration<'submit', SubmitConfig> = defineFormAction({
  *   $type: 'submit',
  *   schema: SubmitActionConfigSchema,
  *   metadata: {
@@ -140,7 +145,7 @@ export type StepperRegistration<
  *     // which includes formId, formData, isValid, config, etc.
  *     return { success: true };
  *   },
- * };
+ * });
  * ```
  */
 export type BuilderActionRegistration<

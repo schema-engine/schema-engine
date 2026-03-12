@@ -6,8 +6,7 @@
  *
  * @example
  * ```typescript
- * import { SubmitActionRegistration } from '@schema-engine/forms/actions/plugins/submit-registration';
- * import { FormComposer } from '@schema-engine/formsuilder';
+ * import { FormComposer, SubmitActionRegistration } from '@schema-engine/forms';
  *
  * const engine = new FormComposer()
  *   .addAction(SubmitActionRegistration)

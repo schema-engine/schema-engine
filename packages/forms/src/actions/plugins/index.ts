@@ -6,9 +6,8 @@
  *
  * @example Custom Configuration
  * ```typescript
- * import { FormComposer } from "@schema-engine/forms/builder";
- * import { submitPlugin } from "@schema-engine/formsctions/plugins/submit-plugin";
- * import type { SubmitAction } from "@schema-engine/formsctions/plugins/submit-plugin";
+ * import { FormComposer, submitPlugin } from '@schema-engine/forms';
+ * import type { SubmitAction } from '@schema-engine/forms';
  *
  * // Manually register the type
  * declare global {
@@ -31,8 +30,7 @@
  *
  * @example Using Registrations
  * ```typescript
- * import { FormComposer } from "@schema-engine/formsuilder";
- * import { SubmitActionRegistration } from "@schema-engine/formsctions/plugins/submit-registration";
+ * import { FormComposer, SubmitActionRegistration } from '@schema-engine/forms';
  * // ↑ Type is automatically registered when you import this
  *
  * const engine = new FormComposer()

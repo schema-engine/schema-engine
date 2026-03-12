@@ -103,8 +103,7 @@ export type FormSubmitAction = z.infer<typeof FormSubmitActionSchema>;
  *
  * @example Basic Usage
  * ```typescript
- * import { submitPlugin } from "@schema-engine/forms/actions";
- * import { FormComposer } from "@schema-engine/formsuilder";
+ * import { FormComposer, submitPlugin } from '@schema-engine/forms';
  *
  * const engine = new FormComposer()
  *   .addElement(InputElement)
