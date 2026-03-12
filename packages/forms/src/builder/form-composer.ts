@@ -4,13 +4,13 @@ import type {
 	LayoutRegistration,
 	StepperRegistration,
 	BuilderActionRegistration,
-	BuilderActionExecutionContext,
+	BuilderActionBaseContext,
 } from '@/types';
 import type { FormEngineSchemaMetadata } from '@/engine/form-engine';
 import { ComponentType, FormEngine } from '@/engine/form-engine';
 import { logger } from '@/lib/logger';
 import { ElementRegistry, LayoutRegistry, StepperRegistry } from '@/registries';
-import { ActionRegistry } from '@schema-engine/actions';
+import { ActionRegistry, type ActionConfigBase } from '@schema-engine/actions';
 import { z } from 'zod';
 import type { ExtractSchemaType, ExtractTypeId } from './types.utils';
 import type { FormActionTrigger } from '@/actions';
@@ -55,7 +55,7 @@ export class FormComposer<
 		private elementRegistry = new ElementRegistry(),
 		private layoutRegistry = new LayoutRegistry(),
 		private stepperRegistry = new StepperRegistry(),
-		private actionRegistry = new ActionRegistry<BuilderActionExecutionContext, FormActionTrigger>(),
+		private actionRegistry = new ActionRegistry<BuilderActionBaseContext, FormActionTrigger>(),
 	) {}
 
 	/**
@@ -172,10 +172,10 @@ export class FormComposer<
 	 * @param registration - Action registration object
 	 * @note If id is already registered, it will be overridden with a warning
 	 */
-	addAction<TType extends string, TConfig>(
+	addAction<TType extends string, TConfig extends ActionConfigBase<TType>>(
 		registration: BuilderActionRegistration<TType, TConfig>,
 	): FormComposer<TElements, TLayouts, TSteppers, TActions & Record<TType, TConfig>> {
-		this.actionRegistry.register(registration as BuilderActionRegistration);
+		this.actionRegistry.register(registration);
 		return this;
 	}
 
@@ -256,7 +256,7 @@ export class FormComposer<
 		const newElementRegistry = new ElementRegistry();
 		const newLayoutRegistry = new LayoutRegistry();
 		const newStepperRegistry = new StepperRegistry();
-		const newActionRegistry = new ActionRegistry<BuilderActionExecutionContext, FormActionTrigger>();
+		const newActionRegistry = new ActionRegistry<BuilderActionBaseContext, FormActionTrigger>();
 
 		for (const item of this.elementRegistry.getAll()) {
 			newElementRegistry.register(item);

@@ -1,19 +1,17 @@
 import { useCallback } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import type { FormConfig } from '@schema-engine/forms/schemas';
-import type { FormActionTrigger, BuilderActionExecutionContext, ActionExecutionResult } from '@schema-engine/forms';
+import type { FormActionTrigger, BuilderActionBaseContext, ActionExecutionResult } from '@schema-engine/forms';
 import type { ActionDispatcher } from '@schema-engine/actions';
-
-type BaseFormContext = Omit<BuilderActionExecutionContext, 'config' | 'trigger'>;
 
 interface UseFormActionDispatchersOptions {
 	form: UseFormReturn<any>;
 	config: FormConfig;
-	actionExecutor: ActionDispatcher;
+	actionExecutor: ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>;
 }
 
 interface UseFormActionDispatchersReturn {
-	buildActionContext: () => BaseFormContext;
+	buildActionContext: () => BuilderActionBaseContext;
 	dispatchTrigger: (
 		trigger: FormActionTrigger,
 		extraMetadata?: Record<string, unknown>,
@@ -30,7 +28,7 @@ export function useFormActionDispatchers({
 	config,
 	actionExecutor,
 }: UseFormActionDispatchersOptions): UseFormActionDispatchersReturn {
-	const buildActionContext = useCallback((): BaseFormContext => {
+	const buildActionContext = useCallback((): BuilderActionBaseContext => {
 		const formData = form.getValues();
 		const formState = form.formState;
 
@@ -55,14 +53,24 @@ export function useFormActionDispatchers({
 			trigger: FormActionTrigger,
 			extraMetadata?: Record<string, unknown>,
 		): Promise<ActionExecutionResult[]> => {
-			return actionExecutor.dispatch(config.actions || [], trigger, buildActionContext(), extraMetadata);
+			return actionExecutor.dispatch({
+				actions: config.actions || [],
+				trigger,
+				context: buildActionContext(),
+				metadata: extraMetadata,
+			});
 		},
 		[config.actions, buildActionContext, actionExecutor],
 	);
 
 	const dispatchTriggerSync = useCallback(
 		(trigger: FormActionTrigger, extraMetadata?: Record<string, unknown>) => {
-			actionExecutor.dispatchSync(config.actions || [], trigger, buildActionContext(), extraMetadata);
+			actionExecutor.dispatchSync({
+				actions: config.actions || [],
+				trigger,
+				context: buildActionContext(),
+				metadata: extraMetadata,
+			});
 		},
 		[config.actions, buildActionContext, actionExecutor],
 	);

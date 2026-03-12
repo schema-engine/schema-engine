@@ -64,7 +64,7 @@ describe('FormProvider', () => {
 		});
 
 		const calls = mockDispatch.mock.calls;
-		const formStartCall = calls.find((call) => call[1] === 'form_mount');
+		const formStartCall = calls.find((call) => call[0]?.trigger === 'form_mount');
 		expect(formStartCall).toBeDefined();
 	});
 
@@ -80,8 +80,8 @@ describe('FormProvider', () => {
 
 		await waitFor(() => {
 			const calls = mockDispatch.mock.calls;
-			const submitStartCalls = calls.filter((call) => call[1] === 'form_submit_start');
-			const formSubmitCalls = calls.filter((call) => call[1] === 'form_submit');
+			const submitStartCalls = calls.filter((call) => call[0]?.trigger === 'form_submit_start');
+			const formSubmitCalls = calls.filter((call) => call[0]?.trigger === 'form_submit');
 
 			expect(submitStartCalls.length).toBeGreaterThanOrEqual(1);
 			expect(formSubmitCalls.length).toBeGreaterThanOrEqual(1);
@@ -89,16 +89,18 @@ describe('FormProvider', () => {
 
 		const calls = mockDispatch.mock.calls;
 
-		const submitRelatedCalls = calls.filter((call) => ['form_submit_start', 'form_submit'].includes(call[1]));
+		const submitRelatedCalls = calls.filter((call) =>
+			['form_submit_start', 'form_submit'].includes(call[0]?.trigger),
+		);
 
-		const lastSubmitStart = submitRelatedCalls.findIndex((call) => call[1] === 'form_submit_start');
-		const lastFormSubmit = submitRelatedCalls.findIndex((call) => call[1] === 'form_submit');
+		const lastSubmitStart = submitRelatedCalls.findIndex((call) => call[0]?.trigger === 'form_submit_start');
+		const lastFormSubmit = submitRelatedCalls.findIndex((call) => call[0]?.trigger === 'form_submit');
 
 		expect(lastSubmitStart).toBeGreaterThan(-1);
 		expect(lastFormSubmit).toBeGreaterThan(-1);
 
-		const submitStartIndex = calls.findIndex((call) => call[1] === 'form_submit_start');
-		const formSubmitIndex = calls.findIndex((call) => call[1] === 'form_submit');
+		const submitStartIndex = calls.findIndex((call) => call[0]?.trigger === 'form_submit_start');
+		const formSubmitIndex = calls.findIndex((call) => call[0]?.trigger === 'form_submit');
 
 		expect(submitStartIndex).toBeLessThan(formSubmitIndex);
 	});

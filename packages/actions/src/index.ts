@@ -15,15 +15,26 @@
  *
  * @example
  * ```typescript
+ * import { z } from 'zod';
  * import { ActionExecutor, ActionRegistration, ActionRegistry } from '@schema-engine/actions';
  *
  * // Define your domain-specific types
  * type MyTrigger = 'submit' | 'change' | 'mount';
  * type MyContext = { formId: string; data: Record<string, unknown> };
+ * interface LogActionConfig {
+ *   id: string;
+ *   $type: 'log';
+ *   message: string;
+ * }
  *
  * // Create action registrations
- * const logAction: ActionRegistration<'log', MyContext, MyTrigger> = {
+ * const logAction: ActionRegistration<LogActionConfig, MyContext, MyTrigger> = {
  *   $type: 'log',
+ *   schema: z.object({
+ *     id: z.string(),
+ *     $type: z.literal('log'),
+ *     message: z.string(),
+ *   }),
  *   metadata: {
  *     name: 'Log Action',
  *     description: 'Logs data',
@@ -36,13 +47,31 @@
  * };
  *
  * // Create and use executor
+ * const registry = new ActionRegistry<MyContext, MyTrigger>();
+ * registry.register(logAction);
  * const executor = new ActionExecutor(registry);
- * const results = await executor.execute(actions, 'submit', context);
+ * const results = await executor.execute({
+ *   actions: [{ id: 'log-1', $type: 'log', message: 'hello' }],
+ *   trigger: 'submit',
+ *   context: { formId: '123', data: {} },
+ * });
  * ```
  */
 
-export type { ActionExecutionContext, ActionExecutionResult, ActionRegistration } from './types';
+export { defineAction } from './types';
+export type {
+	ActionConfigBase,
+	ActionDispatchInput,
+	ActionExecuteInput,
+	ActionExecutionContext,
+	ActionExecutionResult,
+	ActionHandler,
+	ActionMetadata,
+	ActionRegistration,
+	ActionRuntimeContext,
+} from './types';
 export { ActionRegistry } from './registry';
+export type { ActionRegistryProvider } from './registry';
 export { ActionExecutor } from './executor';
 export type { ActionExecutorOptions } from './executor';
 export { ActionDispatcher } from './dispatcher';

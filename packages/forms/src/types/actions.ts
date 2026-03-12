@@ -1,4 +1,5 @@
 import type { FormActionTrigger } from '../actions/triggers';
+import type { ActionRuntimeContext } from '@schema-engine/actions';
 
 /**
  * Action triggers for the builder pattern - events that can trigger action execution.
@@ -9,14 +10,13 @@ import type { FormActionTrigger } from '../actions/triggers';
 export type BuilderActionTrigger = FormActionTrigger;
 
 /**
- * Action execution context for the builder pattern.
+ * Base action context for the builder pattern.
  *
- * Contains all information about the form state, validation, and metadata.
- * This is the context passed to builder action execute functions.
+ * Contains the caller-provided form state, validation state, and metadata.
+ * The action executor enriches this base context with `config` and `trigger`
+ * before invoking action handlers.
  */
-export interface BuilderActionExecutionContext<TConfig = unknown> {
-	/** The action configuration */
-	config: TConfig;
+export interface BuilderActionBaseContext {
 	/** Unique form identifier */
 	formId: string;
 	/** Current form data (all fields) */
@@ -29,8 +29,6 @@ export interface BuilderActionExecutionContext<TConfig = unknown> {
 	isValid: boolean;
 	/** Validation errors by field name */
 	errors: Record<string, unknown>;
-	/** The trigger event that caused this action to execute */
-	trigger: FormActionTrigger;
 	/** Form metadata and timing information */
 	metadata: {
 		/** Timestamp when current step started */
@@ -53,3 +51,18 @@ export interface BuilderActionExecutionContext<TConfig = unknown> {
 		[key: string]: unknown;
 	};
 }
+
+/**
+ * Runtime action context for the builder pattern.
+ * Includes the base form context plus the current action config and trigger.
+ */
+export type BuilderActionRuntimeContext<TConfig = unknown> = ActionRuntimeContext<
+	TConfig,
+	BuilderActionBaseContext,
+	FormActionTrigger
+>;
+
+/**
+ * Execution context passed to form action handlers.
+ */
+export type BuilderActionExecutionContext<TConfig = unknown> = BuilderActionRuntimeContext<TConfig>;

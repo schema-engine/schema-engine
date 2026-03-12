@@ -1,357 +1,94 @@
 import { DocsLayout } from '@/layouts/docs-layout';
-import { LivePreview, CodePreview } from '@/components/code-preview';
 
 export const config = {
-  layout: DocsLayout,
+	layout: DocsLayout,
 };
 
 export const getMetadata = () => ({
-  title: 'How Actions Work | Form Engine Documentation',
-  description:
-    "Learn how Form Engine's action system handles form submissions, notifications, and other behaviors through plugins.",
+	title: 'How Actions Work | Schema Engine Actions',
+	description: 'Understand the generic action lifecycle used by the current implementation.',
 });
 
 # How Actions Work
 
-Actions handle what happens when users interact with your forms - submissions, resets, notifications, and more. The system uses plugins that you register when needed.
+This page explains the generic lifecycle of the actions package.
 
-## Basic Setup
+Forms is the first concrete consumer in this repo, but the mechanics below are package-level behavior.
 
-Actions work through a registry system. You register plugins, then define actions in your form config:
+## Lifecycle
 
-## Basic Setup
+1. Register action types in an `ActionRegistry`.
+2. Provide action configs to the executor.
+3. Trigger execution with a trigger value and base context.
+4. The executor resolves matching registrations.
+5. The executor enriches the provided context with `config` and `trigger`.
+6. Actions run sequentially and return normalized results.
 
-Actions work through a registry system. For a complete guide on setup, see [Getting Started](/docs/packages/actions/getting-started).
-
-The core lifecycle is:
-1.  **Register Plugins**: Add capabilities (submit, log, etc.) to the `ActionRegistry`.
-2.  **Define Config**: Describe *what* you want to do in your JSON/Object config.
-3.  **Execute**: The `ActionExecutor` matches config to plugins and runs them.
-
-## Available Triggers
-
-Actions respond to specific events. Here are the actual triggers you can use:
-
-### Form Events
-
-- **`form_mount`** - Form initialization
-- **`form_change`** - Any field changes
-- **`form_submit`** - Form submission starts
-
-### Submit Events
-
-- **`form_submit_start`** - Submit begins (internal)
-- **`form_submit_success`** - Submit succeeded (internal)
-- **`form_submit_error`** - Submit failed (internal)
-- **`form_submit_complete`** - Submit finished (internal)
-
-### Multi-step Events
-
-- **`step_change`** - Navigation between steps
-- **`step_submit`** - Step submission
-- **`step_enter`** - Entering a step
-- **`step_leave`** - Leaving a step
-- **`step_view`** - Step becomes visible
-
-<CodePreview
-	className="unprose"
-	fileName="action-triggers.ts"
-	code={`// Actions can specify custom triggers
-const formWithTriggers: FormConfig = {
-  id: 'multi-step-form',
-  // ... form config
-  actions: [
-    {
-      id: 'submit-form',
-      $type: 'submit',
-      endpoint: '/api/submit',
-      // Uses default triggers: ['form_submit']
-    },
-    {
-      id: 'success-message',
-      $type: 'show_notification',
-      message: 'Submitted successfully!',
-      triggers: ['form_submit_success'] // Only after success
-    },
-    {
-      id: 'step-analytics',
-      $type: 'gtm_event',
-      event: 'step_viewed', 
-      triggers: ['step_view'] // Track step views
-    }
-  ]
-};`}
-/>
-
-## Available Action Types
-
-The system comes with several plugin types:
-
-### Submit Actions
-
-Handle form submissions to APIs:
+## Registration Example
 
 ```typescript
-{
-  id: 'submit-contact',
-  $type: 'submit',
-  endpoint: '/api/contact',
-  method: 'POST',
-  successMessage: 'Message sent!',
-  errorMessage: 'Failed to send message'
-}
-```
-
-### Notification Actions
-
-Show messages to users:
-
-```typescript
-{
-  id: 'show-success',
-  $type: 'show_notification',
-  message: 'Form submitted successfully!',
-  variant: 'success',
-  duration: 3000,
-  triggers: ['form_submit_success']
-}
-```
-
-### Reset Actions
-
-Clear form data:
-
-```typescript
-{
-  id: 'clear-form',
-  $type: 'reset',
-  resetToDefaults: true,
-  confirmMessage: 'Clear all data?'
-}
-```
-
-/>
-
-### Auto-save Actions
-
-Save drafts automatically:
-
-```typescript
-{
-  id: 'save-draft',
-  $type: 'auto_save',
-  storageKey: 'contact_form_draft',
-  triggers: ['form_change']
-}
-```
-
-## Plugin Configuration
-
-Plugins accept configuration to customize behavior:
-
-```typescript
-import { registerAction } from '@/lib/form-engine/actions/action-registry';
-import { submitPlugin, notificationPlugin } from '@/lib/form-engine/actions/plugins';
-
-// Configure submit behavior
-registerAction(
-	submitPlugin({
-		// Custom request handling
-		request: async (url, options) => {
-			return fetch(url, {
-				...options,
-				headers: {
-					...options.headers,
-					Authorization: 'Bearer ' + getAuthToken(),
-				},
-			});
-		},
-
-		// Transform data before sending
-		transformData: (data, context) => ({
-			...data,
-			timestamp: new Date().toISOString(),
-			formId: context.formId,
-		}),
-
-		// Success callback
-		onSuccess: (data, context) => {
-			console.log('Form submitted:', data);
-			gtag('event', 'form_submit', { form_id: context.formId });
-		},
-
-		// Error callback
-		onError: (error, context) => {
-			console.error('Submit failed:', error);
-			// Could send to error tracking service
-		},
-	}),
-);
-
-// Configure notifications
-registerAction(
-	notificationPlugin({
-		onSuccess: (message) => toast.success(message),
-		onError: (message) => toast.error(message),
-		onWarning: (message) => toast.warning(message),
-	}),
-);
-```
-
-## How It Works Internally
-
-When a form event occurs (like submission), the FormEngine:
-
-1. **Finds matching actions** - Looks for actions with matching triggers
-2. **Validates configuration** - Uses Zod schemas to validate action config
-3. **Executes sequentially** - Runs actions one after another
-4. **Handles results** - Processes success/error outcomes
-5. **Triggers follow-up** - May trigger additional actions (like `submit_success`)
-
-```typescript
-// Example: Form submission flow
-// 1. User clicks submit
-// 2. FormEngine finds actions with 'form_submit' trigger
-// 3. Executes submit action
-// 4. On success, triggers 'form_submit_success' actions
-// 5. Notification and reset actions run
-
-const executionFlow = {
-	form_submit: ['submit-form'], // Submit to API
-	form_submit_success: ['show-notification', 'reset-form'], // Follow-up actions
-	form_submit_error: ['show-error'], // Error handling
-};
-```
-
-## Creating Custom Actions
-
-You can create your own action types by registering custom handlers:
-
-```typescript
-import { registerAction } from '@/lib/form-engine/actions/action-registry';
-import { z } from 'zod';
-
-// Define your action schema
-const MyActionSchema = z.object({
-	id: z.string(),
-	type: z.literal('my_action'),
-	customProperty: z.string(),
-	enabled: z.boolean().default(true),
-});
-
-// Register the action handler
-registerAction({
-	type: 'my_action',
-	schema: MyActionSchema,
-	defaultTriggers: ['form_submit'],
-	handler: async (action, context) => {
-		console.log('Custom action executed!', {
-			action: action.customProperty,
-			formId: context.formId,
-			formData: context.formData,
-		});
-
-		// Do your custom logic here
-
-		return {
-			success: true,
-			message: 'Custom action completed',
-		};
+const registration = {
+	$type: 'log',
+	schema: LogActionSchema,
+	metadata: {
+		name: 'Log Action',
+		defaultTriggers: ['submit'],
 	},
-});
-
-// Use in form config
-const formWithCustomAction: FormConfig = {
-	actions: [
-		{
-			id: 'my-custom-action',
-			type: 'my_action',
-			customProperty: 'Hello World',
-		},
-	],
+	execute: async (context) => {
+		console.log(context.trigger, context.config.message);
+		return { success: true };
+	},
 };
 ```
+
+## Trigger Matching
+
+The executor checks action configs in order.
+
+- If the config has a `triggers` array, that list is used.
+- Otherwise the registration `metadata.defaultTriggers` is used.
+
+## Context Enrichment
+
+The key runtime behavior is this merge:
+
+```typescript
+execute({
+	...context,
+	config: action,
+	trigger,
+});
+```
+
+That is why actions usually read `context.config` and `context.trigger` directly.
 
 ## Execution Order
 
-Actions execute sequentially in the order they're defined. This prevents race conditions and ensures predictable behavior:
+Actions run in array order, not registry registration order.
 
 ```typescript
-// Actions run in order
-const formConfig: FormConfig = {
+await executor.execute({
 	actions: [
-		{ id: 'submit-form', $type: 'submit', endpoint: '/api/submit' },
-		{ id: 'show-success', $type: 'show_notification', triggers: ['form_submit_success'] },
-		{ id: 'reset-form', $type: 'reset', triggers: ['form_submit_success'] },
+		{ id: 'a', $type: 'log', message: 'first' },
+		{ id: 'b', $type: 'log', message: 'second' },
 	],
-};
-
-// Execution flow:
-// 1. Submit action runs first
-// 2. If successful, triggers 'form_submit_success'
-// 3. Success notification shows
-// 4. Form resets
-// All happen sequentially, not in parallel
+	trigger: 'submit',
+	context,
+});
 ```
 
-## Common Patterns
+## Control Flow
 
-### Submit with Notifications
-
-````typescript
-const formWithNotifications: FormConfig = {
-  actions: [
-    {
-      id: 'submit-contact',
-      $type: 'submit',
-      endpoint: '/api/contact',
-      successMessage: 'Message sent successfully!',
-      errorMessage: 'Failed to send message'
-    },
-    {
-      id: 'success-notification',
-      $type: 'show_notification',
-      message: 'Thanks for contacting us!',
-      variant: 'success',
-      triggers: ['form_submit_success']
-    },
-    {
-      id: 'error-notification',
-      $type: 'show_notification',
-      message: 'Please try again',
-      variant: 'error',
-      triggers: ['form_submit_error']
-    }
-  ]
-};`}
-/>
-
-### Auto-save with Submit
+An action result can stop the chain:
 
 ```typescript
-const formWithAutoSave: FormConfig = {
-  actions: [
-    {
-      id: 'auto-save-draft',
-      $type: 'auto_save',
-      storageKey: 'contact_draft',
-      debounceMs: 1000,
-      triggers: ['form_change']
-    },
-    {
-      id: 'submit-form',
-      $type: 'submit',
-      endpoint: '/api/contact'
-    },
-    {
-      id: 'clear-draft',
-      $type: 'auto_save',
-      storageKey: 'contact_draft',
-      clearOnSuccess: true,
-      triggers: ['form_submit_success']
-    }
-  ]
+return {
+	success: false,
+	error: 'Stop here',
+	shouldContinue: false,
 };
-````
+```
 
-That's how Form Engine actions work - register the plugins you need, define actions in your form config, and let the system handle the execution flow. The plugin system keeps things flexible while the sequential execution ensures predictable behavior.
+## Downstream Implementations
+
+The forms package builds on this model by defining a richer execution context with form-specific fields such as `formData`, `errors`, and controller methods. That is an implementation built on top of the generic action primitives, not behavior built into this package.

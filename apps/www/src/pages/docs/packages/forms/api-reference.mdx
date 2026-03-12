@@ -22,7 +22,9 @@ class FormComposer<TElements, TLayouts, TSteppers, TActions> {
 	addElement<T>(registration: ElementRegistration<T>): FormComposer<...>;
 	addLayout<T>(registration: LayoutRegistration<T>): FormComposer<...>;
 	addStepper<T>(registration: StepperRegistration<T>): FormComposer<...>;
-	addAction<T>(registration: BuilderActionRegistration<T>): FormComposer<...>;
+	addAction<TType extends string, TConfig extends ActionConfigBase<TType>>(
+		registration: BuilderActionRegistration<TType, TConfig>,
+	): FormComposer<...>;
 
 	clone(): FormComposer<...>;
 	build(): FormEngine<...>;
@@ -49,9 +51,10 @@ class FormEngine<TElements, TLayouts, TSteppers, TActions> {
 	hasStepper(id: string): boolean;
 
 	// Actions
-	getAction(type: string): BuilderActionRegistration | undefined;
+	getAction(id: string): BuilderActionRegistration | undefined;
 	getAllActions(): BuilderActionRegistration[];
-	hasAction(type: string): boolean;
+	getActionTypes(): string[];
+	hasAction(id: string): boolean;
 
 	// Schema
 	getFormConfigSchema(): z.ZodType<FormConfig>;
@@ -102,12 +105,53 @@ interface StepperRegistration<TConfig> {
 ### BuilderActionRegistration
 
 ```typescript
-interface BuilderActionRegistration<TConfig> {
-	$type: string;
-	schema: z.ZodType<TConfig>;
-	metadata: ActionMetadata<BuilderActionTrigger>;
-	execute: (context: BuilderActionExecutionContext) => Promise<BuilderActionExecutionResult>;
+type BuilderActionRegistration<
+	TType extends string = string,
+	TConfig extends ActionConfigBase<TType> = ActionConfigBase<TType>,
+> = ActionRegistration<TConfig, BuilderActionBaseContext, BuilderActionTrigger>;
+```
+
+Use `defineAction<BuilderActionBaseContext, BuilderActionTrigger>()` from `@schema-engine/actions` to create custom form actions with correct runtime typing.
+
+### BuilderActionBaseContext
+
+```typescript
+interface BuilderActionBaseContext {
+	formId: string;
+	formData: Record<string, unknown>;
+	currentStep: number;
+	totalSteps: number;
+	isValid: boolean;
+	errors: Record<string, unknown>;
+	metadata: {
+		stepStartTime: number;
+		totalFormTime: number;
+		userInteractions: number;
+	};
+	form: {
+		reset: () => void;
+		setValue: (name: string, value: unknown) => void;
+		getValue?: (name: string) => unknown;
+		validate?: () => Promise<boolean>;
+		[key: string]: unknown;
+	};
 }
+```
+
+### BuilderActionExecutionContext
+
+```typescript
+type BuilderActionExecutionContext<TConfig = unknown> = BuilderActionRuntimeContext<TConfig>;
+```
+
+### BuilderActionRuntimeContext
+
+```typescript
+type BuilderActionRuntimeContext<TConfig = unknown> = ActionRuntimeContext<
+	TConfig,
+	BuilderActionBaseContext,
+	FormActionTrigger
+>;
 ```
 
 ### ElementMetadata

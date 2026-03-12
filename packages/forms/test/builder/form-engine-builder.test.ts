@@ -3,6 +3,14 @@ import { z } from 'zod';
 import { FormComposer } from '@/builder';
 import type { InputRegistration, LayoutRegistration, StepperRegistration, BuilderActionRegistration } from '@/types';
 
+function createActionSchema<TType extends string>(type: TType, shape: z.ZodRawShape = {}) {
+	return z.object({
+		id: z.string(),
+		$type: z.literal(type),
+		...shape,
+	});
+}
+
 describe('FormComposer', () => {
 	describe('Element Registration', () => {
 		test('should register a single element', () => {
@@ -268,7 +276,7 @@ describe('FormComposer', () => {
 		test('should register a single action', () => {
 			const submitActionRegistration: BuilderActionRegistration = {
 				$type: 'submit',
-				schema: z.object({ endpoint: z.string() }),
+				schema: createActionSchema('submit', { endpoint: z.string() }),
 				metadata: {
 					name: 'Submit Form',
 					description: 'Submit form data',
@@ -285,14 +293,14 @@ describe('FormComposer', () => {
 		test('should register multiple actions', () => {
 			const submitAction: BuilderActionRegistration = {
 				$type: 'submit',
-				schema: z.object({}),
+				schema: createActionSchema('submit'),
 				metadata: { name: 'Submit' },
 				execute: async () => ({ success: true }),
 			};
 
 			const resetAction: BuilderActionRegistration = {
 				$type: 'reset',
-				schema: z.object({}),
+				schema: createActionSchema('reset'),
 				metadata: { name: 'Reset' },
 				execute: async () => ({ success: true }),
 			};
@@ -308,14 +316,14 @@ describe('FormComposer', () => {
 		test('should override duplicate action id with warning', () => {
 			const registration1: BuilderActionRegistration = {
 				$type: 'submit',
-				schema: z.object({}),
+				schema: createActionSchema('submit'),
 				metadata: { name: 'Submit' },
 				execute: async () => ({ success: true }),
 			};
 
 			const registration2: BuilderActionRegistration = {
 				$type: 'submit',
-				schema: z.object({}),
+				schema: createActionSchema('submit'),
 				metadata: { name: 'Custom Submit' },
 				execute: async () => ({ success: true, custom: true }),
 			};
@@ -355,7 +363,7 @@ describe('FormComposer', () => {
 
 			const action: BuilderActionRegistration = {
 				$type: 'submit',
-				schema: z.object({}),
+				schema: createActionSchema('submit'),
 				metadata: { name: 'Submit' },
 				execute: async () => ({ success: true }),
 			};
@@ -475,7 +483,7 @@ describe('FormComposer', () => {
 
 			const submitAction: BuilderActionRegistration = {
 				$type: 'submit',
-				schema: z.object({ endpoint: z.string(), method: z.string() }),
+				schema: createActionSchema('submit', { endpoint: z.string(), method: z.string() }),
 				metadata: {
 					name: 'Submit Form',
 					description: 'Submit form to endpoint',
@@ -534,7 +542,7 @@ describe('FormComposer', () => {
 
 			const submitAction: BuilderActionRegistration = {
 				$type: 'submit',
-				schema: z.object({ url: z.string() }),
+				schema: createActionSchema('submit', { url: z.string() }),
 				metadata: { name: 'Submit' },
 				execute: async () => ({ success: true }),
 			};
@@ -608,14 +616,14 @@ describe('FormComposer', () => {
 
 			const submitAction: BuilderActionRegistration = {
 				$type: 'submit',
-				schema: z.object({ url: z.string() }),
+				schema: createActionSchema('submit', { url: z.string() }),
 				metadata: { name: 'Submit' },
 				execute: async () => ({ success: true }),
 			};
 
 			const logAction: BuilderActionRegistration = {
 				$type: 'log',
-				schema: z.object({ message: z.string() }),
+				schema: createActionSchema('log', { message: z.string() }),
 				metadata: { name: 'Log' },
 				execute: async () => ({ success: true }),
 			};

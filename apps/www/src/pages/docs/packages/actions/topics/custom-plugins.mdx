@@ -1,697 +1,132 @@
 import { DocsLayout } from '@/layouts/docs-layout';
-import { CodePreview } from '@/components/code-preview';
-import { Badge } from '@/components/ui/badge';
 
 export const config = {
 	layout: DocsLayout,
 };
 
 export const getMetadata = () => ({
-	title: 'Creating Custom Plugins | Form Engine Actions',
-	description:
-		'Learn how to create your own action plugins for custom form behaviors - step-by-step guide with examples.',
+	title: 'Custom Actions | Schema Engine Actions',
+	description: 'Build your own action registrations using the current base-context and runtime-enrichment model.',
 });
 
-# Creating Custom Plugins
+# Custom Actions
 
-While Form Engine comes with several built-in plugins, you can create custom plugins for specific behaviors your forms need. This guide shows you how to build and register your own action plugins.
+`@schema-engine/actions` does not ship built-in domain plugins. Instead, you define your own registrations for your domain.
 
-## Plugin Architecture
-
-A plugin is a factory function that returns an action registration object:
+## Define a Config Schema
 
 ```typescript
 import { z } from 'zod';
-import type { ActionExecutionContext, ActionExecutionResult } from '@schema-engine/actions';
 
-// 1. Define the action schema
-const MyActionSchema = z.object({
+export const WebhookActionSchema = z.object({
 	id: z.string(),
-	type: z.literal('my_action'),
-	customProperty: z.string(),
-	enabled: z.boolean().default(true),
+	$type: z.literal('webhook'),
+	url: z.string().url(),
+	method: z.enum(['POST', 'PUT']).default('POST'),
+	body: z.record(z.string(), z.unknown()).optional(),
+	enabled: z.boolean().optional(),
 	triggers: z.array(z.string()).optional(),
 });
 
-// 2. Create the plugin factory
-export function myPlugin(config: MyPluginConfig = {}) {
-	return {
-		type: 'my_action' as const,
-		schema: MyActionSchema,
-		defaultTriggers: ['form_submit'] as const,
-		handler: async (action, context) => {
-			// Your custom logic here
-			return { success: true, message: 'Action completed' };
-		},
-	};
-}
+export type WebhookActionConfig = z.infer<typeof WebhookActionSchema>;
+```
 
-// 3. Export types for TypeScript
-export type MyAction = z.infer<typeof MyActionSchema>;
-export interface MyPluginConfig {
-	onComplete?: (result: any, context: ActionExecutionContext) => void;
-	validateData?: (data: any) => boolean;
+## Define the Base Context and Trigger
+
+```typescript
+type Trigger = 'submit' | 'sync';
+
+interface BaseContext {
+	entityId: string;
+	data: Record<string, unknown>;
 }
 ```
 
-## Step-by-Step: Creating a Logger Plugin
-
-Let's create a plugin that logs form interactions to an external service:
-
-### Step 1: Define the Schema
+## Create the Registration
 
 ```typescript
-import { z } from 'zod';
-
-export const LoggerActionSchema = z.object({
-	id: z.string().min(1, 'Action ID is required'),
-	type: z.literal('logger'),
-	enabled: z.boolean().default(true),
-	triggers: z.array(z.string()).optional(),
-
-	// Plugin-specific properties
-	logLevel: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
-	message: z.string().optional(),
-	includeFormData: z.boolean().default(false),
-	includeUserAgent: z.boolean().default(false),
-	tags: z.array(z.string()).default([]),
-});
-
-export type LoggerAction = z.infer<typeof LoggerActionSchema>;
-```
-
-### Step 2: Define Configuration Interface
-
-```typescript
-import type { ActionExecutionContext } from '@schema-engine/actions';
-
-export interface LoggerPluginConfig {
-	// Custom log transport
-	transport?: (logEntry: LogEntry) => Promise<void>;
-
-	// Transform log data before sending
-	transformLogData?: (action: LoggerAction, context: ActionExecutionContext) => any;
-
-	// Filter which logs to send
-	shouldLog?: (action: LoggerAction, context: ActionExecutionContext) => boolean;
-
-	// Called after successful logging
-	onLogSent?: (logEntry: LogEntry, context: ActionExecutionContext) => void;
-
-	// Error handling
-	onError?: (error: Error, context: ActionExecutionContext) => void;
-}
-
-export interface LogEntry {
-	timestamp: string;
-	formId: string;
-	trigger: string;
-	level: string;
-	message?: string;
-	formData?: any;
-	userAgent?: string;
-	tags: string[];
-	customData?: any;
-}
-```
-
-### Step 3: Implement the Plugin Factory
-
-````typescript
-import { LoggerActionSchema, type LoggerAction } from './logger-schema';
-import type { LoggerPluginConfig, LogEntry } from './logger-config';
-import type { ActionExecutionContext, ActionExecutionResult } from '@schema-engine/actions';
-
-export function loggerPlugin(config: LoggerPluginConfig = {}) {
-  const {
-    transport = defaultTransport,
-    transformLogData = (action, context) => ({}),
-    shouldLog = () => true,
-    onLogSent = () => {},
-    onError = (error) => console.error('Logger plugin error:', error)
-  } = config;
-
-  return {
-    type: 'logger' as const,
-    schema: LoggerActionSchema,
-    defaultTriggers: ['form_submit'] as const,
-    handler: async (
-      action: LoggerAction,
-      context: ActionExecutionContext
-    ): Promise<ActionExecutionResult> => {
-      try {
-        // Check if we should log this event
-        if (!shouldLog(action, context)) {
-          return { success: true, message: 'Logging skipped' };
-        }
-
-        // Build log entry
-        const logEntry: LogEntry = {
-          timestamp: new Date().toISOString(),
-          formId: context.formId,
-          trigger: context.trigger,
-          level: action.logLevel,
-          message: action.message,
-          tags: action.tags,
-          customData: transformLogData(action, context)
-        };
-
-        // Include optional data
-        if (action.includeFormData) {
-          logEntry.formData = context.formData;
-        }
-
-        if (action.includeUserAgent && typeof navigator !== 'undefined') {
-          logEntry.userAgent = navigator.userAgent;
-        }
-
-        // Send log entry
-        await transport(logEntry);
-
-        // Notify success
-        onLogSent(logEntry, context);
-
-        return {
-          success: true,
-          message: \`Log sent: \${action.logLevel}\`,
-          data: { logEntry }
-        };
-
-      } catch (error) {
-        const err = error instanceof Error ? error : new Error(String(error));
-        onError(err, context);
-
-        return {
-          success: false,
-          error: \`Logging failed: \${err.message}\`
-        };
-      }
-    }
-  };
-}
-
-// Default transport (console + optional remote)
-async function defaultTransport(logEntry: LogEntry) {
-  console.log(\`[\${logEntry.level.toUpperCase()}] FormEngine:\`, logEntry);
-
-  // Could also send to remote service
-  if (process.env.NODE_ENV === 'production') {
-    try {
-      await fetch('/api/form-logs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(logEntry)
-      });
-    } catch (error) {
-      console.warn('Failed to send log to remote service:', error);
-    }
-  }
-}`}
-/>
-
-### Step 4: Type Declaration
-
-For TypeScript support, add module augmentation:
-
-```typescript
-// Add to your types file or at the end of the plugin file
-declare module '@schema-engine/actions' {
-  interface PluginActions {
-    logger: LoggerAction;
-  }
-}`}
-/>
-
-### Step 5: Register and Use the Plugin
-
-```typescript
-import { registerAction } from './my-registry';
-import { loggerPlugin } from './logger-plugin';
-
-// Register with custom configuration
-registerAction(loggerPlugin({
-  // Send logs to your analytics service
-  transport: async (logEntry) => {
-    await analytics.track('form_interaction', {
-      formId: logEntry.formId,
-      trigger: logEntry.trigger,
-      timestamp: logEntry.timestamp,
-      customData: logEntry.customData
-    });
-  },
-
-  // Add custom data to logs
-  transformLogData: (action, context) => ({
-    userId: getCurrentUserId(),
-    sessionId: getSessionId(),
-    formStep: context.currentStep,
-    fieldsCompleted: Object.keys(context.formData).length
-  }),
-
-  // Only log in production
-  shouldLog: (action, context) => {
-    return process.env.NODE_ENV === 'production';
-  },
-
-  // Success callback
-  onLogSent: (logEntry, context) => {
-    console.log(\`Logged interaction for form \${context.formId}\`);
-  }
-}));`}
-/>
-
-### Step 6: Use in Form Config
-
-```typescript
-const formWithLogging: FormConfig = {
-  id: 'contact-form',
-  title: 'Contact Us',
-  steps: [/* ... */],
-  actions: [
-    {
-      id: 'log-form-start',
-      type: 'logger',
-      logLevel: 'info',
-      message: 'User started contact form',
-      includeUserAgent: true,
-      tags: ['contact', 'form-start'],
-      triggers: ['form_mount']
-    },
-    {
-      id: 'log-form-submit',
-      type: 'logger',
-      logLevel: 'info',
-      message: 'User submitted contact form',
-      includeFormData: false, // Don't log sensitive data
-      tags: ['contact', 'form-submit'],
-      triggers: ['form_submit']
-    },
-    {
-      id: 'log-submit-error',
-      type: 'logger',
-      logLevel: 'error',
-      message: 'Contact form submission failed',
-      tags: ['contact', 'error'],
-      triggers: ['form_submit_error']
-    }
-  ]
-};
-````
-
-## Advanced Plugin Patterns
-
-### Plugin with State Management
-
-```typescript
-interface AnalyticsState {
-	startTime: number;
-	interactions: number;
-	lastActivity: number;
-}
-
-// Plugin that tracks form session analytics
-export function analyticsPlugin(config: AnalyticsConfig = {}) {
-	// Plugin-level state (shared across all forms)
-	const formSessions = new Map<string, AnalyticsState>();
-
-	return {
-		type: 'analytics' as const,
-		schema: AnalyticsActionSchema,
-		defaultTriggers: ['form_mount', 'form_change', 'form_submit'] as const,
-		handler: async (action, context) => {
-			const { formId, trigger } = context;
-
-			// Get or create session state
-			let session = formSessions.get(formId);
-			if (!session) {
-				session = {
-					startTime: Date.now(),
-					interactions: 0,
-					lastActivity: Date.now(),
-				};
-				formSessions.set(formId, session);
-			}
-
-			// Update state based on trigger
-			switch (trigger) {
-				case 'form_mount':
-					session.startTime = Date.now();
-					break;
-				case 'form_change':
-					session.interactions++;
-					session.lastActivity = Date.now();
-					break;
-				case 'form_submit':
-					const duration = Date.now() - session.startTime;
-					await config.onSubmit?.({
-						formId,
-						duration,
-						interactions: session.interactions,
-					});
-					// Clean up session
-					formSessions.delete(formId);
-					break;
-			}
-
-			return { success: true };
-		},
-	};
-}
-```
-
-### Plugin with External Dependencies
-
-```typescript
-import { z } from 'zod';
-
-// Plugin that integrates with external services
-export function integrationPlugin(config: IntegrationConfig) {
-  // Validate external dependencies
-  if (!config.apiClient) {
-    throw new Error('Integration plugin requires apiClient');
-  }
-
-  return {
-    type: 'integration' as const,
-    schema: IntegrationActionSchema,
-    defaultTriggers: ['form_submit_success'] as const,
-    handler: async (action, context) => {
-      try {
-        // Use external service
-        const result = await config.apiClient.createContact({
-          formId: context.formId,
-          data: context.formData,
-          source: action.source || 'form-engine'
-        });
-
-        // Handle webhooks if configured
-        if (action.webhookUrl) {
-          await fetch(action.webhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              event: 'form_submitted',
-              formId: context.formId,
-              contactId: result.id,
-              timestamp: new Date().toISOString()
-            })
-          });
-        }
-
-        return {
-          success: true,
-          message: 'Integration completed',
-          data: { contactId: result.id }
-        };
-
-      } catch (error) {
-        return {
-          success: false,
-          error: \`Integration failed: \${error.message}\`
-        };
-      }
-    }
-  };
-}
-
-interface IntegrationConfig {
-  apiClient: {
-    createContact: (data: any) => Promise<{ id: string }>;
-  };
-  onSuccess?: (contactId: string) => void;
-  onError?: (error: Error) => void;
-}
-```
-
-### Async Plugin with Progress
-
-```typescript
-export function uploadPlugin(config: UploadConfig = {}) {
-  return {
-    type: 'upload' as const,
-    schema: UploadActionSchema,
-    defaultTriggers: ['form_submit'] as const,
-    handler: async (action, context) => {
-      try {
-        const files = extractFiles(context.formData);
-        if (files.length === 0) {
-          return { success: true, message: 'No files to upload' };
-        }
-
-        // Show progress if configured
-        config.onProgress?.({ uploaded: 0, total: files.length });
-
-        const uploadPromises = files.map(async (file, index) => {
-          const result = await uploadFile(file, action.uploadEndpoint);
-          config.onProgress?.({ uploaded: index + 1, total: files.length });
-          return result;
-        });
-
-        const uploadResults = await Promise.all(uploadPromises);
-
-        return {
-          success: true,
-          message: \`Uploaded \${files.length} files\`,
-          data: { uploadResults }
-        };
-
-      } catch (error) {
-        return {
-          success: false,
-          error: \`Upload failed: \${error.message}\`
-        };
-      }
-    }
-  };
-}
-
-interface UploadConfig {
-  onProgress?: (progress: { uploaded: number; total: number }) => void;
-  onComplete?: (results: any[]) => void;
-}
-```
-
-## Testing Custom Plugins
-
-### Unit Testing
-
-```typescript
-import { describe, test, expect, vi } from 'vitest';
-import { loggerPlugin } from './logger-plugin';
-import type { ActionExecutionContext } from '@/lib/form-engine/actions/types';
-
-describe('loggerPlugin', () => {
-	test('should log with default transport', async () => {
-		const consoleSpy = vi.spyOn(console, 'log');
-		const plugin = loggerPlugin();
-
-		const action = {
-			id: 'test-log',
-			type: 'logger' as const,
-			logLevel: 'info' as const,
-			message: 'Test message',
-			tags: ['test'],
-		};
-
-		const context: ActionExecutionContext = {
-			formId: 'test-form',
-			trigger: 'form_submit',
-			formData: { name: 'John' },
-			isValid: true,
-		};
-
-		const result = await plugin.handler(action, context);
-
-		expect(result.success).toBe(true);
-		expect(consoleSpy).toHaveBeenCalledWith(
-			expect.stringContaining('[INFO] FormEngine:'),
-			expect.objectContaining({
-				formId: 'test-form',
-				trigger: 'form_submit',
-				message: 'Test message',
-			}),
-		);
-	});
-
-	test('should use custom transport', async () => {
-		const mockTransport = vi.fn();
-		const plugin = loggerPlugin({ transport: mockTransport });
-
-		const action = {
-			id: 'test-log',
-			type: 'logger' as const,
-			logLevel: 'info' as const,
-		};
-
-		const context: ActionExecutionContext = {
-			formId: 'test-form',
-			trigger: 'form_submit',
-			formData: {},
-			isValid: true,
-		};
-
-		await plugin.handler(action, context);
-
-		expect(mockTransport).toHaveBeenCalledWith(
-			expect.objectContaining({
-				formId: 'test-form',
-				trigger: 'form_submit',
-			}),
-		);
-	});
-});
-```
-
-### Integration Testing
-
-```typescript
-import { describe, test, expect, beforeEach } from 'vitest';
-import { describe, test, expect, beforeEach } from 'vitest';
-import { ActionRegistry, ActionExecutor } from '@schema-engine/actions';
-import { loggerPlugin } from './logger-plugin';
-
-describe('Logger Plugin Integration', () => {
-	beforeEach(() => {
-		actionRegistry.clear();
-	});
-
-	test('should work with action executor', async () => {
-		const logsSent: any[] = [];
-
-		registerAction(
-			loggerPlugin({
-				transport: async (logEntry) => {
-					logsSent.push(logEntry);
-				},
-			}),
-		);
-
-		const executor = new ActionExecutor();
-		const actions = [
-			{
-				id: 'log-submit',
-				type: 'logger',
-				logLevel: 'info',
-				message: 'Form submitted',
+import type { ActionRegistration } from '@schema-engine/actions';
+
+export const webhookAction: ActionRegistration<WebhookActionConfig, BaseContext, Trigger> = {
+	$type: 'webhook',
+	schema: WebhookActionSchema,
+	metadata: {
+		name: 'Webhook',
+		description: 'Sends the current payload to a remote endpoint',
+		defaultTriggers: ['submit'],
+	},
+	execute: async (context) => {
+		const response = await fetch(context.config.url, {
+			method: context.config.method,
+			headers: {
+				'Content-Type': 'application/json',
 			},
-		];
-
-		await executor.executeTrigger(actions, 'form_submit', {
-			formId: 'test-form',
-			formData: { name: 'Test' },
-			isValid: true,
+			body: JSON.stringify({
+				trigger: context.trigger,
+				entityId: context.entityId,
+				data: context.data,
+				payload: context.config.body ?? null,
+			}),
 		});
 
-		expect(logsSent).toHaveLength(1);
-		expect(logsSent[0]).toMatchObject({
-			formId: 'test-form',
-			trigger: 'form_submit',
-			level: 'info',
-			message: 'Form submitted',
-		});
-	});
+		if (!response.ok) {
+			return {
+				success: false,
+				error: `Webhook failed with status ${response.status}`,
+			};
+		}
+
+		return {
+			success: true,
+			message: 'Webhook delivered',
+		};
+	},
+};
+```
+
+The handler receives `BaseContext & { config: WebhookActionConfig; trigger: Trigger }`. That runtime shape is created by the executor; you do not provide it at the call site.
+
+## Register and Execute
+
+```typescript
+import { ActionExecutor, ActionRegistry } from '@schema-engine/actions';
+
+const registry = new ActionRegistry<BaseContext, Trigger>();
+registry.register(webhookAction);
+
+const executor = new ActionExecutor<BaseContext, Trigger>(registry);
+
+const baseContext: BaseContext = {
+	entityId: 'entity-1',
+	data: { status: 'ready' },
+};
+
+await executor.execute({
+	actions: [
+		{
+			id: 'send-webhook',
+			$type: 'webhook',
+			url: 'https://example.com/hooks',
+			method: 'POST',
+		},
+	],
+	trigger: 'submit',
+	context: baseContext,
 });
 ```
 
-## Plugin Best Practices
+## Design Guidance
 
-### 1. Configuration Validation
+- Keep schemas strict and serializable.
+- Keep `execute()` focused on one side effect.
+- Use `defaultTriggers` for broad defaults and per-action `triggers` for overrides.
+- Return `shouldContinue: false` only when you want to stop the chain explicitly.
 
-```typescript
-export function robustPlugin(config: RobustConfig) {
-	// Validate config at plugin creation time
-	if (!config.apiKey) {
-		throw new Error('robustPlugin requires apiKey in config');
-	}
+## Typing Model
 
-	if (config.retries && (config.retries < 0 || config.retries > 5)) {
-		throw new Error('retries must be between 0 and 5');
-	}
+There are two layers:
 
-	// Provide sensible defaults
-	const finalConfig = {
-		retries: 3,
-		timeout: 5000,
-		...config,
-	};
+- `BaseContext` is what callers pass into `execute()` or `dispatch()`.
+- The action handler receives `ActionRuntimeContext<WebhookActionConfig, BaseContext, Trigger>`, which the executor constructs by adding `config` and `trigger`.
 
-	return {
-		type: 'robust' as const,
-		handler: async (action, context) => {
-			// Use validated config
-			return performActionWithRetries(action, context, finalConfig);
-		},
-	};
-}
-```
-
-### 2. Error Handling
-
-```typescript
-export function safePlugin(config: SafeConfig = {}) {
-	return {
-		type: 'safe' as const,
-		handler: async (action, context) => {
-			try {
-				// Your plugin logic
-				const result = await performAction(action, context);
-				return { success: true, data: result };
-			} catch (error) {
-				// Log error details
-				console.error('SafePlugin error:', {
-					error: error.message,
-					formId: context.formId,
-					actionId: action.id,
-					trigger: context.trigger,
-				});
-
-				// Call error handler if provided
-				config.onError?.(error, context);
-
-				// Return graceful failure
-				return {
-					success: false,
-					error: config.userFriendlyErrors ? 'Something went wrong. Please try again.' : error.message,
-					shouldContinue: config.continueOnError !== false,
-				};
-			}
-		},
-	};
-}
-```
-
-### 3. TypeScript Support
-
-```typescript
-// Always provide proper TypeScript support
-export interface MyPluginConfig {
-	apiKey: string;
-	timeout?: number;
-	onSuccess?: (data: any, context: ActionExecutionContext) => void;
-	onError?: (error: Error, context: ActionExecutionContext) => void;
-}
-
-// Export the action type
-export type MyAction = z.infer<typeof MyActionSchema>;
-
-// Module augmentation for global types
-declare module '@schema-engine/actions' {
-	interface PluginActions {
-		my_action: MyAction;
-	}
-}
-
-// Type-safe plugin factory
-export function myPlugin(config: MyPluginConfig) {
-	return {
-		type: 'my_action' as const,
-		schema: MyActionSchema,
-		defaultTriggers: ['form_submit'] as const,
-		handler: async (action: MyAction, context: ActionExecutionContext): Promise<ActionExecutionResult> => {
-			// Implementation with full type safety
-		},
-	};
-}
-```
-
-Custom plugins let you extend Form Engine with any behavior your forms need. Follow these patterns for reliable, maintainable plugins that integrate seamlessly with the action system.
+This keeps the call site simple while preserving a strongly typed handler context.

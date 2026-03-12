@@ -3,7 +3,7 @@ import type { ElementRegistry, LayoutRegistry, StepperRegistry } from '@/registr
 import type { ActionRegistry } from '@schema-engine/actions';
 import type { FormConfig } from '@/schemas/form-config';
 import type { PartialFormConfig, BuilderFormStep } from './types';
-import type { BuilderActionExecutionContext } from '@/types';
+import type { BuilderActionBaseContext } from '@/types';
 import type { FormActionTrigger } from '@/actions/triggers';
 import { z } from 'zod';
 
@@ -45,7 +45,7 @@ export class FormConfigBuilder<
 		private elementRegistry: ElementRegistry,
 		private layoutRegistry: LayoutRegistry,
 		private stepperRegistry: StepperRegistry,
-		private actionRegistry: ActionRegistry<BuilderActionExecutionContext, FormActionTrigger>,
+		private actionRegistry: ActionRegistry<BuilderActionBaseContext, FormActionTrigger>,
 	) {
 		this.config = {
 			steps: [],

@@ -1,4 +1,4 @@
-import type { ActionConfigBase, ActionExecutionResult } from './types';
+import type { ActionConfigBase, ActionExecuteInput, ActionExecutionResult, ActionRegistration } from './types';
 import type { ActionRegistryProvider } from './registry';
 
 /**
@@ -27,22 +27,18 @@ export interface ActionExecutorOptions {
  * const registry: ActionRegistryProvider<MyContext, MyTrigger> = new MyRegistry();
  * const executor = new ActionExecutor(registry, { debug: true });
  *
- * const results = await executor.execute(
+ * const results = await executor.execute({
  *   actions,
- *   'submit',
- *   { formId: '123', data: {...} }
- * );
+ *   trigger: 'submit',
+ *   context: { formId: '123', data: {} },
+ * });
  * ```
  */
-export class ActionExecutor<
-	TConfig extends ActionConfigBase = ActionConfigBase,
-	TContext = unknown,
-	TTrigger = string,
-> {
-	private registry: ActionRegistryProvider<TContext, TTrigger>;
+export class ActionExecutor<TBaseContext = unknown, TTrigger = string> {
+	private registry: ActionRegistryProvider<TBaseContext, TTrigger>;
 	private debug: boolean;
 
-	constructor(registry: ActionRegistryProvider<TContext, TTrigger>, options: ActionExecutorOptions = {}) {
+	constructor(registry: ActionRegistryProvider<TBaseContext, TTrigger>, options: ActionExecutorOptions = {}) {
 		this.registry = registry;
 		this.debug = options.debug ?? false;
 	}
@@ -70,12 +66,12 @@ export class ActionExecutor<
 	 * @param triggeredBy - Reference to the action that triggered this execution (for nested execution)
 	 * @returns Array of execution results
 	 */
-	async execute(
-		actions: TConfig[],
-		trigger: TTrigger,
-		context: TContext,
-		triggeredBy?: TConfig,
-	): Promise<ActionExecutionResult[]> {
+	async execute<TConfig extends ActionConfigBase>({
+		actions,
+		trigger,
+		context,
+		triggeredBy,
+	}: ActionExecuteInput<TConfig, TBaseContext, TTrigger>): Promise<ActionExecutionResult[]> {
 		this.log('debug', `Executing trigger: ${String(trigger)}`, {
 			actionsCount: actions.length,
 			triggeredBy: triggeredBy?.id,
@@ -150,7 +146,7 @@ export class ActionExecutor<
 	 * @param trigger - The trigger/event
 	 * @returns True if the action should execute
 	 */
-	private shouldExecute(action: TConfig, trigger: TTrigger): boolean {
+	private shouldExecute<TConfig extends ActionConfigBase>(action: TConfig, trigger: TTrigger): boolean {
 		if ('triggers' in action && Array.isArray(action.triggers)) {
 			return action.triggers.includes(trigger);
 		}
@@ -168,8 +164,14 @@ export class ActionExecutor<
 	 * @param context - Domain-specific context data
 	 * @returns Execution result
 	 */
-	private async executeAction(action: TConfig, trigger: TTrigger, context: TContext): Promise<ActionExecutionResult> {
-		const actionRegistration = this.registry.getAction(action.$type);
+	private async executeAction<TConfig extends ActionConfigBase>(
+		action: TConfig,
+		trigger: TTrigger,
+		context: TBaseContext,
+	): Promise<ActionExecutionResult> {
+		const actionRegistration = this.registry.getAction(action.$type) as
+			| ActionRegistration<TConfig, TBaseContext, TTrigger>
+			| undefined;
 		if (!actionRegistration) {
 			return {
 				success: false,

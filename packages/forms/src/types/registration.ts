@@ -1,8 +1,8 @@
 // oxlint-disable no-redundant-type-constituents
 import type { ComponentRegistration, Brand } from '@schema-engine/registry';
 import type { ElementMetadata } from './metadata';
-import type { BuilderActionExecutionContext, BuilderActionTrigger } from './actions.js';
-import type { ActionRegistration } from '@schema-engine/actions';
+import type { BuilderActionBaseContext, BuilderActionTrigger } from './actions.js';
+import type { ActionRegistration, ActionConfigBase } from '@schema-engine/actions';
 
 declare global {
 	namespace FormEngine {
@@ -119,7 +119,8 @@ export type StepperRegistration<
  * Action registration object for forms.
  *
  * This extends the base ActionRegistration from @schema-engine/actions,
- * specialized with form-specific context (BuilderActionExecutionContext) and trigger types.
+ * specialized with form-specific base context and trigger types.
+ * Action handlers still receive BuilderActionExecutionContext<TConfig> at runtime.
  *
  * @template TType - The action type identifier
  * @template TConfig - The action configuration type
@@ -142,8 +143,7 @@ export type StepperRegistration<
  * };
  * ```
  */
-export type BuilderActionRegistration<TType extends string = string, TConfig = unknown> = ActionRegistration<
-	TType,
-	BuilderActionExecutionContext<TConfig>,
-	BuilderActionTrigger
->;
+export type BuilderActionRegistration<
+	TType extends string = string,
+	TConfig extends ActionConfigBase<TType> = ActionConfigBase<TType>,
+> = ActionRegistration<TConfig, BuilderActionBaseContext, BuilderActionTrigger>;

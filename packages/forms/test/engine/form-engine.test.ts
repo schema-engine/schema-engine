@@ -3,6 +3,14 @@ import { z } from 'zod';
 import { FormComposer } from '@/builder';
 import type { InputRegistration, LayoutRegistration, StepperRegistration } from '@/types';
 
+function createActionSchema<TType extends string>(type: TType, shape: z.ZodRawShape = {}) {
+	return z.object({
+		id: z.string(),
+		$type: z.literal(type),
+		...shape,
+	});
+}
+
 describe('FormEngine', () => {
 	describe('Element Retrieval', () => {
 		test('should get element by id', () => {
@@ -196,8 +204,8 @@ describe('FormEngine', () => {
 	describe('Action Retrieval', () => {
 		test('should get action by id', () => {
 			const submitAction = {
-				$type: 'submit',
-				schema: z.object({}),
+				$type: 'submit' as const,
+				schema: createActionSchema('submit'),
 				metadata: { name: 'Submit' },
 				execute: async () => ({ success: true }),
 			};
@@ -211,8 +219,8 @@ describe('FormEngine', () => {
 
 		test('should check if action exists', () => {
 			const submitAction = {
-				$type: 'submit',
-				schema: z.object({}),
+				$type: 'submit' as const,
+				schema: createActionSchema('submit'),
 				metadata: { name: 'Submit' },
 				execute: async () => ({ success: true }),
 			};
@@ -225,15 +233,15 @@ describe('FormEngine', () => {
 
 		test('should get all action types', () => {
 			const submitAction = {
-				$type: 'submit',
-				schema: z.object({}),
+				$type: 'submit' as const,
+				schema: createActionSchema('submit'),
 				metadata: { name: 'Submit' },
 				execute: async () => ({ success: true }),
 			};
 
 			const resetAction = {
-				$type: 'reset',
-				schema: z.object({}),
+				$type: 'reset' as const,
+				schema: createActionSchema('reset'),
 				metadata: { name: 'Reset' },
 				execute: async () => ({ success: true }),
 			};
@@ -271,8 +279,8 @@ describe('FormEngine', () => {
 			};
 
 			const submitAction = {
-				$type: 'submit',
-				schema: z.object({}),
+				$type: 'submit' as const,
+				schema: createActionSchema('submit'),
 				metadata: { name: 'Submit' },
 				execute: async () => ({ success: true }),
 			};
@@ -470,8 +478,8 @@ describe('FormEngine', () => {
 			};
 
 			const submitAction = {
-				$type: 'submit',
-				schema: z.object({ url: z.string() }),
+				$type: 'submit' as const,
+				schema: createActionSchema('submit', { url: z.string() }),
 				metadata: { name: 'Submit' },
 				execute: async () => ({ success: true as const }),
 			};
@@ -507,15 +515,15 @@ describe('FormEngine', () => {
 			};
 
 			const submitAction = {
-				$type: 'submit',
-				schema: z.object({ url: z.string() }),
+				$type: 'submit' as const,
+				schema: createActionSchema('submit', { url: z.string() }),
 				metadata: { name: 'Submit' },
 				execute: async () => ({ success: true as const }),
 			};
 
 			const logAction = {
-				$type: 'log',
-				schema: z.object({ message: z.string() }),
+				$type: 'log' as const,
+				schema: createActionSchema('log', { message: z.string() }),
 				metadata: { name: 'Log' },
 				execute: async () => ({ success: true as const }),
 			};

@@ -2,6 +2,12 @@ import type { ActionRegistration } from './types';
 import { BaseRegistry } from '@schema-engine/registry';
 
 /**
+ * Registry storage must be able to hold heterogeneous action config shapes.
+ * `any` is used here as an existential placeholder for that internal storage boundary.
+ */
+type AnyActionRegistration<TBaseContext, TTrigger> = ActionRegistration<any, TBaseContext, TTrigger>;
+
+/**
  * Action Registry Provider
  *
  * Interface for objects that can provide action registrations.
@@ -15,13 +21,13 @@ import { BaseRegistry } from '@schema-engine/registry';
  * @example
  * ```typescript
  * class MyActionRegistry implements ActionRegistryProvider<MyContext, MyTrigger> {
- *   private actions = new Map<string, ActionRegistration<string, MyContext, MyTrigger>>();
+ *   private actions = new Map<string, ActionRegistration<any, MyContext, MyTrigger>>();
  *
- *   register(action: ActionRegistration<string, MyContext, MyTrigger>): void {
+ *   register(action: ActionRegistration<any, MyContext, MyTrigger>): void {
  *     this.actions.set(action.$type, action);
  *   }
  *
- *   getAction(type: string): ActionRegistration<string, MyContext, MyTrigger> | undefined {
+ *   getAction(type: string): ActionRegistration<any, MyContext, MyTrigger> | undefined {
  *     return this.actions.get(type);
  *   }
  *
@@ -32,13 +38,9 @@ import { BaseRegistry } from '@schema-engine/registry';
  * ```
  */
 export interface ActionRegistryProvider<
-	TContext = unknown,
+	TBaseContext = unknown,
 	TTrigger = string,
-	TRegistration extends ActionRegistration<string, TContext, TTrigger> = ActionRegistration<
-		string,
-		TContext,
-		TTrigger
-	>,
+	TRegistration extends AnyActionRegistration<TBaseContext, TTrigger> = AnyActionRegistration<TBaseContext, TTrigger>,
 > {
 	/**
 	 * Get an action registration by type
@@ -81,7 +83,7 @@ export interface ActionRegistryProvider<
  *     description: 'Logs data',
  *     defaultTriggers: ['change'],
  *   },
- *   handler: async (context, config) => {
+ *   execute: async (context) => {
  *     console.log(context);
  *     return { success: true };
  *   },
@@ -90,15 +92,13 @@ export interface ActionRegistryProvider<
  * const action = registry.getAction('log');
  * ```
  */
-/**
- * Action Registry
- *
- * Generic, domain-agnostic registry for managing action registrations.
- * Provides storage, retrieval, and lookup capabilities for actions.
- */
-export class ActionRegistry<TContext = unknown, TTrigger = string>
-	extends BaseRegistry<string, ActionRegistration<string, TContext, TTrigger>>
-	implements ActionRegistryProvider<TContext, TTrigger>
+export class ActionRegistry<
+	TBaseContext = unknown,
+	TTrigger = string,
+	TRegistration extends AnyActionRegistration<TBaseContext, TTrigger> = AnyActionRegistration<TBaseContext, TTrigger>,
+>
+	extends BaseRegistry<string, TRegistration>
+	implements ActionRegistryProvider<TBaseContext, TTrigger, TRegistration>
 {
 	get registryName(): string {
 		return 'ActionRegistry';
@@ -107,7 +107,7 @@ export class ActionRegistry<TContext = unknown, TTrigger = string>
 	/**
 	 * Get an action registration by type
 	 */
-	getAction(type: string): ActionRegistration<string, TContext, TTrigger> | undefined {
+	getAction(type: string): TRegistration | undefined {
 		return this.get(type);
 	}
 

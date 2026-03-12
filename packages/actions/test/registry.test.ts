@@ -5,6 +5,18 @@ import { z } from 'zod';
 
 type TestTrigger = 'submit' | 'change' | 'mount';
 
+interface LogActionConfig {
+	id: string;
+	$type: 'log';
+	message: string;
+}
+
+interface ApiActionConfig {
+	id: string;
+	$type: 'api';
+	url: string;
+}
+
 interface TestContext {
 	id: string;
 	data: Record<string, unknown>;
@@ -13,7 +25,7 @@ interface TestContext {
 describe('ActionRegistry', () => {
 	let registry: ActionRegistry<TestContext, TestTrigger>;
 
-	const mockAction: ActionRegistration<'log', TestContext, TestTrigger> = {
+	const mockAction: ActionRegistration<LogActionConfig, TestContext, TestTrigger> = {
 		$type: 'log',
 		schema: z.object({
 			id: z.string(),
@@ -31,7 +43,7 @@ describe('ActionRegistry', () => {
 		},
 	};
 
-	const anotherAction: ActionRegistration<'api', TestContext, TestTrigger> = {
+	const anotherAction: ActionRegistration<ApiActionConfig, TestContext, TestTrigger> = {
 		$type: 'api',
 		schema: z.object({
 			id: z.string(),
@@ -70,7 +82,7 @@ describe('ActionRegistry', () => {
 		});
 
 		test('should override when registering duplicate type', () => {
-			const updated: ActionRegistration<'log', TestContext, TestTrigger> = {
+			const updated: ActionRegistration<LogActionConfig, TestContext, TestTrigger> = {
 				...mockAction,
 				metadata: {
 					...mockAction.metadata,

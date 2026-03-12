@@ -6,26 +6,28 @@ export const config = {
 
 export const getMetadata = () => ({
 	title: 'Advanced Usage | @schema-engine/actions',
-	description: 'Advanced patterns and techniques for the action system.',
+	description: 'Advanced patterns for sequential execution, control flow, and custom registries.',
 });
 
 # Advanced Usage
 
-This page covers advanced patterns and techniques.
-
 ## Sequential Execution
 
-Actions always execute sequentially, never in parallel:
+Actions always execute sequentially.
 
 ```typescript
-const results = await executor.execute([action1, action2, action3], 'submit', context);
-// action2 starts only after action1 completes
-// action3 starts only after action2 completes
+const results = await executor.execute({
+	actions: [action1, action2, action3],
+	trigger: 'submit',
+	context,
+});
 ```
+
+`action2` will not start until `action1` finishes.
 
 ## Stop on Failure
 
-Return `shouldContinue: false` to stop the execution chain:
+Return `shouldContinue: false` to stop the chain.
 
 ```typescript
 execute: async (context) => {
@@ -36,45 +38,40 @@ execute: async (context) => {
 			shouldContinue: false,
 		};
 	}
+
 	return { success: true };
 };
 ```
 
 ## Disabled Actions
 
-Set `enabled: false` to skip an action:
-
 ```typescript
 const action = {
 	id: 'my-action',
 	$type: 'log',
-	enabled: false, // Will be skipped
+	enabled: false,
 };
 ```
 
-## Debug Logging
+Disabled actions are skipped.
 
-Enable debug mode to see execution details:
+## Debug Logging
 
 ```typescript
 const executor = new ActionExecutor(registry, { debug: true });
-// Logs:
-// [ActionExecutor] Executing trigger: submit
-// [ActionExecutor] Executing action: my-action (log)
-// [ActionExecutor] Action my-action executed successfully
 ```
 
 ## Custom Registry
 
-You can implement your own registry by implementing the `ActionRegistryProvider` interface:
+If you want a custom registry abstraction, use `ActionRegistryProvider` from the package root.
 
 ```typescript
-import type { ActionRegistryProvider } from '@schema-engine/actions';
+import type { ActionRegistration, ActionRegistryProvider } from '@schema-engine/actions';
 
-class MyActionRegistry implements ActionRegistryProvider<MyContext, MyTrigger> {
-	private actions = new Map();
+class MyActionRegistry<TBaseContext, TTrigger> implements ActionRegistryProvider<TBaseContext, TTrigger> {
+	private actions = new Map<string, ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>>();
 
-	register(action: ActionRegistration<string, MyContext, MyTrigger>) {
+	register(action: ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>) {
 		this.actions.set(action.$type, action);
 	}
 
@@ -90,19 +87,43 @@ class MyActionRegistry implements ActionRegistryProvider<MyContext, MyTrigger> {
 
 ## Testing Actions
 
-The action system is designed for easy testing:
-
 ```typescript
-import { describe, test, expect } from 'bun:test';
+import { describe, expect, test } from 'bun:test';
 
-describe('LogAction', () => {
-	test('should log message', async () => {
-		const context = { id: 'test', data: {}, isValid: true };
-		const config = { id: 'log-1', $type: 'log', message: 'test' };
-
-		const result = await logAction.execute({ trigger: 'submit', ...context, config });
+describe('logAction', () => {
+	test('returns success', async () => {
+		const result = await logAction.execute({
+			id: 'ctx-1',
+			data: {},
+			trigger: 'submit',
+			config: {
+				id: 'log-1',
+				$type: 'log',
+				message: 'hello',
+			},
+		});
 
 		expect(result.success).toBe(true);
 	});
+});
+```
+
+## Using defineAction
+
+For repeated action definitions within one domain, use the `defineAction` factory to avoid repeating base context and trigger generics:
+
+```typescript
+import { defineAction } from '@schema-engine/actions';
+
+const define = defineAction<AppContext, AppTrigger>();
+
+const myAction = define({
+	$type: 'my-action',
+	schema: mySchema,
+	metadata: { name: 'My Action' },
+	execute: async (context) => {
+		// context: AppContext & { config: MyConfig; trigger: AppTrigger }
+		return { success: true };
+	},
 });
 ```

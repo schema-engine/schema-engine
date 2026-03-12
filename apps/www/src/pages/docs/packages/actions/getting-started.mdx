@@ -1,74 +1,107 @@
 import { DocsLayout } from '@/layouts/docs-layout';
 
 export const config = {
-  layout: DocsLayout,
+	layout: DocsLayout,
 };
 
 export const getMetadata = () => ({
-  title: 'Getting Started | @schema-engine/actions',
-  description: 'Learn how to create and execute your first action.',
+	title: 'Getting Started | @schema-engine/actions',
+	description: 'Create and execute your first action registration.',
 });
 
 # Getting Started
 
-This guide walks you through creating and executing your first action.
+The API is split into two layers: what you provide at the call site (the base context) and what the action handler receives at runtime (the base context enriched with `config` and `trigger`). You only need to think about the base context when calling the executor or dispatcher.
+
+## 1. Define Your Base Context and Trigger
 
 ```typescript
-import { 
-  ActionConfigBase, 
-  ActionExecutionResult, 
-  ActionRegistration, 
-  ActionRegistry, 
-  ActionExecutor 
-} from '@schema-engine/actions';
-import { z } from 'zod';
-
-// 1. Define Domain Types
 type MyTrigger = 'submit' | 'change';
-interface MyContext {
-  id: string;
-  data: Record<string, unknown>;
-}
 
-// 2. Define Action Config
-interface MyActionConfig extends ActionConfigBase {
-  $type: string;
-  message?: string;
+interface BaseContext {
+	id: string;
+	data: Record<string, unknown>;
 }
+```
 
-// 3. Create Action
-const logAction: ActionRegistration<'log', MyContext, MyTrigger> = {
-  $type: 'log',
-  schema: z.object({
-    $type: z.literal('log'),
-    message: z.string(),
-  }),
-  metadata: {
-    name: 'Log Action',
-    defaultTriggers: ['submit'],
-  },
-  execute: (context) => {
-    // context.context is the MyContext
-    // context.trigger is MyTrigger
-    console.log('Executing log:', context);
-    return { success: true };
-  },
+## 2. Define the Action Config
+
+```typescript
+import type { ActionConfigBase } from '@schema-engine/actions';
+
+interface LogActionConfig extends ActionConfigBase<'log'> {
+	message: string;
+}
+```
+
+## 3. Create the Action Registration
+
+The `execute` handler receives an `ActionRuntimeContext`: your `BaseContext` enriched with `config` and `trigger`. You do not need to define that merged type manually — it is inferred from the generics.
+
+```typescript
+import { z } from 'zod';
+import type { ActionRegistration } from '@schema-engine/actions';
+
+const logAction: ActionRegistration<LogActionConfig, BaseContext, MyTrigger> = {
+	$type: 'log',
+	schema: z.object({
+		id: z.string(),
+		$type: z.literal('log'),
+		message: z.string(),
+		enabled: z.boolean().optional(),
+		triggers: z.array(z.string()).optional(),
+	}),
+	metadata: {
+		name: 'Log Action',
+		defaultTriggers: ['submit'],
+	},
+	execute: (context) => {
+		// context: BaseContext & { config: LogActionConfig; trigger: MyTrigger }
+		console.log(context.trigger, context.config.message, context.data);
+		return { success: true };
+	},
 };
+```
 
-// 4. Setup & Execute
-const registry = new ActionRegistry<MyContext, MyTrigger>();
+## 4. Register and Execute
+
+```typescript
+import { ActionExecutor, ActionRegistry } from '@schema-engine/actions';
+
+const registry = new ActionRegistry<BaseContext, MyTrigger>();
 registry.register(logAction);
 
-const executor = new ActionExecutor(registry);
+const executor = new ActionExecutor<BaseContext, MyTrigger>(registry);
 
-await executor.execute(
-  [{ id: '1', $type: 'log', message: 'Hello', enabled: true }], // Actions
-  'submit',                                                   // Trigger
-  { id: 'ctx-1', data: {} }                                   // Context
-);
+const baseContext: BaseContext = {
+	id: 'ctx-1',
+	data: {},
+};
+
+await executor.execute({
+	actions: [
+		{
+			id: 'log-1',
+			$type: 'log',
+			message: 'Hello world',
+		},
+	],
+	trigger: 'submit',
+	context: baseContext,
+});
 ```
+
+## Note on Typing
+
+There are two distinct context shapes:
+
+- `BaseContext` — what you pass to `execute()` or `dispatch()`.
+- `ActionRuntimeContext<LogActionConfig, BaseContext, MyTrigger>` — what the action handler receives, automatically constructed by the executor.
+
+The generics on `ActionRegistration`, `ActionExecutor`, and `ActionDispatcher` are all centered on the base context. The runtime enrichment happens internally.
 
 ## Next Steps
 
-- [Core Concepts](/docs/packages/actions/core-concepts) - Understand contexts, results, and triggers
-- [Advanced Usage](/docs/packages/actions/advanced) - Sequential execution, debugging, and more
+- [Core Concepts](/docs/packages/actions/core-concepts)
+- [Advanced Usage](/docs/packages/actions/advanced)
+- [API Reference](/docs/packages/actions/api-reference)

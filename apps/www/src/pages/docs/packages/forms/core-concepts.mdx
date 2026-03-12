@@ -18,13 +18,36 @@ This page explains the fundamental concepts of the forms package.
 The builder provides a fluent API for registering components and creating immutable engine instances.
 
 ```typescript
-import { FormComposer } from '@schema-engine/forms';
+import { z } from 'zod';
+import { defineAction } from '@schema-engine/actions';
+import { FormComposer, type BuilderActionBaseContext, type BuilderActionTrigger } from '@schema-engine/forms';
 
 // Mock registrations for this example
 const textInputRegistration = { $type: 'text', schema: {}, metadata: {}, render: () => null } as any;
 const cardLayoutRegistration = { $type: 'card', schema: {}, metadata: {}, render: () => null } as any;
 const wizardStepperRegistration = { $type: 'wizard', schema: {}, metadata: {}, render: () => null } as any;
-const submitActionRegistration = { $type: 'submit', schema: {}, metadata: {}, execute: async () => ({}) } as any;
+
+const defineFormAction = defineAction<BuilderActionBaseContext, BuilderActionTrigger>();
+
+const submitActionRegistration = defineFormAction({
+	$type: 'submit',
+	schema: z.object({
+		id: z.string(),
+		$type: z.literal('submit'),
+		endpoint: z.string(),
+	}),
+	metadata: {
+		name: 'Submit Form',
+		defaultTriggers: ['form_submit'],
+	},
+	execute: async (context) => ({
+		success: true,
+		data: {
+			endpoint: context.config.endpoint,
+			formId: context.formId,
+		},
+	}),
+});
 
 const engine = new FormComposer()
 	.addElement(textInputRegistration)
@@ -136,4 +159,4 @@ export const wizardStepperRegistration: StepperRegistration<WizardConfig> = {
 
 ### Actions
 
-Actions are event handlers that execute in response to form lifecycle events. See the [Actions](/docs/packages/forms/actions) page for details.
+Actions are event handlers that execute in response to form lifecycle events. In custom registrations, prefer `defineAction` from `@schema-engine/actions` with `BuilderActionBaseContext` and `BuilderActionTrigger` from `@schema-engine/forms` so the handler receives the correct runtime context automatically. See the [Actions](/docs/packages/forms/actions) page for details.

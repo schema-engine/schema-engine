@@ -1,6 +1,14 @@
-import type { ActionConfigBase, ActionExecutionResult } from './types';
+import type { ActionConfigBase, ActionDispatchInput, ActionExecutionResult } from './types';
 import type { ActionRegistryProvider } from './registry';
 import { ActionExecutor } from './executor';
+
+type MetadataContext = {
+	metadata?: Record<string, unknown>;
+};
+
+function isMetadataContext(value: unknown): value is MetadataContext {
+	return typeof value === 'object' && value !== null;
+}
 
 /**
  * Action Dispatcher Options
@@ -28,25 +36,21 @@ export interface ActionDispatcherOptions {
  * const dispatcher = new ActionDispatcher(registry, { debug: true });
  *
  * // Async dispatch with metadata
- * const results = await dispatcher.dispatch(
+ * const results = await dispatcher.dispatch({
  *   actions,
- *   'submit',
+ *   trigger: 'submit',
  *   context,
- *   { userId: '123' }
- * );
+ *   metadata: { userId: '123' },
+ * });
  *
  * // Fire-and-forget
- * dispatcher.dispatchSync(actions, 'change', context);
+ * dispatcher.dispatchSync({ actions, trigger: 'change', context });
  * ```
  */
-export class ActionDispatcher<
-	TConfig extends ActionConfigBase = ActionConfigBase,
-	TContext = unknown,
-	TTrigger = string,
-> {
-	private executor: ActionExecutor<TConfig, TContext, TTrigger>;
+export class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
+	private executor: ActionExecutor<TBaseContext, TTrigger>;
 
-	constructor(registry: ActionRegistryProvider<TContext, TTrigger>, options: ActionDispatcherOptions = {}) {
+	constructor(registry: ActionRegistryProvider<TBaseContext, TTrigger>, options: ActionDispatcherOptions = {}) {
 		this.executor = new ActionExecutor(registry, options);
 	}
 
@@ -62,19 +66,25 @@ export class ActionDispatcher<
 	 * @param metadata - Additional metadata to merge into context
 	 * @returns Array of execution results
 	 */
-	async dispatch(
-		actions: TConfig[],
-		trigger: TTrigger,
-		context: TContext,
-		metadata?: Record<string, unknown>,
-	): Promise<ActionExecutionResult[]> {
+	async dispatch<TConfig extends ActionConfigBase>({
+		actions,
+		trigger,
+		context,
+		metadata,
+		triggeredBy,
+	}: ActionDispatchInput<TConfig, TBaseContext, TTrigger>): Promise<ActionExecutionResult[]> {
 		if (!actions || actions.length === 0) {
 			return [];
 		}
 
 		const enhancedContext = metadata ? this.mergeMetadata(context, metadata) : context;
 
-		return this.executor.execute(actions, trigger, enhancedContext);
+		return this.executor.execute({
+			actions,
+			trigger,
+			context: enhancedContext,
+			triggeredBy,
+		});
 	}
 
 	/**
@@ -87,8 +97,8 @@ export class ActionDispatcher<
 	 * @param context - Domain-specific context data
 	 * @param metadata - Additional metadata to merge into context
 	 */
-	dispatchSync(actions: TConfig[], trigger: TTrigger, context: TContext, metadata?: Record<string, unknown>): void {
-		void this.dispatch(actions, trigger, context, metadata);
+	dispatchSync<TConfig extends ActionConfigBase>(input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>): void {
+		void this.dispatch(input);
 	}
 
 	/**
@@ -100,13 +110,12 @@ export class ActionDispatcher<
 	 * @param metadata - Metadata to merge in
 	 * @returns Enhanced context with merged metadata
 	 */
-	private mergeMetadata(context: TContext, metadata: Record<string, unknown>): TContext {
-		if (typeof context !== 'object' || context === null) {
+	private mergeMetadata(context: TBaseContext, metadata: Record<string, unknown>): TBaseContext {
+		if (!isMetadataContext(context)) {
 			return context;
 		}
 
-		const hasMetadata = 'metadata' in context;
-		const existingMetadata = hasMetadata ? (context as Record<string, unknown>).metadata : {};
+		const existingMetadata = context.metadata;
 
 		return {
 			...context,
@@ -114,6 +123,6 @@ export class ActionDispatcher<
 				...(typeof existingMetadata === 'object' && existingMetadata !== null ? existingMetadata : {}),
 				...metadata,
 			},
-		} as TContext;
+		};
 	}
 }

@@ -2,33 +2,43 @@ import { describe, test, expect, beforeEach } from 'bun:test';
 import { FormComposer } from '@/builder/form-composer';
 import type { BuilderActionRegistration, BuilderActionExecutionContext } from '@/types';
 import { z } from 'zod';
-import type { ActionExecutionResult } from '@schema-engine/actions';
+import type { ActionExecutionResult, ActionConfigBase } from '@schema-engine/actions';
+
+interface LogActionConfig extends ActionConfigBase<'log'> {
+	message: string;
+}
+
+interface SubmitActionConfig extends ActionConfigBase<'submit'> {
+	url: string;
+}
 
 describe('ActionRegistry', () => {
 	let builder: FormComposer;
 
-	const mockAction: BuilderActionRegistration<'log', { message: string }> = {
+	const mockAction: BuilderActionRegistration<'log', LogActionConfig> = {
 		$type: 'log',
-		schema: z.object({ message: z.string() }),
+		schema: z.object({ id: z.string(), $type: z.literal('log'), message: z.string() }),
 		metadata: {
 			name: 'Log Action',
 			description: 'Logs a message',
 			defaultTriggers: ['form_submit'],
 		},
-		execute(_context: BuilderActionExecutionContext<{ message: string }>): Promise<ActionExecutionResult> {
+		execute(_context: BuilderActionExecutionContext<LogActionConfig>): Promise<ActionExecutionResult> {
 			return Promise.resolve({ success: true });
 		},
 	};
 
-	const anotherAction: BuilderActionRegistration<'submit', { url: string }> = {
+	const anotherAction: BuilderActionRegistration<'submit', SubmitActionConfig> = {
 		$type: 'submit',
-		schema: z.object({ url: z.string() }),
+		schema: z.object({ id: z.string(), $type: z.literal('submit'), url: z.string() }),
 		metadata: {
 			name: 'Submit Action',
 			description: 'Submits form data',
 			defaultTriggers: ['form_submit'],
 		},
-		execute: async (_context: BuilderActionExecutionContext<{ url: string }>): Promise<ActionExecutionResult> => {
+		execute: async (
+			_context: BuilderActionExecutionContext<SubmitActionConfig>,
+		): Promise<ActionExecutionResult> => {
 			return { success: true };
 		},
 	};
@@ -60,7 +70,7 @@ describe('ActionRegistry', () => {
 		});
 
 		test('should override when registering duplicate id', () => {
-			const updated: BuilderActionRegistration<'log', { message: string }> = {
+			const updated: BuilderActionRegistration<'log', LogActionConfig> = {
 				...mockAction,
 				metadata: {
 					...mockAction.metadata,

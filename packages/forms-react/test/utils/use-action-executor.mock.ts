@@ -1,28 +1,21 @@
 import { mock } from 'bun:test';
 import type {
+	BuilderActionBaseContext,
 	FormActionConfig,
-	BuilderActionExecutionContext,
 	FormActionTrigger,
 	ActionExecutionResult,
 } from '@schema-engine/forms';
+import type { ActionDispatchInput } from '@schema-engine/actions';
 
 export const mockDispatch = mock(
 	(
-		_actions: FormActionConfig[],
-		_trigger: FormActionTrigger,
-		_context: BuilderActionExecutionContext,
-		_metadata?: Record<string, unknown>,
+		_input: ActionDispatchInput<FormActionConfig, BuilderActionBaseContext, FormActionTrigger>,
 	): Promise<ActionExecutionResult[]> => Promise.resolve([{ success: true }]),
 );
 
 export const mockDispatchSync = mock(
-	(
-		actions: FormActionConfig[],
-		trigger: FormActionTrigger,
-		context: BuilderActionExecutionContext,
-		metadata?: Record<string, unknown>,
-	): void => {
-		void mockDispatch(actions, trigger, context, metadata);
+	(input: ActionDispatchInput<FormActionConfig, BuilderActionBaseContext, FormActionTrigger>): void => {
+		void mockDispatch(input);
 	},
 );
 

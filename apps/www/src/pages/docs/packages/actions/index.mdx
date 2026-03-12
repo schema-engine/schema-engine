@@ -1,86 +1,110 @@
 import { DocsLayout } from '@/layouts/docs-layout';
 
 export const config = {
-  layout: DocsLayout,
+	layout: DocsLayout,
 };
 
 export const getMetadata = () => ({
-  title: '@schema-engine/actions | Schema Engine Documentation',
-  description: 'Domain-agnostic action execution system for event-driven architectures.',
+	title: '@schema-engine/actions | Schema Engine Documentation',
+	description: 'Domain-agnostic action execution primitives for event-driven architectures.',
 });
 
 # @schema-engine/actions
 
-
-
 ## Overview
 
-`@schema-engine/actions` provides a generic, serializable, type-safe action execution framework. It can be used in any domai or forms, workflows, state machines, UI interactions and is completely independent from any specific framework.
+`@schema-engine/actions` is the generic action core used across Schema Engine packages.
 
-**Key Features:**
+It provides:
 
-- **Domain Agnostic**: No dependencies on specific frameworks or domains
-- **Type Safe**: Full TypeScript support with generic constraints
-- **Sequential Execution**: Actions execute in order, preventing race conditions
-- **Pluggable**: Registry-based architecture for extensibility
-- **Testable**: Clean separation of concerns makes testing straightforward
-- **Zero Dependencies**: Only requires Zod for schema validation
+- action registrations
+- a registry for resolving action types
+- a sequential executor
+- a thin dispatcher for metadata-aware dispatching
 
-## Installation
+The package is intended to be reused across multiple domains. Forms is the first concrete implementation in this repo, but the package itself is not form-specific.
 
-```bash
-bun add @schema-engine/actions zod
-```
+## Current Model
 
-## Quick Start
+The current implementation separates the caller-provided base context from the runtime context seen by action handlers.
+
+When an action runs, the executor enriches the base context with the current action config and trigger before calling `execute()`.
 
 ```typescript
-import { ActionExecutor, ActionRegistration, ActionRegistry } from '@schema-engine/actions';
+execute({
+	...context,
+	config: action,
+	trigger,
+});
+```
+
+At the call site you pass only the base context. The merged runtime shape is constructed internally.
+
+## Dependencies
+
+`zod` is the only external runtime dependency. The package also depends on the internal `@schema-engine/registry` package from the same workspace family.
+
+## Quick Example
+
+```typescript
 import { z } from 'zod';
+import { ActionExecutor, type ActionRegistration, ActionRegistry } from '@schema-engine/actions';
 
-// 1. Define your domain context and triggers
-type AppContext = {
-  userId: string;
-  metadata?: Record<string, unknown>;
+type Trigger = 'submit' | 'change';
+
+type BaseContext = {
+	userId: string;
+	metadata?: Record<string, unknown>;
 };
-type AppTrigger = 'click' | 'submit' | 'auto';
 
-// 2. Create the registry
-const registry = new ActionRegistry<AppContext, AppTrigger>();
+type LogConfig = {
+	id: string;
+	$type: 'log';
+	message: string;
+	enabled?: boolean;
+	triggers?: readonly string[];
+};
 
-// 3. Register an action
-const logAction: ActionRegistration<'log', AppContext, AppTrigger> = {
-  $type: 'log',
-  schema: z.object({
-    $type: z.literal('log'),
-    message: z.string(),
-  }),
-  metadata: {
-    name: 'Log Message',
-    description: 'Logs a message to stdout',
-    defaultTriggers: ['click'],
-  },
-  execute: (context) => {
-    console.log(`[${context.userId}]`, context);
-    return { success: true };
-  },
+const registry = new ActionRegistry<BaseContext, Trigger>();
+
+const logAction: ActionRegistration<LogConfig, BaseContext, Trigger> = {
+	$type: 'log',
+	schema: z.object({
+		id: z.string(),
+		$type: z.literal('log'),
+		message: z.string(),
+	}),
+	metadata: {
+		name: 'Log Message',
+		description: 'Logs a message',
+		defaultTriggers: ['submit'],
+	},
+	execute: (context) => {
+		console.log(context.userId, context.trigger, context.config.message);
+		return { success: true };
+	},
 };
 
 registry.register(logAction);
 
-// 4. Execute
 const executor = new ActionExecutor(registry);
 
-await executor.execute(
-  [{ id: '1', $type: 'log', enabled: true }],
-  'click',
-  { userId: 'user_123' }
-);
+const baseContext: BaseContext = {
+	userId: 'user_123',
+};
+
+await executor.execute({
+	actions: [{ id: '1', $type: 'log', message: 'Hello' }],
+	trigger: 'submit',
+	context: baseContext,
+});
 ```
+
+The handler still receives `BaseContext & { config: LogConfig; trigger: Trigger }`, but that runtime shape is injected by the executor.
 
 ## Next Steps
 
-- [Getting Started](/docs/packages/actions/getting-started) - Build your first action
-- [Core Concepts](/docs/packages/actions/core-concepts) - Understand contexts, results, and triggers
-- [Advanced Usage](/docs/packages/actions/advanced) - Sequential execution, debugging, and more
-- [API Reference](/docs/packages/actions/api-reference) - Complete API documentation
+- [Getting Started](/docs/packages/actions/getting-started)
+- [Core Concepts](/docs/packages/actions/core-concepts)
+- [Advanced Usage](/docs/packages/actions/advanced)
+- [API Reference](/docs/packages/actions/api-reference)

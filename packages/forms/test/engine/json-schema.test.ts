@@ -4,6 +4,14 @@ import { FormComposer } from '@/builder/form-composer';
 import type { InputRegistration, LayoutRegistration, StepperRegistration, BuilderActionRegistration } from '@/types';
 import { ComponentType } from '@/engine/form-engine';
 
+function createActionSchema<TType extends string>(type: TType, shape: z.ZodRawShape = {}) {
+	return z.object({
+		id: z.string(),
+		$type: z.literal(type),
+		...shape,
+	});
+}
+
 describe('FormEngine JSON Schema Generation', () => {
 	describe('Basic Schema Generation', () => {
 		test('should generate JSON schema from empty engine', () => {
@@ -162,7 +170,7 @@ describe('FormEngine JSON Schema Generation', () => {
 			const elementSchema = z.object({ $type: z.literal('text') });
 			const layoutSchema = z.object({ $type: z.literal('card') });
 			const stepperSchema = z.object({ $type: z.literal('wizard') });
-			const actionSchema = z.object({ $type: z.literal('submit'), endpoint: z.string().url() });
+			const actionSchema = createActionSchema('submit', { endpoint: z.string().url() });
 
 			const elementReg: InputRegistration = {
 				$type: 'text',
@@ -595,8 +603,7 @@ describe('FormEngine JSON Schema Generation', () => {
 			const elementSchema = z.object({ $type: z.literal('text'), label: z.string().optional() });
 			const layoutSchema = z.object({ $type: z.literal('card'), padding: z.enum(['sm', 'md', 'lg']).optional() });
 			const stepperSchema = z.object({ $type: z.literal('wizard'), showProgress: z.boolean().optional() });
-			const actionSchema = z.object({
-				$type: z.literal('submit'),
+			const actionSchema = createActionSchema('submit', {
 				endpoint: z.string().url(),
 				method: z.enum(['GET', 'POST']).optional(),
 			});
@@ -750,7 +757,7 @@ describe('FormEngine JSON Schema Generation', () => {
 			const numberSchema = z.object({ $type: z.literal('number'), min: z.number() });
 			const layoutSchema = z.object({ $type: z.literal('card') });
 			const stepperSchema = z.object({ $type: z.literal('wizard') });
-			const actionSchema = z.object({ $type: z.literal('submit') });
+			const actionSchema = createActionSchema('submit');
 
 			const engine = new FormComposer()
 				.addElement({

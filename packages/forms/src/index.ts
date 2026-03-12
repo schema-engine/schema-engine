@@ -10,10 +10,12 @@ export { FormEngine } from './engine';
 export type { EngineRegistries, FormEngineSchemaMetadata } from './engine';
 export { ElementRegistry, LayoutRegistry, StepperRegistry } from './registries';
 export type {
+	BuilderActionBaseContext,
 	ElementMetadata,
 	BuilderActionRegistration,
 	BuilderActionTrigger,
 	BuilderActionExecutionContext,
+	BuilderActionRuntimeContext,
 	InputRegistration,
 	StaticRegistration,
 	LayoutRegistration,

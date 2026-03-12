@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { FieldValues, UseFormReturn } from 'react-hook-form';
 import type { FormConfig } from '@schema-engine/forms/schemas';
-import type { FormActionTrigger, ActionExecutionResult, BuilderActionExecutionContext } from '@schema-engine/forms';
+import type { FormActionTrigger, ActionExecutionResult, BuilderActionBaseContext } from '@schema-engine/forms';
 import { logger } from '@/lib/logger';
 
 type StepStates = {
@@ -92,7 +92,7 @@ export function useRHFMultiStep(
 				return;
 			}
 
-			const context: Omit<BuilderActionExecutionContext, 'config' | 'trigger'> = {
+			const context: BuilderActionBaseContext = {
 				formId: config.id || 'unnamed-form',
 				formData: getValues(),
 				currentStep: stepIndex,

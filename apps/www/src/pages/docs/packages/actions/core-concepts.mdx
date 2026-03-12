@@ -6,27 +6,47 @@ export const config = {
 
 export const getMetadata = () => ({
 	title: 'Core Concepts | @schema-engine/actions',
-	description: 'Understand the core concepts of the action system.',
+	description: 'Understand registrations, configs, triggers, and the current execution model.',
 });
 
 # Core Concepts
 
-This page explains the fundamental concepts of the action system.
+## ActionRegistration
 
-## ActionExecutionContext
-
-Context passed to action handlers. Note that `context` contains domain-specific data:
+An action registration defines one action type.
 
 ```typescript
-interface ActionExecutionContext<TContext, TTrigger> {
-	trigger: TTrigger;     // What triggered this action
-	context: TContext;     // Your domain-specific context
+interface ActionRegistration<
+	TConfig extends ActionConfigBase = ActionConfigBase,
+	TBaseContext = unknown,
+	TTrigger = string,
+	TData = unknown,
+> {
+	$type: TConfig['$type'];
+	schema: z.ZodType<TConfig>;
+	metadata: ActionMetadata<TTrigger>;
+	execute: (context: ActionRuntimeContext<TConfig, TBaseContext, TTrigger>) => Promise<ActionExecutionResult<TData>> | ActionExecutionResult<TData>;
+}
+```
+
+`execute` receives the `ActionRuntimeContext` — the caller-provided base context enriched with `config` and `trigger`.
+
+## ActionConfigBase
+
+An action config is a specific action instance inside your config array.
+
+```typescript
+interface ActionConfigBase<TType extends string = string> {
+	id: string;
+	$type: TType;
+	enabled?: boolean;
+	triggers?: readonly string[];
 }
 ```
 
 ## ActionExecutionResult
 
-All action handlers must return a result:
+Every action returns a normalized result.
 
 ```typescript
 interface ActionExecutionResult<TData = unknown> {
@@ -34,80 +54,48 @@ interface ActionExecutionResult<TData = unknown> {
 	message?: string;
 	error?: string;
 	data?: TData;
-	shouldContinue?: boolean;  // If false, stops execution chain
+	shouldContinue?: boolean;
 	redirectUrl?: string;
 }
 ```
 
-## ActionRegistration
+## Current Execution Model
 
-An action registration defines how an action type behaves:
+The executor separates what callers provide from what handlers receive. Callers pass a `TBaseContext`. The executor internally enriches it before invoking `execute()`:
 
 ```typescript
-interface ActionRegistration<TType extends string, TContext, TTrigger> {
-	$type: TType;
-	schema: z.ZodTypeAny;
-	metadata: ActionMetadata<TTrigger>;
-	execute: (context: TContext) => Promise<ActionExecutionResult> | ActionExecutionResult;
-}
+execute({
+	...context,
+	config: action,
+	trigger,
+});
 ```
 
-Note: The `execute` function receives the domain context directly. The executor merges the action config into this context.
-	
-### Critical Concept: The Merge
-
-When an action executes, the `ActionExecutor` merges the specific **Action Config** (id, message, etc.) *into* your **Domain Context**.
+The resulting `ActionRuntimeContext` is what the handler sees:
 
 ```typescript
-// 1. Your Domain Context
-const domainContext = { userId: "123", db: "..." };
-
-// 2. The Specific Action Config
-const actionConfig = { id: "action-1", message: "Hello" };
-
-// 3. What execute() receives
-execute: async (mergedContext) => {
-  console.log(mergedContext.userId);  // from Domain Context
-  console.log(mergedContext.message); // from Action Config
-}
+type ActionRuntimeContext<TConfig, TBaseContext, TTrigger> = TBaseContext & {
+	config: TConfig;
+	trigger: TTrigger;
+};
 ```
 
-## ActionConfigBase
-
-Base interface for action instance configurations:
+Actions read values directly:
 
 ```typescript
-interface ActionConfigBase<TType extends string = string> {
-	id: string;           // Unique identifier for this action instance
-	$type: TType;         // References a registered action
-	enabled?: boolean;    // Whether this action is enabled
-	triggers?: readonly string[];  // Custom triggers for this instance
-}
+execute: async (context) => {
+	console.log(context.trigger);    // TTrigger
+	console.log(context.config);     // TConfig
+	console.log(context.userId);     // from TBaseContext
+	return { success: true };
+};
 ```
 
 ## Trigger Matching
 
-Actions execute when:
+An action executes when either:
 
-1. They have a custom `triggers` array that includes the current trigger, **OR**
-2. Their `metadata.defaultTriggers` includes the current trigger
+1. The action instance defines `triggers` and the current trigger is included.
+2. Otherwise, the registration `metadata.defaultTriggers` includes the current trigger.
 
-```typescript
-// Action instance with custom triggers
-const action = {
-	id: 'my-action',
-	$type: 'log',
-	triggers: ['submit', 'change'],
-};
-
-// Action registration with default triggers
-const registration = {
-	$type: 'log',
-	metadata: {
-		defaultTriggers: ['mount'],
-	},
-	execute: async (ctx) => ({ success: true }),
-};
-```
-
-Custom triggers on an action instance override the default triggers from the registration.
+Custom triggers on the action instance override the defaults on the registration.

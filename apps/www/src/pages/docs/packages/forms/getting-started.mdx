@@ -18,13 +18,38 @@ This guide walks you through creating your first form engine using the builder p
 Use the `FormComposer` to register components and build an immutable engine:
 
 ```typescript
-import { FormComposer } from '@schema-engine/forms';
+import { z } from 'zod';
+import { defineAction } from '@schema-engine/actions';
+import { FormComposer, type BuilderActionBaseContext, type BuilderActionTrigger } from '@schema-engine/forms';
 
 // Mock registrations for this example
 const textInputRegistration = { $type: 'text', schema: {}, metadata: {}, render: () => null } as any;
 const emailInputRegistration = { $type: 'email', schema: {}, metadata: {}, render: () => null } as any;
 const cardLayoutRegistration = { $type: 'card', schema: {}, metadata: {}, render: () => null } as any;
-const submitActionRegistration = { $type: 'submit', schema: {}, metadata: {}, execute: async () => ({}) } as any;
+
+const defineFormAction = defineAction<BuilderActionBaseContext, BuilderActionTrigger>();
+
+const SubmitActionConfigSchema = z.object({
+	id: z.string(),
+	$type: z.literal('submit'),
+	endpoint: z.string(),
+});
+
+const submitActionRegistration = defineFormAction({
+	$type: 'submit',
+	schema: SubmitActionConfigSchema,
+	metadata: {
+		name: 'Submit Form',
+		defaultTriggers: ['form_submit'],
+	},
+	execute: async (context) => ({
+		success: true,
+		data: {
+			endpoint: context.config.endpoint,
+			formId: context.formId,
+		},
+	}),
+});
 
 const engine = new FormComposer()
 	.addElement(textInputRegistration)

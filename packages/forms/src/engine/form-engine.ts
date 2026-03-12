@@ -1,11 +1,11 @@
 import type {
-	BuilderActionExecutionContext,
+	BuilderActionBaseContext,
+	BuilderActionRegistration,
 	InputRegistration,
 	LayoutRegistration,
 	StaticRegistration,
 	StepperRegistration,
 } from '@/types';
-import type { ActionRegistration } from '@schema-engine/actions';
 import type { FormActionTrigger } from '@/actions';
 import { FormComposer } from '@/builder/form-composer';
 import { ElementRegistry, LayoutRegistry, StepperRegistry } from '@/registries';
@@ -40,7 +40,7 @@ export interface EngineRegistries {
 	elements: Map<string, InputRegistration<any, any, any> | StaticRegistration<any, any, any>>;
 	layouts: Map<string, LayoutRegistration<any, any, any>>;
 	steppers: Map<string, StepperRegistration<any, any, any>>;
-	actions: Map<string, ActionRegistration<string, BuilderActionExecutionContext, FormActionTrigger>>;
+	actions: Map<string, BuilderActionRegistration>;
 	schemaRegistry: ReturnType<typeof z.registry<FormEngineSchemaMetadata>>;
 	formConfigSchema: z.ZodObject<any>;
 }
@@ -177,14 +177,14 @@ export class FormEngine<
 	/**
 	 * Get a registered action by id.
 	 */
-	getAction(id: string): ActionRegistration<string, BuilderActionExecutionContext, FormActionTrigger> | undefined {
+	getAction(id: string): BuilderActionRegistration | undefined {
 		return this.registries.actions.get(id);
 	}
 
 	/**
 	 * Get all registered actions.
 	 */
-	getAllActions(): ActionRegistration<string, BuilderActionExecutionContext, FormActionTrigger>[] {
+	getAllActions(): BuilderActionRegistration[] {
 		return Array.from(this.registries.actions.values());
 	}
 
@@ -355,7 +355,7 @@ export class FormEngine<
 		const elementRegistry = new ElementRegistry();
 		const layoutRegistry = new LayoutRegistry();
 		const stepperRegistry = new StepperRegistry();
-		const actionRegistry = new ActionRegistry<BuilderActionExecutionContext, FormActionTrigger>();
+		const actionRegistry = new ActionRegistry<BuilderActionBaseContext, FormActionTrigger>();
 
 		for (const value of this.registries.elements.values()) {
 			elementRegistry.register(value);
@@ -392,7 +392,7 @@ export class FormEngine<
 		const elementRegistry = new ElementRegistry();
 		const layoutRegistry = new LayoutRegistry();
 		const stepperRegistry = new StepperRegistry();
-		const actionRegistry = new ActionRegistry<BuilderActionExecutionContext, FormActionTrigger>();
+		const actionRegistry = new ActionRegistry<BuilderActionBaseContext, FormActionTrigger>();
 
 		for (const [_key, value] of this.registries.elements.entries()) {
 			elementRegistry.register(value);
