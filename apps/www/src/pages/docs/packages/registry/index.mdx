@@ -19,18 +19,15 @@ Base registry system for managing named resources in an extensible architecture.
 import { BaseRegistry, type BaseRegistration } from '@schema-engine/registry';
 import { z } from 'zod';
 
-// 1. Define your item type
 interface Feature extends BaseRegistration {
   $type: string;
   execute: () => void;
 }
 
-// 2. Create your registry
 class FeatureRegistry extends BaseRegistry<string, Feature> {
   get registryName() { return 'Feature'; }
 }
 
-// 3. Register and use
 const registry = new FeatureRegistry();
 registry.register({
   $type: 'dark-mode',
@@ -41,6 +38,8 @@ registry.register({
 
 registry.get('dark-mode')?.execute();
 ```
+
+The flow is: define a registration shape, create a registry subclass, then register and consume items by `$type`.
 
 ## Overview
 

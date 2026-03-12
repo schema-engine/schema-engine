@@ -59,10 +59,10 @@ abstract class ComponentRegistry<
 	TKey extends string,
 	TValue extends ComponentRegistration
 > extends BaseRegistry<TKey, TValue> {
-	// Inherits all BaseRegistry methods
-	// Enforces that items have a render() method
 }
 ```
+
+`ComponentRegistry` adds no runtime behavior today. Its value is the stronger type constraint that only renderable registrations can be stored in it.
 
 ## BaseRegistration
 
@@ -70,11 +70,13 @@ The interface that all registry items must implement:
 
 ```typescript
 interface BaseRegistration<TConfig = unknown, TMeta extends ComponentMetadata = ComponentMetadata> {
-	$type: string;           // Unique identifier within the registry
-	schema: z.ZodType<TConfig>;  // Zod schema for validation
-	metadata: TMeta;         // Component metadata
+	$type: string;
+	schema: z.ZodType<TConfig>;
+	metadata: TMeta;
 }
 ```
+
+`$type` is the stable registry key, `schema` describes the configuration contract, and `metadata` carries human-readable information.
 
 ## ComponentRegistration
 
@@ -98,10 +100,10 @@ Standard metadata for all components:
 
 ```typescript
 interface ComponentMetadata {
-	name: string;           // Human-readable display name
-	description?: string;   // Detailed description
-	icon?: string;          // Icon identifier for UI
-	tags?: string[];        // Tags for filtering
-	version?: string;       // Component version
+	name: string;
+	description?: string;
+	icon?: string;
+	tags?: string[];
+	version?: string;
 }
 ```

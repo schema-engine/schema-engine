@@ -70,11 +70,10 @@ abstract class ComponentRegistry<
 	TKey extends string,
 	TValue extends ComponentRegistration<any, any, any>
 > extends BaseRegistry<TKey, TValue> {
-// Inherits all BaseRegistry methods
-	// Specialized component behavior can be added here in the future.
-	// For now, it provides stronger type safety for renderable items.
 }
 ```
+
+`ComponentRegistry` currently inherits `BaseRegistry` behavior unchanged and exists to enforce the renderable registration constraint at the type level.
 
 ## Types
 

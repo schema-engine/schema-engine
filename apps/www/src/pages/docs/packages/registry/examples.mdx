@@ -22,7 +22,6 @@ import { z } from 'zod';
 import { BaseRegistry } from '@schema-engine/registry';
 import type { BaseRegistration, ComponentMetadata } from '@schema-engine/registry';
 
-// Define your plugin interface
 interface PluginRegistration extends BaseRegistration {
 	$type: string;
 	schema: z.ZodType<unknown>;
@@ -30,14 +29,12 @@ interface PluginRegistration extends BaseRegistration {
 	execute: () => Promise<void>;
 }
 
-// Create your registry
 class PluginRegistry extends BaseRegistry<string, PluginRegistration> {
 	get registryName(): string {
 		return 'Plugin';
 	}
 }
 
-// Use it
 const registry = new PluginRegistry();
 
 registry.register({
@@ -52,12 +49,13 @@ registry.register({
 	},
 });
 
-// Retrieve and execute
 const plugin = registry.get('my-plugin');
 if (plugin) {
 	await plugin.execute();
 }
 ```
+
+This pattern works well for non-visual plugins where registrations expose behavior but no render function.
 
 ## Creating a Component Registry
 
@@ -69,7 +67,6 @@ import { z } from 'zod';
 import { ComponentRegistry } from '@schema-engine/registry';
 import type { ComponentRegistration, ComponentMetadata } from '@schema-engine/registry';
 
-// Define your component type
 interface WidgetRegistration extends ComponentRegistration<string, unknown, { id: string }> {
 	$type: string;
 	schema: z.ZodType<unknown>;
@@ -77,14 +74,12 @@ interface WidgetRegistration extends ComponentRegistration<string, unknown, { id
 	render: (props: { id: string }) => JSX.Element;
 }
 
-// Create your registry
 class WidgetRegistry extends ComponentRegistry<string, WidgetRegistration> {
 	get registryName(): string {
 		return 'Widget';
 	}
 }
 
-// Use it
 const widgets = new WidgetRegistry();
 
 widgets.register({
