@@ -13,6 +13,8 @@ export const getMetadata = () => ({
 
 Complete API documentation for `@schema-engine/forms`.
 
+Lookup methods on `FormEngine` use the registered component or action `$type` value, not an instance id from a form config.
+
 ## FormComposer
 
 ```typescript
@@ -36,25 +38,25 @@ class FormComposer<TElements, TLayouts, TSteppers, TActions> {
 ```typescript
 class FormEngine<TElements, TLayouts, TSteppers, TActions> {
 	// Elements
-	getElement(id: string): ElementRegistration | undefined;
+	getElement(type: string): ElementRegistration | undefined;
 	getAllElements(): ElementRegistration[];
-	hasElement(id: string): boolean;
+	hasElement(type: string): boolean;
 
 	// Layouts
-	getLayout(id: string): LayoutRegistration | undefined;
+	getLayout(type: string): LayoutRegistration | undefined;
 	getAllLayouts(): LayoutRegistration[];
-	hasLayout(id: string): boolean;
+	hasLayout(type: string): boolean;
 
 	// Steppers
-	getStepper(id: string): StepperRegistration | undefined;
+	getStepper(type: string): StepperRegistration | undefined;
 	getAllSteppers(): StepperRegistration[];
-	hasStepper(id: string): boolean;
+	hasStepper(type: string): boolean;
 
 	// Actions
-	getAction(id: string): BuilderActionRegistration | undefined;
+	getAction(type: string): BuilderActionRegistration | undefined;
 	getAllActions(): BuilderActionRegistration[];
 	getActionTypes(): string[];
-	hasAction(id: string): boolean;
+	hasAction(type: string): boolean;
 
 	// Schema
 	getFormConfigSchema(): z.ZodType<FormConfig>;

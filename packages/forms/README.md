@@ -18,7 +18,7 @@ The package is completely framework-agnostic, with framework-specific adapters (
 ## Installation
 
 ```bash
-bun add @schema-engine/formsod
+bun add @schema-engine/forms zod
 ```
 
 ## Core Concepts
@@ -28,7 +28,7 @@ bun add @schema-engine/formsod
 The builder provides a fluent API for registering components and creating immutable engine instances.
 
 ```typescript
-import { FormComposer } from "@schema-engine/forms
+import { FormComposer } from '@schema-engine/forms';
 
 const engine = new FormComposer()
 	.addElement(textInputRegistration)
@@ -50,7 +50,7 @@ const engine = new FormComposer()
 
 The immutable runtime engine created by the builder. Provides methods for:
 
-- Retrieving registered components by ID
+- Retrieving registered components by registered type
 - Validating form configurations against registered schemas
 - Generating JSON schemas for form builders and documentation
 - Creating type-safe form instances
@@ -91,8 +91,8 @@ Elements are form fields and content components categorized by purpose:
 - **interactive** - Interactive components (buttons, links)
 
 ```typescript
-import type { ElementRegistration } from "@schema-engine/forms
-import { z } from "zod";
+import type { ElementRegistration } from '@schema-engine/forms';
+import { z } from 'zod';
 
 const TextInputConfigSchema = z.object({
 	id: z.string(),
@@ -104,14 +104,14 @@ const TextInputConfigSchema = z.object({
 });
 
 export const textInputRegistration: ElementRegistration<z.infer<typeof TextInputConfigSchema>> = {
-	$type: "text",
+	$type: 'text',
 	schema: TextInputConfigSchema,
 	metadata: {
-		name: "Text Input",
-		description: "Single-line text input field",
-		category: "input",
-		icon: "text",
-		tags: ["input", "text", "basic"],
+		name: 'Text Input',
+		description: 'Single-line text input field',
+		category: 'input',
+		icon: 'text',
+		tags: ['input', 'text', 'basic'],
 	},
 	render: (props) => {
 		// Framework-specific implementation
@@ -125,22 +125,22 @@ export const textInputRegistration: ElementRegistration<z.infer<typeof TextInput
 Layouts wrap form content and provide structural organization:
 
 ```typescript
-import type { LayoutRegistration } from "@schema-engine/forms
+import type { LayoutRegistration } from '@schema-engine/forms';
 
 const CardLayoutConfigSchema = z.object({
 	id: z.string(),
-	padding: z.enum(["none", "small", "medium", "large"]).optional(),
+	padding: z.enum(['none', 'small', 'medium', 'large']).optional(),
 	shadow: z.boolean().optional(),
 	className: z.string().optional(),
 });
 
 export const cardLayoutRegistration: LayoutRegistration<z.infer<typeof CardLayoutConfigSchema>> = {
-	$type: "card",
+	$type: 'card',
 	schema: CardLayoutConfigSchema,
 	metadata: {
-		name: "Card Layout",
-		description: "Display form in a centered card container",
-		icon: "card",
+		name: 'Card Layout',
+		description: 'Display form in a centered card container',
+		icon: 'card',
 	},
 	render: (props) => {
 		// props.children contains the form content
@@ -154,7 +154,7 @@ export const cardLayoutRegistration: LayoutRegistration<z.infer<typeof CardLayou
 Steppers control multi-step form navigation and state:
 
 ```typescript
-import type { StepperRegistration } from "@schema-engine/forms
+import type { StepperRegistration } from '@schema-engine/forms';
 
 const WizardStepperConfigSchema = z.object({
 	id: z.string(),
@@ -162,15 +162,13 @@ const WizardStepperConfigSchema = z.object({
 	allowSkip: z.boolean().optional(),
 });
 
-export const wizardStepperRegistration: StepperRegistration<
-	z.infer<typeof WizardStepperConfigSchema>
-> = {
-	$type: "wizard",
+export const wizardStepperRegistration: StepperRegistration<z.infer<typeof WizardStepperConfigSchema>> = {
+	$type: 'wizard',
 	schema: WizardStepperConfigSchema,
 	metadata: {
-		name: "Wizard Stepper",
-		description: "Step-by-step wizard navigation with progress indicator",
-		icon: "wizard",
+		name: 'Wizard Stepper',
+		description: 'Step-by-step wizard navigation with progress indicator',
+		icon: 'wizard',
 	},
 	render: (props) => {
 		// props contains stepper state and navigation methods
@@ -186,19 +184,15 @@ Actions are event handlers that execute in response to form lifecycle events:
 ```typescript
 import { z } from 'zod';
 import { defineAction } from '@schema-engine/actions';
-import type {
-	BuilderActionBaseContext,
-	BuilderActionRegistration,
-	BuilderActionTrigger,
-} from '@schema-engine/forms';
+import type { BuilderActionBaseContext, BuilderActionRegistration, BuilderActionTrigger } from '@schema-engine/forms';
 
 const defineFormAction = defineAction<BuilderActionBaseContext, BuilderActionTrigger>();
 
 const SubmitActionConfigSchema = z.object({
 	id: z.string(),
-	$type: z.literal("submit"),
+	$type: z.literal('submit'),
 	endpoint: z.string(),
-	method: z.enum(["POST", "PUT", "PATCH"]),
+	method: z.enum(['POST', 'PUT', 'PATCH']),
 	successMessage: z.string().optional(),
 	redirectUrl: z.string().optional(),
 });
@@ -207,13 +201,13 @@ export const submitActionRegistration: BuilderActionRegistration<
 	'submit',
 	z.infer<typeof SubmitActionConfigSchema>
 > = defineFormAction({
-	$type: "submit",
+	$type: 'submit',
 	schema: SubmitActionConfigSchema,
 	metadata: {
-		name: "Submit Form",
-		description: "Submit form data to an endpoint",
-		icon: "send",
-		defaultTriggers: ["form_submit"],
+		name: 'Submit Form',
+		description: 'Submit form data to an endpoint',
+		icon: 'send',
+		defaultTriggers: ['form_submit'],
 	},
 	execute: async (context) => {
 		const { config, formData, formId } = context;
@@ -221,13 +215,13 @@ export const submitActionRegistration: BuilderActionRegistration<
 		try {
 			const response = await fetch(config.endpoint, {
 				method: config.method,
-				headers: { "Content-Type": "application/json" },
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(formData),
 			});
 
 			if (!response.ok) {
 				return {
-});
+					success: false,
 					error: `HTTP ${response.status}: ${response.statusText}`,
 				};
 			}
@@ -239,11 +233,11 @@ export const submitActionRegistration: BuilderActionRegistration<
 		} catch (error) {
 			return {
 				success: false,
-				error: error instanceof Error ? error.message : "Unknown error",
+				error: error instanceof Error ? error.message : 'Unknown error',
 			};
 		}
 	},
-};
+});
 ```
 
 ### Action System
@@ -266,6 +260,7 @@ Actions execute in response to lifecycle triggers:
 **Step Triggers:**
 
 - `step_change` - Navigation between steps
+- `step_submit` - Submission of the current step
 - `step_enter` - Entering a step
 - `step_leave` - Leaving a step
 - `step_view` - Step becomes visible (analytics)
@@ -293,7 +288,7 @@ Custom actions should usually be defined with `defineAction<BuilderActionBaseCon
 The validation system provides 15+ built-in rules with support for custom validation:
 
 ```typescript
-import { ValidationPresets } from '@schema-engine/formschemas/validation';
+import { ValidationPresets } from '@schema-engine/forms';
 
 const emailRules = [
 	ValidationPresets.string.required('Email is required'),
@@ -326,10 +321,13 @@ const ageRules = [
 - `url(message)` - Valid URL format
 - `uuid(message)` - Valid UUID
 - `uuidv4(message)` - Valid UUID v4
+- `cuid(message)` - Valid CUID
+- `cuid2(message)` - Valid CUID2
+- `ulid(message)` - Valid ULID
+- `hex(message)` - Valid hexadecimal string
 - `minLength(min, message)` - Minimum string length
 - `maxLength(max, message)` - Maximum string length
 - `pattern(regex, message)` - Regex pattern match
-- `ip(message)` - Valid IP address
 
 **Number:**
 
@@ -337,16 +335,26 @@ const ageRules = [
 - `min(min, message)` - Minimum value
 - `max(max, message)` - Maximum value
 
+**Boolean:**
+
+- `required(message)` - Required boolean value
+
 **Array:**
 
 - `required(message)` - Non-empty array
 - `minItems(min, message)` - Minimum array length
 - `maxItems(max, message)` - Maximum array length
+- `nonEmpty(message)` - Convenience alias for `minItems(1, message)`
+
+**Network:**
+
+- `ipv4(message)` - Valid IPv4 address
+- `ipv6(message)` - Valid IPv6 address
 
 **Date:**
 
+- `datetime(message)` - Valid datetime
 - `date(message)` - Valid date
-- `dateTime(message)` - Valid datetime
 - `time(message)` - Valid time
 
 ### JSON Schema Generation
@@ -493,7 +501,7 @@ const engine = new FormComposer()
   id: 'track-submit',
 	$type: 'gtm_event',
 	eventName: 'form_submit',
-  data: {
+	eventData: {
     formId: 'contact-form',
     category: 'engagement',
   },
@@ -527,7 +535,7 @@ const engine = new FormComposer()
 Inject custom registry implementations for specialized behavior:
 
 ```typescript
-import { ElementRegistry } from '@schema-engine/formsegistries';
+import { ElementRegistry } from '@schema-engine/forms';
 
 class CustomElementRegistry extends ElementRegistry {
 	register(registration) {
@@ -591,24 +599,18 @@ type MyEngineElements = typeof builder extends FormComposer<infer E, any, any, a
 Manage GDPR consent with localStorage persistence:
 
 ```typescript
-import { GDPRConsent } from '@schema-engine/formsools';
-
-const consent = new GDPRConsent();
+import { GDPRConsent } from '@schema-engine/forms';
 
 // Check consent
-if (consent.hasConsent('analytics')) {
+if (GDPRConsent.hasConsent()) {
 	// Track analytics
 }
 
-// Set consent
-consent.setConsent({
-	analytics: true,
-	marketing: false,
-});
+// Grant consent for draft storage
+GDPRConsent.grantConsent();
 
-// Check specific consent
-const analyticsEnabled = consent.hasAnalyticsConsent();
-const marketingEnabled = consent.hasMarketingConsent();
+// Revoke consent and clear stored drafts
+GDPRConsent.revokeConsent();
 ```
 
 ### GTM Tracker
@@ -616,11 +618,9 @@ const marketingEnabled = consent.hasMarketingConsent();
 Wrapper for Google Tag Manager integration:
 
 ```typescript
-import { GTMTracker } from '@schema-engine/formsools';
+import { GTMTracker } from '@schema-engine/forms';
 
-const tracker = new GTMTracker();
-
-tracker.track('form_submit', {
+GTMTracker.push('form_submit', {
 	formId: 'contact-form',
 	category: 'engagement',
 	value: 1,
@@ -655,7 +655,7 @@ import type {
 	// Engine
 	EngineRegistries,
 	FormEngineSchemaMetadata,
-} from "@schema-engine/forms
+} from '@schema-engine/forms';
 ```
 
 ## Package Structure
@@ -680,9 +680,7 @@ The package is designed for maximum tree-shaking:
 
 ```typescript
 // Only import what you need
-import { FormComposer } from "@schema-engine/forms
-import { ValidationPresets } from "@schema-engine/formschemas/validation";
-import { SubmitActionRegistration } from "@schema-engine/forms";
+import { FormComposer, SubmitActionRegistration, ValidationPresets } from '@schema-engine/forms';
 ```
 
 ## Testing

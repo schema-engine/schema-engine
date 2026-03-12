@@ -247,15 +247,14 @@ Control array length constraints.
 
 ### IP Address
 
-Validate IP addresses with optional version specification.
+Validate IP addresses with explicit IPv4 or IPv6 rule types.
 
 ```typescript
-// Any IP version
-{ type: 'ip', message: 'Please enter a valid IP address' }
+// IPv4
+{ type: 'ipv4', message: 'Please enter a valid IPv4 address' }
 
-// Specific IP version
-{ type: 'ip', version: 'v4', message: 'Please enter a valid IPv4 address' }
-{ type: 'ip', version: 'v6', message: 'Please enter a valid IPv6 address' }
+// IPv6
+{ type: 'ipv6', message: 'Please enter a valid IPv6 address' }
 
 // Server IP field example
 {
@@ -264,12 +263,12 @@ Validate IP addresses with optional version specification.
   label: 'Server IP Address',
   rules: [
     { type: 'required', message: 'Server IP is required' },
-    { type: 'ip', version: 'v4', message: 'Please enter a valid IPv4 address' }
+    { type: 'ipv4', message: 'Please enter a valid IPv4 address' }
   ]
 }
 ```
 
-**Zod equivalent:** `z.string().ip({ version: 'v4' | 'v6' })`
+The package registers IPv4 and IPv6 as separate validation rule types.
 
 ### CIDR Notation
 
@@ -366,20 +365,20 @@ Validate Base64 encoded strings.
 
 ### Format Validation
 
-Validate specific string formats.
+Validate specific string formats using direct rule types.
 
 ```typescript
 // CUID
-{ type: 'format', format: 'cuid', message: 'Please enter a valid CUID' }
+{ type: 'cuid', message: 'Please enter a valid CUID' }
 
 // CUID2
-{ type: 'format', format: 'cuid2', message: 'Please enter a valid CUID2' }
+{ type: 'cuid2', message: 'Please enter a valid CUID2' }
 
 // ULID
-{ type: 'format', format: 'ulid', message: 'Please enter a valid ULID' }
+{ type: 'ulid', message: 'Please enter a valid ULID' }
 
 // Hexadecimal
-{ type: 'format', format: 'hex', message: 'Please enter valid hexadecimal' }
+{ type: 'hex', message: 'Please enter valid hexadecimal' }
 
 // ID field example
 {
@@ -388,7 +387,7 @@ Validate specific string formats.
   label: 'Unique ID',
   rules: [
     { type: 'required', message: 'Unique ID is required' },
-    { type: 'format', format: 'cuid2', message: 'Please enter a valid CUID2' }
+    { type: 'cuid2', message: 'Please enter a valid CUID2' }
   ]
 }
 ```

@@ -31,6 +31,7 @@ Actions execute in response to form lifecycle triggers.
 ### Step Triggers
 
 - `step_change` - Navigation between steps
+- `step_submit` - Submission of the current step
 - `step_enter` - Entering a step
 - `step_leave` - Leaving a step
 - `step_view` - Step becomes visible (for analytics)
@@ -106,8 +107,8 @@ Track form events in Google Tag Manager:
 {
 	"id": "track-submit",
 	"$type": "gtm_event",
-	"event": "form_submit",
-	"data": {
+	"eventName": "form_submit",
+	"eventData": {
 		"formId": "contact-form",
 		"category": "engagement"
 	},
