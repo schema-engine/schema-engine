@@ -426,7 +426,7 @@ function SidebarMenu({ className, ...props }: React.ComponentProps<'ul'>) {
 		<ul
 			data-slot="sidebar-menu"
 			data-sidebar="menu"
-			className={cn('gap-px flex w-full min-w-0 flex-col', className)}
+			className={cn('gap-px flex min-w-0 flex-col my-2', className)}
 			{...props}
 		/>
 	);
@@ -437,7 +437,7 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<'li'>) {
 		<li
 			data-slot="sidebar-menu-item"
 			data-sidebar="menu-item"
-			className={cn('group/menu-item relative', className)}
+			className={cn('group/menu-item relative pl-4', className)}
 			{...props}
 		/>
 	);
@@ -579,7 +579,7 @@ function SidebarMenuSkeleton({
 		>
 			{showIcon && <Skeleton className="size-4 rounded-md" data-sidebar="menu-skeleton-icon" />}
 			<Skeleton
-				className="h-4 max-w-(--skeleton-width) flex-1"
+				className="h-4 max-w-[var(--skeleton-width)] flex-1"
 				data-sidebar="menu-skeleton-text"
 				style={
 					{
@@ -597,7 +597,7 @@ function SidebarMenuSub({ className, ...props }: React.ComponentProps<'ul'>) {
 			data-slot="sidebar-menu-sub"
 			data-sidebar="menu-sub"
 			className={cn(
-				'border-sidebar-border mx-3.5 translate-x-px gap-1 border-l px-2.5 py-0.5 group-data-[collapsible=icon]:hidden flex min-w-0 flex-col',
+				'border-sidebar-border mx-5 translate-x-px gap-1 border-l px-3.5 py-0.5 group-data-[collapsible=icon]:hidden flex min-w-0 flex-col',
 				className,
 			)}
 			{...props}

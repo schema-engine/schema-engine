@@ -6,7 +6,10 @@
 
 @theme inline {
 	--color-background: var(--background);
+	--color-background-accent: var(--background-accent);
 	--color-foreground: var(--foreground);
+	--color-foreground-accent: var(--foreground-accent);
+	--font-serif: var(--font-geist-serif);
 	--font-sans: var(--font-sans);
 	--font-mono: var(--font-geist-mono);
 	--color-sidebar-ring: var(--sidebar-ring);
@@ -49,6 +52,7 @@
 
 :root {
 	--background: oklch(1 0 0);
+	--background-accent: oklch(0.21 0.006 285.885);
 	--foreground: oklch(0.141 0.005 285.823);
 	--card: oklch(1 0 0);
 	--card-foreground: oklch(0.141 0.005 285.823);
@@ -84,6 +88,7 @@
 
 .dark {
 	--background: oklch(0.141 0.005 285.823);
+	--background-accent: oklch(0.21 0.006 285.885);
 	--foreground: oklch(0.985 0 0);
 	--card: oklch(0.21 0.006 285.885);
 	--card-foreground: oklch(0.985 0 0);
@@ -161,6 +166,44 @@
 	ul:not(form ul):not(form * ul):not(.unprose ul):not(.unprose * ul),
 	ol:not(form ol):not(form * ol):not(.unprose ol):not(.unprose * ol) {
 		@apply list-disc pl-8 my-4 font-sans;
+	}
+
+	table {
+		@apply w-full text-left border-collapse my-8 text-sm;
+
+		thead {
+			@apply border-b border-border bg-background-accent/50;
+
+			th {
+				@apply py-3 px-4 font-semibold text-foreground whitespace-nowrap md:whitespace-normal;
+			}
+		}
+
+		tbody {
+			tr {
+				@apply border-b border-border/50 transition-colors hover:bg-background-accent/30;
+
+				td {
+					@apply py-3 px-4 text-foreground align-top;
+
+					code {
+						@apply whitespace-nowrap;
+					}
+				}
+
+				&:last-child {
+					@apply border-0;
+				}
+			}
+		}
+	}
+
+	.table-wrapper {
+		@apply w-full overflow-x-auto my-8 lg:overflow-x-visible;
+
+		table {
+			@apply my-0;
+		}
 	}
 }
 
