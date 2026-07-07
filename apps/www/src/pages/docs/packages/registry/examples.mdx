@@ -93,19 +93,7 @@ widgets.register({
 });
 ```
 
-## Registering Schemas to Zod Registry
+## Validating Registrations
 
-`registerSchemas` is deprecated but still used by `FormEngine` to attach metadata through
-`z.registry()`. Only registrations whose schemas implement Zod's `register()` helper are
-included.
-
-```typescript
-import { z } from 'zod';
-
-const zodRegistry = z.registry();
-
-registry.registerSchemas(zodRegistry, (item) => ({
-	name: item.metadata.name,
-	description: item.metadata.description,
-}));
-```
+Validate configs through each registration's Standard Schema (`schema['~standard'].validate`)
+or the `SchemaMetadataCatalog` in `@schema-engine/forms` for JSON Schema metadata.

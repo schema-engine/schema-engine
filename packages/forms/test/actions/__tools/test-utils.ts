@@ -1,6 +1,6 @@
 import type { BuilderActionExecutionContext } from '@/types/actions';
 import { GDPRConsent } from '@/tools/gdpr-consent';
-import type { ActionExecutionContext } from '@schema-engine/actions';
+import type { ActionRuntimeContext } from '@schema-engine/actions';
 
 /**
  * Mock GDPR consent for testing
@@ -44,7 +44,7 @@ export function createMockBuilderContext<TConfig = unknown>(
 /**
  * Create a mock action execution context with sensible defaults
  */
-export function createMockContext(overrides: Partial<ActionExecutionContext> = {}): ActionExecutionContext {
+export function createMockContext(overrides: Partial<ActionRuntimeContext> = {}): ActionRuntimeContext {
 	return {
 		form: {
 			getValues: () => ({ field1: 'value1' }),
@@ -62,7 +62,7 @@ export function createMockContext(overrides: Partial<ActionExecutionContext> = {
 			},
 		} as any,
 		...overrides,
-	} as ActionExecutionContext;
+	} as ActionRuntimeContext;
 }
 
 /**

@@ -341,7 +341,7 @@ The action execution logic lives in `@schema-engine/actions` and is completely d
 ```typescript
 // From @schema-engine/actions
 import { ActionExecutor } from '@schema-engine/actions';
-import type { ActionExecutionContext, ActionExecutionResult } from '@schema-engine/actions';
+import type { ActionRuntimeContext, ActionExecutionResult } from '@schema-engine/actions';
 
 // The executor works with any domain-specific types
 type MyExecutor = ActionExecutor<MyConfig, MyContext, MyTrigger>;
@@ -357,16 +357,9 @@ Forms package provides:
 
 ### Execution Context
 
-Every action handler receives:
+Every action handler receives an `ActionRuntimeContext` — the caller-provided base context enriched with `config` and `trigger` by the executor.
 
-```typescript
-interface ActionExecutionContext<TContext, TTrigger> {
-	trigger: TTrigger; // What triggered this action
-	context: TContext; // Domain-specific context (FormActionContext for forms)
-}
-```
-
-For forms, the context includes:
+For forms, use `BuilderActionRuntimeContext` (exported as `BuilderActionExecutionContext`):
 
 ```typescript
 interface BuilderActionExecutionContext<TConfig> {
