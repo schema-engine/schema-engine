@@ -88,14 +88,13 @@ export class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 	}
 
 	/**
-	 * Dispatch actions without waiting for results (fire and forget)
+	 * Dispatch actions without waiting for results (fire-and-forget).
 	 *
-	 * Useful for side effects that don't need to block execution or return results.
+	 * **Contract:** Best-effort execution. Never throws to the caller. Handler failures
+	 * are returned as failed `ActionExecutionResult` entries (the executor does not reject).
+	 * If `dispatch()` itself rejects unexpectedly, the error is logged and swallowed.
 	 *
-	 * @param actions - Array of action configurations to potentially execute
-	 * @param trigger - The trigger/event that is causing execution
-	 * @param context - Domain-specific context data
-	 * @param metadata - Additional metadata to merge into context
+	 * @param input - Actions, trigger, context, and optional metadata / triggeredBy
 	 */
 	dispatchSync<TConfig extends ActionConfigBase>(input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>): void {
 		void this.dispatch(input).catch((error) => {

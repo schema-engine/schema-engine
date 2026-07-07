@@ -15,7 +15,7 @@ const build = await Bun.build({
 	outdir: 'dist',
 	root: './src',
 	target: 'browser',
-	minify: !watchMode,
+	minify: false,
 	format: 'esm',
 	// Bun breaks minified named re-export barrels when code-splitting is enabled.
 	splitting: false,
