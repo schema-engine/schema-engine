@@ -1,3 +1,4 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { z } from 'zod';
 
 const BaseValidationRuleSchema = z.object({
@@ -234,7 +235,7 @@ export interface ValidationRegistration<TRule extends { type: string } = { type:
 	 * @param formData - Optional form data for cross-field validation (available in custom resolver)
 	 * @returns Zod schema for validation
 	 */
-	handler: (rule: TRule, formData?: Record<string, any>) => z.ZodTypeAny;
+	handler: (rule: TRule, formData?: Record<string, any>) => StandardSchemaV1;
 }
 
 /**

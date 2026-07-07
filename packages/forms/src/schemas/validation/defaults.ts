@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
+import { toStandardSchema } from '@/lib/standard-schema';
 import type {
 	RequiredRule,
 	MinLengthRule,
@@ -36,10 +38,12 @@ export const defaultValidations: AnyValidationRegistration[] = [
 	{
 		type: 'required',
 		category: 'generic',
-		handler: (rule: RequiredRule) =>
-			z.any().refine((val) => val !== undefined && val !== null && val !== '', {
-				message: rule.message || 'Required',
-			}),
+		handler: (rule: RequiredRule): StandardSchemaV1 =>
+			toStandardSchema(
+				z.any().refine((val) => val !== undefined && val !== null && val !== '', {
+					message: rule.message || 'Required',
+				}),
+			),
 	},
 	{
 		type: 'minLength',

@@ -15,7 +15,13 @@ import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { FormConfigBuilder } from '@/builder/form-config-builder';
 import type { FormEngineSchemaArtifacts, FormEngineSchemaMetadataRegistry } from './schema-artifacts';
 import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from './schema-artifacts';
+import { buildFormDataValidator as buildFormDataValidatorFromRules } from '@/schemas/validation/utils';
+import type { FormValidationElement } from '@/schemas/validation/standard-schema-rules';
 export * from './component-type';
+
+export type FormDataValidatorConfig = {
+	steps: Array<{ elements: FormValidationElement[] }>;
+};
 
 /**
  * Engine registries - internal storage for all registered components.
@@ -326,6 +332,13 @@ export class FormEngine<
 	 */
 	getFormConfigSchema() {
 		return this.schemaArtifacts.formConfigValidator;
+	}
+
+	buildFormDataValidator(
+		config: FormDataValidatorConfig,
+		formData?: Record<string, unknown>,
+	): StandardSchemaV1<Record<string, unknown>> {
+		return buildFormDataValidatorFromRules(config, formData);
 	}
 
 	/**

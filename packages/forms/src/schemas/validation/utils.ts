@@ -1,20 +1,16 @@
 import { z } from 'zod';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { ValidationRule, BaseValidationRule } from './types.js';
-import type { BaseField } from '../base-field.js';
+import {
+	createStandardFormDataSchema,
+	type FormValidationElement,
+} from './standard-schema-rules.js';
 import { validationRegistry } from './validation-registry.js';
 
+export type { FormValidationElement } from './standard-schema-rules.js';
+export { createStandardSchemaFromRules, createStandardFormDataSchema } from './standard-schema-rules.js';
+
 type ValidationRuleType = ValidationRule | BaseValidationRule;
-
-interface ValidationElement {
-	name?: string;
-	rules?: ValidationRuleType[];
-}
-
-interface FieldConfigElement extends BaseField {
-	id: string;
-}
-
-type FormElement = ValidationElement | FieldConfigElement;
 
 export function isFieldRequired(rules?: ValidationRule[]): boolean {
 	return rules?.some((rule) => rule.type === 'required') ?? false;
@@ -22,7 +18,7 @@ export function isFieldRequired(rules?: ValidationRule[]): boolean {
 
 export function createZodSchemaFromRules(
 	rules: ValidationRuleType[] = [],
-	formData?: Record<string, any>,
+	formData?: Record<string, unknown>,
 ): z.ZodTypeAny {
 	if (!rules.length) {
 		return z.any();
@@ -32,7 +28,7 @@ export function createZodSchemaFromRules(
 	for (const rule of rules) {
 		const ruleSchema = validationRegistry.createSchema(rule as ValidationRule, formData);
 		if (ruleSchema) {
-			schemas.push(ruleSchema);
+			schemas.push(ruleSchema as z.ZodTypeAny);
 		}
 	}
 
@@ -48,17 +44,26 @@ export function createZodSchemaFromRules(
 	return combinedSchema;
 }
 
-export function generateFormSchema(elements: FormElement[]): z.ZodObject<any> {
+export function generateFormSchema(elements: FormValidationElement[]): z.ZodObject<any> {
 	const schemaFields: Record<string, z.ZodTypeAny> = {};
 
 	for (const element of elements) {
-		if (!element.name) continue;
+		if (!element.name || !element.rules?.length) {
+			continue;
+		}
 
-		if (!element.rules?.length) continue;
-
-		const fieldSchema = createZodSchemaFromRules(element.rules, undefined);
-		schemaFields[element.name] = fieldSchema;
+		schemaFields[element.name] = createZodSchemaFromRules(element.rules);
 	}
 
 	return z.object(schemaFields);
+}
+
+export function buildFormDataValidator(
+	config: { steps: Array<{ elements: FormValidationElement[] }> },
+	formData?: Record<string, unknown>,
+): StandardSchemaV1<Record<string, unknown>> {
+	return createStandardFormDataSchema(
+		config.steps.flatMap((step) => step.elements),
+		formData,
+	);
 }
