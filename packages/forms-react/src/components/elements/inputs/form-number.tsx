@@ -1,6 +1,6 @@
 import { Input } from '@/components/core-ui/input';
 import { FieldGroup } from '@/components/elements/field-group';
-import { useControlledFormElement, combineHandlers } from '@/hooks';
+import { useAdapterControlledFormElement } from '@/hooks';
 import type { NumberFieldProps } from './form-number.types';
 
 export function FormNumber({
@@ -9,8 +9,8 @@ export function FormNumber({
 	onFocus: propsOnFocus,
 	...config
 }: NumberFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
-		useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles, combineHandlers } =
+		useAdapterControlledFormElement(config);
 
 	return (
 		<FieldGroup

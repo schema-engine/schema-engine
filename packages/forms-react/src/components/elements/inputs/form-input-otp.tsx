@@ -1,5 +1,5 @@
 import { FieldGroup } from '@/components/elements/field-group';
-import { useControlledFormElement, combineHandlers } from '@/hooks';
+import { useAdapterControlledFormElement } from '@/hooks';
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@/components/core-ui/input-otp';
 import type { InputOTPFieldProps } from './form-input-otp.types';
 
@@ -9,8 +9,8 @@ export function FormInputOTP({
 	onFocus: propsOnFocus,
 	...config
 }: InputOTPFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
-		useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles, combineHandlers } =
+		useAdapterControlledFormElement(config);
 
 	const otpValue = String(value || '');
 	const length = config.length || 6;

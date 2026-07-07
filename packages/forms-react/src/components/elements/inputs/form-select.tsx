@@ -1,5 +1,5 @@
 import { FieldGroup } from '@/components/elements/field-group';
-import { combineHandlers, useControlledFormElement } from '@/hooks';
+import { useAdapterControlledFormElement } from '@/hooks';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/core-ui/select';
 import type { SelectFieldProps } from './form-select.types';
 
@@ -9,8 +9,8 @@ export function FormSelect({
 	onFocus: propsOnFocus,
 	...config
 }: SelectFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
-		useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles, combineHandlers } =
+		useAdapterControlledFormElement(config);
 
 	const isMultiple = config.multiple;
 

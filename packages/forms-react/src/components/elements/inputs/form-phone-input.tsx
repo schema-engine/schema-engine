@@ -1,6 +1,6 @@
 import { PhoneInput } from '@/components/core-ui/phone-input';
 import { FieldGroup } from '@/components/elements/field-group';
-import { useControlledFormElement, combineHandlers } from '@/hooks';
+import { useAdapterControlledFormElement } from '@/hooks';
 import type { PhoneInputFieldProps } from './form-phone-input.types';
 
 export function FormPhoneInput({
@@ -9,9 +9,8 @@ export function FormPhoneInput({
 	onFocus: propsOnFocus,
 	...config
 }: PhoneInputFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } = useControlledFormElement(
-		config as unknown as FormEngine.ElementConfig,
-	);
+	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles, combineHandlers } =
+		useAdapterControlledFormElement(config as unknown as FormEngine.ElementConfig);
 
 	const { defaultCountry, international, ...rest } = config;
 

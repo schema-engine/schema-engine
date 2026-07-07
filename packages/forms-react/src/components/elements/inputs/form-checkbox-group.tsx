@@ -5,7 +5,7 @@ import {
 	FieldContent,
 	FieldHint,
 } from '@/components/elements/field-group';
-import { useControlledFormElement, combineHandlers } from '@/hooks';
+import { useAdapterControlledFormElement } from '@/hooks';
 import { Checkbox } from '@/components/core-ui/checkbox';
 import { Label } from '@/components/core-ui/label';
 import type { CheckboxGroupFieldProps } from './form-checkbox-group.types';
@@ -16,8 +16,8 @@ export function FormCheckboxGroup({
 	onFocus: propsOnFocus,
 	...config
 }: CheckboxGroupFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
-		useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles, combineHandlers } =
+		useAdapterControlledFormElement(config);
 
 	const selectedValues = Array.isArray(value) ? value : [];
 

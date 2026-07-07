@@ -1,6 +1,6 @@
 import { Textarea } from '@/components/core-ui/textarea';
 import { FieldGroup } from '@/components/elements/field-group';
-import { useControlledFormElement, combineHandlers } from '@/hooks';
+import { useAdapterControlledFormElement } from '@/hooks';
 import type { TextareaFieldProps } from './form-textarea.types';
 
 export function FormTextarea({
@@ -9,8 +9,8 @@ export function FormTextarea({
 	onFocus: propsOnFocus,
 	...config
 }: TextareaFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
-		useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles, combineHandlers } =
+		useAdapterControlledFormElement(config);
 
 	return (
 		<FieldGroup
