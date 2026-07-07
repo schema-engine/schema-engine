@@ -3,7 +3,7 @@ import { FormProvider } from '../form-provider';
 import type { FormProviderProps } from '../../adapters/types';
 import { FormElement } from './field-renderer';
 import { useFormGridStyles } from '@/hooks';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext } from '@/adapters/context';
 import { LayoutRenderer } from './layout-renderer';
 import { StepperRenderer } from './stepper-renderer';
 import { useFormInstanceActions } from '@/hooks/use-form-context';

@@ -1,8 +1,8 @@
-import { useFieldArray, useFormContext } from 'react-hook-form';
 import { Button } from '@/components/core-ui/button';
 import { Trash2, Plus } from 'lucide-react';
 import { FieldGroup } from '@/components/elements/field-group';
 import { useAdapterControlledFormElement } from '@/hooks';
+import { useFieldArray } from '@/adapters/context';
 import { FormElement } from '@/components/internals/field-renderer';
 import type { ArrayElementsProps, ArrayElementsConfig } from './form-array-elements.types';
 import { cn } from '@/lib/utils';
@@ -145,11 +145,7 @@ function ArrayActions({ canAdd, addButtonText, onAdd }: ArrayActionsProps) {
  * Base UI implementation without shadcn/ui dependencies
  */
 export function FormArrayElements(config: ArrayElementsProps) {
-	const { control } = useFormContext();
-	const { fields, append, remove } = useFieldArray({
-		control,
-		name: config.name,
-	});
+	const { fields, append, remove } = useFieldArray(config.name);
 
 	const { error, containerStyles } = useAdapterControlledFormElement(config);
 

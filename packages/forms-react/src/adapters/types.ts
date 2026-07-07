@@ -25,6 +25,12 @@ export interface FormFieldValue<TFieldValue = unknown> {
 	required: boolean;
 }
 
+export interface FormFieldArrayValue {
+	fields: Array<{ id: string }>;
+	append: (value: unknown) => void;
+	remove: (index: number) => void;
+}
+
 /**
  * Props for the FormProvider component
  */
@@ -58,6 +64,8 @@ export interface FormAdapter<TFormData = Record<string, unknown>> {
 	useFormField: <TFieldValue = unknown>(config: FormEngine.ElementConfig) => FormFieldValue<TFieldValue>;
 	/** Hook to watch a specific field value */
 	useWatchField: <TWatchValue = unknown>(name: string | string[]) => TWatchValue;
+	/** Hook to manage dynamic field arrays */
+	useFieldArray: (name: string) => FormFieldArrayValue;
 	/** The FormProvider component to wrap the form */
 	FormProvider: React.ComponentType<FormProviderProps<TFormData>>;
 }

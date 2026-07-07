@@ -6,3 +6,4 @@ export { useFormActionDispatchers } from './use-form-action-dispatchers';
 export { useFormMountEffect } from './use-form-mount-effect';
 export { useFormWatcher } from './use-form-watcher';
 export { useFormSubmitHandler } from './use-form-submit-handler';
+export { useRhfFieldArray } from './use-field-array';

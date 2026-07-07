@@ -1,6 +1,6 @@
 import { useMemo, useRef } from 'react';
-import { useFormContext, useWatch } from 'react-hook-form';
 import { ConstraintEvaluator, type ConstraintEvaluationResult, type ConstraintLogic } from '@schema-engine/forms';
+import { useWatchField } from '@/adapters/context';
 
 /**
  * Result returned by `useConstraintLogic`
@@ -23,7 +23,6 @@ export function useConstraintLogic(
 	baseRequired = false,
 	fieldPath?: string,
 ): UseConstraintLogicResult {
-	const { control } = useFormContext();
 	const evaluatorRef = useRef<ConstraintEvaluator | null>(null);
 
 	if (!evaluatorRef.current) {
@@ -67,10 +66,7 @@ export function useConstraintLogic(
 		});
 	}, [constraints, fieldPath]);
 
-	const watchedValues = useWatch({
-		control,
-		name: watchedFields,
-	});
+	const watchedValues = useWatchField(watchedFields);
 
 	const fieldValues = useMemo(() => {
 		const map: Record<string, any> = {};

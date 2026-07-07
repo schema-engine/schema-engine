@@ -25,3 +25,8 @@ export function useWatchField<TWatchValue = unknown, TFormData = Record<string, 
 	const adapter = useFormAdapter<TFormData>();
 	return adapter.useWatchField<TWatchValue>(name);
 }
+
+export function useFieldArray(name: string) {
+	const adapter = useFormAdapter();
+	return adapter.useFieldArray(name);
+}
