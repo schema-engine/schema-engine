@@ -220,13 +220,16 @@ export function createAsyncValidationHandler(rule: AsyncRule, formData?: Record<
 		/** Core validation function that performs the HTTP request and processes the response */
 		const performValidation = async () => {
 			try {
+				const method = rule.method ?? 'POST';
+				const hasBody = method !== 'GET' && method !== 'HEAD';
+
 				const response = await fetch(rule.url, {
-					method: 'POST',
+					method,
 					headers: {
-						'Content-Type': 'application/json',
+						...(hasBody ? { 'Content-Type': 'application/json' } : {}),
 						...rule.headers,
 					},
-					body: JSON.stringify(payload),
+					...(hasBody ? { body: JSON.stringify(payload) } : {}),
 				});
 
 				if (!response.ok) {
