@@ -1,5 +1,4 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import { z } from 'zod';
 
 export type StandardSchemaIssue = {
 	message: string;
@@ -52,14 +51,6 @@ export function safeParseStandardSchema<T>(
 	}
 
 	return { success: true, data: syncResult.value as T };
-}
-
-/**
- * Temporary bridge: Zod 4 schemas implement Standard Schema but form-composer
- * still composes unions with Zod until w2-02 (discriminated Standard Schema composer).
- */
-export function asZodTypeAny(schema: StandardSchemaV1): z.ZodTypeAny {
-	return schema as z.ZodTypeAny;
 }
 
 /**

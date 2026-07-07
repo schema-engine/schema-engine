@@ -7,8 +7,6 @@ import type {
 	BuilderActionBaseContext,
 } from '@/types';
 import { FormEngine } from '@/engine/form-engine';
-import { registerSchemasToZod } from '@/engine/register-schemas-to-zod';
-import { asZodTypeAny } from '@/lib/standard-schema';
 import { ComponentType } from '@/engine/component-type';
 import {
 	createActionConfigValidatorMap,
@@ -225,10 +223,11 @@ export class FormComposer<
 		const stepperSchemas = this.stepperRegistry.getAll().map((stepper) => stepper.schema);
 		const actionSchemas = this.actionRegistry.getAll().map((action: any) => action.schema);
 
-		const elementsUnion = this.createUnionSchema(elementSchemas.map(asZodTypeAny));
-		const layoutsUnion = this.createUnionSchema(layoutSchemas.map(asZodTypeAny));
-		const steppersUnion = this.createUnionSchema(stepperSchemas.map(asZodTypeAny));
-		const actionsUnion = this.createUnionSchema(actionSchemas.map(asZodTypeAny));
+		// TODO(w2-02): replace with Standard Schema discriminated union composer
+		const elementsUnion = this.createUnionSchema(elementSchemas as z.ZodTypeAny[]);
+		const layoutsUnion = this.createUnionSchema(layoutSchemas as z.ZodTypeAny[]);
+		const steppersUnion = this.createUnionSchema(stepperSchemas as z.ZodTypeAny[]);
+		const actionsUnion = this.createUnionSchema(actionSchemas as z.ZodTypeAny[]);
 
 		const formStepSchema = z.object({
 			id: z.string(),
@@ -331,7 +330,7 @@ export class FormComposer<
 
 		const schemaRegistry = zodRegistry ?? z.registry<FormEngineSchemaMetadata>();
 
-		registerSchemasToZod(this.elementRegistry, schemaRegistry, (item) => ({
+		this.elementRegistry.registerSchemas(schemaRegistry, (item) => ({
 			id: `element:${item.$type}`,
 			componentType: ComponentType.Element,
 			title: item.metadata.name,
@@ -339,21 +338,21 @@ export class FormComposer<
 			category: item.metadata.category,
 		}));
 
-		registerSchemasToZod(this.layoutRegistry, schemaRegistry, (item) => ({
+		this.layoutRegistry.registerSchemas(schemaRegistry, (item) => ({
 			id: `layout:${item.$type}`,
 			componentType: ComponentType.Layout,
 			title: item.metadata.name,
 			description: item.metadata.description,
 		}));
 
-		registerSchemasToZod(this.stepperRegistry, schemaRegistry, (item) => ({
+		this.stepperRegistry.registerSchemas(schemaRegistry, (item) => ({
 			id: `stepper:${item.$type}`,
 			componentType: ComponentType.Stepper,
 			title: item.metadata.name,
 			description: item.metadata.description,
 		}));
 
-		registerSchemasToZod(this.actionRegistry, schemaRegistry, (item) => ({
+		this.actionRegistry.registerSchemas(schemaRegistry, (item) => ({
 			id: `action:${item.$type}`,
 			componentType: ComponentType.Action,
 			title: item.metadata.name,
