@@ -4,11 +4,7 @@
 	"version": "0.1.0",
 	"license": "MIT",
 	"sideEffects": [
-		"./dist/registrations/*.js",
-		"./dist/components/elements/inputs/*.registry.js",
-		"./dist/components/layouts/*.registry.js",
-		"./dist/components/layouts/*.registry.js",
-		"./dist/components/steppers/*.registry.js",
+		"./dist/**/*.registration.js",
 		"**/*.css"
 	],
 	"main": "dist/index.js",
@@ -168,18 +164,6 @@
 			"types": "./dist/components/*.d.ts",
 			"import": "./dist/components/*.js"
 		},
-		"./components/form/*": {
-			"types": "./dist/components/form/*.d.ts",
-			"import": "./dist/components/form/*.js"
-		},
-		"./components/form/registry": {
-			"types": "./dist/components/form/registry.d.ts",
-			"import": "./dist/components/form/registry.js"
-		},
-		"./components/core-registrations": {
-			"types": "./dist/registrations.d.ts",
-			"import": "./dist/registrations.js"
-		},
 		"./components/elements/inputs/*": {
 			"types": "./dist/components/elements/inputs/*.d.ts",
 			"import": "./dist/components/elements/inputs/*.js"
@@ -193,8 +177,8 @@
 			"import": "./dist/components/elements/content/*.js"
 		},
 		"./components/internals": {
-			"types": "./dist/components/internals.d.ts",
-			"import": "./dist/components/internals.js"
+			"types": "./dist/components/internals/index.d.ts",
+			"import": "./dist/components/internals/index.js"
 		},
 		"./components/internals/*": {
 			"types": "./dist/components/internals/*.d.ts",
@@ -205,8 +189,8 @@
 			"import": "./dist/components/internals/form-renderer.js"
 		},
 		"./components/steppers": {
-			"types": "./dist/components/steppers.d.ts",
-			"import": "./dist/components/steppers.js"
+			"types": "./dist/components/steppers/index.d.ts",
+			"import": "./dist/components/steppers/index.js"
 		},
 		"./components/steppers/*": {
 			"types": "./dist/components/steppers/*.d.ts",
