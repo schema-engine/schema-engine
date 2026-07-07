@@ -39,8 +39,10 @@ export function useRHFMultiStep(
 	config: FormConfig,
 	form: UseFormReturn<FieldValues, any, FieldValues>,
 	dispatchTrigger: DispatchTrigger,
+	options?: { onStepIndexChange?: (index: number) => void },
 ): MultiStepContextValue {
 	const { trigger, setFocus, formState, getValues } = form;
+	const onStepIndexChange = options?.onStepIndexChange;
 	const totalSteps = config.steps.length;
 
 	const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -123,6 +125,7 @@ export function useRHFMultiStep(
 			await executeStepTrigger('step_leave', previousStepIndex);
 
 			setCurrentStepIndex(stepIndex);
+			onStepIndexChange?.(stepIndex);
 			setStepStates((prev) => ({
 				...prev,
 				visited: prev.visited.map((v, i) => (i === stepIndex ? true : v)),
@@ -133,7 +136,7 @@ export function useRHFMultiStep(
 			await executeStepTrigger('step_change', stepIndex);
 			await executeStepTrigger('step_enter', stepIndex);
 		},
-		[config.steps, currentStepIndex, executeStepTrigger],
+		[config.steps, currentStepIndex, executeStepTrigger, onStepIndexChange],
 	);
 
 	const goToNextStepAsync = useCallback(async () => {

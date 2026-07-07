@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import type { FormConfig } from '@schema-engine/forms/schemas';
 import type { FormActionTrigger, BuilderActionBaseContext, ActionExecutionResult } from '@schema-engine/forms';
@@ -8,6 +8,8 @@ interface UseFormActionDispatchersOptions {
 	form: UseFormReturn<any>;
 	config: FormConfig;
 	actionExecutor: ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>;
+	getCurrentStep?: () => number;
+	formMountTime?: number;
 }
 
 interface UseFormActionDispatchersReturn {
@@ -27,7 +29,11 @@ export function useFormActionDispatchers({
 	form,
 	config,
 	actionExecutor,
+	getCurrentStep,
+	formMountTime: formMountTimeProp,
 }: UseFormActionDispatchersOptions): UseFormActionDispatchersReturn {
+	const formMountTimeRef = useRef(formMountTimeProp ?? Date.now());
+
 	const buildActionContext = useCallback((): BuilderActionBaseContext => {
 		const formData = form.getValues();
 		const formState = form.formState;
@@ -35,18 +41,18 @@ export function useFormActionDispatchers({
 		return {
 			formId: config.id || 'unnamed-form',
 			formData,
-			currentStep: 0,
+			currentStep: getCurrentStep?.() ?? 0,
 			totalSteps: config.steps.length,
 			isValid: formState.isValid,
 			errors: formState.errors,
 			form,
 			metadata: {
 				stepStartTime: Date.now(),
-				totalFormTime: Date.now() - Date.now(),
+				totalFormTime: Date.now() - formMountTimeRef.current,
 				userInteractions: formState.submitCount + Object.keys(formState.touchedFields).length,
 			},
 		};
-	}, [form, config.id, config.steps.length]);
+	}, [form, config.id, config.steps.length, getCurrentStep]);
 
 	const dispatchTrigger = useCallback(
 		async (
