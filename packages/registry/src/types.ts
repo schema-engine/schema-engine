@@ -1,13 +1,19 @@
-import type { z } from 'zod';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 
 /**
- * Universal metadata for all components.
+ * Universal metadata for all registrations.
  */
-export interface ComponentMetadata {
+export interface RegistrationMetadata {
 	/** Human-readable display name */
 	name: string;
 	/** Detailed description of the component's purpose */
 	description?: string;
+}
+
+/**
+ * Universal metadata for visual components.
+ */
+export interface ComponentMetadata extends RegistrationMetadata {
 	/** Icon identifier for UI display */
 	icon?: string;
 	/** Tags for filtering and searching */
@@ -27,12 +33,12 @@ export type Brand<T, TBrand> = T & { readonly [__brand]?: TBrand };
 /**
  * Base registration interface - common fields for all registration types.
  */
-export interface BaseRegistration<TConfig = unknown, TMeta extends ComponentMetadata = ComponentMetadata> {
+export interface BaseRegistration<TConfig = unknown, TMeta extends RegistrationMetadata = ComponentMetadata> {
 	/** Unique identifier - MUST be unique within its registry type. */
 	$type: string;
-	/** Zod schema for config validation and type inference */
-	schema: z.ZodType<TConfig>;
-	/** Component or action metadata */
+	/** Standard Schema for config validation and type inference */
+	schema: StandardSchemaV1<TConfig>;
+	/** Registration metadata (display name, description, and type-specific fields) */
 	metadata: TMeta;
 }
 

@@ -52,7 +52,9 @@
 		"packages/*"
 	],
 	"dependencies": {
-		"frimousse": "^0.3.0"
+		"frimousse": "^0.3.0",
+		"react": "^19.1.0",
+		"react-dom": "^19.1.0"
 	},
 	"lint-staged": {
 		"**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}": [
@@ -64,7 +66,7 @@
 		]
 	},
 	"overrides": {
-		"react": "canary",
-		"react-dom": "canary"
+		"react": "^19.1.0",
+		"react-dom": "^19.1.0"
 	}
 }

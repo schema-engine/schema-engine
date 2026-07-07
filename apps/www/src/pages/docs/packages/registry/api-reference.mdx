@@ -52,7 +52,7 @@ abstract class BaseRegistry<TKey extends string, TValue extends BaseRegistration
 | `size` | `number` | Count of items |
 | `clear()` | `void` | Removes all items |
 | `getMap()` | `Map` | Returns internal map (use sparingly) |
-| `registerSchemas(zodRegistry, metadataBuilder)` | `void` | Registers all schemas to a Zod registry |
+| `registerSchemas(zodRegistry, metadataBuilder)` | `void` | **Deprecated.** Registers Zod schemas that expose `register()` into a `z.registry()` instance. Skips schemas without that helper. |
 
 ### Protected Methods
 
@@ -80,10 +80,23 @@ abstract class ComponentRegistry<
 ### BaseRegistration
 
 ```typescript
-interface BaseRegistration<TConfig = unknown, TMeta extends ComponentMetadata = ComponentMetadata> {
+import type { StandardSchemaV1 } from '@standard-schema/spec';
+
+interface BaseRegistration<TConfig = unknown, TMeta extends RegistrationMetadata = ComponentMetadata> {
 	$type: string;
-	schema: z.ZodType<TConfig>;
+	schema: StandardSchemaV1<TConfig>;
 	metadata: TMeta;
+}
+```
+
+Zod schemas implement Standard Schema and remain valid `schema` values.
+
+### RegistrationMetadata
+
+```typescript
+interface RegistrationMetadata {
+	name: string;
+	description?: string;
 }
 ```
 
@@ -106,9 +119,7 @@ interface ComponentRegistration<
 ### ComponentMetadata
 
 ```typescript
-interface ComponentMetadata {
-	name: string;
-	description?: string;
+interface ComponentMetadata extends RegistrationMetadata {
 	icon?: string;
 	tags?: string[];
 	version?: string;

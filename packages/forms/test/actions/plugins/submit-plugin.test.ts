@@ -1,6 +1,7 @@
 import { test, expect, describe, beforeEach, afterEach } from 'bun:test';
 import { formSubmitPlugin, FormSubmitActionSchema, type FormSubmitAction } from '@/actions/plugins/form-submit.plugin';
 import { createMockBuilderContext, setupTestEnvironment, createMockFetch, createFailingMockFetch } from '../__tools';
+import { asStandardSchema } from '@/lib/standard-schema';
 
 describe('SubmitPlugin', () => {
 	let originalFetch: typeof fetch;
@@ -93,7 +94,7 @@ describe('SubmitPlugin', () => {
 
 			expect(plugin.$type).toBe('submit');
 			expect(plugin.execute).toBeDefined();
-			expect(plugin.schema).toBe(FormSubmitActionSchema);
+			expect(plugin.schema).toBe(asStandardSchema(FormSubmitActionSchema));
 			expect(plugin.metadata.defaultTriggers).toEqual(['form_submit']);
 		});
 	});

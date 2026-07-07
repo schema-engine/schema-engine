@@ -6,6 +6,7 @@ import { z } from 'zod';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@schema-engine/forms/types';
 import { FormActionTriggerSchema, type ActionExecutionResult } from '@schema-engine/forms';
 import { SUBMIT_FORM_MOCK_URL } from '@/stories/msw/submit-form';
+import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
 
 declare global {
 	interface Window {
@@ -259,7 +260,7 @@ type ConfettiAction = z.infer<typeof ConfettiActionSchema>;
 function confettiPlugin(): BuilderActionRegistration<'confetti', ConfettiAction> {
 	return {
 		$type: 'confetti',
-		schema: ConfettiActionSchema,
+		schema: asStandardSchema(ConfettiActionSchema),
 		metadata: {
 			name: 'Confetti',
 			description: 'Throw confetti on the screen',

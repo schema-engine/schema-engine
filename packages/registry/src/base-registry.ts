@@ -2,6 +2,10 @@ import { z } from 'zod';
 import { Logger } from '@ecopages/logger';
 import type { BaseRegistration } from './types.js';
 
+type ZodSchemaWithRegister = z.ZodTypeAny & {
+	register: (registry: ReturnType<typeof z.registry>, metadata: Record<string, unknown>) => void;
+};
+
 const logger = new Logger('[@schema-engine/registry]');
 
 /**
@@ -10,7 +14,7 @@ const logger = new Logger('[@schema-engine/registry]');
  * Provides common registration, retrieval, and management functionality.
  * Each registry extends this to add type-specific behavior.
  *
- * All registrations must extend BaseRegistration which provides the unified 'id' field.
+ * All registrations must extend BaseRegistration which provides the unified `$type` field.
  *
  * @template TKey - The key type (typically string)
  * @template TValue - The value type (registration object extending BaseRegistration)
@@ -25,7 +29,7 @@ export abstract class BaseRegistry<TKey extends string, TValue extends BaseRegis
 
 	/**
 	 * Extract the key from an item.
-	 * Uses the unified '$type' field from BaseRegistration.
+	 * Uses the unified `$type` field from BaseRegistration.
 	 * @param item - The item to extract the key from
 	 */
 	protected getItemKey(item: TValue): TKey {
@@ -34,7 +38,7 @@ export abstract class BaseRegistry<TKey extends string, TValue extends BaseRegis
 
 	/**
 	 * Extract the name from an item for logging.
-	 * Uses the 'name' field from metadata.
+	 * Uses the `name` field from metadata.
 	 * @param item - The item to extract the name from
 	 */
 	protected getItemName(item: TValue): string {
@@ -131,18 +135,22 @@ export abstract class BaseRegistry<TKey extends string, TValue extends BaseRegis
 	}
 
 	/**
-	 * Register all items' schemas to a Zod registry using a metadata builder function.
-	 * Pure function - registry is passed in, allowing for composition and testing.
+	 * Registers schemas that implement Zod's `register()` helper into a shared Zod metadata registry.
 	 *
-	 * @param zodRegistry - The Zod registry to register schemas to
-	 * @param metadataBuilder - Function to build metadata for each item
+	 * Registrations whose `schema` does not expose `register()` are skipped silently.
+	 *
+	 * @deprecated Retained for FormEngine JSON Schema metadata via `z.registry()`.
+	 *             Prefer Standard Schema–native metadata when integrating new code.
 	 */
 	registerSchemas(
 		zodRegistry: ReturnType<typeof z.registry>,
 		metadataBuilder: (item: TValue) => Record<string, unknown>,
 	): void {
 		for (const item of this.getAll()) {
-			item.schema.register(zodRegistry, metadataBuilder(item));
+			const schema = item.schema as ZodSchemaWithRegister;
+			if (typeof schema.register === 'function') {
+				schema.register(zodRegistry, metadataBuilder(item));
+			}
 		}
 	}
 }

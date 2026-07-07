@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+import type { BaseRegistration, RegistrationMetadata } from '@schema-engine/registry';
 
 /**
  * Action Configuration Base
@@ -115,11 +115,7 @@ export type ActionHandler<TConfig = unknown, TContext = unknown, TTrigger = stri
  *
  * @template TTrigger - The trigger/event type
  */
-export interface ActionMetadata<TTrigger = string> {
-	/** Human-readable name */
-	name: string;
-	/** Description of what the action does */
-	description?: string;
+export interface ActionMetadata<TTrigger = string> extends RegistrationMetadata {
 	/** Icon identifier (optional) */
 	icon?: string;
 	/** Default triggers that this action responds to */
@@ -165,13 +161,9 @@ export interface ActionRegistration<
 	TBaseContext = unknown,
 	TTrigger = string,
 	TData = unknown,
-> {
+> extends BaseRegistration<TConfig, ActionMetadata<TTrigger>> {
 	/** Unique action type identifier */
 	$type: TConfig['$type'];
-	/** Zod schema for validating action configuration (validates TConfig type) */
-	schema: z.ZodType<TConfig>;
-	/** Action metadata (name, description, default triggers, etc.) */
-	metadata: ActionMetadata<TTrigger>;
 	/**
 	 * Action execution function.
 	 * Receives the runtime context produced by the executor.

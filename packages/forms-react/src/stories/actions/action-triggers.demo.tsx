@@ -12,6 +12,7 @@ import { FormActionTriggerSchema, formResetPlugin, formSubmitPlugin } from '@sch
 import { z } from 'zod';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@schema-engine/forms/types';
 import type { ActionExecutionResult } from '@schema-engine/forms';
+import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
 
 export interface ActionLogEntry {
 	id: string;
@@ -68,7 +69,7 @@ function loggerPlugin(dispatcher: ActionEventDispatcher): BuilderActionRegistrat
 
 	return {
 		$type: 'event_logger',
-		schema: LoggerActionSchema,
+		schema: asStandardSchema(LoggerActionSchema),
 		metadata: {
 			name: 'Event Logger',
 			description: 'Logs action triggers for dashboard display',

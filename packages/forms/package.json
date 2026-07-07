@@ -30,6 +30,7 @@
 		]
 	},
 	"devDependencies": {
+		"@standard-schema/spec": "^1.1.0",
 		"@types/bun": "latest",
 		"tsc-alias": "^1.8.16"
 	},
@@ -92,6 +93,10 @@
 		"./lib/debounce": {
 			"types": "./dist/lib/debounce.d.ts",
 			"import": "./dist/lib/debounce.js"
+		},
+		"./lib/standard-schema": {
+			"types": "./dist/lib/standard-schema.d.ts",
+			"import": "./dist/lib/standard-schema.js"
 		},
 		"./schemas/*": {
 			"types": "./dist/schemas/*.d.ts",

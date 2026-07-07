@@ -95,7 +95,9 @@ widgets.register({
 
 ## Registering Schemas to Zod Registry
 
-You can register all schemas to a Zod registry for validation tooling:
+`registerSchemas` is deprecated but still used by `FormEngine` to attach metadata through
+`z.registry()`. Only registrations whose schemas implement Zod's `register()` helper are
+included.
 
 ```typescript
 import { z } from 'zod';
