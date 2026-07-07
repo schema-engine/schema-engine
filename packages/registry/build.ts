@@ -1,4 +1,3 @@
-import { $ } from 'bun';
 import { watch } from 'node:fs';
 import path from 'node:path';
 import { Logger } from '@ecopages/logger';
@@ -14,7 +13,7 @@ const build = await Bun.build({
 	entrypoints: files,
 	outdir: 'dist',
 	root: './src',
-	target: 'browser',
+	target: 'neutral',
 	minify: !watchMode,
 	format: 'esm',
 	splitting: !watchMode,
@@ -25,12 +24,27 @@ if (!build.success) {
 	for (const log of build.logs) {
 		logger.error(log);
 	}
+	process.exit(1);
 }
 
 if (process.argv.includes('--watch')) {
 	logger.info('Watching for changes...');
 	const watcher = watch(path.resolve(__dirname, 'src'), { recursive: true }, async () => {
-		await $`bun run build:lib`;
+		const rebuild = await Bun.build({
+			entrypoints: files,
+			outdir: 'dist',
+			root: './src',
+			target: 'neutral',
+			minify: false,
+			format: 'esm',
+			splitting: false,
+			sourcemap: 'external',
+		});
+		if (!rebuild.success) {
+			for (const log of rebuild.logs) {
+				logger.error(log);
+			}
+		}
 	});
 
 	process.on('SIGINT', () => {
