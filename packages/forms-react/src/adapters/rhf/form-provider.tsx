@@ -1,5 +1,5 @@
 import { FormProvider as RHFFormProvider, useForm } from 'react-hook-form';
-import { useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import type { FormProviderProps } from '../types';
 import { useFormEngine } from '@/hooks/use-form-context';
 import { useFormValidationResolver } from './hooks/use-form-validation-resolver';
@@ -42,13 +42,23 @@ export function FormProvider({
 		reValidateMode: config.reValidateMode || 'onChange',
 	});
 
+	const formMountTime = useMemo(() => Date.now(), []);
+	const currentStepRef = useRef(0);
+	const getCurrentStep = useCallback(() => currentStepRef.current, []);
+
 	const actionDispatchers = useFormActionDispatchers({
 		form,
 		config,
 		actionExecutor,
+		getCurrentStep,
+		formMountTime,
 	});
 
-	const multiStep = useRHFMultiStep(config, form, actionDispatchers.dispatchTrigger);
+	const multiStep = useRHFMultiStep(config, form, actionDispatchers.dispatchTrigger, {
+		onStepIndexChange: (index) => {
+			currentStepRef.current = index;
+		},
+	});
 
 	useFormMountEffect({
 		actions: config.actions,
