@@ -17,7 +17,7 @@ const build = await Bun.build({
 	format: 'esm',
 	splitting: false,
 	sourcemap: 'external',
-	external: ['@schema-engine/registry', 'zod'],
+	external: ['@schema-engine/registry', '@standard-schema/spec'],
 });
 
 if (!build.success) {

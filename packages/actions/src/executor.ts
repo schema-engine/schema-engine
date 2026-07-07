@@ -1,5 +1,50 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { ActionConfigBase, ActionExecuteInput, ActionExecutionResult, ActionRegistration } from './types';
 import type { ActionRegistryProvider } from './registry';
+
+function validateActionConfig<TConfig>(
+	schema: StandardSchemaV1<TConfig>,
+	config: unknown,
+): ActionExecutionResult | null {
+	const result = schema['~standard'].validate(config);
+	if (result && typeof (result as Promise<unknown>).then === 'function') {
+		return {
+			success: false,
+			error: 'Async Standard Schema validation is not supported in this context',
+			shouldContinue: true,
+		};
+	}
+
+	const syncResult = result as StandardSchemaV1.Result<TConfig>;
+	if (syncResult.issues?.length) {
+		const issues = [...syncResult.issues];
+		return {
+			success: false,
+			error: issues.map((issue) => issue.message).join(', '),
+			issues,
+			shouldContinue: true,
+		};
+	}
+
+	return null;
+}
+
+/**
+ * Determine if an action should execute for a given trigger.
+ *
+ * Custom `action.triggers` override registration defaults when present.
+ */
+export function shouldExecuteAction<TConfig extends ActionConfigBase, TTrigger>(
+	action: TConfig,
+	trigger: TTrigger,
+	defaultTriggers: readonly TTrigger[] = [],
+): boolean {
+	if ('triggers' in action && Array.isArray(action.triggers)) {
+		return action.triggers.includes(trigger);
+	}
+
+	return defaultTriggers.includes(trigger);
+}
 
 /**
  * Action Executor Options
@@ -85,7 +130,9 @@ export class ActionExecutor<TBaseContext = unknown, TTrigger = string> {
 				continue;
 			}
 
-			const actionRegistration = this.registry.getAction(action.$type);
+			const actionRegistration = this.registry.getAction(action.$type) as
+				| ActionRegistration<TConfig, TBaseContext, TTrigger>
+				| undefined;
 			if (!actionRegistration) {
 				this.log('error', `No handler registered for action type: ${action.$type}`, {
 					actionId: action.id,
@@ -99,7 +146,8 @@ export class ActionExecutor<TBaseContext = unknown, TTrigger = string> {
 				continue;
 			}
 
-			if (!this.shouldExecute(action, trigger)) {
+			const defaultTriggers = actionRegistration.metadata?.defaultTriggers ?? [];
+			if (!shouldExecuteAction(action, trigger, defaultTriggers)) {
 				this.log(
 					'debug',
 					`Action ${action.id} (${action.$type}) doesn't respond to trigger: ${String(trigger)}`,
@@ -109,51 +157,22 @@ export class ActionExecutor<TBaseContext = unknown, TTrigger = string> {
 
 			this.log('debug', `Executing action: ${action.id} (${action.$type})`);
 
-			try {
-				const result = await this.executeAction(action, trigger, context, triggeredBy);
-				results.push(result);
+			const result = await this.executeAction(action, trigger, context, actionRegistration, triggeredBy);
+			results.push(result);
 
-				if (result.success) {
-					this.log('debug', `Action ${action.id} executed successfully`);
-				} else {
-					this.log('warn', `Action ${action.id} failed`, result);
-				}
+			if (result.success) {
+				this.log('debug', `Action ${action.id} executed successfully`);
+			} else {
+				this.log('warn', `Action ${action.id} failed`, result);
+			}
 
-				if (!result.success && result.shouldContinue === false) {
-					this.log('warn', `Stopping execution due to failure in action: ${action.id}`);
-					break;
-				}
-			} catch (error) {
-				const errorMessage = error instanceof Error ? error.message : String(error);
-				this.log('error', `Action execution failed for ${action.id}:`, {
-					error: errorMessage,
-				});
-				results.push({
-					success: false,
-					error: errorMessage,
-					shouldContinue: true,
-				});
+			if (!result.success && result.shouldContinue === false) {
+				this.log('warn', `Stopping execution due to failure in action: ${action.id}`);
+				break;
 			}
 		}
 
 		return results;
-	}
-
-	/**
-	 * Determine if an action should execute for a given trigger
-	 *
-	 * @param action - The action configuration
-	 * @param trigger - The trigger/event
-	 * @returns True if the action should execute
-	 */
-	private shouldExecute<TConfig extends ActionConfigBase>(action: TConfig, trigger: TTrigger): boolean {
-		if ('triggers' in action && Array.isArray(action.triggers)) {
-			return action.triggers.includes(trigger);
-		}
-
-		const actionRegistration = this.registry.getAction(action.$type);
-		const defaultTriggers = actionRegistration?.metadata?.defaultTriggers ?? [];
-		return defaultTriggers.includes(trigger);
 	}
 
 	/**
@@ -162,23 +181,19 @@ export class ActionExecutor<TBaseContext = unknown, TTrigger = string> {
 	 * @param action - The action configuration
 	 * @param trigger - The trigger that caused this execution
 	 * @param context - Domain-specific context data
+	 * @param actionRegistration - Resolved registration for the action type
 	 * @returns Execution result
 	 */
 	private async executeAction<TConfig extends ActionConfigBase>(
 		action: TConfig,
 		trigger: TTrigger,
 		context: TBaseContext,
+		actionRegistration: ActionRegistration<TConfig, TBaseContext, TTrigger>,
 		triggeredBy?: TConfig,
 	): Promise<ActionExecutionResult> {
-		const actionRegistration = this.registry.getAction(action.$type) as
-			| ActionRegistration<TConfig, TBaseContext, TTrigger>
-			| undefined;
-		if (!actionRegistration) {
-			return {
-				success: false,
-				error: `No handler registered for action type: ${action.$type}`,
-				shouldContinue: true,
-			};
+		const validationError = validateActionConfig(actionRegistration.schema, action);
+		if (validationError) {
+			return validationError;
 		}
 
 		try {

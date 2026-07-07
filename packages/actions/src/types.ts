@@ -1,3 +1,4 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { BaseRegistration, RegistrationMetadata } from '@schema-engine/registry';
 
 /**
@@ -84,6 +85,8 @@ export interface ActionExecutionResult<TData = unknown> {
 	message?: string;
 	/** Error message if action failed */
 	error?: string;
+	/** Standard Schema validation issues when config validation fails */
+	issues?: ReadonlyArray<StandardSchemaV1.Issue>;
 	/** Data returned by the action (e.g., API response) */
 	data?: TData;
 	/** Whether to continue executing subsequent actions */
