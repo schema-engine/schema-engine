@@ -58,21 +58,7 @@
  * ```
  */
 
-export { defineAction } from './types';
-export type {
-	ActionConfigBase,
-	ActionDispatchInput,
-	ActionExecuteInput,
-	ActionExecutionContext,
-	ActionExecutionResult,
-	ActionHandler,
-	ActionMetadata,
-	ActionRegistration,
-	ActionRuntimeContext,
-} from './types';
-export { ActionRegistry } from './registry';
-export type { ActionRegistryProvider } from './registry';
-export { ActionExecutor } from './executor';
-export type { ActionExecutorOptions } from './executor';
-export { ActionDispatcher } from './dispatcher';
-export type { ActionDispatcherOptions } from './dispatcher';
+export * from './types';
+export * from './registry';
+export * from './executor';
+export * from './dispatcher';

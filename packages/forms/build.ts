@@ -17,14 +17,17 @@ const build = await Bun.build({
 	target: 'browser',
 	minify: !watchMode,
 	format: 'esm',
-	splitting: !watchMode,
+	// Bun breaks minified named re-export barrels when code-splitting is enabled.
+	splitting: false,
 	sourcemap: 'external',
+	external: ['@schema-engine/actions', '@schema-engine/registry', 'zod'],
 });
 
 if (!build.success) {
 	for (const log of build.logs) {
 		logger.error(log);
 	}
+	process.exit(1);
 }
 
 if (process.argv.includes('--watch')) {

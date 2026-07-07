@@ -13,10 +13,10 @@ const build = await Bun.build({
 	entrypoints: files,
 	outdir: 'dist',
 	root: './src',
-	target: 'neutral',
+	target: 'browser',
 	minify: !watchMode,
 	format: 'esm',
-	splitting: !watchMode,
+	splitting: false,
 	sourcemap: 'external',
 });
 
@@ -34,7 +34,7 @@ if (process.argv.includes('--watch')) {
 			entrypoints: files,
 			outdir: 'dist',
 			root: './src',
-			target: 'neutral',
+			target: 'browser',
 			minify: false,
 			format: 'esm',
 			splitting: false,

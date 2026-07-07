@@ -14,8 +14,8 @@
  * ```
  */
 
-export { SubmitActionRegistration } from './form-submit.registration';
-export { NotificationActionRegistration } from './notification.registration';
-export { ResetActionRegistration } from './form-reset.registration';
-export { AutoSaveActionRegistration } from './auto-save.registration';
-export { GTMActionRegistration } from './gtm.registration';
+export * from './form-submit.registration';
+export * from './notification.registration';
+export * from './form-reset.registration';
+export * from './auto-save.registration';
+export * from './gtm.registration';

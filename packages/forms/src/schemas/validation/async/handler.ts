@@ -221,7 +221,7 @@ export function createAsyncValidationHandler(rule: AsyncRule, formData?: Record<
 		const performValidation = async () => {
 			try {
 				const method = rule.method ?? 'POST';
-				const hasBody = method !== 'GET' && method !== 'HEAD';
+				const hasBody = method !== 'GET';
 
 				const response = await fetch(rule.url, {
 					method,

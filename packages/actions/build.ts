@@ -5,26 +5,26 @@ import { Logger } from '@ecopages/logger';
 
 const logger = new Logger('[@schema-engine/actions]');
 
-const glob = new Bun.Glob('src/**/*.ts');
-const files = await Array.fromAsync(glob.scan({ cwd: '.' }));
-
 const watchMode = process.argv.includes('--watch');
 
 const build = await Bun.build({
-	entrypoints: files,
+	// Single browser bundle — Bun breaks named re-export barrels across multi-entry builds.
+	entrypoints: ['src/index.ts'],
 	outdir: 'dist',
 	root: './src',
 	target: 'browser',
 	minify: !watchMode,
 	format: 'esm',
-	splitting: !watchMode,
+	splitting: false,
 	sourcemap: 'external',
+	external: ['@schema-engine/registry', 'zod'],
 });
 
 if (!build.success) {
 	for (const log of build.logs) {
 		logger.error(log);
 	}
+	process.exit(1);
 }
 
 if (process.argv.includes('--watch')) {
