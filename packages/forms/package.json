@@ -32,7 +32,8 @@
 	"devDependencies": {
 		"@standard-schema/spec": "^1.1.0",
 		"@types/bun": "latest",
-		"tsc-alias": "^1.8.16"
+		"tsc-alias": "^1.8.16",
+		"zod": "^4.0.17"
 	},
 	"dependencies": {
 		"@schema-engine/actions": "workspace:*",

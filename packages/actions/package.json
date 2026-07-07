@@ -30,12 +30,12 @@
 		]
 	},
 	"dependencies": {
-		"zod": "^4.0.17",
 		"@schema-engine/registry": "workspace:*"
 	},
 	"devDependencies": {
 		"@types/bun": "latest",
-		"tsc-alias": "^1.8.16"
+		"tsc-alias": "^1.8.16",
+		"zod": "^4.0.17"
 	},
 	"peerDependencies": {
 		"typescript": "^5",

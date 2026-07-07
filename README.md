@@ -173,6 +173,16 @@ graph TD
 | **[@schema-engine/actions](./packages/actions)**         | `0.1.0` | A standalone, domain-agnostic command pattern implementation for handling system events.                             |
 | **[@schema-engine/registry](./packages/registry)**       | `0.1.0` | The low-level type definitions and registry implementations that power the IoC container.                            |
 
+### Schema library peers
+
+Registrations use [Standard Schema](https://standardschema.dev/) (`~standard.validate`) as the portable contract. Built-in packages ship Zod schemas, but **Zod is a peer dependency** — install it in your app alongside the packages you use:
+
+```bash
+bun add zod @schema-engine/registry @schema-engine/forms @schema-engine/forms-react react-hook-form
+```
+
+You can also author registrations with Valibot, Effect Schema, or any other Standard Schema vendor.
+
 ---
 
 ## 🚀 Quick Start
@@ -180,7 +190,7 @@ graph TD
 Initialize a standard engine with best-practice defaults.
 
 ```bash
-bun add @schema-engine/forms @schema-engine/forms-react
+bun add @schema-engine/forms @schema-engine/forms-react zod react-hook-form
 ```
 
 ### 1. Compose the Engine

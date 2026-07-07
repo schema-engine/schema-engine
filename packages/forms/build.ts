@@ -18,7 +18,7 @@ const build = await Bun.build({
 	// Bun breaks minified named re-export barrels when code-splitting is enabled.
 	splitting: false,
 	sourcemap: 'external',
-	external: ['@schema-engine/actions', '@schema-engine/registry', 'zod'],
+	external: ['zod', '@schema-engine/actions', '@schema-engine/registry', '@standard-schema/spec'],
 });
 
 if (!build.success) {
