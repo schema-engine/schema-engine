@@ -5,10 +5,28 @@
  * Tree-shakable library designed for maximum flexibility and performance.
  */
 
-export * from './builder';
-export * from './engine';
-export * from './registries';
-export * from './types';
+export { FormComposer } from './builder';
+export { FormEngine } from './engine';
+export { SchemaMetadataCatalog } from './engine';
+export type {
+	EngineRegistries,
+	FormEngineSchemaArtifacts,
+	FormEngineSchemaMetadata,
+	SchemaMetadataEntry,
+} from './engine';
+export { ElementRegistry, LayoutRegistry, StepperRegistry } from './registries';
+export type {
+	BuilderActionBaseContext,
+	ElementMetadata,
+	BuilderActionRegistration,
+	BuilderActionTrigger,
+	BuilderActionExecutionContext,
+	BuilderActionRuntimeContext,
+	InputRegistration,
+	StaticRegistration,
+	LayoutRegistration,
+	StepperRegistration,
+} from './types';
 export type { ActionExecutionResult } from '@schema-engine/actions';
 export * from './schemas';
 export * from './actions';

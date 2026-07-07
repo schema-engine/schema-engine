@@ -1,6 +1,7 @@
 import { z, type GlobalMeta } from 'zod';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { ComponentType } from './component-type';
+import { SchemaMetadataCatalog } from './schema-metadata-catalog';
 import { generateZodJSONSchemaCollection, generateZodJSONSchemaDocument } from '@/lib/zod-json-schema';
 import {
 	createStandardJSONSchema,
@@ -32,9 +33,41 @@ export type FormEngineSchemaMetadataRegistry = ReturnType<typeof z.registry<Form
  * conversion details into runtime methods.
  */
 export interface FormEngineSchemaArtifacts {
+	metadataCatalog?: SchemaMetadataCatalog;
 	metadataRegistry: FormEngineSchemaMetadataRegistry;
 	formConfigValidator: z.ZodTypeAny;
 	jsonSchema: FormEngineJSONSchemaSerializer;
+}
+
+type ZodSchemaWithRegister = z.ZodTypeAny & {
+	register: (registry: FormEngineSchemaMetadataRegistry, metadata: FormEngineSchemaMetadata) => void;
+};
+
+/**
+ * Bridge catalog metadata into a Zod registry for JSON Schema generation.
+ * Temporary until w2-03 reads jsonSchema from Standard Schema directly.
+ */
+export function createZodRegistryFromCatalog(catalog: SchemaMetadataCatalog): FormEngineSchemaMetadataRegistry {
+	const registry = z.registry<FormEngineSchemaMetadata>();
+
+	for (const { schema, entry } of catalog.getRegisteredSchemas()) {
+		const meta: FormEngineSchemaMetadata = {
+			id: entry.id,
+			title: entry.title,
+			description: entry.description,
+			componentType: entry.componentType,
+			category: entry.category,
+		};
+
+		const zodSchema = schema as ZodSchemaWithRegister;
+		if (typeof zodSchema.register === 'function') {
+			zodSchema.register(registry, meta);
+		} else {
+			registry.add(schema as z.ZodTypeAny, meta);
+		}
+	}
+
+	return registry;
 }
 
 /**
@@ -95,10 +128,10 @@ export function createActionConfigValidatorMap<TRegistration extends SchemaValid
 	actionRegistrations: Iterable<TRegistration>,
 ): Map<string, z.ZodTypeAny> {
 	return new Map(
-		Array.from(actionRegistrations, (registration) => [
-			registration.$type,
-			registration.schema as z.ZodTypeAny,
-		] as const),
+		Array.from(
+			actionRegistrations,
+			(registration) => [registration.$type, registration.schema as z.ZodTypeAny] as const,
+		),
 	);
 }
 
@@ -172,12 +205,18 @@ function createFormEngineJSONSchemaSerializer(
  * Create a schema artifact bundle from the current validator implementation.
  */
 export function createFormEngineSchemaArtifacts(
-	metadataRegistry: FormEngineSchemaMetadataRegistry,
+	metadataSource: SchemaMetadataCatalog | FormEngineSchemaMetadataRegistry,
 	formConfigValidator: z.ZodTypeAny,
 	serializationConfig: FormEngineSchemaSerializationConfig = defaultFormEngineSchemaSerializationConfig,
 	actionConfigValidators?: Map<string, z.ZodTypeAny>,
 ): FormEngineSchemaArtifacts {
+	const metadataCatalog = metadataSource instanceof SchemaMetadataCatalog ? metadataSource : undefined;
+	const metadataRegistry: FormEngineSchemaMetadataRegistry = metadataCatalog
+		? createZodRegistryFromCatalog(metadataCatalog)
+		: (metadataSource as FormEngineSchemaMetadataRegistry);
+
 	return {
+		metadataCatalog,
 		metadataRegistry,
 		formConfigValidator,
 		jsonSchema: createFormEngineJSONSchemaSerializer(
