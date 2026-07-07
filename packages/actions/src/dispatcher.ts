@@ -21,8 +21,9 @@ export interface ActionDispatcherOptions {
 /**
  * Action Dispatcher
  *
- * High-level orchestration layer for action execution with convenience methods.
- * Provides metadata merging, sync/async dispatch variants, and simplified API.
+ * **Recommended public orchestrator** for action execution.
+ * High-level orchestration layer with metadata merging, empty-guard,
+ * and sync/async dispatch variants.
  *
  * This wraps ActionExecutor to provide domain-specific conveniences while
  * keeping the core executor clean and generic.

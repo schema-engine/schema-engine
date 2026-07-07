@@ -1,35 +1,14 @@
 /**
  * @schema-engine/actions
  *
- * Domain-agnostic action system for event-driven architectures: register handlers,
- * execute them sequentially, and dispatch by trigger from any host (forms, workflows, UI).
+ * Domain-agnostic action system for event-driven architectures.
  *
- * @example
- * ```typescript
- * import { z } from 'zod';
- * import { ActionDispatcher, ActionExecutor, ActionRegistry } from '@schema-engine/actions';
- *
- * const registry = new ActionRegistry<{ formId: string }, 'submit' | 'change'>();
- * registry.register({
- *   $type: 'log',
- *   schema: z.object({ id: z.string(), $type: z.literal('log'), message: z.string() }),
- *   metadata: { name: 'Log', defaultTriggers: ['change'] },
- *   execute: async (ctx) => {
- *     console.log(ctx.config.message, ctx);
- *     return { success: true };
- *   },
- * });
- *
- * const dispatcher = new ActionDispatcher(registry);
- * await dispatcher.dispatch({
- *   actions: [{ id: '1', $type: 'log', message: 'hello' }],
- *   trigger: 'submit',
- *   context: { formId: 'demo' },
- * });
- * ```
+ * **Public orchestrator:** {@link ActionDispatcher} (or {@link createActionSystem} factory).
+ * {@link ActionExecutor} is the lower-level sequential runner used internally.
  */
 
 export * from './types';
 export * from './registry';
 export * from './executor';
 export * from './dispatcher';
+export * from './create-action-system';

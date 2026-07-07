@@ -57,6 +57,9 @@ export interface ActionExecutorOptions {
 /**
  * Action Executor
  *
+ * Lower-level sequential action runner. Most consumers should use
+ * {@link ActionDispatcher} or {@link createActionSystem} instead.
+ *
  * Generic, domain-agnostic action executor that handles sequential execution
  * of actions with comprehensive lifecycle management.
  *

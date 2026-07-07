@@ -4,11 +4,14 @@ Domain-agnostic action execution primitives for event-driven architectures.
 
 ## Overview
 
-`@schema-engine/actions` provides a small, generic action system built around three pieces:
+`@schema-engine/actions` provides a small, generic action system built around four pieces:
 
 - `ActionRegistration`: describes an action type
 - `ActionRegistry`: stores action registrations
-- `ActionExecutor`: executes action configs sequentially for a trigger
+- `ActionDispatcher`: **recommended public orchestrator** (metadata merge, empty-guard, sync/async)
+- `ActionExecutor`: lower-level sequential runner (advanced use; used internally by dispatcher)
+
+For a wired setup, use `createActionSystem()` which returns `{ registry, dispatcher }`.
 
 The package is intended to be reusable across different domains such as forms, workflows, UI interactions, and state transitions.
 
@@ -48,12 +51,10 @@ That means call sites stay simple, while handlers still receive a strongly typed
 ```typescript
 import { z } from 'zod';
 import {
-	ActionExecutor,
+	createActionSystem,
 	type ActionConfigBase,
 	type ActionExecutionResult,
 	type ActionRegistration,
-	type ActionRegistryProvider,
-	ActionRegistry,
 } from '@schema-engine/actions';
 
 type MyTrigger = 'submit' | 'change';
@@ -87,17 +88,16 @@ const logAction: ActionRegistration<LogActionConfig, BaseContext, MyTrigger> = {
 	},
 };
 
-const registry = new ActionRegistry<BaseContext, MyTrigger>();
-registry.register(logAction);
+const { registry, dispatcher } = createActionSystem<BaseContext, MyTrigger>();
 
-const executor = new ActionExecutor<BaseContext, MyTrigger>(registry);
+registry.register(logAction);
 
 const baseContext: BaseContext = {
 	id: 'ctx-1',
 	data: { foo: 'bar' },
 };
 
-await executor.execute({
+await dispatcher.dispatch({
 	actions: [
 		{
 			id: 'log-1',
@@ -111,6 +111,16 @@ await executor.execute({
 ```
 
 The handler still receives `BaseContext & { config: LogActionConfig; trigger: MyTrigger }`, but that runtime shape is injected by the executor.
+
+## Entry Points
+
+| API                    | When to use                                                                               |
+| ---------------------- | ----------------------------------------------------------------------------------------- |
+| `createActionSystem()` | Default — returns wired `{ registry, dispatcher }`                                        |
+| `ActionDispatcher`     | When you supply your own registry (e.g. `FormEngine` duck-types `ActionRegistryProvider`) |
+| `ActionExecutor`       | Advanced — direct sequential execution without dispatcher conveniences                    |
+
+Production (`forms-react`) uses `ActionDispatcher` with `FormEngine` as the registry provider.
 
 ## Core Concepts
 
