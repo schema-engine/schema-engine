@@ -186,10 +186,8 @@
     "packages/registry": {
       "name": "@schema-engine/registry",
       "version": "0.1.0",
-      "dependencies": {
-        "@ecopages/logger": "latest",
-      },
       "devDependencies": {
+        "@ecopages/logger": "latest",
         "@standard-schema/spec": "^1.1.0",
         "@types/bun": "latest",
         "tsc-alias": "^1.8.16",
