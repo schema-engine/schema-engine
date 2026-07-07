@@ -116,8 +116,28 @@ export function useRHFMultiStep(
 
 	const goToStepAsync = useCallback(
 		async (stepIndex: number) => {
-			if (stepIndex < 0 || stepIndex >= config.steps.length) {
+			if (stepIndex < 0 || stepIndex >= config.steps.length || stepIndex === currentStepIndex) {
 				return;
+			}
+
+			if (stepIndex > currentStepIndex) {
+				const isUnvisitedForward = !stepStates.visited[stepIndex];
+
+				if (isUnvisitedForward && stepIndex !== currentStepIndex + 1) {
+					return;
+				}
+
+				if (isUnvisitedForward) {
+					const isValid = await validateStep(currentStepIndex);
+					if (!isValid) {
+						return;
+					}
+
+					setStepStates((prev) => ({
+						...prev,
+						completed: prev.completed.map((c, i) => (i === currentStepIndex ? true : c)),
+					}));
+				}
 			}
 
 			const previousStepIndex = currentStepIndex;
@@ -136,7 +156,7 @@ export function useRHFMultiStep(
 			await executeStepTrigger('step_change', stepIndex);
 			await executeStepTrigger('step_enter', stepIndex);
 		},
-		[config.steps, currentStepIndex, executeStepTrigger, onStepIndexChange],
+		[config.steps, currentStepIndex, executeStepTrigger, stepStates.visited, validateStep, onStepIndexChange],
 	);
 
 	const goToNextStepAsync = useCallback(async () => {

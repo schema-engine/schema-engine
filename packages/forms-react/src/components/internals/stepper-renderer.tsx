@@ -3,7 +3,8 @@ import type { FormConfig, FormStep } from '@schema-engine/forms';
 import type { FormStepperConfig } from '@schema-engine/forms/schemas/form-config';
 import type { StepData, StepperNavigation } from '../steppers/types';
 import { useFormEngine } from '@/hooks';
-import { StepperProvider, useStepperContext } from '@/contexts/stepper-context';
+import { StepperProvider } from '@/components/steppers/context';
+import { DefaultStepperComposed } from '../steppers/default-stepper';
 
 interface StepperRendererProps {
 	/**
@@ -47,73 +48,10 @@ interface StepperRendererProps {
 }
 
 /**
- * Default stepper component that renders a simple step navigation
- */
-const DefaultStepper: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
-	const { steps, navigation } = useStepperContext();
-
-	return (
-		<div className="flex flex-col gap-4">
-			<div className="flex gap-2">
-				{steps.map((step, index: number) => (
-					<button
-						key={step.id}
-						className={`px-4 py-2 rounded-md font-medium transition-colors ${
-							step.isActive
-								? 'bg-blue-600 text-white'
-								: step.isCompleted
-									? 'bg-green-600 text-white'
-									: 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-						}`}
-						onClick={() => navigation.goToStep(index)}
-						type="button"
-					>
-						<span className="step-number">{index + 1}</span>
-						{step.title && <span className="ml-2">{step.title}</span>}
-					</button>
-				))}
-			</div>
-
-			{children}
-
-			<div className="flex gap-2 justify-end">
-				<button
-					type="button"
-					onClick={navigation.goToPreviousStep}
-					disabled={!navigation.canGoPrevious}
-					style={{ display: navigation.isFirstStep ? 'none' : 'block' }}
-					className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50"
-				>
-					Previous
-				</button>
-
-				<button
-					type="button"
-					onClick={navigation.goToNextStep}
-					disabled={!navigation.canGoNext}
-					style={{ display: navigation.isLastStep ? 'none' : 'block' }}
-					className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-				>
-					Next
-				</button>
-
-				<button
-					type="submit"
-					style={{ display: navigation.isLastStep ? 'block' : 'none' }}
-					className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-				>
-					Submit
-				</button>
-			</div>
-		</div>
-	);
-};
-
-/**
  * Stepper Renderer Component
  *
  * Resolves and renders the appropriate stepper component based on the form configuration.
- * Falls back to a default stepper if none is specified or if the stepper is not found.
+ * Falls back to the registered default stepper when none is specified or not found.
  */
 export const StepperRenderer: React.FC<StepperRendererProps> = ({
 	form,
@@ -161,12 +99,14 @@ export const StepperRenderer: React.FC<StepperRendererProps> = ({
 		config: form.stepper || {},
 	};
 
+	const renderStepper = (StepperComponent: React.ComponentType<{ children?: React.ReactNode }>) => (
+		<StepperProvider value={contextValue}>
+			<StepperComponent>{children}</StepperComponent>
+		</StepperProvider>
+	);
+
 	if (!form.stepper?.$type) {
-		return (
-			<StepperProvider value={contextValue}>
-				<DefaultStepper>{children}</DefaultStepper>
-			</StepperProvider>
-		);
+		return renderStepper(DefaultStepperComposed);
 	}
 
 	const { $type, ...stepperConfig } = form.stepper;
@@ -175,11 +115,7 @@ export const StepperRenderer: React.FC<StepperRendererProps> = ({
 
 	if (!stepperRegistration) {
 		console.warn(`Stepper '${$type}' not found in registry. Using default stepper.`);
-		return (
-			<StepperProvider value={{ ...contextValue, config: stepperConfig }}>
-				<DefaultStepper>{children}</DefaultStepper>
-			</StepperProvider>
-		);
+		return renderStepper(DefaultStepperComposed);
 	}
 
 	const StepperComponent = stepperRegistration.render as React.ComponentType<{ children?: React.ReactNode }>;

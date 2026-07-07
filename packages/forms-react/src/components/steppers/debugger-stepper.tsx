@@ -1,7 +1,6 @@
 import { cn } from '@/lib/utils';
 import type { BaseStepperConfig } from './types';
-import { StepperProvider, useStepperContext } from './context';
-import { useStepperContext as useGlobalStepperContext } from '@/contexts/stepper-context';
+import { useStepperContext } from './context';
 import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
 
@@ -17,9 +16,8 @@ export interface DebuggerStepperConfig extends BaseStepperConfig {
  * FAB-style widget that expands into a modern dev tool
  */
 const DebuggerStepperRoot: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => {
-	const globalContext = useGlobalStepperContext();
-	const { config } = globalContext;
-	const { defaultExpanded = false } = (config as DebuggerStepperConfig) || {};
+	const { config } = useStepperContext<DebuggerStepperConfig>();
+	const { defaultExpanded = false } = config || {};
 	const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 	const panelRef = useRef<HTMLDivElement>(null);
 
@@ -39,49 +37,47 @@ const DebuggerStepperRoot: React.FC<{ children: React.ReactNode; className?: str
 	}, [isExpanded]);
 
 	return (
-		<StepperProvider value={globalContext}>
-			<div className={cn('debugger-stepper', className)}>
-				{children}
-				<div
-					className={cn('debugger-stepper__widget', {
-						'debugger-stepper__widget--expanded': isExpanded,
-					})}
-				>
-					{!isExpanded ? (
-						<button
-							type="button"
-							onClick={() => setIsExpanded(true)}
-							className="debugger-stepper__fab"
-							aria-label="Open debugger"
+		<div className={cn('debugger-stepper', className)}>
+			{children}
+			<div
+				className={cn('debugger-stepper__widget', {
+					'debugger-stepper__widget--expanded': isExpanded,
+				})}
+			>
+				{!isExpanded ? (
+					<button
+						type="button"
+						onClick={() => setIsExpanded(true)}
+						className="debugger-stepper__fab"
+						aria-label="Open debugger"
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="20"
+							height="20"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							role="img"
+							aria-label="Debug icon"
 						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								width="20"
-								height="20"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2"
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								role="img"
-								aria-label="Debug icon"
-							>
-								<path d="m8 6 4-4 4 4" />
-								<path d="M12 2v10.3a4 4 0 0 1-1.172 2.872L4 22" />
-								<path d="m20 22-5-5" />
-							</svg>
-						</button>
-					) : (
-						<div ref={panelRef} className="debugger-stepper__panel">
-							<DebuggerStepperHeader onClose={() => setIsExpanded(false)} />
-							<DebuggerStepperContent />
-							<DebuggerStepperNavigation />
-						</div>
-					)}
-				</div>
+							<path d="m8 6 4-4 4 4" />
+							<path d="M12 2v10.3a4 4 0 0 1-1.172 2.872L4 22" />
+							<path d="m20 22-5-5" />
+						</svg>
+					</button>
+				) : (
+					<div ref={panelRef} className="debugger-stepper__panel">
+						<DebuggerStepperHeader onClose={() => setIsExpanded(false)} />
+						<DebuggerStepperContent />
+						<DebuggerStepperNavigation />
+					</div>
+				)}
 			</div>
-		</StepperProvider>
+		</div>
 	);
 };
 

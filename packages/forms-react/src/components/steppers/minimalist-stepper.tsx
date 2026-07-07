@@ -1,7 +1,6 @@
 import { cn } from '@/lib/utils';
 import type { BaseStepperConfig } from './types';
-import { StepperProvider, useStepperContext } from './context';
-import { useStepperContext as useGlobalStepperContext } from '@/contexts/stepper-context';
+import { useStepperContext } from './context';
 import type React from 'react';
 
 export interface MinimalistStepperConfig extends BaseStepperConfig {
@@ -17,13 +16,7 @@ const MinimalistStepperRoot: React.FC<{ children: React.ReactNode; className?: s
 	children,
 	className,
 }) => {
-	const globalContext = useGlobalStepperContext();
-
-	return (
-		<StepperProvider value={globalContext}>
-			<div className={cn('minimalist-stepper', className)}>{children}</div>
-		</StepperProvider>
-	);
+	return <div className={cn('minimalist-stepper', className)}>{children}</div>;
 };
 
 /**

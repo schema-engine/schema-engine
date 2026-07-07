@@ -1,28 +1,24 @@
 import type React from 'react';
 import { cn } from '@/lib/utils';
 import type { DefaultStepperConfig } from './default-stepper.types';
-import { StepperProvider, useStepperContext } from './context';
+import { useStepperContext } from './context';
 import { useEffect, useRef } from 'react';
-import { useStepperContext as useGlobalStepperContext } from '@/contexts/stepper-context';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const DefaultStepperRoot: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => {
-	const globalContext = useGlobalStepperContext();
-	const { config } = globalContext;
-	const { orientation = 'horizontal' } = (config as DefaultStepperConfig) || {};
+	const { config } = useStepperContext<DefaultStepperConfig>();
+	const { orientation = 'horizontal' } = config || {};
 
 	return (
-		<StepperProvider value={globalContext}>
-			<div
-				className={cn(
-					'default-stepper',
-					orientation === 'sidebar' ? 'default-stepper--sidebar' : 'default-stepper--horizontal',
-					className,
-				)}
-			>
-				{children}
-			</div>
-		</StepperProvider>
+		<div
+			className={cn(
+				'default-stepper',
+				orientation === 'sidebar' ? 'default-stepper--sidebar' : 'default-stepper--horizontal',
+				className,
+			)}
+		>
+			{children}
+		</div>
 	);
 };
 
@@ -213,30 +209,25 @@ export const DefaultStepper = Object.assign(DefaultStepperRoot, {
  * On mobile: shows horizontal layout regardless of orientation setting
  */
 export const DefaultStepperComposed: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
-	const globalContext = useGlobalStepperContext();
-	const { config } = globalContext;
-	const { orientation = 'horizontal' } = (config as DefaultStepperConfig) || {};
+	const { config } = useStepperContext<DefaultStepperConfig>();
+	const { orientation = 'horizontal' } = config || {};
 	const isMobile = useIsMobile();
 
 	const isSidebarMode = orientation === 'sidebar' && !isMobile;
 
-	return (
-		<StepperProvider value={globalContext}>
-			{isSidebarMode ? (
-				<div className="default-stepper default-stepper--sidebar">
-					<DefaultStepperProgress />
-					<div className="default-stepper__content-wrapper">
-						<DefaultStepperContent>{children}</DefaultStepperContent>
-						<DefaultStepperNavigation className="default-stepper__mobile-navigation" />
-					</div>
-				</div>
-			) : (
-				<div className="default-stepper default-stepper--horizontal">
-					<DefaultStepperProgress />
-					<DefaultStepperContent>{children}</DefaultStepperContent>
-					<DefaultStepperNavigation />
-				</div>
-			)}
-		</StepperProvider>
+	return isSidebarMode ? (
+		<div className="default-stepper default-stepper--sidebar">
+			<DefaultStepperProgress />
+			<div className="default-stepper__content-wrapper">
+				<DefaultStepperContent>{children}</DefaultStepperContent>
+				<DefaultStepperNavigation className="default-stepper__mobile-navigation" />
+			</div>
+		</div>
+	) : (
+		<div className="default-stepper default-stepper--horizontal">
+			<DefaultStepperProgress />
+			<DefaultStepperContent>{children}</DefaultStepperContent>
+			<DefaultStepperNavigation />
+		</div>
 	);
 };
