@@ -63,7 +63,7 @@ export function createZodRegistryFromCatalog(catalog: SchemaMetadataCatalog): Fo
 		if (typeof zodSchema.register === 'function') {
 			zodSchema.register(registry, meta);
 		} else {
-			registry.add(schema, meta);
+			registry.add(schema as z.ZodTypeAny, meta);
 		}
 	}
 
@@ -211,7 +211,9 @@ export function createFormEngineSchemaArtifacts(
 	actionConfigValidators?: Map<string, z.ZodTypeAny>,
 ): FormEngineSchemaArtifacts {
 	const metadataCatalog = metadataSource instanceof SchemaMetadataCatalog ? metadataSource : undefined;
-	const metadataRegistry = metadataCatalog ? createZodRegistryFromCatalog(metadataCatalog) : metadataSource;
+	const metadataRegistry: FormEngineSchemaMetadataRegistry = metadataCatalog
+		? createZodRegistryFromCatalog(metadataCatalog)
+		: (metadataSource as FormEngineSchemaMetadataRegistry);
 
 	return {
 		metadataCatalog,
