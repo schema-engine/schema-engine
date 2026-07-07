@@ -110,7 +110,7 @@ export class ActionExecutor<TBaseContext = unknown, TTrigger = string> {
 			this.log('debug', `Executing action: ${action.id} (${action.$type})`);
 
 			try {
-				const result = await this.executeAction(action, trigger, context);
+				const result = await this.executeAction(action, trigger, context, triggeredBy);
 				results.push(result);
 
 				if (result.success) {
@@ -168,6 +168,7 @@ export class ActionExecutor<TBaseContext = unknown, TTrigger = string> {
 		action: TConfig,
 		trigger: TTrigger,
 		context: TBaseContext,
+		triggeredBy?: TConfig,
 	): Promise<ActionExecutionResult> {
 		const actionRegistration = this.registry.getAction(action.$type) as
 			| ActionRegistration<TConfig, TBaseContext, TTrigger>
@@ -185,6 +186,7 @@ export class ActionExecutor<TBaseContext = unknown, TTrigger = string> {
 				...context,
 				config: action,
 				trigger,
+				...(triggeredBy ? { triggeredBy } : {}),
 			});
 		} catch (error) {
 			return {

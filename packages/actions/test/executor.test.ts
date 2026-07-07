@@ -1068,4 +1068,29 @@ describe('ActionExecutor', () => {
 			]);
 		});
 	});
+
+	test('passes triggeredBy to action handler context', async () => {
+		const triggerAction: TestActionConfig = { id: 'parent', $type: 'test-action', name: 'parent' };
+		let receivedTriggeredBy: TestActionConfig | undefined;
+
+		registry.register({
+			$type: 'test-action',
+			schema: z.any(),
+			metadata: { name: 'Test', defaultTriggers: ['submit'] },
+			execute: async (ctx) => {
+				receivedTriggeredBy = ctx.triggeredBy;
+				return { success: true };
+			},
+		});
+
+		const executor = new ActionExecutor(registry);
+		await executor.execute({
+			actions: [{ id: 'child', $type: 'test-action', name: 'child' }],
+			trigger: 'submit',
+			context: createContext(),
+			triggeredBy: triggerAction,
+		});
+
+		expect(receivedTriggeredBy).toEqual(triggerAction);
+	});
 });
