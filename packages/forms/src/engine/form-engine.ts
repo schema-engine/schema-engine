@@ -1,18 +1,15 @@
 import type {
-	BuilderActionBaseContext,
 	BuilderActionRegistration,
 	InputRegistration,
 	LayoutRegistration,
 	StaticRegistration,
 	StepperRegistration,
 } from '@/types';
-import type { FormActionTrigger } from '@/actions';
 import { FormComposer } from '@/builder/form-composer';
-import { ElementRegistry, LayoutRegistry, StepperRegistry } from '@/registries';
-import { ActionRegistry } from '@schema-engine/actions';
+import { cloneEngineRegistries } from '@/engine/clone-registries';
 import { logger } from '@/lib/logger';
 import type { StandardJSONSchemaV1 } from '@/lib/standard-json-schema';
-import { z } from 'zod';
+import type { z } from 'zod';
 import { FormConfigBuilder } from '@/builder/form-config-builder';
 import type { FormEngineSchemaArtifacts, FormEngineSchemaMetadataRegistry } from './schema-artifacts';
 import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from './schema-artifacts';
@@ -375,23 +372,12 @@ export class FormEngine<
 	 * ```
 	 */
 	createFormDefinition(): FormConfigBuilder<TElements, TLayouts, TSteppers, TActions> {
-		const elementRegistry = new ElementRegistry();
-		const layoutRegistry = new LayoutRegistry();
-		const stepperRegistry = new StepperRegistry();
-		const actionRegistry = new ActionRegistry<BuilderActionBaseContext, FormActionTrigger>();
-
-		for (const value of this.registries.elements.values()) {
-			elementRegistry.register(value);
-		}
-		for (const value of this.registries.layouts.values()) {
-			layoutRegistry.register(value);
-		}
-		for (const value of this.registries.steppers.values()) {
-			stepperRegistry.register(value);
-		}
-		for (const value of this.registries.actions.values()) {
-			actionRegistry.register(value);
-		}
+		const { elementRegistry, layoutRegistry, stepperRegistry, actionRegistry } = cloneEngineRegistries({
+			elements: this.registries.elements.values(),
+			layouts: this.registries.layouts.values(),
+			steppers: this.registries.steppers.values(),
+			actions: this.registries.actions.values(),
+		});
 
 		return new FormConfigBuilder(elementRegistry, layoutRegistry, stepperRegistry, actionRegistry);
 	}
@@ -412,23 +398,12 @@ export class FormEngine<
 	 * ```
 	 */
 	toComposer(): FormComposer {
-		const elementRegistry = new ElementRegistry();
-		const layoutRegistry = new LayoutRegistry();
-		const stepperRegistry = new StepperRegistry();
-		const actionRegistry = new ActionRegistry<BuilderActionBaseContext, FormActionTrigger>();
-
-		for (const [_key, value] of this.registries.elements.entries()) {
-			elementRegistry.register(value);
-		}
-		for (const [_key, value] of this.registries.layouts.entries()) {
-			layoutRegistry.register(value);
-		}
-		for (const [_key, value] of this.registries.steppers.entries()) {
-			stepperRegistry.register(value);
-		}
-		for (const value of this.registries.actions.values()) {
-			actionRegistry.register(value);
-		}
+		const { elementRegistry, layoutRegistry, stepperRegistry, actionRegistry } = cloneEngineRegistries({
+			elements: this.registries.elements.values(),
+			layouts: this.registries.layouts.values(),
+			steppers: this.registries.steppers.values(),
+			actions: this.registries.actions.values(),
+		});
 
 		const composer = new FormComposer(elementRegistry, layoutRegistry, stepperRegistry, actionRegistry);
 

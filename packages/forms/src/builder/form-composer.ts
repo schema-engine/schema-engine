@@ -6,6 +6,7 @@ import type {
 	BuilderActionRegistration,
 	BuilderActionBaseContext,
 } from '@/types';
+import { cloneEngineRegistries } from '@/engine/clone-registries';
 import { FormEngine } from '@/engine/form-engine';
 import { ComponentType } from '@/engine/component-type';
 import {
@@ -279,29 +280,18 @@ export class FormComposer<
 	 * ```
 	 */
 	clone(): FormComposer<TElements, TLayouts, TSteppers, TActions> {
-		const newElementRegistry = new ElementRegistry();
-		const newLayoutRegistry = new LayoutRegistry();
-		const newStepperRegistry = new StepperRegistry();
-		const newActionRegistry = new ActionRegistry<BuilderActionBaseContext, FormActionTrigger>();
-
-		for (const item of this.elementRegistry.getAll()) {
-			newElementRegistry.register(item);
-		}
-		for (const item of this.layoutRegistry.getAll()) {
-			newLayoutRegistry.register(item);
-		}
-		for (const item of this.stepperRegistry.getAll()) {
-			newStepperRegistry.register(item);
-		}
-		for (const item of this.actionRegistry.getAll()) {
-			newActionRegistry.register(item);
-		}
+		const { elementRegistry, layoutRegistry, stepperRegistry, actionRegistry } = cloneEngineRegistries({
+			elements: this.elementRegistry.getAll(),
+			layouts: this.layoutRegistry.getAll(),
+			steppers: this.stepperRegistry.getAll(),
+			actions: this.actionRegistry.getAll(),
+		});
 
 		const newBuilder = new FormComposer<TElements, TLayouts, TSteppers, TActions>(
-			newElementRegistry,
-			newLayoutRegistry,
-			newStepperRegistry,
-			newActionRegistry,
+			elementRegistry,
+			layoutRegistry,
+			stepperRegistry,
+			actionRegistry,
 		);
 
 		logger.debug('Cloned FormComposer', {
