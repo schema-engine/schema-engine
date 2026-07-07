@@ -333,4 +333,38 @@ export class FormComposer<
 			formConfigSchema,
 		});
 	}
+
+	static fromEngine<
+		TElements extends Record<string, unknown> = Record<never, unknown>,
+		TLayouts extends Record<string, unknown> = Record<never, unknown>,
+		TSteppers extends Record<string, unknown> = Record<never, unknown>,
+		TActions extends Record<string, unknown> = Record<never, unknown>,
+	>(
+		engine: FormEngine<TElements, TLayouts, TSteppers, TActions>,
+	): FormComposer<TElements, TLayouts, TSteppers, TActions> {
+		const elementRegistry = new ElementRegistry();
+		const layoutRegistry = new LayoutRegistry();
+		const stepperRegistry = new StepperRegistry();
+		const actionRegistry = new ActionRegistry<BuilderActionBaseContext, FormActionTrigger>();
+
+		for (const value of engine.getAllElements()) {
+			elementRegistry.register(value);
+		}
+		for (const value of engine.getAllLayouts()) {
+			layoutRegistry.register(value);
+		}
+		for (const value of engine.getAllSteppers()) {
+			stepperRegistry.register(value);
+		}
+		for (const value of engine.getAllActions()) {
+			actionRegistry.register(value);
+		}
+
+		return new FormComposer<TElements, TLayouts, TSteppers, TActions>(
+			elementRegistry,
+			layoutRegistry,
+			stepperRegistry,
+			actionRegistry,
+		);
+	}
 }

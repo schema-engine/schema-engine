@@ -7,7 +7,6 @@ import type {
 	StepperRegistration,
 } from '@/types';
 import type { FormActionTrigger } from '@/actions';
-import { FormComposer } from '@/builder/form-composer';
 import { ElementRegistry, LayoutRegistry, StepperRegistry } from '@/registries';
 import { ActionRegistry } from '@schema-engine/actions';
 import { logger } from '@/lib/logger';
@@ -401,51 +400,5 @@ export class FormEngine<
 		}
 
 		return new FormConfigBuilder(elementRegistry, layoutRegistry, stepperRegistry, actionRegistry);
-	}
-
-	/**
-	 * Convert this FormEngine back to a FormComposer.
-	 * Useful for extending an existing engine with additional components.
-	 *
-	 * @example
-	 * ```typescript
-	 * const baseEngine = new FormComposer()
-	 *   .addElement(InputElement)
-	 *   .build();
-	 *
-	 * const extendedEngine = baseEngine.toComposer()
-	 *   .addAction(submitPlugin({ onSuccess: customHandler }))
-	 *   .build();
-	 * ```
-	 */
-	toComposer(): FormComposer {
-		const elementRegistry = new ElementRegistry();
-		const layoutRegistry = new LayoutRegistry();
-		const stepperRegistry = new StepperRegistry();
-		const actionRegistry = new ActionRegistry<BuilderActionBaseContext, FormActionTrigger>();
-
-		for (const [_key, value] of this.registries.elements.entries()) {
-			elementRegistry.register(value);
-		}
-		for (const [_key, value] of this.registries.layouts.entries()) {
-			layoutRegistry.register(value);
-		}
-		for (const [_key, value] of this.registries.steppers.entries()) {
-			stepperRegistry.register(value);
-		}
-		for (const value of this.registries.actions.values()) {
-			actionRegistry.register(value);
-		}
-
-		const composer = new FormComposer(elementRegistry, layoutRegistry, stepperRegistry, actionRegistry);
-
-		logger.debug('Converted FormEngine to composer', {
-			elements: this.registries.elements.size,
-			layouts: this.registries.layouts.size,
-			steppers: this.registries.steppers.size,
-			actions: this.registries.actions.size,
-		});
-
-		return composer;
 	}
 }

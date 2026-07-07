@@ -401,7 +401,7 @@ describe('FormEngine', () => {
 		});
 	});
 
-	describe('toComposer()', () => {
+	describe('FormComposer.fromEngine()', () => {
 		test('should convert engine back to builder with all registrations', () => {
 			const textInput: InputRegistration = {
 				$type: 'text',
@@ -419,7 +419,7 @@ describe('FormEngine', () => {
 
 			const originalEngine = new FormComposer().addElement(textInput).addLayout(cardLayout).build();
 
-			const builder = originalEngine.toComposer();
+			const builder = FormComposer.fromEngine(originalEngine);
 			const rebuiltEngine = builder.build();
 
 			expect(rebuiltEngine.getAllElements()).toHaveLength(1);
@@ -428,7 +428,7 @@ describe('FormEngine', () => {
 			expect(rebuiltEngine.getLayout('card')).toBeDefined();
 		});
 
-		test('should allow extending engine through toComposer', () => {
+		test('should allow extending engine through fromEngine', () => {
 			const textInput: InputRegistration = {
 				$type: 'text',
 				schema: z.object({ name: z.string() }),
@@ -445,7 +445,7 @@ describe('FormEngine', () => {
 
 			const originalEngine = new FormComposer().addElement(textInput).build();
 
-			const extendedEngine = originalEngine.toComposer().addElement(emailInput).build();
+			const extendedEngine = FormComposer.fromEngine(originalEngine).addElement(emailInput).build();
 
 			expect(originalEngine.getAllElements()).toHaveLength(1);
 			expect(originalEngine.getElement('text')).toBeDefined();
@@ -492,7 +492,7 @@ describe('FormEngine', () => {
 				.addAction(submitAction)
 				.build();
 
-			const builder = originalEngine.toComposer();
+			const builder = FormComposer.fromEngine(originalEngine);
 			const rebuiltEngine = builder.build();
 
 			const summary = rebuiltEngine.getSummary();
@@ -531,7 +531,7 @@ describe('FormEngine', () => {
 
 			const baseEngine = new FormComposer().addElement(textInput).addAction(submitAction).build();
 
-			const modifiedEngine = baseEngine.toComposer().addAction(logAction).build();
+			const modifiedEngine = FormComposer.fromEngine(baseEngine).addAction(logAction).build();
 
 			expect(baseEngine.getAllActions()).toHaveLength(1);
 			expect(baseEngine.getAction('submit')).toBeDefined();
@@ -544,7 +544,7 @@ describe('FormEngine', () => {
 
 		test('should work with empty engine', () => {
 			const emptyEngine = new FormComposer().build();
-			const builder = emptyEngine.toComposer();
+			const builder = FormComposer.fromEngine(emptyEngine);
 			const rebuiltEngine = builder.build();
 
 			expect(rebuiltEngine.getAllElements()).toHaveLength(0);
@@ -553,7 +553,7 @@ describe('FormEngine', () => {
 			expect(rebuiltEngine.getAllActions()).toHaveLength(0);
 		});
 
-		test('should allow chaining toComposer multiple times', () => {
+		test('should allow chaining fromEngine multiple times', () => {
 			const textInput: InputRegistration = {
 				$type: 'text',
 				schema: z.object({ name: z.string() }),
@@ -577,9 +577,9 @@ describe('FormEngine', () => {
 
 			const engine1 = new FormComposer().addElement(textInput).build();
 
-			const engine2 = engine1.toComposer().addElement(emailInput).build();
+			const engine2 = FormComposer.fromEngine(engine1).addElement(emailInput).build();
 
-			const engine3 = engine2.toComposer().addElement(numberInput).build();
+			const engine3 = FormComposer.fromEngine(engine2).addElement(numberInput).build();
 
 			expect(engine1.getAllElements()).toHaveLength(1);
 			expect(engine2.getAllElements()).toHaveLength(2);
