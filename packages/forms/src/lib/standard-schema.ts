@@ -1,5 +1,5 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import type { z } from 'zod';
+import { z } from 'zod';
 
 export type StandardSchemaIssue = {
 	message: string;
@@ -9,6 +9,8 @@ export type StandardSchemaIssue = {
 export type StandardSchemaSafeParseResult<T> =
 	| { success: true; data: T }
 	| { success: false; error: { issues: StandardSchemaIssue[] } };
+
+const VENDOR = '@schema-engine/forms';
 
 /**
  * Bridge a Zod schema to `StandardSchemaV1` for registration contracts.
@@ -73,6 +75,67 @@ export function safeParseStandardSchema<T>(
 	}
 
 	return { success: true, data: syncResult.value as T };
+}
+
+export function syncValidateStandardSchema<T>(schema: StandardSchemaV1<T>, value: unknown) {
+	const result = schema['~standard'].validate(value);
+	if (result && typeof (result as Promise<unknown>).then === 'function') {
+		throw new Error('Async Standard Schema validation is not supported in this context');
+	}
+	return result as StandardSchemaV1.Result<T>;
+}
+
+export function toStandardSchema<T = unknown>(schema: StandardSchemaV1<T> | z.ZodTypeAny): StandardSchemaV1<T> {
+	return schema as StandardSchemaV1<T>;
+}
+
+export function createAnyStandardSchema(): StandardSchemaV1<unknown> {
+	return {
+		'~standard': {
+			version: 1,
+			vendor: VENDOR,
+			validate(value) {
+				return { value };
+			},
+		},
+	};
+}
+
+export function createAndStandardSchema<T = unknown>(schemas: StandardSchemaV1<T>[]): StandardSchemaV1<T> {
+	if (schemas.length === 0) {
+		return createAnyStandardSchema() as StandardSchemaV1<T>;
+	}
+	if (schemas.length === 1) {
+		return schemas[0];
+	}
+
+	return {
+		'~standard': {
+			version: 1,
+			vendor: VENDOR,
+			validate(value) {
+				let currentValue = value;
+				const issues: StandardSchemaV1.Issue[] = [];
+
+				for (const schema of schemas) {
+					const result = syncValidateStandardSchema(schema, currentValue);
+					if (result.issues?.length) {
+						issues.push(...result.issues);
+						continue;
+					}
+					if ('value' in result) {
+						currentValue = result.value;
+					}
+				}
+
+				if (issues.length) {
+					return { issues };
+				}
+
+				return { value: currentValue as T };
+			},
+		},
+	};
 }
 
 /**

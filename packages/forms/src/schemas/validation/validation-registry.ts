@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type {
 	AsyncRule,
 	RequiredRule,
@@ -198,7 +198,7 @@ export class ValidationRegistry {
 		) as AnyValidationRegistration[];
 	}
 
-	createSchema<T extends { type: string }>(rule: T, formData?: Record<string, any>): z.ZodTypeAny | null {
+	createSchema<T extends { type: string }>(rule: T, formData?: Record<string, any>): StandardSchemaV1 | null {
 		const registration = this.validations.get(rule.type) as ValidationRegistration<T> | undefined;
 		if (!registration) {
 			return null;
@@ -210,6 +210,13 @@ export class ValidationRegistry {
 			console.error(`Failed to create schema for validation rule '${rule.type}':`, error);
 			return null;
 		}
+	}
+
+	createStandardSchema<T extends { type: string }>(
+		rule: T,
+		formData?: Record<string, any>,
+	): StandardSchemaV1 | null {
+		return this.createSchema(rule, formData);
 	}
 
 	initialize(defaultValidations: AnyValidationRegistration[]): void {
