@@ -8,15 +8,17 @@ import type {
 } from '@/types';
 import { FormEngine } from '@/engine/form-engine';
 import { ComponentType } from '@/engine/component-type';
-import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from '@/engine/schema-artifacts';
+import {
+	createActionConfigValidatorMap,
+	createFormEngineSchemaArtifacts,
+	createZodRegistryFromCatalog,
+} from '@/engine/schema-artifacts';
 import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
 import { logger } from '@/lib/logger';
 import { ElementRegistry, LayoutRegistry, StepperRegistry } from '@/registries';
 import { createFormConfigSchemaFromRegistries } from '@/schemas/standard-schema-composer';
-import { GridLayoutConfigSchema } from '@/schemas/base-field';
 import { ActionRegistry, type ActionConfigBase } from '@schema-engine/actions';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import { z } from 'zod';
 import type { ExtractSchemaType, ExtractTypeId } from './types.utils';
 import type { FormActionTrigger } from '@/actions';
 
@@ -197,73 +199,12 @@ export class FormComposer<
 
 	/** Generate a Standard Schema for form configurations based on registered components. */
 	createFormConfigSchema(): StandardSchemaV1 {
-		return createFormConfigSchemaFromRegistries(
-			{
-				elements: this.elementRegistry.getAll(),
-				layouts: this.layoutRegistry.getAll(),
-				steppers: this.stepperRegistry.getAll(),
-				actions: this.actionRegistry.getAll(),
-			},
-			this.createZodFormConfigSchemaForJsonEmission(),
-		);
-	}
-
-	/**
-	 * Temporary Zod bridge for JSON Schema emission until w2-03.
-	 * Runtime validation uses Standard Schema dispatch via `createFormConfigSchema`.
-	 */
-	private createZodFormConfigSchemaForJsonEmission() {
-		const elementSchemas = this.elementRegistry.getAll().map((el) => el.schema as z.ZodTypeAny);
-		const layoutSchemas = this.layoutRegistry.getAll().map((layout) => layout.schema as z.ZodTypeAny);
-		const stepperSchemas = this.stepperRegistry.getAll().map((stepper) => stepper.schema as z.ZodTypeAny);
-		const actionSchemas = this.actionRegistry.getAll().map((action: any) => action.schema as z.ZodTypeAny);
-
-		const elementsUnion = this.createZodUnionSchema(elementSchemas);
-		const layoutsUnion = this.createZodUnionSchema(layoutSchemas);
-		const steppersUnion = this.createZodUnionSchema(stepperSchemas);
-		const actionsUnion = this.createZodUnionSchema(actionSchemas);
-
-		const formStepSchema = z.object({
-			id: z.string(),
-			title: z.string(),
-			description: z.string().optional(),
-			icon: z.string().optional(),
-			layout: z.optional(layoutSchemas.length > 0 ? layoutsUnion : z.never()),
-			elements: z.array(elementsUnion),
-			rules: z.any().optional(),
-			constraints: z.array(z.any()).optional(),
-			className: z.string().optional(),
-			style: z.record(z.string(), z.any()).optional(),
-			onStepEnter: z.array(actionsUnion).optional(),
-			onStepLeave: z.array(actionsUnion).optional(),
-			onStepValidate: z.array(actionsUnion).optional(),
-			actions: z.array(actionsUnion).optional(),
+		return createFormConfigSchemaFromRegistries({
+			elements: this.elementRegistry.getAll(),
+			layouts: this.layoutRegistry.getAll(),
+			steppers: this.stepperRegistry.getAll(),
+			actions: this.actionRegistry.getAll(),
 		});
-
-		return z.object({
-			id: z.string().describe('Unique identifier for the form'),
-			title: z.string().optional().describe('Display title of the form'),
-			description: z.string().optional().describe('Description of the form purpose'),
-			steps: z.array(formStepSchema),
-			stepper: z.optional(stepperSchemas.length > 0 ? steppersUnion : z.never()),
-			grid: z.lazy(() => GridLayoutConfigSchema).optional(),
-			mode: z.enum(['wizard', 'free']).optional().default('wizard'),
-			validationMode: z.enum(['onSubmit', 'onChange', 'onBlur', 'all']).optional(),
-			reValidateMode: z.enum(['onSubmit', 'onChange', 'onBlur']).optional(),
-			className: z.string().optional(),
-			style: z.record(z.string(), z.any()).optional(),
-			actions: z.array(actionsUnion).optional(),
-		});
-	}
-
-	private createZodUnionSchema(schemas: z.ZodTypeAny[]): z.ZodTypeAny {
-		if (schemas.length === 0) {
-			return z.never();
-		}
-		if (schemas.length === 1) {
-			return schemas[0];
-		}
-		return z.union(schemas as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]]);
 	}
 
 	/**
@@ -365,7 +306,7 @@ export class FormComposer<
 			}));
 		}
 
-		const formConfigZodJsonBridge = this.createZodFormConfigSchemaForJsonEmission();
+		const metadataRegistry = createZodRegistryFromCatalog(metadataCatalog);
 		const formConfigSchema = createFormConfigSchemaFromRegistries(
 			{
 				elements: this.elementRegistry.getAll(),
@@ -373,7 +314,7 @@ export class FormComposer<
 				steppers: this.stepperRegistry.getAll(),
 				actions: this.actionRegistry.getAll(),
 			},
-			formConfigZodJsonBridge,
+			metadataRegistry,
 		);
 		const actionConfigValidators = createActionConfigValidatorMap(this.actionRegistry.getAll());
 		const schemaArtifacts = createFormEngineSchemaArtifacts(
@@ -381,7 +322,6 @@ export class FormComposer<
 			formConfigSchema,
 			undefined,
 			actionConfigValidators,
-			formConfigZodJsonBridge,
 		);
 
 		return new FormEngine({

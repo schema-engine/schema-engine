@@ -1,5 +1,8 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { z } from 'zod';
+import type { FormEngineSchemaMetadataRegistry } from '@/engine/schema-artifacts';
+import type { JSONSchemaOptions } from '@/lib/standard-json-schema';
+import { generateZodJSONSchemaDocument } from '@/lib/zod-json-schema';
 import { GridLayoutConfigSchema } from '@/schemas/base-field';
 
 const VENDOR = '@schema-engine/forms';
@@ -224,14 +227,97 @@ export function createDiscriminatedUnionSchema<T extends RegistrationLike>(
 
 const gridLayoutSchema = GridLayoutConfigSchema as StandardSchemaV1;
 
+type FormConfigRegistriesInput = {
+	elements: RegistrationLike[];
+	layouts: RegistrationLike[];
+	steppers: RegistrationLike[];
+	actions: RegistrationLike[];
+};
+
+function createZodUnionSchema(schemas: z.ZodTypeAny[]): z.ZodTypeAny {
+	if (schemas.length === 0) {
+		return z.never();
+	}
+	if (schemas.length === 1) {
+		return schemas[0];
+	}
+	return z.union(schemas as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]]);
+}
+
+/**
+ * Builds the Zod form-config shape used only for JSON Schema emission.
+ * Runtime validation uses the Standard Schema composer returned alongside this.
+ */
+function buildZodFormConfigSchemaFromRegistries(input: FormConfigRegistriesInput): z.ZodTypeAny {
+	const elementSchemas = input.elements.map((el) => el.schema as z.ZodTypeAny);
+	const layoutSchemas = input.layouts.map((layout) => layout.schema as z.ZodTypeAny);
+	const stepperSchemas = input.steppers.map((stepper) => stepper.schema as z.ZodTypeAny);
+	const actionSchemas = input.actions.map((action) => action.schema as z.ZodTypeAny);
+
+	const elementsUnion = createZodUnionSchema(elementSchemas);
+	const layoutsUnion = createZodUnionSchema(layoutSchemas);
+	const steppersUnion = createZodUnionSchema(stepperSchemas);
+	const actionsUnion = createZodUnionSchema(actionSchemas);
+
+	const formStepSchema = z.object({
+		id: z.string(),
+		title: z.string(),
+		description: z.string().optional(),
+		icon: z.string().optional(),
+		layout: z.optional(input.layouts.length > 0 ? layoutsUnion : z.never()),
+		elements: z.array(elementsUnion),
+		rules: z.any().optional(),
+		constraints: z.array(z.any()).optional(),
+		className: z.string().optional(),
+		style: z.record(z.string(), z.any()).optional(),
+		onStepEnter: z.array(actionsUnion).optional(),
+		onStepLeave: z.array(actionsUnion).optional(),
+		onStepValidate: z.array(actionsUnion).optional(),
+		actions: z.array(actionsUnion).optional(),
+	});
+
+	return z.object({
+		id: z.string().describe('Unique identifier for the form'),
+		title: z.string().optional().describe('Display title of the form'),
+		description: z.string().optional().describe('Description of the form purpose'),
+		steps: z.array(formStepSchema),
+		stepper: z.optional(input.steppers.length > 0 ? steppersUnion : z.never()),
+		grid: z.lazy(() => GridLayoutConfigSchema).optional(),
+		mode: z.enum(['wizard', 'free']).optional().default('wizard'),
+		validationMode: z.enum(['onSubmit', 'onChange', 'onBlur', 'all']).optional(),
+		reValidateMode: z.enum(['onSubmit', 'onChange', 'onBlur']).optional(),
+		className: z.string().optional(),
+		style: z.record(z.string(), z.any()).optional(),
+		actions: z.array(actionsUnion).optional(),
+	});
+}
+
+function attachFormConfigJsonSchema(
+	validator: StandardSchemaV1,
+	input: FormConfigRegistriesInput,
+	metadataRegistry: FormEngineSchemaMetadataRegistry,
+): StandardSchemaV1 {
+	const zodFormConfig = buildZodFormConfigSchemaFromRegistries(input);
+
+	const generateSchema = (options: JSONSchemaOptions) =>
+		generateZodJSONSchemaDocument(zodFormConfig, metadataRegistry, {
+			target: options.target,
+		});
+
+	return {
+		'~standard': {
+			...validator['~standard'],
+			jsonSchema: {
+				input: generateSchema,
+				output: generateSchema,
+			},
+		},
+	} as StandardSchemaV1;
+}
+
 export function createFormConfigSchemaFromRegistries(
-	input: {
-		elements: RegistrationLike[];
-		layouts: RegistrationLike[];
-		steppers: RegistrationLike[];
-		actions: RegistrationLike[];
-	},
-	zodJsonBridge?: z.ZodTypeAny,
+	input: FormConfigRegistriesInput,
+	metadataRegistry?: FormEngineSchemaMetadataRegistry,
 ): StandardSchemaV1 {
 	const elementsUnion = createDiscriminatedUnionSchema(input.elements, {
 		unknownMessage: 'Unknown element $type',
@@ -294,25 +380,9 @@ export function createFormConfigSchemaFromRegistries(
 		{ key: 'actions', schema: createArraySchema(actionsUnion), optional: true },
 	]);
 
-	if (!zodJsonBridge) {
+	if (!metadataRegistry) {
 		return validator;
 	}
 
-	return withZodJsonSchemaBridge(validator, zodJsonBridge);
-}
-
-function withZodJsonSchemaBridge(validator: StandardSchemaV1, zodJsonBridge: z.ZodTypeAny): StandardSchemaV1 {
-	const zodJsonSchema = zodJsonBridge['~standard']?.jsonSchema;
-
-	return {
-		'~standard': {
-			...validator['~standard'],
-			jsonSchema: zodJsonSchema ?? {
-				input: (options) =>
-					z.toJSONSchema(zodJsonBridge, { target: options.target }) as Record<string, unknown>,
-				output: (options) =>
-					z.toJSONSchema(zodJsonBridge, { target: options.target }) as Record<string, unknown>,
-			},
-		},
-	} as StandardSchemaV1;
+	return attachFormConfigJsonSchema(validator, input, metadataRegistry);
 }
