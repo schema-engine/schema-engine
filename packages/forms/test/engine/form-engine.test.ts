@@ -1,5 +1,6 @@
 import { test, expect, describe } from 'bun:test';
 import { z } from 'zod';
+import { safeParseStandardSchema } from '@/lib/standard-schema';
 import { FormComposer } from '@/builder';
 import type { InputRegistration, LayoutRegistration, StepperRegistration } from '@/types';
 
@@ -395,7 +396,7 @@ describe('FormEngine', () => {
 				required: true,
 			};
 
-			const result = retrieved?.schema.safeParse(validConfig);
+			const result = retrieved?.schema ? safeParseStandardSchema(retrieved.schema, validConfig) : undefined;
 			expect(result?.success).toBe(true);
 		});
 	});

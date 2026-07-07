@@ -35,7 +35,8 @@
 	},
 	"dependencies": {
 		"@schema-engine/actions": "workspace:*",
-		"@schema-engine/registry": "workspace:*"
+		"@schema-engine/registry": "workspace:*",
+		"@standard-schema/spec": "^1.0.0"
 	},
 	"peerDependencies": {
 		"typescript": "^5",
