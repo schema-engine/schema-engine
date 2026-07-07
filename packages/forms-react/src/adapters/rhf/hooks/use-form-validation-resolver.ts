@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import type { FieldValues, ResolverResult } from 'react-hook-form';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import { createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation/utils';
+import { createStandardSchemaFromRules } from '@schema-engine/forms/schemas/validation/utils';
 import { getValueAtPath } from '@/lib/path-utils';
 
 /**
@@ -95,7 +95,7 @@ export function useFormValidationResolver(elements: any[]) {
 			await Promise.all(
 				allValidations.map(async ({ path, rules }) => {
 					const value = getValueAtPath(values, path);
-					const schema = createZodSchemaFromRules(rules, values) as StandardSchemaV1;
+					const schema = createStandardSchemaFromRules(rules, values);
 					const message = await validateWithStandardSchema(schema, value);
 
 					if (message) {

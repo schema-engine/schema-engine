@@ -702,6 +702,33 @@ export const CustomStepperRegistration = {
 const engine = createReactFormComposer().addStepper(CustomStepperRegistration).build();
 ```
 
+## Standard Schema authoring
+
+Registrations accept any library that implements [Standard Schema](https://standardschema.dev/) (`~standard.validate`). Built-in components still ship Zod schemas today, but custom registrations can use Valibot, Effect Schema, or other vendors:
+
+```typescript
+import * as v from 'valibot';
+import type { InferConfig } from '@schema-engine/forms-react/lib/infer-config';
+
+const CustomFieldSchema = v.object({
+	$type: v.literal('custom-field'),
+	id: v.string(),
+	name: v.string(),
+	label: v.string(),
+}) as v.GenericSchema<CustomFieldConfig>;
+
+type CustomFieldConfig = InferConfig<typeof CustomFieldSchema>;
+
+export const CustomFieldRegistration = {
+	$type: 'custom-field',
+	render: CustomField,
+	schema: CustomFieldSchema,
+	metadata: { name: 'Custom Field' },
+};
+```
+
+The React Hook Form adapter validates field rules through `~standard.validate` — it does not depend on `@hookform/resolvers/zod`.
+
 ## Type Safety
 
 The package provides full TypeScript support with automatic type inference:
@@ -775,8 +802,7 @@ bun test
 **Required Dependencies:**
 
 - `react-hook-form` - Form state management
-- `zod` - Schema validation
-- `@hookform/resolvers` - Validation resolver
+- `zod` - Schema validation for built-in registrations
 
 ## License
 
