@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
+import { asStandardSchema } from '@/lib/standard-schema';
 import { FormActionTriggerSchema } from '../triggers';
 import { GTMTracker } from '../../tools/gtm-tracker';
 
@@ -195,7 +196,7 @@ export function gtmPlugin(config: GTMPluginConfig = {}): BuilderActionRegistrati
 
 	return {
 		$type: 'gtm_event',
-		schema: GTMEventActionSchema,
+		schema: asStandardSchema(GTMEventActionSchema),
 		metadata: {
 			name: 'GTM Event',
 			description: 'Push events to Google Tag Manager',

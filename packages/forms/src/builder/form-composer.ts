@@ -223,7 +223,7 @@ export class FormComposer<
 		const stepperSchemas = this.stepperRegistry.getAll().map((stepper) => stepper.schema);
 		const actionSchemas = this.actionRegistry.getAll().map((action: any) => action.schema);
 
-		// TODO(w2-02): replace with Standard Schema discriminated union composer
+		// Registrations store Standard Schema; cast while union composition still uses Zod APIs.
 		const elementsUnion = this.createUnionSchema(elementSchemas as z.ZodTypeAny[]);
 		const layoutsUnion = this.createUnionSchema(layoutSchemas as z.ZodTypeAny[]);
 		const steppersUnion = this.createUnionSchema(stepperSchemas as z.ZodTypeAny[]);

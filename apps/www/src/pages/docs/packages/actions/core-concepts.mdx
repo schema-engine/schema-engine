@@ -16,18 +16,22 @@ export const getMetadata = () => ({
 An action registration defines one action type.
 
 ```typescript
+import type { StandardSchemaV1 } from '@standard-schema/spec';
+
 interface ActionRegistration<
 	TConfig extends ActionConfigBase = ActionConfigBase,
 	TBaseContext = unknown,
 	TTrigger = string,
 	TData = unknown,
-> {
+> extends BaseRegistration<TConfig, ActionMetadata<TTrigger>> {
 	$type: TConfig['$type'];
-	schema: z.ZodType<TConfig>;
+	schema: StandardSchemaV1<TConfig>;
 	metadata: ActionMetadata<TTrigger>;
 	execute: (context: ActionRuntimeContext<TConfig, TBaseContext, TTrigger>) => Promise<ActionExecutionResult<TData>> | ActionExecutionResult<TData>;
 }
 ```
+
+Zod schemas implement Standard Schema and remain valid `schema` values.
 
 `execute` receives the `ActionRuntimeContext` — the caller-provided base context enriched with `config` and `trigger`.
 

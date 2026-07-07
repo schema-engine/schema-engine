@@ -38,7 +38,7 @@ export interface BaseRegistration<TConfig = unknown, TMeta extends RegistrationM
 	$type: string;
 	/** Standard Schema for config validation and type inference */
 	schema: StandardSchemaV1<TConfig>;
-	/** Component or action metadata */
+	/** Registration metadata (display name, description, and type-specific fields) */
 	metadata: TMeta;
 }
 

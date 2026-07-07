@@ -1,4 +1,5 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
+import type { z } from 'zod';
 
 export type StandardSchemaIssue = {
 	message: string;
@@ -10,7 +11,22 @@ export type StandardSchemaSafeParseResult<T> =
 	| { success: false; error: { issues: StandardSchemaIssue[] } };
 
 /**
- * Parse via Standard Schema validate. Throws on failure.
+ * Bridge a Zod schema to `StandardSchemaV1` for registration contracts.
+ *
+ * Zod implements Standard Schema at runtime. TypeScript may not infer matching
+ * input/output variance when fields use `.default()` — this helper documents that boundary.
+ */
+export function asStandardSchema<T>(schema: z.ZodType<T>): StandardSchemaV1<T> {
+	return schema as StandardSchemaV1<T>;
+}
+
+/**
+ * Validate `value` with a Standard Schema and return parsed data.
+ *
+ * @param schema - Any `StandardSchemaV1` implementation (for example, a Zod schema)
+ * @param value - Input to validate
+ * @returns Parsed output typed as `T`
+ * @throws {Error} When validation fails or the schema returns async validation
  */
 export function parseStandardSchema<T>(schema: StandardSchemaV1<T>, value: unknown): T {
 	const result = safeParseStandardSchema(schema, value);
@@ -22,7 +38,13 @@ export function parseStandardSchema<T>(schema: StandardSchemaV1<T>, value: unkno
 }
 
 /**
- * Safe parse via Standard Schema validate.
+ * Validate `value` with a Standard Schema without throwing.
+ *
+ * Only synchronous validation is supported. Async schemas throw because builder
+ * and registry code paths require immediate results.
+ *
+ * @param schema - Standard Schema to run
+ * @param value - Input to validate
  */
 export function safeParseStandardSchema<T>(
 	schema: StandardSchemaV1<T>,
@@ -54,8 +76,12 @@ export function safeParseStandardSchema<T>(
 }
 
 /**
- * Validate a registration config against its Standard Schema.
- * @throws Error with joined issue messages on failure
+ * Validate a registration config object against its registration schema.
+ *
+ * @param schema - Schema from `BaseRegistration.schema`
+ * @param config - Config object; callers typically set `$type` before validating
+ * @returns Parsed config typed as `T`
+ * @throws {Error} Joined issue messages when validation fails
  */
 export function validateRegistrationConfig<T>(schema: StandardSchemaV1<T>, config: object): T {
 	const result = safeParseStandardSchema(schema, config);

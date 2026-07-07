@@ -1,4 +1,5 @@
 import { z, type GlobalMeta } from 'zod';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { ComponentType } from './component-type';
 import { generateZodJSONSchemaCollection, generateZodJSONSchemaDocument } from '@/lib/zod-json-schema';
 import {
@@ -78,7 +79,7 @@ export const defaultFormEngineSchemaSerializationConfig: FormEngineSchemaSeriali
  */
 export interface SchemaValidatorRegistrationLike {
 	$type: string;
-	schema: z.ZodTypeAny;
+	schema: StandardSchemaV1<unknown>;
 }
 
 /**
@@ -86,12 +87,18 @@ export interface SchemaValidatorRegistrationLike {
  * The artifact layer only needs the configuration validators, not runtime
  * execution handlers, which keeps this boundary closer to a future internal
  * schema package.
+ *
+ * JSON Schema emission still expects Zod validators today; registrations may
+ * already expose Standard Schema at the type level.
  */
 export function createActionConfigValidatorMap<TRegistration extends SchemaValidatorRegistrationLike>(
 	actionRegistrations: Iterable<TRegistration>,
 ): Map<string, z.ZodTypeAny> {
 	return new Map(
-		Array.from(actionRegistrations, (registration) => [registration.$type, registration.schema] as const),
+		Array.from(actionRegistrations, (registration) => [
+			registration.$type,
+			registration.schema as z.ZodTypeAny,
+		] as const),
 	);
 }
 

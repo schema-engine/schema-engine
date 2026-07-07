@@ -89,18 +89,22 @@ interface ActionRegistryProvider<TBaseContext = unknown, TTrigger = string, TReg
 ## ActionRegistration
 
 ```typescript
+import type { StandardSchemaV1 } from '@standard-schema/spec';
+
 interface ActionRegistration<
 	TConfig extends ActionConfigBase = ActionConfigBase,
 	TBaseContext = unknown,
 	TTrigger = string,
 	TData = unknown,
-> {
+> extends BaseRegistration<TConfig, ActionMetadata<TTrigger>> {
 	$type: TConfig['$type'];
-	schema: z.ZodType<TConfig>;
+	schema: StandardSchemaV1<TConfig>;
 	metadata: ActionMetadata<TTrigger>;
 	execute: ActionHandler<TConfig, TBaseContext, TTrigger, TData>;
 }
 ```
+
+Zod schemas implement Standard Schema and remain valid `schema` values.
 
 `execute` receives an `ActionRuntimeContext` — the caller-provided `TBaseContext` enriched with `config` and `trigger` by the executor.
 
@@ -157,9 +161,7 @@ interface ActionDispatchInput<
 ## ActionMetadata
 
 ```typescript
-interface ActionMetadata<TTrigger = string> {
-	name: string;
-	description?: string;
+interface ActionMetadata<TTrigger = string> extends RegistrationMetadata {
 	icon?: string;
 	defaultTriggers?: readonly TTrigger[];
 	category?: string;

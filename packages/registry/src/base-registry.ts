@@ -135,10 +135,12 @@ export abstract class BaseRegistry<TKey extends string, TValue extends BaseRegis
 	}
 
 	/**
-	 * Register all items' schemas to a Zod metadata registry.
-	 * Removed in w2-01 when SchemaMetadataCatalog replaces z.registry().
+	 * Registers schemas that implement Zod's `register()` helper into a shared Zod metadata registry.
 	 *
-	 * @deprecated Use SchemaMetadataCatalog in forms (w2-01) instead.
+	 * Registrations whose `schema` does not expose `register()` are skipped silently.
+	 *
+	 * @deprecated Retained for FormEngine JSON Schema metadata via `z.registry()`.
+	 *             Prefer Standard Schema–native metadata when integrating new code.
 	 */
 	registerSchemas(
 		zodRegistry: ReturnType<typeof z.registry>,

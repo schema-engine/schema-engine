@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
+import { asStandardSchema } from '@/lib/standard-schema';
 import { FormActionTriggerSchema } from '../triggers';
 
 /**
@@ -171,7 +172,7 @@ export function notificationPlugin(
 
 	return {
 		$type: 'show_notification',
-		schema: NotificationActionSchema,
+		schema: asStandardSchema(NotificationActionSchema),
 		metadata: {
 			name: 'Show Notification',
 			description: 'Display notifications to users with different variants',

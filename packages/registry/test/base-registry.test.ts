@@ -102,11 +102,14 @@ describe('BaseRegistry', () => {
 
 	it('should register schemas to Zod registry', () => {
 		const zodRegistry = z.registry();
-		const item = createMockItem('item1', 'Item 1');
-		registry.register(item);
-
 		const registerSpy = mock();
-		item.schema.register = registerSpy;
+		const schema = Object.assign(z.object({ test: z.string() }), { register: registerSpy });
+		const item: BaseRegistration = {
+			$type: 'item1',
+			schema,
+			metadata: { name: 'Item 1', description: 'Test Description' },
+		};
+		registry.register(item);
 
 		registry.registerSchemas(zodRegistry, (item) => ({
 			id: item.$type,

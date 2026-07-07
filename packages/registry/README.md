@@ -22,7 +22,7 @@ bun add @schema-engine/registry zod
 Every registry entry must provide:
 
 - `$type`: stable key used inside the registry
-- `schema`: Zod schema for config validation and inference
+- `schema`: [Standard Schema](https://standardschema.dev/) (`StandardSchemaV1`) for config validation and inference
 - `metadata`: display metadata such as `name` and `description`
 
 ```typescript
@@ -125,7 +125,12 @@ widgets.register({
 
 ## Registering Schemas Into Zod Metadata
 
-Use `registerSchemas(...)` to publish all registered schemas into a shared Zod registry.
+`registerSchemas(...)` publishes registrations whose schemas implement Zod's `register()`
+helper into a shared `z.registry()` instance. This supports JSON Schema metadata in
+`FormEngine` today.
+
+**Note:** `registerSchemas` is deprecated for new integrations. Prefer validating configs
+through each registration's Standard Schema directly.
 
 ```typescript
 import { z } from 'zod';
@@ -139,7 +144,7 @@ registry.registerSchemas(schemaRegistry, (item) => ({
 }));
 ```
 
-This is useful when a higher-level package needs to generate JSON Schema or attach common metadata to all registrations.
+Registrations without a Zod `register()` helper are skipped.
 
 ## Package Exports
 
@@ -154,4 +159,5 @@ Main exports:
 - `BaseRegistration`
 - `ComponentRegistration`
 - `ComponentMetadata`
+- `RegistrationMetadata`
 - `Brand`

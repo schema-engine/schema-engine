@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
+import { asStandardSchema } from '@/lib/standard-schema';
 import { FormActionTriggerSchema } from '../triggers';
 
 /**
@@ -196,7 +197,7 @@ export function autoSavePlugin(
 
 	return {
 		$type: 'auto_save',
-		schema: AutoSaveActionSchema,
+		schema: asStandardSchema(AutoSaveActionSchema),
 		metadata: {
 			name: 'Auto Save',
 			description: 'Automatically save form data to storage',

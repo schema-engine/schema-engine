@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
+import { asStandardSchema } from '@/lib/standard-schema';
 import { FormActionTriggerSchema } from '../triggers';
 import { GDPRConsent } from '../../tools/gdpr-consent';
 
@@ -106,7 +107,7 @@ export function formResetPlugin(
 
 	return {
 		$type: 'reset',
-		schema: FormResetActionSchema,
+		schema: asStandardSchema(FormResetActionSchema),
 		metadata: {
 			name: 'Reset Form',
 			description: 'Reset form to initial state or defaults',
