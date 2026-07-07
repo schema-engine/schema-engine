@@ -62,7 +62,6 @@
 		"@base-ui/react": "^1.1.0",
 		"@ecopages/logger": "^0.2.2",
 		"@ecopages/postcss-processor": "npm:@jsr/ecopages__postcss-processor@latest",
-		"@hookform/resolvers": "^5.2.1",
 		"@storybook/addon-vitest": "^10.1.8",
 		"@tailwindcss/vite": "^4.1.18",
 		"@vitest/browser-playwright": "^4.0.13",
@@ -132,6 +131,10 @@
 			"types": "./dist/hooks/*.d.ts",
 			"import": "./dist/hooks/*.js"
 		},
+		"./lib/infer-config": {
+			"types": "./dist/lib/infer-config.d.ts",
+			"import": "./dist/lib/infer-config.js"
+		},
 		"./adapters": {
 			"types": "./dist/adapters/index.d.ts",
 			"import": "./dist/adapters/index.js"
@@ -163,6 +166,30 @@
 		"./components/*": {
 			"types": "./dist/components/*.d.ts",
 			"import": "./dist/components/*.js"
+		},
+		"./components/core-ui/primitives": {
+			"types": "./dist/components/core-ui/primitives.d.ts",
+			"import": "./dist/components/core-ui/primitives.js"
+		},
+		"./components/core-ui/composites": {
+			"types": "./dist/components/core-ui/composites.d.ts",
+			"import": "./dist/components/core-ui/composites.js"
+		},
+		"./components/core-ui/tier-manifest": {
+			"types": "./dist/components/core-ui/tier-manifest.d.ts",
+			"import": "./dist/components/core-ui/tier-manifest.js"
+		},
+		"./components/form/*": {
+			"types": "./dist/components/form/*.d.ts",
+			"import": "./dist/components/form/*.js"
+		},
+		"./components/form/registry": {
+			"types": "./dist/components/form/registry.d.ts",
+			"import": "./dist/components/form/registry.js"
+		},
+		"./components/core-registrations": {
+			"types": "./dist/registrations.d.ts",
+			"import": "./dist/registrations.js"
 		},
 		"./components/elements/inputs/*": {
 			"types": "./dist/components/elements/inputs/*.d.ts",
