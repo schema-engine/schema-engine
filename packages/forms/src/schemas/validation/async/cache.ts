@@ -125,16 +125,7 @@ class AsyncValidationCache {
 }
 
 /**
- * Global cache instance for async validation
+ * Global cache instance for async validation.
+ * Expired entries are evicted lazily on get/set; call cleanup() for explicit sweeps.
  */
 export const asyncValidationCache = new AsyncValidationCache();
-
-/**
- * Periodic cleanup to prevent memory leaks
- */
-setInterval(
-	() => {
-		asyncValidationCache.cleanup();
-	},
-	10 * 60 * 1000,
-);
