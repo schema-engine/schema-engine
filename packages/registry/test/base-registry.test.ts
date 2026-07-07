@@ -91,6 +91,19 @@ describe('BaseRegistry', () => {
 		expect(registry.get('item1')?.metadata.name).toBe('Item 1 Updated');
 	});
 
+	it('should return a snapshot map that does not mutate the registry', () => {
+		const item = createMockItem('item1', 'Item 1');
+		registry.register(item);
+
+		const snapshot = registry.snapshotMap();
+		expect(snapshot).toBeInstanceOf(Map);
+		expect(snapshot.get('item1')).toBe(item);
+
+		snapshot.set('item2', createMockItem('item2', 'Item 2'));
+		expect(registry.has('item2')).toBe(false);
+		expect(registry.size).toBe(1);
+	});
+
 	it('should allow direct map access via getMap', () => {
 		const item = createMockItem('item1', 'Item 1');
 		registry.register(item);

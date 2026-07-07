@@ -369,10 +369,10 @@ export class FormComposer<
 		);
 
 		return new FormEngine({
-			elements: this.elementRegistry.getMap(),
-			layouts: this.layoutRegistry.getMap(),
-			steppers: this.stepperRegistry.getMap(),
-			actions: this.actionRegistry.getMap(),
+			elements: this.elementRegistry.snapshotMap(),
+			layouts: this.layoutRegistry.snapshotMap(),
+			steppers: this.stepperRegistry.snapshotMap(),
+			actions: this.actionRegistry.snapshotMap(),
 			schemaArtifacts,
 			schemaRegistry,
 			formConfigSchema,

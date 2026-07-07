@@ -125,9 +125,18 @@ export abstract class BaseRegistry<TKey extends string, TValue extends BaseRegis
 	}
 
 	/**
+	 * Return a shallow copy of the internal map for engine boundaries.
+	 * Mutations to the returned map do not affect the registry.
+	 */
+	snapshotMap(): Map<TKey, TValue> {
+		return new Map(this.items);
+	}
+
+	/**
 	 * Get the internal Map for direct access (e.g., for FormEngine).
 	 * Use sparingly - prefer the public API methods.
 	 *
+	 * @deprecated Prefer `snapshotMap()` at package boundaries to avoid live-map leaks.
 	 * @internal
 	 */
 	getMap(): Map<TKey, TValue> {
