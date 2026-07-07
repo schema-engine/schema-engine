@@ -16,6 +16,7 @@
 
 import { formSubmitPlugin } from './form-submit.plugin';
 import type { FormSubmitAction } from './form-submit.plugin';
+import { logger } from '@/lib/logger';
 import type { BuilderActionRegistration } from '@/types';
 
 declare global {
@@ -28,14 +29,14 @@ declare global {
 
 /**
  * Default Submit Action Registration
- * Handles basic form submission with console logging
+ * Handles basic form submission with logger output
  */
 export const SubmitActionRegistration: BuilderActionRegistration<'submit', FormSubmitAction> = formSubmitPlugin({
 	onSuccess: (data, context) => {
-		console.log('[Submit] Form submitted successfully:', { formId: context.formId, data });
+		logger.info('[Submit] Form submitted successfully:', { formId: context.formId, data });
 	},
 	onError: (error, context) => {
-		console.error('[Submit] Form submission failed:', {
+		logger.error('[Submit] Form submission failed:', {
 			formId: context.formId,
 			error: error.message,
 		});

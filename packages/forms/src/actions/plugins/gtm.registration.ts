@@ -16,6 +16,7 @@
 
 import { gtmPlugin } from './gtm.plugin';
 import type { GTMEventAction } from './gtm.plugin';
+import { logger } from '@/lib/logger';
 import type { BuilderActionRegistration } from '@/types';
 
 declare global {
@@ -28,13 +29,13 @@ declare global {
 
 /**
  * Default GTM Action Registration
- * Pushes events to dataLayer with console logging
+ * Pushes events to dataLayer with logger output
  */
 export const GTMActionRegistration: BuilderActionRegistration<'gtm_event', GTMEventAction> = gtmPlugin({
 	onPush: (eventName, eventData, context) => {
-		console.log('[GTM] Event pushed:', { eventName, formId: context.formId, eventData });
+		logger.info('[GTM] Event pushed:', { eventName, formId: context.formId, eventData });
 	},
 	onError: (error, context) => {
-		console.error('[GTM] Failed to push event:', { formId: context.formId, error });
+		logger.error('[GTM] Failed to push event:', { formId: context.formId, error });
 	},
 });

@@ -16,6 +16,7 @@
 
 import { autoSavePlugin } from './auto-save.plugin';
 import type { AutoSaveAction } from './auto-save.plugin';
+import { logger } from '@/lib/logger';
 import type { BuilderActionRegistration } from '@/types';
 
 declare global {
@@ -28,13 +29,13 @@ declare global {
 
 /**
  * Default Auto-Save Action Registration
- * Saves to localStorage with console logging
+ * Saves to localStorage with logger output
  */
 export const AutoSaveActionRegistration: BuilderActionRegistration<'auto_save', AutoSaveAction> = autoSavePlugin({
 	onSave: (data, context) => {
-		console.log('[AutoSave] Form data saved:', { data, formId: context.formId });
+		logger.info('[AutoSave] Form data saved:', { data, formId: context.formId });
 	},
 	onError: (error, context) => {
-		console.error('[AutoSave] Failed to save:', { formId: context.formId, error });
+		logger.error('[AutoSave] Failed to save:', { formId: context.formId, error });
 	},
 });

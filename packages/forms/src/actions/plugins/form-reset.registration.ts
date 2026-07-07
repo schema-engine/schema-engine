@@ -16,6 +16,7 @@
 
 import { formResetPlugin } from './form-reset.plugin';
 import type { FormResetAction } from './form-reset.plugin';
+import { logger } from '@/lib/logger';
 import type { BuilderActionRegistration } from '@/types';
 
 declare global {
@@ -33,6 +34,6 @@ declare global {
 export const ResetActionRegistration: BuilderActionRegistration<'reset', FormResetAction> = formResetPlugin({
 	confirm: (message) => window.confirm(message),
 	onReset: (context) => {
-		console.log('[Reset] Form reset completed:', { formId: context.formId });
+		logger.info('[Reset] Form reset completed:', { formId: context.formId });
 	},
 });
