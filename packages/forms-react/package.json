@@ -100,6 +100,9 @@
 		"./types": {
 			"types": "./dist/types.d.ts"
 		},
+		"./types-manifest": {
+			"types": "./dist/types-manifest.d.ts"
+		},
 		"./registrations": {
 			"types": "./dist/registrations/index.d.ts",
 			"import": "./dist/registrations/index.js"
