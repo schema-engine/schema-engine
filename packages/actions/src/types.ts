@@ -35,6 +35,8 @@ export type ActionRuntimeContext<TConfig = unknown, TBaseContext = unknown, TTri
 	config: TConfig;
 	/** Trigger/event that caused this action to execute */
 	trigger: TTrigger;
+	/** Action config that triggered nested execution, when applicable */
+	triggeredBy?: TConfig;
 };
 
 /**

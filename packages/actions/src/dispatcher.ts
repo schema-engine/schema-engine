@@ -98,7 +98,9 @@ export class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 	 * @param metadata - Additional metadata to merge into context
 	 */
 	dispatchSync<TConfig extends ActionConfigBase>(input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>): void {
-		void this.dispatch(input);
+		void this.dispatch(input).catch((error) => {
+			console.error('[ActionDispatcher] dispatchSync failed:', error);
+		});
 	}
 
 	/**
