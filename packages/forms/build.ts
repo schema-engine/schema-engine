@@ -5,11 +5,27 @@ import { Logger } from '@ecopages/logger';
 
 const logger = new Logger('[@schema-engine/forms]');
 
-const glob = new Bun.Glob('src/**/*.ts');
-const files = await Array.fromAsync(glob.scan({ cwd: '.' }));
+const entrypoints = [
+	'src/index.ts',
+	'src/actions/index.ts',
+	'src/actions/plugins/index.ts',
+	'src/builder/index.ts',
+	'src/constraints/index.ts',
+	'src/engine/index.ts',
+	'src/layouts/index.ts',
+	'src/lib/debounce.ts',
+	'src/lib/standard-schema.ts',
+	'src/registries/index.ts',
+	'src/schemas/index.ts',
+	'src/schemas/validation/index.ts',
+	'src/schemas/validation/async/index.ts',
+	'src/steppers/index.ts',
+	'src/tools/index.ts',
+	'src/types/index.ts',
+];
 
 const build = await Bun.build({
-	entrypoints: files,
+	entrypoints,
 	outdir: 'dist',
 	root: './src',
 	target: 'browser',
@@ -18,7 +34,7 @@ const build = await Bun.build({
 	// Bun breaks minified named re-export barrels when code-splitting is enabled.
 	splitting: false,
 	sourcemap: 'external',
-	external: ['@schema-engine/actions', '@schema-engine/registry', 'zod'],
+	external: ['@schema-engine/actions', '@schema-engine/registry', '@standard-schema/spec', 'zod'],
 });
 
 if (!build.success) {
@@ -31,7 +47,7 @@ if (!build.success) {
 if (process.argv.includes('--watch')) {
 	logger.info('Watching for changes...');
 	const watcher = watch(path.resolve(__dirname, 'src'), { recursive: true }, async () => {
-		await $`bun run build:lib`;
+		await $`bun run build:files`;
 	});
 
 	process.on('SIGINT', () => {

@@ -122,6 +122,14 @@
 			"types": "./dist/constraints/*.d.ts",
 			"import": "./dist/constraints/*.js"
 		},
+		"./registries": {
+			"types": "./dist/registries/index.d.ts",
+			"import": "./dist/registries/index.js"
+		},
+		"./registries/*": {
+			"types": "./dist/registries/*.d.ts",
+			"import": "./dist/registries/*.js"
+		},
 		"./tools": {
 			"types": "./dist/tools/index.d.ts",
 			"import": "./dist/tools/index.js"

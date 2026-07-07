@@ -43,7 +43,7 @@ export interface LayoutComponentProps {
 	/**
 	 * The form content to be wrapped by this layout
 	 */
-	children: React.ReactNode;
+	children: unknown;
 
 	/**
 	 * Layout-specific configuration options
@@ -72,6 +72,7 @@ export interface LayoutComponentProps {
 }
 
 /**
- * Layout component type definition
+ * Framework-agnostic layout component type definition.
+ * React adapters should narrow `children` to `React.ReactNode` at the boundary.
  */
-export type LayoutComponent = React.ComponentType<LayoutComponentProps>;
+export type LayoutComponent = (props: LayoutComponentProps) => unknown;
