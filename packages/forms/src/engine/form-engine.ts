@@ -260,6 +260,13 @@ export class FormEngine<
 	}
 
 	/**
+	 * Get the schema metadata catalog when the engine was built via FormComposer.
+	 */
+	getSchemaCatalog() {
+		return this.schemaArtifacts.metadataCatalog;
+	}
+
+	/**
 	 * Get the schema registry for JSON Schema generation.
 	 */
 	getSchemaRegistry() {

@@ -8,12 +8,8 @@ import type {
 } from '@/types';
 import { FormEngine } from '@/engine/form-engine';
 import { ComponentType } from '@/engine/component-type';
-import {
-	createActionConfigValidatorMap,
-	createFormEngineSchemaArtifacts,
-	type FormEngineSchemaMetadata,
-	type FormEngineSchemaMetadataRegistry,
-} from '@/engine/schema-artifacts';
+import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from '@/engine/schema-artifacts';
+import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
 import { logger } from '@/lib/logger';
 import { ElementRegistry, LayoutRegistry, StepperRegistry } from '@/registries';
 import { GridLayoutConfigSchema } from '@/schemas/base-field';
@@ -316,11 +312,11 @@ export class FormComposer<
 
 	/**
 	 * Build the immutable FormEngine instance.
-	 * Creates a unified schema registry for JSON Schema generation.
+	 * Populates a schema metadata catalog for JSON Schema generation.
 	 *
 	 * @returns FormEngine configured with all registered components and actions
 	 */
-	build(zodRegistry?: FormEngineSchemaMetadataRegistry): FormEngine<TElements, TLayouts, TSteppers, TActions> {
+	build(catalog?: SchemaMetadataCatalog): FormEngine<TElements, TLayouts, TSteppers, TActions> {
 		logger.debug('Building FormEngine', {
 			elements: this.elementRegistry.size,
 			layouts: this.layoutRegistry.size,
@@ -328,41 +324,43 @@ export class FormComposer<
 			actions: this.actionRegistry.size,
 		});
 
-		const schemaRegistry = zodRegistry ?? z.registry<FormEngineSchemaMetadata>();
+		const metadataCatalog = catalog ?? new SchemaMetadataCatalog();
 
-		this.elementRegistry.registerSchemas(schemaRegistry, (item) => ({
-			id: `element:${item.$type}`,
-			componentType: ComponentType.Element,
-			title: item.metadata.name,
-			description: item.metadata.description,
-			category: item.metadata.category,
-		}));
+		if (!catalog) {
+			metadataCatalog.registerFromRegistry(this.elementRegistry, (item) => ({
+				id: `element:${item.$type}`,
+				componentType: ComponentType.Element,
+				title: item.metadata.name,
+				description: item.metadata.description,
+				category: item.metadata.category,
+			}));
 
-		this.layoutRegistry.registerSchemas(schemaRegistry, (item) => ({
-			id: `layout:${item.$type}`,
-			componentType: ComponentType.Layout,
-			title: item.metadata.name,
-			description: item.metadata.description,
-		}));
+			metadataCatalog.registerFromRegistry(this.layoutRegistry, (item) => ({
+				id: `layout:${item.$type}`,
+				componentType: ComponentType.Layout,
+				title: item.metadata.name,
+				description: item.metadata.description,
+			}));
 
-		this.stepperRegistry.registerSchemas(schemaRegistry, (item) => ({
-			id: `stepper:${item.$type}`,
-			componentType: ComponentType.Stepper,
-			title: item.metadata.name,
-			description: item.metadata.description,
-		}));
+			metadataCatalog.registerFromRegistry(this.stepperRegistry, (item) => ({
+				id: `stepper:${item.$type}`,
+				componentType: ComponentType.Stepper,
+				title: item.metadata.name,
+				description: item.metadata.description,
+			}));
 
-		this.actionRegistry.registerSchemas(schemaRegistry, (item) => ({
-			id: `action:${item.$type}`,
-			componentType: ComponentType.Action,
-			title: item.metadata.name,
-			description: item.metadata.description,
-		}));
+			metadataCatalog.registerFromRegistry(this.actionRegistry, (item) => ({
+				id: `action:${item.$type}`,
+				componentType: ComponentType.Action,
+				title: item.metadata.name,
+				description: item.metadata.description,
+			}));
+		}
 
 		const formConfigSchema = this.createFormConfigSchema();
 		const actionConfigValidators = createActionConfigValidatorMap(this.actionRegistry.getAll());
 		const schemaArtifacts = createFormEngineSchemaArtifacts(
-			schemaRegistry,
+			metadataCatalog,
 			formConfigSchema,
 			undefined,
 			actionConfigValidators,
@@ -374,7 +372,6 @@ export class FormComposer<
 			steppers: this.stepperRegistry.getMap(),
 			actions: this.actionRegistry.getMap(),
 			schemaArtifacts,
-			schemaRegistry,
 			formConfigSchema,
 		});
 	}

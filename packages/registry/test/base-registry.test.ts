@@ -1,4 +1,4 @@
-import { describe, expect, it, mock, beforeEach } from 'bun:test';
+import { describe, expect, it, beforeEach } from 'bun:test';
 import { z } from 'zod';
 import { BaseRegistry, type BaseRegistration } from '../src';
 
@@ -98,28 +98,5 @@ describe('BaseRegistry', () => {
 		const map = registry.getMap();
 		expect(map).toBeInstanceOf(Map);
 		expect(map.get('item1')).toBe(item);
-	});
-
-	it('should register schemas to Zod registry', () => {
-		const zodRegistry = z.registry();
-		const registerSpy = mock();
-		const schema = Object.assign(z.object({ test: z.string() }), { register: registerSpy });
-		const item: BaseRegistration = {
-			$type: 'item1',
-			schema,
-			metadata: { name: 'Item 1', description: 'Test Description' },
-		};
-		registry.register(item);
-
-		registry.registerSchemas(zodRegistry, (item) => ({
-			id: item.$type,
-			name: item.metadata.name,
-		}));
-
-		expect(registerSpy).toHaveBeenCalled();
-		expect(registerSpy).toHaveBeenCalledWith(zodRegistry, {
-			id: 'item1',
-			name: 'Item 1',
-		});
 	});
 });

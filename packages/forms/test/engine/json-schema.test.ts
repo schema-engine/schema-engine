@@ -98,6 +98,38 @@ describe('FormEngine JSON Schema Generation', () => {
 	});
 
 	describe('Schema Metadata', () => {
+		test('should expose schema metadata via catalog', () => {
+			const textInputSchema = z.object({
+				$type: z.literal('text'),
+				label: z.string().optional(),
+			});
+
+			const engine = new FormComposer()
+				.addElement({
+					$type: 'text',
+					schema: textInputSchema,
+					metadata: {
+						name: 'Text Input',
+						description: 'A text input field',
+						category: 'input',
+					},
+					render: () => null,
+				})
+				.build();
+
+			const catalog = engine.getSchemaCatalog();
+
+			expect(catalog).toBeDefined();
+			expect(catalog?.get('element:text')).toEqual({
+				id: 'element:text',
+				componentType: ComponentType.Element,
+				title: 'Text Input',
+				description: 'A text input field',
+				category: 'input',
+			});
+			expect(catalog?.getBySchema(textInputSchema)).toEqual(catalog?.get('element:text'));
+		});
+
 		test('should include metadata in generated schema', () => {
 			const textInputSchema = z.object({
 				$type: z.literal('text'),
@@ -689,6 +721,7 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const artifacts = engine.getSchemaArtifacts();
 
+			expect(artifacts.metadataCatalog).toBe(engine.getSchemaCatalog());
 			expect(artifacts.metadataRegistry).toBe(engine.getSchemaRegistry());
 			expect(artifacts.formConfigValidator).toBe(engine.getFormConfigSchema());
 			expect(artifacts.jsonSchema.formConfigStandardSchema).toBe(engine.getFormConfigStandardSchema());

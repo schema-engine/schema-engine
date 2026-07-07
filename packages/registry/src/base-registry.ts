@@ -1,10 +1,5 @@
-import { z } from 'zod';
 import { Logger } from '@ecopages/logger';
 import type { BaseRegistration } from './types.js';
-
-type ZodSchemaWithRegister = z.ZodTypeAny & {
-	register: (registry: ReturnType<typeof z.registry>, metadata: Record<string, unknown>) => void;
-};
 
 const logger = new Logger('[@schema-engine/registry]');
 
@@ -132,25 +127,5 @@ export abstract class BaseRegistry<TKey extends string, TValue extends BaseRegis
 	 */
 	getMap(): Map<TKey, TValue> {
 		return this.items;
-	}
-
-	/**
-	 * Registers schemas that implement Zod's `register()` helper into a shared Zod metadata registry.
-	 *
-	 * Registrations whose `schema` does not expose `register()` are skipped silently.
-	 *
-	 * @deprecated Retained for FormEngine JSON Schema metadata via `z.registry()`.
-	 *             Prefer Standard Schema–native metadata when integrating new code.
-	 */
-	registerSchemas(
-		zodRegistry: ReturnType<typeof z.registry>,
-		metadataBuilder: (item: TValue) => Record<string, unknown>,
-	): void {
-		for (const item of this.getAll()) {
-			const schema = item.schema as ZodSchemaWithRegister;
-			if (typeof schema.register === 'function') {
-				schema.register(zodRegistry, metadataBuilder(item));
-			}
-		}
 	}
 }
