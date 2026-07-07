@@ -1,6 +1,7 @@
 import type { ActionConfigBase, ActionDispatchInput, ActionExecutionResult } from './types';
 import type { ActionRegistryProvider } from './registry';
 import { ActionExecutor } from './executor';
+import { logger } from './lib/logger';
 
 type MetadataContext = {
 	metadata?: Record<string, unknown>;
@@ -98,7 +99,7 @@ export class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 	 */
 	dispatchSync<TConfig extends ActionConfigBase>(input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>): void {
 		void this.dispatch(input).catch((error) => {
-			console.error('[ActionDispatcher] dispatchSync failed:', error);
+			logger.error('dispatchSync failed:', error);
 		});
 	}
 

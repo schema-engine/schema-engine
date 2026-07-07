@@ -14,6 +14,7 @@ const build = await Bun.build({
 	root: './src',
 	target: 'browser',
 	minify: !watchMode,
+	// Keep minify enabled unless barrel breakage appears; forms uses minify: false.
 	format: 'esm',
 	splitting: false,
 	sourcemap: 'external',

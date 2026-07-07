@@ -763,6 +763,16 @@ bun test
 - Hook behavior
 - Custom component integration
 
+## Testing
+
+`test:all` runs each `test/**/*.test.*` file in isolation. A single `bun test` invocation has intermittently crashed with exit **137** (Bun segfault) in CI and pre-commit, so the per-file loop is a temporary workaround until Bun stabilizes.
+
+```bash
+cd packages/forms-react && bun run test:all
+```
+
+Revert to `"test:all": "bun test"` once the upstream Bun issue is resolved.
+
 ## Dependencies
 
 **Peer Dependencies:**
