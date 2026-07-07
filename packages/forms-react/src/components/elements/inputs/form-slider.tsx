@@ -1,5 +1,5 @@
 import { FieldGroup } from '@/components/elements/field-group';
-import { useControlledFormElement, combineHandlers } from '@/hooks';
+import { useAdapterControlledFormElement } from '@/hooks';
 import { Slider } from '@/components/core-ui/slider';
 import type { SliderFieldProps } from './form-slider.types';
 
@@ -9,8 +9,8 @@ export function FormSlider({
 	onFocus: propsOnFocus,
 	...config
 }: SliderFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
-		useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles, combineHandlers } =
+		useAdapterControlledFormElement(config);
 
 	const sliderValue = typeof value === 'number' ? [value] : [config.min || 0];
 

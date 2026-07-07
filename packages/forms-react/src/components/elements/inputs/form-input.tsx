@@ -1,6 +1,6 @@
 import { Input } from '@/components/core-ui/input';
 import { FieldGroup } from '@/components/elements/field-group';
-import { useControlledFormElement, combineHandlers } from '@/hooks';
+import { useAdapterControlledFormElement } from '@/hooks';
 import type { InputFieldProps } from './form-input.types';
 
 export function FormInput({
@@ -9,8 +9,8 @@ export function FormInput({
 	onFocus: propsOnFocus,
 	...config
 }: InputFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
-		useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles, combineHandlers } =
+		useAdapterControlledFormElement(config);
 
 	const { inputType = 'text', ...rest } = config;
 

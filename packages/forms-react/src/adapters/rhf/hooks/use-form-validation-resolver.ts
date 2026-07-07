@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { z } from 'zod';
 import type { FieldValues, ResolverResult } from 'react-hook-form';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation/utils';
 import { getValueAtPath } from '@/lib/path-utils';
 
@@ -58,8 +58,19 @@ function getAllFieldPaths(values: FieldValues, templatePath: string): string[] {
 	return paths;
 }
 
+async function validateWithStandardSchema(schema: StandardSchemaV1, value: unknown): Promise<string | null> {
+	const result = schema['~standard'].validate(value);
+	const resolved = result instanceof Promise ? await result : result;
+
+	if (resolved?.issues?.length) {
+		return resolved.issues[0]?.message ?? 'Validation failed';
+	}
+
+	return null;
+}
+
 /**
- * Creates a React Hook Form resolver that validates fields using Zod schemas.
+ * Creates a React Hook Form resolver that validates fields via Standard Schema.
  * Handles both simple fields and nested array fields with dynamic indices.
  */
 export function useFormValidationResolver(elements: any[]) {
@@ -84,16 +95,14 @@ export function useFormValidationResolver(elements: any[]) {
 			await Promise.all(
 				allValidations.map(async ({ path, rules }) => {
 					const value = getValueAtPath(values, path);
-					try {
-						const schema = createZodSchemaFromRules(rules, values);
-						await schema.parseAsync(value);
-					} catch (error) {
-						if (error instanceof z.ZodError) {
-							errors[path] = {
-								type: 'validation',
-								message: error.issues[0]?.message || 'Validation failed',
-							};
-						}
+					const schema = createZodSchemaFromRules(rules, values) as StandardSchemaV1;
+					const message = await validateWithStandardSchema(schema, value);
+
+					if (message) {
+						errors[path] = {
+							type: 'validation',
+							message,
+						};
 					}
 				}),
 			);

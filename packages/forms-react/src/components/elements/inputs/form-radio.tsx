@@ -6,7 +6,7 @@ import {
 	FieldContent,
 	FieldHint,
 } from '@/components/elements/field-group';
-import { useControlledFormElement, combineHandlers } from '@/hooks';
+import { useAdapterControlledFormElement } from '@/hooks';
 import type { RadioFieldProps } from './form-radio.types';
 import { Label } from '@/components/core-ui/label';
 
@@ -16,8 +16,8 @@ export function FormRadio({
 	onFocus: propsOnFocus,
 	...config
 }: RadioFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
-		useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles, combineHandlers } =
+		useAdapterControlledFormElement(config);
 
 	return (
 		<FieldGroupRoot style={containerStyles}>

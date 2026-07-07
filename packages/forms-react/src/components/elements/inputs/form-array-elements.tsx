@@ -2,7 +2,7 @@ import { useFieldArray, useFormContext } from 'react-hook-form';
 import { Button } from '@/components/core-ui/button';
 import { Trash2, Plus } from 'lucide-react';
 import { FieldGroup } from '@/components/elements/field-group';
-import { useControlledFormElement } from '@/hooks/use-field';
+import { useAdapterControlledFormElement } from '@/hooks';
 import { FormElement } from '@/components/internals/field-renderer';
 import type { ArrayElementsProps, ArrayElementsConfig } from './form-array-elements.types';
 import { cn } from '@/lib/utils';
@@ -151,7 +151,7 @@ export function FormArrayElements(config: ArrayElementsProps) {
 		name: config.name,
 	});
 
-	const { fieldState, containerStyles } = useControlledFormElement(config);
+	const { error, containerStyles } = useAdapterControlledFormElement(config);
 
 	const isSingleField = config.elements.length === 1;
 	const firstElement = config.elements[0];
@@ -195,7 +195,7 @@ export function FormArrayElements(config: ArrayElementsProps) {
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
 			description={config.description}
-			error={fieldState.error?.message}
+			error={error}
 			style={containerStyles}
 		>
 			<div className="space-y-4">

@@ -1,4 +1,5 @@
 import { useController, useFormContext } from 'react-hook-form';
+import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import type { FormFieldValue } from '../../types';
 
 export function useFormField<TFieldValue = unknown>(config: FormEngine.ElementConfig): FormFieldValue<TFieldValue> {
@@ -12,8 +13,7 @@ export function useFormField<TFieldValue = unknown>(config: FormEngine.ElementCo
 		defaultValue: config.defaultValue ?? formState.defaultValues?.[config.name],
 	});
 
-	const isRequired =
-		config.rules?.some((rule: any) => rule?.type === 'required' || rule?.rule === 'required') || false;
+	const required = isFieldRequired(config.rules);
 
 	return {
 		value: field.value as TFieldValue,
@@ -21,6 +21,6 @@ export function useFormField<TFieldValue = unknown>(config: FormEngine.ElementCo
 		onChange: field.onChange,
 		onBlur: field.onBlur,
 		name: field.name,
-		required: isRequired,
+		required,
 	};
 }

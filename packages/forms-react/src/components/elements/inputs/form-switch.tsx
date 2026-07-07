@@ -6,7 +6,7 @@ import {
 	FieldContent,
 	FieldHint,
 } from '@/components/elements/field-group';
-import { useControlledFormElement, combineHandlers } from '@/hooks';
+import { useAdapterControlledFormElement } from '@/hooks';
 import type { SwitchFieldProps } from './form-switch.types';
 
 export function FormSwitch({
@@ -15,7 +15,8 @@ export function FormSwitch({
 	onFocus: propsOnFocus,
 	...config
 }: SwitchFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, containerStyles } = useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, containerStyles, combineHandlers } =
+		useAdapterControlledFormElement(config);
 
 	return (
 		<FieldGroupRoot style={containerStyles}>

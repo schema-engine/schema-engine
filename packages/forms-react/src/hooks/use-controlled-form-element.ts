@@ -1,25 +1,12 @@
 import { useMemo } from 'react';
+import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { useFormField } from '@/adapters/context';
 import { useFieldGridStyles } from './grid-hooks';
 
 /**
- * Helper function to check if a field is required based on validation rules
- */
-function isFieldRequired(rules?: any[]): boolean {
-	return (
-		rules?.some((rule: any) => {
-			if (typeof rule === 'object' && rule !== null) {
-				return rule.type === 'required' || rule.rule === 'required';
-			}
-			return false;
-		}) || false
-	);
-}
-
-/**
  * Helper function to combine event handlers
  */
-function combineHandlers<T = any>(adapterHandler?: (value: T) => void, propsHandler?: (value: T) => void) {
+export function combineHandlers<T = unknown>(adapterHandler?: (value: T) => void, propsHandler?: (value: T) => void) {
 	return (value: T) => {
 		adapterHandler?.(value);
 		propsHandler?.(value);

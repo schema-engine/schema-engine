@@ -1,13 +1,14 @@
 import { Dropzone, DropzoneContent, DropzoneEmptyState } from '@/components/core-ui/drop-zone';
 import { FieldGroup } from '@/components/elements/field-group';
-import { useControlledFormElement, combineHandlers } from '@/hooks';
+import { useAdapterControlledFormElement } from '@/hooks';
 import type { DropZoneFieldProps } from './form-drop-zone.types';
 
 export function FormDropZone({ onChange: propsOnChange, onDropChange, ...config }: DropZoneFieldProps) {
-	const { value, error, onChange, fieldProps, isRequired, containerStyles } = useControlledFormElement({
-		...config,
-		defaultValue: config.defaultValue ?? [],
-	});
+	const { value, error, onChange, fieldProps, isRequired, containerStyles, combineHandlers } =
+		useAdapterControlledFormElement({
+			...config,
+			defaultValue: config.defaultValue ?? [],
+		});
 
 	const { accept, maxSize, minSize, maxFiles = 1, disabled } = config;
 
