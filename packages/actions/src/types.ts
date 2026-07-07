@@ -42,7 +42,7 @@ export type ActionRuntimeContext<TConfig = unknown, TBaseContext = unknown, TTri
 /**
  * Action Execution Context
  *
- * Alias for the runtime context passed to action handlers.
+ * @deprecated Use `ActionRuntimeContext` instead. This alias remains for backward compatibility.
  */
 export type ActionExecutionContext<TConfig = unknown, TBaseContext = unknown, TTrigger = string> = ActionRuntimeContext<
 	TConfig,

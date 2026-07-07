@@ -15,10 +15,15 @@ The package is intended to be reusable across different domains such as forms, w
 ## Installation
 
 ```bash
-bun add @schema-engine/actions zod
+bun add @schema-engine/actions @schema-engine/registry zod
 ```
 
-`zod` is the only external runtime dependency. The package also uses the internal `@schema-engine/registry` package from the same workspace family.
+Runtime dependencies:
+
+- `@schema-engine/registry` — shared registry primitives (`BaseRegistry`, registration types)
+- `zod` — peer dependency for authoring action config schemas (required at install time)
+
+`@standard-schema/spec` is not a direct dependency of this package; validation flows through registry contracts when enabled by downstream packages.
 
 ## Current Execution Model
 
