@@ -1,5 +1,33 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { ActionConfigBase, ActionExecuteInput, ActionExecutionResult, ActionRegistration } from './types';
 import type { ActionRegistryProvider } from './registry';
+
+function validateActionConfig<TConfig>(
+	schema: StandardSchemaV1<TConfig>,
+	config: unknown,
+): ActionExecutionResult | null {
+	const result = schema['~standard'].validate(config);
+	if (result && typeof (result as Promise<unknown>).then === 'function') {
+		return {
+			success: false,
+			error: 'Async Standard Schema validation is not supported in this context',
+			shouldContinue: true,
+		};
+	}
+
+	const syncResult = result as StandardSchemaV1.Result<TConfig>;
+	if (syncResult.issues?.length) {
+		const issues = [...syncResult.issues];
+		return {
+			success: false,
+			error: issues.map((issue) => issue.message).join(', '),
+			issues,
+			shouldContinue: true,
+		};
+	}
+
+	return null;
+}
 
 /**
  * Action Executor Options
@@ -179,6 +207,11 @@ export class ActionExecutor<TBaseContext = unknown, TTrigger = string> {
 				error: `No handler registered for action type: ${action.$type}`,
 				shouldContinue: true,
 			};
+		}
+
+		const validationError = validateActionConfig(actionRegistration.schema, action);
+		if (validationError) {
+			return validationError;
 		}
 
 		try {
