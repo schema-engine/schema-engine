@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, afterEach, spyOn } from 'bun:test';
+import { describe, expect, it, beforeEach } from 'bun:test';
 import { z } from 'zod';
 import { BaseRegistry, type BaseRegistration } from '../src';
 
@@ -142,34 +142,45 @@ describe('BaseRegistry', () => {
 		expect(registry.get('standard-item')?.schema).toBe(schema);
 	});
 
-	describe('logging', () => {
-		let warnSpy: ReturnType<typeof spyOn>;
-		let logSpy: ReturnType<typeof spyOn>;
-
-		beforeEach(() => {
-			warnSpy = spyOn(console, 'warn').mockImplementation(() => {});
-			logSpy = spyOn(console, 'log').mockImplementation(() => {});
+	it('should use injected logger for register and override warnings', () => {
+		const debugCalls: Array<{ message: string; data?: Record<string, unknown> }> = [];
+		const warnCalls: Array<{ message: string; data?: Record<string, unknown> }> = [];
+		const loggerRegistry = new TestRegistry({
+			logger: {
+				debug(message, data) {
+					debugCalls.push({ message, data });
+				},
+				warn(message, data) {
+					warnCalls.push({ message, data });
+				},
+			},
 		});
 
-		afterEach(() => {
-			warnSpy.mockRestore();
-			logSpy.mockRestore();
-		});
+		const item1 = createMockItem('item1', 'Item 1');
+		const item1Override = createMockItem('item1', 'Item 1 Updated');
 
-		it('should not emit debug logs unless logger debug mode is enabled', () => {
-			registry.register(createMockItem('item1', 'Item 1'));
-			registry.clear();
+		loggerRegistry.register(item1);
+		loggerRegistry.register(item1Override);
+		loggerRegistry.clear();
 
-			expect(logSpy).not.toHaveBeenCalled();
-		});
+		expect(debugCalls).toEqual([
+			{ message: 'Registered TestRegistry: item1', data: { name: 'Item 1' } },
+			{ message: 'Registered TestRegistry: item1', data: { name: 'Item 1 Updated' } },
+			{ message: 'TestRegistry cleared', data: undefined },
+		]);
+		expect(warnCalls).toEqual([
+			{
+				message: 'Overriding TestRegistry: item1',
+				data: { previousName: 'Item 1', newName: 'Item 1 Updated' },
+			},
+		]);
+	});
 
-		it('should warn when overriding an existing registration', () => {
-			registry.register(createMockItem('item1', 'Item 1'));
-			registry.register(createMockItem('item1', 'Item 1 Updated'));
-
-			expect(warnSpy).toHaveBeenCalled();
-			const message = (warnSpy.mock.calls[0] ?? []).map(String).join(' ');
-			expect(message).toContain('Overriding TestRegistry: item1');
-		});
+	it('should default to no-op logger without external logging dependency', () => {
+		const silentRegistry = new TestRegistry();
+		expect(() => {
+			silentRegistry.register(createMockItem('item1', 'Item 1'));
+			silentRegistry.clear();
+		}).not.toThrow();
 	});
 });

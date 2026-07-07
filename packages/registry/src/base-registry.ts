@@ -1,7 +1,7 @@
-import { Logger } from '@ecopages/logger';
 import type { BaseRegistration } from './types.js';
+import { noopRegistryLogger, type BaseRegistryOptions, type RegistryLogger } from './registry-logger.js';
 
-const logger = new Logger('[@schema-engine/registry]');
+export type { BaseRegistryOptions, RegistryLogger } from './registry-logger.js';
 
 /**
  * Base Registry - Abstract class for all registries
@@ -16,6 +16,11 @@ const logger = new Logger('[@schema-engine/registry]');
  */
 export abstract class BaseRegistry<TKey extends string, TValue extends BaseRegistration> {
 	protected items = new Map<TKey, TValue>();
+	protected readonly logger: RegistryLogger;
+
+	constructor(options: BaseRegistryOptions = {}) {
+		this.logger = options.logger ?? noopRegistryLogger;
+	}
 
 	/**
 	 * Get the registry name for logging purposes.
@@ -52,14 +57,14 @@ export abstract class BaseRegistry<TKey extends string, TValue extends BaseRegis
 		if (this.items.has(key)) {
 			const existing = this.items.get(key);
 			const existingName = existing ? this.getItemName(existing) : 'unknown';
-			logger.warn(`Overriding ${this.registryName}: ${key}`, {
+			this.logger.warn(`Overriding ${this.registryName}: ${key}`, {
 				previousName: existingName,
 				newName: name,
 			});
 		}
 
 		this.items.set(key, item);
-		logger.debug(`Registered ${this.registryName}: ${key}`, {
+		this.logger.debug(`Registered ${this.registryName}: ${key}`, {
 			name,
 		});
 	}
@@ -116,7 +121,7 @@ export abstract class BaseRegistry<TKey extends string, TValue extends BaseRegis
 	 */
 	clear(): void {
 		this.items.clear();
-		logger.debug(`${this.registryName} cleared`);
+		this.logger.debug(`${this.registryName} cleared`);
 	}
 
 	/**
