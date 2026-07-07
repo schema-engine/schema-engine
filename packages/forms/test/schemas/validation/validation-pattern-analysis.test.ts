@@ -2,11 +2,11 @@ import { test, expect, describe } from 'bun:test';
 import { validationRegistry, ValidationPresets, type ValidationRule } from '@/schemas/validation';
 
 describe('ValidationRegistry Usage Pattern Analysis', () => {
-	describe('Current ValidationRegistry.presets Usage', () => {
-		test('should use registry presets for rule creation', () => {
-			const emailRule = validationRegistry.presets.string.email();
-			const requiredRule = validationRegistry.presets.string.required('Required');
-			const minRule = validationRegistry.presets.number.min(18);
+	describe('ValidationPresets Usage', () => {
+		test('should use ValidationPresets for rule creation', () => {
+			const emailRule = ValidationPresets.string.email();
+			const requiredRule = ValidationPresets.string.required('Required');
+			const minRule = ValidationPresets.number.min(18);
 
 			expect(emailRule.type).toBe('email');
 			expect(requiredRule.type).toBe('required');
@@ -14,7 +14,7 @@ describe('ValidationRegistry Usage Pattern Analysis', () => {
 		});
 
 		test('should create schemas from preset-generated rules', () => {
-			const rule = validationRegistry.presets.string.email('Invalid email');
+			const rule = ValidationPresets.string.email('Invalid email');
 			const schema = validationRegistry.createSchema(rule);
 
 			expect(schema).not.toBeNull();
@@ -24,10 +24,10 @@ describe('ValidationRegistry Usage Pattern Analysis', () => {
 	});
 
 	describe('Usage Pattern Comparison', () => {
-		test('APPROACH A: Registry presets (current)', () => {
+		test('APPROACH A: ValidationPresets (recommended)', () => {
 			const rules = [
-				validationRegistry.presets.string.required('Email required'),
-				validationRegistry.presets.string.email('Invalid email'),
+				ValidationPresets.string.required('Email required'),
+				ValidationPresets.string.email('Invalid email'),
 			];
 
 			expect(rules[0].type).toBe('required');
@@ -45,19 +45,12 @@ describe('ValidationRegistry Usage Pattern Analysis', () => {
 				expect(schema).not.toBeNull();
 			});
 		});
-
-		test('APPROACH C: ValidationPresets', () => {
-			const rules = [ValidationPresets.string.required('Required'), ValidationPresets.string.email('Invalid')];
-
-			expect(rules[0].type).toBe('required');
-			expect(rules[1].type).toBe('email');
-		});
 	});
 
 	describe('Efficiency Analysis', () => {
 		test('should handle JSON serialization/deserialization', () => {
 			const rules: ValidationRule[] = [
-				validationRegistry.presets.string.required('Required'),
+				ValidationPresets.string.required('Required'),
 				{ type: 'email', message: 'Invalid' },
 			] as ValidationRule[];
 

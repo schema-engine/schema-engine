@@ -36,7 +36,6 @@ The `ValidationRegistry` is the central hub that:
 
 - Stores all validation type implementations
 - Converts validation rules into Zod schemas
-- Provides convenient preset builders
 - Manages custom validation registration
 
 ### Rule-to-Schema Generation
@@ -44,10 +43,12 @@ The `ValidationRegistry` is the central hub that:
 The system automatically converts validation rules into Zod schemas:
 
 ```typescript
+import { createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation';
+
 const rules = [{ type: 'required' }, { type: 'email' }, { type: 'minLength', value: 5 }];
 
 // Automatically generates: z.string().email().min(5)
-const schema = validationRegistry.createSchema(rules);
+const schema = createZodSchemaFromRules(rules);
 ```
 
 ## Quick Start
@@ -55,7 +56,7 @@ const schema = validationRegistry.createSchema(rules);
 ### Basic Usage
 
 ```typescript
-import { validationRegistry, ValidationPresets } from '@schema-engine/forms/schemas/validation';
+import { createZodSchemaFromRules, ValidationPresets } from '@schema-engine/forms/schemas/validation';
 
 // Method 1: Direct JSON rules (simple & flexible)
 const emailRules = [
@@ -70,7 +71,7 @@ const emailRules = [
 ];
 
 // Create Zod schema from rules
-const schema = validationRegistry.createSchema(emailRules);
+const schema = createZodSchemaFromRules(emailRules);
 
 // Validate data
 const result = schema.safeParse('user@example.com');
@@ -109,7 +110,7 @@ const formConfig = {
 The package exports a default registry instance that comes pre-loaded with all built-in validations:
 
 ```typescript
-import { validationRegistry } from '@schema-engine/formschemas/validation';
+import { validationRegistry } from '@schema-engine/forms/schemas/validation';
 
 // Check what's available
 console.log(validationRegistry.getRegisteredTypes());
@@ -123,7 +124,7 @@ const numberValidations = validationRegistry.getByCategory('number');
 ### Creating Custom Instances
 
 ```typescript
-import { ValidationRegistry } from '@schema-engine/formschemas/validation';
+import { ValidationRegistry } from '@schema-engine/forms/schemas/validation';
 
 // Create a new registry (starts empty)
 const customRegistry = new ValidationRegistry();
@@ -208,7 +209,7 @@ customRegistry.register({
 ### Registering Custom Validations
 
 ```typescript
-import { validationRegistry } from '@schema-engine/formschemas/validation';
+import { validationRegistry } from '@schema-engine/forms/schemas/validation';
 
 // Register a phone number validator
 validationRegistry.register({
@@ -282,7 +283,7 @@ validationRegistry.registerMultiple(customValidations);
 Converts an array of validation rules into a Zod schema:
 
 ```typescript
-import { createZodSchemaFromRules } from '@schema-engine/formschemas/validation';
+import { createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation';
 
 const rules = [{ type: 'required' }, { type: 'minLength', value: 3 }, { type: 'maxLength', value: 50 }];
 
@@ -295,7 +296,7 @@ const schema = createZodSchemaFromRules(rules);
 Generates a complete Zod schema for an entire form:
 
 ```typescript
-import { generateFormSchema } from '@schema-engine/formschemas/validation';
+import { generateFormSchema } from '@schema-engine/forms/schemas/validation';
 
 const formElements = [
 	{
@@ -332,7 +333,7 @@ const result = formSchema.safeParse({
 Use the `ValidationPresets` utility for convenient rule creation:
 
 ```typescript
-import { ValidationPresets } from '@schema-engine/formschemas/validation';
+import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
 
 // String presets
 const rules = [
@@ -356,10 +357,7 @@ const tagsRules = [
 ];
 
 // Network presets
-const urlRules = [
-	ValidationPresets.network.url('Invalid URL'),
-	ValidationPresets.network.ip('v4', 'Invalid IPv4 address'),
-];
+const urlRules = [ValidationPresets.string.url('Invalid URL'), ValidationPresets.network.ipv4('Invalid IPv4 address')];
 
 // Async presets
 const usernameRules = [
@@ -415,14 +413,11 @@ validationRegistry.register({
 - `registerMultiple(registrations: ValidationRegistration[]): void` - Register multiple validations
 - `unregister(type: string): boolean` - Remove a validation type
 - `has(type: string): boolean` - Check if validation type exists
-- `createSchema(rule: ValidationRule | ValidationRule[]): z.ZodTypeAny | null` - Create Zod schema from rule(s)
+- `createSchema(rule: ValidationRule, formData?: Record<string, any>): z.ZodTypeAny | null` - Create Zod schema from a single rule
 - `getRegisteredTypes(): string[]` - Get all registered type names
 - `getByCategory(category: string): ValidationRegistration[]` - Get validations by category
-- `clear(): void` - Remove all registered validations
 
-#### Properties
-
-- `presets: ValidationPresets` - Convenient preset builders
+Use `createZodSchemaFromRules` to combine multiple rules into one schema.
 
 ### ValidationRegistration
 
