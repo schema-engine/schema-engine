@@ -1,85 +1,71 @@
-# Base UI Form Elements
+# Form Elements
 
-A complete set of form field components built using [Base UI](https://base-ui.com/) components. Mirror implementation of shadcn/ui elements with the same API and configuration.
+Built-in field and action components for `@schema-engine/forms-react`. Inputs wrap primitives from `components/core-ui/` and connect to the active form adapter (React Hook Form by default).
 
-## Available Elements
+## Available elements
 
-**Inputs:** input, textarea, number, select, radio, checkbox, checkbox-group, switch, slider, input-otp
-**Actions:** submit
+**Inputs:** `input`, `textarea`, `number`, `select`, `radio`, `checkbox`, `checkbox-group`, `switch`, `slider`, `input-otp`, `combobox`, `phone-input`, `drop-zone`, `array`, `fieldset`
 
-## Quick Start
+**Actions:** `submit`
 
-### Option 1: Using Helper Function (Recommended)
+## Quick start
 
-```typescript
-import { createBaseUIFormComposer } from '@/stories/shared/form-engine-setup';
-
-const engine = createBaseUIFormComposer().build();
-```
-
-### Option 2: Manual Registration
+### Manual registration
 
 ```typescript
-import { FormComposer } from '@schema-engine/forms/builder';
+import { createReactFormComposer } from '@schema-engine/forms-react';
 import {
 	InputElementRegistration,
 	TextareaElementRegistration,
 	CheckboxGroupElementRegistration,
-	// ... import others as needed
-} from '@schema-engine/forms-react/components/elements/core-ui';
+} from '@schema-engine/forms-react/registrations/elements';
 
-const engine = new FormComposer()
+const engine = createReactFormComposer()
 	.addElement(InputElementRegistration)
 	.addElement(TextareaElementRegistration)
 	.addElement(CheckboxGroupElementRegistration)
-	// ... add others
 	.build();
 ```
 
-### Option 3: Direct Configuration Object (No Builder)
+### Example `FormConfig`
 
 ```typescript
 import type { FormConfig } from '@schema-engine/forms';
 
 const formConfig: FormConfig = {
-	fields: [
+	id: 'contact',
+	title: 'Contact',
+	steps: [
 		{
-			$type: 'input',
-			name: 'email',
-			label: 'Email',
-			inputType: 'email',
-			placeholder: 'Enter email...',
-			rules: [{ type: 'required', message: 'Email required' }],
-		},
-		{
-			$type: 'textarea',
-			name: 'message',
-			label: 'Message',
-			placeholder: 'Enter message...',
-			rows: 5,
-		},
-		{
-			$type: 'checkbox-group',
-			name: 'interests',
-			label: 'Interests',
-			options: [
-				{ value: 'sports', label: 'Sports' },
-				{ value: 'music', label: 'Music' },
-				{ value: 'reading', label: 'Reading' },
+			id: 'main',
+			title: 'Details',
+			elements: [
+				{
+					$type: 'input',
+					id: 'email',
+					name: 'email',
+					label: 'Email',
+					inputType: 'email',
+					rules: [{ type: 'required', message: 'Email required' }],
+				},
+				{
+					$type: 'textarea',
+					id: 'message',
+					name: 'message',
+					label: 'Message',
+					rows: 5,
+				},
+				{
+					$type: 'checkbox-group',
+					id: 'interests',
+					name: 'interests',
+					label: 'Interests',
+					options: [
+						{ value: 'sports', label: 'Sports' },
+						{ value: 'music', label: 'Music' },
+					],
+				},
 			],
-		},
-		{
-			$type: 'slider',
-			name: 'rating',
-			label: 'Rating',
-			min: 0,
-			max: 10,
-			step: 1,
-		},
-		{
-			$type: 'submit',
-			name: 'submit',
-			label: 'Submit',
 		},
 	],
 };
@@ -87,19 +73,17 @@ const formConfig: FormConfig = {
 
 ## Documentation
 
-- **[Input Elements](./inputs/README.md)** - Configuration options for each element
-- **[Actions](./actions/README.md)** - Submit button and action components
+- [Input elements](./inputs/README.md)
+- [Action elements](./actions/README.md)
 
 ## Features
 
-- ✅ Full TypeScript support with type augmentation
-- ✅ Form validation and state management
-- ✅ Error display and validation feedback
-- ✅ ARIA attributes and accessibility
-- ✅ Responsive grid layout support
-- ✅ Conditional logic (show/hide/enable/disable)
+- Standard Schema registration configs (`schema` on each registration)
+- Adapter-driven field state (`useAdapterControlledFormElement`)
+- Constraint logic via `useConstraintLogic`
+- Grid layout support through form-level `grid` config
 
-## See Also
+## See also
 
-- [Field Development Guide](../shadcn/inputs/README.md)
-- [Form Engine Repository](https://github.com/andeeplus/form-engine)
+- [Package README](../../../README.md)
+- [@schema-engine/forms validation docs](../../../../forms/README.md#validation)

@@ -39,7 +39,7 @@ import {
 	TextareaElementRegistration,
 	CardLayoutRegistration,
 	DefaultStepperRegistration,
-} from '@schema-engine/forms-react/registrations';
+} from '@schema-engine/forms-react/registrations/default';
 
 const formEngine = createReactFormComposer()
 	.addElement(InputElementRegistration)
@@ -140,7 +140,7 @@ import {
 	InputElementRegistration,
 	CheckboxElementRegistration,
 	SelectElementRegistration,
-} from '@schema-engine/forms-react/registrations';
+} from '@schema-engine/forms-react/registrations/default';
 
 const engine = createReactFormComposer()
 	.addElement(InputElementRegistration)
@@ -171,20 +171,18 @@ import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
 </FormEngineProvider>;
 ```
 
-**Adapter Interface:**
+**Adapter interface:**
 
 ```typescript
-interface FormAdapter {
-	useFormContext: () => FormContextValue;
-	useFormField: (config: ElementConfig) => FormFieldValue;
-	useWatchField: (name: string | string[]) => any;
-	FormProvider: React.ComponentType<FormProviderProps>;
-	validateField: (name: string) => Promise<boolean>;
-	validateFields: (names: string[]) => Promise<boolean>;
+interface FormAdapter<TFormData = Record<string, unknown>> {
+	useFormContext: () => FormContextValue<TFormData>;
+	useFormField: <TFieldValue = unknown>(config: FormEngine.ElementConfig) => FormFieldValue<TFieldValue>;
+	useWatchField: <TWatchValue = unknown>(name: string | string[]) => TWatchValue;
+	FormProvider: React.ComponentType<FormProviderProps<TFormData>>;
 }
 ```
 
-Custom adapters can be created to integrate with other form libraries (Formik, Final Form, etc.).
+Field validation is triggered through the adapter form context (`trigger`, `setValue`, `setFocus`). The RHF adapter composes field rules with Standard Schema before React Hook Form runs.
 
 ### Elements
 
@@ -735,7 +733,7 @@ The package provides full TypeScript support with automatic type inference:
 
 ```typescript
 // Type augmentation happens automatically when importing registrations
-import { InputElementRegistration } from '@schema-engine/forms-react/registrations';
+import { InputElementRegistration } from '@schema-engine/forms-react/registrations/default';
 
 const engine = createReactFormComposer().addElement(InputElementRegistration).build();
 
@@ -764,27 +762,26 @@ const config: FormConfig = {
 
 ## Performance
 
-The package is optimized for performance:
+Practical bundle-size and runtime characteristics today:
 
-- **Tree-shaking** - Only imported components are bundled
-- **Code splitting** - Lazy load components and layouts
-- **Memoization** - Components use React.memo and useMemo
-- **Debouncing** - Field changes are debounced to reduce re-renders
-- **Virtual scrolling** - Large forms use virtualization
+- **Tree-shaking** — only imported registrations are bundled when you import components explicitly
+- **Optional debouncing** — `useDebouncedValue` and `useDebounce` are available for consumer-side throttling
+
+There is no built-in virtual scrolling or automatic memoization layer in this package.
 
 ## Testing
 
 The package includes comprehensive test coverage:
 
 ```bash
-bun test
+cd packages/forms-react && bun run test:all
 ```
 
 **Test Categories:**
 
 - Builder pattern and type safety
 - Component registration and retrieval
-- Form rendering and validation
+- Form rendering and validation (including `test/integration/`)
 - Multi-step navigation
 - Action execution
 - Hook behavior

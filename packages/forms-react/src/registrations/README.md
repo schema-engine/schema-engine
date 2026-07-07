@@ -1,131 +1,81 @@
 # Registration System
 
-This directory contains organized re-exports of all component registrations with type augmentation for the Form Engine React package.
+This directory contains grouped re-exports of component registrations with TypeScript module augmentation.
 
-## How Registration Works
+## How registration works
 
-The registration system uses TypeScript's module augmentation to extend global type definitions. This allows TypeScript to know about your components at compile time while keeping the runtime bundle size minimal through tree-shaking.
+Each component ships a colocated registration file:
 
-### Type Augmentation
-
-Each component registration file declares its types in the global `FormEngine` namespace:
-
-```typescript
-declare global {
-	namespace FormEngine {
-		interface ElementRegistry {
-			input: InputFieldConfig;
-		}
-	}
-}
+```
+components/elements/inputs/
+├── form-input.types.ts
+├── form-input.tsx
+└── form-input.registration.ts
 ```
 
-When you import a registration, TypeScript merges these declarations, making the types available throughout your project.
+The registration file:
 
-### Registration Objects
+1. augments `FormEngine.ElementRegistry` (or layout/stepper registries)
+2. exports a registration object with `$type`, `render`, `schema`, and `metadata`
 
-Each registration exports a registration object that contains:
-
-- `$type`: Unique identifier for the component
-- `render`: The React component to render
-- `schema`: Validation schema for the component's configuration
-- `metadata`: Human-readable information about the component
+Importing a registration merges its types at compile time. Runtime registration still happens explicitly through `createReactFormComposer().addElement(...)`.
 
 ## Usage
 
-### Individual Imports (Recommended)
-
-Import only the components you need for maximum tree-shaking and type safety:
+### Individual imports (recommended)
 
 ```typescript
-import { InputElementRegistration } from '@schema-engine/forms-react/registrations/elements/shadcn';
+import { createReactFormComposer } from '@schema-engine/forms-react';
+import { InputElementRegistration } from '@schema-engine/forms-react/registrations/elements';
 import { CardLayoutRegistration } from '@schema-engine/forms-react/registrations/layouts';
 import { DefaultStepperRegistration } from '@schema-engine/forms-react/registrations/stepper';
 
-const engine = new FormComposer()
+const engine = createReactFormComposer()
 	.addElement(InputElementRegistration)
 	.addLayout(CardLayoutRegistration)
 	.addStepper(DefaultStepperRegistration)
 	.build();
 ```
 
-### Grouped Imports
-
-For convenience, components are organized into logical groups:
+### Grouped element imports
 
 ```typescript
 import {
 	InputElementRegistration,
 	TextareaElementRegistration,
 	SelectElementRegistration,
-} from '@schema-engine/forms-react/registrations/elements/shadcn';
+} from '@schema-engine/forms-react/registrations/elements';
 ```
 
-### Direct Component Imports
-
-You can also import directly from the component file:
+### Direct component imports
 
 ```typescript
-import { InputElementRegistration } from '@schema-engine/forms-react/components/elements/shadcn/inputs/form-input.registration';
+import { InputElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-input.registration';
 ```
 
-## File Organization
+### Default bundle
+
+`registrations/default.ts` re-exports the common built-in set when you want a batteries-included engine.
+
+## File organization
 
 ```
 registrations/
-├── README.md              # This file
+├── README.md
+├── default.ts
 ├── elements/
-│   └── shadcn.ts         # All Shadcn UI element registrations
-├── layouts.ts            # All layout component registrations
-└── stepper.ts            # All stepper component registrations
+│   └── index.ts
+├── layouts.ts
+└── stepper.ts
 ```
 
-## Benefits
+Source components live under `src/components/elements/`, `src/components/layouts/`, and `src/components/steppers/`.
 
-### Tree-Shaking
+## Adding a new registration
 
-Only imported components are included in your final bundle. Unused components are automatically removed during the build process.
-
-### Type Safety
-
-TypeScript knows exactly which components are registered, providing:
-
-- Autocomplete for component IDs
-- Type checking for component configurations
-- Intellisense for component properties
-
-### Explicit Registration
-
-No hidden magic - you explicitly import and register the components you need. This makes it clear which components are available in each form builder instance.
-
-### Multiple Builders
-
-Different form builders can have different sets of registered components without conflicts:
-
-```typescript
-// Builder A with basic inputs
-const builderA = new FormComposer().addElement(InputElementRegistration).addElement(TextareaElementRegistration);
-
-// Builder B with advanced inputs
-const builderB = new FormComposer().addElement(SelectElementRegistration).addElement(RadioElementRegistration);
-```
-
-## Adding New Registrations
-
-When creating a new component:
-
-1. Create the component file with its registration
-2. Add the registration to the appropriate file in this directory
-3. Export it with its type augmentation
-
-Example for a new element:
-
-```typescript
-// In elements/shadcn.ts
-export { NewElementRegistration } from '@/components/elements/shadcn/inputs/new-element.registration';
-```
-
-The registration file should follow this pattern:
+1. Create `*.types.ts`, component, and `*.registration.ts` beside each other.
+2. Re-export the registration from `registrations/elements/index.ts` (or layouts/stepper).
+3. Add the global `FormEngine` augmentation in the registration file.
 
 ```typescript
 declare global {
@@ -136,7 +86,7 @@ declare global {
 	}
 }
 
-export const NewElementRegistration: ElementRegistration<NewElementConfig, NewElementProps> = {
+export const NewElementRegistration = {
 	$type: 'new-element',
 	render: NewElement,
 	schema: NewElementSchema,
@@ -147,3 +97,5 @@ export const NewElementRegistration: ElementRegistration<NewElementConfig, NewEl
 	},
 };
 ```
+
+Registration schemas must implement [Standard Schema](https://standardschema.dev/). Use `InferConfig` from `@schema-engine/forms-react/lib/infer-config` for TypeScript output types.
