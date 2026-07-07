@@ -18,9 +18,11 @@
 		"noUnusedParameters": false,
 		"noPropertyAccessFromIndexSignature": false,
 		"paths": {
-			"@/*": ["./src/*"]
+			"@/*": ["./src/*"],
+			"@schema-engine/forms": ["../forms/src/index.ts"],
+			"@schema-engine/forms/*": ["../forms/src/*"]
 		}
 	},
-	"include": ["src"],
+	"include": ["src", "test"],
 	"exclude": ["dist", "node_modules"]
 }

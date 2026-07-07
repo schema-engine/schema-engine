@@ -12,8 +12,10 @@ import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from 
 import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
 import { logger } from '@/lib/logger';
 import { ElementRegistry, LayoutRegistry, StepperRegistry } from '@/registries';
+import { createFormConfigSchemaFromRegistries } from '@/schemas/standard-schema-composer';
 import { GridLayoutConfigSchema } from '@/schemas/base-field';
 import { ActionRegistry, type ActionConfigBase } from '@schema-engine/actions';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { z } from 'zod';
 import type { ExtractSchemaType, ExtractTypeId } from './types.utils';
 import type { FormActionTrigger } from '@/actions';
@@ -193,37 +195,33 @@ export class FormComposer<
 		return this;
 	}
 
-	/**
-	 * Create a union schema from an array of schemas.
-	 * Handles edge cases: empty array, single schema, and multiple schemas.
-	 */
-	private createUnionSchema(schemas: z.ZodTypeAny[]): z.ZodTypeAny {
-		if (schemas.length === 0) {
-			return z.never();
-		}
-		if (schemas.length === 1) {
-			return schemas[0];
-		}
-		return z.union(schemas as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]]);
+	/** Generate a Standard Schema for form configurations based on registered components. */
+	createFormConfigSchema(): StandardSchemaV1 {
+		return createFormConfigSchemaFromRegistries(
+			{
+				elements: this.elementRegistry.getAll(),
+				layouts: this.layoutRegistry.getAll(),
+				steppers: this.stepperRegistry.getAll(),
+				actions: this.actionRegistry.getAll(),
+			},
+			this.createZodFormConfigSchemaForJsonEmission(),
+		);
 	}
 
 	/**
-	 * Generate a Zod schema for form configurations based on registered components.
-	 * This schema can be used for runtime validation of form configs.
-	 *
-	 * @returns Zod schema for validating form configurations
+	 * Temporary Zod bridge for JSON Schema emission until w2-03.
+	 * Runtime validation uses Standard Schema dispatch via `createFormConfigSchema`.
 	 */
-	createFormConfigSchema() {
-		const elementSchemas = this.elementRegistry.getAll().map((el) => el.schema);
-		const layoutSchemas = this.layoutRegistry.getAll().map((layout) => layout.schema);
-		const stepperSchemas = this.stepperRegistry.getAll().map((stepper) => stepper.schema);
-		const actionSchemas = this.actionRegistry.getAll().map((action: any) => action.schema);
+	private createZodFormConfigSchemaForJsonEmission() {
+		const elementSchemas = this.elementRegistry.getAll().map((el) => el.schema as z.ZodTypeAny);
+		const layoutSchemas = this.layoutRegistry.getAll().map((layout) => layout.schema as z.ZodTypeAny);
+		const stepperSchemas = this.stepperRegistry.getAll().map((stepper) => stepper.schema as z.ZodTypeAny);
+		const actionSchemas = this.actionRegistry.getAll().map((action: any) => action.schema as z.ZodTypeAny);
 
-		// Registrations store Standard Schema; cast while union composition still uses Zod APIs.
-		const elementsUnion = this.createUnionSchema(elementSchemas as z.ZodTypeAny[]);
-		const layoutsUnion = this.createUnionSchema(layoutSchemas as z.ZodTypeAny[]);
-		const steppersUnion = this.createUnionSchema(stepperSchemas as z.ZodTypeAny[]);
-		const actionsUnion = this.createUnionSchema(actionSchemas as z.ZodTypeAny[]);
+		const elementsUnion = this.createZodUnionSchema(elementSchemas);
+		const layoutsUnion = this.createZodUnionSchema(layoutSchemas);
+		const steppersUnion = this.createZodUnionSchema(stepperSchemas);
+		const actionsUnion = this.createZodUnionSchema(actionSchemas);
 
 		const formStepSchema = z.object({
 			id: z.string(),
@@ -256,6 +254,16 @@ export class FormComposer<
 			style: z.record(z.string(), z.any()).optional(),
 			actions: z.array(actionsUnion).optional(),
 		});
+	}
+
+	private createZodUnionSchema(schemas: z.ZodTypeAny[]): z.ZodTypeAny {
+		if (schemas.length === 0) {
+			return z.never();
+		}
+		if (schemas.length === 1) {
+			return schemas[0];
+		}
+		return z.union(schemas as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]]);
 	}
 
 	/**
@@ -357,13 +365,23 @@ export class FormComposer<
 			}));
 		}
 
-		const formConfigSchema = this.createFormConfigSchema();
+		const formConfigZodJsonBridge = this.createZodFormConfigSchemaForJsonEmission();
+		const formConfigSchema = createFormConfigSchemaFromRegistries(
+			{
+				elements: this.elementRegistry.getAll(),
+				layouts: this.layoutRegistry.getAll(),
+				steppers: this.stepperRegistry.getAll(),
+				actions: this.actionRegistry.getAll(),
+			},
+			formConfigZodJsonBridge,
+		);
 		const actionConfigValidators = createActionConfigValidatorMap(this.actionRegistry.getAll());
 		const schemaArtifacts = createFormEngineSchemaArtifacts(
 			metadataCatalog,
 			formConfigSchema,
 			undefined,
 			actionConfigValidators,
+			formConfigZodJsonBridge,
 		);
 
 		return new FormEngine({

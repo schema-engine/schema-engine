@@ -8,14 +8,12 @@ const logger = new Logger('[@schema-engine/forms]');
 const glob = new Bun.Glob('src/**/*.ts');
 const files = await Array.fromAsync(glob.scan({ cwd: '.' }));
 
-const watchMode = process.argv.includes('--watch');
-
 const build = await Bun.build({
 	entrypoints: files,
 	outdir: 'dist',
 	root: './src',
 	target: 'browser',
-	minify: !watchMode,
+	minify: false,
 	format: 'esm',
 	// Bun breaks minified named re-export barrels when code-splitting is enabled.
 	splitting: false,

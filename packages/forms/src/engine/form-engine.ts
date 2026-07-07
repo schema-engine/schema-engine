@@ -12,7 +12,7 @@ import { ElementRegistry, LayoutRegistry, StepperRegistry } from '@/registries';
 import { ActionRegistry } from '@schema-engine/actions';
 import { logger } from '@/lib/logger';
 import type { StandardJSONSchemaV1 } from '@/lib/standard-json-schema';
-import { z } from 'zod';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { FormConfigBuilder } from '@/builder/form-config-builder';
 import type { FormEngineSchemaArtifacts, FormEngineSchemaMetadataRegistry } from './schema-artifacts';
 import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from './schema-artifacts';
@@ -28,7 +28,7 @@ export interface EngineRegistries {
 	actions: Map<string, BuilderActionRegistration>;
 	schemaArtifacts?: FormEngineSchemaArtifacts;
 	schemaRegistry?: FormEngineSchemaMetadataRegistry;
-	formConfigSchema?: z.ZodTypeAny;
+	formConfigSchema?: StandardSchemaV1;
 }
 
 function resolveSchemaArtifacts(registries: EngineRegistries): FormEngineSchemaArtifacts {
