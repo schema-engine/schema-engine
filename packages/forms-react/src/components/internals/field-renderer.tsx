@@ -1,5 +1,6 @@
 import { useFormEngine, useConstraintLogic } from '@/hooks';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
+import { parseStandardSchema } from '@schema-engine/forms/lib/standard-schema';
 import { ElementError } from './element-error';
 
 export interface FormElementProps {
@@ -39,7 +40,7 @@ export function FormElement({ config, className, style }: FormElementProps) {
 	}
 
 	try {
-		elementRegistration.schema.parse(config);
+		parseStandardSchema(elementRegistration.schema, config);
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : 'Invalid configuration';
 		return (

@@ -18,6 +18,7 @@ import { FormDropZone } from './form-drop-zone';
 import type { DropZoneFieldConfig, DropZoneFieldProps } from './form-drop-zone.types';
 import { DropZoneFieldSchema } from './form-drop-zone.types';
 import type { InputRegistration } from '@schema-engine/forms/types';
+import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
 
 declare global {
 	namespace FormEngine {
@@ -30,7 +31,7 @@ declare global {
 export const DropZoneElementRegistration: InputRegistration<'drop-zone', DropZoneFieldConfig, DropZoneFieldProps> = {
 	$type: 'drop-zone',
 	render: FormDropZone,
-	schema: DropZoneFieldSchema,
+	schema: asStandardSchema(DropZoneFieldSchema),
 	metadata: {
 		name: 'Drop Zone',
 		description: 'File upload drop-zone with drag-and-drop support and validation rules',

@@ -3,6 +3,7 @@ import type { BuilderActionExecutionContext } from '@/types';
 import { formResetPlugin, FormResetActionSchema, type FormResetAction } from '@/actions/plugins/form-reset.plugin';
 import { GDPRConsent } from '@/tools/gdpr-consent';
 import { createMockBuilderContext, setupTestEnvironment } from '../__tools';
+import { asStandardSchema } from '@/lib/standard-schema';
 
 describe('ResetPlugin', () => {
 	beforeEach(() => {
@@ -84,7 +85,7 @@ describe('ResetPlugin', () => {
 			const plugin = formResetPlugin();
 
 			expect(plugin.$type).toBe('reset');
-			expect(plugin.schema).toBe(FormResetActionSchema);
+			expect(plugin.schema).toBe(asStandardSchema(FormResetActionSchema));
 			expect(plugin.metadata.defaultTriggers).toEqual(['form_submit_success']);
 			expect(plugin.execute).toBeDefined();
 		});

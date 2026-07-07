@@ -2,6 +2,7 @@ import { DefaultStepperComposed } from './default-stepper';
 import type { DefaultStepperConfig } from './default-stepper.types';
 import { DefaultStepperConfigSchema } from './default-stepper.types';
 import type { StepperRegistration } from '@schema-engine/forms/types';
+import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
 
 declare global {
 	namespace FormEngine {
@@ -18,7 +19,7 @@ export const DefaultStepperRegistration: StepperRegistration<
 > = {
 	$type: 'default',
 	render: DefaultStepperComposed,
-	schema: DefaultStepperConfigSchema,
+	schema: asStandardSchema(DefaultStepperConfigSchema),
 	metadata: {
 		name: 'Default Stepper',
 		description: 'Default multi-step form stepper with horizontal and sidebar layouts',

@@ -18,6 +18,7 @@ import { FormPhoneInput } from './form-phone-input';
 import type { PhoneInputFieldConfig, PhoneInputFieldProps } from './form-phone-input.types';
 import { PhoneInputFieldSchema } from './form-phone-input.types';
 import type { InputRegistration } from '@schema-engine/forms/types';
+import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
 
 declare global {
 	namespace FormEngine {
@@ -34,7 +35,7 @@ export const PhoneInputElementRegistration: InputRegistration<
 > = {
 	$type: 'phone-input',
 	render: FormPhoneInput,
-	schema: PhoneInputFieldSchema,
+	schema: asStandardSchema(PhoneInputFieldSchema),
 	metadata: {
 		name: 'Phone Number Input Field',
 		description: 'International phone number input with country selection',
