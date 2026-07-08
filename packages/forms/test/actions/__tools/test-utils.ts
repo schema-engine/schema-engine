@@ -177,6 +177,12 @@ export function createMockFetch(responses: Record<string, any> = {}, shouldFail 
 				ok: false,
 				status: 500,
 				statusText: 'Internal Server Error',
+				headers: {
+					get: (name: string) => {
+						if (name.toLowerCase() === 'content-type') return 'application/json';
+						return null;
+					},
+				},
 				json: () => Promise.resolve({ error: 'Server error' }),
 				text: () => Promise.resolve('Server error'),
 			});

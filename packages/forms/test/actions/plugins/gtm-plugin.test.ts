@@ -102,7 +102,14 @@ describe('GTMPlugin', () => {
 				eventName: 'form_start',
 			};
 
-			expect(() => GTMEventActionSchema.parse(validAction)).not.toThrow();
+			expect(GTMEventActionSchema.parse(validAction)).toEqual({
+				id: 'test-gtm',
+				$type: 'gtm_event',
+				enabled: true,
+				eventName: 'form_start',
+				includeFormData: false,
+				eventData: {},
+			});
 		});
 
 		test('should validate GTM action with all optional fields', () => {
@@ -120,7 +127,7 @@ describe('GTMPlugin', () => {
 				triggers: ['form_submit', 'step_submit'],
 			};
 
-			expect(() => GTMEventActionSchema.parse(fullAction)).not.toThrow();
+			expect(GTMEventActionSchema.parse(fullAction)).toEqual(fullAction);
 		});
 
 		test('should reject empty event name', () => {
@@ -216,10 +223,7 @@ describe('GTMPlugin', () => {
 				triggers: ['form_mount', 'step_change'],
 			};
 
-			expect(() => GTMEventActionSchema.parse(validAction)).not.toThrow();
-		});
-
-		test('should reject invalid trigger values', () => {
+			expect(GTMEventActionSchema.parse(validAction).triggers).toEqual(['form_mount', 'step_change']);
 			const invalidAction = {
 				id: 'test-gtm',
 				$type: 'gtm_event',

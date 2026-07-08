@@ -36,7 +36,12 @@ describe('AutoSavePlugin', () => {
 				enabled: true,
 			};
 
-			expect(() => AutoSaveActionSchema.parse(validAction)).not.toThrow();
+			expect(AutoSaveActionSchema.parse(validAction)).toEqual({
+				id: 'test-autosave',
+				$type: 'auto_save',
+				enabled: true,
+				includeSensitive: false,
+			});
 		});
 
 		test('should validate auto-save action with all optional fields', () => {
@@ -50,7 +55,7 @@ describe('AutoSavePlugin', () => {
 				includeSensitive: true,
 			};
 
-			expect(() => AutoSaveActionSchema.parse(fullAction)).not.toThrow();
+			expect(AutoSaveActionSchema.parse(fullAction)).toEqual(fullAction);
 		});
 
 		test('should reject invalid type', () => {
@@ -101,7 +106,7 @@ describe('AutoSavePlugin', () => {
 			expect(plugin.$type).toBe('auto_save');
 			expect(plugin.schema).toBe(asStandardSchema(AutoSaveActionSchema));
 			expect(plugin.metadata.defaultTriggers).toEqual(['form_change']);
-			expect(plugin.execute).toBeDefined();
+			expect(typeof plugin.execute).toBe('function');
 		});
 	});
 	describe('Action Execution', () => {
@@ -185,7 +190,12 @@ describe('AutoSavePlugin', () => {
 			await plugin.execute(context);
 
 			const savedData = mockStorage.getStoredData('custom_storage_key');
-			expect(savedData).toBeDefined();
+			expect(savedData).toEqual({
+				field1: 'value1',
+				name: 'John',
+				email: 'john@example.com',
+				preferences: { theme: 'dark' },
+			});
 			expect(mockStorage.getStoredData('autosave_test-form')).toBeUndefined();
 		});
 
@@ -214,7 +224,12 @@ describe('AutoSavePlugin', () => {
 			await plugin.execute(context);
 
 			const savedData = mockStorage.getStoredData('generated_test-form_0');
-			expect(savedData).toBeDefined();
+			expect(savedData).toEqual({
+				field1: 'value1',
+				name: 'John',
+				email: 'john@example.com',
+				preferences: { theme: 'dark' },
+			});
 		});
 
 		test('should prefer action storageKey over generator', async () => {
@@ -243,7 +258,12 @@ describe('AutoSavePlugin', () => {
 			await plugin.execute(context);
 
 			const savedData = mockStorage.getStoredData('action_key');
-			expect(savedData).toBeDefined();
+			expect(savedData).toEqual({
+				field1: 'value1',
+				name: 'John',
+				email: 'john@example.com',
+				preferences: { theme: 'dark' },
+			});
 			expect(mockStorage.getStoredData('generated_test-form')).toBeUndefined();
 		});
 
@@ -332,7 +352,12 @@ describe('AutoSavePlugin', () => {
 
 			await plugin.execute(context);
 
-			expect(savedData).toBeDefined();
+			expect(savedData).toEqual({
+				field1: 'value1',
+				name: 'John',
+				email: 'john@example.com',
+				preferences: { theme: 'dark' },
+			});
 			expect(savedContext).not.toBeNull();
 			expect(savedContext).toMatchObject({
 				formId: context.formId,
@@ -497,7 +522,7 @@ describe('AutoSavePlugin', () => {
 			expect(result.success).toBe(true);
 
 			const savedData = mockLocalStorage.getItem('autosave_test-form');
-			expect(savedData).toBeDefined();
+			expect(savedData).not.toBeNull();
 
 			const parsedData = JSON.parse(savedData!);
 			expect(parsedData.field1).toBe('value1');
@@ -508,8 +533,9 @@ describe('AutoSavePlugin', () => {
 		test('should handle localStorage save and load operations', () => {
 			mockLocalStorage.setItem('test-key', JSON.stringify({ test: 'data' }));
 
-			expect(mockLocalStorage.getItem('test-key')).toBeDefined();
-			const saved = JSON.parse(mockLocalStorage.getItem('test-key')!);
+			const raw = mockLocalStorage.getItem('test-key');
+			expect(raw).not.toBeNull();
+			const saved = JSON.parse(raw!);
 			expect(saved.test).toBe('data');
 
 			mockLocalStorage.removeItem('test-key');
