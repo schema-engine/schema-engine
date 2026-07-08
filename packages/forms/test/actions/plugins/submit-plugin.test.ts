@@ -93,7 +93,7 @@ describe('SubmitPlugin', () => {
 			const plugin = formSubmitPlugin();
 
 			expect(plugin.$type).toBe('submit');
-			expect(plugin.execute).toBeDefined();
+			expect(typeof plugin.execute).toBe('function');
 			expect(plugin.schema).toBe(asStandardSchema(FormSubmitActionSchema));
 			expect(plugin.metadata.defaultTriggers).toEqual(['form_submit']);
 		});
@@ -139,7 +139,7 @@ describe('SubmitPlugin', () => {
 			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(false);
-			expect(result.error).toBeDefined();
+			expect(result.error).toBe('Server error');
 		});
 
 		test('should call custom success handler', async () => {
@@ -196,7 +196,7 @@ describe('SubmitPlugin', () => {
 			});
 			await plugin.execute(context);
 
-			expect(errorData).toBeDefined();
+			expect(errorData).toBeInstanceOf(Error);
 			expect(errorContext).not.toBeNull();
 		});
 

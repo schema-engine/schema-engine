@@ -22,7 +22,12 @@ describe('ResetPlugin', () => {
 				enabled: true,
 			};
 
-			expect(() => FormResetActionSchema.parse(validAction)).not.toThrow();
+			expect(FormResetActionSchema.parse(validAction)).toEqual({
+				id: 'test-reset',
+				$type: 'reset',
+				enabled: true,
+				resetToDefaults: true,
+			});
 		});
 
 		test('should validate reset action with all optional fields', () => {
@@ -36,10 +41,15 @@ describe('ResetPlugin', () => {
 				resetToDefaults: false,
 			};
 
-			expect(() => FormResetActionSchema.parse(validAction)).not.toThrow();
-		});
-
-		test('should reject invalid type', () => {
+			expect(FormResetActionSchema.parse(validAction)).toEqual({
+				id: 'test-reset',
+				$type: 'reset',
+				description: 'Reset form to initial state',
+				enabled: true,
+				triggers: ['form_submit_error'],
+				confirmMessage: 'Are you sure you want to reset?',
+				resetToDefaults: false,
+			});
 			const invalidAction = {
 				id: 'test-reset',
 				$type: 'invalid',
@@ -87,7 +97,7 @@ describe('ResetPlugin', () => {
 			expect(plugin.$type).toBe('reset');
 			expect(plugin.schema).toBe(asStandardSchema(FormResetActionSchema));
 			expect(plugin.metadata.defaultTriggers).toEqual(['form_submit_success']);
-			expect(plugin.execute).toBeDefined();
+			expect(typeof plugin.execute).toBe('function');
 		});
 	});
 

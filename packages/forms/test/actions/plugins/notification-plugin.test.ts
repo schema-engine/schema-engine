@@ -112,7 +112,7 @@ describe('NotificationPlugin', () => {
 			const plugin = notificationPlugin();
 
 			expect(plugin.$type).toBe('show_notification');
-			expect(plugin.execute).toBeDefined();
+			expect(typeof plugin.execute).toBe('function');
 			expect(plugin.schema).toBe(asStandardSchema(NotificationActionSchema));
 			expect(plugin.metadata.defaultTriggers).toEqual(['form_submit_success', 'form_submit_error']);
 		});
