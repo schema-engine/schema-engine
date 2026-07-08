@@ -388,7 +388,6 @@ describe('FormComposer', () => {
 			const builder = new FormComposer();
 			const engine = builder.build();
 
-			expect(engine).toBeDefined();
 			expect(typeof engine.getElement).toBe('function');
 			expect(typeof engine.getAllElements).toBe('function');
 		});
@@ -397,10 +396,10 @@ describe('FormComposer', () => {
 			const builder = new FormComposer();
 			const engine = builder.build();
 
-			expect(engine.getAllElements()).toHaveLength(0);
-			expect(engine.getAllLayouts()).toHaveLength(0);
-			expect(engine.getAllSteppers()).toHaveLength(0);
-			expect(engine.getAllActions()).toHaveLength(0);
+			expect(engine.getAllElements()).toEqual([]);
+			expect(engine.getAllLayouts()).toEqual([]);
+			expect(engine.getAllSteppers()).toEqual([]);
+			expect(engine.getAllActions()).toEqual([]);
 		});
 
 		test('should preserve all registrations after build', () => {
@@ -415,7 +414,6 @@ describe('FormComposer', () => {
 			const engine = builder.build();
 
 			const retrieved = engine.getElement('text');
-			expect(retrieved).toBeDefined();
 			expect(retrieved?.$type).toBe('text');
 			expect(retrieved?.metadata.name).toBe('Text');
 		});
@@ -558,14 +556,14 @@ describe('FormComposer', () => {
 			const originalEngine = originalBuilder.build();
 			const clonedEngine = clonedBuilder.build();
 
-			expect(originalEngine.getAllElements()).toHaveLength(1);
-			expect(clonedEngine.getAllElements()).toHaveLength(1);
-			expect(originalEngine.getAllLayouts()).toHaveLength(1);
-			expect(clonedEngine.getAllLayouts()).toHaveLength(1);
-			expect(originalEngine.getAllSteppers()).toHaveLength(1);
-			expect(clonedEngine.getAllSteppers()).toHaveLength(1);
-			expect(originalEngine.getAllActions()).toHaveLength(1);
-			expect(clonedEngine.getAllActions()).toHaveLength(1);
+			expect(originalEngine.getElementIds()).toEqual(['text']);
+			expect(clonedEngine.getElementIds()).toEqual(['text']);
+			expect(originalEngine.getLayoutIds()).toEqual(['card']);
+			expect(clonedEngine.getLayoutIds()).toEqual(['card']);
+			expect(originalEngine.getStepperIds()).toEqual(['wizard']);
+			expect(clonedEngine.getStepperIds()).toEqual(['wizard']);
+			expect(originalEngine.getActionTypes()).toEqual(['submit']);
+			expect(clonedEngine.getActionTypes()).toEqual(['submit']);
 		});
 
 		test('should create independent registries that do not affect original', () => {
@@ -590,13 +588,12 @@ describe('FormComposer', () => {
 			const originalEngine = originalBuilder.build();
 			const clonedEngine = clonedBuilder.build();
 
-			expect(originalEngine.getAllElements()).toHaveLength(1);
-			expect(originalEngine.getElement('text')).toBeDefined();
+			expect(originalEngine.getElementIds()).toEqual(['text']);
 			expect(originalEngine.getElement('email')).toBeUndefined();
 
-			expect(clonedEngine.getAllElements()).toHaveLength(2);
-			expect(clonedEngine.getElement('text')).toBeDefined();
-			expect(clonedEngine.getElement('email')).toBeDefined();
+			expect(clonedEngine.getElementIds().sort()).toEqual(['email', 'text']);
+			expect(clonedEngine.getElement('text')?.$type).toBe('text');
+			expect(clonedEngine.getElement('email')?.$type).toBe('email');
 		});
 
 		test('should allow composition pattern with clone', () => {
@@ -637,14 +634,12 @@ describe('FormComposer', () => {
 			const engineWithSubmit = formBuilderWithSubmit.build();
 			const engineWithLog = formBuilderWithLog.build();
 
-			expect(engineWithSubmit.getAllElements()).toHaveLength(2);
-			expect(engineWithSubmit.getAllActions()).toHaveLength(1);
-			expect(engineWithSubmit.getAction('submit')).toBeDefined();
+			expect(engineWithSubmit.getElementIds().sort()).toEqual(['number', 'text']);
+			expect(engineWithSubmit.getActionTypes()).toEqual(['submit']);
 			expect(engineWithSubmit.getAction('log')).toBeUndefined();
 
-			expect(engineWithLog.getAllElements()).toHaveLength(2);
-			expect(engineWithLog.getAllActions()).toHaveLength(1);
-			expect(engineWithLog.getAction('log')).toBeDefined();
+			expect(engineWithLog.getElementIds().sort()).toEqual(['number', 'text']);
+			expect(engineWithLog.getActionTypes()).toEqual(['log']);
 			expect(engineWithLog.getAction('submit')).toBeUndefined();
 		});
 
@@ -655,14 +650,14 @@ describe('FormComposer', () => {
 			const originalEngine = originalBuilder.build();
 			const clonedEngine = clonedBuilder.build();
 
-			expect(originalEngine.getAllElements()).toHaveLength(0);
-			expect(clonedEngine.getAllElements()).toHaveLength(0);
-			expect(originalEngine.getAllLayouts()).toHaveLength(0);
-			expect(clonedEngine.getAllLayouts()).toHaveLength(0);
-			expect(originalEngine.getAllSteppers()).toHaveLength(0);
-			expect(clonedEngine.getAllSteppers()).toHaveLength(0);
-			expect(originalEngine.getAllActions()).toHaveLength(0);
-			expect(clonedEngine.getAllActions()).toHaveLength(0);
+			expect(originalEngine.getAllElements()).toEqual([]);
+			expect(clonedEngine.getAllElements()).toEqual([]);
+			expect(originalEngine.getAllLayouts()).toEqual([]);
+			expect(clonedEngine.getAllLayouts()).toEqual([]);
+			expect(originalEngine.getAllSteppers()).toEqual([]);
+			expect(clonedEngine.getAllSteppers()).toEqual([]);
+			expect(originalEngine.getAllActions()).toEqual([]);
+			expect(clonedEngine.getAllActions()).toEqual([]);
 		});
 	});
 });

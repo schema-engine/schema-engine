@@ -25,7 +25,6 @@ describe('FormEngine', () => {
 			const engine = new FormComposer().addElement(textInput).build();
 
 			const element = engine.getElement('text');
-			expect(element).toBeDefined();
 			expect(element?.$type).toBe('text');
 			expect(element?.metadata.name).toBe('Text Input');
 		});
@@ -53,10 +52,7 @@ describe('FormEngine', () => {
 
 			const engine = new FormComposer().addElements([textInput, emailInput]).build();
 
-			const elements = engine.getAllElements();
-			expect(elements).toHaveLength(2);
-			expect(elements[0].$type).toBe('text');
-			expect(elements[1].$type).toBe('email');
+			expect(engine.getAllElements().map((element) => element.$type).sort()).toEqual(['email', 'text']);
 		});
 
 		test('should get all element IDs', () => {
@@ -77,9 +73,7 @@ describe('FormEngine', () => {
 			const engine = new FormComposer().addElements([textInput, emailInput]).build();
 
 			const ids = engine.getElementIds();
-			expect(ids).toHaveLength(2);
-			expect(ids).toContain('text');
-			expect(ids).toContain('email');
+			expect(ids.sort()).toEqual(['email', 'text']);
 		});
 
 		test('should check if element exists', () => {
@@ -109,7 +103,6 @@ describe('FormEngine', () => {
 			const engine = new FormComposer().addLayout(cardLayout).build();
 
 			const layout = engine.getLayout('card');
-			expect(layout).toBeDefined();
 			expect(layout?.$type).toBe('card');
 			expect(layout?.metadata.name).toBe('Card Layout');
 		});
@@ -137,8 +130,7 @@ describe('FormEngine', () => {
 
 			const engine = new FormComposer().addLayouts([cardLayout, gridLayout]).build();
 
-			const layouts = engine.getAllLayouts();
-			expect(layouts).toHaveLength(2);
+			expect(engine.getLayoutIds()).toEqual(['card', 'grid']);
 		});
 
 		test('should get all layout IDs', () => {
@@ -152,8 +144,7 @@ describe('FormEngine', () => {
 			const engine = new FormComposer().addLayout(cardLayout).build();
 
 			const ids = engine.getLayoutIds();
-			expect(ids).toHaveLength(1);
-			expect(ids).toContain('card');
+			expect(ids).toEqual(['card']);
 		});
 
 		test('should check if layout exists', () => {
@@ -183,7 +174,6 @@ describe('FormEngine', () => {
 			const engine = new FormComposer().addStepper(wizardStepper).build();
 
 			const stepper = engine.getStepper('wizard');
-			expect(stepper).toBeDefined();
 			expect(stepper?.$type).toBe('wizard');
 		});
 
@@ -214,7 +204,6 @@ describe('FormEngine', () => {
 			const engine = new FormComposer().addAction(submitAction).build();
 
 			const action = engine.getAction('submit');
-			expect(action).toBeDefined();
 			expect(action?.$type).toBe('submit');
 		});
 
@@ -250,9 +239,7 @@ describe('FormEngine', () => {
 			const engine = new FormComposer().addActions([submitAction, resetAction]).build();
 
 			const types = engine.getActionTypes();
-			expect(types).toHaveLength(2);
-			expect(types).toContain('submit');
-			expect(types).toContain('reset');
+			expect(types.sort()).toEqual(['reset', 'submit']);
 		});
 	});
 
@@ -346,7 +333,7 @@ describe('FormEngine', () => {
 
 			// Original engine should not have the new element
 			expect(engine.hasElement('email')).toBe(false);
-			expect(engine.getAllElements()).toHaveLength(1);
+			expect(engine.getElementIds()).toEqual(['text']);
 		});
 	});
 
@@ -386,7 +373,6 @@ describe('FormEngine', () => {
 			const engine = new FormComposer().addElement(textInput).build();
 
 			const retrieved = engine.getElement('text');
-			expect(retrieved).toBeDefined();
 			expect(retrieved?.metadata.version).toBe('1.0.0');
 			expect(retrieved?.metadata.tags).toContain('input');
 
@@ -422,10 +408,9 @@ describe('FormEngine', () => {
 			const builder = originalEngine.toComposer();
 			const rebuiltEngine = builder.build();
 
-			expect(rebuiltEngine.getAllElements()).toHaveLength(1);
-			expect(rebuiltEngine.getElement('text')).toBeDefined();
-			expect(rebuiltEngine.getAllLayouts()).toHaveLength(1);
-			expect(rebuiltEngine.getLayout('card')).toBeDefined();
+			expect(rebuiltEngine.getElementIds()).toEqual(['text']);
+			expect(rebuiltEngine.getLayoutIds()).toEqual(['card']);
+			expect(rebuiltEngine.getLayout('card')?.$type).toBe('card');
 		});
 
 		test('should allow extending engine through toComposer', () => {
@@ -447,13 +432,12 @@ describe('FormEngine', () => {
 
 			const extendedEngine = originalEngine.toComposer().addElement(emailInput).build();
 
-			expect(originalEngine.getAllElements()).toHaveLength(1);
-			expect(originalEngine.getElement('text')).toBeDefined();
+			expect(originalEngine.getElementIds()).toEqual(['text']);
 			expect(originalEngine.getElement('email')).toBeUndefined();
 
-			expect(extendedEngine.getAllElements()).toHaveLength(2);
-			expect(extendedEngine.getElement('text')).toBeDefined();
-			expect(extendedEngine.getElement('email')).toBeDefined();
+			expect(extendedEngine.getElementIds().sort()).toEqual(['email', 'text']);
+			expect(extendedEngine.getElement('text')?.$type).toBe('text');
+			expect(extendedEngine.getElement('email')?.$type).toBe('email');
 		});
 
 		test('should preserve all registry types when converting to builder', () => {
@@ -533,13 +517,12 @@ describe('FormEngine', () => {
 
 			const modifiedEngine = baseEngine.toComposer().addAction(logAction).build();
 
-			expect(baseEngine.getAllActions()).toHaveLength(1);
-			expect(baseEngine.getAction('submit')).toBeDefined();
+			expect(baseEngine.getActionTypes()).toEqual(['submit']);
 			expect(baseEngine.getAction('log')).toBeUndefined();
 
-			expect(modifiedEngine.getAllActions()).toHaveLength(2);
-			expect(modifiedEngine.getAction('submit')).toBeDefined();
-			expect(modifiedEngine.getAction('log')).toBeDefined();
+			expect(modifiedEngine.getActionTypes().sort()).toEqual(['log', 'submit']);
+			expect(modifiedEngine.getAction('submit')?.$type).toBe('submit');
+			expect(modifiedEngine.getAction('log')?.$type).toBe('log');
 		});
 
 		test('should work with empty engine', () => {
@@ -547,10 +530,10 @@ describe('FormEngine', () => {
 			const builder = emptyEngine.toComposer();
 			const rebuiltEngine = builder.build();
 
-			expect(rebuiltEngine.getAllElements()).toHaveLength(0);
-			expect(rebuiltEngine.getAllLayouts()).toHaveLength(0);
-			expect(rebuiltEngine.getAllSteppers()).toHaveLength(0);
-			expect(rebuiltEngine.getAllActions()).toHaveLength(0);
+			expect(rebuiltEngine.getAllElements()).toEqual([]);
+			expect(rebuiltEngine.getAllLayouts()).toEqual([]);
+			expect(rebuiltEngine.getAllSteppers()).toEqual([]);
+			expect(rebuiltEngine.getAllActions()).toEqual([]);
 		});
 
 		test('should allow chaining toComposer multiple times', () => {
@@ -581,13 +564,9 @@ describe('FormEngine', () => {
 
 			const engine3 = engine2.toComposer().addElement(numberInput).build();
 
-			expect(engine1.getAllElements()).toHaveLength(1);
-			expect(engine2.getAllElements()).toHaveLength(2);
-			expect(engine3.getAllElements()).toHaveLength(3);
-
-			expect(engine3.getElement('text')).toBeDefined();
-			expect(engine3.getElement('email')).toBeDefined();
-			expect(engine3.getElement('number')).toBeDefined();
+			expect(engine1.getElementIds()).toEqual(['text']);
+			expect(engine2.getElementIds().sort()).toEqual(['email', 'text']);
+			expect(engine3.getElementIds().sort()).toEqual(['email', 'number', 'text']);
 		});
 	});
 });
