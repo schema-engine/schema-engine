@@ -3,6 +3,8 @@ import { fileURLToPath } from 'node:url';
 import { ApiField } from '@/components/api-field/api-field';
 import { Banner, BannerTitle } from '@/components/banner/banner';
 import { CodeTabs } from '@/components/code-tabs';
+import { ExampleFormPreview } from '@/components/example-form-preview';
+import { StaticContactForm } from '@/components/static-contact-form';
 import { BaseLayout } from '@/layouts/base-layout';
 import { DocsBar } from '@/docs-kit/components/docs-bar';
 import { defineDocsKit } from '@/docs-kit/config';
@@ -26,8 +28,21 @@ defineDocsKit({
 		BannerTitle,
 		ApiField,
 		CodeTabs,
+		StaticContactForm,
+		ExampleFormPreview,
 	},
 	shellLayout: BaseLayout,
-	layoutComponents: [BaseLayout, ApiField, Banner, CodeTabs, DocsBar, DocsSidebar, DocsToc, DocsPagination],
+	layoutComponents: [
+		BaseLayout,
+		ApiField,
+		Banner,
+		CodeTabs,
+		DocsBar,
+		DocsSidebar,
+		DocsToc,
+		DocsPagination,
+		StaticContactForm,
+		ExampleFormPreview,
+	],
 	strictImageImports: process.env.NODE_ENV !== 'production',
 });

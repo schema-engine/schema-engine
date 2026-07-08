@@ -136,28 +136,3 @@
 .home-demo-section__grid {
 	@apply col-span-full grid gap-6 lg:grid-cols-2;
 }
-
-/* Live form placeholder (inside CodeWindow tab body) */
-.home-demo__placeholder {
-	@apply flex flex-col items-center justify-center text-center gap-3 p-8 min-h-[280px] border border-dashed border-border rounded-md bg-background-accent/30;
-}
-
-.home-demo__placeholder-title {
-	@apply font-heading text-lg font-semibold text-on-background m-0;
-}
-
-.home-demo__placeholder-text {
-	@apply text-sm text-on-background/70 leading-relaxed max-w-md m-0;
-}
-
-.home-demo__placeholder-text code {
-	@apply font-mono text-[0.875em] bg-muted text-on-background-accent px-1.5 py-0.5 rounded-md border border-border/30;
-}
-
-.home-demo__placeholder-text a {
-	@apply text-link font-medium underline underline-offset-4 decoration-link/30 hover:decoration-link;
-}
-
-.home-demo__placeholder-cta {
-	@apply mt-2;
-}

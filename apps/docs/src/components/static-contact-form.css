@@ -1,0 +1,38 @@
+/* Static contact form preview */
+.static-contact-form {
+	@apply flex flex-col gap-4 p-5;
+}
+
+.static-contact-form__row {
+	@apply flex flex-col gap-1.5;
+}
+
+.static-contact-form__label {
+	@apply block text-sm font-medium text-on-background;
+}
+
+.static-contact-form__input,
+.static-contact-form__textarea {
+	@apply w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-on-background;
+	@apply placeholder:text-on-background/40;
+	@apply focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.static-contact-form__textarea {
+	@apply resize-y;
+}
+
+.static-contact-form__footer {
+	@apply flex items-center justify-between gap-3;
+}
+
+.static-contact-form__hint {
+	@apply text-xs text-on-background/60 m-0;
+}
+
+.static-contact-form__submit {
+	@apply inline-flex items-center justify-center rounded-sm bg-primary text-on-primary px-4 py-2 text-sm font-semibold cursor-pointer transition-colors;
+	@apply hover:bg-primary/90;
+	@apply focus:outline-none focus:ring-2 focus:ring-primary/40;
+}
