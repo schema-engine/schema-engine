@@ -19,8 +19,6 @@ The Builder Pattern offers several key advantages:
 The `FormComposer` class is your entry point for configuring the form engine. It provides a fluent API for registering components:
 
 ```typescript
-import { createReactFormComposer } from '@schema-engine/forms-react/registries/builder-registry';
-
 const formEngine = createReactFormComposer().addElement(/* ... */).addLayout(/* ... */).addStepper(/* ... */).build();
 ```
 
@@ -36,9 +34,6 @@ Each component (element, layout, or stepper) is defined as a **registration obje
 Example element registration:
 
 ```typescript
-import type { ReactElementRegistration } from '@schema-engine/forms-react';
-import { z } from 'zod';
-
 export const CustomInputElement: ReactElementRegistration = {
 	id: 'custom-input',
 	component: CustomInput,
@@ -65,9 +60,6 @@ Since React uses a `component` property but the core engine expects a `render` f
 - ``: Convert React stepper to core format
 
 ```typescript
-import { createReactFormComposer } from '@schema-engine/forms-react/registries/builder-registry';
-import { CustomInputElement } from './custom-input';
-
 const formEngine = createReactFormComposer().addElement(CustomInputElement).build();
 ```
 
@@ -79,15 +71,6 @@ Create a central form engine instance for your application:
 
 ```typescript
 // lib/form-engine.ts
-import { createReactFormComposer } from '@schema-engine/forms-react/registries/builder-registry';
-import {
-	InputElement,
-	TextareaElement,
-	SelectElement,
-	CardLayoutRegistration,
-	DefaultStepperRegistration,
-} from '@schema-engine/forms-react/registrations';
-
 export const formEngine = createReactFormComposer()
 	.addElement(InputElement)
 	.addElement(TextareaElement)
@@ -102,10 +85,6 @@ export const formEngine = createReactFormComposer()
 Import and use the form engine in your components:
 
 ```typescript
-import { FormRenderer } from '@schema-engine/forms-react';
-import { formEngine } from './lib/form-engine';
-import type { FormConfig } from '@schema-engine/forms/schemas';
-
 function MyForm() {
   const formConfig: FormConfig = {
     id: 'my-form',
@@ -167,9 +146,6 @@ Step indicators for multi-step forms:
 
 ```typescript
 // components/custom-rating.tsx
-import type { ReactElementRegistration } from '@schema-engine/forms-react';
-import { z } from 'zod';
-
 const RatingConfigSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -216,8 +192,6 @@ export const RatingElement: ReactElementRegistration = {
 ### 2. Register Your Component
 
 ```typescript
-import { RatingElement } from './components/custom-rating';
-
 const formEngine = createReactFormComposer()
 	.addElement(RatingElement)
 	// ... other components
@@ -358,16 +332,12 @@ If you're migrating from the old registry pattern:
 **Old Pattern**:
 
 ```typescript
-import '@schema-engine/forms-react/registrations';
 // Components auto-registered via side effects
 ```
 
 **New Pattern**:
 
 ```typescript
-import { createReactFormComposer } from '@schema-engine/forms-react/registries/builder-registry';
-import { InputElement } from '@schema-engine/forms-react/registrations';
-
 export const formEngine = createReactFormComposer().addElement(InputElement).build();
 ```
 

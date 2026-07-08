@@ -7,10 +7,6 @@ Learn how to build your own registry by extending the base classes.
 Here's how to create a simple plugin registry:
 
 ```typescript
-import { z } from 'zod';
-import { BaseRegistry } from '@schema-engine/registry';
-import type { BaseRegistration, ComponentMetadata } from '@schema-engine/registry';
-
 interface PluginRegistration extends BaseRegistration {
 	$type: string;
 	schema: z.ZodType<unknown>;
@@ -51,11 +47,6 @@ This pattern works well for non-visual plugins where registrations expose behavi
 For visual components that need a render method:
 
 ```typescript
-import React from 'react';
-import { z } from 'zod';
-import { ComponentRegistry } from '@schema-engine/registry';
-import type { ComponentRegistration, ComponentMetadata } from '@schema-engine/registry';
-
 interface WidgetRegistration extends ComponentRegistration<string, unknown, { id: string }> {
 	$type: string;
 	schema: z.ZodType<unknown>;

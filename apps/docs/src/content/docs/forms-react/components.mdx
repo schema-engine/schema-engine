@@ -7,18 +7,6 @@ The package provides pre-built form elements with validation and styling via Sha
 Import from `@schema-engine/forms-react/registrations`:
 
 ```typescript
-import {
-	InputElementRegistration,
-	TextareaElementRegistration,
-	CheckboxElementRegistration,
-	RadioElementRegistration,
-	SelectElementRegistration,
-	SwitchElementRegistration,
-	NumberElementRegistration,
-	ArrayElementRegistration,
-	FieldSetRegistration,
-	SubmitButtonElementRegistration,
-} from '@schema-engine/forms-react/registrations';
 ```
 
 | Element | Description |
@@ -39,13 +27,6 @@ import {
 Import only what you need for tree-shaking:
 
 ```typescript
-import { createReactFormComposer } from '@schema-engine/forms-react';
-import {
-	InputElementRegistration,
-	CheckboxElementRegistration,
-	SelectElementRegistration,
-} from '@schema-engine/forms-react/registrations';
-
 const engine = createReactFormComposer()
 	.addElement(InputElementRegistration)
 	.addElement(CheckboxElementRegistration)
@@ -128,8 +109,6 @@ Elements support responsive grid layouts:
 Use `useControlledFormElement` to integrate with the form:
 
 ```tsx
-import { useControlledFormElement } from '@schema-engine/forms-react';
-
 export function CustomDatePicker(config: FormEngine.ElementConfig) {
 	const {
 		value,
@@ -160,9 +139,6 @@ export function CustomDatePicker(config: FormEngine.ElementConfig) {
 ### Step 2: Create Schema
 
 ```typescript
-import { z } from 'zod';
-import { BaseElementConfigSchema } from '@schema-engine/forms/schemas';
-
 export const CustomDatePickerConfigSchema = BaseElementConfigSchema.extend({
 	$type: z.literal('custom-date-picker'),
 	minDate: z.string().optional(),
@@ -173,8 +149,6 @@ export const CustomDatePickerConfigSchema = BaseElementConfigSchema.extend({
 ### Step 3: Create Registration
 
 ```typescript
-import type { ElementRegistration } from '@schema-engine/forms';
-
 export const CustomDatePickerRegistration: ElementRegistration = {
 	$type: 'custom-date-picker',
 	schema: CustomDatePickerConfigSchema,

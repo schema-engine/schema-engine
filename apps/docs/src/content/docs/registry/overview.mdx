@@ -5,9 +5,6 @@ Base registry system for managing named resources in an extensible architecture.
 ## Quick Look
 
 ```typescript
-import { BaseRegistry, type BaseRegistration } from '@schema-engine/registry';
-import { z } from 'zod';
-
 interface Feature extends BaseRegistration {
   $type: string;
   execute: () => void;

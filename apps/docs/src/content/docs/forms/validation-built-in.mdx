@@ -1,7 +1,3 @@
-import { LivePreview, CodePreview } from '@/components/code-preview';
-
-
-
 # Built-in Validations
 
 Form Engine comes with a comprehensive set of built-in validation types that cover most common use cases. Each validation type is implemented as a Zod schema transformation and can be used directly in your form configurations.
@@ -538,11 +534,7 @@ For server-side validation that requires network requests, with built-in caching
 
 See async validation in action:
 
-<LivePreview>
-import { AsyncValidationDemo } from '@/components/demo/async-validation-demo';
-
-<AsyncValidationDemo />
-</LivePreview>
+{/* Live preview: see the running app */}
 
 The demo above shows:
 
@@ -602,8 +594,6 @@ When using `dependencies`, the system automatically creates a `dependsOn` object
 For programmatic usage, you can use the validation presets for better developer experience:
 
 ```typescript
-import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
-
 // String presets
 const nameRules = [
 	ValidationPresets.string.required('Name is required'),

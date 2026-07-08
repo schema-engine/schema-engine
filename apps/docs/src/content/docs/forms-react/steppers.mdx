@@ -7,11 +7,6 @@ Steppers control navigation in multi-step forms, providing progress indication a
 Import from `@schema-engine/forms-react/registrations`:
 
 ```typescript
-import {
-	DefaultStepperRegistration,
-	MinimalistStepperRegistration,
-	DebuggerStepperRegistration,
-} from '@schema-engine/forms-react/registrations';
 ```
 
 | Stepper | Description |
@@ -49,8 +44,6 @@ Custom steppers use compound components with a local context pattern.
 ```tsx
 // my-stepper/context.ts
 import { createContext, useContext } from 'react';
-import { useStepperContext as useGlobalStepperContext } from '@schema-engine/forms-react';
-
 interface MyStepperContextValue {
 	steps: StepData[];
 	currentStepIndex: number;
@@ -84,8 +77,6 @@ export function useMyStepperContext() {
 
 ```tsx
 // my-stepper/components.tsx
-import { useMyStepperContext } from './context';
-
 function StepIndicator() {
 	const { steps, currentStepIndex } = useMyStepperContext();
 
@@ -130,9 +121,6 @@ function NavigationButtons() {
 
 ```tsx
 // my-stepper/index.tsx
-import { MyStepperProvider } from './context';
-import { StepIndicator, NavigationButtons } from './components';
-
 interface MyStepperConfig {
 	$type: 'my-stepper';
 	showNumbers?: boolean;
@@ -153,9 +141,6 @@ export function MyStepper({ config }: { config: MyStepperConfig }) {
 ### Step 4: Create Registration
 
 ```typescript
-import { z } from 'zod';
-import type { StepperRegistration } from '@schema-engine/forms';
-
 const MyStepperConfigSchema = z.object({
 	$type: z.literal('my-stepper'),
 	showNumbers: z.boolean().optional().default(true),

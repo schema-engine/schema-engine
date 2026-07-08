@@ -7,11 +7,6 @@ Layouts wrap form content and provide visual structure and styling for form step
 Import from `@schema-engine/forms-react/registrations`:
 
 ```typescript
-import {
-	CardLayoutRegistration,
-	SplitScreenLayoutRegistration,
-	HeroBackgroundLayoutRegistration,
-} from '@schema-engine/forms-react/registrations';
 ```
 
 | Layout | Description |
@@ -98,8 +93,6 @@ Custom layouts use the exported `useLayoutContext` hook to access form and step 
 
 ```tsx
 // my-layout.tsx
-import { useLayoutContext } from '@schema-engine/forms-react';
-
 interface MyLayoutConfig {
 	$type: 'my-layout';
 	headerColor?: string;
@@ -127,9 +120,6 @@ export function MyLayout({ children }: { children: React.ReactNode }) {
 ### Step 2: Create Schema and Registration
 
 ```typescript
-import { z } from 'zod';
-import type { LayoutRegistration } from '@schema-engine/forms';
-
 const MyLayoutConfigSchema = z.object({
 	$type: z.literal('my-layout'),
 	headerColor: z.string().optional(),

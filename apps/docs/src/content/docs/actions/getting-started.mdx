@@ -16,8 +16,6 @@ interface BaseContext {
 ## 2. Define the Action Config
 
 ```typescript
-import type { ActionConfigBase } from '@schema-engine/actions';
-
 interface LogActionConfig extends ActionConfigBase<'log'> {
 	message: string;
 }
@@ -28,9 +26,6 @@ interface LogActionConfig extends ActionConfigBase<'log'> {
 The `execute` handler receives an `ActionRuntimeContext`: your `BaseContext` enriched with `config` and `trigger`. You do not need to define that merged type manually — it is inferred from the generics.
 
 ```typescript
-import { z } from 'zod';
-import type { ActionRegistration } from '@schema-engine/actions';
-
 const logAction: ActionRegistration<LogActionConfig, BaseContext, MyTrigger> = {
 	$type: 'log',
 	schema: z.object({
@@ -55,8 +50,6 @@ const logAction: ActionRegistration<LogActionConfig, BaseContext, MyTrigger> = {
 ## 4. Register and Execute
 
 ```typescript
-import { ActionExecutor, ActionRegistry } from '@schema-engine/actions';
-
 const registry = new ActionRegistry<BaseContext, MyTrigger>();
 registry.register(logAction);
 

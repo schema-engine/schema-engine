@@ -7,8 +7,6 @@ The package provides hooks for accessing form state and building custom componen
 Access the form engine context:
 
 ```tsx
-import { useFormEngine } from '@schema-engine/forms-react';
-
 function MyComponent() {
 	const { engine } = useFormEngine();
 
@@ -24,8 +22,6 @@ function MyComponent() {
 Access the React Hook Form instance directly:
 
 ```tsx
-import { useFormInstance } from '@schema-engine/forms-react';
-
 function MyComponent() {
 	const form = useFormInstance();
 
@@ -42,8 +38,6 @@ function MyComponent() {
 Access form actions and step navigation:
 
 ```tsx
-import { useFormInstanceActions } from '@schema-engine/forms-react';
-
 function StepNavigation() {
 	const {
 		currentStep,
@@ -108,8 +102,6 @@ interface FormInstanceContextValue {
 Build custom field components with full form integration:
 
 ```tsx
-import { useControlledFormElement } from '@schema-engine/forms-react';
-
 function CustomInput(config: FormEngine.ElementConfig) {
 	const {
 		field,
@@ -169,8 +161,6 @@ interface UseControlledFormElementReturn {
 Use the adapter-aware field hook when you want the same field ergonomics without depending directly on React Hook Form internals:
 
 ```tsx
-import { useAdapterControlledFormElement } from '@schema-engine/forms-react';
-
 function CustomField(config: FormEngine.ElementConfig) {
 	const { value, error, onChange, onBlur, fieldProps, labelProps } = useAdapterControlledFormElement(config);
 
@@ -196,8 +186,6 @@ This is the adapter-safe alternative to `useControlledFormElement()`.
 Dispatch form lifecycle actions from inside a rendered form:
 
 ```tsx
-import { useFormInstanceActions } from '@schema-engine/forms-react';
-
 function MyComponent() {
 	const { dispatchTrigger } = useFormInstanceActions();
 
@@ -217,8 +205,6 @@ This is the supported manual dispatch path inside rendered forms because the pro
 Read submission lifecycle state that the provider keeps in sync with action execution:
 
 ```tsx
-import { useSubmissionState } from '@schema-engine/forms-react';
-
 function SubmissionFeedback() {
 	const { submissionState, clearSubmission } = useSubmissionState();
 
@@ -249,8 +235,6 @@ function SubmissionFeedback() {
 Evaluate constraint logic for conditional visibility/disabled/required states:
 
 ```tsx
-import { useConstraintLogic } from '@schema-engine/forms-react';
-
 function ConditionalField({ constraints, baseRequired, fieldPath }) {
 	const result = useConstraintLogic(constraints, baseRequired, fieldPath);
 
@@ -282,8 +266,6 @@ interface ConstraintEvaluationResult {
 ### useDebounce
 
 ```tsx
-import { useDebounce } from '@schema-engine/forms-react';
-
 const debouncedSearch = useDebounce((term: string) => {
 	void fetch(`/api/search?q=${encodeURIComponent(term)}`);
 }, 250);
@@ -292,8 +274,6 @@ const debouncedSearch = useDebounce((term: string) => {
 ### useDebouncedValue
 
 ```tsx
-import { useDebouncedValue } from '@schema-engine/forms-react';
-
 const debouncedQuery = useDebouncedValue(query, 250);
 ```
 
@@ -302,24 +282,18 @@ const debouncedQuery = useDebouncedValue(query, 250);
 ### useBreakpoint
 
 ```tsx
-import { useBreakpoint } from '@schema-engine/forms-react';
-
 const breakpoint = useBreakpoint();
 ```
 
 ### useFormGridStyles
 
 ```tsx
-import { useFormGridStyles } from '@schema-engine/forms-react';
-
 const styles = useFormGridStyles(config.grid);
 ```
 
 ### useFieldGridStyles
 
 ```tsx
-import { useFieldGridStyles } from '@schema-engine/forms-react';
-
 const styles = useFieldGridStyles(config.grid);
 ```
 
@@ -330,8 +304,6 @@ These hooks resolve responsive grid settings against the current breakpoint and 
 ### useLayoutContext
 
 ```tsx
-import { useLayoutContext } from '@schema-engine/forms-react';
-
 function CardLayout() {
 	const { step, form, config } = useLayoutContext<{ accent?: string }>();
 
@@ -342,8 +314,6 @@ function CardLayout() {
 ### useStepperContext
 
 ```tsx
-import { useStepperContext } from '@schema-engine/forms-react';
-
 function CustomStepper() {
 	const { steps, currentStepIndex, navigation } = useStepperContext();
 
@@ -366,8 +336,6 @@ function CustomStepper() {
 Manage GDPR consent state:
 
 ```tsx
-import { useGDPRConsent } from '@schema-engine/forms-react';
-
 function ConsentStatus() {
 	const consent = useGDPRConsent();
 
@@ -398,8 +366,6 @@ function ConsentStatus() {
 Integrate with Google Tag Manager:
 
 ```tsx
-import { useGTMTracker } from '@schema-engine/forms-react';
-
 function MyForm() {
 	const gtm = useGTMTracker();
 

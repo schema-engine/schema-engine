@@ -122,10 +122,6 @@ Reset form to initial state:
 Use `defineAction` from `@schema-engine/actions` and specialize it with the forms runtime types:
 
 ```typescript
-import { z } from 'zod';
-import { defineAction } from '@schema-engine/actions';
-import type { BuilderActionBaseContext, BuilderActionTrigger } from '@schema-engine/forms';
-
 const defineFormAction = defineAction<BuilderActionBaseContext, BuilderActionTrigger>();
 
 const trackAction = defineFormAction({

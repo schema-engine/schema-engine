@@ -7,14 +7,6 @@ This guide walks you through building your first React form.
 Import component registrations and build your engine:
 
 ```typescript
-import { createReactFormComposer } from '@schema-engine/forms-react';
-import {
-	InputElementRegistration,
-	TextareaElementRegistration,
-	CardLayoutRegistration,
-	DefaultStepperRegistration,
-} from '@schema-engine/forms-react/registrations';
-
 const formEngine = createReactFormComposer()
 	.addElement(InputElementRegistration)
 	.addElement(TextareaElementRegistration)
@@ -28,8 +20,6 @@ const formEngine = createReactFormComposer()
 Create a JSON configuration:
 
 ```typescript
-import type { FormConfig } from '@schema-engine/forms';
-
 const formConfig: FormConfig = {
 	id: 'contact-form',
 	title: 'Contact Us',
@@ -81,9 +71,6 @@ const formConfig: FormConfig = {
 ## 3. Render the Form
 
 ```tsx
-import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
-import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
-
 function ContactForm() {
 	const handleSubmit = (data) => {
 		console.log('Form submitted:', data);

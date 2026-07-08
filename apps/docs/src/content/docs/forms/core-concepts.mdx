@@ -7,10 +7,6 @@ This page explains the fundamental concepts of the forms package.
 The builder provides a fluent API for registering components and creating immutable engine instances.
 
 ```typescript
-import { z } from 'zod';
-import { defineAction } from '@schema-engine/actions';
-import { FormComposer, type BuilderActionBaseContext, type BuilderActionTrigger } from '@schema-engine/forms';
-
 // Mock registrations for this example
 const textInputRegistration = { $type: 'text', schema: {}, metadata: {}, render: () => null } as any;
 const cardLayoutRegistration = { $type: 'card', schema: {}, metadata: {}, render: () => null } as any;
@@ -85,9 +81,6 @@ Elements are form fields and content components categorized by purpose:
 - **interactive** - Interactive components (buttons, links)
 
 ```typescript
-import type { ElementRegistration } from '@schema-engine/forms';
-import { z } from 'zod';
-
 const TextInputConfigSchema = z.object({
 	id: z.string(),
 	name: z.string(),
@@ -113,8 +106,6 @@ export const textInputRegistration: ElementRegistration<z.infer<typeof TextInput
 Layouts wrap form content and provide structural organization:
 
 ```typescript
-import type { LayoutRegistration } from '@schema-engine/forms';
-
 export const cardLayoutRegistration: LayoutRegistration<CardConfig> = {
 	$type: 'card',
 	schema: CardLayoutConfigSchema,
@@ -132,8 +123,6 @@ export const cardLayoutRegistration: LayoutRegistration<CardConfig> = {
 Steppers control multi-step form navigation and state:
 
 ```typescript
-import type { StepperRegistration } from '@schema-engine/forms';
-
 export const wizardStepperRegistration: StepperRegistration<WizardConfig> = {
 	$type: 'wizard',
 	schema: WizardStepperConfigSchema,

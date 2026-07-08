@@ -7,9 +7,6 @@ This page explains the fundamental concepts of the registry system.
 The abstract base class that provides common registration, retrieval, and management functionality. All registries in the schema-engine ecosystem extend this class.
 
 ```typescript
-import { BaseRegistry } from '@schema-engine/registry';
-import type { BaseRegistration } from '@schema-engine/registry';
-
 abstract class BaseRegistry<TKey extends string, TValue extends BaseRegistration> {
 	protected items: Map<TKey, TValue>;
 	abstract get registryName(): string;
@@ -41,9 +38,6 @@ abstract class BaseRegistry<TKey extends string, TValue extends BaseRegistration
 A specialized registry for visual components that require a `render` method. Elements, layouts, and steppers use this.
 
 ```typescript
-import { ComponentRegistry } from '@schema-engine/registry';
-import type { ComponentRegistration } from '@schema-engine/registry';
-
 abstract class ComponentRegistry<
 	TKey extends string,
 	TValue extends ComponentRegistration

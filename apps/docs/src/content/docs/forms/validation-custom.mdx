@@ -1,7 +1,3 @@
-import { LivePreview, CodePreview } from '@/components/code-preview';
-
-
-
 # Custom Validations
 
 While Form Engine provides comprehensive built-in validations, you might need custom validation logic for specific business requirements. The validation registry makes it easy to extend the system with your own validators.
@@ -13,9 +9,6 @@ While Form Engine provides comprehensive built-in validations, you might need cu
 Here's how to create and register a basic custom validation:
 
 ```typescript
-import { validationRegistry } from '@schema-engine/forms/schemas/validation';
-import { z } from 'zod';
-
 // Register a phone number validator
 validationRegistry.register({
   type: 'phone',
@@ -473,8 +466,6 @@ Always test your custom validations thoroughly:
 
 ```typescript
 import { describe, it, expect } from 'bun:test';
-import { validationRegistry, createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation';
-
 describe('Custom Phone Validation', () => {
 	beforeAll(() => {
 		validationRegistry.register({
@@ -702,8 +693,6 @@ validationRegistry.clear();
 For different contexts or testing:
 
 ```typescript
-import { ValidationRegistry } from '@schema-engine/forms/schemas/validation';
-
 // Create a new registry for testing
 const testRegistry = new ValidationRegistry();
 testRegistry.register({
@@ -720,11 +709,7 @@ const schema = testRegistry.createSchema({ type: 'testOnly' });
 
 Here's a working example of async validation in action:
 
-<LivePreview>
-import { AsyncValidationDemo } from '@/components/demo/async-validation-demo';
-
-<AsyncValidationDemo />
-</LivePreview>
+{/* Live preview: see the running app */}
 
 ### Demo Features
 

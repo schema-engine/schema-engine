@@ -1,7 +1,3 @@
-import { SimpleInputDemo } from '@/components/demo/simple-input-demo';
-
-
-
 # Why Schema Engine?
 
 Modern web development requires sophisticated form handling capabilities, yet existing solutions often present significant limitations. Each project brings unique requirements for validation, design integration, user experience patterns, and data flow management.
@@ -19,7 +15,7 @@ Development teams frequently encounter several recurring issues:
 
 Schema Engine is a **JSON-driven form system** that adapts to your needs, not the other way around.
 
-<SimpleInputDemo />
+{/* Live demo: Simple Input Demo — see the running app for the interactive form. */}
 
 ## What Makes It Different?
 
@@ -28,10 +24,6 @@ Schema Engine is a **JSON-driven form system** that adapts to your needs, not th
 Bring your existing component library. Register it with the engine, and it instantly works with form schemas while getting all the React Hook Form goodness.
 
 ```typescript
-import { createReactFormComposer } from '@schema-engine/forms-react';
-import type { ElementRegistration } from '@schema-engine/forms';
-import { z } from 'zod';
-
 // Mock definitions for example purposes
 const MyInputComponent = (props: any) => <input {...props} className="my-custom-input" />;
 const MyInputConfigSchema = z.object({});

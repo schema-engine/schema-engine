@@ -1,8 +1,3 @@
-import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
-import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
-import { formEngine } from '@/lib/form-engine-setup';
-import '@/lib/form-engine-setup';
-
 
 
 # Survey Form Example
@@ -11,81 +6,7 @@ An advanced survey form showcasing Form Engine's sophisticated features includin
 
 ## Interactive Demo
 
-<div className="my-8">
-	<FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
-		<FormRenderer
-			config={{
-				id: 'customer-survey',
-				title: 'Customer Satisfaction Survey',
-				description: 'Help us improve our services',
-				mode: 'wizard',
-				stepper: {
-					$type: 'minimalist',
-					showProgress: true,
-				},
-				steps: [
-					{
-						id: 'experience',
-						title: 'Your Experience',
-						elements: [
-							{
-								id: 'satisfaction',
-								$type: 'select',
-								name: 'satisfaction',
-								label: 'Overall Satisfaction',
-								required: true,
-								options: [
-									{ label: 'Very Satisfied', value: '5' },
-									{ label: 'Satisfied', value: '4' },
-									{ label: 'Neutral', value: '3' },
-									{ label: 'Dissatisfied', value: '2' },
-									{ label: 'Very Dissatisfied', value: '1' },
-								],
-							},
-							{
-								id: 'recommendation',
-								$type: 'radio',
-								name: 'recommendation',
-								label: 'Would you recommend us?',
-								required: true,
-								options: [
-									{ label: 'Definitely', value: 'yes' },
-									{ label: 'Probably', value: 'maybe' },
-									{ label: 'No', value: 'no' },
-								],
-							},
-						],
-					},
-					{
-						id: 'feedback',
-						title: 'Feedback',
-						elements: [
-							{
-								id: 'improvements',
-								$type: 'textarea',
-								name: 'improvements',
-								label: 'What could we improve?',
-								placeholder: 'Share your suggestions...',
-								props: { rows: 3 },
-							},
-							{
-								id: 'contact',
-								$type: 'checkbox',
-								name: 'contact',
-								label: 'I agree to be contacted for follow-up',
-								required: false,
-							},
-						],
-					},
-				],
-			}}
-			onSubmit={(data) => {
-				console.log('Survey submitted:', data);
-				alert('Thank you for your feedback!');
-			}}
-		/>
-	</FormEngineProvider>
-</div>
+{/* Live demo: Survey Form — see the running app for the interactive form. */}
 
 ## Key Features Demonstrated
 
@@ -126,8 +47,6 @@ When building surveys with Form Engine:
 Here's how to structure a basic survey configuration:
 
 ```typescript
-import { FormRenderer } from '@schema-engine/forms-react';
-
 const surveyConfig = {
   id: 'customer-survey',
   title: 'Customer Satisfaction Survey',
@@ -239,8 +158,6 @@ This survey example demonstrates how Form Engine makes it easy to create profess
 ### React Component
 
 ```typescript
-import React from 'react';
-import { FormRenderer } from '@schema-engine/forms-react';
 import surveyConfig from './survey-config';
 
 function CustomerSurvey() {
@@ -279,8 +196,6 @@ export default CustomerSurvey;
 ```typescript
 // pages/api/survey.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { z } from 'zod';
-
 const surveySchema = z.object({
 	// Demographics
 	age: z.string(),
