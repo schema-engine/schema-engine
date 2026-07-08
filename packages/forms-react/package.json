@@ -28,7 +28,7 @@
 		"test:all": "bash -c 'failed=0; for f in $(find test -name \"*.test.*\" | sort); do bun test \"$f\" || failed=1; done; exit $failed'",
 		"storybook": "storybook dev -p 6006",
 		"build-storybook": "storybook build -o ./storybook-static",
-		"check-types": "tsc --noEmit",
+		"check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.test-types.json",
 		"test:storybook": "vitest --config=vitest.browser.config.ts"
 	},
 	"devDependencies": {
