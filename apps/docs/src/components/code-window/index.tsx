@@ -53,6 +53,10 @@ const Shell = ({
 	const instanceId = id ?? newId();
 	const tablistId = `${instanceId}-tabs`;
 	const bodyId = `${instanceId}-body`;
+	// If no default tab is set, fall back to the first tab. This way
+	// a single-tab window opens with its content visible (no need for
+	// the user to click an empty tab strip to reveal anything).
+	const activeTabId = defaultTabId ?? tabs?.[0]?.id;
 	return (
 		<div
 			class={
@@ -83,9 +87,9 @@ const Shell = ({
 							href={`#${instanceId}-${tab.id}`}
 							data-code-tab={tab.id}
 							data-code-tab-target={bodyId}
-							aria-selected={tab.id === defaultTabId ? 'true' : 'false'}
+							aria-selected={tab.id === activeTabId ? 'true' : 'false'}
 							class={
-								tab.id === defaultTabId
+								tab.id === activeTabId
 									? 'px-4 py-2 text-xs font-mono font-semibold text-on-background border-b-2 border-primary -mb-px'
 									: 'px-4 py-2 text-xs font-mono text-on-background/60 hover:text-on-background'
 							}
@@ -103,7 +107,7 @@ const Shell = ({
 					? tabs.map((tab) => (
 							<div
 								data-code-tab-panel={tab.id}
-								hidden={tab.id !== defaultTabId}
+								hidden={tab.id !== activeTabId}
 								class={bodyHeight}
 							>
 								{tab.content}
