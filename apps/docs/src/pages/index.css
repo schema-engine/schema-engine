@@ -134,7 +134,7 @@
 }
 
 .home-demo-section__grid {
-	@apply grid gap-6 lg:grid-cols-2;
+	@apply col-span-full grid gap-6 lg:grid-cols-2;
 }
 
 /* Live form placeholder (inside CodeWindow tab body) */

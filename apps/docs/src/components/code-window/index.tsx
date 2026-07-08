@@ -8,6 +8,7 @@ export type CodeWindowTab = {
 };
 
 export type CodeWindowProps = {
+	id?: string;
 	tabs?: CodeWindowTab[];
 	defaultTabId?: string;
 	label?: string;
@@ -16,19 +17,19 @@ export type CodeWindowProps = {
 	class?: string;
 };
 
+let nextId = 0;
+const newId = (): string => `code-window-${++nextId}`;
+
 /**
  * A code window: macOS-style traffic lights, a header label, optional
  * tab strip, and a body that renders the active tab's content.
- *
- * Replaces the previous "package managers" CodeTabs at the top of the
- * home page. The body accepts arbitrary JSX, so it can host shiki
- * figures, pre-formatted text, or live component output.
  *
  * The window is a pure server-rendered surface. The tab strip uses
  * inline anchors with `data-code-tab-target` so a tiny client script
  * can toggle visibility without bringing in a heavy island.
  */
 const Shell = ({
+	id,
 	tabs,
 	defaultTabId,
 	label,
@@ -36,8 +37,9 @@ const Shell = ({
 	children,
 	class: className,
 }: CodeWindowProps) => {
-	const tablistId = 'code-window-tabs';
-	const bodyId = 'code-window-body';
+	const instanceId = id ?? newId();
+	const tablistId = `${instanceId}-tabs`;
+	const bodyId = `${instanceId}-body`;
 	return (
 		<div
 			class={
@@ -65,7 +67,7 @@ const Shell = ({
 					{tabs.map((tab) => (
 						<a
 							role="tab"
-							href={`#${tab.id}`}
+							href={`#${instanceId}-${tab.id}`}
 							data-code-tab={tab.id}
 							data-code-tab-target={bodyId}
 							aria-selected={tab.id === defaultTabId ? 'true' : 'false'}
@@ -82,9 +84,14 @@ const Shell = ({
 			) : null}
 			<div id={bodyId} class="bg-background">
 				{tabs && tabs.length > 0
-					? tabs
-							.filter((tab) => tab.id === defaultTabId)
-							.map((tab) => <div data-code-tab-panel={tab.id}>{tab.content}</div>)
+					? tabs.map((tab) => (
+							<div
+								data-code-tab-panel={tab.id}
+								hidden={tab.id !== defaultTabId}
+							>
+								{tab.content}
+							</div>
+						))
 					: children}
 			</div>
 			{footer ? (

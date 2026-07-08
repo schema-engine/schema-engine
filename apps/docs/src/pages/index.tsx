@@ -3,8 +3,8 @@ import type { JsxRenderable } from '@ecopages/jsx';
 import { BaseLayout } from '@/layouts/base-layout';
 import { CodeWindow } from '@/components/code-window';
 import {
-	configExample,
-	configExampleCode,
+	schemaConfigExample,
+	schemaConfigCode,
 	contactFormConfigExample,
 	contactFormConfigCode,
 	pageExample,
@@ -47,11 +47,11 @@ const StarterFileTabs = () => (
 		label="src/"
 		tabs={[
 			{
-				id: 'eco-config',
-				label: 'eco.config.ts',
+				id: 'schema-config',
+				label: 'schema.config.ts',
 				content: (
 					<figure data-rehype-pretty-code-figure class="home-code-block">
-						{unsafeHtml(configExample)}
+						{unsafeHtml(schemaConfigExample)}
 					</figure>
 				),
 			},
@@ -66,7 +66,7 @@ const StarterFileTabs = () => (
 			},
 			{
 				id: 'page-example',
-				label: 'src/pages/index.tsx',
+				label: 'src/pages/contact.tsx',
 				content: (
 					<figure data-rehype-pretty-code-figure class="home-code-block">
 						{unsafeHtml(pageExample)}
@@ -74,11 +74,11 @@ const StarterFileTabs = () => (
 				),
 			},
 		]}
-		defaultTabId="eco-config"
+		defaultTabId="schema-config"
 		footer={
 			<span>
-				Tab body mirrors the <code>@schema-engine/forms</code> runtime. Copy any of the three files
-				into a fresh project to reproduce.
+				Three files: an engine, a form config, and a page component. Copy the trio into a fresh React
+				project to render the same form.
 			</span>
 		}
 	/>
@@ -169,7 +169,7 @@ export default eco.page<{}, JsxRenderable>({
 	metadata: () => ({
 		title: 'Schema Engine',
 		description:
-			'A JSON-driven form layer on top of the Ecopages framework. Type-safe, Zod-validated, framework-agnostic.',
+			'JSON-driven, type-safe forms with Zod validation. Four first-party packages: forms, forms-react, actions, and registry.',
 	}),
 	render: () => (
 		<div class="home-layout not-prose">
@@ -181,13 +181,10 @@ export default eco.page<{}, JsxRenderable>({
 							JSON-driven forms, type-safe by construction.
 						</h1>
 						<p class="home-header__description">
-							Define forms in JSON, get Zod validation and React components for free. Four first-party
-							packages: <code>forms</code>, <code>forms-react</code>, <code>actions</code>, and{' '}
-							<code>registry</code>. Powered by{' '}
-							<a href="https://ecopages.app" target="_blank" rel="noopener">
-								Ecopages
-							</a>
-							.
+							Define forms in JSON, get Zod validation and React components for free. Four
+							first-party packages: <code>forms</code>, <code>forms-react</code>,{' '}
+							<code>actions</code>, and <code>registry</code>. Pluggable into any React
+							stack.
 						</p>
 
 						<InitWindow />
