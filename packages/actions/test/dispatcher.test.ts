@@ -95,29 +95,48 @@ describe('ActionDispatcher', () => {
 		expect(receivedId).toBe('ctx-plain');
 	});
 
-	test('dispatchSync never throws to the caller on success', () => {
+	test('dispatchSync forwards to dispatch with merged context and resolves the executor', async () => {
+		const executeCalls: Array<{ context: TestContext; config: TestActionConfig }> = [];
+
 		registry.register({
 			$type: 'log',
 			schema: z.object({ id: z.string(), $type: z.literal('log'), name: z.string() }),
 			metadata: { name: 'Log', defaultTriggers: ['submit'] },
-			execute: async () => ({ success: true }),
+			execute: async (ctx) => {
+				executeCalls.push({ context: ctx, config: ctx.config });
+				return { success: true };
+			},
 		});
 
-		expect(() =>
-			dispatcher.dispatchSync({
-				actions: [{ id: 'a1', $type: 'log', name: 'test' }],
-				trigger: 'submit',
-				context: { id: 'ctx-1' },
-			}),
-		).not.toThrow();
+		dispatcher.dispatchSync({
+			actions: [{ id: 'a1', $type: 'log', name: 'test' }],
+			trigger: 'submit',
+			context: { id: 'ctx-1' },
+			metadata: { userId: '123' },
+		});
+
+		await new Promise((resolve) => setImmediate(resolve));
+
+		expect(executeCalls).toHaveLength(1);
+		expect(executeCalls[0]!.config.id).toBe('a1');
+		expect(executeCalls[0]!.context.id).toBe('ctx-1');
+		expect(executeCalls[0]!.context.metadata).toEqual({ userId: '123' });
 	});
 
-	test('dispatchSync never throws when action returns a failure result', () => {
+	test('dispatchSync swallows executor failures and never raises to the caller', async () => {
+		const executeCalls: Array<unknown> = [];
+		const unhandled: unknown[] = [];
+		const onUnhandled = (reason: unknown) => unhandled.push(reason);
+		process.on('unhandledRejection', onUnhandled);
+
 		registry.register({
 			$type: 'log',
 			schema: z.object({ id: z.string(), $type: z.literal('log'), name: z.string() }),
 			metadata: { name: 'Log', defaultTriggers: ['submit'] },
-			execute: async () => ({ success: false, error: 'handler failed' }),
+			execute: async (ctx) => {
+				executeCalls.push(ctx.config);
+				return { success: false, error: 'handler failed' };
+			},
 		});
 
 		expect(() =>
@@ -127,5 +146,11 @@ describe('ActionDispatcher', () => {
 				context: { id: 'ctx-1' },
 			}),
 		).not.toThrow();
+
+		await new Promise((resolve) => setImmediate(resolve));
+
+		process.off('unhandledRejection', onUnhandled);
+		expect(executeCalls).toHaveLength(1);
+		expect(unhandled).toEqual([]);
 	});
 });
