@@ -100,7 +100,11 @@
 
 /* shiki figure, when rendered inside the code window body */
 .home-code-block[data-rehype-pretty-code-figure] {
-	@apply my-0 border-0 rounded-none bg-background-accent/20 overflow-x-auto;
+	@apply my-0 border-0 rounded-none bg-transparent overflow-x-auto h-full;
+
+	pre {
+		@apply h-full;
+	}
 
 	pre code {
 		@apply font-mono text-[0.875em] leading-relaxed;
@@ -135,4 +139,17 @@
 
 .home-demo-section__grid {
 	@apply col-span-full grid gap-6 lg:grid-cols-2;
+}
+
+/* Fixed-height code window bodies on the homepage. The body region of
+ * each CodeWindow is sized to 420px so all tabs sit at the same
+ * height regardless of their content length. */
+.home-code-window-body {
+	height: 420px;
+	overflow: auto;
+}
+
+.home-code-window-body--short {
+	height: 128px; /* h-32 */
+	overflow: auto;
 }

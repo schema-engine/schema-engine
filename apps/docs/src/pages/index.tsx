@@ -46,12 +46,16 @@ const HomePathCard = ({ href, title, description }: { href: string; title: strin
 const StarterFileTabs = () => (
 	<CodeWindow
 		label="src/"
+		bodyHeight="home-code-window-body"
 		tabs={[
 			{
 				id: 'schema-config',
 				label: 'schema.config.ts',
 				content: (
-					<figure data-rehype-pretty-code-figure class="home-code-block">
+					<figure
+						data-rehype-pretty-code-figure
+						class="home-code-block code-window__body-pre"
+					>
 						{unsafeHtml(schemaConfigExample)}
 					</figure>
 				),
@@ -60,7 +64,10 @@ const StarterFileTabs = () => (
 				id: 'contact-config',
 				label: 'contact-form.json',
 				content: (
-					<figure data-rehype-pretty-code-figure class="home-code-block">
+					<figure
+						data-rehype-pretty-code-figure
+						class="home-code-block code-window__body-pre"
+					>
 						{unsafeHtml(contactFormConfigExample)}
 					</figure>
 				),
@@ -69,7 +76,10 @@ const StarterFileTabs = () => (
 				id: 'page-example',
 				label: 'src/pages/contact.tsx',
 				content: (
-					<figure data-rehype-pretty-code-figure class="home-code-block">
+					<figure
+						data-rehype-pretty-code-figure
+						class="home-code-block code-window__body-pre"
+					>
 						{unsafeHtml(pageExample)}
 					</figure>
 				),
@@ -88,6 +98,7 @@ const StarterFileTabs = () => (
 const InitWindow = () => (
 	<CodeWindow
 		label="terminal — scaffold"
+		bodyHeight="home-code-window-body--short"
 		tabs={[
 			{
 				id: 'bun',
@@ -113,12 +124,16 @@ const InitWindow = () => (
 const ContactFormCode = () => (
 	<CodeWindow
 		label="contact-form.json"
+		bodyHeight="home-code-window-body"
 		tabs={[
 			{
 				id: 'config',
 				label: 'config',
 				content: (
-					<figure data-rehype-pretty-code-figure class="home-code-block">
+					<figure
+						data-rehype-pretty-code-figure
+						class="home-code-block code-window__body-pre"
+					>
 						{unsafeHtml(contactFormConfigExample)}
 					</figure>
 				),
@@ -136,6 +151,7 @@ const ContactFormCode = () => (
 const LiveDemoPanel = () => (
 	<CodeWindow
 		label="contact-form — rendered"
+		bodyHeight="home-code-window-body"
 		tabs={[
 			{
 				id: 'live',
@@ -146,7 +162,10 @@ const LiveDemoPanel = () => (
 				id: 'react',
 				label: 'react',
 				content: (
-					<figure data-rehype-pretty-code-figure class="home-code-block">
+					<figure
+						data-rehype-pretty-code-figure
+						class="home-code-block code-window__body-pre"
+					>
 						{unsafeHtml(pageExample)}
 					</figure>
 				),

@@ -15,10 +15,19 @@ export type CodeWindowProps = {
 	footer?: JsxRenderable;
 	children?: JsxRenderable;
 	class?: string;
+	/**
+	 * Tailwind height class for the body region. All tabs render
+	 * inside this fixed-height region; overflowing content scrolls.
+	 * Defaults to a sensible 320px so the homepage windows stay
+	 * roughly the same height as the other card blocks.
+	 */
+	bodyHeight?: string;
 };
 
 let nextId = 0;
 const newId = (): string => `code-window-${++nextId}`;
+
+const defaultBodyHeight = 'h-80';
 
 /**
  * A code window: macOS-style traffic lights, a header label, optional
@@ -26,7 +35,10 @@ const newId = (): string => `code-window-${++nextId}`;
  *
  * The window is a pure server-rendered surface. The tab strip uses
  * inline anchors with `data-code-tab-target` so a tiny client script
- * can toggle visibility without bringing in a heavy island.
+ * can toggle visibility without bringing in a heavy island. The body
+ * is sized with a fixed height (overridable via the `bodyHeight` prop)
+ * so all tabs in a window sit at the same height, even when their
+ * contents differ in length.
  */
 const Shell = ({
 	id,
@@ -36,6 +48,7 @@ const Shell = ({
 	footer,
 	children,
 	class: className,
+	bodyHeight = defaultBodyHeight,
 }: CodeWindowProps) => {
 	const instanceId = id ?? newId();
 	const tablistId = `${instanceId}-tabs`;
@@ -82,12 +95,16 @@ const Shell = ({
 					))}
 				</div>
 			) : null}
-			<div id={bodyId} class="bg-background">
+			<div
+				id={bodyId}
+				class={`bg-background overflow-auto ${bodyHeight}`}
+			>
 				{tabs && tabs.length > 0
 					? tabs.map((tab) => (
 							<div
 								data-code-tab-panel={tab.id}
 								hidden={tab.id !== defaultTabId}
+								class={bodyHeight}
 							>
 								{tab.content}
 							</div>
@@ -105,6 +122,7 @@ const Shell = ({
 
 export const CodeWindow = eco.component<CodeWindowProps, JsxRenderable>({
 	dependencies: {
+		stylesheets: ['./code-window.css'],
 		scripts: ['./code-window.script.ts'],
 	},
 	render: (props) => <Shell {...props} />,
