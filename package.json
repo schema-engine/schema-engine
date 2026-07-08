@@ -52,6 +52,8 @@
 		"packages/*"
 	],
 	"dependencies": {
+		"baseline-browser-mapping": "^2.10.42",
+		"caniuse-lite": "^1.0.30001803",
 		"frimousse": "^0.3.0",
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0"
