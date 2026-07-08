@@ -39,6 +39,7 @@ export type ActionRuntimeContext<TConfig = unknown, TBaseContext = unknown, TTri
 	triggeredBy?: TConfig;
 };
 
+/**
  * Action Execution Result
  *
  * Standardized return type for all action handlers.
