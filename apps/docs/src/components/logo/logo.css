@@ -3,7 +3,17 @@
 	@apply text-on-background;
 	display: inline-flex;
 	align-items: center;
+	gap: 0.5rem;
+
 	&:hover {
 		@apply text-on-background/80;
 	}
+}
+
+.logo__mark {
+	fill: var(--color-background);
+}
+
+.logo__line {
+	fill: currentColor;
 }

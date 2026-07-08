@@ -47,7 +47,7 @@ export const docsSiteContentMeta: DocsSiteContentMeta = {
 		},
 		{
 			id: 'forms',
-			title: '@schema-engine/forms',
+			title: 'Forms',
 			icon: formsIcon,
 			pages: [
 				page('overview', 'Overview', 'Headless form engine: JSON config, validation rules, constraints.'),
@@ -59,7 +59,7 @@ export const docsSiteContentMeta: DocsSiteContentMeta = {
 				page('core-concepts', 'Core Concepts', 'How Schema Engine parses a config and produces a form.'),
 				page('validation', 'Validation', 'Declarative validation rules and Zod schema generation.'),
 				page('actions', 'Actions', 'Wire submit, reset, auto-save, notifications, and custom plugins.'),
-				page('api-reference', 'API Reference', 'Public surface of @schema-engine/forms.'),
+				page('api-reference', 'API Reference', 'Public surface of the forms package.'),
 				page(
 					'builder',
 					'Builder Pattern',
@@ -84,7 +84,7 @@ export const docsSiteContentMeta: DocsSiteContentMeta = {
 		},
 		{
 			id: 'forms-react',
-			title: '@schema-engine/forms-react',
+			title: 'Forms React',
 			icon: formsReactIcon,
 			pages: [
 				page(
@@ -93,24 +93,24 @@ export const docsSiteContentMeta: DocsSiteContentMeta = {
 					'React adapter: components, layouts, steppers, hooks, RHF bridge.',
 				),
 				page('getting-started', 'Getting Started', 'Install the React adapter and register your engine.'),
-				page('components', 'Components', 'Every element registration that ships with forms-react.'),
+				page('components', 'Components', 'Every element registration that ships with the React adapter.'),
 				page('layouts', 'Layouts', 'Card, split-screen, and hero-background layouts.'),
 				page('steppers', 'Steppers', 'Default, minimalist, and debugger stepper styles.'),
 				page('hooks', 'Hooks', 'useFormContext, useField, useActionExecutor, and more.'),
 				page('advanced', 'Advanced Usage', 'Patterns for power users: async validation, custom plugins.'),
-				page('api-reference', 'API Reference', 'Public surface of @schema-engine/forms-react.'),
+				page('api-reference', 'API Reference', 'Public surface of the React adapter.'),
 			],
 		},
 		{
 			id: 'actions',
-			title: '@schema-engine/actions',
+			title: 'Actions',
 			icon: actionsIcon,
 			pages: [
 				page('overview', 'Overview', 'Domain-agnostic sequential action execution system.'),
 				page('getting-started', 'Getting Started', 'Install the actions package and register the first plugin.'),
 				page('core-concepts', 'Core Concepts', 'How the dispatcher and the context object compose.'),
 				page('advanced', 'Advanced Usage', 'Custom triggers, context, and dispatcher wiring.'),
-				page('api-reference', 'API Reference', 'Public surface of @schema-engine/actions.'),
+				page('api-reference', 'API Reference', 'Public surface of the actions package.'),
 				page('how-it-works', 'How It Works', 'Action lifecycle, dispatch, and error propagation.'),
 				page('available-plugins', 'Available Plugins', 'Submit, reset, auto-save, and notification plugins.'),
 				page('custom-plugins', 'Custom Plugins', 'Author and register your own action plugins.'),
@@ -118,12 +118,12 @@ export const docsSiteContentMeta: DocsSiteContentMeta = {
 		},
 		{
 			id: 'registry',
-			title: '@schema-engine/registry',
+			title: 'Registry',
 			icon: registryIcon,
 			pages: [
 				page('overview', 'Overview', 'The base registry system used by every other package.'),
 				page('core-concepts', 'Core Concepts', 'How registration, lookup, and metadata compose.'),
-				page('api-reference', 'API Reference', 'Public surface of @schema-engine/registry.'),
+				page('api-reference', 'API Reference', 'Public surface of the registry package.'),
 				page('examples', 'Examples', 'Standalone patterns for the registry outside of forms.'),
 			],
 		},

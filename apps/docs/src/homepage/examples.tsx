@@ -13,7 +13,7 @@ const config = await new ConfigBuilder()
   .setBaseUrl(baseUrl)
   .setDefaultMetadata({
     title: 'Schema Engine',
-    description: 'TypeScript-first, JSON-driven forms on top of Ecopages',
+    description: 'JSON-driven, type-safe forms on top of Ecopages',
   })
   .setIntegrations([ecopagesJsxPlugin()])
   .setProcessors([
@@ -27,37 +27,59 @@ const config = await new ConfigBuilder()
 
 export default config;`;
 
-export const componentExampleCode = `import { eco } from '@ecopages/core';
-import { InputElementRegistration } from '@schema-engine/forms-react/registrations';
+export const contactFormConfigCode = `import { createReactFormComposer } from '@schema-engine/forms-react';
+import {
+  InputElementRegistration,
+  TextareaElementRegistration,
+  SubmitButtonElementRegistration,
+  SubmissionAlertElementRegistration,
+} from '@schema-engine/forms-react/registrations';
 
-type ContactFormConfig = {
-  id: string;
-  steps: Array<{ elements: unknown[] }>;
-};
+export const formEngine = createReactFormComposer()
+  .addElement(InputElementRegistration)
+  .addElement(TextareaElementRegistration)
+  .addElement(SubmitButtonElementRegistration)
+  .addElement(SubmissionAlertElementRegistration)
+  .build();
 
-export const config: ContactFormConfig = {
+export const contactFormConfig = {
   id: 'contact-form',
+  title: 'Contact Form',
+  mode: 'free',
   steps: [
     {
+      id: 'contact-step',
       elements: [
-        {
-          $type: 'input',
-          id: 'email',
-          name: 'email',
-          label: 'Email Address',
-          inputType: 'email',
-          rules: [{ rule: 'required', message: 'Email is required' }],
-        },
+        { $type: 'submission-alert', id: 'status', name: 'status',
+          showOn: ['pending', 'success'] },
+        { $type: 'input', id: 'email', name: 'email',
+          inputType: 'email', label: 'Email Address',
+          rules: [
+            { type: 'required', message: 'Email is required' },
+            { type: 'email', message: 'Please enter a valid email address' },
+          ] },
+        { $type: 'textarea', id: 'message', name: 'message',
+          label: 'Message',
+          rules: [
+            { type: 'minLength', value: 10,
+              message: 'Message must be at least 10 characters long' },
+          ] },
+        { $type: 'submit', id: 'submit', name: 'submit',
+          label: 'Submit Form' },
       ],
     },
   ],
-};
-
-export const Form = () => <form-config data={config} />;`;
+};`;
 
 export const pageExampleCode = `import { eco } from '@ecopages/core';
+import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
+import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
+import { formEngine, contactFormConfig } from './schema.config';
 import { BaseLayout } from '@/layouts/base-layout';
-import { CodeTabs } from '@/components/code-tabs';
+
+const handleSubmit = (data) => {
+  console.log('Contact form submitted', { data });
+};
 
 export default eco.page({
   layout: BaseLayout,
@@ -65,16 +87,13 @@ export default eco.page({
     title: 'Welcome to Schema Engine',
     description: 'A JSON-driven form layer on top of the Ecopages framework.',
   }),
-  dependencies: { components: [CodeTabs] },
+  dependencies: {
+    components: [FormEngineProvider, FormRenderer],
+  },
   render: () => (
-    <section class="not-prose">
-      <h1>Build forms from JSON, ship faster</h1>
-      <p>
-        Schema Engine turns form definitions into a single source of truth: type-safe,
-        Zod-validated, and powered by your existing component library.
-      </p>
-      <a href="/docs/getting-started/introduction">Read the docs</a>
-    </section>
+    <FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
+      <FormRenderer config={contactFormConfig} onSubmit={handleSubmit} />
+    </FormEngineProvider>
   ),
 });`;
 
@@ -84,7 +103,7 @@ export const configExample = await codeToHtml(configExampleCode, {
 	defaultColor: false,
 });
 
-export const componentExample = await codeToHtml(componentExampleCode, {
+export const contactFormConfigExample = await codeToHtml(contactFormConfigCode, {
 	lang: 'tsx',
 	themes: { light: 'light-plus', dark: 'dark-plus' },
 	defaultColor: false,

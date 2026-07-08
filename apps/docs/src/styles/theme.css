@@ -81,6 +81,12 @@
 	--color-link: var(--color-navy-blue-700);
 	--color-background-code: var(--color-glacier-white-100);
 	--color-on-background-code: var(--color-laser-lemon-800);
+
+	--color-destructive: var(--color-scarlet-500);
+	--color-destructive-foreground: var(--color-glacier-white-50);
+	--color-card: var(--color-glacier-white-50);
+	--color-card-foreground: var(--color-glacier-white-900);
+	--color-foreground: var(--color-glacier-white-900);
 }
 
 [data-theme='dark'] {
@@ -100,4 +106,10 @@
 	--color-link: var(--color-navy-blue-400);
 	--color-background-code: var(--color-glacier-white-900);
 	--color-on-background-code: var(--color-laser-lemon-300);
+
+	--color-destructive: var(--color-scarlet-500);
+	--color-destructive-foreground: var(--color-glacier-white-950);
+	--color-card: var(--color-glacier-white-900);
+	--color-card-foreground: var(--color-glacier-white-50);
+	--color-foreground: var(--color-glacier-white-50);
 }

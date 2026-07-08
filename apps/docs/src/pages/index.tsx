@@ -3,10 +3,10 @@ import type { JsxRenderable } from '@ecopages/jsx';
 import { BaseLayout } from '@/layouts/base-layout';
 import { CodeTabs } from '@/components/code-tabs';
 import {
-	componentExample,
-	componentExampleCode,
 	configExample,
 	configExampleCode,
+	contactFormConfigExample,
+	contactFormConfigCode,
 	pageExample,
 	pageExampleCode,
 } from '@/homepage/examples';
@@ -42,6 +42,82 @@ const HomePathCard = ({ href, title, description }: { href: string; title: strin
 	</a>
 );
 
+const LiveDemo = () => (
+	<div class="home-demo">
+		<div class="home-demo__header">
+			<div class="home-demo__dots" aria-hidden="true">
+				<span class="home-demo__dot home-demo__dot--red" />
+				<span class="home-demo__dot home-demo__dot--yellow" />
+				<span class="home-demo__dot home-demo__dot--green" />
+			</div>
+			<p class="home-demo__label">Live preview — contact-form.json</p>
+		</div>
+		<div class="home-demo__body">
+			<div class="home-demo__placeholder">
+				<p class="home-demo__placeholder-title">Rendered form lives in the /www app</p>
+				<p class="home-demo__placeholder-text">
+					The same JSON config drives a real <code>&lt;FormRenderer /&gt;</code> in the React app. Open
+					any of the <a href="/docs/examples/basic-form">examples</a> for the live form.
+				</p>
+				<a href="/docs/examples/contact-form" class="button button--default home-demo__placeholder-cta">
+					See a live example
+				</a>
+			</div>
+		</div>
+	</div>
+);
+
+const CodeSample = () => (
+	<div class="home-demo">
+		<div class="home-demo__header">
+			<div class="home-demo__dots" aria-hidden="true">
+				<span class="home-demo__dot home-demo__dot--red" />
+				<span class="home-demo__dot home-demo__dot--yellow" />
+				<span class="home-demo__dot home-demo__dot--green" />
+			</div>
+			<p class="home-demo__label">contact-form.json</p>
+		</div>
+		<div class="home-demo__body home-demo__body--code">
+			<pre class="home-demo__code">
+				<code>{`{
+  "id": "contact-form",
+  "title": "Contact Form",
+  "mode": "free",
+  "steps": [
+    {
+      "id": "contact-step",
+      "elements": [
+        {
+          "$type": "input",
+          "id": "email",
+          "name": "email",
+          "inputType": "email",
+          "label": "Email Address",
+          "rules": [
+            { "type": "required", "message": "Email is required" },
+            { "type": "email", "message": "Please enter a valid email address" }
+          ]
+        },
+        {
+          "$type": "textarea",
+          "id": "message",
+          "name": "message",
+          "label": "Message",
+          "rules": [
+            { "type": "minLength", "value": 10,
+              "message": "Message must be at least 10 characters long" }
+          ]
+        },
+        { "$type": "submit", "name": "submit", "label": "Submit Form" }
+      ]
+    }
+  ]
+}`}</code>
+			</pre>
+		</div>
+	</div>
+);
+
 export default eco.page<{}, JsxRenderable>({
 	layout: BaseLayout,
 	dependencies: {
@@ -67,9 +143,8 @@ export default eco.page<{}, JsxRenderable>({
 							<a href="https://ecopages.app" target="_blank" rel="noopener">
 								Ecopages
 							</a>
-							, used across four first-party packages: <code>@schema-engine/forms</code>,{' '}
-							<code>@schema-engine/forms-react</code>, <code>@schema-engine/actions</code>, and{' '}
-							<code>@schema-engine/registry</code>.
+							, used across four first-party packages: <code>forms</code>, <code>forms-react</code>,{' '}
+							<code>actions</code>, and <code>registry</code>.
 						</p>
 
 						<CodeTabs
@@ -120,17 +195,17 @@ export default eco.page<{}, JsxRenderable>({
 									content: configExampleCode,
 								},
 								{
-									id: 'schema-config',
-									label: 'schema.config.ts',
+									id: 'contact-config',
+									label: 'contact-form.json',
 									code: (
 										<figure data-rehype-pretty-code-figure class="home-code-block">
-											{unsafeHtml(componentExample)}
+											{unsafeHtml(contactFormConfigExample)}
 										</figure>
 									),
-									content: componentExampleCode,
+									content: contactFormConfigCode,
 								},
 								{
-									id: 'home-page',
+									id: 'page-example',
 									label: 'src/pages/index.tsx',
 									code: (
 										<figure data-rehype-pretty-code-figure class="home-code-block">
@@ -147,6 +222,22 @@ export default eco.page<{}, JsxRenderable>({
 				</div>
 			</header>
 
+			<section class="home-demo-section">
+				<div class="home-demo-section__intro">
+					<p class="home-card__label">Same JSON, same code, real form</p>
+					<h2 class="home-demo-section__title">A working form, end to end</h2>
+					<p class="home-demo-section__lede">
+						On the left, a real <code>&lt;FormRenderer /&gt;</code> driven by the JSON config on the
+						right. The config is the source of truth: change it and the form changes with it, no JSX
+						rewrites.
+					</p>
+				</div>
+				<div class="home-demo-section__grid">
+					<LiveDemo />
+					<CodeSample />
+				</div>
+			</section>
+
 			<main class="home-main">
 				<section>
 					<div class="home-cards">
@@ -157,19 +248,19 @@ export default eco.page<{}, JsxRenderable>({
 							description="Define forms in JSON, get Zod validation, real components, and full type safety without writing JSX."
 						/>
 						<HomeCard
-							href="/docs/packages/forms"
+							href="/docs/forms"
 							label="Core"
 							title="Framework-agnostic engine"
-							description="@schema-engine/forms is the headless core. Pluggable adapters, no opinions on UI."
+							description="The forms package is the headless core. Pluggable adapters, no opinions on UI."
 						/>
 						<HomeCard
-							href="/docs/packages/forms-react"
+							href="/docs/forms-react"
 							label="React"
 							title="Production-ready React layer"
 							description="React Hook Form-backed components, layouts, steppers, and a strict builder pattern."
 						/>
 						<HomeCard
-							href="/docs/packages/actions"
+							href="/docs/actions"
 							label="Actions"
 							title="Sequential action system"
 							description="Compose submit, reset, auto-save, GTM, and notifications as registered plugins."
@@ -191,10 +282,10 @@ export default eco.page<{}, JsxRenderable>({
 						<HomePathCard
 							href="/docs/getting-started/installation"
 							title="Install and configure"
-							description="Add @schema-engine/forms and @schema-engine/forms-react to your project and register the engine."
+							description="Add forms and forms-react to your project and register the engine."
 						/>
 						<HomePathCard
-							href="/docs/packages/forms/builder"
+							href="/docs/forms/builder"
 							title="Use the builder pattern"
 							description="Construct your engine once with createReactFormComposer, then addElement / addAction as your app grows."
 						/>
@@ -270,10 +361,10 @@ export default eco.page<{}, JsxRenderable>({
 				<div class="home-sidebar__section">
 					<p class="home-sidebar__label">Packages</p>
 					<div class="home-sidebar__tags">
-						<span class="home-sidebar__tag">@schema-engine/forms</span>
-						<span class="home-sidebar__tag">@schema-engine/forms-react</span>
-						<span class="home-sidebar__tag">@schema-engine/actions</span>
-						<span class="home-sidebar__tag">@schema-engine/registry</span>
+						<span class="home-sidebar__tag">forms</span>
+						<span class="home-sidebar__tag">forms-react</span>
+						<span class="home-sidebar__tag">actions</span>
+						<span class="home-sidebar__tag">registry</span>
 					</div>
 				</div>
 			</aside>

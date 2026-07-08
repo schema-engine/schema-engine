@@ -114,3 +114,99 @@
 		@apply font-mono text-[0.875em] leading-relaxed;
 	}
 }
+
+.home-demo-section {
+	@apply col-span-full border-b border-border pb-12 mb-4 lg:grid lg:grid-cols-12 lg:items-start;
+}
+
+.home-demo-section__intro {
+	@apply lg:col-span-12 flex flex-col gap-3 mb-6;
+}
+
+.home-demo-section__title {
+	@apply font-heading text-3xl md:text-4xl font-semibold text-on-background leading-tight;
+}
+
+.home-demo-section__lede {
+	@apply text-base md:text-lg text-on-background/80 leading-relaxed max-w-3xl;
+}
+
+.home-demo-section__lede code {
+	@apply font-mono text-[0.875em] bg-muted text-on-background-accent px-1.5 py-0.5 rounded-md border border-border/30;
+}
+
+.home-demo-section__grid {
+	@apply grid gap-6 lg:grid-cols-2;
+}
+
+.home-demo {
+	@apply flex flex-col rounded-md border border-border bg-background-accent overflow-hidden;
+}
+
+.home-demo__header {
+	@apply flex items-center gap-3 px-4 py-2.5 border-b border-border bg-muted;
+}
+
+.home-demo__dots {
+	@apply flex items-center gap-1.5;
+}
+
+.home-demo__dot {
+	@apply w-2.5 h-2.5 rounded-full;
+}
+
+.home-demo__dot--red {
+	@apply bg-destructive;
+}
+
+.home-demo__dot--yellow {
+	@apply bg-yellow-500;
+}
+
+.home-demo__dot--green {
+	@apply bg-green-500;
+}
+
+.home-demo__label {
+	@apply text-xs font-mono text-on-background/60 m-0;
+}
+
+.home-demo__body {
+	@apply p-5 bg-background;
+}
+
+.home-demo__body--code {
+	@apply p-0;
+}
+
+.home-demo__code {
+	@apply font-mono text-xs leading-relaxed text-on-background m-0 p-4 overflow-x-auto bg-background-accent/20;
+}
+
+.home-demo__code code {
+	@apply text-on-background/90;
+}
+
+.home-demo__placeholder {
+	@apply flex flex-col items-center justify-center text-center gap-3 p-8 min-h-[280px] border border-dashed border-border rounded-md bg-background-accent/30;
+}
+
+.home-demo__placeholder-title {
+	@apply font-heading text-lg font-semibold text-on-background m-0;
+}
+
+.home-demo__placeholder-text {
+	@apply text-sm text-on-background/70 leading-relaxed max-w-md m-0;
+}
+
+.home-demo__placeholder-text code {
+	@apply font-mono text-[0.875em] bg-muted text-on-background-accent px-1.5 py-0.5 rounded-md border border-border/30;
+}
+
+.home-demo__placeholder-text a {
+	@apply text-link font-medium underline underline-offset-4 decoration-link/30 hover:decoration-link;
+}
+
+.home-demo__placeholder-cta {
+	@apply mt-2;
+}
