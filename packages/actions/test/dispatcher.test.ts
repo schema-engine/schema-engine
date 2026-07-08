@@ -95,7 +95,7 @@ describe('ActionDispatcher', () => {
 		expect(receivedId).toBe('ctx-plain');
 	});
 
-	test('dispatchSync completes without throwing for successful dispatch', async () => {
+	test('dispatchSync never throws to the caller on success', () => {
 		registry.register({
 			$type: 'log',
 			schema: z.object({ id: z.string(), $type: z.literal('log'), name: z.string() }),
@@ -103,12 +103,29 @@ describe('ActionDispatcher', () => {
 			execute: async () => ({ success: true }),
 		});
 
-		dispatcher.dispatchSync({
-			actions: [{ id: 'a1', $type: 'log', name: 'test' }],
-			trigger: 'submit',
-			context: { id: 'ctx-1' },
+		expect(() =>
+			dispatcher.dispatchSync({
+				actions: [{ id: 'a1', $type: 'log', name: 'test' }],
+				trigger: 'submit',
+				context: { id: 'ctx-1' },
+			}),
+		).not.toThrow();
+	});
+
+	test('dispatchSync never throws when action returns a failure result', () => {
+		registry.register({
+			$type: 'log',
+			schema: z.object({ id: z.string(), $type: z.literal('log'), name: z.string() }),
+			metadata: { name: 'Log', defaultTriggers: ['submit'] },
+			execute: async () => ({ success: false, error: 'handler failed' }),
 		});
 
-		await new Promise((resolve) => setTimeout(resolve, 10));
+		expect(() =>
+			dispatcher.dispatchSync({
+				actions: [{ id: 'a1', $type: 'log', name: 'test' }],
+				trigger: 'submit',
+				context: { id: 'ctx-1' },
+			}),
+		).not.toThrow();
 	});
 });
