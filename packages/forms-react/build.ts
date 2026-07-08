@@ -52,7 +52,15 @@ const postcssPlugin: BunPlugin = {
 	},
 };
 
-const entryDirs = ['src/adapters', 'src/components', 'src/contexts', 'src/hooks', 'src/registries', 'src/types'];
+const entryDirs = [
+	'src/adapters',
+	'src/components',
+	'src/contexts',
+	'src/hooks',
+	'src/registries',
+	'src/registrations',
+	'src/types',
+];
 
 async function discoverSourceFiles(): Promise<string[]> {
 	const indexFiles = ['src/index.ts'];

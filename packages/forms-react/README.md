@@ -2,6 +2,8 @@
 
 React implementation of the JSON Form Engine with type-safe components, form adapters, and comprehensive validation support.
 
+> **Important:** This README is a package overview, not the API reference. For verified examples and current contracts, use the [Documentation App](../../apps/www) — start with [Getting Started](../../apps/www/src/pages/docs/packages/forms-react/getting-started.mdx) or [Quick Start](../../apps/www/src/pages/docs/quick-start.mdx).
+
 ## Overview
 
 The React package provides production-ready components and hooks for building dynamic, JSON-configured forms. It integrates seamlessly with `@schema-engine/forms` and supports popular form libraries through an adapter system.
@@ -324,23 +326,13 @@ Actions execute in response to form lifecycle events:
   steps: [...],
   actions: [
     {
+      $type: 'submit',
       id: 'api-submit',
-      type: 'http',
-      trigger: 'form_submit',
-      config: {
-        endpoint: 'https://api.example.com/contact',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      },
-      onSuccess: {
-        message: 'Thank you for contacting us!',
-        redirect: '/thank-you'
-      },
-      onError: {
-        message: 'Failed to submit form. Please try again.'
-      }
+      endpoint: 'https://api.example.com/contact',
+      method: 'POST',
+      successMessage: 'Thank you for contacting us!',
+      errorMessage: 'Failed to submit form. Please try again.',
+      redirectUrl: '/thank-you'
     }
   ]
 }
@@ -425,13 +417,21 @@ function MyComponent() {
 
 ### useFormInstanceActions
 
-Access form actions and navigation:
+Access form actions, navigation, and trigger dispatch:
 
 ```tsx
 import { useFormInstanceActions } from '@schema-engine/forms-react';
 
 function MyComponent() {
-	const { executeAction, currentStep, totalSteps, goToNext, goToPrevious, goToStep } = useFormInstanceActions();
+	const { executeAction, currentStep, totalSteps, goToNext, goToPrevious, goToStep, dispatchTrigger } =
+		useFormInstanceActions();
+
+	const handleCustomAction = async () => {
+		const results = await dispatchTrigger('form_submit');
+		if (results[0]?.success) {
+			console.log('Action executed successfully');
+		}
+	};
 
 	return (
 		<div>
@@ -440,6 +440,7 @@ function MyComponent() {
 			</span>
 			<button onClick={goToPrevious}>Back</button>
 			<button onClick={goToNext}>Next</button>
+			<button onClick={handleCustomAction}>Execute</button>
 		</div>
 	);
 }
@@ -469,28 +470,6 @@ function CustomField(config) {
 }
 ```
 
-### useFormInstanceActions
-
-Execute form lifecycle actions manually from inside a rendered form:
-
-```tsx
-import { useFormInstanceActions } from '@schema-engine/forms-react';
-
-function MyComponent() {
-	const { dispatchTrigger } = useFormInstanceActions();
-
-	const handleCustomAction = async () => {
-		const result = await dispatchTrigger('form_submit');
-
-		if (result[0]?.success) {
-			console.log('Action executed successfully');
-		}
-	};
-
-	return <button onClick={handleCustomAction}>Execute</button>;
-}
-```
-
 ## Advanced Features
 
 ### Constraint Logic
@@ -505,14 +484,10 @@ Apply dynamic visibility and behavior based on form values:
   label: 'Please specify',
   constraints: [
     {
-      type: 'visibility',
-      conditions: [
-        {
-          field: 'reason',
-          operator: 'equals',
-          value: 'other'
-        }
-      ]
+      field: 'reason',
+      operator: 'equals',
+      value: 'other',
+      action: 'show'
     }
   ]
 }
@@ -520,7 +495,7 @@ Apply dynamic visibility and behavior based on form values:
 
 ### GDPR Consent
 
-Track and manage user consent:
+Track and manage user consent with the `useGDPRConsent` hook (global consent state, not a per-field config property):
 
 ```typescript
 {
@@ -528,13 +503,8 @@ Track and manage user consent:
   id: 'gdpr-consent',
   name: 'gdprConsent',
   label: 'I agree to the privacy policy',
-  gdpr: {
-    purpose: 'marketing',
-    required: true,
-    category: 'analytics'
-  },
-	rules: [
-		{ type: 'required', message: 'You must accept the privacy policy' }
+  rules: [
+    { type: 'required', message: 'You must accept the privacy policy' }
   ]
 }
 ```
@@ -743,7 +713,6 @@ The package is optimized for performance:
 - **Code splitting** - Lazy load components and layouts
 - **Memoization** - Components use React.memo and useMemo
 - **Debouncing** - Field changes are debounced to reduce re-renders
-- **Virtual scrolling** - Large forms use virtualization
 
 ## Testing
 
@@ -753,18 +722,6 @@ The package includes comprehensive test coverage:
 bun test
 ```
 
-**Test Categories:**
-
-- Builder pattern and type safety
-- Component registration and retrieval
-- Form rendering and validation
-- Multi-step navigation
-- Action execution
-- Hook behavior
-- Custom component integration
-
-## Testing
-
 `test:all` runs each `test/**/*.test.*` file in isolation. A single `bun test` invocation has intermittently crashed with exit **137** (Bun segfault) in CI and pre-commit, so the per-file loop is a temporary workaround until Bun stabilizes.
 
 ```bash
@@ -772,6 +729,8 @@ cd packages/forms-react && bun run test:all
 ```
 
 Revert to `"test:all": "bun test"` once the upstream Bun issue is resolved.
+
+**Test categories:** builder pattern, registration, rendering, validation, multi-step navigation, action execution, hooks, and custom components.
 
 ## Dependencies
 
