@@ -18,6 +18,14 @@ function createActionSchema<TType extends string>(type: TType, shape: z.ZodRawSh
 	});
 }
 
+function expectSchemaKeys(schemas: Record<string, unknown>, keys: string[]) {
+	expect(Object.keys(schemas).sort()).toEqual([...keys].sort());
+}
+
+function expectTypeConst(schemas: Record<string, { properties?: { $type?: { const?: string } } }>, key: string, type: string) {
+	expect(schemas[key]?.properties?.$type?.const).toBe(type);
+}
+
 describe('FormEngine JSON Schema Generation', () => {
 	describe('Basic Schema Generation', () => {
 		test('should generate JSON schema from empty engine', () => {
@@ -25,8 +33,8 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const schema = engine.generateJSONSchemaCollection();
 
-			expect(schema).toBeDefined();
-			expect(schema.schemas).toBeDefined();
+			expect(schema).toHaveProperty('schemas');
+			expect(Object.keys(schema.schemas)).toEqual([]);
 		});
 
 		test('should generate schema with single element', () => {
@@ -51,8 +59,8 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const schema = engine.generateJSONSchemaCollection();
 
-			expect(schema.schemas).toBeDefined();
-			expect(schema.schemas['element:text']).toBeDefined();
+			expectSchemaKeys(schema.schemas, ['element:text']);
+			expectTypeConst(schema.schemas, 'element:text', 'text');
 		});
 
 		test('should generate schemas for multiple component types', () => {
@@ -92,8 +100,7 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const schema = engine.generateJSONSchemaCollection();
 
-			expect(schema.schemas['element:text']).toBeDefined();
-			expect(schema.schemas['layout:card']).toBeDefined();
+			expectSchemaKeys(schema.schemas, ['element:text', 'layout:card']);
 		});
 	});
 
@@ -119,7 +126,6 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const catalog = engine.getSchemaCatalog();
 
-			expect(catalog).toBeDefined();
 			expect(catalog?.get('element:text')).toEqual({
 				id: 'element:text',
 				componentType: ComponentType.Element,
@@ -153,7 +159,6 @@ describe('FormEngine JSON Schema Generation', () => {
 			const schemaRegistry = engine.getSchemaRegistry();
 			const registeredMetadata = schemaRegistry.get(textInputSchema);
 
-			expect(registeredMetadata).toBeDefined();
 			expect(registeredMetadata?.id).toBe(`${ComponentType.Element}:text`);
 			expect(registeredMetadata?.componentType).toBe(ComponentType.Element);
 			expect(registeredMetadata?.title).toBe('Text Input');
@@ -247,10 +252,12 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const schema = engine.generateJSONSchemaCollection();
 
-			expect(schema.schemas['element:text']).toBeDefined();
-			expect(schema.schemas['layout:card']).toBeDefined();
-			expect(schema.schemas['stepper:wizard']).toBeDefined();
-			expect(schema.schemas['action:submit']).toBeDefined();
+			expectSchemaKeys(schema.schemas, [
+				'element:text',
+				'layout:card',
+				'stepper:wizard',
+				'action:submit',
+			]);
 		});
 	});
 
@@ -273,7 +280,8 @@ describe('FormEngine JSON Schema Generation', () => {
 				uri: (id: string) => `https://api.example.com/schemas/${id}.json`,
 			});
 
-			expect(schema).toBeDefined();
+			expectSchemaKeys(schema.schemas, ['element:text']);
+			expect(schema.schemas['element:text']?.$id).toBe('https://api.example.com/schemas/element:text.json');
 		});
 
 		test('should use default options when none provided', () => {
@@ -292,8 +300,7 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const schema = engine.generateJSONSchemaCollection();
 
-			expect(schema).toBeDefined();
-			expect(schema.schemas).toBeDefined();
+			expectSchemaKeys(schema.schemas, ['element:text']);
 		});
 	});
 
@@ -314,7 +321,6 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const registry = engine.getSchemaRegistry();
 
-			expect(registry).toBeDefined();
 			expect(registry.has(textInputSchema)).toBe(true);
 		});
 
@@ -383,7 +389,7 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const schema = engine.generateJSONSchemaCollection();
 
-			expect(schema.schemas['element:complex']).toBeDefined();
+			expectTypeConst(schema.schemas, 'element:complex', 'complex');
 		});
 
 		test('should handle schemas with enums and unions', () => {
@@ -404,7 +410,7 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const schema = engine.generateJSONSchemaCollection();
 
-			expect(schema.schemas['element:select']).toBeDefined();
+			expectTypeConst(schema.schemas, 'element:select', 'select');
 		});
 	});
 
@@ -439,9 +445,7 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const schema = engine.generateJSONSchemaCollection();
 
-			expect(schema.schemas['element:text']).toBeDefined();
-			expect(schema.schemas['element:email']).toBeDefined();
-			expect(schema.schemas['element:password']).toBeDefined();
+			expectSchemaKeys(schema.schemas, ['element:text', 'element:email', 'element:password']);
 		});
 
 		test('should inspect actual schema structure', () => {
@@ -514,10 +518,12 @@ describe('FormEngine JSON Schema Generation', () => {
 			const schema = engine.generateJSONSchemaCollection();
 			const registry = engine.getSchemaRegistry();
 
-			expect(schema.schemas['element:text']).toBeDefined();
-			expect(schema.schemas['element:heading']).toBeDefined();
-			expect(schema.schemas['element:divider']).toBeDefined();
-			expect(schema.schemas['element:button']).toBeDefined();
+			expectSchemaKeys(schema.schemas, [
+				'element:text',
+				'element:heading',
+				'element:divider',
+				'element:button',
+			]);
 
 			expect(registry.get(inputSchema)?.category).toBe('input');
 			expect(registry.get(headingSchema)?.category).toBe('content');
@@ -549,7 +555,7 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const schema = engine.generateJSONSchemaCollection();
 
-			expect(schema).toBeDefined();
+			expectSchemaKeys(schema.schemas, ['element:text']);
 		});
 
 		test('should check if schemas are properly interlinked', () => {
@@ -583,8 +589,7 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const schema = engine.generateJSONSchemaCollection();
 
-			expect(schema.schemas['element:address']).toBeDefined();
-			expect(schema.schemas['element:person']).toBeDefined();
+			expectSchemaKeys(schema.schemas, ['element:address', 'element:person']);
 		});
 
 		test('should verify URI generation for $ref', () => {
@@ -611,8 +616,10 @@ describe('FormEngine JSON Schema Generation', () => {
 				uri: (id) => `https://api.example.com/schemas/${id}.json`,
 			});
 
-			expect(schemaWithDefaultURI).toBeDefined();
-			expect(schemaWithCustomURI).toBeDefined();
+			expect(schemaWithDefaultURI.schemas['element:text']?.$id).toBe('#/definitions/element:text');
+			expect(schemaWithCustomURI.schemas['element:text']?.$id).toBe(
+				'https://api.example.com/schemas/element:text.json',
+			);
 		});
 
 		test('should generate proper JSON Schema format with all component types', () => {
@@ -695,8 +702,8 @@ describe('FormEngine JSON Schema Generation', () => {
 			expect(configSchema.required).toContain('id');
 			expect(configSchema.required).toContain('steps');
 
-			expect(configSchema.$defs).toBeDefined();
-			expect(configSchema.$defs['element:text']).toBeDefined();
+			expect(configSchema.$defs).toHaveProperty('element:text');
+			expectTypeConst(configSchema.$defs as Record<string, { properties?: { $type?: { const?: string } } }>, 'element:text', 'text');
 
 			const elementsItems = configSchema.properties.steps.items.properties.elements.items;
 			const hasDirectRef = elementsItems.$ref === '#/$defs/element:text';
@@ -814,7 +821,9 @@ describe('FormEngine JSON Schema Generation', () => {
 				}),
 			});
 
-			expect(engine.getActionConfigStandardSchema('submit')).toBeDefined();
+			expect(engine.getActionConfigStandardSchema('submit')?.['~standard'].vendor).toBe(
+				'@schema-engine/forms',
+			);
 			expect(engine.generateActionConfigSchema('submit')).toHaveProperty('$id', 'action:submit');
 		});
 
@@ -962,15 +971,17 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const configSchema = engine.generateFormConfigSchema();
 
-			expect(configSchema.properties.steps.items.properties.elements.items.anyOf).toHaveLength(2);
+			expect(configSchema.properties.steps.items.properties.elements.items.anyOf?.map(
+				(item: { $ref?: string }) => item.$ref,
+			)).toEqual(expect.arrayContaining(['#/$defs/element:text', '#/$defs/element:number']));
 
 			expect(
 				configSchema.properties.steps.items.properties.layout.$ref ||
 					configSchema.properties.steps.items.properties.layout.anyOf?.[0]?.$ref,
-			).toBeDefined();
+			).toBe('#/$defs/layout:card');
 			expect(
 				configSchema.properties.stepper.$ref || configSchema.properties.stepper.anyOf?.[0]?.$ref,
-			).toBeDefined();
+			).toBe('#/$defs/stepper:wizard');
 
 			const actionsItems = configSchema.properties.steps.items.properties.actions.items;
 			expect(
@@ -978,11 +989,13 @@ describe('FormEngine JSON Schema Generation', () => {
 					actionsItems.anyOf?.[0]?.$ref === '#/$defs/action:submit',
 			).toBe(true);
 
-			expect(configSchema.$defs['element:text']).toBeDefined();
-			expect(configSchema.$defs['element:number']).toBeDefined();
-			expect(configSchema.$defs['layout:card']).toBeDefined();
-			expect(configSchema.$defs['stepper:wizard']).toBeDefined();
-			expect(configSchema.$defs['action:submit']).toBeDefined();
+			expectSchemaKeys(configSchema.$defs as Record<string, unknown>, [
+				'element:text',
+				'element:number',
+				'layout:card',
+				'stepper:wizard',
+				'action:submit',
+			]);
 		});
 	});
 });
