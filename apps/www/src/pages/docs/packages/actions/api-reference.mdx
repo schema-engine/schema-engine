@@ -23,7 +23,7 @@ class ActionRegistry<TBaseContext, TTrigger>
 }
 ```
 
-Inherited behavior from `BaseRegistry` includes `register`, `has`, `get`, `getAll`, `getAllKeys`, `size`, `clear`, `getMap`, and `registerSchemas`.
+Inherited behavior from `BaseRegistry` includes `register`, `has`, `get`, `getAll`, `getAllKeys`, `size`, `clear`, and `getMap`.
 
 ## ActionExecutor
 
@@ -119,13 +119,6 @@ type ActionRuntimeContext<TConfig = unknown, TBaseContext = unknown, TTrigger = 
 ```
 
 The shape that action handlers receive at execution time. The executor creates this by spreading the caller-provided base context with the current `config` and `trigger`.
-
-```typescript
-type ActionExecutionContext<TConfig = unknown, TBaseContext = unknown, TTrigger = string> =
-	ActionRuntimeContext<TConfig, TBaseContext, TTrigger>;
-```
-
-`ActionExecutionContext` is an alias for `ActionRuntimeContext`.
 
 ## ActionExecuteInput
 

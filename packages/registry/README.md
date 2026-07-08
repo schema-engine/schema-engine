@@ -123,29 +123,6 @@ widgets.register({
 });
 ```
 
-## Registering Schemas Into Zod Metadata
-
-`registerSchemas(...)` publishes registrations whose schemas implement Zod's `register()`
-helper into a shared `z.registry()` instance. This supports JSON Schema metadata in
-`FormEngine` today.
-
-**Note:** `registerSchemas` is deprecated for new integrations. Prefer validating configs
-through each registration's Standard Schema directly.
-
-```typescript
-import { z } from 'zod';
-
-const schemaRegistry = z.registry();
-
-registry.registerSchemas(schemaRegistry, (item) => ({
-	id: item.$type,
-	title: item.metadata.name,
-	description: item.metadata.description,
-}));
-```
-
-Registrations without a Zod `register()` helper are skipped.
-
 ## Package Exports
 
 ```typescript

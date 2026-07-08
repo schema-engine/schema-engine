@@ -39,18 +39,6 @@ export type ActionRuntimeContext<TConfig = unknown, TBaseContext = unknown, TTri
 	triggeredBy?: TConfig;
 };
 
-/**
- * Action Execution Context
- *
- * Alias for the runtime context passed to action handlers.
- */
-export type ActionExecutionContext<TConfig = unknown, TBaseContext = unknown, TTrigger = string> = ActionRuntimeContext<
-	TConfig,
-	TBaseContext,
-	TTrigger
->;
-
-/**
  * Action Execution Result
  *
  * Standardized return type for all action handlers.

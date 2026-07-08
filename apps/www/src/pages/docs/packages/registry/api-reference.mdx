@@ -33,10 +33,6 @@ abstract class BaseRegistry<TKey extends string, TValue extends BaseRegistration
 	get size(): number;
 	clear(): void;
 	getMap(): Map<TKey, TValue>;
-	registerSchemas(
-		zodRegistry: ReturnType<typeof z.registry>,
-		metadataBuilder: (item: TValue) => Record<string, unknown>
-	): void;
 }
 ```
 
@@ -52,7 +48,6 @@ abstract class BaseRegistry<TKey extends string, TValue extends BaseRegistration
 | `size` | `number` | Count of items |
 | `clear()` | `void` | Removes all items |
 | `getMap()` | `Map` | Returns internal map (use sparingly) |
-| `registerSchemas(zodRegistry, metadataBuilder)` | `void` | **Deprecated.** Registers Zod schemas that expose `register()` into a `z.registry()` instance. Skips schemas without that helper. |
 
 ### Protected Methods
 
