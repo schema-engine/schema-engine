@@ -15,7 +15,6 @@ describe('React Form Engine Builder', () => {
 	describe('Builder Creation', () => {
 		test('should create a new builder instance', () => {
 			const builder = createReactFormComposer();
-			expect(builder).toBeDefined();
 			expect(typeof builder.addElement).toBe('function');
 			expect(typeof builder.addLayout).toBe('function');
 			expect(typeof builder.addStepper).toBe('function');
@@ -33,7 +32,6 @@ describe('React Form Engine Builder', () => {
 
 			expect(engine.hasElement('input')).toBe(true);
 			const element = engine.getElement('input');
-			expect(element).toBeDefined();
 			expect(element?.$type).toBe('input');
 		});
 
@@ -69,7 +67,6 @@ describe('React Form Engine Builder', () => {
 			const engine = builder.build();
 			const element = engine.getElement('input');
 
-			expect(element?.schema).toBeDefined();
 			expect(element?.schema).toBe(InputFieldSchema);
 		});
 
@@ -80,7 +77,6 @@ describe('React Form Engine Builder', () => {
 			const engine = builder.build();
 			const element = engine.getElement('input');
 
-			expect(element?.metadata).toBeDefined();
 			expect(element?.metadata.name).toBe('Text Input Field');
 			expect(element?.metadata.category).toBe('input');
 		});
@@ -95,7 +91,6 @@ describe('React Form Engine Builder', () => {
 
 			expect(engine.hasLayout('card')).toBe(true);
 			const layout = engine.getLayout('card');
-			expect(layout).toBeDefined();
 			expect(layout?.$type).toBe('card');
 		});
 
@@ -106,8 +101,7 @@ describe('React Form Engine Builder', () => {
 			const engine = builder.build();
 			const layout = engine.getLayout('card');
 
-			expect(layout?.metadata).toBeDefined();
-			expect(layout?.metadata.name).toBeDefined();
+			expect(layout?.metadata.name).toBe('Card Layout');
 		});
 	});
 
@@ -120,7 +114,6 @@ describe('React Form Engine Builder', () => {
 
 			expect(engine.hasStepper('default')).toBe(true);
 			const stepper = engine.getStepper('default');
-			expect(stepper).toBeDefined();
 			expect(stepper?.$type).toBe('default');
 		});
 	});
@@ -148,7 +141,6 @@ describe('React Form Engine Builder', () => {
 
 			const engine = builder.build();
 
-			expect(engine).toBeDefined();
 			expect(engine.hasElement('input')).toBe(true);
 		});
 
@@ -171,10 +163,10 @@ describe('React Form Engine Builder', () => {
 			const builder = createReactFormComposer();
 			const engine = builder.build();
 
-			expect(engine.getElementIds()).toHaveLength(0);
-			expect(engine.getStepperIds()).toHaveLength(0);
-			expect(engine.getLayoutIds()).toHaveLength(0);
-			expect(engine.getActionTypes()).toHaveLength(0);
+			expect(engine.getElementIds()).toEqual([]);
+			expect(engine.getStepperIds()).toEqual([]);
+			expect(engine.getLayoutIds()).toEqual([]);
+			expect(engine.getActionTypes()).toEqual([]);
 			const summary = engine.getSummary();
 			expect(summary.elements.count).toBe(0);
 			expect(summary.layouts.count).toBe(0);
@@ -202,9 +194,7 @@ describe('React Form Engine Builder', () => {
 			const engine = builder.build();
 			const elements = engine.getAllElements();
 
-			expect(elements).toHaveLength(2);
-			expect(engine.hasElement('input')).toBe(true);
-			expect(engine.hasElement('textarea')).toBe(true);
+			expect(elements.map((element) => element.$type).sort()).toEqual(['input', 'textarea']);
 		});
 
 		test('should return undefined for non-existent element', () => {
@@ -221,14 +211,12 @@ describe('React Form Engine Builder', () => {
 			const elementReg = InputElementRegistration;
 
 			expect(elementReg.$type).toBe('input');
-			expect(elementReg.render).toBeDefined();
 			expect(typeof elementReg.render).toBe('function');
 		});
 
 		test('should convert React component to render function', () => {
 			const elementReg = InputElementRegistration;
 
-			expect(elementReg.render).toBeDefined();
 			expect(typeof elementReg.render).toBe('function');
 		});
 	});

@@ -107,25 +107,21 @@ describe('Multiple Builders Type Isolation', () => {
 		const engine = builder.build();
 
 		const inputElement = engine.getElement('input');
-		expect(inputElement).toBeDefined();
 		expect(inputElement?.$type).toBe('input');
 
 		const checkboxElement = engine.getElement('checkbox');
-		expect(checkboxElement).toBeDefined();
 		expect(checkboxElement?.$type).toBe('checkbox');
 
 		const textareaElement = engine.getElement('textarea');
 		expect(textareaElement).toBeUndefined();
 
 		const cardLayout = engine.getLayout('card');
-		expect(cardLayout).toBeDefined();
 		expect(cardLayout?.$type).toBe('card');
 
 		const splitScreenLayout = engine.getLayout('split-screen');
 		expect(splitScreenLayout).toBeUndefined();
 
 		const defaultStepper = engine.getStepper('default');
-		expect(defaultStepper).toBeDefined();
 		expect(defaultStepper?.$type).toBe('default');
 
 		const minimalistStepper = engine.getStepper('minimalist');

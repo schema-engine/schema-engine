@@ -56,25 +56,18 @@ describe('FormEngine Type Safety', () => {
 			.build();
 
 		const inputElement = engine.getElement('input');
-		expect(inputElement).toBeDefined();
 		expect(inputElement?.$type).toBe('input');
 
 		const textareaElement = engine.getElement('textarea');
-		expect(textareaElement).toBeDefined();
 		expect(textareaElement?.$type).toBe('textarea');
 
 		const nonExistent = engine.getElement('nonexistent');
 		expect(nonExistent).toBeUndefined();
 
-		const allElements = engine.getAllElements();
-		expect(allElements).toHaveLength(2);
-		expect(allElements[0].$type).toMatch(/^(input|textarea)$/);
-		expect(allElements[1].$type).toMatch(/^(input|textarea)$/);
+		expect(engine.getAllElements().map((element) => element.$type).sort()).toEqual(['input', 'textarea']);
 
 		const elementIds = engine.getElementIds();
-		expect(elementIds).toContain('input');
-		expect(elementIds).toContain('textarea');
-		expect(elementIds).toHaveLength(2);
+		expect(elementIds.sort()).toEqual(['input', 'textarea']);
 	});
 
 	test('should correctly type layout retrieval', () => {
@@ -84,19 +77,13 @@ describe('FormEngine Type Safety', () => {
 			.build();
 
 		const cardLayout = engine.getLayout('card');
-		expect(cardLayout).toBeDefined();
 		expect(cardLayout?.$type).toBe('card');
 
 		const nonExistent = engine.getLayout('nonexistent');
 		expect(nonExistent).toBeUndefined();
 
-		const allLayouts = engine.getAllLayouts();
-		expect(allLayouts).toHaveLength(1);
-		expect(allLayouts[0].$type).toBe('card');
-
-		const layoutIds = engine.getLayoutIds();
-		expect(layoutIds).toContain('card');
-		expect(layoutIds).toHaveLength(1);
+		expect(engine.getAllLayouts()[0].$type).toBe('card');
+		expect(engine.getLayoutIds()).toEqual(['card']);
 	});
 
 	test('should correctly type stepper retrieval', () => {
@@ -106,19 +93,13 @@ describe('FormEngine Type Safety', () => {
 			.build();
 
 		const defaultStepper = engine.getStepper('default');
-		expect(defaultStepper).toBeDefined();
 		expect(defaultStepper?.$type).toBe('default');
 
 		const nonExistent = engine.getStepper('nonexistent');
 		expect(nonExistent).toBeUndefined();
 
-		const allSteppers = engine.getAllSteppers();
-		expect(allSteppers).toHaveLength(1);
-		expect(allSteppers[0].$type).toBe('default');
-
-		const stepperIds = engine.getStepperIds();
-		expect(stepperIds).toContain('default');
-		expect(stepperIds).toHaveLength(1);
+		expect(engine.getAllSteppers()[0].$type).toBe('default');
+		expect(engine.getStepperIds()).toEqual(['default']);
 	});
 
 	test('should provide comprehensive summary', () => {
@@ -144,7 +125,7 @@ describe('FormEngine Type Safety', () => {
 		expect(summary.steppers.ids).toContain('default');
 
 		expect(summary.actions.count).toBe(0);
-		expect(summary.actions.types).toHaveLength(0);
+		expect(summary.actions.types).toEqual([]);
 	});
 
 	test('should maintain type safety across different builders', () => {
@@ -163,9 +144,7 @@ describe('FormEngine Type Safety', () => {
 		expect(engine2.hasElement('input')).toBe(false);
 		expect(engine2.hasElement('textarea')).toBe(true);
 		expect(engine2.hasElement('checkbox')).toBe(true);
-		expect(engine2.getElementIds()).toContain('textarea');
-		expect(engine2.getElementIds()).toContain('checkbox');
-		expect(engine2.getElementIds()).toHaveLength(2);
+		expect(engine2.getElementIds().sort()).toEqual(['checkbox', 'textarea']);
 	});
 
 	test('engine should not be any type', () => {
@@ -205,14 +184,14 @@ describe('FormEngine Type Safety', () => {
 	test('should handle empty engine gracefully', () => {
 		const engine = createReactFormComposer().build();
 
-		expect(engine.getAllElements()).toHaveLength(0);
-		expect(engine.getElementIds()).toHaveLength(0);
-		expect(engine.getAllLayouts()).toHaveLength(0);
-		expect(engine.getLayoutIds()).toHaveLength(0);
-		expect(engine.getAllSteppers()).toHaveLength(0);
-		expect(engine.getStepperIds()).toHaveLength(0);
-		expect(engine.getAllActions()).toHaveLength(0);
-		expect(engine.getActionTypes()).toHaveLength(0);
+		expect(engine.getAllElements()).toEqual([]);
+		expect(engine.getElementIds()).toEqual([]);
+		expect(engine.getAllLayouts()).toEqual([]);
+		expect(engine.getLayoutIds()).toEqual([]);
+		expect(engine.getAllSteppers()).toEqual([]);
+		expect(engine.getStepperIds()).toEqual([]);
+		expect(engine.getAllActions()).toEqual([]);
+		expect(engine.getActionTypes()).toEqual([]);
 
 		const summary = engine.getSummary();
 		expect(summary.elements.count).toBe(0);
