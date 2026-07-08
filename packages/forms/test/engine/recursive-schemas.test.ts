@@ -31,10 +31,8 @@ describe('Recursive Schema Handling', () => {
 
 			const engine = new FormComposer().addElement(commentReg).build();
 
-			expect(() => {
-				const schema = engine.generateJSONSchemaCollection();
-				expect(schema.schemas['element:comment']).toBeDefined();
-			}).not.toThrow();
+			const schema = engine.generateJSONSchemaCollection();
+			expect(schema.schemas['element:comment']?.type).toBe('object');
 		});
 
 		test('should handle tree structure without infinite recursion', () => {
@@ -62,9 +60,8 @@ describe('Recursive Schema Handling', () => {
 			const engine = new FormComposer().addElement(treeReg).build();
 
 			const schema = engine.generateJSONSchemaCollection();
-
-			expect(schema.schemas['element:tree-node']).toBeDefined();
-			expect(schema.schemas['element:tree-node']?.properties?.children).toBeDefined();
+			expect(schema.schemas['element:tree-node']?.type).toBe('object');
+			expect(schema.schemas['element:tree-node']?.properties?.children).toMatchObject({ type: 'array' });
 		});
 	});
 
@@ -116,11 +113,9 @@ describe('Recursive Schema Handling', () => {
 
 			const engine = new FormComposer().addElement(userReg).addElement(postReg).build();
 
-			expect(() => {
-				const schema = engine.generateJSONSchemaCollection();
-				expect(schema.schemas['element:user']).toBeDefined();
-				expect(schema.schemas['element:post']).toBeDefined();
-			}).not.toThrow();
+			const schema = engine.generateJSONSchemaCollection();
+			expect(schema.schemas['element:user']?.type).toBe('object');
+			expect(schema.schemas['element:post']?.type).toBe('object');
 		});
 
 		test('should generate correct $ref for User-Post circular references', () => {
@@ -172,14 +167,14 @@ describe('Recursive Schema Handling', () => {
 
 			const schema = engine.generateJSONSchemaCollection();
 
-			expect(schema.schemas['element:user']).toBeDefined();
-			expect(schema.schemas['element:post']).toBeDefined();
+			expect(schema.schemas['element:user']?.type).toBe('object');
+			expect(schema.schemas['element:post']?.type).toBe('object');
 
 			const userSchema_generated = schema.schemas['element:user'];
-			expect(userSchema_generated?.properties?.posts).toBeDefined();
+			expect(userSchema_generated?.properties?.posts).toMatchObject({ type: 'array' });
 
 			const postSchema_generated = schema.schemas['element:post'];
-			expect(postSchema_generated?.properties?.author).toBeDefined();
+			expect(postSchema_generated?.properties?.author).toMatchObject({ $ref: '#/definitions/element:user' });
 		});
 	});
 
@@ -294,11 +289,9 @@ describe('Recursive Schema Handling', () => {
 
 			expect(duration).toBeLessThan(1000);
 
-			expect(schema.schemas['element:organization']).toBeDefined();
-			expect(schema.schemas['element:department']).toBeDefined();
-			expect(schema.schemas['element:team']).toBeDefined();
-			expect(schema.schemas['element:member']).toBeDefined();
-			expect(schema.schemas['element:project']).toBeDefined();
+			for (const key of ['organization', 'department', 'team', 'member', 'project'] as const) {
+				expect(schema.schemas[`element:${key}`]?.type).toBe('object');
+			}
 		});
 	});
 
@@ -330,8 +323,8 @@ describe('Recursive Schema Handling', () => {
 			const configSchema = engine.generateFormConfigSchema();
 
 			expect(configSchema.$id).toBe('form-config-schema');
-			expect(configSchema.$defs['element:comment']).toBeDefined();
-			expect(configSchema.properties.steps).toBeDefined();
+			expect(configSchema.$defs['element:comment']?.type).toBe('object');
+			expect(configSchema.properties.steps?.type).toBe('array');
 		});
 	});
 
@@ -362,8 +355,8 @@ describe('Recursive Schema Handling', () => {
 
 			const schema = engine.generateJSONSchemaCollection();
 
-			expect(schema.schemas['element:node']).toBeDefined();
-			expect(schema.schemas['element:node']?.properties?.children).toBeDefined();
+			expect(schema.schemas['element:node']?.type).toBe('object');
+			expect(schema.schemas['element:node']?.properties?.children).toMatchObject({ type: 'array' });
 		});
 
 		test('should handle nullable recursive references', () => {
@@ -392,8 +385,10 @@ describe('Recursive Schema Handling', () => {
 
 			const schema = engine.generateJSONSchemaCollection();
 
-			expect(schema.schemas['element:linked-node']).toBeDefined();
-			expect(schema.schemas['element:linked-node']?.properties?.next).toBeDefined();
+			expect(schema.schemas['element:linked-node']?.type).toBe('object');
+			expect(schema.schemas['element:linked-node']?.properties?.next).toMatchObject({
+				anyOf: [{ $ref: '#/definitions/element:linked-node' }, { type: 'null' }],
+			});
 		});
 	});
 });

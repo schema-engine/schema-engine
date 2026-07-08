@@ -95,7 +95,7 @@ describe('Validation', () => {
 			const rules = [validationRegistry.presets.string.required('Field is required')];
 			const schema = createZodSchemaFromRules(rules);
 
-			expect(() => schema.parse('test')).not.toThrow();
+			expect(schema.parse('test')).toBe('test');
 			expect(() => schema.parse('')).toThrow('Field is required');
 			expect(() => schema.parse(undefined)).toThrow('Field is required');
 		});
@@ -104,7 +104,7 @@ describe('Validation', () => {
 			const rules = [validationRegistry.presets.string.email('Invalid email')];
 			const schema = createZodSchemaFromRules(rules);
 
-			expect(() => schema.parse('test@example.com')).not.toThrow();
+			expect(schema.parse('test@example.com')).toBe('test@example.com');
 			expect(() => schema.parse('invalid-email')).toThrow('Invalid email');
 		});
 
@@ -112,7 +112,7 @@ describe('Validation', () => {
 			const rules = [validationRegistry.presets.number.min(5, 'Minimum 5')];
 			const schema = createZodSchemaFromRules(rules);
 
-			expect(() => schema.parse(10)).not.toThrow();
+			expect(schema.parse(10)).toBe(10);
 			expect(() => schema.parse(3)).toThrow('Minimum 5');
 		});
 
@@ -120,7 +120,7 @@ describe('Validation', () => {
 			const rules = [validationRegistry.presets.array.minItems(2, 'Min 2 items')];
 			const schema = createZodSchemaFromRules(rules);
 
-			expect(() => schema.parse([1, 2])).not.toThrow();
+			expect(schema.parse([1, 2])).toEqual([1, 2]);
 			expect(() => schema.parse([1])).toThrow('Min 2 items');
 		});
 
@@ -132,14 +132,14 @@ describe('Validation', () => {
 			];
 			const schema = createZodSchemaFromRules(rules);
 
-			expect(() => schema.parse('test@example.com')).not.toThrow();
+			expect(schema.parse('test@example.com')).toBe('test@example.com');
 			expect(() => schema.parse('te')).toThrow();
 			expect(() => schema.parse('invalid')).toThrow();
 		});
 
 		test('should handle empty rules array', () => {
 			const schema = createZodSchemaFromRules([]);
-			expect(() => schema.parse('anything')).not.toThrow();
+			expect(schema.parse('anything')).toBe('anything');
 		});
 	});
 
@@ -164,17 +164,19 @@ describe('Validation', () => {
 			];
 
 			const schema = generateFormSchema(elements as any);
-			expect(schema.shape.username).toBeDefined();
-			expect(schema.shape.email).toBeDefined();
-			expect(schema.shape.age).toBeDefined();
+			expect(Object.keys(schema.shape).sort()).toEqual(['age', 'email', 'username']);
 
-			expect(() =>
+			expect(
 				schema.parse({
 					username: 'jdoe',
 					email: 'john@example.com',
 					age: 25,
 				}),
-			).not.toThrow();
+			).toEqual({
+				username: 'jdoe',
+				email: 'john@example.com',
+				age: 25,
+			});
 
 			expect(() =>
 				schema.parse({
@@ -193,7 +195,7 @@ describe('Validation', () => {
 			];
 
 			const schema = generateFormSchema(elements as any);
-			expect(schema.shape.valid).toBeDefined();
+			expect('valid' in schema.shape).toBe(true);
 			expect((schema.shape as any).noRules).toBeUndefined();
 		});
 	});
@@ -202,14 +204,14 @@ describe('Validation', () => {
 		test('should create minItems validation rule', () => {
 			const rule: MinItemsRule = { type: 'minItems', value: 2, message: 'Min 2 items' };
 			const schema = createZodSchemaFromRules([rule]);
-			expect(() => schema.parse([1, 2])).not.toThrow();
+			expect(schema.parse([1, 2])).toEqual([1, 2]);
 			expect(() => schema.parse([1])).toThrow('Min 2 items');
 		});
 
 		test('should create maxItems validation rule', () => {
 			const rule: MaxItemsRule = { type: 'maxItems', value: 2, message: 'Max 2 items' };
 			const schema = createZodSchemaFromRules([rule]);
-			expect(() => schema.parse([1, 2])).not.toThrow();
+			expect(schema.parse([1, 2])).toEqual([1, 2]);
 			expect(() => schema.parse([1, 2, 3])).toThrow('Max 2 items');
 		});
 
@@ -219,8 +221,8 @@ describe('Validation', () => {
 				{ type: 'maxItems', value: 4 },
 			];
 			const schema = createZodSchemaFromRules(rules);
-			expect(() => schema.parse([1, 2])).not.toThrow();
-			expect(() => schema.parse([1, 2, 3, 4])).not.toThrow();
+			expect(schema.parse([1, 2])).toEqual([1, 2]);
+			expect(schema.parse([1, 2, 3, 4])).toEqual([1, 2, 3, 4]);
 			expect(() => schema.parse([1])).toThrow();
 			expect(() => schema.parse([1, 2, 3, 4, 5])).toThrow();
 		});
