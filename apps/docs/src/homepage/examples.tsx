@@ -12,15 +12,15 @@ const config = await new ConfigBuilder()
   .setRootDir(import.meta.dir)
   .setBaseUrl(baseUrl)
   .setDefaultMetadata({
-    title: 'Schema Engine',
-    description: 'JSON-driven, type-safe forms on top of Ecopages',
+    title: 'Schema Engine Docs',
+    description: 'JSON-driven, type-safe forms on top of the Ecopages framework.',
   })
   .setIntegrations([ecopagesJsxPlugin()])
   .setProcessors([
     postcssProcessorPlugin(
       tailwindV4Preset({
         referencePath: path.resolve(import.meta.dir, 'src/styles/app.css'),
-      })
+      }),
     ),
   ])
   .build();
@@ -50,22 +50,44 @@ export const contactFormConfig = {
     {
       id: 'contact-step',
       elements: [
-        { $type: 'submission-alert', id: 'status', name: 'status',
-          showOn: ['pending', 'success'] },
-        { $type: 'input', id: 'email', name: 'email',
-          inputType: 'email', label: 'Email Address',
+        {
+          $type: 'submission-alert',
+          id: 'status',
+          name: 'status',
+          showOn: ['pending', 'success'],
+          pendingMessage: 'Pending Submission',
+          successMessage: 'Submission Successful',
+        },
+        {
+          $type: 'input',
+          id: 'email',
+          name: 'email',
+          inputType: 'email',
+          label: 'Email Address',
           rules: [
             { type: 'required', message: 'Email is required' },
             { type: 'email', message: 'Please enter a valid email address' },
-          ] },
-        { $type: 'textarea', id: 'message', name: 'message',
+          ],
+        },
+        {
+          $type: 'textarea',
+          id: 'message',
+          name: 'message',
           label: 'Message',
           rules: [
-            { type: 'minLength', value: 10,
-              message: 'Message must be at least 10 characters long' },
-          ] },
-        { $type: 'submit', id: 'submit', name: 'submit',
-          label: 'Submit Form' },
+            {
+              type: 'minLength',
+              value: 10,
+              message: 'Message must be at least 10 characters long',
+            },
+          ],
+        },
+        {
+          $type: 'submit',
+          id: 'submit',
+          name: 'submit',
+          label: 'Submit Form',
+        },
       ],
     },
   ],
