@@ -1,0 +1,12 @@
+html {
+	scroll-behavior: smooth;
+	@apply bg-background;
+}
+
+::selection {
+	@apply bg-primary/30;
+}
+
+main {
+	@apply max-w-7xl w-full mx-auto;
+}
