@@ -88,6 +88,7 @@
       "name": "@schema-engine/actions",
       "version": "0.1.0",
       "dependencies": {
+        "@ecopages/logger": "^0.2.2",
         "@schema-engine/registry": "workspace:*",
         "zod": "^4.0.17",
       },
