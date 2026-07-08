@@ -1,0 +1,50 @@
+# Available Patterns
+
+This package provides generic primitives, not a built-in catalog of domain plugins.
+
+What ships in `@schema-engine/actions` today is:
+
+- `ActionRegistry`
+- `ActionExecutor`
+- `ActionDispatcher`
+- shared action types such as `ActionRegistration` and `ActionExecutionResult`
+
+## What You Build on Top
+
+Downstream packages define their own action types and registrations.
+
+Examples of domain-specific actions you might build include:
+
+- webhook actions
+- analytics actions
+- notification actions
+- persistence actions
+- workflow transition actions
+
+## Example Pattern: Analytics Action
+
+```typescript
+const analyticsAction = {
+	$type: 'track_event',
+	schema: TrackEventSchema,
+	metadata: {
+		name: 'Track Event',
+		defaultTriggers: ['submit'],
+	},
+	execute: async (context) => {
+		analytics.track(context.config.eventName, {
+			trigger: context.trigger,
+			entityId: context.entityId,
+			payload: context.config.payload,
+		});
+
+		return { success: true };
+	},
+};
+```
+
+## Where Built-In Behaviors Live
+
+If a downstream package such as forms offers submit, reset, notification, or autosave actions, those are package-specific implementations built on top of these generic primitives.
+
+This page intentionally avoids documenting forms-only plugins as if they shipped with `@schema-engine/actions`.

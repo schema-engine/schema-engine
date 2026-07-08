@@ -1,0 +1,118 @@
+# Advanced Usage
+
+## Sequential Execution
+
+Actions always execute sequentially.
+
+```typescript
+const results = await executor.execute({
+	actions: [action1, action2, action3],
+	trigger: 'submit',
+	context,
+});
+```
+
+`action2` will not start until `action1` finishes.
+
+## Stop on Failure
+
+Return `shouldContinue: false` to stop the chain.
+
+```typescript
+execute: async (context) => {
+	if (!context.isValid) {
+		return {
+			success: false,
+			error: 'Validation failed',
+			shouldContinue: false,
+		};
+	}
+
+	return { success: true };
+};
+```
+
+## Disabled Actions
+
+```typescript
+const action = {
+	id: 'my-action',
+	$type: 'log',
+	enabled: false,
+};
+```
+
+Disabled actions are skipped.
+
+## Debug Logging
+
+```typescript
+const executor = new ActionExecutor(registry, { debug: true });
+```
+
+## Custom Registry
+
+If you want a custom registry abstraction, use `ActionRegistryProvider` from the package root.
+
+```typescript
+import type { ActionRegistration, ActionRegistryProvider } from '@schema-engine/actions';
+
+class MyActionRegistry<TBaseContext, TTrigger> implements ActionRegistryProvider<TBaseContext, TTrigger> {
+	private actions = new Map<string, ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>>();
+
+	register(action: ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>) {
+		this.actions.set(action.$type, action);
+	}
+
+	getAction(type: string) {
+		return this.actions.get(type);
+	}
+
+	getActionTypes(): string[] {
+		return Array.from(this.actions.keys());
+	}
+}
+```
+
+## Testing Actions
+
+```typescript
+import { describe, expect, test } from 'bun:test';
+
+describe('logAction', () => {
+	test('returns success', async () => {
+		const result = await logAction.execute({
+			id: 'ctx-1',
+			data: {},
+			trigger: 'submit',
+			config: {
+				id: 'log-1',
+				$type: 'log',
+				message: 'hello',
+			},
+		});
+
+		expect(result.success).toBe(true);
+	});
+});
+```
+
+## Using defineAction
+
+For repeated action definitions within one domain, use the `defineAction` factory to avoid repeating base context and trigger generics:
+
+```typescript
+import { defineAction } from '@schema-engine/actions';
+
+const define = defineAction<AppContext, AppTrigger>();
+
+const myAction = define({
+	$type: 'my-action',
+	schema: mySchema,
+	metadata: { name: 'My Action' },
+	execute: async (context) => {
+		// context: AppContext & { config: MyConfig; trigger: AppTrigger }
+		return { success: true };
+	},
+});
+```

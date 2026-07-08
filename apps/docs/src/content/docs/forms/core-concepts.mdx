@@ -1,0 +1,151 @@
+# Core Concepts
+
+This page explains the fundamental concepts of the forms package.
+
+## FormComposer
+
+The builder provides a fluent API for registering components and creating immutable engine instances.
+
+```typescript
+import { z } from 'zod';
+import { defineAction } from '@schema-engine/actions';
+import { FormComposer, type BuilderActionBaseContext, type BuilderActionTrigger } from '@schema-engine/forms';
+
+// Mock registrations for this example
+const textInputRegistration = { $type: 'text', schema: {}, metadata: {}, render: () => null } as any;
+const cardLayoutRegistration = { $type: 'card', schema: {}, metadata: {}, render: () => null } as any;
+const wizardStepperRegistration = { $type: 'wizard', schema: {}, metadata: {}, render: () => null } as any;
+
+const defineFormAction = defineAction<BuilderActionBaseContext, BuilderActionTrigger>();
+
+const submitActionRegistration = defineFormAction({
+	$type: 'submit',
+	schema: z.object({
+		id: z.string(),
+		$type: z.literal('submit'),
+		endpoint: z.string(),
+	}),
+	metadata: {
+		name: 'Submit Form',
+		defaultTriggers: ['form_submit'],
+	},
+	execute: async (context) => ({
+		success: true,
+		data: {
+			endpoint: context.config.endpoint,
+			formId: context.formId,
+		},
+	}),
+});
+
+const engine = new FormComposer()
+	.addElement(textInputRegistration)
+	.addLayout(cardLayoutRegistration)
+	.addStepper(wizardStepperRegistration)
+	.addAction(submitActionRegistration)
+	.build();
+```
+
+**Features:**
+
+- Type-safe component registration with full TypeScript inference
+- Method chaining for readable configuration
+- Automatic validation of duplicate registrations
+- Immutable engine instances after build
+- Support for custom registry implementations via dependency injection
+
+## FormEngine
+
+The immutable runtime engine created by the builder. Provides methods for:
+
+- Retrieving registered components by registered type
+- Validating form configurations against registered schemas
+- Generating JSON schemas for form builders and documentation
+- Creating type-safe form instances
+
+## Component Registration
+
+All components share a common registration pattern:
+
+```typescript
+interface BaseRegistration<TConfig, TMeta> {
+	$type: string;           // Unique identifier
+	schema: z.ZodType<TConfig>; // Zod schema for validation
+	metadata: TMeta;         // Component metadata
+}
+```
+
+### Elements
+
+Elements are form fields and content components categorized by purpose:
+
+- **input** - Form inputs (text, email, select, etc.)
+- **content** - Static content (headings, paragraphs, images)
+- **decoration** - Visual elements (dividers, spacers)
+- **interactive** - Interactive components (buttons, links)
+
+```typescript
+import type { ElementRegistration } from '@schema-engine/forms';
+import { z } from 'zod';
+
+const TextInputConfigSchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	label: z.string(),
+	placeholder: z.string().optional(),
+});
+
+export const textInputRegistration: ElementRegistration<z.infer<typeof TextInputConfigSchema>> = {
+	$type: 'text',
+	schema: TextInputConfigSchema,
+	metadata: {
+		name: 'Text Input',
+		description: 'Single-line text input field',
+		category: 'input',
+		icon: 'text',
+	},
+	render: (props) => YourTextInputComponent(props),
+};
+```
+
+### Layouts
+
+Layouts wrap form content and provide structural organization:
+
+```typescript
+import type { LayoutRegistration } from '@schema-engine/forms';
+
+export const cardLayoutRegistration: LayoutRegistration<CardConfig> = {
+	$type: 'card',
+	schema: CardLayoutConfigSchema,
+	metadata: {
+		name: 'Card Layout',
+		description: 'Display form in a centered card container',
+		icon: 'card',
+	},
+	render: (props) => YourCardComponent(props),
+};
+```
+
+### Steppers
+
+Steppers control multi-step form navigation and state:
+
+```typescript
+import type { StepperRegistration } from '@schema-engine/forms';
+
+export const wizardStepperRegistration: StepperRegistration<WizardConfig> = {
+	$type: 'wizard',
+	schema: WizardStepperConfigSchema,
+	metadata: {
+		name: 'Wizard Stepper',
+		description: 'Step-by-step wizard navigation with progress indicator',
+		icon: 'wizard',
+	},
+	render: (props) => YourWizardComponent(props),
+};
+```
+
+### Actions
+
+Actions are event handlers that execute in response to form lifecycle events. In custom registrations, prefer `defineAction` from `@schema-engine/actions` with `BuilderActionBaseContext` and `BuilderActionTrigger` from `@schema-engine/forms` so the handler receives the correct runtime context automatically. See the [Actions](/docs/forms/actions) page for details.

@@ -1,0 +1,201 @@
+# API Reference
+
+## ActionRegistry
+
+```typescript
+class ActionRegistry<TBaseContext, TTrigger>
+	extends BaseRegistry<string, ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>>
+	implements ActionRegistryProvider<TBaseContext, TTrigger> {
+	get registryName(): string;
+	getAction(type: string): ActionRegistration<ActionConfigBase, TBaseContext, TTrigger> | undefined;
+	getActionTypes(): string[];
+}
+```
+
+Inherited behavior from `BaseRegistry` includes `register`, `has`, `get`, `getAll`, `getAllKeys`, `size`, `clear`, and `getMap`.
+
+## ActionExecutor
+
+```typescript
+class ActionExecutor<TBaseContext = unknown, TTrigger = string> {
+	constructor(
+		registry: ActionRegistryProvider<TBaseContext, TTrigger>,
+		options?: ActionExecutorOptions,
+	);
+
+	execute<TConfig extends ActionConfigBase>(
+		input: ActionExecuteInput<TConfig, TBaseContext, TTrigger>,
+	): Promise<ActionExecutionResult[]>;
+}
+
+interface ActionExecutorOptions {
+	debug?: boolean;
+}
+```
+
+Before each action runs, the executor enriches the caller-provided `context` with `config` and `trigger`, then passes the result to the handler.
+
+## ActionDispatcher
+
+```typescript
+class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
+	constructor(
+		registry: ActionRegistryProvider<TBaseContext, TTrigger>,
+		options?: ActionDispatcherOptions,
+	);
+
+	dispatch<TConfig extends ActionConfigBase>(
+		input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>,
+	): Promise<ActionExecutionResult[]>;
+
+	dispatchSync<TConfig extends ActionConfigBase>(
+		input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>,
+	): void;
+}
+
+interface ActionDispatcherOptions {
+	debug?: boolean;
+}
+```
+
+When `metadata` is provided in the input, `dispatch()` shallow-merges it into `context.metadata` before execution.
+
+## ActionRegistryProvider
+
+Available from the package root:
+
+```typescript
+import type { ActionRegistryProvider } from '@schema-engine/actions';
+```
+
+```typescript
+interface ActionRegistryProvider<TBaseContext = unknown, TTrigger = string, TRegistration = ActionRegistration<any, TBaseContext, TTrigger>> {
+	getAction(type: string): TRegistration | undefined;
+	getActionTypes(): string[];
+}
+```
+
+## ActionRegistration
+
+```typescript
+import type { StandardSchemaV1 } from '@standard-schema/spec';
+
+interface ActionRegistration<
+	TConfig extends ActionConfigBase = ActionConfigBase,
+	TBaseContext = unknown,
+	TTrigger = string,
+	TData = unknown,
+> extends BaseRegistration<TConfig, ActionMetadata<TTrigger>> {
+	$type: TConfig['$type'];
+	schema: StandardSchemaV1<TConfig>;
+	metadata: ActionMetadata<TTrigger>;
+	execute: ActionHandler<TConfig, TBaseContext, TTrigger, TData>;
+}
+```
+
+Zod schemas implement Standard Schema and remain valid `schema` values.
+
+`execute` receives an `ActionRuntimeContext` — the caller-provided `TBaseContext` enriched with `config` and `trigger` by the executor.
+
+## ActionRuntimeContext
+
+```typescript
+type ActionRuntimeContext<TConfig = unknown, TBaseContext = unknown, TTrigger = string> =
+	TBaseContext & {
+		config: TConfig;
+		trigger: TTrigger;
+	};
+```
+
+The shape that action handlers receive at execution time. The executor creates this by spreading the caller-provided base context with the current `config` and `trigger`.
+
+## ActionExecuteInput
+
+Object-based input for `ActionExecutor.execute()`.
+
+```typescript
+interface ActionExecuteInput<
+	TConfig extends ActionConfigBase = ActionConfigBase,
+	TBaseContext = unknown,
+	TTrigger = string,
+> {
+	trigger: TTrigger;
+	actions: TConfig[];
+	context: TBaseContext;
+	triggeredBy?: TConfig;
+}
+```
+
+## ActionDispatchInput
+
+Extends `ActionExecuteInput` with optional metadata merging.
+
+```typescript
+interface ActionDispatchInput<
+	TConfig extends ActionConfigBase = ActionConfigBase,
+	TBaseContext = unknown,
+	TTrigger = string,
+> extends ActionExecuteInput<TConfig, TBaseContext, TTrigger> {
+	metadata?: Record<string, unknown>;
+}
+```
+
+## ActionMetadata
+
+```typescript
+interface ActionMetadata<TTrigger = string> extends RegistrationMetadata {
+	icon?: string;
+	defaultTriggers?: readonly TTrigger[];
+	category?: string;
+}
+```
+
+## ActionConfigBase
+
+```typescript
+interface ActionConfigBase<TType extends string = string> {
+	id: string;
+	$type: TType;
+	enabled?: boolean;
+	triggers?: readonly string[];
+}
+```
+
+## ActionExecutionResult
+
+```typescript
+interface ActionExecutionResult<TData = unknown> {
+	success: boolean;
+	message?: string;
+	error?: string;
+	data?: TData;
+	shouldContinue?: boolean;
+	redirectUrl?: string;
+}
+```
+
+## defineAction
+
+A factory helper for creating strongly typed action registrations scoped to one domain:
+
+```typescript
+function defineAction<TBaseContext, TTrigger = string>(): <TConfig extends ActionConfigBase, TData = unknown>(
+	registration: ActionRegistration<TConfig, TBaseContext, TTrigger, TData>,
+) => ActionRegistration<TConfig, TBaseContext, TTrigger, TData>;
+```
+
+Usage:
+
+```typescript
+const define = defineAction<AppContext, AppTrigger>();
+
+const myAction = define({
+	$type: 'my-action',
+	schema: mySchema,
+	metadata: { name: 'My Action' },
+	execute: async (context) => {
+		// context is AppContext & { config: MyConfig; trigger: AppTrigger }
+		return { success: true };
+	},
+});
+```

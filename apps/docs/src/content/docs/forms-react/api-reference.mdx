@@ -1,0 +1,333 @@
+# API Reference
+
+Complete API documentation for `@schema-engine/forms-react`.
+
+## createReactFormComposer
+
+Factory function to create a React-specific form composer:
+
+```typescript
+function createReactFormComposer(): FormComposer;
+```
+
+## FormEngineProvider
+
+Provider component that supplies the engine and adapter to the component tree:
+
+```tsx
+<FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
+	{children}
+</FormEngineProvider>
+```
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `engine` | `FormEngine` | required | The built form engine |
+| `adapter` | `FormAdapter` | `rhfAdapter` | Form library adapter |
+| `children` | `ReactNode` | required | Child components |
+
+## FormRenderer
+
+Main component for rendering forms:
+
+```tsx
+<FormRenderer
+	config={formConfig}
+	onSubmit={handleSubmit}
+	defaultValues={defaultValues}
+/>
+```
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `config` | `FormConfig` | Form configuration object |
+| `onSubmit` | `(data) => void` | Submit handler |
+| `defaultValues` | `object` | Initial form values |
+
+## Hooks
+
+### useFormEngine
+
+```typescript
+function useFormEngine(): {
+	engine: FormEngine;
+};
+```
+
+### useFormInstance
+
+```typescript
+function useFormInstance(): UseFormReturn;
+```
+
+Returns the React Hook Form instance with all its methods (`getValues`, `setValue`, `trigger`, `formState`, etc.).
+
+### useFormInstanceActions
+
+```typescript
+function useFormInstanceActions(): {
+	currentStep: number;
+	totalSteps: number;
+	goToStep: (step: number) => void;
+	goToNext: () => void;
+	goToPrevious: () => void;
+	stepStates?: {
+		completed: boolean[];
+		valid: boolean[];
+		visited: boolean[];
+	};
+	navigation: {
+		canGoNext: boolean;
+		canGoPrevious: boolean;
+		isFirstStep: boolean;
+		isLastStep: boolean;
+		goToStep: (step: number) => void;
+		goToNextStep: () => void;
+		goToPreviousStep: () => void;
+	};
+	dispatchTrigger: (trigger: FormActionTrigger, extraMetadata?: Record<string, unknown>) => Promise<ActionExecutionResult[]>;
+	dispatchTriggerSync: (trigger: FormActionTrigger, extraMetadata?: Record<string, unknown>) => void;
+};
+```
+
+### useControlledFormElement
+
+```typescript
+function useControlledFormElement(config: ElementConfig): {
+	field: ControllerRenderProps;
+	fieldState: ControllerFieldState;
+	formState: UseFormStateReturn;
+	value: any;
+	error: string | undefined;
+	isDirty: boolean;
+	isTouched: boolean;
+	isRequired: boolean;
+	onChange: (value: any) => void;
+	onBlur: () => void;
+	fieldProps: object;
+	labelProps: object;
+	errorProps: object | null;
+	containerStyles: object;
+	gridStyles: object;
+	config: ElementConfig;
+	combineHandlers: <T>(controller: (v: T) => void, props?: (v: T) => void) => (v: T) => void;
+};
+```
+
+### useAdapterControlledFormElement
+
+```typescript
+function useAdapterControlledFormElement(config: ElementConfig): {
+	value: unknown;
+	error: string | undefined;
+	isRequired: boolean;
+	onChange: (value: unknown) => void;
+	onBlur: () => void;
+	fieldProps: object;
+	labelProps: object;
+	errorProps: object | null;
+	containerStyles: object;
+	gridStyles: object;
+	config: ElementConfig;
+	combineHandlers: <T>(adapter: (v: T) => void, props?: (v: T) => void) => (v: T) => void;
+};
+```
+
+Adapter-aware alternative to `useControlledFormElement()` for non-RHF adapters.
+
+### useConstraintLogic
+
+```typescript
+function useConstraintLogic(
+	constraints?: ConstraintLogic[],
+	baseRequired?: boolean,
+	fieldPath?: string
+): {
+	isVisible: boolean;
+	isDisabled: boolean;
+	isRequired: boolean;
+};
+```
+
+### useSubmissionState
+
+```typescript
+function useSubmissionState(): {
+	submissionState: {
+		status: 'idle' | 'pending' | 'success' | 'error';
+		errors: Array<{ actionId: string; message: string }>;
+		successMessage: string | null;
+	};
+	clearSubmission: () => void;
+};
+```
+
+### useGDPRConsent
+
+```typescript
+function useGDPRConsent(): {
+	hasConsent: () => boolean;
+	grantConsent: () => void;
+	revokeConsent: () => void;
+	needsUpdate: () => boolean;
+	getConsent: () => ConsentData | null;
+};
+```
+
+### useGTMTracker
+
+```typescript
+function useGTMTracker(): {
+	isAvailable: () => boolean;
+	push: (event: string, data?: Record<string, any>) => void;
+	pushFormEvent: (eventType: string, formData?: Record<string, any>, metadata?: Record<string, any>) => void;
+	initialize: (containerId: string) => void;
+};
+```
+
+### useDebounce
+
+```typescript
+function useDebounce<T extends (...args: any[]) => void>(
+	callback: T,
+	delay: number,
+): (...args: Parameters<T>) => void;
+```
+
+### useDebouncedValue
+
+```typescript
+function useDebouncedValue<T>(value: T, delay: number): T;
+```
+
+### useBreakpoint
+
+```typescript
+type Breakpoint = 'default' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+
+function useBreakpoint(breakpoints?: Record<Breakpoint, number>): Breakpoint;
+```
+
+### useFormGridStyles
+
+```typescript
+function useFormGridStyles(gridConfig?: GridLayoutConfig): React.CSSProperties;
+```
+
+### useFieldGridStyles
+
+```typescript
+function useFieldGridStyles(fieldGridConfig?: ElementGridConfig): React.CSSProperties;
+```
+
+## Context Helpers
+
+### useLayoutContext
+
+```typescript
+function useLayoutContext<TConfig = Record<string, any>>(): {
+	step: {
+		id: string;
+		title?: string;
+		description?: string;
+		index?: number;
+		total?: number;
+	};
+	form: {
+		id: string;
+		title?: string;
+		description?: string;
+	};
+	config: TConfig;
+};
+```
+
+### useStepperContext
+
+```typescript
+function useStepperContext(): {
+	steps: StepData[];
+	currentStepIndex: number;
+	navigation: StepperNavigation;
+	form: {
+		id: string;
+		title?: string;
+		description?: string;
+		isSubmitting?: boolean;
+	};
+	config: Record<string, any>;
+};
+```
+
+### LayoutProvider
+
+```tsx
+<LayoutProvider value={layoutContextValue}>{children}</LayoutProvider>
+```
+
+### StepperProvider
+
+```tsx
+<StepperProvider value={stepperContextValue}>{children}</StepperProvider>
+```
+
+## Types
+
+### FormConfig
+
+```typescript
+interface FormConfig {
+	id: string;
+	title?: string;
+	description?: string;
+	steps: StepConfig[];
+	stepper?: StepperConfig;
+	actions?: ActionConfig[];
+}
+```
+
+### StepConfig
+
+```typescript
+interface StepConfig {
+	id: string;
+	title?: string;
+	description?: string;
+	elements: ElementConfig[];
+	layout?: LayoutConfig;
+	grid?: GridLayoutConfig;
+}
+```
+
+### ElementConfig
+
+```typescript
+interface ElementConfig {
+	$type: string;
+	id?: string;
+	name: string;
+	label?: string;
+	rules?: ValidationRule[];  // Note: "rules" not "validation"
+	constraints?: ConstraintLogic[];
+	grid?: ElementGridConfig;
+	// ... type-specific properties
+}
+```
+
+### LayoutConfig
+
+```typescript
+interface LayoutConfig {
+	$type: string;  // Note: "$type" not "id"
+	// ... layout-specific properties (maxWidth, padding, etc.)
+}
+```
+
+### StepperConfig
+
+```typescript
+interface StepperConfig {
+	$type: string;  // Note: "$type" not "id"
+	// ... stepper-specific properties
+}
+```

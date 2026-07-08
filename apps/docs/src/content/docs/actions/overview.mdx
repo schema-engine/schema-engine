@@ -1,0 +1,99 @@
+# @schema-engine/actions
+
+## Overview
+
+`@schema-engine/actions` is the generic action core used across Schema Engine packages.
+
+It provides:
+
+- action registrations
+- a registry for resolving action types
+- a sequential executor
+- a thin dispatcher for metadata-aware dispatching
+
+The package is intended to be reused across multiple domains. Forms is the first concrete implementation in this repo, but the package itself is not form-specific.
+
+## Current Model
+
+The current implementation separates the caller-provided base context from the runtime context seen by action handlers.
+
+When an action runs, the executor enriches the base context with the current action config and trigger before calling `execute()`.
+
+```typescript
+execute({
+	...context,
+	config: action,
+	trigger,
+});
+```
+
+At the call site you pass only the base context. The merged runtime shape is constructed internally.
+
+## Dependencies
+
+`zod` is the only external runtime dependency. The package also depends on the internal `@schema-engine/registry` package from the same workspace family.
+
+## Quick Example
+
+```typescript
+import { z } from 'zod';
+import { ActionExecutor, type ActionRegistration, ActionRegistry } from '@schema-engine/actions';
+
+type Trigger = 'submit' | 'change';
+
+type BaseContext = {
+	userId: string;
+	metadata?: Record<string, unknown>;
+};
+
+type LogConfig = {
+	id: string;
+	$type: 'log';
+	message: string;
+	enabled?: boolean;
+	triggers?: readonly string[];
+};
+
+const registry = new ActionRegistry<BaseContext, Trigger>();
+
+const logAction: ActionRegistration<LogConfig, BaseContext, Trigger> = {
+	$type: 'log',
+	schema: z.object({
+		id: z.string(),
+		$type: z.literal('log'),
+		message: z.string(),
+	}),
+	metadata: {
+		name: 'Log Message',
+		description: 'Logs a message',
+		defaultTriggers: ['submit'],
+	},
+	execute: (context) => {
+		console.log(context.userId, context.trigger, context.config.message);
+		return { success: true };
+	},
+};
+
+registry.register(logAction);
+
+const executor = new ActionExecutor(registry);
+
+const baseContext: BaseContext = {
+	userId: 'user_123',
+};
+
+await executor.execute({
+	actions: [{ id: '1', $type: 'log', message: 'Hello' }],
+	trigger: 'submit',
+	context: baseContext,
+});
+```
+
+The handler still receives `BaseContext & { config: LogConfig; trigger: Trigger }`, but that runtime shape is injected by the executor.
+
+## Next Steps
+
+- [Getting Started](/docs/actions/getting-started)
+- [Core Concepts](/docs/actions/core-concepts)
+- [Advanced Usage](/docs/actions/advanced)
+- [API Reference](/docs/actions/api-reference)

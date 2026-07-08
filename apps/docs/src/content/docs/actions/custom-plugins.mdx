@@ -1,0 +1,121 @@
+# Custom Actions
+
+`@schema-engine/actions` does not ship built-in domain plugins. Instead, you define your own registrations for your domain.
+
+## Define a Config Schema
+
+```typescript
+import { z } from 'zod';
+
+export const WebhookActionSchema = z.object({
+	id: z.string(),
+	$type: z.literal('webhook'),
+	url: z.string().url(),
+	method: z.enum(['POST', 'PUT']).default('POST'),
+	body: z.record(z.string(), z.unknown()).optional(),
+	enabled: z.boolean().optional(),
+	triggers: z.array(z.string()).optional(),
+});
+
+export type WebhookActionConfig = z.infer<typeof WebhookActionSchema>;
+```
+
+## Define the Base Context and Trigger
+
+```typescript
+type Trigger = 'submit' | 'sync';
+
+interface BaseContext {
+	entityId: string;
+	data: Record<string, unknown>;
+}
+```
+
+## Create the Registration
+
+```typescript
+import type { ActionRegistration } from '@schema-engine/actions';
+
+export const webhookAction: ActionRegistration<WebhookActionConfig, BaseContext, Trigger> = {
+	$type: 'webhook',
+	schema: WebhookActionSchema,
+	metadata: {
+		name: 'Webhook',
+		description: 'Sends the current payload to a remote endpoint',
+		defaultTriggers: ['submit'],
+	},
+	execute: async (context) => {
+		const response = await fetch(context.config.url, {
+			method: context.config.method,
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				trigger: context.trigger,
+				entityId: context.entityId,
+				data: context.data,
+				payload: context.config.body ?? null,
+			}),
+		});
+
+		if (!response.ok) {
+			return {
+				success: false,
+				error: `Webhook failed with status ${response.status}`,
+			};
+		}
+
+		return {
+			success: true,
+			message: 'Webhook delivered',
+		};
+	},
+};
+```
+
+The handler receives `BaseContext & { config: WebhookActionConfig; trigger: Trigger }`. That runtime shape is created by the executor; you do not provide it at the call site.
+
+## Register and Execute
+
+```typescript
+import { ActionExecutor, ActionRegistry } from '@schema-engine/actions';
+
+const registry = new ActionRegistry<BaseContext, Trigger>();
+registry.register(webhookAction);
+
+const executor = new ActionExecutor<BaseContext, Trigger>(registry);
+
+const baseContext: BaseContext = {
+	entityId: 'entity-1',
+	data: { status: 'ready' },
+};
+
+await executor.execute({
+	actions: [
+		{
+			id: 'send-webhook',
+			$type: 'webhook',
+			url: 'https://example.com/hooks',
+			method: 'POST',
+		},
+	],
+	trigger: 'submit',
+	context: baseContext,
+});
+```
+
+## Design Guidance
+
+- Keep schemas strict and serializable.
+- Keep `execute()` focused on one side effect.
+- Use `defaultTriggers` for broad defaults and per-action `triggers` for overrides.
+- Return `shouldContinue: false` only when you want to stop the chain explicitly.
+
+## Typing Model
+
+There are two layers:
+
+- `BaseContext` is what callers pass into `execute()` or `dispatch()`.
+- The action handler receives `ActionRuntimeContext<WebhookActionConfig, BaseContext, Trigger>`, which the executor constructs by adding `config` and `trigger`.
+
+This keeps the call site simple while preserving a strongly typed handler context.

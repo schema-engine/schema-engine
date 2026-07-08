@@ -1,0 +1,741 @@
+import { LivePreview, CodePreview } from '@/components/code-preview';
+
+
+
+# Built-in Validations
+
+Form Engine comes with a comprehensive set of built-in validation types that cover most common use cases. Each validation type is implemented as a Zod schema transformation and can be used directly in your form configurations.
+
+## String Validations
+
+### Required
+
+Ensures a field has a value (not empty, null, or undefined).
+
+```typescript
+// Basic usage
+{ type: 'required', message: 'This field is required' }
+
+// In form configuration
+{
+  id: 'input',
+  name: 'fullName',
+  label: 'Full Name',
+  rules: [
+    { type: 'required', message: 'Please enter your full name' }
+  ]
+}
+```
+
+**Zod equivalent:** `z.string().min(1, message)`
+
+### Email
+
+Validates email address format using Zod's built-in email validation.
+
+```typescript
+// Basic usage
+{ type: 'email', message: 'Please enter a valid email address' }
+
+// Example form field
+{
+  id: 'input',
+  inputType: 'email',
+  name: 'email',
+  label: 'Email Address',
+  rules: [
+    { type: 'required', message: 'Email is required' },
+    { type: 'email', message: 'Please enter a valid email address' }
+  ]
+}
+```
+
+**Zod equivalent:** `z.string().email(message)`
+
+### String Length
+
+Control minimum and maximum string lengths.
+
+```typescript
+// Minimum length
+{ type: 'minLength', value: 3, message: 'Must be at least 3 characters' }
+
+// Maximum length
+{ type: 'maxLength', value: 100, message: 'Cannot exceed 100 characters' }
+
+// Username field example
+{
+  id: 'input',
+  name: 'username',
+  label: 'Username',
+  rules: [
+    { type: 'required', message: 'Username is required' },
+    { type: 'minLength', value: 3, message: 'Username must be at least 3 characters' },
+    { type: 'maxLength', value: 20, message: 'Username cannot exceed 20 characters' }
+  ]
+}
+```
+
+**Zod equivalent:** `z.string().min(value, message)` / `z.string().max(value, message)`
+
+### Pattern (Regex)
+
+Validate against custom regular expression patterns.
+
+```typescript
+// Phone number pattern
+{
+  type: 'pattern',
+  value: '/^\\+?[1-9]\\d{1,14}$/',
+  message: 'Please enter a valid phone number'
+}
+
+// Password strength pattern
+{
+  type: 'pattern',
+  value: '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]/',
+  message: 'Password must contain uppercase, lowercase, number, and special character'
+}
+
+// Form field example
+{
+  id: 'input',
+  name: 'phoneNumber',
+  label: 'Phone Number',
+  rules: [
+    { type: 'required', message: 'Phone number is required' },
+    { type: 'pattern', value: '/^\\+?[1-9]\\d{1,14}$/', message: 'Please enter a valid phone number' }
+  ]
+}
+```
+
+**Zod equivalent:** `z.string().regex(new RegExp(pattern), message)`
+
+### URL
+
+Validates URL format.
+
+```typescript
+// Basic URL validation
+{ type: 'url', message: 'Please enter a valid URL' }
+
+// Website field example
+{
+  id: 'input',
+  inputType: 'url',
+  name: 'website',
+  label: 'Website',
+  rules: [
+    { type: 'url', message: 'Please enter a valid website URL' }
+  ]
+}
+```
+
+**Zod equivalent:** `z.string().url(message)`
+
+### UUID
+
+Validates UUID format with optional version specification.
+
+```typescript
+// Any UUID version
+{ type: 'uuid', message: 'Please enter a valid UUID' }
+
+// Specific UUID version
+{ type: 'uuid', version: 4, message: 'Please enter a valid UUID v4' }
+
+// ID field example
+{
+  id: 'input',
+  name: 'resourceId',
+  label: 'Resource ID',
+  rules: [
+    { type: 'required', message: 'Resource ID is required' },
+    { type: 'uuid', version: 4, message: 'Please enter a valid UUID v4' }
+  ]
+}
+```
+
+**Zod equivalent:** `z.string().uuid(message)`
+
+## Number Validations
+
+### Min/Max Values
+
+Set minimum and maximum numeric values.
+
+```typescript
+// Minimum value
+{ type: 'min', value: 0, message: 'Value cannot be negative' }
+
+// Maximum value
+{ type: 'max', value: 100, message: 'Value cannot exceed 100' }
+
+// Age field example
+{
+  id: 'input',
+  inputType: 'number',
+  name: 'age',
+  label: 'Age',
+  rules: [
+    { type: 'required', message: 'Age is required' },
+    { type: 'min', value: 18, message: 'You must be at least 18 years old' },
+    { type: 'max', value: 120, message: 'Please enter a valid age' }
+  ]
+}
+
+// Rating field example
+{
+  id: 'input',
+  inputType: 'number',
+  name: 'rating',
+  label: 'Rating (1-5)',
+  rules: [
+    { type: 'required', message: 'Rating is required' },
+    { type: 'min', value: 1, message: 'Rating must be at least 1' },
+    { type: 'max', value: 5, message: 'Rating cannot exceed 5' }
+  ]
+}
+```
+
+**Zod equivalent:** `z.number().min(value, message)` / `z.number().max(value, message)`
+
+## Array Validations
+
+### Min/Max Items
+
+Control array length constraints.
+
+```typescript
+// Minimum items required
+{ type: 'minItems', value: 1, message: 'Please select at least one option' }
+
+// Maximum items allowed
+{ type: 'maxItems', value: 5, message: 'You can select up to 5 options' }
+
+// Multi-select field example
+{
+  id: 'checkbox-group',
+  name: 'interests',
+  label: 'Select your interests',
+  options: [
+    { value: 'tech', label: 'Technology' },
+    { value: 'sports', label: 'Sports' },
+    { value: 'music', label: 'Music' },
+    { value: 'travel', label: 'Travel' },
+    { value: 'food', label: 'Food' }
+  ],
+  rules: [
+    { type: 'minItems', value: 1, message: 'Please select at least one interest' },
+    { type: 'maxItems', value: 3, message: 'Please select no more than 3 interests' }
+  ]
+}
+```
+
+**Zod equivalent:** `z.array().min(value, message)` / `z.array().max(value, message)`
+
+## Network & Format Validations
+
+### IP Address
+
+Validate IP addresses with explicit IPv4 or IPv6 rule types.
+
+```typescript
+// IPv4
+{ type: 'ipv4', message: 'Please enter a valid IPv4 address' }
+
+// IPv6
+{ type: 'ipv6', message: 'Please enter a valid IPv6 address' }
+
+// Server IP field example
+{
+  id: 'input',
+  name: 'serverIp',
+  label: 'Server IP Address',
+  rules: [
+    { type: 'required', message: 'Server IP is required' },
+    { type: 'ipv4', message: 'Please enter a valid IPv4 address' }
+  ]
+}
+```
+
+The package registers IPv4 and IPv6 as separate validation rule types.
+
+### CIDR Notation
+
+Validate CIDR notation for network addresses.
+
+```typescript
+// Any CIDR version
+{ type: 'cidr', message: 'Please enter valid CIDR notation' }
+
+// IPv4 CIDR
+{ type: 'cidr', version: 'v4', message: 'Please enter valid IPv4 CIDR notation' }
+
+// Network field example
+{
+  id: 'input',
+  name: 'networkRange',
+  label: 'Network Range',
+  placeholder: '192.168.1.0/24',
+  rules: [
+    { type: 'required', message: 'Network range is required' },
+    { type: 'cidr', version: 'v4', message: 'Please enter valid IPv4 CIDR notation' }
+  ]
+}
+```
+
+### JWT Token
+
+Validate JSON Web Token format.
+
+```typescript
+// Basic JWT validation
+{ type: 'jwt', message: 'Please enter a valid JWT token' }
+
+// With algorithm specification
+{ type: 'jwt', alg: 'HS256', message: 'Please enter a valid HS256 JWT token' }
+
+// Token field example
+{
+  id: 'textarea',
+  name: 'apiToken',
+  label: 'API Token',
+  rules: [
+    { type: 'required', message: 'API token is required' },
+    { type: 'jwt', message: 'Please enter a valid JWT token' }
+  ]
+}
+```
+
+### Hash Validation
+
+Validate hash formats for various algorithms.
+
+```typescript
+// SHA-256 hash
+{ type: 'hash', algorithm: 'sha256', message: 'Please enter a valid SHA-256 hash' }
+
+// MD5 hash
+{ type: 'hash', algorithm: 'md5', message: 'Please enter a valid MD5 hash' }
+
+// File hash field example
+{
+  id: 'input',
+  name: 'fileHash',
+  label: 'File Hash (SHA-256)',
+  rules: [
+    { type: 'required', message: 'File hash is required' },
+    { type: 'hash', algorithm: 'sha256', message: 'Please enter a valid SHA-256 hash' }
+  ]
+}
+```
+
+### Base64 Encoding
+
+Validate Base64 encoded strings.
+
+```typescript
+// Standard Base64
+{ type: 'base64', message: 'Please enter valid Base64 data' }
+
+// URL-safe Base64
+{ type: 'base64', urlSafe: true, message: 'Please enter valid URL-safe Base64 data' }
+
+// Encoded data field example
+{
+  id: 'textarea',
+  name: 'encodedData',
+  label: 'Base64 Encoded Data',
+  rules: [
+    { type: 'required', message: 'Encoded data is required' },
+    { type: 'base64', message: 'Please enter valid Base64 encoded data' }
+  ]
+}
+```
+
+### Format Validation
+
+Validate specific string formats using direct rule types.
+
+```typescript
+// CUID
+{ type: 'cuid', message: 'Please enter a valid CUID' }
+
+// CUID2
+{ type: 'cuid2', message: 'Please enter a valid CUID2' }
+
+// ULID
+{ type: 'ulid', message: 'Please enter a valid ULID' }
+
+// Hexadecimal
+{ type: 'hex', message: 'Please enter valid hexadecimal' }
+
+// ID field example
+{
+  id: 'input',
+  name: 'uniqueId',
+  label: 'Unique ID',
+  rules: [
+    { type: 'required', message: 'Unique ID is required' },
+    { type: 'cuid2', message: 'Please enter a valid CUID2' }
+  ]
+}
+```
+
+## Date & Time Validations
+
+### DateTime
+
+Validate ISO datetime strings with various options.
+
+```typescript
+// Basic datetime validation
+{ type: 'datetime', message: 'Please enter a valid datetime' }
+
+// With precision
+{ type: 'datetime', precision: 3, message: 'Please enter datetime with millisecond precision' }
+
+// With timezone offset requirement
+{ type: 'datetime', offset: true, message: 'Please include timezone offset' }
+
+// Local datetime (no timezone)
+{ type: 'datetime', local: true, message: 'Please enter local datetime' }
+
+// Appointment field example
+{
+  id: 'input',
+  inputType: 'datetime-local',
+  name: 'appointmentTime',
+  label: 'Appointment Date & Time',
+  rules: [
+    { type: 'required', message: 'Appointment time is required' },
+    { type: 'datetime', local: true, message: 'Please enter a valid date and time' }
+  ]
+}
+```
+
+### Date
+
+Validate date strings.
+
+```typescript
+// Date validation
+{ type: 'date', message: 'Please enter a valid date' }
+
+// Birth date field example
+{
+  id: 'input',
+  inputType: 'date',
+  name: 'birthDate',
+  label: 'Date of Birth',
+  rules: [
+    { type: 'required', message: 'Date of birth is required' },
+    { type: 'date', message: 'Please enter a valid date' }
+  ]
+}
+```
+
+### Time
+
+Validate time strings with optional precision.
+
+```typescript
+// Basic time validation
+{ type: 'time', message: 'Please enter a valid time' }
+
+// With precision
+{ type: 'time', precision: 2, message: 'Please enter time with centisecond precision' }
+
+// Meeting time field example
+{
+  id: 'input',
+  inputType: 'time',
+  name: 'meetingTime',
+  label: 'Meeting Time',
+  rules: [
+    { type: 'required', message: 'Meeting time is required' },
+    { type: 'time', message: 'Please enter a valid time' }
+  ]
+}
+```
+
+## Async Validation
+
+For server-side validation that requires network requests, with built-in caching and enhanced dependency support.
+
+```typescript
+// Username availability check with caching
+{
+  type: 'async',
+  url: '/api/validate-username',
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: {
+    // Value is automatically included as { value: actualFieldValue }
+  },
+  expectedResponse: { valid: true },
+  debounce: 500, // Wait 500ms after user stops typing
+  cacheTTL: 300000, // Cache results for 5 minutes
+  message: 'Username is already taken'
+}
+
+// Email verification with dependencies
+{
+  type: 'async',
+  url: '/api/verify-email',
+  method: 'POST',
+  body: {
+    // Automatically creates dependsOn: { username: actualUsernameValue }
+  },
+  dependencies: ['username'], // Re-validate when username changes
+  expectedResponse: { valid: true },
+  debounce: 800,
+  cacheTTL: 600000, // Cache for 10 minutes
+  disableCache: false, // Enable caching (default)
+  message: 'Email address could not be verified'
+}
+
+// Cross-field validation with dependency resolution
+{
+  type: 'async',
+  url: '/api/validate-dependent-field',
+  method: 'POST',
+  body: {
+    // System automatically adds dependsOn object with actual field values:
+    // dependsOn: { username: "actualValue", email: "actual@email.com" }
+  },
+  dependencies: ['username', 'email'], // Depends on multiple fields
+  expectedResponse: { valid: true },
+  debounce: 600,
+  message: 'This value conflicts with other selections'
+}
+
+// Form field with async validation
+{
+  id: 'input',
+  name: 'username',
+  label: 'Username',
+  rules: [
+    { type: 'required', message: 'Username is required' },
+    { type: 'minLength', value: 3, message: 'Username must be at least 3 characters' },
+    {
+      type: 'async',
+      url: '/api/check-username',
+      method: 'POST',
+      body: { },
+      debounce: 500,
+      cacheTTL: 300000, // 5 minutes
+      message: 'This username is already taken'
+    }
+  ]
+}
+```
+
+### Live Async Validation Demo
+
+See async validation in action:
+
+<LivePreview>
+import { AsyncValidationDemo } from '@/components/demo/async-validation-demo';
+
+<AsyncValidationDemo />
+</LivePreview>
+
+The demo above shows:
+
+- **Debounced validation**: API calls only happen after user stops typing
+- **Cross-field dependencies**: Fields that re-validate when other fields change
+- **Error handling**: Graceful handling of network errors
+- **Real-time feedback**: Immediate validation results
+
+### Async Validation Properties
+
+| Property           | Type       | Description                                                |
+| ------------------ | ---------- | ---------------------------------------------------------- |
+| `url`              | `string`   | API endpoint for validation                                |
+| `method`           | `string`   | HTTP method (GET, POST, PUT, PATCH, DELETE)                |
+| `headers`          | `object`   | Optional HTTP headers                                      |
+| `body`             | `object`   | Request body template - field value automatically included |
+| `expectedResponse` | `object`   | Expected response format for success                       |
+| `dependencies`     | `string[]` | Fields that trigger re-validation when changed             |
+| `debounce`         | `number`   | Delay in ms before making API call                         |
+| `cacheTTL`         | `number`   | Cache time-to-live in milliseconds (default: 5 minutes)    |
+| `disableCache`     | `boolean`  | Whether to disable request caching (default: false)        |
+| `message`          | `string`   | Error message to show on validation failure                |
+
+### Dependency Resolution
+
+When using `dependencies`, the system automatically creates a `dependsOn` object in the request body:
+
+```typescript
+// Configuration
+{
+  type: 'async',
+  url: '/api/validate-field',
+  body: { },
+  dependencies: ['username', 'email']
+}
+
+// Actual request sent to server
+{
+  "value": "userInputValue",
+  "dependsOn": {
+    "username": "actualUsernameValue",
+    "email": "actual@email.com"
+  }
+}
+```
+
+### Caching Behavior
+
+- **Default TTL**: 5 minutes for successful validations
+- **Error TTL**: 1 minute for HTTP errors, 30 seconds for network errors
+- **Cache Keys**: Generated from URL + request payload for uniqueness
+- **Memory Management**: Automatic cleanup of expired entries every 10 minutes
+- **Cache Control**: Use `disableCache: true` for always-fresh validation
+
+## Using Validation Presets
+
+For programmatic usage, you can use the validation presets for better developer experience:
+
+```typescript
+import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
+
+// String presets
+const nameRules = [
+	ValidationPresets.string.required('Name is required'),
+	ValidationPresets.string.minLength(2, 'Name must be at least 2 characters'),
+	ValidationPresets.string.maxLength(50, 'Name cannot exceed 50 characters'),
+];
+
+// Number presets
+const ageRules = [
+	ValidationPresets.number.min(0, 'Age cannot be negative'),
+	ValidationPresets.number.max(150, 'Please enter a valid age'),
+];
+
+// Network presets
+const urlRules = [
+	ValidationPresets.network.url('Please enter a valid URL'),
+	ValidationPresets.network.ip('v4', 'Please enter a valid IPv4 address'),
+];
+
+// Array presets
+const tagsRules = [
+	ValidationPresets.array.minItems(1, 'Please select at least one tag'),
+	ValidationPresets.array.maxItems(10, 'You can select up to 10 tags'),
+];
+
+// Async presets
+const usernameRules = [
+	ValidationPresets.custom.async('/api/check-username', {
+		method: 'POST',
+		message: 'Username is already taken',
+	}),
+];
+```
+
+## Combining Validations
+
+You can combine multiple validation rules for comprehensive field validation:
+
+```typescript
+// Complex password validation
+const passwordRules = [
+	{ type: 'required', message: 'Password is required' },
+	{ type: 'minLength', value: 8, message: 'Password must be at least 8 characters' },
+	{ type: 'maxLength', value: 128, message: 'Password cannot exceed 128 characters' },
+	{
+		type: 'pattern',
+		value: '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]/',
+		message: 'Password must contain uppercase, lowercase, number, and special character',
+	},
+];
+
+// Email with async verification
+const emailRules = [
+	{ type: 'required', message: 'Email is required' },
+	{ type: 'email', message: 'Please enter a valid email address' },
+	{ type: 'maxLength', value: 254, message: 'Email address is too long' },
+	{
+		type: 'async',
+		url: '/api/verify-email-domain',
+		method: 'POST',
+		message: 'Email domain is not supported',
+	},
+];
+```
+
+## Best Practices
+
+### 1. Layer Validations Logically
+
+Start with basic validations and add more specific ones:
+
+```typescript
+// Good - logical progression
+[
+	{ type: 'required', message: 'Password is required' }, // First: ensure value exists
+	{ type: 'minLength', value: 8, message: 'At least 8 chars' }, // Then: basic constraints
+	{ type: 'pattern', value: '/complexity/', message: 'Complex' }, // Finally: advanced rules
+][
+	// Poor - confusing order
+	({ type: 'pattern', value: '/complexity/', message: 'Complex' },
+	{ type: 'required', message: 'Password is required' },
+	{ type: 'minLength', value: 8, message: 'At least 8 chars' })
+];
+```
+
+### 2. Provide Helpful Error Messages
+
+Make errors actionable and user-friendly:
+
+```typescript
+// Good - specific and helpful
+{ type: 'minLength', value: 8, message: 'Password must be at least 8 characters long' }
+
+// Poor - vague and unhelpful
+{ type: 'minLength', value: 8, message: 'Too short' }
+```
+
+### 3. Use Appropriate Validation Types
+
+Choose validation types that match your field's purpose:
+
+```typescript
+// Good - semantic validation
+{
+  inputType: 'email',
+  rules: [{ type: 'email', message: 'Please enter a valid email' }]
+}
+
+// Poor - overly complex pattern for simple case
+{
+  inputType: 'text',
+  rules: [{ type: 'pattern', value: '/[complex-email-regex]/', message: 'Invalid email' }]
+}
+```
+
+### 4. Consider Performance
+
+Expensive validations (like async) should come last:
+
+```typescript
+// Good - cheap validations first
+[
+	{ type: 'required' },
+	{ type: 'minLength', value: 3 },
+	{ type: 'async', url: '/api/check-availability' }, // Expensive validation last
+];
+```
+
+## Next Steps
+
+- **[How It Works](./how-it-works)** - Understanding the validation system
+- **[Custom Validations](./custom-validations)** - Creating your own validation logic
+- **[Examples](../examples/basic-form)** - See validations in complete forms
+
+The built-in validations cover most common use cases, but you can always extend the system with custom validation logic when needed.

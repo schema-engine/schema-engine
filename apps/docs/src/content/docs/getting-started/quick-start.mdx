@@ -1,0 +1,241 @@
+# Quick Start
+
+Build your first form with Schema Engine in just a few steps.
+
+## 1. Create Your Form Engine
+
+Use the `createReactFormComposer` to register components and build an immutable engine:
+
+```typescript
+// lib/form-engine.ts
+import { createReactFormComposer } from '@schema-engine/forms-react';
+import {
+	InputElementRegistration,
+	TextareaElementRegistration,
+	SelectElementRegistration,
+	CardLayoutRegistration,
+	DefaultStepperRegistration,
+} from '@schema-engine/forms-react/registrations';
+
+export const formEngine = createReactFormComposer()
+	.addElement(InputElementRegistration)
+	.addElement(TextareaElementRegistration)
+	.addElement(SelectElementRegistration)
+	.addLayout(CardLayoutRegistration)
+	.addStepper(DefaultStepperRegistration)
+	.build();
+```
+
+> **Note:** Create the form engine once and reuse it across your entire application. The engine instance is immutable after calling `build()`.
+
+## 2. Create the Form Configuration
+
+Define your form structure using a JSON configuration:
+
+```typescript
+import type { FormConfig } from '@schema-engine/forms';
+
+// config/contact-form.ts
+const contactFormConfig: FormConfig = {
+	id: 'contact-form',
+	title: 'Get In Touch',
+	description: 'We would love to hear from you',
+	steps: [
+		{
+			id: 'contact-details',
+			title: 'Contact Information',
+			elements: [
+				{
+					$type: 'input',
+					id: 'firstName',
+					name: 'firstName',
+					label: 'First Name',
+					inputType: 'text',
+					rules: [{ rule: 'required', message: 'First name is required' }],
+				},
+				{
+					$type: 'input',
+					id: 'email',
+					name: 'email',
+					label: 'Email Address',
+					inputType: 'email',
+					rules: [
+						{ rule: 'required', message: 'Email is required' },
+						{ rule: 'email', message: 'Please enter a valid email address' },
+					],
+				},
+				{
+					$type: 'select',
+					id: 'subject',
+					name: 'subject',
+					label: 'Subject',
+					options: [
+						{ value: 'general', label: 'General Inquiry' },
+						{ value: 'support', label: 'Technical Support' },
+						{ value: 'billing', label: 'Billing Question' },
+					],
+					rules: [{ rule: 'required', message: 'Please select a subject' }],
+				},
+				{
+					$type: 'select',
+					id: 'priority',
+					name: 'priority',
+					label: 'Priority Level',
+					options: [
+						{ value: 'low', label: 'Low' },
+						{ value: 'medium', label: 'Medium' },
+						{ value: 'high', label: 'High' },
+					],
+					constraints: [
+						{
+							field: 'subject',
+							operator: 'equals',
+							value: 'support',
+							action: 'show',
+						},
+					],
+				},
+				{
+					$type: 'textarea',
+					id: 'message',
+					name: 'message',
+					label: 'Message',
+					rows: 4,
+					rules: [
+						{ rule: 'required', message: 'Message is required' },
+						{ rule: 'minLength', value: 10, message: 'Message must be at least 10 characters' },
+					],
+				},
+			],
+			layout: {
+				$type: 'card',
+				padding: 'md',
+				shadowSize: 'md',
+			},
+		},
+	],
+};
+```
+
+## 3. Render the Form
+
+```tsx
+import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
+import { formEngine } from './lib/form-engine'; // Adjust path as needed
+import { contactFormConfig } from './config/contact-form'; // Import the config created above
+
+export function ContactForm() {
+	const handleSubmit = (data: any) => {
+		console.log('Form submitted:', data);
+	};
+
+	return (
+		<FormEngineProvider engine={formEngine}>
+			<FormRenderer
+				config={contactFormConfig}
+				onSubmit={handleSubmit}
+			/>
+		</FormEngineProvider>
+	);
+}
+```
+
+## Understanding Constraint Logic
+
+Notice the `priority` field includes a `constraints` array:
+
+```json
+{
+	"$type": "select",
+	"id": "priority",
+	"name": "priority",
+	"label": "Priority Level",
+	"constraints": [
+		{
+			"field": "subject",
+			"operator": "equals",
+			"value": "support",
+			"action": "show"
+		}
+	]
+}
+```
+
+This creates **conditional logic** where:
+
+- The priority field is only **shown** when the subject field equals "support"
+- The field automatically hides/shows as users change the subject
+
+**Available operators:** `equals`, `not_equals`, `contains`, `not_contains`, `greater_than`, `less_than`, `is_empty`, `is_not_empty`
+
+**Available actions:** `show`, `hide`, `enable`, `disable`, `require`
+
+## Key Concepts
+
+### Form Config Structure
+
+```typescript
+interface FormConfig {
+	id: string;           // Unique identifier
+	title?: string;       // Form title
+	description?: string; // Form description
+	steps: StepConfig[];  // Form steps (even single-step forms need this)
+	stepper?: StepperConfig; // Optional stepper configuration
+	actions?: ActionConfig[]; // Optional form actions
+}
+```
+
+### Element Configuration
+
+```typescript
+interface ElementConfig {
+	$type: string;        // Element type (input, select, textarea, etc.)
+	id?: string;          // DOM element ID
+	name: string;         // Form field name
+	label?: string;       // Field label
+	rules?: ValidationRule[]; // Validation rules
+	constraints?: ConstraintLogic[]; // Conditional logic
+	grid?: ElementGridConfig; // Grid positioning
+	// ... type-specific properties
+}
+```
+
+## Validation Rules
+
+Schema Engine uses a declarative validation system:
+
+```typescript
+// Required field
+rules: [{ rule: 'required', message: 'This field is required' }]
+
+// Email validation
+rules: [
+	{ rule: 'required', message: 'Email is required' },
+	{ rule: 'email', message: 'Please enter a valid email' },
+]
+
+// Length validation
+rules: [
+	{ rule: 'minLength', value: 3, message: 'Must be at least 3 characters' },
+	{ rule: 'maxLength', value: 100, message: 'Must be less than 100 characters' },
+]
+
+// Pattern validation
+rules: [
+	{
+		rule: 'pattern',
+		value: '^[A-Za-z\\s]+$',
+		message: 'Only letters and spaces allowed',
+	},
+]
+```
+
+## What's Next?
+
+Now that you've built your first form, explore these topics:
+
+- **[Components](/docs/forms-react/components)** - Pre-built elements and custom components
+- **[Layouts](/docs/forms-react/layouts)** - Visual structure for forms
+- **[Steppers](/docs/forms-react/steppers)** - Multi-step form navigation
+- **[Hooks](/docs/forms-react/hooks)** - React hooks for form interactions
+- **[Actions](/docs/forms/actions)** - Handle form submission and lifecycle events

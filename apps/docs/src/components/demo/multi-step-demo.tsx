@@ -1,0 +1,229 @@
+import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
+import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
+import { formEngine } from '@/lib/form-engine-setup';
+import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
+import type { FormConfig } from '@schema-engine/forms/schemas';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui-shim/card';
+import { useState } from 'react';
+import { Button } from '@/components/ui-shim/button';
+
+const stepperDemoConfig: FormConfig = {
+	id: 'stepper-demo',
+	title: 'Multi-Step Form Demo',
+	description: 'Experience different stepper styles and navigation patterns',
+	mode: 'wizard',
+
+	steps: [
+		{
+			id: 'basic-info',
+			title: 'Basic Information',
+			description: "Let's start with the basics",
+			icon: '👤',
+			elements: [
+				{
+					id: 'name',
+					$type: 'input',
+					inputType: 'text',
+					name: 'name',
+					label: 'Full Name',
+					placeholder: 'Enter your full name',
+					rules: [
+						ValidationPresets.string.required('Name is required'),
+						ValidationPresets.string.minLength(2, 'Name must be at least 2 characters'),
+					],
+				},
+				{
+					id: 'email',
+					$type: 'input',
+					inputType: 'email',
+					name: 'email',
+					label: 'Email Address',
+					placeholder: 'your@email.com',
+					rules: [
+						ValidationPresets.string.required('Email is required'),
+						ValidationPresets.string.email('Please enter a valid email address'),
+					],
+				},
+			],
+		},
+		{
+			id: 'preferences',
+			title: 'Preferences',
+			description: 'Tell us about your preferences',
+			icon: '⚙️',
+			elements: [
+				{
+					id: 'role',
+					$type: 'select',
+					name: 'role',
+					label: 'Your Role',
+					placeholder: 'Select your role',
+
+					options: [
+						{ label: 'Developer', value: 'developer' },
+						{ label: 'Designer', value: 'designer' },
+						{ label: 'Product Manager', value: 'pm' },
+						{ label: 'Other', value: 'other' },
+					],
+					rules: [ValidationPresets.string.required('Please select your role')],
+				},
+
+				{
+					id: 'experience',
+					$type: 'select',
+					name: 'experience',
+					label: 'Experience Level',
+					placeholder: 'Select your experience',
+					options: [
+						{ label: 'Beginner (0-1 years)', value: 'beginner' },
+						{ label: 'Intermediate (2-4 years)', value: 'intermediate' },
+						{ label: 'Advanced (5+ years)', value: 'advanced' },
+					],
+					defaultValue: 'intermediate',
+				},
+			],
+		},
+		{
+			id: 'details',
+			title: 'Additional Details',
+			description: 'Optional additional information',
+			icon: '📝',
+			elements: [
+				{
+					id: 'company',
+					$type: 'input',
+					inputType: 'text',
+					name: 'company',
+					label: 'Company (Optional)',
+					placeholder: 'Your company name',
+				},
+				{
+					id: 'feedback',
+					$type: 'textarea',
+					name: 'feedback',
+					label: 'Feedback',
+					placeholder: 'Any feedback about this demo? (Optional)',
+					rows: 4,
+				},
+				{
+					id: 'newsletter',
+					$type: 'checkbox',
+					name: 'newsletter',
+					label: 'Subscribe to newsletter for updates',
+					defaultValue: true,
+				},
+			],
+		},
+	],
+
+	stepper: {
+		$type: 'default',
+		showStepNumbers: true,
+		showStepTitles: true,
+		orientation: 'horizontal',
+	},
+
+	grid: {
+		columns: 1,
+		gap: '1.5rem',
+	},
+
+	actions: [
+		{
+			id: 'submit',
+			$type: 'submit',
+			enabled: true,
+			endpoint: '/api/submit-demo',
+			method: 'POST',
+			successMessage: 'Demo completed successfully! Thanks for trying it out.',
+			errorMessage: 'Demo submission failed. Please try again.',
+			triggers: ['form_submit'],
+		},
+	],
+};
+const verticalStepperConfig: FormConfig = {
+	...stepperDemoConfig,
+	id: 'vertical-stepper-demo',
+	stepper: {
+		$type: 'default',
+		orientation: 'sidebar',
+	},
+};
+
+const minimalStepperConfig: FormConfig = {
+	...stepperDemoConfig,
+	id: 'minimal-stepper-demo',
+	stepper: {
+		$type: 'minimalist',
+		showProgress: true,
+	},
+};
+
+const handleSubmit = (data: any) => {
+	console.log('Multi-step form submitted:', data);
+	alert('This is the alert added manually in the demo! Form submitted successfully!');
+};
+
+export function MultiStepDemo() {
+	const [activeVariant, setActiveVariant] = useState<'default' | 'vertical' | 'minimal'>('default');
+
+	const getConfig = () => {
+		switch (activeVariant) {
+			case 'vertical':
+				return verticalStepperConfig;
+			case 'minimal':
+				return minimalStepperConfig;
+			default:
+				return stepperDemoConfig;
+		}
+	};
+
+	return (
+		<FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
+			<div className="space-y-6">
+				<div className="flex justify-center space-x-2">
+					<Button
+						size="sm"
+						variant={activeVariant === 'default' ? 'default' : 'outline'}
+						onClick={() => setActiveVariant('default')}
+					>
+						Default Stepper
+					</Button>
+					<Button
+						size="sm"
+						variant={activeVariant === 'vertical' ? 'default' : 'outline'}
+						onClick={() => setActiveVariant('vertical')}
+					>
+						Vertical Stepper
+					</Button>
+					<Button
+						size="sm"
+						variant={activeVariant === 'minimal' ? 'default' : 'outline'}
+						onClick={() => setActiveVariant('minimal')}
+					>
+						Minimal Stepper
+					</Button>
+				</div>
+
+				<Card>
+					<CardHeader>
+						<CardTitle>
+							{activeVariant === 'default' && 'Horizontal Stepper Demo'}
+							{activeVariant === 'vertical' && 'Vertical Stepper Demo'}
+							{activeVariant === 'minimal' && 'Minimal Stepper Demo'}
+						</CardTitle>
+						<CardDescription>
+							{activeVariant === 'default' &&
+								'Traditional horizontal stepper with step numbers and titles'}
+							{activeVariant === 'vertical' && 'Space-efficient vertical stepper, perfect for mobile'}
+							{activeVariant === 'minimal' && 'Clean minimal stepper with free navigation between steps'}
+						</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<FormRenderer config={getConfig()} onSubmit={handleSubmit} />
+					</CardContent>
+				</Card>
+			</div>
+		</FormEngineProvider>
+	);
+}

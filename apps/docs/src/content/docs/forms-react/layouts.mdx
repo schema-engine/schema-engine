@@ -1,0 +1,197 @@
+# Layouts
+
+Layouts wrap form content and provide visual structure and styling for form steps.
+
+## Available Layouts
+
+Import from `@schema-engine/forms-react/registrations`:
+
+```typescript
+import {
+	CardLayoutRegistration,
+	SplitScreenLayoutRegistration,
+	HeroBackgroundLayoutRegistration,
+} from '@schema-engine/forms-react/registrations';
+```
+
+| Layout | Description |
+|--------|-------------|
+| `card` | Centered card with shadow |
+| `split-screen` | Split layout with content and form |
+| `hero-background` | Full-width background with overlay |
+
+## How Layouts Work
+
+Each step in a form can have its own layout configuration. The layout wraps the step's elements and provides structural styling.
+
+```typescript
+const formConfig: FormConfig = {
+	id: 'my-form',
+	steps: [
+		{
+			id: 'step-1',
+			title: 'Personal Info',
+			elements: [...],
+			layout: {
+				$type: 'card',
+				maxWidth: 'md',
+				padding: 'lg',
+				shadowSize: 'lg',
+			},
+		},
+	],
+};
+```
+
+## Layout Configuration
+
+### Card Layout
+
+```json
+{
+	"layout": {
+		"$type": "card",
+		"maxWidth": "md",
+		"padding": "lg",
+		"shadowSize": "md"
+	}
+}
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `maxWidth` | `'sm' \| 'md' \| 'lg' \| 'xl'` | Maximum width of the card |
+| `padding` | `'none' \| 'sm' \| 'md' \| 'lg'` | Internal padding |
+| `shadowSize` | `'none' \| 'sm' \| 'md' \| 'lg'` | Shadow depth |
+
+### Split-Screen Layout
+
+```json
+{
+	"layout": {
+		"$type": "split-screen",
+		"contentPosition": "left",
+		"contentWidth": "50%",
+		"backgroundImage": "/images/hero.jpg"
+	}
+}
+```
+
+### Hero Background Layout
+
+```json
+{
+	"layout": {
+		"$type": "hero-background",
+		"backgroundImage": "/images/background.jpg",
+		"overlayOpacity": 0.5,
+		"contentMaxWidth": "lg"
+	}
+}
+```
+
+## Creating a Custom Layout
+
+Custom layouts use the exported `useLayoutContext` hook to access form and step data.
+
+### Step 1: Create the Layout Component
+
+```tsx
+// my-layout.tsx
+import { useLayoutContext } from '@schema-engine/forms-react';
+
+interface MyLayoutConfig {
+	$type: 'my-layout';
+	headerColor?: string;
+	footerText?: string;
+}
+
+export function MyLayout({ children }: { children: React.ReactNode }) {
+	const { step, form, config } = useLayoutContext<MyLayoutConfig>();
+
+	return (
+		<div className="my-layout">
+			<header style={{ backgroundColor: config.headerColor }}>
+				<h1>{step.title || form.title}</h1>
+				{step.description && <p>{step.description}</p>}
+			</header>
+			<main>{children}</main>
+			{config.footerText && (
+				<footer>{config.footerText}</footer>
+			)}
+		</div>
+	);
+}
+```
+
+### Step 2: Create Schema and Registration
+
+```typescript
+import { z } from 'zod';
+import type { LayoutRegistration } from '@schema-engine/forms';
+
+const MyLayoutConfigSchema = z.object({
+	$type: z.literal('my-layout'),
+	headerColor: z.string().optional(),
+	footerText: z.string().optional(),
+});
+
+export const MyLayoutRegistration: LayoutRegistration = {
+	$type: 'my-layout',
+	schema: MyLayoutConfigSchema,
+	metadata: {
+		name: 'My Layout',
+		description: 'Custom branded layout',
+	},
+	render: MyLayout,
+};
+```
+
+### Step 3: Register with Engine
+
+```typescript
+const engine = createReactFormComposer()
+	.addLayout(MyLayoutRegistration)
+	.build();
+```
+
+### Step 4: Use in Form Config
+
+```json
+{
+	"steps": [
+		{
+			"id": "step-1",
+			"title": "Welcome",
+			"elements": [...],
+			"layout": {
+				"$type": "my-layout",
+				"headerColor": "#1a73e8",
+				"footerText": "© 2024 My Company"
+			}
+		}
+	]
+}
+```
+
+## Layout Context
+
+The `useLayoutContext` hook provides:
+
+```typescript
+interface LayoutContextValue {
+	step: {
+		id: string;
+		title?: string;
+		description?: string;
+		index?: number;  // Step index (undefined for single-step forms)
+		total?: number;  // Total steps (undefined for single-step forms)
+	};
+	form: {
+		id: string;
+		title?: string;
+		description?: string;
+	};
+	config: TConfig;  // Your layout's typed config
+}
+```

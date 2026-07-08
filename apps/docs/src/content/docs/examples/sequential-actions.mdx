@@ -1,0 +1,111 @@
+import FormEngineActionExecutor from '@/components/demo/form-engine-action-executor';
+
+
+
+# Sequential Actions Example
+
+A demonstration of sequential actions in the FormEngine action system. Sequential actions ensure that each step is completed before the next one begins, preventing race conditions and ensuring a predictable flow.
+
+## Interactive Demo
+
+<FormEngineActionExecutor />
+
+## Key Features Demonstrated
+
+### 1. Submit Plugin
+
+- **Form Submission**: Handles sending form data to specified endpoints
+- **Configurable Request Handling**: Custom request adapters and data transformation
+- **Lifecycle Management**: Triggers `submit_start`, `submit_success`, and `submit_error` events
+
+### 2. Reset Plugin
+
+- **Form State Reset**: Clears all fields and validation errors
+- **Optional Confirmation**: Prompts users before resetting with customizable confirmation dialogs
+- **Draft Cleanup**: Removes saved drafts from storage
+
+### 3. Notification Plugin
+
+- **User Feedback**: Displays messages with different variants (success, error, warning, info)
+- **Customizable Handlers**: Configure how notifications are displayed (toast, modal, etc.)
+- **Duration Control**: Set how long notifications remain visible
+
+### 4. Auto-Save Plugin
+
+- **Draft Persistence**: Automatically saves form data to prevent data loss
+- **Configurable Storage**: Use localStorage, API endpoints, or custom storage backends
+- **Error Recovery**: Fallback mechanisms when primary storage fails
+
+## Example Configuration
+
+Here's how the actual plugins are configured and used in the demo:
+
+```typescript
+// Register plugins first
+import { registerAction } from '@/lib/form-engine/actions/action-registry';
+import { submitPlugin, resetPlugin, notificationPlugin } from '@/lib/form-engine/actions/plugins';
+
+registerAction(
+	submitPlugin({
+		onSuccess: (data, context) => console.log('Submitted:', data),
+		onError: (error, context) => console.error('Submit failed:', error),
+	}),
+);
+
+registerAction(
+	resetPlugin({
+		confirm: (message) => window.confirm(message),
+		onReset: (context) => console.log('Form reset!'),
+	}),
+);
+
+registerAction(
+	notificationPlugin({
+		onSuccess: (message) => toast.success(message),
+		onError: (message) => toast.error(message),
+	}),
+);
+
+// Then define actions in form configuration
+const actions = [
+	{
+		id: 'submit-form',
+		$type: 'submit',
+		endpoint: '/api/submit',
+		method: 'POST',
+	},
+	{
+		id: 'success-notification',
+		$type: 'show_notification',
+		message: 'Form submitted successfully!',
+		variant: 'success',
+		triggers: ['submit_success'],
+	},
+	{
+		id: 'reset-after-success',
+		$type: 'reset',
+		resetToDefaults: true,
+		triggers: ['submit_success'],
+	},
+];
+```
+
+## Sequential Execution Flow
+
+1. **Form Submit**: User clicks submit, triggers `form_submit`
+2. **Submit Plugin**: Validates and sends data to endpoint
+3. **Success Notification**: Shows success message after `submit_success`
+4. **Form Reset**: Clears form after successful submission
+
+## Implementation Tips
+
+1. **Register Plugins First**: Always register plugin factories before defining form actions
+2. **Use Proper Triggers**: Leverage lifecycle events like `submit_success` and `submit_error` for coordinated workflows
+3. **Handle Errors Gracefully**: Provide meaningful error messages and recovery options
+4. **Test Action Sequences**: Verify that actions execute in the correct order under various conditions
+
+## Next Steps
+
+- Explore the [Contact Form Example](/docs/examples/contact-form) for a complete form implementation
+- Learn about [Actions](/docs/actions) for advanced form behaviors
+- Try the [Registration Flow Example](/docs/examples/registration-flow) for complex workflows

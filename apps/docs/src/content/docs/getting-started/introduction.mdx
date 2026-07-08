@@ -1,0 +1,125 @@
+import { SimpleInputDemo } from '@/components/demo/simple-input-demo';
+
+
+
+# Why Schema Engine?
+
+Modern web development requires sophisticated form handling capabilities, yet existing solutions often present significant limitations. Each project brings unique requirements for validation, design integration, user experience patterns, and data flow management.
+
+## Common Challenges
+
+Development teams frequently encounter several recurring issues:
+
+- **Limited Validation Flexibility** - Existing validation systems may not accommodate custom business logic
+- **UI Library Integration** - Form libraries often conflict with established design systems
+- **Advanced Feature Requirements** - Conditional logic, multi-step workflows, or auto-save require extensive custom development
+- **Serialization Needs** - Forms need to be stored, transmitted, and reconstructed from JSON
+
+## The Approach
+
+Schema Engine is a **JSON-driven form system** that adapts to your needs, not the other way around.
+
+<SimpleInputDemo />
+
+## What Makes It Different?
+
+### Complete Customization
+
+Bring your existing component library. Register it with the engine, and it instantly works with form schemas while getting all the React Hook Form goodness.
+
+```typescript
+import { createReactFormComposer } from '@schema-engine/forms-react';
+import type { ElementRegistration } from '@schema-engine/forms';
+import { z } from 'zod';
+
+// Mock definitions for example purposes
+const MyInputComponent = (props: any) => <input {...props} className="my-custom-input" />;
+const MyInputConfigSchema = z.object({});
+
+// Your custom component registration
+const MyInputRegistration: ElementRegistration = {
+	$type: 'my-input',
+	schema: MyInputConfigSchema,
+	metadata: {
+		name: 'My Input',
+		description: 'Custom styled input',
+		category: 'input',
+	},
+	render: MyInputComponent,
+};
+
+// Register with engine
+const engine = createReactFormComposer()
+	.addElement(MyInputRegistration)
+	.build();
+```
+
+### JSON-Driven Everything
+
+Define complex forms with simple JSON schemas. No more writing repetitive JSX.
+
+```json
+{
+	"id": "contact",
+	"title": "Get In Touch",
+	"steps": [
+		{
+			"id": "details",
+			"title": "Contact Details",
+			"elements": [
+				{
+					"$type": "input",
+					"id": "name",
+					"name": "name",
+					"label": "Full Name",
+					"rules": [{ "rule": "required", "message": "Name is required" }]
+				},
+				{
+					"$type": "input",
+					"inputType": "email",
+					"id": "email",
+					"name": "email",
+					"label": "Email",
+					"rules": [
+						{ "rule": "required", "message": "Email is required" },
+						{ "rule": "email", "message": "Please enter a valid email" }
+					]
+				}
+			]
+		}
+	]
+}
+```
+
+### Registrable Everything
+
+Not just components but also actions, layouts, steppers, and validation rules. Build your own plugins that fit your exact needs.
+
+### Zod Integration
+
+Type-safe validation powered by Zod. Define your schema once, get validation everywhere.
+
+### Powerful Action System
+
+Perform complex operations at any point in your form lifecycle. Auto-save, analytics tracking, multi-step navigation all through a pluggable action system.
+
+## Philosophy
+
+Schema Engine believes in a few core principles:
+
+**Configuration over Code**: Define what you want, not how to build it.
+
+**Composition over Inheritance**: Build complex forms by combining simple, focused components.
+
+**Flexibility over Opinions**: The library should adapt to your patterns, not force you into ours.
+
+**Developer Experience**: If it's frustrating to use, it's wrong.
+
+## What's Next?
+
+Ready to see what Schema Engine can do?
+
+- **[Installation](/docs/installation)** - Get up and running
+- **[Quick Start](/docs/getting-started/quick-start)** - Build your first form
+- **[Forms Package](/docs/packages/forms)** - Core engine documentation
+- **[Forms React](/docs/packages/forms-react)** - React integration
