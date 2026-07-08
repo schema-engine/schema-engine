@@ -1,7 +1,9 @@
 import type { ActionConfigBase, ActionDispatchInput, ActionExecutionResult } from './types';
 import type { ActionRegistryProvider } from './registry';
 import { ActionExecutor } from './executor';
-import { logger } from './lib/logger';
+import { Logger } from '@ecopages/logger';
+
+const logger = new Logger('[@schema-engine/actions]');
 
 type MetadataContext = {
 	metadata?: Record<string, unknown>;
