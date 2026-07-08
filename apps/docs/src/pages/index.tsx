@@ -86,12 +86,6 @@ const StarterFileTabs = () => (
 			},
 		]}
 		defaultTabId="schema-config"
-		footer={
-			<span>
-				Three files: an engine, a form config, and a page component. Copy the trio into a fresh React
-				project to render the same form.
-			</span>
-		}
 	/>
 );
 
@@ -117,7 +111,6 @@ const InitWindow = () => (
 			},
 		]}
 		defaultTabId="bun"
-		footer={<span>Installs the docs template, links the schema-engine packages, and starts the dev server.</span>}
 	/>
 );
 
@@ -139,12 +132,6 @@ const ContactFormCode = () => (
 				),
 			},
 		]}
-		footer={
-			<span>
-				One JSON file drives a real <code>&lt;FormRenderer /&gt;</code>. Same config, same form, every
-				runtime.
-			</span>
-		}
 	/>
 );
 
@@ -172,11 +159,6 @@ const LiveDemoPanel = () => (
 			},
 		]}
 		defaultTabId="live"
-		footer={
-			<span>
-				Static preview above. The right tab shows the React component that produces it in your app.
-			</span>
-		}
 	/>
 );
 

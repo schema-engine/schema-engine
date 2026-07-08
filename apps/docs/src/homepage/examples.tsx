@@ -18,61 +18,56 @@ export const formEngine = createReactFormComposer()
   .addElement(SubmissionAlertElementRegistration)
   .build();`;
 
-export const contactFormConfigCode = `import type { FormConfig } from '@schema-engine/forms';
-
-/**
- * A form is just data. Render it with <FormRenderer config={...} />.
- */
-export const contactFormConfig: FormConfig = {
-  id: 'contact-form',
-  title: 'Contact Form',
-  mode: 'free',
-  steps: [
+export const contactFormConfigCode = `{
+  "id": "contact-form",
+  "title": "Contact Form",
+  "mode": "free",
+  "steps": [
     {
-      id: 'contact-step',
-      elements: [
+      "id": "contact-step",
+      "elements": [
         {
-          $type: 'submission-alert',
-          id: 'status',
-          name: 'status',
-          showOn: ['pending', 'success'],
-          pendingMessage: 'Pending Submission',
-          successMessage: 'Submission Successful',
+          "$type": "submission-alert",
+          "id": "status",
+          "name": "status",
+          "showOn": ["pending", "success"],
+          "pendingMessage": "Pending Submission",
+          "successMessage": "Submission Successful"
         },
         {
-          $type: 'input',
-          id: 'email',
-          name: 'email',
-          inputType: 'email',
-          label: 'Email Address',
-          rules: [
-            { type: 'required', message: 'Email is required' },
-            { type: 'email', message: 'Please enter a valid email address' },
-          ],
+          "$type": "input",
+          "id": "email",
+          "name": "email",
+          "inputType": "email",
+          "label": "Email Address",
+          "rules": [
+            { "type": "required", "message": "Email is required" },
+            { "type": "email", "message": "Please enter a valid email address" }
+          ]
         },
         {
-          $type: 'textarea',
-          id: 'message',
-          name: 'message',
-          label: 'Message',
-          rules: [
+          "$type": "textarea",
+          "id": "message",
+          "name": "message",
+          "label": "Message",
+          "rules": [
             {
-              type: 'minLength',
-              value: 10,
-              message: 'Message must be at least 10 characters long',
-            },
-          ],
+              "type": "minLength",
+              "value": 10,
+              "message": "Message must be at least 10 characters long"
+            }
+          ]
         },
         {
-          $type: 'submit',
-          id: 'submit',
-          name: 'submit',
-          label: 'Submit Form',
-        },
-      ],
-    },
-  ],
-};`;
+          "$type": "submit",
+          "id": "submit",
+          "name": "submit",
+          "label": "Submit Form"
+        }
+      ]
+    }
+  ]
+}`;
 
 export const pageExampleCode = `import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
 import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
@@ -101,7 +96,7 @@ export const schemaConfigExample = await codeToHtml(schemaConfigCode, {
 });
 
 export const contactFormConfigExample = await codeToHtml(contactFormConfigCode, {
-	lang: 'tsx',
+	lang: 'json',
 	themes: { light: 'light-plus', dark: 'dark-plus' },
 	defaultColor: false,
 });
