@@ -46,7 +46,7 @@
 		"@ecopages/bun-postcss-loader": "npm:@jsr/ecopages__bun-postcss-loader@latest",
 		"@ecopages/core": "npm:@jsr/ecopages__core@latest",
 		"@ecopages/file-system": "npm:@jsr/ecopages__file-system@latest",
-		"@ecopages/postcss-processor": "npm:@jsr/ecopages__postcss-processor@latest",
+		"@ecopages/postcss-processor": "npm:@jsr/ecopages__postcss-processor@0.1.105",
 		"@ecopages/react": "npm:@jsr/ecopages__react@latest",
 		"@ecopages/react-router": "npm:@jsr/ecopages__react-router@latest",
 		"@happy-dom/global-registrator": "^18.0.1",
