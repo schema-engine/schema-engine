@@ -8,8 +8,6 @@ const logger = new Logger('[@schema-engine/forms]');
 const glob = new Bun.Glob('src/**/*.ts');
 const files = await Array.fromAsync(glob.scan({ cwd: '.' }));
 
-const watchMode = process.argv.includes('--watch');
-
 const build = await Bun.build({
 	entrypoints: files,
 	outdir: 'dist',
@@ -18,7 +16,6 @@ const build = await Bun.build({
 	minify: false,
 	// Bun minification breaks named re-export barrels in this package.
 	format: 'esm',
-	// Bun breaks minified named re-export barrels when code-splitting is enabled.
 	splitting: false,
 	sourcemap: 'external',
 	external: ['@schema-engine/actions', '@schema-engine/registry', 'zod'],

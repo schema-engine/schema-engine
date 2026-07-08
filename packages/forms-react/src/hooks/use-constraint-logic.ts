@@ -1,6 +1,7 @@
 import { useMemo, useRef } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { ConstraintEvaluator, type ConstraintEvaluationResult, type ConstraintLogic } from '@schema-engine/forms';
+import { ConstraintEvaluator, type ConstraintEvaluationResult } from '@schema-engine/forms/constraints';
+import type { ConstraintLogic } from '@schema-engine/forms/schemas/base-field';
 
 /**
  * Result returned by `useConstraintLogic`
