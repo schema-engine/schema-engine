@@ -5,10 +5,9 @@
 	"license": "MIT",
 	"sideEffects": [
 		"./dist/registrations/*.js",
-		"./dist/components/elements/inputs/*.registry.js",
-		"./dist/components/layouts/*.registry.js",
-		"./dist/components/layouts/*.registry.js",
-		"./dist/components/steppers/*.registry.js",
+		"./dist/components/elements/inputs/*.registration.js",
+		"./dist/components/layouts/*.registration.js",
+		"./dist/components/steppers/*.registration.js",
 		"**/*.css"
 	],
 	"main": "dist/index.js",
