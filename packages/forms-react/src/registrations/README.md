@@ -38,11 +38,12 @@ Each registration exports a registration object that contains:
 Import only the components you need for maximum tree-shaking and type safety:
 
 ```typescript
-import { InputElementRegistration } from '@schema-engine/forms-react/registrations/elements/shadcn';
+import { createReactFormComposer } from '@schema-engine/forms-react';
+import { InputElementRegistration } from '@schema-engine/forms-react/registrations/elements';
 import { CardLayoutRegistration } from '@schema-engine/forms-react/registrations/layouts';
 import { DefaultStepperRegistration } from '@schema-engine/forms-react/registrations/stepper';
 
-const engine = new FormComposer()
+const engine = createReactFormComposer()
 	.addElement(InputElementRegistration)
 	.addLayout(CardLayoutRegistration)
 	.addStepper(DefaultStepperRegistration)
@@ -51,22 +52,24 @@ const engine = new FormComposer()
 
 ### Grouped Imports
 
-For convenience, components are organized into logical groups:
+Import from the barrel when you need several registrations:
 
 ```typescript
 import {
 	InputElementRegistration,
 	TextareaElementRegistration,
 	SelectElementRegistration,
-} from '@schema-engine/forms-react/registrations/elements/shadcn';
+	CardLayoutRegistration,
+	DefaultStepperRegistration,
+} from '@schema-engine/forms-react/registrations';
 ```
 
 ### Direct Component Imports
 
-You can also import directly from the component file:
+You can also import directly from the component registration file:
 
 ```typescript
-import { InputElementRegistration } from '@schema-engine/forms-react/components/elements/shadcn/inputs/form-input.registration';
+import { InputElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-input.registration';
 ```
 
 ## File Organization
@@ -74,10 +77,12 @@ import { InputElementRegistration } from '@schema-engine/forms-react/components/
 ```
 registrations/
 ├── README.md              # This file
+├── index.ts               # Barrel export (elements + layouts + stepper)
+├── default.ts             # Re-exports the full default set
 ├── elements/
-│   └── shadcn.ts         # All Shadcn UI element registrations
-├── layouts.ts            # All layout component registrations
-└── stepper.ts            # All stepper component registrations
+│   └── index.ts           # Base UI element registrations
+├── layouts.ts             # Layout component registrations
+└── stepper.ts             # Stepper component registrations
 ```
 
 ## Benefits
@@ -96,18 +101,23 @@ TypeScript knows exactly which components are registered, providing:
 
 ### Explicit Registration
 
-No hidden magic - you explicitly import and register the components you need. This makes it clear which components are available in each form builder instance.
+No hidden magic — you explicitly import and register the components you need. This makes it clear which components are available in each form builder instance.
 
 ### Multiple Builders
 
 Different form builders can have different sets of registered components without conflicts:
 
 ```typescript
-// Builder A with basic inputs
-const builderA = new FormComposer().addElement(InputElementRegistration).addElement(TextareaElementRegistration);
+import { createReactFormComposer } from '@schema-engine/forms-react';
+import {
+	InputElementRegistration,
+	TextareaElementRegistration,
+} from '@schema-engine/forms-react/registrations/elements';
+import { SelectElementRegistration, RadioElementRegistration } from '@schema-engine/forms-react/registrations/elements';
 
-// Builder B with advanced inputs
-const builderB = new FormComposer().addElement(SelectElementRegistration).addElement(RadioElementRegistration);
+const builderA = createReactFormComposer().addElement(InputElementRegistration).addElement(TextareaElementRegistration);
+
+const builderB = createReactFormComposer().addElement(SelectElementRegistration).addElement(RadioElementRegistration);
 ```
 
 ## Adding New Registrations
@@ -121,8 +131,8 @@ When creating a new component:
 Example for a new element:
 
 ```typescript
-// In elements/shadcn.ts
-export { NewElementRegistration } from '@/components/elements/shadcn/inputs/new-element.registration';
+// In elements/index.ts
+export { NewElementRegistration } from '@/components/elements/inputs/new-element.registration';
 ```
 
 The registration file should follow this pattern:

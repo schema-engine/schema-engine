@@ -2,6 +2,8 @@
 
 > **A Schema-First Foundation for Modular Interfaces** — Build deterministic, type-safe, and event-driven systems from portable definitions.
 
+> **Important:** This README is an overview, not the API reference. For copy-paste-ready examples and current contracts, use the [Documentation App](./apps/www) — start with [Quick Start](./apps/www/src/pages/docs/quick-start.mdx).
+
 ---
 
 ## Why Schema Engine?
@@ -34,37 +36,27 @@ We have distilled interface requirements into four core concepts that are comple
 We reject the compromise between dynamic behavior and static analysis. Through advanced TypeScript inference, your runtime schema dictates your compile-time types.
 
 ```typescript
-// 1. Register components
-const TextInput = {
-	$type: 'text',
-	schema: z.object({
-		name: z.string(),
-		label: z.string(),
-		placeholder: z.string(),
-	}),
-	// ... metadata & render
-};
+import { createReactFormComposer } from '@schema-engine/forms-react';
+import { InputElementRegistration } from '@schema-engine/forms-react/registrations';
 
-// 2. Build the engine
-const engine = new FormComposer().addElement(TextInput).build();
+const engine = createReactFormComposer().addElement(InputElementRegistration).build();
 
-// 3. The Engine produces a strictly typed schema for your configurations
-type FormConfig = z.infer<typeof engine.formConfigSchema>;
-
-// Verified by TypeScript:
-const myForm: FormConfig = {
+// Registered element types are inferred from what you add to the composer.
+const myForm = {
 	id: 'my-form',
-	elements: [
-		// ✅ Valid: 'text' is registered and matches the schema exactly
+	steps: [
 		{
-			$type: 'text',
-			name: 'username',
-			label: 'Username',
-			placeholder: 'Enter name',
+			id: 'step-1',
+			elements: [
+				{
+					$type: 'input',
+					name: 'username',
+					label: 'Username',
+					inputType: 'text',
+					placeholder: 'Enter name',
+				},
+			],
 		},
-
-		// ❌ Error: 'email' is not registered
-		// { $type: 'email', name: 'user_email' }
 	],
 };
 ```
@@ -106,33 +98,20 @@ Forms are dynamic systems. We model interactivity not as callbacks, but as discr
 **Example: Custom Submission Action**
 
 ```typescript
-// Define a custom action
-const submitLeadAction: ActionRegistration<'submit_lead'> = {
+const submitLeadAction = {
 	$type: 'submit_lead',
 	schema: z.object({ endpoint: z.string() }),
 	metadata: { name: 'Submit Lead' },
-	execute: async ({ context, config }) => {
-		// 'context' contains the type-safe form data
-		const result = await fetch(config.endpoint, {
+	execute: async (context) => {
+		const result = await fetch(context.config.endpoint, {
 			method: 'POST',
 			body: JSON.stringify(context.formData),
 		});
-
 		return { success: result.ok };
 	},
 };
 
-// Use it in your form
-const formConfig = {
-	/* ... elements ... */
-	actions: [
-		{
-			$type: 'submit_lead',
-			trigger: 'onSubmit',
-			endpoint: '/api/v1/leads',
-		},
-	],
-};
+// Register with FormComposer, then reference in form config actions array.
 ```
 
 ---
@@ -177,57 +156,46 @@ graph TD
 
 ## 🚀 Quick Start
 
-Initialize a standard engine with best-practice defaults.
+See the full walkthrough in [Quick Start](./apps/www/src/pages/docs/quick-start.mdx). Minimal verified setup:
 
 ```bash
-bun add @schema-engine/forms @schema-engine/forms-react
+bun add @schema-engine/forms @schema-engine/forms-react react-hook-form zod
 ```
 
-### 1. Compose the Engine
-
 ```typescript
-import { FormComposer } from '@schema-engine/forms';
-import { defaultShadcnRegistrations } from '@schema-engine/forms-react/registrations/default-shadcn';
+import { createReactFormComposer } from '@schema-engine/forms-react';
+import { InputElementRegistration, CardLayoutRegistration } from '@schema-engine/forms-react/registrations';
 
-// Create a deterministic engine instance
-const engine = new FormComposer()
-	.addElements(defaultShadcnRegistrations.elements)
-	.addLayouts(defaultShadcnRegistrations.layouts)
-	.addActions(defaultShadcnRegistrations.actions)
-	.build();
-```
+const engine = createReactFormComposer().addElement(InputElementRegistration).addLayout(CardLayoutRegistration).build();
 
-### 2. Define the Schema
-
-```typescript
 const contactFormSchema = {
 	id: 'contact-form',
 	title: 'Contact Sales',
-	elements: [
+	steps: [
 		{
-			$type: 'text',
-			name: 'company_name',
-			label: 'Company Name',
-			rules: [{ type: 'required' }],
-		},
-		{
-			$type: 'email',
-			name: 'business_email',
-			label: 'Business Email',
-			rules: [{ type: 'email' }, { type: 'business_domain' }],
+			id: 'step-1',
+			elements: [
+				{
+					$type: 'input',
+					name: 'company_name',
+					label: 'Company Name',
+					inputType: 'text',
+					rules: [{ type: 'required' }],
+				},
+				{
+					$type: 'input',
+					name: 'business_email',
+					label: 'Business Email',
+					inputType: 'email',
+					rules: [{ type: 'required' }, { type: 'email' }],
+				},
+			],
+			layout: { $type: 'card', padding: 'md' },
 		},
 	],
-	actions: [
-		{
-			$type: 'submit',
-			id: 'submit_lead',
-			endpoint: '/api/v1/leads',
-		},
-	],
+	actions: [{ $type: 'submit', id: 'submit_lead', endpoint: '/api/v1/leads' }],
 };
 ```
-
-### 3. Render
 
 ```tsx
 import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
@@ -247,10 +215,11 @@ export function ContactPage() {
 
 Detailed architectural documentation is available in the [Documentation App](./apps/www).
 
-- **[Core Concepts](./apps/www/src/pages/docs/core-concepts.mdx)**
-- **[Component Registry](./apps/www/src/pages/docs/registry/index.mdx)**
-- **[Action System](./apps/www/src/pages/docs/actions/index.mdx)**
-- **[Constraint Logic](./apps/www/src/pages/docs/forms/constraints.mdx)**
+- **[Quick Start](./apps/www/src/pages/docs/quick-start.mdx)**
+- **[Forms — Core Concepts](./apps/www/src/pages/docs/packages/forms/core-concepts.mdx)**
+- **[Component Registry](./apps/www/src/pages/docs/packages/registry/index.mdx)**
+- **[Action System](./apps/www/src/pages/docs/packages/actions/index.mdx)**
+- **[Forms React — Getting Started](./apps/www/src/pages/docs/packages/forms-react/getting-started.mdx)**
 
 ---
 
