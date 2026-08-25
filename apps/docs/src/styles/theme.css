@@ -1,115 +1,193 @@
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
+:root {
+	color-scheme: light;
+}
+
+.dark {
+	color-scheme: dark;
+}
+
+/**
+ * Schema Engine color roles on Radiant UI palettes.
+ * Set `data-rui-colors="schema"` on `<html>` so the glacier default preset does not win.
+ */
+html[data-rui-colors='schema'] {
+	--gray-50: var(--color-glacier-white-50);
+	--gray-100: var(--color-glacier-white-100);
+	--gray-200: var(--color-glacier-white-200);
+	--gray-300: var(--color-glacier-white-300);
+	--gray-400: var(--color-glacier-white-400);
+	--gray-500: var(--color-glacier-white-500);
+	--gray-600: var(--color-glacier-white-600);
+	--gray-700: var(--color-glacier-white-700);
+	--gray-800: var(--color-glacier-white-800);
+	--gray-900: var(--color-glacier-white-900);
+	--gray-950: var(--color-glacier-white-950);
+
+	--primary: var(--color-navy-blue-600);
+	--on-primary: var(--color-glacier-white-50);
+	--primary-container: var(--color-navy-blue-100);
+	--on-primary-container: var(--color-navy-blue-900);
+	--primary-light: var(--color-navy-blue-400);
+	--primary-dark: var(--color-navy-blue-800);
+
+	--secondary: var(--color-night-sky-500);
+	--on-secondary: var(--color-glacier-white-50);
+	--secondary-container: var(--color-night-sky-100);
+	--on-secondary-container: var(--color-night-sky-900);
+	--secondary-light: var(--color-night-sky-400);
+	--secondary-dark: var(--color-night-sky-700);
+
+	--tertiary: var(--color-laser-lemon-800);
+	--on-tertiary: var(--color-glacier-white-50);
+	--tertiary-container: var(--color-laser-lemon-100);
+	--on-tertiary-container: var(--color-laser-lemon-900);
+
+	--error: var(--color-scarlet-600);
+	--on-error: var(--color-glacier-white-50);
+	--error-container: var(--color-scarlet-100);
+	--on-error-container: var(--color-scarlet-900);
+	--error-light: var(--color-scarlet-400);
+	--error-dark: var(--color-scarlet-800);
+
+	--success: var(--color-navy-blue-600);
+	--on-success: var(--color-glacier-white-50);
+	--success-container: var(--color-navy-blue-100);
+	--on-success-container: var(--color-navy-blue-900);
+	--success-light: var(--color-navy-blue-400);
+	--success-dark: var(--color-navy-blue-800);
+
+	--info: var(--color-night-sky-600);
+	--on-info: var(--color-glacier-white-50);
+	--info-container: var(--color-night-sky-100);
+	--on-info-container: var(--color-night-sky-900);
+	--info-light: var(--color-night-sky-400);
+	--info-dark: var(--color-night-sky-800);
+
+	--warning: var(--color-laser-lemon-800);
+	--on-warning: var(--color-glacier-white-50);
+	--warning-container: color-mix(in oklab, var(--color-laser-lemon-300) 42%, var(--color-glacier-white-50));
+	--on-warning-container: var(--color-laser-lemon-800);
+	--warning-light: var(--color-laser-lemon-300);
+	--warning-dark: var(--color-laser-lemon-800);
+
+	--neutral: var(--color-glacier-white-500);
+
+	--surface: var(--color-glacier-white-100);
+	--on-surface: var(--color-glacier-white-900);
+	--surface-container-lowest: var(--color-glacier-white-100);
+	--on-surface-container-lowest: var(--color-glacier-white-900);
+	--surface-container-low: var(--color-glacier-white-200);
+	--on-surface-container-low: var(--color-glacier-white-900);
+	--surface-container: var(--color-glacier-white-300);
+	--on-surface-container: var(--color-glacier-white-900);
+	--surface-container-high: var(--color-glacier-white-400);
+	--on-surface-container-high: var(--color-glacier-white-900);
+	--surface-container-highest: var(--color-glacier-white-500);
+	--on-surface-container-highest: var(--color-glacier-white-950);
+
+	--background: var(--color-glacier-white-50);
+	--on-background: var(--color-glacier-white-900);
+
+	--border: color-mix(in oklab, var(--color-glacier-white-900) 12%, transparent);
+	--focus-ring: var(--color-navy-blue-600);
+	--link: var(--color-navy-blue-700);
+	--overlay: oklch(0% 0 0 / 0.45);
+
+	--background-code: var(--color-glacier-white-100);
+	--on-background-code: var(--color-laser-lemon-800);
+}
+
+html.dark[data-rui-colors='schema'] {
+	--primary: var(--color-navy-blue-400);
+	--on-primary: var(--color-glacier-white-950);
+	--primary-container: var(--color-navy-blue-800);
+	--on-primary-container: var(--color-navy-blue-50);
+	--primary-light: var(--color-navy-blue-300);
+	--primary-dark: var(--color-navy-blue-600);
+
+	--secondary: var(--color-night-sky-400);
+	--on-secondary: var(--color-glacier-white-950);
+	--secondary-container: var(--color-night-sky-800);
+	--on-secondary-container: var(--color-night-sky-100);
+	--secondary-light: var(--color-night-sky-300);
+	--secondary-dark: var(--color-night-sky-600);
+
+	--tertiary: var(--color-laser-lemon-300);
+	--on-tertiary: var(--color-glacier-white-950);
+	--tertiary-container: color-mix(in oklab, var(--color-laser-lemon-800) 55%, var(--color-glacier-white-950));
+	--on-tertiary-container: var(--color-laser-lemon-300);
+
+	--error: var(--color-scarlet-500);
+	--on-error: var(--color-glacier-white-950);
+	--error-container: var(--color-scarlet-800);
+	--on-error-container: var(--color-scarlet-100);
+	--error-light: var(--color-scarlet-400);
+	--error-dark: var(--color-scarlet-700);
+
+	--success: var(--color-navy-blue-400);
+	--on-success: var(--color-glacier-white-950);
+	--success-container: var(--color-navy-blue-800);
+	--on-success-container: var(--color-navy-blue-100);
+
+	--info: var(--color-night-sky-400);
+	--on-info: var(--color-glacier-white-950);
+	--info-container: var(--color-night-sky-800);
+	--on-info-container: var(--color-night-sky-100);
+	--info-light: var(--color-night-sky-300);
+	--info-dark: var(--color-night-sky-600);
+
+	--warning: var(--color-laser-lemon-300);
+	--on-warning: var(--color-glacier-white-950);
+	--warning-container: color-mix(in oklab, var(--color-laser-lemon-800) 55%, var(--color-glacier-white-950));
+	--on-warning-container: var(--color-laser-lemon-300);
+	--warning-light: var(--color-laser-lemon-300);
+	--warning-dark: var(--color-laser-lemon-800);
+
+	--surface: var(--color-glacier-white-900);
+	--on-surface: var(--color-glacier-white-50);
+	--surface-container-lowest: var(--color-glacier-white-950);
+	--on-surface-container-lowest: var(--color-glacier-white-50);
+	--surface-container-low: var(--color-glacier-white-900);
+	--on-surface-container-low: var(--color-glacier-white-50);
+	--surface-container: var(--color-glacier-white-800);
+	--on-surface-container: var(--color-glacier-white-50);
+	--surface-container-high: var(--color-glacier-white-700);
+	--on-surface-container-high: var(--color-glacier-white-50);
+	--surface-container-highest: var(--color-glacier-white-600);
+	--on-surface-container-highest: var(--color-glacier-white-50);
+
+	--background: var(--color-glacier-white-950);
+	--on-background: var(--color-glacier-white-50);
+
+	--border: color-mix(in oklab, var(--color-glacier-white-50) 16%, transparent);
+	--focus-ring: var(--color-navy-blue-400);
+	--link: var(--color-navy-blue-300);
+	--overlay: oklch(0% 0 0 / 0.65);
+
+	--background-code: var(--color-glacier-white-900);
+	--on-background-code: var(--color-laser-lemon-300);
+}
+
 @theme {
 	--font-sans: 'Geist Sans', ui-sans-serif, system-ui, sans-serif;
 	--font-heading: 'Karla', ui-sans-serif, system-ui, sans-serif;
 	--font-mono: 'Inconsolata', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-	--color-night-sky-50: hsl(225 100% 98%);
-	--color-night-sky-100: hsl(225 100% 95%);
-	--color-night-sky-200: hsl(225 100% 90%);
-	--color-night-sky-300: hsl(225 90% 80%);
-	--color-night-sky-400: hsl(225 90% 70%);
-	--color-night-sky-500: hsl(225 85% 55%);
-	--color-night-sky-600: hsl(225 85% 45%);
-	--color-night-sky-700: hsl(225 90% 35%);
-	--color-night-sky-800: hsl(225 90% 25%);
-	--color-night-sky-900: hsl(225 80% 15%);
-	--color-night-sky-950: hsl(225 80% 10%);
-
-	--color-scarlet-100: hsl(353 100% 89%);
-	--color-scarlet-200: hsl(351 100% 81%);
-	--color-scarlet-300: hsl(350 100% 72%);
-	--color-scarlet-400: hsl(350 100% 63%);
-	--color-scarlet-500: hsl(350 100% 54%);
-	--color-scarlet-600: hsl(350 84% 44%);
-	--color-scarlet-700: hsl(351 83% 35%);
-	--color-scarlet-800: hsl(351 81% 25%);
-	--color-scarlet-900: hsl(353 76% 15%);
-	--color-scarlet-950: hsl(8 60% 5%);
-
-	--color-glacier-white-50: hsl(220 20% 99%);
-	--color-glacier-white-100: hsl(220 20% 97%);
-	--color-glacier-white-200: hsl(220 20% 94%);
-	--color-glacier-white-300: hsl(220 15% 90%);
-	--color-glacier-white-400: hsl(220 12% 80%);
-	--color-glacier-white-500: hsl(220 10% 72%);
-	--color-glacier-white-600: hsl(220 8% 58%);
-	--color-glacier-white-700: hsl(220 10% 35%);
-	--color-glacier-white-800: hsl(220 12% 25%);
-	--color-glacier-white-900: hsl(225 15% 5%);
-	--color-glacier-white-950: hsl(225 20% 2%);
-
-	--color-laser-lemon-50: hsl(60 100% 98%);
-	--color-laser-lemon-100: hsl(60 100% 88%);
-	--color-laser-lemon-200: hsl(60 100% 79%);
-	--color-laser-lemon-300: hsl(60 100% 69%);
-	--color-laser-lemon-400: hsl(60 100% 60%);
-	--color-laser-lemon-500: hsl(60 100% 50%);
-	--color-laser-lemon-600: hsl(60 99% 41%);
-	--color-laser-lemon-700: hsl(60 98% 32%);
-	--color-laser-lemon-800: hsl(59 93% 23%);
-	--color-laser-lemon-900: hsl(58 86% 14%);
-	--color-laser-lemon-950: hsl(55 50% 5%);
-
-	--color-navy-blue-50: hsl(223 64% 98%);
-	--color-navy-blue-100: hsl(214 65% 88%);
-	--color-navy-blue-200: hsl(212 67% 78%);
-	--color-navy-blue-300: hsl(212 66% 68%);
-	--color-navy-blue-400: hsl(212 67% 58%);
-	--color-navy-blue-500: hsl(211 74% 47%);
-	--color-navy-blue-600: hsl(212 73% 39%);
-	--color-navy-blue-700: hsl(212 71% 30%);
-	--color-navy-blue-800: hsl(212 69% 22%);
-	--color-navy-blue-900: hsl(214 64% 13%);
-	--color-navy-blue-950: hsl(225 36% 4%);
-
-	--color-background: var(--color-glacier-white-50);
-	--color-on-background: var(--color-glacier-white-900);
-	--color-background-accent: var(--color-glacier-white-100);
-	--color-on-background-accent: var(--color-glacier-white-950);
-	--color-muted: var(--color-glacier-white-200);
-	--color-primary-container: var(--color-night-sky-100);
-	--color-on-primary-container: var(--color-night-sky-900);
-	--color-primary: var(--color-night-sky-500);
-	--color-on-primary: var(--color-glacier-white-50);
-	--color-secondary: var(--color-scarlet-500);
-	--color-on-secondary: var(--color-glacier-white-50);
-	--color-secondary-container: var(--color-scarlet-100);
-	--color-on-secondary-container: var(--color-scarlet-900);
-	--color-border: color-mix(in oklab, var(--color-on-background) 15%, transparent);
-	--color-link: var(--color-navy-blue-700);
-	--color-background-code: var(--color-glacier-white-100);
-	--color-on-background-code: var(--color-laser-lemon-800);
-
-	--color-destructive: var(--color-scarlet-500);
-	--color-destructive-foreground: var(--color-glacier-white-50);
-	--color-card: var(--color-glacier-white-50);
-	--color-card-foreground: var(--color-glacier-white-900);
-	--color-foreground: var(--color-glacier-white-900);
-}
-
-[data-theme='dark'] {
-	--color-background: var(--color-glacier-white-950);
-	--color-on-background: var(--color-glacier-white-50);
-	--color-background-accent: var(--color-glacier-white-900);
-	--color-on-background-accent: var(--color-glacier-white-50);
-	--color-muted: var(--color-glacier-white-800);
-	--color-primary-container: var(--color-night-sky-800);
-	--color-on-primary-container: var(--color-night-sky-50);
-	--color-primary: var(--color-night-sky-400);
-	--color-on-primary: var(--color-glacier-white-950);
-	--color-secondary: var(--color-scarlet-500);
-	--color-on-secondary: var(--color-glacier-white-950);
-	--color-secondary-container: var(--color-scarlet-800);
-	--color-on-secondary-container: var(--color-scarlet-100);
-	--color-link: var(--color-navy-blue-400);
-	--color-background-code: var(--color-glacier-white-900);
-	--color-on-background-code: var(--color-laser-lemon-300);
-
-	--color-destructive: var(--color-scarlet-500);
-	--color-destructive-foreground: var(--color-glacier-white-950);
-	--color-card: var(--color-glacier-white-900);
-	--color-card-foreground: var(--color-glacier-white-50);
-	--color-foreground: var(--color-glacier-white-50);
+	--color-background-accent: var(--surface);
+	--color-on-background-accent: var(--on-surface);
+	--color-muted: var(--surface-container-low);
+	--color-muted-foreground: color-mix(in oklab, var(--on-background) 55%, transparent);
+	--color-foreground: var(--on-background);
+	--color-card: var(--background);
+	--color-card-foreground: var(--on-background);
+	--color-background: var(--background);
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--on-primary);
+	--color-border: var(--border);
+	--color-input: var(--background);
+	--color-ring: var(--focus-ring);
+	--color-destructive: var(--error);
+	--color-destructive-foreground: var(--on-error);
 }

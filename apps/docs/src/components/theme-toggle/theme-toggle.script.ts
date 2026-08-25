@@ -1,83 +1,88 @@
-import { customElement } from '@ecopages/radiant/decorators/custom-element';
-import { onEvent } from '@ecopages/radiant/decorators/on-event';
-import { RadiantSwitch } from '../switch/switch.script';
+import type { JsxCustomElementAttributes } from '@ecopages/jsx';
+import { customElement, onEvent } from '@ecopages/radiant';
+import { RuiCycleToggleElement, type RuiCycleToggleProps } from '@ecopages/radiant-ui/cycle-toggle';
+import {
+	THEME_CHANGE_EVENT,
+	THEME_STORAGE_KEY,
+	DARK_THEME_QUERY,
+	applyDocumentTheme,
+	normalizePreference,
+	resolveIsDark,
+	type ThemePreference,
+} from '@/lib/theme';
 
 type ThemeChangeDetail = {
-	theme: 'dark' | 'light';
+	theme: ThemePreference;
 	isDark: boolean;
 };
 
-const DARK_THEME_QUERY = '(prefers-color-scheme: dark)';
-const THEME_CHANGE_EVENT = 'eco:theme-change';
+const THEME_TOGGLE_TAG = 'theme-toggle';
 
-@customElement('theme-toggle')
-export class ThemeToggle extends RadiantSwitch {
-	private mediaQueryList: MediaQueryList | null = null;
-
-	override connectedCallback(): void {
-		super.connectedCallback();
-		this.mediaQueryList = window.matchMedia(DARK_THEME_QUERY);
-		this.syncWithThemePreference();
-		this.mediaQueryList.addEventListener('change', this.handleSystemThemeChange);
-		this.addEventListener('change', this.handleToggleChange);
+/**
+ * @remarks
+ * Persists `system` / `light` / `dark` in `localStorage`, mirrors `prefers-color-scheme`
+ * while `system` is selected, and broadcasts `eco:theme-change` so remounted toggles stay in sync.
+ */
+@customElement(THEME_TOGGLE_TAG)
+export class ThemeToggle extends RuiCycleToggleElement {
+	/**
+	 * @remarks
+	 * First-connect attribute catch-up is deferred to a microtask. Applying the
+	 * stored preference synchronously would run first, then catch-up would
+	 * overwrite `value` with the SSR attribute.
+	 */
+	protected override onConnected(): void {
+		this.syncWithStoredPreference();
 	}
 
-	override disconnectedCallback(): void {
-		this.mediaQueryList?.removeEventListener('change', this.handleSystemThemeChange);
-		this.removeEventListener('change', this.handleToggleChange);
-		this.mediaQueryList = null;
-		super.disconnectedCallback();
+	@onEvent({ mediaQuery: DARK_THEME_QUERY, type: 'change' })
+	onSystemThemeChange() {
+		if (normalizePreference(this.value) !== 'system') return;
+		this.applyEffectiveTheme();
 	}
 
-	private readonly handleSystemThemeChange = (event: MediaQueryListEvent) => {
-		if (localStorage.getItem('theme')) {
-			return;
-		}
-
-		this.applyTheme(event.matches);
-	};
-
-	private readonly handleToggleChange = () => {
-		this.handleThemeChange();
-	};
-
-	private handleThemeChange() {
-		const isDark = this.checked;
-		const theme = isDark ? 'dark' : 'light';
-		localStorage.setItem('theme', theme);
-		this.updateDocumentClass(isDark);
-
-		window.dispatchEvent(
-			new CustomEvent<ThemeChangeDetail>(THEME_CHANGE_EVENT, {
-				detail: { theme, isDark },
-			}),
-		);
-	}
-
-	private syncWithThemePreference() {
-		const storedTheme = localStorage.getItem('theme');
-		const prefersDark = this.mediaQueryList?.matches ?? window.matchMedia(DARK_THEME_QUERY).matches;
-		const isDark = storedTheme ? storedTheme === 'dark' : prefersDark;
-
-		this.applyTheme(isDark);
-	}
-
-	private applyTheme(isDark: boolean) {
-		this.checked = isDark;
-		this.updateDocumentClass(isDark);
-	}
-
-	private updateDocumentClass(isDark: boolean) {
-		const theme = isDark ? 'dark' : 'light';
-		document.documentElement.setAttribute('data-theme', theme);
-		document.documentElement.classList.toggle('dark', isDark);
+	@onEvent({ selector: THEME_TOGGLE_TAG, type: 'rui-change' })
+	onCycleChange() {
+		this.handlePreferenceChange();
 	}
 
 	@onEvent({ window: true, type: THEME_CHANGE_EVENT })
 	onThemeChange(event: CustomEvent<ThemeChangeDetail>) {
-		const { isDark } = event.detail;
-		if (this.checked !== isDark) {
-			this.applyTheme(isDark);
+		const { theme } = event.detail;
+		const preference = normalizePreference(theme);
+		if (normalizePreference(this.value) !== preference) {
+			this.value = preference;
+			this.resync();
 		}
+	}
+
+	private handlePreferenceChange() {
+		const preference = normalizePreference(this.value);
+		localStorage.setItem(THEME_STORAGE_KEY, preference);
+		this.applyEffectiveTheme();
+		window.dispatchEvent(
+			new CustomEvent<ThemeChangeDetail>(THEME_CHANGE_EVENT, {
+				detail: { theme: preference, isDark: resolveIsDark(preference) },
+			}),
+		);
+	}
+
+	private syncWithStoredPreference() {
+		const preference = normalizePreference(localStorage.getItem(THEME_STORAGE_KEY));
+		this.value = preference;
+		this.resync();
+		this.applyEffectiveTheme();
+	}
+
+	private applyEffectiveTheme() {
+		applyDocumentTheme(normalizePreference(this.value));
+	}
+}
+
+export type ThemeToggleProps = RuiCycleToggleProps & { id?: string };
+
+declare module '@ecopages/jsx/jsx-runtime' {
+	interface JsxCustomIntrinsicElements {
+		'theme-toggle': JsxCustomElementAttributes<ThemeToggle, ThemeToggleProps>;
 	}
 }

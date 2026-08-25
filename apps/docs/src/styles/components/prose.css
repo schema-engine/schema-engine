@@ -1,5 +1,7 @@
-.prose {
-	@apply text-on-background/90 text-base leading-[1.65];
+@scope (.prose) to (.unstyled) {
+	:scope {
+		@apply text-on-background/90 text-base leading-[1.65];
+	}
 
 	h1 {
 		@apply text-4xl leading-tight font-extrabold text-on-background-accent mt-12 mb-6 font-heading tracking-tight;
