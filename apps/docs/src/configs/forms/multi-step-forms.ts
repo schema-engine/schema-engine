@@ -1,6 +1,5 @@
 import type { FormConfig } from '@schema-engine/forms/schemas';
 import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
-import '@/lib/form-engine-setup';
 
 /**
  * Multi-step registration form configuration

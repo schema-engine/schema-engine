@@ -1,5 +1,4 @@
 import { ValidationPresets, type FormConfig } from '@schema-engine/forms/schemas';
-import '@/lib/form-engine-setup';
 
 /**
  * Basic form example configuration
