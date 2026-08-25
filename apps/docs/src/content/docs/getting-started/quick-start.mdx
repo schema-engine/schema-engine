@@ -1,3 +1,10 @@
+---
+title: "Quick Start"
+description: "Build your first form with Schema Engine in just a few steps."
+group: Getting Started
+order: 3
+---
+
 # Quick Start
 
 Build your first form with Schema Engine in just a few steps.
@@ -109,6 +116,7 @@ const contactFormConfig: FormConfig = {
 ## 3. Render the Form
 
 ```tsx
+import { FormEngineProvider, FormRenderer, rhfAdapter } from '@schema-engine/forms-react';
 import { formEngine } from './lib/form-engine'; // Adjust path as needed
 import { contactFormConfig } from './config/contact-form'; // Import the config created above
 
@@ -118,7 +126,7 @@ export function ContactForm() {
 	};
 
 	return (
-		<FormEngineProvider engine={formEngine}>
+		<FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
 			<FormRenderer
 				config={contactFormConfig}
 				onSubmit={handleSubmit}

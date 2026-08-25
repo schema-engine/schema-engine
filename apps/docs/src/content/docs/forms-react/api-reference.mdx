@@ -1,3 +1,10 @@
+---
+title: "API Reference"
+description: "Public surface of the React adapter."
+group: Forms React
+order: 8
+---
+
 # API Reference
 
 Complete API documentation for `@schema-engine/forms-react`.
@@ -15,6 +22,8 @@ function createReactFormComposer(): FormComposer;
 Provider component that supplies the engine and adapter to the component tree:
 
 ```tsx
+import { FormEngineProvider, rhfAdapter } from '@schema-engine/forms-react';
+
 <FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
 	{children}
 </FormEngineProvider>
@@ -23,7 +32,7 @@ Provider component that supplies the engine and adapter to the component tree:
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
 | `engine` | `FormEngine` | required | The built form engine |
-| `adapter` | `FormAdapter` | `rhfAdapter` | Form library adapter |
+| `adapter` | `FormAdapter` | required | Form library adapter |
 | `children` | `ReactNode` | required | Child components |
 
 ## FormRenderer

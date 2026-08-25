@@ -1,3 +1,10 @@
+---
+title: "Getting Started"
+description: "Install the React adapter and register your engine."
+group: Forms React
+order: 2
+---
+
 # Getting Started
 
 This guide walks you through building your first React form.
@@ -71,6 +78,8 @@ const formConfig: FormConfig = {
 ## 3. Render the Form
 
 ```tsx
+import { FormEngineProvider, FormRenderer, rhfAdapter } from '@schema-engine/forms-react';
+
 function ContactForm() {
 	const handleSubmit = (data) => {
 		console.log('Form submitted:', data);

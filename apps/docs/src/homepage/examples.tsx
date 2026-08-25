@@ -69,8 +69,7 @@ export const contactFormConfigCode = `{
   ]
 }`;
 
-export const pageExampleCode = `import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
-import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
+export const pageExampleCode = `import { FormEngineProvider, FormRenderer, rhfAdapter } from '@schema-engine/forms-react';
 import { formEngine, contactFormConfig } from './schema.config';
 
 const handleSubmit = (data: unknown) => {

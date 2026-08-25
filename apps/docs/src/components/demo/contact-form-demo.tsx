@@ -1,6 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui-shim/card';
-import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
-import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
+import { FormEngineProvider, FormRenderer, rhfAdapter } from '@schema-engine/forms-react';
 import { formEngine } from '@/lib/form-engine-setup';
 import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
 import type { FormConfig } from '@schema-engine/forms/schemas';

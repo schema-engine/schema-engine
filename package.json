@@ -20,7 +20,7 @@
 		"turbo": "^2.7.3"
 	},
 	"peerDependencies": {
-		"typescript": "^5"
+		"typescript": "catalog:"
 	},
 	"scripts": {
 		"build:lib": "turbo build:lib check-types",
@@ -70,5 +70,8 @@
 	"overrides": {
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0"
+	},
+	"catalog": {
+		"typescript": "^5"
 	}
 }
