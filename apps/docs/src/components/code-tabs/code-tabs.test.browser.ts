@@ -10,7 +10,6 @@ function resetDom(): void {
 
 function createCodeTabs(): RadiantCodeTabs {
 	const element = document.createElement('radiant-code-tabs') as RadiantCodeTabs;
-	element.name = 'image-processor-install';
 	element.label = 'Code examples';
 	element.copyLabel = 'Copy code';
 	element.tabs = [

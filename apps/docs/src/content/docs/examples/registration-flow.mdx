@@ -5,7 +5,13 @@ group: Examples
 order: 3
 ---
 
-import { MultiStepDemo } from '@/components/demo/multi-step-demo';
+import { FormRendererIsland } from '@/components/form-renderer-island';
+
+export const config = {
+	dependencies: {
+		components: [FormRendererIsland],
+	},
+};
 
 # Registration Flow Example
 
@@ -13,7 +19,7 @@ This example demonstrates a complete user registration flow using Form Engine's 
 
 ## Interactive Demo
 
-<ExampleFormPreview preview="registration" />
+<FormRendererIsland preview="registration" />
 ## Complete Configuration
 
 Here's the full configuration for a comprehensive registration flow:

@@ -6,6 +6,8 @@ export const DOCS_ROOT = '/docs';
 /** Sidebar group order (frontmatter `group` values). */
 export const DOCS_GROUP_ORDER = ['Getting Started', 'Forms', 'Forms React', 'Actions', 'Registry', 'Examples'] as const;
 
+export type DocsGroupName = (typeof DOCS_GROUP_ORDER)[number];
+
 export const DOCS_GROUP_ORDER_INDEX = new Map<string, number>(DOCS_GROUP_ORDER.map((name, index) => [name, index]));
 
 /** Preferred section order for `llms.txt` (first slug segment). */

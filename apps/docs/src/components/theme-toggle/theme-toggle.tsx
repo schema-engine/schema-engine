@@ -1,22 +1,40 @@
 import { eco } from '@ecopages/core';
-import type { RadiantSwitchProps } from '../switch/switch.script';
+import type { JsxRenderable } from '@ecopages/jsx';
+import {
+	RuiCycleToggleButton,
+	RuiCycleToggleItem,
+	ThemePreferenceItemContent,
+} from '@ecopages/radiant-ui/cycle-toggle';
+import type { ThemeToggleProps } from './theme-toggle.script';
+// oxlint-disable-next-line import/no-unassigned-import -- custom-element types
+import './theme-toggle.script';
 
-export const ThemeToggle = eco.component({
+export type ThemeToggleViewProps = ThemeToggleProps & {
+	label?: string;
+	'data-eco-persist'?: string;
+};
+
+export const ThemeToggle = eco.component<ThemeToggleViewProps, JsxRenderable>({
 	dependencies: {
-		stylesheets: ['../switch/switch.css'],
 		scripts: ['./theme-toggle.script.ts'],
 	},
-	render(props: RadiantSwitchProps & { class?: string; 'data-eco-persist'?: string }) {
+	render: ({ label = 'Theme', value = 'system', variant = 'ghost', size = 'sm', disabled, ...props }) => {
+		const preference = value ?? 'system';
+
 		return (
-			<theme-toggle
-				id={props.id}
-				class={`radiant-switch ${props.class ?? ''}`}
-				data-eco-persist={props['data-eco-persist']}
-				prop:label={props.label}
-				prop:checked={props.checked}
-				prop:disabled={props.disabled}
-				prop:hiddenLabel={props.hiddenLabel}
-			/>
+			<theme-toggle {...props} value={value} label={label} variant={variant} size={size} disabled={disabled}>
+				<RuiCycleToggleButton variant={variant} size={size} disabled={disabled}>
+					<RuiCycleToggleItem id="system" selected={preference === 'system'}>
+						<ThemePreferenceItemContent preference="system" showLabel={false} />
+					</RuiCycleToggleItem>
+					<RuiCycleToggleItem id="light" selected={preference === 'light'}>
+						<ThemePreferenceItemContent preference="light" showLabel={false} />
+					</RuiCycleToggleItem>
+					<RuiCycleToggleItem id="dark" selected={preference === 'dark'}>
+						<ThemePreferenceItemContent preference="dark" showLabel={false} />
+					</RuiCycleToggleItem>
+				</RuiCycleToggleButton>
+			</theme-toggle>
 		);
 	},
 });

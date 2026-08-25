@@ -1,77 +1,31 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-import { pathToFileURL } from 'node:url';
-import { defineDocsKit } from '../src/docs-kit/config';
-import { getContentFilePath } from '../src/docs-kit/manifest/build-docs-manifest';
-import { getDocsManifest } from '../src/docs-kit/manifest/get-docs-manifest';
+import { join } from 'node:path';
+import { ContentScanner, compareEntriesByField } from '@ecopages/content-processor';
+import appConfig from '../eco.config';
+import { docsFrontmatterSchema, LLM_SECTION_ORDER } from '../src/content/docs';
+import { generateLlmDocs } from '../src/lib/llm-docs';
 
-const appRoot = join(import.meta.dirname, '..');
-const publicRoot = join(appRoot, 'src/public');
+const ROOT_DIR = join(import.meta.dirname, '..');
+const PUBLIC_DIR = join(ROOT_DIR, 'src/public');
 
-async function ensureDir(path: string): Promise<void> {
-	await mkdir(path, { recursive: true });
-}
+const LLMS_HEADER = [
+	'# Schema Engine Documentation',
+	'> Build typed JSON-driven forms, React adapters, actions, and registries with Schema Engine.',
+	'> Start at https://schema-engine.ecopages.app/skill.txt or https://schema-engine.ecopages.app/skill/SKILL.md',
+	'',
+];
 
-/**
- * Writes raw MDX bodies and `llms.txt` into the public directory for static serving.
- *
- * @remarks
- * - `llms.txt` is a `.txt` discovery index only.
- * - Linked page bodies live under `docs-llm/<section>/<slug>.md`.
- */
-export async function generateLlmDocs(outputRoot = publicRoot): Promise<void> {
-	const manifest = await getDocsManifest();
-	const llmRoot = join(outputRoot, 'docs-llm');
-	const baseUrl = process.env.ECOPAGES_BASE_URL ?? 'http://localhost:3000';
-	const lines: string[] = [
-		'# Schema Engine Documentation',
-		'> JSON-driven, type-safe form layer on top of the Ecopages framework.',
-		'',
-		'## How to use this file',
-		'',
-		'- This `llms.txt` file is an index only.',
-		'- Follow links to `/docs-llm/<section>/<slug>.md` for full page exports.',
-		'',
-	];
+const scanner = new ContentScanner({
+	contentRoot: join(appConfig.absolutePaths.srcDir, 'content/docs'),
+	orderBy: compareEntriesByField('order'),
+	schema: docsFrontmatterSchema,
+});
 
-	for (const section of manifest.sections) {
-		lines.push(`## ${section.title}`);
+await generateLlmDocs(scanner, {
+	outputDir: join(PUBLIC_DIR, 'llms-content'),
+	indexPath: join(PUBLIC_DIR, 'llms.txt'),
+	baseUrl: process.env.ECOPAGES_BASE_URL ?? 'https://schema-engine.ecopages.app',
+	sectionOrder: LLM_SECTION_ORDER,
+	headerLines: LLMS_HEADER,
+});
 
-		for (const page of section.pages) {
-			if (page.llms === false) {
-				continue;
-			}
-
-			const sourcePath = getContentFilePath(page.section, page.slug);
-			const body = await readFile(sourcePath, 'utf8');
-			const outputPath = join(llmRoot, page.section, `${page.slug}.md`);
-			await ensureDir(dirname(outputPath));
-			await writeFile(outputPath, body, 'utf8');
-
-			const url = `${baseUrl}/docs-llm/${page.section}/${page.slug}.md`;
-			lines.push(`- [${page.title}](${url})`);
-		}
-
-		lines.push('');
-	}
-
-	await ensureDir(outputRoot);
-	await writeFile(join(outputRoot, 'llms.txt'), lines.join('\n'), 'utf8');
-}
-
-const isDirectRun = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
-
-if (isDirectRun) {
-	const { docsSiteContentMeta } = await import('../src/content/docs/content.meta.ts');
-	const { stubDocsSiteContent } = await import('../src/content/docs/attach-docs-content-modules.ts');
-
-	defineDocsKit({
-		rootDir: appRoot,
-		content: stubDocsSiteContent(docsSiteContentMeta),
-		mdxComponents: {},
-		shellLayout: () => null,
-		layoutComponents: [],
-	});
-	await generateLlmDocs();
-	console.log(`[llms] Generated ${join(publicRoot, 'llms.txt')} and ${join(publicRoot, 'docs-llm')}/`);
-}
+console.log('[llms.txt] Successfully generated llms.txt and content files.');

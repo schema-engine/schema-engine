@@ -123,6 +123,20 @@ async function generateGlobalCSS(): Promise<void> {
 	writeFileSync(globalCSSPath, globalCSSContent, 'utf-8');
 }
 
+const bunBuildOptions = {
+	outdir: outputDir,
+	root: './src',
+	target: 'browser' as const,
+	minify: false,
+	format: 'esm' as const,
+	sourcemap: 'external' as const,
+	external: ['react', 'react-dom', '@schema-engine/forms', '@ecopages/logger'],
+	plugins: [postcssPlugin],
+	define: {
+		'process.env.NODE_ENV': watchMode ? '"development"' : '"production"',
+	},
+};
+
 async function build(): Promise<void> {
 	const startTime = performance.now();
 
@@ -132,19 +146,9 @@ async function build(): Promise<void> {
 		const sourceFiles = await discoverSourceFiles();
 
 		const buildResult = await Bun.build({
+			...bunBuildOptions,
 			entrypoints: sourceFiles,
-			outdir: outputDir,
-			root: './src',
-		target: 'browser',
-		minify: false,
-		format: 'esm',
-		splitting: true,
-			sourcemap: 'external',
-			external: ['react', 'react-dom', '@schema-engine/forms', '@ecopages/logger'],
-			plugins: [postcssPlugin],
-			define: {
-				'process.env.NODE_ENV': watchMode ? '"development"' : '"production"',
-			},
+			splitting: true,
 		});
 
 		if (!buildResult.success) {

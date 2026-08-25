@@ -1,60 +1,94 @@
 import { eco } from '@ecopages/core';
-import type { GetMetadata, GetStaticProps } from '@ecopages/core';
 import type { JsxRenderable } from '@ecopages/jsx';
-import '@/docs-kit.instance';
-import { getDocsContent } from '@/docs-kit/content/get-docs-content';
-import { resolveDocsPage } from '@/docs-kit/content/resolve-docs-page';
-import { getDocsMdxComponents } from '@/docs-kit/mdx/docs-mdx-components';
-import { DocsLayout } from '@/docs-kit/layout';
-import { getDocsManifest } from '@/docs-kit/manifest/get-docs-manifest';
-import { resolveFromCatchAll } from '@/docs-kit/navigation/resolve-from-catch-all';
+import {
+	RuiBreadcrumb,
+	RuiBreadcrumbItem,
+	RuiBreadcrumbLink,
+	RuiBreadcrumbList,
+	RuiBreadcrumbPage,
+	RuiBreadcrumbSeparator,
+} from '@ecopages/radiant-ui/breadcrumb';
+import { entries, getEntryBySegments } from 'ecopages:content/docs';
+import { getComponent, getEntryDependencies } from 'ecopages:content/docs/server';
+import type { Entry } from 'ecopages:content/docs';
+import { CopyForLlm } from '@/components/copy-for-llm';
+import { DocsLayout } from '@/layouts/docs-layout';
+import { docsNav } from '@/lib/docs-nav';
 
-type DocsCatchAllProps = {
-	section: string;
-	slug: string;
-	title: string;
-	description?: string;
+const DocsBreadcrumb = ({ entry }: { entry: Entry }) => {
+	const group = docsNav.groups.find((navGroup) => navGroup.items.some((item) => item.slug === entry.slug));
+	const groupLink = group?.items[0];
+
+	return (
+		<div class="unstyled">
+			<RuiBreadcrumb label="Page location">
+				<RuiBreadcrumbList>
+					<RuiBreadcrumbItem>
+						<RuiBreadcrumbLink href="/">Home</RuiBreadcrumbLink>
+					</RuiBreadcrumbItem>
+					<RuiBreadcrumbSeparator />
+					<RuiBreadcrumbItem>
+						<RuiBreadcrumbLink href="/docs/getting-started/introduction">Docs</RuiBreadcrumbLink>
+					</RuiBreadcrumbItem>
+					{group && groupLink ? (
+						<>
+							<RuiBreadcrumbSeparator />
+							<RuiBreadcrumbItem>
+								<RuiBreadcrumbLink href={groupLink.href}>{group.name}</RuiBreadcrumbLink>
+							</RuiBreadcrumbItem>
+						</>
+					) : null}
+					<RuiBreadcrumbSeparator />
+					<RuiBreadcrumbItem>
+						<RuiBreadcrumbPage>{entry.title}</RuiBreadcrumbPage>
+					</RuiBreadcrumbItem>
+				</RuiBreadcrumbList>
+			</RuiBreadcrumb>
+		</div>
+	);
 };
 
-export const getMetadata: GetMetadata<DocsCatchAllProps> = ({ props: { title, description } }) => ({
-	title: `Docs | ${title}`,
-	description: description ?? '',
-});
-
-const staticProps: GetStaticProps<DocsCatchAllProps> = async ({ pathname }) => {
-	const resolved = resolveFromCatchAll(pathname.params.slug);
-	const page = resolveDocsPage(resolved.section, resolved.slug);
-
-	return {
-		props: {
-			section: page.section,
-			slug: page.slug,
-			title: page.title,
-			description: page.description,
-		},
-	};
-};
-
-export default eco.page<DocsCatchAllProps, JsxRenderable>({
+export default eco.page<{ entry: Entry }, JsxRenderable>({
 	layout: DocsLayout,
-	staticPaths: async () => {
-		const manifest = await getDocsManifest();
-
+	dependencies: async ({ props }) => {
+		const entryDependencies = await getEntryDependencies(props.entry.slug);
 		return {
-			paths: manifest.sections.flatMap((section) =>
-				section.pages.map((page) => ({
-					params: {
-						slug: [page.section, page.slug],
-					},
-				})),
-			),
+			...entryDependencies,
+			components: [...(entryDependencies?.components ?? []), CopyForLlm],
 		};
 	},
-	staticProps,
-	metadata: getMetadata,
-	render: async ({ section, slug }) => {
-		const Content = getDocsContent(section, slug);
+	staticPaths: async () => ({
+		paths: entries.map((post) => ({
+			params: {
+				slug: post.segments,
+			},
+		})),
+	}),
+	staticProps: async ({ pathname }) => {
+		const segments = Array.isArray(pathname.params.slug) ? pathname.params.slug : [pathname.params.slug];
+		const entry = getEntryBySegments(segments);
 
-		return await Content({ components: getDocsMdxComponents() });
+		return {
+			props: {
+				entry,
+			},
+		};
+	},
+	metadata: ({ props: { entry } }) => ({
+		title: `Docs | ${entry.title}`,
+		description: entry.description,
+	}),
+	render: async ({ entry }) => {
+		const Content = await getComponent(entry.slug);
+
+		return (
+			<section class="docs-page">
+				<div class="docs-bar unstyled">
+					<DocsBreadcrumb entry={entry} />
+					<CopyForLlm llmUrl={`/llms-content/${entry.slug}.txt`} />
+				</div>
+				<Content />
+			</section>
+		);
 	},
 });
