@@ -28,10 +28,10 @@ const config = await new ConfigBuilder()
 		}),
 	])
 	.setDefaultMetadata({
-		title: 'Radiant | Docs',
-		description: 'Radiant is a minimalist web component library designed for simplicity and flexibility.',
-		image: 'public/assets/images/default-og.webp',
-		keywords: ['typescript', 'framework', 'static'],
+		title: 'Schema Engine | Docs',
+		description:
+			'JSON-driven, type-safe forms with Zod validation. Four first-party packages: forms, forms-react, actions, and registry.',
+		keywords: ['schema-engine', 'forms', 'json', 'zod', 'react'],
 	})
 	.setProcessors([
 		postcssProcessorPlugin(

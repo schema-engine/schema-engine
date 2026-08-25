@@ -1,15 +1,14 @@
 import { eco } from '@ecopages/core';
-import '@/docs-kit.instance';
-import { DocsLayout } from '@/docs-kit/layout';
-import type { Error404TemplateProps } from '@ecopages/core';
+import { RuiButton } from '@ecopages/radiant-ui/button';
+import { BaseLayout } from '@/layouts/base-layout';
 import type { JsxRenderable } from '@ecopages/jsx';
+import type { Error404TemplateProps } from '@ecopages/core';
 
-export default eco.page<Error404TemplateProps, JsxRenderable>({
-	layout: DocsLayout,
+const Error404 = eco.page<Error404TemplateProps, JsxRenderable>({
+	layout: BaseLayout,
 	dependencies: {
 		stylesheets: ['./404.css'],
 	},
-
 	render: () => {
 		return (
 			<div class="error404">
@@ -22,12 +21,12 @@ export default eco.page<Error404TemplateProps, JsxRenderable>({
 						We couldn't find the page you're looking for. It might have been moved or deleted.
 					</p>
 					<div class="error404__actions">
-						<a href="/" class="button button--outline">
-							Return Home
-						</a>
+						<RuiButton href="/">Return Home</RuiButton>
 					</div>
 				</div>
 			</div>
 		);
 	},
 });
+
+export default Error404;
