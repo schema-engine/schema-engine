@@ -114,8 +114,7 @@ const formConfig: FormConfig = {
 ### 3. Render the Form
 
 ```tsx
-import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
-import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
+import { FormEngineProvider, FormRenderer, rhfAdapter } from '@schema-engine/forms-react';
 
 function ContactForm() {
 	const handleSubmit = (data) => {
@@ -165,8 +164,7 @@ Adapters bridge the gap between the form engine and form libraries. The package 
 **Using the RHF Adapter:**
 
 ```tsx
-import { FormEngineProvider } from '@schema-engine/forms-react';
-import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
+import { FormEngineProvider, rhfAdapter } from '@schema-engine/forms-react';
 
 <FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
 	{/* Your form */}

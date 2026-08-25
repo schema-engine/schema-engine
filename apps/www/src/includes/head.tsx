@@ -6,7 +6,7 @@ import type { ReactNode } from 'react';
 export const Head = eco.component<PageHeadProps, ReactNode>({
 	dependencies: {
 		stylesheets: ['../styles/tailwind.css'],
-		scripts: ['theme.script.ts?exclude-from-html=true'],
+		scripts: ['theme.script.ts'],
 	},
 
 	render: ({ metadata, children }) => {
@@ -22,7 +22,6 @@ export const Head = eco.component<PageHeadProps, ReactNode>({
 					rel="stylesheet"
 				/>
 
-				<script src="/assets/includes/theme.script.js"></script>
 				{children}
 			</head>
 		);

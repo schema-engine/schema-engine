@@ -1,7 +1,6 @@
 import { buttonVariants } from '../components/ui/button';
 import { CodePreview } from '../components/code-preview';
-import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
-import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
+import { FormEngineProvider, FormRenderer, rhfAdapter } from '@schema-engine/forms-react';
 import { Separator } from '@/components/ui/separator';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { formEngine } from '@/lib/form-engine-setup';

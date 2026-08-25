@@ -198,11 +198,11 @@ const contactFormSchema = {
 ```
 
 ```tsx
-import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
+import { FormEngineProvider, FormRenderer, rhfAdapter } from '@schema-engine/forms-react';
 
 export function ContactPage() {
 	return (
-		<FormEngineProvider engine={engine}>
+		<FormEngineProvider engine={engine} adapter={rhfAdapter}>
 			<FormRenderer config={contactFormSchema} onSubmit={(data) => console.log('Payload:', data)} />
 		</FormEngineProvider>
 	);

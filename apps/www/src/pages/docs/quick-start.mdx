@@ -131,7 +131,7 @@ const contactFormConfig: FormConfig = {
 ## 3. Render the Form
 
 ```tsx
-import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
+import { FormEngineProvider, FormRenderer, rhfAdapter } from '@schema-engine/forms-react';
 import { formEngine } from './lib/form-engine'; // Adjust path as needed
 import { contactFormConfig } from './config/contact-form'; // Import the config created above
 
@@ -141,7 +141,7 @@ export function ContactForm() {
 	};
 
 	return (
-		<FormEngineProvider engine={formEngine}>
+		<FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
 			<FormRenderer
 				config={contactFormConfig}
 				onSubmit={handleSubmit}

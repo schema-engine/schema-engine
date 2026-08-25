@@ -84,9 +84,9 @@ Pre-configured FormEngine instances for use in stories.
 
 ```tsx
 import { defaultFormEngine } from './shared/form-engine-setup';
-import { FormEngineProvider } from '@schema-engine/forms-react';
+import { FormEngineProvider, rhfAdapter } from '@schema-engine/forms-react';
 
-<FormEngineProvider engine={defaultFormEngine}>
+<FormEngineProvider engine={defaultFormEngine} adapter={rhfAdapter}>
 	<FormRenderer config={myForm} />
 </FormEngineProvider>;
 ```
@@ -326,7 +326,7 @@ Much cleaner! The `StoryWrapper` handles all the provider setup for you.
 **Solution:** Make sure you're wrapping your story with `<StoryWrapper>` or manually providing the engine:
 
 ```tsx
-<FormEngineProvider engine={defaultFormEngine}>{/* your component */}</FormEngineProvider>
+<FormEngineProvider engine={defaultFormEngine} adapter={rhfAdapter}>{/* your component */}</FormEngineProvider>
 ```
 
 ### Type errors

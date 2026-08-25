@@ -1,8 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import type { EcoComponent } from '@ecopages/core';
 import { Badge } from '@/components/ui/badge';
-import { FormEngineProvider } from '@schema-engine/forms-react';
-import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
+import { FormEngineProvider, rhfAdapter } from '@schema-engine/forms-react';
 import { formEngine } from '@/lib/form-engine-setup';
 
 export type FormEngineLayoutProps = {

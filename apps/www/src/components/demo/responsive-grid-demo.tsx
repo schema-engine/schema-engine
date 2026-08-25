@@ -1,5 +1,4 @@
-import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
-import { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
+import { FormEngineProvider, FormRenderer, rhfAdapter } from '@schema-engine/forms-react';
 import { formEngine } from '@/lib/form-engine-setup';
 import { ViewportPreview } from '@schema-engine/forms-react/components/viewport-preview';
 import { responsiveFormConfig } from '@/configs/forms/responsive-forms';

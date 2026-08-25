@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import type { FormEngine as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import { FormAdapterContext } from '../adapters/context';
-import { rhfAdapter } from '../adapters/rhf';
 import type { FormAdapter } from '../adapters/types';
 import { FormEngineContext } from './provider';
 
@@ -16,15 +15,15 @@ export interface FormEngineProviderProps {
 	 * Import the adapter you want to use (e.g., rhfAdapter for React Hook Form).
 	 * This is the supported extension point for integrating another form library.
 	 */
-	adapter?: FormAdapter;
+	adapter: FormAdapter;
 }
 
 /**
  * Main form engine provider - handles adapter selection and provides FormEngine instance
  */
-export function FormEngineProvider({ children, engine, adapter = rhfAdapter }: FormEngineProviderProps) {
+export function FormEngineProvider({ children, engine, adapter }: FormEngineProviderProps) {
 	if (!adapter) {
-		throw new Error('FormEngineProvider requires an adapter. Import and pass an adapter (e.g., rhfAdapter)');
+		throw new Error('FormEngineProvider requires an adapter. Pass an adapter such as rhfAdapter explicitly.');
 	}
 
 	if (!engine) {
