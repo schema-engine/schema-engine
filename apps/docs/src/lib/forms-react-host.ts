@@ -1,11 +1,14 @@
 /**
  * Single import graph for the docs FormRenderer island.
- * Every forms-react runtime import in the island must go through this module
- * so mount, adapter, composer, and registrations share one copy of React.
+ * Every React / forms-react runtime import in the island must go through this
+ * module so createRoot, FormRenderer, adapter, and registrations share one copy.
  */
+export { createElement } from 'react';
+export { createRoot } from 'react-dom/client';
+export { FormEngineProvider } from '@schema-engine/forms-react/components/adapter-provider';
+export { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
 export { createReactFormComposer } from '@schema-engine/forms-react/registries/builder-registry';
 export { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
-export { mountFormRenderer } from '@schema-engine/forms-react/mount-form-renderer';
 export { InputElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-input.registration';
 export { TextareaElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-textarea.registration';
 export { CheckboxElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-checkbox.registration';
