@@ -5,7 +5,13 @@ group: Examples
 order: 1
 ---
 
-import { SimpleInputDemo } from '@/components/demo/simple-input-demo';
+import { FormRendererIsland } from '@/components/form-renderer-island';
+
+export const config = {
+	dependencies: {
+		components: [FormRendererIsland],
+	},
+};
 
 # Basic Form Example
 
@@ -13,7 +19,7 @@ Learn Form Engine fundamentals with this simple contact form example that demons
 
 ## Interactive Demo
 
-<ExampleFormPreview preview="basic" />
+<FormRendererIsland preview="basic" />
 ## Key Concepts
 
 This basic form demonstrates the essential Form Engine concepts:

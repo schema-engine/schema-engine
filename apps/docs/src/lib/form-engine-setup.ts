@@ -1,33 +1,32 @@
 /**
- * Centralized form engine setup for the docs site.
+ * Form engine for the docs live previews.
  *
- * Mirrors the structure used in `apps/www` so the ported demo components
- * resolve identical element / layout / stepper / action registrations.
- * The docs site does not need the entire www app setup; it just needs
- * enough registrations to render the documentation demos.
+ * All forms-react imports go through `forms-react-host` so the island shares
+ * one React instance with FormRenderer.
  */
-import { createReactFormComposer } from '@schema-engine/forms-react/registries/builder-registry';
-
-import { InputElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-input.registration';
-import { TextareaElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-textarea.registration';
-import { CheckboxElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-checkbox.registration';
-import { RadioElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-radio.registration';
-import { SelectElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-select.registration';
-import { SwitchElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-switch.registration';
-import { NumberElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-number.registration';
-import { ArrayElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-array-elements.registration';
-import { SubmitButtonElementRegistration } from '@schema-engine/forms-react/components/elements/actions/submit-button.registration';
-import { SubmissionAlertElementRegistration } from '@schema-engine/forms-react/components/elements/content/form-submission-alert.registration';
-
-import { CardLayoutRegistration } from '@schema-engine/forms-react/components/layouts/card-layout.registration';
-import { SplitScreenLayoutRegistration } from '@schema-engine/forms-react/components/layouts/split-screen-layout.registration';
-import { HeroBackgroundLayoutRegistration } from '@schema-engine/forms-react/components/layouts/hero-background-layout.registration';
-
-import { DefaultStepperRegistration } from '@schema-engine/forms-react/components/steppers/default-stepper.registration';
-import { MinimalistStepperRegistration } from '@schema-engine/forms-react/components/steppers/minimalist-stepper.registration';
-import { DebuggerStepperRegistration } from '@schema-engine/forms-react/components/steppers/debugger-stepper.registration';
+import {
+	ArrayElementRegistration,
+	CardLayoutRegistration,
+	CheckboxElementRegistration,
+	createReactFormComposer,
+	DebuggerStepperRegistration,
+	DefaultStepperRegistration,
+	HeroBackgroundLayoutRegistration,
+	InputElementRegistration,
+	MinimalistStepperRegistration,
+	NumberElementRegistration,
+	RadioElementRegistration,
+	SelectElementRegistration,
+	SplitScreenLayoutRegistration,
+	SubmissionAlertElementRegistration,
+	SubmitButtonElementRegistration,
+	SwitchElementRegistration,
+	TextareaElementRegistration,
+} from '@/lib/forms-react-host';
 
 import { formSubmitPlugin, notificationPlugin, formResetPlugin, autoSavePlugin } from '@schema-engine/forms/actions';
+// oxlint-disable-next-line import/no-unassigned-import -- registers built-in validators
+import '@schema-engine/forms/schemas/validation/validation-registry';
 
 export const formEngine = createReactFormComposer()
 	.addElement(InputElementRegistration)

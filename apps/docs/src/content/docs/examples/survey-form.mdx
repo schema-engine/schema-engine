@@ -5,7 +5,13 @@ group: Examples
 order: 4
 ---
 
+import { FormRendererIsland } from '@/components/form-renderer-island';
 
+export const config = {
+	dependencies: {
+		components: [FormRendererIsland],
+	},
+};
 
 # Survey Form Example
 
@@ -13,7 +19,7 @@ An advanced survey form showcasing Form Engine's sophisticated features includin
 
 ## Interactive Demo
 
-<ExampleFormPreview preview="survey" />
+<FormRendererIsland preview="survey" />
 ## Key Features Demonstrated
 
 This survey example showcases several important Form Engine features:
