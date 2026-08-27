@@ -11,38 +11,38 @@
 	@apply flex;
 	background-color: var(--card-layout-bg);
 
-	@media (--breakpoint-md) {
-		@apply min-h-screen items-center justify-center p-8;
+	@media (width >= 768px) {
+			@apply min-h-screen items-center justify-center p-8;
 	}
 
 	&__card {
 		@apply w-full overflow-hidden;
 		background-color: var(--card-layout-card-bg);
 
-		@media (--breakpoint-md) {
+		@media (width >= 768px) {
 			@apply rounded-xl;
 		}
 
 		&--sm {
-			@media (--breakpoint-md) {
+			@media (width >= 768px) {
 				@apply max-w-sm;
 			}
 		}
 
 		&--md {
-			@media (--breakpoint-md) {
+			@media (width >= 768px) {
 				@apply max-w-md;
 			}
 		}
 
 		&--lg {
-			@media (--breakpoint-md) {
+			@media (width >= 768px) {
 				@apply max-w-lg;
 			}
 		}
 
 		&--xl {
-			@media (--breakpoint-md) {
+			@media (width >= 768px) {
 				@apply max-w-xl;
 			}
 		}
@@ -50,25 +50,25 @@
 
 	&__shadow {
 		&--sm {
-			@media (--breakpoint-md) {
+			@media (width >= 768px) {
 				@apply shadow-sm;
 			}
 		}
 
 		&--md {
-			@media (--breakpoint-md) {
+			@media (width >= 768px) {
 				@apply shadow-md;
 			}
 		}
 
 		&--lg {
-			@media (--breakpoint-md) {
+			@media (width >= 768px) {
 				@apply shadow-lg;
 			}
 		}
 
 		&--xl {
-			@media (--breakpoint-md) {
+			@media (width >= 768px) {
 				@apply shadow-xl;
 			}
 		}
@@ -102,7 +102,7 @@
 		&--sm {
 			@apply p-3;
 
-			@media (--breakpoint-md) {
+			@media (width >= 768px) {
 				@apply p-4;
 			}
 		}
@@ -110,7 +110,7 @@
 		&--md {
 			@apply p-4;
 
-			@media (--breakpoint-md) {
+			@media (width >= 768px) {
 				@apply p-6;
 			}
 		}
@@ -118,7 +118,7 @@
 		&--lg {
 			@apply p-5;
 
-			@media (--breakpoint-md) {
+			@media (width >= 768px) {
 				@apply p-8;
 			}
 		}

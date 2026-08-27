@@ -1,6 +1,6 @@
 ---
-title: "Quick Start"
-description: "Build your first form with Schema Engine in just a few steps."
+title: 'Quick Start'
+description: 'Build your first form with Schema Engine in just a few steps.'
 group: Getting Started
 order: 3
 ---
@@ -15,10 +15,13 @@ Use the `createReactFormComposer` to register components and build an immutable 
 
 ```typescript
 // lib/form-engine.ts
+import { createReactFormComposer } from '@schema-engine/forms-react';
+import { CardLayoutRegistration } from '@schema-engine/forms-react/registrations';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
+import { DefaultStepperRegistration } from '@/components/schema-engine/forms/steppers/default-stepper.registration';
+
 export const formEngine = createReactFormComposer()
-	.addElement(InputElementRegistration)
-	.addElement(TextareaElementRegistration)
-	.addElement(SelectElementRegistration)
+	.addElements(schemaFormRegistrations)
 	.addLayout(CardLayoutRegistration)
 	.addStepper(DefaultStepperRegistration)
 	.build();
@@ -116,7 +119,8 @@ const contactFormConfig: FormConfig = {
 ## 3. Render the Form
 
 ```tsx
-import { FormEngineProvider, FormRenderer, rhfAdapter } from '@schema-engine/forms-react';
+import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
+import { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
 import { formEngine } from './lib/form-engine'; // Adjust path as needed
 import { contactFormConfig } from './config/contact-form'; // Import the config created above
 
@@ -127,10 +131,7 @@ export function ContactForm() {
 
 	return (
 		<FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
-			<FormRenderer
-				config={contactFormConfig}
-				onSubmit={handleSubmit}
-			/>
+			<FormRenderer config={contactFormConfig} onSubmit={handleSubmit} />
 		</FormEngineProvider>
 	);
 }
@@ -172,10 +173,10 @@ This creates **conditional logic** where:
 
 ```typescript
 interface FormConfig {
-	id: string;           // Unique identifier
-	title?: string;       // Form title
+	id: string; // Unique identifier
+	title?: string; // Form title
 	description?: string; // Form description
-	steps: StepConfig[];  // Form steps (even single-step forms need this)
+	steps: StepConfig[]; // Form steps (even single-step forms need this)
 	stepper?: StepperConfig; // Optional stepper configuration
 	actions?: ActionConfig[]; // Optional form actions
 }
@@ -185,10 +186,10 @@ interface FormConfig {
 
 ```typescript
 interface ElementConfig {
-	$type: string;        // Element type (input, select, textarea, etc.)
-	id?: string;          // DOM element ID
-	name: string;         // Form field name
-	label?: string;       // Field label
+	$type: string; // Element type (input, select, textarea, etc.)
+	id?: string; // DOM element ID
+	name: string; // Form field name
+	label?: string; // Field label
 	rules?: ValidationRule[]; // Validation rules
 	constraints?: ConstraintLogic[]; // Conditional logic
 	grid?: ElementGridConfig; // Grid positioning
@@ -202,19 +203,19 @@ Schema Engine uses a declarative validation system:
 
 ```typescript
 // Required field
-rules: [{ rule: 'required', message: 'This field is required' }]
+rules: [{ rule: 'required', message: 'This field is required' }];
 
 // Email validation
 rules: [
 	{ rule: 'required', message: 'Email is required' },
 	{ rule: 'email', message: 'Please enter a valid email' },
-]
+];
 
 // Length validation
 rules: [
 	{ rule: 'minLength', value: 3, message: 'Must be at least 3 characters' },
 	{ rule: 'maxLength', value: 100, message: 'Must be less than 100 characters' },
-]
+];
 
 // Pattern validation
 rules: [
@@ -223,7 +224,7 @@ rules: [
 		value: '^[A-Za-z\\s]+$',
 		message: 'Only letters and spaces allowed',
 	},
-]
+];
 ```
 
 ## What's Next?

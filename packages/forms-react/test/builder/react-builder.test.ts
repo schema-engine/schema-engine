@@ -2,14 +2,14 @@
  * Tests for React Form Engine Builder Pattern
  */
 
-import { describe, test, expect } from 'bun:test';
+import { describe, test, expect } from 'vitest';
 import { createReactFormComposer } from '@/registries/builder-registry';
-import { InputElementRegistration } from '@/components/elements/inputs/form-input.registration';
-import { FormTextarea } from '@/components/elements/inputs/form-textarea';
+import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
+import { FormTextarea } from '@/components/schema-engine/forms/inputs/form-textarea';
 import { CardLayoutRegistration } from '@/components/layouts/card-layout.registration';
-import { DefaultStepperRegistration } from '@/components/steppers/default-stepper.registration';
-import { InputFieldSchema } from '@/components/elements/inputs/form-input.types';
-import { TextareaFieldSchema } from '@/components/elements/inputs/form-textarea.types';
+import { DefaultStepperRegistration } from '@/components/schema-engine/forms/steppers/default-stepper.registration';
+import { InputFieldSchema } from '@/components/schema-engine/forms/inputs/form-input.types';
+import { TextareaFieldSchema } from '@/components/schema-engine/forms/inputs/form-textarea.types';
 
 describe('React Form Engine Builder', () => {
 	describe('Builder Creation', () => {

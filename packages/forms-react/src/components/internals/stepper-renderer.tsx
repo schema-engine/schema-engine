@@ -6,115 +6,83 @@ import { useFormEngine } from '@/hooks';
 import { StepperProvider, useStepperContext } from '@/contexts/stepper-context';
 
 interface StepperRendererProps {
-	/**
-	 * Form configuration containing stepper information
-	 */
-	form: FormConfig & { stepper?: FormStepperConfig };
-
-	/**
-	 * Array of form steps
-	 */
+	form: Omit<FormConfig, 'stepper'> & { stepper?: FormStepperConfig };
 	steps: FormStep[];
-
-	/**
-	 * Current step index
-	 */
 	currentStepIndex: number;
-
-	/**
-	 * Step validation states
-	 */
 	stepStates: {
 		completed: boolean[];
 		valid: boolean[];
 		visited: boolean[];
 	};
-
-	/**
-	 * Navigation functions
-	 */
 	navigation: StepperNavigation;
-
-	/**
-	 * Form submission state
-	 */
 	isSubmitting?: boolean;
-
-	/**
-	 * Children to render inside the stepper (form content)
-	 */
 	children?: React.ReactNode;
 }
 
 /**
- * Default stepper component that renders a simple step navigation
+ * Headless fallback stepper: renders children with minimal prev/next/submit controls.
+ * Buttons stay in the DOM and are hidden with CSS to avoid RHF validation triggers.
  */
-const DefaultStepper: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
-	const { steps, navigation } = useStepperContext();
+const HeadlessStepper: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
+	const { steps, currentStepIndex, navigation, form } = useStepperContext();
 
 	return (
-		<div className="flex flex-col gap-4">
-			<div className="flex gap-2">
-				{steps.map((step, index: number) => (
+		<div className="flex flex-col gap-6">
+			<nav aria-label="Form steps" className="flex flex-wrap gap-2">
+				{steps.map((step, index) => (
 					<button
 						key={step.id}
-						className={`px-4 py-2 rounded-md font-medium transition-colors ${
-							step.isActive
-								? 'bg-blue-600 text-white'
-								: step.isCompleted
-									? 'bg-green-600 text-white'
-									: 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-						}`}
-						onClick={() => navigation.goToStep(index)}
 						type="button"
+						onClick={() => navigation.goToStep(index)}
+						disabled={!step.isVisited && index > currentStepIndex}
+						aria-current={step.isActive ? 'step' : undefined}
+						className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
 					>
-						<span className="step-number">{index + 1}</span>
-						{step.title && <span className="ml-2">{step.title}</span>}
+						{step.title ?? `Step ${index + 1}`}
 					</button>
 				))}
-			</div>
+			</nav>
 
 			{children}
 
-			<div className="flex gap-2 justify-end">
+			<div className="flex items-center justify-between gap-4">
 				<button
 					type="button"
 					onClick={navigation.goToPreviousStep}
-					disabled={!navigation.canGoPrevious}
-					style={{ display: navigation.isFirstStep ? 'none' : 'block' }}
-					className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50"
+					disabled={navigation.isFirstStep}
+					className="rounded-md border px-4 py-2 text-sm disabled:opacity-50"
 				>
 					Previous
 				</button>
 
-				<button
-					type="button"
-					onClick={navigation.goToNextStep}
-					disabled={!navigation.canGoNext}
-					style={{ display: navigation.isLastStep ? 'none' : 'block' }}
-					className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-				>
-					Next
-				</button>
+				<span className="text-sm text-muted-foreground">
+					Step {currentStepIndex + 1} of {steps.length}
+				</span>
 
-				<button
-					type="submit"
-					style={{ display: navigation.isLastStep ? 'block' : 'none' }}
-					className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-				>
-					Submit
-				</button>
+				<div className="flex gap-2">
+					<button
+						type="submit"
+						style={{ display: navigation.isLastStep ? 'inline-flex' : 'none' }}
+						className="rounded-md border px-4 py-2 text-sm"
+					>
+						{form.isSubmitting ? 'Submitting...' : 'Submit'}
+					</button>
+
+					<button
+						type="button"
+						onClick={navigation.goToNextStep}
+						disabled={!navigation.canGoNext}
+						style={{ display: navigation.isLastStep ? 'none' : 'inline-flex' }}
+						className="rounded-md border px-4 py-2 text-sm disabled:opacity-50"
+					>
+						Next
+					</button>
+				</div>
 			</div>
 		</div>
 	);
 };
 
-/**
- * Stepper Renderer Component
- *
- * Resolves and renders the appropriate stepper component based on the form configuration.
- * Falls back to a default stepper if none is specified or if the stepper is not found.
- */
 export const StepperRenderer: React.FC<StepperRendererProps> = ({
 	form,
 	steps,
@@ -164,20 +132,19 @@ export const StepperRenderer: React.FC<StepperRendererProps> = ({
 	if (!form.stepper?.$type) {
 		return (
 			<StepperProvider value={contextValue}>
-				<DefaultStepper>{children}</DefaultStepper>
+				<HeadlessStepper>{children}</HeadlessStepper>
 			</StepperProvider>
 		);
 	}
 
 	const { $type, ...stepperConfig } = form.stepper;
-
 	const stepperRegistration = engine.getStepper($type);
 
 	if (!stepperRegistration) {
-		console.warn(`Stepper '${$type}' not found in registry. Using default stepper.`);
+		console.warn(`Stepper '${$type}' not found in registry. Using headless fallback.`);
 		return (
 			<StepperProvider value={{ ...contextValue, config: stepperConfig }}>
-				<DefaultStepper>{children}</DefaultStepper>
+				<HeadlessStepper>{children}</HeadlessStepper>
 			</StepperProvider>
 		);
 	}

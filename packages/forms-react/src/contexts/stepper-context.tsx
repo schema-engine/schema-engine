@@ -1,33 +1,41 @@
 import { createContext, useContext } from 'react';
-import type { StepData, StepperNavigation } from '@/components/steppers/types';
+import type { StepData, StepperFormContext, StepperNavigation } from '@/components/steppers/types';
 
-interface StepperContextValue {
+export interface StepperContextValue<TConfig = Record<string, unknown>> {
 	steps: StepData[];
 	currentStepIndex: number;
 	navigation: StepperNavigation;
-	form: {
-		id: string;
-		title?: string;
-		description?: string;
-		isSubmitting?: boolean;
-	};
-	config: Record<string, any>;
+	form: StepperFormContext;
+	config: TConfig;
 }
 
 const StepperContext = createContext<StepperContextValue | null>(null);
 
-export function StepperProvider({ children, value }: { children: React.ReactNode; value: StepperContextValue }) {
-	return <StepperContext.Provider value={value}>{children}</StepperContext.Provider>;
+export function StepperProvider<TConfig>({
+	children,
+	value,
+}: {
+	children: React.ReactNode;
+	value: StepperContextValue<TConfig>;
+}) {
+	return <StepperContext.Provider value={value as StepperContextValue}>{children}</StepperContext.Provider>;
 }
 
 /**
- * Hook to access stepper context data
- * Use this in custom stepper components to access step information and navigation
+ * Access step data, navigation, and the stepper's own config. Pass the stepper's
+ * config type to have `config` typed, e.g. `useStepperContext<MyConfig>()`.
  */
-export function useStepperContext() {
+export function useStepperContext<TConfig = Record<string, unknown>>(): StepperContextValue<TConfig> {
 	const context = useContext(StepperContext);
 	if (!context) {
 		throw new Error('useStepperContext must be used within a StepperProvider');
 	}
-	return context;
+	return context as StepperContextValue<TConfig>;
+}
+
+/**
+ * Non-throwing variant for tools that may render outside a stepper tree.
+ */
+export function useOptionalStepperContext() {
+	return useContext(StepperContext);
 }

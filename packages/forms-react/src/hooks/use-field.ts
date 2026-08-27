@@ -1,5 +1,5 @@
-import { useController } from 'react-hook-form';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { useFormField } from '@/adapters/context';
 import { useFieldGridStyles } from './grid-hooks';
 
 /**
@@ -13,9 +13,8 @@ export function combineHandlers<T>(controllerHandler: (value: T) => void, propsH
 }
 
 /**
- * Hook that provides all the field functionality for form fields using useController
- * This replaces the FieldGroup wrapper and gives fields full control
- * over their rendering, errors, and semantic HTML
+ * Field chrome and value binding for consumer-owned registry components.
+ * Goes through the active FormAdapter — not a specific form library.
  */
 export function useControlledFormElement(config: FormEngine.ElementConfig) {
 	if (!config.name) {
@@ -23,24 +22,18 @@ export function useControlledFormElement(config: FormEngine.ElementConfig) {
 	}
 
 	const isRequired = isFieldRequired(config.rules);
-
-	const { field, fieldState, formState } = useController({
-		name: config.name,
-		disabled: config.disabled,
-		defaultValue: 'defaultValue' in config ? config.defaultValue : '',
-	});
-
+	const { value, error, onChange, onBlur, name, disabled, ref } = useFormField<any>(config);
 	const gridStyles = useFieldGridStyles(config.grid);
 
 	const fieldProps = {
 		id: config.id,
-		name: field.name,
+		name,
 		required: isRequired,
-		disabled: config.disabled,
+		disabled,
 		readOnly: config.readonly,
-		'aria-invalid': fieldState.invalid,
-		'aria-describedby': fieldState.error ? `${config.id}-error` : undefined,
-		ref: field.ref,
+		ref,
+		'aria-invalid': Boolean(error),
+		'aria-describedby': error ? `${config.id}-error` : undefined,
 	};
 
 	const labelProps = {
@@ -50,7 +43,7 @@ export function useControlledFormElement(config: FormEngine.ElementConfig) {
 		}`,
 	};
 
-	const errorProps = fieldState.error
+	const errorProps = error
 		? {
 				id: `${config.id}-error`,
 				role: 'alert' as const,
@@ -64,27 +57,23 @@ export function useControlledFormElement(config: FormEngine.ElementConfig) {
 	};
 
 	return {
-		field,
-		fieldState,
-		formState,
-		value: field.value,
-		error: fieldState.error?.message,
-		isDirty: fieldState.isDirty,
-		isTouched: fieldState.isTouched,
+		value,
+		error,
 		isRequired,
-		onChange: field.onChange,
-		onBlur: field.onBlur,
+		onChange,
+		onBlur,
 		fieldProps,
 		labelProps,
 		errorProps,
 		containerStyles,
 		gridStyles,
+		fieldState: {
+			error: error ? { message: error } : undefined,
+			invalid: Boolean(error),
+		},
 		config,
 		combineHandlers,
 	};
 }
 
-/**
- * Type for the return value of useControlledFormElement hook
- */
 export type UseControlledFormElementReturn = ReturnType<typeof useControlledFormElement>;

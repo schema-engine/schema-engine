@@ -1,42 +1,13 @@
-import { $ } from 'bun';
-import { watch } from 'node:fs';
 import path from 'node:path';
-import { Logger } from '@ecopages/logger';
+import { fileURLToPath } from 'node:url';
+import { buildLib } from '../../scripts/esbuild-lib.ts';
 
-const logger = new Logger('[@schema-engine/actions]');
+const cwd = path.dirname(fileURLToPath(import.meta.url));
 
-const watchMode = process.argv.includes('--watch');
-
-const build = await Bun.build({
-	// Single browser bundle — Bun breaks named re-export barrels across multi-entry builds.
-	entrypoints: ['src/index.ts'],
-	outdir: 'dist',
-	root: './src',
-	target: 'browser',
-	minify: !watchMode,
-	// Keep minify enabled unless barrel breakage appears; forms uses minify: false.
-	format: 'esm',
-	splitting: false,
-	sourcemap: 'external',
+await buildLib({
+	cwd,
+	entryGlobs: ['src/index.ts'],
+	aliases: [{ prefix: '@', dir: path.join(cwd, 'src') }],
 	external: ['@schema-engine/registry', 'zod'],
+	minify: !process.argv.includes('--watch'),
 });
-
-if (!build.success) {
-	for (const log of build.logs) {
-		logger.error(log);
-	}
-	process.exit(1);
-}
-
-if (process.argv.includes('--watch')) {
-	logger.info('Watching for changes...');
-	const watcher = watch(path.resolve(__dirname, 'src'), { recursive: true }, async () => {
-		await $`bun run build:lib`;
-	});
-
-	process.on('SIGINT', () => {
-		logger.info('Closing watcher...');
-		watcher.close();
-		process.exit(0);
-	});
-}

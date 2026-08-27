@@ -1,6 +1,6 @@
 ---
-title: "Builder Pattern"
-description: "Construct a configured engine with the fluent builder API."
+title: 'Builder Pattern'
+description: 'Construct a configured engine with the fluent builder API.'
 group: Forms
 order: 7
 ---
@@ -33,17 +33,20 @@ const formEngine = createReactFormComposer().addElement(/* ... */).addLayout(/* 
 
 Each component (element, layout, or stepper) is defined as a **registration object** that contains:
 
-- `id` / `id` / `id`: Unique identifier
-- `component`: React component to render
+- `$type`: Unique identifier
+- `render`: Framework-agnostic render function
 - `schema`: Zod schema for configuration validation
 - `metadata`: Human-readable information (name, description, category, etc.)
 
 Example element registration:
 
 ```typescript
-export const CustomInputElement: ReactElementRegistration = {
-	id: 'custom-input',
-	component: CustomInput,
+import type { InputRegistration } from '@schema-engine/forms';
+import { z } from 'zod';
+
+export const CustomInputElement: InputRegistration<'custom-input'> = {
+	$type: 'custom-input',
+	render: CustomInput,
 	schema: z.object({
 		id: z.string(),
 		name: z.string(),
@@ -58,14 +61,6 @@ export const CustomInputElement: ReactElementRegistration = {
 };
 ```
 
-### Converter Functions
-
-Since React uses a `component` property but the core engine expects a `render` function, we provide converter functions:
-
-- ``: Convert React element to core format
-- ``: Convert React layout to core format
-- ``: Convert React stepper to core format
-
 ```typescript
 const formEngine = createReactFormComposer().addElement(CustomInputElement).build();
 ```
@@ -78,10 +73,13 @@ Create a central form engine instance for your application:
 
 ```typescript
 // lib/form-engine.ts
+import { createReactFormComposer } from '@schema-engine/forms-react';
+import { CardLayoutRegistration } from '@schema-engine/forms-react/registrations';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
+import { DefaultStepperRegistration } from '@/components/schema-engine/forms/steppers/default-stepper.registration';
+
 export const formEngine = createReactFormComposer()
-	.addElement(InputElement)
-	.addElement(TextareaElement)
-	.addElement(SelectElement)
+	.addElements(schemaFormRegistrations)
 	.addLayout(CardLayoutRegistration)
 	.addStepper(DefaultStepperRegistration)
 	.build();
@@ -92,6 +90,9 @@ export const formEngine = createReactFormComposer()
 Import and use the form engine in your components:
 
 ```typescript
+import { FormRenderer } from '@schema-engine/forms-react';
+import { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
+
 function MyForm() {
   const formConfig: FormConfig = {
     id: 'my-form',
@@ -99,7 +100,6 @@ function MyForm() {
     steps: [{
       id: 'step-1',
       elements: [{
-        id: 'input',
         id: 'email',
         name: 'email',
         label: 'Email Address',
@@ -111,7 +111,7 @@ function MyForm() {
     }],
   };
 
-  return <FormRenderer config={formConfig} engine={formEngine} />;
+  return <FormRenderer config={formConfig} engine={formEngine} adapter={rhfAdapter} />;
 }
 ```
 
@@ -121,9 +121,9 @@ function MyForm() {
 
 All input and content elements that can be used in form steps:
 
-- `InputElement` - Text, email, password, tel, url, etc.
-- `TextareaElement` - Multi-line text input
-- `SelectElement` - Dropdown selection
+- `InputElementRegistration` - Text, email, password, tel, url, etc.
+- `TextareaElementRegistration` - Multi-line text input
+- `SelectElementRegistration` - Dropdown selection
 - `CheckboxElement` - Single checkbox or checkbox group
 - `RadioElement` - Radio button group
 - `SwitchElement` - Toggle switch
@@ -142,10 +142,9 @@ Visual layouts that wrap form content:
 
 Step indicators for multi-step forms:
 
-- `DefaultStepperRegistration` - Horizontal step indicator
-- `VerticalStepperRegistration` - Vertical step indicator
-- `MinimalistStepperRegistration` - Minimal progress indicator
-- `DebuggerStepperRegistration` - Debug stepper with form state
+- `DefaultStepperRegistration` - Horizontal or sidebar shadcn stepper (registry)
+- `MinimalistStepperRegistration` - Minimal progress indicator (registry)
+- `FormDebugger` - Opt-in dev overlay (package); mount as a child of `FormRenderer` instead of using a stepper `$type`
 
 ## Creating Custom Components
 
@@ -153,6 +152,9 @@ Step indicators for multi-step forms:
 
 ```typescript
 // components/custom-rating.tsx
+import type { InputRegistration } from '@schema-engine/forms';
+import { z } from 'zod';
+
 const RatingConfigSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -184,9 +186,9 @@ function RatingInput({ config }: { config: RatingConfig }) {
   );
 }
 
-export const RatingElement: ReactElementRegistration = {
-  id: 'rating',
-  component: RatingInput,
+export const RatingElement: InputRegistration<'rating'> = {
+  $type: 'rating',
+  render: RatingInput,
   schema: RatingConfigSchema,
   metadata: {
     name: 'Rating Input',
@@ -214,7 +216,6 @@ const formConfig: FormConfig = {
 		{
 			elements: [
 				{
-					id: 'rating',
 					id: 'satisfaction',
 					name: 'satisfaction',
 					label: 'How satisfied are you?',
@@ -234,7 +235,7 @@ const formConfig: FormConfig = {
 Register components based on feature flags or environment:
 
 ```typescript
-const formEngine = createReactFormComposer().addElement(InputElement).addElement(TextareaElement);
+const formEngine = createReactFormComposer().addElements(schemaFormRegistrations);
 
 if (process.env.ENABLE_ADVANCED_FIELDS) {
 	formEngine.addElement(RichTextElement).addElement(CodeEditorElement);
@@ -250,17 +251,13 @@ Create different engine instances for different use cases:
 ```typescript
 // Simple contact form engine
 export const contactFormEngine = createReactFormComposer()
-	.addElement(InputElement)
-	.addElement(TextareaElement)
+	.addElements(schemaFormRegistrations)
 	.addLayout(CardLayoutRegistration)
 	.build();
 
 // Complex survey engine
 export const surveyEngine = createReactFormComposer()
-	.addElement(InputElement)
-	.addElement(SelectElement)
-	.addElement(RadioElement)
-	.addElement(CheckboxElement)
+	.addElements(schemaFormRegistrations)
 	.addElement(RatingElement)
 	.addLayout(SplitScreenLayoutRegistration)
 	.addStepper(DefaultStepperRegistration)
@@ -272,10 +269,10 @@ export const surveyEngine = createReactFormComposer()
 Create custom registration builders:
 
 ```typescript
-function createInputElement(id: string, displayName: string, inputType: string): ReactElementRegistration {
+function createInputElement(id: string, displayName: string, inputType: string): InputRegistration {
 	return {
-		id,
-		component: FormInput,
+		$type: id,
+		render: FormInput,
 		schema: InputFieldSchema,
 		metadata: {
 			name: displayName,
@@ -297,7 +294,7 @@ The Builder Pattern provides full type safety throughout:
 
 ```typescript
 // TypeScript knows about all registered components
-const formEngine = createReactFormComposer().addElement(InputElement).build();
+const formEngine = createReactFormComposer().addElements(schemaFormRegistrations).build();
 
 // Type-safe retrieval
 const inputElement = formEngine.getElement('input'); // Type: ElementRegistration<InputFieldConfig>
@@ -345,7 +342,7 @@ If you're migrating from the old registry pattern:
 **New Pattern**:
 
 ```typescript
-export const formEngine = createReactFormComposer().addElement(InputElement).build();
+export const formEngine = createReactFormComposer().addElements(schemaFormRegistrations).build();
 ```
 
 See the [Migration Guide](/docs/migration/v2) for detailed instructions.

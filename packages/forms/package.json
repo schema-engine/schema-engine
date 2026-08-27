@@ -3,6 +3,9 @@
 	"type": "module",
 	"version": "0.1.0",
 	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	},
 	"sideEffects": false,
 	"main": "dist/index.js",
 	"module": "dist/index.js",
@@ -11,12 +14,12 @@
 		"/dist/*"
 	],
 	"scripts": {
-		"build:lib": "bun run clean && bun run build:files && bun run build:types",
-		"build:files": "bun run ./build.ts",
+		"build:lib": "pnpm clean && pnpm build:files && pnpm build:types",
+		"build:files": "node ./build.ts",
 		"build:types": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
-		"watch:lib": "bun run ./build.ts --watch",
+		"watch:lib": "node ./build.ts --watch",
 		"clean": "rm -rf ./dist",
-		"test:all": "bun test",
+		"test:all": "vitest run",
 		"lint-staged": "lint-staged",
 		"check-types": "tsc --noEmit"
 	},
@@ -31,8 +34,9 @@
 	},
 	"devDependencies": {
 		"@standard-schema/spec": "^1.1.0",
-		"@types/bun": "latest",
-		"tsc-alias": "^1.8.16"
+		"esbuild": "^0.27.0",
+		"tsc-alias": "^1.8.16",
+		"vitest": "^4.0.13"
 	},
 	"dependencies": {
 		"@schema-engine/actions": "workspace:*",

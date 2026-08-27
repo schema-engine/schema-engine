@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'bun:test';
+import { describe, test, expect } from 'vitest';
 import { z } from 'zod';
 import { FormComposer } from '@/builder/form-composer';
 import type { InputRegistration, LayoutRegistration, StepperRegistration, BuilderActionRegistration } from '@/types';
@@ -22,7 +22,11 @@ function expectSchemaKeys(schemas: Record<string, unknown>, keys: string[]) {
 	expect(Object.keys(schemas).sort()).toEqual([...keys].sort());
 }
 
-function expectTypeConst(schemas: Record<string, { properties?: { $type?: { const?: string } } }>, key: string, type: string) {
+function expectTypeConst(
+	schemas: Record<string, { properties?: { $type?: { const?: string } } }>,
+	key: string,
+	type: string,
+) {
 	expect(schemas[key]?.properties?.$type?.const).toBe(type);
 }
 
@@ -252,12 +256,7 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const schema = engine.generateJSONSchemaCollection();
 
-			expectSchemaKeys(schema.schemas, [
-				'element:text',
-				'layout:card',
-				'stepper:wizard',
-				'action:submit',
-			]);
+			expectSchemaKeys(schema.schemas, ['element:text', 'layout:card', 'stepper:wizard', 'action:submit']);
 		});
 	});
 
@@ -518,12 +517,7 @@ describe('FormEngine JSON Schema Generation', () => {
 			const schema = engine.generateJSONSchemaCollection();
 			const registry = engine.getSchemaRegistry();
 
-			expectSchemaKeys(schema.schemas, [
-				'element:text',
-				'element:heading',
-				'element:divider',
-				'element:button',
-			]);
+			expectSchemaKeys(schema.schemas, ['element:text', 'element:heading', 'element:divider', 'element:button']);
 
 			expect(registry.get(inputSchema)?.category).toBe('input');
 			expect(registry.get(headingSchema)?.category).toBe('content');
@@ -703,7 +697,11 @@ describe('FormEngine JSON Schema Generation', () => {
 			expect(configSchema.required).toContain('steps');
 
 			expect(configSchema.$defs).toHaveProperty('element:text');
-			expectTypeConst(configSchema.$defs as Record<string, { properties?: { $type?: { const?: string } } }>, 'element:text', 'text');
+			expectTypeConst(
+				configSchema.$defs as Record<string, { properties?: { $type?: { const?: string } } }>,
+				'element:text',
+				'text',
+			);
 
 			const elementsItems = configSchema.properties.steps.items.properties.elements.items;
 			const hasDirectRef = elementsItems.$ref === '#/$defs/element:text';
@@ -821,9 +819,7 @@ describe('FormEngine JSON Schema Generation', () => {
 				}),
 			});
 
-			expect(engine.getActionConfigStandardSchema('submit')?.['~standard'].vendor).toBe(
-				'@schema-engine/forms',
-			);
+			expect(engine.getActionConfigStandardSchema('submit')?.['~standard'].vendor).toBe('@schema-engine/forms');
 			expect(engine.generateActionConfigSchema('submit')).toHaveProperty('$id', 'action:submit');
 		});
 
@@ -971,17 +967,19 @@ describe('FormEngine JSON Schema Generation', () => {
 
 			const configSchema = engine.generateFormConfigSchema();
 
-			expect(configSchema.properties.steps.items.properties.elements.items.anyOf?.map(
-				(item: { $ref?: string }) => item.$ref,
-			)).toEqual(expect.arrayContaining(['#/$defs/element:text', '#/$defs/element:number']));
+			expect(
+				configSchema.properties.steps.items.properties.elements.items.anyOf?.map(
+					(item: { $ref?: string }) => item.$ref,
+				),
+			).toEqual(expect.arrayContaining(['#/$defs/element:text', '#/$defs/element:number']));
 
 			expect(
 				configSchema.properties.steps.items.properties.layout.$ref ||
 					configSchema.properties.steps.items.properties.layout.anyOf?.[0]?.$ref,
 			).toBe('#/$defs/layout:card');
-			expect(
-				configSchema.properties.stepper.$ref || configSchema.properties.stepper.anyOf?.[0]?.$ref,
-			).toBe('#/$defs/stepper:wizard');
+			expect(configSchema.properties.stepper.$ref || configSchema.properties.stepper.anyOf?.[0]?.$ref).toBe(
+				'#/$defs/stepper:wizard',
+			);
 
 			const actionsItems = configSchema.properties.steps.items.properties.actions.items;
 			expect(

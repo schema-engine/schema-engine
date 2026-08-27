@@ -1,12 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '@/stories/shared/story-wrapper';
-import { createForm, getEngine, ValidationPresets } from '@/stories/shared/form-builder.ui';
+import { createForm, getEngine, ValidationPresets, rhfAdapter } from '@/stories/shared/form-builder.ui';
 
 const baseUIEngine = getEngine();
 
 const meta = {
 	component: FormRenderer,
+	args: {
+		engine: baseUIEngine,
+		adapter: rhfAdapter,
+	},
 	parameters: {
 		layout: 'padded',
 		docs: {
@@ -24,6 +28,8 @@ const meta = {
 		),
 	],
 	argTypes: {
+		engine: { table: { disable: true } },
+		adapter: { table: { disable: true } },
 		config: {
 			control: 'object',
 			description: 'Form configuration with array elements',

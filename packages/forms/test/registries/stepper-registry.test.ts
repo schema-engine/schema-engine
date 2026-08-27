@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test';
+import { describe, test, expect, beforeEach } from 'vitest';
 import { StepperRegistry } from '@/registries';
 import type { StepperRegistration } from '@/types';
 import { z } from 'zod';

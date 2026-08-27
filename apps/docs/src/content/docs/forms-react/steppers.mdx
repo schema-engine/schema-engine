@@ -1,6 +1,6 @@
 ---
-title: "Steppers"
-description: "Default, minimalist, and debugger stepper styles."
+title: 'Steppers'
+description: 'Shadcn registry steppers and the FormDebugger dev tool.'
 group: Forms React
 order: 5
 ---
@@ -11,16 +11,45 @@ Steppers control navigation in multi-step forms, providing progress indication a
 
 ## Available Steppers
 
-Import from `@schema-engine/forms-react/registrations`:
+Install from the Schema Engine shadcn registry (`schema-engine-form-stepper-default`, `schema-engine-form-stepper-minimalist`), then register:
 
 ```typescript
+import { DefaultStepperRegistration } from '@/components/schema-engine/forms/steppers/default-stepper.registration';
+import { MinimalistStepperRegistration } from '@/components/schema-engine/forms/steppers/minimalist-stepper.registration';
+import { createReactFormComposer } from '@schema-engine/forms-react';
+
+const formEngine = createReactFormComposer()
+	.addStepper(DefaultStepperRegistration)
+	// Choose one stepper per engine.
+	.build();
 ```
 
-| Stepper | Description |
-|---------|-------------|
-| `default` | Horizontal progress indicator with step numbers |
-| `minimalist` | Clean, minimal progress bar |
-| `debugger` | Development debugging tool showing form state |
+| Stepper      | Description                                                          |
+| ------------ | -------------------------------------------------------------------- |
+| `default`    | Horizontal or sidebar layout with shadcn buttons and step indicators |
+| `minimalist` | Clean progress bar with shadcn `Progress` and simple navigation      |
+
+## FormDebugger (dev tool)
+
+`FormDebugger` is opt-in. Mount it as a child of `FormRenderer` to inspect values, errors, and step state **without** replacing your production stepper:
+
+```tsx
+import { FormRenderer } from '@schema-engine/forms-react';
+import { FormDebugger } from '@schema-engine/forms-react/components/form-debugger';
+
+<FormRenderer config={config} engine={engine} adapter={adapter}>
+	<FormDebugger />
+</FormRenderer>;
+```
+
+Nothing mounts it for you, so it stays out of your production bundle unless you import it. Gate it on an environment
+flag if you want it during development only:
+
+```tsx
+<FormRenderer config={config} engine={engine} adapter={adapter}>
+	{import.meta.env.DEV ? <FormDebugger /> : null}
+</FormRenderer>
+```
 
 ## How Steppers Work
 
@@ -63,12 +92,8 @@ const MyStepperContext = createContext<MyStepperContextValue | null>(null);
 
 export function MyStepperProvider({ children, config }: { children: React.ReactNode; config: MyStepperConfig }) {
 	const globalContext = useGlobalStepperContext();
-	
-	return (
-		<MyStepperContext.Provider value={{ ...globalContext, config }}>
-			{children}
-		</MyStepperContext.Provider>
-	);
+
+	return <MyStepperContext.Provider value={{ ...globalContext, config }}>{children}</MyStepperContext.Provider>;
 }
 
 export function useMyStepperContext() {
@@ -107,16 +132,10 @@ function NavigationButtons() {
 
 	return (
 		<div className="navigation">
-			<button
-				onClick={navigation.goToPreviousStep}
-				disabled={navigation.isFirstStep}
-			>
+			<button onClick={navigation.goToPreviousStep} disabled={navigation.isFirstStep}>
 				Previous
 			</button>
-			<button
-				onClick={navigation.goToNextStep}
-				disabled={form.isSubmitting}
-			>
+			<button onClick={navigation.goToNextStep} disabled={form.isSubmitting}>
 				{navigation.isLastStep ? 'Submit' : 'Next'}
 			</button>
 		</div>
@@ -167,9 +186,7 @@ export const MyStepperRegistration: StepperRegistration = {
 ### Step 5: Register with Engine
 
 ```typescript
-const engine = createReactFormComposer()
-	.addStepper(MyStepperRegistration)
-	.build();
+const engine = createReactFormComposer().addStepper(MyStepperRegistration).build();
 ```
 
 ## Stepper Context

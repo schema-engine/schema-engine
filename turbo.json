@@ -26,26 +26,18 @@
 		"build-storybook": {
 			"outputs": ["storybook-static/**"]
 		},
-		"test:0storybook": {
+		"test:storybook": {
 			"dependsOn": ["^build:lib"]
 		},
 		"test:all": {
 			"dependsOn": ["^test:all"]
 		},
-		"preview:www": {
+		"preview": {
 			"cache": false,
 			"persistent": true
 		},
-		"start:www": {
+		"start": {
 			"dependsOn": ["^build:lib"],
-			"persistent": true
-		},
-		"@schema-engine/www#preview": {
-			"cache": false,
-			"persistent": true
-		},
-		"@schema-engine/www#start": {
-			"cache": false,
 			"persistent": true
 		}
 	}

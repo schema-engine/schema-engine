@@ -1,4 +1,4 @@
-import { test, expect, describe } from 'bun:test';
+import { test, expect, describe } from 'vitest';
 import { validationRegistry, ValidationPresets, type ValidationRule } from '@/schemas/validation';
 
 describe('ValidationRegistry Usage Pattern Analysis', () => {

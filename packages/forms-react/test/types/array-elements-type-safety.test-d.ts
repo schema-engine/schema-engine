@@ -3,14 +3,14 @@
  * Run via: bun run check-types (tsconfig.test-types.json)
  */
 
-import type { ArrayElementsConfig } from '@/components/elements/inputs/form-array-elements.types';
+import type { ArrayElementsConfig } from '@/components/schema-engine/forms/inputs/form-array-elements.types';
 
-import '@/components/elements/inputs/form-input.registration';
-import '@/components/elements/inputs/form-select.registration';
-import '@/components/elements/inputs/form-textarea.registration';
-import '@/components/elements/inputs/form-checkbox.registration';
-import '@/components/elements/inputs/form-number.registration';
-import '@/components/elements/inputs/form-array-elements.registration';
+import '@/components/schema-engine/forms/inputs/form-input.registration';
+import '@/components/schema-engine/forms/inputs/form-select.registration';
+import '@/components/schema-engine/forms/inputs/form-textarea.registration';
+import '@/components/schema-engine/forms/inputs/form-checkbox.registration';
+import '@/components/schema-engine/forms/inputs/form-number.registration';
+import '@/components/schema-engine/forms/inputs/form-array-elements.registration';
 
 type Assert<T extends true> = T;
 
@@ -176,9 +176,10 @@ const complexArray = {
 } satisfies ArrayElementsConfig;
 
 type _complexArrayElementTypes = Assert<
-	| (typeof complexArray.elements)[0]['$type']
-	| (typeof complexArray.elements)[1]['$type']
-	| (typeof complexArray.elements)[2]['$type'] extends 'input' | 'select' | 'number'
+
+		| (typeof complexArray.elements)[0]['$type']
+		| (typeof complexArray.elements)[1]['$type']
+		| (typeof complexArray.elements)[2]['$type'] extends 'input' | 'select' | 'number'
 		? true
 		: false
 >;

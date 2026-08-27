@@ -2,22 +2,31 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '../shared/story-wrapper';
 import { FormTemplates } from '../shared/sample-forms';
+import { getEngine, rhfAdapter } from '../shared/form-builder.ui';
+
+const storyEngine = getEngine();
 
 const baseForm = FormTemplates.contactForm;
 
 const meta = {
 	component: FormRenderer,
+	args: {
+		engine: storyEngine,
+		adapter: rhfAdapter,
+	},
 	parameters: {
 		layout: 'fullscreen',
 	},
 	decorators: [
 		(Story) => (
-			<StoryWrapper>
+			<StoryWrapper engine={storyEngine}>
 				<Story />
 			</StoryWrapper>
 		),
 	],
 	argTypes: {
+		engine: { table: { disable: true } },
+		adapter: { table: { disable: true } },
 		config: {
 			control: 'object',
 			description: 'Form configuration with layout settings',
@@ -360,7 +369,7 @@ export const FeedbackFormExample: Story = {
 	},
 };
 
-const multiStepForm = { ...FormTemplates.registrationForm, stepper: { $type: 'debugger' as const } };
+const multiStepForm = { ...FormTemplates.registrationForm, stepper: { $type: 'default' as const } };
 
 export const MultiStepLeftSide: Story = {
 	args: {

@@ -22,7 +22,8 @@ function createReactFormComposer(): FormComposer;
 Provider component that supplies the engine and adapter to the component tree:
 
 ```tsx
-import { FormEngineProvider, rhfAdapter } from '@schema-engine/forms-react';
+import { FormEngineProvider } from '@schema-engine/forms-react';
+import { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
 
 <FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
 	{children}
@@ -123,10 +124,10 @@ function useControlledFormElement(config: ElementConfig): {
 };
 ```
 
-### useAdapterControlledFormElement
+### useControlledFormElement
 
 ```typescript
-function useAdapterControlledFormElement(config: ElementConfig): {
+function useControlledFormElement(config: ElementConfig): {
 	value: unknown;
 	error: string | undefined;
 	isRequired: boolean;

@@ -1,4 +1,4 @@
-import { test, expect, describe } from 'bun:test';
+import { test, expect, describe } from 'vitest';
 import { z } from 'zod';
 import { safeParseStandardSchema } from '@/lib/standard-schema';
 import { FormComposer } from '@/builder';
@@ -52,7 +52,12 @@ describe('FormEngine', () => {
 
 			const engine = new FormComposer().addElements([textInput, emailInput]).build();
 
-			expect(engine.getAllElements().map((element) => element.$type).sort()).toEqual(['email', 'text']);
+			expect(
+				engine
+					.getAllElements()
+					.map((element) => element.$type)
+					.sort(),
+			).toEqual(['email', 'text']);
 		});
 
 		test('should get all element IDs', () => {

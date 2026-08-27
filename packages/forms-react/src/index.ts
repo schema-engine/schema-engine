@@ -8,8 +8,3 @@ export * from '@/adapters';
 export * from '@/contexts';
 export * from '@/hooks';
 export * from '@/registries';
-
-/**
- * Import types to ensure module augmentations are loaded
- */
-export * from './types';

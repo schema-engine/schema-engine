@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'bun:test';
+import { describe, test, expect } from 'vitest';
 import { ConstraintEvaluator } from '../../src/constraints/constraint-evaluator';
 import type { ConstraintLogic } from '../../src/schemas';
 

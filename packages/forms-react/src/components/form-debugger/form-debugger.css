@@ -1,0 +1,130 @@
+.form-debugger {
+	@apply relative w-full;
+}
+
+.form-debugger__widget {
+	@apply fixed z-[9999] transition-all duration-300 ease-out;
+	bottom: 1.5rem;
+	right: 1.5rem;
+}
+
+.form-debugger__widget--expanded {
+	@apply w-[min(28rem,calc(100vw-2rem))] max-h-[min(48rem,calc(100vh-4rem))];
+	bottom: 1rem;
+	right: 1rem;
+}
+
+.form-debugger__fab {
+	@apply flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all duration-200;
+	@apply hover:scale-110 active:scale-95;
+	background: var(--primary);
+	color: var(--primary-foreground);
+	box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+.form-debugger__panel {
+	@apply flex flex-col rounded-2xl overflow-hidden border bg-card text-card-foreground;
+	box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+	max-height: calc(100vh - 4rem);
+}
+
+.form-debugger__header {
+	@apply flex items-center justify-between px-4 py-3 border-b;
+}
+
+.form-debugger__header-title {
+	@apply text-sm font-semibold;
+}
+
+.form-debugger__header-subtitle {
+	@apply text-xs text-muted-foreground;
+}
+
+.form-debugger__close-button {
+	@apply rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground;
+}
+
+.form-debugger__content {
+	@apply flex flex-col gap-4 overflow-y-auto p-4;
+	max-height: calc(100vh - 12rem);
+}
+
+.form-debugger__section-title {
+	@apply text-xs font-medium uppercase tracking-wide text-muted-foreground;
+}
+
+.form-debugger__timeline {
+	@apply flex flex-col gap-2;
+}
+
+.form-debugger__timeline-item {
+	@apply flex gap-3 rounded-lg border p-2 text-sm;
+}
+
+.form-debugger__timeline-item--active {
+	@apply border-primary bg-primary/5;
+}
+
+.form-debugger__timeline-meta {
+	@apply flex flex-wrap gap-1 mt-1;
+}
+
+.form-debugger__badge {
+	@apply inline-flex rounded px-1.5 py-0.5 text-[10px] font-medium;
+}
+
+.form-debugger__badge--valid {
+	@apply bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400;
+}
+
+.form-debugger__badge--invalid {
+	@apply bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400;
+}
+
+.form-debugger__badge--visited {
+	@apply bg-muted text-muted-foreground;
+}
+
+.form-debugger__detail-row {
+	@apply flex justify-between gap-2 text-xs;
+}
+
+.form-debugger__detail-label {
+	@apply text-muted-foreground;
+}
+
+.form-debugger__detail-value {
+	@apply font-mono text-right break-all;
+}
+
+.form-debugger__nav {
+	@apply flex flex-wrap items-center justify-between gap-2 border-t p-3;
+}
+
+.form-debugger__nav-dots {
+	@apply flex flex-wrap gap-1;
+}
+
+.form-debugger__nav-dot {
+	@apply h-2 w-2 rounded-full bg-muted transition-colors;
+}
+
+.form-debugger__nav-dot--active {
+	@apply bg-primary scale-125;
+}
+
+.form-debugger__nav-dot--completed {
+	@apply bg-primary/60;
+}
+
+.form-debugger__nav-dot--disabled {
+	@apply opacity-40 cursor-not-allowed;
+}
+
+.form-debugger__nav-button {
+	@apply inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs disabled:opacity-50;
+}
+
+.form-debugger__pre {
+	@apply mt-2 max-h-40 overflow-auto rounded-md bg-muted p-2 text-[10px] font-mono;
+}

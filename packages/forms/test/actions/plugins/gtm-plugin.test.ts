@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
+import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import type { BuilderActionExecutionContext } from '@/types';
 import { gtmPlugin, GTMEventActionSchema, type GTMEventAction } from '@/actions/plugins/gtm.plugin';
 import { GTMTracker } from '@/tools/gtm-tracker';

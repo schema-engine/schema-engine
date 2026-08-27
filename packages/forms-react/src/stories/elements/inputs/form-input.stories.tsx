@@ -1,12 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '@/stories/shared/story-wrapper';
-import { createForm, getEngine, ValidationPresets } from '@/stories/shared/form-builder.ui';
+import { createForm, getEngine, ValidationPresets, rhfAdapter } from '@/stories/shared/form-builder.ui';
 
 const baseUIEngine = getEngine();
 
 const meta = {
 	component: FormRenderer,
+	args: {
+		engine: baseUIEngine,
+		adapter: rhfAdapter,
+	},
 	parameters: {
 		layout: 'padded',
 		docs: {
@@ -24,6 +28,8 @@ const meta = {
 		),
 	],
 	argTypes: {
+		engine: { table: { disable: true } },
+		adapter: { table: { disable: true } },
 		config: {
 			control: 'object',
 			description: 'Form configuration with input element',
@@ -186,6 +192,15 @@ export const MultipleInputs: Story = {
 				label: 'Website',
 				placeholder: 'https://example.com',
 				inputType: 'url',
+			})
+			.addElement('masked-input', {
+				id: 'iban',
+				name: 'iban',
+				label: 'Bank account (IBAN)',
+				mask: 'aa00 0000 0000 0000 0000 00',
+				placeholder: 'DE89 3704 0044 0532 0130 00',
+				description: 'Used for invoice payouts',
+				inputMode: 'text',
 			})
 			.addElement('submit', { id: 'submit', label: 'Submit', name: 'submit' })
 			.build(),

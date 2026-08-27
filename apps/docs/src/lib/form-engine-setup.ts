@@ -5,23 +5,13 @@
  * one React instance with FormRenderer.
  */
 import {
-	ArrayElementRegistration,
 	CardLayoutRegistration,
-	CheckboxElementRegistration,
 	createReactFormComposer,
-	DebuggerStepperRegistration,
 	DefaultStepperRegistration,
 	HeroBackgroundLayoutRegistration,
-	InputElementRegistration,
 	MinimalistStepperRegistration,
-	NumberElementRegistration,
-	RadioElementRegistration,
-	SelectElementRegistration,
+	schemaFormRegistrations,
 	SplitScreenLayoutRegistration,
-	SubmissionAlertElementRegistration,
-	SubmitButtonElementRegistration,
-	SwitchElementRegistration,
-	TextareaElementRegistration,
 } from '@/lib/forms-react-host';
 
 import { formSubmitPlugin, notificationPlugin, formResetPlugin, autoSavePlugin } from '@schema-engine/forms/actions';
@@ -29,22 +19,12 @@ import { formSubmitPlugin, notificationPlugin, formResetPlugin, autoSavePlugin }
 import '@schema-engine/forms/schemas/validation/validation-registry';
 
 export const formEngine = createReactFormComposer()
-	.addElement(InputElementRegistration)
-	.addElement(TextareaElementRegistration)
-	.addElement(CheckboxElementRegistration)
-	.addElement(RadioElementRegistration)
-	.addElement(SelectElementRegistration)
-	.addElement(SwitchElementRegistration)
-	.addElement(NumberElementRegistration)
-	.addElement(ArrayElementRegistration)
-	.addElement(SubmitButtonElementRegistration)
-	.addElement(SubmissionAlertElementRegistration)
+	.addElements(schemaFormRegistrations)
 	.addLayout(CardLayoutRegistration)
 	.addLayout(SplitScreenLayoutRegistration)
 	.addLayout(HeroBackgroundLayoutRegistration)
 	.addStepper(DefaultStepperRegistration)
 	.addStepper(MinimalistStepperRegistration)
-	.addStepper(DebuggerStepperRegistration)
 	.addAction(
 		formSubmitPlugin({
 			onSuccess: (data, context) => {
@@ -78,3 +58,5 @@ export const formEngine = createReactFormComposer()
 		}),
 	)
 	.build();
+
+export { rhfAdapter } from '@/lib/forms-react-host';

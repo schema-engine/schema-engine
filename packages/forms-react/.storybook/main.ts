@@ -34,9 +34,27 @@ const config: StorybookConfig = {
 	async viteFinal(config) {
 		return mergeConfig(config, {
 			resolve: {
-				alias: Object.assign({}, config.resolve?.alias ?? {}, {
-					'@': resolve(__dirname, '../src'),
-				}),
+				dedupe: ['react', 'react-dom', 'react-hook-form'],
+				alias: [
+					{
+						find: '@/components/ui/schema-engine',
+						replacement: resolve(
+							__dirname,
+							'../../../registry/base-ui/schema-engine-form/components/ui/schema-engine',
+						),
+					},
+					{
+						find: '@/components/schema-engine/forms',
+						replacement: resolve(__dirname, '../../../registry/shared/forms'),
+					},
+					{
+						find: '@/components/ui',
+						replacement: resolve(__dirname, '../../../apps/www/src/components/ui'),
+					},
+					{ find: '@schema-engine/forms-react', replacement: resolve(__dirname, '../src') },
+					{ find: /^@schema-engine\/forms-react\/(.*)$/, replacement: `${resolve(__dirname, '../src')}/$1` },
+					{ find: /^@\//, replacement: `${resolve(__dirname, '../src')}/` },
+				],
 			},
 			plugins: [
 				tailwindReferencePlugin({ globalCssPath: path.join(__dirname, '../src/styles/global.css') }),

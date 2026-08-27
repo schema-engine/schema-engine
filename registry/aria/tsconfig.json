@@ -1,0 +1,29 @@
+{
+	"compilerOptions": {
+		"jsx": "react-jsx",
+		"lib": ["ES2022", "DOM"],
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"strict": true,
+		"skipLibCheck": true,
+		"noEmit": true,
+		"paths": {
+			"@schema-engine/forms-react": ["../../packages/forms-react/src/index.ts"],
+			"@schema-engine/forms-react/hooks": ["../../packages/forms-react/src/hooks/index.ts"],
+			"@schema-engine/forms-react/adapters": ["../../packages/forms-react/src/adapters/index.ts"],
+			"@schema-engine/forms-react/primitives": ["../../packages/forms-react/src/primitives.ts"],
+			"@/*": ["../../packages/forms-react/src/*"],
+			"@/components/ui/schema-engine/components/*": ["./primitives/*", "../shared/primitives/*"],
+			"@/components/schema-engine/forms/*": ["../shared/forms/*"],
+			"@/components/ui/checkbox": ["./ui-stubs/checkbox.tsx"],
+			"@/components/ui/switch": ["./ui-stubs/switch.tsx"],
+			"@/components/ui/slider": ["./ui-stubs/slider.tsx"],
+			"@/components/ui/select": ["./ui-stubs/select.tsx"],
+			"@/components/ui/radio-group": ["./ui-stubs/radio-group.tsx"],
+			"@/components/ui/label": ["./ui-stubs/label.tsx"],
+			"@/components/ui/*": ["./ui-stubs/*", "../ui-stubs/*"],
+			"@/lib/utils": ["../ui-stubs/lib/utils.ts"]
+		}
+	},
+	"include": ["./overlays/**/*.ts", "./overlays/**/*.tsx", "./primitives/**/*.tsx"]
+}

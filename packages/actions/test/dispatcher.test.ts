@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test';
+import { describe, test, expect, beforeEach } from 'vitest';
 import { z } from 'zod';
 import { ActionDispatcher } from '../src/dispatcher';
 import type { ActionRegistryProvider } from '../src/registry';
@@ -149,7 +149,7 @@ describe('ActionDispatcher', () => {
 
 		await new Promise((resolve) => setImmediate(resolve));
 
-		process.off('unhandledRejection', onUnhandled);
+		(process as NodeJS.EventEmitter).off('unhandledRejection', onUnhandled);
 		expect(executeCalls).toHaveLength(1);
 		expect(unhandled).toEqual([]);
 	});

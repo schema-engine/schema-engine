@@ -1,6 +1,9 @@
 import { z } from 'zod';
-import { describe, it, expect, beforeEach, vi } from 'bun:test';
-import { ValidationRegistry } from '../../../src/schemas/validation/validation-registry';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import {
+	ValidationRegistry,
+	validationRegistry as globalRegistry,
+} from '../../../src/schemas/validation/validation-registry';
 import type { ValidationRegistration } from '../../../src/schemas/validation/types';
 
 describe('ValidationRegistry', () => {
@@ -66,9 +69,6 @@ describe('ValidationRegistry', () => {
 	});
 
 	describe('Built-in Validations', () => {
-		// Use the global registry which should be pre-populated
-		const { validationRegistry: globalRegistry } = require('../../../src/schemas/validation/validation-registry');
-
 		it('should have all required built-in validation types', () => {
 			const types = globalRegistry.getRegisteredTypes();
 			expect(types).toContain('required');
@@ -129,8 +129,6 @@ describe('ValidationRegistry', () => {
 	});
 
 	describe('Async Validation', () => {
-		const { validationRegistry: globalRegistry } = require('../../../src/schemas/validation/validation-registry');
-
 		it('should create async validation schema', () => {
 			const rule = { type: 'async', url: '/api/validate' };
 			const schema = globalRegistry.createSchema(rule);

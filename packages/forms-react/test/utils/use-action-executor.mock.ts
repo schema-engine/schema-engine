@@ -1,4 +1,4 @@
-import { mock } from 'bun:test';
+import { vi } from 'vitest';
 import type {
 	BuilderActionBaseContext,
 	FormActionConfig,
@@ -7,28 +7,14 @@ import type {
 } from '@schema-engine/forms';
 import type { ActionDispatchInput } from '@schema-engine/actions';
 
-export const mockDispatch = mock(
+export const mockDispatch = vi.fn(
 	(
 		_input: ActionDispatchInput<FormActionConfig, BuilderActionBaseContext, FormActionTrigger>,
 	): Promise<ActionExecutionResult[]> => Promise.resolve([{ success: true }]),
 );
 
-export const mockDispatchSync = mock(
+export const mockDispatchSync = vi.fn(
 	(input: ActionDispatchInput<FormActionConfig, BuilderActionBaseContext, FormActionTrigger>): void => {
 		void mockDispatch(input);
 	},
 );
-
-/**
- * Replace the ActionDispatcher runtime used by FormProvider with a test double.
- */
-export function setupActionExecutorMock() {
-	void mock.module('@schema-engine/actions', () => {
-		return {
-			ActionDispatcher: class {
-				dispatch = mockDispatch;
-				dispatchSync = mockDispatchSync;
-			},
-		};
-	});
-}

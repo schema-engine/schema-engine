@@ -1,4 +1,4 @@
-import { test, expect, describe } from 'bun:test';
+import { test, expect, describe } from 'vitest';
 import { ValidationPresets, validationRegistry, type ValidationRule } from '../../../src/schemas/validation';
 
 describe('Dual Usage Pattern: JSON + Presets', () => {

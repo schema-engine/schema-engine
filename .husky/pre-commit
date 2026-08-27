@@ -1,1 +1,1 @@
-turbo test:all && bun run lint-staged
+pnpm check-types:scripts && pnpm registry:check && turbo test:all && pnpm lint-staged

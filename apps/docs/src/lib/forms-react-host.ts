@@ -5,23 +5,13 @@
  */
 export { createElement } from 'react';
 export { createRoot } from 'react-dom/client';
-export { FormEngineProvider } from '@schema-engine/forms-react/components/adapter-provider';
-export { FormRenderer } from '@schema-engine/forms-react/components/internals/form-renderer';
-export { createReactFormComposer } from '@schema-engine/forms-react/registries/builder-registry';
-export { rhfAdapter } from '@schema-engine/forms-react/adapters/rhf';
-export { InputElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-input.registration';
-export { TextareaElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-textarea.registration';
-export { CheckboxElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-checkbox.registration';
-export { RadioElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-radio.registration';
-export { SelectElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-select.registration';
-export { SwitchElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-switch.registration';
-export { NumberElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-number.registration';
-export { ArrayElementRegistration } from '@schema-engine/forms-react/components/elements/inputs/form-array-elements.registration';
-export { SubmitButtonElementRegistration } from '@schema-engine/forms-react/components/elements/actions/submit-button.registration';
-export { SubmissionAlertElementRegistration } from '@schema-engine/forms-react/components/elements/content/form-submission-alert.registration';
-export { CardLayoutRegistration } from '@schema-engine/forms-react/components/layouts/card-layout.registration';
-export { SplitScreenLayoutRegistration } from '@schema-engine/forms-react/components/layouts/split-screen-layout.registration';
-export { HeroBackgroundLayoutRegistration } from '@schema-engine/forms-react/components/layouts/hero-background-layout.registration';
-export { DefaultStepperRegistration } from '@schema-engine/forms-react/components/steppers/default-stepper.registration';
-export { MinimalistStepperRegistration } from '@schema-engine/forms-react/components/steppers/minimalist-stepper.registration';
-export { DebuggerStepperRegistration } from '@schema-engine/forms-react/components/steppers/debugger-stepper.registration';
+export { FormEngineProvider, FormRenderer, createReactFormComposer } from '@schema-engine/forms-react';
+export { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
+export { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
+export {
+	CardLayoutRegistration,
+	SplitScreenLayoutRegistration,
+	HeroBackgroundLayoutRegistration,
+} from '@schema-engine/forms-react/registrations';
+export { DefaultStepperRegistration } from '@/components/schema-engine/forms/steppers/default-stepper.registration';
+export { MinimalistStepperRegistration } from '@/components/schema-engine/forms/steppers/minimalist-stepper.registration';

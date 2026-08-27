@@ -1,4 +1,4 @@
-# dependencies (bun install)
+# dependencies
 node_modules
 
 # output
@@ -39,6 +39,7 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # test artifacts
 **/__screenshots__
+**/.vitest-attachments
 
 # misc
 .agent

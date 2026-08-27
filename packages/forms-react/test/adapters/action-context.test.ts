@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'bun:test';
+import { describe, test, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useForm } from 'react-hook-form';
 import { useFormActionDispatchers } from '../../src/adapters/rhf/hooks/use-form-action-dispatchers';

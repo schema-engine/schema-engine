@@ -1,13 +1,13 @@
-import { describe, test, expect, beforeEach, afterEach, spyOn } from 'bun:test';
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createAsyncValidationHandler } from '../../../src/schemas/validation/async/handler';
 
 describe('createAsyncValidationHandler HTTP method', () => {
-	let fetchSpy: ReturnType<typeof spyOn>;
+	let fetchSpy: ReturnType<typeof vi.spyOn>;
 
 	beforeEach(() => {
-		fetchSpy = spyOn(globalThis, 'fetch').mockResolvedValue(
-			new Response(JSON.stringify({ valid: true }), { status: 200 }),
-		);
+		fetchSpy = vi
+			.spyOn(globalThis, 'fetch')
+			.mockResolvedValue(new Response(JSON.stringify({ valid: true }), { status: 200 }));
 	});
 
 	afterEach(() => {

@@ -1,5 +1,5 @@
 import type { FormActionConfig, FormConfig } from '@schema-engine/forms/schemas';
-import type { ReactNode } from 'react';
+import type { ReactNode, RefCallback } from 'react';
 
 export interface FormContextValue<TFormData = Record<string, unknown>> {
 	getValues: () => TFormData;
@@ -23,6 +23,14 @@ export interface FormFieldValue<TFieldValue = unknown> {
 	onBlur: () => void;
 	name: string;
 	required: boolean;
+	disabled?: boolean;
+	ref: RefCallback<HTMLElement | null>;
+}
+
+export interface FieldArrayValue {
+	fields: Array<{ id: string }>;
+	append: (value: unknown) => void;
+	remove: (index: number) => void;
 }
 
 /**
@@ -58,6 +66,10 @@ export interface FormAdapter<TFormData = Record<string, unknown>> {
 	useFormField: <TFieldValue = unknown>(config: FormEngine.ElementConfig) => FormFieldValue<TFieldValue>;
 	/** Hook to watch a specific field value */
 	useWatchField: <TWatchValue = unknown>(name: string | string[]) => TWatchValue;
+	/** Hook to watch the entire form value tree */
+	useWatchForm: () => TFormData;
+	/** Hook to manage a field array */
+	useFieldArray: (name: string) => FieldArrayValue;
 	/** The FormProvider component to wrap the form */
 	FormProvider: React.ComponentType<FormProviderProps<TFormData>>;
 }

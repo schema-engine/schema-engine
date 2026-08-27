@@ -5,6 +5,6 @@ export function useWatchField<TWatchValue = unknown>(name: string | string[]): T
 
 	return useWatch({
 		control,
-		name: name as any,
+		name: name as never,
 	}) as TWatchValue;
 }

@@ -1,3 +1,5 @@
+import type { BaseField } from './base-field';
+
 /**
  * Extensible field configuration system
  * Uses global namespace augmentation to allow library users to add their own field types
@@ -43,7 +45,19 @@ declare global {
 		 * Union of all registered element configurations
 		 * This type is automatically updated when new element types are registered
 		 */
-		type ElementConfig = ElementRegistry[keyof ElementRegistry];
+		type UnregisteredElementConfig = BaseField &
+			Record<string, unknown> & {
+				elements?: UnregisteredElementConfig[];
+			};
+
+		/**
+		 * Before a UI package registers any fields, keep the headless builder
+		 * usable with open-ended custom configurations. Once registrations are
+		 * present, the concrete discriminated union is used instead.
+		 */
+		type ElementConfig = keyof ElementRegistry extends never
+			? UnregisteredElementConfig
+			: ElementRegistry[keyof ElementRegistry];
 
 		/**
 		 * Union of all registered layout configurations

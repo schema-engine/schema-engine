@@ -6,8 +6,7 @@
  */
 
 export { FormComposer } from './builder';
-export { FormEngine } from './engine';
-export { SchemaMetadataCatalog } from './engine';
+export { FormEngine, SchemaMetadataCatalog } from './engine';
 export type {
 	EngineRegistries,
 	FormEngineSchemaArtifacts,

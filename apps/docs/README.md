@@ -12,9 +12,9 @@ Ecopages docs site using content collections, Radiant UI chrome, and a catch-all
 ## Commands
 
 ```bash
-bun install
-bun dev
-bun run generate:llms
+pnpm install
+pnpm dev
+pnpm generate:llms
 ```
 
 Open `/docs/getting-started/introduction` after starting the dev server.

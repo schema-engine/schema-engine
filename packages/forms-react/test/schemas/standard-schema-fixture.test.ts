@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test } from 'vitest';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { safeParseStandardSchema } from '@schema-engine/forms/lib/standard-schema';
 

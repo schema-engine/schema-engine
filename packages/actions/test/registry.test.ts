@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test';
+import { describe, test, expect, beforeEach } from 'vitest';
 import { ActionRegistry } from '../src/registry';
 import type { ActionRegistration } from '../src/types';
 import { z } from 'zod';

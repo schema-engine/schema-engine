@@ -2,7 +2,7 @@
 
 React implementation of the JSON Form Engine with type-safe components, form adapters, and comprehensive validation support.
 
-> **Important:** This README is a package overview, not the API reference. For verified examples and current contracts, use the [Documentation App](../../apps/www) — start with [Getting Started](../../apps/www/src/pages/docs/packages/forms-react/getting-started.mdx) or [Quick Start](../../apps/www/src/pages/docs/quick-start.mdx).
+> **Important:** This README is a package overview, not the API reference. For verified examples and current contracts, use the [Documentation App](../../apps/docs) — start with [Getting Started](../../apps/docs/src/content/docs/forms-react/getting-started.mdx) or [Quick Start](../../apps/docs/src/content/docs/getting-started/quick-start.mdx).
 
 ## Overview
 
@@ -10,11 +10,10 @@ The React package provides production-ready components and hooks for building dy
 
 **Key Features:**
 
-- Type-safe form builder with full TypeScript inference
-- Built-in React Hook Form adapter with extensibility for other form libraries
-- Pre-built form elements (input, textarea, checkbox, radio, select, switch, number, array)
+- Runtime form engine, React Hook Form adapter, layouts, and steppers
 - Layout components for visual organization (card, split-screen, hero-background)
-- Stepper components for multi-step forms (default, minimalist, debugger)
+- Stepper protocol in the package; shadcn default/minimalist steppers in the registry
+- `FormDebugger` opt-in dev overlay (mount as a child of `FormRenderer`, orthogonal to stepper `$type`)
 - Comprehensive validation with 15+ built-in rules
 - Action execution system for form lifecycle events
 - Grid-based responsive layouts
@@ -25,7 +24,7 @@ The React package provides production-ready components and hooks for building dy
 ## Installation
 
 ```bash
-bun add @schema-engine/forms-react @schema-engine/forms react-hook-form zod
+pnpm add @schema-engine/forms-react @schema-engine/forms react-hook-form zod
 ```
 
 ## Quick Start
@@ -36,20 +35,24 @@ Import component registrations and build your engine:
 
 ```typescript
 import { createReactFormComposer } from '@schema-engine/forms-react';
-import {
-	InputElementRegistration,
-	TextareaElementRegistration,
-	CardLayoutRegistration,
-	DefaultStepperRegistration,
-} from '@schema-engine/forms-react/registrations';
+import { CardLayoutRegistration } from '@schema-engine/forms-react/registrations';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
+import { DefaultStepperRegistration } from '@/components/schema-engine/forms/steppers/default-stepper.registration';
 
 const formEngine = createReactFormComposer()
-	.addElement(InputElementRegistration)
-	.addElement(TextareaElementRegistration)
+	.addElements(schemaFormRegistrations)
 	.addLayout(CardLayoutRegistration)
 	.addStepper(DefaultStepperRegistration)
 	.build();
 ```
+
+Install form elements from the GitHub registry first. Pick the aggregate that matches your shadcn base:
+
+- Base UI: `shadcn add andeeplus/schema-engine/schema-form`
+- Radix UI: `shadcn add andeeplus/schema-engine/schema-form-radix`
+- React Aria: `shadcn add andeeplus/schema-engine/schema-form-aria`
+
+Layouts stay package-owned. Install a default or minimalist stepper as a separate registry item when needed.
 
 ### 2. Configure Your Form
 
@@ -114,7 +117,8 @@ const formConfig: FormConfig = {
 ### 3. Render the Form
 
 ```tsx
-import { FormEngineProvider, FormRenderer, rhfAdapter } from '@schema-engine/forms-react';
+import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
+import { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
 
 function ContactForm() {
 	const handleSubmit = (data) => {
@@ -136,18 +140,10 @@ function ContactForm() {
 The package uses explicit, per-component registration to ensure type safety and tree-shaking:
 
 ```typescript
-// Import only what you need
-import {
-	InputElementRegistration,
-	CheckboxElementRegistration,
-	SelectElementRegistration,
-} from '@schema-engine/forms-react/registrations';
+// Import the generated registrations from the shadcn item you installed.
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
-const engine = createReactFormComposer()
-	.addElement(InputElementRegistration)
-	.addElement(CheckboxElementRegistration)
-	.addElement(SelectElementRegistration)
-	.build();
+const engine = createReactFormComposer().addElements(schemaFormRegistrations).build();
 ```
 
 **Benefits:**
@@ -164,7 +160,8 @@ Adapters bridge the gap between the form engine and form libraries. The package 
 **Using the RHF Adapter:**
 
 ```tsx
-import { FormEngineProvider, rhfAdapter } from '@schema-engine/forms-react';
+import { FormEngineProvider } from '@schema-engine/forms-react';
+import { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
 
 <FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
 	{/* Your form */}
@@ -243,11 +240,17 @@ Layouts provide visual structure and styling for form steps:
 
 ### Steppers
 
-Steppers control navigation in multi-step forms:
+Registry steppers (`default`, `minimalist`) are installed via shadcn and registered with `addStepper()`. For development
+inspection, mount `FormDebugger` as a child of `FormRenderer` — it is opt-in and imported from its own subpath, so it is
+never bundled unless you ask for it:
 
-- `default` - Horizontal progress indicator
-- `minimalist` - Clean, minimal progress bar
-- `debugger` - Development debugging tool
+```tsx
+import { FormDebugger } from '@schema-engine/forms-react/components/form-debugger';
+
+<FormRenderer config={config} engine={engine} adapter={adapter}>
+	<FormDebugger />
+</FormRenderer>;
+```
 
 **Example - Multi-Step Form:**
 
@@ -675,14 +678,14 @@ const engine = createReactFormComposer().addStepper(CustomStepperRegistration).b
 The package provides full TypeScript support with automatic type inference:
 
 ```typescript
-// Type augmentation happens automatically when importing registrations
-import { InputElementRegistration } from '@schema-engine/forms-react/registrations';
+// Type augmentation happens when importing the generated registry item.
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
-const engine = createReactFormComposer().addElement(InputElementRegistration).build();
+const engine = createReactFormComposer().addElements(schemaFormRegistrations).build();
 
 // TypeScript knows about registered components
-const element = engine.getElement('input'); // Type: InputElementRegistration | undefined
-const allElements = engine.getAllElements(); // Type: Array<InputElementRegistration>
+const element = engine.getElement('input');
+const allElements = engine.getAllElements();
 
 // Configuration is type-safe
 const config: FormConfig = {
@@ -717,16 +720,12 @@ The package is optimized for performance:
 The package includes comprehensive test coverage:
 
 ```bash
-bun test
+pnpm test
 ```
-
-`test:all` runs each `test/**/*.test.*` file in isolation. A single `bun test` invocation has intermittently crashed with exit **137** (Bun segfault) in CI and pre-commit, so the per-file loop is a temporary workaround until Bun stabilizes.
 
 ```bash
-cd packages/forms-react && bun run test:all
+cd packages/forms-react && pnpm test:all
 ```
-
-Revert to `"test:all": "bun test"` once the upstream Bun issue is resolved.
 
 **Test categories:** builder pattern, registration, rendering, validation, multi-step navigation, action execution, hooks, and custom components.
 

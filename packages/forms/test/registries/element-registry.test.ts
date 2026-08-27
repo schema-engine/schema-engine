@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test';
+import { describe, test, expect, beforeEach } from 'vitest';
 import { ElementRegistry } from '@/registries';
 import type { InputRegistration } from '@/types';
 import { z } from 'zod';

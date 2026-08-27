@@ -1,0 +1,19 @@
+{
+	"compilerOptions": {
+		"jsx": "react-jsx",
+		"lib": ["ES2022", "DOM"],
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"strict": true,
+		"skipLibCheck": true,
+		"noEmit": true,
+		"paths": {
+			"@/*": ["../../packages/forms-react/src/*"],
+			"@/components/ui/schema-engine/components/*": ["./primitives/*", "../shared/primitives/*"],
+			"@/components/ui/button": ["./ui-stubs/button.tsx"],
+			"@/components/ui/*": ["./ui-stubs/*", "../ui-stubs/*"],
+			"@/lib/utils": ["../ui-stubs/lib/utils.ts"]
+		}
+	},
+	"include": ["./primitives/**/*.tsx"]
+}

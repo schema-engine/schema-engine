@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { FormEngineProvider } from '@/components/adapter-provider';
-import { rhfAdapter } from '@/adapters/rhf';
-import { createExtendableComposer, ValidationPresets } from '@/stories/shared/form-builder.ui';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/core-ui/card';
-import { Badge } from '@/components/core-ui/badge';
-import { Button } from '@/components/core-ui/button';
-import { ScrollArea } from '@/components/core-ui/scroll-area';
+import { FormEngineProvider } from '@/components/form-engine-provider';
+import { createExtendableComposer, ValidationPresets, rhfAdapter } from '@/stories/shared/form-builder.ui';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { SUBMIT_FORM_MOCK_URL } from '../msw/submit-form';
 import { FormActionTriggerSchema, formResetPlugin, formSubmitPlugin } from '@schema-engine/forms/actions';
 import { z } from 'zod';
@@ -380,7 +379,12 @@ export const InteractiveActionDemo = () => {
 								<CardDescription>Fill out the form to trigger actions</CardDescription>
 							</CardHeader>
 							<CardContent>
-								<FormRenderer key={formKey} config={demoFormConfig} />
+								<FormRenderer
+									key={formKey}
+									config={demoFormConfig}
+									engine={demoEngine}
+									adapter={rhfAdapter}
+								/>
 							</CardContent>
 						</Card>
 

@@ -2,7 +2,7 @@
 
 > **A Schema-First Foundation for Modular Interfaces** — Build deterministic, type-safe, and event-driven systems from portable definitions.
 
-> **Important:** This README is an overview, not the API reference. For copy-paste-ready examples and current contracts, use the [Documentation App](./apps/www) — start with [Quick Start](./apps/www/src/pages/docs/quick-start.mdx).
+> **Important:** This README is an overview, not the API reference. For copy-paste-ready examples and current contracts, use the [Documentation App](./apps/docs) — start with [Quick Start](./apps/docs/src/content/docs/getting-started/quick-start.mdx).
 
 ---
 
@@ -37,9 +37,9 @@ We reject the compromise between dynamic behavior and static analysis. Through a
 
 ```typescript
 import { createReactFormComposer } from '@schema-engine/forms-react';
-import { InputElementRegistration } from '@schema-engine/forms-react/registrations';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
-const engine = createReactFormComposer().addElement(InputElementRegistration).build();
+const engine = createReactFormComposer().addElements(schemaFormRegistrations).build();
 
 // Registered element types are inferred from what you add to the composer.
 const myForm = {
@@ -148,7 +148,7 @@ graph TD
 | Package                                                  | Version | Description                                                                                                          |
 | -------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
 | **[@schema-engine/forms](./packages/forms)**             | `0.1.0` | Contains the `FormComposer` and `FormEngine`. Handles validation logic, constraint evaluation, and state management. |
-| **[@schema-engine/forms-react](./packages/forms-react)** | `0.1.0` | Provides the React Context bridge, hooks, and default component libraries (Shadcn, Core UI).                         |
+| **[@schema-engine/forms-react](./packages/forms-react)** | `0.1.0` | Provides the React Context bridge, hooks, adapters, layouts, and the shadcn-agnostic rendering runtime.              |
 | **[@schema-engine/actions](./packages/actions)**         | `0.1.0` | A standalone, domain-agnostic command pattern implementation for handling system events.                             |
 | **[@schema-engine/registry](./packages/registry)**       | `0.1.0` | The low-level type definitions and registry implementations that power the IoC container.                            |
 
@@ -156,17 +156,19 @@ graph TD
 
 ## 🚀 Quick Start
 
-See the full walkthrough in [Quick Start](./apps/www/src/pages/docs/quick-start.mdx). Minimal verified setup:
+See the full walkthrough in [Quick Start](./apps/docs/src/content/docs/getting-started/quick-start.mdx). Minimal verified setup:
 
 ```bash
-bun add @schema-engine/forms @schema-engine/forms-react react-hook-form zod
+pnpm add @schema-engine/forms @schema-engine/forms-react react-hook-form zod
+pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form
 ```
 
 ```typescript
 import { createReactFormComposer } from '@schema-engine/forms-react';
-import { InputElementRegistration, CardLayoutRegistration } from '@schema-engine/forms-react/registrations';
+import { CardLayoutRegistration } from '@schema-engine/forms-react/registrations';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
-const engine = createReactFormComposer().addElement(InputElementRegistration).addLayout(CardLayoutRegistration).build();
+const engine = createReactFormComposer().addElements(schemaFormRegistrations).addLayout(CardLayoutRegistration).build();
 
 const contactFormSchema = {
 	id: 'contact-form',
@@ -198,7 +200,8 @@ const contactFormSchema = {
 ```
 
 ```tsx
-import { FormEngineProvider, FormRenderer, rhfAdapter } from '@schema-engine/forms-react';
+import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
+import { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
 
 export function ContactPage() {
 	return (
@@ -213,13 +216,13 @@ export function ContactPage() {
 
 ## 📚 Documentation
 
-Detailed architectural documentation is available in the [Documentation App](./apps/www).
+Detailed architectural documentation is available in the [Documentation App](./apps/docs).
 
-- **[Quick Start](./apps/www/src/pages/docs/quick-start.mdx)**
-- **[Forms — Core Concepts](./apps/www/src/pages/docs/packages/forms/core-concepts.mdx)**
-- **[Component Registry](./apps/www/src/pages/docs/packages/registry/index.mdx)**
-- **[Action System](./apps/www/src/pages/docs/packages/actions/index.mdx)**
-- **[Forms React — Getting Started](./apps/www/src/pages/docs/packages/forms-react/getting-started.mdx)**
+- **[Quick Start](./apps/docs/src/content/docs/getting-started/quick-start.mdx)**
+- **[Forms — Core Concepts](./apps/docs/src/content/docs/forms/core-concepts.mdx)**
+- **[Component Registry](./apps/docs/src/content/docs/registry/overview.mdx)**
+- **[Action System](./apps/docs/src/content/docs/actions/overview.mdx)**
+- **[Forms React — Getting Started](./apps/docs/src/content/docs/forms-react/getting-started.mdx)**
 
 ---
 

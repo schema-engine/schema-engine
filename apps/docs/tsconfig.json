@@ -14,6 +14,13 @@
 		"noImplicitOverride": true,
 		"paths": {
 			"@/*": ["./src/*"],
+			"@/components/ui/schema-engine/components/*": [
+				"../../registry/base-ui/primitives/*",
+				"../../registry/shared/primitives/*"
+			],
+			"@/components/schema-engine/forms/*": ["../../registry/shared/forms/*"],
+			"@/components/ui/*": ["../../registry/ui-stubs/*"],
+			"@/lib/utils": ["../../registry/ui-stubs/lib/utils.ts"],
 			"ecopages:content/docs": ["./types/ecopages-content-docs.d.ts"],
 			"ecopages:content/docs/server": ["./types/ecopages-content-docs-server.d.ts"]
 		},

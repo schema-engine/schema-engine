@@ -140,7 +140,7 @@ const engine = new FormComposer(customElements, undefined, undefined, customActi
 Easy testing with isolated registries:
 
 ```typescript
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { ElementRegistry } from "@schema-engine/forms
 
 describe("ElementRegistry", () => {

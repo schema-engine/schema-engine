@@ -3,11 +3,11 @@
 	"type": "module",
 	"version": "0.1.0",
 	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	},
 	"sideEffects": [
-		"./dist/registrations/*.js",
-		"./dist/components/elements/inputs/*.registration.js",
 		"./dist/components/layouts/*.registration.js",
-		"./dist/components/steppers/*.registration.js",
 		"**/*.css"
 	],
 	"main": "dist/index.js",
@@ -17,41 +17,53 @@
 	"files": [
 		"/dist/*"
 	],
-	"private": true,
 	"scripts": {
-		"build:lib": "bun run clean && bun run build:files && bun run build:types",
-		"build:files": "bun run ./build.ts",
+		"build:lib": "pnpm clean && pnpm build:files && pnpm build:types",
+		"build:files": "node ./build.ts",
 		"build:types": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
-		"watch:lib": "bun run ./build.ts --watch",
+		"watch:lib": "node ./build.ts --watch",
 		"clean": "rm -rf ./dist",
-		"test:all": "bash -c 'failed=0; for f in $(find test -name \"*.test.*\" | sort); do bun test \"$f\" || failed=1; done; exit $failed'",
+		"test:all": "vitest run",
 		"storybook": "storybook dev -p 6006",
 		"build-storybook": "storybook build -o ./storybook-static",
-		"check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.test-types.json",
-		"test:storybook": "vitest --config=vitest.browser.config.ts"
+		"check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.test-types.json && tsc --noEmit -p ../../registry/shared/tsconfig.json && tsc --noEmit -p ../../registry/base-ui/tsconfig.json && tsc --noEmit -p ../../registry/aria/tsconfig.json && tsc --noEmit -p ../../registry/radix/tsconfig.json",
+		"test:storybook": "vitest run --project browser"
 	},
 	"devDependencies": {
-		"@happy-dom/global-registrator": "^18.0.1",
+		"@base-ui/react": "^1.1.0",
 		"@schema-engine/forms": "workspace:*",
 		"@storybook/addon-docs": "^10.1.8",
 		"@storybook/addon-vitest": "^10.1.8",
 		"@storybook/react-vite": "^10.1.8",
+		"@tailwindcss/postcss": "^4.1.18",
+		"@tailwindcss/vite": "^4.1.18",
 		"@testing-library/dom": "^10.4.1",
 		"@testing-library/jest-dom": "^6.8.0",
 		"@testing-library/react": "^16.3.0",
-		"@types/bun": "latest",
 		"@types/react": "^19",
 		"@types/react-dom": "^19",
 		"@vitejs/plugin-react": "^5.1.2",
 		"@vitest/browser": "^4.0.13",
+		"@vitest/browser-playwright": "^4.0.13",
 		"autoprefixer": "^10.4.21",
+		"date-fns": "4.1.0",
+		"esbuild": "^0.27.0",
+		"input-otp": "1.4.1",
+		"lucide-react": "^0.539.0",
 		"msw": "^2.11.6",
 		"msw-storybook-addon": "^2.0.6",
+		"postcss": "^8.5.26",
 		"postcss-import": "^16.1.1",
 		"postcss-nested": "^7.0.2",
+		"react-dropzone": "^14.3.8",
+		"react-imask": "^7.6.1",
+		"react-phone-number-input": "^3.4.12",
+		"react-aria-components": "^1.13.0",
+		"remark-gfm": "^4.0.1",
 		"storybook": "^10.1.8",
 		"tailwindcss": "^4",
 		"tsc-alias": "^1.8.16",
+		"tw-animate-css": "^1.4.0",
 		"vitest": "^4.0.13",
 		"vitest-browser-react": "^2.0.2",
 		"zod": "^4.0.17"
@@ -64,34 +76,14 @@
 		"zod": "^4.0.17"
 	},
 	"dependencies": {
-		"@base-ui/react": "^1.1.0",
 		"@ecopages/logger": "^0.2.2",
-		"@ecopages/postcss-processor": "npm:@jsr/ecopages__postcss-processor@0.1.105",
 		"@hookform/resolvers": "^5.2.1",
-		"@storybook/addon-vitest": "^10.1.8",
-		"@tailwindcss/vite": "^4.1.18",
-		"@vitest/browser-playwright": "^4.0.13",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
-		"cmdk": "1.0.4",
-		"cmdk-base": "^0.0.8",
-		"date-fns": "4.1.0",
-		"embla-carousel-react": "8.5.1",
-		"input-otp": "1.4.1",
-		"lucide-react": "^0.539.0",
 		"react": "^19",
-		"react-day-picker": "9.8.0",
 		"react-dom": "^19",
-		"react-dropzone": "^14.3.8",
 		"react-hook-form": "^7.60.0",
-		"react-phone-number-input": "^3.4.12",
-		"react-resizable-panels": "^2.1.7",
-		"recharts": "2.15.4",
-		"remark-gfm": "^4.0.1",
-		"sonner": "^2.0.7",
-		"tailwind-merge": "^3.4.0",
-		"tw-animate-css": "^1.4.0",
-		"vaul": "^1.1.2"
+		"tailwind-merge": "^3.4.0"
 	},
 	"exports": {
 		"./package.json": {
@@ -101,125 +93,49 @@
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
 		},
-		"./types": {
-			"types": "./dist/types.d.ts"
+		"./primitives": {
+			"types": "./dist/primitives.d.ts",
+			"import": "./dist/primitives.js"
 		},
 		"./registrations": {
 			"types": "./dist/registrations/index.d.ts",
 			"import": "./dist/registrations/index.js"
 		},
-		"./registrations/*": {
-			"types": "./dist/registrations/*.d.ts",
-			"import": "./dist/registrations/*.js"
+		"./adapters": {
+			"types": "./dist/adapters/index.d.ts",
+			"import": "./dist/adapters/index.js"
 		},
-		"./registrations/default": {
-			"types": "./dist/registrations/default.d.ts",
-			"import": "./dist/registrations/default.js"
+		"./adapters/react-hook-form": {
+			"types": "./dist/adapters/react-hook-form.d.ts",
+			"import": "./dist/adapters/react-hook-form.js"
 		},
-		"./registries/*": {
-			"types": "./dist/registries/*.d.ts",
-			"import": "./dist/registries/*.js"
-		},
-		"./contexts": {
-			"types": "./dist/contexts/index.d.ts",
-			"import": "./dist/contexts/index.js"
-		},
-		"./contexts/*": {
-			"types": "./dist/contexts/*.d.ts",
-			"import": "./dist/contexts/*.js"
+		"./registries/builder-registry": {
+			"types": "./dist/registries/builder-registry.d.ts",
+			"import": "./dist/registries/builder-registry.js"
 		},
 		"./hooks": {
 			"types": "./dist/hooks/index.d.ts",
 			"import": "./dist/hooks/index.js"
 		},
-		"./hooks/*": {
-			"types": "./dist/hooks/*.d.ts",
-			"import": "./dist/hooks/*.js"
+		"./contexts": {
+			"types": "./dist/contexts/index.d.ts",
+			"import": "./dist/contexts/index.js"
 		},
-		"./adapters": {
-			"types": "./dist/adapters/index.d.ts",
-			"import": "./dist/adapters/index.js"
+		"./contexts/stepper-context": {
+			"types": "./dist/contexts/stepper-context.d.ts",
+			"import": "./dist/contexts/stepper-context.js"
 		},
-		"./adapters/*": {
-			"types": "./dist/adapters/*.d.ts",
-			"import": "./dist/adapters/*.js"
-		},
-		"./adapters/rhf": {
-			"types": "./dist/adapters/rhf/index.d.ts",
-			"import": "./dist/adapters/rhf/index.js"
-		},
-		"./adapters/rhf/*": {
-			"types": "./dist/adapters/rhf/*.d.ts",
-			"import": "./dist/adapters/rhf/*.js"
-		},
-		"./adapters/rhf/hooks": {
-			"types": "./dist/adapters/rhf/hooks.d.ts",
-			"import": "./dist/adapters/rhf/hooks.js"
-		},
-		"./adapters/rhf/hooks/*": {
-			"types": "./dist/adapters/rhf/hooks/*.d.ts",
-			"import": "./dist/adapters/rhf/hooks/*.js"
-		},
-		"./components": {
-			"types": "./dist/components/index.d.ts",
-			"import": "./dist/components/index.js"
-		},
-		"./components/*": {
-			"types": "./dist/components/*.d.ts",
-			"import": "./dist/components/*.js"
-		},
-		"./components/form/*": {
-			"types": "./dist/components/form/*.d.ts",
-			"import": "./dist/components/form/*.js"
-		},
-		"./components/form/registry": {
-			"types": "./dist/components/form/registry.d.ts",
-			"import": "./dist/components/form/registry.js"
-		},
-		"./components/core-registrations": {
-			"types": "./dist/registrations.d.ts",
-			"import": "./dist/registrations.js"
-		},
-		"./components/elements/inputs/*": {
-			"types": "./dist/components/elements/inputs/*.d.ts",
-			"import": "./dist/components/elements/inputs/*.js"
-		},
-		"./components/elements/actions/*": {
-			"types": "./dist/components/elements/actions/*.d.ts",
-			"import": "./dist/components/elements/actions/*.js"
-		},
-		"./components/elements/content/*": {
-			"types": "./dist/components/elements/content/*.d.ts",
-			"import": "./dist/components/elements/content/*.js"
-		},
-		"./components/internals": {
-			"types": "./dist/components/internals.d.ts",
-			"import": "./dist/components/internals.js"
-		},
-		"./components/internals/*": {
-			"types": "./dist/components/internals/*.d.ts",
-			"import": "./dist/components/internals/*.js"
-		},
-		"./components/internals/form-renderer": {
-			"types": "./dist/components/internals/form-renderer.d.ts",
-			"import": "./dist/components/internals/form-renderer.js"
+		"./components/form-debugger": {
+			"types": "./dist/components/form-debugger/index.d.ts",
+			"import": "./dist/components/form-debugger/index.js"
 		},
 		"./components/steppers": {
-			"types": "./dist/components/steppers.d.ts",
-			"import": "./dist/components/steppers.js"
+			"types": "./dist/components/steppers/index.d.ts",
+			"import": "./dist/components/steppers/index.js"
 		},
-		"./components/steppers/*": {
-			"types": "./dist/components/steppers/*.d.ts",
-			"import": "./dist/components/steppers/*.js"
-		},
-		"./components/steppers/*.css": "./dist/components/steppers/*.css",
 		"./components/layouts": {
 			"types": "./dist/components/layouts/index.d.ts",
 			"import": "./dist/components/layouts/index.js"
-		},
-		"./components/layouts/*": {
-			"types": "./dist/components/layouts/*.d.ts",
-			"import": "./dist/components/layouts/*.js"
 		},
 		"./components/layouts/*.css": "./dist/components/layouts/*.css",
 		"./global.css": "./dist/global.css",

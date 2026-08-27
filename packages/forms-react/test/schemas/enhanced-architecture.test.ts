@@ -1,11 +1,29 @@
-import { describe, test, expect } from 'bun:test';
-import { InputFieldSchema, type InputFieldConfig } from '@/components/elements/inputs/form-input.types';
-import { TextareaFieldSchema, type TextareaFieldConfig } from '@/components/elements/inputs/form-textarea.types';
-import { SelectFieldConfigSchema, type SelectFieldConfig } from '@/components/elements/inputs/form-select.types';
-import { RadioFieldConfigSchema, type RadioFieldConfig } from '@/components/elements/inputs/form-radio.types';
-import { NumberFieldConfigSchema, type NumberFieldConfig } from '@/components/elements/inputs/form-number.types';
-import { SwitchFieldConfigSchema, type SwitchFieldConfig } from '@/components/elements/inputs/form-switch.types';
-import { CheckboxFieldConfigSchema, type CheckboxFieldConfig } from '@/components/elements/inputs/form-checkbox.types';
+import { describe, test, expect } from 'vitest';
+import { InputFieldSchema, type InputFieldConfig } from '@/components/schema-engine/forms/inputs/form-input.types';
+import {
+	TextareaFieldSchema,
+	type TextareaFieldConfig,
+} from '@/components/schema-engine/forms/inputs/form-textarea.types';
+import {
+	SelectFieldConfigSchema,
+	type SelectFieldConfig,
+} from '@/components/schema-engine/forms/inputs/form-select.types';
+import {
+	RadioFieldConfigSchema,
+	type RadioFieldConfig,
+} from '@/components/schema-engine/forms/inputs/form-radio.types';
+import {
+	NumberFieldConfigSchema,
+	type NumberFieldConfig,
+} from '@/components/schema-engine/forms/inputs/form-number.types';
+import {
+	SwitchFieldConfigSchema,
+	type SwitchFieldConfig,
+} from '@/components/schema-engine/forms/inputs/form-switch.types';
+import {
+	CheckboxFieldConfigSchema,
+	type CheckboxFieldConfig,
+} from '@/components/schema-engine/forms/inputs/form-checkbox.types';
 
 describe('Clean Enhanced Field System', () => {
 	test('should use id-based configuration for input', () => {

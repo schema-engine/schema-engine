@@ -1,6 +1,6 @@
 ---
-title: "Getting Started"
-description: "Install the React adapter and register your engine."
+title: 'Getting Started'
+description: 'Install the React adapter and register your engine.'
 group: Forms React
 order: 2
 ---
@@ -11,12 +11,16 @@ This guide walks you through building your first React form.
 
 ## 1. Create a Form Engine
 
-Import component registrations and build your engine:
+Install an aggregate from the Schema Engine shadcn registry, then import its generated registration barrel:
 
 ```typescript
+import { createReactFormComposer } from '@schema-engine/forms-react';
+import { CardLayoutRegistration } from '@schema-engine/forms-react/registrations';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
+import { DefaultStepperRegistration } from '@/components/schema-engine/forms/steppers/default-stepper.registration';
+
 const formEngine = createReactFormComposer()
-	.addElement(InputElementRegistration)
-	.addElement(TextareaElementRegistration)
+	.addElements(schemaFormRegistrations)
 	.addLayout(CardLayoutRegistration)
 	.addStepper(DefaultStepperRegistration)
 	.build();
@@ -42,9 +46,7 @@ const formConfig: FormConfig = {
 					name: 'name',
 					label: 'Full Name',
 					inputType: 'text',
-					rules: [
-						{ type: 'required', message: 'Name is required' },
-					],
+					rules: [{ type: 'required', message: 'Name is required' }],
 				},
 				{
 					$type: 'input',
@@ -78,7 +80,8 @@ const formConfig: FormConfig = {
 ## 3. Render the Form
 
 ```tsx
-import { FormEngineProvider, FormRenderer, rhfAdapter } from '@schema-engine/forms-react';
+import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
+import { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
 
 function ContactForm() {
 	const handleSubmit = (data) => {

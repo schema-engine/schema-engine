@@ -1,12 +1,14 @@
 import type React from 'react';
 import { FormProvider } from '../form-provider';
-import type { FormProviderProps } from '../../adapters/types';
+import type { FormAdapter, FormProviderProps } from '../../adapters/types';
 import { FormElement } from './field-renderer';
 import { useFormGridStyles } from '@/hooks';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext } from '@/adapters/context';
 import { LayoutRenderer } from './layout-renderer';
 import { StepperRenderer } from './stepper-renderer';
 import { useFormInstanceActions } from '@/hooks/use-form-context';
+import { FormEngineProvider } from '../form-engine-provider';
+import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 
 import type { FormConfig, FormStep } from '@schema-engine/forms/schemas';
 
@@ -148,12 +150,26 @@ function StepContent({ step, config }: { step: FormStep; config: FormConfig }) {
 export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
 	className?: string;
 	style?: React.CSSProperties;
+	/**
+	 * Form engine instance. Supply it together with `adapter` to let this
+	 * renderer provide its own FormEngine context; omit both when a parent
+	 * `FormEngineProvider` already provides it.
+	 */
+	engine?: FormEngine;
+	/**
+	 * Form library adapter, supplied together with `engine`. Import e.g.
+	 * `rhfAdapter` from `@schema-engine/forms-react/adapters/react-hook-form`.
+	 */
+	adapter?: FormAdapter;
+	/**
+	 * Rendered inside the form context, after the fields. Use it to mount
+	 * form-aware extras such as `FormDebugger` from
+	 * `@schema-engine/forms-react/components/form-debugger`.
+	 */
+	children?: React.ReactNode;
 }
 
-/**
- * Main form renderer component that renders a complete form from configuration
- */
-export function FormRenderer({
+function FormRendererInner({
 	config,
 	defaultValues,
 	onSubmit,
@@ -161,7 +177,8 @@ export function FormRenderer({
 	onAction,
 	className = '',
 	style,
-}: FormRendererProps) {
+	children,
+}: Omit<FormRendererProps, 'engine' | 'adapter'>) {
 	return (
 		<FormProvider
 			config={config}
@@ -173,6 +190,22 @@ export function FormRenderer({
 			<div className={`space-y-6 ${className}`} style={style}>
 				<FormElementsRenderer config={config} />
 			</div>
+			{children}
 		</FormProvider>
+	);
+}
+
+/**
+ * Main form renderer component that renders a complete form from configuration
+ */
+export function FormRenderer({ engine, adapter, ...props }: FormRendererProps) {
+	if (!engine || !adapter) {
+		return <FormRendererInner {...props} />;
+	}
+
+	return (
+		<FormEngineProvider engine={engine} adapter={adapter}>
+			<FormRendererInner {...props} />
+		</FormEngineProvider>
 	);
 }

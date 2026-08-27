@@ -1,17 +1,25 @@
-import { describe, it, expect, mock, beforeEach, spyOn } from 'bun:test';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { FormProvider } from '../../src/adapters/rhf/form-provider';
 import type { FormConfig } from '@schema-engine/forms/schemas';
-import { mockDispatch, setupActionExecutorMock } from '../utils/use-action-executor.mock';
+import { mockDispatch } from '../utils/use-action-executor.mock';
 import { useFormContext as useReactHookFormContext } from 'react-hook-form';
 
-setupActionExecutorMock();
+vi.mock('@schema-engine/actions', async () => {
+	const { mockDispatch, mockDispatchSync } = await import('../utils/use-action-executor.mock');
+	return {
+		ActionDispatcher: class {
+			dispatch = mockDispatch;
+			dispatchSync = mockDispatchSync;
+		},
+	};
+});
 
-void mock.module('@/hooks/use-form-context', () => ({
+vi.mock('@/hooks/use-form-context', () => ({
 	useFormEngine: () => ({ engine: {} }),
 }));
 
-void mock.module('../../src/adapters/rhf/hooks/use-form-validation-resolver', () => ({
+vi.mock('../../src/adapters/rhf/hooks/use-form-validation-resolver', () => ({
 	useFormValidationResolver: () => async () => ({ values: {}, errors: {} }),
 }));
 
@@ -112,8 +120,8 @@ describe('FormProvider', () => {
 	});
 
 	it('should keep consumer onChange callbacks non-blocking when form_change actions fail', async () => {
-		const consoleError = spyOn(console, 'error').mockImplementation(() => undefined);
-		const onChange = mock(() => undefined);
+		const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+		const onChange = vi.fn(() => undefined);
 
 		mockDispatch.mockImplementation((input) => {
 			if (input.trigger === 'form_change') {

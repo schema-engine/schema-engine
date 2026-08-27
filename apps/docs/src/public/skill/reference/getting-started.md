@@ -47,18 +47,20 @@ JSON config in MDX and links to `/www` for the running form.
 - The catch-all route is `apps/docs/src/pages/docs/[...slug]/index.tsx`.
   One source of truth, single static path table.
 - New MDX files need to be:
-  1. Imported in `apps/docs/src/content/docs/content.ts`.
-  2. Listed in `content.meta.ts` with a section, slug, title, description.
+    1. Imported in `apps/docs/src/content/docs/content.ts`.
+    2. Listed in `content.meta.ts` with a section, slug, title, description.
 - For code examples, prefer real config snippets over `LivePreview` /
   `CodePreview` components — the docs site can't run React during SSR.
 
-## When you reach for the www app
+## Wiring a form into the docs app
 
-- The single form engine instance lives at
-  `apps/www/src/lib/form-engine-setup.ts`. Every demo imports it.
+- The single form engine instance lives at `apps/docs/src/lib/form-engine-setup.ts`. Every demo imports it.
 - New components go through the builder: `createReactFormComposer().addElement(...).build()`.
-- The shadcn UI primitives live under `apps/www/src/components/ui/*` —
-  there are 48 of them. Don't bring them into the docs app.
+- Form elements come from the registry sources in `registry/shared/forms`, aliased as
+  `@/components/schema-engine/forms/*`.
+- The shadcn primitives those elements import (`@/components/ui/*`) are not owned by this repo. `registry/ui-stubs`
+  stands in for them so the registry can be typechecked and unit-tested; an app that renders forms needs a real shadcn
+  install.
 
 ## More
 

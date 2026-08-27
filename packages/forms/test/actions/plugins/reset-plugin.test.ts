@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
+import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import type { BuilderActionExecutionContext } from '@/types';
 import { formResetPlugin, FormResetActionSchema, type FormResetAction } from '@/actions/plugins/form-reset.plugin';
 import { GDPRConsent } from '@/tools/gdpr-consent';

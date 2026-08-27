@@ -1,12 +1,12 @@
 {
-	"name": "@ecopages/docs",
+	"name": "@schema-engine/docs",
 	"type": "module",
 	"private": true,
 	"scripts": {
-		"start": "bun run build && ecopages start",
-		"generate:llms": "bunx tsx scripts/generate-llm-docs.ts",
-		"dev": "bun run generate:llms && ecopages dev",
-		"build": "bun run generate:llms && ecopages build",
+		"start": "pnpm build && ecopages start",
+		"generate:llms": "tsx scripts/generate-llm-docs.ts",
+		"dev": "pnpm generate:llms && ecopages dev",
+		"build": "pnpm generate:llms && ecopages build",
 		"preview": "ecopages preview"
 	},
 	"devDependencies": {

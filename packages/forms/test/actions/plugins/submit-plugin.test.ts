@@ -1,4 +1,4 @@
-import { test, expect, describe, beforeEach, afterEach } from 'bun:test';
+import { test, expect, describe, beforeEach, afterEach } from 'vitest';
 import { formSubmitPlugin, FormSubmitActionSchema, type FormSubmitAction } from '@/actions/plugins/form-submit.plugin';
 import { createMockBuilderContext, setupTestEnvironment, createMockFetch, createFailingMockFetch } from '../__tools';
 import { asStandardSchema } from '@/lib/standard-schema';

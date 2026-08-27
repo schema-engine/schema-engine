@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test';
+import { describe, test, expect, beforeEach } from 'vitest';
 import { LayoutRegistry } from '@/registries';
 import type { LayoutRegistration } from '@/types';
 import { z } from 'zod';

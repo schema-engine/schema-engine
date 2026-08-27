@@ -1,36 +1,25 @@
 /**
- * Walks the registration files under src/components, extracts the declared
- * $type literal, and asserts non-empty, unique values within each category
- * (element / layout / stepper).
+ * Walks registration files and asserts unique $type literals.
+ * Form/stepper registrations live in registry/shared/forms.
+ * Layout registrations stay package-owned.
  */
 
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const SRC_ROOT = path.join(import.meta.dir, '..', '..', 'src');
+const testDir = path.dirname(fileURLToPath(import.meta.url));
+const PACKAGE_SRC_ROOT = path.join(testDir, '..', '..', 'src');
+const SHARED_FORMS_ROOT = path.join(testDir, '..', '..', '..', '..', 'registry/shared/forms');
 
-const CATEGORIES = [
-	{ dir: 'components/elements', name: 'element' },
-	{ dir: 'components/layouts', name: 'layout' },
-	{ dir: 'components/steppers', name: 'stepper' },
-] as const;
-
-type Category = (typeof CATEGORIES)[number]['name'];
-
-interface ScanResult {
-	category: Category;
-	types: Set<string>;
-	files: number;
-}
-
-function listRegistrationFiles(dir: string): string[] {
-	const absolute = path.join(SRC_ROOT, dir);
+function listRegistrationFiles(root: string, dir: string): string[] {
+	const absolute = path.join(root, dir);
 	if (!fs.existsSync(absolute)) return [];
 	const out: string[] = [];
 	for (const entry of fs.readdirSync(absolute, { withFileTypes: true })) {
 		if (entry.isDirectory()) {
-			out.push(...listRegistrationFiles(path.join(dir, entry.name)));
+			out.push(...listRegistrationFiles(root, path.join(dir, entry.name)));
 		} else if (entry.isFile() && entry.name.endsWith('.registration.ts')) {
 			out.push(path.join(dir, entry.name));
 		}
@@ -43,28 +32,30 @@ function extractTypeLiteral(source: string): string | null {
 	return match ? match[1] : null;
 }
 
-function scanCategory(dir: string, category: Category): ScanResult {
-	const files = listRegistrationFiles(dir);
+function scan(root: string, dir: string, label: string) {
+	const files = listRegistrationFiles(root, dir);
 	const types = new Set<string>();
 	for (const relative of files) {
-		const source = fs.readFileSync(path.join(SRC_ROOT, relative), 'utf8');
+		const source = fs.readFileSync(path.join(root, relative), 'utf8');
 		const value = extractTypeLiteral(source);
 		if (!value) {
-			throw new Error(`Missing $type literal in ${relative}. Every registration must declare a string $type.`);
+			throw new Error(`Missing $type literal in ${label}/${relative}`);
 		}
 		types.add(value);
 	}
-	return { category, types, files: files.length };
+	return { files: files.length, types };
 }
 
 describe('registration parity', () => {
-	const results = CATEGORIES.map((c) => scanCategory(c.dir, c.name));
+	test('shared form element registrations declare unique $type values', () => {
+		const result = scan(SHARED_FORMS_ROOT, '.', 'shared-forms');
+		expect(result.files).toBeGreaterThan(0);
+		expect(result.types.size).toBe(result.files);
+	});
 
-	for (const result of results) {
-		test(`${result.category} registrations declare unique, non-empty $type values`, () => {
-			expect(result.files).toBeGreaterThan(0);
-			expect(result.types.size).toBe(result.files);
-			expect(result.types.size).toBeGreaterThan(0);
-		});
-	}
+	test('package layout registrations declare unique $type values', () => {
+		const result = scan(PACKAGE_SRC_ROOT, 'components/layouts', 'package-layouts');
+		expect(result.files).toBeGreaterThan(0);
+		expect(result.types.size).toBe(result.files);
+	});
 });

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useFormDefaultValues } from '../../src/adapters/rhf/hooks/use-form-default-values';
 

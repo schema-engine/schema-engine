@@ -1,12 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '@/stories/shared/story-wrapper';
-import { createForm, getEngine, ValidationPresets, createExtendableComposer } from '@/stories/shared/form-builder.ui';
+import {
+	createForm,
+	getEngine,
+	ValidationPresets,
+	createExtendableComposer,
+	rhfAdapter,
+} from '@/stories/shared/form-builder.ui';
 import { z } from 'zod';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@schema-engine/forms/types';
 import { FormActionTriggerSchema, type ActionExecutionResult } from '@schema-engine/forms';
 import { SUBMIT_FORM_MOCK_URL } from '@/stories/msw/submit-form';
 import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
+
+const CONFETTI_SCRIPT_SRC = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js';
 
 declare global {
 	interface Window {
@@ -14,10 +22,58 @@ declare global {
 	}
 }
 
+function loadConfetti(): Promise<(options: unknown) => Promise<void>> {
+	if (typeof window === 'undefined') {
+		return Promise.reject(new Error('Confetti is not available in SSR'));
+	}
+
+	if (window.confetti) {
+		return Promise.resolve(window.confetti);
+	}
+
+	const existing = document.querySelector<HTMLScriptElement>(`script[src="${CONFETTI_SCRIPT_SRC}"]`);
+
+	return new Promise((resolve, reject) => {
+		const handleLoad = () => {
+			if (window.confetti) {
+				resolve(window.confetti);
+				return;
+			}
+			reject(new Error('Confetti library not available'));
+		};
+
+		if (existing) {
+			if (existing.dataset.loaded === 'true') {
+				handleLoad();
+				return;
+			}
+			existing.addEventListener('load', handleLoad, { once: true });
+			existing.addEventListener('error', () => reject(new Error('Failed to load confetti library')), {
+				once: true,
+			});
+			return;
+		}
+
+		const script = document.createElement('script');
+		script.src = CONFETTI_SCRIPT_SRC;
+		script.async = true;
+		script.addEventListener('load', () => {
+			script.dataset.loaded = 'true';
+			handleLoad();
+		});
+		script.addEventListener('error', () => reject(new Error('Failed to load confetti library')), { once: true });
+		document.head.appendChild(script);
+	});
+}
+
 const baseUIEngine = getEngine();
 
 const meta = {
 	component: FormRenderer,
+	args: {
+		engine: baseUIEngine,
+		adapter: rhfAdapter,
+	},
 	parameters: {
 		layout: 'padded',
 		docs: {
@@ -34,6 +90,8 @@ const meta = {
 		),
 	],
 	argTypes: {
+		engine: { table: { disable: true } },
+		adapter: { table: { disable: true } },
 		config: {
 			control: 'object',
 			description: 'Form configuration with submit button',
@@ -275,11 +333,8 @@ function confettiPlugin(): BuilderActionRegistration<'confetti', ConfettiAction>
 					return { success: true, message: 'Confetti skipped in SSR', shouldContinue: true };
 				}
 
-				if (!window.confetti) {
-					return { success: false, error: 'Confetti library not available', shouldContinue: true };
-				}
-
-				window.confetti({
+				const confetti = await loadConfetti();
+				await confetti({
 					particleCount: action.particleCount,
 					spread: action.spread,
 					origin: action.origin,
@@ -310,12 +365,7 @@ export const WithConfetti: Story = {
 	},
 	decorators: [
 		(Story) => {
-			if (typeof window !== 'undefined' && !window.confetti) {
-				const script = document.createElement('script');
-				script.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js';
-				script.async = true;
-				document.head.appendChild(script);
-			}
+			void loadConfetti();
 			return (
 				<StoryWrapper engine={confettiEngine}>
 					<Story />
@@ -324,6 +374,7 @@ export const WithConfetti: Story = {
 		},
 	],
 	args: {
+		engine: confettiEngine,
 		config: confettiBuilder
 			.build()
 			.createFormDefinition()
@@ -361,6 +412,7 @@ export const WithConfetti: Story = {
 			.addFormAction('confetti', {
 				id: 'throw-confetti',
 				enabled: true,
+				triggers: ['form_submit_success'],
 				particleCount: 200,
 				spread: 90,
 				origin: { y: 0.6 },

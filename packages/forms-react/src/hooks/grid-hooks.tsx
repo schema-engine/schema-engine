@@ -20,7 +20,8 @@ export const BREAKPOINTS = {
 const BREAKPOINT_ORDER: Breakpoint[] = ['default', 'sm', 'md', 'lg', 'xl', '2xl'];
 
 /**
- * Breakpoint override context for ViewportPreview
+ * Lets a wrapper pin the breakpoint used for grid resolution instead of
+ * measuring the real viewport.
  */
 const BreakpointOverrideContext = createContext<Breakpoint | undefined>(undefined);
 

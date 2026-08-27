@@ -1,4 +1,4 @@
-import { test, expect } from 'bun:test';
+import { test, expect } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useState } from 'react';
 import { useDebounce, useDebouncedValue } from '../../src/hooks/use-debounce';

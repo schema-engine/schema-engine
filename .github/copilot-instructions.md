@@ -34,11 +34,11 @@
 
 ## JS Runtime
 
-- Please remember we are using bun js
+- Please remember we are using pnpm and Node.js
 
 ## Preview and commands
 
-- Please do not run `bun run dev` to see if the code works. You can't even check the logs.
+- Please do not run `pnpm dev:www` to see if the code works. You can't even check the logs.
 
 ## Commit messages
 

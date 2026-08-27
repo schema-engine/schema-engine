@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, spyOn, afterEach } from 'bun:test';
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ActionExecutor } from '../src/executor';
 import type { ActionRegistryProvider } from '../src/registry';
 import type { ActionRegistration, ActionConfigBase } from '../src/types';
@@ -56,14 +56,14 @@ describe('ActionExecutor', () => {
 	});
 
 	describe('Debug Logging', () => {
-		let debugSpy: ReturnType<typeof spyOn>;
-		let warnSpy: ReturnType<typeof spyOn>;
-		let errorSpy: ReturnType<typeof spyOn>;
+		let debugSpy: ReturnType<typeof vi.spyOn>;
+		let warnSpy: ReturnType<typeof vi.spyOn>;
+		let errorSpy: ReturnType<typeof vi.spyOn>;
 
 		beforeEach(() => {
-			debugSpy = spyOn(console, 'debug').mockImplementation(() => {});
-			warnSpy = spyOn(console, 'warn').mockImplementation(() => {});
-			errorSpy = spyOn(console, 'error').mockImplementation(() => {});
+			debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+			warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+			errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 		});
 
 		afterEach(() => {

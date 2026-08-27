@@ -1,18 +1,14 @@
 import { useContext } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext as useAdapterFormContext } from '@/adapters/context';
 import { FormEngineContext, FormInstanceContext } from '../components/provider';
 import type { FormEngineContextValue, FormInstanceContextValue } from '../components/provider';
 
 /**
- * Hook to get the current form instance from React Hook Form
+ * Hook to get the current form instance from the active adapter
  * Must be used within a FormProvider
  */
 export function useFormInstance() {
-	const form = useFormContext();
-	if (!form) {
-		throw new Error('useFormInstance must be used within a FormProvider');
-	}
-	return form;
+	return useAdapterFormContext();
 }
 
 /**
@@ -29,12 +25,12 @@ export function useFormInstanceActions(): FormInstanceContextValue {
 
 /**
  * Hook to access the form engine context
- * Must be used within a FormEngine
+ * Must be used within a FormEngineProvider
  */
 export function useFormEngine(): FormEngineContextValue {
 	const context = useContext(FormEngineContext);
 	if (!context) {
-		throw new Error('useFormEngine must be used within a FormEngine');
+		throw new Error('useFormEngine must be used within a FormEngineProvider');
 	}
 	return context;
 }

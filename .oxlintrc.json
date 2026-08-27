@@ -5,13 +5,7 @@
 		"suspicious": "warn",
 		"pedantic": "off"
 	},
-	"plugins": [
-		"typescript",
-		"react",
-		"unicorn",
-		"jsx-a11y",
-		"import"
-	],
+	"plugins": ["typescript", "react", "unicorn", "jsx-a11y", "import"],
 	"ignorePatterns": [
 		"**/node_modules",
 		"**/dist",
@@ -22,9 +16,8 @@
 		"**/.turbo",
 		"**/storybook-static",
 		"**/public/mockServiceWorker.js",
-		"apps/www/src/components/ui/**",
-		"apps/www/src/hooks/**",
-		"packages/forms-react/src/shadcn/**"
+		"registry/ui-stubs/**",
+		"registry/*/ui-stubs/**"
 	],
 	"rules": {
 		"typescript/no-explicit-any": "off",
@@ -46,20 +39,33 @@
 			{
 				"allow": [
 					"**/*.css",
+					"**/*.test-d.ts",
 					"**/node_modules/**",
 					"@/lib/form-engine-setup",
-					"@schema-engine/forms/schemas/validation/validation-registry",
+					"@schema-engine/forms/schemas/validation/validation-registry"
 				]
 			}
 		]
 	},
 	"overrides": [
 		{
-			"files": [
-				"**/*.test.{ts,tsx,js,jsx}",
-				"**/*.stories.{ts,tsx,js,jsx}",
-				"**/test/**"
-			],
+			"files": ["**/*.test-d.ts"],
+			"rules": {
+				"import/no-unassigned-import": "off",
+				"eslint/no-underscore-dangle": "off"
+			}
+		},
+		{
+			"files": ["registry/**"],
+			"rules": {
+				"react/refs": "off",
+				"jsx-a11y/prefer-tag-over-role": "off",
+				"jsx-a11y/role-has-required-aria-props": "off",
+				"jsx-a11y/click-events-have-key-events": "off"
+			}
+		},
+		{
+			"files": ["**/*.test.{ts,tsx,js,jsx}", "**/*.stories.{ts,tsx,js,jsx}", "**/test/**"],
 			"rules": {
 				"max-lines-per-function": "off"
 			}

@@ -1,0 +1,682 @@
+{
+	"$schema": "https://ui.shadcn.com/schema/registry.json",
+	"name": "schema-engine-aria",
+	"homepage": "https://github.com/andeeplus/schema-engine",
+	"items": [
+		{
+			"name": "schema-engine-form-utils-aria",
+			"type": "registry:lib",
+			"title": "Form utils",
+			"description": "className helper for Schema Engine form elements.",
+			"registryDependencies": [],
+			"dependencies": ["clsx", "tailwind-merge"],
+			"files": [
+				{
+					"path": "../shared/forms/lib/utils.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/lib/utils.ts"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-field-group-aria",
+			"type": "registry:item",
+			"title": "Field group",
+			"description": "Label, description, and error chrome for Schema Engine fields.",
+			"registryDependencies": ["label", "andeeplus/schema-engine/schema-engine-form-utils-aria"],
+			"dependencies": [],
+			"files": [
+				{
+					"path": "../shared/forms/field-group.tsx",
+					"type": "registry:component",
+					"target": "@components/schema-engine/forms/field-group.tsx"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-combobox-primitive-aria",
+			"type": "registry:ui",
+			"title": "Schema Engine combobox",
+			"description": "Chips-capable React Aria combobox primitive used by FormCombobox.",
+			"registryDependencies": [],
+			"dependencies": ["react-aria-components", "lucide-react"],
+			"files": [
+				{
+					"path": "primitives/combobox.tsx",
+					"type": "registry:ui",
+					"target": "@ui/schema-engine/components/combobox.tsx"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-phone-primitive-aria",
+			"type": "registry:ui",
+			"title": "Schema Engine phone input",
+			"description": "Schema Engine phone input primitive.",
+			"registryDependencies": ["button", "command", "input", "popover", "scroll-area"],
+			"dependencies": ["react-phone-number-input", "lucide-react", "react-aria-components"],
+			"files": [
+				{
+					"path": "primitives/phone-input.tsx",
+					"type": "registry:ui",
+					"target": "@ui/schema-engine/components/phone-input.tsx"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-dropzone-primitive-aria",
+			"type": "registry:ui",
+			"title": "Schema Engine dropzone",
+			"description": "Schema Engine dropzone primitive built on React Aria DropZone.",
+			"registryDependencies": ["button"],
+			"dependencies": ["react-aria-components", "lucide-react"],
+			"files": [
+				{
+					"path": "primitives/drop-zone.tsx",
+					"type": "registry:ui",
+					"target": "@ui/schema-engine/components/drop-zone.tsx"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-masked-input-primitive-aria",
+			"type": "registry:ui",
+			"title": "Schema Engine masked input",
+			"description": "Schema Engine masked input primitive powered by react-imask.",
+			"registryDependencies": [],
+			"dependencies": ["react-imask"],
+			"files": [
+				{
+					"path": "../shared/primitives/masked-input.tsx",
+					"type": "registry:ui",
+					"target": "@ui/schema-engine/components/masked-input.tsx"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-submission-alert-aria",
+			"type": "registry:item",
+			"title": "Submission alert",
+			"description": "Schema Engine submission-alert form element.",
+			"registryDependencies": ["alert"],
+			"dependencies": ["lucide-react", "@schema-engine/forms-react", "@schema-engine/forms", "zod"],
+			"files": [
+				{
+					"path": "../shared/forms/content/form-submission-alert.tsx",
+					"type": "registry:component",
+					"target": "@components/schema-engine/forms/content/form-submission-alert.tsx"
+				},
+				{
+					"path": "../shared/forms/content/form-submission-alert.types.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/content/form-submission-alert.types.ts"
+				},
+				{
+					"path": "../shared/forms/content/form-submission-alert.registration.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/content/form-submission-alert.registration.ts"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-submit-button-aria",
+			"type": "registry:item",
+			"title": "Submit button",
+			"description": "Schema Engine submit-button form element.",
+			"registryDependencies": ["button"],
+			"dependencies": ["@schema-engine/forms-react", "@schema-engine/forms", "zod"],
+			"files": [
+				{
+					"path": "../shared/forms/actions/submit-button.tsx",
+					"type": "registry:component",
+					"target": "@components/schema-engine/forms/actions/submit-button.tsx"
+				},
+				{
+					"path": "../shared/forms/actions/submit-button.types.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/actions/submit-button.types.ts"
+				},
+				{
+					"path": "../shared/forms/actions/submit-button.registration.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/actions/submit-button.registration.ts"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-fieldset-aria",
+			"type": "registry:item",
+			"title": "Fieldset",
+			"description": "Schema Engine fieldset form element.",
+			"registryDependencies": ["andeeplus/schema-engine/schema-engine-form-field-group-aria"],
+			"dependencies": ["@schema-engine/forms-react", "@schema-engine/forms", "zod"],
+			"files": [
+				{
+					"path": "../shared/forms/inputs/form-fieldset.tsx",
+					"type": "registry:component",
+					"target": "@components/schema-engine/forms/inputs/form-fieldset.tsx"
+				},
+				{
+					"path": "../shared/forms/inputs/form-fieldset.types.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-fieldset.types.ts"
+				},
+				{
+					"path": "../shared/forms/inputs/form-fieldset.registration.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-fieldset.registration.ts"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-array-elements-aria",
+			"type": "registry:item",
+			"title": "Array elements",
+			"description": "Schema Engine array-elements form element.",
+			"registryDependencies": [
+				"button",
+				"andeeplus/schema-engine/schema-engine-form-utils-aria",
+				"andeeplus/schema-engine/schema-engine-form-field-group-aria"
+			],
+			"dependencies": ["lucide-react", "@schema-engine/forms-react", "@schema-engine/forms", "zod"],
+			"files": [
+				{
+					"path": "../shared/forms/inputs/form-array-elements.tsx",
+					"type": "registry:component",
+					"target": "@components/schema-engine/forms/inputs/form-array-elements.tsx"
+				},
+				{
+					"path": "../shared/forms/inputs/form-array-elements.types.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-array-elements.types.ts"
+				},
+				{
+					"path": "../shared/forms/inputs/form-array-elements.registration.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-array-elements.registration.ts"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-phone-input-aria",
+			"type": "registry:item",
+			"title": "Phone input",
+			"description": "Schema Engine phone-input form element.",
+			"registryDependencies": [
+				"andeeplus/schema-engine/schema-engine-form-phone-primitive-aria",
+				"andeeplus/schema-engine/schema-engine-form-field-group-aria"
+			],
+			"dependencies": ["react-phone-number-input", "@schema-engine/forms-react", "@schema-engine/forms", "zod"],
+			"files": [
+				{
+					"path": "../shared/forms/inputs/form-phone-input.tsx",
+					"type": "registry:component",
+					"target": "@components/schema-engine/forms/inputs/form-phone-input.tsx"
+				},
+				{
+					"path": "../shared/forms/inputs/form-phone-input.types.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-phone-input.types.ts"
+				},
+				{
+					"path": "../shared/forms/inputs/form-phone-input.registration.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-phone-input.registration.ts"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-masked-input-aria",
+			"type": "registry:item",
+			"title": "Masked input",
+			"description": "Schema Engine masked-input form element for IBAN, cards, and other patterned values.",
+			"registryDependencies": [
+				"andeeplus/schema-engine/schema-engine-form-masked-input-primitive-aria",
+				"andeeplus/schema-engine/schema-engine-form-field-group-aria"
+			],
+			"dependencies": ["@schema-engine/forms-react", "@schema-engine/forms", "zod"],
+			"files": [
+				{
+					"path": "../shared/forms/inputs/form-masked-input.tsx",
+					"type": "registry:component",
+					"target": "@components/schema-engine/forms/inputs/form-masked-input.tsx"
+				},
+				{
+					"path": "../shared/forms/inputs/form-masked-input.types.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-masked-input.types.ts"
+				},
+				{
+					"path": "../shared/forms/inputs/form-masked-input.registration.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-masked-input.registration.ts"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-textarea-aria",
+			"type": "registry:item",
+			"title": "Textarea",
+			"description": "Schema Engine textarea form element.",
+			"registryDependencies": ["textarea", "andeeplus/schema-engine/schema-engine-form-field-group-aria"],
+			"dependencies": ["@schema-engine/forms-react", "@schema-engine/forms", "zod"],
+			"files": [
+				{
+					"path": "../shared/forms/inputs/form-textarea.tsx",
+					"type": "registry:component",
+					"target": "@components/schema-engine/forms/inputs/form-textarea.tsx"
+				},
+				{
+					"path": "../shared/forms/inputs/form-textarea.types.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-textarea.types.ts"
+				},
+				{
+					"path": "../shared/forms/inputs/form-textarea.registration.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-textarea.registration.ts"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-checkbox-aria",
+			"type": "registry:item",
+			"title": "Checkbox",
+			"description": "Schema Engine checkbox form element.",
+			"registryDependencies": ["checkbox", "andeeplus/schema-engine/schema-engine-form-field-group-aria"],
+			"dependencies": ["@schema-engine/forms-react", "@schema-engine/forms", "zod"],
+			"files": [
+				{
+					"path": "overlays/forms/inputs/form-checkbox.tsx",
+					"type": "registry:component",
+					"target": "@components/schema-engine/forms/inputs/form-checkbox.tsx"
+				},
+				{
+					"path": "../shared/forms/inputs/form-checkbox.types.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-checkbox.types.ts"
+				},
+				{
+					"path": "../shared/forms/inputs/form-checkbox.registration.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-checkbox.registration.ts"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-input-otp-aria",
+			"type": "registry:item",
+			"title": "Input OTP",
+			"description": "Schema Engine input-otp form element.",
+			"registryDependencies": ["input-otp", "andeeplus/schema-engine/schema-engine-form-field-group-aria"],
+			"dependencies": ["@schema-engine/forms-react", "@schema-engine/forms", "zod"],
+			"files": [
+				{
+					"path": "../shared/forms/inputs/form-input-otp.tsx",
+					"type": "registry:component",
+					"target": "@components/schema-engine/forms/inputs/form-input-otp.tsx"
+				},
+				{
+					"path": "../shared/forms/inputs/form-input-otp.types.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-input-otp.types.ts"
+				},
+				{
+					"path": "../shared/forms/inputs/form-input-otp.registration.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-input-otp.registration.ts"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-drop-zone-aria",
+			"type": "registry:item",
+			"title": "Drop zone",
+			"description": "Schema Engine drop-zone form element.",
+			"registryDependencies": [
+				"andeeplus/schema-engine/schema-engine-form-dropzone-primitive-aria",
+				"andeeplus/schema-engine/schema-engine-form-field-group-aria"
+			],
+			"dependencies": ["@schema-engine/forms-react", "@schema-engine/forms", "zod"],
+			"files": [
+				{
+					"path": "../shared/forms/inputs/form-drop-zone.tsx",
+					"type": "registry:component",
+					"target": "@components/schema-engine/forms/inputs/form-drop-zone.tsx"
+				},
+				{
+					"path": "../shared/forms/inputs/form-drop-zone.types.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-drop-zone.types.ts"
+				},
+				{
+					"path": "../shared/forms/inputs/form-drop-zone.registration.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-drop-zone.registration.ts"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-checkbox-group-aria",
+			"type": "registry:item",
+			"title": "Checkbox group",
+			"description": "Schema Engine checkbox-group form element.",
+			"registryDependencies": [
+				"label",
+				"checkbox",
+				"andeeplus/schema-engine/schema-engine-form-field-group-aria"
+			],
+			"dependencies": ["@schema-engine/forms-react", "@schema-engine/forms", "zod"],
+			"files": [
+				{
+					"path": "overlays/forms/inputs/form-checkbox-group.tsx",
+					"type": "registry:component",
+					"target": "@components/schema-engine/forms/inputs/form-checkbox-group.tsx"
+				},
+				{
+					"path": "../shared/forms/inputs/form-checkbox-group.types.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-checkbox-group.types.ts"
+				},
+				{
+					"path": "../shared/forms/inputs/form-checkbox-group.registration.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-checkbox-group.registration.ts"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-number-aria",
+			"type": "registry:item",
+			"title": "Number",
+			"description": "Schema Engine number form element.",
+			"registryDependencies": ["input", "andeeplus/schema-engine/schema-engine-form-field-group-aria"],
+			"dependencies": ["@schema-engine/forms-react", "@schema-engine/forms", "zod"],
+			"files": [
+				{
+					"path": "../shared/forms/inputs/form-number.tsx",
+					"type": "registry:component",
+					"target": "@components/schema-engine/forms/inputs/form-number.tsx"
+				},
+				{
+					"path": "../shared/forms/inputs/form-number.types.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-number.types.ts"
+				},
+				{
+					"path": "../shared/forms/inputs/form-number.registration.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-number.registration.ts"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-switch-aria",
+			"type": "registry:item",
+			"title": "Switch",
+			"description": "Schema Engine switch form element.",
+			"registryDependencies": ["switch", "andeeplus/schema-engine/schema-engine-form-field-group-aria"],
+			"dependencies": ["@schema-engine/forms-react", "@schema-engine/forms", "zod"],
+			"files": [
+				{
+					"path": "overlays/forms/inputs/form-switch.tsx",
+					"type": "registry:component",
+					"target": "@components/schema-engine/forms/inputs/form-switch.tsx"
+				},
+				{
+					"path": "../shared/forms/inputs/form-switch.types.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-switch.types.ts"
+				},
+				{
+					"path": "../shared/forms/inputs/form-switch.registration.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-switch.registration.ts"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-select-aria",
+			"type": "registry:item",
+			"title": "Select",
+			"description": "Schema Engine select form element. Supports multiple selection with chips.",
+			"registryDependencies": ["select", "andeeplus/schema-engine/schema-engine-form-field-group-aria"],
+			"dependencies": ["lucide-react", "@schema-engine/forms-react", "@schema-engine/forms", "zod"],
+			"files": [
+				{
+					"path": "overlays/forms/inputs/form-select.tsx",
+					"type": "registry:component",
+					"target": "@components/schema-engine/forms/inputs/form-select.tsx"
+				},
+				{
+					"path": "../shared/forms/inputs/form-select.types.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-select.types.ts"
+				},
+				{
+					"path": "../shared/forms/inputs/form-select.registration.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-select.registration.ts"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-radio-aria",
+			"type": "registry:item",
+			"title": "Radio",
+			"description": "Schema Engine radio form element.",
+			"registryDependencies": [
+				"label",
+				"radio-group",
+				"andeeplus/schema-engine/schema-engine-form-field-group-aria"
+			],
+			"dependencies": ["@schema-engine/forms-react", "@schema-engine/forms", "zod"],
+			"files": [
+				{
+					"path": "overlays/forms/inputs/form-radio.tsx",
+					"type": "registry:component",
+					"target": "@components/schema-engine/forms/inputs/form-radio.tsx"
+				},
+				{
+					"path": "../shared/forms/inputs/form-radio.types.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-radio.types.ts"
+				},
+				{
+					"path": "../shared/forms/inputs/form-radio.registration.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-radio.registration.ts"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-combobox-aria",
+			"type": "registry:item",
+			"title": "Combobox",
+			"description": "Schema Engine combobox form element. Use multiple for chips-based multi-select.",
+			"registryDependencies": [
+				"andeeplus/schema-engine/schema-engine-form-combobox-primitive-aria",
+				"andeeplus/schema-engine/schema-engine-form-field-group-aria"
+			],
+			"dependencies": ["@schema-engine/forms-react", "@schema-engine/forms", "zod"],
+			"files": [
+				{
+					"path": "overlays/forms/inputs/form-combobox.tsx",
+					"type": "registry:component",
+					"target": "@components/schema-engine/forms/inputs/form-combobox.tsx"
+				},
+				{
+					"path": "../shared/forms/inputs/form-combobox.types.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-combobox.types.ts"
+				},
+				{
+					"path": "../shared/forms/inputs/form-combobox.registration.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-combobox.registration.ts"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-slider-aria",
+			"type": "registry:item",
+			"title": "Slider",
+			"description": "Schema Engine slider form element.",
+			"registryDependencies": ["slider", "andeeplus/schema-engine/schema-engine-form-field-group-aria"],
+			"dependencies": ["@schema-engine/forms-react", "@schema-engine/forms", "zod"],
+			"files": [
+				{
+					"path": "overlays/forms/inputs/form-slider.tsx",
+					"type": "registry:component",
+					"target": "@components/schema-engine/forms/inputs/form-slider.tsx"
+				},
+				{
+					"path": "../shared/forms/inputs/form-slider.types.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-slider.types.ts"
+				},
+				{
+					"path": "../shared/forms/inputs/form-slider.registration.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-slider.registration.ts"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-input-aria",
+			"type": "registry:item",
+			"title": "Input",
+			"description": "Schema Engine input form element.",
+			"registryDependencies": ["input", "andeeplus/schema-engine/schema-engine-form-field-group-aria"],
+			"dependencies": ["@schema-engine/forms-react", "@schema-engine/forms", "zod"],
+			"files": [
+				{
+					"path": "../shared/forms/inputs/form-input.tsx",
+					"type": "registry:component",
+					"target": "@components/schema-engine/forms/inputs/form-input.tsx"
+				},
+				{
+					"path": "../shared/forms/inputs/form-input.types.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-input.types.ts"
+				},
+				{
+					"path": "../shared/forms/inputs/form-input.registration.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/form-input.registration.ts"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-stepper-default-aria",
+			"type": "registry:item",
+			"title": "Default stepper",
+			"description": "Schema Engine default multi-step stepper.",
+			"registryDependencies": ["button", "badge", "andeeplus/schema-engine/schema-engine-form-utils-aria"],
+			"dependencies": ["lucide-react", "@schema-engine/forms-react", "@schema-engine/forms", "zod"],
+			"files": [
+				{
+					"path": "../shared/forms/steppers/default-stepper.tsx",
+					"type": "registry:component",
+					"target": "@components/schema-engine/forms/steppers/default-stepper.tsx"
+				},
+				{
+					"path": "../shared/forms/steppers/default-stepper.types.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/steppers/default-stepper.types.ts"
+				},
+				{
+					"path": "../shared/forms/steppers/default-stepper.registration.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/steppers/default-stepper.registration.ts"
+				}
+			]
+		},
+		{
+			"name": "schema-engine-form-stepper-minimalist-aria",
+			"type": "registry:item",
+			"title": "Minimalist stepper",
+			"description": "Schema Engine minimalist multi-step stepper.",
+			"registryDependencies": ["button", "progress", "andeeplus/schema-engine/schema-engine-form-utils-aria"],
+			"dependencies": ["@schema-engine/forms-react", "@schema-engine/forms", "zod"],
+			"files": [
+				{
+					"path": "../shared/forms/steppers/minimalist-stepper.tsx",
+					"type": "registry:component",
+					"target": "@components/schema-engine/forms/steppers/minimalist-stepper.tsx"
+				},
+				{
+					"path": "../shared/forms/steppers/minimalist-stepper.types.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/steppers/minimalist-stepper.types.ts"
+				},
+				{
+					"path": "../shared/forms/steppers/minimalist-stepper.registration.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/steppers/minimalist-stepper.registration.ts"
+				}
+			]
+		},
+		{
+			"name": "schema-form-aria",
+			"type": "registry:item",
+			"title": "Schema Engine forms (React Aria)",
+			"description": "All React Aria Schema Engine form elements and the generated registration barrel.",
+			"docs": "Import schemaFormRegistrations from @/components/schema-engine/forms/registrations and pass them to createReactFormComposer().addElements(...).",
+			"registryDependencies": [
+				"andeeplus/schema-engine/schema-engine-form-utils-aria",
+				"andeeplus/schema-engine/schema-engine-form-field-group-aria",
+				"andeeplus/schema-engine/schema-engine-form-combobox-primitive-aria",
+				"andeeplus/schema-engine/schema-engine-form-phone-primitive-aria",
+				"andeeplus/schema-engine/schema-engine-form-dropzone-primitive-aria",
+				"andeeplus/schema-engine/schema-engine-form-masked-input-primitive-aria",
+				"andeeplus/schema-engine/schema-engine-form-submission-alert-aria",
+				"andeeplus/schema-engine/schema-engine-form-submit-button-aria",
+				"andeeplus/schema-engine/schema-engine-form-fieldset-aria",
+				"andeeplus/schema-engine/schema-engine-form-array-elements-aria",
+				"andeeplus/schema-engine/schema-engine-form-phone-input-aria",
+				"andeeplus/schema-engine/schema-engine-form-masked-input-aria",
+				"andeeplus/schema-engine/schema-engine-form-textarea-aria",
+				"andeeplus/schema-engine/schema-engine-form-checkbox-aria",
+				"andeeplus/schema-engine/schema-engine-form-input-otp-aria",
+				"andeeplus/schema-engine/schema-engine-form-drop-zone-aria",
+				"andeeplus/schema-engine/schema-engine-form-checkbox-group-aria",
+				"andeeplus/schema-engine/schema-engine-form-number-aria",
+				"andeeplus/schema-engine/schema-engine-form-switch-aria",
+				"andeeplus/schema-engine/schema-engine-form-select-aria",
+				"andeeplus/schema-engine/schema-engine-form-radio-aria",
+				"andeeplus/schema-engine/schema-engine-form-combobox-aria",
+				"andeeplus/schema-engine/schema-engine-form-slider-aria",
+				"andeeplus/schema-engine/schema-engine-form-input-aria"
+			],
+			"dependencies": ["@schema-engine/forms-react", "@schema-engine/forms", "zod"],
+			"files": [
+				{
+					"path": "../shared/forms/registrations.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/registrations.ts"
+				},
+				{
+					"path": "../shared/forms/index.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/index.ts"
+				},
+				{
+					"path": "../shared/forms/inputs/index.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/inputs/index.ts"
+				},
+				{
+					"path": "../shared/forms/actions/index.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/actions/index.ts"
+				},
+				{
+					"path": "../shared/forms/content/index.ts",
+					"type": "registry:lib",
+					"target": "@components/schema-engine/forms/content/index.ts"
+				}
+			]
+		}
+	]
+}

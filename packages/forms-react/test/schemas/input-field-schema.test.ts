@@ -3,12 +3,12 @@
  * Tests for the InputFieldSchema and related type definitions
  */
 
-import { describe, test, expect } from 'bun:test';
+import { describe, test, expect } from 'vitest';
 import {
 	InputFieldSchema,
 	inputFieldExample,
 	type InputFieldConfig,
-} from '@/components/elements/inputs/form-input.types';
+} from '@/components/schema-engine/forms/inputs/form-input.types';
 
 describe('Input Field Schema', () => {
 	test('validates valid input field configuration', () => {

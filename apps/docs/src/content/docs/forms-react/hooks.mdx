@@ -163,13 +163,13 @@ interface UseControlledFormElementReturn {
 }
 ```
 
-## useAdapterControlledFormElement
+## useControlledFormElement
 
 Use the adapter-aware field hook when you want the same field ergonomics without depending directly on React Hook Form internals:
 
 ```tsx
 function CustomField(config: FormEngine.ElementConfig) {
-	const { value, error, onChange, onBlur, fieldProps, labelProps } = useAdapterControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, labelProps } = useControlledFormElement(config);
 
 	return (
 		<div>

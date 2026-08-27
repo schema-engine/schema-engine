@@ -1,6 +1,6 @@
 ---
-title: "Layouts"
-description: "Card, split-screen, and hero-background layouts."
+title: 'Layouts'
+description: 'Card, split-screen, and hero-background layouts.'
 group: Forms React
 order: 4
 ---
@@ -14,12 +14,17 @@ Layouts wrap form content and provide visual structure and styling for form step
 Import from `@schema-engine/forms-react/registrations`:
 
 ```typescript
+import {
+	CardLayoutRegistration,
+	SplitScreenLayoutRegistration,
+	HeroBackgroundLayoutRegistration,
+} from '@schema-engine/forms-react/registrations';
 ```
 
-| Layout | Description |
-|--------|-------------|
-| `card` | Centered card with shadow |
-| `split-screen` | Split layout with content and form |
+| Layout            | Description                        |
+| ----------------- | ---------------------------------- |
+| `card`            | Centered card with shadow          |
+| `split-screen`    | Split layout with content and form |
 | `hero-background` | Full-width background with overlay |
 
 ## How Layouts Work
@@ -60,11 +65,11 @@ const formConfig: FormConfig = {
 }
 ```
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `maxWidth` | `'sm' \| 'md' \| 'lg' \| 'xl'` | Maximum width of the card |
-| `padding` | `'none' \| 'sm' \| 'md' \| 'lg'` | Internal padding |
-| `shadowSize` | `'none' \| 'sm' \| 'md' \| 'lg'` | Shadow depth |
+| Property     | Type                             | Description               |
+| ------------ | -------------------------------- | ------------------------- |
+| `maxWidth`   | `'sm' \| 'md' \| 'lg' \| 'xl'`   | Maximum width of the card |
+| `padding`    | `'none' \| 'sm' \| 'md' \| 'lg'` | Internal padding          |
+| `shadowSize` | `'none' \| 'sm' \| 'md' \| 'lg'` | Shadow depth              |
 
 ### Split-Screen Layout
 
@@ -116,9 +121,7 @@ export function MyLayout({ children }: { children: React.ReactNode }) {
 				{step.description && <p>{step.description}</p>}
 			</header>
 			<main>{children}</main>
-			{config.footerText && (
-				<footer>{config.footerText}</footer>
-			)}
+			{config.footerText && <footer>{config.footerText}</footer>}
 		</div>
 	);
 }
@@ -147,9 +150,7 @@ export const MyLayoutRegistration: LayoutRegistration = {
 ### Step 3: Register with Engine
 
 ```typescript
-const engine = createReactFormComposer()
-	.addLayout(MyLayoutRegistration)
-	.build();
+const engine = createReactFormComposer().addLayout(MyLayoutRegistration).build();
 ```
 
 ### Step 4: Use in Form Config
@@ -181,14 +182,14 @@ interface LayoutContextValue {
 		id: string;
 		title?: string;
 		description?: string;
-		index?: number;  // Step index (undefined for single-step forms)
-		total?: number;  // Total steps (undefined for single-step forms)
+		index?: number; // Step index (undefined for single-step forms)
+		total?: number; // Total steps (undefined for single-step forms)
 	};
 	form: {
 		id: string;
 		title?: string;
 		description?: string;
 	};
-	config: TConfig;  // Your layout's typed config
+	config: TConfig; // Your layout's typed config
 }
 ```
