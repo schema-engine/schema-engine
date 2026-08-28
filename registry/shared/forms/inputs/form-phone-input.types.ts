@@ -1,9 +1,8 @@
 import { z } from 'zod';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
-import type { Country } from 'react-phone-number-input';
 
 export const PhoneInputFieldExtensionSchema = z.object({
-	defaultCountry: z.custom<Country>().optional(),
+	defaultCountry: z.string().optional(),
 	international: z.boolean().optional(),
 });
 
@@ -25,7 +24,7 @@ export const phoneInputFieldExample: PhoneInputFieldConfig = {
 	name: 'phoneNumber',
 	label: 'Phone Number',
 	description: 'Enter your phone number with country code',
-	defaultCountry: 'US' as Country,
+	defaultCountry: 'US',
 	international: true,
 	placeholder: 'Enter phone number',
 };
