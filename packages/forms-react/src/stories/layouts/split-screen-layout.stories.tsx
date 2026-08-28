@@ -46,7 +46,8 @@ export const Default: Story = {
 					...baseForm.steps[0],
 					layout: {
 						$type: 'split-screen',
-						sideContent: 'Welcome to our platform! Fill out the form to get started.',
+						sideContent:
+							'Welcome back! Sign in to access your account, manage your profile, and pick up where you left off.',
 					},
 				},
 			],

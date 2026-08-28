@@ -13,7 +13,7 @@ const sideVariants = cva('split-screen-layout__side', {
 		},
 		placement: {
 			left: '',
-			right: 'md:order-last',
+			right: 'split-screen-layout__side--right',
 		},
 	},
 	defaultVariants: {
@@ -42,25 +42,17 @@ const mainVariants = cva('split-screen-layout__main', {
  * Loads configuration from global context
  */
 export const SplitScreenLayout: React.FC<SplitScreenLayoutProps> = ({ children, className }) => {
-	const { step, form, config } = useLayoutContext<SplitScreenLayoutConfig>();
+	const { config } = useLayoutContext<SplitScreenLayoutConfig>();
 
 	const { sideContent, sidePlacement = 'left', sideWidth = 'normal', contentAlignment = 'center' } = config;
 
-	const title = step?.title || form.title;
-	const description = step?.description || form.description;
-
 	return (
 		<div className={cn('split-screen-layout', className)}>
-			<div className={sideVariants({ width: sideWidth, placement: sidePlacement })}>
-				{typeof step.index === 'number' && typeof step.total === 'number' ? (
-					<h2 className="split-screen-layout__step-counter">
-						Step {step.index + 1} of {step.total}
-					</h2>
-				) : null}
-				{title ? <h3 className="split-screen-layout__step-title">{title}</h3> : null}
-				{description ? <p className="split-screen-layout__step-description">{description}</p> : null}
-				<div className="split-screen-layout__side-content">{sideContent}</div>
-			</div>
+			{sideContent ? (
+				<div className={sideVariants({ width: sideWidth, placement: sidePlacement })}>
+					<div className="split-screen-layout__side-content">{sideContent}</div>
+				</div>
+			) : null}
 			<div className={mainVariants({ alignment: contentAlignment })}>{children}</div>
 		</div>
 	);
