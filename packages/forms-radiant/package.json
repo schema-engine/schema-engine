@@ -1,0 +1,110 @@
+{
+	"name": "@schema-engine/forms-radiant",
+	"type": "module",
+	"version": "0.1.0",
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	},
+	"sideEffects": [
+		"**/*.css"
+	],
+	"main": "dist/index.js",
+	"module": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"files": [
+		"/dist/*"
+	],
+	"scripts": {
+		"build:lib": "pnpm clean && pnpm build:files && pnpm build:types",
+		"build:files": "node ./build.ts",
+		"build:types": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
+		"watch:lib": "node ./build.ts --watch",
+		"clean": "rm -rf ./dist",
+		"test:all": "vitest run",
+		"storybook": "storybook dev -p 6007 --no-open",
+		"build-storybook": "storybook build -o ./storybook-static",
+		"check-types": "tsc --noEmit",
+		"test:storybook": "vitest run --project storybook"
+	},
+	"peerDependencies": {
+		"@ecopages/jsx": ">=0.3.0-rc.3",
+		"@ecopages/radiant": ">=0.3.0-rc.3",
+		"@ecopages/radiant-ui": ">=0.1.0-rc.7",
+		"@ecopages/signals": ">=0.3.0-rc.3",
+		"@schema-engine/forms": "workspace:*",
+		"typescript": "^5",
+		"zod": "^4.0.17"
+	},
+	"devDependencies": {
+		"@babel/core": "^7.28.0",
+		"@babel/plugin-proposal-decorators": "^7.28.0",
+		"@babel/plugin-syntax-typescript": "^7.28.0",
+		"@babel/plugin-transform-class-properties": "^7.28.0",
+		"@ecopages/jsx": "0.3.0-rc.3",
+		"@ecopages/radiant": "0.3.0-rc.3",
+		"@ecopages/radiant-ui": "0.1.0-rc.7",
+		"@ecopages/signals": "0.3.0-rc.3",
+		"@ecopages/storybook-radiant-vite": "0.1.0-rc.0",
+		"@ecopages/vite-plugin-radiant": "0.1.0-rc.0",
+		"@rolldown/plugin-babel": "^0.2.1",
+		"@schema-engine/forms": "workspace:*",
+		"@storybook/addon-a11y": "^10.5.10",
+		"@storybook/addon-docs": "^10.1.8",
+		"@storybook/addon-vitest": "^10.1.8",
+		"@testing-library/dom": "^10.4.1",
+		"@testing-library/jest-dom": "^6.9.1",
+		"@testing-library/user-event": "^14.6.6",
+		"@vitest/browser": "^4.0.13",
+		"@vitest/browser-playwright": "^4.0.13",
+		"esbuild": "^0.27.0",
+		"nitro": "^3.0.260311-beta",
+		"playwright": "^1.61.1",
+		"storybook": "^10.1.8",
+		"tsc-alias": "^1.8.16",
+		"typescript": "catalog:",
+		"vite": "^8.0.0",
+		"vitest": "^4.0.13",
+		"zod": "^4.0.17"
+	},
+	"dependencies": {
+		"@ecopages/logger": "^0.2.2"
+	},
+	"exports": {
+		"./package.json": {
+			"import": "./package.json"
+		},
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./primitives": {
+			"types": "./dist/primitives.d.ts",
+			"import": "./dist/primitives.js"
+		},
+		"./registrations": {
+			"types": "./dist/registrations/index.d.ts",
+			"import": "./dist/registrations/index.js"
+		},
+		"./adapters": {
+			"types": "./dist/adapters/index.d.ts",
+			"import": "./dist/adapters/index.js"
+		},
+		"./adapters/radiant": {
+			"types": "./dist/adapters/radiant/index.d.ts",
+			"import": "./dist/adapters/radiant/index.js"
+		},
+		"./registries/builder-registry": {
+			"types": "./dist/registries/builder-registry.d.ts",
+			"import": "./dist/registries/builder-registry.js"
+		},
+		"./hooks": {
+			"types": "./dist/hooks/index.d.ts",
+			"import": "./dist/hooks/index.js"
+		},
+		"./contexts": {
+			"types": "./dist/contexts/index.d.ts",
+			"import": "./dist/contexts/index.js"
+		}
+	}
+}

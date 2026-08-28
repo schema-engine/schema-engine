@@ -1,0 +1,131 @@
+se-form-engine-provider,
+se-form-renderer,
+se-form-instance,
+se-multi-step-form,
+se-layout-provider,
+se-stepper-provider,
+se-layout-renderer,
+se-stepper-renderer,
+se-card-layout,
+se-hero-background-layout,
+se-minimalist-stepper,
+se-form-array,
+se-drop-zone,
+se-input-otp,
+se-submission-alert {
+	display: block;
+}
+
+se-form-element {
+	display: contents;
+}
+
+se-split-screen-layout,
+se-default-stepper {
+	display: block;
+	width: 100%;
+	min-height: 100%;
+}
+
+se-split-screen-layout > .split-screen-layout,
+se-default-stepper > .default-stepper {
+	width: 100%;
+	min-height: 100%;
+}
+
+se-form-renderer,
+.se-form-renderer,
+.se-form-elements,
+rui-form,
+form.rui-form {
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+}
+
+.se-form-story--full se-form-renderer,
+.se-form-story--full se-form-instance,
+.se-form-story--full se-multi-step-form,
+.se-form-story--full se-layout-provider,
+.se-form-story--full se-split-screen-layout,
+.se-form-story--full se-hero-background-layout,
+.se-form-story--full se-card-layout {
+	height: 100%;
+	min-height: 100%;
+}
+
+form.rui-form:has(> .se-form-elements) {
+	gap: 0;
+}
+
+form.rui-form:has(.card-layout),
+form.rui-form:has(se-card-layout),
+form.rui-form:has(.hero-background-layout),
+form.rui-form:has(se-hero-background-layout),
+form.rui-form:has(.split-screen-layout),
+form.rui-form:has(se-split-screen-layout) {
+	align-items: stretch;
+}
+
+.se-form-elements {
+	align-items: stretch;
+	align-content: start;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
+}
+
+/* UA margins on <p> stack with .rui-field flex gap and inflate error spacing. */
+.rui-field__error,
+.rui-field__description {
+	margin: 0;
+}
+
+.se-form-elements > * {
+	min-width: 0;
+}
+
+.se-headless-stepper {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-block-lg, 1.5rem);
+	min-height: 0;
+	width: 100%;
+}
+
+.se-headless-stepper__content {
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
+.se-headless-stepper__controls {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
+.se-headless-stepper__actions {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.se-headless-stepper__button {
+	padding: 0.5rem 1rem;
+	border: 1px solid var(--border, currentColor);
+	border-radius: var(--radius-control, 0.5rem);
+	background: transparent;
+	cursor: pointer;
+}
+
+.se-headless-stepper__button--primary {
+	background: var(--primary, currentColor);
+	color: var(--on-primary, #fff);
+	border-color: transparent;
+}
+
+.se-headless-stepper__button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}

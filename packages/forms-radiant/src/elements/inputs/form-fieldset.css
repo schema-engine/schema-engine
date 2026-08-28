@@ -1,0 +1,25 @@
+.se-fieldset {
+	display: grid;
+	gap: 1rem;
+	margin: 0;
+	padding: var(--space-block, 1rem);
+	border: 1px solid var(--border, currentColor);
+	border-radius: var(--radius-control, 0.5rem);
+	min-inline-size: 0;
+}
+
+.se-fieldset__legend {
+	padding-inline: 0.25rem;
+	font-weight: 600;
+}
+
+.se-fieldset__description {
+	margin: 0;
+	font-size: 0.875rem;
+	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
+}
+
+.se-fieldset__fields {
+	display: grid;
+	gap: 1rem;
+}

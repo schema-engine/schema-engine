@@ -1,0 +1,67 @@
+.minimalist-stepper {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-block-lg, 1.5rem);
+	width: 100%;
+	min-height: 0;
+}
+
+.minimalist-stepper__content {
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
+.minimalist-stepper__progress {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.minimalist-stepper__progress-labels {
+	display: flex;
+	justify-content: space-between;
+	font-size: 0.875rem;
+}
+
+.minimalist-stepper__progress-bar {
+	height: 0.5rem;
+	overflow: hidden;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--on-surface, #000) 10%, transparent);
+}
+
+.minimalist-stepper__progress-fill {
+	height: 100%;
+	background: var(--primary, currentColor);
+}
+
+.minimalist-stepper__header {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.minimalist-stepper__counter {
+	margin: 0;
+	font-size: 0.875rem;
+	color: var(--on-surface-muted, color-mix(in srgb, currentColor 70%, transparent));
+}
+
+.minimalist-stepper__title {
+	margin: 0;
+	font-size: 1.25rem;
+	font-weight: 600;
+}
+
+.minimalist-stepper__description {
+	margin: 0;
+	font-size: 0.875rem;
+	color: var(--on-surface-muted, color-mix(in srgb, currentColor 70%, transparent));
+}
+
+.minimalist-stepper__navigation {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+}

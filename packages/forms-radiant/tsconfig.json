@@ -1,0 +1,32 @@
+{
+	"compilerOptions": {
+		"lib": ["ESNext", "DOM", "DOM.Iterable"],
+		"types": ["vitest/globals", "vite/client"],
+		"target": "ESNext",
+		"module": "ESNext",
+		"moduleDetection": "force",
+		"jsx": "react-jsx",
+		"jsxImportSource": "@ecopages/jsx",
+		"experimentalDecorators": false,
+		"useDefineForClassFields": true,
+		"allowJs": true,
+		"moduleResolution": "bundler",
+		"allowImportingTsExtensions": true,
+		"verbatimModuleSyntax": true,
+		"noEmit": true,
+		"strict": true,
+		"skipLibCheck": true,
+		"noFallthroughCasesInSwitch": true,
+		"noUnusedLocals": false,
+		"noUnusedParameters": false,
+		"noPropertyAccessFromIndexSignature": false,
+		"paths": {
+			"@schema-engine/forms-radiant": ["./src/index.ts"],
+			"@schema-engine/forms-radiant/*": ["./src/*"],
+			"@/registry/forms/*": ["../../registry/shared/forms/*"],
+			"@/*": ["./src/*"]
+		}
+	},
+	"include": ["src", ".storybook/**/*"],
+	"exclude": ["dist", "node_modules"]
+}

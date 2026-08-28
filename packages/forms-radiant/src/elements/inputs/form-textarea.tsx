@@ -1,0 +1,43 @@
+import '@ecopages/radiant-ui/textarea/styles.css';
+import { RuiTextarea } from '@ecopages/radiant-ui/textarea';
+import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { FieldGroup } from '../field-group';
+import { getFieldGridStyles } from '@/hooks/grid-styles';
+import { toFieldRules } from '@/lib/field-rules';
+import type { TextareaFieldProps } from '@/registry/forms/inputs/form-textarea.types';
+
+export function FormTextarea({
+	onChange: propsOnChange,
+	onBlur: propsOnBlur,
+	onFocus: propsOnFocus,
+	...config
+}: TextareaFieldProps) {
+	return (
+		<FieldGroup
+			name={config.name}
+			label={config.label || config.name}
+			htmlFor={config.id}
+			hiddenLabel={!config.label}
+			required={isFieldRequired(config.rules)}
+			description={config.description}
+			style={{ ...getFieldGridStyles(config.grid), ...config.style }}
+			rules={toFieldRules(config.rules)}
+			defaultValue={config.defaultValue}
+			disabled={config.disabled}
+		>
+			<RuiTextarea
+				id={config.id}
+				name={config.name}
+				placeholder={config.placeholder}
+				rows={config.rows}
+				disabled={config.disabled}
+				on:input={(event: Event) => {
+					const target = event.target as HTMLTextAreaElement;
+					propsOnChange?.(target.value);
+				}}
+				on:blur={propsOnBlur}
+				on:focus={propsOnFocus}
+			/>
+		</FieldGroup>
+	);
+}

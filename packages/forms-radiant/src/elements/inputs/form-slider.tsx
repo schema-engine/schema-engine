@@ -1,0 +1,45 @@
+import '@ecopages/radiant-ui/slider/styles.css';
+import { RuiSlider } from '@ecopages/radiant-ui/slider';
+import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { FieldGroup } from '../field-group';
+import { getFieldGridStyles } from '@/hooks/grid-styles';
+import { toFieldRules } from '@/lib/field-rules';
+import type { SliderFieldProps } from '@/registry/forms/inputs/form-slider.types';
+
+export function FormSlider({
+	onChange: propsOnChange,
+	onBlur: propsOnBlur,
+	onFocus: propsOnFocus,
+	...config
+}: SliderFieldProps) {
+	return (
+		<FieldGroup
+			name={config.name}
+			label={config.label || config.name}
+			htmlFor={config.id}
+			hiddenLabel={!config.label}
+			required={isFieldRequired(config.rules)}
+			description={config.description}
+			style={{ ...getFieldGridStyles(config.grid), ...config.style }}
+			rules={toFieldRules(config.rules)}
+			defaultValue={config.defaultValue}
+			disabled={config.disabled}
+		>
+			<RuiSlider
+				name={config.name}
+				min={config.min ?? 0}
+				max={config.max ?? 100}
+				step={config.step ?? 1}
+				orientation={config.orientation}
+				disabled={config.disabled}
+				showValue
+				on:change={(event: Event) => {
+					const detail = (event as CustomEvent<{ value?: number }>).detail;
+					propsOnChange?.(detail?.value ?? 0);
+				}}
+				on:blur={propsOnBlur}
+				on:focus={propsOnFocus}
+			/>
+		</FieldGroup>
+	);
+}
