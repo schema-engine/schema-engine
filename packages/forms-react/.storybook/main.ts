@@ -37,11 +37,12 @@ const config: StorybookConfig = {
 				dedupe: ['react', 'react-dom', 'react-hook-form'],
 				alias: [
 					{
-						find: '@/components/ui/schema-engine',
-						replacement: resolve(
-							__dirname,
-							'../../../registry/base-ui/schema-engine-form/components/ui/schema-engine',
-						),
+						find: '@/components/ui/schema-engine/components/combobox',
+						replacement: resolve(__dirname, '../../../registry/base-ui/primitives/combobox.tsx'),
+					},
+					{
+						find: '@/components/ui/schema-engine/components',
+						replacement: resolve(__dirname, '../../../registry/shared/primitives'),
 					},
 					{
 						find: '@/components/schema-engine/forms',
@@ -49,7 +50,7 @@ const config: StorybookConfig = {
 					},
 					{
 						find: '@/components/ui',
-						replacement: resolve(__dirname, '../../../apps/www/src/components/ui'),
+						replacement: resolve(__dirname, './ui'),
 					},
 					{ find: '@schema-engine/forms-react', replacement: resolve(__dirname, '../src') },
 					{ find: /^@schema-engine\/forms-react\/(.*)$/, replacement: `${resolve(__dirname, '../src')}/$1` },

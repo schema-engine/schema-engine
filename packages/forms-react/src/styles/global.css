@@ -5,6 +5,7 @@
    only auto-scans this package, so those class names must be sourced. */
 @source "../../../../registry/shared";
 @source "../../../../registry/base-ui";
+@source "../../.storybook/ui";
 
 @custom-variant dark (&:is(.dark *));
 
