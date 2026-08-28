@@ -27,25 +27,10 @@ const HeadlessStepper: React.FC<{ children?: React.ReactNode }> = ({ children })
 	const { steps, currentStepIndex, navigation, form } = useStepperContext();
 
 	return (
-		<div className="flex flex-col gap-6">
-			<nav aria-label="Form steps" className="flex flex-wrap gap-2">
-				{steps.map((step, index) => (
-					<button
-						key={step.id}
-						type="button"
-						onClick={() => navigation.goToStep(index)}
-						disabled={!step.isVisited && index > currentStepIndex}
-						aria-current={step.isActive ? 'step' : undefined}
-						className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
-					>
-						{step.title ?? `Step ${index + 1}`}
-					</button>
-				))}
-			</nav>
+		<div className="flex min-h-0 w-full flex-col gap-6">
+			<div className="min-h-0 flex-1">{children}</div>
 
-			{children}
-
-			<div className="flex items-center justify-between gap-4">
+			<div className="mt-auto flex shrink-0 items-center justify-between gap-4 pt-6">
 				<button
 					type="button"
 					onClick={navigation.goToPreviousStep}

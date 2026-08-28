@@ -35,7 +35,6 @@ function FormElementsRenderer({ config }: { config: FormConfig }) {
  * Note: We don't pass stepMeta for single-step forms since step navigation is meaningless
  */
 function SingleStepFormElementsRenderer({ config }: { config: FormConfig }) {
-	const gridStyles = useFormGridStyles(config.grid);
 	const singleStep = config.steps[0];
 
 	if (!singleStep?.elements) return null;
@@ -50,27 +49,12 @@ function SingleStepFormElementsRenderer({ config }: { config: FormConfig }) {
 					description: config.description,
 				}}
 			>
-				<div style={gridStyles}>
-					{singleStep.elements.map((field, index) => (
-						<FormElement
-							key={`field-${index}`}
-							config={field}
-							className={field.className}
-							style={field.style}
-						/>
-					))}
-				</div>
+				<StepFields step={singleStep} config={config} />
 			</LayoutRenderer>
 		);
 	}
 
-	return (
-		<div style={gridStyles}>
-			{singleStep.elements.map((field, index) => (
-				<FormElement key={`field-${index}`} config={field} className={field.className} style={field.style} />
-			))}
-		</div>
-	);
+	return <StepFields step={singleStep} config={config} />;
 }
 
 function createInitialStepStates(config: FormConfig) {
@@ -81,14 +65,36 @@ function createInitialStepStates(config: FormConfig) {
 	};
 }
 
+function StepFields({ step, config }: { step: FormStep; config: FormConfig }) {
+	const gridStyles = useFormGridStyles(config.grid);
+
+	if (!step?.elements) return null;
+
+	return (
+		<div style={gridStyles}>
+			{step.elements.map((field, index) => (
+				<FormElement
+					key={field.id ?? `field-${index}`}
+					config={field}
+					className={field.className}
+					style={field.style}
+				/>
+			))}
+		</div>
+	);
+}
+
 /**
  * Internal component for multi-step form rendering
  */
 function MultiStepFormElementsRenderer({ config }: { config: FormConfig }) {
 	const { formState } = useFormContext();
 	const { stepStates, currentStep, navigation } = useFormInstanceActions();
+	const step = config.steps[currentStep];
 
-	return (
+	if (!step) return null;
+
+	const stepper = (
 		<StepperRenderer
 			form={config}
 			steps={config.steps}
@@ -97,25 +103,16 @@ function MultiStepFormElementsRenderer({ config }: { config: FormConfig }) {
 			navigation={navigation}
 			isSubmitting={formState.isSubmitting}
 		>
-			<StepContent step={config.steps[currentStep]} config={config} />
+			<StepFields step={step} config={config} />
 		</StepperRenderer>
 	);
-}
-
-/**
- * Component that renders the current step's content
- */
-function StepContent({ step, config }: { step: FormStep; config: FormConfig }) {
-	const gridStyles = useFormGridStyles(config.grid);
-
-	if (!step?.elements) return null;
 
 	if (step.layout && '$type' in step.layout) {
 		return (
 			<LayoutRenderer
 				step={step}
 				stepMeta={{
-					index: config.steps.indexOf(step),
+					index: currentStep,
 					total: config.steps.length,
 				}}
 				formMeta={{
@@ -124,24 +121,12 @@ function StepContent({ step, config }: { step: FormStep; config: FormConfig }) {
 					description: config.description,
 				}}
 			>
-				<div style={gridStyles}>
-					{step.elements.map((field) => (
-						<FormElement key={field.id} config={field} className={field.className} style={field.style} />
-					))}
-				</div>
+				{stepper}
 			</LayoutRenderer>
 		);
 	}
 
-	return (
-		<div className="mt-8">
-			<div style={gridStyles}>
-				{step.elements.map((field) => (
-					<FormElement key={field.id} config={field} className={field.className} style={field.style} />
-				))}
-			</div>
-		</div>
-	);
+	return stepper;
 }
 
 /**
@@ -187,7 +172,7 @@ function FormRendererInner({
 			onChange={onChange}
 			onAction={onAction}
 		>
-			<div className={`space-y-6 ${className}`} style={style}>
+			<div className={`w-full min-h-full ${className}`.trim()} style={style}>
 				<FormElementsRenderer config={config} />
 			</div>
 			{children}
