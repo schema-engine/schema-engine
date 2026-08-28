@@ -1,4 +1,4 @@
-import { FieldGroup } from '@/components/schema-engine/forms/field-group';
+import { FieldGroup } from '@/components/ui/schema-engine/components/field';
 import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
 import { Slider } from '@/components/ui/slider';
 import type { SliderFieldProps } from './form-slider.types';

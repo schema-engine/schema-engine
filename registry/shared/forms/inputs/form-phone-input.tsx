@@ -1,5 +1,5 @@
 import { PhoneInput } from '@/components/ui/schema-engine/components/phone-input';
-import { FieldGroup } from '@/components/schema-engine/forms/field-group';
+import { FieldGroup } from '@/components/ui/schema-engine/components/field';
 import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
 import type { PhoneInputFieldProps } from './form-phone-input.types';
 

@@ -9,7 +9,7 @@ const SHARED_FORMS_ROOT = 'registry/shared/forms';
 const SHARED_PRIMITIVES_ROOT = 'registry/shared/primitives';
 
 type BaseId = 'base-ui' | 'radix' | 'aria';
-type PrimitiveName = 'combobox' | 'phone-input' | 'drop-zone' | 'masked-input';
+type PrimitiveName = 'field' | 'combobox' | 'phone-input' | 'drop-zone' | 'masked-input';
 type ItemType = 'registry:lib' | 'registry:ui' | 'registry:item' | 'registry:component';
 
 interface CatalogFile {
@@ -55,9 +55,9 @@ interface Base {
 
 /** Same-repo item stems. Resolved to `owner/repo/<stem><suffix>` per base. */
 const UTILS = 'schema-engine-form-utils';
-const FIELD_GROUP = 'schema-engine-form-field-group';
 
 const PRIMITIVE_ITEM: Record<PrimitiveName, string> = {
+	field: 'schema-engine-form-field-primitive',
 	combobox: 'schema-engine-form-combobox-primitive',
 	'phone-input': 'schema-engine-form-phone-primitive',
 	'drop-zone': 'schema-engine-form-dropzone-primitive',
@@ -72,6 +72,12 @@ interface PrimitiveSpec {
 }
 
 const PRIMITIVES: Record<PrimitiveName, PrimitiveSpec> = {
+	field: {
+		title: 'Schema Engine field',
+		description: 'Label, description, and error chrome for Schema Engine fields.',
+		registryDependencies: ['label'],
+		dependencies: [],
+	},
 	combobox: {
 		title: 'Schema Engine combobox',
 		description: 'Chips-capable combobox primitive used by FormCombobox.',
@@ -191,20 +197,20 @@ const ELEMENTS: ElementSpec[] = [
 		stem: 'inputs/form-fieldset',
 		title: 'Fieldset',
 		ident: 'FieldSetRegistration',
-		registryDependencies: [FIELD_GROUP],
+		registryDependencies: [PRIMITIVE_ITEM.field],
 	},
 	{
 		stem: 'inputs/form-array-elements',
 		title: 'Array elements',
 		ident: 'ArrayElementRegistration',
-		registryDependencies: ['button', UTILS, FIELD_GROUP],
+		registryDependencies: ['button', UTILS, PRIMITIVE_ITEM.field],
 		dependencies: ['lucide-react'],
 	},
 	{
 		stem: 'inputs/form-phone-input',
 		title: 'Phone input',
 		ident: 'PhoneInputElementRegistration',
-		registryDependencies: [PRIMITIVE_ITEM['phone-input'], FIELD_GROUP],
+		registryDependencies: [PRIMITIVE_ITEM['phone-input'], PRIMITIVE_ITEM.field],
 		dependencies: ['react-phone-number-input'],
 	},
 	{
@@ -212,82 +218,82 @@ const ELEMENTS: ElementSpec[] = [
 		title: 'Masked input',
 		description: 'Schema Engine masked-input form element for IBAN, cards, and other patterned values.',
 		ident: 'MaskedInputElementRegistration',
-		registryDependencies: [PRIMITIVE_ITEM['masked-input'], FIELD_GROUP],
+		registryDependencies: [PRIMITIVE_ITEM['masked-input'], PRIMITIVE_ITEM.field],
 	},
 	{
 		stem: 'inputs/form-textarea',
 		title: 'Textarea',
 		ident: 'TextareaElementRegistration',
-		registryDependencies: ['textarea', FIELD_GROUP],
+		registryDependencies: ['textarea', PRIMITIVE_ITEM.field],
 	},
 	{
 		stem: 'inputs/form-checkbox',
 		title: 'Checkbox',
 		ident: 'CheckboxElementRegistration',
-		registryDependencies: ['checkbox', FIELD_GROUP],
+		registryDependencies: ['checkbox', PRIMITIVE_ITEM.field],
 	},
 	{
 		stem: 'inputs/form-input-otp',
 		title: 'Input OTP',
 		ident: 'InputOTPElementRegistration',
-		registryDependencies: ['input-otp', FIELD_GROUP],
+		registryDependencies: ['input-otp', PRIMITIVE_ITEM.field],
 	},
 	{
 		stem: 'inputs/form-drop-zone',
 		title: 'Drop zone',
 		ident: 'DropZoneElementRegistration',
-		registryDependencies: [PRIMITIVE_ITEM['drop-zone'], FIELD_GROUP],
+		registryDependencies: [PRIMITIVE_ITEM['drop-zone'], PRIMITIVE_ITEM.field],
 	},
 	{
 		stem: 'inputs/form-checkbox-group',
 		title: 'Checkbox group',
 		ident: 'CheckboxGroupElementRegistration',
-		registryDependencies: ['label', 'checkbox', FIELD_GROUP],
+		registryDependencies: ['label', 'checkbox', PRIMITIVE_ITEM.field],
 	},
 	{
 		stem: 'inputs/form-number',
 		title: 'Number',
 		ident: 'NumberElementRegistration',
-		registryDependencies: ['input', FIELD_GROUP],
+		registryDependencies: ['input', PRIMITIVE_ITEM.field],
 	},
 	{
 		stem: 'inputs/form-switch',
 		title: 'Switch',
 		ident: 'SwitchElementRegistration',
-		registryDependencies: ['switch', FIELD_GROUP],
+		registryDependencies: ['switch', PRIMITIVE_ITEM.field],
 	},
 	{
 		stem: 'inputs/form-select',
 		title: 'Select',
 		description: 'Schema Engine select form element. Supports multiple selection with chips.',
 		ident: 'SelectElementRegistration',
-		registryDependencies: ['select', FIELD_GROUP],
+		registryDependencies: ['select', PRIMITIVE_ITEM.field],
 		dependencies: ['lucide-react'],
 	},
 	{
 		stem: 'inputs/form-radio',
 		title: 'Radio',
 		ident: 'RadioElementRegistration',
-		registryDependencies: ['label', 'radio-group', FIELD_GROUP],
+		registryDependencies: ['label', 'radio-group', PRIMITIVE_ITEM.field],
 	},
 	{
 		stem: 'inputs/form-combobox',
 		title: 'Combobox',
 		description: 'Schema Engine combobox form element. Use multiple for chips-based multi-select.',
 		ident: 'ComboboxElementRegistration',
-		registryDependencies: [PRIMITIVE_ITEM.combobox, FIELD_GROUP],
+		registryDependencies: [PRIMITIVE_ITEM.combobox, PRIMITIVE_ITEM.field],
 	},
 	{
 		stem: 'inputs/form-slider',
 		title: 'Slider',
 		ident: 'SliderElementRegistration',
-		registryDependencies: ['slider', FIELD_GROUP],
+		registryDependencies: ['slider', PRIMITIVE_ITEM.field],
 	},
 	{
 		stem: 'inputs/form-input',
 		title: 'Input',
 		ident: 'InputElementRegistration',
-		registryDependencies: ['input', FIELD_GROUP],
+		registryDependencies: ['input', PRIMITIVE_ITEM.field],
 	},
 	{
 		stem: 'steppers/default-stepper',
@@ -410,15 +416,6 @@ function buildItems(base: Base): CatalogItem[] {
 			dependencies: ['clsx', 'tailwind-merge'],
 			files: [formFile(base, 'lib/utils.ts')],
 		},
-		{
-			name: itemName(base, FIELD_GROUP),
-			type: 'registry:item',
-			title: 'Field group',
-			description: 'Label, description, and error chrome for Schema Engine fields.',
-			registryDependencies: ['label', resolveDep(base, UTILS)],
-			dependencies: [],
-			files: [formFile(base, 'field-group.tsx')],
-		},
 		...(Object.keys(PRIMITIVES) as PrimitiveName[]).map((name) => buildPrimitiveItem(base, name)),
 		...ELEMENTS.map((spec) => buildElementItem(base, spec)),
 	];
@@ -462,11 +459,11 @@ function collectImports(source: string): string[] {
 
 /** Import specifier prefix -> same-repo registry item stem. */
 const REGISTRY_DEP_BY_IMPORT: Array<[string, string]> = [
+	['@/components/ui/schema-engine/components/field', PRIMITIVE_ITEM.field],
 	['@/components/ui/schema-engine/components/phone-input', PRIMITIVE_ITEM['phone-input']],
 	['@/components/ui/schema-engine/components/drop-zone', PRIMITIVE_ITEM['drop-zone']],
 	['@/components/ui/schema-engine/components/combobox', PRIMITIVE_ITEM.combobox],
 	['@/components/ui/schema-engine/components/masked-input', PRIMITIVE_ITEM['masked-input']],
-	['@/components/schema-engine/forms/field-group', FIELD_GROUP],
 	['@/components/schema-engine/forms/lib/utils', UTILS],
 ];
 

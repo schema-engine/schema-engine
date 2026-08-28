@@ -1,5 +1,5 @@
 import { Textarea } from '@/components/ui/textarea';
-import { FieldGroup } from '@/components/schema-engine/forms/field-group';
+import { FieldGroup } from '@/components/ui/schema-engine/components/field';
 import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
 import type { TextareaFieldProps } from './form-textarea.types';
 

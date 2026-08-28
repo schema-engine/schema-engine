@@ -4,7 +4,7 @@ import {
 	FieldInputContainer,
 	FieldContent,
 	FieldHint,
-} from '@/components/schema-engine/forms/field-group';
+} from '@/components/ui/schema-engine/components/field';
 import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';

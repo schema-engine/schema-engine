@@ -5,7 +5,7 @@ import {
 	FieldInputContainer,
 	FieldContent,
 	FieldHint,
-} from '@/components/schema-engine/forms/field-group';
+} from '@/components/ui/schema-engine/components/field';
 import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
 import type { CheckboxFieldProps } from '@/components/schema-engine/forms/inputs/form-checkbox.types';
 

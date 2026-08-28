@@ -10,3 +10,6 @@ package-lock.json
 yarn.lock
 pnpm-lock.yaml
 bun.lockb
+registry.json
+registry/*/registry.json
+registry/shared/forms/registrations.ts

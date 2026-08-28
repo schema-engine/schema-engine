@@ -1,4 +1,4 @@
-import { FieldGroup } from '@/components/schema-engine/forms/field-group';
+import { FieldGroup } from '@/components/ui/schema-engine/components/field';
 import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@/components/ui/input-otp';
 import type { InputOTPFieldProps } from './form-input-otp.types';

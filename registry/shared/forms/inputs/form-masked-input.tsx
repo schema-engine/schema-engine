@@ -1,5 +1,5 @@
 import { MaskedInput } from '@/components/ui/schema-engine/components/masked-input';
-import { FieldGroup } from '@/components/schema-engine/forms/field-group';
+import { FieldGroup } from '@/components/ui/schema-engine/components/field';
 import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
 import { useFormContext } from '@schema-engine/forms-react/adapters';
 import type { MaskedInputFieldProps } from './form-masked-input.types';

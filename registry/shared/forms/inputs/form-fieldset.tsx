@@ -1,5 +1,5 @@
 import { FormElement } from '@schema-engine/forms-react/primitives';
-import { FieldSet } from '@/components/schema-engine/forms/field-group';
+import { FieldSet } from '@/components/ui/schema-engine/components/field';
 import type { FieldSetProps as FieldSetConfigProps } from './form-fieldset.types';
 
 /**

@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Trash2, Plus } from 'lucide-react';
-import { FieldGroup } from '@/components/schema-engine/forms/field-group';
+import { FieldGroup } from '@/components/ui/schema-engine/components/field';
 import { useControlledFormElement } from '@schema-engine/forms-react/hooks';
 import { useFieldArray } from '@schema-engine/forms-react/adapters';
 import { FormElement } from '@schema-engine/forms-react/primitives';

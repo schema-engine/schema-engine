@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Check, X } from 'lucide-react';
-import { FieldGroup } from '@/components/schema-engine/forms/field-group';
+import { FieldGroup } from '@/components/ui/schema-engine/components/field';
 import { combineHandlers, useControlledFormElement } from '@schema-engine/forms-react/hooks';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { SelectFieldProps, SelectOption } from './form-select.types';

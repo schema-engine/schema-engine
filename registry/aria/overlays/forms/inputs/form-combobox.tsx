@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { FieldGroup } from '@/components/schema-engine/forms/field-group';
+import { FieldGroup } from '@/components/ui/schema-engine/components/field';
 import { combineHandlers, useControlledFormElement } from '@schema-engine/forms-react/hooks';
 import {
 	Combobox,
