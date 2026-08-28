@@ -59,7 +59,7 @@ function MinimalistStepperNavigation({ className }: { className?: string }) {
 				onClick={() => navigation.goToPreviousStep()}
 				disabled={navigation.isFirstStep}
 			>
-				← Previous
+				Previous
 			</Button>
 
 			<Button type="submit" style={{ display: navigation.isLastStep ? 'inline-flex' : 'none' }}>
@@ -72,7 +72,7 @@ function MinimalistStepperNavigation({ className }: { className?: string }) {
 				disabled={!navigation.canGoNext}
 				style={{ display: navigation.isLastStep ? 'none' : 'inline-flex' }}
 			>
-				Next →
+				Next
 			</Button>
 		</div>
 	);
