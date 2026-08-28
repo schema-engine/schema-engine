@@ -4,7 +4,15 @@ import { z } from 'zod';
 export const DOCS_ROOT = '/docs';
 
 /** Sidebar group order (frontmatter `group` values). */
-export const DOCS_GROUP_ORDER = ['Getting Started', 'Forms', 'Forms React', 'Actions', 'Registry', 'Examples'] as const;
+export const DOCS_GROUP_ORDER = [
+	'Getting Started',
+	'Forms',
+	'Forms React',
+	'Forms Radiant',
+	'Actions',
+	'Registry',
+	'Examples',
+] as const;
 
 export type DocsGroupName = (typeof DOCS_GROUP_ORDER)[number];
 
@@ -15,6 +23,7 @@ export const LLM_SECTION_ORDER = [
 	'getting-started',
 	'forms',
 	'forms-react',
+	'forms-radiant',
 	'actions',
 	'registry',
 	'examples',

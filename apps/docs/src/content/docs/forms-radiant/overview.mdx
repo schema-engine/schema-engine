@@ -1,0 +1,33 @@
+---
+title: 'Overview'
+description: 'Radiant/JSX adapter for Ecopages apps using @ecopages/radiant-ui.'
+group: Forms Radiant
+order: 1
+---
+
+# @schema-engine/forms-radiant
+
+Radiant/JSX implementation of the JSON Form Engine for Ecopages apps. It wraps `@ecopages/radiant-ui` primitives and ships default field registrations in the package (no shadcn copy step).
+
+## Key features
+
+- **Same `FormConfig` JSON** as `@schema-engine/forms-react`
+- **Signals-based `FormStore`** with validation through `@schema-engine/forms`
+- **Default registrations** for input, textarea, number, select, checkbox, switch, radio, and submit
+- **Shared Zod schemas** from `registry/shared/forms/*.types.ts`
+- **`createRadiantFormComposer()`** — same builder API as the React adapter
+
+## When to use
+
+| Use | Package |
+| --- | --- |
+| React + shadcn consumer-owned fields | `@schema-engine/forms-react` |
+| Radiant / `@ecopages/jsx` + `@ecopages/radiant-ui` | `@schema-engine/forms-radiant` |
+
+## Next steps
+
+- [Getting Started](/docs/forms-radiant/getting-started) — install peers, load theme CSS, render a form
+
+## Optional enhanceable registry (later)
+
+If you need to fork field chrome, copy wrappers from `packages/forms-radiant/src/elements/` into your app and override registrations with `FormComposer.addElement(...)`. A dedicated `registry/radiant/` copy tree is planned but not required for the first release.

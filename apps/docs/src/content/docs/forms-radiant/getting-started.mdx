@@ -1,0 +1,104 @@
+---
+title: 'Getting Started'
+description: 'Install the Radiant adapter and register your engine.'
+group: Forms Radiant
+order: 2
+---
+
+# Getting Started
+
+## 1. Install peers
+
+```bash
+pnpm add @schema-engine/forms-radiant @schema-engine/forms @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
+```
+
+Load Radiant UI theme and styles once in your app entry:
+
+```typescript
+import '@ecopages/radiant-ui/themes/default';
+import '@ecopages/radiant-ui/styles.css';
+```
+
+## 2. Create a form engine
+
+Default field registrations ship in the package:
+
+```typescript
+import { createRadiantFormComposer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+
+const formEngine = createRadiantFormComposer().addElements(schemaFormRegistrations).build();
+```
+
+## 3. Configure your form
+
+Use the same `FormConfig` JSON as the React adapter:
+
+```typescript
+import type { FormConfig } from '@schema-engine/forms/schemas';
+
+const formConfig: FormConfig = {
+	id: 'contact-form',
+	steps: [
+		{
+			id: 'step-1',
+			elements: [
+				{
+					$type: 'input',
+					id: 'name',
+					name: 'name',
+					label: 'Full Name',
+					rules: [{ type: 'required', message: 'Name is required' }],
+				},
+				{
+					$type: 'input',
+					id: 'email',
+					name: 'email',
+					label: 'Email',
+					inputType: 'email',
+					rules: [
+						{ type: 'required', message: 'Email is required' },
+						{ type: 'email', message: 'Invalid email' },
+					],
+				},
+				{ $type: 'submit', id: 'submit', name: 'submit', label: 'Send' },
+			],
+		},
+	],
+};
+```
+
+## 4. Render the form
+
+```typescript
+import { FormRenderer } from '@schema-engine/forms-radiant';
+import { radiantAdapter } from '@schema-engine/forms-radiant/adapters/radiant';
+
+<FormRenderer
+	engine={formEngine}
+	adapter={radiantAdapter}
+	config={formConfig}
+	onSubmit={(data) => console.log(data)}
+/>;
+```
+
+## Override a registration
+
+```typescript
+import { InputElementRegistration } from '@schema-engine/forms-radiant/registrations';
+
+const engine = createRadiantFormComposer()
+	.addElements(schemaFormRegistrations)
+	.addElement({ ...InputElementRegistration, render: MyCustomInput })
+	.build();
+```
+
+## Storybook
+
+From the monorepo root:
+
+```bash
+pnpm dev:radiant-storybook
+```
+
+Runs on port `6007` by default.
