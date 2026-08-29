@@ -9,21 +9,12 @@
 .default-stepper--sidebar {
 	flex-direction: row;
 	align-items: stretch;
-	gap: 0;
+	gap: var(--space-block-xl, 2rem);
 }
 
 .default-stepper__sidebar {
 	width: 18rem;
 	flex-shrink: 0;
-	padding-inline-end: var(--space-block-xl, 2rem);
-}
-
-.default-stepper__separator {
-	flex-shrink: 0;
-}
-
-.default-stepper--sidebar .default-stepper__main {
-	padding-inline-start: var(--space-block-xl, 2rem);
 }
 
 @media (max-width: 767px) {
@@ -33,15 +24,6 @@
 
 	.default-stepper__sidebar {
 		width: 100%;
-		padding-inline-end: 0;
-	}
-
-	.default-stepper__separator {
-		display: none;
-	}
-
-	.default-stepper--sidebar .default-stepper__main {
-		padding-inline-start: 0;
 	}
 }
 
@@ -115,6 +97,17 @@
 
 .default-stepper__step-button--active {
 	background: color-mix(in srgb, var(--surface, #fff) 94%, var(--on-surface, #000) 6%);
+}
+
+.default-stepper__step-button:disabled {
+	cursor: not-allowed;
+	color: var(--on-surface-muted, color-mix(in srgb, currentColor 70%, transparent));
+	opacity: 1;
+}
+
+.default-stepper__step-button:disabled .default-stepper__indicator,
+.default-stepper__step-button:disabled .default-stepper__step-description {
+	color: inherit;
 }
 
 .default-stepper__indicator {

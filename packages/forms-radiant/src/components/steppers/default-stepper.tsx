@@ -6,8 +6,6 @@ import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import '@ecopages/radiant-ui/badge/styles.css';
 import { RuiBadge } from '@ecopages/radiant-ui/badge';
 import { RuiButton } from '@ecopages/radiant-ui/button';
-import '@ecopages/radiant-ui/separator/styles.css';
-import { RuiSeparator } from '@ecopages/radiant-ui/separator';
 import type { JsxRenderable } from '@ecopages/jsx';
 import { stepperContext } from '@/contexts/stepper-context';
 import type { StepperContextValue } from '@/contexts/stepper-context';
@@ -157,7 +155,6 @@ export class DefaultStepperElement extends RadiantElement {
 					)}
 				>
 					<aside class="default-stepper__sidebar">{indicators}</aside>
-					<RuiSeparator class="default-stepper__separator" orientation="vertical" />
 					<div class="default-stepper__main">
 						{content}
 						{navigationBar}

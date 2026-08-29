@@ -70,7 +70,9 @@ function StepIndicators({ sidebar = false }: { sidebar?: boolean }) {
 								aria-current={step.isActive ? 'step' : undefined}
 								className={cn(
 									'flex h-auto w-full gap-2 rounded-xl px-3 text-center',
-									sidebar ? 'flex-row items-start py-3 text-left' : 'flex-col items-center py-4',
+									sidebar
+										? 'flex-row items-start justify-start py-3 text-left'
+										: 'flex-col items-center py-4',
 									step.isActive && 'bg-muted',
 								)}
 							>
