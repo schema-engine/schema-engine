@@ -12,6 +12,7 @@ export function FormProvider<TFormData extends Record<string, unknown> = Record<
 	config,
 	defaultValues = {},
 	onSubmit,
+	children,
 	engine,
 }: FormProviderProps<TFormData> & { engine?: CoreFormEngine }) {
 	if (isMultiStepForm(config)) {
@@ -21,7 +22,9 @@ export function FormProvider<TFormData extends Record<string, unknown> = Record<
 				engine={engine}
 				defaultValues={defaultValues}
 				onSubmit={onSubmit as ((data: Record<string, unknown>) => void | Promise<void>) | undefined}
-			/>
+			>
+				{children}
+			</FormInstance>
 		);
 	}
 
@@ -32,6 +35,7 @@ export function FormProvider<TFormData extends Record<string, unknown> = Record<
 			onSubmit={onSubmit as ((data: Record<string, unknown>) => void | Promise<void>) | undefined}
 		>
 			<FormElementsRenderer config={config} engine={engine} />
+			{children}
 		</ConfiguredRuiForm>
 	);
 }
