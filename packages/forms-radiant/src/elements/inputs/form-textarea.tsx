@@ -30,6 +30,7 @@ export function FormTextarea({
 				name={config.name}
 				placeholder={config.placeholder}
 				rows={config.rows}
+				style={{ fontFamily: 'inherit' }}
 				disabled={config.disabled}
 				on:input={(event: Event) => {
 					const target = event.target as HTMLTextAreaElement;
