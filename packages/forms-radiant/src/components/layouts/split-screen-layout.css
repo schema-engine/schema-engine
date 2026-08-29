@@ -100,11 +100,16 @@
 	padding-top: var(--space-block-lg, 1.5rem);
 }
 
+.split-screen-layout__side .rui-heading {
+	max-width: 28rem;
+	color: inherit;
+}
+
 .split-screen-layout__side-content {
 	max-width: 28rem;
-	font-size: 1rem;
+	font-size: inherit;
 	line-height: 1.5;
-	color: var(--on-surface, inherit);
+	color: var(--on-surface-muted, color-mix(in srgb, currentColor 75%, transparent));
 }
 
 .split-screen-layout__side-content :is(h1, h2, h3, p) {

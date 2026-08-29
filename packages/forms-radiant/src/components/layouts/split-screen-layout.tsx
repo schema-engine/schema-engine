@@ -1,7 +1,9 @@
 import './split-screen-layout.css';
+import '@ecopages/radiant-ui/heading/styles.css';
 import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import { RuiHeading, RuiHeadingDescription, RuiHeadingTitle } from '@ecopages/radiant-ui/heading';
 import { layoutContext } from '@/contexts/layout-context';
 import type { SplitScreenLayoutConfig } from './split-screen-layout.types';
 
@@ -49,17 +51,20 @@ export class SplitScreenLayoutElement extends RadiantElement {
 	}
 
 	override render(): JsxRenderable {
-		const { config } = this.layoutContext ?? {
+		const { step, form, config } = this.layoutContext ?? {
+			step: {},
+			form: {},
 			config: {},
 		};
 		const sidePlacement = config.sidePlacement ?? 'left';
 		const sideWidth = config.sideWidth ?? 'normal';
 		const contentAlignment = config.contentAlignment ?? 'center';
 		const sideContent = this.sideContent();
+		const title = form?.title || step?.title;
 
 		return (
 			<div class={layoutClassName('split-screen-layout', this.layoutClass || undefined)}>
-				{sideContent ? (
+				{title || sideContent ? (
 					<div
 						class={layoutClassName(
 							'split-screen-layout__side',
@@ -67,7 +72,14 @@ export class SplitScreenLayoutElement extends RadiantElement {
 							sidePlacement === 'right' ? 'split-screen-layout__side--right' : undefined,
 						)}
 					>
-						<div class="split-screen-layout__side-content">{sideContent}</div>
+						<RuiHeading size="md" as="header">
+							{title ? <RuiHeadingTitle as="h2">{title}</RuiHeadingTitle> : null}
+							{sideContent ? (
+								<RuiHeadingDescription class="split-screen-layout__side-content">
+									{sideContent}
+								</RuiHeadingDescription>
+							) : null}
+						</RuiHeading>
 					</div>
 				) : null}
 				<div

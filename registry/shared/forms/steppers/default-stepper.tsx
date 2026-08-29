@@ -124,7 +124,7 @@ function DefaultStepperContent({ children, className }: { children: React.ReactN
 
 	return (
 		<div className={cn('space-y-6', className)}>
-			<header>
+			<header className="default-stepper__header">
 				<h2 className="text-xl font-semibold">{currentStep?.title || `Step ${currentStepIndex + 1}`}</h2>
 				{currentStep?.description && (
 					<p className="mt-1 text-sm text-muted-foreground">{currentStep.description}</p>

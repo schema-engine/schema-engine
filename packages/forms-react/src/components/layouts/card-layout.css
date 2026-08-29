@@ -123,7 +123,6 @@
 	padding: 2rem;
 }
 
-.card-layout__content header,
 .card-layout__content .default-stepper__header,
 .card-layout__content .minimalist-stepper__header {
 	display: none;

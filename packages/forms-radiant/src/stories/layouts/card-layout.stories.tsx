@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
-import { formRendererMeta, withStepLayout } from '@/stories/shared/form-story';
+import { formRendererMeta, minimalistStepper, withStepLayout } from '@/stories/shared/form-story';
 import { FormTemplates } from '@/stories/shared/sample-forms';
 import { createLayoutPlay } from '@/stories/shared/field-plays';
 
@@ -74,9 +74,29 @@ export const ExtraLargeCard: Story = {
 
 export const MultiStep: Story = {
 	args: {
+		config: withStepLayout(FormTemplates.registrationForm, {
+			$type: 'card',
+			maxWidth: 'md',
+			padding: 'md',
+			shadowSize: 'md',
+		}),
+	},
+	play: cardPlay,
+};
+
+export const MultiStepWithMinimalistStepper: Story = {
+	args: {
 		config: withStepLayout(
-			{ ...FormTemplates.registrationForm, stepper: { $type: 'default' } },
-			{ $type: 'card', maxWidth: 'md', padding: 'md', shadowSize: 'md' },
+			{
+				...FormTemplates.registrationForm,
+				stepper: minimalistStepper,
+			},
+			{
+				$type: 'card',
+				maxWidth: 'md',
+				padding: 'md',
+				shadowSize: 'md',
+			},
 		),
 	},
 	play: cardPlay,

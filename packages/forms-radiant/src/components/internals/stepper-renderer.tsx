@@ -22,14 +22,10 @@ interface StepperRendererProps {
 }
 
 function HeadlessStepper({
-	currentStepIndex,
 	navigation,
 	isSubmitting,
 	children,
-	steps,
 }: {
-	steps: StepData[];
-	currentStepIndex: number;
 	navigation: StepperNavigation;
 	isSubmitting?: boolean;
 	children?: JsxRenderable;
@@ -47,10 +43,6 @@ function HeadlessStepper({
 				>
 					Previous
 				</button>
-
-				<span class="se-headless-stepper__counter">
-					Step {currentStepIndex + 1} of {steps.length}
-				</span>
 
 				<div class="se-headless-stepper__actions">
 					<button
@@ -124,12 +116,7 @@ export function StepperRenderer({
 	if (!form.stepper?.$type) {
 		return (
 			<StepperProvider value={contextValue}>
-				<HeadlessStepper
-					steps={stepInfos}
-					currentStepIndex={currentStepIndex}
-					navigation={navigationControls}
-					isSubmitting={isSubmitting}
-				>
+				<HeadlessStepper navigation={navigationControls} isSubmitting={isSubmitting}>
 					{children}
 				</HeadlessStepper>
 			</StepperProvider>
@@ -142,12 +129,7 @@ export function StepperRenderer({
 	if (!stepperRegistration) {
 		return (
 			<StepperProvider value={{ ...contextValue, config: stepperConfig }}>
-				<HeadlessStepper
-					steps={stepInfos}
-					currentStepIndex={currentStepIndex}
-					navigation={navigationControls}
-					isSubmitting={isSubmitting}
-				>
+				<HeadlessStepper navigation={navigationControls} isSubmitting={isSubmitting}>
 					{children}
 				</HeadlessStepper>
 			</StepperProvider>

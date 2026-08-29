@@ -4,6 +4,7 @@ import type { FormStepperConfig } from '@schema-engine/forms/schemas/form-config
 import type { StepData, StepperNavigation } from '../steppers/types';
 import { useFormEngine } from '@/hooks';
 import { StepperProvider, useStepperContext } from '@/contexts/stepper-context';
+import './stepper-renderer.css';
 
 interface StepperRendererProps {
 	form: Omit<FormConfig, 'stepper'> & { stepper?: FormStepperConfig };
@@ -20,35 +21,32 @@ interface StepperRendererProps {
 }
 
 /**
- * Headless fallback stepper: renders children with minimal prev/next/submit controls.
- * Buttons stay in the DOM and are hidden with CSS to avoid RHF validation triggers.
+ * Internal fallback when `form.stepper.$type` is missing. Not the registered
+ * minimalist stepper: no progress, no step title, no counter. Prev/next stay
+ * in the DOM so wizard navigation still works.
  */
 const HeadlessStepper: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
-	const { steps, currentStepIndex, navigation, form } = useStepperContext();
+	const { navigation, form } = useStepperContext();
 
 	return (
-		<div className="flex min-h-0 w-full flex-col gap-6">
-			<div className="min-h-0 flex-1">{children}</div>
+		<div className="se-headless-stepper">
+			<div className="se-headless-stepper__content">{children}</div>
 
-			<div className="mt-auto flex shrink-0 items-center justify-between gap-4 pt-6">
+			<div className="se-headless-stepper__controls">
 				<button
 					type="button"
 					onClick={navigation.goToPreviousStep}
 					disabled={navigation.isFirstStep}
-					className="rounded-md border px-4 py-2 text-sm disabled:opacity-50"
+					className="se-headless-stepper__button"
 				>
 					Previous
 				</button>
 
-				<span className="text-sm text-muted-foreground">
-					Step {currentStepIndex + 1} of {steps.length}
-				</span>
-
-				<div className="flex gap-2">
+				<div className="se-headless-stepper__actions">
 					<button
 						type="submit"
 						style={{ display: navigation.isLastStep ? 'inline-flex' : 'none' }}
-						className="rounded-md border px-4 py-2 text-sm"
+						className="se-headless-stepper__button"
 					>
 						{form.isSubmitting ? 'Submitting...' : 'Submit'}
 					</button>
@@ -58,7 +56,7 @@ const HeadlessStepper: React.FC<{ children?: React.ReactNode }> = ({ children })
 						onClick={navigation.goToNextStep}
 						disabled={!navigation.canGoNext}
 						style={{ display: navigation.isLastStep ? 'none' : 'inline-flex' }}
-						className="rounded-md border px-4 py-2 text-sm disabled:opacity-50"
+						className="se-headless-stepper__button"
 					>
 						Next
 					</button>
