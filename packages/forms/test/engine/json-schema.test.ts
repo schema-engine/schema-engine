@@ -781,7 +781,7 @@ describe('FormEngine JSON Schema Generation', () => {
 			expect(standardSchema?.['~standard'].version).toBe(1);
 			expect(standardSchema?.['~standard'].vendor).toBe('@schema-engine/forms');
 			expect(schema).toHaveProperty('$id', 'action:submit');
-			expect(schema).toHaveProperty('properties.$type.const', 'submit');
+			expect(schema).toHaveProperty(['$defs', 'action:submit', 'properties', '$type', 'const'], 'submit');
 			expect(engine.generateActionConfigSchema('submit')).toHaveProperty('$id', 'action:submit');
 		});
 

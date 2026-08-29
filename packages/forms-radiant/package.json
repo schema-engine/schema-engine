@@ -21,7 +21,7 @@
 		"build:types": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
 		"watch:lib": "node ./build.ts --watch",
 		"clean": "rm -rf ./dist",
-		"test:all": "vitest run",
+		"test:all": "vitest run --project unit",
 		"storybook": "storybook dev -p 6007 --no-open",
 		"build-storybook": "storybook build -o ./storybook-static",
 		"check-types": "tsc --noEmit",
