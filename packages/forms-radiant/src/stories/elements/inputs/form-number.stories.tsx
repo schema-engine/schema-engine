@@ -5,7 +5,7 @@ import { clickSubmit, expectFieldError } from '@/stories/shared/play';
 
 const meta = {
 	...formRendererMeta,
-	title: 'Forms/Elements/Inputs/Number',
+	title: 'Elements/Inputs/Number',
 	args: {
 		config: fieldFormConfig('number-default', 'Forms/Elements/Inputs/Number', [
 			{

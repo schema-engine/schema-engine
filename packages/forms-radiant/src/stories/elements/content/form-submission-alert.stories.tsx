@@ -5,7 +5,7 @@ import { clickSubmit, playFieldFocusAndType } from '@/stories/shared/play';
 
 const meta = {
 	...formRendererMeta,
-	title: 'Forms/Elements/Content/Submission Alert',
+	title: 'Elements/Content/Submission Alert',
 	args: {
 		config: fieldFormConfig('submission-alert-default', 'Submission Alert', [
 			{

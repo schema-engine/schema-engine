@@ -5,7 +5,7 @@ import { clickSubmit, getFieldControl } from '@/stories/shared/play';
 
 const meta = {
 	...formRendererMeta,
-	title: 'Forms/Elements/Inputs/Slider',
+	title: 'Elements/Inputs/Slider',
 	args: {
 		config: fieldFormConfig('slider-default', 'Slider Field', [
 			{

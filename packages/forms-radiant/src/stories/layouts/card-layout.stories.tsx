@@ -5,8 +5,8 @@ import { createLayoutPlay } from '@/stories/shared/field-plays';
 
 const meta = {
 	...formRendererMeta,
-	title: 'Forms/Layouts/Card',
-	parameters: { layout: 'fullscreen' },
+	title: 'Layouts/Card',
+	parameters: { ...formRendererMeta.parameters, layout: 'fullscreen' },
 	args: {
 		className: 'se-form-story--full',
 	},

@@ -5,7 +5,7 @@ import { getFieldControl } from '@/stories/shared/play';
 
 const meta = {
 	...formRendererMeta,
-	title: 'Forms/Elements/Inputs/Switch',
+	title: 'Elements/Inputs/Switch',
 	args: {
 		config: fieldFormConfig('switch-default', 'Forms/Elements/Inputs/Switch', [
 			{

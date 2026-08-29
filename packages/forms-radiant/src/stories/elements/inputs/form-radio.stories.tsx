@@ -5,7 +5,7 @@ import { getFieldControl } from '@/stories/shared/play';
 
 const meta = {
 	...formRendererMeta,
-	title: 'Forms/Elements/Inputs/Radio',
+	title: 'Elements/Inputs/Radio',
 	args: {
 		config: fieldFormConfig('radio-default', 'Forms/Elements/Inputs/Radio', [
 			{
