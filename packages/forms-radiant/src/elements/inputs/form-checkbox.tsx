@@ -1,3 +1,4 @@
+import '@ecopages/radiant-ui/checkbox-group';
 import '@ecopages/radiant-ui/checkbox/styles.css';
 import { RuiCheckbox } from '@ecopages/radiant-ui/checkbox';
 import '@ecopages/radiant-ui/field/styles.css';

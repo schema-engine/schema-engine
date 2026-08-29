@@ -1,19 +1,12 @@
-import '@ecopages/radiant-ui/checkbox';
 import '@ecopages/radiant-ui/checkbox/styles.css';
 import '@ecopages/radiant-ui/checkbox-group/styles.css';
 import { RuiCheckboxGroup } from '@ecopages/radiant-ui/checkbox-group';
-import '@ecopages/radiant-ui/field/styles.css';
-import { RuiField, RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
-import '@ecopages/radiant-ui/label/styles.css';
-import { RuiLabel } from '@ecopages/radiant-ui/label';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { FieldGroup } from '../field-group';
 import { getFieldGridStyles } from '@/hooks/grid-styles';
+import { parseChoiceValue, serializeChoiceValue } from '@/lib/choice-value';
 import { toFieldRules } from '@/lib/field-rules';
 import type { CheckboxGroupFieldProps } from '@/registry/forms/inputs/form-checkbox-group.types';
-
-function parseGroupValue(value: string): string[] {
-	return value === '' ? [] : value.split(',');
-}
 
 export function FormCheckboxGroup({
 	onChange: propsOnChange,
@@ -21,7 +14,6 @@ export function FormCheckboxGroup({
 	onFocus: propsOnFocus,
 	...config
 }: CheckboxGroupFieldProps) {
-	const isRequired = isFieldRequired(config.rules);
 	const options = config.options.map((option) => ({
 		value: String(option.value),
 		label: option.label,
@@ -29,34 +21,30 @@ export function FormCheckboxGroup({
 	}));
 
 	return (
-		<RuiField
+		<FieldGroup
 			name={config.name}
-			rules={toFieldRules(config.rules)}
-			defaultValue={config.defaultValue}
-			disabled={config.disabled}
+			label={config.label || config.name}
+			htmlFor={config.id}
+			hiddenLabel={!config.label}
+			required={isFieldRequired(config.rules)}
+			description={config.description}
 			style={{ ...getFieldGridStyles(config.grid), ...config.style }}
+			rules={toFieldRules(config.rules)}
+			defaultValue={serializeChoiceValue(config.defaultValue)}
+			disabled={config.disabled}
 		>
-			{config.label ? (
-				<RuiLabel>
-					{config.label}
-					{isRequired ? ' *' : ''}
-				</RuiLabel>
-			) : null}
 			<RuiCheckboxGroup
 				name={config.name}
-				label={config.label}
 				orientation={config.orientation}
 				disabled={config.disabled}
 				options={options}
 				on:change={(event: Event) => {
 					const detail = (event as CustomEvent<{ value: string }>).detail;
-					propsOnChange?.(parseGroupValue(detail?.value ?? ''));
+					propsOnChange?.(parseChoiceValue(detail?.value ?? '', true) as string[]);
 				}}
 				on:blur={propsOnBlur}
 				on:focus={propsOnFocus}
 			/>
-			{config.description ? <RuiFieldDescription>{config.description}</RuiFieldDescription> : null}
-			<RuiFieldError />
-		</RuiField>
+		</FieldGroup>
 	);
 }

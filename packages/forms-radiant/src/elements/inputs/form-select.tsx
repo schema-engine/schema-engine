@@ -1,8 +1,8 @@
-import '@ecopages/radiant-ui/select/styles.css';
-import { RuiSelect } from '@ecopages/radiant-ui/select';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
+import { ChoiceSelect } from './choice-select';
 import { getFieldGridStyles } from '@/hooks/grid-styles';
+import { parseChoiceValue, serializeChoiceValue } from '@/lib/choice-value';
 import { toFieldRules } from '@/lib/field-rules';
 import type { SelectFieldProps } from '@/registry/forms/inputs/form-select.types';
 
@@ -12,6 +12,7 @@ export function FormSelect({
 	onFocus: propsOnFocus,
 	...config
 }: SelectFieldProps) {
+	const isMultiple = Boolean(config.multiple);
 	const options = config.options.map((option) => ({
 		value: String(option.value),
 		label: option.label,
@@ -28,19 +29,20 @@ export function FormSelect({
 			description={config.description}
 			style={{ ...getFieldGridStyles(config.grid), ...config.style }}
 			rules={toFieldRules(config.rules)}
-			defaultValue={config.defaultValue}
+			defaultValue={serializeChoiceValue(config.defaultValue)}
 			disabled={config.disabled}
 		>
-			<RuiSelect
+			<ChoiceSelect
 				placeholder={config.placeholder}
 				disabled={config.disabled}
+				multiple={isMultiple}
 				options={options}
-				on:change={(event: Event) => {
+				onChange={(event: Event) => {
 					const detail = (event as CustomEvent<{ value: string }>).detail;
-					propsOnChange?.(detail?.value ?? '');
+					propsOnChange?.(parseChoiceValue(detail?.value ?? '', isMultiple));
 				}}
-				on:blur={propsOnBlur}
-				on:focus={propsOnFocus}
+				onBlur={propsOnBlur}
+				onFocus={propsOnFocus}
 			/>
 		</FieldGroup>
 	);

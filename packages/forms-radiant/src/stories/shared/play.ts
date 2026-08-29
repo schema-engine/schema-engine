@@ -35,6 +35,16 @@ function waitForFormDecision(root: ParentNode): Promise<void> {
 	});
 }
 
+export async function clickNamedButton(root: ParentNode, name: string | RegExp): Promise<void> {
+	await waitFor(
+		() => {
+			expect(getSubmitButton(root, name), `Expected control matching ${String(name)}`).toBeTruthy();
+		},
+		{ timeout: 5000 },
+	);
+	await userEvent.click(getSubmitButton(root, name));
+}
+
 export async function clickSubmit(root: ParentNode, name: string | RegExp): Promise<void> {
 	await waitFor(
 		() => {
@@ -106,8 +116,15 @@ export async function playSelectOption(
 	const canvas = within(root as HTMLElement);
 	const trigger = canvas.getByRole('combobox', { name: fieldLabel });
 	await userEvent.click(trigger);
+	await userEvent.keyboard('{ArrowDown}');
 	const option = await waitFor(() => within(document.body).getByRole('option', { name: optionLabel }));
 	await userEvent.click(option);
+}
+
+export async function playClearSelection(root: ParentNode): Promise<void> {
+	const canvas = within(root as HTMLElement);
+	const clear = await waitFor(() => canvas.getByRole('button', { name: /clear selection/i }));
+	await userEvent.click(clear);
 }
 
 export async function playCheckboxByLabel(root: ParentNode, label: string | RegExp): Promise<void> {

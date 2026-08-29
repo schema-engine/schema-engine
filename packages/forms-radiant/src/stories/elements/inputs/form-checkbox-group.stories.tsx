@@ -1,11 +1,18 @@
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
 import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story';
 import { expect, within } from 'storybook/test';
-import { clickSubmit, expectFieldError } from '@/stories/shared/play';
+import { playCheckboxByLabel } from '@/stories/shared/play';
+import { createValidationFieldPlay } from '@/stories/shared/field-plays';
+
+const interests = [
+	{ label: 'Design', value: 'design' },
+	{ label: 'Engineering', value: 'engineering' },
+	{ label: 'Product', value: 'product' },
+];
 
 const meta = {
 	...formRendererMeta,
-	title: 'Forms/Elements/Inputs/Checkbox Group',
+	title: 'Elements/Inputs/Checkbox Group',
 	args: {
 		config: fieldFormConfig('checkbox-group-default', 'Select options', [
 			{
@@ -13,10 +20,7 @@ const meta = {
 				id: 'interests',
 				name: 'interests',
 				label: 'Interests',
-				options: [
-					{ label: 'Design', value: 'design' },
-					{ label: 'Engineering', value: 'engineering' },
-				],
+				options: interests,
 			},
 		]),
 	},
@@ -29,7 +33,23 @@ export const Default: Story = {
 	play: async ({ canvasElement, step }) => {
 		await step('Checkbox group is visible', async () => {
 			await expect(within(canvasElement).getByText(/interests/i)).toBeInTheDocument();
+			await expect(within(canvasElement).getByRole('checkbox', { name: /design/i })).toBeInTheDocument();
 		});
+	},
+};
+
+export const Horizontal: Story = {
+	args: {
+		config: fieldFormConfig('checkbox-group-horizontal', 'Select options', [
+			{
+				$type: 'checkbox-group',
+				id: 'interests',
+				name: 'interests',
+				label: 'Interests',
+				orientation: 'horizontal',
+				options: interests,
+			},
+		]),
 	},
 };
 
@@ -47,10 +67,7 @@ export const WithValidation: Story = {
 			{ $type: 'submit', id: 'submit', name: 'submit', label: 'Save' },
 		]),
 	},
-	play: async ({ canvasElement, step }) => {
-		await step('Empty submit shows validation error', async () => {
-			await clickSubmit(canvasElement, /save/i);
-			await expectFieldError(canvasElement, /select at least one skill/i);
-		});
-	},
+	play: createValidationFieldPlay(/react/i, 'react', /save/i, /select at least one skill/i, (canvasElement) =>
+		playCheckboxByLabel(canvasElement, /react/i),
+	),
 };
