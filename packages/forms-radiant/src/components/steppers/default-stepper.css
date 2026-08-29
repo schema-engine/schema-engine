@@ -160,7 +160,7 @@
 .default-stepper__content {
 	display: flex;
 	flex-direction: column;
-	gap: var(--space-block, 1rem);
+	gap: var(--space-block-lg, 1.5rem);
 	flex: 1 1 auto;
 	min-height: 0;
 }
@@ -169,6 +169,10 @@
 	margin: 0;
 	font-size: 1.25rem;
 	font-weight: 600;
+}
+
+.default-stepper__title--sidebar {
+	font-size: 1.125rem;
 }
 
 .default-stepper__description {
@@ -181,11 +185,6 @@
 	align-items: center;
 	justify-content: space-between;
 	gap: 1rem;
-}
-
-.default-stepper__badge {
-	font-size: 0.875rem;
-	color: var(--on-surface-muted, color-mix(in srgb, currentColor 70%, transparent));
 }
 
 .default-stepper__actions {

@@ -26,7 +26,7 @@ const DefaultStepperRoot: React.FC<{ children: React.ReactNode; className?: stri
 	);
 };
 
-function StepIndicators() {
+function StepIndicators({ sidebar = false }: { sidebar?: boolean }) {
 	const { steps, currentStepIndex, navigation } = useStepperContext<DefaultStepperConfig>();
 	const stepRefs = useRef<(HTMLButtonElement | null)[]>([]);
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -43,13 +43,22 @@ function StepIndicators() {
 	}, [currentStepIndex]);
 
 	return (
-		<div ref={containerRef} className="relative flex overflow-x-auto scroll-px-4 scroll-smooth">
-			<ol className="relative flex min-w-full gap-2 lg:gap-3">
+		<div
+			ref={containerRef}
+			className={cn('relative flex', sidebar ? 'overflow-visible' : 'overflow-x-auto scroll-px-4 scroll-smooth')}
+		>
+			<ol className={cn('relative flex', sidebar ? 'min-w-0 flex-col gap-1' : 'min-w-full gap-2 lg:gap-3')}>
 				{steps.map((step, index) => {
 					const isDisabled = !step.isVisited && index > currentStepIndex;
 
 					return (
-						<li key={step.id} className="flex min-w-[7.5rem] max-w-[8.75rem] flex-1 scroll-snap-start">
+						<li
+							key={step.id}
+							className={cn(
+								'flex',
+								sidebar ? 'min-w-0 w-full' : 'min-w-[7.5rem] max-w-[8.75rem] flex-1 scroll-snap-start',
+							)}
+						>
 							<Button
 								ref={(el) => {
 									stepRefs.current[index] = el;
@@ -60,7 +69,8 @@ function StepIndicators() {
 								disabled={isDisabled}
 								aria-current={step.isActive ? 'step' : undefined}
 								className={cn(
-									'flex h-auto w-full flex-col items-center gap-2 rounded-xl px-3 py-4 text-center',
+									'flex h-auto w-full gap-2 rounded-xl px-3 text-center',
+									sidebar ? 'flex-row items-start py-3 text-left' : 'flex-col items-center py-4',
 									step.isActive && 'bg-muted',
 								)}
 							>
@@ -74,7 +84,7 @@ function StepIndicators() {
 								>
 									{step.isCompleted ? <Check className="size-4" aria-hidden /> : index + 1}
 								</span>
-								<span className="space-y-1">
+								<span className={cn('space-y-1', sidebar && 'text-left')}>
 									<span
 										className={cn(
 											'block text-sm font-medium',
@@ -96,10 +106,10 @@ function StepIndicators() {
 	);
 }
 
-function DefaultStepperProgress({ className }: { className?: string }) {
+function DefaultStepperProgress({ className, sidebar = false }: { className?: string; sidebar?: boolean }) {
 	return (
 		<nav aria-label="Form progress" className={cn('w-full', className)}>
-			<StepIndicators />
+			<StepIndicators sidebar={sidebar} />
 		</nav>
 	);
 }
@@ -185,7 +195,7 @@ export const DefaultStepperComposed: React.FC<{ children?: React.ReactNode }> = 
 		return (
 			<div className="flex w-full flex-row">
 				<aside className="w-72 shrink-0 pr-8 lg:pr-12">
-					<DefaultStepperProgress />
+					<DefaultStepperProgress sidebar />
 				</aside>
 				<Separator orientation="vertical" />
 				<div className="flex min-w-0 flex-1 flex-col gap-6 pl-8 lg:pl-12">

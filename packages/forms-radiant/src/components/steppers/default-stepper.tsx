@@ -3,6 +3,8 @@ import './minimalist-stepper.css';
 import '@ecopages/radiant-ui/button/styles.css';
 import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
+import '@ecopages/radiant-ui/badge/styles.css';
+import { RuiBadge } from '@ecopages/radiant-ui/badge';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import '@ecopages/radiant-ui/separator/styles.css';
 import { RuiSeparator } from '@ecopages/radiant-ui/separator';
@@ -100,7 +102,14 @@ export class DefaultStepperElement extends RadiantElement {
 		const content = (
 			<div class="default-stepper__content">
 				<header class="default-stepper__header">
-					<h2 class="default-stepper__title">{currentStep?.title || `Step ${currentStepIndex + 1}`}</h2>
+					<h2
+						class={stepperClassName(
+							'default-stepper__title',
+							isSidebar ? 'default-stepper__title--sidebar' : undefined,
+						)}
+					>
+						{currentStep?.title || `Step ${currentStepIndex + 1}`}
+					</h2>
 					{currentStep?.description ? (
 						<p class="default-stepper__description">{currentStep.description}</p>
 					) : null}
@@ -119,9 +128,9 @@ export class DefaultStepperElement extends RadiantElement {
 				>
 					Previous
 				</RuiButton>
-				<span class="default-stepper__badge">
+				<RuiBadge variant="muted">
 					Step {currentStepIndex + 1} of {steps.length}
-				</span>
+				</RuiBadge>
 				<div class="default-stepper__actions">
 					<RuiButton type="submit" style={{ display: navigation.isLastStep ? 'inline-flex' : 'none' }}>
 						{form.isSubmitting ? 'Submitting...' : 'Submit'}
