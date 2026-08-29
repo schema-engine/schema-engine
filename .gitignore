@@ -14,7 +14,12 @@ coverage
 # logs
 logs
 _.log
+*storybook.log
 report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
+
+# tsc emit belongs in dist, not beside sources
+packages/forms/src/**/*.d.ts
+registry/**/*.d.ts
 
 # dotenv environment variable files
 .env

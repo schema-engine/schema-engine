@@ -3,6 +3,7 @@ import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '../shared/story-wrapper';
 import { FormTemplates } from '../shared/sample-forms';
 import { getEngine, rhfAdapter } from '../shared/form-builder.ui';
+import { minimalistStepper, withStepLayout } from '../shared/form-story';
 
 const storyEngine = getEngine();
 
@@ -26,7 +27,7 @@ const meta = {
 		engine: { table: { disable: true } },
 		adapter: { table: { disable: true } },
 		config: {
-			control: 'object',
+			control: false,
 			description: 'Form configuration with layout settings',
 		},
 	},
@@ -35,75 +36,61 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const cardMd = { $type: 'card' as const, maxWidth: 'md' as const, padding: 'md' as const, shadowSize: 'md' as const };
+
 export const Default: Story = {
 	args: {
-		config: {
-			...FormTemplates.loginForm,
-			steps: FormTemplates.loginForm.steps.map((step) => ({
-				...step,
-				layout: { $type: 'card' },
-			})),
-		},
+		config: withStepLayout(FormTemplates.loginForm, { $type: 'card' }),
 	},
 };
 
 export const SmallCard: Story = {
 	args: {
-		config: {
-			...FormTemplates.loginForm,
-			steps: FormTemplates.loginForm.steps.map((step) => ({
-				...step,
-				layout: { $type: 'card', maxWidth: 'sm', padding: 'sm', shadowSize: 'sm' },
-			})),
-		},
+		config: withStepLayout(FormTemplates.loginForm, {
+			$type: 'card',
+			maxWidth: 'sm',
+			padding: 'sm',
+			shadowSize: 'sm',
+		}),
 	},
 };
 
 export const MediumCard: Story = {
 	args: {
-		config: {
-			...FormTemplates.loginForm,
-			steps: FormTemplates.loginForm.steps.map((step) => ({
-				...step,
-				layout: { $type: 'card', maxWidth: 'md', padding: 'md', shadowSize: 'md' },
-			})),
-		},
+		config: withStepLayout(FormTemplates.loginForm, cardMd),
 	},
 };
 
 export const LargeCard: Story = {
 	args: {
-		config: {
-			...FormTemplates.loginForm,
-			steps: FormTemplates.loginForm.steps.map((step) => ({
-				...step,
-				layout: { $type: 'card', maxWidth: 'lg', padding: 'lg', shadowSize: 'lg' },
-			})),
-		},
+		config: withStepLayout(FormTemplates.loginForm, {
+			$type: 'card',
+			maxWidth: 'lg',
+			padding: 'lg',
+			shadowSize: 'lg',
+		}),
 	},
 };
 
 export const ExtraLargeCard: Story = {
 	args: {
-		config: {
-			...FormTemplates.loginForm,
-			steps: FormTemplates.loginForm.steps.map((step) => ({
-				...step,
-				layout: { $type: 'card', maxWidth: 'xl', padding: 'lg', shadowSize: 'xl' },
-			})),
-		},
+		config: withStepLayout(FormTemplates.loginForm, {
+			$type: 'card',
+			maxWidth: 'xl',
+			padding: 'lg',
+			shadowSize: 'xl',
+		}),
 	},
 };
 
 export const MultiStep: Story = {
 	args: {
-		config: {
-			...FormTemplates.registrationForm,
-			stepper: { $type: 'default' },
-			steps: FormTemplates.registrationForm.steps.map((step) => ({
-				...step,
-				layout: { $type: 'card', maxWidth: 'md', padding: 'md', shadowSize: 'md' },
-			})),
-		},
+		config: withStepLayout(FormTemplates.registrationForm, cardMd),
+	},
+};
+
+export const MultiStepWithMinimalistStepper: Story = {
+	args: {
+		config: withStepLayout({ ...FormTemplates.registrationForm, stepper: minimalistStepper }, cardMd),
 	},
 };

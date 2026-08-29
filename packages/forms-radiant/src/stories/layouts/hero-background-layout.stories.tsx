@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
-import { formRendererMeta, withStepLayout } from '@/stories/shared/form-story';
+import { formRendererMeta, minimalistStepper, withStepLayout } from '@/stories/shared/form-story';
 import { FormTemplates } from '@/stories/shared/sample-forms';
 import { createLayoutPlay } from '@/stories/shared/field-plays';
 
@@ -18,7 +18,11 @@ type Story = StoryObj<typeof meta>;
 const heroPlay = createLayoutPlay(['.hero-background-layout', '.hero-background-layout__form']);
 const gradientImage = 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80';
 const natureImage = 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=80';
-const multiStepForm = { ...FormTemplates.registrationForm, stepper: { $type: 'default' as const } };
+const heroBackgroundLayout = {
+	$type: 'hero-background' as const,
+	backgroundImage: gradientImage,
+	contentWidth: 'md' as const,
+};
 
 export const Default: Story = {
 	args: {
@@ -95,11 +99,20 @@ export const NatureBackground: Story = {
 
 export const MultiStepWithBackground: Story = {
 	args: {
-		config: withStepLayout(multiStepForm, {
-			$type: 'hero-background',
-			backgroundImage: gradientImage,
-			contentWidth: 'md',
-		}),
+		config: withStepLayout(FormTemplates.registrationForm, heroBackgroundLayout),
+	},
+	play: heroPlay,
+};
+
+export const MultiStepWithMinimalistStepper: Story = {
+	args: {
+		config: withStepLayout(
+			{
+				...FormTemplates.registrationForm,
+				stepper: minimalistStepper,
+			},
+			heroBackgroundLayout,
+		),
 	},
 	play: heroPlay,
 };

@@ -100,7 +100,7 @@
 }
 
 .default-stepper__step-button--active {
-	background: color-mix(in srgb, var(--surface, #fff) 85%, var(--on-surface, #000) 15%);
+	background: color-mix(in srgb, var(--surface, #fff) 94%, var(--on-surface, #000) 6%);
 }
 
 .default-stepper__indicator {

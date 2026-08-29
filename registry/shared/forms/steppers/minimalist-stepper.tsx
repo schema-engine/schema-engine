@@ -8,7 +8,7 @@ import type { MinimalistStepperConfig } from './minimalist-stepper.types';
 const MinimalistStepperRoot: React.FC<{ children: React.ReactNode; className?: string }> = ({
 	children,
 	className,
-}) => <div className={cn('flex w-full flex-col gap-6', className)}>{children}</div>;
+}) => <div className={cn('minimalist-stepper flex w-full flex-col gap-6', className)}>{children}</div>;
 
 function MinimalistStepperProgress({ className }: { className?: string }) {
 	const { steps, currentStepIndex, config } = useStepperContext<MinimalistStepperConfig>();
@@ -19,7 +19,7 @@ function MinimalistStepperProgress({ className }: { className?: string }) {
 	const progressValue = ((currentStepIndex + 1) / steps.length) * 100;
 
 	return (
-		<div className={cn('space-y-2', className)}>
+		<div className={cn('minimalist-stepper__progress space-y-2', className)}>
 			<div className="flex items-center justify-between text-sm">
 				<span>Progress</span>
 				<span className="text-muted-foreground tabular-nums">{Math.round(progressValue)}%</span>
@@ -34,7 +34,7 @@ function MinimalistStepperHeader({ className }: { className?: string }) {
 	const currentStep = steps[currentStepIndex];
 
 	return (
-		<header className={cn('space-y-1', className)}>
+		<header className={cn('minimalist-stepper__header space-y-1', className)}>
 			<p className="text-sm text-muted-foreground">
 				Step {currentStepIndex + 1} of {steps.length}
 			</p>
@@ -52,7 +52,7 @@ function MinimalistStepperNavigation({ className }: { className?: string }) {
 	const { navigation, form } = useStepperContext<MinimalistStepperConfig>();
 
 	return (
-		<div className={cn('flex items-center justify-between gap-4', className)}>
+		<div className={cn('minimalist-stepper__navigation flex items-center justify-between gap-4', className)}>
 			<Button
 				type="button"
 				variant="ghost"

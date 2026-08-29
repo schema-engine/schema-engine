@@ -22,6 +22,11 @@ export function withStepLayout(
 	};
 }
 
+export const minimalistStepper = {
+	$type: 'minimalist' as const,
+	showProgress: true,
+};
+
 export function fieldFormConfig(
 	id: string,
 	title: string,
