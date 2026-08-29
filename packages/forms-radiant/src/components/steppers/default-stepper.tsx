@@ -4,6 +4,8 @@ import '@ecopages/radiant-ui/button/styles.css';
 import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import { RuiButton } from '@ecopages/radiant-ui/button';
+import '@ecopages/radiant-ui/separator/styles.css';
+import { RuiSeparator } from '@ecopages/radiant-ui/separator';
 import type { JsxRenderable } from '@ecopages/jsx';
 import { stepperContext } from '@/contexts/stepper-context';
 import type { StepperContextValue } from '@/contexts/stepper-context';
@@ -96,12 +98,7 @@ export class DefaultStepperElement extends RadiantElement {
 		);
 
 		const content = (
-			<div
-				class={stepperClassName(
-					'default-stepper__content',
-					isSidebar ? 'default-stepper__content--sidebar' : undefined,
-				)}
-			>
+			<div class="default-stepper__content">
 				<header class="default-stepper__header">
 					<h2 class="default-stepper__title">{currentStep?.title || `Step ${currentStepIndex + 1}`}</h2>
 					{currentStep?.description ? (
@@ -151,6 +148,7 @@ export class DefaultStepperElement extends RadiantElement {
 					)}
 				>
 					<aside class="default-stepper__sidebar">{indicators}</aside>
+					<RuiSeparator class="default-stepper__separator" orientation="vertical" />
 					<div class="default-stepper__main">
 						{content}
 						{navigationBar}

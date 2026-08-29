@@ -706,6 +706,7 @@
       "registryDependencies": [
         "button",
         "badge",
+        "separator",
         "andeeplus/schema-engine/schema-engine-form-utils-aria"
       ],
       "dependencies": [

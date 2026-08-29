@@ -9,16 +9,21 @@
 .default-stepper--sidebar {
 	flex-direction: row;
 	align-items: stretch;
-	gap: var(--space-block-xl, 2rem);
+	gap: 0;
 }
 
 .default-stepper__sidebar {
 	width: 18rem;
 	flex-shrink: 0;
-	padding: var(--space-block, 1rem);
-	border: 1px solid var(--border, currentColor);
-	border-radius: var(--radius-control, 0.75rem);
-	background: color-mix(in srgb, var(--surface, #fff) 90%, transparent);
+	padding-inline-end: var(--space-block-xl, 2rem);
+}
+
+.default-stepper__separator {
+	flex-shrink: 0;
+}
+
+.default-stepper--sidebar .default-stepper__main {
+	padding-inline-start: var(--space-block-xl, 2rem);
 }
 
 @media (max-width: 767px) {
@@ -28,6 +33,15 @@
 
 	.default-stepper__sidebar {
 		width: 100%;
+		padding-inline-end: 0;
+	}
+
+	.default-stepper__separator {
+		display: none;
+	}
+
+	.default-stepper--sidebar .default-stepper__main {
+		padding-inline-start: 0;
 	}
 }
 
@@ -149,13 +163,6 @@
 	gap: var(--space-block, 1rem);
 	flex: 1 1 auto;
 	min-height: 0;
-}
-
-.default-stepper__content--sidebar {
-	padding: var(--space-block-lg, 1.5rem);
-	border: 1px solid var(--border, currentColor);
-	border-radius: var(--radius-control, 0.75rem);
-	background: var(--surface, #fff);
 }
 
 .default-stepper__title {

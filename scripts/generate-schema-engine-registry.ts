@@ -301,7 +301,7 @@ const ELEMENTS: ElementSpec[] = [
 		title: 'Default stepper',
 		description: 'Schema Engine default multi-step stepper.',
 		ident: 'DefaultStepperRegistration',
-		registryDependencies: ['button', 'badge', UTILS],
+		registryDependencies: ['button', 'badge', 'separator', UTILS],
 		dependencies: ['lucide-react'],
 		isStepper: true,
 	},

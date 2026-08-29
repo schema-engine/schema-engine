@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { cn } from '@/components/schema-engine/forms/lib/utils';
 import { useStepperContext } from '@schema-engine/forms-react/contexts/stepper-context';
 import { useIsMobile } from '@schema-engine/forms-react/hooks';
@@ -111,13 +112,11 @@ function DefaultStepperContent({ children, className }: { children: React.ReactN
 	if (orientation === 'sidebar') {
 		return (
 			<div className={cn('min-w-0 flex-1', className)}>
-				<div className="rounded-xl border bg-card p-6 shadow-sm">
-					<h3 className="text-lg font-semibold">{currentStep?.title || `Step ${currentStepIndex + 1}`}</h3>
-					{currentStep?.description && (
-						<p className="mt-1 text-sm text-muted-foreground">{currentStep.description}</p>
-					)}
-					<div className="mt-6">{children}</div>
-				</div>
+				<h3 className="text-lg font-semibold">{currentStep?.title || `Step ${currentStepIndex + 1}`}</h3>
+				{currentStep?.description && (
+					<p className="mt-1 text-sm text-muted-foreground">{currentStep.description}</p>
+				)}
+				<div className="mt-6">{children}</div>
 			</div>
 		);
 	}
@@ -184,11 +183,12 @@ export const DefaultStepperComposed: React.FC<{ children?: React.ReactNode }> = 
 
 	if (isSidebarMode) {
 		return (
-			<div className="flex w-full flex-row gap-8 lg:gap-12">
-				<aside className="w-72 shrink-0 rounded-2xl border bg-muted/30 p-4">
+			<div className="flex w-full flex-row">
+				<aside className="w-72 shrink-0 pr-8 lg:pr-12">
 					<DefaultStepperProgress />
 				</aside>
-				<div className="flex min-w-0 flex-1 flex-col gap-6">
+				<Separator orientation="vertical" />
+				<div className="flex min-w-0 flex-1 flex-col gap-6 pl-8 lg:pl-12">
 					<DefaultStepperContent>{children}</DefaultStepperContent>
 					<DefaultStepperNavigation />
 				</div>
