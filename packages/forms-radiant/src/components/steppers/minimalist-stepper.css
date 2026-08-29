@@ -32,6 +32,8 @@
 
 .minimalist-stepper__progress-fill {
 	height: 100%;
+	width: 100%;
+	transform-origin: left center;
 	background: var(--primary, currentColor);
 }
 
@@ -64,4 +66,16 @@
 	align-items: center;
 	justify-content: space-between;
 	gap: 1rem;
+}
+
+.minimalist-stepper [data-se-submit] {
+	display: none;
+}
+
+.minimalist-stepper[data-se-last-step='true'] [data-se-submit] {
+	display: inline-flex;
+}
+
+.minimalist-stepper[data-se-last-step='true'] [data-se-next] {
+	display: none;
 }

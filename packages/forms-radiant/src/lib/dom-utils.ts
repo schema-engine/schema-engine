@@ -62,6 +62,16 @@ export function queryByTextDeep(root: ParentNode, matcher: string | RegExp): Ele
 	return null;
 }
 
+export function queryByTextContentDeep(root: ParentNode, matcher: string | RegExp): Element | null {
+	for (const element of queryAllDeep(root, '*')) {
+		if (matchesText(element.textContent ?? '', matcher)) {
+			return element;
+		}
+	}
+
+	return null;
+}
+
 export function queryDeep(root: ParentNode, selector: string): Element | null {
 	return queryAllDeep(root, selector)[0] ?? null;
 }

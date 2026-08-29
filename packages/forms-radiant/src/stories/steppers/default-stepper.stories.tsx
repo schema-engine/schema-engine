@@ -5,8 +5,8 @@ import { createStepperPlay } from '@/stories/shared/field-plays';
 
 const meta = {
 	...formRendererMeta,
-	title: 'Forms/Steppers/Default',
-	parameters: { layout: 'padded' },
+	title: 'Steppers/Default',
+	parameters: { ...formRendererMeta.parameters, layout: 'padded' },
 	args: {
 		className: 'se-form-story--full',
 	},

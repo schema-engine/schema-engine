@@ -16,7 +16,7 @@ const DefaultStepperRoot: React.FC<{ children: React.ReactNode; className?: stri
 	return (
 		<div
 			className={cn(
-				'w-full',
+				'min-w-0 w-full',
 				orientation === 'sidebar' ? 'flex flex-row gap-8 lg:gap-12' : 'flex flex-col gap-6',
 				className,
 			)}
@@ -45,20 +45,14 @@ function StepIndicators({ sidebar = false }: { sidebar?: boolean }) {
 	return (
 		<div
 			ref={containerRef}
-			className={cn('relative flex', sidebar ? 'overflow-visible' : 'overflow-x-auto scroll-px-4 scroll-smooth')}
+			className={cn('relative flex min-w-0', sidebar ? 'overflow-visible' : 'overflow-x-auto scroll-smooth')}
 		>
-			<ol className={cn('relative flex', sidebar ? 'min-w-0 flex-col gap-1' : 'min-w-full gap-2 lg:gap-3')}>
+			<ol className={cn('relative flex', sidebar ? 'min-w-0 flex-col gap-1' : 'min-w-full gap-2')}>
 				{steps.map((step, index) => {
 					const isDisabled = !step.isVisited && index > currentStepIndex;
 
 					return (
-						<li
-							key={step.id}
-							className={cn(
-								'flex',
-								sidebar ? 'min-w-0 w-full' : 'min-w-[7.5rem] max-w-[8.75rem] flex-1 scroll-snap-start',
-							)}
-						>
+						<li key={step.id} className={cn('flex', sidebar ? 'min-w-0 w-full' : 'min-w-30 flex-1')}>
 							<Button
 								ref={(el) => {
 									stepRefs.current[index] = el;
@@ -69,10 +63,10 @@ function StepIndicators({ sidebar = false }: { sidebar?: boolean }) {
 								disabled={isDisabled}
 								aria-current={step.isActive ? 'step' : undefined}
 								className={cn(
-									'flex h-auto w-full gap-2 rounded-xl px-3 text-center',
+									'flex h-auto w-full gap-2 rounded-xl p-3 text-center',
 									sidebar
 										? 'flex-row items-start justify-start py-3 text-left'
-										: 'flex-col items-center py-4',
+										: 'flex-col items-center',
 									step.isActive && 'bg-muted',
 								)}
 							>
@@ -209,7 +203,7 @@ export const DefaultStepperComposed: React.FC<{ children?: React.ReactNode }> = 
 	}
 
 	return (
-		<div className="flex w-full flex-col gap-6">
+		<div className="flex min-w-0 w-full flex-col gap-6">
 			<DefaultStepperProgress />
 			<DefaultStepperContent>{children}</DefaultStepperContent>
 			<DefaultStepperNavigation />

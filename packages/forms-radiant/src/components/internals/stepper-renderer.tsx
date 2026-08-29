@@ -5,7 +5,9 @@ import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
 import { StepperProvider } from '@/components/stepper-provider';
+import { HeadlessStepper } from '@/components/steppers/headless-stepper';
 import type { StepData, StepperNavigation } from '@/components/steppers/types';
+
 interface StepperRendererProps {
 	form: Omit<FormConfig, 'stepper'> & { stepper?: FormStepperConfig };
 	steps: FormStep[];
@@ -19,53 +21,6 @@ interface StepperRendererProps {
 	isSubmitting?: boolean;
 	children?: JsxRenderable;
 	engine?: FormEngineContextValue['engine'];
-}
-
-function HeadlessStepper({
-	navigation,
-	isSubmitting,
-	children,
-}: {
-	navigation: StepperNavigation;
-	isSubmitting?: boolean;
-	children?: JsxRenderable;
-}) {
-	return (
-		<div class="se-headless-stepper">
-			<div class="se-headless-stepper__content">{children}</div>
-
-			<div class="se-headless-stepper__controls">
-				<button
-					type="button"
-					class="se-headless-stepper__button"
-					on:click={() => navigation.goToPreviousStep()}
-					disabled={navigation.isFirstStep}
-				>
-					Previous
-				</button>
-
-				<div class="se-headless-stepper__actions">
-					<button
-						type="submit"
-						class="se-headless-stepper__button se-headless-stepper__button--primary"
-						style={{ display: navigation.isLastStep ? 'inline-flex' : 'none' }}
-					>
-						{isSubmitting ? 'Submitting...' : 'Submit'}
-					</button>
-
-					<button
-						type="submit"
-						class="se-headless-stepper__button se-headless-stepper__button--primary"
-						on:click={() => navigation.goToNextStep()}
-						disabled={!navigation.canGoNext}
-						style={{ display: navigation.isLastStep ? 'none' : 'inline-flex' }}
-					>
-						Next
-					</button>
-				</div>
-			</div>
-		</div>
-	);
 }
 
 export function StepperRenderer({
@@ -90,20 +45,18 @@ export function StepperRenderer({
 		isVisited: stepStates.visited[index] || false,
 	}));
 
-	const navigationControls: StepperNavigation = {
-		canGoNext: navigation.canGoNext,
-		canGoPrevious: navigation.canGoPrevious,
-		isFirstStep: currentStepIndex === 0,
-		isLastStep: currentStepIndex === steps.length - 1,
-		goToStep: navigation.goToStep,
-		goToNextStep: navigation.goToNextStep,
-		goToPreviousStep: navigation.goToPreviousStep,
-	};
-
 	const contextValue = {
 		steps: stepInfos,
 		currentStepIndex,
-		navigation: navigationControls,
+		navigation: {
+			canGoNext: navigation.canGoNext,
+			canGoPrevious: navigation.canGoPrevious,
+			isFirstStep: currentStepIndex === 0,
+			isLastStep: currentStepIndex === steps.length - 1,
+			goToStep: navigation.goToStep,
+			goToNextStep: navigation.goToNextStep,
+			goToPreviousStep: navigation.goToPreviousStep,
+		},
 		form: {
 			id: form.id,
 			title: form.title,
@@ -116,9 +69,7 @@ export function StepperRenderer({
 	if (!form.stepper?.$type) {
 		return (
 			<StepperProvider value={contextValue}>
-				<HeadlessStepper navigation={navigationControls} isSubmitting={isSubmitting}>
-					{children}
-				</HeadlessStepper>
+				<HeadlessStepper>{children}</HeadlessStepper>
 			</StepperProvider>
 		);
 	}
@@ -129,9 +80,7 @@ export function StepperRenderer({
 	if (!stepperRegistration) {
 		return (
 			<StepperProvider value={{ ...contextValue, config: stepperConfig }}>
-				<HeadlessStepper navigation={navigationControls} isSubmitting={isSubmitting}>
-					{children}
-				</HeadlessStepper>
+				<HeadlessStepper>{children}</HeadlessStepper>
 			</StepperProvider>
 		);
 	}

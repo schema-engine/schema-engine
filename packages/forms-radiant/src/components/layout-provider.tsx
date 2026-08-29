@@ -1,4 +1,4 @@
-import { customElement, prop, RadiantElement } from '@ecopages/radiant';
+import { customElement, onUpdated, prop, RadiantElement, registerSsrPreparationCallback } from '@ecopages/radiant';
 import { provideContext, type ContextProvider } from '@ecopages/radiant/context';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { layoutContext, type LayoutContextValue } from '@/contexts/layout-context';
@@ -13,11 +13,17 @@ export class LayoutProviderElement extends RadiantElement {
 	})
 	provider!: ContextProvider<typeof layoutContext>;
 
+	constructor() {
+		super();
+		registerSsrPreparationCallback(this, () => this.publish());
+	}
+
 	protected override onConnected(): void {
 		this.publish();
 	}
 
-	protected onUpdated(): void {
+	@onUpdated(['value'])
+	onValueUpdated(): void {
 		this.publish();
 	}
 

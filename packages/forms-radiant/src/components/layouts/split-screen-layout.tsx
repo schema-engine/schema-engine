@@ -1,7 +1,8 @@
 import './split-screen-layout.css';
 import '@ecopages/radiant-ui/heading/styles.css';
+import '@ecopages/radiant-ui/headline/styles.css';
 import { contextSelector } from '@ecopages/radiant/context';
-import { customElement, prop, RadiantElement } from '@ecopages/radiant';
+import { customElement, prop, query, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { RuiHeading, RuiHeadingDescription, RuiHeadingTitle } from '@ecopages/radiant-ui/heading';
 import { layoutContext } from '@/contexts/layout-context';
@@ -22,6 +23,9 @@ export class SplitScreenLayoutElement extends RadiantElement {
 		config: SplitScreenLayoutConfig;
 	};
 
+	@query({ ref: 'side-content' })
+	sideContentTarget!: HTMLElement;
+
 	protected override onConnected(): void {
 		this.syncSideContent();
 	}
@@ -32,7 +36,7 @@ export class SplitScreenLayoutElement extends RadiantElement {
 	}
 
 	private syncSideContent(): void {
-		const target = this.querySelector<HTMLElement>('.split-screen-layout__side-content');
+		const target = this.sideContentTarget;
 		const content = this.sideContent();
 		if (!target || !content) {
 			return;
@@ -62,7 +66,7 @@ export class SplitScreenLayoutElement extends RadiantElement {
 		const sideContent = this.sideContent();
 		const title = form?.title || step?.title;
 
-		return (
+		const view = (
 			<div class={layoutClassName('split-screen-layout', this.layoutClass || undefined)}>
 				{title || sideContent ? (
 					<div
@@ -75,7 +79,10 @@ export class SplitScreenLayoutElement extends RadiantElement {
 						<RuiHeading size="md" as="header">
 							{title ? <RuiHeadingTitle as="h2">{title}</RuiHeadingTitle> : null}
 							{sideContent ? (
-								<RuiHeadingDescription class="split-screen-layout__side-content">
+								<RuiHeadingDescription
+									data-ref="side-content"
+									class="split-screen-layout__side-content"
+								>
 									{sideContent}
 								</RuiHeadingDescription>
 							) : null}
@@ -92,6 +99,12 @@ export class SplitScreenLayoutElement extends RadiantElement {
 				</div>
 			</div>
 		);
+
+		if (/<[a-z][\s\S]*>/i.test(sideContent)) {
+			queueMicrotask(() => this.syncSideContent());
+		}
+
+		return view;
 	}
 }
 
