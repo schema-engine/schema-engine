@@ -1,6 +1,6 @@
-import { useCallback } from 'react';
+import { useMemo } from 'react';
 import { z } from 'zod';
-import type { FieldValues, ResolverResult } from 'react-hook-form';
+import type { FieldValues, Resolver, ResolverResult } from 'react-hook-form';
 import { createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation/utils';
 import { getValueAtPath } from '@/lib/path-utils';
 
@@ -58,52 +58,63 @@ function getAllFieldPaths(values: FieldValues, templatePath: string): string[] {
 	return paths;
 }
 
+function pathIsRequested(path: string, names?: readonly string[]): boolean {
+	if (!names?.length) {
+		return true;
+	}
+
+	return names.some((name) => path === name || path.startsWith(`${name}.`));
+}
+
 /**
  * Creates a React Hook Form resolver that validates fields using Zod schemas.
  * Handles both simple fields and nested array fields with dynamic indices.
+ * When RHF passes `options.names` (e.g. stepper `trigger(currentStepFields)`),
+ * only those fields are validated so later steps stay untriggered.
  */
-export function useFormValidationResolver(elements: any[]) {
-	return useCallback(
-		async (values: FieldValues): Promise<ResolverResult> => {
-			const validatableFields = collectValidatableFields(elements);
-			const allValidations: Array<{ path: string; rules: any[] }> = [];
+export function createFormValidationResolver(elements: any[]): Resolver {
+	return async (values: FieldValues, _context, options): Promise<ResolverResult> => {
+		const validatableFields = collectValidatableFields(elements);
+		const allValidations: Array<{ path: string; rules: any[] }> = [];
 
-			for (const { path: templatePath, rules } of validatableFields) {
-				const actualPaths = getAllFieldPaths(values, templatePath);
-				if (actualPaths.length > 0) {
-					for (const actualPath of actualPaths) {
-						allValidations.push({ path: actualPath, rules });
-					}
-				} else {
-					allValidations.push({ path: templatePath, rules });
+		for (const { path: templatePath, rules } of validatableFields) {
+			const actualPaths = getAllFieldPaths(values, templatePath);
+			const candidatePaths = actualPaths.length > 0 ? actualPaths : [templatePath];
+
+			for (const actualPath of candidatePaths) {
+				if (pathIsRequested(actualPath, options?.names)) {
+					allValidations.push({ path: actualPath, rules });
 				}
 			}
+		}
 
-			const errors: Record<string, { type: string; message: string }> = {};
+		const errors: Record<string, { type: string; message: string }> = {};
 
-			await Promise.all(
-				allValidations.map(async ({ path, rules }) => {
-					const value = getValueAtPath(values, path);
-					try {
-						const schema = createZodSchemaFromRules(rules, values);
-						await schema.parseAsync(value);
-					} catch (error) {
-						if (error instanceof z.ZodError) {
-							errors[path] = {
-								type: 'validation',
-								message: error.issues[0]?.message || 'Validation failed',
-							};
-						}
+		await Promise.all(
+			allValidations.map(async ({ path, rules }) => {
+				const value = getValueAtPath(values, path);
+				try {
+					const schema = createZodSchemaFromRules(rules, values);
+					await schema.parseAsync(value);
+				} catch (error) {
+					if (error instanceof z.ZodError) {
+						errors[path] = {
+							type: 'validation',
+							message: error.issues[0]?.message || 'Validation failed',
+						};
 					}
-				}),
-			);
+				}
+			}),
+		);
 
-			if (Object.keys(errors).length === 0) {
-				return { values, errors: {} };
-			}
+		if (Object.keys(errors).length === 0) {
+			return { values, errors: {} };
+		}
 
-			return { values: {}, errors };
-		},
-		[elements],
-	);
+		return { values: {}, errors };
+	};
+}
+
+export function useFormValidationResolver(elements: any[]): Resolver {
+	return useMemo(() => createFormValidationResolver(elements), [elements]);
 }

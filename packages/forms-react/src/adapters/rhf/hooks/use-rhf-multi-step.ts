@@ -35,6 +35,10 @@ type DispatchTrigger = (
 	extraMetadata?: Record<string, unknown>,
 ) => Promise<ActionExecutionResult[]>;
 
+function fieldNamesForStep(step: FormConfig['steps'][number] | undefined): string[] {
+	return (step?.elements ?? []).map((field) => field.name).filter(Boolean);
+}
+
 export function useRHFMultiStep(
 	config: FormConfig,
 	form: UseFormReturn<FieldValues, any, FieldValues>,
@@ -49,25 +53,24 @@ export function useRHFMultiStep(
 	const [stepStates, setStepStates] = useState<StepStates>(() => ({
 		completed: config.steps.map(() => false),
 		valid: config.steps.map(() => false),
-		visited: config.steps.map(() => false),
+		// The first step is visible as soon as the form mounts, so it is already visited.
+		visited: config.steps.map((_, index) => index === 0),
 	}));
 
 	const validateStep = useCallback(
 		async (stepIndex: number): Promise<boolean> => {
-			const step = config.steps[stepIndex];
-			if (!step?.elements) return true;
-
-			const fieldNames = step.elements.map((field) => field.name);
+			const fieldNames = fieldNamesForStep(config.steps[stepIndex]);
+			if (fieldNames.length === 0) return true;
 
 			try {
 				const isValid = await trigger(fieldNames);
 
 				if (!isValid) {
-					const fieldsWithErrors = fieldNames.filter((fieldName) => formState.errors[fieldName]);
+					const firstInvalid = fieldNames.find((fieldName) => form.getFieldState(fieldName).invalid);
 
-					if (fieldsWithErrors.length > 0) {
-						setFocus(fieldsWithErrors[0]);
-						logger.debug(`Validation failed. Focused on field: ${fieldsWithErrors[0]}`);
+					if (firstInvalid) {
+						setFocus(firstInvalid);
+						logger.debug(`Validation failed. Focused on field: ${firstInvalid}`);
 					}
 				}
 
@@ -82,7 +85,7 @@ export function useRHFMultiStep(
 				return false;
 			}
 		},
-		[config.steps, trigger, setFocus, formState.errors],
+		[config.steps, form, trigger, setFocus],
 	);
 
 	const executeStepTrigger = useCallback(
