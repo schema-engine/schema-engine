@@ -68,18 +68,23 @@
         "button",
         "command",
         "input",
-        "popover",
-        "scroll-area"
+        "popover"
       ],
       "dependencies": [
         "react-phone-number-input",
-        "lucide-react"
+        "lucide-react",
+        "libphonenumber-js"
       ],
       "files": [
         {
           "path": "../shared/primitives/phone-input.tsx",
           "type": "registry:ui",
           "target": "@ui/schema-engine/components/phone-input.tsx"
+        },
+        {
+          "path": "../shared/primitives/phone-country.ts",
+          "type": "registry:lib",
+          "target": "@ui/schema-engine/components/phone-country.ts"
         }
       ]
     },
@@ -107,10 +112,10 @@
       "name": "schema-engine-form-masked-input-primitive-radix",
       "type": "registry:ui",
       "title": "Schema Engine masked input",
-      "description": "Schema Engine masked input primitive powered by react-imask.",
+      "description": "Schema Engine masked input primitive powered by imask.",
       "registryDependencies": [],
       "dependencies": [
-        "react-imask"
+        "imask"
       ],
       "files": [
         {

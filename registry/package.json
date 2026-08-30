@@ -1,0 +1,10 @@
+{
+	"name": "@schema-engine/registry-files",
+	"private": true,
+	"type": "module",
+	"dependencies": {
+		"@schema-engine/forms": "workspace:*",
+		"@schema-engine/forms-react": "workspace:*",
+		"zod": "^4.0.17"
+	}
+}

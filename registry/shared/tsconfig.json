@@ -22,5 +22,5 @@
 			"@/lib/utils": ["../ui-stubs/lib/utils.ts"]
 		}
 	},
-	"include": ["./forms/**/*.ts", "./forms/**/*.tsx", "./primitives/**/*.tsx"]
+	"include": ["./forms/**/*.ts", "./forms/**/*.tsx", "./primitives/**/*.tsx", "./primitives/**/*.ts"]
 }

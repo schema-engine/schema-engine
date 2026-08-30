@@ -1,5 +1,30 @@
-import type { ComponentProps, ReactNode } from 'react';
+import type { ComponentProps, KeyboardEvent, ReactNode } from 'react';
 import { splitExtras, type StubExtras } from './props';
+
+function moveActiveOption(root: HTMLElement, direction: 1 | -1) {
+	const options = Array.from(root.querySelectorAll<HTMLElement>('[role="option"]'));
+	if (options.length === 0) {
+		return;
+	}
+
+	const current = options.findIndex(
+		(option) => option.hasAttribute('data-selected') && option.getAttribute('data-selected') !== 'false',
+	);
+	const nextIndex =
+		current < 0
+			? direction === 1
+				? 0
+				: options.length - 1
+			: (current + direction + options.length) % options.length;
+	options.forEach((option, index) => {
+		option.toggleAttribute('data-selected', index === nextIndex);
+	});
+}
+
+function selectActiveOption(root: HTMLElement) {
+	const active = root.querySelector<HTMLElement>('[role="option"][data-selected]:not([data-selected="false"])');
+	active?.click();
+}
 
 export function Command({
 	children,
@@ -9,7 +34,27 @@ export function Command({
 }: ComponentProps<'div'> &
 	StubExtras & { shouldFilter?: boolean; filter?: (value: string, search: string) => number }) {
 	const { rest } = splitExtras(props);
-	return <div {...rest}>{children}</div>;
+	const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+		rest.onKeyDown?.(event);
+		if (event.key === 'ArrowDown') {
+			event.preventDefault();
+			moveActiveOption(event.currentTarget, 1);
+		}
+		if (event.key === 'ArrowUp') {
+			event.preventDefault();
+			moveActiveOption(event.currentTarget, -1);
+		}
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			selectActiveOption(event.currentTarget);
+		}
+	};
+
+	return (
+		<div {...rest} data-slot="command" onKeyDown={onKeyDown}>
+			{children}
+		</div>
+	);
 }
 
 export function CommandInput({

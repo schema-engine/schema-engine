@@ -50,7 +50,7 @@ export const Default: Story = {
 				id: 'phone',
 				name: 'phone',
 				label: 'Phone Number',
-				placeholder: 'Enter phone number',
+				placeholder: '(202) 555-0123',
 				defaultCountry: 'US',
 			})
 			.build(),
@@ -67,7 +67,7 @@ export const International: Story = {
 				id: 'internationalPhone',
 				name: 'internationalPhone',
 				label: 'International Phone',
-				placeholder: 'Enter phone number',
+				placeholder: '+1 202 555 0123',
 				description: 'Phone number with country code',
 				international: true,
 			})

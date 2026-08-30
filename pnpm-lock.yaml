@@ -241,6 +241,15 @@ importers:
       '@schema-engine/actions':
         specifier: workspace:*
         version: link:../actions
+      country-flag-icons:
+        specifier: ^1.6.20
+        version: 1.6.20
+      imask:
+        specifier: ^7.6.1
+        version: 7.6.1
+      libphonenumber-js:
+        specifier: ^1.13.12
+        version: 1.13.12
     devDependencies:
       '@babel/core':
         specifier: ^7.28.0
@@ -338,6 +347,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.2.1
         version: 5.9.1(@standard-schema/spec@1.1.0)(react-hook-form@7.86.0(react@19.2.8))(zod@4.5.4)
+      '@schema-engine/actions':
+        specifier: workspace:*
+        version: link:../actions
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -435,9 +447,15 @@ importers:
       esbuild:
         specifier: ^0.27.0
         version: 0.27.7
+      imask:
+        specifier: ^7.6.1
+        version: 7.6.1
       input-otp:
         specifier: 1.4.1
         version: 1.4.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      libphonenumber-js:
+        specifier: ^1.13.12
+        version: 1.13.12
       lucide-react:
         specifier: ^0.539.0
         version: 0.539.0(react@19.2.8)
@@ -462,9 +480,6 @@ importers:
       react-dropzone:
         specifier: ^14.3.8
         version: 14.4.1(react@19.2.8)
-      react-imask:
-        specifier: ^7.6.1
-        version: 7.6.1(react@19.2.8)
       react-phone-number-input:
         specifier: ^3.4.12
         version: 3.4.18(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -514,6 +529,18 @@ importers:
       vitest:
         specifier: ^4.0.13
         version: 4.1.11(@types/node@24.13.3)(@vitest/browser-playwright@4.1.11)(msw@2.15.0(@types/node@24.13.3)(typescript@5.9.3))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))
+      zod:
+        specifier: ^4.0.17
+        version: 4.5.4
+
+  registry:
+    dependencies:
+      '@schema-engine/forms':
+        specifier: workspace:*
+        version: link:../packages/forms
+      '@schema-engine/forms-react':
+        specifier: workspace:*
+        version: link:../packages/forms-react
       zod:
         specifier: ^4.0.17
         version: 4.5.4
@@ -4778,12 +4805,6 @@ packages:
   react-hook-form@7.86.0:
     resolution: {integrity: sha512-4kbWJrh5jPZt1+YqVcXcGKffGcXV/XVbozknLh0Yjh0KhpoAkus21TAQhzRYqNwFkkObmnSvRlZZ3GT+ehoIrA==}
     engines: {node: '>=18.0.0'}
-    peerDependencies:
-      react: ^19.1.0
-
-  react-imask@7.6.1:
-    resolution: {integrity: sha512-vLNfzcCz62Yzx/GRGh5tiCph9Gbh2cZu+Tz8OiO5it2eNuuhpA0DWhhSlOtVtSJ80+Bx+vFK5De8eQ9AmbkXzA==}
-    engines: {npm: '>=4.0.0'}
     peerDependencies:
       react: ^19.1.0
 
@@ -9842,12 +9863,6 @@ snapshots:
 
   react-hook-form@7.86.0(react@19.2.8):
     dependencies:
-      react: 19.2.8
-
-  react-imask@7.6.1(react@19.2.8):
-    dependencies:
-      imask: 7.6.1
-      prop-types: 15.8.1
       react: 19.2.8
 
   react-is@16.13.1: {}

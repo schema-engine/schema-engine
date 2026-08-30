@@ -16,7 +16,7 @@ const meta = {
 		docs: {
 			description: {
 				component:
-					'Masked text input powered by react-imask. Use for formatted values such as IBAN, card numbers, and dates.',
+					'Masked text input powered by imask. Use for formatted values such as IBAN, card numbers, and dates.',
 			},
 		},
 	},
@@ -50,8 +50,8 @@ export const BankAccount: Story = {
 				id: 'iban',
 				name: 'iban',
 				label: 'Bank account (IBAN)',
-				mask: 'aa00 0000 0000 0000 0000 00',
-				placeholder: 'DE89 3704 0044 0532 0130 00',
+				mask: 'aa00 0000 0000 000000',
+				placeholder: 'ES12 4311 2144 214423',
 				description: 'Enter the international bank account number',
 				inputMode: 'text',
 				autoComplete: 'off',
@@ -108,8 +108,8 @@ export const WithValidation: Story = {
 				id: 'iban',
 				name: 'iban',
 				label: 'Bank account (IBAN)',
-				mask: 'aa00 0000 0000 0000 0000 00',
-				placeholder: 'DE89 3704 0044 0532 0130 00',
+				mask: 'aa00 0000 0000 000000',
+				placeholder: 'ES12 4311 2144 214423',
 				description: 'Required for payouts',
 				rules: [
 					ValidationPresets.string.required('IBAN is required'),

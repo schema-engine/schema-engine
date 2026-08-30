@@ -1,13 +1,16 @@
-import type { ComponentProps, ReactNode } from 'react';
+import type { ComponentProps, MouseEvent, ReactNode } from 'react';
 import { createContext, useContext } from 'react';
 import { splitExtras, type StubExtras } from './props';
 
-const PopoverContext = createContext<{ open: boolean }>({ open: false });
+const PopoverContext = createContext<{
+	open: boolean;
+	onOpenChange?: (open: boolean) => void;
+}>({ open: false });
 
 export function Popover({
 	open = false,
 	modal: _modal,
-	onOpenChange: _onOpenChange,
+	onOpenChange,
 	children,
 }: {
 	open?: boolean;
@@ -15,14 +18,23 @@ export function Popover({
 	onOpenChange?: (open: boolean) => void;
 	children?: ReactNode;
 }) {
-	return <PopoverContext.Provider value={{ open }}>{children}</PopoverContext.Provider>;
+	return <PopoverContext.Provider value={{ open, onOpenChange }}>{children}</PopoverContext.Provider>;
 }
 
 export function PopoverTrigger({ children, ...props }: ComponentProps<'button'> & StubExtras) {
+	const { open, onOpenChange } = useContext(PopoverContext);
 	const { extras, rest } = splitExtras(props);
-	if (extras.render) return <>{extras.render(rest)}</>;
+	const triggerProps = {
+		...rest,
+		onClick: (event: MouseEvent<HTMLButtonElement>) => {
+			rest.onClick?.(event);
+			onOpenChange?.(!open);
+		},
+	};
+
+	if (extras.render) return <>{extras.render(triggerProps)}</>;
 	return (
-		<button type="button" {...rest}>
+		<button type="button" {...triggerProps}>
 			{children}
 		</button>
 	);
