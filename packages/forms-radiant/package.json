@@ -68,7 +68,8 @@
 		"zod": "^4.0.17"
 	},
 	"dependencies": {
-		"@ecopages/logger": "^0.2.2"
+		"@ecopages/logger": "^0.2.2",
+		"@schema-engine/actions": "workspace:*"
 	},
 	"exports": {
 		"./package.json": {

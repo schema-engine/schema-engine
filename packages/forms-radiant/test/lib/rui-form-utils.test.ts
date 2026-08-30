@@ -1,5 +1,11 @@
 import { describe, expect, test, vi } from 'vitest';
-import { findNativeForm, findNearestRuiForm, getRuiFormStore, submitNativeForm } from '@/lib/rui-form-utils';
+import {
+	findNativeForm,
+	findNearestRuiForm,
+	getRuiFormStore,
+	readRuiFormStore,
+	submitNativeForm,
+} from '@/lib/rui-form-utils';
 
 describe('submitNativeForm', () => {
 	test('uses requestSubmit so RuiForm can validate', () => {
@@ -55,5 +61,19 @@ describe('getRuiFormStore', () => {
 		Reflect.set(ruiForm, 'store', store);
 
 		expect(getRuiFormStore(ruiForm)).toBe(store);
+	});
+});
+
+describe('readRuiFormStore', () => {
+	test('returns a store only when it satisfies the requested contract', () => {
+		const ruiForm = document.createElement('rui-form');
+		const store = {
+			getValues: () => ({ name: 'Ada' }),
+			reset: () => undefined,
+		};
+		Reflect.set(ruiForm, 'store', store);
+
+		expect(readRuiFormStore<typeof store>(ruiForm, ['getValues', 'reset'])).toBe(store);
+		expect(readRuiFormStore<typeof store>(ruiForm, ['getValues', 'validateAll'])).toBeNull();
 	});
 });
