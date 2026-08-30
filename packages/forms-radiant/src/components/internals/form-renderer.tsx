@@ -12,6 +12,8 @@ export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
 	style?: Record<string, string | number | undefined>;
 	engine?: FormEngine;
 	adapter?: FormAdapter;
+	/** Rendered inside the form after its fields, for opt-in tools such as FormDebugger. */
+	children?: JsxRenderable;
 }
 
 /**
@@ -27,6 +29,7 @@ export class FormRendererElement extends RadiantElement {
 	@prop({ type: Object }) engine?: FormEngine;
 	@prop({ type: Object }) adapter?: FormAdapter;
 	@prop({ type: Object }) defaultValues?: Record<string, unknown>;
+	@prop({ type: Object }) extras?: JsxRenderable;
 	onSubmit?: FormProviderProps['onSubmit'];
 
 	@provideContext<typeof formEngineContext>({
@@ -68,17 +71,27 @@ export class FormRendererElement extends RadiantElement {
 				config={config}
 				defaultValues={this.defaultValues}
 				onSubmit={this.onSubmit}
+				children={this.extras}
 				engine={this.engine}
 			/>
 		);
 	}
 }
 
-export function FormRenderer({ engine, adapter, className = '', style, ...props }: FormRendererProps): JsxRenderable {
+export function FormRenderer({
+	engine,
+	adapter,
+	className = '',
+	style,
+	children,
+	...props
+}: FormRendererProps): JsxRenderable {
 	if (!engine || !adapter) {
 		return (
 			<div class={`se-form-renderer ${className}`.trim()} style={style}>
-				<FormProvider {...props} engine={engine} />
+				<FormProvider {...props} engine={engine}>
+					{children}
+				</FormProvider>
 			</div>
 		);
 	}
@@ -91,6 +104,7 @@ export function FormRenderer({ engine, adapter, className = '', style, ...props 
 		'prop:adapter': adapter,
 		'prop:defaultValues': props.defaultValues,
 		'prop:onSubmit': props.onSubmit,
+		'prop:extras': children,
 	});
 }
 

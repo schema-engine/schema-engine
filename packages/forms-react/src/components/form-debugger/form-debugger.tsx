@@ -15,6 +15,211 @@ export interface FormDebuggerProps {
 	showFormState?: boolean;
 }
 
+function CloseIcon() {
+	return (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="18"
+			height="18"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			aria-hidden="true"
+		>
+			<path d="M18 6 6 18" />
+			<path d="m6 6 12 12" />
+		</svg>
+	);
+}
+
+function DebuggerHeader({
+	title,
+	currentStep,
+	totalSteps,
+	onClose,
+}: {
+	title: string;
+	currentStep: number;
+	totalSteps: number;
+	onClose: () => void;
+}) {
+	return (
+		<div className="form-debugger__header">
+			<div>
+				<h3 className="form-debugger__header-title">{title}</h3>
+				{totalSteps > 1 && (
+					<span className="form-debugger__header-subtitle">
+						Step {currentStep + 1} / {totalSteps}
+					</span>
+				)}
+			</div>
+			<button type="button" onClick={onClose} className="form-debugger__close-button" aria-label="Close debugger">
+				<CloseIcon />
+			</button>
+		</div>
+	);
+}
+
+function DebuggerProgress({ currentStep, totalSteps }: { currentStep: number; totalSteps: number }) {
+	return (
+		<div>
+			<div className="form-debugger__section-title">Progress</div>
+			<div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-muted">
+				<div
+					className="h-full bg-primary transition-all"
+					style={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }}
+				/>
+			</div>
+		</div>
+	);
+}
+
+function DebuggerSteps({
+	steps,
+	currentStep,
+	showDetails,
+}: {
+	steps: Array<{
+		id: string;
+		title?: string;
+		description?: string;
+		isValid?: boolean;
+		isVisited?: boolean;
+	}>;
+	currentStep: number;
+	showDetails: boolean;
+}) {
+	return (
+		<div>
+			<div className="form-debugger__section-title">Steps</div>
+			<div className="form-debugger__timeline mt-2">
+				{steps.map((step, index) => (
+					<div
+						key={step.id}
+						className={cn('form-debugger__timeline-item', {
+							'form-debugger__timeline-item--active': index === currentStep,
+						})}
+					>
+						<div>
+							<div className="font-medium">{step.title ?? `Step ${index + 1}`}</div>
+							{step.description && showDetails && (
+								<div className="text-xs text-muted-foreground">{step.description}</div>
+							)}
+							<div className="form-debugger__timeline-meta">
+								{step.isValid && (
+									<span className="form-debugger__badge form-debugger__badge--valid">Valid</span>
+								)}
+								{!step.isValid && step.isVisited && (
+									<span className="form-debugger__badge form-debugger__badge--invalid">Invalid</span>
+								)}
+								{step.isVisited && (
+									<span className="form-debugger__badge form-debugger__badge--visited">Visited</span>
+								)}
+							</div>
+						</div>
+					</div>
+				))}
+			</div>
+		</div>
+	);
+}
+
+function DebuggerFormState({
+	formState,
+	formValues,
+	submissionStatus,
+	stepStates,
+}: {
+	formState: { isSubmitting: boolean; isValid: boolean; errors: Record<string, unknown> };
+	formValues: unknown;
+	submissionStatus: string;
+	stepStates?: { valid: boolean[] } | null;
+}) {
+	return (
+		<div>
+			<div className="form-debugger__section-title">Form state</div>
+			<div className="mt-2 space-y-1">
+				<div className="form-debugger__detail-row">
+					<span className="form-debugger__detail-label">Submitting</span>
+					<code className="form-debugger__detail-value">{String(formState.isSubmitting)}</code>
+				</div>
+				<div className="form-debugger__detail-row">
+					<span className="form-debugger__detail-label">Valid</span>
+					<code className="form-debugger__detail-value">{String(formState.isValid)}</code>
+				</div>
+				<div className="form-debugger__detail-row">
+					<span className="form-debugger__detail-label">Submission</span>
+					<code className="form-debugger__detail-value">{submissionStatus}</code>
+				</div>
+				{stepStates ? (
+					<div className="form-debugger__detail-row">
+						<span className="form-debugger__detail-label">Step states</span>
+						<code className="form-debugger__detail-value">{JSON.stringify(stepStates.valid)}</code>
+					</div>
+				) : null}
+			</div>
+			<pre className="form-debugger__pre">{JSON.stringify(formValues, null, 2)}</pre>
+			{Object.keys(formState.errors).length > 0 && (
+				<pre className="form-debugger__pre">{JSON.stringify(formState.errors, null, 2)}</pre>
+			)}
+		</div>
+	);
+}
+
+function DebuggerNav({
+	steps,
+	currentStep,
+	navigation,
+}: {
+	steps: Array<{ id: string; title?: string; isVisited?: boolean }>;
+	currentStep: number;
+	navigation: {
+		goToPreviousStep: () => void;
+		goToNextStep: () => void;
+		goToStep: (index: number) => void;
+		isFirstStep: boolean;
+		canGoNext: boolean;
+	};
+}) {
+	return (
+		<div className="form-debugger__nav">
+			<button
+				type="button"
+				onClick={navigation.goToPreviousStep}
+				disabled={navigation.isFirstStep}
+				className="form-debugger__nav-button"
+			>
+				Previous
+			</button>
+			<div className="form-debugger__nav-dots">
+				{steps.map((step, index) => (
+					<button
+						key={step.id}
+						type="button"
+						onClick={() => navigation.goToStep(index)}
+						disabled={!step.isVisited && index > currentStep}
+						className={cn('form-debugger__nav-dot', {
+							'form-debugger__nav-dot--active': index === currentStep,
+							'form-debugger__nav-dot--completed': index < currentStep,
+							'form-debugger__nav-dot--disabled': !step.isVisited && index > currentStep,
+						})}
+						aria-label={`Go to ${step.title ?? `step ${index + 1}`}`}
+					/>
+				))}
+			</div>
+			<button
+				type="button"
+				onClick={navigation.goToNextStep}
+				disabled={!navigation.canGoNext}
+				className="form-debugger__nav-button"
+			>
+				Next
+			</button>
+		</div>
+	);
+}
+
 function FormDebuggerPanel({
 	onClose,
 	showStepDetails,
@@ -27,165 +232,32 @@ function FormDebuggerPanel({
 
 	const steps = stepperContext?.steps ?? [];
 	const isMultiStep = totalSteps > 1;
-	const progressPercentage = isMultiStep ? ((currentStep + 1) / totalSteps) * 100 : 100;
 
 	return (
 		<div className="form-debugger__panel">
-			<div className="form-debugger__header">
-				<div>
-					<h3 className="form-debugger__header-title">{stepperContext?.form.title ?? 'Form Debugger'}</h3>
-					{isMultiStep && (
-						<span className="form-debugger__header-subtitle">
-							Step {currentStep + 1} / {totalSteps}
-						</span>
-					)}
-				</div>
-				<button
-					type="button"
-					onClick={onClose}
-					className="form-debugger__close-button"
-					aria-label="Close debugger"
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="18"
-						height="18"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						strokeWidth="2"
-						aria-hidden="true"
-					>
-						<path d="M18 6 6 18" />
-						<path d="m6 6 12 12" />
-					</svg>
-				</button>
-			</div>
-
+			<DebuggerHeader
+				title={stepperContext?.form.title ?? 'Form Debugger'}
+				currentStep={currentStep}
+				totalSteps={totalSteps}
+				onClose={onClose}
+			/>
 			<div className="form-debugger__content">
-				{isMultiStep && (
-					<div>
-						<div className="form-debugger__section-title">Progress</div>
-						<div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-muted">
-							<div
-								className="h-full bg-primary transition-all"
-								style={{ width: `${progressPercentage}%` }}
-							/>
-						</div>
-					</div>
-				)}
-
+				{isMultiStep && <DebuggerProgress currentStep={currentStep} totalSteps={totalSteps} />}
 				{isMultiStep && steps.length > 0 && (
-					<div>
-						<div className="form-debugger__section-title">Steps</div>
-						<div className="form-debugger__timeline mt-2">
-							{steps.map((step, index) => (
-								<div
-									key={step.id}
-									className={cn('form-debugger__timeline-item', {
-										'form-debugger__timeline-item--active': index === currentStep,
-									})}
-								>
-									<div>
-										<div className="font-medium">{step.title ?? `Step ${index + 1}`}</div>
-										{step.description && showStepDetails && (
-											<div className="text-xs text-muted-foreground">{step.description}</div>
-										)}
-										<div className="form-debugger__timeline-meta">
-											{step.isValid && (
-												<span className="form-debugger__badge form-debugger__badge--valid">
-													Valid
-												</span>
-											)}
-											{!step.isValid && step.isVisited && (
-												<span className="form-debugger__badge form-debugger__badge--invalid">
-													Invalid
-												</span>
-											)}
-											{step.isVisited && (
-												<span className="form-debugger__badge form-debugger__badge--visited">
-													Visited
-												</span>
-											)}
-										</div>
-									</div>
-								</div>
-							))}
-						</div>
-					</div>
+					<DebuggerSteps steps={steps} currentStep={currentStep} showDetails={showStepDetails} />
 				)}
-
 				{showFormState && (
-					<div>
-						<div className="form-debugger__section-title">Form state</div>
-						<div className="mt-2 space-y-1">
-							<div className="form-debugger__detail-row">
-								<span className="form-debugger__detail-label">Submitting</span>
-								<code className="form-debugger__detail-value">{String(formState.isSubmitting)}</code>
-							</div>
-							<div className="form-debugger__detail-row">
-								<span className="form-debugger__detail-label">Valid</span>
-								<code className="form-debugger__detail-value">{String(formState.isValid)}</code>
-							</div>
-							<div className="form-debugger__detail-row">
-								<span className="form-debugger__detail-label">Submission</span>
-								<code className="form-debugger__detail-value">{submissionState.status}</code>
-							</div>
-							{stepStates && (
-								<div className="form-debugger__detail-row">
-									<span className="form-debugger__detail-label">Step states</span>
-									<code className="form-debugger__detail-value">
-										{JSON.stringify(stepStates.valid)}
-									</code>
-								</div>
-							)}
-						</div>
-						<pre className="form-debugger__pre">{JSON.stringify(formValues, null, 2)}</pre>
-						{Object.keys(formState.errors).length > 0 && (
-							<pre className="form-debugger__pre">{JSON.stringify(formState.errors, null, 2)}</pre>
-						)}
-					</div>
+					<DebuggerFormState
+						formState={formState}
+						formValues={formValues}
+						submissionStatus={submissionState.status}
+						stepStates={stepStates}
+					/>
 				)}
 			</div>
-
-			{isMultiStep && navigation && (
-				<div className="form-debugger__nav">
-					<button
-						type="button"
-						onClick={navigation.goToPreviousStep}
-						disabled={navigation.isFirstStep}
-						className="form-debugger__nav-button"
-					>
-						Previous
-					</button>
-
-					<div className="form-debugger__nav-dots">
-						{steps.map((step, index) => (
-							<button
-								key={step.id}
-								type="button"
-								onClick={() => navigation.goToStep(index)}
-								disabled={!step.isVisited && index > currentStep}
-								className={cn('form-debugger__nav-dot', {
-									'form-debugger__nav-dot--active': index === currentStep,
-									'form-debugger__nav-dot--completed': index < currentStep,
-									'form-debugger__nav-dot--disabled': !step.isVisited && index > currentStep,
-								})}
-								aria-label={`Go to ${step.title ?? `step ${index + 1}`}`}
-							/>
-						))}
-					</div>
-
-					<button
-						type="button"
-						onClick={navigation.goToNextStep}
-						disabled={!navigation.canGoNext}
-						className="form-debugger__nav-button"
-					>
-						Next
-					</button>
-				</div>
-			)}
+			{isMultiStep && navigation ? (
+				<DebuggerNav steps={steps} currentStep={currentStep} navigation={navigation} />
+			) : null}
 		</div>
 	);
 }

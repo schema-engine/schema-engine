@@ -9,6 +9,7 @@ se-stepper-renderer,
 se-card-layout,
 se-hero-background-layout,
 se-minimalist-stepper,
+se-headless-stepper,
 se-form-array,
 se-drop-zone,
 se-input-otp,
@@ -21,14 +22,16 @@ se-form-element {
 }
 
 se-split-screen-layout,
-se-default-stepper {
+se-default-stepper,
+se-headless-stepper {
 	display: block;
 	width: 100%;
 	min-height: 100%;
 }
 
 se-split-screen-layout > .split-screen-layout,
-se-default-stepper > .default-stepper {
+se-default-stepper > .default-stepper,
+se-headless-stepper > .se-headless-stepper {
 	width: 100%;
 	min-height: 100%;
 }
@@ -86,6 +89,10 @@ form.rui-form:has(se-split-screen-layout) {
 	min-width: 0;
 }
 
+[data-select-value]:has([data-tag]) [data-select-placeholder] {
+	display: none;
+}
+
 .se-headless-stepper {
 	display: flex;
 	flex-direction: column;
@@ -128,4 +135,16 @@ form.rui-form:has(se-split-screen-layout) {
 .se-headless-stepper__button:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
+}
+
+.se-headless-stepper [data-se-submit] {
+	display: none;
+}
+
+.se-headless-stepper[data-se-last-step='true'] [data-se-submit] {
+	display: inline-flex;
+}
+
+.se-headless-stepper[data-se-last-step='true'] [data-se-next] {
+	display: none;
 }

@@ -1,7 +1,5 @@
 import { createContext } from '@ecopages/radiant/context';
 
-export type PendingNavigation = 'next' | null;
-
 export interface StepStates {
 	completed: boolean[];
 	valid: boolean[];
@@ -12,8 +10,6 @@ export interface FormInstanceContextValue {
 	currentStep: number;
 	totalSteps: number;
 	stepStates: StepStates;
-	pendingNavigation: PendingNavigation;
-	setPendingNavigation: (value: PendingNavigation) => void;
 	goToStep: (index: number) => void;
 	goToNextStep: () => void;
 	goToPreviousStep: () => void;

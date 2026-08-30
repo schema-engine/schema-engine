@@ -4,7 +4,6 @@ import { createDefaultFieldPlay, createValidationFieldPlay } from '@/stories/sha
 
 const meta = {
 	...formRendererMeta,
-	title: 'Forms/Elements/Inputs/Textarea',
 	args: {
 		config: fieldFormConfig('textarea-default', 'Forms/Elements/Inputs/Textarea', [
 			{

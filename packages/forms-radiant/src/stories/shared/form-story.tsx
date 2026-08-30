@@ -1,4 +1,4 @@
-import { FormRenderer, FormRendererElement, type FormRendererProps } from '@/components/internals/form-renderer';
+import { FormRenderer, type FormRendererProps } from '@/components/internals/form-renderer';
 import { getEngine, radiantAdapter } from './form-builder';
 import type { FormConfig } from '@schema-engine/forms/schemas';
 import type { Meta } from '@ecopages/storybook-radiant-vite';
@@ -52,9 +52,11 @@ export const formRendererMeta = {
 	},
 	parameters: {
 		layout: 'padded',
+		// No `element` / `ssrModule`: FormRendererElement is not a stamped `.script` host,
+		// and engine/adapter cannot hydrate through HTML. The CSF stamp falls back to
+		// JSX story SSR so hydrate can re-apply live args.
 		radiant: {
 			renderMode: 'client',
-			element: FormRendererElement,
 		},
 	},
 } satisfies Meta<typeof FormRenderer>;

@@ -2,6 +2,7 @@ import type { FormEngine as CoreFormEngine } from '@schema-engine/forms/engine/f
 import type { FormProviderProps } from '../types';
 import { FormElementsRenderer } from '@/components/internals/form-elements-renderer';
 import { FormInstance } from '@/components/form-instance';
+import { FormActionController } from '@/components/form-action-controller';
 import { ConfiguredRuiForm } from './rui-form-shell';
 
 function isMultiStepForm(config: FormProviderProps['config']): boolean {
@@ -12,8 +13,11 @@ export function FormProvider<TFormData extends Record<string, unknown> = Record<
 	config,
 	defaultValues = {},
 	onSubmit,
+	children,
 	engine,
 }: FormProviderProps<TFormData> & { engine?: CoreFormEngine }) {
+	const actionController = config.actions?.length ? <FormActionController config={config} engine={engine} /> : null;
+
 	if (isMultiStepForm(config)) {
 		return (
 			<FormInstance
@@ -21,7 +25,10 @@ export function FormProvider<TFormData extends Record<string, unknown> = Record<
 				engine={engine}
 				defaultValues={defaultValues}
 				onSubmit={onSubmit as ((data: Record<string, unknown>) => void | Promise<void>) | undefined}
-			/>
+			>
+				{children}
+				{actionController}
+			</FormInstance>
 		);
 	}
 
@@ -32,6 +39,8 @@ export function FormProvider<TFormData extends Record<string, unknown> = Record<
 			onSubmit={onSubmit as ((data: Record<string, unknown>) => void | Promise<void>) | undefined}
 		>
 			<FormElementsRenderer config={config} engine={engine} />
+			{children}
+			{actionController}
 		</ConfiguredRuiForm>
 	);
 }

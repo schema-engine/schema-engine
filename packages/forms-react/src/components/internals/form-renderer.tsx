@@ -22,19 +22,19 @@ function isMultiStepForm(config: FormConfig): boolean {
 /**
  * Internal component that renders fields with access to form context and grid layout
  */
-function FormElementsRenderer({ config }: { config: FormConfig }) {
+function FormElementsRenderer({ config, children }: { config: FormConfig; children?: React.ReactNode }) {
 	if (isMultiStepForm(config)) {
-		return <MultiStepFormElementsRenderer config={config} />;
+		return <MultiStepFormElementsRenderer config={config}>{children}</MultiStepFormElementsRenderer>;
 	}
 
-	return <SingleStepFormElementsRenderer config={config} />;
+	return <SingleStepFormElementsRenderer config={config}>{children}</SingleStepFormElementsRenderer>;
 }
 
 /**
  * Component for single-step forms (only one step in the steps array)
  * Note: We don't pass stepMeta for single-step forms since step navigation is meaningless
  */
-function SingleStepFormElementsRenderer({ config }: { config: FormConfig }) {
+function SingleStepFormElementsRenderer({ config, children }: { config: FormConfig; children?: React.ReactNode }) {
 	const singleStep = config.steps[0];
 
 	if (!singleStep?.elements) return null;
@@ -50,18 +50,24 @@ function SingleStepFormElementsRenderer({ config }: { config: FormConfig }) {
 				}}
 			>
 				<StepFields step={singleStep} config={config} />
+				{children}
 			</LayoutRenderer>
 		);
 	}
 
-	return <StepFields step={singleStep} config={config} />;
+	return (
+		<>
+			<StepFields step={singleStep} config={config} />
+			{children}
+		</>
+	);
 }
 
 function createInitialStepStates(config: FormConfig) {
 	return {
 		completed: config.steps.map(() => false),
 		valid: config.steps.map(() => false),
-		visited: config.steps.map(() => false),
+		visited: config.steps.map((_, index) => index === 0),
 	};
 }
 
@@ -87,7 +93,7 @@ function StepFields({ step, config }: { step: FormStep; config: FormConfig }) {
 /**
  * Internal component for multi-step form rendering
  */
-function MultiStepFormElementsRenderer({ config }: { config: FormConfig }) {
+function MultiStepFormElementsRenderer({ config, children }: { config: FormConfig; children?: React.ReactNode }) {
 	const { formState } = useFormContext();
 	const { stepStates, currentStep, navigation } = useFormInstanceActions();
 	const step = config.steps[currentStep];
@@ -104,6 +110,7 @@ function MultiStepFormElementsRenderer({ config }: { config: FormConfig }) {
 			isSubmitting={formState.isSubmitting}
 		>
 			<StepFields step={step} config={config} />
+			{children}
 		</StepperRenderer>
 	);
 
@@ -173,9 +180,8 @@ function FormRendererInner({
 			onAction={onAction}
 		>
 			<div className={`w-full min-h-full ${className}`.trim()} style={style}>
-				<FormElementsRenderer config={config} />
+				<FormElementsRenderer config={config}>{children}</FormElementsRenderer>
 			</div>
-			{children}
 		</FormProvider>
 	);
 }

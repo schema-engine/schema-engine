@@ -8,12 +8,15 @@ Radiant/JSX adapter for the Schema Engine form system.
 pnpm add @schema-engine/forms-radiant @schema-engine/forms @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
 ```
 
-Load theme + styles:
+Load Tailwind preflight (via Radiant core), theme, and component styles:
 
 ```ts
+import '@ecopages/radiant-ui/radiant-ui-core.css';
 import '@ecopages/radiant-ui/themes/default';
 import '@ecopages/radiant-ui/styles.css';
 ```
+
+`@schema-engine/forms-radiant` already imports `radiant-ui-core.css`. Apps that load component CSS without the package root still need the core (or their own Tailwind preflight) so headings, lists, and form controls are not left on user-agent margins.
 
 ## Quick start
 

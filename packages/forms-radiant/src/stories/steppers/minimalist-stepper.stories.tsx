@@ -5,8 +5,7 @@ import { createStepperPlay } from '@/stories/shared/field-plays';
 
 const meta = {
 	...formRendererMeta,
-	title: 'Forms/Steppers/Minimalist',
-	parameters: { layout: 'padded' },
+	parameters: { ...formRendererMeta.parameters, layout: 'padded' },
 	args: {
 		className: 'se-form-story--full',
 	},

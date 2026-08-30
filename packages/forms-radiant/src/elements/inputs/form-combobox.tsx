@@ -1,8 +1,23 @@
+import '@ecopages/radiant-ui/autocomplete/styles.css';
+import { RuiAutocomplete, RuiAutocompleteCollection, RuiAutocompleteEmpty } from '@ecopages/radiant-ui/autocomplete';
 import '@ecopages/radiant-ui/combobox/styles.css';
-import { RuiCombobox } from '@ecopages/radiant-ui/combobox';
+import {
+	RuiCombobox,
+	RuiComboboxClear,
+	RuiComboboxControl,
+	RuiComboboxInput,
+	RuiComboboxListbox,
+	RuiComboboxTrigger,
+	RuiComboboxValue,
+	RuiListbox,
+} from '@ecopages/radiant-ui/combobox';
+import '@ecopages/radiant-ui/listbox/styles.css';
+import '@ecopages/radiant-ui/tag-group/styles.css';
+import { RuiTagGroup } from '@ecopages/radiant-ui/tag-group';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
 import { getFieldGridStyles } from '@/hooks/grid-styles';
+import { parseChoiceValue, serializeChoiceValue } from '@/lib/choice-value';
 import { toFieldRules } from '@/lib/field-rules';
 import type { ComboboxFieldProps } from '@/registry/forms/inputs/form-combobox.types';
 
@@ -12,6 +27,7 @@ export function FormCombobox({
 	onFocus: propsOnFocus,
 	...config
 }: ComboboxFieldProps) {
+	const isMultiple = Boolean(config.multiple);
 	const options = config.options.map((option) => ({
 		value: String(option.value),
 		label: option.label,
@@ -28,21 +44,39 @@ export function FormCombobox({
 			description={config.description}
 			style={{ ...getFieldGridStyles(config.grid), ...config.style }}
 			rules={toFieldRules(config.rules)}
-			defaultValue={config.defaultValue}
+			defaultValue={serializeChoiceValue(config.defaultValue)}
 			disabled={config.disabled}
 		>
 			<RuiCombobox
 				placeholder={config.placeholder}
 				disabled={config.disabled}
-				options={options}
+				selectionMode={isMultiple ? 'multiple' : 'single'}
 				on:change={(event: Event) => {
 					const detail = (event as CustomEvent<{ value: string }>).detail;
-					const value = detail?.value ?? '';
-					propsOnChange?.(config.multiple ? (value === '' ? [] : [value]) : value);
+					propsOnChange?.(parseChoiceValue(detail?.value ?? '', isMultiple));
 				}}
 				on:blur={propsOnBlur}
 				on:focus={propsOnFocus}
-			/>
+			>
+				<RuiComboboxControl>
+					{isMultiple ? (
+						<RuiComboboxValue>
+							<RuiTagGroup embedded />
+						</RuiComboboxValue>
+					) : null}
+					<RuiComboboxInput placeholder={config.placeholder} disabled={config.disabled} />
+					<RuiComboboxClear disabled={config.disabled} />
+					<RuiComboboxTrigger disabled={config.disabled} />
+				</RuiComboboxControl>
+				<RuiComboboxListbox>
+					<RuiAutocomplete>
+						<RuiAutocompleteCollection>
+							<RuiListbox embedded selectionMode={isMultiple ? 'multiple' : 'single'} options={options} />
+							<RuiAutocompleteEmpty>No results found.</RuiAutocompleteEmpty>
+						</RuiAutocompleteCollection>
+					</RuiAutocomplete>
+				</RuiComboboxListbox>
+			</RuiCombobox>
 		</FieldGroup>
 	);
 }

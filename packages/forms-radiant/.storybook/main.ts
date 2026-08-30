@@ -2,7 +2,12 @@ import type { StorybookConfig } from '@ecopages/storybook-radiant-vite/node';
 import { formsRadiantAliases } from './aliases.ts';
 
 const config: StorybookConfig = {
-	stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
+	stories: [
+		{
+			directory: '../src/stories',
+			files: '**/*.stories.@(js|jsx|mjs|ts|tsx)',
+		},
+	],
 	addons: ['@storybook/addon-docs', '@storybook/addon-a11y', '@storybook/addon-vitest'],
 	framework: {
 		name: '@ecopages/storybook-radiant-vite',

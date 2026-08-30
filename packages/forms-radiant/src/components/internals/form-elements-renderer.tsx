@@ -96,9 +96,9 @@ export function renderMultiStepForm(
 		canGoPrevious: instance.currentStep > 0,
 		isFirstStep: instance.currentStep === 0,
 		isLastStep: instance.currentStep === instance.totalSteps - 1,
-		goToStep: (index) => instance.goToStep(index),
-		goToNextStep: () => instance.goToNextStep(),
-		goToPreviousStep: () => instance.goToPreviousStep(),
+		goToStep: instance.goToStep,
+		goToNextStep: instance.goToNextStep,
+		goToPreviousStep: instance.goToPreviousStep,
 	};
 
 	const formMeta = {

@@ -4,7 +4,6 @@ import { createDefaultFieldPlay, createValidationFieldPlay } from '@/stories/sha
 
 const meta = {
 	...formRendererMeta,
-	title: 'Forms/Elements/Inputs/Phone Input',
 	args: {
 		config: fieldFormConfig('phone-input-default', 'Phone Number', [
 			{

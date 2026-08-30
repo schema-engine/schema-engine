@@ -3,6 +3,7 @@
  * Radiant/JSX components and bindings for the form engine
  */
 
+import '@ecopages/radiant-ui/radiant-ui-core.css';
 import './styles/hosts.css';
 
 export * from '@/components';

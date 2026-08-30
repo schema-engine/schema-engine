@@ -2,28 +2,27 @@ import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
 import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story';
 import { createValidationFieldPlay } from '@/stories/shared/field-plays';
 import { expect, within } from 'storybook/test';
-import { playSelectOption } from '@/stories/shared/play';
+import { playClearSelection, playSelectOption } from '@/stories/shared/play';
+
+const languages = [
+	{ label: 'JavaScript', value: 'js' },
+	{ label: 'TypeScript', value: 'ts' },
+	{ label: 'Python', value: 'py' },
+	{ label: 'Go', value: 'go' },
+	{ label: 'Rust', value: 'rs' },
+];
 
 const meta = {
 	...formRendererMeta,
-	title: 'Forms/Elements/Inputs/Select',
 	args: {
-		config: fieldFormConfig('select-default', 'Forms/Elements/Inputs/Select', [
+		config: fieldFormConfig('select-default', 'Select', [
 			{
 				$type: 'select',
-				id: 'country',
-				name: 'country',
-				label: 'Country',
-				options: [
-					{
-						label: 'USA',
-						value: 'us',
-					},
-					{
-						label: 'Canada',
-						value: 'ca',
-					},
-				],
+				id: 'language',
+				name: 'language',
+				label: 'Programming Language',
+				placeholder: 'Select a language',
+				options: languages,
 			},
 		]),
 	},
@@ -35,37 +34,85 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
 	play: async ({ canvasElement, step }) => {
 		await step('Select opens and chooses an option', async () => {
-			await expect(within(canvasElement).getByRole('combobox', { name: /country/i })).toBeInTheDocument();
-			await playSelectOption(canvasElement, /country/i, /usa/i);
+			await expect(
+				within(canvasElement).getByRole('combobox', { name: /programming language/i }),
+			).toBeInTheDocument();
+			await playSelectOption(canvasElement, /programming language/i, /javascript/i);
+		});
+	},
+};
+
+export const Clearable: Story = {
+	args: {
+		config: fieldFormConfig('select-clearable', 'Select', [
+			{
+				$type: 'select',
+				id: 'language',
+				name: 'language',
+				label: 'Programming Language',
+				placeholder: 'Select a language',
+				description: 'Optional — click the clear control to remove the selection.',
+				defaultValue: 'ts',
+				options: languages,
+			},
+		]),
+	},
+	play: async ({ canvasElement, step }) => {
+		await step('Starts with a selection and clears with the X control', async () => {
+			await expect(
+				within(canvasElement).getByRole('combobox', { name: /programming language/i }),
+			).toHaveTextContent(/typescript/i);
+			await playClearSelection(canvasElement);
+			await expect(
+				within(canvasElement).getByRole('combobox', { name: /programming language/i }),
+			).toHaveTextContent(/select a language/i);
+		});
+	},
+};
+
+export const Multiple: Story = {
+	args: {
+		config: fieldFormConfig('select-multiple', 'Select', [
+			{
+				$type: 'select',
+				id: 'languages',
+				name: 'languages',
+				label: 'Languages',
+				placeholder: 'Select languages',
+				description: 'Choose one or more languages. Remove a chip to deselect.',
+				multiple: true,
+				defaultValue: ['js', 'ts'],
+				options: languages,
+			},
+		]),
+	},
+	play: async ({ canvasElement, step }) => {
+		await step('Selected values render as removable chips', async () => {
+			const canvas = within(canvasElement);
+			await expect(canvas.getByRole('listitem', { name: /javascript/i })).toBeInTheDocument();
+			await expect(canvas.getByRole('listitem', { name: /typescript/i })).toBeInTheDocument();
+			await playSelectOption(canvasElement, /languages/i, /python/i);
+			await expect(canvas.getByRole('listitem', { name: /python/i })).toBeInTheDocument();
 		});
 	},
 };
 
 export const WithValidation: Story = {
 	args: {
-		config: fieldFormConfig('select-validation', 'Forms/Elements/Inputs/Select', [
+		config: fieldFormConfig('select-validation', 'Select with Validation', [
 			{
 				$type: 'select',
-				id: 'country',
-				name: 'country',
-				label: 'Country',
-				options: [
-					{
-						label: 'USA',
-						value: 'us',
-					},
-				],
-				rules: [
-					{
-						type: 'required',
-						message: 'Country is required',
-					},
-				],
+				id: 'language',
+				name: 'language',
+				label: 'Favorite Language',
+				placeholder: 'Select a language',
+				options: languages,
+				rules: [{ type: 'required', message: 'Language is required' }],
 			},
 			{ $type: 'submit', id: 'submit', name: 'submit', label: 'Submit' },
 		]),
 	},
-	play: createValidationFieldPlay(/country/i, 'us', /submit/i, /country is required/i, (canvasElement) =>
-		playSelectOption(canvasElement, /country/i, /usa/i),
+	play: createValidationFieldPlay(/favorite language/i, 'js', /submit/i, /language is required/i, (canvasElement) =>
+		playSelectOption(canvasElement, /favorite language/i, /javascript/i),
 	),
 };

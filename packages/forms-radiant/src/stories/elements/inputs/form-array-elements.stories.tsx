@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
 import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story';
 import { expect, userEvent, within } from 'storybook/test';
+import { clickSubmit, expectFieldError, expectNoFieldError, playFieldFocusAndType } from '@/stories/shared/play';
 
 const emergencyContactsConfig = fieldFormConfig(
 	'emergency-contacts',
@@ -56,7 +57,6 @@ const emergencyContactsConfig = fieldFormConfig(
 
 const meta = {
 	...formRendererMeta,
-	title: 'Forms/Elements/Inputs/Array Elements',
 	args: {
 		config: emergencyContactsConfig,
 	},
@@ -106,5 +106,69 @@ export const SingleField: Story = {
 				],
 			},
 		]),
+	},
+};
+
+export const WithValidation: Story = {
+	args: {
+		config: fieldFormConfig(
+			'array-validation',
+			'References',
+			[
+				{
+					$type: 'arrayElements',
+					id: 'references',
+					name: 'references',
+					label: 'References',
+					description: 'Add at least one professional reference.',
+					minItems: 1,
+					maxItems: 3,
+					addButtonText: 'Add reference',
+					removeButtonText: 'Remove reference',
+					elements: [
+						{
+							$type: 'input',
+							inputType: 'text',
+							id: 'refName',
+							name: 'refName',
+							label: 'Reference name',
+							placeholder: 'Alex Rivera',
+							rules: [{ type: 'required', message: 'Name is required' }],
+						},
+						{
+							$type: 'input',
+							inputType: 'email',
+							id: 'refEmail',
+							name: 'refEmail',
+							label: 'Email',
+							placeholder: 'alex@company.com',
+							rules: [{ type: 'required', message: 'Email is required' }],
+						},
+					],
+				},
+				{
+					$type: 'submit',
+					id: 'submit',
+					name: 'submit',
+					label: 'Submit references',
+				},
+			],
+			'Provide a name and email for each reference.',
+		),
+	},
+	play: async ({ canvasElement, step }) => {
+		await step('Empty submit shows nested field errors', async () => {
+			await clickSubmit(canvasElement, /submit references/i);
+			await expectFieldError(canvasElement, /name is required/i);
+			await expectFieldError(canvasElement, /email is required/i);
+		});
+
+		await step('Valid values clear nested field errors', async () => {
+			await playFieldFocusAndType(canvasElement, /reference name/i, 'Alex Rivera');
+			await playFieldFocusAndType(canvasElement, /email/i, 'alex@company.com');
+			await clickSubmit(canvasElement, /submit references/i);
+			await expectNoFieldError(canvasElement, /name is required/i);
+			await expectNoFieldError(canvasElement, /email is required/i);
+		});
 	},
 };

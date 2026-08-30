@@ -5,7 +5,6 @@ import { clickSubmit } from '@/stories/shared/play';
 
 const meta = {
 	...formRendererMeta,
-	title: 'Forms/Elements/Inputs/Drop Zone',
 	args: {
 		config: fieldFormConfig('dropzone-default', 'File Upload', [
 			{

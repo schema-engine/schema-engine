@@ -2,7 +2,6 @@ import '@ecopages/radiant-ui/form/styles.css';
 import { RuiForm } from '@ecopages/radiant-ui/form';
 import type { FormConfig } from '@schema-engine/forms/schemas';
 import type { JsxRenderable } from '@ecopages/jsx';
-import { consumeSubmitSuppression } from '@/lib/form-navigation-state';
 
 export function collectFormDefaultValues(
 	config: FormConfig,
@@ -42,13 +41,6 @@ export function ConfiguredRuiForm({
 	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
 	children: JsxRenderable;
 }) {
-	const handleSubmit = async (values: Record<string, unknown>) => {
-		if (consumeSubmitSuppression()) {
-			return;
-		}
-		await (onSubmit ?? (() => undefined))(values);
-	};
-
 	return (
 		<RuiForm
 			class={config.className}
@@ -56,7 +48,7 @@ export function ConfiguredRuiForm({
 			mode="onSubmit"
 			reValidateMode="onChange"
 			defaultValues={collectFormDefaultValues(config, defaultValues)}
-			onSubmit={handleSubmit}
+			onSubmit={onSubmit}
 			on:rui-invalid={rememberInvalidErrors}
 			on:rui-submit={clearInvalidErrors}
 		>

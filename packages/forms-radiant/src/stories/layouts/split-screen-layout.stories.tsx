@@ -5,8 +5,7 @@ import { createLayoutPlay } from '@/stories/shared/field-plays';
 
 const meta = {
 	...formRendererMeta,
-	title: 'Forms/Layouts/Split Screen',
-	parameters: { layout: 'fullscreen' },
+	parameters: { ...formRendererMeta.parameters, layout: 'fullscreen' },
 	args: {
 		className: 'se-form-story--full',
 	},

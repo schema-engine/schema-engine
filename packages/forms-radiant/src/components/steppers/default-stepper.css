@@ -95,7 +95,7 @@
 	cursor: pointer;
 }
 
-.default-stepper__step-button--active {
+.default-stepper__step-button[data-se-step-state='active'] {
 	background: color-mix(in srgb, var(--surface, #fff) 94%, var(--on-surface, #000) 6%);
 }
 
@@ -120,17 +120,29 @@
 	border-radius: 999px;
 	font-size: 0.875rem;
 	font-weight: 600;
+	font-variant-numeric: tabular-nums;
 }
 
-.default-stepper__indicator--completed {
+.default-stepper__check-icon {
+	width: 1rem;
+	height: 1rem;
+	flex-shrink: 0;
+}
+
+.default-stepper__step-button[data-se-step-state='completed'] .default-stepper__indicator {
 	border-color: var(--primary, currentColor);
 	background: var(--primary, currentColor);
 	color: var(--on-primary, #fff);
 }
 
-.default-stepper__indicator--active {
+.default-stepper__step-button[data-se-step-state='active'] .default-stepper__indicator {
 	border-color: var(--primary, currentColor);
 	color: var(--primary, currentColor);
+}
+
+.default-stepper__step-button[data-se-step-state='completed'] .default-stepper__indicator-index,
+.default-stepper__step-button:not([data-se-step-state='completed']) .default-stepper__check-icon {
+	display: none;
 }
 
 .default-stepper__step-copy {
@@ -158,21 +170,6 @@
 	min-height: 0;
 }
 
-.default-stepper__title {
-	margin: 0;
-	font-size: 1.25rem;
-	font-weight: 600;
-}
-
-.default-stepper__title--sidebar {
-	font-size: 1.125rem;
-}
-
-.default-stepper__description {
-	margin: 0.25rem 0 0;
-	color: var(--on-surface-muted, color-mix(in srgb, currentColor 70%, transparent));
-}
-
 .default-stepper__navigation {
 	display: flex;
 	align-items: center;
@@ -183,4 +180,16 @@
 .default-stepper__actions {
 	display: flex;
 	gap: 0.5rem;
+}
+
+.default-stepper [data-se-submit] {
+	display: none;
+}
+
+.default-stepper[data-se-last-step='true'] [data-se-submit] {
+	display: inline-flex;
+}
+
+.default-stepper[data-se-last-step='true'] [data-se-next] {
+	display: none;
 }

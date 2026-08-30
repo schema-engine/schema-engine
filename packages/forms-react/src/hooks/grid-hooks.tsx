@@ -99,6 +99,7 @@ export function useFormGridStyles(gridConfig?: GridLayoutConfig): React.CSSPrope
 				display: 'grid',
 				gridTemplateColumns: '1fr',
 				gap: '1rem',
+				alignContent: 'start',
 			};
 		}
 

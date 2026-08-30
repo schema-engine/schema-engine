@@ -5,7 +5,6 @@ import { getFieldControl, playFieldFocusAndType } from '@/stories/shared/play';
 
 const meta = {
 	...formRendererMeta,
-	title: 'Forms/Elements/Inputs/Masked Input',
 	args: {
 		config: fieldFormConfig('masked-input-card', 'Card Number', [
 			{
