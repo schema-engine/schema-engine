@@ -4,7 +4,6 @@ import { clickSubmit, expectFieldError, playFieldFocusAndType } from '@/stories/
 
 const meta = {
 	...formRendererMeta,
-	title: 'Elements/Actions/Submit Button',
 	args: {
 		config: fieldFormConfig('submit-button-default', 'Submit Button', [
 			{

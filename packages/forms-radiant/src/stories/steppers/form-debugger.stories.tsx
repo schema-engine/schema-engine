@@ -5,7 +5,6 @@ import { FormTemplates } from '@/stories/shared/sample-forms';
 
 const meta = {
 	...formRendererMeta,
-	title: 'Steppers/Form Debugger',
 	args: {
 		className: 'se-form-story--full',
 	},

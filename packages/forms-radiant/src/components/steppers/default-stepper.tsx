@@ -122,12 +122,13 @@ export class DefaultStepperElement extends RadiantElement<DefaultStepperBindings
 								<button
 									type="button"
 									class="default-stepper__step-button"
-									data-se-stepper="goto"
-									data-se-step-index={String(index)}
-									data-se-step-state={chrome?.state}
+									data={{
+										seStepper: 'goto',
+										seStepIndex: index,
+										seStepState: chrome?.state,
+									}}
 									disabled={chrome?.disabled}
-									aria-current={chrome?.ariaCurrent}
-									aria-label={title}
+									aria={{ current: chrome?.ariaCurrent, label: title }}
 								>
 									{showStepNumbers ? (
 										<span class="default-stepper__indicator">
@@ -172,22 +173,21 @@ export class DefaultStepperElement extends RadiantElement<DefaultStepperBindings
 				<RuiButton
 					type="button"
 					variant="outline"
-					data-se-stepper="previous"
+					data={{ seStepper: 'previous' }}
 					prop:disabled={this.$.view.isFirstStep}
 				>
 					Previous
 				</RuiButton>
-				<RuiBadge variant="muted" data-se-step-chip="">
+				<RuiBadge variant="muted" data={{ seStepChip: true }}>
 					{this.$.view.stepChip}
 				</RuiBadge>
 				<div class="default-stepper__actions">
-					<RuiButton type="submit" data-se-submit="">
+					<RuiButton type="submit" data={{ seSubmit: true }}>
 						{this.$.view.submitLabel}
 					</RuiButton>
 					<RuiButton
 						type="button"
-						data-se-stepper="next"
-						data-se-next=""
+						data={{ seStepper: 'next', seNext: true }}
 						prop:disabled={this.$.view.nextDisabled}
 					>
 						Next
@@ -204,8 +204,10 @@ export class DefaultStepperElement extends RadiantElement<DefaultStepperBindings
 						'default-stepper--sidebar',
 						this.stepperClass || undefined,
 					)}
-					data-se-current-step={this.$.view.currentStepIndex}
-					data-se-last-step={this.$.view.lastStepFlag}
+					data={{
+						seCurrentStep: this.$.view.currentStepIndex,
+						seLastStep: this.$.view.isLastStep,
+					}}
 				>
 					<aside class="default-stepper__sidebar">{indicators}</aside>
 					<div class="default-stepper__main">
@@ -219,8 +221,10 @@ export class DefaultStepperElement extends RadiantElement<DefaultStepperBindings
 		return (
 			<div
 				class={stepperClassName('default-stepper', this.stepperClass || undefined)}
-				data-se-current-step={this.$.view.currentStepIndex}
-				data-se-last-step={this.$.view.lastStepFlag}
+				data={{
+					seCurrentStep: this.$.view.currentStepIndex,
+					seLastStep: this.$.view.isLastStep,
+				}}
 			>
 				{indicators}
 				{content}

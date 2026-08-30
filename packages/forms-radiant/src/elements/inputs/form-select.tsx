@@ -1,6 +1,19 @@
+import '@ecopages/radiant-ui/listbox/styles.css';
+import '@ecopages/radiant-ui/select/styles.css';
+import {
+	RuiListbox,
+	RuiSelect,
+	RuiSelectClear,
+	RuiSelectControl,
+	RuiSelectListbox,
+	RuiSelectToggle,
+	RuiSelectTrigger,
+	RuiSelectValue,
+} from '@ecopages/radiant-ui/select';
+import '@ecopages/radiant-ui/tag-group/styles.css';
+import { RuiTagGroup } from '@ecopages/radiant-ui/tag-group';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
-import { ChoiceSelect } from './choice-select';
 import { getFieldGridStyles } from '@/hooks/grid-styles';
 import { parseChoiceValue, serializeChoiceValue } from '@/lib/choice-value';
 import { toFieldRules } from '@/lib/field-rules';
@@ -13,11 +26,13 @@ export function FormSelect({
 	...config
 }: SelectFieldProps) {
 	const isMultiple = Boolean(config.multiple);
+	const selectionMode = isMultiple ? 'multiple' : 'single';
 	const options = config.options.map((option) => ({
 		value: String(option.value),
 		label: option.label,
 		disabled: option.disabled,
 	}));
+	const listbox = <RuiListbox embedded selectionMode={selectionMode} options={options} />;
 
 	return (
 		<FieldGroup
@@ -32,18 +47,26 @@ export function FormSelect({
 			defaultValue={serializeChoiceValue(config.defaultValue)}
 			disabled={config.disabled}
 		>
-			<ChoiceSelect
+			<RuiSelect
 				placeholder={config.placeholder}
 				disabled={config.disabled}
-				multiple={isMultiple}
-				options={options}
-				onChange={(event: Event) => {
+				selectionMode={selectionMode}
+				on:change={(event: Event) => {
 					const detail = (event as CustomEvent<{ value: string }>).detail;
 					propsOnChange?.(parseChoiceValue(detail?.value ?? '', isMultiple));
 				}}
-				onBlur={propsOnBlur}
-				onFocus={propsOnFocus}
-			/>
+				on:blur={propsOnBlur}
+				on:focus={propsOnFocus}
+			>
+				<RuiSelectControl>
+					<RuiSelectTrigger disabled={config.disabled}>
+						<RuiSelectValue>{isMultiple ? <RuiTagGroup embedded /> : null}</RuiSelectValue>
+					</RuiSelectTrigger>
+					<RuiSelectClear disabled={config.disabled} />
+					<RuiSelectToggle disabled={config.disabled} />
+				</RuiSelectControl>
+				<RuiSelectListbox>{listbox}</RuiSelectListbox>
+			</RuiSelect>
 		</FieldGroup>
 	);
 }

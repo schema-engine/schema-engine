@@ -57,7 +57,6 @@ const emergencyContactsConfig = fieldFormConfig(
 
 const meta = {
 	...formRendererMeta,
-	title: 'Elements/Inputs/Array Elements',
 	args: {
 		config: emergencyContactsConfig,
 	},

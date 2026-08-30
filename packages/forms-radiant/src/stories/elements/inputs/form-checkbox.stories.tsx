@@ -5,7 +5,6 @@ import { getFieldControl } from '@/stories/shared/play';
 
 const meta = {
 	...formRendererMeta,
-	title: 'Elements/Inputs/Checkbox',
 	args: {
 		config: fieldFormConfig('checkbox-default', 'Forms/Elements/Inputs/Checkbox', [
 			{

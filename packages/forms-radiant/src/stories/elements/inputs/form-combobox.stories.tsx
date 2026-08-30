@@ -13,7 +13,6 @@ const programmingLanguages = [
 
 const meta = {
 	...formRendererMeta,
-	title: 'Elements/Inputs/Combobox',
 	args: {
 		config: fieldFormConfig('combobox-default', 'Combobox', [
 			{

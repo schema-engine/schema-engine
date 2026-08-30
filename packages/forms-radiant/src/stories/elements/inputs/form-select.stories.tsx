@@ -14,7 +14,6 @@ const languages = [
 
 const meta = {
 	...formRendererMeta,
-	title: 'Elements/Inputs/Select',
 	args: {
 		config: fieldFormConfig('select-default', 'Select', [
 			{

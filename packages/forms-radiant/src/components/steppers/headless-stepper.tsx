@@ -63,7 +63,7 @@ export class HeadlessStepperElement extends RadiantElement<HeadlessStepperBindin
 
 	override render(): JsxRenderable {
 		return (
-			<div class="se-headless-stepper" data-se-last-step={this.$.view.lastStepFlag}>
+			<div class="se-headless-stepper" data={{ seLastStep: this.$.view.isLastStep }}>
 				<div class="se-headless-stepper__content">
 					<slot />
 				</div>
@@ -71,7 +71,7 @@ export class HeadlessStepperElement extends RadiantElement<HeadlessStepperBindin
 					<button
 						type="button"
 						class="se-headless-stepper__button"
-						data-se-stepper="previous"
+						data={{ seStepper: 'previous' }}
 						disabled={this.$.view.isFirstStep}
 					>
 						Previous
@@ -80,15 +80,14 @@ export class HeadlessStepperElement extends RadiantElement<HeadlessStepperBindin
 						<button
 							type="submit"
 							class="se-headless-stepper__button se-headless-stepper__button--primary"
-							data-se-submit=""
+							data={{ seSubmit: true }}
 						>
 							{this.$.view.submitLabel}
 						</button>
 						<button
 							type="button"
 							class="se-headless-stepper__button se-headless-stepper__button--primary"
-							data-se-stepper="next"
-							data-se-next=""
+							data={{ seStepper: 'next', seNext: true }}
 							disabled={this.$.view.nextDisabled}
 						>
 							Next

@@ -11,7 +11,6 @@ export type StepperChromeView = {
 	descriptionHidden: boolean;
 	isFirstStep: boolean;
 	isLastStep: boolean;
-	lastStepFlag: 'true' | 'false';
 	canGoNext: boolean;
 	nextDisabled: boolean;
 	isSubmitting: boolean;
@@ -39,7 +38,6 @@ export const EMPTY_STEPPER_CHROME: StepperChromeView = {
 	descriptionHidden: true,
 	isFirstStep: true,
 	isLastStep: true,
-	lastStepFlag: 'true',
 	canGoNext: false,
 	nextDisabled: true,
 	isSubmitting: false,
@@ -71,7 +69,6 @@ export function createStepperChromeView(context: StepperContextValue): StepperCh
 		descriptionHidden: !current?.description,
 		isFirstStep: navigation?.isFirstStep ?? currentStepIndex === 0,
 		isLastStep,
-		lastStepFlag: isLastStep ? 'true' : 'false',
 		canGoNext,
 		nextDisabled: !canGoNext,
 		isSubmitting,
@@ -123,7 +120,6 @@ export function sameStepperChrome(left: StepperChromeView, right: StepperChromeV
 		left.descriptionHidden === right.descriptionHidden &&
 		left.isFirstStep === right.isFirstStep &&
 		left.isLastStep === right.isLastStep &&
-		left.lastStepFlag === right.lastStepFlag &&
 		left.canGoNext === right.canGoNext &&
 		left.nextDisabled === right.nextDisabled &&
 		left.isSubmitting === right.isSubmitting &&

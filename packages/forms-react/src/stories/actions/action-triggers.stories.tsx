@@ -8,7 +8,6 @@ import { realtimeDashboardPlay } from './action-triggers.play';
 const simpleEngine = createExtendableComposer().build();
 
 const meta = {
-	title: 'Actions/Action Triggers',
 	component: InteractiveActionDemo,
 	parameters: {
 		layout: 'padded',

@@ -11,6 +11,21 @@ function queryNativeForm(root: ParentNode): HTMLFormElement | null {
 	return found?.tagName === 'FORM' ? (found as HTMLFormElement) : null;
 }
 
+export function findAncestorElement(host: Node | null, ...localNames: string[]): HTMLElement | null {
+	let current: Node | null = host;
+	while (current) {
+		if (current instanceof HTMLElement && localNames.includes(current.localName)) {
+			return current;
+		}
+		if (current instanceof ShadowRoot) {
+			current = current.host;
+			continue;
+		}
+		current = current.parentNode;
+	}
+	return null;
+}
+
 export function findNearestRuiForm(host: HTMLElement | null): HTMLElement | null {
 	if (!host) {
 		return null;
@@ -27,16 +42,9 @@ export function findNearestRuiForm(host: HTMLElement | null): HTMLElement | null
 		return nested;
 	}
 
-	let node: Node | null = host;
-	while (node) {
-		if (node instanceof HTMLElement && node.localName === 'rui-form') {
-			return node;
-		}
-		if (node instanceof ShadowRoot) {
-			node = node.host;
-			continue;
-		}
-		node = node.parentNode;
+	const ancestor = findAncestorElement(host, 'rui-form');
+	if (ancestor) {
+		return ancestor;
 	}
 
 	const root = host.getRootNode();
@@ -65,23 +73,18 @@ export function findNativeForm(host: HTMLElement | null): HTMLFormElement | null
 	return null;
 }
 
-export function getRuiFormStore(host: HTMLElement | null): RuiFormStore | null {
+export function readRuiFormStore<T extends object>(host: HTMLElement | null, methods: readonly string[]): T | null {
 	const ruiForm = findNearestRuiForm(host);
-	if (!ruiForm) {
+	const store = ruiForm ? Reflect.get(ruiForm, 'store') : null;
+	if (!store || typeof store !== 'object') {
 		return null;
 	}
 
-	const store = Reflect.get(ruiForm, 'store');
-	if (
-		store &&
-		typeof store === 'object' &&
-		typeof Reflect.get(store, 'validateField') === 'function' &&
-		typeof Reflect.get(store, 'markTouched') === 'function'
-	) {
-		return store as RuiFormStore;
-	}
+	return methods.every((method) => typeof Reflect.get(store, method) === 'function') ? (store as T) : null;
+}
 
-	return null;
+export function getRuiFormStore(host: HTMLElement | null): RuiFormStore | null {
+	return readRuiFormStore<RuiFormStore>(host, ['validateField', 'markTouched']);
 }
 
 export function submitNativeForm(form: {
@@ -94,13 +97,4 @@ export function submitNativeForm(form: {
 	}
 
 	form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-}
-
-export function requestNearestFormSubmit(host: HTMLElement | null): void {
-	const nativeForm = findNativeForm(host);
-	if (!nativeForm) {
-		return;
-	}
-
-	submitNativeForm(nativeForm);
 }

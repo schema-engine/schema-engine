@@ -4,7 +4,6 @@ import { expect, within } from 'storybook/test';
 
 const meta = {
 	...formRendererMeta,
-	title: 'Elements/Inputs/Fieldset',
 	args: {
 		config: fieldFormConfig('fieldset-default', 'Address', [
 			{

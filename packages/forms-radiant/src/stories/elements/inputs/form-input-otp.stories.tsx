@@ -5,7 +5,6 @@ import { clickSubmit } from '@/stories/shared/play';
 
 const meta = {
 	...formRendererMeta,
-	title: 'Elements/Inputs/Input OTP',
 	args: {
 		config: fieldFormConfig('input-otp-default', 'Verification Code', [
 			{

@@ -12,7 +12,6 @@ const interests = [
 
 const meta = {
 	...formRendererMeta,
-	title: 'Elements/Inputs/Checkbox Group',
 	args: {
 		config: fieldFormConfig('checkbox-group-default', 'Select options', [
 			{

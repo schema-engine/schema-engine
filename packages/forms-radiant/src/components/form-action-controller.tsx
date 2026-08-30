@@ -1,13 +1,15 @@
 import './form-action-controller.css';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
+import { onContextUpdate } from '@ecopages/radiant/context';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import type { FormConfig } from '@schema-engine/forms/schemas';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { BuilderActionBaseContext, FormActionTrigger } from '@schema-engine/forms';
 import { ActionDispatcher } from '@schema-engine/actions';
-import { findNearestRuiForm } from '@/lib/rui-form-utils';
+import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
+import { findNearestRuiForm, readRuiFormStore } from '@/lib/rui-form-utils';
 
-type RuiFormStore = {
+type ActionFormStore = {
 	getValues: () => Record<string, unknown>;
 	getState: () => {
 		isValid: boolean;
@@ -19,18 +21,7 @@ type RuiFormStore = {
 	validateAll: () => Promise<boolean>;
 };
 
-function getFormStore(host: HTMLElement): RuiFormStore | null {
-	const form = findNearestRuiForm(host);
-	const store = form ? Reflect.get(form, 'store') : null;
-	if (!store || typeof store !== 'object') {
-		return null;
-	}
-
-	const requiredMethods = ['getValues', 'getState', 'reset', 'setValue', 'validateAll'];
-	return requiredMethods.every((method) => typeof Reflect.get(store, method) === 'function')
-		? (store as RuiFormStore)
-		: null;
-}
+const ACTION_STORE_METHODS = ['getValues', 'getState', 'reset', 'setValue', 'validateAll'] as const;
 
 /** Dispatches configured form actions for Radiant form lifecycle events. */
 @customElement('se-form-action-controller')
@@ -41,6 +32,12 @@ export class FormActionControllerElement extends RadiantElement {
 	private dispatcher?: ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>;
 	private mountedAt = 0;
 	private formChangeQueued = false;
+	private formInstance?: FormInstanceContextValue;
+
+	@onContextUpdate({ context: formInstanceContext, requestUpdate: false })
+	onFormInstance(value: FormInstanceContextValue): void {
+		this.formInstance = value;
+	}
 
 	protected override onConnected(): void {
 		if (!this.engine || !this.config?.actions?.length) {
@@ -99,7 +96,7 @@ export class FormActionControllerElement extends RadiantElement {
 			return [];
 		}
 
-		const store = getFormStore(this);
+		const store = readRuiFormStore<ActionFormStore>(this, ACTION_STORE_METHODS);
 		if (!store) {
 			return [];
 		}
@@ -111,8 +108,8 @@ export class FormActionControllerElement extends RadiantElement {
 			context: {
 				formId: this.config.id || 'unnamed-form',
 				formData: store.getValues(),
-				currentStep: 0,
-				totalSteps: this.config.steps.length,
+				currentStep: this.formInstance?.currentStep ?? 0,
+				totalSteps: this.formInstance?.totalSteps ?? this.config.steps.length,
 				isValid: state.isValid,
 				errors: state.errors,
 				metadata: {

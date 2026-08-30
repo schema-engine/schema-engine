@@ -80,8 +80,10 @@ export class MinimalistStepperElement extends RadiantElement<MinimalistStepperBi
 		return (
 			<div
 				class={`minimalist-stepper ${this.stepperClass}`.trim()}
-				data-se-current-step={this.$.view.currentStepIndex}
-				data-se-last-step={this.$.view.lastStepFlag}
+				data={{
+					seCurrentStep: this.$.view.currentStepIndex,
+					seLastStep: this.$.view.isLastStep,
+				}}
 			>
 				{showProgress ? (
 					<div class="minimalist-stepper__progress">
@@ -95,7 +97,7 @@ export class MinimalistStepperElement extends RadiantElement<MinimalistStepperBi
 					</div>
 				) : null}
 				<header class="minimalist-stepper__header">
-					<p class="minimalist-stepper__counter" data-se-step-chip="">
+					<p class="minimalist-stepper__counter" data={{ seStepChip: true }}>
 						{this.$.view.stepChip}
 					</p>
 					<h2 class="minimalist-stepper__title">{this.$.view.currentTitle}</h2>
@@ -110,18 +112,17 @@ export class MinimalistStepperElement extends RadiantElement<MinimalistStepperBi
 					<RuiButton
 						type="button"
 						variant="ghost"
-						data-se-stepper="previous"
+						data={{ seStepper: 'previous' }}
 						prop:disabled={this.$.view.isFirstStep}
 					>
 						Previous
 					</RuiButton>
-					<RuiButton type="submit" data-se-submit="">
+					<RuiButton type="submit" data={{ seSubmit: true }}>
 						{this.$.view.submitLabel}
 					</RuiButton>
 					<RuiButton
 						type="button"
-						data-se-stepper="next"
-						data-se-next=""
+						data={{ seStepper: 'next', seNext: true }}
 						prop:disabled={this.$.view.nextDisabled}
 					>
 						Next

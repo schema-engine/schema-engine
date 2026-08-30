@@ -1,6 +1,5 @@
 import {
 	customElement,
-	onEvent,
 	onUpdated,
 	prop,
 	RadiantElement,
@@ -12,7 +11,7 @@ import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import type { FormConfig } from '@schema-engine/forms/schemas';
 import type { FormEngine as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import { formInstanceContext, type FormInstanceContextValue, type StepStates } from '@/contexts/form-instance-context';
-import { getRuiFormStore, requestNearestFormSubmit } from '@/lib/rui-form-utils';
+import { getRuiFormStore } from '@/lib/rui-form-utils';
 import { fieldNamesForStep, validateCurrentStepFields } from '@/lib/validate-current-step';
 import { renderMultiStepForm } from '@/components/internals/form-elements-renderer';
 import { ConfiguredRuiForm } from '@/adapters/radiant/rui-form-shell';
@@ -36,7 +35,6 @@ export class FormInstanceElement extends RadiantElement {
 
 	@state currentStep = 0;
 	@state stepStates: StepStates = { completed: [], valid: [], visited: [] };
-	private stepAdvancePending = false;
 	private publishedContext?: FormInstanceContextValue;
 
 	@provideContext<typeof formInstanceContext>({
@@ -66,35 +64,10 @@ export class FormInstanceElement extends RadiantElement {
 		this.publishContext();
 	}
 
-	@onEvent({ type: 'rui-submit', selector: 'rui-form', scope: 'both' })
-	onFormSubmit(): void {
-		if (!this.stepAdvancePending || this.isLastStep()) {
-			return;
-		}
-
-		this.markStepCompleted(this.currentStep);
-		this.markStepVisited(this.currentStep + 1);
-		this.currentStep += 1;
-	}
-
-	@onEvent({ type: 'rui-invalid', selector: 'rui-form', scope: 'both' })
-	onFormInvalid(): void {
-		this.stepAdvancePending = false;
-	}
-
-	private consumeStepAdvance(): boolean {
-		if (!this.stepAdvancePending) {
-			return false;
-		}
-		this.stepAdvancePending = false;
-		return true;
-	}
-
 	private resetStepState(): void {
 		const total = this.config?.steps.length ?? 1;
 		this.currentStep = 0;
 		this.stepStates = createInitialStepStates(total);
-		this.stepAdvancePending = false;
 		this.markStepVisited(0);
 	}
 
@@ -124,7 +97,6 @@ export class FormInstanceElement extends RadiantElement {
 		}
 		this.currentStep = index;
 		this.markStepVisited(index);
-		this.stepAdvancePending = false;
 	};
 
 	readonly goToNextStep = async (): Promise<void> => {
@@ -133,22 +105,18 @@ export class FormInstanceElement extends RadiantElement {
 		}
 
 		const store = getRuiFormStore(this);
-		if (store) {
-			const isValid = await validateCurrentStepFields(
-				store,
-				fieldNamesForStep(this.config?.steps[this.currentStep]),
-			);
-			if (!isValid) {
-				return;
-			}
-			this.markStepCompleted(this.currentStep);
-			this.markStepVisited(this.currentStep + 1);
-			this.currentStep += 1;
+		if (!store) {
 			return;
 		}
 
-		this.stepAdvancePending = true;
-		requestNearestFormSubmit(this);
+		const isValid = await validateCurrentStepFields(store, fieldNamesForStep(this.config?.steps[this.currentStep]));
+		if (!isValid) {
+			return;
+		}
+
+		this.markStepCompleted(this.currentStep);
+		this.markStepVisited(this.currentStep + 1);
+		this.currentStep += 1;
 	};
 
 	readonly goToPreviousStep = (): void => {
@@ -156,7 +124,6 @@ export class FormInstanceElement extends RadiantElement {
 			return;
 		}
 		this.currentStep -= 1;
-		this.stepAdvancePending = false;
 	};
 
 	getContextValue(): FormInstanceContextValue {
@@ -198,16 +165,7 @@ export class FormInstanceElement extends RadiantElement {
 		}
 
 		return (
-			<ConfiguredRuiForm
-				config={config}
-				defaultValues={this.defaultValues}
-				onSubmit={async (values) => {
-					if (this.consumeStepAdvance()) {
-						return;
-					}
-					await this.onSubmit?.(values);
-				}}
-			>
+			<ConfiguredRuiForm config={config} defaultValues={this.defaultValues} onSubmit={this.onSubmit}>
 				{renderMultiStepForm(config, this.engine, this.getContextValue())}
 				{this.extras}
 			</ConfiguredRuiForm>
