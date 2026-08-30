@@ -40,7 +40,8 @@
 	},
 	"dependencies": {
 		"@schema-engine/actions": "workspace:*",
-		"@schema-engine/registry": "workspace:*"
+		"@schema-engine/registry": "workspace:*",
+		"libphonenumber-js": "^1.13.12"
 	},
 	"peerDependencies": {
 		"typescript": "^5",

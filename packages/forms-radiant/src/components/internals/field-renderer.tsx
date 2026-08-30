@@ -24,7 +24,7 @@ export function renderRegisteredElement(config: FormEngine.ElementConfig, engine
 		return null;
 	}
 
-	const { $type, ...componentConfig } = config;
+	const { $type } = config;
 	const elementRegistration = engine.getElement($type);
 
 	if (!elementRegistration) {
@@ -37,12 +37,15 @@ export function renderRegisteredElement(config: FormEngine.ElementConfig, engine
 		);
 	}
 
+	let parsedConfig: FormEngine.ElementConfig;
 	try {
-		parseStandardSchema(elementRegistration.schema, config);
+		parsedConfig = parseStandardSchema(elementRegistration.schema, config);
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : 'Invalid configuration';
 		return <ElementError title="Invalid element configuration" message={errorMessage} componentType={$type} />;
 	}
+
+	const { $type: _type, ...componentConfig } = parsedConfig;
 
 	const enhancedConfig = {
 		...componentConfig,

@@ -3,6 +3,7 @@ import type {
 	AsyncRule,
 	RequiredRule,
 	EmailRule,
+	PhoneRule,
 	MinLengthRule,
 	MaxLengthRule,
 	PatternRule,
@@ -121,6 +122,10 @@ export class ValidationRegistry {
 			email: (message?: string): EmailRule => ({
 				type: 'email',
 				message: message || 'Please enter a valid email address',
+			}),
+			phone: (message?: string): PhoneRule => ({
+				type: 'phone',
+				message: message || 'Enter a complete phone number',
 			}),
 			minLength: (value: number, message?: string): MinLengthRule => ({
 				type: 'minLength',

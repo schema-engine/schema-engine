@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { z } from 'zod';
 import type { FieldValues, Resolver, ResolverResult } from 'react-hook-form';
-import { createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation/utils';
+import { createZodSchemaFromRules, getValidationRulesForElement } from '@schema-engine/forms/schemas/validation/utils';
 import { getValueAtPath } from '@/lib/path-utils';
 
 /**
@@ -20,8 +20,9 @@ function collectValidatableFields(elements: any[], basePath = ''): Array<{ path:
 			fields.push(...nestedFields);
 		}
 
-		if (element.rules?.length && !element.elements?.length) {
-			fields.push({ path: currentPath, rules: element.rules });
+		const rules = getValidationRulesForElement(element);
+		if (rules?.length && !element.elements?.length) {
+			fields.push({ path: currentPath, rules });
 		}
 	}
 

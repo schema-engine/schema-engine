@@ -213,6 +213,9 @@ importers:
       '@schema-engine/registry':
         specifier: workspace:*
         version: link:../registry
+      libphonenumber-js:
+        specifier: ^1.13.12
+        version: 1.13.12
       typescript:
         specifier: ^5
         version: 5.9.3

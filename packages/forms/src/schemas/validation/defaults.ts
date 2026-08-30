@@ -1,9 +1,11 @@
 import { z } from 'zod';
+import { isValidPhoneNumber } from 'libphonenumber-js/min';
 import type {
 	RequiredRule,
 	MinLengthRule,
 	MaxLengthRule,
 	EmailRule,
+	PhoneRule,
 	PatternRule,
 	UrlRule,
 	UuidRule,
@@ -55,6 +57,17 @@ export const defaultValidations: AnyValidationRegistration[] = [
 		type: 'email',
 		category: 'string',
 		handler: (rule: EmailRule) => z.string().email(rule.message),
+	},
+	{
+		type: 'phone',
+		category: 'string',
+		handler: (rule: PhoneRule) =>
+			z
+				.string()
+				.optional()
+				.refine((value) => value === undefined || value === '' || isValidPhoneNumber(value), {
+					message: rule.message || 'Enter a complete phone number',
+				}),
 	},
 	{
 		type: 'pattern',

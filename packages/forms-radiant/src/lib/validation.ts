@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation/utils';
+import { createZodSchemaFromRules, getValidationRulesForElement } from '@schema-engine/forms/schemas/validation/utils';
 import { getValueAtPath } from './path-utils';
 
 function collectValidatableFields(elements: any[], basePath = ''): Array<{ path: string; rules: any[] }> {
@@ -14,8 +14,9 @@ function collectValidatableFields(elements: any[], basePath = ''): Array<{ path:
 			fields.push(...collectValidatableFields(element.elements, currentPath));
 		}
 
-		if (element.rules?.length && !element.elements?.length) {
-			fields.push({ path: currentPath, rules: element.rules });
+		const rules = getValidationRulesForElement(element);
+		if (rules?.length && !element.elements?.length) {
+			fields.push({ path: currentPath, rules });
 		}
 	}
 

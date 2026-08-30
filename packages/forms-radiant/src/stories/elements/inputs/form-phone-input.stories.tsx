@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
 import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story';
-import { createValidationFieldPlay } from '@/stories/shared/field-plays';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { queryDeep } from '@/lib/dom-utils';
 import type { StoryContext } from 'storybook/internal/types';
@@ -69,9 +68,30 @@ export const WithValidation: Story = {
 			{ $type: 'submit', id: 'submit', name: 'submit', label: 'Submit' },
 		]),
 	},
-	play: async (context: StoryContext) => {
-		await waitForPhoneReady(context.canvasElement);
-		await createValidationFieldPlay(/phone number/i, '2025550123', /submit/i, /phone number is required/i)(context);
+	play: async ({ canvasElement, step }: StoryContext) => {
+		await waitForPhoneReady(canvasElement);
+		const input = queryDeep(canvasElement, '[data-ref="number"]') as HTMLInputElement | null;
+		expect(input).toBeTruthy();
+		if (!input) return;
+		const field = queryDeep(canvasElement, 'rui-field') as { rules?: { validate?: unknown } } | null;
+		expect(typeof field?.rules?.validate).toBe('function');
+
+		await step('A country prefix alone is invalid', async () => {
+			await userEvent.click(input);
+			await userEvent.type(input, '+44');
+			await userEvent.click(within(canvasElement).getByRole('button', { name: /submit/i }));
+			await waitFor(() => {
+				expect(within(canvasElement).getByRole('alert')).toHaveTextContent('Enter a complete phone number');
+			});
+		});
+
+		await step('A complete number clears the validation error', async () => {
+			await userEvent.type(input, '2079460958');
+			await userEvent.click(within(canvasElement).getByRole('button', { name: /submit/i }));
+			await waitFor(() => {
+				expect(within(canvasElement).queryByRole('alert')).toBeNull();
+			});
+		});
 	},
 };
 

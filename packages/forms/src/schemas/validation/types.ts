@@ -28,6 +28,11 @@ const EmailRuleSchema = z.object({
 	message: z.string().optional(),
 });
 
+const PhoneRuleSchema = z.object({
+	type: z.literal('phone'),
+	message: z.string().optional(),
+});
+
 const PatternRuleSchema = z.object({
 	type: z.literal('pattern'),
 	value: z.string(),
@@ -174,6 +179,7 @@ export const ValidationRuleSchema = z.union([
 	MinItemsRuleSchema,
 	MaxItemsRuleSchema,
 	EmailRuleSchema,
+	PhoneRuleSchema,
 	PatternRuleSchema,
 	UrlRuleSchema,
 	UuidRuleSchema,
@@ -202,6 +208,7 @@ export type MaxRule = z.infer<typeof MaxRuleSchema>;
 export type MinItemsRule = z.infer<typeof MinItemsRuleSchema>;
 export type MaxItemsRule = z.infer<typeof MaxItemsRuleSchema>;
 export type EmailRule = z.infer<typeof EmailRuleSchema>;
+export type PhoneRule = z.infer<typeof PhoneRuleSchema>;
 export type PatternRule = z.infer<typeof PatternRuleSchema>;
 export type UrlRule = z.infer<typeof UrlRuleSchema>;
 export type UuidRule = z.infer<typeof UuidRuleSchema>;
