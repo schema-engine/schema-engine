@@ -69,7 +69,10 @@
 	},
 	"dependencies": {
 		"@ecopages/logger": "^0.2.2",
-		"@schema-engine/actions": "workspace:*"
+		"@schema-engine/actions": "workspace:*",
+		"country-flag-icons": "^1.6.20",
+		"imask": "^7.6.1",
+		"libphonenumber-js": "^1.13.12"
 	},
 	"exports": {
 		"./package.json": {

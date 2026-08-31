@@ -1,39 +1,10 @@
-import { defineConfig, type Plugin } from 'vitest/config';
+import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
-
-/** Registry files live outside this package; resolve workspace exports from here. */
-function resolveWorkspaceFromPackage(): Plugin {
-	return {
-		name: 'resolve-workspace-from-forms-react',
-		enforce: 'pre',
-		resolveId(id) {
-			if (id.startsWith('@schema-engine/forms-react')) {
-				return null;
-			}
-
-			if (!id.startsWith('@schema-engine/forms') && !id.startsWith('@schema-engine/actions')) {
-				return null;
-			}
-
-			const parents = [import.meta.url, pathToFileURL(path.resolve(dirname, '../forms/package.json')).href];
-
-			for (const parent of parents) {
-				try {
-					return fileURLToPath(import.meta.resolve(id, parent));
-				} catch {
-					// try the next resolution parent
-				}
-			}
-
-			return null;
-		},
-	};
-}
 
 const alias = [
 	{
@@ -56,15 +27,11 @@ const alias = [
 	},
 ];
 
-const workspaceResolve = resolveWorkspaceFromPackage();
-
 export default defineConfig({
-	plugins: [workspaceResolve],
 	resolve: { alias },
 	test: {
 		projects: [
 			{
-				plugins: [workspaceResolve],
 				resolve: { alias },
 				test: {
 					name: 'unit',
@@ -74,7 +41,7 @@ export default defineConfig({
 				},
 			},
 			{
-				plugins: [react(), workspaceResolve],
+				plugins: [react()],
 				resolve: { alias },
 				test: {
 					name: 'browser',

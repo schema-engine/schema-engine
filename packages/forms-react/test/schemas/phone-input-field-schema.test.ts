@@ -42,4 +42,26 @@ describe('Phone input field schema', () => {
 		});
 		expect(result.success).toBe(true);
 	});
+
+	test('adds phone validation without replacing configured rules', () => {
+		const result = PhoneInputFieldSchema.parse({
+			$type: 'phone-input',
+			id: 'phone',
+			name: 'phone',
+			rules: [{ type: 'required', message: 'Phone number is required' }],
+		});
+
+		expect(result.rules).toEqual([{ type: 'required', message: 'Phone number is required' }, { type: 'phone' }]);
+	});
+
+	test('preserves an explicitly configured phone-validation message', () => {
+		const result = PhoneInputFieldSchema.parse({
+			$type: 'phone-input',
+			id: 'phone',
+			name: 'phone',
+			rules: [{ type: 'phone', message: 'Use a complete number' }],
+		});
+
+		expect(result.rules).toEqual([{ type: 'phone', message: 'Use a complete number' }]);
+	});
 });

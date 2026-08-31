@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
+import { ValidationRuleSchema, type ValidationRule } from '@schema-engine/forms/schemas/validation';
 
 export const PhoneInputFieldExtensionSchema = z.object({
 	defaultCountry: z.string().optional(),
@@ -9,9 +10,22 @@ export const PhoneInputFieldExtensionSchema = z.object({
 export const PhoneInputFieldSchema = BaseFieldSchema.extend({
 	$type: z.literal('phone-input'),
 	...PhoneInputFieldExtensionSchema.shape,
+	rules: z
+		.array(ValidationRuleSchema)
+		.optional()
+		.transform((rules) => {
+			if (rules?.some((rule) => rule.type === 'phone')) {
+				return rules;
+			}
+
+			return [...(rules ?? []), { type: 'phone' as const }];
+		}),
 });
 
-export type PhoneInputFieldConfig = z.infer<typeof PhoneInputFieldSchema>;
+/** Serializable input accepted by the phone-input registration. */
+export type PhoneInputFieldConfig = Omit<z.infer<typeof PhoneInputFieldSchema>, 'rules'> & {
+	rules?: ValidationRule[];
+};
 
 export type PhoneInputFieldProps = PhoneInputFieldConfig & {
 	onChange?: (value: string) => void;

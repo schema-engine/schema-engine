@@ -1,11 +1,12 @@
 import { z } from 'zod';
-import type { ValidationRule, BaseValidationRule } from './types.js';
+import type { ValidationRule, BaseValidationRule, PhoneRule } from './types.js';
 import type { BaseField } from '../base-field.js';
 import { validationRegistry } from './validation-registry.js';
 
 type ValidationRuleType = ValidationRule | BaseValidationRule;
 
 interface ValidationElement {
+	$type?: string;
 	name?: string;
 	rules?: ValidationRuleType[];
 }
@@ -18,6 +19,25 @@ type FormElement = ValidationElement | FieldConfigElement;
 
 export function isFieldRequired(rules?: ValidationRule[]): boolean {
 	return rules?.some((rule) => rule.type === 'required') ?? false;
+}
+
+/**
+ * Returns an element's configured rules plus validation intrinsic to its field type.
+ *
+ * Phone inputs accept partially typed values while editing, but a submitted non-empty
+ * value must be a complete phone number. The explicit rule is preserved so callers can
+ * customize its error message.
+ */
+export function getValidationRulesForElement<TRule extends BaseValidationRule>(element: {
+	$type?: string;
+	rules?: TRule[];
+}): Array<TRule | PhoneRule> | undefined {
+	const rules = element.rules;
+	if (element.$type !== 'phone-input' || rules?.some((rule) => rule.type === 'phone')) {
+		return rules;
+	}
+
+	return [...(rules ?? []), { type: 'phone' }];
 }
 
 export function createZodSchemaFromRules(
@@ -54,9 +74,10 @@ export function generateFormSchema(elements: FormElement[]): z.ZodObject<any> {
 	for (const element of elements) {
 		if (!element.name) continue;
 
-		if (!element.rules?.length) continue;
+		const rules = getValidationRulesForElement(element);
+		if (!rules?.length) continue;
 
-		const fieldSchema = createZodSchemaFromRules(element.rules, undefined);
+		const fieldSchema = createZodSchemaFromRules(rules, undefined);
 		schemaFields[element.name] = fieldSchema;
 	}
 

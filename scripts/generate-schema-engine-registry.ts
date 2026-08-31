@@ -87,8 +87,8 @@ const PRIMITIVES: Record<PrimitiveName, PrimitiveSpec> = {
 	'phone-input': {
 		title: 'Schema Engine phone input',
 		description: 'Schema Engine phone input primitive.',
-		registryDependencies: ['button', 'command', 'input', 'popover', 'scroll-area'],
-		dependencies: ['react-phone-number-input', 'lucide-react'],
+		registryDependencies: ['button', 'command', 'input', 'popover'],
+		dependencies: ['react-phone-number-input', 'lucide-react', 'libphonenumber-js'],
 	},
 	'drop-zone': {
 		title: 'Schema Engine dropzone',
@@ -98,9 +98,9 @@ const PRIMITIVES: Record<PrimitiveName, PrimitiveSpec> = {
 	},
 	'masked-input': {
 		title: 'Schema Engine masked input',
-		description: 'Schema Engine masked input primitive powered by react-imask.',
+		description: 'Schema Engine masked input primitive powered by imask.',
 		registryDependencies: [],
-		dependencies: ['react-imask'],
+		dependencies: ['imask'],
 	},
 };
 
@@ -146,7 +146,12 @@ const BASES: Base[] = [
 				description: 'Chips-capable React Aria combobox primitive used by FormCombobox.',
 			},
 			'phone-input': {
-				dependencies: ['react-phone-number-input', 'lucide-react', 'react-aria-components'],
+				dependencies: [
+					'react-phone-number-input',
+					'lucide-react',
+					'react-aria-components',
+					'libphonenumber-js',
+				],
 			},
 			'drop-zone': {
 				dependencies: ['react-aria-components', 'lucide-react'],
@@ -363,6 +368,19 @@ function primitiveFile(base: Base, name: PrimitiveName): CatalogFile {
 	return { path, sourcePath, type: 'registry:ui', target: `@ui/schema-engine/components/${rel}` };
 }
 
+function primitiveFiles(base: Base, name: PrimitiveName): CatalogFile[] {
+	const files = [primitiveFile(base, name)];
+	if (name === 'phone-input') {
+		files.push({
+			path: '../shared/primitives/phone-country.ts',
+			sourcePath: `${SHARED_PRIMITIVES_ROOT}/phone-country.ts`,
+			type: 'registry:lib',
+			target: '@ui/schema-engine/components/phone-country.ts',
+		});
+	}
+	return files;
+}
+
 /** `inputs/form-drop-zone` -> `drop-zone` */
 function elementSlug(stem: string): string {
 	return stem.slice(stem.lastIndexOf('/') + 1).replace(/^form-/, '');
@@ -381,7 +399,7 @@ function buildPrimitiveItem(base: Base, name: PrimitiveName): CatalogItem {
 			resolveDep(base, dep),
 		),
 		dependencies: override.dependencies ?? spec.dependencies,
-		files: [primitiveFile(base, name)],
+		files: primitiveFiles(base, name),
 	};
 }
 
@@ -480,7 +498,7 @@ const TRACKED_NPM_DEPENDENCIES = [
 	'react-aria-components',
 	'react-phone-number-input',
 	'react-dropzone',
-	'react-imask',
+	'imask',
 ];
 
 function expectedFromImports(imports: string[], base: Base) {

@@ -1,5 +1,6 @@
 import type { FieldRules } from '@ecopages/radiant-ui/form';
 import type { ValidationRule } from '@schema-engine/forms/schemas';
+import { createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation/utils';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -40,6 +41,14 @@ export function toFieldRules(rules?: ValidationRule[]): FieldRules | undefined {
 					message: rule.message ?? 'Invalid email',
 				};
 				break;
+			case 'phone': {
+				const schema = createZodSchemaFromRules([rule]);
+				fieldRules.validate = (value) => {
+					const result = schema.safeParse(value);
+					return result.success || result.error.issues[0]?.message || 'Enter a complete phone number';
+				};
+				break;
+			}
 			case 'minItems':
 				if (rule.value >= 1) {
 					fieldRules.required = rule.message ?? true;

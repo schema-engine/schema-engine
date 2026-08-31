@@ -199,7 +199,7 @@ export class ActionDashboardElement extends RadiantElement {
 						<ul class="se-action-demo__log-list">
 							{this.logs.length ? (
 								this.logs.map((log) => (
-									<li class="se-action-demo__log">
+									<li class="se-action-demo__log" data-trigger={log.trigger}>
 										<RuiBadge
 											variant="filled"
 											class="se-action-demo__badge"
@@ -236,7 +236,11 @@ export class ActionDashboardElement extends RadiantElement {
 						<ul class="se-action-demo__summary-list">
 							{Object.keys(grouped).length ? (
 								Object.entries(grouped).map(([trigger, logs]) => (
-									<li class="se-action-demo__trigger-summary">
+									<li
+										class="se-action-demo__trigger-summary"
+										data-testid={trigger}
+										data-trigger={trigger}
+									>
 										<div>
 											<RuiBadge
 												variant="filled"

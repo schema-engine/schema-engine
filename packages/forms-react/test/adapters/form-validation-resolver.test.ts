@@ -39,4 +39,22 @@ describe('createFormValidationResolver', () => {
 		});
 		expect(resolved.errors).not.toHaveProperty('email');
 	});
+
+	test('rejects a phone country prefix while accepting a complete international number', async () => {
+		const phone = {
+			$type: 'phone-input',
+			id: 'phone',
+			name: 'phone',
+		};
+		const resolver = createFormValidationResolver([phone]);
+		const options = { fields: {}, shouldUseNativeValidation: false };
+
+		const incomplete = await resolver({ phone: '+44' }, undefined, options);
+		expect(incomplete.errors).toMatchObject({
+			phone: { message: 'Enter a complete phone number' },
+		});
+
+		const complete = await resolver({ phone: '+442079460958' }, undefined, options);
+		expect(complete.errors).toEqual({});
+	});
 });

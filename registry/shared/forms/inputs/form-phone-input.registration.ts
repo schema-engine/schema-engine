@@ -35,7 +35,7 @@ export const PhoneInputElementRegistration: InputRegistration<
 > = {
 	$type: 'phone-input',
 	render: FormPhoneInput,
-	schema: asStandardSchema(PhoneInputFieldSchema),
+	schema: asStandardSchema<PhoneInputFieldConfig>(PhoneInputFieldSchema),
 	metadata: {
 		name: 'Phone Number Input Field',
 		description: 'International phone number input with country selection',

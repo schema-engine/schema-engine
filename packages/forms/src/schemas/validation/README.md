@@ -44,10 +44,12 @@ The `ValidationRegistry` is the central hub that:
 The system automatically converts validation rules into Zod schemas:
 
 ```typescript
+import { createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation';
+
 const rules = [{ type: 'required' }, { type: 'email' }, { type: 'minLength', value: 5 }];
 
 // Automatically generates: z.string().email().min(5)
-const schema = validationRegistry.createSchema(rules);
+const schema = createZodSchemaFromRules(rules);
 ```
 
 ## Quick Start
@@ -55,7 +57,7 @@ const schema = validationRegistry.createSchema(rules);
 ### Basic Usage
 
 ```typescript
-import { validationRegistry, ValidationPresets } from '@schema-engine/forms/schemas/validation';
+import { createZodSchemaFromRules, ValidationPresets } from '@schema-engine/forms/schemas/validation';
 
 // Method 1: Direct JSON rules (simple & flexible)
 const emailRules = [
@@ -70,7 +72,7 @@ const emailRules = [
 ];
 
 // Create Zod schema from rules
-const schema = validationRegistry.createSchema(emailRules);
+const schema = createZodSchemaFromRules(emailRules);
 
 // Validate data
 const result = schema.safeParse('user@example.com');
@@ -109,7 +111,7 @@ const formConfig = {
 The package exports a default registry instance that comes pre-loaded with all built-in validations:
 
 ```typescript
-import { validationRegistry } from '@schema-engine/formschemas/validation';
+import { validationRegistry } from '@schema-engine/forms/schemas/validation';
 
 // Check what's available
 console.log(validationRegistry.getRegisteredTypes());
@@ -123,19 +125,16 @@ const numberValidations = validationRegistry.getByCategory('number');
 ### Creating Custom Instances
 
 ```typescript
-import { ValidationRegistry } from '@schema-engine/formschemas/validation';
+import { ValidationRegistry } from '@schema-engine/forms/schemas/validation';
 
 // Create a new registry (starts empty)
 const customRegistry = new ValidationRegistry();
 
-// Register your own validations
+// Register your own validations.
 customRegistry.register({
-	type: 'phone',
+	type: 'postalCode',
 	category: 'string',
-	handler: (rule) => {
-		const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-		return z.string().regex(phoneRegex, rule.message || 'Invalid phone number');
-	},
+	handler: (rule) => z.string().regex(/^\d{5}$/, rule.message || 'Invalid postal code'),
 });
 ```
 
@@ -147,6 +146,7 @@ customRegistry.register({
 | ----------- | ------------------------- | --------------------- | -------------------------- |
 | `required`  | `message?`                | Field is required     | `.min(1, message)`         |
 | `email`     | `message?`                | Valid email address   | `.email(message)`          |
+| `phone`     | `message?`                | Complete phone number | `libphonenumber-js`        |
 | `minLength` | `value: number, message?` | Minimum string length | `.min(value, message)`     |
 | `maxLength` | `value: number, message?` | Maximum string length | `.max(value, message)`     |
 | `pattern`   | `value: string, message?` | Regex pattern match   | `.regex(pattern, message)` |
@@ -205,20 +205,29 @@ customRegistry.register({
 
 ## Custom Validations
 
+### Phone Validation
+
+`phone` uses `libphonenumber-js` to validate non-empty values. A country prefix such as `+44` is invalid; a complete E.164 number such as `+442079460958` is valid. Empty values remain valid so optional phone fields work normally. Pair it with `required` when a phone number is mandatory.
+
+`phone-input` fields add the `phone` rule automatically. Configure the rule explicitly only to override its message.
+
+```typescript
+import { createZodSchemaFromRules, ValidationPresets } from '@schema-engine/forms/schemas/validation';
+
+const schema = createZodSchemaFromRules([
+	ValidationPresets.string.required('Phone number is required'),
+	ValidationPresets.string.phone('Enter a complete phone number'),
+]);
+
+schema.safeParse('+44').success; // false
+schema.safeParse('+442079460958').success; // true
+```
+
 ### Registering Custom Validations
 
 ```typescript
-import { validationRegistry } from '@schema-engine/formschemas/validation';
-
-// Register a phone number validator
-validationRegistry.register({
-	type: 'phone',
-	category: 'string',
-	handler: (rule) => {
-		const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-		return z.string().regex(phoneRegex, rule.message || 'Invalid phone number');
-	},
-});
+import { z } from 'zod';
+import { validationRegistry } from '@schema-engine/forms/schemas/validation';
 
 // Register a credit card validator with Luhn algorithm
 validationRegistry.register({
@@ -247,13 +256,6 @@ validationRegistry.register({
 		}, rule.message || 'Invalid credit card number');
 	},
 });
-
-// Use in form configuration
-const field = {
-	id: 'input',
-	name: 'phone',
-	rules: [{ type: 'phone', message: 'Please enter a valid phone number' }],
-};
 ```
 
 ### Bulk Registration
@@ -282,7 +284,7 @@ validationRegistry.registerMultiple(customValidations);
 Converts an array of validation rules into a Zod schema:
 
 ```typescript
-import { createZodSchemaFromRules } from '@schema-engine/formschemas/validation';
+import { createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation';
 
 const rules = [{ type: 'required' }, { type: 'minLength', value: 3 }, { type: 'maxLength', value: 50 }];
 
@@ -295,7 +297,7 @@ const schema = createZodSchemaFromRules(rules);
 Generates a complete Zod schema for an entire form:
 
 ```typescript
-import { generateFormSchema } from '@schema-engine/formschemas/validation';
+import { generateFormSchema } from '@schema-engine/forms/schemas/validation';
 
 const formElements = [
 	{
@@ -332,7 +334,7 @@ const result = formSchema.safeParse({
 Use the `ValidationPresets` utility for convenient rule creation:
 
 ```typescript
-import { ValidationPresets } from '@schema-engine/formschemas/validation';
+import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
 
 // String presets
 const rules = [
@@ -340,7 +342,7 @@ const rules = [
 	ValidationPresets.string.minLength(2, 'Name too short'),
 	ValidationPresets.string.maxLength(50, 'Name too long'),
 	ValidationPresets.string.email('Invalid email'),
-	ValidationPresets.string.pattern(/^[A-Za-z\s]+$/, 'Letters only'),
+	ValidationPresets.string.pattern('^[A-Za-z\\s]+$', 'Letters only'),
 ];
 
 // Number presets
@@ -356,9 +358,9 @@ const tagsRules = [
 ];
 
 // Network presets
-const urlRules = [
-	ValidationPresets.network.url('Invalid URL'),
-	ValidationPresets.network.ip('v4', 'Invalid IPv4 address'),
+const formatRules = [
+	ValidationPresets.string.url('Invalid URL'),
+	ValidationPresets.network.ipv4('Invalid IPv4 address'),
 ];
 
 // Async presets
@@ -415,7 +417,7 @@ validationRegistry.register({
 - `registerMultiple(registrations: ValidationRegistration[]): void` - Register multiple validations
 - `unregister(type: string): boolean` - Remove a validation type
 - `has(type: string): boolean` - Check if validation type exists
-- `createSchema(rule: ValidationRule | ValidationRule[]): z.ZodTypeAny | null` - Create Zod schema from rule(s)
+- `createSchema(rule: ValidationRule, formData?): z.ZodTypeAny | null` - Create a Zod schema from one rule
 - `getRegisteredTypes(): string[]` - Get all registered type names
 - `getByCategory(category: string): ValidationRegistration[]` - Get validations by category
 - `clear(): void` - Remove all registered validations
@@ -510,14 +512,13 @@ const emailRules = [
 Always test custom validation logic thoroughly:
 
 ```typescript
-describe('Custom Phone Validation', () => {
-	it('should validate phone numbers correctly', () => {
-		const rule = { type: 'phone', message: 'Invalid phone' };
+describe('Custom postal-code validation', () => {
+	it('validates postal codes correctly', () => {
+		const rule = { type: 'postalCode', message: 'Invalid postal code' };
 		const schema = validationRegistry.createSchema(rule);
 
-		expect(() => schema?.parse('+1234567890')).not.toThrow();
+		expect(() => schema?.parse('28013')).not.toThrow();
 		expect(() => schema?.parse('invalid')).toThrow();
-		expect(() => schema?.parse('')).toThrow();
 	});
 });
 ```

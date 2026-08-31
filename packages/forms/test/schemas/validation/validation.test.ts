@@ -91,6 +91,29 @@ describe('Validation', () => {
 	});
 
 	describe('createZodSchemaFromRules', () => {
+		test('rejects incomplete phone prefixes but permits optional empty values', () => {
+			const schema = createZodSchemaFromRules([validationRegistry.presets.string.phone()]);
+
+			expect(schema.safeParse('').success).toBe(true);
+			expect(schema.safeParse(undefined).success).toBe(true);
+			expect(schema.safeParse('+44').success).toBe(false);
+			expect(schema.safeParse('+12025550123').success).toBe(true);
+		});
+
+		test('adds phone validation to phone-input fields without replacing explicit rules', () => {
+			const schema = generateFormSchema([
+				{
+					$type: 'phone-input',
+					id: 'phone',
+					name: 'phone',
+					rules: [{ type: 'required', message: 'Phone number is required' }],
+				},
+			]);
+
+			expect(schema.safeParse({ phone: '+44' }).success).toBe(false);
+			expect(schema.safeParse({ phone: '+442079460958' }).success).toBe(true);
+		});
+
 		test('should create string schema with required validation', () => {
 			const rules = [validationRegistry.presets.string.required('Field is required')];
 			const schema = createZodSchemaFromRules(rules);

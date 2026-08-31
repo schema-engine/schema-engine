@@ -2,6 +2,7 @@ import { PhoneInput } from '@/components/ui/schema-engine/components/phone-input
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
 import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
 import type { PhoneInputFieldProps } from './form-phone-input.types';
+import type { Country } from 'react-phone-number-input';
 
 export function FormPhoneInput({
 	onChange: propsOnChange,
@@ -28,7 +29,7 @@ export function FormPhoneInput({
 			<PhoneInput
 				{...fieldProps}
 				value={value || ''}
-				defaultCountry={defaultCountry}
+				defaultCountry={defaultCountry as Country | undefined}
 				international={international}
 				onChange={combineHandlers(onChange, propsOnChange)}
 				onBlur={combineHandlers(onBlur, propsOnBlur)}

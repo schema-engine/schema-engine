@@ -1,8 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { IMask } from 'react-imask';
-import type { InputMask } from 'imask';
+import IMask, { type InputMask } from 'imask';
 import { cn } from '@/lib/utils';
 
 type MaskedInputProps = Omit<React.ComponentProps<'input'>, 'onChange' | 'value' | 'defaultValue'> & {

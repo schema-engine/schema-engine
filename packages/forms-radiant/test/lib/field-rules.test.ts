@@ -22,4 +22,13 @@ describe('toFieldRules', () => {
 		expect(toFieldRules(undefined)).toBeUndefined();
 		expect(toFieldRules([])).toBeUndefined();
 	});
+
+	test('uses the shared phone validator for complete numbers', () => {
+		const rules = toFieldRules([{ type: 'phone' }]);
+		expect(typeof rules?.validate).toBe('function');
+
+		const validate = rules?.validate as (value: unknown) => boolean | string;
+		expect(validate('+44')).toBe('Enter a complete phone number');
+		expect(validate('+442079460958')).toBe(true);
+	});
 });

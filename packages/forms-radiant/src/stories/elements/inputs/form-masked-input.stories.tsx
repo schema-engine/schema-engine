@@ -1,18 +1,24 @@
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
 import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story';
-import { expect, within } from 'storybook/test';
-import { getFieldControl, playFieldFocusAndType } from '@/stories/shared/play';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { queryDeep } from '@/lib/dom-utils';
+
+const ibanMask = 'aa00 0000 0000 000000';
+const ibanPlaceholder = 'ES12 4311 2144 214423';
 
 const meta = {
 	...formRendererMeta,
 	args: {
-		config: fieldFormConfig('masked-input-card', 'Card Number', [
+		config: fieldFormConfig('masked-input-iban', 'Bank Account', [
 			{
 				$type: 'masked-input',
-				id: 'cardNumber',
-				name: 'cardNumber',
-				label: 'Card Number',
-				mask: '9999 9999 9999 9999',
+				id: 'iban',
+				name: 'iban',
+				label: 'Bank account (IBAN)',
+				mask: ibanMask,
+				placeholder: ibanPlaceholder,
+				inputMode: 'text',
+				autoComplete: 'off',
 			},
 		]),
 	},
@@ -23,29 +29,40 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
 	play: async ({ canvasElement, step }) => {
-		await step('Field is visible and accepts input', async () => {
-			const input = getFieldControl(canvasElement, /card number/i);
-			await expect(input).toBeInTheDocument();
-			await playFieldFocusAndType(canvasElement, /card number/i, '4242424242424242');
+		await step('Field is visible and formats the IBAN', async () => {
+			await waitFor(() => {
+				expect(queryDeep(canvasElement, 'se-masked-input[data-ready]')).toBeTruthy();
+			});
+			const input = queryDeep(canvasElement, '[data-ref="input"]') as HTMLInputElement | null;
+			expect(input).toBeTruthy();
+			if (!input) return;
+			await expect(input).toHaveAttribute('placeholder', ibanPlaceholder);
+			await userEvent.click(input);
+			await userEvent.clear(input);
+			await userEvent.type(input, 'ES1243112144214423');
+			await expect(input).toHaveValue(ibanPlaceholder);
 		});
 	},
 };
 
-export const BankAccount: Story = {
+export const CardNumber: Story = {
 	args: {
-		config: fieldFormConfig('masked-input-bank', 'Bank Account', [
+		config: fieldFormConfig('masked-input-card', 'Card Number', [
 			{
 				$type: 'masked-input',
-				id: 'account',
-				name: 'account',
-				label: 'Account Number',
-				mask: '9999999999',
+				id: 'cardNumber',
+				name: 'cardNumber',
+				label: 'Card Number',
+				mask: '0000 0000 0000 0000',
+				placeholder: '4242 4242 4242 4242',
+				inputMode: 'numeric',
+				autoComplete: 'cc-number',
 			},
 		]),
 	},
 	play: async ({ canvasElement, step }) => {
-		await step('Bank account field is visible', async () => {
-			await expect(within(canvasElement).getByLabelText(/account number/i)).toBeInTheDocument();
+		await step('Card field is visible', async () => {
+			await expect(within(canvasElement).getByPlaceholderText('4242 4242 4242 4242')).toBeInTheDocument();
 		});
 	},
 };

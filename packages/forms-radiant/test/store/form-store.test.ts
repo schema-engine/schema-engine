@@ -52,4 +52,24 @@ describe('FormStore', () => {
 		const isValid = await store.validateAll();
 		expect(isValid).toBe(true);
 	});
+
+	test('rejects incomplete phone prefixes from raw phone-input configuration', async () => {
+		const config: FormConfig = {
+			id: 'phone-form',
+			steps: [
+				{
+					id: 'step-1',
+					elements: [{ $type: 'phone-input', id: 'phone', name: 'phone' }],
+				},
+			],
+		};
+		const store = new FormStore(config);
+
+		store.setValue('phone', '+44');
+		expect(await store.validateAll()).toBe(false);
+		expect(store.getError('phone')).toBe('Enter a complete phone number');
+
+		store.setValue('phone', '+442079460958');
+		expect(await store.validateAll()).toBe(true);
+	});
 });

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
 
 export const MaskedInputFieldExtensionSchema = z.object({
-	mask: z.string().describe('iMask pattern. Use 0 for digits and a for letters, e.g. "aa00 0000 0000 0000 0000 00"'),
+	mask: z.string().describe('iMask pattern. Use 0 for digits and a for letters, e.g. "aa00 0000 0000 000000"'),
 	unmask: z.union([z.boolean(), z.literal('typed')]).optional(),
 	lazy: z.boolean().optional(),
 	overwrite: z.boolean().optional(),
@@ -31,7 +31,7 @@ export const maskedInputFieldExample: MaskedInputFieldConfig = {
 	name: 'iban',
 	label: 'Bank account (IBAN)',
 	description: 'International bank account number',
-	mask: 'aa00 0000 0000 0000 0000 00',
-	placeholder: 'DE89 3704 0044 0532 0130 00',
+	mask: 'aa00 0000 0000 000000',
+	placeholder: 'ES12 4311 2144 214423',
 	inputMode: 'text',
 };

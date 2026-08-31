@@ -85,6 +85,10 @@ await buildLib({
 		'@ecopages/radiant-ui/textarea/styles.css',
 		'@ecopages/signals',
 		'@ecopages/logger',
+		'imask',
+		'libphonenumber-js',
+		'country-flag-icons',
+		'country-flag-icons/string/3x2',
 		'zod',
 	],
 });

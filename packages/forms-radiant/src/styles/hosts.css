@@ -13,6 +13,8 @@ se-headless-stepper,
 se-form-array,
 se-drop-zone,
 se-input-otp,
+se-masked-input,
+se-phone-input,
 se-submission-alert {
 	display: block;
 }

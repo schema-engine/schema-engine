@@ -3,7 +3,6 @@ import { Command as CommandPrimitive } from 'cmdk';
 
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { InputGroup, InputGroupAddon } from '@/components/ui/input-group';
 import { SearchIcon, CheckIcon } from 'lucide-react';
 
 function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {
@@ -51,20 +50,16 @@ function CommandDialog({
 
 function CommandInput({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Input>) {
 	return (
-		<div data-slot="command-input-wrapper" className="p-1 pb-0">
-			<InputGroup className="h-8! rounded-lg! border-input/30 bg-input/30 shadow-none! *:data-[slot=input-group-addon]:pl-2!">
-				<CommandPrimitive.Input
-					data-slot="command-input"
-					className={cn(
-						'w-full text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50',
-						className,
-					)}
-					{...props}
-				/>
-				<InputGroupAddon>
-					<SearchIcon className="size-4 shrink-0 opacity-50" />
-				</InputGroupAddon>
-			</InputGroup>
+		<div data-slot="command-input-wrapper" className="flex items-center gap-2 px-2.5 py-1.5">
+			<SearchIcon className="size-4 shrink-0 opacity-50" />
+			<CommandPrimitive.Input
+				data-slot="command-input"
+				className={cn(
+					'h-8 w-full border-0 bg-transparent text-sm shadow-none outline-hidden ring-0 placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50',
+					className,
+				)}
+				{...props}
+			/>
 		</div>
 	);
 }
@@ -120,7 +115,7 @@ function CommandItem({ className, children, ...props }: React.ComponentProps<typ
 		<CommandPrimitive.Item
 			data-slot="command-item"
 			className={cn(
-				"group/command-item relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none in-data-[slot=dialog-content]:rounded-lg! data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 data-selected:bg-muted data-selected:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-selected:*:[svg]:text-foreground",
+				"group/command-item relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none in-data-[slot=dialog-content]:rounded-lg! data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 data-selected:bg-transparent data-selected:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
 				className,
 			)}
 			{...props}

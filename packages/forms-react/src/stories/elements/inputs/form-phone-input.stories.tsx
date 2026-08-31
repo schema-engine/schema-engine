@@ -16,7 +16,7 @@ const meta = {
 		docs: {
 			description: {
 				component:
-					'International phone number input element with country code selection and validation. Supports formatting and international numbers. Base UI implementation.',
+					'International phone number input with country selection. Non-empty values are stored in E.164 format and validated with libphonenumber-js, so a country prefix alone is invalid.',
 			},
 		},
 	},
@@ -50,7 +50,7 @@ export const Default: Story = {
 				id: 'phone',
 				name: 'phone',
 				label: 'Phone Number',
-				placeholder: 'Enter phone number',
+				placeholder: '(202) 555-0123',
 				defaultCountry: 'US',
 			})
 			.build(),
@@ -67,7 +67,7 @@ export const International: Story = {
 				id: 'internationalPhone',
 				name: 'internationalPhone',
 				label: 'International Phone',
-				placeholder: 'Enter phone number',
+				placeholder: '+1 202 555 0123',
 				description: 'Phone number with country code',
 				international: true,
 			})
@@ -87,11 +87,8 @@ export const WithValidation: Story = {
 				label: 'Phone Number',
 				placeholder: 'Enter your phone number',
 				defaultCountry: 'US',
-				description: 'Enter a valid phone number',
-				rules: [
-					ValidationPresets.string.required('Phone number is required'),
-					ValidationPresets.string.minLength(10, 'Phone number must be at least 10 digits'),
-				],
+				description: 'Enter a complete phone number',
+				rules: [ValidationPresets.string.required('Phone number is required')],
 			})
 			.addElement('submit', { id: 'submit', label: 'Submit', name: 'submit' })
 			.build(),
