@@ -1,6 +1,8 @@
 import {
 	AsYouType,
 	Metadata,
+	formatIncompletePhoneNumber,
+	getCountryCallingCode,
 	isSupportedCountry,
 	parseIncompletePhoneNumber,
 	parsePhoneNumberFromString,
@@ -47,4 +49,48 @@ export function detectCountryFromInput(input: string, fallback: CountryCode): Co
 	}
 
 	return countryForCallingCode(callingCode) ?? fallback;
+}
+
+export function formatPhoneInputValue(input: string, country: CountryCode, international: boolean) {
+	const incomplete = parseIncompletePhoneNumber(input);
+	if (!incomplete) {
+		return '';
+	}
+
+	if (international) {
+		const withPlus = incomplete.startsWith('+')
+			? incomplete
+			: `+${getCountryCallingCode(country)}${incomplete}`;
+		return formatIncompletePhoneNumber(withPlus);
+	}
+
+	if (incomplete.startsWith('+')) {
+		const prefix = `+${getCountryCallingCode(country)}`;
+		const hasCallingCode = incomplete === prefix || incomplete.startsWith(prefix);
+		const national = hasCallingCode ? incomplete.slice(prefix.length) : '';
+
+		if (hasCallingCode && national) {
+			return formatIncompletePhoneNumber(national, country);
+		}
+
+		return incomplete;
+	}
+
+	return formatIncompletePhoneNumber(incomplete, country);
+}
+
+export function phoneInputToE164(input: string, country: CountryCode) {
+	const parsed = parsePhoneNumberFromString(input, country);
+	if (parsed?.number) {
+		return parsed.number;
+	}
+
+	const incomplete = parseIncompletePhoneNumber(input);
+	if (!incomplete) {
+		return '';
+	}
+	if (incomplete.startsWith('+')) {
+		return incomplete;
+	}
+	return `+${getCountryCallingCode(country)}${incomplete}`;
 }

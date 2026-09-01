@@ -18,7 +18,7 @@ import {
 	type ComponentProps,
 	type KeyboardEvent,
 } from 'react';
-import { detectCountryFromInput } from '@/components/ui/schema-engine/components/phone-country';
+import { detectCountryFromInput, formatPhoneInputValue } from '@/components/ui/schema-engine/components/phone-country';
 
 type PhoneInputProps = Omit<ComponentProps<'input'>, 'onChange' | 'value' | 'ref'> &
 	Omit<BasePhoneInput.Props<typeof BasePhoneInput.default>, 'onChange'> & {
@@ -27,22 +27,37 @@ type PhoneInputProps = Omit<ComponentProps<'input'>, 'onChange' | 'value' | 'ref
 
 type PhoneInputApi = {
 	country: BasePhoneInput.Country | undefined;
+	international: boolean;
 	selectCountry: (country: BasePhoneInput.Country) => void;
 	registerCountrySelector: (selector: (country: BasePhoneInput.Country) => void) => void;
 };
 
 const PhoneInputApiContext = createContext<PhoneInputApi | null>(null);
 
-function PhoneInput({ className, onChange, onCountryChange, value, defaultCountry, ...props }: PhoneInputProps) {
+function PhoneInput({
+	className,
+	onChange,
+	onCountryChange,
+	value,
+	defaultCountry,
+	international,
+	...props
+}: PhoneInputProps) {
 	const [country, setCountry] = useState<BasePhoneInput.Country | undefined>(defaultCountry);
 	const [selectCountry, setCountrySelector] = useState<(country: BasePhoneInput.Country) => void>(() => () => {});
 	const registerCountrySelector = useCallback(
 		(selector: (country: BasePhoneInput.Country) => void) => setCountrySelector(() => selector),
 		[],
 	);
+	const useInternationalFormat = international === true;
 	const api = useMemo(
-		() => ({ country, selectCountry, registerCountrySelector }),
-		[country, selectCountry, registerCountrySelector],
+		() => ({
+			country,
+			international: useInternationalFormat,
+			selectCountry,
+			registerCountrySelector,
+		}),
+		[country, useInternationalFormat, selectCountry, registerCountrySelector],
 	);
 
 	return (
@@ -59,6 +74,9 @@ function PhoneInput({ className, onChange, onCountryChange, value, defaultCountr
 				countrySelectComponent={CountrySelect}
 				inputComponent={PhoneNumberInput}
 				smartCaret={false}
+				{...(useInternationalFormat
+					? { international: true }
+					: { initialValueFormat: 'national' as const })}
 				addInternationalOption={false}
 				focusInputOnCountrySelection={false}
 				defaultCountry={defaultCountry}
@@ -73,18 +91,21 @@ function PhoneInput({ className, onChange, onCountryChange, value, defaultCountr
 	);
 }
 
-function PhoneNumberInput({ className, onChange, ...props }: ComponentProps<typeof Input>) {
+function PhoneNumberInput({ className, onChange, value, ...props }: ComponentProps<typeof Input>) {
 	const api = useContext(PhoneInputApiContext);
+	const country = api?.country ?? 'US';
+	const displayValue =
+		api?.international || value == null ? value : formatPhoneInputValue(String(value), country, false);
 
 	return (
 		<Input
 			{...props}
+			value={displayValue}
 			className={cn('rounded-s-none', className)}
 			onChange={(event) => {
 				onChange?.(event);
-				const fallback = api?.country ?? 'US';
-				const detected = detectCountryFromInput(event.currentTarget.value, fallback);
-				if (detected !== fallback) {
+				const detected = detectCountryFromInput(event.currentTarget.value, country);
+				if (detected !== country) {
 					queueMicrotask(() => api?.selectCountry(detected));
 				}
 			}}
@@ -166,18 +187,19 @@ function CountrySelect({ disabled, value: selectedCountry, options: countryList,
 					</Button>
 				)}
 			/>
-			<PopoverContent className="w-[300px] p-2">
-				<Input
-					autoFocus
-					value={searchValue}
-					onChange={(event) => {
-						setSearchValue(event.target.value);
-						setActiveIndex(0);
-					}}
-					onKeyDown={onSearchKeyDown}
-					placeholder="Search country..."
-					className="mb-2"
-				/>
+			<PopoverContent className="w-[300px] p-0">
+				<div className="border-b border-border p-2">
+					<Input
+						autoFocus
+						value={searchValue}
+						onChange={(event) => {
+							setSearchValue(event.target.value);
+							setActiveIndex(0);
+						}}
+						onKeyDown={onSearchKeyDown}
+						placeholder="Search country..."
+					/>
+				</div>
 				<ListBox
 					aria-label="Countries"
 					selectionMode="single"
@@ -189,18 +211,15 @@ function CountrySelect({ disabled, value: selectedCountry, options: countryList,
 							setIsOpen(false);
 						}
 					}}
-					className="max-h-72 overflow-y-auto"
+					className="max-h-72 overflow-y-auto p-1"
 				>
-					{filtered.map(({ value, label }, index) =>
+					{filtered.map(({ value, label }) =>
 						value ? (
 							<ListBoxItem
 								key={value}
 								id={value}
 								textValue={label}
-								className={cn(
-									'relative flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-sm outline-none data-[focused]:bg-transparent',
-									index === activeIndex && 'shadow-[inset_0_0_0_2px_currentColor]',
-								)}
+								className="relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none data-[focused]:bg-accent data-[focused]:text-accent-foreground data-[selected]:bg-accent data-[selected]:text-accent-foreground"
 							>
 								<FlagComponent country={value} countryName={label} />
 								<span className="flex-1 text-sm">{label}</span>

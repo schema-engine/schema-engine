@@ -37,8 +37,7 @@ export const phoneInputFieldExample: PhoneInputFieldConfig = {
 	$type: 'phone-input',
 	name: 'phoneNumber',
 	label: 'Phone Number',
-	description: 'Enter your phone number with country code',
+	description: 'Enter your phone number',
 	defaultCountry: 'US',
-	international: true,
 	placeholder: 'Enter phone number',
 };

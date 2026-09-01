@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 
 import { cn } from '@/lib/utils';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ComponentProps } from 'react';
-import { detectCountryFromInput } from './phone-country';
+import { detectCountryFromInput, formatPhoneInputValue } from './phone-country';
 
 type PhoneInputProps = Omit<ComponentProps<'input'>, 'onChange' | 'value' | 'ref'> &
 	Omit<BasePhoneInput.Props<typeof BasePhoneInput.default>, 'onChange'> & {
@@ -18,22 +18,37 @@ type PhoneInputProps = Omit<ComponentProps<'input'>, 'onChange' | 'value' | 'ref
 
 type PhoneInputApi = {
 	country: BasePhoneInput.Country | undefined;
+	international: boolean;
 	selectCountry: (country: BasePhoneInput.Country) => void;
 	registerCountrySelector: (selector: (country: BasePhoneInput.Country) => void) => void;
 };
 
 const PhoneInputApiContext = createContext<PhoneInputApi | null>(null);
 
-function PhoneInput({ className, onChange, onCountryChange, value, defaultCountry, ...props }: PhoneInputProps) {
+function PhoneInput({
+	className,
+	onChange,
+	onCountryChange,
+	value,
+	defaultCountry,
+	international,
+	...props
+}: PhoneInputProps) {
 	const [country, setCountry] = useState<BasePhoneInput.Country | undefined>(defaultCountry);
 	const [selectCountry, setCountrySelector] = useState<(country: BasePhoneInput.Country) => void>(() => () => {});
 	const registerCountrySelector = useCallback(
 		(selector: (country: BasePhoneInput.Country) => void) => setCountrySelector(() => selector),
 		[],
 	);
+	const useInternationalFormat = international === true;
 	const api = useMemo(
-		() => ({ country, selectCountry, registerCountrySelector }),
-		[country, selectCountry, registerCountrySelector],
+		() => ({
+			country,
+			international: useInternationalFormat,
+			selectCountry,
+			registerCountrySelector,
+		}),
+		[country, useInternationalFormat, selectCountry, registerCountrySelector],
 	);
 
 	return (
@@ -50,6 +65,9 @@ function PhoneInput({ className, onChange, onCountryChange, value, defaultCountr
 				countrySelectComponent={CountrySelect}
 				inputComponent={PhoneNumberInput}
 				smartCaret={false}
+				{...(useInternationalFormat
+					? { international: true }
+					: { initialValueFormat: 'national' as const })}
 				addInternationalOption={false}
 				focusInputOnCountrySelection={false}
 				defaultCountry={defaultCountry}
@@ -64,18 +82,21 @@ function PhoneInput({ className, onChange, onCountryChange, value, defaultCountr
 	);
 }
 
-function PhoneNumberInput({ className, onChange, ...props }: ComponentProps<typeof Input>) {
+function PhoneNumberInput({ className, onChange, value, ...props }: ComponentProps<typeof Input>) {
 	const api = useContext(PhoneInputApiContext);
+	const country = api?.country ?? 'US';
+	const displayValue =
+		api?.international || value == null ? value : formatPhoneInputValue(String(value), country, false);
 
 	return (
 		<Input
 			{...props}
+			value={displayValue}
 			className={cn('rounded-s-none', className)}
 			onChange={(event) => {
 				onChange?.(event);
-				const fallback = api?.country ?? 'US';
-				const detected = detectCountryFromInput(event.currentTarget.value, fallback);
-				if (detected !== fallback) {
+				const detected = detectCountryFromInput(event.currentTarget.value, country);
+				if (detected !== country) {
 					queueMicrotask(() => api?.selectCountry(detected));
 				}
 			}}
@@ -179,7 +200,7 @@ function CountrySelectOption({
 		<CommandItem
 			value={`${countryName} ${country}`}
 			data-checked={country === selectedCountry ? true : undefined}
-			className="gap-2 bg-transparent data-selected:bg-transparent data-selected:shadow-[inset_0_0_0_2px_currentColor]"
+			className="gap-2"
 			onSelect={handleSelect}
 		>
 			<FlagComponent country={country} countryName={countryName} />
