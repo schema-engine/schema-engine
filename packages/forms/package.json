@@ -135,21 +135,17 @@
 			"types": "./dist/tools/*.d.ts",
 			"import": "./dist/tools/*.js"
 		},
-		"./layouts": {
-			"types": "./dist/layouts/index.d.ts",
-			"import": "./dist/layouts/index.js"
+		"./recipes": {
+			"types": "./dist/recipes/index.d.ts",
+			"import": "./dist/recipes/index.js"
 		},
-		"./layouts/*": {
-			"types": "./dist/layouts/*.d.ts",
-			"import": "./dist/layouts/*.js"
+		"./recipes/*": {
+			"types": "./dist/recipes/*.d.ts",
+			"import": "./dist/recipes/*.js"
 		},
-		"./steppers": {
-			"types": "./dist/steppers/index.d.ts",
-			"import": "./dist/steppers/index.js"
-		},
-		"./steppers/*": {
-			"types": "./dist/steppers/*.d.ts",
-			"import": "./dist/steppers/*.js"
+		"./lib/validate-form": {
+			"types": "./dist/lib/validate-form.d.ts",
+			"import": "./dist/lib/validate-form.js"
 		}
 	}
 }

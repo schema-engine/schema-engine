@@ -5,39 +5,11 @@ import { GridLayoutConfigSchema } from './base-field';
 export type { FormActionConfig } from '../actions/types';
 
 /**
- * Step layout configuration schema
+ * Form view configuration schema.
  *
- * Base schema for step-specific layout configurations. Layout components define their own
- * extended schemas with specific configuration options.
- *
- * @example
- * ```ts
- * const MyLayoutConfigSchema = StepLayoutConfigSchema.extend({
- *   $type: z.literal('my-layout'),
- *   columns: z.number(),
- *   gap: z.string()
- * });
- * ```
+ * Recipe registrations extend this with slot-specific keys (shell, header, progress, actions).
  */
-export const StepLayoutConfigSchema = z.looseObject({
-	$type: z.string(),
-});
-
-/**
- * Form stepper configuration schema
- *
- * Base schema for stepper configurations. Each stepper component registers its own
- * extended schema with specific configuration options via module augmentation.
- *
- * @example
- * ```ts
- * const MyStepperConfigSchema = BaseStepperConfigSchema.extend({
- *   $type: z.literal('my-stepper'),
- *   orientation: z.enum(['horizontal', 'vertical'])
- * });
- * ```
- */
-export const FormStepperConfigSchema = z.looseObject({
+export const FormViewConfigSchema = z.looseObject({
 	$type: z.string(),
 });
 
@@ -49,7 +21,6 @@ export const FormStepSchema = z.object({
 	title: z.string(),
 	description: z.string().optional(),
 	icon: z.string().optional(),
-	layout: StepLayoutConfigSchema.optional(),
 	elements: z.array(z.any()),
 	rules: z.any().optional(),
 	constraints: z.array(z.any()).optional(),
@@ -69,9 +40,8 @@ export const FormConfigSchema = z.object({
 	title: z.string().optional(),
 	description: z.string().optional(),
 	steps: z.array(FormStepSchema),
-	stepper: FormStepperConfigSchema.optional(),
+	view: FormViewConfigSchema.optional(),
 	grid: z.lazy(() => GridLayoutConfigSchema).optional(),
-	mode: z.enum(['wizard', 'free']).optional().default('wizard'),
 	validationMode: z.enum(['onSubmit', 'onChange', 'onBlur', 'all']).optional(),
 	reValidateMode: z.enum(['onSubmit', 'onChange', 'onBlur']).optional(),
 	className: z.string().optional(),
@@ -82,27 +52,22 @@ export const FormConfigSchema = z.object({
 /**
  * Inferred types from schemas
  */
-export type StepLayoutConfig = z.infer<typeof StepLayoutConfigSchema>;
-export type FormStepperConfig = z.infer<typeof FormStepperConfigSchema>;
+export type FormViewConfig = z.infer<typeof FormViewConfigSchema>;
 
 /**
- * Form step configuration type with properly typed elements and layout arrays.
- *
- * The Zod schema uses z.any() for elements and z.looseObject() for layout to avoid circular references,
- * but we override them here to provide strict type checking for field configurations.
+ * Form step configuration type with properly typed elements.
  */
-export type FormStep = Omit<z.infer<typeof FormStepSchema>, 'elements' | 'layout'> & {
+export type FormStep = Omit<z.infer<typeof FormStepSchema>, 'elements'> & {
 	elements: Array<FormEngine.ElementConfig>;
-	layout?: FormEngine.LayoutConfig;
 };
 
 /**
- * Form configuration type with strict typing for steps and stepper.
+ * Form configuration type with strict typing for steps and view.
  * Includes additional properties not in the Zod schema for runtime handlers.
  */
-export type FormConfig = Omit<z.infer<typeof FormConfigSchema>, 'steps' | 'stepper'> & {
+export type FormConfig = Omit<z.infer<typeof FormConfigSchema>, 'steps' | 'view'> & {
 	steps: Array<FormStep>;
-	stepper?: FormEngine.StepperConfig;
+	view?: FormEngine.ViewConfig;
 	onSubmit?: (data: any) => void | Promise<void>;
 	onChange?: (data: any) => void;
 };

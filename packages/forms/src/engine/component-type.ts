@@ -8,8 +8,7 @@
  */
 export const ComponentType = {
 	Element: 'element',
-	Layout: 'layout',
-	Stepper: 'stepper',
+	Recipe: 'recipe',
 	Action: 'action',
 } as const;
 

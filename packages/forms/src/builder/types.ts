@@ -1,5 +1,19 @@
-import type { FormActionConfig } from '@/actions/types';
-import type { GridLayoutConfig } from '@/schemas/base-field';
+/**
+ * Partial form configuration used during building phase.
+ */
+export type PartialFormConfig = {
+	id?: string;
+	title?: string;
+	description?: string;
+	steps: BuilderFormStep[];
+	view?: FormEngine.ViewConfig;
+	actions?: import('@/actions/types').FormActionConfig[];
+	validationMode?: 'onSubmit' | 'onChange' | 'onBlur' | 'all';
+	reValidateMode?: 'onSubmit' | 'onChange' | 'onBlur';
+	grid?: import('@/schemas/base-field').GridLayoutConfig;
+	className?: string;
+	style?: Record<string, any>;
+};
 
 /**
  * Form step during building phase.
@@ -10,24 +24,5 @@ export type BuilderFormStep = {
 	description?: string;
 	icon?: string;
 	elements: FormEngine.ElementConfig[];
-	layout?: FormEngine.LayoutConfig;
-	actions?: FormActionConfig[];
-};
-
-/**
- * Partial form configuration used during building phase.
- */
-export type PartialFormConfig = {
-	id?: string;
-	title?: string;
-	description?: string;
-	steps: BuilderFormStep[];
-	mode?: 'wizard' | 'free';
-	stepper?: FormEngine.StepperConfig;
-	actions?: FormActionConfig[];
-	validationMode?: 'onSubmit' | 'onChange' | 'onBlur' | 'all';
-	reValidateMode?: 'onSubmit' | 'onChange' | 'onBlur';
-	grid?: GridLayoutConfig;
-	className?: string;
-	style?: Record<string, any>;
+	actions?: import('@/actions/types').FormActionConfig[];
 };

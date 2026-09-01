@@ -1,8 +1,7 @@
 import type {
 	InputRegistration,
 	StaticRegistration,
-	LayoutRegistration,
-	StepperRegistration,
+	RecipeRegistration,
 	BuilderActionRegistration,
 	BuilderActionBaseContext,
 } from '@/types';
@@ -11,7 +10,7 @@ import { ComponentType } from '@/engine/component-type';
 import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from '@/engine/schema-artifacts';
 import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
 import { logger } from '@/lib/logger';
-import { ElementRegistry, LayoutRegistry, StepperRegistry } from '@/registries';
+import { ElementRegistry, RecipeRegistry } from '@/registries';
 import { GridLayoutConfigSchema } from '@/schemas/base-field';
 import { ActionRegistry, type ActionConfigBase } from '@schema-engine/actions';
 import { z } from 'zod';
@@ -20,76 +19,25 @@ import type { FormActionTrigger } from '@/actions';
 
 /**
  * FormComposer - Composes the capabilities of the Form Engine.
- *
- * Provides a fluent API for registering elements, layouts, steppers, and actions.
- * Once composed, calling `build()` creates an immutable FormEngine instance.
- *
- * Registries are injected as dependencies (with defaults), allowing for:
- * - Custom registry implementations
- * - Standalone registry usage
- * - Easy testing with mock registries
- *
- * @example
- * ```typescript
- * const engine = new FormComposer()
- *   .addElement(textInputRegistration)
- *   .addElement(emailInputRegistration)
- *   .addLayout(cardLayoutRegistration)
- *   .addAction(submitActionRegistration)
- *   .build();
- * ```
- *
- * @example Custom registries
- * ```typescript
- * const customElements = new ElementRegistry();
- * customElements.register(myCustomElement);
- *
- * const engine = new FormComposer(customElements)
- *   .build();
- * ```
  */
 export class FormComposer<
 	TElements extends Record<string, unknown> = Record<never, unknown>,
-	TLayouts extends Record<string, unknown> = Record<never, unknown>,
-	TSteppers extends Record<string, unknown> = Record<never, unknown>,
+	TRecipes extends Record<string, unknown> = Record<never, unknown>,
 	TActions extends Record<string, unknown> = Record<never, unknown>,
 > {
 	constructor(
 		private elementRegistry = new ElementRegistry(),
-		private layoutRegistry = new LayoutRegistry(),
-		private stepperRegistry = new StepperRegistry(),
+		private recipeRegistry = new RecipeRegistry(),
 		private actionRegistry = new ActionRegistry<BuilderActionBaseContext, FormActionTrigger>(),
 	) {}
 
-	/**
-	 * Register a single element with type inference from registration.
-	 *
-	 * @param registration - Element registration object with embedded type information
-	 * @note If id is already registered, it will be overridden with a warning
-	 *
-	 * @example
-	 * ```typescript
-	 * builder.addElement(InputElementRegistration)
-	 * ```
-	 */
 	addElement<T extends InputRegistration<any, any, any> | StaticRegistration<any, any, any>>(
 		registration: T,
-	): FormComposer<
-		TElements & Record<ExtractTypeId<T>, ExtractSchemaType<T['schema']>>,
-		TLayouts,
-		TSteppers,
-		TActions
-	> {
+	): FormComposer<TElements & Record<ExtractTypeId<T>, ExtractSchemaType<T['schema']>>, TRecipes, TActions> {
 		this.elementRegistry.register(registration);
-
 		return this;
 	}
 
-	/**
-	 * Register multiple elements at once.
-	 *
-	 * @param registrations - Array of element registrations
-	 */
 	addElements(registrations: (InputRegistration<any, any, any> | StaticRegistration<any, any, any>)[]): this {
 		for (const registration of registrations) {
 			this.addElement(registration);
@@ -97,95 +45,27 @@ export class FormComposer<
 		return this;
 	}
 
-	/**
-	 * Register a single layout with type inference from registration.
-	 *
-	 * @param registration - Layout registration object with embedded type information
-	 * @note If id is already registered, it will be overridden with a warning
-	 *
-	 * @example
-	 * ```typescript
-	 * builder.addLayout(CardLayoutRegistration)
-	 * ```
-	 */
-	addLayout<T extends LayoutRegistration<any, any, any>>(
+	addRecipe<T extends RecipeRegistration<any, any>>(
 		registration: T,
-	): FormComposer<
-		TElements,
-		TLayouts & Record<ExtractTypeId<T>, ExtractSchemaType<T['schema']>>,
-		TSteppers,
-		TActions
-	> {
-		this.layoutRegistry.register(registration);
-
+	): FormComposer<TElements, TRecipes & Record<ExtractTypeId<T>, ExtractSchemaType<T['schema']>>, TActions> {
+		this.recipeRegistry.register(registration);
 		return this;
 	}
 
-	/**
-	 * Register multiple layouts at once.
-	 *
-	 * @param registrations - Array of layout registrations
-	 */
-	addLayouts(registrations: LayoutRegistration<any, any, any>[]): this {
+	addRecipes(registrations: RecipeRegistration<any, any>[]): this {
 		for (const registration of registrations) {
-			this.addLayout(registration);
+			this.addRecipe(registration);
 		}
 		return this;
 	}
 
-	/**
-	 * Register a single stepper with type inference from registration.
-	 *
-	 * @param registration - Stepper registration object with embedded type information
-	 * @note If id is already registered, it will be overridden with a warning
-	 *
-	 * @example
-	 * ```typescript
-	 * builder.addStepper(DefaultStepperRegistration)
-	 * ```
-	 */
-	addStepper<T extends StepperRegistration<any, any, any>>(
-		registration: T,
-	): FormComposer<
-		TElements,
-		TLayouts,
-		TSteppers & Record<ExtractTypeId<T>, ExtractSchemaType<T['schema']>>,
-		TActions
-	> {
-		this.stepperRegistry.register(registration);
-		return this;
-	}
-
-	/**
-	 * Register multiple steppers at once.
-	 *
-	 * @param registrations - Array of stepper registrations
-	 */
-	addSteppers(registrations: StepperRegistration<any, any, any>[]): this {
-		for (const registration of registrations) {
-			this.addStepper(registration);
-		}
-		return this;
-	}
-
-	/**
-	 * Register a single action.
-	 *
-	 * @param registration - Action registration object
-	 * @note If id is already registered, it will be overridden with a warning
-	 */
 	addAction<TType extends string, TConfig extends ActionConfigBase<TType>>(
 		registration: BuilderActionRegistration<TType, TConfig>,
-	): FormComposer<TElements, TLayouts, TSteppers, TActions & Record<TType, TConfig>> {
+	): FormComposer<TElements, TRecipes, TActions & Record<TType, TConfig>> {
 		this.actionRegistry.register(registration);
 		return this;
 	}
 
-	/**
-	 * Register multiple actions at once.
-	 *
-	 * @param registrations - Array of action registrations
-	 */
 	addActions(registrations: BuilderActionRegistration<any, any>[]): this {
 		for (const registration of registrations) {
 			this.addAction(registration);
@@ -193,10 +73,6 @@ export class FormComposer<
 		return this;
 	}
 
-	/**
-	 * Create a union schema from an array of schemas.
-	 * Handles edge cases: empty array, single schema, and multiple schemas.
-	 */
 	private createUnionSchema(schemas: z.ZodTypeAny[]): z.ZodTypeAny {
 		if (schemas.length === 0) {
 			return z.never();
@@ -207,22 +83,13 @@ export class FormComposer<
 		return z.union(schemas as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]]);
 	}
 
-	/**
-	 * Generate a Zod schema for form configurations based on registered components.
-	 * This schema can be used for runtime validation of form configs.
-	 *
-	 * @returns Zod schema for validating form configurations
-	 */
 	createFormConfigSchema() {
 		const elementSchemas = this.elementRegistry.getAll().map((el) => el.schema);
-		const layoutSchemas = this.layoutRegistry.getAll().map((layout) => layout.schema);
-		const stepperSchemas = this.stepperRegistry.getAll().map((stepper) => stepper.schema);
+		const recipeSchemas = this.recipeRegistry.getAll().map((recipe) => recipe.schema);
 		const actionSchemas = this.actionRegistry.getAll().map((action: any) => action.schema);
 
-		// Registrations store Standard Schema; cast while union composition still uses Zod APIs.
 		const elementsUnion = this.createUnionSchema(elementSchemas as z.ZodTypeAny[]);
-		const layoutsUnion = this.createUnionSchema(layoutSchemas as z.ZodTypeAny[]);
-		const steppersUnion = this.createUnionSchema(stepperSchemas as z.ZodTypeAny[]);
+		const recipesUnion = this.createUnionSchema(recipeSchemas as z.ZodTypeAny[]);
 		const actionsUnion = this.createUnionSchema(actionSchemas as z.ZodTypeAny[]);
 
 		const formStepSchema = z.object({
@@ -230,7 +97,6 @@ export class FormComposer<
 			title: z.string(),
 			description: z.string().optional(),
 			icon: z.string().optional(),
-			layout: z.optional(layoutSchemas.length > 0 ? layoutsUnion : z.never()),
 			elements: z.array(elementsUnion),
 			rules: z.any().optional(),
 			constraints: z.array(z.any()).optional(),
@@ -247,9 +113,8 @@ export class FormComposer<
 			title: z.string().optional().describe('Display title of the form'),
 			description: z.string().optional().describe('Description of the form purpose'),
 			steps: z.array(formStepSchema),
-			stepper: z.optional(stepperSchemas.length > 0 ? steppersUnion : z.never()),
+			view: z.optional(recipeSchemas.length > 0 ? recipesUnion : z.never()),
 			grid: z.lazy(() => GridLayoutConfigSchema).optional(),
-			mode: z.enum(['wizard', 'free']).optional().default('wizard'),
 			validationMode: z.enum(['onSubmit', 'onChange', 'onBlur', 'all']).optional(),
 			reValidateMode: z.enum(['onSubmit', 'onChange', 'onBlur']).optional(),
 			className: z.string().optional(),
@@ -258,69 +123,39 @@ export class FormComposer<
 		});
 	}
 
-	/**
-	 * Create a new builder by cloning this one with all current registrations.
-	 * This allows for composition and creating specialized builders.
-	 *
-	 * @example
-	 * ```typescript
-	 * const baseBuilder = new FormComposer()
-	 *   .addElement(InputElement)
-	 *   .addElement(TextareaElement);
-	 * const extendedBuilder = baseBuilder.clone()
-	 *   .addAction(submitAction)
-	 *   .addAction(notificationAction);
-	 *
-	 * const engine = extendedBuilder.build();
-	 * ```
-	 */
-	clone(): FormComposer<TElements, TLayouts, TSteppers, TActions> {
+	clone(): FormComposer<TElements, TRecipes, TActions> {
 		const newElementRegistry = new ElementRegistry();
-		const newLayoutRegistry = new LayoutRegistry();
-		const newStepperRegistry = new StepperRegistry();
+		const newRecipeRegistry = new RecipeRegistry();
 		const newActionRegistry = new ActionRegistry<BuilderActionBaseContext, FormActionTrigger>();
 
 		for (const item of this.elementRegistry.getAll()) {
 			newElementRegistry.register(item);
 		}
-		for (const item of this.layoutRegistry.getAll()) {
-			newLayoutRegistry.register(item);
-		}
-		for (const item of this.stepperRegistry.getAll()) {
-			newStepperRegistry.register(item);
+		for (const item of this.recipeRegistry.getAll()) {
+			newRecipeRegistry.register(item);
 		}
 		for (const item of this.actionRegistry.getAll()) {
 			newActionRegistry.register(item);
 		}
-
-		const newBuilder = new FormComposer<TElements, TLayouts, TSteppers, TActions>(
+		const newBuilder = new FormComposer<TElements, TRecipes, TActions>(
 			newElementRegistry,
-			newLayoutRegistry,
-			newStepperRegistry,
+			newRecipeRegistry,
 			newActionRegistry,
 		);
 
 		logger.debug('Cloned FormComposer', {
 			elements: newBuilder.elementRegistry.size,
-			layouts: newBuilder.layoutRegistry.size,
-			steppers: newBuilder.stepperRegistry.size,
+			recipes: newBuilder.recipeRegistry.size,
 			actions: newBuilder.actionRegistry.size,
 		});
 
 		return newBuilder;
 	}
 
-	/**
-	 * Build the immutable FormEngine instance.
-	 * Populates a schema metadata catalog for JSON Schema generation.
-	 *
-	 * @returns FormEngine configured with all registered components and actions
-	 */
-	build(catalog?: SchemaMetadataCatalog): FormEngine<TElements, TLayouts, TSteppers, TActions> {
+	build(catalog?: SchemaMetadataCatalog): FormEngine<TElements, TRecipes, TActions> {
 		logger.debug('Building FormEngine', {
 			elements: this.elementRegistry.size,
-			layouts: this.layoutRegistry.size,
-			steppers: this.stepperRegistry.size,
+			recipes: this.recipeRegistry.size,
 			actions: this.actionRegistry.size,
 		});
 
@@ -335,18 +170,12 @@ export class FormComposer<
 				category: item.metadata.category,
 			}));
 
-			metadataCatalog.registerFromRegistry(this.layoutRegistry, (item) => ({
-				id: `layout:${item.$type}`,
-				componentType: ComponentType.Layout,
+			metadataCatalog.registerFromRegistry(this.recipeRegistry, (item) => ({
+				id: `recipe:${item.$type}`,
+				componentType: ComponentType.Recipe,
 				title: item.metadata.name,
 				description: item.metadata.description,
-			}));
-
-			metadataCatalog.registerFromRegistry(this.stepperRegistry, (item) => ({
-				id: `stepper:${item.$type}`,
-				componentType: ComponentType.Stepper,
-				title: item.metadata.name,
-				description: item.metadata.description,
+				category: item.metadata.category,
 			}));
 
 			metadataCatalog.registerFromRegistry(this.actionRegistry, (item) => ({
@@ -368,8 +197,7 @@ export class FormComposer<
 
 		return new FormEngine({
 			elements: this.elementRegistry.getMap(),
-			layouts: this.layoutRegistry.getMap(),
-			steppers: this.stepperRegistry.getMap(),
+			recipes: this.recipeRegistry.getMap(),
 			actions: this.actionRegistry.getMap(),
 			schemaArtifacts,
 			formConfigSchema,

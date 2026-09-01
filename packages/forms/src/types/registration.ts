@@ -7,8 +7,7 @@ import type { ActionRegistration, ActionConfigBase } from '@schema-engine/action
 declare global {
 	namespace FormEngine {
 		interface ElementRegistry {}
-		interface LayoutRegistry {}
-		interface StepperRegistry {}
+		interface RecipeRegistry {}
 	}
 }
 
@@ -18,8 +17,6 @@ declare global {
  * Provides type-safe patterns for registering components across different frameworks:
  * - `InputRegistration<>` - Form inputs (explicit props with framework-specific handlers)
  * - `StaticRegistration<>` - Static display elements without handlers
- * - `LayoutRegistration<>` - Layout containers with explicit children typing
- * - `StepperRegistration<>` - Multi-step navigation components with explicit children
  *
  * All require explicit TProps as the third type parameter to specify framework-specific
  * event handlers and props. This avoids framework assumptions (React onChange vs Vue onUpdate:modelValue).
@@ -68,52 +65,28 @@ export type StaticRegistration<
 > = Brand<ComponentRegistration<TType, TConfig, TProps, ElementMetadata>, 'Static'>;
 
 /**
- * Layout component registration - containers that structure form content.
+ * View recipe registration — code-defined wiring of shell and slot blocks.
  *
- * Must provide explicit TProps including framework-specific children typing for type safety.
- *
- * @template TType - Layout type identifier
- * @template TConfig - Serializable configuration type
- * @template TProps - Explicit props type with children property
- *
- * @example
- * ```typescript
- * export const CardLayoutRegistration: LayoutRegistration<
- *   'card',
- *   CardLayoutConfig,
- *   CardLayoutConfig & { children?: React.ReactNode }
- * > = { ... };
- * ```
+ * @template TType - Recipe type identifier
+ * @template TConfig - Serializable view configuration type
  */
-export type LayoutRegistration<
-	TType extends keyof FormEngine.LayoutRegistry | string = keyof FormEngine.LayoutRegistry | string,
+export type RecipeRegistration<
+	TType extends keyof FormEngine.RecipeRegistry | string = keyof FormEngine.RecipeRegistry | string,
 	TConfig = unknown,
-	TProps = unknown,
-> = Brand<ComponentRegistration<TType, TConfig, TProps>, 'Layout'>;
-
-/**
- * Stepper component registration - multi-step navigation components.
- *
- * Must provide explicit TProps including framework-specific children typing for type safety.
- *
- * @template TType - Stepper type identifier
- * @template TConfig - Serializable configuration type
- * @template TProps - Explicit props type with children property
- *
- * @example
- * ```typescript
- * export const DefaultStepperRegistration: StepperRegistration<
- *   'default',
- *   DefaultStepperConfig,
- *   DefaultStepperConfig & { children?: React.ReactNode }
- * > = { ... };
- * ```
- */
-export type StepperRegistration<
-	TType extends keyof FormEngine.StepperRegistry | string = keyof FormEngine.StepperRegistry | string,
-	TConfig = unknown,
-	TProps = unknown,
-> = Brand<ComponentRegistration<TType, TConfig, TProps>, 'Stepper'>;
+	TRender = unknown,
+> = Brand<
+	{
+		$type: TType;
+		kind: import('@/recipes/types').RecipeKind;
+		slots: import('@/recipes/types').RecipeSlot[];
+		schema: ComponentRegistration<TType, TConfig>['schema'];
+		metadata: import('@/recipes/types').RecipeMetadata;
+		slotDefaults?: Partial<Record<import('@/recipes/types').RecipeSlot, Record<string, unknown>>>;
+		/** Adapter render payload (shell + slot components). */
+		render: TRender;
+	},
+	'Recipe'
+>;
 
 /**
  * Action registration object for forms.

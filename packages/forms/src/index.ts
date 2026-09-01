@@ -13,7 +13,7 @@ export type {
 	FormEngineSchemaMetadata,
 	SchemaMetadataEntry,
 } from './engine';
-export { ElementRegistry, LayoutRegistry, StepperRegistry } from './registries';
+export { ElementRegistry, RecipeRegistry } from './registries';
 export type {
 	BuilderActionBaseContext,
 	ElementMetadata,
@@ -23,13 +23,18 @@ export type {
 	BuilderActionRuntimeContext,
 	InputRegistration,
 	StaticRegistration,
-	LayoutRegistration,
-	StepperRegistration,
+	RecipeRegistration,
 } from './types';
+export {
+	DEFAULT_WIZARD_RECIPE,
+	FormValidationError,
+	resolveFormRecipe,
+	resolveValidatedConfig,
+	validateFormConfig,
+} from './lib/validate-form';
+export type { RecipeKind, RecipeSlot, RecipeMetadata, RecipeDescriptor, ViewCatalog } from './recipes/types';
 export type { ActionExecutionResult } from '@schema-engine/actions';
 export * from './schemas';
 export * from './actions';
-export * from './layouts';
-export * from './steppers';
 export * from './tools';
 export * from './constraints';

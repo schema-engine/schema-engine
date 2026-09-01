@@ -14,7 +14,7 @@ import {
 
 /**
  * Metadata for form engine JSON Schema generation.
- * Used across all component types (elements, layouts, steppers, actions).
+ * Used across all component types (elements, recipes, and actions).
  */
 export interface FormEngineSchemaMetadata extends GlobalMeta {
 	componentType: ComponentType;

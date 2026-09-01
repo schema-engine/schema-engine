@@ -30,16 +30,27 @@ declare global {
 		interface ElementRegistry {}
 
 		/**
-		 * Layout configuration registry
-		 * Augment this interface to register layout types.
+		 * View recipe configuration registry
+		 * Augment this interface to register view recipe types.
 		 */
-		interface LayoutRegistry {}
+		interface RecipeRegistry {}
 
 		/**
-		 * Stepper configuration registry
-		 * Augment this interface to register stepper types.
+		 * Union of all registered view recipe configurations
 		 */
-		interface StepperRegistry {}
+		type ViewConfig = [keyof RecipeRegistry] extends [never]
+			? import('../schemas/form-config').FormViewConfig & Record<string, unknown>
+			: RecipeRegistry[keyof RecipeRegistry];
+
+		/**
+		 * Union of all registered recipe IDs
+		 */
+		type RecipeId = [keyof RecipeRegistry] extends [never] ? string : ViewConfig['$type'];
+
+		/**
+		 * Get view configuration by recipe ID
+		 */
+		type GetViewConfig<T extends RecipeId> = Extract<ViewConfig, { $type: T }>;
 
 		/**
 		 * Union of all registered element configurations
@@ -60,44 +71,14 @@ declare global {
 			: ElementRegistry[keyof ElementRegistry];
 
 		/**
-		 * Union of all registered layout configurations
-		 */
-		type LayoutConfig = LayoutRegistry[keyof LayoutRegistry];
-
-		/**
-		 * Union of all registered stepper configurations
-		 */
-		type StepperConfig = StepperRegistry[keyof StepperRegistry];
-
-		/**
 		 * Union of all registered element IDs
 		 * This creates a union type like: "input" | "textarea" | "select" | ...
 		 */
 		type ElementId = ElementConfig['$type'];
 
 		/**
-		 * Union of all registered layout IDs
-		 */
-		type LayoutId = LayoutConfig['$type'];
-
-		/**
-		 * Union of all registered stepper IDs
-		 */
-		type StepperId = StepperConfig['$type'];
-
-		/**
 		 * Get element configuration by element ID
 		 */
 		type GetElementConfig<T extends ElementId> = Extract<ElementConfig, { $type: T }>;
-
-		/**
-		 * Get layout configuration by layout ID
-		 */
-		type GetLayoutConfig<T extends LayoutId> = Extract<LayoutConfig, { $type: T }>;
-
-		/**
-		 * Get stepper configuration by stepper ID
-		 */
-		type GetStepperConfig<T extends StepperId> = Extract<StepperConfig, { $type: T }>;
 	}
 }
