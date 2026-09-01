@@ -1,168 +1,114 @@
 ---
 title: 'Components'
-description: 'Every element registration that ships with the React adapter.'
+description: 'Register and configure the field elements supplied by the React registry.'
 group: Forms React
 order: 3
 ---
 
 # Components
 
-The package provides pre-built form elements with validation and styling via Shadcn UI.
+`@schema-engine/forms-react` renders element registrations, but the field
+implementations are consumer-owned registry code. Install the matching Schema
+Engine registry item and import its generated registration barrel:
 
-## Available Elements
-
-Install a matching Schema Engine shadcn registry item, then import its generated registrations:
-
-```typescript
+```ts
+import { createReactFormComposer } from '@schema-engine/forms-react';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
+
+const engine = createReactFormComposer()
+	.addElements(schemaFormRegistrations)
+	.build();
 ```
 
-| Element         | Description                            |
-| --------------- | -------------------------------------- |
-| `input`         | Text, email, password, tel, url inputs |
-| `textarea`      | Multi-line text input                  |
-| `checkbox`      | Single checkbox or checkbox group      |
-| `radio`         | Radio button group                     |
-| `select`        | Dropdown select                        |
-| `switch`        | Toggle switch                          |
-| `number`        | Number input with increment/decrement  |
-| `array`         | Dynamic array of form elements         |
-| `fieldset`      | Group of related form elements         |
-| `submit-button` | Form submission button                 |
+## Registry elements
 
-## Registration System
+The aggregate `schema-form` item currently includes:
 
-Import only what you need for tree-shaking:
+| `$type` | Purpose |
+| --- | --- |
+| `input` | Text, email, password, URL, telephone, and date inputs |
+| `textarea` | Multi-line text |
+| `number` | Numeric input |
+| `select` | Select menu |
+| `checkbox`, `checkbox-group` | Boolean and multi-choice inputs |
+| `radio` | Single-choice group |
+| `switch` | Boolean toggle |
+| `slider` | Numeric range |
+| `combobox` | Searchable choice input |
+| `drop-zone` | File drop input |
+| `fieldSet` | Grouped content |
+| `input-otp` | One-time-password input |
+| `phone-input`, `masked-input` | Specialized text inputs |
+| `arrayElements` | Repeated element groups |
+| `submit`, `submission-alert` | Action and submission feedback |
 
-```typescript
-const engine = createReactFormComposer().addElements(schemaFormRegistrations).build();
-```
+The registry item is an installation boundary: applications can select a
+smaller set of registrations or replace one registration before building the
+engine.
 
-## Element Configuration
+## Element configuration
 
-### Input Field
+Every field has a `$type` and `name`; the remaining properties come from that
+registration's schema. Shared properties include `label`, `description`,
+`defaultValue`, `rules`, `constraints`, `grid`, `className`, and `style`.
 
 ```json
 {
 	"$type": "input",
 	"id": "email",
 	"name": "email",
-	"label": "Email Address",
+	"label": "Email address",
 	"inputType": "email",
-	"placeholder": "you@example.com",
 	"rules": [
 		{ "type": "required", "message": "Email is required" },
-		{ "type": "email", "message": "Invalid email format" }
+		{ "type": "email", "message": "Enter a valid email" }
 	]
 }
 ```
 
-### Select Field
+Responsive placement belongs to the element's `grid` property and the form's
+top-level `grid` configuration. View chrome belongs to `view`, not to a step or
+element; see [View recipes](/docs/forms-react/layouts).
 
-```json
-{
-	"$type": "select",
-	"id": "country",
-	"name": "country",
-	"label": "Country",
-	"options": [
-		{ "value": "us", "label": "United States" },
-		{ "value": "ca", "label": "Canada" },
-		{ "value": "uk", "label": "United Kingdom" }
-	],
-	"rules": [{ "type": "required", "message": "Please select a country" }]
-}
-```
+## Custom elements
 
-## Grid Layout
-
-Elements support responsive grid layouts:
-
-```json
-{
-	"id": "step-1",
-	"grid": {
-		"columns": 12,
-		"gap": "1rem"
-	},
-	"elements": [
-		{
-			"$type": "input",
-			"id": "firstName",
-			"name": "firstName",
-			"label": "First Name",
-			"grid": { "column": "1 / 7" }
-		},
-		{
-			"$type": "input",
-			"id": "lastName",
-			"name": "lastName",
-			"label": "Last Name",
-			"grid": { "column": "7 / 13" }
-		}
-	]
-}
-```
-
-## Creating a Custom Component
-
-### Step 1: Define Your Component
-
-Use `useControlledFormElement` to integrate with the form:
+Create a consumer-owned registration with `InputRegistration` (or
+`StaticRegistration` for display-only content). The render component receives
+the registration config and should use `useControlledFormElement` for field
+binding:
 
 ```tsx
-export function CustomDatePicker(config: FormEngine.ElementConfig) {
-	const { value, error, onChange, onBlur, fieldProps, labelProps, errorProps, containerStyles } =
-		useControlledFormElement(config);
+import type { InputRegistration } from '@schema-engine/forms';
+import { useControlledFormElement } from '@schema-engine/forms-react';
+import { z } from 'zod';
 
-	return (
-		<div style={containerStyles}>
-			<label {...labelProps}>{config.label}</label>
-			<DatePicker {...fieldProps} selected={value} onChange={onChange} onBlur={onBlur} />
-			{errorProps && <span {...errorProps}>{error}</span>}
-		</div>
-	);
-}
-```
-
-### Step 2: Create Schema
-
-```typescript
-export const CustomDatePickerConfigSchema = BaseElementConfigSchema.extend({
-	$type: z.literal('custom-date-picker'),
-	minDate: z.string().optional(),
-	maxDate: z.string().optional(),
+const RatingSchema = z.object({
+	$type: z.literal('rating'),
+	id: z.string(),
+	name: z.string(),
+	label: z.string().optional(),
+	max: z.number().int().positive().default(5),
 });
-```
 
-### Step 3: Create Registration
+function Rating({ ...config }: z.infer<typeof RatingSchema>) {
+	const { value, onChange, fieldProps } = useControlledFormElement(config);
+	return <input {...fieldProps} type="number" value={value ?? ''} onChange={(event) => onChange(event.target.value)} />;
+}
 
-```typescript
-export const CustomDatePickerRegistration: ElementRegistration = {
-	$type: 'custom-date-picker',
-	schema: CustomDatePickerConfigSchema,
+const ratingRegistration: InputRegistration<'rating', z.infer<typeof RatingSchema>> = {
+	$type: 'rating',
+	schema: RatingSchema,
+	render: Rating,
 	metadata: {
-		name: 'Custom Date Picker',
-		description: 'Date selection with custom styling',
+		name: 'Rating',
+		description: 'Numeric rating input',
 		category: 'input',
 	},
-	render: CustomDatePicker,
 };
+
+const engine = createReactFormComposer().addElement(ratingRegistration).build();
 ```
 
-### Step 4: Register with Engine
-
-```typescript
-const engine = createReactFormComposer().addElement(CustomDatePickerRegistration).build();
-```
-
-### Step 5: Use in Form Config
-
-```json
-{
-	"$type": "custom-date-picker",
-	"id": "birthdate",
-	"name": "birthdate",
-	"label": "Date of Birth"
-}
-```
+In a real registry item, make the render props type explicit and convert the
+Zod schema with the package's standard-schema helper when required by the
+registration type.

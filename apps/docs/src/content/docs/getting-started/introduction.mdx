@@ -40,11 +40,14 @@ Bring your existing component library. Register it with the engine, and it insta
 
 ```typescript
 // Mock definitions for example purposes
+import type { InputRegistration } from '@schema-engine/forms';
+import { z } from 'zod';
+
 const MyInputComponent = (props: any) => <input {...props} className="my-custom-input" />;
 const MyInputConfigSchema = z.object({});
 
 // Your custom component registration
-const MyInputRegistration: ElementRegistration = {
+const MyInputRegistration: InputRegistration<'my-input'> = {
 	$type: 'my-input',
 	schema: MyInputConfigSchema,
 	metadata: {
@@ -79,7 +82,7 @@ Define complex forms with simple JSON schemas. No more writing repetitive JSX.
 					"id": "name",
 					"name": "name",
 					"label": "Full Name",
-					"rules": [{ "rule": "required", "message": "Name is required" }]
+					"rules": [{ "type": "required", "message": "Name is required" }]
 				},
 				{
 					"$type": "input",
@@ -88,8 +91,8 @@ Define complex forms with simple JSON schemas. No more writing repetitive JSX.
 					"name": "email",
 					"label": "Email",
 					"rules": [
-						{ "rule": "required", "message": "Email is required" },
-						{ "rule": "email", "message": "Please enter a valid email" }
+						{ "type": "required", "message": "Email is required" },
+						{ "type": "email", "message": "Please enter a valid email" }
 					]
 				}
 			]
@@ -100,7 +103,7 @@ Define complex forms with simple JSON schemas. No more writing repetitive JSX.
 
 ### Registrable Everything
 
-Not just components but also actions, layouts, steppers, and validation rules. Build your own plugins that fit your exact needs.
+Not just components but also actions, view recipes, and validation rules. Build your own plugins that fit your exact needs.
 
 ### Zod Integration
 
@@ -126,7 +129,7 @@ Schema Engine believes in a few core principles:
 
 Ready to see what Schema Engine can do?
 
-- **[Installation](/docs/installation)** - Get up and running
+- **[Installation](/docs/getting-started/installation)** - Get up and running
 - **[Quick Start](/docs/getting-started/quick-start)** - Build your first form
-- **[Forms Package](/docs/packages/forms)** - Core engine documentation
-- **[Forms React](/docs/packages/forms-react)** - React integration
+- **[Forms Package](/docs/forms/overview)** - Core engine documentation
+- **[Forms React](/docs/forms-react/overview)** - React integration

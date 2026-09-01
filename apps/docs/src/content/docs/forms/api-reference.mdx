@@ -1,255 +1,52 @@
 ---
-title: "API Reference"
-description: "Public surface of the forms package."
+title: 'API Reference'
+description: 'Public surface of the forms package.'
 group: Forms
 order: 6
 ---
 
 # API Reference
 
-Complete API documentation for `@schema-engine/forms`.
-
-Lookup methods on `FormEngine` use the registered component or action `$type` value, not an instance id from a form config.
-
 ## FormComposer
 
-```typescript
-class FormComposer<TElements, TLayouts, TSteppers, TActions> {
-	constructor(elementRegistry?: ElementRegistry);
-
-	addElement<T>(registration: ElementRegistration<T>): FormComposer<...>;
-	addLayout<T>(registration: LayoutRegistration<T>): FormComposer<...>;
-	addStepper<T>(registration: StepperRegistration<T>): FormComposer<...>;
-	addAction<TType extends string, TConfig extends ActionConfigBase<TType>>(
-		registration: BuilderActionRegistration<TType, TConfig>,
-	): FormComposer<...>;
-
-	clone(): FormComposer<...>;
-	build(): FormEngine<...>;
+```ts
+class FormComposer<TElements, TRecipes, TActions> {
+	addElement(registration: InputRegistration | StaticRegistration): this;
+	addRecipe(registration: RecipeRegistration): this;
+	addAction(registration: BuilderActionRegistration): this;
+	addElements(registrations: Array<InputRegistration | StaticRegistration>): this;
+	addRecipes(registrations: RecipeRegistration[]): this;
+	addActions(registrations: BuilderActionRegistration[]): this;
+	build(): FormEngine<TElements, TRecipes, TActions>;
 }
 ```
 
 ## FormEngine
 
-```typescript
-class FormEngine<TElements, TLayouts, TSteppers, TActions> {
-	// Elements
-	getElement(type: string): ElementRegistration | undefined;
-	getAllElements(): ElementRegistration[];
-	getElementIds(): string[];
-	hasElement(type: string): boolean;
+`FormEngine` retrieves registered elements, recipes, and actions; validates
+`FormConfig` values; and generates JSON Schema and authoring catalog artifacts.
 
-	// Layouts
-	getLayout(type: string): LayoutRegistration | undefined;
-	getAllLayouts(): LayoutRegistration[];
-	getLayoutIds(): string[];
-	hasLayout(type: string): boolean;
+```ts
+engine.getElement('text');
+engine.getRecipe('card');
+engine.getAllRecipes();
+engine.validateForm(config);
+engine.getFormConfigStandardSchema();
+engine.describeViewCatalog();
+```
 
-	// Steppers
-	getStepper(type: string): StepperRegistration | undefined;
-	getAllSteppers(): StepperRegistration[];
-	getStepperIds(): string[];
-	hasStepper(type: string): boolean;
+## RecipeRegistration
 
-	// Actions
-	getAction(type: string): BuilderActionRegistration | undefined;
-	getAllActions(): BuilderActionRegistration[];
-	getActionTypes(): string[];
-	hasAction(type: string): boolean;
-
-	// Schema
-	getSchemaArtifacts(): FormEngineSchemaArtifacts;
-	getSchemaRegistry(): FormEngineSchemaMetadataRegistry;
-	getFormConfigSchema(): z.ZodType<FormConfig>;
-	getFormConfigStandardSchema(): StandardJSONSchemaV1;
-	getActionConfigStandardSchema(actionType: string): StandardJSONSchemaV1 | undefined;
-	generateJSONSchemaCollection(opts?: {
-		target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0';
-		uri?: (id: string) => string;
-	}): JSONSchemaObject;
-	generateFormConfigSchema(opts?: {
-		target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0';
-	}): JSONSchemaObject;
-	generateActionConfigSchema(
-		actionType: string,
-		opts?: { target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0' },
-	): JSONSchemaObject | undefined;
-
-	// Utilities
-	getSummary(): EngineSummary;
-	toComposer(): FormComposer<...>;
+```ts
+interface RecipeRegistration<TType, TConfig> {
+	$type: TType;
+	kind: 'single-step' | 'wizard';
+	slots: Array<'shell' | 'header' | 'progress' | 'actions'>;
+	schema: StandardSchemaV1<TConfig>;
+	metadata: RecipeMetadata;
+	render: unknown;
 }
 ```
 
-### Schema Artifact Types
-
-```typescript
-interface FormEngineSchemaArtifacts {
-	metadataRegistry: FormEngineSchemaMetadataRegistry;
-	formConfigValidator: z.ZodTypeAny;
-	jsonSchema: FormEngineJSONSchemaSerializer;
-}
-
-interface FormEngineJSONSchemaSerializer {
-	generateCollection(options?: {
-		target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0';
-		uri?: (id: string) => string;
-	}): JSONSchemaObject;
-	generateFormConfig(options?: {
-		target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0';
-	}): JSONSchemaObject;
-	generateActionConfig(
-		actionType: string,
-		options?: { target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0' },
-	): JSONSchemaObject | undefined;
-	formConfigStandardSchema: StandardJSONSchemaV1;
-	actionConfigStandardSchemas: Record<string, StandardJSONSchemaV1>;
-}
-```
-
-Use `getSchemaArtifacts()` when you want the raw validator registry plus the JSON Schema and Standard JSON Schema serializer surface from one place.
-
-## Types
-
-### ElementRegistration
-
-```typescript
-interface ElementRegistration<TConfig> {
-	$type: string;
-	schema: z.ZodType<TConfig>;
-	metadata: ElementMetadata;
-	render: (props: ElementRenderProps<TConfig>) => unknown;
-}
-```
-
-### LayoutRegistration
-
-```typescript
-interface LayoutRegistration<TConfig> {
-	$type: string;
-	schema: z.ZodType<TConfig>;
-	metadata: ComponentMetadata;
-	render: (props: LayoutRenderProps<TConfig>) => unknown;
-}
-```
-
-### StepperRegistration
-
-```typescript
-interface StepperRegistration<TConfig> {
-	$type: string;
-	schema: z.ZodType<TConfig>;
-	metadata: ComponentMetadata;
-	render: (props: StepperRenderProps<TConfig>) => unknown;
-}
-```
-
-### BuilderActionRegistration
-
-```typescript
-type BuilderActionRegistration<
-	TType extends string = string,
-	TConfig extends ActionConfigBase<TType> = ActionConfigBase<TType>,
-> = ActionRegistration<TConfig, BuilderActionBaseContext, BuilderActionTrigger>;
-```
-
-Use `defineAction<BuilderActionBaseContext, BuilderActionTrigger>()` from `@schema-engine/actions` to create custom form actions with correct runtime typing.
-
-### BuilderActionBaseContext
-
-```typescript
-interface BuilderActionBaseContext {
-	formId: string;
-	formData: Record<string, unknown>;
-	currentStep: number;
-	totalSteps: number;
-	isValid: boolean;
-	errors: Record<string, unknown>;
-	metadata: {
-		stepStartTime: number;
-		totalFormTime: number;
-		userInteractions: number;
-	};
-	form: {
-		reset: () => void;
-		setValue: (name: string, value: unknown) => void;
-		getValue?: (name: string) => unknown;
-		validate?: () => Promise<boolean>;
-		[key: string]: unknown;
-	};
-}
-```
-
-### BuilderActionExecutionContext
-
-```typescript
-type BuilderActionExecutionContext<TConfig = unknown> = BuilderActionRuntimeContext<TConfig>;
-```
-
-### BuilderActionRuntimeContext
-
-```typescript
-type BuilderActionRuntimeContext<TConfig = unknown> = ActionRuntimeContext<
-	TConfig,
-	BuilderActionBaseContext,
-	FormActionTrigger
->;
-```
-
-### ElementMetadata
-
-```typescript
-interface ElementMetadata extends ComponentMetadata {
-	category: 'input' | 'content' | 'decoration' | 'interactive';
-}
-```
-
-### ActionMetadata
-
-```typescript
-interface ActionMetadata<TTrigger> {
-	name: string;
-	description?: string;
-	icon?: string;
-	defaultTriggers?: readonly TTrigger[];
-}
-```
-
-## Tools
-
-### GDPRConsent
-
-Static class for GDPR-compliant consent management:
-
-```typescript
-class GDPRConsent {
-	static isLocalStorageAvailable(): boolean;
-	static getConsent(): { granted: boolean; version: string; timestamp: string } | null;
-	static hasConsent(): boolean;
-	static grantConsent(): void;
-	static revokeConsent(): void;
-	static needsConsentUpdate(): boolean;
-	static saveDraft(formId: string, data: Record<string, any>): boolean;
-	static loadDraft(formId: string): Record<string, any> | null;
-	static clearDraft(formId: string): void;
-}
-```
-
-### GTMTracker
-
-Static class for Google Tag Manager integration:
-
-```typescript
-class GTMTracker {
-	static isAvailable(): boolean;
-	static push(event: string, data?: Record<string, any>): void;
-	static pushFormEvent(
-		eventType: 'form_mount' | 'form_step_complete' | 'form_submit' | 'form_abandon',
-		formData?: Record<string, any>,
-		metadata?: Record<string, any>
-	): void;
-	static initialize(containerId: string): void;
-}
-```
-
-> **Note:** Both tools are static classes. Call methods directly on the class (e.g., `GDPRConsent.hasConsent()`).
+Forms select at most one recipe with `view.$type`. Slot configuration is
+validated against the selected recipe's schema.

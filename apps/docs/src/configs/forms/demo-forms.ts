@@ -9,7 +9,6 @@ export const demoFormConfig: FormConfig = {
 	title: 'Interactive Form Demo',
 	description: 'Try out different field types and configurations',
 
-	mode: 'free',
 	steps: [
 		{
 			id: 'demo-step',

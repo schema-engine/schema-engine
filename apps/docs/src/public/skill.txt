@@ -6,16 +6,10 @@ Schema Engine, a JSON-driven form layer on top of the Ecopages framework.
 ## How to use this file
 
 - This `skill.txt` file is an index only.
-- Follow `SKILL.md` for an end-to-end tour of the framework.
-- Each sub-skill under `reference/` covers one topic in depth.
+- Follow `SKILL.md` for the package map and current composition model.
+- Follow `reference/getting-started.md` for repository and docs workflows.
 
 ## Skills
 
-- [SKILL.md](https://ecopages.app/skill/SKILL.md) — overview of the framework
-- [Getting started](https://ecopages.app/skill/reference/getting-started.md)
-- [Core](https://ecopages.app/skill/reference/core.md)
-- [Integrations](https://ecopages.app/skill/reference/integrations.md)
-- [Processors and plugins](https://ecopages.app/skill/reference/processors-and-plugins.md)
-- [Server](https://ecopages.app/skill/reference/server.md)
-- [Styling](https://ecopages.app/skill/reference/styling.md)
-- [Full-stack](https://ecopages.app/skill/reference/full-stack.md)
+- [SKILL.md](https://schema-engine.ecopages.app/skill/SKILL.md) — package map and composition model
+- [Getting started](https://schema-engine.ecopages.app/skill/reference/getting-started.md)

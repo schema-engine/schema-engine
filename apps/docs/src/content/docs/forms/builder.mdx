@@ -1,355 +1,105 @@
 ---
 title: 'Builder Pattern'
-description: 'Construct a configured engine with the fluent builder API.'
+description: 'Compose elements, recipes, and actions into an immutable form engine.'
 group: Forms
 order: 7
 ---
 
 # Builder Pattern
 
-The Form Engine uses a **Builder Pattern** to provide a type-safe, explicit, and flexible way to configure your form components, layouts, and steppers.
+`FormComposer` is the assembly point for a form engine. Register the runtime
+capabilities your application uses, then call `build()` to create an immutable
+`FormEngine`.
 
-## Why the Builder Pattern?
+## Register capabilities
 
-The Builder Pattern offers several key advantages:
+The core composer has three independent registries:
 
-- **Type Safety**: Full TypeScript support with autocomplete and compile-time validation
-- **Explicit Configuration**: See exactly what components are registered in your engine
-- **Tree-Shaking**: Only bundle the components you actually use
-- **Flexibility**: Easy to add custom components or override defaults
-- **Immutability**: Once built, the engine instance is immutable and safe to reuse
+- **Elements** render fields and static content inside a step.
+- **Recipes** compose the form shell and optional header, progress, and action
+  blocks.
+- **Actions** respond to form and step lifecycle triggers.
 
-## Core Concepts
-
-### FormComposer
-
-The `FormComposer` class is your entry point for configuring the form engine. It provides a fluent API for registering components:
-
-```typescript
-const formEngine = createReactFormComposer().addElement(/* ... */).addLayout(/* ... */).addStepper(/* ... */).build();
+```ts
+const engine = new FormComposer()
+	.addElements(elementRegistrations)
+	.addRecipes(recipeRegistrations)
+	.addActions(actionRegistrations)
+	.build();
 ```
 
-### Registration Objects
+`addElement`, `addRecipe`, and `addAction` are the single-registration forms;
+the plural methods register a collection. Registration IDs are the `$type`
+values used in serialized configuration.
 
-Each component (element, layout, or stepper) is defined as a **registration object** that contains:
+## React composer
 
-- `$type`: Unique identifier
-- `render`: Framework-agnostic render function
-- `schema`: Zod schema for configuration validation
-- `metadata`: Human-readable information (name, description, category, etc.)
+The React adapter provides a convenience factory that registers its built-in
+view recipes. It does not own application field components: install a Schema
+Engine registry item and pass the generated element registrations explicitly.
 
-Example element registration:
+```ts
+import { createReactFormComposer } from '@schema-engine/forms-react';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
-```typescript
-import type { InputRegistration } from '@schema-engine/forms';
-import { z } from 'zod';
+const engine = createReactFormComposer()
+	.addElements(schemaFormRegistrations)
+	.build();
+```
 
-export const CustomInputElement: InputRegistration<'custom-input'> = {
-	$type: 'custom-input',
-	render: CustomInput,
-	schema: z.object({
-		id: z.string(),
-		name: z.string(),
-		label: z.string().optional(),
-		placeholder: z.string().optional(),
-	}),
-	metadata: {
-		name: 'Custom Input',
-		description: 'A customized input field',
-		category: 'input',
+Radiant follows the same composition model, but its factory starts with no
+elements or recipes. Register the Radiant package's exports before using those
+types in a config.
+
+## Build configuration fluently
+
+When configuration is authored in TypeScript rather than loaded as JSON, use
+`engine.createFormDefinition()`:
+
+```ts
+const form = engine
+	.createFormDefinition()
+	.setId('contact')
+	.setTitle('Contact')
+	.addStep({ id: 'details', title: 'Contact details' })
+	.addElement('input', {
+		id: 'email',
+		name: 'email',
+		label: 'Email',
+		inputType: 'email',
+	})
+	.setView('card', { shell: { maxWidth: 'md' } })
+	.build();
+```
+
+The builder validates each registered element, action, and recipe when it is
+added. It requires an ID and at least one step before `build()` succeeds. Use a
+plain `FormConfig` when configuration must remain portable or editable by
+another system.
+
+## Composition rules
+
+There is one view recipe per form. The recipe is selected at the form level:
+
+```ts
+const config: FormConfig = {
+	id: 'contact',
+	steps: [{ id: 'details', title: 'Contact details', elements: [] }],
+	view: {
+		$type: 'card',
+		shell: { padding: 'md' },
 	},
 };
 ```
 
-```typescript
-const formEngine = createReactFormComposer().addElement(CustomInputElement).build();
-```
-
-## Basic Usage
-
-### Step 1: Create Your Form Engine
-
-Create a central form engine instance for your application:
-
-```typescript
-// lib/form-engine.ts
-import { createReactFormComposer } from '@schema-engine/forms-react';
-import { CardLayoutRegistration } from '@schema-engine/forms-react/registrations';
-import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
-import { DefaultStepperRegistration } from '@/components/schema-engine/forms/steppers/default-stepper.registration';
-
-export const formEngine = createReactFormComposer()
-	.addElements(schemaFormRegistrations)
-	.addLayout(CardLayoutRegistration)
-	.addStepper(DefaultStepperRegistration)
-	.build();
-```
-
-### Step 2: Use in Your Components
-
-Import and use the form engine in your components:
-
-```typescript
-import { FormRenderer } from '@schema-engine/forms-react';
-import { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
-
-function MyForm() {
-  const formConfig: FormConfig = {
-    id: 'my-form',
-    title: 'Contact Form',
-    steps: [{
-      id: 'step-1',
-      elements: [{
-        id: 'email',
-        name: 'email',
-        label: 'Email Address',
-        rules: [
-          { type: 'required', message: 'Email is required' },
-          { type: 'email', message: 'Invalid email address' },
-        ],
-      }],
-    }],
-  };
-
-  return <FormRenderer config={formConfig} engine={formEngine} adapter={rhfAdapter} />;
-}
-```
-
-## Available Components
-
-### Elements
-
-All input and content elements that can be used in form steps:
-
-- `InputElementRegistration` - Text, email, password, tel, url, etc.
-- `TextareaElementRegistration` - Multi-line text input
-- `SelectElementRegistration` - Dropdown selection
-- `CheckboxElement` - Single checkbox or checkbox group
-- `RadioElement` - Radio button group
-- `SwitchElement` - Toggle switch
-- `NumberElement` - Numeric input
-- `ArrayElement` - Dynamic array of elements
-
-### Layouts
-
-Visual layouts that wrap form content:
-
-- `CardLayoutRegistration` - Centered card with shadow
-- `SplitScreenLayoutRegistration` - Two-column split layout
-- `HeroBackgroundLayoutRegistration` - Full-width hero with background image
-
-### Steppers
-
-Step indicators for multi-step forms:
-
-- `DefaultStepperRegistration` - Horizontal or sidebar shadcn stepper (registry)
-- `MinimalistStepperRegistration` - Minimal progress indicator (registry)
-- `FormDebugger` - Opt-in dev overlay (package); mount as a child of `FormRenderer` instead of using a stepper `$type`
-
-## Creating Custom Components
-
-### 1. Define Your Component
-
-```typescript
-// components/custom-rating.tsx
-import type { InputRegistration } from '@schema-engine/forms';
-import { z } from 'zod';
-
-const RatingConfigSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  label: z.string().optional(),
-  maxRating: z.number().default(5),
-  rules: z.array(z.any()).optional(),
-});
-
-type RatingConfig = z.infer<typeof RatingConfigSchema>;
-
-function RatingInput({ config }: { config: RatingConfig }) {
-  const [rating, setRating] = useState(0);
-
-  return (
-    <div>
-      {config.label && <label>{config.label}</label>}
-      <div>
-        {Array.from({ length: config.maxRating }, (_, i) => (
-          <button
-            key={i}
-            onClick={() => setRating(i + 1)}
-            className={rating > i ? 'text-yellow-500' : 'text-gray-300'}
-          >
-            [star]
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export const RatingElement: InputRegistration<'rating'> = {
-  $type: 'rating',
-  render: RatingInput,
-  schema: RatingConfigSchema,
-  metadata: {
-    name: 'Rating Input',
-    description: 'Star rating input field',
-    category: 'input',
-  },
-};
-```
-
-### 2. Register Your Component
-
-```typescript
-const formEngine = createReactFormComposer()
-	.addElement(RatingElement)
-	// ... other components
-	.build();
-```
-
-### 3. Use in Form Config
-
-```typescript
-const formConfig: FormConfig = {
-	id: 'feedback-form',
-	steps: [
-		{
-			elements: [
-				{
-					id: 'satisfaction',
-					name: 'satisfaction',
-					label: 'How satisfied are you?',
-					maxRating: 5,
-					rules: [{ type: 'required', message: 'Please rate your experience' }],
-				},
-			],
-		},
-	],
-};
-```
-
-## Advanced Usage
-
-### Conditional Registration
-
-Register components based on feature flags or environment:
-
-```typescript
-const formEngine = createReactFormComposer().addElements(schemaFormRegistrations);
-
-if (process.env.ENABLE_ADVANCED_FIELDS) {
-	formEngine.addElement(RichTextElement).addElement(CodeEditorElement);
-}
-
-export const finalEngine = formEngine.build();
-```
-
-### Multiple Engine Instances
-
-Create different engine instances for different use cases:
-
-```typescript
-// Simple contact form engine
-export const contactFormEngine = createReactFormComposer()
-	.addElements(schemaFormRegistrations)
-	.addLayout(CardLayoutRegistration)
-	.build();
-
-// Complex survey engine
-export const surveyEngine = createReactFormComposer()
-	.addElements(schemaFormRegistrations)
-	.addElement(RatingElement)
-	.addLayout(SplitScreenLayoutRegistration)
-	.addStepper(DefaultStepperRegistration)
-	.build();
-```
-
-### Extending Registration Objects
-
-Create custom registration builders:
-
-```typescript
-function createInputElement(id: string, displayName: string, inputType: string): InputRegistration {
-	return {
-		$type: id,
-		render: FormInput,
-		schema: InputFieldSchema,
-		metadata: {
-			name: displayName,
-			description: `${displayName} input field`,
-			category: 'input',
-		},
-	};
-}
-
-const formEngine = createReactFormComposer()
-	.addElement(createInputElement('email', 'Email', 'email'))
-	.addElement(createInputElement('phone', 'Phone', 'tel'))
-	.build();
-```
-
-## Type Safety
-
-The Builder Pattern provides full type safety throughout:
-
-```typescript
-// TypeScript knows about all registered components
-const formEngine = createReactFormComposer().addElements(schemaFormRegistrations).build();
-
-// Type-safe retrieval
-const inputElement = formEngine.getElement('input'); // Type: ElementRegistration<InputFieldConfig>
-const unknownElement = formEngine.getElement('unknown'); // Compile error if strict mode
-
-// Type-safe form configs
-const config: FormConfig = {
-	steps: [
-		{
-			elements: [
-				{
-					id: 'input', // [check-mark] Valid
-					// id: 'invalid', // [x-mark] Would cause runtime error
-				},
-			],
-		},
-	],
-};
-```
-
-## Best Practices
-
-1. **Create a Single Engine Instance**: Define your form engine in one place and export it for reuse.
-
-2. **Register All Components Upfront**: Register all components during initialization, not dynamically at runtime.
-
-3. **Use TypeScript**: Leverage type safety for configuration and component registration.
-
-4. **Organize Registrations**: Group related components together for better maintainability.
-
-5. **Document Custom Components**: Add clear metadata to custom components for form builder UIs.
-
-6. **Validate Schemas**: Use Zod schemas to validate component configurations at runtime.
-
-## Migration from Old Pattern
-
-If you're migrating from the old registry pattern:
-
-**Old Pattern**:
-
-```typescript
-// Components auto-registered via side effects
-```
-
-**New Pattern**:
-
-```typescript
-export const formEngine = createReactFormComposer().addElements(schemaFormRegistrations).build();
-```
-
-See the [Migration Guide](/docs/migration/v2) for detailed instructions.
-
-## Next Steps
-
-- Learn about [Element Categories](/docs/components/categories)
-- Explore [Creating Custom Layouts](/docs/layout/custom-layouts)
-- Understand [Validation Rules](/docs/validation/built-in-validations)
-- Read about [Actions System](/docs/actions/how-it-works)
+Do not place shell, header, progress, or action configuration on individual
+steps. Wizard recipes are for multi-step forms; single-step recipes cannot
+declare progress or actions slots. See [View recipes](/docs/forms-react/layouts)
+for the available compositions and custom recipe API.
+
+## Related APIs
+
+- [Core Concepts](/docs/forms/core-concepts) — registration and validation
+- [Validation](/docs/forms/validation) — declarative field rules
+- [Actions](/docs/forms/actions) — lifecycle behavior
+- [Forms API Reference](/docs/forms/api-reference) — exact engine signatures

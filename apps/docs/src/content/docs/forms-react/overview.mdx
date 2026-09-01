@@ -1,13 +1,14 @@
 ---
-title: "Overview"
-description: "React adapter: components, layouts, steppers, hooks, RHF bridge."
+title: 'Overview'
+description: 'React adapter: components, view recipes, hooks, and RHF bridge.'
 group: Forms React
 order: 1
 ---
 
 # @schema-engine/forms-react
 
-React implementation of the JSON Form Engine with type-safe components, form adapters, and comprehensive validation support.
+React adapter for the JSON Form Engine. It supplies rendering, hooks, and view
+recipe composition while applications supply element registrations.
 
 ## Overview
 
@@ -19,9 +20,9 @@ This package is designed for modern React applications, leveraging hooks, contex
 
 - **Type-Safe Builder**: Full TypeScript inference for form configurations and components.
 - **Adapter System**: Built-in React Hook Form adapter, extendable to other libraries.
-- **Rich Component Library**: Pre-built, accessible form elements (input, select, array, etc.).
-- **Flexible Layouts**: Visual organization components like Cards, Split Screens, and Hero Backgrounds.
-- **Multi-Step Support**: Comprehensive stepper systems for wizard-style forms.
+- **Registry-based elements**: Install the element set that matches your UI library.
+- **View Recipes**: Compose shells and slot blocks for Cards, Split Screens, Heroes, and Wizards.
+- **Multi-Step Support**: Wizard recipes provide navigation and progress for multi-step forms.
 - **Advanced Validation**: Integration with 15+ built-in validation rules and custom validators.
 - **Lifecycle Actions**: Execute HTTP requests, redirects, and state changes on form events.
 - **Responsive Grids**: CSS Grid-based layouts for complex form structures.
@@ -38,8 +39,7 @@ Beyond basic form rendering, the package supports enterprise-grade requirements:
 
 - [Getting Started](/docs/forms-react/getting-started) - Build your first React form
 - [Components](/docs/forms-react/components) - Pre-built elements with examples
-- [Layouts](/docs/forms-react/layouts) - Visual structure for forms
-- [Steppers](/docs/forms-react/steppers) - Multi-step navigation
+- [View recipes](/docs/forms-react/layouts) - Shells, blocks, and wizard recipes
 - [Hooks](/docs/forms-react/hooks) - React hooks for form interactions
 - [Advanced Features](/docs/forms-react/advanced) - Constraints, GDPR, and Analytics
 - [API Reference](/docs/forms-react/api-reference) - Complete API documentation

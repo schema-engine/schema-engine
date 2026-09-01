@@ -1,6 +1,6 @@
 ---
-title: "Registration Flow"
-description: "Multi-step registration with progress and per-step validation."
+title: 'Registration Flow'
+description: 'A multi-step registration flow with wizard navigation and actions.'
 group: Examples
 order: 3
 ---
@@ -13,438 +13,69 @@ export const config = {
 	},
 };
 
-# Registration Flow Example
+# Registration Flow
 
-This example demonstrates a complete user registration flow using Form Engine's multi-step capabilities, validation, and actions system.
+Use a wizard recipe when a form has multiple steps. Step data remains focused
+on fields; the recipe owns progress and navigation chrome.
 
-## Interactive Demo
+## Interactive demo
 
 <FormRendererIsland preview="registration" />
-## Complete Configuration
 
-Here's the full configuration for a comprehensive registration flow:
+## Configuration pattern
 
-```typescript
-import { FormRenderer } from "@/lib/form-engine";
-import { ValidationPresets } from "@/lib/form-engine/validation";
-import type { FormConfig } from "@/lib/form-engine/types";
-
-const registrationFlowConfig: FormConfig = {
-  id: "user-registration-flow",
-  title: "Create Your Account",
-  description: "Join our platform in just a few simple steps",
-
-  steps: [
-    {
-      id: "personal-information",
-      title: "Personal Information",
-      description: "Tell us about yourself",
-      elements: [
-        {
-          type: "input",
-          inputType: "text",
-          id: "firstName",
-          name: "firstName",
-          label: "First Name",
-          placeholder: "Enter your first name",
-          rules: [
-            ValidationPresets.string.required("First name is required"),
-            ValidationPresets.string.minLength(2, "First name must be at least 2 characters")
-          ],
-          grid: {
-            responsive: {
-              default: { column: "1 / -1" },
-              md: { column: "1 / 2" }
-            }
-          }
-        },
-        {
-          type: "input",
-          inputType: "text",
-          id: "lastName",
-          name: "lastName",
-          label: "Last Name",
-          placeholder: "Enter your last name",
-          rules:
-            ValidationPresets.string.required("Last name is required"),
-            ValidationPresets.string.minLength(2, "Last name must be at least 2 characters")
-          ],
-          grid: {
-            responsive: {
-              default: { column: "1 / -1" },
-              md: { column: "2 / 3" }
-            }
-          }
-        },
-        {
-          type: "input",
-          inputType: "email",
-          id: "email",
-          name: "email",
-          label: "Email Address",
-          placeholder: "Enter your email address",
-          rules:
-            ValidationPresets.string.required("Email is required"),
-            ValidationPresets.string.email("Please enter a valid email address")
-          ]
-        },
-        {
-          type: "number",
-          id: "age",
-          name: "age",
-          label: "Age",
-          placeholder: "Enter your age",
-          rules:
-            ValidationPresets.string.required("Age is required"),
-            ValidationPresets.number.min(18, "You must be at least 18 years old"),
-            ValidationPresets.number.max(120, "Please enter a valid age")
-          ]
-        }
-      ],
-      actions: [
-        {
-          id: "track-personal-info-step",
-          $type: "gtm_event",
-          description: "Track personal info step completion",
-          eventName: "registration_step_complete",
-          eventData: { step: "personal-information" },
-          includeFormData: ["email"],
-          triggers: ["step_submit"],
-          enabled: true
-        }
-      ]
-    },
-    {
-      id: "account-details",
-      title: "Account Details",
-      description: "Set up your account credentials",
-      elements: [
-        {
-          type: "input",
-          inputType: "text",
-          id: "username",
-          name: "username",
-          label: "Username",
-          placeholder: "Choose a username",
-          rules:
-            ValidationPresets.string.required("Username is required"),
-            ValidationPresets.string.minLength(3, "Username must be at least 3 characters"),
-            ValidationPresets.string.maxLength(20, "Username cannot exceed 20 characters"),
-            ValidationPresets.string.regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores")
-          ]
-        },
-        {
-          type: "input",
-          inputType: "password",
-          id: "password",
-          name: "password",
-          label: "Password",
-          placeholder: "Create a strong password",
-          rules:
-            ValidationPresets.string.required("Password is required"),
-            ValidationPresets.string.minLength(8, "Password must be at least 8 characters"),
-            ValidationPresets.string.regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, "Password must contain uppercase, lowercase, and number")
-          ]
-        },
-        {
-          type: "input",
-          inputType: "password",
-          id: "confirmPassword",
-          name: "confirmPassword",
-          label: "Confirm Password",
-          placeholder: "Confirm your password",
-          rules:
-            ValidationPresets.string.required("Please confirm your password")
-          ]
-        }
-      ]
-    },
-    {
-      id: "preferences-settings",
-      title: "Preferences & Settings",
-      description: "Customize your experience",
-      elements: [
-        {
-          type: "select",
-          id: "country",
-          name: "country",
-          label: "Country",
-          placeholder: "Select your country",
-          rules:idationPresets.string.required("Please select your country")],
-          options: [
-            { value: "us", label: "United States" },
-            { value: "ca", label: "Canada" },
-            { value: "uk", label: "United Kingdom" },
-            { value: "de", label: "Germany" },
-            { value: "fr", label: "France" },
-            { value: "jp", label: "Japan" },
-            { value: "au", label: "Australia" },
-            { value: "other", label: "Other" }
-          ]
-        },
-        {
-          type: "select",
-          id: "timezone",
-          name: "timezone",
-          label: "Timezone",
-          placeholder: "Select your timezone",
-          rules:idationPresets.string.required("Please select your timezone")],
-          options: [
-            { value: "UTC-8", label: "Pacific Time (UTC-8)" },
-            { value: "UTC-7", label: "Mountain Time (UTC-7)" },
-            { value: "UTC-6", label: "Central Time (UTC-6)" },
-            { value: "UTC-5", label: "Eastern Time (UTC-5)" },
-            { value: "UTC", label: "UTC" },
-            { value: "UTC+1", label: "Central European Time (UTC+1)" },
-            { value: "UTC+9", label: "Japan Time (UTC+9)" }
-          ]
-        },
-        {
-          type: "radio",
-          id: "theme",
-          name: "theme",
-          label: "Preferred Theme",
-          options: [
-            { value: "light", label: "Light Theme" },
-            { value: "dark", label: "Dark Theme" },
-            { value: "auto", label: "Auto (System)" }
-          ]
-        },
-        {
-          type: "checkbox",
-          id: "newsletter",
-          name: "newsletter",
-          label: "Subscribe to our newsletter for updates and tips"
-        },
-        {
-          type: "checkbox",
-          id: "marketing",
-          name: "marketing",
-          label: "Receive marketing emails about new features"
-        }
-      ]
-    },
-    {
-      id: "terms-confirmation",
-      title: "Terms & Confirmation",
-      description: "Review and accept our terms",
-      elements: [
-        {
-          type: "checkbox",
-          id: "terms",
-          name: "terms",
-          label: "I agree to the Terms of Service and Privacy Policy",
-          rules:idationPresets.string.required("You must accept the terms and privacy policy")]
-        },
-        {
-          type: "checkbox",
-          id: "ageConfirmation",
-          name: "ageConfirmation",
-          label: "I confirm that I am at least 18 years old",
-          rules:idationPresets.string.required("You must confirm you are at least 18 years old")]
-        }
-      ]
-    }
-  ],
-  grid: {
-    columns: 1,
-    gap: "1.5rem",
-    responsive: {
-      default: { columns: 1, gap: "1rem" },
-      md: { columns: 2, gap: "1.5rem" }
-    }
-  },
-  actions: [
-    // Track registration start
-    {
-      id: "track-registration-start",
-      $type: "gtm_event",
-      description: "Track registration flow start",
-      eventName: "registration_started",
-      eventData: { source: "main_cta" },
-      triggers: ["form_mount"],
-      enabled: true
-    },
-
-    // Auto-save progress
-    {
-      id: "auto-save-registration",
-      type: "auto_save_draft",
-      description: "Auto save registration progress",
-      mode: "debounced",
-      debounceMs: 3000,
-      formId: "user-registration-flow",
-      enabled: true,
-      showNotification: false
-    },
-
-    // Submit registration
-    {
-      id: "submit-registration",
-      $type: "submit",
-      description: "Submit user registration",
-      endpoint: "/api/auth/register",
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      successMessage: "Welcome! Your account has been created successfully.",
-      errorMessage: "Registration failed. Please check your information and try again.",
-      enabled: true
-    },
-
-    // Track successful registration
-    {
-      id: "track-registration-success",
-      $type: "gtm_event",
-      description: "Track successful registration",
-      eventName: "registration_completed",
-      eventData: {
-        registration_method: "email",
-        user_type: "new"
-      },
-      includeFormData: ["email", "country", "age"],
-      includeMetadata: true,
-      triggers: ["submit_success"],
-      enabled: true
-    },
-
-    // Show success notification
-    {
-      id: "registration-success-notification",
-      $type: "notification",
-      description: "Show registration success message",
-      message: "Account created! Check your email to verify your account.",
-      variant: "success",
-      duration: 8000,
-      triggers: ["submit_success"],
-      enabled: true
-    }
-  ]
+```ts
+const formConfig: FormConfig = {
+	id: 'registration',
+	title: 'Create your account',
+	view: { $type: 'wizard' },
+	steps: [
+		{
+			id: 'account',
+			title: 'Account',
+			elements: [
+				{
+					$type: 'input',
+					id: 'email',
+					name: 'email',
+					label: 'Email',
+					inputType: 'email',
+					rules: [
+						{ type: 'required', message: 'Email is required' },
+						{ type: 'email', message: 'Enter a valid email' },
+					],
+				},
+			],
+		},
+		{
+			id: 'profile',
+			title: 'Profile',
+			elements: [
+				{ $type: 'input', id: 'name', name: 'name', label: 'Full name' },
+			],
+		},
+	],
+	actions: [
+		{
+			id: 'submit-registration',
+			$type: 'submit',
+			endpoint: '/api/register',
+			method: 'POST',
+			enabled: true,
+		},
+		{
+			id: 'reset-after-success',
+			$type: 'reset',
+			triggers: ['form_submit_success'],
+			resetToDefaults: true,
+		},
+	],
 };
-
-export function RegistrationFlow() {
-  const handleSubmit = (data: any) => {
-    console.log("Registration data:", data);
-    // Handle successful registration
-    // Redirect to dashboard or verification page
-  };
-
-  const handleStepChange = (step: number) => {
-    console.log("Step changed to:", step);
-    // Optional: Handle step navigation
-  };
-
-  return (
-    <div className="max-w-4xl mx-auto p-6">
-      <FormRenderer
-        config={registrationFlowConfig}
-        onSubmit={handleSubmit}
-        onChange={handleStepChange}
-      />
-    </div>
-  );
-}
 ```
 
-## Key Features Demonstrated
+The wizard recipe must be registered in the engine and the form must contain
+at least two steps. Action triggers use the canonical `form_*` and `step_*`
+names from the forms package.
 
-### Multi-Step Navigation
-
-- 4-step registration flow with clear progression
-- Step validation before navigation
-- Progress indication
-
-### Responsive Grid Layout
-
-- Mobile-first responsive design
-- Fields adapt to screen size
-- Optimized for both desktop and mobile
-
-### Comprehensive Validation
-
-- Field-level validation with real-time feedback
-- Password strength requirements
-- Email format validation
-- Username format restrictions
-
-### Form Actions
-
-- Analytics tracking at form and step level
-- Auto-save functionality for long forms
-- Success notifications and error handling
-- API submission with proper error handling
-
-### Advanced Field Types
-
-- Text inputs with various types
-- Select dropdowns with comprehensive options
-- Radio buttons for single choices
-- Checkboxes for agreements and preferences
-
-## Data Structure
-
-The completed registration produces this data structure:
-
-```typescript
-{
-  // Personal Information
-  firstName: "John",
-  lastName: "Doe",
-  email: "john.doe@example.com",
-  age: 28,
-
-  // Account Details
-  username: "johndoe123",
-  password: "SecurePass123!",
-  confirmPassword: "SecurePass123!",
-
-  // Preferences
-  country: "us",
-  timezone: "UTC-5",
-  theme: "auto",
-  newsletter: true,
-  marketing: false,
-
-  // Confirmations
-  terms: true,
-  ageConfirmation: true
-}
-```
-
-## Implementation Tips
-
-### Progressive Enhancement
-
-Start with a simple single-step form and gradually add steps as needed.
-
-### Validation Strategy
-
-- Use client-side validation for immediate feedback
-- Implement server-side validation for security
-- Consider async validation for username availability
-
-### User Experience
-
-- Provide clear progress indication
-- Allow users to go back and edit previous steps
-- Save progress automatically to prevent data loss
-
-### Performance Optimization
-
-- Lazy load non-critical steps
-- Optimize validation to run only when necessary
-- Consider splitting very long forms into separate pages
-
-## Related Examples
-
-- **[Basic Contact Form](/docs/examples/basic-form)** - Simple single-step form
-- **[Sequential Actions Example](/docs/examples/sequential-actions)** - Chained form actions
-- **[Actions System](/docs/actions)** - Complete actions documentation
-
-## Next Steps
-
-1. Experiment with the interactive demo above to see all the features in action
-2. Explore [conditional logic](/docs/concepts/conditional-logic) for dynamic fields
-3. Learn about [form actions](/docs/actions) for advanced behaviors
-4. Check out the [API reference](/docs/api) for complete configuration options
+See [View recipes](/docs/forms-react/layouts) for other wizard compositions
+and [Actions](/docs/forms/actions) for registration and lifecycle behavior.

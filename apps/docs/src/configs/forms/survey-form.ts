@@ -4,11 +4,7 @@ export const surveyFormConfig: FormConfig = {
 	id: 'customer-survey',
 	title: 'Customer Satisfaction Survey',
 	description: 'Help us improve our services',
-	mode: 'wizard',
-	stepper: {
-		$type: 'minimalist',
-		showProgress: true,
-	},
+	view: { $type: 'wizard' },
 	steps: [
 		{
 			id: 'experience',

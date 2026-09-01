@@ -4,27 +4,14 @@
  * All forms-react imports go through `forms-react-host` so the island shares
  * one React instance with FormRenderer.
  */
-import {
-	CardLayoutRegistration,
-	createReactFormComposer,
-	DefaultStepperRegistration,
-	HeroBackgroundLayoutRegistration,
-	MinimalistStepperRegistration,
-	schemaFormRegistrations,
-	SplitScreenLayoutRegistration,
-} from '@/lib/forms-react-host';
+import { createReactFormComposer, schemaFormRegistrations } from '@/lib/forms-react-host';
 
 import { formSubmitPlugin, notificationPlugin, formResetPlugin, autoSavePlugin } from '@schema-engine/forms/actions';
-// oxlint-disable-next-line import/no-unassigned-import -- registers built-in validators
+
 import '@schema-engine/forms/schemas/validation/validation-registry';
 
 export const formEngine = createReactFormComposer()
 	.addElements(schemaFormRegistrations)
-	.addLayout(CardLayoutRegistration)
-	.addLayout(SplitScreenLayoutRegistration)
-	.addLayout(HeroBackgroundLayoutRegistration)
-	.addStepper(DefaultStepperRegistration)
-	.addStepper(MinimalistStepperRegistration)
 	.addAction(
 		formSubmitPlugin({
 			onSuccess: (data, context) => {

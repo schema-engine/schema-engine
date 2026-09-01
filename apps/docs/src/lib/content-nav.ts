@@ -74,7 +74,7 @@ export function buildGroupedNav<T extends NavigableContentEntry>(
 		byGroup.get(group)!.push(post);
 	});
 
-	const orderedGroups = Array.from(byGroup.keys()).toSorted((a, b) => {
+	const orderedGroups = Array.from(byGroup.keys()).sort((a, b) => {
 		const ai = groupOrder?.get(a);
 		const bi = groupOrder?.get(b);
 		if (ai === undefined && bi === undefined) return (groupInsertion.get(a) ?? 0) - (groupInsertion.get(b) ?? 0);

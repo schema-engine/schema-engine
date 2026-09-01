@@ -60,7 +60,7 @@ export async function generateLlmDocs<T extends Record<string, unknown>>(
 		...sectionOrder.filter((section) => sections.has(section)),
 		...Array.from(sections.keys())
 			.filter((section) => !sectionOrder.includes(section))
-			.toSorted((a, b) => a.localeCompare(b)),
+			.sort((a, b) => a.localeCompare(b)),
 	];
 
 	const outputLines = [...headerLines];
@@ -74,7 +74,7 @@ export async function generateLlmDocs<T extends Record<string, unknown>>(
 
 		outputLines.push(`## ${formatSectionTitle(section)}`);
 
-		for (const post of sectionPosts.toSorted((a, b) => a.slug.localeCompare(b.slug))) {
+		for (const post of sectionPosts.sort((a, b) => a.slug.localeCompare(b.slug))) {
 			const destFile = join(outputDir, `${post.slug}.txt`);
 			const raw = await scanner.getRawContent(post.slug);
 			await fileSystem.writeAsync(destFile, raw);

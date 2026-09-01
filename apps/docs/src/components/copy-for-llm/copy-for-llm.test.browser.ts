@@ -10,7 +10,7 @@ async function createCopyForLlm(options: { llmUrl?: string; label?: string } = {
 	button: HTMLButtonElement;
 }> {
 	const element = document.createElement('radiant-copy-for-llm') as RadiantCopyForLlm;
-	element.llmUrl = options.llmUrl ?? '/docs-llm/getting-started/introduction.md';
+	element.llmUrl = options.llmUrl ?? '/llms-content/getting-started/introduction.txt';
 	element.label = options.label ?? 'Copy for LLM';
 
 	document.body.appendChild(element);

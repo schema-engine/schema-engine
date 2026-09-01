@@ -15,15 +15,9 @@ Install an aggregate from the Schema Engine shadcn registry, then import its gen
 
 ```typescript
 import { createReactFormComposer } from '@schema-engine/forms-react';
-import { CardLayoutRegistration } from '@schema-engine/forms-react/registrations';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
-import { DefaultStepperRegistration } from '@/components/schema-engine/forms/steppers/default-stepper.registration';
 
-const formEngine = createReactFormComposer()
-	.addElements(schemaFormRegistrations)
-	.addLayout(CardLayoutRegistration)
-	.addStepper(DefaultStepperRegistration)
-	.build();
+const formEngine = createReactFormComposer().addElements(schemaFormRegistrations).build();
 ```
 
 ## 2. Configure Your Form
@@ -67,13 +61,12 @@ const formConfig: FormConfig = {
 					rows: 5,
 				},
 			],
-			layout: {
-				$type: 'card',
-				padding: 'md',
-				shadowSize: 'md',
-			},
 		},
 	],
+	view: {
+		$type: 'card',
+		shell: { padding: 'md', shadowSize: 'md' },
+	},
 };
 ```
 
@@ -99,5 +92,4 @@ function ContactForm() {
 ## Next Steps
 
 - [Components](/docs/forms-react/components) - Pre-built elements with examples
-- [Layouts](/docs/forms-react/layouts) - Visual structure for forms
-- [Steppers](/docs/forms-react/steppers) - Multi-step navigation
+- [View recipes](/docs/forms-react/layouts) - Shells and slot blocks

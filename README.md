@@ -148,7 +148,7 @@ graph TD
 | Package                                                  | Version | Description                                                                                                          |
 | -------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
 | **[@schema-engine/forms](./packages/forms)**             | `0.1.0` | Contains the `FormComposer` and `FormEngine`. Handles validation logic, constraint evaluation, and state management. |
-| **[@schema-engine/forms-react](./packages/forms-react)** | `0.1.0` | Provides the React Context bridge, hooks, adapters, layouts, and the shadcn-agnostic rendering runtime.              |
+| **[@schema-engine/forms-react](./packages/forms-react)** | `0.1.0` | Provides the React Context bridge, hooks, adapters, view recipes, and the shadcn-agnostic rendering runtime.         |
 | **[@schema-engine/actions](./packages/actions)**         | `0.1.0` | A standalone, domain-agnostic command pattern implementation for handling system events.                             |
 | **[@schema-engine/registry](./packages/registry)**       | `0.1.0` | The low-level type definitions and registry implementations that power the IoC container.                            |
 
@@ -165,14 +165,14 @@ pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form
 
 ```typescript
 import { createReactFormComposer } from '@schema-engine/forms-react';
-import { CardLayoutRegistration } from '@schema-engine/forms-react/registrations';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
-const engine = createReactFormComposer().addElements(schemaFormRegistrations).addLayout(CardLayoutRegistration).build();
+const engine = createReactFormComposer().addElements(schemaFormRegistrations).build();
 
 const contactFormSchema = {
 	id: 'contact-form',
 	title: 'Contact Sales',
+	view: { $type: 'card', shell: { padding: 'md' } },
 	steps: [
 		{
 			id: 'step-1',
@@ -192,7 +192,6 @@ const contactFormSchema = {
 					rules: [{ type: 'required' }, { type: 'email' }],
 				},
 			],
-			layout: { $type: 'card', padding: 'md' },
 		},
 	],
 	actions: [{ $type: 'submit', id: 'submit_lead', endpoint: '/api/v1/leads' }],

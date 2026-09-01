@@ -16,15 +16,9 @@ Use the `createReactFormComposer` to register components and build an immutable 
 ```typescript
 // lib/form-engine.ts
 import { createReactFormComposer } from '@schema-engine/forms-react';
-import { CardLayoutRegistration } from '@schema-engine/forms-react/registrations';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
-import { DefaultStepperRegistration } from '@/components/schema-engine/forms/steppers/default-stepper.registration';
 
-export const formEngine = createReactFormComposer()
-	.addElements(schemaFormRegistrations)
-	.addLayout(CardLayoutRegistration)
-	.addStepper(DefaultStepperRegistration)
-	.build();
+export const formEngine = createReactFormComposer().addElements(schemaFormRegistrations).build();
 ```
 
 > **Note:** Create the form engine once and reuse it across your entire application. The engine instance is immutable after calling `build()`.
@@ -106,13 +100,12 @@ const contactFormConfig: FormConfig = {
 					],
 				},
 			],
-			layout: {
-				$type: 'card',
-				padding: 'md',
-				shadowSize: 'md',
-			},
 		},
 	],
+	view: {
+		$type: 'card',
+		shell: { padding: 'md', shadowSize: 'md' },
+	},
 };
 ```
 
@@ -177,7 +170,7 @@ interface FormConfig {
 	title?: string; // Form title
 	description?: string; // Form description
 	steps: StepConfig[]; // Form steps (even single-step forms need this)
-	stepper?: StepperConfig; // Optional stepper configuration
+	view?: FormViewConfig; // Optional view recipe configuration
 	actions?: ActionConfig[]; // Optional form actions
 }
 ```
@@ -232,7 +225,6 @@ rules: [
 Now that you've built your first form, explore these topics:
 
 - **[Components](/docs/forms-react/components)** - Pre-built elements and custom components
-- **[Layouts](/docs/forms-react/layouts)** - Visual structure for forms
-- **[Steppers](/docs/forms-react/steppers)** - Multi-step form navigation
+- **[View recipes](/docs/forms-react/layouts)** - Shells, blocks, and multi-step composition
 - **[Hooks](/docs/forms-react/hooks)** - React hooks for form interactions
 - **[Actions](/docs/forms/actions)** - Handle form submission and lifecycle events

@@ -1,16 +1,16 @@
 # Schema Engine — getting started skill
 
 This skill is the entry point for an agent working with the Schema
-Engine monorepo. Read it first.
+Engine repository. Read it first.
 
 ## What this repo is
 
 Schema Engine is a JSON-driven form layer on top of the Ecopages
-framework. The monorepo has four first-party packages:
+framework. The repository currently contains one docs app and four first-party packages:
 
 - `forms` — headless form engine: JSON config, validation rules,
   constraint logic.
-- `forms-react` — React adapter: components, layouts, steppers, hooks,
+- `forms-react` — React adapter: components, view recipes, hooks,
   React Hook Form bridge.
 - `actions` — domain-agnostic sequential action execution system.
 - `registry` — base registry used by the other three packages.
@@ -20,7 +20,6 @@ framework. The monorepo has four first-party packages:
 ```
 schema-engine/
 ├── apps/
-│   ├── www/      # React app: live demos, marketing pages
 │   └── docs/     # Ecopages docs site: this app
 └── packages/
     ├── actions/   # @schema-engine/actions
@@ -29,28 +28,23 @@ schema-engine/
     └── registry/  # @schema-engine/registry
 ```
 
-The `/www` app uses the React plugin (`@ecopages/react`) and renders
-live form demos. The `/docs` app uses the JSX plugin
-(`@ecopages/ecopages-jsx`) and is body-only — the docs site shows the
-JSON config in MDX and links to `/www` for the running form.
+The `/docs` app uses the JSX plugin (`@ecopages/ecopages-jsx`). Its MDX
+pages include interactive form islands backed by one shared engine setup.
 
 ## First 60 seconds
 
-1. `bun install`
-2. `bun run dev:www` to start the React app (the one with the live forms)
-3. `cd apps/docs && bun run dev` to start the docs site
+1. `pnpm install`
+2. `cd apps/docs && pnpm dev` to start the docs site
 
 ## When you reach for the docs site
 
-- The manifest lives at `apps/docs/src/content/docs/content.meta.ts`.
-  Edit it to add, remove, or reorder pages.
+- Pages are MDX files under `apps/docs/src/content/docs/`.
+  Frontmatter `group` and `order` control the sidebar.
 - The catch-all route is `apps/docs/src/pages/docs/[...slug]/index.tsx`.
-  One source of truth, single static path table.
-- New MDX files need to be:
-    1. Imported in `apps/docs/src/content/docs/content.ts`.
-    2. Listed in `content.meta.ts` with a section, slug, title, description.
-- For code examples, prefer real config snippets over `LivePreview` /
-  `CodePreview` components — the docs site can't run React during SSR.
+  The Ecopages content collection discovers new MDX files automatically.
+- For code examples, prefer real config snippets. Interactive previews use
+  `FormRendererIsland` and the shared setup in
+  `apps/docs/src/lib/form-engine-setup.ts`.
 
 ## Wiring a form into the docs app
 
@@ -64,6 +58,6 @@ JSON config in MDX and links to `/www` for the running form.
 
 ## More
 
-- The full docs site lives at `/docs` in any running app.
-- LLM exports are at `/llms.txt` and `/docs-llm/<section>/<slug>.md`.
+- The full docs site lives at `/docs`.
+- LLM exports are at `/llms.txt` and `/llms-content/<section>/<slug>.txt`.
 - The Ecopages framework docs are at <https://ecopages.app/docs>.

@@ -1,111 +1,34 @@
 ---
-title: "Getting Started"
-description: "Install the core engine and learn the shape of a FormConfig."
+title: 'Getting Started'
+description: 'Install the core engine and create a recipe-based FormConfig.'
 group: Forms
 order: 2
 ---
 
 # Getting Started
 
-This guide walks you through creating your first form engine using the builder pattern.
+Install the framework-agnostic package and `zod`:
 
-## 1. Create a Form Engine
-
-Use the `FormComposer` to register components and build an immutable engine:
-
-```typescript
-// Mock registrations for this example
-const textInputRegistration = { $type: 'text', schema: {}, metadata: {}, render: () => null } as any;
-const emailInputRegistration = { $type: 'email', schema: {}, metadata: {}, render: () => null } as any;
-const cardLayoutRegistration = { $type: 'card', schema: {}, metadata: {}, render: () => null } as any;
-
-const defineFormAction = defineAction<BuilderActionBaseContext, BuilderActionTrigger>();
-
-const SubmitActionConfigSchema = z.object({
-	id: z.string(),
-	$type: z.literal('submit'),
-	endpoint: z.string(),
-});
-
-const submitActionRegistration = defineFormAction({
-	$type: 'submit',
-	schema: SubmitActionConfigSchema,
-	metadata: {
-		name: 'Submit Form',
-		defaultTriggers: ['form_submit'],
-	},
-	execute: async (context) => ({
-		success: true,
-		data: {
-			endpoint: context.config.endpoint,
-			formId: context.formId,
-		},
-	}),
-});
-
-const engine = new FormComposer()
-	.addElement(textInputRegistration)
-	.addElement(emailInputRegistration)
-	.addLayout(cardLayoutRegistration)
-	.addAction(submitActionRegistration)
-	.build();
+```bash
+pnpm add @schema-engine/forms zod
 ```
 
-## 2. Query the Engine
+Register the elements, recipes, and actions used by the application:
 
-The built engine provides methods to retrieve and inspect registered components:
-
-```typescript
-const element = engine.getElement('text');
-const allElements = engine.getAllElements();
-const hasEmail = engine.hasElement('email');
-
-const summary = engine.getSummary();
-// {
-//   elements: { count: 2, ids: ['text', 'email'] },
-//   layouts: { count: 1, ids: ['card'] },
-//   steppers: { count: 0, ids: [] },
-//   actions: { count: 1, types: ['submit'] }
-// }
+```ts
+const engine = new FormComposer().addElement(textInputRegistration).addRecipe(cardRecipe).build();
 ```
 
-## 3. Validate Form Configurations
+Then define a serializable form. The adapter owns rendering and receives the
+same engine instance so it can resolve `view.$type`.
 
-Get a Zod schema to validate form configurations at runtime:
-
-```typescript
-const zodSchema = engine.getFormConfigSchema();
-const result = zodSchema.safeParse(formConfig);
-
-if (!result.success) {
-	console.error(result.error);
-}
+```ts
+const form = engine.defineForm({
+	id: 'contact',
+	steps: [{ id: 'details', title: 'Details', elements: [] }],
+	view: { $type: 'card' },
+});
 ```
 
-## 4. Generate JSON Schemas
-
-Generate JSON Schemas for documentation, storage, or external validation tools:
-
-```typescript
-const collection = engine.generateJSONSchemaCollection({
-	target: 'draft-2020-12',
-});
-
-const configSchema = engine.generateFormConfigSchema({
-	target: 'draft-2020-12',
-});
-
-const actionSchema = engine.generateActionConfigSchema('submit', {
-	target: 'draft-2020-12',
-});
-
-const standardFormSchema = engine.getFormConfigStandardSchema();
-const standardSubmitSchema = engine.getActionConfigStandardSchema('submit');
-```
-
-The Standard JSON Schema wrappers expose the `~standard.jsonSchema.input(...)` API, which is useful when you need a validator-agnostic schema publishing surface.
-
-## Next Steps
-
-- [Core Concepts](/docs/forms/core-concepts) - Understand registrations and the engine
-- [Validation](/docs/forms/validation) - Built-in rules and custom validation
+Use `engine.getFormConfigStandardSchema()` when configurations must be
+validated outside the runtime.

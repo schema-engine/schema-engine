@@ -15,7 +15,7 @@ export const actionsFormConfig: FormConfig = {
 	id: 'enhanced-actions-demo',
 	title: 'Enhanced Form Actions Demo',
 	description: 'Demonstrates simplified action system with auto-save, GTM tracking, and submission handling',
-	mode: 'wizard',
+	view: { $type: 'wizard' },
 
 	steps: [
 		{
@@ -244,7 +244,6 @@ export const simpleActionsFormConfig: FormConfig = {
 	id: 'simple-actions-demo',
 	title: 'Simple Actions Demo',
 	description: 'Basic form with minimal actions for testing',
-	mode: 'free',
 
 	steps: [
 		{

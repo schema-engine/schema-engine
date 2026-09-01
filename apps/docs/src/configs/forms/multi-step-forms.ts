@@ -8,7 +8,7 @@ export const multiStepRegistrationConfig: FormConfig = {
 	id: 'multi-step-user-registration',
 	title: 'User Registration',
 	description: 'Complete your registration by filling out all required information.',
-	mode: 'wizard',
+	view: { $type: 'wizard' },
 
 	steps: [
 		{
@@ -140,10 +140,6 @@ export const multiStepRegistrationConfig: FormConfig = {
 			],
 		},
 	],
-	stepper: {
-		$type: 'default',
-		orientation: 'horizontal',
-	},
 	grid: {
 		columns: 2,
 		gap: '1rem',
@@ -171,31 +167,4 @@ export const multiStepRegistrationConfig: FormConfig = {
 			resetToDefaults: true,
 		},
 	],
-};
-
-/**
- * Vertical stepper variant
- */
-export const verticalStepperConfig: FormConfig = {
-	...multiStepRegistrationConfig,
-	id: 'vertical-stepper-demo',
-	stepper: {
-		$type: 'default',
-		showStepNumbers: true,
-		showStepTitles: true,
-		orientation: 'horizontal',
-	},
-};
-
-/**
- * Minimal stepper variant
- */
-export const minimalStepperConfig: FormConfig = {
-	...multiStepRegistrationConfig,
-	id: 'minimal-stepper-demo',
-	mode: 'free',
-	stepper: {
-		$type: 'minimalist',
-		showProgress: true,
-	},
 };

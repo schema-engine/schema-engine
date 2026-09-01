@@ -6,7 +6,6 @@ import { ValidationPresets, type FormConfig } from '@schema-engine/forms/schemas
 export const basicFormConfig: FormConfig = {
 	id: 'basic-demo',
 	title: 'Basic Form Example',
-	mode: 'free',
 	steps: [
 		{
 			id: 'basic-step',
@@ -80,7 +79,6 @@ export const conditionalFormConfig: FormConfig = {
 	id: 'conditional-demo',
 	title: 'Advanced Conditional Logic Demo',
 
-	mode: 'free',
 	steps: [
 		{
 			id: 'conditional-step',
@@ -246,7 +244,6 @@ export const arrayFormConfig: FormConfig = {
 	id: 'array-demo',
 	title: 'Dynamic Array Fields Demo',
 
-	mode: 'free',
 	steps: [
 		{
 			id: 'array-step',
@@ -350,7 +347,6 @@ export const complexFormConfig: FormConfig = {
 	id: 'complex-demo',
 	title: 'Complex Form with All Features',
 
-	mode: 'free',
 	steps: [
 		{
 			id: 'complex-step',

@@ -9,7 +9,6 @@ export const responsiveFormConfig: FormConfig = {
 	title: 'Responsive Contact Form',
 	description: 'A demonstration of the responsive grid layout system',
 
-	mode: 'free',
 	grid: {
 		columns: 12,
 		gap: '1.5rem',

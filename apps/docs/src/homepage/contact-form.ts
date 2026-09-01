@@ -4,7 +4,6 @@ import type { FormConfig } from '@schema-engine/forms/schemas';
 export const contactFormConfig = {
 	id: 'contact-form',
 	title: 'Contact Form',
-	mode: 'free',
 	steps: [
 		{
 			id: 'contact-step',

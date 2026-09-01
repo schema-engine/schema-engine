@@ -1,6 +1,4 @@
-@import '@schema-engine/forms-react/components/layouts/card-layout.css';
-@import '@schema-engine/forms-react/components/layouts/split-screen-layout.css';
-@import '@schema-engine/forms-react/components/layouts/hero-background-layout.css';
+@import '@schema-engine/forms-react/global.css';
 
 docs-form-renderer {
 	display: block;

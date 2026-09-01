@@ -1,195 +1,68 @@
 ---
-title: 'Layouts'
-description: 'Card, split-screen, and hero-background layouts.'
+title: 'View recipes'
+description: 'Card, wizard, and other view recipes for form chrome.'
 group: Forms React
 order: 4
 ---
 
-# Layouts
+# View recipes
 
-Layouts wrap form content and provide visual structure and styling for form steps.
+Recipes compose a **shell** with optional **header**, **progress**, and **actions** blocks. Select one with form-level `view.$type`. `createReactFormComposer()` registers the built-in recipes.
 
-## Available Layouts
+## Built-in recipes
 
-Import from `@schema-engine/forms-react/registrations`:
-
-```typescript
-import {
-	CardLayoutRegistration,
-	SplitScreenLayoutRegistration,
-	HeroBackgroundLayoutRegistration,
-} from '@schema-engine/forms-react/registrations';
-```
-
-| Layout            | Description                        |
-| ----------------- | ---------------------------------- |
-| `card`            | Centered card with shadow          |
-| `split-screen`    | Split layout with content and form |
-| `hero-background` | Full-width background with overlay |
-
-## How Layouts Work
-
-Each step in a form can have its own layout configuration. The layout wraps the step's elements and provides structural styling.
+| `$type` | Kind | Description |
+| --- | --- | --- |
+| `card` | single-step | Centered card shell |
+| `split-screen` | single-step | Side panel plus form |
+| `hero-background` | single-step | Hero image or video |
+| `bare-controls` | wizard | Previous / next / submit only |
+| `card-wizard` | wizard | Card shell with progress |
+| `wizard` | wizard | Horizontal step indicators |
+| `sidebar-wizard` | wizard | Step indicators in a sidebar |
+| `hero-wizard` | wizard | Wizard over a hero background |
+| `split-screen-wizard` | wizard | Wizard with a marketing side panel |
 
 ```typescript
 const formConfig: FormConfig = {
-	id: 'my-form',
-	steps: [
-		{
-			id: 'step-1',
-			title: 'Personal Info',
-			elements: [...],
-			layout: {
-				$type: 'card',
-				maxWidth: 'md',
-				padding: 'lg',
-				shadowSize: 'lg',
-			},
-		},
-	],
+	id: 'contact',
+	view: {
+		$type: 'card',
+		shell: { maxWidth: 'md', padding: 'lg', shadowSize: 'md' },
+	},
+	steps: [{ id: 'step-1', title: 'Contact', elements: [/* ... */] }],
 };
 ```
 
-## Layout Configuration
+Slot config is optional. The recipe fixes block identity; `view` only passes options such as `shell`, `header`, `progress`, and `actions`.
 
-### Card Layout
+## Custom recipes
 
-```json
-{
-	"layout": {
-		"$type": "card",
-		"maxWidth": "md",
-		"padding": "lg",
-		"shadowSize": "md"
-	}
-}
-```
+```typescript
+import { z } from 'zod';
+import { createReactFormComposer } from '@schema-engine/forms-react';
+import { defineFormRecipe, defineRecipeSpec } from '@schema-engine/forms/recipes';
+import type { FormShellProps } from '@schema-engine/forms-react';
 
-| Property     | Type                             | Description               |
-| ------------ | -------------------------------- | ------------------------- |
-| `maxWidth`   | `'sm' \| 'md' \| 'lg' \| 'xl'`   | Maximum width of the card |
-| `padding`    | `'none' \| 'sm' \| 'md' \| 'lg'` | Internal padding          |
-| `shadowSize` | `'none' \| 'sm' \| 'md' \| 'lg'` | Shadow depth              |
-
-### Split-Screen Layout
-
-```json
-{
-	"layout": {
-		"$type": "split-screen",
-		"contentPosition": "left",
-		"contentWidth": "50%",
-		"backgroundImage": "/images/hero.jpg"
-	}
-}
-```
-
-### Hero Background Layout
-
-```json
-{
-	"layout": {
-		"$type": "hero-background",
-		"backgroundImage": "/images/background.jpg",
-		"overlayOpacity": 0.5,
-		"contentMaxWidth": "lg"
-	}
-}
-```
-
-## Creating a Custom Layout
-
-Custom layouts use the exported `useLayoutContext` hook to access form and step data.
-
-### Step 1: Create the Layout Component
-
-```tsx
-// my-layout.tsx
-interface MyLayoutConfig {
-	$type: 'my-layout';
-	headerColor?: string;
-	footerText?: string;
-}
-
-export function MyLayout({ children }: { children: React.ReactNode }) {
-	const { step, form, config } = useLayoutContext<MyLayoutConfig>();
-
+function BrandShell({ slots }: FormShellProps) {
 	return (
-		<div className="my-layout">
-			<header style={{ backgroundColor: config.headerColor }}>
-				<h1>{step.title || form.title}</h1>
-				{step.description && <p>{step.description}</p>}
-			</header>
-			<main>{children}</main>
-			{config.footerText && <footer>{config.footerText}</footer>}
+		<div>
+			{slots.header}
+			{slots.content}
+			{slots.actions}
 		</div>
 	);
 }
-```
 
-### Step 2: Create Schema and Registration
+const BrandRecipe = defineFormRecipe(
+	defineRecipeSpec({
+		$type: 'brand',
+		kind: 'single-step',
+		slotSchemas: { shell: z.object({ accent: z.string().optional() }).strict() },
+		metadata: { name: 'Brand', description: 'Branded form shell' },
+	}),
+	{ shell: BrandShell, slots: {} },
+);
 
-```typescript
-const MyLayoutConfigSchema = z.object({
-	$type: z.literal('my-layout'),
-	headerColor: z.string().optional(),
-	footerText: z.string().optional(),
-});
-
-export const MyLayoutRegistration: LayoutRegistration = {
-	$type: 'my-layout',
-	schema: MyLayoutConfigSchema,
-	metadata: {
-		name: 'My Layout',
-		description: 'Custom branded layout',
-	},
-	render: MyLayout,
-};
-```
-
-### Step 3: Register with Engine
-
-```typescript
-const engine = createReactFormComposer().addLayout(MyLayoutRegistration).build();
-```
-
-### Step 4: Use in Form Config
-
-```json
-{
-	"steps": [
-		{
-			"id": "step-1",
-			"title": "Welcome",
-			"elements": [...],
-			"layout": {
-				"$type": "my-layout",
-				"headerColor": "#1a73e8",
-				"footerText": "© 2024 My Company"
-			}
-		}
-	]
-}
-```
-
-## Layout Context
-
-The `useLayoutContext` hook provides:
-
-```typescript
-interface LayoutContextValue {
-	step: {
-		id: string;
-		title?: string;
-		description?: string;
-		index?: number; // Step index (undefined for single-step forms)
-		total?: number; // Total steps (undefined for single-step forms)
-	};
-	form: {
-		id: string;
-		title?: string;
-		description?: string;
-	};
-	config: TConfig; // Your layout's typed config
-}
+const engine = createReactFormComposer().addRecipe(BrandRecipe).build();
 ```

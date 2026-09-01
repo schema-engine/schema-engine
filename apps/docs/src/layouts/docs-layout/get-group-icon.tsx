@@ -35,6 +35,12 @@ const GROUP_ICONS = {
 			<path d="M12 2a10 10 0 0 1 0 20M12 2a10 10 0 0 0 0 20" />
 		</GroupIcon>
 	),
+	'Forms Radiant': () => (
+		<GroupIcon>
+			<path d="M12 3v18M3 12h18" />
+			<circle cx="12" cy="12" r="7" />
+		</GroupIcon>
+	),
 	Actions: () => (
 		<GroupIcon>
 			<polygon points="5 4 19 12 5 20 5 4" />

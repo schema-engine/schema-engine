@@ -1,6 +1,6 @@
 ---
-title: "Contact Form"
-description: "Conditional fields, multi-column layout, validation."
+title: 'Contact Form'
+description: 'Conditional fields, responsive grid placement, and validation.'
 group: Examples
 order: 2
 ---
@@ -13,62 +13,68 @@ export const config = {
 	},
 };
 
-# Contact Form Example
+# Contact Form
 
-A comprehensive contact form example showcasing Form Engine's capabilities including validation, responsive design, conditional fields, and action handling.
+This example combines shared element configuration with conditional behavior
+and a responsive form grid.
 
-## Interactive Demo
+## Interactive demo
 
 <FormRendererIsland preview="contact" />
-## Key Features Demonstrated
 
-This contact form example showcases several advanced Form Engine features:
+## Configuration pattern
 
-### 1. Conditional Field Logic
+```ts
+const formConfig: FormConfig = {
+	id: 'contact',
+	title: 'Contact us',
+	steps: [
+		{
+			id: 'details',
+			title: 'Contact details',
+			elements: [
+				{
+					$type: 'select',
+					id: 'subject',
+					name: 'subject',
+					label: 'Subject',
+					options: [
+						{ value: 'general', label: 'General question' },
+						{ value: 'support', label: 'Technical support' },
+					],
+					constraints: [],
+				},
+				{
+					$type: 'input',
+					id: 'ticket',
+					name: 'ticket',
+					label: 'Support ticket number',
+					constraints: [
+						{ field: 'subject', operator: 'equals', value: 'support', action: 'show' },
+					],
+				},
+				{
+					$type: 'textarea',
+					id: 'message',
+					name: 'message',
+					label: 'Message',
+					grid: { column: '1 / -1' },
+				},
+			],
+		},
+	],
+	grid: {
+		columns: 2,
+		gap: '1rem',
+		responsive: { default: { columns: 1 }, md: { columns: 2 } },
+	},
+	view: { $type: 'card' },
+};
+```
 
-- **Dynamic Budget Fields**: Only show when inquiry type is 'sales' or 'partnership'
-- **Operator Support**: Uses `in` operator to check multiple values
-- **Smart UX**: Reduces form complexity by hiding irrelevant fields
+`constraints` are direct objects on the element. The field's visibility is
+derived from the current form value; it is not a separate layout or step
+configuration.
 
-### 2. Responsive Grid Layout
-
-- **Mobile-First Design**: Single column on mobile, two columns on desktop
-- **Flexible Spanning**: Some fields span full width even on desktop
-- **Automatic Adaptation**: Grid automatically adjusts based on screen size
-
-### 3. Advanced Validation
-
-- **Required Fields**: First name, last name, email, inquiry type, subject, message, and terms
-- **String Length**: Minimum/maximum character requirements
-- **Email Format**: Built-in email validation
-- **Custom Messages**: Specific error messages for each validation rule
-
-### 4. Multiple Field Types
-
-- **Text Inputs**: First name, last name, subject
-- **Email Input**: Dedicated email field with validation
-- **Select Dropdowns**: Inquiry type, priority, budget
-- **Textarea**: Message field with row configuration
-- **Checkboxes**: Newsletter subscription and terms agreement
-
-### 5. Form Actions
-
-- **Submit Button**: Custom styling and loading states
-- **Async Handling**: Simulated API call with loading feedback
-- **Success Messages**: User feedback on successful submission
-
-## Implementation Tips
-
-When building similar forms, consider:
-
-1. **Start Mobile-First**: Design for mobile screens first, then enhance for larger devices
-2. **Group Related Fields**: Use logical grouping and spacing to improve user experience
-3. **Progressive Enhancement**: Show advanced options only when relevant
-4. **Clear Validation**: Provide immediate, helpful feedback on validation errors
-5. **Accessible Labels**: Ensure all fields have clear, descriptive labels
-
-## Next Steps
-
-- Try the [Registration Flow](/docs/examples/registration-flow) example for complex workflows
-- Learn about [Actions](/docs/actions) for advanced form behaviors
-- Explore [Field Customization](/docs/guides/custom-fields) for specialized inputs
+See [constraint logic](/docs/forms-react/advanced), [validation](/docs/forms/validation),
+and [components](/docs/forms-react/components) for the underlying contracts.

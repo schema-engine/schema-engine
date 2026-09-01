@@ -9,7 +9,6 @@ export const conditionalFormConfig: FormConfig = {
 	title: 'Advanced Form Engine Demo',
 	description: 'Showcasing conditional logic, array fields, and tree-shakable registries',
 
-	mode: 'free',
 	steps: [
 		{
 			id: 'conditional-step',
@@ -260,7 +259,7 @@ export const conditionalFormConfig: FormConfig = {
 			id: 'reset-after-success',
 			$type: 'reset',
 			enabled: true,
-			triggers: ['submit_success'],
+			triggers: ['form_submit_success'],
 			resetToDefaults: true,
 		},
 	],

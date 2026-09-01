@@ -1,122 +1,87 @@
 ---
-title: "Advanced Usage"
-description: "Patterns for power users: async validation, custom plugins."
+title: 'Advanced Usage'
+description: 'Constraints, consent-aware drafts, and analytics hooks.'
 group: Forms React
 order: 7
 ---
 
-# Advanced Features
+# Advanced Usage
 
-The `@schema-engine/forms-react` package includes powerful features for handling complex form requirements.
+## Conditional fields
 
-## Constraint Logic
+Put one or more constraint objects directly on an element. Each object names a
+source field, comparison, and effect:
 
-Constraint logic allows you to apply dynamic visibility and behavior based on form values. This is useful for conditional fields, dependent questions, and complex validation workflows.
-
-### Configuration
-
-Add a `constraints` array to any field configuration.
-
-```typescript
+```ts
 {
-  $type: 'input',
-  id: 'other-reason',
-  name: 'otherReason',
-  label: 'Please specify',
-  constraints: [
-    {
-      type: 'visibility',
-      conditions: [
-        {
-          field: 'reason',
-          operator: 'equals',
-          value: 'other'
-        }
-      ]
-    }
-  ]
+	$type: 'input',
+	id: 'other-reason',
+	name: 'otherReason',
+	label: 'Please specify',
+	constraints: [
+		{
+			field: 'reason',
+			operator: 'equals',
+			value: 'other',
+			action: 'show',
+		},
+	],
 }
 ```
 
-### Supported Operators
+Supported operators are `equals`, `not_equals`, `contains`, `not_contains`,
+`greater_than`, `less_than`, `is_empty`, and `is_not_empty`. Effects are
+`show`, `hide`, `enable`, `disable`, and `require`.
 
-- `equals`
-- `not_equals`
-- `contains`
-- `not_contains`
-- `greater_than`
-- `less_than`
-- `is_empty`
-- `is_not_empty`
+## Consent-aware drafts
 
-### Actions
-
-You can control multiple aspects of a field based on conditions:
-
-- `show` / `hide` - Toggle visibility
-- `enable` / `disable` - Toggle interaction
-- `require` - Toggle validation requirement
-
-## GDPR Consent
-
-The package includes a built-in system for tracking and managing user consent, critical for compliance in modern web applications.
-
-### Configuration
-
-Add a `gdpr` object to checkbox or switch fields.
-
-```typescript
-{
-  $type: 'checkbox',
-  id: 'gdpr-consent',
-  name: 'gdprConsent',
-  label: 'I agree to the privacy policy',
-  gdpr: {
-    purpose: 'marketing',
-    required: true,
-    category: 'analytics'
-  },
-  rules: [
-    { type: 'required', message: 'You must accept the privacy policy' }
-  ]
-}
-```
-
-### Managing Consent State
-
-Use the `useGDPRConsent` hook to access consent state programmatically.
+`useGDPRConsent` manages consent for the core draft-storage helper. It does not
+add a `gdpr` property to field configuration.
 
 ```tsx
-function ConsentStatus() {
-  const consent = useGDPRConsent();
+import { useGDPRConsent } from '@schema-engine/forms-react';
 
-  return <div>{consent.hasConsent() ? 'Consented' : 'Not consented'}</div>;
+function DraftConsent() {
+	const consent = useGDPRConsent();
+
+	return consent.hasConsent() ? (
+		<button type="button" onClick={consent.revokeConsent}>Revoke draft consent</button>
+	) : (
+		<button type="button" onClick={consent.grantConsent}>Allow draft storage</button>
+	);
 }
 ```
 
-## GTM Tracking
+Grant consent before using `GDPRConsent.saveDraft`; revoking consent also clears
+the package's `form_draft_` entries from local storage. Applications should
+still provide their own disclosure and retention policy.
 
-Integrate Google Tag Manager (GTM) to track form interactions and events automatically.
+## Analytics
 
-### Usage
-
-Use the `useGTMTracker` hook within your form component.
+Use `useGTMTracker` for direct data-layer integration:
 
 ```tsx
-function MyForm() {
-  const tracker = useGTMTracker();
+import { useGTMTracker } from '@schema-engine/forms-react';
 
-  const handleSubmit = () => {
-    tracker.pushFormEvent('form_submit', { email: 'user@example.com' }, { formId: 'contact-form' });
-  };
+function TrackSubmit() {
+	const tracker = useGTMTracker();
 
-  return <button onClick={handleSubmit}>Track submit</button>;
+	return (
+		<button
+			type="button"
+			onClick={() => tracker.pushFormEvent('form_submit', undefined, { formId: 'contact' })}
+		>
+			Track submit
+		</button>
+	);
 }
 ```
 
-### Tracked Events
+The hook supports `form_mount`, `form_step_complete`, `form_submit`, and
+`form_abandon`. Avoid sending sensitive values; the tracker filters common
+password, SSN, and credit-card keys, but field-level minimization remains the
+application's responsibility.
 
-- `form_mount`: When the form is mounted
-- `form_step_complete`: When a step is completed
-- `form_submit`: When the form is submitted
-- `form_abandon`: When a form is abandoned
+For config-driven analytics, register the core `gtm_event` action and place an
+action config in `form.actions`. See [Actions](/docs/forms/actions) for the
+action registration and trigger model.

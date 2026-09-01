@@ -9,7 +9,6 @@ export const constraintsDemoConfig: FormConfig = {
 	title: 'Constraints Demo',
 	description: 'Showcasing field constraints and conditional logic',
 
-	mode: 'free',
 	steps: [
 		{
 			id: 'constraints-step',
@@ -209,7 +208,7 @@ export const constraintsDemoConfig: FormConfig = {
 			id: 'reset-after-success',
 			$type: 'reset',
 			enabled: true,
-			triggers: ['submit_success'],
+			triggers: ['form_submit_success'],
 			resetToDefaults: true,
 		},
 	],
