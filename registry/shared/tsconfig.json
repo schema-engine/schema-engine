@@ -11,10 +11,8 @@
 			"@schema-engine/forms-react": ["../../packages/forms-react/src/index.ts"],
 			"@schema-engine/forms-react/hooks": ["../../packages/forms-react/src/hooks/index.ts"],
 			"@schema-engine/forms-react/adapters": ["../../packages/forms-react/src/adapters/index.ts"],
+			"@schema-engine/forms-react/recipes": ["../../packages/forms-react/src/recipes/index.ts"],
 			"@schema-engine/forms-react/primitives": ["../../packages/forms-react/src/primitives.ts"],
-			"@schema-engine/forms-react/contexts/stepper-context": [
-				"../../packages/forms-react/src/contexts/stepper-context.tsx"
-			],
 			"@/*": ["../../packages/forms-react/src/*"],
 			"@/components/ui/schema-engine/components/*": ["./primitives/*", "../base-ui/primitives/*"],
 			"@/components/schema-engine/forms/*": ["./forms/*"],

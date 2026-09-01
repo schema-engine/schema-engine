@@ -20,6 +20,8 @@ import { RadioElementRegistration } from './inputs/form-radio.registration';
 import { ComboboxElementRegistration } from './inputs/form-combobox.registration';
 import { SliderElementRegistration } from './inputs/form-slider.registration';
 import { InputElementRegistration } from './inputs/form-input.registration';
+import { DateElementRegistration } from './inputs/form-date.registration';
+import { DateRangeElementRegistration } from './inputs/form-date-range.registration';
 
 export {
 	SubmissionAlertElementRegistration,
@@ -40,6 +42,8 @@ export {
 	ComboboxElementRegistration,
 	SliderElementRegistration,
 	InputElementRegistration,
+	DateElementRegistration,
+	DateRangeElementRegistration,
 };
 
 export const schemaFormRegistrations = [
@@ -61,4 +65,6 @@ export const schemaFormRegistrations = [
 	ComboboxElementRegistration,
 	SliderElementRegistration,
 	InputElementRegistration,
+	DateElementRegistration,
+	DateRangeElementRegistration,
 ];

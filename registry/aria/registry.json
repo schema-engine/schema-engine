@@ -124,6 +124,77 @@
       ]
     },
     {
+      "name": "schema-engine-form-number-field-primitive-aria",
+      "type": "registry:ui",
+      "title": "Schema Engine number field",
+      "description": "React Aria number field primitive with stepper buttons used by FormNumber.",
+      "registryDependencies": [],
+      "dependencies": [
+        "react-aria-components",
+        "lucide-react"
+      ],
+      "files": [
+        {
+          "path": "primitives/number-field.tsx",
+          "type": "registry:ui",
+          "target": "@ui/schema-engine/components/number-field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "schema-engine-form-date-picker-primitive-aria",
+      "type": "registry:ui",
+      "title": "Schema Engine date picker",
+      "description": "Calendar popover primitives for single dates and date ranges used by FormDate and FormDateRange.",
+      "registryDependencies": [
+        "button",
+        "calendar",
+        "popover"
+      ],
+      "dependencies": [
+        "date-fns",
+        "lucide-react",
+        "react-day-picker"
+      ],
+      "files": [
+        {
+          "path": "../shared/primitives/date-picker.tsx",
+          "type": "registry:ui",
+          "target": "@ui/schema-engine/components/date-picker.tsx"
+        },
+        {
+          "path": "../shared/primitives/calendar.tsx",
+          "type": "registry:ui",
+          "target": "@ui/schema-engine/components/calendar.tsx"
+        },
+        {
+          "path": "../shared/primitives/date-input.tsx",
+          "type": "registry:ui",
+          "target": "@ui/schema-engine/components/date-input.tsx"
+        },
+        {
+          "path": "../shared/primitives/date-picker.tsx",
+          "type": "registry:ui",
+          "target": "@ui/schema-engine/components/date-picker.tsx"
+        },
+        {
+          "path": "../shared/primitives/date-range-picker.tsx",
+          "type": "registry:ui",
+          "target": "@ui/schema-engine/components/date-range-picker.tsx"
+        },
+        {
+          "path": "../shared/primitives/date-range-presets.ts",
+          "type": "registry:lib",
+          "target": "@ui/schema-engine/components/date-range-presets.ts"
+        },
+        {
+          "path": "../shared/primitives/date-utils.ts",
+          "type": "registry:lib",
+          "target": "@ui/schema-engine/components/date-utils.ts"
+        }
+      ]
+    },
+    {
       "name": "schema-engine-form-submission-alert-aria",
       "type": "registry:item",
       "title": "Submission alert",
@@ -483,7 +554,7 @@
       "title": "Number",
       "description": "Schema Engine number form element.",
       "registryDependencies": [
-        "input",
+        "andeeplus/schema-engine/schema-engine-form-number-field-primitive-aria",
         "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
@@ -704,70 +775,70 @@
       ]
     },
     {
-      "name": "schema-engine-form-stepper-default-aria",
+      "name": "schema-engine-form-date-aria",
       "type": "registry:item",
-      "title": "Default stepper",
-      "description": "Schema Engine default multi-step stepper.",
+      "title": "Date",
+      "description": "Schema Engine date form element.",
       "registryDependencies": [
-        "button",
-        "badge",
-        "separator",
-        "andeeplus/schema-engine/schema-engine-form-utils-aria"
+        "andeeplus/schema-engine/schema-engine-form-date-picker-primitive-aria",
+        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
-        "lucide-react",
+        "date-fns",
+        "react-day-picker",
         "@schema-engine/forms-react",
         "@schema-engine/forms",
         "zod"
       ],
       "files": [
         {
-          "path": "../shared/forms/steppers/default-stepper.tsx",
+          "path": "../shared/forms/inputs/form-date.tsx",
           "type": "registry:component",
-          "target": "@components/schema-engine/forms/steppers/default-stepper.tsx"
+          "target": "@components/schema-engine/forms/inputs/form-date.tsx"
         },
         {
-          "path": "../shared/forms/steppers/default-stepper.types.ts",
+          "path": "../shared/forms/inputs/form-date.types.ts",
           "type": "registry:lib",
-          "target": "@components/schema-engine/forms/steppers/default-stepper.types.ts"
+          "target": "@components/schema-engine/forms/inputs/form-date.types.ts"
         },
         {
-          "path": "../shared/forms/steppers/default-stepper.registration.ts",
+          "path": "../shared/forms/inputs/form-date.registration.ts",
           "type": "registry:lib",
-          "target": "@components/schema-engine/forms/steppers/default-stepper.registration.ts"
+          "target": "@components/schema-engine/forms/inputs/form-date.registration.ts"
         }
       ]
     },
     {
-      "name": "schema-engine-form-stepper-minimalist-aria",
+      "name": "schema-engine-form-date-range-aria",
       "type": "registry:item",
-      "title": "Minimalist stepper",
-      "description": "Schema Engine minimalist multi-step stepper.",
+      "title": "Date range",
+      "description": "Schema Engine date-range form element.",
       "registryDependencies": [
-        "button",
-        "progress",
-        "andeeplus/schema-engine/schema-engine-form-utils-aria"
+        "andeeplus/schema-engine/schema-engine-form-date-picker-primitive-aria",
+        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
+        "date-fns",
+        "react-day-picker",
         "@schema-engine/forms-react",
         "@schema-engine/forms",
         "zod"
       ],
       "files": [
         {
-          "path": "../shared/forms/steppers/minimalist-stepper.tsx",
+          "path": "../shared/forms/inputs/form-date-range.tsx",
           "type": "registry:component",
-          "target": "@components/schema-engine/forms/steppers/minimalist-stepper.tsx"
+          "target": "@components/schema-engine/forms/inputs/form-date-range.tsx"
         },
         {
-          "path": "../shared/forms/steppers/minimalist-stepper.types.ts",
+          "path": "../shared/forms/inputs/form-date-range.types.ts",
           "type": "registry:lib",
-          "target": "@components/schema-engine/forms/steppers/minimalist-stepper.types.ts"
+          "target": "@components/schema-engine/forms/inputs/form-date-range.types.ts"
         },
         {
-          "path": "../shared/forms/steppers/minimalist-stepper.registration.ts",
+          "path": "../shared/forms/inputs/form-date-range.registration.ts",
           "type": "registry:lib",
-          "target": "@components/schema-engine/forms/steppers/minimalist-stepper.registration.ts"
+          "target": "@components/schema-engine/forms/inputs/form-date-range.registration.ts"
         }
       ]
     },
@@ -784,6 +855,8 @@
         "andeeplus/schema-engine/schema-engine-form-phone-primitive-aria",
         "andeeplus/schema-engine/schema-engine-form-dropzone-primitive-aria",
         "andeeplus/schema-engine/schema-engine-form-masked-input-primitive-aria",
+        "andeeplus/schema-engine/schema-engine-form-number-field-primitive-aria",
+        "andeeplus/schema-engine/schema-engine-form-date-picker-primitive-aria",
         "andeeplus/schema-engine/schema-engine-form-submission-alert-aria",
         "andeeplus/schema-engine/schema-engine-form-submit-button-aria",
         "andeeplus/schema-engine/schema-engine-form-fieldset-aria",
@@ -801,7 +874,9 @@
         "andeeplus/schema-engine/schema-engine-form-radio-aria",
         "andeeplus/schema-engine/schema-engine-form-combobox-aria",
         "andeeplus/schema-engine/schema-engine-form-slider-aria",
-        "andeeplus/schema-engine/schema-engine-form-input-aria"
+        "andeeplus/schema-engine/schema-engine-form-input-aria",
+        "andeeplus/schema-engine/schema-engine-form-date-aria",
+        "andeeplus/schema-engine/schema-engine-form-date-range-aria"
       ],
       "dependencies": [
         "@schema-engine/forms-react",

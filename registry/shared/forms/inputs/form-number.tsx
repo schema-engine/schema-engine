@@ -1,4 +1,4 @@
-import { Input } from '@/components/ui/input';
+import { NumberField } from '@/components/ui/schema-engine/components/number-field';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
 import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
 import type { NumberFieldProps } from './form-number.types';
@@ -12,6 +12,8 @@ export function FormNumber({
 	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
 		useControlledFormElement(config);
 
+	const numericValue = typeof value === 'number' ? value : '';
+
 	return (
 		<FieldGroup
 			label={config.label || config.name}
@@ -22,14 +24,11 @@ export function FormNumber({
 			error={error}
 			style={containerStyles}
 		>
-			<Input
+			<NumberField
 				{...fieldProps}
-				type="number"
-				value={value || ''}
-				onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-					const numValue = e.target.value ? Number(e.target.value) : '';
-					combineHandlers(onChange, propsOnChange)(numValue);
-				}}
+				id={config.id}
+				value={numericValue}
+				onChange={combineHandlers(onChange, propsOnChange)}
 				onBlur={combineHandlers(onBlur, propsOnBlur)}
 				onFocus={propsOnFocus}
 				placeholder={config.placeholder}

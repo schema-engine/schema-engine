@@ -8,11 +8,12 @@ export interface StubExtras {
 	variant?: string;
 	size?: string;
 	orientation?: string;
+	align?: string;
 	asChild?: boolean;
 	render?: (props: Record<string, unknown>) => ReactNode;
 }
 
-const EXTRA_KEYS: Array<keyof StubExtras> = ['variant', 'size', 'orientation', 'asChild', 'render'];
+const EXTRA_KEYS: Array<keyof StubExtras> = ['variant', 'size', 'orientation', 'align', 'asChild', 'render'];
 
 /** Splits presentational props off so the rest can be spread onto a DOM node. */
 export function splitExtras<T extends StubExtras>(props: T): { extras: StubExtras; rest: Omit<T, keyof StubExtras> } {

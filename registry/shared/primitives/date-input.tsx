@@ -1,0 +1,167 @@
+'use client';
+
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { cn } from '@/lib/utils';
+
+type DateParts = {
+	day: number;
+	month: number;
+	year: number;
+};
+
+type DateInputProps = {
+	value?: Date;
+	onChange: (date: Date) => void;
+	className?: string;
+	disabled?: boolean;
+};
+
+function toParts(value?: Date): DateParts {
+	const date = value ? new Date(value) : new Date();
+	return {
+		day: date.getDate(),
+		month: date.getMonth() + 1,
+		year: date.getFullYear(),
+	};
+}
+
+function isValidParts(parts: DateParts) {
+	if (parts.month < 1 || parts.month > 12 || parts.year < 1000 || parts.year > 9999) {
+		return false;
+	}
+
+	const date = new Date(parts.year, parts.month - 1, parts.day);
+	return (
+		date.getFullYear() === parts.year && date.getMonth() + 1 === parts.month && date.getDate() === parts.day
+	);
+}
+
+function DateInput({ value, onChange, className, disabled }: DateInputProps) {
+	const [parts, setParts] = useState<DateParts>(() => toParts(value));
+	const initialParts = useRef(parts);
+	const monthRef = useRef<HTMLInputElement>(null);
+	const dayRef = useRef<HTMLInputElement>(null);
+	const yearRef = useRef<HTMLInputElement>(null);
+
+	useEffect(() => {
+		const next = toParts(value);
+		setParts(next);
+		initialParts.current = next;
+	}, [value]);
+
+	const commit = (next: DateParts) => {
+		setParts(next);
+		if (isValidParts(next)) {
+			onChange(new Date(next.year, next.month - 1, next.day));
+		}
+	};
+
+	const handleChange = (field: keyof DateParts, raw: string) => {
+		const nextValue = raw === '' ? '' : Number(raw);
+		if (nextValue !== '' && Number.isNaN(nextValue)) {
+			return;
+		}
+
+		const next = { ...parts, [field]: nextValue };
+		commit(next as DateParts);
+	};
+
+	const handleBlur = (field: keyof DateParts, raw: string) => {
+		if (!raw) {
+			setParts(initialParts.current);
+			return;
+		}
+
+		const next = { ...parts, [field]: Number(raw) };
+		if (!isValidParts(next)) {
+			setParts(initialParts.current);
+			return;
+		}
+
+		initialParts.current = next;
+	};
+
+	const handleKeyDown = (field: keyof DateParts) => (event: KeyboardEvent<HTMLInputElement>) => {
+		if (event.metaKey || event.ctrlKey) {
+			return;
+		}
+
+		if (
+			!/^[0-9]$/.test(event.key) &&
+			!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Delete', 'Tab', 'Backspace', 'Enter'].includes(
+				event.key,
+			)
+		) {
+			event.preventDefault();
+		}
+
+		if (event.key === 'ArrowRight' && event.currentTarget.selectionStart === event.currentTarget.value.length) {
+			event.preventDefault();
+			if (field === 'month') dayRef.current?.focus();
+			if (field === 'day') yearRef.current?.focus();
+		}
+
+		if (event.key === 'ArrowLeft' && event.currentTarget.selectionStart === 0) {
+			event.preventDefault();
+			if (field === 'day') monthRef.current?.focus();
+			if (field === 'year') dayRef.current?.focus();
+		}
+	};
+
+	const inputClassName =
+		'border-0 bg-transparent p-0 text-center text-sm shadow-none outline-none focus-visible:ring-0';
+
+	return (
+		<div
+			className={cn(
+				'border-input bg-background flex h-8 items-center rounded-lg border px-2 text-sm shadow-xs',
+				disabled && 'pointer-events-none opacity-50',
+				className,
+			)}
+		>
+			<input
+				ref={monthRef}
+				type="text"
+				inputMode="numeric"
+				disabled={disabled}
+				value={parts.month}
+				onChange={(event) => handleChange('month', event.target.value)}
+				onBlur={(event) => handleBlur('month', event.target.value)}
+				onKeyDown={handleKeyDown('month')}
+				className={cn(inputClassName, 'w-6')}
+				placeholder="M"
+				aria-label="Month"
+			/>
+			<span className="text-muted-foreground">/</span>
+			<input
+				ref={dayRef}
+				type="text"
+				inputMode="numeric"
+				disabled={disabled}
+				value={parts.day}
+				onChange={(event) => handleChange('day', event.target.value)}
+				onBlur={(event) => handleBlur('day', event.target.value)}
+				onKeyDown={handleKeyDown('day')}
+				className={cn(inputClassName, 'w-7')}
+				placeholder="D"
+				aria-label="Day"
+			/>
+			<span className="text-muted-foreground">/</span>
+			<input
+				ref={yearRef}
+				type="text"
+				inputMode="numeric"
+				disabled={disabled}
+				value={parts.year}
+				onChange={(event) => handleChange('year', event.target.value)}
+				onBlur={(event) => handleBlur('year', event.target.value)}
+				onKeyDown={handleKeyDown('year')}
+				className={cn(inputClassName, 'w-12')}
+				placeholder="YYYY"
+				aria-label="Year"
+			/>
+		</div>
+	);
+}
+
+export { DateInput };

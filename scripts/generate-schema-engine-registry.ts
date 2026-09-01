@@ -9,7 +9,7 @@ const SHARED_FORMS_ROOT = 'registry/shared/forms';
 const SHARED_PRIMITIVES_ROOT = 'registry/shared/primitives';
 
 type BaseId = 'base-ui' | 'radix' | 'aria';
-type PrimitiveName = 'field' | 'combobox' | 'phone-input' | 'drop-zone' | 'masked-input';
+type PrimitiveName = 'field' | 'combobox' | 'phone-input' | 'drop-zone' | 'masked-input' | 'number-field' | 'date-picker';
 type ItemType = 'registry:lib' | 'registry:ui' | 'registry:item' | 'registry:component';
 
 interface CatalogFile {
@@ -34,7 +34,6 @@ interface CatalogItem {
 	files: CatalogFile[];
 	docs?: string;
 	registration?: Registration;
-	isStepper?: boolean;
 }
 
 /** Per-primitive metadata a base may override when its implementation differs. */
@@ -62,6 +61,8 @@ const PRIMITIVE_ITEM: Record<PrimitiveName, string> = {
 	'phone-input': 'schema-engine-form-phone-primitive',
 	'drop-zone': 'schema-engine-form-dropzone-primitive',
 	'masked-input': 'schema-engine-form-masked-input-primitive',
+	'number-field': 'schema-engine-form-number-field-primitive',
+	'date-picker': 'schema-engine-form-date-picker-primitive',
 };
 
 interface PrimitiveSpec {
@@ -102,6 +103,18 @@ const PRIMITIVES: Record<PrimitiveName, PrimitiveSpec> = {
 		registryDependencies: [],
 		dependencies: ['imask'],
 	},
+	'number-field': {
+		title: 'Schema Engine number field',
+		description: 'Number field primitive with increment and decrement steppers used by FormNumber.',
+		registryDependencies: [],
+		dependencies: ['lucide-react'],
+	},
+	'date-picker': {
+		title: 'Schema Engine date picker',
+		description: 'Calendar popover primitives for single dates and date ranges used by FormDate and FormDateRange.',
+		registryDependencies: ['button', 'calendar', 'popover'],
+		dependencies: ['date-fns', 'lucide-react', 'react-day-picker'],
+	},
 };
 
 /**
@@ -120,6 +133,10 @@ const BASES: Base[] = [
 				dependencies: ['@base-ui/react', 'lucide-react'],
 				description: 'Chips-capable Base UI combobox primitive used by FormCombobox.',
 			},
+			'number-field': {
+				dependencies: ['@base-ui/react', 'lucide-react'],
+				description: 'Base UI number field primitive with stepper buttons used by FormNumber.',
+			},
 		},
 	},
 	{
@@ -133,6 +150,10 @@ const BASES: Base[] = [
 				registryDependencies: ['popover', 'command'],
 				description: 'Chips-capable Radix combobox primitive (Popover + Command) used by FormCombobox.',
 			},
+			'number-field': {
+				dependencies: ['react-aria-components', 'lucide-react'],
+				description: 'React Aria number field primitive with stepper buttons used by FormNumber.',
+			},
 		},
 	},
 	{
@@ -144,6 +165,10 @@ const BASES: Base[] = [
 			combobox: {
 				dependencies: ['react-aria-components', 'lucide-react'],
 				description: 'Chips-capable React Aria combobox primitive used by FormCombobox.',
+			},
+			'number-field': {
+				dependencies: ['react-aria-components', 'lucide-react'],
+				description: 'React Aria number field primitive with stepper buttons used by FormNumber.',
 			},
 			'phone-input': {
 				dependencies: [
@@ -180,8 +205,6 @@ interface ElementSpec {
 	registryDependencies?: string[];
 	/** npm deps beyond `FORM_RUNTIME_DEPENDENCIES`. */
 	dependencies?: string[];
-	/** Steppers are installed individually, so the aggregate item excludes them. */
-	isStepper?: boolean;
 }
 
 const ELEMENTS: ElementSpec[] = [
@@ -259,7 +282,7 @@ const ELEMENTS: ElementSpec[] = [
 		stem: 'inputs/form-number',
 		title: 'Number',
 		ident: 'NumberElementRegistration',
-		registryDependencies: ['input', PRIMITIVE_ITEM.field],
+		registryDependencies: [PRIMITIVE_ITEM['number-field'], PRIMITIVE_ITEM.field],
 	},
 	{
 		stem: 'inputs/form-switch',
@@ -301,23 +324,18 @@ const ELEMENTS: ElementSpec[] = [
 		registryDependencies: ['input', PRIMITIVE_ITEM.field],
 	},
 	{
-		stem: 'steppers/default-stepper',
-		name: 'schema-engine-form-stepper-default',
-		title: 'Default stepper',
-		description: 'Schema Engine default multi-step stepper.',
-		ident: 'DefaultStepperRegistration',
-		registryDependencies: ['button', 'badge', 'separator', UTILS],
-		dependencies: ['lucide-react'],
-		isStepper: true,
+		stem: 'inputs/form-date',
+		title: 'Date',
+		ident: 'DateElementRegistration',
+		registryDependencies: [PRIMITIVE_ITEM['date-picker'], PRIMITIVE_ITEM.field],
+		dependencies: ['date-fns', 'react-day-picker'],
 	},
 	{
-		stem: 'steppers/minimalist-stepper',
-		name: 'schema-engine-form-stepper-minimalist',
-		title: 'Minimalist stepper',
-		description: 'Schema Engine minimalist multi-step stepper.',
-		ident: 'MinimalistStepperRegistration',
-		registryDependencies: ['button', 'progress', UTILS],
-		isStepper: true,
+		stem: 'inputs/form-date-range',
+		title: 'Date range',
+		ident: 'DateRangeElementRegistration',
+		registryDependencies: [PRIMITIVE_ITEM['date-picker'], PRIMITIVE_ITEM.field],
+		dependencies: ['date-fns', 'react-day-picker'],
 	},
 ];
 
@@ -378,6 +396,46 @@ function primitiveFiles(base: Base, name: PrimitiveName): CatalogFile[] {
 			target: '@ui/schema-engine/components/phone-country.ts',
 		});
 	}
+	if (name === 'date-picker') {
+		files.push(
+			{
+				path: '../shared/primitives/calendar.tsx',
+				sourcePath: `${SHARED_PRIMITIVES_ROOT}/calendar.tsx`,
+				type: 'registry:ui',
+				target: '@ui/schema-engine/components/calendar.tsx',
+			},
+			{
+				path: '../shared/primitives/date-input.tsx',
+				sourcePath: `${SHARED_PRIMITIVES_ROOT}/date-input.tsx`,
+				type: 'registry:ui',
+				target: '@ui/schema-engine/components/date-input.tsx',
+			},
+			{
+				path: '../shared/primitives/date-picker.tsx',
+				sourcePath: `${SHARED_PRIMITIVES_ROOT}/date-picker.tsx`,
+				type: 'registry:ui',
+				target: '@ui/schema-engine/components/date-picker.tsx',
+			},
+			{
+				path: '../shared/primitives/date-range-picker.tsx',
+				sourcePath: `${SHARED_PRIMITIVES_ROOT}/date-range-picker.tsx`,
+				type: 'registry:ui',
+				target: '@ui/schema-engine/components/date-range-picker.tsx',
+			},
+			{
+				path: '../shared/primitives/date-range-presets.ts',
+				sourcePath: `${SHARED_PRIMITIVES_ROOT}/date-range-presets.ts`,
+				type: 'registry:lib',
+				target: '@ui/schema-engine/components/date-range-presets.ts',
+			},
+			{
+				path: '../shared/primitives/date-utils.ts',
+				sourcePath: `${SHARED_PRIMITIVES_ROOT}/date-utils.ts`,
+				type: 'registry:lib',
+				target: '@ui/schema-engine/components/date-utils.ts',
+			},
+		);
+	}
 	return files;
 }
 
@@ -419,7 +477,6 @@ function buildElementItem(base: Base, spec: ElementSpec): CatalogItem {
 			formFile(base, `${spec.stem}.registration.ts`),
 		],
 		registration: { ident: spec.ident, from: `./${spec.stem}.registration` },
-		isStepper: spec.isStepper,
 	};
 }
 
@@ -446,7 +503,7 @@ function buildAggregate(base: Base, items: CatalogItem[]): CatalogItem {
 		title: `Schema Engine forms (${base.label})`,
 		description: `All ${base.label} Schema Engine form elements and the generated registration barrel.`,
 		docs: 'Import schemaFormRegistrations from @/components/schema-engine/forms/registrations and pass them to createReactFormComposer().addElements(...).',
-		registryDependencies: items.filter((item) => !item.isStepper).map((item) => `${GITHUB}/${item.name}`),
+		registryDependencies: items.map((item) => `${GITHUB}/${item.name}`),
 		dependencies: FORM_RUNTIME_DEPENDENCIES,
 		files: [
 			formFile(base, 'registrations.ts'),
@@ -482,6 +539,7 @@ const REGISTRY_DEP_BY_IMPORT: Array<[string, string]> = [
 	['@/components/ui/schema-engine/components/drop-zone', PRIMITIVE_ITEM['drop-zone']],
 	['@/components/ui/schema-engine/components/combobox', PRIMITIVE_ITEM.combobox],
 	['@/components/ui/schema-engine/components/masked-input', PRIMITIVE_ITEM['masked-input']],
+	['@/components/ui/schema-engine/components/number-field', PRIMITIVE_ITEM['number-field']],
 	['@/components/schema-engine/forms/lib/utils', UTILS],
 ];
 
@@ -614,10 +672,7 @@ function elementRegistrations(): Registration[] {
 	if (!primary) return [];
 
 	return primary.items
-		.filter(
-			(item): item is CatalogItem & { registration: Registration } =>
-				Boolean(item.registration) && !item.isStepper,
-		)
+		.filter((item): item is CatalogItem & { registration: Registration } => Boolean(item.registration))
 		.map((item) => item.registration);
 }
 
@@ -642,7 +697,7 @@ export const schemaFormRegistrations = [
 }
 
 function toRegistryItem(item: CatalogItem) {
-	const { registration: _registration, isStepper: _isStepper, ...rest } = item;
+	const { registration: _registration, ...rest } = item;
 	return {
 		...rest,
 		files: rest.files.map(({ sourcePath: _sourcePath, ...file }) => file),

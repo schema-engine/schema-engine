@@ -61,3 +61,11 @@ export type { ArrayElementsConfig, ArrayElementsProps } from './form-array-eleme
 export { FormFieldSet } from './form-fieldset';
 export { FieldSetRegistration } from './form-fieldset.registration';
 export type { FieldSetConfig, FieldSetProps } from './form-fieldset.types';
+
+export { FormDate } from './form-date';
+export { DateElementRegistration } from './form-date.registration';
+export type { DateFieldConfig, DateFieldProps } from './form-date.types';
+
+export { FormDateRange } from './form-date-range';
+export { DateRangeElementRegistration } from './form-date-range.registration';
+export type { DateRangeFieldConfig, DateRangeFieldProps, DateRangeValue } from './form-date-range.types';

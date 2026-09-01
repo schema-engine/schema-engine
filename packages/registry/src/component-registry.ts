@@ -4,7 +4,7 @@ import type { ComponentRegistration } from './types.js';
 /**
  * Component Registry
  *
- * Specialized registry for visual components (elements, layouts, steppers).
+ * Specialized registry for visual components (elements and recipes).
  * Enforces that all registered items implement the ComponentRegistration interface,
  * which guarantees a `render` method.
  *

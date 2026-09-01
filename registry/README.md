@@ -2,7 +2,7 @@
 
 The registry ships three component-base ports. Pick the aggregate that matches your shadcn project base. Install only one aggregate per app.
 
-Form wrappers and steppers live in `registry/shared/forms`. Each base only owns Schema Engine primitives (and React Aria wrapper overlays).
+Form elements and view recipes live in `registry/shared/forms`. Each base only owns Schema Engine primitives (and React Aria wrapper overlays).
 
 ## Base UI (default)
 
@@ -24,7 +24,7 @@ pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form-aria
 
 Every form element is also available as an individual item (for example `schema-engine-form-input-radix`). Installed Schema Engine source lives under `components/schema-engine/forms`; Schema Engine-owned primitives install under `components/ui/schema-engine/components`.
 
-Layouts remain package-owned and are imported from `@schema-engine/forms-react`. Steppers are separate registry items and must be registered explicitly.
+Shells and blocks are package-owned and are selected through `view.$type` recipes.
 
 ## Source trees
 

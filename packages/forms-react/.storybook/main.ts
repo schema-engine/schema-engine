@@ -47,6 +47,14 @@ const config: StorybookConfig = {
 						replacement: resolve(__dirname, '../../../registry/base-ui/primitives/combobox.tsx'),
 					},
 					{
+						find: '@/components/ui/schema-engine/components/number-field',
+						replacement: resolve(__dirname, '../../../registry/base-ui/primitives/number-field.tsx'),
+					},
+					{
+						find: '@/components/ui/calendar',
+						replacement: resolve(__dirname, '../../../registry/shared/primitives/calendar.tsx'),
+					},
+					{
 						find: '@/components/ui/schema-engine/components',
 						replacement: resolve(__dirname, '../../../registry/shared/primitives'),
 					},
