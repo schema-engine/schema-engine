@@ -2,14 +2,11 @@ se-form-engine-provider,
 se-form-renderer,
 se-form-instance,
 se-multi-step-form,
-se-layout-provider,
-se-stepper-provider,
-se-layout-renderer,
-se-stepper-renderer,
-se-card-layout,
-se-hero-background-layout,
-se-minimalist-stepper,
-se-headless-stepper,
+se-view-provider,
+se-step-header,
+se-minimal-progress,
+se-step-indicators,
+se-wizard-actions,
 se-form-array,
 se-drop-zone,
 se-input-otp,
@@ -21,21 +18,6 @@ se-submission-alert {
 
 se-form-element {
 	display: contents;
-}
-
-se-split-screen-layout,
-se-default-stepper,
-se-headless-stepper {
-	display: block;
-	width: 100%;
-	min-height: 100%;
-}
-
-se-split-screen-layout > .split-screen-layout,
-se-default-stepper > .default-stepper,
-se-headless-stepper > .se-headless-stepper {
-	width: 100%;
-	min-height: 100%;
 }
 
 se-form-renderer,
@@ -51,10 +33,9 @@ form.rui-form {
 .se-form-story--full se-form-renderer,
 .se-form-story--full se-form-instance,
 .se-form-story--full se-multi-step-form,
-.se-form-story--full se-layout-provider,
-.se-form-story--full se-split-screen-layout,
-.se-form-story--full se-hero-background-layout,
-.se-form-story--full se-card-layout {
+.se-form-story--full .card-shell,
+.se-form-story--full .hero-shell,
+.se-form-story--full .split-screen-shell {
 	height: 100%;
 	min-height: 100%;
 }
@@ -63,12 +44,9 @@ form.rui-form:has(> .se-form-elements) {
 	gap: 0;
 }
 
-form.rui-form:has(.card-layout),
-form.rui-form:has(se-card-layout),
-form.rui-form:has(.hero-background-layout),
-form.rui-form:has(se-hero-background-layout),
-form.rui-form:has(.split-screen-layout),
-form.rui-form:has(se-split-screen-layout) {
+form.rui-form:has(.card-shell),
+form.rui-form:has(.hero-shell),
+form.rui-form:has(.split-screen-shell) {
 	align-items: stretch;
 }
 
@@ -95,7 +73,9 @@ form.rui-form:has(se-split-screen-layout) {
 	display: none;
 }
 
-.se-headless-stepper {
+.se-stack-shell,
+.se-sidebar-shell,
+.se-sidebar-shell__main {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-block-lg, 1.5rem);
@@ -103,50 +83,45 @@ form.rui-form:has(se-split-screen-layout) {
 	width: 100%;
 }
 
-.se-headless-stepper__content {
+.se-sidebar-shell {
+	gap: 0;
+}
+
+.se-sidebar-shell__progress {
+	padding: var(--space-block, 1rem);
+	border-bottom: 1px solid var(--border, currentColor);
+}
+
+.se-sidebar-shell__main {
+	padding: var(--space-block-lg, 1.5rem);
+}
+
+@media (min-width: 768px) {
+	.se-sidebar-shell {
+		flex-direction: row;
+	}
+
+	.se-sidebar-shell__progress {
+		flex: 0 0 min(18rem, 33%);
+		border-right: 1px solid var(--border, currentColor);
+		border-bottom: 0;
+	}
+}
+
+.se-stack-shell__content,
+.se-sidebar-shell__content {
 	flex: 1 1 auto;
 	min-height: 0;
 }
 
-.se-headless-stepper__controls {
+.se-wizard-actions {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	gap: 1rem;
 }
 
-.se-headless-stepper__actions {
+.se-wizard-actions__forward {
 	display: flex;
 	gap: 0.5rem;
-}
-
-.se-headless-stepper__button {
-	padding: 0.5rem 1rem;
-	border: 1px solid var(--border, currentColor);
-	border-radius: var(--radius-control, 0.5rem);
-	background: transparent;
-	cursor: pointer;
-}
-
-.se-headless-stepper__button--primary {
-	background: var(--primary, currentColor);
-	color: var(--on-primary, #fff);
-	border-color: transparent;
-}
-
-.se-headless-stepper__button:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
-.se-headless-stepper [data-se-submit] {
-	display: none;
-}
-
-.se-headless-stepper[data-se-last-step='true'] [data-se-submit] {
-	display: inline-flex;
-}
-
-.se-headless-stepper[data-se-last-step='true'] [data-se-next] {
-	display: none;
 }

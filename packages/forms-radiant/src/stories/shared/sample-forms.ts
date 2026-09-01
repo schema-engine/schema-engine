@@ -5,7 +5,6 @@ export const simpleContactForm: FormConfig = {
 	id: 'simple-contact-form',
 	title: 'Contact Form',
 	description: 'Fill out this form to get in touch with us',
-	mode: 'free',
 	steps: [
 		{
 			id: 'contact-info',
@@ -61,7 +60,6 @@ export const multiStepRegistrationForm: FormConfig = {
 	id: 'multi-step-registration',
 	title: 'Account Registration',
 	description: 'Complete the registration process',
-	mode: 'wizard',
 	steps: [
 		{
 			id: 'personal-info',
@@ -176,7 +174,6 @@ export const multiStepRegistrationForm: FormConfig = {
 export const loginForm: FormConfig = {
 	id: 'login-form',
 	title: 'Sign In',
-	mode: 'free',
 	steps: [
 		{
 			id: 'login-step',

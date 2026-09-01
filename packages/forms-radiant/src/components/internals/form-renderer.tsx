@@ -87,6 +87,9 @@ export function FormRenderer({
 	...props
 }: FormRendererProps): JsxRenderable {
 	if (!engine || !adapter) {
+		if (props.config.view) {
+			throw new Error('FormRenderer requires an engine when config.view is set.');
+		}
 		return (
 			<div class={`se-form-renderer ${className}`.trim()} style={style}>
 				<FormProvider {...props} engine={engine}>
@@ -107,5 +110,3 @@ export function FormRenderer({
 		'prop:extras': children,
 	});
 }
-
-export { FormElementsRenderer } from './form-elements-renderer';

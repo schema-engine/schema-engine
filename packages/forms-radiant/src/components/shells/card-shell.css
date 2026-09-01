@@ -1,4 +1,4 @@
-.card-layout {
+.card-shell {
 	display: flex;
 	flex-direction: column;
 	min-height: 100%;
@@ -9,7 +9,7 @@
 	color: var(--on-surface, inherit);
 }
 
-.card-layout__card {
+.card-shell__card {
 	box-sizing: border-box;
 	flex: 0 1 auto;
 	background: var(--surface, #fff);
@@ -17,73 +17,73 @@
 	border-radius: var(--radius-control, 0.75rem);
 }
 
-.card-layout__card--sm {
+.card-shell__card--sm {
 	width: min(100%, 24rem);
 }
 
-.card-layout__card--md {
+.card-shell__card--md {
 	width: min(100%, 28rem);
 }
 
-.card-layout__card--lg {
+.card-shell__card--lg {
 	width: min(100%, 32rem);
 }
 
-.card-layout__card--xl {
+.card-shell__card--xl {
 	width: min(100%, 36rem);
 }
 
-.card-layout__shadow--sm {
+.card-shell__shadow--sm {
 	box-shadow: 0 1px 2px color-mix(in srgb, var(--on-surface, #000) 8%, transparent);
 }
 
-.card-layout__shadow--md {
+.card-shell__shadow--md {
 	box-shadow: 0 8px 24px color-mix(in srgb, var(--on-surface, #000) 10%, transparent);
 }
 
-.card-layout__shadow--lg {
+.card-shell__shadow--lg {
 	box-shadow: 0 16px 40px color-mix(in srgb, var(--on-surface, #000) 12%, transparent);
 }
 
-.card-layout__shadow--xl {
+.card-shell__shadow--xl {
 	box-shadow: 0 24px 56px color-mix(in srgb, var(--on-surface, #000) 14%, transparent);
 }
 
-.card-layout__header {
+.card-shell__header {
 	text-align: center;
 	border-bottom: 1px solid var(--border, currentColor);
 }
 
-.card-layout__title {
+.card-shell__title {
 	margin: 0 0 0.5rem;
 	font-size: 1.5rem;
 	font-weight: 600;
 }
 
-.card-layout__description {
+.card-shell__description {
 	margin: 0 0 0.5rem;
 	color: var(--on-surface-muted, color-mix(in srgb, currentColor 70%, transparent));
 }
 
-.card-layout__step-counter {
+.card-shell__step-counter {
 	display: block;
 	font-size: 0.875rem;
 	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
 }
 
-.card-layout__padding--sm {
+.card-shell__padding--sm {
 	padding: var(--space-block, 1rem);
 }
 
-.card-layout__padding--md {
+.card-shell__padding--md {
 	padding: var(--space-block-lg, 1.5rem);
 }
 
-.card-layout__padding--lg {
+.card-shell__padding--lg {
 	padding: var(--space-block-xl, 2rem);
 }
 
-.card-layout__content {
+.card-shell__content {
 	display: flex;
 	flex-direction: column;
 	align-items: stretch;
@@ -93,24 +93,21 @@
 	overflow: visible;
 }
 
-.card-layout__content .se-form-elements,
-.card-layout__content .default-stepper,
-.card-layout__content .minimalist-stepper,
-.card-layout__content .se-headless-stepper {
+.card-shell__content .se-form-elements {
 	width: 100%;
 	max-width: 100%;
 	min-width: 0;
 	box-sizing: border-box;
 }
 
-.card-layout__content :is(rui-field, .rui-field) {
+.card-shell__content :is(rui-field, .rui-field) {
 	width: 100%;
 	max-width: 100%;
 	min-width: 0;
 	box-sizing: border-box;
 }
 
-.card-layout__content :is(rui-input, .rui-input, input.rui-input) {
+.card-shell__content :is(rui-input, .rui-input, input.rui-input) {
 	display: block;
 	width: 100%;
 	max-width: 100%;
@@ -118,13 +115,8 @@
 	box-sizing: border-box;
 }
 
-.card-layout__content .default-stepper__header,
-.card-layout__content .minimalist-stepper__header {
-	display: none;
-}
-
 /* Keep slotted form trees sized to the card content box, not the outer form width. */
-.card-layout__content ::slotted(*) {
+.card-shell__content ::slotted(*) {
 	box-sizing: border-box;
 	max-width: 100%;
 	min-width: 0;

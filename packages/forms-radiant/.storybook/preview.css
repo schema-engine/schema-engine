@@ -48,21 +48,13 @@ body {
 .se-form-story--full se-form-renderer,
 .se-form-story--full se-form-instance,
 .se-form-story--full rui-form,
-.se-form-story--full se-multi-step-form,
-.se-form-story--full se-layout-provider,
-.se-form-story--full se-layout-renderer,
-.se-form-story--full se-stepper-renderer,
-.se-form-story--full se-split-screen-layout,
-.se-form-story--full se-hero-background-layout,
-.se-form-story--full se-card-layout,
-.se-form-story--full se-default-stepper,
-.se-form-story--full se-stepper-provider {
+.se-form-story--full se-multi-step-form {
 	width: 100%;
 	min-height: 100%;
 }
 
-.se-form-story--full .split-screen-layout,
-.se-form-story--full .hero-background-layout,
-.se-form-story--full .card-layout {
+.se-form-story--full .split-screen-shell,
+.se-form-story--full .hero-shell,
+.se-form-story--full .card-shell {
 	min-height: 100vh;
 }

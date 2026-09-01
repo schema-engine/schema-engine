@@ -10,5 +10,6 @@ export * from '@/components';
 export * from '@/adapters';
 export * from '@/hooks';
 export * from '@/registries';
+export * from '@/recipes';
 export { schemaFormRegistrations } from '@/registrations';
 export { createRadiantFormComposer } from '@/registries/builder-registry';

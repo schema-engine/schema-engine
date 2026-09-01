@@ -1,8 +1,5 @@
-import { expect, waitFor, within } from 'storybook/test';
-import { queryByTextContentDeep, queryDeep } from '@/lib/dom-utils';
 import type { StoryContext } from 'storybook/internal/types';
 import {
-	clickNamedButton,
 	clickSubmit,
 	expectFieldError,
 	expectNoFieldError,
@@ -56,52 +53,6 @@ export function createValidationFieldPlay(
 			await fillField(canvasElement);
 			await clickSubmit(canvasElement, submitLabel);
 			await expectNoFieldError(canvasElement, errorMessage);
-		});
-	};
-}
-
-export function createLayoutPlay(selectors: string[]) {
-	return async ({ canvasElement, step }: StoryContext) => {
-		for (const selector of selectors) {
-			await step(`Layout contains ${selector}`, async () => {
-				await waitFor(() => {
-					if (!canvasElement.querySelector(selector)) {
-						throw new Error(`Expected ${selector} to be present`);
-					}
-				});
-			});
-		}
-	};
-}
-
-export function createStepperPlay() {
-	return async ({ canvasElement, step }: StoryContext) => {
-		await step('Next is blocked when step is invalid', async () => {
-			await clickNamedButton(canvasElement, /next/i);
-			await expectFieldError(canvasElement, /required|at least/i);
-			within(canvasElement).getByLabelText(/first name/i);
-		});
-
-		await step('Step one fields are visible', async () => {
-			within(canvasElement).getByLabelText(/first name/i);
-			within(canvasElement).getByLabelText(/last name/i);
-		});
-
-		await step('Valid current step advances to step two without those errors', async () => {
-			await playFieldFocusAndType(canvasElement, /first name/i, 'Jane');
-			await playFieldFocusAndType(canvasElement, /last name/i, 'Doe');
-			await clickNamedButton(canvasElement, /next/i);
-			await waitFor(() => {
-				if (!queryDeep(canvasElement, '[data-se-current-step="1"]')) {
-					throw new Error('Expected stepper chrome to move to step 2');
-				}
-				if (!queryByTextContentDeep(canvasElement, /step\s+2\s+of/i)) {
-					throw new Error('Expected step chip to read Step 2 of N');
-				}
-				within(canvasElement).getByLabelText(/email/i);
-			});
-			expect(within(canvasElement).queryByLabelText(/first name/i)).toBeNull();
-			await expectNoFieldError(canvasElement, /required|valid email|at least/i);
 		});
 	};
 }

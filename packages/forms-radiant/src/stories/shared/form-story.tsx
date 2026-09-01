@@ -9,24 +9,6 @@ export function renderFormStory(args: FormRendererProps) {
 	return <FormRenderer engine={storyEngine} adapter={radiantAdapter} {...args} />;
 }
 
-export function withStepLayout(
-	config: FormConfig,
-	layout: NonNullable<FormConfig['steps'][number]['layout']>,
-): FormConfig {
-	return {
-		...config,
-		steps: config.steps.map((step) => ({
-			...step,
-			layout,
-		})),
-	};
-}
-
-export const minimalistStepper = {
-	$type: 'minimalist' as const,
-	showProgress: true,
-};
-
 export function fieldFormConfig(
 	id: string,
 	title: string,
@@ -37,7 +19,6 @@ export function fieldFormConfig(
 		id,
 		title,
 		description,
-		mode: 'free',
 		steps: [{ id: 'step-1', title, elements }],
 	};
 }

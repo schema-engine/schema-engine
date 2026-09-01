@@ -1,4 +1,4 @@
-.hero-background-layout {
+.hero-shell {
 	position: relative;
 	display: flex;
 	min-height: 100%;
@@ -10,7 +10,7 @@
 	color: #fff;
 }
 
-.hero-background-layout__video {
+.hero-shell__video {
 	position: absolute;
 	inset: 0;
 	width: 100%;
@@ -19,58 +19,58 @@
 	z-index: 0;
 }
 
-.hero-background-layout__overlay {
+.hero-shell__overlay {
 	position: absolute;
 	inset: 0;
 	z-index: 1;
 	background: rgba(0, 0, 0, 0.5);
 }
 
-.hero-background-layout__content {
+.hero-shell__content {
 	position: relative;
 	z-index: 2;
 	width: 100%;
 	text-align: center;
 }
 
-.hero-background-layout__content--sm {
+.hero-shell__content--sm {
 	max-width: 24rem;
 }
 
-.hero-background-layout__content--md {
+.hero-shell__content--md {
 	max-width: 28rem;
 }
 
-.hero-background-layout__content--lg {
+.hero-shell__content--lg {
 	max-width: 32rem;
 }
 
-.hero-background-layout__content--xl {
+.hero-shell__content--xl {
 	max-width: 36rem;
 }
 
-.hero-background-layout__header {
+.hero-shell__header {
 	margin-bottom: var(--space-block-lg, 2rem);
 }
 
-.hero-background-layout__title {
+.hero-shell__title {
 	margin: 0 0 1rem;
 	font-size: 2.25rem;
 	font-weight: 700;
 }
 
-.hero-background-layout__description {
+.hero-shell__description {
 	margin: 0 0 0.5rem;
 	font-size: 1.125rem;
 }
 
-.hero-background-layout__step-counter {
+.hero-shell__step-counter {
 	margin: 0;
 	font-size: 0.875rem;
 	opacity: 0.85;
 }
 
-.hero-background-layout__form {
+.hero-shell__form {
 	padding: var(--space-block-lg, 2rem);
 	border-radius: var(--radius-control, 0.75rem);
 	background: color-mix(in srgb, var(--surface, #fff) 95%, transparent);

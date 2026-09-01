@@ -13,8 +13,9 @@ import type { FormEngine as CoreFormEngine } from '@schema-engine/forms/engine/f
 import { formInstanceContext, type FormInstanceContextValue, type StepStates } from '@/contexts/form-instance-context';
 import { getRuiFormStore } from '@/lib/rui-form-utils';
 import { fieldNamesForStep, validateCurrentStepFields } from '@/lib/validate-current-step';
-import { renderMultiStepForm } from '@/components/internals/form-elements-renderer';
+import { RecipeRenderer } from '@/components/internals/recipe-renderer';
 import { ConfiguredRuiForm } from '@/adapters/radiant/rui-form-shell';
+import { resolveFormRecipe, resolveValidatedConfig } from '@schema-engine/forms';
 
 function createInitialStepStates(totalSteps: number): StepStates {
 	return {
@@ -32,6 +33,7 @@ export class FormInstanceElement extends RadiantElement {
 	@prop({ type: Object }) extras?: JsxRenderable;
 	@prop({ type: Boolean, defaultValue: false }) isSubmitting = false;
 	@prop({ type: Object }) onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
+	@prop({ type: Boolean, defaultValue: false }) validated = false;
 
 	@state currentStep = 0;
 	@state stepStates: StepStates = { completed: [], valid: [], visited: [] };
@@ -159,15 +161,17 @@ export class FormInstanceElement extends RadiantElement {
 	}
 
 	override render(): JsxRenderable {
-		const config = this.config;
+		const config = this.validated ? this.config : resolveValidatedConfig(this.config, this.engine);
 		if (!config) {
 			return null;
 		}
+		const recipe = resolveFormRecipe(config, this.engine ? (id) => this.engine!.getRecipe(id) : undefined);
 
 		return (
 			<ConfiguredRuiForm config={config} defaultValues={this.defaultValues} onSubmit={this.onSubmit}>
-				{renderMultiStepForm(config, this.engine, this.getContextValue())}
-				{this.extras}
+				<RecipeRenderer config={config} engine={this.engine} recipe={recipe} instance={this.getContextValue()}>
+					{this.extras}
+				</RecipeRenderer>
 			</ConfiguredRuiForm>
 		);
 	}
@@ -179,6 +183,7 @@ export function FormInstance({
 	defaultValues,
 	onSubmit,
 	isSubmitting = false,
+	validated = false,
 	children,
 }: {
 	config: FormConfig;
@@ -186,6 +191,7 @@ export function FormInstance({
 	defaultValues?: Record<string, unknown>;
 	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
 	isSubmitting?: boolean;
+	validated?: boolean;
 	children?: JsxRenderable;
 }): JsxRenderable {
 	return jsx('se-form-instance', {
@@ -193,6 +199,7 @@ export function FormInstance({
 		'prop:engine': engine,
 		'prop:defaultValues': defaultValues,
 		'prop:isSubmitting': isSubmitting,
+		'prop:validated': validated,
 		'prop:onSubmit': onSubmit,
 		'prop:extras': children,
 	});
