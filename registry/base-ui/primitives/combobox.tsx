@@ -102,15 +102,20 @@ function ComboboxValue({ ...props }: ComboboxPrimitive.Value.Props) {
 	return <ComboboxPrimitive.Value {...props} />;
 }
 
-function ComboboxChips({ className, ...props }: React.ComponentPropsWithRef<typeof ComboboxPrimitive.Chips>) {
+function ComboboxChips({ className, children, ...props }: React.ComponentPropsWithRef<typeof ComboboxPrimitive.Chips>) {
 	return (
-		<ComboboxPrimitive.Chips
-			className={cn(
-				'border-input bg-background flex min-h-8 flex-wrap items-center gap-1 rounded-lg border px-2 py-1 transition-colors outline-none focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50',
-				className,
-			)}
-			{...props}
-		/>
+		<div className="relative flex items-center">
+			<ComboboxPrimitive.Chips
+				className={cn(
+					'border-input bg-background flex min-h-8 w-full flex-wrap items-center gap-1 rounded-lg border px-2 py-1 pr-9 transition-colors outline-none focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50',
+					className,
+				)}
+				{...props}
+			>
+				{children}
+			</ComboboxPrimitive.Chips>
+			<ComboboxTrigger className="absolute right-1" />
+		</div>
 	);
 }
 

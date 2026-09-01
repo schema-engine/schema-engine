@@ -37,10 +37,7 @@ export function FormCheckboxGroup({
 			<FieldContent>
 				<div className={isHorizontal ? 'flex flex-wrap gap-4' : 'space-y-3'}>
 					{config.options.map((option) => (
-						<FieldInputContainer
-							key={option.value}
-							className={isHorizontal ? 'flex-col items-center space-x-0 gap-1.5' : undefined}
-						>
+						<FieldInputContainer key={option.value}>
 							<Checkbox
 								id={`${config.id}-${option.value}`}
 								checked={selectedValues.includes(option.value)}
@@ -50,12 +47,7 @@ export function FormCheckboxGroup({
 								disabled={fieldProps.disabled || option.disabled}
 								autoFocus={config.autoFocus}
 							/>
-							<Label
-								htmlFor={`${config.id}-${option.value}`}
-								className={isHorizontal ? 'text-center' : undefined}
-							>
-								{option.label}
-							</Label>
+							<Label htmlFor={`${config.id}-${option.value}`}>{option.label}</Label>
 						</FieldInputContainer>
 					))}
 				</div>

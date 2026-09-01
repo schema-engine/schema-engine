@@ -149,15 +149,18 @@ function ComboboxEmpty({ className, ...props }: React.ComponentProps<'div'>) {
 
 function ComboboxChips({ children, className, ...props }: GroupProps) {
 	return (
-		<Group
-			className={cn(
-				'border-input bg-background flex min-h-8 flex-wrap items-center gap-1 rounded-lg border px-2 py-1 transition-colors outline-none focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50',
-				className,
-			)}
-			{...props}
-		>
-			{children}
-		</Group>
+		<div className="relative flex items-center">
+			<Group
+				className={cn(
+					'border-input bg-background flex min-h-8 w-full flex-wrap items-center gap-1 rounded-lg border px-2 py-1 pr-9 transition-colors outline-none focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50',
+					className,
+				)}
+				{...props}
+			>
+				{children}
+			</Group>
+			<ComboboxTrigger className="absolute right-1" />
+		</div>
 	);
 }
 

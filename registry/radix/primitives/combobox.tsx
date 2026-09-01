@@ -111,11 +111,20 @@ function ComboboxInput({
 	);
 }
 
-function ComboboxTrigger({ className, ...props }: React.ComponentProps<'button'>) {
+function ComboboxTrigger({ className, onClick, ...props }: React.ComponentProps<'button'>) {
+	const { setOpen, disabled, open } = useComboboxContext();
+
 	return (
 		<button
 			type="button"
+			role="combobox"
+			aria-expanded={open}
+			disabled={disabled}
 			className={cn('text-muted-foreground inline-flex size-7 items-center justify-center rounded', className)}
+			onClick={(event) => {
+				setOpen(!open);
+				onClick?.(event);
+			}}
 			{...props}
 		>
 			<ChevronDown className="size-4" />
@@ -238,16 +247,19 @@ function ComboboxValue({ ...props }: React.ComponentProps<'span'>) {
 function ComboboxChips({ className, children, ...props }: React.ComponentProps<'div'>) {
 	const { disabled, setOpen } = useComboboxContext();
 	return (
-		<div
-			className={cn(
-				'border-input bg-background flex min-h-8 flex-wrap items-center gap-1 rounded-lg border px-2 py-1 transition-colors outline-none focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50',
-				disabled && 'opacity-50',
-				className,
-			)}
-			onClick={() => setOpen(true)}
-			{...props}
-		>
-			{children}
+		<div className="relative flex items-center">
+			<div
+				className={cn(
+					'border-input bg-background flex min-h-8 w-full flex-wrap items-center gap-1 rounded-lg border px-2 py-1 pr-9 transition-colors outline-none focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50',
+					disabled && 'opacity-50',
+					className,
+				)}
+				onClick={() => setOpen(true)}
+				{...props}
+			>
+				{children}
+			</div>
+			<ComboboxTrigger className="absolute right-1" />
 		</div>
 	);
 }
