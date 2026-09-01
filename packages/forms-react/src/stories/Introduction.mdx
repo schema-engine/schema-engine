@@ -11,7 +11,7 @@ The official React SDK for [Schema Engine](https://schema-engine.com). This pack
 - **End-to-End Type Safety**: Full TypeScript inference for form configurations, components, and actions.
 - **Universal Adapter System**: Includes a built-in React Hook Form adapter and supports custom adapters for any form library.
 - **Production-Ready Components**: A rich library of accessible, pre-styled form elements.
-- **Flexible Layouts**: Varied visual organizations including Cards, Split Screens, and Steppers.
+- **View Recipes**: Compose shells, progress, and actions via `view.$type` recipes (`card`, `card-wizard`, `hero-background`, …).
 - **Dynamic Lifecycle Actions**: Declaratively execute HTTP requests, redirects, and state updates based on form events.
 
 ## Core Concepts
@@ -25,7 +25,7 @@ The root object that defines the form's identity, behavior, and structure.
 interface FormConfig {
   id: string;              // Unique identifier
   title?: string;          // Form title
-  mode?: 'wizard' | 'free'; // Navigation mode
+  view?: { $type: string }; // View recipe
   steps: FormStep[];       // Array of steps (pages)
   actions?: FormAction[];  // Global actions (e.g., submit)
 }
@@ -34,14 +34,18 @@ interface FormConfig {
 ### 2. Steps & Elements
 Forms are divided into one or more **Steps**. Each step contains **Elements** (inputs, buttons, etc.).
 
+### 3. View Recipes
+Visual chrome is configured via `view.$type` recipes:
+
 ```ts
-interface FormStep {
-  id: string;
-  title: string;
-  elements: FormElement[]; // The fields within this step
-  layout?: StepLayout;     // Visual arrangement (e.g., card, split)
+view: {
+  $type: 'card-wizard',
+  shell: { maxWidth: 'md', padding: 'md' },
+  progress: { showPercentage: true },
 }
 ```
+
+Single-step recipes (`card`, `hero-background`, `split-screen`) compose a **shell** around the form. Multi-step recipes (`card-wizard`, `wizard`, `sidebar-wizard`, …) add **progress** and **actions** blocks on top.
 
 ## Basic Usage
 

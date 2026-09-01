@@ -179,12 +179,12 @@ export const MultipleInputs: Story = {
 				inputType: 'email',
 				rules: [ValidationPresets.string.required('Email is required'), ValidationPresets.string.email()],
 			})
-			.addElement('input', {
+			.addElement('phone-input', {
 				id: 'phone',
 				name: 'phone',
 				label: 'Phone Number',
-				placeholder: '+1 (555) 123-4567',
-				inputType: 'tel',
+				placeholder: 'Enter phone number',
+				defaultCountry: 'US',
 			})
 			.addElement('input', {
 				id: 'website',

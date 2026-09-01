@@ -111,12 +111,12 @@ export const WithValidation: Story = {
 						],
 					},
 					{
-						$type: 'input',
-						inputType: 'tel',
+						$type: 'phone-input',
 						id: 'refPhone',
 						name: 'refPhone',
 						label: 'Phone Number',
-						placeholder: '+1 (555) 000-0000',
+						placeholder: 'Enter phone number',
+						defaultCountry: 'US',
 						rules: [ValidationPresets.string.required('Phone number is required')],
 					},
 					{
@@ -224,12 +224,12 @@ export const WithMinMaxConstraints: Story = {
 						rules: [ValidationPresets.string.required('Name is required')],
 					},
 					{
-						$type: 'input',
-						inputType: 'tel',
+						$type: 'phone-input',
 						id: 'contactPhone',
 						name: 'contactPhone',
 						label: 'Phone',
-						placeholder: '+1 (555) 000-0000',
+						placeholder: 'Enter phone number',
+						defaultCountry: 'US',
 						rules: [ValidationPresets.string.required('Phone is required')],
 					},
 					{

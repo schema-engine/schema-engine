@@ -5,7 +5,6 @@ export const simpleContactForm: FormConfig = {
 	id: 'simple-contact-form',
 	title: 'Contact Form',
 	description: 'Fill out this form to get in touch with us',
-	mode: 'free',
 	steps: [
 		{
 			id: 'contact-info',
@@ -30,12 +29,12 @@ export const simpleContactForm: FormConfig = {
 					rules: [ValidationPresets.string.email('Please enter a valid email address')],
 				},
 				{
-					$type: 'input',
-					inputType: 'tel',
+					$type: 'phone-input',
 					id: 'phone',
 					name: 'phone',
 					label: 'Phone Number',
-					placeholder: '+1 (555) 000-0000',
+					placeholder: 'Enter phone number',
+					defaultCountry: 'US',
 				},
 				{
 					$type: 'textarea',
@@ -61,7 +60,6 @@ export const multiStepRegistrationForm: FormConfig = {
 	id: 'multi-step-registration',
 	title: 'Account Registration',
 	description: 'Complete the registration process',
-	mode: 'wizard',
 	steps: [
 		{
 			id: 'personal-info',
@@ -88,11 +86,11 @@ export const multiStepRegistrationForm: FormConfig = {
 				},
 				{
 					$type: 'input',
-					inputType: 'text',
+					inputType: 'date',
 					id: 'dateOfBirth',
 					name: 'dateOfBirth',
 					label: 'Date of Birth',
-					placeholder: 'MM/DD/YYYY',
+					autoComplete: 'bday',
 				},
 			],
 		},
@@ -111,12 +109,12 @@ export const multiStepRegistrationForm: FormConfig = {
 					rules: [ValidationPresets.string.email('Please enter a valid email address')],
 				},
 				{
-					$type: 'input',
-					inputType: 'tel',
+					$type: 'phone-input',
 					id: 'phone',
 					name: 'phone',
 					label: 'Phone Number',
-					placeholder: '+1 (555) 000-0000',
+					placeholder: 'Enter phone number',
+					defaultCountry: 'US',
 				},
 				{
 					$type: 'input',
@@ -194,7 +192,6 @@ export const multiStepRegistrationForm: FormConfig = {
 export const loginForm: FormConfig = {
 	id: 'login-form',
 	title: 'Sign In',
-	mode: 'free',
 	steps: [
 		{
 			id: 'login-step',
@@ -231,10 +228,6 @@ export const loginForm: FormConfig = {
 
 export const FormTemplates = {
 	contactForm: simpleContactForm,
-	simpleContactForm,
 	registrationForm: multiStepRegistrationForm,
-	multiStepRegistrationForm,
 	loginForm,
-	onboardingSurvey: multiStepRegistrationForm,
-	splitScreenForm: multiStepRegistrationForm,
 };

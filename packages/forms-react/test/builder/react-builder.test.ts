@@ -6,18 +6,16 @@ import { describe, test, expect } from 'vitest';
 import { createReactFormComposer } from '@/registries/builder-registry';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { FormTextarea } from '@/components/schema-engine/forms/inputs/form-textarea';
-import { CardLayoutRegistration } from '@/components/layouts/card-layout.registration';
-import { DefaultStepperRegistration } from '@/components/schema-engine/forms/steppers/default-stepper.registration';
+import { CardRecipe } from '@/recipes';
 import { InputFieldSchema } from '@/components/schema-engine/forms/inputs/form-input.types';
 import { TextareaFieldSchema } from '@/components/schema-engine/forms/inputs/form-textarea.types';
 
 describe('React Form Engine Builder', () => {
 	describe('Builder Creation', () => {
-		test('should create a new builder instance', () => {
+		test('should create a new builder instance with built-in recipes', () => {
 			const builder = createReactFormComposer();
 			expect(typeof builder.addElement).toBe('function');
-			expect(typeof builder.addLayout).toBe('function');
-			expect(typeof builder.addStepper).toBe('function');
+			expect(typeof builder.addRecipe).toBe('function');
 			expect(typeof builder.build).toBe('function');
 		});
 	});
@@ -82,55 +80,22 @@ describe('React Form Engine Builder', () => {
 		});
 	});
 
-	describe('Layout Registration', () => {
-		test('should register layout', () => {
-			const builder = createReactFormComposer();
-			builder.addLayout(CardLayoutRegistration);
+	describe('Recipe Registration', () => {
+		test('should register built-in recipes', () => {
+			const engine = createReactFormComposer().build();
 
-			const engine = builder.build();
-
-			expect(engine.hasLayout('card')).toBe(true);
-			const layout = engine.getLayout('card');
-			expect(layout?.$type).toBe('card');
-		});
-
-		test('should include layout metadata', () => {
-			const builder = createReactFormComposer();
-			builder.addLayout(CardLayoutRegistration);
-
-			const engine = builder.build();
-			const layout = engine.getLayout('card');
-
-			expect(layout?.metadata.name).toBe('Card Layout');
-		});
-	});
-
-	describe('Stepper Registration', () => {
-		test('should register stepper', () => {
-			const builder = createReactFormComposer();
-			builder.addStepper(DefaultStepperRegistration);
-
-			const engine = builder.build();
-
-			expect(engine.hasStepper('default')).toBe(true);
-			const stepper = engine.getStepper('default');
-			expect(stepper?.$type).toBe('default');
+			expect(engine.hasRecipe('card')).toBe(true);
+			expect(engine.getRecipe('card')?.$type).toBe('card');
+			expect(engine.getRecipe('card')?.metadata.name).toBe(CardRecipe.metadata.name);
 		});
 	});
 
 	describe('Method Chaining', () => {
 		test('should support fluent API', () => {
-			const builder = createReactFormComposer();
-
-			const engine = builder
-				.addElement(InputElementRegistration)
-				.addLayout(CardLayoutRegistration)
-				.addStepper(DefaultStepperRegistration)
-				.build();
+			const engine = createReactFormComposer().addElement(InputElementRegistration).build();
 
 			expect(engine.hasElement('input')).toBe(true);
-			expect(engine.hasLayout('card')).toBe(true);
-			expect(engine.hasStepper('default')).toBe(true);
+			expect(engine.hasRecipe('card')).toBe(true);
 		});
 	});
 
@@ -145,33 +110,23 @@ describe('React Form Engine Builder', () => {
 		});
 
 		test('should build engine summary', () => {
-			const builder = createReactFormComposer();
-			builder
-				.addElement(InputElementRegistration)
-				.addLayout(CardLayoutRegistration)
-				.addStepper(DefaultStepperRegistration);
-
-			const engine = builder.build();
+			const engine = createReactFormComposer().addElement(InputElementRegistration).build();
 			const summary = engine.getSummary();
 
 			expect(summary.elements.count).toBe(1);
-			expect(summary.layouts.count).toBe(1);
-			expect(summary.steppers.count).toBe(1);
+			expect(summary.recipes.count).toBeGreaterThan(0);
 		});
 
-		test('should allow building empty engine', () => {
-			const builder = createReactFormComposer();
-			const engine = builder.build();
+		test('should allow building an engine with recipes and no elements', () => {
+			const engine = createReactFormComposer().build();
 
 			expect(engine.getElementIds()).toEqual([]);
-			expect(engine.getStepperIds()).toEqual([]);
-			expect(engine.getLayoutIds()).toEqual([]);
 			expect(engine.getActionTypes()).toEqual([]);
+			expect(engine.getRecipeIds().length).toBeGreaterThan(0);
 			const summary = engine.getSummary();
 			expect(summary.elements.count).toBe(0);
-			expect(summary.layouts.count).toBe(0);
-			expect(summary.steppers.count).toBe(0);
 			expect(summary.actions.count).toBe(0);
+			expect(summary.recipes.count).toBeGreaterThan(0);
 		});
 	});
 
@@ -223,17 +178,10 @@ describe('React Form Engine Builder', () => {
 
 	describe('Integration', () => {
 		test('should create a fully configured form engine', () => {
-			const builder = createReactFormComposer();
-
-			const engine = builder
-				.addElement(InputElementRegistration)
-				.addLayout(CardLayoutRegistration)
-				.addStepper(DefaultStepperRegistration)
-				.build();
+			const engine = createReactFormComposer().addElement(InputElementRegistration).build();
 
 			expect(engine.hasElement('input')).toBe(true);
-			expect(engine.hasLayout('card')).toBe(true);
-			expect(engine.hasStepper('default')).toBe(true);
+			expect(engine.hasRecipe('wizard')).toBe(true);
 
 			const element = engine.getElement('input');
 			expect(element?.$type).toBe('input');

@@ -8,158 +8,90 @@
 
 import { describe, test, expect } from 'vitest';
 import { createReactFormComposer } from '@/registries/builder-registry';
+import { FormComposer } from '@schema-engine/forms/builder';
 
-/**
- * Import ONLY the registrations needed for each builder
- * This is the key: each import triggers type augmentation for that component only
- */
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { TextareaElementRegistration } from '@/components/schema-engine/forms/inputs/form-textarea.registration';
 import { CheckboxElementRegistration } from '@/components/schema-engine/forms/inputs/form-checkbox.registration';
 import { SelectElementRegistration } from '@/components/schema-engine/forms/inputs/form-select.registration';
 
-import { CardLayoutRegistration } from '@/components/layouts/card-layout.registration';
-import { SplitScreenLayoutRegistration } from '@/components/layouts/split-screen-layout.registration';
-
-import { DefaultStepperRegistration } from '@/components/schema-engine/forms/steppers/default-stepper.registration';
-import { MinimalistStepperRegistration } from '@/components/schema-engine/forms/steppers/minimalist-stepper.registration';
-
 describe('Multiple Builders Type Isolation', () => {
 	test('should create builder with only input and textarea', () => {
-		const minimalBuilder = createReactFormComposer()
+		const engine = createReactFormComposer()
 			.addElement(InputElementRegistration)
 			.addElement(TextareaElementRegistration)
-			.addLayout(CardLayoutRegistration)
-			.addStepper(DefaultStepperRegistration);
-
-		const engine = minimalBuilder.build();
+			.build();
 
 		expect(engine.hasElement('input')).toBe(true);
 		expect(engine.hasElement('textarea')).toBe(true);
 		expect(engine.hasElement('checkbox')).toBe(false);
 		expect(engine.hasElement('select')).toBe(false);
-
-		expect(engine.hasLayout('card')).toBe(true);
-		expect(engine.hasLayout('split-screen')).toBe(false);
-
-		expect(engine.hasStepper('default')).toBe(true);
-		expect(engine.hasStepper('minimalist')).toBe(false);
+		expect(engine.hasRecipe('card')).toBe(true);
 	});
 
 	test('should create builder with different components', () => {
-		const fullBuilder = createReactFormComposer()
+		const engine = createReactFormComposer()
 			.addElement(InputElementRegistration)
 			.addElement(TextareaElementRegistration)
 			.addElement(CheckboxElementRegistration)
 			.addElement(SelectElementRegistration)
-			.addLayout(CardLayoutRegistration)
-			.addLayout(SplitScreenLayoutRegistration)
-			.addStepper(DefaultStepperRegistration)
-			.addStepper(MinimalistStepperRegistration);
-
-		const engine = fullBuilder.build();
+			.build();
 
 		expect(engine.hasElement('input')).toBe(true);
-		expect(engine.hasElement('textarea')).toBe(true);
 		expect(engine.hasElement('checkbox')).toBe(true);
 		expect(engine.hasElement('select')).toBe(true);
-
-		expect(engine.hasLayout('card')).toBe(true);
-		expect(engine.hasLayout('split-screen')).toBe(true);
-
-		expect(engine.hasStepper('default')).toBe(true);
-		expect(engine.hasStepper('minimalist')).toBe(true);
+		expect(engine.hasRecipe('wizard')).toBe(true);
 	});
 
 	test('should create two independent builders', () => {
-		const builder1 = createReactFormComposer()
-			.addElement(InputElementRegistration)
-			.addLayout(CardLayoutRegistration);
-
-		const builder2 = createReactFormComposer()
+		const engine1 = createReactFormComposer().addElement(InputElementRegistration).build();
+		const engine2 = createReactFormComposer()
 			.addElement(TextareaElementRegistration)
 			.addElement(CheckboxElementRegistration)
-			.addLayout(SplitScreenLayoutRegistration);
-
-		const engine1 = builder1.build();
-		const engine2 = builder2.build();
+			.build();
 
 		expect(engine1.hasElement('input')).toBe(true);
 		expect(engine1.hasElement('textarea')).toBe(false);
 		expect(engine1.hasElement('checkbox')).toBe(false);
-		expect(engine1.hasLayout('card')).toBe(true);
-		expect(engine1.hasLayout('split-screen')).toBe(false);
 
 		expect(engine2.hasElement('input')).toBe(false);
 		expect(engine2.hasElement('textarea')).toBe(true);
 		expect(engine2.hasElement('checkbox')).toBe(true);
-		expect(engine2.hasLayout('card')).toBe(false);
-		expect(engine2.hasLayout('split-screen')).toBe(true);
 	});
 
 	test('should allow retrieving registered components', () => {
-		const builder = createReactFormComposer()
+		const engine = createReactFormComposer()
 			.addElement(InputElementRegistration)
 			.addElement(CheckboxElementRegistration)
-			.addLayout(CardLayoutRegistration)
-			.addStepper(DefaultStepperRegistration);
+			.build();
 
-		const engine = builder.build();
-
-		const inputElement = engine.getElement('input');
-		expect(inputElement?.$type).toBe('input');
-
-		const checkboxElement = engine.getElement('checkbox');
-		expect(checkboxElement?.$type).toBe('checkbox');
-
-		const textareaElement = engine.getElement('textarea');
-		expect(textareaElement).toBeUndefined();
-
-		const cardLayout = engine.getLayout('card');
-		expect(cardLayout?.$type).toBe('card');
-
-		const splitScreenLayout = engine.getLayout('split-screen');
-		expect(splitScreenLayout).toBeUndefined();
-
-		const defaultStepper = engine.getStepper('default');
-		expect(defaultStepper?.$type).toBe('default');
-
-		const minimalistStepper = engine.getStepper('minimalist');
-		expect(minimalistStepper).toBeUndefined();
+		expect(engine.getElement('input')?.$type).toBe('input');
+		expect(engine.getElement('checkbox')?.$type).toBe('checkbox');
+		expect(engine.getElement('textarea')).toBeUndefined();
+		expect(engine.getRecipe('card')?.$type).toBe('card');
 	});
 
 	test('should allow method chaining', () => {
 		const engine = createReactFormComposer()
 			.addElement(InputElementRegistration)
 			.addElement(TextareaElementRegistration)
-			.addLayout(CardLayoutRegistration)
-			.addStepper(DefaultStepperRegistration)
 			.build();
 
 		expect(engine.hasElement('input')).toBe(true);
 		expect(engine.hasElement('textarea')).toBe(true);
-		expect(engine.hasLayout('card')).toBe(true);
-		expect(engine.hasStepper('default')).toBe(true);
 	});
 
-	test('should handle empty builder', () => {
-		const engine = createReactFormComposer().build();
+	test('core FormComposer does not register React recipes', () => {
+		const engine = new FormComposer().build();
 
 		expect(engine.hasElement('input')).toBe(false);
-		expect(engine.hasLayout('card')).toBe(false);
-		expect(engine.hasStepper('default')).toBe(false);
-
-		expect(engine.getElement('input')).toBeUndefined();
-		expect(engine.getLayout('card')).toBeUndefined();
-		expect(engine.getStepper('default')).toBeUndefined();
+		expect(engine.hasRecipe('card')).toBe(false);
+		expect(engine.getRecipe('card')).toBeUndefined();
 	});
 
-	test('should not share registrations between builders', () => {
-		const builder1 = createReactFormComposer().addElement(InputElementRegistration);
-		const builder2 = createReactFormComposer().addElement(TextareaElementRegistration);
-
-		const engine1 = builder1.build();
-		const engine2 = builder2.build();
+	test('should not share element registrations between builders', () => {
+		const engine1 = createReactFormComposer().addElement(InputElementRegistration).build();
+		const engine2 = createReactFormComposer().addElement(TextareaElementRegistration).build();
 
 		expect(engine1.hasElement('input')).toBe(true);
 		expect(engine1.hasElement('textarea')).toBe(false);
@@ -171,58 +103,14 @@ describe('Multiple Builders Type Isolation', () => {
 
 describe('Type Safety Verification', () => {
 	test('should only expose types for registered components', () => {
-		/**
-		 * This test demonstrates type safety at compile time.
-		 * TypeScript will catch errors if you try to use components
-		 * that weren't imported for type augmentation.
-		 */
-		const builder = createReactFormComposer()
-			.addElement(InputElementRegistration)
-			.addElement(CheckboxElementRegistration);
-
-		const engine = builder.build();
-
-		/**
-		 * At runtime, we can verify the registered components
-		 */
-		expect(engine.hasElement('input')).toBe(true);
-		expect(engine.hasElement('checkbox')).toBe(true);
-
-		/**
-		 * Components not imported should not be available
-		 * Note: Because we imported multiple registrations in this test file,
-		 * the types are all available. In a real-world scenario where you
-		 * only import specific registrations, TypeScript would enforce
-		 * that only those types are available.
-		 */
-		expect(engine.hasElement('radio')).toBe(false);
-		expect(engine.hasElement('switch')).toBe(false);
-	});
-
-	test('should demonstrate explicit vs implicit registration', () => {
-		/**
-		 * The new pattern is EXPLICIT:
-		 * - Import InputElementRegistration = type 'input' is registered
-		 * - Import CheckboxElementRegistration = type 'checkbox' is registered
-		 * - Don't import RadioElementRegistration = type 'radio' is NOT registered
-		 *
-		 * This makes the codebase predictable and debuggable.
-		 */
 		const engine = createReactFormComposer()
 			.addElement(InputElementRegistration)
 			.addElement(CheckboxElementRegistration)
 			.build();
 
-		/**
-		 * You can grep for "InputElementRegistration" to see where
-		 * the input type is registered - no hidden magic!
-		 */
 		expect(engine.hasElement('input')).toBe(true);
 		expect(engine.hasElement('checkbox')).toBe(true);
-
-		/**
-		 * Radio was never imported, so it's not available
-		 */
 		expect(engine.hasElement('radio')).toBe(false);
+		expect(engine.hasElement('switch')).toBe(false);
 	});
 });

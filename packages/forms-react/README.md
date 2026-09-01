@@ -10,10 +10,9 @@ The React package provides production-ready components and hooks for building dy
 
 **Key Features:**
 
-- Runtime form engine, React Hook Form adapter, layouts, and steppers
-- Layout components for visual organization (card, split-screen, hero-background)
-- Stepper protocol in the package; shadcn default/minimalist steppers in the registry
-- `FormDebugger` opt-in dev overlay (mount as a child of `FormRenderer`, orthogonal to stepper `$type`)
+- Runtime form engine, React Hook Form adapter, and view recipes
+- View recipes for visual chrome (`card`, `card-wizard`, `wizard`, …)
+- `FormDebugger` opt-in dev overlay (mount as a child of `FormRenderer`)
 - Comprehensive validation with 15+ built-in rules
 - Action execution system for form lifecycle events
 - Grid-based responsive layouts
@@ -35,15 +34,9 @@ Import component registrations and build your engine:
 
 ```typescript
 import { createReactFormComposer } from '@schema-engine/forms-react';
-import { CardLayoutRegistration } from '@schema-engine/forms-react/registrations';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
-import { DefaultStepperRegistration } from '@/components/schema-engine/forms/steppers/default-stepper.registration';
 
-const formEngine = createReactFormComposer()
-	.addElements(schemaFormRegistrations)
-	.addLayout(CardLayoutRegistration)
-	.addStepper(DefaultStepperRegistration)
-	.build();
+const formEngine = createReactFormComposer().addElements(schemaFormRegistrations).build();
 ```
 
 Install form elements from the GitHub registry first. Pick the aggregate that matches your shadcn base:
@@ -52,7 +45,7 @@ Install form elements from the GitHub registry first. Pick the aggregate that ma
 - Radix UI: `shadcn add andeeplus/schema-engine/schema-form-radix`
 - React Aria: `shadcn add andeeplus/schema-engine/schema-form-aria`
 
-Layouts stay package-owned. Install a default or minimalist stepper as a separate registry item when needed.
+`createReactFormComposer()` registers the built-in view recipes. Select one with `view.$type`.
 
 ### 2. Configure Your Form
 
@@ -65,6 +58,10 @@ const formConfig: FormConfig = {
 	id: 'contact-form',
 	title: 'Contact Us',
 	description: 'Get in touch with our team',
+	view: {
+		$type: 'card',
+		shell: { padding: 'md', shadowSize: 'md' },
+	},
 	steps: [
 		{
 			id: 'step-1',
@@ -104,11 +101,6 @@ const formConfig: FormConfig = {
 					],
 				},
 			],
-			layout: {
-				$type: 'card',
-				padding: 'md',
-				shadowSize: 'md',
-			},
 		},
 	],
 };
@@ -215,34 +207,25 @@ Pre-built form field components with validation and styling:
 }
 ```
 
-### Layouts
+### View recipes
 
-Layouts provide visual structure and styling for form steps:
+Visual chrome is selected with form-level `view.$type`:
 
-- `card` - Centered card with shadow
-- `split-screen` - Split layout with content and form
-- `hero-background` - Full-width background with overlay
-
-**Example - Card Layout:**
+- `card`, `split-screen`, `hero-background` — single-step shells
+- `card-wizard`, `wizard`, `sidebar-wizard`, `hero-wizard`, `split-screen-wizard`, `bare-controls` — multi-step recipes
 
 ```typescript
 {
-  id: 'step-1',
-  elements: [...],
-  layout: {
-		$type: 'card',
-    maxWidth: 'md',
-    padding: 'lg',
-    shadowSize: 'lg'
-  }
+  id: 'contact-form',
+  view: {
+    $type: 'card',
+    shell: { maxWidth: 'md', padding: 'lg', shadowSize: 'lg' },
+  },
+  steps: [{ id: 'step-1', title: 'Contact', elements: [...] }],
 }
 ```
 
-### Steppers
-
-Registry steppers (`default`, `minimalist`) are installed via shadcn and registered with `addStepper()`. For development
-inspection, mount `FormDebugger` as a child of `FormRenderer` — it is opt-in and imported from its own subpath, so it is
-never bundled unless you ask for it:
+Mount `FormDebugger` as a child of `FormRenderer` when you want an opt-in inspector:
 
 ```tsx
 import { FormDebugger } from '@schema-engine/forms-react/components/form-debugger';
@@ -274,10 +257,9 @@ const multiStepConfig: FormConfig = {
       elements: [...]
     }
   ],
-  stepper: {
-		$type: 'default',
-    showStepNumbers: true,
-    showStepTitles: true
+  view: {
+    $type: 'wizard',
+    progress: { orientation: 'horizontal' },
   }
 };
 ```
@@ -583,94 +565,37 @@ export const CustomDatePickerRegistration = {
 const engine = createReactFormComposer().addElement(CustomDatePickerRegistration).build();
 ```
 
-### Custom Layouts
+### Custom recipes
 
-Create custom layout components:
+Compose a shell and slot blocks with `defineFormRecipe`, then register it:
 
 ```typescript
-import { useLayoutContext } from '@schema-engine/forms-react/contexts';
+import { defineFormRecipe, defineRecipeSpec } from '@schema-engine/forms/recipes';
+import type { FormShellProps } from '@schema-engine/forms-react';
 
-// 1. Define layout component
-export function CustomLayout({ children, className }) {
-	const { step, form, config } = useLayoutContext();
+const brandSpec = defineRecipeSpec({
+	$type: 'brand',
+	kind: 'single-step',
+	slotSchemas: { shell: z.object({ accent: z.string().optional() }).strict() },
+	metadata: { name: 'Brand', description: 'Branded form shell' },
+});
 
+function BrandShell({ slots }: FormShellProps) {
 	return (
-		<div className={`custom-layout ${className}`}>
-			<header>
-				<h1>{step?.title || form.title}</h1>
-			</header>
-			<main>{children}</main>
+		<div className="brand-shell">
+			{slots.header}
+			{slots.content}
+			{slots.actions}
 		</div>
 	);
 }
 
-// 2. Create schema
-export const CustomLayoutConfigSchema = z.object({
-	$type: z.literal("custom-layout"),
-	headerColor: z.string().optional(),
-	footerText: z.string().optional(),
+export const BrandRecipe = defineFormRecipe(brandSpec, {
+	shell: BrandShell,
+	slots: {},
 });
 
-// 3. Create registration
-export const CustomLayoutRegistration = {
-	$type: "custom-layout",
-	render: CustomLayout,
-	schema: CustomLayoutConfigSchema,
-	metadata: {
-		name: "Custom Layout",
-		description: "Custom branded layout",
-	},
-};
-
-// 4. Register with engine
-const engine = createReactFormComposer().addLayout(CustomLayoutRegistration).build();
-```
-
-### Custom Steppers
-
-Create custom stepper components:
-
-```typescript
-import { useStepperContext } from '@schema-engine/forms-react/contexts';
-
-// 1. Define stepper component
-export function CustomStepper() {
-	const { steps, currentStepIndex, navigation, config } = useStepperContext();
-
-	return (
-		<div className="custom-stepper">
-			{steps.map((step, index) => (
-				<button
-					key={step.id}
-					onClick={() => navigation.goToStep(index)}
-					disabled={!step.isVisited && index > currentStepIndex}
-				>
-					{step.title}
-				</button>
-			))}
-		</div>
-	);
-}
-
-// 2. Create schema
-export const CustomStepperConfigSchema = z.object({
-	$type: z.literal("custom-stepper"),
-	showIcons: z.boolean().optional(),
-});
-
-// 3. Create registration
-export const CustomStepperRegistration = {
-	$type: "custom-stepper",
-	render: CustomStepper,
-	schema: CustomStepperConfigSchema,
-	metadata: {
-		name: "Custom Stepper",
-		description: "Custom navigation stepper",
-	},
-};
-
-// 4. Register with engine
-const engine = createReactFormComposer().addStepper(CustomStepperRegistration).build();
+const engine = createReactFormComposer().addRecipe(BrandRecipe).build();
 ```
 
 ## Type Safety

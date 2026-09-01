@@ -48,10 +48,8 @@ All tests verify both compile-time types and runtime behavior match:
 
 - `engine.hasElement(id)` - Check if element is registered
 - `engine.getElement(id)` - Retrieve element registration
-- `engine.hasLayout(id)` - Check if layout is registered
-- `engine.getLayout(id)` - Retrieve layout registration
-- `engine.hasStepper(id)` - Check if stepper is registered
-- `engine.getStepper(id)` - Retrieve stepper registration
+- `engine.hasRecipe(id)` - Check if a view recipe is registered
+- `engine.getRecipe(id)` - Retrieve a view recipe registration
 
 ## Test Files
 

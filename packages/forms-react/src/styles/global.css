@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@import 'react-day-picker/style.css';
 
 /* Stories resolve registry form fields and primitives via aliases. Tailwind
    only auto-scans this package, so those class names must be sourced. */
@@ -295,21 +296,42 @@
 		@apply mb-2 block;
 	}
 
-	table {
+	[data-slot='table'] {
 		@apply w-full border-collapse;
 	}
 
-	td,
-	th {
+	[data-slot='table'] td,
+	[data-slot='table'] th {
 		@apply border border-border px-4 py-2 text-left;
 	}
 
-	tr:nth-child(even) {
+	[data-slot='table'] tr:nth-child(even) {
 		@apply bg-muted;
 	}
 
-	th {
-		@apply pt-3 pb-3.5 font-medium bg-secondary text-secondary-foreground;
+	[data-slot='table'] th {
+		@apply bg-secondary pt-3 pb-3.5 font-medium text-secondary-foreground;
+	}
+}
+
+@layer components {
+	[data-slot='calendar'] {
+		--rdp-accent-color: var(--primary);
+		--rdp-accent-background-color: var(--accent);
+		--rdp-range_middle-background-color: var(--accent);
+	}
+
+	[data-slot='calendar'] table {
+		@apply w-full border-collapse;
+	}
+
+	[data-slot='calendar'] th,
+	[data-slot='calendar'] td {
+		@apply border-0 bg-transparent p-0 text-center align-middle font-normal;
+	}
+
+	[data-slot='calendar'] tr:nth-child(even) {
+		@apply bg-transparent;
 	}
 }
 
@@ -361,6 +383,24 @@
 		code {
 			@apply bg-transparent text-inherit rounded-none p-0 font-mono;
 		}
+	}
+
+	table:not(form table):not(form * table):not(.unprose table):not(.unprose * table):not([data-slot='calendar'] *) {
+		@apply my-4 w-full border-collapse;
+	}
+
+	table:not(form table):not(form * table):not(.unprose table):not(.unprose * table):not([data-slot='calendar'] *) td,
+	table:not(form table):not(form * table):not(.unprose table):not(.unprose * table):not([data-slot='calendar'] *) th {
+		@apply border border-border px-4 py-2 text-left;
+	}
+
+	table:not(form table):not(form * table):not(.unprose table):not(.unprose * table):not([data-slot='calendar'] *)
+		tr:nth-child(even) {
+		@apply bg-muted;
+	}
+
+	table:not(form table):not(form * table):not(.unprose table):not(.unprose * table):not([data-slot='calendar'] *) th {
+		@apply bg-secondary pt-3 pb-3.5 font-medium text-secondary-foreground;
 	}
 }
 

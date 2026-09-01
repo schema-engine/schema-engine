@@ -16,7 +16,7 @@ const entryDirs = [
 	'src/contexts',
 	'src/hooks',
 	'src/registries',
-	'src/registrations',
+	'src/recipes',
 	'src/types',
 ];
 const excludedCssFiles = ['styles.css'];
@@ -84,7 +84,10 @@ await buildLib({
 	],
 	exclude: ['.stories.', '.play.', '.test.'],
 	splitting: true,
-	aliases: [{ prefix: '@', dir: path.join(cwd, 'src') }],
+	aliases: [
+		{ prefix: '@/components/ui', dir: path.join(cwd, '../../registry/ui-stubs') },
+		{ prefix: '@', dir: path.join(cwd, 'src') },
+	],
 	external: ['react', 'react-dom', '@schema-engine/forms', '@ecopages/logger'],
 	plugins: [postcssPlugin],
 	onEnd: generateGlobalCSS,

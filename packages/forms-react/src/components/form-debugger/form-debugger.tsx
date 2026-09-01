@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useFormContext, useWatchForm } from '@/adapters/context';
 import { cn } from '@/lib/utils';
 import { useFormInstanceActions } from '@/hooks/use-form-context';
-import { useOptionalStepperContext } from '@/contexts/stepper-context';
+import { useOptionalViewContext } from '@/contexts/view-context';
 import './form-debugger.css';
 
 export interface FormDebuggerProps {
@@ -228,15 +228,22 @@ function FormDebuggerPanel({
 	const { formState } = useFormContext();
 	const formValues = useWatchForm();
 	const { currentStep, totalSteps, stepStates, navigation, submissionState } = useFormInstanceActions();
-	const stepperContext = useOptionalStepperContext();
+	const view = useOptionalViewContext();
 
-	const steps = stepperContext?.steps ?? [];
+	const steps =
+		view?.steps ??
+		Array.from({ length: totalSteps }, (_, index) => ({
+			id: `step-${index}`,
+			title: `Step ${index + 1}`,
+			isVisited: stepStates?.visited[index],
+			isValid: stepStates?.valid[index],
+		}));
 	const isMultiStep = totalSteps > 1;
 
 	return (
 		<div className="form-debugger__panel">
 			<DebuggerHeader
-				title={stepperContext?.form.title ?? 'Form Debugger'}
+				title={view?.form.title ?? 'Form Debugger'}
 				currentStep={currentStep}
 				totalSteps={totalSteps}
 				onClose={onClose}
@@ -264,7 +271,7 @@ function FormDebuggerPanel({
 
 /**
  * Opt-in dev tool. Mount it as a child of `FormRenderer` to inspect values,
- * errors, and multi-step state without replacing the production stepper:
+ * errors, and multi-step state:
  *
  * ```tsx
  * <FormRenderer config={config} engine={engine} adapter={adapter}>

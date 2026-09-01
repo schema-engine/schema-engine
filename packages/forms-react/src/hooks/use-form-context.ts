@@ -34,3 +34,7 @@ export function useFormEngine(): FormEngineContextValue {
 	}
 	return context;
 }
+
+export function useOptionalFormEngine(): FormEngineContextValue | null {
+	return useContext(FormEngineContext);
+}

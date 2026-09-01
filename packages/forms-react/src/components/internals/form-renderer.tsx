@@ -1,75 +1,15 @@
+import { useMemo } from 'react';
 import type React from 'react';
 import { FormProvider } from '../form-provider';
 import type { FormAdapter, FormProviderProps } from '../../adapters/types';
 import { FormElement } from './field-renderer';
 import { useFormGridStyles } from '@/hooks';
-import { useFormContext } from '@/adapters/context';
-import { LayoutRenderer } from './layout-renderer';
-import { StepperRenderer } from './stepper-renderer';
-import { useFormInstanceActions } from '@/hooks/use-form-context';
+import { useFormInstanceActions, useOptionalFormEngine } from '@/hooks/use-form-context';
 import { FormEngineProvider } from '../form-engine-provider';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
-
 import type { FormConfig, FormStep } from '@schema-engine/forms/schemas';
-
-/**
- * Helper to determine if form has multiple steps
- */
-function isMultiStepForm(config: FormConfig): boolean {
-	return config.steps.length > 1;
-}
-
-/**
- * Internal component that renders fields with access to form context and grid layout
- */
-function FormElementsRenderer({ config, children }: { config: FormConfig; children?: React.ReactNode }) {
-	if (isMultiStepForm(config)) {
-		return <MultiStepFormElementsRenderer config={config}>{children}</MultiStepFormElementsRenderer>;
-	}
-
-	return <SingleStepFormElementsRenderer config={config}>{children}</SingleStepFormElementsRenderer>;
-}
-
-/**
- * Component for single-step forms (only one step in the steps array)
- * Note: We don't pass stepMeta for single-step forms since step navigation is meaningless
- */
-function SingleStepFormElementsRenderer({ config, children }: { config: FormConfig; children?: React.ReactNode }) {
-	const singleStep = config.steps[0];
-
-	if (!singleStep?.elements) return null;
-
-	if (singleStep.layout && '$type' in singleStep.layout) {
-		return (
-			<LayoutRenderer
-				step={singleStep}
-				formMeta={{
-					id: config.id,
-					title: config.title,
-					description: config.description,
-				}}
-			>
-				<StepFields step={singleStep} config={config} />
-				{children}
-			</LayoutRenderer>
-		);
-	}
-
-	return (
-		<>
-			<StepFields step={singleStep} config={config} />
-			{children}
-		</>
-	);
-}
-
-function createInitialStepStates(config: FormConfig) {
-	return {
-		completed: config.steps.map(() => false),
-		valid: config.steps.map(() => false),
-		visited: config.steps.map((_, index) => index === 0),
-	};
-}
+import { RecipeRenderer } from './recipe-renderer';
+import { resolveValidatedConfig } from '@schema-engine/forms/lib/validate-form';
 
 function StepFields({ step, config }: { step: FormStep; config: FormConfig }) {
 	const gridStyles = useFormGridStyles(config.grid);
@@ -90,74 +30,24 @@ function StepFields({ step, config }: { step: FormStep; config: FormConfig }) {
 	);
 }
 
-/**
- * Internal component for multi-step form rendering
- */
-function MultiStepFormElementsRenderer({ config, children }: { config: FormConfig; children?: React.ReactNode }) {
-	const { formState } = useFormContext();
-	const { stepStates, currentStep, navigation } = useFormInstanceActions();
-	const step = config.steps[currentStep];
+function FormElementsRenderer({ config, children }: { config: FormConfig; children?: React.ReactNode }) {
+	const { currentStep } = useFormInstanceActions();
+	const step = config.steps[currentStep] ?? config.steps[0];
 
 	if (!step) return null;
 
-	const stepper = (
-		<StepperRenderer
-			form={config}
-			steps={config.steps}
-			currentStepIndex={currentStep}
-			stepStates={stepStates ?? createInitialStepStates(config)}
-			navigation={navigation}
-			isSubmitting={formState.isSubmitting}
-		>
-			<StepFields step={step} config={config} />
+	return (
+		<RecipeRenderer config={config} renderFields={() => <StepFields step={step} config={config} />}>
 			{children}
-		</StepperRenderer>
+		</RecipeRenderer>
 	);
-
-	if (step.layout && '$type' in step.layout) {
-		return (
-			<LayoutRenderer
-				step={step}
-				stepMeta={{
-					index: currentStep,
-					total: config.steps.length,
-				}}
-				formMeta={{
-					id: config.id,
-					title: config.title,
-					description: config.description,
-				}}
-			>
-				{stepper}
-			</LayoutRenderer>
-		);
-	}
-
-	return stepper;
 }
 
-/**
- * Props for the FormRenderer component
- */
 export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
 	className?: string;
 	style?: React.CSSProperties;
-	/**
-	 * Form engine instance. Supply it together with `adapter` to let this
-	 * renderer provide its own FormEngine context; omit both when a parent
-	 * `FormEngineProvider` already provides it.
-	 */
 	engine?: FormEngine;
-	/**
-	 * Form library adapter, supplied together with `engine`. Import e.g.
-	 * `rhfAdapter` from `@schema-engine/forms-react/adapters/react-hook-form`.
-	 */
 	adapter?: FormAdapter;
-	/**
-	 * Rendered inside the form context, after the fields. Use it to mount
-	 * form-aware extras such as `FormDebugger` from
-	 * `@schema-engine/forms-react/components/form-debugger`.
-	 */
 	children?: React.ReactNode;
 }
 
@@ -179,24 +69,25 @@ function FormRendererInner({
 			onChange={onChange}
 			onAction={onAction}
 		>
-			<div className={`w-full min-h-full ${className}`.trim()} style={style}>
+			<div className={`w-full min-h-full h-full ${className}`.trim()} style={style}>
 				<FormElementsRenderer config={config}>{children}</FormElementsRenderer>
 			</div>
 		</FormProvider>
 	);
 }
 
-/**
- * Main form renderer component that renders a complete form from configuration
- */
 export function FormRenderer({ engine, adapter, ...props }: FormRendererProps) {
+	const inheritedEngine = useOptionalFormEngine();
+	const resolvedEngine = engine ?? inheritedEngine?.engine;
+	const config = useMemo(() => resolveValidatedConfig(props.config, resolvedEngine), [props.config, resolvedEngine]);
+	const validatedProps = { ...props, config };
 	if (!engine || !adapter) {
-		return <FormRendererInner {...props} />;
+		return <FormRendererInner {...validatedProps} />;
 	}
 
 	return (
 		<FormEngineProvider engine={engine} adapter={adapter}>
-			<FormRendererInner {...props} />
+			<FormRendererInner {...validatedProps} />
 		</FormEngineProvider>
 	);
 }

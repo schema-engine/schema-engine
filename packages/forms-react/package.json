@@ -7,7 +7,6 @@
 		"access": "public"
 	},
 	"sideEffects": [
-		"./dist/components/layouts/*.registration.js",
 		"**/*.css"
 	],
 	"main": "dist/index.js",
@@ -49,7 +48,6 @@
 		"date-fns": "4.1.0",
 		"esbuild": "^0.27.0",
 		"input-otp": "1.4.1",
-		"lucide-react": "^0.539.0",
 		"msw": "^2.11.6",
 		"msw-storybook-addon": "^2.0.6",
 		"postcss": "^8.5.26",
@@ -82,6 +80,7 @@
 		"@hookform/resolvers": "^5.2.1",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
+		"lucide-react": "^0.539.0",
 		"cmdk": "^1.1.1",
 		"embla-carousel-react": "^8.6.0",
 		"next-themes": "^0.4.6",
@@ -106,10 +105,6 @@
 			"types": "./dist/primitives.d.ts",
 			"import": "./dist/primitives.js"
 		},
-		"./registrations": {
-			"types": "./dist/registrations/index.d.ts",
-			"import": "./dist/registrations/index.js"
-		},
 		"./adapters": {
 			"types": "./dist/adapters/index.d.ts",
 			"import": "./dist/adapters/index.js"
@@ -130,23 +125,10 @@
 			"types": "./dist/contexts/index.d.ts",
 			"import": "./dist/contexts/index.js"
 		},
-		"./contexts/stepper-context": {
-			"types": "./dist/contexts/stepper-context.d.ts",
-			"import": "./dist/contexts/stepper-context.js"
-		},
 		"./components/form-debugger": {
 			"types": "./dist/components/form-debugger/index.d.ts",
 			"import": "./dist/components/form-debugger/index.js"
 		},
-		"./components/steppers": {
-			"types": "./dist/components/steppers/index.d.ts",
-			"import": "./dist/components/steppers/index.js"
-		},
-		"./components/layouts": {
-			"types": "./dist/components/layouts/index.d.ts",
-			"import": "./dist/components/layouts/index.js"
-		},
-		"./components/layouts/*.css": "./dist/components/layouts/*.css",
 		"./global.css": "./dist/global.css",
 		"./dist/*.css": "./dist/*.css"
 	},

@@ -5,9 +5,9 @@
  * Elements are added individually so FormComposer keeps a typed element map.
  */
 
-import { FormComposer } from '@schema-engine/forms/builder';
 import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
 import { SubmitActionRegistration, ResetActionRegistration } from '@schema-engine/forms';
+import { createReactFormComposer } from '@/registries/builder-registry';
 import {
 	ArrayElementRegistration,
 	CheckboxElementRegistration,
@@ -27,23 +27,19 @@ import {
 	SubmitButtonElementRegistration,
 	SwitchElementRegistration,
 	TextareaElementRegistration,
+	DateElementRegistration,
+	DateRangeElementRegistration,
 } from '@/components/schema-engine/forms/registrations';
 
-import { CardLayoutRegistration } from '@/components/layouts/card-layout.registration';
-import { SplitScreenLayoutRegistration } from '@/components/layouts/split-screen-layout.registration';
-import { HeroBackgroundLayoutRegistration } from '@/components/layouts/hero-background-layout.registration';
-
-import { DefaultStepperRegistration } from '@/components/schema-engine/forms/steppers/default-stepper.registration';
-import { MinimalistStepperRegistration } from '@/components/schema-engine/forms/steppers/minimalist-stepper.registration';
-
-import '@/components/layouts/card-layout.css';
-import '@/components/layouts/split-screen-layout.css';
-import '@/components/layouts/hero-background-layout.css';
+import '@/components/shells/card-shell.css';
+import '@/components/shells/split-screen-shell.css';
+import '@/components/shells/hero-shell.css';
+import '@/components/internals/recipe-renderer.css';
 
 export { ValidationPresets };
 
 function createBaseUIFormComposer() {
-	return new FormComposer()
+	return createReactFormComposer()
 		.addElement(InputElementRegistration)
 		.addElement(TextareaElementRegistration)
 		.addElement(CheckboxElementRegistration)
@@ -53,6 +49,8 @@ function createBaseUIFormComposer() {
 		.addElement(SwitchElementRegistration)
 		.addElement(NumberElementRegistration)
 		.addElement(SliderElementRegistration)
+		.addElement(DateElementRegistration)
+		.addElement(DateRangeElementRegistration)
 		.addElement(CheckboxGroupElementRegistration)
 		.addElement(InputOTPElementRegistration)
 		.addElement(PhoneInputElementRegistration)
@@ -62,11 +60,6 @@ function createBaseUIFormComposer() {
 		.addElement(FieldSetRegistration)
 		.addElement(SubmitButtonElementRegistration)
 		.addElement(SubmissionAlertElementRegistration)
-		.addLayout(CardLayoutRegistration)
-		.addLayout(SplitScreenLayoutRegistration)
-		.addLayout(HeroBackgroundLayoutRegistration)
-		.addStepper(DefaultStepperRegistration)
-		.addStepper(MinimalistStepperRegistration)
 		.addAction(SubmitActionRegistration)
 		.addAction(ResetActionRegistration);
 }
