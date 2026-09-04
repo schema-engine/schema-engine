@@ -75,6 +75,7 @@ await buildLib({
 		'@ecopages/radiant-ui/radio-group/styles.css',
 		'@ecopages/radiant-ui/select',
 		'@ecopages/radiant-ui/select/styles.css',
+		'@ecopages/radiant-ui/sidebar',
 		'@ecopages/radiant-ui/slider',
 		'@ecopages/radiant-ui/slider/styles.css',
 		'@ecopages/radiant-ui/switch',

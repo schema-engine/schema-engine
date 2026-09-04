@@ -210,10 +210,6 @@ export const loginForm: FormConfig = {
 
 export const FormTemplates = {
 	contactForm: simpleContactForm,
-	simpleContactForm,
 	registrationForm: multiStepRegistrationForm,
-	multiStepRegistrationForm,
 	loginForm,
-	onboardingSurvey: multiStepRegistrationForm,
-	splitScreenForm: multiStepRegistrationForm,
 };

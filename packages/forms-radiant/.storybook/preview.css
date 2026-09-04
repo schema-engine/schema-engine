@@ -56,5 +56,5 @@ body {
 .se-form-story--full .split-screen-shell,
 .se-form-story--full .hero-shell,
 .se-form-story--full .card-shell {
-	min-height: 100vh;
+	min-height: 100svh;
 }

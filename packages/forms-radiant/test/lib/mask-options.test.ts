@@ -1,5 +1,12 @@
 import { describe, expect, test } from 'vitest';
-import { createPatternMaskOptions, loadIMask, parseUnmaskMode, readMaskValue } from '@/lib/mask-options';
+import {
+	createPatternMaskOptions,
+	getMaskedInputPlaceholder,
+	loadIMask,
+	maskToPlaceholder,
+	parseUnmaskMode,
+	readMaskValue,
+} from '@/lib/mask-options';
 
 describe('mask options', () => {
 	test('loads imask on demand', async () => {
@@ -40,5 +47,18 @@ describe('mask options', () => {
 		expect(readMaskValue(mask, false)).toBe('12-34');
 		expect(readMaskValue(mask, true)).toBe('1234');
 		expect(readMaskValue(mask, 'typed')).toBe('1234');
+	});
+
+	test('derives readable placeholders from mask patterns', () => {
+		expect(maskToPlaceholder('aa00 0000 0000 000000')).toBe('AA00 0000 0000 000000');
+		expect(maskToPlaceholder('0000 0000 0000 0000')).toBe('0000 0000 0000 0000');
+		expect(maskToPlaceholder('00/00')).toBe('00/00');
+		expect(maskToPlaceholder('\\+{7}(000)000-00-00')).toBe('+7(000)000-00-00');
+	});
+
+	test('prefers explicit placeholders over derived mask placeholders', () => {
+		expect(getMaskedInputPlaceholder('00/00', 'MM/YY')).toBe('MM/YY');
+		expect(getMaskedInputPlaceholder('00/00')).toBe('00/00');
+		expect(getMaskedInputPlaceholder('aa00 0000 0000 000000', '  ')).toBe('AA00 0000 0000 000000');
 	});
 });

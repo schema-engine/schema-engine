@@ -36,7 +36,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const LeftSide: Story = {
+export const Default: Story = {
 	args: {
 		config: {
 			...registrationForm,

@@ -8,6 +8,8 @@ import {
 	resolveValidatedConfig,
 } from '@/lib/validate-form';
 import type { RecipeRegistration } from '@/types';
+import { defineFormRecipe } from '@/recipes/define-form-recipe';
+import { sidebarWizardSpec } from '@/recipes/built-in-specs';
 
 const cardRecipeSchema = z
 	.object({
@@ -183,6 +185,27 @@ describe('validateFormConfig', () => {
 		};
 
 		expect(engine.defineForm(payload)).toEqual(engine.validateForm(payload));
+	});
+
+	test('sidebar wizard form config accepts view.shell', () => {
+		const engine = new FormComposer()
+			.addRecipe(defineFormRecipe(sidebarWizardSpec, { shell: null, slots: {} }))
+			.build();
+
+		expect(() =>
+			engine.validateForm({
+				id: 'onboarding',
+				view: {
+					$type: 'sidebar-wizard',
+					shell: { showSeparator: false },
+					progress: { orientation: 'sidebar', showStepTitles: true },
+				},
+				steps: [
+					{ id: 'one', title: 'One', elements: [] },
+					{ id: 'two', title: 'Two', elements: [] },
+				],
+			}),
+		).not.toThrow();
 	});
 
 	test('describeRecipe emits viewSchema from the recipe schema', () => {

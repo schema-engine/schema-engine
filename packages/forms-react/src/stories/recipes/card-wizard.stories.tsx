@@ -47,19 +47,6 @@ export const Default: Story = {
 	},
 };
 
-export const WithProgress: Story = {
-	args: {
-		config: {
-			...FormTemplates.registrationForm,
-			view: {
-				$type: 'card-wizard',
-				shell: { maxWidth: 'md', padding: 'md', shadowSize: 'md' },
-				progress: { showPercentage: true },
-			},
-		},
-	},
-};
-
 export const WithoutProgress: Story = {
 	args: {
 		config: {
@@ -68,21 +55,6 @@ export const WithoutProgress: Story = {
 				$type: 'card-wizard',
 				shell: { maxWidth: 'md', padding: 'md', shadowSize: 'md' },
 				progress: { showPercentage: false },
-			},
-		},
-	},
-};
-
-export const LongForm: Story = {
-	args: {
-		config: {
-			...FormTemplates.registrationForm,
-			title: 'Extended Registration Form',
-			description: 'A longer multi-step form with more steps',
-			view: {
-				$type: 'card-wizard',
-				shell: { maxWidth: 'md', padding: 'md', shadowSize: 'md' },
-				progress: { showPercentage: true },
 			},
 		},
 	},
