@@ -1,6 +1,6 @@
 import { Separator } from '@/components/ui/separator';
-import { useIsMobile } from '@/hooks/use-mobile';
-import type { FormShellProps } from '@/recipes/types';
+import { useIsMobile } from '@schema-engine/forms-react/hooks';
+import type { FormShellProps } from '@schema-engine/forms-react/primitives';
 
 export function SidebarShell({ slots }: FormShellProps) {
 	const isMobile = useIsMobile();

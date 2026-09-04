@@ -10,15 +10,7 @@ import { buildLib } from '../../scripts/esbuild-lib.ts';
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const outputDir = path.join(cwd, 'dist');
 
-const entryDirs = [
-	'src/adapters',
-	'src/components',
-	'src/contexts',
-	'src/hooks',
-	'src/registries',
-	'src/recipes',
-	'src/types',
-];
+const entryDirs = ['src/adapters', 'src/components', 'src/contexts', 'src/hooks', 'src/registries', 'src/types'];
 const excludedCssFiles = ['styles.css'];
 
 const postcssPlugin = {

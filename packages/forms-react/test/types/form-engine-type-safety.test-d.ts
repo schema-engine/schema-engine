@@ -24,8 +24,6 @@ const _typedEngine: FormEngine<any, any, any> = engine;
 
 type _registeredElementIds = Assert<'input' extends FormEngine.ElementId ? true : false>;
 
-type _registeredRecipeIds = Assert<'card' extends FormEngine.RecipeId ? true : false>;
-
 type _inputConfig = FormEngine.GetElementConfig<'input'>;
 type _inputHasInputType = Assert<'inputType' extends keyof _inputConfig ? true : false>;
 

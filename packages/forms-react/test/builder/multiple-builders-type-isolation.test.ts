@@ -26,7 +26,7 @@ describe('Multiple Builders Type Isolation', () => {
 		expect(engine.hasElement('textarea')).toBe(true);
 		expect(engine.hasElement('checkbox')).toBe(false);
 		expect(engine.hasElement('select')).toBe(false);
-		expect(engine.hasRecipe('card')).toBe(true);
+		expect(engine.hasRecipe('card')).toBe(false);
 	});
 
 	test('should create builder with different components', () => {
@@ -40,7 +40,7 @@ describe('Multiple Builders Type Isolation', () => {
 		expect(engine.hasElement('input')).toBe(true);
 		expect(engine.hasElement('checkbox')).toBe(true);
 		expect(engine.hasElement('select')).toBe(true);
-		expect(engine.hasRecipe('wizard')).toBe(true);
+		expect(engine.hasRecipe('wizard')).toBe(false);
 	});
 
 	test('should create two independent builders', () => {
@@ -68,7 +68,7 @@ describe('Multiple Builders Type Isolation', () => {
 		expect(engine.getElement('input')?.$type).toBe('input');
 		expect(engine.getElement('checkbox')?.$type).toBe('checkbox');
 		expect(engine.getElement('textarea')).toBeUndefined();
-		expect(engine.getRecipe('card')?.$type).toBe('card');
+		expect(engine.getRecipe('card')).toBeUndefined();
 	});
 
 	test('should allow method chaining', () => {

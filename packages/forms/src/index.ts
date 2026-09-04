@@ -32,6 +32,7 @@ export {
 	resolveValidatedConfig,
 	validateFormConfig,
 } from './lib/validate-form';
+export type { RecipeLookup } from './lib/validate-form';
 export type { RecipeKind, RecipeSlot, RecipeMetadata, RecipeDescriptor, ViewCatalog } from './recipes/types';
 export type { ActionExecutionResult } from '@schema-engine/actions';
 export * from './schemas';

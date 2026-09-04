@@ -30,11 +30,7 @@ import {
 	DateElementRegistration,
 	DateRangeElementRegistration,
 } from '@/components/schema-engine/forms/registrations';
-
-import '@/components/shells/card-shell.css';
-import '@/components/shells/split-screen-shell.css';
-import '@/components/shells/hero-shell.css';
-import '@/components/internals/recipe-renderer.css';
+import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
 export { ValidationPresets };
 
@@ -60,6 +56,7 @@ function createBaseUIFormComposer() {
 		.addElement(FieldSetRegistration)
 		.addElement(SubmitButtonElementRegistration)
 		.addElement(SubmissionAlertElementRegistration)
+		.addRecipes(schemaFormRecipeRegistrations)
 		.addAction(SubmitActionRegistration)
 		.addAction(ResetActionRegistration);
 }

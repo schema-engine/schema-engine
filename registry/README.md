@@ -22,9 +22,9 @@ pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form-radix
 pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form-aria
 ```
 
-Every form element is also available as an individual item (for example `schema-engine-form-input-radix`). Installed Schema Engine source lives under `components/schema-engine/forms`; Schema Engine-owned primitives install under `components/ui/schema-engine/components`.
+Every form element is also available as an individual item (for example `schema-engine-form-input-radix`). Default visual recipes are a separate aggregate: `schema-engine-form-recipes`, `schema-engine-form-recipes-radix`, or `schema-engine-form-recipes-aria`. Installed Schema Engine source lives under `components/schema-engine/forms`; Schema Engine-owned primitives install under `components/ui/schema-engine/components`.
 
-Shells and blocks are package-owned and are selected through `view.$type` recipes.
+Shells and blocks are consumer-owned registry source and are selected through explicitly registered `view.$type` recipes.
 
 ## Source trees
 

@@ -1,5 +1,5 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -9,7 +9,8 @@ const SHARED_FORMS_ROOT = 'registry/shared/forms';
 const SHARED_PRIMITIVES_ROOT = 'registry/shared/primitives';
 
 type BaseId = 'base-ui' | 'radix' | 'aria';
-type PrimitiveName = 'field' | 'combobox' | 'phone-input' | 'drop-zone' | 'masked-input' | 'number-field' | 'date-picker';
+type PrimitiveName =
+	'field' | 'combobox' | 'phone-input' | 'drop-zone' | 'masked-input' | 'number-field' | 'date-picker';
 type ItemType = 'registry:lib' | 'registry:ui' | 'registry:item' | 'registry:component';
 
 interface CatalogFile {
@@ -187,6 +188,29 @@ const BASES: Base[] = [
 ];
 
 const FORM_RUNTIME_DEPENDENCIES = ['@schema-engine/forms-react', '@schema-engine/forms', 'zod'];
+
+const DEFAULT_RECIPE_ITEM = 'schema-engine-form-recipes';
+const DEFAULT_RECIPE_RUNTIME_DEPENDENCIES = [...FORM_RUNTIME_DEPENDENCIES, 'lucide-react'];
+const DEFAULT_RECIPE_REGISTRY_DEPENDENCIES = ['button', 'badge', 'progress', 'separator', UTILS];
+
+function listRelativeSourceFiles(absDir: string, prefix = ''): string[] {
+	const files: string[] = [];
+	for (const entry of readdirSync(absDir, { withFileTypes: true }).toSorted((left, right) =>
+		left.name.localeCompare(right.name),
+	)) {
+		const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+		if (entry.isDirectory()) {
+			files.push(...listRelativeSourceFiles(join(absDir, entry.name), rel));
+		} else if (rel.endsWith('.ts') || rel.endsWith('.tsx')) {
+			files.push(rel);
+		}
+	}
+	return files;
+}
+
+function defaultRecipeFiles(): string[] {
+	return listRelativeSourceFiles(join(root, SHARED_FORMS_ROOT, 'recipes'));
+}
 
 /**
  * Every form element ships the same triple of files and a registration, so the
@@ -480,6 +504,32 @@ function buildElementItem(base: Base, spec: ElementSpec): CatalogItem {
 	};
 }
 
+function recipeFile(rel: string): CatalogFile {
+	return {
+		path: `../shared/forms/recipes/${rel}`,
+		sourcePath: `${SHARED_FORMS_ROOT}/recipes/${rel}`,
+		type: rel.endsWith('.tsx') ? 'registry:component' : 'registry:lib',
+		target: `@components/schema-engine/forms/recipes/${rel}`,
+	};
+}
+
+/**
+ * Default recipe implementations are a distinct installation boundary from
+ * form elements. Consumers opt into their visual layer with addRecipes().
+ */
+function buildDefaultRecipeItem(base: Base): CatalogItem {
+	return {
+		name: itemName(base, DEFAULT_RECIPE_ITEM),
+		type: 'registry:item',
+		title: `Schema Engine default recipes (${base.label})`,
+		description: `Default ${base.label} view recipes and the generated recipe registration barrel.`,
+		docs: 'Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createReactFormComposer().addRecipes(...).',
+		registryDependencies: DEFAULT_RECIPE_REGISTRY_DEPENDENCIES.map((dep) => resolveDep(base, dep)),
+		dependencies: DEFAULT_RECIPE_RUNTIME_DEPENDENCIES,
+		files: defaultRecipeFiles().map(recipeFile),
+	};
+}
+
 function buildItems(base: Base): CatalogItem[] {
 	return [
 		{
@@ -523,7 +573,7 @@ interface BaseCatalog {
 
 const catalogsByBase: BaseCatalog[] = BASES.map((base) => {
 	const items = buildItems(base);
-	return { base, items, catalog: [...items, buildAggregate(base, items)] };
+	return { base, items, catalog: [...items, buildAggregate(base, items), buildDefaultRecipeItem(base)] };
 });
 
 export const catalog: CatalogItem[] = catalogsByBase.flatMap((entry) => entry.catalog);
@@ -558,6 +608,15 @@ const TRACKED_NPM_DEPENDENCIES = [
 	'react-dropzone',
 	'imask',
 ];
+
+const PUBLIC_FORMS_REACT_IMPORTS = new Set([
+	'@schema-engine/forms-react',
+	'@schema-engine/forms-react/adapters',
+	'@schema-engine/forms-react/adapters/react-hook-form',
+	'@schema-engine/forms-react/contexts',
+	'@schema-engine/forms-react/hooks',
+	'@schema-engine/forms-react/primitives',
+]);
 
 function expectedFromImports(imports: string[], base: Base) {
 	const registryDependencies = new Set<string>();
@@ -635,6 +694,9 @@ export function validateCatalog(): string[] {
 				if (spec.includes('@schema-engine/forms-react/components/internals')) {
 					errors.push(`${item.name} reaches into forms-react internals: ${spec}`);
 				}
+				if (spec.startsWith('@schema-engine/forms-react') && !PUBLIC_FORMS_REACT_IMPORTS.has(spec)) {
+					errors.push(`${item.name} uses a non-public forms-react import: ${spec}`);
+				}
 			}
 
 			const expected = expectedFromImports(imports, base);
@@ -696,6 +758,112 @@ export const schemaFormRegistrations = [
 `;
 }
 
+function compareRecipeStems(left: string, right: string) {
+	if (left === right) return 0;
+	if (left.startsWith(`${right}-`)) return 1;
+	if (right.startsWith(`${left}-`)) return -1;
+	return left.localeCompare(right);
+}
+
+function recipeTitle(stem: string): string {
+	return stem
+		.split('-')
+		.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+		.join(' ');
+}
+
+/** Resolves a relative import inside the recipes tree, or null for package imports. */
+function resolveRecipeLocalImport(fromFile: string, spec: string): string | null {
+	if (!spec.startsWith('.')) return null;
+	const base = join(root, SHARED_FORMS_ROOT, 'recipes', dirname(fromFile), spec);
+	for (const ext of ['.tsx', '.ts']) {
+		const candidate = `${relative(join(root, SHARED_FORMS_ROOT, 'recipes'), base)}${ext}`;
+		if (existsSync(join(root, SHARED_FORMS_ROOT, 'recipes', candidate))) return candidate;
+	}
+	return null;
+}
+
+/** Collects the registration plus every local implementation file it references. */
+function recipeSourceFiles(rel: string, source: string): string[] {
+	const files = [rel];
+	const seen = new Set([rel]);
+
+	for (const match of source.matchAll(/from\s+['"]([^'"]+)['"]/g)) {
+		const local = resolveRecipeLocalImport(rel, match[1] as string);
+		if (!local || seen.has(local)) continue;
+		seen.add(local);
+		files.push(local);
+	}
+
+	return files;
+}
+
+interface RecipeScanEntry extends Registration {
+	stem: string;
+	source: string;
+}
+
+function scanRecipeRegistrations(): RecipeScanEntry[] {
+	const dir = join(root, SHARED_FORMS_ROOT, 'recipes/registrations');
+	return readdirSync(dir)
+		.filter((name) => name.endsWith('.ts'))
+		.map((name) => name.replace(/\.ts$/, ''))
+		.toSorted(compareRecipeStems)
+		.map((stem) => {
+			const source = readFileSync(join(dir, `${stem}.ts`), 'utf8');
+			const match = source.match(/export const (\w+)/);
+			if (!match?.[1]) {
+				throw new Error(`Missing exported recipe identifier in recipes/registrations/${stem}.ts`);
+			}
+			return { stem, source, ident: match[1], from: `./registrations/${stem}` };
+		});
+}
+
+function renderRecipeRegistrations(scan: RecipeScanEntry[]): string {
+	const imports = scan.map((entry) => `import { ${entry.ident} } from '${entry.from}';`).join('\n');
+	const idents = scan.map((entry) => entry.ident);
+
+	return `/**
+ * Generated registration barrel for the default recipe registry item.
+ * Consumers explicitly opt into this visual layer with FormComposer.addRecipes().
+ */
+${imports}
+
+export type { BuiltInRecipeRegistry } from './recipe-registry';
+
+export {
+	${idents.join(',\n\t')},
+};
+
+export const schemaFormRecipeRegistrations = [
+	${idents.join(',\n\t')},
+];
+`;
+}
+
+interface RecipeManifest {
+	/** The one-time registry augmentation file. */
+	registry: string;
+	recipes: Array<{ id: string; title: string; files: string[] }>;
+}
+
+/**
+ * Maps each recipe to the files a consumer needs to copy it into an
+ * application. The docs site renders from this instead of re-parsing sources.
+ */
+function renderRecipeManifest(scan: RecipeScanEntry[]): string {
+	const manifest: RecipeManifest = {
+		registry: 'recipe-registry.ts',
+		recipes: scan.map(({ stem, source }) => ({
+			id: stem,
+			title: recipeTitle(stem),
+			files: recipeSourceFiles(`registrations/${stem}.ts`, source),
+		})),
+	};
+
+	return `${JSON.stringify(manifest, null, 2)}\n`;
+}
+
 function toRegistryItem(item: CatalogItem) {
 	const { registration: _registration, ...rest } = item;
 	return {
@@ -729,8 +897,12 @@ function buildRootRegistry() {
 export function buildOutputs(): Map<string, string> {
 	const outputs = new Map<string, string>();
 
+	const recipeScan = scanRecipeRegistrations();
+
 	outputs.set('registry.json', `${JSON.stringify(buildRootRegistry(), null, 2)}\n`);
 	outputs.set(`${SHARED_FORMS_ROOT}/registrations.ts`, renderRegistrations(elementRegistrations()));
+	outputs.set(`${SHARED_FORMS_ROOT}/recipes/registrations.ts`, renderRecipeRegistrations(recipeScan));
+	outputs.set(`${SHARED_FORMS_ROOT}/recipes/manifest.json`, renderRecipeManifest(recipeScan));
 
 	for (const entry of catalogsByBase) {
 		outputs.set(

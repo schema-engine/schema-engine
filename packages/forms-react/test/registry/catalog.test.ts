@@ -9,6 +9,12 @@ const AGGREGATES = [
 	{ name: 'schema-form-aria', depPrefix: `${github}/schema-engine-form-` },
 ];
 
+const RECIPE_AGGREGATES = [
+	'schema-engine-form-recipes',
+	'schema-engine-form-recipes-radix',
+	'schema-engine-form-recipes-aria',
+];
+
 describe('schema-engine GitHub registry catalog', () => {
 	test('catalog is internally consistent', () => {
 		expect(validateCatalog()).toEqual([]);
@@ -35,6 +41,18 @@ describe('schema-engine GitHub registry catalog', () => {
 			}
 		}
 	});
+
+	for (const name of RECIPE_AGGREGATES) {
+		test(`${name} installs the explicit default recipe barrel`, () => {
+			const item = catalog.find((entry) => entry.name === name);
+			expect(item).toBeDefined();
+			expect(item?.files.some((file) => file.target.endsWith('/recipes/registrations.ts'))).toBe(true);
+			expect(item?.files.some((file) => file.target.endsWith('/recipes/recipe-registry.ts'))).toBe(true);
+			expect(item?.registryDependencies).toEqual(
+				expect.arrayContaining(['button', 'badge', 'progress', 'separator']),
+			);
+		});
+	}
 
 	test('every file has an @components or @ui target', () => {
 		for (const item of catalog) {

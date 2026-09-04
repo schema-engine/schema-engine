@@ -31,6 +31,12 @@ export function assertRecipeSlotSchemas(
 	}
 }
 
+/**
+ * Declares a recipe's `$type`, kind, slot schemas, and metadata.
+ *
+ * Single-step recipes cannot declare `progress` or `actions`. Wizard recipes
+ * must declare `actions`. Built-in specs are exported from this module.
+ */
 export function defineRecipeSpec<TType extends string, TSchema extends z.ZodTypeAny>(definition: {
 	$type: TType;
 	kind: RecipeKind;

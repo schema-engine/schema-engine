@@ -909,6 +909,133 @@
           "target": "@components/schema-engine/forms/content/index.ts"
         }
       ]
+    },
+    {
+      "name": "schema-engine-form-recipes",
+      "type": "registry:item",
+      "title": "Schema Engine default recipes (Base UI)",
+      "description": "Default Base UI view recipes and the generated recipe registration barrel.",
+      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createReactFormComposer().addRecipes(...).",
+      "registryDependencies": [
+        "button",
+        "badge",
+        "progress",
+        "separator",
+        "andeeplus/schema-engine/schema-engine-form-utils"
+      ],
+      "dependencies": [
+        "@schema-engine/forms-react",
+        "@schema-engine/forms",
+        "zod",
+        "lucide-react"
+      ],
+      "files": [
+        {
+          "path": "../shared/forms/recipes/blocks/minimal-progress.tsx",
+          "type": "registry:component",
+          "target": "@components/schema-engine/forms/recipes/blocks/minimal-progress.tsx"
+        },
+        {
+          "path": "../shared/forms/recipes/blocks/step-header.tsx",
+          "type": "registry:component",
+          "target": "@components/schema-engine/forms/recipes/blocks/step-header.tsx"
+        },
+        {
+          "path": "../shared/forms/recipes/blocks/step-indicators.tsx",
+          "type": "registry:component",
+          "target": "@components/schema-engine/forms/recipes/blocks/step-indicators.tsx"
+        },
+        {
+          "path": "../shared/forms/recipes/blocks/wizard-actions.tsx",
+          "type": "registry:component",
+          "target": "@components/schema-engine/forms/recipes/blocks/wizard-actions.tsx"
+        },
+        {
+          "path": "../shared/forms/recipes/index.ts",
+          "type": "registry:lib",
+          "target": "@components/schema-engine/forms/recipes/index.ts"
+        },
+        {
+          "path": "../shared/forms/recipes/recipe-registry.ts",
+          "type": "registry:lib",
+          "target": "@components/schema-engine/forms/recipes/recipe-registry.ts"
+        },
+        {
+          "path": "../shared/forms/recipes/registrations/bare-controls.ts",
+          "type": "registry:lib",
+          "target": "@components/schema-engine/forms/recipes/registrations/bare-controls.ts"
+        },
+        {
+          "path": "../shared/forms/recipes/registrations/card-wizard.ts",
+          "type": "registry:lib",
+          "target": "@components/schema-engine/forms/recipes/registrations/card-wizard.ts"
+        },
+        {
+          "path": "../shared/forms/recipes/registrations/card.ts",
+          "type": "registry:lib",
+          "target": "@components/schema-engine/forms/recipes/registrations/card.ts"
+        },
+        {
+          "path": "../shared/forms/recipes/registrations/hero-background.ts",
+          "type": "registry:lib",
+          "target": "@components/schema-engine/forms/recipes/registrations/hero-background.ts"
+        },
+        {
+          "path": "../shared/forms/recipes/registrations/hero-wizard.ts",
+          "type": "registry:lib",
+          "target": "@components/schema-engine/forms/recipes/registrations/hero-wizard.ts"
+        },
+        {
+          "path": "../shared/forms/recipes/registrations/sidebar-wizard.ts",
+          "type": "registry:lib",
+          "target": "@components/schema-engine/forms/recipes/registrations/sidebar-wizard.ts"
+        },
+        {
+          "path": "../shared/forms/recipes/registrations/split-screen-wizard.ts",
+          "type": "registry:lib",
+          "target": "@components/schema-engine/forms/recipes/registrations/split-screen-wizard.ts"
+        },
+        {
+          "path": "../shared/forms/recipes/registrations/split-screen.ts",
+          "type": "registry:lib",
+          "target": "@components/schema-engine/forms/recipes/registrations/split-screen.ts"
+        },
+        {
+          "path": "../shared/forms/recipes/registrations/wizard.ts",
+          "type": "registry:lib",
+          "target": "@components/schema-engine/forms/recipes/registrations/wizard.ts"
+        },
+        {
+          "path": "../shared/forms/recipes/registrations.ts",
+          "type": "registry:lib",
+          "target": "@components/schema-engine/forms/recipes/registrations.ts"
+        },
+        {
+          "path": "../shared/forms/recipes/shells/card-shell.tsx",
+          "type": "registry:component",
+          "target": "@components/schema-engine/forms/recipes/shells/card-shell.tsx"
+        },
+        {
+          "path": "../shared/forms/recipes/shells/hero-shell.tsx",
+          "type": "registry:component",
+          "target": "@components/schema-engine/forms/recipes/shells/hero-shell.tsx"
+        },
+        {
+          "path": "../shared/forms/recipes/shells/sidebar-shell.tsx",
+          "type": "registry:component",
+          "target": "@components/schema-engine/forms/recipes/shells/sidebar-shell.tsx"
+        },
+        {
+          "path": "../shared/forms/recipes/shells/split-screen-shell.tsx",
+          "type": "registry:component",
+          "target": "@components/schema-engine/forms/recipes/shells/split-screen-shell.tsx"
+        },
+        {
+          "path": "../shared/forms/recipes/shells/stack-shell.tsx",
+          "type": "registry:component",
+          "target": "@components/schema-engine/forms/recipes/shells/stack-shell.tsx"
+        }
+      ]
     }
   ]
 }

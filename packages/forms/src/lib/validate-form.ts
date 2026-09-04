@@ -2,6 +2,7 @@ import type { FormConfig } from '@/schemas/form-config';
 import type { RecipeRegistration } from '@/types';
 import { validateRegistrationConfig } from '@/lib/standard-schema';
 
+/** Implicit `view.$type` for multi-step forms that omit `view`. */
 export const DEFAULT_WIZARD_RECIPE = 'bare-controls';
 
 export class FormValidationError extends Error {
@@ -19,23 +20,66 @@ export interface ValidateFormOptions {
 	parseFormConfig: (config: unknown) => FormConfig;
 }
 
-export function resolveFormRecipe(
-	config: FormConfig,
-	getRecipe?: (id: string) => RecipeRegistration<any, any> | undefined,
-): RecipeRegistration<any, any> | undefined {
+/**
+ * Engine-shaped lookup passed to {@link resolveFormRecipe}.
+ *
+ * Pass the `FormEngine` instance (or a stable `{ getRecipe }` object). Object
+ * identity is the warn-cache key: a new lambda every render will warn on every
+ * render.
+ */
+export interface RecipeLookup {
+	getRecipe: (id: string) => RecipeRegistration<any, any> | undefined;
+}
+
+/** Per-engine form ids already warned, so re-renders of the same engine do not spam. */
+const warnedMultiStepForms = new WeakMap<RecipeLookup, Set<string>>();
+
+function warnMissingDefaultWizard(lookup: RecipeLookup, config: FormConfig) {
+	let warned = warnedMultiStepForms.get(lookup);
+	if (!warned) {
+		warned = new Set();
+		warnedMultiStepForms.set(lookup, warned);
+	}
+	if (warned.has(config.id)) return;
+	warned.add(config.id);
+	console.warn(
+		`Form '${config.id}' has ${config.steps.length} steps but no '${DEFAULT_WIZARD_RECIPE}' recipe is registered. ` +
+			'The form renders as a single page without a view layout. ' +
+			'Register a wizard recipe with FormComposer.addRecipe() (or addRecipes()) or set an explicit view.$type.',
+	);
+}
+
+/**
+ * Resolves the view recipe for a form at render time.
+ *
+ * - Explicit `view.$type`: looks up that recipe. Throws if `lookup` is missing
+ *   or the type is unregistered.
+ * - No `view`, one step or fewer: returns `undefined` (fields only).
+ * - No `view`, two or more steps: looks up {@link DEFAULT_WIZARD_RECIPE}.
+ * - Engine present but that recipe is missing: warns once per engine/form id
+ *   and returns `undefined`. `validateForm` / `defineForm` still succeed.
+ * - No `lookup` (engine-less render): stays silent and returns `undefined`.
+ */
+export function resolveFormRecipe(config: FormConfig, lookup?: RecipeLookup): RecipeRegistration<any, any> | undefined {
 	const requestedType = config.view?.$type;
 	if (requestedType) {
-		if (!getRecipe) {
+		if (!lookup) {
 			throw new Error(`Form '${config.id}' uses view '${requestedType}' but no FormEngine was supplied.`);
 		}
-		const recipe = getRecipe(requestedType);
+		const recipe = lookup.getRecipe(requestedType);
 		if (!recipe) {
 			throw new Error(`Unknown view recipe '${requestedType}'. Register it with FormComposer.addRecipe().`);
 		}
 		return recipe;
 	}
 
-	return config.steps.length > 1 ? getRecipe?.(DEFAULT_WIZARD_RECIPE) : undefined;
+	if (config.steps.length <= 1) return undefined;
+
+	const recipe = lookup?.getRecipe(DEFAULT_WIZARD_RECIPE);
+	if (recipe || !lookup) return recipe;
+
+	warnMissingDefaultWizard(lookup, config);
+	return undefined;
 }
 
 export function resolveValidatedConfig(

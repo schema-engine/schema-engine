@@ -6,13 +6,13 @@ import { describe, test, expect } from 'vitest';
 import { createReactFormComposer } from '@/registries/builder-registry';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { FormTextarea } from '@/components/schema-engine/forms/inputs/form-textarea';
-import { CardRecipe } from '@/recipes';
+import { CardRecipe } from '@/components/schema-engine/forms/recipes/registrations';
 import { InputFieldSchema } from '@/components/schema-engine/forms/inputs/form-input.types';
 import { TextareaFieldSchema } from '@/components/schema-engine/forms/inputs/form-textarea.types';
 
 describe('React Form Engine Builder', () => {
 	describe('Builder Creation', () => {
-		test('should create a new builder instance with built-in recipes', () => {
+		test('should create a new headless builder instance', () => {
 			const builder = createReactFormComposer();
 			expect(typeof builder.addElement).toBe('function');
 			expect(typeof builder.addRecipe).toBe('function');
@@ -81,12 +81,12 @@ describe('React Form Engine Builder', () => {
 	});
 
 	describe('Recipe Registration', () => {
-		test('should register built-in recipes', () => {
+		test('registers recipes only when explicitly added', () => {
 			const engine = createReactFormComposer().build();
 
-			expect(engine.hasRecipe('card')).toBe(true);
-			expect(engine.getRecipe('card')?.$type).toBe('card');
-			expect(engine.getRecipe('card')?.metadata.name).toBe(CardRecipe.metadata.name);
+			expect(engine.getRecipeIds()).toEqual([]);
+			const recipeEngine = createReactFormComposer().addRecipe(CardRecipe).build();
+			expect(recipeEngine.getRecipe('card')?.metadata.name).toBe(CardRecipe.metadata.name);
 		});
 	});
 
@@ -95,7 +95,7 @@ describe('React Form Engine Builder', () => {
 			const engine = createReactFormComposer().addElement(InputElementRegistration).build();
 
 			expect(engine.hasElement('input')).toBe(true);
-			expect(engine.hasRecipe('card')).toBe(true);
+			expect(engine.getRecipeIds()).toEqual([]);
 		});
 	});
 
@@ -114,19 +114,19 @@ describe('React Form Engine Builder', () => {
 			const summary = engine.getSummary();
 
 			expect(summary.elements.count).toBe(1);
-			expect(summary.recipes.count).toBeGreaterThan(0);
+			expect(summary.recipes.count).toBe(0);
 		});
 
-		test('should allow building an engine with recipes and no elements', () => {
+		test('should allow building a headless engine with no registrations', () => {
 			const engine = createReactFormComposer().build();
 
 			expect(engine.getElementIds()).toEqual([]);
 			expect(engine.getActionTypes()).toEqual([]);
-			expect(engine.getRecipeIds().length).toBeGreaterThan(0);
+			expect(engine.getRecipeIds()).toEqual([]);
 			const summary = engine.getSummary();
 			expect(summary.elements.count).toBe(0);
 			expect(summary.actions.count).toBe(0);
-			expect(summary.recipes.count).toBeGreaterThan(0);
+			expect(summary.recipes.count).toBe(0);
 		});
 	});
 
@@ -181,7 +181,7 @@ describe('React Form Engine Builder', () => {
 			const engine = createReactFormComposer().addElement(InputElementRegistration).build();
 
 			expect(engine.hasElement('input')).toBe(true);
-			expect(engine.hasRecipe('wizard')).toBe(true);
+			expect(engine.getRecipeIds()).toEqual([]);
 
 			const element = engine.getElement('input');
 			expect(element?.$type).toBe('input');

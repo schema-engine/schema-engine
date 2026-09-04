@@ -1,6 +1,11 @@
 import { describe, expect, test } from 'vitest';
 import { validateRegistrationConfig } from '@schema-engine/forms/lib/standard-schema';
-import { CardRecipe, CardWizardRecipe, SplitScreenRecipe, WizardRecipe } from '@/recipes';
+import {
+	CardRecipe,
+	CardWizardRecipe,
+	SplitScreenRecipe,
+	WizardRecipe,
+} from '@/components/schema-engine/forms/recipes/registrations';
 
 describe('recipe view schemas accept partial slot config', () => {
 	test('card with shell only', () => {

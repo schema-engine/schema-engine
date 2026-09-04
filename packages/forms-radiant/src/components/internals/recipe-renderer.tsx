@@ -27,7 +27,7 @@ export function RecipeRenderer({
 	recipe?: RecipeRegistration<any, any>;
 	children?: JsxRenderable;
 }): JsxRenderable {
-	const recipe = providedRecipe ?? resolveFormRecipe(config, engine ? (id) => engine.getRecipe(id) : undefined);
+	const recipe = providedRecipe ?? resolveFormRecipe(config, engine);
 	const step = config.steps[instance.currentStep] as FormStep | undefined;
 	if (!step) return null;
 	const content = (
