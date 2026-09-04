@@ -52,7 +52,7 @@ const config = await new ConfigBuilder()
 			},
 		}),
 	])
-	.setAdditionalWatchPaths(['src/data', 'src/content'])
+	.setAdditionalWatchPaths(['src/data', 'src/content', '../../registry/shared/forms/recipes'])
 	.setDevToolbar(devToolbar())
 	.build();
 

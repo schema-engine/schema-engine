@@ -8,6 +8,7 @@ import { getFieldGridStyles } from '@/hooks/grid-styles';
 import { toFieldRules } from '@/lib/field-rules';
 import {
 	createPatternMaskOptions,
+	getMaskedInputPlaceholder,
 	loadIMask,
 	parseUnmaskMode,
 	readMaskValue,
@@ -26,7 +27,7 @@ export class SeMaskedInput extends RadiantElement {
 	@prop({ type: String }) inputMode = '';
 	@prop({ type: String }) placeholderChar = '';
 	@prop({ type: String }) defaultValue = '';
-	@prop({ type: Boolean, defaultValue: false }) lazy = false;
+	@prop({ type: Boolean, defaultValue: true }) lazy = true;
 	@prop({ type: Boolean, defaultValue: false }) overwrite = false;
 	@prop({ type: Boolean, defaultValue: false }) autoFocus = false;
 	@prop({ type: Boolean, defaultValue: false }) disabled = false;
@@ -119,7 +120,7 @@ export class SeMaskedInput extends RadiantElement {
 					data-ref="input"
 					class="rui-input se-masked__input"
 					type="text"
-					placeholder={this.placeholder}
+					placeholder={getMaskedInputPlaceholder(this.mask, this.placeholder)}
 					autocomplete={this.autoComplete || undefined}
 					inputmode={this.inputMode || undefined}
 					autofocus={this.autoFocus}
@@ -157,7 +158,7 @@ export function FormMaskedInput({
 				'prop:inputId': config.id ?? '',
 				'prop:mask': config.mask,
 				'prop:unmask': config.unmask === 'typed' ? 'typed' : config.unmask ? 'true' : '',
-				'prop:lazy': Boolean(config.lazy),
+				'prop:lazy': config.lazy ?? true,
 				'prop:overwrite': Boolean(config.overwrite),
 				'prop:placeholderChar': config.placeholderChar ?? '',
 				'prop:definitions': config.definitions,

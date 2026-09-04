@@ -1,3 +1,5 @@
+@import '../components/blocks/wizard-blocks.css';
+
 se-form-engine-provider,
 se-form-renderer,
 se-form-instance,
@@ -6,7 +8,11 @@ se-view-provider,
 se-step-header,
 se-minimal-progress,
 se-step-indicators,
-se-wizard-actions,
+se-wizard-actions {
+	display: block;
+	width: 100%;
+}
+
 se-form-array,
 se-drop-zone,
 se-input-otp,
@@ -18,6 +24,10 @@ se-submission-alert {
 
 se-form-element {
 	display: contents;
+}
+
+se-split-screen-side {
+	display: flex;
 }
 
 se-form-renderer,
@@ -36,8 +46,8 @@ form.rui-form {
 .se-form-story--full .card-shell,
 .se-form-story--full .hero-shell,
 .se-form-story--full .split-screen-shell {
-	height: 100%;
-	min-height: 100%;
+	height: auto;
+	min-height: 100svh;
 }
 
 form.rui-form:has(> .se-form-elements) {
@@ -74,42 +84,95 @@ form.rui-form:has(.split-screen-shell) {
 }
 
 .se-stack-shell,
-.se-sidebar-shell,
-.se-sidebar-shell__main {
+.se-sidebar-shell {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-block-lg, 1.5rem);
+	min-width: 0;
 	min-height: 0;
 	width: 100%;
+	max-width: 40rem;
+	margin-inline: auto;
 }
 
-.se-sidebar-shell {
-	gap: 0;
-}
-
-.se-sidebar-shell__progress {
-	padding: var(--space-block, 1rem);
-	border-bottom: 1px solid var(--border, currentColor);
+.se-sidebar-shell__separator {
+	display: none;
 }
 
 .se-sidebar-shell__main {
-	padding: var(--space-block-lg, 1.5rem);
+	display: contents;
+}
+
+.se-sidebar-shell__header {
+	order: 1;
+}
+
+.se-sidebar-shell__progress {
+	order: 2;
+}
+
+.se-sidebar-shell__content {
+	order: 3;
+}
+
+.se-sidebar-shell__actions {
+	order: 4;
+}
+
+.se-sidebar-shell__header,
+.se-sidebar-shell__progress,
+.se-sidebar-shell__content,
+.se-sidebar-shell__actions {
+	min-width: 0;
 }
 
 @media (min-width: 768px) {
 	.se-sidebar-shell {
-		flex-direction: row;
+		display: grid;
+		grid-template-columns: min(18rem, 33%) 1fr;
+		grid-template-areas: 'progress main';
+		column-gap: var(--space-block-xl, 2rem);
+		align-items: stretch;
+		max-width: none;
+		margin-inline: 0;
+	}
+
+	.se-sidebar-shell:not(.se-sidebar-shell--no-separator) {
+		grid-template-columns: min(18rem, 33%) 1px 1fr;
+		grid-template-areas: 'progress separator main';
 	}
 
 	.se-sidebar-shell__progress {
-		flex: 0 0 min(18rem, 33%);
-		border-right: 1px solid var(--border, currentColor);
-		border-bottom: 0;
+		grid-area: progress;
+		order: unset;
+	}
+
+	.se-sidebar-shell__main {
+		display: flex;
+		grid-area: main;
+		flex-direction: column;
+		justify-content: flex-start;
+		gap: var(--space-block-lg, 1.5rem);
+		min-width: 0;
+	}
+
+	.se-sidebar-shell__header,
+	.se-sidebar-shell__content,
+	.se-sidebar-shell__actions {
+		order: unset;
+	}
+
+	.se-sidebar-shell:not(.se-sidebar-shell--no-separator) .se-sidebar-shell__separator {
+		display: block;
+		grid-area: separator;
+		align-self: stretch;
+		width: 1px;
+		margin: 0;
+		background: var(--color-border, var(--border, currentColor));
 	}
 }
 
-.se-stack-shell__content,
-.se-sidebar-shell__content {
+.se-stack-shell__content {
 	flex: 1 1 auto;
 	min-height: 0;
 }

@@ -49,8 +49,18 @@ export class StepIndicatorsElement extends RadiantElement {
 											{step.isCompleted ? '✓' : step.index + 1}
 										</span>
 									) : null}
-									{showTitles ? <span>{step.title || `Step ${step.index + 1}`}</span> : null}
-									{showDescriptions && step.description ? <small>{step.description}</small> : null}
+									{showTitles || (showDescriptions && step.description) ? (
+										<span class="se-step-indicators__copy">
+											{showTitles ? (
+												<span class="se-step-indicators__title">
+													{step.title || `Step ${step.index + 1}`}
+												</span>
+											) : null}
+											{showDescriptions && step.description ? (
+												<small>{step.description}</small>
+											) : null}
+										</span>
+									) : null}
 								</RuiButton>
 							</li>
 						);

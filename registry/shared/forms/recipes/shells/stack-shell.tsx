@@ -1,4 +1,4 @@
-import type { FormShellProps } from '@/recipes/types';
+import type { FormShellProps } from '@schema-engine/forms-react/primitives';
 
 export function StackShell({ slots }: FormShellProps) {
 	return (

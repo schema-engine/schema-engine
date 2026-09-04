@@ -46,26 +46,13 @@ export const Default: Story = {
 	},
 };
 
-export const FourSteps: Story = {
+export const WithoutSeparator: Story = {
 	args: {
 		config: {
 			...FormTemplates.registrationForm,
 			view: {
 				$type: 'sidebar-wizard',
-				progress: { orientation: 'sidebar', showStepTitles: true },
-			},
-		},
-	},
-};
-
-export const WithLongContent: Story = {
-	args: {
-		config: {
-			...FormTemplates.registrationForm,
-			title: 'Extended Onboarding',
-			description: 'Complete profile setup with detailed information',
-			view: {
-				$type: 'sidebar-wizard',
+				shell: { showSeparator: false },
 				progress: { orientation: 'sidebar', showStepTitles: true },
 			},
 		},

@@ -1,14 +1,14 @@
 /**
  * Walks registration files and asserts unique $type literals.
  * Form element registrations live in registry/shared/forms.
- * View recipes live in the package recipe table.
+ * View recipe implementations live in the registry source.
  */
 
 import { describe, expect, test } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { builtInRecipes } from '@/recipes';
+import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
 const testDir = path.dirname(fileURLToPath(import.meta.url));
 const SHARED_FORMS_ROOT = path.join(testDir, '..', '..', '..', '..', 'registry/shared/forms');
@@ -58,8 +58,8 @@ describe('registration parity', () => {
 		expect(types.size).toBe(files);
 	});
 
-	test('built-in recipes declare unique $type values', () => {
-		const types = builtInRecipes.map((recipe) => recipe.$type);
+	test('registry default recipes declare unique $type values', () => {
+		const types = schemaFormRecipeRegistrations.map((recipe) => recipe.$type);
 		expect(types.length).toBeGreaterThan(0);
 		expect(new Set(types).size).toBe(types.length);
 	});

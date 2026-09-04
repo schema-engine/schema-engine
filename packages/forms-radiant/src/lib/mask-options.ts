@@ -65,6 +65,51 @@ export function createPatternMaskOptions(config: PatternMaskConfig): PatternMask
 	return options;
 }
 
+export function maskToPlaceholder(mask: string): string {
+	let result = '';
+	let index = 0;
+
+	while (index < mask.length) {
+		const char = mask[index];
+
+		if (char === '\\') {
+			index += 1;
+			if (index < mask.length) {
+				result += mask[index];
+				index += 1;
+			}
+			continue;
+		}
+
+		if (char === '[' || char === ']' || char === '{' || char === '}' || char === '`') {
+			index += 1;
+			continue;
+		}
+
+		if (char === '0') {
+			result += '0';
+		} else if (char === 'a') {
+			result += 'A';
+		} else if (char === '*') {
+			result += '·';
+		} else {
+			result += char;
+		}
+
+		index += 1;
+	}
+
+	return result;
+}
+
+export function getMaskedInputPlaceholder(mask: string, placeholder?: string): string {
+	if (placeholder?.trim()) {
+		return placeholder;
+	}
+
+	return mask ? maskToPlaceholder(mask) : '';
+}
+
 export function readMaskValue(mask: MaskValueSource, unmask: UnmaskMode) {
 	if (unmask === 'typed') {
 		const typed = mask.typedValue;

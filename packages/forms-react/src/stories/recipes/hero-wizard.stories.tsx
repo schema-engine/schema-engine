@@ -5,8 +5,6 @@ import { rhfAdapter } from '@/stories/shared/form-builder.ui';
 import { recipeStoryDecorators, recipeStoryEngine } from './shared/recipe-story';
 
 const gradientImage = 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80';
-const natureImage = 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=80';
-const gradientAltImage = 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1920&q=80';
 
 const meta = {
 	title: 'Recipes/Hero Wizard',
@@ -51,26 +49,13 @@ export const Default: Story = {
 	},
 };
 
-export const NatureBackground: Story = {
-	args: {
-		config: {
-			...FormTemplates.registrationForm,
-			view: {
-				$type: 'hero-wizard',
-				shell: { backgroundImage: natureImage, contentWidth: 'lg' },
-				progress: { showPercentage: true },
-			},
-		},
-	},
-};
-
 export const SmallContent: Story = {
 	args: {
 		config: {
 			...FormTemplates.registrationForm,
 			view: {
 				$type: 'hero-wizard',
-				shell: { backgroundImage: gradientAltImage, contentWidth: 'sm' },
+				shell: { backgroundImage: gradientImage, contentWidth: 'sm' },
 				progress: { showPercentage: true },
 			},
 		},

@@ -25,6 +25,12 @@ export const SplitScreenShellConfigSchema = z
 	})
 	.strict();
 
+export const SidebarShellConfigSchema = z
+	.object({
+		showSeparator: z.boolean().optional(),
+	})
+	.strict();
+
 export const StepHeaderConfigSchema = z
 	.object({
 		showDescription: z.boolean().optional(),
@@ -98,6 +104,7 @@ export const DEFAULT_WIZARD_ACTION_LABELS = {
 export type CardShellConfig = z.infer<typeof CardShellConfigSchema>;
 export type HeroShellConfig = z.infer<typeof HeroShellConfigSchema>;
 export type SplitScreenShellConfig = z.infer<typeof SplitScreenShellConfigSchema>;
+export type SidebarShellConfig = z.infer<typeof SidebarShellConfigSchema>;
 export type StepHeaderConfig = z.infer<typeof StepHeaderConfigSchema>;
 export type MinimalProgressConfig = z.infer<typeof MinimalProgressConfigSchema>;
 export type StepIndicatorsConfig = z.infer<typeof StepIndicatorsConfigSchema>;

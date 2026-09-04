@@ -3,6 +3,12 @@ import type { z } from 'zod';
 import type { RecipeRegistration } from '@/types';
 import type { RecipeSpec } from './types';
 
+/**
+ * Binds a recipe spec to a framework render payload (shell and slot components).
+ *
+ * Specs are canonical in this package. React implementations typically come
+ * from the Schema Engine registry; Radiant binds its own payload in-package.
+ */
 export function defineFormRecipe<TType extends string, TSchema extends z.ZodTypeAny, TRender>(
 	spec: RecipeSpec<TType, TSchema>,
 	render: TRender,

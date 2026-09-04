@@ -4,7 +4,11 @@
  * All forms-react imports go through `forms-react-host` so the island shares
  * one React instance with FormRenderer.
  */
-import { createReactFormComposer, schemaFormRegistrations } from '@/lib/forms-react-host';
+import {
+	createReactFormComposer,
+	schemaFormRecipeRegistrations,
+	schemaFormRegistrations,
+} from '@/lib/forms-react-host';
 
 import { formSubmitPlugin, notificationPlugin, formResetPlugin, autoSavePlugin } from '@schema-engine/forms/actions';
 
@@ -12,6 +16,7 @@ import '@schema-engine/forms/schemas/validation/validation-registry';
 
 export const formEngine = createReactFormComposer()
 	.addElements(schemaFormRegistrations)
+	.addRecipes(schemaFormRecipeRegistrations)
 	.addAction(
 		formSubmitPlugin({
 			onSuccess: (data, context) => {

@@ -34,22 +34,24 @@ values used in serialized configuration.
 
 ## React composer
 
-The React adapter provides a convenience factory that registers its built-in
-view recipes. It does not own application field components: install a Schema
-Engine registry item and pass the generated element registrations explicitly.
+The React adapter provides a headless convenience factory. It does not own
+application field components or visual recipes: install Schema Engine registry
+items and pass their generated registrations explicitly.
 
 ```ts
 import { createReactFormComposer } from '@schema-engine/forms-react';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
+import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
 const engine = createReactFormComposer()
 	.addElements(schemaFormRegistrations)
+	.addRecipes(schemaFormRecipeRegistrations)
 	.build();
 ```
 
-Radiant follows the same composition model, but its factory starts with no
-elements or recipes. Register the Radiant package's exports before using those
-types in a config.
+Radiant uses the same composition model for elements: register them explicitly.
+`createRadiantFormComposer()` already binds the canonical view recipes because
+Radiant has no shadcn registry. Specs still come from `@schema-engine/forms/recipes`.
 
 ## Build configuration fluently
 

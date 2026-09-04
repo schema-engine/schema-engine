@@ -4,6 +4,7 @@ import {
 	HeroShellConfigSchema,
 	MinimalProgressConfigSchema,
 	SplitScreenShellConfigSchema,
+	SidebarShellConfigSchema,
 	StepHeaderConfigSchema,
 	StepIndicatorsConfigSchema,
 	WizardActionsConfigSchema,
@@ -88,11 +89,12 @@ export const sidebarWizardSpec = defineRecipeSpec({
 	$type: 'sidebar-wizard',
 	kind: 'wizard',
 	slotSchemas: {
+		shell: SidebarShellConfigSchema,
 		header: StepHeaderConfigSchema,
 		progress: StepIndicatorsConfigSchema,
 		actions: WizardActionsConfigSchema,
 	},
-	slotDefaults: { header: { size: 'sm' }, progress: { orientation: 'sidebar' } },
+	slotDefaults: { shell: { showSeparator: true }, header: { size: 'sm' }, progress: { orientation: 'sidebar' } },
 	metadata: {
 		name: 'Sidebar wizard',
 		description: 'Multi-step wizard with step indicators in a sidebar.',
@@ -169,6 +171,7 @@ export interface BuiltInRecipeRegistry {
 	};
 	'sidebar-wizard': {
 		$type: 'sidebar-wizard';
+		shell?: import('./slot-schemas').SidebarShellConfig;
 		header?: import('./slot-schemas').StepHeaderConfig;
 		progress?: import('./slot-schemas').StepIndicatorsConfig;
 		actions?: import('./slot-schemas').WizardActionsConfig;

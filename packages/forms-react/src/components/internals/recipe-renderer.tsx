@@ -5,9 +5,7 @@ import { resolveFormRecipe, type RecipeRegistration } from '@schema-engine/forms
 import { useFormContext } from '@/adapters/context';
 import { useOptionalFormEngine, useFormInstanceActions } from '@/hooks/use-form-context';
 import { ViewProvider } from '@/contexts/view-context';
-import type { ReactRecipeAdapterPayload } from '@/recipes/types';
-
-import './recipe-renderer.css';
+import type { ReactRecipeAdapterPayload } from '@/primitives';
 
 function createInitialStepStates(config: FormConfig) {
 	return {
@@ -44,7 +42,7 @@ export function RecipeRenderer({ config, children, renderFields }: RecipeRendere
 	const engineContext = useOptionalFormEngine();
 	const { formState } = useFormContext();
 	const { stepStates, currentStep, navigation } = useFormInstanceActions();
-	const recipe = resolveFormRecipe(config, engineContext ? (id) => engineContext.engine.getRecipe(id) : undefined);
+	const recipe = resolveFormRecipe(config, engineContext?.engine);
 	if (!recipe) {
 		return (
 			<>

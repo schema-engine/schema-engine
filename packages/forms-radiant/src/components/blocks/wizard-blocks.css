@@ -1,0 +1,168 @@
+.se-step-header__counter {
+	margin: 0;
+	font-size: 0.875rem;
+	font-variant-numeric: tabular-nums;
+	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
+}
+
+.se-minimal-progress {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	width: 100%;
+}
+
+.se-minimal-progress__labels {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	font-size: 0.875rem;
+}
+
+.se-minimal-progress__labels span:last-child {
+	font-variant-numeric: tabular-nums;
+	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
+}
+
+.se-minimal-progress__track {
+	height: 0.5rem;
+	overflow: hidden;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--on-surface, currentColor) 12%, transparent);
+}
+
+.se-minimal-progress__fill {
+	height: 100%;
+	border-radius: inherit;
+	background: var(--primary);
+}
+
+.se-step-indicators,
+.se-minimal-progress,
+.se-wizard-actions {
+	width: 100%;
+	min-width: 0;
+}
+
+.se-step-indicators {
+	overflow-x: auto;
+}
+
+.se-step-indicators__list {
+	display: flex;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	gap: 0.5rem;
+	min-width: 100%;
+}
+
+.se-step-indicators__item {
+	display: flex;
+	flex: 1 1 0;
+	min-width: 7.5rem;
+}
+
+.se-step-indicators .rui-button {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 0.5rem;
+	width: 100%;
+	min-width: 0;
+	height: auto;
+	padding: 0.75rem;
+	border-radius: var(--radius-control, 0.75rem);
+	text-align: center;
+	white-space: normal;
+}
+
+.se-step-indicators__copy {
+	display: flex;
+	min-width: 0;
+	flex: 1 1 auto;
+	flex-direction: column;
+	gap: 0.25rem;
+	width: 100%;
+	align-items: center;
+	text-align: center;
+}
+
+@media (min-width: 768px) {
+	.se-step-indicators--sidebar {
+		overflow-x: visible;
+	}
+
+	.se-step-indicators--sidebar .se-step-indicators__list {
+		flex-direction: column;
+		gap: 0.25rem;
+		min-width: 0;
+	}
+
+	.se-step-indicators--sidebar .se-step-indicators__item {
+		min-width: 0;
+		width: 100%;
+	}
+
+	.se-step-indicators--sidebar .rui-button {
+		flex-direction: row;
+		align-items: center;
+		justify-content: flex-start;
+		text-align: left;
+	}
+
+	.se-step-indicators--sidebar .se-step-indicators__copy {
+		width: auto;
+		align-items: flex-start;
+		text-align: left;
+	}
+}
+
+.se-step-indicators__title {
+	font-weight: 500;
+	overflow-wrap: break-word;
+	text-wrap: balance;
+}
+
+.se-step-indicators .rui-button[data-active='true'] {
+	background: color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
+.se-step-indicators__number {
+	display: inline-flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	width: 2rem;
+	height: 2rem;
+	border: 1px solid var(--border, currentColor);
+	border-radius: 999px;
+	font-size: 0.875rem;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+.se-step-indicators .rui-button[data-active='true'] .se-step-indicators__number {
+	border-color: var(--primary);
+	color: var(--primary);
+}
+
+.se-step-indicators .rui-button[data-completed='true'] .se-step-indicators__number {
+	border-color: var(--primary);
+	background: var(--primary);
+	color: var(--on-primary, #fff);
+}
+
+.se-step-indicators small {
+	display: block;
+	font-size: 0.75rem;
+	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
+}
+
+.se-wizard-actions__counter {
+	font-size: 0.875rem;
+	font-variant-numeric: tabular-nums;
+	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
+}

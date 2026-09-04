@@ -40,6 +40,8 @@ import { createReactFormComposer } from '@schema-engine/forms-react';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
 const engine = createReactFormComposer().addElements(schemaFormRegistrations).build();
+// Register schemaFormRecipeRegistrations with addRecipes when the form sets
+// view.$type or has more than one step.
 
 // Registered element types are inferred from what you add to the composer.
 const myForm = {
@@ -145,12 +147,13 @@ graph TD
 
 ## 📦 Packages
 
-| Package                                                  | Version | Description                                                                                                          |
-| -------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
-| **[@schema-engine/forms](./packages/forms)**             | `0.1.0` | Contains the `FormComposer` and `FormEngine`. Handles validation logic, constraint evaluation, and state management. |
-| **[@schema-engine/forms-react](./packages/forms-react)** | `0.1.0` | Provides the React Context bridge, hooks, adapters, view recipes, and the shadcn-agnostic rendering runtime.         |
-| **[@schema-engine/actions](./packages/actions)**         | `0.1.0` | A standalone, domain-agnostic command pattern implementation for handling system events.                             |
-| **[@schema-engine/registry](./packages/registry)**       | `0.1.0` | The low-level type definitions and registry implementations that power the IoC container.                            |
+| Package                                                      | Version | Description                                                                                                          |
+| ------------------------------------------------------------ | ------- | -------------------------------------------------------------------------------------------------------------------- |
+| **[@schema-engine/forms](./packages/forms)**                 | `0.1.0` | Contains the `FormComposer` and `FormEngine`. Handles validation logic, constraint evaluation, and state management. |
+| **[@schema-engine/forms-react](./packages/forms-react)**     | `0.1.0` | React Context bridge, hooks, adapters, and rendering runtime. Default view recipes live in the shadcn registry.      |
+| **[@schema-engine/forms-radiant](./packages/forms-radiant)** | `0.1.0` | Radiant/JSX adapter. Binds canonical view recipes in-package; specs stay in `@schema-engine/forms/recipes`.          |
+| **[@schema-engine/actions](./packages/actions)**             | `0.1.0` | A standalone, domain-agnostic command pattern implementation for handling system events.                             |
+| **[@schema-engine/registry](./packages/registry)**           | `0.1.0` | The low-level type definitions and registry implementations that power the IoC container.                            |
 
 ---
 
@@ -160,14 +163,18 @@ See the full walkthrough in [Quick Start](./apps/docs/src/content/docs/getting-s
 
 ```bash
 pnpm add @schema-engine/forms @schema-engine/forms-react react-hook-form zod
-pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form
+pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-engine/schema-engine-form-recipes
 ```
 
 ```typescript
 import { createReactFormComposer } from '@schema-engine/forms-react';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
+import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
-const engine = createReactFormComposer().addElements(schemaFormRegistrations).build();
+const engine = createReactFormComposer()
+	.addElements(schemaFormRegistrations)
+	.addRecipes(schemaFormRecipeRegistrations)
+	.build();
 
 const contactFormSchema = {
 	id: 'contact-form',

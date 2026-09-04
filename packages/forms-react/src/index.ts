@@ -8,4 +8,4 @@ export * from '@/adapters';
 export * from '@/contexts';
 export * from '@/hooks';
 export * from '@/registries';
-export * from '@/recipes';
+export type { FormShellComponent, FormShellProps, ReactRecipeAdapterPayload } from '@/primitives';

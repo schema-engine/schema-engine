@@ -55,18 +55,6 @@ export const SmallCard: Story = {
 	},
 };
 
-export const MediumCard: Story = {
-	args: {
-		config: {
-			...FormTemplates.loginForm,
-			view: {
-				$type: 'card',
-				shell: { maxWidth: 'md', padding: 'md', shadowSize: 'md' },
-			},
-		},
-	},
-};
-
 export const LargeCard: Story = {
 	args: {
 		config: {

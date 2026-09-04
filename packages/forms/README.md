@@ -30,9 +30,20 @@ const form = engine.defineForm({
 ```
 
 Single-step forms may omit `view` to render fields directly. Multi-step forms
-use a registered wizard recipe when one is available. `engine.validateForm`
-performs the same strict schema, recipe-kind, and slot validation used by the
-builder.
+that omit `view` use the registered `bare-controls` recipe at **render** time.
+`engine.validateForm` still succeeds if that recipe is missing; the renderer
+warns and shows fields without chrome. `validateForm` does apply kind and slot
+checks when `view.$type` is set.
+
+## Who owns visual chrome
+
+| Layer                                                         | Owns                                                                |
+| ------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `@schema-engine/forms/recipes`                                | Specs, `defineFormRecipe`, kinds, slot schemas                      |
+| Schema Engine shadcn registry (`schema-engine-form-recipes*`) | React shells, blocks, `schemaFormRecipeRegistrations`               |
+| `@schema-engine/forms-radiant`                                | Radiant shells and blocks; `createRadiantFormComposer()` binds them |
+
+This package is framework-agnostic. It does not ship default visual recipes.
 
 ## Runtime and tooling
 
@@ -45,6 +56,3 @@ engine.getFormConfigStandardSchema();
 engine.describeViewCatalog();
 engine.getAuthoringInstructions();
 ```
-
-The package is framework-agnostic. React and Radiant packages provide the
-adapter payloads and built-in view recipes.

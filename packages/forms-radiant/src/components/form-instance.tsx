@@ -165,7 +165,7 @@ export class FormInstanceElement extends RadiantElement {
 		if (!config) {
 			return null;
 		}
-		const recipe = resolveFormRecipe(config, this.engine ? (id) => this.engine!.getRecipe(id) : undefined);
+		const recipe = resolveFormRecipe(config, this.engine);
 
 		return (
 			<ConfiguredRuiForm config={config} defaultValues={this.defaultValues} onSubmit={this.onSubmit}>

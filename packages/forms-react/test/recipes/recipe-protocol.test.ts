@@ -2,15 +2,25 @@ import { describe, expect, test } from 'vitest';
 import { z } from 'zod';
 import { validateRegistrationConfig } from '@schema-engine/forms/lib/standard-schema';
 import { defineFormRecipe, defineRecipeSpec } from '@schema-engine/forms/recipes';
-import { builtInRecipes } from '@/recipes';
+import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
 describe('recipe protocol', () => {
-	test('ships built-in recipes with kind constraints', () => {
-		const types = builtInRecipes.map((recipe) => recipe.$type);
-		expect(types).toContain('card');
-		expect(types).toContain('card-wizard');
-		expect(types).toContain('bare-controls');
-		expect(types).toContain('wizard');
+	test('registry-owned recipes use the canonical kind constraints', () => {
+		const types = schemaFormRecipeRegistrations.map((recipe) => recipe.$type);
+		expect(types).toHaveLength(9);
+		expect(new Set(types)).toEqual(
+			new Set([
+				'card',
+				'split-screen',
+				'hero-background',
+				'bare-controls',
+				'card-wizard',
+				'wizard',
+				'sidebar-wizard',
+				'hero-wizard',
+				'split-screen-wizard',
+			]),
+		);
 	});
 
 	test('bound recipes reuse canonical slot schemas', () => {

@@ -1,12 +1,15 @@
 import type { JsxRenderable } from '@ecopages/jsx';
-import '@ecopages/radiant-ui/heading/styles.css';
-import { RuiHeading, RuiHeadingDescription } from '@ecopages/radiant-ui/heading';
+import { contextSelector } from '@ecopages/radiant/context';
+import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import {
 	getSlotConfig,
 	type CardShellConfig,
 	type HeroShellConfig,
+	type SidebarShellConfig,
 	type SplitScreenShellConfig,
+	type ViewModel,
 } from '@schema-engine/forms/recipes';
+import { viewContext } from '@/contexts/view-context';
 import type { FormShellProps } from '@/recipes/types';
 import './card-shell.css';
 import './hero-shell.css';
@@ -23,15 +26,17 @@ export function StackShell({ slots }: FormShellProps): JsxRenderable {
 	);
 }
 
-export function SidebarShell({ slots }: FormShellProps): JsxRenderable {
+export function SidebarShell({ slots, viewConfig }: FormShellProps): JsxRenderable {
+	const { showSeparator = true } = getSlotConfig<SidebarShellConfig>(viewConfig, 'shell');
 	return (
-		<div class="se-sidebar-shell">
-			<aside class="se-sidebar-shell__progress">{slots.progress}</aside>
-			<main class="se-sidebar-shell__main">
+		<div class={showSeparator ? 'se-sidebar-shell' : 'se-sidebar-shell se-sidebar-shell--no-separator'}>
+			{slots.progress ? <aside class="se-sidebar-shell__progress">{slots.progress}</aside> : null}
+			<div class="se-sidebar-shell__separator" aria-hidden="true" />
+			<div class="se-sidebar-shell__main">
 				{slots.header ? <div class="se-sidebar-shell__header">{slots.header}</div> : null}
 				<div class="se-sidebar-shell__content">{slots.content}</div>
 				{slots.actions ? <div class="se-sidebar-shell__actions">{slots.actions}</div> : null}
-			</main>
+			</div>
 		</div>
 	);
 }
@@ -89,15 +94,10 @@ export function SplitScreenShell({ slots, viewConfig }: FormShellProps): JsxRend
 	} = getSlotConfig<SplitScreenShellConfig>(viewConfig, 'shell');
 	return (
 		<div class="split-screen-shell">
-			{sideContent ? (
-				<aside
-					class={`split-screen-shell__side split-screen-shell__side--${sideWidth}${sidePlacement === 'right' ? ' split-screen-shell__side--right' : ''}`}
-				>
-					<RuiHeading size="md" as="header">
-						<RuiHeadingDescription>{sideContent}</RuiHeadingDescription>
-					</RuiHeading>
-				</aside>
-			) : null}
+			<se-split-screen-side
+				class={`split-screen-shell__side split-screen-shell__side--${sideWidth}${sidePlacement === 'right' ? ' split-screen-shell__side--right' : ''}`}
+				prop:sideContent={sideContent}
+			/>
 			<main class={`split-screen-shell__main split-screen-shell__main--${contentAlignment}`}>
 				{slots.header}
 				{slots.progress}
@@ -106,4 +106,23 @@ export function SplitScreenShell({ slots, viewConfig }: FormShellProps): JsxRend
 			</main>
 		</div>
 	);
+}
+
+@customElement('se-split-screen-side')
+export class SplitScreenSideElement extends RadiantElement {
+	@prop({ type: String }) sideContent = '';
+	@contextSelector({ context: viewContext }) view!: ViewModel;
+
+	override render(): JsxRenderable {
+		if (!this.view) return null;
+		const title = this.view.form.title || this.view.activeStep.title;
+		const sideContent = this.sideContent;
+		if (!title && !sideContent) return null;
+		return (
+			<>
+				{title ? <h2 class="split-screen-shell__title">{title}</h2> : null}
+				{sideContent ? <p class="split-screen-shell__side-content">{sideContent}</p> : null}
+			</>
+		);
+	}
 }

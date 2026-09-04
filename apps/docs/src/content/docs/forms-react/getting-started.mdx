@@ -11,13 +11,23 @@ This guide walks you through building your first React form.
 
 ## 1. Create a Form Engine
 
-Install an aggregate from the Schema Engine shadcn registry, then import its generated registration barrel:
+Install the form elements and, when using a supplied visual recipe, the recipe source from the Schema Engine shadcn registry:
+
+```bash
+pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-engine/schema-engine-form-recipes
+```
+
+Then import their generated registration barrels:
 
 ```typescript
 import { createReactFormComposer } from '@schema-engine/forms-react';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
+import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
-const formEngine = createReactFormComposer().addElements(schemaFormRegistrations).build();
+const formEngine = createReactFormComposer()
+	.addElements(schemaFormRegistrations)
+	.addRecipes(schemaFormRecipeRegistrations)
+	.build();
 ```
 
 ## 2. Configure Your Form

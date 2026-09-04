@@ -1,6 +1,6 @@
-import { Progress } from '@/components/ui/progress';
-import { useViewConfig, useViewContext } from '@/contexts/view-context';
 import type { MinimalProgressConfig } from '@schema-engine/forms/recipes';
+import { useViewConfig, useViewContext } from '@schema-engine/forms-react/contexts';
+import { Progress } from '@/components/ui/progress';
 
 export function MinimalProgress() {
 	const { steps, currentStepIndex } = useViewContext();

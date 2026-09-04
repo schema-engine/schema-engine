@@ -32,37 +32,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Wizard: Story = {
+export const Default: Story = {
 	args: {
 		config: {
 			...FormTemplates.registrationForm,
-			view: {
-				$type: 'wizard',
-				progress: { showStepNumbers: true, showStepTitles: true, showStepDescriptions: false },
-			},
-		},
-	},
-};
-
-export const CardWizard: Story = {
-	args: {
-		config: {
-			...FormTemplates.registrationForm,
-			title: 'Product Survey',
-			view: {
-				$type: 'card-wizard',
-				shell: { maxWidth: 'md', padding: 'md', shadowSize: 'md' },
-				progress: { showPercentage: true },
-			},
-		},
-	},
-};
-
-export const ComplexForm: Story = {
-	args: {
-		config: {
-			...FormTemplates.registrationForm,
-			title: 'Complex Application Form',
 			view: {
 				$type: 'wizard',
 				progress: { showStepNumbers: true, showStepTitles: true, showStepDescriptions: false },

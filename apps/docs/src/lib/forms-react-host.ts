@@ -8,3 +8,4 @@ export { createRoot } from 'react-dom/client';
 export { FormEngineProvider, FormRenderer, createReactFormComposer } from '@schema-engine/forms-react';
 export { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
 export { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
+export { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';

@@ -30,7 +30,7 @@
 	"peerDependencies": {
 		"@ecopages/jsx": ">=0.3.0-rc.5",
 		"@ecopages/radiant": ">=0.3.0-rc.5",
-		"@ecopages/radiant-ui": ">=0.1.0-rc.10",
+		"@ecopages/radiant-ui": ">=0.1.0-rc.11",
 		"@ecopages/signals": ">=0.3.0-rc.5",
 		"@schema-engine/forms": "workspace:*",
 		"typescript": "^5",

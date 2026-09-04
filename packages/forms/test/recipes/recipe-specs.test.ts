@@ -43,6 +43,17 @@ describe('built-in recipe specs', () => {
 		expect(cardSpec.schema.safeParse({ $type: 'card', shell: { padding: 'md' } }).success).toBe(true);
 		expect(cardSpec.schema.safeParse({ $type: 'card', shell: { $type: 'card' } }).success).toBe(false);
 	});
+
+	test('sidebar wizard accepts optional shell separator', () => {
+		expect(builtInRecipeSpecs['sidebar-wizard'].slots).toContain('shell');
+		expect(builtInRecipeSpecs['sidebar-wizard'].schema.safeParse({ $type: 'sidebar-wizard' }).success).toBe(true);
+		expect(
+			builtInRecipeSpecs['sidebar-wizard'].schema.safeParse({
+				$type: 'sidebar-wizard',
+				shell: { showSeparator: false },
+			}).success,
+		).toBe(true);
+	});
 });
 
 describe('view model', () => {

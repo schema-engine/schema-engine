@@ -45,6 +45,10 @@ export class FormComposer<
 		return this;
 	}
 
+	/**
+	 * Register one view recipe. `$type` is the id used in `view.$type`.
+	 * A second registration with the same `$type` overrides the first.
+	 */
 	addRecipe<T extends RecipeRegistration<any, any>>(
 		registration: T,
 	): FormComposer<TElements, TRecipes & Record<ExtractTypeId<T>, ExtractSchemaType<T['schema']>>, TActions> {
@@ -52,6 +56,7 @@ export class FormComposer<
 		return this;
 	}
 
+	/** Register several recipes. Same `$type` override rules as {@link addRecipe}. */
 	addRecipes(registrations: RecipeRegistration<any, any>[]): this {
 		for (const registration of registrations) {
 			this.addRecipe(registration);

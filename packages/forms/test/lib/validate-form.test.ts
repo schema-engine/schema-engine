@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { z } from 'zod';
 import { FormComposer } from '@/builder';
 import {
@@ -8,6 +8,8 @@ import {
 	resolveValidatedConfig,
 } from '@/lib/validate-form';
 import type { RecipeRegistration } from '@/types';
+import { defineFormRecipe } from '@/recipes/define-form-recipe';
+import { sidebarWizardSpec } from '@/recipes/built-in-specs';
 
 const cardRecipeSchema = z
 	.object({
@@ -55,10 +57,52 @@ describe('validateFormConfig', () => {
 					{ id: 'two', title: 'Two', elements: [] },
 				],
 			},
-			(id) => (id === DEFAULT_WIZARD_RECIPE ? wizardRecipe : undefined),
+			{ getRecipe: (id) => (id === DEFAULT_WIZARD_RECIPE ? wizardRecipe : undefined) },
 		);
 
 		expect(recipe).toBe(wizardRecipe);
+	});
+
+	test('warns once per engine when a multi-step form has no wizard recipe registered', () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const config = {
+			id: 'headless-wizard',
+			steps: [
+				{ id: 'one', title: 'One', elements: [] },
+				{ id: 'two', title: 'Two', elements: [] },
+			],
+		};
+		const lookup = { getRecipe: () => undefined };
+
+		try {
+			expect(resolveFormRecipe(config, lookup)).toBeUndefined();
+			expect(resolveFormRecipe(config, lookup)).toBeUndefined();
+			expect(warn).toHaveBeenCalledTimes(1);
+			expect(warn.mock.calls[0]?.[0]).toMatch(/no 'bare-controls' recipe is registered/i);
+
+			expect(resolveFormRecipe(config, { getRecipe: () => undefined })).toBeUndefined();
+			expect(warn).toHaveBeenCalledTimes(2);
+		} finally {
+			warn.mockRestore();
+		}
+	});
+
+	test('stays silent for multi-step forms without an engine', () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		try {
+			expect(
+				resolveFormRecipe({
+					id: 'no-engine-wizard',
+					steps: [
+						{ id: 'one', title: 'One', elements: [] },
+						{ id: 'two', title: 'Two', elements: [] },
+					],
+				}),
+			).toBeUndefined();
+			expect(warn).not.toHaveBeenCalled();
+		} finally {
+			warn.mockRestore();
+		}
 	});
 
 	test('requires an engine for explicit view configuration', () => {
@@ -141,6 +185,27 @@ describe('validateFormConfig', () => {
 		};
 
 		expect(engine.defineForm(payload)).toEqual(engine.validateForm(payload));
+	});
+
+	test('sidebar wizard form config accepts view.shell', () => {
+		const engine = new FormComposer()
+			.addRecipe(defineFormRecipe(sidebarWizardSpec, { shell: null, slots: {} }))
+			.build();
+
+		expect(() =>
+			engine.validateForm({
+				id: 'onboarding',
+				view: {
+					$type: 'sidebar-wizard',
+					shell: { showSeparator: false },
+					progress: { orientation: 'sidebar', showStepTitles: true },
+				},
+				steps: [
+					{ id: 'one', title: 'One', elements: [] },
+					{ id: 'two', title: 'Two', elements: [] },
+				],
+			}),
+		).not.toThrow();
 	});
 
 	test('describeRecipe emits viewSchema from the recipe schema', () => {

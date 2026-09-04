@@ -5,8 +5,6 @@ import { rhfAdapter } from '@/stories/shared/form-builder.ui';
 import { recipeStoryDecorators, recipeStoryEngine } from './shared/recipe-story';
 
 const gradientImage = 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80';
-const natureImage = 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=80';
-const gradientAltImage = 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1920&q=80';
 
 const meta = {
 	title: 'Recipes/Hero Background',
@@ -42,19 +40,19 @@ export const Default: Story = {
 	args: {
 		config: {
 			...FormTemplates.contactForm,
-			view: { $type: 'hero-background' },
-		},
-	},
-};
-
-export const WithBackgroundImage: Story = {
-	args: {
-		config: {
-			...FormTemplates.contactForm,
 			view: {
 				$type: 'hero-background',
 				shell: { backgroundImage: gradientImage, contentWidth: 'md' },
 			},
+		},
+	},
+};
+
+export const WithoutImage: Story = {
+	args: {
+		config: {
+			...FormTemplates.contactForm,
+			view: { $type: 'hero-background' },
 		},
 	},
 };
@@ -71,61 +69,13 @@ export const SmallContent: Story = {
 	},
 };
 
-export const MediumContent: Story = {
-	args: {
-		config: {
-			...FormTemplates.contactForm,
-			view: {
-				$type: 'hero-background',
-				shell: { backgroundImage: gradientImage, contentWidth: 'md' },
-			},
-		},
-	},
-};
-
 export const LargeContent: Story = {
 	args: {
 		config: {
 			...FormTemplates.contactForm,
 			view: {
 				$type: 'hero-background',
-				shell: { backgroundImage: gradientImage, contentWidth: 'lg' },
-			},
-		},
-	},
-};
-
-export const ExtraLargeContent: Story = {
-	args: {
-		config: {
-			...FormTemplates.contactForm,
-			view: {
-				$type: 'hero-background',
 				shell: { backgroundImage: gradientImage, contentWidth: 'xl' },
-			},
-		},
-	},
-};
-
-export const GradientBackground: Story = {
-	args: {
-		config: {
-			...FormTemplates.contactForm,
-			view: {
-				$type: 'hero-background',
-				shell: { backgroundImage: gradientAltImage, contentWidth: 'md' },
-			},
-		},
-	},
-};
-
-export const NatureBackground: Story = {
-	args: {
-		config: {
-			...FormTemplates.contactForm,
-			view: {
-				$type: 'hero-background',
-				shell: { backgroundImage: natureImage, contentWidth: 'lg' },
 			},
 		},
 	},
