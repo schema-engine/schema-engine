@@ -41,5 +41,8 @@ allowed slots. Single-step recipes require exactly one step; wizard recipes
 require at least two. A single-step form may omit `view` to render fields
 directly.
 
-`validateForm` parses the form schema, resolves the recipe, validates slot
-configuration, and reports all view-specific issues together.
+`validateForm` / `defineForm` parse the form schema and, when `view` is present,
+validate the registered recipe's kind and slot config. They do **not** apply
+the default wizard recipe. A multi-step form that omits `view` validates
+successfully; at render, `resolveFormRecipe` uses registered `bare-controls`,
+or renders fields without chrome and warns once per engine.

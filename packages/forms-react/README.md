@@ -10,8 +10,8 @@ The React package provides production-ready components and hooks for building dy
 
 **Key Features:**
 
-- Runtime form engine, React Hook Form adapter, and view recipes
-- View recipes for visual chrome (`card`, `card-wizard`, `wizard`, …)
+- Runtime form engine, React Hook Form adapter, and headless recipe contracts
+- Registry-owned view recipes for visual chrome (`card`, `card-wizard`, `wizard`, …)
 - `FormDebugger` opt-in dev overlay (mount as a child of `FormRenderer`)
 - Comprehensive validation with 15+ built-in rules
 - Action execution system for form lifecycle events
@@ -35,8 +35,12 @@ Import component registrations and build your engine:
 ```typescript
 import { createReactFormComposer } from '@schema-engine/forms-react';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
+import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
-const formEngine = createReactFormComposer().addElements(schemaFormRegistrations).build();
+const formEngine = createReactFormComposer()
+	.addElements(schemaFormRegistrations)
+	.addRecipes(schemaFormRecipeRegistrations)
+	.build();
 ```
 
 Install form elements from the GitHub registry first. Pick the aggregate that matches your shadcn base:
@@ -45,7 +49,13 @@ Install form elements from the GitHub registry first. Pick the aggregate that ma
 - Radix UI: `shadcn add andeeplus/schema-engine/schema-form-radix`
 - React Aria: `shadcn add andeeplus/schema-engine/schema-form-aria`
 
-`createReactFormComposer()` registers the built-in view recipes. Select one with `view.$type`.
+Install the matching default recipe item to use the supplied `view.$type` implementations:
+
+- Base UI: `shadcn add andeeplus/schema-engine/schema-engine-form-recipes`
+- Radix UI: `shadcn add andeeplus/schema-engine/schema-engine-form-recipes-radix`
+- React Aria: `shadcn add andeeplus/schema-engine/schema-engine-form-recipes-aria`
+
+`createReactFormComposer()` is headless; add `schemaFormRecipeRegistrations` explicitly.
 
 ### 2. Configure Your Form
 
@@ -136,6 +146,7 @@ The package uses explicit, per-component registration to ensure type safety and 
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
 const engine = createReactFormComposer().addElements(schemaFormRegistrations).build();
+// addRecipes(schemaFormRecipeRegistrations) when using view.$type or multi-step forms.
 ```
 
 **Benefits:**
@@ -209,7 +220,9 @@ Pre-built form field components with validation and styling:
 
 ### View recipes
 
-Visual chrome is selected with form-level `view.$type`:
+Visual chrome is selected with form-level `view.$type`. Install the matching
+registry recipe aggregate and register `schemaFormRecipeRegistrations` before
+using these default implementations:
 
 - `card`, `split-screen`, `hero-background` — single-step shells
 - `card-wizard`, `wizard`, `sidebar-wizard`, `hero-wizard`, `split-screen-wizard`, `bare-controls` — multi-step recipes
@@ -571,7 +584,7 @@ Compose a shell and slot blocks with `defineFormRecipe`, then register it:
 
 ```typescript
 import { defineFormRecipe, defineRecipeSpec } from '@schema-engine/forms/recipes';
-import type { FormShellProps } from '@schema-engine/forms-react';
+import type { FormShellProps } from '@schema-engine/forms-react/primitives';
 
 const brandSpec = defineRecipeSpec({
 	$type: 'brand',

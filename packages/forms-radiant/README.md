@@ -2,6 +2,10 @@
 
 Radiant/JSX adapter for the Schema Engine form system.
 
+## Why the recipe components ship in this package
+
+Unlike `@schema-engine/forms-react` — where the default view recipes live in the shadcn registry and consumers register them explicitly with `addRecipes()` — Radiant has no registry ecosystem to lean on. The shells and step blocks are therefore part of this package and `createRadiantFormComposer()` binds the canonical recipes automatically, so the package stays plug-and-play. The recipe specs themselves remain canonical in `@schema-engine/forms/recipes`.
+
 ## Install
 
 ```bash
