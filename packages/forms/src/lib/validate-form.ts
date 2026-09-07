@@ -3,6 +3,10 @@ import { formConfigEnvelopeSchema } from '@/schemas/form-config';
 import type { BuilderActionRegistration, InputRegistration, RecipeRegistration, StaticRegistration } from '@/types';
 import { safeParseStandardSchema, type StandardSchemaIssue } from '@/lib/standard-schema';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
+import { isValidatedFormConfig, markValidatedFormConfig } from '@/lib/normalized-form-config';
+
+export { isValidatedFormConfig, markValidatedFormConfig } from '@/lib/normalized-form-config';
+export type { ValidatedFormConfig } from '@/lib/normalized-form-config';
 
 /** Implicit `view.$type` for multi-step forms that omit `view`. */
 export const DEFAULT_WIZARD_RECIPE = 'bare-controls';
@@ -163,6 +167,7 @@ export function resolveValidatedConfig(
 	config: FormConfig,
 	engine?: { validateForm: (config: unknown) => FormConfig },
 ): FormConfig {
+	if (isValidatedFormConfig(config)) return config;
 	if (engine) return engine.validateForm(config);
 	if (config.view) {
 		throw new Error(`Form '${config.id}' uses view '${config.view.$type}' but no FormEngine was supplied.`);
@@ -294,6 +299,10 @@ function parseTypedList(
  * Returns a new config: schema defaults and transforms are kept, the input object is not mutated.
  */
 export function validateFormConfig(config: unknown, options: ValidateFormOptions): FormConfig {
+	if (isValidatedFormConfig(config)) {
+		return config;
+	}
+
 	let envelope: FormConfigEnvelope;
 	try {
 		envelope = formConfigEnvelopeSchema.parse(
@@ -351,10 +360,10 @@ export function validateFormConfig(config: unknown, options: ValidateFormOptions
 		throw new FormValidationError(issues[0] ?? 'Invalid form configuration', issues);
 	}
 
-	return {
+	return markValidatedFormConfig({
 		...envelope,
 		steps,
 		view: view.view ?? envelope.view,
 		actions: formActions.items ?? envelope.actions,
-	} as FormConfig;
+	} as FormConfig);
 }

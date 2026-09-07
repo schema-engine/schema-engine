@@ -32,6 +32,7 @@ export {
 	resolveFormRecipe,
 	resolveValidatedConfig,
 	validateFormConfig,
+	isValidatedFormConfig,
 } from './lib/validate-form';
 export type { RecipeLookup } from './lib/validate-form';
 export type { FormAuthoringInput, FormAuthoringStep } from './builder/form-authoring';

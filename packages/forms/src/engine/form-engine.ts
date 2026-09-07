@@ -241,7 +241,7 @@ export class FormEngine<
 		return this.schemaArtifacts.jsonSchema.generateActionConfig(actionType, options);
 	}
 
-	toComposer(): FormComposer {
+	toComposer(): FormComposer<TElements, TRecipes, TActions> {
 		const elementRegistry = new ElementRegistry();
 		const recipeRegistry = new RecipeRegistry();
 		const actionRegistry = new ActionRegistry<BuilderActionBaseContext, FormActionTrigger>();
@@ -256,7 +256,11 @@ export class FormEngine<
 			actionRegistry.register(value);
 		}
 
-		const composer = new FormComposer(elementRegistry, recipeRegistry, actionRegistry);
+		const composer = new FormComposer<TElements, TRecipes, TActions>(
+			elementRegistry,
+			recipeRegistry,
+			actionRegistry,
+		);
 
 		logger.debug('Converted FormEngine to composer', {
 			elements: this.registries.elements.size,

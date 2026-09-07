@@ -16,7 +16,9 @@ import { createFormConfigShape } from '@/schemas/form-config-shape';
 import { ActionRegistry, type ActionConfigBase } from '@schema-engine/actions';
 import { z } from 'zod';
 import { isZodType } from '@/lib/zod-json-schema';
-import type { ExtractSchemaType } from './types.utils';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
+import { assertStandardSchema } from '@/lib/standard-schema';
+import type { ExtractSchemaType, MergeActionRegistrationMaps, MergeRegistrationMaps } from './types.utils';
 import type { FormActionTrigger } from '@/actions';
 
 /**
@@ -33,28 +35,31 @@ export class FormComposer<
 		private actionRegistry = new ActionRegistry<BuilderActionBaseContext, FormActionTrigger>(),
 	) {}
 
-	addElement<const K extends string, S>(registration: {
+	addElement<const K extends string, S extends StandardSchemaV1>(registration: {
 		$type: K;
 		schema: S;
 		metadata: ElementMetadata;
 		render: (...args: any[]) => unknown;
 	}): FormComposer<TElements & Record<K, ExtractSchemaType<S>>, TRecipes, TActions> {
+		assertStandardSchema(registration.schema, `Element '${registration.$type}' schema`);
 		this.elementRegistry.register(registration);
 		return this as FormComposer<TElements & Record<K, ExtractSchemaType<S>>, TRecipes, TActions>;
 	}
 
-	addElements(registrations: (InputRegistration<any, any, any> | StaticRegistration<any, any, any>)[]): this {
+	addElements<const T extends readonly (InputRegistration<any, any, any> | StaticRegistration<any, any, any>)[]>(
+		registrations: T,
+	): FormComposer<TElements & MergeRegistrationMaps<T>, TRecipes, TActions> {
 		for (const registration of registrations) {
-			this.addElement(registration);
+			this.addElement(registration as Parameters<FormComposer['addElement']>[0]);
 		}
-		return this;
+		return this as FormComposer<TElements & MergeRegistrationMaps<T>, TRecipes, TActions>;
 	}
 
 	/**
 	 * Register one view recipe. `$type` is the id used in `view.$type`.
 	 * A second registration with the same `$type` overrides the first.
 	 */
-	addRecipe<const K extends string, S>(registration: {
+	addRecipe<const K extends string, S extends StandardSchemaV1>(registration: {
 		$type: K;
 		schema: S;
 		kind: 'single-step' | 'wizard';
@@ -63,30 +68,36 @@ export class FormComposer<
 		render: unknown;
 		slotDefaults?: RecipeRegistration<any, any>['slotDefaults'];
 	}): FormComposer<TElements, TRecipes & Record<K, ExtractSchemaType<S>>, TActions> {
+		assertStandardSchema(registration.schema, `Recipe '${registration.$type}' schema`);
 		this.recipeRegistry.register(registration);
 		return this as FormComposer<TElements, TRecipes & Record<K, ExtractSchemaType<S>>, TActions>;
 	}
 
 	/** Register several recipes. Same `$type` override rules as {@link addRecipe}. */
-	addRecipes(registrations: RecipeRegistration<any, any>[]): this {
+	addRecipes<const T extends readonly RecipeRegistration<any, any>[]>(
+		registrations: T,
+	): FormComposer<TElements, TRecipes & MergeRegistrationMaps<T>, TActions> {
 		for (const registration of registrations) {
-			this.addRecipe(registration);
+			this.addRecipe(registration as Parameters<FormComposer['addRecipe']>[0]);
 		}
-		return this;
+		return this as FormComposer<TElements, TRecipes & MergeRegistrationMaps<T>, TActions>;
 	}
 
 	addAction<TType extends string, TConfig extends ActionConfigBase<TType>>(
 		registration: BuilderActionRegistration<TType, TConfig>,
 	): FormComposer<TElements, TRecipes, TActions & Record<TType, TConfig>> {
+		assertStandardSchema(registration.schema, `Action '${registration.$type}' schema`);
 		this.actionRegistry.register(registration);
 		return this as FormComposer<TElements, TRecipes, TActions & Record<TType, TConfig>>;
 	}
 
-	addActions(registrations: BuilderActionRegistration<any, any>[]): this {
+	addActions<const T extends readonly BuilderActionRegistration<any, any>[]>(
+		registrations: T,
+	): FormComposer<TElements, TRecipes, TActions & MergeActionRegistrationMaps<T>> {
 		for (const registration of registrations) {
 			this.addAction(registration);
 		}
-		return this;
+		return this as FormComposer<TElements, TRecipes, TActions & MergeActionRegistrationMaps<T>>;
 	}
 
 	private createUnionSchema(schemas: z.ZodTypeAny[]): z.ZodTypeAny {

@@ -16,6 +16,7 @@ export interface FormInstanceContextValue {
 	markStepCompleted: (index: number) => void;
 	markStepVisited: (index: number) => void;
 	isSubmitting: boolean;
+	configValidated: boolean;
 }
 
 export const formInstanceContext = createContext<FormInstanceContextValue>(Symbol.for('se-form-instance-context'));

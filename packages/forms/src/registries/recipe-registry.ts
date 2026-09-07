@@ -2,6 +2,7 @@ import type { RecipeRegistration } from '@/types';
 import { BaseRegistry } from '@schema-engine/registry';
 import { ComponentType } from '@/engine/component-type';
 import type { RecipeKind, RecipeMetadata, RecipeSlot } from '@/recipes/types';
+import { assertStandardSchema } from '@/lib/standard-schema';
 
 /**
  * Recipe Registry
@@ -22,6 +23,7 @@ export class RecipeRegistry extends BaseRegistry<string, RecipeRegistration<any,
 		render: unknown;
 		slotDefaults?: RecipeRegistration['slotDefaults'];
 	}): void {
+		assertStandardSchema(item.schema, `Recipe '${item.$type}' schema`);
 		super.register(item as RecipeRegistration<any, any>);
 	}
 }

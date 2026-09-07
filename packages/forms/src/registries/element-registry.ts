@@ -2,6 +2,7 @@ import type { ElementMetadata } from '@/types';
 import type { ComponentRegistration } from '@schema-engine/registry';
 import { ComponentRegistry } from '@schema-engine/registry';
 import { ComponentType } from '@/engine/component-type';
+import { assertStandardSchema } from '@/lib/standard-schema';
 
 /**
  * Base type for all element registrations.
@@ -28,6 +29,7 @@ export class ElementRegistry extends ComponentRegistry<string, ElementRegistrati
 		metadata: ElementMetadata;
 		render: (props: any) => unknown;
 	}): void {
+		assertStandardSchema(item.schema, `Element '${item.$type}' schema`);
 		super.register(item as ElementRegistration);
 	}
 }

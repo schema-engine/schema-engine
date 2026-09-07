@@ -9,7 +9,14 @@ import type { SubmissionState } from '@/hooks/use-submission-state';
  */
 export interface FormEngineContextValue {
 	engine: FormEngine;
+	/** When true, element configs were validated by the engine and must not be re-parsed at render time. */
+	configValidated?: boolean;
 }
+
+/**
+ * Tracks whether the active form config has already been engine-validated.
+ */
+export const ValidatedFormConfigContext = createContext(false);
 
 /**
  * Form Engine context

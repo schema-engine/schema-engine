@@ -5,6 +5,7 @@ import type { FormEngine as CoreFormEngine } from '@schema-engine/forms/engine/f
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { parseStandardSchema } from '@schema-engine/forms/lib/standard-schema';
 import { formEngineContext, type FormEngineContextValue } from '../provider';
+import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { evaluateConstraintLogic } from '@/hooks/constraint-logic';
 import { ElementError } from './element-error';
 
@@ -14,7 +15,11 @@ export interface FormElementProps {
 	style?: Record<string, string | number | undefined>;
 }
 
-export function renderRegisteredElement(config: FormEngine.ElementConfig, engine: CoreFormEngine): JsxRenderable {
+export function renderRegisteredElement(
+	config: FormEngine.ElementConfig,
+	engine: CoreFormEngine,
+	configValidated = false,
+): JsxRenderable {
 	const { shouldShow, shouldDisable, isRequired } = evaluateConstraintLogic(
 		'constraints' in config ? config.constraints : undefined,
 		isFieldRequired('rules' in config ? config.rules : undefined),
@@ -37,12 +42,14 @@ export function renderRegisteredElement(config: FormEngine.ElementConfig, engine
 		);
 	}
 
-	let parsedConfig: FormEngine.ElementConfig;
-	try {
-		parsedConfig = parseStandardSchema(elementRegistration.schema, config);
-	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : 'Invalid configuration';
-		return <ElementError title="Invalid element configuration" message={errorMessage} componentType={$type} />;
+	let parsedConfig: FormEngine.ElementConfig = config;
+	if (!configValidated) {
+		try {
+			parsedConfig = parseStandardSchema(elementRegistration.schema, config);
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : 'Invalid configuration';
+			return <ElementError title="Invalid element configuration" message={errorMessage} componentType={$type} />;
+		}
 	}
 
 	const { $type: _type, ...componentConfig } = parsedConfig;
@@ -63,6 +70,9 @@ export class FormElementHost extends RadiantElement {
 	@contextSelector({ context: formEngineContext })
 	engineContext!: FormEngineContextValue;
 
+	@contextSelector({ context: formInstanceContext })
+	instanceContext?: FormInstanceContextValue;
+
 	override render(): JsxRenderable {
 		const config = this.config;
 		const engine = this.engineContext?.engine;
@@ -71,7 +81,7 @@ export class FormElementHost extends RadiantElement {
 			return null;
 		}
 
-		return renderRegisteredElement(config, engine);
+		return renderRegisteredElement(config, engine, this.instanceContext?.configValidated ?? false);
 	}
 }
 

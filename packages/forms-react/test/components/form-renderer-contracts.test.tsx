@@ -139,3 +139,48 @@ describe('native Standard Schema through FormRenderer', () => {
 		expect(screen.getByLabelText('Fixture')).toBeInTheDocument();
 	});
 });
+
+describe('transformed element configs through FormRenderer', () => {
+	test('defineForm output with string-to-number transform renders without revalidation errors', () => {
+		const countSchema = z.object({
+			$type: z.literal('count'),
+			id: z.string(),
+			name: z.string(),
+			label: z.string().optional(),
+			count: z.string().transform((value) => Number(value)),
+		});
+
+		const engine = createReactFormComposer()
+			.addElement({
+				$type: 'count',
+				schema: countSchema,
+				metadata: { name: 'Count', category: 'input' },
+				render: (props: { id: string; name: string; label?: string; count: number }) => (
+					<label>
+						{props.label}
+						<input
+							name={props.name}
+							aria-label={props.label}
+							data-testid={props.id}
+							data-count={String(props.count)}
+						/>
+					</label>
+				),
+			})
+			.build();
+
+		const config = engine.defineForm({
+			id: 'count-form',
+			steps: [
+				{
+					id: 'main',
+					title: 'Main',
+					elements: [{ $type: 'count', id: 'count', name: 'count', label: 'Count', count: '7' }],
+				},
+			],
+		});
+
+		render(<FormRenderer config={config} engine={engine} adapter={rhfAdapter} />);
+		expect(screen.getByLabelText('Count')).toHaveAttribute('data-count', '7');
+	});
+});

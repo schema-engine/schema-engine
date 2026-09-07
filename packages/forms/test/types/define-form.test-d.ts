@@ -49,6 +49,14 @@ engine.defineForm({
 	steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'note', id: 'n1', name: 'n1' }] }],
 });
 
+const bulkEngine = new FormComposer().addElements([noteElement]).addRecipe(cardRecipe).build();
+
+bulkEngine.defineForm({
+	id: 'bulk',
+	view: { $type: 'card' },
+	steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'note', id: 'n1', name: 'n1' }] }],
+});
+
 engine.defineForm({
 	id: 'bad',
 	steps: [

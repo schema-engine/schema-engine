@@ -152,4 +152,16 @@ describe('defineForm contract', () => {
 			}),
 		).toThrow(/single-step/i);
 	});
+
+	test('bulk registration preserves defineForm authoring types', () => {
+		const engine = new FormComposer().addElements([noteElement]).addRecipes([cardRecipe]).build();
+
+		const form = engine.defineForm({
+			id: 'bulk',
+			view: { $type: 'card' },
+			steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'note', id: 'n1', name: 'n1' }] }],
+		});
+
+		expect(form.steps[0]?.elements[0]).toMatchObject({ $type: 'note', id: 'n1' });
+	});
 });

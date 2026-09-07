@@ -5,6 +5,7 @@ import {
 	DEFAULT_WIZARD_RECIPE,
 	FormValidationError,
 	getRenderableSteps,
+	isValidatedFormConfig,
 	resolveFormRecipe,
 	resolveValidatedConfig,
 } from '@/lib/validate-form';
@@ -314,5 +315,49 @@ describe('validateFormConfig', () => {
 				steps: [{ id: 'main', title: 'Notes', elements: [{ $type: 'missing', id: 'x', name: 'x' }] }],
 			}),
 		).toThrow(/steps\[0\] \(id: 'main'\) elements\[0\] \(id: 'x'\).*Unknown element type 'missing'/s);
+	});
+
+	test('marks validated forms and skips re-running registration transforms', () => {
+		const countSchema = z.object({
+			$type: z.literal('count'),
+			id: z.string(),
+			name: z.string(),
+			count: z.string().transform((value) => Number(value)),
+		});
+		const engine = new FormComposer()
+			.addElement({
+				$type: 'count',
+				schema: countSchema,
+				metadata: { name: 'Count', category: 'input' },
+				render: () => null,
+			})
+			.build();
+
+		const defined = engine.defineForm({
+			id: 'counts',
+			steps: [
+				{
+					id: 'main',
+					title: 'Main',
+					elements: [{ $type: 'count', id: 'count', name: 'count', count: '3' }],
+				},
+			],
+		});
+
+		expect(defined.steps[0]?.elements[0]).toMatchObject({ count: 3 });
+		expect(isValidatedFormConfig(defined)).toBe(true);
+		expect(resolveValidatedConfig(defined, engine)).toBe(defined);
+		expect(engine.validateForm(defined)).toBe(defined);
+	});
+
+	test('rejects registrations without Standard Schema at compose time', () => {
+		expect(() =>
+			new FormComposer().addElement({
+				$type: 'broken',
+				schema: {} as never,
+				metadata: { name: 'Broken', category: 'input' },
+				render: () => null,
+			}),
+		).toThrow(/must implement Standard Schema/i);
 	});
 });
