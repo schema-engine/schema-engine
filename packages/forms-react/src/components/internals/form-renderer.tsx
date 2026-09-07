@@ -9,7 +9,7 @@ import { FormEngineProvider } from '../form-engine-provider';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { FormConfig, FormStep } from '@schema-engine/forms/schemas';
 import { RecipeRenderer } from './recipe-renderer';
-import { resolveValidatedConfig } from '@schema-engine/forms/lib/validate-form';
+import { getRenderableSteps, resolveFormRecipe, resolveValidatedConfig } from '@schema-engine/forms/lib/validate-form';
 
 function StepFields({ step, config }: { step: FormStep; config: FormConfig }) {
 	const gridStyles = useFormGridStyles(config.grid);
@@ -32,12 +32,24 @@ function StepFields({ step, config }: { step: FormStep; config: FormConfig }) {
 
 function FormElementsRenderer({ config, children }: { config: FormConfig; children?: React.ReactNode }) {
 	const { currentStep } = useFormInstanceActions();
-	const step = config.steps[currentStep] ?? config.steps[0];
+	const engineContext = useOptionalFormEngine();
+	const recipe = resolveFormRecipe(config, engineContext?.engine);
+	const steps = getRenderableSteps(config, recipe, currentStep);
 
-	if (!step) return null;
+	if (steps.length === 0) return null;
 
 	return (
-		<RecipeRenderer config={config} renderFields={() => <StepFields step={step} config={config} />}>
+		<RecipeRenderer
+			config={config}
+			recipe={recipe}
+			renderFields={() => (
+				<>
+					{steps.map((step) => (
+						<StepFields key={step.id} step={step} config={config} />
+					))}
+				</>
+			)}
+		>
 			{children}
 		</RecipeRenderer>
 	);

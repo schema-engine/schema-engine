@@ -1,14 +1,49 @@
 import { logger } from '@/lib/logger';
-import type { ElementRegistry, RecipeRegistry } from '@/registries';
-import type { ActionRegistry } from '@schema-engine/actions';
 import type { FormConfig } from '@/schemas/form-config';
 import type { PartialFormConfig, BuilderFormStep } from './types';
-import type { BuilderActionBaseContext } from '@/types';
-import type { FormActionTrigger } from '@/actions/triggers';
-import { validateRegistrationConfig } from '@/lib/standard-schema';
 
 /**
- * FormConfigBuilder - Fluent API for creating typed form configurations.
+ * Snapshot nested builder state so later mutations cannot change returned forms.
+ * Copies owned arrays/objects; leaves callable values by reference.
+ */
+function snapshotFormConfig(config: PartialFormConfig): unknown {
+	return {
+		id: config.id,
+		title: config.title,
+		description: config.description,
+		steps: config.steps.map((step) => ({
+			id: step.id,
+			title: step.title,
+			description: step.description,
+			icon: step.icon,
+			elements: [...step.elements],
+			actions: step.actions ? [...step.actions] : undefined,
+		})),
+		view: config.view ? { ...config.view } : undefined,
+		actions: config.actions ? [...config.actions] : undefined,
+		validationMode: config.validationMode,
+		reValidateMode: config.reValidateMode,
+		grid: config.grid ? { ...config.grid } : undefined,
+		className: config.className,
+		style: config.style ? { ...config.style } : undefined,
+	};
+}
+
+export interface FormConfigBuilderOptions {
+	hasElement: (id: string) => boolean;
+	hasRecipe: (id: string) => boolean;
+	hasAction: (id: string) => boolean;
+	commit: (config: unknown) => FormConfig;
+}
+
+/**
+ * @deprecated Prefer {@link FormEngine.defineForm}. This fluent adapter exists for
+ * existing callers; it snapshots builder state and commits through the same
+ * validation pipeline. It will be removed after those call sites migrate.
+ *
+ * Setters accumulate raw authoring input. {@link build} snapshots that input and
+ * runs the engine validation pipeline once, so defaults and transforms are applied
+ * a single time and later builder calls cannot mutate returned forms.
  */
 export class FormConfigBuilder<
 	TElements extends Record<string, unknown> = Record<never, unknown>,
@@ -18,11 +53,7 @@ export class FormConfigBuilder<
 	private config: PartialFormConfig;
 	private currentStep: BuilderFormStep | null = null;
 
-	constructor(
-		private elementRegistry: ElementRegistry,
-		private recipeRegistry: RecipeRegistry,
-		private actionRegistry: ActionRegistry<BuilderActionBaseContext, FormActionTrigger>,
-	) {
+	constructor(private readonly options: FormConfigBuilderOptions) {
 		this.config = {
 			steps: [],
 		};
@@ -71,25 +102,11 @@ export class FormConfigBuilder<
 	/**
 	 * Set the form view (recipe selection and slot configuration).
 	 */
-	setView<K extends keyof TRecipes & string>(id: K, config: TRecipes[K]): this {
-		const registration = this.recipeRegistry.get(id);
-
-		if (!registration) {
+	setView<K extends keyof TRecipes & string>(id: K, config: TRecipes[K] & object): this {
+		if (!this.options.hasRecipe(id)) {
 			throw new Error(`Recipe "${id}" is not registered`);
 		}
-
-		try {
-			const validated = validateRegistrationConfig(registration.schema, {
-				...(config as object),
-				$type: id,
-			});
-			this.config.view = validated as FormEngine.ViewConfig;
-			logger.debug(`Set view: ${id}`, { config: validated });
-		} catch (error) {
-			const message = error instanceof Error ? error.message : 'Validation failed';
-			logger.error(`Invalid config for recipe "${id}"`, { message });
-			throw new Error(`Invalid configuration for recipe "${id}": ${message}`, { cause: error });
-		}
+		this.config.view = { ...config, $type: id };
 		return this;
 	}
 
@@ -106,86 +123,39 @@ export class FormConfigBuilder<
 		return this;
 	}
 
-	addElement<K extends keyof TElements & string>(id: K, config: TElements[K]): this {
+	addElement<K extends keyof TElements & string>(id: K, config: TElements[K] & object): this {
 		if (!this.currentStep) {
 			throw new Error('Must call addStep() before adding elements');
 		}
-		const registration = this.elementRegistry.get(id);
-
-		if (!registration) {
+		if (!this.options.hasElement(id)) {
 			throw new Error(`Element type "${id}" is not registered`);
 		}
-
-		try {
-			const validated = validateRegistrationConfig(registration.schema, {
-				...(config as object),
-				$type: id,
-			});
-			this.currentStep.elements.push(validated as FormEngine.ElementConfig);
-			logger.debug(`Added element: ${id}`, { config: validated });
-		} catch (error) {
-			const message = error instanceof Error ? error.message : 'Validation failed';
-			logger.error(`Invalid config for element "${id}"`, { message });
-			throw new Error(`Invalid configuration for element "${id}": ${message}`, { cause: error });
-		}
+		this.currentStep.elements.push({ ...config, $type: id });
 		return this;
 	}
 
-	addStepAction<K extends keyof TActions & string>(type: K, config: TActions[K]): this {
+	addStepAction<K extends keyof TActions & string>(type: K, config: TActions[K] & object): this {
 		if (!this.currentStep) {
 			throw new Error('Must call addStep() before adding step actions');
 		}
-
-		const registration = this.actionRegistry.getAction(type);
-
-		if (!registration?.schema) {
+		if (!this.options.hasAction(type)) {
 			throw new Error(`Action type "${type}" is not registered`);
 		}
-
-		try {
-			const validated = validateRegistrationConfig(registration.schema, {
-				...(config as object),
-				$type: type,
-			});
-
-			if (!this.currentStep.actions) {
-				this.currentStep.actions = [];
-			}
-			this.currentStep.actions.push(validated as any);
-
-			logger.debug(`Added step action: ${type}`, { config: validated });
-		} catch (error) {
-			const message = error instanceof Error ? error.message : 'Validation failed';
-			logger.error(`Invalid config for action "${type}"`, { message });
-			throw new Error(`Invalid configuration for action "${type}": ${message}`, { cause: error });
+		if (!this.currentStep.actions) {
+			this.currentStep.actions = [];
 		}
+		this.currentStep.actions.push({ ...config, $type: type });
 		return this;
 	}
 
-	addFormAction<K extends keyof TActions & string>(type: K, config: Omit<TActions[K], '$type'>): this {
-		const registration = this.actionRegistry.getAction(type);
-
-		if (!registration || !registration.schema) {
+	addFormAction<K extends keyof TActions & string>(type: K, config: Omit<TActions[K], '$type'> & object): this {
+		if (!this.options.hasAction(type)) {
 			throw new Error(`Action type "${type}" is not registered`);
 		}
-
-		try {
-			const validated = validateRegistrationConfig(registration.schema, {
-				...(config as object),
-				$type: type,
-			});
-
-			if (!this.config.actions) {
-				this.config.actions = [];
-			}
-			this.config.actions.push(validated as any);
-
-			logger.debug(`Added form action: ${type}`, { config: validated });
-		} catch (error) {
-			const message = error instanceof Error ? error.message : 'Validation failed';
-			logger.error(`Invalid config for action "${type}"`, { message });
-			throw new Error(`Invalid configuration for action "${type}": ${message}`, { cause: error });
+		if (!this.config.actions) {
+			this.config.actions = [];
 		}
+		this.config.actions.push({ ...config, $type: type });
 		return this;
 	}
 
@@ -198,30 +168,7 @@ export class FormConfigBuilder<
 			throw new Error('At least one step is required. Call addStep() before building.');
 		}
 
-		const totalElements = this.config.steps.reduce((sum, step) => sum + step.elements.length, 0);
-		const totalStepActions = this.config.steps.reduce((sum, step) => sum + (step.actions?.length || 0), 0);
-
-		logger.debug('Built form configuration', {
-			id: this.config.id,
-			stepCount: this.config.steps.length,
-			totalElements,
-			hasView: !!this.config.view,
-			formActions: this.config.actions?.length || 0,
-			stepActions: totalStepActions,
-		});
-
-		return {
-			id: this.config.id,
-			title: this.config.title,
-			description: this.config.description,
-			steps: this.config.steps as any,
-			view: this.config.view,
-			actions: this.config.actions,
-			validationMode: this.config.validationMode,
-			reValidateMode: this.config.reValidateMode,
-			grid: this.config.grid,
-			className: this.config.className,
-			style: this.config.style,
-		};
+		const snapshot = snapshotFormConfig(this.config);
+		return this.options.commit(snapshot);
 	}
 }

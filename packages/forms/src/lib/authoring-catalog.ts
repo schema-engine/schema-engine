@@ -30,7 +30,7 @@ export function describeViewCatalogFromRecipes(
 		rules: {
 			noViewSingleStep: 'Omit view for a single-step form to render fields only.',
 			noViewMultiStep:
-				'Omit view for a multi-step form to use the registered default wizard recipe (bare-controls). If that recipe is not registered, validateForm still succeeds and render warns, then fields render without chrome.',
+				'Omit view for a multi-step form to use the registered default wizard recipe (bare-controls). If that recipe is not registered, validateForm still succeeds and render warns, then every step renders on a single page without chrome.',
 			oneViewPerForm:
 				'Each form has at most one view. Recipes are code-defined; forms select view.$type and pass slot config.',
 		},

@@ -20,17 +20,19 @@
 			"cache": false
 		},
 		"storybook": {
+			"dependsOn": ["^build:lib"],
 			"cache": false,
 			"persistent": true
 		},
 		"build-storybook": {
+			"dependsOn": ["^build:lib"],
 			"outputs": ["storybook-static/**"]
 		},
 		"test:storybook": {
 			"dependsOn": ["^build:lib"]
 		},
 		"test:all": {
-			"dependsOn": ["^test:all"]
+			"dependsOn": ["^build:lib", "^test:all"]
 		},
 		"preview": {
 			"cache": false,

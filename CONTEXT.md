@@ -19,4 +19,4 @@ This monorepo uses a **hybrid model** pre-v1:
 
 ### Proof test
 
-`packages/forms-react/test/schemas/standard-schema-fixture.test.ts` validates a minimal non-Zod Standard Schema through the forms bridge.
+`packages/forms/test/lib/standard-schema-engine.test.ts` registers a native Standard Schema element, builds a FormEngine, and runs `defineForm`. Renderer packages exercise the same registration through `FormRenderer`.

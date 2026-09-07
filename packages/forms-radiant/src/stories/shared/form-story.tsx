@@ -1,12 +1,19 @@
 import { FormRenderer, type FormRendererProps } from '@/components/internals/form-renderer';
 import { getEngine, radiantAdapter } from './form-builder';
+import { resolveStoryAdapter, resolveStoryEngine } from './live-form-runtime';
 import type { FormConfig } from '@schema-engine/forms/schemas';
 import type { Meta } from '@ecopages/storybook-radiant-vite';
 
 export const storyEngine = getEngine();
 
 export function renderFormStory(args: FormRendererProps) {
-	return <FormRenderer engine={storyEngine} adapter={radiantAdapter} {...args} />;
+	return (
+		<FormRenderer
+			{...args}
+			engine={resolveStoryEngine(args.engine, storyEngine)}
+			adapter={resolveStoryAdapter(args.adapter, radiantAdapter)}
+		/>
+	);
 }
 
 export function fieldFormConfig(
@@ -27,8 +34,6 @@ export const formRendererMeta = {
 	component: FormRenderer,
 	render: renderFormStory,
 	args: {
-		engine: storyEngine,
-		adapter: radiantAdapter,
 		className: 'se-form-story--narrow',
 	},
 	parameters: {

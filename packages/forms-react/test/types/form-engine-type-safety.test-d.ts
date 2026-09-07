@@ -34,6 +34,13 @@ const inputConfig = {
 	inputType: 'email',
 } satisfies FormEngine.GetElementConfig<'input'>;
 
+engine.defineForm({
+	id: 'contact',
+	steps: [{ id: 'main', title: 'Contact', elements: [inputConfig] }],
+});
+
+// Unregistered `$type` rejection is asserted in `@schema-engine/forms` test/types/define-form.test-d.ts.
+
 // @ts-expect-error -- unregistered element id is not in ElementId union
 type _unknownElement = FormEngine.GetElementConfig<'not-registered'>;
 

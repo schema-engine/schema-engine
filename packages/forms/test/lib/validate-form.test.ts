@@ -4,6 +4,7 @@ import { FormComposer } from '@/builder';
 import {
 	DEFAULT_WIZARD_RECIPE,
 	FormValidationError,
+	getRenderableSteps,
 	resolveFormRecipe,
 	resolveValidatedConfig,
 } from '@/lib/validate-form';
@@ -61,6 +62,47 @@ describe('validateFormConfig', () => {
 		);
 
 		expect(recipe).toBe(wizardRecipe);
+	});
+
+	test('accepts a getter function as the recipe lookup', () => {
+		const recipe = resolveFormRecipe(
+			{
+				id: 'contact',
+				view: { $type: 'card' },
+				steps: [{ id: 'main', title: 'Contact', elements: [] }],
+			},
+			(id) => (id === 'card' ? cardRecipe : undefined),
+		);
+
+		expect(recipe).toBe(cardRecipe);
+	});
+
+	test('rejects a serialized engine object without getRecipe', () => {
+		expect(() =>
+			resolveFormRecipe(
+				{
+					id: 'contact',
+					view: { $type: 'card' },
+					steps: [{ id: 'main', title: 'Contact', elements: [] }],
+				},
+				{} as never,
+			),
+		).toThrow(/no getRecipe/i);
+	});
+
+	test('rejects a serialized engine object for implicit multi-step lookup', () => {
+		expect(() =>
+			resolveFormRecipe(
+				{
+					id: 'onboarding',
+					steps: [
+						{ id: 'one', title: 'One', elements: [] },
+						{ id: 'two', title: 'Two', elements: [] },
+					],
+				},
+				{} as never,
+			),
+		).toThrow(/no getRecipe/i);
 	});
 
 	test('warns once per engine when a multi-step form has no wizard recipe registered', () => {
@@ -180,7 +222,7 @@ describe('validateFormConfig', () => {
 		const engine = createEngine();
 		const payload = {
 			id: 'login',
-			view: { $type: 'card', shell: { padding: 'md' } },
+			view: { $type: 'card' as const, shell: { padding: 'md' as const } },
 			steps: [{ id: 'login', title: 'Login', elements: [] }],
 		};
 
@@ -224,5 +266,53 @@ describe('validateFormConfig', () => {
 				},
 			},
 		});
+	});
+
+	test('flattens every step when no recipe is resolved', () => {
+		const config = {
+			id: 'headless-wizard',
+			steps: [
+				{ id: 'one', title: 'One', elements: [] },
+				{ id: 'two', title: 'Two', elements: [] },
+			],
+		};
+
+		expect(getRenderableSteps(config, undefined, 0).map((step) => step.id)).toEqual(['one', 'two']);
+		expect(getRenderableSteps(config, wizardRecipe, 1).map((step) => step.id)).toEqual(['two']);
+	});
+
+	test('validates registered Zod elements through defineForm', () => {
+		const noteSchema = z.object({
+			$type: z.literal('note'),
+			id: z.string(),
+			name: z.string(),
+		});
+		const engine = new FormComposer()
+			.addElement({
+				$type: 'note',
+				schema: noteSchema,
+				metadata: { name: 'Note', category: 'input' },
+				render: () => null,
+			})
+			.build();
+
+		const config = engine.defineForm({
+			id: 'notes',
+			steps: [{ id: 'main', title: 'Notes', elements: [{ $type: 'note', id: 'n1', name: 'n1' }] }],
+		});
+
+		expect(config.steps[0]?.elements[0]).toMatchObject({ $type: 'note', id: 'n1' });
+		expect(() =>
+			engine.validateForm({
+				id: 'bad',
+				steps: [{ id: 'main', title: 'Notes', elements: [{ $type: 'note', id: 1, name: 'n1' }] }],
+			}),
+		).toThrow(/steps\[0\] \(id: 'main'\) elements\[0\].*Invalid element configuration.*\(id\)/s);
+		expect(() =>
+			engine.validateForm({
+				id: 'unknown',
+				steps: [{ id: 'main', title: 'Notes', elements: [{ $type: 'missing', id: 'x', name: 'x' }] }],
+			}),
+		).toThrow(/steps\[0\] \(id: 'main'\) elements\[0\] \(id: 'x'\).*Unknown element type 'missing'/s);
 	});
 });

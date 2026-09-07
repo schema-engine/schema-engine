@@ -2,7 +2,7 @@ import { z, type GlobalMeta } from 'zod';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { ComponentType } from './component-type';
 import { SchemaMetadataCatalog } from './schema-metadata-catalog';
-import { generateZodJSONSchemaCollection, generateZodJSONSchemaDocument } from '@/lib/zod-json-schema';
+import { generateZodJSONSchemaCollection, generateZodJSONSchemaDocument, isZodType } from '@/lib/zod-json-schema';
 import {
 	createStandardJSONSchema,
 	createStandardJSONSchemaRecord,
@@ -59,11 +59,15 @@ export function createZodRegistryFromCatalog(catalog: SchemaMetadataCatalog): Fo
 			category: entry.category,
 		};
 
+		if (!isZodType(schema)) {
+			continue;
+		}
+
 		const zodSchema = schema as ZodSchemaWithRegister;
 		if (typeof zodSchema.register === 'function') {
 			zodSchema.register(registry, meta);
 		} else {
-			registry.add(schema as z.ZodTypeAny, meta);
+			registry.add(zodSchema, meta);
 		}
 	}
 
@@ -128,10 +132,9 @@ export function createActionConfigValidatorMap<TRegistration extends SchemaValid
 	actionRegistrations: Iterable<TRegistration>,
 ): Map<string, z.ZodTypeAny> {
 	return new Map(
-		Array.from(
-			actionRegistrations,
-			(registration) => [registration.$type, registration.schema as z.ZodTypeAny] as const,
-		),
+		Array.from(actionRegistrations)
+			.filter((registration) => isZodType(registration.schema))
+			.map((registration) => [registration.$type, registration.schema as z.ZodTypeAny] as const),
 	);
 }
 

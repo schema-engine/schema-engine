@@ -4,6 +4,7 @@ import type {
 	RecipeRegistration,
 	BuilderActionRegistration,
 	BuilderActionBaseContext,
+	ElementMetadata,
 } from '@/types';
 import { FormEngine } from '@/engine/form-engine';
 import { ComponentType } from '@/engine/component-type';
@@ -11,10 +12,11 @@ import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from 
 import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
 import { logger } from '@/lib/logger';
 import { ElementRegistry, RecipeRegistry } from '@/registries';
-import { GridLayoutConfigSchema } from '@/schemas/base-field';
+import { createFormConfigShape } from '@/schemas/form-config-shape';
 import { ActionRegistry, type ActionConfigBase } from '@schema-engine/actions';
 import { z } from 'zod';
-import type { ExtractSchemaType, ExtractTypeId } from './types.utils';
+import { isZodType } from '@/lib/zod-json-schema';
+import type { ExtractSchemaType } from './types.utils';
 import type { FormActionTrigger } from '@/actions';
 
 /**
@@ -31,11 +33,14 @@ export class FormComposer<
 		private actionRegistry = new ActionRegistry<BuilderActionBaseContext, FormActionTrigger>(),
 	) {}
 
-	addElement<T extends InputRegistration<any, any, any> | StaticRegistration<any, any, any>>(
-		registration: T,
-	): FormComposer<TElements & Record<ExtractTypeId<T>, ExtractSchemaType<T['schema']>>, TRecipes, TActions> {
+	addElement<const K extends string, S>(registration: {
+		$type: K;
+		schema: S;
+		metadata: ElementMetadata;
+		render: (...args: any[]) => unknown;
+	}): FormComposer<TElements & Record<K, ExtractSchemaType<S>>, TRecipes, TActions> {
 		this.elementRegistry.register(registration);
-		return this;
+		return this as FormComposer<TElements & Record<K, ExtractSchemaType<S>>, TRecipes, TActions>;
 	}
 
 	addElements(registrations: (InputRegistration<any, any, any> | StaticRegistration<any, any, any>)[]): this {
@@ -49,11 +54,17 @@ export class FormComposer<
 	 * Register one view recipe. `$type` is the id used in `view.$type`.
 	 * A second registration with the same `$type` overrides the first.
 	 */
-	addRecipe<T extends RecipeRegistration<any, any>>(
-		registration: T,
-	): FormComposer<TElements, TRecipes & Record<ExtractTypeId<T>, ExtractSchemaType<T['schema']>>, TActions> {
+	addRecipe<const K extends string, S>(registration: {
+		$type: K;
+		schema: S;
+		kind: 'single-step' | 'wizard';
+		slots: Array<'shell' | 'header' | 'progress' | 'actions'>;
+		metadata: { name: string; description?: string };
+		render: unknown;
+		slotDefaults?: RecipeRegistration<any, any>['slotDefaults'];
+	}): FormComposer<TElements, TRecipes & Record<K, ExtractSchemaType<S>>, TActions> {
 		this.recipeRegistry.register(registration);
-		return this;
+		return this as FormComposer<TElements, TRecipes & Record<K, ExtractSchemaType<S>>, TActions>;
 	}
 
 	/** Register several recipes. Same `$type` override rules as {@link addRecipe}. */
@@ -68,7 +79,7 @@ export class FormComposer<
 		registration: BuilderActionRegistration<TType, TConfig>,
 	): FormComposer<TElements, TRecipes, TActions & Record<TType, TConfig>> {
 		this.actionRegistry.register(registration);
-		return this;
+		return this as FormComposer<TElements, TRecipes, TActions & Record<TType, TConfig>>;
 	}
 
 	addActions(registrations: BuilderActionRegistration<any, any>[]): this {
@@ -88,43 +99,29 @@ export class FormComposer<
 		return z.union(schemas as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]]);
 	}
 
+	/**
+	 * JSON Schema / authoring union. Zod registrations keep their full schema.
+	 * Native Standard Schema registrations contribute a literal `$type` envelope
+	 * so mixed engines do not silently drop supported types.
+	 */
+	private createRegistrationSchema(registrations: Array<{ $type: string; schema: unknown }>): z.ZodTypeAny {
+		const parts = registrations.map((registration) =>
+			isZodType(registration.schema)
+				? registration.schema
+				: z.looseObject({ $type: z.literal(registration.$type) }),
+		);
+		return this.createUnionSchema(parts);
+	}
+
 	createFormConfigSchema() {
-		const elementSchemas = this.elementRegistry.getAll().map((el) => el.schema);
-		const recipeSchemas = this.recipeRegistry.getAll().map((recipe) => recipe.schema);
-		const actionSchemas = this.actionRegistry.getAll().map((action: any) => action.schema);
+		const elementsUnion = this.createRegistrationSchema(this.elementRegistry.getAll());
+		const recipesUnion = this.createRegistrationSchema(this.recipeRegistry.getAll());
+		const actionsUnion = this.createRegistrationSchema(this.actionRegistry.getAll());
 
-		const elementsUnion = this.createUnionSchema(elementSchemas as z.ZodTypeAny[]);
-		const recipesUnion = this.createUnionSchema(recipeSchemas as z.ZodTypeAny[]);
-		const actionsUnion = this.createUnionSchema(actionSchemas as z.ZodTypeAny[]);
-
-		const formStepSchema = z.object({
-			id: z.string(),
-			title: z.string(),
-			description: z.string().optional(),
-			icon: z.string().optional(),
-			elements: z.array(elementsUnion),
-			rules: z.any().optional(),
-			constraints: z.array(z.any()).optional(),
-			className: z.string().optional(),
-			style: z.record(z.string(), z.any()).optional(),
-			onStepEnter: z.array(actionsUnion).optional(),
-			onStepLeave: z.array(actionsUnion).optional(),
-			onStepValidate: z.array(actionsUnion).optional(),
-			actions: z.array(actionsUnion).optional(),
-		});
-
-		return z.object({
-			id: z.string().describe('Unique identifier for the form'),
-			title: z.string().optional().describe('Display title of the form'),
-			description: z.string().optional().describe('Description of the form purpose'),
-			steps: z.array(formStepSchema),
-			view: z.optional(recipeSchemas.length > 0 ? recipesUnion : z.never()),
-			grid: z.lazy(() => GridLayoutConfigSchema).optional(),
-			validationMode: z.enum(['onSubmit', 'onChange', 'onBlur', 'all']).optional(),
-			reValidateMode: z.enum(['onSubmit', 'onChange', 'onBlur']).optional(),
-			className: z.string().optional(),
-			style: z.record(z.string(), z.any()).optional(),
-			actions: z.array(actionsUnion).optional(),
+		return createFormConfigShape({
+			elements: elementsUnion,
+			view: this.recipeRegistry.size > 0 ? recipesUnion : z.never(),
+			actions: actionsUnion,
 		});
 	}
 
