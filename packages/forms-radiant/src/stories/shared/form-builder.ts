@@ -10,12 +10,14 @@ function createStoryFormComposer() {
 
 export const storyFormEngine = createStoryFormComposer().build();
 
-export function createForm() {
-	return createStoryFormComposer().build().createFormDefinition();
-}
-
 export function getEngine() {
 	return storyFormEngine;
+}
+
+export function defineStoryForm<const TConfig extends Parameters<typeof storyFormEngine.defineForm>[0]>(
+	config: TConfig,
+) {
+	return storyFormEngine.defineForm(config);
 }
 
 export { radiantAdapter } from '@/adapters/radiant';

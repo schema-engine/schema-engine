@@ -2,7 +2,6 @@ import { describe, expect, test } from 'vitest';
 import { z } from 'zod';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { FormComposer } from '@/builder';
-import { FormValidationError } from '@/lib/validate-form';
 import { defineFormRecipe, defineRecipeSpec } from '@/recipes';
 
 type MinimalFixtureConfig = {
@@ -129,23 +128,18 @@ describe('defineForm contract', () => {
 		).toBe(false);
 	});
 
-	test('fluent build snapshots nested state and uses the same invariants as defineForm', () => {
+	test('single-step recipe rejects extra steps via defineForm', () => {
 		const engine = new FormComposer().addElement(noteElement).addRecipe(cardRecipe).build();
-		const builder = engine.createFormDefinition();
 
-		const first = builder
-			.setId('contact')
-			.setView('card', {})
-			.addStep({ id: 'one', title: 'One' })
-			.addElement('note', { id: 'n1', name: 'n1' })
-			.build();
+		const form = engine.defineForm({
+			id: 'contact',
+			view: { $type: 'card' },
+			steps: [{ id: 'one', title: 'One', elements: [{ $type: 'note', id: 'n1', name: 'n1' }] }],
+		});
 
-		expect(first.view).toMatchObject({ header: { title: 'UNTITLED' } });
-		expect(first.steps).toHaveLength(1);
-
-		expect(() => builder.addStep({ id: 'two', title: 'Two' }).build()).toThrow(FormValidationError);
-		expect(first.steps).toHaveLength(1);
-		expect(first.steps[0]?.elements).toHaveLength(1);
+		expect(form.view).toMatchObject({ header: { title: 'UNTITLED' } });
+		expect(form.steps).toHaveLength(1);
+		expect(form.steps[0]?.elements).toHaveLength(1);
 
 		expect(() =>
 			engine.defineForm({

@@ -37,7 +37,7 @@ const contactForm = engine.defineForm({
 
 `defineForm` is the typed authoring API for that engine's registrations. `validateForm(input: unknown)` validates external JSON. Both run the same pipeline: envelope parse, Standard Schema dispatch by `$type`, recipe-kind checks, and schema defaults/transforms. Registrations may use Zod, Valibot, Effect Schema, or any other Standard Schema implementation.
 
-`FormComposer` registers capabilities. `createFormDefinition()` is a deprecated fluent adapter for existing callers; new forms should use `defineForm`. See `MIGRATE-FLUENT-TO-DEFINE-FORM.md` at the repository root.
+`FormComposer` registers capabilities. Author forms with `engine.defineForm({ ... })` object literals. For migrating legacy fluent call sites, see `MIGRATE-FLUENT-TO-DEFINE-FORM.md` at the repository root.
 
 Single-step forms may omit `view` to render fields directly. Multi-step forms
 that omit `view` use the registered `bare-controls` recipe at **render** time.

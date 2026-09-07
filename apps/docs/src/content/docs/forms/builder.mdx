@@ -53,31 +53,38 @@ Radiant uses the same composition model for elements: register them explicitly.
 `createRadiantFormComposer()` already binds the canonical view recipes because
 Radiant has no shadcn registry. Specs still come from `@schema-engine/forms/recipes`.
 
-## Build configuration fluently
+## Author form configuration
 
-When configuration is authored in TypeScript rather than loaded as JSON, use
-`engine.createFormDefinition()`:
+When configuration is authored in TypeScript rather than loaded as JSON, pass a
+typed object to `engine.defineForm()`:
 
 ```ts
-const form = engine
-	.createFormDefinition()
-	.setId('contact')
-	.setTitle('Contact')
-	.addStep({ id: 'details', title: 'Contact details' })
-	.addElement('input', {
-		id: 'email',
-		name: 'email',
-		label: 'Email',
-		inputType: 'email',
-	})
-	.setView('card', { shell: { maxWidth: 'md' } })
-	.build();
+const form = engine.defineForm({
+	id: 'contact',
+	title: 'Contact',
+	view: { $type: 'card', shell: { maxWidth: 'md' } },
+	steps: [
+		{
+			id: 'details',
+			title: 'Contact details',
+			elements: [
+				{
+					$type: 'input',
+					id: 'email',
+					name: 'email',
+					label: 'Email',
+					inputType: 'email',
+				},
+			],
+		},
+	],
+});
 ```
 
-The builder validates each registered element, action, and recipe when it is
-added. It requires an ID and at least one step before `build()` succeeds. Use a
-plain `FormConfig` when configuration must remain portable or editable by
-another system.
+`defineForm` validates against the engine's registered elements, recipes, and
+actions. It applies schema defaults and transforms. Use `engine.validateForm()`
+for untyped or external JSON. Use a plain `FormConfig` when configuration must
+remain portable or editable by another system.
 
 ## Composition rules
 

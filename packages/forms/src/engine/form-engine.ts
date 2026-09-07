@@ -12,7 +12,6 @@ import { ActionRegistry } from '@schema-engine/actions';
 import { logger } from '@/lib/logger';
 import type { StandardJSONSchemaV1 } from '@/lib/standard-json-schema';
 import { z } from 'zod';
-import { FormConfigBuilder } from '@/builder/form-config-builder';
 import type { FormEngineSchemaArtifacts, FormEngineSchemaMetadataRegistry } from './schema-artifacts';
 import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from './schema-artifacts';
 import type { FormConfig } from '@/schemas/form-config';
@@ -240,18 +239,6 @@ export class FormEngine<
 		options?: { target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0' },
 	) {
 		return this.schemaArtifacts.jsonSchema.generateActionConfig(actionType, options);
-	}
-
-	/**
-	 * @deprecated Prefer {@link defineForm}. Thin adapter over the same validation pipeline.
-	 */
-	createFormDefinition(): FormConfigBuilder<TElements, TRecipes, TActions> {
-		return new FormConfigBuilder({
-			hasElement: (id) => this.hasElement(id),
-			hasRecipe: (id) => this.hasRecipe(id),
-			hasAction: (id) => this.hasAction(id),
-			commit: (config) => this.validateForm(config),
-		});
 	}
 
 	toComposer(): FormComposer {
