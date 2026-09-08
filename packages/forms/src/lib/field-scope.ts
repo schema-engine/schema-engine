@@ -1,4 +1,5 @@
 import { getElementChildren } from '@/lib/element-children';
+import { getValueAtPath } from '@/lib/path-values';
 
 /**
  * Shared field-path semantics for React and Radiant renderers.
@@ -174,11 +175,20 @@ function treeHasDefaultValue(element: object): boolean {
 	);
 }
 
-function getArraySeedCount(element: object, children: readonly object[]): number {
-	const arrayDefault = getDefaultValue(element);
-	const fromValue = Array.isArray(arrayDefault) ? arrayDefault.length : 0;
+function getArrayLength(value: unknown): number {
+	return Array.isArray(value) ? value.length : 0;
+}
+
+function getArraySeedCount(
+	element: object,
+	children: readonly object[],
+	path: string,
+	userDefaults: Record<string, unknown>,
+): number {
+	const fromValue = getArrayLength(getDefaultValue(element));
+	const fromUser = getArrayLength(getValueAtPath(userDefaults, path));
 	const fromChildren = children.some(treeHasDefaultValue) ? 1 : 0;
-	return Math.max(fromValue, getMinItems(element), fromChildren);
+	return Math.max(fromValue, fromUser, getMinItems(element), fromChildren);
 }
 
 /**
@@ -186,15 +196,21 @@ function getArraySeedCount(element: object, children: readonly object[]): number
  *
  * @remarks
  * Fieldsets join (`address.street`). Arrays seed item indices and follow the
- * renderer scalar-item strategy (`tags.0` vs `contacts.0.name`). Validation
- * still uses {@link walkNamedElements} template paths without indices.
+ * renderer scalar-item strategy (`tags.0` vs `contacts.0.name`). Seed count
+ * includes provider `defaultValues` array length so child defaults apply to
+ * every supplied item. Validation still uses {@link walkNamedElements}
+ * template paths without indices.
  */
-export function collectFieldDefaults(elements: readonly object[]): Array<{ name: string; defaultValue?: unknown }> {
-	return collectScopedDefaults(elements);
+export function collectFieldDefaults(
+	elements: readonly object[],
+	userDefaults: Record<string, unknown> = {},
+): Array<{ name: string; defaultValue?: unknown }> {
+	return collectScopedDefaults(elements, userDefaults);
 }
 
 function collectScopedDefaults(
 	elements: readonly object[],
+	userDefaults: Record<string, unknown>,
 	scope?: FieldScope,
 ): Array<{ name: string; defaultValue?: unknown }> {
 	const fields: Array<{ name: string; defaultValue?: unknown }> = [];
@@ -207,11 +223,12 @@ function collectScopedDefaults(
 			if (!path) continue;
 			fields.push({ name: path, defaultValue: getDefaultValue(element) });
 			const scalar = children.length === 1;
-			const seedCount = getArraySeedCount(element, children);
+			const seedCount = getArraySeedCount(element, children, path, userDefaults);
 			for (let index = 0; index < seedCount; index += 1) {
 				fields.push(
 					...collectScopedDefaults(
 						children,
+						userDefaults,
 						arrayItemScope(path, index, `seed-${index}`, {
 							scalar,
 							parentInstanceId: scope?.instanceId,
@@ -227,7 +244,7 @@ function collectScopedDefaults(
 		fields.push({ name: path, defaultValue: getDefaultValue(element) });
 
 		if (children?.length) {
-			fields.push(...collectScopedDefaults(children, objectFieldScope(path, scope)));
+			fields.push(...collectScopedDefaults(children, userDefaults, objectFieldScope(path, scope)));
 		}
 	}
 

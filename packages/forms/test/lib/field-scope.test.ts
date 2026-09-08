@@ -163,4 +163,24 @@ describe('named element tree walk', () => {
 			{ name: 'contacts.1.phones.0', defaultValue: '555' },
 		]);
 	});
+
+	test('seeds child defaults across provider array length', () => {
+		const contacts = {
+			$type: 'arrayElements',
+			name: 'contacts',
+			elements: [
+				{ $type: 'input', name: 'name', defaultValue: 'Ada' },
+				{ $type: 'input', name: 'email' },
+			],
+		};
+
+		expect(
+			collectFieldDefaults([contacts], {
+				contacts: [{ email: 'ada@example.com' }, { name: 'Grace' }],
+			}).filter((field) => field.defaultValue !== undefined),
+		).toEqual([
+			{ name: 'contacts.0.name', defaultValue: 'Ada' },
+			{ name: 'contacts.1.name', defaultValue: 'Ada' },
+		]);
+	});
 });

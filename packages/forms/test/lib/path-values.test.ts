@@ -64,4 +64,25 @@ describe('path-values', () => {
 			tags: ['work'],
 		});
 	});
+
+	test('applies child defaults to every provider array item and keeps explicit values', () => {
+		const contacts = {
+			$type: 'arrayElements',
+			name: 'contacts',
+			elements: [
+				{ $type: 'input', name: 'name', defaultValue: 'Ada' },
+				{ $type: 'input', name: 'email' },
+			],
+		};
+		const userDefaults = {
+			contacts: [{ email: 'ada@example.com' }, { name: 'Grace', email: 'grace@example.com' }],
+		};
+
+		expect(mergePathValues(collectFieldDefaults([contacts], userDefaults), userDefaults)).toEqual({
+			contacts: [
+				{ name: 'Ada', email: 'ada@example.com' },
+				{ name: 'Grace', email: 'grace@example.com' },
+			],
+		});
+	});
 });

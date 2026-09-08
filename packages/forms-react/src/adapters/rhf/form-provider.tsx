@@ -30,7 +30,10 @@ export function FormProvider({
 	const submission = useSubmissionStateManager();
 
 	const formElements = useMemo(() => flattenStepElements(config.steps), [config.steps]);
-	const fieldDefaults = useMemo(() => collectFieldDefaults(formElements), [formElements]);
+	const fieldDefaults = useMemo(
+		() => collectFieldDefaults(formElements, defaultValues),
+		[formElements, defaultValues],
+	);
 	const formDefaultValues = useFormDefaultValues(fieldDefaults, defaultValues);
 	const formValidationResolver = useFormValidationResolver(formElements);
 

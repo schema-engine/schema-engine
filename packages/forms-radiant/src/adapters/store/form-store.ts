@@ -30,7 +30,10 @@ export class FormStore<TFormData extends Record<string, unknown> = Record<string
 		this.stepElements = flattenStepElements(config.steps);
 		this.defaultValues = userDefaults;
 		this.values.set(
-			mergePathValues(collectFieldDefaults(this.stepElements), userDefaults as Record<string, unknown>),
+			mergePathValues(
+				collectFieldDefaults(this.stepElements, userDefaults as Record<string, unknown>),
+				userDefaults as Record<string, unknown>,
+			),
 		);
 	}
 

@@ -9,7 +9,7 @@ export function collectFormDefaultValues(
 	config: FormConfigView,
 	userDefaults: Partial<Record<string, unknown>> = {},
 ): Partial<Record<string, unknown>> {
-	return mergePathValues(collectFieldDefaults(flattenStepElements(config.steps)), userDefaults);
+	return mergePathValues(collectFieldDefaults(flattenStepElements(config.steps), userDefaults), userDefaults);
 }
 
 function rememberInvalidErrors(event: Event): void {
