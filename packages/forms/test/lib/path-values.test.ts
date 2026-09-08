@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { collectFieldDefaults } from '@/lib/field-scope';
 import { expandFieldTemplatePaths, mergePathValues } from '@/lib/path-values';
 
 describe('path-values', () => {
@@ -25,6 +26,42 @@ describe('path-values', () => {
 		).toEqual({
 			name: 'Grace',
 			address: { street: '1 Main' },
+		});
+	});
+
+	test('clones frozen parent defaults before nested writes', () => {
+		const parentDefault = Object.freeze({ street: 'parent', city: 'Oslo' });
+
+		const result = mergePathValues([
+			{ name: 'address', defaultValue: parentDefault },
+			{ name: 'address.street', defaultValue: 'child' },
+		]);
+
+		expect(result).toEqual({ address: { street: 'child', city: 'Oslo' } });
+		expect(parentDefault).toEqual({ street: 'parent', city: 'Oslo' });
+		expect(() => {
+			(result.address as Record<string, unknown>).street = 'mutated';
+		}).not.toThrow();
+	});
+
+	test('materializes object and scalar array child defaults', () => {
+		const contacts = {
+			$type: 'arrayElements',
+			name: 'contacts',
+			elements: [
+				{ $type: 'input', name: 'name', defaultValue: 'Ada' },
+				{ $type: 'input', name: 'email' },
+			],
+		};
+		const tags = {
+			$type: 'arrayElements',
+			name: 'tags',
+			elements: [{ $type: 'input', name: 'tag', defaultValue: 'work' }],
+		};
+
+		expect(mergePathValues(collectFieldDefaults([contacts, tags]))).toEqual({
+			contacts: [{ name: 'Ada' }],
+			tags: ['work'],
 		});
 	});
 });

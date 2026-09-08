@@ -1,80 +1,95 @@
 {
-	"registry": "recipe-registry.ts",
-	"recipes": [
-		{
-			"id": "bare-controls",
-			"title": "Bare Controls",
-			"files": ["registrations/bare-controls.ts", "blocks/wizard-actions.tsx", "shells/stack-shell.tsx"]
-		},
-		{
-			"id": "card",
-			"title": "Card",
-			"files": ["registrations/card.ts", "blocks/step-header.tsx", "shells/card-shell.tsx"]
-		},
-		{
-			"id": "card-wizard",
-			"title": "Card Wizard",
-			"files": [
-				"registrations/card-wizard.ts",
-				"blocks/minimal-progress.tsx",
-				"blocks/step-header.tsx",
-				"blocks/wizard-actions.tsx",
-				"shells/card-shell.tsx"
-			]
-		},
-		{
-			"id": "hero-background",
-			"title": "Hero Background",
-			"files": ["registrations/hero-background.ts", "blocks/step-header.tsx", "shells/hero-shell.tsx"]
-		},
-		{
-			"id": "hero-wizard",
-			"title": "Hero Wizard",
-			"files": [
-				"registrations/hero-wizard.ts",
-				"blocks/minimal-progress.tsx",
-				"blocks/step-header.tsx",
-				"blocks/wizard-actions.tsx",
-				"shells/hero-shell.tsx"
-			]
-		},
-		{
-			"id": "sidebar-wizard",
-			"title": "Sidebar Wizard",
-			"files": [
-				"registrations/sidebar-wizard.ts",
-				"blocks/step-header.tsx",
-				"blocks/step-indicators.tsx",
-				"blocks/wizard-actions.tsx",
-				"shells/sidebar-shell.tsx"
-			]
-		},
-		{
-			"id": "split-screen",
-			"title": "Split Screen",
-			"files": ["registrations/split-screen.ts", "shells/split-screen-shell.tsx"]
-		},
-		{
-			"id": "split-screen-wizard",
-			"title": "Split Screen Wizard",
-			"files": [
-				"registrations/split-screen-wizard.ts",
-				"blocks/step-header.tsx",
-				"blocks/step-indicators.tsx",
-				"blocks/wizard-actions.tsx",
-				"shells/split-screen-shell.tsx"
-			]
-		},
-		{
-			"id": "wizard",
-			"title": "Wizard",
-			"files": [
-				"registrations/wizard.ts",
-				"blocks/step-header.tsx",
-				"blocks/step-indicators.tsx",
-				"blocks/wizard-actions.tsx",
-				"shells/stack-shell.tsx"
-			]
-		}
-	]
+  "registry": "recipe-registry.ts",
+  "recipes": [
+    {
+      "id": "bare-controls",
+      "title": "Bare Controls",
+      "files": [
+        "registrations/bare-controls.ts",
+        "blocks/wizard-actions.tsx",
+        "shells/stack-shell.tsx"
+      ]
+    },
+    {
+      "id": "card",
+      "title": "Card",
+      "files": [
+        "registrations/card.ts",
+        "blocks/step-header.tsx",
+        "shells/card-shell.tsx"
+      ]
+    },
+    {
+      "id": "card-wizard",
+      "title": "Card Wizard",
+      "files": [
+        "registrations/card-wizard.ts",
+        "blocks/minimal-progress.tsx",
+        "blocks/step-header.tsx",
+        "blocks/wizard-actions.tsx",
+        "shells/card-shell.tsx"
+      ]
+    },
+    {
+      "id": "hero-background",
+      "title": "Hero Background",
+      "files": [
+        "registrations/hero-background.ts",
+        "blocks/step-header.tsx",
+        "shells/hero-shell.tsx"
+      ]
+    },
+    {
+      "id": "hero-wizard",
+      "title": "Hero Wizard",
+      "files": [
+        "registrations/hero-wizard.ts",
+        "blocks/minimal-progress.tsx",
+        "blocks/step-header.tsx",
+        "blocks/wizard-actions.tsx",
+        "shells/hero-shell.tsx"
+      ]
+    },
+    {
+      "id": "sidebar-wizard",
+      "title": "Sidebar Wizard",
+      "files": [
+        "registrations/sidebar-wizard.ts",
+        "blocks/step-header.tsx",
+        "blocks/step-indicators.tsx",
+        "blocks/wizard-actions.tsx",
+        "shells/sidebar-shell.tsx"
+      ]
+    },
+    {
+      "id": "split-screen",
+      "title": "Split Screen",
+      "files": [
+        "registrations/split-screen.ts",
+        "shells/split-screen-shell.tsx"
+      ]
+    },
+    {
+      "id": "split-screen-wizard",
+      "title": "Split Screen Wizard",
+      "files": [
+        "registrations/split-screen-wizard.ts",
+        "blocks/step-header.tsx",
+        "blocks/step-indicators.tsx",
+        "blocks/wizard-actions.tsx",
+        "shells/split-screen-shell.tsx"
+      ]
+    },
+    {
+      "id": "wizard",
+      "title": "Wizard",
+      "files": [
+        "registrations/wizard.ts",
+        "blocks/step-header.tsx",
+        "blocks/step-indicators.tsx",
+        "blocks/wizard-actions.tsx",
+        "shells/stack-shell.tsx"
+      ]
+    }
+  ]
 }

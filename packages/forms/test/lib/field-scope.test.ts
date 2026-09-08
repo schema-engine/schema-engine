@@ -104,4 +104,63 @@ describe('named element tree walk', () => {
 			]),
 		).toEqual([{ name: 'first' }, { name: 'second' }, { name: 'third' }]);
 	});
+
+	test('keeps array child paths as templates without indices', () => {
+		const name = { $type: 'input', name: 'name', defaultValue: 'Ada' };
+		const contacts = { $type: 'arrayElements', name: 'contacts', elements: [name] };
+
+		expect(walkNamedElements([contacts]).map((node) => node.path)).toEqual(['contacts', 'contacts.name']);
+		expect(walkLeafFields([contacts]).map((node) => node.path)).toEqual(['contacts.name']);
+	});
+
+	test('seeds object-array child defaults at item index 0', () => {
+		const contacts = {
+			$type: 'arrayElements',
+			name: 'contacts',
+			elements: [
+				{ $type: 'input', name: 'name', defaultValue: 'Ada' },
+				{ $type: 'input', name: 'email' },
+			],
+		};
+
+		expect(collectFieldDefaults([contacts])).toEqual([
+			{ name: 'contacts', defaultValue: undefined },
+			{ name: 'contacts.0.name', defaultValue: 'Ada' },
+			{ name: 'contacts.0.email', defaultValue: undefined },
+		]);
+	});
+
+	test('seeds scalar-array child defaults at the item path', () => {
+		const tags = {
+			$type: 'arrayElements',
+			name: 'tags',
+			elements: [{ $type: 'input', name: 'tag', defaultValue: 'Ada' }],
+		};
+
+		expect(collectFieldDefaults([tags])).toEqual([
+			{ name: 'tags', defaultValue: undefined },
+			{ name: 'tags.0', defaultValue: 'Ada' },
+		]);
+	});
+
+	test('seeds minItems slots and nested array paths', () => {
+		const phones = {
+			$type: 'arrayElements',
+			name: 'phones',
+			elements: [{ $type: 'input', name: 'number', defaultValue: '555' }],
+		};
+		const contacts = {
+			$type: 'arrayElements',
+			name: 'contacts',
+			minItems: 2,
+			elements: [{ $type: 'input', name: 'name', defaultValue: 'Ada' }, phones],
+		};
+
+		expect(collectFieldDefaults([contacts]).filter((field) => field.defaultValue !== undefined)).toEqual([
+			{ name: 'contacts.0.name', defaultValue: 'Ada' },
+			{ name: 'contacts.0.phones.0', defaultValue: '555' },
+			{ name: 'contacts.1.name', defaultValue: 'Ada' },
+			{ name: 'contacts.1.phones.0', defaultValue: '555' },
+		]);
+	});
 });

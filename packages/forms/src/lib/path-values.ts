@@ -64,6 +64,10 @@ export function setValueAtPath(target: Record<string, unknown>, path: string, va
 /**
  * Build adapter default values from field-level defaults and merge them with
  * consumer-provided defaults using nested path semantics.
+ *
+ * @remarks
+ * Config snapshots are frozen. Defaults are cloned into a mutable value tree
+ * before nested writes so parent objects are never mutated in place.
  */
 export function mergePathValues(
 	fields: readonly { name: string; defaultValue?: unknown }[],
@@ -71,12 +75,12 @@ export function mergePathValues(
 ): Record<string, unknown> {
 	const fieldDefaults = fields.reduce<Record<string, unknown>>((accumulator, field) => {
 		if (field.defaultValue !== undefined) {
-			setValueAtPath(accumulator, field.name, field.defaultValue);
+			setValueAtPath(accumulator, field.name, clonePlainValue(field.defaultValue));
 		}
 		return accumulator;
 	}, {});
 
-	return deepMerge(fieldDefaults, userDefaults) as Record<string, unknown>;
+	return deepMerge(fieldDefaults, clonePlainValue(userDefaults)) as Record<string, unknown>;
 }
 
 /**
@@ -110,6 +114,25 @@ export function expandFieldTemplatePaths(values: Record<string, unknown>, templa
 
 	traverse(values, [], parts);
 	return paths.length > 0 ? paths : [templatePath];
+}
+
+function clonePlainValue(value: unknown): unknown {
+	if (Array.isArray(value)) {
+		return value.map(clonePlainValue);
+	}
+
+	if (value && typeof value === 'object') {
+		const proto = Object.getPrototypeOf(value);
+		if (proto === Object.prototype || proto === null) {
+			const copy: Record<string, unknown> = {};
+			for (const [key, child] of Object.entries(value)) {
+				copy[key] = clonePlainValue(child);
+			}
+			return copy;
+		}
+	}
+
+	return value;
 }
 
 function deepMerge(base: unknown, override: unknown): unknown {

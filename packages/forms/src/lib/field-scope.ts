@@ -155,11 +155,83 @@ function getDefaultValue(element: object): unknown {
 	return (element as { defaultValue?: unknown }).defaultValue;
 }
 
+function isArrayElements(element: object): boolean {
+	return '$type' in element && element.$type === 'arrayElements';
+}
+
+function getMinItems(element: object): number {
+	if (!('minItems' in element) || typeof element.minItems !== 'number') {
+		return 0;
+	}
+	return element.minItems;
+}
+
+function treeHasDefaultValue(element: object): boolean {
+	if (getDefaultValue(element) !== undefined) return true;
+	const children = getElementChildren(element);
+	return (
+		children?.some((child) => typeof child === 'object' && child !== null && treeHasDefaultValue(child)) ?? false
+	);
+}
+
+function getArraySeedCount(element: object, children: readonly object[]): number {
+	const arrayDefault = getDefaultValue(element);
+	const fromValue = Array.isArray(arrayDefault) ? arrayDefault.length : 0;
+	const fromChildren = children.some(treeHasDefaultValue) ? 1 : 0;
+	return Math.max(fromValue, getMinItems(element), fromChildren);
+}
+
+/**
+ * Field defaults using the same path composition as renderers.
+ *
+ * @remarks
+ * Fieldsets join (`address.street`). Arrays seed item indices and follow the
+ * renderer scalar-item strategy (`tags.0` vs `contacts.0.name`). Validation
+ * still uses {@link walkNamedElements} template paths without indices.
+ */
 export function collectFieldDefaults(elements: readonly object[]): Array<{ name: string; defaultValue?: unknown }> {
-	return walkNamedElements(elements).map(({ path, element }) => ({
-		name: path,
-		defaultValue: getDefaultValue(element),
-	}));
+	return collectScopedDefaults(elements);
+}
+
+function collectScopedDefaults(
+	elements: readonly object[],
+	scope?: FieldScope,
+): Array<{ name: string; defaultValue?: unknown }> {
+	const fields: Array<{ name: string; defaultValue?: unknown }> = [];
+
+	for (const element of elements) {
+		const children = getElementChildren(element) as object[] | undefined;
+		const path = composeFieldName(element, scope);
+
+		if (isArrayElements(element) && children?.length) {
+			if (!path) continue;
+			fields.push({ name: path, defaultValue: getDefaultValue(element) });
+			const scalar = children.length === 1;
+			const seedCount = getArraySeedCount(element, children);
+			for (let index = 0; index < seedCount; index += 1) {
+				fields.push(
+					...collectScopedDefaults(
+						children,
+						arrayItemScope(path, index, `seed-${index}`, {
+							scalar,
+							parentInstanceId: scope?.instanceId,
+						}),
+					),
+				);
+			}
+			continue;
+		}
+
+		if (!path) continue;
+
+		fields.push({ name: path, defaultValue: getDefaultValue(element) });
+
+		if (children?.length) {
+			fields.push(...collectScopedDefaults(children, objectFieldScope(path, scope)));
+		}
+	}
+
+	return fields;
 }
 
 export function flattenStepElements(steps: readonly { readonly elements?: readonly object[] }[]): object[] {
