@@ -60,8 +60,8 @@ const formConfig: FormConfig = {
 };
 ```
 
-Register the corresponding action registrations with `FormComposer.addActions`
-before building the engine. Use `form_submit_start`,
+Register the corresponding action registrations with
+`createFormEngine({ actions: [...] })`. Use `form_submit_start`,
 `form_submit_success`, `form_submit_error`, and `form_submit_complete` for the
 submit lifecycle; step navigation uses the `step_*` triggers.
 

@@ -72,9 +72,8 @@ const PATH_CARDS: HomePathCardData[] = [
 	},
 	{
 		href: '/docs/forms/builder',
-		title: 'Use the builder pattern',
-		description:
-			'Construct your engine once with createReactFormComposer, then addElement / addAction as your app grows.',
+		title: 'Set up the form engine',
+		description: 'Construct your engine once with createReactFormEngine, then extend it as your app grows.',
 	},
 	{
 		href: '/docs/examples/basic-form',

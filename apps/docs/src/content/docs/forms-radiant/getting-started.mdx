@@ -25,9 +25,9 @@ import '@ecopages/radiant-ui/styles.css';
 Default field registrations ship in the package:
 
 ```typescript
-import { createRadiantFormComposer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
 
-const formEngine = createRadiantFormComposer().addElements(schemaFormRegistrations).build();
+const formEngine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 ```
 
 ## 3. Configure your form
@@ -87,10 +87,9 @@ import { radiantAdapter } from '@schema-engine/forms-radiant/adapters/radiant';
 ```typescript
 import { InputElementRegistration } from '@schema-engine/forms-radiant/registrations';
 
-const engine = createRadiantFormComposer()
-	.addElements(schemaFormRegistrations)
-	.addElement({ ...InputElementRegistration, render: MyCustomInput })
-	.build();
+const engine = createRadiantFormEngine({
+	elements: [...schemaFormRegistrations, { ...InputElementRegistration, render: MyCustomInput }],
+});
 ```
 
 ## Storybook

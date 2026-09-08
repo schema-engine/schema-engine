@@ -12,19 +12,37 @@ export type DiscriminatedConfigs<TMap extends Record<string, unknown>> = string 
 				[K in keyof TMap]: { readonly $type: K } & TMap[K];
 			}[keyof TMap];
 
-export type FormAuthoringAction<TActions extends Record<string, unknown>> = [keyof TActions] extends [never]
-	? never
-	: TActions[keyof TActions];
+export type FormAuthoringAction<TActions extends Record<string, unknown>> = DiscriminatedConfigs<TActions>;
 
-export interface FormAuthoringStep<
+/**
+ * Recursively rewrite container `elements` to this engine's authoring union.
+ * Nested fieldsets and arrays use the same registrations as top-level fields.
+ */
+type WithEngineChildren<TConfig, TElements extends Record<string, unknown>> = TConfig extends {
+	elements: unknown[];
+}
+	? Omit<TConfig, 'elements'> & { elements: Array<AuthoringElement<TElements>> }
+	: TConfig extends { elements?: unknown[] }
+		? Omit<TConfig, 'elements'> & { elements?: Array<AuthoringElement<TElements>> }
+		: TConfig;
+
+export type AuthoringElement<TElements extends Record<string, unknown>> = string extends keyof TElements
+	? never
+	: [keyof TElements] extends [never]
+		? never
+		: {
+				[K in keyof TElements]: { readonly $type: K } & WithEngineChildren<TElements[K], TElements>;
+			}[keyof TElements];
+
+export type FormAuthoringStep<
 	TElements extends Record<string, unknown> = Record<never, unknown>,
 	TActions extends Record<string, unknown> = Record<never, unknown>,
-> {
+> = {
 	id: string;
 	title: string;
 	description?: string;
 	icon?: string;
-	elements: Array<DiscriminatedConfigs<TElements>>;
+	elements: Array<AuthoringElement<TElements>>;
 	rules?: unknown;
 	constraints?: unknown[];
 	className?: string;
@@ -33,11 +51,15 @@ export interface FormAuthoringStep<
 	onStepLeave?: Array<FormAuthoringAction<TActions>>;
 	onStepValidate?: Array<FormAuthoringAction<TActions>>;
 	actions?: Array<FormAuthoringAction<TActions>>;
-}
+};
 
 /**
  * Typed form authoring input for an engine's registered elements, recipes, and actions.
  * Pass this to {@link FormEngine.defineForm}. External JSON uses {@link FormEngine.validateForm}.
+ * Both return a frozen `NormalizedFormConfig`, not this authoring shape.
+ *
+ * Nested container `elements` are typed from the same engine registrations as
+ * top-level fields.
  */
 export interface FormAuthoringInput<
 	TElements extends Record<string, unknown> = Record<never, unknown>,

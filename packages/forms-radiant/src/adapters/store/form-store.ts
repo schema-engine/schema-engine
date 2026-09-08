@@ -1,7 +1,8 @@
 import { computed, state, type Signal } from '@ecopages/signals';
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { FormConfigView } from '@schema-engine/forms';
 import type { FormContextValue } from '../types';
-import { getValueAtPath, mergePathValues, setValueAtPath } from '@/lib/path-utils';
+import { collectFieldDefaults, flattenStepElements } from '@schema-engine/forms/lib/field-scope';
+import { getValueAtPath, mergePathValues, setValueAtPath } from '@schema-engine/forms/lib/path-values';
 import { validateFormValues } from '@/lib/validation';
 
 let fieldIdCounter = 0;
@@ -19,16 +20,18 @@ export class FormStore<TFormData extends Record<string, unknown> = Record<string
 	readonly submitCount = state(0);
 	readonly currentStep = state(0);
 
-	private readonly allFields: Array<{ name: string; defaultValue?: unknown }>;
+	private readonly stepElements: object[];
 	private readonly defaultValues: Partial<TFormData>;
 
 	constructor(
-		private readonly config: FormConfig,
+		private readonly config: FormConfigView,
 		userDefaults: Partial<TFormData> = {},
 	) {
-		this.allFields = config.steps.flatMap((step) => step.elements || []);
+		this.stepElements = flattenStepElements(config.steps);
 		this.defaultValues = userDefaults;
-		this.values.set(mergePathValues(this.allFields, userDefaults as Record<string, unknown>));
+		this.values.set(
+			mergePathValues(collectFieldDefaults(this.stepElements), userDefaults as Record<string, unknown>),
+		);
 	}
 
 	watchValue<TValue = unknown>(name: string): Signal<TValue> {
@@ -62,7 +65,7 @@ export class FormStore<TFormData extends Record<string, unknown> = Record<string
 	}
 
 	async trigger(names?: string | string[]): Promise<boolean> {
-		const allErrors = await validateFormValues(this.allFields, this.values.get());
+		const allErrors = await validateFormValues(this.stepElements, this.values.get());
 		if (!names) {
 			this.errors.set(allErrors);
 			return Object.keys(allErrors).length === 0;
@@ -111,7 +114,7 @@ export class FormStore<TFormData extends Record<string, unknown> = Record<string
 	}
 
 	async validateAll(): Promise<boolean> {
-		const errors = await validateFormValues(this.allFields, this.values.get());
+		const errors = await validateFormValues(this.stepElements, this.values.get());
 		this.errors.set(errors);
 		return Object.keys(errors).length === 0;
 	}

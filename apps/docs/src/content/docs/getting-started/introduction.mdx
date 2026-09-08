@@ -39,7 +39,7 @@ Schema Engine is a **JSON-driven form system** that adapts to your needs, not th
 Bring your existing component library. Register it with the engine, and it instantly works with form schemas while getting all the React Hook Form goodness.
 
 ```typescript
-import { createReactFormComposer } from '@schema-engine/forms-react';
+import { createReactFormEngine } from '@schema-engine/forms-react';
 import type { InputRegistration } from '@schema-engine/forms';
 import { z } from 'zod';
 
@@ -56,7 +56,7 @@ const MyInputRegistration: InputRegistration<'my-input'> = {
 	render: (props) => <input {...props} className="my-custom-input" />,
 };
 
-const engine = createReactFormComposer().addElement(MyInputRegistration).build();
+const engine = createReactFormEngine({ elements: [MyInputRegistration] });
 ```
 
 ### JSON-Driven Everything

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { FormEngineProvider } from '@/components/form-engine-provider';
-import { createExtendableComposer, ValidationPresets, rhfAdapter } from '@/stories/shared/form-builder.ui';
+import { getEngine, ValidationPresets, rhfAdapter } from '@/stories/shared/form-builder.ui';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,6 @@ import { FormActionTriggerSchema, formResetPlugin, formSubmitPlugin } from '@sch
 import { z } from 'zod';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@schema-engine/forms/types';
 import type { ActionExecutionResult } from '@schema-engine/forms';
-import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
 
 export interface ActionLogEntry {
 	id: string;
@@ -63,12 +62,14 @@ const LoggerActionSchema = z.object({
 
 type LoggerAction = z.infer<typeof LoggerActionSchema>;
 
-function loggerPlugin(dispatcher: ActionEventDispatcher): BuilderActionRegistration<'event_logger', LoggerAction> {
+function loggerPlugin(
+	dispatcher: ActionEventDispatcher,
+): BuilderActionRegistration<'event_logger', typeof LoggerActionSchema> {
 	let previousFormData: Record<string, any> = {};
 
 	return {
 		$type: 'event_logger',
-		schema: asStandardSchema(LoggerActionSchema),
+		schema: LoggerActionSchema,
 		metadata: {
 			name: 'Event Logger',
 			description: 'Logs action triggers for dashboard display',
@@ -147,11 +148,9 @@ const customResetPlugin = formResetPlugin({
 	},
 });
 
-export const demoEngine = createExtendableComposer()
-	.addAction(customLoggerPlugin)
-	.addAction(customSubmitPlugin)
-	.addAction(customResetPlugin)
-	.build();
+export const demoEngine = getEngine().extend({
+	actions: [customLoggerPlugin, customSubmitPlugin, customResetPlugin],
+});
 
 export const demoFormConfig = demoEngine.defineForm({
 	id: 'action-demo-form',

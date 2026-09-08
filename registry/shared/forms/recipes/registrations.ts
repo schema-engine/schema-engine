@@ -1,6 +1,6 @@
 /**
  * Generated registration barrel for the default recipe registry item.
- * Consumers explicitly opt into this visual layer with FormComposer.addRecipes().
+ * Consumers explicitly opt into this visual layer with createFormEngine({ recipes: [...] }).
  */
 import { BareControlsRecipe } from './registrations/bare-controls';
 import { CardRecipe } from './registrations/card';
@@ -36,4 +36,4 @@ export const schemaFormRecipeRegistrations = [
 	SplitScreenRecipe,
 	SplitScreenWizardRecipe,
 	WizardRecipe,
-];
+] as const;

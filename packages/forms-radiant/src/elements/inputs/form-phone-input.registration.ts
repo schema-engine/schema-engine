@@ -1,8 +1,7 @@
 import { FormPhoneInput } from './form-phone-input';
-import type { PhoneInputFieldConfig, PhoneInputFieldProps } from '@/registry/forms/inputs/form-phone-input.types';
+import type { PhoneInputFieldConfig } from '@/registry/forms/inputs/form-phone-input.types';
 import { PhoneInputFieldSchema } from '@/registry/forms/inputs/form-phone-input.types';
-import type { InputRegistration } from '@schema-engine/forms/types';
-import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
+import { defineInput } from '@schema-engine/forms';
 
 declare global {
 	namespace FormEngine {
@@ -12,17 +11,13 @@ declare global {
 	}
 }
 
-export const PhoneInputElementRegistration: InputRegistration<
-	'phone-input',
-	PhoneInputFieldConfig,
-	PhoneInputFieldProps
-> = {
+export const PhoneInputElementRegistration = defineInput({
 	$type: 'phone-input',
 	render: FormPhoneInput,
-	schema: asStandardSchema(PhoneInputFieldSchema),
+	schema: PhoneInputFieldSchema,
 	metadata: {
 		name: 'Phone Input',
 		description: 'Telephone input field',
 		category: 'input',
 	},
-};
+});

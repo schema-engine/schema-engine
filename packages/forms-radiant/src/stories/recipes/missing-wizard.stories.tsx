@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
-import { FormComposer } from '@schema-engine/forms';
+import { createFormEngine } from '@schema-engine/forms';
 import { schemaFormRegistrations } from '@/registrations';
 import { formRendererMeta, renderFormStory } from '@/stories/shared/form-story';
 import { radiantAdapter } from '@/stories/shared/form-builder';
@@ -7,7 +7,7 @@ import { getFieldControl, getSubmitButton } from '@/stories/shared/play';
 import { expect, waitFor } from 'storybook/test';
 import type { StoryContext } from 'storybook/internal/types';
 
-const noRecipeEngine = new FormComposer().addElements(schemaFormRegistrations).build();
+const noRecipeEngine = createFormEngine({ elements: schemaFormRegistrations });
 
 const meta = {
 	...formRendererMeta,

@@ -16,7 +16,7 @@ export interface SchemaMetadataEntry {
 
 /**
  * Catalog of schema metadata keyed by stable component ids (e.g. `element:text`).
- * Replaces direct use of `z.registry()` for metadata storage in FormComposer.build().
+ * Replaces direct use of `z.registry()` for metadata storage in engine construction.
  */
 export class SchemaMetadataCatalog {
 	private entries = new Map<string, SchemaMetadataEntry>();

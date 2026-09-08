@@ -2,41 +2,28 @@ import { useMemo } from 'react';
 import type React from 'react';
 import { FormProvider } from '../form-provider';
 import type { FormAdapter, FormProviderProps } from '../../adapters/types';
-import { FormElement } from './field-renderer';
+import { FormElements } from './form-elements';
 import { useFormGridStyles } from '@/hooks';
 import { useFormInstanceActions, useOptionalFormEngine } from '@/hooks/use-form-context';
 import { FormEngineProvider } from '../form-engine-provider';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
-import type { FormConfig, FormStep } from '@schema-engine/forms/schemas';
+import type { NormalizedFormConfig } from '@schema-engine/forms';
 import { RecipeRenderer } from './recipe-renderer';
-import {
-	getRenderableSteps,
-	isValidatedFormConfig,
-	resolveFormRecipe,
-	resolveValidatedConfig,
-} from '@schema-engine/forms/lib/validate-form';
-import { ValidatedFormConfigContext } from '../provider';
+import { getRenderableSteps, assertFormEngine, resolveFormRecipe } from '@schema-engine/forms/lib/validate-form';
 
-function StepFields({ step, config }: { step: FormStep; config: FormConfig }) {
+function StepFields({ step, config }: { step: NormalizedFormConfig['steps'][number]; config: NormalizedFormConfig }) {
 	const gridStyles = useFormGridStyles(config.grid);
 
-	if (!step?.elements) return null;
+	if (!step.elements.length) return null;
 
 	return (
 		<div style={gridStyles}>
-			{step.elements.map((field, index) => (
-				<FormElement
-					key={field.id ?? `field-${index}`}
-					config={field}
-					className={field.className}
-					style={field.style}
-				/>
-			))}
+			<FormElements elements={step.elements} />
 		</div>
 	);
 }
 
-function FormElementsRenderer({ config, children }: { config: FormConfig; children?: React.ReactNode }) {
+function FormElementsRenderer({ config, children }: { config: NormalizedFormConfig; children?: React.ReactNode }) {
 	const { currentStep } = useFormInstanceActions();
 	const engineContext = useOptionalFormEngine();
 	const recipe = resolveFormRecipe(config, engineContext?.engine);
@@ -78,38 +65,37 @@ function FormRendererInner({
 	className = '',
 	style,
 	children,
-	configValidated,
-}: Omit<FormRendererProps, 'engine' | 'adapter'> & { configValidated: boolean }) {
+}: Omit<FormRendererProps, 'engine' | 'adapter' | 'config'> & { config: NormalizedFormConfig }) {
 	return (
-		<ValidatedFormConfigContext.Provider value={configValidated}>
-			<FormProvider
-				config={config}
-				defaultValues={defaultValues}
-				onSubmit={onSubmit}
-				onChange={onChange}
-				onAction={onAction}
-			>
-				<div className={`w-full min-h-full h-full ${className}`.trim()} style={style}>
-					<FormElementsRenderer config={config}>{children}</FormElementsRenderer>
-				</div>
-			</FormProvider>
-		</ValidatedFormConfigContext.Provider>
+		<FormProvider
+			config={config}
+			defaultValues={defaultValues}
+			onSubmit={onSubmit}
+			onChange={onChange}
+			onAction={onAction}
+		>
+			<div className={`w-full min-h-full h-full ${className}`.trim()} style={style}>
+				<FormElementsRenderer config={config}>{children}</FormElementsRenderer>
+			</div>
+		</FormProvider>
 	);
 }
 
 export function FormRenderer({ engine, adapter, ...props }: FormRendererProps) {
 	const inheritedEngine = useOptionalFormEngine();
 	const resolvedEngine = engine ?? inheritedEngine?.engine;
-	const config = useMemo(() => resolveValidatedConfig(props.config, resolvedEngine), [props.config, resolvedEngine]);
-	const configValidated = isValidatedFormConfig(config);
-	const validatedProps = { ...props, config, configValidated };
+	const config = useMemo(() => {
+		assertFormEngine(resolvedEngine, props.config);
+		return resolvedEngine.validateForm(props.config);
+	}, [props.config, resolvedEngine]);
+	const innerProps = { ...props, config };
 	if (!engine || !adapter) {
-		return <FormRendererInner {...validatedProps} />;
+		return <FormRendererInner {...innerProps} />;
 	}
 
 	return (
-		<FormEngineProvider engine={engine} adapter={adapter} configValidated={configValidated}>
-			<FormRendererInner {...validatedProps} />
+		<FormEngineProvider engine={engine} adapter={adapter}>
+			<FormRendererInner {...innerProps} />
 		</FormEngineProvider>
 	);
 }

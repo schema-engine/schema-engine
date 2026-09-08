@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
-import { asStandardSchema } from '@/lib/standard-schema';
 import { FormActionTriggerSchema } from '../triggers';
 
 /**
@@ -100,23 +99,21 @@ export type FormSubmitAction = z.infer<typeof FormSubmitActionSchema>;
  * Submit Plugin Factory
  *
  * Returns a configured action registration object for form submission.
- * Use with the FormComposer pattern.
  *
  * @example Basic Usage
  * ```typescript
- * import { FormComposer, submitPlugin } from '@schema-engine/forms';
+ * import { createFormEngine, submitPlugin } from '@schema-engine/forms';
  *
- * const engine = new FormComposer()
- *   .addElement(InputElement)
- *   .addAction(submitPlugin({
+ * const engine = createFormEngine({
+ *   actions: [submitPlugin({
  *     onSuccess: (data, context) => {
  *       console.log("Form submitted successfully:", data);
  *     },
  *     onError: (error, context) => {
  *       console.error("Submit failed:", error);
  *     }
- *   }))
- *   .build();
+ *   })],
+ * });
  * ```
  *
  * @example Axios Integration
@@ -167,7 +164,7 @@ export type FormSubmitAction = z.infer<typeof FormSubmitActionSchema>;
  */
 export function formSubmitPlugin(
 	config: FormSubmitPluginConfig = {},
-): BuilderActionRegistration<'submit', FormSubmitAction> {
+): BuilderActionRegistration<'submit', typeof FormSubmitActionSchema> {
 	const { request = fetch, transformData = (data) => data, onSuccess = () => {}, onError = () => {} } = config;
 
 	const handler = async (context: BuilderActionExecutionContext<FormSubmitAction>) => {
@@ -246,7 +243,7 @@ export function formSubmitPlugin(
 
 	return {
 		$type: 'submit',
-		schema: asStandardSchema(FormSubmitActionSchema),
+		schema: FormSubmitActionSchema,
 		metadata: {
 			name: 'Submit Form',
 			description: 'Submit form data to an endpoint',

@@ -1,27 +1,162 @@
-import type { FormConfig } from '@/schemas/form-config';
+import type { FormConfig, FormStep } from '@/schemas/form-config';
 
-const VALIDATED_FORM_CONFIG = Symbol.for('@schema-engine/forms.validated-form-config');
+const NORMALIZED_FORM_CONFIG = Symbol.for('@schema-engine/forms.normalized-form-config');
+const NORMALIZED_ELEMENT_CONFIG = Symbol.for('@schema-engine/forms.normalized-element-config');
 
-/**
- * Form configuration that has already passed engine validation (defaults and transforms applied).
- * Render paths must not re-run registration input schemas against this object.
- */
-export type ValidatedFormConfig = FormConfig & {
-	readonly [VALIDATED_FORM_CONFIG]: true;
+type NormalizedFormProvenance = {
+	readonly owner: object;
 };
 
-export function isValidatedFormConfig(value: unknown): value is ValidatedFormConfig {
-	return typeof value === 'object' && value !== null && VALIDATED_FORM_CONFIG in value;
+export type DeepReadonly<T> = T extends (...args: never[]) => unknown
+	? T
+	: T extends ReadonlyArray<infer U>
+		? ReadonlyArray<DeepReadonly<U>>
+		: T extends object
+			? { readonly [K in keyof T]: DeepReadonly<T[K]> }
+			: T;
+
+/** Readable form shape. Accepts authoring `FormConfig` and frozen normalized output. */
+export type FormConfigView = DeepReadonly<FormConfig>;
+
+/**
+ * Element produced by {@link FormEngine.validateElement} or as part of a
+ * {@link NormalizedFormConfig}. Distinct from authoring `ElementConfig`.
+ *
+ * Container children are typed for renderers via {@link WithNormalizedChildren}
+ * / {@link ElementRenderProps}. The snapshot itself is frozen at runtime.
+ */
+export type NormalizedElementConfig = DeepReadonly<FormEngine.ElementConfig> & {
+	readonly [NORMALIZED_ELEMENT_CONFIG]: true;
+};
+
+type NormalizedStep = Omit<DeepReadonly<FormStep>, 'elements'> & {
+	readonly elements: ReadonlyArray<NormalizedElementConfig>;
+};
+
+/**
+ * Immutable form produced by {@link FormEngine.defineForm} / {@link FormEngine.validateForm}.
+ *
+ * Distinct from authoring input (`FormConfig` / JSON): registration schemas have already
+ * applied defaults and transforms. Frozen at runtime and readonly in TypeScript.
+ */
+export type NormalizedFormConfig = Omit<DeepReadonly<FormConfig>, 'steps'> & {
+	readonly steps: ReadonlyArray<NormalizedStep>;
+	readonly [NORMALIZED_FORM_CONFIG]: NormalizedFormProvenance;
+};
+
+function isPlainObject(value: object): value is Record<string, unknown> {
+	const proto = Object.getPrototypeOf(value);
+	return proto === Object.prototype || proto === null;
 }
 
-export function markValidatedFormConfig(config: FormConfig): ValidatedFormConfig {
-	if (isValidatedFormConfig(config)) {
-		return config;
+export function isNormalizedElementConfig(value: unknown): value is NormalizedElementConfig {
+	if (typeof value !== 'object' || value === null || !Object.isFrozen(value)) return false;
+	return (value as NormalizedElementConfig)[NORMALIZED_ELEMENT_CONFIG] === true;
+}
+
+/**
+ * Copy plain objects and arrays into an owned snapshot.
+ * Other objects (`Date`, class instances, etc.) are reused by reference.
+ */
+function cloneFormValue(value: unknown, seen: WeakMap<object, unknown>): unknown {
+	if (value === null || typeof value !== 'object') return value;
+	if (isNormalizedElementConfig(value)) return value;
+
+	const cached = seen.get(value);
+	if (cached) return cached;
+
+	if (Array.isArray(value)) {
+		const copy: unknown[] = [];
+		seen.set(value, copy);
+		for (const item of value) copy.push(cloneFormValue(item, seen));
+		return copy;
 	}
 
-	return Object.defineProperty(config, VALIDATED_FORM_CONFIG, {
+	if (!isPlainObject(value)) return value;
+
+	const copy: Record<string, unknown> = {};
+	seen.set(value, copy);
+	for (const key of Object.keys(value)) {
+		copy[key] = cloneFormValue(value[key], seen);
+	}
+	return copy;
+}
+
+function freezeOwnedTree(value: unknown, seen: WeakSet<object>): void {
+	if (value === null || typeof value !== 'object') return;
+	if (seen.has(value)) return;
+	if (isNormalizedElementConfig(value)) return;
+	seen.add(value);
+
+	if (Array.isArray(value)) {
+		for (const item of value) freezeOwnedTree(item, seen);
+		Object.freeze(value);
+		return;
+	}
+
+	if (!isPlainObject(value)) return;
+
+	for (const key of Object.keys(value)) {
+		freezeOwnedTree(value[key], seen);
+	}
+	Object.freeze(value);
+}
+
+function attachFormBrand(config: object, owner: object): void {
+	Object.defineProperty(config, NORMALIZED_FORM_CONFIG, {
+		value: { owner },
+		enumerable: false,
+		configurable: false,
+		writable: false,
+	});
+}
+
+function attachElementBrand(element: object): void {
+	Object.defineProperty(element, NORMALIZED_ELEMENT_CONFIG, {
 		value: true,
 		enumerable: false,
 		configurable: false,
-	}) as ValidatedFormConfig;
+		writable: false,
+	});
+}
+
+function getFormProvenance(value: object): NormalizedFormProvenance | undefined {
+	const provenance = (value as NormalizedFormConfig)[NORMALIZED_FORM_CONFIG];
+	if (!provenance || typeof provenance !== 'object' || !('owner' in provenance)) {
+		return undefined;
+	}
+	return provenance;
+}
+
+export function getNormalizedFormOwner(value: unknown): object | undefined {
+	if (typeof value !== 'object' || value === null || !Object.isFrozen(value)) return undefined;
+	return getFormProvenance(value)?.owner;
+}
+
+export function isNormalizedFormConfig(value: unknown, owner?: object): value is NormalizedFormConfig {
+	const provenanceOwner = getNormalizedFormOwner(value);
+	if (!provenanceOwner) return false;
+	return owner === undefined || provenanceOwner === owner;
+}
+
+export function markNormalizedFormConfig(config: FormConfig, owner: object): NormalizedFormConfig {
+	if (isNormalizedFormConfig(config, owner)) {
+		return config;
+	}
+
+	const snapshot = cloneFormValue(config, new WeakMap()) as FormConfig;
+	attachFormBrand(snapshot, owner);
+	freezeOwnedTree(snapshot, new WeakSet());
+	return snapshot as unknown as NormalizedFormConfig;
+}
+
+export function markNormalizedElementConfig(config: FormEngine.ElementConfig): NormalizedElementConfig {
+	if (isNormalizedElementConfig(config)) {
+		return config;
+	}
+
+	const snapshot = cloneFormValue(config, new WeakMap()) as object;
+	attachElementBrand(snapshot);
+	freezeOwnedTree(snapshot, new WeakSet());
+	return snapshot as unknown as NormalizedElementConfig;
 }

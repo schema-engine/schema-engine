@@ -88,7 +88,7 @@ export class SePhoneInput extends RadiantElement {
 		if (!this.lib) {
 			return;
 		}
-		const next = (event as CustomEvent<{ value?: string }>).detail?.value ?? '';
+		const next = (event as CustomEvent<{ value?: string | readonly string[] }>).detail?.value;
 		this.setCountry(resolvePhoneCountry(this.lib, next, this.country));
 		this.applyNumber(this.numberInput?.value ?? this.e164);
 	}

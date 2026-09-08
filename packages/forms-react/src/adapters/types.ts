@@ -1,4 +1,5 @@
 import type { FormActionConfig, FormConfig } from '@schema-engine/forms/schemas';
+import type { NormalizedFormConfig } from '@schema-engine/forms';
 import type { ReactNode, RefCallback } from 'react';
 
 export interface FormContextValue<TFormData = Record<string, unknown>> {
@@ -38,7 +39,7 @@ export interface FieldArrayValue {
  */
 export interface FormProviderProps<TFormData = Record<string, unknown>> {
 	/** Form configuration object defining structure, rules, and actions */
-	config: FormConfig;
+	config: FormConfig | NormalizedFormConfig;
 	/** Optional default values for form fields */
 	defaultValues?: Partial<TFormData>;
 	/** React children to render inside the form context */

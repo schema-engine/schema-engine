@@ -67,4 +67,4 @@ export const schemaFormRegistrations = [
 	InputElementRegistration,
 	DateElementRegistration,
 	DateRangeElementRegistration,
-];
+] as const;

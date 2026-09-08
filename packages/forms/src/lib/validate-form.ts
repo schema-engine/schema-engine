@@ -1,15 +1,20 @@
-import type { FormConfig, FormConfigEnvelope, FormStep, FormTaggedConfig } from '@/schemas/form-config';
+import type { FormConfig, FormConfigEnvelope, FormTaggedConfig } from '@/schemas/form-config';
 import { formConfigEnvelopeSchema } from '@/schemas/form-config';
 import type { BuilderActionRegistration, InputRegistration, RecipeRegistration, StaticRegistration } from '@/types';
 import { safeParseStandardSchema, type StandardSchemaIssue } from '@/lib/standard-schema';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import { isValidatedFormConfig, markValidatedFormConfig } from '@/lib/normalized-form-config';
+import {
+	markNormalizedElementConfig,
+	markNormalizedFormConfig,
+	getNormalizedFormOwner,
+	type NormalizedElementConfig,
+	type NormalizedFormConfig,
+} from '@/lib/normalized-form-config';
+import { getElementChildren, withElementChildren } from '@/lib/element-children';
 
-export { isValidatedFormConfig, markValidatedFormConfig } from '@/lib/normalized-form-config';
-export type { ValidatedFormConfig } from '@/lib/normalized-form-config';
-
-/** Implicit `view.$type` for multi-step forms that omit `view`. */
-export const DEFAULT_WIZARD_RECIPE = 'bare-controls';
+export type { FormConfigView, NormalizedElementConfig, NormalizedFormConfig } from '@/lib/normalized-form-config';
+export { DEFAULT_WIZARD_RECIPE, assertFormEngine, getRenderableSteps, resolveFormRecipe } from '@/lib/form-view';
+export type { RecipeLookup, RecipeGetter, RecipeResolver } from '@/lib/form-view';
 
 export class FormValidationError extends Error {
 	constructor(
@@ -24,62 +29,12 @@ export class FormValidationError extends Error {
 type ElementRegistration = InputRegistration<any, any, any> | StaticRegistration<any, any, any>;
 
 export interface ValidateFormOptions {
+	/** Engine (or other owner) that produced this validation. Required to skip re-validation. */
+	owner: object;
 	getRecipe: (id: string) => RecipeRegistration<any, any> | undefined;
 	getElement: (id: string) => ElementRegistration | undefined;
 	getAction: (id: string) => BuilderActionRegistration | undefined;
 	parseFormConfig?: (config: unknown) => FormConfig;
-}
-
-/**
- * Engine-shaped lookup passed to {@link resolveFormRecipe}.
- *
- * Pass the `FormEngine` instance (or a stable `{ getRecipe }` object). Object
- * identity is the warn-cache key: a new lambda every render will warn on every
- * render.
- */
-export interface RecipeLookup {
-	getRecipe: (id: string) => RecipeRegistration<any, any> | undefined;
-}
-
-/** Getter form still accepted so a `(id) => engine.getRecipe(id)` lambda does not crash. */
-export type RecipeGetter = RecipeLookup['getRecipe'];
-
-export type RecipeResolver = RecipeLookup | RecipeGetter;
-
-/** Per-engine form ids already warned, so re-renders of the same engine do not spam. */
-const warnedMultiStepForms = new WeakMap<object, Set<string>>();
-
-function isRecipeLookup(lookup: RecipeResolver): lookup is RecipeLookup {
-	return typeof lookup === 'object' && lookup !== null && typeof lookup.getRecipe === 'function';
-}
-
-function getRecipeFromLookup(lookup: RecipeResolver | undefined, id: string) {
-	if (!lookup) return undefined;
-	if (typeof lookup === 'function') return lookup(id);
-	if (isRecipeLookup(lookup)) return lookup.getRecipe(id);
-	return undefined;
-}
-
-function assertRecipeResolver(lookup: RecipeResolver): void {
-	if (typeof lookup === 'function' || isRecipeLookup(lookup)) return;
-	throw new Error(
-		'The supplied engine has no getRecipe(). Pass a live FormEngine instance — class methods do not survive HTML attributes or Storybook arg serialization.',
-	);
-}
-
-function warnMissingDefaultWizard(lookup: object, config: FormConfig) {
-	let warned = warnedMultiStepForms.get(lookup);
-	if (!warned) {
-		warned = new Set();
-		warnedMultiStepForms.set(lookup, warned);
-	}
-	if (warned.has(config.id)) return;
-	warned.add(config.id);
-	console.warn(
-		`Form '${config.id}' has ${config.steps.length} steps but no '${DEFAULT_WIZARD_RECIPE}' recipe is registered. ` +
-			'The form renders every step on a single page without a view layout. ' +
-			'Register a wizard recipe with FormComposer.addRecipe() (or addRecipes()) or set an explicit view.$type.',
-	);
 }
 
 function formatIssuePath(path: StandardSchemaIssue['path']): string {
@@ -103,76 +58,6 @@ function itemLocation(kind: string, index: number, item: { id?: unknown }): stri
 
 function prefixed(location: string, message: string): string {
 	return `${location}: ${message}`;
-}
-
-/**
- * Resolves the view recipe for a form at render time.
- *
- * - Explicit `view.$type`: looks up that recipe. Throws if `lookup` is missing
- *   or the type is unregistered. `lookup` may be a FormEngine, `{ getRecipe }`,
- *   or a `(id) => recipe` getter.
- * - No `view`, one step or fewer: returns `undefined` (fields only).
- * - No `view`, two or more steps: looks up {@link DEFAULT_WIZARD_RECIPE}.
- * - Engine present but that recipe is missing: warns once per engine/form id
- *   and returns `undefined`. `validateForm` / `defineForm` still succeed.
- * - No `lookup` (engine-less render): stays silent and returns `undefined`.
- */
-export function resolveFormRecipe(
-	config: FormConfig,
-	lookup?: RecipeResolver,
-): RecipeRegistration<any, any> | undefined {
-	const requestedType = config.view?.$type;
-	if (requestedType) {
-		if (!lookup) {
-			throw new Error(`Form '${config.id}' uses view '${requestedType}' but no FormEngine was supplied.`);
-		}
-		assertRecipeResolver(lookup);
-		const recipe = getRecipeFromLookup(lookup, requestedType);
-		if (!recipe) {
-			throw new Error(`Unknown view recipe '${requestedType}'. Register it with FormComposer.addRecipe().`);
-		}
-		return recipe;
-	}
-
-	if (config.steps.length <= 1) return undefined;
-	if (!lookup) return undefined;
-
-	assertRecipeResolver(lookup);
-	const recipe = getRecipeFromLookup(lookup, DEFAULT_WIZARD_RECIPE);
-	if (recipe) return recipe;
-
-	warnMissingDefaultWizard(lookup, config);
-	return undefined;
-}
-
-/**
- * Steps to paint for a resolved recipe.
- *
- * A recipe owns wizard navigation, so only the current step is rendered.
- * Without a recipe, every step is flattened onto one page so later fields stay reachable.
- */
-export function getRenderableSteps(
-	config: FormConfig,
-	recipe: RecipeRegistration<any, any> | undefined,
-	currentStep: number,
-): FormStep[] {
-	if (recipe) {
-		const step = config.steps[currentStep] ?? config.steps[0];
-		return step ? [step] : [];
-	}
-	return config.steps;
-}
-
-export function resolveValidatedConfig(
-	config: FormConfig,
-	engine?: { validateForm: (config: unknown) => FormConfig },
-): FormConfig {
-	if (isValidatedFormConfig(config)) return config;
-	if (engine) return engine.validateForm(config);
-	if (config.view) {
-		throw new Error(`Form '${config.id}' uses view '${config.view.$type}' but no FormEngine was supplied.`);
-	}
-	return config;
 }
 
 type ParseResult<T> = { ok: true; data: T } | { ok: false; issue: string };
@@ -209,7 +94,9 @@ function parseView(
 
 	const recipe = getRecipe(recipeType);
 	if (!recipe) {
-		return { issues: [`Unknown view recipe '${recipeType}'. Register it with FormComposer.addRecipe().`] };
+		return {
+			issues: [`Unknown view recipe '${recipeType}'. Register it with createFormEngine({ recipes: [...] }).`],
+		};
 	}
 
 	const issues: string[] = [];
@@ -294,13 +181,120 @@ function parseTypedList(
 	return { issues, items: next };
 }
 
+function taggedId(item: unknown): unknown {
+	if (typeof item === 'object' && item !== null && 'id' in item) {
+		return (item as { id?: unknown }).id;
+	}
+	return undefined;
+}
+
+function childLocation(parentLocation: string, index: number, child: unknown): string {
+	const nested = itemLocation('elements', index, { id: taggedId(child) });
+	return parentLocation ? `${parentLocation} ${nested}` : nested;
+}
+
+function parseElementNode(
+	item: unknown,
+	getElement: ValidateFormOptions['getElement'],
+	location: string,
+): { issues: string[]; item?: FormTaggedConfig } {
+	const fail = (message: string) => ({
+		issues: [location ? prefixed(location, message) : message],
+	});
+
+	if (!isTaggedConfig(item)) {
+		return fail('Invalid element configuration: missing $type.');
+	}
+
+	const parsed = parseTypedConfig('element', item, getElement, 'createFormEngine({ elements: [...] })');
+	if (!parsed.ok) {
+		return fail(parsed.issue);
+	}
+
+	const children = getElementChildren(parsed.data);
+	if (!children) {
+		return { issues: [], item: parsed.data };
+	}
+
+	const nextChildren: FormTaggedConfig[] = [];
+	const issues: string[] = [];
+	for (let index = 0; index < children.length; index += 1) {
+		const child = children[index];
+		const nested = parseElementNode(child, getElement, childLocation(location, index, child));
+		issues.push(...nested.issues);
+		if (nested.item) nextChildren.push(nested.item);
+	}
+
+	if (issues.length > 0) {
+		return { issues };
+	}
+
+	return { issues: [], item: withElementChildren(parsed.data, nextChildren) };
+}
+
+function parseElementList(
+	items: unknown[] | undefined,
+	getElement: ValidateFormOptions['getElement'],
+	parentLocation: string,
+): { issues: string[]; items?: FormTaggedConfig[] } {
+	if (!items) return { issues: [] };
+
+	const next: FormTaggedConfig[] = [];
+	const issues: string[] = [];
+	for (let index = 0; index < items.length; index += 1) {
+		const item = items[index];
+		const parsed = parseElementNode(item, getElement, childLocation(parentLocation, index, item));
+		issues.push(...parsed.issues);
+		if (parsed.item) next.push(parsed.item);
+	}
+	return { issues, items: next };
+}
+
+function brandElementTree(config: FormTaggedConfig): NormalizedElementConfig {
+	const children = getElementChildren(config);
+	const next = children
+		? withElementChildren(
+				config,
+				children.map((child) => brandElementTree(child as FormTaggedConfig)),
+			)
+		: config;
+	return markNormalizedElementConfig(next as unknown as FormEngine.ElementConfig);
+}
+
+/**
+ * Validate a single element against its registration schema, including nested child elements.
+ * Use this before rendering a field that is not already part of a {@link NormalizedFormConfig}.
+ * The normalized marker is applied only after this element and its children succeed.
+ */
+export function validateElementConfig(
+	config: unknown,
+	options: { getElement: ValidateFormOptions['getElement'] },
+): NormalizedElementConfig {
+	const parsed = parseElementNode(config, options.getElement, '');
+	if (parsed.issues.length > 0 || !parsed.item) {
+		const issues = parsed.issues.length ? parsed.issues : ['Invalid element configuration: missing $type.'];
+		throw new FormValidationError(issues[0] ?? 'Invalid element configuration', issues);
+	}
+	return brandElementTree(parsed.item);
+}
+
 /**
  * Strict validation for a form configuration against the engine's registered recipes and schema.
- * Returns a new config: schema defaults and transforms are kept, the input object is not mutated.
+ * Returns a frozen {@link NormalizedFormConfig}: schema defaults and transforms are kept, the input object is not mutated.
  */
-export function validateFormConfig(config: unknown, options: ValidateFormOptions): FormConfig {
-	if (isValidatedFormConfig(config)) {
-		return config;
+export function validateFormConfig(config: unknown, options: ValidateFormOptions): NormalizedFormConfig {
+	const existingOwner = getNormalizedFormOwner(config);
+	if (existingOwner) {
+		if (existingOwner === options.owner) {
+			return config as NormalizedFormConfig;
+		}
+		const formId = typeof config === 'object' && config !== null && 'id' in config ? String(config.id) : 'unknown';
+		throw new FormValidationError(
+			`Form '${formId}' was already normalized by a different engine. Pass the original authoring input or JSON to this engine instead.`,
+			[
+				`Form '${formId}' was already normalized by a different engine. Pass the original authoring input or JSON to this engine instead.`,
+			],
+		);
 	}
 
 	let envelope: FormConfigEnvelope;
@@ -315,18 +309,18 @@ export function validateFormConfig(config: unknown, options: ValidateFormOptions
 
 	const issues: string[] = [];
 	const parseActions = (items: FormTaggedConfig[] | undefined, parentLocation: string, itemKind: string) =>
-		parseTypedList(items, 'action', options.getAction, 'FormComposer.addAction()', parentLocation, itemKind);
+		parseTypedList(
+			items,
+			'action',
+			options.getAction,
+			'createFormEngine({ actions: [...] })',
+			parentLocation,
+			itemKind,
+		);
 
 	const steps = envelope.steps.map((step, stepIndex) => {
 		const stepLocation = itemLocation('steps', stepIndex, step);
-		const elements = parseTypedList(
-			step.elements,
-			'element',
-			options.getElement,
-			'FormComposer.addElement()',
-			stepLocation,
-			'elements',
-		);
+		const elements = parseElementList(step.elements, options.getElement, stepLocation);
 		const actions = parseActions(step.actions, stepLocation, 'actions');
 		const onStepEnter = parseActions(step.onStepEnter, stepLocation, 'onStepEnter');
 		const onStepLeave = parseActions(step.onStepLeave, stepLocation, 'onStepLeave');
@@ -360,10 +354,16 @@ export function validateFormConfig(config: unknown, options: ValidateFormOptions
 		throw new FormValidationError(issues[0] ?? 'Invalid form configuration', issues);
 	}
 
-	return markValidatedFormConfig({
-		...envelope,
-		steps,
-		view: view.view ?? envelope.view,
-		actions: formActions.items ?? envelope.actions,
-	} as FormConfig);
+	return markNormalizedFormConfig(
+		{
+			...envelope,
+			steps: steps.map((step) => ({
+				...step,
+				elements: step.elements.map((element) => brandElementTree(element as FormTaggedConfig)),
+			})),
+			view: view.view ?? envelope.view,
+			actions: formActions.items ?? envelope.actions,
+		} as FormConfig,
+		options.owner,
+	);
 }

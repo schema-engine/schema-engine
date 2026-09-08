@@ -37,9 +37,9 @@ The submit button component provides a button that submits the form while displa
 
 ```typescript
 import { SubmitButtonElementRegistration } from '@components/schema-engine/forms/actions';
-import { FormComposer } from '@schema-engine/forms/builder';
+import { createFormEngine } from '@schema-engine/forms/builder';
 
-const engine = new FormComposer().addElement(SubmitButtonElementRegistration).build();
+const engine = createFormEngine({ elements: [SubmitButtonElementRegistration] });
 
 // In your form config
 const formConfig = {

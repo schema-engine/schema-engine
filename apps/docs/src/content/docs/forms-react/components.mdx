@@ -12,12 +12,10 @@ implementations are consumer-owned registry code. Install the matching Schema
 Engine registry item and import its generated registration barrel:
 
 ```ts
-import { createReactFormComposer } from '@schema-engine/forms-react';
+import { createReactFormEngine } from '@schema-engine/forms-react';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
-const engine = createReactFormComposer()
-	.addElements(schemaFormRegistrations)
-	.build();
+const engine = createReactFormEngine({ elements: schemaFormRegistrations });
 ```
 
 ## Registry elements
@@ -106,7 +104,7 @@ const ratingRegistration: InputRegistration<'rating', z.infer<typeof RatingSchem
 	},
 };
 
-const engine = createReactFormComposer().addElement(ratingRegistration).build();
+const engine = createReactFormEngine({ elements: [ratingRegistration] });
 ```
 
 In a real registry item, make the render props type explicit and convert the

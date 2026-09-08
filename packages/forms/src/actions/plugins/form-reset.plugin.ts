@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
-import { asStandardSchema } from '@/lib/standard-schema';
 import { FormActionTriggerSchema } from '../triggers';
 import { GDPRConsent } from '../../tools/gdpr-consent';
 
@@ -57,17 +56,17 @@ function defaultResetForm(context: BuilderActionExecutionContext<any>, _resetToD
  * @example Builder Usage
  * ```typescript
  * import { resetPlugin } from "@/actions/plugins";
- * import { FormComposer } from "@/builder";
+ * import { createFormEngine } from "@schema-engine/forms";
  *
- * const engine = new FormComposer()
- *   .addAction(resetPlugin({
+ * const engine = createFormEngine({
+ *   actions: [resetPlugin({
  *     confirm: (message) => window.confirm(message),
  *     onReset: (context) => {
  *       console.log("Form reset:", context.formId);
  *       analytics.track("form_reset", { formId: context.formId });
  *     }
- *   }))
- *   .build();
+ *   })],
+ * });
  * ```
  *
  * @example Custom Confirmation Dialog
@@ -97,7 +96,7 @@ function defaultResetForm(context: BuilderActionExecutionContext<any>, _resetToD
  */
 export function formResetPlugin(
 	config: FormResetPluginConfig = {},
-): BuilderActionRegistration<'reset', FormResetAction> {
+): BuilderActionRegistration<'reset', typeof FormResetActionSchema> {
 	const {
 		confirm = (message: string) => window.confirm(message),
 		clearDraft = (formId: string) => GDPRConsent.hasConsent() && GDPRConsent.clearDraft(formId),
@@ -107,7 +106,7 @@ export function formResetPlugin(
 
 	return {
 		$type: 'reset',
-		schema: asStandardSchema(FormResetActionSchema),
+		schema: FormResetActionSchema,
 		metadata: {
 			name: 'Reset Form',
 			description: 'Reset form to initial state or defaults',

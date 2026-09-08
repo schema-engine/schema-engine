@@ -1,12 +1,17 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { FieldValues, UseFormReturn } from 'react-hook-form';
-import type { FormConfig } from '@schema-engine/forms/schemas';
-import type { FormActionTrigger, ActionExecutionResult, BuilderActionBaseContext } from '@schema-engine/forms';
+import type {
+	FormActionTrigger,
+	ActionExecutionResult,
+	BuilderActionBaseContext,
+	FormConfigView,
+} from '@schema-engine/forms';
 import { logger } from '@/lib/logger';
 
 type StepStates = {
 	completed: boolean[];
 	valid: boolean[];
+	/** Index `0` is pre-visited: the first step is visible as soon as the form mounts. */
 	visited: boolean[];
 };
 
@@ -35,12 +40,12 @@ type DispatchTrigger = (
 	extraMetadata?: Record<string, unknown>,
 ) => Promise<ActionExecutionResult[]>;
 
-function fieldNamesForStep(step: FormConfig['steps'][number] | undefined): string[] {
+function fieldNamesForStep(step: FormConfigView['steps'][number] | undefined): string[] {
 	return (step?.elements ?? []).map((field) => field.name).filter(Boolean);
 }
 
 export function useRHFMultiStep(
-	config: FormConfig,
+	config: FormConfigView,
 	form: UseFormReturn<FieldValues, any, FieldValues>,
 	dispatchTrigger: DispatchTrigger,
 	options?: { onStepIndexChange?: (index: number) => void },
@@ -53,7 +58,6 @@ export function useRHFMultiStep(
 	const [stepStates, setStepStates] = useState<StepStates>(() => ({
 		completed: config.steps.map(() => false),
 		valid: config.steps.map(() => false),
-		// The first step is visible as soon as the form mounts, so it is already visited.
 		visited: config.steps.map((_, index) => index === 0),
 	}));
 

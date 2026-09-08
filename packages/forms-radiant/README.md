@@ -4,7 +4,7 @@ Radiant/JSX adapter for the Schema Engine form system.
 
 ## Why the recipe components ship in this package
 
-Unlike `@schema-engine/forms-react` — where the default view recipes live in the shadcn registry and consumers register them explicitly with `addRecipes()` — Radiant has no registry ecosystem to lean on. The shells and step blocks are therefore part of this package and `createRadiantFormComposer()` binds the canonical recipes automatically, so the package stays plug-and-play. The recipe specs themselves remain canonical in `@schema-engine/forms/recipes`.
+Unlike `@schema-engine/forms-react` — where the default view recipes live in the shadcn registry and consumers register them explicitly with `createReactFormEngine({ recipes })` — Radiant has no registry ecosystem to lean on. The shells and step blocks are therefore part of this package and `createRadiantFormEngine()` binds the canonical recipes automatically, so the package stays plug-and-play. The recipe specs themselves remain canonical in `@schema-engine/forms/recipes`.
 
 ## Install
 
@@ -25,10 +25,10 @@ import '@ecopages/radiant-ui/styles.css';
 ## Quick start
 
 ```ts
-import { createRadiantFormComposer, FormRenderer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+import { createRadiantFormEngine, FormRenderer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
 import { radiantAdapter } from '@schema-engine/forms-radiant/adapters/radiant';
 
-const engine = createRadiantFormComposer().addElements(schemaFormRegistrations).build();
+const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 
 <FormRenderer engine={engine} adapter={radiantAdapter} config={formConfig} onSubmit={handleSubmit} />;
 ```

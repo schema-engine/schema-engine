@@ -36,14 +36,13 @@ We have distilled interface requirements into four core concepts that are comple
 We reject the compromise between dynamic behavior and static analysis. Through advanced TypeScript inference, your runtime schema dictates your compile-time types.
 
 ```typescript
-import { createReactFormComposer } from '@schema-engine/forms-react';
+import { createReactFormEngine } from '@schema-engine/forms-react';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
-const engine = createReactFormComposer().addElements(schemaFormRegistrations).build();
-// Register schemaFormRecipeRegistrations with addRecipes when the form sets
-// view.$type or has more than one step.
+const engine = createReactFormEngine({ elements: schemaFormRegistrations });
+// Register schemaFormRecipeRegistrations when the form sets view.$type or has more than one step.
 
-// Registered element types are inferred from what you add to the composer.
+// Registered element types are inferred from createFormEngine options.
 const myForm = {
 	id: 'my-form',
 	steps: [
@@ -113,7 +112,7 @@ const submitLeadAction = {
 	},
 };
 
-// Register with FormComposer, then reference in form config actions array.
+// Register with createFormEngine, then reference in form config actions array.
 ```
 
 ---
@@ -149,7 +148,7 @@ graph TD
 
 | Package                                                      | Version | Description                                                                                                          |
 | ------------------------------------------------------------ | ------- | -------------------------------------------------------------------------------------------------------------------- |
-| **[@schema-engine/forms](./packages/forms)**                 | `0.1.0` | Contains the `FormComposer` and `FormEngine`. Handles validation logic, constraint evaluation, and state management. |
+| **[@schema-engine/forms](./packages/forms)**                 | `0.1.0` | Contains `createFormEngine` and `FormEngine`. Handles validation logic, constraint evaluation, and state management. |
 | **[@schema-engine/forms-react](./packages/forms-react)**     | `0.1.0` | React Context bridge, hooks, adapters, and rendering runtime. Default view recipes live in the shadcn registry.      |
 | **[@schema-engine/forms-radiant](./packages/forms-radiant)** | `0.1.0` | Radiant/JSX adapter. Binds canonical view recipes in-package; specs stay in `@schema-engine/forms/recipes`.          |
 | **[@schema-engine/actions](./packages/actions)**             | `0.1.0` | A standalone, domain-agnostic command pattern implementation for handling system events.                             |
@@ -167,14 +166,14 @@ pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-
 ```
 
 ```typescript
-import { createReactFormComposer } from '@schema-engine/forms-react';
+import { createReactFormEngine } from '@schema-engine/forms-react';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
-const engine = createReactFormComposer()
-	.addElements(schemaFormRegistrations)
-	.addRecipes(schemaFormRecipeRegistrations)
-	.build();
+const engine = createReactFormEngine({
+	elements: schemaFormRegistrations,
+	recipes: schemaFormRecipeRegistrations,
+});
 
 const contactFormSchema = {
 	id: 'contact-form',

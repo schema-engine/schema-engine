@@ -6,19 +6,19 @@ registration for Schema Engine.
 ## Compose an engine
 
 ```ts
-import { FormComposer } from '@schema-engine/forms';
+import { createFormEngine } from '@schema-engine/forms';
 
-const engine = new FormComposer()
-	.addElement(textInputRegistration)
-	.addRecipe(cardRecipe)
-	.addAction(submitActionRegistration)
-	.build();
+const engine = createFormEngine({
+	elements: [textInputRegistration],
+	recipes: [cardRecipe],
+	actions: [submitActionRegistration],
+});
 ```
 
-`FormComposer` owns element, recipe, and action registrations. A recipe is the
-single view protocol: it declares the recipe kind, shell/slot keys, validation
-schema, metadata, and framework adapter payload. Forms select one recipe with
-`view.$type`.
+`createFormEngine` registers elements, recipes, and actions in one declarative
+call. A recipe is the single view protocol: it declares the recipe kind,
+shell/slot keys, validation schema, metadata, and framework adapter payload.
+Forms select one recipe with `view.$type`.
 
 ```ts
 const contactForm = engine.defineForm({
@@ -35,9 +35,9 @@ const contactForm = engine.defineForm({
 });
 ```
 
-`defineForm` is the typed authoring API for that engine's registrations. `validateForm(input: unknown)` validates external JSON. Both run the same pipeline: envelope parse, Standard Schema dispatch by `$type`, recipe-kind checks, and schema defaults/transforms. Registrations may use Zod, Valibot, Effect Schema, or any other Standard Schema implementation.
+`defineForm` is the typed authoring API for that engine's registrations. `validateForm(input: unknown)` validates external JSON. Both run the same pipeline: envelope parse, Standard Schema dispatch by `$type` (including nested child elements), recipe-kind checks, and schema defaults/transforms. The normalized marker is applied only after that succeeds. `defineForm` and `validateForm` return a frozen `NormalizedFormConfig` owned by that engine. Snapshot isolation copies plain objects and arrays, so caller data of those kinds is not frozen. Other objects currently remain shared. A normalized form cannot be reused on another engine; pass the original authoring input or JSON instead. Renderers consume that normalized output. They do not re-run registration input schemas. Standalone or dynamically created fields that are not already inside a form must go through `engine.validateElement()` first. Containers render children with `FormElements` and a field scope (`namePrefix`, `instanceId`); they do not clone normalized configs to change paths.
 
-`FormComposer` registers capabilities. Author forms with `engine.defineForm({ ... })` object literals. For migrating legacy fluent call sites, see `MIGRATE-FLUENT-TO-DEFINE-FORM.md` at the repository root.
+Use `engine.extend({ ... })` to add registrations without re-spreading shared barrels. Author forms with `engine.defineForm({ ... })` object literals.
 
 Single-step forms may omit `view` to render fields directly. Multi-step forms
 that omit `view` use the registered `bare-controls` recipe at **render** time.
@@ -47,22 +47,9 @@ checks when `view.$type` is set.
 
 ## Who owns visual chrome
 
-| Layer                                                         | Owns                                                                |
-| ------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `@schema-engine/forms/recipes`                                | Specs, `defineFormRecipe`, kinds, slot schemas                      |
-| Schema Engine shadcn registry (`schema-engine-form-recipes*`) | React shells, blocks, `schemaFormRecipeRegistrations`               |
-| `@schema-engine/forms-radiant`                                | Radiant shells and blocks; `createRadiantFormComposer()` binds them |
-
-This package is framework-agnostic. It does not ship default visual recipes.
-
-## Runtime and tooling
-
-`FormEngine` exposes registered elements and recipes, action registrations,
-form validation, and JSON Schema/authoring catalog generation:
-
-```ts
-engine.getRecipe('card');
-engine.getFormConfigStandardSchema();
-engine.describeViewCatalog();
-engine.getAuthoringInstructions();
-```
+| Layer                                                           | Owns                                                              |
+| --------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `@schema-engine/forms`                                          | Engine, validation, actions, recipe specs                         |
+| `@schema-engine/forms-react`                                    | React renderer, RHF adapter, headless `createReactFormEngine()`   |
+| `@schema-engine/forms-radiant`                                  | Radiant shells and blocks; `createRadiantFormEngine()` binds them |
+| Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Default field components and view recipes for the React adapter   |

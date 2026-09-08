@@ -1,8 +1,7 @@
 import { FormSelect } from './form-select';
-import type { SelectFieldConfig, SelectFieldProps } from '@/registry/forms/inputs/form-select.types';
+import type { SelectFieldConfig } from '@/registry/forms/inputs/form-select.types';
 import { SelectFieldConfigSchema } from '@/registry/forms/inputs/form-select.types';
-import type { InputRegistration } from '@schema-engine/forms/types';
-import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
+import { defineInput } from '@schema-engine/forms';
 
 declare global {
 	namespace FormEngine {
@@ -12,13 +11,13 @@ declare global {
 	}
 }
 
-export const SelectElementRegistration: InputRegistration<'select', SelectFieldConfig, SelectFieldProps> = {
+export const SelectElementRegistration = defineInput({
 	$type: 'select',
 	render: FormSelect,
-	schema: asStandardSchema(SelectFieldConfigSchema),
+	schema: SelectFieldConfigSchema,
 	metadata: {
 		name: 'Select Field',
 		description: 'Dropdown select field',
 		category: 'input',
 	},
-};
+});

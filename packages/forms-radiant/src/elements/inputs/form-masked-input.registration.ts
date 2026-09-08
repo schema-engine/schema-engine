@@ -1,8 +1,7 @@
 import { FormMaskedInput } from './form-masked-input';
-import type { MaskedInputFieldConfig, MaskedInputFieldProps } from '@/registry/forms/inputs/form-masked-input.types';
+import type { MaskedInputFieldConfig } from '@/registry/forms/inputs/form-masked-input.types';
 import { MaskedInputFieldSchema } from '@/registry/forms/inputs/form-masked-input.types';
-import type { InputRegistration } from '@schema-engine/forms/types';
-import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
+import { defineInput } from '@schema-engine/forms';
 
 declare global {
 	namespace FormEngine {
@@ -12,17 +11,13 @@ declare global {
 	}
 }
 
-export const MaskedInputElementRegistration: InputRegistration<
-	'masked-input',
-	MaskedInputFieldConfig,
-	MaskedInputFieldProps
-> = {
+export const MaskedInputElementRegistration = defineInput({
 	$type: 'masked-input',
 	render: FormMaskedInput,
-	schema: asStandardSchema(MaskedInputFieldSchema),
+	schema: MaskedInputFieldSchema,
 	metadata: {
 		name: 'Masked Input',
 		description: 'Text input with an IMask pattern',
 		category: 'input',
 	},
-};
+});

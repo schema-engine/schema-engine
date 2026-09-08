@@ -1,8 +1,7 @@
 import { FormCombobox } from './form-combobox';
-import type { ComboboxFieldConfig, ComboboxFieldProps } from '@/registry/forms/inputs/form-combobox.types';
+import type { ComboboxFieldConfig } from '@/registry/forms/inputs/form-combobox.types';
 import { ComboboxFieldConfigSchema } from '@/registry/forms/inputs/form-combobox.types';
-import type { InputRegistration } from '@schema-engine/forms/types';
-import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
+import { defineInput } from '@schema-engine/forms';
 
 declare global {
 	namespace FormEngine {
@@ -12,13 +11,13 @@ declare global {
 	}
 }
 
-export const ComboboxElementRegistration: InputRegistration<'combobox', ComboboxFieldConfig, ComboboxFieldProps> = {
+export const ComboboxElementRegistration = defineInput({
 	$type: 'combobox',
 	render: FormCombobox,
-	schema: asStandardSchema(ComboboxFieldConfigSchema),
+	schema: ComboboxFieldConfigSchema,
 	metadata: {
 		name: 'Combobox Field',
 		description: 'Searchable combobox field for choosing from options',
 		category: 'input',
 	},
-};
+});

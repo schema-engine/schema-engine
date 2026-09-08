@@ -8,7 +8,7 @@ function numericRule(value: number, message?: string) {
 	return message ? { value, message } : value;
 }
 
-export function toFieldRules(rules?: ValidationRule[]): FieldRules | undefined {
+export function toFieldRules(rules?: ReadonlyArray<ValidationRule>): FieldRules | undefined {
 	if (!rules?.length) {
 		return undefined;
 	}

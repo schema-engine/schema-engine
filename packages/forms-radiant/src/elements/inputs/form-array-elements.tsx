@@ -3,9 +3,10 @@ import '@ecopages/radiant-ui/button/styles.css';
 import { customElement, onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
-import { FormElement } from '@/components/internals/field-renderer';
+import { FormElements } from '@/components/internals/form-elements';
 import { getFieldGridStyles } from '@/hooks/grid-styles';
 import type { ArrayElementsProps } from '@/registry/forms/inputs/form-array-elements.types';
+import { arrayItemScope } from '@schema-engine/forms';
 
 function TrashIcon() {
 	return (
@@ -89,7 +90,6 @@ export class SeFormArray extends RadiantElement {
 		}
 
 		const isSingleField = config.elements.length === 1;
-		const firstElement = config.elements[0];
 		const canAdd = !config.maxItems || this.ids.length < config.maxItems;
 		const canRemove = this.ids.length > (config.minItems ?? 0);
 		const removeLabel = config.removeButtonText || 'Remove item';
@@ -99,52 +99,38 @@ export class SeFormArray extends RadiantElement {
 				{this.ids.length === 0 ? (
 					<p class="se-form-array__empty">{config.emptyStateMessage || 'No items added yet'}</p>
 				) : null}
-				{this.ids.map((id, index) => (
-					<div class="se-form-array__item" key={id}>
-						<div class="se-form-array__fields">
-							{isSingleField && firstElement ? (
-								<FormElement
-									config={
-										{
-											...firstElement,
-											name: `${config.name}.${index}`,
-											id: firstElement.id ? `${firstElement.id}_${index}` : undefined,
-										} as FormEngine.ElementConfig
-									}
+				{this.ids.map((id, index) => {
+					const scope = arrayItemScope(config.name, index, String(id), {
+						scalar: isSingleField,
+						parentInstanceId: config.instanceId,
+					});
+					return (
+						<div class="se-form-array__item" key={id}>
+							<div class="se-form-array__fields">
+								<FormElements
+									elements={config.elements}
+									namePrefix={scope.namePrefix}
+									nameStrategy={scope.nameStrategy}
+									instanceId={scope.instanceId}
 								/>
-							) : (
-								config.elements.map((elementConfig, elementIndex) => (
-									<FormElement
-										key={`${elementConfig.id || elementConfig.$type}_${index}_${elementIndex}`}
-										config={
-											{
-												...elementConfig,
-												name: `${config.name}.${index}.${elementConfig.name}`,
-												id: elementConfig.id
-													? `${elementConfig.id}_${index}_${elementIndex}`
-													: undefined,
-											} as FormEngine.ElementConfig
-										}
-									/>
-								))
-							)}
+							</div>
+							{canRemove ? (
+								<RuiButton
+									type="button"
+									class="se-form-array__remove"
+									variant="outline"
+									size="sm"
+									square
+									data-action="remove"
+									data-id={String(id)}
+									aria-label={removeLabel}
+								>
+									<TrashIcon />
+								</RuiButton>
+							) : null}
 						</div>
-						{canRemove ? (
-							<RuiButton
-								type="button"
-								class="se-form-array__remove"
-								variant="outline"
-								size="sm"
-								square
-								data-action="remove"
-								data-id={String(id)}
-								aria-label={removeLabel}
-							>
-								<TrashIcon />
-							</RuiButton>
-						) : null}
-					</div>
-				))}
+					);
+				})}
 				{canAdd ? (
 					<RuiButton type="button" class="se-form-array__add" variant="outline" data-action="add">
 						<PlusIcon />

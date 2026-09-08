@@ -25,7 +25,7 @@ function resolveConstraintField(constraintField: string, fieldPath?: string) {
  * Evaluate constraint logic for a field against the active adapter's watched values.
  */
 export function useConstraintLogic(
-	constraints: ConstraintLogic[] = [],
+	constraints: readonly ConstraintLogic[] = [],
 	baseRequired = false,
 	fieldPath?: string,
 ): UseConstraintLogicResult {

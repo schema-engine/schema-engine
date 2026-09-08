@@ -33,14 +33,11 @@ pnpm add @schema-engine/forms-react @schema-engine/forms react-hook-form zod
 Import component registrations and build your engine:
 
 ```typescript
-import { createReactFormComposer } from '@schema-engine/forms-react';
+import { createReactFormEngine } from '@schema-engine/forms-react';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
-const formEngine = createReactFormComposer()
-	.addElements(schemaFormRegistrations)
-	.addRecipes(schemaFormRecipeRegistrations)
-	.build();
+const formEngine = createReactFormEngine({ elements: schemaFormRegistrations, recipes: schemaFormRecipeRegistrations });
 ```
 
 Install form elements from the GitHub registry first. Pick the aggregate that matches your shadcn base:
@@ -55,7 +52,7 @@ Install the matching default recipe item to use the supplied `view.$type` implem
 - Radix UI: `shadcn add andeeplus/schema-engine/schema-engine-form-recipes-radix`
 - React Aria: `shadcn add andeeplus/schema-engine/schema-engine-form-recipes-aria`
 
-`createReactFormComposer()` is headless; add `schemaFormRecipeRegistrations` explicitly.
+`createReactFormEngine()` is headless; add `schemaFormRecipeRegistrations` explicitly.
 
 ### 2. Configure Your Form
 
@@ -145,8 +142,8 @@ The package uses explicit, per-component registration to ensure type safety and 
 // Import the generated registrations from the shadcn item you installed.
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
-const engine = createReactFormComposer().addElements(schemaFormRegistrations).build();
-// addRecipes(schemaFormRecipeRegistrations) when using view.$type or multi-step forms.
+const engine = createReactFormEngine({ elements: schemaFormRegistrations });
+// Pass schemaFormRecipeRegistrations when using view.$type or multi-step forms.
 ```
 
 **Benefits:**
@@ -575,7 +572,7 @@ export const CustomDatePickerRegistration = {
 };
 
 // 4. Register with engine
-const engine = createReactFormComposer().addElement(CustomDatePickerRegistration).build();
+const engine = createReactFormEngine({ elements: [CustomDatePickerRegistration] });
 ```
 
 ### Custom recipes
@@ -608,7 +605,7 @@ export const BrandRecipe = defineFormRecipe(brandSpec, {
 	slots: {},
 });
 
-const engine = createReactFormComposer().addRecipe(BrandRecipe).build();
+const engine = createReactFormEngine({ recipes: [BrandRecipe] });
 ```
 
 ## Type Safety
@@ -619,7 +616,7 @@ The package provides full TypeScript support with automatic type inference:
 // Type augmentation happens when importing the generated registry item.
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
-const engine = createReactFormComposer().addElements(schemaFormRegistrations).build();
+const engine = createReactFormEngine({ elements: schemaFormRegistrations });
 
 // TypeScript knows about registered components
 const element = engine.getElement('input');

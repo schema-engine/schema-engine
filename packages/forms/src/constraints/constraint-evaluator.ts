@@ -62,7 +62,7 @@ function evaluateConstraint(constraint: ConstraintLogic, watchedValue: any): boo
  * Parameters for evaluating constraint logic
  */
 export interface EvaluateConstraintsParams {
-	constraints?: ConstraintLogic[];
+	constraints?: readonly ConstraintLogic[];
 	fieldValues: Record<string, any>;
 	baseRequired?: boolean;
 }
@@ -98,7 +98,7 @@ export class ConstraintEvaluator {
 	 * Multiple show constraints are treated as OR (show if any condition is met)
 	 * Hide constraints are applied afterward to allow explicit hiding
 	 */
-	private evaluateVisibility(constraints: ConstraintLogic[], fieldValues: Record<string, any>): boolean {
+	private evaluateVisibility(constraints: readonly ConstraintLogic[], fieldValues: Record<string, any>): boolean {
 		if (constraints.length === 0) return true;
 
 		const showConstraints = constraints.filter((c) => c.action === 'show');
@@ -128,7 +128,7 @@ export class ConstraintEvaluator {
 	/**
 	 * Evaluate disabled constraints (enable/disable actions)
 	 */
-	private evaluateDisabled(constraints: ConstraintLogic[], fieldValues: Record<string, any>): boolean {
+	private evaluateDisabled(constraints: readonly ConstraintLogic[], fieldValues: Record<string, any>): boolean {
 		return constraints.some((constraint) => {
 			const watchedValue = fieldValues[constraint.field];
 			const conditionMet = evaluateConstraint(constraint, watchedValue);
@@ -149,7 +149,7 @@ export class ConstraintEvaluator {
 	 * Base required state is OR'ed with constraint-based required state
 	 */
 	private evaluateRequired(
-		constraints: ConstraintLogic[],
+		constraints: readonly ConstraintLogic[],
 		fieldValues: Record<string, any>,
 		baseRequired: boolean,
 	): boolean {

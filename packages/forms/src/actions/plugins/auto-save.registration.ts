@@ -6,16 +6,15 @@
  *
  * @example
  * ```typescript
- * import { AutoSaveActionRegistration, FormComposer } from '@schema-engine/forms';
+ * import { createFormEngine, AutoSaveActionRegistration } from '@schema-engine/forms';
  *
- * const engine = new FormComposer()
- *   .addAction(AutoSaveActionRegistration)
- *   .build();
+ * const engine = createFormEngine({
+ *   actions: [AutoSaveActionRegistration],
+ * });
  * ```
  */
 
-import { autoSavePlugin } from './auto-save.plugin';
-import type { AutoSaveAction } from './auto-save.plugin';
+import { autoSavePlugin, AutoSaveActionSchema, type AutoSaveAction } from './auto-save.plugin';
 import { logger } from '@/lib/logger';
 import type { BuilderActionRegistration } from '@/types';
 
@@ -31,11 +30,12 @@ declare global {
  * Default Auto-Save Action Registration
  * Saves to localStorage with logger output
  */
-export const AutoSaveActionRegistration: BuilderActionRegistration<'auto_save', AutoSaveAction> = autoSavePlugin({
-	onSave: (data, context) => {
-		logger.info('[AutoSave] Form data saved:', { data, formId: context.formId });
-	},
-	onError: (error, context) => {
-		logger.error('[AutoSave] Failed to save:', { formId: context.formId, error });
-	},
-});
+export const AutoSaveActionRegistration: BuilderActionRegistration<'auto_save', typeof AutoSaveActionSchema> =
+	autoSavePlugin({
+		onSave: (data, context) => {
+			logger.info('[AutoSave] Form data saved:', { data, formId: context.formId });
+		},
+		onError: (error, context) => {
+			logger.error('[AutoSave] Failed to save:', { formId: context.formId, error });
+		},
+	});

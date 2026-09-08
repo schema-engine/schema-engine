@@ -11,7 +11,7 @@ import type { RecipeSpec } from './types';
 export function defineFormRecipe<const TType extends string, TSchema extends z.ZodTypeAny, TRender>(
 	spec: RecipeSpec<TType, TSchema>,
 	render: TRender,
-): RecipeRegistration<TType, z.input<TSchema>, TRender> {
+): RecipeRegistration<TType, TSchema, TRender> {
 	return {
 		$type: spec.$type,
 		kind: spec.kind,
@@ -20,5 +20,5 @@ export function defineFormRecipe<const TType extends string, TSchema extends z.Z
 		metadata: spec.metadata,
 		slotDefaults: spec.slotDefaults,
 		render,
-	} as RecipeRegistration<TType, z.input<TSchema>, TRender>;
+	} as RecipeRegistration<TType, TSchema, TRender>;
 }

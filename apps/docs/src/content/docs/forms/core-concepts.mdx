@@ -14,11 +14,13 @@ the selected recipe.
 ## Registration
 
 ```ts
-const engine = new FormComposer()
-	.addElement(textInputRegistration)
-	.addRecipe(cardRecipe)
-	.addAction(submitActionRegistration)
-	.build();
+import { createFormEngine } from '@schema-engine/forms';
+
+const engine = createFormEngine({
+	elements: [textInputRegistration],
+	recipes: [cardRecipe],
+	actions: [submitActionRegistration],
+});
 ```
 
 ## Form configuration
@@ -42,7 +44,22 @@ require at least two. A single-step form may omit `view` to render fields
 directly.
 
 `validateForm` / `defineForm` parse the form schema and, when `view` is present,
-validate the registered recipe's kind and slot config. They do **not** apply
-the default wizard recipe. A multi-step form that omits `view` validates
-successfully; at render, `resolveFormRecipe` uses registered `bare-controls`,
-or renders fields without chrome and warns once per engine.
+validate the registered recipe's kind and slot config. Nested child elements are
+validated at the same boundary; the normalized marker is applied only after that
+succeeds. They return a frozen `NormalizedFormConfig` owned by that engine.
+Snapshot isolation copies plain objects and arrays; other objects currently
+remain shared. A form normalized by one engine cannot be passed to another;
+start from authoring input or JSON instead. They do **not** apply the default
+wizard recipe. A multi-step form that omits `view` validates successfully; at
+render, `resolveFormRecipe` uses registered `bare-controls`, or renders fields
+without chrome and warns once per engine.
+
+React and Radiant render that normalized form. They do not re-parse element
+input schemas. A field created outside a form must go through
+`engine.validateElement()` first.
+
+Authors supply schema **input**; defaulted properties stay optional in
+`defineForm`. Components receive schema **output**. Nested fieldset and array
+children are typed from the same engine registrations as top-level fields.
+Containers render those children with `FormElements` and a field scope instead
+of cloning configuration to change paths.

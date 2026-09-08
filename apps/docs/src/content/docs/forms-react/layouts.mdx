@@ -22,7 +22,7 @@ Recipes compose a **shell** with optional **header**, **progress**, and **action
 | ---------------------------------------------- | ---------------------------------------------------------------------- |
 | `@schema-engine/forms/recipes`                 | Specs, kinds, slot schemas, `defineFormRecipe`                         |
 | `schema-engine-form-recipes` (shadcn registry) | React shells, blocks, `schemaFormRecipeRegistrations`                  |
-| `@schema-engine/forms-radiant`                 | Radiant shells and blocks, auto-bound by `createRadiantFormComposer()` |
+| `@schema-engine/forms-radiant`                 | Radiant shells and blocks, auto-bound by `createRadiantFormEngine()` |
 
 ## Default registry recipes
 
@@ -35,14 +35,11 @@ pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-engine-form-recipes
 Then add its generated recipe barrel when you construct the engine:
 
 ```ts
-import { createReactFormComposer } from '@schema-engine/forms-react';
+import { createReactFormEngine } from '@schema-engine/forms-react';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
-const engine = createReactFormComposer()
-	.addElements(schemaFormRegistrations)
-	.addRecipes(schemaFormRecipeRegistrations)
-	.build();
+const engine = createReactFormEngine({ elements: schemaFormRegistrations, recipes: schemaFormRecipeRegistrations });
 ```
 
 | `$type`               | Kind        | Description                        |
@@ -103,7 +100,7 @@ Canonical source is `registry/shared/forms/recipes`. After `shadcn add`, files l
 
 ```typescript
 import { z } from 'zod';
-import { createReactFormComposer } from '@schema-engine/forms-react';
+import { createReactFormEngine } from '@schema-engine/forms-react';
 import { defineFormRecipe, defineRecipeSpec } from '@schema-engine/forms/recipes';
 import type { FormShellProps } from '@schema-engine/forms-react/primitives';
 
@@ -127,5 +124,5 @@ const BrandRecipe = defineFormRecipe(
 	{ shell: BrandShell, slots: {} },
 );
 
-const engine = createReactFormComposer().addRecipe(BrandRecipe).build();
+const engine = createReactFormEngine({ recipes: [BrandRecipe] });
 ```

@@ -1,26 +1,21 @@
 /**
- * Tests for Multiple Builders with Different Components (Type Isolation)
- *
- * This test verifies that the per-component registration pattern allows
- * multiple FormComposer instances in the same codebase with different
- * component sets, where types accurately reflect what each builder has registered.
+ * Tests for multiple engines with different component registrations (type isolation)
  */
 
 import { describe, test, expect } from 'vitest';
-import { createReactFormComposer } from '@/registries/builder-registry';
-import { FormComposer } from '@schema-engine/forms/builder';
+import { createReactFormEngine } from '@/registries/builder-registry';
+import { createFormEngine } from '@schema-engine/forms';
 
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { TextareaElementRegistration } from '@/components/schema-engine/forms/inputs/form-textarea.registration';
 import { CheckboxElementRegistration } from '@/components/schema-engine/forms/inputs/form-checkbox.registration';
 import { SelectElementRegistration } from '@/components/schema-engine/forms/inputs/form-select.registration';
 
-describe('Multiple Builders Type Isolation', () => {
-	test('should create builder with only input and textarea', () => {
-		const engine = createReactFormComposer()
-			.addElement(InputElementRegistration)
-			.addElement(TextareaElementRegistration)
-			.build();
+describe('Multiple engines type isolation', () => {
+	test('should create an engine with only input and textarea', () => {
+		const engine = createReactFormEngine({
+			elements: [InputElementRegistration, TextareaElementRegistration],
+		});
 
 		expect(engine.hasElement('input')).toBe(true);
 		expect(engine.hasElement('textarea')).toBe(true);
@@ -29,13 +24,15 @@ describe('Multiple Builders Type Isolation', () => {
 		expect(engine.hasRecipe('card')).toBe(false);
 	});
 
-	test('should create builder with different components', () => {
-		const engine = createReactFormComposer()
-			.addElement(InputElementRegistration)
-			.addElement(TextareaElementRegistration)
-			.addElement(CheckboxElementRegistration)
-			.addElement(SelectElementRegistration)
-			.build();
+	test('should create an engine with different components', () => {
+		const engine = createReactFormEngine({
+			elements: [
+				InputElementRegistration,
+				TextareaElementRegistration,
+				CheckboxElementRegistration,
+				SelectElementRegistration,
+			],
+		});
 
 		expect(engine.hasElement('input')).toBe(true);
 		expect(engine.hasElement('checkbox')).toBe(true);
@@ -43,12 +40,11 @@ describe('Multiple Builders Type Isolation', () => {
 		expect(engine.hasRecipe('wizard')).toBe(false);
 	});
 
-	test('should create two independent builders', () => {
-		const engine1 = createReactFormComposer().addElement(InputElementRegistration).build();
-		const engine2 = createReactFormComposer()
-			.addElement(TextareaElementRegistration)
-			.addElement(CheckboxElementRegistration)
-			.build();
+	test('should create two independent engines', () => {
+		const engine1 = createReactFormEngine({ elements: [InputElementRegistration] });
+		const engine2 = createReactFormEngine({
+			elements: [TextareaElementRegistration, CheckboxElementRegistration],
+		});
 
 		expect(engine1.hasElement('input')).toBe(true);
 		expect(engine1.hasElement('textarea')).toBe(false);
@@ -60,10 +56,9 @@ describe('Multiple Builders Type Isolation', () => {
 	});
 
 	test('should allow retrieving registered components', () => {
-		const engine = createReactFormComposer()
-			.addElement(InputElementRegistration)
-			.addElement(CheckboxElementRegistration)
-			.build();
+		const engine = createReactFormEngine({
+			elements: [InputElementRegistration, CheckboxElementRegistration],
+		});
 
 		expect(engine.getElement('input')?.$type).toBe('input');
 		expect(engine.getElement('checkbox')?.$type).toBe('checkbox');
@@ -71,27 +66,17 @@ describe('Multiple Builders Type Isolation', () => {
 		expect(engine.getRecipe('card')).toBeUndefined();
 	});
 
-	test('should allow method chaining', () => {
-		const engine = createReactFormComposer()
-			.addElement(InputElementRegistration)
-			.addElement(TextareaElementRegistration)
-			.build();
-
-		expect(engine.hasElement('input')).toBe(true);
-		expect(engine.hasElement('textarea')).toBe(true);
-	});
-
-	test('core FormComposer does not register React recipes', () => {
-		const engine = new FormComposer().build();
+	test('headless createFormEngine does not register React recipes', () => {
+		const engine = createFormEngine();
 
 		expect(engine.hasElement('input')).toBe(false);
 		expect(engine.hasRecipe('card')).toBe(false);
 		expect(engine.getRecipe('card')).toBeUndefined();
 	});
 
-	test('should not share element registrations between builders', () => {
-		const engine1 = createReactFormComposer().addElement(InputElementRegistration).build();
-		const engine2 = createReactFormComposer().addElement(TextareaElementRegistration).build();
+	test('should not share element registrations between engines', () => {
+		const engine1 = createReactFormEngine({ elements: [InputElementRegistration] });
+		const engine2 = createReactFormEngine({ elements: [TextareaElementRegistration] });
 
 		expect(engine1.hasElement('input')).toBe(true);
 		expect(engine1.hasElement('textarea')).toBe(false);
@@ -101,12 +86,11 @@ describe('Multiple Builders Type Isolation', () => {
 	});
 });
 
-describe('Type Safety Verification', () => {
+describe('Type safety verification', () => {
 	test('should only expose types for registered components', () => {
-		const engine = createReactFormComposer()
-			.addElement(InputElementRegistration)
-			.addElement(CheckboxElementRegistration)
-			.build();
+		const engine = createReactFormEngine({
+			elements: [InputElementRegistration, CheckboxElementRegistration],
+		});
 
 		expect(engine.hasElement('input')).toBe(true);
 		expect(engine.hasElement('checkbox')).toBe(true);

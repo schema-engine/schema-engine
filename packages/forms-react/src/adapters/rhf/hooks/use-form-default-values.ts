@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
-import { mergePathValues } from '@/lib/path-utils';
+import { mergePathValues } from '@schema-engine/forms/lib/path-values';
 
 interface FieldWithDefault {
 	name: string;
-	defaultValue?: any;
+	defaultValue?: unknown;
 }
 
 /**
@@ -11,8 +11,8 @@ interface FieldWithDefault {
  * Field defaults are applied first, then user defaults override them.
  */
 export function useFormDefaultValues(
-	fields: FieldWithDefault[],
-	userDefaults: Record<string, any> = {},
-): Record<string, any> {
+	fields: readonly FieldWithDefault[],
+	userDefaults: Record<string, unknown> = {},
+): Record<string, unknown> {
 	return useMemo(() => mergePathValues(fields, userDefaults), [fields, userDefaults]);
 }

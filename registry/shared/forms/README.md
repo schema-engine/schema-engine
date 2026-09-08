@@ -25,14 +25,11 @@ Files land under `@components/schema-engine/forms`. Schema Engine primitives (fi
 Register everything with the generated barrel:
 
 ```typescript
-import { createReactFormComposer } from '@schema-engine/forms-react';
+import { createReactFormEngine } from '@schema-engine/forms-react';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
-const engine = createReactFormComposer()
-	.addElements(schemaFormRegistrations)
-	.addRecipes(schemaFormRecipeRegistrations)
-	.build();
+const engine = createReactFormEngine({ elements: schemaFormRegistrations, recipes: schemaFormRecipeRegistrations });
 ```
 
 `FormSelect` is single-select. Use `FormCombobox` with `multiple` for chips-based multi-selection.

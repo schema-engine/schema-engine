@@ -148,6 +148,14 @@
 		"./lib/validate-form": {
 			"types": "./dist/lib/validate-form.d.ts",
 			"import": "./dist/lib/validate-form.js"
+		},
+		"./lib/field-scope": {
+			"types": "./dist/lib/field-scope.d.ts",
+			"import": "./dist/lib/field-scope.js"
+		},
+		"./lib/path-values": {
+			"types": "./dist/lib/path-values.d.ts",
+			"import": "./dist/lib/path-values.js"
 		}
 	}
 }

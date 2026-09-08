@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { FormComposer } from '@schema-engine/forms';
+import { createFormEngine } from '@schema-engine/forms';
 import { resolveStoryAdapter, resolveStoryEngine } from '@/stories/shared/live-form-runtime';
 import type { FormAdapter } from '@/adapters/types';
 
-const fallbackEngine = new FormComposer().build();
+const fallbackEngine = createFormEngine();
 const fallbackAdapter = {
 	useFormContext: () => ({
 		getValues: () => ({}),
@@ -38,7 +38,7 @@ describe('story live runtime contract', () => {
 	});
 
 	test('keeps an explicit live engine', () => {
-		const custom = new FormComposer().build();
+		const custom = createFormEngine();
 		expect(resolveStoryEngine(custom, fallbackEngine)).toBe(custom);
 	});
 

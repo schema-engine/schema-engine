@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
-import { asStandardSchema } from '@/lib/standard-schema';
 import { FormActionTriggerSchema } from '../triggers';
 
 /**
@@ -114,7 +113,7 @@ export type NotificationAction = z.infer<typeof NotificationActionSchema>;
  */
 export function notificationPlugin(
 	config: NotificationPluginConfig = {},
-): BuilderActionRegistration<'show_notification', NotificationAction> {
+): BuilderActionRegistration<'show_notification', typeof NotificationActionSchema> {
 	const handler = async (context: BuilderActionExecutionContext<NotificationAction>) => {
 		const action = context.config;
 
@@ -172,7 +171,7 @@ export function notificationPlugin(
 
 	return {
 		$type: 'show_notification',
-		schema: asStandardSchema(NotificationActionSchema),
+		schema: NotificationActionSchema,
 		metadata: {
 			name: 'Show Notification',
 			description: 'Display notifications to users with different variants',

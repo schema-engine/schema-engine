@@ -1,8 +1,7 @@
 import { FormSubmissionAlert } from './form-submission-alert';
-import type { SubmissionAlertConfig, SubmissionAlertProps } from './form-submission-alert.types';
+import type { SubmissionAlertConfig } from './form-submission-alert.types';
 import { SubmissionAlertConfigSchema } from './form-submission-alert.types';
-import type { InputRegistration } from '@schema-engine/forms/types';
-import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
+import { defineStatic } from '@schema-engine/forms';
 
 declare global {
 	namespace FormEngine {
@@ -12,17 +11,13 @@ declare global {
 	}
 }
 
-export const SubmissionAlertElementRegistration: InputRegistration<
-	'submission-alert',
-	SubmissionAlertConfig,
-	SubmissionAlertProps
-> = {
+export const SubmissionAlertElementRegistration = defineStatic({
 	$type: 'submission-alert',
 	render: FormSubmissionAlert,
-	schema: asStandardSchema(SubmissionAlertConfigSchema),
+	schema: SubmissionAlertConfigSchema,
 	metadata: {
 		name: 'Submission Alert',
 		description: 'Displays form submission status (pending, success, error)',
 		category: 'content',
 	},
-};
+});

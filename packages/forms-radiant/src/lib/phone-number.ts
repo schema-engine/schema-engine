@@ -45,13 +45,20 @@ export function countryFlagEmoji(code: string) {
 	return String.fromCodePoint(127397 + normalized.charCodeAt(0), 127397 + normalized.charCodeAt(1));
 }
 
+/**
+ * Resolves the active country from a selection value, falling back when unsupported.
+ * @remarks `RuiSelect` is a multi-value control, so `rui-change` emits `string[]`
+ * even in single-selection mode. Passing that array to libphonenumber-js throws
+ * `Invalid second argument`, so it is normalized to its first entry here.
+ */
 export function resolvePhoneCountry(
 	lib: LibPhoneNumber,
-	code: string | undefined,
+	code: string | readonly string[] | undefined,
 	fallback: CountryCode = 'US',
 ): CountryCode {
-	if (code && lib.isSupportedCountry(code)) {
-		return code;
+	const candidate = Array.isArray(code) ? code[0] : code;
+	if (typeof candidate === 'string' && candidate && lib.isSupportedCountry(candidate)) {
+		return candidate;
 	}
 	return fallback;
 }

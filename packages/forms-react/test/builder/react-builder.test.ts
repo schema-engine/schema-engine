@@ -1,32 +1,28 @@
 /**
- * Tests for React Form Engine Builder Pattern
+ * Tests for React Form Engine factory
  */
 
 import { describe, test, expect } from 'vitest';
-import { createReactFormComposer } from '@/registries/builder-registry';
+import { createReactFormEngine } from '@/registries/builder-registry';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { FormTextarea } from '@/components/schema-engine/forms/inputs/form-textarea';
 import { CardRecipe } from '@/components/schema-engine/forms/recipes/registrations';
 import { InputFieldSchema } from '@/components/schema-engine/forms/inputs/form-input.types';
 import { TextareaFieldSchema } from '@/components/schema-engine/forms/inputs/form-textarea.types';
 
-describe('React Form Engine Builder', () => {
-	describe('Builder Creation', () => {
-		test('should create a new headless builder instance', () => {
-			const builder = createReactFormComposer();
-			expect(typeof builder.addElement).toBe('function');
-			expect(typeof builder.addRecipe).toBe('function');
-			expect(typeof builder.build).toBe('function');
+describe('React Form Engine factory', () => {
+	describe('Engine creation', () => {
+		test('should create a new headless engine instance', () => {
+			const engine = createReactFormEngine();
+			expect(typeof engine.defineForm).toBe('function');
+			expect(typeof engine.validateForm).toBe('function');
+			expect(typeof engine.extend).toBe('function');
 		});
 	});
 
-	describe('Element Registration', () => {
+	describe('Element registration', () => {
 		test('should register input element', () => {
-			const builder = createReactFormComposer();
-			const elementReg = InputElementRegistration;
-
-			builder.addElement(elementReg);
-			const engine = builder.build();
+			const engine = createReactFormEngine({ elements: [InputElementRegistration] });
 
 			expect(engine.hasElement('input')).toBe(true);
 			const element = engine.getElement('input');
@@ -41,14 +37,13 @@ describe('React Form Engine Builder', () => {
 				metadata: {
 					name: 'Textarea Field',
 					description: 'Multi-line text input',
-					category: 'input' as const,
+					category: 'input',
 				},
 			};
 
-			const builder = createReactFormComposer();
-			builder.addElement(InputElementRegistration).addElement(textareaElement);
-
-			const engine = builder.build();
+			const engine = createReactFormEngine({
+				elements: [InputElementRegistration, textareaElement],
+			});
 
 			expect(engine.hasElement('input')).toBe(true);
 			expect(engine.hasElement('textarea')).toBe(true);
@@ -59,20 +54,14 @@ describe('React Form Engine Builder', () => {
 		});
 
 		test('should include element schema', () => {
-			const builder = createReactFormComposer();
-			builder.addElement(InputElementRegistration);
-
-			const engine = builder.build();
+			const engine = createReactFormEngine({ elements: [InputElementRegistration] });
 			const element = engine.getElement('input');
 
 			expect(element?.schema).toBe(InputFieldSchema);
 		});
 
 		test('should include element metadata', () => {
-			const builder = createReactFormComposer();
-			builder.addElement(InputElementRegistration);
-
-			const engine = builder.build();
+			const engine = createReactFormEngine({ elements: [InputElementRegistration] });
 			const element = engine.getElement('input');
 
 			expect(element?.metadata.name).toBe('Text Input Field');
@@ -80,37 +69,42 @@ describe('React Form Engine Builder', () => {
 		});
 	});
 
-	describe('Recipe Registration', () => {
+	describe('Recipe registration', () => {
 		test('registers recipes only when explicitly added', () => {
-			const engine = createReactFormComposer().build();
+			const engine = createReactFormEngine();
 
 			expect(engine.getRecipeIds()).toEqual([]);
-			const recipeEngine = createReactFormComposer().addRecipe(CardRecipe).build();
+			const recipeEngine = createReactFormEngine({ recipes: [CardRecipe] });
 			expect(recipeEngine.getRecipe('card')?.metadata.name).toBe(CardRecipe.metadata.name);
 		});
 	});
 
-	describe('Method Chaining', () => {
-		test('should support fluent API', () => {
-			const engine = createReactFormComposer().addElement(InputElementRegistration).build();
+	describe('Engine extend', () => {
+		test('should extend an engine with additional registrations', () => {
+			const base = createReactFormEngine({ elements: [InputElementRegistration] });
+			const extended = base.extend({
+				elements: [
+					{
+						$type: 'textarea',
+						render: FormTextarea,
+						schema: TextareaFieldSchema,
+						metadata: {
+							name: 'Textarea Field',
+							description: 'Multi-line text input',
+							category: 'input',
+						},
+					},
+				],
+			});
 
-			expect(engine.hasElement('input')).toBe(true);
-			expect(engine.getRecipeIds()).toEqual([]);
+			expect(extended.hasElement('input')).toBe(true);
+			expect(extended.hasElement('textarea')).toBe(true);
 		});
 	});
 
-	describe('Engine Build', () => {
-		test('should build engine with registrations', () => {
-			const builder = createReactFormComposer();
-			builder.addElement(InputElementRegistration);
-
-			const engine = builder.build();
-
-			expect(engine.hasElement('input')).toBe(true);
-		});
-
+	describe('Engine summary', () => {
 		test('should build engine summary', () => {
-			const engine = createReactFormComposer().addElement(InputElementRegistration).build();
+			const engine = createReactFormEngine({ elements: [InputElementRegistration] });
 			const summary = engine.getSummary();
 
 			expect(summary.elements.count).toBe(1);
@@ -118,7 +112,7 @@ describe('React Form Engine Builder', () => {
 		});
 
 		test('should allow building a headless engine with no registrations', () => {
-			const engine = createReactFormComposer().build();
+			const engine = createReactFormEngine();
 
 			expect(engine.getElementIds()).toEqual([]);
 			expect(engine.getActionTypes()).toEqual([]);
@@ -130,7 +124,7 @@ describe('React Form Engine Builder', () => {
 		});
 	});
 
-	describe('Engine Retrieval', () => {
+	describe('Engine retrieval', () => {
 		test('should retrieve all elements', () => {
 			const textareaElement = {
 				$type: 'textarea',
@@ -139,30 +133,28 @@ describe('React Form Engine Builder', () => {
 				metadata: {
 					name: 'Textarea Field',
 					description: 'Multi-line text input',
-					category: 'input' as const,
+					category: 'input',
 				},
 			};
 
-			const builder = createReactFormComposer();
-			builder.addElement(InputElementRegistration).addElement(textareaElement);
-
-			const engine = builder.build();
+			const engine = createReactFormEngine({
+				elements: [InputElementRegistration, textareaElement],
+			});
 			const elements = engine.getAllElements();
 
 			expect(elements.map((element) => element.$type).sort()).toEqual(['input', 'textarea']);
 		});
 
 		test('should return undefined for non-existent element', () => {
-			const builder = createReactFormComposer();
-			const engine = builder.build();
+			const engine = createReactFormEngine();
 
 			expect(engine.getElement('nonexistent')).toBeUndefined();
 			expect(engine.hasElement('nonexistent')).toBe(false);
 		});
 	});
 
-	describe('Type Safety', () => {
-		test('should maintain type safety through builder', () => {
+	describe('Type safety', () => {
+		test('should maintain type safety through registration objects', () => {
 			const elementReg = InputElementRegistration;
 
 			expect(elementReg.$type).toBe('input');
@@ -178,7 +170,7 @@ describe('React Form Engine Builder', () => {
 
 	describe('Integration', () => {
 		test('should create a fully configured form engine', () => {
-			const engine = createReactFormComposer().addElement(InputElementRegistration).build();
+			const engine = createReactFormEngine({ elements: [InputElementRegistration] });
 
 			expect(engine.hasElement('input')).toBe(true);
 			expect(engine.getRecipeIds()).toEqual([]);

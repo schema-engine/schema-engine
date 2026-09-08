@@ -6,7 +6,6 @@ import {
 	type NotificationAction,
 } from '@/actions/plugins/notification.plugin';
 import { createMockBuilderContext, setupTestEnvironment } from '../__tools';
-import { asStandardSchema } from '@/lib/standard-schema';
 
 describe('NotificationPlugin', () => {
 	beforeEach(() => {
@@ -113,7 +112,7 @@ describe('NotificationPlugin', () => {
 
 			expect(plugin.$type).toBe('show_notification');
 			expect(typeof plugin.execute).toBe('function');
-			expect(plugin.schema).toBe(asStandardSchema(NotificationActionSchema));
+			expect(plugin.schema).toBe(NotificationActionSchema);
 			expect(plugin.metadata.defaultTriggers).toEqual(['form_submit_success', 'form_submit_error']);
 		});
 	});

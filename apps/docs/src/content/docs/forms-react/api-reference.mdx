@@ -7,18 +7,33 @@ order: 8
 
 # API Reference
 
-## Composer
+## Engine factory
 
 ```ts
-const engine = createReactFormComposer()
-	.addElements(schemaFormRegistrations)
-	.addRecipes(schemaFormRecipeRegistrations)
-	.addRecipe(customRecipe)
-	.build();
+const engine = createReactFormEngine({
+	elements: schemaFormRegistrations,
+	recipes: [...schemaFormRecipeRegistrations, customRecipe],
+});
 ```
 
-`createReactFormComposer()` is headless. Register installed default recipes or
-your own recipes with `addRecipe` or `addRecipes`.
+`createReactFormEngine()` is headless. Register installed default recipes or
+your own recipes in the `recipes` array. Use `engine.extend({ recipes: [customRecipe] })`
+to add registrations later.
+
+## FormElements
+
+```tsx
+<FormElements
+	elements={config.elements}
+	namePrefix={config.name}
+	nameStrategy="join"
+	instanceId={itemId}
+/>
+```
+
+Fieldsets pass `namePrefix={config.name}`. Array items pass an
+`arrayItemScope` so paths and HTML ids are composed at render time. Do not
+clone child configs to change `name` or `id`.
 
 ## Rendering
 
@@ -28,9 +43,10 @@ your own recipes with `addRecipe` or `addRecipes`.
 </FormEngineProvider>
 ```
 
-`FormRenderer` validates the config once at the rendering boundary. The
-selected recipe receives a `ViewContext` containing form metadata, active-step
-state, navigation, and the current slot configuration.
+`FormRenderer` validates the config once at the form boundary and renders the
+resulting `NormalizedFormConfig`. Field renderers do not re-parse registration
+schemas. The selected recipe receives a `ViewContext` containing form metadata,
+active-step state, navigation, and the current slot configuration.
 
 ## View hooks
 
@@ -46,7 +62,7 @@ with `defineFormRecipe(spec, { shell, slots })` from `@schema-engine/forms/recip
 Built-in specs are exported from that subpath. The package root
 `@schema-engine/forms` does not re-export them.
 
-`createReactFormComposer()` does not bind default recipes. That is not the same
+`createReactFormEngine()` does not bind default recipes. That is not the same
 as omitting `FormRenderer`, which still lives in this package.
 
 ## Form hooks

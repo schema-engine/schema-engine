@@ -1,8 +1,7 @@
 import { FormNumber } from './form-number';
-import type { NumberFieldConfig, NumberFieldProps } from './form-number.types';
+import type { NumberFieldConfig } from './form-number.types';
 import { NumberFieldConfigSchema } from './form-number.types';
-import type { InputRegistration } from '@schema-engine/forms/types';
-import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
+import { defineInput } from '@schema-engine/forms';
 
 declare global {
 	namespace FormEngine {
@@ -12,13 +11,13 @@ declare global {
 	}
 }
 
-export const NumberElementRegistration: InputRegistration<'number', NumberFieldConfig, NumberFieldProps> = {
+export const NumberElementRegistration = defineInput({
 	$type: 'number',
 	render: FormNumber,
-	schema: asStandardSchema(NumberFieldConfigSchema),
+	schema: NumberFieldConfigSchema,
 	metadata: {
 		name: 'Number Field',
 		description: 'Number input field for numeric values',
 		category: 'input',
 	},
-};
+});

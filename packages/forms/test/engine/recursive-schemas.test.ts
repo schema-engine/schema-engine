@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { z } from 'zod';
-import { FormComposer } from '@/builder/form-composer';
+import { createFormEngine } from '@/engine/create-form-engine';
 import type { StaticRegistration } from '@/types';
 
 describe('Recursive Schema Handling', () => {
@@ -29,7 +29,7 @@ describe('Recursive Schema Handling', () => {
 				render: () => null,
 			};
 
-			const engine = new FormComposer().addElement(commentReg).build();
+			const engine = createFormEngine({ elements: [commentReg] });
 
 			const schema = engine.generateJSONSchemaCollection();
 			expect(schema.schemas['element:comment']?.type).toBe('object');
@@ -57,7 +57,7 @@ describe('Recursive Schema Handling', () => {
 				render: () => null,
 			};
 
-			const engine = new FormComposer().addElement(treeReg).build();
+			const engine = createFormEngine({ elements: [treeReg] });
 
 			const schema = engine.generateJSONSchemaCollection();
 			expect(schema.schemas['element:tree-node']?.type).toBe('object');
@@ -111,7 +111,7 @@ describe('Recursive Schema Handling', () => {
 				render: () => null,
 			};
 
-			const engine = new FormComposer().addElement(userReg).addElement(postReg).build();
+			const engine = createFormEngine({ elements: [userReg, postReg] });
 
 			const schema = engine.generateJSONSchemaCollection();
 			expect(schema.schemas['element:user']?.type).toBe('object');
@@ -163,7 +163,7 @@ describe('Recursive Schema Handling', () => {
 				render: () => null,
 			};
 
-			const engine = new FormComposer().addElement(userReg).addElement(postReg).build();
+			const engine = createFormEngine({ elements: [userReg, postReg] });
 
 			const schema = engine.generateJSONSchemaCollection();
 
@@ -250,38 +250,40 @@ describe('Recursive Schema Handling', () => {
 				}),
 			) as z.ZodType<Project>;
 
-			const engine = new FormComposer()
-				.addElement({
-					$type: 'organization',
-					schema: organizationSchema,
-					metadata: { name: 'Organization', category: 'input' },
-					render: () => null,
-				})
-				.addElement({
-					$type: 'department',
-					schema: departmentSchema,
-					metadata: { name: 'Department', category: 'input' },
-					render: () => null,
-				})
-				.addElement({
-					$type: 'team',
-					schema: teamSchema,
-					metadata: { name: 'Team', category: 'input' },
-					render: () => null,
-				})
-				.addElement({
-					$type: 'member',
-					schema: memberSchema,
-					metadata: { name: 'Member', category: 'input' },
-					render: () => null,
-				})
-				.addElement({
-					$type: 'project',
-					schema: projectSchema,
-					metadata: { name: 'Project', category: 'input' },
-					render: () => null,
-				})
-				.build();
+			const engine = createFormEngine({
+				elements: [
+					{
+						$type: 'organization',
+						schema: organizationSchema,
+						metadata: { name: 'Organization', category: 'input' },
+						render: () => null,
+					},
+					{
+						$type: 'department',
+						schema: departmentSchema,
+						metadata: { name: 'Department', category: 'input' },
+						render: () => null,
+					},
+					{
+						$type: 'team',
+						schema: teamSchema,
+						metadata: { name: 'Team', category: 'input' },
+						render: () => null,
+					},
+					{
+						$type: 'member',
+						schema: memberSchema,
+						metadata: { name: 'Member', category: 'input' },
+						render: () => null,
+					},
+					{
+						$type: 'project',
+						schema: projectSchema,
+						metadata: { name: 'Project', category: 'input' },
+						render: () => null,
+					},
+				],
+			});
 
 			const start = performance.now();
 			const schema = engine.generateJSONSchemaCollection();
@@ -311,14 +313,16 @@ describe('Recursive Schema Handling', () => {
 				}),
 			) as z.ZodType<Comment>;
 
-			const engine = new FormComposer()
-				.addElement({
-					$type: 'comment',
-					schema: commentSchema,
-					metadata: { name: 'Comment', category: 'input' },
-					render: () => null,
-				})
-				.build();
+			const engine = createFormEngine({
+				elements: [
+					{
+						$type: 'comment',
+						schema: commentSchema,
+						metadata: { name: 'Comment', category: 'input' },
+						render: () => null,
+					},
+				],
+			});
 
 			const configSchema = engine.generateFormConfigSchema();
 
@@ -344,14 +348,16 @@ describe('Recursive Schema Handling', () => {
 				}),
 			) as z.ZodType<Node>;
 
-			const engine = new FormComposer()
-				.addElement({
-					$type: 'node',
-					schema: nodeSchema,
-					metadata: { name: 'Node', category: 'input' },
-					render: () => null,
-				})
-				.build();
+			const engine = createFormEngine({
+				elements: [
+					{
+						$type: 'node',
+						schema: nodeSchema,
+						metadata: { name: 'Node', category: 'input' },
+						render: () => null,
+					},
+				],
+			});
 
 			const schema = engine.generateJSONSchemaCollection();
 
@@ -374,14 +380,16 @@ describe('Recursive Schema Handling', () => {
 				}),
 			) as z.ZodType<LinkedNode>;
 
-			const engine = new FormComposer()
-				.addElement({
-					$type: 'linked-node',
-					schema: linkedNodeSchema,
-					metadata: { name: 'Linked Node', category: 'input' },
-					render: () => null,
-				})
-				.build();
+			const engine = createFormEngine({
+				elements: [
+					{
+						$type: 'linked-node',
+						schema: linkedNodeSchema,
+						metadata: { name: 'Linked Node', category: 'input' },
+						render: () => null,
+					},
+				],
+			});
 
 			const schema = engine.generateJSONSchemaCollection();
 

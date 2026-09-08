@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import * as v from 'valibot';
 import { Schema } from 'effect';
-import { FormComposer } from '@/builder';
+import { createFormEngine } from '@/engine/create-form-engine';
 
 describe('Standard Schema libraries through defineForm', () => {
 	test('Valibot defaults and transforms reach the returned form', () => {
@@ -11,14 +11,16 @@ describe('Standard Schema libraries through defineForm', () => {
 			name: v.pipe(v.optional(v.string(), 'untitled'), v.toUpperCase()),
 		});
 
-		const engine = new FormComposer()
-			.addElement({
-				$type: 'valibot-note',
-				schema,
-				metadata: { name: 'Valibot note', category: 'input' },
-				render: () => null,
-			})
-			.build();
+		const engine = createFormEngine({
+			elements: [
+				{
+					$type: 'valibot-note',
+					schema,
+					metadata: { name: 'Valibot note', category: 'input' },
+					render: () => null,
+				},
+			],
+		});
 
 		const withName = engine.defineForm({
 			id: 'valibot',
@@ -63,14 +65,16 @@ describe('Standard Schema libraries through defineForm', () => {
 			}),
 		);
 
-		const engine = new FormComposer()
-			.addElement({
-				$type: 'effect-note',
-				schema,
-				metadata: { name: 'Effect note', category: 'input' },
-				render: () => null,
-			})
-			.build();
+		const engine = createFormEngine({
+			elements: [
+				{
+					$type: 'effect-note',
+					schema,
+					metadata: { name: 'Effect note', category: 'input' },
+					render: () => null,
+				},
+			],
+		});
 
 		const withName = engine.defineForm({
 			id: 'effect',

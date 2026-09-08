@@ -6,19 +6,18 @@
  * @example
  * ```typescript
  * import { PhoneInputElementRegistration } from '@components/schema-engine/forms/inputs/form-phone-input.registration';
- * import { FormComposer } from '@schema-engine/forms/builder';
+ * import { createFormEngine, defineInput } from '@schema-engine/forms';
  *
- * const engine = new FormComposer()
- *   .addElement(PhoneInputElementRegistration)
- *   .build();
+ * const engine = createFormEngine({
+ *   elements: [PhoneInputElementRegistration],
+ * });
  * ```
  */
 
 import { FormPhoneInput } from './form-phone-input';
-import type { PhoneInputFieldConfig, PhoneInputFieldProps } from './form-phone-input.types';
+import type { PhoneInputFieldConfig } from './form-phone-input.types';
 import { PhoneInputFieldSchema } from './form-phone-input.types';
-import type { InputRegistration } from '@schema-engine/forms/types';
-import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
+import { defineInput } from '@schema-engine/forms';
 
 declare global {
 	namespace FormEngine {
@@ -28,17 +27,13 @@ declare global {
 	}
 }
 
-export const PhoneInputElementRegistration: InputRegistration<
-	'phone-input',
-	PhoneInputFieldConfig,
-	PhoneInputFieldProps
-> = {
+export const PhoneInputElementRegistration = defineInput({
 	$type: 'phone-input',
 	render: FormPhoneInput,
-	schema: asStandardSchema<PhoneInputFieldConfig>(PhoneInputFieldSchema),
+	schema: PhoneInputFieldSchema,
 	metadata: {
 		name: 'Phone Number Input Field',
 		description: 'International phone number input with country selection',
 		category: 'input',
 	},
-};
+});

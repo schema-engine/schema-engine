@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
-import { asStandardSchema } from '@/lib/standard-schema';
 import { FormActionTriggerSchema } from '../triggers';
 
 /**
@@ -139,7 +138,7 @@ const defaultStorage: AutoSaveStorage = {
  */
 export function autoSavePlugin(
 	config: AutoSavePluginConfig = {},
-): BuilderActionRegistration<'auto_save', AutoSaveAction> {
+): BuilderActionRegistration<'auto_save', typeof AutoSaveActionSchema> {
 	const storage = config.storage || defaultStorage;
 
 	const handler = async (context: BuilderActionExecutionContext<AutoSaveAction>) => {
@@ -197,7 +196,7 @@ export function autoSavePlugin(
 
 	return {
 		$type: 'auto_save',
-		schema: asStandardSchema(AutoSaveActionSchema),
+		schema: AutoSaveActionSchema,
 		metadata: {
 			name: 'Auto Save',
 			description: 'Automatically save form data to storage',

@@ -20,7 +20,7 @@ function assertProviderProps(engine: CoreFormEngine | undefined, adapter: FormAd
 
 	if (!engine) {
 		throw new Error(
-			'FormEngineProvider requires a FormEngine instance. Create one using createRadiantFormComposer()',
+			'FormEngineProvider requires a FormEngine instance. Create one using createRadiantFormEngine()',
 		);
 	}
 }

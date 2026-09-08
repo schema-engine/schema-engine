@@ -1,22 +1,22 @@
-import type {
-	BuilderActionBaseContext,
-	BuilderActionRegistration,
-	InputRegistration,
-	RecipeRegistration,
-	StaticRegistration,
-} from '@/types';
-import type { FormActionTrigger } from '@/actions';
-import { FormComposer } from '@/builder/form-composer';
-import { ElementRegistry, RecipeRegistry } from '@/registries';
-import { ActionRegistry } from '@schema-engine/actions';
+import type { BuilderActionRegistration, InputRegistration, RecipeRegistration, StaticRegistration } from '@/types';
 import { logger } from '@/lib/logger';
 import type { StandardJSONSchemaV1 } from '@/lib/standard-json-schema';
 import { z } from 'zod';
 import type { FormEngineSchemaArtifacts, FormEngineSchemaMetadataRegistry } from './schema-artifacts';
 import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from './schema-artifacts';
-import type { FormConfig } from '@/schemas/form-config';
-import { validateFormConfig } from '@/lib/validate-form';
+import { validateElementConfig, validateFormConfig } from '@/lib/validate-form';
+import type { NormalizedElementConfig, NormalizedFormConfig } from '@/lib/normalized-form-config';
 import type { FormAuthoringInput } from '@/builder/form-authoring';
+import type {
+	LastWinsMerge,
+	MergedRegistrationMap,
+	MergedActionRegistrationMap,
+	ElementRegistrationConstraint,
+	RecipeRegistrationConstraint,
+	ActionRegistrationConstraint,
+} from '@/builder/types.utils';
+import type { CreateFormEngineOptions } from './create-form-engine';
+import { buildFormEngine } from './build-form-engine';
 import {
 	describeRecipeFromRegistration,
 	describeViewCatalogFromRecipes,
@@ -151,9 +151,11 @@ export class FormEngine<
 	/**
 	 * Validate external JSON against this engine's registrations.
 	 * Applies defaults and schema transforms. Prefer {@link defineForm} when authoring in TypeScript.
+	 * Returns a frozen {@link NormalizedFormConfig} owned by this engine.
 	 */
-	validateForm(config: unknown): FormConfig {
+	validateForm(config: unknown): NormalizedFormConfig {
 		return validateFormConfig(config, {
+			owner: this,
 			getRecipe: (id) => this.getRecipe(id),
 			getElement: (id) => this.getElement(id),
 			getAction: (id) => this.getAction(id),
@@ -164,14 +166,25 @@ export class FormEngine<
 	 * Author a form from this engine's registered elements, recipes, and actions.
 	 * Same runtime pipeline as {@link validateForm}.
 	 */
-	defineForm<const TConfig extends FormAuthoringInput<TElements, TRecipes, TActions>>(config: TConfig): FormConfig {
+	defineForm<const TConfig extends FormAuthoringInput<TElements, TRecipes, TActions>>(
+		config: TConfig,
+	): NormalizedFormConfig {
 		return this.validateForm(config);
+	}
+
+	/**
+	 * Validate a single element against this engine's registrations, including nested children.
+	 * Use for standalone or dynamically created fields that are not already inside a normalized form.
+	 * The normalized marker is applied only after this element and its children succeed.
+	 */
+	validateElement(config: unknown): NormalizedElementConfig {
+		return validateElementConfig(config, { getElement: (id) => this.getElement(id) });
 	}
 
 	describeRecipe($type: string): RecipeDescriptor {
 		const recipe = this.getRecipe($type);
 		if (!recipe) {
-			throw new Error(`Unknown recipe '${$type}'. Register it with FormComposer.addRecipe().`);
+			throw new Error(`Unknown recipe '${$type}'. Register it with createFormEngine({ recipes: [...] }).`);
 		}
 		return describeRecipeFromRegistration(recipe, (r) => this.generateRecipeViewSchema(r));
 	}
@@ -241,33 +254,30 @@ export class FormEngine<
 		return this.schemaArtifacts.jsonSchema.generateActionConfig(actionType, options);
 	}
 
-	toComposer(): FormComposer<TElements, TRecipes, TActions> {
-		const elementRegistry = new ElementRegistry();
-		const recipeRegistry = new RecipeRegistry();
-		const actionRegistry = new ActionRegistry<BuilderActionBaseContext, FormActionTrigger>();
-
-		for (const [_key, value] of this.registries.elements.entries()) {
-			elementRegistry.register(value);
-		}
-		for (const [_key, value] of this.registries.recipes.entries()) {
-			recipeRegistry.register(value);
-		}
-		for (const value of this.registries.actions.values()) {
-			actionRegistry.register(value);
-		}
-
-		const composer = new FormComposer<TElements, TRecipes, TActions>(
-			elementRegistry,
-			recipeRegistry,
-			actionRegistry,
-		);
-
-		logger.debug('Converted FormEngine to composer', {
-			elements: this.registries.elements.size,
-			recipes: this.registries.recipes.size,
-			actions: this.registries.actions.size,
-		});
-
-		return composer;
+	/**
+	 * Return a new engine with additional registrations merged in.
+	 * Duplicate `$type` values follow last-wins semantics.
+	 */
+	extend<
+		const TNewElements extends readonly ElementRegistrationConstraint[] = readonly [],
+		const TNewRecipes extends readonly RecipeRegistrationConstraint[] = readonly [],
+		const TNewActions extends readonly ActionRegistrationConstraint[] = readonly [],
+	>(
+		options?: CreateFormEngineOptions<TNewElements, TNewRecipes, TNewActions>,
+	): FormEngine<
+		LastWinsMerge<TElements, MergedRegistrationMap<TNewElements>>,
+		LastWinsMerge<TRecipes, MergedRegistrationMap<TNewRecipes>>,
+		LastWinsMerge<TActions, MergedActionRegistrationMap<TNewActions>>
+	> {
+		return buildFormEngine({
+			elements: [...this.getAllElements(), ...(options?.elements ?? [])],
+			recipes: [...this.getAllRecipes(), ...(options?.recipes ?? [])],
+			actions: [...this.getAllActions(), ...(options?.actions ?? [])],
+			catalog: options?.catalog,
+		}) as FormEngine<
+			LastWinsMerge<TElements, MergedRegistrationMap<TNewElements>>,
+			LastWinsMerge<TRecipes, MergedRegistrationMap<TNewRecipes>>,
+			LastWinsMerge<TActions, MergedActionRegistrationMap<TNewActions>>
+		>;
 	}
 }

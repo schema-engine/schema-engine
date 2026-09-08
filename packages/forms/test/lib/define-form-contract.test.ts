@@ -1,8 +1,9 @@
 import { describe, expect, test } from 'vitest';
 import { z } from 'zod';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import { FormComposer } from '@/builder';
+import { createFormEngine } from '@/engine/create-form-engine';
 import { defineFormRecipe, defineRecipeSpec } from '@/recipes';
+import { defineInput } from '@/types';
 
 type MinimalFixtureConfig = {
 	id: string;
@@ -39,12 +40,12 @@ const noteSchema = z.object({
 	name: z.string(),
 });
 
-const noteElement = {
-	$type: 'note' as const,
+const noteElement = defineInput({
+	$type: 'note',
 	schema: noteSchema,
-	metadata: { name: 'Note', category: 'input' as const },
+	metadata: { name: 'Note', category: 'input' },
 	render: () => null,
-};
+});
 
 const cardRecipeSchema = z
 	.object({
@@ -79,7 +80,7 @@ const cardRecipe = defineFormRecipe(
 
 describe('defineForm contract', () => {
 	test('keeps recipe defaults and transforms on the returned form', () => {
-		const engine = new FormComposer().addRecipe(cardRecipe).build();
+		const engine = createFormEngine({ recipes: [cardRecipe] });
 
 		const config = engine.defineForm({
 			id: 'contact',
@@ -91,15 +92,34 @@ describe('defineForm contract', () => {
 	});
 
 	test('mixed Zod and native Standard Schema registrations appear in the authoring schema', () => {
-		const engine = new FormComposer()
-			.addElement(noteElement)
-			.addElement({
-				$type: 'minimal-fixture',
-				schema: createMinimalStandardSchema(),
-				metadata: { name: 'Minimal fixture', category: 'input' },
-				render: () => null,
-			})
-			.build();
+		const minimalFixtureElement = defineInput({
+			$type: 'minimal-fixture',
+			schema: createMinimalStandardSchema(),
+			metadata: { name: 'Minimal fixture', category: 'input' },
+			render: () => null,
+		});
+		const engine = createFormEngine({
+			elements: [noteElement, minimalFixtureElement],
+		});
+
+		expect(
+			engine.defineForm({
+				id: 'native',
+				steps: [
+					{
+						id: 'main',
+						title: 'Main',
+						elements: [{ $type: 'minimal-fixture', id: 'field-1', name: 'field-1' }],
+					},
+				],
+			}).steps[0]?.elements[0],
+		).toMatchObject({ $type: 'minimal-fixture' });
+		expect(
+			engine.defineForm({
+				id: 'zod',
+				steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'note', id: 'n1', name: 'n1' }] }],
+			}).steps[0]?.elements[0],
+		).toMatchObject({ $type: 'note' });
 
 		const nativeForm = {
 			id: 'native',
@@ -107,17 +127,14 @@ describe('defineForm contract', () => {
 				{
 					id: 'main',
 					title: 'Main',
-					elements: [{ $type: 'minimal-fixture' as const, id: 'field-1', name: 'field-1' }],
+					elements: [{ $type: 'minimal-fixture', id: 'field-1', name: 'field-1' }],
 				},
 			],
 		};
 		const zodForm = {
 			id: 'zod',
-			steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'note' as const, id: 'n1', name: 'n1' }] }],
+			steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'note', id: 'n1', name: 'n1' }] }],
 		};
-
-		expect(engine.defineForm(nativeForm).steps[0]?.elements[0]).toMatchObject({ $type: 'minimal-fixture' });
-		expect(engine.defineForm(zodForm).steps[0]?.elements[0]).toMatchObject({ $type: 'note' });
 		expect(engine.getFormConfigSchema().safeParse(nativeForm).success).toBe(true);
 		expect(engine.getFormConfigSchema().safeParse(zodForm).success).toBe(true);
 		expect(
@@ -129,7 +146,7 @@ describe('defineForm contract', () => {
 	});
 
 	test('single-step recipe rejects extra steps via defineForm', () => {
-		const engine = new FormComposer().addElement(noteElement).addRecipe(cardRecipe).build();
+		const engine = createFormEngine({ elements: [noteElement], recipes: [cardRecipe] });
 
 		const form = engine.defineForm({
 			id: 'contact',
@@ -154,10 +171,24 @@ describe('defineForm contract', () => {
 	});
 
 	test('bulk registration preserves defineForm authoring types', () => {
-		const engine = new FormComposer().addElements([noteElement]).addRecipes([cardRecipe]).build();
+		const engine = createFormEngine({ elements: [noteElement], recipes: [cardRecipe] });
 
 		const form = engine.defineForm({
 			id: 'bulk',
+			view: { $type: 'card' },
+			steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'note', id: 'n1', name: 'n1' }] }],
+		});
+
+		expect(form.steps[0]?.elements[0]).toMatchObject({ $type: 'note', id: 'n1' });
+	});
+
+	test('ordinary registration arrays preserve defineForm authoring types', () => {
+		const elements = [noteElement];
+		const recipes = [cardRecipe];
+		const engine = createFormEngine({ elements, recipes });
+
+		const form = engine.defineForm({
+			id: 'array-bulk',
 			view: { $type: 'card' },
 			steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'note', id: 'n1', name: 'n1' }] }],
 		});

@@ -1,8 +1,7 @@
 import { FormCheckboxGroup } from './form-checkbox-group';
-import type { CheckboxGroupFieldConfig, CheckboxGroupFieldProps } from './form-checkbox-group.types';
+import type { CheckboxGroupFieldConfig } from './form-checkbox-group.types';
 import { CheckboxGroupFieldConfigSchema } from './form-checkbox-group.types';
-import type { InputRegistration } from '@schema-engine/forms/types';
-import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
+import { defineInput } from '@schema-engine/forms';
 
 declare global {
 	namespace FormEngine {
@@ -12,17 +11,13 @@ declare global {
 	}
 }
 
-export const CheckboxGroupElementRegistration: InputRegistration<
-	'checkbox-group',
-	CheckboxGroupFieldConfig,
-	CheckboxGroupFieldProps
-> = {
+export const CheckboxGroupElementRegistration = defineInput({
 	$type: 'checkbox-group',
 	render: FormCheckboxGroup,
-	schema: asStandardSchema(CheckboxGroupFieldConfigSchema),
+	schema: CheckboxGroupFieldConfigSchema,
 	metadata: {
 		name: 'Checkbox Group Field',
 		description: 'Multiple checkbox field for selecting multiple options',
 		category: 'input',
 	},
-};
+});

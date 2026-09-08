@@ -1,8 +1,8 @@
 /**
- * Read a nested value from an object using dotted path syntax.
- * This is shared by adapter helpers so nested field handling stays consistent
- * across default values, validation, and other form state lookups.
+ * Nested value-tree helpers shared by React and Radiant adapters.
+ * Field *names* are composed in {@link ./field-scope.ts}; this module reads and writes values.
  */
+
 export function getValueAtPath<TValue = unknown>(input: unknown, path: string): TValue | undefined {
 	if (!path) {
 		return input as TValue;
@@ -66,7 +66,7 @@ export function setValueAtPath(target: Record<string, unknown>, path: string, va
  * consumer-provided defaults using nested path semantics.
  */
 export function mergePathValues(
-	fields: Array<{ name: string; defaultValue?: unknown }>,
+	fields: readonly { name: string; defaultValue?: unknown }[],
 	userDefaults: Record<string, unknown> = {},
 ): Record<string, unknown> {
 	const fieldDefaults = fields.reduce<Record<string, unknown>>((accumulator, field) => {
@@ -80,9 +80,38 @@ export function mergePathValues(
 }
 
 /**
- * Deeply merge two nested value trees while preserving object structure and
- * letting explicit override values replace base values.
+ * Expand a template path (`contacts.name`) against live values (`contacts.0.name`).
+ * When the template has no matching array/object yet, the template itself is returned.
  */
+export function expandFieldTemplatePaths(values: Record<string, unknown>, templatePath: string): string[] {
+	const parts = templatePath.split('.');
+	const paths: string[] = [];
+
+	function traverse(obj: unknown, currentParts: string[], remainingParts: string[]): void {
+		if (remainingParts.length === 0) {
+			paths.push(currentParts.join('.'));
+			return;
+		}
+
+		const [nextPart, ...rest] = remainingParts;
+		const nextValue = (obj as Record<string, unknown> | undefined)?.[nextPart];
+
+		if (Array.isArray(nextValue)) {
+			for (let index = 0; index < nextValue.length; index += 1) {
+				traverse(nextValue[index], [...currentParts, nextPart, String(index)], rest);
+			}
+			return;
+		}
+
+		if (nextValue !== undefined) {
+			traverse(nextValue, [...currentParts, nextPart], rest);
+		}
+	}
+
+	traverse(values, [], parts);
+	return paths.length > 0 ? paths : [templatePath];
+}
+
 function deepMerge(base: unknown, override: unknown): unknown {
 	if (Array.isArray(base) && Array.isArray(override)) {
 		return override.map((value, index) => deepMerge(base[index], value));
@@ -99,10 +128,6 @@ function deepMerge(base: unknown, override: unknown): unknown {
 	return override === undefined ? base : override;
 }
 
-/**
- * Narrow a value to a plain object so deep merging can distinguish object
- * containers from arrays and primitives.
- */
 function isPlainObject(value: unknown): value is Record<string, unknown> {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

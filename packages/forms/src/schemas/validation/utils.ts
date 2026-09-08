@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { ValidationRule, BaseValidationRule, PhoneRule } from './types.js';
 import type { BaseField } from '../base-field.js';
 import { validationRegistry } from './validation-registry.js';
+import { walkLeafFields } from '@/lib/field-scope.js';
 
 type ValidationRuleType = ValidationRule | BaseValidationRule;
 
@@ -17,7 +18,12 @@ interface FieldConfigElement extends BaseField {
 
 type FormElement = ValidationElement | FieldConfigElement;
 
-export function isFieldRequired(rules?: ValidationRule[]): boolean {
+export type ValidatableField = {
+	path: string;
+	rules: ReadonlyArray<BaseValidationRule | PhoneRule>;
+};
+
+export function isFieldRequired(rules?: ReadonlyArray<{ readonly type: string }>): boolean {
 	return rules?.some((rule) => rule.type === 'required') ?? false;
 }
 
@@ -30,8 +36,8 @@ export function isFieldRequired(rules?: ValidationRule[]): boolean {
  */
 export function getValidationRulesForElement<TRule extends BaseValidationRule>(element: {
 	$type?: string;
-	rules?: TRule[];
-}): Array<TRule | PhoneRule> | undefined {
+	rules?: readonly TRule[];
+}): ReadonlyArray<TRule | PhoneRule> | undefined {
 	const rules = element.rules;
 	if (element.$type !== 'phone-input' || rules?.some((rule) => rule.type === 'phone')) {
 		return rules;
@@ -40,8 +46,27 @@ export function getValidationRulesForElement<TRule extends BaseValidationRule>(e
 	return [...(rules ?? []), { type: 'phone' }];
 }
 
+/**
+ * Leaf fields with validation rules, using composed paths (`address.street`).
+ * Array indices are expanded later against live values.
+ */
+export function collectValidatableFields(elements: readonly object[], basePath = ''): ValidatableField[] {
+	const fields: ValidatableField[] = [];
+
+	for (const { path, element } of walkLeafFields(elements, basePath)) {
+		const rules = getValidationRulesForElement(
+			element as { $type?: string; rules?: ReadonlyArray<BaseValidationRule> },
+		);
+		if (rules?.length) {
+			fields.push({ path, rules });
+		}
+	}
+
+	return fields;
+}
+
 export function createZodSchemaFromRules(
-	rules: ValidationRuleType[] = [],
+	rules: ReadonlyArray<ValidationRuleType> = [],
 	formData?: Record<string, any>,
 ): z.ZodTypeAny {
 	if (!rules.length) {

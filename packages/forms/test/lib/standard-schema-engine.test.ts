@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import { FormComposer } from '@/builder';
+import { createFormEngine } from '@/engine/create-form-engine';
 import { FormValidationError } from '@/lib/validate-form';
 
 type MinimalFixtureConfig = {
@@ -33,15 +33,17 @@ function createMinimalStandardSchema(): StandardSchemaV1<MinimalFixtureConfig> {
 }
 
 describe('native Standard Schema engine path', () => {
-	test('addElement -> build -> defineForm accepts a hand-written Standard Schema', () => {
-		const engine = new FormComposer()
-			.addElement({
-				$type: 'minimal-fixture',
-				schema: createMinimalStandardSchema(),
-				metadata: { name: 'Minimal fixture', category: 'input' },
-				render: () => null,
-			})
-			.build();
+	test('createFormEngine -> defineForm accepts a hand-written Standard Schema', () => {
+		const engine = createFormEngine({
+			elements: [
+				{
+					$type: 'minimal-fixture',
+					schema: createMinimalStandardSchema(),
+					metadata: { name: 'Minimal fixture', category: 'input' },
+					render: () => null,
+				},
+			],
+		});
 
 		const config = engine.defineForm({
 			id: 'native-ss',
@@ -60,14 +62,16 @@ describe('native Standard Schema engine path', () => {
 	});
 
 	test('rejects invalid native Standard Schema configs with a registration error', () => {
-		const engine = new FormComposer()
-			.addElement({
-				$type: 'minimal-fixture',
-				schema: createMinimalStandardSchema(),
-				metadata: { name: 'Minimal fixture', category: 'input' },
-				render: () => null,
-			})
-			.build();
+		const engine = createFormEngine({
+			elements: [
+				{
+					$type: 'minimal-fixture',
+					schema: createMinimalStandardSchema(),
+					metadata: { name: 'Minimal fixture', category: 'input' },
+					render: () => null,
+				},
+			],
+		});
 
 		expect(() =>
 			engine.validateForm({

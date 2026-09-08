@@ -6,19 +6,18 @@
  * @example
  * ```typescript
  * import { DropZoneElementRegistration } from '@components/schema-engine/forms/inputs/form-drop-zone.registration';
- * import { FormComposer } from '@schema-engine/forms/builder';
+ * import { createFormEngine, defineInput } from '@schema-engine/forms';
  *
- * const engine = new FormComposer()
- *   .addElement(DropZoneElementRegistration)
- *   .build();
+ * const engine = createFormEngine({
+ *   elements: [DropZoneElementRegistration],
+ * });
  * ```
  */
 
 import { FormDropZone } from './form-drop-zone';
-import type { DropZoneFieldConfig, DropZoneFieldProps } from './form-drop-zone.types';
+import type { DropZoneFieldConfig } from './form-drop-zone.types';
 import { DropZoneFieldSchema } from './form-drop-zone.types';
-import type { InputRegistration } from '@schema-engine/forms/types';
-import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
+import { defineInput } from '@schema-engine/forms';
 
 declare global {
 	namespace FormEngine {
@@ -28,13 +27,13 @@ declare global {
 	}
 }
 
-export const DropZoneElementRegistration: InputRegistration<'drop-zone', DropZoneFieldConfig, DropZoneFieldProps> = {
+export const DropZoneElementRegistration = defineInput({
 	$type: 'drop-zone',
 	render: FormDropZone,
-	schema: asStandardSchema(DropZoneFieldSchema),
+	schema: DropZoneFieldSchema,
 	metadata: {
 		name: 'Drop Zone',
 		description: 'File upload drop-zone with drag-and-drop support and validation rules',
 		category: 'input',
 	},
-};
+});

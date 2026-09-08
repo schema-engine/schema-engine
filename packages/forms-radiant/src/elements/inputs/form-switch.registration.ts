@@ -1,8 +1,7 @@
 import { FormSwitch } from './form-switch';
-import type { SwitchFieldConfig, SwitchFieldProps } from '@/registry/forms/inputs/form-switch.types';
+import type { SwitchFieldConfig } from '@/registry/forms/inputs/form-switch.types';
 import { SwitchFieldConfigSchema } from '@/registry/forms/inputs/form-switch.types';
-import type { InputRegistration } from '@schema-engine/forms/types';
-import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
+import { defineInput } from '@schema-engine/forms';
 
 declare global {
 	namespace FormEngine {
@@ -12,13 +11,13 @@ declare global {
 	}
 }
 
-export const SwitchElementRegistration: InputRegistration<'switch', SwitchFieldConfig, SwitchFieldProps> = {
+export const SwitchElementRegistration = defineInput({
 	$type: 'switch',
 	render: FormSwitch,
-	schema: asStandardSchema(SwitchFieldConfigSchema),
+	schema: SwitchFieldConfigSchema,
 	metadata: {
 		name: 'Switch Field',
 		description: 'Toggle switch field',
 		category: 'input',
 	},
-};
+});

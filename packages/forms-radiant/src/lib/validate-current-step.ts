@@ -1,4 +1,4 @@
-export function fieldNamesForStep(step: { elements?: Array<{ name?: string }> } | undefined): string[] {
+export function fieldNamesForStep(step: { elements?: ReadonlyArray<{ name?: string }> } | undefined): string[] {
 	return (step?.elements ?? []).map((field) => field.name).filter((name): name is string => Boolean(name));
 }
 

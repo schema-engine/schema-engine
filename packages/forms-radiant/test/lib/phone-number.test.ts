@@ -73,6 +73,14 @@ describe('phone number helpers', () => {
 		expect(resolvePhoneCountry(lib, 'GB')).toBe('GB');
 	});
 
+	test('normalizes multi-value selection values to a single country', async () => {
+		const lib = await loadLibphonenumber();
+		expect(resolvePhoneCountry(lib, ['AF'])).toBe('AF');
+		expect(resolvePhoneCountry(lib, [])).toBe('US');
+		expect(resolvePhoneCountry(lib, ['ZZ'])).toBe('US');
+		expect(resolvePhoneCountry(lib, ['AF'], 'GB')).toBe('AF');
+	});
+
 	test('detects country from an international calling-code prefix', async () => {
 		const lib = await loadLibphonenumber();
 		expect(detectCountryFromInput(lib, '+44', 'US')).toBe('GB');

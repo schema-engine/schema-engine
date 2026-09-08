@@ -1,8 +1,7 @@
 import { SubmitButton } from './submit-button';
 import type { SubmitButtonConfig } from './submit-button.types';
 import { SubmitButtonSchema } from './submit-button.types';
-import type { InputRegistration } from '@schema-engine/forms';
-import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
+import { defineStatic } from '@schema-engine/forms';
 
 declare global {
 	namespace FormEngine {
@@ -12,13 +11,13 @@ declare global {
 	}
 }
 
-export const SubmitButtonElementRegistration: InputRegistration<'submit', SubmitButtonConfig> = {
+export const SubmitButtonElementRegistration = defineStatic({
 	$type: 'submit',
 	render: SubmitButton,
-	schema: asStandardSchema(SubmitButtonSchema),
+	schema: SubmitButtonSchema,
 	metadata: {
 		name: 'Submit Button',
 		description: 'Form submission button that handles submitting state',
 		category: 'action',
 	},
-};
+});

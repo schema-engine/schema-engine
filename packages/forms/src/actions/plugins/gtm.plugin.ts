@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
-import { asStandardSchema } from '@/lib/standard-schema';
 import { FormActionTriggerSchema } from '../triggers';
 import { GTMTracker } from '../../tools/gtm-tracker';
 
@@ -191,12 +190,14 @@ const defaultTracker: GTMTrackerInterface = {
  * });
  * ```
  */
-export function gtmPlugin(config: GTMPluginConfig = {}): BuilderActionRegistration<'gtm_event', GTMEventAction> {
+export function gtmPlugin(
+	config: GTMPluginConfig = {},
+): BuilderActionRegistration<'gtm_event', typeof GTMEventActionSchema> {
 	const tracker = config.tracker || defaultTracker;
 
 	return {
 		$type: 'gtm_event',
-		schema: asStandardSchema(GTMEventActionSchema),
+		schema: GTMEventActionSchema,
 		metadata: {
 			name: 'GTM Event',
 			description: 'Push events to Google Tag Manager',

@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { z } from 'zod';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import { createReactFormComposer } from '@/registries/builder-registry';
+import { createReactFormEngine } from '@/registries/builder-registry';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { rhfAdapter } from '@/adapters/react-hook-form';
 
@@ -21,25 +21,27 @@ const submitSchema = z.object({
 });
 
 function createHeadlessEngine() {
-	return createReactFormComposer()
-		.addElement({
-			$type: 'input',
-			schema: inputSchema,
-			metadata: { name: 'Input', category: 'input' },
-			render: (props: { id: string; name: string; label?: string }) => (
-				<label>
-					{props.label}
-					<input name={props.name} aria-label={props.label} data-testid={props.id} />
-				</label>
-			),
-		})
-		.addElement({
-			$type: 'submit',
-			schema: submitSchema,
-			metadata: { name: 'Submit', category: 'action' },
-			render: (props: { label?: string }) => <button type="submit">{props.label ?? 'Submit'}</button>,
-		})
-		.build();
+	return createReactFormEngine({
+		elements: [
+			{
+				$type: 'input',
+				schema: inputSchema,
+				metadata: { name: 'Input', category: 'input' },
+				render: (props: { id: string; name: string; label?: string }) => (
+					<label>
+						{props.label}
+						<input name={props.name} aria-label={props.label} data-testid={props.id} />
+					</label>
+				),
+			},
+			{
+				$type: 'submit',
+				schema: submitSchema,
+				metadata: { name: 'Submit', category: 'action' },
+				render: (props: { label?: string }) => <button type="submit">{props.label ?? 'Submit'}</button>,
+			},
+		],
+	});
 }
 
 type MinimalFixtureConfig = {
@@ -109,20 +111,22 @@ describe('FormRenderer missing-recipe fallback', () => {
 });
 
 describe('native Standard Schema through FormRenderer', () => {
-	test('addElement -> build -> defineForm -> renderer', () => {
-		const engine = createReactFormComposer()
-			.addElement({
-				$type: 'minimal-fixture',
-				schema: createMinimalStandardSchema(),
-				metadata: { name: 'Minimal fixture', category: 'input' },
-				render: (props: MinimalFixtureConfig) => (
-					<label>
-						{props.label}
-						<input name={props.name} aria-label={props.label} data-testid={props.id} />
-					</label>
-				),
-			})
-			.build();
+	test('createFormEngine -> defineForm -> renderer', () => {
+		const engine = createReactFormEngine({
+			elements: [
+				{
+					$type: 'minimal-fixture',
+					schema: createMinimalStandardSchema(),
+					metadata: { name: 'Minimal fixture', category: 'input' },
+					render: (props: MinimalFixtureConfig) => (
+						<label>
+							{props.label}
+							<input name={props.name} aria-label={props.label} data-testid={props.id} />
+						</label>
+					),
+				},
+			],
+		});
 
 		const config = engine.defineForm({
 			id: 'native-ss',
@@ -150,24 +154,27 @@ describe('transformed element configs through FormRenderer', () => {
 			count: z.string().transform((value) => Number(value)),
 		});
 
-		const engine = createReactFormComposer()
-			.addElement({
-				$type: 'count',
-				schema: countSchema,
-				metadata: { name: 'Count', category: 'input' },
-				render: (props: { id: string; name: string; label?: string; count: number }) => (
-					<label>
-						{props.label}
-						<input
-							name={props.name}
-							aria-label={props.label}
-							data-testid={props.id}
-							data-count={String(props.count)}
-						/>
-					</label>
-				),
-			})
-			.build();
+		const engine = createReactFormEngine({
+			elements: [
+				{
+					$type: 'count',
+					schema: countSchema,
+					metadata: { name: 'Count', category: 'input' },
+					render: (props: { id: string; name: string; label?: string; count: number; $type: 'count' }) => (
+						<label>
+							{props.label}
+							<input
+								name={props.name}
+								aria-label={props.label}
+								data-testid={props.id}
+								data-count={String(props.count)}
+								data-type={props.$type}
+							/>
+						</label>
+					),
+				},
+			],
+		});
 
 		const config = engine.defineForm({
 			id: 'count-form',
@@ -182,5 +189,6 @@ describe('transformed element configs through FormRenderer', () => {
 
 		render(<FormRenderer config={config} engine={engine} adapter={rhfAdapter} />);
 		expect(screen.getByLabelText('Count')).toHaveAttribute('data-count', '7');
+		expect(screen.getByLabelText('Count')).toHaveAttribute('data-type', 'count');
 	});
 });

@@ -1,5 +1,6 @@
 import { test, expect, describe } from 'vitest';
 import {
+	collectValidatableFields,
 	createZodSchemaFromRules,
 	generateFormSchema,
 	validationRegistry,
@@ -220,6 +221,28 @@ describe('Validation', () => {
 			const schema = generateFormSchema(elements as any);
 			expect('valid' in schema.shape).toBe(true);
 			expect((schema.shape as any).noRules).toBeUndefined();
+		});
+	});
+
+	describe('collectValidatableFields', () => {
+		test('collects nested fieldset leaves by composed path', () => {
+			const fields = collectValidatableFields([
+				{
+					name: 'address',
+					$type: 'fieldset',
+					elements: [
+						{ name: 'street', rules: [validationRegistry.presets.string.required('Street is required')] },
+						{ $type: 'note', id: 'hint' },
+					],
+				},
+			]);
+
+			expect(fields).toEqual([
+				{
+					path: 'address.street',
+					rules: [{ type: 'required', message: 'Street is required' }],
+				},
+			]);
 		});
 	});
 

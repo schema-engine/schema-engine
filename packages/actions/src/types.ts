@@ -171,7 +171,7 @@ export interface ActionExecuteInput<
 	/** Trigger/event causing execution */
 	trigger: TTrigger;
 	/** Action configurations to evaluate */
-	actions: TConfig[];
+	actions: readonly TConfig[];
 	/** Caller-provided base context */
 	context: TBaseContext;
 	/** Optional reference to the action that triggered nested execution */

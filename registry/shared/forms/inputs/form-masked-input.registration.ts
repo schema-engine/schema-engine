@@ -6,19 +6,18 @@
  * @example
  * ```typescript
  * import { MaskedInputElementRegistration } from '@components/schema-engine/forms/inputs/form-masked-input.registration';
- * import { FormComposer } from '@schema-engine/forms/builder';
+ * import { createFormEngine, defineInput } from '@schema-engine/forms';
  *
- * const engine = new FormComposer()
- *   .addElement(MaskedInputElementRegistration)
- *   .build();
+ * const engine = createFormEngine({
+ *   elements: [MaskedInputElementRegistration],
+ * });
  * ```
  */
 
 import { FormMaskedInput } from './form-masked-input';
-import type { MaskedInputFieldConfig, MaskedInputFieldProps } from './form-masked-input.types';
+import type { MaskedInputFieldConfig } from './form-masked-input.types';
 import { MaskedInputFieldSchema } from './form-masked-input.types';
-import type { InputRegistration } from '@schema-engine/forms/types';
-import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
+import { defineInput } from '@schema-engine/forms';
 
 declare global {
 	namespace FormEngine {
@@ -28,17 +27,13 @@ declare global {
 	}
 }
 
-export const MaskedInputElementRegistration: InputRegistration<
-	'masked-input',
-	MaskedInputFieldConfig,
-	MaskedInputFieldProps
-> = {
+export const MaskedInputElementRegistration = defineInput({
 	$type: 'masked-input',
 	render: FormMaskedInput,
-	schema: asStandardSchema(MaskedInputFieldSchema),
+	schema: MaskedInputFieldSchema,
 	metadata: {
 		name: 'Masked Input Field',
 		description: 'Text input with an iMask pattern for formatted values like IBAN, cards, and dates',
 		category: 'input',
 	},
-};
+});

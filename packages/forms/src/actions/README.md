@@ -21,33 +21,26 @@ The forms package includes several ready-to-use action plugins:
 ### 1. Register Plugins
 
 ```typescript
-import { FormComposer } from '@schema-engine/forms';
+import { createFormEngine } from '@schema-engine/forms';
 import { submitPlugin, resetPlugin, notificationPlugin } from '@schema-engine/forms/actions/plugins';
 import { toast } from 'react-hot-toast';
 
-const engine = new FormComposer()
-	// Configure submit behavior
-	.addAction(
+const engine = createFormEngine({
+	actions: [
 		submitPlugin({
 			onSuccess: (data, context) => console.log('Submitted:', data),
 			onError: (error, context) => console.error('Submit failed:', error),
 		}),
-	)
-	// Configure reset behavior
-	.addAction(
 		resetPlugin({
 			confirm: (message) => window.confirm(message),
 			onReset: () => toast.success('Form reset!'),
 		}),
-	)
-	// Configure notifications
-	.addAction(
 		notificationPlugin({
 			onSuccess: (message) => toast.success(message),
 			onError: (message) => toast.error(message),
 		}),
-	)
-	.build();
+	],
+});
 ```
 
 ### 2. Define Actions in Your Form

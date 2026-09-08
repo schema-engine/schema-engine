@@ -10,13 +10,11 @@ export type StandardSchemaSafeParseResult<T> =
 	{ success: true; data: T } | { success: false; error: { issues: StandardSchemaIssue[] } };
 
 /**
- * Bridge a Zod schema to `StandardSchemaV1` for registration contracts.
- *
- * Zod implements Standard Schema at runtime. TypeScript may not infer matching
- * input/output variance when fields use `.default()` — this helper documents that boundary.
+ * @deprecated Pass the schema directly, or use {@link defineInput} / {@link defineStatic}.
+ * This identity helper no longer collapses schema input and output.
  */
-export function asStandardSchema<T>(schema: z.ZodType<T>): StandardSchemaV1<T> {
-	return schema as StandardSchemaV1<T>;
+export function asStandardSchema<TSchema extends z.ZodType>(schema: TSchema): TSchema {
+	return schema;
 }
 
 function hasStandardSchemaShape(schema: unknown): schema is StandardSchemaV1 {

@@ -21,13 +21,13 @@ Zod-validated, and powered by your existing component library.
 
 ## Packages
 
-| Package                        | Role                                                                                     |
-| ------------------------------ | ---------------------------------------------------------------------------------------- |
-| `@schema-engine/forms`         | Headless engine: JSON config, validation, constraints, recipe specs                      |
-| `@schema-engine/forms-react`   | React adapter: renderer, hooks, RHF bridge. No default visual recipes                    |
-| `@schema-engine/forms-radiant` | Radiant adapter: renderer plus in-package recipes bound by `createRadiantFormComposer()` |
-| `@schema-engine/actions`       | Domain-agnostic sequential action system                                                 |
-| `@schema-engine/registry`      | Base registry used by the other packages                                                 |
+| Package                        | Role                                                                                   |
+| ------------------------------ | -------------------------------------------------------------------------------------- |
+| `@schema-engine/forms`         | Headless engine: JSON config, validation, constraints, recipe specs                    |
+| `@schema-engine/forms-react`   | React adapter: renderer, hooks, RHF bridge. No default visual recipes                  |
+| `@schema-engine/forms-radiant` | Radiant adapter: renderer plus in-package recipes bound by `createRadiantFormEngine()` |
+| `@schema-engine/actions`       | Domain-agnostic sequential action system                                               |
+| `@schema-engine/registry`      | Base registry used by the other packages                                               |
 
 React default shells and blocks live in the shadcn registry item
 `schema-engine-form-recipes` (source: `registry/shared/forms/recipes`). Specs

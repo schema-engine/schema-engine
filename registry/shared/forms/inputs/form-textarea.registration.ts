@@ -1,8 +1,7 @@
 import { FormTextarea } from './form-textarea';
-import type { TextareaFieldConfig, TextareaFieldProps } from './form-textarea.types';
+import type { TextareaFieldConfig } from './form-textarea.types';
 import { TextareaFieldSchema } from './form-textarea.types';
-import type { InputRegistration } from '@schema-engine/forms/types';
-import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
+import { defineInput } from '@schema-engine/forms';
 
 declare global {
 	namespace FormEngine {
@@ -12,13 +11,13 @@ declare global {
 	}
 }
 
-export const TextareaElementRegistration: InputRegistration<'textarea', TextareaFieldConfig, TextareaFieldProps> = {
+export const TextareaElementRegistration = defineInput({
 	$type: 'textarea',
 	render: FormTextarea,
-	schema: asStandardSchema(TextareaFieldSchema),
+	schema: TextareaFieldSchema,
 	metadata: {
 		name: 'Textarea Field',
 		description: 'Multi-line text input field',
 		category: 'input',
 	},
-};
+});
