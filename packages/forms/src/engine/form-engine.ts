@@ -12,11 +12,11 @@ import { ActionRegistry } from '@schema-engine/actions';
 import { logger } from '@/lib/logger';
 import type { StandardJSONSchemaV1 } from '@/lib/standard-json-schema';
 import { z } from 'zod';
-import { FormConfigBuilder } from '@/builder/form-config-builder';
 import type { FormEngineSchemaArtifacts, FormEngineSchemaMetadataRegistry } from './schema-artifacts';
 import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from './schema-artifacts';
 import type { FormConfig } from '@/schemas/form-config';
 import { validateFormConfig } from '@/lib/validate-form';
+import type { FormAuthoringInput } from '@/builder/form-authoring';
 import {
 	describeRecipeFromRegistration,
 	describeViewCatalogFromRecipes,
@@ -148,14 +148,23 @@ export class FormEngine<
 		};
 	}
 
+	/**
+	 * Validate external JSON against this engine's registrations.
+	 * Applies defaults and schema transforms. Prefer {@link defineForm} when authoring in TypeScript.
+	 */
 	validateForm(config: unknown): FormConfig {
 		return validateFormConfig(config, {
 			getRecipe: (id) => this.getRecipe(id),
-			parseFormConfig: (value) => this.schemaArtifacts.formConfigValidator.parse(value) as FormConfig,
+			getElement: (id) => this.getElement(id),
+			getAction: (id) => this.getAction(id),
 		});
 	}
 
-	defineForm(config: unknown): FormConfig {
+	/**
+	 * Author a form from this engine's registered elements, recipes, and actions.
+	 * Same runtime pipeline as {@link validateForm}.
+	 */
+	defineForm<const TConfig extends FormAuthoringInput<TElements, TRecipes, TActions>>(config: TConfig): FormConfig {
 		return this.validateForm(config);
 	}
 
@@ -232,25 +241,7 @@ export class FormEngine<
 		return this.schemaArtifacts.jsonSchema.generateActionConfig(actionType, options);
 	}
 
-	createFormDefinition(): FormConfigBuilder<TElements, TRecipes, TActions> {
-		const elementRegistry = new ElementRegistry();
-		const recipeRegistry = new RecipeRegistry();
-		const actionRegistry = new ActionRegistry<BuilderActionBaseContext, FormActionTrigger>();
-
-		for (const value of this.registries.elements.values()) {
-			elementRegistry.register(value);
-		}
-		for (const value of this.registries.recipes.values()) {
-			recipeRegistry.register(value);
-		}
-		for (const value of this.registries.actions.values()) {
-			actionRegistry.register(value);
-		}
-
-		return new FormConfigBuilder(elementRegistry, recipeRegistry, actionRegistry);
-	}
-
-	toComposer(): FormComposer {
+	toComposer(): FormComposer<TElements, TRecipes, TActions> {
 		const elementRegistry = new ElementRegistry();
 		const recipeRegistry = new RecipeRegistry();
 		const actionRegistry = new ActionRegistry<BuilderActionBaseContext, FormActionTrigger>();
@@ -265,7 +256,11 @@ export class FormEngine<
 			actionRegistry.register(value);
 		}
 
-		const composer = new FormComposer(elementRegistry, recipeRegistry, actionRegistry);
+		const composer = new FormComposer<TElements, TRecipes, TActions>(
+			elementRegistry,
+			recipeRegistry,
+			actionRegistry,
+		);
 
 		logger.debug('Converted FormEngine to composer', {
 			elements: this.registries.elements.size,

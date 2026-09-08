@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '@/stories/shared/story-wrapper';
-import { createForm, getEngine, rhfAdapter } from '@/stories/shared/form-builder.ui';
+import { defineStoryForm, getEngine, rhfAdapter } from '@/stories/shared/form-builder.ui';
 
 const baseUIEngine = getEngine();
 
@@ -37,35 +37,51 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
 	args: {
-		config: createForm()
-			.setId('date-default')
-			.setTitle('Date Field')
-			.addStep({ id: 'step-1', title: 'Select Date' })
-			.addElement('date', {
-				id: 'startDate',
-				name: 'startDate',
-				label: 'Start date',
-				placeholder: 'Pick a date',
-				description: 'Choose when your project begins',
-			})
-			.build(),
+		config: defineStoryForm({
+			id: 'date-default',
+			title: 'Date Field',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'Select Date',
+					elements: [
+						{
+							$type: 'date',
+							id: 'startDate',
+							name: 'startDate',
+							label: 'Start date',
+							placeholder: 'Pick a date',
+							description: 'Choose when your project begins',
+						},
+					],
+				},
+			],
+		}),
 	},
 };
 
 export const WithBounds: Story = {
 	args: {
-		config: createForm()
-			.setId('date-bounds')
-			.setTitle('Date Field With Bounds')
-			.addStep({ id: 'step-1', title: 'Select Date' })
-			.addElement('date', {
-				id: 'appointmentDate',
-				name: 'appointmentDate',
-				label: 'Appointment date',
-				min: '2026-01-01',
-				max: '2026-12-31',
-				description: 'Only dates in 2026 are selectable',
-			})
-			.build(),
+		config: defineStoryForm({
+			id: 'date-bounds',
+			title: 'Date Field With Bounds',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'Select Date',
+					elements: [
+						{
+							$type: 'date',
+							id: 'appointmentDate',
+							name: 'appointmentDate',
+							label: 'Appointment date',
+							min: '2026-01-01',
+							max: '2026-12-31',
+							description: 'Only dates in 2026 are selectable',
+						},
+					],
+				},
+			],
+		}),
 	},
 };

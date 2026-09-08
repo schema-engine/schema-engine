@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '@/stories/shared/story-wrapper';
-import { createForm, getEngine, rhfAdapter } from '@/stories/shared/form-builder.ui';
+import { defineStoryForm, getEngine, rhfAdapter } from '@/stories/shared/form-builder.ui';
 
 const baseUIEngine = getEngine();
 
@@ -15,7 +15,8 @@ const meta = {
 		layout: 'padded',
 		docs: {
 			description: {
-				component: 'Date range picker with presets, text inputs, and Apply/Cancel. Values are stored as `{ from, to }` ISO dates.',
+				component:
+					'Date range picker with presets, text inputs, and Apply/Cancel. Values are stored as `{ from, to }` ISO dates.',
 			},
 		},
 	},
@@ -37,18 +38,27 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
 	args: {
-		config: createForm()
-			.setId('date-range-default')
-			.setTitle('Date Range Field')
-			.addStep({ id: 'step-1', title: 'Select Dates' })
-			.addElement('date-range', {
-				id: 'tripDates',
-				name: 'tripDates',
-				label: 'Trip dates',
-				placeholder: 'Pick a date range',
-				numberOfMonths: 2,
-				description: 'Select your check-in and check-out dates',
-			})
-			.build(),
+		config: defineStoryForm({
+			id: 'date-range-default',
+			title: 'Date Range Field',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'Select Dates',
+					elements: [
+						{
+							$type: 'date-range',
+							id: 'tripDates',
+							name: 'tripDates',
+							label: 'Trip dates',
+							placeholder: 'Pick a date range',
+							numberOfMonths: 2,
+							presets: true,
+							description: 'Select your check-in and check-out dates',
+						},
+					],
+				},
+			],
+		}),
 	},
 };

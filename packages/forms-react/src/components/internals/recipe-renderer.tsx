@@ -1,9 +1,9 @@
 import type React from 'react';
 import type { FormConfig } from '@schema-engine/forms/schemas';
 import { applySlotDefaults, buildViewModel, type RecipeKind, type ViewNavigation } from '@schema-engine/forms/recipes';
-import { resolveFormRecipe, type RecipeRegistration } from '@schema-engine/forms';
+import type { RecipeRegistration } from '@schema-engine/forms';
 import { useFormContext } from '@/adapters/context';
-import { useOptionalFormEngine, useFormInstanceActions } from '@/hooks/use-form-context';
+import { useFormInstanceActions } from '@/hooks/use-form-context';
 import { ViewProvider } from '@/contexts/view-context';
 import type { ReactRecipeAdapterPayload } from '@/primitives';
 
@@ -34,15 +34,14 @@ function renderSlotBlock(Component: React.FC | undefined): React.ReactNode {
 
 interface RecipeRendererProps {
 	config: FormConfig;
+	recipe: RecipeRegistration<any, any> | undefined;
 	children?: React.ReactNode;
 	renderFields: () => React.ReactNode;
 }
 
-export function RecipeRenderer({ config, children, renderFields }: RecipeRendererProps) {
-	const engineContext = useOptionalFormEngine();
+export function RecipeRenderer({ config, recipe, children, renderFields }: RecipeRendererProps) {
 	const { formState } = useFormContext();
 	const { stepStates, currentStep, navigation } = useFormInstanceActions();
-	const recipe = resolveFormRecipe(config, engineContext?.engine);
 	if (!recipe) {
 		return (
 			<>

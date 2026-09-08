@@ -15,7 +15,7 @@ import { getRuiFormStore } from '@/lib/rui-form-utils';
 import { fieldNamesForStep, validateCurrentStepFields } from '@/lib/validate-current-step';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
 import { ConfiguredRuiForm } from '@/adapters/radiant/rui-form-shell';
-import { resolveFormRecipe, resolveValidatedConfig } from '@schema-engine/forms';
+import { resolveFormRecipe, resolveValidatedConfig, isValidatedFormConfig } from '@schema-engine/forms';
 
 function createInitialStepStates(totalSteps: number): StepStates {
 	return {
@@ -140,6 +140,7 @@ export class FormInstanceElement extends RadiantElement {
 			markStepCompleted: this.markStepCompleted,
 			markStepVisited: this.markStepVisited,
 			isSubmitting: this.isSubmitting,
+			configValidated: this.validated || isValidatedFormConfig(this.config),
 		};
 	}
 

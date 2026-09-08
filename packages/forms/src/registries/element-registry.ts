@@ -1,7 +1,8 @@
-import type { InputRegistration, StaticRegistration, ElementMetadata } from '@/types';
+import type { ElementMetadata } from '@/types';
 import type { ComponentRegistration } from '@schema-engine/registry';
 import { ComponentRegistry } from '@schema-engine/registry';
 import { ComponentType } from '@/engine/component-type';
+import { assertStandardSchema } from '@/lib/standard-schema';
 
 /**
  * Base type for all element registrations.
@@ -13,9 +14,6 @@ type ElementRegistration = ComponentRegistration<string, unknown, unknown, Eleme
  * Element Registry
  *
  * Manages registration and retrieval of form elements (inputs, content, decorations, interactive).
- *
- * Note: Uses union of InputRegistration and StaticRegistration to support both input elements
- * with handlers and static elements. Type safety is maintained at the registration site via branded types.
  */
 export class ElementRegistry extends ComponentRegistry<string, ElementRegistration> {
 	get registryName(): string {
@@ -23,10 +21,15 @@ export class ElementRegistry extends ComponentRegistry<string, ElementRegistrati
 	}
 
 	/**
-	 * Register an input or static element.
-	 * Accepts the branded registration types while storing as the base ElementRegistration.
+	 * Accept any Standard Schema registration. Authoring types are tracked on FormComposer.
 	 */
-	override register(item: InputRegistration<any, any, any> | StaticRegistration<any, any, any>): void {
+	override register(item: {
+		$type: string;
+		schema: unknown;
+		metadata: ElementMetadata;
+		render: (props: any) => unknown;
+	}): void {
+		assertStandardSchema(item.schema, `Element '${item.$type}' schema`);
 		super.register(item as ElementRegistration);
 	}
 }

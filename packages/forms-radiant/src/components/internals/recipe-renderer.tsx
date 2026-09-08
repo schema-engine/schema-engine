@@ -1,5 +1,5 @@
 import type { JsxRenderable } from '@ecopages/jsx';
-import { resolveFormRecipe, type RecipeRegistration } from '@schema-engine/forms';
+import { getRenderableSteps, type RecipeRegistration } from '@schema-engine/forms';
 import { applySlotDefaults, buildViewModel } from '@schema-engine/forms/recipes';
 import type { FormConfig, FormStep } from '@schema-engine/forms/schemas';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
@@ -18,21 +18,20 @@ export function RecipeRenderer({
 	config,
 	engine,
 	instance,
-	recipe: providedRecipe,
+	recipe,
 	children,
 }: {
 	config: FormConfig;
 	engine?: FormEngine;
 	instance: FormInstanceContextValue;
-	recipe?: RecipeRegistration<any, any>;
+	recipe: RecipeRegistration<any, any> | undefined;
 	children?: JsxRenderable;
 }): JsxRenderable {
-	const recipe = providedRecipe ?? resolveFormRecipe(config, engine);
-	const step = config.steps[instance.currentStep] as FormStep | undefined;
-	if (!step) return null;
+	const steps = getRenderableSteps(config, recipe, instance.currentStep);
+	if (steps.length === 0) return null;
 	const content = (
 		<>
-			{renderStepFields(step, config, engine)}
+			{steps.map((step: FormStep) => renderStepFields(step, config, engine))}
 			{children}
 		</>
 	);

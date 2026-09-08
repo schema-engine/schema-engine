@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '@/stories/shared/story-wrapper';
-import { createForm, getEngine, ValidationPresets, rhfAdapter } from '@/stories/shared/form-builder.ui';
+import { defineStoryForm, getEngine, ValidationPresets, rhfAdapter } from '@/stories/shared/form-builder.ui';
 
 const baseUIEngine = getEngine();
 
@@ -42,221 +42,294 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
 	args: {
-		config: createForm()
-			.setId('phone-input-default')
-			.setTitle('Phone Number Input')
-			.addStep({ id: 'step-1', title: 'Contact Information' })
-			.addElement('phone-input', {
-				id: 'phone',
-				name: 'phone',
-				label: 'Phone Number',
-				placeholder: '(202) 555-0123',
-				defaultCountry: 'US',
-			})
-			.build(),
+		config: defineStoryForm({
+			id: 'phone-input-default',
+			title: 'Phone Number Input',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'Contact Information',
+					elements: [
+						{
+							$type: 'phone-input',
+							id: 'phone',
+							name: 'phone',
+							label: 'Phone Number',
+							placeholder: '(202) 555-0123',
+							defaultCountry: 'US',
+						},
+					],
+				},
+			],
+		}),
 	},
 };
 
 export const International: Story = {
 	args: {
-		config: createForm()
-			.setId('phone-input-international')
-			.setTitle('International Phone Number')
-			.addStep({ id: 'step-1', title: 'Contact Details' })
-			.addElement('phone-input', {
-				id: 'internationalPhone',
-				name: 'internationalPhone',
-				label: 'International Phone',
-				placeholder: '+1 202 555 0123',
-				description: 'Phone number with country code',
-				international: true,
-			})
-			.build(),
+		config: defineStoryForm({
+			id: 'phone-input-international',
+			title: 'International Phone Number',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'Contact Details',
+					elements: [
+						{
+							$type: 'phone-input',
+							id: 'internationalPhone',
+							name: 'internationalPhone',
+							label: 'International Phone',
+							placeholder: '+1 202 555 0123',
+							description: 'Phone number with country code',
+							international: true,
+						},
+					],
+				},
+			],
+		}),
 	},
 };
 
 export const WithValidation: Story = {
 	args: {
-		config: createForm()
-			.setId('phone-input-validation')
-			.setTitle('Phone Number with Validation')
-			.addStep({ id: 'step-1', title: 'Contact Form' })
-			.addElement('phone-input', {
-				id: 'phone',
-				name: 'phone',
-				label: 'Phone Number',
-				placeholder: 'Enter your phone number',
-				defaultCountry: 'US',
-				description: 'Enter a complete phone number',
-				rules: [ValidationPresets.string.required('Phone number is required')],
-			})
-			.addElement('submit', { id: 'submit', label: 'Submit', name: 'submit' })
-			.build(),
+		config: defineStoryForm({
+			id: 'phone-input-validation',
+			title: 'Phone Number with Validation',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'Contact Form',
+					elements: [
+						{
+							$type: 'phone-input',
+							id: 'phone',
+							name: 'phone',
+							label: 'Phone Number',
+							placeholder: 'Enter your phone number',
+							defaultCountry: 'US',
+							description: 'Enter a complete phone number',
+							rules: [ValidationPresets.string.required('Phone number is required')],
+						},
+						{ $type: 'submit', id: 'submit', label: 'Submit', name: 'submit' },
+					],
+				},
+			],
+		}),
 	},
 };
 
 export const DifferentCountries: Story = {
 	args: {
-		config: createForm()
-			.setId('phone-input-countries')
-			.setTitle('Phone Numbers from Different Countries')
-			.addStep({ id: 'step-1', title: 'Multi-Country Form' })
-			.addElement('phone-input', {
-				id: 'usPhone',
-				name: 'usPhone',
-				label: 'US Phone Number',
-				placeholder: '(555) 123-4567',
-				defaultCountry: 'US',
-			})
-			.addElement('phone-input', {
-				id: 'ukPhone',
-				name: 'ukPhone',
-				label: 'UK Phone Number',
-				placeholder: '7700 900000',
-				defaultCountry: 'GB',
-			})
-			.addElement('phone-input', {
-				id: 'italyPhone',
-				name: 'italyPhone',
-				label: 'Italy Phone Number',
-				placeholder: '312 345 6789',
-				defaultCountry: 'IT',
-			})
-			.addElement('phone-input', {
-				id: 'japanPhone',
-				name: 'japanPhone',
-				label: 'Japan Phone Number',
-				placeholder: '90-1234-5678',
-				defaultCountry: 'JP',
-			})
-			.build(),
+		config: defineStoryForm({
+			id: 'phone-input-countries',
+			title: 'Phone Numbers from Different Countries',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'Multi-Country Form',
+					elements: [
+						{
+							$type: 'phone-input',
+							id: 'usPhone',
+							name: 'usPhone',
+							label: 'US Phone Number',
+							placeholder: '(555) 123-4567',
+							defaultCountry: 'US',
+						},
+						{
+							$type: 'phone-input',
+							id: 'ukPhone',
+							name: 'ukPhone',
+							label: 'UK Phone Number',
+							placeholder: '7700 900000',
+							defaultCountry: 'GB',
+						},
+						{
+							$type: 'phone-input',
+							id: 'italyPhone',
+							name: 'italyPhone',
+							label: 'Italy Phone Number',
+							placeholder: '312 345 6789',
+							defaultCountry: 'IT',
+						},
+						{
+							$type: 'phone-input',
+							id: 'japanPhone',
+							name: 'japanPhone',
+							label: 'Japan Phone Number',
+							placeholder: '90-1234-5678',
+							defaultCountry: 'JP',
+						},
+					],
+				},
+			],
+		}),
 	},
 };
 
 export const RequiredField: Story = {
 	args: {
-		config: createForm()
-			.setId('phone-input-required')
-			.setTitle('Required Phone Input')
-			.addStep({ id: 'step-1', title: 'Contact Information' })
-			.addElement('phone-input', {
-				id: 'requiredPhone',
-				name: 'requiredPhone',
-				label: 'Phone Number',
-				placeholder: 'Enter your phone number',
-				defaultCountry: 'US',
-				description: 'This field is required',
-				rules: [ValidationPresets.string.required('Please provide a phone number')],
-			})
-			.addElement('submit', { id: 'submit', label: 'Continue', name: 'submit' })
-			.build(),
+		config: defineStoryForm({
+			id: 'phone-input-required',
+			title: 'Required Phone Input',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'Contact Information',
+					elements: [
+						{
+							$type: 'phone-input',
+							id: 'requiredPhone',
+							name: 'requiredPhone',
+							label: 'Phone Number',
+							placeholder: 'Enter your phone number',
+							defaultCountry: 'US',
+							description: 'This field is required',
+							rules: [ValidationPresets.string.required('Please provide a phone number')],
+						},
+						{ $type: 'submit', id: 'submit', label: 'Continue', name: 'submit' },
+					],
+				},
+			],
+		}),
 	},
 };
 
 export const ContactForm: Story = {
 	args: {
-		config: createForm()
-			.setId('phone-input-contact-form')
-			.setTitle('Complete Contact Form')
-			.setDescription('Fill in your contact details')
-			.addStep({ id: 'step-1', title: 'Personal Information' })
-			.addElement('input', {
-				id: 'name',
-				name: 'name',
-				label: 'Full Name',
-				placeholder: 'John Doe',
-				inputType: 'text',
-				rules: [ValidationPresets.string.required()],
-			})
-			.addElement('input', {
-				id: 'email',
-				name: 'email',
-				label: 'Email Address',
-				placeholder: 'john@example.com',
-				inputType: 'email',
-				rules: [ValidationPresets.string.required(), ValidationPresets.string.email()],
-			})
-			.addElement('phone-input', {
-				id: 'phone',
-				name: 'phone',
-				label: 'Phone Number',
-				placeholder: 'Enter phone number',
-				defaultCountry: 'US',
-				description: 'We will use this for important updates',
-				rules: [ValidationPresets.string.required('Phone number is required')],
-			})
-			.addElement('phone-input', {
-				id: 'alternatePhone',
-				name: 'alternatePhone',
-				label: 'Alternate Phone (Optional)',
-				placeholder: 'Enter alternate phone number',
-				defaultCountry: 'US',
-			})
-			.addElement('submit', { id: 'submit', label: 'Submit Contact Info', name: 'submit' })
-			.build(),
+		config: defineStoryForm({
+			id: 'phone-input-contact-form',
+			title: 'Complete Contact Form',
+			description: 'Fill in your contact details',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'Personal Information',
+					elements: [
+						{
+							$type: 'input',
+							id: 'name',
+							name: 'name',
+							label: 'Full Name',
+							placeholder: 'John Doe',
+							inputType: 'text',
+							rules: [ValidationPresets.string.required()],
+						},
+						{
+							$type: 'input',
+							id: 'email',
+							name: 'email',
+							label: 'Email Address',
+							placeholder: 'john@example.com',
+							inputType: 'email',
+							rules: [ValidationPresets.string.required(), ValidationPresets.string.email()],
+						},
+						{
+							$type: 'phone-input',
+							id: 'phone',
+							name: 'phone',
+							label: 'Phone Number',
+							placeholder: 'Enter phone number',
+							defaultCountry: 'US',
+							description: 'We will use this for important updates',
+							rules: [ValidationPresets.string.required('Phone number is required')],
+						},
+						{
+							$type: 'phone-input',
+							id: 'alternatePhone',
+							name: 'alternatePhone',
+							label: 'Alternate Phone (Optional)',
+							placeholder: 'Enter alternate phone number',
+							defaultCountry: 'US',
+						},
+						{ $type: 'submit', id: 'submit', label: 'Submit Contact Info', name: 'submit' },
+					],
+				},
+			],
+		}),
 	},
 };
 
 export const Disabled: Story = {
 	args: {
-		config: createForm()
-			.setId('phone-input-disabled')
-			.setTitle('Disabled Phone Input')
-			.setDescription('Examples of disabled phone inputs')
-			.addStep({ id: 'step-1', title: 'Account Information' })
-			.addElement('phone-input', {
-				id: 'disabledEmpty',
-				name: 'disabledEmpty',
-				label: 'Disabled phone input',
-				placeholder: 'Cannot edit',
-				defaultCountry: 'US',
-				disabled: true,
-			})
-			.addElement('phone-input', {
-				id: 'disabledWithValue',
-				name: 'disabledWithValue',
-				label: 'Verified Phone Number',
-				defaultCountry: 'US',
-				disabled: true,
-				defaultValue: '+15551234567',
-				description: 'This phone number has been verified',
-			})
-			.build(),
+		config: defineStoryForm({
+			id: 'phone-input-disabled',
+			title: 'Disabled Phone Input',
+			description: 'Examples of disabled phone inputs',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'Account Information',
+					elements: [
+						{
+							$type: 'phone-input',
+							id: 'disabledEmpty',
+							name: 'disabledEmpty',
+							label: 'Disabled phone input',
+							placeholder: 'Cannot edit',
+							defaultCountry: 'US',
+							disabled: true,
+						},
+						{
+							$type: 'phone-input',
+							id: 'disabledWithValue',
+							name: 'disabledWithValue',
+							label: 'Verified Phone Number',
+							defaultCountry: 'US',
+							disabled: true,
+							defaultValue: '+15551234567',
+							description: 'This phone number has been verified',
+						},
+					],
+				},
+			],
+		}),
 	},
 };
 
 export const MixedStates: Story = {
 	args: {
-		config: createForm()
-			.setId('phone-input-mixed')
-			.setTitle('Mixed Phone Input States')
-			.setDescription('Combination of enabled and disabled phone inputs')
-			.addStep({ id: 'step-1', title: 'Update Contact Details' })
-			.addElement('phone-input', {
-				id: 'primaryPhone',
-				name: 'primaryPhone',
-				label: 'Primary Phone',
-				defaultCountry: 'US',
-				disabled: true,
-				defaultValue: '+15551234567',
-				description: 'Primary phone cannot be changed here',
-			})
-			.addElement('phone-input', {
-				id: 'mobilePhone',
-				name: 'mobilePhone',
-				label: 'Mobile Phone',
-				placeholder: 'Enter mobile number',
-				defaultCountry: 'US',
-				rules: [ValidationPresets.string.required()],
-			})
-			.addElement('phone-input', {
-				id: 'workPhone',
-				name: 'workPhone',
-				label: 'Work Phone (Optional)',
-				placeholder: 'Enter work number',
-				defaultCountry: 'US',
-			})
-			.addElement('submit', { id: 'submit', label: 'Update Phone Numbers', name: 'submit' })
-			.build(),
+		config: defineStoryForm({
+			id: 'phone-input-mixed',
+			title: 'Mixed Phone Input States',
+			description: 'Combination of enabled and disabled phone inputs',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'Update Contact Details',
+					elements: [
+						{
+							$type: 'phone-input',
+							id: 'primaryPhone',
+							name: 'primaryPhone',
+							label: 'Primary Phone',
+							defaultCountry: 'US',
+							disabled: true,
+							defaultValue: '+15551234567',
+							description: 'Primary phone cannot be changed here',
+						},
+						{
+							$type: 'phone-input',
+							id: 'mobilePhone',
+							name: 'mobilePhone',
+							label: 'Mobile Phone',
+							placeholder: 'Enter mobile number',
+							defaultCountry: 'US',
+							rules: [ValidationPresets.string.required()],
+						},
+						{
+							$type: 'phone-input',
+							id: 'workPhone',
+							name: 'workPhone',
+							label: 'Work Phone (Optional)',
+							placeholder: 'Enter work number',
+							defaultCountry: 'US',
+						},
+						{ $type: 'submit', id: 'submit', label: 'Update Phone Numbers', name: 'submit' },
+					],
+				},
+			],
+		}),
 	},
 };

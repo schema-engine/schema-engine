@@ -61,12 +61,14 @@ function createBaseUIFormComposer() {
 		.addAction(ResetActionRegistration);
 }
 
-export function createForm() {
-	return createBaseUIFormComposer().build().createFormDefinition();
-}
+const baseUIEngine = createBaseUIFormComposer().build();
 
 export function getEngine() {
-	return createBaseUIFormComposer().build();
+	return baseUIEngine;
+}
+
+export function defineStoryForm<const TConfig extends Parameters<typeof baseUIEngine.defineForm>[0]>(config: TConfig) {
+	return baseUIEngine.defineForm(config);
 }
 
 export function createExtendableComposer() {

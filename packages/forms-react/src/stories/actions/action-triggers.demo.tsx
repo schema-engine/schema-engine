@@ -153,71 +153,79 @@ export const demoEngine = createExtendableComposer()
 	.addAction(customResetPlugin)
 	.build();
 
-export const demoFormConfig = createExtendableComposer()
-	.addAction(customLoggerPlugin)
-	.addAction(customSubmitPlugin)
-	.addAction(customResetPlugin)
-	.build()
-	.createFormDefinition()
-	.setId('action-demo-form')
-	.setTitle('Action Triggers Demo')
-	.setDescription('Interact with the form to see actions trigger in real-time')
-	.addStep({
-		id: 'demo',
-		title: 'Demo',
-	})
-	.addElement('input', {
-		id: 'name',
-		name: 'name',
-		label: 'Name',
-		placeholder: 'Type to trigger form_change',
-		inputType: 'text',
-		rules: [ValidationPresets.string.required('Name is required')],
-	})
-	.addElement('input', {
-		id: 'email',
-		name: 'email',
-		label: 'Email',
-		placeholder: 'Enter your email',
-		inputType: 'email',
-		rules: [ValidationPresets.string.email('Valid email required')],
-	})
-	.addElement('checkbox', {
-		id: 'subscribe',
-		name: 'subscribe',
-		label: 'Subscribe to newsletter',
-	})
-	.addElement('submit', {
-		id: 'submit',
-		name: 'submit',
-		label: 'Submit Form',
-	})
-	.addFormAction('submit', {
-		id: 'submit-action',
-		enabled: true,
-		endpoint: SUBMIT_FORM_MOCK_URL,
-		method: 'POST',
-	})
-	.addFormAction('event_logger', {
-		id: 'log-all-events',
-		enabled: true,
-		triggers: [
-			'form_mount',
-			'form_change',
-			'form_submit',
-			'form_submit_start',
-			'form_submit_success',
-			'form_submit_error',
-			'form_submit_complete',
-		],
-	})
-	.addFormAction('reset', {
-		id: 'reset-action',
-		enabled: true,
-		resetToDefaults: true,
-		triggers: ['form_submit_success'],
-	})
-	.build();
+export const demoFormConfig = demoEngine.defineForm({
+	id: 'action-demo-form',
+	title: 'Action Triggers Demo',
+	description: 'Interact with the form to see actions trigger in real-time',
+	steps: [
+		{
+			id: 'demo',
+			title: 'Demo',
+			elements: [
+				{
+					$type: 'input',
+					id: 'name',
+					name: 'name',
+					label: 'Name',
+					placeholder: 'Type to trigger form_change',
+					inputType: 'text',
+					rules: [ValidationPresets.string.required('Name is required')],
+				},
+				{
+					$type: 'input',
+					id: 'email',
+					name: 'email',
+					label: 'Email',
+					placeholder: 'Enter your email',
+					inputType: 'email',
+					rules: [ValidationPresets.string.email('Valid email required')],
+				},
+				{
+					$type: 'checkbox',
+					id: 'subscribe',
+					name: 'subscribe',
+					label: 'Subscribe to newsletter',
+				},
+				{
+					$type: 'submit',
+					id: 'submit',
+					name: 'submit',
+					label: 'Submit Form',
+				},
+			],
+		},
+	],
+	actions: [
+		{
+			$type: 'submit',
+			id: 'submit-action',
+			enabled: true,
+			endpoint: SUBMIT_FORM_MOCK_URL,
+			method: 'POST',
+		},
+		{
+			$type: 'event_logger',
+			id: 'log-all-events',
+			enabled: true,
+			triggers: [
+				'form_mount',
+				'form_change',
+				'form_submit',
+				'form_submit_start',
+				'form_submit_success',
+				'form_submit_error',
+				'form_submit_complete',
+			],
+		},
+		{
+			$type: 'reset',
+			id: 'reset-action',
+			enabled: true,
+			resetToDefaults: true,
+			triggers: ['form_submit_success'],
+		},
+	],
+});
 
 const getTriggerColor = (trigger: string) => {
 	if (trigger.includes('submit')) return 'bg-blue-500';

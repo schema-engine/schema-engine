@@ -7,8 +7,7 @@ export type StandardSchemaIssue = {
 };
 
 export type StandardSchemaSafeParseResult<T> =
-	| { success: true; data: T }
-	| { success: false; error: { issues: StandardSchemaIssue[] } };
+	{ success: true; data: T } | { success: false; error: { issues: StandardSchemaIssue[] } };
 
 /**
  * Bridge a Zod schema to `StandardSchemaV1` for registration contracts.
@@ -18,6 +17,24 @@ export type StandardSchemaSafeParseResult<T> =
  */
 export function asStandardSchema<T>(schema: z.ZodType<T>): StandardSchemaV1<T> {
 	return schema as StandardSchemaV1<T>;
+}
+
+function hasStandardSchemaShape(schema: unknown): schema is StandardSchemaV1 {
+	if (schema === null || (typeof schema !== 'object' && typeof schema !== 'function')) {
+		return false;
+	}
+
+	return typeof (schema as StandardSchemaV1)['~standard']?.validate === 'function';
+}
+
+/**
+ * Require a registration schema to implement Standard Schema before registration.
+ */
+export function assertStandardSchema(schema: unknown, context = 'Registration schema'): StandardSchemaV1 {
+	if (!hasStandardSchemaShape(schema)) {
+		throw new Error(`${context} must implement Standard Schema (~standard.validate).`);
+	}
+	return schema;
 }
 
 /**

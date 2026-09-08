@@ -37,7 +37,7 @@ export function assertRecipeSlotSchemas(
  * Single-step recipes cannot declare `progress` or `actions`. Wizard recipes
  * must declare `actions`. Built-in specs are exported from this module.
  */
-export function defineRecipeSpec<TType extends string, TSchema extends z.ZodTypeAny>(definition: {
+export function defineRecipeSpec<const TType extends string, TSchema extends z.ZodTypeAny>(definition: {
 	$type: TType;
 	kind: RecipeKind;
 	metadata: RecipeSpec<TType>['metadata'];

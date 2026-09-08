@@ -2,6 +2,18 @@ import { z } from 'zod';
 import type { JSONSchemaObject, JSONSchemaTarget } from '@/lib/standard-json-schema';
 
 /**
+ * Duck-type a Zod validator. Native Standard Schema objects only expose `~standard`.
+ */
+export function isZodType(schema: unknown): schema is z.ZodTypeAny {
+	return (
+		typeof schema === 'object' &&
+		schema !== null &&
+		typeof (schema as { parse?: unknown }).parse === 'function' &&
+		typeof (schema as { safeParse?: unknown }).safeParse === 'function'
+	);
+}
+
+/**
  * Shared alias for the Zod registry type used during JSON Schema generation.
  * Keeping this in one place reduces the amount of Zod-specific typing that
  * leaks into higher-level schema artifact code.

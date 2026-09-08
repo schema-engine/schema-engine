@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '@/stories/shared/story-wrapper';
-import { createForm, getEngine, ValidationPresets, rhfAdapter } from '@/stories/shared/form-builder.ui';
+import { defineStoryForm, getEngine, ValidationPresets, rhfAdapter } from '@/stories/shared/form-builder.ui';
 
 const baseUIEngine = getEngine();
 
@@ -42,209 +42,289 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
 	args: {
-		config: createForm()
-			.setId('otp-default')
-			.setTitle('OTP Verification')
-			.addStep({ id: 'step-1', title: 'Enter OTP' })
-			.addElement('input-otp', {
-				id: 'otp',
-				name: 'otp',
-				label: 'Enter Code',
-				length: 6,
-				pattern: 'numeric',
-				description: 'Enter the 6-digit code sent to your phone',
-			})
-			.build(),
+		config: defineStoryForm({
+			id: 'otp-default',
+			title: 'OTP Verification',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'Enter OTP',
+					elements: [
+						{
+							$type: 'input-otp',
+							id: 'otp',
+							name: 'otp',
+							label: 'Enter Code',
+							length: 6,
+							pattern: 'numeric',
+							description: 'Enter the 6-digit code sent to your phone',
+						},
+					],
+				},
+			],
+		}),
 	},
 };
 
 export const FourDigitOTP: Story = {
 	args: {
-		config: createForm()
-			.setId('otp-four-digit')
-			.setTitle('Quick Verification')
-			.addStep({ id: 'step-1', title: 'Enter Code' })
-			.addElement('input-otp', {
-				id: 'code',
-				name: 'code',
-				label: 'Verification Code',
-				length: 4,
-				pattern: 'numeric',
-				description: 'Enter the 4-digit code',
-			})
-			.build(),
+		config: defineStoryForm({
+			id: 'otp-four-digit',
+			title: 'Quick Verification',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'Enter Code',
+					elements: [
+						{
+							$type: 'input-otp',
+							id: 'code',
+							name: 'code',
+							label: 'Verification Code',
+							length: 4,
+							pattern: 'numeric',
+							description: 'Enter the 4-digit code',
+						},
+					],
+				},
+			],
+		}),
 	},
 };
 
 export const AlphanumericOTP: Story = {
 	args: {
-		config: createForm()
-			.setId('otp-alphanumeric')
-			.setTitle('Code Entry')
-			.addStep({ id: 'step-1', title: 'Enter Confirmation Code' })
-			.addElement('input-otp', {
-				id: 'confirmationCode',
-				name: 'confirmationCode',
-				label: 'Confirmation Code',
-				length: 8,
-				pattern: 'alphanumeric',
-				description: 'Enter your unique confirmation code (letters and numbers)',
-			})
-			.build(),
+		config: defineStoryForm({
+			id: 'otp-alphanumeric',
+			title: 'Code Entry',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'Enter Confirmation Code',
+					elements: [
+						{
+							$type: 'input-otp',
+							id: 'confirmationCode',
+							name: 'confirmationCode',
+							label: 'Confirmation Code',
+							length: 8,
+							pattern: 'alphanumeric',
+							description: 'Enter your unique confirmation code (letters and numbers)',
+						},
+					],
+				},
+			],
+		}),
 	},
 };
 
 export const WithValidation: Story = {
 	args: {
-		config: createForm()
-			.setId('otp-validation')
-			.setTitle('Secure Verification')
-			.addStep({ id: 'step-1', title: 'Enter OTP' })
-			.addElement('input-otp', {
-				id: 'otp',
-				name: 'otp',
-				label: 'One-Time Password',
-				length: 6,
-				pattern: 'numeric',
-				rules: [ValidationPresets.string.required('OTP is required')],
-				description: 'Enter the 6-digit code for verification',
-			})
-			.addElement('submit', { id: 'submit', label: 'Verify', name: 'submit' })
-			.build(),
+		config: defineStoryForm({
+			id: 'otp-validation',
+			title: 'Secure Verification',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'Enter OTP',
+					elements: [
+						{
+							$type: 'input-otp',
+							id: 'otp',
+							name: 'otp',
+							label: 'One-Time Password',
+							length: 6,
+							pattern: 'numeric',
+							rules: [ValidationPresets.string.required('OTP is required')],
+							description: 'Enter the 6-digit code for verification',
+						},
+						{ $type: 'submit', id: 'submit', label: 'Verify', name: 'submit' },
+					],
+				},
+			],
+		}),
 	},
 };
 
 export const MultipleOTPFields: Story = {
 	args: {
-		config: createForm()
-			.setId('otp-multiple')
-			.setTitle('Two-Factor Authentication')
-			.setDescription('Complete both verification steps')
-			.addStep({ id: 'step-1', title: 'First Verification' })
-			.addElement('input-otp', {
-				id: 'smsOtp',
-				name: 'smsOtp',
-				label: 'SMS Code',
-				length: 6,
-				pattern: 'numeric',
-				description: 'Enter the code sent to your phone',
-				rules: [ValidationPresets.string.required('SMS code is required')],
-			})
-			.addStep({ id: 'step-2', title: 'Second Verification' })
-			.addElement('input-otp', {
-				id: 'emailOtp',
-				name: 'emailOtp',
-				label: 'Email Code',
-				length: 6,
-				pattern: 'numeric',
-				description: 'Enter the code sent to your email',
-				rules: [ValidationPresets.string.required('Email code is required')],
-			})
-			.addElement('submit', { id: 'submit', label: 'Complete Verification', name: 'submit' })
-			.build(),
+		config: defineStoryForm({
+			id: 'otp-multiple',
+			title: 'Two-Factor Authentication',
+			description: 'Complete both verification steps',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'First Verification',
+					elements: [
+						{
+							$type: 'input-otp',
+							id: 'smsOtp',
+							name: 'smsOtp',
+							label: 'SMS Code',
+							length: 6,
+							pattern: 'numeric',
+							description: 'Enter the code sent to your phone',
+							rules: [ValidationPresets.string.required('SMS code is required')],
+						},
+					],
+				},
+				{
+					id: 'step-2',
+					title: 'Second Verification',
+					elements: [
+						{
+							$type: 'input-otp',
+							id: 'emailOtp',
+							name: 'emailOtp',
+							label: 'Email Code',
+							length: 6,
+							pattern: 'numeric',
+							description: 'Enter the code sent to your email',
+							rules: [ValidationPresets.string.required('Email code is required')],
+						},
+						{ $type: 'submit', id: 'submit', label: 'Complete Verification', name: 'submit' },
+					],
+				},
+			],
+		}),
 	},
 };
 
 export const VariedLengths: Story = {
 	args: {
-		config: createForm()
-			.setId('otp-varied')
-			.setTitle('Verification Codes')
-			.setDescription('Different code lengths for different purposes')
-			.addStep({ id: 'step-1', title: 'Verification' })
-			.addElement('input-otp', {
-				id: 'quickCode',
-				name: 'quickCode',
-				label: 'Quick Code',
-				length: 4,
-				pattern: 'numeric',
-				description: '4-digit quick code',
-			})
-			.addElement('input-otp', {
-				id: 'standardCode',
-				name: 'standardCode',
-				label: 'Standard Code',
-				length: 6,
-				pattern: 'numeric',
-				description: '6-digit standard code',
-			})
-			.addElement('input-otp', {
-				id: 'secureCode',
-				name: 'secureCode',
-				label: 'Secure Code',
-				length: 8,
-				pattern: 'alphanumeric',
-				description: '8-character secure code',
-			})
-			.addElement('submit', { id: 'submit', label: 'Verify All', name: 'submit' })
-			.build(),
+		config: defineStoryForm({
+			id: 'otp-varied',
+			title: 'Verification Codes',
+			description: 'Different code lengths for different purposes',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'Verification',
+					elements: [
+						{
+							$type: 'input-otp',
+							id: 'quickCode',
+							name: 'quickCode',
+							label: 'Quick Code',
+							length: 4,
+							pattern: 'numeric',
+							description: '4-digit quick code',
+						},
+						{
+							$type: 'input-otp',
+							id: 'standardCode',
+							name: 'standardCode',
+							label: 'Standard Code',
+							length: 6,
+							pattern: 'numeric',
+							description: '6-digit standard code',
+						},
+						{
+							$type: 'input-otp',
+							id: 'secureCode',
+							name: 'secureCode',
+							label: 'Secure Code',
+							length: 8,
+							pattern: 'alphanumeric',
+							description: '8-character secure code',
+						},
+						{ $type: 'submit', id: 'submit', label: 'Verify All', name: 'submit' },
+					],
+				},
+			],
+		}),
 	},
 };
 
 export const Disabled: Story = {
 	args: {
-		config: createForm()
-			.setId('otp-disabled')
-			.setTitle('Disabled OTP Fields')
-			.setDescription('Examples of disabled OTP inputs')
-			.addStep({ id: 'step-1', title: 'Read-only Verification' })
-			.addElement('input-otp', {
-				id: 'confirmedOtp',
-				name: 'confirmedOtp',
-				label: 'Confirmed Code',
-				length: 6,
-				pattern: 'numeric',
-				disabled: true,
-				description: 'Code already verified',
-			})
-			.addElement('input-otp', {
-				id: 'backupCode',
-				name: 'backupCode',
-				label: 'Backup Code',
-				length: 8,
-				pattern: 'alphanumeric',
-				disabled: true,
-				description: 'Backup code on file',
-			})
-			.build(),
+		config: defineStoryForm({
+			id: 'otp-disabled',
+			title: 'Disabled OTP Fields',
+			description: 'Examples of disabled OTP inputs',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'Read-only Verification',
+					elements: [
+						{
+							$type: 'input-otp',
+							id: 'confirmedOtp',
+							name: 'confirmedOtp',
+							label: 'Confirmed Code',
+							length: 6,
+							pattern: 'numeric',
+							disabled: true,
+							description: 'Code already verified',
+						},
+						{
+							$type: 'input-otp',
+							id: 'backupCode',
+							name: 'backupCode',
+							label: 'Backup Code',
+							length: 8,
+							pattern: 'alphanumeric',
+							disabled: true,
+							description: 'Backup code on file',
+						},
+					],
+				},
+			],
+		}),
 	},
 };
 
 export const MixedStates: Story = {
 	args: {
-		config: createForm()
-			.setId('otp-mixed')
-			.setTitle('Multi-Step Verification')
-			.setDescription('Progressive verification with different states')
-			.addStep({ id: 'step-1', title: 'Primary Verification' })
-			.addElement('input-otp', {
-				id: 'primaryOtp',
-				name: 'primaryOtp',
-				label: 'Verification Code',
-				length: 6,
-				pattern: 'numeric',
-				description: 'Enter the code sent to your registered phone',
-				rules: [ValidationPresets.string.required('Verification code is required')],
-			})
-			.addStep({ id: 'step-2', title: 'Backup Verification' })
-			.addElement('input-otp', {
-				id: 'backupOtp',
-				name: 'backupOtp',
-				label: 'Backup Code',
-				length: 8,
-				pattern: 'alphanumeric',
-				description: "If you don't have access to your phone",
-			})
-			.addElement('input-otp', {
-				id: 'previousCode',
-				name: 'previousCode',
-				label: 'Previous Code',
-				length: 6,
-				pattern: 'numeric',
-				disabled: true,
-				description: 'Your previous verification code',
-			})
-			.addElement('submit', { id: 'submit', label: 'Complete Verification', name: 'submit' })
-			.build(),
+		config: defineStoryForm({
+			id: 'otp-mixed',
+			title: 'Multi-Step Verification',
+			description: 'Progressive verification with different states',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'Primary Verification',
+					elements: [
+						{
+							$type: 'input-otp',
+							id: 'primaryOtp',
+							name: 'primaryOtp',
+							label: 'Verification Code',
+							length: 6,
+							pattern: 'numeric',
+							description: 'Enter the code sent to your registered phone',
+							rules: [ValidationPresets.string.required('Verification code is required')],
+						},
+					],
+				},
+				{
+					id: 'step-2',
+					title: 'Backup Verification',
+					elements: [
+						{
+							$type: 'input-otp',
+							id: 'backupOtp',
+							name: 'backupOtp',
+							label: 'Backup Code',
+							length: 8,
+							pattern: 'alphanumeric',
+							description: "If you don't have access to your phone",
+						},
+						{
+							$type: 'input-otp',
+							id: 'previousCode',
+							name: 'previousCode',
+							label: 'Previous Code',
+							length: 6,
+							pattern: 'numeric',
+							disabled: true,
+							description: 'Your previous verification code',
+						},
+						{ $type: 'submit', id: 'submit', label: 'Complete Verification', name: 'submit' },
+					],
+				},
+			],
+		}),
 	},
 };
