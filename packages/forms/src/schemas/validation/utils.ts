@@ -68,12 +68,12 @@ export function collectValidatableFields(elements: readonly object[], basePath =
 export function createZodSchemaFromRules(
 	rules: ReadonlyArray<ValidationRuleType> = [],
 	formData?: Record<string, any>,
-): z.ZodTypeAny {
+): z.ZodType {
 	if (!rules.length) {
 		return z.any();
 	}
 
-	const schemas: z.ZodTypeAny[] = [];
+	const schemas: z.ZodType[] = [];
 	for (const rule of rules) {
 		const ruleSchema = validationRegistry.createSchema(rule as ValidationRule, formData);
 		if (ruleSchema) {
@@ -94,7 +94,7 @@ export function createZodSchemaFromRules(
 }
 
 export function generateFormSchema(elements: FormElement[]): z.ZodObject<any> {
-	const schemaFields: Record<string, z.ZodTypeAny> = {};
+	const schemaFields: Record<string, z.ZodType> = {};
 
 	for (const element of elements) {
 		if (!element.name) continue;

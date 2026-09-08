@@ -417,7 +417,7 @@ validationRegistry.register({
 - `registerMultiple(registrations: ValidationRegistration[]): void` - Register multiple validations
 - `unregister(type: string): boolean` - Remove a validation type
 - `has(type: string): boolean` - Check if validation type exists
-- `createSchema(rule: ValidationRule, formData?): z.ZodTypeAny | null` - Create a Zod schema from one rule
+- `createSchema(rule: ValidationRule, formData?): z.ZodType | null` - Create a Zod schema from one rule
 - `getRegisteredTypes(): string[]` - Get all registered type names
 - `getByCategory(category: string): ValidationRegistration[]` - Get validations by category
 - `clear(): void` - Remove all registered validations
@@ -432,7 +432,7 @@ validationRegistry.register({
 interface ValidationRegistration {
 	type: string;
 	category: 'string' | 'number' | 'array' | 'boolean' | 'date' | 'generic';
-	handler: (rule: ValidationRule) => z.ZodTypeAny;
+	handler: (rule: ValidationRule) => z.ZodType;
 }
 ```
 

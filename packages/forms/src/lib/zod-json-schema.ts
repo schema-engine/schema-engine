@@ -4,7 +4,7 @@ import type { JSONSchemaObject, JSONSchemaTarget } from '@/lib/standard-json-sch
 /**
  * Duck-type a Zod validator. Native Standard Schema objects only expose `~standard`.
  */
-export function isZodType(schema: unknown): schema is z.ZodTypeAny {
+export function isZodType(schema: unknown): schema is z.ZodType {
 	return (
 		typeof schema === 'object' &&
 		schema !== null &&
@@ -44,7 +44,7 @@ export function generateZodJSONSchemaCollection(
  * concern for each emitted schema.
  */
 export function generateZodJSONSchemaDocument(
-	validator: z.ZodTypeAny,
+	validator: z.ZodType,
 	metadataRegistry: ZodJSONSchemaRegistry,
 	options?: {
 		target?: JSONSchemaTarget;

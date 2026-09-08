@@ -9,7 +9,7 @@ export const TypedConfigEnvelopeSchema = z.looseObject({
 	$type: z.string().min(1),
 });
 
-export function createFormStepSchema(parts: { elements: z.ZodTypeAny; actions: z.ZodTypeAny }) {
+export function createFormStepSchema(parts: { elements: z.ZodType; actions: z.ZodType }) {
 	return z.object({
 		id: z.string(),
 		title: z.string(),
@@ -32,7 +32,7 @@ export function createFormStepSchema(parts: { elements: z.ZodTypeAny; actions: z
  * callers so envelope validation, authoring schema export, and the public
  * FormConfigSchema stay aligned.
  */
-export function createFormConfigShape(parts: { elements: z.ZodTypeAny; view: z.ZodTypeAny; actions: z.ZodTypeAny }) {
+export function createFormConfigShape(parts: { elements: z.ZodType; view: z.ZodType; actions: z.ZodType }) {
 	return z.object({
 		id: z.string().describe('Unique identifier for the form'),
 		title: z.string().optional().describe('Display title of the form'),

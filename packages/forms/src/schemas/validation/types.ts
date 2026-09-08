@@ -241,7 +241,7 @@ export interface ValidationRegistration<TRule extends { type: string } = { type:
 	 * @param formData - Optional form data for cross-field validation (available in custom resolver)
 	 * @returns Zod schema for validation
 	 */
-	handler: (rule: TRule, formData?: Record<string, any>) => z.ZodTypeAny;
+	handler: (rule: TRule, formData?: Record<string, any>) => z.ZodType;
 }
 
 /**

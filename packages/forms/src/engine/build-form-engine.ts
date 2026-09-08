@@ -17,14 +17,14 @@ import { isZodType } from '@/lib/zod-json-schema';
 import { assertStandardSchema } from '@/lib/standard-schema';
 import type { FormActionTrigger } from '@/actions';
 
-function createUnionSchema(schemas: z.ZodTypeAny[]): z.ZodTypeAny {
+function createUnionSchema(schemas: z.ZodType[]): z.ZodType {
 	if (schemas.length === 0) {
 		return z.never();
 	}
 	if (schemas.length === 1) {
 		return schemas[0];
 	}
-	return z.union(schemas as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]]);
+	return z.union(schemas as [z.ZodType, z.ZodType, ...z.ZodType[]]);
 }
 
 /**
@@ -32,7 +32,7 @@ function createUnionSchema(schemas: z.ZodTypeAny[]): z.ZodTypeAny {
  * Native Standard Schema registrations contribute a literal `$type` envelope
  * so mixed engines do not silently drop supported types.
  */
-function createRegistrationSchema(registrations: Array<{ $type: string; schema: unknown }>): z.ZodTypeAny {
+function createRegistrationSchema(registrations: Array<{ $type: string; schema: unknown }>): z.ZodType {
 	const parts = registrations.map((registration) =>
 		isZodType(registration.schema) ? registration.schema : z.looseObject({ $type: z.literal(registration.$type) }),
 	);

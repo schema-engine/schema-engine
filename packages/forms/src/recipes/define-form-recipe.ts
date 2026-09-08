@@ -8,7 +8,7 @@ import type { RecipeSpec } from './types';
  * Specs are canonical in this package. React implementations typically come
  * from the Schema Engine registry; Radiant binds its own payload in-package.
  */
-export function defineFormRecipe<const TType extends string, TSchema extends z.ZodTypeAny, TRender>(
+export function defineFormRecipe<const TType extends string, TSchema extends z.ZodType, TRender>(
 	spec: RecipeSpec<TType, TSchema>,
 	render: TRender,
 ): RecipeRegistration<TType, TSchema, TRender> {

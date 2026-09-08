@@ -35,7 +35,7 @@ export interface EngineRegistries {
 	actions: Map<string, BuilderActionRegistration>;
 	schemaArtifacts?: FormEngineSchemaArtifacts;
 	schemaRegistry?: FormEngineSchemaMetadataRegistry;
-	formConfigSchema?: z.ZodTypeAny;
+	formConfigSchema?: z.ZodType;
 }
 
 function resolveSchemaArtifacts(registries: EngineRegistries): FormEngineSchemaArtifacts {
@@ -199,7 +199,7 @@ export class FormEngine<
 
 	private generateRecipeViewSchema(recipe: RecipeRegistration<any, any>): Record<string, unknown> {
 		try {
-			return generateZodJSONSchemaDocument(recipe.schema as z.ZodTypeAny, this.schemaArtifacts.metadataRegistry, {
+			return generateZodJSONSchemaDocument(recipe.schema as z.ZodType, this.schemaArtifacts.metadataRegistry, {
 				target: 'draft-2020-12',
 				schemaId: `recipe:${recipe.$type}`,
 			}) as Record<string, unknown>;

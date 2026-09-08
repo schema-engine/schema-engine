@@ -99,7 +99,7 @@ export class ValidationRegistry {
 	 * @param rule - The validation rule
 	 * @param formData - Optional form data for cross-field validation
 	 */
-	createSchema<T extends { type: string }>(rule: T, formData?: Record<string, any>): z.ZodTypeAny | null {
+	createSchema<T extends { type: string }>(rule: T, formData?: Record<string, any>): z.ZodType | null {
 		const registration = this.validations.get(rule.type) as ValidationRegistration<T> | undefined;
 		if (!registration) {
 			return null;
