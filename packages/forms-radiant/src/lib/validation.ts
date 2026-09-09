@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { collectValidatableFields, createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation/utils';
 import { expandFieldTemplatePaths, getValueAtPath } from '@schema-engine/forms/lib/path-values';
 
@@ -14,11 +14,12 @@ export async function validateFormValues(
 				const value = getValueAtPath(values, path);
 				try {
 					const schema = createZodSchemaFromRules(rules, values);
-					await schema.parseAsync(value);
-				} catch (error) {
-					if (error instanceof z.ZodError) {
-						errors[path] = error.issues[0]?.message || 'Validation failed';
+					const result = await z.safeParseAsync(schema, value);
+					if (!result.success) {
+						errors[path] = result.error.issues[0]?.message || 'Validation failed';
 					}
+				} catch {
+					errors[path] = 'Validation failed';
 				}
 			}),
 		),

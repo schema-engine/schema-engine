@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'vitest';
+import { createFormEngine } from '@schema-engine/forms';
+import { PhoneInputElementRegistration } from '@/components/schema-engine/forms/inputs/form-phone-input.registration';
 import { createFormValidationResolver } from '../../src/adapters/rhf/hooks/use-form-validation-resolver';
 
 const elements = [
@@ -41,12 +43,14 @@ describe('createFormValidationResolver', () => {
 	});
 
 	test('rejects a phone country prefix while accepting a complete international number', async () => {
-		const phone = {
-			$type: 'phone-input',
-			id: 'phone',
-			name: 'phone',
-		};
-		const resolver = createFormValidationResolver([phone]);
+		createFormEngine({ elements: [PhoneInputElementRegistration] });
+		const resolver = createFormValidationResolver([
+			{
+				$type: 'phone-input',
+				id: 'phone',
+				name: 'phone',
+			},
+		]);
 		const options = { fields: {}, shouldUseNativeValidation: false };
 
 		const incomplete = await resolver({ phone: '+44' }, undefined, options);

@@ -43,7 +43,7 @@ describe('Phone input field schema', () => {
 		expect(result.success).toBe(true);
 	});
 
-	test('adds phone validation without replacing configured rules', () => {
+	test('keeps authored rules unchanged', () => {
 		const result = PhoneInputFieldSchema.parse({
 			$type: 'phone-input',
 			id: 'phone',
@@ -51,7 +51,7 @@ describe('Phone input field schema', () => {
 			rules: [{ type: 'required', message: 'Phone number is required' }],
 		});
 
-		expect(result.rules).toEqual([{ type: 'required', message: 'Phone number is required' }, { type: 'phone' }]);
+		expect(result.rules).toEqual([{ type: 'required', message: 'Phone number is required' }]);
 	});
 
 	test('preserves an explicitly configured phone-validation message', () => {
