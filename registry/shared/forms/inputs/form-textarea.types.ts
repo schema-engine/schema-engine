@@ -1,15 +1,15 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
 
 export const TextareaFieldExtensionSchema = z.object({
-	rows: z.number().positive().optional(),
-	cols: z.number().positive().optional(),
-	resize: z.enum(['none', 'both', 'horizontal', 'vertical']).optional(),
-	spellCheck: z.boolean().optional(),
-	wrap: z.enum(['hard', 'soft']).optional(),
+	rows: z.optional(z.number().check(z.positive())),
+	cols: z.optional(z.number().check(z.positive())),
+	resize: z.optional(z.enum(['none', 'both', 'horizontal', 'vertical'])),
+	spellCheck: z.optional(z.boolean()),
+	wrap: z.optional(z.enum(['hard', 'soft'])),
 });
 
-export const TextareaFieldSchema = BaseFieldSchema.extend({
+export const TextareaFieldSchema = z.extend(BaseFieldSchema, {
 	$type: z.literal('textarea'),
 	...TextareaFieldExtensionSchema.shape,
 });

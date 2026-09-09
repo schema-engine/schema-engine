@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import type { FieldValues, Resolver, ResolverResult } from 'react-hook-form';
 import { collectValidatableFields, createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation/utils';
 import { expandFieldTemplatePaths, getValueAtPath } from '@schema-engine/forms/lib/path-values';
@@ -13,7 +13,7 @@ function pathIsRequested(path: string, names?: readonly string[]): boolean {
 }
 
 /**
- * Creates a React Hook Form resolver that validates fields using Zod schemas.
+ * Creates a React Hook Form resolver that validates fields using Zod Mini schemas.
  * Handles both simple fields and nested array fields with dynamic indices.
  * When RHF passes `options.names` (for example, next-step validation),
  * only those fields are validated so later steps stay untriggered.
@@ -31,14 +31,15 @@ export function createFormValidationResolver(elements: readonly object[]): Resol
 						const value = getValueAtPath(values, path);
 						try {
 							const schema = createZodSchemaFromRules(rules, values);
-							await schema.parseAsync(value);
-						} catch (error) {
-							if (error instanceof z.ZodError) {
+							const result = await z.safeParseAsync(schema, value);
+							if (!result.success) {
 								errors[path] = {
 									type: 'validation',
-									message: error.issues[0]?.message || 'Validation failed',
+									message: result.error.issues[0]?.message || 'Validation failed',
 								};
 							}
+						} catch {
+							errors[path] = { type: 'validation', message: 'Validation failed' };
 						}
 					}),
 			),

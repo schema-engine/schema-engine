@@ -1,12 +1,12 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
 
 export const SwitchFieldExtensionSchema = z.object({
-	autoFocus: z.boolean().optional(),
-	size: z.enum(['sm', 'md', 'lg']).optional(),
+	autoFocus: z.optional(z.boolean()),
+	size: z.optional(z.enum(['sm', 'md', 'lg'])),
 });
 
-export const SwitchFieldConfigSchema = BaseFieldSchema.extend({
+export const SwitchFieldConfigSchema = z.extend(BaseFieldSchema, {
 	$type: z.literal('switch'),
 	...SwitchFieldExtensionSchema.shape,
 });

@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { createReactFormEngine } from '@/registries/builder-registry';
 import { FormRenderer } from '@/components/internals/form-renderer';
@@ -10,14 +10,14 @@ const inputSchema = z.object({
 	$type: z.literal('input'),
 	id: z.string(),
 	name: z.string(),
-	label: z.string().optional(),
+	label: z.optional(z.string()),
 });
 
 const submitSchema = z.object({
 	$type: z.literal('submit'),
 	id: z.string(),
 	name: z.string(),
-	label: z.string().optional(),
+	label: z.optional(z.string()),
 });
 
 function createHeadlessEngine() {
@@ -150,8 +150,11 @@ describe('transformed element configs through FormRenderer', () => {
 			$type: z.literal('count'),
 			id: z.string(),
 			name: z.string(),
-			label: z.string().optional(),
-			count: z.string().transform((value) => Number(value)),
+			label: z.optional(z.string()),
+			count: z.pipe(
+				z.string(),
+				z.transform((value) => Number(value)),
+			),
 		});
 
 		const engine = createReactFormEngine({

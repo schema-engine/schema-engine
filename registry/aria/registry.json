@@ -333,6 +333,7 @@
       ],
       "dependencies": [
         "react-phone-number-input",
+        "libphonenumber-js",
         "@schema-engine/forms-react",
         "@schema-engine/forms",
         "zod"
@@ -352,6 +353,11 @@
           "path": "../shared/forms/inputs/form-phone-input.registration.ts",
           "type": "registry:lib",
           "target": "@components/schema-engine/forms/inputs/form-phone-input.registration.ts"
+        },
+        {
+          "path": "../shared/forms/inputs/form-phone-input.validation.ts",
+          "type": "registry:lib",
+          "target": "@components/schema-engine/forms/inputs/form-phone-input.validation.ts"
         }
       ]
     },

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SUBMIT_FORM_MOCK_URL } from '../msw/submit-form';
 import { FormActionTriggerSchema, formResetPlugin, formSubmitPlugin } from '@schema-engine/forms/actions';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@schema-engine/forms/types';
 import type { ActionExecutionResult } from '@schema-engine/forms';
 
@@ -55,9 +55,9 @@ export const actionEventDispatcher = new ActionEventDispatcher();
 const LoggerActionSchema = z.object({
 	id: z.string(),
 	$type: z.literal('event_logger'),
-	description: z.string().optional(),
-	enabled: z.boolean().default(true),
-	triggers: FormActionTriggerSchema.array().optional(),
+	description: z.optional(z.string()),
+	enabled: z._default(z.boolean(), true),
+	triggers: z.optional(z.array(FormActionTriggerSchema)),
 });
 
 type LoggerAction = z.infer<typeof LoggerActionSchema>;

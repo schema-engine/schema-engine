@@ -78,7 +78,7 @@ describe('Input Field Schema', () => {
 	});
 
 	test('uses default input type when not specified', () => {
-		const configWithoutType = {
+		const configWithoutType: InputFieldConfig = {
 			$type: 'input',
 			id: 'default-test',
 			name: 'defaultTest',
@@ -115,7 +115,7 @@ describe('Input Field Schema', () => {
 	});
 
 	test('validates required fields with default inputType', () => {
-		const minimalConfig = {
+		const minimalConfig: InputFieldConfig = {
 			$type: 'input',
 			id: 'minimal',
 			name: 'minimal',

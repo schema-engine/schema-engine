@@ -75,7 +75,7 @@ describe('Enhanced Form Field System', () => {
 		});
 
 		test('uses default input type when not specified', () => {
-			const configWithoutType = {
+			const configWithoutType: InputFieldConfig = {
 				$type: 'input',
 				id: 'default-test',
 				name: 'defaultTest',

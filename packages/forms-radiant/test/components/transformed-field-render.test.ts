@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
 import { renderRegisteredElement } from '@/components/internals/render-registered-element';
 
@@ -7,7 +7,10 @@ const countSchema = z.object({
 	$type: z.literal('count'),
 	id: z.string(),
 	name: z.string(),
-	count: z.string().transform((value) => Number(value)),
+	count: z.pipe(
+		z.string(),
+		z.transform((value) => Number(value)),
+	),
 });
 
 function createCountEngine() {

@@ -2,20 +2,22 @@
  * Array field type — dynamic lists of scalar fields or nested objects.
  */
 
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
 import { elementChildrenSchema } from '@schema-engine/forms';
 import type { ElementRenderProps } from '@schema-engine/forms';
 
-export const ArrayElementConfigSchema = BaseFieldSchema.extend({
+export const ArrayElementConfigSchema = z.extend(BaseFieldSchema, {
 	$type: z.literal('arrayElements'),
-	minItems: z.number().min(0).optional().describe('Minimum number of items allowed'),
-	maxItems: z.number().min(1).optional().describe('Maximum number of items allowed'),
-	addButtonText: z.string().optional().describe('Text for the add button'),
-	removeButtonText: z.string().optional().describe('Text for the remove button'),
-	emptyStateMessage: z.string().optional().describe('Message shown when array is empty'),
-	initialValues: z.record(z.string(), z.any()).optional().describe('Default values for new items'),
-	elements: elementChildrenSchema.min(1).describe('Field definitions for each item in the array'),
+	minItems: z.optional(z.number().check(z.gte(0))).check(z.describe('Minimum number of items allowed')),
+	maxItems: z.optional(z.number().check(z.gte(1))).check(z.describe('Maximum number of items allowed')),
+	addButtonText: z.optional(z.string()).check(z.describe('Text for the add button')),
+	removeButtonText: z.optional(z.string()).check(z.describe('Text for the remove button')),
+	emptyStateMessage: z.optional(z.string()).check(z.describe('Message shown when array is empty')),
+	initialValues: z.optional(z.record(z.string(), z.any())).check(z.describe('Default values for new items')),
+	elements: elementChildrenSchema
+		.check(z.minLength(1))
+		.check(z.describe('Field definitions for each item in the array')),
 });
 
 export type ArrayElementsConfig = z.output<typeof ArrayElementConfigSchema>;

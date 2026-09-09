@@ -1,14 +1,14 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
 
 export const CheckboxFieldExtensionSchema = z.object({
-	autoFocus: z.boolean().optional(),
-	checked: z.boolean().optional(),
-	indeterminate: z.boolean().optional(),
-	form: z.string().optional(),
+	autoFocus: z.optional(z.boolean()),
+	checked: z.optional(z.boolean()),
+	indeterminate: z.optional(z.boolean()),
+	form: z.optional(z.string()),
 });
 
-export const CheckboxFieldConfigSchema = BaseFieldSchema.extend({
+export const CheckboxFieldConfigSchema = z.extend(BaseFieldSchema, {
 	$type: z.literal('checkbox'),
 	...CheckboxFieldExtensionSchema.shape,
 });

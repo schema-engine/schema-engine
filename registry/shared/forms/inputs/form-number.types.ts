@@ -1,16 +1,16 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
 
 export const NumberFieldExtensionSchema = z.object({
-	min: z.number().optional(),
-	max: z.number().optional(),
-	step: z.number().optional(),
-	autoComplete: z.string().optional(),
-	autoFocus: z.boolean().optional(),
-	inputMode: z.enum(['none', 'text', 'decimal', 'numeric', 'tel', 'search', 'email', 'url']).optional(),
+	min: z.optional(z.number()),
+	max: z.optional(z.number()),
+	step: z.optional(z.number()),
+	autoComplete: z.optional(z.string()),
+	autoFocus: z.optional(z.boolean()),
+	inputMode: z.optional(z.enum(['none', 'text', 'decimal', 'numeric', 'tel', 'search', 'email', 'url'])),
 });
 
-export const NumberFieldConfigSchema = BaseFieldSchema.extend({
+export const NumberFieldConfigSchema = z.extend(BaseFieldSchema, {
 	$type: z.literal('number'),
 	...NumberFieldExtensionSchema.shape,
 });

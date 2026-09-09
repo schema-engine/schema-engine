@@ -22,6 +22,8 @@ import '@ecopages/radiant-ui/styles.css';
 
 `@schema-engine/forms-radiant` already imports `radiant-ui-core.css`. Apps that load component CSS without the package root still need the core (or their own Tailwind preflight) so headings, lists, and form controls are not left on user-agent margins.
 
+First-party schemas use the functional `zod/mini` API. Install the `zod` package when authoring schemas; registrations supplied by consumers may use any Standard Schema implementation, including Valibot, Effect Schema, or Zod.
+
 ## Quick start
 
 ```ts

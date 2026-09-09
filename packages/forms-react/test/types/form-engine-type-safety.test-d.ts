@@ -24,12 +24,12 @@ type _registeredElementIds = Assert<'input' extends FormEngine.ElementId ? true 
 
 type _inputConfig = FormEngine.GetElementConfig<'input'>;
 type _inputHasInputType = Assert<'inputType' extends keyof _inputConfig ? true : false>;
+type _inputTypeDefaultsToText = Assert<undefined extends _inputConfig['inputType'] ? true : false>;
 
 const inputConfig = {
 	$type: 'input',
 	id: 'email',
 	name: 'email',
-	inputType: 'email',
 } satisfies FormEngine.GetElementConfig<'input'>;
 
 engine.defineForm({

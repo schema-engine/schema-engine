@@ -10,6 +10,7 @@ import { TextareaElementRegistration } from '@/components/schema-engine/forms/in
 import { CheckboxElementRegistration } from '@/components/schema-engine/forms/inputs/form-checkbox.registration';
 import { NumberElementRegistration } from '@/components/schema-engine/forms/inputs/form-number.registration';
 import { ArrayElementRegistration } from '@/components/schema-engine/forms/inputs/form-array-elements.registration';
+import type { InputFieldConfig } from '@/components/schema-engine/forms/inputs/form-input.types';
 
 type Assert<T extends true> = T;
 
@@ -126,7 +127,7 @@ engine.defineForm({
 });
 
 function assertInputElement(element: Extract<FormEngine.ElementConfig, { $type: 'input' }>) {
-	const _inputType: string = element.inputType;
+	const _inputType: InputFieldConfig['inputType'] = element.inputType;
 	void _inputType;
 }
 
@@ -183,15 +184,14 @@ const _invalidElement = {
 	name: 'x',
 } satisfies FormEngine.ElementConfig;
 
-const _invalidInput = {
+const _defaultInput = {
 	$type: 'input',
 	id: 'x',
 	name: 'x',
-	// @ts-expect-error -- input elements require inputType
 } satisfies FormEngine.ElementConfig;
 
 void engine;
 void fieldConfigs;
 void _invalidElement;
-void _invalidInput;
+void _defaultInput;
 void assertSelectElement;
