@@ -12,10 +12,12 @@ It is used by higher-level packages such as `@schema-engine/forms` and `@schema-
 ## Installation
 
 ```bash
-bun add @schema-engine/registry zod
+bun add @schema-engine/registry
 ```
 
 ## Core Types
+
+The registry itself has no schema-library dependency. Install the Standard Schema provider your application prefers; the examples below use `zod/mini` and therefore require the `zod` package in the consuming application.
 
 ### `BaseRegistration`
 
@@ -26,7 +28,7 @@ Every registry entry must provide:
 - `metadata`: display metadata such as `name` and `description`
 
 ```typescript
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import type { BaseRegistration } from '@schema-engine/registry';
 
 interface FeatureRegistration extends BaseRegistration {
@@ -50,7 +52,7 @@ type WidgetRegistration = ComponentRegistration<string, { title: string }, { id:
 Extend `BaseRegistry` when you need a typed lookup table keyed by `$type`.
 
 ```typescript
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { BaseRegistry } from '@schema-engine/registry';
 import type { BaseRegistration } from '@schema-engine/registry';
 
@@ -69,7 +71,7 @@ const registry = new PluginRegistry();
 
 registry.register({
 	$type: 'sync-cache',
-	schema: z.object({ enabled: z.boolean() }),
+	schema: z.strictObject({ enabled: z.boolean() }),
 	metadata: {
 		name: 'Sync Cache',
 		description: 'Synchronizes cached content',
@@ -99,7 +101,7 @@ Available operations:
 Extend `ComponentRegistry` when registrations must include a `render` function.
 
 ```typescript
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { ComponentRegistry } from '@schema-engine/registry';
 import type { ComponentRegistration } from '@schema-engine/registry';
 
@@ -115,7 +117,7 @@ const widgets = new WidgetRegistry();
 
 widgets.register({
 	$type: 'card',
-	schema: z.object({ title: z.string() }),
+	schema: z.strictObject({ title: z.string() }),
 	metadata: {
 		name: 'Card Widget',
 	},
