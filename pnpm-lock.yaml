@@ -194,9 +194,6 @@ importers:
       typescript:
         specifier: ^5
         version: 5.9.3
-      zod:
-        specifier: ^4.0.17
-        version: 4.5.4
     devDependencies:
       esbuild:
         specifier: ^0.27.0
@@ -207,6 +204,9 @@ importers:
       vitest:
         specifier: ^4.0.13
         version: 4.1.11(@types/node@24.13.3)(@vitest/browser-playwright@4.1.11)(msw@2.15.0(@types/node@24.13.3)(typescript@5.9.3))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0))
+      zod:
+        specifier: ^4.0.17
+        version: 4.5.4
 
   packages/forms:
     dependencies:
@@ -216,9 +216,9 @@ importers:
       '@schema-engine/registry':
         specifier: workspace:*
         version: link:../registry
-      libphonenumber-js:
-        specifier: ^1.13.12
-        version: 1.13.12
+      '@standard-schema/spec':
+        specifier: ^1.1.0
+        version: 1.1.0
       typescript:
         specifier: ^5
         version: 5.9.3
@@ -226,9 +226,6 @@ importers:
         specifier: ^4.0.17
         version: 4.5.4
     devDependencies:
-      '@standard-schema/spec':
-        specifier: ^1.1.0
-        version: 1.1.0
       effect:
         specifier: ^3.22.1
         version: 3.22.1
@@ -525,13 +522,13 @@ importers:
       '@ecopages/logger':
         specifier: latest
         version: 0.2.3(typescript@5.9.3)
+      '@standard-schema/spec':
+        specifier: ^1.1.0
+        version: 1.1.0
       typescript:
         specifier: ^5
         version: 5.9.3
     devDependencies:
-      '@standard-schema/spec':
-        specifier: ^1.1.0
-        version: 1.1.0
       esbuild:
         specifier: ^0.27.0
         version: 0.27.7
@@ -553,9 +550,6 @@ importers:
       '@schema-engine/forms-react':
         specifier: workspace:*
         version: link:../packages/forms-react
-      zod:
-        specifier: ^4.0.17
-        version: 4.5.4
 
 packages:
 

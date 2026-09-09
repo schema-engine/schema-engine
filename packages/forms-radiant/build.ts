@@ -90,6 +90,6 @@ await buildLib({
 		'libphonenumber-js',
 		'country-flag-icons',
 		'country-flag-icons/string/3x2',
-		'zod',
+		'zod/mini',
 	],
 });
