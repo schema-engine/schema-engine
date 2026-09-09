@@ -1,9 +1,9 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
 
-export const SubmitButtonSchema = BaseFieldSchema.extend({
+export const SubmitButtonSchema = z.extend(BaseFieldSchema, {
 	$type: z.literal('submit'),
-	label: z.string().default('Submit'),
+	label: z._default(z.string(), 'Submit'),
 });
 
 export type SubmitButtonConfig = z.infer<typeof SubmitButtonSchema>;

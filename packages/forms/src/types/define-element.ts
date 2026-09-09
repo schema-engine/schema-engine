@@ -2,6 +2,7 @@ import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { ElementMetadata } from './metadata';
 import type { InputRegistration, StaticRegistration } from './registration';
 import type { NormalizedElementConfig } from '@/lib/normalized-form-config';
+import type { AnyValidationRegistration } from '@/schemas/validation/types';
 
 type InferOutput<TSchema> = TSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TSchema> : never;
 
@@ -27,9 +28,22 @@ type DefineElementRegistration<TType extends string, TSchema extends StandardSch
 	render: (props: TProps) => unknown;
 };
 
+type DefineInputRegistration<
+	TType extends string,
+	TSchema extends StandardSchemaV1,
+	TProps,
+> = DefineElementRegistration<TType, TSchema, TProps> & {
+	validations?: readonly AnyValidationRegistration[];
+};
+
 type DefineElementArg<TType extends string, TSchema extends StandardSchemaV1, TProps> =
 	WithNormalizedChildren<InferOutput<TSchema>> extends TProps
 		? DefineElementRegistration<TType, TSchema, TProps>
+		: never;
+
+type DefineInputArg<TType extends string, TSchema extends StandardSchemaV1, TProps> =
+	WithNormalizedChildren<InferOutput<TSchema>> extends TProps
+		? DefineInputRegistration<TType, TSchema, TProps>
 		: never;
 
 /**
@@ -37,12 +51,13 @@ type DefineElementArg<TType extends string, TSchema extends StandardSchemaV1, TP
  *
  * Form authors supply schema input (defaults stay optional). The render function
  * must accept schema output, with container `elements` already normalized.
+ * `validations` are registered when the element is added to a form engine.
  */
 export function defineInput<
 	const TType extends string,
 	TSchema extends StandardSchemaV1,
 	TProps = WithNormalizedChildren<InferOutput<TSchema>>,
->(registration: DefineElementArg<TType, TSchema, TProps>): InputRegistration<TType, TSchema, TProps> {
+>(registration: DefineInputArg<TType, TSchema, TProps>): InputRegistration<TType, TSchema, TProps> {
 	return registration as InputRegistration<TType, TSchema, TProps>;
 }
 

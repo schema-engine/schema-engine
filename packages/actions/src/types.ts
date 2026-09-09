@@ -125,6 +125,8 @@ export interface ActionMetadata<TTrigger = string> extends RegistrationMetadata 
  *
  * @example
  * ```typescript
+ * import * as z from 'zod/mini';
+ *
  * const logAction: ActionRegistration<LogActionConfig, AppContext, AppTrigger> = {
  *   $type: 'log',
  *   schema: z.object({

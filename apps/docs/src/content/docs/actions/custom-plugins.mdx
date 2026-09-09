@@ -1,6 +1,6 @@
 ---
-title: "Custom Plugins"
-description: "Author and register your own action plugins."
+title: 'Custom Plugins'
+description: 'Author and register your own action plugins.'
 group: Actions
 order: 8
 ---
@@ -12,14 +12,16 @@ order: 8
 ## Define a Config Schema
 
 ```typescript
-export const WebhookActionSchema = z.object({
+import * as z from 'zod/mini';
+
+export const WebhookActionSchema = z.strictObject({
 	id: z.string(),
 	$type: z.literal('webhook'),
-	url: z.string().url(),
-	method: z.enum(['POST', 'PUT']).default('POST'),
-	body: z.record(z.string(), z.unknown()).optional(),
-	enabled: z.boolean().optional(),
-	triggers: z.array(z.string()).optional(),
+	url: z.url(),
+	method: z._default(z.enum(['POST', 'PUT']), 'POST'),
+	body: z.optional(z.record(z.string(), z.unknown())),
+	enabled: z.optional(z.boolean()),
+	triggers: z.optional(z.array(z.string())),
 });
 
 export type WebhookActionConfig = z.infer<typeof WebhookActionSchema>;

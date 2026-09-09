@@ -1,6 +1,6 @@
 ---
-title: "Overview"
-description: "The base registry system used by every other package."
+title: 'Overview'
+description: 'The base registry system used by every other package.'
 group: Registry
 order: 1
 ---
@@ -12,21 +12,25 @@ Base registry system for managing named resources in an extensible architecture.
 ## Quick Look
 
 ```typescript
+import * as z from 'zod/mini';
+
 interface Feature extends BaseRegistration {
-  $type: string;
-  execute: () => void;
+	$type: string;
+	execute: () => void;
 }
 
 class FeatureRegistry extends BaseRegistry<string, Feature> {
-  get registryName() { return 'Feature'; }
+	get registryName() {
+		return 'Feature';
+	}
 }
 
 const registry = new FeatureRegistry();
 registry.register({
-  $type: 'dark-mode',
-  schema: z.object({}), 
-  metadata: { name: 'Dark Mode' },
-  execute: () => console.log('Dark mode active')
+	$type: 'dark-mode',
+	schema: z.object({}),
+	metadata: { name: 'Dark Mode' },
+	execute: () => console.log('Dark mode active'),
 });
 
 registry.get('dark-mode')?.execute();
@@ -43,12 +47,15 @@ The flow is: define a registration shape, create a registry subclass, then regis
 - **Type Safe**: Full TypeScript support with generic constraints for keys and values.
 - **Extensible**: Abstract `BaseRegistry` and `ComponentRegistry` classes designed for domain-specific extension.
 - **Logging**: Built-in debug logging for registration lifecycle events.
-- **Zod Integration**: Native support for registering item schemas to a centralized Zod registry for validation and inference.
+- **Standard Schema boundary**: Register schemas from Zod Mini, Zod, Valibot, Effect Schema, or another compatible provider.
 
 ## Installation
 
 ```bash
-bun add @schema-engine/registry zod
+bun add @schema-engine/registry
+
+# Install zod only when authoring schemas with zod/mini.
+bun add zod
 ```
 
 ## Next Steps

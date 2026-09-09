@@ -12,19 +12,20 @@ import { logger } from '@/lib/logger';
 import { ElementRegistry, RecipeRegistry } from '@/registries';
 import { createFormConfigShape } from '@/schemas/form-config-shape';
 import { ActionRegistry } from '@schema-engine/actions';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { isZodType } from '@/lib/zod-json-schema';
 import { assertStandardSchema } from '@/lib/standard-schema';
 import type { FormActionTrigger } from '@/actions';
+import { validationRegistry } from '@/schemas/validation';
 
-function createUnionSchema(schemas: z.ZodTypeAny[]): z.ZodTypeAny {
+function createUnionSchema(schemas: z.ZodMiniType[]): z.ZodMiniType {
 	if (schemas.length === 0) {
 		return z.never();
 	}
 	if (schemas.length === 1) {
 		return schemas[0];
 	}
-	return z.union(schemas as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]]);
+	return z.union(schemas as [z.ZodMiniType, z.ZodMiniType, ...z.ZodMiniType[]]);
 }
 
 /**
@@ -32,7 +33,7 @@ function createUnionSchema(schemas: z.ZodTypeAny[]): z.ZodTypeAny {
  * Native Standard Schema registrations contribute a literal `$type` envelope
  * so mixed engines do not silently drop supported types.
  */
-function createRegistrationSchema(registrations: Array<{ $type: string; schema: unknown }>): z.ZodTypeAny {
+function createRegistrationSchema(registrations: Array<{ $type: string; schema: unknown }>): z.ZodMiniType {
 	const parts = registrations.map((registration) =>
 		isZodType(registration.schema) ? registration.schema : z.looseObject({ $type: z.literal(registration.$type) }),
 	);
@@ -75,6 +76,9 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 		assertStandardSchema(element.schema, `Element '${element.$type}' schema`);
 		elementRegistry.register(element as unknown as Parameters<ElementRegistry['register']>[0]);
 	}
+
+	registerLastWinsElementValidations(lists.elements ?? []);
+
 	for (const recipe of lists.recipes ?? []) {
 		assertStandardSchema(recipe.schema, `Recipe '${recipe.$type}' schema`);
 		recipeRegistry.register(recipe as unknown as Parameters<RecipeRegistry['register']>[0]);
@@ -135,4 +139,21 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 		schemaArtifacts,
 		formConfigSchema,
 	});
+}
+
+/**
+ * Registers `validations` from the last-wins element for each `$type`.
+ */
+function registerLastWinsElementValidations(elements: readonly ElementRegistrationConstraint[]): void {
+	const seen = new Set<string>();
+	for (let index = elements.length - 1; index >= 0; index -= 1) {
+		const element = elements[index];
+		if (seen.has(element.$type)) {
+			continue;
+		}
+		seen.add(element.$type);
+		if (element.validations?.length) {
+			validationRegistry.registerMultiple([...element.validations]);
+		}
+	}
 }

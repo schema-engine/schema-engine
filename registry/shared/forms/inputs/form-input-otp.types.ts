@@ -1,14 +1,14 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
 
 export const InputOTPFieldExtensionSchema = z.object({
-	length: z.number().positive().default(6).optional(),
-	autoFocus: z.boolean().optional(),
-	pattern: z.enum(['numeric', 'alphanumeric']).default('numeric').optional(),
-	disabled: z.boolean().optional(),
+	length: z.optional(z._default(z.number().check(z.positive()), 6)),
+	autoFocus: z.optional(z.boolean()),
+	pattern: z.optional(z._default(z.enum(['numeric', 'alphanumeric']), 'numeric')),
+	disabled: z.optional(z.boolean()),
 });
 
-export const InputOTPFieldConfigSchema = BaseFieldSchema.extend({
+export const InputOTPFieldConfigSchema = z.extend(BaseFieldSchema, {
 	$type: z.literal('input-otp'),
 	...InputOTPFieldExtensionSchema.shape,
 });

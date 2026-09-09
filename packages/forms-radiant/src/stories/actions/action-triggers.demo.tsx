@@ -10,7 +10,7 @@ import type {
 	BuilderActionRegistration,
 } from '@schema-engine/forms';
 import type { FormConfig } from '@schema-engine/forms/schemas';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { findNearestRuiForm } from '@/lib/rui-form-utils';
 import { schemaFormRegistrations } from '@/registrations';
@@ -45,9 +45,9 @@ const actionEventDispatcher = new ActionEventDispatcher();
 const LoggerActionSchema = z.object({
 	id: z.string(),
 	$type: z.literal('event_logger'),
-	description: z.string().optional(),
-	enabled: z.boolean().default(true),
-	triggers: FormActionTriggerSchema.array().optional(),
+	description: z.optional(z.string()),
+	enabled: z._default(z.boolean(), true),
+	triggers: z.optional(z.array(FormActionTriggerSchema)),
 });
 type LoggerAction = z.infer<typeof LoggerActionSchema>;
 

@@ -22,23 +22,23 @@ const engine = createReactFormEngine({ elements: schemaFormRegistrations });
 
 The aggregate `schema-form` item currently includes:
 
-| `$type` | Purpose |
-| --- | --- |
-| `input` | Text, email, password, URL, telephone, and date inputs |
-| `textarea` | Multi-line text |
-| `number` | Numeric input |
-| `select` | Select menu |
-| `checkbox`, `checkbox-group` | Boolean and multi-choice inputs |
-| `radio` | Single-choice group |
-| `switch` | Boolean toggle |
-| `slider` | Numeric range |
-| `combobox` | Searchable choice input |
-| `drop-zone` | File drop input |
-| `fieldSet` | Grouped content |
-| `input-otp` | One-time-password input |
-| `phone-input`, `masked-input` | Specialized text inputs |
-| `arrayElements` | Repeated element groups |
-| `submit`, `submission-alert` | Action and submission feedback |
+| `$type`                       | Purpose                                                |
+| ----------------------------- | ------------------------------------------------------ |
+| `input`                       | Text, email, password, URL, telephone, and date inputs |
+| `textarea`                    | Multi-line text                                        |
+| `number`                      | Numeric input                                          |
+| `select`                      | Select menu                                            |
+| `checkbox`, `checkbox-group`  | Boolean and multi-choice inputs                        |
+| `radio`                       | Single-choice group                                    |
+| `switch`                      | Boolean toggle                                         |
+| `slider`                      | Numeric range                                          |
+| `combobox`                    | Searchable choice input                                |
+| `drop-zone`                   | File drop input                                        |
+| `fieldSet`                    | Grouped content                                        |
+| `input-otp`                   | One-time-password input                                |
+| `phone-input`, `masked-input` | Specialized text inputs                                |
+| `arrayElements`               | Repeated element groups                                |
+| `submit`, `submission-alert`  | Action and submission feedback                         |
 
 The registry item is an installation boundary: applications can select a
 smaller set of registrations or replace one registration before building the
@@ -78,22 +78,24 @@ binding:
 ```tsx
 import type { InputRegistration } from '@schema-engine/forms';
 import { useControlledFormElement } from '@schema-engine/forms-react';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 
 const RatingSchema = z.object({
 	$type: z.literal('rating'),
 	id: z.string(),
 	name: z.string(),
-	label: z.string().optional(),
-	max: z.number().int().positive().default(5),
+	label: z.optional(z.string()),
+	max: z._default(z.number().check(z.int(), z.positive()), 5),
 });
 
-function Rating({ ...config }: z.infer<typeof RatingSchema>) {
+function Rating({ ...config }: z.output<typeof RatingSchema>) {
 	const { value, onChange, fieldProps } = useControlledFormElement(config);
-	return <input {...fieldProps} type="number" value={value ?? ''} onChange={(event) => onChange(event.target.value)} />;
+	return (
+		<input {...fieldProps} type="number" value={value ?? ''} onChange={(event) => onChange(event.target.value)} />
+	);
 }
 
-const ratingRegistration: InputRegistration<'rating', z.infer<typeof RatingSchema>> = {
+const ratingRegistration: InputRegistration<'rating', typeof RatingSchema> = {
 	$type: 'rating',
 	schema: RatingSchema,
 	render: Rating,
@@ -107,6 +109,6 @@ const ratingRegistration: InputRegistration<'rating', z.infer<typeof RatingSchem
 const engine = createReactFormEngine({ elements: [ratingRegistration] });
 ```
 
-In a real registry item, make the render props type explicit and convert the
-Zod schema with the package's standard-schema helper when required by the
-registration type.
+In a real registry item, make the render props type explicit. The Mini schema
+already implements Standard Schema, so it can be passed directly as the
+registration schema.

@@ -1,9 +1,11 @@
 ---
-title: "Custom Validations"
-description: "Author your own validation rules and integrate them with the engine."
+title: 'Custom Validations'
+description: 'Author your own validation rules and integrate them with the engine.'
 group: Forms
 order: 9
 ---
+
+import * as z from 'zod/mini';
 
 # Custom Validations
 
@@ -16,24 +18,22 @@ While Form Engine provides comprehensive built-in validations, you might need cu
 Here's how to create and register a basic custom validation:
 
 ```typescript
-// Register a phone number validator
 validationRegistry.register({
-  type: 'phone',
+  type: 'postalCode',
   category: 'string',
   handler: (rule) => {
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-    return z.string().regex(phoneRegex, rule.message || 'Invalid phone number');
+    const postalCodeRegex = /^\d{5}(?:-\d{4})?$/;
+    return z.string().check(z.regex(postalCodeRegex, rule.message || 'Invalid postal code'));
   }
 });
 
-// Now use it in form configurations
 {
   id: 'input',
-  name: 'phoneNumber',
-  label: 'Phone Number',
+  name: 'postalCode',
+  label: 'Postal code',
   rules: [
-    { type: 'required', message: 'Phone number is required' },
-    { type: 'phone', message: 'Please enter a valid phone number' }
+    { type: 'required', message: 'Postal code is required' },
+    { type: 'postalCode', message: 'Please enter a valid postal code' }
   ]
 }
 ```
@@ -43,21 +43,17 @@ validationRegistry.register({
 Create validations that accept configuration parameters:
 
 ```typescript
-// Register a credit card validator
 validationRegistry.register({
   type: 'creditCard',
   category: 'string',
   handler: (rule) => {
-    return z.string().refine((value) => {
-      // Remove spaces and dashes
+    return z.string().check(z.refine((value) => {
       const cleanValue = value.replace(/[\s-]/g, '');
 
-      // Check if it's numeric and has valid length
       if (!/^\d+$/.test(cleanValue) || cleanValue.length < 13 || cleanValue.length > 19) {
         return false;
       }
 
-      // Luhn algorithm validation
       let sum = 0;
       let isEven = false;
 
@@ -76,11 +72,10 @@ validationRegistry.register({
       }
 
       return sum % 10 === 0;
-    }, rule.message || 'Invalid credit card number');
+    }, rule.message || 'Invalid credit card number'));
   }
 });
 
-// Register a custom length validator with range
 validationRegistry.register({
   type: 'lengthRange',
   category: 'string',
@@ -89,18 +84,17 @@ validationRegistry.register({
     let schema = z.string();
 
     if (min !== undefined) {
-      schema = schema.min(min, `Must be at least ${min} characters`);
+      schema = schema.check(z.minLength(min, `Must be at least ${min} characters`));
     }
 
     if (max !== undefined) {
-      schema = schema.max(max, `Must be no more than ${max} characters`);
+      schema = schema.check(z.maxLength(max, `Must be no more than ${max} characters`));
     }
 
     return schema;
   }
 });
 
-// Usage with parameters
 {
   id: 'input',
   name: 'description',
@@ -120,26 +114,23 @@ validationRegistry.register({
 ### Business Rule Validations
 
 ```typescript
-// Company email domain validation
 validationRegistry.register({
 	type: 'companyEmail',
 	category: 'string',
 	handler: (rule) => {
 		const allowedDomains = rule.value?.domains || ['company.com'];
-		return z
-			.string()
-			.email('Invalid email format')
-			.refine(
+		return z.email('Invalid email format').check(
+			z.refine(
 				(email) => {
 					const domain = email.split('@')[1];
 					return allowedDomains.includes(domain);
 				},
 				rule.message || `Email must be from one of: ${rule.value?.domains?.join(', ')}`,
-			);
+			),
+		);
 	},
 });
 
-// Usage
 {
 	rules: [
 		{
@@ -154,14 +145,13 @@ validationRegistry.register({
 ### Age Validation with Date
 
 ```typescript
-// Age validation based on birth date
 validationRegistry.register({
   type: 'ageFromBirthDate',
   category: 'date',
   handler: (rule) => {
     const { minAge, maxAge } = rule.value || {};
 
-    return z.string().refine((dateString) => {
+    return z.string().check(z.refine((dateString) => {
       const birthDate = new Date(dateString);
       const today = new Date();
       const age = today.getFullYear() - birthDate.getFullYear();
@@ -175,11 +165,10 @@ validationRegistry.register({
       if (maxAge !== undefined && actualAge > maxAge) return false;
 
       return true;
-    }, rule.message || `Age must be between ${rule.value?.minAge} and ${rule.value?.maxAge}`);
+    }, rule.message || `Age must be between ${rule.value?.minAge} and ${rule.value?.maxAge}`));
   }
 });
 
-// Usage
 {
   id: 'input',
   inputType: 'date',
@@ -202,20 +191,19 @@ validationRegistry.register({
 	type: 'ssn',
 	category: 'string',
 	handler: (rule) => {
-		return z
-			.string()
-			.regex(/^\d{3}-\d{2}-\d{4}$/, 'SSN must be in format XXX-XX-XXXX')
-			.refine((ssn) => {
+		return z.string().check(
+			z.regex(/^\d{3}-\d{2}-\d{4}$/, 'SSN must be in format XXX-XX-XXXX'),
+			z.refine((ssn) => {
 				const parts = ssn.split('-');
 				const [area, group, serial] = parts;
 
-				// Basic SSN validation rules
 				if (area === '000' || area === '666' || area.startsWith('9')) return false;
 				if (group === '00') return false;
 				if (serial === '0000') return false;
 
 				return true;
-			}, rule.message || 'Invalid Social Security Number');
+			}, rule.message || 'Invalid Social Security Number'),
+		);
 	},
 });
 ```
@@ -235,33 +223,34 @@ validationRegistry.register({
 			requireSpecialChars: true,
 		};
 
-		return z.string().refine((password) => {
-			if (requirements.minLength && password.length < requirements.minLength) {
-				return false;
-			}
+		return z.string().check(
+			z.refine((password) => {
+				if (requirements.minLength && password.length < requirements.minLength) {
+					return false;
+				}
 
-			if (requirements.requireUppercase && !/[A-Z]/.test(password)) {
-				return false;
-			}
+				if (requirements.requireUppercase && !/[A-Z]/.test(password)) {
+					return false;
+				}
 
-			if (requirements.requireLowercase && !/[a-z]/.test(password)) {
-				return false;
-			}
+				if (requirements.requireLowercase && !/[a-z]/.test(password)) {
+					return false;
+				}
 
-			if (requirements.requireNumbers && !/\d/.test(password)) {
-				return false;
-			}
+				if (requirements.requireNumbers && !/\d/.test(password)) {
+					return false;
+				}
 
-			if (requirements.requireSpecialChars && !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-				return false;
-			}
+				if (requirements.requireSpecialChars && !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+					return false;
+				}
 
-			return true;
-		}, rule.message || 'Password does not meet strength requirements');
+				return true;
+			}, rule.message || 'Password does not meet strength requirements'),
+		);
 	},
 });
 
-// Usage with custom requirements
 {
 	rules: [
 		{
@@ -284,41 +273,33 @@ validationRegistry.register({
 For validations that depend on other field values, use the form context:
 
 ```typescript
-// Password confirmation validation
 validationRegistry.register({
   type: 'confirmPassword',
   category: 'string',
-  handler: (rule) => {
-    return z.string().refine((confirmPassword, ctx) => {
-      // Access form data through context (implementation may vary based on your form system)
-      const formData = ctx.path.length > 0 ? ctx.path[0] : {};
-      const password = formData?.password;
-
-      return password === confirmPassword;
-    }, rule.message || 'Passwords do not match');
+  handler: (rule, formData) => {
+    return z.string().check(z.refine(
+      (confirmPassword) => formData?.password === confirmPassword,
+      rule.message || 'Passwords do not match',
+    ));
   }
 });
 
-// Alternative approach using async validation for cross-field dependencies
 validationRegistry.register({
   type: 'conditionalRequired',
   category: 'string',
-  handler: (rule) => {
-    return z.string().optional().refine((value, ctx) => {
-      const formData = ctx.path.length > 0 ? ctx.path[0] : {};
+  handler: (rule, formData) => {
+    return z.optional(z.string()).check(z.refine((value) => {
       const dependentField = formData?.[rule.value?.dependsOn];
 
-      // Only require this field if the dependent field has a specific value
       if (rule.value?.when === dependentField && !value) {
         return false;
       }
 
       return true;
-    }, rule.message || 'This field is required');
+    }, rule.message || 'This field is required'));
   }
 });
 
-// Usage
 {
   id: 'input',
   name: 'companyName',
@@ -335,8 +316,6 @@ validationRegistry.register({
 
 ## Async Custom Validations
 
-## Async Custom Validations
-
 > **Best Practice:**
 > For most server-side validations, use the built-in `type: 'async'` validator. It provides caching, dependency resolution, debouncing, and error handling out of the box.
 
@@ -347,11 +326,10 @@ validationRegistry.register({
   type: 'async',
   url: '/api/check-username',
   method: 'POST',
-  // Use extraPayload for additional custom data if needed
-  extraPayload: { validationType: 'premium' }, // Optional
+  extraPayload: { validationType: 'premium' },
   expectedResponse: { available: true },
   debounce: 500,
-  cacheTTL: 300000, // 5 minutes
+  cacheTTL: 300000,
   message: 'Username is already taken'
 }
 ```
@@ -361,34 +339,33 @@ validationRegistry.register({
 For complex async validation logic that can't be handled by the built-in async type, create custom async validators:
 
 ```typescript
-// Custom async validator for complex business logic
 validationRegistry.register({
 	type: 'uniqueUsername',
-	category: 'async',
+	category: 'generic',
 	handler: (rule) => {
-		return z.string().refine(async (username) => {
-			try {
-				const response = await fetch('/api/check-username', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ username }),
-				});
+		return z.string().check(
+			z.refine(async (username) => {
+				try {
+					const response = await fetch('/api/check-username', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ username }),
+					});
 
-				const result = await response.json();
-				return result.available;
-			} catch (error) {
-				// Handle network errors gracefully
-				console.error('Username validation failed:', error);
-				return false;
-			}
-		}, rule.message || 'Username is already taken');
+					const result = await response.json();
+					return result.available;
+				} catch (error) {
+					console.error('Username validation failed:', error);
+					return false;
+				}
+			}, rule.message || 'Username is already taken'),
+		);
 	},
 });
 
-// For more complex async validations with dependencies
 validationRegistry.register({
 	type: 'validAddress',
-	category: 'async',
+	category: 'generic',
 	handler: (rule) => {
 		return z
 			.object({
@@ -397,16 +374,18 @@ validationRegistry.register({
 				state: z.string(),
 				zip: z.string(),
 			})
-			.refine(async (address) => {
-				const response = await fetch('/api/validate-address', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify(address),
-				});
+			.check(
+				z.refine(async (address) => {
+					const response = await fetch('/api/validate-address', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify(address),
+					});
 
-				const result = await response.json();
-				return result.valid;
-			}, rule.message || 'Address could not be validated');
+					const result = await response.json();
+					return result.valid;
+				}, rule.message || 'Address could not be validated'),
+			);
 	},
 });
 ```
@@ -431,39 +410,41 @@ const customValidations = [
 			};
 
 			const pattern = patterns[country];
-			return z.string().regex(pattern, rule.message || `Invalid ${country} postal code`);
+			return z.string().check(z.regex(pattern, rule.message || `Invalid ${country} postal code`));
 		},
 	},
 	{
 		type: 'workingHours',
 		category: 'time',
 		handler: (rule) => {
-			return z.string().refine((time) => {
-				const [hours, minutes] = time.split(':').map(Number);
-				const totalMinutes = hours * 60 + minutes;
+			return z.string().check(
+				z.refine((time) => {
+					const [hours, minutes] = time.split(':').map(Number);
+					const totalMinutes = hours * 60 + minutes;
 
-				// Working hours: 9 AM to 5 PM (540 to 1020 minutes)
-				return totalMinutes >= 540 && totalMinutes <= 1020;
-			}, rule.message || 'Time must be during working hours (9 AM - 5 PM)');
+					return totalMinutes >= 540 && totalMinutes <= 1020;
+				}, rule.message || 'Time must be during working hours (9 AM - 5 PM)'),
+			);
 		},
 	},
 	{
 		type: 'fileSize',
 		category: 'file',
 		handler: (rule) => {
-			const maxSize = rule.value?.maxSize || 1024 * 1024; // 1MB default
+			const maxSize = rule.value?.maxSize || 1024 * 1024;
 
-			return z.instanceof(File).refine(
-				(file) => {
-					return file.size <= maxSize;
-				},
-				rule.message || `File size must be less than ${maxSize / 1024 / 1024}MB`,
+			return z.instanceof(File).check(
+				z.refine(
+					(file) => {
+						return file.size <= maxSize;
+					},
+					rule.message || `File size must be less than ${maxSize / 1024 / 1024}MB`,
+				),
 			);
 		},
 	},
 ];
 
-// Register all at once
 validationRegistry.registerMultiple(customValidations);
 ```
 
@@ -472,43 +453,41 @@ validationRegistry.registerMultiple(customValidations);
 Always test your custom validations thoroughly:
 
 ```typescript
-import { describe, it, expect } from 'bun:test';
-describe('Custom Phone Validation', () => {
+import { describe, it, expect } from 'vitest';
+describe('Custom postal code validation', () => {
 	beforeAll(() => {
 		validationRegistry.register({
-			type: 'phone',
+			type: 'postalCode',
 			category: 'string',
 			handler: (rule) => {
-				const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-				return z.string().regex(phoneRegex, rule.message || 'Invalid phone number');
+				const postalCodeRegex = /^\d{5}(?:-\d{4})?$/;
+				return z.string().check(z.regex(postalCodeRegex, rule.message || 'Invalid postal code'));
 			},
 		});
 	});
 
-	it('should validate correct phone numbers', () => {
-		const schema = createZodSchemaFromRules([{ type: 'phone', message: 'Invalid phone number' }]);
+	it('should validate correct postal codes', () => {
+		const schema = createZodSchemaFromRules([{ type: 'postalCode', message: 'Invalid postal code' }]);
 
-		expect(schema.safeParse('+1234567890').success).toBe(true);
-		expect(schema.safeParse('1234567890').success).toBe(true);
+		expect(schema.safeParse('12345').success).toBe(true);
+		expect(schema.safeParse('12345-6789').success).toBe(true);
 	});
 
-	it('should reject invalid phone numbers', () => {
-		const schema = createZodSchemaFromRules([{ type: 'phone', message: 'Invalid phone number' }]);
+	it('should reject invalid postal codes', () => {
+		const schema = createZodSchemaFromRules([{ type: 'postalCode', message: 'Invalid postal code' }]);
 
-		expect(schema.safeParse('+0123456789').success).toBe(false);
-		expect(schema.safeParse('abc123').success).toBe(false);
+		expect(schema.safeParse('1234').success).toBe(false);
+		expect(schema.safeParse('abcde').success).toBe(false);
 		expect(schema.safeParse('').success).toBe(false);
 	});
 
 	it('should use custom error message', () => {
-		const schema = createZodSchemaFromRules([
-			{ type: 'phone', message: 'Please enter a valid phone number' },
-		]);
+		const schema = createZodSchemaFromRules([{ type: 'postalCode', message: 'Please enter a valid postal code' }]);
 
 		const result = schema.safeParse('invalid');
 		expect(result.success).toBe(false);
 		if (!result.success) {
-			expect(result.error.errors[0].message).toBe('Please enter a valid phone number');
+			expect(result.error.issues[0].message).toBe('Please enter a valid postal code');
 		}
 	});
 });
@@ -521,23 +500,12 @@ describe('Custom Phone Validation', () => {
 Place expensive validations last in the rule chain:
 
 ```typescript
-// Good - cheap validations first
 {
-	rules: [
-		{ type: 'required' }, // Fast
-		{ type: 'minLength', value: 3 }, // Fast
-		{ type: 'email' }, // Medium
-		{ type: 'uniqueEmail' }, // Slow (async)
-	];
+	rules: [{ type: 'required' }, { type: 'minLength', value: 3 }, { type: 'email' }, { type: 'uniqueEmail' }];
 }
 
-// Poor - expensive validation first
 {
-	rules: [
-		{ type: 'uniqueEmail' }, // Slow (async)
-		{ type: 'required' }, // Fast
-		{ type: 'email' }, // Medium
-	];
+	rules: [{ type: 'uniqueEmail' }, { type: 'required' }, { type: 'email' }];
 }
 ```
 
@@ -550,29 +518,29 @@ let debounceTimer;
 
 validationRegistry.register({
 	type: 'debouncedAsync',
-	category: 'async',
+	category: 'generic',
 	handler: (rule) => {
-		return z.string().refine(async (value) => {
-			// Clear existing timer
-			clearTimeout(debounceTimer);
+		return z.string().check(
+			z.refine(async (value) => {
+				clearTimeout(debounceTimer);
 
-			// Set new timer
-			return new Promise((resolve) => {
-				debounceTimer = setTimeout(async () => {
-					try {
-						const response = await fetch(rule.value?.url, {
-							method: 'POST',
-							body: JSON.stringify({ value }),
-							headers: { 'Content-Type': 'application/json' },
-						});
-						const result = await response.json();
-						resolve(result.valid);
-					} catch (error) {
-						resolve(false);
-					}
-				}, rule.value?.delay || 300);
-			});
-		}, rule.message);
+				return new Promise((resolve) => {
+					debounceTimer = setTimeout(async () => {
+						try {
+							const response = await fetch(rule.value?.url, {
+								method: 'POST',
+								body: JSON.stringify({ value }),
+								headers: { 'Content-Type': 'application/json' },
+							});
+							const result = await response.json();
+							resolve(result.valid);
+						} catch (error) {
+							resolve(false);
+						}
+					}, rule.value?.delay || 300);
+				});
+			}, rule.message),
+		);
 	},
 });
 ```
@@ -584,11 +552,9 @@ validationRegistry.register({
 Choose descriptive type names that clearly indicate what the validation does:
 
 ```typescript
-// Good - clear and descriptive
 validationRegistry.register({ type: 'socialSecurityNumber', ... });
 validationRegistry.register({ type: 'businessEmailDomain', ... });
 
-// Poor - vague or cryptic
 validationRegistry.register({ type: 'ssn', ... });
 validationRegistry.register({ type: 'customVal1', ... });
 ```
@@ -598,14 +564,14 @@ validationRegistry.register({ type: 'customVal1', ... });
 Always include meaningful default error messages:
 
 ```typescript
-// Good - helpful default message
 handler: (rule) => {
-	return z.string().regex(pattern, rule.message || 'Please enter a valid phone number in format: +1234567890');
+	return z
+		.string()
+		.check(z.regex(pattern, rule.message || 'Please enter a valid phone number in format: +1234567890'));
 };
 
-// Poor - unhelpful default
 handler: (rule) => {
-	return z.string().regex(pattern, rule.message || 'Invalid format');
+	return z.string().check(z.regex(pattern, rule.message || 'Invalid format'));
 };
 ```
 
@@ -618,22 +584,19 @@ validationRegistry.register({
 	type: 'creditCard',
 	category: 'string',
 	handler: (rule) => {
-		return z.string().refine((value) => {
-			// Handle null/undefined
-			if (!value) return false;
+		return z.string().check(
+			z.refine((value) => {
+				if (!value) return false;
 
-			// Handle non-string values
-			if (typeof value !== 'string') return false;
+				if (typeof value !== 'string') return false;
 
-			// Clean the input
-			const cleanValue = value.replace(/[\s-]/g, '');
+				const cleanValue = value.replace(/[\s-]/g, '');
 
-			// Validate format
-			if (!/^\d+$/.test(cleanValue)) return false;
+				if (!/^\d+$/.test(cleanValue)) return false;
 
-			// Your validation logic here...
-			return true;
-		}, rule.message || 'Please enter a valid credit card number');
+				return true;
+			}, rule.message || 'Please enter a valid credit card number'),
+		);
 	},
 });
 ```
@@ -659,9 +622,9 @@ validationRegistry.register({
 	type: 'australianABN',
 	category: 'string',
 	handler: (rule) => {
-		return z.string().refine((abn) => {
-			// Implementation...
-		}, rule.message || 'Please enter a valid Australian Business Number');
+		return z
+			.string()
+			.check(z.refine((abn) => {}, rule.message || 'Please enter a valid Australian Business Number'));
 	},
 });
 ```
@@ -671,28 +634,21 @@ validationRegistry.register({
 ### Checking Registration Status
 
 ```typescript
-// Check if a validation type exists
 if (validationRegistry.has('customPhone')) {
 	console.log('Custom phone validation is available');
 }
 
-// Get all registered types
 const types = validationRegistry.getRegisteredTypes();
 console.log('Available validations:', types);
 
-// Get validations by category
 const stringValidations = validationRegistry.getByCategory('string');
 ```
 
 ### Removing Validations
 
 ```typescript
-// Remove a specific validation
 const removed = validationRegistry.unregister('customPhone');
 console.log('Validation removed:', removed);
-
-// Clear all validations (careful!)
-validationRegistry.clear();
 ```
 
 ### Creating Separate Registries
@@ -700,78 +656,57 @@ validationRegistry.clear();
 For different contexts or testing:
 
 ```typescript
-// Create a new registry for testing
 const testRegistry = new ValidationRegistry();
 testRegistry.register({
 	type: 'testOnly',
 	category: 'string',
-	handler: (rule) => z.string().min(1),
+	handler: (rule) => z.string().check(z.minLength(1)),
 });
 
-// Use specific registry
 const schema = testRegistry.createSchema({ type: 'testOnly' });
 ```
 
-## Live Demo: Async Validation
+## Async Endpoint Example
 
-Here's a working example of async validation in action:
+Use the built-in async rule when a field depends on a server response. The endpoint receives `value`, optional `dependsOn`, and any fields from `extraPayload`:
 
-{/* Live preview: see the running app */}
-
-### Demo Features
-
-The demo above showcases several key async validation concepts:
-
-1. **Username Availability**: Checks if a username is available (try "admin", "root", or "invalid")
-2. **Email Domain Validation**: Validates email domains against a blocklist
-3. **Company Code Lookup**: Simulates database lookups for company identifiers
-4. **Cross-Field Dependencies**: Shows how one field can depend on another's value
-
-### Implementation Details
-
-Here's how the async validation is configured in the demo:
+### Rule Configuration
 
 ```typescript
-// Basic async validation
 {
   type: 'async',
   url: '/api/async-validate',
   method: 'POST',
-  // Field name is NOT sent automatically. Use extraPayload if needed.
   expectedResponse: { valid: true },
   debounce: 500,
   message: 'This username is not available'
 }
 
-// With dependencies (re-validates when other fields change)
 {
   type: 'async',
   url: '/api/async-validate',
   method: 'POST',
-  // System automatically sends { value, dependsOn, ...extraPayload } in request body
-  extraPayload: { field: 'username', validationType: 'complex' }, // Optional additional data
+  extraPayload: { field: 'username', validationType: 'complex' },
   expectedResponse: { valid: true },
-  dependencies: ['username'], // Re-validate when username changes
+  dependencies: ['username'],
   debounce: 600,
-  cacheTTL: 300000, // Cache for 5 minutes
+  cacheTTL: 300000,
   message: 'This value conflicts with the selected username'
 }
 ```
 
 ### Server-Side Implementation
 
-The backend validation endpoint handles the new request format with automatic dependency resolution:
+The endpoint can use the automatic `value` and `dependsOn` fields together with values supplied through `extraPayload`:
 
 ```typescript
 app.post('/api/async-validate', async (ctx) => {
 	const { field, value, dependsOn } = await ctx.request.json();
 
-	// dependsOn is now an object: { username: "actualValue", email: "actual@email.com" }
 	console.log('Validating field:', field);
 	console.log('Field value:', value);
 	console.log('Dependencies:', dependsOn);
 
-	// Simulate network delay
 	await new Promise((resolve) => setTimeout(resolve, 200 + Math.random() * 300));
 
 	switch (field) {
@@ -797,7 +732,6 @@ app.post('/api/async-validate', async (ctx) => {
 			break;
 
 		case 'dependentField':
-			// Access dependency values from the dependsOn object
 			const usernameValue = dependsOn?.username;
 			if (usernameValue === 'admin' && value?.toLowerCase() === 'user') {
 				return ctx.response.json({
@@ -806,8 +740,6 @@ app.post('/api/async-validate', async (ctx) => {
 				});
 			}
 			break;
-
-		// ... other field validations
 	}
 
 	return ctx.response.json({ valid: true });
@@ -824,8 +756,8 @@ app.post('/api/async-validate', async (ctx) => {
 
 ## Next Steps
 
-- **[How It Works](./how-it-works)** - Understanding the validation system architecture
-- **[Built-in Validations](./built-in-validations)** - Complete reference of available validators
+- **[How It Works](./validation-how-it-works)** - Understanding the validation system architecture
+- **[Built-in Validations](./validation-built-in)** - Complete reference of available validators
 - **[Examples](../examples/basic-form)** - See custom validations in complete forms
 
 Custom validations give you the power to implement any business logic while maintaining the consistency and ease of use of the Form Engine validation system. The registry pattern makes it easy to share validations across your application and keep your form configurations clean and declarative.

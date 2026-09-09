@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { FormActionConfigSchema } from '../actions/types';
 import { createFormConfigShape, createFormStepSchema, TypedConfigEnvelopeSchema } from './form-config-shape';
 
@@ -97,7 +97,7 @@ export type FormStep = Omit<
 
 /**
  * Form configuration type with strict typing for steps and view.
- * Includes additional properties not in the Zod schema for runtime handlers.
+ * Includes additional properties not in the base schema for runtime handlers.
  */
 export type FormConfig = Omit<z.infer<typeof FormConfigSchema>, 'steps' | 'view' | 'actions'> & {
 	steps: Array<FormStep>;

@@ -1,7 +1,7 @@
 import type { BuilderActionRegistration, InputRegistration, RecipeRegistration, StaticRegistration } from '@/types';
 import { logger } from '@/lib/logger';
 import type { StandardJSONSchemaV1 } from '@/lib/standard-json-schema';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import type { FormEngineSchemaArtifacts, FormEngineSchemaMetadataRegistry } from './schema-artifacts';
 import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from './schema-artifacts';
 import { validateElementConfig, validateFormConfig } from '@/lib/validate-form';
@@ -35,7 +35,7 @@ export interface EngineRegistries {
 	actions: Map<string, BuilderActionRegistration>;
 	schemaArtifacts?: FormEngineSchemaArtifacts;
 	schemaRegistry?: FormEngineSchemaMetadataRegistry;
-	formConfigSchema?: z.ZodTypeAny;
+	formConfigSchema?: z.ZodMiniType;
 }
 
 function resolveSchemaArtifacts(registries: EngineRegistries): FormEngineSchemaArtifacts {
@@ -199,10 +199,14 @@ export class FormEngine<
 
 	private generateRecipeViewSchema(recipe: RecipeRegistration<any, any>): Record<string, unknown> {
 		try {
-			return generateZodJSONSchemaDocument(recipe.schema as z.ZodTypeAny, this.schemaArtifacts.metadataRegistry, {
-				target: 'draft-2020-12',
-				schemaId: `recipe:${recipe.$type}`,
-			}) as Record<string, unknown>;
+			return generateZodJSONSchemaDocument(
+				recipe.schema as z.ZodMiniType,
+				this.schemaArtifacts.metadataRegistry,
+				{
+					target: 'draft-2020-12',
+					schemaId: `recipe:${recipe.$type}`,
+				},
+			) as Record<string, unknown>;
 		} catch (error) {
 			logger.warn('Could not generate recipe view schema', {
 				recipe: recipe.$type,
@@ -235,6 +239,7 @@ export class FormEngine<
 	generateJSONSchemaCollection(options?: {
 		target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0';
 		uri?: (id: string) => string;
+		io?: 'input' | 'output';
 	}) {
 		return this.schemaArtifacts.jsonSchema.generateCollection(options);
 	}
@@ -243,13 +248,19 @@ export class FormEngine<
 		return this.schemaArtifacts.formConfigValidator;
 	}
 
-	generateFormConfigSchema(options?: { target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0' }) {
+	generateFormConfigSchema(options?: {
+		target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0';
+		io?: 'input' | 'output';
+	}) {
 		return this.schemaArtifacts.jsonSchema.generateFormConfig(options);
 	}
 
 	generateActionConfigSchema(
 		actionType: string,
-		options?: { target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0' },
+		options?: {
+			target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0';
+			io?: 'input' | 'output';
+		},
 	) {
 		return this.schemaArtifacts.jsonSchema.generateActionConfig(actionType, options);
 	}

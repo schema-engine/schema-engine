@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
+import { registerValidation } from '@schema-engine/forms/schemas/validation';
 import { toFieldRules } from '@/lib/field-rules';
+import { createRadiantPhoneValidationRegistration } from '@/lib/phone-validation';
 
 describe('toFieldRules', () => {
 	test('maps required and email rules for RuiField', () => {
@@ -23,12 +25,23 @@ describe('toFieldRules', () => {
 		expect(toFieldRules([])).toBeUndefined();
 	});
 
-	test('uses the shared phone validator for complete numbers', () => {
+	test('uses the phone validator for complete numbers', async () => {
+		registerValidation(createRadiantPhoneValidationRegistration());
 		const rules = toFieldRules([{ type: 'phone' }]);
 		expect(typeof rules?.validate).toBe('function');
 
-		const validate = rules?.validate as (value: unknown) => boolean | string;
-		expect(validate('+44')).toBe('Enter a complete phone number');
-		expect(validate('+442079460958')).toBe(true);
+		const validate = rules?.validate as (value: unknown) => Promise<boolean | string>;
+		expect(await validate('+44')).toBe('Enter a complete phone number');
+		expect(await validate('+442079460958')).toBe(true);
+	});
+
+	test('injects phone validation for phone-input when the author omitted the rule', async () => {
+		registerValidation(createRadiantPhoneValidationRegistration());
+		const rules = toFieldRules(undefined, 'phone-input');
+		expect(typeof rules?.validate).toBe('function');
+
+		const validate = rules?.validate as (value: unknown) => Promise<boolean | string>;
+		expect(await validate('+44')).toBe('Enter a complete phone number');
+		expect(await validate('+442079460958')).toBe(true);
 	});
 });

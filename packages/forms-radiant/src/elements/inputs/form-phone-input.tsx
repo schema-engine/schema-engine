@@ -21,7 +21,6 @@ import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
 import { getFieldGridStyles } from '@/hooks/grid-styles';
 import { toFieldRules } from '@/lib/field-rules';
-import { getValidationRulesForElement } from '@schema-engine/forms/schemas/validation/utils';
 import {
 	detectCountryFromInput,
 	formatPhoneInputValue,
@@ -236,7 +235,7 @@ export function FormPhoneInput({
 			required={isFieldRequired(config.rules)}
 			description={config.description}
 			style={{ ...getFieldGridStyles(config.grid), ...config.style }}
-			rules={toFieldRules(getValidationRulesForElement(config))}
+			rules={toFieldRules(config.rules, config.$type)}
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}
 		>

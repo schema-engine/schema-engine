@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { FormSubmitActionSchema } from './plugins/form-submit.plugin';
 import { FormResetActionSchema } from './plugins/form-reset.plugin';
 import { NotificationActionSchema } from './plugins/notification.plugin';

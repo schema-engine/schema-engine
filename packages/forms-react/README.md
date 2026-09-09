@@ -2,7 +2,7 @@
 
 React implementation of the JSON Form Engine with type-safe components, form adapters, and comprehensive validation support.
 
-> **Important:** This README is a package overview, not the API reference. For verified examples and current contracts, use the [Documentation App](../../apps/docs) — start with [Getting Started](../../apps/docs/src/content/docs/forms-react/getting-started.mdx) or [Quick Start](../../apps/docs/src/content/docs/getting-started/quick-start.mdx).
+> **Important:** This README is a package overview, not the API reference. For verified examples and API contracts, use the [Documentation App](../../apps/docs) — start with [Getting Started](../../apps/docs/src/content/docs/forms-react/getting-started.mdx) or [Quick Start](../../apps/docs/src/content/docs/getting-started/quick-start.mdx).
 
 ## Overview
 
@@ -13,7 +13,7 @@ The React package provides production-ready components and hooks for building dy
 - Runtime form engine, React Hook Form adapter, and headless recipe contracts
 - Registry-owned view recipes for visual chrome (`card`, `card-wizard`, `wizard`, …)
 - `FormDebugger` opt-in dev overlay (mount as a child of `FormRenderer`)
-- Comprehensive validation with 15+ built-in rules
+- Comprehensive validation with 24 built-in rules
 - Action execution system for form lifecycle events
 - Grid-based responsive layouts
 - GDPR consent tracking
@@ -139,11 +139,9 @@ function ContactForm() {
 The package uses explicit, per-component registration to ensure type safety and tree-shaking:
 
 ```typescript
-// Import the generated registrations from the shadcn item you installed.
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
 const engine = createReactFormEngine({ elements: schemaFormRegistrations });
-// Pass schemaFormRecipeRegistrations when using view.$type or multi-step forms.
 ```
 
 **Benefits:**
@@ -163,9 +161,7 @@ Adapters bridge the gap between the form engine and form libraries. The package 
 import { FormEngineProvider } from '@schema-engine/forms-react';
 import { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
 
-<FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
-	{/* Your form */}
-</FormEngineProvider>;
+<FormEngineProvider engine={formEngine} adapter={rhfAdapter}></FormEngineProvider>;
 ```
 
 **Adapter Interface:**
@@ -350,21 +346,21 @@ Forms support responsive grid layouts using CSS Grid:
       id: 'firstName',
       name: 'firstName',
       label: 'First Name',
-      grid: { column: '1 / 7' } // Takes 6 columns
+      grid: { column: '1 / 7' }
     },
     {
       $type: 'input',
       id: 'lastName',
       name: 'lastName',
       label: 'Last Name',
-      grid: { column: '7 / 13' } // Takes 6 columns
+      grid: { column: '7 / 13' }
     },
     {
       $type: 'input',
       id: 'email',
       name: 'email',
       label: 'Email',
-      grid: { column: '1 / 13' } // Takes full width
+      grid: { column: '1 / 13' }
     }
   ]
 }
@@ -384,11 +380,10 @@ import { useFormEngine } from '@schema-engine/forms-react';
 function MyComponent() {
 	const { engine } = useFormEngine();
 
-	// Access registered components
 	const inputElement = engine.getElement('input');
 	const allElements = engine.getAllElements();
 
-	return <div>{/* ... */}</div>;
+	return <div />;
 }
 ```
 
@@ -404,7 +399,7 @@ function MyComponent() {
 
 	const currentValues = getValues();
 
-	return <div>{/* ... */}</div>;
+	return <div />;
 }
 ```
 
@@ -537,7 +532,8 @@ function MyForm() {
 Register custom field components:
 
 ```typescript
-// 1. Define your component
+import * as z from 'zod/mini';
+
 export function CustomDatePicker(props) {
 	const { value, error, onChange, onBlur } = useControlledFormElement(props);
 
@@ -549,17 +545,15 @@ export function CustomDatePicker(props) {
 	);
 }
 
-// 2. Create schema
 export const CustomDatePickerSchema = z.object({
 	$type: z.literal("custom-date-picker"),
 	id: z.string(),
 	name: z.string(),
 	label: z.string(),
-	minDate: z.date().optional(),
-	maxDate: z.date().optional(),
+	minDate: z.optional(z.date()),
+	maxDate: z.optional(z.date()),
 });
 
-// 3. Create registration
 export const CustomDatePickerRegistration = {
 	$type: "custom-date-picker",
 	render: CustomDatePicker,
@@ -571,7 +565,6 @@ export const CustomDatePickerRegistration = {
 	},
 };
 
-// 4. Register with engine
 const engine = createReactFormEngine({ elements: [CustomDatePickerRegistration] });
 ```
 
@@ -580,13 +573,14 @@ const engine = createReactFormEngine({ elements: [CustomDatePickerRegistration] 
 Compose a shell and slot blocks with `defineFormRecipe`, then register it:
 
 ```typescript
+import * as z from 'zod/mini';
 import { defineFormRecipe, defineRecipeSpec } from '@schema-engine/forms/recipes';
 import type { FormShellProps } from '@schema-engine/forms-react/primitives';
 
 const brandSpec = defineRecipeSpec({
 	$type: 'brand',
 	kind: 'single-step',
-	slotSchemas: { shell: z.object({ accent: z.string().optional() }).strict() },
+	slotSchemas: { shell: z.strictObject({ accent: z.optional(z.string()) }) },
 	metadata: { name: 'Brand', description: 'Branded form shell' },
 });
 
@@ -613,16 +607,13 @@ const engine = createReactFormEngine({ recipes: [BrandRecipe] });
 The package provides full TypeScript support with automatic type inference:
 
 ```typescript
-// Type augmentation happens when importing the generated registry item.
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
 const engine = createReactFormEngine({ elements: schemaFormRegistrations });
 
-// TypeScript knows about registered components
 const element = engine.getElement('input');
 const allElements = engine.getAllElements();
 
-// Configuration is type-safe
 const config: FormConfig = {
 	id: 'my-form',
 	steps: [
@@ -630,10 +621,10 @@ const config: FormConfig = {
 			id: 'step-1',
 			elements: [
 				{
-					$type: 'input', // TypeScript validates this exists
+					$type: 'input',
 					id: 'name',
 					name: 'name',
-					inputType: 'text', // TypeScript validates valid input types
+					inputType: 'text',
 				},
 			],
 		},
@@ -676,7 +667,7 @@ cd packages/forms-react && pnpm test:all
 **Required Dependencies:**
 
 - `react-hook-form` - Form state management
-- `zod` - Schema validation
+- `zod` - Required by `@schema-engine/forms` for its first-party `zod/mini` schemas
 - `@hookform/resolvers` - Validation resolver
 
 ## License

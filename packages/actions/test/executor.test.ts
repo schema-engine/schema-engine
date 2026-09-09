@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ActionExecutor } from '../src/executor';
 import type { ActionRegistryProvider } from '../src/registry';
 import type { ActionRegistration, ActionConfigBase } from '../src/types';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 
 type TestTrigger = 'mount' | 'change' | 'submit' | 'complete' | 'error';
 

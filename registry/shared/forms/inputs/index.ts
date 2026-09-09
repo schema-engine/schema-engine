@@ -44,6 +44,7 @@ export type { InputOTPFieldConfig, InputOTPFieldProps } from './form-input-otp.t
 
 export { FormPhoneInput } from './form-phone-input';
 export { PhoneInputElementRegistration } from './form-phone-input.registration';
+export { createPhoneValidationRegistration } from './form-phone-input.validation';
 export type { PhoneInputFieldConfig, PhoneInputFieldProps } from './form-phone-input.types';
 
 export { FormMaskedInput } from './form-masked-input';

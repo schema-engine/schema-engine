@@ -263,7 +263,7 @@ const ELEMENTS: ElementSpec[] = [
 		title: 'Phone input',
 		ident: 'PhoneInputElementRegistration',
 		registryDependencies: [PRIMITIVE_ITEM['phone-input'], PRIMITIVE_ITEM.field],
-		dependencies: ['react-phone-number-input'],
+		dependencies: ['react-phone-number-input', 'libphonenumber-js'],
 	},
 	{
 		stem: 'inputs/form-masked-input',
@@ -499,6 +499,7 @@ function buildElementItem(base: Base, spec: ElementSpec): CatalogItem {
 			formFile(base, `${spec.stem}.tsx`),
 			formFile(base, `${spec.stem}.types.ts`),
 			formFile(base, `${spec.stem}.registration.ts`),
+			...(spec.stem === 'inputs/form-phone-input' ? [formFile(base, `${spec.stem}.validation.ts`)] : []),
 		],
 		registration: { ident: spec.ident, from: `./${spec.stem}.registration` },
 	};

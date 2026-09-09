@@ -1,22 +1,22 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
 
 export const DateRangeValueSchema = z.object({
-	from: z.string().optional(),
-	to: z.string().optional(),
+	from: z.optional(z.string()),
+	to: z.optional(z.string()),
 });
 
 export const DateRangeFieldExtensionSchema = z.object({
-	placeholder: z.string().optional(),
-	dateFormat: z.string().optional(),
-	min: z.string().optional(),
-	max: z.string().optional(),
-	numberOfMonths: z.number().int().min(1).max(2).optional().default(2),
-	presets: z.boolean().optional().default(true),
-	autoFocus: z.boolean().optional(),
+	placeholder: z.optional(z.string()),
+	dateFormat: z.optional(z.string()),
+	min: z.optional(z.string()),
+	max: z.optional(z.string()),
+	numberOfMonths: z._default(z.optional(z.number().check(z.int(), z.gte(1), z.lte(2))), 2),
+	presets: z._default(z.optional(z.boolean()), true),
+	autoFocus: z.optional(z.boolean()),
 });
 
-export const DateRangeFieldSchema = BaseFieldSchema.extend({
+export const DateRangeFieldSchema = z.extend(BaseFieldSchema, {
 	$type: z.literal('date-range'),
 	...DateRangeFieldExtensionSchema.shape,
 });

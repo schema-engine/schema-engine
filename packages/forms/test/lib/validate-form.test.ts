@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { DEFAULT_WIZARD_RECIPE, FormValidationError, getRenderableSteps, resolveFormRecipe } from '@/lib/validate-form';
 import { isNormalizedFormConfig, isNormalizedElementConfig } from '@/lib/normalized-form-config';
@@ -8,37 +8,35 @@ import { defineRecipeSpec } from '@/recipes/define-recipe-spec';
 import { sidebarWizardSpec } from '@/recipes/built-in-specs';
 import { defineInput } from '@/types';
 
-const cardRecipeSchema = z
-	.object({
-		$type: z.literal('card'),
-		shell: z.object({ padding: z.enum(['sm', 'md', 'lg']).optional() }).optional(),
-	})
-	.strict();
+const cardRecipeSchema = z.strictObject({
+	$type: z.literal('card'),
+	shell: z.optional(z.strictObject({ padding: z.optional(z.enum(['sm', 'md', 'lg'])) })),
+});
 
 const cardRecipe = defineFormRecipe(
 	defineRecipeSpec({
 		$type: 'card',
 		kind: 'single-step',
 		metadata: { name: 'Card', description: 'Card shell recipe' },
-		slotSchemas: { shell: z.object({ padding: z.enum(['sm', 'md', 'lg']).optional() }) },
+		slotSchemas: { shell: z.strictObject({ padding: z.optional(z.enum(['sm', 'md', 'lg'])) }) },
 		schema: cardRecipeSchema,
 	}),
 	{},
 );
 
-const wizardRecipeSchema = z
-	.object({
-		$type: z.literal('wizard'),
-		actions: z.object({ labels: z.object({ next: z.string().optional() }).optional() }).optional(),
-	})
-	.strict();
+const wizardRecipeSchema = z.strictObject({
+	$type: z.literal('wizard'),
+	actions: z.optional(z.strictObject({ labels: z.optional(z.strictObject({ next: z.optional(z.string()) })) })),
+});
 
 const wizardRecipe = defineFormRecipe(
 	defineRecipeSpec({
 		$type: 'wizard',
 		kind: 'wizard',
 		metadata: { name: 'Wizard', description: 'Wizard recipe' },
-		slotSchemas: { actions: z.object({ labels: z.object({ next: z.string().optional() }).optional() }) },
+		slotSchemas: {
+			actions: z.strictObject({ labels: z.optional(z.strictObject({ next: z.optional(z.string()) })) }),
+		},
 		schema: wizardRecipeSchema,
 	}),
 	{},
@@ -320,7 +318,10 @@ describe('validateFormConfig', () => {
 			$type: z.literal('count'),
 			id: z.string(),
 			name: z.string(),
-			count: z.string().transform((value) => Number(value)),
+			count: z.pipe(
+				z.string(),
+				z.transform((value) => Number(value)),
+			),
 		});
 		const engine = createFormEngine({
 			elements: [
@@ -374,7 +375,10 @@ describe('validateFormConfig', () => {
 			$type: z.literal('count'),
 			id: z.string(),
 			name: z.string(),
-			count: z.string().transform((value) => Number(value)),
+			count: z.pipe(
+				z.string(),
+				z.transform((value) => Number(value)),
+			),
 		});
 		const engine = createFormEngine({
 			elements: [
@@ -406,7 +410,10 @@ describe('validateFormConfig', () => {
 			$type: z.literal('count'),
 			id: z.string(),
 			name: z.string(),
-			count: z.string().transform((value) => Number(value)),
+			count: z.pipe(
+				z.string(),
+				z.transform((value) => Number(value)),
+			),
 		});
 		const groupSchema = z.object({
 			$type: z.literal('group'),

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { defineFormRecipe, defineRecipeSpec } from '@/recipes';
@@ -47,19 +47,16 @@ const noteElement = defineInput({
 	render: () => null,
 });
 
-const cardRecipeSchema = z
-	.object({
+const cardRecipeSchema = z.pipe(
+	z.object({
 		$type: z.literal('card'),
-		header: z
-			.object({
-				title: z.string().default('Untitled'),
-			})
-			.default({ title: 'Untitled' }),
-	})
-	.transform((view) => ({
+		header: z._default(z.object({ title: z._default(z.string(), 'Untitled') }), { title: 'Untitled' }),
+	}),
+	z.transform((view) => ({
 		...view,
 		header: { title: view.header.title.toUpperCase() },
-	}));
+	})),
+);
 
 const cardRecipe = defineFormRecipe(
 	defineRecipeSpec({
@@ -67,11 +64,7 @@ const cardRecipe = defineFormRecipe(
 		kind: 'single-step',
 		metadata: { name: 'Card', description: 'Card with defaults' },
 		slotSchemas: {
-			header: z
-				.object({
-					title: z.string().default('Untitled'),
-				})
-				.default({ title: 'Untitled' }),
+			header: z._default(z.object({ title: z._default(z.string(), 'Untitled') }), { title: 'Untitled' }),
 		},
 		schema: cardRecipeSchema,
 	}),

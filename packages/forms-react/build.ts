@@ -80,7 +80,7 @@ await buildLib({
 		{ prefix: '@/components/ui', dir: path.join(cwd, '../../registry/ui-stubs') },
 		{ prefix: '@', dir: path.join(cwd, 'src') },
 	],
-	external: ['react', 'react-dom', '@schema-engine/forms', '@ecopages/logger'],
+	external: ['react', 'react-dom', '@schema-engine/forms', '@ecopages/logger', 'zod/mini'],
 	plugins: [postcssPlugin],
 	onEnd: generateGlobalCSS,
 });

@@ -1,4 +1,5 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
+import type { AnyValidationRegistration } from '@/schemas/validation/types';
 
 /** Coerce inferred registration maps into the engine generic constraint. */
 export type AsRegistrationMap<T> = T extends Record<string, unknown> ? T : Record<never, never>;
@@ -116,6 +117,7 @@ export type ElementRegistrationConstraint = {
 	readonly schema: StandardSchemaConstraint;
 	readonly metadata: { readonly name: string };
 	readonly render: (props: never) => unknown;
+	readonly validations?: readonly AnyValidationRegistration[];
 };
 
 export type RecipeRegistrationConstraint = {

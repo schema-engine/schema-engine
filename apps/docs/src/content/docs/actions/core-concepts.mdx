@@ -1,6 +1,6 @@
 ---
-title: "Core Concepts"
-description: "How the dispatcher and the context object compose."
+title: 'Core Concepts'
+description: 'How the dispatcher and the context object compose.'
 group: Actions
 order: 3
 ---
@@ -23,11 +23,13 @@ interface ActionRegistration<
 	$type: TConfig['$type'];
 	schema: StandardSchemaV1<TConfig>;
 	metadata: ActionMetadata<TTrigger>;
-	execute: (context: ActionRuntimeContext<TConfig, TBaseContext, TTrigger>) => Promise<ActionExecutionResult<TData>> | ActionExecutionResult<TData>;
+	execute: (
+		context: ActionRuntimeContext<TConfig, TBaseContext, TTrigger>,
+	) => Promise<ActionExecutionResult<TData>> | ActionExecutionResult<TData>;
 }
 ```
 
-Zod schemas implement Standard Schema and remain valid `schema` values.
+Zod Mini, Zod, Valibot, and Effect Schema values implement Standard Schema and remain valid `schema` values.
 
 `execute` receives the `ActionRuntimeContext` — the caller-provided base context enriched with `config` and `trigger`.
 
@@ -59,7 +61,7 @@ interface ActionExecutionResult<TData = unknown> {
 }
 ```
 
-## Current Execution Model
+## Execution Model
 
 The executor separates what callers provide from what handlers receive. Callers pass a `TBaseContext`. The executor internally enriches it before invoking `execute()`:
 
@@ -84,9 +86,9 @@ Actions read values directly:
 
 ```typescript
 execute: async (context) => {
-	console.log(context.trigger);    // TTrigger
-	console.log(context.config);     // TConfig
-	console.log(context.userId);     // from TBaseContext
+	console.log(context.trigger);
+	console.log(context.config);
+	console.log(context.userId);
 	return { success: true };
 };
 ```

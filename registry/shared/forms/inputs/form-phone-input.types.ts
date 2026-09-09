@@ -1,33 +1,20 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
-import { ValidationRuleSchema, type ValidationRule } from '@schema-engine/forms/schemas/validation';
 
 export const PhoneInputFieldExtensionSchema = z.object({
-	defaultCountry: z.string().optional(),
-	international: z.boolean().optional(),
+	defaultCountry: z.optional(z.string()),
+	international: z.optional(z.boolean()),
 });
 
-export const PhoneInputFieldSchema = BaseFieldSchema.extend({
+export const PhoneInputFieldSchema = z.extend(BaseFieldSchema, {
 	$type: z.literal('phone-input'),
 	...PhoneInputFieldExtensionSchema.shape,
-	rules: z
-		.array(ValidationRuleSchema)
-		.optional()
-		.transform((rules) => {
-			if (rules?.some((rule) => rule.type === 'phone')) {
-				return rules;
-			}
-
-			return [...(rules ?? []), { type: 'phone' as const }];
-		}),
 });
 
 /** Serializable input accepted by the phone-input registration. */
-export type PhoneInputFieldConfig = Omit<z.infer<typeof PhoneInputFieldSchema>, 'rules'> & {
-	rules?: ValidationRule[];
-};
+export type PhoneInputFieldConfig = z.input<typeof PhoneInputFieldSchema>;
 
-export type PhoneInputFieldProps = PhoneInputFieldConfig & {
+export type PhoneInputFieldProps = z.output<typeof PhoneInputFieldSchema> & {
 	onChange?: (value: string) => void;
 	onBlur?: () => void;
 	onFocus?: () => void;

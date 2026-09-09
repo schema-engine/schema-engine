@@ -1,22 +1,23 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
 
 export const InputFieldExtensionSchema = z.object({
-	inputType: z.enum(['text', 'email', 'password', 'url', 'tel', 'search', 'date']).default('text'),
-	autoComplete: z.string().optional(),
-	autoFocus: z.boolean().optional(),
-	inputMode: z.enum(['none', 'text', 'decimal', 'numeric', 'tel', 'search', 'email', 'url']).optional(),
-	spellCheck: z.boolean().optional(),
+	inputType: z._default(z.enum(['text', 'email', 'password', 'url', 'tel', 'search', 'date']), 'text'),
+	autoComplete: z.optional(z.string()),
+	autoFocus: z.optional(z.boolean()),
+	inputMode: z.optional(z.enum(['none', 'text', 'decimal', 'numeric', 'tel', 'search', 'email', 'url'])),
+	spellCheck: z.optional(z.boolean()),
 });
 
-export const InputFieldSchema = BaseFieldSchema.extend({
+export const InputFieldSchema = z.extend(BaseFieldSchema, {
 	$type: z.literal('input'),
 	...InputFieldExtensionSchema.shape,
 });
 
-export type InputFieldConfig = z.infer<typeof InputFieldSchema>;
+export type InputFieldConfig = z.input<typeof InputFieldSchema>;
+export type InputFieldOutput = z.output<typeof InputFieldSchema>;
 
-export type InputFieldProps = InputFieldConfig & {
+export type InputFieldProps = InputFieldOutput & {
 	onChange?: (value: string) => void;
 	onBlur?: () => void;
 	onFocus?: () => void;

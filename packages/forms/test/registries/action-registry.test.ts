@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import { createFormEngine } from '@/engine/create-form-engine';
 import type { BuilderActionRegistration, BuilderActionExecutionContext } from '@/types';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import type { ActionExecutionResult } from '@schema-engine/actions';
 
 const logActionSchema = z.object({ id: z.string(), $type: z.literal('log'), message: z.string() });

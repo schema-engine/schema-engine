@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from 'vitest';
 import { ActionRegistry } from '../src/registry';
 import type { ActionRegistration } from '../src/types';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 
 type TestTrigger = 'submit' | 'change' | 'mount';
 

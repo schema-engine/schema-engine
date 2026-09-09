@@ -39,14 +39,29 @@ export interface ValidateFormOptions {
 
 function formatIssuePath(path: StandardSchemaIssue['path']): string {
 	if (!path?.length) return '';
-	return path.map(String).join('.');
+	return path
+		.map((segment) => {
+			if (typeof segment === 'object' && segment !== null && 'key' in segment) {
+				return String(segment.key);
+			}
+			return String(segment);
+		})
+		.join('.');
 }
 
 function formatSchemaIssues(issues: StandardSchemaIssue[]): string {
 	return issues
 		.map((issue) => {
 			const path = formatIssuePath(issue.path);
-			return path ? `${issue.message} (${path})` : issue.message;
+			const keys =
+				'keys' in issue && Array.isArray(issue.keys)
+					? issue.keys.filter(
+							(key): key is PropertyKey =>
+								typeof key === 'string' || typeof key === 'number' || typeof key === 'symbol',
+						)
+					: [];
+			const message = keys.length > 0 ? `${issue.message} (${keys.map(String).join(', ')})` : issue.message;
+			return path ? `${message} (${path})` : message;
 		})
 		.join(', ');
 }
@@ -66,14 +81,11 @@ function isTaggedConfig(value: unknown): value is FormTaggedConfig {
 	return typeof value === 'object' && value !== null && '$type' in value && typeof value.$type === 'string';
 }
 
-function parseRegistration(
-	schema: StandardSchemaV1<unknown>,
-	config: object,
-	invalidPrefix: string,
-): ParseResult<unknown> {
+function parseRegistration(schema: StandardSchemaV1, config: object, invalidPrefix: string): ParseResult<unknown> {
 	const result = safeParseStandardSchema(schema, config);
 	if (!result.success) {
-		return { ok: false, issue: `${invalidPrefix}: ${formatSchemaIssues(result.error.issues)}` };
+		const message = formatSchemaIssues(result.error.issues) || 'Validation failed';
+		return { ok: false, issue: `${invalidPrefix}: ${message}` };
 	}
 	return { ok: true, data: result.data };
 }
@@ -137,7 +149,7 @@ function parseView(
 function parseTypedConfig(
 	kind: 'element' | 'action',
 	item: FormTaggedConfig,
-	getRegistration: (id: string) => { schema: StandardSchemaV1<unknown> } | undefined,
+	getRegistration: (id: string) => { schema: StandardSchemaV1 } | undefined,
 	registerHint: string,
 ): ParseResult<FormTaggedConfig> {
 	const registration = getRegistration(item.$type);
@@ -159,7 +171,7 @@ function parseTypedConfig(
 function parseTypedList(
 	items: FormTaggedConfig[] | undefined,
 	kind: 'element' | 'action',
-	getRegistration: (id: string) => { schema: StandardSchemaV1<unknown> } | undefined,
+	getRegistration: (id: string) => { schema: StandardSchemaV1 } | undefined,
 	registerHint: string,
 	parentLocation: string,
 	itemKind: string,
