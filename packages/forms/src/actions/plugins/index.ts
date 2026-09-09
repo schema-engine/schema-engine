@@ -1,42 +1,7 @@
 /**
- * Action plugin system for FormEngine
- *
- * ## Plugin Factories (Custom Configuration)
- * Use these to create actions with custom configuration:
- *
- * @example Custom Configuration
- * ```typescript
- * import { createFormEngine, submitPlugin } from '@schema-engine/forms';
- * import type { SubmitAction } from '@schema-engine/forms';
- *
- * // Manually register the type
- * declare global {
- *   namespace FormEngine {
- *     interface ActionRegistry {
- *       submit: SubmitAction;
- *     }
- *   }
- * }
- *
- * const engine = createFormEngine({
- *   actions: [submitPlugin({
- *     onSuccess: (data) => myCustomHandler(data)
- *   })],
- * });
- * ```
- *
- * ## Pre-configured Registrations (Recommended)
- * Import registration files for automatic type augmentation:
- *
- * @example Using Registrations
- * ```typescript
- * import { createFormEngine, SubmitActionRegistration } from '@schema-engine/forms';
- * // ↑ Type is automatically registered when you import this
- *
- * const engine = createFormEngine({
- *   actions: [SubmitActionRegistration],
- * });
- * ```
+ * Action plugin factories and preconfigured registrations for FormEngine.
+ * Import a registration for built-in action types or create a configured
+ * registration with a plugin factory.
  */
 
 /** Plugin factory functions (require manual type registration). */

@@ -1,8 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { defineFormRecipe, defineRecipeSpec } from '@/recipes';
 import { defineInput } from '@/types';
+import { createZodSchemaFromRules, getValidationRulesForElement, validationRegistry } from '@/schemas/validation';
 
 const noteSchema = z.object({
 	$type: z.literal('note'),
@@ -31,7 +32,7 @@ describe('createFormEngine', () => {
 				$type: 'card',
 				kind: 'single-step',
 				metadata: { name: 'Card' },
-				slotSchemas: { shell: z.object({}) },
+				slotSchemas: { shell: z.strictObject({}) },
 				schema: z.object({ $type: z.literal('card') }),
 			}),
 			{},
@@ -63,6 +64,51 @@ describe('createFormEngine', () => {
 		const engine = createFormEngine({ elements: [first, second] });
 
 		expect(engine.getElement('note')?.metadata.name).toBe('Second note');
+	});
+
+	test('registers element validations onto the shared validation registry', () => {
+		const phoneElement = defineInput({
+			$type: 'phone-input',
+			schema: z.object({
+				$type: z.literal('phone-input'),
+				name: z.string(),
+				id: z.optional(z.string()),
+			}),
+			metadata: { name: 'Phone', category: 'input' },
+			render: () => null,
+			validations: [
+				{
+					type: 'phone',
+					category: 'string',
+					defaultFor: ['phone-input'],
+					handler: (rule: { message?: string }) =>
+						z.optional(z.string()).check(
+							z.refine((value) => value === undefined || value === '' || value.endsWith('complete'), {
+								message: rule.message || 'Enter a complete phone number',
+							}),
+						),
+				},
+			],
+		});
+
+		try {
+			createFormEngine({ elements: [phoneElement] });
+
+			expect(validationRegistry.has('phone')).toBe(true);
+			expect(getValidationRulesForElement({ $type: 'phone-input' })).toEqual([{ type: 'phone' }]);
+			expect(
+				getValidationRulesForElement({
+					$type: 'phone-input',
+					rules: [{ type: 'phone', message: 'Use a complete number' }],
+				}),
+			).toEqual([{ type: 'phone', message: 'Use a complete number' }]);
+
+			const schema = createZodSchemaFromRules([{ type: 'phone' }]);
+			expect(schema.safeParse('+44').success).toBe(false);
+			expect(schema.safeParse('+44-complete').success).toBe(true);
+		} finally {
+			validationRegistry.unregister('phone');
+		}
 	});
 });
 

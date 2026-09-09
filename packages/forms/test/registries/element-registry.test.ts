@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from 'vitest';
 import { ElementRegistry } from '@/registries';
 import type { InputRegistration } from '@/types';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { ComponentType } from '@/engine';
 
 describe('ElementRegistry', () => {

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import type { ComponentMetadata } from '@schema-engine/registry';
 
 export type RecipeKind = 'single-step' | 'wizard';
@@ -10,11 +10,9 @@ export const RECIPE_SLOT_ORDER = ['shell', 'header', 'progress', 'actions'] as c
 /**
  * Base view configuration schema — recipe registrations extend this with slot keys.
  */
-export const BaseViewConfigSchema = z
-	.object({
-		$type: z.string().describe('Recipe type identifier'),
-	})
-	.strict();
+export const BaseViewConfigSchema = z.strictObject({
+	$type: z.string().check(z.describe('Recipe type identifier')),
+});
 
 export interface RecipeMetadata extends ComponentMetadata {
 	category?: string;
@@ -40,11 +38,11 @@ export interface ViewCatalog {
 	};
 }
 
-export interface RecipeSpec<TType extends string = string, TSchema extends z.ZodType = z.ZodType> {
+export interface RecipeSpec<TType extends string = string, TSchema extends z.ZodMiniType = z.ZodMiniType> {
 	$type: TType;
 	kind: RecipeKind;
 	slots: RecipeSlot[];
-	slotSchemas: Partial<Record<RecipeSlot, z.ZodType>>;
+	slotSchemas: Partial<Record<RecipeSlot, z.ZodMiniType>>;
 	slotDefaults?: Partial<Record<RecipeSlot, Record<string, unknown>>>;
 	metadata: RecipeMetadata;
 	schema: TSchema;

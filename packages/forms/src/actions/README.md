@@ -1,414 +1,212 @@
 # Form Actions
 
-## Overview
+Form actions connect form lifecycle events to side effects. The forms package
+provides typed registrations for common actions and uses the generic execution
+engine from [@schema-engine/actions](../../../actions).
 
-Form actions use the generic action system from **[@schema-engine/actions](../../../actions)**. For details on how the action execution system works, see the [actions package README](../../../actions/README.md).
+## Built-in registrations
 
-This document focuses on **creating and using form-specific action plugins**.
-
-## Built-in Plugins
-
-The forms package includes several ready-to-use action plugins:
-
-- **Submit Plugin**: Form submission with custom request adapters
-- **Reset Plugin**: Form reset with confirmation and cleanup
-- **Notification Plugin**: User notifications with custom handlers
-- **Auto-Save Plugin**: Draft saving with configurable storage
-- **GTM Plugin**: Google Tag Manager event tracking
-
-## Quick Start
-
-### 1. Register Plugins
+Import the registrations you need from `@schema-engine/forms`. Importing a
+registration also adds its `$type` to the form action configuration types.
 
 ```typescript
-import { createFormEngine } from '@schema-engine/forms';
-import { submitPlugin, resetPlugin, notificationPlugin } from '@schema-engine/forms/actions/plugins';
-import { toast } from 'react-hot-toast';
+import {
+	AutoSaveActionRegistration,
+	NotificationActionRegistration,
+	ResetActionRegistration,
+	SubmitActionRegistration,
+	createFormEngine,
+} from '@schema-engine/forms';
 
 const engine = createFormEngine({
 	actions: [
-		submitPlugin({
-			onSuccess: (data, context) => console.log('Submitted:', data),
-			onError: (error, context) => console.error('Submit failed:', error),
-		}),
-		resetPlugin({
-			confirm: (message) => window.confirm(message),
-			onReset: () => toast.success('Form reset!'),
-		}),
-		notificationPlugin({
-			onSuccess: (message) => toast.success(message),
-			onError: (message) => toast.error(message),
-		}),
+		SubmitActionRegistration,
+		ResetActionRegistration,
+		NotificationActionRegistration,
+		AutoSaveActionRegistration,
 	],
 });
 ```
 
-### 2. Define Actions in Your Form
+Declare action instances in the form configuration:
 
 ```typescript
-const formConfig = {
-	actions: [
-		{
-			id: 'submit-form',
-			$type: 'submit',
-			endpoint: '/api/submit',
-			method: 'POST',
-			successMessage: 'Form submitted successfully!',
-		},
-		{
-			id: 'success-notification',
-			$type: 'show_notification',
-			message: 'Thank you for your submission!',
-			variant: 'success',
-			triggers: ['form_submit_success'], // Only runs after successful submit
-		},
-		{
-			id: 'auto-reset',
-			$type: 'reset',
-			resetToDefaults: true,
-			triggers: ['form_submit_success'], // Reset form after successful submit
-		},
-	],
-};
+const actions = [
+	{
+		id: 'submit-form',
+		$type: 'submit',
+		endpoint: '/api/submit',
+		method: 'POST',
+	},
+	{
+		id: 'show-success',
+		$type: 'show_notification',
+		message: 'Thank you for your submission.',
+		variant: 'success',
+		triggers: ['form_submit_success'],
+	},
+];
+
+const formConfig = { id: 'contact', steps: [], actions };
 ```
 
-### 3. Actions Execute Automatically
+An action runs when its `triggers` contains the current event. When an action
+does not declare `triggers`, the executor uses the registration's
+`metadata.defaultTriggers`.
 
-The FormEngine executes actions automatically based on triggers. You don't need to manually call the executor - it's integrated into the form lifecycle.
+## Action triggers
 
-## Available Plugins
+The forms action trigger type contains these events:
 
-### Submit Plugin
+| Trigger                | When it runs                           |
+| ---------------------- | -------------------------------------- |
+| `form_mount`           | The form is initialized                |
+| `form_change`          | A field value changes                  |
+| `form_submit`          | Form submission starts                 |
+| `form_submit_start`    | Submission begins after validation     |
+| `form_submit_success`  | Submission completes successfully      |
+| `form_submit_error`    | Submission fails                       |
+| `form_submit_complete` | Submission finishes with either result |
+| `step_change`          | The active step changes                |
+| `step_submit`          | A step is submitted                    |
+| `step_enter`           | A step becomes active                  |
+| `step_leave`           | A step stops being active              |
+| `step_view`            | A step becomes visible                 |
 
-Handles form submission with configurable request handling:
+Actions execute sequentially in the order provided to the executor.
+
+## Plugin factories
+
+Factories return action registrations with configurable handlers. Register the
+returned value in `createFormEngine({ actions })`.
+
+### `formSubmitPlugin`
 
 ```typescript
-submitPlugin({
-	// Custom request adapter (default: fetch)
-	request: (url, data) => axios.post(url, data),
+import { formSubmitPlugin } from '@schema-engine/forms';
 
-	// Transform data before sending
+const submit = formSubmitPlugin({
+	request: (url, options) => fetch(url, options),
 	transformData: (data, context) => ({
 		...data,
-		timestamp: new Date().toISOString(),
+		formId: context.formId,
 	}),
-
-	// Success callback
-	onSuccess: (data, context) => {
-		console.log('Form submitted:', data);
-		analytics.track('form_submitted', { formId: context.formId });
-	},
-
-	// Error callback
-	onError: (error, context) => {
-		console.error('Submit failed:', error);
-		Sentry.captureException(error);
-	},
-
-	// Custom validation
-	validate: (context) => {
-		if (context.formData.email.includes('spam')) {
-			return 'Invalid email domain';
-		}
-		return true;
-	},
+	onSuccess: (data, context) => console.log('Submitted', context.formId, data),
+	onError: (error, context) => console.error('Submit failed', context.formId, error),
 });
 ```
 
-### Reset Plugin
+The submit action accepts `endpoint`, `method` (`POST`, `PUT`, or `PATCH`),
+optional `successMessage`, `errorMessage`, `redirectUrl`, and `triggers`.
+Submission data is sent as `FormData`.
 
-Handles form reset with confirmation and cleanup:
+### `formResetPlugin`
 
 ```typescript
-resetPlugin({
-	// Custom confirmation (default: window.confirm)
-	confirm: async (message) => {
-		const { isConfirmed } = await Swal.fire({
-			title: 'Reset Form?',
-			text: message,
-			icon: 'warning',
-			showCancelButton: true,
-		});
-		return isConfirmed;
-	},
+import { formResetPlugin } from '@schema-engine/forms';
 
-	// Custom draft clearing
-	clearDraft: (formId) => {
-		localStorage.removeItem(`draft_${formId}`);
-		api.deleteDraft(formId);
-	},
-
-	// Reset callback
-	onReset: (context) => {
-		toast.success('Form reset successfully');
-		analytics.track('form_reset', { formId: context.formId });
-	},
+const reset = formResetPlugin({
+	confirm: (message) => window.confirm(message),
+	onReset: (context) => console.log('Reset', context.formId),
 });
 ```
 
-### Notification Plugin
+The reset action accepts `confirmMessage`, `resetToDefaults`, and `triggers`.
+The factory also accepts `clearDraft` and `resetForm` handlers.
 
-Displays user notifications with configurable handlers:
+### `notificationPlugin`
 
 ```typescript
-notificationPlugin({
-	onSuccess: (message) => toast.success(message),
-	onError: (message) => toast.error(message),
-	onWarning: (message) => toast.warning(message),
-	onInfo: (message) => toast.info(message),
+import { notificationPlugin } from '@schema-engine/forms';
+
+const notifications = notificationPlugin({
+	onSuccess: (message, context) => console.log('Success', context.formId, message),
+	onError: (message, context) => console.error('Error', context.formId, message),
+	onWarning: (message, context) => console.warn('Warning', context.formId, message),
+	onInfo: (message, context) => console.info('Info', context.formId, message),
+	onNotification: (message, variant, context) => console.log(variant, context.formId, message),
 });
 ```
 
-### Auto-Save Plugin
+The notification action accepts `message`, `variant` (`success`, `error`,
+`warning`, or `info`), `duration`, and `triggers`.
 
-Automatically saves form drafts:
+### `autoSavePlugin`
 
 ```typescript
-autoSavePlugin({
-	// Custom storage backend
+import { autoSavePlugin } from '@schema-engine/forms';
+
+const autoSave = autoSavePlugin({
 	storage: {
-		save: async (key, data) => {
-			await api.saveDraft(key, data);
-		},
-		load: async (key) => {
-			return await api.loadDraft(key);
-		},
-		remove: async (key) => {
-			await api.deleteDraft(key);
-		},
+		save: (key, data) => localStorage.setItem(key, JSON.stringify(data)),
+		load: (key) => JSON.parse(localStorage.getItem(key) ?? 'null'),
+		remove: (key) => localStorage.removeItem(key),
 	},
+	getStorageKey: (context) => `form:${context.formId}`,
+	onSave: (data, context) => console.log('Saved', context.formId, data),
+	onError: (error, context) => console.error('Auto-save failed', context.formId, error),
+});
+```
 
-	// Save callback
-	onSave: (data, context) => {
-		console.log(`Draft saved for ${context.formId}`);
-	},
+The auto-save action accepts `storageKey`, `includeSensitive`, and `triggers`.
+By default, password, secret, and token fields are excluded from saved data.
 
-	// Error callback
-	onError: (error, context) => {
-		console.error('Auto-save failed:', error);
-		// Fallback to localStorage
-		localStorage.setItem(`backup_${context.formId}`, JSON.stringify(data));
+### `gtmPlugin`
+
+```typescript
+import { gtmPlugin } from '@schema-engine/forms';
+
+const analytics = gtmPlugin({
+	onPush: (eventName, eventData, context) => {
+		console.log('GTM event', eventName, context.formId, eventData);
 	},
 });
 ```
 
-## Form Action Triggers
+The GTM action accepts `eventName`, `eventData`, `includeFormData`, and
+`triggers`. Set `includeFormData` to `true` to include all fields or to an
+array of field names to select specific values.
 
-Actions can respond to these trigger events:
+## Custom action plugins
 
-- `form_mount` - Form initialization
-- `form_change` - Any form field changes
-- `form_submit` - Form submission initiated
-- `form_submit_success` - Submit completed successfully
-- `form_submit_error` - Submit failed
-- `form_submit_complete` - Submit finished (success or error)
-- `step_change` - Multi-step form navigation
-- `step_submit` - Step-specific submission
-- `step_enter` - Entering a step
-- `step_leave` - Leaving a step
-- `step_view` - Step became visible
-
-### Trigger Usage
+Use `BuilderActionRegistration` to create a form-specific action. The schema
+uses Zod Mini in this example; any Standard Schema implementation is valid.
 
 ```typescript
-{
-  id: 'success-notification',
-  $type: 'show_notification',
-  message: 'Form submitted!',
-  triggers: ['form_submit_success'],  // Only after successful submit
-}
-```
+import * as z from 'zod/mini';
+import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@schema-engine/forms';
 
-## Creating Custom Plugins
-
-### Plugin Structure
-
-A form action plugin must implement `BuilderActionRegistration`:
-
-```typescript
-import { z } from 'zod';
-import type { BuilderActionRegistration } from '@schema-engine/forms';
-
-// 1. Define your action schema
-const MyActionSchema = z.object({
+const ActionSchema = z.object({
 	id: z.string(),
-	$type: z.literal('my_action'),
+	$type: z.literal('log_message'),
 	message: z.string(),
-	enabled: z.boolean().optional(),
-	triggers: z.array(z.string()).optional(),
+	triggers: z.optional(z.array(z.string())),
 });
 
-type MyActionConfig = z.infer<typeof MyActionSchema>;
+type Action = z.infer<typeof ActionSchema>;
 
-// 2. Define plugin configuration (for the factory)
-export interface MyPluginConfig {
-	onExecute?: (data: any, context: BuilderActionExecutionContext) => void;
-	validate?: (context: BuilderActionExecutionContext) => boolean | string;
-}
-
-// 3. Create plugin factory function
-export function myPlugin(config: MyPluginConfig = {}): BuilderActionRegistration<'my_action', MyActionConfig> {
-	return {
-		$type: 'my_action',
-		schema: MyActionSchema,
-		metadata: {
-			name: 'My Custom Action',
-			description: 'Does something custom with form data',
-			defaultTriggers: ['form_submit'],
-		},
-		execute: async (context) => {
-			// Validate if needed
-			if (config.validate) {
-				const validation = config.validate(context);
-				if (validation !== true) {
-					return {
-						success: false,
-						error: typeof validation === 'string' ? validation : 'Validation failed',
-					};
-				}
-			}
-
-			// Execute custom logic
-			try {
-				config.onExecute?.(context.formData, context);
-
-				return {
-					success: true,
-					message: context.config.message,
-				};
-			} catch (error) {
-				return {
-					success: false,
-					error: error instanceof Error ? error.message : 'Unknown error',
-				};
-			}
-		},
-	};
-}
-
-// 4. Module augmentation for TypeScript
 declare global {
 	namespace FormEngine {
 		interface ActionRegistry {
-			my_action: MyActionConfig;
+			log_message: Action;
 		}
 	}
 }
-```
 
-### Execution Context
-
-Your plugin receives `BuilderActionExecutionContext`:
-
-```typescript
-interface BuilderActionExecutionContext<TConfig> {
-	config: TConfig; // Your action configuration
-	formId: string; // Form identifier
-	formData: Record<string, unknown>; // Current form data
-	currentStep: number; // Current step (multi-step forms)
-	totalSteps: number; // Total steps
-	isValid: boolean; // Form validation state
-	errors: Record<string, unknown>; // Validation errors
-	trigger: FormActionTrigger; // What triggered this action
+const logMessage: BuilderActionRegistration<'log_message', typeof ActionSchema> = {
+	$type: 'log_message',
+	schema: ActionSchema,
 	metadata: {
-		stepStartTime: number;
-		totalFormTime: number;
-		userInteractions: number;
-	};
-	form: {
-		// Framework-agnostic form controller
-		reset: () => void;
-		setValue: (name: string, value: unknown) => void;
-		getValue: (name: string) => unknown;
-		validate: () => Promise<boolean>;
-	};
-}
+		name: 'Log message',
+		defaultTriggers: ['form_submit'],
+	},
+	execute: async (context: BuilderActionExecutionContext<Action>) => {
+		console.log(context.config.message, context.formId);
+		return { success: true, shouldContinue: true };
+	},
+};
 ```
 
-## Key Concepts
-
-### Generic Action System
-
-The action execution logic lives in `@schema-engine/actions` and is completely domain-agnostic:
-
-```typescript
-// From @schema-engine/actions
-import { ActionExecutor } from '@schema-engine/actions';
-import type { ActionRuntimeContext, ActionExecutionResult } from '@schema-engine/actions';
-
-// The executor works with any domain-specific types
-type MyExecutor = ActionExecutor<MyConfig, MyContext, MyTrigger>;
-```
-
-### Form-Specific Implementation
-
-Forms package provides:
-
-1. **Form-specific types**: `FormActionConfig`, `BuilderActionExecutionContext`, `FormActionTrigger`
-2. **Form plugins**: Submit, Reset, Notification, Auto-Save, GTM
-3. **Integration with FormEngine**: Automatic action execution
-
-### Execution Context
-
-Every action handler receives an `ActionRuntimeContext` — the caller-provided base context enriched with `config` and `trigger` by the executor.
-
-For forms, use `BuilderActionRuntimeContext` (exported as `BuilderActionExecutionContext`):
-
-```typescript
-interface BuilderActionExecutionContext<TConfig> {
-	config: TConfig;
-	formId: string;
-	formData: Record<string, unknown>;
-	currentStep: number;
-	totalSteps: number;
-	isValid: boolean;
-	errors: Record<string, unknown>;
-	trigger: FormActionTrigger;
-	metadata: { stepStartTime: number; totalFormTime: number; userInteractions: number };
-	form: { reset: () => void; setValue: (name: string, value: unknown) => void };
-}
-```
-
-## Migration Guide
-
-### From Old ActionExecutor Class
-
-**Before:**
-
-```typescript
-import { ActionExecutor } from '@/actions/action-executor';
-
-const executor = new ActionExecutor(engine);
-await executor.executeTrigger(actions, 'form_submit', source);
-```
-
-**After:**
-
-```typescript
-import { ActionExecutor } from '@schema-engine/actions';
-
-// FormEngine creates and uses the executor internally
-// You don't need to manually instantiate or call it
-```
-
-The FormEngine now handles action execution automatically as part of the form lifecycle.
-
-### Benefits
-
-1. **Domain Agnostic**: Core action system can be reused in workflows, UI state machines, etc.
-2. **Maximum Flexibility**: Every aspect of behavior can be customized via plugins
-3. **Type Safety**: Full TypeScript support with proper generic constraints
-4. **Sequential Execution**: Predictable order, no race conditions
-5. **Easy Testing**: Generic executor and plugins can be tested independently
-6. **Clean Architecture**: Clear separation between generic logic and domain-specific plugins
-
-## Best Practices
-
-1. **Use the Generic System**: Import `ActionExecutor` from `@schema-engine/actions`, not from forms
-2. **Create Plugin Factories**: Make plugins configurable rather than hardcoded
-3. **Handle Errors Gracefully**: Provide meaningful error messages and recovery options
-4. **Leverage Lifecycle Triggers**: Use `form_submit_success`/`form_submit_error` for coordinated workflows
-5. **Keep Plugins Focused**: Each plugin should handle one responsibility well
-6. **Provide Good Defaults**: Make plugins work out-of-the-box with sensible defaults
-
-The generic action architecture enables code reuse across different domains while maintaining type safety and preventing common pitfalls like race conditions.
+The execution context contains the parsed action `config`, the current form
+state, and the triggering event. See [@schema-engine/actions](../../../actions)
+for the generic registration and execution contracts.

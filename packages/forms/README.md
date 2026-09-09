@@ -3,6 +3,12 @@
 Framework-agnostic form configuration, validation, actions, and view-recipe
 registration for Schema Engine.
 
+First-party schemas are authored with Zod Mini's functional API and imported
+from `zod/mini`. Install the `zod` package when using the built-in schemas. The
+registration contracts remain `StandardSchemaV1`, so custom elements, recipes,
+and actions can use Valibot, Effect Schema, Zod, or another compatible
+provider.
+
 ## Compose an engine
 
 ```ts

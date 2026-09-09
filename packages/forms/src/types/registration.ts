@@ -4,6 +4,7 @@ import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { ElementMetadata } from './metadata';
 import type { BuilderActionBaseContext, BuilderActionTrigger } from './actions.js';
 import type { ActionRegistration, ActionConfigBase } from '@schema-engine/actions';
+import type { AnyValidationRegistration } from '@/schemas/validation/types';
 
 declare global {
 	namespace FormEngine {
@@ -32,6 +33,7 @@ export type InputRegistration<
 		schema: TSchema;
 		metadata: ElementMetadata;
 		render: (props: TProps) => unknown;
+		validations?: readonly AnyValidationRegistration[];
 	},
 	'Input'
 >;

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 
 /** Shared child-element key used by containers (fieldset, array, and custom). */
 export const ELEMENT_CHILDREN_KEY = 'elements' as const;

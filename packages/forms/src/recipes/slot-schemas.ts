@@ -1,95 +1,76 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 
-export const CardShellConfigSchema = z
-	.object({
-		maxWidth: z.enum(['sm', 'md', 'lg', 'xl']).optional(),
-		padding: z.enum(['sm', 'md', 'lg']).optional(),
-		shadowSize: z.enum(['sm', 'md', 'lg', 'xl']).optional(),
-	})
-	.strict();
+export const CardShellConfigSchema = z.strictObject({
+	maxWidth: z.optional(z.enum(['sm', 'md', 'lg', 'xl'])),
+	padding: z.optional(z.enum(['sm', 'md', 'lg'])),
+	shadowSize: z.optional(z.enum(['sm', 'md', 'lg', 'xl'])),
+});
 
-export const HeroShellConfigSchema = z
-	.object({
-		backgroundImage: z.string().optional(),
-		backgroundVideo: z.string().optional(),
-		contentWidth: z.enum(['sm', 'md', 'lg', 'xl']).optional(),
-	})
-	.strict();
+export const HeroShellConfigSchema = z.strictObject({
+	backgroundImage: z.optional(z.string()),
+	backgroundVideo: z.optional(z.string()),
+	contentWidth: z.optional(z.enum(['sm', 'md', 'lg', 'xl'])),
+});
 
-export const SplitScreenShellConfigSchema = z
-	.object({
-		sideContent: z.string().optional(),
-		sidePlacement: z.enum(['left', 'right']).optional(),
-		sideWidth: z.enum(['narrow', 'normal', 'wide']).optional(),
-		contentAlignment: z.enum(['top', 'center', 'bottom']).optional(),
-	})
-	.strict();
+export const SplitScreenShellConfigSchema = z.strictObject({
+	sideContent: z.optional(z.string()),
+	sidePlacement: z.optional(z.enum(['left', 'right'])),
+	sideWidth: z.optional(z.enum(['narrow', 'normal', 'wide'])),
+	contentAlignment: z.optional(z.enum(['top', 'center', 'bottom'])),
+});
 
-export const SidebarShellConfigSchema = z
-	.object({
-		showSeparator: z.boolean().optional(),
-	})
-	.strict();
+export const SidebarShellConfigSchema = z.strictObject({
+	showSeparator: z.optional(z.boolean()),
+});
 
-export const StepHeaderConfigSchema = z
-	.object({
-		showDescription: z.boolean().optional(),
-		showStepCounter: z.boolean().optional(),
-		labels: z
-			.object({
-				stepCounter: z.string().optional().describe('Template with {current} and {total}'),
-			})
-			.strict()
-			.optional(),
-		size: z.enum(['sm', 'md', 'lg']).optional(),
-		align: z.enum(['start', 'center']).optional(),
-		titleAs: z.enum(['h1', 'h2']).optional(),
-		inheritColor: z.boolean().optional(),
-		counterPlacement: z.enum(['before', 'after']).optional(),
-	})
-	.strict();
+export const StepHeaderConfigSchema = z.strictObject({
+	showDescription: z.optional(z.boolean()),
+	showStepCounter: z.optional(z.boolean()),
+	labels: z.optional(
+		z.strictObject({
+			stepCounter: z.optional(z.string()).check(z.describe('Template with {current} and {total}')),
+		}),
+	),
+	size: z.optional(z.enum(['sm', 'md', 'lg'])),
+	align: z.optional(z.enum(['start', 'center'])),
+	titleAs: z.optional(z.enum(['h1', 'h2'])),
+	inheritColor: z.optional(z.boolean()),
+	counterPlacement: z.optional(z.enum(['before', 'after'])),
+});
 
-export const MinimalProgressConfigSchema = z
-	.object({
-		showPercentage: z.boolean().optional(),
-		labels: z
-			.object({
-				regionAriaLabel: z.string().optional(),
-				progress: z.string().optional(),
-			})
-			.strict()
-			.optional(),
-	})
-	.strict();
+export const MinimalProgressConfigSchema = z.strictObject({
+	showPercentage: z.optional(z.boolean()),
+	labels: z.optional(
+		z.strictObject({
+			regionAriaLabel: z.optional(z.string()),
+			progress: z.optional(z.string()),
+		}),
+	),
+});
 
-export const StepIndicatorsConfigSchema = z
-	.object({
-		orientation: z.enum(['horizontal', 'sidebar']).optional(),
-		showStepNumbers: z.boolean().optional(),
-		showStepTitles: z.boolean().optional(),
-		showStepDescriptions: z.boolean().optional(),
-		labels: z.object({ regionAriaLabel: z.string().optional() }).strict().optional(),
-	})
-	.strict();
+export const StepIndicatorsConfigSchema = z.strictObject({
+	orientation: z.optional(z.enum(['horizontal', 'sidebar'])),
+	showStepNumbers: z.optional(z.boolean()),
+	showStepTitles: z.optional(z.boolean()),
+	showStepDescriptions: z.optional(z.boolean()),
+	labels: z.optional(z.strictObject({ regionAriaLabel: z.optional(z.string()) })),
+});
 
-export const WizardActionsConfigSchema = z
-	.object({
-		labels: z
-			.object({
-				previous: z.string().optional(),
-				previousAriaLabel: z.string().optional(),
-				next: z.string().optional(),
-				nextAriaLabel: z.string().optional(),
-				submit: z.string().optional(),
-				submitAriaLabel: z.string().optional(),
-				submitting: z.string().optional(),
-			})
-			.strict()
-			.optional(),
-		showStepCounter: z.boolean().optional(),
-		appearance: z.enum(['default', 'minimal']).optional(),
-	})
-	.strict();
+export const WizardActionsConfigSchema = z.strictObject({
+	labels: z.optional(
+		z.strictObject({
+			previous: z.optional(z.string()),
+			previousAriaLabel: z.optional(z.string()),
+			next: z.optional(z.string()),
+			nextAriaLabel: z.optional(z.string()),
+			submit: z.optional(z.string()),
+			submitAriaLabel: z.optional(z.string()),
+			submitting: z.optional(z.string()),
+		}),
+	),
+	showStepCounter: z.optional(z.boolean()),
+	appearance: z.optional(z.enum(['default', 'minimal'])),
+});
 
 export const DEFAULT_WIZARD_ACTION_LABELS = {
 	previous: 'Previous',

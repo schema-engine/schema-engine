@@ -1,8 +1,10 @@
 import { test, expect, describe } from 'vitest';
+import * as z from 'zod/mini';
 import {
 	collectValidatableFields,
 	createZodSchemaFromRules,
 	generateFormSchema,
+	getValidationRulesForElement,
 	validationRegistry,
 	type MinItemsRule,
 	type MaxItemsRule,
@@ -92,27 +94,48 @@ describe('Validation', () => {
 	});
 
 	describe('createZodSchemaFromRules', () => {
-		test('rejects incomplete phone prefixes but permits optional empty values', () => {
-			const schema = createZodSchemaFromRules([validationRegistry.presets.string.phone()]);
-
-			expect(schema.safeParse('').success).toBe(true);
-			expect(schema.safeParse(undefined).success).toBe(true);
-			expect(schema.safeParse('+44').success).toBe(false);
-			expect(schema.safeParse('+12025550123').success).toBe(true);
+		test('does not register phone validation by default', () => {
+			expect(validationRegistry.has('phone')).toBe(false);
 		});
 
-		test('adds phone validation to phone-input fields without replacing explicit rules', () => {
-			const schema = generateFormSchema([
-				{
-					$type: 'phone-input',
-					id: 'phone',
-					name: 'phone',
-					rules: [{ type: 'required', message: 'Phone number is required' }],
-				},
-			]);
+		test('injects defaultFor rules onto matching field types', () => {
+			validationRegistry.register({
+				type: 'phone',
+				category: 'string',
+				defaultFor: ['phone-input'],
+				handler: () => z.any(),
+			});
 
-			expect(schema.safeParse({ phone: '+44' }).success).toBe(false);
-			expect(schema.safeParse({ phone: '+442079460958' }).success).toBe(true);
+			try {
+				expect(getValidationRulesForElement({ $type: 'phone-input' })).toEqual([{ type: 'phone' }]);
+				expect(
+					getValidationRulesForElement({
+						$type: 'phone-input',
+						rules: [{ type: 'required', message: 'Phone number is required' }],
+					}),
+				).toEqual([{ type: 'required', message: 'Phone number is required' }, { type: 'phone' }]);
+				expect(getValidationRulesForElement({ $type: 'input' })).toBeUndefined();
+			} finally {
+				validationRegistry.unregister('phone');
+			}
+		});
+
+		test('uses the native IPv4 validator and preserves its configured message', () => {
+			const schema = createZodSchemaFromRules([{ type: 'ipv4', message: 'Enter an IPv4 address' }]);
+
+			expect(schema.safeParse('192.168.1.1').success).toBe(true);
+			expect(schema.safeParse('256.168.1.1').success).toBe(false);
+			expect(schema.safeParse('256.168.1.1').error?.issues[0]?.message).toBe('Enter an IPv4 address');
+		});
+
+		test('uses the native IPv6 validator and preserves scoped addresses', () => {
+			const schema = createZodSchemaFromRules([{ type: 'ipv6', message: 'Enter an IPv6 address' }]);
+
+			expect(schema.safeParse('2001:db8::1').success).toBe(true);
+			expect(schema.safeParse('fe80::1%eth0').success).toBe(true);
+			expect(schema.safeParse('2001:db8::1::2').success).toBe(false);
+			expect(schema.safeParse('2001:db8::1::2').error?.issues[0]?.message).toBe('Enter an IPv6 address');
+			expect(schema.safeParse('fe80::1%').success).toBe(false);
 		});
 
 		test('should create string schema with required validation', () => {

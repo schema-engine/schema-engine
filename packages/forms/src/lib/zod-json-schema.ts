@@ -1,10 +1,10 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import type { JSONSchemaObject, JSONSchemaTarget } from '@/lib/standard-json-schema';
 
 /**
  * Duck-type a Zod validator. Native Standard Schema objects only expose `~standard`.
  */
-export function isZodType(schema: unknown): schema is z.ZodType {
+export function isZodType(schema: unknown): schema is z.ZodMiniType {
 	return (
 		typeof schema === 'object' &&
 		schema !== null &&
@@ -30,10 +30,12 @@ export function generateZodJSONSchemaCollection(
 	options?: {
 		target?: JSONSchemaTarget;
 		uri?: (id: string) => string;
+		io?: 'input' | 'output';
 	},
 ): JSONSchemaObject {
 	return z.toJSONSchema(metadataRegistry, {
 		target: options?.target || 'draft-2020-12',
+		io: options?.io || 'output',
 		uri: options?.uri || ((id: string) => `#/definitions/${id}`),
 	}) as JSONSchemaObject;
 }
@@ -44,15 +46,17 @@ export function generateZodJSONSchemaCollection(
  * concern for each emitted schema.
  */
 export function generateZodJSONSchemaDocument(
-	validator: z.ZodType,
+	validator: z.ZodMiniType,
 	metadataRegistry: ZodJSONSchemaRegistry,
 	options?: {
 		target?: JSONSchemaTarget;
 		schemaId?: string;
+		io?: 'input' | 'output';
 	},
 ): JSONSchemaObject {
 	const schema = z.toJSONSchema(validator, {
 		target: options?.target || 'draft-2020-12',
+		io: options?.io || 'output',
 		metadata: metadataRegistry as ReturnType<typeof z.registry<Record<string, any>>>,
 	}) as JSONSchemaObject & { $id?: string };
 

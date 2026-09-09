@@ -1,9 +1,8 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import type {
 	AsyncRule,
 	RequiredRule,
 	EmailRule,
-	PhoneRule,
 	MinLengthRule,
 	MaxLengthRule,
 	PatternRule,
@@ -23,6 +22,7 @@ import type {
 	UlidRule,
 	HexRule,
 	AnyValidationRegistration,
+	BaseValidationRule,
 	ValidationRegistration,
 	ValidationRegistrationMap,
 } from './types.js';
@@ -34,6 +34,7 @@ import { logger } from '@/lib/logger.js';
  */
 export class ValidationRegistry {
 	private validations = new Map<string, ValidationRegistration<any>>();
+	private defaultRulesByFieldType = new Map<string, Map<string, BaseValidationRule>>();
 
 	/**
 	 * Register a new validation type
@@ -46,6 +47,7 @@ export class ValidationRegistry {
 		}
 
 		this.validations.set(type, registration);
+		this.bindDefaultFor(registration);
 	}
 
 	/**
@@ -75,7 +77,16 @@ export class ValidationRegistry {
 	 * Remove a validation type
 	 */
 	unregister(type: string): boolean {
+		this.unbindDefaultFor(type);
 		return this.validations.delete(type);
+	}
+
+	/**
+	 * Default rules injected for a field `$type` when the author omitted them.
+	 */
+	getDefaultRulesForFieldType(fieldType: string): BaseValidationRule[] {
+		const rules = this.defaultRulesByFieldType.get(fieldType);
+		return rules ? [...rules.values()] : [];
 	}
 
 	/**
@@ -95,11 +106,11 @@ export class ValidationRegistry {
 	}
 
 	/**
-	 * Create Zod schema from a validation rule
+	 * Create a Zod Mini schema from a validation rule
 	 * @param rule - The validation rule
 	 * @param formData - Optional form data for cross-field validation
 	 */
-	createSchema<T extends { type: string }>(rule: T, formData?: Record<string, any>): z.ZodType | null {
+	createSchema<T extends { type: string }>(rule: T, formData?: Record<string, any>): z.ZodMiniType | null {
 		const registration = this.validations.get(rule.type) as ValidationRegistration<T> | undefined;
 		if (!registration) {
 			return null;
@@ -122,10 +133,6 @@ export class ValidationRegistry {
 			email: (message?: string): EmailRule => ({
 				type: 'email',
 				message: message || 'Please enter a valid email address',
-			}),
-			phone: (message?: string): PhoneRule => ({
-				type: 'phone',
-				message: message || 'Enter a complete phone number',
 			}),
 			minLength: (value: number, message?: string): MinLengthRule => ({
 				type: 'minLength',
@@ -248,6 +255,27 @@ export class ValidationRegistry {
 	 */
 	initialize(defaultValidations: AnyValidationRegistration[]): void {
 		this.registerMultiple(defaultValidations);
+	}
+
+	private unbindDefaultFor(ruleType: string): void {
+		for (const [fieldType, rules] of this.defaultRulesByFieldType) {
+			rules.delete(ruleType);
+			if (rules.size === 0) {
+				this.defaultRulesByFieldType.delete(fieldType);
+			}
+		}
+	}
+
+	private bindDefaultFor(registration: ValidationRegistration<any>): void {
+		this.unbindDefaultFor(registration.type);
+		for (const fieldType of registration.defaultFor ?? []) {
+			let rules = this.defaultRulesByFieldType.get(fieldType);
+			if (!rules) {
+				rules = new Map();
+				this.defaultRulesByFieldType.set(fieldType, rules);
+			}
+			rules.set(registration.type, { type: registration.type });
+		}
 	}
 }
 

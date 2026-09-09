@@ -1,173 +1,173 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 
 const BaseValidationRuleSchema = z.object({
 	type: z.string(),
-	message: z.string().optional(),
+	message: z.optional(z.string()),
 });
 
 const RequiredRuleSchema = z.object({
 	type: z.literal('required'),
-	message: z.string().optional(),
+	message: z.optional(z.string()),
 });
 
 const MinLengthRuleSchema = z.object({
 	type: z.literal('minLength'),
 	value: z.number(),
-	message: z.string().optional(),
+	message: z.optional(z.string()),
 });
 
 const MaxLengthRuleSchema = z.object({
 	type: z.literal('maxLength'),
 	value: z.number(),
-	message: z.string().optional(),
+	message: z.optional(z.string()),
 });
 
 const EmailRuleSchema = z.object({
 	type: z.literal('email'),
-	pattern: z.string().optional(),
-	message: z.string().optional(),
+	pattern: z.optional(z.string()),
+	message: z.optional(z.string()),
 });
 
 const PhoneRuleSchema = z.object({
 	type: z.literal('phone'),
-	message: z.string().optional(),
+	message: z.optional(z.string()),
 });
 
 const PatternRuleSchema = z.object({
 	type: z.literal('pattern'),
 	value: z.string(),
-	message: z.string().optional(),
+	message: z.optional(z.string()),
 });
 
 const UrlRuleSchema = z.object({
 	type: z.literal('url'),
-	protocol: z.string().optional(),
-	hostname: z.string().optional(),
-	message: z.string().optional(),
+	protocol: z.optional(z.string()),
+	hostname: z.optional(z.string()),
+	message: z.optional(z.string()),
 });
 
 const UuidRuleSchema = z.object({
 	type: z.literal('uuid'),
-	version: z.enum(['v1', 'v2', 'v3', 'v4', 'v5']).optional(),
-	message: z.string().optional(),
+	version: z.optional(z.enum(['v1', 'v2', 'v3', 'v4', 'v5'])),
+	message: z.optional(z.string()),
 });
 
 const Ipv4RuleSchema = z.object({
 	type: z.literal('ipv4'),
-	message: z.string().optional(),
+	message: z.optional(z.string()),
 });
 
 const Ipv6RuleSchema = z.object({
 	type: z.literal('ipv6'),
-	message: z.string().optional(),
+	message: z.optional(z.string()),
 });
 
 const CidrRuleSchema = z.object({
 	type: z.literal('cidr'),
-	version: z.enum(['v4', 'v6']).optional(),
-	message: z.string().optional(),
+	version: z.optional(z.enum(['v4', 'v6'])),
+	message: z.optional(z.string()),
 });
 
 const JwtRuleSchema = z.object({
 	type: z.literal('jwt'),
-	alg: z.string().optional(),
-	message: z.string().optional(),
+	alg: z.optional(z.string()),
+	message: z.optional(z.string()),
 });
 
 const HashRuleSchema = z.object({
 	type: z.literal('hash'),
 	algorithm: z.enum(['md5', 'sha1', 'sha256', 'sha384', 'sha512']),
-	message: z.string().optional(),
+	message: z.optional(z.string()),
 });
 
 const Base64RuleSchema = z.object({
 	type: z.literal('base64'),
-	urlSafe: z.boolean().optional(),
-	message: z.string().optional(),
+	urlSafe: z.optional(z.boolean()),
+	message: z.optional(z.string()),
 });
 
 const CuidRuleSchema = z.object({
 	type: z.literal('cuid'),
-	message: z.string().optional(),
+	message: z.optional(z.string()),
 });
 
 const Cuid2RuleSchema = z.object({
 	type: z.literal('cuid2'),
-	message: z.string().optional(),
+	message: z.optional(z.string()),
 });
 
 const UlidRuleSchema = z.object({
 	type: z.literal('ulid'),
-	message: z.string().optional(),
+	message: z.optional(z.string()),
 });
 
 const HexRuleSchema = z.object({
 	type: z.literal('hex'),
-	message: z.string().optional(),
+	message: z.optional(z.string()),
 });
 
 const MinRuleSchema = z.object({
 	type: z.literal('min'),
 	value: z.number(),
-	message: z.string().optional(),
+	message: z.optional(z.string()),
 });
 
 const MaxRuleSchema = z.object({
 	type: z.literal('max'),
 	value: z.number(),
-	message: z.string().optional(),
+	message: z.optional(z.string()),
 });
 
 const MinItemsRuleSchema = z.object({
 	type: z.literal('minItems'),
 	value: z.number(),
-	message: z.string().optional(),
+	message: z.optional(z.string()),
 });
 
 const MaxItemsRuleSchema = z.object({
 	type: z.literal('maxItems'),
 	value: z.number(),
-	message: z.string().optional(),
+	message: z.optional(z.string()),
 });
 
 const DateTimeRuleSchema = z.object({
 	type: z.literal('datetime'),
-	precision: z.number().optional(),
-	offset: z.boolean().optional(),
-	local: z.boolean().optional(),
-	message: z.string().optional(),
+	precision: z.optional(z.number()),
+	offset: z.optional(z.boolean()),
+	local: z.optional(z.boolean()),
+	message: z.optional(z.string()),
 });
 
 const DateRuleSchema = z.object({
 	type: z.literal('date'),
-	message: z.string().optional(),
+	message: z.optional(z.string()),
 });
 
 const TimeRuleSchema = z.object({
 	type: z.literal('time'),
-	precision: z.number().optional(),
-	message: z.string().optional(),
+	precision: z.optional(z.number()),
+	message: z.optional(z.string()),
 });
 
 const AsyncRuleSchema = z.object({
 	type: z.literal('async'),
 	url: z.string(),
-	method: z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']).default('POST'),
-	headers: z.record(z.string(), z.string()).optional(),
-	extraPayload: z.record(z.string(), z.unknown()).optional(),
-	expectedResponse: z
-		.object({
-			valid: z.boolean().optional(),
-			success: z.boolean().optional(),
-			message: z.string().optional(),
-			error: z.string().optional(),
-		})
-		.optional(),
-	message: z.string().optional(),
-	dependencies: z.array(z.string()).optional(),
-	debounce: z.number().optional(),
-	cacheTTL: z.number().optional(),
-	disableCache: z.boolean().optional(),
+	method: z._default(z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']), 'POST'),
+	headers: z.optional(z.record(z.string(), z.string())),
+	extraPayload: z.optional(z.record(z.string(), z.unknown())),
+	expectedResponse: z.optional(
+		z.object({
+			valid: z.optional(z.boolean()),
+			success: z.optional(z.boolean()),
+			message: z.optional(z.string()),
+			error: z.optional(z.string()),
+		}),
+	),
+	message: z.optional(z.string()),
+	dependencies: z.optional(z.array(z.string())),
+	debounce: z.optional(z.number()),
+	cacheTTL: z.optional(z.number()),
+	disableCache: z.optional(z.boolean()),
 });
 
 export const ValidationRuleSchema = z.union([
@@ -239,9 +239,17 @@ export interface ValidationRegistration<TRule extends { type: string } = { type:
 	 * Validation handler function
 	 * @param rule - The validation rule configuration (typed to specific rule type)
 	 * @param formData - Optional form data for cross-field validation (available in custom resolver)
-	 * @returns Zod schema for validation
+	 * @returns Zod Mini schema for validation
 	 */
-	handler: (rule: TRule, formData?: Record<string, any>) => z.ZodType;
+	handler: (rule: TRule, formData?: Record<string, any>) => z.ZodMiniType;
+	/**
+	 * Field `$type` values that receive this rule when the author omitted it.
+	 *
+	 * @remarks Lets an integration attach a rule (for example `phone` on
+	 * `phone-input`) without putting that field type or its library into the
+	 * forms package.
+	 */
+	defaultFor?: readonly string[];
 }
 
 /**

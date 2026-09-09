@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { asyncValidationCache } from './cache';
 import { debounce } from '@/lib/debounce';
 
@@ -140,11 +140,11 @@ function getErrorMessage(data: unknown, fallbackMessage?: string): string {
 }
 
 /**
- * Handles validation failure by adding issue to Zod context.
+ * Handles validation failure by adding an issue to the Zod Mini context.
  */
-function handleValidationFailure(ctx: z.RefinementCtx, message: string): void {
+function handleValidationFailure(ctx: z.core.$RefinementCtx, message: string): void {
 	ctx.addIssue({
-		code: z.ZodIssueCode.custom,
+		code: 'custom',
 		message,
 	});
 }
@@ -153,7 +153,7 @@ function handleValidationFailure(ctx: z.RefinementCtx, message: string): void {
  * Creates and caches error result, then adds issue to context.
  */
 function handleErrorWithCache(
-	ctx: z.RefinementCtx,
+	ctx: z.core.$RefinementCtx,
 	cache: typeof asyncValidationCache,
 	url: string,
 	payload: Record<string, unknown>,
@@ -171,115 +171,117 @@ function handleErrorWithCache(
 }
 
 /**
- * Creates a Zod async validation handler for server-side validation.
+ * Creates a Zod Mini async validation handler for server-side validation.
  * Includes debouncing, dependency resolution, and performance optimizations.
  */
 export function createAsyncValidationHandler(rule: AsyncRule, formData?: Record<string, unknown>) {
-	return z.any().superRefine(async (value: unknown, ctx) => {
-		/** Skip validation for empty values to prevent unnecessary API calls */
-		if (value === '' || value === null || value === undefined) {
-			return;
-		}
-
-		const dependsOn = resolveDependencies(rule.dependencies, formData);
-
-		/**
-		 * Skip validation if any dependency field is empty.
-		 * This ensures all required context is available before making API calls.
-		 */
-		if (rule.dependencies?.length) {
-			const hasEmptyDependencies = rule.dependencies.some((dep) => {
-				const depValue = formData?.[dep];
-				return depValue === '' || depValue === null || depValue === undefined;
-			});
-
-			if (hasEmptyDependencies) {
+	return z.any().check(
+		z.superRefine(async (value: unknown, ctx) => {
+			/** Skip validation for empty values to prevent unnecessary API calls */
+			if (value === '' || value === null || value === undefined) {
 				return;
 			}
-		}
 
-		const payload = createValidationPayload(value, dependsOn, rule.extraPayload);
+			const dependsOn = resolveDependencies(rule.dependencies, formData);
 
-		/** Check cache first to avoid unnecessary delays for cached results */
-		if (!rule.disableCache) {
-			const cachedResult = asyncValidationCache.get(rule.url, payload) as CachedValidationResult | null;
-			if (cachedResult !== null) {
-				if (!cachedResult.valid && cachedResult.message) {
-					handleValidationFailure(ctx, cachedResult.message);
-				}
-				return;
-			}
-		}
-
-		/**
-		 * Create unique debounce key excluding the changing value to ensure proper debouncing.
-		 */
-		const stablePayload = { dependsOn, ...rule.extraPayload };
-		const debounceKey = `async-validation:${rule.url}:${JSON.stringify(stablePayload)}`;
-
-		/** Core validation function that performs the HTTP request and processes the response */
-		const performValidation = async () => {
-			try {
-				const method = rule.method ?? 'POST';
-				const hasBody = method !== 'GET';
-
-				const response = await fetch(rule.url, {
-					method,
-					headers: {
-						...(hasBody ? { 'Content-Type': 'application/json' } : {}),
-						...rule.headers,
-					},
-					...(hasBody ? { body: JSON.stringify(payload) } : {}),
+			/**
+			 * Skip validation if any dependency field is empty.
+			 * This ensures all required context is available before making API calls.
+			 */
+			if (rule.dependencies?.length) {
+				const hasEmptyDependencies = rule.dependencies.some((dep) => {
+					const depValue = formData?.[dep];
+					return depValue === '' || depValue === null || depValue === undefined;
 				});
 
-				if (!response.ok) {
-					const errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+				if (hasEmptyDependencies) {
+					return;
+				}
+			}
+
+			const payload = createValidationPayload(value, dependsOn, rule.extraPayload);
+
+			/** Check cache first to avoid unnecessary delays for cached results */
+			if (!rule.disableCache) {
+				const cachedResult = asyncValidationCache.get(rule.url, payload) as CachedValidationResult | null;
+				if (cachedResult !== null) {
+					if (!cachedResult.valid && cachedResult.message) {
+						handleValidationFailure(ctx, cachedResult.message);
+					}
+					return;
+				}
+			}
+
+			/**
+			 * Create unique debounce key excluding the changing value to ensure proper debouncing.
+			 */
+			const stablePayload = { dependsOn, ...rule.extraPayload };
+			const debounceKey = `async-validation:${rule.url}:${JSON.stringify(stablePayload)}`;
+
+			/** Core validation function that performs the HTTP request and processes the response */
+			const performValidation = async () => {
+				try {
+					const method = rule.method ?? 'POST';
+					const hasBody = method !== 'GET';
+
+					const response = await fetch(rule.url, {
+						method,
+						headers: {
+							...(hasBody ? { 'Content-Type': 'application/json' } : {}),
+							...rule.headers,
+						},
+						...(hasBody ? { body: JSON.stringify(payload) } : {}),
+					});
+
+					if (!response.ok) {
+						const errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+						handleErrorWithCache(
+							ctx,
+							asyncValidationCache,
+							rule.url,
+							payload,
+							errorMessage,
+							CACHE_TTL.HTTP_ERROR,
+							rule.disableCache,
+						);
+						return;
+					}
+
+					const data = await response.json();
+					const isValid = isValidationSuccessful(data, rule.expectedResponse);
+
+					const cacheResult: CachedValidationResult = {
+						valid: isValid,
+						message: isValid ? undefined : getErrorMessage(data, rule.message),
+					};
+
+					if (!rule.disableCache) {
+						asyncValidationCache.set(rule.url, payload, cacheResult, rule.cacheTTL);
+					}
+
+					if (!isValid && cacheResult.message) {
+						handleValidationFailure(ctx, cacheResult.message);
+					}
+				} catch (error) {
+					const errorMessage = error instanceof Error ? error.message : 'Async validation failed';
 					handleErrorWithCache(
 						ctx,
 						asyncValidationCache,
 						rule.url,
 						payload,
 						errorMessage,
-						CACHE_TTL.HTTP_ERROR,
+						CACHE_TTL.NETWORK_ERROR,
 						rule.disableCache,
 					);
-					return;
 				}
+			};
 
-				const data = await response.json();
-				const isValid = isValidationSuccessful(data, rule.expectedResponse);
-
-				const cacheResult: CachedValidationResult = {
-					valid: isValid,
-					message: isValid ? undefined : getErrorMessage(data, rule.message),
-				};
-
-				if (!rule.disableCache) {
-					asyncValidationCache.set(rule.url, payload, cacheResult, rule.cacheTTL);
-				}
-
-				if (!isValid && cacheResult.message) {
-					handleValidationFailure(ctx, cacheResult.message);
-				}
-			} catch (error) {
-				const errorMessage = error instanceof Error ? error.message : 'Async validation failed';
-				handleErrorWithCache(
-					ctx,
-					asyncValidationCache,
-					rule.url,
-					payload,
-					errorMessage,
-					CACHE_TTL.NETWORK_ERROR,
-					rule.disableCache,
-				);
+			/** Execute validation with optional debouncing based on rule configuration */
+			if (rule.debounce && rule.debounce > 0) {
+				await debounce(performValidation, rule.debounce, debounceKey);
+			} else {
+				await performValidation();
 			}
-		};
-
-		/** Execute validation with optional debouncing based on rule configuration */
-		if (rule.debounce && rule.debounce > 0) {
-			await debounce(performValidation, rule.debounce, debounceKey);
-		} else {
-			await performValidation();
-		}
-	});
+		}),
+	);
 }
