@@ -1,6 +1,6 @@
 ---
-title: "Advanced Usage"
-description: "Custom triggers, context, and dispatcher wiring."
+title: 'Advanced Usage'
+description: 'Custom triggers, context, and dispatcher wiring.'
 group: Actions
 order: 4
 ---
@@ -82,7 +82,7 @@ class MyActionRegistry<TBaseContext, TTrigger> implements ActionRegistryProvider
 ## Testing Actions
 
 ```typescript
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test } from 'vitest';
 
 describe('logAction', () => {
 	test('returns success', async () => {
@@ -114,7 +114,6 @@ const myAction = define({
 	schema: mySchema,
 	metadata: { name: 'My Action' },
 	execute: async (context) => {
-		// context: AppContext & { config: MyConfig; trigger: AppTrigger }
 		return { success: true };
 	},
 });

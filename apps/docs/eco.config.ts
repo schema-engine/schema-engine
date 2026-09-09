@@ -30,7 +30,7 @@ const config = await new ConfigBuilder()
 	.setDefaultMetadata({
 		title: 'Schema Engine | Docs',
 		description:
-			'JSON-driven, type-safe forms with Zod validation. Four first-party packages: forms, forms-react, actions, and registry.',
+			'JSON-driven, type-safe forms with Zod Mini validation and Standard Schema registrations. Four first-party packages: forms, forms-react, actions, and registry.',
 		keywords: ['schema-engine', 'forms', 'json', 'zod', 'react'],
 	})
 	.setProcessors([

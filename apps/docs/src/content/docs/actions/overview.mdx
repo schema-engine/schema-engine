@@ -1,6 +1,6 @@
 ---
-title: "Overview"
-description: "Domain-agnostic sequential action execution system."
+title: 'Overview'
+description: 'Domain-agnostic sequential action execution system.'
 group: Actions
 order: 1
 ---
@@ -18,11 +18,11 @@ It provides:
 - a sequential executor
 - a thin dispatcher for metadata-aware dispatching
 
-The package is intended to be reused across multiple domains. Forms is the first concrete implementation in this repo, but the package itself is not form-specific.
+The package is reusable across domains. It is not form-specific.
 
-## Current Model
+## Execution Model
 
-The current implementation separates the caller-provided base context from the runtime context seen by action handlers.
+The executor separates the caller-provided base context from the runtime context seen by action handlers.
 
 When an action runs, the executor enriches the base context with the current action config and trigger before calling `execute()`.
 
@@ -38,11 +38,15 @@ At the call site you pass only the base context. The merged runtime shape is con
 
 ## Dependencies
 
-`zod` is the only external runtime dependency. The package also depends on the internal `@schema-engine/registry` package from the same workspace family.
+The package has no schema-library runtime dependency. Its `schema` values use
+the provider-neutral Standard Schema contract; applications may choose Zod Mini,
+Zod, Valibot, Effect Schema, or another compatible provider.
 
 ## Quick Example
 
 ```typescript
+import * as z from 'zod/mini';
+
 type Trigger = 'submit' | 'change';
 
 type BaseContext = {
@@ -62,7 +66,7 @@ const registry = new ActionRegistry<BaseContext, Trigger>();
 
 const logAction: ActionRegistration<LogConfig, BaseContext, Trigger> = {
 	$type: 'log',
-	schema: z.object({
+	schema: z.strictObject({
 		id: z.string(),
 		$type: z.literal('log'),
 		message: z.string(),

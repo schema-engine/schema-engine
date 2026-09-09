@@ -1,6 +1,6 @@
 ---
-title: "Getting Started"
-description: "Install the actions package and register the first plugin."
+title: 'Getting Started'
+description: 'Install the actions package and register the first plugin.'
 group: Actions
 order: 2
 ---
@@ -33,21 +33,22 @@ interface LogActionConfig extends ActionConfigBase<'log'> {
 The `execute` handler receives an `ActionRuntimeContext`: your `BaseContext` enriched with `config` and `trigger`. You do not need to define that merged type manually — it is inferred from the generics.
 
 ```typescript
+import * as z from 'zod/mini';
+
 const logAction: ActionRegistration<LogActionConfig, BaseContext, MyTrigger> = {
 	$type: 'log',
-	schema: z.object({
+	schema: z.strictObject({
 		id: z.string(),
 		$type: z.literal('log'),
 		message: z.string(),
-		enabled: z.boolean().optional(),
-		triggers: z.array(z.string()).optional(),
+		enabled: z.optional(z.boolean()),
+		triggers: z.optional(z.array(z.string())),
 	}),
 	metadata: {
 		name: 'Log Action',
 		defaultTriggers: ['submit'],
 	},
 	execute: (context) => {
-		// context: BaseContext & { config: LogActionConfig; trigger: MyTrigger }
 		console.log(context.trigger, context.config.message, context.data);
 		return { success: true };
 	},

@@ -51,13 +51,13 @@ schema input, so defaulted properties stay optional in `defineForm`.
 
 ```tsx
 import { defineInput, createFormEngine } from '@schema-engine/forms';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 
 const RatingSchema = z.object({
 	$type: z.literal('rating'),
 	id: z.string(),
 	name: z.string(),
-	max: z.number().default(5),
+	max: z._default(z.number(), 5),
 });
 
 function RatingField(config: { name: string; max: number }) {
@@ -95,12 +95,12 @@ of cloning child configs.
 ```tsx
 import { defineInput, elementChildrenSchema, objectFieldScope } from '@schema-engine/forms';
 import { FormElements } from '@schema-engine/forms-react';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
 
-const GroupSchema = BaseFieldSchema.extend({
+const GroupSchema = z.extend(BaseFieldSchema, {
 	$type: z.literal('group'),
-	elements: elementChildrenSchema.min(1),
+	elements: elementChildrenSchema.check(z.minLength(1)),
 });
 
 function GroupField(config: {
@@ -109,13 +109,7 @@ function GroupField(config: {
 	instanceId?: string;
 }) {
 	const scope = objectFieldScope(config.name, config);
-	return (
-		<FormElements
-			elements={config.elements}
-			namePrefix={scope.namePrefix}
-			instanceId={scope.instanceId}
-		/>
-	);
+	return <FormElements elements={config.elements} namePrefix={scope.namePrefix} instanceId={scope.instanceId} />;
 }
 
 export const GroupRegistration = defineInput({

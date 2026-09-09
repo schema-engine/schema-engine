@@ -1,6 +1,6 @@
 ---
-title: "Examples"
-description: "Standalone patterns for the registry outside of forms."
+title: 'Examples'
+description: 'Standalone patterns for the registry outside of forms.'
 group: Registry
 order: 4
 ---
@@ -9,6 +9,11 @@ order: 4
 
 Learn how to build your own registry by extending the base classes.
 
+```typescript
+import type { StandardSchemaV1 } from '@standard-schema/spec';
+import * as z from 'zod/mini';
+```
+
 ## Creating a Plugin Registry
 
 Here's how to create a simple plugin registry:
@@ -16,7 +21,7 @@ Here's how to create a simple plugin registry:
 ```typescript
 interface PluginRegistration extends BaseRegistration {
 	$type: string;
-	schema: z.ZodType<unknown>;
+	schema: StandardSchemaV1;
 	metadata: ComponentMetadata;
 	execute: () => Promise<void>;
 }
@@ -56,7 +61,7 @@ For visual components that need a render method:
 ```typescript
 interface WidgetRegistration extends ComponentRegistration<string, unknown, { id: string }> {
 	$type: string;
-	schema: z.ZodType<unknown>;
+	schema: StandardSchemaV1;
 	metadata: ComponentMetadata;
 	render: (props: { id: string }) => JSX.Element;
 }

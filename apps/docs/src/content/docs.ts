@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 
 /** Public URL prefix for docs pages. */
 export const DOCS_ROOT = '/docs';
@@ -32,8 +32,8 @@ export const LLM_SECTION_ORDER = [
 export const docsFrontmatterSchema = z.object({
 	title: z.string(),
 	description: z.string(),
-	group: z.string().optional(),
-	order: z.coerce.number().optional(),
+	group: z.optional(z.string()),
+	order: z.optional(z.coerce.number()),
 });
 
 export type DocsFrontmatter = z.infer<typeof docsFrontmatterSchema>;

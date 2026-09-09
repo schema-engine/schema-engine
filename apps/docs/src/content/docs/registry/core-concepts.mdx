@@ -1,6 +1,6 @@
 ---
-title: "Core Concepts"
-description: "How registration, lookup, and metadata compose."
+title: 'Core Concepts'
+description: 'How registration, lookup, and metadata compose.'
 group: Registry
 order: 2
 ---
@@ -8,6 +8,10 @@ order: 2
 # Core Concepts
 
 This page explains the fundamental concepts of the registry system.
+
+Registry schemas use the provider-neutral `StandardSchemaV1` contract. The
+examples can be authored with Zod Mini, Zod, Valibot, Effect Schema, or another
+Standard Schema implementation.
 
 ## BaseRegistry
 
@@ -17,7 +21,7 @@ The abstract base class that provides common registration, retrieval, and manage
 abstract class BaseRegistry<TKey extends string, TValue extends BaseRegistration> {
 	protected items: Map<TKey, TValue>;
 	abstract get registryName(): string;
-	
+
 	register(item: TValue): void;
 	has(key: TKey): boolean;
 	get(key: TKey): TValue | undefined;
@@ -30,26 +34,25 @@ abstract class BaseRegistry<TKey extends string, TValue extends BaseRegistration
 
 ### Key Methods
 
-| Method | Description |
-|--------|-------------|
+| Method           | Description                                                 |
+| ---------------- | ----------------------------------------------------------- |
 | `register(item)` | Adds an item to the registry. Logs a warning if overriding. |
-| `has(key)` | Checks if an item exists |
-| `get(key)` | Retrieves an item by key |
-| `getAll()` | Returns all registered items |
-| `getAllKeys()` | Returns all registered keys |
-| `size` | Number of registered items |
-| `clear()` | Removes all items (useful for testing) |
+| `has(key)`       | Checks if an item exists                                    |
+| `get(key)`       | Retrieves an item by key                                    |
+| `getAll()`       | Returns all registered items                                |
+| `getAllKeys()`   | Returns all registered keys                                 |
+| `size`           | Number of registered items                                  |
+| `clear()`        | Removes all items (useful for testing)                      |
 
 ## ComponentRegistry
 
 A specialized registry for visual components that require a `render` method. Form elements and view recipes use this.
 
 ```typescript
-abstract class ComponentRegistry<
-	TKey extends string,
-	TValue extends ComponentRegistration
-> extends BaseRegistry<TKey, TValue> {
-}
+abstract class ComponentRegistry<TKey extends string, TValue extends ComponentRegistration> extends BaseRegistry<
+	TKey,
+	TValue
+> {}
 ```
 
 `ComponentRegistry` adds no runtime behavior today. Its value is the stronger type constraint that only renderable registrations can be stored in it.
@@ -61,7 +64,7 @@ The interface that all registry items must implement:
 ```typescript
 interface BaseRegistration<TConfig = unknown, TMeta extends ComponentMetadata = ComponentMetadata> {
 	$type: string;
-	schema: z.ZodType<TConfig>;
+	schema: StandardSchemaV1<TConfig>;
 	metadata: TMeta;
 }
 ```
@@ -77,7 +80,7 @@ interface ComponentRegistration<
 	TType extends string,
 	TConfig,
 	TProps,
-	TMeta extends ComponentMetadata
+	TMeta extends ComponentMetadata,
 > extends BaseRegistration<TConfig, TMeta> {
 	$type: TType;
 	render: (props: TProps) => unknown;

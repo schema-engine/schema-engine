@@ -1,6 +1,6 @@
 ---
-title: "How It Works"
-description: "Action lifecycle, dispatch, and error propagation."
+title: 'How It Works'
+description: 'Action lifecycle, dispatch, and error propagation.'
 group: Actions
 order: 6
 ---
@@ -9,7 +9,7 @@ order: 6
 
 This page explains the generic lifecycle of the actions package.
 
-Forms is the first concrete consumer in this repo, but the mechanics below are package-level behavior.
+The forms package uses these primitives for form actions.
 
 ## Lifecycle
 
@@ -53,6 +53,7 @@ execute({
 	...context,
 	config: action,
 	trigger,
+	...(triggeredBy ? { triggeredBy } : {}),
 });
 ```
 
@@ -85,6 +86,6 @@ return {
 };
 ```
 
-## Downstream Implementations
+## Form Integration
 
-The forms package builds on this model by defining a richer execution context with form-specific fields such as `formData`, `errors`, and controller methods. That is an implementation built on top of the generic action primitives, not behavior built into this package.
+Form action handlers receive a context with `formData`, `errors`, form state, and controller methods in addition to the action `config` and `trigger`.

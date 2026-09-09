@@ -18,10 +18,10 @@ export const config = {
 
 Recipes compose a **shell** with optional **header**, **progress**, and **actions** blocks. Select one with form-level `view.$type`. `@schema-engine/forms-react` is headless: the factory does not bind default recipes. `FormRenderer` still lives in the package.
 
-| Layer                                          | Owns                                                                   |
-| ---------------------------------------------- | ---------------------------------------------------------------------- |
-| `@schema-engine/forms/recipes`                 | Specs, kinds, slot schemas, `defineFormRecipe`                         |
-| `schema-engine-form-recipes` (shadcn registry) | React shells, blocks, `schemaFormRecipeRegistrations`                  |
+| Layer                                          | Owns                                                                 |
+| ---------------------------------------------- | -------------------------------------------------------------------- |
+| `@schema-engine/forms/recipes`                 | Specs, kinds, slot schemas, `defineFormRecipe`                       |
+| `schema-engine-form-recipes` (shadcn registry) | React shells, blocks, `schemaFormRecipeRegistrations`                |
 | `@schema-engine/forms-radiant`                 | Radiant shells and blocks, auto-bound by `createRadiantFormEngine()` |
 
 ## Default registry recipes
@@ -99,7 +99,7 @@ Canonical source is `registry/shared/forms/recipes`. After `shadcn add`, files l
 ## Custom recipes
 
 ```typescript
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { createReactFormEngine } from '@schema-engine/forms-react';
 import { defineFormRecipe, defineRecipeSpec } from '@schema-engine/forms/recipes';
 import type { FormShellProps } from '@schema-engine/forms-react/primitives';
@@ -118,7 +118,7 @@ const BrandRecipe = defineFormRecipe(
 	defineRecipeSpec({
 		$type: 'brand',
 		kind: 'single-step',
-		slotSchemas: { shell: z.object({ accent: z.string().optional() }).strict() },
+		slotSchemas: { shell: z.strictObject({ accent: z.optional(z.string()) }) },
 		metadata: { name: 'Brand', description: 'Branded form shell' },
 	}),
 	{ shell: BrandShell, slots: {} },

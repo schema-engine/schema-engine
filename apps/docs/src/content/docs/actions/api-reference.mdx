@@ -1,6 +1,6 @@
 ---
-title: "API Reference"
-description: "Public surface of the actions package."
+title: 'API Reference'
+description: 'Public surface of the actions package.'
 group: Actions
 order: 5
 ---
@@ -12,7 +12,8 @@ order: 5
 ```typescript
 class ActionRegistry<TBaseContext, TTrigger>
 	extends BaseRegistry<string, ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>>
-	implements ActionRegistryProvider<TBaseContext, TTrigger> {
+	implements ActionRegistryProvider<TBaseContext, TTrigger>
+{
 	get registryName(): string;
 	getAction(type: string): ActionRegistration<ActionConfigBase, TBaseContext, TTrigger> | undefined;
 	getActionTypes(): string[];
@@ -25,10 +26,7 @@ Inherited behavior from `BaseRegistry` includes `register`, `has`, `get`, `getAl
 
 ```typescript
 class ActionExecutor<TBaseContext = unknown, TTrigger = string> {
-	constructor(
-		registry: ActionRegistryProvider<TBaseContext, TTrigger>,
-		options?: ActionExecutorOptions,
-	);
+	constructor(registry: ActionRegistryProvider<TBaseContext, TTrigger>, options?: ActionExecutorOptions);
 
 	execute<TConfig extends ActionConfigBase>(
 		input: ActionExecuteInput<TConfig, TBaseContext, TTrigger>,
@@ -46,18 +44,13 @@ Before each action runs, the executor enriches the caller-provided `context` wit
 
 ```typescript
 class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
-	constructor(
-		registry: ActionRegistryProvider<TBaseContext, TTrigger>,
-		options?: ActionDispatcherOptions,
-	);
+	constructor(registry: ActionRegistryProvider<TBaseContext, TTrigger>, options?: ActionDispatcherOptions);
 
 	dispatch<TConfig extends ActionConfigBase>(
 		input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>,
 	): Promise<ActionExecutionResult[]>;
 
-	dispatchSync<TConfig extends ActionConfigBase>(
-		input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>,
-	): void;
+	dispatchSync<TConfig extends ActionConfigBase>(input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>): void;
 }
 
 interface ActionDispatcherOptions {
@@ -72,10 +65,15 @@ When `metadata` is provided in the input, `dispatch()` shallow-merges it into `c
 Available from the package root:
 
 ```typescript
-```
-
-```typescript
-interface ActionRegistryProvider<TBaseContext = unknown, TTrigger = string, TRegistration = ActionRegistration<any, TBaseContext, TTrigger>> {
+interface ActionRegistryProvider<
+	TBaseContext = unknown,
+	TTrigger = string,
+	TRegistration extends ActionRegistration<ActionConfigBase, TBaseContext, TTrigger> = ActionRegistration<
+		ActionConfigBase,
+		TBaseContext,
+		TTrigger
+	>,
+> {
 	getAction(type: string): TRegistration | undefined;
 	getActionTypes(): string[];
 }
@@ -99,21 +97,21 @@ interface ActionRegistration<
 }
 ```
 
-Zod schemas implement Standard Schema and remain valid `schema` values.
+Zod Mini, Zod, Valibot, and Effect Schema values implement Standard Schema and remain valid `schema` values.
 
 `execute` receives an `ActionRuntimeContext` — the caller-provided `TBaseContext` enriched with `config` and `trigger` by the executor.
 
 ## ActionRuntimeContext
 
 ```typescript
-type ActionRuntimeContext<TConfig = unknown, TBaseContext = unknown, TTrigger = string> =
-	TBaseContext & {
-		config: TConfig;
-		trigger: TTrigger;
-	};
+type ActionRuntimeContext<TConfig = unknown, TBaseContext = unknown, TTrigger = string> = TBaseContext & {
+	config: TConfig;
+	trigger: TTrigger;
+	triggeredBy?: TConfig;
+};
 ```
 
-The shape that action handlers receive at execution time. The executor creates this by spreading the caller-provided base context with the current `config` and `trigger`.
+The shape that action handlers receive at execution time. The executor creates this by spreading the caller-provided base context with the current `config` and `trigger`, and includes `triggeredBy` for nested dispatches.
 
 ## ActionExecuteInput
 
@@ -126,7 +124,7 @@ interface ActionExecuteInput<
 	TTrigger = string,
 > {
 	trigger: TTrigger;
-	actions: TConfig[];
+	actions: readonly TConfig[];
 	context: TBaseContext;
 	triggeredBy?: TConfig;
 }
@@ -200,7 +198,6 @@ const myAction = define({
 	schema: mySchema,
 	metadata: { name: 'My Action' },
 	execute: async (context) => {
-		// context is AppContext & { config: MyConfig; trigger: AppTrigger }
 		return { success: true };
 	},
 });

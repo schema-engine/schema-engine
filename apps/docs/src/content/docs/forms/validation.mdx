@@ -1,13 +1,13 @@
 ---
-title: "Validation"
-description: "Declarative validation rules and Zod schema generation."
+title: 'Validation'
+description: 'Declarative validation rules and Zod Mini schema generation.'
 group: Forms
 order: 4
 ---
 
 # Validation
 
-The validation system provides 15+ built-in rules with support for custom validation.
+The validation system provides 24 built-in rules with support for custom validation.
 
 ## Using Validation Presets
 
@@ -38,58 +38,58 @@ const ageRules = [
 
 ### String
 
-| Preset | Description |
-|--------|-------------|
-| `required(message)` | Non-empty string |
-| `email(message)` | Valid email format |
-| `url(message)` | Valid URL format |
-| `uuid(message)` | Valid UUID |
-| `uuidv4(message)` | Valid UUID v4 |
-| `cuid(message)` | Valid CUID |
-| `cuid2(message)` | Valid CUID2 |
-| `ulid(message)` | Valid ULID |
-| `hex(message)` | Valid hexadecimal string |
-| `minLength(min, message)` | Minimum string length |
-| `maxLength(max, message)` | Maximum string length |
-| `pattern(regex, message)` | Regex pattern match |
+| Preset                    | Description              |
+| ------------------------- | ------------------------ |
+| `required(message)`       | Non-empty string         |
+| `email(message)`          | Valid email format       |
+| `url(message)`            | Valid URL format         |
+| `uuid(message)`           | Valid UUID               |
+| `uuidv4(message)`         | Valid UUID v4            |
+| `cuid(message)`           | Valid CUID               |
+| `cuid2(message)`          | Valid CUID2              |
+| `ulid(message)`           | Valid ULID               |
+| `hex(message)`            | Valid hexadecimal string |
+| `minLength(min, message)` | Minimum string length    |
+| `maxLength(max, message)` | Maximum string length    |
+| `pattern(regex, message)` | Regex pattern match      |
 
 ### Number
 
-| Preset | Description |
-|--------|-------------|
+| Preset              | Description     |
+| ------------------- | --------------- |
 | `required(message)` | Non-null number |
-| `min(min, message)` | Minimum value |
-| `max(max, message)` | Maximum value |
+| `min(min, message)` | Minimum value   |
+| `max(max, message)` | Maximum value   |
 
 ### Boolean
 
-| Preset | Description |
-|--------|-------------|
+| Preset              | Description            |
+| ------------------- | ---------------------- |
 | `required(message)` | Required boolean value |
 
 ### Array
 
-| Preset | Description |
-|--------|-------------|
-| `required(message)` | Non-empty array |
-| `minItems(min, message)` | Minimum array length |
-| `maxItems(max, message)` | Maximum array length |
-| `nonEmpty(message)` | Convenience alias for `minItems(1, message)` |
+| Preset                   | Description                                  |
+| ------------------------ | -------------------------------------------- |
+| `required(message)`      | Non-empty array                              |
+| `minItems(min, message)` | Minimum array length                         |
+| `maxItems(max, message)` | Maximum array length                         |
+| `nonEmpty(message)`      | Convenience alias for `minItems(1, message)` |
 
 ### Network
 
-| Preset | Description |
-|--------|-------------|
+| Preset          | Description        |
+| --------------- | ------------------ |
 | `ipv4(message)` | Valid IPv4 address |
 | `ipv6(message)` | Valid IPv6 address |
 
 ### Date
 
-| Preset | Description |
-|--------|-------------|
+| Preset              | Description    |
+| ------------------- | -------------- |
 | `datetime(message)` | Valid datetime |
-| `date(message)` | Valid date |
-| `time(message)` | Valid time |
+| `date(message)`     | Valid date     |
+| `time(message)`     | Valid time     |
 
 ## In Form Configurations
 

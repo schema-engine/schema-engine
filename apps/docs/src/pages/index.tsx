@@ -28,7 +28,7 @@ const EXPLORE_ARTICLES: HomeFeedArticleData[] = [
 		label: 'Get Started',
 		title: 'Schema-driven from day one',
 		description:
-			'Define forms in JSON, get Zod validation, real components, and full type safety without writing the form by hand.',
+			'Define forms in JSON, get Zod Mini validation, real components, and full type safety without writing the form by hand.',
 	},
 	{
 		href: '/docs/forms/overview',
@@ -351,7 +351,7 @@ const HomeHero = () => (
 			</h1>
 			<p class="home-hero__lede">
 				A framework-agnostic toolkit for building schema-driven interfaces. Define your UI in JSON, get
-				automatic Zod validation and type safety. Use with React today, more adapters coming soon.
+				automatic Zod Mini validation and type safety. Use with React today, more adapters coming soon.
 			</p>
 			<div class="home-hero__actions">
 				<RuiButton href="/docs/getting-started/quick-start" size="lg">
@@ -446,7 +446,7 @@ export default eco.page({
 	metadata: () => ({
 		title: 'Schema Engine',
 		description:
-			'A framework-agnostic toolkit for building schema-driven interfaces. Define your UI in JSON, get automatic Zod validation and type safety.',
+			'A framework-agnostic toolkit for building schema-driven interfaces. Define your UI in JSON, get automatic Zod Mini validation and type safety.',
 	}),
 	render: HomePage,
 });

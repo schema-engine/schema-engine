@@ -41,7 +41,7 @@ Bring your existing component library. Register it with the engine, and it insta
 ```typescript
 import { createReactFormEngine } from '@schema-engine/forms-react';
 import type { InputRegistration } from '@schema-engine/forms';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 
 const MyInputConfigSchema = z.object({});
 
@@ -100,9 +100,9 @@ Define complex forms with simple JSON schemas. No more writing repetitive JSX.
 
 Not just components but also actions, view recipes, and validation rules. Build your own plugins that fit your exact needs.
 
-### Zod Integration
+### Zod Mini and Standard Schema
 
-Type-safe validation powered by Zod. Define your schema once, get validation everywhere.
+First-party schemas use Zod Mini. Registrations accept any Standard Schema provider, so consumer-owned components can use Zod, Valibot, Effect Schema, or another compatible library.
 
 ### Powerful Action System
 

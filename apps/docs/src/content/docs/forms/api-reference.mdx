@@ -11,18 +11,18 @@ order: 6
 
 ```ts
 function createFormEngine<
-  const TElements extends readonly ElementRegistrationConstraint[] = readonly [],
-  const TRecipes extends readonly RecipeRegistrationConstraint[] = readonly [],
-  const TActions extends readonly ActionRegistrationConstraint[] = readonly [],
+	const TElements extends readonly ElementRegistrationConstraint[] = readonly [],
+	const TRecipes extends readonly RecipeRegistrationConstraint[] = readonly [],
+	const TActions extends readonly ActionRegistrationConstraint[] = readonly [],
 >(options?: {
-  elements?: TElements;
-  recipes?: TRecipes;
-  actions?: TActions;
-  catalog?: SchemaMetadataCatalog;
+	elements?: TElements;
+	recipes?: TRecipes;
+	actions?: TActions;
+	catalog?: SchemaMetadataCatalog;
 }): FormEngine<
-  AsRegistrationMap<MergeRegistrationMapsLastWins<TElements>>,
-  AsRegistrationMap<MergeRegistrationMapsLastWins<TRecipes>>,
-  AsRegistrationMap<MergeActionRegistrationMapsLastWins<TActions>>
+	AsRegistrationMap<MergeRegistrationMapsLastWins<TElements>>,
+	AsRegistrationMap<MergeRegistrationMapsLastWins<TRecipes>>,
+	AsRegistrationMap<MergeActionRegistrationMapsLastWins<TActions>>
 >;
 ```
 
@@ -33,8 +33,8 @@ use last-wins typing; open `T[]` values use a union of configs for the same
 `$type`. Spread shared registration barrels and append overrides when needed.
 
 Authors supply schema **input**. After validation, render functions receive
-schema **output**. Register elements with `defineInput` / `defineStatic` so that
-check is preserved.
+schema **output**. Register elements with `defineInput` / `defineStatic` so the
+schema input/output relationship is preserved.
 
 ## defineInput / defineStatic
 
@@ -42,10 +42,10 @@ check is preserved.
 import { defineInput, elementChildrenSchema } from '@schema-engine/forms';
 
 export const FieldSetRegistration = defineInput({
-  $type: 'fieldSet',
-  schema: FieldSetConfigSchema,
-  metadata: { name: 'FieldSet', category: 'input' },
-  render: FormFieldSet,
+	$type: 'fieldSet',
+	schema: FieldSetConfigSchema,
+	metadata: { name: 'FieldSet', category: 'input' },
+	render: FormFieldSet,
 });
 ```
 
@@ -53,8 +53,6 @@ export const FieldSetRegistration = defineInput({
 `elementChildrenSchema` for `elements`; the engine validates those children
 against its registrations. The render function then receives frozen,
 normalized children — not authoring JSON.
-
-## FormEngine
 
 ## FormEngine
 
@@ -74,6 +72,23 @@ engine.extend({ actions: [extraAction] });
 engine.getFormConfigStandardSchema();
 engine.describeViewCatalog();
 ```
+
+JSON Schema conversion is backed by Zod Mini for first-party schemas. Use
+`io: 'input'` for authoring input (where defaulted fields are optional) or
+`io: 'output'` for parsed output (the default):
+
+```ts
+engine.generateJSONSchemaCollection({ io: 'input' });
+engine.generateFormConfigSchema({ io: 'output' });
+engine.generateActionConfigSchema('submit', { io: 'input' });
+```
+
+`getFormConfigStandardSchema()` and `getActionConfigStandardSchema()` expose
+the same input/output converters through the Standard JSON Schema contract.
+Consumer schemas from other Standard Schema providers remain fully supported
+for runtime validation. Their provider-specific JSON Schema is not introspected
+in this iteration; mixed form config exports retain the registered `$type`
+envelope for those schemas.
 
 ## RecipeRegistration
 
