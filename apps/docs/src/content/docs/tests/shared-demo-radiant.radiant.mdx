@@ -1,0 +1,28 @@
+---
+title: 'Shared config — Radiant integration'
+description: 'The shared demo form rendered by the Radiant (EcoPages JSX) integration.'
+group: Tests
+order: 1
+---
+
+import { FormRendererPreview } from '@/components/form-renderer';
+import { FormConfigCode } from '@/components/form-config-code';
+import { sharedDemoConfig } from './shared-demo.config';
+
+export const config = {
+	dependencies: { components: [FormRendererPreview, FormConfigCode] },
+};
+
+# Shared config — Radiant integration
+
+This page and [the React one](/docs/tests/shared-demo-react) import the same
+`shared-demo.config.ts` module. The form below is rendered by the Radiant
+(EcoPages JSX) integration.
+
+## Live demo
+
+<FormRendererPreview config={sharedDemoConfig} />
+
+## Configuration
+
+<FormConfigCode config={sharedDemoConfig} />

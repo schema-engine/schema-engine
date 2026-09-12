@@ -33,6 +33,9 @@ React default shells and blocks live in the shadcn registry item
 `schema-engine-form-recipes` (source: `registry/shared/forms/recipes`). Specs
 live in `@schema-engine/forms/recipes`.
 
+The docs app's default previews use `@schema-engine/forms-radiant`. Forms
+React demo pages are EcoPages JSX pages that mount `ReactFormPreview` (the Radiant-styled demo kit) as a React island.
+
 ## Documentation map
 
 The canonical documentation is at `/docs` on the deployed site and lives

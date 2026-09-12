@@ -1,10 +1,13 @@
 import { join } from 'node:path';
 import { fileSystem } from '@ecopages/file-system';
-import { ContentScanner, type ContentEntry } from '@ecopages/content-processor';
+import { ContentScanner } from '@ecopages/content-processor';
+import { mergeDocsPages, type DocsPageEntry } from './explicit-docs-pages';
 
-export type LlmDocsOptions<T extends Record<string, unknown> = Record<string, unknown>> = {
+export type LlmDocsOptions = {
 	/** Directory where each document's raw content is written. */
 	outputDir: string;
+	pages?: readonly DocsPageEntry[];
+	getPageContent?: (post: DocsPageEntry) => Promise<string>;
 	/** Path of the generated `llms.txt` index file. */
 	indexPath: string;
 	/** Base URL used for links in the index. */
@@ -16,7 +19,7 @@ export type LlmDocsOptions<T extends Record<string, unknown> = Record<string, un
 	/** Header lines written at the top of the index file. */
 	headerLines?: readonly string[];
 	/** Computes the section key for a post. Defaults to the first slug segment. */
-	getSection?: (post: ContentEntry<T>) => string;
+	getSection?: (post: DocsPageEntry) => string;
 	/** Formats a section key into a display title. */
 	formatSectionTitle?: (section: string) => string;
 };
@@ -32,12 +35,14 @@ function defaultFormatTitle(value: string): string {
 }
 
 /** Generates an `llms.txt` index and per-document text files from scanned content. */
-export async function generateLlmDocs<T extends Record<string, unknown>>(
+export async function generateLlmDocs<T extends Record<string, unknown> & { title: string; description: string }>(
 	scanner: ContentScanner<T>,
-	options: LlmDocsOptions<T>,
+	options: LlmDocsOptions,
 ): Promise<void> {
 	const {
 		outputDir,
+		pages = [],
+		getPageContent,
 		indexPath,
 		baseUrl,
 		publicPath = 'llms-content',
@@ -47,9 +52,15 @@ export async function generateLlmDocs<T extends Record<string, unknown>>(
 		formatSectionTitle = defaultFormatTitle,
 	} = options;
 
-	const posts = await scanner.getManifest();
+	const posts = mergeDocsPages(await scanner.getManifest(), pages);
+	const pageSlugs = new Set(pages.map((page) => page.slug));
+	async function getRawContent(post: DocsPageEntry): Promise<string> {
+		if (!pageSlugs.has(post.slug)) return scanner.getRawContent(post.slug);
+		if (!getPageContent) throw new Error('Explicit docs pages require a content loader');
+		return getPageContent(post);
+	}
 
-	const sections = new Map<string, ContentEntry<T>[]>();
+	const sections = new Map<string, DocsPageEntry[]>();
 	for (const post of posts) {
 		const section = getSection(post);
 		if (!sections.has(section)) sections.set(section, []);
@@ -60,7 +71,7 @@ export async function generateLlmDocs<T extends Record<string, unknown>>(
 		...sectionOrder.filter((section) => sections.has(section)),
 		...Array.from(sections.keys())
 			.filter((section) => !sectionOrder.includes(section))
-			.sort((a, b) => a.localeCompare(b)),
+			.toSorted((a, b) => a.localeCompare(b)),
 	];
 
 	const outputLines = [...headerLines];
@@ -74,9 +85,9 @@ export async function generateLlmDocs<T extends Record<string, unknown>>(
 
 		outputLines.push(`## ${formatSectionTitle(section)}`);
 
-		for (const post of sectionPosts.sort((a, b) => a.slug.localeCompare(b.slug))) {
+		for (const post of sectionPosts.toSorted((a, b) => a.slug.localeCompare(b.slug))) {
 			const destFile = join(outputDir, `${post.slug}.txt`);
-			const raw = await scanner.getRawContent(post.slug);
+			const raw = await getRawContent(post);
 			await fileSystem.writeAsync(destFile, raw);
 
 			outputLines.push(`- [${post.title}](${baseUrl}/${publicPath}/${post.slug}.txt)`);

@@ -1,52 +1,12 @@
 import { eco } from '@ecopages/core';
 import type { JsxRenderable } from '@ecopages/jsx';
-import {
-	RuiBreadcrumb,
-	RuiBreadcrumbItem,
-	RuiBreadcrumbLink,
-	RuiBreadcrumbList,
-	RuiBreadcrumbPage,
-	RuiBreadcrumbSeparator,
-} from '@ecopages/radiant-ui/breadcrumb';
 import { entries, getEntryBySegments } from 'ecopages:content/docs';
 import { getComponent, getEntryDependencies } from 'ecopages:content/docs/server';
 import type { Entry } from 'ecopages:content/docs';
 import { CopyForLlm } from '@/components/copy-for-llm';
+import { DocsBreadcrumb } from '@/components/docs-breadcrumb';
 import { DocsLayout } from '@/layouts/docs-layout';
-import { docsNav } from '@/lib/docs-nav';
-
-const DocsBreadcrumb = ({ entry }: { entry: Entry }) => {
-	const group = docsNav.groups.find((navGroup) => navGroup.items.some((item) => item.slug === entry.slug));
-	const groupLink = group?.items[0];
-
-	return (
-		<div class="unstyled">
-			<RuiBreadcrumb label="Page location">
-				<RuiBreadcrumbList>
-					<RuiBreadcrumbItem>
-						<RuiBreadcrumbLink href="/">Home</RuiBreadcrumbLink>
-					</RuiBreadcrumbItem>
-					<RuiBreadcrumbSeparator />
-					<RuiBreadcrumbItem>
-						<RuiBreadcrumbLink href="/docs/getting-started/introduction">Docs</RuiBreadcrumbLink>
-					</RuiBreadcrumbItem>
-					{group && groupLink ? (
-						<>
-							<RuiBreadcrumbSeparator />
-							<RuiBreadcrumbItem>
-								<RuiBreadcrumbLink href={groupLink.href}>{group.name}</RuiBreadcrumbLink>
-							</RuiBreadcrumbItem>
-						</>
-					) : null}
-					<RuiBreadcrumbSeparator />
-					<RuiBreadcrumbItem>
-						<RuiBreadcrumbPage>{entry.title}</RuiBreadcrumbPage>
-					</RuiBreadcrumbItem>
-				</RuiBreadcrumbList>
-			</RuiBreadcrumb>
-		</div>
-	);
-};
+import { explicitDocsPages } from '@/lib/explicit-docs-pages';
 
 export default eco.page<{ entry: Entry }, JsxRenderable>({
 	layout: DocsLayout,
@@ -54,15 +14,17 @@ export default eco.page<{ entry: Entry }, JsxRenderable>({
 		const entryDependencies = await getEntryDependencies(props.entry.slug);
 		return {
 			...entryDependencies,
-			components: [...(entryDependencies?.components ?? []), CopyForLlm],
+			components: [...(entryDependencies?.components ?? []), CopyForLlm, DocsBreadcrumb],
 		};
 	},
 	staticPaths: async () => ({
-		paths: entries.map((post) => ({
-			params: {
-				slug: post.segments,
-			},
-		})),
+		paths: entries
+			.filter((post) => !explicitDocsPages.some((page) => page.slug === post.slug))
+			.map((post) => ({
+				params: {
+					slug: post.segments,
+				},
+			})),
 	}),
 	staticProps: async ({ pathname }) => {
 		const segments = Array.isArray(pathname.params.slug) ? pathname.params.slug : [pathname.params.slug];

@@ -67,6 +67,7 @@ export const contactFormConfig = {
 			id: 'reset-form',
 			$type: 'reset',
 			enabled: true,
+			triggers: ['form_submit_success'],
 			resetToDefaults: true,
 		},
 	],

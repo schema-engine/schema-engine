@@ -7,7 +7,7 @@
 		"forceConsistentCasingInFileNames": true,
 		"jsx": "react-jsx",
 		"jsxImportSource": "@ecopages/jsx",
-		"lib": ["ES2021", "DOM", "DOM.Iterable"],
+		"lib": ["ES2023", "DOM", "DOM.Iterable"],
 		"module": "ESNext",
 		"moduleResolution": "Bundler",
 		"noEmit": true,
@@ -19,7 +19,8 @@
 				"../../registry/shared/primitives/*"
 			],
 			"@/components/schema-engine/forms/*": ["../../registry/shared/forms/*"],
-			"@/components/ui/*": ["../../registry/ui-stubs/*"],
+			"@/components/ui/calendar": ["../../registry/shared/primitives/calendar.tsx"],
+			"@/components/ui/*": ["../../packages/forms-react/.storybook/ui/*", "../../registry/ui-stubs/*"],
 			"@/lib/utils": ["../../registry/ui-stubs/lib/utils.ts"],
 			"ecopages:content/docs": ["./types/ecopages-content-docs.d.ts"],
 			"ecopages:content/docs/server": ["./types/ecopages-content-docs-server.d.ts"]

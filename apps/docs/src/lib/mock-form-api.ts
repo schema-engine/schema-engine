@@ -31,7 +31,9 @@ function pathOf(url: string): string {
 
 /** Intercepts demo submit/async-validation fetches so FormRenderer works without a backend. */
 export function installMockFormApi(): void {
-	if (typeof window === 'undefined') return;
+	if (typeof window === 'undefined' || typeof window.fetch !== 'function') {
+		return;
+	}
 	if ((window as Window & { [MOCK_FLAG]?: boolean })[MOCK_FLAG]) return;
 
 	const originalFetch = window.fetch.bind(window);
@@ -48,7 +50,8 @@ export function installMockFormApi(): void {
 
 		if (pathname === '/api/async-validate' && init?.method === 'POST') {
 			const body = parseBody(init);
-			const value = String(body.value ?? '');
+			const value =
+				typeof body.value === 'string' ? body.value : typeof body.value === 'number' ? String(body.value) : '';
 			if (value.toLowerCase() === 'invalid') {
 				return json({ valid: false, message: `Value "${value}" is not allowed` });
 			}

@@ -1,13 +1,10 @@
----
-title: 'Getting Started'
-description: 'Install the React adapter and register your engine.'
-group: Forms React
-order: 2
----
-
 # Getting Started
 
 This guide walks you through building your first React form.
+
+## Live example
+
+The interactive example is available on the documentation page.
 
 ## 1. Create a Form Engine
 

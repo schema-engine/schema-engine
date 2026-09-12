@@ -24,7 +24,7 @@ import { Logo } from '@/components/logo/logo';
 import { GITHUB_MARK_PATH } from '@/components/github-mark';
 import { ThemeToggle } from '@/components/theme-toggle/theme-toggle';
 import { BaseLayout } from '@/layouts/base-layout';
-import rootJson from '../../../../../packages/forms/package.json';
+import { schemaEngineVersion } from '@/lib/schema-engine-version';
 import { DocsPagination } from './components/docs-pagination';
 import { getGroupIcon } from './get-group-icon';
 
@@ -33,10 +33,6 @@ const paginationData = JSON.stringify({
 });
 const ECO_NAVIGATION_EVENTS = 'eco:page-load,eco:after-swap';
 const DOCS_SIDEBAR_ID = 'docs-sidebar';
-
-export type DocsLayoutProps = {
-	children: JsxRenderable;
-};
 
 const DocsNavigation = () => (
 	<>
@@ -84,7 +80,7 @@ const DocsSiteHeader = () => (
 			/>
 			<Logo href="/" target="_self" title="Schema Engine" />
 			<RuiChip variant="default" class="max-md:hidden">
-				{rootJson.version}
+				{schemaEngineVersion}
 			</RuiChip>
 		</div>
 		<nav class="rui-sidebar-provider__site-header-nav" aria-label="Site">
@@ -105,7 +101,7 @@ const DocsSiteHeader = () => (
 	</div>
 );
 
-export const DocsLayout = eco.component<DocsLayoutProps, JsxRenderable>({
+export const DocsLayout = eco.layout<JsxRenderable>({
 	dependencies: {
 		stylesheets: ['./docs-layout.css'],
 		scripts: ['./docs-layout.script.ts'],

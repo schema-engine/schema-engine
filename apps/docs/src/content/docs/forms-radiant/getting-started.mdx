@@ -5,7 +5,16 @@ group: Forms Radiant
 order: 2
 ---
 
+import { FormRendererPreview } from '@/components/form-renderer';
+import { contactFormConfig } from '@/homepage/contact-form';
+
+export const config = {
+	dependencies: { components: [FormRendererPreview] },
+};
+
 # Getting Started
+
+<FormRendererPreview config={contactFormConfig} />
 
 ## 1. Install peers
 

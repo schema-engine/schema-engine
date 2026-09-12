@@ -1,76 +1,32 @@
 ---
 title: 'Contact Form'
-description: 'Conditional fields, responsive grid placement, and validation.'
+description: 'Conditional fields, responsive grid placement, and validation.' 
 group: Examples
 order: 2
 ---
 
-import { FormRendererIsland } from '@/components/form-renderer-island';
+import { FormRendererPreview } from '@/components/form-renderer';
+import { FormConfigCode } from '@/components/form-config-code';
+import { contactFormDemoConfig } from './contact-form.config';
 
 export const config = {
-	dependencies: {
-		components: [FormRendererIsland],
-	},
+	dependencies: { components: [FormRendererPreview, FormConfigCode] },
 };
 
 # Contact Form
+
+These previews use Radiant because the docs app is Ecopages + Radiant UI.
 
 This example combines shared element configuration with conditional behavior
 and a responsive form grid.
 
 ## Interactive demo
 
-<FormRendererIsland preview="contact" />
+<FormRendererPreview config={contactFormDemoConfig} />
 
-## Configuration pattern
+## Configuration reference
 
-```ts
-const formConfig: FormConfig = {
-	id: 'contact',
-	title: 'Contact us',
-	steps: [
-		{
-			id: 'details',
-			title: 'Contact details',
-			elements: [
-				{
-					$type: 'select',
-					id: 'subject',
-					name: 'subject',
-					label: 'Subject',
-					options: [
-						{ value: 'general', label: 'General question' },
-						{ value: 'support', label: 'Technical support' },
-					],
-					constraints: [],
-				},
-				{
-					$type: 'input',
-					id: 'ticket',
-					name: 'ticket',
-					label: 'Support ticket number',
-					constraints: [
-						{ field: 'subject', operator: 'equals', value: 'support', action: 'show' },
-					],
-				},
-				{
-					$type: 'textarea',
-					id: 'message',
-					name: 'message',
-					label: 'Message',
-					grid: { column: '1 / -1' },
-				},
-			],
-		},
-	],
-	grid: {
-		columns: 2,
-		gap: '1rem',
-		responsive: { default: { columns: 1 }, md: { columns: 2 } },
-	},
-	view: { $type: 'card' },
-};
-```
+<FormConfigCode config={contactFormDemoConfig} />
 
 `constraints` are direct objects on the element. The field's visibility is
 derived from the current form value; it is not a separate layout or step

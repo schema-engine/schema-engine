@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+import { explicitDocsPages } from '../src/lib/explicit-docs-pages';
 import { join } from 'node:path';
 import { ContentScanner, compareEntriesByField } from '@ecopages/content-processor';
 import appConfig from '../eco.config';
@@ -21,6 +23,8 @@ const scanner = new ContentScanner({
 });
 
 await generateLlmDocs(scanner, {
+	pages: explicitDocsPages,
+	getPageContent: (post) => readFile(join(ROOT_DIR, 'src/docs-text', `${post.slug}.md`), 'utf8'),
 	outputDir: join(PUBLIC_DIR, 'llms-content'),
 	indexPath: join(PUBLIC_DIR, 'llms.txt'),
 	baseUrl: process.env.ECOPAGES_BASE_URL ?? 'https://schema-engine.ecopages.app',

@@ -1,19 +1,3 @@
----
-title: 'View recipes'
-description: 'Card, wizard, and other view recipes for form chrome.'
-group: Forms React
-order: 4
----
-
-import { DefaultRecipeSources } from '@/components/default-recipe-sources';
-import { FormRendererIsland } from '@/components/form-renderer-island';
-
-export const config = {
-	dependencies: {
-		components: [DefaultRecipeSources, FormRendererIsland],
-	},
-};
-
 # View recipes
 
 Recipes compose a **shell** with optional **header**, **progress**, and **actions** blocks. Select one with form-level `view.$type`. `@schema-engine/forms-react` is headless: the factory does not bind default recipes. `FormRenderer` still lives in the package.
@@ -73,7 +57,7 @@ const formConfig: FormConfig = {
 
 Wizard recipes require **at least two steps**. Set `view.$type` to a wizard recipe such as `wizard` or `card-wizard`.
 
-<FormRendererIsland preview="registration" />
+The interactive example is available on the documentation page.
 
 ```typescript
 const formConfig: FormConfig = {
@@ -94,7 +78,7 @@ See [Registration Flow](/docs/examples/registration-flow) for a full wizard conf
 
 Canonical source is `registry/shared/forms/recipes`. After `shadcn add`, files land under `@/components/schema-engine/forms/recipes`. Copy `recipe-registry.ts` once, then the files for each recipe you want. Each tab below has a Copy button.
 
-<DefaultRecipeSources />
+Recipe source: https://github.com/andeeplus/schema-engine/tree/main/registry/shared/forms/recipes
 
 ## Custom recipes
 
