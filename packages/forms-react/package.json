@@ -26,11 +26,12 @@
 		"storybook": "storybook dev -p 6006",
 		"build-storybook": "storybook build -o ./storybook-static",
 		"check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.test-types.json && tsc --noEmit -p ../../registry/shared/tsconfig.json && tsc --noEmit -p ../../registry/base-ui/tsconfig.json && tsc --noEmit -p ../../registry/aria/tsconfig.json && tsc --noEmit -p ../../registry/radix/tsconfig.json",
-		"test:storybook": "vitest run --project browser"
+		"test:storybook": "vitest run --project storybook"
 	},
 	"devDependencies": {
 		"@base-ui/react": "^1.1.0",
 		"@schema-engine/forms": "workspace:*",
+		"@schema-engine/scripts": "workspace:*",
 		"@storybook/addon-docs": "^10.1.8",
 		"@storybook/addon-vitest": "^10.1.8",
 		"@storybook/react-vite": "^10.1.8",
