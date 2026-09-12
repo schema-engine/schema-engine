@@ -1,6 +1,6 @@
 # Base UI Form Elements
 
-Consumer-owned Schema Engine form fields for a [shadcn Base UI](https://ui.shadcn.com) app.
+Consumer-owned Schema Engine form fields for a [shadcn Base UI](https://ui.shadcn.com) app. JSX sources declare the React runtime explicitly for mixed-runtime consumers. Resolve the renderer and hooks through `@schema-engine/forms-react` package exports; mixing source aliases with built package imports creates separate provider contexts.
 
 Install from this GitHub registry:
 

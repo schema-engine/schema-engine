@@ -1,3 +1,4 @@
+/** @jsxImportSource react */
 import { Switch } from '@/components/ui/switch';
 import {
 	FieldGroupRoot,

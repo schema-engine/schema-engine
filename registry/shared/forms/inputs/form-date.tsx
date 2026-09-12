@@ -1,3 +1,4 @@
+/** @jsxImportSource react */
 import { DatePicker } from '@/components/ui/schema-engine/components/date-picker';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
 import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';

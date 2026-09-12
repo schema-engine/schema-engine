@@ -1,3 +1,4 @@
+/** @jsxImportSource react */
 import { Dropzone, DropzoneContent, DropzoneEmptyState } from '@/components/ui/schema-engine/components/drop-zone';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
 import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
@@ -9,7 +10,7 @@ export function FormDropZone({ onChange: propsOnChange, onDropChange, ...config 
 		defaultValue: config.defaultValue ?? [],
 	});
 
-	const { accept, maxSize, minSize, maxFiles = 1, disabled } = config;
+	const { accept, maxSize, minSize, maxFiles, disabled } = config;
 
 	const normalizedValue = Array.isArray(value) ? value : undefined;
 

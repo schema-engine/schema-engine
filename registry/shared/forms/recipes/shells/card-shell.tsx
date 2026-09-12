@@ -1,3 +1,4 @@
+/** @jsxImportSource react */
 import { getSlotConfig, type CardShellConfig } from '@schema-engine/forms/recipes';
 import type { FormShellProps } from '@schema-engine/forms-react/primitives';
 import { cn } from '@/components/schema-engine/forms/lib/utils';

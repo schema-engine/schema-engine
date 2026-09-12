@@ -1,3 +1,4 @@
+/** @jsxImportSource react */
 import { useEffect, useRef } from 'react';
 import { Check } from 'lucide-react';
 import type { StepIndicatorsConfig } from '@schema-engine/forms/recipes';

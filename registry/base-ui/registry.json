@@ -937,6 +937,11 @@
       ],
       "files": [
         {
+          "path": "../shared/forms/recipes/blocks/form-actions.tsx",
+          "type": "registry:component",
+          "target": "@components/schema-engine/forms/recipes/blocks/form-actions.tsx"
+        },
+        {
           "path": "../shared/forms/recipes/blocks/minimal-progress.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/blocks/minimal-progress.tsx"

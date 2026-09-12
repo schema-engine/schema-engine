@@ -1,3 +1,4 @@
+/** @jsxImportSource react */
 import { FormElements } from '@schema-engine/forms-react/primitives';
 import { objectFieldScope } from '@schema-engine/forms';
 import { FieldSet } from '@/components/ui/schema-engine/components/field';
