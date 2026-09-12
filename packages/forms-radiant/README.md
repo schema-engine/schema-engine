@@ -4,7 +4,7 @@ Radiant/JSX adapter for the Schema Engine form system.
 
 ## Why the recipe components ship in this package
 
-Unlike `@schema-engine/forms-react` — where the default view recipes live in the shadcn registry and consumers register them explicitly with `addRecipes()` — Radiant has no registry ecosystem to lean on. The shells and step blocks are therefore part of this package and `createRadiantFormComposer()` binds the canonical recipes automatically, so the package stays plug-and-play. The recipe specs themselves remain canonical in `@schema-engine/forms/recipes`.
+Unlike `@schema-engine/forms-react` — where the default view recipes live in the shadcn registry and consumers register them explicitly with `createReactFormEngine({ recipes })` — Radiant has no registry ecosystem to lean on. The shells and step blocks are therefore part of this package and `createRadiantFormEngine()` binds the canonical recipes automatically, so the package stays plug-and-play. The recipe specs themselves remain canonical in `@schema-engine/forms/recipes`.
 
 ## Install
 
@@ -22,13 +22,15 @@ import '@ecopages/radiant-ui/styles.css';
 
 `@schema-engine/forms-radiant` already imports `radiant-ui-core.css`. Apps that load component CSS without the package root still need the core (or their own Tailwind preflight) so headings, lists, and form controls are not left on user-agent margins.
 
+First-party schemas use the functional `zod/mini` API. Install the `zod` package when authoring schemas; registrations supplied by consumers may use any Standard Schema implementation, including Valibot, Effect Schema, or Zod.
+
 ## Quick start
 
 ```ts
-import { createRadiantFormComposer, FormRenderer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+import { createRadiantFormEngine, FormRenderer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
 import { radiantAdapter } from '@schema-engine/forms-radiant/adapters/radiant';
 
-const engine = createRadiantFormComposer().addElements(schemaFormRegistrations).build();
+const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 
 <FormRenderer engine={engine} adapter={radiantAdapter} config={formConfig} onSubmit={handleSubmit} />;
 ```

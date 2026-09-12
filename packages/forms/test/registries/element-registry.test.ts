@@ -1,15 +1,18 @@
 import { describe, test, expect, beforeEach } from 'vitest';
 import { ElementRegistry } from '@/registries';
 import type { InputRegistration } from '@/types';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { ComponentType } from '@/engine';
 
 describe('ElementRegistry', () => {
 	let registry: ElementRegistry;
 
-	const mockElement: InputRegistration<'text-input', { label: string }, any> = {
+	const textInputSchema = z.object({ label: z.string() });
+	const emailInputSchema = z.object({ placeholder: z.string() });
+
+	const mockElement: InputRegistration<'text-input', typeof textInputSchema> = {
 		$type: 'text-input',
-		schema: z.object({ label: z.string() }),
+		schema: textInputSchema,
 		metadata: {
 			name: 'Text Input',
 			description: 'A text input field',
@@ -18,9 +21,9 @@ describe('ElementRegistry', () => {
 		render: (props) => props,
 	};
 
-	const anotherElement: InputRegistration<'email-input', { placeholder: string }, any> = {
+	const anotherElement: InputRegistration<'email-input', typeof emailInputSchema> = {
 		$type: 'email-input',
-		schema: z.object({ placeholder: z.string() }),
+		schema: emailInputSchema,
 		metadata: {
 			name: 'Email Input',
 			description: 'An email input field',
@@ -51,7 +54,7 @@ describe('ElementRegistry', () => {
 		});
 
 		test('should override when registering duplicate id', () => {
-			const updated: InputRegistration = {
+			const updated: InputRegistration<'text-input', typeof textInputSchema> = {
 				...mockElement,
 				metadata: {
 					...mockElement.metadata,

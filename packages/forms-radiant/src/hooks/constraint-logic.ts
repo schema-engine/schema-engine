@@ -1,5 +1,5 @@
 import { ConstraintEvaluator } from '@schema-engine/forms/constraints';
-import { getValueAtPath } from '@/lib/path-utils';
+import { getValueAtPath } from '@schema-engine/forms/lib/path-values';
 
 function resolveConstraintField(constraintField: string, fieldPath?: string) {
 	if (!fieldPath || constraintField.includes('.')) {
@@ -18,7 +18,7 @@ function resolveConstraintField(constraintField: string, fieldPath?: string) {
 }
 
 export function evaluateConstraintLogic(
-	constraints: FormEngine.ElementConfig['constraints'] = [],
+	constraints: ReadonlyArray<NonNullable<FormEngine.ElementConfig['constraints']>[number]> = [],
 	baseRequired = false,
 	fieldPath?: string,
 	values: Record<string, unknown> = {},

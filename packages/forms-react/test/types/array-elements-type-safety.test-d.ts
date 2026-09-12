@@ -1,95 +1,139 @@
 /**
- * Compile-time checks for ArrayElementsConfig and nested FormEngine.ElementConfig unions.
- * Run via: bun run check-types (tsconfig.test-types.json)
+ * Compile-time checks for nested array authoring and the global ElementRegistry.
+ * Run via: pnpm check-types (tsconfig.test-types.json)
  */
 
-import type { ArrayElementsConfig } from '@/components/schema-engine/forms/inputs/form-array-elements.types';
-
-import '@/components/schema-engine/forms/inputs/form-input.registration';
-import '@/components/schema-engine/forms/inputs/form-select.registration';
-import '@/components/schema-engine/forms/inputs/form-textarea.registration';
-import '@/components/schema-engine/forms/inputs/form-checkbox.registration';
-import '@/components/schema-engine/forms/inputs/form-number.registration';
-import '@/components/schema-engine/forms/inputs/form-array-elements.registration';
+import { createReactFormEngine } from '@/registries/builder-registry';
+import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
+import { SelectElementRegistration } from '@/components/schema-engine/forms/inputs/form-select.registration';
+import { TextareaElementRegistration } from '@/components/schema-engine/forms/inputs/form-textarea.registration';
+import { CheckboxElementRegistration } from '@/components/schema-engine/forms/inputs/form-checkbox.registration';
+import { NumberElementRegistration } from '@/components/schema-engine/forms/inputs/form-number.registration';
+import { ArrayElementRegistration } from '@/components/schema-engine/forms/inputs/form-array-elements.registration';
+import type { InputFieldConfig } from '@/components/schema-engine/forms/inputs/form-input.types';
 
 type Assert<T extends true> = T;
 
-const arrayConfig = {
-	$type: 'arrayElements',
-	id: 'testArray',
-	name: 'testArray',
-	label: 'Test Array',
+const engine = createReactFormEngine({
 	elements: [
+		InputElementRegistration,
+		SelectElementRegistration,
+		TextareaElementRegistration,
+		CheckboxElementRegistration,
+		NumberElementRegistration,
+		ArrayElementRegistration,
+	],
+});
+
+engine.defineForm({
+	id: 'array-authoring',
+	steps: [
 		{
-			$type: 'input',
-			id: 'name',
-			name: 'name',
-			label: 'Name',
-			inputType: 'text',
-		},
-		{
-			$type: 'select',
-			id: 'category',
-			name: 'category',
-			label: 'Category',
-			options: [
-				{ value: 'a', label: 'Option A' },
-				{ value: 'b', label: 'Option B' },
+			id: 'main',
+			title: 'Main',
+			elements: [
+				{
+					$type: 'arrayElements',
+					id: 'testArray',
+					name: 'testArray',
+					label: 'Test Array',
+					elements: [
+						{
+							$type: 'input',
+							id: 'name',
+							name: 'name',
+							label: 'Name',
+							inputType: 'text',
+						},
+						{
+							$type: 'select',
+							id: 'category',
+							name: 'category',
+							label: 'Category',
+							options: [
+								{ value: 'a', label: 'Option A' },
+								{ value: 'b', label: 'Option B' },
+							],
+						},
+						{
+							$type: 'arrayElements',
+							id: 'nestedArray',
+							name: 'nestedArray',
+							elements: [
+								{
+									$type: 'input',
+									id: 'nestedInput',
+									name: 'nestedInput',
+									inputType: 'text',
+								},
+							],
+						},
+						{
+							// @ts-expect-error -- nested children use this engine's registrations
+							$type: 'not-a-registered-element',
+							id: 'x',
+							name: 'x',
+						},
+					],
+				},
 			],
 		},
 	],
-} satisfies ArrayElementsConfig;
+});
 
-const discriminatedElements = [
-	{
-		$type: 'input',
-		id: 'text',
-		name: 'text',
-		inputType: 'email',
-	},
-	{
-		$type: 'select',
-		id: 'dropdown',
-		name: 'dropdown',
-		options: [
-			{ value: 'a', label: 'Option A' },
-			{ value: 'b', label: 'Option B' },
-		],
-	},
-	{
-		$type: 'arrayElements',
-		id: 'nestedArray',
-		name: 'nestedArray',
-		elements: [
-			{
-				$type: 'input',
-				id: 'nestedInput',
-				name: 'nestedInput',
-				inputType: 'text',
-			},
-		],
-	},
-] satisfies ArrayElementsConfig['elements'];
+engine.defineForm({
+	id: 'products',
+	steps: [
+		{
+			id: 'main',
+			title: 'Main',
+			elements: [
+				{
+					$type: 'arrayElements',
+					id: 'products',
+					name: 'products',
+					label: 'Products',
+					elements: [
+						{
+							$type: 'input',
+							id: 'productName',
+							name: 'name',
+							label: 'Product Name',
+							inputType: 'text',
+						},
+						{
+							$type: 'select',
+							id: 'category',
+							name: 'category',
+							label: 'Category',
+							options: [
+								{ value: 'electronics', label: 'Electronics' },
+								{ value: 'clothing', label: 'Clothing' },
+							],
+						},
+						{
+							$type: 'number',
+							id: 'price',
+							name: 'price',
+							label: 'Price',
+							min: 0,
+							step: 0.01,
+						},
+					],
+				},
+			],
+		},
+	],
+});
 
 function assertInputElement(element: Extract<FormEngine.ElementConfig, { $type: 'input' }>) {
-	const _inputType: string = element.inputType;
+	const _inputType: InputFieldConfig['inputType'] = element.inputType;
 	void _inputType;
 }
 
 function assertSelectElement(element: Extract<FormEngine.ElementConfig, { $type: 'select' }>) {
 	const _options: typeof element.options = element.options;
 	void _options;
-}
-
-for (const element of discriminatedElements) {
-	if (element.$type === 'input') {
-		assertInputElement(element);
-	} else if (element.$type === 'select') {
-		assertSelectElement(element);
-	} else if (element.$type === 'arrayElements') {
-		const _nested: FormEngine.ElementConfig[] = element.elements;
-		void _nested;
-	}
 }
 
 const fieldConfigs = [
@@ -113,13 +157,12 @@ const fieldConfigs = [
 		id: 'agree',
 		name: 'agree',
 	},
-] satisfies ArrayElementsConfig['elements'];
+] satisfies FormEngine.ElementConfig[];
 
 for (const element of fieldConfigs) {
 	switch (element.$type) {
 		case 'input': {
-			const _autoComplete: string | undefined = element.autoComplete;
-			void _autoComplete;
+			assertInputElement(element);
 			break;
 		}
 		case 'textarea': {
@@ -134,56 +177,6 @@ for (const element of fieldConfigs) {
 	}
 }
 
-const complexArray = {
-	$type: 'arrayElements',
-	id: 'products',
-	name: 'products',
-	label: 'Products',
-	description: 'Add your products',
-	elements: [
-		{
-			$type: 'input',
-			id: 'productName',
-			name: 'name',
-			label: 'Product Name',
-			inputType: 'text',
-			placeholder: 'Enter product name...',
-		},
-		{
-			$type: 'select',
-			id: 'category',
-			name: 'category',
-			label: 'Category',
-			options: [
-				{ value: 'electronics', label: 'Electronics' },
-				{ value: 'clothing', label: 'Clothing' },
-				{ value: 'books', label: 'Books' },
-			],
-		},
-		{
-			$type: 'number',
-			id: 'price',
-			name: 'price',
-			label: 'Price',
-			min: 0,
-			step: 0.01,
-		},
-	],
-	minItems: 1,
-	maxItems: 50,
-	addButtonText: 'Add Product',
-	removeButtonText: 'Remove Product',
-} satisfies ArrayElementsConfig;
-
-type _complexArrayElementTypes = Assert<
-
-		| (typeof complexArray.elements)[0]['$type']
-		| (typeof complexArray.elements)[1]['$type']
-		| (typeof complexArray.elements)[2]['$type'] extends 'input' | 'select' | 'number'
-		? true
-		: false
->;
-
 const _invalidElement = {
 	// @ts-expect-error -- unknown element $type is not in the ElementRegistry union
 	$type: 'not-a-registered-element',
@@ -191,16 +184,14 @@ const _invalidElement = {
 	name: 'x',
 } satisfies FormEngine.ElementConfig;
 
-const _invalidInput = {
+const _defaultInput = {
 	$type: 'input',
 	id: 'x',
 	name: 'x',
-	// @ts-expect-error -- input elements require inputType
 } satisfies FormEngine.ElementConfig;
 
-void arrayConfig;
-void discriminatedElements;
+void engine;
 void fieldConfigs;
-void complexArray;
 void _invalidElement;
-void _invalidInput;
+void _defaultInput;
+void assertSelectElement;

@@ -6,16 +6,15 @@
  *
  * @example
  * ```typescript
- * import { FormComposer, ResetActionRegistration } from '@schema-engine/forms';
+ * import { createFormEngine, ResetActionRegistration } from '@schema-engine/forms';
  *
- * const engine = new FormComposer()
- *   .addAction(ResetActionRegistration)
- *   .build();
+ * const engine = createFormEngine({
+ *   actions: [ResetActionRegistration],
+ * });
  * ```
  */
 
-import { formResetPlugin } from './form-reset.plugin';
-import type { FormResetAction } from './form-reset.plugin';
+import { formResetPlugin, FormResetActionSchema, type FormResetAction } from './form-reset.plugin';
 import { logger } from '@/lib/logger';
 import type { BuilderActionRegistration } from '@/types';
 
@@ -31,9 +30,10 @@ declare global {
  * Default Reset Action Registration
  * Resets form with browser confirmation
  */
-export const ResetActionRegistration: BuilderActionRegistration<'reset', FormResetAction> = formResetPlugin({
-	confirm: (message) => window.confirm(message),
-	onReset: (context) => {
-		logger.info('[Reset] Form reset completed:', { formId: context.formId });
-	},
-});
+export const ResetActionRegistration: BuilderActionRegistration<'reset', typeof FormResetActionSchema> =
+	formResetPlugin({
+		confirm: (message) => window.confirm(message),
+		onReset: (context) => {
+			logger.info('[Reset] Form reset completed:', { formId: context.formId });
+		},
+	});

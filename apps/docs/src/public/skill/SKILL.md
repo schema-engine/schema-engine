@@ -11,23 +11,23 @@ description: |
 # Schema Engine
 
 Schema Engine turns form definitions into a single source of truth: type-safe,
-Zod-validated, and powered by your existing component library.
+Zod Mini-validated, and powered by your existing component library.
 
 ## Repository
 
 - https://github.com/andeeplus/schema-engine
 - License: MIT
-- Built on: TypeScript, React, Zod. The docs app uses Ecopages.
+- Built on: TypeScript, React, Zod Mini, and Standard Schema registrations. The docs app uses Ecopages.
 
 ## Packages
 
-| Package                        | Role                                                                                     |
-| ------------------------------ | ---------------------------------------------------------------------------------------- |
-| `@schema-engine/forms`         | Headless engine: JSON config, validation, constraints, recipe specs                      |
-| `@schema-engine/forms-react`   | React adapter: renderer, hooks, RHF bridge. No default visual recipes                    |
-| `@schema-engine/forms-radiant` | Radiant adapter: renderer plus in-package recipes bound by `createRadiantFormComposer()` |
-| `@schema-engine/actions`       | Domain-agnostic sequential action system                                                 |
-| `@schema-engine/registry`      | Base registry used by the other packages                                                 |
+| Package                        | Role                                                                                   |
+| ------------------------------ | -------------------------------------------------------------------------------------- |
+| `@schema-engine/forms`         | Headless engine: JSON config, validation, constraints, recipe specs                    |
+| `@schema-engine/forms-react`   | React adapter: renderer, hooks, RHF bridge. No default visual recipes                  |
+| `@schema-engine/forms-radiant` | Radiant adapter: renderer plus in-package recipes bound by `createRadiantFormEngine()` |
+| `@schema-engine/actions`       | Domain-agnostic sequential action system                                               |
+| `@schema-engine/registry`      | Base registry used by the other packages                                               |
 
 React default shells and blocks live in the shadcn registry item
 `schema-engine-form-recipes` (source: `registry/shared/forms/recipes`). Specs

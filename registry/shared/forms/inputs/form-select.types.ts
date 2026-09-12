@@ -1,21 +1,21 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
 
 export const SelectOptionSchema = z.object({
 	value: z.union([z.string(), z.number()]),
 	label: z.string(),
-	disabled: z.boolean().optional(),
+	disabled: z.optional(z.boolean()),
 });
 
 export const SelectFieldExtensionSchema = z.object({
-	options: z.array(SelectOptionSchema).describe('Available options for the select field'),
-	multiple: z.boolean().optional(),
-	autoComplete: z.string().optional(),
-	autoFocus: z.boolean().optional(),
-	size: z.number().optional(),
+	options: z.array(SelectOptionSchema).check(z.describe('Available options for the select field')),
+	multiple: z.optional(z.boolean()),
+	autoComplete: z.optional(z.string()),
+	autoFocus: z.optional(z.boolean()),
+	size: z.optional(z.number()),
 });
 
-export const SelectFieldConfigSchema = BaseFieldSchema.extend({
+export const SelectFieldConfigSchema = z.extend(BaseFieldSchema, {
 	$type: z.literal('select'),
 	...SelectFieldExtensionSchema.shape,
 });

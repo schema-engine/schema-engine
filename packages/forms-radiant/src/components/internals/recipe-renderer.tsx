@@ -1,12 +1,11 @@
 import type { JsxRenderable } from '@ecopages/jsx';
-import { getRenderableSteps, type RecipeRegistration } from '@schema-engine/forms';
+import { type NormalizedFormConfig, getRenderableSteps, type RecipeRegistration } from '@schema-engine/forms';
 import { applySlotDefaults, buildViewModel } from '@schema-engine/forms/recipes';
-import type { FormConfig, FormStep } from '@schema-engine/forms/schemas';
-import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { ViewProvider } from '@/components/view-provider';
 import type { FormInstanceContextValue } from '@/contexts/form-instance-context';
 import type { RadiantRecipeAdapterPayload } from '@/recipes/types';
-import { renderStepFields } from './form-elements-renderer';
+import { getFormGridStyles } from '@/hooks/grid-styles';
+import { FormElements } from './form-elements';
 
 function adapterFor(recipe: RecipeRegistration<any, any, RadiantRecipeAdapterPayload>): RadiantRecipeAdapterPayload {
 	const adapter = recipe.render;
@@ -14,15 +13,28 @@ function adapterFor(recipe: RecipeRegistration<any, any, RadiantRecipeAdapterPay
 	return adapter;
 }
 
+function StepFields({
+	step,
+	config,
+}: {
+	step: NormalizedFormConfig['steps'][number];
+	config: NormalizedFormConfig;
+}): JsxRenderable {
+	if (!step.elements.length) return null;
+	return (
+		<div class="se-form-elements" style={getFormGridStyles(config.grid)}>
+			<FormElements elements={step.elements} />
+		</div>
+	);
+}
+
 export function RecipeRenderer({
 	config,
-	engine,
 	instance,
 	recipe,
 	children,
 }: {
-	config: FormConfig;
-	engine?: FormEngine;
+	config: NormalizedFormConfig;
 	instance: FormInstanceContextValue;
 	recipe: RecipeRegistration<any, any> | undefined;
 	children?: JsxRenderable;
@@ -31,7 +43,9 @@ export function RecipeRenderer({
 	if (steps.length === 0) return null;
 	const content = (
 		<>
-			{steps.map((step: FormStep) => renderStepFields(step, config, engine))}
+			{steps.map((step) => (
+				<StepFields key={step.id} step={step} config={config} />
+			))}
 			{children}
 		</>
 	);

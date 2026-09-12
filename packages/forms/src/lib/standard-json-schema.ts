@@ -45,15 +45,16 @@ export interface StandardJSONSchemaV1<Input = unknown, Output = Input> {
  */
 export function createStandardJSONSchema(
 	vendor: string,
-	generateSchema: (options: JSONSchemaOptions) => JSONSchemaObject,
+	generateInputSchema: (options: JSONSchemaOptions) => JSONSchemaObject,
+	generateOutputSchema: (options: JSONSchemaOptions) => JSONSchemaObject = generateInputSchema,
 ): StandardJSONSchemaV1 {
 	return {
 		'~standard': {
 			version: 1,
 			vendor,
 			jsonSchema: {
-				input: generateSchema,
-				output: generateSchema,
+				input: generateInputSchema,
+				output: generateOutputSchema,
 			},
 		},
 	};
@@ -67,18 +68,32 @@ export function createStandardJSONSchema(
 export function createStandardJSONSchemaRecord(
 	ids: string[],
 	vendor: string,
-	generateSchema: (id: string, options: JSONSchemaOptions) => JSONSchemaObject | undefined,
+	generateInputSchema: (id: string, options: JSONSchemaOptions) => JSONSchemaObject | undefined,
+	generateOutputSchema: (
+		id: string,
+		options: JSONSchemaOptions,
+	) => JSONSchemaObject | undefined = generateInputSchema,
 ): Record<string, StandardJSONSchemaV1> {
 	return Object.fromEntries(
 		ids.map((id) => [
 			id,
-			createStandardJSONSchema(vendor, (options) => {
-				const schema = generateSchema(id, options);
-				if (!schema) {
-					throw new Error(`Schema "${id}" is not registered`);
-				}
-				return schema;
-			}),
+			createStandardJSONSchema(
+				vendor,
+				(options) => {
+					const schema = generateInputSchema(id, options);
+					if (!schema) {
+						throw new Error(`Schema "${id}" is not registered`);
+					}
+					return schema;
+				},
+				(options) => {
+					const schema = generateOutputSchema(id, options);
+					if (!schema) {
+						throw new Error(`Schema "${id}" is not registered`);
+					}
+					return schema;
+				},
+			),
 		]),
 	) as Record<string, StandardJSONSchemaV1>;
 }

@@ -1,9 +1,9 @@
 /**
- * Compile-time checks that createReactFormComposer().build() returns a typed FormEngine.
+ * Compile-time checks that createReactFormEngine() returns a typed FormEngine.
  * Run via: bun run check-types (tsconfig.test-types.json)
  */
 
-import { createReactFormComposer } from '@/registries/builder-registry';
+import { createReactFormEngine } from '@/registries/builder-registry';
 import type { FormEngine } from '@schema-engine/forms/engine';
 
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
@@ -12,11 +12,9 @@ import { CheckboxElementRegistration } from '@/components/schema-engine/forms/in
 
 type Assert<T extends true> = T;
 
-const engine = createReactFormComposer()
-	.addElement(InputElementRegistration)
-	.addElement(TextareaElementRegistration)
-	.addElement(CheckboxElementRegistration)
-	.build();
+const engine = createReactFormEngine({
+	elements: [InputElementRegistration, TextareaElementRegistration, CheckboxElementRegistration],
+});
 
 type _engineIsFormEngine = Assert<typeof engine extends FormEngine<any, any, any> ? true : false>;
 
@@ -26,12 +24,12 @@ type _registeredElementIds = Assert<'input' extends FormEngine.ElementId ? true 
 
 type _inputConfig = FormEngine.GetElementConfig<'input'>;
 type _inputHasInputType = Assert<'inputType' extends keyof _inputConfig ? true : false>;
+type _inputTypeDefaultsToText = Assert<undefined extends _inputConfig['inputType'] ? true : false>;
 
 const inputConfig = {
 	$type: 'input',
 	id: 'email',
 	name: 'email',
-	inputType: 'email',
 } satisfies FormEngine.GetElementConfig<'input'>;
 
 engine.defineForm({

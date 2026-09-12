@@ -1,6 +1,6 @@
 # Form Engine Validation System
 
-The Form Engine validation system provides a flexible, extensible way to define and execute validation rules for form fields. It's built on top of [Zod](https://zod.dev/) and follows a registry pattern for maximum flexibility.
+The Form Engine validation system provides a flexible, extensible way to define and execute validation rules for form fields. It builds first-party validators with [Zod Mini](https://zod.dev/) and follows a registry pattern for maximum flexibility.
 
 ## Table of Contents
 
@@ -20,13 +20,10 @@ The Form Engine validation system provides a flexible, extensible way to define 
 Validation rules are plain JavaScript objects that describe how to validate a field value:
 
 ```typescript
-// Simple required validation
 { type: 'required', message: 'This field is required' }
 
-// Email validation
 { type: 'email', message: 'Please enter a valid email' }
 
-// String length validation
 { type: 'minLength', value: 3, message: 'Must be at least 3 characters' }
 ```
 
@@ -35,20 +32,19 @@ Validation rules are plain JavaScript objects that describe how to validate a fi
 The `ValidationRegistry` is the central hub that:
 
 - Stores all validation type implementations
-- Converts validation rules into Zod schemas
+- Converts validation rules into Zod Mini schemas
 - Provides convenient preset builders
 - Manages custom validation registration
 
 ### Rule-to-Schema Generation
 
-The system automatically converts validation rules into Zod schemas:
+The system automatically converts validation rules into Zod Mini schemas:
 
 ```typescript
 import { createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation';
 
 const rules = [{ type: 'required' }, { type: 'email' }, { type: 'minLength', value: 5 }];
 
-// Automatically generates: z.string().email().min(5)
 const schema = createZodSchemaFromRules(rules);
 ```
 
@@ -59,27 +55,23 @@ const schema = createZodSchemaFromRules(rules);
 ```typescript
 import { createZodSchemaFromRules, ValidationPresets } from '@schema-engine/forms/schemas/validation';
 
-// Method 1: Direct JSON rules (simple & flexible)
 const emailRules = [
 	{ type: 'required', message: 'Email is required' },
 	{ type: 'email', message: 'Invalid email format' },
 ];
 
-// Method 2: Using presets (convenient & discoverable)
 const emailRules = [
 	ValidationPresets.string.required('Email is required'),
 	ValidationPresets.string.email('Invalid email format'),
 ];
 
-// Create Zod schema from rules
 const schema = createZodSchemaFromRules(emailRules);
 
-// Validate data
 const result = schema.safeParse('user@example.com');
 if (result.success) {
 	console.log('Valid email:', result.data);
 } else {
-	console.log('Validation errors:', result.error.errors);
+	console.log('Validation errors:', result.error.issues);
 }
 ```
 
@@ -113,11 +105,8 @@ The package exports a default registry instance that comes pre-loaded with all b
 ```typescript
 import { validationRegistry } from '@schema-engine/forms/schemas/validation';
 
-// Check what's available
 console.log(validationRegistry.getRegisteredTypes());
-// ['required', 'email', 'minLength', 'maxLength', 'pattern', 'url', 'uuid', ...]
 
-// Get validations by category
 const stringValidations = validationRegistry.getByCategory('string');
 const numberValidations = validationRegistry.getByCategory('number');
 ```
@@ -126,15 +115,14 @@ const numberValidations = validationRegistry.getByCategory('number');
 
 ```typescript
 import { ValidationRegistry } from '@schema-engine/forms/schemas/validation';
+import * as z from 'zod/mini';
 
-// Create a new registry (starts empty)
 const customRegistry = new ValidationRegistry();
 
-// Register your own validations.
 customRegistry.register({
 	type: 'postalCode',
 	category: 'string',
-	handler: (rule) => z.string().regex(/^\d{5}$/, rule.message || 'Invalid postal code'),
+	handler: (rule) => z.string().check(z.regex(/^\d{5}$/, rule.message || 'Invalid postal code')),
 });
 ```
 
@@ -142,41 +130,43 @@ customRegistry.register({
 
 ### String Validations
 
-| Type        | Parameters                | Description           | Zod Equivalent             |
-| ----------- | ------------------------- | --------------------- | -------------------------- |
-| `required`  | `message?`                | Field is required     | `.min(1, message)`         |
-| `email`     | `message?`                | Valid email address   | `.email(message)`          |
-| `phone`     | `message?`                | Complete phone number | `libphonenumber-js`        |
-| `minLength` | `value: number, message?` | Minimum string length | `.min(value, message)`     |
-| `maxLength` | `value: number, message?` | Maximum string length | `.max(value, message)`     |
-| `pattern`   | `value: string, message?` | Regex pattern match   | `.regex(pattern, message)` |
-| `url`       | `message?`                | Valid URL             | `.url(message)`            |
-| `uuid`      | `version?, message?`      | Valid UUID            | `.uuid(message)`           |
+| Type        | Parameters                | Description           | Zod Mini implementation              |
+| ----------- | ------------------------- | --------------------- | ------------------------------------ |
+| `required`  | `message?`                | Field is required     | `z.refine(...)`                      |
+| `email`     | `message?`                | Valid email address   | `z.email(message)`                   |
+| `minLength` | `value: number, message?` | Minimum string length | `z.string().check(z.minLength(...))` |
+| `maxLength` | `value: number, message?` | Maximum string length | `z.string().check(z.maxLength(...))` |
+| `pattern`   | `value: string, message?` | Regex pattern match   | `z.string().check(z.regex(...))`     |
+| `url`       | `message?`                | Valid URL             | `z.url(message)`                     |
+| `uuid`      | `version?, message?`      | Valid UUID            | `z.uuid(message)`                    |
 
 ### Number Validations
 
-| Type  | Parameters                | Description   | Zod Equivalent         |
-| ----- | ------------------------- | ------------- | ---------------------- |
-| `min` | `value: number, message?` | Minimum value | `.min(value, message)` |
-| `max` | `value: number, message?` | Maximum value | `.max(value, message)` |
+| Type  | Parameters                | Description   | Zod Mini implementation        |
+| ----- | ------------------------- | ------------- | ------------------------------ |
+| `min` | `value: number, message?` | Minimum value | `z.number().check(z.gte(...))` |
+| `max` | `value: number, message?` | Maximum value | `z.number().check(z.lte(...))` |
 
 ### Array Validations
 
-| Type       | Parameters                | Description          | Zod Equivalent         |
-| ---------- | ------------------------- | -------------------- | ---------------------- |
-| `minItems` | `value: number, message?` | Minimum array length | `.min(value, message)` |
-| `maxItems` | `value: number, message?` | Maximum array length | `.max(value, message)` |
+| Type       | Parameters                | Description          | Zod Mini implementation                |
+| ---------- | ------------------------- | -------------------- | -------------------------------------- |
+| `minItems` | `value: number, message?` | Minimum array length | `z.array(...).check(z.minLength(...))` |
+| `maxItems` | `value: number, message?` | Maximum array length | `z.array(...).check(z.maxLength(...))` |
 
 ### Network & Format Validations
 
-| Type     | Parameters                                               | Description                |
-| -------- | -------------------------------------------------------- | -------------------------- |
-| `ip`     | `version?: 'v4' \| 'v6', message?`                       | IP address validation      |
-| `cidr`   | `version?: 'v4' \| 'v6', message?`                       | CIDR notation validation   |
-| `jwt`    | `alg?: string, message?`                                 | JWT token validation       |
-| `hash`   | `algorithm: string, message?`                            | Hash validation            |
-| `base64` | `urlSafe?: boolean, message?`                            | Base64 encoding validation |
-| `format` | `format: 'cuid' \| 'cuid2' \| 'ulid' \| 'hex', message?` | String format validation   |
+| Type     | Parameters                    | Description                        | Zod Mini implementation               |
+| -------- | ----------------------------- | ---------------------------------- | ------------------------------------- |
+| `ipv4`   | `message?`                    | IPv4 address validation            | `z.ipv4(message)`                     |
+| `ipv6`   | `message?`                    | IPv6 address validation with zones | `z.ipv6(message)` plus zone check     |
+| `jwt`    | `alg?: string, message?`      | JWT token validation               | `z.jwt(...)`                          |
+| `hash`   | `algorithm: string, message?` | Hash validation                    | `z.hash(...)`                         |
+| `base64` | `urlSafe?: boolean, message?` | Base64 encoding validation         | `z.base64(...)` or `z.base64url(...)` |
+| `cuid`   | `message?`                    | CUID validation                    | `z.cuid(...)`                         |
+| `cuid2`  | `message?`                    | CUID2 validation                   | `z.cuid2(...)`                        |
+| `ulid`   | `message?`                    | ULID validation                    | `z.ulid(...)`                         |
+| `hex`    | `message?`                    | Hexadecimal string validation      | `z.hex(...)`                          |
 
 ### Date & Time Validations
 
@@ -188,54 +178,37 @@ customRegistry.register({
 
 ### Async Validation
 
-| Type    | Parameters                                                                          | Description            |
-| ------- | ----------------------------------------------------------------------------------- | ---------------------- |
-| `async` | `url: string, method?, headers?, body?, expectedResponse?, dependencies?, message?` | Server-side validation |
+| Type    | Parameters                                                                                  | Description            |
+| ------- | ------------------------------------------------------------------------------------------- | ---------------------- |
+| `async` | `url: string, method?, headers?, extraPayload?, expectedResponse?, dependencies?, message?` | Server-side validation |
 
 ```typescript
-// Async validation example
 {
   type: 'async',
   url: '/api/validate-username',
   method: 'POST',
-  dependencies: ['email'], // Re-validate when email changes
+  dependencies: ['email'],
   message: 'Username is already taken'
 }
 ```
 
 ## Custom Validations
 
-### Phone Validation
+### Phone Inputs
 
-`phone` uses `libphonenumber-js` to validate non-empty values. A country prefix such as `+44` is invalid; a complete E.164 number such as `+442079460958` is valid. Empty values remain valid so optional phone fields work normally. Pair it with `required` when a phone number is mandatory.
-
-`phone-input` fields add the `phone` rule automatically. Configure the rule explicitly only to override its message.
-
-```typescript
-import { createZodSchemaFromRules, ValidationPresets } from '@schema-engine/forms/schemas/validation';
-
-const schema = createZodSchemaFromRules([
-	ValidationPresets.string.required('Phone number is required'),
-	ValidationPresets.string.phone('Enter a complete phone number'),
-]);
-
-schema.safeParse('+44').success; // false
-schema.safeParse('+442079460958').success; // true
-```
+The phone-input element registration includes a `phone` validator. Creating a form engine with that element registers the handler and applies `{ type: 'phone' }` to `phone-input` fields when the author omitted it. Pair the field with `required` when a number is mandatory. The forms package does not depend on a phone-number library.
 
 ### Registering Custom Validations
 
 ```typescript
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { validationRegistry } from '@schema-engine/forms/schemas/validation';
 
-// Register a credit card validator with Luhn algorithm
 validationRegistry.register({
 	type: 'creditCard',
 	category: 'string',
 	handler: (rule) => {
-		return z.string().refine((value) => {
-			// Luhn algorithm implementation
+		return z.string().check(z.refine((value) => {
 			const digits = value.replace(/\D/g, '');
 			if (digits.length < 13 || digits.length > 19) return false;
 
@@ -255,7 +228,7 @@ validationRegistry.register({
 			return sum % 10 === 0;
 		}, rule.message || 'Invalid credit card number');
 	},
-});
+		}));
 ```
 
 ### Bulk Registration
@@ -265,12 +238,12 @@ const customValidations = [
 	{
 		type: 'postalCode',
 		category: 'string',
-		handler: (rule) => z.string().regex(/^\d{5}(-\d{4})?$/, rule.message),
+		handler: (rule) => z.string().check(z.regex(/^\d{5}(-\d{4})?$/, rule.message)),
 	},
 	{
 		type: 'socialSecurity',
 		category: 'string',
-		handler: (rule) => z.string().regex(/^\d{3}-\d{2}-\d{4}$/, rule.message),
+		handler: (rule) => z.string().check(z.regex(/^\d{3}-\d{2}-\d{4}$/, rule.message)),
 	},
 ];
 
@@ -281,7 +254,7 @@ validationRegistry.registerMultiple(customValidations);
 
 ### createZodSchemaFromRules
 
-Converts an array of validation rules into a Zod schema:
+Converts an array of validation rules into a Zod Mini schema:
 
 ```typescript
 import { createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation';
@@ -289,12 +262,11 @@ import { createZodSchemaFromRules } from '@schema-engine/forms/schemas/validatio
 const rules = [{ type: 'required' }, { type: 'minLength', value: 3 }, { type: 'maxLength', value: 50 }];
 
 const schema = createZodSchemaFromRules(rules);
-// Results in: z.string().min(1).min(3).max(50)
 ```
 
 ### generateFormSchema
 
-Generates a complete Zod schema for an entire form:
+Generates a complete Zod Mini schema for an entire form:
 
 ```typescript
 import { generateFormSchema } from '@schema-engine/forms/schemas/validation';
@@ -319,7 +291,6 @@ const formElements = [
 
 const formSchema = generateFormSchema(formElements);
 
-// Validate entire form data
 const result = formSchema.safeParse({
 	firstName: 'John',
 	email: 'john@example.com',
@@ -336,7 +307,6 @@ Use the `ValidationPresets` utility for convenient rule creation:
 ```typescript
 import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
 
-// String presets
 const rules = [
 	ValidationPresets.string.required('Name is required'),
 	ValidationPresets.string.minLength(2, 'Name too short'),
@@ -345,25 +315,21 @@ const rules = [
 	ValidationPresets.string.pattern('^[A-Za-z\\s]+$', 'Letters only'),
 ];
 
-// Number presets
 const ageRules = [
 	ValidationPresets.number.min(0, 'Age cannot be negative'),
 	ValidationPresets.number.max(150, 'Age seems unrealistic'),
 ];
 
-// Array presets
 const tagsRules = [
 	ValidationPresets.array.minItems(1, 'At least one tag required'),
 	ValidationPresets.array.maxItems(10, 'Too many tags'),
 ];
 
-// Network presets
 const formatRules = [
 	ValidationPresets.string.url('Invalid URL'),
 	ValidationPresets.network.ipv4('Invalid IPv4 address'),
 ];
 
-// Async presets
 const usernameRules = [
 	ValidationPresets.custom.async('/api/check-username', {
 		method: 'POST',
@@ -372,6 +338,8 @@ const usernameRules = [
 	}),
 ];
 ```
+
+IPv4 and IPv6 rules delegate address parsing to Zod Mini. IPv6 also keeps support for interface-scoped addresses such as `fe80::1%eth0`.
 
 ### Cross-Field Validation
 
@@ -382,8 +350,8 @@ const passwordConfirmRule = {
 	type: 'async',
 	url: '/api/validate-password-match',
 	method: 'POST',
-	dependencies: ['password'], // Re-validate when password changes
-	body: { field: 'confirmPassword' },
+	dependencies: ['password'],
+	extraPayload: { field: 'confirmPassword' },
 	expectedResponse: { valid: true },
 	message: 'Passwords do not match',
 };
@@ -397,12 +365,10 @@ Custom validators can access form data for conditional logic:
 validationRegistry.register({
 	type: 'conditionalRequired',
 	category: 'string',
-	handler: (rule) => {
-		return z.string().refine((value, ctx) => {
-			const formData = ctx.path; // Access to form context
-			// Implement conditional logic
-			return true;
-		}, rule.message);
+	handler: (rule, formData) => {
+		return z
+			.string()
+			.check(z.refine((value) => formData?.accountType !== 'business' || value.length > 0, rule.message));
 	},
 });
 ```
@@ -417,10 +383,9 @@ validationRegistry.register({
 - `registerMultiple(registrations: ValidationRegistration[]): void` - Register multiple validations
 - `unregister(type: string): boolean` - Remove a validation type
 - `has(type: string): boolean` - Check if validation type exists
-- `createSchema(rule: ValidationRule, formData?): z.ZodTypeAny | null` - Create a Zod schema from one rule
+- `createSchema(rule: ValidationRule, formData?): z.ZodMiniType | null` - Create a Zod Mini schema from one rule
 - `getRegisteredTypes(): string[]` - Get all registered type names
 - `getByCategory(category: string): ValidationRegistration[]` - Get validations by category
-- `clear(): void` - Remove all registered validations
 
 #### Properties
 
@@ -432,7 +397,7 @@ validationRegistry.register({
 interface ValidationRegistration {
 	type: string;
 	category: 'string' | 'number' | 'array' | 'boolean' | 'date' | 'generic';
-	handler: (rule: ValidationRule) => z.ZodTypeAny;
+	handler: (rule: ValidationRule) => z.ZodMiniType;
 }
 ```
 
@@ -456,23 +421,18 @@ Specific rule types add their own properties (e.g., `value` for min/max rules, `
 Form configurations must use plain JSON objects. For custom validation logic, register it in the ValidationRegistry first:
 
 ```typescript
-// Correct approach - register custom validation during app initialization
 validationRegistry.register({
 	type: 'companyEmail',
 	category: 'string',
-	handler: (rule) => z.string().email().endsWith('@company.com'),
+	handler: (rule) => z.email().check(z.endsWith('@company.com')),
 });
 
-// Then use in JSON form configs
 const field = {
 	rules: [
 		{ type: 'required', message: 'Email is required' },
 		{ type: 'companyEmail', message: 'Must be a company email' },
 	],
 };
-
-// Not possible - functions cannot be used in form configurations
-// { type: 'custom', handler: (value) => value.includes('@company.com') }
 ```
 
 ### 2. Use Meaningful Error Messages
@@ -480,11 +440,9 @@ const field = {
 Provide clear, user-friendly error messages:
 
 ```typescript
-// Good - specific and helpful
 { type: 'minLength', value: 8, message: 'Password must be at least 8 characters' }
 { type: 'email', message: 'Please enter a valid email address' }
 
-// Poor - vague and unhelpful
 { type: 'minLength', value: 8, message: 'Invalid' }
 { type: 'email', message: 'Error' }
 ```
@@ -494,13 +452,11 @@ Provide clear, user-friendly error messages:
 Use presets to reduce boilerplate and improve consistency:
 
 ```typescript
-// Clean and consistent using presets
 const emailRules = [
 	ValidationPresets.string.required('Email is required'),
 	ValidationPresets.string.email('Please enter a valid email'),
 ];
 
-// Repetitive without presets
 const emailRules = [
 	{ type: 'required', message: 'Email is required' },
 	{ type: 'email', message: 'Please enter a valid email' },

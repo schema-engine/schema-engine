@@ -1,23 +1,19 @@
-import { describe, test, expect, beforeEach } from 'vitest';
-import { FormComposer } from '@/builder/form-composer';
+import { describe, test, expect } from 'vitest';
+import { createFormEngine } from '@/engine/create-form-engine';
 import type { BuilderActionRegistration, BuilderActionExecutionContext } from '@/types';
-import { z } from 'zod';
-import type { ActionExecutionResult, ActionConfigBase } from '@schema-engine/actions';
+import * as z from 'zod/mini';
+import type { ActionExecutionResult } from '@schema-engine/actions';
 
-interface LogActionConfig extends ActionConfigBase<'log'> {
-	message: string;
-}
+const logActionSchema = z.object({ id: z.string(), $type: z.literal('log'), message: z.string() });
+const submitActionSchema = z.object({ id: z.string(), $type: z.literal('submit'), url: z.string() });
 
-interface SubmitActionConfig extends ActionConfigBase<'submit'> {
-	url: string;
-}
+type LogActionConfig = z.output<typeof logActionSchema>;
+type SubmitActionConfig = z.output<typeof submitActionSchema>;
 
 describe('ActionRegistry', () => {
-	let builder: FormComposer;
-
-	const mockAction: BuilderActionRegistration<'log', LogActionConfig> = {
+	const mockAction: BuilderActionRegistration<'log', typeof logActionSchema> = {
 		$type: 'log',
-		schema: z.object({ id: z.string(), $type: z.literal('log'), message: z.string() }),
+		schema: logActionSchema,
 		metadata: {
 			name: 'Log Action',
 			description: 'Logs a message',
@@ -28,9 +24,9 @@ describe('ActionRegistry', () => {
 		},
 	};
 
-	const anotherAction: BuilderActionRegistration<'submit', SubmitActionConfig> = {
+	const anotherAction: BuilderActionRegistration<'submit', typeof submitActionSchema> = {
 		$type: 'submit',
-		schema: z.object({ id: z.string(), $type: z.literal('submit'), url: z.string() }),
+		schema: submitActionSchema,
 		metadata: {
 			name: 'Submit Action',
 			description: 'Submits form data',
@@ -43,14 +39,9 @@ describe('ActionRegistry', () => {
 		},
 	};
 
-	beforeEach(() => {
-		builder = new FormComposer();
-	});
-
 	describe('register', () => {
 		test('should register an action', () => {
-			builder.addAction(mockAction);
-			const engine = builder.build();
+			const engine = createFormEngine({ actions: [mockAction] });
 
 			expect(engine.hasAction('log')).toBe(true);
 			const retrieved = engine.getAction('log');
@@ -60,9 +51,7 @@ describe('ActionRegistry', () => {
 		});
 
 		test('should allow registering multiple actions', () => {
-			builder.addAction(mockAction);
-			builder.addAction(anotherAction);
-			const engine = builder.build();
+			const engine = createFormEngine({ actions: [mockAction, anotherAction] });
 
 			expect(engine.getAllActions().length).toBe(2);
 			expect(engine.hasAction('log')).toBe(true);
@@ -70,7 +59,7 @@ describe('ActionRegistry', () => {
 		});
 
 		test('should override when registering duplicate id', () => {
-			const updated: BuilderActionRegistration<'log', LogActionConfig> = {
+			const updated: BuilderActionRegistration<'log', typeof logActionSchema> = {
 				...mockAction,
 				metadata: {
 					...mockAction.metadata,
@@ -78,9 +67,7 @@ describe('ActionRegistry', () => {
 				},
 			};
 
-			builder.addAction(mockAction);
-			builder.addAction(updated);
-			const engine = builder.build();
+			const engine = createFormEngine({ actions: [mockAction, updated] });
 
 			expect(engine.getAllActions().length).toBe(1);
 			expect(engine.getAction('log')?.metadata.name).toBe('Updated Log Action');
@@ -89,21 +76,19 @@ describe('ActionRegistry', () => {
 
 	describe('has', () => {
 		test('should return true for registered action', () => {
-			builder.addAction(mockAction);
-			const engine = builder.build();
+			const engine = createFormEngine({ actions: [mockAction] });
 			expect(engine.hasAction('log')).toBe(true);
 		});
 
 		test('should return false for unregistered action', () => {
-			const engine = builder.build();
+			const engine = createFormEngine();
 			expect(engine.hasAction('non-existent')).toBe(false);
 		});
 	});
 
 	describe('getAction', () => {
 		test('should retrieve registered action', () => {
-			builder.addAction(mockAction);
-			const engine = builder.build();
+			const engine = createFormEngine({ actions: [mockAction] });
 			const retrieved = engine.getAction('log');
 
 			expect(retrieved?.$type).toBe('log');
@@ -113,7 +98,7 @@ describe('ActionRegistry', () => {
 		});
 
 		test('should return undefined for unregistered action', () => {
-			const engine = builder.build();
+			const engine = createFormEngine();
 			const retrieved = engine.getAction('non-existent');
 			expect(retrieved).toBeUndefined();
 		});
@@ -121,14 +106,12 @@ describe('ActionRegistry', () => {
 
 	describe('getAll', () => {
 		test('should return empty array when no actions registered', () => {
-			const engine = builder.build();
+			const engine = createFormEngine();
 			expect(engine.getAllActions()).toEqual([]);
 		});
 
 		test('should return all registered actions', () => {
-			builder.addAction(mockAction);
-			builder.addAction(anotherAction);
-			const engine = builder.build();
+			const engine = createFormEngine({ actions: [mockAction, anotherAction] });
 
 			const all = engine.getAllActions();
 			expect(all).toHaveLength(2);
@@ -140,14 +123,12 @@ describe('ActionRegistry', () => {
 
 	describe('getActionTypes', () => {
 		test('should return empty array when no actions registered', () => {
-			const engine = builder.build();
+			const engine = createFormEngine();
 			expect(engine.getActionTypes()).toEqual([]);
 		});
 
 		test('should return all registered ids', () => {
-			builder.addAction(mockAction);
-			builder.addAction(anotherAction);
-			const engine = builder.build();
+			const engine = createFormEngine({ actions: [mockAction, anotherAction] });
 
 			const keys = engine.getActionTypes();
 			expect(keys).toHaveLength(2);

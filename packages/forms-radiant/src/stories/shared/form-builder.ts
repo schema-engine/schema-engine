@@ -1,16 +1,14 @@
-import { createRadiantFormComposer } from '@/registries/builder-registry';
+import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
 import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
 
 export { ValidationPresets };
 
-function createStoryFormComposer() {
-	return createRadiantFormComposer().addElements(schemaFormRegistrations);
-}
+export const storyFormEngine = createRadiantFormEngine({
+	elements: schemaFormRegistrations,
+});
 
-export const storyFormEngine = createStoryFormComposer().build();
-
-export function getEngine() {
+export function getEngine(): typeof storyFormEngine {
 	return storyFormEngine;
 }
 

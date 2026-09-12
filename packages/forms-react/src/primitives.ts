@@ -9,6 +9,8 @@ import type { FormShellLayout } from '@schema-engine/forms/recipes';
 
 export { FormElement } from './components/internals/field-renderer';
 export type { FormElementProps } from './components/internals/field-renderer';
+export { FormElements } from './components/internals/form-elements';
+export type { FormElementsProps } from './components/internals/form-elements';
 export { combineHandlers, useControlledFormElement } from './hooks/use-field';
 export type { UseControlledFormElementReturn } from './hooks/use-field';
 

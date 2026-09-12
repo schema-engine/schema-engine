@@ -4,18 +4,17 @@ import { RuiBadge } from '@ecopages/radiant-ui/badge';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { RuiHeading, RuiHeadingDescription, RuiHeadingTitle } from '@ecopages/radiant-ui/heading';
 import { formResetPlugin, formSubmitPlugin, FormActionTriggerSchema } from '@schema-engine/forms/actions';
-import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
 import type {
 	ActionExecutionResult,
 	BuilderActionExecutionContext,
 	BuilderActionRegistration,
 } from '@schema-engine/forms';
 import type { FormConfig } from '@schema-engine/forms/schemas';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { findNearestRuiForm } from '@/lib/rui-form-utils';
 import { schemaFormRegistrations } from '@/registrations';
-import { createRadiantFormComposer } from '@/registries/builder-registry';
+import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { radiantAdapter, ValidationPresets } from '@/stories/shared/form-builder';
 
 export interface ActionLogEntry {
@@ -46,17 +45,17 @@ const actionEventDispatcher = new ActionEventDispatcher();
 const LoggerActionSchema = z.object({
 	id: z.string(),
 	$type: z.literal('event_logger'),
-	description: z.string().optional(),
-	enabled: z.boolean().default(true),
-	triggers: FormActionTriggerSchema.array().optional(),
+	description: z.optional(z.string()),
+	enabled: z._default(z.boolean(), true),
+	triggers: z.optional(z.array(FormActionTriggerSchema)),
 });
 type LoggerAction = z.infer<typeof LoggerActionSchema>;
 
-function loggerPlugin(): BuilderActionRegistration<'event_logger', LoggerAction> {
+function loggerPlugin(): BuilderActionRegistration<'event_logger', typeof LoggerActionSchema> {
 	let previousFormData: Record<string, unknown> = {};
 	return {
 		$type: 'event_logger',
-		schema: asStandardSchema(LoggerActionSchema),
+		schema: LoggerActionSchema,
 		metadata: {
 			name: 'Event Logger',
 			description: 'Logs action triggers for the real-time dashboard',
@@ -88,17 +87,17 @@ function loggerPlugin(): BuilderActionRegistration<'event_logger', LoggerAction>
 }
 
 const demoLoggerPlugin = loggerPlugin();
-const demoEngine = createRadiantFormComposer()
-	.addElements(schemaFormRegistrations)
-	.addAction(demoLoggerPlugin)
-	.addAction(
+const demoEngine = createRadiantFormEngine({
+	elements: schemaFormRegistrations,
+	actions: [
+		demoLoggerPlugin,
 		formSubmitPlugin({
 			request: async () =>
 				new Response(JSON.stringify({ received: true }), { headers: { 'content-type': 'application/json' } }),
 		}),
-	)
-	.addAction(formResetPlugin({ confirm: () => true }))
-	.build();
+		formResetPlugin({ confirm: () => true }),
+	],
+});
 
 const demoFormConfig = {
 	id: 'action-triggers-demo',

@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
-import { z } from 'zod';
-import { FormComposer } from '@/builder/form-composer';
+import * as z from 'zod/mini';
+import { createFormEngine } from '@/engine/create-form-engine';
 import type { StaticRegistration } from '@/types';
 
 describe('Recursive Schema Handling', () => {
@@ -13,14 +13,14 @@ describe('Recursive Schema Handling', () => {
 				replies?: Comment[];
 			};
 
-			const commentSchema: z.ZodType<Comment> = z.lazy(() =>
+			const commentSchema: z.ZodMiniType<Comment> = z.lazy(() =>
 				z.object({
 					$type: z.literal('comment'),
 					text: z.string(),
 					author: z.string(),
-					replies: z.array(commentSchema).optional(),
+					replies: z.optional(z.array(commentSchema)),
 				}),
-			) as z.ZodType<Comment>;
+			) as z.ZodMiniType<Comment>;
 
 			const commentReg: StaticRegistration = {
 				$type: 'comment',
@@ -29,7 +29,7 @@ describe('Recursive Schema Handling', () => {
 				render: () => null,
 			};
 
-			const engine = new FormComposer().addElement(commentReg).build();
+			const engine = createFormEngine({ elements: [commentReg] });
 
 			const schema = engine.generateJSONSchemaCollection();
 			expect(schema.schemas['element:comment']?.type).toBe('object');
@@ -42,13 +42,13 @@ describe('Recursive Schema Handling', () => {
 				children?: TreeNode[];
 			};
 
-			const treeNodeSchema: z.ZodType<TreeNode> = z.lazy(() =>
+			const treeNodeSchema: z.ZodMiniType<TreeNode> = z.lazy(() =>
 				z.object({
 					$type: z.literal('tree-node'),
 					value: z.string(),
-					children: z.array(treeNodeSchema).optional(),
+					children: z.optional(z.array(treeNodeSchema)),
 				}),
-			) as z.ZodType<TreeNode>;
+			) as z.ZodMiniType<TreeNode>;
 
 			const treeReg: StaticRegistration = {
 				$type: 'tree-node',
@@ -57,7 +57,7 @@ describe('Recursive Schema Handling', () => {
 				render: () => null,
 			};
 
-			const engine = new FormComposer().addElement(treeReg).build();
+			const engine = createFormEngine({ elements: [treeReg] });
 
 			const schema = engine.generateJSONSchemaCollection();
 			expect(schema.schemas['element:tree-node']?.type).toBe('object');
@@ -80,22 +80,22 @@ describe('Recursive Schema Handling', () => {
 				author?: User;
 			};
 
-			const userSchema: z.ZodType<User> = z.lazy(() =>
+			const userSchema: z.ZodMiniType<User> = z.lazy(() =>
 				z.object({
 					$type: z.literal('user'),
 					name: z.string(),
-					posts: z.array(postSchema).optional(),
+					posts: z.optional(z.array(postSchema)),
 				}),
-			) as z.ZodType<User>;
+			) as z.ZodMiniType<User>;
 
-			const postSchema: z.ZodType<Post> = z.lazy(() =>
+			const postSchema: z.ZodMiniType<Post> = z.lazy(() =>
 				z.object({
 					$type: z.literal('post'),
 					title: z.string(),
 					content: z.string(),
-					author: userSchema.optional(),
+					author: z.optional(userSchema),
 				}),
-			) as z.ZodType<Post>;
+			) as z.ZodMiniType<Post>;
 
 			const userReg: StaticRegistration = {
 				$type: 'user',
@@ -111,7 +111,7 @@ describe('Recursive Schema Handling', () => {
 				render: () => null,
 			};
 
-			const engine = new FormComposer().addElement(userReg).addElement(postReg).build();
+			const engine = createFormEngine({ elements: [userReg, postReg] });
 
 			const schema = engine.generateJSONSchemaCollection();
 			expect(schema.schemas['element:user']?.type).toBe('object');
@@ -132,22 +132,22 @@ describe('Recursive Schema Handling', () => {
 				author?: User;
 			};
 
-			const userSchema: z.ZodType<User> = z.lazy(() =>
+			const userSchema: z.ZodMiniType<User> = z.lazy(() =>
 				z.object({
 					$type: z.literal('user'),
 					name: z.string(),
-					posts: z.array(postSchema).optional(),
+					posts: z.optional(z.array(postSchema)),
 				}),
-			) as z.ZodType<User>;
+			) as z.ZodMiniType<User>;
 
-			const postSchema: z.ZodType<Post> = z.lazy(() =>
+			const postSchema: z.ZodMiniType<Post> = z.lazy(() =>
 				z.object({
 					$type: z.literal('post'),
 					title: z.string(),
 					content: z.string(),
-					author: userSchema.optional(),
+					author: z.optional(userSchema),
 				}),
-			) as z.ZodType<Post>;
+			) as z.ZodMiniType<Post>;
 
 			const userReg: StaticRegistration = {
 				$type: 'user',
@@ -163,7 +163,7 @@ describe('Recursive Schema Handling', () => {
 				render: () => null,
 			};
 
-			const engine = new FormComposer().addElement(userReg).addElement(postReg).build();
+			const engine = createFormEngine({ elements: [userReg, postReg] });
 
 			const schema = engine.generateJSONSchemaCollection();
 
@@ -210,78 +210,80 @@ describe('Recursive Schema Handling', () => {
 				organization?: Organization;
 			};
 
-			const organizationSchema: z.ZodType<Organization> = z.lazy(() =>
+			const organizationSchema: z.ZodMiniType<Organization> = z.lazy(() =>
 				z.object({
 					$type: z.literal('organization'),
 					name: z.string(),
-					departments: z.array(departmentSchema).optional(),
+					departments: z.optional(z.array(departmentSchema)),
 				}),
-			) as z.ZodType<Organization>;
+			) as z.ZodMiniType<Organization>;
 
-			const departmentSchema: z.ZodType<Department> = z.lazy(() =>
+			const departmentSchema: z.ZodMiniType<Department> = z.lazy(() =>
 				z.object({
 					$type: z.literal('department'),
 					name: z.string(),
-					teams: z.array(teamSchema).optional(),
+					teams: z.optional(z.array(teamSchema)),
 				}),
-			) as z.ZodType<Department>;
+			) as z.ZodMiniType<Department>;
 
-			const teamSchema: z.ZodType<Team> = z.lazy(() =>
+			const teamSchema: z.ZodMiniType<Team> = z.lazy(() =>
 				z.object({
 					$type: z.literal('team'),
 					name: z.string(),
-					members: z.array(memberSchema).optional(),
+					members: z.optional(z.array(memberSchema)),
 				}),
-			) as z.ZodType<Team>;
+			) as z.ZodMiniType<Team>;
 
-			const memberSchema: z.ZodType<Member> = z.lazy(() =>
+			const memberSchema: z.ZodMiniType<Member> = z.lazy(() =>
 				z.object({
 					$type: z.literal('member'),
 					name: z.string(),
-					projects: z.array(projectSchema).optional(),
+					projects: z.optional(z.array(projectSchema)),
 				}),
-			) as z.ZodType<Member>;
+			) as z.ZodMiniType<Member>;
 
-			const projectSchema: z.ZodType<Project> = z.lazy(() =>
+			const projectSchema: z.ZodMiniType<Project> = z.lazy(() =>
 				z.object({
 					$type: z.literal('project'),
 					name: z.string(),
-					organization: organizationSchema.optional(),
+					organization: z.optional(organizationSchema),
 				}),
-			) as z.ZodType<Project>;
+			) as z.ZodMiniType<Project>;
 
-			const engine = new FormComposer()
-				.addElement({
-					$type: 'organization',
-					schema: organizationSchema,
-					metadata: { name: 'Organization', category: 'input' },
-					render: () => null,
-				})
-				.addElement({
-					$type: 'department',
-					schema: departmentSchema,
-					metadata: { name: 'Department', category: 'input' },
-					render: () => null,
-				})
-				.addElement({
-					$type: 'team',
-					schema: teamSchema,
-					metadata: { name: 'Team', category: 'input' },
-					render: () => null,
-				})
-				.addElement({
-					$type: 'member',
-					schema: memberSchema,
-					metadata: { name: 'Member', category: 'input' },
-					render: () => null,
-				})
-				.addElement({
-					$type: 'project',
-					schema: projectSchema,
-					metadata: { name: 'Project', category: 'input' },
-					render: () => null,
-				})
-				.build();
+			const engine = createFormEngine({
+				elements: [
+					{
+						$type: 'organization',
+						schema: organizationSchema,
+						metadata: { name: 'Organization', category: 'input' },
+						render: () => null,
+					},
+					{
+						$type: 'department',
+						schema: departmentSchema,
+						metadata: { name: 'Department', category: 'input' },
+						render: () => null,
+					},
+					{
+						$type: 'team',
+						schema: teamSchema,
+						metadata: { name: 'Team', category: 'input' },
+						render: () => null,
+					},
+					{
+						$type: 'member',
+						schema: memberSchema,
+						metadata: { name: 'Member', category: 'input' },
+						render: () => null,
+					},
+					{
+						$type: 'project',
+						schema: projectSchema,
+						metadata: { name: 'Project', category: 'input' },
+						render: () => null,
+					},
+				],
+			});
 
 			const start = performance.now();
 			const schema = engine.generateJSONSchemaCollection();
@@ -303,22 +305,24 @@ describe('Recursive Schema Handling', () => {
 				replies?: Comment[];
 			};
 
-			const commentSchema: z.ZodType<Comment> = z.lazy(() =>
+			const commentSchema: z.ZodMiniType<Comment> = z.lazy(() =>
 				z.object({
 					$type: z.literal('comment'),
 					text: z.string(),
-					replies: z.array(commentSchema).optional(),
+					replies: z.optional(z.array(commentSchema)),
 				}),
-			) as z.ZodType<Comment>;
+			) as z.ZodMiniType<Comment>;
 
-			const engine = new FormComposer()
-				.addElement({
-					$type: 'comment',
-					schema: commentSchema,
-					metadata: { name: 'Comment', category: 'input' },
-					render: () => null,
-				})
-				.build();
+			const engine = createFormEngine({
+				elements: [
+					{
+						$type: 'comment',
+						schema: commentSchema,
+						metadata: { name: 'Comment', category: 'input' },
+						render: () => null,
+					},
+				],
+			});
 
 			const configSchema = engine.generateFormConfigSchema();
 
@@ -336,22 +340,24 @@ describe('Recursive Schema Handling', () => {
 				children?: Node[];
 			};
 
-			const nodeSchema: z.ZodType<Node> = z.lazy(() =>
+			const nodeSchema: z.ZodMiniType<Node> = z.lazy(() =>
 				z.object({
 					$type: z.literal('node'),
 					value: z.string(),
-					children: z.array(nodeSchema).optional(),
+					children: z.optional(z.array(nodeSchema)),
 				}),
-			) as z.ZodType<Node>;
+			) as z.ZodMiniType<Node>;
 
-			const engine = new FormComposer()
-				.addElement({
-					$type: 'node',
-					schema: nodeSchema,
-					metadata: { name: 'Node', category: 'input' },
-					render: () => null,
-				})
-				.build();
+			const engine = createFormEngine({
+				elements: [
+					{
+						$type: 'node',
+						schema: nodeSchema,
+						metadata: { name: 'Node', category: 'input' },
+						render: () => null,
+					},
+				],
+			});
 
 			const schema = engine.generateJSONSchemaCollection();
 
@@ -366,22 +372,24 @@ describe('Recursive Schema Handling', () => {
 				next: LinkedNode | null;
 			};
 
-			const linkedNodeSchema: z.ZodType<LinkedNode> = z.lazy(() =>
+			const linkedNodeSchema: z.ZodMiniType<LinkedNode> = z.lazy(() =>
 				z.object({
 					$type: z.literal('linked-node'),
 					value: z.string(),
 					next: z.union([linkedNodeSchema, z.null()]),
 				}),
-			) as z.ZodType<LinkedNode>;
+			) as z.ZodMiniType<LinkedNode>;
 
-			const engine = new FormComposer()
-				.addElement({
-					$type: 'linked-node',
-					schema: linkedNodeSchema,
-					metadata: { name: 'Linked Node', category: 'input' },
-					render: () => null,
-				})
-				.build();
+			const engine = createFormEngine({
+				elements: [
+					{
+						$type: 'linked-node',
+						schema: linkedNodeSchema,
+						metadata: { name: 'Linked Node', category: 'input' },
+						render: () => null,
+					},
+				],
+			});
 
 			const schema = engine.generateJSONSchemaCollection();
 

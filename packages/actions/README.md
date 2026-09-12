@@ -15,16 +15,16 @@ The package is intended to be reusable across different domains such as forms, w
 ## Installation
 
 ```bash
-bun add @schema-engine/actions zod
+bun add @schema-engine/actions
 ```
 
-`zod` is the only external runtime dependency. The package also uses the internal `@schema-engine/registry` package from the same workspace family.
+The package has no schema-library runtime dependency. Action registrations use the provider-neutral `StandardSchemaV1` contract, so applications can choose Zod Mini, Zod, Valibot, Effect Schema, or another Standard Schema implementation.
 
-## Current Execution Model
+## Execution Model
 
-The current implementation separates the caller-provided base context from the runtime context seen by action handlers.
+The executor separates the caller-provided base context from the runtime context seen by action handlers.
 
-You provide base domain context to the executor. Before each action runs, the executor enriches that context with the current action config and trigger and passes the merged object to `execute()`.
+Provide base domain context to the executor. Before each action runs, the executor enriches that context with the action config and trigger and passes the merged object to `execute()`.
 
 At runtime the call shape is effectively:
 
@@ -41,7 +41,7 @@ That means call sites stay simple, while handlers still receive a strongly typed
 ## Quick Start
 
 ```typescript
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import {
 	ActionExecutor,
 	type ActionConfigBase,
@@ -64,12 +64,12 @@ interface LogActionConfig extends ActionConfigBase<'log'> {
 
 const logAction: ActionRegistration<LogActionConfig, BaseContext, MyTrigger> = {
 	$type: 'log',
-	schema: z.object({
+	schema: z.strictObject({
 		id: z.string(),
 		$type: z.literal('log'),
 		message: z.string(),
-		enabled: z.boolean().optional(),
-		triggers: z.array(z.string()).optional(),
+		enabled: z.optional(z.boolean()),
+		triggers: z.optional(z.array(z.string())),
 	}),
 	metadata: {
 		name: 'Log Action',
@@ -105,7 +105,7 @@ await executor.execute({
 });
 ```
 
-The handler still receives `BaseContext & { config: LogActionConfig; trigger: MyTrigger }`, but that runtime shape is injected by the executor.
+The handler receives `BaseContext & { config: LogActionConfig; trigger: MyTrigger }`. Nested dispatches also include the optional `triggeredBy` action. The runtime shape is injected by the executor.
 
 ## Core Concepts
 
@@ -114,6 +114,8 @@ The handler still receives `BaseContext & { config: LogActionConfig; trigger: My
 Defines a reusable action type.
 
 ```typescript
+import type { StandardSchemaV1 } from '@standard-schema/spec';
+
 interface ActionRegistration<
 	TConfig extends ActionConfigBase = ActionConfigBase,
 	TBaseContext = unknown,
@@ -121,7 +123,7 @@ interface ActionRegistration<
 	TData = unknown,
 > {
 	$type: TConfig['$type'];
-	schema: z.ZodType<TConfig>;
+	schema: StandardSchemaV1;
 	metadata: ActionMetadata<TTrigger>;
 	execute: (
 		context: ActionRuntimeContext<TConfig, TBaseContext, TTrigger>,
@@ -216,10 +218,10 @@ class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 
 ## Testing
 
-The current package test suite passes with Bun:
+Run the package test suite with pnpm:
 
 ```bash
-bun test
+pnpm test:all
 ```
 
 ## License

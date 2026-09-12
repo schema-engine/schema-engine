@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useWatch, type Control } from 'react-hook-form';
-import type { FormConfig } from '@schema-engine/forms/schemas';
-import type { FormActionTrigger } from '@schema-engine/forms';
+import type { FormActionTrigger, FormConfigView } from '@schema-engine/forms';
 import type { ActionExecutionResult } from '@schema-engine/actions';
 
 interface UseFormWatcherOptions {
 	control: Control<any>;
-	config: FormConfig;
+	config: FormConfigView;
 	onChange?: (data: any) => void;
 	dispatchTrigger: (trigger: FormActionTrigger) => Promise<ActionExecutionResult[]>;
 }

@@ -1,7 +1,6 @@
 /**
- * Builder module - FormComposer and related utilities
+ * Builder module - form authoring types and internal registration utilities.
  */
 
-export * from './form-composer';
 export * from './form-authoring';
 export * from './types.utils';

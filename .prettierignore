@@ -13,3 +13,4 @@ bun.lockb
 registry.json
 registry/*/registry.json
 registry/shared/forms/registrations.ts
+registry/shared/forms/recipes/manifest.json

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
 	ValidationRegistry,
@@ -18,7 +18,7 @@ describe('ValidationRegistry', () => {
 			const customValidation: ValidationRegistration = {
 				type: 'custom',
 				category: 'generic',
-				handler: (rule: { type: string; message?: string }) => z.string().min(5, rule.message),
+				handler: (rule: { type: string; message?: string }) => z.string().check(z.minLength(5, rule.message)),
 			};
 
 			registry.register(customValidation);
@@ -156,25 +156,27 @@ describe('ValidationRegistry', () => {
 				type: 'creditCard',
 				category: 'string',
 				handler: (rule: { type: string; message?: string }) => {
-					return z.string().refine((value) => {
-						const digits = value.replace(/\s/g, '');
-						if (!/^\d+$/.test(digits)) return false;
+					return z.string().check(
+						z.refine((value) => {
+							const digits = value.replace(/\s/g, '');
+							if (!/^\d+$/.test(digits)) return false;
 
-						let sum = 0;
-						let shouldDouble = false;
+							let sum = 0;
+							let shouldDouble = false;
 
-						for (let i = digits.length - 1; i >= 0; i--) {
-							let digit = parseInt(digits[i], 10);
-							if (shouldDouble) {
-								digit *= 2;
-								if (digit > 9) digit -= 9;
+							for (let i = digits.length - 1; i >= 0; i--) {
+								let digit = parseInt(digits[i], 10);
+								if (shouldDouble) {
+									digit *= 2;
+									if (digit > 9) digit -= 9;
+								}
+								sum += digit;
+								shouldDouble = !shouldDouble;
 							}
-							sum += digit;
-							shouldDouble = !shouldDouble;
-						}
 
-						return sum % 10 === 0;
-					}, rule.message || 'Invalid credit card number');
+							return sum % 10 === 0;
+						}, rule.message || 'Invalid credit card number'),
+					);
 				},
 			};
 
@@ -195,7 +197,7 @@ describe('ValidationRegistry', () => {
 				category: 'string',
 				handler: (rule: { type: string; message?: string }) => {
 					const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-					return z.string().regex(phoneRegex, rule.message || 'Invalid phone number');
+					return z.string().check(z.regex(phoneRegex, rule.message || 'Invalid phone number'));
 				},
 			};
 
@@ -207,6 +209,38 @@ describe('ValidationRegistry', () => {
 			expect(schema).toBeDefined();
 			expect(() => schema?.parse('+1234567890')).not.toThrow();
 			expect(() => schema?.parse('invalid')).toThrow();
+		});
+
+		it('injects defaultFor rules onto matching field types', () => {
+			registry.register({
+				type: 'phone',
+				category: 'string',
+				defaultFor: ['phone-input'],
+				handler: () => z.string(),
+			});
+
+			expect(registry.getDefaultRulesForFieldType('phone-input')).toEqual([{ type: 'phone' }]);
+			expect(registry.getDefaultRulesForFieldType('input')).toEqual([]);
+
+			registry.register({
+				type: 'phone',
+				category: 'string',
+				handler: () => z.string(),
+			});
+
+			expect(registry.getDefaultRulesForFieldType('phone-input')).toEqual([]);
+		});
+
+		it('clears defaultFor mappings when a validation is unregistered', () => {
+			registry.register({
+				type: 'phone',
+				category: 'string',
+				defaultFor: ['phone-input'],
+				handler: () => z.string(),
+			});
+			registry.unregister('phone');
+
+			expect(registry.getDefaultRulesForFieldType('phone-input')).toEqual([]);
 		});
 	});
 

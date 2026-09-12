@@ -21,7 +21,7 @@ export class ElementRegistry extends ComponentRegistry<string, ElementRegistrati
 	}
 
 	/**
-	 * Accept any Standard Schema registration. Authoring types are tracked on FormComposer.
+	 * Accept any Standard Schema registration. Authoring types are tracked on FormEngine.
 	 */
 	override register(item: {
 		$type: string;

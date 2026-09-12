@@ -33,7 +33,6 @@
 		]
 	},
 	"devDependencies": {
-		"@standard-schema/spec": "^1.1.0",
 		"effect": "^3.22.1",
 		"esbuild": "^0.27.0",
 		"tsc-alias": "^1.8.16",
@@ -41,9 +40,9 @@
 		"vitest": "^4.0.13"
 	},
 	"dependencies": {
+		"@standard-schema/spec": "^1.1.0",
 		"@schema-engine/actions": "workspace:*",
-		"@schema-engine/registry": "workspace:*",
-		"libphonenumber-js": "^1.13.12"
+		"@schema-engine/registry": "workspace:*"
 	},
 	"peerDependencies": {
 		"typescript": "^5",
@@ -148,6 +147,14 @@
 		"./lib/validate-form": {
 			"types": "./dist/lib/validate-form.d.ts",
 			"import": "./dist/lib/validate-form.js"
+		},
+		"./lib/field-scope": {
+			"types": "./dist/lib/field-scope.d.ts",
+			"import": "./dist/lib/field-scope.js"
+		},
+		"./lib/path-values": {
+			"types": "./dist/lib/path-values.d.ts",
+			"import": "./dist/lib/path-values.js"
 		}
 	}
 }

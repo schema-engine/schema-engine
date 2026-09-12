@@ -1,1 +1,1 @@
-export { createRadiantFormComposer } from './builder-registry';
+export { createRadiantFormEngine } from './builder-registry';

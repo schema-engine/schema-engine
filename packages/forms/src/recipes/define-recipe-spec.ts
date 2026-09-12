@@ -1,27 +1,27 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import type { RecipeKind, RecipeSlot, RecipeSpec } from './types';
 import { RECIPE_SLOT_ORDER } from './types';
 
 export function mergeRecipeSlotSchemas(
 	$type: string,
-	slotSchemas: Partial<Record<RecipeSlot, z.ZodTypeAny>>,
-): z.ZodTypeAny {
-	const shape: Record<string, z.ZodTypeAny> = {
+	slotSchemas: Partial<Record<RecipeSlot, z.ZodMiniType>>,
+): z.ZodMiniType {
+	const shape: Record<string, z.ZodMiniType> = {
 		$type: z.literal($type),
 	};
 
 	for (const [slot, schema] of Object.entries(slotSchemas)) {
 		if (schema) {
-			shape[slot] = schema.optional();
+			shape[slot] = z.optional(schema);
 		}
 	}
 
-	return z.object(shape).strict();
+	return z.strictObject(shape);
 }
 
 export function assertRecipeSlotSchemas(
 	kind: RecipeKind,
-	slotSchemas: Partial<Record<RecipeSlot, z.ZodTypeAny>>,
+	slotSchemas: Partial<Record<RecipeSlot, z.ZodMiniType>>,
 ): void {
 	if (kind === 'single-step' && (slotSchemas.progress || slotSchemas.actions)) {
 		throw new Error("Recipes with kind 'single-step' cannot declare progress or actions slots.");
@@ -37,11 +37,11 @@ export function assertRecipeSlotSchemas(
  * Single-step recipes cannot declare `progress` or `actions`. Wizard recipes
  * must declare `actions`. Built-in specs are exported from this module.
  */
-export function defineRecipeSpec<const TType extends string, TSchema extends z.ZodTypeAny>(definition: {
+export function defineRecipeSpec<const TType extends string, TSchema extends z.ZodMiniType>(definition: {
 	$type: TType;
 	kind: RecipeKind;
 	metadata: RecipeSpec<TType>['metadata'];
-	slotSchemas?: Partial<Record<RecipeSlot, z.ZodTypeAny>>;
+	slotSchemas?: Partial<Record<RecipeSlot, z.ZodMiniType>>;
 	slotDefaults?: RecipeSpec<TType>['slotDefaults'];
 	schema?: TSchema;
 }): RecipeSpec<TType, TSchema> {

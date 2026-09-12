@@ -1,7 +1,8 @@
-import { z } from 'zod';
-import type { ValidationRule, BaseValidationRule, PhoneRule } from './types.js';
+import * as z from 'zod/mini';
+import type { ValidationRule, BaseValidationRule } from './types.js';
 import type { BaseField } from '../base-field.js';
 import { validationRegistry } from './validation-registry.js';
+import { walkLeafFields } from '@/lib/field-scope.js';
 
 type ValidationRuleType = ValidationRule | BaseValidationRule;
 
@@ -17,38 +18,69 @@ interface FieldConfigElement extends BaseField {
 
 type FormElement = ValidationElement | FieldConfigElement;
 
-export function isFieldRequired(rules?: ValidationRule[]): boolean {
+export type ValidatableField = {
+	path: string;
+	rules: ReadonlyArray<BaseValidationRule>;
+};
+
+export function isFieldRequired(rules?: ReadonlyArray<{ readonly type: string }>): boolean {
 	return rules?.some((rule) => rule.type === 'required') ?? false;
 }
 
 /**
- * Returns an element's configured rules plus validation intrinsic to its field type.
+ * Configured rules plus any `defaultFor` rules registered for the field `$type`.
  *
- * Phone inputs accept partially typed values while editing, but a submitted non-empty
- * value must be a complete phone number. The explicit rule is preserved so callers can
- * customize its error message.
+ * @remarks Default rules are stored as `{ type }` and asserted as `TRule` because
+ * every validation rule in the union is identified by `type` alone.
  */
 export function getValidationRulesForElement<TRule extends BaseValidationRule>(element: {
 	$type?: string;
-	rules?: TRule[];
-}): Array<TRule | PhoneRule> | undefined {
-	const rules = element.rules;
-	if (element.$type !== 'phone-input' || rules?.some((rule) => rule.type === 'phone')) {
-		return rules;
+	rules?: readonly TRule[];
+}): ReadonlyArray<TRule> | undefined {
+	const configured = element.rules;
+	const defaults = element.$type ? validationRegistry.getDefaultRulesForFieldType(element.$type) : [];
+	if (defaults.length === 0) {
+		return configured;
 	}
 
-	return [...(rules ?? []), { type: 'phone' }];
+	const merged: TRule[] = [...(configured ?? [])];
+	for (const rule of defaults) {
+		if (!merged.some((existing) => existing.type === rule.type)) {
+			merged.push(rule as TRule);
+		}
+	}
+
+	return merged;
+}
+
+/**
+ * Leaf fields with validation rules, using composed paths (`address.street`).
+ * Array indices are expanded later against live values.
+ */
+export function collectValidatableFields(elements: readonly object[], basePath = ''): ValidatableField[] {
+	const fields: ValidatableField[] = [];
+
+	for (const { path, element } of walkLeafFields(elements, basePath)) {
+		const rules = getValidationRulesForElement(
+			element as { $type?: string; rules?: ReadonlyArray<BaseValidationRule> },
+		);
+		if (rules?.length) {
+			fields.push({ path, rules });
+		}
+	}
+
+	return fields;
 }
 
 export function createZodSchemaFromRules(
-	rules: ValidationRuleType[] = [],
+	rules: ReadonlyArray<ValidationRuleType> = [],
 	formData?: Record<string, any>,
-): z.ZodTypeAny {
+): z.ZodMiniType {
 	if (!rules.length) {
 		return z.any();
 	}
 
-	const schemas: z.ZodTypeAny[] = [];
+	const schemas: z.ZodMiniType[] = [];
 	for (const rule of rules) {
 		const ruleSchema = validationRegistry.createSchema(rule as ValidationRule, formData);
 		if (ruleSchema) {
@@ -62,14 +94,14 @@ export function createZodSchemaFromRules(
 
 	let combinedSchema = schemas[0];
 	for (let i = 1; i < schemas.length; i++) {
-		combinedSchema = combinedSchema.and(schemas[i]);
+		combinedSchema = z.intersection(combinedSchema, schemas[i]);
 	}
 
 	return combinedSchema;
 }
 
-export function generateFormSchema(elements: FormElement[]): z.ZodObject<any> {
-	const schemaFields: Record<string, z.ZodTypeAny> = {};
+export function generateFormSchema(elements: FormElement[]): z.ZodMiniObject<any> {
+	const schemaFields: Record<string, z.ZodMiniType> = {};
 
 	for (const element of elements) {
 		if (!element.name) continue;

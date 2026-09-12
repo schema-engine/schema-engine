@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'vitest';
-import { FormComposer, resolveFormRecipe } from '@schema-engine/forms';
+import { createFormEngine, resolveFormRecipe } from '@schema-engine/forms';
 
 describe('forms package export contract', () => {
 	test('resolveFormRecipe accepts a getter from the published package', () => {
 		const recipe = {
 			$type: 'card',
-			kind: 'single-step' as const,
+			kind: 'single-step',
 			slots: [],
-			schema: { '~standard': { version: 1 as const, vendor: 'test', validate: (value: unknown) => ({ value }) } },
+			schema: { '~standard': { version: 1, vendor: 'test', validate: (value: unknown) => ({ value }) } },
 			metadata: { name: 'Card', description: 'Card' },
 			render: {},
 		};
@@ -24,8 +24,8 @@ describe('forms package export contract', () => {
 		).toBe(recipe);
 	});
 
-	test('FormComposer is constructable from the published package', () => {
-		const engine = new FormComposer().build();
+	test('createFormEngine is callable from the published package', () => {
+		const engine = createFormEngine();
 		expect(engine.getElementIds()).toEqual([]);
 	});
 });

@@ -8,14 +8,14 @@ import {
 } from '@ecopages/radiant';
 import { provideContext, type ContextProvider } from '@ecopages/radiant/context';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { NormalizedFormConfig } from '@schema-engine/forms';
 import type { FormEngine as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import { formInstanceContext, type FormInstanceContextValue, type StepStates } from '@/contexts/form-instance-context';
 import { getRuiFormStore } from '@/lib/rui-form-utils';
 import { fieldNamesForStep, validateCurrentStepFields } from '@/lib/validate-current-step';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
 import { ConfiguredRuiForm } from '@/adapters/radiant/rui-form-shell';
-import { resolveFormRecipe, resolveValidatedConfig, isValidatedFormConfig } from '@schema-engine/forms';
+import { resolveFormRecipe } from '@schema-engine/forms';
 
 function createInitialStepStates(totalSteps: number): StepStates {
 	return {
@@ -27,13 +27,13 @@ function createInitialStepStates(totalSteps: number): StepStates {
 
 @customElement('se-form-instance')
 export class FormInstanceElement extends RadiantElement {
-	@prop({ type: Object }) config!: FormConfig;
+	/** Frozen config from `engine.defineForm` / `engine.validateForm` via `FormProvider`. */
+	@prop({ type: Object }) config!: NormalizedFormConfig;
 	@prop({ type: Object }) engine?: CoreFormEngine;
 	@prop({ type: Object }) defaultValues?: Record<string, unknown>;
 	@prop({ type: Object }) extras?: JsxRenderable;
 	@prop({ type: Boolean, defaultValue: false }) isSubmitting = false;
 	@prop({ type: Object }) onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
-	@prop({ type: Boolean, defaultValue: false }) validated = false;
 
 	@state currentStep = 0;
 	@state stepStates: StepStates = { completed: [], valid: [], visited: [] };
@@ -140,7 +140,6 @@ export class FormInstanceElement extends RadiantElement {
 			markStepCompleted: this.markStepCompleted,
 			markStepVisited: this.markStepVisited,
 			isSubmitting: this.isSubmitting,
-			configValidated: this.validated || isValidatedFormConfig(this.config),
 		};
 	}
 
@@ -162,15 +161,16 @@ export class FormInstanceElement extends RadiantElement {
 	}
 
 	override render(): JsxRenderable {
-		const config = this.validated ? this.config : resolveValidatedConfig(this.config, this.engine);
-		if (!config) {
-			return null;
+		const engine = this.engine;
+		if (!engine) {
+			throw new Error(`Form '${this.config.id}' requires a FormEngine to render.`);
 		}
-		const recipe = resolveFormRecipe(config, this.engine);
+		const config = this.config;
+		const recipe = resolveFormRecipe(config, engine);
 
 		return (
 			<ConfiguredRuiForm config={config} defaultValues={this.defaultValues} onSubmit={this.onSubmit}>
-				<RecipeRenderer config={config} engine={this.engine} recipe={recipe} instance={this.getContextValue()}>
+				<RecipeRenderer config={config} recipe={recipe} instance={this.getContextValue()}>
 					{this.extras}
 				</RecipeRenderer>
 			</ConfiguredRuiForm>
@@ -184,15 +184,13 @@ export function FormInstance({
 	defaultValues,
 	onSubmit,
 	isSubmitting = false,
-	validated = false,
 	children,
 }: {
-	config: FormConfig;
-	engine?: CoreFormEngine;
+	config: NormalizedFormConfig;
+	engine: CoreFormEngine;
 	defaultValues?: Record<string, unknown>;
 	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
 	isSubmitting?: boolean;
-	validated?: boolean;
 	children?: JsxRenderable;
 }): JsxRenderable {
 	return jsx('se-form-instance', {
@@ -200,7 +198,6 @@ export function FormInstance({
 		'prop:engine': engine,
 		'prop:defaultValues': defaultValues,
 		'prop:isSubmitting': isSubmitting,
-		'prop:validated': validated,
 		'prop:onSubmit': onSubmit,
 		'prop:extras': children,
 	});

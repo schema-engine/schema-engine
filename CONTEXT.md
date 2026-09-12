@@ -1,21 +1,23 @@
 # Schema Engine — context
 
-## Zod and Standard Schema boundary
+## Zod Mini and Standard Schema boundary
 
-This monorepo uses a **hybrid model** pre-v1:
+The engine uses Zod Mini for its first-party schemas and keeps Standard Schema as the provider-neutral registration boundary:
 
-| Layer                  | Role                                                                                           |
-| ---------------------- | ---------------------------------------------------------------------------------------------- |
-| `registry` / `actions` | `StandardSchemaV1` on every `BaseRegistration.schema`                                          |
-| `forms`                | Zod for authoring; `asStandardSchema()` at registration sites; `~standard.validate` at runtime |
-| `forms-react`          | Zod in `*.types.ts` for built-in field config authoring; **zod is a peerDependency**           |
+| Layer                  | Role                                                                                                    |
+| ---------------------- | ------------------------------------------------------------------------------------------------------- |
+| `registry` / `actions` | `StandardSchemaV1` on every `BaseRegistration.schema`                                                   |
+| `forms`                | Zod Mini for first-party authoring and JSON Schema export; `~standard.validate` at registration/runtime |
+| `forms-react`          | Uses the forms and registry schemas; consumer registrations remain Standard Schema                      |
 
 ### Rules
 
-1. **Author** field/action config schemas with Zod (or another library) inside package-internal `*.types.ts`.
-2. **Register** with `asStandardSchema(schema)` or a native `StandardSchemaV1` implementation.
+1. **Author** first-party field/action/config schemas with the functional `zod/mini` API. Installing the `zod` package is required to import its `zod/mini` entry point.
+2. **Register** the concrete schema. Prefer `defineInput` / `defineStatic` so the render function is checked against schema **output**. Consumer schemas may come from any Standard Schema provider, including Zod, Valibot, and Effect Schema.
 3. **Validate** via `~standard.validate` at engine and action boundaries. The forms package wraps the spec call in `safeParseStandardSchema` (`packages/forms/src/lib/standard-schema.ts`; import as `@schema-engine/forms/lib/standard-schema`) for callers that prefer a tagged result over a thrown error.
 4. **Consumers** may register custom elements with a hand-written Standard Schema — they are not required to install Zod unless they use Zod-authored built-ins.
+
+Form authors supply schema **input** (defaults stay optional). After `defineForm` / `validateForm`, components receive schema **output**. Nested container `elements` are authored against the same engine registrations as top-level fields.
 
 ### Proof test
 

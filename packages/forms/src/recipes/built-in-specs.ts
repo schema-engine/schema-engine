@@ -10,10 +10,10 @@ import {
 	WizardActionsConfigSchema,
 } from './slot-schemas';
 
-const MINIMAL_ACTIONS = { appearance: 'minimal' as const, showStepCounter: false };
-const CENTERED_HEADER = { align: 'center' as const, size: 'md' as const };
-const HERO_HEADER = { align: 'center' as const, size: 'lg' as const, titleAs: 'h1' as const, inheritColor: true };
-const WIZARD_PROGRESS_HEADER = { showStepCounter: true, counterPlacement: 'before' as const };
+const MINIMAL_ACTIONS = { appearance: 'minimal', showStepCounter: false };
+const CENTERED_HEADER = { align: 'center', size: 'md' };
+const HERO_HEADER = { align: 'center', size: 'lg', titleAs: 'h1', inheritColor: true };
+const WIZARD_PROGRESS_HEADER = { showStepCounter: true, counterPlacement: 'before' };
 
 export const cardSpec = defineRecipeSpec({
 	$type: 'card',

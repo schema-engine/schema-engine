@@ -1,36 +1,25 @@
-import { FormElement } from '@schema-engine/forms-react/primitives';
+import { FormElements } from '@schema-engine/forms-react/primitives';
+import { objectFieldScope } from '@schema-engine/forms';
 import { FieldSet } from '@/components/ui/schema-engine/components/field';
-import type { FieldSetProps as FieldSetConfigProps } from './form-fieldset.types';
+import type { FieldSetProps } from './form-fieldset.types';
 
 /**
- * FieldSet component that groups related form fields into a nested object
+ * Groups related form fields into a nested object.
  *
- * Unlike FormArrayElements which creates arrays, this creates a single nested object.
- * Perfect for grouping related fields like addresses, contact info, date ranges, etc.
- *
- * Features:
- * - Groups multiple fields under a single name
- * - Creates nested object structure in form data
- * - Supports validation on nested fields
- * - Base UI implementation without shadcn/ui dependencies
+ * Field paths are composed at render time: children bind as `${name}.${child.name}`.
  */
-export function FormFieldSet({ ...config }: FieldSetConfigProps) {
+export function FormFieldSet({ ...config }: FieldSetProps) {
+	const scope = objectFieldScope(config.name, config);
+
 	return (
 		<div className="space-y-4" style={config.style}>
 			<FieldSet legend={config.legend} description={config.description}>
 				<div className="space-y-4">
-					{config.elements.map((elementConfig, elementIndex) => (
-						<FormElement
-							key={`${elementConfig.id || elementConfig.$type}_${elementIndex}`}
-							config={
-								{
-									...elementConfig,
-									name: `${config.name}.${elementConfig.name}`,
-									id: elementConfig.id ? `${elementConfig.id}_${elementIndex}` : undefined,
-								} as FormEngine.ElementConfig
-							}
-						/>
-					))}
+					<FormElements
+						elements={config.elements}
+						namePrefix={scope.namePrefix}
+						instanceId={scope.instanceId}
+					/>
 				</div>
 			</FieldSet>
 		</div>

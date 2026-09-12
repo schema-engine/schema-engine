@@ -4,5 +4,6 @@
 
 export * from './component-type';
 export * from './form-engine';
+export * from './create-form-engine';
 export * from './schema-artifacts';
 export * from './schema-metadata-catalog';

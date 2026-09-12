@@ -1,4 +1,5 @@
 import type { JsxRenderable } from '@ecopages/jsx';
+import { jsx } from '@ecopages/jsx/jsx-runtime';
 import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import {
@@ -94,10 +95,10 @@ export function SplitScreenShell({ slots, viewConfig }: FormShellProps): JsxRend
 	} = getSlotConfig<SplitScreenShellConfig>(viewConfig, 'shell');
 	return (
 		<div class="split-screen-shell">
-			<se-split-screen-side
-				class={`split-screen-shell__side split-screen-shell__side--${sideWidth}${sidePlacement === 'right' ? ' split-screen-shell__side--right' : ''}`}
-				prop:sideContent={sideContent}
-			/>
+			{jsx('se-split-screen-side', {
+				class: `split-screen-shell__side split-screen-shell__side--${sideWidth}${sidePlacement === 'right' ? ' split-screen-shell__side--right' : ''}`,
+				'prop:sideContent': sideContent ?? '',
+			})}
 			<main class={`split-screen-shell__main split-screen-shell__main--${contentAlignment}`}>
 				{slots.header}
 				{slots.progress}

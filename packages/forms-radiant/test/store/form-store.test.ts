@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'vitest';
 import { FormStore } from '@/adapters/store/form-store';
 import type { FormConfig } from '@schema-engine/forms/schemas';
+import { registerValidation } from '@schema-engine/forms/schemas/validation';
+import { createRadiantPhoneValidationRegistration } from '@/lib/phone-validation';
 
 const sampleConfig: FormConfig = {
 	id: 'test-form',
@@ -54,6 +56,7 @@ describe('FormStore', () => {
 	});
 
 	test('rejects incomplete phone prefixes from raw phone-input configuration', async () => {
+		registerValidation(createRadiantPhoneValidationRegistration());
 		const config: FormConfig = {
 			id: 'phone-form',
 			steps: [

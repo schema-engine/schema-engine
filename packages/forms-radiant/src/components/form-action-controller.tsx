@@ -2,9 +2,8 @@ import './form-action-controller.css';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { BuilderActionBaseContext, FormActionTrigger, FormConfigView } from '@schema-engine/forms';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
-import type { BuilderActionBaseContext, FormActionTrigger } from '@schema-engine/forms';
 import { ActionDispatcher } from '@schema-engine/actions';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { findNearestRuiForm, readRuiFormStore } from '@/lib/rui-form-utils';
@@ -26,7 +25,7 @@ const ACTION_STORE_METHODS = ['getValues', 'getState', 'reset', 'setValue', 'val
 /** Dispatches configured form actions for Radiant form lifecycle events. */
 @customElement('se-form-action-controller')
 export class FormActionControllerElement extends RadiantElement {
-	@prop({ type: Object }) config!: FormConfig;
+	@prop({ type: Object }) config!: FormConfigView;
 	@prop({ type: Object }) engine?: FormEngine;
 
 	private dispatcher?: ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>;
@@ -128,6 +127,6 @@ export class FormActionControllerElement extends RadiantElement {
 	}
 }
 
-export function FormActionController({ config, engine }: { config: FormConfig; engine?: FormEngine }) {
+export function FormActionController({ config, engine }: { config: FormConfigView; engine?: FormEngine }) {
 	return jsx('se-form-action-controller', { 'prop:config': config, 'prop:engine': engine });
 }

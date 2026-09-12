@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { BaseRegistry, type BaseRegistration } from '../src';
 
 class TestRegistry extends BaseRegistry<string, BaseRegistration> {

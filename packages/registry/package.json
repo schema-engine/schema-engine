@@ -29,17 +29,16 @@
 		"check-types": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@ecopages/logger": "latest"
+		"@ecopages/logger": "latest",
+		"@standard-schema/spec": "^1.1.0"
 	},
 	"devDependencies": {
-		"@standard-schema/spec": "^1.1.0",
 		"esbuild": "^0.27.0",
 		"tsc-alias": "^1.8.16",
 		"vitest": "^4.0.13",
 		"zod": "^4.0.17"
 	},
 	"peerDependencies": {
-		"typescript": "^5",
-		"zod": "^4.0.17"
+		"typescript": "^5"
 	}
 }

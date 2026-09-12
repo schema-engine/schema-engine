@@ -1,19 +1,19 @@
 ---
-title: 'Builder Pattern'
-description: 'Compose elements, recipes, and actions into an immutable form engine.'
+title: 'Form engine setup'
+description: 'Register elements, recipes, and actions into an immutable form engine.'
 group: Forms
 order: 7
 ---
 
-# Builder Pattern
+# Form engine setup
 
-`FormComposer` is the assembly point for a form engine. Register the runtime
-capabilities your application uses, then call `build()` to create an immutable
+`createFormEngine` is the public entry point for assembling a form engine.
+Pass declarative registration arrays; the factory returns an immutable
 `FormEngine`.
 
 ## Register capabilities
 
-The core composer has three independent registries:
+The engine has three independent registries:
 
 - **Elements** render fields and static content inside a step.
 - **Recipes** compose the form shell and optional header, progress, and action
@@ -21,36 +21,129 @@ The core composer has three independent registries:
 - **Actions** respond to form and step lifecycle triggers.
 
 ```ts
-const engine = new FormComposer()
-	.addElements(elementRegistrations)
-	.addRecipes(recipeRegistrations)
-	.addActions(actionRegistrations)
-	.build();
+import { createFormEngine } from '@schema-engine/forms';
+
+const engine = createFormEngine({
+	elements: elementRegistrations,
+	recipes: recipeRegistrations,
+	actions: actionRegistrations,
+});
 ```
 
-`addElement`, `addRecipe`, and `addAction` are the single-registration forms;
-the plural methods register a collection. Registration IDs are the `$type`
-values used in serialized configuration.
+Registration IDs are the `$type` values used in serialized configuration.
+Duplicate `$type` values follow last-wins semantics. Spread shared barrels and
+append overrides:
 
-## React composer
+```ts
+const engine = createFormEngine({
+	elements: [...schemaFormRegistrations, customInput],
+});
+```
+
+Use `engine.extend({ actions: [extraAction] })` to derive a new engine without
+re-spreading the full registration lists.
+
+## Register a custom field
+
+Pass the schema directly. `defineInput` checks that the component accepts
+schema output (defaults and transforms applied). Form authors still write
+schema input, so defaulted properties stay optional in `defineForm`.
+
+```tsx
+import { defineInput, createFormEngine } from '@schema-engine/forms';
+import * as z from 'zod/mini';
+
+const RatingSchema = z.object({
+	$type: z.literal('rating'),
+	id: z.string(),
+	name: z.string(),
+	max: z._default(z.number(), 5),
+});
+
+function RatingField(config: { name: string; max: number }) {
+	return <input name={config.name} type="range" max={config.max} />;
+}
+
+export const RatingRegistration = defineInput({
+	$type: 'rating',
+	schema: RatingSchema,
+	metadata: { name: 'Rating', category: 'input' },
+	render: RatingField,
+});
+
+const engine = createFormEngine({ elements: [RatingRegistration] });
+
+engine.defineForm({
+	id: 'review',
+	steps: [
+		{
+			id: 'main',
+			title: 'Review',
+			elements: [{ $type: 'rating', id: 'score', name: 'score' }],
+		},
+	],
+});
+```
+
+## Register a container
+
+Containers declare children with `elementChildrenSchema`. Nested authoring
+uses the same engine registrations as top-level fields. Field paths are a
+render-time scope: pass `namePrefix` / `instanceId` to `FormElements` instead
+of cloning child configs.
+
+```tsx
+import { defineInput, elementChildrenSchema, objectFieldScope } from '@schema-engine/forms';
+import { FormElements } from '@schema-engine/forms-react';
+import * as z from 'zod/mini';
+import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
+
+const GroupSchema = z.extend(BaseFieldSchema, {
+	$type: z.literal('group'),
+	elements: elementChildrenSchema.check(z.minLength(1)),
+});
+
+function GroupField(config: {
+	name: string;
+	elements: ReadonlyArray<import('@schema-engine/forms').NormalizedElementConfig>;
+	instanceId?: string;
+}) {
+	const scope = objectFieldScope(config.name, config);
+	return <FormElements elements={config.elements} namePrefix={scope.namePrefix} instanceId={scope.instanceId} />;
+}
+
+export const GroupRegistration = defineInput({
+	$type: 'group',
+	schema: GroupSchema,
+	metadata: { name: 'Group', category: 'input' },
+	render: GroupField,
+});
+```
+
+Arrays use `arrayItemScope(name, index, instanceId)` and pass `instanceId` —
+a stable item id, not the current index — so ids survive item removal.
+Scalar array items set `{ scalar: true }` so the child binds to the item path
+itself.
+
+## React engine
 
 The React adapter provides a headless convenience factory. It does not own
 application field components or visual recipes: install Schema Engine registry
 items and pass their generated registrations explicitly.
 
 ```ts
-import { createReactFormComposer } from '@schema-engine/forms-react';
+import { createReactFormEngine } from '@schema-engine/forms-react';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
-const engine = createReactFormComposer()
-	.addElements(schemaFormRegistrations)
-	.addRecipes(schemaFormRecipeRegistrations)
-	.build();
+const engine = createReactFormEngine({
+	elements: schemaFormRegistrations,
+	recipes: schemaFormRecipeRegistrations,
+});
 ```
 
 Radiant uses the same composition model for elements: register them explicitly.
-`createRadiantFormComposer()` already binds the canonical view recipes because
+`createRadiantFormEngine()` already binds the canonical view recipes because
 Radiant has no shadcn registry. Specs still come from `@schema-engine/forms/recipes`.
 
 ## Author form configuration
@@ -82,9 +175,10 @@ const form = engine.defineForm({
 ```
 
 `defineForm` validates against the engine's registered elements, recipes, and
-actions. It applies schema defaults and transforms. Use `engine.validateForm()`
-for untyped or external JSON. Use a plain `FormConfig` when configuration must
-remain portable or editable by another system.
+actions. It applies schema defaults and transforms and returns a frozen
+`NormalizedFormConfig`. Use `engine.validateForm()` for untyped or external
+JSON. Use a plain `FormConfig` when configuration must remain portable or
+editable by another system, then pass it through `validateForm` before render.
 
 ## Composition rules
 

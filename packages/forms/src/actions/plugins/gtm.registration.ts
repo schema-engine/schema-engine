@@ -6,16 +6,15 @@
  *
  * @example
  * ```typescript
- * import { FormComposer, GTMActionRegistration } from '@schema-engine/forms';
+ * import { createFormEngine, GTMActionRegistration } from '@schema-engine/forms';
  *
- * const engine = new FormComposer()
- *   .addAction(GTMActionRegistration)
- *   .build();
+ * const engine = createFormEngine({
+ *   actions: [GTMActionRegistration],
+ * });
  * ```
  */
 
-import { gtmPlugin } from './gtm.plugin';
-import type { GTMEventAction } from './gtm.plugin';
+import { gtmPlugin, GTMEventActionSchema, type GTMEventAction } from './gtm.plugin';
 import { logger } from '@/lib/logger';
 import type { BuilderActionRegistration } from '@/types';
 
@@ -31,7 +30,7 @@ declare global {
  * Default GTM Action Registration
  * Pushes events to dataLayer with logger output
  */
-export const GTMActionRegistration: BuilderActionRegistration<'gtm_event', GTMEventAction> = gtmPlugin({
+export const GTMActionRegistration: BuilderActionRegistration<'gtm_event', typeof GTMEventActionSchema> = gtmPlugin({
 	onPush: (eventName, eventData, context) => {
 		logger.info('[GTM] Event pushed:', { eventName, formId: context.formId, eventData });
 	},

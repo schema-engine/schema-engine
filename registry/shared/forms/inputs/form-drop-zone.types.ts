@@ -1,15 +1,15 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
 
 export const DropZoneFieldExtensionSchema = z.object({
-	accept: z.record(z.string(), z.array(z.string())).optional(),
-	maxSize: z.number().optional(),
-	minSize: z.number().optional(),
-	maxFiles: z.number().default(1),
-	disabled: z.boolean().optional(),
+	accept: z.optional(z.record(z.string(), z.array(z.string()))),
+	maxSize: z.optional(z.number()),
+	minSize: z.optional(z.number()),
+	maxFiles: z._default(z.number(), 1),
+	disabled: z.optional(z.boolean()),
 });
 
-export const DropZoneFieldSchema = BaseFieldSchema.extend({
+export const DropZoneFieldSchema = z.extend(BaseFieldSchema, {
 	$type: z.literal('drop-zone'),
 	...DropZoneFieldExtensionSchema.shape,
 });

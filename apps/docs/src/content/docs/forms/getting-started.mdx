@@ -7,7 +7,7 @@ order: 2
 
 # Getting Started
 
-Install the framework-agnostic package and `zod`:
+Install the framework-agnostic package and `zod` for its first-party Zod Mini schemas:
 
 ```bash
 pnpm add @schema-engine/forms zod
@@ -16,11 +16,17 @@ pnpm add @schema-engine/forms zod
 Register the elements, recipes, and actions used by the application:
 
 ```ts
-const engine = new FormComposer().addElement(textInputRegistration).addRecipe(cardRecipe).build();
+import { createFormEngine } from '@schema-engine/forms';
+
+const engine = createFormEngine({
+	elements: [textInputRegistration],
+	recipes: [cardRecipe],
+});
 ```
 
-Then define a serializable form. The adapter owns rendering and receives the
-same engine instance so it can resolve `view.$type`.
+Then define a form. `defineForm` returns a frozen `NormalizedFormConfig`. The
+adapter owns rendering and receives the same engine instance so it can resolve
+`view.$type`.
 
 ```ts
 const form = engine.defineForm({

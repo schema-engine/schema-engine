@@ -1,8 +1,7 @@
 import { FormDate } from './form-date';
-import type { DateFieldConfig, DateFieldProps } from './form-date.types';
+import type { DateFieldConfig } from './form-date.types';
 import { DateFieldSchema } from './form-date.types';
-import type { InputRegistration } from '@schema-engine/forms/types';
-import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
+import { defineInput } from '@schema-engine/forms';
 
 declare global {
 	namespace FormEngine {
@@ -12,13 +11,13 @@ declare global {
 	}
 }
 
-export const DateElementRegistration: InputRegistration<'date', DateFieldConfig, DateFieldProps> = {
+export const DateElementRegistration = defineInput({
 	$type: 'date',
 	render: FormDate,
-	schema: asStandardSchema(DateFieldSchema),
+	schema: DateFieldSchema,
 	metadata: {
 		name: 'Date Field',
 		description: 'Calendar popover for selecting a single ISO date',
 		category: 'input',
 	},
-};
+});

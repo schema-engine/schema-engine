@@ -2,7 +2,7 @@ import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
 import type { FormConfig } from '@schema-engine/forms/schemas';
 
 /**
- * Demo configuration showcasing the new constraint-based naming and DynamicFieldset functionality
+ * Demo configuration showcasing constraint-based field visibility.
  */
 export const constraintsDemoConfig: FormConfig = {
 	id: 'constraints-demo',

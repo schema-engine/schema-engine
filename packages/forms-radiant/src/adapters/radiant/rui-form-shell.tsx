@@ -1,23 +1,15 @@
 import '@ecopages/radiant-ui/form/styles.css';
 import { RuiForm } from '@ecopages/radiant-ui/form';
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import { collectFieldDefaults, flattenStepElements } from '@schema-engine/forms/lib/field-scope';
+import { mergePathValues } from '@schema-engine/forms/lib/path-values';
+import type { FormConfigView } from '@schema-engine/forms';
 import type { JsxRenderable } from '@ecopages/jsx';
 
 export function collectFormDefaultValues(
-	config: FormConfig,
+	config: FormConfigView,
 	userDefaults: Partial<Record<string, unknown>> = {},
 ): Partial<Record<string, unknown>> {
-	const defaults: Record<string, unknown> = { ...userDefaults };
-
-	for (const step of config.steps) {
-		for (const element of step.elements ?? []) {
-			if (element.name && element.defaultValue !== undefined && defaults[element.name] === undefined) {
-				defaults[element.name] = element.defaultValue;
-			}
-		}
-	}
-
-	return defaults;
+	return mergePathValues(collectFieldDefaults(flattenStepElements(config.steps), userDefaults), userDefaults);
 }
 
 function rememberInvalidErrors(event: Event): void {
@@ -36,7 +28,7 @@ export function ConfiguredRuiForm({
 	onSubmit,
 	children,
 }: {
-	config: FormConfig;
+	config: FormConfigView;
 	defaultValues?: Partial<Record<string, unknown>>;
 	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
 	children: JsxRenderable;

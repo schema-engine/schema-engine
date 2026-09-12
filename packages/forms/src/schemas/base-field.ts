@@ -1,80 +1,80 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { ValidationRuleSchema } from './validation/';
 
 /**
  * Responsive breakpoint configuration for grid layout
  */
 export const GridBreakpointConfigSchema = z.object({
-	columns: z.union([z.number(), z.literal('auto')]).optional(),
-	rows: z.union([z.number(), z.literal('auto')]).optional(),
-	gap: z.union([z.number(), z.string()]).optional(),
-	minColumnWidth: z.string().optional(),
-	maxColumnWidth: z.string().optional(),
+	columns: z.optional(z.union([z.number(), z.literal('auto')])),
+	rows: z.optional(z.union([z.number(), z.literal('auto')])),
+	gap: z.optional(z.union([z.number(), z.string()])),
+	minColumnWidth: z.optional(z.string()),
+	maxColumnWidth: z.optional(z.string()),
 });
 
 /**
  * Field-level responsive breakpoint configuration
  */
 export const FieldGridBreakpointSchema = z.object({
-	column: z.union([z.number(), z.string()]).optional(),
-	row: z.union([z.number(), z.string()]).optional(),
-	justifySelf: z.enum(['start', 'end', 'center', 'stretch']).optional(),
-	alignSelf: z.enum(['start', 'end', 'center', 'stretch']).optional(),
-	hidden: z.boolean().optional(),
+	column: z.optional(z.union([z.number(), z.string()])),
+	row: z.optional(z.union([z.number(), z.string()])),
+	justifySelf: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
+	alignSelf: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
+	hidden: z.optional(z.boolean()),
 });
 
 /**
  * Grid layout configuration schema
  */
 export const GridLayoutConfigSchema = z.object({
-	columns: z.union([z.number(), z.literal('auto')]).optional(),
-	rows: z.union([z.number(), z.literal('auto')]).optional(),
-	gap: z.union([z.number(), z.string()]).optional(),
-	responsive: z
-		.object({
-			default: GridBreakpointConfigSchema.optional(),
-			sm: GridBreakpointConfigSchema.optional(),
-			md: GridBreakpointConfigSchema.optional(),
-			lg: GridBreakpointConfigSchema.optional(),
-			xl: GridBreakpointConfigSchema.optional(),
-			'2xl': GridBreakpointConfigSchema.optional(),
-		})
-		.optional(),
-	autoFit: z.boolean().optional(),
-	autoFill: z.boolean().optional(),
-	minColumnWidth: z.string().optional(),
-	maxColumnWidth: z.string().optional(),
-	justifyItems: z.enum(['start', 'end', 'center', 'stretch']).optional(),
-	alignItems: z.enum(['start', 'end', 'center', 'stretch']).optional(),
-	placeItems: z.string().optional(),
-	justifyContent: z
-		.enum(['start', 'end', 'center', 'stretch', 'space-around', 'space-between', 'space-evenly'])
-		.optional(),
-	alignContent: z
-		.enum(['start', 'end', 'center', 'stretch', 'space-around', 'space-between', 'space-evenly'])
-		.optional(),
-	placeContent: z.string().optional(),
+	columns: z.optional(z.union([z.number(), z.literal('auto')])),
+	rows: z.optional(z.union([z.number(), z.literal('auto')])),
+	gap: z.optional(z.union([z.number(), z.string()])),
+	responsive: z.optional(
+		z.object({
+			default: z.optional(GridBreakpointConfigSchema),
+			sm: z.optional(GridBreakpointConfigSchema),
+			md: z.optional(GridBreakpointConfigSchema),
+			lg: z.optional(GridBreakpointConfigSchema),
+			xl: z.optional(GridBreakpointConfigSchema),
+			'2xl': z.optional(GridBreakpointConfigSchema),
+		}),
+	),
+	autoFit: z.optional(z.boolean()),
+	autoFill: z.optional(z.boolean()),
+	minColumnWidth: z.optional(z.string()),
+	maxColumnWidth: z.optional(z.string()),
+	justifyItems: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
+	alignItems: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
+	placeItems: z.optional(z.string()),
+	justifyContent: z.optional(
+		z.enum(['start', 'end', 'center', 'stretch', 'space-around', 'space-between', 'space-evenly']),
+	),
+	alignContent: z.optional(
+		z.enum(['start', 'end', 'center', 'stretch', 'space-around', 'space-between', 'space-evenly']),
+	),
+	placeContent: z.optional(z.string()),
 });
 
 /**
  * Element grid configuration schema
  */
 export const ElementGridConfigSchema = z.object({
-	column: z.union([z.number(), z.string()]).optional(),
-	row: z.union([z.number(), z.string()]).optional(),
-	responsive: z
-		.object({
-			default: FieldGridBreakpointSchema.optional(),
-			sm: FieldGridBreakpointSchema.optional(),
-			md: FieldGridBreakpointSchema.optional(),
-			lg: FieldGridBreakpointSchema.optional(),
-			xl: FieldGridBreakpointSchema.optional(),
-			'2xl': FieldGridBreakpointSchema.optional(),
-		})
-		.optional(),
-	justifySelf: z.enum(['start', 'end', 'center', 'stretch']).optional(),
-	alignSelf: z.enum(['start', 'end', 'center', 'stretch']).optional(),
-	placeSelf: z.string().optional(),
+	column: z.optional(z.union([z.number(), z.string()])),
+	row: z.optional(z.union([z.number(), z.string()])),
+	responsive: z.optional(
+		z.object({
+			default: z.optional(FieldGridBreakpointSchema),
+			sm: z.optional(FieldGridBreakpointSchema),
+			md: z.optional(FieldGridBreakpointSchema),
+			lg: z.optional(FieldGridBreakpointSchema),
+			xl: z.optional(FieldGridBreakpointSchema),
+			'2xl': z.optional(FieldGridBreakpointSchema),
+		}),
+	),
+	justifySelf: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
+	alignSelf: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
+	placeSelf: z.optional(z.string()),
 });
 
 /**
@@ -101,29 +101,26 @@ export const ConstraintLogicSchema = z.object({
  * This contains all common properties shared by all form fields
  */
 export const BaseFieldSchema = z.object({
-	name: z.string().describe('Form field name used for form submission'),
-	id: z.string().optional().describe('HTML element ID'),
-	$type: z.string().describe('Field component identifier'),
+	name: z.string().check(z.describe('Form field name used for form submission')),
+	id: z.optional(z.string()).check(z.describe('HTML element ID')),
+	$type: z.string().check(z.describe('Field component identifier')),
 
-	label: z.string().optional().describe('Display label for the field'),
-	description: z.string().optional().describe('Help text or description'),
-	placeholder: z.string().optional().describe('Placeholder text'),
+	label: z.optional(z.string()).check(z.describe('Display label for the field')),
+	description: z.optional(z.string()).check(z.describe('Help text or description')),
+	placeholder: z.optional(z.string()).check(z.describe('Placeholder text')),
 
-	disabled: z.boolean().optional().describe('Whether the field is disabled'),
-	readonly: z.boolean().optional().describe('Whether the field is read-only'),
-	defaultValue: z.any().optional().describe('Default value for the field'),
+	disabled: z.optional(z.boolean()).check(z.describe('Whether the field is disabled')),
+	readonly: z.optional(z.boolean()).check(z.describe('Whether the field is read-only')),
+	defaultValue: z.optional(z.any()).check(z.describe('Default value for the field')),
 
-	rules: z.array(ValidationRuleSchema).optional().describe('Validation rules'),
+	rules: z.optional(z.array(ValidationRuleSchema)).check(z.describe('Validation rules')),
 
-	className: z.string().optional().describe('CSS class name'),
-	style: z.record(z.string(), z.any()).optional().describe('Inline styles'),
+	className: z.optional(z.string()).check(z.describe('CSS class name')),
+	style: z.optional(z.record(z.string(), z.any())).check(z.describe('Inline styles')),
 
-	grid: ElementGridConfigSchema.optional().describe('Grid positioning configuration'),
+	grid: z.optional(ElementGridConfigSchema).check(z.describe('Grid positioning configuration')),
 
-	constraints: z
-		.array(z.lazy(() => ConstraintLogicSchema))
-		.optional()
-		.describe('Conditional logic rules'),
+	constraints: z.optional(z.array(z.lazy(() => ConstraintLogicSchema))).check(z.describe('Conditional logic rules')),
 });
 
 /**

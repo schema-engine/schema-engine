@@ -6,19 +6,18 @@
  * @example
  * ```typescript
  * import { InputElementRegistration } from '@components/schema-engine/forms/inputs/form-input.registration';
- * import { FormComposer } from '@schema-engine/forms/builder';
+ * import { createFormEngine } from '@schema-engine/forms';
  *
- * const engine = new FormComposer()
- *   .addElement(InputElementRegistration)
- *   .build();
+ * const engine = createFormEngine({
+ *   elements: [InputElementRegistration],
+ * });
  * ```
  */
 
 import { FormInput } from './form-input';
-import type { InputFieldConfig, InputFieldProps } from './form-input.types';
+import type { InputFieldConfig } from './form-input.types';
 import { InputFieldSchema } from './form-input.types';
-import type { InputRegistration } from '@schema-engine/forms/types';
-import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
+import { defineInput } from '@schema-engine/forms';
 
 declare global {
 	namespace FormEngine {
@@ -28,13 +27,13 @@ declare global {
 	}
 }
 
-export const InputElementRegistration: InputRegistration<'input', InputFieldConfig, InputFieldProps> = {
+export const InputElementRegistration = defineInput({
 	$type: 'input',
 	render: FormInput,
-	schema: asStandardSchema(InputFieldSchema),
+	schema: InputFieldSchema,
 	metadata: {
 		name: 'Text Input Field',
 		description: 'Text input field for various input types (text, email, password, etc.)',
 		category: 'input',
 	},
-};
+});

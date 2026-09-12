@@ -1,7 +1,6 @@
 import { test, expect, describe, beforeEach, afterEach } from 'vitest';
 import { formSubmitPlugin, FormSubmitActionSchema, type FormSubmitAction } from '@/actions/plugins/form-submit.plugin';
 import { createMockBuilderContext, setupTestEnvironment, createMockFetch, createFailingMockFetch } from '../__tools';
-import { asStandardSchema } from '@/lib/standard-schema';
 
 describe('SubmitPlugin', () => {
 	let originalFetch: typeof fetch;
@@ -94,7 +93,7 @@ describe('SubmitPlugin', () => {
 
 			expect(plugin.$type).toBe('submit');
 			expect(typeof plugin.execute).toBe('function');
-			expect(plugin.schema).toBe(asStandardSchema(FormSubmitActionSchema));
+			expect(plugin.schema).toBe(FormSubmitActionSchema);
 			expect(plugin.metadata.defaultTriggers).toEqual(['form_submit']);
 		});
 	});

@@ -32,12 +32,16 @@ export type Brand<T, TBrand> = T & { readonly [__brand]?: TBrand };
 
 /**
  * Base registration interface - common fields for all registration types.
+ *
+ * `schema` is the concrete Standard Schema value. Do not collapse it to
+ * `StandardSchemaV1<TConfig>`: that forces input and output to the same type
+ * and makes defaulted properties required at authoring time.
  */
-export interface BaseRegistration<TConfig = unknown, TMeta extends RegistrationMetadata = ComponentMetadata> {
+export interface BaseRegistration<_TConfig = unknown, TMeta extends RegistrationMetadata = ComponentMetadata> {
 	/** Unique identifier - MUST be unique within its registry type. */
 	$type: string;
-	/** Standard Schema for config validation and type inference */
-	schema: StandardSchemaV1<TConfig>;
+	/** Standard Schema for config validation. Input and output remain distinct. */
+	schema: StandardSchemaV1;
 	/** Registration metadata (display name, description, and type-specific fields) */
 	metadata: TMeta;
 }

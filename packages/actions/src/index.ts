@@ -6,7 +6,7 @@
  *
  * @example
  * ```typescript
- * import { z } from 'zod';
+ * import * as z from 'zod/mini';
  * import { ActionDispatcher, ActionExecutor, ActionRegistry } from '@schema-engine/actions';
  *
  * const registry = new ActionRegistry<{ formId: string }, 'submit' | 'change'>();

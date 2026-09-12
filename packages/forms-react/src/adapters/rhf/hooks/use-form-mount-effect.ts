@@ -1,10 +1,9 @@
 import { useEffect, useRef } from 'react';
-import type { FormActionConfig } from '@schema-engine/forms/schemas';
-import type { FormActionTrigger } from '@schema-engine/forms';
+import type { FormActionTrigger, FormConfigView } from '@schema-engine/forms';
 import type { ActionExecutionResult } from '@schema-engine/actions';
 
 interface UseFormMountEffectOptions {
-	actions: FormActionConfig[] | undefined;
+	actions: FormConfigView['actions'];
 	dispatchTrigger: (trigger: FormActionTrigger) => Promise<ActionExecutionResult[]>;
 }
 

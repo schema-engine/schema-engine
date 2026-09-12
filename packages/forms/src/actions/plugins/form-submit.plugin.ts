@@ -1,6 +1,5 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
-import { asStandardSchema } from '@/lib/standard-schema';
 import { FormActionTriggerSchema } from '../triggers';
 
 /**
@@ -17,157 +16,36 @@ export interface FormSubmitPluginConfig {
 	onError?: (error: Error, context: BuilderActionExecutionContext<any>) => void;
 }
 
-/**
- * Submit Action Schema
- *
- * Handles form submission with configurable request handling and lifecycle management.
- * Configure behavior using the submitPlugin() factory function.
- *
- * @example Basic HTTP Submit
- * ```typescript
- * submitPlugin({
- *   onSuccess: (data, context) => console.log("Submitted:", data),
- *   onError: (error, context) => console.error("Submit failed:", error)
- * });
- *
- * // Usage in form config
- * {
- *   id: "submit-form",
- *   $type: "submit",
- *   endpoint: "/api/forms",  // Relative path
- *   method: "POST"
- * }
- * ```
- *
- * @example Custom Request with Full URL
- * ```typescript
- * submitPlugin({
- *   request: (url, options) => axios.post(url, options.body),
- *   onSuccess: (data, context) => analytics.track("form_submitted")
- * });
- *
- * // Usage in form config
- * {
- *   id: "submit-form",
- *   $type: "submit",
- *   endpoint: "https://api.example.com/submit",  // Full URL
- *   method: "POST"
- * }
- * ```
- * });
- * ```
- *
- * @example Custom Request Adapter
- * ```typescript
- * submitPlugin({
- *   request: (url, options) => axios.post(url, options.body, {
- *     headers: options.headers
- *   }),
- *   transformData: (data, context) => ({
- *     ...data,
- *     timestamp: new Date().toISOString(),
- *     formId: context.formId
- *   })
- * });
- * ```
- */
+/** Schema for the `submit` action configuration. */
 export const FormSubmitActionSchema = z.object({
 	/** Unique identifier for this action within the form */
-	id: z.string().min(1, 'Action ID cannot be empty'),
+	id: z.string().check(z.minLength(1, 'Action ID cannot be empty')),
 	/** Action type identifier */
 	$type: z.literal('submit'),
 	/** Optional description for documentation and debugging purposes */
-	description: z.string().optional(),
+	description: z.optional(z.string()),
 	/** Whether this action is enabled and should be executed */
-	enabled: z.boolean().default(true),
+	enabled: z._default(z.boolean(), true),
 	/** Custom triggers that override the default triggers for this action */
-	triggers: z.array(FormActionTriggerSchema).optional(),
+	triggers: z.optional(z.array(FormActionTriggerSchema)),
 	/** Target URL for form submission (supports both full URLs and relative paths) */
-	endpoint: z.string().min(1, 'Endpoint cannot be empty'),
+	endpoint: z.string().check(z.minLength(1, 'Endpoint cannot be empty')),
 	/** HTTP method for the request */
-	method: z.enum(['POST', 'PUT', 'PATCH']).default('POST'),
+	method: z._default(z.enum(['POST', 'PUT', 'PATCH']), 'POST'),
 	/** Message to show on successful submission */
-	successMessage: z.string().optional(),
+	successMessage: z.optional(z.string()),
 	/** Message to show on submission failure */
-	errorMessage: z.string().optional(),
+	errorMessage: z.optional(z.string()),
 	/** URL to redirect to after successful submission (supports both full URLs and relative paths) */
-	redirectUrl: z.string().min(1, 'Redirect URL cannot be empty').optional(),
+	redirectUrl: z.optional(z.string().check(z.minLength(1, 'Redirect URL cannot be empty'))),
 });
 
 export type FormSubmitAction = z.infer<typeof FormSubmitActionSchema>;
 
-/**
- * Submit Plugin Factory
- *
- * Returns a configured action registration object for form submission.
- * Use with the FormComposer pattern.
- *
- * @example Basic Usage
- * ```typescript
- * import { FormComposer, submitPlugin } from '@schema-engine/forms';
- *
- * const engine = new FormComposer()
- *   .addElement(InputElement)
- *   .addAction(submitPlugin({
- *     onSuccess: (data, context) => {
- *       console.log("Form submitted successfully:", data);
- *     },
- *     onError: (error, context) => {
- *       console.error("Submit failed:", error);
- *     }
- *   }))
- *   .build();
- * ```
- *
- * @example Axios Integration
- * ```typescript
- * import axios from 'axios';
- *
- * const apiSubmit = submitPlugin({
- *   request: async (url, options) => {
- *     const response = await axios({
- *       method: options.method,
- *       url,
- *       data: JSON.parse(options.body),
- *       headers: options.headers
- *     });
- *     return {
- *       ok: response.status < 400,
- *       status: response.status,
- *       statusText: response.statusText,
- *       json: async () => response.data
- *     } as Response;
- *   },
- *   transformData: (data, context) => ({
- *     ...data,
- *     metadata: {
- *       formId: context.formId,
- *       timestamp: new Date().toISOString(),
- *       userAgent: navigator.userAgent
- *     }
- *   }),
- *   onSuccess: (data, context) => {
- *     toast.success("Form submitted successfully!");
- *     analytics.track("form_submitted", { formId: context.formId });
- *   }
- * });
- * ```
- *
- * @example Error Handling
- * ```typescript
- * const errorAwareSubmit = submitPlugin({
- *   onError: (error, context) => {
- *     console.error("Submit failed:", error);
- *     Sentry.captureException(error, {
- *       contexts: { form: context }
- *     });
- *   }
- * });
- * ```
- */
+/** Creates a configured `submit` action registration. */
 export function formSubmitPlugin(
 	config: FormSubmitPluginConfig = {},
-): BuilderActionRegistration<'submit', FormSubmitAction> {
+): BuilderActionRegistration<'submit', typeof FormSubmitActionSchema> {
 	const { request = fetch, transformData = (data) => data, onSuccess = () => {}, onError = () => {} } = config;
 
 	const handler = async (context: BuilderActionExecutionContext<FormSubmitAction>) => {
@@ -246,7 +124,7 @@ export function formSubmitPlugin(
 
 	return {
 		$type: 'submit',
-		schema: asStandardSchema(FormSubmitActionSchema),
+		schema: FormSubmitActionSchema,
 		metadata: {
 			name: 'Submit Form',
 			description: 'Submit form data to an endpoint',

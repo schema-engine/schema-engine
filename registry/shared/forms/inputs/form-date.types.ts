@@ -1,28 +1,28 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
 import { ValidationRuleSchema, type ValidationRule } from '@schema-engine/forms/schemas/validation';
 
 export const DateFieldExtensionSchema = z.object({
-	placeholder: z.string().optional(),
-	dateFormat: z.string().optional(),
-	min: z.string().optional(),
-	max: z.string().optional(),
-	autoFocus: z.boolean().optional(),
+	placeholder: z.optional(z.string()),
+	dateFormat: z.optional(z.string()),
+	min: z.optional(z.string()),
+	max: z.optional(z.string()),
+	autoFocus: z.optional(z.boolean()),
 });
 
-export const DateFieldSchema = BaseFieldSchema.extend({
+export const DateFieldSchema = z.extend(BaseFieldSchema, {
 	$type: z.literal('date'),
 	...DateFieldExtensionSchema.shape,
-	rules: z
-		.array(ValidationRuleSchema)
-		.optional()
-		.transform((rules) => {
+	rules: z.pipe(
+		z.optional(z.array(ValidationRuleSchema)),
+		z.transform((rules) => {
 			if (rules?.some((rule) => rule.type === 'date')) {
 				return rules;
 			}
 
 			return [...(rules ?? []), { type: 'date' as const }];
 		}),
+	),
 });
 
 export type DateFieldConfig = Omit<z.infer<typeof DateFieldSchema>, 'rules'> & {

@@ -335,6 +335,7 @@
       ],
       "dependencies": [
         "react-phone-number-input",
+        "libphonenumber-js",
         "@schema-engine/forms-react",
         "@schema-engine/forms",
         "zod"
@@ -354,6 +355,11 @@
           "path": "../shared/forms/inputs/form-phone-input.registration.ts",
           "type": "registry:lib",
           "target": "@components/schema-engine/forms/inputs/form-phone-input.registration.ts"
+        },
+        {
+          "path": "../shared/forms/inputs/form-phone-input.validation.ts",
+          "type": "registry:lib",
+          "target": "@components/schema-engine/forms/inputs/form-phone-input.validation.ts"
         }
       ]
     },
@@ -849,7 +855,7 @@
       "type": "registry:item",
       "title": "Schema Engine forms (Radix UI)",
       "description": "All Radix UI Schema Engine form elements and the generated registration barrel.",
-      "docs": "Import schemaFormRegistrations from @/components/schema-engine/forms/registrations and pass them to createReactFormComposer().addElements(...).",
+      "docs": "Import schemaFormRegistrations from @/components/schema-engine/forms/registrations and pass them to createReactFormEngine({ elements: [...] }).",
       "registryDependencies": [
         "andeeplus/schema-engine/schema-engine-form-utils-radix",
         "andeeplus/schema-engine/schema-engine-form-field-primitive-radix",
@@ -918,7 +924,7 @@
       "type": "registry:item",
       "title": "Schema Engine default recipes (Radix UI)",
       "description": "Default Radix UI view recipes and the generated recipe registration barrel.",
-      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createReactFormComposer().addRecipes(...).",
+      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createReactFormEngine({ recipes: [...] }).",
       "registryDependencies": [
         "button",
         "badge",

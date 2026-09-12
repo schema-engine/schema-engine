@@ -1,6 +1,5 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
-import { asStandardSchema } from '@/lib/standard-schema';
 import { FormActionTriggerSchema } from '../triggers';
 
 /**
@@ -29,45 +28,22 @@ export interface AutoSavePluginConfig {
 	getStorageKey?: (context: BuilderActionExecutionContext<any>) => string;
 }
 
-/**
- * Auto-Save Action Schema
- *
- * Automatically saves form data to storage with configurable storage backend.
- * Configure storage and handlers using the autoSavePlugin() factory function.
- *
- * @example API Storage
- * ```typescript
- * autoSavePlugin({
- *   storage: {
- *     save: async (key, data) => {
- *       await fetch(`/api/auto-save/${key}`, {
- *         method: 'POST',
- *         body: JSON.stringify(data)
- *       });
- *     },
- *     load: async (key) => {
- *       const response = await fetch(`/api/auto-save/${key}`);
- *       return response.json();
- *     }
- *   }
- * });
- * ```
- */
+/** Schema for the `auto_save` action configuration. */
 export const AutoSaveActionSchema = z.object({
 	/** Unique identifier for this action within the form */
-	id: z.string().min(1, 'Action ID cannot be empty'),
+	id: z.string().check(z.minLength(1, 'Action ID cannot be empty')),
 	/** Action type identifier */
 	$type: z.literal('auto_save'),
 	/** Optional description for documentation and debugging purposes */
-	description: z.string().optional(),
+	description: z.optional(z.string()),
 	/** Whether this action is enabled and should be executed */
-	enabled: z.boolean().default(true),
+	enabled: z._default(z.boolean(), true),
 	/** Custom triggers that override the default triggers for this action */
-	triggers: z.array(FormActionTriggerSchema).optional(),
+	triggers: z.optional(z.array(FormActionTriggerSchema)),
 	/** Storage key to use (will use generated key if not provided) */
-	storageKey: z.string().optional(),
+	storageKey: z.optional(z.string()),
 	/** Whether to include sensitive fields in auto-save */
-	includeSensitive: z.boolean().default(false).optional(),
+	includeSensitive: z.optional(z._default(z.boolean(), false)),
 });
 
 export type AutoSaveAction = z.infer<typeof AutoSaveActionSchema>;
@@ -85,61 +61,10 @@ const defaultStorage: AutoSaveStorage = {
 	},
 };
 
-/**
- * Auto-Save Plugin Factory
- *
- * Returns a configured action registration object for auto-saving form data.
- *
- * @example Basic LocalStorage Auto-Save
- * ```typescript
- * import { autoSavePlugin } from "@/actions/plugins";
- * import { registerAction } from "@/actions/action-registry";
- *
- * const autoSave = autoSavePlugin({
- *   onSave: (data) => console.log("Auto-saved:", data)
- * });
- *
- * registerAction(autoSave);
- * ```
- *
- * @example API Storage
- * ```typescript
- * const apiAutoSave = autoSavePlugin({
- *   storage: {
- *     save: async (key, data) => {
- *       await fetch(`/api/forms/${key}/auto-save`, {
- *         method: 'POST',
- *         headers: { 'Content-Type': 'application/json' },
- *         body: JSON.stringify(data)
- *       });
- *     },
- *     load: async (key) => {
- *       const response = await fetch(`/api/forms/${key}/auto-save`);
- *       return response.ok ? response.json() : null;
- *     },
- *     remove: async (key) => {
- *       await fetch(`/api/forms/${key}/auto-save`, { method: 'DELETE' });
- *     }
- *   },
- *   onSave: (data, context) => {
- *     console.log(`Auto-saved form ${context.formId} to API`);
- *   }
- * });
- *
- * registerAction(apiAutoSave);
- * ```
- *
- * @example Custom Storage Key
- * ```typescript
- * const userAutoSave = autoSavePlugin({
- *   getStorageKey: (context) => `autosave_${context.formId}_${userId}`,
- *   onSave: (data) => showToast("Draft saved", "success")
- * });
- * ```
- */
+/** Creates a configured `auto_save` action registration. */
 export function autoSavePlugin(
 	config: AutoSavePluginConfig = {},
-): BuilderActionRegistration<'auto_save', AutoSaveAction> {
+): BuilderActionRegistration<'auto_save', typeof AutoSaveActionSchema> {
 	const storage = config.storage || defaultStorage;
 
 	const handler = async (context: BuilderActionExecutionContext<AutoSaveAction>) => {
@@ -197,7 +122,7 @@ export function autoSavePlugin(
 
 	return {
 		$type: 'auto_save',
-		schema: asStandardSchema(AutoSaveActionSchema),
+		schema: AutoSaveActionSchema,
 		metadata: {
 			name: 'Auto Save',
 			description: 'Automatically save form data to storage',

@@ -263,7 +263,7 @@ const ELEMENTS: ElementSpec[] = [
 		title: 'Phone input',
 		ident: 'PhoneInputElementRegistration',
 		registryDependencies: [PRIMITIVE_ITEM['phone-input'], PRIMITIVE_ITEM.field],
-		dependencies: ['react-phone-number-input'],
+		dependencies: ['react-phone-number-input', 'libphonenumber-js'],
 	},
 	{
 		stem: 'inputs/form-masked-input',
@@ -499,6 +499,7 @@ function buildElementItem(base: Base, spec: ElementSpec): CatalogItem {
 			formFile(base, `${spec.stem}.tsx`),
 			formFile(base, `${spec.stem}.types.ts`),
 			formFile(base, `${spec.stem}.registration.ts`),
+			...(spec.stem === 'inputs/form-phone-input' ? [formFile(base, `${spec.stem}.validation.ts`)] : []),
 		],
 		registration: { ident: spec.ident, from: `./${spec.stem}.registration` },
 	};
@@ -515,7 +516,8 @@ function recipeFile(rel: string): CatalogFile {
 
 /**
  * Default recipe implementations are a distinct installation boundary from
- * form elements. Consumers opt into their visual layer with addRecipes().
+ * form elements. Consumers opt into their visual layer with
+ * `createReactFormEngine({ recipes })`.
  */
 function buildDefaultRecipeItem(base: Base): CatalogItem {
 	return {
@@ -523,7 +525,7 @@ function buildDefaultRecipeItem(base: Base): CatalogItem {
 		type: 'registry:item',
 		title: `Schema Engine default recipes (${base.label})`,
 		description: `Default ${base.label} view recipes and the generated recipe registration barrel.`,
-		docs: 'Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createReactFormComposer().addRecipes(...).',
+		docs: 'Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createReactFormEngine({ recipes: [...] }).',
 		registryDependencies: DEFAULT_RECIPE_REGISTRY_DEPENDENCIES.map((dep) => resolveDep(base, dep)),
 		dependencies: DEFAULT_RECIPE_RUNTIME_DEPENDENCIES,
 		files: defaultRecipeFiles().map(recipeFile),
@@ -552,7 +554,7 @@ function buildAggregate(base: Base, items: CatalogItem[]): CatalogItem {
 		type: 'registry:item',
 		title: `Schema Engine forms (${base.label})`,
 		description: `All ${base.label} Schema Engine form elements and the generated registration barrel.`,
-		docs: 'Import schemaFormRegistrations from @/components/schema-engine/forms/registrations and pass them to createReactFormComposer().addElements(...).',
+		docs: 'Import schemaFormRegistrations from @/components/schema-engine/forms/registrations and pass them to createReactFormEngine({ elements: [...] }).',
 		registryDependencies: items.map((item) => `${GITHUB}/${item.name}`),
 		dependencies: FORM_RUNTIME_DEPENDENCIES,
 		files: [
@@ -754,7 +756,7 @@ export {
 
 export const schemaFormRegistrations = [
 	${idents.join(',\n\t')},
-];
+] as const;
 `;
 }
 
@@ -825,7 +827,7 @@ function renderRecipeRegistrations(scan: RecipeScanEntry[]): string {
 
 	return `/**
  * Generated registration barrel for the default recipe registry item.
- * Consumers explicitly opt into this visual layer with FormComposer.addRecipes().
+ * Consumers explicitly opt into this visual layer with createFormEngine({ recipes: [...] }).
  */
 ${imports}
 
@@ -837,7 +839,7 @@ export {
 
 export const schemaFormRecipeRegistrations = [
 	${idents.join(',\n\t')},
-];
+] as const;
 `;
 }
 

@@ -1,4 +1,4 @@
-import type { FormConfig } from '@/schemas/form-config';
+import type { FormConfigView } from '@/lib/normalized-form-config';
 import type { RecipeKind, RecipeSlot } from './types';
 
 export interface ViewNavigation {
@@ -70,7 +70,7 @@ export function buildViewModel({
 	viewConfig,
 	stepStates,
 }: {
-	config: FormConfig;
+	config: FormConfigView;
 	kind: RecipeKind;
 	currentStepIndex: number;
 	navigation: ViewNavigation;

@@ -1,8 +1,7 @@
 import { FormInputOTP } from './form-input-otp';
-import type { InputOTPFieldConfig, InputOTPFieldProps } from './form-input-otp.types';
+import type { InputOTPFieldConfig } from './form-input-otp.types';
 import { InputOTPFieldConfigSchema } from './form-input-otp.types';
-import type { InputRegistration } from '@schema-engine/forms/types';
-import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
+import { defineInput } from '@schema-engine/forms';
 
 declare global {
 	namespace FormEngine {
@@ -12,13 +11,13 @@ declare global {
 	}
 }
 
-export const InputOTPElementRegistration: InputRegistration<'input-otp', InputOTPFieldConfig, InputOTPFieldProps> = {
+export const InputOTPElementRegistration = defineInput({
 	$type: 'input-otp',
 	render: FormInputOTP,
-	schema: asStandardSchema(InputOTPFieldConfigSchema),
+	schema: InputOTPFieldConfigSchema,
 	metadata: {
 		name: 'Input OTP Field',
 		description: 'One-time password input field with multiple slots',
 		category: 'input',
 	},
-};
+});

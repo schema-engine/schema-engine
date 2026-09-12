@@ -1,8 +1,7 @@
 import { FormRadio } from './form-radio';
-import type { RadioFieldConfig, RadioFieldProps } from '@/registry/forms/inputs/form-radio.types';
+import type { RadioFieldConfig } from '@/registry/forms/inputs/form-radio.types';
 import { RadioFieldConfigSchema } from '@/registry/forms/inputs/form-radio.types';
-import type { InputRegistration } from '@schema-engine/forms/types';
-import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
+import { defineInput } from '@schema-engine/forms';
 
 declare global {
 	namespace FormEngine {
@@ -12,13 +11,13 @@ declare global {
 	}
 }
 
-export const RadioElementRegistration: InputRegistration<'radio', RadioFieldConfig, RadioFieldProps> = {
+export const RadioElementRegistration = defineInput({
 	$type: 'radio',
 	render: FormRadio,
-	schema: asStandardSchema(RadioFieldConfigSchema),
+	schema: RadioFieldConfigSchema,
 	metadata: {
 		name: 'Radio Field',
 		description: 'Radio button group field',
 		category: 'input',
 	},
-};
+});

@@ -46,20 +46,22 @@ import {
 ### Register in Form Engine
 
 ```typescript
-import { FormComposer } from '@schema-engine/forms/builder';
+import { createFormEngine } from '@schema-engine/forms';
 
-const engine = new FormComposer()
-	.addElement(InputElementRegistration)
-	.addElement(TextareaElementRegistration)
-	.addElement(SelectElementRegistration)
-	.addElement(CheckboxElementRegistration)
-	.addElement(RadioElementRegistration)
-	.addElement(SwitchElementRegistration)
-	.addElement(NumberElementRegistration)
-	.addElement(SliderElementRegistration)
-	.addElement(CheckboxGroupElementRegistration)
-	.addElement(InputOTPElementRegistration)
-	.build();
+const engine = createFormEngine({
+	elements: [
+		InputElementRegistration,
+		TextareaElementRegistration,
+		SelectElementRegistration,
+		CheckboxElementRegistration,
+		RadioElementRegistration,
+		SwitchElementRegistration,
+		NumberElementRegistration,
+		SliderElementRegistration,
+		CheckboxGroupElementRegistration,
+		InputOTPElementRegistration,
+	],
+});
 ```
 
 ### Use in Form Configuration

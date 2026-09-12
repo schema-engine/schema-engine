@@ -1,4 +1,5 @@
 import type { FormActionConfig, FormConfig } from '@schema-engine/forms/schemas';
+import type { NormalizedFormConfig } from '@schema-engine/forms';
 import type { JsxRenderable } from '@ecopages/jsx';
 
 export interface FormContextValue<TFormData = Record<string, unknown>> {
@@ -33,7 +34,7 @@ export interface FieldArrayValue {
 }
 
 export interface FormProviderProps<TFormData = Record<string, unknown>> {
-	config: FormConfig;
+	config: FormConfig | NormalizedFormConfig;
 	defaultValues?: Partial<TFormData>;
 	children?: JsxRenderable;
 	onSubmit?: (data: TFormData) => void | Promise<void>;

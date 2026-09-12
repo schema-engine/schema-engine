@@ -97,6 +97,14 @@ export async function expectNoFieldError(root: ParentNode, message: string | Reg
 	);
 }
 
+/**
+ * Focus a field control, clear it, and type a value, then blur.
+ *
+ * @remarks Blurring mirrors a real user moving focus before submitting (e.g.
+ * clicking the submit button). Controls such as `rui-number-field` commit their
+ * draft value on blur, so the submitted form must observe the committed value,
+ * not the draft.
+ */
 export async function playFieldFocusAndType(
 	canvasElement: HTMLElement,
 	label: string | RegExp,
@@ -106,6 +114,7 @@ export async function playFieldFocusAndType(
 	await userEvent.click(input);
 	await userEvent.clear(input);
 	await userEvent.type(input, value);
+	input.blur();
 }
 
 export async function playSelectOption(

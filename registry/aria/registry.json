@@ -333,6 +333,7 @@
       ],
       "dependencies": [
         "react-phone-number-input",
+        "libphonenumber-js",
         "@schema-engine/forms-react",
         "@schema-engine/forms",
         "zod"
@@ -352,6 +353,11 @@
           "path": "../shared/forms/inputs/form-phone-input.registration.ts",
           "type": "registry:lib",
           "target": "@components/schema-engine/forms/inputs/form-phone-input.registration.ts"
+        },
+        {
+          "path": "../shared/forms/inputs/form-phone-input.validation.ts",
+          "type": "registry:lib",
+          "target": "@components/schema-engine/forms/inputs/form-phone-input.validation.ts"
         }
       ]
     },
@@ -847,7 +853,7 @@
       "type": "registry:item",
       "title": "Schema Engine forms (React Aria)",
       "description": "All React Aria Schema Engine form elements and the generated registration barrel.",
-      "docs": "Import schemaFormRegistrations from @/components/schema-engine/forms/registrations and pass them to createReactFormComposer().addElements(...).",
+      "docs": "Import schemaFormRegistrations from @/components/schema-engine/forms/registrations and pass them to createReactFormEngine({ elements: [...] }).",
       "registryDependencies": [
         "andeeplus/schema-engine/schema-engine-form-utils-aria",
         "andeeplus/schema-engine/schema-engine-form-field-primitive-aria",
@@ -916,7 +922,7 @@
       "type": "registry:item",
       "title": "Schema Engine default recipes (React Aria)",
       "description": "Default React Aria view recipes and the generated recipe registration barrel.",
-      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createReactFormComposer().addRecipes(...).",
+      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createReactFormEngine({ recipes: [...] }).",
       "registryDependencies": [
         "button",
         "badge",

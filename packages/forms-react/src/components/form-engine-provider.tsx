@@ -12,10 +12,9 @@ export interface FormEngineProviderProps {
 	 * `@schema-engine/forms-react/adapters/react-hook-form`.
 	 */
 	adapter: FormAdapter;
-	configValidated?: boolean;
 }
 
-export function FormEngineProvider({ children, engine, adapter, configValidated }: FormEngineProviderProps) {
+export function FormEngineProvider({ children, engine, adapter }: FormEngineProviderProps) {
 	if (!adapter) {
 		throw new Error(
 			'FormEngineProvider requires an adapter. Pass one explicitly, e.g. rhfAdapter from @schema-engine/forms-react/adapters/react-hook-form.',
@@ -23,14 +22,12 @@ export function FormEngineProvider({ children, engine, adapter, configValidated 
 	}
 
 	if (!engine) {
-		throw new Error(
-			'FormEngineProvider requires a FormEngine instance. Create one using createReactFormComposer()',
-		);
+		throw new Error('FormEngineProvider requires a FormEngine instance. Create one using createReactFormEngine()');
 	}
 
 	return (
 		<FormAdapterContext.Provider value={adapter}>
-			<FormEngineContext.Provider value={{ engine, configValidated }}>{children}</FormEngineContext.Provider>
+			<FormEngineContext.Provider value={{ engine }}>{children}</FormEngineContext.Provider>
 		</FormAdapterContext.Provider>
 	);
 }

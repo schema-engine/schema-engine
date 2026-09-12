@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+import type { z } from 'zod/mini';
 import type { RecipeRegistration } from '@/types';
 import type { RecipeSpec } from './types';
 
@@ -8,10 +8,10 @@ import type { RecipeSpec } from './types';
  * Specs are canonical in this package. React implementations typically come
  * from the Schema Engine registry; Radiant binds its own payload in-package.
  */
-export function defineFormRecipe<const TType extends string, TSchema extends z.ZodTypeAny, TRender>(
+export function defineFormRecipe<const TType extends string, TSchema extends z.ZodMiniType, TRender>(
 	spec: RecipeSpec<TType, TSchema>,
 	render: TRender,
-): RecipeRegistration<TType, z.input<TSchema>, TRender> {
+): RecipeRegistration<TType, TSchema, TRender> {
 	return {
 		$type: spec.$type,
 		kind: spec.kind,
@@ -20,5 +20,5 @@ export function defineFormRecipe<const TType extends string, TSchema extends z.Z
 		metadata: spec.metadata,
 		slotDefaults: spec.slotDefaults,
 		render,
-	} as RecipeRegistration<TType, z.input<TSchema>, TRender>;
+	} as RecipeRegistration<TType, TSchema, TRender>;
 }

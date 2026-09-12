@@ -1,6 +1,6 @@
 ---
-title: "Actions"
-description: "Wire submit, reset, auto-save, notifications, and custom plugins."
+title: 'Actions'
+description: 'Wire submit, reset, auto-save, notifications, and custom plugins.'
 group: Forms
 order: 5
 ---
@@ -37,12 +37,10 @@ Actions execute in response to form lifecycle triggers.
 Actions can specify default triggers in metadata or be configured per-form:
 
 ```typescript
-// Default triggers from registration
 metadata: {
 	defaultTriggers: ['form_submit', 'form_submit_success']
 }
 
-// Override in form config
 {
 	id: 'custom-action',
 	$type: 'submit',
@@ -129,6 +127,9 @@ Reset form to initial state:
 Use `defineAction` from `@schema-engine/actions` and specialize it with the forms runtime types:
 
 ```typescript
+import * as z from 'zod/mini';
+import { defineAction } from '@schema-engine/actions';
+
 const defineFormAction = defineAction<BuilderActionBaseContext, BuilderActionTrigger>();
 
 const trackAction = defineFormAction({

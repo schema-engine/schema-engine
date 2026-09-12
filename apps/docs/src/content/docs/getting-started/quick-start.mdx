@@ -11,18 +11,15 @@ Build your first form with Schema Engine in just a few steps.
 
 ## 1. Create Your Form Engine
 
-Use the `createReactFormComposer` to register components and build an immutable engine:
+Use the `createReactFormEngine` to register components and build an immutable engine:
 
 ```typescript
 // lib/form-engine.ts
-import { createReactFormComposer } from '@schema-engine/forms-react';
+import { createReactFormEngine } from '@schema-engine/forms-react';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
-export const formEngine = createReactFormComposer()
-	.addElements(schemaFormRegistrations)
-	.addRecipes(schemaFormRecipeRegistrations)
-	.build();
+export const formEngine = createReactFormEngine({ elements: schemaFormRegistrations, recipes: schemaFormRecipeRegistrations });
 ```
 
 > **Note:** Create the form engine once and reuse it across your entire application. The engine instance is immutable after calling `build()`.

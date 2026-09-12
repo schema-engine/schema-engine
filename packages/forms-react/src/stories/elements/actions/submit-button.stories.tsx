@@ -1,18 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '@/stories/shared/story-wrapper';
-import {
-	defineStoryForm,
-	getEngine,
-	ValidationPresets,
-	createExtendableComposer,
-	rhfAdapter,
-} from '@/stories/shared/form-builder.ui';
-import { z } from 'zod';
+import { defineStoryForm, getEngine, ValidationPresets, rhfAdapter } from '@/stories/shared/form-builder.ui';
+import * as z from 'zod/mini';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@schema-engine/forms/types';
 import { FormActionTriggerSchema, type ActionExecutionResult } from '@schema-engine/forms';
 import { SUBMIT_FORM_MOCK_URL } from '@/stories/msw/submit-form';
-import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
 
 const CONFETTI_SCRIPT_SRC = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js';
 
@@ -339,20 +332,20 @@ export const SubscriptionForm: Story = {
 const ConfettiActionSchema = z.object({
 	id: z.string(),
 	$type: z.literal('confetti'),
-	description: z.string().optional(),
-	enabled: z.boolean().default(true),
-	triggers: z.array(FormActionTriggerSchema).optional(),
-	particleCount: z.number().default(100).optional(),
-	spread: z.number().default(70).optional(),
-	origin: z.object({ y: z.number() }).default({ y: 0.6 }).optional(),
+	description: z.optional(z.string()),
+	enabled: z._default(z.boolean(), true),
+	triggers: z.optional(z.array(FormActionTriggerSchema)),
+	particleCount: z.optional(z._default(z.number(), 100)),
+	spread: z.optional(z._default(z.number(), 70)),
+	origin: z.optional(z._default(z.object({ y: z.number() }), { y: 0.6 })),
 });
 
 type ConfettiAction = z.infer<typeof ConfettiActionSchema>;
 
-function confettiPlugin(): BuilderActionRegistration<'confetti', ConfettiAction> {
+function confettiPlugin(): BuilderActionRegistration<'confetti', typeof ConfettiActionSchema> {
 	return {
 		$type: 'confetti',
-		schema: asStandardSchema(ConfettiActionSchema),
+		schema: ConfettiActionSchema,
 		metadata: {
 			name: 'Confetti',
 			description: 'Throw confetti on the screen',
@@ -386,8 +379,7 @@ function confettiPlugin(): BuilderActionRegistration<'confetti', ConfettiAction>
 	};
 }
 
-const confettiBuilder = createExtendableComposer().addAction(confettiPlugin());
-const confettiEngine = confettiBuilder.build();
+const confettiEngine = getEngine().extend({ actions: [confettiPlugin()] });
 
 export const WithConfetti: Story = {
 	parameters: {

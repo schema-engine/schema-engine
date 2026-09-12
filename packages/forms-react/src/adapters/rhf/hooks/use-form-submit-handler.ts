@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
-import type { FormConfig, FormActionConfig } from '@schema-engine/forms/schemas';
-import type { FormActionTrigger } from '@schema-engine/forms';
+import type { FormActionConfig } from '@schema-engine/forms/schemas';
+import type { FormActionTrigger, FormConfigView } from '@schema-engine/forms';
 import type { ActionExecutionResult } from '@schema-engine/actions';
 import type { SubmissionState, SubmissionError } from '@/hooks/use-submission-state';
 
@@ -15,7 +15,7 @@ interface SubmissionStateManager {
 
 interface UseFormSubmitHandlerOptions {
 	form: UseFormReturn<any>;
-	config: FormConfig;
+	config: FormConfigView;
 	submission: SubmissionStateManager;
 	dispatchTrigger: (trigger: FormActionTrigger) => Promise<ActionExecutionResult[]>;
 	onSubmit?: (data: any) => void | Promise<void>;

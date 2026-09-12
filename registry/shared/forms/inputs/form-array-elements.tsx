@@ -3,15 +3,16 @@ import { Trash2, Plus } from 'lucide-react';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
 import { useControlledFormElement } from '@schema-engine/forms-react/hooks';
 import { useFieldArray } from '@schema-engine/forms-react/adapters';
-import { FormElement } from '@schema-engine/forms-react/primitives';
-import type { ArrayElementsProps, ArrayElementsConfig } from './form-array-elements.types';
+import { FormElements } from '@schema-engine/forms-react/primitives';
+import { arrayItemScope } from '@schema-engine/forms';
+import type { ArrayElementsProps } from './form-array-elements.types';
 import { cn } from '@/components/schema-engine/forms/lib/utils';
 
 interface ArrayItemProps {
 	index: number;
-	config: ArrayElementsConfig;
+	instanceId: string;
+	config: ArrayElementsProps;
 	isSingleField: boolean;
-	firstElement?: FormEngine.ElementConfig;
 	canRemove: boolean;
 	removeButtonText?: string;
 	onRemove: (index: number) => void;
@@ -19,45 +20,28 @@ interface ArrayItemProps {
 
 function ArrayItem({
 	index,
+	instanceId,
 	config,
 	isSingleField,
-	firstElement,
 	canRemove,
 	removeButtonText,
 	onRemove,
 }: ArrayItemProps) {
+	const scope = arrayItemScope(config.name, index, instanceId, {
+		scalar: isSingleField,
+		parentInstanceId: config.instanceId,
+	});
+
 	return (
 		<div className={cn('space-y-3 p-4 border border-border rounded-lg')}>
 			<div className="flex items-start justify-between gap-3">
 				<div className="flex-1">
-					{isSingleField && firstElement ? (
-						<FormElement
-							config={
-								{
-									...firstElement,
-									name: `${config.name}.${index}`,
-									id: firstElement.id ? `${firstElement.id}_${index}` : undefined,
-								} as FormEngine.ElementConfig
-							}
-						/>
-					) : (
-						<div className="space-y-4">
-							{config.elements.map((elementConfig, elementIndex) => (
-								<FormElement
-									key={`${elementConfig.id || elementConfig.$type}_${index}_${elementIndex}`}
-									config={
-										{
-											...elementConfig,
-											name: `${config.name}.${index}.${elementConfig.name}`,
-											id: elementConfig.id
-												? `${elementConfig.id}_${index}_${elementIndex}`
-												: undefined,
-										} as FormEngine.ElementConfig
-									}
-								/>
-							))}
-						</div>
-					)}
+					<FormElements
+						elements={config.elements}
+						namePrefix={scope.namePrefix}
+						nameStrategy={scope.nameStrategy}
+						instanceId={scope.instanceId}
+					/>
 				</div>
 
 				{canRemove && (
@@ -78,9 +62,8 @@ function ArrayItem({
 
 interface ArrayItemsListProps {
 	fields: Array<{ id: string }>;
-	config: ArrayElementsConfig;
+	config: ArrayElementsProps;
 	isSingleField: boolean;
-	firstElement?: FormEngine.ElementConfig;
 	canRemove: boolean;
 	removeButtonText?: string;
 	emptyStateMessage: string;
@@ -91,7 +74,6 @@ function ArrayItemsList({
 	fields,
 	config,
 	isSingleField,
-	firstElement,
 	canRemove,
 	removeButtonText,
 	emptyStateMessage,
@@ -107,9 +89,9 @@ function ArrayItemsList({
 				<ArrayItem
 					key={field.id}
 					index={index}
+					instanceId={field.id}
 					config={config}
 					isSingleField={isSingleField}
-					firstElement={firstElement}
 					canRemove={canRemove}
 					removeButtonText={removeButtonText}
 					onRemove={onRemove}
@@ -139,10 +121,8 @@ function ArrayActions({ canAdd, addButtonText, onAdd }: ArrayActionsProps) {
 }
 
 /**
- * Array field component that manages dynamic arrays of form fields
- * Uses React Hook Form's useFieldArray for proper array state management
- * Supports both single field type arrays and complex multi-field objects
- * Base UI implementation without shadcn/ui dependencies
+ * Array field that manages dynamic lists of form fields.
+ * Field paths and instance ids are composed at render time.
  */
 export function FormArrayElements(config: ArrayElementsProps) {
 	const { fields, append, remove } = useFieldArray(config.name);
@@ -159,7 +139,7 @@ export function FormArrayElements(config: ArrayElementsProps) {
 
 		const defaults = config.elements.reduce(
 			(acc, element) => {
-				if (element.name) {
+				if ('name' in element && typeof element.name === 'string' && element.name) {
 					acc[element.name] = '';
 				}
 				return acc;
@@ -199,7 +179,6 @@ export function FormArrayElements(config: ArrayElementsProps) {
 					fields={fields}
 					config={config}
 					isSingleField={isSingleField}
-					firstElement={firstElement}
 					canRemove={canRemove}
 					removeButtonText={removeButtonText}
 					emptyStateMessage={emptyStateMessage}

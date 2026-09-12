@@ -1,6 +1,6 @@
 ---
-title: "API Reference"
-description: "Public surface of the registry package."
+title: 'API Reference'
+description: 'Public surface of the registry package.'
 group: Registry
 order: 3
 ---
@@ -34,22 +34,22 @@ abstract class BaseRegistry<TKey extends string, TValue extends BaseRegistration
 
 ### Methods
 
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `register(item)` | `void` | Registers an item. Logs warning on override. |
-| `has(key)` | `boolean` | Checks if key exists |
-| `get(key)` | `TValue \| undefined` | Gets item by key |
-| `getAll()` | `TValue[]` | Returns all items |
-| `getAllKeys()` | `TKey[]` | Returns all keys |
-| `size` | `number` | Count of items |
-| `clear()` | `void` | Removes all items |
-| `getMap()` | `Map` | Returns internal map (use sparingly) |
+| Method           | Returns               | Description                                  |
+| ---------------- | --------------------- | -------------------------------------------- |
+| `register(item)` | `void`                | Registers an item. Logs warning on override. |
+| `has(key)`       | `boolean`             | Checks if key exists                         |
+| `get(key)`       | `TValue \| undefined` | Gets item by key                             |
+| `getAll()`       | `TValue[]`            | Returns all items                            |
+| `getAllKeys()`   | `TKey[]`              | Returns all keys                             |
+| `size`           | `number`              | Count of items                               |
+| `clear()`        | `void`                | Removes all items                            |
+| `getMap()`       | `Map`                 | Returns internal map (use sparingly)         |
 
 ### Protected Methods
 
-| Method | Description |
-|--------|-------------|
-| `getItemKey(item)` | Extracts key from item (uses `$type`) |
+| Method              | Description                                    |
+| ------------------- | ---------------------------------------------- |
+| `getItemKey(item)`  | Extracts key from item (uses `$type`)          |
 | `getItemName(item)` | Extracts name from item (uses `metadata.name`) |
 
 ## ComponentRegistry
@@ -59,9 +59,8 @@ Abstract class for component registries. Extends `BaseRegistry`.
 ```typescript
 abstract class ComponentRegistry<
 	TKey extends string,
-	TValue extends ComponentRegistration<any, any, any>
-> extends BaseRegistry<TKey, TValue> {
-}
+	TValue extends ComponentRegistration<any, any, any>,
+> extends BaseRegistry<TKey, TValue> {}
 ```
 
 `ComponentRegistry` currently inherits `BaseRegistry` behavior unchanged and exists to enforce the renderable registration constraint at the type level.
@@ -80,7 +79,7 @@ interface BaseRegistration<TConfig = unknown, TMeta extends RegistrationMetadata
 }
 ```
 
-Zod schemas implement Standard Schema and remain valid `schema` values.
+Zod Mini, Zod, Valibot, and Effect Schema values implement Standard Schema and remain valid `schema` values.
 
 ### RegistrationMetadata
 
@@ -98,7 +97,7 @@ interface ComponentRegistration<
 	TType extends string = string,
 	TConfig = unknown,
 	TProps = unknown,
-	TMeta extends ComponentMetadata = ComponentMetadata
+	TMeta extends ComponentMetadata = ComponentMetadata,
 > extends BaseRegistration<TConfig, TMeta> {
 	/** Framework-agnostic render function */
 	render: (props: TProps) => unknown;

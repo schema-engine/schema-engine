@@ -56,7 +56,12 @@ form islands backed by one shared engine in
 
 - The single form engine instance lives at `apps/docs/src/lib/form-engine-setup.ts`.
 - Register elements and recipes explicitly:
-  `createReactFormComposer().addElements(...).addRecipes(...).build()`.
+  `createReactFormEngine({ elements: ..., recipes: ... })`.
+- Custom fields use `defineInput({ $type, schema, metadata, render })`.
+  Authors supply schema input; the component receives schema output.
+- Custom containers declare `elements: elementChildrenSchema` and render with
+  `<FormElements elements={config.elements} namePrefix={config.name} />`.
+  Field paths are a render-time scope; do not clone child configs.
 - Form elements and React recipes come from `registry/shared/forms`,
   aliased as `@/components/schema-engine/forms/*`.
 - The shadcn primitives those sources import (`@/components/ui/*`) are not

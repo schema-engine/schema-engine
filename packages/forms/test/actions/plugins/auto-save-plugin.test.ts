@@ -8,7 +8,6 @@ import {
 } from '@/actions/plugins/auto-save.plugin';
 import { createMockBuilderContext, setupTestEnvironment, MockLocalStorage } from '../__tools';
 import { MockAutoSaveStorage, createFailingStorage } from '../__tools/storage-utils';
-import { asStandardSchema } from '@/lib/standard-schema';
 
 describe('AutoSavePlugin', () => {
 	let mockStorage: MockAutoSaveStorage;
@@ -104,7 +103,7 @@ describe('AutoSavePlugin', () => {
 			const plugin = autoSavePlugin();
 
 			expect(plugin.$type).toBe('auto_save');
-			expect(plugin.schema).toBe(asStandardSchema(AutoSaveActionSchema));
+			expect(plugin.schema).toBe(AutoSaveActionSchema);
 			expect(plugin.metadata.defaultTriggers).toEqual(['form_change']);
 			expect(typeof plugin.execute).toBe('function');
 		});

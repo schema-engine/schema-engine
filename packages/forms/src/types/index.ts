@@ -7,4 +7,5 @@
 export * from './categories';
 export * from './metadata';
 export * from './registration';
+export * from './define-element';
 export * from './actions';

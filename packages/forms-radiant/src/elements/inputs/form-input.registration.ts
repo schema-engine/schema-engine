@@ -1,8 +1,7 @@
 import { FormInput } from './form-input';
-import type { InputFieldConfig, InputFieldProps } from '@/registry/forms/inputs/form-input.types';
+import type { InputFieldConfig } from '@/registry/forms/inputs/form-input.types';
 import { InputFieldSchema } from '@/registry/forms/inputs/form-input.types';
-import type { InputRegistration } from '@schema-engine/forms/types';
-import { asStandardSchema } from '@schema-engine/forms/lib/standard-schema';
+import { defineInput } from '@schema-engine/forms';
 
 declare global {
 	namespace FormEngine {
@@ -12,13 +11,13 @@ declare global {
 	}
 }
 
-export const InputElementRegistration: InputRegistration<'input', InputFieldConfig, InputFieldProps> = {
+export const InputElementRegistration = defineInput({
 	$type: 'input',
 	render: FormInput,
-	schema: asStandardSchema(InputFieldSchema),
+	schema: InputFieldSchema,
 	metadata: {
 		name: 'Text Input Field',
 		description: 'Text input field for various input types (text, email, password, etc.)',
 		category: 'input',
 	},
-};
+});

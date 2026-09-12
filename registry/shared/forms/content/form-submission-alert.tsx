@@ -12,7 +12,7 @@ const DEFAULT_AUTO_DISMISS_MS = 5000;
 /**
  * Display element that shows submission status feedback (shadcn Base UI variant).
  *
- * Add to form via: `.addElement('submission-alert', { ... })`
+ * Add to a form step: `{ $type: 'submission-alert', id: 'status', name: 'status' }`
  */
 export function FormSubmissionAlert({
 	showOn = ['error', 'success'],

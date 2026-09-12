@@ -1,9 +1,42 @@
 import { describe, expect, test } from 'vitest';
 import * as v from 'valibot';
 import { Schema } from 'effect';
-import { FormComposer } from '@/builder';
+import { z as classicZod } from 'zod';
+import { createFormEngine } from '@/engine/create-form-engine';
 
 describe('Standard Schema libraries through defineForm', () => {
+	test('classic Zod consumer schemas remain accepted through Standard Schema', () => {
+		const schema = classicZod.object({
+			$type: classicZod.literal('classic-zod-note'),
+			id: classicZod.string(),
+			name: classicZod.string().default('untitled'),
+		});
+
+		const engine = createFormEngine({
+			elements: [
+				{
+					$type: 'classic-zod-note',
+					schema,
+					metadata: { name: 'Classic Zod note', category: 'input' },
+					render: () => null,
+				},
+			],
+		});
+
+		const form = engine.defineForm({
+			id: 'classic-zod',
+			steps: [
+				{
+					id: 'main',
+					title: 'Main',
+					elements: [{ $type: 'classic-zod-note', id: 'n1' }],
+				},
+			],
+		});
+
+		expect(form.steps[0]?.elements[0]).toMatchObject({ $type: 'classic-zod-note', name: 'untitled' });
+	});
+
 	test('Valibot defaults and transforms reach the returned form', () => {
 		const schema = v.object({
 			$type: v.literal('valibot-note'),
@@ -11,14 +44,16 @@ describe('Standard Schema libraries through defineForm', () => {
 			name: v.pipe(v.optional(v.string(), 'untitled'), v.toUpperCase()),
 		});
 
-		const engine = new FormComposer()
-			.addElement({
-				$type: 'valibot-note',
-				schema,
-				metadata: { name: 'Valibot note', category: 'input' },
-				render: () => null,
-			})
-			.build();
+		const engine = createFormEngine({
+			elements: [
+				{
+					$type: 'valibot-note',
+					schema,
+					metadata: { name: 'Valibot note', category: 'input' },
+					render: () => null,
+				},
+			],
+		});
 
 		const withName = engine.defineForm({
 			id: 'valibot',
@@ -63,14 +98,16 @@ describe('Standard Schema libraries through defineForm', () => {
 			}),
 		);
 
-		const engine = new FormComposer()
-			.addElement({
-				$type: 'effect-note',
-				schema,
-				metadata: { name: 'Effect note', category: 'input' },
-				render: () => null,
-			})
-			.build();
+		const engine = createFormEngine({
+			elements: [
+				{
+					$type: 'effect-note',
+					schema,
+					metadata: { name: 'Effect note', category: 'input' },
+					render: () => null,
+				},
+			],
+		});
 
 		const withName = engine.defineForm({
 			id: 'effect',

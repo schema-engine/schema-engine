@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'vitest';
+import { createFormEngine } from '@schema-engine/forms';
+import { PhoneInputElementRegistration } from '@/components/schema-engine/forms/inputs/form-phone-input.registration';
 import { createFormValidationResolver } from '../../src/adapters/rhf/hooks/use-form-validation-resolver';
 
 const elements = [
@@ -41,12 +43,14 @@ describe('createFormValidationResolver', () => {
 	});
 
 	test('rejects a phone country prefix while accepting a complete international number', async () => {
-		const phone = {
-			$type: 'phone-input',
-			id: 'phone',
-			name: 'phone',
-		};
-		const resolver = createFormValidationResolver([phone]);
+		createFormEngine({ elements: [PhoneInputElementRegistration] });
+		const resolver = createFormValidationResolver([
+			{
+				$type: 'phone-input',
+				id: 'phone',
+				name: 'phone',
+			},
+		]);
 		const options = { fields: {}, shouldUseNativeValidation: false };
 
 		const incomplete = await resolver({ phone: '+44' }, undefined, options);
@@ -56,5 +60,28 @@ describe('createFormValidationResolver', () => {
 
 		const complete = await resolver({ phone: '+442079460958' }, undefined, options);
 		expect(complete.errors).toEqual({});
+	});
+
+	test('validates nested fieldset children by composed path', async () => {
+		const resolver = createFormValidationResolver([
+			{
+				name: 'address',
+				$type: 'fieldset',
+				elements: [
+					{
+						name: 'street',
+						rules: [{ type: 'required', message: 'Street is required' }],
+					},
+				],
+			},
+		]);
+		const resolved = await resolver({ address: { street: '' } }, undefined, {
+			fields: {},
+			shouldUseNativeValidation: false,
+		});
+
+		expect(resolved.errors).toMatchObject({
+			'address.street': { message: 'Street is required' },
+		});
 	});
 });

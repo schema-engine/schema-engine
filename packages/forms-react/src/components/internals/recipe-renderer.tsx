@@ -1,13 +1,12 @@
 import type React from 'react';
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import { type FormConfigView, type RecipeRegistration } from '@schema-engine/forms';
 import { applySlotDefaults, buildViewModel, type RecipeKind, type ViewNavigation } from '@schema-engine/forms/recipes';
-import type { RecipeRegistration } from '@schema-engine/forms';
 import { useFormContext } from '@/adapters/context';
 import { useFormInstanceActions } from '@/hooks/use-form-context';
 import { ViewProvider } from '@/contexts/view-context';
 import type { ReactRecipeAdapterPayload } from '@/primitives';
 
-function createInitialStepStates(config: FormConfig) {
+function createInitialStepStates(config: FormConfigView) {
 	return {
 		completed: config.steps.map(() => false),
 		valid: config.steps.map(() => false),
@@ -33,7 +32,7 @@ function renderSlotBlock(Component: React.FC | undefined): React.ReactNode {
 }
 
 interface RecipeRendererProps {
-	config: FormConfig;
+	config: FormConfigView;
 	recipe: RecipeRegistration<any, any> | undefined;
 	children?: React.ReactNode;
 	renderFields: () => React.ReactNode;

@@ -1,6 +1,5 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
-import { asStandardSchema } from '@/lib/standard-schema';
 import { FormActionTriggerSchema } from '../triggers';
 
 /**
@@ -23,98 +22,32 @@ export interface NotificationPluginConfig {
 	) => void | Promise<void>;
 }
 
-/**
- * Notification Action Schema
- *
- * Shows user notifications with different variants and customizable duration.
- * Configure handlers using the notificationPlugin() factory function.
- *
- * @example Custom Toast Integration
- * ```typescript
- * notificationPlugin({
- *   onSuccess: (message) => toast.success(message),
- *   onError: (message) => toast.error(message),
- *   onWarning: (message) => toast.warning(message)
- * });
- * ```
- */
+/** Schema for the `show_notification` action configuration. */
 export const NotificationActionSchema = z.object({
 	/** Unique identifier for this action within the form */
-	id: z.string().min(1, 'Action ID cannot be empty'),
+	id: z.string().check(z.minLength(1, 'Action ID cannot be empty')),
 	/** Action type identifier */
 	$type: z.literal('show_notification'),
 	/** Optional description for documentation and debugging purposes */
-	description: z.string().optional(),
+	description: z.optional(z.string()),
 	/** Whether this action is enabled and should be executed */
-	enabled: z.boolean().default(true),
+	enabled: z._default(z.boolean(), true),
 	/** Custom triggers that override the default triggers for this action */
-	triggers: z.array(FormActionTriggerSchema).optional(),
+	triggers: z.optional(z.array(FormActionTriggerSchema)),
 	/** Message to display in the notification */
-	message: z.string().min(1, 'Message cannot be empty'),
+	message: z.string().check(z.minLength(1, 'Message cannot be empty')),
 	/** Visual style of the notification */
-	variant: z.enum(['success', 'error', 'warning', 'info']).default('info'),
+	variant: z._default(z.enum(['success', 'error', 'warning', 'info']), 'info'),
 	/** Duration in milliseconds to show the notification (0 = permanent) */
-	duration: z.number().min(0).default(3000).optional(),
+	duration: z.optional(z._default(z.number().check(z.gte(0)), 3000)),
 });
 
 export type NotificationAction = z.infer<typeof NotificationActionSchema>;
 
-/**
- * Notification Plugin Factory
- *
- * Returns a configured action registration object that you can register when needed.
- *
- * @example Basic Console Notifications
- * ```typescript
- * import { notificationPlugin } from "@/actions/plugins";
- * import { registerAction } from "@/actions/action-registry";
- *
- * const notificationAction = notificationPlugin({
- *   onSuccess: (message) => console.log("✅", message),
- *   onError: (message) => console.error("❌", message)
- * });
- *
- * // Register when you need it
- * registerAction(notificationAction);
- * ```
- *
- * @example Toast Integration
- * ```typescript
- * const toastNotifications = notificationPlugin({
- *   onSuccess: (message) => toast.success(message),
- *   onError: (message) => toast.error(message),
- *   onWarning: (message) => toast.warning(message),
- *   onInfo: (message) => toast.info(message)
- * });
- *
- * registerAction(toastNotifications);
- * ```
- *
- * @example Multiple Configurations
- * ```typescript
- * // Different configurations for different forms
- * const marketingNotifications = notificationPlugin({
- *   onSuccess: (message) => {
- *     toast.success(message);
- *     analytics.track('marketing_form_success');
- *   }
- * });
- *
- * const accountNotifications = notificationPlugin({
- *   onSuccess: (message) => showAccountDialog(message, 'success')
- * });
- *
- * // Register based on context
- * if (isMarketingForm) {
- *   registerAction(marketingNotifications);
- * } else {
- *   registerAction(accountNotifications);
- * }
- * ```
- */
+/** Creates a configured `show_notification` action registration. */
 export function notificationPlugin(
 	config: NotificationPluginConfig = {},
-): BuilderActionRegistration<'show_notification', NotificationAction> {
+): BuilderActionRegistration<'show_notification', typeof NotificationActionSchema> {
 	const handler = async (context: BuilderActionExecutionContext<NotificationAction>) => {
 		const action = context.config;
 
@@ -172,7 +105,7 @@ export function notificationPlugin(
 
 	return {
 		$type: 'show_notification',
-		schema: asStandardSchema(NotificationActionSchema),
+		schema: NotificationActionSchema,
 		metadata: {
 			name: 'Show Notification',
 			description: 'Display notifications to users with different variants',
