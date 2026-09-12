@@ -1,9 +1,11 @@
-import { customElement, prop, RadiantElement } from '@ecopages/radiant';
-import { contextSelector } from '@ecopages/radiant/context';
-import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import type { JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import type { NormalizedElementConfig } from '@schema-engine/forms';
-import { formEngineContext, type FormEngineContextValue } from '../provider';
+import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
+import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { renderRegisteredElement } from './render-registered-element';
+import { getActiveFormEngine } from '@/registries/active-engine';
+import { evaluateConstraintLogic } from '@/hooks/constraint-logic';
+import { getFieldGridStyles } from '@/hooks/grid-styles';
 
 export interface FormElementProps {
 	/**
@@ -11,6 +13,7 @@ export interface FormElementProps {
 	 * This host does not re-parse registration schemas.
 	 */
 	config: NormalizedElementConfig;
+	engine?: FormEngine;
 	name?: string;
 	id?: string;
 	instanceId?: string;
@@ -20,39 +23,56 @@ export interface FormElementProps {
 
 export { renderRegisteredElement } from './render-registered-element';
 
-@customElement('se-form-element')
-export class FormElementHost extends RadiantElement {
-	@prop({ type: Object }) config!: NormalizedElementConfig;
-	@prop({ type: String }) name?: string;
-	@prop({ type: String }) fieldId?: string;
-	@prop({ type: String }) instanceId?: string;
+export function FormElement({
+	config,
+	engine,
+	name,
+	id,
+	instanceId,
+	className,
+	style,
+}: FormElementProps): JsxRenderable {
+	const resolvedEngine = engine ?? getActiveFormEngine();
+	if (!resolvedEngine) {
+		throw new Error(`Cannot render form element '${config.$type}' without a FormEngine.`);
+	}
 
-	@contextSelector({ context: formEngineContext })
-	engineContext!: FormEngineContextValue;
-
-	override render(): JsxRenderable {
-		const config = this.config;
-		const engine = this.engineContext?.engine;
-
-		if (!config || !engine) {
-			return null;
-		}
-
-		return renderRegisteredElement(config, engine, {
-			name: this.name,
-			id: this.fieldId,
-			instanceId: this.instanceId,
+	const constraints = 'constraints' in config ? config.constraints : undefined;
+	if (!constraints?.length) {
+		return renderRegisteredElement(config, resolvedEngine, {
+			name,
+			id,
+			instanceId,
 		});
 	}
-}
 
-export function FormElement({ config, name, id, instanceId, className, style }: FormElementProps): JsxRenderable {
-	return jsx('se-form-element', {
-		'prop:config': config,
-		'prop:name': name,
-		'prop:fieldId': id,
-		'prop:instanceId': instanceId,
-		class: className,
-		style,
-	});
+	const { shouldShow } = evaluateConstraintLogic(
+		constraints,
+		isFieldRequired('rules' in config ? config.rules : undefined),
+		name ?? ('name' in config ? config.name : undefined),
+	);
+	const fieldName =
+		name ?? ('name' in config ? config.name : undefined) ?? id ?? ('id' in config ? config.id : undefined) ?? '';
+	const fieldGridStyles = getFieldGridStyles('grid' in config ? config.grid : undefined);
+
+	return (
+		<div
+			class={`se-form-constraint ${className ?? ''}`.trim()}
+			data-se-constraint-field={fieldName}
+			style={{ ...fieldGridStyles, ...style }}
+			hidden={!shouldShow}
+		>
+			{renderRegisteredElement(
+				config,
+				resolvedEngine,
+				{
+					name,
+					id,
+					instanceId,
+				},
+				undefined,
+				true,
+			)}
+		</div>
+	);
 }

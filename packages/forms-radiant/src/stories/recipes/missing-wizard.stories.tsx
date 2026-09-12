@@ -7,6 +7,8 @@ import { getFieldControl, getSubmitButton } from '@/stories/shared/play';
 import { expect, waitFor } from 'storybook/test';
 import type { StoryContext } from 'storybook/internal/types';
 
+import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
+
 const noRecipeEngine = createFormEngine({ elements: schemaFormRegistrations });
 
 const meta = {
@@ -57,11 +59,12 @@ type Story = StoryObj<typeof meta>;
 
 export const SinglePageFallback: Story = {
 	play: async ({ canvasElement, step }: StoryContext) => {
+		if (isStaticSsrPreview(canvasElement)) return;
 		await step('Every step is visible without wizard navigation', async () => {
-			await waitFor(() => {
-				expect(getFieldControl(canvasElement, /first name/i)).toBeTruthy();
-				expect(getFieldControl(canvasElement, /last name/i)).toBeTruthy();
-				expect(getSubmitButton(canvasElement, /send/i)).toBeTruthy();
+			await waitFor(async () => {
+				await expect(getFieldControl(canvasElement, /first name/i)).toBeTruthy();
+				await expect(getFieldControl(canvasElement, /last name/i)).toBeTruthy();
+				await expect(getSubmitButton(canvasElement, /send/i)).toBeTruthy();
 			});
 		});
 	},

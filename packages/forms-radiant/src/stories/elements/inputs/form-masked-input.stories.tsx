@@ -3,6 +3,8 @@ import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { queryDeep } from '@/lib/dom-utils';
 
+import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
+
 const ibanMask = 'aa00 0000 0000 000000';
 const ibanPlaceholder = 'ES12 4311 2144 214423';
 
@@ -29,12 +31,13 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
 	play: async ({ canvasElement, step }) => {
+		if (isStaticSsrPreview(canvasElement)) return;
 		await step('Field is visible and formats the IBAN', async () => {
-			await waitFor(() => {
-				expect(queryDeep(canvasElement, 'se-masked-input[data-ready]')).toBeTruthy();
+			await waitFor(async () => {
+				await expect(queryDeep(canvasElement, 'se-masked-input[data-ready]')).toBeTruthy();
 			});
 			const input = queryDeep(canvasElement, '[data-ref="input"]') as HTMLInputElement | null;
-			expect(input).toBeTruthy();
+			await expect(input).toBeTruthy();
 			if (!input) return;
 			await expect(input).toHaveAttribute('placeholder', ibanPlaceholder);
 			await userEvent.click(input);
@@ -61,6 +64,7 @@ export const CardNumber: Story = {
 		]),
 	},
 	play: async ({ canvasElement, step }) => {
+		if (isStaticSsrPreview(canvasElement)) return;
 		await step('Card field is visible', async () => {
 			await expect(within(canvasElement).getByPlaceholderText('4242 4242 4242 4242')).toBeInTheDocument();
 		});

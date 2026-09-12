@@ -4,9 +4,11 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { queryDeep } from '@/lib/dom-utils';
 import type { StoryContext } from 'storybook/internal/types';
 
+import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
+
 async function waitForPhoneReady(canvasElement: HTMLElement) {
-	await waitFor(() => {
-		expect(queryDeep(canvasElement, 'se-phone-input[data-ready]')).toBeTruthy();
+	await waitFor(async () => {
+		await expect(queryDeep(canvasElement, 'se-phone-input[data-ready]')).toBeTruthy();
 	});
 }
 
@@ -31,22 +33,23 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
 	play: async ({ canvasElement, step }: StoryContext) => {
+		if (isStaticSsrPreview(canvasElement)) return;
 		await waitForPhoneReady(canvasElement);
 
 		await step('Country flag is the same SVG artwork as React', async () => {
 			const flag = queryDeep(canvasElement, '.se-phone__flag svg');
-			expect(flag).toBeTruthy();
-			expect(flag?.getAttribute('viewBox')).toBeTruthy();
+			await expect(flag).toBeTruthy();
+			await expect(flag?.getAttribute('viewBox')).toBeTruthy();
 		});
 
 		await step('Field is visible and formats national numbers', async () => {
 			const input = queryDeep(canvasElement, '[data-ref="number"]') as HTMLInputElement | null;
-			expect(input).toBeTruthy();
+			await expect(input).toBeTruthy();
 			await userEvent.click(input as HTMLInputElement);
 			await userEvent.clear(input as HTMLInputElement);
 			await userEvent.type(input as HTMLInputElement, '2025550123');
-			await waitFor(() => {
-				expect((queryDeep(canvasElement, '[data-ref="number"]') as HTMLInputElement).value).toBe(
+			await waitFor(async () => {
+				await expect((queryDeep(canvasElement, '[data-ref="number"]') as HTMLInputElement).value).toBe(
 					'(202) 555-0123',
 				);
 			});
@@ -69,27 +72,30 @@ export const WithValidation: Story = {
 		]),
 	},
 	play: async ({ canvasElement, step }: StoryContext) => {
+		if (isStaticSsrPreview(canvasElement)) return;
 		await waitForPhoneReady(canvasElement);
 		const input = queryDeep(canvasElement, '[data-ref="number"]') as HTMLInputElement | null;
-		expect(input).toBeTruthy();
+		await expect(input).toBeTruthy();
 		if (!input) return;
 		const field = queryDeep(canvasElement, 'rui-field') as { rules?: { validate?: unknown } } | null;
-		expect(typeof field?.rules?.validate).toBe('function');
+		await expect(typeof field?.rules?.validate).toBe('function');
 
 		await step('A country prefix alone is invalid', async () => {
 			await userEvent.click(input);
 			await userEvent.type(input, '+44');
 			await userEvent.click(within(canvasElement).getByRole('button', { name: /submit/i }));
-			await waitFor(() => {
-				expect(within(canvasElement).getByRole('alert')).toHaveTextContent('Enter a complete phone number');
+			await waitFor(async () => {
+				await expect(within(canvasElement).getByRole('alert')).toHaveTextContent(
+					'Enter a complete phone number',
+				);
 			});
 		});
 
 		await step('A complete number clears the validation error', async () => {
 			await userEvent.type(input, '2079460958');
 			await userEvent.click(within(canvasElement).getByRole('button', { name: /submit/i }));
-			await waitFor(() => {
-				expect(within(canvasElement).queryByRole('alert')).toBeNull();
+			await waitFor(async () => {
+				await expect(within(canvasElement).queryByRole('alert')).toBeNull();
 			});
 		});
 	},
@@ -97,17 +103,18 @@ export const WithValidation: Story = {
 
 export const ArrowCountrySelection: Story = {
 	play: async ({ canvasElement, step }: StoryContext) => {
+		if (isStaticSsrPreview(canvasElement)) return;
 		await waitForPhoneReady(canvasElement);
 		const host = queryDeep(canvasElement, 'se-phone-input') as HTMLElement;
 
 		await step('Arrow keys move the active country and Enter selects it', async () => {
-			expect(host.getAttribute('data-country')).toBe('US');
+			await expect(host.getAttribute('data-country')).toBe('US');
 			await userEvent.click(within(canvasElement).getByRole('combobox', { name: /country/i }));
 			await userEvent.keyboard('{ArrowDown}');
 
-			const active = await waitFor(() => {
+			const active = await waitFor(async () => {
 				const option = queryDeep(canvasElement, '[role="option"][data-active]') as HTMLElement | null;
-				expect(option).toBeTruthy();
+				await expect(option).toBeTruthy();
 				return option as HTMLElement;
 			});
 
@@ -115,16 +122,16 @@ export const ArrowCountrySelection: Story = {
 				await userEvent.keyboard('{ArrowDown}');
 			}
 
-			const selected = await waitFor(() => {
+			const selected = await waitFor(async () => {
 				const option = queryDeep(canvasElement, '[role="option"][data-active]') as HTMLElement | null;
-				expect(option?.getAttribute('data-value')).toBeTruthy();
-				expect(option?.getAttribute('data-value')).not.toBe('US');
+				await expect(option?.getAttribute('data-value')).toBeTruthy();
+				await expect(option?.getAttribute('data-value')).not.toBe('US');
 				return option?.getAttribute('data-value') as string;
 			});
 
 			await userEvent.keyboard('{Enter}');
-			await waitFor(() => {
-				expect(host.getAttribute('data-country')).toBe(selected);
+			await waitFor(async () => {
+				await expect(host.getAttribute('data-country')).toBe(selected);
 			});
 		});
 	},
@@ -132,32 +139,33 @@ export const ArrowCountrySelection: Story = {
 
 export const CallingCodeCountry: Story = {
 	play: async ({ canvasElement, step }: StoryContext) => {
+		if (isStaticSsrPreview(canvasElement)) return;
 		await waitForPhoneReady(canvasElement);
 		const host = queryDeep(canvasElement, 'se-phone-input') as HTMLElement;
 
 		await step('Typing an international prefix selects that country', async () => {
-			expect(host.getAttribute('data-country')).toBe('US');
+			await expect(host.getAttribute('data-country')).toBe('US');
 			const input = queryDeep(canvasElement, '[data-ref="number"]') as HTMLInputElement | null;
-			expect(input).toBeTruthy();
+			await expect(input).toBeTruthy();
 			await userEvent.click(input as HTMLInputElement);
 			await userEvent.clear(input as HTMLInputElement);
 			await userEvent.type(input as HTMLInputElement, '+44', { delay: 20 });
-			await waitFor(() => {
-				expect(host.getAttribute('data-country')).toBe('GB');
+			await waitFor(async () => {
+				await expect(host.getAttribute('data-country')).toBe('GB');
 			});
-			await waitFor(() => {
+			await waitFor(async () => {
 				const visible = queryDeep(canvasElement, '[data-ref="number"]') as HTMLInputElement;
 				const stored = queryDeep(canvasElement, '[data-ref="control"]') as HTMLInputElement;
-				expect(visible.value).toContain('+44');
-				expect(stored.value).toBe('+44');
+				await expect(visible.value).toContain('+44');
+				await expect(stored.value).toBe('+44');
 			});
 
 			await userEvent.type(input as HTMLInputElement, '20');
-			await waitFor(() => {
+			await waitFor(async () => {
 				const visible = queryDeep(canvasElement, '[data-ref="number"]') as HTMLInputElement;
 				const stored = queryDeep(canvasElement, '[data-ref="control"]') as HTMLInputElement;
-				expect(visible.value).not.toContain('+');
-				expect(stored.value.startsWith('+44')).toBe(true);
+				await expect(visible.value).not.toContain('+');
+				await expect(stored.value.startsWith('+44')).toBe(true);
 			});
 		});
 	},

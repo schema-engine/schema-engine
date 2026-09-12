@@ -4,6 +4,8 @@ import { createValidationFieldPlay } from '@/stories/shared/field-plays';
 import { expect, within } from 'storybook/test';
 import { playClearSelection, playSelectOption } from '@/stories/shared/play';
 
+import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
+
 const languages = [
 	{ label: 'JavaScript', value: 'js' },
 	{ label: 'TypeScript', value: 'ts' },
@@ -33,6 +35,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
 	play: async ({ canvasElement, step }) => {
+		if (isStaticSsrPreview(canvasElement)) return;
 		await step('Select opens and chooses an option', async () => {
 			await expect(
 				within(canvasElement).getByRole('combobox', { name: /programming language/i }),
@@ -58,6 +61,7 @@ export const Clearable: Story = {
 		]),
 	},
 	play: async ({ canvasElement, step }) => {
+		if (isStaticSsrPreview(canvasElement)) return;
 		await step('Starts with a selection and clears with the X control', async () => {
 			await expect(
 				within(canvasElement).getByRole('combobox', { name: /programming language/i }),
@@ -87,6 +91,7 @@ export const Multiple: Story = {
 		]),
 	},
 	play: async ({ canvasElement, step }) => {
+		if (isStaticSsrPreview(canvasElement)) return;
 		await step('Selected values render as removable chips', async () => {
 			const canvas = within(canvasElement);
 			await expect(canvas.getByRole('listitem', { name: /javascript/i })).toBeInTheDocument();

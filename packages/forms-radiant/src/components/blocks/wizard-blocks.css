@@ -166,3 +166,21 @@
 	font-variant-numeric: tabular-nums;
 	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
 }
+
+.se-form-actions {
+	display: flex;
+	width: 100%;
+	min-width: 0;
+}
+
+.se-form-actions--align-start {
+	justify-content: flex-start;
+}
+
+.se-form-actions--align-center {
+	justify-content: center;
+}
+
+.se-form-actions--align-end {
+	justify-content: flex-end;
+}

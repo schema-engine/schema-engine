@@ -1,6 +1,4 @@
-import '@ecopages/radiant-ui/autocomplete/styles.css';
 import { RuiAutocomplete, RuiAutocompleteCollection, RuiAutocompleteEmpty } from '@ecopages/radiant-ui/autocomplete';
-import '@ecopages/radiant-ui/combobox/styles.css';
 import {
 	RuiCombobox,
 	RuiComboboxClear,
@@ -11,8 +9,6 @@ import {
 	RuiComboboxValue,
 	RuiListbox,
 } from '@ecopages/radiant-ui/combobox';
-import '@ecopages/radiant-ui/listbox/styles.css';
-import '@ecopages/radiant-ui/tag-group/styles.css';
 import { RuiTagGroup } from '@ecopages/radiant-ui/tag-group';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
@@ -51,6 +47,7 @@ export function FormCombobox({
 				placeholder={config.placeholder}
 				disabled={config.disabled}
 				selectionMode={isMultiple ? 'multiple' : 'single'}
+				value={config.defaultValue}
 				on:change={(event: Event) => {
 					const detail = (event as CustomEvent<{ value: string }>).detail;
 					propsOnChange?.(parseChoiceValue(detail?.value ?? '', isMultiple));

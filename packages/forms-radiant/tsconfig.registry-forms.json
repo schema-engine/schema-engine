@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"declaration": true,
+		"emitDeclarationOnly": true,
+		"lib": ["ESNext", "DOM"],
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"noEmit": false,
+		"outDir": "./dist/registry-forms",
+		"rootDir": "../../registry/shared/forms",
+		"skipLibCheck": true,
+		"strict": true,
+		"target": "ESNext",
+		"types": []
+	},
+	"include": ["../../registry/shared/forms/**/*.types.ts"]
+}

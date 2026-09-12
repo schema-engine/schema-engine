@@ -35,6 +35,30 @@ describe('toFieldRules', () => {
 		expect(await validate('+442079460958')).toBe(true);
 	});
 
+	test('uses the shared validation registry for URL and IPv4 rules', async () => {
+		const urlRules = toFieldRules([{ type: 'url', message: 'Enter a valid URL' }]);
+		const ipv4Rules = toFieldRules([{ type: 'ipv4', message: 'Enter a valid IPv4 address' }]);
+
+		const validateUrl = urlRules?.validate as (value: unknown) => Promise<boolean | string>;
+		const validateIpv4 = ipv4Rules?.validate as (value: unknown) => Promise<boolean | string>;
+		expect(await validateUrl('not-a-url')).toBe('Enter a valid URL');
+		expect(await validateUrl('https://schema-engine.dev')).toBe(true);
+		expect(await validateIpv4('127.0.0.999')).toBe('Enter a valid IPv4 address');
+		expect(await validateIpv4('127.0.0.1')).toBe(true);
+	});
+
+	test('uses the shared validation registry for Base64 and hexadecimal rules', async () => {
+		const base64Rules = toFieldRules([{ type: 'base64', message: 'Enter Base64 data' }]);
+		const hexadecimalRules = toFieldRules([{ type: 'hex', message: 'Enter hexadecimal characters' }]);
+		const base64Pattern = base64Rules?.pattern as { value: RegExp } | undefined;
+		const hexPattern = hexadecimalRules?.pattern as { value: RegExp } | undefined;
+
+		expect(base64Pattern?.value.test('not base64')).toBe(false);
+		expect(base64Pattern?.value.test('aGVsbG8=')).toBe(true);
+		expect(hexPattern?.value.test('not hexadecimal')).toBe(false);
+		expect(hexPattern?.value.test('deadbeef')).toBe(true);
+	});
+
 	test('injects phone validation for phone-input when the author omitted the rule', async () => {
 		registerValidation(createRadiantPhoneValidationRegistration());
 		const rules = toFieldRules(undefined, 'phone-input');

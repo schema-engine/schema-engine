@@ -1,7 +1,8 @@
 import { existsSync, mkdirSync, rmSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildLib } from '../../scripts/esbuild-lib.ts';
+import type { Plugin } from 'esbuild';
+import { buildLib } from '@schema-engine/scripts/esbuild-lib';
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const outputDir = path.join(cwd, 'dist');
@@ -17,6 +18,28 @@ const entryDirs = [
 	'src/lib',
 ];
 
+/**
+ * Drops CSS from the JS graph so Node can import the published package.
+ * Hosts load first-party rules from `index.css`; Radiant UI styles stay in the app.
+ */
+function cssStubPlugin(): Plugin {
+	return {
+		name: 'css-stub',
+		setup(buildApi) {
+			buildApi.onResolve({ filter: /\.css$/ }, (args) => {
+				if (args.kind === 'entry-point' || args.importer.endsWith('.css')) {
+					return null;
+				}
+				return { path: args.path, namespace: 'css-stub' };
+			});
+			buildApi.onLoad({ filter: /.*/, namespace: 'css-stub' }, () => ({
+				contents: '',
+				loader: 'empty',
+			}));
+		},
+	};
+}
+
 if (existsSync(outputDir) && !process.argv.includes('--watch')) {
 	rmSync(outputDir, { recursive: true, force: true });
 }
@@ -27,6 +50,7 @@ await buildLib({
 	cwd,
 	entryGlobs: [
 		'src/index.ts',
+		'src/index.css',
 		'src/primitives.ts',
 		'src/*.ts',
 		'src/*.tsx',
@@ -35,6 +59,7 @@ await buildLib({
 	exclude: ['.stories.', '.play.', '.test.'],
 	splitting: true,
 	aliases: [{ prefix: '@', dir: path.join(cwd, 'src') }],
+	plugins: [cssStubPlugin()],
 	external: [
 		'@schema-engine/forms',
 		'@ecopages/jsx',
@@ -42,48 +67,27 @@ await buildLib({
 		'@ecopages/radiant',
 		'@ecopages/radiant/context',
 		'@ecopages/radiant-ui',
-		'@ecopages/radiant-ui/radiant-ui-core.css',
 		'@ecopages/radiant-ui/alert',
-		'@ecopages/radiant-ui/alert/styles.css',
 		'@ecopages/radiant-ui/autocomplete',
-		'@ecopages/radiant-ui/autocomplete/styles.css',
 		'@ecopages/radiant-ui/button',
-		'@ecopages/radiant-ui/button/styles.css',
 		'@ecopages/radiant-ui/checkbox',
-		'@ecopages/radiant-ui/checkbox/styles.css',
 		'@ecopages/radiant-ui/checkbox-group',
-		'@ecopages/radiant-ui/checkbox-group/styles.css',
 		'@ecopages/radiant-ui/combobox',
-		'@ecopages/radiant-ui/combobox/styles.css',
 		'@ecopages/radiant-ui/field',
-		'@ecopages/radiant-ui/field/styles.css',
 		'@ecopages/radiant-ui/form',
-		'@ecopages/radiant-ui/form/styles.css',
 		'@ecopages/radiant-ui/heading',
-		'@ecopages/radiant-ui/heading/styles.css',
 		'@ecopages/radiant-ui/headline',
-		'@ecopages/radiant-ui/headline/styles.css',
 		'@ecopages/radiant-ui/input',
-		'@ecopages/radiant-ui/input/styles.css',
 		'@ecopages/radiant-ui/label',
-		'@ecopages/radiant-ui/label/styles.css',
 		'@ecopages/radiant-ui/listbox',
-		'@ecopages/radiant-ui/listbox/styles.css',
 		'@ecopages/radiant-ui/number-field',
-		'@ecopages/radiant-ui/number-field/styles.css',
 		'@ecopages/radiant-ui/radio-group',
-		'@ecopages/radiant-ui/radio-group/styles.css',
 		'@ecopages/radiant-ui/select',
-		'@ecopages/radiant-ui/select/styles.css',
 		'@ecopages/radiant-ui/sidebar',
 		'@ecopages/radiant-ui/slider',
-		'@ecopages/radiant-ui/slider/styles.css',
 		'@ecopages/radiant-ui/switch',
-		'@ecopages/radiant-ui/switch/styles.css',
 		'@ecopages/radiant-ui/tag-group',
-		'@ecopages/radiant-ui/tag-group/styles.css',
 		'@ecopages/radiant-ui/textarea',
-		'@ecopages/radiant-ui/textarea/styles.css',
 		'@ecopages/signals',
 		'@ecopages/logger',
 		'imask',

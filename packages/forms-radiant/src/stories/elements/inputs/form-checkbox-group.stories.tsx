@@ -4,6 +4,8 @@ import { expect, within } from 'storybook/test';
 import { playCheckboxByLabel } from '@/stories/shared/play';
 import { createValidationFieldPlay } from '@/stories/shared/field-plays';
 
+import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
+
 const interests = [
 	{ label: 'Design', value: 'design' },
 	{ label: 'Engineering', value: 'engineering' },
@@ -30,6 +32,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
 	play: async ({ canvasElement, step }) => {
+		if (isStaticSsrPreview(canvasElement)) return;
 		await step('Checkbox group is visible', async () => {
 			await expect(within(canvasElement).getByText(/interests/i)).toBeInTheDocument();
 			await expect(within(canvasElement).getByRole('checkbox', { name: /design/i })).toBeInTheDocument();

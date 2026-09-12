@@ -160,12 +160,6 @@ export const multiStepRegistrationForm: FormConfig = {
 					placeholder: 'Tell us a bit about yourself...',
 					rows: 4,
 				},
-				{
-					$type: 'submit',
-					id: 'submit',
-					name: 'submit',
-					label: 'Complete Registration',
-				},
 			],
 		},
 	],

@@ -17,6 +17,10 @@ function resolveConstraintField(constraintField: string, fieldPath?: string) {
 	return parentPath ? `${parentPath}.${constraintField}` : constraintField;
 }
 
+function normalizeConstraintValue(value: unknown): unknown {
+	return Array.isArray(value) && value.length === 1 ? value[0] : value;
+}
+
 export function evaluateConstraintLogic(
 	constraints: ReadonlyArray<NonNullable<FormEngine.ElementConfig['constraints']>[number]> = [],
 	baseRequired = false,
@@ -28,7 +32,7 @@ export function evaluateConstraintLogic(
 
 	for (const constraint of constraints ?? []) {
 		const resolved = resolveConstraintField(constraint.field, fieldPath);
-		fieldValues[constraint.field] = getValueAtPath(values, resolved);
+		fieldValues[constraint.field] = normalizeConstraintValue(getValueAtPath(values, resolved));
 	}
 
 	return evaluator.evaluate({

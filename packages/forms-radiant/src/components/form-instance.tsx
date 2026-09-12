@@ -6,16 +6,31 @@ import {
 	registerSsrPreparationCallback,
 	state,
 } from '@ecopages/radiant';
-import { provideContext, type ContextProvider } from '@ecopages/radiant/context';
+import { onContextUpdate, provideContext, type ContextProvider } from '@ecopages/radiant/context';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
-import type { NormalizedFormConfig } from '@schema-engine/forms';
+import { resolveFormRecipe, type NormalizedFormConfig, type RecipeRegistration } from '@schema-engine/forms';
 import type { FormEngine as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import { formInstanceContext, type FormInstanceContextValue, type StepStates } from '@/contexts/form-instance-context';
-import { getRuiFormStore } from '@/lib/rui-form-utils';
+import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
+import { onActiveEngineChange } from '@/registries/active-engine';
+import {
+	findNearestRuiForm,
+	getRuiConstraintStore,
+	getRuiFormStore,
+	type RuiConstraintStore,
+} from '@/lib/rui-form-utils';
+import { collectConstrainedElements } from '@/lib/constraint-elements';
+import { evaluateConstraintLogic } from '@/hooks/constraint-logic';
 import { fieldNamesForStep, validateCurrentStepFields } from '@/lib/validate-current-step';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
 import { ConfiguredRuiForm } from '@/adapters/radiant/rui-form-shell';
-import { resolveFormRecipe } from '@schema-engine/forms';
+import { hydrateFieldRules } from '@/components/internals/field-rule-hydrator';
+
+function escapeSelector(value: string): string {
+	return typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
+		? CSS.escape(value)
+		: value.replace(/(["\\])/g, '\\$1');
+}
 
 function createInitialStepStates(totalSteps: number): StepStates {
 	return {
@@ -25,19 +40,35 @@ function createInitialStepStates(totalSteps: number): StepStates {
 	};
 }
 
+/**
+ * Behavior host for one composed form instance.
+ *
+ * @remarks
+ * View-owned shell: the `FormInstance` view authors `<rui-form>` and the recipe
+ * chrome as light-DOM children, so SSR expands the whole form without a derived
+ * tree. Step switching is pure DOM: each step's fields are authored once and the
+ * `se-form-step` hosts toggle `hidden` from this host's step state.
+ *
+ * The host publishes `formInstanceContext` (step machine + navigation); recipe
+ * blocks consume it and derive their chrome from the config and view-config
+ * props authored alongside them.
+ *
+ * @element se-form-instance
+ */
 @customElement('se-form-instance')
 export class FormInstanceElement extends RadiantElement {
 	/** Frozen config from `engine.defineForm` / `engine.validateForm` via `FormProvider`. */
 	@prop({ type: Object }) config!: NormalizedFormConfig;
-	@prop({ type: Object }) engine?: CoreFormEngine;
+	@state engine?: CoreFormEngine;
 	@prop({ type: Object }) defaultValues?: Record<string, unknown>;
-	@prop({ type: Object }) extras?: JsxRenderable;
-	@prop({ type: Boolean, defaultValue: false }) isSubmitting = false;
-	@prop({ type: Object }) onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
+	@state onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
+	@state isSubmitting = false;
 
 	@state currentStep = 0;
 	@state stepStates: StepStates = { completed: [], valid: [], visited: [] };
 	private publishedContext?: FormInstanceContextValue;
+	private unsubscribeConstraints?: () => void;
+	private unsubscribeActiveEngine?: () => void;
 
 	@provideContext<typeof formInstanceContext>({
 		context: formInstanceContext,
@@ -48,22 +79,115 @@ export class FormInstanceElement extends RadiantElement {
 
 	constructor() {
 		super();
-		registerSsrPreparationCallback(this, () => this.publishContext());
+		registerSsrPreparationCallback(this, () => this.publish());
+		this.publishLiveContexts();
+	}
+
+	@onContextUpdate({ context: formEngineContext, requestUpdate: false })
+	onFormEngine(value: FormEngineContextValue): void {
+		if (value.engine && !this.engine) {
+			this.engine = value.engine;
+			this.publish();
+		}
 	}
 
 	protected override onConnected(): void {
+		if (!this.engine) {
+			this.unsubscribeActiveEngine = onActiveEngineChange((engine) => {
+				if (!this.engine) {
+					this.engine = engine;
+				}
+				this.publish();
+			});
+		}
+		hydrateFieldRules(this);
+		queueMicrotask(() => hydrateFieldRules(this));
 		this.resetStepState();
-		this.publishContext();
+		this.publish();
+		this.connectConstraints();
+		this.wireRuiForm();
+	}
+
+	override disconnectedCallback(): void {
+		this.unsubscribeActiveEngine?.();
+		this.disconnectConstraints();
+		super.disconnectedCallback();
 	}
 
 	@onUpdated(['config'])
 	onConfigUpdated(): void {
+		hydrateFieldRules(this);
 		this.resetStepState();
+		this.connectConstraints();
+		this.wireRuiForm();
 	}
 
-	@onUpdated(['currentStep', 'stepStates', 'isSubmitting'])
+	@onUpdated(['currentStep', 'stepStates', 'isSubmitting', 'engine', 'onSubmit'])
 	onInstanceStateUpdated(): void {
-		this.publishContext();
+		this.wireRuiForm();
+		this.publish();
+	}
+
+	private wireRuiForm(): void {
+		const ruiForm = findNearestRuiForm(this);
+		if (ruiForm && typeof (ruiForm as { onSubmit?: unknown }).onSubmit !== 'function') {
+			(ruiForm as { onSubmit?: (data: Record<string, unknown>) => void }).onSubmit = (data) =>
+				this.onSubmit?.(data);
+		}
+	}
+
+	private connectConstraints(): void {
+		this.disconnectConstraints();
+		const store = getRuiConstraintStore(this);
+		if (store) {
+			this.applyConstraints(store);
+			this.unsubscribeConstraints = store.subscribe(() => this.applyConstraints(store));
+			return;
+		}
+
+		queueMicrotask(() => {
+			if (this.unsubscribeConstraints) {
+				return;
+			}
+			const deferredStore = getRuiConstraintStore(this);
+			if (deferredStore) {
+				this.applyConstraints(deferredStore);
+				this.unsubscribeConstraints = deferredStore.subscribe(() => this.applyConstraints(deferredStore));
+			}
+		});
+	}
+
+	private disconnectConstraints(): void {
+		this.unsubscribeConstraints?.();
+		this.unsubscribeConstraints = undefined;
+	}
+
+	private applyConstraints(store: RuiConstraintStore): void {
+		if (!this.config) {
+			return;
+		}
+
+		const constrained = collectConstrainedElements(this.config);
+		if (constrained.length === 0) {
+			return;
+		}
+
+		const values = store.getValues();
+		for (const item of constrained) {
+			const { shouldShow } = evaluateConstraintLogic(item.constraints, item.isRequired, item.fieldName, values);
+
+			const selector =
+				item.id && item.id !== item.fieldName
+					? `[data-se-constraint-field="${escapeSelector(item.fieldName)}"], [data-se-constraint-field="${escapeSelector(item.id)}"]`
+					: `[data-se-constraint-field="${escapeSelector(item.fieldName)}"]`;
+
+			const targets = this.querySelectorAll(selector);
+			for (const target of targets) {
+				if (target instanceof HTMLElement) {
+					target.hidden = !shouldShow;
+				}
+			}
+		}
 	}
 
 	private resetStepState(): void {
@@ -133,6 +257,7 @@ export class FormInstanceElement extends RadiantElement {
 		return {
 			currentStep: this.currentStep,
 			totalSteps,
+			isWizard: this.resolveRecipe()?.kind === 'wizard',
 			stepStates: this.stepStates,
 			goToStep: this.goToStep,
 			goToNextStep: this.goToNextStep,
@@ -143,41 +268,53 @@ export class FormInstanceElement extends RadiantElement {
 		};
 	}
 
-	private publishContext(): void {
-		const next = this.getContextValue();
-		const previous = this.publishedContext;
-		if (
-			previous &&
-			previous.currentStep === next.currentStep &&
-			previous.totalSteps === next.totalSteps &&
-			previous.stepStates === next.stepStates &&
-			previous.isSubmitting === next.isSubmitting
-		) {
-			return;
+	private resolveRecipe(): RecipeRegistration<any, any> | undefined {
+		if (!this.engine || !this.config) {
+			return undefined;
 		}
-
-		this.publishedContext = next;
-		this.provider.setContext(next);
+		return resolveFormRecipe(this.config, this.engine);
 	}
 
-	override render(): JsxRenderable {
-		const engine = this.engine;
-		if (!engine) {
-			throw new Error(`Form '${this.config.id}' requires a FormEngine to render.`);
-		}
-		const config = this.config;
-		const recipe = resolveFormRecipe(config, engine);
+	private publish(): void {
+		this.provider.setContext(this.getContextValue());
+	}
 
-		return (
-			<ConfiguredRuiForm config={config} defaultValues={this.defaultValues} onSubmit={this.onSubmit}>
-				<RecipeRenderer config={config} recipe={recipe} instance={this.getContextValue()}>
-					{this.extras}
-				</RecipeRenderer>
-			</ConfiguredRuiForm>
-		);
+	/**
+	 * Publishes the live context facade at construction.
+	 *
+	 * @remarks
+	 * Nested consumers construct while the SSR pipeline serializes authored
+	 * children — before this host's SSR preparation publishes fresh snapshots.
+	 * Getters defer to host state so those consumers read props applied after
+	 * construction; later `publish()` calls swap in a plain snapshot that
+	 * re-notifies subscribers on state changes.
+	 */
+	private publishLiveContexts(): void {
+		const context = {} as FormInstanceContextValue;
+		Object.defineProperties(context, {
+			currentStep: { get: () => this.currentStep },
+			totalSteps: { get: () => this.config?.steps.length ?? 1 },
+			isWizard: { get: () => this.resolveRecipe()?.kind === 'wizard' },
+			stepStates: { get: () => this.stepStates },
+			goToStep: { get: () => this.goToStep },
+			goToNextStep: { get: () => this.goToNextStep },
+			goToPreviousStep: { get: () => this.goToPreviousStep },
+			markStepCompleted: { get: () => this.markStepCompleted },
+			markStepVisited: { get: () => this.markStepVisited },
+			isSubmitting: { get: () => this.isSubmitting },
+		});
+		this.provider.setContext(context);
 	}
 }
 
+/**
+ * JSX view around `<se-form-instance>`.
+ *
+ * @remarks
+ * View-owned shell: the `ConfiguredRuiForm` tree is authored as light-DOM
+ * children so SSR expands it. The element re-attaches live objects (`engine`,
+ * `onSubmit`) through `prop:` bindings, mirroring `RuiForm`'s `prop:resolver`.
+ */
 export function FormInstance({
 	config,
 	engine,
@@ -193,12 +330,18 @@ export function FormInstance({
 	isSubmitting?: boolean;
 	children?: JsxRenderable;
 }): JsxRenderable {
+	void isSubmitting;
 	return jsx('se-form-instance', {
 		'prop:config': config,
 		'prop:engine': engine,
 		'prop:defaultValues': defaultValues,
-		'prop:isSubmitting': isSubmitting,
 		'prop:onSubmit': onSubmit,
-		'prop:extras': children,
+		children: (
+			<ConfiguredRuiForm config={config} defaultValues={defaultValues} onSubmit={onSubmit}>
+				<RecipeRenderer config={config} engine={engine} recipe={resolveFormRecipe(config, engine)}>
+					{children}
+				</RecipeRenderer>
+			</ConfiguredRuiForm>
+		),
 	});
 }

@@ -1,5 +1,4 @@
 import './form-array-elements.css';
-import '@ecopages/radiant-ui/button/styles.css';
 import { customElement, onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';

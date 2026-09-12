@@ -2,10 +2,18 @@
 	"extends": "./tsconfig.json",
 	"compilerOptions": {
 		"lib": ["ESNext", "DOM", "DOM.Iterable"],
+		"baseUrl": ".",
+		"rootDir": "./src",
 		"outDir": "./dist",
 		"noEmit": false,
 		"declaration": true,
-		"emitDeclarationOnly": true
+		"emitDeclarationOnly": true,
+		"paths": {
+			"@schema-engine/forms-radiant": ["./src/index.ts"],
+			"@schema-engine/forms-radiant/*": ["./src/*"],
+			"@/registry/forms/*": ["./dist/registry-forms/*"],
+			"@/*": ["./src/*"]
+		}
 	},
 	"include": ["src"],
 	"exclude": [
@@ -16,5 +24,8 @@
 		"**/*.stories.ts",
 		"**/*.stories.tsx",
 		"**/*.play.ts"
-	]
+	],
+	"tsc-alias": {
+		"resolveFullPaths": true
+	}
 }
