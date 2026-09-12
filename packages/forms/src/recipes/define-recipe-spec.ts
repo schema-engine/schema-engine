@@ -23,8 +23,8 @@ export function assertRecipeSlotSchemas(
 	kind: RecipeKind,
 	slotSchemas: Partial<Record<RecipeSlot, z.ZodMiniType>>,
 ): void {
-	if (kind === 'single-step' && (slotSchemas.progress || slotSchemas.actions)) {
-		throw new Error("Recipes with kind 'single-step' cannot declare progress or actions slots.");
+	if (kind === 'single-step' && slotSchemas.progress) {
+		throw new Error("Recipes with kind 'single-step' cannot declare a progress slot.");
 	}
 	if (kind === 'wizard' && !slotSchemas.actions) {
 		throw new Error("Recipes with kind 'wizard' must declare an actions slot.");
@@ -34,8 +34,10 @@ export function assertRecipeSlotSchemas(
 /**
  * Declares a recipe's `$type`, kind, slot schemas, and metadata.
  *
- * Single-step recipes cannot declare `progress` or `actions`. Wizard recipes
- * must declare `actions`. Built-in specs are exported from this module.
+ * @remarks
+ * Single-step recipes cannot declare `progress`; their `actions` slot is the
+ * submit-only bar. Wizard recipes must declare `actions`. Built-in specs are
+ * exported from this module.
  */
 export function defineRecipeSpec<const TType extends string, TSchema extends z.ZodMiniType>(definition: {
 	$type: TType;

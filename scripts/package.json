@@ -1,0 +1,17 @@
+{
+	"name": "@schema-engine/scripts",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./esbuild-lib": "./esbuild-lib.ts"
+	},
+	"scripts": {
+		"build:lib": "tsc --noEmit -p tsconfig.build.json",
+		"check-types": "tsc --noEmit -p tsconfig.json"
+	},
+	"devDependencies": {
+		"esbuild": "^0.27.0",
+		"typescript": "catalog:",
+		"vitest": "^4.0.13"
+	}
+}

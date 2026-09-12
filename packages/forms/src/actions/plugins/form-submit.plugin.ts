@@ -46,10 +46,11 @@ export type FormSubmitAction = z.infer<typeof FormSubmitActionSchema>;
 export function formSubmitPlugin(
 	config: FormSubmitPluginConfig = {},
 ): BuilderActionRegistration<'submit', typeof FormSubmitActionSchema> {
-	const { request = fetch, transformData = (data) => data, onSuccess = () => {}, onError = () => {} } = config;
+	const { transformData = (data) => data, onSuccess = () => {}, onError = () => {} } = config;
 
 	const handler = async (context: BuilderActionExecutionContext<FormSubmitAction>) => {
 		const action = context.config;
+		const request = config.request ?? fetch;
 
 		try {
 			const transformedData = transformData(

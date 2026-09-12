@@ -227,7 +227,7 @@ Detailed architectural documentation is available in the [Documentation App](./a
 - **[Forms — Core Concepts](./apps/docs/src/content/docs/forms/core-concepts.mdx)**
 - **[Component Registry](./apps/docs/src/content/docs/registry/overview.mdx)**
 - **[Action System](./apps/docs/src/content/docs/actions/overview.mdx)**
-- **[Forms React — Getting Started](./apps/docs/src/content/docs/forms-react/getting-started.mdx)**
+- **[Forms React — Getting Started](./apps/docs/src/pages/docs/forms-react/getting-started/index.react.tsx)**
 
 ---
 

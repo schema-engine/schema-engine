@@ -82,6 +82,23 @@ export const DEFAULT_WIZARD_ACTION_LABELS = {
 	submitting: 'Submitting...',
 } as const;
 
+export const FormActionsConfigSchema = z.strictObject({
+	labels: z.optional(
+		z.strictObject({
+			submit: z.optional(z.string()),
+			submitAriaLabel: z.optional(z.string()),
+			submitting: z.optional(z.string()),
+		}),
+	),
+	align: z.optional(z.enum(['start', 'center', 'end'])),
+});
+
+export const DEFAULT_FORM_ACTION_LABELS = {
+	submit: 'Submit',
+	submitAriaLabel: 'Submit form',
+	submitting: 'Submitting...',
+} as const;
+
 export type CardShellConfig = z.infer<typeof CardShellConfigSchema>;
 export type HeroShellConfig = z.infer<typeof HeroShellConfigSchema>;
 export type SplitScreenShellConfig = z.infer<typeof SplitScreenShellConfigSchema>;
@@ -90,6 +107,7 @@ export type StepHeaderConfig = z.infer<typeof StepHeaderConfigSchema>;
 export type MinimalProgressConfig = z.infer<typeof MinimalProgressConfigSchema>;
 export type StepIndicatorsConfig = z.infer<typeof StepIndicatorsConfigSchema>;
 export type WizardActionsConfig = z.infer<typeof WizardActionsConfigSchema>;
+export type FormActionsConfig = z.infer<typeof FormActionsConfigSchema>;
 
 export function formatStepCounter(template: string, current: number, total: number): string {
 	return template.replaceAll('{current}', String(current)).replaceAll('{total}', String(total));

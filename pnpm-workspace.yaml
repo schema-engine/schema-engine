@@ -1,7 +1,8 @@
 packages:
-    - 'apps/*'
-    - 'packages/*'
-    - 'registry'
+    - apps/*
+    - packages/*
+    - registry
+    - scripts
 
 catalog:
-    typescript: '^5'
+    typescript: ^5.9.3

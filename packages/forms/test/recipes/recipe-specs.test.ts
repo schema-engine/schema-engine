@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { defineRecipeSpec } from '@/recipes/define-recipe-spec';
 import { cardSpec, wizardSpec, builtInRecipeSpecs } from '@/recipes/built-in-specs';
-import { StepHeaderConfigSchema, WizardActionsConfigSchema } from '@/recipes/slot-schemas';
+import { FormActionsConfigSchema, StepHeaderConfigSchema, WizardActionsConfigSchema } from '@/recipes/slot-schemas';
 import { applySlotDefaults, buildViewModel } from '@/recipes/view-model';
 
 describe('defineRecipeSpec', () => {
@@ -24,7 +24,18 @@ describe('defineRecipeSpec', () => {
 				metadata: { name: 'Invalid', description: 'Has progress' },
 				slotSchemas: { progress: WizardActionsConfigSchema },
 			}),
-		).toThrow(/progress or actions/i);
+		).toThrow(/progress slot/i);
+	});
+
+	test('allows actions on single-step recipes', () => {
+		expect(() =>
+			defineRecipeSpec({
+				$type: 'single-step-actions',
+				kind: 'single-step',
+				metadata: { name: 'Actions', description: 'Has actions' },
+				slotSchemas: { actions: FormActionsConfigSchema },
+			}),
+		).not.toThrow();
 	});
 
 	test('omits empty shell slots from the view schema', () => {
