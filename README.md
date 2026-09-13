@@ -146,13 +146,13 @@ graph TD
 
 ## 📦 Packages
 
-| Package                                                      | Version | Description                                                                                                          |
-| ------------------------------------------------------------ | ------- | -------------------------------------------------------------------------------------------------------------------- |
-| **[@schema-engine/forms](./packages/forms)**                 | `0.1.0` | Contains `createFormEngine` and `FormEngine`. Handles validation logic, constraint evaluation, and state management. |
-| **[@schema-engine/forms-react](./packages/forms-react)**     | `0.1.0` | React Context bridge, hooks, adapters, and rendering runtime. Default view recipes live in the shadcn registry.      |
-| **[@schema-engine/forms-radiant](./packages/forms-radiant)** | `0.1.0` | Radiant/JSX adapter. Binds canonical view recipes in-package; specs stay in `@schema-engine/forms/recipes`.          |
-| **[@schema-engine/actions](./packages/actions)**             | `0.1.0` | A standalone, domain-agnostic command pattern implementation for handling system events.                             |
-| **[@schema-engine/registry](./packages/registry)**           | `0.1.0` | The low-level type definitions and registry implementations that power the IoC container.                            |
+| Package                                                      | Version | Description                                                                                                                                                     |
+| ------------------------------------------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **[@schema-engine/forms](./packages/forms)**                 | `0.1.0` | Contains `createFormEngine` and `FormEngine`. Handles validation logic, constraint evaluation, and state management.                                            |
+| **[@schema-engine/forms-react](./packages/forms-react)**     | `0.1.0` | React Context bridge, hooks, adapters, full field-array operations, and rendering runtime. Default view recipes live in the shadcn registry.                    |
+| **[@schema-engine/forms-radiant](./packages/forms-radiant)** | `0.1.0` | Radiant/JSX adapter with full field-array operations and stable row IDs. Binds canonical view recipes in-package; specs stay in `@schema-engine/forms/recipes`. |
+| **[@schema-engine/actions](./packages/actions)**             | `0.1.0` | A standalone, domain-agnostic command pattern implementation for handling system events.                                                                        |
+| **[@schema-engine/registry](./packages/registry)**           | `0.1.0` | The low-level type definitions and registry implementations that power the IoC container.                                                                       |
 
 ---
 
