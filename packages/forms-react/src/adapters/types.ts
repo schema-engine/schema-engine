@@ -31,7 +31,13 @@ export interface FormFieldValue<TFieldValue = unknown> {
 export interface FieldArrayValue {
 	fields: Array<{ id: string }>;
 	append: (value: unknown) => void;
-	remove: (index: number) => void;
+	prepend: (value: unknown) => void;
+	insert: (index: number, value: unknown) => void;
+	swap: (indexA: number, indexB: number) => void;
+	move: (indexA: number, indexB: number) => void;
+	update: (index: number, value: unknown) => void;
+	replace: (value: unknown[]) => void;
+	remove: (index?: number | number[]) => void;
 }
 
 /**
