@@ -30,7 +30,13 @@ export interface FormFieldValue<TFieldValue = unknown> {
 export interface FieldArrayValue {
 	fields: Array<{ id: string }>;
 	append: (value: unknown) => void;
-	remove: (index: number) => void;
+	prepend: (value: unknown) => void;
+	insert: (index: number, value: unknown) => void;
+	swap: (indexA: number, indexB: number) => void;
+	move: (indexA: number, indexB: number) => void;
+	update: (index: number, value: unknown) => void;
+	replace: (value: unknown[]) => void;
+	remove: (index?: number | number[]) => void;
 }
 
 export interface FormProviderProps<TFormData = Record<string, unknown>> {
@@ -45,8 +51,8 @@ export interface FormProviderProps<TFormData = Record<string, unknown>> {
 export interface FormAdapter<TFormData = Record<string, unknown>> {
 	useFormContext: () => FormContextValue<TFormData>;
 	useFormField: <TFieldValue = unknown>(config: FormEngine.ElementConfig) => FormFieldValue<TFieldValue>;
-	useWatchField: <TWatchValue = unknown>(name: string | string[]) => TWatchValue;
-	useWatchForm: () => TFormData;
+	useWatchField: <TWatchValue = unknown>(name: string | string[], defaultValue?: TWatchValue) => TWatchValue;
+	useWatchForm: (defaultValues?: TFormData) => TFormData;
 	useFieldArray: (name: string) => FieldArrayValue;
 	FormProvider: (props: FormProviderProps<TFormData>) => JsxRenderable;
 }

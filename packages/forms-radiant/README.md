@@ -56,6 +56,15 @@ View-owned shell, same authoring model as radiant-ui: the `FormRenderer` / `Form
 
 - input, textarea, number, select, checkbox, switch, radio, submit-button
 
+The adapter-neutral `useFieldArray` hook exposes `fields` and the full set of
+array mutations: `append`, `prepend`, `insert`, `swap`, `move`, `update`,
+`replace`, and `remove`. Row IDs follow items through insertion, reordering,
+and removal. `update` regenerates the updated row ID; `replace` and external
+array replacement regenerate all row IDs. Reading `fields` returns current IDs.
+
+`useWatchField` accepts fallback values; when watching multiple fields, pass an
+array of defaults in the same order. Only missing (`undefined`) values use defaults.
+
 Schemas are reused from `registry/shared/forms/*.types.ts`. Wrappers live in `src/elements/` and import `@ecopages/radiant-ui` directly.
 
 ## Development
