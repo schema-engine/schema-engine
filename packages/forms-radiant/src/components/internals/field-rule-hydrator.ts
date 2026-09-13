@@ -32,21 +32,47 @@ export function reviveRules(value: string | null): FieldRules | undefined {
 	}
 }
 
-export function hydrateFieldRules(root: ParentNode): void {
-	const fields = root.querySelectorAll<HTMLElement>('rui-field[data-se-field-rules]');
-	for (const field of fields) {
-		const validationRules = field.getAttribute('data-se-validation-rules');
-		const rules = validationRules
-			? toFieldRules(JSON.parse(validationRules) as ValidationRule[])
-			: reviveRules(field.getAttribute('data-se-field-rules'));
-		if (rules) {
-			Reflect.set(field, 'rules', rules);
-			(field as { connectToForm?: () => void }).connectToForm?.();
+/**
+ * @remarks
+ * Serialized rules cannot carry validator functions. Preserve live validators
+ * when markup hydration runs again after client properties have been applied.
+ */
+export function readHydratedRules(field: HTMLElement): FieldRules | undefined {
+	const currentRules: unknown = Reflect.get(field, 'rules');
+	if (
+		currentRules &&
+		typeof currentRules === 'object' &&
+		typeof Reflect.get(currentRules, 'validate') === 'function'
+	) {
+		return undefined;
+	}
+
+	const validationRules = field.getAttribute('data-se-validation-rules');
+	if (validationRules) {
+		try {
+			return toFieldRules(JSON.parse(validationRules) as ValidationRule[]);
+		} catch {
+			return undefined;
 		}
 	}
+
+	return reviveRules(field.getAttribute('data-se-field-rules'));
 }
 
-if (typeof document !== 'undefined') {
-	hydrateFieldRules(document);
-	document.addEventListener('eco:after-swap', () => hydrateFieldRules(document));
+export function hydrateField(field: HTMLElement): void {
+	const rules = readHydratedRules(field);
+	if (!rules) {
+		return;
+	}
+	Reflect.set(field, 'rules', rules);
+	(field as { connectToForm?: () => void }).connectToForm?.();
+}
+
+export function hydrateFieldRules(root: ParentNode): void {
+	const fields = root.querySelectorAll<HTMLElement>(
+		'se-field[data-se-field-rules], se-field[data-se-validation-rules]',
+	);
+	for (const field of fields) {
+		hydrateField(field);
+	}
 }

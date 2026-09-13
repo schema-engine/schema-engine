@@ -12,7 +12,7 @@ import type {
 import type { FormConfig } from '@schema-engine/forms/schemas';
 import * as z from 'zod/mini';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { findNearestRuiForm } from '@/lib/rui-form-utils';
+import { FormController } from '@/adapters/radiant/controller';
 import { schemaFormRegistrations } from '@/registrations';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { radiantAdapter, ValidationPresets } from '@/stories/shared/form-builder';
@@ -278,9 +278,9 @@ function ActionDashboard() {
 export class ActionDemoControlsElement extends RadiantElement {
 	@onEvent({ type: 'click', selector: '[data-action="reset"]' })
 	reset(): void {
-		const form = findNearestRuiForm(this);
-		const store = form ? (Reflect.get(form, 'store') as { reset?: () => void }) : undefined;
-		store?.reset?.();
+		const demo = this.closest('.se-action-demo');
+		const ruiForm = demo?.querySelector('rui-form');
+		if (ruiForm instanceof HTMLElement) new FormController(ruiForm).reset();
 	}
 
 	override render() {

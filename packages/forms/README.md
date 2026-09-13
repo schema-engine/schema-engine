@@ -53,9 +53,9 @@ checks when `view.$type` is set.
 
 ## Who owns visual chrome
 
-| Layer                                                           | Owns                                                              |
-| --------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `@schema-engine/forms`                                          | Engine, validation, actions, recipe specs                         |
-| `@schema-engine/forms-react`                                    | React renderer, RHF adapter, headless `createReactFormEngine()`   |
-| `@schema-engine/forms-radiant`                                  | Radiant shells and blocks; `createRadiantFormEngine()` binds them |
-| Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Default field components and view recipes for the React adapter   |
+| Layer                                                           | Owns                                                                                        |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `@schema-engine/forms`                                          | Engine, validation, actions, recipe specs                                                   |
+| `@schema-engine/forms-react`                                    | React renderer, RHF adapter, field-array operations, and headless `createReactFormEngine()` |
+| `@schema-engine/forms-radiant`                                  | Radiant shells, blocks, and scoped form controllers; `createRadiantFormEngine()` binds them |
+| Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Default field components and view recipes for the React adapter                             |

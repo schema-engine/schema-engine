@@ -1,3 +1,4 @@
+import { FormController, formController } from '@/adapters/radiant/controller';
 import './form-debugger.css';
 import { customElement, onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
@@ -6,17 +7,7 @@ import { RuiBadge } from '@ecopages/radiant-ui/badge';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import type { FormConfig } from '@schema-engine/forms/schemas';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
-import { findAncestorElement, readRuiFormStore } from '@/lib/rui-form-utils';
-
-type DebuggerStore = {
-	getState: () => {
-		values: Record<string, unknown>;
-		errors: Record<string, unknown>;
-		isSubmitting: boolean;
-		isValid: boolean;
-	};
-	subscribe: (listener: () => void) => () => void;
-};
+import { findAncestorElement } from '@/lib/rui-form-utils';
 
 function findFormConfig(host: Node): FormConfig | undefined {
 	const owner = findAncestorElement(host, 'se-form-renderer', 'se-form-instance');
@@ -160,7 +151,7 @@ function DebuggerFormState({
 	formState,
 	stepStates,
 }: {
-	formState: ReturnType<DebuggerStore['getState']> | undefined;
+	formState: FormController['formState'] | undefined;
 	stepStates: FormInstanceContextValue['stepStates'] | undefined;
 }) {
 	return (
@@ -256,18 +247,12 @@ export class FormDebuggerElement extends RadiantElement {
 	@state open = false;
 	@state revision = 0;
 
+	@formController form!: FormController;
+
 	private formInstance?: FormInstanceContextValue;
 
 	protected override onConnected(): void {
 		this.open = this.defaultOpen;
-		const store = readRuiFormStore<DebuggerStore>(this, ['getState', 'subscribe']);
-		if (store) {
-			this.registerCleanupCallback(
-				store.subscribe(() => {
-					this.revision += 1;
-				}),
-			);
-		}
 	}
 
 	@onContextUpdate({ context: formInstanceContext, requestUpdate: false })
@@ -295,7 +280,7 @@ export class FormDebuggerElement extends RadiantElement {
 			return <DebuggerToggle />;
 		}
 
-		const formState = readRuiFormStore<DebuggerStore>(this, ['getState', 'subscribe'])?.getState();
+		const formState = this.form.ready ? this.form.formState : undefined;
 		const currentStep = this.formInstance?.currentStep ?? 0;
 		const stepStates = this.formInstance?.stepStates;
 		const config = this.config ?? findFormConfig(this);

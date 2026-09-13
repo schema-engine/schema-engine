@@ -8,7 +8,6 @@
 	},
 	"sideEffects": [
 		"**/*.css",
-		"./src/components/internals/field-rule-hydrator.ts",
 		"./src/components/internals/form-renderer.script.tsx",
 		"./dist/index.js",
 		"./dist/chunk-*.js"
@@ -35,7 +34,7 @@
 	"peerDependencies": {
 		"@ecopages/jsx": ">=0.3.0-rc.9",
 		"@ecopages/radiant": ">=0.3.0-rc.9",
-		"@ecopages/radiant-ui": ">=0.1.0-rc.15",
+		"@ecopages/radiant-ui": ">=0.1.0-rc.17",
 		"@ecopages/signals": ">=0.3.0-rc.9",
 		"@schema-engine/forms": "workspace:*",
 		"typescript": "^5",
@@ -48,7 +47,7 @@
 		"@babel/plugin-transform-class-properties": "^7.28.0",
 		"@ecopages/jsx": "0.3.0-rc.9",
 		"@ecopages/radiant": "0.3.0-rc.9",
-		"@ecopages/radiant-ui": "0.1.0-rc.15",
+		"@ecopages/radiant-ui": "0.1.0-rc.17",
 		"@ecopages/signals": "0.3.0-rc.9",
 		"@ecopages/storybook-radiant-vite": "0.1.0-rc.1",
 		"@ecopages/vite-plugin-radiant": "0.1.0-rc.1",

@@ -1,11 +1,12 @@
 import './form-array-elements.css';
-import { customElement, onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
+import { customElement, onEvent, prop, RadiantElement } from '@ecopages/radiant';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { FormElements } from '@/components/internals/form-elements';
 import { getFieldGridStyles } from '@/hooks/grid-styles';
 import type { ArrayElementsProps } from '@/registry/forms/inputs/form-array-elements.types';
 import { arrayItemScope } from '@schema-engine/forms';
+import { FormController } from '@/adapters/radiant/controller';
 
 function TrashIcon() {
 	return (
@@ -50,15 +51,45 @@ function PlusIcon() {
 export class SeFormArray extends RadiantElement {
 	@prop({ type: Object }) config!: ArrayElementsProps;
 
-	@state ids: number[] = [];
-	@state nextId = 0;
+	readonly form = new FormController(this);
+	private initialized = false;
+	private renderedIds: string[] = [];
+
+	private get ids(): string[] {
+		return this.form.ready ? this.form.fieldArray(this.config.name).fields.map(({ id }) => id) : [];
+	}
+
+	private emptyItem(): unknown {
+		const elements = this.config.elements;
+		if (elements.length === 1) return elements[0].defaultValue ?? '';
+		return Object.fromEntries(
+			elements.filter((element) => element.name).map((element) => [element.name, element.defaultValue ?? '']),
+		);
+	}
 
 	protected override onConnected(): void {
-		const minItems = this.config?.minItems ?? 0;
-		if (this.ids.length === 0 && minItems > 0) {
-			this.ids = Array.from({ length: minItems }, (_, index) => index);
-			this.nextId = minItems;
-		}
+		this.form.connect(() => {
+			if (!this.initialized && this.config) {
+				this.initialized = true;
+				const count = Math.max(0, (this.config.minItems ?? 0) - this.ids.length);
+				if (count)
+					this.form
+						.fieldArray(this.config.name)
+						.append(Array.from({ length: count }, () => this.emptyItem()));
+			}
+			const ids = this.ids;
+			if (ids.length !== this.renderedIds.length || ids.some((id, index) => id !== this.renderedIds[index])) {
+				this.renderedIds = ids;
+				this.requestUpdate();
+			}
+		});
+	}
+
+	override disconnectedCallback(): void {
+		this.form.disconnect();
+		this.initialized = false;
+		this.renderedIds = [];
+		super.disconnectedCallback();
 	}
 
 	@onEvent({ type: 'click', selector: '[data-action="add"]' })
@@ -67,19 +98,19 @@ export class SeFormArray extends RadiantElement {
 		if (maxItems && this.ids.length >= maxItems) {
 			return;
 		}
-		this.ids = [...this.ids, this.nextId];
-		this.nextId += 1;
+		this.form.fieldArray(this.config.name).append(this.emptyItem());
 	}
 
 	@onEvent({ type: 'click', selector: '[data-action="remove"]' })
 	onRemove(event: Event) {
 		const button = (event.target as HTMLElement).closest('[data-action="remove"]');
-		const id = Number(button?.getAttribute('data-id'));
+		const id = button?.getAttribute('data-id');
 		const minItems = this.config.minItems ?? 0;
 		if (this.ids.length <= minItems) {
 			return;
 		}
-		this.ids = this.ids.filter((itemId) => itemId !== id);
+		const index = this.ids.indexOf(id ?? '');
+		if (index >= 0) this.form.fieldArray(this.config.name).remove(index);
 	}
 
 	override render(): JsxRenderable {
@@ -99,7 +130,7 @@ export class SeFormArray extends RadiantElement {
 					<p class="se-form-array__empty">{config.emptyStateMessage || 'No items added yet'}</p>
 				) : null}
 				{this.ids.map((id, index) => {
-					const scope = arrayItemScope(config.name, index, String(id), {
+					const scope = arrayItemScope(config.name, index, id, {
 						scalar: isSingleField,
 						parentInstanceId: config.instanceId,
 					});
@@ -121,7 +152,7 @@ export class SeFormArray extends RadiantElement {
 									size="sm"
 									square
 									data-action="remove"
-									data-id={String(id)}
+									data-id={id}
 									aria-label={removeLabel}
 								>
 									<TrashIcon />

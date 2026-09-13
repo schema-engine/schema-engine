@@ -21,7 +21,7 @@
 		"@ecopages/jsx": "0.3.0-rc.9",
 		"@ecopages/postcss-processor": "0.2.0-rc.6",
 		"@ecopages/radiant": "0.3.0-rc.9",
-		"@ecopages/radiant-ui": "0.1.0-rc.15",
+		"@ecopages/radiant-ui": "0.1.0-rc.17",
 		"@ecopages/react": "0.2.0-rc.6",
 		"@ecopages/scripts-injector": "^0.1.5",
 		"@ecopages/signals": "0.3.0-rc.9",

@@ -56,6 +56,17 @@ View-owned shell, same authoring model as radiant-ui: the `FormRenderer` / `Form
 
 - input, textarea, number, select, checkbox, switch, radio, submit-button
 
+Fields and array components share Radiant UI's form store through
+`FormController`. Use it with explicit `connect` / `disconnect` lifecycle methods
+or the optional `@formController` decorator. `FormFieldElement` extends
+`RuiFieldElement` and exposes scoped form access; Radiant UI retains control
+registration, validation, and error presentation.
+
+The controller provides snapshot reads, live watches with cleanup, field bindings,
+and array mutations with stable row IDs. See the [controller API and migration
+guide](./src/adapters/radiant/controller/README.md) for examples and the replacement
+for the removed snapshot hooks.
+
 Schemas are reused from `registry/shared/forms/*.types.ts`. Wrappers live in `src/elements/` and import `@ecopages/radiant-ui` directly.
 
 ## Development

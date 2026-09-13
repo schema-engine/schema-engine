@@ -22,3 +22,15 @@ Form authors supply schema **input** (defaults stay optional). After `defineForm
 ### Proof test
 
 `packages/forms/test/lib/standard-schema-engine.test.ts` registers a native Standard Schema element, builds a FormEngine, and runs `defineForm`. Renderer packages exercise the same registration through `FormRenderer`.
+
+## Radiant form state
+
+Radiant UI's form store owns control registration, values, validation, and field
+presentation. It publishes that store on `formContext`. `@schema-engine/forms-radiant`
+exposes scoped `FormController` instances that read `formContext` from a host
+inside `rui-form`; there is no global active form store. They read
+`formContext.store` instead of a private host field. Decorators are
+optional lifecycle wiring around that controller.
+Radiant UI registration uses flat dotted field names. Controller reads, action
+context values, constraints, and submission use the engine's nested value tree.
+See [the controller contract](./packages/forms-radiant/src/adapters/radiant/controller/README.md).
