@@ -1,4 +1,5 @@
 import type { StoryContext } from 'storybook/internal/types';
+import { whenInteractive } from '@/stories/shared/storybook-ssr';
 import {
 	clickSubmit,
 	expectFieldError,
@@ -16,7 +17,7 @@ function readControlValue(input: HTMLElement): string {
 }
 
 export function createDefaultFieldPlay(label: string | RegExp, value: string, expectedValue: string | RegExp = value) {
-	return async ({ canvasElement, step }: StoryContext) => {
+	return whenInteractive(async ({ canvasElement, step }: StoryContext) => {
 		await step('Field is visible and accepts input', async () => {
 			const input = getFieldControl(canvasElement, label);
 			if (!input.isConnected) {
@@ -32,7 +33,7 @@ export function createDefaultFieldPlay(label: string | RegExp, value: string, ex
 				throw new Error(`Expected value "${expectedValue}", got "${nextValue}"`);
 			}
 		});
-	};
+	});
 }
 
 export function createValidationFieldPlay(
@@ -43,7 +44,7 @@ export function createValidationFieldPlay(
 	fillField: (canvasElement: HTMLElement) => Promise<void> = (canvasElement) =>
 		playFieldFocusAndType(canvasElement, fieldLabel, fieldValue),
 ) {
-	return async ({ canvasElement, step }: StoryContext) => {
+	return whenInteractive(async ({ canvasElement, step }: StoryContext) => {
 		await step('Empty submit shows validation error', async () => {
 			await clickSubmit(canvasElement, submitLabel);
 			await expectFieldError(canvasElement, errorMessage);
@@ -54,7 +55,7 @@ export function createValidationFieldPlay(
 			await clickSubmit(canvasElement, submitLabel);
 			await expectNoFieldError(canvasElement, errorMessage);
 		});
-	};
+	});
 }
 
 export { playCheckboxByLabel, playOtpValue, playSelectOption, playSliderToValue };

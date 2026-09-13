@@ -3,6 +3,8 @@ import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story';
 import { expect, within } from 'storybook/test';
 import { clickSubmit } from '@/stories/shared/play';
 
+import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
+
 const meta = {
 	...formRendererMeta,
 	args: {
@@ -23,6 +25,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
 	play: async ({ canvasElement, step }) => {
+		if (isStaticSsrPreview(canvasElement)) return;
 		await step('OTP field is visible', async () => {
 			await expect(within(canvasElement).getByText(/verification code/i)).toBeInTheDocument();
 		});
@@ -44,6 +47,7 @@ export const WithValidation: Story = {
 		]),
 	},
 	play: async ({ canvasElement, step }) => {
+		if (isStaticSsrPreview(canvasElement)) return;
 		await step('Submit triggers validation flow', async () => {
 			await clickSubmit(canvasElement, /verify/i);
 			await expect(within(canvasElement).getByText(/verification code/i)).toBeInTheDocument();

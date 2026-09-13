@@ -3,6 +3,8 @@ import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story';
 import { expect, userEvent } from 'storybook/test';
 import { getFieldControl } from '@/stories/shared/play';
 
+import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
+
 const meta = {
 	...formRendererMeta,
 	args: {
@@ -22,6 +24,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
 	play: async ({ canvasElement, step }) => {
+		if (isStaticSsrPreview(canvasElement)) return;
 		await step('Control is visible', async () => {
 			const control = getFieldControl(canvasElement, /enable notifications/i);
 			await expect(control).toBeInTheDocument();

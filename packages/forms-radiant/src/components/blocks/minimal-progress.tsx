@@ -1,22 +1,31 @@
 import { contextSelector } from '@ecopages/radiant/context';
-import { customElement, RadiantElement } from '@ecopages/radiant';
-import type { JsxRenderable } from '@ecopages/jsx';
-import { getSlotConfig, type MinimalProgressConfig, type ViewModel } from '@schema-engine/forms/recipes';
-import { viewContext } from '@/contexts/view-context';
+import { customElement, prop, RadiantElement } from '@ecopages/radiant';
+import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import { getSlotConfig, type MinimalProgressConfig } from '@schema-engine/forms/recipes';
+import type { NormalizedFormConfig } from '@schema-engine/forms';
+import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
+import { deriveInitialInstance } from '@/lib/instance-view';
 
 @customElement('se-minimal-progress')
 export class MinimalProgressElement extends RadiantElement {
-	@contextSelector({ context: viewContext }) view!: ViewModel;
+	@prop({ type: Object }) config?: NormalizedFormConfig;
+	@prop({ type: Object }) viewConfig?: Record<string, unknown>;
+
+	@contextSelector({ context: formInstanceContext })
+	instance?: FormInstanceContextValue;
 
 	override render(): JsxRenderable {
-		if (!this.view) return null;
-		const config = getSlotConfig<MinimalProgressConfig>(this.view.viewConfig, 'progress');
-		if (config.showPercentage === false) return null;
-		const percent = Math.round(((this.view.activeStep.index + 1) / this.view.steps.length) * 100);
+		const config = this.config;
+		if (!config) return null;
+		const instance = this.instance ?? deriveInitialInstance(config);
+
+		const progressConfig = getSlotConfig<MinimalProgressConfig>(this.viewConfig ?? {}, 'progress');
+		if (progressConfig.showPercentage === false) return null;
+		const percent = Math.round(((instance.currentStep + 1) / instance.totalSteps) * 100);
 		return (
-			<nav aria-label={config.labels?.regionAriaLabel ?? 'Form progress'} class="se-minimal-progress">
+			<nav aria-label={progressConfig.labels?.regionAriaLabel ?? 'Form progress'} class="se-minimal-progress">
 				<div class="se-minimal-progress__labels">
-					<span>{config.labels?.progress ?? 'Progress'}</span>
+					<span>{progressConfig.labels?.progress ?? 'Progress'}</span>
 					<span>{percent}%</span>
 				</div>
 				<div class="se-minimal-progress__track" aria-hidden="true">
@@ -27,6 +36,12 @@ export class MinimalProgressElement extends RadiantElement {
 	}
 }
 
-export function MinimalProgressBlock(): JsxRenderable {
-	return <se-minimal-progress />;
+export function MinimalProgressBlock(context?: {
+	config?: NormalizedFormConfig;
+	viewConfig?: Record<string, unknown>;
+}): JsxRenderable {
+	return jsx('se-minimal-progress', {
+		'prop:config': context?.config,
+		'prop:viewConfig': context?.viewConfig ?? {},
+	});
 }

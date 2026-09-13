@@ -37,6 +37,7 @@
 		"@schema-engine/registry": "workspace:*"
 	},
 	"devDependencies": {
+		"@schema-engine/scripts": "workspace:*",
 		"esbuild": "^0.27.0",
 		"tsc-alias": "^1.8.16",
 		"vitest": "^4.0.13",

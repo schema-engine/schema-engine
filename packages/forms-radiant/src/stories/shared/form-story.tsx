@@ -1,19 +1,13 @@
 import { FormRenderer, type FormRendererProps } from '@/components/internals/form-renderer';
+import { FormRendererElement } from '@/components/internals/form-renderer.script';
 import { getEngine, radiantAdapter } from './form-builder';
-import { resolveStoryAdapter, resolveStoryEngine } from './live-form-runtime';
 import type { FormConfig } from '@schema-engine/forms/schemas';
 import type { Meta } from '@ecopages/storybook-radiant-vite';
 
 export const storyEngine = getEngine();
 
 export function renderFormStory(args: FormRendererProps) {
-	return (
-		<FormRenderer
-			{...args}
-			engine={resolveStoryEngine(args.engine, storyEngine)}
-			adapter={resolveStoryAdapter(args.adapter, radiantAdapter)}
-		/>
-	);
+	return <FormRenderer {...args} engine={args.engine ?? storyEngine} adapter={args.adapter ?? radiantAdapter} />;
 }
 
 export function fieldFormConfig(
@@ -36,13 +30,13 @@ export const formRendererMeta = {
 	args: {
 		className: 'se-form-story--narrow',
 	},
+	argTypes: {
+		engine: { table: { disable: true } },
+		adapter: { table: { disable: true } },
+		onSubmit: { table: { disable: true } },
+	},
 	parameters: {
 		layout: 'padded',
-		// No `element` / `ssrModule`: FormRendererElement is not a stamped `.script` host,
-		// and engine/adapter cannot hydrate through HTML. The CSF stamp falls back to
-		// JSX story SSR so hydrate can re-apply live args.
-		radiant: {
-			renderMode: 'client',
-		},
+		radiant: { element: FormRendererElement },
 	},
 } satisfies Meta<typeof FormRenderer>;

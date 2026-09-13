@@ -8,7 +8,8 @@ se-view-provider,
 se-step-header,
 se-minimal-progress,
 se-step-indicators,
-se-wizard-actions {
+se-wizard-actions,
+se-form-actions {
 	display: block;
 	width: 100%;
 }
@@ -18,12 +19,15 @@ se-drop-zone,
 se-input-otp,
 se-masked-input,
 se-phone-input,
-se-submission-alert {
+se-submission-alert,
+.se-form-constraint,
+se-form-constraint {
 	display: block;
 }
 
-se-form-element {
-	display: contents;
+.se-form-constraint[hidden],
+se-form-constraint[hidden] {
+	display: none !important;
 }
 
 se-split-screen-side {

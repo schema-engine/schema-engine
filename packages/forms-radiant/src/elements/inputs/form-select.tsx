@@ -1,5 +1,3 @@
-import '@ecopages/radiant-ui/listbox/styles.css';
-import '@ecopages/radiant-ui/select/styles.css';
 import {
 	RuiListbox,
 	RuiSelect,
@@ -10,7 +8,6 @@ import {
 	RuiSelectTrigger,
 	RuiSelectValue,
 } from '@ecopages/radiant-ui/select';
-import '@ecopages/radiant-ui/tag-group/styles.css';
 import { RuiTagGroup } from '@ecopages/radiant-ui/tag-group';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
@@ -51,6 +48,7 @@ export function FormSelect({
 				placeholder={config.placeholder}
 				disabled={config.disabled}
 				selectionMode={selectionMode}
+				{...(config.defaultValue === undefined ? {} : { value: config.defaultValue })}
 				on:change={(event: Event) => {
 					const detail = (event as CustomEvent<{ value: string }>).detail;
 					propsOnChange?.(parseChoiceValue(detail?.value ?? '', isMultiple));

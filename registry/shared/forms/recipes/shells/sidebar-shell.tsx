@@ -1,3 +1,4 @@
+/** @jsxImportSource react */
 import { Separator } from '@/components/ui/separator';
 import { useIsMobile } from '@schema-engine/forms-react/hooks';
 import { getSlotConfig, type SidebarShellConfig } from '@schema-engine/forms/recipes';

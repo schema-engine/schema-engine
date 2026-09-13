@@ -17,7 +17,7 @@ export function findAncestorElement(host: Node | null, ...localNames: string[]):
 		if (current instanceof HTMLElement && localNames.includes(current.localName)) {
 			return current;
 		}
-		if (current instanceof ShadowRoot) {
+		if (typeof ShadowRoot !== 'undefined' && current instanceof ShadowRoot) {
 			current = current.host;
 			continue;
 		}
@@ -47,9 +47,9 @@ export function findNearestRuiForm(host: HTMLElement | null): HTMLElement | null
 		return ancestor;
 	}
 
-	const root = host.getRootNode();
-	if (root instanceof Document || root instanceof DocumentFragment || root instanceof Element) {
-		return querySelectorDeep(root, 'rui-form') as HTMLElement | null;
+	const root = host.getRootNode?.() ?? host.ownerDocument;
+	if (root && typeof (root as ParentNode).querySelector === 'function') {
+		return querySelectorDeep(root as ParentNode, 'rui-form') as HTMLElement | null;
 	}
 
 	return null;
@@ -85,6 +85,15 @@ export function readRuiFormStore<T extends object>(host: HTMLElement | null, met
 
 export function getRuiFormStore(host: HTMLElement | null): RuiFormStore | null {
 	return readRuiFormStore<RuiFormStore>(host, ['validateField', 'markTouched']);
+}
+
+export type RuiConstraintStore = {
+	getValues: () => Record<string, unknown>;
+	subscribe: (listener: () => void) => () => void;
+};
+
+export function getRuiConstraintStore(host: HTMLElement | null): RuiConstraintStore | null {
+	return readRuiFormStore<RuiConstraintStore>(host, ['getValues', 'subscribe']);
 }
 
 export function submitNativeForm(form: {

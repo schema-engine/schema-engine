@@ -1,5 +1,3 @@
-import '@ecopages/radiant-ui/checkbox/styles.css';
-import '@ecopages/radiant-ui/checkbox-group/styles.css';
 import { RuiCheckboxGroup } from '@ecopages/radiant-ui/checkbox-group';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
@@ -38,6 +36,7 @@ export function FormCheckboxGroup({
 				orientation={config.orientation}
 				disabled={config.disabled}
 				options={options}
+				value={config.defaultValue}
 				on:change={(event: Event) => {
 					const detail = (event as CustomEvent<{ value: string }>).detail;
 					propsOnChange?.(parseChoiceValue(detail?.value ?? '', true) as string[]);

@@ -7,3 +7,4 @@ dist
 src/public/llms.txt
 src/public/llms-content
 src/public/docs-llm
+src/components/ui

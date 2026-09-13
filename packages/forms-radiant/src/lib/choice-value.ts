@@ -4,10 +4,23 @@ export function serializeChoiceValue(value: unknown): string | undefined {
 	}
 
 	if (Array.isArray(value)) {
-		return value.map(String).filter(Boolean).join(',') || undefined;
+		return (
+			value
+				.map((item) =>
+					typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean'
+						? String(item)
+						: '',
+				)
+				.filter(Boolean)
+				.join(',') || undefined
+		);
 	}
 
-	return String(value);
+	if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+		return String(value);
+	}
+
+	return undefined;
 }
 
 export function parseChoiceValue(value: string, multiple: boolean): string | string[] {

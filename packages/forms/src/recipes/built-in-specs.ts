@@ -1,6 +1,7 @@
 import { defineRecipeSpec } from './define-recipe-spec';
 import {
 	CardShellConfigSchema,
+	FormActionsConfigSchema,
 	HeroShellConfigSchema,
 	MinimalProgressConfigSchema,
 	SplitScreenShellConfigSchema,
@@ -18,7 +19,7 @@ const WIZARD_PROGRESS_HEADER = { showStepCounter: true, counterPlacement: 'befor
 export const cardSpec = defineRecipeSpec({
 	$type: 'card',
 	kind: 'single-step',
-	slotSchemas: { shell: CardShellConfigSchema, header: StepHeaderConfigSchema },
+	slotSchemas: { shell: CardShellConfigSchema, header: StepHeaderConfigSchema, actions: FormActionsConfigSchema },
 	slotDefaults: { header: CENTERED_HEADER },
 	metadata: { name: 'Card', description: 'Single-step form in a centered card shell.', category: 'layout' },
 });
@@ -26,14 +27,14 @@ export const cardSpec = defineRecipeSpec({
 export const splitScreenSpec = defineRecipeSpec({
 	$type: 'split-screen',
 	kind: 'single-step',
-	slotSchemas: { shell: SplitScreenShellConfigSchema },
+	slotSchemas: { shell: SplitScreenShellConfigSchema, actions: FormActionsConfigSchema },
 	metadata: { name: 'Split screen', description: 'Single-step form with a side panel.', category: 'layout' },
 });
 
 export const heroBackgroundSpec = defineRecipeSpec({
 	$type: 'hero-background',
 	kind: 'single-step',
-	slotSchemas: { shell: HeroShellConfigSchema, header: StepHeaderConfigSchema },
+	slotSchemas: { shell: HeroShellConfigSchema, header: StepHeaderConfigSchema, actions: FormActionsConfigSchema },
 	slotDefaults: { header: HERO_HEADER },
 	metadata: {
 		name: 'Hero background',
@@ -148,12 +149,18 @@ export interface BuiltInRecipeRegistry {
 		$type: 'card';
 		shell?: import('./slot-schemas').CardShellConfig;
 		header?: import('./slot-schemas').StepHeaderConfig;
+		actions?: import('./slot-schemas').FormActionsConfig;
 	};
-	'split-screen': { $type: 'split-screen'; shell?: import('./slot-schemas').SplitScreenShellConfig };
+	'split-screen': {
+		$type: 'split-screen';
+		shell?: import('./slot-schemas').SplitScreenShellConfig;
+		actions?: import('./slot-schemas').FormActionsConfig;
+	};
 	'hero-background': {
 		$type: 'hero-background';
 		shell?: import('./slot-schemas').HeroShellConfig;
 		header?: import('./slot-schemas').StepHeaderConfig;
+		actions?: import('./slot-schemas').FormActionsConfig;
 	};
 	'bare-controls': { $type: 'bare-controls'; actions?: import('./slot-schemas').WizardActionsConfig };
 	'card-wizard': {

@@ -3,6 +3,8 @@ import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story';
 import { expect, userEvent, within } from 'storybook/test';
 import { clickSubmit, expectFieldError, expectNoFieldError, playFieldFocusAndType } from '@/stories/shared/play';
 
+import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
+
 const emergencyContactsConfig = fieldFormConfig(
 	'emergency-contacts',
 	'Emergency contacts',
@@ -67,6 +69,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
 	play: async ({ canvasElement, step }) => {
+		if (isStaticSsrPreview(canvasElement)) return;
 		await step('Array starts with one contact row', async () => {
 			await expect(within(canvasElement).getByText(/emergency contacts/i)).toBeInTheDocument();
 			await expect(within(canvasElement).getByLabelText(/full name/i)).toBeInTheDocument();
@@ -157,6 +160,7 @@ export const WithValidation: Story = {
 		),
 	},
 	play: async ({ canvasElement, step }) => {
+		if (isStaticSsrPreview(canvasElement)) return;
 		await step('Empty submit shows nested field errors', async () => {
 			await clickSubmit(canvasElement, /submit references/i);
 			await expectFieldError(canvasElement, /name is required/i);

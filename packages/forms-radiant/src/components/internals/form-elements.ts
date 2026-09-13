@@ -6,10 +6,12 @@ import {
 	composeFieldName,
 	type NormalizedElementConfig,
 } from '@schema-engine/forms';
+import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { FormElement } from './field-renderer';
 
 export interface FormElementsProps {
 	elements: ReadonlyArray<NormalizedElementConfig>;
+	engine?: FormEngine;
 	className?: string;
 	style?: Record<string, string | number | undefined>;
 	namePrefix?: string;
@@ -19,6 +21,7 @@ export interface FormElementsProps {
 
 export function FormElements({
 	elements,
+	engine,
 	className,
 	style,
 	namePrefix,
@@ -31,6 +34,7 @@ export function FormElements({
 		jsx(FormElement, {
 			key: composeElementKey(element, index, scope),
 			config: element,
+			engine,
 			name: composeFieldName(element, scope),
 			id: composeFieldId(element, scope),
 			instanceId,

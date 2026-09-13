@@ -1,7 +1,7 @@
 export { FormEngineProvider, FormEngineProviderElement } from './form-engine-provider';
 export { formEngineContext, type FormEngineContextValue } from './provider';
 export { FormRenderer, FormRendererElement } from './internals/form-renderer';
-export { FormElement, FormElementHost } from './internals/field-renderer';
+export { FormElement } from './internals/field-renderer';
 export { FormElements } from './internals/form-elements';
 export type { FormElementsProps } from './internals/form-elements';
 export { FormInstance, FormInstanceElement } from './form-instance';

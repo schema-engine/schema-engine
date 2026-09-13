@@ -1,0 +1,112 @@
+# View recipes
+
+Recipes compose a **shell** with optional **header**, **progress**, and **actions** blocks. Select one with form-level `view.$type`. `@schema-engine/forms-react` is headless: the factory does not bind default recipes. `FormRenderer` still lives in the package.
+
+| Layer                                          | Owns                                                                 |
+| ---------------------------------------------- | -------------------------------------------------------------------- |
+| `@schema-engine/forms/recipes`                 | Specs, kinds, slot schemas, `defineFormRecipe`                       |
+| `schema-engine-form-recipes` (shadcn registry) | React shells, blocks, `schemaFormRecipeRegistrations`                |
+| `@schema-engine/forms-radiant`                 | Radiant shells and blocks, auto-bound by `createRadiantFormEngine()` |
+
+## Default registry recipes
+
+Install the default source owned by your app:
+
+```bash
+pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-engine-form-recipes
+```
+
+Then add its generated recipe barrel when you construct the engine:
+
+```ts
+import { createReactFormEngine } from '@schema-engine/forms-react';
+import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
+
+const engine = createReactFormEngine({ elements: schemaFormRegistrations, recipes: schemaFormRecipeRegistrations });
+```
+
+| `$type`               | Kind        | Description                        |
+| --------------------- | ----------- | ---------------------------------- |
+| `card`                | single-step | Centered card shell                |
+| `split-screen`        | single-step | Side panel plus form               |
+| `hero-background`     | single-step | Hero image or video                |
+| `bare-controls`       | wizard      | Previous / next / submit only      |
+| `card-wizard`         | wizard      | Card shell with progress           |
+| `wizard`              | wizard      | Horizontal step indicators         |
+| `sidebar-wizard`      | wizard      | Step indicators in a sidebar       |
+| `hero-wizard`         | wizard      | Wizard over a hero background      |
+| `split-screen-wizard` | wizard      | Wizard with a marketing side panel |
+
+Slot config is optional. The recipe fixes block identity; `view` only passes options such as `shell`, `header`, `progress`, and `actions`.
+
+## Single-step
+
+```typescript
+const formConfig: FormConfig = {
+	id: 'contact',
+	view: {
+		$type: 'card',
+		shell: { maxWidth: 'md', padding: 'lg', shadowSize: 'md' },
+	},
+	steps: [{ id: 'step-1', title: 'Contact', elements: [/* ... */] }],
+};
+```
+
+## Multi-step
+
+Wizard recipes require **at least two steps**. Set `view.$type` to a wizard recipe such as `wizard` or `card-wizard`.
+
+The interactive example is available on the documentation page.
+
+```typescript
+const formConfig: FormConfig = {
+	id: 'onboarding',
+	view: { $type: 'wizard' },
+	steps: [
+		{ id: 'account', title: 'Account', elements: [/* ... */] },
+		{ id: 'profile', title: 'Profile', elements: [/* ... */] },
+	],
+};
+```
+
+If you omit `view.$type` on a multi-step form, the engine uses the registered `bare-controls` recipe. If that recipe is not registered, fields render without chrome and the renderer warns once per engine.
+
+See [Registration Flow](/docs/examples/registration-flow) for a full wizard configuration.
+
+## Copy the default source
+
+Canonical source is `registry/shared/forms/recipes`. After `shadcn add`, files land under `@/components/schema-engine/forms/recipes`. Copy `recipe-registry.ts` once, then the files for each recipe you want. Each tab below has a Copy button.
+
+Recipe source: https://github.com/andeeplus/schema-engine/tree/main/registry/shared/forms/recipes
+
+## Custom recipes
+
+```typescript
+import * as z from 'zod/mini';
+import { createReactFormEngine } from '@schema-engine/forms-react';
+import { defineFormRecipe, defineRecipeSpec } from '@schema-engine/forms/recipes';
+import type { FormShellProps } from '@schema-engine/forms-react/primitives';
+
+function BrandShell({ slots }: FormShellProps) {
+	return (
+		<div>
+			{slots.header}
+			{slots.content}
+			{slots.actions}
+		</div>
+	);
+}
+
+const BrandRecipe = defineFormRecipe(
+	defineRecipeSpec({
+		$type: 'brand',
+		kind: 'single-step',
+		slotSchemas: { shell: z.strictObject({ accent: z.optional(z.string()) }) },
+		metadata: { name: 'Brand', description: 'Branded form shell' },
+	}),
+	{ shell: BrandShell, slots: {} },
+);
+
+const engine = createReactFormEngine({ recipes: [BrandRecipe] });
+```

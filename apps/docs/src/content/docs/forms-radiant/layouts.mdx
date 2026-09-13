@@ -1,0 +1,34 @@
+---
+title: 'Layouts'
+description: 'Radiant shells and wizard layouts for live form configurations.'
+group: Forms Radiant
+order: 3
+---
+
+import { FormRendererPreview } from '@/components/form-renderer';
+import { registrationDemoConfig } from '@/content/docs/examples/registration-flow.config';
+import { surveyDemoConfig } from '@/content/docs/examples/survey-form.config';
+
+export const config = {
+	dependencies: { components: [FormRendererPreview] },
+};
+
+# Radiant layouts
+
+The Radiant adapter ships its own shells and wizard blocks. These live
+previews use the same `FormConfig` JSON as the React adapter while rendering
+with Ecopages and Radiant UI elements.
+
+## Wizard shell
+
+The registration demo declares its form inline and renders it with the
+canonical Radiant wizard shell and step navigation.
+
+<FormRendererPreview config={registrationDemoConfig} />
+
+## Survey shell
+
+The survey demo shows the Radiant field controls, including its select and
+radio group composition.
+
+<FormRendererPreview config={surveyDemoConfig} />

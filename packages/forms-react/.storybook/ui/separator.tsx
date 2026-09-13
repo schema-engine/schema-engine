@@ -1,3 +1,4 @@
+/** @jsxImportSource react */
 'use client';
 
 import { Separator as SeparatorPrimitive } from '@base-ui/react/separator';

@@ -1,7 +1,6 @@
 import { eco } from '@ecopages/core';
 import type { JsxRenderable } from '@ecopages/jsx';
 import type { CopyForLlmProps } from './copy-for-llm.script';
-import './copy-for-llm.script';
 
 export type { CopyForLlmProps };
 

@@ -1,5 +1,4 @@
 import './form-masked-input.css';
-import '@ecopages/radiant-ui/input/styles.css';
 import { customElement, onUpdated, prop, query, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { isFieldRequired } from '@schema-engine/forms/schemas';

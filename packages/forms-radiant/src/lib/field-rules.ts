@@ -4,6 +4,21 @@ import type { ValidationRule } from '@schema-engine/forms/schemas';
 import { createZodSchemaFromRules, getValidationRulesForElement } from '@schema-engine/forms/schemas/validation/utils';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const BASE64_PATTERN = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
+const HEX_PATTERN = /^[0-9A-Fa-f]*$/;
+
+const NATIVE_RUI_RULES = new Set([
+	'required',
+	'minLength',
+	'maxLength',
+	'min',
+	'max',
+	'pattern',
+	'email',
+	'base64',
+	'hex',
+	'minItems',
+]);
 
 function numericRule(value: number, message?: string) {
 	return message ? { value, message } : value;
@@ -43,6 +58,12 @@ export function toFieldRules(rules?: ReadonlyArray<ValidationRule>, fieldType?: 
 					message: rule.message ?? 'Invalid email',
 				};
 				break;
+			case 'base64':
+				fieldRules.pattern = { value: BASE64_PATTERN, message: rule.message ?? 'Invalid Base64' };
+				break;
+			case 'hex':
+				fieldRules.pattern = { value: HEX_PATTERN, message: rule.message ?? 'Invalid hexadecimal value' };
+				break;
 			case 'phone': {
 				const schema = createZodSchemaFromRules([rule]);
 				fieldRules.validate = async (value) => {
@@ -59,6 +80,13 @@ export function toFieldRules(rules?: ReadonlyArray<ValidationRule>, fieldType?: 
 			default:
 				break;
 		}
+	}
+
+	if (resolved.some((rule) => !NATIVE_RUI_RULES.has(rule.type))) {
+		fieldRules.validate = async (value) => {
+			const result = await z.safeParseAsync(createZodSchemaFromRules(resolved), value);
+			return result.success || result.error.issues[0]?.message || 'Validation failed';
+		};
 	}
 
 	return fieldRules;

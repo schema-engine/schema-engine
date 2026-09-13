@@ -2,15 +2,16 @@ import type { JsxRenderable } from '@ecopages/jsx';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
+import type { NormalizedFormConfig } from '@schema-engine/forms';
 import {
 	getSlotConfig,
 	type CardShellConfig,
 	type HeroShellConfig,
 	type SidebarShellConfig,
 	type SplitScreenShellConfig,
-	type ViewModel,
 } from '@schema-engine/forms/recipes';
-import { viewContext } from '@/contexts/view-context';
+import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
+import { deriveFormMeta, deriveInitialInstance } from '@/lib/instance-view';
 import type { FormShellProps } from '@/recipes/types';
 import './card-shell.css';
 import './hero-shell.css';
@@ -86,7 +87,7 @@ export function HeroShell({ slots, viewConfig }: FormShellProps): JsxRenderable 
 	);
 }
 
-export function SplitScreenShell({ slots, viewConfig }: FormShellProps): JsxRenderable {
+export function SplitScreenShell({ slots, viewConfig, config }: FormShellProps): JsxRenderable {
 	const {
 		sideContent,
 		sidePlacement = 'left',
@@ -98,6 +99,7 @@ export function SplitScreenShell({ slots, viewConfig }: FormShellProps): JsxRend
 			{jsx('se-split-screen-side', {
 				class: `split-screen-shell__side split-screen-shell__side--${sideWidth}${sidePlacement === 'right' ? ' split-screen-shell__side--right' : ''}`,
 				'prop:sideContent': sideContent ?? '',
+				'prop:config': config,
 			})}
 			<main class={`split-screen-shell__main split-screen-shell__main--${contentAlignment}`}>
 				{slots.header}
@@ -112,11 +114,18 @@ export function SplitScreenShell({ slots, viewConfig }: FormShellProps): JsxRend
 @customElement('se-split-screen-side')
 export class SplitScreenSideElement extends RadiantElement {
 	@prop({ type: String }) sideContent = '';
-	@contextSelector({ context: viewContext }) view!: ViewModel;
+	@prop({ type: Object }) config?: NormalizedFormConfig;
+
+	@contextSelector({ context: formInstanceContext })
+	instance?: FormInstanceContextValue;
 
 	override render(): JsxRenderable {
-		if (!this.view) return null;
-		const title = this.view.form.title || this.view.activeStep.title;
+		const config = this.config;
+		if (!config) return <slot />;
+		const instance = this.instance ?? deriveInitialInstance(config);
+		const step = config.steps[instance.currentStep] ?? config.steps[0];
+		const form = deriveFormMeta(config, instance);
+		const title = form.title || step?.title;
 		const sideContent = this.sideContent;
 		if (!title && !sideContent) return null;
 		return (

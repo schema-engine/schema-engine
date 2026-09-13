@@ -1,4 +1,3 @@
-import '@ecopages/radiant-ui/number-field/styles.css';
 import {
 	RuiNumberField,
 	RuiNumberFieldDecrementButton,

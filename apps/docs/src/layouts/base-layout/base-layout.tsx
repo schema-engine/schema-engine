@@ -5,7 +5,7 @@ import { RuiChip } from '@ecopages/radiant-ui/chip';
 import { Logo } from '@/components/logo/logo';
 import { GITHUB_MARK_PATH } from '@/components/github-mark';
 import { ThemeToggle } from '@/components/theme-toggle/theme-toggle';
-import rootJson from '../../../../../packages/forms/package.json';
+import { schemaEngineVersion } from '@/lib/schema-engine-version';
 
 export type BaseLayoutProps = {
 	children: JsxRenderable;
@@ -29,7 +29,7 @@ export const BaseLayout = eco.component<BaseLayoutProps, JsxRenderable>({
 							<div class="site-header__start">
 								<Logo href="/" target="_self" title="Schema Engine" />
 								<RuiChip variant="default" class="max-md:hidden">
-									{rootJson.version}
+									{schemaEngineVersion}
 								</RuiChip>
 							</div>
 							<nav class="site-header__nav" aria-label="Site">

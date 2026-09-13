@@ -1,6 +1,7 @@
 /* oxlint-disable import/no-unassigned-import -- ambient module augmentation */
 import '@ecopages/core/declarations';
 import '@ecopages/core/env';
+import '@ecopages/react/declarations';
 /* oxlint-enable import/no-unassigned-import */
 
 declare module '*.css';

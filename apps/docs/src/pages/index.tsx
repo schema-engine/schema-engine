@@ -12,8 +12,8 @@ import {
 } from '@ecopages/radiant-ui/feed';
 import { RuiHeading, RuiHeadingEyebrow, RuiHeadingTitle } from '@ecopages/radiant-ui/heading';
 import { BaseLayout } from '@/layouts/base-layout';
-import { FormRendererIsland } from '@/components/form-renderer-island';
-import { contactFormConfigExample } from '@/homepage/examples';
+import { FormRendererPreview } from '@/components/form-renderer';
+import { contactFormConfig, contactFormConfigExample } from '@/homepage/examples';
 
 type HomeFeedArticleData = {
 	href: string;
@@ -382,7 +382,7 @@ const HomeDemo = () => (
 				</figure>
 			</PreviewChrome>
 			<PreviewChrome label="Live Preview" traffic="preview">
-				<FormRendererIsland preview="contact" />
+				<FormRendererPreview config={contactFormConfig} />
 			</PreviewChrome>
 		</div>
 	</section>
@@ -440,7 +440,7 @@ const HomePage = () => (
 export default eco.page({
 	layout: BaseLayout,
 	dependencies: {
-		components: [FormRendererIsland],
+		components: [FormRendererPreview],
 		stylesheets: ['./index.css'],
 	},
 	metadata: () => ({

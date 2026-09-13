@@ -75,7 +75,7 @@ describe('GTMPlugin', () => {
 
 		mockDataLayer.length = 0;
 
-		GTMTracker.push = (event: string, data: Record<string, any> = {}) => {
+		GTMTracker.push = (event: string, data?: Record<string, any>) => {
 			mockDataLayer.push({
 				event,
 				...data,
@@ -586,7 +586,7 @@ describe('GTMPlugin', () => {
 			globalThis.window = undefined as any;
 
 			// Mock GTMTracker for SSR
-			GTMTracker.push = (event: string, data: Record<string, any> = {}) => {
+			GTMTracker.push = (event: string, data?: Record<string, any>) => {
 				console.log('[GTM] Server-side event (not sent):', event, data);
 			};
 
@@ -613,7 +613,7 @@ describe('GTMPlugin', () => {
 			const originalPush = GTMTracker.push.bind(GTMTracker);
 			let pushCalled = false;
 
-			GTMTracker.push = (event: string, data: Record<string, any> = {}) => {
+			GTMTracker.push = (event: string, data?: Record<string, any>) => {
 				pushCalled = true;
 				if (!(globalThis.window as any).dataLayer) {
 					(globalThis.window as any).dataLayer = [];

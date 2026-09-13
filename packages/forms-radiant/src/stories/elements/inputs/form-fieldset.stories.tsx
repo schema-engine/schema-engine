@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
 import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story';
 import { expect, within } from 'storybook/test';
 
+import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
+
 const meta = {
 	...formRendererMeta,
 	args: {
@@ -37,6 +39,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
 	play: async ({ canvasElement, step }) => {
+		if (isStaticSsrPreview(canvasElement)) return;
 		await step('Nested fieldset fields render', async () => {
 			await expect(within(canvasElement).getByLabelText(/street/i)).toBeInTheDocument();
 			await expect(within(canvasElement).getByLabelText(/city/i)).toBeInTheDocument();

@@ -16,6 +16,7 @@
       "files": [
         "registrations/card.ts",
         "blocks/step-header.tsx",
+        "blocks/form-actions.tsx",
         "shells/card-shell.tsx"
       ]
     },
@@ -36,6 +37,7 @@
       "files": [
         "registrations/hero-background.ts",
         "blocks/step-header.tsx",
+        "blocks/form-actions.tsx",
         "shells/hero-shell.tsx"
       ]
     },
@@ -66,6 +68,7 @@
       "title": "Split Screen",
       "files": [
         "registrations/split-screen.ts",
+        "blocks/form-actions.tsx",
         "shells/split-screen-shell.tsx"
       ]
     },

@@ -1,4 +1,3 @@
-import '@ecopages/radiant-ui/form/styles.css';
 import { RuiForm } from '@ecopages/radiant-ui/form';
 import { collectFieldDefaults, flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import { mergePathValues } from '@schema-engine/forms/lib/path-values';
@@ -33,6 +32,8 @@ export function ConfiguredRuiForm({
 	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
 	children: JsxRenderable;
 }) {
+	const effectiveOnSubmit = onSubmit ?? (() => {});
+
 	return (
 		<RuiForm
 			class={config.className}
@@ -40,7 +41,7 @@ export function ConfiguredRuiForm({
 			mode="onSubmit"
 			reValidateMode="onChange"
 			defaultValues={collectFormDefaultValues(config, defaultValues)}
-			onSubmit={onSubmit}
+			onSubmit={effectiveOnSubmit}
 			on:rui-invalid={rememberInvalidErrors}
 			on:rui-submit={clearInvalidErrors}
 		>

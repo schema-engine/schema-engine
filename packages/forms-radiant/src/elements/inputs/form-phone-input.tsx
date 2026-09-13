@@ -1,8 +1,4 @@
 import './form-phone-input.css';
-import '@ecopages/radiant-ui/input/styles.css';
-import '@ecopages/radiant-ui/select/styles.css';
-import '@ecopages/radiant-ui/listbox/styles.css';
-import '@ecopages/radiant-ui/autocomplete/styles.css';
 import { customElement, onEvent, onUpdated, prop, query, RadiantElement, state } from '@ecopages/radiant';
 import { jsx, unsafeHtml, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import {

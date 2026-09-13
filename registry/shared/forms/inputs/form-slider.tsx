@@ -1,3 +1,4 @@
+/** @jsxImportSource react */
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
 import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
 import { Slider } from '@/components/ui/slider';

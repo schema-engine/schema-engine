@@ -1,0 +1,22 @@
+.docs-form-renderer-preview {
+	@apply block w-full p-5 text-left bg-background-code rounded-md;
+}
+
+/*
+ * Recipe shells size themselves for full-page use (`100svh`, viewport
+ * centering). Inside the docs demo container that reserves a viewport of
+ * blank space around a small card, so the demo frame flattens them.
+ */
+.docs-form-renderer-preview .card-shell,
+.docs-form-renderer-preview .hero-shell,
+.docs-form-renderer-preview .split-screen-shell,
+.docs-form-renderer-preview .se-sidebar-shell,
+.docs-form-renderer-preview .se-stack-shell {
+	min-height: auto;
+	padding: 0;
+}
+
+.docs-form-renderer-preview .hero-shell,
+.docs-form-renderer-preview .split-screen-shell {
+	text-align: left;
+}

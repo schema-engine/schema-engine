@@ -1,3 +1,4 @@
+/** @jsxImportSource react */
 import { Input } from '@/components/ui/input';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
 import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
@@ -12,7 +13,7 @@ export function FormInput({
 	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
 		useControlledFormElement(config);
 
-	const { inputType = 'text', ...rest } = config;
+	const { inputType, ...rest } = config;
 
 	return (
 		<FieldGroup

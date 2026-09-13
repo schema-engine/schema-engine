@@ -9,12 +9,10 @@
 @import '@ecopages/radiant-ui/tokens/semantic';
 @import './theme.css';
 @import '@ecopages/radiant-ui/styles.css';
+@import '@schema-engine/forms-radiant/index.css';
 @import './vendor/shiki.css';
 @import './fonts.css';
 @import './components/prose.css';
-
-@source "../../../../packages/forms-react/src";
-@source "../../../../registry/shared/forms/recipes";
 
 @source inline("sr-only");
 

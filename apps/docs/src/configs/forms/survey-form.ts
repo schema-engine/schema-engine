@@ -55,12 +55,6 @@ export const surveyFormConfig: FormConfig = {
 					name: 'contact',
 					label: 'I agree to be contacted for follow-up',
 				},
-				{
-					$type: 'submit',
-					id: 'survey-submit',
-					name: 'submit',
-					label: 'Submit survey',
-				},
 			],
 		},
 	],

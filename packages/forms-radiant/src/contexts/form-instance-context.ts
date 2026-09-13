@@ -9,6 +9,8 @@ export interface StepStates {
 export interface FormInstanceContextValue {
 	currentStep: number;
 	totalSteps: number;
+	/** True when a wizard recipe owns navigation and steps toggle visibility. */
+	isWizard: boolean;
 	stepStates: StepStates;
 	goToStep: (index: number) => void;
 	goToNextStep: () => void;

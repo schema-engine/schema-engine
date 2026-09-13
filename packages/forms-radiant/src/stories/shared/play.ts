@@ -1,6 +1,7 @@
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import type { StoryContext } from 'storybook/internal/types';
 import { matchesText, queryAllDeep, queryByTextDeep, queryDeep } from '@/lib/dom-utils';
+import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
 
 export function getRuiForm(root: ParentNode): HTMLElement | null {
 	return queryDeep(root, 'rui-form') as HTMLElement | null;
@@ -37,8 +38,8 @@ function waitForFormDecision(root: ParentNode): Promise<void> {
 
 export async function clickNamedButton(root: ParentNode, name: string | RegExp): Promise<void> {
 	await waitFor(
-		() => {
-			expect(getSubmitButton(root, name), `Expected control matching ${String(name)}`).toBeTruthy();
+		async () => {
+			await expect(getSubmitButton(root, name), `Expected control matching ${String(name)}`).toBeTruthy();
 		},
 		{ timeout: 5000 },
 	);
@@ -47,10 +48,10 @@ export async function clickNamedButton(root: ParentNode, name: string | RegExp):
 
 export async function clickSubmit(root: ParentNode, name: string | RegExp): Promise<void> {
 	await waitFor(
-		() => {
-			expect(queryDeep(root, 'rui-form'), 'Expected rui-form to be present').toBeTruthy();
-			expect(queryDeep(root, 'rui-field'), 'Expected rui-field to be present').toBeTruthy();
-			expect(getSubmitButton(root, name), `Expected submit control matching ${String(name)}`).toBeTruthy();
+		async () => {
+			await expect(queryDeep(root, 'rui-form'), 'Expected rui-form to be present').toBeTruthy();
+			await expect(queryDeep(root, 'rui-field'), 'Expected rui-field to be present').toBeTruthy();
+			await expect(getSubmitButton(root, name), `Expected submit control matching ${String(name)}`).toBeTruthy();
 		},
 		{ timeout: 5000 },
 	);
@@ -75,8 +76,8 @@ function findVisibleFieldError(root: ParentNode, message: string | RegExp): Elem
 
 export async function expectFieldError(root: ParentNode, message: string | RegExp, timeout = 3000): Promise<void> {
 	await waitFor(
-		() => {
-			expect(
+		async () => {
+			await expect(
 				findVisibleFieldError(root, message),
 				`Expected visible field error matching ${String(message)}`,
 			).toBeTruthy();
@@ -87,8 +88,8 @@ export async function expectFieldError(root: ParentNode, message: string | RegEx
 
 export async function expectNoFieldError(root: ParentNode, message: string | RegExp, timeout = 2000): Promise<void> {
 	await waitFor(
-		() => {
-			expect(
+		async () => {
+			await expect(
 				findVisibleFieldError(root, message),
 				`Expected no field error matching ${String(message)}`,
 			).toBeFalsy();
@@ -186,6 +187,7 @@ export async function playValidSubmitClearsError(
 }
 
 export async function playContactFormValidation({ canvasElement, step }: StoryContext): Promise<void> {
+	if (isStaticSsrPreview(canvasElement)) return;
 	await step('Empty submit shows required errors', async () => {
 		await clickSubmit(canvasElement, /send message/i);
 		await expectFieldError(canvasElement, /name is required/i);

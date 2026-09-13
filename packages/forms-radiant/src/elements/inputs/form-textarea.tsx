@@ -1,4 +1,3 @@
-import '@ecopages/radiant-ui/textarea/styles.css';
 import { RuiTextarea } from '@ecopages/radiant-ui/textarea';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';

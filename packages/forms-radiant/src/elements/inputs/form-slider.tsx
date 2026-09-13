@@ -1,4 +1,3 @@
-import '@ecopages/radiant-ui/slider/styles.css';
 import { RuiSlider } from '@ecopages/radiant-ui/slider';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
@@ -33,6 +32,7 @@ export function FormSlider({
 				orientation={config.orientation}
 				disabled={config.disabled}
 				showValue
+				value={config.defaultValue}
 				on:change={(event: Event) => {
 					const detail = (event as CustomEvent<{ value?: number }>).detail;
 					propsOnChange?.(detail?.value ?? 0);

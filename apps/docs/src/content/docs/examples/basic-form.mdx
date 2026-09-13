@@ -5,65 +5,28 @@ group: Examples
 order: 1
 ---
 
-import { FormRendererIsland } from '@/components/form-renderer-island';
+import { FormRendererPreview } from '@/components/form-renderer';
+import { FormConfigCode } from '@/components/form-config-code';
+import { basicContactFormConfig } from './basic-form.config';
 
 export const config = {
-	dependencies: {
-		components: [FormRendererIsland],
-	},
+	dependencies: { components: [FormRendererPreview, FormConfigCode] },
 };
 
 # Basic Form
 
-This is the smallest useful React form: register elements, describe steps as
+These previews use Radiant because the docs app is Ecopages + Radiant UI.
+
+This is the smallest useful JSON form: register elements, describe steps as
 data, and choose an optional view recipe at the form level.
 
 ## Interactive demo
 
-<FormRendererIsland preview="basic" />
+<FormRendererPreview config={basicContactFormConfig} />
 
 ## Configuration
 
-```ts
-const formConfig: FormConfig = {
-	id: 'basic-contact',
-	title: 'Contact us',
-	steps: [
-		{
-			id: 'details',
-			title: 'Your details',
-			elements: [
-				{
-					$type: 'input',
-					id: 'name',
-					name: 'name',
-					label: 'Name',
-					inputType: 'text',
-					rules: [{ type: 'required', message: 'Name is required' }],
-				},
-				{
-					$type: 'input',
-					id: 'email',
-					name: 'email',
-					label: 'Email',
-					inputType: 'email',
-					rules: [
-						{ type: 'required', message: 'Email is required' },
-						{ type: 'email', message: 'Enter a valid email' },
-					],
-				},
-				{
-					$type: 'textarea',
-					id: 'message',
-					name: 'message',
-					label: 'Message',
-				},
-			],
-		},
-	],
-	view: { $type: 'card' },
-};
-```
+<FormConfigCode config={basicContactFormConfig} />
 
 The renderer validates the configuration against the registrations in the
 engine. A form without `view` is also valid; it renders its elements without

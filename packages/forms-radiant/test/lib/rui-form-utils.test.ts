@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import {
 	findNativeForm,
 	findNearestRuiForm,
+	getRuiConstraintStore,
 	getRuiFormStore,
 	readRuiFormStore,
 	submitNativeForm,
@@ -75,5 +76,26 @@ describe('readRuiFormStore', () => {
 
 		expect(readRuiFormStore<typeof store>(ruiForm, ['getValues', 'reset'])).toBe(store);
 		expect(readRuiFormStore<typeof store>(ruiForm, ['getValues', 'validateAll'])).toBeNull();
+	});
+});
+
+describe('getRuiConstraintStore', () => {
+	test('returns null when host is null or rui-form not found', () => {
+		expect(getRuiConstraintStore(null)).toBeNull();
+		const host = document.createElement('div');
+		expect(getRuiConstraintStore(host)).toBeNull();
+	});
+
+	test('returns constraint store when rui-form has getValues and subscribe', () => {
+		const host = document.createElement('div');
+		const ruiForm = document.createElement('rui-form');
+		const store = {
+			getValues: () => ({ subject: 'support' }),
+			subscribe: vi.fn(() => () => undefined),
+		};
+		Reflect.set(ruiForm, 'store', store);
+		host.append(ruiForm);
+
+		expect(getRuiConstraintStore(host)).toBe(store);
 	});
 });

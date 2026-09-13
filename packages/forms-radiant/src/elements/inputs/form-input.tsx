@@ -1,4 +1,3 @@
-import '@ecopages/radiant-ui/input/styles.css';
 import { RuiInput } from '@ecopages/radiant-ui/input';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
@@ -12,7 +11,7 @@ export function FormInput({
 	onFocus: propsOnFocus,
 	...config
 }: InputFieldProps) {
-	const { inputType = 'text', placeholder } = config;
+	const { inputType, placeholder } = config;
 
 	return (
 		<FieldGroup
@@ -24,6 +23,7 @@ export function FormInput({
 			description={config.description}
 			style={{ ...getFieldGridStyles(config.grid), ...config.style }}
 			rules={toFieldRules(config.rules)}
+			validationRules={config.rules}
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}
 		>

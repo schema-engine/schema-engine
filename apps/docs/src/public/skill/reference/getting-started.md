@@ -33,9 +33,8 @@ schema-engine/
 └── registry/        # shadcn catalogs (elements + default React recipes)
 ```
 
-The docs app uses `@ecopages/ecopages-jsx`. MDX pages include interactive
-form islands backed by one shared engine in
-`apps/docs/src/lib/form-engine-setup.ts`.
+The docs app uses `@ecopages/ecopages-jsx` for the site chrome. Forms React
+previews mount through a client island, same pattern as Radiant.
 
 ## First 60 seconds
 
@@ -47,25 +46,37 @@ form islands backed by one shared engine in
 - Pages are MDX files under `apps/docs/src/content/docs/`.
   Frontmatter `group` and `order` control the sidebar.
 - The catch-all route is `apps/docs/src/pages/docs/[...slug]/index.tsx`.
-- For code examples, prefer real config snippets. Interactive previews use
-  `FormRendererIsland` and `apps/docs/src/lib/form-engine-setup.ts`.
+- For code examples, prefer real config snippets. Default interactive previews
+  use Radiant `FormRendererPreview` with the form configuration declared in a
+  `<page>.config.ts` module next to the MDX (`FormConfigCode` serializes it for
+  the snippet); Forms React pages use `ReactFormPreview`, the Radiant-styled
+  demo kit in `apps/docs/src/components/react-form-demo/`, with the form
+  declared inline in the page.
 - View recipe source for agents: `registry/shared/forms/recipes`.
   The View recipes page also has copy tabs, which are not in `llms.txt`.
 
 ## Wiring a form into the docs app
 
-- The single form engine instance lives at `apps/docs/src/lib/form-engine-setup.ts`.
-- Register elements and recipes explicitly:
-  `createReactFormEngine({ elements: ..., recipes: ... })`.
+- The default Radiant form engine instance lives at
+  `apps/docs/src/lib/form-engine-setup.ts` and is created with
+  `createRadiantFormEngine({ elements: schemaFormRegistrations, actions })`.
+  Demo action plugins are shared with Forms React via
+  `apps/docs/src/lib/docs-demo-actions.ts`.
+- The Forms React preview engine lives at
+  `apps/docs/src/components/react-form-demo/demo-engine.ts`.
+  Forms React MDX entries import `ReactFormPreview`, which client-mounts
+  `FormRenderer` from `@schema-engine/forms-react` as a React island.
 - Custom fields use `defineInput({ $type, schema, metadata, render })`.
   Authors supply schema input; the component receives schema output.
 - Custom containers declare `elements: elementChildrenSchema` and render with
   `<FormElements elements={config.elements} namePrefix={config.name} />`.
   Field paths are a render-time scope; do not clone child configs.
 - Form elements and React recipes come from `registry/shared/forms`,
-  aliased as `@/components/schema-engine/forms/*`.
-- The shadcn primitives those sources import (`@/components/ui/*`) are not
-  owned by this repo. `registry/ui-stubs` stands in for typecheck and tests.
+  aliased as `@/components/schema-engine/forms/*`. `@/components/ui/*` resolves
+  to the Forms React Storybook kit for those previews.
+- The catch-all docs route registers island scripts and styles from each MDX
+  entry's imports, so Forms React pages do not load Radiant preview assets
+  and vice versa.
 
 ## More
 

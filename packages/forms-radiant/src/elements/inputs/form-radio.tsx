@@ -1,8 +1,5 @@
-import '@ecopages/radiant-ui/radio-group/styles.css';
 import { RuiRadioGroup } from '@ecopages/radiant-ui/radio-group';
-import '@ecopages/radiant-ui/field/styles.css';
 import { RuiField, RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
-import '@ecopages/radiant-ui/label/styles.css';
 import { RuiLabel } from '@ecopages/radiant-ui/label';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { getFieldGridStyles } from '@/hooks/grid-styles';
@@ -26,7 +23,7 @@ export function FormRadio({
 		<RuiField
 			name={config.name}
 			rules={toFieldRules(config.rules)}
-			defaultValue={config.defaultValue}
+			defaultValueData={config.defaultValue !== undefined ? JSON.stringify(config.defaultValue) : undefined}
 			disabled={config.disabled}
 			style={{ ...getFieldGridStyles(config.grid), ...config.style }}
 		>
@@ -39,6 +36,7 @@ export function FormRadio({
 			<RuiRadioGroup
 				name={config.name}
 				options={options}
+				value={config.defaultValue}
 				on:change={(event: Event) => {
 					const detail = (event as CustomEvent<{ value: string }>).detail;
 					propsOnChange?.(detail?.value ?? '');

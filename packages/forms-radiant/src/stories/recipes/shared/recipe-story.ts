@@ -24,8 +24,7 @@ export function recipeStoryMeta(options: {
 			},
 		},
 		argTypes: {
-			engine: { table: { disable: true } },
-			adapter: { table: { disable: true } },
+			...formRendererMeta.argTypes,
 			config: {
 				control: false,
 				description: 'Form config with a recipe `view.$type`',

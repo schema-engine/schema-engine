@@ -3,6 +3,8 @@ import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story';
 import { expect, userEvent, within } from 'storybook/test';
 import { clickSubmit, getFieldControl } from '@/stories/shared/play';
 
+import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
+
 const meta = {
 	...formRendererMeta,
 	args: {
@@ -26,6 +28,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
 	play: async ({ canvasElement, step }) => {
+		if (isStaticSsrPreview(canvasElement)) return;
 		await step('Slider control is visible', async () => {
 			const control = getFieldControl(canvasElement, /volume/i);
 			await expect(control).toBeInTheDocument();
@@ -51,6 +54,7 @@ export const WithValidation: Story = {
 		]),
 	},
 	play: async ({ canvasElement, step }) => {
+		if (isStaticSsrPreview(canvasElement)) return;
 		await step('Submit triggers validation flow', async () => {
 			await clickSubmit(canvasElement, /confirm age/i);
 			await expect(within(canvasElement).getByRole('slider')).toBeInTheDocument();

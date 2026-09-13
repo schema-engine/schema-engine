@@ -1,3 +1,4 @@
+/** @jsxImportSource react */
 import { Button } from '@/components/ui/button';
 import { Trash2, Plus } from 'lucide-react';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';

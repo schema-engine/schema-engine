@@ -5,15 +5,17 @@ group: Examples
 order: 5
 ---
 
-import { FormRendererIsland } from '@/components/form-renderer-island';
+import { FormRendererPreview } from '@/components/form-renderer';
+import { FormConfigCode } from '@/components/form-config-code';
+import { sequentialActionsDemoConfig } from './sequential-actions.config';
 
 export const config = {
-	dependencies: {
-		components: [FormRendererIsland],
-	},
+	dependencies: { components: [FormRendererPreview, FormConfigCode] },
 };
 
 # Sequential Actions
+
+These previews use Radiant because the docs app is Ecopages + Radiant UI.
 
 Actions are registered capabilities that run in response to lifecycle
 triggers. The form configuration determines the order in which action entries
@@ -21,44 +23,11 @@ are evaluated.
 
 ## Interactive demo
 
-<FormRendererIsland preview="sequential" />
+<FormRendererPreview config={sequentialActionsDemoConfig} />
 
 ## Configuration pattern
 
-```ts
-const formConfig: FormConfig = {
-	id: 'action-demo',
-	steps: [{
-		id: 'details',
-		title: 'Details',
-		elements: [
-			{ $type: 'input', id: 'email', name: 'email', label: 'Email', inputType: 'email' },
-		],
-	}],
-	actions: [
-		{
-			id: 'submit',
-			$type: 'submit',
-			endpoint: '/api/submit',
-			method: 'POST',
-			enabled: true,
-		},
-		{
-			id: 'notify',
-			$type: 'show_notification',
-			message: 'Submitted successfully',
-			variant: 'success',
-			triggers: ['form_submit_success'],
-		},
-		{
-			id: 'reset',
-			$type: 'reset',
-			triggers: ['form_submit_success'],
-			resetToDefaults: true,
-		},
-	],
-};
-```
+<FormConfigCode config={sequentialActionsDemoConfig} />
 
 Register the corresponding action registrations with
 `createFormEngine({ actions: [...] })`. Use `form_submit_start`,

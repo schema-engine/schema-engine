@@ -5,7 +5,7 @@ import autoprefixer from 'autoprefixer';
 import postcss from 'postcss';
 import nested from 'postcss-nested';
 import tailwindcss from '@tailwindcss/postcss';
-import { buildLib } from '../../scripts/esbuild-lib.ts';
+import { buildLib } from '@schema-engine/scripts/esbuild-lib';
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const outputDir = path.join(cwd, 'dist');

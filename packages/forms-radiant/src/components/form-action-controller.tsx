@@ -1,11 +1,13 @@
 import './form-action-controller.css';
-import { customElement, prop, RadiantElement } from '@ecopages/radiant';
+import { customElement, prop, RadiantElement, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import type { BuilderActionBaseContext, FormActionTrigger, FormConfigView } from '@schema-engine/forms';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { ActionDispatcher } from '@schema-engine/actions';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
+import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
+import { onActiveEngineChange } from '@/registries/active-engine';
 import { findNearestRuiForm, readRuiFormStore } from '@/lib/rui-form-utils';
 
 type ActionFormStore = {
@@ -26,20 +28,67 @@ const ACTION_STORE_METHODS = ['getValues', 'getState', 'reset', 'setValue', 'val
 @customElement('se-form-action-controller')
 export class FormActionControllerElement extends RadiantElement {
 	@prop({ type: Object }) config!: FormConfigView;
-	@prop({ type: Object }) engine?: FormEngine;
+	@state engine?: FormEngine;
 
 	private dispatcher?: ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>;
 	private mountedAt = 0;
 	private formChangeQueued = false;
 	private formInstance?: FormInstanceContextValue;
+	private unsubscribeActiveEngine?: () => void;
 
 	@onContextUpdate({ context: formInstanceContext, requestUpdate: false })
 	onFormInstance(value: FormInstanceContextValue): void {
 		this.formInstance = value;
 	}
 
+	@onContextUpdate({ context: formEngineContext, requestUpdate: false })
+	onFormEngine(value: FormEngineContextValue): void {
+		if (value.engine && !this.engine) {
+			this.engine = value.engine;
+			this.setupDispatcher();
+		}
+	}
+
 	protected override onConnected(): void {
-		if (!this.engine || !this.config?.actions?.length) {
+		if (!this.engine) {
+			this.unsubscribeActiveEngine = onActiveEngineChange((engine) => {
+				if (!this.engine) {
+					this.engine = engine;
+				}
+				this.setupDispatcher();
+			});
+		}
+		this.setupDispatcher();
+	}
+
+	override disconnectedCallback(): void {
+		this.unsubscribeActiveEngine?.();
+		super.disconnectedCallback();
+	}
+
+	override render() {
+		return null;
+	}
+
+	private resolveConfig(): FormConfigView | undefined {
+		if (this.config) {
+			return this.config;
+		}
+		const raw = this.getAttribute('data-config');
+		if (raw) {
+			try {
+				this.config = JSON.parse(raw);
+				return this.config;
+			} catch {
+				return undefined;
+			}
+		}
+		return undefined;
+	}
+
+	private setupDispatcher(): void {
+		const config = this.resolveConfig();
+		if (this.dispatcher || !this.engine || !config?.actions?.length) {
 			return;
 		}
 
@@ -67,10 +116,6 @@ export class FormActionControllerElement extends RadiantElement {
 		queueMicrotask(() => void this.dispatch('form_mount'));
 	}
 
-	override render() {
-		return null;
-	}
-
 	private queueFormChange(): void {
 		if (this.formChangeQueued) {
 			return;
@@ -83,15 +128,24 @@ export class FormActionControllerElement extends RadiantElement {
 	}
 
 	private async runSubmissionLifecycle(): Promise<void> {
+		this.dispatchEvent(new CustomEvent('se-action-submit-start', { bubbles: true, composed: true }));
 		await this.dispatch('form_submit_start');
 		const results = await this.dispatch('form_submit');
 		const succeeded = results.every((result) => result.success || result.shouldContinue !== false);
 		await this.dispatch(succeeded ? 'form_submit_success' : 'form_submit_error');
 		await this.dispatch('form_submit_complete');
+		this.dispatchEvent(
+			new CustomEvent('se-action-submit-complete', {
+				bubbles: true,
+				composed: true,
+				detail: { succeeded, results },
+			}),
+		);
 	}
 
 	private async dispatch(trigger: FormActionTrigger): Promise<Awaited<ReturnType<ActionDispatcher['dispatch']>>> {
-		if (!this.dispatcher || !this.config?.actions?.length) {
+		const config = this.resolveConfig();
+		if (!this.dispatcher || !config?.actions?.length) {
 			return [];
 		}
 
@@ -100,21 +154,21 @@ export class FormActionControllerElement extends RadiantElement {
 			return [];
 		}
 
-		const state = store.getState();
+		const formState = store.getState();
 		return this.dispatcher.dispatch({
-			actions: this.config.actions,
+			actions: config.actions,
 			trigger,
 			context: {
-				formId: this.config.id || 'unnamed-form',
+				formId: config.id || 'unnamed-form',
 				formData: store.getValues(),
 				currentStep: this.formInstance?.currentStep ?? 0,
-				totalSteps: this.formInstance?.totalSteps ?? this.config.steps.length,
-				isValid: state.isValid,
-				errors: state.errors,
+				totalSteps: this.formInstance?.totalSteps ?? config.steps?.length ?? 1,
+				isValid: formState.isValid,
+				errors: formState.errors,
 				metadata: {
 					stepStartTime: this.mountedAt,
 					totalFormTime: Date.now() - this.mountedAt,
-					userInteractions: Object.keys(state.touched).length,
+					userInteractions: Object.keys(formState.touched).length,
 				},
 				form: {
 					reset: () => store.reset(),
@@ -128,5 +182,9 @@ export class FormActionControllerElement extends RadiantElement {
 }
 
 export function FormActionController({ config, engine }: { config: FormConfigView; engine?: FormEngine }) {
-	return jsx('se-form-action-controller', { 'prop:config': config, 'prop:engine': engine });
+	return jsx('se-form-action-controller', {
+		'prop:config': config,
+		'prop:engine': engine,
+		'data-config': JSON.stringify(config),
+	});
 }

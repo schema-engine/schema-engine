@@ -7,18 +7,23 @@
 		"access": "public"
 	},
 	"sideEffects": [
-		"**/*.css"
+		"**/*.css",
+		"./src/components/internals/field-rule-hydrator.ts",
+		"./src/components/internals/form-renderer.script.tsx",
+		"./dist/index.js",
+		"./dist/chunk-*.js"
 	],
 	"main": "dist/index.js",
 	"module": "dist/index.js",
 	"types": "dist/index.d.ts",
+	"style": "dist/index.css",
 	"files": [
 		"/dist/*"
 	],
 	"scripts": {
 		"build:lib": "pnpm clean && pnpm build:files && pnpm build:types",
 		"build:files": "node ./build.ts",
-		"build:types": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
+		"build:types": "tsc -p tsconfig.registry-forms.json && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json -f",
 		"watch:lib": "node ./build.ts --watch",
 		"clean": "rm -rf ./dist",
 		"test:all": "vitest run --project unit",
@@ -49,6 +54,7 @@
 		"@ecopages/vite-plugin-radiant": "0.1.0-rc.1",
 		"@rolldown/plugin-babel": "^0.2.1",
 		"@schema-engine/forms": "workspace:*",
+		"@schema-engine/scripts": "workspace:*",
 		"@storybook/addon-a11y": "^10.5.10",
 		"@storybook/addon-docs": "^10.1.8",
 		"@storybook/addon-vitest": "^10.1.8",
@@ -82,6 +88,7 @@
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
 		},
+		"./index.css": "./dist/index.css",
 		"./primitives": {
 			"types": "./dist/primitives.d.ts",
 			"import": "./dist/primitives.js"

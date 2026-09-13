@@ -3,10 +3,11 @@ import { ActionTriggersDemo } from './action-triggers.demo';
 import { realtimeDashboardPlay } from './action-triggers.play';
 
 const meta = {
+	title: 'Capabilities/Actions',
 	component: ActionTriggersDemo,
 	parameters: {
 		layout: 'padded',
-		radiant: { renderMode: 'client' },
+		radiant: { cssImports: ['./action-triggers.demo.css'] },
 	},
 } satisfies Meta<typeof ActionTriggersDemo>;
 

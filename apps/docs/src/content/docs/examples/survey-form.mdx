@@ -5,66 +5,28 @@ group: Examples
 order: 4
 ---
 
-import { FormRendererIsland } from '@/components/form-renderer-island';
+import { FormRendererPreview } from '@/components/form-renderer';
+import { FormConfigCode } from '@/components/form-config-code';
+import { surveyDemoConfig } from './survey-form.config';
 
 export const config = {
-	dependencies: {
-		components: [FormRendererIsland],
-	},
+	dependencies: { components: [FormRendererPreview, FormConfigCode] },
 };
 
 # Survey Form
+
+These previews use Radiant because the docs app is Ecopages + Radiant UI.
 
 This survey demonstrates a wizard recipe, choice elements, and a conditional
 follow-up question.
 
 ## Interactive demo
 
-<FormRendererIsland preview="survey" />
+<FormRendererPreview config={surveyDemoConfig} />
 
 ## Configuration pattern
 
-```ts
-const formConfig: FormConfig = {
-	id: 'customer-survey',
-	title: 'Customer satisfaction',
-	view: { $type: 'wizard' },
-	steps: [
-		{
-			id: 'rating',
-			title: 'Your experience',
-			elements: [
-				{
-					$type: 'select',
-					id: 'satisfaction',
-					name: 'satisfaction',
-					label: 'How satisfied are you?',
-					options: [
-						{ value: '5', label: 'Very satisfied' },
-						{ value: '3', label: 'Neutral' },
-						{ value: '1', label: 'Very dissatisfied' },
-					],
-				},
-			],
-		},
-		{
-			id: 'feedback',
-			title: 'Feedback',
-			elements: [
-				{
-					$type: 'textarea',
-					id: 'improvements',
-					name: 'improvements',
-					label: 'What could we improve?',
-					constraints: [
-						{ field: 'satisfaction', operator: 'equals', value: '1', action: 'show' },
-					],
-				},
-			],
-		},
-	],
-};
-```
+<FormConfigCode config={surveyDemoConfig} />
 
 Constraints are direct element properties with one effect per object. Use
 multiple elements when a follow-up should appear for several independent

@@ -1,7 +1,9 @@
 import path from 'node:path';
+import '@ecopages/radiant/server/install-ssr-runtime';
 import { ConfigBuilder } from '@ecopages/core/config-builder';
 import { postcssProcessorPlugin } from '@ecopages/postcss-processor/plugin';
 import { tailwindV4Preset } from '@ecopages/postcss-processor/presets/tailwind-v4';
+import { reactPlugin } from '@ecopages/react';
 import { ecopagesJsxPlugin } from '@ecopages/ecopages-jsx';
 import { contentProcessorPlugin } from '@ecopages/content-processor/plugin';
 import { compareEntriesByField } from '@ecopages/content-processor';
@@ -9,13 +11,21 @@ import { createDocsMdxPlugins } from './src/mdx/plugins';
 import { docsFrontmatterSchema } from './src/content/docs';
 import { devToolbar } from '@ecopages/dev-toolbar/config';
 
+/** @remarks Install Radiant's server runtime before React routes import the shared docs shell. */
 const config = await new ConfigBuilder()
 	.setRootDir(import.meta.dirname)
 	.setBaseUrl(process.env.ECOPAGES_BASE_URL ?? 'http://localhost:3000')
 	.setIntegrations([
+		reactPlugin({
+			extensions: ['.react.tsx'],
+			explicitGraph: true,
+			runtimeModules: ['@schema-engine/forms-react', 'react-hook-form'],
+		}),
 		ecopagesJsxPlugin({
 			mdx: {
 				enabled: true,
+				extensions: ['.radiant.mdx', '.mdx'],
+				compilerOptions: { mdxExtensions: ['.radiant.mdx', '.mdx'] },
 				...createDocsMdxPlugins({
 					rehypePrettyCode: {
 						theme: {
@@ -44,6 +54,7 @@ const config = await new ConfigBuilder()
 				collections: {
 					docs: {
 						contentDir: 'content/docs',
+						extensions: ['.radiant.mdx', '.react.mdx', '.mdx'],
 						orderBy: compareEntriesByField('order'),
 						schema: docsFrontmatterSchema,
 						entryType: './src/content/docs#DocsFrontmatter',
@@ -52,7 +63,13 @@ const config = await new ConfigBuilder()
 			},
 		}),
 	])
-	.setAdditionalWatchPaths(['src/data', 'src/content', '../../registry/shared/forms/recipes'])
+	.setAdditionalWatchPaths([
+		'src/data',
+		'src/content',
+		'../../registry/shared/forms',
+		'../../packages/forms-react/.storybook/ui',
+		'../../packages/forms-radiant/dist',
+	])
 	.setDevToolbar(devToolbar())
 	.build();
 

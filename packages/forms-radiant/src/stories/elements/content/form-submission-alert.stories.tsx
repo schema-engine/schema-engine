@@ -3,6 +3,8 @@ import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story';
 import { expect, waitFor, within } from 'storybook/test';
 import { clickSubmit, playFieldFocusAndType } from '@/stories/shared/play';
 
+import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
+
 const meta = {
 	...formRendererMeta,
 	args: {
@@ -26,11 +28,12 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
 	play: async ({ canvasElement, step }) => {
+		if (isStaticSsrPreview(canvasElement)) return;
 		await step('Successful submit shows alert', async () => {
 			await playFieldFocusAndType(canvasElement, /email/i, 'user@example.com');
 			await clickSubmit(canvasElement, /save/i);
-			await waitFor(() => {
-				expect(within(canvasElement).getByText(/saved successfully/i)).toBeInTheDocument();
+			await waitFor(async () => {
+				await expect(within(canvasElement).getByText(/saved successfully/i)).toBeInTheDocument();
 			});
 		});
 	},

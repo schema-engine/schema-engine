@@ -8,6 +8,7 @@ import { realtimeDashboardPlay } from './action-triggers.play';
 const simpleEngine = getEngine();
 
 const meta = {
+	title: 'Capabilities/Actions',
 	component: InteractiveActionDemo,
 	parameters: {
 		layout: 'padded',

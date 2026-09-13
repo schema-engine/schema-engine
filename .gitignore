@@ -49,3 +49,5 @@ registry/**/*.d.ts
 # misc
 .agent
 
+# pnpm
+.pnpm-store

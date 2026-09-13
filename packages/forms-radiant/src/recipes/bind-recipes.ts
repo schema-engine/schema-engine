@@ -11,7 +11,13 @@ import {
 	wizardSpec,
 	type BuiltInRecipeRegistry,
 } from '@schema-engine/forms/recipes';
-import { StepHeaderBlock, MinimalProgressBlock, StepIndicatorsBlock, WizardActionsBlock } from '@/components/blocks';
+import {
+	StepHeaderBlock,
+	MinimalProgressBlock,
+	StepIndicatorsBlock,
+	WizardActionsBlock,
+	FormActionsBlock,
+} from '@/components/blocks';
 import { CardShell, HeroShell, SidebarShell, SplitScreenShell, StackShell } from '@/components/shells';
 import type { RadiantRecipeAdapterPayload } from './types';
 
@@ -27,15 +33,15 @@ function bind(spec: Parameters<typeof defineFormRecipe>[0], render: RadiantRecip
 
 export const CardRecipe = bind(cardSpec, {
 	shell: CardShell,
-	slots: { header: StepHeaderBlock },
+	slots: { header: StepHeaderBlock, actions: FormActionsBlock },
 });
 export const SplitScreenRecipe = bind(splitScreenSpec, {
 	shell: SplitScreenShell,
-	slots: {},
+	slots: { actions: FormActionsBlock },
 });
 export const HeroBackgroundRecipe = bind(heroBackgroundSpec, {
 	shell: HeroShell,
-	slots: { header: StepHeaderBlock },
+	slots: { header: StepHeaderBlock, actions: FormActionsBlock },
 });
 export const BareControlsRecipe = bind(bareControlsSpec, {
 	shell: StackShell,

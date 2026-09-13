@@ -1,9 +1,8 @@
 import type { JsxRenderable } from '@ecopages/jsx';
-import '@ecopages/radiant-ui/field/styles.css';
-import '@ecopages/radiant-ui/label/styles.css';
 import { RuiField, RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
 import { RuiLabel } from '@ecopages/radiant-ui/label';
 import type { FieldRules } from '@ecopages/radiant-ui/form';
+import type { ValidationRule } from '@schema-engine/forms/schemas';
 
 export interface FieldGroupProps {
 	label: string;
@@ -16,8 +15,19 @@ export interface FieldGroupProps {
 	style?: Record<string, string | number | undefined>;
 	name?: string;
 	rules?: FieldRules;
+	validationRules?: ReadonlyArray<ValidationRule>;
 	defaultValue?: unknown;
 	disabled?: boolean;
+}
+
+function serializeRules(rules: FieldRules | undefined): string | undefined {
+	if (!rules) {
+		return undefined;
+	}
+
+	return JSON.stringify(rules, (_key, value: unknown) =>
+		value instanceof RegExp ? { $type: 'regexp', source: value.source, flags: value.flags } : value,
+	);
 }
 
 export function FieldGroup({
@@ -31,6 +41,7 @@ export function FieldGroup({
 	style,
 	name,
 	rules,
+	validationRules,
 	defaultValue,
 	disabled,
 }: FieldGroupProps) {
@@ -38,7 +49,11 @@ export function FieldGroup({
 		<RuiField
 			name={name ?? htmlFor ?? label}
 			rules={rules}
-			defaultValue={defaultValue}
+			data-se-field-rules={serializeRules(rules)}
+			data-se-validation-rules={validationRules ? JSON.stringify(validationRules) : undefined}
+			// String channel only: the Object-typed `defaultValue` prop rejects
+			// serialized scalars (e.g. `"en"`) during client attribute adoption.
+			defaultValueData={defaultValue !== undefined ? JSON.stringify(defaultValue) : undefined}
 			disabled={disabled}
 			class={className}
 			style={style}

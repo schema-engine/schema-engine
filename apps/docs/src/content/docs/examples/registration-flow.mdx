@@ -5,73 +5,28 @@ group: Examples
 order: 3
 ---
 
-import { FormRendererIsland } from '@/components/form-renderer-island';
+import { FormRendererPreview } from '@/components/form-renderer';
+import { FormConfigCode } from '@/components/form-config-code';
+import { registrationDemoConfig } from './registration-flow.config';
 
 export const config = {
-	dependencies: {
-		components: [FormRendererIsland],
-	},
+	dependencies: { components: [FormRendererPreview, FormConfigCode] },
 };
 
 # Registration Flow
+
+These previews use Radiant because the docs app is Ecopages + Radiant UI.
 
 Use a wizard recipe when a form has multiple steps. Step data remains focused
 on fields; the recipe owns progress and navigation chrome.
 
 ## Interactive demo
 
-<FormRendererIsland preview="registration" />
+<FormRendererPreview config={registrationDemoConfig} />
 
 ## Configuration pattern
 
-```ts
-const formConfig: FormConfig = {
-	id: 'registration',
-	title: 'Create your account',
-	view: { $type: 'wizard' },
-	steps: [
-		{
-			id: 'account',
-			title: 'Account',
-			elements: [
-				{
-					$type: 'input',
-					id: 'email',
-					name: 'email',
-					label: 'Email',
-					inputType: 'email',
-					rules: [
-						{ type: 'required', message: 'Email is required' },
-						{ type: 'email', message: 'Enter a valid email' },
-					],
-				},
-			],
-		},
-		{
-			id: 'profile',
-			title: 'Profile',
-			elements: [
-				{ $type: 'input', id: 'name', name: 'name', label: 'Full name' },
-			],
-		},
-	],
-	actions: [
-		{
-			id: 'submit-registration',
-			$type: 'submit',
-			endpoint: '/api/register',
-			method: 'POST',
-			enabled: true,
-		},
-		{
-			id: 'reset-after-success',
-			$type: 'reset',
-			triggers: ['form_submit_success'],
-			resetToDefaults: true,
-		},
-	],
-};
-```
+<FormConfigCode config={registrationDemoConfig} />
 
 The wizard recipe must be registered in the engine and the form must contain
 at least two steps. Action triggers use the canonical `form_*` and `step_*`

@@ -5,12 +5,11 @@ group: Getting Started
 order: 1
 ---
 
-import { FormRendererIsland } from '@/components/form-renderer-island';
+import { FormRendererPreview } from '@/components/form-renderer';
+import { contactFormConfig } from '@/homepage/contact-form';
 
 export const config = {
-	dependencies: {
-		components: [FormRendererIsland],
-	},
+	dependencies: { components: [FormRendererPreview] },
 };
 
 # Why Schema Engine?
@@ -30,7 +29,7 @@ Development teams frequently encounter several recurring issues:
 
 Schema Engine is a **JSON-driven form system** that adapts to your needs, not the other way around.
 
-<FormRendererIsland preview="contact" />
+<FormRendererPreview config={contactFormConfig} />
 
 ## What Makes It Different?
 
