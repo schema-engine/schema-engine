@@ -77,7 +77,7 @@ export const WithValidation: Story = {
 		const input = queryDeep(canvasElement, '[data-ref="number"]') as HTMLInputElement | null;
 		await expect(input).toBeTruthy();
 		if (!input) return;
-		const field = queryDeep(canvasElement, 'rui-field') as { rules?: { validate?: unknown } } | null;
+		const field = queryDeep(canvasElement, 'se-field') as { rules?: { validate?: unknown } } | null;
 		await expect(typeof field?.rules?.validate).toBe('function');
 
 		await step('A country prefix alone is invalid', async () => {

@@ -2,13 +2,16 @@ import { RuiForm } from '@ecopages/radiant-ui/form';
 import { collectFieldDefaults, flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import { mergePathValues } from '@schema-engine/forms/lib/path-values';
 import type { FormConfigView } from '@schema-engine/forms';
+import { expandValues, flattenValues } from './controller/values';
 import type { JsxRenderable } from '@ecopages/jsx';
 
 export function collectFormDefaultValues(
 	config: FormConfigView,
 	userDefaults: Partial<Record<string, unknown>> = {},
 ): Partial<Record<string, unknown>> {
-	return mergePathValues(collectFieldDefaults(flattenStepElements(config.steps), userDefaults), userDefaults);
+	return flattenValues(
+		mergePathValues(collectFieldDefaults(flattenStepElements(config.steps), userDefaults), userDefaults),
+	);
 }
 
 function rememberInvalidErrors(event: Event): void {
@@ -32,7 +35,7 @@ export function ConfiguredRuiForm({
 	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
 	children: JsxRenderable;
 }) {
-	const effectiveOnSubmit = onSubmit ?? (() => {});
+	const effectiveOnSubmit = (values: Record<string, unknown>) => onSubmit?.(expandValues(values));
 
 	return (
 		<RuiForm

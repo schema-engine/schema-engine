@@ -1,5 +1,6 @@
+import { FormField } from '@/elements/form-field';
 import type { JsxRenderable } from '@ecopages/jsx';
-import { RuiField, RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
+import { RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
 import { RuiLabel } from '@ecopages/radiant-ui/label';
 import type { FieldRules } from '@ecopages/radiant-ui/form';
 import type { ValidationRule } from '@schema-engine/forms/schemas';
@@ -30,6 +31,11 @@ function serializeRules(rules: FieldRules | undefined): string | undefined {
 	);
 }
 
+/**
+ * @remarks
+ * Defaults use the JSON string channel because Radiant UI's Object-typed
+ * defaultValue prop rejects serialized scalars during attribute adoption.
+ */
 export function FieldGroup({
 	label,
 	htmlFor,
@@ -46,13 +52,11 @@ export function FieldGroup({
 	disabled,
 }: FieldGroupProps) {
 	return (
-		<RuiField
+		<FormField
 			name={name ?? htmlFor ?? label}
 			rules={rules}
 			data-se-field-rules={serializeRules(rules)}
 			data-se-validation-rules={validationRules ? JSON.stringify(validationRules) : undefined}
-			// String channel only: the Object-typed `defaultValue` prop rejects
-			// serialized scalars (e.g. `"en"`) during client attribute adoption.
 			defaultValueData={defaultValue !== undefined ? JSON.stringify(defaultValue) : undefined}
 			disabled={disabled}
 			class={className}
@@ -67,6 +71,6 @@ export function FieldGroup({
 			{children}
 			{description ? <RuiFieldDescription>{description}</RuiFieldDescription> : null}
 			<RuiFieldError />
-		</RuiField>
+		</FormField>
 	);
 }

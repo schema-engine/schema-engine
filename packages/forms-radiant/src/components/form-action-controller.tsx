@@ -8,21 +8,8 @@ import { ActionDispatcher } from '@schema-engine/actions';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
 import { onActiveEngineChange } from '@/registries/active-engine';
-import { findNearestRuiForm, readRuiFormStore } from '@/lib/rui-form-utils';
-
-type ActionFormStore = {
-	getValues: () => Record<string, unknown>;
-	getState: () => {
-		isValid: boolean;
-		errors: Record<string, unknown>;
-		touched: Record<string, boolean>;
-	};
-	reset: () => void;
-	setValue: (name: string, value: unknown) => void;
-	validateAll: () => Promise<boolean>;
-};
-
-const ACTION_STORE_METHODS = ['getValues', 'getState', 'reset', 'setValue', 'validateAll'] as const;
+import { FormController } from '@/adapters/radiant/controller';
+import { findAncestorElement } from '@/lib/rui-form-utils';
 
 /** Dispatches configured form actions for Radiant form lifecycle events. */
 @customElement('se-form-action-controller')
@@ -30,9 +17,12 @@ export class FormActionControllerElement extends RadiantElement {
 	@prop({ type: Object }) config!: FormConfigView;
 	@state engine?: FormEngine;
 
+	readonly form = new FormController(this);
+
 	private dispatcher?: ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>;
 	private mountedAt = 0;
-	private formChangeQueued = false;
+	private didMount = false;
+	private watchingChanges = false;
 	private formInstance?: FormInstanceContextValue;
 	private unsubscribeActiveEngine?: () => void;
 
@@ -46,6 +36,7 @@ export class FormActionControllerElement extends RadiantElement {
 		if (value.engine && !this.engine) {
 			this.engine = value.engine;
 			this.setupDispatcher();
+			this.onFormReady();
 		}
 	}
 
@@ -56,13 +47,21 @@ export class FormActionControllerElement extends RadiantElement {
 					this.engine = engine;
 				}
 				this.setupDispatcher();
+				this.onFormReady();
 			});
 		}
+		this.watchingChanges = false;
+		this.form.connect(() => this.onFormReady());
 		this.setupDispatcher();
+		this.onFormReady();
 	}
 
 	override disconnectedCallback(): void {
 		this.unsubscribeActiveEngine?.();
+		this.form.disconnect();
+		this.dispatcher = undefined;
+		this.didMount = false;
+		this.watchingChanges = false;
 		super.disconnectedCallback();
 	}
 
@@ -92,37 +91,39 @@ export class FormActionControllerElement extends RadiantElement {
 			return;
 		}
 
-		this.dispatcher = new ActionDispatcher(this.engine);
-		this.mountedAt = Date.now();
-
-		const form = findNearestRuiForm(this);
+		const form = findAncestorElement(this, 'rui-form');
 		if (!form) {
 			return;
 		}
 
-		const onChange = () => this.queueFormChange();
+		this.dispatcher = new ActionDispatcher(this.engine);
+		this.mountedAt = Date.now();
+
 		const onSubmit = () => void this.runSubmissionLifecycle();
-		form.addEventListener('input', onChange);
-		form.addEventListener('change', onChange);
-		form.addEventListener('rui-change', onChange);
 		form.addEventListener('rui-submit', onSubmit);
 		this.registerCleanupCallback(() => {
-			form.removeEventListener('input', onChange);
-			form.removeEventListener('change', onChange);
-			form.removeEventListener('rui-change', onChange);
 			form.removeEventListener('rui-submit', onSubmit);
 		});
-
-		queueMicrotask(() => void this.dispatch('form_mount'));
 	}
 
-	private queueFormChange(): void {
-		if (this.formChangeQueued) {
+	private onFormReady(): void {
+		if (!this.dispatcher || !this.form.ready) {
 			return;
 		}
-		this.formChangeQueued = true;
-		queueMicrotask(() => {
-			this.formChangeQueued = false;
+		if (!this.didMount) {
+			this.didMount = true;
+			void this.dispatch('form_mount');
+		}
+		if (this.watchingChanges) {
+			return;
+		}
+		this.watchingChanges = true;
+		let initial = true;
+		this.form.watchForm(() => {
+			if (initial) {
+				initial = false;
+				return;
+			}
 			void this.dispatch('form_change');
 		});
 	}
@@ -149,18 +150,18 @@ export class FormActionControllerElement extends RadiantElement {
 			return [];
 		}
 
-		const store = readRuiFormStore<ActionFormStore>(this, ACTION_STORE_METHODS);
-		if (!store) {
+		const form = this.form;
+		if (!form.ready) {
 			return [];
 		}
 
-		const formState = store.getState();
+		const formState = form.formState;
 		return this.dispatcher.dispatch({
 			actions: config.actions,
 			trigger,
 			context: {
 				formId: config.id || 'unnamed-form',
-				formData: store.getValues(),
+				formData: form.getValues(),
 				currentStep: this.formInstance?.currentStep ?? 0,
 				totalSteps: this.formInstance?.totalSteps ?? config.steps?.length ?? 1,
 				isValid: formState.isValid,
@@ -171,10 +172,10 @@ export class FormActionControllerElement extends RadiantElement {
 					userInteractions: Object.keys(formState.touched).length,
 				},
 				form: {
-					reset: () => store.reset(),
-					setValue: (name, value) => store.setValue(name, value),
-					getValue: (name) => store.getValues()[name],
-					validate: () => store.validateAll(),
+					reset: () => form.reset(),
+					setValue: (name, value) => form.setValue(name, value),
+					getValue: (name) => form.getValue(name),
+					validate: () => form.trigger(),
 				},
 			},
 		});

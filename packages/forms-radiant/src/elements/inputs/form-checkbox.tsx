@@ -1,6 +1,7 @@
+import { FormField } from '@/elements/form-field';
 import '@ecopages/radiant-ui/checkbox-group';
 import { RuiCheckbox } from '@ecopages/radiant-ui/checkbox';
-import { RuiField, RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
+import { RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
 import { getFieldGridStyles } from '@/hooks/grid-styles';
 import { toFieldRules } from '@/lib/field-rules';
 import type { CheckboxFieldProps } from '@/registry/forms/inputs/form-checkbox.types';
@@ -12,7 +13,7 @@ export function FormCheckbox({
 	...config
 }: CheckboxFieldProps) {
 	return (
-		<RuiField
+		<FormField
 			name={config.name}
 			rules={toFieldRules(config.rules)}
 			defaultValueData={config.defaultValue !== undefined ? JSON.stringify(config.defaultValue) : undefined}
@@ -35,6 +36,6 @@ export function FormCheckbox({
 			</RuiCheckbox>
 			{config.description ? <RuiFieldDescription>{config.description}</RuiFieldDescription> : null}
 			<RuiFieldError />
-		</RuiField>
+		</FormField>
 	);
 }

@@ -1,6 +1,8 @@
+import { FormController } from '@/adapters/radiant/controller';
+import type { FormFieldElement } from '@/elements/form-field';
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
 import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, within, waitFor, fn } from 'storybook/test';
 import { clickSubmit, expectFieldError, expectNoFieldError, playFieldFocusAndType } from '@/stories/shared/play';
 
 import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
@@ -174,5 +176,110 @@ export const WithValidation: Story = {
 			await expectNoFieldError(canvasElement, /name is required/i);
 			await expectNoFieldError(canvasElement, /email is required/i);
 		});
+	},
+};
+
+export const ControllerOperations: Story = {
+	args: {
+		defaultValues: {
+			emergencyContacts: [
+				{ contactName: 'Alice', contactPhone: '111', relationship: 'Friend' },
+				{ contactName: 'Bob', contactPhone: '222', relationship: 'Sibling' },
+			],
+		},
+		onSubmit: fn(),
+	},
+	play: async ({ canvasElement, args, step }) => {
+		if (isStaticSsrPreview(canvasElement)) return;
+		const canvas = within(canvasElement);
+		const arrayHost = canvasElement.querySelector<HTMLElement>('se-form-array');
+		if (!arrayHost) throw new Error('Expected array component');
+		const form = new FormController(arrayHost);
+		const array = form.fieldArray('emergencyContacts');
+		const names = () => canvas.getAllByLabelText<HTMLInputElement>(/full name/i);
+		const listener = fn();
+		const stop = form.watchField('emergencyContacts', listener);
+
+		await step('Default values populate registered controls', async () => {
+			await waitFor(async () => expect(names().map((input) => input.value)).toEqual(['Alice', 'Bob']));
+		});
+		await step('Decorated fields and plain controller share live values', async () => {
+			const field = canvasElement.querySelector<FormFieldElement>('se-field');
+			if (!field) throw new Error('Expected extended RuiField');
+			field.field.onChange('Updated Alice');
+			await waitFor(async () => expect(names()[0]).toHaveValue('Updated Alice'));
+			await userEvent.clear(names()[1]);
+			await userEvent.type(names()[1], 'Typed Bob');
+			await expect(form.getValue('emergencyContacts.1.contactName')).toBe('Typed Bob');
+		});
+		await step('Move and remove keep row identity, DOM values, and submission aligned', async () => {
+			const originalIds = array.fields;
+			array.move(0, 1);
+			await waitFor(async () =>
+				expect(names().map((input) => input.value)).toEqual(['Typed Bob', 'Updated Alice']),
+			);
+			await expect(array.fields).toEqual([originalIds[1], originalIds[0]]);
+			await userEvent.click(canvas.getAllByRole('button', { name: /remove contact/i })[0]);
+			await waitFor(async () => expect(names().map((input) => input.value)).toEqual(['Updated Alice']));
+			await userEvent.click(canvas.getByRole('button', { name: /save contacts/i }));
+			await waitFor(() =>
+				expect(args.onSubmit).toHaveBeenCalledWith({
+					emergencyContacts: [{ contactName: 'Updated Alice', contactPhone: '111', relationship: 'Friend' }],
+				}),
+			);
+		});
+		await step('Watch cleanup stops notifications', async () => {
+			stop();
+			const count = listener.mock.calls.length;
+			form.setValue('emergencyContacts.0.contactName', 'After cleanup');
+			await expect(listener).toHaveBeenCalledTimes(count);
+		});
+		form.disconnect();
+	},
+};
+
+class PlainFormConsumer extends HTMLElement {
+	readonly form = new FormController(this);
+	updates = 0;
+	connectedCallback(): void {
+		this.form.connect(() => {
+			this.updates += 1;
+		});
+	}
+	disconnectedCallback(): void {
+		this.form.disconnect();
+	}
+}
+if (!customElements.get('se-test-form-consumer')) customElements.define('se-test-form-consumer', PlainFormConsumer);
+
+export const ControllerLifecycle: Story = {
+	play: async ({ canvasElement }) => {
+		if (isStaticSsrPreview(canvasElement)) return;
+		const host = canvasElement.querySelector<HTMLElement>('se-form-array');
+		if (!host) throw new Error('Expected array component');
+		const first = new FormController(host);
+		const consumer = document.createElement('se-test-form-consumer') as PlainFormConsumer;
+		host.append(consumer);
+		await waitFor(async () => expect(consumer.updates).toBeGreaterThan(0));
+		first.setValue('title', 'First form');
+		await expect(consumer.form.getValue('title')).toBe('First form');
+
+		const secondHost = document.createElement('rui-form');
+		Reflect.set(secondHost, 'defaultValues', { title: 'Second form' });
+		canvasElement.append(secondHost);
+		secondHost.append(consumer);
+		await expect(consumer.form.getValue('title')).toBe('Second form');
+		const updates = consumer.updates;
+		first.setValue('title', 'Unrelated change');
+		await expect(consumer.updates).toBe(updates);
+		consumer.form.setValue('title', 'Changed second');
+		await expect(consumer.updates).toBeGreaterThan(updates);
+		const second = new FormController(secondHost);
+		consumer.remove();
+		const disconnectedUpdates = consumer.updates;
+		second.setValue('title', 'After disconnect');
+		await expect(consumer.updates).toBe(disconnectedUpdates);
+		secondHost.remove();
+		first.disconnect();
 	},
 };

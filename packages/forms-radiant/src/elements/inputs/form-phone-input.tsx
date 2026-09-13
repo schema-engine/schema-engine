@@ -1,3 +1,4 @@
+import { getValidationRulesForElement } from '@schema-engine/forms/schemas/validation/utils';
 import './form-phone-input.css';
 import { customElement, onEvent, onUpdated, prop, query, RadiantElement, state } from '@ecopages/radiant';
 import { jsx, unsafeHtml, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
@@ -232,6 +233,7 @@ export function FormPhoneInput({
 			description={config.description}
 			style={{ ...getFieldGridStyles(config.grid), ...config.style }}
 			rules={toFieldRules(config.rules, config.$type)}
+			validationRules={getValidationRulesForElement(config)}
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}
 		>

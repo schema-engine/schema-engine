@@ -13,18 +13,13 @@ import type { FormEngine as CoreFormEngine } from '@schema-engine/forms/engine/f
 import { formInstanceContext, type FormInstanceContextValue, type StepStates } from '@/contexts/form-instance-context';
 import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
 import { onActiveEngineChange } from '@/registries/active-engine';
-import {
-	findNearestRuiForm,
-	getRuiConstraintStore,
-	getRuiFormStore,
-	type RuiConstraintStore,
-} from '@/lib/rui-form-utils';
+import { findNearestRuiForm } from '@/lib/rui-form-utils';
 import { collectConstrainedElements } from '@/lib/constraint-elements';
 import { evaluateConstraintLogic } from '@/hooks/constraint-logic';
 import { fieldNamesForStep, validateCurrentStepFields } from '@/lib/validate-current-step';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
+import { FormController } from '@/adapters/radiant/controller';
 import { ConfiguredRuiForm } from '@/adapters/radiant/rui-form-shell';
-import { hydrateFieldRules } from '@/components/internals/field-rule-hydrator';
 
 function escapeSelector(value: string): string {
 	return typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
@@ -66,8 +61,7 @@ export class FormInstanceElement extends RadiantElement {
 
 	@state currentStep = 0;
 	@state stepStates: StepStates = { completed: [], valid: [], visited: [] };
-	private publishedContext?: FormInstanceContextValue;
-	private unsubscribeConstraints?: () => void;
+	private form?: FormController;
 	private unsubscribeActiveEngine?: () => void;
 
 	@provideContext<typeof formInstanceContext>({
@@ -100,25 +94,23 @@ export class FormInstanceElement extends RadiantElement {
 				this.publish();
 			});
 		}
-		hydrateFieldRules(this);
-		queueMicrotask(() => hydrateFieldRules(this));
 		this.resetStepState();
 		this.publish();
-		this.connectConstraints();
+		this.connectForm();
 		this.wireRuiForm();
 	}
 
 	override disconnectedCallback(): void {
 		this.unsubscribeActiveEngine?.();
-		this.disconnectConstraints();
+		this.form?.disconnect();
+		this.form = undefined;
 		super.disconnectedCallback();
 	}
 
 	@onUpdated(['config'])
 	onConfigUpdated(): void {
-		hydrateFieldRules(this);
 		this.resetStepState();
-		this.connectConstraints();
+		this.connectForm();
 		this.wireRuiForm();
 	}
 
@@ -129,41 +121,36 @@ export class FormInstanceElement extends RadiantElement {
 	}
 
 	private wireRuiForm(): void {
-		const ruiForm = findNearestRuiForm(this);
+		const ruiForm = this.form?.host ?? findNearestRuiForm(this);
 		if (ruiForm && typeof (ruiForm as { onSubmit?: unknown }).onSubmit !== 'function') {
 			(ruiForm as { onSubmit?: (data: Record<string, unknown>) => void }).onSubmit = (data) =>
 				this.onSubmit?.(data);
 		}
 	}
 
-	private connectConstraints(): void {
-		this.disconnectConstraints();
-		const store = getRuiConstraintStore(this);
-		if (store) {
-			this.applyConstraints(store);
-			this.unsubscribeConstraints = store.subscribe(() => this.applyConstraints(store));
+	/**
+	 * @remarks
+	 * `se-form-instance` wraps `rui-form`, so it sits above `formContext`. Point
+	 * the controller at the child form; do not ask FormController to search.
+	 */
+	private connectForm(): void {
+		const ruiForm = findNearestRuiForm(this);
+		if (!ruiForm) {
+			this.form?.disconnect();
+			this.form = undefined;
 			return;
 		}
-
-		queueMicrotask(() => {
-			if (this.unsubscribeConstraints) {
-				return;
-			}
-			const deferredStore = getRuiConstraintStore(this);
-			if (deferredStore) {
-				this.applyConstraints(deferredStore);
-				this.unsubscribeConstraints = deferredStore.subscribe(() => this.applyConstraints(deferredStore));
-			}
-		});
+		if (this.form?.host === ruiForm) {
+			this.applyConstraints();
+			return;
+		}
+		this.form?.disconnect();
+		this.form = new FormController(ruiForm);
+		this.form.connect(() => this.applyConstraints());
 	}
 
-	private disconnectConstraints(): void {
-		this.unsubscribeConstraints?.();
-		this.unsubscribeConstraints = undefined;
-	}
-
-	private applyConstraints(store: RuiConstraintStore): void {
-		if (!this.config) {
+	private applyConstraints(): void {
+		if (!this.config || !this.form?.ready) {
 			return;
 		}
 
@@ -172,7 +159,7 @@ export class FormInstanceElement extends RadiantElement {
 			return;
 		}
 
-		const values = store.getValues();
+		const values = this.form.getValues();
 		for (const item of constrained) {
 			const { shouldShow } = evaluateConstraintLogic(item.constraints, item.isRequired, item.fieldName, values);
 
@@ -230,7 +217,7 @@ export class FormInstanceElement extends RadiantElement {
 			return;
 		}
 
-		const store = getRuiFormStore(this);
+		const store = this.form?.store;
 		if (!store) {
 			return;
 		}

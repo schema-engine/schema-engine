@@ -153,8 +153,8 @@ importers:
         specifier: 0.3.0-rc.9
         version: 0.3.0-rc.9(@ecopages/jsx@0.3.0-rc.9(@ecopages/signals@0.3.0-rc.9))
       '@ecopages/radiant-ui':
-        specifier: 0.1.0-rc.15
-        version: 0.1.0-rc.15(@ecopages/jsx@0.3.0-rc.9(@ecopages/signals@0.3.0-rc.9))(@ecopages/radiant@0.3.0-rc.9(@ecopages/jsx@0.3.0-rc.9(@ecopages/signals@0.3.0-rc.9)))(@ecopages/signals@0.3.0-rc.9)
+        specifier: 0.1.0-rc.17
+        version: 0.1.0-rc.17(@ecopages/jsx@0.3.0-rc.9(@ecopages/signals@0.3.0-rc.9))(@ecopages/radiant@0.3.0-rc.9(@ecopages/jsx@0.3.0-rc.9(@ecopages/signals@0.3.0-rc.9)))(@ecopages/signals@0.3.0-rc.9)
       '@ecopages/react':
         specifier: 0.2.0-rc.6
         version: 0.2.0-rc.6(@ecopages/core@0.2.0-rc.6(@ecopages/dev-toolbar@0.2.0-rc.6)(typescript@5.9.3))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)
@@ -318,8 +318,8 @@ importers:
         specifier: 0.3.0-rc.9
         version: 0.3.0-rc.9(@ecopages/jsx@0.3.0-rc.9(@ecopages/signals@0.3.0-rc.9))
       '@ecopages/radiant-ui':
-        specifier: 0.1.0-rc.15
-        version: 0.1.0-rc.15(@ecopages/jsx@0.3.0-rc.9(@ecopages/signals@0.3.0-rc.9))(@ecopages/radiant@0.3.0-rc.9(@ecopages/jsx@0.3.0-rc.9(@ecopages/signals@0.3.0-rc.9)))(@ecopages/signals@0.3.0-rc.9)
+        specifier: 0.1.0-rc.17
+        version: 0.1.0-rc.17(@ecopages/jsx@0.3.0-rc.9(@ecopages/signals@0.3.0-rc.9))(@ecopages/radiant@0.3.0-rc.9(@ecopages/jsx@0.3.0-rc.9(@ecopages/signals@0.3.0-rc.9)))(@ecopages/signals@0.3.0-rc.9)
       '@ecopages/signals':
         specifier: 0.3.0-rc.9
         version: 0.3.0-rc.9
@@ -930,12 +930,12 @@ packages:
       tailwindcss:
         optional: true
 
-  '@ecopages/radiant-ui@0.1.0-rc.15':
-    resolution: {integrity: sha512-YmJoni2fDFrfhmwec26a0JpuGP6YYTButrmNgBSQBRhqnVbXmerUSH6vPM3SkAPyBUeFuoqQIig+dprfTfdeHQ==}
+  '@ecopages/radiant-ui@0.1.0-rc.17':
+    resolution: {integrity: sha512-/RGr7gVbGYBFnh4U1q2ZtTO8OiHIWPRNolZOt+lCqC5rouLw1NjhDZ0fQaSCTeFwgvv4BMFrGe4dgr7rHAUuEA==}
     peerDependencies:
-      '@ecopages/jsx': '>=0.3.0-rc.9'
-      '@ecopages/radiant': '>=0.3.0-rc.9'
-      '@ecopages/signals': '>=0.3.0-rc.9'
+      '@ecopages/jsx': '>=0.3.0-rc.10'
+      '@ecopages/radiant': '>=0.3.0-rc.10'
+      '@ecopages/signals': '>=0.3.0-rc.10'
 
   '@ecopages/radiant@0.3.0-rc.9':
     resolution: {integrity: sha512-GWpINS5VHJKAaQt14rwjYTURwoxNm8KdRpV20uOHaG3PzZP4M2eT/Aq9KVQ195zTX8GHIp2AylHYw9XCiiKf7g==}
@@ -6813,7 +6813,7 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@ecopages/radiant-ui@0.1.0-rc.15(@ecopages/jsx@0.3.0-rc.9(@ecopages/signals@0.3.0-rc.9))(@ecopages/radiant@0.3.0-rc.9(@ecopages/jsx@0.3.0-rc.9(@ecopages/signals@0.3.0-rc.9)))(@ecopages/signals@0.3.0-rc.9)':
+  '@ecopages/radiant-ui@0.1.0-rc.17(@ecopages/jsx@0.3.0-rc.9(@ecopages/signals@0.3.0-rc.9))(@ecopages/radiant@0.3.0-rc.9(@ecopages/jsx@0.3.0-rc.9(@ecopages/signals@0.3.0-rc.9)))(@ecopages/signals@0.3.0-rc.9)':
     dependencies:
       '@ecopages/jsx': 0.3.0-rc.9(@ecopages/signals@0.3.0-rc.9)
       '@ecopages/radiant': 0.3.0-rc.9(@ecopages/jsx@0.3.0-rc.9(@ecopages/signals@0.3.0-rc.9))

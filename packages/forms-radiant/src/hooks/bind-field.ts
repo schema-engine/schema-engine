@@ -1,5 +1,5 @@
 import { isFieldRequired } from '@schema-engine/forms/schemas';
-import { getActiveFormStore } from '@/adapters/store/active-store';
+import type { FormController } from '@/adapters/radiant/controller';
 import { getFieldGridStyles } from './grid-styles';
 
 export function combineHandlers<T>(controllerHandler: (value: T) => void, propsHandler?: (value: T) => void) {
@@ -9,24 +9,26 @@ export function combineHandlers<T>(controllerHandler: (value: T) => void, propsH
 	};
 }
 
-export function bindControlledFormElement<TFieldValue = unknown>(config: FormEngine.ElementConfig) {
+export function bindControlledFormElement<TFieldValue = unknown>(
+	config: FormEngine.ElementConfig,
+	form: FormController,
+) {
 	if (!config.name) {
 		throw new Error(`Field configuration is missing required "name" property. Config: ${JSON.stringify(config)}`);
 	}
 
-	const store = getActiveFormStore();
+	const field = form.field(config.name);
 	const isRequired = isFieldRequired(config.rules);
 	const name = config.name;
-	const value = store.getValue<TFieldValue>(name);
-	const error = store.getError(name);
+	const value = field.value;
+	const error = field.error;
 
 	const onChange = (nextValue: TFieldValue) => {
-		store.setValue(name, nextValue);
+		field.onChange(nextValue);
 	};
 
 	const onBlur = () => {
-		store.markTouched(name);
-		void store.trigger(name);
+		field.onBlur();
 	};
 
 	const fieldProps = {
@@ -69,9 +71,7 @@ export function bindControlledFormElement<TFieldValue = unknown>(config: FormEng
 		},
 		config,
 		combineHandlers,
-		valueBinding: store.fieldValueSignal<TFieldValue>(name),
-		errorBinding: store.fieldErrorSignal(name),
-		store,
+		form,
 	};
 }
 

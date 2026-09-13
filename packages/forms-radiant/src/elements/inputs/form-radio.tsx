@@ -1,5 +1,6 @@
+import { FormField } from '@/elements/form-field';
 import { RuiRadioGroup } from '@ecopages/radiant-ui/radio-group';
-import { RuiField, RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
+import { RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
 import { RuiLabel } from '@ecopages/radiant-ui/label';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { getFieldGridStyles } from '@/hooks/grid-styles';
@@ -20,7 +21,7 @@ export function FormRadio({
 	}));
 
 	return (
-		<RuiField
+		<FormField
 			name={config.name}
 			rules={toFieldRules(config.rules)}
 			defaultValueData={config.defaultValue !== undefined ? JSON.stringify(config.defaultValue) : undefined}
@@ -46,6 +47,6 @@ export function FormRadio({
 			/>
 			{config.description ? <RuiFieldDescription>{config.description}</RuiFieldDescription> : null}
 			<RuiFieldError />
-		</RuiField>
+		</FormField>
 	);
 }
