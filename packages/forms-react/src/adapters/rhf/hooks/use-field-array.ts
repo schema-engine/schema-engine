@@ -3,7 +3,7 @@ import type { FieldArrayValue } from '../../types';
 
 export function useFieldArray(name: string): FieldArrayValue {
 	const { control } = useFormContext();
-	const { fields, append, remove } = useRHFFieldArray({
+	const { fields, append, prepend, insert, swap, move, update, replace, remove } = useRHFFieldArray({
 		control,
 		name,
 	});
@@ -11,6 +11,12 @@ export function useFieldArray(name: string): FieldArrayValue {
 	return {
 		fields,
 		append,
+		prepend,
+		insert,
+		swap,
+		move,
+		update,
+		replace,
 		remove,
 	};
 }

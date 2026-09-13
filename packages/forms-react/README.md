@@ -370,6 +370,10 @@ Forms support responsive grid layouts using CSS Grid:
 
 The package provides several hooks for form interactions:
 
+The adapter-neutral `useFieldArray` hook exposes the complete field-array
+mutation surface: `append`, `prepend`, `insert`, `swap`, `move`, `update`,
+`replace`, and `remove`, alongside the current `fields`.
+
 ### useFormEngine
 
 Access the form engine instance:
