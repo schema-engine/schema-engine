@@ -1,16 +1,14 @@
 import type { FormConfig } from '@schema-engine/forms/schemas';
 
-/**
- * Declared here so the contact-form demo and its generated snippet share one
- * source of truth (`FormConfigCode` serializes this object for the page).
- */
+/** Contact form with conditional fields and responsive grid — constraints example. */
 export const contactFormDemoConfig: FormConfig = {
 	id: 'contact',
 	title: 'Contact us',
+	description: 'Send a message with conditional fields and a responsive layout.',
 	steps: [
 		{
 			id: 'details',
-			title: 'Contact details',
+			title: 'Contact us',
 			elements: [
 				{
 					$type: 'select',
@@ -21,7 +19,6 @@ export const contactFormDemoConfig: FormConfig = {
 						{ value: 'general', label: 'General question' },
 						{ value: 'support', label: 'Technical support' },
 					],
-					constraints: [],
 					rules: [{ type: 'required', message: 'Subject is required' }],
 				},
 				{
@@ -48,5 +45,9 @@ export const contactFormDemoConfig: FormConfig = {
 		gap: '1rem',
 		responsive: { default: { columns: 1 }, md: { columns: 2 } },
 	},
-	view: { $type: 'card' },
+	view: {
+		$type: 'card',
+		shell: { padding: 'md', shadowSize: 'md' },
+		header: { align: 'center', size: 'md' },
+	},
 };

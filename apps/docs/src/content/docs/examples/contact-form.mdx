@@ -1,24 +1,21 @@
 ---
 title: 'Contact Form'
-description: 'Conditional fields, responsive grid placement, and validation.' 
+description: 'Conditional fields, responsive grid placement, and validation.'
 group: Examples
 order: 2
 ---
 
 import { FormRendererPreview } from '@/components/form-renderer';
 import { FormConfigCode } from '@/components/form-config-code';
-import { contactFormDemoConfig } from './contact-form.config';
-
-export const config = {
-	dependencies: { components: [FormRendererPreview, FormConfigCode] },
-};
+import { contactFormDemoConfig } from '@/lib/form-configs/contact-with-constraints';
 
 # Contact Form
 
 These previews use Radiant because the docs app is Ecopages + Radiant UI.
 
 This example combines shared element configuration with conditional behavior
-and a responsive form grid.
+and a responsive form grid. Form-level `title` and `description` feed the card
+header together with the step `title` (required on every step).
 
 ## Interactive demo
 

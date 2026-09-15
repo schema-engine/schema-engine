@@ -1,16 +1,20 @@
 import type { FormConfig } from '@schema-engine/forms/schemas';
 
 /**
- * Single source of truth for the integration-matrix demo: both the Radiant and
- * the React showcase pages import this module and render the same form.
+ * Simple contact form on a card shell — shared by getting-started guides,
+ * basic-form example, and cross-adapter integration demos.
+ *
+ * @remarks Pages pass this object to live previews and `FormConfigCode` so demos
+ * and snippets cannot drift.
  */
-export const sharedDemoConfig: FormConfig = {
-	id: 'shared-demo',
-	title: 'Contact us',
+export const basicContactFormConfig: FormConfig = {
+	id: 'basic-contact',
+	title: 'Contact Us',
+	description: 'Get in touch with our team',
 	steps: [
 		{
 			id: 'details',
-			title: 'Your details',
+			title: 'Your Information',
 			elements: [
 				{
 					$type: 'input',
@@ -28,7 +32,7 @@ export const sharedDemoConfig: FormConfig = {
 					inputType: 'email',
 					rules: [
 						{ type: 'required', message: 'Email is required' },
-						{ type: 'email', message: 'Enter a valid email' },
+						{ type: 'email', message: 'Invalid email format' },
 					],
 				},
 				{
@@ -41,5 +45,8 @@ export const sharedDemoConfig: FormConfig = {
 			],
 		},
 	],
-	view: { $type: 'card' },
+	view: {
+		$type: 'card',
+		shell: { padding: 'md', shadowSize: 'md' },
+	},
 };

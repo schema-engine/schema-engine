@@ -1,6 +1,6 @@
 import type { FormConfig } from '@schema-engine/forms/schemas';
 
-/** Shared homepage contact form — JSON preview and live engine validation use this. */
+/** Homepage and intro previews — includes demo submit action and submission alert. */
 export const contactFormConfig = {
 	id: 'contact-form',
 	title: 'Contact Form',

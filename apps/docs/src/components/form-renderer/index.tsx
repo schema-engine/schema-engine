@@ -17,9 +17,6 @@ import './form-renderer-preview.css';
  * snippet and the interactive demo share the same data.
  */
 export const FormRendererPreview = eco.component<{ config: FormConfig }, JsxRenderable>({
-	dependencies: {
-		stylesheets: ['./form-renderer-preview.css'],
-	},
 	render: ({ config }) => {
 		return (
 			<div class="not-prose unstyled">

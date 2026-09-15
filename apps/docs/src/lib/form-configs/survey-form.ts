@@ -1,9 +1,6 @@
 import type { FormConfig } from '@schema-engine/forms/schemas';
 
-/**
- * Declared here so the survey demo and its generated snippet share one source
- * of truth (`FormConfigCode` serializes this object for the page).
- */
+/** Customer satisfaction survey with a conditional follow-up field. */
 export const surveyDemoConfig: FormConfig = {
 	id: 'customer-survey',
 	title: 'Customer satisfaction',

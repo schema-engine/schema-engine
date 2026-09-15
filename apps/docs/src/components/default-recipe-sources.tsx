@@ -16,9 +16,6 @@ function recipeTabs(recipe: RecipeSourceGroup) {
 }
 
 export const DefaultRecipeSources = eco.component({
-	dependencies: {
-		components: [CodeTabs],
-	},
 	render: (): JsxRenderable => {
 		const singleStep = defaultRecipeSources.recipes.filter((recipe) => !isWizardRecipe(recipe.id));
 		const wizard = defaultRecipeSources.recipes.filter((recipe) => isWizardRecipe(recipe.id));
