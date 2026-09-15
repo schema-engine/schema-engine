@@ -1,10 +1,11 @@
 import { eco } from '@ecopages/core';
 import type { JsxCustomElementAttributes } from '@ecopages/jsx';
 import type { RadiantSliderProps as SliderProps } from './slider.script';
+import '../radiant-field/field.css';
+import './slider.css';
 
 export const RadiantSlider = eco.component({
 	dependencies: {
-		stylesheets: ['../radiant-field/field.css', './slider.css'],
 		scripts: ['./slider.script.tsx'],
 	},
 	render(props: JsxCustomElementAttributes<HTMLElement, SliderProps>) {

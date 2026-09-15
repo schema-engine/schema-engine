@@ -1,5 +1,6 @@
 import { eco } from '@ecopages/core';
 import type { JsxRenderable } from '@ecopages/jsx';
+import './breadcrumb.css';
 
 export type BreadcrumbItem = {
 	label: string;
@@ -14,9 +15,6 @@ export type BreadcrumbProps = {
 };
 
 export const Breadcrumb = eco.component<BreadcrumbProps, JsxRenderable>({
-	dependencies: {
-		stylesheets: ['./breadcrumb.css'],
-	},
 	render: ({ items, ariaLabel = 'Breadcrumb', showHome, class: className }) => {
 		return (
 			<nav aria-label={ariaLabel} class={className}>

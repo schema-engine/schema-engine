@@ -6,12 +6,8 @@ order: 3
 ---
 
 import { FormRendererPreview } from '@/components/form-renderer';
-import { registrationDemoConfig } from '@/content/docs/examples/registration-flow.config';
-import { surveyDemoConfig } from '@/content/docs/examples/survey-form.config';
-
-export const config = {
-	dependencies: { components: [FormRendererPreview] },
-};
+import { registrationDemoConfig } from '@/lib/form-configs/registration-flow';
+import { surveyDemoConfig } from '@/lib/form-configs/survey-form';
 
 # Radiant layouts
 

@@ -1,4 +1,5 @@
 import { eco } from '@ecopages/core';
+import './api-field.css';
 
 export const ApiField = eco.component<{
 	name: string;
@@ -8,9 +9,6 @@ export const ApiField = eco.component<{
 	setter: string;
 	children: string;
 }>({
-	dependencies: {
-		stylesheets: ['./api-field.css'],
-	},
 	render: ({ name, defaultValue, setter, mandatory, type, children }) => {
 		return (
 			<div class="api-field">

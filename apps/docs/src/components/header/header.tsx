@@ -3,6 +3,7 @@ import { Burger } from '@/components/burger';
 import { Logo } from '@/components/logo/logo';
 import { Navigation, type NavigationProps } from '@/components/navigation';
 import rootJson from '../../../../../package.json';
+import './header.css';
 
 export type HeaderProps = {
 	navigation: NavigationProps;
@@ -10,10 +11,6 @@ export type HeaderProps = {
 };
 
 export const Header = eco.component<HeaderProps>({
-	dependencies: {
-		stylesheets: ['./header.css'],
-		components: [Navigation, Logo, Burger],
-	},
 	render: ({ navigation, showBurger = false }) => {
 		return (
 			<header class="header">

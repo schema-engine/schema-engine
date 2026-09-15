@@ -14,6 +14,7 @@ import { RuiHeading, RuiHeadingEyebrow, RuiHeadingTitle } from '@ecopages/radian
 import { BaseLayout } from '@/layouts/base-layout';
 import { FormRendererPreview } from '@/components/form-renderer';
 import { contactFormConfig, contactFormConfigExample } from '@/homepage/examples';
+import './index.css';
 
 type HomeFeedArticleData = {
 	href: string;
@@ -439,10 +440,6 @@ const HomePage = () => (
 
 export default eco.page({
 	layout: BaseLayout,
-	dependencies: {
-		components: [FormRendererPreview],
-		stylesheets: ['./index.css'],
-	},
 	metadata: () => ({
 		title: 'Schema Engine',
 		description:

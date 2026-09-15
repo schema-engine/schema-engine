@@ -5,6 +5,7 @@ import { eco } from '@ecopages/core';
 import type { FormConfig } from '@schema-engine/forms/schemas';
 import { docsReactFormEngine, rhfAdapter } from './demo-engine';
 import { installMockFormApi } from '@/lib/mock-form-api';
+import './demo-recipes.css';
 
 /**
  * Live React form preview for docs demos.
@@ -29,7 +30,6 @@ export const ReactFormPreview = eco.component<
 	{ config: FormConfig; onSubmit?: (data: Record<string, unknown>) => void },
 	ReactNode
 >({
-	dependencies: { stylesheets: ['./demo-recipes.css'] },
 	render: (props) => {
 		installMockFormApi();
 		return <Preview {...props} />;

@@ -1,10 +1,11 @@
 import { eco } from '@ecopages/core';
 import type { JsxCustomElementAttributes } from '@ecopages/jsx';
 import type { RadiantSelectProps as SelectProps } from './select.script';
+import '../radiant-field/field.css';
+import './select.css';
 
 export const RadiantSelect = eco.component({
 	dependencies: {
-		stylesheets: ['../radiant-field/field.css', './select.css'],
 		scripts: ['./select.script.tsx'],
 	},
 	render(props: JsxCustomElementAttributes<HTMLElement, SelectProps>) {
