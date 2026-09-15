@@ -1,4 +1,5 @@
 import type { FieldRules } from '@ecopages/radiant-ui/form';
+import { isServer } from '@ecopages/radiant/is-server';
 import type { ValidationRule } from '@schema-engine/forms/schemas';
 import { toFieldRules } from '@/lib/field-rules';
 
@@ -75,4 +76,24 @@ export function hydrateFieldRules(root: ParentNode): void {
 	for (const field of fields) {
 		hydrateField(field);
 	}
+}
+
+const HYDRATOR_INSTALLED = Symbol.for('@schema-engine/forms-radiant.field-rule-hydrator');
+
+/**
+ * @remarks Registers a single document-level hydrator for client navigations.
+ * Skipped during SSR so Radiant's minimal document does not accumulate listeners.
+ */
+export function ensureDocumentFieldRuleHydrator(doc: Document): void {
+	if (isServer || HYDRATOR_INSTALLED in doc) {
+		return;
+	}
+
+	Reflect.set(doc, HYDRATOR_INSTALLED, true);
+	hydrateFieldRules(doc);
+	doc.addEventListener('eco:after-swap', () => hydrateFieldRules(doc));
+}
+
+if (typeof document !== 'undefined') {
+	ensureDocumentFieldRuleHydrator(document);
 }
