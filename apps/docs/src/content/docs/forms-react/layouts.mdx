@@ -1,3 +1,16 @@
+---
+title: 'View recipes'
+description: 'Card, wizard, and other view recipes for form chrome.'
+group: Forms React
+order: 4
+---
+
+import { EcoEmbed } from '@ecopages/ecopages-jsx/eco-embed';
+import { ReactFormPreview } from '@/components/react-form-demo/react-form-preview.react';
+import { FormConfigCode } from '@/components/form-config-code';
+import { DefaultRecipeSources } from '@/components/default-recipe-sources';
+import { viewRecipesDemoConfig } from '@/lib/form-configs/onboarding-wizard';
+
 # View recipes
 
 Recipes compose a **shell** with optional **header**, **progress**, and **actions** blocks. Select one with form-level `view.$type`. `@schema-engine/forms-react` is headless: the factory does not bind default recipes. `FormRenderer` still lives in the package.
@@ -18,7 +31,7 @@ pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-engine-form-recipes
 
 Then add its generated recipe barrel when you construct the engine:
 
-```ts
+```typescript
 import { createReactFormEngine } from '@schema-engine/forms-react';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
@@ -42,6 +55,8 @@ Slot config is optional. The recipe fixes block identity; `view` only passes opt
 
 ## Single-step
 
+Single-step recipes render a submit-only actions bar below the fields (aligned with the `actions.align` slot config), so the form is submittable without wizard navigation:
+
 ```typescript
 const formConfig: FormConfig = {
 	id: 'contact',
@@ -55,20 +70,11 @@ const formConfig: FormConfig = {
 
 ## Multi-step
 
-Wizard recipes require **at least two steps**. Set `view.$type` to a wizard recipe such as `wizard` or `card-wizard`.
+Wizard recipes require **at least two steps**. Set `view.$type` to a wizard recipe such as `wizard` or `card-wizard`. The live demo renders exactly the configuration below:
 
-The interactive example is available on the documentation page.
+<EcoEmbed component={ReactFormPreview} props={{ config: viewRecipesDemoConfig }} />
 
-```typescript
-const formConfig: FormConfig = {
-	id: 'onboarding',
-	view: { $type: 'wizard' },
-	steps: [
-		{ id: 'account', title: 'Account', elements: [/* ... */] },
-		{ id: 'profile', title: 'Profile', elements: [/* ... */] },
-	],
-};
-```
+<FormConfigCode config={viewRecipesDemoConfig} />
 
 If you omit `view.$type` on a multi-step form, the engine uses the registered `bare-controls` recipe. If that recipe is not registered, fields render without chrome and the renderer warns once per engine.
 
@@ -76,9 +82,9 @@ See [Registration Flow](/docs/examples/registration-flow) for a full wizard conf
 
 ## Copy the default source
 
-Canonical source is `registry/shared/forms/recipes`. After `shadcn add`, files land under `@/components/schema-engine/forms/recipes`. Copy `recipe-registry.ts` once, then the files for each recipe you want. Each tab below has a Copy button.
+Canonical source is `registry/shared/forms/recipes`. After `shadcn add`, files land under `@/components/schema-engine/forms/recipes`. Copy `recipe-registry.ts` once, then the files for each recipe you want. Each tab has a copy button.
 
-Recipe source: https://github.com/andeeplus/schema-engine/tree/main/registry/shared/forms/recipes
+<DefaultRecipeSources />
 
 ## Custom recipes
 

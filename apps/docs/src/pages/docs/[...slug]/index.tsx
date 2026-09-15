@@ -6,25 +6,20 @@ import type { Entry } from 'ecopages:content/docs';
 import { CopyForLlm } from '@/components/copy-for-llm';
 import { DocsBreadcrumb } from '@/components/docs-breadcrumb';
 import { DocsLayout } from '@/layouts/docs-layout';
-import { explicitDocsPages } from '@/lib/explicit-docs-pages';
 
 export default eco.page<{ entry: Entry }, JsxRenderable>({
 	layout: DocsLayout,
-	dependencies: async ({ props }) => {
-		const entryDependencies = await getEntryDependencies(props.entry.slug);
-		return {
-			...entryDependencies,
-			components: [...(entryDependencies?.components ?? []), CopyForLlm, DocsBreadcrumb],
-		};
-	},
+	/**
+	 * @remarks MDX entry assets still flow through `getEntryDependencies`; the
+	 * page's own components are picked up from the static imports above.
+	 */
+	dependencies: async ({ props }) => getEntryDependencies(props.entry.slug),
 	staticPaths: async () => ({
-		paths: entries
-			.filter((post) => !explicitDocsPages.some((page) => page.slug === post.slug))
-			.map((post) => ({
-				params: {
-					slug: post.segments,
-				},
-			})),
+		paths: entries.map((post) => ({
+			params: {
+				slug: post.segments,
+			},
+		})),
 	}),
 	staticProps: async ({ pathname }) => {
 		const segments = Array.isArray(pathname.params.slug) ? pathname.params.slug : [pathname.params.slug];
