@@ -1,10 +1,24 @@
+---
+title: 'Getting Started'
+description: 'Install the React adapter and register your engine.'
+group: Forms React
+order: 2
+---
+
+import { EcoEmbed } from '@ecopages/ecopages-jsx/eco-embed';
+import { ReactFormPreview } from '@/components/react-form-demo/react-form-preview.react';
+import { FormConfigCode } from '@/components/form-config-code';
+import { basicContactFormConfig } from '@/lib/form-configs/basic-contact';
+
 # Getting Started
 
 This guide walks you through building your first React form.
 
+The live example on this page is the exact configuration shown below, rendered with the docs demo kit (Radiant UI styling).
+
 ## Live example
 
-The interactive example is available on the documentation page.
+<EcoEmbed component={ReactFormPreview} props={{ config: basicContactFormConfig }} />
 
 ## 1. Create a Form Engine
 
@@ -26,53 +40,9 @@ const formEngine = createReactFormEngine({ elements: schemaFormRegistrations, re
 
 ## 2. Configure Your Form
 
-Create a JSON configuration:
+Create a JSON configuration — this page's live demo renders exactly this:
 
-```typescript
-const formConfig: FormConfig = {
-	id: 'contact-form',
-	title: 'Contact Us',
-	description: 'Get in touch with our team',
-	steps: [
-		{
-			id: 'step-1',
-			title: 'Your Information',
-			elements: [
-				{
-					$type: 'input',
-					id: 'name',
-					name: 'name',
-					label: 'Full Name',
-					inputType: 'text',
-					rules: [{ type: 'required', message: 'Name is required' }],
-				},
-				{
-					$type: 'input',
-					id: 'email',
-					name: 'email',
-					label: 'Email Address',
-					inputType: 'email',
-					rules: [
-						{ type: 'required', message: 'Email is required' },
-						{ type: 'email', message: 'Invalid email format' },
-					],
-				},
-				{
-					$type: 'textarea',
-					id: 'message',
-					name: 'message',
-					label: 'Message',
-					rows: 5,
-				},
-			],
-		},
-	],
-	view: {
-		$type: 'card',
-		shell: { padding: 'md', shadowSize: 'md' },
-	},
-};
-```
+<FormConfigCode config={basicContactFormConfig} />
 
 ## 3. Render the Form
 

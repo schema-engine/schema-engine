@@ -20,6 +20,10 @@ const config = await new ConfigBuilder()
 			extensions: ['.react.tsx'],
 			explicitGraph: true,
 			runtimeModules: ['@schema-engine/forms-react', 'react-hook-form'],
+			mdx: {
+				enabled: true,
+				extensions: ['.react.mdx'],
+			},
 		}),
 		ecopagesJsxPlugin({
 			mdx: {

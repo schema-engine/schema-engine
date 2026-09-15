@@ -19,7 +19,6 @@ import { RuiToc } from '@ecopages/radiant-ui/toc';
 import { docsNav } from '@/lib/docs-nav';
 import { flattenContentNav } from '@/lib/content-nav';
 
-import { CodeTabs } from '@/components/code-tabs';
 import { Logo } from '@/components/logo/logo';
 import { GITHUB_MARK_PATH } from '@/components/github-mark';
 import { ThemeToggle } from '@/components/theme-toggle/theme-toggle';
@@ -27,6 +26,7 @@ import { BaseLayout } from '@/layouts/base-layout';
 import { schemaEngineVersion } from '@/lib/schema-engine-version';
 import { DocsPagination } from './components/docs-pagination';
 import { getGroupIcon } from './get-group-icon';
+import './docs-layout.css';
 
 const paginationData = JSON.stringify({
 	pages: flattenContentNav(docsNav).map(({ href, title }) => ({ href, title })),
@@ -103,9 +103,7 @@ const DocsSiteHeader = () => (
 
 export const DocsLayout = eco.layout<JsxRenderable>({
 	dependencies: {
-		stylesheets: ['./docs-layout.css'],
 		scripts: ['./docs-layout.script.ts'],
-		components: [BaseLayout, CodeTabs, DocsPagination, Logo, ThemeToggle],
 	},
 	render: ({ children }) => {
 		return (

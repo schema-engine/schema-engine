@@ -1,4 +1,5 @@
 /* oxlint-disable import/no-unassigned-import -- ambient module augmentation */
+import '@ecopages/content-processor/types';
 import '@ecopages/core/declarations';
 import '@ecopages/core/env';
 import '@ecopages/react/declarations';

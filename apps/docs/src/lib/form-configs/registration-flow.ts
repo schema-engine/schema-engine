@@ -1,9 +1,6 @@
 import type { FormConfig } from '@schema-engine/forms/schemas';
 
-/**
- * Declared here so the registration-flow demo and its generated snippet share
- * one source of truth (`FormConfigCode` serializes this object for the page).
- */
+/** Registration wizard with submit and reset actions. */
 export const registrationDemoConfig: FormConfig = {
 	id: 'registration',
 	title: 'Create your account',

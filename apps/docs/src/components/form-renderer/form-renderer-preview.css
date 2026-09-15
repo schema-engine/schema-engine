@@ -7,6 +7,10 @@
  * centering). Inside the docs demo container that reserves a viewport of
  * blank space around a small card, so the demo frame flattens them.
  */
+.docs-form-renderer-preview:has(.card-shell, .hero-shell, .split-screen-shell, .se-sidebar-shell, .se-stack-shell) {
+	@apply bg-transparent p-0 rounded-none;
+}
+
 .docs-form-renderer-preview .card-shell,
 .docs-form-renderer-preview .hero-shell,
 .docs-form-renderer-preview .split-screen-shell,
@@ -14,6 +18,7 @@
 .docs-form-renderer-preview .se-stack-shell {
 	min-height: auto;
 	padding: 0;
+	background: transparent;
 }
 
 .docs-form-renderer-preview .hero-shell,

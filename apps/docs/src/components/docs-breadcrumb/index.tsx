@@ -8,10 +8,10 @@ import {
 	RuiBreadcrumbPage,
 	RuiBreadcrumbSeparator,
 } from '@ecopages/radiant-ui/breadcrumb';
-import type { DocsPageEntry } from '@/lib/explicit-docs-pages';
+import type { Entry } from 'ecopages:content/docs';
 import { docsNav } from '@/lib/docs-nav';
 
-export const DocsBreadcrumb = eco.component<{ entry: DocsPageEntry }, JsxRenderable>({
+export const DocsBreadcrumb = eco.component<{ entry: Entry }, JsxRenderable>({
 	render: ({ entry }) => {
 		const group = docsNav.groups.find((navGroup) => navGroup.items.some((item) => item.slug === entry.slug));
 		const groupLink = group?.items[0];

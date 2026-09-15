@@ -1,5 +1,6 @@
 import { eco } from '@ecopages/core';
 import type { JsxRenderable } from '@ecopages/jsx';
+import './code-window.css';
 
 export type CodeWindowTab = {
 	id: string;
@@ -58,21 +59,14 @@ const Shell = ({
 	// the user to click an empty tab strip to reveal anything).
 	const activeTabId = defaultTabId ?? tabs?.[0]?.id;
 	return (
-		<div
-			class={
-				className ??
-				'flex flex-col rounded-md border border-border bg-background-accent overflow-hidden'
-			}
-		>
+		<div class={className ?? 'flex flex-col rounded-md border border-border bg-background-accent overflow-hidden'}>
 			<div class="flex items-center gap-3 px-4 py-2.5 border-b border-border bg-muted">
 				<div class="flex items-center gap-1.5" aria-hidden="true">
 					<span class="w-2.5 h-2.5 rounded-full bg-destructive" />
 					<span class="w-2.5 h-2.5 rounded-full bg-yellow-500" />
 					<span class="w-2.5 h-2.5 rounded-full bg-green-500" />
 				</div>
-				{label ? (
-					<p class="text-xs font-mono text-on-background/60 m-0">{label}</p>
-				) : null}
+				{label ? <p class="text-xs font-mono text-on-background/60 m-0">{label}</p> : null}
 			</div>
 			{tabs && tabs.length > 0 ? (
 				<div
@@ -99,26 +93,17 @@ const Shell = ({
 					))}
 				</div>
 			) : null}
-			<div
-				id={bodyId}
-				class={`bg-background overflow-auto ${bodyHeight}`}
-			>
+			<div id={bodyId} class={`bg-background overflow-auto ${bodyHeight}`}>
 				{tabs && tabs.length > 0
 					? tabs.map((tab) => (
-							<div
-								data-code-tab-panel={tab.id}
-								hidden={tab.id !== activeTabId}
-								class={bodyHeight}
-							>
+							<div data-code-tab-panel={tab.id} hidden={tab.id !== activeTabId} class={bodyHeight}>
 								{tab.content}
 							</div>
 						))
 					: children}
 			</div>
 			{footer ? (
-				<div class="px-4 py-2.5 border-t border-border bg-muted text-xs text-on-background/60">
-					{footer}
-				</div>
+				<div class="px-4 py-2.5 border-t border-border bg-muted text-xs text-on-background/60">{footer}</div>
 			) : null}
 		</div>
 	);
@@ -126,7 +111,6 @@ const Shell = ({
 
 export const CodeWindow = eco.component<CodeWindowProps, JsxRenderable>({
 	dependencies: {
-		stylesheets: ['./code-window.css'],
 		scripts: ['./code-window.script.ts'],
 	},
 	render: (props) => <Shell {...props} />,

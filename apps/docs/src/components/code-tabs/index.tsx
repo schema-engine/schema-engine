@@ -3,11 +3,11 @@ import type { RadiantCodeTabsProps } from './code-tabs.script.tsx';
 import type { JsxCustomElementAttributes } from '@ecopages/jsx';
 // oxlint-disable-next-line import/no-unassigned-import -- custom-element types
 import './code-tabs.script.tsx';
+import './code-tabs.css';
 
 export const CodeTabs = eco.component({
 	dependencies: {
 		scripts: ['./code-tabs.script.tsx'],
-		stylesheets: ['./code-tabs.css'],
 	},
 	render(props: JsxCustomElementAttributes<HTMLElement, RadiantCodeTabsProps>) {
 		return (

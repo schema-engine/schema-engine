@@ -41,6 +41,12 @@ const GROUP_ICONS = {
 			<circle cx="12" cy="12" r="7" />
 		</GroupIcon>
 	),
+	Capabilities: () => (
+		<GroupIcon>
+			<path d="M8 3h8l4 4v14H4V7l4-4z" />
+			<path d="M8 3v4h8V3M12 11v6M9 14h6" />
+		</GroupIcon>
+	),
 	Actions: () => (
 		<GroupIcon>
 			<polygon points="5 4 19 12 5 20 5 4" />

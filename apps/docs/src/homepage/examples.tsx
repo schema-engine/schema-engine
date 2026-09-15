@@ -1,10 +1,6 @@
-import { codeToHtml } from 'shiki';
-import { contactFormConfig } from './contact-form';
+import { contactFormConfig } from '@/lib/form-configs/homepage-contact';
+import { codeToHtmlSync } from '@/lib/sync-highlighter';
 
 export { contactFormConfig };
 
-export const contactFormConfigExample = await codeToHtml(JSON.stringify(contactFormConfig, null, 2), {
-	lang: 'json',
-	themes: { light: 'light-plus', dark: 'dark-plus' },
-	defaultColor: false,
-});
+export const contactFormConfigExample = codeToHtmlSync(JSON.stringify(contactFormConfig, null, 2), 'json');

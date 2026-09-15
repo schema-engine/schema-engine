@@ -5,14 +5,12 @@ import type { JsxRenderable } from '@ecopages/jsx';
 
 const HtmlTemplate = eco.html<JsxRenderable>({
 	dependencies: {
-		components: [Head],
 		scripts: [
 			{
 				content: THEME_BOOTSTRAP_SCRIPT,
 			},
 		],
 	},
-
 	render: ({ children, metadata, headContent, language = 'en' }) => {
 		return (
 			<html lang={language} data-rui-colors="schema">

@@ -47,11 +47,11 @@ previews mount through a client island, same pattern as Radiant.
   Frontmatter `group` and `order` control the sidebar.
 - The catch-all route is `apps/docs/src/pages/docs/[...slug]/index.tsx`.
 - For code examples, prefer real config snippets. Default interactive previews
-  use Radiant `FormRendererPreview` with the form configuration declared in a
-  `<page>.config.ts` module next to the MDX (`FormConfigCode` serializes it for
-  the snippet); Forms React pages use `ReactFormPreview`, the Radiant-styled
-  demo kit in `apps/docs/src/components/react-form-demo/`, with the form
-  declared inline in the page.
+  use Radiant `FormRendererPreview` with a `FormConfig` from
+  `apps/docs/src/lib/form-configs/` (`FormConfigCode` serializes the
+  same object for the snippet). Forms React pages use `ReactFormPreview`, the
+  Radiant-styled demo kit in `apps/docs/src/components/react-form-demo/`,
+  importing the same shared configs when the demo matches another page.
 - View recipe source for agents: `registry/shared/forms/recipes`.
   The View recipes page also has copy tabs, which are not in `llms.txt`.
 

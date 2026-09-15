@@ -1,6 +1,7 @@
 import { eco } from '@ecopages/core';
 import { ThemeToggle } from '../theme-toggle/theme-toggle';
 import type { JsxRenderable } from '@ecopages/jsx';
+import './navigation.css';
 
 export type NavigationProps = {
 	items: {
@@ -11,10 +12,6 @@ export type NavigationProps = {
 };
 
 export const Navigation = eco.component<NavigationProps, JsxRenderable>({
-	dependencies: {
-		stylesheets: ['./navigation.css'],
-		components: [ThemeToggle],
-	},
 	render: ({ items }) => {
 		return (
 			<nav class="navigation">

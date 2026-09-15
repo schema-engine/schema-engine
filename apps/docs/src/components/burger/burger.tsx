@@ -1,8 +1,8 @@
 import { eco } from '@ecopages/core';
+import './burger.css';
 
 export const Burger = eco.component<{ class?: string }>({
 	dependencies: {
-		stylesheets: ['./burger.css'],
 		scripts: ['./burger.script.ts'],
 	},
 	render: ({ class: className }) => {
