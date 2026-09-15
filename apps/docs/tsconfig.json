@@ -21,15 +21,13 @@
 			"@/components/schema-engine/forms/*": ["../../registry/shared/forms/*"],
 			"@/components/ui/calendar": ["../../registry/shared/primitives/calendar.tsx"],
 			"@/components/ui/*": ["../../packages/forms-react/.storybook/ui/*", "../../registry/ui-stubs/*"],
-			"@/lib/utils": ["../../registry/ui-stubs/lib/utils.ts"],
-			"ecopages:content/docs": ["./types/ecopages-content-docs.d.ts"],
-			"ecopages:content/docs/server": ["./types/ecopages-content-docs-server.d.ts"]
+			"@/lib/utils": ["../../registry/ui-stubs/lib/utils.ts"]
 		},
 		"resolveJsonModule": true,
 		"skipLibCheck": true,
 		"strict": true,
 		"target": "ES2021",
-		"types": ["node"],
+		"types": ["node", "ecopages-content-processor"],
 		"useDefineForClassFields": true,
 		"verbatimModuleSyntax": true
 	},
