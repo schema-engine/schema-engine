@@ -6,6 +6,7 @@ import { Logo } from '@/components/logo/logo';
 import { GITHUB_MARK_PATH } from '@/components/github-mark';
 import { ThemeToggle } from '@/components/theme-toggle/theme-toggle';
 import { schemaEngineVersion } from '@/lib/schema-engine-version';
+import './base-layout.css';
 
 export type BaseLayoutProps = {
 	children: JsxRenderable;
@@ -16,9 +17,7 @@ export type BaseLayoutProps = {
 
 export const BaseLayout = eco.component<BaseLayoutProps, JsxRenderable>({
 	dependencies: {
-		stylesheets: ['./base-layout.css'],
 		scripts: ['./base-layout.script.ts'],
-		components: [Logo, ThemeToggle],
 	},
 	render: ({ children, class: className, showHeader = true }) => {
 		return (

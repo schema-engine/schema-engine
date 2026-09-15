@@ -1,4 +1,5 @@
 import type { ActionRegistrationConstraint } from '@schema-engine/forms';
+import type { NotificationAction } from '@schema-engine/forms/actions';
 import {
 	autoSavePlugin,
 	formResetPlugin,
@@ -6,6 +7,7 @@ import {
 	gtmPlugin as gtmEventPlugin,
 	notificationPlugin,
 } from '@schema-engine/forms/actions';
+import { showDocsActionNotification } from '@/lib/docs-demo-notification';
 
 /**
  * Demo action registrations shared by Radiant and Forms React docs previews.
@@ -22,10 +24,10 @@ export function createDocsDemoActions(): ActionRegistrationConstraint[] {
 			},
 		}),
 		notificationPlugin({
-			onSuccess: (message) => console.log(`[success] ${message}`),
-			onError: (message) => console.error(`[error] ${message}`),
-			onWarning: (message) => console.warn(`[warning] ${message}`),
-			onInfo: (message) => console.info(`[info] ${message}`),
+			onNotification: (message, variant, context) => {
+				const action = context.config as NotificationAction;
+				showDocsActionNotification(message, variant, action.duration ?? 3000);
+			},
 		}),
 		formResetPlugin({
 			onReset: (context) => {
