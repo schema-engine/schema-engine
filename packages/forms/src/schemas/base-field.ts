@@ -2,14 +2,42 @@ import * as z from 'zod/mini';
 import { ValidationRuleSchema } from './validation/';
 
 /**
+ * Semantic gap tokens for grid layouts.
+ *
+ * @remarks
+ * Tokens are indirections to overridable CSS variables: the renderer emits
+ * `var(--se-grid-gap-<token>)`, so hosts restyle every form by overriding the
+ * token at `:root`. Raw CSS strings (e.g. `'1.5rem'`) are the one-off escape
+ * hatch.
+ */
+export const GridGapTokens = ['none', 'compact', 'default', 'loose', 'wide'] as const;
+
+export type GridGapToken = (typeof GridGapTokens)[number];
+
+/**
+ * Semantic token or raw CSS length.
+ *
+ * @remarks
+ * `string & {}` keeps the token union from collapsing to `string`, so
+ * `resolveGridGap` can narrow tokens without a cast.
+ */
+export type GridGapValue = GridGapToken | (string & {});
+
+export const GridGapValueSchema = z.union([z.enum(GridGapTokens), z.string()]);
+
+/**
  * Responsive breakpoint configuration for grid layout
  */
 export const GridBreakpointConfigSchema = z.object({
 	columns: z.optional(z.union([z.number(), z.literal('auto')])),
-	rows: z.optional(z.union([z.number(), z.literal('auto')])),
-	gap: z.optional(z.union([z.number(), z.string()])),
+	rows: z
+		.optional(z.union([z.number(), z.literal('auto')]))
+		.check(z.describe('Deprecated: not emitted to grid CSS yet.')),
+	gap: z.optional(GridGapValueSchema),
+	gapX: z.optional(GridGapValueSchema),
+	gapY: z.optional(GridGapValueSchema),
 	minColumnWidth: z.optional(z.string()),
-	maxColumnWidth: z.optional(z.string()),
+	maxColumnWidth: z.optional(z.string()).check(z.describe('Deprecated: not emitted to grid CSS yet.')),
 });
 
 /**
@@ -28,8 +56,12 @@ export const FieldGridBreakpointSchema = z.object({
  */
 export const GridLayoutConfigSchema = z.object({
 	columns: z.optional(z.union([z.number(), z.literal('auto')])),
-	rows: z.optional(z.union([z.number(), z.literal('auto')])),
-	gap: z.optional(z.union([z.number(), z.string()])),
+	rows: z
+		.optional(z.union([z.number(), z.literal('auto')]))
+		.check(z.describe('Deprecated: not emitted to grid CSS yet.')),
+	gap: z.optional(GridGapValueSchema),
+	gapX: z.optional(GridGapValueSchema),
+	gapY: z.optional(GridGapValueSchema),
 	responsive: z.optional(
 		z.object({
 			default: z.optional(GridBreakpointConfigSchema),
@@ -40,10 +72,10 @@ export const GridLayoutConfigSchema = z.object({
 			'2xl': z.optional(GridBreakpointConfigSchema),
 		}),
 	),
-	autoFit: z.optional(z.boolean()),
-	autoFill: z.optional(z.boolean()),
+	autoFit: z.optional(z.boolean()).check(z.describe('Deprecated: not emitted to grid CSS yet.')),
+	autoFill: z.optional(z.boolean()).check(z.describe('Deprecated: not emitted to grid CSS yet.')),
 	minColumnWidth: z.optional(z.string()),
-	maxColumnWidth: z.optional(z.string()),
+	maxColumnWidth: z.optional(z.string()).check(z.describe('Deprecated: not emitted to grid CSS yet.')),
 	justifyItems: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
 	alignItems: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
 	placeItems: z.optional(z.string()),

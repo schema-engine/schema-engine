@@ -19,3 +19,8 @@ createFormEngine().extend({
 	// @ts-expect-error -- recipes must be recipe registrations
 	recipes: [false],
 });
+
+createFormEngine().extend({
+	// @ts-expect-error -- grid theme is fixed at engine construction
+	grid: { breakpoints: { md: '50rem' } },
+});

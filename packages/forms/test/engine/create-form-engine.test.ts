@@ -134,4 +134,16 @@ describe('FormEngine.extend', () => {
 		expect(extended.hasElement('note')).toBe(true);
 		expect(extended.hasElement('textarea')).toBe(true);
 	});
+
+	test('preserves the grid theme and cached stylesheet', () => {
+		const base = createFormEngine({
+			elements: [noteElement],
+			grid: { breakpoints: { md: '50rem' } },
+		});
+		const extended = base.extend({ elements: [textareaElement] });
+
+		expect(extended.getGridTheme()).toBe(base.getGridTheme());
+		expect(extended.getGridThemeCss()).toBe(base.getGridThemeCss());
+		expect(extended.getCompiledGrid()).toBe(base.getCompiledGrid());
+	});
 });

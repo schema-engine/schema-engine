@@ -45,6 +45,24 @@ const contactForm = engine.defineForm({
 
 Use `engine.extend({ ... })` to add registrations without re-spreading shared barrels. Author forms with `engine.defineForm({ ... })` object literals.
 
+### Grid theme
+
+The engine also owns the grid layout vocabulary through the optional `grid`
+option: breakpoint thresholds (`sm`…`2xl`, CSS lengths), gap token definitions
+(`none | compact | default | loose | wide`), and the default minimum column
+width for `columns: 'auto'` grids. Every engine exposes a frozen
+`engine.getCompiledGrid()` (theme plus stylesheet), with `getGridTheme()` /
+`getGridThemeCss()` as convenience getters, computed once at construction
+(library defaults apply when `grid` is omitted). Configured breakpoint
+thresholds must preserve named cascade order (`sm ≤ md ≤ lg ≤ xl ≤ 2xl`);
+`rem`/`em` lengths compare at a 16px root so mixed units cannot invert the
+sequence. Forms consume those tokens in their `grid` configuration (`columns`,
+`gap`/`gapX`/`gapY`, `responsive` entries, per-field `grid` placement).
+Renderers emit the scoped stylesheet (`data-se-grid-theme`) inline during
+render, so responsive layout is CSS-driven — no runtime observers, and SSR
+output is styled before hydration. `engine.extend()` inherits the source
+engine's grid theme; `grid` is not an extend option.
+
 Single-step forms may omit `view` to render fields directly. Multi-step forms
 that omit `view` use the registered `bare-controls` recipe at **render** time.
 `engine.validateForm` still succeeds if that recipe is missing; the renderer

@@ -9,6 +9,7 @@ import { ComponentType } from '@/engine/component-type';
 import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from '@/engine/schema-artifacts';
 import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
 import { logger } from '@/lib/logger';
+import { compileGridTheme, getDefaultCompiledGrid, type CompiledGrid, type GridThemeOptions } from '@/lib/grid-styles';
 import { ElementRegistry, RecipeRegistry } from '@/registries';
 import { createFormConfigShape } from '@/schemas/form-config-shape';
 import { ActionRegistry } from '@schema-engine/actions';
@@ -61,6 +62,9 @@ export interface FormEngineRegistrationLists {
 	recipes?: readonly RecipeRegistrationConstraint[];
 	actions?: readonly ActionRegistrationConstraint[];
 	catalog?: SchemaMetadataCatalog;
+	grid?: GridThemeOptions;
+	/** Preserves the compiled grid when {@link FormEngine.extend} clones an engine. */
+	compiledGrid?: CompiledGrid;
 }
 
 /**
@@ -132,12 +136,16 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 		actionConfigValidators,
 	);
 
+	const compiledGrid =
+		lists.compiledGrid ?? (lists.grid === undefined ? getDefaultCompiledGrid() : compileGridTheme(lists.grid));
+
 	return new FormEngine({
 		elements: elementRegistry.getMap(),
 		recipes: recipeRegistry.getMap(),
 		actions: actionRegistry.getMap(),
 		schemaArtifacts,
 		formConfigSchema,
+		compiledGrid,
 	});
 }
 
