@@ -61,7 +61,7 @@ export function FieldGroup({
 			data-se-validation-rules={validationRules ? JSON.stringify(validationRules) : undefined}
 			defaultValueData={defaultValue !== undefined ? JSON.stringify(defaultValue) : undefined}
 			disabled={disabled}
-			class={className ?? 'se-form-field'}
+			classes={['se-form-field', className]}
 			grid={grid}
 			style={style}
 		>

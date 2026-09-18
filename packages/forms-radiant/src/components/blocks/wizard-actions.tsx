@@ -38,9 +38,7 @@ export class WizardActionsElement extends RadiantElement {
 		const steps = deriveFormSteps(config, instance);
 		const form = { isSubmitting: instance.isSubmitting };
 		return (
-			<div
-				class={appearance === 'minimal' ? 'se-wizard-actions se-wizard-actions--minimal' : 'se-wizard-actions'}
-			>
+			<div classes={['se-wizard-actions', appearance === 'minimal' && 'se-wizard-actions--minimal']}>
 				<RuiButton
 					type="button"
 					variant={appearance === 'minimal' ? 'ghost' : 'outline'}

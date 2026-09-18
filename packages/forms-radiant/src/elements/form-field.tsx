@@ -41,7 +41,7 @@ export function FormField({
 
 	return jsx('se-field', {
 		...props,
-		class: className ?? 'se-form-field',
+		classes: ['se-form-field', className],
 		'data-se-grid-theme': fieldHost.themeId,
 		style: fieldHost.style,
 		'prop:rules': rules,

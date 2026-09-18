@@ -61,7 +61,7 @@ export function FormElement({
 
 	return (
 		<div
-			class={`se-form-field se-form-constraint ${className ?? ''}`.trim()}
+			classes={['se-form-field', 'se-form-constraint', className]}
 			data-se-constraint-field={fieldName}
 			data-se-grid-theme={fieldHost.themeId}
 			style={fieldHost.style}

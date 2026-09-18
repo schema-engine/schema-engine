@@ -31,7 +31,7 @@ export function StackShell({ slots }: FormShellProps): JsxRenderable {
 export function SidebarShell({ slots, viewConfig }: FormShellProps): JsxRenderable {
 	const { showSeparator = true } = getSlotConfig<SidebarShellConfig>(viewConfig, 'shell');
 	return (
-		<div class={showSeparator ? 'se-sidebar-shell' : 'se-sidebar-shell se-sidebar-shell--no-separator'}>
+		<div classes={['se-sidebar-shell', !showSeparator && 'se-sidebar-shell--no-separator']}>
 			{slots.progress ? <aside class="se-sidebar-shell__progress">{slots.progress}</aside> : null}
 			<div class="se-sidebar-shell__separator" aria-hidden="true" />
 			<div class="se-sidebar-shell__main">
@@ -47,11 +47,11 @@ export function CardShell({ slots, viewConfig }: FormShellProps): JsxRenderable 
 	const { maxWidth = 'md', padding = 'md', shadowSize = 'md' } = getSlotConfig<CardShellConfig>(viewConfig, 'shell');
 	return (
 		<div class="card-shell">
-			<div class={`card-shell__card card-shell__card--${maxWidth} card-shell__shadow--${shadowSize}`}>
+			<div classes={['card-shell__card', `card-shell__card--${maxWidth}`, `card-shell__shadow--${shadowSize}`]}>
 				{slots.header ? (
-					<div class={`card-shell__header card-shell__padding--${padding}`}>{slots.header}</div>
+					<div classes={['card-shell__header', `card-shell__padding--${padding}`]}>{slots.header}</div>
 				) : null}
-				<div class={`card-shell__content card-shell__padding--${padding}`}>
+				<div classes={['card-shell__content', `card-shell__padding--${padding}`]}>
 					{slots.progress}
 					{slots.content}
 					{slots.actions}
@@ -75,7 +75,7 @@ export function HeroShell({ slots, viewConfig }: FormShellProps): JsxRenderable 
 				</video>
 			) : null}
 			<div class="hero-shell__overlay" />
-			<div class={`hero-shell__content hero-shell__content--${contentWidth}`}>
+			<div classes={['hero-shell__content', `hero-shell__content--${contentWidth}`]}>
 				{slots.header ? <div class="hero-shell__header">{slots.header}</div> : null}
 				<div class="hero-shell__form">
 					{slots.progress}
@@ -101,7 +101,7 @@ export function SplitScreenShell({ slots, viewConfig, config }: FormShellProps):
 				'prop:sideContent': sideContent ?? '',
 				'prop:config': config,
 			})}
-			<main class={`split-screen-shell__main split-screen-shell__main--${contentAlignment}`}>
+			<main classes={['split-screen-shell__main', `split-screen-shell__main--${contentAlignment}`]}>
 				{slots.header}
 				{slots.progress}
 				{slots.content}

@@ -36,7 +36,7 @@ export class StepIndicatorsElement extends RadiantElement {
 		return (
 			<nav
 				aria-label={indicatorsConfig.labels?.regionAriaLabel ?? 'Form progress'}
-				class={sidebar ? 'se-step-indicators se-step-indicators--sidebar' : 'se-step-indicators'}
+				classes={['se-step-indicators', sidebar && 'se-step-indicators--sidebar']}
 			>
 				<ol class="se-step-indicators__list">
 					{steps.map((step) => {
