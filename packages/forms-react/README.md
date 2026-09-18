@@ -381,14 +381,23 @@ Behavior:
   during render, so SSR output is styled with no FOUC and hydration is not
   required for layout. Hosts can still restyle every form by overriding the
   `--se-grid-gap-*` tokens at `:root`.
+- Only authored values reach the markup. The stylesheet holds the neutral
+  defaults, the breakpoint cascade (each media query falls back through the
+  narrower slots), and the resets that stop a nested grid inheriting its
+  parent's placement — so a field with no `grid` config carries no inline style.
+- `placeItems`/`placeContent`/`placeSelf` are resolved into their axis
+  longhands before emission; the axis property wins when both are authored.
+  Field alignment defaults to `auto`, so form-level `justifyItems`/`alignItems`
+  still applies.
 - `engine.getCompiledGrid()` is computed once at engine construction (frozen
-  theme-plus-stylesheet pair); `getGridTheme()` / `getGridThemeCss()` read it.
+  theme-plus-stylesheet pair); `getGridTheme()` reads its theme.
   `engine.extend()` inherits that compiled grid; `grid` is not an extend option.
   Breakpoint thresholds must preserve named order (`sm ≤ md ≤ lg ≤ xl ≤ 2xl`).
-- **SSR acceptance:** `test/ssr/grid-layout-ssr.acceptance.browser.test.tsx`
-  renders with `renderToStaticMarkup`, loads the HTML in an isolated iframe
-  without app JS, and checks the emitted stylesheet plus layout at two widths
-  (browser vitest project).
+- **SSR acceptance:** `test/ssr/grid-layout-ssr.markup.test.ts` renders the real
+  `FormRenderer` with `renderToStaticMarkup` and checks the emitted stylesheet
+  and field variables; `test/ssr/grid-layout-ssr.acceptance.browser.test.tsx`
+  loads that same HTML in an isolated iframe without app JS and checks layout at
+  two widths (browser vitest project). Both share `test-utils/`.
 
 ## Hooks
 

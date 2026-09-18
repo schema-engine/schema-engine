@@ -67,7 +67,10 @@ The renderer emits the generated theme stylesheet (scoped to
 SSR output is styled with no FOUC and hydration is not required for layout.
 Media queries follow the viewport width. Sparse responsive entries inherit
 from the preceding breakpoint, then the top-level value; `gapX`/`gapY` beat an
-entry's `gap`. Breakpoint thresholds on the engine must keep named order
+entry's `gap`. Only authored values are emitted inline — the generated
+stylesheet supplies the defaults, chains each breakpoint back through the
+narrower ones, and resets the variables at every host so nested grids stay
+isolated. Breakpoint thresholds on the engine must keep named order
 (`sm ≤ md ≤ lg ≤ xl ≤ 2xl`); `rem`/`em` compare at a 16px root.
 
 ## MVP elements
@@ -97,4 +100,4 @@ pnpm storybook   # port 6007
 
 From monorepo root: `pnpm dev:radiant-storybook`.
 
-Stories default to **client** render. Use the Storybook toolbar **Radiant render** control to spot-check `ssr-hydrate` and `ssr-static` on any story — same contract as radiant-ui. Play functions skip `ssr-static` (markup-only iframe, no client module). SSR layout acceptance is enforced by `test/ssr/grid-layout-ssr.markup.test.ts` and `test/ssr/grid-layout-ssr.acceptance.browser.test.ts` (compiled stylesheet and layout in an isolated iframe).
+Stories default to **client** render. Use the Storybook toolbar **Radiant render** control to spot-check `ssr-hydrate` and `ssr-static` on any story — same contract as radiant-ui. Play functions skip `ssr-static` (markup-only iframe, no client module). SSR layout acceptance renders the real `RecipeRenderer` through `renderToString`: `test/ssr/grid-layout-ssr.markup.test.ts` checks the emitted stylesheet and field variables, and `test/ssr/grid-layout-ssr.acceptance.browser.test.ts` loads that HTML in an isolated iframe without app JS and checks layout at two widths. Both share `test-utils/` with the React package.
