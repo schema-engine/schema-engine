@@ -34,3 +34,20 @@ optional lifecycle wiring around that controller.
 Radiant UI registration uses flat dotted field names. Controller reads, action
 context values, constraints, and submission use the engine's nested value tree.
 See [the controller contract](./packages/forms-radiant/src/adapters/radiant/controller/README.md).
+
+## Grid theme ownership
+
+Responsive grid layout is pure CSS. The **engine** owns the grid vocabulary —
+breakpoint thresholds (`sm`…`2xl`), gap tokens (`none | compact | default |
+loose | wide`), and the default minimum column width — through the `grid`
+option on engine creation. The **form** owns layout intent: `columns`,
+`gap`/`gapX`/`gapY` selection, `responsive` entries per breakpoint, and
+per-field `grid` placement. Renderers emit the theme-scoped stylesheet
+(`data-se-grid-theme` identity) and per-form CSS variables inline during
+render, so responsive behavior is media-query driven with no runtime
+observers, SSR output is styled before hydration, and two engines with
+different themes cannot overwrite each other. Field names must not collide
+with `HTMLFormElement` properties in Radiant (e.g. `tagName`, `elements`) —
+the form host carries field state keyed by field name. Configured breakpoint
+thresholds must preserve named cascade order (`sm ≤ md ≤ lg ≤ xl ≤ 2xl`);
+`rem`/`em` lengths are compared at a 16px root.
