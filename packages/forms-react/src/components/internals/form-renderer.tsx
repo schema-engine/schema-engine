@@ -7,7 +7,6 @@
  * the theme stylesheet the engine generates and the renderer emits inline.
  */
 import {
-	getDefaultCompiledGrid,
 	getFormGridVariables,
 	type CompiledGrid,
 	type NormalizedGridTheme,
@@ -127,11 +126,10 @@ function FormRendererInner({
 export function FormRenderer({ engine, adapter, ...props }: FormRendererProps) {
 	const inheritedEngine = useOptionalFormEngine();
 	const resolvedEngine = engine ?? inheritedEngine?.engine;
-	const config = useMemo(() => {
+	const { config, compiledGrid } = useMemo(() => {
 		assertFormEngine(resolvedEngine, props.config);
-		return resolvedEngine.validateForm(props.config);
+		return { config: resolvedEngine.validateForm(props.config), compiledGrid: resolvedEngine.getCompiledGrid() };
 	}, [props.config, resolvedEngine]);
-	const compiledGrid = resolvedEngine?.getCompiledGrid() ?? getDefaultCompiledGrid();
 	const innerProps = { ...props, config, compiledGrid };
 	if (!engine || !adapter) {
 		return <FormRendererInner {...innerProps} />;
