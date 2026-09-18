@@ -27,7 +27,7 @@ export function FormCombobox({
 	onFocus: propsOnFocus,
 	...config
 }: ComboboxFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
+	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles, gridThemeId } =
 		useControlledFormElement(config);
 	const isMultiple = Boolean(config.multiple);
 	const values = isMultiple ? (Array.isArray(value) ? value : []) : value == null || value === '' ? [] : [value];
@@ -47,6 +47,7 @@ export function FormCombobox({
 
 	return (
 		<FieldGroup
+			gridThemeId={gridThemeId}
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}

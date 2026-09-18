@@ -17,11 +17,11 @@ export function FormRadio({
 	onFocus: propsOnFocus,
 	...config
 }: RadioFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
+	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles, gridThemeId } =
 		useControlledFormElement(config);
 
 	return (
-		<FieldGroupRoot style={containerStyles}>
+		<FieldGroupRoot gridThemeId={gridThemeId} style={containerStyles}>
 			{config.label && (
 				<FieldLabel htmlFor={config.id} required={isRequired} error={error} className="mb-4">
 					{config.label}

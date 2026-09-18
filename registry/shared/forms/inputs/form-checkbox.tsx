@@ -16,10 +16,11 @@ export function FormCheckbox({
 	onFocus: propsOnFocus,
 	...config
 }: CheckboxFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, containerStyles } = useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, containerStyles, gridThemeId } =
+		useControlledFormElement(config);
 
 	return (
-		<FieldGroupRoot style={containerStyles}>
+		<FieldGroupRoot gridThemeId={gridThemeId} style={containerStyles}>
 			<FieldContent>
 				<FieldInputContainer>
 					<Checkbox

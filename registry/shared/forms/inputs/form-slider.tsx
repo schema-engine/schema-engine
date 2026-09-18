@@ -10,13 +10,14 @@ export function FormSlider({
 	onFocus: propsOnFocus,
 	...config
 }: SliderFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
+	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles, gridThemeId } =
 		useControlledFormElement(config);
 
 	const sliderValue = typeof value === 'number' ? [value] : [config.min || 0];
 
 	return (
 		<FieldGroup
+			gridThemeId={gridThemeId}
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}

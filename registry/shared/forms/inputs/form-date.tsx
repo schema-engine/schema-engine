@@ -10,12 +10,12 @@ export function FormDate({
 	onFocus: propsOnFocus,
 	...config
 }: DateFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } = useControlledFormElement(
-		config as unknown as FormEngine.ElementConfig,
-	);
+	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles, gridThemeId } =
+		useControlledFormElement(config as unknown as FormEngine.ElementConfig);
 
 	return (
 		<FieldGroup
+			gridThemeId={gridThemeId}
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}

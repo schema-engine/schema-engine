@@ -1,6 +1,9 @@
 /** @jsxImportSource react */
+import type React from 'react';
 import { FormElements } from '@schema-engine/forms-react/primitives';
 import { objectFieldScope } from '@schema-engine/forms';
+import { getDefaultGridTheme, getFieldGridHostProps } from '@schema-engine/forms/lib/grid-styles';
+import { useOptionalFormEngine } from '@schema-engine/forms-react/hooks';
 import { FieldSet } from '@/components/ui/schema-engine/components/field';
 import type { FieldSetProps } from './form-fieldset.types';
 
@@ -11,9 +14,12 @@ import type { FieldSetProps } from './form-fieldset.types';
  */
 export function FormFieldSet({ ...config }: FieldSetProps) {
 	const scope = objectFieldScope(config.name, config);
+	const themeId = useOptionalFormEngine()?.engine.getGridTheme().id ?? getDefaultGridTheme().id;
+	const fieldHost = getFieldGridHostProps(themeId, config.grid);
+	const style: React.CSSProperties = { ...fieldHost.style, ...config.style };
 
 	return (
-		<div className="space-y-4" style={config.style}>
+		<div className="se-form-field space-y-4" data-se-grid-theme={fieldHost.themeId} style={style}>
 			<FieldSet legend={config.legend} description={config.description}>
 				<div className="space-y-4">
 					<FormElements
