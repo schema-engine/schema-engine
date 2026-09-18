@@ -11,14 +11,14 @@ Capabilities describe what a form does. They are independent of the element
 that collects a value and the recipe that lays out the form. Both the React and
 Radiant adapters implement the same form configuration contracts.
 
-| Capability | Use it for | Start here |
-| --- | --- | --- |
-| Constraints | Show, hide, enable, disable, or require a field from another value | [Contact form example](/docs/examples/contact-form) |
-| Validation | Required values, formats, ranges, and custom rules | [Validation](/docs/forms/validation) |
-| Actions | Submit, reset, notifications, and ordered side effects | [Actions overview](/docs/actions/overview) |
-| Async validation | Debounced remote checks, dependency values, and failure handling | [Async validation](/docs/forms/validation-how-it-works#asynchronous-validation) |
-| Async actions | Pending, success, and failure states around a remote operation | [Sequential actions example](/docs/examples/sequential-actions) |
-| Dynamic fields | Repeatable groups and nested field scopes | [Components](/docs/forms-react/components) |
+| Capability       | Use it for                                                         | Start here                                                                      |
+| ---------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| Constraints      | Show, hide, enable, disable, or require a field from another value | [Contact form example](/docs/examples/contact-form)                             |
+| Validation       | Required values, formats, ranges, and custom rules                 | [Validation](/docs/forms/validation)                                            |
+| Actions          | Submit, reset, notifications, and ordered side effects             | [Actions overview](/docs/actions/overview)                                      |
+| Async validation | Debounced remote checks, dependency values, and failure handling   | [Async validation](/docs/forms/validation-how-it-works#asynchronous-validation) |
+| Async actions    | Pending, success, and failure states around a remote operation     | [Sequential actions example](/docs/examples/sequential-actions)                 |
+| Dynamic fields   | Repeatable groups and nested field scopes                          | [Components](/docs/forms-react/components)                                      |
 
 ## Constraints
 
@@ -28,12 +28,10 @@ support reveals it without rebuilding the form tree.
 
 ```json
 {
-  "$type": "input",
-  "name": "ticket",
-  "label": "Support ticket number",
-  "constraints": [
-    { "field": "subject", "operator": "equals", "value": "support", "action": "show" }
-  ]
+	"$type": "input",
+	"name": "ticket",
+	"label": "Support ticket number",
+	"constraints": [{ "field": "subject", "operator": "equals", "value": "support", "action": "show" }]
 }
 ```
 

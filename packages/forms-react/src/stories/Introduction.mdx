@@ -19,22 +19,25 @@ The official React SDK for [Schema Engine](https://schema-engine.com). This pack
 Understanding the architecture of Schema Engine is key to leveraging its full potential. The system allows you to define complex forms as serializable JSON data structures.
 
 ### 1. Form Configuration
+
 The root object that defines the form's identity, behavior, and structure.
 
 ```ts
 interface FormConfig {
-  id: string;              // Unique identifier
-  title?: string;          // Form title
-  view?: { $type: string }; // View recipe
-  steps: FormStep[];       // Array of steps (pages)
-  actions?: FormAction[];  // Global actions (e.g., submit)
+	id: string; // Unique identifier
+	title?: string; // Form title
+	view?: { $type: string }; // View recipe
+	steps: FormStep[]; // Array of steps (pages)
+	actions?: FormAction[]; // Global actions (e.g., submit)
 }
 ```
 
 ### 2. Steps & Elements
+
 Forms are divided into one or more **Steps**. Each step contains **Elements** (inputs, buttons, etc.).
 
 ### 3. View Recipes
+
 Visual chrome is configured via `view.$type` recipes:
 
 ```ts
@@ -55,43 +58,38 @@ Render a form by passing a configuration object to the `FormRenderer`.
 import { FormRenderer } from '@schema-engine/forms-react';
 
 const schema = {
-  id: 'contact-form',
-  title: 'Contact Us',
-  steps: [
-    {
-      id: 'contact-step',
-      title: 'Contact Details',
-      elements: [
-        {
-          $type: 'input',
-          name: 'email',
-          label: 'Email Address',
-          rules: [{ type: 'required' }, { type: 'email' }]
-        },
-        {
-          $type: 'submit',
-          label: 'Send Message'
-        }
-      ]
-    }
-  ],
-  actions: [
-    {
-      id: 'submit-action',
-      $type: 'submit',
-      endpoint: '/api/contact',
-      triggers: ['form_submit']
-    }
-  ]
+	id: 'contact-form',
+	title: 'Contact Us',
+	steps: [
+		{
+			id: 'contact-step',
+			title: 'Contact Details',
+			elements: [
+				{
+					$type: 'input',
+					name: 'email',
+					label: 'Email Address',
+					rules: [{ type: 'required' }, { type: 'email' }],
+				},
+				{
+					$type: 'submit',
+					label: 'Send Message',
+				},
+			],
+		},
+	],
+	actions: [
+		{
+			id: 'submit-action',
+			$type: 'submit',
+			endpoint: '/api/contact',
+			triggers: ['form_submit'],
+		},
+	],
 };
 
 export default function Page() {
-  return (
-    <FormRenderer 
-      config={schema} 
-      onSubmit={(data) => console.log(data)} 
-    />
-  );
+	return <FormRenderer config={schema} onSubmit={(data) => console.log(data)} />;
 }
 ```
 
@@ -103,7 +101,7 @@ This Storybook serves as an interactive component playground. For detailed guide
 
 ## Philosophy
 
-Schema Engine adheres to **Configuration over Code**. Define *what* you want, not *how* to build it. Decoupling form definition from implementation ensures:
+Schema Engine adheres to **Configuration over Code**. Define _what_ you want, not _how_ to build it. Decoupling form definition from implementation ensures:
 
 - **Portability**: Persist forms in databases and serve them dynamically to any client.
 - **Consistency**: Enforce design systems and validation rules uniformly across applications.

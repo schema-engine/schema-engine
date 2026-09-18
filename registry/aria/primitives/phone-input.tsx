@@ -74,9 +74,7 @@ function PhoneInput({
 				countrySelectComponent={CountrySelect}
 				inputComponent={PhoneNumberInput}
 				smartCaret={false}
-				{...(useInternationalFormat
-					? { international: true }
-					: { initialValueFormat: 'national' as const })}
+				{...(useInternationalFormat ? { international: true } : { initialValueFormat: 'national' as const })}
 				addInternationalOption={false}
 				focusInputOnCountrySelection={false}
 				defaultCountry={defaultCountry}
