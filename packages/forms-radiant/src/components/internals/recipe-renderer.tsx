@@ -1,9 +1,10 @@
 import type { JsxRenderable } from '@ecopages/jsx';
+import { jsx } from '@ecopages/jsx/jsx-runtime';
 import { type NormalizedFormConfig, type RecipeRegistration } from '@schema-engine/forms';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
+import { getFormGridVariables } from '@schema-engine/forms/lib/grid-styles';
 import { applySlotDefaults } from '@schema-engine/forms/recipes';
 import type { RadiantRecipeAdapterPayload } from '@/recipes/types';
-import { getFormGridStyles } from '@/hooks/grid-styles';
 import { FormElements } from './form-elements';
 import { FormStep } from '@/components/form-step';
 
@@ -15,6 +16,10 @@ import { FormStep } from '@/components/form-step';
  * `se-form-step` hosts toggle their own `hidden` attribute from the instance's
  * step state, so SSR emits the whole form and step switching is pure DOM.
  */
+function GridThemeStyle({ themeId, css }: { themeId: string; css: string }): JsxRenderable {
+	return jsx('style', { 'data-se-grid-theme': themeId, children: css });
+}
+
 export function RecipeRenderer({
 	config,
 	engine,
@@ -26,6 +31,7 @@ export function RecipeRenderer({
 	recipe: RecipeRegistration<any, any> | undefined;
 	children?: JsxRenderable;
 }): JsxRenderable {
+	const { theme, css: gridThemeCss } = engine.getCompiledGrid();
 	const viewConfig = recipe
 		? applySlotDefaults((config.view ?? { $type: recipe.$type }) as Record<string, unknown>, recipe.slotDefaults)
 		: ((config.view as Record<string, unknown> | undefined) ?? {});
@@ -34,10 +40,15 @@ export function RecipeRenderer({
 
 	const content = (
 		<>
+			<GridThemeStyle themeId={theme.id} css={gridThemeCss} />
 			{config.steps.map((step, index) => (
 				<FormStep key={step.id} stepIndex={index} isWizard={isWizard}>
 					{step.elements.length ? (
-						<div class="se-form-elements" style={getFormGridStyles(config.grid)}>
+						<div
+							class="se-form-elements se-form-grid"
+							data-se-grid-theme={theme.id}
+							style={getFormGridVariables(config.grid, theme)}
+						>
 							<FormElements elements={step.elements} engine={engine} />
 						</div>
 					) : null}
