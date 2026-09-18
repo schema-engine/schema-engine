@@ -17,3 +17,17 @@ export function whenInteractive(play: (context: StoryContext) => unknown): (cont
 		await play(context);
 	};
 }
+
+/**
+ * Runs layout assertions only in markup-only `ssr-static` previews (no client module).
+ */
+export function whenSsrStatic(play: (context: StoryContext) => unknown): (context: StoryContext) => Promise<void> {
+	return async (context) => {
+		if (!isStaticSsrPreview(context.canvasElement)) {
+			throw new Error(
+				'SSR acceptance stories require the Radiant render toolbar set to ssr-static (iframe.radiant-ssr-static-frame).',
+			);
+		}
+		await play(context);
+	};
+}

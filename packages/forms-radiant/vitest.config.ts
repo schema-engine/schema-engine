@@ -7,13 +7,16 @@ import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const alias = [
-	{ find: '@', replacement: path.resolve(dirname, 'src') },
+	{
+		find: '@/registry/forms',
+		replacement: path.resolve(dirname, '../../registry/shared/forms'),
+	},
 	{ find: /^@schema-engine\/forms-radiant$/, replacement: path.resolve(dirname, 'src/index.ts') },
 	{
 		find: /^@schema-engine\/forms-radiant\/(.*)$/,
 		replacement: `${path.resolve(dirname, 'src')}/$1`,
 	},
-	{ find: /^@\/registry\/forms/, replacement: path.resolve(dirname, '../../registry/shared/forms') },
+	{ find: '@', replacement: path.resolve(dirname, 'src') },
 ];
 
 export default defineConfig({
@@ -26,7 +29,21 @@ export default defineConfig({
 					name: 'unit',
 					environment: 'node',
 					include: ['test/**/*.test.ts'],
+					exclude: ['test/**/*.browser.test.ts'],
 					setupFiles: ['./vitest.setup.ts'],
+				},
+			},
+			{
+				resolve: { alias },
+				test: {
+					name: 'browser',
+					include: ['test/**/*.browser.test.ts'],
+					browser: {
+						enabled: true,
+						headless: true,
+						provider: playwright(),
+						instances: [{ browser: 'chromium' }],
+					},
 				},
 			},
 			{
