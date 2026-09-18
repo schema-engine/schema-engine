@@ -23,9 +23,15 @@ author actually wrote — an element without a `grid` config carries no inline
 style at all.
 
 `placeItems`, `placeContent` and `placeSelf` are resolved into their axis
-longhands instead of being declared as CSS shorthands, and the axis property
-wins when both are authored. Field `justify-self`/`align-self` default to
-`auto` so form-level `justifyItems`/`alignItems` still applies.
+longhands instead of being declared as CSS shorthands, following the CSS
+grammar so a two-keyword axis value such as `safe center` or `first baseline`
+stays on one axis. The axis property wins when both are authored. Field
+`justify-self`/`align-self` default to `auto` so form-level
+`justifyItems`/`alignItems` still applies, and a field host keeps its own
+layout: set `--se-field-display-mode` instead of `display`, which responsive
+`hidden` toggles against. Gap tokens remain overridable from `:root` — the
+engine declares its defaults under `--se-grid-gap-base-*` and reads the public
+token with that as the fallback.
 
 Field responsive placement cascades across breakpoints like form columns.
 Grid themes are frozen at engine construction as one compiled

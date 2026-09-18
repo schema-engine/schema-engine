@@ -59,4 +59,13 @@ inheriting its parent's placement. **Inline custom properties carry only
 values** an author wrote, so an element without a `grid` config emits no style
 attribute. `place-*` shorthands are resolved into their axis longhands before
 emission rather than declared in CSS, because a shorthand would have to follow
-the longhands in the generated rule and would reset them.
+the longhands in the generated rule and would reset them; the split follows the
+CSS grammar, so a two-keyword axis value such as `safe center` stays on one
+axis.
+
+Two contracts follow from the field rule outranking a component's own class.
+Gap tokens (`--se-grid-gap-*`) are never declared on an element — the engine
+declares `--se-grid-gap-base-*` and reads the public token with that as the
+fallback — so a host's `:root` override still applies. And a field host with
+its own layout sets `--se-field-display-mode` instead of `display`, which
+responsive `hidden` toggles against rather than forcing `block`.

@@ -63,7 +63,11 @@ render, so responsive layout is CSS-driven — no runtime observers, and SSR
 output is styled before hydration. The stylesheet owns the neutral defaults,
 the breakpoint cascade, and the resets that keep nested grids isolated; inline
 styles carry only the values an author actually wrote, so an unconfigured field
-emits none at all. `engine.extend()` inherits the source engine's grid theme;
+emits none at all. Gap tokens stay host-overridable: the engine declares its
+defaults privately and reads `var(--se-grid-gap-<token>, …)`, so a `:root`
+override still wins. A field host that needs its own layout sets
+`--se-field-display-mode` rather than `display`, because the generated field
+rule outranks a bare class. `engine.extend()` inherits the source engine's grid theme;
 `grid` is not an extend option.
 
 Single-step forms may omit `view` to render fields directly. Multi-step forms
