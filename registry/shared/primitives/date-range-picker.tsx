@@ -3,18 +3,14 @@
 import { format } from 'date-fns';
 import { CalendarIcon, CheckIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
-import { useEffect, useRef, useState, type ComponentProps } from 'react';
+import { useRef, useState, useSyncExternalStore, type ComponentProps } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { DateInput } from './date-input';
-import {
-	DATE_RANGE_PRESETS,
-	getDateRangePreset,
-	matchDateRangePreset,
-} from './date-range-presets';
+import { DATE_RANGE_PRESETS, getDateRangePreset, matchDateRangePreset } from './date-range-presets';
 import { parseDateRange, parseISODate, toDateRangeValue, type DateRangeValue } from './date-utils';
 
 type DraftRange = {
@@ -52,29 +48,40 @@ function toDraftRange(value: DateRangeValue | undefined): DraftRange | undefined
 	return { from, to };
 }
 
+/** Identity of the authored range while the popover is closed; `null` while open. */
+function rangeKey(value: DateRangeValue | undefined, open: boolean): string | null {
+	return open ? null : `${value?.from ?? ''}|${value?.to ?? ''}`;
+}
+
 function rangesEqual(left?: DraftRange, right?: DraftRange) {
 	if (!left || !right) {
 		return left === right;
 	}
 
-	return (
-		left.from.getTime() === right.from.getTime() &&
-		(left.to?.getTime() ?? 0) === (right.to?.getTime() ?? 0)
-	);
+	return left.from.getTime() === right.from.getTime() && (left.to?.getTime() ?? 0) === (right.to?.getTime() ?? 0);
 }
 
-function useCompactLayout() {
-	const [compact, setCompact] = useState(
-		typeof window !== 'undefined' ? window.innerWidth < 960 : false,
+const COMPACT_QUERY = '(max-width: 959px)';
+
+function subscribeCompact(onStoreChange: () => void) {
+	const query = window.matchMedia(COMPACT_QUERY);
+	query.addEventListener('change', onStoreChange);
+	return () => query.removeEventListener('change', onStoreChange);
+}
+
+/**
+ * Whether the popover should show a single month.
+ *
+ * @remarks
+ * Read as an external store so the server render and the first client render
+ * agree, instead of branching on `typeof window` in a state initializer.
+ */
+function useCompactLayout(): boolean {
+	return useSyncExternalStore(
+		subscribeCompact,
+		() => window.matchMedia(COMPACT_QUERY).matches,
+		() => false,
 	);
-
-	useEffect(() => {
-		const onResize = () => setCompact(window.innerWidth < 960);
-		window.addEventListener('resize', onResize);
-		return () => window.removeEventListener('resize', onResize);
-	}, []);
-
-	return compact;
 }
 
 function DateRangePicker({
@@ -93,7 +100,7 @@ function DateRangePicker({
 }: DateRangePickerProps) {
 	const [open, setOpen] = useState(false);
 	const [draft, setDraft] = useState<DraftRange | undefined>(() => toDraftRange(value));
-	const [selectedPreset, setSelectedPreset] = useState<string | undefined>();
+	const [syncedValue, setSyncedValue] = useState(() => rangeKey(value, false));
 	const openedDraftRef = useRef<DraftRange | undefined>(undefined);
 	const compact = useCompactLayout();
 	const minDate = parseISODate(min);
@@ -101,19 +108,19 @@ function DateRangePicker({
 	const label = formatRangeLabel(value, dateFormat);
 	const months = compact ? 1 : numberOfMonths;
 
-	useEffect(() => {
+	// Re-adopt `value` during render whenever the popover is closed, matching the
+	// old effect without the extra committed render. While open the key is null,
+	// so an in-progress draft is never overwritten.
+	const valueKey = rangeKey(value, open);
+	if (valueKey !== syncedValue) {
+		setSyncedValue(valueKey);
 		if (!open) {
 			setDraft(toDraftRange(value));
 		}
-	}, [open, value]);
+	}
 
-	useEffect(() => {
-		if (draft?.from && draft.to) {
-			setSelectedPreset(matchDateRangePreset({ from: draft.from, to: draft.to }));
-			return;
-		}
-		setSelectedPreset(undefined);
-	}, [draft]);
+	const selectedPreset =
+		draft?.from && draft.to ? matchDateRangePreset({ from: draft.from, to: draft.to }) : undefined;
 
 	const openPopover = (nextOpen: boolean) => {
 		if (nextOpen) {
@@ -179,8 +186,7 @@ function DateRangePicker({
 							disabled={disabled}
 							onChange={(from) => {
 								setDraft((current) => {
-									const to =
-										current?.to && from > current.to ? from : current?.to ?? from;
+									const to = current?.to && from > current.to ? from : (current?.to ?? from);
 									return { from, to };
 								});
 							}}
