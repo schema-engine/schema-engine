@@ -1,11 +1,4 @@
-import type {
-	ElementGridConfig,
-	FieldGridBreakpointConfig,
-	GridBreakpointConfig,
-	GridGapToken,
-	GridGapValue,
-	GridLayoutConfig,
-} from '@/schemas/base-field';
+import type { ElementGridConfig, GridGapToken, GridLayoutConfig } from '@/schemas/base-field';
 import { GridGapTokens } from '@/schemas/base-field';
 
 /**
@@ -26,22 +19,26 @@ import { GridGapTokens } from '@/schemas/base-field';
  * breakpoint. Within an entry, axis-specific gaps (`gapX`/`gapY`) beat the
  * entry's general `gap`.
  *
+ * `place-*` shorthands are resolved into their axis longhands here rather than
+ * emitted as CSS. A shorthand declaration would have to follow the longhands
+ * in the generated rule and would then reset them, so authored `justifyItems`
+ * or `justifySelf` could never take effect. Resolving in one place also lets
+ * `placeSelf` join the responsive cascade for free.
+ *
  * Form-level `rows`, `autoFit`, `autoFill`, and `maxColumnWidth` are accepted
  * by the schema for compatibility but are not emitted to CSS yet.
  *
- * Alignment is emitted as custom properties (not camelCase CSS keys) so the
- * return type is a `--*` record assignable to React `CSSProperties` and to
- * inline `style` attributes without a cast. Unauthored alignment is fully
- * resolved so nested grids do not inherit a parent's variables.
+ * Only authored values are emitted, as custom properties (not camelCase CSS
+ * keys) so the return type is a `--*` record assignable to React
+ * `CSSProperties` and to inline `style` attributes without a cast. Neutral
+ * defaults, the breakpoint cascade, and the resets that stop a nested grid
+ * inheriting its parent's placement all live in the generated stylesheet.
  */
 
 const BREAKPOINT_ORDER = ['sm', 'md', 'lg', 'xl', '2xl'] as const;
 
 /** Named breakpoint tokens. Thresholds are configured on the engine. */
 export type GridBreakpointToken = (typeof BREAKPOINT_ORDER)[number];
-
-export type { GridGapToken };
-export const GRID_GAP_TOKENS = GridGapTokens;
 
 /**
  * Inline style consisting only of CSS custom properties.
@@ -125,6 +122,9 @@ const ROOT_FONT_PX = 16;
 type CascadeSlot = 'default' | GridBreakpointToken;
 type CssLengthUnit = 'px' | 'rem' | 'em';
 
+/** CSS property, its variable base name, and the value used when unauthored. */
+type ResponsiveProperty = readonly [property: string, variable: string, fallback: string];
+
 let cachedDefaultCompiledGrid: CompiledGrid | undefined;
 
 function deepFreeze<T extends object>(value: T): T {
@@ -147,7 +147,7 @@ function deepFreeze<T extends object>(value: T): T {
  * Media queries follow viewport width — a form inside a narrow sidebar
  * still receives the desktop rules of the wide screen it lives on.
  */
-export function resolveGridTheme(options?: GridThemeOptions): NormalizedGridTheme {
+function resolveGridTheme(options?: GridThemeOptions): NormalizedGridTheme {
 	const breakpoints = { ...DEFAULT_BREAKPOINTS, ...options?.breakpoints };
 	const gap = { ...DEFAULT_GAP, ...options?.gap };
 	const minColumnWidth = options?.minColumnWidth ?? DEFAULT_MIN_COLUMN_WIDTH;
@@ -217,7 +217,7 @@ function assertBreakpointOrder(breakpoints: Record<GridBreakpointToken, string>)
 }
 
 /** Stable theme identity from the normalized options. */
-export function gridThemeId(theme: Pick<NormalizedGridTheme, 'breakpoints' | 'gap' | 'minColumnWidth'>): string {
+function gridThemeId(theme: Pick<NormalizedGridTheme, 'breakpoints' | 'gap' | 'minColumnWidth'>): string {
 	const serialized = JSON.stringify({
 		breakpoints: theme.breakpoints,
 		gap: theme.gap,
@@ -231,6 +231,84 @@ export function gridThemeId(theme: Pick<NormalizedGridTheme, 'breakpoints' | 'ga
 }
 
 /**
+ * Grid container properties that change per breakpoint.
+ *
+ * @remarks
+ * One table drives the base rule, every media query, and the inheritance
+ * resets, so a property cannot be declared at one width and forgotten at
+ * another.
+ */
+const GRID_PROPERTIES: readonly ResponsiveProperty[] = [
+	['grid-template-columns', 'se-grid-template', 'repeat(1, minmax(0, 1fr))'],
+	['row-gap', 'se-grid-gap-y', DEFAULT_GAP_CSS],
+	['column-gap', 'se-grid-gap-x', DEFAULT_GAP_CSS],
+];
+
+/**
+ * Field placement properties that change per breakpoint.
+ *
+ * @remarks
+ * `justify-self`/`align-self` fall back to `auto`, which defers to the grid's
+ * own `justify-items`/`align-items`. Any other fallback would silently beat
+ * form-level alignment on every field.
+ */
+const FIELD_PROPERTIES: readonly ResponsiveProperty[] = [
+	['display', 'se-field-display', 'block'],
+	['grid-column', 'se-field-grid-column', 'auto'],
+	['grid-row', 'se-field-grid-row', 'auto'],
+	['justify-self', 'se-field-justify-self', 'auto'],
+	['align-self', 'se-field-align-self', 'auto'],
+];
+
+/** Grid alignment, authored once for all widths. */
+const GRID_ALIGNMENT_PROPERTIES: readonly ResponsiveProperty[] = [
+	['justify-items', 'se-grid-justify-items', 'normal'],
+	['align-items', 'se-grid-align-items', 'normal'],
+	['justify-content', 'se-grid-justify-content', 'normal'],
+	['align-content', 'se-grid-align-content', 'start'],
+];
+
+/**
+ * `var(--x-md, var(--x-sm, var(--x, fallback)))`.
+ *
+ * @remarks
+ * Walking narrower slots in the fallback chain is what lets a renderer emit
+ * only the breakpoints an author actually wrote: an unset slot resolves to the
+ * nearest narrower one, so the cascade lives in the stylesheet instead of
+ * being pre-expanded into every element's inline style.
+ */
+function cascadingVar(variable: string, fallback: string, breakpoint?: GridBreakpointToken): string {
+	const narrower = breakpoint ? BREAKPOINT_ORDER.slice(0, BREAKPOINT_ORDER.indexOf(breakpoint) + 1) : [];
+	let value = `var(--${variable}, ${fallback})`;
+	for (const slot of narrower) {
+		value = `var(--${variable}-${slot}, ${value})`;
+	}
+	return value;
+}
+
+function declarations(properties: readonly ResponsiveProperty[], breakpoint?: GridBreakpointToken): string {
+	return properties
+		.map(([property, variable, fallback]) => `${property}:${cascadingVar(variable, fallback, breakpoint)};`)
+		.join('');
+}
+
+/**
+ * Resets every slot so custom properties do not inherit past a host.
+ *
+ * @remarks
+ * Custom properties inherit, so a nested grid or field would otherwise pick up
+ * its ancestor's placement. `initial` makes `var()` fall through to the chain
+ * above, and an inline value on the same element still wins the cascade.
+ */
+function inheritanceResets(...tables: readonly (readonly ResponsiveProperty[])[]): string {
+	return tables
+		.flat()
+		.flatMap(([, variable]) => [variable, ...BREAKPOINT_ORDER.map((slot) => `${variable}-${slot}`)])
+		.map((name) => `--${name}:initial;`)
+		.join('');
+}
+
+/**
  * Generates the theme-scoped stylesheet.
  *
  * @remarks
@@ -240,21 +318,21 @@ export function gridThemeId(theme: Pick<NormalizedGridTheme, 'breakpoints' | 'ga
  * carries the theme attribute on each field host so nested grids do not leak
  * styles across themes.
  */
-export function getGridThemeCss(theme: NormalizedGridTheme): string {
+function getGridThemeCss(theme: NormalizedGridTheme): string {
 	const scope = `[data-se-grid-theme="${theme.id}"]`;
 	const gridScope = `.se-form-grid${scope}`;
 	const fieldScope = `.se-form-field${scope}`;
-	const tokens = GRID_GAP_TOKENS.map((token) => `${GAP_TOKEN_VARIABLES[token]}:${theme.gap[token]}`).join(';');
+	const tokens = GridGapTokens.map((token) => `${GAP_TOKEN_VARIABLES[token]}:${theme.gap[token]};`).join('');
 	const lines: string[] = [
-		`${scope}{${tokens};--se-grid-min-column-width:${theme.minColumnWidth};}`,
-		`${gridScope}{display:grid;grid-template-columns:var(--se-grid-template, repeat(1, minmax(0, 1fr)));row-gap:var(--se-grid-gap-y, var(--se-grid-gap-default));column-gap:var(--se-grid-gap-x, var(--se-grid-gap-default));justify-items:var(--se-grid-justify-items);align-items:var(--se-grid-align-items);justify-content:var(--se-grid-justify-content);align-content:var(--se-grid-align-content);place-items:var(--se-grid-place-items);place-content:var(--se-grid-place-content);}`,
-		`${fieldScope}{display:var(--se-field-display, block);grid-column:var(--se-field-grid-column, auto);grid-row:var(--se-field-grid-row, auto);justify-self:var(--se-field-justify-self, stretch);align-self:var(--se-field-align-self, stretch);place-self:var(--se-field-place-self);}`,
+		`${scope}{${tokens}}`,
+		`${gridScope}{${inheritanceResets(GRID_PROPERTIES, GRID_ALIGNMENT_PROPERTIES)}display:grid;${declarations(GRID_PROPERTIES)}${declarations(GRID_ALIGNMENT_PROPERTIES)}}`,
+		`${fieldScope}{${inheritanceResets(FIELD_PROPERTIES)}${declarations(FIELD_PROPERTIES)}}`,
 	];
 	for (const breakpoint of BREAKPOINT_ORDER) {
 		lines.push(
 			`@media (min-width:${theme.breakpoints[breakpoint]}){` +
-				`${gridScope}{grid-template-columns:var(--se-grid-template-${breakpoint}, var(--se-grid-template, repeat(1, minmax(0, 1fr))));row-gap:var(--se-grid-gap-y-${breakpoint}, var(--se-grid-gap-y, var(--se-grid-gap-default)));column-gap:var(--se-grid-gap-x-${breakpoint}, var(--se-grid-gap-x, var(--se-grid-gap-default)));}` +
-				`${fieldScope}{display:var(--se-field-display-${breakpoint}, var(--se-field-display, block));grid-column:var(--se-field-grid-column-${breakpoint}, var(--se-field-grid-column, auto));grid-row:var(--se-field-grid-row-${breakpoint}, var(--se-field-grid-row, auto));justify-self:var(--se-field-justify-self-${breakpoint}, var(--se-field-justify-self, stretch));align-self:var(--se-field-align-self-${breakpoint}, var(--se-field-align-self, stretch));}` +
+				`${gridScope}{${declarations(GRID_PROPERTIES, breakpoint)}}` +
+				`${fieldScope}{${declarations(FIELD_PROPERTIES, breakpoint)}}` +
 				`}`,
 		);
 	}
@@ -262,7 +340,7 @@ export function getGridThemeCss(theme: NormalizedGridTheme): string {
 }
 
 function isGridGapToken(value: string): value is GridGapToken {
-	for (const token of GRID_GAP_TOKENS) {
+	for (const token of GridGapTokens) {
 		if (token === value) return true;
 	}
 	return false;
@@ -272,12 +350,24 @@ function isGridGapToken(value: string): value is GridGapToken {
  * Maps an authored gap value (semantic token or raw CSS value) to its
  * variable reference or literal.
  */
-export function resolveGridGap(value: GridGapValue | undefined): string | undefined {
+function resolveGridGap(value: string | undefined): string | undefined {
 	if (value === undefined) return undefined;
 	if (isGridGapToken(value)) {
 		return `var(${GAP_TOKEN_VARIABLES[value]})`;
 	}
 	return value;
+}
+
+/**
+ * Splits a `place-*` shorthand into `[align, justify]`.
+ *
+ * @remarks
+ * CSS orders these shorthands align-first, and a single value sets both axes.
+ */
+function splitPlaceShorthand(value: string | undefined): [string | undefined, string | undefined] {
+	if (value === undefined) return [undefined, undefined];
+	const [align, justify = align] = value.trim().split(/\s+/);
+	return [align, justify];
 }
 
 function toGridTemplate(columns: number | 'auto', minColumnWidth: string): string {
@@ -291,6 +381,15 @@ function customProperty(name: string, slot: CascadeSlot): `--${string}` {
 	return slot === 'default' ? `--${name}` : `--${name}-${slot}`;
 }
 
+/** Layout values a single cascade slot may set; the top-level config is the `default` slot. */
+interface FormGridEntry {
+	columns?: number | 'auto';
+	minColumnWidth?: string;
+	gap?: string;
+	gapX?: string;
+	gapY?: string;
+}
+
 interface ResolvedFormGrid {
 	columns: number | 'auto';
 	minColumnWidth: string;
@@ -298,21 +397,47 @@ interface ResolvedFormGrid {
 	gapY: string;
 }
 
-function applyFormEntry(resolved: ResolvedFormGrid, entry: GridBreakpointConfig | undefined): void {
+/** Which variables a slot has to emit. Untouched ones fall through to the stylesheet. */
+interface FormGridTouch {
+	template: boolean;
+	gapX: boolean;
+	gapY: boolean;
+}
+
+function applyFormEntry(resolved: ResolvedFormGrid, touch: FormGridTouch, entry: FormGridEntry | undefined): void {
 	if (!entry) return;
-	if (entry.columns !== undefined) resolved.columns = entry.columns;
-	if (entry.minColumnWidth !== undefined) resolved.minColumnWidth = entry.minColumnWidth;
+	if (entry.columns !== undefined) {
+		resolved.columns = entry.columns;
+		touch.template = true;
+	}
+	if (entry.minColumnWidth !== undefined) {
+		resolved.minColumnWidth = entry.minColumnWidth;
+		touch.template = true;
+	}
 	const entryGap = resolveGridGap(entry.gap);
 	const gapX = resolveGridGap(entry.gapX) ?? entryGap;
 	const gapY = resolveGridGap(entry.gapY) ?? entryGap;
-	if (gapX !== undefined) resolved.gapX = gapX;
-	if (gapY !== undefined) resolved.gapY = gapY;
+	if (gapX !== undefined) {
+		resolved.gapX = gapX;
+		touch.gapX = true;
+	}
+	if (gapY !== undefined) {
+		resolved.gapY = gapY;
+		touch.gapY = true;
+	}
 }
 
-function emitFormSlot(variables: CssVariables, resolved: ResolvedFormGrid, slot: CascadeSlot): void {
-	variables[customProperty('se-grid-template', slot)] = toGridTemplate(resolved.columns, resolved.minColumnWidth);
-	variables[customProperty('se-grid-gap-y', slot)] = resolved.gapY;
-	variables[customProperty('se-grid-gap-x', slot)] = resolved.gapX;
+function emitFormSlot(
+	variables: CssVariables,
+	resolved: ResolvedFormGrid,
+	slot: CascadeSlot,
+	touch: FormGridTouch,
+): void {
+	if (touch.template) {
+		variables[customProperty('se-grid-template', slot)] = toGridTemplate(resolved.columns, resolved.minColumnWidth);
+	}
+	if (touch.gapY) variables[customProperty('se-grid-gap-y', slot)] = resolved.gapY;
+	if (touch.gapX) variables[customProperty('se-grid-gap-x', slot)] = resolved.gapX;
 }
 
 /**
@@ -320,35 +445,42 @@ function emitFormSlot(variables: CssVariables, resolved: ResolvedFormGrid, slot:
  *
  * @remarks
  * Walks the cascade forward: top-level values, then `responsive.default`, then
- * each named breakpoint. Every slot is emitted fully resolved so generated
- * media queries read single variables and nested grids stay isolated.
+ * each named breakpoint. Only slots the author actually wrote are emitted —
+ * the generated media queries fall back through narrower slots, so an
+ * unconfigured grid carries no inline style at all. Axis properties win over
+ * the matching `placeItems`/`placeContent` shorthand.
  */
 export function getFormGridVariables(grid: GridLayoutConfig | undefined, theme: NormalizedGridTheme): CssVariables {
 	const resolved: ResolvedFormGrid = {
-		columns: grid?.columns ?? 1,
-		minColumnWidth: grid?.minColumnWidth ?? theme.minColumnWidth,
-		gapX: resolveGridGap(grid?.gapX ?? grid?.gap) ?? DEFAULT_GAP_CSS,
-		gapY: resolveGridGap(grid?.gapY ?? grid?.gap) ?? DEFAULT_GAP_CSS,
+		columns: 1,
+		minColumnWidth: theme.minColumnWidth,
+		gapX: DEFAULT_GAP_CSS,
+		gapY: DEFAULT_GAP_CSS,
 	};
+	const variables: CssVariables = {};
+
+	const [placeAlignItems, placeJustifyItems] = splitPlaceShorthand(grid?.placeItems);
+	const [placeAlignContent, placeJustifyContent] = splitPlaceShorthand(grid?.placeContent);
+	const alignment: Record<string, string | undefined> = {
+		'--se-grid-justify-items': grid?.justifyItems ?? placeJustifyItems,
+		'--se-grid-align-items': grid?.alignItems ?? placeAlignItems,
+		'--se-grid-justify-content': grid?.justifyContent ?? placeJustifyContent,
+		'--se-grid-align-content': grid?.alignContent ?? placeAlignContent,
+	};
+	for (const [name, value] of Object.entries(alignment)) {
+		if (value !== undefined) variables[name as `--${string}`] = value;
+	}
 
 	const responsive = grid?.responsive;
-	applyFormEntry(resolved, responsive?.default);
+	const touch: FormGridTouch = { template: false, gapX: false, gapY: false };
+	applyFormEntry(resolved, touch, grid);
+	applyFormEntry(resolved, touch, responsive?.default);
+	emitFormSlot(variables, resolved, 'default', touch);
 
-	const variables: CssVariables = {
-		'--se-grid-justify-items': grid?.justifyItems ?? 'initial',
-		'--se-grid-align-items': grid?.alignItems ?? 'initial',
-		'--se-grid-justify-content': grid?.justifyContent ?? 'initial',
-		'--se-grid-align-content': grid?.alignContent ?? 'start',
-		'--se-grid-place-items': grid?.placeItems ?? 'initial',
-		'--se-grid-place-content': grid?.placeContent ?? 'initial',
-	};
-	emitFormSlot(variables, resolved, 'default');
-	if (resolved.columns === 'auto') {
-		variables['--se-grid-min-column-width'] = resolved.minColumnWidth;
-	}
 	for (const breakpoint of BREAKPOINT_ORDER) {
-		applyFormEntry(resolved, responsive?.[breakpoint]);
-		emitFormSlot(variables, resolved, breakpoint);
+		const breakpointTouch: FormGridTouch = { template: false, gapX: false, gapY: false };
+		applyFormEntry(resolved, breakpointTouch, responsive?.[breakpoint]);
+		emitFormSlot(variables, resolved, breakpoint, breakpointTouch);
 	}
 	return variables;
 }
@@ -357,8 +489,13 @@ function formatGridLine(value: number | string): string {
 	return typeof value === 'number' ? String(value) : value;
 }
 
-function fieldDisplay(hidden: boolean): string {
-	return hidden ? 'none' : 'block';
+/** Placement a single cascade slot may set; the top-level config is the `default` slot. */
+interface FieldGridEntry {
+	column?: number | string;
+	row?: number | string;
+	justifySelf?: string;
+	alignSelf?: string;
+	hidden?: boolean;
 }
 
 interface ResolvedFieldGrid {
@@ -366,75 +503,88 @@ interface ResolvedFieldGrid {
 	row: string;
 	justifySelf: string;
 	alignSelf: string;
-	hidden: boolean;
+	display: string;
 }
 
-function applyFieldEntry(resolved: ResolvedFieldGrid, entry: FieldGridBreakpointConfig | undefined): void {
+interface FieldGridTouch {
+	column: boolean;
+	row: boolean;
+	justifySelf: boolean;
+	alignSelf: boolean;
+	display: boolean;
+}
+
+function newFieldTouch(): FieldGridTouch {
+	return { column: false, row: false, justifySelf: false, alignSelf: false, display: false };
+}
+
+function applyFieldEntry(resolved: ResolvedFieldGrid, touch: FieldGridTouch, entry: FieldGridEntry | undefined): void {
 	if (!entry) return;
-	if (entry.column !== undefined) resolved.column = formatGridLine(entry.column);
-	if (entry.row !== undefined) resolved.row = formatGridLine(entry.row);
-	if (entry.justifySelf !== undefined) resolved.justifySelf = entry.justifySelf;
-	if (entry.alignSelf !== undefined) resolved.alignSelf = entry.alignSelf;
-	if (entry.hidden !== undefined) resolved.hidden = entry.hidden;
+	if (entry.column !== undefined) {
+		resolved.column = formatGridLine(entry.column);
+		touch.column = true;
+	}
+	if (entry.row !== undefined) {
+		resolved.row = formatGridLine(entry.row);
+		touch.row = true;
+	}
+	if (entry.justifySelf !== undefined) {
+		resolved.justifySelf = entry.justifySelf;
+		touch.justifySelf = true;
+	}
+	if (entry.alignSelf !== undefined) {
+		resolved.alignSelf = entry.alignSelf;
+		touch.alignSelf = true;
+	}
+	if (entry.hidden !== undefined) {
+		resolved.display = entry.hidden ? 'none' : 'block';
+		touch.display = true;
+	}
 }
 
-function emitFieldSlot(variables: CssVariables, resolved: ResolvedFieldGrid, slot: CascadeSlot): void {
-	variables[customProperty('se-field-grid-column', slot)] = resolved.column;
-	variables[customProperty('se-field-grid-row', slot)] = resolved.row;
-	variables[customProperty('se-field-justify-self', slot)] = resolved.justifySelf;
-	variables[customProperty('se-field-align-self', slot)] = resolved.alignSelf;
-	variables[customProperty('se-field-display', slot)] = fieldDisplay(resolved.hidden);
+function emitFieldSlot(
+	variables: CssVariables,
+	resolved: ResolvedFieldGrid,
+	slot: CascadeSlot,
+	touch: FieldGridTouch,
+): void {
+	if (touch.column) variables[customProperty('se-field-grid-column', slot)] = resolved.column;
+	if (touch.row) variables[customProperty('se-field-grid-row', slot)] = resolved.row;
+	if (touch.justifySelf) variables[customProperty('se-field-justify-self', slot)] = resolved.justifySelf;
+	if (touch.alignSelf) variables[customProperty('se-field-align-self', slot)] = resolved.alignSelf;
+	if (touch.display) variables[customProperty('se-field-display', slot)] = resolved.display;
 }
 
 /**
  * Resolves a single element's grid placement into inline style variables.
  *
  * @remarks
- * Same forward cascade as form grids. Neutral defaults are emitted when unset
- * so nested fields never inherit a parent field's custom properties.
+ * Same forward cascade and sparse emission as form grids: an element without a
+ * `grid` config produces no inline style, and the stylesheet supplies neutral
+ * defaults plus the inheritance resets that keep nested fields isolated.
+ * `placeSelf` is applied before the axis properties, so those win.
  */
 export function getFieldGridVariables(grid?: ElementGridConfig): CssVariables {
-	const authored = grid ?? {};
 	const resolved: ResolvedFieldGrid = {
-		column: authored.column !== undefined ? formatGridLine(authored.column) : 'auto',
-		row: authored.row !== undefined ? formatGridLine(authored.row) : 'auto',
-		justifySelf: authored.justifySelf ?? 'stretch',
-		alignSelf: authored.alignSelf ?? 'stretch',
-		hidden: false,
+		column: 'auto',
+		row: 'auto',
+		justifySelf: 'auto',
+		alignSelf: 'auto',
+		display: 'block',
 	};
-	const responsive = authored.responsive;
-	applyFieldEntry(resolved, responsive?.default);
+	const variables: CssVariables = {};
 
-	const variables: CssVariables = {
-		'--se-field-place-self': authored.placeSelf ?? 'auto',
-	};
-	emitFieldSlot(variables, resolved, 'default');
+	const [placeAlignSelf, placeJustifySelf] = splitPlaceShorthand(grid?.placeSelf);
+	const touch = newFieldTouch();
+	applyFieldEntry(resolved, touch, { justifySelf: placeJustifySelf, alignSelf: placeAlignSelf });
+	applyFieldEntry(resolved, touch, grid);
+	applyFieldEntry(resolved, touch, grid?.responsive?.default);
+	emitFieldSlot(variables, resolved, 'default', touch);
+
 	for (const breakpoint of BREAKPOINT_ORDER) {
-		applyFieldEntry(resolved, responsive?.[breakpoint]);
-		emitFieldSlot(variables, resolved, breakpoint);
+		const breakpointTouch = newFieldTouch();
+		applyFieldEntry(resolved, breakpointTouch, grid?.responsive?.[breakpoint]);
+		emitFieldSlot(variables, resolved, breakpoint, breakpointTouch);
 	}
 	return variables;
-}
-
-/** `data-se-grid-theme` on the field host; must match the owning grid container's theme id. */
-export const GRID_THEME_DATA_ATTRIBUTE = 'data-se-grid-theme';
-
-export interface FieldGridHost {
-	readonly themeId: string;
-	readonly style: CssVariables;
-}
-
-/**
- * Grid placement styles and theme ownership for a field host element.
- *
- * @remarks
- * Field rules in {@link getGridThemeCss} match `.se-form-field[data-se-grid-theme]`
- * so outer themes cannot style fields owned by a nested grid. Callers set
- * `data-se-grid-theme={host.themeId}`.
- */
-export function getFieldGridHostProps(themeId: string, grid?: ElementGridConfig): FieldGridHost {
-	return {
-		themeId,
-		style: getFieldGridVariables(grid),
-	};
 }
