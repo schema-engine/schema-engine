@@ -1,8 +1,11 @@
+import { renderToString } from '@ecopages/jsx/server';
+import { jsx } from '@ecopages/jsx/jsx-runtime';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
-import { getFieldGridVariables, getFormGridVariables, type CssVariables } from '@schema-engine/forms/lib/grid-styles';
 import type { ElementGridConfig } from '@schema-engine/forms/schemas';
+import { RecipeRenderer } from '@/components/internals/recipe-renderer';
+import { mergeFieldGridHost } from '@/hooks/grid-styles';
 
 const ssrInputSchema = z.object({
 	$type: z.literal('ssr-input'),
@@ -12,6 +15,31 @@ const ssrInputSchema = z.object({
 	grid: z.optional(z.custom<ElementGridConfig>()),
 });
 
+type SsrInputConfig = z.infer<typeof ssrInputSchema>;
+
+/**
+ * Field host built the way the shipped elements build theirs.
+ *
+ * @remarks
+ * Written with `jsx(...)` rather than JSX syntax because the package tsconfig
+ * only covers `src`, so `test/` files are not transformed with the Radiant
+ * `jsxImportSource`.
+ */
+function SsrFixtureInput(config: SsrInputConfig) {
+	const host = mergeFieldGridHost(config.grid);
+	const label = config.label ?? config.name;
+
+	return jsx('div', {
+		class: 'se-form-field',
+		'data-se-grid-theme': host.themeId,
+		style: host.style,
+		children: [
+			jsx('label', { for: config.id, children: label }),
+			jsx('input', { id: config.id, name: config.name, 'aria-label': label, readonly: true }),
+		],
+	});
+}
+
 function createSsrAcceptanceEngine() {
 	return createFormEngine({
 		elements: [
@@ -19,7 +47,7 @@ function createSsrAcceptanceEngine() {
 				$type: 'ssr-input',
 				schema: ssrInputSchema,
 				metadata: { name: 'SSR input', category: 'input' },
-				render: () => null,
+				render: (config: SsrInputConfig) => SsrFixtureInput(config),
 			},
 		],
 	});
@@ -27,23 +55,20 @@ function createSsrAcceptanceEngine() {
 
 let cachedEngine: FormEngine | undefined;
 
-export function getSsrAcceptanceEngine() {
+export function getSsrAcceptanceEngine(): FormEngine {
 	if (!cachedEngine) {
 		cachedEngine = createSsrAcceptanceEngine();
 	}
 	return cachedEngine;
 }
 
-function cssDeclarations(style: CssVariables): string {
-	return Object.entries(style)
-		.filter((entry): entry is [string, string] => typeof entry[1] === 'string')
-		.map(([name, value]) => `${name}:${value}`)
-		.join(';');
-}
-
 /**
- * Isolated SSR document for the compiled stylesheet and form/field variables
- * the renderer emits (`getCompiledGrid`, `getFormGridVariables`, `getFieldGridVariables`).
+ * SSR document produced by the renderer itself.
+ *
+ * @remarks
+ * Goes through {@link RecipeRenderer} rather than re-deriving the markup from
+ * the grid helpers, so a renderer that stops emitting the theme stylesheet, the
+ * grid container, or the `se-form-field` class fails this test.
  */
 export function renderSsrLayoutAcceptanceHtml(): string {
 	const engine = getSsrAcceptanceEngine();
@@ -79,18 +104,8 @@ export function renderSsrLayoutAcceptanceHtml(): string {
 			},
 		],
 	});
-	const { theme, css } = engine.getCompiledGrid();
-	const tracked = config.steps[0]!.elements[0]!;
-	const visible = config.steps[0]!.elements[1]!;
-	const gridStyle = cssDeclarations(getFormGridVariables(config.grid, theme));
-	const trackedStyle = cssDeclarations(getFieldGridVariables('grid' in tracked ? tracked.grid : undefined));
-	const visibleStyle = cssDeclarations(getFieldGridVariables('grid' in visible ? visible.grid : undefined));
 
-	return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
-<style data-se-grid-theme="${theme.id}">${css}</style>
-<div class="se-form-grid" data-se-grid-theme="${theme.id}" style="${gridStyle}">
-<div class="se-form-field" data-se-grid-theme="${theme.id}" style="${trackedStyle}"><label for="tracked">Tracked field</label><input id="tracked" name="tracked" aria-label="Tracked field" readonly></div>
-<div class="se-form-field" data-se-grid-theme="${theme.id}" style="${visibleStyle}"><label for="visible">Visible field</label><input id="visible" name="visible" aria-label="Visible field" readonly></div>
-</div>
-</body></html>`;
+	const body = renderToString(RecipeRenderer({ config, engine, recipe: undefined }), { mode: 'plain' });
+
+	return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${body}</body></html>`;
 }

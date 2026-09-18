@@ -33,6 +33,7 @@ export default defineConfig({
 	test: {
 		projects: [
 			{
+				plugins: [react()],
 				resolve: { alias },
 				test: {
 					name: 'unit',
