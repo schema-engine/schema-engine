@@ -1,12 +1,16 @@
 import './form-array-elements.css';
-import { customElement, onEvent, prop, RadiantElement } from '@ecopages/radiant';
+import { customElement, onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
+import { onContextUpdate } from '@ecopages/radiant/context';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { FormElements } from '@/components/internals/form-elements';
-import { getFieldGridStyles } from '@/hooks/grid-styles';
+import { mergeFieldGridHost, owningFormEngine } from '@/hooks/grid-styles';
 import type { ArrayElementsProps } from '@/registry/forms/inputs/form-array-elements.types';
 import { arrayItemScope } from '@schema-engine/forms';
+import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { FormController } from '@/adapters/radiant/controller';
+import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
+import { getActiveFormEngine } from '@/registries/active-engine';
 
 function TrashIcon() {
 	return (
@@ -50,10 +54,22 @@ function PlusIcon() {
 @customElement('se-form-array')
 export class SeFormArray extends RadiantElement {
 	@prop({ type: Object }) config!: ArrayElementsProps;
+	@state engine?: FormEngine;
 
 	readonly form = new FormController(this);
 	private initialized = false;
 	private renderedIds: string[] = [];
+
+	@onContextUpdate({ context: formEngineContext, requestUpdate: false })
+	onFormEngine(value: FormEngineContextValue): void {
+		if (value.engine) {
+			this.engine = value.engine;
+		}
+	}
+
+	private resolveEngine(): FormEngine | undefined {
+		return this.engine ?? getActiveFormEngine();
+	}
 
 	private get ids(): string[] {
 		return this.form.ready ? this.form.fieldArray(this.config.name).fields.map(({ id }) => id) : [];
@@ -139,6 +155,7 @@ export class SeFormArray extends RadiantElement {
 							<div class="se-form-array__fields">
 								<FormElements
 									elements={config.elements}
+									engine={this.resolveEngine()}
 									namePrefix={scope.namePrefix}
 									nameStrategy={scope.nameStrategy}
 									instanceId={scope.instanceId}
@@ -173,11 +190,13 @@ export class SeFormArray extends RadiantElement {
 }
 
 export function FormArrayElements(config: ArrayElementsProps) {
+	const fieldHost = mergeFieldGridHost(config.grid, config.style);
+
 	return (
-		<div class="se-form-array-field" style={{ ...getFieldGridStyles(config.grid), ...config.style }}>
+		<div class="se-form-field se-form-array-field" data-se-grid-theme={fieldHost.themeId} style={fieldHost.style}>
 			{config.label ? <p class="se-form-array-field__label">{config.label}</p> : null}
 			{config.description ? <p class="se-form-array-field__description">{config.description}</p> : null}
-			{jsx('se-form-array', { 'prop:config': config })}
+			{jsx('se-form-array', { 'prop:config': config, 'prop:engine': owningFormEngine() })}
 		</div>
 	);
 }

@@ -1,7 +1,6 @@
 import { RuiCheckboxGroup } from '@ecopages/radiant-ui/checkbox-group';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
-import { getFieldGridStyles } from '@/hooks/grid-styles';
 import { parseChoiceValue, serializeChoiceValue } from '@/lib/choice-value';
 import { toFieldRules } from '@/lib/field-rules';
 import type { CheckboxGroupFieldProps } from '@/registry/forms/inputs/form-checkbox-group.types';
@@ -26,7 +25,8 @@ export function FormCheckboxGroup({
 			hiddenLabel={!config.label}
 			required={isFieldRequired(config.rules)}
 			description={config.description}
-			style={{ ...getFieldGridStyles(config.grid), ...config.style }}
+			grid={config.grid}
+			style={config.style}
 			rules={toFieldRules(config.rules)}
 			defaultValue={serializeChoiceValue(config.defaultValue)}
 			disabled={config.disabled}
