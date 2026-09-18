@@ -2,7 +2,6 @@ import { describe, expect, test } from 'vitest';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
 import { renderRegisteredElement } from '@/components/internals/render-registered-element';
-import { owningGridThemeId } from '@/contexts/form-engine-owner';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { getActiveFormEngine, setActiveFormEngine } from '@/registries/active-engine';
 
@@ -45,7 +44,7 @@ describe('form engine owner', () => {
 
 			expect(capturedThemeId).toBe(engineA.getGridTheme().id);
 			expect(capturedThemeId).not.toBe(engineB.getGridTheme().id);
-			expect(owningGridThemeId()).toBe(engineB.getGridTheme().id);
+			expect(mergeFieldGridHost().themeId).toBe(engineB.getGridTheme().id);
 		} finally {
 			setActiveFormEngine(previous ?? null);
 		}

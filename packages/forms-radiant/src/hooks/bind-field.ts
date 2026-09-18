@@ -41,9 +41,7 @@ export function bindControlledFormElement<TFieldValue = unknown>(
 		'aria-describedby': error ? `${config.id}-error` : undefined,
 	};
 
-	const fieldHost = mergeFieldGridHost(config.grid, config.style);
-	const containerStyles = fieldHost.style;
-	const gridThemeHost = { 'data-se-grid-theme': fieldHost.themeId };
+	const containerStyles = mergeFieldGridHost(config.grid, config.style).style;
 
 	return {
 		value: (value ?? '') as TFieldValue,
@@ -64,7 +62,6 @@ export function bindControlledFormElement<TFieldValue = unknown>(
 				}
 			: null,
 		containerStyles,
-		gridThemeHost,
 		fieldState: {
 			error: error ? { message: error } : undefined,
 			invalid: Boolean(error),
