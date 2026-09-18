@@ -27,6 +27,10 @@ function fieldStyle(html: string, label: string): string {
  * Asserts the renderer's SSR markup: the compiled stylesheet, the theme-scoped
  * grid container, and field hosts carrying only the breakpoints the author
  * wrote. Runs in Node against the shared acceptance fixture.
+ *
+ * @remarks
+ * The fixture authors `md` only, so `lg` and wider must be absent from the
+ * inline style and resolve through the stylesheet's fallback chain instead.
  */
 export function expectSsrGridMarkup(html: string, compiled: CompiledGridLike): void {
 	expect(html).not.toMatch(/<script\b/i);
@@ -39,7 +43,6 @@ export function expectSsrGridMarkup(html: string, compiled: CompiledGridLike): v
 	expect(tracked).toMatch(/--se-field-grid-column:\s*span 1/);
 	expect(tracked).toMatch(/--se-field-grid-column-md:\s*span 2/);
 	expect(tracked).toMatch(/--se-field-display-md:\s*none/);
-	// lg and wider resolve from md through the stylesheet's fallback chain.
 	expect(tracked).not.toContain('-lg');
 	expect(tracked).not.toContain('-2xl');
 

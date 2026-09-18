@@ -84,6 +84,15 @@ function useCompactLayout(): boolean {
 	);
 }
 
+/**
+ * Range picker whose popover edits a draft before committing it.
+ *
+ * @remarks
+ * `value` is re-adopted during render whenever the popover is closed, which
+ * matches the previous effect without the extra committed render. While the
+ * popover is open {@link rangeKey} returns `null`, so an in-progress draft is
+ * never overwritten.
+ */
 function DateRangePicker({
 	className,
 	value,
@@ -108,9 +117,6 @@ function DateRangePicker({
 	const label = formatRangeLabel(value, dateFormat);
 	const months = compact ? 1 : numberOfMonths;
 
-	// Re-adopt `value` during render whenever the popover is closed, matching the
-	// old effect without the extra committed render. While open the key is null,
-	// so an in-progress draft is never overwritten.
 	const valueKey = rangeKey(value, open);
 	if (valueKey !== syncedValue) {
 		setSyncedValue(valueKey);

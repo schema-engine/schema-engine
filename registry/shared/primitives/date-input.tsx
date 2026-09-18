@@ -34,6 +34,15 @@ function isValidParts(parts: DateParts) {
 	return date.getFullYear() === parts.year && date.getMonth() + 1 === parts.month && date.getDate() === parts.day;
 }
 
+/**
+ * Three-part date entry backed by a draft the user edits freely.
+ *
+ * @remarks
+ * A new `value` is adopted during render rather than from an effect, so the
+ * inputs never paint one frame of the previous date. The comparison is by
+ * timestamp, so a fresh `Date` for the same instant cannot reset the draft
+ * mid-edit. `committed` holds the last valid parts to revert to on blur.
+ */
 function DateInput({ value, onChange, className, disabled }: DateInputProps) {
 	const [parts, setParts] = useState<DateParts>(() => toParts(value));
 	const [committed, setCommitted] = useState<DateParts>(parts);
@@ -42,9 +51,6 @@ function DateInput({ value, onChange, className, disabled }: DateInputProps) {
 	const dayRef = useRef<HTMLInputElement>(null);
 	const yearRef = useRef<HTMLInputElement>(null);
 
-	// Adopt a new `value` during render rather than from an effect, so the inputs
-	// never paint one frame of the previous date. Compared by timestamp, so a new
-	// Date object for the same instant does not reset the draft mid-edit.
 	if (value?.getTime() !== syncedTime) {
 		const next = toParts(value);
 		setSyncedTime(value?.getTime());
