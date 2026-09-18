@@ -27,7 +27,7 @@
 		"skipLibCheck": true,
 		"strict": true,
 		"target": "ES2021",
-		"types": ["node", "ecopages-content-processor"],
+		"types": ["node"],
 		"useDefineForClassFields": true,
 		"verbatimModuleSyntax": true
 	},
