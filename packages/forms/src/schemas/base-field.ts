@@ -15,15 +15,17 @@ export const GridGapTokens = ['none', 'compact', 'default', 'loose', 'wide'] as 
 export type GridGapToken = (typeof GridGapTokens)[number];
 
 /**
- * Semantic token or raw CSS length.
+ * Semantic gap token or a raw CSS length.
  *
  * @remarks
- * `string & {}` keeps the token union from collapsing to `string`, so
- * `resolveGridGap` can narrow tokens without a cast.
+ * The enum branch is redundant for validation — the string branch accepts the
+ * same values — and `z.infer` collapses the union to `string`. It is kept
+ * because `z.toJSONSchema` emits it as `anyOf: [{enum: [...]}, {type: string}]`,
+ * which is how the token vocabulary reaches registry and docs consumers.
  */
-export type GridGapValue = GridGapToken | (string & {});
-
-export const GridGapValueSchema = z.union([z.enum(GridGapTokens), z.string()]);
+export const GridGapValueSchema = z
+	.union([z.enum(GridGapTokens), z.string()])
+	.check(z.describe('Semantic gap token (none | compact | default | loose | wide) or a raw CSS length.'));
 
 /**
  * Responsive breakpoint configuration for grid layout
