@@ -143,7 +143,7 @@ describe('FormEngine.extend', () => {
 		const extended = base.extend({ elements: [textareaElement] });
 
 		expect(extended.getGridTheme()).toBe(base.getGridTheme());
-		expect(extended.getGridThemeCss()).toBe(base.getGridThemeCss());
+		expect(extended.getCompiledGrid()).toBe(base.getCompiledGrid());
 		expect(extended.getCompiledGrid()).toBe(base.getCompiledGrid());
 	});
 });

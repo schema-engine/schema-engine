@@ -120,7 +120,14 @@ export class FormEngine<
 		return this.registries.recipes.has(id);
 	}
 
-	/** The engine's immutable compiled grid (theme plus stylesheet). */
+	/**
+	 * The engine's immutable compiled grid: the resolved theme and its stylesheet.
+	 *
+	 * @remarks
+	 * Compiled once when the engine is built. Renderers emit `css` inside the
+	 * rendered form markup (React hoists and dedupes by key; Radiant renders it
+	 * inline), so SSR output is styled with no FOUC and no runtime injection.
+	 */
 	getCompiledGrid(): CompiledGrid {
 		return this.compiledGrid;
 	}
@@ -128,18 +135,6 @@ export class FormEngine<
 	/** The engine's immutable grid theme (computed once at construction). */
 	getGridTheme(): NormalizedGridTheme {
 		return this.compiledGrid.theme;
-	}
-
-	/**
-	 * The theme-scoped stylesheet for the engine's grid configuration.
-	 *
-	 * @remarks
-	 * Compiled once when the engine is built. Renderers emit this string inside
-	 * the rendered form markup (React hoists and dedupes by key; Radiant renders
-	 * it inline), so SSR output is styled with no FOUC and no runtime injection.
-	 */
-	getGridThemeCss(): string {
-		return this.compiledGrid.css;
 	}
 
 	getAction(id: string): BuilderActionRegistration | undefined {
