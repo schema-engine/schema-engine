@@ -191,6 +191,12 @@ describe('getFormGridVariables', () => {
 		expect(Object.keys(variables).every((key) => key.startsWith('--'))).toBe(true);
 	});
 
+	test('keeps multi-keyword alignment values in one axis', () => {
+		const variables = getFormGridVariables({ placeContent: 'first baseline' }, theme());
+		expect(variables['--se-grid-align-content']).toBe('first baseline');
+		expect(variables['--se-grid-justify-content']).toBe('first baseline');
+	});
+
 	test('resolves place-* shorthands into both axes', () => {
 		const variables = getFormGridVariables({ placeItems: 'center start', placeContent: 'space-between' }, theme());
 		expect(variables['--se-grid-align-items']).toBe('center');
@@ -266,6 +272,15 @@ describe('getFieldGridVariables', () => {
 		expect(variables['--se-field-justify-self']).toBe('end');
 		expect(variables['--se-field-justify-self-md']).toBe('start');
 		expect(variables['--se-field-align-self-md']).toBeUndefined();
+	});
+
+	test('keeps multi-keyword axis values in one axis', () => {
+		expect(getFieldGridVariables({ placeSelf: 'safe center' })['--se-field-align-self']).toBe('safe center');
+		expect(getFieldGridVariables({ placeSelf: 'safe center' })['--se-field-justify-self']).toBe('safe center');
+		expect(getFieldGridVariables({ placeSelf: 'first baseline' })['--se-field-align-self']).toBe('first baseline');
+		const split = getFieldGridVariables({ placeSelf: 'safe center unsafe start' });
+		expect(split['--se-field-align-self']).toBe('safe center');
+		expect(split['--se-field-justify-self']).toBe('unsafe start');
 	});
 
 	test('axis properties beat the placeSelf shorthand', () => {

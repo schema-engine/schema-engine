@@ -377,15 +377,26 @@ function resolveGridGap(value: string | undefined): string | undefined {
 	return value;
 }
 
+/** Keywords that qualify the position keyword that follows them. */
+const AXIS_QUALIFIERS = new Set(['safe', 'unsafe', 'first', 'last']);
+
 /**
- * Splits a `place-*` shorthand into `[align, justify]`.
+ * Splits a `place-*` shorthand into `[align, justify]` per the CSS grammar.
  *
  * @remarks
- * CSS orders these shorthands align-first, and a single value sets both axes.
+ * The shorthand is align-first and a single axis value sets both axes — but an
+ * axis value can be two keywords, an overflow position (`safe`/`unsafe`) or a
+ * baseline modifier (`first`/`last`) plus its position. So `safe center` is one
+ * value for both axes, while `center start` is one value per axis. Splitting on
+ * whitespace alone would emit `align-self: safe`, which is not valid CSS.
  */
 function splitPlaceShorthand(value: string | undefined): [string | undefined, string | undefined] {
 	if (value === undefined) return [undefined, undefined];
-	const [align, justify = align] = value.trim().split(/\s+/);
+	const tokens = value.trim().split(/\s+/).filter(Boolean);
+	if (tokens.length === 0) return [undefined, undefined];
+	const alignLength = AXIS_QUALIFIERS.has(tokens[0] as string) && tokens.length > 1 ? 2 : 1;
+	const align = tokens.slice(0, alignLength).join(' ');
+	const justify = alignLength < tokens.length ? tokens.slice(alignLength).join(' ') : align;
 	return [align, justify];
 }
 
