@@ -78,7 +78,7 @@ const PRIMITIVES: Record<PrimitiveName, PrimitiveSpec> = {
 		title: 'Schema Engine field',
 		description: 'Label, description, and error chrome for Schema Engine fields.',
 		registryDependencies: ['label'],
-		dependencies: [],
+		dependencies: ['@schema-engine/forms', '@schema-engine/forms-react'],
 	},
 	combobox: {
 		title: 'Schema Engine combobox',
