@@ -79,9 +79,10 @@ describe('generated stylesheet', () => {
 		expect(stylesheet).toContain('@media (min-width:64rem)');
 	});
 
-	test('defines gap tokens for consumer overrides', () => {
+	test('declares engine gap defaults without shadowing the public tokens', () => {
 		for (const token of GridGapTokens) {
-			expect(css()).toContain(`--se-grid-gap-${token}:`);
+			expect(css()).toContain(`--se-grid-gap-base-${token}:`);
+			expect(css()).not.toMatch(new RegExp(`--se-grid-gap-${token}:`));
 		}
 	});
 
@@ -122,8 +123,8 @@ describe('generated stylesheet', () => {
 describe('getFormGridVariables', () => {
 	test('maps a gap token to its theme variable on both axes', () => {
 		const variables = getFormGridVariables({ gap: 'loose' }, theme());
-		expect(variables['--se-grid-gap-y']).toBe('var(--se-grid-gap-loose)');
-		expect(variables['--se-grid-gap-x']).toBe('var(--se-grid-gap-loose)');
+		expect(variables['--se-grid-gap-y']).toBe('var(--se-grid-gap-loose, var(--se-grid-gap-base-loose))');
+		expect(variables['--se-grid-gap-x']).toBe('var(--se-grid-gap-loose, var(--se-grid-gap-base-loose))');
 		// No columns authored: the stylesheet's single-column fallback stands.
 		expect(variables['--se-grid-template']).toBeUndefined();
 	});
@@ -148,7 +149,7 @@ describe('getFormGridVariables', () => {
 		};
 		const variables = getFormGridVariables(grid, theme());
 		expect(variables['--se-grid-template-sm']).toBe('repeat(2, minmax(0, 1fr))');
-		expect(variables['--se-grid-gap-y-md']).toBe('var(--se-grid-gap-loose)');
+		expect(variables['--se-grid-gap-y-md']).toBe('var(--se-grid-gap-loose, var(--se-grid-gap-base-loose))');
 		expect(variables['--se-grid-template']).toBe('repeat(1, minmax(0, 1fr))');
 		// md re-states no columns, so the stylesheet resolves it from the sm slot.
 		expect(variables['--se-grid-template-md']).toBeUndefined();
@@ -156,8 +157,8 @@ describe('getFormGridVariables', () => {
 
 	test('axis gaps beat the entry gap within the same breakpoint', () => {
 		const variables = getFormGridVariables({ responsive: { sm: { gap: 'loose', gapX: 'compact' } } }, theme());
-		expect(variables['--se-grid-gap-x-sm']).toBe('var(--se-grid-gap-compact)');
-		expect(variables['--se-grid-gap-y-sm']).toBe('var(--se-grid-gap-loose)');
+		expect(variables['--se-grid-gap-x-sm']).toBe('var(--se-grid-gap-compact, var(--se-grid-gap-base-compact))');
+		expect(variables['--se-grid-gap-y-sm']).toBe('var(--se-grid-gap-loose, var(--se-grid-gap-base-loose))');
 	});
 
 	test('responsive.default overrides the top-level baseline', () => {
@@ -166,8 +167,8 @@ describe('getFormGridVariables', () => {
 			responsive: { default: { gap: 'wide', gapY: 'loose' } },
 		};
 		const variables = getFormGridVariables(grid, theme());
-		expect(variables['--se-grid-gap-y']).toBe('var(--se-grid-gap-loose)');
-		expect(variables['--se-grid-gap-x']).toBe('var(--se-grid-gap-wide)');
+		expect(variables['--se-grid-gap-y']).toBe('var(--se-grid-gap-loose, var(--se-grid-gap-base-loose))');
+		expect(variables['--se-grid-gap-x']).toBe('var(--se-grid-gap-wide, var(--se-grid-gap-base-wide))');
 	});
 
 	test('auto columns inline the minimum width into the authored slot', () => {

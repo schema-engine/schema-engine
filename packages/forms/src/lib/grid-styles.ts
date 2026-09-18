@@ -106,6 +106,15 @@ const DEFAULT_GAP: Record<GridGapToken, string> = {
 
 const DEFAULT_MIN_COLUMN_WIDTH = '15.625rem';
 
+/**
+ * Public gap tokens. Hosts override these at `:root` to restyle every form.
+ *
+ * @remarks
+ * The engine must never declare these on an element: an element's own
+ * declaration beats an inherited one, which would make the documented `:root`
+ * override a no-op. The engine's value is declared under
+ * {@link gapBaseVariable} instead and reached through a `var()` fallback.
+ */
 const GAP_TOKEN_VARIABLES: Record<GridGapToken, `--${string}`> = {
 	none: '--se-grid-gap-none',
 	compact: '--se-grid-gap-compact',
@@ -114,7 +123,17 @@ const GAP_TOKEN_VARIABLES: Record<GridGapToken, `--${string}`> = {
 	wide: '--se-grid-gap-wide',
 };
 
-const DEFAULT_GAP_CSS = `var(${GAP_TOKEN_VARIABLES.default})`;
+/** Engine default for a gap token, shadowed by the public token when a host sets it. */
+function gapBaseVariable(token: GridGapToken): `--${string}` {
+	return `--se-grid-gap-base-${token}`;
+}
+
+/** A gap token as CSS: the host's override if present, else the engine default. */
+function gapTokenValue(token: GridGapToken): string {
+	return `var(${GAP_TOKEN_VARIABLES[token]}, var(${gapBaseVariable(token)}))`;
+}
+
+const DEFAULT_GAP_CSS = gapTokenValue('default');
 
 /** Root font size used when comparing `rem`/`em` breakpoint thresholds. */
 const ROOT_FONT_PX = 16;
@@ -322,7 +341,7 @@ function getGridThemeCss(theme: NormalizedGridTheme): string {
 	const scope = `[data-se-grid-theme="${theme.id}"]`;
 	const gridScope = `.se-form-grid${scope}`;
 	const fieldScope = `.se-form-field${scope}`;
-	const tokens = GridGapTokens.map((token) => `${GAP_TOKEN_VARIABLES[token]}:${theme.gap[token]};`).join('');
+	const tokens = GridGapTokens.map((token) => `${gapBaseVariable(token)}:${theme.gap[token]};`).join('');
 	const lines: string[] = [
 		`${scope}{${tokens}}`,
 		`${gridScope}{${inheritanceResets(GRID_PROPERTIES, GRID_ALIGNMENT_PROPERTIES)}display:grid;${declarations(GRID_PROPERTIES)}${declarations(GRID_ALIGNMENT_PROPERTIES)}}`,
@@ -353,7 +372,7 @@ function isGridGapToken(value: string): value is GridGapToken {
 function resolveGridGap(value: string | undefined): string | undefined {
 	if (value === undefined) return undefined;
 	if (isGridGapToken(value)) {
-		return `var(${GAP_TOKEN_VARIABLES[value]})`;
+		return gapTokenValue(value);
 	}
 	return value;
 }
