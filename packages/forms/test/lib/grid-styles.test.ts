@@ -86,6 +86,10 @@ describe('generated stylesheet', () => {
 		}
 	});
 
+	test('a visible field falls back to the component display mode, not block', () => {
+		expect(css()).toContain('display:var(--se-field-display, var(--se-field-display-mode, block))');
+	});
+
 	test('declares no place-* shorthand that would reset the axis longhands', () => {
 		expect(css()).not.toMatch(/place-(items|content|self):/);
 	});
@@ -121,11 +125,10 @@ describe('generated stylesheet', () => {
 });
 
 describe('getFormGridVariables', () => {
-	test('maps a gap token to its theme variable on both axes', () => {
+	test('maps a gap token to its theme variable on both axes and leaves columns to the stylesheet', () => {
 		const variables = getFormGridVariables({ gap: 'loose' }, theme());
 		expect(variables['--se-grid-gap-y']).toBe('var(--se-grid-gap-loose, var(--se-grid-gap-base-loose))');
 		expect(variables['--se-grid-gap-x']).toBe('var(--se-grid-gap-loose, var(--se-grid-gap-base-loose))');
-		// No columns authored: the stylesheet's single-column fallback stands.
 		expect(variables['--se-grid-template']).toBeUndefined();
 	});
 
@@ -151,7 +154,6 @@ describe('getFormGridVariables', () => {
 		expect(variables['--se-grid-template-sm']).toBe('repeat(2, minmax(0, 1fr))');
 		expect(variables['--se-grid-gap-y-md']).toBe('var(--se-grid-gap-loose, var(--se-grid-gap-base-loose))');
 		expect(variables['--se-grid-template']).toBe('repeat(1, minmax(0, 1fr))');
-		// md re-states no columns, so the stylesheet resolves it from the sm slot.
 		expect(variables['--se-grid-template-md']).toBeUndefined();
 	});
 
@@ -255,7 +257,7 @@ describe('getFieldGridVariables', () => {
 			},
 		});
 		expect(variables['--se-field-display']).toBe('none');
-		expect(variables['--se-field-display-md']).toBe('block');
+		expect(variables['--se-field-display-md']).toBe('var(--se-field-display-mode, block)');
 		expect(variables['--se-field-display-lg']).toBeUndefined();
 	});
 
@@ -275,12 +277,18 @@ describe('getFieldGridVariables', () => {
 	});
 
 	test('keeps multi-keyword axis values in one axis', () => {
-		expect(getFieldGridVariables({ placeSelf: 'safe center' })['--se-field-align-self']).toBe('safe center');
-		expect(getFieldGridVariables({ placeSelf: 'safe center' })['--se-field-justify-self']).toBe('safe center');
-		expect(getFieldGridVariables({ placeSelf: 'first baseline' })['--se-field-align-self']).toBe('first baseline');
-		const split = getFieldGridVariables({ placeSelf: 'safe center unsafe start' });
-		expect(split['--se-field-align-self']).toBe('safe center');
-		expect(split['--se-field-justify-self']).toBe('unsafe start');
+		expect(getFieldGridVariables({ placeSelf: 'safe center' })).toEqual({
+			'--se-field-align-self': 'safe center',
+			'--se-field-justify-self': 'safe center',
+		});
+		expect(getFieldGridVariables({ placeSelf: 'first baseline' })).toEqual({
+			'--se-field-align-self': 'first baseline',
+			'--se-field-justify-self': 'first baseline',
+		});
+		expect(getFieldGridVariables({ placeSelf: 'safe center unsafe start' })).toEqual({
+			'--se-field-align-self': 'safe center',
+			'--se-field-justify-self': 'unsafe start',
+		});
 	});
 
 	test('axis properties beat the placeSelf shorthand', () => {

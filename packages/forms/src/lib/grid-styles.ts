@@ -135,6 +135,17 @@ function gapTokenValue(token: GridGapToken): string {
 
 const DEFAULT_GAP_CSS = gapTokenValue('default');
 
+/**
+ * Display a visible field falls back to.
+ *
+ * @remarks
+ * The field rule outranks a component's own `display` (class plus attribute
+ * beats a lone class), so a host that needs its own layout sets
+ * `--se-field-display-mode` rather than `display`. Responsive `hidden` then
+ * toggles between `none` and that mode instead of forcing `block`.
+ */
+const FIELD_DISPLAY_MODE = 'var(--se-field-display-mode, block)';
+
 /** Root font size used when comparing `rem`/`em` breakpoint thresholds. */
 const ROOT_FONT_PX = 16;
 
@@ -272,7 +283,7 @@ const GRID_PROPERTIES: readonly ResponsiveProperty[] = [
  * form-level alignment on every field.
  */
 const FIELD_PROPERTIES: readonly ResponsiveProperty[] = [
-	['display', 'se-field-display', 'block'],
+	['display', 'se-field-display', FIELD_DISPLAY_MODE],
 	['grid-column', 'se-field-grid-column', 'auto'],
 	['grid-row', 'se-field-grid-row', 'auto'],
 	['justify-self', 'se-field-justify-self', 'auto'],
@@ -420,73 +431,35 @@ interface FormGridEntry {
 	gapY?: string;
 }
 
-interface ResolvedFormGrid {
-	columns: number | 'auto';
-	minColumnWidth: string;
-	gapX: string;
-	gapY: string;
+/** Placement a single cascade slot may set; the top-level config is the `default` slot. */
+interface FieldGridEntry {
+	column?: number | string;
+	row?: number | string;
+	justifySelf?: string;
+	alignSelf?: string;
+	hidden?: boolean;
 }
 
-/** Which variables a slot has to emit. Untouched ones fall through to the stylesheet. */
-interface FormGridTouch {
-	template: boolean;
-	gapX: boolean;
-	gapY: boolean;
-}
-
-function applyFormEntry(resolved: ResolvedFormGrid, touch: FormGridTouch, entry: FormGridEntry | undefined): void {
+function emitGapEntry(variables: CssVariables, slot: CascadeSlot, entry: FormGridEntry | undefined): void {
 	if (!entry) return;
-	if (entry.columns !== undefined) {
-		resolved.columns = entry.columns;
-		touch.template = true;
-	}
-	if (entry.minColumnWidth !== undefined) {
-		resolved.minColumnWidth = entry.minColumnWidth;
-		touch.template = true;
-	}
 	const entryGap = resolveGridGap(entry.gap);
 	const gapX = resolveGridGap(entry.gapX) ?? entryGap;
 	const gapY = resolveGridGap(entry.gapY) ?? entryGap;
-	if (gapX !== undefined) {
-		resolved.gapX = gapX;
-		touch.gapX = true;
-	}
-	if (gapY !== undefined) {
-		resolved.gapY = gapY;
-		touch.gapY = true;
-	}
-}
-
-function emitFormSlot(
-	variables: CssVariables,
-	resolved: ResolvedFormGrid,
-	slot: CascadeSlot,
-	touch: FormGridTouch,
-): void {
-	if (touch.template) {
-		variables[customProperty('se-grid-template', slot)] = toGridTemplate(resolved.columns, resolved.minColumnWidth);
-	}
-	if (touch.gapY) variables[customProperty('se-grid-gap-y', slot)] = resolved.gapY;
-	if (touch.gapX) variables[customProperty('se-grid-gap-x', slot)] = resolved.gapX;
+	if (gapY !== undefined) variables[customProperty('se-grid-gap-y', slot)] = gapY;
+	if (gapX !== undefined) variables[customProperty('se-grid-gap-x', slot)] = gapX;
 }
 
 /**
  * Resolves a form grid against the engine theme into one inline style record.
  *
  * @remarks
- * Walks the cascade forward: top-level values, then `responsive.default`, then
- * each named breakpoint. Only slots the author actually wrote are emitted —
- * the generated media queries fall back through narrower slots, so an
- * unconfigured grid carries no inline style at all. Axis properties win over
- * the matching `placeItems`/`placeContent` shorthand.
+ * Only values an author wrote are emitted; the generated stylesheet falls back
+ * through the narrower breakpoints, so an unconfigured grid carries no inline
+ * style. `columns` and `minColumnWidth` are the one coupled pair — they share a
+ * single template — so they are the only values carried across slots. Axis
+ * properties win over the matching `placeItems`/`placeContent` shorthand.
  */
 export function getFormGridVariables(grid: GridLayoutConfig | undefined, theme: NormalizedGridTheme): CssVariables {
-	const resolved: ResolvedFormGrid = {
-		columns: 1,
-		minColumnWidth: theme.minColumnWidth,
-		gapX: DEFAULT_GAP_CSS,
-		gapY: DEFAULT_GAP_CSS,
-	};
 	const variables: CssVariables = {};
 
 	const [placeAlignItems, placeJustifyItems] = splitPlaceShorthand(grid?.placeItems);
@@ -501,16 +474,25 @@ export function getFormGridVariables(grid: GridLayoutConfig | undefined, theme: 
 		if (value !== undefined) variables[name as `--${string}`] = value;
 	}
 
+	let columns: number | 'auto' = 1;
+	let minColumnWidth = theme.minColumnWidth;
+	const emitTemplate = (slot: CascadeSlot, entry: FormGridEntry | undefined): void => {
+		if (!entry) return;
+		if (entry.columns === undefined && entry.minColumnWidth === undefined) return;
+		if (entry.columns !== undefined) columns = entry.columns;
+		if (entry.minColumnWidth !== undefined) minColumnWidth = entry.minColumnWidth;
+		variables[customProperty('se-grid-template', slot)] = toGridTemplate(columns, minColumnWidth);
+	};
+
 	const responsive = grid?.responsive;
-	const touch: FormGridTouch = { template: false, gapX: false, gapY: false };
-	applyFormEntry(resolved, touch, grid);
-	applyFormEntry(resolved, touch, responsive?.default);
-	emitFormSlot(variables, resolved, 'default', touch);
+	emitTemplate('default', grid);
+	emitTemplate('default', responsive?.default);
+	emitGapEntry(variables, 'default', grid);
+	emitGapEntry(variables, 'default', responsive?.default);
 
 	for (const breakpoint of BREAKPOINT_ORDER) {
-		const breakpointTouch: FormGridTouch = { template: false, gapX: false, gapY: false };
-		applyFormEntry(resolved, breakpointTouch, responsive?.[breakpoint]);
-		emitFormSlot(variables, resolved, breakpoint, breakpointTouch);
+		emitTemplate(breakpoint, responsive?.[breakpoint]);
+		emitGapEntry(variables, breakpoint, responsive?.[breakpoint]);
 	}
 	return variables;
 }
@@ -519,102 +501,38 @@ function formatGridLine(value: number | string): string {
 	return typeof value === 'number' ? String(value) : value;
 }
 
-/** Placement a single cascade slot may set; the top-level config is the `default` slot. */
-interface FieldGridEntry {
-	column?: number | string;
-	row?: number | string;
-	justifySelf?: string;
-	alignSelf?: string;
-	hidden?: boolean;
-}
-
-interface ResolvedFieldGrid {
-	column: string;
-	row: string;
-	justifySelf: string;
-	alignSelf: string;
-	display: string;
-}
-
-interface FieldGridTouch {
-	column: boolean;
-	row: boolean;
-	justifySelf: boolean;
-	alignSelf: boolean;
-	display: boolean;
-}
-
-function newFieldTouch(): FieldGridTouch {
-	return { column: false, row: false, justifySelf: false, alignSelf: false, display: false };
-}
-
-function applyFieldEntry(resolved: ResolvedFieldGrid, touch: FieldGridTouch, entry: FieldGridEntry | undefined): void {
+function emitFieldEntry(variables: CssVariables, slot: CascadeSlot, entry: FieldGridEntry | undefined): void {
 	if (!entry) return;
 	if (entry.column !== undefined) {
-		resolved.column = formatGridLine(entry.column);
-		touch.column = true;
+		variables[customProperty('se-field-grid-column', slot)] = formatGridLine(entry.column);
 	}
-	if (entry.row !== undefined) {
-		resolved.row = formatGridLine(entry.row);
-		touch.row = true;
-	}
-	if (entry.justifySelf !== undefined) {
-		resolved.justifySelf = entry.justifySelf;
-		touch.justifySelf = true;
-	}
-	if (entry.alignSelf !== undefined) {
-		resolved.alignSelf = entry.alignSelf;
-		touch.alignSelf = true;
-	}
+	if (entry.row !== undefined) variables[customProperty('se-field-grid-row', slot)] = formatGridLine(entry.row);
+	if (entry.justifySelf !== undefined) variables[customProperty('se-field-justify-self', slot)] = entry.justifySelf;
+	if (entry.alignSelf !== undefined) variables[customProperty('se-field-align-self', slot)] = entry.alignSelf;
 	if (entry.hidden !== undefined) {
-		resolved.display = entry.hidden ? 'none' : 'block';
-		touch.display = true;
+		variables[customProperty('se-field-display', slot)] = entry.hidden ? 'none' : FIELD_DISPLAY_MODE;
 	}
-}
-
-function emitFieldSlot(
-	variables: CssVariables,
-	resolved: ResolvedFieldGrid,
-	slot: CascadeSlot,
-	touch: FieldGridTouch,
-): void {
-	if (touch.column) variables[customProperty('se-field-grid-column', slot)] = resolved.column;
-	if (touch.row) variables[customProperty('se-field-grid-row', slot)] = resolved.row;
-	if (touch.justifySelf) variables[customProperty('se-field-justify-self', slot)] = resolved.justifySelf;
-	if (touch.alignSelf) variables[customProperty('se-field-align-self', slot)] = resolved.alignSelf;
-	if (touch.display) variables[customProperty('se-field-display', slot)] = resolved.display;
 }
 
 /**
  * Resolves a single element's grid placement into inline style variables.
  *
  * @remarks
- * Same forward cascade and sparse emission as form grids: an element without a
- * `grid` config produces no inline style, and the stylesheet supplies neutral
- * defaults plus the inheritance resets that keep nested fields isolated.
+ * Each slot emits exactly what its entry authored — no value is carried across
+ * breakpoints, because the generated stylesheet already falls back through the
+ * narrower slots. An element without a `grid` config produces no inline style.
  * `placeSelf` is applied before the axis properties, so those win.
  */
 export function getFieldGridVariables(grid?: ElementGridConfig): CssVariables {
-	const resolved: ResolvedFieldGrid = {
-		column: 'auto',
-		row: 'auto',
-		justifySelf: 'auto',
-		alignSelf: 'auto',
-		display: 'block',
-	};
 	const variables: CssVariables = {};
+	const [alignSelf, justifySelf] = splitPlaceShorthand(grid?.placeSelf);
 
-	const [placeAlignSelf, placeJustifySelf] = splitPlaceShorthand(grid?.placeSelf);
-	const touch = newFieldTouch();
-	applyFieldEntry(resolved, touch, { justifySelf: placeJustifySelf, alignSelf: placeAlignSelf });
-	applyFieldEntry(resolved, touch, grid);
-	applyFieldEntry(resolved, touch, grid?.responsive?.default);
-	emitFieldSlot(variables, resolved, 'default', touch);
+	emitFieldEntry(variables, 'default', { alignSelf, justifySelf });
+	emitFieldEntry(variables, 'default', grid);
+	emitFieldEntry(variables, 'default', grid?.responsive?.default);
 
 	for (const breakpoint of BREAKPOINT_ORDER) {
-		const breakpointTouch = newFieldTouch();
-		applyFieldEntry(resolved, breakpointTouch, grid?.responsive?.[breakpoint]);
-		emitFieldSlot(variables, resolved, breakpoint, breakpointTouch);
+		emitFieldEntry(variables, breakpoint, grid?.responsive?.[breakpoint]);
 	}
 	return variables;
 }
