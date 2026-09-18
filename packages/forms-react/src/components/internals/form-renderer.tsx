@@ -1,9 +1,22 @@
-import { useMemo } from 'react';
+/**
+ * Form grid CSS variables and alignment properties.
+ *
+ * @remarks
+ * Variable emission is shared with the Radiant renderer
+ * (`@schema-engine/forms/lib/grid-styles`); the responsive behavior lives in
+ * the theme stylesheet the engine generates and the renderer emits inline.
+ */
+import {
+	getDefaultCompiledGrid,
+	getFormGridVariables,
+	type CompiledGrid,
+	type NormalizedGridTheme,
+} from '@schema-engine/forms/lib/grid-styles';
 import type React from 'react';
+import { useMemo } from 'react';
 import { FormProvider } from '../form-provider';
 import type { FormAdapter, FormProviderProps } from '../../adapters/types';
 import { FormElements } from './form-elements';
-import { useFormGridStyles } from '@/hooks';
 import { useFormInstanceActions, useOptionalFormEngine } from '@/hooks/use-form-context';
 import { FormEngineProvider } from '../form-engine-provider';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
@@ -11,19 +24,41 @@ import type { NormalizedFormConfig } from '@schema-engine/forms';
 import { RecipeRenderer } from './recipe-renderer';
 import { getRenderableSteps, assertFormEngine, resolveFormRecipe } from '@schema-engine/forms/lib/validate-form';
 
-function StepFields({ step, config }: { step: NormalizedFormConfig['steps'][number]; config: NormalizedFormConfig }) {
-	const gridStyles = useFormGridStyles(config.grid);
+function GridThemeStyle({ themeId, css }: { themeId: string; css: string }) {
+	return (
+		<style href={`se-grid-theme-${themeId}`} precedence="se-grid-theme" data-se-grid-theme={themeId}>
+			{css}
+		</style>
+	);
+}
 
+function StepFields({
+	step,
+	config,
+	theme,
+}: {
+	step: NormalizedFormConfig['steps'][number];
+	config: NormalizedFormConfig;
+	theme: NormalizedGridTheme;
+}) {
 	if (!step.elements.length) return null;
 
 	return (
-		<div style={gridStyles}>
+		<div className="se-form-grid" data-se-grid-theme={theme.id} style={getFormGridVariables(config.grid, theme)}>
 			<FormElements elements={step.elements} />
 		</div>
 	);
 }
 
-function FormElementsRenderer({ config, children }: { config: NormalizedFormConfig; children?: React.ReactNode }) {
+function FormElementsRenderer({
+	config,
+	theme,
+	children,
+}: {
+	config: NormalizedFormConfig;
+	theme: NormalizedGridTheme;
+	children?: React.ReactNode;
+}) {
 	const { currentStep } = useFormInstanceActions();
 	const engineContext = useOptionalFormEngine();
 	const recipe = resolveFormRecipe(config, engineContext?.engine);
@@ -38,7 +73,7 @@ function FormElementsRenderer({ config, children }: { config: NormalizedFormConf
 			renderFields={() => (
 				<>
 					{steps.map((step) => (
-						<StepFields key={step.id} step={step} config={config} />
+						<StepFields key={step.id} step={step} config={config} theme={theme} />
 					))}
 				</>
 			)}
@@ -64,8 +99,13 @@ function FormRendererInner({
 	onAction,
 	className = '',
 	style,
+	compiledGrid,
 	children,
-}: Omit<FormRendererProps, 'engine' | 'adapter' | 'config'> & { config: NormalizedFormConfig }) {
+}: Omit<FormRendererProps, 'engine' | 'adapter' | 'config'> & {
+	config: NormalizedFormConfig;
+	compiledGrid: CompiledGrid;
+}) {
+	const { theme, css } = compiledGrid;
 	return (
 		<FormProvider
 			config={config}
@@ -75,7 +115,10 @@ function FormRendererInner({
 			onAction={onAction}
 		>
 			<div className={`w-full min-h-full h-full ${className}`.trim()} style={style}>
-				<FormElementsRenderer config={config}>{children}</FormElementsRenderer>
+				<GridThemeStyle themeId={theme.id} css={css} />
+				<FormElementsRenderer config={config} theme={theme}>
+					{children}
+				</FormElementsRenderer>
 			</div>
 		</FormProvider>
 	);
@@ -88,7 +131,8 @@ export function FormRenderer({ engine, adapter, ...props }: FormRendererProps) {
 		assertFormEngine(resolvedEngine, props.config);
 		return resolvedEngine.validateForm(props.config);
 	}, [props.config, resolvedEngine]);
-	const innerProps = { ...props, config };
+	const compiledGrid = resolvedEngine?.getCompiledGrid() ?? getDefaultCompiledGrid();
+	const innerProps = { ...props, config, compiledGrid };
 	if (!engine || !adapter) {
 		return <FormRendererInner {...innerProps} />;
 	}

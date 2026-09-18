@@ -1,6 +1,8 @@
+import type React from 'react';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { getDefaultGridTheme, getFieldGridHostProps } from '@schema-engine/forms/lib/grid-styles';
 import { useFormField } from '@/adapters/context';
-import { useFieldGridStyles } from './grid-hooks';
+import { useOptionalFormEngine } from '@/hooks/use-form-context';
 
 /**
  * Combines handlers from props with controller handlers
@@ -23,7 +25,6 @@ export function useControlledFormElement(config: FormEngine.ElementConfig) {
 
 	const isRequired = isFieldRequired(config.rules);
 	const { value, error, onChange, onBlur, name, disabled, ref } = useFormField<any>(config);
-	const gridStyles = useFieldGridStyles(config.grid);
 
 	const fieldProps = {
 		id: config.id,
@@ -51,12 +52,15 @@ export function useControlledFormElement(config: FormEngine.ElementConfig) {
 			}
 		: null;
 
-	const containerStyles = {
-		...gridStyles,
+	const engineThemeId = useOptionalFormEngine()?.engine.getGridTheme().id ?? getDefaultGridTheme().id;
+	const fieldHost = getFieldGridHostProps(engineThemeId, config.grid);
+	const containerStyles: React.CSSProperties = {
+		...fieldHost.style,
 		...config.style,
 	};
 
 	return {
+		gridThemeId: fieldHost.themeId,
 		value,
 		error,
 		isRequired,
@@ -66,7 +70,6 @@ export function useControlledFormElement(config: FormEngine.ElementConfig) {
 		labelProps,
 		errorProps,
 		containerStyles,
-		gridStyles,
 		fieldState: {
 			error: error ? { message: error } : undefined,
 			invalid: Boolean(error),

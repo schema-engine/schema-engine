@@ -329,46 +329,73 @@ Actions execute in response to form lifecycle events:
 
 ### Grid Layout
 
-Forms support responsive grid layouts using CSS Grid:
+Forms support responsive grid layouts using CSS Grid. The engine owns the grid
+vocabulary (breakpoint thresholds, gap tokens, default minimum column width);
+each form describes its layout:
 
 ```typescript
-{
-  id: 'step-1',
+// Engine: define the vocabulary once
+const engine = createReactFormEngine({
+  elements: [...],
   grid: {
-    columns: 12,
-    gap: '1rem',
-    columnGap: '1rem',
-    rowGap: '1.5rem'
+    breakpoints: { sm: '30rem', lg: '64rem' },   // optional; library defaults otherwise
+    gap: { loose: '2rem' },                      // optional gap token overrides
+    minColumnWidth: '16rem',
   },
-  elements: [
-    {
-      $type: 'input',
-      id: 'firstName',
-      name: 'firstName',
-      label: 'First Name',
-      grid: { column: '1 / 7' }
+});
+
+// Form: describe the layout
+{
+  grid: {
+    columns: 1,
+    gap: 'default',            // none | compact | default | loose | wide, or a CSS value
+    responsive: {
+      sm: { columns: 2 },
+      lg: { columns: 3 },
     },
+  },
+  steps: [
     {
-      $type: 'input',
-      id: 'lastName',
-      name: 'lastName',
-      label: 'Last Name',
-      grid: { column: '7 / 13' }
+      elements: [
+        { $type: 'input', id: 'firstName', name: 'firstName', label: 'First Name',
+          grid: { column: 'span 2' } },
+        { $type: 'input', id: 'email', name: 'email', label: 'Email',
+          grid: { responsive: { md: { column: '1 / -1' } } } },
+      ],
     },
-    {
-      $type: 'input',
-      id: 'email',
-      name: 'email',
-      label: 'Email',
-      grid: { column: '1 / 13' }
-    }
-  ]
+  ],
 }
 ```
 
+Behavior:
+
+- Breakpoints follow the **viewport width** (media queries), so forms inside a
+  narrow container still receive the desktop rules of the wide screen they
+  live on.
+- Sparse responsive entries inherit from the **preceding breakpoint**, then the
+  top-level value, then the theme default. Within an entry, `gapX`/`gapY` beat
+  the entry's `gap`.
+- `hidden` is part of per-field responsive entries; an explicit
+  `hidden: false` at a larger breakpoint undoes an earlier `hidden: true`.
+- The renderer emits the theme stylesheet and the form's CSS variables inline
+  during render, so SSR output is styled with no FOUC and hydration is not
+  required for layout. Hosts can still restyle every form by overriding the
+  `--se-grid-gap-*` tokens at `:root`.
+- `engine.getCompiledGrid()` is computed once at engine construction (frozen
+  theme-plus-stylesheet pair); `getGridTheme()` / `getGridThemeCss()` read it.
+  `engine.extend()` inherits that compiled grid; `grid` is not an extend option.
+  Breakpoint thresholds must preserve named order (`sm ≤ md ≤ lg ≤ xl ≤ 2xl`).
+- **SSR acceptance:** `test/ssr/grid-layout-ssr.acceptance.browser.test.tsx`
+  renders with `renderToStaticMarkup`, loads the HTML in an isolated iframe
+  without app JS, and checks the emitted stylesheet plus layout at two widths
+  (browser vitest project).
+
 ## Hooks
 
-The package provides several hooks for form interactions:
+The package provides several hooks for form interactions. Responsive grid
+layout is pure CSS (media queries generated from the engine's grid theme); the
+former breakpoint hooks (`useBreakpoint`, `useFormGridStyles`,
+`useFieldGridStyles`, `BreakpointOverrideProvider`) were removed.
 
 The adapter-neutral `useFieldArray` hook exposes the complete field-array
 mutation surface: `append`, `prepend`, `insert`, `swap`, `move`, `update`,
