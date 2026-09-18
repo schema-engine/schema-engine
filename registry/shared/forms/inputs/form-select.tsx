@@ -16,7 +16,7 @@ export function FormSelect({
 	onFocus: propsOnFocus,
 	...config
 }: SelectFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles, gridThemeId } =
+	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
 		useControlledFormElement(config);
 	const isMultiple = Boolean(config.multiple);
 	const [open, setOpen] = React.useState(false);
@@ -37,7 +37,6 @@ export function FormSelect({
 
 	return (
 		<FieldGroup
-			gridThemeId={gridThemeId}
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}

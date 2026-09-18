@@ -1,6 +1,5 @@
 import type React from 'react';
-import { getDefaultGridTheme } from '@schema-engine/forms/lib/grid-styles';
-import { useOptionalFormEngine } from '@schema-engine/forms-react/hooks';
+import { useGridThemeId } from '@schema-engine/forms-react/hooks';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
@@ -133,8 +132,6 @@ export function FieldHint({ error, description, display = 'alternate', className
 
 interface FieldGroupRootProps extends React.ComponentProps<'div'> {
 	hasError?: boolean;
-	/** Owning grid theme id from `useControlledFormElement`. */
-	gridThemeId?: string;
 }
 
 /**
@@ -142,11 +139,13 @@ interface FieldGroupRootProps extends React.ComponentProps<'div'> {
  *
  * @remarks
  * `se-form-field` carries the grid CSS variables consumed by the theme
- * stylesheet the engine generates (`engine.getGridThemeCss()`). Set
- * `data-se-grid-theme` to the owning grid's theme id (from
- * `useControlledFormElement`) so nested grids stay isolated.
+ * stylesheet the engine generates (`engine.getCompiledGrid().css`), and
+ * `data-se-grid-theme` scopes them to the owning engine so nested grids stay
+ * isolated. Both are set here, so field components never carry the theme id.
  */
-export function FieldGroupRoot({ className, hasError, gridThemeId, ...props }: FieldGroupRootProps) {
+export function FieldGroupRoot({ className, hasError, ...props }: FieldGroupRootProps) {
+	const gridThemeId = useGridThemeId();
+
 	return (
 		<div
 			className={cn('se-form-field space-y-2', className)}
@@ -182,8 +181,6 @@ interface FieldGroupProps {
 	className?: string;
 	children: React.ReactNode;
 	style?: React.CSSProperties;
-	/** Owning grid theme id; defaults from `useOptionalFormEngine()` when omitted. */
-	gridThemeId?: string;
 	errorLabelColor?: boolean;
 	showDescriptionWithError?: boolean;
 }
@@ -200,15 +197,12 @@ export function FieldGroup({
 	style,
 	errorLabelColor = false,
 	showDescriptionWithError = false,
-	gridThemeId,
 }: FieldGroupProps) {
 	const display = showDescriptionWithError ? 'both' : 'alternate';
 	const hasError = !!error;
-	const engineThemeId = useOptionalFormEngine()?.engine.getGridTheme().id ?? getDefaultGridTheme().id;
-	const resolvedGridThemeId = gridThemeId ?? engineThemeId;
 
 	return (
-		<FieldGroupRoot className={className} style={style} hasError={hasError} gridThemeId={resolvedGridThemeId}>
+		<FieldGroupRoot className={className} style={style} hasError={hasError}>
 			<FieldLabel
 				htmlFor={htmlFor}
 				hiddenLabel={hiddenLabel}

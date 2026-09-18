@@ -12,12 +12,11 @@ export function FormMaskedInput({
 	...config
 }: MaskedInputFieldProps) {
 	const { formState } = useFormContext();
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles, gridThemeId } =
+	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
 		useControlledFormElement(config);
 
 	return (
 		<FieldGroup
-			gridThemeId={gridThemeId}
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}

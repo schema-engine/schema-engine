@@ -16,11 +16,10 @@ export function FormSwitch({
 	onFocus: propsOnFocus,
 	...config
 }: SwitchFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, containerStyles, gridThemeId } =
-		useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, containerStyles } = useControlledFormElement(config);
 
 	return (
-		<FieldGroupRoot gridThemeId={gridThemeId} style={containerStyles}>
+		<FieldGroupRoot style={containerStyles}>
 			<FieldContent>
 				<FieldInputContainer>
 					<Switch

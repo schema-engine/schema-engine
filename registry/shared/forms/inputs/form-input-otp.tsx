@@ -10,7 +10,7 @@ export function FormInputOTP({
 	onFocus: propsOnFocus,
 	...config
 }: InputOTPFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles, gridThemeId } =
+	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
 		useControlledFormElement(config);
 
 	const otpValue = String(value || '');
@@ -20,7 +20,6 @@ export function FormInputOTP({
 
 	return (
 		<FieldGroup
-			gridThemeId={gridThemeId}
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}

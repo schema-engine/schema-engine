@@ -4,6 +4,7 @@ import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { ElementGridConfig } from '@schema-engine/forms/schemas';
 import { rhfAdapter } from '@/adapters/react-hook-form';
 import { useControlledFormElement } from '@/hooks/use-field';
+import { useGridThemeId } from '@/hooks/use-form-context';
 import { createReactFormEngine } from '@/registries/builder-registry';
 
 const ssrInputSchema = z.object({
@@ -17,11 +18,14 @@ const ssrInputSchema = z.object({
 type SsrInputConfig = z.infer<typeof ssrInputSchema>;
 
 function SsrFixtureInput(config: SsrInputConfig) {
-	const { containerStyles, gridThemeId } = useControlledFormElement(config as unknown as FormEngine.ElementConfig);
+	const { containerStyles } = useControlledFormElement(config as unknown as FormEngine.ElementConfig);
+	const gridThemeId = useGridThemeId();
+	const label = config.label ?? config.name;
+
 	return (
 		<div className="se-form-field" data-se-grid-theme={gridThemeId} style={containerStyles}>
-			<label htmlFor={config.id}>{config.label ?? config.name}</label>
-			<input id={config.id} name={config.name} aria-label={config.label ?? config.name} readOnly />
+			<label htmlFor={config.id}>{label}</label>
+			<input id={config.id} name={config.name} aria-label={label} readOnly />
 		</div>
 	);
 }

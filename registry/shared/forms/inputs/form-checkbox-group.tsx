@@ -17,7 +17,7 @@ export function FormCheckboxGroup({
 	onFocus: propsOnFocus,
 	...config
 }: CheckboxGroupFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles, gridThemeId } =
+	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
 		useControlledFormElement(config);
 
 	const selectedValues = Array.isArray(value) ? value : [];
@@ -29,7 +29,7 @@ export function FormCheckboxGroup({
 	};
 
 	return (
-		<FieldGroupRoot gridThemeId={gridThemeId} style={containerStyles}>
+		<FieldGroupRoot style={containerStyles}>
 			{config.label && (
 				<FieldLabel htmlFor={config.id} required={isRequired} error={error} className="mb-4">
 					{config.label}

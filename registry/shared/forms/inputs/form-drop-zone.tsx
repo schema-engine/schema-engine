@@ -5,7 +5,7 @@ import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-
 import type { DropZoneFieldProps } from './form-drop-zone.types';
 
 export function FormDropZone({ onChange: propsOnChange, onDropChange, ...config }: DropZoneFieldProps) {
-	const { value, error, onChange, fieldProps, isRequired, containerStyles, gridThemeId } = useControlledFormElement({
+	const { value, error, onChange, fieldProps, isRequired, containerStyles } = useControlledFormElement({
 		...config,
 		defaultValue: config.defaultValue ?? [],
 	});
@@ -21,7 +21,6 @@ export function FormDropZone({ onChange: propsOnChange, onDropChange, ...config 
 
 	return (
 		<FieldGroup
-			gridThemeId={gridThemeId}
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}

@@ -1,8 +1,7 @@
 import type React from 'react';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
-import { getDefaultGridTheme, getFieldGridHostProps } from '@schema-engine/forms/lib/grid-styles';
+import { getFieldGridVariables } from '@schema-engine/forms/lib/grid-styles';
 import { useFormField } from '@/adapters/context';
-import { useOptionalFormEngine } from '@/hooks/use-form-context';
 
 /**
  * Combines handlers from props with controller handlers
@@ -52,15 +51,12 @@ export function useControlledFormElement(config: FormEngine.ElementConfig) {
 			}
 		: null;
 
-	const engineThemeId = useOptionalFormEngine()?.engine.getGridTheme().id ?? getDefaultGridTheme().id;
-	const fieldHost = getFieldGridHostProps(engineThemeId, config.grid);
 	const containerStyles: React.CSSProperties = {
-		...fieldHost.style,
+		...getFieldGridVariables(config.grid),
 		...config.style,
 	};
 
 	return {
-		gridThemeId: fieldHost.themeId,
 		value,
 		error,
 		isRequired,
