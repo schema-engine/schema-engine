@@ -1,4 +1,5 @@
 import type { ConstraintLogic } from '../schemas';
+import { getValueAtPath } from '@/lib/path-values';
 
 /**
  * Result from evaluating constraint logic
@@ -59,7 +60,174 @@ function evaluateConstraint(constraint: ConstraintLogic, watchedValue: any): boo
 }
 
 /**
- * Parameters for evaluating constraint logic
+ * Resolves an authored constraint field against the scope of the field declaring it.
+ *
+ * @remarks
+ * A constraint names a sibling (`accountType`), so the path it resolves to depends
+ * on where the declaring field is rendered. Inside an array item (`contacts.0.email`)
+ * the sibling is `contacts.0.accountType`; inside an object (`address.street`) it is
+ * `address.accountType`. A constraint field that already contains a dot is treated as
+ * absolute and returned unchanged.
+ *
+ * This lived in both renderer packages as identical private copies until the
+ * duplication drifted; it belongs next to the evaluator that consumes it.
+ */
+export function resolveConstraintPath(constraintField: string, fieldPath?: string): string {
+	if (!fieldPath || constraintField.includes('.')) {
+		return constraintField;
+	}
+
+	const parts = fieldPath.split('.');
+	const last = parts[parts.length - 1];
+	if (!Number.isNaN(Number(last))) {
+		return `${fieldPath}.${constraintField}`;
+	}
+
+	parts.pop();
+	const parentPath = parts.join('.');
+	return parentPath ? `${parentPath}.${constraintField}` : constraintField;
+}
+
+/**
+ * Every value path a constraint set depends on, in declaration order.
+ *
+ * @remarks
+ * React needs the list separately from evaluation so it can subscribe to exactly
+ * those paths; Radiant reads a whole-store snapshot and does not.
+ */
+export function resolveConstraintPaths(constraints: readonly ConstraintLogic[] = [], fieldPath?: string): string[] {
+	return constraints.map((constraint) => resolveConstraintPath(constraint.field, fieldPath));
+}
+
+/**
+ * A one-element array compares as its element.
+ *
+ * @remarks
+ * Single-selection controls (checkbox group, multi-select) hold `['sports']` rather
+ * than `'sports'`, so an authored `equals: 'sports'` would never match. Radiant
+ * applied this unwrap and React did not, which made the same config behave
+ * differently per renderer; the shared rule is Radiant's.
+ */
+function normalizeWatchedValue(value: unknown): unknown {
+	return Array.isArray(value) && value.length === 1 ? value[0] : value;
+}
+
+export interface EvaluateConstraintsInput {
+	constraints?: readonly ConstraintLogic[];
+	/** Nested value tree for the whole form. Paths are read with {@link getValueAtPath}. */
+	values: Record<string, unknown>;
+	/** Path of the field declaring the constraints; scopes sibling lookups. */
+	fieldPath?: string;
+	baseRequired?: boolean;
+}
+
+/**
+ * Evaluates a field's constraints against the form's value tree.
+ *
+ * @remarks
+ * Resolution and evaluation are deliberately one call: when they were separate,
+ * each renderer had to reproduce the "map authored field name to value path" step
+ * itself, and they drifted. Callers pass the value tree, not a pre-resolved map.
+ *
+ * Multiple `show` constraints are OR'ed, then any matching `hide` wins. `enable`
+ * disables when its condition is *not* met. `require` is OR'ed with `baseRequired`.
+ */
+export function evaluateConstraints({
+	constraints = [],
+	values,
+	fieldPath,
+	baseRequired = false,
+}: EvaluateConstraintsInput): ConstraintEvaluationResult {
+	const fieldValues: Record<string, unknown> = {};
+	for (const constraint of constraints) {
+		fieldValues[constraint.field] = getValueAtPath(values, resolveConstraintPath(constraint.field, fieldPath));
+	}
+
+	return evaluateResolvedConstraints(constraints, fieldValues, baseRequired);
+}
+
+/**
+ * Evaluates constraints against values already keyed by authored field name.
+ *
+ * @remarks
+ * Separate from {@link evaluateConstraints} for callers that subscribe to paths
+ * themselves and therefore hold the values keyed by name, not a value tree.
+ */
+export function evaluateResolvedConstraints(
+	constraints: readonly ConstraintLogic[] = [],
+	fieldValues: Record<string, unknown>,
+	baseRequired = false,
+): ConstraintEvaluationResult {
+	const normalized: Record<string, unknown> = {};
+	for (const constraint of constraints) {
+		normalized[constraint.field] = normalizeWatchedValue(fieldValues[constraint.field]);
+	}
+
+	return {
+		shouldShow: evaluateVisibility(constraints, normalized),
+		shouldDisable: evaluateDisabled(constraints, normalized),
+		isRequired: evaluateRequired(constraints, normalized, baseRequired),
+	};
+}
+
+function evaluateVisibility(constraints: readonly ConstraintLogic[], fieldValues: Record<string, unknown>): boolean {
+	if (constraints.length === 0) return true;
+
+	const showConstraints = constraints.filter((c) => c.action === 'show');
+	const hideConstraints = constraints.filter((c) => c.action === 'hide');
+
+	if (showConstraints.length > 0) {
+		const anyShow = showConstraints.some((constraint) =>
+			evaluateConstraint(constraint, fieldValues[constraint.field]),
+		);
+
+		if (!anyShow) return false;
+	}
+
+	if (hideConstraints.length > 0) {
+		const anyHide = hideConstraints.some((constraint) =>
+			evaluateConstraint(constraint, fieldValues[constraint.field]),
+		);
+
+		if (anyHide) return false;
+	}
+
+	return true;
+}
+
+function evaluateDisabled(constraints: readonly ConstraintLogic[], fieldValues: Record<string, unknown>): boolean {
+	return constraints.some((constraint) => {
+		const conditionMet = evaluateConstraint(constraint, fieldValues[constraint.field]);
+
+		switch (constraint.action) {
+			case 'disable':
+				return conditionMet;
+			case 'enable':
+				return !conditionMet;
+			default:
+				return false;
+		}
+	});
+}
+
+function evaluateRequired(
+	constraints: readonly ConstraintLogic[],
+	fieldValues: Record<string, unknown>,
+	baseRequired: boolean,
+): boolean {
+	const hasRequireAction = constraints.some(
+		(constraint) =>
+			constraint.action === 'require' && evaluateConstraint(constraint, fieldValues[constraint.field]),
+	);
+
+	return baseRequired || hasRequireAction;
+}
+
+/**
+ * Parameters for {@link ConstraintEvaluator.evaluate}.
+ *
+ * @deprecated Use {@link EvaluateConstraintsInput}, which takes the value tree
+ * instead of a map the caller has already resolved.
  */
 export interface EvaluateConstraintsParams {
 	constraints?: readonly ConstraintLogic[];
@@ -68,98 +236,16 @@ export interface EvaluateConstraintsParams {
 }
 
 /**
- * Framework-agnostic constraint logic evaluator
- * Evaluates constraint logic rules to determine field visibility, disabled state, and required state
+ * Framework-agnostic constraint logic evaluator.
+ *
+ * @deprecated Use {@link evaluateConstraints} with the form's value tree, or
+ * {@link evaluateResolvedConstraints} when values are already keyed by field name.
+ * The class carries no state and its `fieldValues` contract — a map keyed by
+ * authored field name rather than by value path — was the reason both renderers
+ * reimplemented path resolution.
  */
 export class ConstraintEvaluator {
-	/**
-	 * Evaluate constraint logic against provided field values
-	 *
-	 * @param params - Evaluation parameters
-	 * @param params.constraints - Array of constraint logic rules
-	 * @param params.fieldValues - Map of field names to their current values
-	 * @param params.baseRequired - Base required state for the field
-	 * @returns Evaluation result indicating visibility, disabled, and required state
-	 */
-	evaluate({
-		constraints = [],
-		fieldValues,
-		baseRequired = false,
-	}: EvaluateConstraintsParams): ConstraintEvaluationResult {
-		return {
-			shouldShow: this.evaluateVisibility(constraints, fieldValues),
-			shouldDisable: this.evaluateDisabled(constraints, fieldValues),
-			isRequired: this.evaluateRequired(constraints, fieldValues, baseRequired),
-		};
-	}
-
-	/**
-	 * Evaluate visibility constraints (show/hide actions)
-	 * Multiple show constraints are treated as OR (show if any condition is met)
-	 * Hide constraints are applied afterward to allow explicit hiding
-	 */
-	private evaluateVisibility(constraints: readonly ConstraintLogic[], fieldValues: Record<string, any>): boolean {
-		if (constraints.length === 0) return true;
-
-		const showConstraints = constraints.filter((c) => c.action === 'show');
-		const hideConstraints = constraints.filter((c) => c.action === 'hide');
-
-		if (showConstraints.length > 0) {
-			const anyShow = showConstraints.some((constraint) => {
-				const watchedValue = fieldValues[constraint.field];
-				return evaluateConstraint(constraint, watchedValue);
-			});
-
-			if (!anyShow) return false;
-		}
-
-		if (hideConstraints.length > 0) {
-			const anyHide = hideConstraints.some((constraint) => {
-				const watchedValue = fieldValues[constraint.field];
-				return evaluateConstraint(constraint, watchedValue);
-			});
-
-			if (anyHide) return false;
-		}
-
-		return true;
-	}
-
-	/**
-	 * Evaluate disabled constraints (enable/disable actions)
-	 */
-	private evaluateDisabled(constraints: readonly ConstraintLogic[], fieldValues: Record<string, any>): boolean {
-		return constraints.some((constraint) => {
-			const watchedValue = fieldValues[constraint.field];
-			const conditionMet = evaluateConstraint(constraint, watchedValue);
-
-			switch (constraint.action) {
-				case 'disable':
-					return conditionMet;
-				case 'enable':
-					return !conditionMet;
-				default:
-					return false;
-			}
-		});
-	}
-
-	/**
-	 * Evaluate required constraints (require action)
-	 * Base required state is OR'ed with constraint-based required state
-	 */
-	private evaluateRequired(
-		constraints: readonly ConstraintLogic[],
-		fieldValues: Record<string, any>,
-		baseRequired: boolean,
-	): boolean {
-		const hasRequireAction = constraints.some((constraint) => {
-			const watchedValue = fieldValues[constraint.field];
-			const conditionMet = evaluateConstraint(constraint, watchedValue);
-
-			return constraint.action === 'require' && conditionMet;
-		});
-
-		return baseRequired || hasRequireAction;
+	evaluate({ constraints = [], fieldValues, baseRequired = false }: EvaluateConstraintsParams) {
+		return evaluateResolvedConstraints(constraints, fieldValues, baseRequired);
 	}
 }

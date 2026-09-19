@@ -33,6 +33,15 @@ inside `rui-form`; there is no global active form store. They read
 optional lifecycle wiring around that controller.
 Radiant UI registration uses flat dotted field names. Controller reads, action
 context values, constraints, and submission use the engine's nested value tree.
+
+Constraint resolution belongs to the engine, not to a renderer. A constraint
+names a sibling (`accountType`), so its value path depends on where the
+declaring field is rendered: inside `contacts.0.email` the sibling is
+`contacts.0.accountType`. `resolveConstraintPath` and `evaluateConstraints` in
+`@schema-engine/forms/constraints` own that rule, and a renderer passes the
+rendered field path plus the value tree rather than resolving paths itself. A
+one-element array compares as its element, so a single-selection control matches
+an authored scalar.
 See [the controller contract](./packages/forms-radiant/src/adapters/radiant/controller/README.md).
 
 ## Grid theme ownership
