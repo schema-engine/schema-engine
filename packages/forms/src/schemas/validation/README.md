@@ -179,6 +179,24 @@ customRegistry.register({
 | `date`     | `message?`                              | Date validation         |
 | `time`     | `precision?, message?`                  | Time validation         |
 
+### Cross-Field Validation
+
+| Type     | Parameters                                                                   | Description                       |
+| -------- | ---------------------------------------------------------------------------- | --------------------------------- |
+| `relate` | `fields: string[], assert, includeSelf?, as?, skipWhenIncomplete?, message?` | Compare a field with its siblings |
+
+```typescript
+{
+  type: 'relate',
+  fields: ['password'],
+  assert: 'allEqual',
+  message: 'Passwords must match'
+}
+```
+
+The assertion table and reference scoping are under
+[Cross-Field Validation](#cross-field-validation-1) in Advanced Usage.
+
 ### Async Validation
 
 | Type    | Parameters                                                                                  | Description            |
@@ -382,6 +400,70 @@ and is shared with constraints.
 The array-row case is the reason the reference is scoped rather than literal: a
 rule written once on `contacts.email` has to read _its own_ row's
 `accountType`, not row zero's.
+
+#### The `relate` rule
+
+Most cross-field checks are one comparison over a list of referenced values, so
+they share one rule rather than one registration each:
+
+```typescript
+{ $type: 'input', name: 'confirmPassword', inputType: 'password',
+  rules: [{ type: 'relate', fields: ['password'], assert: 'allEqual',
+            message: 'Passwords must match' }] }
+```
+
+The declaring field's own value comes first in the list, then each entry of
+`fields` in order.
+
+| `assert`             | Holds when                                            |
+| -------------------- | ----------------------------------------------------- |
+| `allEqual`           | every value is the same                               |
+| `allDifferent`       | no value repeats                                      |
+| `ascending`          | each value is greater than or equal to the one before |
+| `strictlyAscending`  | each value is greater than the one before             |
+| `descending`         | each value is less than or equal to the one before    |
+| `strictlyDescending` | each value is less than the one before                |
+| `atLeastOne`         | at least one value is filled                          |
+| `exactlyOne`         | exactly one value is filled                           |
+| `allOrNone`          | all values are filled, or none are                    |
+
+| Option               | Default  | Effect                                                                                                                                                         |
+| -------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `includeSelf`        | `true`   | the declaring field's value participates, first. Turn it off for an assertion about a group the field merely belongs to.                                       |
+| `as`                 | `'auto'` | comparison basis: `string`, `number`, `date` (compared as timestamps), `boolean`, or `auto` to compare values unchanged.                                       |
+| `skipWhenIncomplete` | `true`   | stay quiet while any participating value is empty. Ignored by `atLeastOne`, `exactlyOne` and `allOrNone`, whose whole job is to fire on a partly filled group. |
+
+Because ordering reads left to right with the declaring field first, "this date
+must be after that one" is `descending`:
+
+```typescript
+{ $type: 'date', name: 'endDate',
+  rules: [{ type: 'relate', fields: ['startDate'], assert: 'descending', as: 'date',
+            message: 'End date must be after the start date' }] }
+```
+
+Inside an array, references stay in their row:
+
+```typescript
+{ $type: 'arrayElements', name: 'lines', elements: [
+    { $type: 'number', name: 'quantity' },
+    { $type: 'number', name: 'max',
+      rules: [{ type: 'relate', fields: ['quantity'], assert: 'descending', as: 'number',
+                message: 'Max must be at least the quantity' }] },
+] }
+```
+
+`ValidationPresets.relate` builds the common shapes, and each returns a plain
+rule object so TypeScript authoring and JSON round-tripping agree:
+
+```typescript
+ValidationPresets.relate.matches('password', 'Passwords must match');
+ValidationPresets.relate.after('startDate', 'End date must be after the start date');
+ValidationPresets.relate.before('endDate');
+ValidationPresets.relate.atLeastOneOf(['phone', 'email'], 'Give us a phone number or an email');
+ValidationPresets.relate.mutuallyExclusive(['card', 'invoice']);
+ValidationPresets.relate.allOrNone(['street', 'city', 'postcode']);
+```
 
 ### Conditional Validation
 

@@ -21,6 +21,7 @@ import type {
 	Cuid2Rule,
 	UlidRule,
 	HexRule,
+	RelateRule,
 	AnyValidationRegistration,
 	BaseValidationRule,
 	ValidationContext,
@@ -229,6 +230,71 @@ export class ValidationRegistry {
 			time: (message?: string): TimeRule => ({
 				type: 'time',
 				message: message || 'Please enter a valid ISO time',
+			}),
+		},
+
+		/**
+		 * Authoring sugar over the generic `relate` rule.
+		 *
+		 * @remarks
+		 * Each returns a plain rule object, so a form authored in TypeScript and one
+		 * round-tripped through JSON produce the same configuration. References
+		 * resolve relative to the field declaring the rule.
+		 */
+		relate: {
+			matches: (field: string, message?: string): RelateRule => ({
+				type: 'relate',
+				fields: [field],
+				assert: 'allEqual',
+				includeSelf: true,
+				as: 'auto',
+				skipWhenIncomplete: true,
+				message,
+			}),
+			after: (field: string, message?: string): RelateRule => ({
+				type: 'relate',
+				fields: [field],
+				assert: 'descending',
+				includeSelf: true,
+				as: 'date',
+				skipWhenIncomplete: true,
+				message,
+			}),
+			before: (field: string, message?: string): RelateRule => ({
+				type: 'relate',
+				fields: [field],
+				assert: 'ascending',
+				includeSelf: true,
+				as: 'date',
+				skipWhenIncomplete: true,
+				message,
+			}),
+			atLeastOneOf: (fields: string[], message?: string): RelateRule => ({
+				type: 'relate',
+				fields,
+				assert: 'atLeastOne',
+				includeSelf: false,
+				as: 'auto',
+				skipWhenIncomplete: true,
+				message,
+			}),
+			mutuallyExclusive: (fields: string[], message?: string): RelateRule => ({
+				type: 'relate',
+				fields,
+				assert: 'exactlyOne',
+				includeSelf: false,
+				as: 'auto',
+				skipWhenIncomplete: true,
+				message,
+			}),
+			allOrNone: (fields: string[], message?: string): RelateRule => ({
+				type: 'relate',
+				fields,
+				assert: 'allOrNone',
+				includeSelf: false,
+				as: 'auto',
+				skipWhenIncomplete: true,
+				message,
 			}),
 		},
 

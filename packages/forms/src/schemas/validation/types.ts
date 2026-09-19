@@ -170,6 +170,48 @@ const AsyncRuleSchema = z.object({
 	disableCache: z.optional(z.boolean()),
 });
 
+/**
+ * Named comparisons a {@link RelateRuleSchema} can make over the referenced values.
+ *
+ * @remarks
+ * Ordering assertions read left to right over `fields` (with the declaring
+ * field's own value first, unless `includeSelf` is off), so `descending` on
+ * `[endDate, startDate]` asserts that the end date is the later one.
+ */
+export const RelationAssertSchema = z.enum([
+	'allEqual',
+	'allDifferent',
+	'ascending',
+	'strictlyAscending',
+	'descending',
+	'strictlyDescending',
+	'atLeastOne',
+	'exactlyOne',
+	'allOrNone',
+]);
+
+const RelateRuleSchema = z.object({
+	type: z.literal('relate'),
+	fields: z
+		.array(z.string())
+		.check(z.minLength(1), z.describe('Field references, each resolved relative to the field declaring the rule.')),
+	assert: RelationAssertSchema,
+	includeSelf: z
+		._default(z.boolean(), true)
+		.check(z.describe('Own value participates, first in the list. Off for assertions about a group.')),
+	as: z
+		._default(z.enum(['auto', 'string', 'number', 'date', 'boolean']), 'auto')
+		.check(z.describe('Comparison basis. `auto` compares values as they are.')),
+	skipWhenIncomplete: z
+		._default(z.boolean(), true)
+		.check(
+			z.describe(
+				'Stay quiet while any participating value is empty. Ignored by the assertions about emptiness: `atLeastOne`, `exactlyOne`, `allOrNone`.',
+			),
+		),
+	message: z.optional(z.string()),
+});
+
 export const ValidationRuleSchema = z.union([
 	RequiredRuleSchema,
 	MinLengthRuleSchema,
@@ -197,6 +239,7 @@ export const ValidationRuleSchema = z.union([
 	UlidRuleSchema,
 	HexRuleSchema,
 	AsyncRuleSchema,
+	RelateRuleSchema,
 ]);
 
 export type BaseValidationRule = z.infer<typeof BaseValidationRuleSchema>;
@@ -226,6 +269,8 @@ export type Cuid2Rule = z.infer<typeof Cuid2RuleSchema>;
 export type UlidRule = z.infer<typeof UlidRuleSchema>;
 export type HexRule = z.infer<typeof HexRuleSchema>;
 export type AsyncRule = z.infer<typeof AsyncRuleSchema>;
+export type RelationAssert = z.infer<typeof RelationAssertSchema>;
+export type RelateRule = z.infer<typeof RelateRuleSchema>;
 export type ValidationRule = z.infer<typeof ValidationRuleSchema>;
 
 /**

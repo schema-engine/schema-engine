@@ -28,6 +28,7 @@ import type {
 	ValidationContext,
 } from './types.js';
 import { createAsyncValidationHandler } from './async/handler.js';
+import { relateValidation } from './relations.js';
 
 const ipv6ZonePattern = /^[0-9a-zA-Z]+$/;
 
@@ -202,4 +203,6 @@ export const defaultValidations: AnyValidationRegistration[] = [
 		category: 'cross-field',
 		handler: (rule: AsyncRule, context: ValidationContext) => createAsyncValidationHandler(rule, context),
 	},
+
+	relateValidation,
 ];
