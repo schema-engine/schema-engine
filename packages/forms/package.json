@@ -41,6 +41,7 @@
 		"vitest": "^4.0.13"
 	},
 	"dependencies": {
+		"@ecopages/logger": "^0.2.2",
 		"@standard-schema/spec": "^1.1.0",
 		"@schema-engine/actions": "workspace:*",
 		"@schema-engine/registry": "workspace:*"

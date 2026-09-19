@@ -661,18 +661,18 @@ cd packages/forms-react && pnpm test:all
 
 ## Dependencies
 
-**Peer Dependencies:**
+**Peer Dependencies** — install these alongside the package:
 
 - `@schema-engine/forms` - Core form engine
 - `react` ^19
 - `react-dom` ^19
+- `react-hook-form` ^7 - Form state management behind `rhfAdapter`
 - `typescript` ^5
+- `zod` ^4 - Required by `@schema-engine/forms` for its first-party `zod/mini` schemas
 
-**Required Dependencies:**
+`react` and `react-hook-form` are peers rather than dependencies so a consumer cannot end up with two copies: a second React breaks hooks, and a second `react-hook-form` makes `useFormContext` return `null`, because its context is matched by instance identity.
 
-- `react-hook-form` - Form state management
-- `zod` - Required by `@schema-engine/forms` for its first-party `zod/mini` schemas
-- `@hookform/resolvers` - Validation resolver
+Validation is resolved in-package by `createFormValidationResolver`, so `@hookform/resolvers` is not required.
 
 ## License
 
