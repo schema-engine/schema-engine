@@ -1,5 +1,6 @@
 import { customElement, prop, RadiantElement, state } from '@ecopages/radiant';
 import { RuiAlert, RuiAlertIcon } from '@ecopages/radiant-ui/alert';
+import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import type { SubmissionAlertProps } from '@/registry/forms/content/form-submission-alert.types';
 
@@ -129,7 +130,12 @@ export class SeSubmissionAlert extends RadiantElement {
 }
 
 export function FormSubmissionAlert(config: SubmissionAlertProps) {
+	const fieldHost = mergeFieldGridHost(config.grid, config.style);
+
 	return jsx('se-submission-alert', {
+		classes: ['se-form-field'],
+		'data-se-grid-theme': fieldHost.themeId,
+		style: fieldHost.style,
 		'prop:config': config,
 		'data-config': JSON.stringify(config),
 	});

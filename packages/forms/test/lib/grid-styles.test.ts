@@ -307,3 +307,123 @@ describe('getFieldGridVariables', () => {
 		expect(variables).toEqual({ '--se-field-grid-column': 'span 2' });
 	});
 });
+
+describe('responsive gap tokens', () => {
+	/** Each media query is emitted as a single line, so this isolates one block exactly. */
+	const mediaBlock = (stylesheet: string, minWidth: string) =>
+		stylesheet.split('\n').find((line) => line.startsWith(`@media (min-width:${minWidth})`)) ?? '';
+
+	/**
+	 * Declarations only. Every media query *references* the base tokens inside
+	 * `var()` fallback chains, so a bare substring match cannot tell a
+	 * redeclaration from a reference.
+	 */
+	const declaresAnyGapToken = (block: string) => /[{;]--se-grid-gap-base-[a-z]+:/.test(block);
+
+	const ramped = {
+		gap: { default: '1rem' },
+		responsive: { md: { default: '1.25rem' }, lg: { default: '1.5rem', loose: '2rem' } },
+	} as const;
+
+	test('an unramped theme declares tokens once and never inside a media query', () => {
+		const stylesheet = css();
+		expect(stylesheet).toContain('--se-grid-gap-base-default:var(--space-stack, 1rem);');
+		for (const width of ['40rem', '48rem', '64rem', '80rem', '96rem']) {
+			expect(declaresAnyGapToken(mediaBlock(stylesheet, width))).toBe(false);
+		}
+		expect(theme().responsive).toEqual({});
+	});
+
+	test('a ramped token is redeclared only at the widths that change it', () => {
+		const stylesheet = css(ramped);
+		expect(stylesheet).toContain('--se-grid-gap-base-default:1rem;');
+		expect(mediaBlock(stylesheet, '48rem')).toContain('--se-grid-gap-base-default:1.25rem;');
+		expect(mediaBlock(stylesheet, '64rem')).toContain('--se-grid-gap-base-default:1.5rem;');
+		expect(declaresAnyGapToken(mediaBlock(stylesheet, '40rem'))).toBe(false);
+		expect(declaresAnyGapToken(mediaBlock(stylesheet, '96rem'))).toBe(false);
+	});
+
+	test('a width declares only the tokens it changes', () => {
+		const stylesheet = css(ramped);
+		expect(mediaBlock(stylesheet, '48rem')).not.toContain('--se-grid-gap-base-loose:');
+		expect(mediaBlock(stylesheet, '64rem')).toContain('--se-grid-gap-base-loose:2rem;');
+		expect(mediaBlock(stylesheet, '64rem')).not.toContain('--se-grid-gap-base-compact:');
+	});
+
+	test('base values stay in gap and are unaffected by a ramp', () => {
+		const resolved = theme(ramped);
+		expect(resolved.gap.default).toBe('1rem');
+		expect(resolved.gap.loose).toBe('var(--space-block-lg, 1.5rem)');
+		expect(resolved.responsive.lg).toEqual({ default: '1.5rem', loose: '2rem' });
+	});
+
+	test('theme identity ignores the order breakpoints and tokens were authored in', () => {
+		const a = theme({ responsive: { md: { default: '1.25rem', loose: '2rem' }, lg: { default: '1.5rem' } } });
+		const b = theme({ responsive: { lg: { default: '1.5rem' }, md: { loose: '2rem', default: '1.25rem' } } });
+		expect(a.id).toBe(b.id);
+	});
+
+	test('a ramped theme is a different theme from an unramped one', () => {
+		expect(theme(ramped).id).not.toBe(theme({ gap: { default: '1rem' } }).id);
+	});
+
+	test('an empty responsive entry does not change the theme or its output', () => {
+		expect(theme({ responsive: { md: {} } }).id).toBe(theme().id);
+		expect(css({ responsive: { md: {} } })).toBe(css());
+	});
+
+	test('the ramp is invisible to the form: a token still emits one variable reference', () => {
+		const variables = getFormGridVariables({ gap: 'default' }, theme(ramped));
+		expect(variables['--se-grid-gap-y']).toBe('var(--se-grid-gap-default, var(--se-grid-gap-base-default))');
+		expect(variables['--se-grid-gap-x']).toBe('var(--se-grid-gap-default, var(--se-grid-gap-base-default))');
+	});
+
+	test('a host override still shadows the whole ramp', () => {
+		expect(css(ramped)).not.toMatch(/--se-grid-gap-default:/);
+	});
+});
+
+describe('per-element spacing', () => {
+	test('maps a gap token to the element margin variables', () => {
+		const variables = getFieldGridVariables({ marginBlockEnd: 'loose' });
+		expect(variables['--se-field-margin-block-end']).toBe(
+			'var(--se-grid-gap-loose, var(--se-grid-gap-base-loose))',
+		);
+		expect(variables['--se-field-margin-block-start']).toBeUndefined();
+	});
+
+	test('passes a raw CSS length through untouched', () => {
+		expect(getFieldGridVariables({ marginBlockStart: '3rem' })['--se-field-margin-block-start']).toBe('3rem');
+	});
+
+	test('emits nothing when no spacing is authored', () => {
+		expect(getFieldGridVariables({ column: 2 })['--se-field-margin-block-end']).toBeUndefined();
+		expect(getFieldGridVariables()).toEqual({});
+	});
+
+	test('spacing joins the responsive cascade per breakpoint', () => {
+		const variables = getFieldGridVariables({
+			marginBlockEnd: 'compact',
+			responsive: { lg: { marginBlockEnd: 'wide' } },
+		});
+		expect(variables['--se-field-margin-block-end']).toBe(
+			'var(--se-grid-gap-compact, var(--se-grid-gap-base-compact))',
+		);
+		expect(variables['--se-field-margin-block-end-lg']).toBe(
+			'var(--se-grid-gap-wide, var(--se-grid-gap-base-wide))',
+		);
+		expect(variables['--se-field-margin-block-end-md']).toBeUndefined();
+	});
+
+	test('the stylesheet defaults element margins to zero and falls back through narrower slots', () => {
+		expect(css()).toContain('margin-block-end:var(--se-field-margin-block-end, 0)');
+		expect(css()).toContain(
+			'margin-block-start:var(--se-field-margin-block-start-sm, var(--se-field-margin-block-start, 0))',
+		);
+	});
+
+	test('the stylesheet resets every spacing slot so nested fields do not inherit it', () => {
+		expect(css()).toContain('--se-field-margin-block-end:initial;');
+		expect(css()).toContain('--se-field-margin-block-start-2xl:initial;');
+	});
+});

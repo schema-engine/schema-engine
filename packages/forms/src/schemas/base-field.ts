@@ -51,6 +51,8 @@ export const FieldGridBreakpointSchema = z.object({
 	justifySelf: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
 	alignSelf: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
 	hidden: z.optional(z.boolean()),
+	marginBlockStart: z.optional(GridGapValueSchema),
+	marginBlockEnd: z.optional(GridGapValueSchema),
 });
 
 /**
@@ -109,6 +111,12 @@ export const ElementGridConfigSchema = z.object({
 	justifySelf: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
 	alignSelf: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
 	placeSelf: z.optional(z.string()),
+	marginBlockStart: z
+		.optional(GridGapValueSchema)
+		.check(z.describe('Extra space before this element, on top of the grid row gap.')),
+	marginBlockEnd: z
+		.optional(GridGapValueSchema)
+		.check(z.describe('Extra space after this element, on top of the grid row gap.')),
 });
 
 /**

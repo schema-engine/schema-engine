@@ -66,6 +66,21 @@ axis.
 Two contracts follow from the field rule outranking a component's own class.
 Gap tokens (`--se-grid-gap-*`) are never declared on an element — the engine
 declares `--se-grid-gap-base-*` and reads the public token with that as the
-fallback — so a host's `:root` override still applies. And a field host with
+fallback — so a host's `:root` override still applies. Gap tokens may change by
+breakpoint through the engine's `responsive` option, which is breakpoint-major
+like a form's own: each entry lists the tokens that change at that width. A ramp
+redeclares only the base variable inside the generated media queries, so a form
+selecting `gap: 'default'` inherits the rhythm and rhythm stays engine vocabulary
+rather than form intent. A host override replaces the token at every width, ramp
+included, since the public token is the first `var()` argument.
+
+Per-element rhythm is part of the same mechanism, not a second one. An element's
+`grid.marginBlockStart` / `grid.marginBlockEnd` take the same gap tokens and ride
+the shared field property table, so they inherit the breakpoint cascade and the
+inheritance resets and one system keeps owning the block axis. They apply to any
+element that renders a `.se-form-field` host carrying the engine's theme id —
+inputs get it from the field primitive, and a content or decoration element opts
+in with `useFieldHost` (React) or `mergeFieldGridHost` (Radiant). An element
+without that host ignores its `grid` config entirely. And a field host with
 its own layout sets `--se-field-display-mode` instead of `display`, which
 responsive `hidden` toggles against rather than forcing `block`.

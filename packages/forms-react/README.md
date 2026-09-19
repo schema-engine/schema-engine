@@ -340,6 +340,7 @@ const engine = createReactFormEngine({
   grid: {
     breakpoints: { sm: '30rem', lg: '64rem' },   // optional; library defaults otherwise
     gap: { loose: '2rem' },                      // optional gap token overrides
+    responsive: { md: { loose: '2.5rem' } },     // optional per-breakpoint token values
     minColumnWidth: '16rem',
   },
 });
