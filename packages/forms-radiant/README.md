@@ -75,12 +75,17 @@ export function FormInstance({ config, … }) {
 }
 ```
 
-That re-export is the point, not bookkeeping. `@customElement` registers the
-element as a side effect of the script module loading, so a view that only named
-`'se-form-instance'` as a string would have no reference to the script at all
-and could be bundled without it — a form that renders markup and does nothing.
-The re-export is a real runtime edge, and the script is listed under
-`sideEffects` so a bundler keeps it even though the view is its only importer.
+The split is a bundle boundary, not a filing preference. The view is evaluated
+at build time to produce HTML and never reaches the browser; the script is the
+only part that ships. A component with no behavior therefore has no `.script`
+file and costs a page nothing, which is why `heading` and `chip` in radiant-ui
+are view-only.
+
+The re-export is what carries the registration at the source level: without it,
+a view that only named `'se-form-instance'` as a string literal would have no
+reference to the script module at all. It does not by itself survive a
+consumer's bundler, though — this package's published output still needs its
+own `sideEffects` accounting, tracked separately from this split.
 `internals/form-renderer.script.tsx` is the same shape.
 
 Behavior that does not need the element — DOM queries, value diffing, path maths

@@ -8,7 +8,6 @@
 	},
 	"sideEffects": [
 		"**/*.css",
-		"./src/components/form-instance.script.tsx",
 		"./src/components/internals/form-renderer.script.tsx",
 		"./dist/index.js",
 		"./dist/chunk-*.js"
