@@ -1,5 +1,10 @@
 import { test, expect, describe } from 'vitest';
-import { ValidationPresets, validationRegistry, type ValidationRule } from '../../../src/schemas/validation';
+import {
+	createValidationContext,
+	ValidationPresets,
+	validationRegistry,
+	type ValidationRule,
+} from '../../../src/schemas/validation';
 
 describe('Dual Usage Pattern: JSON + Presets', () => {
 	describe('OPTION 1: Direct JSON (Simple & Flexible)', () => {
@@ -14,7 +19,7 @@ describe('Dual Usage Pattern: JSON + Presets', () => {
 			expect(json).toContain('"type":"required"');
 
 			rules.forEach((rule) => {
-				const schema = validationRegistry.createSchema(rule);
+				const schema = validationRegistry.createSchema(rule, createValidationContext());
 				expect(schema).not.toBeNull();
 			});
 		});
@@ -65,7 +70,7 @@ describe('Dual Usage Pattern: JSON + Presets', () => {
 			expect(rules[3].type).toBe('min');
 
 			rules.forEach((rule) => {
-				const schema = validationRegistry.createSchema(rule);
+				const schema = validationRegistry.createSchema(rule, createValidationContext());
 				expect(schema).not.toBeNull();
 			});
 		});
@@ -95,7 +100,7 @@ describe('Dual Usage Pattern: JSON + Presets', () => {
 			};
 
 			formField.rules.forEach((rule) => {
-				const schema = validationRegistry.createSchema(rule);
+				const schema = validationRegistry.createSchema(rule, createValidationContext());
 				expect(schema).not.toBeNull();
 			});
 

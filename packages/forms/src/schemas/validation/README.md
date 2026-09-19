@@ -41,12 +41,15 @@ The `ValidationRegistry` is the central hub that:
 The system automatically converts validation rules into Zod Mini schemas:
 
 ```typescript
-import { createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation';
+import { createValidationContext, createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation';
 
 const rules = [{ type: 'required' }, { type: 'email' }, { type: 'minLength', value: 5 }];
 
-const schema = createZodSchemaFromRules(rules);
+const schema = createZodSchemaFromRules(rules, createValidationContext({ values, fieldPath: 'email' }));
 ```
+
+Every schema is built against a [validation context](#cross-field-validation),
+which is how a rule reads fields other than the one under test.
 
 ## Quick Start
 
@@ -176,6 +179,24 @@ customRegistry.register({
 | `date`     | `message?`                              | Date validation         |
 | `time`     | `precision?, message?`                  | Time validation         |
 
+### Cross-Field Validation
+
+| Type     | Parameters                                                                   | Description                       |
+| -------- | ---------------------------------------------------------------------------- | --------------------------------- |
+| `relate` | `fields: string[], assert, includeSelf?, as?, skipWhenIncomplete?, message?` | Compare a field with its siblings |
+
+```typescript
+{
+  type: 'relate',
+  fields: ['password'],
+  assert: 'allEqual',
+  message: 'Passwords must match'
+}
+```
+
+The assertion table and reference scoping are under
+[Cross-Field Validation](#cross-field-validation-1) in Advanced Usage.
+
 ### Async Validation
 
 | Type    | Parameters                                                                                  | Description            |
@@ -257,12 +278,18 @@ validationRegistry.registerMultiple(customValidations);
 Converts an array of validation rules into a Zod Mini schema:
 
 ```typescript
-import { createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation';
+import { createValidationContext, createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation';
 
 const rules = [{ type: 'required' }, { type: 'minLength', value: 3 }, { type: 'maxLength', value: 50 }];
 
-const schema = createZodSchemaFromRules(rules);
+const schema = createZodSchemaFromRules(rules, createValidationContext({ values, fieldPath: 'contacts.0.email' }));
 ```
+
+The context is required. A caller with no form values — a unit test, or a schema
+built before any value exists — passes `createValidationContext()`, which
+resolves every reference to `undefined`. Making it explicit is deliberate:
+omitting the form context used to be invisible, and a renderer that did so left
+every cross-field rule silently passing.
 
 ### generateFormSchema
 
@@ -343,7 +370,122 @@ IPv4 and IPv6 rules delegate address parsing to Zod Mini. IPv6 also keeps suppor
 
 ### Cross-Field Validation
 
-Use async validation for cross-field dependencies:
+Every handler receives a `ValidationContext` alongside its rule:
+
+```typescript
+interface ValidationContext {
+	/** Nested value tree for the whole form. */
+	values: Record<string, unknown>;
+	/** Rendered path of the field being validated, e.g. `contacts.0.email`. */
+	fieldPath: string;
+	/** Reads another field relative to this one. */
+	resolve: (fieldRef: string) => unknown;
+}
+```
+
+Prefer `resolve` over reading `values` directly. It applies the same scoping
+constraints use, so one authored name cannot mean two different fields:
+
+| Reference         | Declared on        | Resolves to              |
+| ----------------- | ------------------ | ------------------------ |
+| `accountType`     | `email`            | `accountType`            |
+| `accountType`     | `contacts.0.email` | `contacts.0.accountType` |
+| `country`         | `address.street`   | `address.country`        |
+| `billing.country` | `contacts.0.email` | `billing.country`        |
+
+A bare name is a sibling; a name containing a dot is absolute from the form
+root. The rule lives in `@schema-engine/forms/lib/field-ref` as `resolveFieldRef`
+and is shared with constraints.
+
+The array-row case is the reason the reference is scoped rather than literal: a
+rule written once on `contacts.email` has to read _its own_ row's
+`accountType`, not row zero's.
+
+#### The `relate` rule
+
+Most cross-field checks are one comparison over a list of referenced values, so
+they share one rule rather than one registration each:
+
+```typescript
+{ $type: 'input', name: 'confirmPassword', inputType: 'password',
+  rules: [{ type: 'relate', fields: ['password'], assert: 'allEqual',
+            message: 'Passwords must match' }] }
+```
+
+The declaring field's own value comes first in the list, then each entry of
+`fields` in order.
+
+| `assert`             | Holds when                                            |
+| -------------------- | ----------------------------------------------------- |
+| `allEqual`           | every value is the same                               |
+| `allDifferent`       | no value repeats                                      |
+| `ascending`          | each value is greater than or equal to the one before |
+| `strictlyAscending`  | each value is greater than the one before             |
+| `descending`         | each value is less than or equal to the one before    |
+| `strictlyDescending` | each value is less than the one before                |
+| `atLeastOne`         | at least one value is filled                          |
+| `exactlyOne`         | exactly one value is filled                           |
+| `allOrNone`          | all values are filled, or none are                    |
+
+| Option               | Default  | Effect                                                                                                                                                         |
+| -------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `includeSelf`        | `true`   | the declaring field's value participates, first. Turn it off for an assertion about a group the field merely belongs to.                                       |
+| `as`                 | `'auto'` | comparison basis: `string`, `number`, `date` (compared as timestamps), `boolean`, or `auto` to compare values unchanged.                                       |
+| `skipWhenIncomplete` | `true`   | stay quiet while any participating value is empty. Ignored by `atLeastOne`, `exactlyOne` and `allOrNone`, whose whole job is to fire on a partly filled group. |
+
+Because ordering reads left to right with the declaring field first, "this date
+must be after that one" is `descending`:
+
+```typescript
+{ $type: 'date', name: 'endDate',
+  rules: [{ type: 'relate', fields: ['startDate'], assert: 'descending', as: 'date',
+            message: 'End date must be after the start date' }] }
+```
+
+Inside an array, references stay in their row:
+
+```typescript
+{ $type: 'arrayElements', name: 'lines', elements: [
+    { $type: 'number', name: 'quantity' },
+    { $type: 'number', name: 'max',
+      rules: [{ type: 'relate', fields: ['quantity'], assert: 'descending', as: 'number',
+                message: 'Max must be at least the quantity' }] },
+] }
+```
+
+`ValidationPresets.relate` builds the common shapes, and each returns a plain
+rule object so TypeScript authoring and JSON round-tripping agree:
+
+```typescript
+ValidationPresets.relate.matches('password', 'Passwords must match');
+ValidationPresets.relate.after('startDate', 'End date must be after the start date');
+ValidationPresets.relate.before('endDate');
+ValidationPresets.relate.atLeastOneOf(['phone', 'email'], 'Give us a phone number or an email');
+ValidationPresets.relate.mutuallyExclusive(['card', 'invoice']);
+ValidationPresets.relate.allOrNone(['street', 'city', 'postcode']);
+```
+
+### Conditional Validation
+
+Custom validators read other fields through the context:
+
+```typescript
+validationRegistry.register({
+	type: 'conditionalRequired',
+	category: 'cross-field',
+	handler: (rule, context) => {
+		return z
+			.string()
+			.check(
+				z.refine((value) => context.resolve('accountType') !== 'business' || value.length > 0, rule.message),
+			);
+	},
+});
+```
+
+Async validation resolves its `dependencies` the same way, so a dependency may
+be a sibling (`accountType`), a nested field (`billing.country`), or a sibling
+inside the declaring array row:
 
 ```typescript
 const passwordConfirmRule = {
@@ -357,21 +499,41 @@ const passwordConfirmRule = {
 };
 ```
 
-### Conditional Validation
+Dependencies are sent to the endpoint under `dependsOn`, keyed by the reference
+as authored.
 
-Custom validators can access form data for conditional logic:
+#### Revalidation
+
+A cross-field rule re-runs when a field it reads changes, not only when its own
+field is validated. Correcting a password clears the "passwords must match"
+error on the confirmation without the user going back to it.
+
+A rule declares what it reads through `dependsOn` on its registration; `relate`
+returns its `fields` and `async` returns its `dependencies`. `buildDependencyIndex`
+inverts those into a change-to-dependents map over _rendered_ paths, so
+`lines.0.max` depends on `lines.0.quantity` and not on every row's quantity.
+A custom rule that reads other fields should declare `dependsOn` too, or nothing
+will re-run it:
 
 ```typescript
 validationRegistry.register({
-	type: 'conditionalRequired',
-	category: 'string',
-	handler: (rule, formData) => {
-		return z
-			.string()
-			.check(z.refine((value) => formData?.accountType !== 'business' || value.length > 0, rule.message));
-	},
+	type: 'confirmPassword',
+	category: 'cross-field',
+	dependsOn: () => ['password'],
+	handler: (rule, context) => …,
 });
 ```
+
+Two deliberate limits:
+
+- **Only direct dependents.** If `c` depends on `b` and `b` on `a`, changing `a`
+  re-validates `b` and not `c`. Transitive expansion invites cycles, and every
+  assertion reads values rather than another field's validity.
+- **Errors surface only on a field the user has reached.** A dependent is
+  re-validated when it has been touched, or on any dependent once the form has
+  been submitted — `shouldSurfaceDependentError` is the single place that
+  decides, so the two renderers cannot drift. Typing a password does not light
+  up a confirmation nobody has visited.
 
 ## API Reference
 
@@ -383,7 +545,7 @@ validationRegistry.register({
 - `registerMultiple(registrations: ValidationRegistration[]): void` - Register multiple validations
 - `unregister(type: string): boolean` - Remove a validation type
 - `has(type: string): boolean` - Check if validation type exists
-- `createSchema(rule: ValidationRule, formData?): z.ZodMiniType | null` - Create a Zod Mini schema from one rule
+- `createSchema(rule: ValidationRule, context: ValidationContext): z.ZodMiniType | null` - Create a Zod Mini schema from one rule
 - `getRegisteredTypes(): string[]` - Get all registered type names
 - `getByCategory(category: string): ValidationRegistration[]` - Get validations by category
 
@@ -396,8 +558,12 @@ validationRegistry.register({
 ```typescript
 interface ValidationRegistration {
 	type: string;
-	category: 'string' | 'number' | 'array' | 'boolean' | 'date' | 'generic';
-	handler: (rule: ValidationRule) => z.ZodMiniType;
+	category: 'string' | 'number' | 'array' | 'boolean' | 'date' | 'generic' | 'cross-field';
+	handler: (rule: ValidationRule, context: ValidationContext) => z.ZodMiniType;
+	/** Field references this rule reads, so renderers know when to re-run it. */
+	dependsOn?: (rule: ValidationRule) => readonly string[];
+	/** Field `$type` values that receive this rule when the author omitted it. */
+	defaultFor?: readonly string[];
 }
 ```
 

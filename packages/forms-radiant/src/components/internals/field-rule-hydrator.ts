@@ -34,6 +34,17 @@ export function reviveRules(value: string | null): FieldRules | undefined {
 }
 
 /**
+ * The field's rendered path, which cross-field references resolve against.
+ *
+ * @remarks
+ * The attribute is read before the property because Radiant can apply client
+ * properties after connect, and hydration runs on connect.
+ */
+function readFieldName(field: HTMLElement): string | undefined {
+	return field.getAttribute('name') ?? (Reflect.get(field, 'name') as string | undefined);
+}
+
+/**
  * @remarks
  * Serialized rules cannot carry validator functions. Preserve live validators
  * when markup hydration runs again after client properties have been applied.
@@ -51,7 +62,10 @@ export function readHydratedRules(field: HTMLElement): FieldRules | undefined {
 	const validationRules = field.getAttribute('data-se-validation-rules');
 	if (validationRules) {
 		try {
-			return toFieldRules(JSON.parse(validationRules) as ValidationRule[]);
+			return toFieldRules({
+				rules: JSON.parse(validationRules) as ValidationRule[],
+				name: readFieldName(field),
+			});
 		} catch {
 			return undefined;
 		}

@@ -21,8 +21,10 @@ import type {
 	Cuid2Rule,
 	UlidRule,
 	HexRule,
+	RelateRule,
 	AnyValidationRegistration,
 	BaseValidationRule,
+	ValidationContext,
 	ValidationRegistration,
 	ValidationRegistrationMap,
 } from './types.js';
@@ -90,6 +92,18 @@ export class ValidationRegistry {
 	}
 
 	/**
+	 * Field references a rule reads besides the value under test.
+	 *
+	 * @remarks
+	 * Lives on the registry because the answer comes from the registration, and
+	 * `get` is keyed by the built-in rule union — a consumer-registered type is a
+	 * plain string and would need a cast at every call site.
+	 */
+	getRuleDependencies(rule: { type: string }): readonly string[] {
+		return this.validations.get(rule.type)?.dependsOn?.(rule) ?? [];
+	}
+
+	/**
 	 * Get all registered validation types
 	 */
 	getRegisteredTypes(): string[] {
@@ -107,17 +121,23 @@ export class ValidationRegistry {
 
 	/**
 	 * Create a Zod Mini schema from a validation rule
+	 *
 	 * @param rule - The validation rule
-	 * @param formData - Optional form data for cross-field validation
+	 * @param context - Form context for rules that read other fields
+	 *
+	 * @remarks
+	 * `context` is required rather than optional so a caller cannot silently omit
+	 * it: a renderer that did exactly that is why cross-field rules were inert on
+	 * one of the two renderers. Build it with `createValidationContext`.
 	 */
-	createSchema<T extends { type: string }>(rule: T, formData?: Record<string, any>): z.ZodMiniType | null {
+	createSchema<T extends { type: string }>(rule: T, context: ValidationContext): z.ZodMiniType | null {
 		const registration = this.validations.get(rule.type) as ValidationRegistration<T> | undefined;
 		if (!registration) {
 			return null;
 		}
 
 		try {
-			return registration.handler(rule, formData);
+			return registration.handler(rule, context);
 		} catch (error) {
 			console.error(`Failed to create schema for validation rule '${rule.type}':`, error);
 			return null;
@@ -222,6 +242,71 @@ export class ValidationRegistry {
 			time: (message?: string): TimeRule => ({
 				type: 'time',
 				message: message || 'Please enter a valid ISO time',
+			}),
+		},
+
+		/**
+		 * Authoring sugar over the generic `relate` rule.
+		 *
+		 * @remarks
+		 * Each returns a plain rule object, so a form authored in TypeScript and one
+		 * round-tripped through JSON produce the same configuration. References
+		 * resolve relative to the field declaring the rule.
+		 */
+		relate: {
+			matches: (field: string, message?: string): RelateRule => ({
+				type: 'relate',
+				fields: [field],
+				assert: 'allEqual',
+				includeSelf: true,
+				as: 'auto',
+				skipWhenIncomplete: true,
+				message,
+			}),
+			after: (field: string, message?: string): RelateRule => ({
+				type: 'relate',
+				fields: [field],
+				assert: 'descending',
+				includeSelf: true,
+				as: 'date',
+				skipWhenIncomplete: true,
+				message,
+			}),
+			before: (field: string, message?: string): RelateRule => ({
+				type: 'relate',
+				fields: [field],
+				assert: 'ascending',
+				includeSelf: true,
+				as: 'date',
+				skipWhenIncomplete: true,
+				message,
+			}),
+			atLeastOneOf: (fields: string[], message?: string): RelateRule => ({
+				type: 'relate',
+				fields,
+				assert: 'atLeastOne',
+				includeSelf: false,
+				as: 'auto',
+				skipWhenIncomplete: true,
+				message,
+			}),
+			mutuallyExclusive: (fields: string[], message?: string): RelateRule => ({
+				type: 'relate',
+				fields,
+				assert: 'exactlyOne',
+				includeSelf: false,
+				as: 'auto',
+				skipWhenIncomplete: true,
+				message,
+			}),
+			allOrNone: (fields: string[], message?: string): RelateRule => ({
+				type: 'relate',
+				fields,
+				assert: 'allOrNone',
+				includeSelf: false,
+				as: 'auto',
+				skipWhenIncomplete: true,
+				message,
 			}),
 		},
 

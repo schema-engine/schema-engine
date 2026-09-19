@@ -25,8 +25,10 @@ import type {
 	JwtRule,
 	AnyValidationRegistration,
 	AsyncRule,
+	ValidationContext,
 } from './types.js';
 import { createAsyncValidationHandler } from './async/handler.js';
+import { relateValidation } from './relations.js';
 
 const ipv6ZonePattern = /^[0-9a-zA-Z]+$/;
 
@@ -198,9 +200,10 @@ export const defaultValidations: AnyValidationRegistration[] = [
 
 	{
 		type: 'async',
-		category: 'generic',
-		handler: (rule: AsyncRule, formData?: Record<string, any>) => {
-			return createAsyncValidationHandler(rule, formData);
-		},
+		category: 'cross-field',
+		dependsOn: (rule: AsyncRule) => rule.dependencies ?? [],
+		handler: (rule: AsyncRule, context: ValidationContext) => createAsyncValidationHandler(rule, context),
 	},
+
+	relateValidation,
 ];

@@ -13,6 +13,7 @@ import { useFormActionDispatchers } from './hooks/use-form-action-dispatchers';
 import { useFormMountEffect } from './hooks/use-form-mount-effect';
 import { useFormWatcher } from './hooks/use-form-watcher';
 import { useFormSubmitHandler } from './hooks/use-form-submit-handler';
+import { useValidationDependencies } from './hooks/use-validation-dependencies';
 
 /**
  * React Hook Form adapter implementation
@@ -64,6 +65,8 @@ export function FormProvider({
 		actions: config.actions,
 		dispatchTrigger: actionDispatchers.dispatchTrigger,
 	});
+
+	useValidationDependencies(form, formElements);
 
 	useFormWatcher({
 		control: form.control,

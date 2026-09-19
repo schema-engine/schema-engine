@@ -10,6 +10,6 @@ export const CopyForLlm = eco.component<CopyForLlmProps, JsxRenderable>({
 		scripts: ['./copy-for-llm.script.tsx'],
 	},
 	render: ({ llmUrl, label = 'Copy for LLM' }: CopyForLlmProps) => {
-		return <radiant-copy-for-llm prop:llmUrl={llmUrl} prop:label={label} />;
+		return <radiant-copy-for-llm llmUrl={llmUrl} label={label} />;
 	},
 });

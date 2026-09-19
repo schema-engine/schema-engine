@@ -1,7 +1,11 @@
 import { useMemo } from 'react';
 import * as z from 'zod/mini';
 import type { FieldValues, Resolver, ResolverResult } from 'react-hook-form';
-import { collectValidatableFields, createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation/utils';
+import {
+	collectValidatableFields,
+	createValidationContext,
+	createZodSchemaFromRules,
+} from '@schema-engine/forms/schemas/validation/utils';
 import { expandFieldTemplatePaths, getValueAtPath } from '@schema-engine/forms/lib/path-values';
 
 function pathIsRequested(path: string, names?: readonly string[]): boolean {
@@ -30,7 +34,10 @@ export function createFormValidationResolver(elements: readonly object[]): Resol
 					.map(async (path) => {
 						const value = getValueAtPath(values, path);
 						try {
-							const schema = createZodSchemaFromRules(rules, values);
+							const schema = createZodSchemaFromRules(
+								rules,
+								createValidationContext({ values, fieldPath: path }),
+							);
 							const result = await z.safeParseAsync(schema, value);
 							if (!result.success) {
 								errors[path] = {

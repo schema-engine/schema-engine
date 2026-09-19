@@ -170,6 +170,48 @@ const AsyncRuleSchema = z.object({
 	disableCache: z.optional(z.boolean()),
 });
 
+/**
+ * Named comparisons a {@link RelateRuleSchema} can make over the referenced values.
+ *
+ * @remarks
+ * Ordering assertions read left to right over `fields` (with the declaring
+ * field's own value first, unless `includeSelf` is off), so `descending` on
+ * `[endDate, startDate]` asserts that the end date is the later one.
+ */
+export const RelationAssertSchema = z.enum([
+	'allEqual',
+	'allDifferent',
+	'ascending',
+	'strictlyAscending',
+	'descending',
+	'strictlyDescending',
+	'atLeastOne',
+	'exactlyOne',
+	'allOrNone',
+]);
+
+const RelateRuleSchema = z.object({
+	type: z.literal('relate'),
+	fields: z
+		.array(z.string())
+		.check(z.minLength(1), z.describe('Field references, each resolved relative to the field declaring the rule.')),
+	assert: RelationAssertSchema,
+	includeSelf: z
+		._default(z.boolean(), true)
+		.check(z.describe('Own value participates, first in the list. Off for assertions about a group.')),
+	as: z
+		._default(z.enum(['auto', 'string', 'number', 'date', 'boolean']), 'auto')
+		.check(z.describe('Comparison basis. `auto` compares values as they are.')),
+	skipWhenIncomplete: z
+		._default(z.boolean(), true)
+		.check(
+			z.describe(
+				'Stay quiet while any participating value is empty. Ignored by the assertions about emptiness: `atLeastOne`, `exactlyOne`, `allOrNone`.',
+			),
+		),
+	message: z.optional(z.string()),
+});
+
 export const ValidationRuleSchema = z.union([
 	RequiredRuleSchema,
 	MinLengthRuleSchema,
@@ -197,6 +239,7 @@ export const ValidationRuleSchema = z.union([
 	UlidRuleSchema,
 	HexRuleSchema,
 	AsyncRuleSchema,
+	RelateRuleSchema,
 ]);
 
 export type BaseValidationRule = z.infer<typeof BaseValidationRuleSchema>;
@@ -226,22 +269,56 @@ export type Cuid2Rule = z.infer<typeof Cuid2RuleSchema>;
 export type UlidRule = z.infer<typeof UlidRuleSchema>;
 export type HexRule = z.infer<typeof HexRuleSchema>;
 export type AsyncRule = z.infer<typeof AsyncRuleSchema>;
+export type RelationAssert = z.infer<typeof RelationAssertSchema>;
+export type RelateRule = z.infer<typeof RelateRuleSchema>;
 export type ValidationRule = z.infer<typeof ValidationRuleSchema>;
+
+/**
+ * Everything a validation handler may read beyond the value under test.
+ *
+ * @remarks
+ * `fieldPath` is the field's *rendered* path (`contacts.0.email`), not the
+ * authored template, which is what lets a rule address a sibling inside its own
+ * array row. Prefer {@link ValidationContext.resolve} over reading
+ * {@link ValidationContext.values} directly: it applies that scoping, and it is
+ * the same resolution constraints use, so one authored name cannot mean two
+ * different fields.
+ */
+export interface ValidationContext {
+	/** Nested value tree for the whole form. */
+	readonly values: Record<string, unknown>;
+	/** Rendered path of the field being validated, e.g. `contacts.0.email`. */
+	readonly fieldPath: string;
+	/**
+	 * Reads another field relative to this one: a bare name is a sibling, a
+	 * dotted name is absolute from the form root.
+	 */
+	readonly resolve: (fieldRef: string) => unknown;
+}
 
 /**
  * Validation rule registration definition
  * @template TRule - Specific rule type for type-safe handler
  */
-export interface ValidationRegistration<TRule extends { type: string } = { type: string } & Record<string, any>> {
+export interface ValidationRegistration<TRule extends { type: string } = { type: string } & Record<string, unknown>> {
 	type: TRule['type'];
-	category: 'string' | 'number' | 'array' | 'boolean' | 'date' | 'generic';
+	category: 'string' | 'number' | 'array' | 'boolean' | 'date' | 'generic' | 'cross-field';
 	/**
 	 * Validation handler function
 	 * @param rule - The validation rule configuration (typed to specific rule type)
-	 * @param formData - Optional form data for cross-field validation (available in custom resolver)
+	 * @param context - The form context, for rules that read fields other than the one under test
 	 * @returns Zod Mini schema for validation
 	 */
-	handler: (rule: TRule, formData?: Record<string, any>) => z.ZodMiniType;
+	handler: (rule: TRule, context: ValidationContext) => z.ZodMiniType;
+	/**
+	 * Field references this rule reads besides the value under test.
+	 *
+	 * @remarks
+	 * Renderers re-validate the declaring field when any of these change. Returned
+	 * as authored references; the caller resolves them against the field's path,
+	 * so a rule inside an array row watches that row.
+	 */
+	dependsOn?: (rule: TRule) => readonly string[];
 	/**
 	 * Field `$type` values that receive this rule when the author omitted it.
 	 *

@@ -47,3 +47,41 @@ export function collectConstrainedElements(config: NormalizedFormConfig | undefi
 
 	return result;
 }
+
+/**
+ * Drops array indices from a rendered field path.
+ *
+ * @remarks
+ * {@link collectConstrainedElements} walks the config, where array length is
+ * unknown, so it records the authored template (`contacts.email`). The renderer
+ * emits the composed path (`contacts.0.email`).
+ */
+function templatePath(path: string): string {
+	return path
+		.split('.')
+		.filter((segment) => !/^\d+$/.test(segment))
+		.join('.');
+}
+
+/**
+ * Maps a rendered `data-se-constraint-field` value back to the element that declared it.
+ *
+ * @remarks
+ * Matching the other way round — building selectors from the config — cannot
+ * reach a field inside an array, because the config only knows the template path
+ * while the DOM carries one composed path per row. An element with no `name`
+ * falls back to its `id`, which is what the renderer writes for it.
+ */
+export function createConstraintLookup(
+	config: NormalizedFormConfig | undefined,
+): (renderedPath: string) => ConstrainedElementMetadata | undefined {
+	const declarations = new Map<string, ConstrainedElementMetadata>();
+	for (const item of collectConstrainedElements(config)) {
+		declarations.set(item.fieldName, item);
+		if (item.id) {
+			declarations.set(item.id, item);
+		}
+	}
+
+	return (renderedPath) => declarations.get(renderedPath) ?? declarations.get(templatePath(renderedPath));
+}

@@ -146,7 +146,7 @@ export function FormMaskedInput({
 			description={config.description}
 			grid={config.grid}
 			style={config.style}
-			rules={toFieldRules(config.rules)}
+			rules={toFieldRules(config)}
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}
 		>

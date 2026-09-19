@@ -33,6 +33,32 @@ inside `rui-form`; there is no global active form store. They read
 optional lifecycle wiring around that controller.
 Radiant UI registration uses flat dotted field names. Controller reads, action
 context values, constraints, and submission use the engine's nested value tree.
+
+Constraint resolution belongs to the engine, not to a renderer. A constraint
+names a sibling (`accountType`), so its value path depends on where the
+declaring field is rendered: inside `contacts.0.email` the sibling is
+`contacts.0.accountType`. `resolveConstraintPath` and `evaluateConstraints` in
+`@schema-engine/forms/constraints` own that rule, and a renderer passes the
+rendered field path plus the value tree rather than resolving paths itself. A
+one-element array compares as its element, so a single-selection control matches
+an authored scalar.
+
+Field references resolve identically for constraints and for validation, and
+that is deliberate: `resolveFieldRef` in `@schema-engine/forms/lib/field-ref` is
+the single implementation, and `resolveConstraintPath` is an alias of it. A
+validation handler reaches it through the `ValidationContext` its second
+argument carries — `resolve`, plus the form's nested `values` and the field's
+rendered `fieldPath`. The context is required rather than optional so a renderer
+cannot omit it and leave cross-field rules silently passing, which is what
+happened while it was optional.
+
+A rule that reads other fields declares them through `dependsOn` on its
+registration, and `buildDependencyIndex` inverts those declarations into a
+change-to-dependents map over rendered paths. Both renderers re-validate
+dependents from that map and both ask `shouldSurfaceDependentError` whether the
+result may be shown — touched, or the form submitted. That gate lives in the
+engine rather than in each renderer, because the constraint subsystem already
+demonstrated what happens when a decision of this class is made twice.
 See [the controller contract](./packages/forms-radiant/src/adapters/radiant/controller/README.md).
 
 ## Grid theme ownership

@@ -43,14 +43,82 @@ const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 
 `engine` and `adapter` are `@state` (JS only). `@prop({ type: Object })` would stringify them onto the host tag.
 
+### Registering only the elements a form uses
+
+`schemaFormRegistrations` is every built-in element — the convenient default,
+and the right choice while a form's `$type` set is still moving. Each
+registration is also its own named export from the `/registrations` subpath, so
+an app whose forms only ever use a known subset can pass just those instead:
+
+```ts
+import { createRadiantFormEngine } from '@schema-engine/forms-radiant';
+import { InputElementRegistration, SelectElementRegistration } from '@schema-engine/forms-radiant/registrations';
+
+const engine = createRadiantFormEngine({
+	elements: [InputElementRegistration, SelectElementRegistration],
+});
+```
+
+This is why elements are registered by explicit array rather than
+auto-discovered from installed packages: a form's `$type`s are runtime data,
+not static imports the engine can see ahead of time, so it has to be told.
+Passing the narrower array is the only lever an app has for trimming what
+ships to the browser through this package's single bundled entry point.
+
+Get the array wrong and it fails loud, not silent: an unregistered `$type`
+renders an inline error naming the exact type, in place of the field, in both
+development and production. Nothing to guard against beyond testing the pages
+that render forms.
+
 ## Rendering architecture
 
 View-owned shell, same authoring model as radiant-ui: the `FormRenderer` / `FormInstance` views author the whole form tree as light-DOM children (authored children, no `<slot />` written by hosts), and `se-form-renderer` / `se-form-instance` are behavior-only hosts that publish context. There is no derived tree at the form level.
 
 - Every step's fields are authored once inside `se-form-step`; hosts toggle their own `hidden` attribute from the step state, so SSR emits the full form and step switching is pure DOM.
-- Conditional fields with constraints are wrapped in a plain `.se-form-constraint` container with `data-se-constraint-field`. `se-form-instance` listens to the form store and toggles `hidden` reactively without requiring separate custom element wrappers or serialized JSON configs.
+- Conditional fields with constraints are wrapped in a plain `.se-form-constraint` container with `data-se-constraint-field`. `se-form-instance` listens to the form store and toggles `hidden` and the field's `disabled` reactively, without separate custom element wrappers or serialized JSON configs. It reads the rendered `data-se-constraint-field` values rather than building selectors from the config, so each row of an array resolves its own siblings. The `require` action is evaluated but not yet applied — see `.audit/forms-stack/2026-09-19/needs-review/`.
 - Recipe chrome blocks read serializable `config` / `viewConfig` props plus the live `formInstanceContext`; where SSR cannot resolve context (authored children serialize before providers publish), they fall back to the initial step-0 state and hydrate the live values.
 - Published JS must keep element registrations: `sideEffects` marks the compiled chunks so bundlers do not drop the bare script imports.
+
+### Script and view files
+
+A behavior host large enough to read as its own unit lives in a `*.script.tsx`
+file beside its view, matching radiant-ui: the script owns the
+`@customElement` class, the view owns the JSX, and the view re-exports the
+element so importing the view registers it.
+
+```tsx
+// form-instance.script.tsx
+@customElement('se-form-instance')
+export class FormInstanceElement extends RadiantElement { … }
+```
+
+```tsx
+// form-instance.tsx
+/** Registers `<se-form-instance>` when this view is imported. */
+export { FormInstanceElement } from './form-instance.script';
+
+export function FormInstance({ config, … }) {
+	return jsx('se-form-instance', { 'prop:config': config, children: … });
+}
+```
+
+The split is a bundle boundary, not a filing preference. The view is evaluated
+at build time to produce HTML and never reaches the browser; the script is the
+only part that ships. A component with no behavior therefore has no `.script`
+file and costs a page nothing, which is why `heading` and `chip` in radiant-ui
+are view-only.
+
+The re-export is what carries the registration at the source level: without it,
+a view that only named `'se-form-instance'` as a string literal would have no
+reference to the script module at all. It does not by itself survive a
+consumer's bundler, though — this package's published output still needs its
+own `sideEffects` accounting, tracked separately from this split.
+`internals/form-renderer.script.tsx` is the same shape.
+
+Behavior that does not need the element — DOM queries, value diffing, path maths
+— belongs in `lib/` instead, where it is testable without registering a custom
+element: `lib/constraint-elements.ts`, `lib/validate-current-step.ts` and
+`lib/validation-deps.ts` are the existing examples.
 
 ## Grid layout
 

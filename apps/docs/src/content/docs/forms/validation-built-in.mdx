@@ -390,6 +390,90 @@ Validate time strings with optional precision.
 }
 ```
 
+## Cross-Field Validations
+
+The `relate` rule compares a field with its siblings. One rule covers password
+confirmation, date ordering, "one of these two", and mutual exclusion, because
+they are the same operation with a different assertion.
+
+```typescript
+{
+  id: 'input',
+  name: 'confirmPassword',
+  inputType: 'password',
+  label: 'Confirm Password',
+  rules: [
+    { type: 'relate', fields: ['password'], assert: 'allEqual', message: 'Passwords must match' }
+  ]
+}
+```
+
+The declaring field's own value comes first in the comparison, then each entry
+of `fields` in order.
+
+| `assert`             | Holds when                                            |
+| -------------------- | ----------------------------------------------------- |
+| `allEqual`           | every value is the same                               |
+| `allDifferent`       | no value repeats                                      |
+| `ascending`          | each value is greater than or equal to the one before |
+| `strictlyAscending`  | each value is greater than the one before             |
+| `descending`         | each value is less than or equal to the one before    |
+| `strictlyDescending` | each value is less than the one before                |
+| `atLeastOne`         | at least one value is filled                          |
+| `exactlyOne`         | exactly one value is filled                           |
+| `allOrNone`          | all values are filled, or none are                    |
+
+| Option               | Type       | Default  | Description                                                                                                                                                    |
+| -------------------- | ---------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fields`             | `string[]` | —        | References to compare against, resolved relative to the declaring field                                                                                        |
+| `includeSelf`        | `boolean`  | `true`   | Whether the declaring field's value participates, first in the list                                                                                            |
+| `as`                 | `string`   | `'auto'` | Comparison basis: `string`, `number`, `date`, `boolean`, or `auto`                                                                                             |
+| `skipWhenIncomplete` | `boolean`  | `true`   | Stay quiet while any participating value is empty. Ignored by `atLeastOne`, `exactlyOne` and `allOrNone`, whose whole job is to fire on a partly filled group. |
+| `message`            | `string`   | —        | Error message to show on failure                                                                                                                               |
+
+Ordering reads left to right with the declaring field first, so "this date must
+be after that one" is `descending`:
+
+```typescript
+{
+  id: 'date',
+  name: 'endDate',
+  label: 'End Date',
+  rules: [
+    { type: 'relate', fields: ['startDate'], assert: 'descending', as: 'date',
+      message: 'End date must be after the start date' }
+  ]
+}
+```
+
+References are relative, so a rule authored once inside an array reads its own
+row rather than row zero:
+
+```typescript
+{
+  $type: 'arrayElements',
+  name: 'lines',
+  elements: [
+    { id: 'number', name: 'quantity', label: 'Quantity' },
+    { id: 'number', name: 'max', label: 'Maximum',
+      rules: [
+        { type: 'relate', fields: ['quantity'], assert: 'descending', as: 'number',
+          message: 'Max must be at least the quantity' }
+      ]
+    }
+  ]
+}
+```
+
+A dotted reference is absolute from the form root, so `billing.country` always
+means the same field wherever it is written.
+
+A cross-field rule re-runs when a field it reads changes, not only when its own
+field is validated, so correcting a password clears the "passwords must match"
+error on the confirmation. The error surfaces only once the dependent field has
+been touched, or once the form has been submitted, so typing a password does not
+light up a confirmation nobody has reached.
+
 ## Async Validation
 
 For server-side validation that requires network requests, with built-in caching and enhanced dependency support.
@@ -470,7 +554,11 @@ For server-side validation that requires network requests, with built-in caching
 
 ### Dependency Resolution
 
-When using `dependencies`, the system automatically creates a `dependsOn` object in the request body:
+`dependencies` are field references and resolve exactly like `relate`'s
+`fields`: a bare name is a sibling — including a sibling inside the declaring
+array row — and a dotted name is absolute from the form root. The system
+automatically creates a `dependsOn` object in the request body, keyed by the
+reference as authored:
 
 ```typescript
 {
@@ -521,6 +609,12 @@ const tagsRules = [
 	ValidationPresets.array.minItems(1, 'Please select at least one tag'),
 	ValidationPresets.array.maxItems(10, 'You can select up to 10 tags'),
 ];
+
+const confirmPasswordRules = [ValidationPresets.relate.matches('password', 'Passwords must match')];
+
+const endDateRules = [ValidationPresets.relate.after('startDate', 'End date must be after the start date')];
+
+const contactRules = [ValidationPresets.relate.atLeastOneOf(['phone', 'email'], 'Give us a phone number or an email')];
 
 const usernameRules = [
 	ValidationPresets.custom.async('/api/check-username', {

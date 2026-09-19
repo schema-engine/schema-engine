@@ -5,6 +5,7 @@ import {
 	validationRegistry as globalRegistry,
 } from '../../../src/schemas/validation/validation-registry';
 import type { ValidationRegistration } from '../../../src/schemas/validation/types';
+import { createValidationContext } from '../../../src/schemas/validation/utils';
 
 describe('ValidationRegistry', () => {
 	let registry: ValidationRegistry;
@@ -80,23 +81,29 @@ describe('ValidationRegistry', () => {
 		});
 
 		it('should create schemas for string validations', () => {
-			const requiredSchema = globalRegistry.createSchema({ type: 'required', message: 'Required field' });
+			const requiredSchema = globalRegistry.createSchema(
+				{ type: 'required', message: 'Required field' },
+				createValidationContext(),
+			);
 			expect(requiredSchema?.parse('data')).toBe('data');
 			expect(() => requiredSchema?.parse('')).toThrow();
 
-			const emailSchema = globalRegistry.createSchema({ type: 'email' });
+			const emailSchema = globalRegistry.createSchema({ type: 'email' }, createValidationContext());
 			expect(emailSchema?.parse('test@example.com')).toBe('test@example.com');
 			expect(() => emailSchema?.parse('invalid')).toThrow();
 		});
 
 		it('should create schemas for number validations', () => {
-			const minSchema = globalRegistry.createSchema({ type: 'min', value: 10 });
+			const minSchema = globalRegistry.createSchema({ type: 'min', value: 10 }, createValidationContext());
 			expect(minSchema?.parse(15)).toBe(15);
 			expect(() => minSchema?.parse(5)).toThrow();
 		});
 
 		it('should create schemas for array validations', () => {
-			const minItemsSchema = globalRegistry.createSchema({ type: 'minItems', value: 2 });
+			const minItemsSchema = globalRegistry.createSchema(
+				{ type: 'minItems', value: 2 },
+				createValidationContext(),
+			);
 			expect(minItemsSchema?.parse([1, 2])).toEqual([1, 2]);
 			expect(() => minItemsSchema?.parse([1])).toThrow();
 		});
@@ -131,7 +138,7 @@ describe('ValidationRegistry', () => {
 	describe('Async Validation', () => {
 		it('should create async validation schema', () => {
 			const rule = { type: 'async', url: '/api/validate' };
-			const schema = globalRegistry.createSchema(rule);
+			const schema = globalRegistry.createSchema(rule, createValidationContext());
 			expect(schema).toBeDefined();
 		});
 
@@ -141,7 +148,10 @@ describe('ValidationRegistry', () => {
 				url: '/api/validate',
 				dependencies: ['field1', 'field2'],
 			};
-			const schema = globalRegistry.createSchema(rule, { field1: 'val1', field2: 'val2' });
+			const schema = globalRegistry.createSchema(
+				rule,
+				createValidationContext({ values: { field1: 'val1', field2: 'val2' } }),
+			);
 			expect(schema).toBeDefined();
 		});
 	});
@@ -183,7 +193,7 @@ describe('ValidationRegistry', () => {
 			registry.register(creditCardValidation);
 
 			const rule = { type: 'creditCard', message: 'Invalid card' };
-			const schema = registry.createSchema(rule);
+			const schema = registry.createSchema(rule, createValidationContext());
 
 			expect(schema).toBeDefined();
 			expect(() => schema?.parse('4532015112830366')).not.toThrow();
@@ -204,7 +214,7 @@ describe('ValidationRegistry', () => {
 			registry.register(phoneValidation);
 
 			const phoneRule = { type: 'phone', message: 'Invalid phone format' };
-			const schema = registry.createSchema(phoneRule);
+			const schema = registry.createSchema(phoneRule, createValidationContext());
 
 			expect(schema).toBeDefined();
 			expect(() => schema?.parse('+1234567890')).not.toThrow();
@@ -246,7 +256,7 @@ describe('ValidationRegistry', () => {
 
 	describe('Error Handling', () => {
 		it('should return null for unregistered validation types', () => {
-			const schema = registry.createSchema({ type: 'nonexistent' });
+			const schema = registry.createSchema({ type: 'nonexistent' }, createValidationContext());
 			expect(schema).toBeNull();
 		});
 
@@ -262,7 +272,7 @@ describe('ValidationRegistry', () => {
 			registry.register(faultyValidation);
 
 			const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-			const schema = registry.createSchema({ type: 'faulty' });
+			const schema = registry.createSchema({ type: 'faulty' }, createValidationContext());
 
 			expect(schema).toBeNull();
 			expect(consoleErrorSpy).toHaveBeenCalled();
@@ -276,7 +286,7 @@ describe('ValidationRegistry', () => {
 			registry.register(v1);
 			registry.register(v2);
 
-			const schema = registry.createSchema({ type: 'test' });
+			const schema = registry.createSchema({ type: 'test' }, createValidationContext());
 			expect(schema?.parse(123)).toBe(123);
 		});
 	});
