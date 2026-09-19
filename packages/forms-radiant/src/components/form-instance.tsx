@@ -14,17 +14,25 @@ import { formInstanceContext, type FormInstanceContextValue, type StepStates } f
 import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
 import { onActiveEngineChange } from '@/registries/active-engine';
 import { findNearestRuiForm } from '@/lib/rui-form-utils';
-import { collectConstrainedElements } from '@/lib/constraint-elements';
+import { createConstraintLookup } from '@/lib/constraint-elements';
 import { evaluateConstraintLogic } from '@/hooks/constraint-logic';
 import { fieldNamesForStep, validateCurrentStepFields } from '@/lib/validate-current-step';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
 import { FormController } from '@/adapters/radiant/controller';
 import { ConfiguredRuiForm } from '@/adapters/radiant/rui-form-shell';
 
-function escapeSelector(value: string): string {
-	return typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
-		? CSS.escape(value)
-		: value.replace(/(["\\])/g, '\\$1');
+/**
+ * Fields this wrapper owns, excluding those belonging to a nested constraint.
+ *
+ * @remarks
+ * Without the guard, a constrained field inside a constrained fieldset would be
+ * written twice in one pass and the later write — document order, so the inner
+ * one — would silently win over its own parent's `disable`.
+ */
+function ownedFields(wrapper: HTMLElement): HTMLElement[] {
+	return [...wrapper.querySelectorAll<HTMLElement>('se-field')].filter(
+		(field) => field.closest('[data-se-constraint-field]') === wrapper,
+	);
 }
 
 function createInitialStepStates(totalSteps: number): StepStates {
@@ -149,30 +157,41 @@ export class FormInstanceElement extends RadiantElement {
 		this.form.connect(() => this.applyConstraints());
 	}
 
+	/**
+	 * Syncs every rendered constraint wrapper against the live value tree.
+	 *
+	 * @remarks
+	 * Driven by what is in the DOM rather than by selectors built from the config:
+	 * the config only knows authored template paths, while the renderer emits
+	 * composed ones, so matching config to DOM missed every field inside an array.
+	 * Each wrapper is evaluated at its own rendered path, which is also what scopes
+	 * a constraint's sibling lookup to the right array row.
+	 */
 	private applyConstraints(): void {
 		if (!this.config || !this.form?.ready) {
 			return;
 		}
 
-		const constrained = collectConstrainedElements(this.config);
-		if (constrained.length === 0) {
-			return;
-		}
-
+		const declaring = createConstraintLookup(this.config);
 		const values = this.form.getValues();
-		for (const item of constrained) {
-			const { shouldShow } = evaluateConstraintLogic(item.constraints, item.isRequired, item.fieldName, values);
 
-			const selector =
-				item.id && item.id !== item.fieldName
-					? `[data-se-constraint-field="${escapeSelector(item.fieldName)}"], [data-se-constraint-field="${escapeSelector(item.id)}"]`
-					: `[data-se-constraint-field="${escapeSelector(item.fieldName)}"]`;
+		for (const target of this.querySelectorAll<HTMLElement>('[data-se-constraint-field]')) {
+			const fieldPath = target.getAttribute('data-se-constraint-field') ?? '';
+			const item = declaring(fieldPath);
+			if (!item) {
+				continue;
+			}
 
-			const targets = this.querySelectorAll(selector);
-			for (const target of targets) {
-				if (target instanceof HTMLElement) {
-					target.hidden = !shouldShow;
-				}
+			const { shouldShow, shouldDisable } = evaluateConstraintLogic(
+				item.constraints,
+				item.isRequired,
+				fieldPath,
+				values,
+			);
+
+			target.hidden = !shouldShow;
+			for (const field of ownedFields(target)) {
+				(field as HTMLElement & { disabled?: boolean }).disabled = shouldDisable;
 			}
 		}
 	}
@@ -222,7 +241,10 @@ export class FormInstanceElement extends RadiantElement {
 			return;
 		}
 
-		const isValid = await validateCurrentStepFields(store, fieldNamesForStep(this.config?.steps[this.currentStep]));
+		const isValid = await validateCurrentStepFields(
+			store,
+			fieldNamesForStep(this.config?.steps[this.currentStep], this.form?.getValues()),
+		);
 		if (!isValid) {
 			return;
 		}

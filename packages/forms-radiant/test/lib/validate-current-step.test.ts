@@ -19,6 +19,45 @@ describe('fieldNamesForStep', () => {
 			}),
 		).toEqual(['firstName', 'lastName']);
 	});
+
+	test('reaches fields nested inside a fieldset', () => {
+		expect(
+			fieldNamesForStep({
+				elements: [
+					{
+						$type: 'fieldset',
+						name: 'address',
+						elements: [{ name: 'street' }, { name: 'city' }],
+					},
+				],
+			}),
+		).toEqual(['address', 'address.street', 'address.city']);
+	});
+
+	test('expands an array template to one path per row', () => {
+		expect(
+			fieldNamesForStep(
+				{
+					elements: [
+						{
+							$type: 'arrayElements',
+							name: 'contacts',
+							elements: [{ name: 'email' }],
+						},
+					],
+				},
+				{ contacts: [{ email: 'a@example.com' }, { email: 'b@example.com' }] },
+			),
+		).toEqual(['contacts', 'contacts.0.email', 'contacts.1.email']);
+	});
+
+	test('falls back to the template when the array has no rows yet', () => {
+		expect(
+			fieldNamesForStep({
+				elements: [{ $type: 'arrayElements', name: 'contacts', elements: [{ name: 'email' }] }],
+			}),
+		).toEqual(['contacts', 'contacts.email']);
+	});
 });
 
 describe('validateCurrentStepFields', () => {
