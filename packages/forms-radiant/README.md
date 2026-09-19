@@ -52,6 +52,42 @@ View-owned shell, same authoring model as radiant-ui: the `FormRenderer` / `Form
 - Recipe chrome blocks read serializable `config` / `viewConfig` props plus the live `formInstanceContext`; where SSR cannot resolve context (authored children serialize before providers publish), they fall back to the initial step-0 state and hydrate the live values.
 - Published JS must keep element registrations: `sideEffects` marks the compiled chunks so bundlers do not drop the bare script imports.
 
+### Script and view files
+
+A behavior host large enough to read as its own unit lives in a `*.script.tsx`
+file beside its view, matching radiant-ui: the script owns the
+`@customElement` class, the view owns the JSX, and the view re-exports the
+element so importing the view registers it.
+
+```tsx
+// form-instance.script.tsx
+@customElement('se-form-instance')
+export class FormInstanceElement extends RadiantElement { … }
+```
+
+```tsx
+// form-instance.tsx
+/** Registers `<se-form-instance>` when this view is imported. */
+export { FormInstanceElement } from './form-instance.script';
+
+export function FormInstance({ config, … }) {
+	return jsx('se-form-instance', { 'prop:config': config, children: … });
+}
+```
+
+That re-export is the point, not bookkeeping. `@customElement` registers the
+element as a side effect of the script module loading, so a view that only named
+`'se-form-instance'` as a string would have no reference to the script at all
+and could be bundled without it — a form that renders markup and does nothing.
+The re-export is a real runtime edge, and the script is listed under
+`sideEffects` so a bundler keeps it even though the view is its only importer.
+`internals/form-renderer.script.tsx` is the same shape.
+
+Behavior that does not need the element — DOM queries, value diffing, path maths
+— belongs in `lib/` instead, where it is testable without registering a custom
+element: `lib/constraint-elements.ts`, `lib/validate-current-step.ts` and
+`lib/validation-deps.ts` are the existing examples.
+
 ## Grid layout
 
 Responsive grid layout is **pure CSS**. The engine owns the grid vocabulary —
