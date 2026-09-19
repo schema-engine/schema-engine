@@ -7,4 +7,5 @@ export { useFormDefaultValues } from './use-form-default-values';
 export { useFormActionDispatchers } from './use-form-action-dispatchers';
 export { useFormMountEffect } from './use-form-mount-effect';
 export { useFormWatcher } from './use-form-watcher';
+export { useValidationDependencies } from './use-validation-dependencies';
 export { useFormSubmitHandler } from './use-form-submit-handler';

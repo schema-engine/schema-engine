@@ -9,6 +9,7 @@ import {
 import { onContextUpdate, provideContext, type ContextProvider } from '@ecopages/radiant/context';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { resolveFormRecipe, type NormalizedFormConfig, type RecipeRegistration } from '@schema-engine/forms';
+import { flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import type { FormEngine as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import { formInstanceContext, type FormInstanceContextValue, type StepStates } from '@/contexts/form-instance-context';
 import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
@@ -17,6 +18,7 @@ import { findNearestRuiForm } from '@/lib/rui-form-utils';
 import { createConstraintLookup } from '@/lib/constraint-elements';
 import { evaluateConstraintLogic } from '@/hooks/constraint-logic';
 import { fieldNamesForStep, validateCurrentStepFields } from '@/lib/validate-current-step';
+import { connectValidationDependencies } from '@/lib/validation-deps';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
 import { FormController } from '@/adapters/radiant/controller';
 import { ConfiguredRuiForm } from '@/adapters/radiant/rui-form-shell';
@@ -70,6 +72,7 @@ export class FormInstanceElement extends RadiantElement {
 	@state currentStep = 0;
 	@state stepStates: StepStates = { completed: [], valid: [], visited: [] };
 	private form?: FormController;
+	private unwatchValidationDependencies?: () => void;
 	private unsubscribeActiveEngine?: () => void;
 
 	@provideContext<typeof formInstanceContext>({
@@ -110,6 +113,7 @@ export class FormInstanceElement extends RadiantElement {
 
 	override disconnectedCallback(): void {
 		this.unsubscribeActiveEngine?.();
+		this.stopWatchingValidationDependencies();
 		this.form?.disconnect();
 		this.form = undefined;
 		super.disconnectedCallback();
@@ -143,6 +147,7 @@ export class FormInstanceElement extends RadiantElement {
 	 */
 	private connectForm(): void {
 		const ruiForm = findNearestRuiForm(this);
+		this.stopWatchingValidationDependencies();
 		if (!ruiForm) {
 			this.form?.disconnect();
 			this.form = undefined;
@@ -150,11 +155,36 @@ export class FormInstanceElement extends RadiantElement {
 		}
 		if (this.form?.host === ruiForm) {
 			this.applyConstraints();
+			this.watchValidationDependencies();
 			return;
 		}
 		this.form?.disconnect();
 		this.form = new FormController(ruiForm);
-		this.form.connect(() => this.applyConstraints());
+		this.form.connect(() => {
+			this.applyConstraints();
+			this.watchValidationDependencies();
+		});
+	}
+
+	/**
+	 * @remarks
+	 * Idempotent because the context callback fires on every form update, while
+	 * the subscription must outlive them: it carries the previous value snapshot
+	 * that stops `validateField` from re-entering itself.
+	 */
+	private watchValidationDependencies(): void {
+		if (this.unwatchValidationDependencies || !this.config || !this.form?.ready) {
+			return;
+		}
+		this.unwatchValidationDependencies = connectValidationDependencies(
+			this.form,
+			flattenStepElements(this.config.steps),
+		);
+	}
+
+	private stopWatchingValidationDependencies(): void {
+		this.unwatchValidationDependencies?.();
+		this.unwatchValidationDependencies = undefined;
 	}
 
 	/**

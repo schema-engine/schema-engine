@@ -502,10 +502,38 @@ const passwordConfirmRule = {
 Dependencies are sent to the endpoint under `dependsOn`, keyed by the reference
 as authored.
 
-**Revalidation is not automatic yet.** A cross-field rule runs when its own
-field is validated; changing a field it _reads_ does not currently re-run it.
-Until that lands, pair cross-field rules with validation on submit, or with a
-`required` rule so the field is visited.
+#### Revalidation
+
+A cross-field rule re-runs when a field it reads changes, not only when its own
+field is validated. Correcting a password clears the "passwords must match"
+error on the confirmation without the user going back to it.
+
+A rule declares what it reads through `dependsOn` on its registration; `relate`
+returns its `fields` and `async` returns its `dependencies`. `buildDependencyIndex`
+inverts those into a change-to-dependents map over _rendered_ paths, so
+`lines.0.max` depends on `lines.0.quantity` and not on every row's quantity.
+A custom rule that reads other fields should declare `dependsOn` too, or nothing
+will re-run it:
+
+```typescript
+validationRegistry.register({
+	type: 'confirmPassword',
+	category: 'cross-field',
+	dependsOn: () => ['password'],
+	handler: (rule, context) => …,
+});
+```
+
+Two deliberate limits:
+
+- **Only direct dependents.** If `c` depends on `b` and `b` on `a`, changing `a`
+  re-validates `b` and not `c`. Transitive expansion invites cycles, and every
+  assertion reads values rather than another field's validity.
+- **Errors surface only on a field the user has reached.** A dependent is
+  re-validated when it has been touched, or on any dependent once the form has
+  been submitted — `shouldSurfaceDependentError` is the single place that
+  decides, so the two renderers cannot drift. Typing a password does not light
+  up a confirmation nobody has visited.
 
 ## API Reference
 
@@ -532,6 +560,10 @@ interface ValidationRegistration {
 	type: string;
 	category: 'string' | 'number' | 'array' | 'boolean' | 'date' | 'generic' | 'cross-field';
 	handler: (rule: ValidationRule, context: ValidationContext) => z.ZodMiniType;
+	/** Field references this rule reads, so renderers know when to re-run it. */
+	dependsOn?: (rule: ValidationRule) => readonly string[];
+	/** Field `$type` values that receive this rule when the author omitted it. */
+	defaultFor?: readonly string[];
 }
 ```
 

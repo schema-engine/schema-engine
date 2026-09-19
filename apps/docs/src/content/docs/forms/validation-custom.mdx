@@ -279,6 +279,7 @@ the form root.
 validationRegistry.register({
 	type: 'confirmPassword',
 	category: 'cross-field',
+	dependsOn: () => ['password'],
 	handler: (rule, context) => {
 		return z
 			.string()
@@ -294,6 +295,7 @@ validationRegistry.register({
 validationRegistry.register({
 	type: 'conditionalRequired',
 	category: 'cross-field',
+	dependsOn: (rule) => (rule.value?.dependsOn ? [rule.value.dependsOn] : []),
 	handler: (rule, context) => {
 		return z.optional(z.string()).check(
 			z.refine((value) => {
@@ -316,10 +318,15 @@ resolves `password` to `accounts.1.password`, not `accounts.0.password`.
 `context.values` holds the whole form as a nested tree when a rule genuinely
 needs more than one reference.
 
-> **Revalidation is not automatic yet:**
-> A cross-field rule runs when its own field is validated. Changing a field it
-> reads does not currently re-run it, so pair cross-field rules with validation
-> on submit.
+`dependsOn` is what tells a renderer when to re-run the rule. Without it the rule
+still validates correctly, but only when its own field is validated — changing a
+field it reads will not re-run it.
+
+A cross-field rule that declares `dependsOn` re-runs when a field it reads
+changes, so correcting a password clears the "passwords must match" error on the
+confirmation. The error surfaces only once the dependent field has been touched,
+or once the form has been submitted, so typing a password does not light up a
+confirmation nobody has reached.
 
 Authoring the field is unchanged:
 

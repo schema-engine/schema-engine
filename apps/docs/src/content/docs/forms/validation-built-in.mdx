@@ -468,10 +468,11 @@ row rather than row zero:
 A dotted reference is absolute from the form root, so `billing.country` always
 means the same field wherever it is written.
 
-> **Revalidation is not automatic yet:**
-> A cross-field rule runs when its own field is validated. Changing a field it
-> reads does not currently re-run it, so pair cross-field rules with validation
-> on submit.
+A cross-field rule re-runs when a field it reads changes, not only when its own
+field is validated, so correcting a password clears the "passwords must match"
+error on the confirmation. The error surfaces only once the dependent field has
+been touched, or once the form has been submitted, so typing a password does not
+light up a confirmation nobody has reached.
 
 ## Async Validation
 

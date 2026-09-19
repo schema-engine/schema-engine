@@ -311,6 +311,15 @@ export interface ValidationRegistration<TRule extends { type: string } = { type:
 	 */
 	handler: (rule: TRule, context: ValidationContext) => z.ZodMiniType;
 	/**
+	 * Field references this rule reads besides the value under test.
+	 *
+	 * @remarks
+	 * Renderers re-validate the declaring field when any of these change. Returned
+	 * as authored references; the caller resolves them against the field's path,
+	 * so a rule inside an array row watches that row.
+	 */
+	dependsOn?: (rule: TRule) => readonly string[];
+	/**
 	 * Field `$type` values that receive this rule when the author omitted it.
 	 *
 	 * @remarks Lets an integration attach a rule (for example `phone` on

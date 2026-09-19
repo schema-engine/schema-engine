@@ -92,6 +92,18 @@ export class ValidationRegistry {
 	}
 
 	/**
+	 * Field references a rule reads besides the value under test.
+	 *
+	 * @remarks
+	 * Lives on the registry because the answer comes from the registration, and
+	 * `get` is keyed by the built-in rule union — a consumer-registered type is a
+	 * plain string and would need a cast at every call site.
+	 */
+	getRuleDependencies(rule: { type: string }): readonly string[] {
+		return this.validations.get(rule.type)?.dependsOn?.(rule) ?? [];
+	}
+
+	/**
 	 * Get all registered validation types
 	 */
 	getRegisteredTypes(): string[] {

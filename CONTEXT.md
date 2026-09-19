@@ -51,6 +51,14 @@ argument carries — `resolve`, plus the form's nested `values` and the field's
 rendered `fieldPath`. The context is required rather than optional so a renderer
 cannot omit it and leave cross-field rules silently passing, which is what
 happened while it was optional.
+
+A rule that reads other fields declares them through `dependsOn` on its
+registration, and `buildDependencyIndex` inverts those declarations into a
+change-to-dependents map over rendered paths. Both renderers re-validate
+dependents from that map and both ask `shouldSurfaceDependentError` whether the
+result may be shown — touched, or the form submitted. That gate lives in the
+engine rather than in each renderer, because the constraint subsystem already
+demonstrated what happens when a decision of this class is made twice.
 See [the controller contract](./packages/forms-radiant/src/adapters/radiant/controller/README.md).
 
 ## Grid theme ownership

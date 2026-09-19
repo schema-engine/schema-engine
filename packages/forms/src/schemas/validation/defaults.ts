@@ -201,6 +201,7 @@ export const defaultValidations: AnyValidationRegistration[] = [
 	{
 		type: 'async',
 		category: 'cross-field',
+		dependsOn: (rule: AsyncRule) => rule.dependencies ?? [],
 		handler: (rule: AsyncRule, context: ValidationContext) => createAsyncValidationHandler(rule, context),
 	},
 

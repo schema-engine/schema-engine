@@ -86,6 +86,7 @@ const EMPTINESS_ASSERTIONS = new Set<RelationAssert>(['atLeastOne', 'exactlyOne'
 export const relateValidation: ValidationRegistration<RelateRule> = {
 	type: 'relate',
 	category: 'cross-field',
+	dependsOn: (rule) => rule.fields,
 	handler: (rule, context) =>
 		z.any().check(
 			z.refine((value: unknown) => {
