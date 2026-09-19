@@ -1,4 +1,5 @@
 import { useContext } from 'react';
+import { getDefaultGridTheme } from '@schema-engine/forms/lib/grid-styles';
 import { useFormContext as useAdapterFormContext } from '@/adapters/context';
 import { FormEngineContext, FormInstanceContext } from '../components/provider';
 import type { FormEngineContextValue, FormInstanceContextValue } from '../components/provider';
@@ -37,4 +38,17 @@ export function useFormEngine(): FormEngineContextValue {
 
 export function useOptionalFormEngine(): FormEngineContextValue | null {
 	return useContext(FormEngineContext);
+}
+
+/**
+ * Theme id of the grid that owns the field being rendered.
+ *
+ * @remarks
+ * Field hosts set `data-se-grid-theme` to this value so the engine's generated
+ * stylesheet matches them and nested grids stay isolated. Single resolver for
+ * the React renderer — the engine context is the only source, with the library
+ * default for hosts rendered outside a `FormEngineProvider`.
+ */
+export function useGridThemeId(): string {
+	return useOptionalFormEngine()?.engine.getGridTheme().id ?? getDefaultGridTheme().id;
 }

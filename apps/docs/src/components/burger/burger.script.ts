@@ -18,7 +18,7 @@ export class RadiantBurger extends RadiantElement {
 		document.body.classList.toggle('overflow-hidden', isExpanded);
 
 		if (isExpanded) {
-			window.addEventListener('resize', this.onResizeReset, { once: true });
+			window.addEventListener('resize', () => this.onResizeReset(), { once: true });
 		}
 	}
 

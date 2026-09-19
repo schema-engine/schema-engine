@@ -17,7 +17,7 @@ export { FormRendererElement, type FormRendererProps } from './form-renderer.scr
 export function FormRenderer({
 	engine,
 	adapter,
-	className = '',
+	className,
 	style,
 	children,
 	...props
@@ -30,7 +30,7 @@ export function FormRenderer({
 			throw new Error('FormRenderer requires an engine when config.view is set.');
 		}
 		return (
-			<div class={`se-form-renderer ${className}`.trim()} style={style}>
+			<div classes={['se-form-renderer', className]} style={style}>
 				<FormProvider {...props} engine={resolvedEngine}>
 					{children}
 				</FormProvider>
@@ -39,7 +39,7 @@ export function FormRenderer({
 	}
 
 	return jsx('se-form-renderer', {
-		class: `se-form-renderer ${className}`.trim(),
+		classes: ['se-form-renderer', className],
 		style,
 		'prop:config': props.config,
 		'prop:engine': resolvedEngine,

@@ -45,9 +45,13 @@ function DraftConsent() {
 	const consent = useGDPRConsent();
 
 	return consent.hasConsent() ? (
-		<button type="button" onClick={consent.revokeConsent}>Revoke draft consent</button>
+		<button type="button" onClick={consent.revokeConsent}>
+			Revoke draft consent
+		</button>
 	) : (
-		<button type="button" onClick={consent.grantConsent}>Allow draft storage</button>
+		<button type="button" onClick={consent.grantConsent}>
+			Allow draft storage
+		</button>
 	);
 }
 ```
@@ -67,10 +71,7 @@ function TrackSubmit() {
 	const tracker = useGTMTracker();
 
 	return (
-		<button
-			type="button"
-			onClick={() => tracker.pushFormEvent('form_submit', undefined, { formId: 'contact' })}
-		>
+		<button type="button" onClick={() => tracker.pushFormEvent('form_submit', undefined, { formId: 'contact' })}>
 			Track submit
 		</button>
 	);

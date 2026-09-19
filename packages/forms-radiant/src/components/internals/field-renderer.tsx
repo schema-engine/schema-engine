@@ -5,7 +5,7 @@ import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { renderRegisteredElement } from './render-registered-element';
 import { getActiveFormEngine } from '@/registries/active-engine';
 import { evaluateConstraintLogic } from '@/hooks/constraint-logic';
-import { getFieldGridStyles } from '@/hooks/grid-styles';
+import { mergeFieldGridHost } from '@/hooks/grid-styles';
 
 export interface FormElementProps {
 	/**
@@ -53,13 +53,18 @@ export function FormElement({
 	);
 	const fieldName =
 		name ?? ('name' in config ? config.name : undefined) ?? id ?? ('id' in config ? config.id : undefined) ?? '';
-	const fieldGridStyles = getFieldGridStyles('grid' in config ? config.grid : undefined);
+	const fieldHost = mergeFieldGridHost(
+		'grid' in config ? config.grid : undefined,
+		style,
+		resolvedEngine.getGridTheme().id,
+	);
 
 	return (
 		<div
-			class={`se-form-constraint ${className ?? ''}`.trim()}
+			classes={['se-form-field', 'se-form-constraint', className]}
 			data-se-constraint-field={fieldName}
-			style={{ ...fieldGridStyles, ...style }}
+			data-se-grid-theme={fieldHost.themeId}
+			style={fieldHost.style}
 			hidden={!shouldShow}
 		>
 			{renderRegisteredElement(

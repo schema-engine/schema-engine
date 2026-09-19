@@ -52,6 +52,27 @@ View-owned shell, same authoring model as radiant-ui: the `FormRenderer` / `Form
 - Recipe chrome blocks read serializable `config` / `viewConfig` props plus the live `formInstanceContext`; where SSR cannot resolve context (authored children serialize before providers publish), they fall back to the initial step-0 state and hydrate the live values.
 - Published JS must keep element registrations: `sideEffects` marks the compiled chunks so bundlers do not drop the bare script imports.
 
+## Grid layout
+
+Responsive grid layout is **pure CSS**. The engine owns the grid vocabulary —
+breakpoint thresholds, gap tokens, and the default minimum column width — via
+`createRadiantFormEngine({ grid: { breakpoints, gap, minColumnWidth } })`;
+forms describe their layout with `columns`, `gap`/`gapX`/`gapY`
+(`none | compact | default | loose | wide` or a CSS value), `responsive`
+entries per breakpoint, and per-field `grid.column`/`grid.row` placement with
+per-breakpoint `hidden` overrides.
+
+The renderer emits the generated theme stylesheet (scoped to
+`data-se-grid-theme`) and the form's CSS variables inline during render, so
+SSR output is styled with no FOUC and hydration is not required for layout.
+Media queries follow the viewport width. Sparse responsive entries inherit
+from the preceding breakpoint, then the top-level value; `gapX`/`gapY` beat an
+entry's `gap`. Only authored values are emitted inline — the generated
+stylesheet supplies the defaults, chains each breakpoint back through the
+narrower ones, and resets the variables at every host so nested grids stay
+isolated. Breakpoint thresholds on the engine must keep named order
+(`sm ≤ md ≤ lg ≤ xl ≤ 2xl`); `rem`/`em` compare at a 16px root.
+
 ## MVP elements
 
 - input, textarea, number, select, checkbox, switch, radio, submit-button
@@ -79,4 +100,4 @@ pnpm storybook   # port 6007
 
 From monorepo root: `pnpm dev:radiant-storybook`.
 
-Stories default to **client** render. Use the Storybook toolbar **Radiant render** control to spot-check `ssr-hydrate` and `ssr-static` on any story — same contract as radiant-ui. Play functions skip `ssr-static` (markup-only iframe, no client module).
+Stories default to **client** render. Use the Storybook toolbar **Radiant render** control to spot-check `ssr-hydrate` and `ssr-static` on any story — same contract as radiant-ui. Play functions skip `ssr-static` (markup-only iframe, no client module). SSR layout acceptance renders the real `RecipeRenderer` through `renderToString`: `test/ssr/grid-layout-ssr.markup.test.ts` checks the emitted stylesheet and field variables, and `test/ssr/grid-layout-ssr.acceptance.browser.test.ts` loads that HTML in an isolated iframe without app JS and checks layout at two widths. Both share `test-utils/` with the React package.

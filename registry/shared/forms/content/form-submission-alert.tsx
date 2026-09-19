@@ -1,7 +1,7 @@
 /** @jsxImportSource react */
 import { useEffect } from 'react';
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
-import { useSubmissionState, type SubmissionError } from '@schema-engine/forms-react/hooks';
+import { useFieldHost, useSubmissionState, type SubmissionError } from '@schema-engine/forms-react/hooks';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import type { SubmissionAlertProps } from './form-submission-alert.types';
 
@@ -22,8 +22,11 @@ export function FormSubmissionAlert({
 	errorMessage = DEFAULT_ERROR_MESSAGE,
 	pendingMessage = DEFAULT_PENDING_MESSAGE,
 	className,
+	grid,
+	style,
 }: SubmissionAlertProps) {
 	const { submissionState, clearSubmission } = useSubmissionState();
+	const host = useFieldHost(grid, style);
 	useEffect(() => {
 		let timer: ReturnType<typeof setTimeout>;
 
@@ -47,7 +50,11 @@ export function FormSubmissionAlert({
 	switch (submissionState.status) {
 		case 'pending':
 			return (
-				<Alert variant="default" className={`grid-cols-[1rem_1fr] gap-x-3 ${className || ''}`}>
+				<Alert
+					{...host}
+					variant="default"
+					className={`${host.className} grid-cols-[1rem_1fr] gap-x-3 ${className || ''}`}
+				>
 					<div className="size-4 mt-0.5">
 						<Loader2 className="size-4 animate-spin" />
 					</div>
@@ -57,7 +64,11 @@ export function FormSubmissionAlert({
 
 		case 'success':
 			return (
-				<Alert variant="default" className={`border-emerald-500/50 text-emerald-700 ${className || ''}`}>
+				<Alert
+					{...host}
+					variant="default"
+					className={`${host.className} border-emerald-500/50 text-emerald-700 ${className || ''}`}
+				>
 					<CheckCircle2 className="size-4" />
 					<AlertTitle>{submissionState.successMessage || successMessage}</AlertTitle>
 				</Alert>
@@ -65,7 +76,7 @@ export function FormSubmissionAlert({
 
 		case 'error':
 			return (
-				<Alert variant="destructive" className={className}>
+				<Alert {...host} variant="destructive" className={`${host.className} ${className || ''}`}>
 					<XCircle className="size-4" />
 					<AlertTitle>Submission Error</AlertTitle>
 					<AlertDescription>

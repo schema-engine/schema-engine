@@ -1,7 +1,6 @@
 import { useState, type ReactNode } from 'react';
 
-const cn = (...classes: (string | false | null | undefined)[]) =>
-	classes.filter(Boolean).join(' ');
+const cn = (...classes: (string | false | null | undefined)[]) => classes.filter(Boolean).join(' ');
 
 interface CodeBlockProps {
 	code: string;

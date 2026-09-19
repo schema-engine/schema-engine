@@ -4,6 +4,7 @@ import { applyFieldOverlay } from '@schema-engine/forms';
 import type { NormalizedElementConfig, FieldOverlay } from '@schema-engine/forms';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { evaluateConstraintLogic } from '@/hooks/constraint-logic';
+import { renderWithOwningFormEngine } from '@/contexts/form-engine-owner';
 import { ElementError } from './element-error';
 
 /** Live values the constraint snapshot is evaluated against. */
@@ -61,5 +62,5 @@ export function renderRegisteredElement(
 		overlays,
 	);
 
-	return elementRegistration.render(enhancedConfig) as JsxRenderable;
+	return renderWithOwningFormEngine(engine, () => elementRegistration.render(enhancedConfig) as JsxRenderable);
 }

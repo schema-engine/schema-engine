@@ -1,6 +1,6 @@
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import type { FormController } from '@/adapters/radiant/controller';
-import { getFieldGridStyles } from './grid-styles';
+import { mergeFieldGridHost } from './grid-styles';
 
 export function combineHandlers<T>(controllerHandler: (value: T) => void, propsHandler?: (value: T) => void) {
 	return (value: T) => {
@@ -41,10 +41,7 @@ export function bindControlledFormElement<TFieldValue = unknown>(
 		'aria-describedby': error ? `${config.id}-error` : undefined,
 	};
 
-	const containerStyles = {
-		...getFieldGridStyles(config.grid),
-		...config.style,
-	};
+	const containerStyles = mergeFieldGridHost(config.grid, config.style).style;
 
 	return {
 		value: (value ?? '') as TFieldValue,

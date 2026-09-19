@@ -58,9 +58,7 @@ export function formatPhoneInputValue(input: string, country: CountryCode, inter
 	}
 
 	if (international) {
-		const withPlus = incomplete.startsWith('+')
-			? incomplete
-			: `+${getCountryCallingCode(country)}${incomplete}`;
+		const withPlus = incomplete.startsWith('+') ? incomplete : `+${getCountryCallingCode(country)}${incomplete}`;
 		return formatIncompletePhoneNumber(withPlus);
 	}
 

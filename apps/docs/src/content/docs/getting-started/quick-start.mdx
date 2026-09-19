@@ -19,7 +19,10 @@ import { createReactFormEngine } from '@schema-engine/forms-react';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
-export const formEngine = createReactFormEngine({ elements: schemaFormRegistrations, recipes: schemaFormRecipeRegistrations });
+export const formEngine = createReactFormEngine({
+	elements: schemaFormRegistrations,
+	recipes: schemaFormRecipeRegistrations,
+});
 ```
 
 > **Note:** Create the form engine once and reuse it across your entire application. The engine instance is immutable after calling `build()`.

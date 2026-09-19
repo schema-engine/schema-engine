@@ -29,7 +29,10 @@
       "registryDependencies": [
         "label"
       ],
-      "dependencies": [],
+      "dependencies": [
+        "@schema-engine/forms",
+        "@schema-engine/forms-react"
+      ],
       "files": [
         {
           "path": "../shared/primitives/field.tsx",

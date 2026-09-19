@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { useRef, useState, type KeyboardEvent } from 'react';
 import { cn } from '@/lib/utils';
 
 type DateParts = {
@@ -31,23 +31,32 @@ function isValidParts(parts: DateParts) {
 	}
 
 	const date = new Date(parts.year, parts.month - 1, parts.day);
-	return (
-		date.getFullYear() === parts.year && date.getMonth() + 1 === parts.month && date.getDate() === parts.day
-	);
+	return date.getFullYear() === parts.year && date.getMonth() + 1 === parts.month && date.getDate() === parts.day;
 }
 
+/**
+ * Three-part date entry backed by a draft the user edits freely.
+ *
+ * @remarks
+ * A new `value` is adopted during render rather than from an effect, so the
+ * inputs never paint one frame of the previous date. The comparison is by
+ * timestamp, so a fresh `Date` for the same instant cannot reset the draft
+ * mid-edit. `committed` holds the last valid parts to revert to on blur.
+ */
 function DateInput({ value, onChange, className, disabled }: DateInputProps) {
 	const [parts, setParts] = useState<DateParts>(() => toParts(value));
-	const initialParts = useRef(parts);
+	const [committed, setCommitted] = useState<DateParts>(parts);
+	const [syncedTime, setSyncedTime] = useState(() => value?.getTime());
 	const monthRef = useRef<HTMLInputElement>(null);
 	const dayRef = useRef<HTMLInputElement>(null);
 	const yearRef = useRef<HTMLInputElement>(null);
 
-	useEffect(() => {
+	if (value?.getTime() !== syncedTime) {
 		const next = toParts(value);
+		setSyncedTime(value?.getTime());
 		setParts(next);
-		initialParts.current = next;
-	}, [value]);
+		setCommitted(next);
+	}
 
 	const commit = (next: DateParts) => {
 		setParts(next);
@@ -68,17 +77,17 @@ function DateInput({ value, onChange, className, disabled }: DateInputProps) {
 
 	const handleBlur = (field: keyof DateParts, raw: string) => {
 		if (!raw) {
-			setParts(initialParts.current);
+			setParts(committed);
 			return;
 		}
 
 		const next = { ...parts, [field]: Number(raw) };
 		if (!isValidParts(next)) {
-			setParts(initialParts.current);
+			setParts(committed);
 			return;
 		}
 
-		initialParts.current = next;
+		setCommitted(next);
 	};
 
 	const handleKeyDown = (field: keyof DateParts) => (event: KeyboardEvent<HTMLInputElement>) => {

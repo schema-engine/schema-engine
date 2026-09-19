@@ -1,7 +1,6 @@
 import { RuiSlider } from '@ecopages/radiant-ui/slider';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
-import { getFieldGridStyles } from '@/hooks/grid-styles';
 import { toFieldRules } from '@/lib/field-rules';
 import type { SliderFieldProps } from '@/registry/forms/inputs/form-slider.types';
 
@@ -19,7 +18,8 @@ export function FormSlider({
 			hiddenLabel={!config.label}
 			required={isFieldRequired(config.rules)}
 			description={config.description}
-			style={{ ...getFieldGridStyles(config.grid), ...config.style }}
+			grid={config.grid}
+			style={config.style}
 			rules={toFieldRules(config.rules)}
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}

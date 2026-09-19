@@ -34,3 +34,53 @@ optional lifecycle wiring around that controller.
 Radiant UI registration uses flat dotted field names. Controller reads, action
 context values, constraints, and submission use the engine's nested value tree.
 See [the controller contract](./packages/forms-radiant/src/adapters/radiant/controller/README.md).
+
+## Grid theme ownership
+
+Responsive grid layout is pure CSS. The **engine** owns the grid vocabulary —
+breakpoint thresholds (`sm`…`2xl`), gap tokens (`none | compact | default |
+loose | wide`), and the default minimum column width — through the `grid`
+option on engine creation. The **form** owns layout intent: `columns`,
+`gap`/`gapX`/`gapY` selection, `responsive` entries per breakpoint, and
+per-field `grid` placement. Renderers emit the theme-scoped stylesheet
+(`data-se-grid-theme` identity) and per-form CSS variables inline during
+render, so responsive behavior is media-query driven with no runtime
+observers, SSR output is styled before hydration, and two engines with
+different themes cannot overwrite each other. Field names must not collide
+with `HTMLFormElement` properties in Radiant (e.g. `tagName`, `elements`) —
+the form host carries field state keyed by field name. Configured breakpoint
+thresholds must preserve named cascade order (`sm ≤ md ≤ lg ≤ xl ≤ 2xl`);
+`rem`/`em` lengths are compared at a 16px root.
+
+The split between the two is strict: **the stylesheet owns behavior** —
+neutral defaults, the breakpoint cascade (each media query falls back through
+the narrower slots), and the `initial` resets that stop a nested grid or field
+inheriting its parent's placement. **Inline custom properties carry only
+values** an author wrote, so an element without a `grid` config emits no style
+attribute. `place-*` shorthands are resolved into their axis longhands before
+emission rather than declared in CSS, because a shorthand would have to follow
+the longhands in the generated rule and would reset them; the split follows the
+CSS grammar, so a two-keyword axis value such as `safe center` stays on one
+axis.
+
+Two contracts follow from the field rule outranking a component's own class.
+Gap tokens (`--se-grid-gap-*`) are never declared on an element — the engine
+declares `--se-grid-gap-base-*` and reads the public token with that as the
+fallback — so a host's `:root` override still applies. Gap tokens may change by
+breakpoint through the engine's `responsive` option, which is breakpoint-major
+like a form's own: each entry lists the tokens that change at that width. A ramp
+redeclares only the base variable inside the generated media queries, so a form
+selecting `gap: 'default'` inherits the rhythm and rhythm stays engine vocabulary
+rather than form intent. A host override replaces the token at every width, ramp
+included, since the public token is the first `var()` argument.
+
+Per-element rhythm is part of the same mechanism, not a second one. An element's
+`grid.marginBlockStart` / `grid.marginBlockEnd` take the same gap tokens and ride
+the shared field property table, so they inherit the breakpoint cascade and the
+inheritance resets and one system keeps owning the block axis. They apply to any
+element that renders a `.se-form-field` host carrying the engine's theme id —
+inputs get it from the field primitive, and a content or decoration element opts
+in with `useFieldHost` (React) or `mergeFieldGridHost` (Radiant). An element
+without that host ignores its `grid` config entirely. And a field host with
+its own layout sets `--se-field-display-mode` instead of `display`, which
+responsive `hidden` toggles against rather than forcing `block`.

@@ -45,6 +45,66 @@ const contactForm = engine.defineForm({
 
 Use `engine.extend({ ... })` to add registrations without re-spreading shared barrels. Author forms with `engine.defineForm({ ... })` object literals.
 
+### Grid theme
+
+The engine also owns the grid layout vocabulary through the optional `grid`
+option: breakpoint thresholds (`sm`…`2xl`, CSS lengths), gap token definitions
+(`none | compact | default | loose | wide`), and the default minimum column
+width for `columns: 'auto'` grids. Gap tokens can change by breakpoint, so one
+token carries a whole responsive rhythm and a form that selects it inherits that
+rhythm without any `responsive` entry of its own:
+
+```ts
+createFormEngine({
+	grid: {
+		gap: { default: '1rem', loose: '1.5rem' },
+		responsive: {
+			md: { default: '1.25rem' },
+			lg: { default: '1.5rem', loose: '2rem' },
+		},
+	},
+});
+```
+
+`responsive` is breakpoint-major, matching a form's own `responsive`: each entry
+lists the tokens that change at that width, and unlisted tokens keep the value
+from the next narrower one. Base values stay in `gap`. Tokens are axis-agnostic —
+a form chooses which token each axis uses through `gapX`/`gapY`, so a theme never
+declares an axis. Overriding the public token (`--se-grid-gap-default`) from a
+host replaces it at every width, ramp included — host declarations beat the
+engine's by design.
+
+An individual element can set its own rhythm with `grid.marginBlockStart` and
+`grid.marginBlockEnd`, which accept the same gap tokens and are responsive per
+breakpoint like the rest of `grid`:
+
+```ts
+{ $type: 'submission-alert', id: 'status', name: 'status',
+  grid: { marginBlockEnd: 'wide', responsive: { lg: { marginBlockEnd: 'loose' } } } }
+```
+
+This applies to any element rendering a `.se-form-field` host with the engine's
+theme id — not only inputs. Renderers expose a helper for elements that build
+their own container (`useFieldHost` in React, `mergeFieldGridHost` in Radiant). Every engine exposes a frozen
+`engine.getCompiledGrid()` (theme plus stylesheet), with `getGridTheme()` as a
+convenience getter, computed once at construction (library defaults apply when
+`grid` is omitted). Configured breakpoint
+thresholds must preserve named cascade order (`sm ≤ md ≤ lg ≤ xl ≤ 2xl`);
+`rem`/`em` lengths compare at a 16px root so mixed units cannot invert the
+sequence. Forms consume those tokens in their `grid` configuration (`columns`,
+`gap`/`gapX`/`gapY`, `responsive` entries, per-field `grid` placement).
+Renderers emit the scoped stylesheet (`data-se-grid-theme`) inline during
+render, so responsive layout is CSS-driven — no runtime observers, and SSR
+output is styled before hydration. The stylesheet owns the neutral defaults,
+the breakpoint cascade, and the resets that keep nested grids isolated; inline
+styles carry only the values an author actually wrote, so an unconfigured field
+emits none at all. Gap tokens stay host-overridable: the engine declares its
+defaults privately and reads `var(--se-grid-gap-<token>, …)`, so a `:root`
+override still wins. A field host that needs its own layout sets
+`--se-field-display-mode` rather than `display`, because the generated field
+rule outranks a bare class. `engine.extend()` inherits the source engine's grid theme;
+`grid` is not an extend option.
+
 Single-step forms may omit `view` to render fields directly. Multi-step forms
 that omit `view` use the registered `bare-controls` recipe at **render** time.
 `engine.validateForm` still succeeds if that recipe is missing; the renderer

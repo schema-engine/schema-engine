@@ -171,8 +171,7 @@ export class ActionExecutor<TBaseContext = unknown, TTrigger = string> {
 		triggeredBy?: TConfig,
 	): Promise<ActionExecutionResult> {
 		const actionRegistration = this.registry.getAction(action.$type) as
-			| ActionRegistration<TConfig, TBaseContext, TTrigger>
-			| undefined;
+			ActionRegistration<TConfig, TBaseContext, TTrigger> | undefined;
 		if (!actionRegistration) {
 			return {
 				success: false,

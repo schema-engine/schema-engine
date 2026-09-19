@@ -15,8 +15,9 @@ import type {
 	RecipeRegistrationConstraint,
 	ActionRegistrationConstraint,
 } from '@/builder/types.utils';
-import type { CreateFormEngineOptions } from './create-form-engine';
+import type { ExtendFormEngineOptions } from './create-form-engine';
 import { buildFormEngine } from './build-form-engine';
+import type { CompiledGrid, NormalizedGridTheme } from '@/lib/grid-styles';
 import {
 	describeRecipeFromRegistration,
 	describeViewCatalogFromRecipes,
@@ -36,6 +37,7 @@ export interface EngineRegistries {
 	schemaArtifacts?: FormEngineSchemaArtifacts;
 	schemaRegistry?: FormEngineSchemaMetadataRegistry;
 	formConfigSchema?: z.ZodMiniType;
+	compiledGrid: CompiledGrid;
 }
 
 function resolveSchemaArtifacts(registries: EngineRegistries): FormEngineSchemaArtifacts {
@@ -62,6 +64,7 @@ export class FormEngine<
 > {
 	private readonly registries: EngineRegistries;
 	private readonly schemaArtifacts: FormEngineSchemaArtifacts;
+	private readonly compiledGrid: CompiledGrid;
 
 	constructor(registries: EngineRegistries) {
 		const schemaArtifacts = resolveSchemaArtifacts(registries);
@@ -73,8 +76,10 @@ export class FormEngine<
 			schemaArtifacts,
 			schemaRegistry: schemaArtifacts.metadataRegistry,
 			formConfigSchema: schemaArtifacts.formConfigValidator,
+			compiledGrid: registries.compiledGrid,
 		};
 		this.schemaArtifacts = schemaArtifacts;
+		this.compiledGrid = registries.compiledGrid;
 
 		logger.debug('FormEngine initialized', {
 			elements: this.registries.elements.size,
@@ -113,6 +118,23 @@ export class FormEngine<
 
 	hasRecipe(id: string): boolean {
 		return this.registries.recipes.has(id);
+	}
+
+	/**
+	 * The engine's immutable compiled grid: the resolved theme and its stylesheet.
+	 *
+	 * @remarks
+	 * Compiled once when the engine is built. Renderers emit `css` inside the
+	 * rendered form markup (React hoists and dedupes by key; Radiant renders it
+	 * inline), so SSR output is styled with no FOUC and no runtime injection.
+	 */
+	getCompiledGrid(): CompiledGrid {
+		return this.compiledGrid;
+	}
+
+	/** The engine's immutable grid theme (computed once at construction). */
+	getGridTheme(): NormalizedGridTheme {
+		return this.compiledGrid.theme;
 	}
 
 	getAction(id: string): BuilderActionRegistration | undefined {
@@ -274,7 +296,7 @@ export class FormEngine<
 		const TNewRecipes extends readonly RecipeRegistrationConstraint[] = readonly [],
 		const TNewActions extends readonly ActionRegistrationConstraint[] = readonly [],
 	>(
-		options?: CreateFormEngineOptions<TNewElements, TNewRecipes, TNewActions>,
+		options?: ExtendFormEngineOptions<TNewElements, TNewRecipes, TNewActions>,
 	): FormEngine<
 		LastWinsMerge<TElements, MergedRegistrationMap<TNewElements>>,
 		LastWinsMerge<TRecipes, MergedRegistrationMap<TNewRecipes>>,
@@ -285,6 +307,7 @@ export class FormEngine<
 			recipes: [...this.getAllRecipes(), ...(options?.recipes ?? [])],
 			actions: [...this.getAllActions(), ...(options?.actions ?? [])],
 			catalog: options?.catalog,
+			compiledGrid: this.compiledGrid,
 		}) as FormEngine<
 			LastWinsMerge<TElements, MergedRegistrationMap<TNewElements>>,
 			LastWinsMerge<TRecipes, MergedRegistrationMap<TNewRecipes>>,

@@ -1,5 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 import { RadiantCopyForLlm } from './copy-for-llm.script';
+
+/** Held from `spyOn` so assertions never reference the unbound clipboard method. */
+let writeText: MockInstance<typeof navigator.clipboard.writeText>;
 
 function resetDom(): void {
 	document.body.innerHTML = '';
@@ -40,7 +43,7 @@ describe('RadiantCopyForLlm', () => {
 				text: async () => '# Docs page',
 			})),
 		);
-		vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
+		writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
 	});
 
 	afterEach(() => {
@@ -57,7 +60,7 @@ describe('RadiantCopyForLlm', () => {
 			expect(button.dataset.copied).toBe('true');
 		});
 		expect(button.dataset.copyError).toBe('false');
-		expect(navigator.clipboard.writeText).toHaveBeenCalledWith('# Docs page');
+		expect(writeText).toHaveBeenCalledWith('# Docs page');
 	});
 
 	it('shows an error state when the fetch fails', async () => {
@@ -73,7 +76,7 @@ describe('RadiantCopyForLlm', () => {
 			expect(button.dataset.copyError).toBe('true');
 		});
 		expect(button.dataset.copied).toBe('false');
-		expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
+		expect(writeText).not.toHaveBeenCalled();
 	});
 
 	it('resets copied state after navigation swap', async () => {

@@ -33,6 +33,7 @@ export default defineConfig({
 	test: {
 		projects: [
 			{
+				plugins: [react()],
 				resolve: { alias },
 				test: {
 					name: 'unit',
@@ -48,6 +49,7 @@ export default defineConfig({
 					name: 'browser',
 					include: [
 						'test/**/*.test.tsx',
+						'test/**/*.browser.test.tsx',
 						'test/adapters/action-context.test.ts',
 						'src/stories/**/*.test.{ts,tsx}',
 						'**/*.test-browser.{ts,tsx}',
@@ -66,11 +68,13 @@ export default defineConfig({
 				resolve: { alias },
 				test: {
 					name: 'storybook',
+					setupFiles: ['./.storybook/vitest.setup.ts'],
 					browser: {
 						enabled: true,
 						headless: true,
 						provider: playwright(),
 						instances: [{ browser: 'chromium' }],
+						viewport: { width: 1280, height: 720 },
 					},
 				},
 			},

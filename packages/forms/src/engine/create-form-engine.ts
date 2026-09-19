@@ -8,6 +8,7 @@ import type {
 } from '@/builder/types.utils';
 import type { FormEngine } from './form-engine';
 import type { SchemaMetadataCatalog } from './schema-metadata-catalog';
+import type { GridThemeOptions } from '@/lib/grid-styles';
 
 export interface CreateFormEngineOptions<
 	TElements extends readonly ElementRegistrationConstraint[] = readonly [],
@@ -18,7 +19,16 @@ export interface CreateFormEngineOptions<
 	recipes?: TRecipes;
 	actions?: TActions;
 	catalog?: SchemaMetadataCatalog;
+	/** Engine-level grid vocabulary: breakpoint thresholds, gap tokens, default min column width. */
+	grid?: GridThemeOptions;
 }
+
+/** Options for {@link FormEngine.extend}; grid theme is always inherited from the source engine. */
+export type ExtendFormEngineOptions<
+	TElements extends readonly ElementRegistrationConstraint[] = readonly [],
+	TRecipes extends readonly RecipeRegistrationConstraint[] = readonly [],
+	TActions extends readonly ActionRegistrationConstraint[] = readonly [],
+> = Omit<CreateFormEngineOptions<TElements, TRecipes, TActions>, 'grid'>;
 
 /** {@link FormEngine} specialization produced from registration lists. */
 export type FormEngineFromOptions<
@@ -54,5 +64,6 @@ export function createFormEngine<
 		recipes: options?.recipes,
 		actions: options?.actions,
 		catalog: options?.catalog,
+		grid: options?.grid,
 	}) as FormEngineFromOptions<TElements, TRecipes, TActions>;
 }
