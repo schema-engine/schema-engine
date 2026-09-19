@@ -13,7 +13,7 @@ export function ElementError({ title, message, componentType, className, style }
 	return (
 		<div className={cx('rounded-lg border border-red-200 bg-red-50 p-4', className)} style={style}>
 			<div className="flex-1">
-				<p className="text-red-900 font-semibold flexgap-2">
+				<p className="text-red-900 font-semibold flex gap-2">
 					<span className="text-red-600 text-lg font-semibold">[error] </span>
 					{title}
 				</p>
