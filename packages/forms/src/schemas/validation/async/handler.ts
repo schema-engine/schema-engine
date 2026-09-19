@@ -1,5 +1,6 @@
 import * as z from 'zod/mini';
 import { asyncValidationCache } from './cache';
+import type { ValidationContext } from '../types.js';
 import { debounce } from '@/lib/debounce';
 
 /**
@@ -73,18 +74,21 @@ export const CACHE_TTL = {
 } as const;
 
 /**
- * Resolves dependency values from form data.
+ * Resolves dependency values through the field's validation context.
+ *
+ * @remarks
+ * Dependencies are field *references*, so they resolve like any other: a bare
+ * name is a sibling and a dotted name is absolute. Reading them off a flat map
+ * instead — as this did — dropped every nested dependency and pinned every
+ * array-row dependency to row zero.
  */
-function resolveDependencies(
-	dependencies: string[] | undefined,
-	formData: Record<string, unknown> | undefined,
-): Record<string, unknown> {
-	if (!dependencies?.length || !formData) {
+function resolveDependencies(dependencies: string[] | undefined, context: ValidationContext): Record<string, unknown> {
+	if (!dependencies?.length) {
 		return {};
 	}
 
 	return Object.fromEntries(
-		dependencies.filter((dep) => formData[dep] !== undefined).map((dep) => [dep, formData[dep]]),
+		dependencies.map((dep) => [dep, context.resolve(dep)] as const).filter(([, value]) => value !== undefined),
 	);
 }
 
@@ -174,7 +178,7 @@ function handleErrorWithCache(
  * Creates a Zod Mini async validation handler for server-side validation.
  * Includes debouncing, dependency resolution, and performance optimizations.
  */
-export function createAsyncValidationHandler(rule: AsyncRule, formData?: Record<string, unknown>) {
+export function createAsyncValidationHandler(rule: AsyncRule, context: ValidationContext) {
 	return z.any().check(
 		z.superRefine(async (value: unknown, ctx) => {
 			/** Skip validation for empty values to prevent unnecessary API calls */
@@ -182,7 +186,7 @@ export function createAsyncValidationHandler(rule: AsyncRule, formData?: Record<
 				return;
 			}
 
-			const dependsOn = resolveDependencies(rule.dependencies, formData);
+			const dependsOn = resolveDependencies(rule.dependencies, context);
 
 			/**
 			 * Skip validation if any dependency field is empty.
@@ -190,7 +194,7 @@ export function createAsyncValidationHandler(rule: AsyncRule, formData?: Record<
 			 */
 			if (rule.dependencies?.length) {
 				const hasEmptyDependencies = rule.dependencies.some((dep) => {
-					const depValue = formData?.[dep];
+					const depValue = context.resolve(dep);
 					return depValue === '' || depValue === null || depValue === undefined;
 				});
 

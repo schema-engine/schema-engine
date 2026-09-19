@@ -1,5 +1,10 @@
 import { test, expect, describe } from 'vitest';
-import { validationRegistry, ValidationPresets, type ValidationRule } from '@/schemas/validation';
+import {
+	createValidationContext,
+	validationRegistry,
+	ValidationPresets,
+	type ValidationRule,
+} from '@/schemas/validation';
 
 describe('ValidationRegistry Usage Pattern Analysis', () => {
 	describe('Current ValidationRegistry.presets Usage', () => {
@@ -15,7 +20,7 @@ describe('ValidationRegistry Usage Pattern Analysis', () => {
 
 		test('should create schemas from preset-generated rules', () => {
 			const rule = validationRegistry.presets.string.email('Invalid email');
-			const schema = validationRegistry.createSchema(rule);
+			const schema = validationRegistry.createSchema(rule, createValidationContext());
 
 			expect(schema).not.toBeNull();
 			expect(() => schema?.parse('test@example.com')).not.toThrow();
@@ -41,7 +46,7 @@ describe('ValidationRegistry Usage Pattern Analysis', () => {
 			];
 
 			rules.forEach((rule) => {
-				const schema = validationRegistry.createSchema(rule);
+				const schema = validationRegistry.createSchema(rule, createValidationContext());
 				expect(schema).not.toBeNull();
 			});
 		});
@@ -67,7 +72,7 @@ describe('ValidationRegistry Usage Pattern Analysis', () => {
 			expect(deserialized).toEqual(rules);
 
 			deserialized.forEach((rule) => {
-				expect(validationRegistry.createSchema(rule)).not.toBeNull();
+				expect(validationRegistry.createSchema(rule, createValidationContext())).not.toBeNull();
 			});
 		});
 

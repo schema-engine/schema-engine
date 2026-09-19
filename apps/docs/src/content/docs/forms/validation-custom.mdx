@@ -270,36 +270,60 @@ validationRegistry.register({
 
 ## Cross-Field Validations
 
-For validations that depend on other field values, use the form context:
+Every handler receives a `ValidationContext` as its second argument. Read other
+fields through `context.resolve`, which resolves a reference relative to the
+field being validated: a bare name is a sibling, a dotted name is absolute from
+the form root.
 
 ```typescript
 validationRegistry.register({
-  type: 'confirmPassword',
-  category: 'string',
-  handler: (rule, formData) => {
-    return z.string().check(z.refine(
-      (confirmPassword) => formData?.password === confirmPassword,
-      rule.message || 'Passwords do not match',
-    ));
-  }
+	type: 'confirmPassword',
+	category: 'cross-field',
+	handler: (rule, context) => {
+		return z
+			.string()
+			.check(
+				z.refine(
+					(confirmPassword) => context.resolve('password') === confirmPassword,
+					rule.message || 'Passwords do not match',
+				),
+			);
+	},
 });
 
 validationRegistry.register({
-  type: 'conditionalRequired',
-  category: 'string',
-  handler: (rule, formData) => {
-    return z.optional(z.string()).check(z.refine((value) => {
-      const dependentField = formData?.[rule.value?.dependsOn];
+	type: 'conditionalRequired',
+	category: 'cross-field',
+	handler: (rule, context) => {
+		return z.optional(z.string()).check(
+			z.refine((value) => {
+				const dependentField = context.resolve(rule.value?.dependsOn);
 
-      if (rule.value?.when === dependentField && !value) {
-        return false;
-      }
+				if (rule.value?.when === dependentField && !value) {
+					return false;
+				}
 
-      return true;
-    }, rule.message || 'This field is required'));
-  }
+				return true;
+			}, rule.message || 'This field is required'),
+		);
+	},
 });
+```
 
+Because the reference is relative, a rule authored once on a field inside an
+array reads its own row. A `confirmPassword` rule on `accounts.1.confirm`
+resolves `password` to `accounts.1.password`, not `accounts.0.password`.
+`context.values` holds the whole form as a nested tree when a rule genuinely
+needs more than one reference.
+
+> **Revalidation is not automatic yet:**
+> A cross-field rule runs when its own field is validated. Changing a field it
+> reads does not currently re-run it, so pair cross-field rules with validation
+> on submit.
+
+Authoring the field is unchanged:
+
+```typescript
 {
   id: 'input',
   name: 'companyName',

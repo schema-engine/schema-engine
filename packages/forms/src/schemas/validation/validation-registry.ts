@@ -23,6 +23,7 @@ import type {
 	HexRule,
 	AnyValidationRegistration,
 	BaseValidationRule,
+	ValidationContext,
 	ValidationRegistration,
 	ValidationRegistrationMap,
 } from './types.js';
@@ -107,17 +108,23 @@ export class ValidationRegistry {
 
 	/**
 	 * Create a Zod Mini schema from a validation rule
+	 *
 	 * @param rule - The validation rule
-	 * @param formData - Optional form data for cross-field validation
+	 * @param context - Form context for rules that read other fields
+	 *
+	 * @remarks
+	 * `context` is required rather than optional so a caller cannot silently omit
+	 * it: a renderer that did exactly that is why cross-field rules were inert on
+	 * one of the two renderers. Build it with `createValidationContext`.
 	 */
-	createSchema<T extends { type: string }>(rule: T, formData?: Record<string, any>): z.ZodMiniType | null {
+	createSchema<T extends { type: string }>(rule: T, context: ValidationContext): z.ZodMiniType | null {
 		const registration = this.validations.get(rule.type) as ValidationRegistration<T> | undefined;
 		if (!registration) {
 			return null;
 		}
 
 		try {
-			return registration.handler(rule, formData);
+			return registration.handler(rule, context);
 		} catch (error) {
 			console.error(`Failed to create schema for validation rule '${rule.type}':`, error);
 			return null;

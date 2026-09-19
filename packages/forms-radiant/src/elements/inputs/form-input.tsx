@@ -22,7 +22,7 @@ export function FormInput({
 			description={config.description}
 			grid={config.grid}
 			style={config.style}
-			rules={toFieldRules(config.rules)}
+			rules={toFieldRules(config)}
 			validationRules={config.rules}
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}

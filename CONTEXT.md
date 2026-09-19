@@ -42,6 +42,15 @@ declaring field is rendered: inside `contacts.0.email` the sibling is
 rendered field path plus the value tree rather than resolving paths itself. A
 one-element array compares as its element, so a single-selection control matches
 an authored scalar.
+
+Field references resolve identically for constraints and for validation, and
+that is deliberate: `resolveFieldRef` in `@schema-engine/forms/lib/field-ref` is
+the single implementation, and `resolveConstraintPath` is an alias of it. A
+validation handler reaches it through the `ValidationContext` its second
+argument carries — `resolve`, plus the form's nested `values` and the field's
+rendered `fieldPath`. The context is required rather than optional so a renderer
+cannot omit it and leave cross-field rules silently passing, which is what
+happened while it was optional.
 See [the controller contract](./packages/forms-radiant/src/adapters/radiant/controller/README.md).
 
 ## Grid theme ownership

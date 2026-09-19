@@ -25,6 +25,7 @@ import type {
 	JwtRule,
 	AnyValidationRegistration,
 	AsyncRule,
+	ValidationContext,
 } from './types.js';
 import { createAsyncValidationHandler } from './async/handler.js';
 
@@ -198,9 +199,7 @@ export const defaultValidations: AnyValidationRegistration[] = [
 
 	{
 		type: 'async',
-		category: 'generic',
-		handler: (rule: AsyncRule, formData?: Record<string, any>) => {
-			return createAsyncValidationHandler(rule, formData);
-		},
+		category: 'cross-field',
+		handler: (rule: AsyncRule, context: ValidationContext) => createAsyncValidationHandler(rule, context),
 	},
 ];

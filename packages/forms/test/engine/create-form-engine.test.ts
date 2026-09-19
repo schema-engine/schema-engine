@@ -3,7 +3,12 @@ import * as z from 'zod/mini';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { defineFormRecipe, defineRecipeSpec } from '@/recipes';
 import { defineInput } from '@/types';
-import { createZodSchemaFromRules, getValidationRulesForElement, validationRegistry } from '@/schemas/validation';
+import {
+	createValidationContext,
+	createZodSchemaFromRules,
+	getValidationRulesForElement,
+	validationRegistry,
+} from '@/schemas/validation';
 
 const noteSchema = z.object({
 	$type: z.literal('note'),
@@ -103,7 +108,7 @@ describe('createFormEngine', () => {
 				}),
 			).toEqual([{ type: 'phone', message: 'Use a complete number' }]);
 
-			const schema = createZodSchemaFromRules([{ type: 'phone' }]);
+			const schema = createZodSchemaFromRules([{ type: 'phone' }], createValidationContext());
 			expect(schema.safeParse('+44').success).toBe(false);
 			expect(schema.safeParse('+44-complete').success).toBe(true);
 		} finally {

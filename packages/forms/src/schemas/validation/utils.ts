@@ -1,8 +1,10 @@
 import * as z from 'zod/mini';
-import type { ValidationRule, BaseValidationRule } from './types.js';
+import type { ValidationContext, ValidationRule, BaseValidationRule } from './types.js';
 import type { BaseField } from '../base-field.js';
 import { validationRegistry } from './validation-registry.js';
 import { walkLeafFields } from '@/lib/field-scope.js';
+import { resolveFieldRef } from '@/lib/field-ref.js';
+import { getValueAtPath } from '@/lib/path-values.js';
 
 type ValidationRuleType = ValidationRule | BaseValidationRule;
 
@@ -72,9 +74,45 @@ export function collectValidatableFields(elements: readonly object[], basePath =
 	return fields;
 }
 
+export interface ValidationContextInput {
+	/** Nested value tree for the whole form. Renderers holding flat values expand them first. */
+	values?: Record<string, unknown>;
+	/** Rendered path of the field being validated, e.g. `contacts.0.email`. */
+	fieldPath?: string;
+}
+
+/**
+ * Builds the context handed to every validation handler.
+ *
+ * @remarks
+ * Both inputs default so a caller with no cross-field rules — a unit test, or a
+ * schema generated without values — can still satisfy the required argument.
+ * An empty context resolves every reference to `undefined`, which cross-field
+ * rules treat as "not filled in" rather than as a match.
+ */
+export function createValidationContext({
+	values = {},
+	fieldPath = '',
+}: ValidationContextInput = {}): ValidationContext {
+	return {
+		values,
+		fieldPath,
+		resolve: (fieldRef) => getValueAtPath(values, resolveFieldRef(fieldRef, fieldPath)),
+	};
+}
+
+/**
+ * Combines a field's rules into one Zod Mini schema.
+ *
+ * @remarks
+ * `context` is required. Callers with no form values to offer pass
+ * `createValidationContext()` explicitly, so omitting the form context is a
+ * decision in the diff rather than an accident nobody notices until a
+ * cross-field rule silently passes.
+ */
 export function createZodSchemaFromRules(
 	rules: ReadonlyArray<ValidationRuleType> = [],
-	formData?: Record<string, any>,
+	context: ValidationContext,
 ): z.ZodMiniType {
 	if (!rules.length) {
 		return z.any();
@@ -82,7 +120,7 @@ export function createZodSchemaFromRules(
 
 	const schemas: z.ZodMiniType[] = [];
 	for (const rule of rules) {
-		const ruleSchema = validationRegistry.createSchema(rule as ValidationRule, formData);
+		const ruleSchema = validationRegistry.createSchema(rule as ValidationRule, context);
 		if (ruleSchema) {
 			schemas.push(ruleSchema);
 		}
@@ -109,8 +147,10 @@ export function generateFormSchema(elements: FormElement[]): z.ZodMiniObject<any
 		const rules = getValidationRulesForElement(element);
 		if (!rules?.length) continue;
 
-		const fieldSchema = createZodSchemaFromRules(rules, undefined);
-		schemaFields[element.name] = fieldSchema;
+		schemaFields[element.name] = createZodSchemaFromRules(
+			rules,
+			createValidationContext({ fieldPath: element.name }),
+		);
 	}
 
 	return z.object(schemaFields);

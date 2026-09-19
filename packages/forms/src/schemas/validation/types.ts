@@ -229,19 +229,42 @@ export type AsyncRule = z.infer<typeof AsyncRuleSchema>;
 export type ValidationRule = z.infer<typeof ValidationRuleSchema>;
 
 /**
+ * Everything a validation handler may read beyond the value under test.
+ *
+ * @remarks
+ * `fieldPath` is the field's *rendered* path (`contacts.0.email`), not the
+ * authored template, which is what lets a rule address a sibling inside its own
+ * array row. Prefer {@link ValidationContext.resolve} over reading
+ * {@link ValidationContext.values} directly: it applies that scoping, and it is
+ * the same resolution constraints use, so one authored name cannot mean two
+ * different fields.
+ */
+export interface ValidationContext {
+	/** Nested value tree for the whole form. */
+	readonly values: Record<string, unknown>;
+	/** Rendered path of the field being validated, e.g. `contacts.0.email`. */
+	readonly fieldPath: string;
+	/**
+	 * Reads another field relative to this one: a bare name is a sibling, a
+	 * dotted name is absolute from the form root.
+	 */
+	readonly resolve: (fieldRef: string) => unknown;
+}
+
+/**
  * Validation rule registration definition
  * @template TRule - Specific rule type for type-safe handler
  */
-export interface ValidationRegistration<TRule extends { type: string } = { type: string } & Record<string, any>> {
+export interface ValidationRegistration<TRule extends { type: string } = { type: string } & Record<string, unknown>> {
 	type: TRule['type'];
-	category: 'string' | 'number' | 'array' | 'boolean' | 'date' | 'generic';
+	category: 'string' | 'number' | 'array' | 'boolean' | 'date' | 'generic' | 'cross-field';
 	/**
 	 * Validation handler function
 	 * @param rule - The validation rule configuration (typed to specific rule type)
-	 * @param formData - Optional form data for cross-field validation (available in custom resolver)
+	 * @param context - The form context, for rules that read fields other than the one under test
 	 * @returns Zod Mini schema for validation
 	 */
-	handler: (rule: TRule, formData?: Record<string, any>) => z.ZodMiniType;
+	handler: (rule: TRule, context: ValidationContext) => z.ZodMiniType;
 	/**
 	 * Field `$type` values that receive this rule when the author omitted it.
 	 *

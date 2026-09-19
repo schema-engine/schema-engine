@@ -1,14 +1,16 @@
-import { describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { registerValidation } from '@schema-engine/forms/schemas/validation';
 import { toFieldRules } from '@/lib/field-rules';
 import { createRadiantPhoneValidationRegistration } from '@/lib/phone-validation';
 
 describe('toFieldRules', () => {
 	test('maps required and email rules for RuiField', () => {
-		const rules = toFieldRules([
-			{ type: 'required', message: 'Name is required' },
-			{ type: 'email', message: 'Invalid email' },
-		]);
+		const rules = toFieldRules({
+			rules: [
+				{ type: 'required', message: 'Name is required' },
+				{ type: 'email', message: 'Invalid email' },
+			],
+		});
 
 		expect(rules?.required).toBe('Name is required');
 		const pattern = rules?.pattern as { value: RegExp; message: string } | undefined;
@@ -21,13 +23,13 @@ describe('toFieldRules', () => {
 	});
 
 	test('returns undefined when a field has no rules', () => {
-		expect(toFieldRules(undefined)).toBeUndefined();
-		expect(toFieldRules([])).toBeUndefined();
+		expect(toFieldRules({})).toBeUndefined();
+		expect(toFieldRules({ rules: [] })).toBeUndefined();
 	});
 
 	test('uses the phone validator for complete numbers', async () => {
 		registerValidation(createRadiantPhoneValidationRegistration());
-		const rules = toFieldRules([{ type: 'phone' }]);
+		const rules = toFieldRules({ rules: [{ type: 'phone' }] });
 		expect(typeof rules?.validate).toBe('function');
 
 		const validate = rules?.validate as (value: unknown) => Promise<boolean | string>;
@@ -36,8 +38,8 @@ describe('toFieldRules', () => {
 	});
 
 	test('uses the shared validation registry for URL and IPv4 rules', async () => {
-		const urlRules = toFieldRules([{ type: 'url', message: 'Enter a valid URL' }]);
-		const ipv4Rules = toFieldRules([{ type: 'ipv4', message: 'Enter a valid IPv4 address' }]);
+		const urlRules = toFieldRules({ rules: [{ type: 'url', message: 'Enter a valid URL' }] });
+		const ipv4Rules = toFieldRules({ rules: [{ type: 'ipv4', message: 'Enter a valid IPv4 address' }] });
 
 		const validateUrl = urlRules?.validate as (value: unknown) => Promise<boolean | string>;
 		const validateIpv4 = ipv4Rules?.validate as (value: unknown) => Promise<boolean | string>;
@@ -48,8 +50,8 @@ describe('toFieldRules', () => {
 	});
 
 	test('uses the shared validation registry for Base64 and hexadecimal rules', async () => {
-		const base64Rules = toFieldRules([{ type: 'base64', message: 'Enter Base64 data' }]);
-		const hexadecimalRules = toFieldRules([{ type: 'hex', message: 'Enter hexadecimal characters' }]);
+		const base64Rules = toFieldRules({ rules: [{ type: 'base64', message: 'Enter Base64 data' }] });
+		const hexadecimalRules = toFieldRules({ rules: [{ type: 'hex', message: 'Enter hexadecimal characters' }] });
 		const base64Pattern = base64Rules?.pattern as { value: RegExp } | undefined;
 		const hexPattern = hexadecimalRules?.pattern as { value: RegExp } | undefined;
 
@@ -61,11 +63,56 @@ describe('toFieldRules', () => {
 
 	test('injects phone validation for phone-input when the author omitted the rule', async () => {
 		registerValidation(createRadiantPhoneValidationRegistration());
-		const rules = toFieldRules(undefined, 'phone-input');
+		const rules = toFieldRules({ $type: 'phone-input' });
 		expect(typeof rules?.validate).toBe('function');
 
 		const validate = rules?.validate as (value: unknown) => Promise<boolean | string>;
 		expect(await validate('+44')).toBe('Enter a complete phone number');
 		expect(await validate('+442079460958')).toBe(true);
+	});
+
+	describe('cross-field context', () => {
+		let fetchSpy: ReturnType<typeof vi.spyOn>;
+
+		beforeEach(() => {
+			fetchSpy = vi
+				.spyOn(globalThis, 'fetch')
+				.mockResolvedValue(new Response(JSON.stringify({ valid: true }), { status: 200 }));
+		});
+
+		afterEach(() => {
+			fetchSpy.mockRestore();
+		});
+
+		test('resolves a reference against the rendered row using the form values', async () => {
+			const rules = toFieldRules({
+				rules: [
+					{
+						type: 'async',
+						url: '/api/check',
+						method: 'POST',
+						dependencies: ['accountType'],
+						disableCache: true,
+					},
+				],
+				name: 'contacts.1.email',
+			});
+
+			const validate = rules?.validate as (
+				value: unknown,
+				values: Record<string, unknown>,
+			) => Promise<boolean | string>;
+			await validate('jane@example.com', {
+				contacts: [{ accountType: 'personal' }, { accountType: 'business' }],
+				'contacts.0.accountType': 'personal',
+				'contacts.1.accountType': 'business',
+			});
+
+			const [, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
+			expect(JSON.parse(init.body as string)).toEqual({
+				value: 'jane@example.com',
+				dependsOn: { accountType: 'business' },
+			});
+		});
 	});
 });

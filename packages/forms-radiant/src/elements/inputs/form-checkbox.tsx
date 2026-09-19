@@ -14,7 +14,7 @@ export function FormCheckbox({
 	return (
 		<FormField
 			name={config.name}
-			rules={toFieldRules(config.rules)}
+			rules={toFieldRules(config)}
 			defaultValueData={config.defaultValue !== undefined ? JSON.stringify(config.defaultValue) : undefined}
 			disabled={config.disabled}
 			grid={config.grid}

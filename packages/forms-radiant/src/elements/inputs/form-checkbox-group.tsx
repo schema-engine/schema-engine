@@ -27,7 +27,7 @@ export function FormCheckboxGroup({
 			description={config.description}
 			grid={config.grid}
 			style={config.style}
-			rules={toFieldRules(config.rules)}
+			rules={toFieldRules(config)}
 			defaultValue={serializeChoiceValue(config.defaultValue)}
 			disabled={config.disabled}
 		>

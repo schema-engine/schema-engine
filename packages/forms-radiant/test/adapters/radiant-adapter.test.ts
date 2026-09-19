@@ -7,7 +7,7 @@ function registerInput(store: ReturnType<typeof createTestForm>['store'], name: 
 	let value = initial;
 	const unregister = store.register({
 		name,
-		rules: toFieldRules([{ type: 'required', message: 'Required' }]),
+		rules: toFieldRules({ rules: [{ type: 'required', message: 'Required' }] }),
 		getValue: () => value,
 		setValue: (next) => {
 			value = next;

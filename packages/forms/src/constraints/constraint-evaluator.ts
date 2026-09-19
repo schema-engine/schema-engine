@@ -1,5 +1,6 @@
 import type { ConstraintLogic } from '../schemas';
 import { getValueAtPath } from '@/lib/path-values';
+import { resolveFieldRef } from '@/lib/field-ref';
 
 /**
  * Result from evaluating constraint logic
@@ -63,30 +64,12 @@ function evaluateConstraint(constraint: ConstraintLogic, watchedValue: any): boo
  * Resolves an authored constraint field against the scope of the field declaring it.
  *
  * @remarks
- * A constraint names a sibling (`accountType`), so the path it resolves to depends
- * on where the declaring field is rendered. Inside an array item (`contacts.0.email`)
- * the sibling is `contacts.0.accountType`; inside an object (`address.street`) it is
- * `address.accountType`. A constraint field that already contains a dot is treated as
- * absolute and returned unchanged.
- *
- * This lived in both renderer packages as identical private copies until the
- * duplication drifted; it belongs next to the evaluator that consumes it.
+ * Alias of {@link resolveFieldRef}. Constraints and cross-field validation ask the
+ * same question of an authored name — "what does `accountType` mean, written on
+ * `contacts.0.email`?" — so they must answer it identically. The implementation
+ * lives in `lib/field-ref` because neither subsystem owns it.
  */
-export function resolveConstraintPath(constraintField: string, fieldPath?: string): string {
-	if (!fieldPath || constraintField.includes('.')) {
-		return constraintField;
-	}
-
-	const parts = fieldPath.split('.');
-	const last = parts[parts.length - 1];
-	if (!Number.isNaN(Number(last))) {
-		return `${fieldPath}.${constraintField}`;
-	}
-
-	parts.pop();
-	const parentPath = parts.join('.');
-	return parentPath ? `${parentPath}.${constraintField}` : constraintField;
-}
+export const resolveConstraintPath = resolveFieldRef;
 
 /**
  * Every value path a constraint set depends on, in declaration order.

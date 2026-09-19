@@ -232,7 +232,7 @@ export function FormPhoneInput({
 			description={config.description}
 			grid={config.grid}
 			style={config.style}
-			rules={toFieldRules(config.rules, config.$type)}
+			rules={toFieldRules(config)}
 			validationRules={getValidationRulesForElement(config)}
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}

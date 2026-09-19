@@ -2,6 +2,7 @@ import { test, expect, describe } from 'vitest';
 import * as z from 'zod/mini';
 import {
 	collectValidatableFields,
+	createValidationContext,
 	createZodSchemaFromRules,
 	generateFormSchema,
 	getValidationRulesForElement,
@@ -121,7 +122,10 @@ describe('Validation', () => {
 		});
 
 		test('uses the native IPv4 validator and preserves its configured message', () => {
-			const schema = createZodSchemaFromRules([{ type: 'ipv4', message: 'Enter an IPv4 address' }]);
+			const schema = createZodSchemaFromRules(
+				[{ type: 'ipv4', message: 'Enter an IPv4 address' }],
+				createValidationContext(),
+			);
 
 			expect(schema.safeParse('192.168.1.1').success).toBe(true);
 			expect(schema.safeParse('256.168.1.1').success).toBe(false);
@@ -129,7 +133,10 @@ describe('Validation', () => {
 		});
 
 		test('uses the native IPv6 validator and preserves scoped addresses', () => {
-			const schema = createZodSchemaFromRules([{ type: 'ipv6', message: 'Enter an IPv6 address' }]);
+			const schema = createZodSchemaFromRules(
+				[{ type: 'ipv6', message: 'Enter an IPv6 address' }],
+				createValidationContext(),
+			);
 
 			expect(schema.safeParse('2001:db8::1').success).toBe(true);
 			expect(schema.safeParse('fe80::1%eth0').success).toBe(true);
@@ -140,7 +147,7 @@ describe('Validation', () => {
 
 		test('should create string schema with required validation', () => {
 			const rules = [validationRegistry.presets.string.required('Field is required')];
-			const schema = createZodSchemaFromRules(rules);
+			const schema = createZodSchemaFromRules(rules, createValidationContext());
 
 			expect(schema.parse('test')).toBe('test');
 			expect(() => schema.parse('')).toThrow('Field is required');
@@ -149,7 +156,7 @@ describe('Validation', () => {
 
 		test('should create email schema', () => {
 			const rules = [validationRegistry.presets.string.email('Invalid email')];
-			const schema = createZodSchemaFromRules(rules);
+			const schema = createZodSchemaFromRules(rules, createValidationContext());
 
 			expect(schema.parse('test@example.com')).toBe('test@example.com');
 			expect(() => schema.parse('invalid-email')).toThrow('Invalid email');
@@ -157,7 +164,7 @@ describe('Validation', () => {
 
 		test('should create number schema with min validation', () => {
 			const rules = [validationRegistry.presets.number.min(5, 'Minimum 5')];
-			const schema = createZodSchemaFromRules(rules);
+			const schema = createZodSchemaFromRules(rules, createValidationContext());
 
 			expect(schema.parse(10)).toBe(10);
 			expect(() => schema.parse(3)).toThrow('Minimum 5');
@@ -165,7 +172,7 @@ describe('Validation', () => {
 
 		test('should create array schema with minItems validation', () => {
 			const rules = [validationRegistry.presets.array.minItems(2, 'Min 2 items')];
-			const schema = createZodSchemaFromRules(rules);
+			const schema = createZodSchemaFromRules(rules, createValidationContext());
 
 			expect(schema.parse([1, 2])).toEqual([1, 2]);
 			expect(() => schema.parse([1])).toThrow('Min 2 items');
@@ -177,7 +184,7 @@ describe('Validation', () => {
 				validationRegistry.presets.string.minLength(3),
 				validationRegistry.presets.string.email(),
 			];
-			const schema = createZodSchemaFromRules(rules);
+			const schema = createZodSchemaFromRules(rules, createValidationContext());
 
 			expect(schema.parse('test@example.com')).toBe('test@example.com');
 			expect(() => schema.parse('te')).toThrow();
@@ -185,7 +192,7 @@ describe('Validation', () => {
 		});
 
 		test('should handle empty rules array', () => {
-			const schema = createZodSchemaFromRules([]);
+			const schema = createZodSchemaFromRules([], createValidationContext());
 			expect(schema.parse('anything')).toBe('anything');
 		});
 	});
@@ -272,14 +279,14 @@ describe('Validation', () => {
 	describe('Array Validation', () => {
 		test('should create minItems validation rule', () => {
 			const rule: MinItemsRule = { type: 'minItems', value: 2, message: 'Min 2 items' };
-			const schema = createZodSchemaFromRules([rule]);
+			const schema = createZodSchemaFromRules([rule], createValidationContext());
 			expect(schema.parse([1, 2])).toEqual([1, 2]);
 			expect(() => schema.parse([1])).toThrow('Min 2 items');
 		});
 
 		test('should create maxItems validation rule', () => {
 			const rule: MaxItemsRule = { type: 'maxItems', value: 2, message: 'Max 2 items' };
-			const schema = createZodSchemaFromRules([rule]);
+			const schema = createZodSchemaFromRules([rule], createValidationContext());
 			expect(schema.parse([1, 2])).toEqual([1, 2]);
 			expect(() => schema.parse([1, 2, 3])).toThrow('Max 2 items');
 		});
@@ -289,7 +296,7 @@ describe('Validation', () => {
 				{ type: 'minItems', value: 2 },
 				{ type: 'maxItems', value: 4 },
 			];
-			const schema = createZodSchemaFromRules(rules);
+			const schema = createZodSchemaFromRules(rules, createValidationContext());
 			expect(schema.parse([1, 2])).toEqual([1, 2]);
 			expect(schema.parse([1, 2, 3, 4])).toEqual([1, 2, 3, 4]);
 			expect(() => schema.parse([1])).toThrow();
@@ -302,7 +309,7 @@ describe('Validation', () => {
 			const rule = validationRegistry.presets.custom.async('/api/validate', {
 				dependencies: ['field1'],
 			});
-			const schema = createZodSchemaFromRules([rule], { field1: 'value' });
+			const schema = createZodSchemaFromRules([rule], createValidationContext({ values: { field1: 'value' } }));
 			expect(schema).toBeDefined();
 		});
 
@@ -310,7 +317,7 @@ describe('Validation', () => {
 			const rule = validationRegistry.presets.custom.async('/api/validate', {
 				expectedResponse: { valid: true },
 			});
-			const schema = createZodSchemaFromRules([rule]);
+			const schema = createZodSchemaFromRules([rule], createValidationContext());
 			expect(schema).toBeDefined();
 		});
 
@@ -319,7 +326,10 @@ describe('Validation', () => {
 				dependencies: ['otherField'],
 			});
 
-			const schema = createZodSchemaFromRules([rule], { otherField: 'some value' });
+			const schema = createZodSchemaFromRules(
+				[rule],
+				createValidationContext({ values: { otherField: 'some value' } }),
+			);
 			expect(schema).toBeDefined();
 		});
 	});
