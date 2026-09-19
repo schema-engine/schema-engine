@@ -43,6 +43,33 @@ const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 
 `engine` and `adapter` are `@state` (JS only). `@prop({ type: Object })` would stringify them onto the host tag.
 
+### Registering only the elements a form uses
+
+`schemaFormRegistrations` is every built-in element — the convenient default,
+and the right choice while a form's `$type` set is still moving. Each
+registration is also its own named export from the `/registrations` subpath, so
+an app whose forms only ever use a known subset can pass just those instead:
+
+```ts
+import { createRadiantFormEngine } from '@schema-engine/forms-radiant';
+import { InputElementRegistration, SelectElementRegistration } from '@schema-engine/forms-radiant/registrations';
+
+const engine = createRadiantFormEngine({
+	elements: [InputElementRegistration, SelectElementRegistration],
+});
+```
+
+This is why elements are registered by explicit array rather than
+auto-discovered from installed packages: a form's `$type`s are runtime data,
+not static imports the engine can see ahead of time, so it has to be told.
+Passing the narrower array is the only lever an app has for trimming what
+ships to the browser through this package's single bundled entry point.
+
+Get the array wrong and it fails loud, not silent: an unregistered `$type`
+renders an inline error naming the exact type, in place of the field, in both
+development and production. Nothing to guard against beyond testing the pages
+that render forms.
+
 ## Rendering architecture
 
 View-owned shell, same authoring model as radiant-ui: the `FormRenderer` / `FormInstance` views author the whole form tree as light-DOM children (authored children, no `<slot />` written by hosts), and `se-form-renderer` / `se-form-instance` are behavior-only hosts that publish context. There is no derived tree at the form level.
