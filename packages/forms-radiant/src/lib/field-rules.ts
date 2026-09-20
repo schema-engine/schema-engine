@@ -45,6 +45,16 @@ export interface FieldRulesSource {
 	name?: string;
 }
 
+export function serializeFieldRules(rules: FieldRules | undefined): string | undefined {
+	if (!rules) {
+		return undefined;
+	}
+
+	return JSON.stringify(rules, (_key, value: unknown) =>
+		value instanceof RegExp ? { $type: 'regexp', source: value.source, flags: value.flags } : value,
+	);
+}
+
 /**
  * Builds a Radiant UI validator that rebuilds its schema on every call.
  *

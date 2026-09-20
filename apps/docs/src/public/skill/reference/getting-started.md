@@ -68,6 +68,14 @@ previews mount through a client island, same pattern as Radiant.
   `FormRenderer` from `@schema-engine/forms-react` as a React island.
 - Custom fields use `defineInput({ $type, schema, metadata, render })`.
   Authors supply schema input; the component receives schema output.
+- Field widget bindings: Radiant widgets use `bindField(config, controlOverrides?)`
+  from `@schema-engine/forms-radiant/primitives` (spreading `fieldGroupProps` on `<FieldGroup>`
+  or `hostProps` on `<FormField>`, and `controlProps` on the focusable control).
+  React widgets use `useControlledFormElement(config)` (spreading `fieldProps`).
+  Both splitters merge `htmlAttributes` and keep event handlers explicit on the JSX node.
+- Extra DOM attributes on focusable controls belong in `htmlAttributes` on the field config.
+  Unknown top-level keys are stripped during schema validation, and reserved control props
+  or event handlers are rejected.
 - Custom containers declare `elements: elementChildrenSchema` and render with
   `<FormElements elements={config.elements} namePrefix={config.name} />`.
   Field paths are a render-time scope; do not clone child configs.

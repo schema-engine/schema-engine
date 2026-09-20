@@ -1,7 +1,6 @@
 import { RuiTextarea } from '@ecopages/radiant-ui/textarea';
-import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
-import { toFieldRules } from '@/lib/field-rules';
+import { bindField } from '@/lib/bind-field';
 import type { TextareaFieldProps } from './form-textarea.types';
 
 export function FormTextarea({
@@ -10,27 +9,16 @@ export function FormTextarea({
 	onFocus: propsOnFocus,
 	...config
 }: TextareaFieldProps) {
+	const { fieldGroupProps, controlProps } = bindField(config, {
+		placeholder: config.placeholder,
+		rows: config.rows,
+		style: { fontFamily: 'inherit' },
+	});
+
 	return (
-		<FieldGroup
-			name={config.name}
-			label={config.label || config.name}
-			htmlFor={config.id}
-			hiddenLabel={!config.label}
-			required={isFieldRequired(config.rules)}
-			description={config.description}
-			grid={config.grid}
-			style={config.style}
-			rules={toFieldRules(config)}
-			defaultValue={config.defaultValue}
-			disabled={config.disabled}
-		>
+		<FieldGroup {...fieldGroupProps}>
 			<RuiTextarea
-				id={config.id}
-				name={config.name}
-				placeholder={config.placeholder}
-				rows={config.rows}
-				style={{ fontFamily: 'inherit' }}
-				disabled={config.disabled}
+				{...controlProps}
 				on:input={(event: Event) => {
 					const target = event.target as HTMLTextAreaElement;
 					propsOnChange?.(target.value);

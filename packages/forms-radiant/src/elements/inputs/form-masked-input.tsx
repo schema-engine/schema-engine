@@ -1,9 +1,8 @@
 import './form-masked-input.css';
 import { customElement, onUpdated, prop, query, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
-import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
-import { toFieldRules } from '@/lib/field-rules';
+import { bindField } from '@/lib/bind-field';
 import {
 	createPatternMaskOptions,
 	getMaskedInputPlaceholder,
@@ -136,35 +135,25 @@ export function FormMaskedInput({
 	onFocus: propsOnFocus,
 	...config
 }: MaskedInputFieldProps) {
+	const { fieldGroupProps, controlProps } = bindField(config, {
+		placeholder: config.placeholder,
+		inputId: config.id ?? '',
+		mask: config.mask,
+		unmask: config.unmask === 'typed' ? 'typed' : config.unmask ? 'true' : '',
+		lazy: config.lazy ?? true,
+		overwrite: Boolean(config.overwrite),
+		placeholderChar: config.placeholderChar ?? '',
+		definitions: config.definitions,
+		autoComplete: config.autoComplete ?? '',
+		inputMode: config.inputMode ?? '',
+		autoFocus: Boolean(config.autoFocus),
+		defaultValue: typeof config.defaultValue === 'string' ? config.defaultValue : '',
+	});
+
 	return (
-		<FieldGroup
-			name={config.name}
-			label={config.label || config.name}
-			htmlFor={config.id}
-			hiddenLabel={!config.label}
-			required={isFieldRequired(config.rules)}
-			description={config.description}
-			grid={config.grid}
-			style={config.style}
-			rules={toFieldRules(config)}
-			defaultValue={config.defaultValue}
-			disabled={config.disabled}
-		>
+		<FieldGroup {...fieldGroupProps}>
 			{jsx('se-masked-input', {
-				name: config.name,
-				placeholder: config.placeholder,
-				disabled: config.disabled,
-				inputId: config.id ?? '',
-				mask: config.mask,
-				unmask: config.unmask === 'typed' ? 'typed' : config.unmask ? 'true' : '',
-				lazy: config.lazy ?? true,
-				overwrite: Boolean(config.overwrite),
-				placeholderChar: config.placeholderChar ?? '',
-				definitions: config.definitions,
-				autoComplete: config.autoComplete ?? '',
-				inputMode: config.inputMode ?? '',
-				autoFocus: Boolean(config.autoFocus),
-				defaultValue: typeof config.defaultValue === 'string' ? config.defaultValue : '',
+				...controlProps,
 				'on:change': (event: Event) => {
 					propsOnChange?.((event as CustomEvent<{ value?: string }>).detail?.value ?? '');
 				},

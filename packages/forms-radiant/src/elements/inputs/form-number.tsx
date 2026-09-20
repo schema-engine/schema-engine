@@ -6,9 +6,8 @@ import {
 	RuiNumberFieldInput,
 	RuiNumberFieldSteppers,
 } from '@ecopages/radiant-ui/number-field';
-import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
-import { toFieldRules } from '@/lib/field-rules';
+import { bindField } from '@/lib/bind-field';
 import type { NumberFieldProps } from './form-number.types';
 
 export function FormNumber({
@@ -17,26 +16,16 @@ export function FormNumber({
 	onFocus: propsOnFocus,
 	...config
 }: NumberFieldProps) {
+	const { fieldGroupProps, controlProps } = bindField(config, {
+		minValue: config.min,
+		maxValue: config.max,
+		step: config.step,
+	});
+
 	return (
-		<FieldGroup
-			name={config.name}
-			label={config.label || config.name}
-			htmlFor={config.id}
-			hiddenLabel={!config.label}
-			required={isFieldRequired(config.rules)}
-			description={config.description}
-			grid={config.grid}
-			style={config.style}
-			rules={toFieldRules(config)}
-			defaultValue={config.defaultValue}
-			disabled={config.disabled}
-		>
+		<FieldGroup {...fieldGroupProps}>
 			<RuiNumberField
-				name={config.name}
-				minValue={config.min}
-				maxValue={config.max}
-				step={config.step}
-				disabled={config.disabled}
+				{...controlProps}
 				on:change={(event: Event) => {
 					const detail = (event as CustomEvent<{ value: number }>).detail;
 					propsOnChange?.(detail?.value ?? '');

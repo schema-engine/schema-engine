@@ -4,6 +4,7 @@ import { RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
 import { RuiLabel } from '@ecopages/radiant-ui/label';
 import type { FieldRules } from '@ecopages/radiant-ui/form';
 import type { ElementGridConfig, ValidationRule } from '@schema-engine/forms/schemas';
+import { serializeFieldRules } from '@/lib/field-rules';
 
 export interface FieldGroupProps {
 	label: string;
@@ -20,16 +21,6 @@ export interface FieldGroupProps {
 	validationRules?: ReadonlyArray<ValidationRule>;
 	defaultValue?: unknown;
 	disabled?: boolean;
-}
-
-function serializeRules(rules: FieldRules | undefined): string | undefined {
-	if (!rules) {
-		return undefined;
-	}
-
-	return JSON.stringify(rules, (_key, value: unknown) =>
-		value instanceof RegExp ? { $type: 'regexp', source: value.source, flags: value.flags } : value,
-	);
 }
 
 /**
@@ -57,7 +48,7 @@ export function FieldGroup({
 		<FormField
 			name={name ?? htmlFor ?? label}
 			rules={rules}
-			data-se-field-rules={serializeRules(rules)}
+			data-se-field-rules={serializeFieldRules(rules)}
 			data-se-validation-rules={validationRules ? JSON.stringify(validationRules) : undefined}
 			defaultValueData={defaultValue !== undefined ? JSON.stringify(defaultValue) : undefined}
 			disabled={disabled}

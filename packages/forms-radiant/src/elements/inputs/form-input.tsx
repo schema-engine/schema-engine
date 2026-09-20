@@ -1,7 +1,6 @@
 import { RuiInput } from '@ecopages/radiant-ui/input';
-import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
-import { toFieldRules } from '@/lib/field-rules';
+import { bindField } from '@/lib/bind-field';
 import type { InputFieldProps } from './form-input.types';
 
 export function FormInput({
@@ -10,29 +9,15 @@ export function FormInput({
 	onFocus: propsOnFocus,
 	...config
 }: InputFieldProps) {
-	const { inputType, placeholder } = config;
+	const { fieldGroupProps, controlProps } = bindField(config, {
+		type: config.inputType,
+		placeholder: config.placeholder,
+	});
 
 	return (
-		<FieldGroup
-			name={config.name}
-			label={config.label || config.name}
-			htmlFor={config.id}
-			hiddenLabel={!config.label}
-			required={isFieldRequired(config.rules)}
-			description={config.description}
-			grid={config.grid}
-			style={config.style}
-			rules={toFieldRules(config)}
-			validationRules={config.rules}
-			defaultValue={config.defaultValue}
-			disabled={config.disabled}
-		>
+		<FieldGroup {...fieldGroupProps}>
 			<RuiInput
-				id={config.id}
-				name={config.name}
-				type={inputType}
-				placeholder={placeholder}
-				disabled={config.disabled}
+				{...controlProps}
 				on:input={(event: Event) => {
 					const target = event.target as HTMLInputElement;
 					propsOnChange?.(target.value);

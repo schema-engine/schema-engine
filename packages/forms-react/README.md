@@ -483,21 +483,19 @@ Create custom field components:
 import { useControlledFormElement } from '@schema-engine/forms-react';
 
 function CustomField(config) {
-	const { value, error, onChange, onBlur, isRequired } = useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, labelProps, errorProps } = useControlledFormElement(config);
 
 	return (
 		<div>
-			<input
-				value={value || ''}
-				onChange={(e) => onChange(e.target.value)}
-				onBlur={onBlur}
-				required={isRequired}
-			/>
-			{error && <span>{error}</span>}
+			{config.label && <label {...labelProps}>{config.label}</label>}
+			<input {...fieldProps} value={value ?? ''} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} />
+			{errorProps && <span {...errorProps}>{error}</span>}
 		</div>
 	);
 }
 ```
+
+`fieldProps` pre-populates identity (`id`, `name`), state (`required`, `disabled`, `readOnly`, `ref`), accessibility (`aria-invalid`, `aria-describedby`), and author-configured `htmlAttributes` (merged via `mergeControlProps`). Event handlers remain explicit on the input.
 
 ## Advanced Features
 
@@ -576,11 +574,11 @@ Register custom field components:
 import * as z from 'zod/mini';
 
 export function CustomDatePicker(props) {
-	const { value, error, onChange, onBlur } = useControlledFormElement(props);
+	const { value, error, onChange, onBlur, fieldProps } = useControlledFormElement(props);
 
 	return (
 		<div>
-			<DatePicker selected={value} onChange={onChange} onBlur={onBlur} />
+			<DatePicker {...fieldProps} selected={value} onChange={onChange} onBlur={onBlur} />
 			{error && <span>{error}</span>}
 		</div>
 	);

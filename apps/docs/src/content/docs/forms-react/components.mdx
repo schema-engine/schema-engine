@@ -48,7 +48,13 @@ engine.
 
 Every field has a `$type` and `name`; the remaining properties come from that
 registration's schema. Shared properties include `label`, `description`,
-`defaultValue`, `rules`, `constraints`, `grid`, `className`, and `style`.
+`defaultValue`, `rules`, `constraints`, `grid`, `className`, `style`, and
+`htmlAttributes`.
+
+Extra DOM attributes forwarded to the focusable control (such as `data-testid`
+or `enterKeyHint`) belong in `htmlAttributes`. Unknown top-level keys are stripped
+during schema validation, and reserved control props (`id`, `name`, `value`,
+`disabled`, etc.) cannot be authored inside the bag:
 
 ```json
 {
@@ -57,6 +63,7 @@ registration's schema. Shared properties include `label`, `description`,
 	"name": "email",
 	"label": "Email address",
 	"inputType": "email",
+	"htmlAttributes": { "data-testid": "email-input", "enterKeyHint": "next" },
 	"rules": [
 		{ "type": "required", "message": "Email is required" },
 		{ "type": "email", "message": "Enter a valid email" }
@@ -72,8 +79,13 @@ element; see [View recipes](/docs/forms-react/layouts).
 
 Create a consumer-owned registration with `InputRegistration` (or
 `StaticRegistration` for display-only content). The render component receives
-the registration config and should use `useControlledFormElement` for field
-binding:
+the registration config and uses `useControlledFormElement` for field
+binding.
+
+`useControlledFormElement` manages controller subscription and provides
+`fieldProps`, which merges baseline identity (`id`, `name`), control state
+(`required`, `disabled`, `readOnly`, `ref`), accessibility attributes
+(`aria-invalid`, `aria-describedby`), and optional `htmlAttributes`:
 
 ```tsx
 import type { InputRegistration } from '@schema-engine/forms';

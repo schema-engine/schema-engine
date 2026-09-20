@@ -103,5 +103,17 @@ interface RecipeRegistration<TType, TSchema, TRender = unknown> {
 }
 ```
 
+## Control props and htmlAttributes
+
+Field configurations support forwarding extra DOM attributes to focusable controls
+through the optional `htmlAttributes` bag on `BaseFieldSchema`:
+
+```ts
+import { HtmlAttributesSchema, mergeControlProps } from '@schema-engine/forms/schemas';
+```
+
+- **`htmlAttributes`**: A record of string, number, or boolean attributes (such as `data-testid` or `enterKeyHint`). Reserved control props (`id`, `name`, `value`, `disabled`, `required`, etc.) and event handlers (`onClick`, `onInput`) are rejected during schema validation.
+- **`mergeControlProps(controlProps, htmlAttributes?)`**: Merges optional `htmlAttributes` under engine-defined control props. Engine props take precedence to prevent clobbering identity and accessibility contracts. Event handlers should be wired directly on the JSX node after spreading the merged control props.
+
 See [Form engine setup](/docs/forms/builder) for adapter factories and
 composition rules.

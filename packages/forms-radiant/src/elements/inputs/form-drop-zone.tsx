@@ -1,9 +1,8 @@
 import './form-drop-zone.css';
 import { customElement, onEvent, prop, query, RadiantElement, state } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
-import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
-import { toFieldRules } from '@/lib/field-rules';
+import { bindField } from '@/lib/bind-field';
 import type { DropZoneFieldProps } from './form-drop-zone.types';
 
 type AcceptMap = Record<string, string[]>;
@@ -202,27 +201,20 @@ export function FormDropZone({
 	onFocus: propsOnFocus,
 	...config
 }: DropZoneFieldProps) {
+	const { fieldGroupProps, controlProps } = bindField(
+		{ ...config, defaultValue: config.defaultValue ?? [] },
+		{
+			maxFiles: config.maxFiles ?? 1,
+			maxSize: config.maxSize ?? 0,
+			minSize: config.minSize ?? 0,
+			accept: config.accept,
+		},
+	);
+
 	return (
-		<FieldGroup
-			name={config.name}
-			label={config.label || config.name}
-			htmlFor={config.id}
-			hiddenLabel={!config.label}
-			required={isFieldRequired(config.rules)}
-			description={config.description}
-			grid={config.grid}
-			style={config.style}
-			rules={toFieldRules(config)}
-			defaultValue={config.defaultValue ?? []}
-			disabled={config.disabled}
-		>
+		<FieldGroup {...fieldGroupProps}>
 			{jsx('se-drop-zone', {
-				name: config.name,
-				maxFiles: config.maxFiles ?? 1,
-				maxSize: config.maxSize ?? 0,
-				minSize: config.minSize ?? 0,
-				accept: config.accept,
-				disabled: config.disabled,
+				...controlProps,
 				'on:change': (event: Event) => {
 					const files = (event as CustomEvent<{ files?: File[] }>).detail?.files ?? [];
 					propsOnChange?.(files);

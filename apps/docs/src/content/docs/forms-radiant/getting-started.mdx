@@ -97,6 +97,77 @@ const engine = createRadiantFormEngine({
 });
 ```
 
+## Author a custom field widget
+
+Radiant field widgets use `bindField(config, controlOverrides?)` from
+`@schema-engine/forms-radiant/primitives` to split field configuration into
+chrome layout and static control props.
+
+For standard chrome (label, required marker, description, error), spread
+`fieldGroupProps` onto `FieldGroup`:
+
+```tsx
+import { FieldGroup, bindField } from '@schema-engine/forms-radiant/primitives';
+import { RuiInput } from '@ecopages/radiant-ui/input';
+
+export function MyCustomInput(config) {
+	const { fieldGroupProps, controlProps } = bindField(config, {
+		type: config.inputType,
+		placeholder: config.placeholder,
+	});
+
+	return (
+		<FieldGroup {...fieldGroupProps}>
+			<RuiInput
+				{...controlProps}
+				on:input={(event: Event) => {
+					const target = event.target as HTMLInputElement;
+					config.onChange?.(target.value);
+				}}
+				on:blur={config.onBlur}
+				on:focus={config.onFocus}
+			/>
+		</FieldGroup>
+	);
+}
+```
+
+For custom label arrangements (such as checkboxes, switches, or radios),
+spread `hostProps` directly on `FormField`:
+
+```tsx
+import { FormField, bindField } from '@schema-engine/forms-radiant/primitives';
+import { RuiCheckbox } from '@ecopages/radiant-ui/checkbox';
+import { RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
+
+export function MyCustomCheckbox(config) {
+	const { hostProps, controlProps } = bindField(config);
+
+	return (
+		<FormField {...hostProps}>
+			<RuiCheckbox
+				{...controlProps}
+				on:change={(event: Event) => {
+					const detail = (event as CustomEvent<{ checked: boolean }>).detail;
+					config.onChange?.(detail?.checked ?? false);
+				}}
+				on:blur={config.onBlur}
+				on:focus={config.onFocus}
+			>
+				{config.label}
+			</RuiCheckbox>
+			{config.description ? <RuiFieldDescription>{config.description}</RuiFieldDescription> : null}
+			<RuiFieldError />
+		</FormField>
+	);
+}
+```
+
+`bindField` automatically resolves validation rules from the owning form engine,
+merges author-defined `htmlAttributes` under control props, and serializes
+SSR hydration attributes (`data-se-field-rules`, `data-se-validation-rules`).
+Event handlers stay explicit on the JSX node.
+
 ## Storybook
 
 From the monorepo root:
