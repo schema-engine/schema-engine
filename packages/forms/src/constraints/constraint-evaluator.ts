@@ -23,41 +23,43 @@ export interface ConstraintEvaluationResult {
  * - 'is_empty' returns true for null, undefined, empty string, or empty array
  * - 'is_not_empty' returns true for any non-empty value
  */
-function evaluateConstraint(constraint: ConstraintLogic, watchedValue: any): boolean {
-	const { operator, value } = constraint;
-
-	switch (operator) {
-		case 'equals':
-			return watchedValue === value;
-		case 'not_equals':
-			return watchedValue !== value;
-		case 'contains':
-			if (Array.isArray(value)) {
-				return value.includes(watchedValue);
-			}
-			return String(watchedValue || '').includes(String(value));
-		case 'not_contains':
-			if (Array.isArray(value)) {
-				return !value.includes(watchedValue);
-			}
-			return !String(watchedValue || '').includes(String(value));
-		case 'greater_than':
-			return Number(watchedValue) > Number(value);
-		case 'less_than':
-			return Number(watchedValue) < Number(value);
-		case 'is_empty':
-			if (Array.isArray(watchedValue)) {
-				return watchedValue.length === 0;
-			}
-			return !watchedValue || watchedValue === '' || watchedValue === null || watchedValue === undefined;
-		case 'is_not_empty':
-			if (Array.isArray(watchedValue)) {
-				return watchedValue.length > 0;
-			}
-			return watchedValue && watchedValue !== '' && watchedValue !== null && watchedValue !== undefined;
-		default:
-			return false;
+function evaluateContains(watchedValue: unknown, value: unknown): boolean {
+	if (Array.isArray(value)) {
+		return value.includes(watchedValue);
 	}
+	return String(watchedValue ?? '').includes(String(value));
+}
+
+function evaluateIsEmpty(watchedValue: unknown): boolean {
+	if (Array.isArray(watchedValue)) {
+		return watchedValue.length === 0;
+	}
+	return !watchedValue || watchedValue === '' || watchedValue === null || watchedValue === undefined;
+}
+
+function evaluateIsNotEmpty(watchedValue: unknown): boolean {
+	if (Array.isArray(watchedValue)) {
+		return watchedValue.length > 0;
+	}
+	return Boolean(watchedValue && watchedValue !== '' && watchedValue !== null && watchedValue !== undefined);
+}
+
+const CONSTRAINT_OPERATOR_EVALUATORS: Record<
+	ConstraintLogic['operator'],
+	(watchedValue: unknown, value: unknown) => boolean
+> = {
+	equals: (watchedValue, value) => watchedValue === value,
+	not_equals: (watchedValue, value) => watchedValue !== value,
+	contains: evaluateContains,
+	not_contains: (watchedValue, value) => !evaluateContains(watchedValue, value),
+	greater_than: (watchedValue, value) => Number(watchedValue) > Number(value),
+	less_than: (watchedValue, value) => Number(watchedValue) < Number(value),
+	is_empty: (watchedValue) => evaluateIsEmpty(watchedValue),
+	is_not_empty: (watchedValue) => evaluateIsNotEmpty(watchedValue),
+};
+
+function evaluateConstraint(constraint: ConstraintLogic, watchedValue: unknown): boolean {
+	return CONSTRAINT_OPERATOR_EVALUATORS[constraint.operator](watchedValue, constraint.value);
 }
 
 /**
