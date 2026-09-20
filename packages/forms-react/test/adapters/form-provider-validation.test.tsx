@@ -3,9 +3,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { FormProvider } from '../../src/adapters/rhf/form-provider';
 import { useFormContext as useReactHookFormContext } from 'react-hook-form';
 import type { FormConfig } from '@schema-engine/forms/schemas';
+import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
 
 vi.mock('@/hooks/use-form-context', () => ({
-	useFormEngine: () => ({ engine: {} }),
+	useFormEngine: () => ({ engine: { getValidationRegistry: () => createDefaultValidationRegistry() } }),
 }));
 
 vi.mock('@schema-engine/actions', () => ({

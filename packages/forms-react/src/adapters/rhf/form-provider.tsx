@@ -36,7 +36,7 @@ export function FormProvider({
 		[formElements, defaultValues],
 	);
 	const formDefaultValues = useFormDefaultValues(fieldDefaults, defaultValues);
-	const formValidationResolver = useFormValidationResolver(formElements);
+	const formValidationResolver = useFormValidationResolver(formElements, engine.getValidationRegistry());
 
 	const form = useForm({
 		resolver: formValidationResolver,

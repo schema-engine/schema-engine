@@ -115,7 +115,9 @@ checks when `view.$type` is set.
 
 | Layer                                                           | Owns                                                                                        |
 | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `@schema-engine/forms`                                          | Engine, validation, actions, recipe specs                                                   |
-| `@schema-engine/forms-react`                                    | React renderer, RHF adapter, field-array operations, and headless `createReactFormEngine()` |
-| `@schema-engine/forms-radiant`                                  | Radiant shells, blocks, and scoped form controllers; `createRadiantFormEngine()` binds them |
-| Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Default field components and view recipes for the React adapter                             |
+| `@schema-engine/forms`                                          | Engine, validation, actions, recipe protocol, adapter types (`@schema-engine/forms/adapters`) — no widget `$type` schemas |
+| `@schema-engine/forms-react`                                    | React renderer, RHF adapter, field-array operations, and headless `createFormEngine()` re-export |
+| `@schema-engine/forms-radiant`                                  | Radiant widgets, colocated field schemas, shells, blocks, and scoped form controllers |
+| Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Copied React widgets, colocated field schemas, and view recipes for the React adapter       |
+
+Custom fields use `defineInput` with any Standard Schema. Default widgets ship their own Zod schemas beside their registrations; those schemas are not engine contracts and may differ between React and Radiant.

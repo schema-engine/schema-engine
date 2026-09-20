@@ -1,6 +1,6 @@
 import { FormRadio } from './form-radio';
-import type { RadioFieldConfig } from '@/registry/forms/inputs/form-radio.types';
-import { RadioFieldConfigSchema } from '@/registry/forms/inputs/form-radio.types';
+import type { RadioFieldConfig } from './form-radio.types';
+import { RadioFieldConfigSchema } from './form-radio.types';
 import { defineInput } from '@schema-engine/forms';
 
 declare global {

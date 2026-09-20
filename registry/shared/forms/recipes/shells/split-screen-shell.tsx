@@ -1,4 +1,3 @@
-/** @jsxImportSource react */
 import { getSlotConfig, type SplitScreenShellConfig } from '@schema-engine/forms/recipes';
 import { useViewContext } from '@schema-engine/forms-react/contexts';
 import type { FormShellProps } from '@schema-engine/forms-react/primitives';

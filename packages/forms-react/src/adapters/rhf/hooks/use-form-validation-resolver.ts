@@ -7,6 +7,7 @@ import {
 	createZodSchemaFromRules,
 } from '@schema-engine/forms/schemas/validation/utils';
 import { expandFieldTemplatePaths, getValueAtPath } from '@schema-engine/forms/lib/path-values';
+import type { ValidationRegistry } from '@schema-engine/forms/schemas/validation';
 
 function pathIsRequested(path: string, names?: readonly string[]): boolean {
 	if (!names?.length) {
@@ -22,9 +23,9 @@ function pathIsRequested(path: string, names?: readonly string[]): boolean {
  * When RHF passes `options.names` (for example, next-step validation),
  * only those fields are validated so later steps stay untriggered.
  */
-export function createFormValidationResolver(elements: readonly object[]): Resolver {
+export function createFormValidationResolver(elements: readonly object[], registry: ValidationRegistry): Resolver {
+	const validatableFields = collectValidatableFields(elements, '', registry);
 	return async (values: FieldValues, _context, options): Promise<ResolverResult> => {
-		const validatableFields = collectValidatableFields(elements);
 		const errors: Record<string, { type: string; message: string }> = {};
 
 		await Promise.all(
@@ -37,6 +38,7 @@ export function createFormValidationResolver(elements: readonly object[]): Resol
 							const schema = createZodSchemaFromRules(
 								rules,
 								createValidationContext({ values, fieldPath: path }),
+								registry,
 							);
 							const result = await z.safeParseAsync(schema, value);
 							if (!result.success) {
@@ -60,6 +62,6 @@ export function createFormValidationResolver(elements: readonly object[]): Resol
 	};
 }
 
-export function useFormValidationResolver(elements: readonly object[]): Resolver {
-	return useMemo(() => createFormValidationResolver(elements), [elements]);
+export function useFormValidationResolver(elements: readonly object[], registry: ValidationRegistry): Resolver {
+	return useMemo(() => createFormValidationResolver(elements, registry), [elements, registry]);
 }

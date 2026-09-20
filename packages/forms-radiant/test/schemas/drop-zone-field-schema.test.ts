@@ -3,7 +3,7 @@ import {
 	DropZoneFieldSchema,
 	dropZoneFieldExample,
 	type DropZoneFieldConfig,
-} from '@/components/schema-engine/forms/inputs/form-drop-zone.types';
+} from '../../src/elements/inputs/form-drop-zone.types';
 
 describe('Drop zone field schema', () => {
 	test('validates a complete configuration', () => {

@@ -1,4 +1,4 @@
-import { eco } from '@ecopages/core';
+import { eco, mergePageDependencies } from '@ecopages/core';
 import type { JsxRenderable } from '@ecopages/jsx';
 import { entries, getEntryBySegments } from 'ecopages:content/docs';
 import { getComponent, getEntryDependencies } from 'ecopages:content/docs/server';
@@ -6,6 +6,25 @@ import type { Entry } from 'ecopages:content/docs';
 import { CopyForLlm } from '@/components/copy-for-llm';
 import { DocsBreadcrumb } from '@/components/docs-breadcrumb';
 import { DocsLayout } from '@/layouts/docs-layout';
+import { ReactFormDemoEmbed } from '@/components/react-form-demo/react-form-demo-embed';
+import { ReactFormPreview } from '@/components/react-form-demo/react-form-preview.react';
+
+/**
+ * @remarks
+ * MDX entries only contribute their own module identity to
+ * `getEntryDependencies`. Embedded React islands (`EcoEmbed` of
+ * `ReactFormPreview`) must be merged explicitly or the page browser graph
+ * ships SSR markup without hydration chunks.
+ */
+async function resolveDocsEntryDependencies(slug: string) {
+	const entryDependencies = await getEntryDependencies(slug);
+	if (!slug.startsWith('forms-react/')) {
+		return entryDependencies;
+	}
+	return mergePageDependencies(entryDependencies, {
+		components: [ReactFormDemoEmbed, ReactFormPreview],
+	});
+}
 
 export default eco.page<{ entry: Entry }, JsxRenderable>({
 	layout: DocsLayout,
@@ -13,7 +32,7 @@ export default eco.page<{ entry: Entry }, JsxRenderable>({
 	 * @remarks MDX entry assets still flow through `getEntryDependencies`; the
 	 * page's own components are picked up from the static imports above.
 	 */
-	dependencies: async ({ props }) => getEntryDependencies(props.entry.slug),
+	dependencies: async ({ props }) => resolveDocsEntryDependencies(props.entry.slug),
 	staticPaths: async () => ({
 		paths: entries.map((post) => ({
 			params: {

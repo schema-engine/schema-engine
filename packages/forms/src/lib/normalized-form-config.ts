@@ -1,4 +1,5 @@
 import type { FormConfig, FormStep } from '@/schemas/form-config';
+import type { ElementConfig } from '@/schemas/field-config';
 
 const NORMALIZED_FORM_CONFIG = Symbol.for('@schema-engine/forms.normalized-form-config');
 const NORMALIZED_ELEMENT_CONFIG = Symbol.for('@schema-engine/forms.normalized-element-config');
@@ -25,7 +26,7 @@ export type FormConfigView = DeepReadonly<FormConfig>;
  * Container children are typed for renderers via {@link WithNormalizedChildren}
  * / {@link ElementRenderProps}. The snapshot itself is frozen at runtime.
  */
-export type NormalizedElementConfig = DeepReadonly<FormEngine.ElementConfig> & {
+export type NormalizedElementConfig = DeepReadonly<ElementConfig> & {
 	readonly [NORMALIZED_ELEMENT_CONFIG]: true;
 };
 
@@ -150,7 +151,7 @@ export function markNormalizedFormConfig(config: FormConfig, owner: object): Nor
 	return snapshot as unknown as NormalizedFormConfig;
 }
 
-export function markNormalizedElementConfig(config: FormEngine.ElementConfig): NormalizedElementConfig {
+export function markNormalizedElementConfig(config: ElementConfig): NormalizedElementConfig {
 	if (isNormalizedElementConfig(config)) {
 		return config;
 	}

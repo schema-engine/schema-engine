@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { createFormEngine } from '@schema-engine/forms';
+import { createFormEngine, createDefaultValidationRegistry } from '@schema-engine/forms';
 import { PhoneInputElementRegistration } from '@/components/schema-engine/forms/inputs/form-phone-input.registration';
 import { createFormValidationResolver } from '../../src/adapters/rhf/hooks/use-form-validation-resolver';
 
@@ -14,9 +14,11 @@ const elements = [
 	},
 ];
 
+const registry = createDefaultValidationRegistry();
+
 describe('createFormValidationResolver', () => {
 	test('validates every field when names are omitted', async () => {
-		const resolver = createFormValidationResolver(elements);
+		const resolver = createFormValidationResolver(elements, registry);
 		const resolved = await resolver({ firstName: '', email: '' }, undefined, {
 			fields: {},
 			shouldUseNativeValidation: false,
@@ -29,7 +31,7 @@ describe('createFormValidationResolver', () => {
 	});
 
 	test('validates only requested fields so later steps stay untriggered', async () => {
-		const resolver = createFormValidationResolver(elements);
+		const resolver = createFormValidationResolver(elements, registry);
 		const resolved = await resolver({ firstName: '', email: '' }, undefined, {
 			fields: {},
 			names: ['firstName'],
@@ -43,14 +45,17 @@ describe('createFormValidationResolver', () => {
 	});
 
 	test('rejects a phone country prefix while accepting a complete international number', async () => {
-		createFormEngine({ elements: [PhoneInputElementRegistration] });
-		const resolver = createFormValidationResolver([
-			{
-				$type: 'phone-input',
-				id: 'phone',
-				name: 'phone',
-			},
-		]);
+		const engine = createFormEngine({ elements: [PhoneInputElementRegistration] });
+		const resolver = createFormValidationResolver(
+			[
+				{
+					$type: 'phone-input',
+					id: 'phone',
+					name: 'phone',
+				},
+			],
+			engine.getValidationRegistry(),
+		);
 		const options = { fields: {}, shouldUseNativeValidation: false };
 
 		const incomplete = await resolver({ phone: '+44' }, undefined, options);
@@ -63,18 +68,21 @@ describe('createFormValidationResolver', () => {
 	});
 
 	test('validates nested fieldset children by composed path', async () => {
-		const resolver = createFormValidationResolver([
-			{
-				name: 'address',
-				$type: 'fieldset',
-				elements: [
-					{
-						name: 'street',
-						rules: [{ type: 'required', message: 'Street is required' }],
-					},
-				],
-			},
-		]);
+		const resolver = createFormValidationResolver(
+			[
+				{
+					name: 'address',
+					$type: 'fieldset',
+					elements: [
+						{
+							name: 'street',
+							rules: [{ type: 'required', message: 'Street is required' }],
+						},
+					],
+				},
+			],
+			registry,
+		);
 		const resolved = await resolver({ address: { street: '' } }, undefined, {
 			fields: {},
 			shouldUseNativeValidation: false,

@@ -12,7 +12,7 @@ import {
 	readMaskValue,
 	type IMaskFactory,
 } from '@/lib/mask-options';
-import type { MaskedInputFieldProps } from '@/registry/forms/inputs/form-masked-input.types';
+import type { MaskedInputFieldProps } from './form-masked-input.types';
 
 @customElement('se-masked-input')
 export class SeMaskedInput extends RadiantElement {
@@ -154,17 +154,17 @@ export function FormMaskedInput({
 				name: config.name,
 				placeholder: config.placeholder,
 				disabled: config.disabled,
-				'prop:inputId': config.id ?? '',
-				'prop:mask': config.mask,
-				'prop:unmask': config.unmask === 'typed' ? 'typed' : config.unmask ? 'true' : '',
-				'prop:lazy': config.lazy ?? true,
-				'prop:overwrite': Boolean(config.overwrite),
-				'prop:placeholderChar': config.placeholderChar ?? '',
-				'prop:definitions': config.definitions,
-				'prop:autoComplete': config.autoComplete ?? '',
-				'prop:inputMode': config.inputMode ?? '',
-				'prop:autoFocus': Boolean(config.autoFocus),
-				'prop:defaultValue': typeof config.defaultValue === 'string' ? config.defaultValue : '',
+				inputId: config.id ?? '',
+				mask: config.mask,
+				unmask: config.unmask === 'typed' ? 'typed' : config.unmask ? 'true' : '',
+				lazy: config.lazy ?? true,
+				overwrite: Boolean(config.overwrite),
+				placeholderChar: config.placeholderChar ?? '',
+				definitions: config.definitions,
+				autoComplete: config.autoComplete ?? '',
+				inputMode: config.inputMode ?? '',
+				autoFocus: Boolean(config.autoFocus),
+				defaultValue: typeof config.defaultValue === 'string' ? config.defaultValue : '',
 				'on:change': (event: Event) => {
 					propsOnChange?.((event as CustomEvent<{ value?: string }>).detail?.value ?? '');
 				},

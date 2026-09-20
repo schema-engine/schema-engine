@@ -17,6 +17,8 @@
 		"noUnusedParameters": false,
 		"noPropertyAccessFromIndexSignature": false,
 		"paths": {
+			"@schema-engine/forms": ["./src/index.ts"],
+			"@schema-engine/forms/*": ["./src/*"],
 			"@/*": ["./src/*"]
 		}
 	},

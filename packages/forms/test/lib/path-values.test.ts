@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { collectFieldDefaults } from '@/lib/field-scope';
-import { expandFieldTemplatePaths, mergePathValues } from '@/lib/path-values';
+import { expandFieldTemplatePaths, getValueAtPath, mergePathValues, setValueAtPath } from '@/lib/path-values';
 
 describe('path-values', () => {
 	test('expands array templates against live values', () => {
@@ -63,6 +63,12 @@ describe('path-values', () => {
 			contacts: [{ name: 'Ada' }],
 			tags: ['work'],
 		});
+	});
+
+	test('rejects prototype-polluting path keys on write', () => {
+		expect(() => setValueAtPath({}, '__proto__.polluted', true)).toThrow(/__proto__/);
+		expect(() => setValueAtPath({}, 'constructor', true)).toThrow(/constructor/);
+		expect(getValueAtPath({ __proto__: { polluted: true } }, '__proto__.polluted')).toBeUndefined();
 	});
 
 	test('applies child defaults to every provider array item and keeps explicit values', () => {

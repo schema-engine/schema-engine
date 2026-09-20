@@ -23,7 +23,7 @@ export interface ConstraintEvaluationResult {
  * - 'is_empty' returns true for null, undefined, empty string, or empty array
  * - 'is_not_empty' returns true for any non-empty value
  */
-function evaluateConstraint(constraint: ConstraintLogic, watchedValue: any): boolean {
+function evaluateConstraint(constraint: ConstraintLogic, watchedValue: unknown): boolean {
 	const { operator, value } = constraint;
 
 	switch (operator) {
@@ -54,7 +54,7 @@ function evaluateConstraint(constraint: ConstraintLogic, watchedValue: any): boo
 			if (Array.isArray(watchedValue)) {
 				return watchedValue.length > 0;
 			}
-			return watchedValue && watchedValue !== '' && watchedValue !== null && watchedValue !== undefined;
+			return Boolean(watchedValue);
 		default:
 			return false;
 	}
@@ -204,31 +204,4 @@ function evaluateRequired(
 	);
 
 	return baseRequired || hasRequireAction;
-}
-
-/**
- * Parameters for {@link ConstraintEvaluator.evaluate}.
- *
- * @deprecated Use {@link EvaluateConstraintsInput}, which takes the value tree
- * instead of a map the caller has already resolved.
- */
-export interface EvaluateConstraintsParams {
-	constraints?: readonly ConstraintLogic[];
-	fieldValues: Record<string, any>;
-	baseRequired?: boolean;
-}
-
-/**
- * Framework-agnostic constraint logic evaluator.
- *
- * @deprecated Use {@link evaluateConstraints} with the form's value tree, or
- * {@link evaluateResolvedConstraints} when values are already keyed by field name.
- * The class carries no state and its `fieldValues` contract — a map keyed by
- * authored field name rather than by value path — was the reason both renderers
- * reimplemented path resolution.
- */
-export class ConstraintEvaluator {
-	evaluate({ constraints = [], fieldValues, baseRequired = false }: EvaluateConstraintsParams) {
-		return evaluateResolvedConstraints(constraints, fieldValues, baseRequired);
-	}
 }

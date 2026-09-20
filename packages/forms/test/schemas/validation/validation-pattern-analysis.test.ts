@@ -1,10 +1,13 @@
 import { test, expect, describe } from 'vitest';
 import {
 	createValidationContext,
-	validationRegistry,
+	createDefaultValidationRegistry,
 	ValidationPresets,
 	type ValidationRule,
 } from '@/schemas/validation';
+
+
+const validationRegistry = createDefaultValidationRegistry();
 
 describe('ValidationRegistry Usage Pattern Analysis', () => {
 	describe('Current ValidationRegistry.presets Usage', () => {

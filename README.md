@@ -36,10 +36,10 @@ We have distilled interface requirements into four core concepts that are comple
 We reject the compromise between dynamic behavior and static analysis. Through advanced TypeScript inference, your runtime schema dictates your compile-time types.
 
 ```typescript
-import { createReactFormEngine } from '@schema-engine/forms-react';
+import { createFormEngine } from '@schema-engine/forms-react';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
-const engine = createReactFormEngine({ elements: schemaFormRegistrations });
+const engine = createFormEngine({ elements: schemaFormRegistrations });
 // Register schemaFormRecipeRegistrations when the form sets view.$type or has more than one step.
 
 // Registered element types are inferred from createFormEngine options.
@@ -166,11 +166,11 @@ pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-
 ```
 
 ```typescript
-import { createReactFormEngine } from '@schema-engine/forms-react';
+import { createFormEngine } from '@schema-engine/forms-react';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
-const engine = createReactFormEngine({
+const engine = createFormEngine({
 	elements: schemaFormRegistrations,
 	recipes: schemaFormRecipeRegistrations,
 });

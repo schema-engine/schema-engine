@@ -3,7 +3,7 @@
  * Run via: pnpm check-types (tsconfig.test-types.json)
  */
 
-import { createReactFormEngine } from '@/registries/builder-registry';
+import { createFormEngine } from '@/registries/builder-registry';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { SelectElementRegistration } from '@/components/schema-engine/forms/inputs/form-select.registration';
 import { TextareaElementRegistration } from '@/components/schema-engine/forms/inputs/form-textarea.registration';
@@ -14,7 +14,7 @@ import type { InputFieldConfig } from '@/components/schema-engine/forms/inputs/f
 
 type Assert<T extends true> = T;
 
-const engine = createReactFormEngine({
+const engine = createFormEngine({
 	elements: [
 		InputElementRegistration,
 		SelectElementRegistration,

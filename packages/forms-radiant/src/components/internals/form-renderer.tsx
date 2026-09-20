@@ -1,6 +1,6 @@
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { FormProvider } from '@/adapters/radiant/form-provider';
-import { getActiveFormEngine } from '@/registries/active-engine';
+import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import { radiantAdapter } from '@/adapters/radiant';
 import type { FormRendererProps } from './form-renderer.script';
 
@@ -22,7 +22,7 @@ export function FormRenderer({
 	children,
 	...props
 }: FormRendererProps): JsxRenderable {
-	const resolvedEngine = engine ?? getActiveFormEngine();
+	const resolvedEngine = resolveFormEngine(undefined, engine);
 	const resolvedAdapter = adapter ?? radiantAdapter;
 
 	if (!resolvedEngine || !resolvedAdapter) {
@@ -41,10 +41,10 @@ export function FormRenderer({
 	return jsx('se-form-renderer', {
 		classes: ['se-form-renderer', className],
 		style,
-		'prop:config': props.config,
+		config: props.config,
 		'prop:engine': resolvedEngine,
 		'prop:adapter': resolvedAdapter,
-		'prop:defaultValues': props.defaultValues,
+		defaultValues: props.defaultValues,
 		'prop:onSubmit': props.onSubmit,
 		children: (
 			<FormProvider

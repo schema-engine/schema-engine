@@ -5,8 +5,7 @@ group: Forms React
 order: 4
 ---
 
-import { EcoEmbed } from '@ecopages/ecopages-jsx/eco-embed';
-import { ReactFormPreview } from '@/components/react-form-demo/react-form-preview.react';
+import { ReactFormDemoEmbed } from '@/components/react-form-demo/react-form-demo-embed';
 import { FormConfigCode } from '@/components/form-config-code';
 import { DefaultRecipeSources } from '@/components/default-recipe-sources';
 import { viewRecipesDemoConfig } from '@/lib/form-configs/onboarding-wizard';
@@ -32,11 +31,11 @@ pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-engine-form-recipes
 Then add its generated recipe barrel when you construct the engine:
 
 ```typescript
-import { createReactFormEngine } from '@schema-engine/forms-react';
+import { createFormEngine } from '@schema-engine/forms-react';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
-const engine = createReactFormEngine({ elements: schemaFormRegistrations, recipes: schemaFormRecipeRegistrations });
+const engine = createFormEngine({ elements: schemaFormRegistrations, recipes: schemaFormRecipeRegistrations });
 ```
 
 | `$type`               | Kind        | Description                        |
@@ -72,7 +71,7 @@ const formConfig: FormConfig = {
 
 Wizard recipes require **at least two steps**. Set `view.$type` to a wizard recipe such as `wizard` or `card-wizard`. The live demo renders exactly the configuration below:
 
-<EcoEmbed component={ReactFormPreview} props={{ config: viewRecipesDemoConfig }} />
+<ReactFormDemoEmbed config={viewRecipesDemoConfig} />
 
 <FormConfigCode config={viewRecipesDemoConfig} />
 
@@ -90,7 +89,7 @@ Canonical source is `registry/shared/forms/recipes`. After `shadcn add`, files l
 
 ```typescript
 import * as z from 'zod/mini';
-import { createReactFormEngine } from '@schema-engine/forms-react';
+import { createFormEngine } from '@schema-engine/forms-react';
 import { defineFormRecipe, defineRecipeSpec } from '@schema-engine/forms/recipes';
 import type { FormShellProps } from '@schema-engine/forms-react/primitives';
 
@@ -114,5 +113,5 @@ const BrandRecipe = defineFormRecipe(
 	{ shell: BrandShell, slots: {} },
 );
 
-const engine = createReactFormEngine({ recipes: [BrandRecipe] });
+const engine = createFormEngine({ recipes: [BrandRecipe] });
 ```

@@ -9,7 +9,7 @@ import {
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
 import { toFieldRules } from '@/lib/field-rules';
-import type { NumberFieldProps } from '@/registry/forms/inputs/form-number.types';
+import type { NumberFieldProps } from './form-number.types';
 
 export function FormNumber({
 	onChange: propsOnChange,

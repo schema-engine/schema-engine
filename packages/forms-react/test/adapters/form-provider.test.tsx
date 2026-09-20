@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { FormProvider } from '../../src/adapters/rhf/form-provider';
 import type { FormConfig } from '@schema-engine/forms/schemas';
+import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
 import { mockDispatch } from '../utils/use-action-executor.mock';
 import { useFormContext as useReactHookFormContext } from 'react-hook-form';
 
@@ -16,7 +17,7 @@ vi.mock('@schema-engine/actions', async () => {
 });
 
 vi.mock('@/hooks/use-form-context', () => ({
-	useFormEngine: () => ({ engine: {} }),
+	useFormEngine: () => ({ engine: { getValidationRegistry: () => createDefaultValidationRegistry() } }),
 }));
 
 vi.mock('../../src/adapters/rhf/hooks/use-form-validation-resolver', () => ({

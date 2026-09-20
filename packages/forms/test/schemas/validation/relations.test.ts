@@ -3,11 +3,13 @@ import * as z from 'zod/mini';
 import {
 	createValidationContext,
 	createZodSchemaFromRules,
+	createDefaultValidationRegistry,
 	ValidationPresets,
 	type RelateRule,
 } from '@/schemas/validation';
 
 const BASE = { includeSelf: true, as: 'auto', skipWhenIncomplete: true } as const;
+const registry = createDefaultValidationRegistry();
 
 async function check(
 	rule: RelateRule,
@@ -15,7 +17,7 @@ async function check(
 	values: Record<string, unknown> = {},
 	fieldPath = 'confirmPassword',
 ): Promise<true | string | undefined> {
-	const schema = createZodSchemaFromRules([rule], createValidationContext({ values, fieldPath }));
+	const schema = createZodSchemaFromRules([rule], createValidationContext({ values, fieldPath }), registry);
 	const result = await z.safeParseAsync(schema, value);
 	return result.success ? true : result.error.issues[0]?.message;
 }

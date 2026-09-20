@@ -3,7 +3,7 @@ import {
 	PhoneInputFieldSchema,
 	phoneInputFieldExample,
 	type PhoneInputFieldConfig,
-} from '@/components/schema-engine/forms/inputs/form-phone-input.types';
+} from '../../src/elements/inputs/form-phone-input.types';
 
 describe('Phone input field schema', () => {
 	test('validates a complete configuration', () => {

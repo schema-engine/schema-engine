@@ -1,7 +1,7 @@
 import * as z from 'zod/mini';
 import type { ValidationContext, ValidationRule, BaseValidationRule } from './types.js';
 import type { BaseField } from '../base-field.js';
-import { validationRegistry } from './validation-registry.js';
+import type { ValidationRegistry } from './validation-registry.js';
 import { walkLeafFields } from '@/lib/field-scope.js';
 import { resolveFieldRef } from '@/lib/field-ref.js';
 import { getValueAtPath } from '@/lib/path-values.js';
@@ -35,12 +35,15 @@ export function isFieldRequired(rules?: ReadonlyArray<{ readonly type: string }>
  * @remarks Default rules are stored as `{ type }` and asserted as `TRule` because
  * every validation rule in the union is identified by `type` alone.
  */
-export function getValidationRulesForElement<TRule extends BaseValidationRule>(element: {
-	$type?: string;
-	rules?: readonly TRule[];
-}): ReadonlyArray<TRule> | undefined {
+export function getValidationRulesForElement<TRule extends BaseValidationRule>(
+	element: {
+		$type?: string;
+		rules?: readonly TRule[];
+	},
+	registry: ValidationRegistry,
+): ReadonlyArray<TRule> | undefined {
 	const configured = element.rules;
-	const defaults = element.$type ? validationRegistry.getDefaultRulesForFieldType(element.$type) : [];
+	const defaults = element.$type ? registry.getDefaultRulesForFieldType(element.$type) : [];
 	if (defaults.length === 0) {
 		return configured;
 	}
@@ -59,12 +62,17 @@ export function getValidationRulesForElement<TRule extends BaseValidationRule>(e
  * Leaf fields with validation rules, using composed paths (`address.street`).
  * Array indices are expanded later against live values.
  */
-export function collectValidatableFields(elements: readonly object[], basePath = ''): ValidatableField[] {
+export function collectValidatableFields(
+	elements: readonly object[],
+	basePath: string,
+	registry: ValidationRegistry,
+): ValidatableField[] {
 	const fields: ValidatableField[] = [];
 
 	for (const { path, element } of walkLeafFields(elements, basePath)) {
 		const rules = getValidationRulesForElement(
 			element as { $type?: string; rules?: ReadonlyArray<BaseValidationRule> },
+			registry,
 		);
 		if (rules?.length) {
 			fields.push({ path, rules });
@@ -113,21 +121,22 @@ export function createValidationContext({
 export function createZodSchemaFromRules(
 	rules: ReadonlyArray<ValidationRuleType> = [],
 	context: ValidationContext,
+	registry: ValidationRegistry,
 ): z.ZodMiniType {
 	if (!rules.length) {
-		return z.any();
+		return z.unknown();
 	}
 
 	const schemas: z.ZodMiniType[] = [];
 	for (const rule of rules) {
-		const ruleSchema = validationRegistry.createSchema(rule as ValidationRule, context);
+		const ruleSchema = registry.createSchema(rule as ValidationRule, context);
 		if (ruleSchema) {
 			schemas.push(ruleSchema);
 		}
 	}
 
 	if (schemas.length === 0) {
-		return z.any();
+		return z.unknown();
 	}
 
 	let combinedSchema = schemas[0];
@@ -138,18 +147,19 @@ export function createZodSchemaFromRules(
 	return combinedSchema;
 }
 
-export function generateFormSchema(elements: FormElement[]): z.ZodMiniObject<any> {
+export function generateFormSchema(elements: FormElement[], registry: ValidationRegistry) {
 	const schemaFields: Record<string, z.ZodMiniType> = {};
 
 	for (const element of elements) {
 		if (!element.name) continue;
 
-		const rules = getValidationRulesForElement(element);
+		const rules = getValidationRulesForElement(element, registry);
 		if (!rules?.length) continue;
 
 		schemaFields[element.name] = createZodSchemaFromRules(
 			rules,
 			createValidationContext({ fieldPath: element.name }),
+			registry,
 		);
 	}
 

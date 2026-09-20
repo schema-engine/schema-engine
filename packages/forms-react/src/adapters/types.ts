@@ -1,5 +1,6 @@
-import type { FormActionConfig, FormConfig } from '@schema-engine/forms/schemas';
+import type { ElementConfig, FormActionConfig, FormConfig } from '@schema-engine/forms/schemas';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
+import type { FieldArrayValue } from '@schema-engine/forms/adapters';
 import type { ReactNode, RefCallback } from 'react';
 
 export interface FormContextValue<TFormData = Record<string, unknown>> {
@@ -28,17 +29,7 @@ export interface FormFieldValue<TFieldValue = unknown> {
 	ref: RefCallback<HTMLElement | null>;
 }
 
-export interface FieldArrayValue {
-	fields: Array<{ id: string }>;
-	append: (value: unknown) => void;
-	prepend: (value: unknown) => void;
-	insert: (index: number, value: unknown) => void;
-	swap: (indexA: number, indexB: number) => void;
-	move: (indexA: number, indexB: number) => void;
-	update: (index: number, value: unknown) => void;
-	replace: (value: unknown[]) => void;
-	remove: (index?: number | number[]) => void;
-}
+export type { FieldArrayValue };
 
 /**
  * Props for the FormProvider component
@@ -70,7 +61,7 @@ export interface FormAdapter<TFormData = Record<string, unknown>> {
 	/** Hook to access form context (values, errors, state) */
 	useFormContext: () => FormContextValue<TFormData>;
 	/** Hook to register and manage a specific form field */
-	useFormField: <TFieldValue = unknown>(config: FormEngine.ElementConfig) => FormFieldValue<TFieldValue>;
+	useFormField: <TFieldValue = unknown>(config: ElementConfig) => FormFieldValue<TFieldValue>;
 	/** Hook to watch a specific field value */
 	useWatchField: <TWatchValue = unknown>(name: string | string[]) => TWatchValue;
 	/** Hook to watch the entire form value tree */

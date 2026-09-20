@@ -77,7 +77,7 @@ export function WizardActionsBlock(context?: {
 	viewConfig?: Record<string, unknown>;
 }): JsxRenderable {
 	return jsx('se-wizard-actions', {
-		'prop:config': context?.config,
-		'prop:viewConfig': context?.viewConfig ?? {},
+		config: context?.config,
+		viewConfig: context?.viewConfig ?? {},
 	});
 }

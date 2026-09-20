@@ -320,9 +320,9 @@ export class FormDebuggerElement extends RadiantElement {
 
 export function FormDebugger(props: FormDebuggerProps & { config?: FormConfig } = {}) {
 	return jsx('se-form-debugger', {
-		'prop:defaultOpen': props.defaultOpen,
-		'prop:showStepDetails': props.showStepDetails,
-		'prop:showFormState': props.showFormState,
-		'prop:config': props.config,
+		defaultOpen: props.defaultOpen,
+		showStepDetails: props.showStepDetails,
+		showFormState: props.showFormState,
+		config: props.config,
 	});
 }

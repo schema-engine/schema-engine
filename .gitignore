@@ -48,6 +48,7 @@ registry/**/*.d.ts
 
 # misc
 .agent
+.worktrees/
 
 # pnpm
 .pnpm-store

@@ -37,6 +37,10 @@ export function flattenValues(values: Record<string, unknown>): Record<string, u
 }
 
 export function readValue(values: Record<string, unknown>, name: string): unknown {
+	const hasNestedKeys = Object.keys(values).some((key) => key.startsWith(`${name}.`));
+	if (name in values && !hasNestedKeys) {
+		return cloneValue(values[name]);
+	}
 	return getValueAtPath(expandValues(values), name);
 }
 

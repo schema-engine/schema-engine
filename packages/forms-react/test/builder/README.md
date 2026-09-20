@@ -19,8 +19,8 @@ cd packages/react && bun test test/builder/multiple-builders-type-isolation.test
 Verifies that two builders in the same application can have completely different component sets:
 
 ```typescript
-const engine1 = createReactFormEngine({ elements: [InputElementRegistration] });
-const engine2 = createReactFormEngine({ elements: [TextareaElementRegistration] });
+const engine1 = createFormEngine({ elements: [InputElementRegistration] });
+const engine2 = createFormEngine({ elements: [TextareaElementRegistration] });
 
 // ✅ engine1 only has input
 expect(engine1.hasElement('input')).toBe(true);

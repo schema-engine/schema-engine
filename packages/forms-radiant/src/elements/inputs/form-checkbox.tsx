@@ -3,7 +3,7 @@ import '@ecopages/radiant-ui/checkbox-group';
 import { RuiCheckbox } from '@ecopages/radiant-ui/checkbox';
 import { RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
 import { toFieldRules } from '@/lib/field-rules';
-import type { CheckboxFieldProps } from '@/registry/forms/inputs/form-checkbox.types';
+import type { CheckboxFieldProps } from './form-checkbox.types';
 
 export function FormCheckbox({
 	onChange: propsOnChange,

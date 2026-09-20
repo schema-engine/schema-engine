@@ -10,13 +10,13 @@ order: 8
 ## Engine factory
 
 ```ts
-const engine = createReactFormEngine({
+const engine = createFormEngine({
 	elements: schemaFormRegistrations,
 	recipes: [...schemaFormRecipeRegistrations, customRecipe],
 });
 ```
 
-`createReactFormEngine()` is headless. Register installed default recipes or
+`createFormEngine()` is headless. Register installed default recipes or
 your own recipes in the `recipes` array. Use `engine.extend({ recipes: [customRecipe] })`
 to add registrations later.
 
@@ -57,7 +57,7 @@ with `defineFormRecipe(spec, { shell, slots })` from `@schema-engine/forms/recip
 Built-in specs are exported from that subpath. The package root
 `@schema-engine/forms` does not re-export them.
 
-`createReactFormEngine()` does not bind default recipes. That is not the same
+`createFormEngine()` does not bind default recipes. That is not the same
 as omitting `FormRenderer`, which still lives in this package.
 
 ## Form hooks

@@ -1,4 +1,5 @@
 import { getValidationRulesForElement } from '@schema-engine/forms/schemas/validation/utils';
+import { peekOwningFormEngine } from '@/contexts/form-engine-owner';
 import './form-phone-input.css';
 import { customElement, onEvent, onUpdated, prop, query, RadiantElement, state } from '@ecopages/radiant';
 import { jsx, unsafeHtml, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
@@ -30,7 +31,7 @@ import {
 	type LibPhoneNumber,
 	type PhoneCountryOption,
 } from '@/lib/phone-number';
-import type { PhoneInputFieldProps } from '@/registry/forms/inputs/form-phone-input.types';
+import type { PhoneInputFieldProps } from './form-phone-input.types';
 
 function PhoneFlag({ code, class: className }: { code?: string; class: string }) {
 	const svg = code ? countryFlagSvg(code) : '';
@@ -222,6 +223,9 @@ export function FormPhoneInput({
 	onFocus: propsOnFocus,
 	...config
 }: PhoneInputFieldProps) {
+	const owningEngine = peekOwningFormEngine();
+	const registry = owningEngine?.getValidationRegistry();
+
 	return (
 		<FieldGroup
 			name={config.name}
@@ -232,8 +236,8 @@ export function FormPhoneInput({
 			description={config.description}
 			grid={config.grid}
 			style={config.style}
-			rules={toFieldRules(config)}
-			validationRules={getValidationRulesForElement(config)}
+			rules={toFieldRules(config, registry)}
+			validationRules={registry ? getValidationRulesForElement(config, registry) : config.rules}
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}
 		>
@@ -241,10 +245,10 @@ export function FormPhoneInput({
 				name: config.name,
 				placeholder: config.placeholder,
 				disabled: config.disabled,
-				'prop:inputId': config.id ?? '',
-				'prop:defaultCountry': config.defaultCountry ?? 'US',
-				'prop:international': Boolean(config.international),
-				'prop:defaultValue': typeof config.defaultValue === 'string' ? config.defaultValue : '',
+				inputId: config.id ?? '',
+				defaultCountry: config.defaultCountry ?? 'US',
+				international: Boolean(config.international),
+				defaultValue: typeof config.defaultValue === 'string' ? config.defaultValue : '',
 				'on:change': (event: Event) => {
 					propsOnChange?.((event as CustomEvent<{ value?: string }>).detail?.value ?? '');
 				},

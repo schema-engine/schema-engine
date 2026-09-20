@@ -50,14 +50,6 @@
 				]
 			}
 		],
-		"eslint/no-unused-vars": [
-			"warn",
-			{
-				"varsIgnorePattern": "^_",
-				"argsIgnorePattern": "^_",
-				"caughtErrorsIgnorePattern": "^_"
-			}
-		],
 		"eslint/no-underscore-dangle": [
 			"warn",
 			{

@@ -1,11 +1,13 @@
 import type { FieldRules } from '@ecopages/radiant-ui/form';
 import * as z from 'zod/mini';
 import type { ValidationRule } from '@schema-engine/forms/schemas';
+import type { ValidationRegistry } from '@schema-engine/forms/schemas/validation';
 import {
 	createValidationContext,
 	createZodSchemaFromRules,
 	getValidationRulesForElement,
 } from '@schema-engine/forms/schemas/validation/utils';
+import { peekOwningFormEngine } from '@/contexts/form-engine-owner';
 import { expandValues } from '@/adapters/radiant/controller/values';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -52,16 +54,28 @@ export interface FieldRulesSource {
  * invocation whose context produced it. Radiant UI hands `validate` the form's
  * flat values, which are expanded into the engine's nested tree first.
  */
-function toValidator(rules: ReadonlyArray<ValidationRule>, fieldPath: string | undefined, fallbackMessage: string) {
+function resolveValidationRegistry(registry?: ValidationRegistry): ValidationRegistry | undefined {
+	return registry ?? peekOwningFormEngine()?.getValidationRegistry();
+}
+
+function toValidator(
+	rules: ReadonlyArray<ValidationRule>,
+	fieldPath: string | undefined,
+	fallbackMessage: string,
+	registry: ValidationRegistry,
+) {
 	return async (value: unknown, values: Record<string, unknown>) => {
 		const context = createValidationContext({ values: expandValues(values ?? {}), fieldPath });
-		const result = await z.safeParseAsync(createZodSchemaFromRules(rules, context), value);
+		const result = await z.safeParseAsync(createZodSchemaFromRules(rules, context, registry), value);
 		return result.success || result.error.issues[0]?.message || fallbackMessage;
 	};
 }
 
-export function toFieldRules(element: FieldRulesSource): FieldRules | undefined {
-	const resolved = getValidationRulesForElement<ValidationRule>(element);
+export function toFieldRules(element: FieldRulesSource, registry?: ValidationRegistry): FieldRules | undefined {
+	const resolvedRegistry = resolveValidationRegistry(registry);
+	const resolved = resolvedRegistry
+		? getValidationRulesForElement<ValidationRule>(element, resolvedRegistry)
+		: element.rules;
 	if (!resolved?.length) {
 		return undefined;
 	}
@@ -101,7 +115,14 @@ export function toFieldRules(element: FieldRulesSource): FieldRules | undefined 
 				fieldRules.pattern = { value: HEX_PATTERN, message: rule.message ?? 'Invalid hexadecimal value' };
 				break;
 			case 'phone':
-				fieldRules.validate = toValidator([rule], element.name, 'Enter a complete phone number');
+				if (resolvedRegistry) {
+					fieldRules.validate = toValidator(
+						[rule],
+						element.name,
+						'Enter a complete phone number',
+						resolvedRegistry,
+					);
+				}
 				break;
 			case 'minItems':
 				if (rule.value >= 1) {
@@ -113,8 +134,8 @@ export function toFieldRules(element: FieldRulesSource): FieldRules | undefined 
 		}
 	}
 
-	if (resolved.some((rule) => !NATIVE_RUI_RULES.has(rule.type))) {
-		fieldRules.validate = toValidator(resolved, element.name, 'Validation failed');
+	if (resolvedRegistry && resolved.some((rule) => !NATIVE_RUI_RULES.has(rule.type))) {
+		fieldRules.validate = toValidator(resolved, element.name, 'Validation failed', resolvedRegistry);
 	}
 
 	return fieldRules;

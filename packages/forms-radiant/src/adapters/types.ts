@@ -1,5 +1,6 @@
 import type { FormActionConfig, FormConfig } from '@schema-engine/forms/schemas';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
+import type { FieldArrayValue } from '@schema-engine/forms/adapters';
 import type { JsxRenderable } from '@ecopages/jsx';
 
 export interface FormFieldValue<TFieldValue = unknown> {
@@ -10,17 +11,7 @@ export interface FormFieldValue<TFieldValue = unknown> {
 	name: string;
 }
 
-export interface FieldArrayValue {
-	fields: Array<{ id: string }>;
-	append: (value: unknown) => void;
-	prepend: (value: unknown) => void;
-	insert: (index: number, value: unknown) => void;
-	swap: (indexA: number, indexB: number) => void;
-	move: (indexA: number, indexB: number) => void;
-	update: (index: number, value: unknown) => void;
-	replace: (value: unknown[]) => void;
-	remove: (index?: number | number[]) => void;
-}
+export type { FieldArrayValue };
 
 export interface FormProviderProps<TFormData = Record<string, unknown>> {
 	config: FormConfig | NormalizedFormConfig;

@@ -3,7 +3,7 @@ import { RuiSwitch } from '@ecopages/radiant-ui/switch';
 import { RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
 import { RuiLabel } from '@ecopages/radiant-ui/label';
 import { toFieldRules } from '@/lib/field-rules';
-import type { SwitchFieldProps } from '@/registry/forms/inputs/form-switch.types';
+import type { SwitchFieldProps } from './form-switch.types';
 
 export function FormSwitch({
 	onChange: propsOnChange,

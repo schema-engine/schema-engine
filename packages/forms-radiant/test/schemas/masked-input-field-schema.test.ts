@@ -3,7 +3,7 @@ import {
 	MaskedInputFieldSchema,
 	maskedInputFieldExample,
 	type MaskedInputFieldConfig,
-} from '@/components/schema-engine/forms/inputs/form-masked-input.types';
+} from '../../src/elements/inputs/form-masked-input.types';
 
 describe('Masked input field schema', () => {
 	test('validates a complete configuration', () => {

@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import * as z from 'zod/mini';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import { createReactFormEngine } from '@/registries/builder-registry';
+import { createFormEngine } from '@/registries/builder-registry';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { rhfAdapter } from '@/adapters/react-hook-form';
 
@@ -21,7 +21,7 @@ const submitSchema = z.object({
 });
 
 function createHeadlessEngine() {
-	return createReactFormEngine({
+	return createFormEngine({
 		elements: [
 			{
 				$type: 'input',
@@ -112,7 +112,7 @@ describe('FormRenderer missing-recipe fallback', () => {
 
 describe('native Standard Schema through FormRenderer', () => {
 	test('createFormEngine -> defineForm -> renderer', () => {
-		const engine = createReactFormEngine({
+		const engine = createFormEngine({
 			elements: [
 				{
 					$type: 'minimal-fixture',
@@ -157,7 +157,7 @@ describe('transformed element configs through FormRenderer', () => {
 			),
 		});
 
-		const engine = createReactFormEngine({
+		const engine = createFormEngine({
 			elements: [
 				{
 					$type: 'count',

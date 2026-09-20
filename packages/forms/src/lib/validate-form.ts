@@ -1,4 +1,5 @@
 import type { FormConfig, FormConfigEnvelope, FormTaggedConfig } from '@/schemas/form-config';
+import type { ElementConfig } from '@/schemas/field-config';
 import { formConfigEnvelopeSchema } from '@/schemas/form-config';
 import type { BuilderActionRegistration, InputRegistration, RecipeRegistration, StaticRegistration } from '@/types';
 import { safeParseStandardSchema, type StandardSchemaIssue } from '@/lib/standard-schema';
@@ -270,7 +271,7 @@ function brandElementTree(config: FormTaggedConfig): NormalizedElementConfig {
 				children.map((child) => brandElementTree(child as FormTaggedConfig)),
 			)
 		: config;
-	return markNormalizedElementConfig(next as unknown as FormEngine.ElementConfig);
+	return markNormalizedElementConfig(next as unknown as ElementConfig);
 }
 
 /**

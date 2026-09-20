@@ -4,7 +4,7 @@ import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
 import { toFieldRules } from '@/lib/field-rules';
-import type { InputOTPFieldProps } from '@/registry/forms/inputs/form-input-otp.types';
+import type { InputOTPFieldProps } from './form-input-otp.types';
 
 function sanitizeChar(value: string, pattern: 'numeric' | 'alphanumeric') {
 	const char = value.slice(-1);
@@ -145,8 +145,8 @@ export function FormInputOTP({
 		>
 			{jsx('se-input-otp', {
 				name: config.name,
-				'prop:length': config.length ?? 6,
-				'prop:pattern': config.pattern ?? 'numeric',
+				length: config.length ?? 6,
+				pattern: config.pattern ?? 'numeric',
 				disabled: config.disabled,
 				'on:change': (event: Event) => {
 					propsOnChange?.((event as CustomEvent<{ value?: string }>).detail?.value ?? '');

@@ -2,8 +2,7 @@ import type { BuilderActionRegistration, InputRegistration, RecipeRegistration, 
 import { logger } from '@/lib/logger';
 import type { StandardJSONSchemaV1 } from '@/lib/standard-json-schema';
 import * as z from 'zod/mini';
-import type { FormEngineSchemaArtifacts, FormEngineSchemaMetadataRegistry } from './schema-artifacts';
-import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from './schema-artifacts';
+import type { FormEngineSchemaArtifacts } from './schema-artifacts';
 import { validateElementConfig, validateFormConfig } from '@/lib/validate-form';
 import type { NormalizedElementConfig, NormalizedFormConfig } from '@/lib/normalized-form-config';
 import type { FormAuthoringInput } from '@/builder/form-authoring';
@@ -18,6 +17,7 @@ import type {
 import type { ExtendFormEngineOptions } from './create-form-engine';
 import { buildFormEngine } from './build-form-engine';
 import type { CompiledGrid, NormalizedGridTheme } from '@/lib/grid-styles';
+import type { ValidationRegistry } from '@/schemas/validation/validation-registry';
 import {
 	describeRecipeFromRegistration,
 	describeViewCatalogFromRecipes,
@@ -34,27 +34,9 @@ export interface EngineRegistries {
 	elements: Map<string, InputRegistration<any, any, any> | StaticRegistration<any, any, any>>;
 	recipes: Map<string, RecipeRegistration<any, any>>;
 	actions: Map<string, BuilderActionRegistration>;
-	schemaArtifacts?: FormEngineSchemaArtifacts;
-	schemaRegistry?: FormEngineSchemaMetadataRegistry;
-	formConfigSchema?: z.ZodMiniType;
+	schemaArtifacts: FormEngineSchemaArtifacts;
 	compiledGrid: CompiledGrid;
-}
-
-function resolveSchemaArtifacts(registries: EngineRegistries): FormEngineSchemaArtifacts {
-	if (registries.schemaArtifacts) {
-		return registries.schemaArtifacts;
-	}
-
-	if (!registries.schemaRegistry || !registries.formConfigSchema) {
-		throw new Error('FormEngine requires schemaArtifacts or both schemaRegistry and formConfigSchema');
-	}
-
-	return createFormEngineSchemaArtifacts(
-		registries.schemaRegistry,
-		registries.formConfigSchema,
-		undefined,
-		createActionConfigValidatorMap(registries.actions.values()),
-	);
+	validationRegistry: ValidationRegistry;
 }
 
 export class FormEngine<
@@ -65,21 +47,20 @@ export class FormEngine<
 	private readonly registries: EngineRegistries;
 	private readonly schemaArtifacts: FormEngineSchemaArtifacts;
 	private readonly compiledGrid: CompiledGrid;
+	private readonly validationRegistry: ValidationRegistry;
 
 	constructor(registries: EngineRegistries) {
-		const schemaArtifacts = resolveSchemaArtifacts(registries);
-
 		this.registries = {
 			elements: new Map(registries.elements),
 			recipes: new Map(registries.recipes),
 			actions: new Map(registries.actions),
-			schemaArtifacts,
-			schemaRegistry: schemaArtifacts.metadataRegistry,
-			formConfigSchema: schemaArtifacts.formConfigValidator,
+			schemaArtifacts: registries.schemaArtifacts,
 			compiledGrid: registries.compiledGrid,
+			validationRegistry: registries.validationRegistry,
 		};
-		this.schemaArtifacts = schemaArtifacts;
+		this.schemaArtifacts = registries.schemaArtifacts;
 		this.compiledGrid = registries.compiledGrid;
+		this.validationRegistry = registries.validationRegistry;
 
 		logger.debug('FormEngine initialized', {
 			elements: this.registries.elements.size,
@@ -130,6 +111,10 @@ export class FormEngine<
 	 */
 	getCompiledGrid(): CompiledGrid {
 		return this.compiledGrid;
+	}
+
+	getValidationRegistry(): ValidationRegistry {
+		return this.validationRegistry;
 	}
 
 	/** The engine's immutable grid theme (computed once at construction). */

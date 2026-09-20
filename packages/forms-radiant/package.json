@@ -22,7 +22,7 @@
 	"scripts": {
 		"build:lib": "pnpm clean && pnpm build:files && pnpm build:types",
 		"build:files": "node ./build.ts",
-		"build:types": "tsc -p tsconfig.registry-forms.json && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json -f",
+		"build:types": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json -f",
 		"watch:lib": "node ./build.ts --watch",
 		"clean": "rm -rf ./dist",
 		"test:all": "vitest run --project unit --project browser",

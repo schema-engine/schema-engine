@@ -5,8 +5,7 @@ group: Forms React
 order: 2
 ---
 
-import { EcoEmbed } from '@ecopages/ecopages-jsx/eco-embed';
-import { ReactFormPreview } from '@/components/react-form-demo/react-form-preview.react';
+import { ReactFormDemoEmbed } from '@/components/react-form-demo/react-form-demo-embed';
 import { FormConfigCode } from '@/components/form-config-code';
 import { basicContactFormConfig } from '@/lib/form-configs/basic-contact';
 
@@ -18,7 +17,7 @@ The live example on this page is the exact configuration shown below, rendered w
 
 ## Live example
 
-<EcoEmbed component={ReactFormPreview} props={{ config: basicContactFormConfig }} />
+<ReactFormDemoEmbed config={basicContactFormConfig} />
 
 ## 1. Create a Form Engine
 
@@ -31,11 +30,11 @@ pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-
 Then import their generated registration barrels:
 
 ```typescript
-import { createReactFormEngine } from '@schema-engine/forms-react';
+import { createFormEngine } from '@schema-engine/forms-react';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
-const formEngine = createReactFormEngine({ elements: schemaFormRegistrations, recipes: schemaFormRecipeRegistrations });
+const formEngine = createFormEngine({ elements: schemaFormRegistrations, recipes: schemaFormRecipeRegistrations });
 ```
 
 ## 2. Configure Your Form

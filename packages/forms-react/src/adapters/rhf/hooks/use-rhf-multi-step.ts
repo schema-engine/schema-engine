@@ -41,7 +41,9 @@ type DispatchTrigger = (
 ) => Promise<ActionExecutionResult[]>;
 
 function fieldNamesForStep(step: FormConfigView['steps'][number] | undefined): string[] {
-	return (step?.elements ?? []).map((field) => field.name).filter(Boolean);
+	return (step?.elements ?? [])
+		.map((field) => field.name)
+		.filter((name): name is string => typeof name === 'string' && name.length > 0);
 }
 
 export function useRHFMultiStep(

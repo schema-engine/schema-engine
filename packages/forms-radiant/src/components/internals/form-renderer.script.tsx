@@ -11,7 +11,7 @@ import type { JsxRenderable } from '@ecopages/jsx';
 import type { FormConfig } from '@schema-engine/forms/schemas';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { FormAdapter, FormProviderProps } from '@/adapters/types';
-import { getActiveFormEngine, onActiveEngineChange } from '@/registries/active-engine';
+import { resolveFormEngine, whenEngineAvailable } from '@/contexts/resolve-form-engine';
 import { radiantAdapter } from '@/adapters/radiant';
 import { formEngineContext, type FormEngineContextValue } from '../provider';
 
@@ -61,7 +61,7 @@ export class FormRendererElement extends RadiantElement {
 
 	protected override onConnected(): void {
 		if (!this.engine) {
-			this.unsubscribeActiveEngine = onActiveEngineChange((engine) => {
+			this.unsubscribeActiveEngine = whenEngineAvailable(this, this.engine, (engine) => {
 				if (!this.engine) {
 					this.engine = engine;
 				}
@@ -85,7 +85,7 @@ export class FormRendererElement extends RadiantElement {
 	}
 
 	private publishContext(): void {
-		const engine = this.engine ?? getActiveFormEngine();
+		const engine = resolveFormEngine(this, this.engine);
 		const adapter = this.adapter ?? radiantAdapter;
 		if (!engine || !adapter) {
 			return;
@@ -104,7 +104,7 @@ export class FormRendererElement extends RadiantElement {
 		const context = {} as FormEngineContextValue;
 		Object.defineProperties(context, {
 			engine: {
-				get: () => (this.engine ?? getActiveFormEngine()) as FormEngine,
+				get: () => resolveFormEngine(this, this.engine) as FormEngine,
 			},
 			adapter: {
 				get: () => (this.adapter ?? radiantAdapter) as FormAdapter,

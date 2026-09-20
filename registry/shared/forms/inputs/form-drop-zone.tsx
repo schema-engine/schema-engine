@@ -1,4 +1,3 @@
-/** @jsxImportSource react */
 import { Dropzone, DropzoneContent, DropzoneEmptyState } from '@/components/ui/schema-engine/components/drop-zone';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
 import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';

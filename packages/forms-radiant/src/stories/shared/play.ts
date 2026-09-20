@@ -1,6 +1,6 @@
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import type { StoryContext } from 'storybook/internal/types';
-import { matchesText, queryAllDeep, queryByTextDeep, queryDeep } from '@/lib/dom-utils';
+import { matchesText, queryAllDeep, queryByTextDeep, queryDeep } from '@/stories/shared/dom-utils';
 import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
 
 export function getRuiForm(root: ParentNode): HTMLElement | null {

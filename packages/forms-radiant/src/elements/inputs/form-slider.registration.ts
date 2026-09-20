@@ -1,6 +1,6 @@
 import { FormSlider } from './form-slider';
-import type { SliderFieldConfig } from '@/registry/forms/inputs/form-slider.types';
-import { SliderFieldConfigSchema } from '@/registry/forms/inputs/form-slider.types';
+import type { SliderFieldConfig } from './form-slider.types';
+import { SliderFieldConfigSchema } from './form-slider.types';
 import { defineInput } from '@schema-engine/forms';
 
 declare global {

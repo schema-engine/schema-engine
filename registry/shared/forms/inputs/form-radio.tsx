@@ -1,4 +1,3 @@
-/** @jsxImportSource react */
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
 	FieldGroupRoot,

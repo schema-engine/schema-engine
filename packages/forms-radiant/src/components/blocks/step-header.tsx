@@ -58,7 +58,7 @@ export function StepHeaderBlock(context?: {
 	viewConfig?: Record<string, unknown>;
 }): JsxRenderable {
 	return jsx('se-step-header', {
-		'prop:config': context?.config,
-		'prop:viewConfig': context?.viewConfig ?? {},
+		config: context?.config,
+		viewConfig: context?.viewConfig ?? {},
 	});
 }

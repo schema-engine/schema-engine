@@ -1,16 +1,21 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { registerValidation } from '@schema-engine/forms/schemas/validation';
+import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
 import { toFieldRules } from '@/lib/field-rules';
 import { createRadiantPhoneValidationRegistration } from '@/lib/phone-validation';
 
+const registry = createDefaultValidationRegistry();
+
 describe('toFieldRules', () => {
 	test('maps required and email rules for RuiField', () => {
-		const rules = toFieldRules({
-			rules: [
-				{ type: 'required', message: 'Name is required' },
-				{ type: 'email', message: 'Invalid email' },
-			],
-		});
+		const rules = toFieldRules(
+			{
+				rules: [
+					{ type: 'required', message: 'Name is required' },
+					{ type: 'email', message: 'Invalid email' },
+				],
+			},
+			registry,
+		);
 
 		expect(rules?.required).toBe('Name is required');
 		const pattern = rules?.pattern as { value: RegExp; message: string } | undefined;
@@ -23,13 +28,14 @@ describe('toFieldRules', () => {
 	});
 
 	test('returns undefined when a field has no rules', () => {
-		expect(toFieldRules({})).toBeUndefined();
-		expect(toFieldRules({ rules: [] })).toBeUndefined();
+		expect(toFieldRules({}, registry)).toBeUndefined();
+		expect(toFieldRules({ rules: [] }, registry)).toBeUndefined();
 	});
 
 	test('uses the phone validator for complete numbers', async () => {
-		registerValidation(createRadiantPhoneValidationRegistration());
-		const rules = toFieldRules({ rules: [{ type: 'phone' }] });
+		const phoneRegistry = createDefaultValidationRegistry();
+		phoneRegistry.register(createRadiantPhoneValidationRegistration());
+		const rules = toFieldRules({ rules: [{ type: 'phone' }] }, phoneRegistry);
 		expect(typeof rules?.validate).toBe('function');
 
 		const validate = rules?.validate as (value: unknown) => Promise<boolean | string>;
@@ -38,8 +44,8 @@ describe('toFieldRules', () => {
 	});
 
 	test('uses the shared validation registry for URL and IPv4 rules', async () => {
-		const urlRules = toFieldRules({ rules: [{ type: 'url', message: 'Enter a valid URL' }] });
-		const ipv4Rules = toFieldRules({ rules: [{ type: 'ipv4', message: 'Enter a valid IPv4 address' }] });
+		const urlRules = toFieldRules({ rules: [{ type: 'url', message: 'Enter a valid URL' }] }, registry);
+		const ipv4Rules = toFieldRules({ rules: [{ type: 'ipv4', message: 'Enter a valid IPv4 address' }] }, registry);
 
 		const validateUrl = urlRules?.validate as (value: unknown) => Promise<boolean | string>;
 		const validateIpv4 = ipv4Rules?.validate as (value: unknown) => Promise<boolean | string>;
@@ -50,8 +56,11 @@ describe('toFieldRules', () => {
 	});
 
 	test('uses the shared validation registry for Base64 and hexadecimal rules', async () => {
-		const base64Rules = toFieldRules({ rules: [{ type: 'base64', message: 'Enter Base64 data' }] });
-		const hexadecimalRules = toFieldRules({ rules: [{ type: 'hex', message: 'Enter hexadecimal characters' }] });
+		const base64Rules = toFieldRules({ rules: [{ type: 'base64', message: 'Enter Base64 data' }] }, registry);
+		const hexadecimalRules = toFieldRules(
+			{ rules: [{ type: 'hex', message: 'Enter hexadecimal characters' }] },
+			registry,
+		);
 		const base64Pattern = base64Rules?.pattern as { value: RegExp } | undefined;
 		const hexPattern = hexadecimalRules?.pattern as { value: RegExp } | undefined;
 
@@ -62,8 +71,9 @@ describe('toFieldRules', () => {
 	});
 
 	test('injects phone validation for phone-input when the author omitted the rule', async () => {
-		registerValidation(createRadiantPhoneValidationRegistration());
-		const rules = toFieldRules({ $type: 'phone-input' });
+		const phoneRegistry = createDefaultValidationRegistry();
+		phoneRegistry.register(createRadiantPhoneValidationRegistration());
+		const rules = toFieldRules({ $type: 'phone-input' }, phoneRegistry);
 		expect(typeof rules?.validate).toBe('function');
 
 		const validate = rules?.validate as (value: unknown) => Promise<boolean | string>;
@@ -85,18 +95,21 @@ describe('toFieldRules', () => {
 		});
 
 		test('resolves a reference against the rendered row using the form values', async () => {
-			const rules = toFieldRules({
-				rules: [
-					{
-						type: 'async',
-						url: '/api/check',
-						method: 'POST',
-						dependencies: ['accountType'],
-						disableCache: true,
-					},
-				],
-				name: 'contacts.1.email',
-			});
+			const rules = toFieldRules(
+				{
+					rules: [
+						{
+							type: 'async',
+							url: '/api/check',
+							method: 'POST',
+							dependencies: ['accountType'],
+							disableCache: true,
+						},
+					],
+					name: 'contacts.1.email',
+				},
+				registry,
+			);
 
 			const validate = rules?.validate as (
 				value: unknown,

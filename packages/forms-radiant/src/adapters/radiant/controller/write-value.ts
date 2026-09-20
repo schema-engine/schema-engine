@@ -11,7 +11,10 @@ export function isWritingValue(store: FormStore): boolean {
  * @remarks
  * Radiant UI addresses registered controls by flat names. Replace the branch and
  * synchronize those controls before notifying controller subscribers. Removed
- * controls receive undefined until the renderer unregisters them.
+ * controls receive undefined until the renderer unregisters them. `store.values`
+ * is assigned twice so child field stores observe the branch replacement before
+ * per-field `setValue` calls run, then the tree is reconciled again after those
+ * updates.
  */
 export function writeValue(store: FormStore, name: string, value: unknown): void {
 	const belongsToBranch = (field: string) => field === name || field.startsWith(`${name}.`);

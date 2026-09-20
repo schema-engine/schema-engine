@@ -98,8 +98,8 @@ export function SplitScreenShell({ slots, viewConfig, config }: FormShellProps):
 		<div class="split-screen-shell">
 			{jsx('se-split-screen-side', {
 				class: `split-screen-shell__side split-screen-shell__side--${sideWidth}${sidePlacement === 'right' ? ' split-screen-shell__side--right' : ''}`,
-				'prop:sideContent': sideContent ?? '',
-				'prop:config': config,
+				sideContent: sideContent ?? '',
+				config,
 			})}
 			<main classes={['split-screen-shell__main', `split-screen-shell__main--${contentAlignment}`]}>
 				{slots.header}

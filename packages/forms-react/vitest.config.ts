@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
+const formsPackageRoot = path.resolve(dirname, '../forms/src');
 
 const alias = [
 	{
@@ -15,6 +16,18 @@ const alias = [
 	{
 		find: '@/components/schema-engine/forms',
 		replacement: path.resolve(dirname, '../../registry/shared/forms'),
+	},
+	{
+		find: /^@schema-engine\/forms\/lib\/logger$/,
+		replacement: `${formsPackageRoot}/lib/logger.ts`,
+	},
+	{
+		find: /^@schema-engine\/forms\/lib\/normalized-form-config$/,
+		replacement: `${formsPackageRoot}/lib/normalized-form-config.ts`,
+	},
+	{
+		find: /^@schema-engine\/forms\/adapters(\/.*)?$/,
+		replacement: `${formsPackageRoot}/adapters$1`,
 	},
 	{
 		find: '@/components/ui',

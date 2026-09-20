@@ -1,6 +1,6 @@
 import { FormDropZone } from './form-drop-zone';
-import type { DropZoneFieldConfig } from '@/registry/forms/inputs/form-drop-zone.types';
-import { DropZoneFieldSchema } from '@/registry/forms/inputs/form-drop-zone.types';
+import type { DropZoneFieldConfig } from './form-drop-zone.types';
+import { DropZoneFieldSchema } from './form-drop-zone.types';
 import { defineInput } from '@schema-engine/forms';
 
 declare global {

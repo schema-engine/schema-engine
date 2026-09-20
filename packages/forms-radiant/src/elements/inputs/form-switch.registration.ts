@@ -1,6 +1,6 @@
 import { FormSwitch } from './form-switch';
-import type { SwitchFieldConfig } from '@/registry/forms/inputs/form-switch.types';
-import { SwitchFieldConfigSchema } from '@/registry/forms/inputs/form-switch.types';
+import type { SwitchFieldConfig } from './form-switch.types';
+import { SwitchFieldConfigSchema } from './form-switch.types';
 import { defineInput } from '@schema-engine/forms';
 
 declare global {

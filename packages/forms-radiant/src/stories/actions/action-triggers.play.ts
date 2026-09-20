@@ -1,7 +1,7 @@
 import { expect, userEvent, waitFor } from 'storybook/test';
 import type { StoryContext } from 'storybook/internal/types';
 import { whenInteractive } from '@/stories/shared/storybook-ssr';
-import { queryAllDeep, queryByTextContentDeep, queryDeep } from '@/lib/dom-utils';
+import { queryAllDeep, queryByTextContentDeep, queryDeep } from '@/stories/shared/dom-utils';
 import { clickSubmit, expectFieldError, getFieldControl } from '@/stories/shared/play';
 
 function getDashboard(root: ParentNode): HTMLElement {

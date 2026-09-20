@@ -3,7 +3,7 @@ import type { NormalizedElementConfig } from '@schema-engine/forms';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { renderRegisteredElement } from './render-registered-element';
-import { getActiveFormEngine } from '@/registries/active-engine';
+import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import { evaluateConstraintLogic } from '@/hooks/constraint-logic';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 
@@ -32,7 +32,7 @@ export function FormElement({
 	className,
 	style,
 }: FormElementProps): JsxRenderable {
-	const resolvedEngine = engine ?? getActiveFormEngine();
+	const resolvedEngine = resolveFormEngine(undefined, engine);
 	if (!resolvedEngine) {
 		throw new Error(`Cannot render form element '${config.$type}' without a FormEngine.`);
 	}

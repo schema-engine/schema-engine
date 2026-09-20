@@ -13,7 +13,7 @@ import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
 import { parseChoiceValue, serializeChoiceValue } from '@/lib/choice-value';
 import { toFieldRules } from '@/lib/field-rules';
-import type { SelectFieldProps } from '@/registry/forms/inputs/form-select.types';
+import type { SelectFieldProps } from './form-select.types';
 
 export function FormSelect({
 	onChange: propsOnChange,

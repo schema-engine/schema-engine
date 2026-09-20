@@ -1,4 +1,3 @@
-/** @jsxImportSource react */
 import { Checkbox } from '@/components/ui/checkbox';
 import {
 	FieldGroupRoot,

@@ -10,6 +10,7 @@ import {
 	splitScreenWizardSpec,
 	wizardSpec,
 	type BuiltInRecipeRegistry,
+	type RecipeSpec,
 } from '@schema-engine/forms/recipes';
 import {
 	StepHeaderBlock,
@@ -27,7 +28,7 @@ declare global {
 	}
 }
 
-function bind(spec: Parameters<typeof defineFormRecipe>[0], render: RadiantRecipeAdapterPayload) {
+function bind<TSpec extends RecipeSpec>(spec: TSpec, render: RadiantRecipeAdapterPayload) {
 	return defineFormRecipe(spec, render);
 }
 

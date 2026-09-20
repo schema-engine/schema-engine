@@ -11,7 +11,6 @@
 		"paths": {
 			"@schema-engine/forms-radiant": ["./src/index.ts"],
 			"@schema-engine/forms-radiant/*": ["./src/*"],
-			"@/registry/forms/*": ["./dist/registry-forms/*"],
 			"@/*": ["./src/*"]
 		}
 	},

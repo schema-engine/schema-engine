@@ -1,6 +1,6 @@
 import { FormCombobox } from './form-combobox';
-import type { ComboboxFieldConfig } from '@/registry/forms/inputs/form-combobox.types';
-import { ComboboxFieldConfigSchema } from '@/registry/forms/inputs/form-combobox.types';
+import type { ComboboxFieldConfig } from './form-combobox.types';
+import { ComboboxFieldConfigSchema } from './form-combobox.types';
 import { defineInput } from '@schema-engine/forms';
 
 declare global {

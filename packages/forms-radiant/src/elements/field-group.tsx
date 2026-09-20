@@ -68,7 +68,9 @@ export function FieldGroup({
 			{!hiddenLabel ? (
 				<RuiLabel htmlFor={htmlFor}>
 					{label}
-					{required ? ' *' : ''}
+					<span data-se-required-marker hidden={!required}>
+						{' *'}
+					</span>
 				</RuiLabel>
 			) : null}
 			{children}

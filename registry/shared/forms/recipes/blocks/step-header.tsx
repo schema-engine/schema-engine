@@ -1,4 +1,3 @@
-/** @jsxImportSource react */
 import type { ElementType } from 'react';
 import { formatStepCounter, type StepHeaderConfig } from '@schema-engine/forms/recipes';
 import { useActiveStep, useViewConfig, useViewContext } from '@schema-engine/forms-react/contexts';

@@ -3,17 +3,29 @@
  * Field *names* are composed in {@link ./field-scope.ts}; this module reads and writes values.
  */
 
+const RESERVED_PATH_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+function assertWritablePathKey(key: string): void {
+	if (RESERVED_PATH_KEYS.has(key)) {
+		throw new Error(`Rejected path segment '${key}'`);
+	}
+}
+
+function createValueObject(): Record<string, unknown> {
+	return Object.create(null) as Record<string, unknown>;
+}
+
 export function getValueAtPath<TValue = unknown>(input: unknown, path: string): TValue | undefined {
 	if (!path) {
 		return input as TValue;
 	}
 
 	return path.split('.').reduce<unknown>((current, segment) => {
-		if (current === null || current === undefined) {
+		if (current === null || current === undefined || RESERVED_PATH_KEYS.has(segment)) {
 			return undefined;
 		}
 
-		return (current as Record<string, unknown>)[segment];
+		return Object.hasOwn(current as object, segment) ? (current as Record<string, unknown>)[segment] : undefined;
 	}, input) as TValue | undefined;
 }
 
@@ -32,6 +44,7 @@ export function setValueAtPath(target: Record<string, unknown>, path: string, va
 
 	for (let index = 0; index < segments.length; index += 1) {
 		const segment = segments[index];
+		assertWritablePathKey(segment);
 		const isLeaf = index === segments.length - 1;
 
 		if (isLeaf) {
@@ -53,7 +66,7 @@ export function setValueAtPath(target: Record<string, unknown>, path: string, va
 			continue;
 		}
 
-		const container: Record<string, unknown> | unknown[] = nextIsIndex ? [] : {};
+		const container: Record<string, unknown> | unknown[] = nextIsIndex ? [] : createValueObject();
 		current[segment] = container;
 		current = container as Record<string, unknown>;
 	}
@@ -98,7 +111,16 @@ export function expandFieldTemplatePaths(values: Record<string, unknown>, templa
 		}
 
 		const [nextPart, ...rest] = remainingParts;
-		const nextValue = (obj as Record<string, unknown> | undefined)?.[nextPart];
+		if (
+			obj === null ||
+			obj === undefined ||
+			typeof obj !== 'object' ||
+			RESERVED_PATH_KEYS.has(nextPart) ||
+			!Object.hasOwn(obj, nextPart)
+		) {
+			return;
+		}
+		const nextValue = (obj as Record<string, unknown>)[nextPart];
 
 		if (Array.isArray(nextValue)) {
 			for (let index = 0; index < nextValue.length; index += 1) {
@@ -124,8 +146,11 @@ function clonePlainValue(value: unknown): unknown {
 	if (value && typeof value === 'object') {
 		const proto = Object.getPrototypeOf(value);
 		if (proto === Object.prototype || proto === null) {
-			const copy: Record<string, unknown> = {};
+			const copy = createValueObject();
 			for (const [key, child] of Object.entries(value)) {
+				if (RESERVED_PATH_KEYS.has(key)) {
+					continue;
+				}
 				copy[key] = clonePlainValue(child);
 			}
 			return copy;
@@ -141,9 +166,17 @@ function deepMerge(base: unknown, override: unknown): unknown {
 	}
 
 	if (isPlainObject(base) && isPlainObject(override)) {
-		const result: Record<string, unknown> = { ...base };
+		const result = createValueObject();
+		for (const [key, value] of Object.entries(base)) {
+			if (!RESERVED_PATH_KEYS.has(key)) {
+				result[key] = value;
+			}
+		}
 		for (const [key, value] of Object.entries(override)) {
-			result[key] = key in result ? deepMerge(result[key], value) : value;
+			if (RESERVED_PATH_KEYS.has(key)) {
+				continue;
+			}
+			result[key] = Object.hasOwn(result, key) ? deepMerge(result[key], value) : value;
 		}
 		return result;
 	}

@@ -85,7 +85,7 @@ export function StepIndicatorsBlock(context?: {
 	viewConfig?: Record<string, unknown>;
 }): JsxRenderable {
 	return jsx('se-step-indicators', {
-		'prop:config': context?.config,
-		'prop:viewConfig': context?.viewConfig ?? {},
+		config: context?.config,
+		viewConfig: context?.viewConfig ?? {},
 	});
 }

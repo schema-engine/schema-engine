@@ -2,7 +2,7 @@ import { customElement, prop, RadiantElement, state } from '@ecopages/radiant';
 import { RuiAlert, RuiAlertIcon } from '@ecopages/radiant-ui/alert';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
-import type { SubmissionAlertProps } from '@/registry/forms/content/form-submission-alert.types';
+import type { SubmissionAlertProps } from './form-submission-alert.types';
 
 type AlertStatus = 'idle' | 'pending' | 'success' | 'error';
 
@@ -13,29 +13,13 @@ export class SeSubmissionAlert extends RadiantElement {
 	@state status: AlertStatus = 'idle';
 	private dismissTimer?: ReturnType<typeof setTimeout>;
 
-	private resolveConfig(): SubmissionAlertProps | undefined {
-		if (this.config) {
-			return this.config;
-		}
-		const raw = this.getAttribute('data-config');
-		if (raw) {
-			try {
-				this.config = JSON.parse(raw);
-				return this.config;
-			} catch {
-				return undefined;
-			}
-		}
-		return undefined;
-	}
-
 	private setStatus(next: AlertStatus): void {
 		this.status = next;
 		if (this.dismissTimer) {
 			clearTimeout(this.dismissTimer);
 			this.dismissTimer = undefined;
 		}
-		const config = this.resolveConfig();
+		const config = this.config;
 		if (config?.autoDismiss && next !== 'idle') {
 			this.dismissTimer = setTimeout(() => {
 				this.status = 'idle';
@@ -61,7 +45,7 @@ export class SeSubmissionAlert extends RadiantElement {
 			if (hasActionController) {
 				return;
 			}
-			const config = this.resolveConfig();
+			const config = this.config;
 			if (config?.showOn?.includes('pending')) {
 				this.setStatus('pending');
 			} else {
@@ -88,7 +72,7 @@ export class SeSubmissionAlert extends RadiantElement {
 	}
 
 	override render(): JsxRenderable {
-		const config = this.resolveConfig();
+		const config = this.config;
 		if (!config) {
 			return null;
 		}
@@ -136,7 +120,6 @@ export function FormSubmissionAlert(config: SubmissionAlertProps) {
 		classes: ['se-form-field'],
 		'data-se-grid-theme': fieldHost.themeId,
 		style: fieldHost.style,
-		'prop:config': config,
-		'data-config': JSON.stringify(config),
+		config,
 	});
 }

@@ -30,12 +30,12 @@ export function FormInstance({
 	isSubmitting?: boolean;
 	children?: JsxRenderable;
 }): JsxRenderable {
-	void isSubmitting;
 	return jsx('se-form-instance', {
-		'prop:config': config,
+		config,
 		'prop:engine': engine,
-		'prop:defaultValues': defaultValues,
+		defaultValues,
 		'prop:onSubmit': onSubmit,
+		isSubmitting,
 		children: (
 			<ConfiguredRuiForm config={config} defaultValues={defaultValues} onSubmit={onSubmit}>
 				<RecipeRenderer config={config} engine={engine} recipe={resolveFormRecipe(config, engine)}>

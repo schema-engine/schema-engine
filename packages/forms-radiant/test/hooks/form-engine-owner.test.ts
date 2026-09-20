@@ -1,9 +1,9 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, beforeEach } from 'vitest';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
 import { renderRegisteredElement } from '@/components/internals/render-registered-element';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
-import { getActiveFormEngine, setActiveFormEngine } from '@/registries/active-engine';
+import { getDefaultFormEngine, registerFormEngine, resetRegisteredFormEnginesForTests } from '@/registries/active-engine';
 
 const probeSchema = z.object({
 	$type: z.literal('probe'),
@@ -29,45 +29,39 @@ function createProbeEngine(breakpoints: { md: string }, onRender: () => void) {
 }
 
 describe('form engine owner', () => {
+	beforeEach(() => {
+		resetRegisteredFormEnginesForTests();
+	});
+
 	test('field hosts resolve the engine that is rendering them, not the active engine', () => {
-		const previous = getActiveFormEngine();
 		const engineB = createFormEngine({ grid: { breakpoints: { md: '60rem' } } });
-		setActiveFormEngine(engineB);
+		registerFormEngine(engineB);
 
-		try {
-			let capturedThemeId: string | undefined;
-			const engineA = createProbeEngine({ md: '50rem' }, () => {
-				capturedThemeId = mergeFieldGridHost().themeId;
-			});
+		let capturedThemeId: string | undefined;
+		const engineA = createProbeEngine({ md: '50rem' }, () => {
+			capturedThemeId = mergeFieldGridHost().themeId;
+		});
 
-			renderRegisteredElement(engineA.validateElement({ $type: 'probe', id: 'probe', name: 'probe' }), engineA);
+		renderRegisteredElement(engineA.validateElement({ $type: 'probe', id: 'probe', name: 'probe' }), engineA);
 
-			expect(capturedThemeId).toBe(engineA.getGridTheme().id);
-			expect(capturedThemeId).not.toBe(engineB.getGridTheme().id);
-			expect(mergeFieldGridHost().themeId).toBe(engineB.getGridTheme().id);
-		} finally {
-			setActiveFormEngine(previous ?? null);
-		}
+		expect(capturedThemeId).toBe(engineA.getGridTheme().id);
+		expect(capturedThemeId).not.toBe(engineB.getGridTheme().id);
+		expect(mergeFieldGridHost().themeId).toBe(engineB.getGridTheme().id);
 	});
 
 	test('later renders through the same engine still own the field hosts', () => {
-		const previous = getActiveFormEngine();
 		const engineB = createFormEngine({ grid: { breakpoints: { md: '60rem' } } });
-		setActiveFormEngine(engineB);
+		registerFormEngine(engineB);
 
-		try {
-			const captured: string[] = [];
-			const engineA = createProbeEngine({ md: '50rem' }, () => {
-				captured.push(mergeFieldGridHost().themeId);
-			});
-			const normalized = engineA.validateElement({ $type: 'probe', id: 'probe', name: 'probe' });
+		const captured: string[] = [];
+		const engineA = createProbeEngine({ md: '50rem' }, () => {
+			captured.push(mergeFieldGridHost().themeId);
+		});
+		const normalized = engineA.validateElement({ $type: 'probe', id: 'probe', name: 'probe' });
 
-			renderRegisteredElement(normalized, engineA);
-			renderRegisteredElement(normalized, engineA);
+		renderRegisteredElement(normalized, engineA);
+		renderRegisteredElement(normalized, engineA);
 
-			expect(captured).toEqual([engineA.getGridTheme().id, engineA.getGridTheme().id]);
-		} finally {
-			setActiveFormEngine(previous ?? null);
-		}
+		expect(captured).toEqual([engineA.getGridTheme().id, engineA.getGridTheme().id]);
 	});
 });

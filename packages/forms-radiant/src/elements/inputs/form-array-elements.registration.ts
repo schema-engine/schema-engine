@@ -1,11 +1,11 @@
 import { FormArrayElements } from './form-array-elements';
-import { ArrayElementConfigSchema } from '@/registry/forms/inputs/form-array-elements.types';
+import { ArrayElementConfigSchema } from './form-array-elements.types';
 import { defineInput } from '@schema-engine/forms';
 
 declare global {
 	namespace FormEngine {
 		interface ElementRegistry {
-			arrayElements: import('@/registry/forms/inputs/form-array-elements.types').ArrayElementsConfig;
+			arrayElements: import('./form-array-elements.types').ArrayElementsConfig;
 		}
 	}
 }

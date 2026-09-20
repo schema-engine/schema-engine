@@ -7,7 +7,7 @@ import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { ActionDispatcher } from '@schema-engine/actions';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
-import { onActiveEngineChange } from '@/registries/active-engine';
+import { whenEngineAvailable } from '@/contexts/resolve-form-engine';
 import { FormController } from '@/adapters/radiant/controller';
 import { findAncestorElement } from '@/lib/rui-form-utils';
 
@@ -42,7 +42,7 @@ export class FormActionControllerElement extends RadiantElement {
 
 	protected override onConnected(): void {
 		if (!this.engine) {
-			this.unsubscribeActiveEngine = onActiveEngineChange((engine) => {
+			this.unsubscribeActiveEngine = whenEngineAvailable(this, this.engine, (engine) => {
 				if (!this.engine) {
 					this.engine = engine;
 				}
@@ -50,7 +50,6 @@ export class FormActionControllerElement extends RadiantElement {
 				this.onFormReady();
 			});
 		}
-		this.watchingChanges = false;
 		this.form.connect(() => this.onFormReady());
 		this.setupDispatcher();
 		this.onFormReady();
@@ -69,24 +68,8 @@ export class FormActionControllerElement extends RadiantElement {
 		return null;
 	}
 
-	private resolveConfig(): FormConfigView | undefined {
-		if (this.config) {
-			return this.config;
-		}
-		const raw = this.getAttribute('data-config');
-		if (raw) {
-			try {
-				this.config = JSON.parse(raw);
-				return this.config;
-			} catch {
-				return undefined;
-			}
-		}
-		return undefined;
-	}
-
 	private setupDispatcher(): void {
-		const config = this.resolveConfig();
+		const config = this.config;
 		if (this.dispatcher || !this.engine || !config?.actions?.length) {
 			return;
 		}
@@ -145,7 +128,7 @@ export class FormActionControllerElement extends RadiantElement {
 	}
 
 	private async dispatch(trigger: FormActionTrigger): Promise<Awaited<ReturnType<ActionDispatcher['dispatch']>>> {
-		const config = this.resolveConfig();
+		const config = this.config;
 		if (!this.dispatcher || !config?.actions?.length) {
 			return [];
 		}
@@ -184,8 +167,7 @@ export class FormActionControllerElement extends RadiantElement {
 
 export function FormActionController({ config, engine }: { config: FormConfigView; engine?: FormEngine }) {
 	return jsx('se-form-action-controller', {
-		'prop:config': config,
+		config,
 		'prop:engine': engine,
-		'data-config': JSON.stringify(config),
 	});
 }
