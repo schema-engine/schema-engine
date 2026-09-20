@@ -6,6 +6,7 @@ import {
 	FieldHint,
 } from '@/components/ui/schema-engine/components/field';
 import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
+import { mergeControlProps } from '@schema-engine/forms/schemas/html-attributes';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import type { CheckboxGroupFieldProps } from './form-checkbox-group.types';
@@ -35,7 +36,11 @@ export function FormCheckboxGroup({
 				</FieldLabel>
 			)}
 			<FieldContent>
-				<div className={isHorizontal ? 'flex flex-wrap gap-4' : 'space-y-3'}>
+				<div
+					{...mergeControlProps({ id: config.id }, config.htmlAttributes)}
+					className={isHorizontal ? 'flex flex-wrap gap-4' : 'space-y-3'}
+					role="group"
+				>
 					{config.options.map((option) => (
 						<FieldInputContainer key={option.value}>
 							<Checkbox

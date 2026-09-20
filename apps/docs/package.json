@@ -12,7 +12,8 @@
 		"preview": "ecopages preview",
 		"test:e2e": "vitest run --project e2e",
 		"pretest:e2e": "pnpm build",
-		"test:browser": "vitest run --project browser"
+		"test:browser": "vitest run --project browser",
+		"test:unit": "vitest run --project unit"
 	},
 	"devDependencies": {
 		"@ecopages/browser-router": "0.2.0-rc.7",

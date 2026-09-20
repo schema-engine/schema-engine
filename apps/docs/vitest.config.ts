@@ -18,6 +18,19 @@ export default defineConfig({
 		fileParallelism: false,
 		projects: [
 			{
+				resolve: {
+					alias: {
+						'@': path.resolve(dirname, 'src'),
+					},
+				},
+				test: {
+					name: 'unit',
+					include: ['test/**/*.test.ts'],
+					environment: 'node',
+					setupFiles: ['./test/unit-setup.ts'],
+				},
+			},
+			{
 				test: {
 					name: 'browser',
 					include: ['src/**/*.test.browser.ts'],

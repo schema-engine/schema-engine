@@ -26,7 +26,7 @@ export function FormSlider({
 		>
 			<div className="flex items-center gap-4">
 				<Slider
-					id={config.id}
+					{...fieldProps}
 					min={config.min || 0}
 					max={config.max || 100}
 					step={config.step || 1}
@@ -35,7 +35,6 @@ export function FormSlider({
 						const val = Array.isArray(values) ? values[0] : values;
 						combineHandlers(onChange, propsOnChange)(val);
 					}}
-					disabled={fieldProps.disabled}
 					orientation={config.orientation}
 					onBlur={combineHandlers(onBlur, propsOnBlur)}
 					onFocus={propsOnFocus}
