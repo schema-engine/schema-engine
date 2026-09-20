@@ -16,41 +16,50 @@ export class StepHeaderElement extends RadiantElement {
 	instance?: FormInstanceContextValue;
 
 	override render(): JsxRenderable {
-		const config = this.config;
-		if (!config) return null;
-		const instance = this.instance ?? deriveInitialInstance(config);
+		const content = resolveStepHeaderContent(this.config, this.instance, this.viewConfig);
+		if (!content) return null;
 
-		const headerConfig = getSlotConfig<StepHeaderConfig>(this.viewConfig ?? {}, 'header');
-		const stepIndex = config.steps[instance.currentStep] ? instance.currentStep : 0;
-		const step = config.steps[stepIndex];
-		if (!step) return null;
-		const total = config.steps.length;
-
-		const form = deriveFormMeta(config, instance);
-		const title = step.title || form.title;
-		const description = step.description || form.description;
-		const showCounter = headerConfig.showStepCounter === true;
-		const counter = showCounter
-			? formatStepCounter(headerConfig.labels?.stepCounter ?? 'Step {current} of {total}', stepIndex + 1, total)
-			: null;
-
-		if (!title && !description && !counter) return null;
+		const { headerConfig, title, description, counter } = content;
+		const counterPlacement = headerConfig.counterPlacement ?? 'after';
 
 		return (
 			<RuiHeading as="header" size={headerConfig.size ?? 'md'} class="se-step-header">
-				{counter && (headerConfig.counterPlacement ?? 'after') === 'before' ? (
-					<p class="se-step-header__counter">{counter}</p>
-				) : null}
+				{counter && counterPlacement === 'before' ? <p class="se-step-header__counter">{counter}</p> : null}
 				{title ? <RuiHeadingTitle as={headerConfig.titleAs ?? 'h2'}>{title}</RuiHeadingTitle> : null}
 				{headerConfig.showDescription !== false && description ? (
 					<RuiHeadingDescription>{description}</RuiHeadingDescription>
 				) : null}
-				{counter && (headerConfig.counterPlacement ?? 'after') === 'after' ? (
-					<p class="se-step-header__counter">{counter}</p>
-				) : null}
+				{counter && counterPlacement === 'after' ? <p class="se-step-header__counter">{counter}</p> : null}
 			</RuiHeading>
 		);
 	}
+}
+
+function resolveStepHeaderContent(
+	config: NormalizedFormConfig | undefined,
+	instance: FormInstanceContextValue | undefined,
+	viewConfig: Record<string, unknown> | undefined,
+) {
+	if (!config) return null;
+	const resolvedInstance = instance ?? deriveInitialInstance(config);
+	const headerConfig = getSlotConfig<StepHeaderConfig>(viewConfig ?? {}, 'header');
+	const stepIndex = config.steps[resolvedInstance.currentStep] ? resolvedInstance.currentStep : 0;
+	const step = config.steps[stepIndex];
+	if (!step) return null;
+
+	const form = deriveFormMeta(config, resolvedInstance);
+	const title = step.title || form.title;
+	const description = step.description || form.description;
+	const counter = headerConfig.showStepCounter
+		? formatStepCounter(
+				headerConfig.labels?.stepCounter ?? 'Step {current} of {total}',
+				stepIndex + 1,
+				config.steps.length,
+			)
+		: null;
+
+	if (!title && !description && !counter) return null;
+	return { headerConfig, title, description, counter };
 }
 
 export function StepHeaderBlock(context?: {

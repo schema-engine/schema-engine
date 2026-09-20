@@ -19,21 +19,30 @@ export function collectConstrainedElements(config: NormalizedFormConfig | undefi
 
 	const result: ConstrainedElementMetadata[] = [];
 
+	function resolveElementPath(element: NormalizedElementConfig, basePath: string): string {
+		const name = 'name' in element && typeof element.name === 'string' ? element.name : undefined;
+		const id = 'id' in element && typeof element.id === 'string' ? element.id : undefined;
+		const localName = name ?? id ?? '';
+		return basePath && localName ? `${basePath}.${localName}` : localName || basePath;
+	}
+
+	function recordConstrainedElement(element: NormalizedElementConfig, fieldPath: string): void {
+		if (!('constraints' in element) || !Array.isArray(element.constraints) || element.constraints.length === 0) {
+			return;
+		}
+		const id = 'id' in element && typeof element.id === 'string' ? element.id : undefined;
+		result.push({
+			fieldName: fieldPath,
+			id,
+			constraints: element.constraints,
+			isRequired: isFieldRequired('rules' in element ? element.rules : undefined),
+		});
+	}
+
 	function walk(elements: ReadonlyArray<NormalizedElementConfig>, basePath = ''): void {
 		for (const element of elements) {
-			const name = 'name' in element && typeof element.name === 'string' ? element.name : undefined;
-			const id = 'id' in element && typeof element.id === 'string' ? element.id : undefined;
-			const localName = name ?? id ?? '';
-			const fieldPath = basePath && localName ? `${basePath}.${localName}` : localName || basePath;
-
-			if ('constraints' in element && Array.isArray(element.constraints) && element.constraints.length > 0) {
-				result.push({
-					fieldName: fieldPath,
-					id,
-					constraints: element.constraints,
-					isRequired: isFieldRequired('rules' in element ? element.rules : undefined),
-				});
-			}
+			const fieldPath = resolveElementPath(element, basePath);
+			recordConstrainedElement(element, fieldPath);
 
 			if ('elements' in element && Array.isArray(element.elements)) {
 				walk(element.elements as ReadonlyArray<NormalizedElementConfig>, fieldPath);

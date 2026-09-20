@@ -94,6 +94,36 @@ function DebuggerProgress({ currentStep, totalSteps }: { currentStep: number; to
 	);
 }
 
+function StepStateBadges({
+	index,
+	stepStates,
+}: {
+	index: number;
+	stepStates: FormInstanceContextValue['stepStates'] | undefined;
+}) {
+	const isValid = stepStates?.valid?.[index];
+	const isVisited = stepStates?.visited?.[index];
+	return (
+		<div class="se-form-debugger__timeline-meta">
+			{isValid ? (
+				<RuiBadge variant="filled" class="se-form-debugger__badge se-form-debugger__badge--valid">
+					Valid
+				</RuiBadge>
+			) : null}
+			{!isValid && isVisited ? (
+				<RuiBadge variant="filled" class="se-form-debugger__badge se-form-debugger__badge--invalid">
+					Invalid
+				</RuiBadge>
+			) : null}
+			{isVisited ? (
+				<RuiBadge variant="muted" class="se-form-debugger__badge">
+					Visited
+				</RuiBadge>
+			) : null}
+		</div>
+	);
+}
+
 function DebuggerSteps({
 	steps,
 	currentStep,
@@ -116,29 +146,7 @@ function DebuggerSteps({
 							{showDetails && step.description ? (
 								<div class="se-form-debugger__step-description">{step.description}</div>
 							) : null}
-							<div class="se-form-debugger__timeline-meta">
-								{stepStates?.valid?.[index] ? (
-									<RuiBadge
-										variant="filled"
-										class="se-form-debugger__badge se-form-debugger__badge--valid"
-									>
-										Valid
-									</RuiBadge>
-								) : null}
-								{!stepStates?.valid?.[index] && stepStates?.visited?.[index] ? (
-									<RuiBadge
-										variant="filled"
-										class="se-form-debugger__badge se-form-debugger__badge--invalid"
-									>
-										Invalid
-									</RuiBadge>
-								) : null}
-								{stepStates?.visited?.[index] ? (
-									<RuiBadge variant="muted" class="se-form-debugger__badge">
-										Visited
-									</RuiBadge>
-								) : null}
-							</div>
+							<StepStateBadges index={index} stepStates={stepStates} />
 						</div>
 					</div>
 				))}
