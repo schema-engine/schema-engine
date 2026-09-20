@@ -1,4 +1,3 @@
-// oxlint-disable no-redundant-type-constituents
 import type { Brand } from '@schema-engine/registry';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { ElementMetadata } from './metadata';
@@ -62,7 +61,7 @@ export type StaticRegistration<
  * @template TSchema - Concrete view schema
  */
 export type RecipeRegistration<
-	TType extends keyof FormEngine.RecipeRegistry | string = keyof FormEngine.RecipeRegistry | string,
+	TType extends string = string,
 	TSchema extends StandardSchemaV1 = StandardSchemaV1,
 	TRender = unknown,
 > = Brand<

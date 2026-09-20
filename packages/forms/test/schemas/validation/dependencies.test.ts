@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { buildDependencyIndex, shouldSurfaceDependentError } from '@/schemas/validation';
+import { buildDependencyIndex, createDefaultValidationRegistry, shouldSurfaceDependentError } from '@/schemas/validation';
+
+const registry = createDefaultValidationRegistry();
 
 const passwordForm = [
 	{ $type: 'input', name: 'password', rules: [{ type: 'required' }] },
@@ -27,14 +29,14 @@ const lineItemsForm = [
 
 describe('buildDependencyIndex', () => {
 	test('maps a dependency to the field that reads it', () => {
-		const index = buildDependencyIndex(passwordForm, {});
+		const index = buildDependencyIndex(passwordForm, {}, registry);
 
 		expect(index.watched).toEqual(['password']);
 		expect(index.dependentsOf('password')).toEqual(['confirmPassword']);
 	});
 
 	test('reports no dependents for a field nothing reads', () => {
-		const index = buildDependencyIndex(passwordForm, {});
+		const index = buildDependencyIndex(passwordForm, {}, registry);
 
 		expect(index.dependentsOf('confirmPassword')).toEqual([]);
 		expect(index.expand(['confirmPassword'])).toEqual([]);
@@ -47,7 +49,7 @@ describe('buildDependencyIndex', () => {
 				{ quantity: 3, max: 4 },
 			],
 		};
-		const index = buildDependencyIndex(lineItemsForm, values);
+		const index = buildDependencyIndex(lineItemsForm, values, registry);
 
 		expect(index.dependentsOf('lines.1.quantity')).toEqual(['lines.1.max']);
 		expect(index.dependentsOf('lines.0.quantity')).toEqual(['lines.0.max']);
@@ -55,13 +57,17 @@ describe('buildDependencyIndex', () => {
 	});
 
 	test('follows the row count of the values it is built from', () => {
-		const oneRow = buildDependencyIndex(lineItemsForm, { lines: [{ quantity: 1, max: 2 }] });
-		const twoRows = buildDependencyIndex(lineItemsForm, {
-			lines: [
-				{ quantity: 1, max: 2 },
-				{ quantity: 3, max: 4 },
-			],
-		});
+		const oneRow = buildDependencyIndex(lineItemsForm, { lines: [{ quantity: 1, max: 2 }] }, registry);
+		const twoRows = buildDependencyIndex(
+			lineItemsForm,
+			{
+				lines: [
+					{ quantity: 1, max: 2 },
+					{ quantity: 3, max: 4 },
+				],
+			},
+			registry,
+		);
 
 		expect(oneRow.watched).toEqual(['lines.0.quantity']);
 		expect(twoRows.watched).toEqual(['lines.0.quantity', 'lines.1.quantity']);
@@ -76,7 +82,7 @@ describe('buildDependencyIndex', () => {
 			},
 		];
 
-		expect(buildDependencyIndex(elements, {}).watched).toEqual(['email', 'billing.country']);
+		expect(buildDependencyIndex(elements, {}, registry).watched).toEqual(['email', 'billing.country']);
 	});
 
 	test('unions dependents across several changed paths without repeating one', () => {
@@ -87,7 +93,7 @@ describe('buildDependencyIndex', () => {
 				rules: [{ type: 'relate', fields: ['a', 'b'], assert: 'atLeastOne', includeSelf: false }],
 			},
 		];
-		const index = buildDependencyIndex(elements, {});
+		const index = buildDependencyIndex(elements, {}, registry);
 
 		expect(index.expand(['a', 'b'])).toEqual(['summary']);
 	});
@@ -95,7 +101,7 @@ describe('buildDependencyIndex', () => {
 	test('ignores rules that read nothing beyond their own value', () => {
 		const elements = [{ $type: 'input', name: 'email', rules: [{ type: 'required' }, { type: 'email' }] }];
 
-		expect(buildDependencyIndex(elements, {}).watched).toEqual([]);
+		expect(buildDependencyIndex(elements, {}, registry).watched).toEqual([]);
 	});
 });
 

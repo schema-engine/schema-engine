@@ -41,11 +41,16 @@ The `ValidationRegistry` is the central hub that:
 The system automatically converts validation rules into Zod Mini schemas:
 
 ```typescript
-import { createValidationContext, createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation';
+import {
+	createDefaultValidationRegistry,
+	createValidationContext,
+	createZodSchemaFromRules,
+} from '@schema-engine/forms/schemas/validation';
 
+const registry = createDefaultValidationRegistry();
 const rules = [{ type: 'required' }, { type: 'email' }, { type: 'minLength', value: 5 }];
 
-const schema = createZodSchemaFromRules(rules, createValidationContext({ values, fieldPath: 'email' }));
+const schema = createZodSchemaFromRules(rules, createValidationContext({ values, fieldPath: 'email' }), registry);
 ```
 
 Every schema is built against a [validation context](#cross-field-validation),
@@ -56,19 +61,21 @@ which is how a rule reads fields other than the one under test.
 ### Basic Usage
 
 ```typescript
-import { createZodSchemaFromRules, ValidationPresets } from '@schema-engine/forms/schemas/validation';
+import {
+	createDefaultValidationRegistry,
+	createValidationContext,
+	createZodSchemaFromRules,
+	ValidationPresets,
+} from '@schema-engine/forms/schemas/validation';
 
-const emailRules = [
-	{ type: 'required', message: 'Email is required' },
-	{ type: 'email', message: 'Invalid email format' },
-];
+const registry = createDefaultValidationRegistry();
 
 const emailRules = [
 	ValidationPresets.string.required('Email is required'),
 	ValidationPresets.string.email('Invalid email format'),
 ];
 
-const schema = createZodSchemaFromRules(emailRules);
+const schema = createZodSchemaFromRules(emailRules, createValidationContext(), registry);
 
 const result = schema.safeParse('user@example.com');
 if (result.success) {
@@ -101,17 +108,19 @@ const formConfig = {
 
 ## Validation Registry
 
-### Default Instance
+### Engine registry
 
-The package exports a default registry instance that comes pre-loaded with all built-in validations:
+Each `FormEngine` owns a `ValidationRegistry` pre-loaded with the built-in handlers. Create a standalone copy with `createDefaultValidationRegistry()` when you are not building an engine:
 
 ```typescript
-import { validationRegistry } from '@schema-engine/forms/schemas/validation';
+import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
 
-console.log(validationRegistry.getRegisteredTypes());
+const registry = createDefaultValidationRegistry();
 
-const stringValidations = validationRegistry.getByCategory('string');
-const numberValidations = validationRegistry.getByCategory('number');
+console.log(registry.getRegisteredTypes());
+
+const stringValidations = registry.getByCategory('string');
+const numberValidations = registry.getByCategory('number');
 ```
 
 ### Creating Custom Instances
@@ -223,9 +232,11 @@ The phone-input element registration includes a `phone` validator. Creating a fo
 
 ```typescript
 import * as z from 'zod/mini';
-import { validationRegistry } from '@schema-engine/forms/schemas/validation';
+import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
 
-validationRegistry.register({
+const registry = createDefaultValidationRegistry();
+
+registry.register({
 	type: 'creditCard',
 	category: 'string',
 	handler: (rule) => {
@@ -268,7 +279,7 @@ const customValidations = [
 	},
 ];
 
-validationRegistry.registerMultiple(customValidations);
+registry.registerMultiple(customValidations);
 ```
 
 ## Utility Functions
@@ -470,7 +481,7 @@ ValidationPresets.relate.allOrNone(['street', 'city', 'postcode']);
 Custom validators read other fields through the context:
 
 ```typescript
-validationRegistry.register({
+registry.register({
 	type: 'conditionalRequired',
 	category: 'cross-field',
 	handler: (rule, context) => {
@@ -516,7 +527,7 @@ A custom rule that reads other fields should declare `dependsOn` too, or nothing
 will re-run it:
 
 ```typescript
-validationRegistry.register({
+registry.register({
 	type: 'confirmPassword',
 	category: 'cross-field',
 	dependsOn: () => ['password'],
@@ -587,7 +598,7 @@ Specific rule types add their own properties (e.g., `value` for min/max rules, `
 Form configurations must use plain JSON objects. For custom validation logic, register it in the ValidationRegistry first:
 
 ```typescript
-validationRegistry.register({
+registry.register({
 	type: 'companyEmail',
 	category: 'string',
 	handler: (rule) => z.email().check(z.endsWith('@company.com')),
@@ -637,7 +648,7 @@ Always test custom validation logic thoroughly:
 describe('Custom postal-code validation', () => {
 	it('validates postal codes correctly', () => {
 		const rule = { type: 'postalCode', message: 'Invalid postal code' };
-		const schema = validationRegistry.createSchema(rule);
+		const schema = registry.createSchema(rule, createValidationContext());
 
 		expect(() => schema?.parse('28013')).not.toThrow();
 		expect(() => schema?.parse('invalid')).toThrow();

@@ -7,7 +7,7 @@ import {
 	createValidationContext,
 	createZodSchemaFromRules,
 	getValidationRulesForElement,
-	validationRegistry,
+	type AnyValidationRegistration,
 } from '@/schemas/validation';
 
 const noteSchema = z.object({
@@ -71,7 +71,7 @@ describe('createFormEngine', () => {
 		expect(engine.getElement('note')?.metadata.name).toBe('Second note');
 	});
 
-	test('registers element validations onto the shared validation registry', () => {
+	test('registers element validations on the engine validation registry', () => {
 		const phoneElement = defineInput({
 			$type: 'phone-input',
 			schema: z.object({
@@ -96,24 +96,45 @@ describe('createFormEngine', () => {
 			],
 		});
 
-		try {
-			createFormEngine({ elements: [phoneElement] });
+		const engine = createFormEngine({ elements: [phoneElement] });
+		const registry = engine.getValidationRegistry();
 
-			expect(validationRegistry.has('phone')).toBe(true);
-			expect(getValidationRulesForElement({ $type: 'phone-input' })).toEqual([{ type: 'phone' }]);
-			expect(
-				getValidationRulesForElement({
+		expect(registry.has('phone')).toBe(true);
+		expect(getValidationRulesForElement({ $type: 'phone-input' }, registry)).toEqual([{ type: 'phone' }]);
+		expect(
+			getValidationRulesForElement(
+				{
 					$type: 'phone-input',
 					rules: [{ type: 'phone', message: 'Use a complete number' }],
-				}),
-			).toEqual([{ type: 'phone', message: 'Use a complete number' }]);
+				},
+				registry,
+			),
+		).toEqual([{ type: 'phone', message: 'Use a complete number' }]);
 
-			const schema = createZodSchemaFromRules([{ type: 'phone' }], createValidationContext());
-			expect(schema.safeParse('+44').success).toBe(false);
-			expect(schema.safeParse('+44-complete').success).toBe(true);
-		} finally {
-			validationRegistry.unregister('phone');
-		}
+		const schema = createZodSchemaFromRules([{ type: 'phone' }], createValidationContext(), registry);
+		expect(schema.safeParse('+44').success).toBe(false);
+		expect(schema.safeParse('+44-complete').success).toBe(true);
+	});
+
+	test('does not leak element validations between engines', () => {
+		const customValidation = {
+			type: 'custom-leak-test',
+			category: 'string',
+			defaultFor: ['leak-input'],
+			handler: () => z.string(),
+		} satisfies AnyValidationRegistration;
+		const leakElement = defineInput({
+			$type: 'leak-input',
+			schema: z.object({ $type: z.literal('leak-input'), name: z.string() }),
+			metadata: { name: 'Leak', category: 'input' },
+			render: () => null,
+			validations: [customValidation],
+		});
+		const engineA = createFormEngine({ elements: [leakElement] });
+		const engineB = createFormEngine({ elements: [] });
+
+		expect(engineA.getValidationRegistry().has('custom-leak-test')).toBe(true);
+		expect(engineB.getValidationRegistry().has('custom-leak-test')).toBe(false);
 	});
 });
 

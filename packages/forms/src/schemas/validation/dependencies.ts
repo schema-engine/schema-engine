@@ -1,5 +1,5 @@
 import type { BaseValidationRule } from './types.js';
-import { validationRegistry, type ValidationRegistry } from './validation-registry.js';
+import type { ValidationRegistry } from './validation-registry.js';
 import { collectValidatableFields } from './utils.js';
 import { resolveFieldRef } from '@/lib/field-ref.js';
 import { expandFieldTemplatePaths } from '@/lib/path-values.js';
@@ -57,11 +57,11 @@ function collectRuleDependencies(
 export function buildDependencyIndex(
 	elements: readonly object[],
 	values: Record<string, unknown>,
-	registry: ValidationRegistry = validationRegistry,
+	registry: ValidationRegistry,
 ): DependencyIndex {
 	const dependents = new Map<string, string[]>();
 
-	for (const { path: templatePath, rules } of collectValidatableFields(elements)) {
+	for (const { path: templatePath, rules } of collectValidatableFields(elements, '', registry)) {
 		for (const fieldPath of expandFieldTemplatePaths(values, templatePath)) {
 			for (const dependency of collectRuleDependencies(rules, fieldPath, registry)) {
 				const existing = dependents.get(dependency);

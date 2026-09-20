@@ -154,6 +154,10 @@
 			"types": "./dist/lib/validate-form.d.ts",
 			"import": "./dist/lib/validate-form.js"
 		},
+		"./lib/normalized-form-config": {
+			"types": "./dist/lib/normalized-form-config.d.ts",
+			"import": "./dist/lib/normalized-form-config.js"
+		},
 		"./lib/field-ref": {
 			"types": "./dist/lib/field-ref.d.ts",
 			"import": "./dist/lib/field-ref.js"
@@ -165,6 +169,18 @@
 		"./lib/path-values": {
 			"types": "./dist/lib/path-values.d.ts",
 			"import": "./dist/lib/path-values.js"
+		},
+		"./lib/logger": {
+			"types": "./dist/lib/logger.d.ts",
+			"import": "./dist/lib/logger.js"
+		},
+		"./adapters": {
+			"types": "./dist/adapters/index.d.ts",
+			"import": "./dist/adapters/index.js"
+		},
+		"./adapters/*": {
+			"types": "./dist/adapters/*.d.ts",
+			"import": "./dist/adapters/*.js"
 		}
 	}
 }

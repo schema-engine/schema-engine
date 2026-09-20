@@ -1,4 +1,6 @@
+import type * as z from 'zod/mini';
 import { defineRecipeSpec } from './define-recipe-spec';
+import type { RecipeSpec } from './types';
 import {
 	CardShellConfigSchema,
 	FormActionsConfigSchema,
@@ -144,57 +146,12 @@ export const builtInRecipeSpecs = {
 	'split-screen-wizard': splitScreenWizardSpec,
 } as const;
 
-export interface BuiltInRecipeRegistry {
-	card: {
-		$type: 'card';
-		shell?: import('./slot-schemas').CardShellConfig;
-		header?: import('./slot-schemas').StepHeaderConfig;
-		actions?: import('./slot-schemas').FormActionsConfig;
-	};
-	'split-screen': {
-		$type: 'split-screen';
-		shell?: import('./slot-schemas').SplitScreenShellConfig;
-		actions?: import('./slot-schemas').FormActionsConfig;
-	};
-	'hero-background': {
-		$type: 'hero-background';
-		shell?: import('./slot-schemas').HeroShellConfig;
-		header?: import('./slot-schemas').StepHeaderConfig;
-		actions?: import('./slot-schemas').FormActionsConfig;
-	};
-	'bare-controls': { $type: 'bare-controls'; actions?: import('./slot-schemas').WizardActionsConfig };
-	'card-wizard': {
-		$type: 'card-wizard';
-		shell?: import('./slot-schemas').CardShellConfig;
-		header?: import('./slot-schemas').StepHeaderConfig;
-		progress?: import('./slot-schemas').MinimalProgressConfig;
-		actions?: import('./slot-schemas').WizardActionsConfig;
-	};
-	wizard: {
-		$type: 'wizard';
-		header?: import('./slot-schemas').StepHeaderConfig;
-		progress?: import('./slot-schemas').StepIndicatorsConfig;
-		actions?: import('./slot-schemas').WizardActionsConfig;
-	};
-	'sidebar-wizard': {
-		$type: 'sidebar-wizard';
-		shell?: import('./slot-schemas').SidebarShellConfig;
-		header?: import('./slot-schemas').StepHeaderConfig;
-		progress?: import('./slot-schemas').StepIndicatorsConfig;
-		actions?: import('./slot-schemas').WizardActionsConfig;
-	};
-	'hero-wizard': {
-		$type: 'hero-wizard';
-		shell?: import('./slot-schemas').HeroShellConfig;
-		header?: import('./slot-schemas').StepHeaderConfig;
-		progress?: import('./slot-schemas').MinimalProgressConfig;
-		actions?: import('./slot-schemas').WizardActionsConfig;
-	};
-	'split-screen-wizard': {
-		$type: 'split-screen-wizard';
-		shell?: import('./slot-schemas').SplitScreenShellConfig;
-		header?: import('./slot-schemas').StepHeaderConfig;
-		progress?: import('./slot-schemas').StepIndicatorsConfig;
-		actions?: import('./slot-schemas').WizardActionsConfig;
-	};
-}
+export type RecipeConfigOf<S extends RecipeSpec> = { $type: S['$type'] } & {
+	[K in keyof S['slotSchemas'] as S['slotSchemas'][K] extends z.ZodMiniType ? K : never]?: z.infer<
+		NonNullable<S['slotSchemas'][K]>
+	>;
+};
+
+export type BuiltInRecipeRegistry = {
+	[K in keyof typeof builtInRecipeSpecs]: RecipeConfigOf<(typeof builtInRecipeSpecs)[K]>;
+};

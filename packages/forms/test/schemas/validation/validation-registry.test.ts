@@ -2,8 +2,10 @@ import * as z from 'zod/mini';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
 	ValidationRegistry,
-	validationRegistry as globalRegistry,
+	createDefaultValidationRegistry,
 } from '../../../src/schemas/validation/validation-registry';
+
+const globalRegistry = createDefaultValidationRegistry();
 import type { ValidationRegistration } from '../../../src/schemas/validation/types';
 import { createValidationContext } from '../../../src/schemas/validation/utils';
 

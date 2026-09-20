@@ -53,31 +53,20 @@ export type FormViewConfig = z.infer<typeof FormViewConfigSchema>;
  */
 export type FormTaggedConfig = { $type: string } & Record<string, unknown>;
 
-export type FormConfigEnvelope = {
-	id: string;
-	title?: string;
-	description?: string;
-	steps: Array<{
-		id: string;
-		title: string;
-		description?: string;
-		icon?: string;
-		elements: FormTaggedConfig[];
-		actions?: FormTaggedConfig[];
-		onStepEnter?: FormTaggedConfig[];
-		onStepLeave?: FormTaggedConfig[];
-		onStepValidate?: FormTaggedConfig[];
-		rules?: unknown;
-		constraints?: unknown[];
-		className?: string;
-		style?: Record<string, unknown>;
-	}>;
-	view?: FormTaggedConfig;
-	grid?: z.infer<typeof FormConfigSchema>['grid'];
-	validationMode?: z.infer<typeof FormConfigSchema>['validationMode'];
-	reValidateMode?: z.infer<typeof FormConfigSchema>['reValidateMode'];
-	className?: string;
-	style?: Record<string, unknown>;
+export type FormConfigEnvelope = Omit<z.infer<typeof formConfigEnvelopeSchema>, 'steps' | 'view' | 'actions'> & {
+	steps: Array<
+		Omit<
+			z.infer<typeof FormStepSchema>,
+			'elements' | 'actions' | 'onStepEnter' | 'onStepLeave' | 'onStepValidate'
+		> & {
+			elements: FormTaggedConfig[];
+			actions?: FormTaggedConfig[];
+			onStepEnter?: FormTaggedConfig[];
+			onStepLeave?: FormTaggedConfig[];
+			onStepValidate?: FormTaggedConfig[];
+		}
+	>;
+	view?: FormViewConfig;
 	actions?: FormTaggedConfig[];
 };
 
@@ -88,7 +77,7 @@ export type FormStep = Omit<
 	z.infer<typeof FormStepSchema>,
 	'elements' | 'actions' | 'onStepEnter' | 'onStepLeave' | 'onStepValidate'
 > & {
-	elements: Array<FormEngine.ElementConfig>;
+	elements: FormTaggedConfig[];
 	actions?: Array<FormActionConfig>;
 	onStepEnter?: Array<FormActionConfig>;
 	onStepLeave?: Array<FormActionConfig>;
@@ -101,8 +90,8 @@ export type FormStep = Omit<
  */
 export type FormConfig = Omit<z.infer<typeof FormConfigSchema>, 'steps' | 'view' | 'actions'> & {
 	steps: Array<FormStep>;
-	view?: FormEngine.ViewConfig;
+	view?: FormViewConfig;
 	actions?: Array<FormActionConfig>;
-	onSubmit?: (data: any) => void | Promise<void>;
-	onChange?: (data: any) => void;
+	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
+	onChange?: (data: Record<string, unknown>) => void;
 };

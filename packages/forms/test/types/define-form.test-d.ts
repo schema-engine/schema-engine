@@ -51,6 +51,16 @@ const defined = engine.defineForm({
 	view: { $type: 'card' },
 	steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'note', id: 'n1', name: 'n1' }] }],
 });
+
+engine.defineForm({
+	id: 'invalid-view',
+	view: {
+		$type: 'card',
+		// @ts-expect-error -- concrete recipe schemas must constrain view authoring
+		header: { title: 123 },
+	},
+	steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'note', id: 'n1', name: 'n1' }] }],
+});
 type _defineFormReturnsNormalized = Assert<typeof defined extends NormalizedFormConfig ? true : false>;
 
 const rawForm: FormConfig = {

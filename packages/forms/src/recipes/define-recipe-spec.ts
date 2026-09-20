@@ -39,15 +39,19 @@ export function assertRecipeSlotSchemas(
  * submit-only bar. Wizard recipes must declare `actions`. Built-in specs are
  * exported from this module.
  */
-export function defineRecipeSpec<const TType extends string, TSchema extends z.ZodMiniType>(definition: {
+export function defineRecipeSpec<
+	const TType extends string,
+	TSchema extends z.ZodMiniType = z.ZodMiniType,
+	const TSlots extends Partial<Record<RecipeSlot, z.ZodMiniType>> = Partial<Record<RecipeSlot, z.ZodMiniType>>,
+>(definition: {
 	$type: TType;
 	kind: RecipeKind;
-	metadata: RecipeSpec<TType>['metadata'];
-	slotSchemas?: Partial<Record<RecipeSlot, z.ZodMiniType>>;
-	slotDefaults?: RecipeSpec<TType>['slotDefaults'];
+	metadata: RecipeSpec<TType, TSchema, TSlots>['metadata'];
+	slotSchemas?: TSlots;
+	slotDefaults?: RecipeSpec<TType, TSchema, TSlots>['slotDefaults'];
 	schema?: TSchema;
-}): RecipeSpec<TType, TSchema> {
-	const slotSchemas = definition.slotSchemas ?? {};
+}): RecipeSpec<TType, TSchema, TSlots> {
+	const slotSchemas = (definition.slotSchemas ?? {}) as TSlots;
 	assertRecipeSlotSchemas(definition.kind, slotSchemas);
 	const schema = (definition.schema ?? mergeRecipeSlotSchemas(definition.$type, slotSchemas)) as TSchema;
 	const slots = RECIPE_SLOT_ORDER.filter((slot) => slotSchemas[slot]);

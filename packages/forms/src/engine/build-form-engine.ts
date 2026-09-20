@@ -17,7 +17,7 @@ import * as z from 'zod/mini';
 import { isZodType } from '@/lib/zod-json-schema';
 import { assertStandardSchema } from '@/lib/standard-schema';
 import type { FormActionTrigger } from '@/actions';
-import { validationRegistry } from '@/schemas/validation';
+import { createDefaultValidationRegistry, type ValidationRegistry } from '@/schemas/validation';
 
 function createUnionSchema(schemas: z.ZodMiniType[]): z.ZodMiniType {
 	if (schemas.length === 0) {
@@ -81,7 +81,8 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 		elementRegistry.register(element as unknown as Parameters<ElementRegistry['register']>[0]);
 	}
 
-	registerLastWinsElementValidations(lists.elements ?? []);
+	const validationRegistryInstance = createDefaultValidationRegistry();
+	registerLastWinsElementValidations(lists.elements ?? [], validationRegistryInstance);
 
 	for (const recipe of lists.recipes ?? []) {
 		assertStandardSchema(recipe.schema, `Recipe '${recipe.$type}' schema`);
@@ -144,15 +145,18 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 		recipes: recipeRegistry.getMap(),
 		actions: actionRegistry.getMap(),
 		schemaArtifacts,
-		formConfigSchema,
 		compiledGrid,
+		validationRegistry: validationRegistryInstance,
 	});
 }
 
 /**
  * Registers `validations` from the last-wins element for each `$type`.
  */
-function registerLastWinsElementValidations(elements: readonly ElementRegistrationConstraint[]): void {
+function registerLastWinsElementValidations(
+	elements: readonly ElementRegistrationConstraint[],
+	registry: ValidationRegistry,
+): void {
 	const seen = new Set<string>();
 	for (let index = elements.length - 1; index >= 0; index -= 1) {
 		const element = elements[index];
@@ -161,7 +165,7 @@ function registerLastWinsElementValidations(elements: readonly ElementRegistrati
 		}
 		seen.add(element.$type);
 		if (element.validations?.length) {
-			validationRegistry.registerMultiple([...element.validations]);
+			registry.registerMultiple([...element.validations]);
 		}
 	}
 }

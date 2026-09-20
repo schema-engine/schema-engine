@@ -82,3 +82,11 @@ declare global {
 		type GetElementConfig<T extends ElementId> = Extract<ElementConfig, { $type: T }>;
 	}
 }
+
+export type UnregisteredElementConfig = FormEngine.UnregisteredElementConfig;
+export type ElementConfig = FormEngine.ElementConfig;
+export type ElementId = FormEngine.ElementId;
+export type GetElementConfig<T extends ElementId> = FormEngine.GetElementConfig<T>;
+export type ViewConfig = FormEngine.ViewConfig;
+export type RecipeId = FormEngine.RecipeId;
+export type GetViewConfig<T extends RecipeId> = FormEngine.GetViewConfig<T>;

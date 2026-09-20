@@ -333,11 +333,13 @@ export interface ValidationRegistration<TRule extends { type: string } = { type:
  * Union of all possible validation registrations based on ValidationRule union.
  * This allows heterogeneous arrays (like defaultValidations) to be typed without 'any'.
  */
-export type AnyValidationRegistration = ValidationRule extends infer T
-	? T extends ValidationRule
-		? ValidationRegistration<T>
-		: never
-	: never;
+export type AnyValidationRegistration =
+	| (ValidationRule extends infer T
+			? T extends ValidationRule
+				? ValidationRegistration<T>
+				: never
+			: never)
+	| ValidationRegistration;
 
 /**
  * Mapping of validation rule types to their specific rule interfaces.

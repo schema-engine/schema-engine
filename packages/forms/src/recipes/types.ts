@@ -38,11 +38,15 @@ export interface ViewCatalog {
 	};
 }
 
-export interface RecipeSpec<TType extends string = string, TSchema extends z.ZodMiniType = z.ZodMiniType> {
+export interface RecipeSpec<
+	TType extends string = string,
+	TSchema extends z.ZodMiniType = z.ZodMiniType,
+	TSlots extends Partial<Record<RecipeSlot, z.ZodMiniType>> = Partial<Record<RecipeSlot, z.ZodMiniType>>,
+> {
 	$type: TType;
 	kind: RecipeKind;
 	slots: RecipeSlot[];
-	slotSchemas: Partial<Record<RecipeSlot, z.ZodMiniType>>;
+	slotSchemas: TSlots;
 	slotDefaults?: Partial<Record<RecipeSlot, Record<string, unknown>>>;
 	metadata: RecipeMetadata;
 	schema: TSchema;

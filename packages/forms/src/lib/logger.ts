@@ -1,3 +1,3 @@
 import { Logger } from '@ecopages/logger';
 
-export const logger = new Logger('[json-form-engine/core]');
+export const logger = new Logger('[schema-engine/forms]');

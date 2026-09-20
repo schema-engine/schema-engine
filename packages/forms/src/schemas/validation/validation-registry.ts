@@ -367,21 +367,15 @@ export class ValidationRegistry {
 import { defaultValidations } from './defaults.js';
 
 /**
- * Global validation registry instance
+ * Built-in handlers plus any caller-supplied registrations for one engine build.
  */
-export const validationRegistry = new ValidationRegistry();
-
-validationRegistry.initialize(defaultValidations);
-
-/**
- * Helper function to register a validation
- */
-export function registerValidation(registration: AnyValidationRegistration): void {
-	validationRegistry.register(registration);
+export function createDefaultValidationRegistry(): ValidationRegistry {
+	const registry = new ValidationRegistry();
+	registry.initialize(defaultValidations);
+	return registry;
 }
 
 /**
- * Convenience export of validation presets from the global registry
- * For developers who want easy-to-use helpers instead of direct JSON
+ * Authoring helpers. These return rule objects and do not register handlers.
  */
-export const ValidationPresets = validationRegistry.presets;
+export const ValidationPresets = new ValidationRegistry().presets;

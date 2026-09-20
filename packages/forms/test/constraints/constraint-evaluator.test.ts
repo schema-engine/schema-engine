@@ -1,9 +1,16 @@
 import { describe, test, expect } from 'vitest';
-import { ConstraintEvaluator } from '../../src/constraints/constraint-evaluator';
+import { evaluateResolvedConstraints } from '../../src/constraints/constraint-evaluator';
 import type { ConstraintLogic } from '../../src/schemas';
 
-describe('ConstraintEvaluator', () => {
-	const evaluator = new ConstraintEvaluator();
+function evaluate(input: {
+	constraints?: readonly ConstraintLogic[];
+	fieldValues: Record<string, unknown>;
+	baseRequired?: boolean;
+}) {
+	return evaluateResolvedConstraints(input.constraints ?? [], input.fieldValues, input.baseRequired);
+}
+
+describe('evaluateResolvedConstraints', () => {
 
 	describe('equals operator', () => {
 		test('should return true when values match exactly', () => {
@@ -16,7 +23,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { status: 'active' },
 			});
@@ -34,7 +41,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { status: 'inactive' },
 			});
@@ -52,7 +59,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { count: 5 },
 			});
@@ -72,7 +79,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { status: 'inactive' },
 			});
@@ -90,7 +97,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { status: 'active' },
 			});
@@ -110,19 +117,19 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result1 = evaluator.evaluate({
+			const result1 = evaluate({
 				constraints,
 				fieldValues: { inquiryType: 'sales' },
 			});
 			expect(result1.shouldShow).toBe(true);
 
-			const result2 = evaluator.evaluate({
+			const result2 = evaluate({
 				constraints,
 				fieldValues: { inquiryType: 'partnership' },
 			});
 			expect(result2.shouldShow).toBe(true);
 
-			const result3 = evaluator.evaluate({
+			const result3 = evaluate({
 				constraints,
 				fieldValues: { inquiryType: 'support' },
 			});
@@ -139,13 +146,13 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result1 = evaluator.evaluate({
+			const result1 = evaluate({
 				constraints,
 				fieldValues: { email: 'user@example.com' },
 			});
 			expect(result1.shouldShow).toBe(true);
 
-			const result2 = evaluator.evaluate({
+			const result2 = evaluate({
 				constraints,
 				fieldValues: { email: 'user@other.com' },
 			});
@@ -162,13 +169,13 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result1 = evaluator.evaluate({
+			const result1 = evaluate({
 				constraints,
 				fieldValues: { text: '' },
 			});
 			expect(result1.shouldShow).toBe(false);
 
-			const result2 = evaluator.evaluate({
+			const result2 = evaluate({
 				constraints,
 				fieldValues: { text: null },
 			});
@@ -187,13 +194,13 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result1 = evaluator.evaluate({
+			const result1 = evaluate({
 				constraints,
 				fieldValues: { role: 'user' },
 			});
 			expect(result1.shouldShow).toBe(true);
 
-			const result2 = evaluator.evaluate({
+			const result2 = evaluate({
 				constraints,
 				fieldValues: { role: 'admin' },
 			});
@@ -210,13 +217,13 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result1 = evaluator.evaluate({
+			const result1 = evaluate({
 				constraints,
 				fieldValues: { email: 'user@example.com' },
 			});
 			expect(result1.shouldShow).toBe(true);
 
-			const result2 = evaluator.evaluate({
+			const result2 = evaluate({
 				constraints,
 				fieldValues: { email: 'spam@example.com' },
 			});
@@ -235,7 +242,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { age: 25 },
 			});
@@ -253,13 +260,13 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result1 = evaluator.evaluate({
+			const result1 = evaluate({
 				constraints,
 				fieldValues: { age: 18 },
 			});
 			expect(result1.shouldShow).toBe(false);
 
-			const result2 = evaluator.evaluate({
+			const result2 = evaluate({
 				constraints,
 				fieldValues: { age: 15 },
 			});
@@ -276,7 +283,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { count: '15' },
 			});
@@ -296,7 +303,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { price: 50 },
 			});
@@ -314,13 +321,13 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result1 = evaluator.evaluate({
+			const result1 = evaluate({
 				constraints,
 				fieldValues: { price: 100 },
 			});
 			expect(result1.shouldShow).toBe(false);
 
-			const result2 = evaluator.evaluate({
+			const result2 = evaluate({
 				constraints,
 				fieldValues: { price: 150 },
 			});
@@ -342,7 +349,7 @@ describe('ConstraintEvaluator', () => {
 			const testCases = ['', null, undefined, false, 0];
 
 			for (const testValue of testCases) {
-				const result = evaluator.evaluate({
+				const result = evaluate({
 					constraints,
 					fieldValues: { optional: testValue },
 				});
@@ -360,7 +367,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { items: [] },
 			});
@@ -378,7 +385,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { items: ['item1', 'item2'] },
 			});
@@ -399,7 +406,7 @@ describe('ConstraintEvaluator', () => {
 			const testCases = ['text', 1, true, { key: 'value' }, ['item']];
 
 			for (const testValue of testCases) {
-				const result = evaluator.evaluate({
+				const result = evaluate({
 					constraints,
 					fieldValues: { optional: testValue },
 				});
@@ -422,7 +429,7 @@ describe('ConstraintEvaluator', () => {
 			const testCases = ['text', 1, true, { key: 'value' }, ['item']];
 
 			for (const testValue of testCases) {
-				const result = evaluator.evaluate({
+				const result = evaluate({
 					constraints,
 					fieldValues: { required: testValue },
 				});
@@ -440,7 +447,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { items: ['item1', 'item2'] },
 			});
@@ -458,7 +465,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { items: [] },
 			});
@@ -479,7 +486,7 @@ describe('ConstraintEvaluator', () => {
 			const testCases = ['', null, undefined, false, 0];
 
 			for (const testValue of testCases) {
-				const result = evaluator.evaluate({
+				const result = evaluate({
 					constraints,
 					fieldValues: { required: testValue },
 				});
@@ -499,7 +506,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { type: 'premium' },
 			});
@@ -517,7 +524,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { type: 'basic' },
 			});
@@ -541,19 +548,19 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result1 = evaluator.evaluate({
+			const result1 = evaluate({
 				constraints,
 				fieldValues: { type: 'premium', role: 'user' },
 			});
 			expect(result1.shouldShow).toBe(true);
 
-			const result2 = evaluator.evaluate({
+			const result2 = evaluate({
 				constraints,
 				fieldValues: { type: 'basic', role: 'admin' },
 			});
 			expect(result2.shouldShow).toBe(true);
 
-			const result3 = evaluator.evaluate({
+			const result3 = evaluate({
 				constraints,
 				fieldValues: { type: 'basic', role: 'user' },
 			});
@@ -572,7 +579,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { status: 'disabled' },
 			});
@@ -590,7 +597,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { status: 'active' },
 			});
@@ -614,7 +621,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { type: 'premium', status: 'disabled' },
 			});
@@ -634,7 +641,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { locked: true },
 			});
@@ -652,7 +659,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { locked: false },
 			});
@@ -672,7 +679,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { hasPermission: false },
 			});
@@ -690,7 +697,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { hasPermission: true },
 			});
@@ -710,7 +717,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { type: 'business' },
 			});
@@ -728,7 +735,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { type: 'personal' },
 			});
@@ -746,7 +753,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { type: 'personal' },
 				baseRequired: true,
@@ -765,21 +772,21 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result1 = evaluator.evaluate({
+			const result1 = evaluate({
 				constraints,
 				fieldValues: { type: 'business' },
 				baseRequired: false,
 			});
 			expect(result1.isRequired).toBe(true);
 
-			const result2 = evaluator.evaluate({
+			const result2 = evaluate({
 				constraints,
 				fieldValues: { type: 'personal' },
 				baseRequired: true,
 			});
 			expect(result2.isRequired).toBe(true);
 
-			const result3 = evaluator.evaluate({
+			const result3 = evaluate({
 				constraints,
 				fieldValues: { type: 'business' },
 				baseRequired: true,
@@ -790,7 +797,7 @@ describe('ConstraintEvaluator', () => {
 
 	describe('no constraints', () => {
 		test('should show field by default when no constraints provided', () => {
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				fieldValues: {},
 			});
 
@@ -798,7 +805,7 @@ describe('ConstraintEvaluator', () => {
 		});
 
 		test('should not disable field by default when no constraints provided', () => {
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				fieldValues: {},
 			});
 
@@ -806,13 +813,13 @@ describe('ConstraintEvaluator', () => {
 		});
 
 		test('should respect baseRequired when no constraints provided', () => {
-			const result1 = evaluator.evaluate({
+			const result1 = evaluate({
 				fieldValues: {},
 				baseRequired: false,
 			});
 			expect(result1.isRequired).toBe(false);
 
-			const result2 = evaluator.evaluate({
+			const result2 = evaluate({
 				fieldValues: {},
 				baseRequired: true,
 			});
@@ -843,7 +850,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: {
 					userType: 'premium',
@@ -867,7 +874,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: {},
 			});
@@ -885,19 +892,19 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const resultSales = evaluator.evaluate({
+			const resultSales = evaluate({
 				constraints,
 				fieldValues: { inquiryType: 'sales' },
 			});
 			expect(resultSales.shouldShow).toBe(true);
 
-			const resultPartnership = evaluator.evaluate({
+			const resultPartnership = evaluate({
 				constraints,
 				fieldValues: { inquiryType: 'partnership' },
 			});
 			expect(resultPartnership.shouldShow).toBe(true);
 
-			const resultSupport = evaluator.evaluate({
+			const resultSupport = evaluate({
 				constraints,
 				fieldValues: { inquiryType: 'support' },
 			});
@@ -917,7 +924,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { test: 'test' },
 			});
@@ -926,7 +933,7 @@ describe('ConstraintEvaluator', () => {
 		});
 
 		test('should handle empty constraints array', () => {
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints: [],
 				fieldValues: { test: 'value' },
 			});
@@ -946,7 +953,7 @@ describe('ConstraintEvaluator', () => {
 				},
 			];
 
-			const result = evaluator.evaluate({
+			const result = evaluate({
 				constraints,
 				fieldValues: { test: 'other' },
 			});
