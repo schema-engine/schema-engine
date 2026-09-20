@@ -9,9 +9,15 @@ order: 4
 
 The validation system provides 24 built-in rules with support for custom validation.
 
+**Note:** Runnable element configs require `$type`, `id`, and `name` (and any
+fields your element registration schema requires). Fragments below omit those
+when the focus is rule shape only.
+
 ## Using Validation Presets
 
 ```typescript
+import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
+
 const emailRules = [
 	ValidationPresets.string.required('Email is required'),
 	ValidationPresets.string.email('Invalid email address'),

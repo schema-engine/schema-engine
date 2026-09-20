@@ -39,6 +39,10 @@ const formEngine = createRadiantFormEngine({ elements: schemaFormRegistrations }
 
 Use the same `FormConfig` JSON as the React adapter:
 
+For TypeScript authored next to your engine, prefer
+[`engine.defineForm()`](/docs/forms/builder#author-form-configuration).
+See [Authoring modes](/docs/forms/core-concepts#authoring-modes).
+
 ```typescript
 import type { FormConfig } from '@schema-engine/forms/schemas';
 

@@ -11,6 +11,23 @@ Schema Engine separates serializable form data from framework rendering. The
 core package registers elements, view recipes, and actions; an adapter renders
 the selected recipe.
 
+## Authoring modes
+
+Choose how you author form configuration based on where the data lives:
+
+| Mode | Use when | API |
+| --- | --- | --- |
+| **TypeScript in your app** | The form is hardcoded next to a known engine | `engine.defineForm({ ... })` — full typing from your registrations |
+| **Portable JSON** | CMS, API, storage, or shared files across systems | Plain `FormConfig` (or raw JSON) + `engine.validateForm(unknown)` |
+
+`defineForm` and `validateForm` run the same validation pipeline. `defineForm`
+only adds compile-time checks for the engine you built. The exported `FormConfig`
+type is envelope-level: it does not narrow each `$type` until validation runs.
+
+With `FormRenderer`, passing a plain config is enough — the renderer calls
+`validateForm` at the form boundary. Pre-validate only when you need a
+`NormalizedFormConfig` outside the renderer (caching, tests, custom pipelines).
+
 ## Registration
 
 ```ts

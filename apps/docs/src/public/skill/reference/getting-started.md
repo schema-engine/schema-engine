@@ -86,6 +86,13 @@ previews mount through a client island, same pattern as Radiant.
   entry's imports, so Forms React pages do not load Radiant preview assets
   and vice versa.
 
+## Form authoring
+
+- **In application code** next to one engine: `engine.defineForm({ ... })`.
+- **Portable JSON** (CMS, API, shared demo modules): `FormConfig` +
+  `validateForm`, or pass the object to `FormRenderer` (validates at the boundary).
+- See `/docs/forms/core-concepts#authoring-modes` on the docs site.
+
 ## More
 
 - The full docs site lives at `/docs`.
