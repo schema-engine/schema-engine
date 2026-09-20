@@ -63,7 +63,8 @@
 			{
 				"allow": ["_default"]
 			}
-		]
+		],
+		"complexity": ["error", { "max": 15 }]
 	},
 	"overrides": [
 		{
