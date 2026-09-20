@@ -34,6 +34,39 @@ function isValidParts(parts: DateParts) {
 	return date.getFullYear() === parts.year && date.getMonth() + 1 === parts.month && date.getDate() === parts.day;
 }
 
+const ALLOWED_DATE_KEYS = new Set([
+	'ArrowUp',
+	'ArrowDown',
+	'ArrowLeft',
+	'ArrowRight',
+	'Delete',
+	'Tab',
+	'Backspace',
+	'Enter',
+]);
+
+function isAllowedDateKey(key: string): boolean {
+	return /^[0-9]$/.test(key) || ALLOWED_DATE_KEYS.has(key);
+}
+
+function focusAdjacentDateField(
+	field: keyof DateParts,
+	direction: 'forward' | 'backward',
+	refs: {
+		month: HTMLInputElement | null;
+		day: HTMLInputElement | null;
+		year: HTMLInputElement | null;
+	},
+): void {
+	if (direction === 'forward') {
+		if (field === 'month') refs.day?.focus();
+		if (field === 'day') refs.year?.focus();
+		return;
+	}
+	if (field === 'day') refs.month?.focus();
+	if (field === 'year') refs.day?.focus();
+}
+
 /**
  * Three-part date entry backed by a draft the user edits freely.
  *
@@ -95,25 +128,19 @@ function DateInput({ value, onChange, className, disabled }: DateInputProps) {
 			return;
 		}
 
-		if (
-			!/^[0-9]$/.test(event.key) &&
-			!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Delete', 'Tab', 'Backspace', 'Enter'].includes(
-				event.key,
-			)
-		) {
+		if (!isAllowedDateKey(event.key)) {
 			event.preventDefault();
 		}
 
+		const refs = { month: monthRef.current, day: dayRef.current, year: yearRef.current };
 		if (event.key === 'ArrowRight' && event.currentTarget.selectionStart === event.currentTarget.value.length) {
 			event.preventDefault();
-			if (field === 'month') dayRef.current?.focus();
-			if (field === 'day') yearRef.current?.focus();
+			focusAdjacentDateField(field, 'forward', refs);
 		}
 
 		if (event.key === 'ArrowLeft' && event.currentTarget.selectionStart === 0) {
 			event.preventDefault();
-			if (field === 'day') monthRef.current?.focus();
-			if (field === 'year') dayRef.current?.focus();
+			focusAdjacentDateField(field, 'backward', refs);
 		}
 	};
 

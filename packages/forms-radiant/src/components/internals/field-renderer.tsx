@@ -23,6 +23,41 @@ export interface FormElementProps {
 
 export { renderRegisteredElement } from './render-registered-element';
 
+function resolveFieldName(config: NormalizedElementConfig, name?: string, id?: string): string {
+	return name ?? ('name' in config ? config.name : undefined) ?? id ?? ('id' in config ? config.id : undefined) ?? '';
+}
+
+function renderConstrainedFormElement(
+	config: NormalizedElementConfig,
+	resolvedEngine: FormEngine,
+	props: Omit<FormElementProps, 'config' | 'engine'>,
+): JsxRenderable {
+	const { name, id, instanceId, className, style } = props;
+	const constraints = 'constraints' in config ? config.constraints : undefined;
+	const { shouldShow } = evaluateConstraintLogic(
+		constraints ?? [],
+		isFieldRequired('rules' in config ? config.rules : undefined),
+		name ?? ('name' in config ? config.name : undefined),
+	);
+	const fieldHost = mergeFieldGridHost(
+		'grid' in config ? config.grid : undefined,
+		style,
+		resolvedEngine.getGridTheme().id,
+	);
+
+	return (
+		<div
+			classes={['se-form-field', 'se-form-constraint', className]}
+			data-se-constraint-field={resolveFieldName(config, name, id)}
+			data-se-grid-theme={fieldHost.themeId}
+			style={fieldHost.style}
+			hidden={!shouldShow}
+		>
+			{renderRegisteredElement(config, resolvedEngine, { name, id, instanceId }, undefined, true)}
+		</div>
+	);
+}
+
 export function FormElement({
 	config,
 	engine,
@@ -46,38 +81,11 @@ export function FormElement({
 		});
 	}
 
-	const { shouldShow } = evaluateConstraintLogic(
-		constraints,
-		isFieldRequired('rules' in config ? config.rules : undefined),
-		name ?? ('name' in config ? config.name : undefined),
-	);
-	const fieldName =
-		name ?? ('name' in config ? config.name : undefined) ?? id ?? ('id' in config ? config.id : undefined) ?? '';
-	const fieldHost = mergeFieldGridHost(
-		'grid' in config ? config.grid : undefined,
+	return renderConstrainedFormElement(config, resolvedEngine, {
+		name,
+		id,
+		instanceId,
+		className,
 		style,
-		resolvedEngine.getGridTheme().id,
-	);
-
-	return (
-		<div
-			classes={['se-form-field', 'se-form-constraint', className]}
-			data-se-constraint-field={fieldName}
-			data-se-grid-theme={fieldHost.themeId}
-			style={fieldHost.style}
-			hidden={!shouldShow}
-		>
-			{renderRegisteredElement(
-				config,
-				resolvedEngine,
-				{
-					name,
-					id,
-					instanceId,
-				},
-				undefined,
-				true,
-			)}
-		</div>
-	);
+	});
 }

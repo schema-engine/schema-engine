@@ -84,6 +84,157 @@ function useCompactLayout(): boolean {
 	);
 }
 
+function resolvePopoverDraft(
+	nextOpen: boolean,
+	value: DateRangeValue | undefined,
+	draft: DraftRange | undefined,
+	openedDraft: DraftRange | undefined,
+): { draft: DraftRange | undefined; openedDraft: DraftRange | undefined } {
+	if (nextOpen) {
+		const nextDraft = toDraftRange(value);
+		return { draft: nextDraft, openedDraft: nextDraft };
+	}
+	if (rangesEqual(draft, openedDraft)) {
+		return { draft, openedDraft };
+	}
+	return { draft: openedDraft, openedDraft };
+}
+
+function isDateDisabled(date: Date, minDate: Date | undefined, maxDate: Date | undefined): boolean {
+	if (minDate && date < minDate) {
+		return true;
+	}
+	return Boolean(maxDate && date > maxDate);
+}
+
+function DateRangePickerPanel({
+	draft,
+	setDraft,
+	disabled,
+	presets,
+	compact,
+	months,
+	minDate,
+	maxDate,
+	selectedPreset,
+	setPreset,
+	onCancel,
+	onApply,
+}: {
+	draft: DraftRange | undefined;
+	setDraft: (value: DraftRange | undefined | ((current: DraftRange | undefined) => DraftRange | undefined)) => void;
+	disabled?: boolean;
+	presets: boolean;
+	compact: boolean;
+	months: number;
+	minDate: Date | undefined;
+	maxDate: Date | undefined;
+	selectedPreset: string | undefined;
+	setPreset: (presetName: string) => void;
+	onCancel: () => void;
+	onApply: () => void;
+}) {
+	return (
+		<div className="flex flex-col gap-3 p-3">
+			<div className="flex flex-wrap items-center gap-2">
+				<DateInput
+					value={draft?.from}
+					disabled={disabled}
+					onChange={(from) => {
+						setDraft((current) => {
+							const to = current?.to && from > current.to ? from : (current?.to ?? from);
+							return { from, to };
+						});
+					}}
+				/>
+				<span className="text-muted-foreground text-sm">–</span>
+				<DateInput
+					value={draft?.to ?? draft?.from}
+					disabled={disabled}
+					onChange={(to) => {
+						setDraft((current) => {
+							if (!current?.from) {
+								return { from: to, to };
+							}
+							const from = to < current.from ? to : current.from;
+							return { from, to };
+						});
+					}}
+				/>
+			</div>
+
+			{presets && compact ? (
+				<div className="flex flex-wrap gap-2">
+					{DATE_RANGE_PRESETS.map((preset) => (
+						<Button
+							key={preset.name}
+							type="button"
+							size="sm"
+							variant={selectedPreset === preset.name ? 'default' : 'outline'}
+							onClick={() => setPreset(preset.name)}
+						>
+							{preset.label}
+						</Button>
+					))}
+				</div>
+			) : null}
+
+			<div className="flex gap-3">
+				<div className="flex flex-col">
+					<Calendar
+						mode="range"
+						numberOfMonths={months}
+						selected={draft}
+						defaultMonth={
+							draft?.from ??
+							(() => {
+								const month = new Date();
+								month.setMonth(month.getMonth() - (months > 1 ? 1 : 0));
+								return month;
+							})()
+						}
+						disabled={(date: Date) => isDateDisabled(date, minDate, maxDate)}
+						onSelect={(range: DateRange | undefined) => {
+							if (range?.from) {
+								setDraft({ from: range.from, to: range.to });
+							}
+						}}
+					/>
+				</div>
+
+				{presets && !compact ? (
+					<div className="flex w-40 flex-col gap-1 border-l border-border pl-3">
+						{DATE_RANGE_PRESETS.map((preset) => (
+							<Button
+								key={preset.name}
+								type="button"
+								variant="ghost"
+								className={cn(
+									'justify-start px-2 font-normal',
+									selectedPreset === preset.name && 'bg-accent text-accent-foreground',
+								)}
+								onClick={() => setPreset(preset.name)}
+							>
+								<span className="flex-1 text-left">{preset.label}</span>
+								{selectedPreset === preset.name ? <CheckIcon className="size-4" /> : null}
+							</Button>
+						))}
+					</div>
+				) : null}
+			</div>
+
+			<div className="flex justify-end gap-2 border-t border-border pt-3">
+				<Button type="button" variant="ghost" onClick={onCancel}>
+					Cancel
+				</Button>
+				<Button type="button" disabled={!draft?.from} onClick={onApply}>
+					Apply
+				</Button>
+			</div>
+		</div>
+	);
+}
+
 /**
  * Range picker whose popover edits a draft before committing it.
  *
@@ -129,13 +280,9 @@ function DateRangePicker({
 		draft?.from && draft.to ? matchDateRangePreset({ from: draft.from, to: draft.to }) : undefined;
 
 	const openPopover = (nextOpen: boolean) => {
-		if (nextOpen) {
-			const nextDraft = toDraftRange(value);
-			setDraft(nextDraft);
-			openedDraftRef.current = nextDraft;
-		} else if (!rangesEqual(draft, openedDraftRef.current)) {
-			setDraft(openedDraftRef.current);
-		}
+		const next = resolvePopoverDraft(nextOpen, value, draft, openedDraftRef.current);
+		setDraft(next.draft);
+		openedDraftRef.current = next.openedDraft;
 		setOpen(nextOpen);
 	};
 
@@ -185,111 +332,20 @@ function DateRangePicker({
 				)}
 			/>
 			<PopoverContent className="w-auto p-0" align="start">
-				<div className="flex flex-col gap-3 p-3">
-					<div className="flex flex-wrap items-center gap-2">
-						<DateInput
-							value={draft?.from}
-							disabled={disabled}
-							onChange={(from) => {
-								setDraft((current) => {
-									const to = current?.to && from > current.to ? from : (current?.to ?? from);
-									return { from, to };
-								});
-							}}
-						/>
-						<span className="text-muted-foreground text-sm">–</span>
-						<DateInput
-							value={draft?.to ?? draft?.from}
-							disabled={disabled}
-							onChange={(to) => {
-								setDraft((current) => {
-									if (!current?.from) {
-										return { from: to, to };
-									}
-									const from = to < current.from ? to : current.from;
-									return { from, to };
-								});
-							}}
-						/>
-					</div>
-
-					{presets && compact ? (
-						<div className="flex flex-wrap gap-2">
-							{DATE_RANGE_PRESETS.map((preset) => (
-								<Button
-									key={preset.name}
-									type="button"
-									size="sm"
-									variant={selectedPreset === preset.name ? 'default' : 'outline'}
-									onClick={() => setPreset(preset.name)}
-								>
-									{preset.label}
-								</Button>
-							))}
-						</div>
-					) : null}
-
-					<div className="flex gap-3">
-						<div className="flex flex-col">
-							<Calendar
-								mode="range"
-								numberOfMonths={months}
-								selected={draft}
-								defaultMonth={
-									draft?.from ??
-									(() => {
-										const month = new Date();
-										month.setMonth(month.getMonth() - (months > 1 ? 1 : 0));
-										return month;
-									})()
-								}
-								disabled={(date: Date) => {
-									if (minDate && date < minDate) {
-										return true;
-									}
-									if (maxDate && date > maxDate) {
-										return true;
-									}
-									return false;
-								}}
-								onSelect={(range: DateRange | undefined) => {
-									if (range?.from) {
-										setDraft({ from: range.from, to: range.to });
-									}
-								}}
-							/>
-						</div>
-
-						{presets && !compact ? (
-							<div className="flex w-40 flex-col gap-1 border-l border-border pl-3">
-								{DATE_RANGE_PRESETS.map((preset) => (
-									<Button
-										key={preset.name}
-										type="button"
-										variant="ghost"
-										className={cn(
-											'justify-start px-2 font-normal',
-											selectedPreset === preset.name && 'bg-accent text-accent-foreground',
-										)}
-										onClick={() => setPreset(preset.name)}
-									>
-										<span className="flex-1 text-left">{preset.label}</span>
-										{selectedPreset === preset.name ? <CheckIcon className="size-4" /> : null}
-									</Button>
-								))}
-							</div>
-						) : null}
-					</div>
-
-					<div className="flex justify-end gap-2 border-t border-border pt-3">
-						<Button type="button" variant="ghost" onClick={() => openPopover(false)}>
-							Cancel
-						</Button>
-						<Button type="button" disabled={!draft?.from} onClick={applyRange}>
-							Apply
-						</Button>
-					</div>
-				</div>
+				<DateRangePickerPanel
+					draft={draft}
+					setDraft={setDraft}
+					disabled={disabled}
+					presets={presets}
+					compact={compact}
+					months={months}
+					minDate={minDate}
+					maxDate={maxDate}
+					selectedPreset={selectedPreset}
+					setPreset={setPreset}
+					onCancel={() => openPopover(false)}
+					onApply={applyRange}
+				/>
 			</PopoverContent>
 		</Popover>
 	);

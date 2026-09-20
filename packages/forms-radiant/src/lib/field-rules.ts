@@ -60,6 +60,57 @@ function toValidator(rules: ReadonlyArray<ValidationRule>, fieldPath: string | u
 	};
 }
 
+type NativeRule = Extract<ValidationRule, { type: keyof typeof NATIVE_RULE_APPLIERS }>;
+
+const NATIVE_RULE_APPLIERS = {
+	required: (fieldRules: FieldRules, rule: Extract<ValidationRule, { type: 'required' }>) => {
+		fieldRules.required = rule.message ?? true;
+	},
+	minLength: (fieldRules: FieldRules, rule: Extract<ValidationRule, { type: 'minLength' }>) => {
+		fieldRules.minLength = numericRule(rule.value, rule.message);
+	},
+	maxLength: (fieldRules: FieldRules, rule: Extract<ValidationRule, { type: 'maxLength' }>) => {
+		fieldRules.maxLength = numericRule(rule.value, rule.message);
+	},
+	min: (fieldRules: FieldRules, rule: Extract<ValidationRule, { type: 'min' }>) => {
+		fieldRules.min = numericRule(rule.value, rule.message);
+	},
+	max: (fieldRules: FieldRules, rule: Extract<ValidationRule, { type: 'max' }>) => {
+		fieldRules.max = numericRule(rule.value, rule.message);
+	},
+	pattern: (fieldRules: FieldRules, rule: Extract<ValidationRule, { type: 'pattern' }>) => {
+		fieldRules.pattern = { value: new RegExp(rule.value), message: rule.message ?? 'Invalid format' };
+	},
+	email: (fieldRules: FieldRules, rule: Extract<ValidationRule, { type: 'email' }>) => {
+		fieldRules.pattern = {
+			value: rule.pattern ? new RegExp(rule.pattern) : EMAIL_PATTERN,
+			message: rule.message ?? 'Invalid email',
+		};
+	},
+	base64: (fieldRules: FieldRules, rule: Extract<ValidationRule, { type: 'base64' }>) => {
+		fieldRules.pattern = { value: BASE64_PATTERN, message: rule.message ?? 'Invalid Base64' };
+	},
+	hex: (fieldRules: FieldRules, rule: Extract<ValidationRule, { type: 'hex' }>) => {
+		fieldRules.pattern = { value: HEX_PATTERN, message: rule.message ?? 'Invalid hexadecimal value' };
+	},
+	minItems: (fieldRules: FieldRules, rule: Extract<ValidationRule, { type: 'minItems' }>) => {
+		if (rule.value >= 1) {
+			fieldRules.required = rule.message ?? true;
+		}
+	},
+} satisfies Record<string, (fieldRules: FieldRules, rule: ValidationRule) => void>;
+
+function applyNativeFieldRule(fieldRules: FieldRules, rule: ValidationRule, element: FieldRulesSource): void {
+	if (rule.type === 'phone') {
+		fieldRules.validate = toValidator([rule], element.name, 'Enter a complete phone number');
+		return;
+	}
+	const apply = NATIVE_RULE_APPLIERS[rule.type as keyof typeof NATIVE_RULE_APPLIERS];
+	if (apply) {
+		apply(fieldRules, rule as NativeRule);
+	}
+}
+
 export function toFieldRules(element: FieldRulesSource): FieldRules | undefined {
 	const resolved = getValidationRulesForElement<ValidationRule>(element);
 	if (!resolved?.length) {
@@ -69,48 +120,7 @@ export function toFieldRules(element: FieldRulesSource): FieldRules | undefined 
 	const fieldRules: FieldRules = {};
 
 	for (const rule of resolved) {
-		switch (rule.type) {
-			case 'required':
-				fieldRules.required = rule.message ?? true;
-				break;
-			case 'minLength':
-				fieldRules.minLength = numericRule(rule.value, rule.message);
-				break;
-			case 'maxLength':
-				fieldRules.maxLength = numericRule(rule.value, rule.message);
-				break;
-			case 'min':
-				fieldRules.min = numericRule(rule.value, rule.message);
-				break;
-			case 'max':
-				fieldRules.max = numericRule(rule.value, rule.message);
-				break;
-			case 'pattern':
-				fieldRules.pattern = { value: new RegExp(rule.value), message: rule.message ?? 'Invalid format' };
-				break;
-			case 'email':
-				fieldRules.pattern = {
-					value: rule.pattern ? new RegExp(rule.pattern) : EMAIL_PATTERN,
-					message: rule.message ?? 'Invalid email',
-				};
-				break;
-			case 'base64':
-				fieldRules.pattern = { value: BASE64_PATTERN, message: rule.message ?? 'Invalid Base64' };
-				break;
-			case 'hex':
-				fieldRules.pattern = { value: HEX_PATTERN, message: rule.message ?? 'Invalid hexadecimal value' };
-				break;
-			case 'phone':
-				fieldRules.validate = toValidator([rule], element.name, 'Enter a complete phone number');
-				break;
-			case 'minItems':
-				if (rule.value >= 1) {
-					fieldRules.required = rule.message ?? true;
-				}
-				break;
-			default:
-				break;
-		}
+		applyNativeFieldRule(fieldRules, rule, element);
 	}
 
 	if (resolved.some((rule) => !NATIVE_RUI_RULES.has(rule.type))) {
