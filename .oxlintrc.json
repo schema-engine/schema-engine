@@ -49,6 +49,20 @@
 					"@testing-library/jest-dom/vitest"
 				]
 			}
+		],
+		"eslint/no-unused-vars": [
+			"warn",
+			{
+				"varsIgnorePattern": "^_",
+				"argsIgnorePattern": "^_",
+				"caughtErrorsIgnorePattern": "^_"
+			}
+		],
+		"eslint/no-underscore-dangle": [
+			"warn",
+			{
+				"allow": ["_default"]
+			}
 		]
 	},
 	"overrides": [
