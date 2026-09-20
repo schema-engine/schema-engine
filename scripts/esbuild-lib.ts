@@ -79,39 +79,37 @@ function collectEntryPoints(cwd: string, patterns: string[], exclude: string[]):
 	return [...files];
 }
 
-export async function buildLib(options: BuildLibOptions): Promise<void> {
-	const cwd = options.cwd ?? process.cwd();
-	const watch = process.argv.includes('--watch');
-	const outdir = path.resolve(cwd, options.outdir ?? 'dist');
-	const outbase = path.resolve(cwd, options.outbase ?? 'src');
-	const exclude = options.exclude ?? ['.test.', '.stories.', '.play.'];
-	const entryPoints = collectEntryPoints(cwd, options.entryGlobs, exclude);
-
-	if (entryPoints.length === 0) {
-		throw new Error(`No entry points matched ${options.entryGlobs.join(', ')}`);
-	}
-
+function createBuildPlugins(options: BuildLibOptions): Plugin[] {
 	const plugins = [...(options.aliases?.length ? [aliasPlugin(options.aliases)] : []), ...(options.plugins ?? [])];
-
 	const onEnd = options.onEnd;
-	if (onEnd) {
-		plugins.push({
-			name: 'on-end',
-			setup(buildApi) {
-				buildApi.onEnd(async (result) => {
-					if (result.errors.length === 0) {
-						await onEnd();
-					}
-				});
-			},
-		});
+	if (!onEnd) {
+		return plugins;
 	}
+	plugins.push({
+		name: 'on-end',
+		setup(buildApi) {
+			buildApi.onEnd(async (result) => {
+				if (result.errors.length === 0) {
+					await onEnd();
+				}
+			});
+		},
+	});
+	return plugins;
+}
 
-	const esbuildOptions: BuildOptions = {
+function createEsbuildOptions(
+	options: BuildLibOptions,
+	cwd: string,
+	entryPoints: string[],
+	plugins: Plugin[],
+	watch: boolean,
+): BuildOptions {
+	return {
 		absWorkingDir: cwd,
 		entryPoints,
-		outdir,
-		outbase,
+		outdir: path.resolve(cwd, options.outdir ?? 'dist'),
+		outbase: path.resolve(cwd, options.outbase ?? 'src'),
 		bundle: true,
 		format: 'esm',
 		platform: 'browser',
@@ -128,6 +126,19 @@ export async function buildLib(options: BuildLibOptions): Promise<void> {
 		logLevel: 'info',
 		plugins,
 	};
+}
+
+export async function buildLib(options: BuildLibOptions): Promise<void> {
+	const cwd = options.cwd ?? process.cwd();
+	const watch = process.argv.includes('--watch');
+	const exclude = options.exclude ?? ['.test.', '.stories.', '.play.'];
+	const entryPoints = collectEntryPoints(cwd, options.entryGlobs, exclude);
+
+	if (entryPoints.length === 0) {
+		throw new Error(`No entry points matched ${options.entryGlobs.join(', ')}`);
+	}
+
+	const esbuildOptions = createEsbuildOptions(options, cwd, entryPoints, createBuildPlugins(options), watch);
 
 	if (watch) {
 		const ctx = await context(esbuildOptions);
