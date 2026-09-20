@@ -15,6 +15,8 @@ The Form Engine validation system provides a flexible, extensible way to define 
 
 Validation rules are plain JavaScript objects that describe how to validate a field value. This makes them JSON-serializable and perfect for form configurations:
 
+Complete elements still need `$type`, `id`, and `name` when you paste configs into an engine.
+
 ```typescript
 { type: 'required', message: 'This field is required' }
 

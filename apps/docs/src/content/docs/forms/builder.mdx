@@ -2,7 +2,7 @@
 title: 'Form engine setup'
 description: 'Register elements, recipes, and actions into an immutable form engine.'
 group: Forms
-order: 7
+order: 5
 ---
 
 # Form engine setup
@@ -178,7 +178,8 @@ const form = engine.defineForm({
 actions. It applies schema defaults and transforms and returns a frozen
 `NormalizedFormConfig`. Use `engine.validateForm()` for untyped or external
 JSON. Use a plain `FormConfig` when configuration must remain portable or
-editable by another system, then pass it through `validateForm` before render.
+editable by another system, then pass it to `validateForm` or to `FormRenderer`
+(which validates at the form boundary).
 
 ## Composition rules
 

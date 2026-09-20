@@ -9,9 +9,14 @@ order: 3
 
 Build your first form with Schema Engine in just a few steps.
 
+This guide uses a portable **`FormConfig`** object (ideal for JSON and shared files).
+When the form lives in TypeScript next to your engine, prefer
+[`engine.defineForm()`](/docs/forms/builder#author-form-configuration) instead.
+See [Authoring modes](/docs/forms/core-concepts#authoring-modes).
+
 ## 1. Create Your Form Engine
 
-Use the `createFormEngine` to register components and build an immutable engine:
+Use `createFormEngine` to register components. The returned engine is immutable:
 
 ```typescript
 // lib/form-engine.ts
@@ -25,15 +30,17 @@ export const formEngine = createFormEngine({
 });
 ```
 
-> **Note:** Create the form engine once and reuse it across your entire application. The engine instance is immutable after calling `build()`.
+> **Note:** Create the form engine once and reuse it across your application.
 
 ## 2. Create the Form Configuration
 
-Define your form structure using a JSON configuration:
+Define your form structure using a configuration object:
 
 ```typescript
 // config/contact-form.ts
-const contactFormConfig: FormConfig = {
+import type { FormConfig } from '@schema-engine/forms/schemas';
+
+export const contactFormConfig: FormConfig = {
 	id: 'contact-form',
 	title: 'Get In Touch',
 	description: 'We would love to hear from you',
@@ -115,14 +122,17 @@ const contactFormConfig: FormConfig = {
 
 ## 3. Render the Form
 
+`FormRenderer` validates the config at the form boundary; you do not need to call
+`validateForm` first unless you reuse the normalized result elsewhere.
+
 ```tsx
 import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
 import { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
-import { formEngine } from './lib/form-engine'; // Adjust path as needed
-import { contactFormConfig } from './config/contact-form'; // Import the config created above
+import { formEngine } from './lib/form-engine';
+import { contactFormConfig } from './config/contact-form';
 
 export function ContactForm() {
-	const handleSubmit = (data: any) => {
+	const handleSubmit = (data: Record<string, unknown>) => {
 		console.log('Form submitted:', data);
 	};
 
@@ -166,33 +176,12 @@ This creates **conditional logic** where:
 
 ## Key Concepts
 
-### Form Config Structure
+Form and element shapes are defined by `@schema-engine/forms/schemas` (`FormConfig`,
+`FormStep`, validation rules, and constraints). Import those types instead of
+copying simplified interfaces so your project stays aligned with the engine.
 
-```typescript
-interface FormConfig {
-	id: string; // Unique identifier
-	title?: string; // Form title
-	description?: string; // Form description
-	steps: StepConfig[]; // Form steps (even single-step forms need this)
-	view?: FormViewConfig; // Optional view recipe configuration
-	actions?: ActionConfig[]; // Optional form actions
-}
-```
-
-### Element Configuration
-
-```typescript
-interface ElementConfig {
-	$type: string; // Element type (input, select, textarea, etc.)
-	id?: string; // DOM element ID
-	name: string; // Form field name
-	label?: string; // Field label
-	rules?: ValidationRule[]; // Validation rules
-	constraints?: ConstraintLogic[]; // Conditional logic
-	grid?: ElementGridConfig; // Grid positioning
-	// ... type-specific properties
-}
-```
+See [Core Concepts](/docs/forms/core-concepts) for validation, recipes, and
+[Authoring modes](/docs/forms/core-concepts#authoring-modes).
 
 ## Validation Rules
 
@@ -232,3 +221,4 @@ Now that you've built your first form, explore these topics:
 - **[View recipes](/docs/forms-react/layouts)** - Shells, blocks, and multi-step composition
 - **[Hooks](/docs/forms-react/hooks)** - React hooks for form interactions
 - **[Actions](/docs/forms/actions)** - Handle form submission and lifecycle events
+- **[Form engine setup](/docs/forms/builder)** - Typed authoring with `defineForm`
