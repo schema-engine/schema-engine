@@ -1,8 +1,7 @@
 import { RuiCheckboxGroup } from '@ecopages/radiant-ui/checkbox-group';
-import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
 import { parseChoiceValue, serializeChoiceValue } from '@/lib/choice-value';
-import { toFieldRules } from '@/lib/field-rules';
+import { bindField } from '@/lib/bind-field';
 import type { CheckboxGroupFieldProps } from './form-checkbox-group.types';
 
 export function FormCheckboxGroup({
@@ -16,27 +15,16 @@ export function FormCheckboxGroup({
 		label: option.label,
 		disabled: option.disabled,
 	}));
+	const { fieldGroupProps, controlProps } = bindField(config, {
+		orientation: config.orientation,
+		options,
+		value: config.defaultValue,
+	});
 
 	return (
-		<FieldGroup
-			name={config.name}
-			label={config.label || config.name}
-			htmlFor={config.id}
-			hiddenLabel={!config.label}
-			required={isFieldRequired(config.rules)}
-			description={config.description}
-			grid={config.grid}
-			style={config.style}
-			rules={toFieldRules(config)}
-			defaultValue={serializeChoiceValue(config.defaultValue)}
-			disabled={config.disabled}
-		>
+		<FieldGroup {...fieldGroupProps} defaultValue={serializeChoiceValue(config.defaultValue)}>
 			<RuiCheckboxGroup
-				name={config.name}
-				orientation={config.orientation}
-				disabled={config.disabled}
-				options={options}
-				value={config.defaultValue}
+				{...controlProps}
 				on:change={(event: Event) => {
 					const detail = (event as CustomEvent<{ value: string }>).detail;
 					propsOnChange?.(parseChoiceValue(detail?.value ?? '', true) as string[]);

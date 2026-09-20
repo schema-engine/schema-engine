@@ -4,6 +4,7 @@ import { RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
 import { RuiLabel } from '@ecopages/radiant-ui/label';
 import type { FieldRules } from '@ecopages/radiant-ui/form';
 import type { ElementGridConfig, ValidationRule } from '@schema-engine/forms/schemas';
+import { serializeFieldRules } from '@/lib/field-rules';
 
 export interface FieldGroupProps {
 	label: string;
@@ -22,14 +23,36 @@ export interface FieldGroupProps {
 	disabled?: boolean;
 }
 
-function serializeRules(rules: FieldRules | undefined): string | undefined {
-	if (!rules) {
-		return undefined;
-	}
+export type FormFieldHostProps = {
+	name: string;
+	rules?: FieldRules;
+	'data-se-field-rules'?: string;
+	'data-se-validation-rules'?: string;
+	defaultValueData?: string;
+	disabled?: boolean;
+	grid?: ElementGridConfig;
+	style?: Record<string, string | number | undefined>;
+	class?: string;
+};
 
-	return JSON.stringify(rules, (_key, value: unknown) =>
-		value instanceof RegExp ? { $type: 'regexp', source: value.source, flags: value.flags } : value,
-	);
+/**
+ * Maps FieldGroup chrome onto `FormField` hydration attributes.
+ *
+ * @remarks
+ * Custom-chrome widgets (checkbox, switch, radio) call this instead of wrapping `FieldGroup`.
+ */
+export function toFormFieldHost(chrome: Omit<FieldGroupProps, 'children'>): FormFieldHostProps {
+	return {
+		name: chrome.name ?? chrome.htmlFor ?? chrome.label,
+		rules: chrome.rules,
+		'data-se-field-rules': serializeFieldRules(chrome.rules),
+		'data-se-validation-rules': chrome.validationRules ? JSON.stringify(chrome.validationRules) : undefined,
+		defaultValueData: chrome.defaultValue !== undefined ? JSON.stringify(chrome.defaultValue) : undefined,
+		disabled: chrome.disabled,
+		grid: chrome.grid,
+		style: chrome.style,
+		class: chrome.className,
+	};
 }
 
 /**
@@ -37,34 +60,11 @@ function serializeRules(rules: FieldRules | undefined): string | undefined {
  * Defaults use the JSON string channel because Radiant UI's Object-typed
  * defaultValue prop rejects serialized scalars during attribute adoption.
  */
-export function FieldGroup({
-	label,
-	htmlFor,
-	hiddenLabel = false,
-	required = false,
-	description,
-	className,
-	children,
-	style,
-	grid,
-	name,
-	rules,
-	validationRules,
-	defaultValue,
-	disabled,
-}: FieldGroupProps) {
+export function FieldGroup({ children, hiddenLabel = false, required = false, ...chrome }: FieldGroupProps) {
+	const { label, htmlFor, description } = chrome;
+
 	return (
-		<FormField
-			name={name ?? htmlFor ?? label}
-			rules={rules}
-			data-se-field-rules={serializeRules(rules)}
-			data-se-validation-rules={validationRules ? JSON.stringify(validationRules) : undefined}
-			defaultValueData={defaultValue !== undefined ? JSON.stringify(defaultValue) : undefined}
-			disabled={disabled}
-			classes={['se-form-field', className]}
-			grid={grid}
-			style={style}
-		>
+		<FormField {...toFormFieldHost({ ...chrome, hiddenLabel, required })}>
 			{!hiddenLabel ? (
 				<RuiLabel htmlFor={htmlFor}>
 					{label}

@@ -156,6 +156,28 @@ and array mutations with stable row IDs. See the [controller API and migration
 guide](./src/adapters/radiant/controller/README.md) for examples and the replacement
 for the removed snapshot hooks.
 
+### Custom field widgets
+
+Shipped inputs use `bindField(config, controlOverrides?)` to split field chrome
+from static control props. Spread `fieldGroupProps` on `FieldGroup`, or
+`hostProps` on `FormField` for custom label layouts. Spread `controlProps` on the
+focusable control, then attach event handlers on the JSX node after the
+spread. Use `bindControlledFormElement(config, form)` only when you need a live
+controller snapshot (`value`, `onChange`, `error`); it is not a substitute for
+`bindField` during SSR authoring.
+
+```tsx
+import { bindField } from '@schema-engine/forms-radiant/primitives';
+
+const { fieldGroupProps, controlProps } = bindField(config, { type: config.inputType });
+
+return (
+	<FieldGroup {...fieldGroupProps}>
+		<RuiInput {...controlProps} on:input={handleInput} />
+	</FieldGroup>
+);
+```
+
 Field schemas live beside each registration under `src/elements/` (for example `form-input.types.ts` next to `form-input.registration.ts`). Component props stay on the widget modules. Radiant does not ship `date` or `date-range` widgets; those `$type`s exist only in the shadcn registry today. Registry and Radiant schemas may diverge where capabilities differ.
 
 ## Development

@@ -1,5 +1,3 @@
-import { getValidationRulesForElement } from '@schema-engine/forms/schemas/validation/utils';
-import { peekOwningFormEngine } from '@/contexts/form-engine-owner';
 import './form-phone-input.css';
 import { customElement, onEvent, onUpdated, prop, query, RadiantElement, state } from '@ecopages/radiant';
 import { jsx, unsafeHtml, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
@@ -15,9 +13,8 @@ import {
 import { RuiAutocomplete, RuiAutocompleteCollection, RuiAutocompleteEmpty } from '@ecopages/radiant-ui/autocomplete';
 import { RuiListbox, RuiListboxOption, RuiListboxOptionIndicator } from '@ecopages/radiant-ui/listbox';
 import type { CountryCode } from 'libphonenumber-js';
-import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
-import { toFieldRules } from '@/lib/field-rules';
+import { bindField } from '@/lib/bind-field';
 import {
 	detectCountryFromInput,
 	formatPhoneInputValue,
@@ -223,32 +220,18 @@ export function FormPhoneInput({
 	onFocus: propsOnFocus,
 	...config
 }: PhoneInputFieldProps) {
-	const owningEngine = peekOwningFormEngine();
-	const registry = owningEngine?.getValidationRegistry();
+	const { fieldGroupProps, controlProps } = bindField(config, {
+		placeholder: config.placeholder,
+		inputId: config.id ?? '',
+		defaultCountry: config.defaultCountry ?? 'US',
+		international: Boolean(config.international),
+		defaultValue: typeof config.defaultValue === 'string' ? config.defaultValue : '',
+	});
 
 	return (
-		<FieldGroup
-			name={config.name}
-			label={config.label || config.name}
-			htmlFor={config.id}
-			hiddenLabel={!config.label}
-			required={isFieldRequired(config.rules)}
-			description={config.description}
-			grid={config.grid}
-			style={config.style}
-			rules={toFieldRules(config, registry)}
-			validationRules={registry ? getValidationRulesForElement(config, registry) : config.rules}
-			defaultValue={config.defaultValue}
-			disabled={config.disabled}
-		>
+		<FieldGroup {...fieldGroupProps}>
 			{jsx('se-phone-input', {
-				name: config.name,
-				placeholder: config.placeholder,
-				disabled: config.disabled,
-				inputId: config.id ?? '',
-				defaultCountry: config.defaultCountry ?? 'US',
-				international: Boolean(config.international),
-				defaultValue: typeof config.defaultValue === 'string' ? config.defaultValue : '',
+				...controlProps,
 				'on:change': (event: Event) => {
 					propsOnChange?.((event as CustomEvent<{ value?: string }>).detail?.value ?? '');
 				},

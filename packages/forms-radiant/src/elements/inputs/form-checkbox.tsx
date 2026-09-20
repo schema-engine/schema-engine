@@ -2,7 +2,7 @@ import { FormField } from '@/elements/form-field';
 import '@ecopages/radiant-ui/checkbox-group';
 import { RuiCheckbox } from '@ecopages/radiant-ui/checkbox';
 import { RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
-import { toFieldRules } from '@/lib/field-rules';
+import { bindField } from '@/lib/bind-field';
 import type { CheckboxFieldProps } from './form-checkbox.types';
 
 export function FormCheckbox({
@@ -11,20 +11,14 @@ export function FormCheckbox({
 	onFocus: propsOnFocus,
 	...config
 }: CheckboxFieldProps) {
+	const { hostProps, controlProps } = bindField(config, {
+		indeterminate: config.indeterminate,
+	});
+
 	return (
-		<FormField
-			name={config.name}
-			rules={toFieldRules(config)}
-			defaultValueData={config.defaultValue !== undefined ? JSON.stringify(config.defaultValue) : undefined}
-			disabled={config.disabled}
-			grid={config.grid}
-			style={config.style}
-		>
+		<FormField {...hostProps}>
 			<RuiCheckbox
-				id={config.id}
-				name={config.name}
-				indeterminate={config.indeterminate}
-				disabled={config.disabled}
+				{...controlProps}
 				on:change={(event: Event) => {
 					const detail = (event as CustomEvent<{ checked: boolean }>).detail;
 					propsOnChange?.(detail?.checked ?? false);

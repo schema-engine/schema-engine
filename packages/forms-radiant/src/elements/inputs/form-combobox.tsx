@@ -10,10 +10,9 @@ import {
 	RuiListbox,
 } from '@ecopages/radiant-ui/combobox';
 import { RuiTagGroup } from '@ecopages/radiant-ui/tag-group';
-import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
 import { parseChoiceValue, serializeChoiceValue } from '@/lib/choice-value';
-import { toFieldRules } from '@/lib/field-rules';
+import { bindField } from '@/lib/bind-field';
 import type { ComboboxFieldProps } from './form-combobox.types';
 
 export function FormCombobox({
@@ -28,26 +27,16 @@ export function FormCombobox({
 		label: option.label,
 		disabled: option.disabled,
 	}));
+	const { fieldGroupProps, controlProps } = bindField(config, {
+		placeholder: config.placeholder,
+		selectionMode: (isMultiple ? 'multiple' : 'single') as 'multiple' | 'single',
+		value: config.defaultValue,
+	});
 
 	return (
-		<FieldGroup
-			name={config.name}
-			label={config.label || config.name}
-			htmlFor={config.id}
-			hiddenLabel={!config.label}
-			required={isFieldRequired(config.rules)}
-			description={config.description}
-			grid={config.grid}
-			style={config.style}
-			rules={toFieldRules(config)}
-			defaultValue={serializeChoiceValue(config.defaultValue)}
-			disabled={config.disabled}
-		>
+		<FieldGroup {...fieldGroupProps} defaultValue={serializeChoiceValue(config.defaultValue)}>
 			<RuiCombobox
-				placeholder={config.placeholder}
-				disabled={config.disabled}
-				selectionMode={isMultiple ? 'multiple' : 'single'}
-				value={config.defaultValue}
+				{...controlProps}
 				on:change={(event: Event) => {
 					const detail = (event as CustomEvent<{ value: string }>).detail;
 					propsOnChange?.(parseChoiceValue(detail?.value ?? '', isMultiple));

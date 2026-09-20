@@ -1,9 +1,8 @@
 import './form-input-otp.css';
 import { customElement, onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
-import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
-import { toFieldRules } from '@/lib/field-rules';
+import { bindField } from '@/lib/bind-field';
 import type { InputOTPFieldProps } from './form-input-otp.types';
 
 function sanitizeChar(value: string, pattern: 'numeric' | 'alphanumeric') {
@@ -129,25 +128,15 @@ export function FormInputOTP({
 	onFocus: propsOnFocus,
 	...config
 }: InputOTPFieldProps) {
+	const { fieldGroupProps, controlProps } = bindField(config, {
+		length: config.length ?? 6,
+		pattern: config.pattern ?? 'numeric',
+	});
+
 	return (
-		<FieldGroup
-			name={config.name}
-			label={config.label || config.name}
-			htmlFor={config.id}
-			hiddenLabel={!config.label}
-			required={isFieldRequired(config.rules)}
-			description={config.description}
-			grid={config.grid}
-			style={config.style}
-			rules={toFieldRules(config)}
-			defaultValue={config.defaultValue}
-			disabled={config.disabled}
-		>
+		<FieldGroup {...fieldGroupProps}>
 			{jsx('se-input-otp', {
-				name: config.name,
-				length: config.length ?? 6,
-				pattern: config.pattern ?? 'numeric',
-				disabled: config.disabled,
+				...controlProps,
 				'on:change': (event: Event) => {
 					propsOnChange?.((event as CustomEvent<{ value?: string }>).detail?.value ?? '');
 				},

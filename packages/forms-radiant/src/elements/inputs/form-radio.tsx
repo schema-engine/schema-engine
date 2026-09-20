@@ -2,8 +2,7 @@ import { FormField } from '@/elements/form-field';
 import { RuiRadioGroup } from '@ecopages/radiant-ui/radio-group';
 import { RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
 import { RuiLabel } from '@ecopages/radiant-ui/label';
-import { isFieldRequired } from '@schema-engine/forms/schemas';
-import { toFieldRules } from '@/lib/field-rules';
+import { bindField } from '@/lib/bind-field';
 import type { RadioFieldProps } from './form-radio.types';
 
 export function FormRadio({
@@ -12,7 +11,7 @@ export function FormRadio({
 	onFocus: propsOnFocus,
 	...config
 }: RadioFieldProps) {
-	const isRequired = isFieldRequired(config.rules);
+	const { hostProps, controlProps, isRequired } = bindField(config);
 	const options = config.options.map((option) => ({
 		value: String(option.value),
 		label: option.label,
@@ -20,14 +19,7 @@ export function FormRadio({
 	}));
 
 	return (
-		<FormField
-			name={config.name}
-			rules={toFieldRules(config)}
-			defaultValueData={config.defaultValue !== undefined ? JSON.stringify(config.defaultValue) : undefined}
-			disabled={config.disabled}
-			grid={config.grid}
-			style={config.style}
-		>
+		<FormField {...hostProps}>
 			{config.label ? (
 				<RuiLabel>
 					{config.label}
@@ -35,7 +27,7 @@ export function FormRadio({
 				</RuiLabel>
 			) : null}
 			<RuiRadioGroup
-				name={config.name}
+				{...controlProps}
 				options={options}
 				value={config.defaultValue}
 				on:change={(event: Event) => {
