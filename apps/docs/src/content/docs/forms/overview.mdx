@@ -13,7 +13,7 @@ Framework-agnostic core engine for building type-safe, JSON-configured forms wit
 
 The core package provides the foundational architecture for the JSON Form Engine ecosystem. It enables developers to:
 
-- Build type-safe form configurations using a fluent builder pattern
+- Author type-safe form configs with `engine.defineForm()` object literals tied to your registrations
 - Register and manage form components (elements, recipes, actions)
 - Generate JSON schemas for validation and tooling
 - Execute form actions in response to lifecycle events
@@ -26,7 +26,7 @@ such as React and Radiant built on top.
 ## Installation
 
 ```bash
-bun add @schema-engine/forms zod
+pnpm add @schema-engine/forms zod
 ```
 
 The `zod` package provides the `zod/mini` entry point used by first-party
@@ -36,6 +36,7 @@ schemas. Consumer registrations may use any Standard Schema provider.
 
 - [Getting Started](/docs/forms/getting-started) - Build your first form engine
 - [Core Concepts](/docs/forms/core-concepts) - createFormEngine, FormEngine, registrations
+- [Form engine setup](/docs/forms/builder) - Registrations and typed authoring
 - [Validation](/docs/forms/validation) - Built-in rules and custom validation
 - [Actions](/docs/forms/actions) - Action system and built-in plugins
 - [API Reference](/docs/forms/api-reference) - Complete API documentation

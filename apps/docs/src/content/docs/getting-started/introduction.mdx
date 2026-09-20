@@ -27,6 +27,11 @@ Schema Engine is a **JSON-driven form system** that adapts to your needs, not th
 
 <FormRendererPreview config={contactFormConfig} />
 
+## Authoring modes
+
+- **Forms in your codebase** (next to one engine): use `engine.defineForm({ ... })` for full TypeScript narrowing. See [Authoring modes](/docs/forms/core-concepts#authoring-modes).
+- **Portable JSON** (CMS, API, shared files): use a `FormConfig` object or raw JSON and `engine.validateForm()` at runtime. The docs site demos use this pattern so the same config works across adapters and copy-paste snippets.
+
 ## What Makes It Different?
 
 ### Complete Customization
