@@ -1,4 +1,3 @@
-/** @jsxImportSource react */
 import { Button } from '@/components/ui/button';
 import type { SubmitButtonProps } from './submit-button.types';
 import { useFormContext } from '@schema-engine/forms-react/adapters';

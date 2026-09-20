@@ -1,8 +1,8 @@
 import { useController, useFormContext } from 'react-hook-form';
-import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { isFieldRequired, type ElementConfig } from '@schema-engine/forms/schemas';
 import type { FormFieldValue } from '../../types';
 
-export function useFormField<TFieldValue = unknown>(config: FormEngine.ElementConfig): FormFieldValue<TFieldValue> {
+export function useFormField<TFieldValue = unknown>(config: ElementConfig): FormFieldValue<TFieldValue> {
 	const { formState } = useFormContext();
 
 	const {

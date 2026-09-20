@@ -855,7 +855,7 @@
       "type": "registry:item",
       "title": "Schema Engine forms (Base UI)",
       "description": "All Base UI Schema Engine form elements and the generated registration barrel.",
-      "docs": "Import schemaFormRegistrations from @/components/schema-engine/forms/registrations and pass them to createReactFormEngine({ elements: [...] }).",
+      "docs": "Import schemaFormRegistrations from @/components/schema-engine/forms/registrations and pass them to createFormEngine({ elements: [...] }).",
       "registryDependencies": [
         "andeeplus/schema-engine/schema-engine-form-utils",
         "andeeplus/schema-engine/schema-engine-form-field-primitive",
@@ -924,7 +924,7 @@
       "type": "registry:item",
       "title": "Schema Engine default recipes (Base UI)",
       "description": "Default Base UI view recipes and the generated recipe registration barrel.",
-      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createReactFormEngine({ recipes: [...] }).",
+      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createFormEngine({ recipes: [...] }).",
       "registryDependencies": [
         "button",
         "badge",

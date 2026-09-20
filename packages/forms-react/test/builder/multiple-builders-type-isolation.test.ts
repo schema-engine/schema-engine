@@ -3,8 +3,7 @@
  */
 
 import { describe, test, expect } from 'vitest';
-import { createReactFormEngine } from '@/registries/builder-registry';
-import { createFormEngine } from '@schema-engine/forms';
+import { createFormEngine } from '@/registries/builder-registry';
 
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { TextareaElementRegistration } from '@/components/schema-engine/forms/inputs/form-textarea.registration';
@@ -13,7 +12,7 @@ import { SelectElementRegistration } from '@/components/schema-engine/forms/inpu
 
 describe('Multiple engines type isolation', () => {
 	test('should create an engine with only input and textarea', () => {
-		const engine = createReactFormEngine({
+		const engine = createFormEngine({
 			elements: [InputElementRegistration, TextareaElementRegistration],
 		});
 
@@ -25,7 +24,7 @@ describe('Multiple engines type isolation', () => {
 	});
 
 	test('should create an engine with different components', () => {
-		const engine = createReactFormEngine({
+		const engine = createFormEngine({
 			elements: [
 				InputElementRegistration,
 				TextareaElementRegistration,
@@ -41,8 +40,8 @@ describe('Multiple engines type isolation', () => {
 	});
 
 	test('should create two independent engines', () => {
-		const engine1 = createReactFormEngine({ elements: [InputElementRegistration] });
-		const engine2 = createReactFormEngine({
+		const engine1 = createFormEngine({ elements: [InputElementRegistration] });
+		const engine2 = createFormEngine({
 			elements: [TextareaElementRegistration, CheckboxElementRegistration],
 		});
 
@@ -56,7 +55,7 @@ describe('Multiple engines type isolation', () => {
 	});
 
 	test('should allow retrieving registered components', () => {
-		const engine = createReactFormEngine({
+		const engine = createFormEngine({
 			elements: [InputElementRegistration, CheckboxElementRegistration],
 		});
 
@@ -75,8 +74,8 @@ describe('Multiple engines type isolation', () => {
 	});
 
 	test('should not share element registrations between engines', () => {
-		const engine1 = createReactFormEngine({ elements: [InputElementRegistration] });
-		const engine2 = createReactFormEngine({ elements: [TextareaElementRegistration] });
+		const engine1 = createFormEngine({ elements: [InputElementRegistration] });
+		const engine2 = createFormEngine({ elements: [TextareaElementRegistration] });
 
 		expect(engine1.hasElement('input')).toBe(true);
 		expect(engine1.hasElement('textarea')).toBe(false);
@@ -88,7 +87,7 @@ describe('Multiple engines type isolation', () => {
 
 describe('Type safety verification', () => {
 	test('should only expose types for registered components', () => {
-		const engine = createReactFormEngine({
+		const engine = createFormEngine({
 			elements: [InputElementRegistration, CheckboxElementRegistration],
 		});
 

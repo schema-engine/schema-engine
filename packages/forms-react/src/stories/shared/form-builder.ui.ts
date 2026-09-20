@@ -6,7 +6,7 @@
 
 import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
 import { SubmitActionRegistration, ResetActionRegistration } from '@schema-engine/forms';
-import { createReactFormEngine } from '@/registries/builder-registry';
+import { createFormEngine } from '@/registries/builder-registry';
 import {
 	ArrayElementRegistration,
 	CheckboxElementRegistration,
@@ -33,7 +33,7 @@ import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/
 
 export { ValidationPresets };
 
-const baseUIEngine = createReactFormEngine({
+const baseUIEngine = createFormEngine({
 	elements: [
 		InputElementRegistration,
 		TextareaElementRegistration,

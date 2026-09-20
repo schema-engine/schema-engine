@@ -1,4 +1,3 @@
-/** @jsxImportSource react */
 import type React from 'react';
 import { FormElements } from '@schema-engine/forms-react/primitives';
 import { objectFieldScope } from '@schema-engine/forms';

@@ -1,7 +1,6 @@
 import type React from 'react';
-import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { isFieldRequired, type ElementConfig, type ElementGridConfig } from '@schema-engine/forms/schemas';
 import { getFieldGridVariables } from '@schema-engine/forms/lib/grid-styles';
-import type { ElementGridConfig } from '@schema-engine/forms/schemas';
 import { useFormField } from '@/adapters/context';
 import { useGridThemeId } from '@/hooks/use-form-context';
 
@@ -51,7 +50,7 @@ export function combineHandlers<T>(controllerHandler: (value: T) => void, propsH
  * Field chrome and value binding for consumer-owned registry components.
  * Goes through the active FormAdapter — not a specific form library.
  */
-export function useControlledFormElement(config: FormEngine.ElementConfig) {
+export function useControlledFormElement(config: ElementConfig) {
 	if (!config.name) {
 		throw new Error(`Field configuration is missing required "name" property. Config: ${JSON.stringify(config)}`);
 	}

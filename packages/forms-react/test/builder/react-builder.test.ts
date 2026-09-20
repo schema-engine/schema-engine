@@ -3,7 +3,7 @@
  */
 
 import { describe, test, expect } from 'vitest';
-import { createReactFormEngine } from '@/registries/builder-registry';
+import { createFormEngine } from '@/registries/builder-registry';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { FormTextarea } from '@/components/schema-engine/forms/inputs/form-textarea';
 import { CardRecipe } from '@/components/schema-engine/forms/recipes/registrations';
@@ -13,7 +13,7 @@ import { TextareaFieldSchema } from '@/components/schema-engine/forms/inputs/for
 describe('React Form Engine factory', () => {
 	describe('Engine creation', () => {
 		test('should create a new headless engine instance', () => {
-			const engine = createReactFormEngine();
+			const engine = createFormEngine();
 			expect(typeof engine.defineForm).toBe('function');
 			expect(typeof engine.validateForm).toBe('function');
 			expect(typeof engine.extend).toBe('function');
@@ -22,7 +22,7 @@ describe('React Form Engine factory', () => {
 
 	describe('Element registration', () => {
 		test('should register input element', () => {
-			const engine = createReactFormEngine({ elements: [InputElementRegistration] });
+			const engine = createFormEngine({ elements: [InputElementRegistration] });
 
 			expect(engine.hasElement('input')).toBe(true);
 			const element = engine.getElement('input');
@@ -41,7 +41,7 @@ describe('React Form Engine factory', () => {
 				},
 			};
 
-			const engine = createReactFormEngine({
+			const engine = createFormEngine({
 				elements: [InputElementRegistration, textareaElement],
 			});
 
@@ -54,14 +54,14 @@ describe('React Form Engine factory', () => {
 		});
 
 		test('should include element schema', () => {
-			const engine = createReactFormEngine({ elements: [InputElementRegistration] });
+			const engine = createFormEngine({ elements: [InputElementRegistration] });
 			const element = engine.getElement('input');
 
 			expect(element?.schema).toBe(InputFieldSchema);
 		});
 
 		test('should include element metadata', () => {
-			const engine = createReactFormEngine({ elements: [InputElementRegistration] });
+			const engine = createFormEngine({ elements: [InputElementRegistration] });
 			const element = engine.getElement('input');
 
 			expect(element?.metadata.name).toBe('Text Input Field');
@@ -71,17 +71,17 @@ describe('React Form Engine factory', () => {
 
 	describe('Recipe registration', () => {
 		test('registers recipes only when explicitly added', () => {
-			const engine = createReactFormEngine();
+			const engine = createFormEngine();
 
 			expect(engine.getRecipeIds()).toEqual([]);
-			const recipeEngine = createReactFormEngine({ recipes: [CardRecipe] });
+			const recipeEngine = createFormEngine({ recipes: [CardRecipe] });
 			expect(recipeEngine.getRecipe('card')?.metadata.name).toBe(CardRecipe.metadata.name);
 		});
 	});
 
 	describe('Engine extend', () => {
 		test('should extend an engine with additional registrations', () => {
-			const base = createReactFormEngine({ elements: [InputElementRegistration] });
+			const base = createFormEngine({ elements: [InputElementRegistration] });
 			const extended = base.extend({
 				elements: [
 					{
@@ -104,7 +104,7 @@ describe('React Form Engine factory', () => {
 
 	describe('Engine summary', () => {
 		test('should build engine summary', () => {
-			const engine = createReactFormEngine({ elements: [InputElementRegistration] });
+			const engine = createFormEngine({ elements: [InputElementRegistration] });
 			const summary = engine.getSummary();
 
 			expect(summary.elements.count).toBe(1);
@@ -112,7 +112,7 @@ describe('React Form Engine factory', () => {
 		});
 
 		test('should allow building a headless engine with no registrations', () => {
-			const engine = createReactFormEngine();
+			const engine = createFormEngine();
 
 			expect(engine.getElementIds()).toEqual([]);
 			expect(engine.getActionTypes()).toEqual([]);
@@ -137,7 +137,7 @@ describe('React Form Engine factory', () => {
 				},
 			};
 
-			const engine = createReactFormEngine({
+			const engine = createFormEngine({
 				elements: [InputElementRegistration, textareaElement],
 			});
 			const elements = engine.getAllElements();
@@ -146,7 +146,7 @@ describe('React Form Engine factory', () => {
 		});
 
 		test('should return undefined for non-existent element', () => {
-			const engine = createReactFormEngine();
+			const engine = createFormEngine();
 
 			expect(engine.getElement('nonexistent')).toBeUndefined();
 			expect(engine.hasElement('nonexistent')).toBe(false);
@@ -170,7 +170,7 @@ describe('React Form Engine factory', () => {
 
 	describe('Integration', () => {
 		test('should create a fully configured form engine', () => {
-			const engine = createReactFormEngine({ elements: [InputElementRegistration] });
+			const engine = createFormEngine({ elements: [InputElementRegistration] });
 
 			expect(engine.hasElement('input')).toBe(true);
 			expect(engine.getRecipeIds()).toEqual([]);

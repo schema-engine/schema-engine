@@ -1,7 +1,7 @@
-/** @jsxImportSource react */
 import { DateRangePicker } from '@/components/ui/schema-engine/components/date-range-picker';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
 import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
+import type { ElementConfig } from '@schema-engine/forms/schemas';
 import type { DateRangeFieldProps, DateRangeValue } from './form-date-range.types';
 
 function normalizeDateRange(value: unknown): DateRangeValue {
@@ -23,7 +23,7 @@ export function FormDateRange({
 	...config
 }: DateRangeFieldProps) {
 	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } = useControlledFormElement(
-		config as unknown as FormEngine.ElementConfig,
+		config as unknown as ElementConfig,
 	);
 
 	return (

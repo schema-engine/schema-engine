@@ -12,11 +12,12 @@ import {
 	type NormalizedGridTheme,
 } from '@schema-engine/forms/lib/grid-styles';
 import type React from 'react';
-import { useMemo } from 'react';
+import { useContext, useMemo } from 'react';
 import { FormProvider } from '../form-provider';
 import type { FormAdapter, FormProviderProps } from '../../adapters/types';
 import { FormElements } from './form-elements';
 import { useFormInstanceActions, useOptionalFormEngine } from '@/hooks/use-form-context';
+import { FormAdapterContext } from '../../adapters/context';
 import { FormEngineProvider } from '../form-engine-provider';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
@@ -125,18 +126,27 @@ function FormRendererInner({
 
 export function FormRenderer({ engine, adapter, ...props }: FormRendererProps) {
 	const inheritedEngine = useOptionalFormEngine();
+	const inheritedAdapter = useContext(FormAdapterContext);
 	const resolvedEngine = engine ?? inheritedEngine?.engine;
+	const resolvedAdapter = adapter ?? inheritedAdapter ?? undefined;
 	const { config, compiledGrid } = useMemo(() => {
 		assertFormEngine(resolvedEngine, props.config);
 		return { config: resolvedEngine.validateForm(props.config), compiledGrid: resolvedEngine.getCompiledGrid() };
 	}, [props.config, resolvedEngine]);
 	const innerProps = { ...props, config, compiledGrid };
-	if (!engine || !adapter) {
+
+	if (!resolvedEngine) {
 		return <FormRendererInner {...innerProps} />;
 	}
 
+	if (!resolvedAdapter) {
+		throw new Error(
+			'FormRenderer requires an adapter when an engine is supplied. Pass `adapter` or render inside FormEngineProvider.',
+		);
+	}
+
 	return (
-		<FormEngineProvider engine={engine} adapter={adapter}>
+		<FormEngineProvider engine={resolvedEngine} adapter={resolvedAdapter}>
 			<FormRendererInner {...innerProps} />
 		</FormEngineProvider>
 	);

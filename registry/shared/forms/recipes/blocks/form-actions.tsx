@@ -1,4 +1,3 @@
-/** @jsxImportSource react */
 import { DEFAULT_FORM_ACTION_LABELS, type FormActionsConfig } from '@schema-engine/forms/recipes';
 import { useViewConfig, useViewContext } from '@schema-engine/forms-react/contexts';
 import { Button } from '@/components/ui/button';

@@ -856,7 +856,7 @@
       "type": "registry:item",
       "title": "Schema Engine forms (React Aria)",
       "description": "All React Aria Schema Engine form elements and the generated registration barrel.",
-      "docs": "Import schemaFormRegistrations from @/components/schema-engine/forms/registrations and pass them to createReactFormEngine({ elements: [...] }).",
+      "docs": "Import schemaFormRegistrations from @/components/schema-engine/forms/registrations and pass them to createFormEngine({ elements: [...] }).",
       "registryDependencies": [
         "andeeplus/schema-engine/schema-engine-form-utils-aria",
         "andeeplus/schema-engine/schema-engine-form-field-primitive-aria",
@@ -925,7 +925,7 @@
       "type": "registry:item",
       "title": "Schema Engine default recipes (React Aria)",
       "description": "Default React Aria view recipes and the generated recipe registration barrel.",
-      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createReactFormEngine({ recipes: [...] }).",
+      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createFormEngine({ recipes: [...] }).",
       "registryDependencies": [
         "button",
         "badge",

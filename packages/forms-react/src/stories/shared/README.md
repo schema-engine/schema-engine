@@ -5,7 +5,7 @@ public API. Register elements, recipes, and actions explicitly; the resulting
 engine exposes only those registrations.
 
 ```ts
-const engine = createReactFormEngine({ elements: schemaFormRegistrations, recipes: schemaFormRecipeRegistrations });
+const engine = createFormEngine({ elements: schemaFormRegistrations, recipes: schemaFormRecipeRegistrations });
 ```
 
 Multi-step stories select a view recipe with `view.$type`, such as `wizard` or

@@ -1,4 +1,3 @@
-/** @jsxImportSource react */
 import { Textarea } from '@/components/ui/textarea';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
 import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';

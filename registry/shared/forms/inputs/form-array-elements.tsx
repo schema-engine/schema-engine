@@ -1,4 +1,3 @@
-/** @jsxImportSource react */
 import { Button } from '@/components/ui/button';
 import { Trash2, Plus } from 'lucide-react';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
@@ -6,6 +5,7 @@ import { useControlledFormElement } from '@schema-engine/forms-react/hooks';
 import { useFieldArray } from '@schema-engine/forms-react/adapters';
 import { FormElements } from '@schema-engine/forms-react/primitives';
 import { arrayItemScope } from '@schema-engine/forms';
+import type { ElementConfig } from '@schema-engine/forms/schemas';
 import type { ArrayElementsProps } from './form-array-elements.types';
 import { cn } from '@/components/schema-engine/forms/lib/utils';
 
@@ -128,7 +128,7 @@ function ArrayActions({ canAdd, addButtonText, onAdd }: ArrayActionsProps) {
 export function FormArrayElements(config: ArrayElementsProps) {
 	const { fields, append, remove } = useFieldArray(config.name);
 
-	const { fieldState, containerStyles } = useControlledFormElement(config as unknown as FormEngine.ElementConfig);
+	const { fieldState, containerStyles } = useControlledFormElement(config as unknown as ElementConfig);
 
 	const isSingleField = config.elements.length === 1;
 	const firstElement = config.elements[0];

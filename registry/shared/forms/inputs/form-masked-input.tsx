@@ -1,4 +1,3 @@
-/** @jsxImportSource react */
 import { MaskedInput } from '@/components/ui/schema-engine/components/masked-input';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
 import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';

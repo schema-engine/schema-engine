@@ -1,6 +1,6 @@
 # Base UI Form Elements
 
-Consumer-owned Schema Engine form fields for a [shadcn Base UI](https://ui.shadcn.com) app. JSX sources declare the React runtime explicitly for mixed-runtime consumers. Resolve the renderer and hooks through `@schema-engine/forms-react` package exports; mixing source aliases with built package imports creates separate provider contexts.
+Consumer-owned Schema Engine form fields for a [shadcn Base UI](https://ui.shadcn.com) app. Resolve the renderer and hooks through `@schema-engine/forms-react` package exports; mixing source aliases with built package imports creates separate provider contexts.
 
 Install from this GitHub registry:
 
@@ -25,11 +25,11 @@ Files land under `@components/schema-engine/forms`. Schema Engine primitives (fi
 Register everything with the generated barrel:
 
 ```typescript
-import { createReactFormEngine } from '@schema-engine/forms-react';
+import { createFormEngine } from '@schema-engine/forms-react';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
-const engine = createReactFormEngine({ elements: schemaFormRegistrations, recipes: schemaFormRecipeRegistrations });
+const engine = createFormEngine({ elements: schemaFormRegistrations, recipes: schemaFormRecipeRegistrations });
 ```
 
 `FormSelect` is single-select. Use `FormCombobox` with `multiple` for chips-based multi-selection.
@@ -39,3 +39,7 @@ const engine = createReactFormEngine({ elements: schemaFormRegistrations, recipe
 - Form elements: `registry/shared/forms` (a base may override one in `registry/<base>/overlays/forms`)
 - Primitives: `registry/shared/primitives` (a base may override one in `registry/<base>/primitives`)
 - Catalog: root `registry.json` (generated from `scripts/generate-schema-engine-registry.ts`)
+
+Each copied field item includes its own `form-*.types.ts` Zod schema beside the widget and registration. After `shadcn add`, that schema is yours to change; bumping `@schema-engine/forms` alone does not update copied widgets. Re-add or patch the item when a wrapper must learn new configuration keys.
+
+The registry includes `date` and `date-range` fields that Radiant does not ship; do not assume every default `$type` exists on every renderer.

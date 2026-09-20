@@ -1,9 +1,9 @@
 /**
- * Compile-time checks that createReactFormEngine() returns a typed FormEngine.
+ * Compile-time checks that createFormEngine() returns a typed FormEngine.
  * Run via: bun run check-types (tsconfig.test-types.json)
  */
 
-import { createReactFormEngine } from '@/registries/builder-registry';
+import { createFormEngine } from '@/registries/builder-registry';
 import type { FormEngine } from '@schema-engine/forms/engine';
 
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
@@ -12,7 +12,7 @@ import { CheckboxElementRegistration } from '@/components/schema-engine/forms/in
 
 type Assert<T extends true> = T;
 
-const engine = createReactFormEngine({
+const engine = createFormEngine({
 	elements: [InputElementRegistration, TextareaElementRegistration, CheckboxElementRegistration],
 });
 

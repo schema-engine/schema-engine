@@ -858,7 +858,7 @@
       "type": "registry:item",
       "title": "Schema Engine forms (Radix UI)",
       "description": "All Radix UI Schema Engine form elements and the generated registration barrel.",
-      "docs": "Import schemaFormRegistrations from @/components/schema-engine/forms/registrations and pass them to createReactFormEngine({ elements: [...] }).",
+      "docs": "Import schemaFormRegistrations from @/components/schema-engine/forms/registrations and pass them to createFormEngine({ elements: [...] }).",
       "registryDependencies": [
         "andeeplus/schema-engine/schema-engine-form-utils-radix",
         "andeeplus/schema-engine/schema-engine-form-field-primitive-radix",
@@ -927,7 +927,7 @@
       "type": "registry:item",
       "title": "Schema Engine default recipes (Radix UI)",
       "description": "Default Radix UI view recipes and the generated recipe registration barrel.",
-      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createReactFormEngine({ recipes: [...] }).",
+      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createFormEngine({ recipes: [...] }).",
       "registryDependencies": [
         "button",
         "badge",

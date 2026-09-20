@@ -1,8 +1,8 @@
 import type React from 'react';
 import { useFormEngine, useConstraintLogic } from '@/hooks';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
-import { applyFieldOverlay } from '@schema-engine/forms';
-import type { NormalizedElementConfig } from '@schema-engine/forms';
+import { applyFieldOverlay, type NormalizedElementConfig } from '@schema-engine/forms';
+import { isNormalizedElementConfig } from '@schema-engine/forms/lib/normalized-form-config';
 import { ElementError } from './element-error';
 
 export interface FormElementProps {
@@ -26,6 +26,10 @@ export interface FormElementProps {
  */
 export function FormElement({ config, name, id, instanceId, className, style }: FormElementProps) {
 	const { engine } = useFormEngine();
+	const elementType = config.$type;
+	if (!isNormalizedElementConfig(config)) {
+		throw new Error(`FormElement config must be normalized before render (${elementType}).`);
+	}
 	const { shouldShow, shouldDisable, isRequired } = useConstraintLogic(
 		'constraints' in config ? config.constraints : undefined,
 		isFieldRequired('rules' in config ? config.rules : undefined),

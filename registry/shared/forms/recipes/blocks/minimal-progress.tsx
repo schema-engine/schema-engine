@@ -1,4 +1,3 @@
-/** @jsxImportSource react */
 import type { MinimalProgressConfig } from '@schema-engine/forms/recipes';
 import { useViewConfig, useViewContext } from '@schema-engine/forms-react/contexts';
 import { Progress } from '@/components/ui/progress';

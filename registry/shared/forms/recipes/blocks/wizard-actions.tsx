@@ -1,4 +1,3 @@
-/** @jsxImportSource react */
 import { DEFAULT_WIZARD_ACTION_LABELS, type WizardActionsConfig } from '@schema-engine/forms/recipes';
 import { useViewConfig, useViewContext } from '@schema-engine/forms-react/contexts';
 import { Badge } from '@/components/ui/badge';

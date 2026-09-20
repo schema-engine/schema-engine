@@ -1,4 +1,3 @@
-/** @jsxImportSource react */
 import { useEffect } from 'react';
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { useFieldHost, useSubmissionState, type SubmissionError } from '@schema-engine/forms-react/hooks';

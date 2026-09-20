@@ -517,7 +517,7 @@ function recipeFile(rel: string): CatalogFile {
 /**
  * Default recipe implementations are a distinct installation boundary from
  * form elements. Consumers opt into their visual layer with
- * `createReactFormEngine({ recipes })`.
+ * `createFormEngine({ recipes })`.
  */
 function buildDefaultRecipeItem(base: Base): CatalogItem {
 	return {
@@ -525,7 +525,7 @@ function buildDefaultRecipeItem(base: Base): CatalogItem {
 		type: 'registry:item',
 		title: `Schema Engine default recipes (${base.label})`,
 		description: `Default ${base.label} view recipes and the generated recipe registration barrel.`,
-		docs: 'Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createReactFormEngine({ recipes: [...] }).',
+		docs: 'Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createFormEngine({ recipes: [...] }).',
 		registryDependencies: DEFAULT_RECIPE_REGISTRY_DEPENDENCIES.map((dep) => resolveDep(base, dep)),
 		dependencies: DEFAULT_RECIPE_RUNTIME_DEPENDENCIES,
 		files: defaultRecipeFiles().map(recipeFile),
@@ -554,7 +554,7 @@ function buildAggregate(base: Base, items: CatalogItem[]): CatalogItem {
 		type: 'registry:item',
 		title: `Schema Engine forms (${base.label})`,
 		description: `All ${base.label} Schema Engine form elements and the generated registration barrel.`,
-		docs: 'Import schemaFormRegistrations from @/components/schema-engine/forms/registrations and pass them to createReactFormEngine({ elements: [...] }).',
+		docs: 'Import schemaFormRegistrations from @/components/schema-engine/forms/registrations and pass them to createFormEngine({ elements: [...] }).',
 		registryDependencies: items.map((item) => `${GITHUB}/${item.name}`),
 		dependencies: FORM_RUNTIME_DEPENDENCIES,
 		files: [

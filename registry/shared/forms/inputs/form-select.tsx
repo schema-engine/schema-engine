@@ -1,4 +1,3 @@
-/** @jsxImportSource react */
 import * as React from 'react';
 import { Check, X } from 'lucide-react';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';

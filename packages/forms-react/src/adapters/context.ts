@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { FormAdapter } from './types';
+import type { ElementConfig } from '@schema-engine/forms/schemas';
 
 export const FormAdapterContext = createContext<FormAdapter | null>(null);
 
@@ -16,7 +17,7 @@ export function useFormContext<TFormData = Record<string, unknown>>() {
 	return adapter.useFormContext();
 }
 
-export function useFormField<TFieldValue = unknown>(config: FormEngine.ElementConfig) {
+export function useFormField<TFieldValue = unknown>(config: ElementConfig) {
 	const adapter = useFormAdapter();
 	return adapter.useFormField<TFieldValue>(config);
 }

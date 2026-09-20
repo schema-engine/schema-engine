@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import type { FieldPath, FieldValues, UseFormReturn } from 'react-hook-form';
 import { buildDependencyIndex, shouldSurfaceDependentError } from '@schema-engine/forms/schemas/validation';
+import { useFormEngine } from '@/hooks/use-form-context';
 
 /**
  * Re-validates a field when a field its rules read changes.
@@ -18,6 +19,8 @@ import { buildDependencyIndex, shouldSurfaceDependentError } from '@schema-engin
  * changes — once per submit, which is cheaper than the ref it replaces.
  */
 export function useValidationDependencies(form: UseFormReturn<any>, elements: readonly object[]): void {
+	const { engine } = useFormEngine();
+	const registry = engine.getValidationRegistry();
 	const { watch, trigger, getValues, getFieldState, formState } = form;
 	const submitted = formState.submitCount > 0;
 
@@ -27,7 +30,7 @@ export function useValidationDependencies(form: UseFormReturn<any>, elements: re
 				return;
 			}
 
-			const dependents = buildDependencyIndex(elements, getValues() as FieldValues).dependentsOf(name);
+			const dependents = buildDependencyIndex(elements, getValues() as FieldValues, registry).dependentsOf(name);
 			const surfaceable = dependents.filter((path) =>
 				shouldSurfaceDependentError({
 					touched: getFieldState(path as FieldPath<FieldValues>).isTouched,
@@ -41,5 +44,5 @@ export function useValidationDependencies(form: UseFormReturn<any>, elements: re
 		});
 
 		return () => subscription.unsubscribe();
-	}, [watch, trigger, getValues, getFieldState, elements, submitted]);
+	}, [watch, trigger, getValues, getFieldState, elements, submitted, registry]);
 }

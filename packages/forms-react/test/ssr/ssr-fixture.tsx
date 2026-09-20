@@ -1,11 +1,11 @@
 import * as z from 'zod/mini';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
-import type { ElementGridConfig } from '@schema-engine/forms/schemas';
+import type { ElementConfig, ElementGridConfig } from '@schema-engine/forms/schemas';
 import { rhfAdapter } from '@/adapters/react-hook-form';
 import { useControlledFormElement } from '@/hooks/use-field';
 import { useGridThemeId } from '@/hooks/use-form-context';
-import { createReactFormEngine } from '@/registries/builder-registry';
+import { createFormEngine } from '@/registries/builder-registry';
 
 const ssrInputSchema = z.object({
 	$type: z.literal('ssr-input'),
@@ -18,7 +18,7 @@ const ssrInputSchema = z.object({
 type SsrInputConfig = z.infer<typeof ssrInputSchema>;
 
 function SsrFixtureInput(config: SsrInputConfig) {
-	const { containerStyles } = useControlledFormElement(config as unknown as FormEngine.ElementConfig);
+	const { containerStyles } = useControlledFormElement(config as unknown as ElementConfig);
 	const gridThemeId = useGridThemeId();
 	const label = config.label ?? config.name;
 
@@ -31,7 +31,7 @@ function SsrFixtureInput(config: SsrInputConfig) {
 }
 
 function createSsrAcceptanceEngine() {
-	return createReactFormEngine({
+	return createFormEngine({
 		elements: [
 			{
 				$type: 'ssr-input',
