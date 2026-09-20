@@ -4,7 +4,7 @@ import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
 import { toFieldRules } from '@/lib/field-rules';
-import type { DropZoneFieldProps } from '@/registry/forms/inputs/form-drop-zone.types';
+import type { DropZoneFieldProps } from './form-drop-zone.types';
 
 type AcceptMap = Record<string, string[]>;
 
@@ -218,10 +218,10 @@ export function FormDropZone({
 		>
 			{jsx('se-drop-zone', {
 				name: config.name,
-				'prop:maxFiles': config.maxFiles ?? 1,
-				'prop:maxSize': config.maxSize ?? 0,
-				'prop:minSize': config.minSize ?? 0,
-				'prop:accept': config.accept,
+				maxFiles: config.maxFiles ?? 1,
+				maxSize: config.maxSize ?? 0,
+				minSize: config.minSize ?? 0,
+				accept: config.accept,
 				disabled: config.disabled,
 				'on:change': (event: Event) => {
 					const files = (event as CustomEvent<{ files?: File[] }>).detail?.files ?? [];

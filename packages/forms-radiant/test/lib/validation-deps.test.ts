@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
 import type { FormController } from '@/adapters/radiant/controller';
 import { connectValidationDependencies } from '@/lib/validation-deps';
 
@@ -79,11 +80,13 @@ function createHarness(values: Record<string, unknown>) {
 	};
 }
 
+const registry = createDefaultValidationRegistry();
+
 describe('connectValidationDependencies', () => {
 	test('re-validates a touched dependent when the field it reads changes', () => {
 		const harness = createHarness({ password: '', confirmPassword: '' });
 		harness.state.touched.confirmPassword = true;
-		connectValidationDependencies(harness.controller, passwordForm);
+		connectValidationDependencies(harness.controller, passwordForm, registry);
 
 		harness.setValues({ password: 'hunter2', confirmPassword: '' });
 
@@ -92,7 +95,7 @@ describe('connectValidationDependencies', () => {
 
 	test('leaves an untouched dependent alone', () => {
 		const harness = createHarness({ password: '', confirmPassword: '' });
-		connectValidationDependencies(harness.controller, passwordForm);
+		connectValidationDependencies(harness.controller, passwordForm, registry);
 
 		harness.setValues({ password: 'hunter2', confirmPassword: '' });
 
@@ -102,7 +105,7 @@ describe('connectValidationDependencies', () => {
 	test('re-validates an untouched dependent once the form has been submitted', () => {
 		const harness = createHarness({ password: '', confirmPassword: '' });
 		harness.state.isSubmitted = true;
-		connectValidationDependencies(harness.controller, passwordForm);
+		connectValidationDependencies(harness.controller, passwordForm, registry);
 
 		harness.setValues({ password: 'hunter2', confirmPassword: '' });
 
@@ -112,7 +115,7 @@ describe('connectValidationDependencies', () => {
 	test('ignores a notification that carries no value change', () => {
 		const harness = createHarness({ password: 'hunter2', confirmPassword: 'hunter2' });
 		harness.state.touched.confirmPassword = true;
-		connectValidationDependencies(harness.controller, passwordForm);
+		connectValidationDependencies(harness.controller, passwordForm, registry);
 
 		harness.notifyWithoutChange();
 
@@ -123,7 +126,7 @@ describe('connectValidationDependencies', () => {
 		const harness = createHarness({ a: '', b: '' });
 		harness.state.touched.a = true;
 		harness.state.touched.b = true;
-		connectValidationDependencies(harness.controller, mutualForm);
+		connectValidationDependencies(harness.controller, mutualForm, registry);
 
 		harness.setValues({ a: 'x', b: '' });
 
@@ -139,7 +142,7 @@ describe('connectValidationDependencies', () => {
 		});
 		harness.state.touched['lines.0.max'] = true;
 		harness.state.touched['lines.1.max'] = true;
-		connectValidationDependencies(harness.controller, lineItemsForm);
+		connectValidationDependencies(harness.controller, lineItemsForm, registry);
 
 		harness.setValues({
 			lines: [
@@ -154,7 +157,7 @@ describe('connectValidationDependencies', () => {
 	test('stops re-validating once unsubscribed', () => {
 		const harness = createHarness({ password: '', confirmPassword: '' });
 		harness.state.touched.confirmPassword = true;
-		const unsubscribe = connectValidationDependencies(harness.controller, passwordForm);
+		const unsubscribe = connectValidationDependencies(harness.controller, passwordForm, registry);
 
 		unsubscribe();
 		harness.setValues({ password: 'hunter2', confirmPassword: '' });

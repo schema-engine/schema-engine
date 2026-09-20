@@ -1,5 +1,4 @@
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
-import { getActiveFormEngine } from '@/registries/active-engine';
 
 /**
  * Engine that owns the field currently being rendered.
@@ -27,7 +26,7 @@ export function renderWithOwningFormEngine<T>(engine: FormEngine, render: () => 
 	}
 }
 
-/** Engine of the in-progress field render, else the active engine. */
-export function owningFormEngine(): FormEngine | undefined {
-	return owningEngine ?? getActiveFormEngine();
+/** Engine currently being rendered inside {@link renderWithOwningFormEngine}. */
+export function peekOwningFormEngine(): FormEngine | undefined {
+	return owningEngine;
 }

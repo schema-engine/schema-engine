@@ -1,6 +1,6 @@
 import { FormMaskedInput } from './form-masked-input';
-import type { MaskedInputFieldConfig } from '@/registry/forms/inputs/form-masked-input.types';
-import { MaskedInputFieldSchema } from '@/registry/forms/inputs/form-masked-input.types';
+import type { MaskedInputFieldConfig } from './form-masked-input.types';
+import { MaskedInputFieldSchema } from './form-masked-input.types';
 import { defineInput } from '@schema-engine/forms';
 
 declare global {

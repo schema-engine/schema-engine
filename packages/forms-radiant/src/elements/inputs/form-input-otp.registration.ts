@@ -1,6 +1,6 @@
 import { FormInputOTP } from './form-input-otp';
-import type { InputOTPFieldConfig } from '@/registry/forms/inputs/form-input-otp.types';
-import { InputOTPFieldConfigSchema } from '@/registry/forms/inputs/form-input-otp.types';
+import type { InputOTPFieldConfig } from './form-input-otp.types';
+import { InputOTPFieldConfigSchema } from './form-input-otp.types';
 import { defineInput } from '@schema-engine/forms';
 
 declare global {

@@ -1,6 +1,6 @@
 import { FormCheckboxGroup } from './form-checkbox-group';
-import type { CheckboxGroupFieldConfig } from '@/registry/forms/inputs/form-checkbox-group.types';
-import { CheckboxGroupFieldConfigSchema } from '@/registry/forms/inputs/form-checkbox-group.types';
+import type { CheckboxGroupFieldConfig } from './form-checkbox-group.types';
+import { CheckboxGroupFieldConfigSchema } from './form-checkbox-group.types';
 import { defineInput } from '@schema-engine/forms';
 
 declare global {

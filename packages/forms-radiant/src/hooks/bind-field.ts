@@ -1,4 +1,4 @@
-import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { isFieldRequired, type ElementConfig } from '@schema-engine/forms/schemas';
 import type { FormController } from '@/adapters/radiant/controller';
 import { mergeFieldGridHost } from './grid-styles';
 
@@ -10,7 +10,7 @@ export function combineHandlers<T>(controllerHandler: (value: T) => void, propsH
 }
 
 export function bindControlledFormElement<TFieldValue = unknown>(
-	config: FormEngine.ElementConfig,
+	config: ElementConfig,
 	form: FormController,
 ) {
 	if (!config.name) {

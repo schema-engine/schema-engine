@@ -1,8 +1,6 @@
 import type { ElementGridConfig } from '@schema-engine/forms/schemas';
 import { getDefaultGridTheme, getFieldGridVariables } from '@schema-engine/forms/lib/grid-styles';
-import { owningFormEngine } from '@/contexts/form-engine-owner';
-
-export { owningFormEngine } from '@/contexts/form-engine-owner';
+import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 
 type HostStyle = Record<string, string | number | undefined>;
 
@@ -21,7 +19,7 @@ export function mergeFieldGridHost(
 	themeId?: string,
 ): { themeId: string; style: HostStyle } {
 	return {
-		themeId: themeId ?? owningFormEngine()?.getGridTheme().id ?? getDefaultGridTheme().id,
+		themeId: themeId ?? resolveFormEngine()?.getGridTheme().id ?? getDefaultGridTheme().id,
 		style: { ...getFieldGridVariables(grid), ...style },
 	};
 }

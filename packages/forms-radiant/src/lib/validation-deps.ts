@@ -2,6 +2,8 @@ import { buildDependencyIndex, shouldSurfaceDependentError } from '@schema-engin
 import { getValueAtPath } from '@schema-engine/forms/lib/path-values';
 import type { FormController } from '@/adapters/radiant/controller';
 
+import type { ValidationRegistry } from '@schema-engine/forms/schemas/validation';
+
 /**
  * Re-validates a field when a field its rules read changes.
  *
@@ -18,7 +20,11 @@ import type { FormController } from '@/adapters/radiant/controller';
  *
  * @returns Unsubscribe, or a no-op when the controller has no store yet.
  */
-export function connectValidationDependencies(controller: FormController, elements: readonly object[]): () => void {
+export function connectValidationDependencies(
+	controller: FormController,
+	elements: readonly object[],
+	registry: ValidationRegistry,
+): () => void {
 	const store = controller.store;
 	if (!store) {
 		return () => {};
@@ -27,7 +33,7 @@ export function connectValidationDependencies(controller: FormController, elemen
 	let previous = controller.getValues();
 
 	return controller.watchForm((values) => {
-		const index = buildDependencyIndex(elements, values);
+		const index = buildDependencyIndex(elements, values, registry);
 		const changed = index.watched.filter(
 			(path) => !Object.is(getValueAtPath(values, path), getValueAtPath(previous, path)),
 		);

@@ -1,6 +1,7 @@
 import { FormElements } from '@/components/internals/form-elements';
-import { mergeFieldGridHost, owningFormEngine } from '@/hooks/grid-styles';
-import type { FieldSetProps } from '@/registry/forms/inputs/form-fieldset.types';
+import { mergeFieldGridHost } from '@/hooks/grid-styles';
+import { resolveFormEngine } from '@/contexts/resolve-form-engine';
+import type { FieldSetProps } from './form-fieldset.types';
 import { objectFieldScope } from '@schema-engine/forms';
 import './form-fieldset.css';
 
@@ -15,7 +16,7 @@ export function FormFieldSet(config: FieldSetProps) {
 			<div class="se-fieldset__fields">
 				<FormElements
 					elements={config.elements}
-					engine={owningFormEngine()}
+					engine={resolveFormEngine()}
 					namePrefix={scope.namePrefix}
 					instanceId={scope.instanceId}
 				/>

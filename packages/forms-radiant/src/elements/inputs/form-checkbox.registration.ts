@@ -1,6 +1,6 @@
 import { FormCheckbox } from './form-checkbox';
-import type { CheckboxFieldConfig } from '@/registry/forms/inputs/form-checkbox.types';
-import { CheckboxFieldConfigSchema } from '@/registry/forms/inputs/form-checkbox.types';
+import type { CheckboxFieldConfig } from './form-checkbox.types';
+import { CheckboxFieldConfigSchema } from './form-checkbox.types';
 import { defineInput } from '@schema-engine/forms';
 
 declare global {

@@ -1,4 +1,5 @@
 import { evaluateConstraints } from '@schema-engine/forms/constraints';
+import type { ConstraintLogic } from '@schema-engine/forms/schemas';
 
 /**
  * Evaluates a field's constraints against a snapshot of the form's value tree.
@@ -9,7 +10,7 @@ import { evaluateConstraints } from '@schema-engine/forms/constraints';
  * only adapts the argument order the Radiant call sites use.
  */
 export function evaluateConstraintLogic(
-	constraints: ReadonlyArray<NonNullable<FormEngine.ElementConfig['constraints']>[number]> = [],
+	constraints: ReadonlyArray<ConstraintLogic> = [],
 	baseRequired = false,
 	fieldPath?: string,
 	values: Record<string, unknown> = {},

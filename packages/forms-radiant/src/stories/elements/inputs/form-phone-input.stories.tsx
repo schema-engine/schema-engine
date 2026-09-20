@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
 import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
-import { queryDeep } from '@/lib/dom-utils';
+import { queryDeep } from '@/stories/shared/dom-utils';
 import type { StoryContext } from 'storybook/internal/types';
 
 import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';

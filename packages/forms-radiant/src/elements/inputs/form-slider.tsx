@@ -2,7 +2,7 @@ import { RuiSlider } from '@ecopages/radiant-ui/slider';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
 import { toFieldRules } from '@/lib/field-rules';
-import type { SliderFieldProps } from '@/registry/forms/inputs/form-slider.types';
+import type { SliderFieldProps } from './form-slider.types';
 
 export function FormSlider({
 	onChange: propsOnChange,

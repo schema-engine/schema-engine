@@ -2,7 +2,7 @@ import { RuiInput } from '@ecopages/radiant-ui/input';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
 import { toFieldRules } from '@/lib/field-rules';
-import type { InputFieldProps } from '@/registry/forms/inputs/form-input.types';
+import type { InputFieldProps } from './form-input.types';
 
 export function FormInput({
 	onChange: propsOnChange,

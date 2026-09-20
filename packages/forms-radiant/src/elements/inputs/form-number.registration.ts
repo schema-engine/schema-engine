@@ -1,6 +1,6 @@
 import { FormNumber } from './form-number';
-import type { NumberFieldConfig } from '@/registry/forms/inputs/form-number.types';
-import { NumberFieldConfigSchema } from '@/registry/forms/inputs/form-number.types';
+import type { NumberFieldConfig } from './form-number.types';
+import { NumberFieldConfigSchema } from './form-number.types';
 import { defineInput } from '@schema-engine/forms';
 
 declare global {

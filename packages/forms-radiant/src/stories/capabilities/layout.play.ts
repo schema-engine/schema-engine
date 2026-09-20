@@ -1,5 +1,5 @@
 import { expect } from 'storybook/test';
-import { queryDeep } from '@/lib/dom-utils';
+import { queryDeep } from '@/stories/shared/dom-utils';
 import { whenInteractive } from '@/stories/shared/storybook-ssr';
 import { getFieldControl } from '@/stories/shared/play';
 

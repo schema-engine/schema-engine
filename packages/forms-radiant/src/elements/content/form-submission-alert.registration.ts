@@ -1,6 +1,6 @@
 import { FormSubmissionAlert } from './form-submission-alert';
-import type { SubmissionAlertConfig } from '@/registry/forms/content/form-submission-alert.types';
-import { SubmissionAlertConfigSchema } from '@/registry/forms/content/form-submission-alert.types';
+import type { SubmissionAlertConfig } from './form-submission-alert.types';
+import { SubmissionAlertConfigSchema } from './form-submission-alert.types';
 import { defineStatic } from '@schema-engine/forms';
 
 declare global {

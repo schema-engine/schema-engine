@@ -23,11 +23,6 @@ export class FormStepElement extends RadiantElement {
 	@prop({ type: Number, defaultValue: 0 }) stepIndex = 0;
 	@prop({ type: Boolean, defaultValue: false }) isWizard = false;
 
-	constructor() {
-		super();
-		this.applyStepState(undefined);
-	}
-
 	@onContextUpdate({ context: formInstanceContext, requestUpdate: false })
 	applyStepState(instance: FormInstanceContextValue | undefined): void {
 		const activeStep = instance?.currentStep ?? 0;
@@ -50,8 +45,8 @@ export function FormStep({
 	children: JsxRenderable;
 }): JsxRenderable {
 	return jsx('se-form-step', {
-		'prop:stepIndex': stepIndex,
-		'prop:isWizard': isWizard,
+		stepIndex,
+		isWizard,
 		hidden: isWizard && stepIndex !== 0,
 		children,
 	});

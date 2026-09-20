@@ -1,6 +1,6 @@
 import { FormInput } from './form-input';
-import type { InputFieldConfig } from '@/registry/forms/inputs/form-input.types';
-import { InputFieldSchema } from '@/registry/forms/inputs/form-input.types';
+import type { InputFieldConfig } from './form-input.types';
+import { InputFieldSchema } from './form-input.types';
 import { defineInput } from '@schema-engine/forms';
 
 declare global {

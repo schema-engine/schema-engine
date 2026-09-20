@@ -1,6 +1,6 @@
 import { FormPhoneInput } from './form-phone-input';
-import type { PhoneInputFieldConfig } from '@/registry/forms/inputs/form-phone-input.types';
-import { PhoneInputFieldSchema } from '@/registry/forms/inputs/form-phone-input.types';
+import type { PhoneInputFieldConfig } from './form-phone-input.types';
+import { PhoneInputFieldSchema } from './form-phone-input.types';
 import { createRadiantPhoneValidationRegistration } from '@/lib/phone-validation';
 import { defineInput } from '@schema-engine/forms';
 

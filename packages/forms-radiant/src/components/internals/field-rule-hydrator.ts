@@ -2,6 +2,7 @@ import type { FieldRules } from '@ecopages/radiant-ui/form';
 import { isServer } from '@ecopages/radiant/is-server';
 import type { ValidationRule } from '@schema-engine/forms/schemas';
 import { toFieldRules } from '@/lib/field-rules';
+import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 
 type SerializedPattern = {
 	$type: 'regexp';
@@ -62,10 +63,13 @@ export function readHydratedRules(field: HTMLElement): FieldRules | undefined {
 	const validationRules = field.getAttribute('data-se-validation-rules');
 	if (validationRules) {
 		try {
-			return toFieldRules({
-				rules: JSON.parse(validationRules) as ValidationRule[],
-				name: readFieldName(field),
-			});
+			return toFieldRules(
+				{
+					rules: JSON.parse(validationRules) as ValidationRule[],
+					name: readFieldName(field),
+				},
+				resolveFormEngine(field)?.getValidationRegistry(),
+			);
 		} catch {
 			return undefined;
 		}

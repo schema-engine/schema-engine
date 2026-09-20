@@ -40,6 +40,6 @@ export class FormActionsElement extends RadiantElement {
 
 export function FormActionsBlock(context?: { viewConfig?: Record<string, unknown> }): JsxRenderable {
 	return jsx('se-form-actions', {
-		'prop:viewConfig': context?.viewConfig ?? {},
+		viewConfig: context?.viewConfig ?? {},
 	});
 }

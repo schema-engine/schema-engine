@@ -12,12 +12,14 @@ import { flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import type { FormEngine as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import { formInstanceContext, type FormInstanceContextValue, type StepStates } from '@/contexts/form-instance-context';
 import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
-import { onActiveEngineChange } from '@/registries/active-engine';
+import { whenEngineAvailable } from '@/contexts/resolve-form-engine';
 import { findNearestRuiForm } from '@/lib/rui-form-utils';
 import { createConstraintLookup } from '@/lib/constraint-elements';
 import { evaluateConstraintLogic } from '@/hooks/constraint-logic';
 import { fieldNamesForStep, validateCurrentStepFields } from '@/lib/validate-current-step';
 import { connectValidationDependencies } from '@/lib/validation-deps';
+import { applyConstraintRequired } from '@/lib/constraint-required-rules';
+import { shouldSurfaceDependentError } from '@schema-engine/forms/schemas/validation';
 import { FormController } from '@/adapters/radiant/controller';
 
 /**
@@ -64,7 +66,7 @@ export class FormInstanceElement extends RadiantElement {
 	@state engine?: CoreFormEngine;
 	@prop({ type: Object }) defaultValues?: Record<string, unknown>;
 	@state onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
-	@state isSubmitting = false;
+	@prop({ type: Boolean, defaultValue: false }) isSubmitting = false;
 
 	@state currentStep = 0;
 	@state stepStates: StepStates = { completed: [], valid: [], visited: [] };
@@ -95,7 +97,7 @@ export class FormInstanceElement extends RadiantElement {
 
 	protected override onConnected(): void {
 		if (!this.engine) {
-			this.unsubscribeActiveEngine = onActiveEngineChange((engine) => {
+			this.unsubscribeActiveEngine = whenEngineAvailable(this, this.engine, (engine) => {
 				if (!this.engine) {
 					this.engine = engine;
 				}
@@ -126,6 +128,7 @@ export class FormInstanceElement extends RadiantElement {
 	@onUpdated(['currentStep', 'stepStates', 'isSubmitting', 'engine', 'onSubmit'])
 	onInstanceStateUpdated(): void {
 		this.wireRuiForm();
+		this.connectForm();
 		this.publish();
 	}
 
@@ -170,12 +173,13 @@ export class FormInstanceElement extends RadiantElement {
 	 * that stops `validateField` from re-entering itself.
 	 */
 	private watchValidationDependencies(): void {
-		if (this.unwatchValidationDependencies || !this.config || !this.form?.ready) {
+		if (this.unwatchValidationDependencies || !this.config || !this.form?.ready || !this.engine) {
 			return;
 		}
 		this.unwatchValidationDependencies = connectValidationDependencies(
 			this.form,
 			flattenStepElements(this.config.steps),
+			this.engine.getValidationRegistry(),
 		);
 	}
 
@@ -209,7 +213,7 @@ export class FormInstanceElement extends RadiantElement {
 				continue;
 			}
 
-			const { shouldShow, shouldDisable } = evaluateConstraintLogic(
+			const { shouldShow, shouldDisable, isRequired } = evaluateConstraintLogic(
 				item.constraints,
 				item.isRequired,
 				fieldPath,
@@ -219,6 +223,18 @@ export class FormInstanceElement extends RadiantElement {
 			target.hidden = !shouldShow;
 			for (const field of ownedFields(target)) {
 				(field as HTMLElement & { disabled?: boolean }).disabled = shouldDisable;
+				const requiredChanged = applyConstraintRequired(field, isRequired);
+				const name = field.getAttribute('name');
+				const store = this.form?.store;
+				if (name && store) {
+					const { touched, isSubmitted } = store.getState();
+					if (
+						requiredChanged &&
+						shouldSurfaceDependentError({ touched: Boolean(touched[name]), submitted: isSubmitted })
+					) {
+						void store.validateField(name);
+					}
+				}
 			}
 		}
 	}

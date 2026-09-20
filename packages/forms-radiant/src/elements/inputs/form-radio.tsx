@@ -4,7 +4,7 @@ import { RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
 import { RuiLabel } from '@ecopages/radiant-ui/label';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { toFieldRules } from '@/lib/field-rules';
-import type { RadioFieldProps } from '@/registry/forms/inputs/form-radio.types';
+import type { RadioFieldProps } from './form-radio.types';
 
 export function FormRadio({
 	onChange: propsOnChange,

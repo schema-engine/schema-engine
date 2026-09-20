@@ -1,10 +1,11 @@
-import type { NormalizedElementConfig, NormalizedFormConfig } from '@schema-engine/forms';
+import type { ConstraintLogic } from '@schema-engine/forms/schemas';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
+import type { NormalizedElementConfig, NormalizedFormConfig } from '@schema-engine/forms';
 
 export interface ConstrainedElementMetadata {
 	readonly fieldName: string;
 	readonly id?: string;
-	readonly constraints: ReadonlyArray<NonNullable<FormEngine.ElementConfig['constraints']>[number]>;
+	readonly constraints: ReadonlyArray<ConstraintLogic>;
 	readonly isRequired: boolean;
 }
 
@@ -36,7 +37,7 @@ export function collectConstrainedElements(config: NormalizedFormConfig | undefi
 			}
 
 			if ('elements' in element && Array.isArray(element.elements)) {
-				walk(element.elements as ReadonlyArray<NormalizedElementConfig>, fieldPath);
+				walk(element.elements as unknown as ReadonlyArray<NormalizedElementConfig>, fieldPath);
 			}
 		}
 	}

@@ -1,6 +1,6 @@
 import { FormTextarea } from './form-textarea';
-import type { TextareaFieldConfig } from '@/registry/forms/inputs/form-textarea.types';
-import { TextareaFieldSchema } from '@/registry/forms/inputs/form-textarea.types';
+import type { TextareaFieldConfig } from './form-textarea.types';
+import { TextareaFieldSchema } from './form-textarea.types';
 import { defineInput } from '@schema-engine/forms';
 
 declare global {

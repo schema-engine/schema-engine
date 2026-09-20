@@ -3,7 +3,7 @@ import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
 import { parseChoiceValue, serializeChoiceValue } from '@/lib/choice-value';
 import { toFieldRules } from '@/lib/field-rules';
-import type { CheckboxGroupFieldProps } from '@/registry/forms/inputs/form-checkbox-group.types';
+import type { CheckboxGroupFieldProps } from './form-checkbox-group.types';
 
 export function FormCheckboxGroup({
 	onChange: propsOnChange,

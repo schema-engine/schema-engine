@@ -41,7 +41,7 @@ export function MinimalProgressBlock(context?: {
 	viewConfig?: Record<string, unknown>;
 }): JsxRenderable {
 	return jsx('se-minimal-progress', {
-		'prop:config': context?.config,
-		'prop:viewConfig': context?.viewConfig ?? {},
+		config: context?.config,
+		viewConfig: context?.viewConfig ?? {},
 	});
 }

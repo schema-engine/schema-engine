@@ -4,7 +4,7 @@ Radiant/JSX adapter for the Schema Engine form system.
 
 ## Why the recipe components ship in this package
 
-Unlike `@schema-engine/forms-react` — where the default view recipes live in the shadcn registry and consumers register them explicitly with `createReactFormEngine({ recipes })` — Radiant has no registry ecosystem to lean on. The shells and step blocks are therefore part of this package and `createRadiantFormEngine()` binds the canonical recipes automatically, so the package stays plug-and-play. The recipe specs themselves remain canonical in `@schema-engine/forms/recipes`.
+Unlike `@schema-engine/forms-react` — where the default view recipes live in the shadcn registry and consumers register them explicitly with `createFormEngine({ recipes })` — Radiant has no registry ecosystem to lean on. The shells and step blocks are therefore part of this package and `createRadiantFormEngine()` binds the canonical recipes automatically, so the package stays plug-and-play. The recipe specs themselves remain canonical in `@schema-engine/forms/recipes`.
 
 ## Install
 
@@ -75,7 +75,7 @@ that render forms.
 View-owned shell, same authoring model as radiant-ui: the `FormRenderer` / `FormInstance` views author the whole form tree as light-DOM children (authored children, no `<slot />` written by hosts), and `se-form-renderer` / `se-form-instance` are behavior-only hosts that publish context. There is no derived tree at the form level.
 
 - Every step's fields are authored once inside `se-form-step`; hosts toggle their own `hidden` attribute from the step state, so SSR emits the full form and step switching is pure DOM.
-- Conditional fields with constraints are wrapped in a plain `.se-form-constraint` container with `data-se-constraint-field`. `se-form-instance` listens to the form store and toggles `hidden` and the field's `disabled` reactively, without separate custom element wrappers or serialized JSON configs. It reads the rendered `data-se-constraint-field` values rather than building selectors from the config, so each row of an array resolves its own siblings. The `require` action is evaluated but not yet applied — see `.audit/forms-stack/2026-09-19/needs-review/`.
+- Conditional fields with constraints are wrapped in a plain `.se-form-constraint` container with `data-se-constraint-field`. `se-form-instance` listens to the form store and toggles `hidden` and the field's `disabled` reactively, without separate custom element wrappers or serialized JSON configs. It reads the rendered `data-se-constraint-field` values rather than building selectors from the config, so each row of an array resolves its own siblings. Constraint `require` updates the live `FieldRules` object (so `validate` functions and `RegExp` patterns survive) and toggles `[data-se-required-marker]` on the label.
 - Recipe chrome blocks read serializable `config` / `viewConfig` props plus the live `formInstanceContext`; where SSR cannot resolve context (authored children serialize before providers publish), they fall back to the initial step-0 state and hydrate the live values.
 - Published JS must keep element registrations: `sideEffects` marks the compiled chunks so bundlers do not drop the bare script imports.
 
@@ -98,7 +98,7 @@ export class FormInstanceElement extends RadiantElement { … }
 export { FormInstanceElement } from './form-instance.script';
 
 export function FormInstance({ config, … }) {
-	return jsx('se-form-instance', { 'prop:config': config, children: … });
+	return jsx('se-form-instance', { config, 'prop:engine': engine, children: … });
 }
 ```
 
@@ -156,7 +156,7 @@ and array mutations with stable row IDs. See the [controller API and migration
 guide](./src/adapters/radiant/controller/README.md) for examples and the replacement
 for the removed snapshot hooks.
 
-Schemas are reused from `registry/shared/forms/*.types.ts`. Wrappers live in `src/elements/` and import `@ecopages/radiant-ui` directly.
+Field schemas live beside each registration under `src/elements/` (for example `form-input.types.ts` next to `form-input.registration.ts`). Component props stay on the widget modules. Radiant does not ship `date` or `date-range` widgets; those `$type`s exist only in the shadcn registry today. Registry and Radiant schemas may diverge where capabilities differ.
 
 ## Development
 

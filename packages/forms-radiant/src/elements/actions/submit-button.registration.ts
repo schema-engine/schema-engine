@@ -1,6 +1,6 @@
 import { SubmitButton } from './submit-button';
-import type { SubmitButtonConfig } from '@/registry/forms/actions/submit-button.types';
-import { SubmitButtonSchema } from '@/registry/forms/actions/submit-button.types';
+import type { SubmitButtonConfig } from './submit-button.types';
+import { SubmitButtonSchema } from './submit-button.types';
 import { defineStatic } from '@schema-engine/forms';
 
 declare global {
