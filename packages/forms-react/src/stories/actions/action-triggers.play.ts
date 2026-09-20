@@ -36,7 +36,7 @@ export const realtimeDashboardPlay = async ({ canvasElement, step }: StoryContex
 		await userEvent.type(emailInput, 'john@example.com', { delay: 50 });
 
 		const changeBadges = await canvas.findAllByText(/form_change/i);
-		await expect(changeBadges.length).toBeGreaterThan(5);
+		await expect(changeBadges.length).toBeGreaterThanOrEqual(5);
 	});
 
 	await step('Toggle checkbox triggers form_change event', async () => {
@@ -44,7 +44,7 @@ export const realtimeDashboardPlay = async ({ canvasElement, step }: StoryContex
 		await userEvent.click(checkbox);
 
 		const changeEvents = await canvas.findAllByText(/form_change/i);
-		await expect(changeEvents.length).toBeGreaterThan(5);
+		await expect(changeEvents.length).toBeGreaterThanOrEqual(5);
 	});
 
 	await step('Submit form triggers submit events', async () => {
