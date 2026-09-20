@@ -11,18 +11,19 @@ import './demo-recipes.css';
  * Live React form preview for docs demos.
  *
  * @remarks
- * The form configuration is declared inline in the demo page and passed as a
- * prop, so the documented snippet and the interactive demo share the same data.
- * Uses the small Radiant-styled demo kit — not the shadcn registry — and no
- * extra stylesheet: the docs shell already loads `@ecopages/radiant-ui/styles.css`.
+ * The docs app defaults to Ecopages JSX (`jsxImportSource: @ecopages/jsx`), so
+ * this module and sibling `*.react.tsx` demo sources declare `@jsxImportSource
+ * react` for `@schema-engine/forms-react` `FormRenderer`. The docs catch-all page
+ * merges this registration into its browser graph for `forms-react/*` entries so
+ * the client hydration script ships on the route. Radiant live previews use
+ * {@link FormRendererPreview} from `@/components/form-renderer` instead and do
+ * not need a React pragma.
  */
 function Preview({ config, onSubmit }: { config: FormConfig; onSubmit?: (data: Record<string, unknown>) => void }) {
 	return (
-		<div className="not-prose unstyled docs-react-form-demo">
-			<FormEngineProvider engine={docsReactFormEngine} adapter={rhfAdapter}>
-				<FormRenderer config={config} engine={docsReactFormEngine} adapter={rhfAdapter} onSubmit={onSubmit} />
-			</FormEngineProvider>
-		</div>
+		<FormEngineProvider engine={docsReactFormEngine} adapter={rhfAdapter}>
+			<FormRenderer config={config} engine={docsReactFormEngine} adapter={rhfAdapter} onSubmit={onSubmit} />
+		</FormEngineProvider>
 	);
 }
 

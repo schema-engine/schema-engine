@@ -55,7 +55,8 @@
 		"registry:check": "node scripts/generate-schema-engine-registry.ts --check",
 		"registry:validate": "node scripts/generate-schema-engine-registry.ts --check && pnpm dlx shadcn@latest registry validate ./registry.json",
 		"start:docs": "turbo run @schema-engine/docs#start",
-		"test:all": "turbo test:all"
+		"test:all": "turbo test:all",
+		"test:e2e:docs": "turbo run @schema-engine/docs#test:e2e"
 	},
 	"dependencies": {
 		"baseline-browser-mapping": "^2.11.22",

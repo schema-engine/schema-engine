@@ -9,8 +9,9 @@ import './form-renderer-preview.css';
  * Live Radiant form preview.
  *
  * @remarks
- * The docs app renders with the default Ecopages JSX integration, so this is a
- * regular page component, not an island: the form tree is authored here as
+ * The docs app renders with the default Ecopages JSX integration (no React
+ * `@jsxImportSource` pragma). This is a regular page component, not an island:
+ * the form tree is authored here as
  * light-DOM children and expands on the server. The page script wires the
  * engine, adapter, and mock submission API after hydration. The configuration
  * is declared inline in the demo page and passed as a prop, so the documented

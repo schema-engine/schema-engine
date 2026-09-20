@@ -8,7 +8,10 @@ The engine uses Zod Mini for its first-party schemas and keeps Standard Schema a
 | ---------------------- | ------------------------------------------------------------------------------------------------------- |
 | `registry` / `actions` | `StandardSchemaV1` on every `BaseRegistration.schema`                                                   |
 | `forms`                | Zod Mini for first-party authoring and JSON Schema export; `~standard.validate` at registration/runtime |
-| `forms-react`          | Uses the forms and registry schemas; consumer registrations remain Standard Schema                      |
+| `forms-react`          | Headless renderer; copied registry widgets carry their own field schemas                                  |
+| `forms-radiant`        | Radiant widgets and colocated field schemas; not required to match registry schemas                       |
+
+Default widget `$type` schemas (for example `input`, `drop-zone`) live beside each implementation — shadcn registry sources and `forms-radiant` — not in `forms`. Custom registrations use the engine contract only (`defineInput`, `BaseFieldSchema`, Standard Schema). Shared docs examples use the overlapping subset both renderers support; library-shaped keys (iMask, drop-zone `accept`) are implementation contracts and may differ.
 
 ### Rules
 
@@ -23,6 +26,13 @@ Form authors supply schema **input** (defaults stay optional). After `defineForm
 
 `packages/forms/test/lib/standard-schema-engine.test.ts` registers a native Standard Schema element, builds a FormEngine, and runs `defineForm`. Renderer packages exercise the same registration through `FormRenderer`.
 
+## Forms logging
+
+`@schema-engine/forms` and the renderer packages use `@ecopages/logger` through
+the shared `logger` export (`@schema-engine/forms/lib/logger`). Tags identify
+the package (`[schema-engine/forms]`, `[schema-engine/forms-react]`, and so on).
+Debug output stays off unless the host enables Ecopages log levels.
+
 ## Radiant form state
 
 Radiant UI's form store owns control registration, values, validation, and field
@@ -33,6 +43,12 @@ inside `rui-form`; there is no global active form store. They read
 optional lifecycle wiring around that controller.
 Radiant UI registration uses flat dotted field names. Controller reads, action
 context values, constraints, and submission use the engine's nested value tree.
+
+Radiant **FormEngine** resolution is host-scoped like `FormController`: explicit
+`engine` prop, ancestor `formEngineContext`, then the engine owning the current
+field render. When exactly one engine has been registered (typical SSR bootstrap),
+that engine is the fallback; with multiple engines, hosts need an explicit engine
+or a provider frame — there is no last-writer-wins global.
 
 Constraint resolution belongs to the engine, not to a renderer. A constraint
 names a sibling (`accountType`), so its value path depends on where the

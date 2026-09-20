@@ -35,6 +35,10 @@
 		"test:all": {
 			"dependsOn": ["^build:lib", "^test:all"]
 		},
+		"test:e2e": {
+			"dependsOn": ["^build:lib", "build"],
+			"cache": false
+		},
 		"preview": {
 			"cache": false,
 			"persistent": true

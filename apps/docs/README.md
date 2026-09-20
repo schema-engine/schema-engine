@@ -16,7 +16,14 @@ pnpm install
 pnpm dev
 pnpm build
 pnpm generate:llms
+pnpm test:e2e
 ```
+
+`pnpm test:e2e` builds the site, serves the production preview, and runs Playwright
+checks that Forms React doc embeds hydrate (React island host + hydration script)
+and that the getting-started demo surfaces validation after submit. Install the
+browser once with `pnpm exec playwright install chromium` inside `apps/docs` if
+Playwright reports a missing executable.
 
 Open `/docs/getting-started/introduction` after starting the dev server.
 

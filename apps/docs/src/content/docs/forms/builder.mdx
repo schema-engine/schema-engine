@@ -132,11 +132,11 @@ application field components or visual recipes: install Schema Engine registry
 items and pass their generated registrations explicitly.
 
 ```ts
-import { createReactFormEngine } from '@schema-engine/forms-react';
+import { createFormEngine } from '@schema-engine/forms-react';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
-const engine = createReactFormEngine({
+const engine = createFormEngine({
 	elements: schemaFormRegistrations,
 	recipes: schemaFormRecipeRegistrations,
 });
