@@ -666,6 +666,61 @@ function checkOverrideIsNotACopy(base: Base, file: CatalogFile, errors: string[]
 	}
 }
 
+function validateCatalogItemFiles(base: Base, item: CatalogItem, errors: string[]): void {
+	for (const file of item.files) {
+		if (!existsSync(join(root, file.sourcePath))) {
+			errors.push(`${item.name} missing file ${file.sourcePath}`);
+			continue;
+		}
+		if (!file.target.startsWith('@components/') && !file.target.startsWith('@ui/')) {
+			errors.push(`${item.name} file ${file.path} target must use @components/ or @ui/`);
+		}
+		checkOverrideIsNotACopy(base, file, errors);
+	}
+}
+
+function validateCatalogItemImports(base: Base, item: CatalogItem, errors: string[]): void {
+	const imports = item.files
+		.filter((file) => existsSync(join(root, file.sourcePath)))
+		.flatMap((file) => collectImports(readFileSync(join(root, file.sourcePath), 'utf8')));
+
+	for (const spec of imports) {
+		if (spec.includes('@schema-engine/forms-react/components/internals')) {
+			errors.push(`${item.name} reaches into forms-react internals: ${spec}`);
+		}
+		if (spec.startsWith('@schema-engine/forms-react') && !PUBLIC_FORMS_REACT_IMPORTS.has(spec)) {
+			errors.push(`${item.name} uses a non-public forms-react import: ${spec}`);
+		}
+	}
+
+	const expected = expectedFromImports(imports, base);
+	for (const dep of expected.registryDependencies) {
+		if (!item.registryDependencies.includes(dep)) {
+			errors.push(`${item.name} missing registryDependency ${dep}`);
+		}
+	}
+	for (const dep of expected.dependencies) {
+		if (!item.dependencies.includes(dep)) {
+			errors.push(`${item.name} missing npm dependency ${dep}`);
+		}
+	}
+}
+
+function validateAggregateItem(base: Base, items: CatalogItem[], baseCatalog: CatalogItem[], errors: string[]): void {
+	const aggregate = baseCatalog.find((item) => item.name === base.aggregateName);
+	if (!aggregate) {
+		errors.push(`${base.id} is missing its ${base.aggregateName} aggregate item`);
+		return;
+	}
+
+	const owned = new Set(items.flatMap((item) => item.files.map((file) => file.path)));
+	for (const file of aggregate.files) {
+		if (owned.has(file.path) && !file.path.endsWith('registrations.ts') && !file.path.endsWith('index.ts')) {
+			errors.push(`${base.aggregateName} should not re-ship ${file.path}`);
+		}
+	}
+}
+
 export function validateCatalog(): string[] {
 	const errors: string[] = [];
 	const names = new Set<string>();
@@ -675,57 +730,13 @@ export function validateCatalog(): string[] {
 			if (names.has(item.name)) errors.push(`duplicate item name: ${item.name}`);
 			names.add(item.name);
 
-			for (const file of item.files) {
-				if (!existsSync(join(root, file.sourcePath))) {
-					errors.push(`${item.name} missing file ${file.sourcePath}`);
-					continue;
-				}
-				if (!file.target.startsWith('@components/') && !file.target.startsWith('@ui/')) {
-					errors.push(`${item.name} file ${file.path} target must use @components/ or @ui/`);
-				}
-				checkOverrideIsNotACopy(base, file, errors);
-			}
-
+			validateCatalogItemFiles(base, item, errors);
 			if (item.name === base.aggregateName) continue;
 
-			const imports = item.files
-				.filter((file) => existsSync(join(root, file.sourcePath)))
-				.flatMap((file) => collectImports(readFileSync(join(root, file.sourcePath), 'utf8')));
-
-			for (const spec of imports) {
-				if (spec.includes('@schema-engine/forms-react/components/internals')) {
-					errors.push(`${item.name} reaches into forms-react internals: ${spec}`);
-				}
-				if (spec.startsWith('@schema-engine/forms-react') && !PUBLIC_FORMS_REACT_IMPORTS.has(spec)) {
-					errors.push(`${item.name} uses a non-public forms-react import: ${spec}`);
-				}
-			}
-
-			const expected = expectedFromImports(imports, base);
-			for (const dep of expected.registryDependencies) {
-				if (!item.registryDependencies.includes(dep)) {
-					errors.push(`${item.name} missing registryDependency ${dep}`);
-				}
-			}
-			for (const dep of expected.dependencies) {
-				if (!item.dependencies.includes(dep)) {
-					errors.push(`${item.name} missing npm dependency ${dep}`);
-				}
-			}
+			validateCatalogItemImports(base, item, errors);
 		}
 
-		const aggregate = baseCatalog.find((item) => item.name === base.aggregateName);
-		if (!aggregate) {
-			errors.push(`${base.id} is missing its ${base.aggregateName} aggregate item`);
-			continue;
-		}
-
-		const owned = new Set(items.flatMap((item) => item.files.map((file) => file.path)));
-		for (const file of aggregate.files) {
-			if (owned.has(file.path) && !file.path.endsWith('registrations.ts') && !file.path.endsWith('index.ts')) {
-				errors.push(`${base.aggregateName} should not re-ship ${file.path}`);
-			}
-		}
+		validateAggregateItem(base, items, baseCatalog, errors);
 	}
 
 	return errors;
