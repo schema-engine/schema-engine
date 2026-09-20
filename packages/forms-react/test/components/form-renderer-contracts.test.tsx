@@ -230,4 +230,33 @@ describe('registry DOM prop boundaries', () => {
 			consoleError.mockRestore();
 		}
 	});
+
+	test('forwards htmlAttributes to the focusable control', () => {
+		const engine = createFormEngine({ elements: [InputElementRegistration] });
+		const config = engine.defineForm({
+			id: 'dom-props-html',
+			steps: [
+				{
+					id: 'main',
+					title: 'Main',
+					elements: [
+						{
+							$type: 'input',
+							id: 'email',
+							name: 'email',
+							label: 'Email',
+							inputType: 'email',
+							htmlAttributes: { 'data-testid': 'email-field' },
+						},
+					],
+				},
+			],
+		});
+
+		render(<FormRenderer config={config} engine={engine} adapter={rhfAdapter} />);
+
+		const input = screen.getByRole('textbox', { name: 'Email' });
+		expect(input).toHaveAttribute('data-testid', 'email-field');
+		expect(input).not.toHaveAttribute('$type');
+	});
 });

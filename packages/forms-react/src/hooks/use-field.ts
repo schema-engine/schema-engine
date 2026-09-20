@@ -1,5 +1,6 @@
 import type React from 'react';
 import { isFieldRequired, type ElementConfig, type ElementGridConfig } from '@schema-engine/forms/schemas';
+import { mergeControlProps } from '@schema-engine/forms/schemas/html-attributes';
 import { getFieldGridVariables } from '@schema-engine/forms/lib/grid-styles';
 import { useFormField } from '@/adapters/context';
 import { useGridThemeId } from '@/hooks/use-form-context';
@@ -58,16 +59,19 @@ export function useControlledFormElement(config: ElementConfig) {
 	const isRequired = isFieldRequired(config.rules);
 	const { value, error, onChange, onBlur, name, disabled, ref } = useFormField<any>(config);
 
-	const fieldProps = {
-		id: config.id,
-		name,
-		required: isRequired,
-		disabled,
-		readOnly: config.readonly,
-		ref,
-		'aria-invalid': Boolean(error),
-		'aria-describedby': error ? `${config.id}-error` : undefined,
-	};
+	const fieldProps = mergeControlProps(
+		{
+			id: config.id,
+			name,
+			required: isRequired,
+			disabled,
+			readOnly: config.readonly,
+			ref,
+			'aria-invalid': Boolean(error),
+			'aria-describedby': error ? `${config.id}-error` : undefined,
+		},
+		config.htmlAttributes,
+	);
 
 	const labelProps = {
 		htmlFor: config.id,

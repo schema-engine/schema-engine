@@ -1,9 +1,13 @@
 import { RuiButton } from '@ecopages/radiant-ui/button';
+import { mergeControlProps } from '@schema-engine/forms/schemas/html-attributes';
 import type { SubmitButtonProps } from './submit-button.types';
 
-export function SubmitButton({ label, disabled, onClick, className }: SubmitButtonProps) {
+export function SubmitButton({ label, disabled, onClick, className, id, name, htmlAttributes }: SubmitButtonProps) {
 	return (
-		<RuiButton type="submit" disabled={disabled} class={className} on:click={onClick}>
+		<RuiButton
+			{...mergeControlProps({ type: 'submit' as const, disabled, class: className, id, name }, htmlAttributes)}
+			on:click={onClick}
+		>
 			{label}
 		</RuiButton>
 	);

@@ -1,4 +1,5 @@
 import * as z from 'zod/mini';
+import { HtmlAttributesSchema } from './html-attributes';
 import { ValidationRuleSchema } from './validation/';
 
 /**
@@ -159,6 +160,7 @@ export const BaseFieldSchema = z.object({
 
 	className: z.optional(z.string()).check(z.describe('CSS class name')),
 	style: z.optional(z.record(z.string(), z.any())).check(z.describe('Inline styles')),
+	htmlAttributes: z.optional(HtmlAttributesSchema),
 
 	grid: z.optional(ElementGridConfigSchema).check(z.describe('Grid positioning configuration')),
 

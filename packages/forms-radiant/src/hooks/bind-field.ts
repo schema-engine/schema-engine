@@ -1,4 +1,5 @@
 import { isFieldRequired, type ElementConfig } from '@schema-engine/forms/schemas';
+import { mergeControlProps } from '@schema-engine/forms/schemas/html-attributes';
 import type { FormController } from '@/adapters/radiant/controller';
 import { mergeFieldGridHost } from './grid-styles';
 
@@ -9,10 +10,7 @@ export function combineHandlers<T>(controllerHandler: (value: T) => void, propsH
 	};
 }
 
-export function bindControlledFormElement<TFieldValue = unknown>(
-	config: ElementConfig,
-	form: FormController,
-) {
+export function bindControlledFormElement<TFieldValue = unknown>(config: ElementConfig, form: FormController) {
 	if (!config.name) {
 		throw new Error(`Field configuration is missing required "name" property. Config: ${JSON.stringify(config)}`);
 	}
@@ -31,15 +29,18 @@ export function bindControlledFormElement<TFieldValue = unknown>(
 		field.onBlur();
 	};
 
-	const fieldProps = {
-		id: config.id,
-		name,
-		required: isRequired,
-		disabled: Boolean(config.disabled),
-		readOnly: config.readonly,
-		'aria-invalid': Boolean(error),
-		'aria-describedby': error ? `${config.id}-error` : undefined,
-	};
+	const fieldProps = mergeControlProps(
+		{
+			id: config.id,
+			name,
+			required: isRequired,
+			disabled: Boolean(config.disabled),
+			readOnly: config.readonly,
+			'aria-invalid': Boolean(error),
+			'aria-describedby': error ? `${config.id}-error` : undefined,
+		},
+		config.htmlAttributes,
+	);
 
 	const containerStyles = mergeFieldGridHost(config.grid, config.style).style;
 

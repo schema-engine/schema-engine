@@ -45,6 +45,20 @@ const contactForm = engine.defineForm({
 
 Use `engine.extend({ ... })` to add registrations without re-spreading shared barrels. Author forms with `engine.defineForm({ ... })` object literals.
 
+Extra DOM attributes on the focusable control (for example `data-testid`) belong in `htmlAttributes` on the field config. Unknown top-level keys are stripped during validation; reserved control props cannot be authored inside the bag.
+
+```ts
+elements: [
+	{
+		$type: 'input',
+		id: 'email',
+		name: 'email',
+		label: 'Email',
+		htmlAttributes: { 'data-testid': 'email-field', enterKeyHint: 'next' },
+	},
+];
+```
+
 ### Grid theme
 
 The engine also owns the grid layout vocabulary through the optional `grid`
@@ -113,11 +127,11 @@ checks when `view.$type` is set.
 
 ## Who owns visual chrome
 
-| Layer                                                           | Owns                                                                                        |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Layer                                                           | Owns                                                                                                                      |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | `@schema-engine/forms`                                          | Engine, validation, actions, recipe protocol, adapter types (`@schema-engine/forms/adapters`) — no widget `$type` schemas |
-| `@schema-engine/forms-react`                                    | React renderer, RHF adapter, field-array operations, and headless `createFormEngine()` re-export |
-| `@schema-engine/forms-radiant`                                  | Radiant widgets, colocated field schemas, shells, blocks, and scoped form controllers |
-| Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Copied React widgets, colocated field schemas, and view recipes for the React adapter       |
+| `@schema-engine/forms-react`                                    | React renderer, RHF adapter, field-array operations, and headless `createFormEngine()` re-export                          |
+| `@schema-engine/forms-radiant`                                  | Radiant widgets, colocated field schemas, shells, blocks, and scoped form controllers                                     |
+| Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Copied React widgets, colocated field schemas, and view recipes for the React adapter                                     |
 
 Custom fields use `defineInput` with any Standard Schema. Default widgets ship their own Zod schemas beside their registrations; those schemas are not engine contracts and may differ between React and Radiant.
