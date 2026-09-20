@@ -5,6 +5,7 @@ import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { createFormEngine } from '@/registries/builder-registry';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { rhfAdapter } from '@/adapters/react-hook-form';
+import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 
 const inputSchema = z.object({
 	$type: z.literal('input'),
@@ -193,5 +194,40 @@ describe('transformed element configs through FormRenderer', () => {
 		render(<FormRenderer config={config} engine={engine} adapter={rhfAdapter} />);
 		expect(screen.getByLabelText('Count')).toHaveAttribute('data-count', '7');
 		expect(screen.getByLabelText('Count')).toHaveAttribute('data-type', 'count');
+	});
+});
+
+describe('registry DOM prop boundaries', () => {
+	test('does not forward schema metadata to native inputs', () => {
+		const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+		try {
+			const engine = createFormEngine({ elements: [InputElementRegistration] });
+			const config = engine.defineForm({
+				id: 'dom-props',
+				steps: [
+					{
+						id: 'main',
+						title: 'Main',
+						elements: [
+							{
+								$type: 'input',
+								id: 'email',
+								name: 'email',
+								label: 'Email',
+								inputType: 'email',
+							},
+						],
+					},
+				],
+			});
+
+			render(<FormRenderer config={config} engine={engine} adapter={rhfAdapter} />);
+
+			expect(screen.getByRole('textbox', { name: 'Email' })).not.toHaveAttribute('$type');
+			expect(consoleError.mock.calls.flat().some((argument) => String(argument).includes('$type'))).toBe(false);
+		} finally {
+			consoleError.mockRestore();
+		}
 	});
 });

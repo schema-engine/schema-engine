@@ -42,4 +42,6 @@ const engine = createFormEngine({ elements: schemaFormRegistrations, recipes: sc
 
 Each copied field item includes its own `form-*.types.ts` Zod schema beside the widget and registration. After `shadcn add`, that schema is yours to change; bumping `@schema-engine/forms` alone does not update copied widgets. Re-add or patch the item when a wrapper must learn new configuration keys.
 
+Field schemas are authoring contracts for the copied wrappers. Wrappers pass only supported control props to DOM primitives, so schema metadata such as `$type`, rules, and layout configuration stays in the form renderer.
+
 The registry includes `date` and `date-range` fields that Radiant does not ship; do not assume every default `$type` exists on every renderer.

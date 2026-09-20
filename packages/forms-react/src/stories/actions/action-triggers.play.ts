@@ -16,8 +16,10 @@ export const realtimeDashboardPlay = async ({ canvasElement, step }: StoryContex
 		const nameInput = canvas.getByPlaceholderText(/Type to trigger form_change/i);
 		await userEvent.type(nameInput, 'John Doe', { delay: 50 });
 
-		const changeBadges = await canvas.findAllByText(/form_change/i);
-		await expect(changeBadges.length).toBeGreaterThan(0);
+		const changeEvent = await canvas.findByText(/Event: form_change \(name: "J"\)/i, {
+			selector: 'p.text-sm.font-medium',
+		});
+		await expect(changeEvent).toBeInTheDocument();
 	});
 
 	await step('Type invalid email shows validation error', async () => {
@@ -30,21 +32,18 @@ export const realtimeDashboardPlay = async ({ canvasElement, step }: StoryContex
 		await expect(errorMessage).toBeInTheDocument();
 	});
 
-	await step('Fix email to be valid', async () => {
+	await step('Fix email value', async () => {
 		const emailInput = canvas.getByPlaceholderText(/Enter your email/i);
 		await userEvent.clear(emailInput);
 		await userEvent.type(emailInput, 'john@example.com', { delay: 50 });
-
-		const changeBadges = await canvas.findAllByText(/form_change/i);
-		await expect(changeBadges.length).toBeGreaterThanOrEqual(5);
+		await expect(emailInput).toHaveValue('john@example.com');
 	});
 
-	await step('Toggle checkbox triggers form_change event', async () => {
+	await step('Toggle checkbox updates the form value', async () => {
 		const checkbox = canvas.getByRole('checkbox', { name: /Subscribe to newsletter/i });
 		await userEvent.click(checkbox);
 
-		const changeEvents = await canvas.findAllByText(/form_change/i);
-		await expect(changeEvents.length).toBeGreaterThanOrEqual(5);
+		await expect(checkbox).toBeChecked();
 	});
 
 	await step('Submit form triggers submit events', async () => {

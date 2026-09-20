@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import type { SubmitButtonProps } from './submit-button.types';
 import { useFormContext } from '@schema-engine/forms-react/adapters';
 
-export function SubmitButton({ label, disabled, onClick, className, ...config }: SubmitButtonProps) {
+export function SubmitButton({ label, disabled, onClick, className, id, name }: SubmitButtonProps) {
 	const { formState } = useFormContext();
 	const isSubmitting = formState?.isSubmitting;
 
@@ -13,7 +13,8 @@ export function SubmitButton({ label, disabled, onClick, className, ...config }:
 			aria-busy={isSubmitting}
 			onClick={onClick}
 			className={className}
-			{...config}
+			id={id}
+			name={name}
 		>
 			{isSubmitting ? 'Submitting...' : label}
 		</Button>
