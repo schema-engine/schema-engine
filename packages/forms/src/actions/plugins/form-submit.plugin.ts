@@ -42,6 +42,37 @@ export const FormSubmitActionSchema = z.object({
 
 export type FormSubmitAction = z.infer<typeof FormSubmitActionSchema>;
 
+function appendFormField(formData: FormData, key: string, value: unknown): void {
+	if (value === null || value === undefined) {
+		return;
+	}
+	if (value instanceof File || value instanceof Blob) {
+		formData.append(key, value);
+		return;
+	}
+	if (typeof value === 'object') {
+		formData.append(key, JSON.stringify(value));
+		return;
+	}
+	formData.append(key, String(value as string | number | boolean | bigint));
+}
+
+async function readHttpErrorMessage(response: Response): Promise<string> {
+	const fallback = `HTTP ${response.status}: ${response.statusText}`;
+	const contentType = response.headers.get('content-type');
+	if (!contentType?.includes('application/json')) {
+		return fallback;
+	}
+	try {
+		const errorData = await response.json();
+		const message = errorData.error || errorData.message;
+		return typeof message === 'string' && message ? message : fallback;
+	} catch (parseError) {
+		console.warn('Failed to parse JSON error response:', parseError);
+		return fallback;
+	}
+}
+
 /** Creates a configured `submit` action registration. */
 export function formSubmitPlugin(
 	config: FormSubmitPluginConfig = {},
@@ -62,41 +93,17 @@ export function formSubmitPlugin(
 			);
 
 			const formData = new FormData();
-
 			for (const [key, value] of Object.entries(transformedData)) {
-				if (value !== null && value !== undefined) {
-					if (value instanceof File || value instanceof Blob) {
-						formData.append(key, value);
-					} else if (typeof value === 'object') {
-						formData.append(key, JSON.stringify(value));
-					} else {
-						formData.append(key, String(value as string | number | boolean | bigint));
-					}
-				}
+				appendFormField(formData, key, value);
 			}
-			const requestOptions = {
+
+			const response = await request(action.endpoint, {
 				method: action.method,
 				body: formData,
-			};
-
-			const response = await request(action.endpoint, requestOptions);
+			});
 
 			if (!response.ok) {
-				let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-				const contentType = response.headers.get('content-type');
-
-				if (contentType?.includes('application/json')) {
-					try {
-						const errorData = await response.json();
-						const message = errorData.error || errorData.message;
-						if (typeof message === 'string' && message) {
-							errorMessage = message;
-						}
-					} catch (parseError) {
-						console.warn('Failed to parse JSON error response:', parseError);
-					}
-				}
-				throw new Error(errorMessage);
+				throw new Error(await readHttpErrorMessage(response));
 			}
 
 			const responseData = await response.json();

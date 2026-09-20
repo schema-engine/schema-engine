@@ -547,9 +547,7 @@ function emitGapEntry(variables: CssVariables, slot: CascadeSlot, entry: FormGri
  * single template — so they are the only values carried across slots. Axis
  * properties win over the matching `placeItems`/`placeContent` shorthand.
  */
-export function getFormGridVariables(grid: GridLayoutConfig | undefined, theme: NormalizedGridTheme): CssVariables {
-	const variables: CssVariables = {};
-
+function emitFormGridAlignment(variables: CssVariables, grid: GridLayoutConfig | undefined): void {
 	const [placeAlignItems, placeJustifyItems] = splitPlaceShorthand(grid?.placeItems);
 	const [placeAlignContent, placeJustifyContent] = splitPlaceShorthand(grid?.placeContent);
 	const alignment: Record<string, string | undefined> = {
@@ -561,7 +559,13 @@ export function getFormGridVariables(grid: GridLayoutConfig | undefined, theme: 
 	for (const [name, value] of Object.entries(alignment)) {
 		if (value !== undefined) variables[name as `--${string}`] = value;
 	}
+}
 
+function emitFormGridCascade(
+	variables: CssVariables,
+	grid: GridLayoutConfig | undefined,
+	theme: NormalizedGridTheme,
+): void {
 	let columns: number | 'auto' = 1;
 	let minColumnWidth = theme.minColumnWidth;
 	const emitTemplate = (slot: CascadeSlot, entry: FormGridEntry | undefined): void => {
@@ -582,6 +586,12 @@ export function getFormGridVariables(grid: GridLayoutConfig | undefined, theme: 
 		emitTemplate(breakpoint, responsive?.[breakpoint]);
 		emitGapEntry(variables, breakpoint, responsive?.[breakpoint]);
 	}
+}
+
+export function getFormGridVariables(grid: GridLayoutConfig | undefined, theme: NormalizedGridTheme): CssVariables {
+	const variables: CssVariables = {};
+	emitFormGridAlignment(variables, grid);
+	emitFormGridCascade(variables, grid, theme);
 	return variables;
 }
 
