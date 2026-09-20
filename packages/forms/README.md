@@ -45,7 +45,7 @@ const contactForm = engine.defineForm({
 
 Use `engine.extend({ ... })` to add registrations without re-spreading shared barrels. Author forms with `engine.defineForm({ ... })` object literals.
 
-Extra DOM attributes on the focusable control (for example `data-testid`) belong in `htmlAttributes` on the field config. Unknown top-level keys are stripped during validation; reserved control props cannot be authored inside the bag.
+Extra DOM attributes on the focusable control (for example `data-testid`) belong in `htmlAttributes` on the field config. Unknown top-level keys are stripped during validation; reserved control props (`id`, `name`, `value`, `disabled`, and similar) and event handlers (`onClick`, `onInput`, etc.) cannot be authored inside the bag.
 
 ```ts
 elements: [
@@ -58,6 +58,19 @@ elements: [
 	},
 ];
 ```
+
+Renderer widgets merge static control props under `htmlAttributes` using `mergeControlProps`:
+
+```ts
+import { mergeControlProps } from '@schema-engine/forms/schemas';
+
+const controlProps = mergeControlProps(
+	{ id: config.id, name: config.name, disabled: config.disabled },
+	config.htmlAttributes,
+);
+```
+
+Engine-defined control props always take precedence over author attributes, ensuring identity, state, and accessibility attributes cannot be accidentally overridden. Event handlers stay explicit on the JSX node rather than passing through `mergeControlProps`.
 
 ### Grid theme
 

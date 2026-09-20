@@ -167,15 +167,56 @@ controller snapshot (`value`, `onChange`, `error`); it is not a substitute for
 `bindField` during SSR authoring.
 
 ```tsx
-import { bindField } from '@schema-engine/forms-radiant/primitives';
+import { bindField, FieldGroup } from '@schema-engine/forms-radiant/primitives';
+import { RuiInput } from '@ecopages/radiant-ui/input';
 
-const { fieldGroupProps, controlProps } = bindField(config, { type: config.inputType });
+export function CustomInput(config) {
+	const { fieldGroupProps, controlProps } = bindField(config, { type: config.inputType });
 
-return (
-	<FieldGroup {...fieldGroupProps}>
-		<RuiInput {...controlProps} on:input={handleInput} />
-	</FieldGroup>
-);
+	return (
+		<FieldGroup {...fieldGroupProps}>
+			<RuiInput
+				{...controlProps}
+				on:input={(event: Event) => {
+					const target = event.target as HTMLInputElement;
+					config.onChange?.(target.value);
+				}}
+				on:blur={config.onBlur}
+				on:focus={config.onFocus}
+			/>
+		</FieldGroup>
+	);
+}
+```
+
+For custom label arrangements (such as checkboxes or switches), spread `hostProps` on `FormField`:
+
+```tsx
+import { bindField, FormField } from '@schema-engine/forms-radiant/primitives';
+import { RuiCheckbox } from '@ecopages/radiant-ui/checkbox';
+import { RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
+
+export function CustomCheckbox(config) {
+	const { hostProps, controlProps } = bindField(config);
+
+	return (
+		<FormField {...hostProps}>
+			<RuiCheckbox
+				{...controlProps}
+				on:change={(event: Event) => {
+					const detail = (event as CustomEvent<{ checked: boolean }>).detail;
+					config.onChange?.(detail?.checked ?? false);
+				}}
+				on:blur={config.onBlur}
+				on:focus={config.onFocus}
+			>
+				{config.label}
+			</RuiCheckbox>
+			{config.description ? <RuiFieldDescription>{config.description}</RuiFieldDescription> : null}
+			<RuiFieldError />
+		</FormField>
+	);
+}
 ```
 
 Field schemas live beside each registration under `src/elements/` (for example `form-input.types.ts` next to `form-input.registration.ts`). Component props stay on the widget modules. Radiant does not ship `date` or `date-range` widgets; those `$type`s exist only in the shadcn registry today. Registry and Radiant schemas may diverge where capabilities differ.
