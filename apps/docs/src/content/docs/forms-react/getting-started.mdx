@@ -43,6 +43,10 @@ Create a JSON configuration — this page's live demo renders exactly this:
 
 <FormConfigCode config={basicContactFormConfig} />
 
+When the form is authored in TypeScript next to your engine (not loaded from
+JSON), use [`engine.defineForm()`](/docs/forms/builder#author-form-configuration)
+for compile-time checks. See [Authoring modes](/docs/forms/core-concepts#authoring-modes).
+
 ## 3. Render the Form
 
 ```tsx

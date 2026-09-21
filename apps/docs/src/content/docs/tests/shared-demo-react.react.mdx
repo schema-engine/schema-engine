@@ -1,0 +1,24 @@
+---
+title: 'Shared config — Forms React integration'
+description: 'The shared demo form rendered by the Forms React island preview.'
+group: Tests
+order: 2
+---
+
+import { ReactFormDemoEmbed } from '@/components/react-form-demo/react-form-demo-embed';
+import { FormConfigCode } from '@/components/form-config-code';
+import { basicContactFormConfig } from '@/lib/form-configs/basic-contact';
+
+# Shared config — Forms React integration
+
+This page and [the Radiant one](/docs/tests/shared-demo-radiant) import the same
+`lib/form-configs/basic-contact` module. The form below is rendered by the Forms
+React demo island.
+
+## Live demo
+
+<ReactFormDemoEmbed config={basicContactFormConfig} />
+
+## Configuration
+
+<FormConfigCode config={basicContactFormConfig} />

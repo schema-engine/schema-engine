@@ -13,6 +13,17 @@ description: |
 Schema Engine turns form definitions into a single source of truth: type-safe,
 Zod Mini-validated, and powered by your existing component library.
 
+## Authoring modes
+
+- **TypeScript in your app:** `engine.defineForm({ ... })` on the engine you
+  registered — full typing from element, recipe, and action schemas.
+- **Portable JSON:** `FormConfig` or raw JSON + `engine.validateForm(unknown)`.
+  Same validation pipeline as `defineForm`; no compile-time `$type` narrowing on
+  the envelope `FormConfig` type.
+
+Docs demos use portable configs in `apps/docs/src/lib/form-configs/` so snippets
+and cross-adapter previews stay identical.
+
 ## Repository
 
 - https://github.com/andeeplus/schema-engine

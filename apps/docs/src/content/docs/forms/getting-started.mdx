@@ -24,9 +24,9 @@ const engine = createFormEngine({
 });
 ```
 
-Then define a form. `defineForm` returns a frozen `NormalizedFormConfig`. The
-adapter owns rendering and receives the same engine instance so it can resolve
-`view.$type`.
+Then define a form with `engine.defineForm({ ... })`. It returns a frozen
+`NormalizedFormConfig` owned by that engine instance. See [Authoring modes](/docs/forms/core-concepts#authoring-modes)
+for when to use `defineForm` versus portable JSON and `validateForm`.
 
 ```ts
 const form = engine.defineForm({
@@ -36,5 +36,10 @@ const form = engine.defineForm({
 });
 ```
 
-Use `engine.getFormConfigStandardSchema()` when configurations must be
-validated outside the runtime.
+For external or stored JSON, call `engine.validateForm(unknown)` — the same
+pipeline as `defineForm`, without compile-time narrowing. Use
+`engine.getFormConfigStandardSchema()` when another tool must validate configs
+against Standard JSON Schema outside your app runtime.
+
+**Note:** Framework adapters (React, Radiant) render a normalized form. They
+receive the same engine instance you used to validate or define the config.
