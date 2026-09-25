@@ -1,10 +1,10 @@
 import type { FormConfig } from '@schema-engine/forms/schemas';
 
-/** Contact form with conditional fields and responsive grid — constraints example. */
+/** Contact form with conditional fields — constraints example. */
 export const contactFormDemoConfig: FormConfig = {
 	id: 'contact',
 	title: 'Contact us',
-	description: 'Send a message with conditional fields and a responsive layout.',
+	description: 'Send a message with conditional fields.',
 	steps: [
 		{
 			id: 'details',
@@ -34,17 +34,11 @@ export const contactFormDemoConfig: FormConfig = {
 					id: 'message',
 					name: 'message',
 					label: 'Message',
-					grid: { column: '1 / -1' },
 					rules: [{ type: 'required', message: 'Message is required' }],
 				},
 			],
 		},
 	],
-	grid: {
-		columns: 2,
-		gap: '1rem',
-		responsive: { default: { columns: 1 }, md: { columns: 2 } },
-	},
 	view: {
 		$type: 'card',
 		shell: { padding: 'md', shadowSize: 'md' },
