@@ -1,8 +1,8 @@
 import type { FormConfig } from '@schema-engine/forms/schemas';
 
 /**
- * Simple contact form on a card shell — shared by getting-started guides,
- * basic-form example, and cross-adapter integration demos.
+ * Simple contact form on a card shell — shared by getting-started guides
+ * and the basic-form example.
  *
  * @remarks Pages pass this object to live previews and `FormConfigCode` so demos
  * and snippets cannot drift.
