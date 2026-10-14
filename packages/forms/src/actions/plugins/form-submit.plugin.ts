@@ -1,5 +1,6 @@
 import * as z from 'zod/mini';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
+import { logger } from '@/lib/logger';
 import { FormActionTriggerSchema } from '../triggers';
 
 /**
@@ -93,7 +94,7 @@ export function formSubmitPlugin(
 							errorMessage = message;
 						}
 					} catch (parseError) {
-						console.warn('Failed to parse JSON error response:', parseError);
+						logger.warn('Failed to parse JSON error response', { error: parseError });
 					}
 				}
 				throw new Error(errorMessage);

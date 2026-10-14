@@ -78,9 +78,9 @@ const schema = createZodSchemaFromRules(emailRules, createValidationContext(), r
 
 const result = schema.safeParse('user@example.com');
 if (result.success) {
-	console.log('Valid email:', result.data);
+	showValidationResult(result.data);
 } else {
-	console.log('Validation errors:', result.error.issues);
+	showValidationErrors(result.error.issues);
 }
 ```
 
@@ -116,7 +116,7 @@ import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/va
 
 const registry = createDefaultValidationRegistry();
 
-console.log(registry.getRegisteredTypes());
+const registeredTypes = registry.getRegisteredTypes();
 
 const stringValidations = registry.getByCategory('string');
 const numberValidations = registry.getByCategory('number');

@@ -181,6 +181,29 @@ The current React and Radiant renderers still have their own validation paths;
 adoption of these shared helpers is tracked by [#138](https://github.com/andeeplus/schema-engine/issues/138)
 and [#133](https://github.com/andeeplus/schema-engine/issues/133), respectively.
 
+## Browser integrations
+
+The `@schema-engine/forms` root entry point is framework-agnostic and does not
+choose browser storage or analytics globals. Import browser tools and their
+preconfigured action registrations from `@schema-engine/forms/browser`:
+
+```ts
+import {
+	AutoSaveActionRegistration,
+	GTMActionRegistration,
+	GDPRConsent,
+	ResetActionRegistration,
+} from '@schema-engine/forms/browser';
+
+GDPRConsent.grantConsent();
+```
+
+The browser auto-save registration writes only after consent has been granted.
+It and the reset registration share the `autosave_<formId>` key, and revoking
+consent clears drafts stored under that key or a custom auto-save `storageKey`.
+Hosts using the root plugin factories provide their own `AutoSaveStorage`
+adapter.
+
 ## Who owns visual chrome
 
 | Layer                                                           | Owns                                                                                                                      |

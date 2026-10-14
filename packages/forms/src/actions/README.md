@@ -6,17 +6,17 @@ engine from [@schema-engine/actions](../../../actions).
 
 ## Built-in registrations
 
-Import the registrations you need from `@schema-engine/forms`. Importing a
-registration also adds its `$type` to the form action configuration types.
+Import runtime-neutral registrations from `@schema-engine/forms` and browser
+registrations from `@schema-engine/forms/browser`. Importing a registration
+also adds its `$type` to the form action configuration types.
 
 ```typescript
+import { NotificationActionRegistration, SubmitActionRegistration, createFormEngine } from '@schema-engine/forms';
 import {
 	AutoSaveActionRegistration,
-	NotificationActionRegistration,
 	ResetActionRegistration,
-	SubmitActionRegistration,
-	createFormEngine,
-} from '@schema-engine/forms';
+	GTMActionRegistration,
+} from '@schema-engine/forms/browser';
 
 const engine = createFormEngine({
 	actions: [
@@ -24,6 +24,7 @@ const engine = createFormEngine({
 		ResetActionRegistration,
 		NotificationActionRegistration,
 		AutoSaveActionRegistration,
+		GTMActionRegistration,
 	],
 });
 ```
@@ -91,8 +92,8 @@ const submit = formSubmitPlugin({
 		...data,
 		formId: context.formId,
 	}),
-	onSuccess: (data, context) => console.log('Submitted', context.formId, data),
-	onError: (error, context) => console.error('Submit failed', context.formId, error),
+	onSuccess: (data, context) => recordSubmission(context.formId, data),
+	onError: (error, context) => reportSubmissionFailure(context.formId, error),
 });
 ```
 
@@ -106,13 +107,15 @@ Submission data is sent as `FormData`.
 import { formResetPlugin } from '@schema-engine/forms';
 
 const reset = formResetPlugin({
-	confirm: (message) => window.confirm(message),
-	onReset: (context) => console.log('Reset', context.formId),
+	storage: draftStorage,
+	confirm: askForResetConfirmation,
+	onReset: (context) => recordReset(context.formId),
 });
 ```
 
 The reset action accepts `confirmMessage`, `resetToDefaults`, and `triggers`.
-The factory also accepts `clearDraft` and `resetForm` handlers.
+The factory requires an `AutoSaveStorage` port and removes the form's default
+auto-save key. It also accepts `clearDraft` and `resetForm` handlers.
 
 ### `notificationPlugin`
 
@@ -120,11 +123,11 @@ The factory also accepts `clearDraft` and `resetForm` handlers.
 import { notificationPlugin } from '@schema-engine/forms';
 
 const notifications = notificationPlugin({
-	onSuccess: (message, context) => console.log('Success', context.formId, message),
-	onError: (message, context) => console.error('Error', context.formId, message),
-	onWarning: (message, context) => console.warn('Warning', context.formId, message),
-	onInfo: (message, context) => console.info('Info', context.formId, message),
-	onNotification: (message, variant, context) => console.log(variant, context.formId, message),
+	onSuccess: (message, context) => showNotice('success', context.formId, message),
+	onError: (message, context) => showNotice('error', context.formId, message),
+	onWarning: (message, context) => showNotice('warning', context.formId, message),
+	onInfo: (message, context) => showNotice('info', context.formId, message),
+	onNotification: (message, variant, context) => showNotice(variant, context.formId, message),
 });
 ```
 
@@ -137,19 +140,17 @@ The notification action accepts `message`, `variant` (`success`, `error`,
 import { autoSavePlugin } from '@schema-engine/forms';
 
 const autoSave = autoSavePlugin({
-	storage: {
-		save: (key, data) => localStorage.setItem(key, JSON.stringify(data)),
-		load: (key) => JSON.parse(localStorage.getItem(key) ?? 'null'),
-		remove: (key) => localStorage.removeItem(key),
-	},
+	storage: appDraftStorage,
 	getStorageKey: (context) => `form:${context.formId}`,
-	onSave: (data, context) => console.log('Saved', context.formId, data),
-	onError: (error, context) => console.error('Auto-save failed', context.formId, error),
+	onSave: (data, context) => recordDraft(context.formId, data),
+	onError: (error, context) => reportDraftFailure(context.formId, error),
 });
 ```
 
 The auto-save action accepts `storageKey`, `includeSensitive`, and `triggers`.
-By default, password, secret, and token fields are excluded from saved data.
+The factory requires an `AutoSaveStorage` port rather than choosing browser
+storage. By default, password, secret, and token fields are excluded from saved
+data.
 
 ### `gtmPlugin`
 
@@ -157,15 +158,16 @@ By default, password, secret, and token fields are excluded from saved data.
 import { gtmPlugin } from '@schema-engine/forms';
 
 const analytics = gtmPlugin({
-	onPush: (eventName, eventData, context) => {
-		console.log('GTM event', eventName, context.formId, eventData);
-	},
+	tracker: { push: pushAnalyticsEvent },
+	onPush: (eventName, eventData, context) => recordAnalyticsEvent(context.formId, eventName, eventData),
 });
 ```
 
 The GTM action accepts `eventName`, `eventData`, `includeFormData`, and
 `triggers`. Set `includeFormData` to `true` to include all fields or to an
-array of field names to select specific values.
+array of field names to select specific values. The factory requires a tracker
+port; the browser data-layer tracker is available from
+`@schema-engine/forms/browser`.
 
 ## Custom action plugins
 
@@ -201,7 +203,7 @@ const logMessage: BuilderActionRegistration<'log_message', typeof ActionSchema> 
 		defaultTriggers: ['form_submit'],
 	},
 	execute: async (context: BuilderActionExecutionContext<Action>) => {
-		console.log(context.config.message, context.formId);
+		publishMessage(context.config.message, context.formId);
 		return { success: true, shouldContinue: true };
 	},
 };
