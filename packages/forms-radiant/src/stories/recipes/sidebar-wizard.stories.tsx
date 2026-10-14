@@ -12,7 +12,6 @@ const meta = {
 	title: 'Recipes/Sidebar Wizard',
 	argTypes: {
 		engine: { table: { disable: true } },
-		adapter: { table: { disable: true } },
 		config: {
 			control: 'object',
 			description: 'Form config with `view.$type: "sidebar-wizard"`',

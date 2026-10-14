@@ -52,12 +52,12 @@ with its defaults and step state. The change watcher subscribes to field value
 changes, so a parent render by itself does not call `onChange` or dispatch a
 `form_change` action.
 
-Radiant **FormEngine** resolution is host-scoped like `FormController`: explicit
-`engine` prop, ancestor `formEngineContext`, then the engine owning the current
-field render. When exactly one engine has been registered (typical SSR bootstrap),
-that engine is the fallback; with multiple engines, hosts need an explicit engine
-or a provider frame — there is no last-writer-wins global.
-
+Radiant `FormEngineController` subscribes to the nearest ancestor
+`formEngineContext`; renderer-owned field rendering resolves an explicit engine,
+then that context, then the engine owning the current render. `se-form-renderer`
+publishes a plain engine snapshot on the context. There is no module-level engine
+registry or implicit single-engine fallback, so standalone hosts must receive an
+engine through a renderer context or an explicit prop.
 Constraint resolution belongs to the engine, not to a renderer. A constraint
 names a sibling (`accountType`), so its value path depends on where the
 declaring field is rendered: inside `contacts.0.email` the sibling is

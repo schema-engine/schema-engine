@@ -16,7 +16,7 @@ Radiant/JSX implementation of the JSON Form Engine for Ecopages apps. It wraps `
 - **Default registrations** for input, textarea, number, select, checkbox, switch, radio, and submit
 - **Shared Zod Mini schemas** from `registry/shared/forms/*.types.ts`
 - **`createRadiantFormEngine()`** — same builder API as the React adapter
-- **Scoped `FormController`** for reads, subscriptions, and full field-array operations; explicit lifecycle or optional `@formController` decorator
+- **Scoped `FormController`** for form state and `FormEngineController` for the nearest renderer engine; explicit lifecycle or optional `@formController` decorator
 
 ## When to use
 
@@ -31,11 +31,15 @@ Radiant/JSX implementation of the JSON Form Engine for Ecopages apps. It wraps `
 
 ## Programmatic form access
 
-Import `FormController` and `formController` from
+Import `FormController`, `FormEngineController`, and `formController` from
 `@schema-engine/forms-radiant/adapters/radiant`. Create `new FormController(host)`
 for a host inside `rui-form`, call `connect(listener)` on connection, and call
 `disconnect()` on disconnection. Radiant elements can declare
 `@formController form!: FormController` for automatic lifecycle wiring.
+
+Create `new FormEngineController(host)` for a host inside `se-form-renderer`.
+Its `engine` and `ready` getters expose the nearest renderer engine, while
+`connect()` and `disconnect()` manage the context subscription.
 
 Use `getValue(name)` / `getValues()` for snapshots, `watchField(name, listener)` /
 `watchForm(listener)` for subscriptions, and `fieldArray(name)` for array edits.
@@ -46,4 +50,4 @@ flat field names internally.
 
 The former `useFormContext`, `useFormField`, `useWatchField`, `useWatchForm`,
 `useFieldArray`, and `getActiveFormStore` exports have been replaced by this scoped
-API. Custom Radiant adapters now provide `FormProvider`, without React-style hooks.
+API. Radiant rendering uses `FormProvider` directly and does not emulate React hooks.

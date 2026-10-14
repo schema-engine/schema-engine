@@ -1,4 +1,3 @@
-export { FormEngineProvider, FormEngineProviderElement } from './form-engine-provider';
 export { formEngineContext, type FormEngineContextValue } from './provider';
 export { FormRenderer, FormRendererElement } from './internals/form-renderer';
 export { FormElement } from './internals/field-renderer';

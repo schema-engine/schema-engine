@@ -1,9 +1,8 @@
-import { describe, expect, test, beforeEach } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
 import { renderRegisteredElement } from '@/components/internals/render-registered-element';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
-import { registerFormEngine, resetRegisteredFormEnginesForTests } from '@/registries/active-engine';
 
 const probeSchema = z.object({
 	$type: z.literal('probe'),
@@ -79,13 +78,8 @@ function createNestedProbeEngines(captured: string[]) {
 }
 
 describe('form engine owner', () => {
-	beforeEach(() => {
-		resetRegisteredFormEnginesForTests();
-	});
-
-	test('field hosts resolve the engine that is rendering them, not the active engine', () => {
+	test('field hosts resolve the engine that is rendering them', () => {
 		const engineB = createFormEngine({ grid: { breakpoints: { md: '60rem' } } });
-		registerFormEngine(engineB);
 
 		let capturedThemeId: string | undefined;
 		const engineA = createProbeEngine({ md: '50rem' }, () => {
@@ -96,13 +90,9 @@ describe('form engine owner', () => {
 
 		expect(capturedThemeId).toBe(engineA.getGridTheme().id);
 		expect(capturedThemeId).not.toBe(engineB.getGridTheme().id);
-		expect(mergeFieldGridHost().themeId).toBe(engineB.getGridTheme().id);
 	});
 
 	test('later renders through the same engine still own the field hosts', () => {
-		const engineB = createFormEngine({ grid: { breakpoints: { md: '60rem' } } });
-		registerFormEngine(engineB);
-
 		const captured: string[] = [];
 		const engineA = createProbeEngine({ md: '50rem' }, () => {
 			captured.push(mergeFieldGridHost().themeId);

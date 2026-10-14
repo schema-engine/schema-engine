@@ -9,8 +9,7 @@ import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import type { ArrayElementsProps } from './form-array-elements.types';
 import { arrayItemScope, usesScalarArrayItem } from '@schema-engine/forms';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
-import { FormController } from '@/adapters/radiant/controller';
-import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
+import { FormController, FormEngineController } from '@/adapters/radiant/controller';
 import { toFieldRules } from '@/lib/field-rules';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { adoptFieldArrayIds } from '@/adapters/radiant/controller/field-array';
@@ -62,26 +61,21 @@ function PlusIcon() {
 @customElement('se-form-array')
 export class SeFormArray extends RadiantElement {
 	@prop({ type: Object }) config!: ArrayElementsProps;
-	@state engine?: FormEngine;
 	@state fieldError?: string;
 
 	readonly form = new FormController(this);
+	private readonly formEngine = new FormEngineController(this);
 	private unregisterArrayField?: () => void;
 	private isArrayFieldRegistered = false;
+	private formContext?: FormContextValue;
 	private initialized = false;
 	private initializing = false;
 	private preservedHydratedContainer = false;
 	private renderedIds: string[] = [];
 
-	@onContextUpdate({ context: formEngineContext, requestUpdate: false })
-	onFormEngine(value: FormEngineContextValue): void {
-		if (value.engine) {
-			this.engine = value.engine;
-		}
-	}
-
 	@onContextUpdate({ context: formContext, requestUpdate: false })
 	onFormContext(value: FormContextValue): void {
+		this.formContext = value;
 		const fieldError = value.fields[this.config?.name ?? '']?.error;
 		if (fieldError !== this.fieldError) {
 			this.fieldError = fieldError;
@@ -95,7 +89,12 @@ export class SeFormArray extends RadiantElement {
 			return;
 		}
 		this.scheduleSync(this.renderedIds.length ? this.renderedIds : this.initialIds());
-		if (this.isArrayFieldRegistered) return;
+		this.registerArrayField();
+	}
+
+	private registerArrayField(): void {
+		const value = this.formContext;
+		if (!value?.ready || !this.config?.name || !this.resolveEngine() || this.isArrayFieldRegistered) return;
 
 		const name = this.config.name;
 		this.isArrayFieldRegistered = true;
@@ -139,7 +138,7 @@ export class SeFormArray extends RadiantElement {
 	}
 
 	private resolveEngine(): FormEngine | undefined {
-		return resolveFormEngine(this, this.engine);
+		return this.formEngine.engine;
 	}
 
 	private get ids(): string[] {
@@ -219,6 +218,10 @@ export class SeFormArray extends RadiantElement {
 	protected override onConnected(): void {
 		const initialIds = this.initialIds();
 		this.renderedIds = initialIds;
+		this.formEngine.connect(() => {
+			this.registerArrayField();
+			this.requestUpdate();
+		});
 		this.form.connect(() => this.scheduleSync(initialIds));
 		if (this.form.ready) this.scheduleSync(initialIds);
 	}
@@ -228,7 +231,9 @@ export class SeFormArray extends RadiantElement {
 	}
 
 	override disconnectedCallback(): void {
+		this.formEngine.disconnect();
 		this.form.disconnect();
+		this.formContext = undefined;
 		this.unregisterArrayField?.();
 		this.unregisterArrayField = undefined;
 		this.isArrayFieldRegistered = false;
@@ -266,6 +271,8 @@ export class SeFormArray extends RadiantElement {
 		}
 		const hydratedContainer = this.preserveHydratedContainer();
 		if (hydratedContainer) return hydratedContainer;
+		const engine = this.resolveEngine();
+		if (this.ids.length > 0 && !engine) return null;
 		const renderValues = this.form.ready ? this.form.getValues() : (config.initialFormValues ?? {});
 		const initialValues = this.rowInitialValues();
 		const isSingleField = usesScalarArrayItem(config, config.name, config.elements, renderValues);
@@ -288,7 +295,7 @@ export class SeFormArray extends RadiantElement {
 							<div class="se-form-array__fields">
 								<FormElements
 									elements={config.elements}
-									engine={this.resolveEngine()}
+									engine={engine}
 									initialValues={initialValues}
 									values={renderValues}
 									namePrefix={scope.namePrefix}
@@ -348,7 +355,6 @@ export function FormArrayElements(config: ArrayElementsProps) {
 			{fieldConfig.description ? <p class="se-form-array-field__description">{fieldConfig.description}</p> : null}
 			{jsx('se-form-array', {
 				config: arrayConfig,
-				'prop:engine': engine,
 			})}
 		</div>
 	);

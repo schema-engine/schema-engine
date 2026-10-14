@@ -34,14 +34,13 @@ First-party schemas use the functional `zod/mini` API. Install the `zod` package
 
 ```ts
 import { createRadiantFormEngine, FormRenderer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
-import { radiantAdapter } from '@schema-engine/forms-radiant/adapters/radiant';
 
 const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 
-<FormRenderer engine={engine} adapter={radiantAdapter} config={formConfig} onSubmit={handleSubmit} />;
+<FormRenderer engine={engine} config={formConfig} onSubmit={handleSubmit} />;
 ```
 
-`engine` and `adapter` are `@state` (JS only). `@prop({ type: Object })` would stringify them onto the host tag.
+`engine` is a live JavaScript value. `se-form-renderer` publishes it to descendant hosts through `formEngineContext`.
 
 ### Registering only the elements a form uses
 
@@ -98,9 +97,12 @@ export class FormInstanceElement extends RadiantElement { … }
 export { FormInstanceElement } from './form-instance.script';
 
 export function FormInstance({ config, … }) {
-	return jsx('se-form-instance', { config, 'prop:engine': engine, children: … });
+	return jsx('se-form-instance', { config, children: … });
 }
 ```
+
+The `engine` is used to render the recipe. The enclosing `se-form-renderer`
+publishes it through `formEngineContext` for the instance host and its descendants.
 
 The split is a bundle boundary, not a filing preference. The view is evaluated
 at build time to produce HTML and never reaches the browser; the script is the

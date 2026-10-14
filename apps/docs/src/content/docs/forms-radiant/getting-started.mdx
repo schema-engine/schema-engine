@@ -1,6 +1,6 @@
 ---
 title: 'Getting Started'
-description: 'Install the Radiant adapter and register your engine.'
+description: 'Install the Radiant package and register your engine.'
 group: Forms Radiant
 order: 2
 ---
@@ -81,11 +81,9 @@ const formConfig: FormConfig = {
 
 ```typescript
 import { FormRenderer } from '@schema-engine/forms-radiant';
-import { radiantAdapter } from '@schema-engine/forms-radiant/adapters/radiant';
 
 <FormRenderer
 	engine={formEngine}
-	adapter={radiantAdapter}
 	config={formConfig}
 	onSubmit={(data) => console.log(data)}
 />;

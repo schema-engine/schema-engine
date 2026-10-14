@@ -12,8 +12,10 @@ export { FormInstanceElement } from './form-instance.script';
  *
  * @remarks
  * View-owned shell: the `ConfiguredRuiForm` tree is authored as light-DOM
- * children so SSR expands it. The element re-attaches live objects (`engine`,
- * `onSubmit`) through `prop:` bindings, mirroring `RuiForm`'s `prop:resolver`.
+ * children so SSR expands it. The recipe renderer receives the live `engine`,
+ * while the enclosing `se-form-renderer` publishes it to this host through
+ * `formEngineContext`. The element re-attaches `onSubmit` through a `prop:`
+ * binding, mirroring `RuiForm`'s `prop:resolver`.
  */
 export function FormInstance({
 	config,
@@ -34,7 +36,6 @@ export function FormInstance({
 
 	return jsx('se-form-instance', {
 		config,
-		'prop:engine': engine,
 		defaultValues,
 		'prop:onSubmit': onSubmit,
 		isSubmitting,

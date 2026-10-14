@@ -14,7 +14,7 @@ export function FormProvider<TFormData extends Record<string, unknown> = Record<
 	assertFormEngine(engine, config);
 	const normalizedConfig = engine.validateForm(config);
 	const actionController = normalizedConfig.actions?.length ? (
-		<FormActionController config={normalizedConfig} engine={engine} />
+		<FormActionController config={normalizedConfig} />
 	) : null;
 
 	return (

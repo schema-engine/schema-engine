@@ -1,62 +1,44 @@
 import './form-action-controller.css';
-import { customElement, prop, RadiantElement, state } from '@ecopages/radiant';
+import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import type { BuilderActionBaseContext, FormActionTrigger, FormConfigView } from '@schema-engine/forms';
-import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { ActionDispatcher } from '@schema-engine/actions';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
-import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
-import { whenEngineAvailable } from '@/contexts/resolve-form-engine';
-import { FormController } from '@/adapters/radiant/controller';
+import { FormController, FormEngineController } from '@/adapters/radiant/controller';
 import { findAncestorElement } from '@/lib/rui-form-utils';
 
 /** Dispatches configured form actions for Radiant form lifecycle events. */
 @customElement('se-form-action-controller')
 export class FormActionControllerElement extends RadiantElement {
 	@prop({ type: Object }) config!: FormConfigView;
-	@state engine?: FormEngine;
 
 	readonly form = new FormController(this);
+	private readonly formEngine = new FormEngineController(this);
 
 	private dispatcher?: ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>;
 	private mountedAt = 0;
 	private didMount = false;
 	private watchingChanges = false;
 	private formInstance?: FormInstanceContextValue;
-	private unsubscribeActiveEngine?: () => void;
 
 	@onContextUpdate({ context: formInstanceContext, requestUpdate: false })
 	onFormInstance(value: FormInstanceContextValue): void {
 		this.formInstance = value;
 	}
 
-	@onContextUpdate({ context: formEngineContext, requestUpdate: false })
-	onFormEngine(value: FormEngineContextValue): void {
-		if (value.engine && !this.engine) {
-			this.engine = value.engine;
+	protected override onConnected(): void {
+		this.formEngine.connect(() => {
 			this.setupDispatcher();
 			this.onFormReady();
-		}
-	}
-
-	protected override onConnected(): void {
-		if (!this.engine) {
-			this.unsubscribeActiveEngine = whenEngineAvailable(this, this.engine, (engine) => {
-				if (!this.engine) {
-					this.engine = engine;
-				}
-				this.setupDispatcher();
-				this.onFormReady();
-			});
-		}
+		});
 		this.form.connect(() => this.onFormReady());
 		this.setupDispatcher();
 		this.onFormReady();
 	}
 
 	override disconnectedCallback(): void {
-		this.unsubscribeActiveEngine?.();
+		this.formEngine.disconnect();
 		this.form.disconnect();
 		this.dispatcher = undefined;
 		this.didMount = false;
@@ -70,7 +52,8 @@ export class FormActionControllerElement extends RadiantElement {
 
 	private setupDispatcher(): void {
 		const config = this.config;
-		if (this.dispatcher || !this.engine || !config?.actions?.length) {
+		const engine = this.formEngine.engine;
+		if (this.dispatcher || !engine || !config?.actions?.length) {
 			return;
 		}
 
@@ -79,7 +62,7 @@ export class FormActionControllerElement extends RadiantElement {
 			return;
 		}
 
-		this.dispatcher = new ActionDispatcher(this.engine);
+		this.dispatcher = new ActionDispatcher(engine);
 		this.mountedAt = Date.now();
 
 		const onSubmit = () => void this.runSubmissionLifecycle();
@@ -165,9 +148,8 @@ export class FormActionControllerElement extends RadiantElement {
 	}
 }
 
-export function FormActionController({ config, engine }: { config: FormConfigView; engine?: FormEngine }) {
+export function FormActionController({ config }: { config: FormConfigView }) {
 	return jsx('se-form-action-controller', {
 		config,
-		'prop:engine': engine,
 	});
 }
