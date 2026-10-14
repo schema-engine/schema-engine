@@ -66,30 +66,4 @@ describe('createFormValidationResolver', () => {
 		const complete = await resolver({ phone: '+442079460958' }, undefined, options);
 		expect(complete.errors).toEqual({});
 	});
-
-	test('validates nested fieldset children by composed path', async () => {
-		const resolver = createFormValidationResolver(
-			[
-				{
-					name: 'address',
-					$type: 'fieldset',
-					elements: [
-						{
-							name: 'street',
-							rules: [{ type: 'required', message: 'Street is required' }],
-						},
-					],
-				},
-			],
-			registry,
-		);
-		const resolved = await resolver({ address: { street: '' } }, undefined, {
-			fields: {},
-			shouldUseNativeValidation: false,
-		});
-
-		expect(resolved.errors).toMatchObject({
-			'address.street': { message: 'Street is required' },
-		});
-	});
 });

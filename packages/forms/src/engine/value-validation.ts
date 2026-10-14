@@ -1,0 +1,185 @@
+import { evaluateConstraints } from '../constraints/constraint-evaluator.js';
+import {
+	expandContainerParentPaths,
+	expandFieldTemplatePaths,
+	getValueAtPath,
+	setValueAtPath,
+} from '../lib/path-values.js';
+import { walkNamedElements } from '../lib/field-scope.js';
+import type { NormalizedElementConfig, NormalizedFormConfig } from '../lib/normalized-form-config.js';
+import {
+	createValidationContext,
+	createZodSchemaFromRules,
+	getValidationRulesForElement,
+	isFieldRequired,
+} from '../schemas/validation/utils.js';
+import type { BaseValidationRule, RequiredRule } from '../schemas/validation/types.js';
+import type { ValidationRegistry } from '../schemas/validation/validation-registry.js';
+import * as z from 'zod/mini';
+
+export type ValidationElement = NormalizedElementConfig;
+export type ValidationElementTree = ReadonlyArray<ValidationElement>;
+export type ValidationStep = Pick<NormalizedFormConfig['steps'][number], 'elements'>;
+
+export interface EffectiveRulesInput {
+	element: ValidationElement;
+	fieldPath: string;
+	values: Record<string, unknown>;
+	registry: ValidationRegistry;
+}
+
+export interface ValidateFieldValueInput extends EffectiveRulesInput {
+	value: unknown;
+}
+
+export interface ValidateFormValuesInput {
+	elements: ValidationElementTree;
+	values: Record<string, unknown>;
+	registry: ValidationRegistry;
+	names?: readonly string[];
+}
+
+export interface FieldValidationError {
+	readonly type: 'validation';
+	readonly message: string;
+}
+
+export type FormValidationErrors = Record<string, unknown>;
+
+interface FieldElementPath {
+	readonly element: ValidationElement;
+	readonly fieldPath: string;
+}
+
+function expandContainerTemplatePaths(values: Record<string, unknown>, templatePath: string): string[] {
+	const segments = templatePath.split('.');
+	if (segments.length === 1) {
+		return [templatePath];
+	}
+
+	const containerName = segments[segments.length - 1];
+	const parentPath = segments.slice(0, -1).join('.');
+	if (!containerName) {
+		return [templatePath];
+	}
+
+	return expandContainerParentPaths(values, parentPath).map((fieldPath) => `${fieldPath}.${containerName}`);
+}
+
+function pathIsRequested(path: string, names?: readonly string[]): boolean {
+	if (!names?.length) {
+		return true;
+	}
+
+	return names.some((name) => path === name || path.startsWith(`${name}.`));
+}
+
+function fieldElementPathsFor(elements: ValidationElementTree, values: Record<string, unknown>): FieldElementPath[] {
+	return walkNamedElements(elements).flatMap(({ path, element, hasChildren }) => {
+		const paths = hasChildren ? expandContainerTemplatePaths(values, path) : expandFieldTemplatePaths(values, path);
+		return paths.map((fieldPath) => ({ element, fieldPath }));
+	});
+}
+
+/**
+ * Lists the named paths in a step, expanding field templates for each live array row.
+ *
+ * @remarks
+ * Container paths stay whole so their own rules can be validated, while leaf
+ * paths such as `contacts.email` expand to the rendered `contacts.0.email` paths.
+ */
+export function collectStepFieldPaths(
+	step: ValidationStep | undefined,
+	values: Record<string, unknown> = {},
+): string[] {
+	const paths = fieldElementPathsFor(step?.elements ?? [], values).map(({ fieldPath }) => fieldPath);
+
+	return [...new Set(paths)];
+}
+
+/**
+ * Resolves authored rules and adds a required rule when a `require` constraint holds.
+ *
+ * @remarks
+ * Constraint references use the rendered path, so each row of an array evaluates
+ * against its own sibling values.
+ */
+export function effectiveRulesFor({ element, fieldPath, values, registry }: EffectiveRulesInput): BaseValidationRule[] {
+	const rules = getValidationRulesForElement<BaseValidationRule>(element, registry) ?? [];
+	const isRequired = evaluateConstraints({
+		constraints: element.constraints,
+		values,
+		fieldPath,
+		baseRequired: isFieldRequired(rules),
+	}).isRequired;
+
+	if (!isRequired || isFieldRequired(rules)) {
+		return [...rules];
+	}
+
+	const requiredRule: RequiredRule = { type: 'required' };
+	return [requiredRule, ...rules];
+}
+
+/**
+ * Validates one field value and returns its first validation message when invalid.
+ */
+export async function validateFieldValue({
+	element,
+	value,
+	values,
+	fieldPath,
+	registry,
+}: ValidateFieldValueInput): Promise<string | undefined> {
+	const rules = effectiveRulesFor({ element, values, fieldPath, registry });
+	if (rules.length === 0) {
+		return undefined;
+	}
+
+	try {
+		const context = createValidationContext({ values, fieldPath });
+		const schema = createZodSchemaFromRules(rules, context, registry);
+		const result = await z.safeParseAsync(schema, value);
+		return result.success ? undefined : result.error.issues[0]?.message || 'Validation failed';
+	} catch {
+		return 'Validation failed';
+	}
+}
+
+/**
+ * Validates named fields and returns errors in the same nested shape as `values`.
+ *
+ * @remarks
+ * `names` limits validation to matching paths and their descendants, which lets
+ * callers validate a wizard step without surfacing errors from later steps.
+ */
+export async function validateFormValues({
+	elements,
+	values,
+	registry,
+	names,
+}: ValidateFormValuesInput): Promise<FormValidationErrors> {
+	const fields = fieldElementPathsFor(elements, values).filter(({ fieldPath }) => pathIsRequested(fieldPath, names));
+	const messages = await Promise.all(
+		fields.map(async ({ element, fieldPath }) => ({
+			fieldPath,
+			message: await validateFieldValue({
+				element,
+				value: getValueAtPath(values, fieldPath),
+				values,
+				fieldPath,
+				registry,
+			}),
+		})),
+	);
+
+	const errors: FormValidationErrors = {};
+	for (const { fieldPath, message } of messages) {
+		if (message) {
+			const error: FieldValidationError = { type: 'validation', message };
+			setValueAtPath(errors, fieldPath, error);
+		}
+	}
+
+	return errors;
+}

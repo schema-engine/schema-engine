@@ -16,6 +16,17 @@ export type {
 	SubmissionLifecycleResult,
 	FormActionContextFormState,
 } from './engine';
+export { collectStepFieldPaths, effectiveRulesFor, validateFieldValue, validateFormValues } from './engine';
+export type {
+	EffectiveRulesInput,
+	FieldValidationError,
+	FormValidationErrors,
+	ValidateFieldValueInput,
+	ValidateFormValuesInput,
+	ValidationElement,
+	ValidationElementTree,
+	ValidationStep,
+} from './engine';
 export type {
 	EngineRegistries,
 	FormEngineSchemaArtifacts,
