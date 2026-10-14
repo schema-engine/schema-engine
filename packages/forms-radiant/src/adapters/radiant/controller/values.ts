@@ -1,5 +1,11 @@
 import { getValueAtPath, setValueAtPath } from '@schema-engine/forms/lib/path-values';
 
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+	if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
+	const prototype = Object.getPrototypeOf(value);
+	return prototype === Object.prototype || prototype === null;
+}
+
 /** Converts Radiant UI's flat field names into the engine's nested value tree. */
 export function expandValues(values: Record<string, unknown>): Record<string, unknown> {
 	const result: Record<string, unknown> = {};
@@ -14,7 +20,7 @@ export function expandValues(values: Record<string, unknown>): Record<string, un
 
 function cloneValue(value: unknown): unknown {
 	if (Array.isArray(value)) return value.map(cloneValue);
-	if (value && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
+	if (isPlainRecord(value)) {
 		return Object.fromEntries(Object.entries(value).map(([key, child]) => [key, cloneValue(child)]));
 	}
 	return value;
@@ -24,11 +30,7 @@ export function flattenValues(values: Record<string, unknown>): Record<string, u
 	const result: Record<string, unknown> = {};
 	function visit(name: string, value: unknown): void {
 		result[name] = value;
-		if (
-			value &&
-			typeof value === 'object' &&
-			(Array.isArray(value) || Object.getPrototypeOf(value) === Object.prototype)
-		) {
+		if (Array.isArray(value) || isPlainRecord(value)) {
 			for (const [key, child] of Object.entries(value)) visit(`${name}.${key}`, child);
 		}
 	}

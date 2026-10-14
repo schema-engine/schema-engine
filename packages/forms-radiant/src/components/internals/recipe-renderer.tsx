@@ -25,11 +25,13 @@ export function RecipeRenderer({
 	engine,
 	recipe,
 	children,
+	initialValues,
 }: {
 	config: NormalizedFormConfig;
 	engine: FormEngine;
 	recipe: RecipeRegistration<any, any> | undefined;
 	children?: JsxRenderable;
+	initialValues?: Record<string, unknown>;
 }): JsxRenderable {
 	const { theme, css: gridThemeCss } = engine.getCompiledGrid();
 	const viewConfig = recipe
@@ -49,7 +51,7 @@ export function RecipeRenderer({
 							data-se-grid-theme={theme.id}
 							style={getFormGridVariables(config.grid, theme)}
 						>
-							<FormElements elements={step.elements} engine={engine} />
+							<FormElements elements={step.elements} engine={engine} initialValues={initialValues} />
 						</div>
 					) : null}
 				</FormStep>

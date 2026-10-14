@@ -24,7 +24,6 @@ const NATIVE_RUI_RULES = new Set([
 	'email',
 	'base64',
 	'hex',
-	'minItems',
 ]);
 
 function numericRule(value: number, message?: string) {
@@ -122,11 +121,6 @@ export function toFieldRules(element: FieldRulesSource, registry?: ValidationReg
 						'Enter a complete phone number',
 						resolvedRegistry,
 					);
-				}
-				break;
-			case 'minItems':
-				if (rule.value >= 1) {
-					fieldRules.required = rule.message ?? true;
 				}
 				break;
 			default:

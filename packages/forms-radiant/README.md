@@ -156,6 +156,15 @@ and array mutations with stable row IDs. See the [controller API and migration
 guide](./src/adapters/radiant/controller/README.md) for examples and the replacement
 for the removed snapshot hooks.
 
+`arrayElements` registers the array name as a field. A `minItems` rule in
+`rules` checks the row count at submission. The `minItems` config property seeds
+the initial row count, and the built-in Remove control keeps that count as its
+floor. `maxItems` caps the built-in Add control. `initialValues` seeds rows
+created by Add or to meet the `minItems` floor. Rows supplied through form `defaultValues` are included in
+server markup with deterministic IDs, which the connected array host adopts
+during hydration. Direct `FormController.fieldArray` mutations do not apply the
+array config's Add and Remove behavior.
+
 Field schemas live beside each registration under `src/elements/` (for example `form-input.types.ts` next to `form-input.registration.ts`). Component props stay on the widget modules. Radiant does not ship `date` or `date-range` widgets; those `$type`s exist only in the shadcn registry today. Registry and Radiant schemas may diverge where capabilities differ.
 
 ## Development

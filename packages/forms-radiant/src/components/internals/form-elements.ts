@@ -14,6 +14,8 @@ export interface FormElementsProps {
 	engine?: FormEngine;
 	className?: string;
 	style?: Record<string, string | number | undefined>;
+	initialValues?: Record<string, unknown>;
+	values?: Record<string, unknown>;
 	namePrefix?: string;
 	nameStrategy?: FieldScope['nameStrategy'];
 	instanceId?: string;
@@ -24,6 +26,8 @@ export function FormElements({
 	engine,
 	className,
 	style,
+	initialValues,
+	values,
 	namePrefix,
 	nameStrategy,
 	instanceId,
@@ -38,6 +42,8 @@ export function FormElements({
 			name: composeFieldName(element, scope),
 			id: composeFieldId(element, scope),
 			instanceId,
+			initialValues,
+			values,
 			className,
 			style,
 		}),

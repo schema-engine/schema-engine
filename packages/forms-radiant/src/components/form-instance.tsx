@@ -2,7 +2,7 @@ import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { resolveFormRecipe, type NormalizedFormConfig } from '@schema-engine/forms';
 import type { FormEngine as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
-import { ConfiguredRuiForm } from '@/adapters/radiant/rui-form-shell';
+import { collectFormInitialValues, ConfiguredRuiForm } from '@/adapters/radiant/rui-form-shell';
 
 /** Registers `<se-form-instance>` when this view is imported. */
 export { FormInstanceElement } from './form-instance.script';
@@ -30,6 +30,8 @@ export function FormInstance({
 	isSubmitting?: boolean;
 	children?: JsxRenderable;
 }): JsxRenderable {
+	const initialValues = collectFormInitialValues(config, defaultValues);
+
 	return jsx('se-form-instance', {
 		config,
 		'prop:engine': engine,
@@ -38,7 +40,12 @@ export function FormInstance({
 		isSubmitting,
 		children: (
 			<ConfiguredRuiForm config={config} defaultValues={defaultValues} onSubmit={onSubmit}>
-				<RecipeRenderer config={config} engine={engine} recipe={resolveFormRecipe(config, engine)}>
+				<RecipeRenderer
+					config={config}
+					engine={engine}
+					recipe={resolveFormRecipe(config, engine)}
+					initialValues={initialValues}
+				>
 					{children}
 				</RecipeRenderer>
 			</ConfiguredRuiForm>

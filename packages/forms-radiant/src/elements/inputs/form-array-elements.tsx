@@ -2,15 +2,23 @@ import './form-array-elements.css';
 import { customElement, onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { RuiButton } from '@ecopages/radiant-ui/button';
+import { hasHydrationMarkers } from '@ecopages/jsx';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { FormElements } from '@/components/internals/form-elements';
-import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import type { ArrayElementsProps } from './form-array-elements.types';
-import { arrayItemScope } from '@schema-engine/forms';
+import { arrayItemScope, usesScalarArrayItem } from '@schema-engine/forms';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { FormController } from '@/adapters/radiant/controller';
 import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
+import { toFieldRules } from '@/lib/field-rules';
+import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
+import { adoptFieldArrayIds } from '@/adapters/radiant/controller/field-array';
+import { getValueAtPath, setValueAtPath } from '@schema-engine/forms/lib/path-values';
+import { formContext, type FormContextValue } from '@ecopages/radiant-ui/form';
+import { mergeFieldGridHost } from '@/hooks/grid-styles';
+import { readValue } from '@/adapters/radiant/controller/values';
+import { createArrayItemDefaultValue } from '@/lib/array-item-default';
 
 function TrashIcon() {
 	return (
@@ -55,9 +63,14 @@ function PlusIcon() {
 export class SeFormArray extends RadiantElement {
 	@prop({ type: Object }) config!: ArrayElementsProps;
 	@state engine?: FormEngine;
+	@state fieldError?: string;
 
 	readonly form = new FormController(this);
+	private unregisterArrayField?: () => void;
+	private isArrayFieldRegistered = false;
 	private initialized = false;
+	private initializing = false;
+	private preservedHydratedContainer = false;
 	private renderedIds: string[] = [];
 
 	@onContextUpdate({ context: formEngineContext, requestUpdate: false })
@@ -67,43 +80,160 @@ export class SeFormArray extends RadiantElement {
 		}
 	}
 
+	@onContextUpdate({ context: formContext, requestUpdate: false })
+	onFormContext(value: FormContextValue): void {
+		const fieldError = value.fields[this.config?.name ?? '']?.error;
+		if (fieldError !== this.fieldError) {
+			this.fieldError = fieldError;
+			this.requestUpdate();
+		}
+
+		if (!value.ready || !this.config?.name) {
+			this.unregisterArrayField?.();
+			this.unregisterArrayField = undefined;
+			this.isArrayFieldRegistered = false;
+			return;
+		}
+		this.scheduleSync(this.renderedIds.length ? this.renderedIds : this.initialIds());
+		if (this.isArrayFieldRegistered) return;
+
+		const name = this.config.name;
+		this.isArrayFieldRegistered = true;
+		this.unregisterArrayField = value.actions.register({
+			name,
+			rules: this.arrayRules(),
+			getRules: () => this.arrayRules(),
+			defaultValue: this.initialArrayValue(),
+			getValue: () => {
+				const store = this.form.store;
+				return store ? readValue(store.values, name) : undefined;
+			},
+			setValue: () => {},
+		});
+	}
+
+	private arrayRules() {
+		return toFieldRules(this.config, this.resolveEngine()?.getValidationRegistry());
+	}
+
+	private initialArrayValue(): unknown[] | undefined {
+		const values = getValueAtPath(this.config.initialFormValues ?? {}, this.config.name);
+		const configuredRows = Array.isArray(values)
+			? values
+			: Array.isArray(this.config.defaultValue)
+				? this.config.defaultValue
+				: undefined;
+		const rows = configuredRows ?? [];
+		const count = Math.max(this.config.minItems ?? 0, rows.length);
+		if (!count && !configuredRows) return undefined;
+		return Array.from({ length: count }, (_, index) =>
+			index < rows.length ? structuredClone(rows[index]) : this.emptyItem(),
+		);
+	}
+
+	private rowInitialValues(): Record<string, unknown> {
+		const values = structuredClone(this.config.initialFormValues ?? {});
+		const arrayValue = this.initialArrayValue();
+		if (arrayValue) setValueAtPath(values, this.config.name, arrayValue);
+		return values;
+	}
+
 	private resolveEngine(): FormEngine | undefined {
 		return resolveFormEngine(this, this.engine);
 	}
 
 	private get ids(): string[] {
-		return this.form.ready ? this.form.fieldArray(this.config.name).fields.map(({ id }) => id) : [];
+		if (!this.initialized && this.isConnected) {
+			const initialIds = this.initialIds();
+			if (initialIds.length) return initialIds;
+		}
+		if (this.form.ready) {
+			return this.form.fieldArray(this.config.name).fields.map(({ id }) => id);
+		}
+		return this.initialIds();
 	}
 
-	private emptyItem(): unknown {
-		const elements = this.config.elements;
-		if (elements.length === 1) return elements[0].defaultValue ?? '';
-		return Object.fromEntries(
-			elements.filter((element) => element.name).map((element) => [element.name, element.defaultValue ?? '']),
+	private initialIds(): string[] {
+		const container = this.renderedContainer();
+		const rendered = Array.from(container?.children ?? [])
+			.filter((row) => row.getAttribute('class')?.split(/\s+/).includes('se-form-array__item'))
+			.map((row) => row.getAttribute('data-se-row-id'))
+			.filter((id): id is string => Boolean(id));
+		if (rendered.length) return rendered;
+		return (this.config.ssrInitialRows ?? []).map((_, index) => `seed-${index}`);
+	}
+
+	private renderedContainer(): HTMLElement | undefined {
+		return Array.from(this.children).find(
+			(child): child is HTMLElement =>
+				child.getAttribute('class')?.split(/\s+/).includes('se-form-array') ?? false,
 		);
 	}
 
-	protected override onConnected(): void {
-		this.form.connect(() => {
-			if (!this.initialized && this.config) {
-				this.initialized = true;
-				const count = Math.max(0, (this.config.minItems ?? 0) - this.ids.length);
-				if (count)
-					this.form
-						.fieldArray(this.config.name)
-						.append(Array.from({ length: count }, () => this.emptyItem()));
+	/**
+	 * Returns the existing server container on the first hydrated render.
+	 *
+	 * @remarks Reusing the node lets its child controls upgrade against the server rows. Later updates render the current keyed rows normally.
+	 */
+	private preserveHydratedContainer(): HTMLElement | undefined {
+		if (this.preservedHydratedContainer || !this.isConnected || !hasHydrationMarkers(this)) return undefined;
+		const container = this.renderedContainer();
+		if (container) this.preservedHydratedContainer = true;
+		return container;
+	}
+
+	private syncRows(initialIds: readonly string[]): void {
+		if (!this.form.ready || this.initializing || !this.config) return;
+		if (!this.initialized) {
+			this.initialized = true;
+			this.initializing = true;
+			try {
+				const array = this.form.fieldArray(this.config.name);
+				const currentIds = array.fields.map(({ id }) => id);
+				const count = Math.max(this.config.minItems ?? 0, initialIds.length) - currentIds.length;
+				if (count > 0) array.append(Array.from({ length: count }, () => this.emptyItem()));
+				const store = this.form.store;
+				const seededIds = array.fields.map(({ id }) => id);
+				if (store && initialIds.length === seededIds.length) {
+					adoptFieldArrayIds(store, this.config.name, initialIds);
+				}
+			} finally {
+				this.initializing = false;
 			}
-			const ids = this.ids;
-			if (ids.length !== this.renderedIds.length || ids.some((id, index) => id !== this.renderedIds[index])) {
-				this.renderedIds = ids;
-				this.requestUpdate();
-			}
+		}
+		const ids = this.ids;
+		if (ids.length !== this.renderedIds.length || ids.some((id, index) => id !== this.renderedIds[index])) {
+			this.renderedIds = ids;
+			this.requestUpdate();
+		}
+	}
+
+	private emptyItem(): unknown {
+		const values = this.form.ready ? this.form.getValues() : (this.config.initialFormValues ?? {});
+		return createArrayItemDefaultValue({
+			...this.config,
+			scalar: usesScalarArrayItem(this.config, this.config.name, this.config.elements, values),
 		});
+	}
+
+	protected override onConnected(): void {
+		const initialIds = this.initialIds();
+		this.renderedIds = initialIds;
+		this.form.connect(() => this.scheduleSync(initialIds));
+		if (this.form.ready) this.scheduleSync(initialIds);
+	}
+
+	private scheduleSync(initialIds: readonly string[]): void {
+		queueMicrotask(() => this.syncRows(initialIds));
 	}
 
 	override disconnectedCallback(): void {
 		this.form.disconnect();
+		this.unregisterArrayField?.();
+		this.unregisterArrayField = undefined;
+		this.isArrayFieldRegistered = false;
 		this.initialized = false;
+		this.initializing = false;
 		this.renderedIds = [];
 		super.disconnectedCallback();
 	}
@@ -134,8 +264,11 @@ export class SeFormArray extends RadiantElement {
 		if (!config) {
 			return null;
 		}
-
-		const isSingleField = config.elements.length === 1;
+		const hydratedContainer = this.preserveHydratedContainer();
+		if (hydratedContainer) return hydratedContainer;
+		const renderValues = this.form.ready ? this.form.getValues() : (config.initialFormValues ?? {});
+		const initialValues = this.rowInitialValues();
+		const isSingleField = usesScalarArrayItem(config, config.name, config.elements, renderValues);
 		const canAdd = !config.maxItems || this.ids.length < config.maxItems;
 		const canRemove = this.ids.length > (config.minItems ?? 0);
 		const removeLabel = config.removeButtonText || 'Remove item';
@@ -151,11 +284,13 @@ export class SeFormArray extends RadiantElement {
 						parentInstanceId: config.instanceId,
 					});
 					return (
-						<div class="se-form-array__item" key={id}>
+						<div class="se-form-array__item" key={id} data-se-row-id={id}>
 							<div class="se-form-array__fields">
 								<FormElements
 									elements={config.elements}
 									engine={this.resolveEngine()}
+									initialValues={initialValues}
+									values={renderValues}
 									namePrefix={scope.namePrefix}
 									nameStrategy={scope.nameStrategy}
 									instanceId={scope.instanceId}
@@ -184,19 +319,37 @@ export class SeFormArray extends RadiantElement {
 						{config.addButtonText || 'Add item'}
 					</RuiButton>
 				) : null}
+				<p class="rui-field__error" data-rui-field-error role="alert" hidden={!this.fieldError}>
+					{this.fieldError}
+				</p>
 			</div>
 		);
 	}
 }
 
 export function FormArrayElements(config: ArrayElementsProps) {
-	const fieldHost = mergeFieldGridHost(config.grid, config.style);
+	const { ssrInitialRows, initialFormValues, ...fieldConfig } = config;
+	const engine = resolveFormEngine();
+	const fieldHost = mergeFieldGridHost(fieldConfig.grid, fieldConfig.style, engine?.getGridTheme().id);
+	const arrayConfig = {
+		...fieldConfig,
+		ssrInitialRows: ssrInitialRows ?? [],
+		initialFormValues,
+	};
 
 	return (
 		<div class="se-form-field se-form-array-field" data-se-grid-theme={fieldHost.themeId} style={fieldHost.style}>
-			{config.label ? <p class="se-form-array-field__label">{config.label}</p> : null}
-			{config.description ? <p class="se-form-array-field__description">{config.description}</p> : null}
-			{jsx('se-form-array', { config, 'prop:engine': resolveFormEngine() })}
+			{fieldConfig.label ? (
+				<p class="se-form-array-field__label">
+					{fieldConfig.label}
+					{isFieldRequired(fieldConfig.rules) ? <span data-se-required-marker>{' *'}</span> : null}
+				</p>
+			) : null}
+			{fieldConfig.description ? <p class="se-form-array-field__description">{fieldConfig.description}</p> : null}
+			{jsx('se-form-array', {
+				config: arrayConfig,
+				'prop:engine': engine,
+			})}
 		</div>
 	);
 }

@@ -6,11 +6,48 @@ import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { evaluateConstraintLogic } from '@/hooks/constraint-logic';
 import { renderWithOwningFormEngine } from '@/contexts/form-engine-owner';
 import { ElementError } from './element-error';
+import { getValueAtPath } from '@schema-engine/forms/lib/path-values';
 
 /** Live values the constraint snapshot is evaluated against. */
 export interface ConstraintEvaluationContext {
 	values?: Record<string, unknown>;
+	initialValues?: Record<string, unknown>;
 	fieldPath?: string;
+}
+
+function addArrayInitialValues(
+	config: NormalizedElementConfig,
+	values: Record<string, unknown> | undefined,
+	initialValues: Record<string, unknown> | undefined,
+):
+	| NormalizedElementConfig
+	| (NormalizedElementConfig & {
+			ssrInitialRows: readonly unknown[];
+			initialFormValues: Record<string, unknown>;
+	  }) {
+	if (config.$type !== 'arrayElements') return config;
+	const path = 'name' in config ? config.name : '';
+	const configuredValues = getValueAtPath(values ?? initialValues ?? {}, path);
+	const defaultValues = 'defaultValue' in config ? config.defaultValue : undefined;
+	const rows = Array.isArray(configuredValues) ? configuredValues : Array.isArray(defaultValues) ? defaultValues : [];
+	const minItems = 'minItems' in config && typeof config.minItems === 'number' ? config.minItems : 0;
+	const count = Math.max(rows.length, minItems);
+	return {
+		...config,
+		ssrInitialRows: Array.from({ length: count }, (_, index) => rows[index]),
+		initialFormValues: initialValues ?? {},
+	};
+}
+
+function addFieldInitialValue(
+	config: NormalizedElementConfig,
+	initialValues: Record<string, unknown> | undefined,
+	fieldPath: string | undefined,
+): NormalizedElementConfig {
+	if (config.$type === 'arrayElements' || !initialValues || !fieldPath) return config;
+	const value = getValueAtPath(initialValues, fieldPath);
+	if (value === undefined) return config;
+	return { ...config, defaultValue: value } as NormalizedElementConfig;
 }
 
 /**
@@ -61,6 +98,16 @@ export function renderRegisteredElement(
 		},
 		overlays,
 	);
+	const withInitialValue = addFieldInitialValue(
+		enhancedConfig,
+		constraintContext?.initialValues,
+		constraintContext?.fieldPath ?? ('name' in config ? config.name : undefined),
+	);
+	const renderConfig = addArrayInitialValues(
+		withInitialValue,
+		constraintContext?.values,
+		constraintContext?.initialValues,
+	);
 
-	return renderWithOwningFormEngine(engine, () => elementRegistration.render(enhancedConfig) as JsxRenderable);
+	return renderWithOwningFormEngine(engine, () => elementRegistration.render(renderConfig) as JsxRenderable);
 }

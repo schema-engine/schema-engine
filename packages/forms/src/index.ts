@@ -66,6 +66,7 @@ export {
 	walkNamedElements,
 	walkLeafFields,
 	collectFieldDefaults,
+	usesScalarArrayItem,
 	flattenStepElements,
 } from './lib/field-scope';
 export type { FieldScope, FieldNameStrategy, FieldOverlay, NamedElementNode } from './lib/field-scope';

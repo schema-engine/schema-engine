@@ -143,6 +143,40 @@ describe('named element tree walk', () => {
 		]);
 	});
 
+	test('uses object item paths for a single child when row defaults are objects', () => {
+		const members = {
+			$type: 'arrayElements',
+			name: 'members',
+			initialValues: { role: 'viewer' },
+			elements: [{ $type: 'input', name: 'role' }],
+		};
+
+		expect(collectFieldDefaults([members], { members: [{ role: 'admin' }] })).toEqual([
+			{ name: 'members', defaultValue: undefined },
+			{ name: 'members.0.role', defaultValue: undefined },
+		]);
+	});
+
+	test('uses object item paths for a single fieldset child with nested defaults', () => {
+		const members = {
+			$type: 'arrayElements',
+			name: 'members',
+			elements: [
+				{
+					$type: 'fieldSet',
+					name: 'address',
+					elements: [{ $type: 'input', name: 'street', defaultValue: '1 Main' }],
+				},
+			],
+		};
+
+		expect(collectFieldDefaults([members])).toEqual([
+			{ name: 'members', defaultValue: undefined },
+			{ name: 'members.0.address', defaultValue: undefined },
+			{ name: 'members.0.address.street', defaultValue: '1 Main' },
+		]);
+	});
+
 	test('seeds minItems slots and nested array paths', () => {
 		const phones = {
 			$type: 'arrayElements',
