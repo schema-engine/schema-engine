@@ -1,14 +1,16 @@
 import * as z from 'zod/mini';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
 import { FormActionTriggerSchema } from '../triggers';
-import { GDPRConsent } from '../../tools/gdpr-consent';
+import { getAutoSaveDraftStorageKey, type AutoSaveStorage } from './auto-save.plugin';
 
 /**
  * Reset Plugin Configuration
  */
 export interface FormResetPluginConfig {
+	/** Storage used to remove a form's auto-saved draft. */
+	storage: AutoSaveStorage;
 	confirm?: (message: string) => boolean | Promise<boolean>;
-	clearDraft?: (formId: string) => void;
+	clearDraft?: (formId: string) => void | Promise<void>;
 	resetForm?: (context: BuilderActionExecutionContext<any>, resetToDefaults: boolean) => void;
 	onReset?: (context: BuilderActionExecutionContext<any>) => void;
 }
@@ -36,11 +38,12 @@ function defaultResetForm(context: BuilderActionExecutionContext<any>, _resetToD
 
 /** Creates a configured `reset` action registration. */
 export function formResetPlugin(
-	config: FormResetPluginConfig = {},
+	config: FormResetPluginConfig,
 ): BuilderActionRegistration<'reset', typeof FormResetActionSchema> {
 	const {
-		confirm = (message: string) => window.confirm(message),
-		clearDraft = (formId: string) => GDPRConsent.hasConsent() && GDPRConsent.clearDraft(formId),
+		storage,
+		confirm = () => false,
+		clearDraft = (formId: string) => storage.remove(getAutoSaveDraftStorageKey(formId)),
 		resetForm = defaultResetForm,
 		onReset = () => {},
 	} = config;
@@ -68,7 +71,7 @@ export function formResetPlugin(
 					}
 				}
 
-				clearDraft(context.formId);
+				await clearDraft(context.formId);
 				resetForm(context, action.resetToDefaults);
 				onReset(context);
 

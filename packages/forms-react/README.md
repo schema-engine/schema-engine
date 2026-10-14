@@ -527,7 +527,9 @@ Apply dynamic visibility and behavior based on form values:
 
 ### GDPR Consent
 
-Track and manage user consent with the `useGDPRConsent` hook (global consent state, not a per-field config property):
+Track and manage user consent with the `useGDPRConsent` hook (global consent
+state, not a per-field config property). The hook uses the browser tools from
+`@schema-engine/forms/browser`:
 
 ```typescript
 {
@@ -555,7 +557,8 @@ function ConsentStatus() {
 
 ### GTM Tracking
 
-Integrate Google Tag Manager for form analytics:
+Integrate Google Tag Manager for form analytics. The hook uses the browser
+tracker from `@schema-engine/forms/browser`:
 
 ```tsx
 import { useGTMTracker } from '@schema-engine/forms-react';

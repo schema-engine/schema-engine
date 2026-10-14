@@ -10,12 +10,9 @@
  * Or import multiple from this file:
  * @example
  * ```typescript
- * import { SubmitActionRegistration, ResetActionRegistration } from '@schema-engine/forms';
+ * import { SubmitActionRegistration, NotificationActionRegistration } from '@schema-engine/forms';
  * ```
  */
 
 export * from './form-submit.registration';
 export * from './notification.registration';
-export * from './form-reset.registration';
-export * from './auto-save.registration';
-export * from './gtm.registration';

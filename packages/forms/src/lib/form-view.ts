@@ -1,5 +1,6 @@
 import type { RecipeRegistration } from '@/types';
 import type { FormConfigView, NormalizedFormConfig } from '@/lib/normalized-form-config';
+import { logger } from '@/lib/logger';
 
 /** Implicit `view.$type` for multi-step forms that omit `view`. */
 export const DEFAULT_WIZARD_RECIPE = 'bare-controls';
@@ -49,7 +50,7 @@ function warnMissingDefaultWizard(lookup: object, config: FormConfigView) {
 	}
 	if (warned.has(config.id)) return;
 	warned.add(config.id);
-	console.warn(
+	logger.warn(
 		`Form '${config.id}' has ${config.steps.length} steps but no '${DEFAULT_WIZARD_RECIPE}' recipe is registered. ` +
 			'The form renders every step on a single page without a view layout. ' +
 			'Register a wizard recipe with createFormEngine({ recipes: [...] }) or set an explicit view.$type.',

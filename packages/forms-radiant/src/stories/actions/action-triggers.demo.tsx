@@ -4,6 +4,7 @@ import { RuiBadge } from '@ecopages/radiant-ui/badge';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { RuiHeading, RuiHeadingDescription, RuiHeadingTitle } from '@ecopages/radiant-ui/heading';
 import { formResetPlugin, formSubmitPlugin, FormActionTriggerSchema } from '@schema-engine/forms/actions';
+import { localStorageAutoSaveStorage } from '@schema-engine/forms/browser';
 import type {
 	ActionExecutionResult,
 	BuilderActionExecutionContext,
@@ -95,7 +96,7 @@ const demoEngine = createRadiantFormEngine({
 			request: async () =>
 				new Response(JSON.stringify({ received: true }), { headers: { 'content-type': 'application/json' } }),
 		}),
-		formResetPlugin({ confirm: () => true }),
+		formResetPlugin({ storage: localStorageAutoSaveStorage, confirm: () => true }),
 	],
 });
 

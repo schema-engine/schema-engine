@@ -1,4 +1,4 @@
-import { GTMTracker } from '@schema-engine/forms/tools/gtm-tracker';
+import { GTMTracker } from '@schema-engine/forms/browser';
 
 /**
  * Helper hook for GTM integration
