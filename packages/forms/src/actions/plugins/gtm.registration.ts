@@ -1,8 +1,8 @@
 /**
  * GTM Event Action Registration
  *
- * Pre-configured GTM event action with type augmentation.
- * Import this file to register the GTM event action type and get a default configuration.
+ * Pre-configured GTM event action.
+ * Register this declaration on your engine to enable the GTM event action type and get a default configuration.
  *
  * @example
  * ```typescript
@@ -14,17 +14,9 @@
  * ```
  */
 
-import { gtmPlugin, GTMEventActionSchema, type GTMEventAction } from './gtm.plugin';
+import { gtmPlugin, GTMEventActionSchema } from './gtm.plugin';
 import { logger } from '@/lib/logger';
 import type { BuilderActionRegistration } from '@/types';
-
-declare global {
-	namespace FormEngine {
-		interface ActionRegistry {
-			gtm_event: GTMEventAction;
-		}
-	}
-}
 
 /**
  * Default GTM Action Registration

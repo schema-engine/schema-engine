@@ -1,15 +1,6 @@
 import { FormMaskedInput } from './form-masked-input';
-import type { MaskedInputFieldConfig } from './form-masked-input.types';
 import { MaskedInputFieldSchema } from './form-masked-input.types';
 import { defineInput } from '@schema-engine/forms';
-
-declare global {
-	namespace FormEngine {
-		interface ElementRegistry {
-			'masked-input': MaskedInputFieldConfig;
-		}
-	}
-}
 
 export const MaskedInputElementRegistration = defineInput({
 	$type: 'masked-input',

@@ -1,8 +1,8 @@
 /**
  * Auto-Save Action Registration
  *
- * Pre-configured auto-save action with type augmentation.
- * Import this file to register the auto-save action type and get a default configuration.
+ * Pre-configured auto-save action.
+ * Register this declaration on your engine to enable the auto-save action type and get a default configuration.
  *
  * @example
  * ```typescript
@@ -14,17 +14,9 @@
  * ```
  */
 
-import { autoSavePlugin, AutoSaveActionSchema, type AutoSaveAction } from './auto-save.plugin';
+import { autoSavePlugin, AutoSaveActionSchema } from './auto-save.plugin';
 import { logger } from '@/lib/logger';
 import type { BuilderActionRegistration } from '@/types';
-
-declare global {
-	namespace FormEngine {
-		interface ActionRegistry {
-			auto_save: AutoSaveAction;
-		}
-	}
-}
 
 /**
  * Default Auto-Save Action Registration

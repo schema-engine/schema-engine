@@ -1,4 +1,4 @@
-import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 
 /**
  * Engine that owns the field currently being rendered.

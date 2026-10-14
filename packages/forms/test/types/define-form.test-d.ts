@@ -12,6 +12,13 @@ const noteSchema = z.object({
 	$type: z.literal('note'),
 	id: z.string(),
 	name: z.string(),
+	count: z._default(
+		z.pipe(
+			z.string(),
+			z.transform((value) => Number(value)),
+		),
+		0,
+	),
 });
 
 const noteElement = defineInput({
@@ -39,8 +46,8 @@ const cardRecipe = defineFormRecipe(
 
 const engine = createFormEngine({ elements: [noteElement], recipes: [cardRecipe] });
 
-type EngineElements = typeof engine extends FormEngine<infer E, infer _R, infer _A> ? E : never;
-type EngineRecipes = typeof engine extends FormEngine<infer _E, infer R, infer _A> ? R : never;
+type EngineElements = typeof engine extends FormEngine<infer E, infer _R, infer _A, infer _Outputs> ? E : never;
+type EngineRecipes = typeof engine extends FormEngine<infer _E, infer R, infer _A, infer _Outputs> ? R : never;
 type _noteIsRegistered = Assert<'note' extends keyof EngineElements ? true : false>;
 type _onlyNote = Assert<keyof EngineElements extends 'note' ? true : false>;
 type _cardIsRegistered = Assert<'card' extends keyof EngineRecipes ? true : false>;
@@ -253,6 +260,13 @@ const pingSchema = z.object({
 	id: z.string(),
 	$type: z.literal('ping'),
 	endpoint: z.string(),
+	retries: z._default(
+		z.pipe(
+			z.string(),
+			z.transform((value) => Number(value)),
+		),
+		1,
+	),
 });
 
 const pingAction = {
@@ -263,7 +277,7 @@ const pingAction = {
 };
 
 const actionEngine = createFormEngine({ elements: [noteElement], actions: [pingAction] });
-actionEngine.defineForm({
+const actionForm = actionEngine.defineForm({
 	id: 'actions-ok',
 	steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'note', id: 'n1', name: 'n1' }] }],
 	actions: [{ $type: 'ping', id: 'a1', endpoint: '/ping' }],
@@ -299,3 +313,59 @@ actionEngine.defineForm({
 		{ $type: 'ping', id: 'a1' },
 	],
 });
+
+const choiceElement = defineInput({
+	$type: 'choice',
+	schema: z.object({ $type: z.literal('choice'), name: z.string(), options: z.array(z.string()) }),
+	metadata: { name: 'Choice', category: 'input' },
+	render: () => null,
+});
+const choiceEngine = createFormEngine({ elements: [choiceElement] });
+const choiceForm = choiceEngine.defineForm({
+	id: 'choices',
+	steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'choice', name: 'answer', options: ['yes'] }] }],
+});
+type _noteSnapshotIsLocal = Assert<
+	(typeof defined.steps)[number]['elements'][number]['$type'] extends 'note' ? true : false
+>;
+type _choiceSnapshotIsLocal = Assert<
+	(typeof choiceForm.steps)[number]['elements'][number]['$type'] extends 'choice' ? true : false
+>;
+const _choiceOptions: readonly string[] = choiceForm.steps[0].elements[0].options;
+choiceEngine.defineForm({
+	id: 'wrong-engine',
+	steps: [
+		{
+			id: 'main',
+			title: 'Main',
+			elements: [
+				/* @ts-expect-error -- note belongs only to the other engine */
+				{ $type: 'note', name: 'answer', id: 'answer' },
+			],
+		},
+	],
+});
+engine.defineForm({
+	id: 'wrong-engine',
+	steps: [
+		{
+			id: 'main',
+			title: 'Main',
+			elements: [
+				/* @ts-expect-error -- choice belongs only to the other engine */
+				{ $type: 'choice', name: 'answer', options: ['yes'] },
+			],
+		},
+	],
+});
+
+const _normalizedCount: number = defined.steps[0].elements[0].count;
+const _normalizedRecipeTitle: string = defined.view!.header.title;
+const _normalizedRetries: number = actionForm.actions![0].retries;
+const extendedOutputs = engine.extend({ actions: [pingAction] });
+const _extendedCount: number = extendedOutputs.validateElement({ $type: 'note', name: 'n', id: 'n' }).count;
+
+type OpenInput = import('@/schemas/field-config').GetElementConfig<'custom'>;
+const _openInput: OpenInput = { $type: 'custom', name: 'custom' };
+type OpenView = import('@/schemas/field-config').GetViewConfig<'custom'>;
+const _openView: OpenView = { $type: 'custom' };

@@ -1,5 +1,5 @@
 import type { RecipeRegistration } from '@/types';
-import type { FormConfigView, NormalizedFormConfig } from '@/lib/normalized-form-config';
+import type { FormConfigView } from '@/lib/normalized-form-config';
 
 /** Implicit `view.$type` for multi-step forms that omit `view`. */
 export const DEFAULT_WIZARD_RECIPE = 'bare-controls';
@@ -123,7 +123,7 @@ export function getRenderableSteps<T extends FormConfigView>(
  * `FormProvider`): normalize once at the boundary, then pass the frozen
  * {@link NormalizedFormConfig} down. Renderers must not accept authoring input.
  */
-export function assertFormEngine<E extends { validateForm: (config: unknown) => NormalizedFormConfig }>(
+export function assertFormEngine<E extends { validateForm: (config: unknown) => unknown }>(
 	engine: E | undefined,
 	config: FormConfigView,
 ): asserts engine is E {

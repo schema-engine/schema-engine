@@ -1,7 +1,9 @@
+import type { EngineOutputMaps } from '@schema-engine/forms/engine/form-engine';
 import type { ElementConfig, FormActionConfig, FormConfig } from '@schema-engine/forms/schemas';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
 import type { FieldArrayValue } from '@schema-engine/forms/adapters';
 import type { ReactNode, RefCallback } from 'react';
+import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine';
 
 export interface FormContextValue<TFormData = Record<string, unknown>> {
 	getValues: () => TFormData;
@@ -34,9 +36,19 @@ export type { FieldArrayValue };
 /**
  * Props for the FormProvider component
  */
-export interface FormProviderProps<TFormData = Record<string, unknown>> {
+export interface FormProviderProps<
+	TFormData = Record<string, unknown>,
+	TElements extends Record<string, unknown> = Record<string, unknown>,
+	TRecipes extends Record<string, unknown> = Record<string, unknown>,
+	TActions extends Record<string, unknown> = Record<string, unknown>,
+	TOutputs extends EngineOutputMaps = EngineOutputMaps,
+> {
 	/** Form configuration object defining structure, rules, and actions */
-	config: FormConfig | NormalizedFormConfig;
+	config:
+		| FormConfig<TElements, TRecipes, TActions>
+		| NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>;
+	/** Engine used to author and normalize this form. */
+	engine?: FormEngine<TElements, TRecipes, TActions, TOutputs>;
 	/** Optional default values for form fields */
 	defaultValues?: Partial<TFormData>;
 	/** React children to render inside the form context */
@@ -46,7 +58,7 @@ export interface FormProviderProps<TFormData = Record<string, unknown>> {
 	/** Callback function executed whenever form data changes */
 	onChange?: (data: Partial<TFormData>) => void;
 	/** Callback function executed when a form action is triggered */
-	onAction?: (action: FormActionConfig, data: TFormData) => void | Promise<void>;
+	onAction?: (action: FormActionConfig<TOutputs['actions']>, data: TFormData) => void | Promise<void>;
 }
 
 /**
@@ -57,11 +69,17 @@ export interface FormProviderProps<TFormData = Record<string, unknown>> {
  * (`trigger`, `setValue`, `setFocus`) rather than adapter-specific helper
  * methods so different implementations can stay aligned.
  */
-export interface FormAdapter<TFormData = Record<string, unknown>> {
+export interface FormAdapter<
+	TFormData = Record<string, unknown>,
+	TElements extends Record<string, unknown> = Record<string, unknown>,
+	TRecipes extends Record<string, unknown> = Record<string, unknown>,
+	TActions extends Record<string, unknown> = Record<string, unknown>,
+	TOutputs extends EngineOutputMaps = EngineOutputMaps,
+> {
 	/** Hook to access form context (values, errors, state) */
 	useFormContext: () => FormContextValue<TFormData>;
 	/** Hook to register and manage a specific form field */
-	useFormField: <TFieldValue = unknown>(config: ElementConfig) => FormFieldValue<TFieldValue>;
+	useFormField: <TFieldValue = unknown>(config: ElementConfig<TElements>) => FormFieldValue<TFieldValue>;
 	/** Hook to watch a specific field value */
 	useWatchField: <TWatchValue = unknown>(name: string | string[]) => TWatchValue;
 	/** Hook to watch the entire form value tree */
@@ -69,5 +87,5 @@ export interface FormAdapter<TFormData = Record<string, unknown>> {
 	/** Hook to manage a field array */
 	useFieldArray: (name: string) => FieldArrayValue;
 	/** The FormProvider component to wrap the form */
-	FormProvider: React.ComponentType<FormProviderProps<TFormData>>;
+	FormProvider: React.ComponentType<FormProviderProps<TFormData, TElements, TRecipes, TActions, TOutputs>>;
 }

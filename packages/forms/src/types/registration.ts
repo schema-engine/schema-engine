@@ -5,13 +5,6 @@ import type { BuilderActionBaseContext, BuilderActionTrigger } from './actions.j
 import type { ActionRegistration, ActionConfigBase } from '@schema-engine/actions';
 import type { AnyValidationRegistration } from '@/schemas/validation/types';
 
-declare global {
-	namespace FormEngine {
-		interface ElementRegistry {}
-		interface RecipeRegistry {}
-	}
-}
-
 /**
  * Input element registration - form inputs, selects, checkboxes, and interactive elements.
  *

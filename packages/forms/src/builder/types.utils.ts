@@ -27,9 +27,12 @@ export type ExtractSchemaOutput<TSchema> = TSchema extends StandardSchemaV1
  */
 export type ExtractTypeId<T> = T extends { $type: infer K } ? K : never;
 
-type ConfigMapFromRegistration<R> = R extends { $type: infer K extends string; schema: infer S }
+type ConfigMapFromRegistration<R, TOutput extends boolean = false> = R extends {
+	$type: infer K extends string;
+	schema: infer S;
+}
 	? S extends StandardSchemaV1
-		? Record<K, ExtractSchemaType<S>>
+		? Record<K, TOutput extends true ? Omit<StandardSchemaV1.InferOutput<S>, '$type'> : ExtractSchemaType<S>>
 		: Record<never, never>
 	: Record<never, never>;
 
@@ -42,9 +45,11 @@ type UnionMergeMaps<U> = {
 	[K in U extends unknown ? keyof U : never]: U extends Record<K, infer V> ? V : never;
 };
 
-export type MergeRegistrationMaps<T extends readonly unknown[]> = [T[number]] extends [never]
+export type MergeRegistrationMaps<T extends readonly unknown[], TOutput extends boolean = false> = [T[number]] extends [
+	never,
+]
 	? Record<never, never>
-	: UnionMergeMaps<ConfigMapFromRegistration<T[number]>>;
+	: UnionMergeMaps<ConfigMapFromRegistration<T[number], TOutput>>;
 
 /** Later keys in `Override` replace matching keys in `Base`. Empty override maps preserve `Base`. */
 export type LastWinsMerge<Base extends Record<string, unknown>, Override extends Record<string, unknown>> = [
@@ -55,11 +60,11 @@ export type LastWinsMerge<Base extends Record<string, unknown>, Override extends
 
 type IsFixedLengthTuple<T extends readonly unknown[]> = number extends T['length'] ? false : true;
 
-type FoldRegistrationMapsLastWins<T extends readonly unknown[]> = T extends readonly [
+type FoldRegistrationMapsLastWins<T extends readonly unknown[], TOutput extends boolean = false> = T extends readonly [
 	infer Head,
 	...infer Tail extends readonly unknown[],
 ]
-	? LastWinsMerge<ConfigMapFromRegistration<Head>, FoldRegistrationMapsLastWins<Tail>>
+	? LastWinsMerge<ConfigMapFromRegistration<Head, TOutput>, FoldRegistrationMapsLastWins<Tail, TOutput>>
 	: Record<never, never>;
 
 /**
@@ -68,11 +73,13 @@ type FoldRegistrationMapsLastWins<T extends readonly unknown[]> = T extends read
  * - Tuple / inline arrays: last-wins in the type.
  * - Open arrays (`T[]`): union of configs for the same `$type`.
  */
-export type MergeRegistrationMapsLastWins<T extends readonly unknown[]> = [T[number]] extends [never]
+export type MergeRegistrationMapsLastWins<T extends readonly unknown[], TOutput extends boolean = false> = [
+	T[number],
+] extends [never]
 	? Record<never, never>
 	: IsFixedLengthTuple<T> extends true
-		? FoldRegistrationMapsLastWins<T>
-		: MergeRegistrationMaps<T>;
+		? FoldRegistrationMapsLastWins<T, TOutput>
+		: MergeRegistrationMaps<T, TOutput>;
 
 /** Engine element/recipe map for a registration list (see {@link MergeRegistrationMapsLastWins}). */
 export type MergedRegistrationMap<T extends readonly unknown[]> = AsRegistrationMap<MergeRegistrationMapsLastWins<T>>;
@@ -135,3 +142,12 @@ export type ActionRegistrationConstraint = {
 	readonly metadata: { readonly name: string };
 	readonly execute: (...args: never[]) => unknown;
 };
+
+/** Parsed config maps retain defaults and transforms independently of authoring input. */
+export interface EngineOutputMaps {
+	elements: Record<string, unknown>;
+	recipes: Record<string, unknown>;
+	actions: Record<string, unknown>;
+}
+
+export type MergedOutputMap<T extends readonly unknown[]> = AsRegistrationMap<MergeRegistrationMapsLastWins<T, true>>;

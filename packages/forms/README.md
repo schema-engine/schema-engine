@@ -154,3 +154,15 @@ checks when `view.$type` is set.
 | Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Copied React widgets, colocated field schemas, and view recipes for the React adapter                                     |
 
 Custom fields use `defineInput` with any Standard Schema. Default widgets ship their own Zod schemas beside their registrations; those schemas are not engine contracts and may differ between React and Radiant.
+
+### Engine-scoped config types
+
+Element, recipe, and action config types come from the registrations passed to
+`createFormEngine`. Two engines may expose different element sets independently.
+Use `engine.defineForm` to infer authoring input and normalized output for that
+engine. Generic `FormConfig` and `NormalizedFormConfig` types accept the engine
+maps; their defaults describe an open config for helpers without a concrete engine.
+`FormEngine` keeps schema input maps separate from its fourth generic, the parsed
+output maps, so defaults and transforms appear correctly in normalized configs.
+Renderers store the `FormEngineRuntime` contract, which omits registration extension.
+Registration files no longer augment a global `FormEngine` namespace.

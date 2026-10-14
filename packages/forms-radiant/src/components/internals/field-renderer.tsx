@@ -1,6 +1,6 @@
 import type { JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import type { NormalizedElementConfig } from '@schema-engine/forms';
-import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { renderRegisteredElement } from './render-registered-element';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';

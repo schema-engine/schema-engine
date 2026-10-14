@@ -1,4 +1,4 @@
-import type { FormEngine as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { FormProviderProps } from '../types';
 import { assertFormEngine } from '@schema-engine/forms';
 import { FormInstance } from '@/components/form-instance';

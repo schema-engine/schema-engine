@@ -180,3 +180,15 @@ pnpm storybook   # port 6007
 From monorepo root: `pnpm dev:radiant-storybook`.
 
 Stories default to **client** render. Use the Storybook toolbar **Radiant render** control to spot-check `ssr-hydrate` and `ssr-static` on any story — same contract as radiant-ui. Play functions skip `ssr-static` (markup-only iframe, no client module). SSR layout acceptance renders the real `RecipeRenderer` through `renderToString`: `test/ssr/grid-layout-ssr.markup.test.ts` checks the emitted stylesheet and field variables, and `test/ssr/grid-layout-ssr.acceptance.browser.test.ts` loads that HTML in an isolated iframe without app JS and checks layout at two widths. Both share `test-utils/` with the React package.
+
+### Engine-scoped config types
+
+Element, recipe, and action config types come from the registrations passed to
+`createFormEngine`. Two engines may expose different element sets independently.
+Use `engine.defineForm` to infer authoring input and normalized output for that
+engine. Generic `FormConfig` and `NormalizedFormConfig` types accept the engine
+maps; their defaults describe an open config for helpers without a concrete engine.
+`FormEngine` keeps schema input maps separate from its fourth generic, the parsed
+output maps, so defaults and transforms appear correctly in normalized configs.
+Renderers store the `FormEngineRuntime` contract, which omits registration extension.
+Registration files no longer augment a global `FormEngine` namespace.

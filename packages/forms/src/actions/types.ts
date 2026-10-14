@@ -1,46 +1,29 @@
 import * as z from 'zod/mini';
+import type { ActionConfigBase } from '@schema-engine/actions';
 import { FormSubmitActionSchema } from './plugins/form-submit.plugin';
 import { FormResetActionSchema } from './plugins/form-reset.plugin';
 import { NotificationActionSchema } from './plugins/notification.plugin';
 import { AutoSaveActionSchema } from './plugins/auto-save.plugin';
 import { GTMEventActionSchema } from './plugins/gtm.plugin';
 
-/**
- * Global Action Registry
- *
- * Extension point for registering custom action types via global namespace augmentation.
- * External packages can extend this interface to add their action schemas.
- *
- * @example
- * ```typescript
- * declare global {
- *   namespace FormEngine {
- *     interface ActionRegistry {
- *       my_custom_action: MyCustomActionConfig;
- *     }
- *   }
- * }
- * ```
- */
-declare global {
-	namespace FormEngine {
-		interface ActionRegistry {}
-	}
-}
-
-/**
- * Form Action Configuration Union
- *
- * Union of all registered action types from FormEngine.ActionRegistry.
- * TypeScript can automatically infer the correct action type based on the '$type' field.
- */
-export type FormActionConfig = FormEngine.ActionRegistry[keyof FormEngine.ActionRegistry];
+/** Action configs accepted by an engine's registered action map. */
+export type FormActionConfig<TActions extends Record<string, unknown> = Record<string, unknown>> =
+	string extends keyof TActions
+		? ActionConfigBase<string> & { [key: string]: unknown }
+		: [keyof TActions] extends [never]
+			? never
+			: {
+					[K in keyof TActions & string]: { readonly $type: K } & TActions[K] &
+						ActionConfigBase<K> & {
+							[key: string]: unknown;
+						};
+				}[keyof TActions & string];
 
 /**
  * Form Action Configuration Schema
  *
- * Union schema for all built-in form action plugins.
- * This creates a discriminated union based on the '$type' field.
+ * This runtime schema covers the built-in form action plugins. Each engine
+ * applies the schemas of the actions it has registered.
  */
 export const FormActionConfigSchema = z.discriminatedUnion('$type', [
 	FormSubmitActionSchema,

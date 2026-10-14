@@ -8,7 +8,7 @@
 import type { ReactNode } from 'react';
 import { FormEngineProvider } from '@/components/form-engine-provider';
 import { getEngine as getDefaultEngine, rhfAdapter } from './form-builder.ui';
-import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 
 const defaultFormEngine = getDefaultEngine();
 

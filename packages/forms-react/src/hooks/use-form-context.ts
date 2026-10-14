@@ -1,5 +1,6 @@
 import { useContext, useMemo } from 'react';
 import type { StepStates } from '@schema-engine/forms';
+import type { EngineOutputMaps } from '@schema-engine/forms/engine/form-engine';
 import { getDefaultGridTheme } from '@schema-engine/forms/lib/grid-styles';
 import { useFormContext as useAdapterFormContext } from '@/adapters/context';
 import { FormEngineContext, FormInstanceContext } from '../components/provider';
@@ -31,16 +32,27 @@ export function useFormInstanceActions(): FormInstanceContextValue & { stepState
  * Hook to access the form engine context
  * Must be used within a FormEngineProvider
  */
-export function useFormEngine(): FormEngineContextValue {
+export function useFormEngine<
+	TElements extends Record<string, unknown> = Record<string, unknown>,
+	TRecipes extends Record<string, unknown> = Record<string, unknown>,
+	TActions extends Record<string, unknown> = Record<string, unknown>,
+	TOutputs extends EngineOutputMaps = EngineOutputMaps,
+>(): FormEngineContextValue<TElements, TRecipes, TActions, TOutputs> {
 	const context = useContext(FormEngineContext);
 	if (!context) {
 		throw new Error('useFormEngine must be used within a FormEngineProvider');
 	}
-	return context;
+	return context as unknown as FormEngineContextValue<TElements, TRecipes, TActions, TOutputs>;
 }
 
-export function useOptionalFormEngine(): FormEngineContextValue | null {
-	return useContext(FormEngineContext);
+export function useOptionalFormEngine<
+	TElements extends Record<string, unknown> = Record<string, unknown>,
+	TRecipes extends Record<string, unknown> = Record<string, unknown>,
+	TActions extends Record<string, unknown> = Record<string, unknown>,
+	TOutputs extends EngineOutputMaps = EngineOutputMaps,
+>(): FormEngineContextValue<TElements, TRecipes, TActions, TOutputs> | null {
+	const context = useContext(FormEngineContext);
+	return context ? (context as unknown as FormEngineContextValue<TElements, TRecipes, TActions, TOutputs>) : null;
 }
 
 /**

@@ -9,7 +9,6 @@ import {
 	splitScreenSpec,
 	splitScreenWizardSpec,
 	wizardSpec,
-	type BuiltInRecipeRegistry,
 	type RecipeSpec,
 } from '@schema-engine/forms/recipes';
 import {
@@ -21,12 +20,6 @@ import {
 } from '@/components/blocks';
 import { CardShell, HeroShell, SidebarShell, SplitScreenShell, StackShell } from '@/components/shells';
 import type { RadiantRecipeAdapterPayload } from './types';
-
-declare global {
-	namespace FormEngine {
-		interface RecipeRegistry extends BuiltInRecipeRegistry {}
-	}
-}
 
 function bind<TSpec extends RecipeSpec>(spec: TSpec, render: RadiantRecipeAdapterPayload) {
 	return defineFormRecipe(spec, render);

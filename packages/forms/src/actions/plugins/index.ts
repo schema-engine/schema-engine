@@ -11,7 +11,7 @@ export * from './notification.plugin';
 export * from './form-reset.plugin';
 export * from './form-submit.plugin';
 
-/** Pre-configured registrations with automatic type augmentation. */
+/** Pre-configured registrations for engine action maps. */
 export * from './auto-save.registration';
 export * from './gtm.registration';
 export * from './notification.registration';

@@ -376,7 +376,7 @@ export function validateFormConfig(config: unknown, options: ValidateFormOptions
 			})),
 			view: view.view ?? envelope.view,
 			actions: formActions.items ?? envelope.actions,
-		} as FormConfig,
+		} as unknown as FormConfig,
 		options.owner,
 	);
 }

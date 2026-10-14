@@ -1,92 +1,41 @@
-import type { BaseField } from './base-field';
+import type { AuthoringElement } from '@/builder/form-authoring';
+import type { FormViewConfig } from './form-config';
+import type { BaseFieldInput } from './base-field';
+
+/** Open field config used by helpers that do not receive an engine type. */
+export type UnregisteredElementConfig = BaseFieldInput & {
+	[key: string]: unknown;
+	elements?: UnregisteredElementConfig[];
+};
 
 /**
- * Extensible field configuration system
- * Uses global namespace augmentation to allow library users to add their own field types
+ * Element configs accepted by a particular engine.
+ *
+ * @remarks
+ * The open default supports utilities that receive configs without an engine.
+ * A concrete registration map narrows `$type` and each schema's input shape.
  */
+export type ElementConfig<TElements extends Record<string, unknown> = Record<string, unknown>> =
+	string extends keyof TElements
+		? UnregisteredElementConfig
+		: AuthoringElement<TElements> & BaseFieldInput & { [key: string]: unknown };
 
-/**
- * Global registry for fsield configurations
- * This interface can be extended by library users to add their own field types
- */
-declare global {
-	namespace FormEngine {
-		/**
-		 * Element/Field configuration registry
-		 * Augment this interface to register element types.
-		 * Each registration file imports its type and augments this interface.
-		 *
-		 * @example
-		 * ```ts
-		 * declare global {
-		 *   namespace FormEngine {
-		 *     interface ElementRegistry {
-		 *       myCustomField: MyCustomFieldConfig;
-		 *     }
-		 *   }
-		 * }
-		 * ```
-		 */
-		interface ElementRegistry {}
+export type ElementId<TElements extends Record<string, unknown> = Record<string, unknown>> =
+	keyof TElements extends never ? string : keyof TElements & string;
 
-		/**
-		 * View recipe configuration registry
-		 * Augment this interface to register view recipe types.
-		 */
-		interface RecipeRegistry {}
+export type GetElementConfig<
+	TType extends ElementId<TElements>,
+	TElements extends Record<string, unknown> = Record<string, unknown>,
+> = string extends keyof TElements
+	? UnregisteredElementConfig & { $type: TType }
+	: Extract<ElementConfig<TElements>, { $type: TType }>;
 
-		/**
-		 * Union of all registered view recipe configurations
-		 */
-		type ViewConfig = [keyof RecipeRegistry] extends [never]
-			? import('../schemas/form-config').FormViewConfig & Record<string, unknown>
-			: RecipeRegistry[keyof RecipeRegistry];
+/** Form view config when no concrete recipe map is available. */
+export type ViewConfig = { $type: string } & { [key: string]: unknown };
 
-		/**
-		 * Union of all registered recipe IDs
-		 */
-		type RecipeId = [keyof RecipeRegistry] extends [never] ? string : ViewConfig['$type'];
+export type RecipeId<TRecipes extends Record<string, unknown> = Record<string, unknown>> = keyof TRecipes & string;
 
-		/**
-		 * Get view configuration by recipe ID
-		 */
-		type GetViewConfig<T extends RecipeId> = Extract<ViewConfig, { $type: T }>;
-
-		/**
-		 * Union of all registered element configurations
-		 * This type is automatically updated when new element types are registered
-		 */
-		type UnregisteredElementConfig = BaseField &
-			Record<string, unknown> & {
-				elements?: UnregisteredElementConfig[];
-			};
-
-		/**
-		 * Before a UI package registers any fields, keep the headless builder
-		 * usable with open-ended custom configurations. Once registrations are
-		 * present, the concrete discriminated union is used instead.
-		 */
-		type ElementConfig = keyof ElementRegistry extends never
-			? UnregisteredElementConfig
-			: ElementRegistry[keyof ElementRegistry];
-
-		/**
-		 * Union of all registered element IDs
-		 * This creates a union type like: "input" | "textarea" | "select" | ...
-		 */
-		type ElementId = ElementConfig['$type'];
-
-		/**
-		 * Get element configuration by element ID
-		 */
-		type GetElementConfig<T extends ElementId> = Extract<ElementConfig, { $type: T }>;
-	}
-}
-
-export type UnregisteredElementConfig = FormEngine.UnregisteredElementConfig;
-export type ElementConfig = FormEngine.ElementConfig;
-export type ElementId = FormEngine.ElementId;
-export type GetElementConfig<T extends ElementId> = FormEngine.GetElementConfig<T>;
-export type ViewConfig = FormEngine.ViewConfig;
-export type RecipeId = FormEngine.RecipeId;
-export type GetViewConfig<T extends RecipeId> = FormEngine.GetViewConfig<T>;
+export type GetViewConfig<
+	TType extends RecipeId<TRecipes>,
+	TRecipes extends Record<string, unknown> = Record<string, unknown>,
+> = string extends keyof TRecipes ? ViewConfig & { $type: TType } : Extract<FormViewConfig<TRecipes>, { $type: TType }>;

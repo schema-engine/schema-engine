@@ -11,8 +11,13 @@ import { CheckboxElementRegistration } from '@/components/schema-engine/forms/in
 import { NumberElementRegistration } from '@/components/schema-engine/forms/inputs/form-number.registration';
 import { ArrayElementRegistration } from '@/components/schema-engine/forms/inputs/form-array-elements.registration';
 import type { InputFieldConfig } from '@/components/schema-engine/forms/inputs/form-input.types';
+import type { FormEngine } from '@schema-engine/forms/engine';
+import type { ElementConfig } from '@schema-engine/forms/schemas';
 
 type Assert<T extends true> = T;
+
+type EngineElementMap<TEngine> =
+	TEngine extends FormEngine<infer TElements, infer _TRecipes, infer _TActions, infer _Outputs> ? TElements : never;
 
 const engine = createFormEngine({
 	elements: [
@@ -24,6 +29,8 @@ const engine = createFormEngine({
 		ArrayElementRegistration,
 	],
 });
+
+type EngineElementConfig = ElementConfig<EngineElementMap<typeof engine>>;
 
 engine.defineForm({
 	id: 'array-authoring',
@@ -126,12 +133,12 @@ engine.defineForm({
 	],
 });
 
-function assertInputElement(element: Extract<FormEngine.ElementConfig, { $type: 'input' }>) {
+function assertInputElement(element: Extract<EngineElementConfig, { $type: 'input' }>) {
 	const _inputType: InputFieldConfig['inputType'] = element.inputType;
 	void _inputType;
 }
 
-function assertSelectElement(element: Extract<FormEngine.ElementConfig, { $type: 'select' }>) {
+function assertSelectElement(element: Extract<EngineElementConfig, { $type: 'select' }>) {
 	const _options: typeof element.options = element.options;
 	void _options;
 }
@@ -157,7 +164,7 @@ const fieldConfigs = [
 		id: 'agree',
 		name: 'agree',
 	},
-] satisfies FormEngine.ElementConfig[];
+] satisfies EngineElementConfig[];
 
 for (const element of fieldConfigs) {
 	switch (element.$type) {
@@ -182,13 +189,13 @@ const _invalidElement = {
 	$type: 'not-a-registered-element',
 	id: 'x',
 	name: 'x',
-} satisfies FormEngine.ElementConfig;
+} satisfies EngineElementConfig;
 
 const _defaultInput = {
 	$type: 'input',
 	id: 'x',
 	name: 'x',
-} satisfies FormEngine.ElementConfig;
+} satisfies EngineElementConfig;
 
 void engine;
 void fieldConfigs;

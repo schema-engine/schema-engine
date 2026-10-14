@@ -1,5 +1,5 @@
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
-import type { FormEngine as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import { applyFieldOverlay } from '@schema-engine/forms';
 import type { NormalizedElementConfig, FieldOverlay } from '@schema-engine/forms';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';

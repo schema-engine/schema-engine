@@ -1,8 +1,8 @@
 /**
  * Reset Action Registration
  *
- * Pre-configured reset action with type augmentation.
- * Import this file to register the reset action type and get a default configuration.
+ * Pre-configured reset action.
+ * Register this declaration on your engine to enable the reset action type and get a default configuration.
  *
  * @example
  * ```typescript
@@ -14,17 +14,9 @@
  * ```
  */
 
-import { formResetPlugin, FormResetActionSchema, type FormResetAction } from './form-reset.plugin';
+import { formResetPlugin, FormResetActionSchema } from './form-reset.plugin';
 import { logger } from '@/lib/logger';
 import type { BuilderActionRegistration } from '@/types';
-
-declare global {
-	namespace FormEngine {
-		interface ActionRegistry {
-			reset: FormResetAction;
-		}
-	}
-}
 
 /**
  * Default Reset Action Registration

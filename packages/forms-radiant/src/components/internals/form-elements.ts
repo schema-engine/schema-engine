@@ -6,7 +6,7 @@ import {
 	composeFieldName,
 	type NormalizedElementConfig,
 } from '@schema-engine/forms';
-import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { FormElement } from './field-renderer';
 
 export interface FormElementsProps {

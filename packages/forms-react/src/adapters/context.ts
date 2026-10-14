@@ -1,15 +1,22 @@
+import type { EngineOutputMaps } from '@schema-engine/forms/engine/form-engine';
 import { createContext, useContext } from 'react';
 import type { FormAdapter } from './types';
 import type { ElementConfig } from '@schema-engine/forms/schemas';
 
 export const FormAdapterContext = createContext<FormAdapter | null>(null);
 
-export function useFormAdapter<TFormData = Record<string, unknown>>(): FormAdapter<TFormData> {
+export function useFormAdapter<
+	TFormData = Record<string, unknown>,
+	TElements extends Record<string, unknown> = Record<string, unknown>,
+	TRecipes extends Record<string, unknown> = Record<string, unknown>,
+	TActions extends Record<string, unknown> = Record<string, unknown>,
+	TOutputs extends EngineOutputMaps = EngineOutputMaps,
+>(): FormAdapter<TFormData, TElements, TRecipes, TActions, TOutputs> {
 	const adapter = useContext(FormAdapterContext);
 	if (!adapter) {
 		throw new Error('useFormAdapter must be used within a FormEngine with a valid adapter');
 	}
-	return adapter as FormAdapter<TFormData>;
+	return adapter as unknown as FormAdapter<TFormData, TElements, TRecipes, TActions, TOutputs>;
 }
 
 export function useFormContext<TFormData = Record<string, unknown>>() {

@@ -6,8 +6,9 @@ engine from [@schema-engine/actions](../../../actions).
 
 ## Built-in registrations
 
-Import the registrations you need from `@schema-engine/forms`. Importing a
-registration also adds its `$type` to the form action configuration types.
+Import the registrations you need from `@schema-engine/forms` and pass them to
+`createFormEngine`. Each registration contributes its `$type` and schema to that
+engine's action configuration types.
 
 ```typescript
 import {
@@ -185,14 +186,6 @@ const ActionSchema = z.object({
 
 type Action = z.infer<typeof ActionSchema>;
 
-declare global {
-	namespace FormEngine {
-		interface ActionRegistry {
-			log_message: Action;
-		}
-	}
-}
-
 const logMessage: BuilderActionRegistration<'log_message', typeof ActionSchema> = {
 	$type: 'log_message',
 	schema: ActionSchema,
@@ -210,3 +203,6 @@ const logMessage: BuilderActionRegistration<'log_message', typeof ActionSchema> 
 The execution context contains the parsed action `config`, the current form
 state, and the triggering event. See [@schema-engine/actions](../../../actions)
 for the generic registration and execution contracts.
+
+Register the action in `createFormEngine({ actions: [logMessage] })`. Its schema
+then contributes to that engine's action config type; no global augmentation is required.
