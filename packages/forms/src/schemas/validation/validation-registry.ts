@@ -117,7 +117,7 @@ export class ValidationRegistry {
 		try {
 			return registration.handler(rule, context);
 		} catch (error) {
-			console.error(`Failed to create schema for validation rule '${rule.type}':`, error);
+			logger.error(`Failed to create schema for validation rule '${rule.type}'`, { error });
 			return null;
 		}
 	}

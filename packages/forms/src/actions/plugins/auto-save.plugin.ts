@@ -19,7 +19,9 @@ export interface AutoSaveStorage {
  */
 export interface AutoSavePluginConfig {
 	/** Custom storage implementation */
-	storage?: AutoSaveStorage;
+	storage: AutoSaveStorage;
+	/** Checks whether saving is currently allowed, for example by a consent tool. */
+	shouldSave?: () => boolean | Promise<boolean>;
 	/** Called when auto-save succeeds */
 	onSave?: (data: unknown, context: BuilderActionExecutionContext<any>) => void | Promise<void>;
 	/** Called when auto-save fails */
@@ -48,29 +50,37 @@ export const AutoSaveActionSchema = z.object({
 
 export type AutoSaveAction = z.infer<typeof AutoSaveActionSchema>;
 
-const defaultStorage: AutoSaveStorage = {
-	save: (key: string, data: unknown) => {
-		localStorage.setItem(key, JSON.stringify(data));
-	},
-	load: (key: string) => {
-		const stored = localStorage.getItem(key);
-		return stored ? JSON.parse(stored) : null;
-	},
-	remove: (key: string) => {
-		localStorage.removeItem(key);
-	},
-};
+const autoSaveDraftKeyPrefix = 'autosave_';
+
+/** Builds the default storage key shared by auto-save and reset actions. */
+export function getAutoSaveDraftStorageKey(formId: string): string {
+	return `${autoSaveDraftKeyPrefix}${formId}`;
+}
+
+/** Identifies storage entries owned by the default auto-save key scheme. */
+export function isAutoSaveDraftStorageKey(key: string): boolean {
+	return key.startsWith(autoSaveDraftKeyPrefix);
+}
 
 /** Creates a configured `auto_save` action registration. */
 export function autoSavePlugin(
-	config: AutoSavePluginConfig = {},
+	config: AutoSavePluginConfig,
 ): BuilderActionRegistration<'auto_save', typeof AutoSaveActionSchema> {
-	const storage = config.storage || defaultStorage;
+	const { storage } = config;
 
 	const handler = async (context: BuilderActionExecutionContext<AutoSaveAction>) => {
 		const action = context.config;
 		try {
-			const storageKey = action.storageKey || config.getStorageKey?.(context) || `autosave_${context.formId}`;
+			if (config.shouldSave && !(await config.shouldSave())) {
+				return {
+					success: true,
+					message: 'Auto-save skipped because permission was not granted',
+					shouldContinue: true,
+				};
+			}
+
+			const storageKey =
+				action.storageKey || config.getStorageKey?.(context) || getAutoSaveDraftStorageKey(context.formId);
 
 			const formData = context.formData;
 

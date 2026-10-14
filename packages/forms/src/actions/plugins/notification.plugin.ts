@@ -1,5 +1,6 @@
 import * as z from 'zod/mini';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
+import { logger } from '@/lib/logger';
 import { FormActionTriggerSchema } from '../triggers';
 
 /**
@@ -62,28 +63,28 @@ export function notificationPlugin(
 						if (config.onSuccess) {
 							await config.onSuccess(message, context);
 						} else {
-							console.log('success', { formId: context.formId, message });
+							logger.info('success', { formId: context.formId, message });
 						}
 						break;
 					case 'error':
 						if (config.onError) {
 							await config.onError(message, context);
 						} else {
-							console.error('error', { formId: context.formId, message });
+							logger.error('error', { formId: context.formId, message });
 						}
 						break;
 					case 'warning':
 						if (config.onWarning) {
 							await config.onWarning(message, context);
 						} else {
-							console.warn('warning', { formId: context.formId, message });
+							logger.warn('warning', { formId: context.formId, message });
 						}
 						break;
 					case 'info':
 						if (config.onInfo) {
 							await config.onInfo(message, context);
 						} else {
-							console.info('info', { formId: context.formId, message });
+							logger.info('info', { formId: context.formId, message });
 						}
 						break;
 				}

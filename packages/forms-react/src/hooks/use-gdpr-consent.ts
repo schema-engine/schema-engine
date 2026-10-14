@@ -1,4 +1,4 @@
-import { GDPRConsent } from '@schema-engine/forms/tools/gdpr-consent';
+import { GDPRConsent } from '@schema-engine/forms/browser';
 
 /**
  * Helper hook for GDPR consent management

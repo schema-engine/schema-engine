@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SUBMIT_FORM_MOCK_URL } from '../msw/submit-form';
 import { FormActionTriggerSchema, formResetPlugin, formSubmitPlugin } from '@schema-engine/forms/actions';
+import { localStorageAutoSaveStorage } from '@schema-engine/forms/browser';
 import * as z from 'zod/mini';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@schema-engine/forms/types';
 import type { ActionExecutionResult } from '@schema-engine/forms';
@@ -143,6 +144,7 @@ const customSubmitPlugin = formSubmitPlugin({
 const customLoggerPlugin = loggerPlugin(actionEventDispatcher);
 
 const customResetPlugin = formResetPlugin({
+	storage: localStorageAutoSaveStorage,
 	onReset(context) {
 		console.log('Form has been reset:', context);
 	},

@@ -86,5 +86,4 @@ export type { RecipeKind, RecipeSlot, RecipeMetadata, RecipeDescriptor, ViewCata
 export type { ActionExecutionResult } from '@schema-engine/actions';
 export * from './schemas';
 export * from './actions';
-export * from './tools';
 export * from './constraints';

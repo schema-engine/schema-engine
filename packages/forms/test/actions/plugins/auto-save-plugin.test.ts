@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach } from 'vitest';
+import { describe, test, expect, beforeEach } from 'vitest';
 import type { BuilderActionExecutionContext } from '@/types';
 import {
 	autoSavePlugin,
@@ -6,25 +6,14 @@ import {
 	AutoSaveActionSchema,
 	type AutoSaveStorage,
 } from '@/actions/plugins/auto-save.plugin';
-import { createMockBuilderContext, setupTestEnvironment, MockLocalStorage } from '../__tools';
+import { createMockBuilderContext } from '../__tools';
 import { MockAutoSaveStorage, createFailingStorage } from '../__tools/storage-utils';
 
 describe('AutoSavePlugin', () => {
 	let mockStorage: MockAutoSaveStorage;
-	let mockLocalStorage: MockLocalStorage;
 
 	beforeEach(() => {
-		mockLocalStorage = setupTestEnvironment();
 		mockStorage = new MockAutoSaveStorage();
-	});
-
-	afterEach(() => {
-		if (mockLocalStorage) {
-			mockLocalStorage.clear();
-		}
-		if (mockStorage) {
-			mockStorage.clear();
-		}
 	});
 
 	describe('Schema Validation', () => {
@@ -99,8 +88,8 @@ describe('AutoSavePlugin', () => {
 	});
 
 	describe('Plugin Factory', () => {
-		test('should create plugin with default configuration', () => {
-			const plugin = autoSavePlugin();
+		test('should create plugin with explicit storage', () => {
+			const plugin = autoSavePlugin({ storage: mockStorage });
 
 			expect(plugin.$type).toBe('auto_save');
 			expect(plugin.schema).toBe(AutoSaveActionSchema);
@@ -384,6 +373,16 @@ describe('AutoSavePlugin', () => {
 			expect(result.shouldContinue).toBe(true);
 		});
 
+		test('should skip storage writes when permission is denied', async () => {
+			const plugin = autoSavePlugin({ storage: mockStorage, shouldSave: () => false });
+			const action: AutoSaveAction = { id: 'test-autosave', $type: 'auto_save', enabled: true };
+
+			const result = await plugin.execute(createMockBuilderContext(action, { formData: { name: 'Ada' } }));
+
+			expect(result.success).toBe(true);
+			expect(mockStorage.getAllKeys()).toEqual([]);
+		});
+
 		test('should handle storage errors', async () => {
 			const failingStorage = createFailingStorage('Storage failed');
 
@@ -493,60 +492,6 @@ describe('AutoSavePlugin', () => {
 
 			expect(result.success).toBe(false);
 			expect(asyncErrorCalled).toBe(true);
-		});
-	});
-
-	describe('Default Storage (localStorage)', () => {
-		test('should use localStorage as default storage', async () => {
-			const plugin = autoSavePlugin();
-
-			const action: AutoSaveAction = {
-				id: 'test-autosave',
-				$type: 'auto_save',
-				enabled: true,
-			};
-
-			const context = createMockBuilderContext(action, {
-				formData: {
-					field1: 'value1',
-					name: 'John',
-					email: 'john@example.com',
-					preferences: { theme: 'dark' },
-					password: 'secret123',
-				},
-			});
-
-			const result = await plugin.execute(context);
-
-			expect(result.success).toBe(true);
-
-			const savedData = mockLocalStorage.getItem('autosave_test-form');
-			expect(savedData).not.toBeNull();
-
-			const parsedData = JSON.parse(savedData!);
-			expect(parsedData.field1).toBe('value1');
-			expect(parsedData.name).toBe('John');
-			expect(parsedData.password).toBeUndefined();
-		});
-
-		test('should handle localStorage save and load operations', () => {
-			mockLocalStorage.setItem('test-key', JSON.stringify({ test: 'data' }));
-
-			const raw = mockLocalStorage.getItem('test-key');
-			expect(raw).not.toBeNull();
-			const saved = JSON.parse(raw!);
-			expect(saved.test).toBe('data');
-
-			mockLocalStorage.removeItem('test-key');
-			expect(mockLocalStorage.getItem('test-key')).toBeNull();
-
-			mockLocalStorage.setItem('key1', 'value1');
-			mockLocalStorage.setItem('key2', 'value2');
-			expect(mockLocalStorage.length).toBe(2);
-
-			mockLocalStorage.clear();
-			expect(mockLocalStorage.length).toBe(0);
-			expect(mockLocalStorage.getItem('key1')).toBeNull();
 		});
 	});
 
