@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useRef } from 'react';
-import { useWatch, type Control } from 'react-hook-form';
+import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useWatch, type Control, type FieldValues } from 'react-hook-form';
 import type { FormActionTrigger, FormConfigView } from '@schema-engine/forms';
 import type { ActionExecutionResult } from '@schema-engine/actions';
 
 interface UseFormWatcherOptions {
-	control: Control<any>;
+	control: Control<FieldValues>;
 	config: FormConfigView;
-	onChange?: (data: any) => void;
+	onChange?: (data: FieldValues) => void;
 	dispatchTrigger: (trigger: FormActionTrigger) => Promise<ActionExecutionResult[]>;
 }
 
@@ -18,31 +18,33 @@ interface UseFormWatcherOptions {
  * block consumer onChange callbacks or form state updates.
  */
 export function useFormWatcher({ control, config, onChange, dispatchTrigger }: UseFormWatcherOptions): void {
-	const handleFormChange = useCallback(
-		async (data: any) => {
-			if (config.actions && config.actions.length > 0) {
-				await dispatchTrigger('form_change').catch((error) => {
+	const callbacks = useRef({ config, onChange, dispatchTrigger });
+	const values = useWatch({ control, compute: (formValues) => formValues });
+	const previousValues = useRef(values);
+
+	useLayoutEffect(() => {
+		callbacks.current = { config, onChange, dispatchTrigger };
+	}, [config, onChange, dispatchTrigger]);
+
+	useEffect(() => {
+		if (Object.is(previousValues.current, values)) return;
+		previousValues.current = values;
+
+		const {
+			config: currentConfig,
+			onChange: currentOnChange,
+			dispatchTrigger: currentDispatchTrigger,
+		} = callbacks.current;
+
+		void (async () => {
+			if (currentConfig.actions && currentConfig.actions.length > 0) {
+				await currentDispatchTrigger('form_change').catch((error) => {
 					console.error('Form change action execution failed:', error);
 				});
 			}
 
-			if (onChange) onChange(data);
-			if (config.onChange) config.onChange(data);
-		},
-		[config, onChange, dispatchTrigger],
-	);
-
-	const watchedData = useWatch({ control });
-	const isFirstRender = useRef(true);
-
-	useEffect(() => {
-		if (isFirstRender.current) {
-			isFirstRender.current = false;
-			return;
-		}
-
-		if (watchedData && Object.keys(watchedData).length > 0) {
-			void handleFormChange(watchedData);
-		}
-	}, [watchedData, handleFormChange]);
+			currentOnChange?.(values);
+			currentConfig.onChange?.(values);
+		})();
+	}, [values]);
 }

@@ -179,6 +179,14 @@ interface FormAdapter {
 
 Custom adapters can be created to integrate with other form libraries (Formik, Final Form, etc.).
 
+### Form instance boundary
+
+`FormRenderer` keys the adapter's form instance to the identity of its normalized
+config. Passing a newly defined config starts a fresh instance with its new
+defaults and step state. Re-rendering the parent with the same config keeps the
+instance and only reports `onChange` or runs `form_change` actions when a field
+value changes.
+
 ### Elements
 
 Pre-built form field components with validation and styling:
@@ -521,6 +529,9 @@ Apply dynamic visibility and behavior based on form values:
   ]
 }
 ```
+
+Nested sibling references resolve from the rendered field path. For example,
+`accountType` on `contacts.0.email` reads `contacts.0.accountType`.
 
 ### GDPR Consent
 

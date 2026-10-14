@@ -8,8 +8,8 @@ The engine uses Zod Mini for its first-party schemas and keeps Standard Schema a
 | ---------------------- | ------------------------------------------------------------------------------------------------------- |
 | `registry` / `actions` | `StandardSchemaV1` on every `BaseRegistration.schema`                                                   |
 | `forms`                | Zod Mini for first-party authoring and JSON Schema export; `~standard.validate` at registration/runtime |
-| `forms-react`          | Headless renderer; copied registry widgets carry their own field schemas                                  |
-| `forms-radiant`        | Radiant widgets and colocated field schemas; not required to match registry schemas                       |
+| `forms-react`          | Headless renderer; copied registry widgets carry their own field schemas                                |
+| `forms-radiant`        | Radiant widgets and colocated field schemas; not required to match registry schemas                     |
 
 Default widget `$type` schemas (for example `input`, `drop-zone`) live beside each implementation — shadcn registry sources and `forms-radiant` — not in `forms`. Custom registrations use the engine contract only (`defineInput`, `BaseFieldSchema`, Standard Schema). Shared docs examples use the overlapping subset both renderers support; library-shaped keys (iMask, drop-zone `accept`) are implementation contracts and may differ.
 
@@ -43,6 +43,14 @@ inside `rui-form`; there is no global active form store. They read
 optional lifecycle wiring around that controller.
 Radiant UI registration uses flat dotted field names. Controller reads, action
 context values, constraints, and submission use the engine's nested value tree.
+
+## React form state
+
+React Hook Form's instance lifetime follows the identity of the normalized form
+config passed to `FormRenderer`. Replacing that config starts a fresh instance
+with its defaults and step state. The change watcher subscribes to field value
+changes, so a parent render by itself does not call `onChange` or dispatch a
+`form_change` action.
 
 Radiant **FormEngine** resolution is host-scoped like `FormController`: explicit
 `engine` prop, ancestor `formEngineContext`, then the engine owning the current
