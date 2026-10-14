@@ -166,6 +166,7 @@ export class FormEngine<
 			getRecipe: (id) => this.getRecipe(id),
 			getElement: (id) => this.getElement(id),
 			getAction: (id) => this.getAction(id),
+			hasValidation: (type) => this.validationRegistry.has(type),
 		});
 	}
 
@@ -185,7 +186,10 @@ export class FormEngine<
 	 * The normalized marker is applied only after this element and its children succeed.
 	 */
 	validateElement(config: unknown): NormalizedElementConfig {
-		return validateElementConfig(config, { getElement: (id) => this.getElement(id) });
+		return validateElementConfig(config, {
+			getElement: (id) => this.getElement(id),
+			hasValidation: (type) => this.validationRegistry.has(type),
+		});
 	}
 
 	describeRecipe($type: string): RecipeDescriptor {

@@ -15,6 +15,7 @@ import {
 } from '../schemas/validation/utils.js';
 import type { BaseValidationRule, RequiredRule } from '../schemas/validation/types.js';
 import type { ValidationRegistry } from '../schemas/validation/validation-registry.js';
+import type { DebounceScope } from '../lib/debounce.js';
 import * as z from 'zod/mini';
 
 export type ValidationElement = NormalizedElementConfig;
@@ -30,6 +31,8 @@ export interface EffectiveRulesInput {
 
 export interface ValidateFieldValueInput extends EffectiveRulesInput {
 	value: unknown;
+	/** Reuse keyed async validation state for this caller's form lifetime. */
+	debounceScope?: DebounceScope;
 }
 
 export interface ValidateFormValuesInput {
@@ -37,6 +40,8 @@ export interface ValidateFormValuesInput {
 	values: Record<string, unknown>;
 	registry: ValidationRegistry;
 	names?: readonly string[];
+	/** Reuse keyed async validation state for this caller's form lifetime. */
+	debounceScope?: DebounceScope;
 }
 
 export interface FieldValidationError {
@@ -130,6 +135,7 @@ export async function validateFieldValue({
 	values,
 	fieldPath,
 	registry,
+	debounceScope,
 }: ValidateFieldValueInput): Promise<string | undefined> {
 	const rules = effectiveRulesFor({ element, values, fieldPath, registry });
 	if (rules.length === 0) {
@@ -137,7 +143,11 @@ export async function validateFieldValue({
 	}
 
 	try {
-		const context = createValidationContext({ values, fieldPath });
+		const context = createValidationContext({
+			values,
+			fieldPath,
+			debounceScope,
+		});
 		const schema = createZodSchemaFromRules(rules, context, registry);
 		const result = await z.safeParseAsync(schema, value);
 		return result.success ? undefined : result.error.issues[0]?.message || 'Validation failed';
@@ -158,6 +168,7 @@ export async function validateFormValues({
 	values,
 	registry,
 	names,
+	debounceScope,
 }: ValidateFormValuesInput): Promise<FormValidationErrors> {
 	const fields = fieldElementPathsFor(elements, values).filter(({ fieldPath }) => pathIsRequested(fieldPath, names));
 	const messages = await Promise.all(
@@ -169,6 +180,7 @@ export async function validateFormValues({
 				values,
 				fieldPath,
 				registry,
+				debounceScope,
 			}),
 		})),
 	);

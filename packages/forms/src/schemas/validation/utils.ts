@@ -5,6 +5,8 @@ import type { ValidationRegistry } from './validation-registry.js';
 import { walkLeafFields } from '@/lib/field-scope.js';
 import { resolveFieldRef } from '@/lib/field-ref.js';
 import { getValueAtPath } from '@/lib/path-values.js';
+import { createDebounceScope } from '@/lib/debounce.js';
+import type { DebounceScope } from '@/lib/debounce.js';
 
 type ValidationRuleType = ValidationRule | BaseValidationRule;
 
@@ -87,6 +89,8 @@ export interface ValidationContextInput {
 	values?: Record<string, unknown>;
 	/** Rendered path of the field being validated, e.g. `contacts.0.email`. */
 	fieldPath?: string;
+	/** Reuse keyed async validation state across calls when the caller owns its lifetime. */
+	debounceScope?: DebounceScope;
 }
 
 /**
@@ -101,11 +105,13 @@ export interface ValidationContextInput {
 export function createValidationContext({
 	values = {},
 	fieldPath = '',
+	debounceScope,
 }: ValidationContextInput = {}): ValidationContext {
 	return {
 		values,
 		fieldPath,
 		resolve: (fieldRef) => getValueAtPath(values, resolveFieldRef(fieldRef, fieldPath)),
+		debounceScope: debounceScope ?? createDebounceScope(),
 	};
 }
 

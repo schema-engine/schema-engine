@@ -4,6 +4,7 @@ import {
 	ValidationRegistry,
 	createDefaultValidationRegistry,
 } from '../../../src/schemas/validation/validation-registry';
+import { ValidationPresets } from '../../../src/schemas/validation/presets';
 
 const globalRegistry = createDefaultValidationRegistry();
 import type { ValidationRegistration } from '../../../src/schemas/validation/types';
@@ -113,25 +114,25 @@ describe('ValidationRegistry', () => {
 
 	describe('Presets', () => {
 		it('should provide string presets', () => {
-			const rule = registry.presets.string.required('Required');
+			const rule = ValidationPresets.string.required('Required');
 			expect(rule).toEqual({ type: 'required', message: 'Required' });
 
-			const emailRule = registry.presets.string.email();
+			const emailRule = ValidationPresets.string.email();
 			expect(emailRule.type).toBe('email');
 		});
 
 		it('should provide number presets', () => {
-			const minRule = registry.presets.number.min(5);
+			const minRule = ValidationPresets.number.min(5);
 			expect(minRule).toEqual({ type: 'min', value: 5, message: 'Must be at least 5' });
 		});
 
 		it('should provide array presets', () => {
-			const minItemsRule = registry.presets.array.minItems(3);
+			const minItemsRule = ValidationPresets.array.minItems(3);
 			expect(minItemsRule).toEqual({ type: 'minItems', value: 3, message: 'Must have at least 3 items' });
 		});
 
 		it('should provide async presets with dependencies', () => {
-			const asyncRule = registry.presets.custom.async('/api/check', { dependencies: ['otherField'] });
+			const asyncRule = ValidationPresets.custom.async('/api/check', { dependencies: ['otherField'] });
 			expect(asyncRule.type).toBe('async');
 			expect(asyncRule.dependencies).toEqual(['otherField']);
 		});

@@ -282,6 +282,9 @@ const multiStepConfig: FormConfig = {
 
 Validation rules are defined in the field configuration. The React package uses the validation system provided by `@schema-engine/forms`.
 
+The RHF resolver owns one async debounce scope per resolver instance and separates
+fields by their rendered paths.
+
 For complete documentation on validation rules, custom validators, and advanced validation patterns, see the [@schema-engine/forms documentation](../forms/README.md#validation).
 
 **Quick Example:**

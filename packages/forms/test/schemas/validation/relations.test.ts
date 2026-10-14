@@ -85,6 +85,20 @@ describe('relate assertions', () => {
 		expect(await check(rule, '', { phone: '', email: '' })).toBe('Fill at least one of these fields');
 	});
 
+	test('emptiness treats empty arrays as empty and false or zero as filled', async () => {
+		const rule: RelateRule = {
+			...BASE,
+			type: 'relate',
+			fields: ['phone', 'email'],
+			assert: 'atLeastOne',
+			includeSelf: false,
+		};
+
+		expect(await check(rule, '', { phone: [], email: null })).toBe('Fill at least one of these fields');
+		expect(await check(rule, '', { phone: false, email: null })).toBe(true);
+		expect(await check(rule, '', { phone: 0, email: null })).toBe(true);
+	});
+
 	test('exactlyOne rejects both filled and neither filled', async () => {
 		const rule: RelateRule = {
 			...BASE,

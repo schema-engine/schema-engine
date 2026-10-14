@@ -1,8 +1,9 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { createDefaultValidationRegistry } from '@/schemas/validation';
 import type { ElementConfig } from '@/schemas/field-config';
 import { markNormalizedElementConfig } from '@/lib/normalized-form-config';
 import { getValueAtPath } from '@/lib/path-values';
+import { createDebounceScope } from '@/lib/debounce';
 import type { NormalizedElementConfig } from '@/lib/normalized-form-config';
 import {
 	collectStepFieldPaths,
@@ -88,6 +89,50 @@ describe('validateFieldValue', () => {
 		});
 
 		expect(message).toBe('Required');
+	});
+
+	test('settles superseded async validations across value snapshots', async () => {
+		vi.useFakeTimers();
+		const fetchSpy = vi
+			.spyOn(globalThis, 'fetch')
+			.mockImplementation(async () => new Response(JSON.stringify({ valid: true }), { status: 200 }));
+		const element = normalizeElement({
+			$type: 'input',
+			name: 'email',
+			rules: [{ type: 'async', url: '/api/check', debounce: 300, disableCache: true }],
+		});
+		const debounceScope = createDebounceScope();
+
+		try {
+			const first = validateFieldValue({
+				element,
+				value: 'first@example.com',
+				values: { email: 'first@example.com' },
+				fieldPath: 'email',
+				registry,
+				debounceScope,
+			});
+			await vi.advanceTimersByTimeAsync(100);
+			const second = validateFieldValue({
+				element,
+				value: 'second@example.com',
+				values: { email: 'second@example.com' },
+				fieldPath: 'email',
+				registry,
+				debounceScope,
+			});
+
+			await expect(first).resolves.toBeUndefined();
+			await vi.advanceTimersByTimeAsync(300);
+			await expect(second).resolves.toBeUndefined();
+
+			expect(fetchSpy).toHaveBeenCalledOnce();
+			const [, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
+			expect(JSON.parse(init.body as string)).toEqual({ value: 'second@example.com' });
+		} finally {
+			fetchSpy.mockRestore();
+			vi.useRealTimers();
+		}
 	});
 });
 

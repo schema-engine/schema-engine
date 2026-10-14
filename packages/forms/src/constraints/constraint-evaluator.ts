@@ -1,6 +1,7 @@
 import type { ConstraintLogic } from '../schemas';
 import { getValueAtPath } from '@/lib/path-values';
 import { resolveFieldRef } from '@/lib/field-ref';
+import { isEmpty } from '@/schemas/validation/empty';
 
 /**
  * Result from evaluating constraint logic
@@ -46,15 +47,9 @@ function evaluateConstraint(constraint: ConstraintLogic, watchedValue: unknown):
 		case 'less_than':
 			return Number(watchedValue) < Number(value);
 		case 'is_empty':
-			if (Array.isArray(watchedValue)) {
-				return watchedValue.length === 0;
-			}
-			return !watchedValue || watchedValue === '' || watchedValue === null || watchedValue === undefined;
+			return isEmpty(watchedValue);
 		case 'is_not_empty':
-			if (Array.isArray(watchedValue)) {
-				return watchedValue.length > 0;
-			}
-			return Boolean(watchedValue);
+			return !isEmpty(watchedValue);
 		default:
 			return false;
 	}
