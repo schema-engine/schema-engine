@@ -6,6 +6,7 @@ import { collectFieldDefaults, flattenStepElements } from '@schema-engine/forms/
 import { useFormEngine } from '@/hooks/use-form-context';
 import { useFormValidationResolver } from './hooks/use-form-validation-resolver';
 import { FormInstanceContext, type FormInstanceContextValue } from '@/components/provider';
+import { FormStepStateContext } from '@/components/form-step-state-context';
 import { useRHFMultiStep } from './hooks/use-rhf-multi-step';
 import { useSubmissionStateManager } from '@/hooks/use-submission-state';
 import { useFormDefaultValues } from './hooks/use-form-default-values';
@@ -84,9 +85,15 @@ export function FormProvider({
 		onAction,
 	});
 
+	const { stepStates } = multiStep;
 	const formInstanceContextValue: FormInstanceContextValue = useMemo(
 		() => ({
-			...multiStep,
+			currentStep: multiStep.currentStep,
+			totalSteps: multiStep.totalSteps,
+			goToStep: multiStep.goToStep,
+			goToNext: multiStep.goToNext,
+			goToPrevious: multiStep.goToPrevious,
+			navigation: multiStep.navigation,
 			...actionDispatchers,
 			...submissionContext,
 		}),
@@ -96,14 +103,16 @@ export function FormProvider({
 	return (
 		<RHFFormProvider {...form}>
 			<FormInstanceContext.Provider value={formInstanceContextValue}>
-				<form
-					onSubmit={form.handleSubmit(handleSubmit)}
-					className={config.className}
-					style={config.style}
-					noValidate
-				>
-					{children}
-				</form>
+				<FormStepStateContext.Provider value={stepStates}>
+					<form
+						onSubmit={form.handleSubmit(handleSubmit)}
+						className={config.className}
+						style={config.style}
+						noValidate
+					>
+						{children}
+					</form>
+				</FormStepStateContext.Provider>
 			</FormInstanceContext.Provider>
 		</RHFFormProvider>
 	);

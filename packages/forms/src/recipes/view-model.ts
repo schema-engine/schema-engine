@@ -1,4 +1,5 @@
 import type { FormConfigView } from '@/lib/normalized-form-config';
+import type { StepStates } from '@/engine/step-machine';
 import type { RecipeKind, RecipeSlot } from './types';
 
 export interface ViewNavigation {
@@ -76,7 +77,7 @@ export function buildViewModel({
 	navigation: ViewNavigation;
 	isSubmitting?: boolean;
 	viewConfig: Record<string, unknown>;
-	stepStates?: { completed: boolean[]; valid: boolean[]; visited: boolean[] };
+	stepStates: StepStates;
 }): ViewModel {
 	const steps: ViewStep[] = config.steps.map((step, index) => ({
 		id: step.id,

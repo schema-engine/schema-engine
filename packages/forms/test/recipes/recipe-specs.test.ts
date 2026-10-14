@@ -3,6 +3,7 @@ import { defineRecipeSpec } from '@/recipes/define-recipe-spec';
 import { cardSpec, wizardSpec, builtInRecipeSpecs } from '@/recipes/built-in-specs';
 import { FormActionsConfigSchema, StepHeaderConfigSchema, WizardActionsConfigSchema } from '@/recipes/slot-schemas';
 import { applySlotDefaults, buildViewModel } from '@/recipes/view-model';
+import { createInitialStepStates } from '@/engine/step-machine';
 
 describe('defineRecipeSpec', () => {
 	test('rejects wizard recipes without actions', () => {
@@ -97,6 +98,7 @@ describe('view model', () => {
 				goToPreviousStep: () => undefined,
 			},
 			viewConfig: { $type: 'wizard' },
+			stepStates: createInitialStepStates(2),
 		});
 
 		expect(model.activeStep.index).toBe(1);

@@ -5,9 +5,14 @@
  * Tree-shakable library designed for maximum flexibility and performance.
  */
 
-export { createFormEngine, FormEngine, SchemaMetadataCatalog } from './engine';
+export { createFormEngine, FormEngine, SchemaMetadataCatalog, ActionDispatcher } from './engine';
 export { collectStepFieldPaths, effectiveRulesFor, validateFieldValue, validateFormValues } from './engine';
-export type { CreateFormEngineOptions } from './engine';
+export type { CreateFormEngineOptions, ActionDispatcherOptions } from './engine';
+export { createInitialStepStates, createStepMachine, runSubmissionLifecycle, buildFormActionContext } from './engine';
+export type {
+ StepStates, StepMachineState, StepMachineAction, StepMachineReducer,
+ SubmissionLifecycleResult, FormActionContextFormState,
+} from './engine';
 export type {
 	EffectiveRulesInput,
 	FieldValidationError,
