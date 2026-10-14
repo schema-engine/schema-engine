@@ -33,12 +33,6 @@ export interface FormInstanceContextValue {
 	goToNext: () => void;
 	/** Navigates to the previous step if allowed */
 	goToPrevious: () => void;
-	/** State tracking for each step (completion, validity, visitation) */
-	stepStates?: {
-		completed: boolean[];
-		valid: boolean[];
-		visited: boolean[];
-	};
 	/** Comprehensive navigation controls and strict state checks */
 	navigation: {
 		/** Whether navigation to next step is currently allowed */

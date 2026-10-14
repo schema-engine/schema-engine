@@ -43,6 +43,24 @@ const contactForm = engine.defineForm({
 
 `defineForm` is the typed authoring API for that engine's registrations. `validateForm(input: unknown)` validates external JSON. Both run the same pipeline: envelope parse, Standard Schema dispatch by `$type` (including nested child elements), recipe-kind checks, and schema defaults/transforms. The normalized marker is applied only after that succeeds. `defineForm` and `validateForm` return a frozen `NormalizedFormConfig` owned by that engine. Snapshot isolation copies plain objects and arrays, so caller data of those kinds is not frozen. Other objects currently remain shared. A normalized form cannot be reused on another engine; pass the original authoring input or JSON instead. Renderers consume that normalized output. They do not re-run registration input schemas. Standalone or dynamically created fields that are not already inside a form must go through `engine.validateElement()` first. Containers render children with `FormElements` and a field scope (`namePrefix`, `instanceId`); they do not clone normalized configs to change paths.
 
+### Shared step and submission logic
+
+`createInitialStepStates(totalSteps)` creates completion, validity, and visitation arrays;
+the first step starts visited. `createStepMachine(config)` returns a reducer for `next`,
+`previous`, and `go-to` actions. A `next` action receives the caller-supplied `isValid`
+value; the reducer does not validate fields. When it is true on a non-final step, the
+reducer completes the active step and advances. On the final step, it updates validity
+without marking that step complete or advancing. When `isValid` is false, it leaves the
+active step in place. Pass the resulting state to `buildViewModel` as `stepStates`.
+
+`runSubmissionLifecycle(dispatch, { actions, context })` dispatches the form submit start,
+submit, success or error, and complete triggers. The returned `succeeded` flag is false
+only when a submit action fails with `shouldContinue: false`; a failed action that allows
+continuation does not fail the submission. `buildFormActionContext` is an exported utility
+that constructs a form action context with form data and timing metadata, including a
+stable step start time that resets when the active step changes. The engine entry point also
+re-exports `ActionDispatcher` so both renderers can use the same action dispatcher class.
+
 Use `engine.extend({ ... })` to add registrations without re-spreading shared barrels. Author forms with `engine.defineForm({ ... })` object literals.
 
 Extra DOM attributes on the focusable control (for example `data-testid`) belong in `htmlAttributes` on the field config. Unknown top-level keys are stripped during validation; reserved control props cannot be authored inside the bag.

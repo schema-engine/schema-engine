@@ -38,6 +38,11 @@ execute({
 
 That means call sites stay simple, while handlers still receive a strongly typed runtime context.
 
+Actions execute sequentially in their configured order. When an action fails,
+execution stops only when its result sets `shouldContinue: false`; an omitted
+value or `true` allows later actions to run. For forms, only an unsuccessful
+action with `shouldContinue: false` makes the submission fail.
+
 ## Quick Start
 
 ```typescript
