@@ -1,9 +1,6 @@
 import * as z from 'zod/mini';
 import type { RelateRule, RelationAssert, ValidationRegistration } from './types.js';
-
-function isEmpty(value: unknown): boolean {
-	return value === undefined || value === null || value === '';
-}
+import { isEmpty } from './empty.js';
 
 /**
  * Brings a referenced value onto the rule's comparison basis.

@@ -35,6 +35,7 @@ export interface ValidateFormOptions {
 	getRecipe: (id: string) => RecipeRegistration<any, any> | undefined;
 	getElement: (id: string) => ElementRegistration | undefined;
 	getAction: (id: string) => BuilderActionRegistration | undefined;
+	hasValidation?: (type: string) => boolean;
 	parseFormConfig?: (config: unknown) => FormConfig;
 }
 
@@ -206,9 +207,29 @@ function childLocation(parentLocation: string, index: number, child: unknown): s
 	return parentLocation ? `${parentLocation} ${nested}` : nested;
 }
 
+function unregisteredValidationRule(
+	item: FormTaggedConfig,
+	hasValidation: ValidateFormOptions['hasValidation'],
+): string | undefined {
+	if (!hasValidation || !Array.isArray(item.rules)) return undefined;
+
+	for (const rule of item.rules) {
+		if (typeof rule !== 'object' || rule === null || !('type' in rule) || typeof rule.type !== 'string') {
+			continue;
+		}
+		if (!hasValidation(rule.type)) {
+			const fieldName = typeof item.name === 'string' ? `Field '${item.name}'` : 'Element';
+			return `${fieldName} uses validation rule '${rule.type}' with no registered handler.`;
+		}
+	}
+
+	return undefined;
+}
+
 function parseElementNode(
 	item: unknown,
 	getElement: ValidateFormOptions['getElement'],
+	hasValidation: ValidateFormOptions['hasValidation'],
 	location: string,
 ): { issues: string[]; item?: FormTaggedConfig } {
 	const fail = (message: string) => ({
@@ -218,6 +239,8 @@ function parseElementNode(
 	if (!isTaggedConfig(item)) {
 		return fail('Invalid element configuration: missing $type.');
 	}
+	const unregisteredRule = unregisteredValidationRule(item, hasValidation);
+	if (unregisteredRule) return fail(unregisteredRule);
 
 	const parsed = parseTypedConfig('element', item, getElement, 'createFormEngine({ elements: [...] })');
 	if (!parsed.ok) {
@@ -233,7 +256,7 @@ function parseElementNode(
 	const issues: string[] = [];
 	for (let index = 0; index < children.length; index += 1) {
 		const child = children[index];
-		const nested = parseElementNode(child, getElement, childLocation(location, index, child));
+		const nested = parseElementNode(child, getElement, hasValidation, childLocation(location, index, child));
 		issues.push(...nested.issues);
 		if (nested.item) nextChildren.push(nested.item);
 	}
@@ -248,6 +271,7 @@ function parseElementNode(
 function parseElementList(
 	items: unknown[] | undefined,
 	getElement: ValidateFormOptions['getElement'],
+	hasValidation: ValidateFormOptions['hasValidation'],
 	parentLocation: string,
 ): { issues: string[]; items?: FormTaggedConfig[] } {
 	if (!items) return { issues: [] };
@@ -256,7 +280,7 @@ function parseElementList(
 	const issues: string[] = [];
 	for (let index = 0; index < items.length; index += 1) {
 		const item = items[index];
-		const parsed = parseElementNode(item, getElement, childLocation(parentLocation, index, item));
+		const parsed = parseElementNode(item, getElement, hasValidation, childLocation(parentLocation, index, item));
 		issues.push(...parsed.issues);
 		if (parsed.item) next.push(parsed.item);
 	}
@@ -281,9 +305,9 @@ function brandElementTree(config: FormTaggedConfig): NormalizedElementConfig {
  */
 export function validateElementConfig(
 	config: unknown,
-	options: { getElement: ValidateFormOptions['getElement'] },
+	options: Pick<ValidateFormOptions, 'getElement' | 'hasValidation'>,
 ): NormalizedElementConfig {
-	const parsed = parseElementNode(config, options.getElement, '');
+	const parsed = parseElementNode(config, options.getElement, options.hasValidation, '');
 	if (parsed.issues.length > 0 || !parsed.item) {
 		const issues = parsed.issues.length ? parsed.issues : ['Invalid element configuration: missing $type.'];
 		throw new FormValidationError(issues[0] ?? 'Invalid element configuration', issues);
@@ -333,7 +357,7 @@ export function validateFormConfig(config: unknown, options: ValidateFormOptions
 
 	const steps = envelope.steps.map((step, stepIndex) => {
 		const stepLocation = itemLocation('steps', stepIndex, step);
-		const elements = parseElementList(step.elements, options.getElement, stepLocation);
+		const elements = parseElementList(step.elements, options.getElement, options.hasValidation, stepLocation);
 		const actions = parseActions(step.actions, stepLocation, 'actions');
 		const onStepEnter = parseActions(step.onStepEnter, stepLocation, 'onStepEnter');
 		const onStepLeave = parseActions(step.onStepLeave, stepLocation, 'onStepLeave');

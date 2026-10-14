@@ -7,6 +7,8 @@ import type {
 	PatternRule,
 	UrlRule,
 	UuidRule,
+	CidrRule,
+	PhoneRule,
 	MinRule,
 	MaxRule,
 	MinItemsRule,
@@ -29,6 +31,7 @@ import type {
 } from './types.js';
 import { createAsyncValidationHandler } from './async/handler.js';
 import { relateValidation } from './relations.js';
+import { isEmpty } from './empty.js';
 
 const ipv6ZonePattern = /^[0-9a-zA-Z]+$/;
 
@@ -66,7 +69,7 @@ export const defaultValidations: AnyValidationRegistration[] = [
 		category: 'generic',
 		handler: (rule: RequiredRule) =>
 			z.any().check(
-				z.refine((val) => val !== undefined && val !== null && val !== '', {
+				z.refine((val) => !isEmpty(val), {
 					message: rule.message || 'Required',
 				}),
 			),
@@ -84,7 +87,10 @@ export const defaultValidations: AnyValidationRegistration[] = [
 	{
 		type: 'email',
 		category: 'string',
-		handler: (rule: EmailRule) => z.email(rule.message),
+		handler: (rule: EmailRule) => {
+			const email = z.email(rule.message);
+			return rule.pattern ? email.check(z.regex(new RegExp(rule.pattern), rule.message)) : email;
+		},
 	},
 	{
 		type: 'pattern',
@@ -94,12 +100,34 @@ export const defaultValidations: AnyValidationRegistration[] = [
 	{
 		type: 'url',
 		category: 'string',
-		handler: (rule: UrlRule) => z.url(rule.message),
+		handler: (rule: UrlRule) =>
+			z.url({
+				error: rule.message,
+				protocol: rule.protocol ? new RegExp(rule.protocol) : undefined,
+				hostname: rule.hostname ? new RegExp(rule.hostname) : undefined,
+			}),
 	},
 	{
 		type: 'uuid',
 		category: 'string',
-		handler: (rule: UuidRule) => z.uuid(rule.message),
+		handler: (rule: UuidRule) => z.uuid({ version: rule.version, error: rule.message }),
+	},
+	{
+		type: 'phone',
+		category: 'string',
+		handler: (rule: PhoneRule) => z.e164(rule.message || 'Please enter a valid phone number'),
+	},
+	{
+		type: 'cidr',
+		category: 'string',
+		handler: (rule: CidrRule) => {
+			const v4 = z.cidrv4(rule.message || 'Please enter a valid IPv4 CIDR');
+			const v6 = z.cidrv6(rule.message || 'Please enter a valid IPv6 CIDR');
+
+			if (rule.version === 'v4') return v4;
+			if (rule.version === 'v6') return v6;
+			return z.union([v4, v6]);
+		},
 	},
 	{
 		type: 'ipv4',
@@ -179,6 +207,7 @@ export const defaultValidations: AnyValidationRegistration[] = [
 				error: rule.message || 'Please enter a valid datetime',
 				precision: rule.precision,
 				offset: rule.offset,
+				local: rule.local,
 			}),
 	},
 

@@ -149,7 +149,9 @@ Fields and array components share Radiant UI's form store through
 `FormController`. Use it with explicit `connect` / `disconnect` lifecycle methods
 or the optional `@formController` decorator. `FormFieldElement` extends
 `RuiFieldElement` and exposes scoped form access; Radiant UI retains control
-registration, validation, and error presentation.
+registration, validation, and error presentation. Custom async validators keep
+debounce state in the field's validator closure, so one field instance cannot
+cancel another field's pending request.
 
 The controller provides snapshot reads, live watches with cleanup, field bindings,
 and array mutations with stable row IDs. See the [controller API and migration

@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { createFormEngine, createDefaultValidationRegistry } from '@schema-engine/forms';
 import { PhoneInputElementRegistration } from '@/components/schema-engine/forms/inputs/form-phone-input.registration';
 import { createFormValidationResolver } from '../../src/adapters/rhf/hooks/use-form-validation-resolver';
@@ -65,5 +65,33 @@ describe('createFormValidationResolver', () => {
 
 		const complete = await resolver({ phone: '+442079460958' }, undefined, options);
 		expect(complete.errors).toEqual({});
+	});
+
+	test('isolates debounced requests between resolver instances sharing a registry', async () => {
+		vi.useFakeTimers();
+		const fetchSpy = vi
+			.spyOn(globalThis, 'fetch')
+			.mockImplementation(async () => new Response(JSON.stringify({ valid: true }), { status: 200 }));
+		const asyncElements = [
+			{
+				name: 'email',
+				rules: [{ type: 'async', url: '/api/check', debounce: 300, disableCache: true }],
+			},
+		];
+		const firstResolver = createFormValidationResolver(asyncElements, registry);
+		const secondResolver = createFormValidationResolver(asyncElements, registry);
+		const options = { fields: {}, shouldUseNativeValidation: false };
+
+		try {
+			const first = firstResolver({ email: 'first@example.com' }, undefined, options);
+			const second = secondResolver({ email: 'second@example.com' }, undefined, options);
+			await vi.advanceTimersByTimeAsync(300);
+			await Promise.all([first, second]);
+
+			expect(fetchSpy).toHaveBeenCalledTimes(2);
+		} finally {
+			fetchSpy.mockRestore();
+			vi.useRealTimers();
+		}
 	});
 });

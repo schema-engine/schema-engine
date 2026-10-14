@@ -2,6 +2,7 @@ import type { FieldRules } from '@ecopages/radiant-ui/form';
 import * as z from 'zod/mini';
 import type { ValidationRule } from '@schema-engine/forms/schemas';
 import type { ValidationRegistry } from '@schema-engine/forms/schemas/validation';
+import { createDebounceScope } from '@schema-engine/forms/lib/debounce';
 import {
 	createValidationContext,
 	createZodSchemaFromRules,
@@ -64,8 +65,9 @@ function toValidator(
 	fallbackMessage: string,
 	registry: ValidationRegistry,
 ) {
+	const debounceScope = createDebounceScope();
 	return async (value: unknown, values: Record<string, unknown>) => {
-		const context = createValidationContext({ values: expandValues(values ?? {}), fieldPath });
+		const context = createValidationContext({ values: expandValues(values ?? {}), fieldPath, debounceScope });
 		const result = await z.safeParseAsync(createZodSchemaFromRules(rules, context, registry), value);
 		return result.success || result.error.issues[0]?.message || fallbackMessage;
 	};

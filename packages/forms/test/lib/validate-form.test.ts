@@ -313,6 +313,36 @@ describe('validateFormConfig', () => {
 		).toThrow(/steps\[0\] \(id: 'main'\) elements\[0\] \(id: 'x'\).*Unknown element type 'missing'/s);
 	});
 
+	test('rejects a field rule that has no validation handler', () => {
+		const field = defineInput({
+			$type: 'field',
+			schema: z.looseObject({
+				$type: z.literal('field'),
+				id: z.string(),
+				name: z.string(),
+				rules: z.optional(z.array(z.looseObject({ type: z.string() }))),
+			}),
+			metadata: { name: 'Field', category: 'input' },
+			render: () => null,
+		});
+		const engine = createFormEngine({ elements: [field] });
+
+		expect(() =>
+			engine.validateForm({
+				id: 'unsupported-rule',
+				steps: [
+					{
+						id: 'main',
+						title: 'Main',
+						elements: [
+							{ $type: 'field', id: 'quantity', name: 'quantity', rules: [{ type: 'unregistered' }] },
+						],
+					},
+				],
+			}),
+		).toThrow(/field 'quantity'.*rule 'unregistered'/i);
+	});
+
 	test('marks validated forms and skips re-running registration transforms', () => {
 		const countSchema = z.object({
 			$type: z.literal('count'),

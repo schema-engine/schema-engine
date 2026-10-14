@@ -7,6 +7,7 @@ import {
 	createZodSchemaFromRules,
 } from '@schema-engine/forms/schemas/validation/utils';
 import { expandFieldTemplatePaths, getValueAtPath } from '@schema-engine/forms/lib/path-values';
+import { createDebounceScope } from '@schema-engine/forms/lib/debounce';
 import type { ValidationRegistry } from '@schema-engine/forms/schemas/validation';
 
 function pathIsRequested(path: string, names?: readonly string[]): boolean {
@@ -25,6 +26,7 @@ function pathIsRequested(path: string, names?: readonly string[]): boolean {
  */
 export function createFormValidationResolver(elements: readonly object[], registry: ValidationRegistry): Resolver {
 	const validatableFields = collectValidatableFields(elements, '', registry);
+	const debounceScope = createDebounceScope();
 	return async (values: FieldValues, _context, options): Promise<ResolverResult> => {
 		const errors: Record<string, { type: string; message: string }> = {};
 
@@ -37,7 +39,7 @@ export function createFormValidationResolver(elements: readonly object[], regist
 						try {
 							const schema = createZodSchemaFromRules(
 								rules,
-								createValidationContext({ values, fieldPath: path }),
+								createValidationContext({ values, fieldPath: path, debounceScope }),
 								registry,
 							);
 							const result = await z.safeParseAsync(schema, value);
