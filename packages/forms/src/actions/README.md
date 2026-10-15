@@ -212,3 +212,7 @@ const logMessage: BuilderActionRegistration<'log_message', typeof ActionSchema> 
 The execution context contains the parsed action `config`, the current form
 state, and the triggering event. See [@schema-engine/actions](../../../actions)
 for the generic registration and execution contracts.
+
+Plugin callbacks receive their concrete action configuration in `context.config`.
+Payload maps use `Record<string, unknown>`; submit response data stays `unknown`
+until a callback narrows it. Submit request adapters accept `RequestInit`.

@@ -77,6 +77,6 @@ export interface FormAuthoringInput<
 	className?: string;
 	style?: Record<string, unknown>;
 	actions?: Array<FormAuthoringAction<TActions>>;
-	onSubmit?: (data: any) => void | Promise<void>;
-	onChange?: (data: any) => void;
+	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
+	onChange?: (data: Record<string, unknown>) => void;
 }

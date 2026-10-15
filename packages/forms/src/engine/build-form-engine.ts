@@ -57,15 +57,12 @@ function createFormConfigSchema(
 	});
 }
 
-export interface FormEngineRegistrationLists {
+export type FormEngineRegistrationLists = {
 	elements?: readonly ElementRegistrationConstraint[];
 	recipes?: readonly RecipeRegistrationConstraint[];
 	actions?: readonly ActionRegistrationConstraint[];
 	catalog?: SchemaMetadataCatalog;
-	grid?: GridThemeOptions;
-	/** Preserves the compiled grid when {@link FormEngine.extend} clones an engine. */
-	compiledGrid?: CompiledGrid;
-}
+} & ({ grid?: GridThemeOptions; compiledGrid?: never } | { grid?: never; compiledGrid: CompiledGrid });
 
 /**
  * Single construction path for {@link createFormEngine} and {@link FormEngine.extend}.
@@ -130,12 +127,7 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 
 	const formConfigSchema = createFormConfigSchema(elementRegistry, recipeRegistry, actionRegistry);
 	const actionConfigValidators = createActionConfigValidatorMap(actionRegistry.getAll());
-	const schemaArtifacts = createFormEngineSchemaArtifacts(
-		metadataCatalog,
-		formConfigSchema,
-		undefined,
-		actionConfigValidators,
-	);
+	const schemaArtifacts = createFormEngineSchemaArtifacts(metadataCatalog, formConfigSchema, actionConfigValidators);
 
 	const compiledGrid =
 		lists.compiledGrid ?? (lists.grid === undefined ? getDefaultCompiledGrid() : compileGridTheme(lists.grid));

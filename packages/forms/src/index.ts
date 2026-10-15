@@ -44,6 +44,7 @@ export type {
 	InputRegistration,
 	StaticRegistration,
 	RecipeRegistration,
+	ContainerKind,
 } from './types';
 export { defineInput, defineStatic } from './types';
 export type { ElementRenderProps, WithNormalizedChildren } from './types';

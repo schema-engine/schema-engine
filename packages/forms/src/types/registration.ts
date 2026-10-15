@@ -30,6 +30,7 @@ export type InputRegistration<
 	{
 		$type: TType;
 		schema: TSchema;
+		containerKind?: ContainerKind;
 		metadata: ElementMetadata;
 		render: (props: TProps) => unknown;
 		validations?: readonly AnyValidationRegistration[];
@@ -48,6 +49,7 @@ export type StaticRegistration<
 	{
 		$type: TType;
 		schema: TSchema;
+		containerKind?: ContainerKind;
 		metadata: ElementMetadata;
 		render: (props: TProps) => unknown;
 	},
@@ -103,3 +105,18 @@ export type BuilderActionRegistration<
 	$type: TType;
 	schema: TSchema;
 };
+
+/** Determines how named child fields compose their value paths. */
+export type ContainerKind = 'object' | 'array';
+
+/**
+ * @remarks Runtime storage erases each registration's schema and render props;
+ * factories enforce their relationship before registrations enter this boundary.
+ */
+export type AnyElementRegistration = InputRegistration<string, any, any> | StaticRegistration<string, any, any>;
+
+/** @remarks Runtime recipe storage accepts heterogeneous schema types checked by the recipe factory. */
+export type AnyRecipeRegistration = RecipeRegistration<string, any>;
+
+/** @remarks Runtime action storage erases concrete configuration output checked at registration time. */
+export type AnyActionRegistration = BuilderActionRegistration<string, any>;

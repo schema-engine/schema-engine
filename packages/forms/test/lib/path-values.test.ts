@@ -1,3 +1,4 @@
+import { normalizeContainerFixture } from './container-fixture';
 import { describe, expect, test } from 'vitest';
 import { collectFieldDefaults } from '@/lib/field-scope';
 import {
@@ -91,7 +92,7 @@ describe('path-values', () => {
 			elements: [{ $type: 'input', name: 'tag', defaultValue: 'work' }],
 		};
 
-		expect(mergePathValues(collectFieldDefaults([contacts, tags]))).toEqual({
+		expect(mergePathValues(collectFieldDefaults([contacts, tags].map(normalizeContainerFixture)))).toEqual({
 			contacts: [{ name: 'Ada' }],
 			tags: ['work'],
 		});
@@ -116,11 +117,26 @@ describe('path-values', () => {
 			contacts: [{ email: 'ada@example.com' }, { name: 'Grace', email: 'grace@example.com' }],
 		};
 
-		expect(mergePathValues(collectFieldDefaults([contacts], userDefaults), userDefaults)).toEqual({
+		expect(
+			mergePathValues(
+				collectFieldDefaults([contacts].map(normalizeContainerFixture), userDefaults),
+				userDefaults,
+			),
+		).toEqual({
 			contacts: [
 				{ name: 'Ada', email: 'ada@example.com' },
 				{ name: 'Grace', email: 'grace@example.com' },
 			],
 		});
 	});
+});
+
+test('deep merges preserve non-plain values by reference', () => {
+	class Model {
+		constructor(readonly value: string) {}
+	}
+	const model = new Model('replacement');
+	expect(mergePathValues([{ name: 'profile', defaultValue: { previous: true } }], { profile: model }).profile).toBe(
+		model,
+	);
 });

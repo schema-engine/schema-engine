@@ -152,7 +152,8 @@ and `collectStepFieldPaths` accepts a `ValidationStep`; both types follow the
 engine's normalized form model.
 
 - `collectStepFieldPaths(step, values)` walks named fields in nested containers
-  and expands field templates for each array row.
+  and expands field templates for each array row. Scalar array child rules use
+  item paths such as `tags.0`, while the array container keeps its `tags` path.
 - `effectiveRulesFor({ element, fieldPath, values, registry })` combines
   configured and field-type default rules, then adds `required` when a `require`
   constraint holds for the rendered field path. A sibling reference such as
@@ -214,3 +215,12 @@ adapter.
 | Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Copied React widgets, colocated field schemas, and view recipes for the React adapter                                     |
 
 Custom fields use `defineInput` with any Standard Schema. Default widgets ship their own Zod schemas beside their registrations; those schemas are not engine contracts and may differ between React and Radiant.
+
+### Container registration semantics
+
+Set `containerKind: 'array'` on an array input registration, including custom
+widgets with a different `$type`. The engine carries this metadata into frozen
+normalized elements for default seeding and field traversal. Authoring JSON does
+not include this marker. Containers without an array marker use object paths.
+See [engine internals](src/engine/README.md#schema-artifacts-and-extension).
+`extend` also preserves an engine's custom schema metadata catalog.

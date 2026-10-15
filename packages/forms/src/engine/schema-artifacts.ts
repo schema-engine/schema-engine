@@ -1,5 +1,6 @@
 import * as z from 'zod/mini';
-import type { StandardSchemaV1 } from '@standard-schema/spec';
+import type { StandardJSONSchemaV1 } from '@standard-schema/spec';
+import type { AnyActionRegistration } from '@/types/registration';
 import type { ComponentType } from './component-type';
 import { SchemaMetadataCatalog } from './schema-metadata-catalog';
 import { generateZodJSONSchemaCollection, generateZodJSONSchemaDocument, isZodType } from '@/lib/zod-json-schema';
@@ -7,9 +8,7 @@ import {
 	createStandardJSONSchema,
 	createStandardJSONSchemaRecord,
 	type JSONSchemaObject,
-	type JSONSchemaOptions,
 	type JSONSchemaTarget,
-	type StandardJSONSchemaV1,
 } from '@/lib/standard-json-schema';
 
 /**
@@ -36,7 +35,7 @@ export type FormEngineSchemaMetadataRegistry = ReturnType<typeof z.registry<Form
  * conversion details into runtime methods.
  */
 export interface FormEngineSchemaArtifacts {
-	metadataCatalog?: SchemaMetadataCatalog;
+	metadataCatalog: SchemaMetadataCatalog;
 	metadataRegistry: FormEngineSchemaMetadataRegistry;
 	formConfigValidator: z.ZodMiniType;
 	jsonSchema: FormEngineJSONSchemaSerializer;
@@ -48,7 +47,6 @@ type ZodSchemaWithRegister = z.ZodMiniType & {
 
 /**
  * Bridge catalog metadata into a Zod registry for JSON Schema generation.
- * Temporary until w2-03 reads jsonSchema from Standard Schema directly.
  */
 export function createZodRegistryFromCatalog(catalog: SchemaMetadataCatalog): FormEngineSchemaMetadataRegistry {
 	const registry = z.registry<FormEngineSchemaMetadata>();
@@ -79,8 +77,7 @@ export function createZodRegistryFromCatalog(catalog: SchemaMetadataCatalog): Fo
 
 /**
  * Serializer contract used by the engine for emitted JSON Schema artifacts.
- * This groups the current JSON Schema collection APIs with the Standard JSON
- * Schema wrappers that are being prepared for later extraction.
+ * Exposes collections and per-configuration input/output converters.
  */
 export interface FormEngineJSONSchemaSerializer {
 	generateCollection: (options?: {
@@ -97,49 +94,12 @@ export interface FormEngineJSONSchemaSerializer {
 	actionConfigStandardSchemas: Record<string, StandardJSONSchemaV1>;
 }
 
-/**
- * Controls how engine schema artifacts are identified and branded when exposed
- * through JSON Schema and Standard JSON Schema APIs.
- *
- * The current defaults preserve the existing `forms` behavior, but the shape is
- * intentionally generic so the serializer layer can be moved later without
- * carrying hardcoded package conventions inside its implementation.
- */
-export interface FormEngineSchemaSerializationConfig {
-	vendor: string;
-	formConfigSchemaId: string;
-	actionSchemaId: (actionType: string) => string;
-}
+const VENDOR = '@schema-engine/forms';
+const FORM_CONFIG_SCHEMA_ID = 'form-config-schema';
 
-/**
- * Default serialization identifiers used by the forms package today.
- */
-export const defaultFormEngineSchemaSerializationConfig: FormEngineSchemaSerializationConfig = {
-	vendor: '@schema-engine/forms',
-	formConfigSchemaId: 'form-config-schema',
-	actionSchemaId: (actionType) => `action:${actionType}`,
-};
-
-/**
- * Minimal registration shape required to derive schema validators from a
- * runtime component registration.
- */
-export interface SchemaValidatorRegistrationLike {
-	$type: string;
-	schema: StandardSchemaV1<unknown>;
-}
-
-/**
- * Derive a stable action-type to validator map from action registrations.
- * The artifact layer only needs the configuration validators, not runtime
- * execution handlers, which keeps this boundary closer to a future internal
- * schema package.
- *
- * JSON Schema emission still expects Zod-compatible validators today; registrations may
- * already expose Standard Schema at the type level.
- */
-export function createActionConfigValidatorMap<TRegistration extends SchemaValidatorRegistrationLike>(
-	actionRegistrations: Iterable<TRegistration>,
+/** Extract Zod-compatible action validators for JSON Schema conversion. */
+export function createActionConfigValidatorMap(
+	actionRegistrations: Iterable<AnyActionRegistration>,
 ): Map<string, z.ZodMiniType> {
 	return new Map(
 		Array.from(actionRegistrations)
@@ -151,26 +111,22 @@ export function createActionConfigValidatorMap<TRegistration extends SchemaValid
 function generateFormConfigJSONSchemaForIO(
 	metadataRegistry: FormEngineSchemaMetadataRegistry,
 	formConfigValidator: z.ZodMiniType,
-	serializationConfig: FormEngineSchemaSerializationConfig,
 	io: 'input' | 'output',
 	options?: { target?: JSONSchemaTarget },
 ): JSONSchemaObject {
 	return generateZodJSONSchemaDocument(formConfigValidator, metadataRegistry, {
 		target: options?.target,
 		io,
-		schemaId: serializationConfig.formConfigSchemaId,
+		schemaId: FORM_CONFIG_SCHEMA_ID,
 	});
 }
 
 /**
  * Create the JSON Schema serializer used by FormEngine schema artifacts.
- * The inputs are intentionally generic enough that the serializer can later be
- * moved out of `forms` without another redesign.
  */
 function createFormEngineJSONSchemaSerializer(
 	metadataRegistry: FormEngineSchemaMetadataRegistry,
 	formConfigValidator: z.ZodMiniType,
-	serializationConfig: FormEngineSchemaSerializationConfig,
 	actionConfigValidators?: Map<string, z.ZodMiniType>,
 ): FormEngineJSONSchemaSerializer {
 	const generateCollection: FormEngineJSONSchemaSerializer['generateCollection'] = (options) => {
@@ -181,66 +137,48 @@ function createFormEngineJSONSchemaSerializer(
 		return generateFormConfigJSONSchemaForIO(
 			metadataRegistry,
 			formConfigValidator,
-			serializationConfig,
 			options?.io ?? 'output',
 			options,
 		);
 	};
 
-	const generateActionConfig: FormEngineJSONSchemaSerializer['generateActionConfig'] = (actionType, options) => {
-		const actionConfigValidator = actionConfigValidators?.get(actionType);
-		if (!actionConfigValidator) {
-			return undefined;
-		}
-
-		return generateZodJSONSchemaDocument(actionConfigValidator, metadataRegistry, {
-			target: options?.target,
-			io: options?.io,
-			schemaId: serializationConfig.actionSchemaId(actionType),
-		});
+	const generateActionSchema = (
+		actionType: string,
+		options?: { target?: JSONSchemaTarget; io?: 'input' | 'output' },
+	): JSONSchemaObject | undefined => {
+		const validator = actionConfigValidators?.get(actionType);
+		return validator
+			? generateZodJSONSchemaDocument(validator, metadataRegistry, {
+					target: options?.target,
+					io: options?.io,
+					schemaId: `action:${actionType}`,
+				})
+			: undefined;
 	};
 
 	const formConfigStandardSchema = createStandardJSONSchema(
-		serializationConfig.vendor,
+		VENDOR,
 		(options) =>
-			generateFormConfigJSONSchemaForIO(metadataRegistry, formConfigValidator, serializationConfig, 'input', {
+			generateFormConfigJSONSchemaForIO(metadataRegistry, formConfigValidator, 'input', {
 				target: options.target,
 			}),
 		(options) =>
-			generateFormConfigJSONSchemaForIO(metadataRegistry, formConfigValidator, serializationConfig, 'output', {
+			generateFormConfigJSONSchemaForIO(metadataRegistry, formConfigValidator, 'output', {
 				target: options.target,
 			}),
 	);
 
 	const actionConfigStandardSchemas = createStandardJSONSchemaRecord(
 		Array.from(actionConfigValidators?.keys() || []),
-		serializationConfig.vendor,
-		(actionType, options: JSONSchemaOptions) => {
-			const actionConfigValidator = actionConfigValidators?.get(actionType);
-			return actionConfigValidator
-				? generateZodJSONSchemaDocument(actionConfigValidator, metadataRegistry, {
-						target: options.target,
-						io: 'input',
-						schemaId: serializationConfig.actionSchemaId(actionType),
-					})
-				: undefined;
-		},
-		(actionType, options: JSONSchemaOptions) => {
-			const actionConfigValidator = actionConfigValidators?.get(actionType);
-			return actionConfigValidator
-				? generateZodJSONSchemaDocument(actionConfigValidator, metadataRegistry, {
-						target: options.target,
-						io: 'output',
-						schemaId: serializationConfig.actionSchemaId(actionType),
-					})
-				: undefined;
-		},
+		VENDOR,
+		(actionType, options) => generateActionSchema(actionType, { target: options.target, io: 'input' }),
+		(actionType, options) => generateActionSchema(actionType, { target: options.target, io: 'output' }),
 	);
 
 	return {
 		generateCollection,
 		generateFormConfig,
-		generateActionConfig,
+		generateActionConfig: generateActionSchema,
 		formConfigStandardSchema,
 		actionConfigStandardSchemas,
 	};
@@ -250,25 +188,15 @@ function createFormEngineJSONSchemaSerializer(
  * Create a schema artifact bundle from the current validator implementation.
  */
 export function createFormEngineSchemaArtifacts(
-	metadataSource: SchemaMetadataCatalog | FormEngineSchemaMetadataRegistry,
+	metadataCatalog: SchemaMetadataCatalog,
 	formConfigValidator: z.ZodMiniType,
-	serializationConfig: FormEngineSchemaSerializationConfig = defaultFormEngineSchemaSerializationConfig,
 	actionConfigValidators?: Map<string, z.ZodMiniType>,
 ): FormEngineSchemaArtifacts {
-	const metadataCatalog = metadataSource instanceof SchemaMetadataCatalog ? metadataSource : undefined;
-	const metadataRegistry: FormEngineSchemaMetadataRegistry = metadataCatalog
-		? createZodRegistryFromCatalog(metadataCatalog)
-		: (metadataSource as FormEngineSchemaMetadataRegistry);
-
+	const metadataRegistry = createZodRegistryFromCatalog(metadataCatalog);
 	return {
 		metadataCatalog,
 		metadataRegistry,
 		formConfigValidator,
-		jsonSchema: createFormEngineJSONSchemaSerializer(
-			metadataRegistry,
-			formConfigValidator,
-			serializationConfig,
-			actionConfigValidators,
-		),
+		jsonSchema: createFormEngineJSONSchemaSerializer(metadataRegistry, formConfigValidator, actionConfigValidators),
 	};
 }

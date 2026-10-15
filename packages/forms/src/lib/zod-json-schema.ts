@@ -17,6 +17,7 @@ export function isZodType(schema: unknown): schema is z.ZodMiniType {
  * Shared alias for the Zod registry type used during JSON Schema generation.
  * Keeping this in one place reduces the amount of Zod-specific typing that
  * leaks into higher-level schema artifact code.
+ * @remarks Zod accepts heterogeneous metadata through this existential registry.
  */
 export type ZodJSONSchemaRegistry = ReturnType<typeof z.registry<Record<string, any>>>;
 
@@ -57,7 +58,7 @@ export function generateZodJSONSchemaDocument(
 	const schema = z.toJSONSchema(validator, {
 		target: options?.target || 'draft-2020-12',
 		io: options?.io || 'output',
-		metadata: metadataRegistry as ReturnType<typeof z.registry<Record<string, any>>>,
+		metadata: metadataRegistry,
 	}) as JSONSchemaObject & { $id?: string };
 
 	if (options?.schemaId) {
