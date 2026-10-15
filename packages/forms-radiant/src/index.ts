@@ -13,4 +13,4 @@ export * from '@/recipes';
 export { schemaFormRegistrations } from '@/registrations';
 export { createRadiantFormEngine } from '@/registries/builder-registry';
 export { createRadiantPhoneValidationRegistration } from '@/lib/phone-validation';
-export { hydrateFieldRules, reviveRules } from '@/components/internals/field-rule-hydrator';
+export { hydrateFieldRules } from '@/components/internals/field-rule-hydrator';

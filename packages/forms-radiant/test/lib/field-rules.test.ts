@@ -6,7 +6,7 @@ import { createRadiantPhoneValidationRegistration } from '@/lib/phone-validation
 const registry = createDefaultValidationRegistry();
 
 describe('toFieldRules', () => {
-	test('maps required and email rules for RuiField', () => {
+	test('maps required and delegates email to the engine registry', async () => {
 		const rules = toFieldRules(
 			{
 				rules: [
@@ -18,13 +18,10 @@ describe('toFieldRules', () => {
 		);
 
 		expect(rules?.required).toBe('Name is required');
-		const pattern = rules?.pattern as { value: RegExp; message: string } | undefined;
-		expect(pattern).toEqual({
-			value: expect.any(RegExp),
-			message: 'Invalid email',
-		});
-		expect(pattern?.value.test('jane@example.com')).toBe(true);
-		expect(pattern?.value.test('not-an-email')).toBe(false);
+		expect(rules?.pattern).toBeUndefined();
+		const validate = rules?.validate as (value: unknown) => Promise<boolean | string>;
+		expect(await validate('jane@example.com')).toBe(true);
+		expect(await validate('not-an-email')).toBe('Invalid email');
 	});
 
 	test('returns undefined when a field has no rules', () => {
@@ -61,13 +58,12 @@ describe('toFieldRules', () => {
 			{ rules: [{ type: 'hex', message: 'Enter hexadecimal characters' }] },
 			registry,
 		);
-		const base64Pattern = base64Rules?.pattern as { value: RegExp } | undefined;
-		const hexPattern = hexadecimalRules?.pattern as { value: RegExp } | undefined;
-
-		expect(base64Pattern?.value.test('not base64')).toBe(false);
-		expect(base64Pattern?.value.test('aGVsbG8=')).toBe(true);
-		expect(hexPattern?.value.test('not hexadecimal')).toBe(false);
-		expect(hexPattern?.value.test('deadbeef')).toBe(true);
+		const validateBase64 = base64Rules?.validate as (value: unknown) => Promise<boolean | string>;
+		const validateHex = hexadecimalRules?.validate as (value: unknown) => Promise<boolean | string>;
+		expect(await validateBase64('not base64')).toBe('Enter Base64 data');
+		expect(await validateBase64('aGVsbG8=')).toBe(true);
+		expect(await validateHex('not hexadecimal')).toBe('Enter hexadecimal characters');
+		expect(await validateHex('deadbeef')).toBe(true);
 	});
 
 	test('validates minItems as an array rule rather than a required field', async () => {
