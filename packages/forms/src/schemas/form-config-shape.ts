@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import { GridLayoutConfigSchema } from './base-field';
+import { GridLayoutConfigSchema, RendererStyleSchema } from './base-field';
 
 /**
  * Envelope for a registered config object. Per-item Standard Schema validation
@@ -16,10 +16,10 @@ export function createFormStepSchema(parts: { elements: z.ZodMiniType; actions: 
 		description: z.optional(z.string()),
 		icon: z.optional(z.string()),
 		elements: z.array(parts.elements),
-		rules: z.optional(z.any()),
-		constraints: z.optional(z.array(z.any())),
+		rules: z.optional(z.unknown()),
+		constraints: z.optional(z.array(z.unknown())),
 		className: z.optional(z.string()),
-		style: z.optional(z.record(z.string(), z.any())),
+		style: z.optional(RendererStyleSchema),
 		onStepEnter: z.optional(z.array(parts.actions)),
 		onStepLeave: z.optional(z.array(parts.actions)),
 		onStepValidate: z.optional(z.array(parts.actions)),
@@ -43,7 +43,7 @@ export function createFormConfigShape(parts: { elements: z.ZodMiniType; view: z.
 		validationMode: z.optional(z.enum(['onSubmit', 'onChange', 'onBlur', 'all'])),
 		reValidateMode: z.optional(z.enum(['onSubmit', 'onChange', 'onBlur'])),
 		className: z.optional(z.string()),
-		style: z.optional(z.record(z.string(), z.any())),
+		style: z.optional(RendererStyleSchema),
 		actions: z.optional(z.array(parts.actions)),
 	});
 }

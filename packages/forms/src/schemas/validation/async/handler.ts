@@ -136,7 +136,7 @@ function handleErrorWithCache(
  * Includes debouncing, dependency resolution, and performance optimizations.
  */
 export function createAsyncValidationHandler(rule: AsyncRule, context: ValidationContext) {
-	return z.any().check(
+	return z.unknown().check(
 		z.superRefine(async (value: unknown, ctx) => {
 			if (isEmpty(value)) {
 				return;

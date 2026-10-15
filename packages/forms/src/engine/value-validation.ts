@@ -71,6 +71,17 @@ function expandContainerTemplatePaths(values: Record<string, unknown>, templateP
 	return expandContainerParentPaths(values, parentPath).map((fieldPath) => `${fieldPath}.${containerName}`);
 }
 
+function expandArrayItemPaths(values: Record<string, unknown>, templatePath: string, depth: number): string[] {
+	let paths = expandContainerTemplatePaths(values, templatePath);
+	for (let level = 0; level < depth; level += 1) {
+		paths = paths.flatMap((path) => {
+			const value = getValueAtPath<unknown[]>(values, path);
+			return Array.isArray(value) ? Array.from({ length: value.length }, (_, index) => `${path}.${index}`) : [];
+		});
+	}
+	return paths;
+}
+
 function pathIsRequested(path: string, names?: readonly string[]): boolean {
 	if (!names?.length) {
 		return true;
@@ -80,8 +91,12 @@ function pathIsRequested(path: string, names?: readonly string[]): boolean {
 }
 
 function fieldElementPathsFor(elements: ValidationElementTree, values: Record<string, unknown>): FieldElementPath[] {
-	return walkNamedElements(elements).flatMap(({ path, element, hasChildren }) => {
-		const paths = hasChildren ? expandContainerTemplatePaths(values, path) : expandFieldTemplatePaths(values, path);
+	return walkNamedElements(elements).flatMap(({ path, element, hasChildren, arrayItemDepth }) => {
+		const paths = arrayItemDepth
+			? expandArrayItemPaths(values, path, arrayItemDepth)
+			: hasChildren
+				? expandContainerTemplatePaths(values, path)
+				: expandFieldTemplatePaths(values, path);
 		return paths.map((fieldPath) => ({ element, fieldPath }));
 	});
 }

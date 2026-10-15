@@ -27,9 +27,22 @@ export class SchemaMetadataCatalog {
 	 * Associate a validator schema with catalog metadata.
 	 */
 	register(schema: StandardSchemaV1, entry: SchemaMetadataEntry): void {
+		const previousSchema = this.schemasById.get(entry.id);
+		if (previousSchema && previousSchema !== schema) {
+			this.idBySchema.delete(previousSchema);
+		}
 		this.entries.set(entry.id, entry);
 		this.schemasById.set(entry.id, schema);
 		this.idBySchema.set(schema, entry.id);
+	}
+
+	/** Create an independent catalog with the same schema and metadata entries. */
+	clone(): SchemaMetadataCatalog {
+		const catalog = new SchemaMetadataCatalog();
+		for (const { schema, entry } of this.getRegisteredSchemas()) {
+			catalog.register(schema, entry);
+		}
+		return catalog;
 	}
 
 	/**

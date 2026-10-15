@@ -1,10 +1,7 @@
-import type { RecipeRegistration } from '@/types';
+import type { AnyRecipeRegistration } from '@/types/registration';
 import type { RecipeDescriptor, ViewCatalog } from '@/recipes/types';
 
-function recipeToDescriptor(
-	recipe: RecipeRegistration<any, any>,
-	viewSchema?: Record<string, unknown>,
-): RecipeDescriptor {
+function recipeToDescriptor(recipe: AnyRecipeRegistration, viewSchema?: Record<string, unknown>): RecipeDescriptor {
 	return {
 		$type: recipe.$type,
 		kind: recipe.kind,
@@ -15,15 +12,15 @@ function recipeToDescriptor(
 }
 
 export function describeRecipeFromRegistration(
-	recipe: RecipeRegistration<any, any>,
-	generateViewSchema?: (recipe: RecipeRegistration<any, any>) => Record<string, unknown>,
+	recipe: AnyRecipeRegistration,
+	generateViewSchema?: (recipe: AnyRecipeRegistration) => Record<string, unknown>,
 ): RecipeDescriptor {
 	return recipeToDescriptor(recipe, generateViewSchema?.(recipe));
 }
 
 export function describeViewCatalogFromRecipes(
-	recipes: RecipeRegistration<any, any>[],
-	generateViewSchema?: (recipe: RecipeRegistration<any, any>) => Record<string, unknown>,
+	recipes: AnyRecipeRegistration[],
+	generateViewSchema?: (recipe: AnyRecipeRegistration) => Record<string, unknown>,
 ): ViewCatalog {
 	return {
 		recipes: recipes.map((recipe) => describeRecipeFromRegistration(recipe, generateViewSchema)),

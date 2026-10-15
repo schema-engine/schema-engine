@@ -27,7 +27,8 @@ export class ElementRegistry extends ComponentRegistry<string, ElementRegistrati
 		$type: string;
 		schema: unknown;
 		metadata: ElementMetadata;
-		render: (props: any) => unknown;
+		render: (props: never) => unknown;
+		containerKind?: import('@/types/registration').ContainerKind;
 	}): void {
 		assertStandardSchema(item.schema, `Element '${item.$type}' schema`);
 		super.register(item as ElementRegistration);

@@ -24,3 +24,21 @@ adoption is tracked by [#138](https://github.com/andeeplus/schema-engine/issues/
 and [#133](https://github.com/andeeplus/schema-engine/issues/133), respectively.
 
 The public usage examples are in the [forms package README](../../README.md#engine-validation).
+
+## Schema artifacts and extension
+
+`extend` inherits the source engine's schema metadata catalog and compiled grid.
+An explicit `catalog` on `extend` replaces that catalog. JSON Schema generation
+uses `StandardJSONSchemaV1` from `@standard-schema/spec` and keeps the existing
+forms vendor, schema ids, targets and input/output documents. Inherited
+catalogs are copied; schemas for added or overridden registrations are updated
+without mutating the source engine's catalog.
+
+Container registrations declare `containerKind: 'array'` (or `'object'`).
+Normalization stores that metadata on the frozen element without adding JSON
+keys. `collectFieldDefaults` and `walkNamedElements` read the metadata rather
+than a widget `$type`. A one-child array uses scalar item paths; other arrays
+join child names onto each item. Validation expands scalar child rules to each
+live item path (`tags.0`, `tags.1`) while keeping the container path (`tags`)
+available for container rules. Pass normalized elements to these helpers so
+custom array widgets receive the same path and default behavior as built-ins.

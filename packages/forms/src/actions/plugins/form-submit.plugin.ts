@@ -8,13 +8,16 @@ import { FormActionTriggerSchema } from '../triggers';
  */
 export interface FormSubmitPluginConfig {
 	/** Custom request adapter (fetch, axios, etc.) */
-	request?: (url: string, options: any) => Promise<Response>;
+	request?: (url: string, options: RequestInit) => Promise<Response>;
 	/** Transform data before sending */
-	transformData?: (data: any, context: BuilderActionExecutionContext<any>) => any;
+	transformData?: (
+		data: Record<string, unknown>,
+		context: BuilderActionExecutionContext<FormSubmitAction>,
+	) => Record<string, unknown>;
 	/** Handle successful response */
-	onSuccess?: (data: any, context: BuilderActionExecutionContext<any>) => void;
+	onSuccess?: (data: unknown, context: BuilderActionExecutionContext<FormSubmitAction>) => void;
 	/** Handle error response */
-	onError?: (error: Error, context: BuilderActionExecutionContext<any>) => void;
+	onError?: (error: Error, context: BuilderActionExecutionContext<FormSubmitAction>) => void;
 }
 
 /** Schema for the `submit` action configuration. */

@@ -1,3 +1,5 @@
+import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
+import { ComponentType } from '@/engine/component-type';
 import { describe, expect, test } from 'vitest';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@/engine/create-form-engine';
@@ -172,4 +174,39 @@ describe('FormEngine.extend', () => {
 		expect(extended.getCompiledGrid()).toBe(base.getCompiledGrid());
 		expect(extended.getCompiledGrid()).toBe(base.getCompiledGrid());
 	});
+});
+
+test('extend preserves an explicitly supplied metadata catalog', () => {
+	const catalog = new SchemaMetadataCatalog();
+	const customSchema = z.object({ tag: z.string() });
+	catalog.register(customSchema, {
+		id: 'custom:metadata',
+		title: 'Custom metadata',
+		componentType: ComponentType.Element,
+	});
+	const engine = createFormEngine({ catalog });
+	const before = engine.generateJSONSchemaCollection();
+	expect(JSON.stringify(before)).toContain('custom:metadata');
+	const extended = engine.extend({ elements: [noteElement] });
+	const after = extended.generateJSONSchemaCollection();
+	expect(extended.getSchemaCatalog()).not.toBe(catalog);
+	expect(after.schemas).toHaveProperty('custom:metadata', before.schemas['custom:metadata']);
+	expect(after.schemas).toHaveProperty('element:note');
+	expect(catalog.getRegisteredSchemas()).toHaveLength(1);
+	expect(extended.hasElement('note')).toBe(true);
+});
+
+test('extend replaces the catalog schema for an overridden registration', () => {
+	const replacement = defineInput({
+		$type: 'note',
+		schema: z.object({ $type: z.literal('note'), id: z.string(), name: z.string(), revision: z.number() }),
+		metadata: { name: 'Revised note', category: 'input' },
+		render: () => null,
+	});
+	const base = createFormEngine({ elements: [noteElement] });
+	const extended = base.extend({ elements: [replacement] });
+	const schemas = extended.generateJSONSchemaCollection().schemas as Record<string, Record<string, unknown>>;
+
+	expect(schemas['element:note'].properties).toHaveProperty('revision');
+	expect(base.generateJSONSchemaCollection().schemas).toHaveProperty('element:note');
 });

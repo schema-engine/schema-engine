@@ -171,6 +171,10 @@ array config's Add and Remove behavior.
 
 Field schemas live beside each registration under `src/elements/` (for example `form-input.types.ts` next to `form-input.registration.ts`). Component props stay on the widget modules. Radiant does not ship `date` or `date-range` widgets; those `$type`s exist only in the shadcn registry today. Registry and Radiant schemas may diverge where capabilities differ.
 
+Custom container registrations declare `containerKind: 'array'` or
+`containerKind: 'object'`. The forms engine uses this registration metadata to
+compose defaults and validation paths, independent of the widget `$type`.
+
 ## Development
 
 ```bash
