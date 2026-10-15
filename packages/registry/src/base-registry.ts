@@ -118,14 +118,4 @@ export abstract class BaseRegistry<TKey extends string, TValue extends BaseRegis
 		this.items.clear();
 		logger.debug(`${this.registryName} cleared`);
 	}
-
-	/**
-	 * Get the internal Map for direct access (e.g., for FormEngine).
-	 * Use sparingly - prefer the public API methods.
-	 *
-	 * @internal
-	 */
-	getMap(): Map<TKey, TValue> {
-		return this.items;
-	}
 }

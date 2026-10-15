@@ -15,16 +15,15 @@ It provides:
 
 - action registrations
 - a registry for resolving action types
-- a sequential executor
-- a thin dispatcher for metadata-aware dispatching
+- a sequential dispatcher with metadata merging
 
 The package is reusable across domains. It is not form-specific.
 
 ## Execution Model
 
-The executor separates the caller-provided base context from the runtime context seen by action handlers.
+The dispatcher separates the caller-provided base context from the runtime context seen by action handlers.
 
-When an action runs, the executor enriches the base context with the current action config and trigger before calling `execute()`.
+When an action runs, the dispatcher enriches the base context with the current action config and trigger before calling `execute()`.
 
 ```typescript
 execute({
@@ -84,20 +83,20 @@ const logAction: ActionRegistration<LogConfig, BaseContext, Trigger> = {
 
 registry.register(logAction);
 
-const executor = new ActionExecutor(registry);
+const dispatcher = new ActionDispatcher(registry);
 
 const baseContext: BaseContext = {
 	userId: 'user_123',
 };
 
-await executor.execute({
+await dispatcher.dispatch({
 	actions: [{ id: '1', $type: 'log', message: 'Hello' }],
 	trigger: 'submit',
 	context: baseContext,
 });
 ```
 
-The handler still receives `BaseContext & { config: LogConfig; trigger: Trigger }`, but that runtime shape is injected by the executor.
+The handler still receives `BaseContext & { config: LogConfig; trigger: Trigger }`, but that runtime shape is injected by the dispatcher.
 
 ## Next Steps
 

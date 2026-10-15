@@ -40,26 +40,26 @@ The flow is: define a registration shape, create a registry subclass, then regis
 
 ## Overview
 
-`@schema-engine/registry` provides the foundational classes for creating registry-based plugin systems. It is used internally by `@schema-engine/forms` and `@schema-engine/actions` to manage elements, recipes, and actions.
+`@schema-engine/registry` provides the foundational classes for creating registry-based plugin systems. The actions package uses it to store action registrations. The forms package exposes optional registry helpers and builds engine Maps directly.
 
 **Key Features:**
 
 - **Type Safe**: Full TypeScript support with generic constraints for keys and values.
-- **Extensible**: Abstract `BaseRegistry` and `ComponentRegistry` classes designed for domain-specific extension.
+- **Extensible**: Abstract `BaseRegistry` accepts domain-specific registration types.
 - **Logging**: Built-in debug logging for registration lifecycle events.
 - **Standard Schema boundary**: Register schemas from Zod Mini, Zod, Valibot, Effect Schema, or another compatible provider.
 
 ## Installation
 
 ```bash
-bun add @schema-engine/registry
+pnpm add @schema-engine/registry
 
 # Install zod only when authoring schemas with zod/mini.
-bun add zod
+pnpm add zod
 ```
 
 ## Next Steps
 
-- [Core Concepts](/docs/registry/core-concepts) - Understand BaseRegistry and ComponentRegistry
+- [Core Concepts](/docs/registry/core-concepts) - Understand BaseRegistry and registration types
 - [API Reference](/docs/registry/api-reference) - Complete API documentation
 - [Examples](/docs/registry/examples) - Build your own registry

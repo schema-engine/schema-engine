@@ -90,13 +90,4 @@ describe('BaseRegistry', () => {
 		expect(registry.get('item1')).toBe(item1Override);
 		expect(registry.get('item1')?.metadata.name).toBe('Item 1 Updated');
 	});
-
-	it('should allow direct map access via getMap', () => {
-		const item = createMockItem('item1', 'Item 1');
-		registry.register(item);
-
-		const map = registry.getMap();
-		expect(map).toBeInstanceOf(Map);
-		expect(map.get('item1')).toBe(item);
-	});
 });

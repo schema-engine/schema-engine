@@ -23,7 +23,7 @@ export interface ActionConfigBase<TType extends string = string> {
  * Action Runtime Context
  *
  * Context received by action handlers at execution time.
- * The executor creates this runtime shape by enriching the caller-provided
+ * The dispatcher creates this runtime shape by enriching the caller-provided
  * base context with the current action config and trigger.
  *
  * @template TConfig - Action configuration type
@@ -77,8 +77,6 @@ export interface ActionExecutionResult<TData = unknown> {
 	data?: TData;
 	/** Whether to continue executing subsequent actions */
 	shouldContinue?: boolean;
-	/** URL to redirect to after action completion */
-	redirectUrl?: string;
 }
 
 /**
@@ -157,38 +155,21 @@ export interface ActionRegistration<
 	$type: TConfig['$type'];
 	/**
 	 * Action execution function.
-	 * Receives the runtime context produced by the executor.
+	 * Receives the runtime context produced by the dispatcher.
 	 */
 	execute: ActionHandler<TConfig, TBaseContext, TTrigger, TData>;
 }
 
-/**
- * Action executor input.
- */
-export interface ActionExecuteInput<
-	TConfig extends ActionConfigBase = ActionConfigBase,
-	TBaseContext = unknown,
-	TTrigger = string,
-> {
-	/** Trigger/event causing execution */
-	trigger: TTrigger;
-	/** Action configurations to evaluate */
-	actions: readonly TConfig[];
-	/** Caller-provided base context */
-	context: TBaseContext;
-	/** Optional reference to the action that triggered nested execution */
-	triggeredBy?: TConfig;
-}
-
-/**
- * Action dispatcher input.
- */
+/** Input for trigger-based sequential dispatch. */
 export interface ActionDispatchInput<
 	TConfig extends ActionConfigBase = ActionConfigBase,
 	TBaseContext = unknown,
 	TTrigger = string,
-> extends ActionExecuteInput<TConfig, TBaseContext, TTrigger> {
-	/** Additional metadata to merge into context.metadata */
+> {
+	trigger: TTrigger;
+	actions: readonly TConfig[];
+	context: TBaseContext;
+	triggeredBy?: TConfig;
 	metadata?: Record<string, unknown>;
 }
 

@@ -28,7 +28,6 @@ abstract class BaseRegistry<TKey extends string, TValue extends BaseRegistration
 	getAllKeys(): TKey[];
 	get size(): number;
 	clear(): void;
-	getMap(): Map<TKey, TValue>;
 }
 ```
 
@@ -43,7 +42,6 @@ abstract class BaseRegistry<TKey extends string, TValue extends BaseRegistration
 | `getAllKeys()`   | `TKey[]`              | Returns all keys                             |
 | `size`           | `number`              | Count of items                               |
 | `clear()`        | `void`                | Removes all items                            |
-| `getMap()`       | `Map`                 | Returns internal map (use sparingly)         |
 
 ### Protected Methods
 
@@ -51,19 +49,6 @@ abstract class BaseRegistry<TKey extends string, TValue extends BaseRegistration
 | ------------------- | ---------------------------------------------- |
 | `getItemKey(item)`  | Extracts key from item (uses `$type`)          |
 | `getItemName(item)` | Extracts name from item (uses `metadata.name`) |
-
-## ComponentRegistry
-
-Abstract class for component registries. Extends `BaseRegistry`.
-
-```typescript
-abstract class ComponentRegistry<
-	TKey extends string,
-	TValue extends ComponentRegistration<any, any, any>,
-> extends BaseRegistry<TKey, TValue> {}
-```
-
-`ComponentRegistry` currently inherits `BaseRegistry` behavior unchanged and exists to enforce the renderable registration constraint at the type level.
 
 ## Types
 
@@ -74,7 +59,7 @@ import type { StandardSchemaV1 } from '@standard-schema/spec';
 
 interface BaseRegistration<TConfig = unknown, TMeta extends RegistrationMetadata = ComponentMetadata> {
 	$type: string;
-	schema: StandardSchemaV1<TConfig>;
+	schema: StandardSchemaV1;
 	metadata: TMeta;
 }
 ```

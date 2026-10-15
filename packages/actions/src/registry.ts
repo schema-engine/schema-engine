@@ -11,7 +11,7 @@ type AnyActionRegistration<TBaseContext, TTrigger> = ActionRegistration<any, TBa
  * Action Registry Provider
  *
  * Interface for objects that can provide action registrations.
- * This allows the ActionExecutor to look up action handlers without
+ * This allows the ActionDispatcher to look up action handlers without
  * depending on a specific registry implementation.
  *
  * @template TContext - Domain-specific context data

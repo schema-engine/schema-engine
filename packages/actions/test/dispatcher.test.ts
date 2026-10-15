@@ -154,3 +154,44 @@ describe('ActionDispatcher', () => {
 		expect(unhandled).toEqual([]);
 	});
 });
+
+test('unregistered action with another trigger produces no result', async () => {
+	const dispatcher = new ActionDispatcher({ getAction: () => undefined, getActionTypes: () => [] });
+	expect(
+		await dispatcher.dispatch({
+			actions: [{ id: 'audit-1', $type: 'audit', triggers: ['form_submit'] }],
+			trigger: 'form_change',
+			context: {},
+		}),
+	).toEqual([]);
+});
+
+test('looks up each matching registration once and skips explicit mismatches', async () => {
+	let lookups = 0;
+	const dispatcher = new ActionDispatcher({
+		getAction: () => {
+			lookups += 1;
+			return {
+				$type: 'audit',
+				schema: z.unknown(),
+				metadata: { name: 'Audit', defaultTriggers: ['form_submit'] },
+				execute: () => ({ success: true, data: 'audited' }),
+			};
+		},
+		getActionTypes: () => ['audit'],
+	});
+	const results = await dispatcher.dispatch({
+		actions: [
+			{ id: 'skip', $type: 'audit', triggers: ['form_change'] },
+			{ id: 'default', $type: 'audit' },
+			{ id: 'explicit', $type: 'audit', triggers: ['form_submit'] },
+		],
+		trigger: 'form_submit',
+		context: {},
+	});
+	expect(results).toEqual([
+		{ success: true, data: 'audited' },
+		{ success: true, data: 'audited' },
+	]);
+	expect(lookups).toBe(2);
+});

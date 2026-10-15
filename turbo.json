@@ -46,6 +46,9 @@
 		"start": {
 			"dependsOn": ["^build:lib"],
 			"persistent": true
+		},
+		"@schema-engine/registry#test:all": {
+			"dependsOn": ["build:lib", "^test:all"]
 		}
 	}
 }

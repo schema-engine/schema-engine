@@ -213,3 +213,7 @@ See [engine internals](src/engine/README.md#schema-artifacts-and-extension).
 `extend` also preserves an engine's custom schema metadata catalog.
 
 `templatePath` in `@schema-engine/forms/lib/path-values` removes numeric array indices from rendered paths for constraint declaration lookup, alongside `expandFieldTemplatePaths`.
+
+Engine construction builds registration Maps directly and validates each supplied
+schema once at that boundary. Form action results add optional browser redirects
+to the generic result; see [actions](./src/actions/README.md).

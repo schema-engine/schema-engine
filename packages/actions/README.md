@@ -8,23 +8,23 @@ Domain-agnostic action execution primitives for event-driven architectures.
 
 - `ActionRegistration`: describes an action type
 - `ActionRegistry`: stores action registrations
-- `ActionExecutor`: executes action configs sequentially for a trigger
+- `ActionDispatcher`: executes action configs sequentially for a trigger
 
 The package is intended to be reusable across different domains such as forms, workflows, UI interactions, and state transitions.
 
 ## Installation
 
 ```bash
-bun add @schema-engine/actions
+pnpm add @schema-engine/actions
 ```
 
 The package has no schema-library runtime dependency. Action registrations use the provider-neutral `StandardSchemaV1` contract, so applications can choose Zod Mini, Zod, Valibot, Effect Schema, or another Standard Schema implementation.
 
 ## Execution Model
 
-The executor separates the caller-provided base context from the runtime context seen by action handlers.
+The dispatcher separates the caller-provided base context from the runtime context seen by action handlers.
 
-Provide base domain context to the executor. Before each action runs, the executor enriches that context with the action config and trigger and passes the merged object to `execute()`.
+Provide base domain context to the dispatcher. Before each action runs, the dispatcher enriches that context with the action config and trigger and passes the merged object to `execute()`.
 
 At runtime the call shape is effectively:
 
@@ -43,7 +43,7 @@ That means call sites stay simple, while handlers still receive a strongly typed
 ```typescript
 import * as z from 'zod/mini';
 import {
-	ActionExecutor,
+	ActionDispatcher,
 	type ActionConfigBase,
 	type ActionExecutionResult,
 	type ActionRegistration,
@@ -85,14 +85,14 @@ const logAction: ActionRegistration<LogActionConfig, BaseContext, MyTrigger> = {
 const registry = new ActionRegistry<BaseContext, MyTrigger>();
 registry.register(logAction);
 
-const executor = new ActionExecutor<BaseContext, MyTrigger>(registry);
+const dispatcher = new ActionDispatcher<BaseContext, MyTrigger>(registry);
 
 const baseContext: BaseContext = {
 	id: 'ctx-1',
 	data: { foo: 'bar' },
 };
 
-await executor.execute({
+await dispatcher.dispatch({
 	actions: [
 		{
 			id: 'log-1',
@@ -105,7 +105,7 @@ await executor.execute({
 });
 ```
 
-The handler receives `BaseContext & { config: LogActionConfig; trigger: MyTrigger }`. Nested dispatches also include the optional `triggeredBy` action. The runtime shape is injected by the executor.
+The handler receives `BaseContext & { config: LogActionConfig; trigger: MyTrigger }`. Nested dispatches also include the optional `triggeredBy` action. The runtime shape is injected by the dispatcher.
 
 ## Core Concepts
 
@@ -190,23 +190,11 @@ class ActionRegistry<TBaseContext, TTrigger> {
 }
 ```
 
-### ActionExecutor
-
-```typescript
-class ActionExecutor<TBaseContext = unknown, TTrigger = string> {
-	constructor(registry: ActionRegistryProvider<TBaseContext, TTrigger>, options?: { debug?: boolean });
-
-	execute<TConfig extends ActionConfigBase>(
-		input: ActionExecuteInput<TConfig, TBaseContext, TTrigger>,
-	): Promise<ActionExecutionResult[]>;
-}
-```
-
 ### ActionDispatcher
 
 ```typescript
 class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
-	constructor(registry: ActionRegistryProvider<TBaseContext, TTrigger>, options?: { debug?: boolean });
+	constructor(registry: ActionRegistryProvider<TBaseContext, TTrigger>);
 
 	dispatch<TConfig extends ActionConfigBase>(
 		input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>,
@@ -227,3 +215,17 @@ pnpm test:all
 ## License
 
 MIT
+
+## Dispatch behavior
+
+`ActionDispatcher` is the execution entry point. It skips disabled actions and
+explicit trigger mismatches before looking up a registration. Matching actions
+run sequentially, with one registration lookup each. Missing registrations
+produce a failed result. Thrown handlers become failed results and execution
+continues; an unsuccessful result with `shouldContinue: false` stops the sequence.
+`dispatch` merges optional metadata into object contexts without mutating the
+caller. `dispatchSync` starts the same dispatch and logs unexpected rejections.
+Logging uses `@ecopages/logger`; enable debug output through the host's log levels.
+The former `ActionExecutor`, its `execute` method, and the `debug` constructor
+option have been removed. Use `ActionDispatcher.dispatch` instead.
+Browser redirects belong to the forms package's `ActionExecutionResult` type.
