@@ -1,5 +1,5 @@
 import { DEFAULT_WIZARD_ACTION_LABELS, type WizardActionsConfig } from '@schema-engine/forms/recipes';
-import { useViewConfig, useViewContext } from '@schema-engine/forms-react/contexts';
+import { useViewConfig, useViewContext } from '@schema-engine/forms-react/hooks';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/components/schema-engine/forms/lib/utils';

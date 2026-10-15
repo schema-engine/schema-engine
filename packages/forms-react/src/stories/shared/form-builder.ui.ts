@@ -6,7 +6,7 @@
 
 import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
 import { SubmitActionRegistration, ResetActionRegistration } from '@schema-engine/forms/browser';
-import { createFormEngine } from '@/registries/builder-registry';
+import { createFormEngine } from '@schema-engine/forms';
 import {
 	ArrayElementRegistration,
 	CheckboxElementRegistration,
