@@ -4,6 +4,12 @@ React implementation of the JSON Form Engine with type-safe components, form ada
 
 > **Important:** This README is a package overview, not the API reference. For verified examples and API contracts, use the [Documentation App](../../apps/docs) — start with [Getting Started](../../apps/docs/src/content/docs/forms-react/getting-started.mdx) or [Quick Start](../../apps/docs/src/content/docs/getting-started/quick-start.mdx).
 
+## Logging
+
+Runtime diagnostics go through `@ecopages/logger` with the
+`[schema-engine/forms-react]` package tag. Debug output is disabled by default;
+warnings and errors keep their severity and diagnostic details.
+
 ## Overview
 
 The React package provides production-ready components and hooks for building dynamic, JSON-configured forms. It integrates seamlessly with `@schema-engine/forms` and supports popular form libraries through an adapter system.

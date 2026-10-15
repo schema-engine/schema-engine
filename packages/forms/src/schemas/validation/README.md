@@ -2,6 +2,10 @@
 
 The Form Engine validation system provides a flexible, extensible way to define and execute validation rules for form fields. It builds first-party validators with [Zod Mini](https://zod.dev/) and follows a registry pattern for maximum flexibility.
 
+Examples that log messages use `logger` imported from `@schema-engine/forms/lib/logger`,
+which adds the `[schema-engine/forms]` package tag. Runtime diagnostics use this
+same logger; debug output is disabled by default.
+
 ## Table of Contents
 
 - [Core Concepts](#core-concepts)
