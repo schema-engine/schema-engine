@@ -326,3 +326,6 @@ Show/hide or enable/disable fields based on conditions:
 - [Base UI Form Elements Overview](../README.md)
 - [Field Development Guide](../../shadcn/inputs/README.md)
 - [Submit Button Action](../actions/index.ts)
+
+Array registrations declare `containerKind: 'array'`; the engine uses this
+metadata to seed normalized defaults independently of the widget name.

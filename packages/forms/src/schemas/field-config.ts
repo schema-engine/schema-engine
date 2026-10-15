@@ -6,7 +6,7 @@ import type { BaseField } from './base-field';
  */
 
 /**
- * Global registry for fsield configurations
+ * Global registry for field configurations
  * This interface can be extended by library users to add their own field types
  */
 declare global {

@@ -8,18 +8,18 @@ import { FormActionTriggerSchema } from '../triggers';
  */
 export interface NotificationPluginConfig {
 	/** Custom success handler */
-	onSuccess?: (message: string, context: BuilderActionExecutionContext<any>) => void | Promise<void>;
+	onSuccess?: (message: string, context: BuilderActionExecutionContext<NotificationAction>) => void | Promise<void>;
 	/** Custom error handler */
-	onError?: (message: string, context: BuilderActionExecutionContext<any>) => void | Promise<void>;
+	onError?: (message: string, context: BuilderActionExecutionContext<NotificationAction>) => void | Promise<void>;
 	/** Custom warning handler */
-	onWarning?: (message: string, context: BuilderActionExecutionContext<any>) => void | Promise<void>;
+	onWarning?: (message: string, context: BuilderActionExecutionContext<NotificationAction>) => void | Promise<void>;
 	/** Custom info handler */
-	onInfo?: (message: string, context: BuilderActionExecutionContext<any>) => void | Promise<void>;
+	onInfo?: (message: string, context: BuilderActionExecutionContext<NotificationAction>) => void | Promise<void>;
 	/** Global handler for all notification types */
 	onNotification?: (
 		message: string,
 		variant: string,
-		context: BuilderActionExecutionContext<any>,
+		context: BuilderActionExecutionContext<NotificationAction>,
 	) => void | Promise<void>;
 }
 

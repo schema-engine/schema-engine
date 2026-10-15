@@ -1,4 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
+import { normalizeContainerFixture } from '../lib/container-fixture';
 import { createDefaultValidationRegistry } from '@/schemas/validation';
 import type { ElementConfig } from '@/schemas/field-config';
 import { markNormalizedElementConfig } from '@/lib/normalized-form-config';
@@ -45,6 +46,86 @@ describe('collectStepFieldPaths', () => {
 				contacts: [{ email: 'a@example.com' }, { email: 'b@example.com' }],
 			}),
 		).toEqual(['address', 'address.street', 'contacts', 'contacts.0.email', 'contacts.1.email']);
+	});
+
+	test('expands scalar array child paths for validation', async () => {
+		const element = normalizeContainerFixture({
+			$type: 'arrayElements',
+			name: 'tags',
+			elements: [{ $type: 'input', name: 'value', rules: [{ type: 'required', message: 'Tag is required' }] }],
+		});
+		const values = { tags: ['', 'valid'] };
+		const step = { elements: [element] };
+
+		expect(collectStepFieldPaths(step, values)).toEqual(['tags', 'tags.0', 'tags.1']);
+		await expect(validateFormValues({ elements: [element], values, registry })).resolves.toEqual({
+			tags: [{ type: 'validation', message: 'Tag is required' }],
+		});
+	});
+
+	test('expands sparse scalar array slots so required rules can validate them', async () => {
+		const element = normalizeContainerFixture({
+			$type: 'arrayElements',
+			name: 'tags',
+			elements: [{ $type: 'input', name: 'ignored', rules: [{ type: 'required', message: 'Tag is required' }] }],
+		});
+		const tags: undefined[] = [undefined];
+		delete tags[0];
+		const values = { tags };
+
+		expect(collectStepFieldPaths({ elements: [element] }, values)).toEqual(['tags', 'tags.0']);
+		await expect(validateFormValues({ elements: [element], values, registry })).resolves.toEqual({
+			tags: [{ type: 'validation', message: 'Tag is required' }],
+		});
+	});
+
+	test('expands scalar array child paths inside nested object arrays', async () => {
+		const element = normalizeContainerFixture({
+			$type: 'arrayElements',
+			name: 'groups',
+			elements: [
+				{
+					$type: 'arrayElements',
+					name: 'tags',
+					elements: [
+						{ $type: 'input', name: 'value', rules: [{ type: 'required', message: 'Tag is required' }] },
+					],
+				},
+				{ $type: 'input', name: 'label' },
+			],
+		});
+		const values = { groups: [{ tags: [''] }] };
+
+		expect(collectStepFieldPaths({ elements: [element] }, values)).toContain('groups.0.tags.0');
+		await expect(validateFormValues({ elements: [element], values, registry })).resolves.toEqual({
+			groups: [{ tags: [{ type: 'validation', message: 'Tag is required' }] }],
+		});
+	});
+
+	test('expands each nested scalar array boundary before validating its item', async () => {
+		const element = normalizeContainerFixture({
+			$type: 'arrayElements',
+			name: 'groups',
+			elements: [
+				{
+					$type: 'arrayElements',
+					name: 'ignored',
+					elements: [
+						{
+							$type: 'input',
+							name: 'ignored',
+							rules: [{ type: 'required', message: 'Tag is required' }],
+						},
+					],
+				},
+			],
+		});
+		const values = { groups: [['']] };
+
+		expect(collectStepFieldPaths({ elements: [element] }, values)).toEqual(['groups', 'groups.0', 'groups.0.0']);
+		await expect(validateFormValues({ elements: [element], values, registry })).resolves.toEqual({
+			groups: [[{ type: 'validation', message: 'Tag is required' }]],
+		});
 	});
 });
 

@@ -8,18 +8,21 @@ import type {
 } from './types.js';
 import { logger } from '@/lib/logger.js';
 
+/** @remarks Rule-specific handlers are checked at registration, then stored together by rule type. */
+type StoredValidationRegistration = ValidationRegistration<any>;
+
 /**
  * Registry for validation rules
  * Provides registration, validation, and execution capabilities for validation types.
  */
 export class ValidationRegistry {
-	private validations = new Map<string, ValidationRegistration<any>>();
+	private validations = new Map<string, StoredValidationRegistration>();
 	private defaultRulesByFieldType = new Map<string, Map<string, BaseValidationRule>>();
 
 	/**
 	 * Register a new validation type
 	 */
-	register(registration: ValidationRegistration<any>): void {
+	register(registration: StoredValidationRegistration): void {
 		const type = registration.type;
 
 		if (this.validations.has(type)) {
@@ -33,7 +36,7 @@ export class ValidationRegistry {
 	/**
 	 * Register multiple validation types at once
 	 */
-	registerMultiple(registrations: ValidationRegistration<any>[]): void {
+	registerMultiple(registrations: StoredValidationRegistration[]): void {
 		for (const registration of registrations) {
 			this.register(registration);
 		}
@@ -131,7 +134,7 @@ export class ValidationRegistry {
 		}
 	}
 
-	private bindDefaultFor(registration: ValidationRegistration<any>): void {
+	private bindDefaultFor(registration: StoredValidationRegistration): void {
 		this.unbindDefaultFor(registration.type);
 		for (const fieldType of registration.defaultFor ?? []) {
 			let rules = this.defaultRulesByFieldType.get(fieldType);

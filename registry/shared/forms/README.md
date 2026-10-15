@@ -45,3 +45,6 @@ Each copied field item includes its own `form-*.types.ts` Zod schema beside the 
 Field schemas are authoring contracts for the copied wrappers. Wrappers pass only supported control props to DOM primitives, so schema metadata such as `$type`, rules, and layout configuration stays in the form renderer. Forward extra control attributes (`data-testid`, `enterKeyHint`, and similar) through `htmlAttributes` on the field config rather than spreading the field object onto the control.
 
 The registry includes `date` and `date-range` fields that Radiant does not ship; do not assume every default `$type` exists on every renderer.
+
+The [input registrations](inputs/README.md) declare array container semantics
+for the engine's shared field traversal.

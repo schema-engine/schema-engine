@@ -1,4 +1,4 @@
-import type { RecipeRegistration } from '@/types';
+import type { AnyRecipeRegistration } from '@/types/registration';
 import type { FormConfigView, NormalizedFormConfig } from '@/lib/normalized-form-config';
 import { logger } from '@/lib/logger';
 
@@ -13,7 +13,7 @@ export const DEFAULT_WIZARD_RECIPE = 'bare-controls';
  * render.
  */
 export interface RecipeLookup {
-	getRecipe: (id: string) => RecipeRegistration<any, any> | undefined;
+	getRecipe: (id: string) => AnyRecipeRegistration | undefined;
 }
 
 /** Getter form still accepted so a `(id) => engine.getRecipe(id)` lambda does not crash. */
@@ -51,9 +51,7 @@ function warnMissingDefaultWizard(lookup: object, config: FormConfigView) {
 	if (warned.has(config.id)) return;
 	warned.add(config.id);
 	logger.warn(
-		`Form '${config.id}' has ${config.steps.length} steps but no '${DEFAULT_WIZARD_RECIPE}' recipe is registered. ` +
-			'The form renders every step on a single page without a view layout. ' +
-			'Register a wizard recipe with createFormEngine({ recipes: [...] }) or set an explicit view.$type.',
+		`Form '${config.id}' has ${config.steps.length} steps but no '${DEFAULT_WIZARD_RECIPE}' recipe is registered. The form renders every step on a single page without a view layout. Register a wizard recipe with createFormEngine({ recipes: [...] }) or set an explicit view.$type.`,
 	);
 }
 
@@ -69,10 +67,7 @@ function warnMissingDefaultWizard(lookup: object, config: FormConfigView) {
  *   and returns `undefined`. `validateForm` / `defineForm` still succeed.
  * - No `lookup` (engine-less render): stays silent and returns `undefined`.
  */
-export function resolveFormRecipe(
-	config: FormConfigView,
-	lookup?: RecipeResolver,
-): RecipeRegistration<any, any> | undefined {
+export function resolveFormRecipe(config: FormConfigView, lookup?: RecipeResolver): AnyRecipeRegistration | undefined {
 	const requestedType = config.view?.$type;
 	if (requestedType) {
 		if (!lookup) {
@@ -107,7 +102,7 @@ export function resolveFormRecipe(
  */
 export function getRenderableSteps<T extends FormConfigView>(
 	config: T,
-	recipe: RecipeRegistration<any, any> | undefined,
+	recipe: AnyRecipeRegistration | undefined,
 	currentStep: number,
 ): T['steps'] {
 	if (recipe) {

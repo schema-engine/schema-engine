@@ -16,6 +16,7 @@ declare global {
 
 export const ArrayElementRegistration = defineInput({
 	$type: 'arrayElements',
+	containerKind: 'array',
 	render: FormArrayElements,
 	schema: ArrayElementConfigSchema,
 	metadata: {

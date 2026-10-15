@@ -1,3 +1,8 @@
+import * as z from 'zod/mini';
+import { createFormEngine } from '@/engine/create-form-engine';
+import { defineInput } from '@/types';
+import { normalizeContainerFixture } from './container-fixture';
+import { getElementContainerKind, markNormalizedElementConfig } from '@/lib/normalized-form-config';
 import { describe, expect, test } from 'vitest';
 import {
 	arrayItemScope,
@@ -123,7 +128,7 @@ describe('named element tree walk', () => {
 			],
 		};
 
-		expect(collectFieldDefaults([contacts])).toEqual([
+		expect(collectFieldDefaults([contacts].map(normalizeContainerFixture))).toEqual([
 			{ name: 'contacts', defaultValue: undefined },
 			{ name: 'contacts.0.name', defaultValue: 'Ada' },
 			{ name: 'contacts.0.email', defaultValue: undefined },
@@ -137,7 +142,7 @@ describe('named element tree walk', () => {
 			elements: [{ $type: 'input', name: 'tag', defaultValue: 'Ada' }],
 		};
 
-		expect(collectFieldDefaults([tags])).toEqual([
+		expect(collectFieldDefaults([tags].map(normalizeContainerFixture))).toEqual([
 			{ name: 'tags', defaultValue: undefined },
 			{ name: 'tags.0', defaultValue: 'Ada' },
 		]);
@@ -156,7 +161,11 @@ describe('named element tree walk', () => {
 			elements: [{ $type: 'input', name: 'name', defaultValue: 'Ada' }, phones],
 		};
 
-		expect(collectFieldDefaults([contacts]).filter((field) => field.defaultValue !== undefined)).toEqual([
+		expect(
+			collectFieldDefaults([contacts].map(normalizeContainerFixture)).filter(
+				(field) => field.defaultValue !== undefined,
+			),
+		).toEqual([
 			{ name: 'contacts.0.name', defaultValue: 'Ada' },
 			{ name: 'contacts.0.phones.0', defaultValue: '555' },
 			{ name: 'contacts.1.name', defaultValue: 'Ada' },
@@ -175,7 +184,7 @@ describe('named element tree walk', () => {
 		};
 
 		expect(
-			collectFieldDefaults([contacts], {
+			collectFieldDefaults([contacts].map(normalizeContainerFixture), {
 				contacts: [{ email: 'ada@example.com' }, { name: 'Grace' }],
 			}).filter((field) => field.defaultValue !== undefined),
 		).toEqual([
@@ -183,4 +192,67 @@ describe('named element tree walk', () => {
 			{ name: 'contacts.1.name', defaultValue: 'Ada' },
 		]);
 	});
+});
+
+test('container semantics come from the registration rather than the widget name', () => {
+	const engine = createFormEngine({
+		elements: [
+			defineInput({
+				$type: 'rows',
+				containerKind: 'array',
+				schema: z.looseObject({ $type: z.literal('rows') }),
+				metadata: { name: 'Rows', category: 'input' },
+				render: (_props: Record<string, unknown>) => null,
+			}),
+			defineInput({
+				$type: 'text',
+				schema: z.looseObject({ $type: z.literal('text') }),
+				metadata: { name: 'Text', category: 'input' },
+				render: (_props: Record<string, unknown>) => null,
+			}),
+		],
+	});
+	const rows = engine.validateElement({
+		$type: 'rows',
+		name: 'tags',
+		minItems: 2,
+		elements: [{ $type: 'text', name: 'ignored', defaultValue: 'seed' }],
+	});
+	expect(collectFieldDefaults([rows])).toEqual([
+		{ name: 'tags', defaultValue: undefined },
+		{ name: 'tags.0', defaultValue: 'seed' },
+		{ name: 'tags.1', defaultValue: 'seed' },
+	]);
+	expect(walkLeafFields([rows]).map(({ path }) => path)).toEqual(['tags']);
+	expect(Object.keys(rows)).not.toContain('containerKind');
+	const validatedForm = engine.validateForm({
+		id: 'rows',
+		steps: [
+			{
+				id: 'step',
+				title: 'Step',
+				elements: [
+					{
+						$type: 'rows',
+						name: 'tags',
+						elements: [{ $type: 'text', name: 'ignored', defaultValue: 'seed' }],
+					},
+				],
+			},
+		],
+	});
+	const normalizedRows = validatedForm.steps[0].elements[0];
+	expect(normalizedRows).toBeDefined();
+	expect(getElementContainerKind(normalizedRows)).toBe('array');
+});
+
+test('revalidation replaces container semantics on a normalized element', () => {
+	const element = markNormalizedElementConfig({ $type: 'rows', name: 'tags' }, 'array');
+	const revalidated = markNormalizedElementConfig(element, 'object');
+
+	expect(revalidated).not.toBe(element);
+	expect(getElementContainerKind(revalidated)).toBe('object');
+	expect(Object.keys(revalidated)).toEqual(['$type', 'name']);
+	expect(markNormalizedElementConfig(element)).toBe(element);
+	expect(getElementContainerKind(markNormalizedElementConfig(element))).toBe('array');
 });

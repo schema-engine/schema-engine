@@ -11,8 +11,8 @@ export interface FormResetPluginConfig {
 	storage: AutoSaveStorage;
 	confirm?: (message: string) => boolean | Promise<boolean>;
 	clearDraft?: (formId: string) => void | Promise<void>;
-	resetForm?: (context: BuilderActionExecutionContext<any>, resetToDefaults: boolean) => void;
-	onReset?: (context: BuilderActionExecutionContext<any>) => void;
+	resetForm?: (context: BuilderActionExecutionContext<FormResetAction>, resetToDefaults: boolean) => void;
+	onReset?: (context: BuilderActionExecutionContext<FormResetAction>) => void;
 }
 
 /** Schema for the `reset` action configuration. */
@@ -32,7 +32,7 @@ export type FormResetAction = z.infer<typeof FormResetActionSchema>;
 /**
  * Default form reset implementation using React Hook Form methods
  */
-function defaultResetForm(context: BuilderActionExecutionContext<any>, _resetToDefaults: boolean) {
+function defaultResetForm(context: BuilderActionExecutionContext<FormResetAction>, _resetToDefaults: boolean) {
 	context.form.reset();
 }
 

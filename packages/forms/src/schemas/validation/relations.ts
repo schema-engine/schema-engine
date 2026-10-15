@@ -3,6 +3,12 @@ import type { RelateRule, RelationAssert, ValidationRegistration } from './types
 import { isEmpty } from './empty.js';
 
 /**
+ * Relation operands are values from registered fields.
+ * @remarks Their concrete types are selected by the engine's element registrations.
+ */
+const RelationValueSchema = z.any();
+
+/**
  * Brings a referenced value onto the rule's comparison basis.
  *
  * @remarks
@@ -85,7 +91,7 @@ export const relateValidation: ValidationRegistration<RelateRule> = {
 	category: 'cross-field',
 	dependsOn: (rule) => rule.fields,
 	handler: (rule, context) =>
-		z.any().check(
+		RelationValueSchema.check(
 			z.refine((value: unknown) => {
 				const referenced = rule.fields.map((fieldRef) => context.resolve(fieldRef));
 				const participating = rule.includeSelf ? [value, ...referenced] : referenced;
