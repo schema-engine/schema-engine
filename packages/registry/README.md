@@ -152,3 +152,6 @@ const id: ElementId = 'text';
 `getAll()` and `getAllKeys()` return fresh arrays. Mutating them does not change
 the registry; registration objects themselves are shared references. `BaseRegistry`
 stores schemas as supplied; validation belongs to the consuming domain boundary.
+
+The published registry uses a caret range for its logger dependency. Copied
+widget sources live in the separate, private `registry-files` workspace.

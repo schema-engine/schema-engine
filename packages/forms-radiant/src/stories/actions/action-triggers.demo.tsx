@@ -7,7 +7,7 @@ import { formResetPlugin, formSubmitPlugin, FormActionTriggerSchema } from '@sch
 import { localStorageAutoSaveStorage } from '@schema-engine/forms/browser';
 import type {
 	ActionExecutionResult,
-	BuilderActionExecutionContext,
+	BuilderActionRuntimeContext,
 	BuilderActionRegistration,
 } from '@schema-engine/forms';
 import type { FormConfig } from '@schema-engine/forms/schemas';
@@ -63,7 +63,7 @@ function loggerPlugin(): BuilderActionRegistration<'event_logger', typeof Logger
 			icon: 'activity',
 			defaultTriggers: ['form_mount', 'form_change', 'form_submit'],
 		},
-		execute: async (context: BuilderActionExecutionContext<LoggerAction>): Promise<ActionExecutionResult> => {
+		execute: async (context: BuilderActionRuntimeContext<LoggerAction>): Promise<ActionExecutionResult> => {
 			const formData = context.formData;
 			let changedField: string | undefined;
 			let changedValue: unknown;

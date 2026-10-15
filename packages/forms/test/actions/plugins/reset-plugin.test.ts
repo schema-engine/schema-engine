@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach } from 'vitest';
-import type { BuilderActionExecutionContext } from '@/types';
+import type { BuilderActionRuntimeContext } from '@/types';
 import {
 	formResetPlugin as createFormResetPlugin,
 	FormResetActionSchema,
@@ -185,7 +185,7 @@ describe('ResetPlugin', () => {
 		});
 
 		test('should call custom reset handler', async () => {
-			let customResetContext: BuilderActionExecutionContext<FormResetAction> | undefined = undefined;
+			let customResetContext: BuilderActionRuntimeContext<FormResetAction> | undefined = undefined;
 			let customResetToDefaults = true;
 
 			const plugin = createResetPlugin({
@@ -211,7 +211,7 @@ describe('ResetPlugin', () => {
 		});
 
 		test('should call onReset callback', async () => {
-			let onResetContext: BuilderActionExecutionContext<FormResetAction> | undefined = undefined;
+			let onResetContext: BuilderActionRuntimeContext<FormResetAction> | undefined = undefined;
 
 			const plugin = createResetPlugin({
 				onReset: (context) => {

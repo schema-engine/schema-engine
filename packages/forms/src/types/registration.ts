@@ -1,7 +1,8 @@
 import type { Brand } from '@schema-engine/registry';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { ElementMetadata } from './metadata';
-import type { BuilderActionBaseContext, BuilderActionTrigger } from './actions.js';
+import type { BuilderActionBaseContext } from './actions.js';
+import type { FormActionTrigger } from '../actions/triggers';
 import type { ActionRegistration, ActionConfigBase } from '@schema-engine/actions';
 import type { AnyValidationRegistration } from '@/schemas/validation/types';
 
@@ -98,7 +99,7 @@ export type BuilderActionRegistration<
 	ActionRegistration<
 		StandardSchemaV1.InferOutput<TSchema> & ActionConfigBase<TType>,
 		BuilderActionBaseContext,
-		BuilderActionTrigger
+		FormActionTrigger
 	>,
 	'schema' | '$type'
 > & {

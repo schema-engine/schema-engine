@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import type { FormActionConfig } from '@schema-engine/forms/schemas';
 import type { FormActionTrigger, FormConfigView } from '@schema-engine/forms';
-import type { ActionExecutionResult } from '@schema-engine/actions';
+import type { ActionExecutionResult } from '@schema-engine/forms/actions';
 import type { SubmissionState, SubmissionError } from '@/hooks/use-submission-state';
 
 interface SubmissionStateManager {

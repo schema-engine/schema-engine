@@ -128,8 +128,9 @@ Use `defineAction` from `@schema-engine/actions` and specialize it with the form
 ```typescript
 import * as z from 'zod/mini';
 import { defineAction } from '@schema-engine/actions';
+import type { BuilderActionBaseContext, FormActionTrigger } from '@schema-engine/forms';
 
-const defineFormAction = defineAction<BuilderActionBaseContext, BuilderActionTrigger>();
+const defineFormAction = defineAction<BuilderActionBaseContext, FormActionTrigger>();
 
 const trackAction = defineFormAction({
 	$type: 'track_submit',

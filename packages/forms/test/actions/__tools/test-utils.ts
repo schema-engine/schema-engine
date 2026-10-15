@@ -1,4 +1,4 @@
-import type { BuilderActionExecutionContext } from '@/types/actions';
+import type { BuilderActionRuntimeContext } from '@/types/actions';
 import type { ActionRuntimeContext } from '@schema-engine/actions';
 
 /**
@@ -6,8 +6,8 @@ import type { ActionRuntimeContext } from '@schema-engine/actions';
  */
 export function createMockBuilderContext<TConfig = unknown>(
 	config: TConfig,
-	overrides: Partial<Omit<BuilderActionExecutionContext<TConfig>, 'config'>> = {},
-): BuilderActionExecutionContext<TConfig> {
+	overrides: Partial<Omit<BuilderActionRuntimeContext<TConfig>, 'config'>> = {},
+): BuilderActionRuntimeContext<TConfig> {
 	return {
 		config,
 		formId: 'test-form',

@@ -1,5 +1,5 @@
 import { test, expect, describe, beforeEach } from 'vitest';
-import type { BuilderActionExecutionContext } from '@/types';
+import type { BuilderActionRuntimeContext } from '@/types';
 import {
 	notificationPlugin,
 	NotificationActionSchema,
@@ -120,7 +120,7 @@ describe('NotificationPlugin', () => {
 	describe('Action Execution', () => {
 		test('should execute success notification', async () => {
 			let successMessage = '';
-			let successContext: BuilderActionExecutionContext<NotificationAction> | undefined = undefined;
+			let successContext: BuilderActionRuntimeContext<NotificationAction> | undefined = undefined;
 
 			const plugin = notificationPlugin({
 				onSuccess: (message, context) => {
@@ -152,7 +152,7 @@ describe('NotificationPlugin', () => {
 
 		test('should execute error notification', async () => {
 			let errorMessage = '';
-			let errorContext: BuilderActionExecutionContext<NotificationAction> | undefined = undefined;
+			let errorContext: BuilderActionRuntimeContext<NotificationAction> | undefined = undefined;
 
 			const plugin = notificationPlugin({
 				onError: (message, context) => {
@@ -184,7 +184,7 @@ describe('NotificationPlugin', () => {
 
 		test('should execute warning notification', async () => {
 			let warningMessage = '';
-			let warningContext: BuilderActionExecutionContext<NotificationAction> | undefined = undefined;
+			let warningContext: BuilderActionRuntimeContext<NotificationAction> | undefined = undefined;
 
 			const plugin = notificationPlugin({
 				onWarning: (message, context) => {
@@ -216,7 +216,7 @@ describe('NotificationPlugin', () => {
 
 		test('should execute info notification', async () => {
 			let infoMessage = '';
-			let infoContext: BuilderActionExecutionContext<NotificationAction> | undefined = undefined;
+			let infoContext: BuilderActionRuntimeContext<NotificationAction> | undefined = undefined;
 
 			const plugin = notificationPlugin({
 				onInfo: (message, context) => {
@@ -249,7 +249,7 @@ describe('NotificationPlugin', () => {
 		test('should use global notification handler when available', async () => {
 			let globalMessage = '';
 			let globalVariant = '';
-			let globalContext: BuilderActionExecutionContext<NotificationAction> | undefined = undefined;
+			let globalContext: BuilderActionRuntimeContext<NotificationAction> | undefined = undefined;
 
 			const plugin = notificationPlugin({
 				onNotification: (message, variant, context) => {

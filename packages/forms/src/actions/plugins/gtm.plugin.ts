@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
+import type { BuilderActionRuntimeContext, BuilderActionRegistration } from '@/types';
 import { FormActionTriggerSchema } from '../triggers';
 
 /**
@@ -20,10 +20,10 @@ export interface GTMPluginConfig {
 	onPush?: (
 		eventName: string,
 		eventData: Record<string, unknown>,
-		context: BuilderActionExecutionContext<GTMEventAction>,
+		context: BuilderActionRuntimeContext<GTMEventAction>,
 	) => void | Promise<void>;
 	/** Called when GTM event push fails */
-	onError?: (error: string, context: BuilderActionExecutionContext<GTMEventAction>) => void | Promise<void>;
+	onError?: (error: string, context: BuilderActionRuntimeContext<GTMEventAction>) => void | Promise<void>;
 }
 
 /** Schema for the `gtm_event` action configuration. */
@@ -75,7 +75,7 @@ export function gtmPlugin(
 			icon: 'analytics',
 			defaultTriggers: ['form_submit', 'form_submit_success'],
 		},
-		execute: async (context: BuilderActionExecutionContext<GTMEventAction>) => {
+		execute: async (context: BuilderActionRuntimeContext<GTMEventAction>) => {
 			const action = context.config;
 			try {
 				const eventData: Record<string, unknown> = {

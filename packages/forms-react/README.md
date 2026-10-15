@@ -90,3 +90,7 @@ The runtime exposes `se-*` class hooks and grid variables. Consumers do not need
 - Replace `useGDPRConsent` and `useGTMTracker` with `GDPRConsent` and `GTMTracker` from `@schema-engine/forms/browser`. These are static browser helpers; React state subscriptions belong to the application.
 
 See [Getting started](../../apps/docs/src/content/docs/forms-react/getting-started.mdx), [Hooks](../../apps/docs/src/content/docs/forms-react/hooks.mdx), and [Advanced usage](../../apps/docs/src/content/docs/forms-react/advanced.mdx).
+
+Registry source type checks run through the registry workspace's `check-types`
+task in Turbo. Renderer actions import the dispatcher from
+`@schema-engine/forms/actions`.

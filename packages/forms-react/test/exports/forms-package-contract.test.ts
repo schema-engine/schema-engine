@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { createFormEngine, resolveFormRecipe } from '@schema-engine/forms';
 
 describe('forms package export contract', () => {
-	test('resolveFormRecipe accepts a getter from the published package', () => {
+	test('resolveFormRecipe accepts an engine lookup from the published package', () => {
 		const recipe = {
 			$type: 'card',
 			kind: 'single-step',
@@ -19,7 +19,7 @@ describe('forms package export contract', () => {
 					view: { $type: 'card' },
 					steps: [{ id: 'main', title: 'Contact', elements: [] }],
 				},
-				(id) => (id === 'card' ? recipe : undefined),
+				{ getRecipe: (id) => (id === 'card' ? recipe : undefined) },
 			),
 		).toBe(recipe);
 	});
