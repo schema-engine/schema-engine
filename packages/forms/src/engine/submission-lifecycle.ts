@@ -10,7 +10,7 @@ type FormActionDispatch = (
 
 interface RunSubmissionLifecycleOptions {
 	actions: readonly FormActionConfig[];
-	context: BuilderActionBaseContext;
+	context: BuilderActionBaseContext | (() => BuilderActionBaseContext);
 }
 
 export interface SubmissionLifecycleResult {
@@ -18,12 +18,17 @@ export interface SubmissionLifecycleResult {
 	results: ActionExecutionResult[];
 }
 
-/** Runs the shared form submission action triggers and returns the submit action results. */
+/**
+ * Runs the shared form submission action triggers and returns the submit action results.
+ *
+ * @remarks Pass a context factory when each trigger needs a fresh form-state snapshot.
+ */
 export async function runSubmissionLifecycle(
 	dispatch: FormActionDispatch,
 	{ actions, context }: RunSubmissionLifecycleOptions,
 ): Promise<SubmissionLifecycleResult> {
-	const dispatchTrigger = (trigger: FormActionTrigger) => dispatch({ actions, trigger, context });
+	const dispatchTrigger = (trigger: FormActionTrigger) =>
+		dispatch({ actions, trigger, context: typeof context === 'function' ? context() : context });
 
 	await dispatchTrigger('form_submit_start');
 	const results = await dispatchTrigger('form_submit');

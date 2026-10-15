@@ -60,12 +60,14 @@ without marking that step complete or advancing. When `isValid` is false, it lea
 active step in place. Pass the resulting state to `buildViewModel` as `stepStates`.
 
 `runSubmissionLifecycle(dispatch, { actions, context })` dispatches the form submit start,
-submit, success or error, and complete triggers. The returned `succeeded` flag is false
-only when a submit action fails with `shouldContinue: false`; a failed action that allows
-continuation does not fail the submission. `buildFormActionContext` is an exported utility
-that constructs a form action context with form data and timing metadata, including a
-stable step start time that resets when the active step changes. The engine entry point also
-re-exports `ActionDispatcher` so both renderers can use the same action dispatcher class.
+submit, success or error, and complete triggers. Pass a fixed `context` when every trigger
+uses the same snapshot, or a context factory when each trigger needs a fresh form-state
+snapshot. The returned `succeeded` flag is false only when a submit action fails with
+`shouldContinue: false`; a failed action that allows continuation does not fail the
+submission. `buildFormActionContext` is an exported utility that constructs a form action
+context with form data and timing metadata, including a stable step start time that resets
+when the active step changes. The engine entry point also re-exports `ActionDispatcher` so
+both renderers can use the same action dispatcher class.
 
 An `arrayElements` row with one leaf child uses a scalar path when its seed is not object-shaped. A child container such as `fieldSet` stays under its own row object path. Object-shaped array `initialValues`, a child field's object-shaped `defaultValue`, or the first row object from form `defaultValues` (falling back to the array's `defaultValue`) also selects the object path.
 Use `engine.extend({ ... })` to add registrations without re-spreading shared barrels. Author forms with `engine.defineForm({ ... })` object literals.
