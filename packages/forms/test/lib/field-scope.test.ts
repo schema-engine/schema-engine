@@ -156,7 +156,9 @@ describe('named element tree walk', () => {
 			elements: [{ $type: 'input', name: 'role' }],
 		};
 
-		expect(collectFieldDefaults([members], { members: [{ role: 'admin' }] })).toEqual([
+		expect(
+			collectFieldDefaults([members].map(normalizeContainerFixture), { members: [{ role: 'admin' }] }),
+		).toEqual([
 			{ name: 'members', defaultValue: undefined },
 			{ name: 'members.0.role', defaultValue: undefined },
 		]);
@@ -175,7 +177,7 @@ describe('named element tree walk', () => {
 			],
 		};
 
-		expect(collectFieldDefaults([members])).toEqual([
+		expect(collectFieldDefaults([members].map(normalizeContainerFixture))).toEqual([
 			{ name: 'members', defaultValue: undefined },
 			{ name: 'members.0.address', defaultValue: undefined },
 			{ name: 'members.0.address.street', defaultValue: '1 Main' },
