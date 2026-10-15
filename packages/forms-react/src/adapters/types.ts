@@ -3,7 +3,6 @@ import type { ElementConfig, FormActionConfig, FormConfig } from '@schema-engine
 import type { NormalizedFormConfig } from '@schema-engine/forms';
 import type { FieldArrayValue } from '@schema-engine/forms/adapters';
 import type { ReactNode, RefCallback } from 'react';
-import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine';
 
 export interface FormContextValue<TFormData = Record<string, unknown>> {
 	getValues: () => TFormData;
@@ -47,8 +46,6 @@ export interface FormProviderProps<
 	config:
 		| FormConfig<TElements, TRecipes, TActions>
 		| NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>;
-	/** Engine used to author and normalize this form. */
-	engine?: FormEngine<TElements, TRecipes, TActions, TOutputs>;
 	/** Optional default values for form fields */
 	defaultValues?: Partial<TFormData>;
 	/** React children to render inside the form context */

@@ -89,7 +89,6 @@ type TransformedRenderer =
 		: never;
 const transformedRenderer: TransformedRenderer = { engine: transformedEngine, config: transformedForm };
 const transformedProvider: TransformedProvider = {
-	engine: transformedEngine,
 	config: transformedForm,
 	children: null,
 	onAction: (action) => {

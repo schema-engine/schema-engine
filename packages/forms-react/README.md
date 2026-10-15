@@ -154,6 +154,7 @@ const engine = createFormEngine({ elements: schemaFormRegistrations });
 ### Form Adapters
 
 Adapters bridge the gap between the form engine and form libraries. The package includes a React Hook Form adapter by default.
+`FormProvider` uses the engine and adapter from its surrounding `FormEngineProvider`; use `FormRenderer`'s `engine` prop when a form needs to select an engine directly.
 
 **Using the RHF Adapter:**
 

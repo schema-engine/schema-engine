@@ -1,5 +1,5 @@
 import type { EngineOutputMaps } from '@schema-engine/forms/engine/form-engine';
-import { FormProvider as RHFFormProvider, useForm } from 'react-hook-form';
+import { FormProvider as RHFFormProvider, useForm, type FieldValues } from 'react-hook-form';
 import { useCallback, useMemo, useRef } from 'react';
 import type { FormProviderProps } from '../types';
 import { ActionDispatcher } from '@schema-engine/actions';
@@ -78,10 +78,22 @@ export function FormProvider<
 
 	useValidationDependencies(form, formElements);
 
+	/**
+	 * Adapts React Hook Form's broad value record to the provider's declared data shape.
+	 *
+	 * @remarks
+	 * The config is normalized at runtime, so React Hook Form cannot infer the consumer's
+	 * TFormData; the provider generic is the consumer contract for this callback.
+	 */
+	const handleFormChange = useCallback(
+		(data: FieldValues) => onChange?.(data as unknown as Partial<TFormData>),
+		[onChange],
+	);
+
 	useFormWatcher({
 		control: form.control,
 		config: runtimeConfig,
-		onChange,
+		onChange: handleFormChange,
 		dispatchTrigger: actionDispatchers.dispatchTrigger,
 	});
 
