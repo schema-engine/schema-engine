@@ -1,5 +1,3 @@
-export * from '@/hooks/use-gdpr-consent';
-export * from '@/hooks/use-gtm-tracker';
 export * from '@/hooks/use-field';
 export * from '@/hooks/use-constraint-logic';
 export * from '@/hooks/use-form-context';
@@ -11,3 +9,10 @@ export {
 	type SubmissionStatus,
 	type SubmissionError,
 } from '@/hooks/use-submission-state';
+export {
+	useViewContext,
+	useOptionalViewContext,
+	useActiveStep,
+	useFormNavigation,
+	useViewConfig,
+} from '@/contexts/view-context';

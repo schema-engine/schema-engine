@@ -1,16 +1,7 @@
 import { useContext } from 'react';
 import { getDefaultGridTheme } from '@schema-engine/forms/lib/grid-styles';
-import { useFormContext as useAdapterFormContext } from '@/adapters/context';
 import { FormEngineContext, FormInstanceContext } from '../components/provider';
 import type { FormEngineContextValue, FormInstanceContextValue } from '../components/provider';
-
-/**
- * Hook to get the current form instance from the active adapter
- * Must be used within a FormProvider
- */
-export function useFormInstance() {
-	return useAdapterFormContext();
-}
 
 /**
  * Hook to access form actions and navigation

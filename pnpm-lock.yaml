@@ -416,15 +416,6 @@ importers:
       '@schema-engine/actions':
         specifier: workspace:*
         version: link:../actions
-      class-variance-authority:
-        specifier: ^0.7.1
-        version: 0.7.1
-      clsx:
-        specifier: ^2.1.1
-        version: 2.1.1
-      tailwind-merge:
-        specifier: ^3.4.0
-        version: 3.7.0
       typescript:
         specifier: ^5
         version: 5.9.3
@@ -480,6 +471,9 @@ importers:
       autoprefixer:
         specifier: ^10.4.21
         version: 10.6.1(postcss@8.5.28)
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
       cmdk:
         specifier: ^1.1.1
         version: 1.1.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -543,6 +537,9 @@ importers:
       storybook:
         specifier: ^10.1.8
         version: 10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0)
+      tailwind-merge:
+        specifier: ^3.4.0
+        version: 3.7.0
       tailwindcss:
         specifier: ^4
         version: 4.3.3
@@ -3622,9 +3619,6 @@ packages:
 
   citty@0.2.2:
     resolution: {integrity: sha512-+6vJA3L98yv+IdfKGZHBNiGW5KHn22e/JwID0Strsz8h4S/csAu/OuICwxrg44k5MRiZHWIo8XXuJgQTriRP4w==}
-
-  class-variance-authority@0.7.1:
-    resolution: {integrity: sha512-Ka+9Trutv7G8M6WT6SeiRWz792K5qEqIGEGzXKhAE6xOWAY6pPH8U+9IY3oCMv6kqTmLsv7Xh/2w2RigkePMsg==}
 
   classnames@2.5.1:
     resolution: {integrity: sha512-saHYOzhIQs6wy2sVxTM6bUDsQO4F50V9RQ22qBpEdCW+I+/Wmke2HOl6lS6dTpdxVhb88/I6+Hs+438c3lfUow==}
@@ -8894,10 +8888,6 @@ snapshots:
       consola: 3.4.2
 
   citty@0.2.2: {}
-
-  class-variance-authority@0.7.1:
-    dependencies:
-      clsx: 2.1.1
 
   classnames@2.5.1: {}
 

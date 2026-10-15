@@ -1,6 +1,6 @@
 import type { ElementType } from 'react';
 import { formatStepCounter, type StepHeaderConfig } from '@schema-engine/forms/recipes';
-import { useActiveStep, useViewConfig, useViewContext } from '@schema-engine/forms-react/contexts';
+import { useActiveStep, useViewConfig, useViewContext } from '@schema-engine/forms-react/hooks';
 import { cn } from '@/components/schema-engine/forms/lib/utils';
 
 const titleSizes = {

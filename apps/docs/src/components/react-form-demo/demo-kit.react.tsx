@@ -1,6 +1,6 @@
 /** @jsxImportSource react */
 import type { ReactNode } from 'react';
-import { useControlledFormElement } from '@schema-engine/forms-react';
+import { useControlledFormElement } from '@schema-engine/forms-react/hooks';
 
 /**
  * Radiant-styled field chrome for docs demos.

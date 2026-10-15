@@ -33,6 +33,7 @@ const alias = [
 		find: '@/components/ui',
 		replacement: path.resolve(dirname, '../../registry/ui-stubs'),
 	},
+	{ find: '@/lib/utils', replacement: path.resolve(dirname, '../../registry/ui-stubs/lib/utils.ts') },
 	{ find: '@', replacement: path.resolve(dirname, 'src') },
 	{ find: /^@schema-engine\/forms-react$/, replacement: path.resolve(dirname, 'src/index.ts') },
 	{

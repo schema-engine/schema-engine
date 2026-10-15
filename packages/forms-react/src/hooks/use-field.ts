@@ -75,16 +75,12 @@ export function useControlledFormElement(config: ElementConfig) {
 
 	const labelProps = {
 		htmlFor: config.id,
-		className: `text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${
-			isRequired ? "after:content-['*'] after:text-red-500 after:ml-1" : ''
-		}`,
 	};
 
 	const errorProps = error
 		? {
 				id: `${config.id}-error`,
 				role: 'alert' as const,
-				className: 'text-sm text-destructive',
 			}
 		: null;
 
