@@ -3,7 +3,7 @@ import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import type { BuilderActionBaseContext, FormActionTrigger, FormConfigView } from '@schema-engine/forms';
-import { ActionDispatcher } from '@schema-engine/actions';
+import { ActionDispatcher } from '@schema-engine/forms/actions';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { FormController, FormEngineController } from '@/adapters/radiant/controller';
 import { findAncestorElement } from '@/lib/rui-form-utils';

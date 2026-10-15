@@ -63,45 +63,18 @@ describe('validateFormConfig', () => {
 		expect(recipe).toBe(wizardRecipe);
 	});
 
-	test('accepts a getter function as the recipe lookup', () => {
-		const recipe = resolveFormRecipe(
-			{
-				id: 'contact',
-				view: { $type: 'card' },
-				steps: [{ id: 'main', title: 'Contact', elements: [] }],
-			},
-			(id) => (id === 'card' ? cardRecipe : undefined),
+	test.each([
+		['rows', 2],
+		['autoFit', true],
+		['autoFill', true],
+		['maxColumnWidth', '20rem'],
+	])('rejects unsupported grid key %s at every breakpoint', (key, value) => {
+		const engine = createEngine();
+		const form = { id: 'grid', steps: [{ id: 'main', title: 'Main', elements: [] }] };
+		expect(() => engine.validateForm({ ...form, grid: { [key]: value } })).toThrow(FormValidationError);
+		expect(() => engine.validateForm({ ...form, grid: { responsive: { md: { [key]: value } } } })).toThrow(
+			FormValidationError,
 		);
-
-		expect(recipe).toBe(cardRecipe);
-	});
-
-	test('rejects a serialized engine object without getRecipe', () => {
-		expect(() =>
-			resolveFormRecipe(
-				{
-					id: 'contact',
-					view: { $type: 'card' },
-					steps: [{ id: 'main', title: 'Contact', elements: [] }],
-				},
-				{} as never,
-			),
-		).toThrow(/no getRecipe/i);
-	});
-
-	test('rejects a serialized engine object for implicit multi-step lookup', () => {
-		expect(() =>
-			resolveFormRecipe(
-				{
-					id: 'onboarding',
-					steps: [
-						{ id: 'one', title: 'One', elements: [] },
-						{ id: 'two', title: 'Two', elements: [] },
-					],
-				},
-				{} as never,
-			),
-		).toThrow(/no getRecipe/i);
 	});
 
 	test('warns once per engine when a multi-step form has no wizard recipe registered', () => {

@@ -180,7 +180,7 @@ uses Zod Mini in this example; any Standard Schema implementation is valid.
 
 ```typescript
 import * as z from 'zod/mini';
-import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@schema-engine/forms';
+import type { BuilderActionRuntimeContext, BuilderActionRegistration } from '@schema-engine/forms';
 
 const ActionSchema = z.object({
 	id: z.string(),
@@ -206,7 +206,7 @@ const logMessage: BuilderActionRegistration<'log_message', typeof ActionSchema> 
 		name: 'Log message',
 		defaultTriggers: ['form_submit'],
 	},
-	execute: async (context: BuilderActionExecutionContext<Action>) => {
+	execute: async (context: BuilderActionRuntimeContext<Action>) => {
 		publishMessage(context.config.message, context.formId);
 		return { success: true, shouldContinue: true };
 	},

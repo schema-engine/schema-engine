@@ -16,7 +16,6 @@ export const BaseViewConfigSchema = z.strictObject({
 
 export interface RecipeMetadata extends ComponentMetadata {
 	category?: string;
-	deprecated?: boolean;
 	example?: unknown;
 	preview?: string;
 }

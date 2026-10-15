@@ -38,8 +38,6 @@ export type {
 	BuilderActionBaseContext,
 	ElementMetadata,
 	BuilderActionRegistration,
-	BuilderActionTrigger,
-	BuilderActionExecutionContext,
 	BuilderActionRuntimeContext,
 	InputRegistration,
 	StaticRegistration,

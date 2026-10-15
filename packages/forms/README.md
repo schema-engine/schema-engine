@@ -236,3 +236,12 @@ See [engine internals](src/engine/README.md#schema-artifacts-and-extension).
 Engine construction builds registration Maps directly and validates each supplied
 schema once at that boundary. Form action results add optional browser redirects
 to the generic result; see [actions](./src/actions/README.md).
+
+## Pre-publish API
+
+Use `FormActionTrigger` and `BuilderActionRuntimeContext` for form actions. The
+`@schema-engine/forms/actions` entry exports `ActionDispatcher` for renderers.
+Recipe lookup accepts an engine or `{ getRecipe }` object. Grid configuration
+rejects unknown keys, including `rows`, `autoFit`, `autoFill`, and
+`maxColumnWidth`; automatic columns use `columns: 'auto'` and `minColumnWidth`.
+Recipe metadata has no `deprecated` property.

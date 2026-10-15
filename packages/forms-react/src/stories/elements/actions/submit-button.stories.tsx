@@ -3,7 +3,7 @@ import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '@/stories/shared/story-wrapper';
 import { defineStoryForm, getEngine, ValidationPresets, rhfAdapter } from '@/stories/shared/form-builder.ui';
 import * as z from 'zod/mini';
-import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@schema-engine/forms/types';
+import type { BuilderActionRuntimeContext, BuilderActionRegistration } from '@schema-engine/forms/types';
 import { FormActionTriggerSchema, type ActionExecutionResult } from '@schema-engine/forms';
 import { SUBMIT_FORM_MOCK_URL } from '@/stories/msw/submit-form';
 
@@ -352,7 +352,7 @@ function confettiPlugin(): BuilderActionRegistration<'confetti', typeof Confetti
 			icon: 'sparkles',
 			defaultTriggers: ['form_submit_success'],
 		},
-		execute: async (context: BuilderActionExecutionContext<ConfettiAction>): Promise<ActionExecutionResult> => {
+		execute: async (context: BuilderActionRuntimeContext<ConfettiAction>): Promise<ActionExecutionResult> => {
 			const action = context.config;
 
 			try {
