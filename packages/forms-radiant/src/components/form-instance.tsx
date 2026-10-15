@@ -44,7 +44,6 @@ export function FormInstance({
 				config={config}
 				defaultValues={defaultValues}
 				initialValues={flattenValues(initialValues)}
-				onSubmit={onSubmit}
 			>
 				<RecipeRenderer
 					config={config}
