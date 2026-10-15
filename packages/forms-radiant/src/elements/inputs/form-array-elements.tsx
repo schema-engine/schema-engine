@@ -58,6 +58,89 @@ function PlusIcon() {
 	);
 }
 
+function createInitialArrayValue(config: ArrayElementsProps, emptyItem: () => unknown): unknown[] | undefined {
+	const values = getValueAtPath(config.initialFormValues ?? {}, config.name);
+	const configuredRows = Array.isArray(values)
+		? values
+		: Array.isArray(config.defaultValue)
+			? config.defaultValue
+			: undefined;
+	const rows = configuredRows ?? [];
+	const count = Math.max(config.minItems ?? 0, rows.length);
+	if (!count && !configuredRows) return undefined;
+	return Array.from({ length: count }, (_, index) =>
+		index < rows.length ? structuredClone(rows[index]) : emptyItem(),
+	);
+}
+
+interface ArrayContentProps {
+	config: ArrayElementsProps;
+	engine?: FormEngine;
+	ids: readonly string[];
+	initialValues: Record<string, unknown>;
+	renderValues: Record<string, unknown>;
+	fieldError?: string;
+}
+
+function renderArrayContent({ config, engine, ids, initialValues, renderValues, fieldError }: ArrayContentProps) {
+	const isSingleField = usesScalarArrayItem(config, config.name, config.elements, renderValues);
+	const canAdd = !config.maxItems || ids.length < config.maxItems;
+	const canRemove = ids.length > (config.minItems ?? 0);
+	const removeLabel = config.removeButtonText || 'Remove item';
+
+	return (
+		<div class="se-form-array">
+			{ids.length === 0 ? (
+				<p class="se-form-array__empty">{config.emptyStateMessage || 'No items added yet'}</p>
+			) : null}
+			{ids.map((id, index) => {
+				const scope = arrayItemScope(config.name, index, id, {
+					scalar: isSingleField,
+					parentInstanceId: config.instanceId,
+				});
+				return (
+					<div class="se-form-array__item" key={id} data-se-row-id={id}>
+						<div class="se-form-array__fields">
+							<FormElements
+								elements={config.elements}
+								engine={engine}
+								initialValues={initialValues}
+								values={renderValues}
+								namePrefix={scope.namePrefix}
+								nameStrategy={scope.nameStrategy}
+								instanceId={scope.instanceId}
+							/>
+						</div>
+						{canRemove ? (
+							<RuiButton
+								type="button"
+								class="se-form-array__remove"
+								variant="outline"
+								size="sm"
+								square
+								data-action="remove"
+								data-id={id}
+								aria-label={removeLabel}
+							>
+								<TrashIcon />
+							</RuiButton>
+						) : null}
+					</div>
+				);
+			})}
+			{canAdd ? (
+				<RuiButton type="button" class="se-form-array__add" variant="outline" data-action="add">
+					<PlusIcon />
+					{config.addButtonText || 'Add item'}
+				</RuiButton>
+			) : null}
+			<p class="rui-field__error" data-rui-field-error role="alert" hidden={!fieldError}>
+				{fieldError}
+			</p>
+		</div>
+	);
+}
+
 @customElement('se-form-array')
 export class SeFormArray extends RadiantElement {
 	@prop({ type: Object }) config!: ArrayElementsProps;
@@ -116,18 +199,7 @@ export class SeFormArray extends RadiantElement {
 	}
 
 	private initialArrayValue(): unknown[] | undefined {
-		const values = getValueAtPath(this.config.initialFormValues ?? {}, this.config.name);
-		const configuredRows = Array.isArray(values)
-			? values
-			: Array.isArray(this.config.defaultValue)
-				? this.config.defaultValue
-				: undefined;
-		const rows = configuredRows ?? [];
-		const count = Math.max(this.config.minItems ?? 0, rows.length);
-		if (!count && !configuredRows) return undefined;
-		return Array.from({ length: count }, (_, index) =>
-			index < rows.length ? structuredClone(rows[index]) : this.emptyItem(),
-		);
+		return createInitialArrayValue(this.config, () => this.emptyItem());
 	}
 
 	private rowInitialValues(): Record<string, unknown> {
@@ -220,7 +292,7 @@ export class SeFormArray extends RadiantElement {
 		this.renderedIds = initialIds;
 		this.formEngine.connect(() => {
 			this.registerArrayField();
-			this.requestUpdate();
+			if (!hasHydrationMarkers(this)) this.requestUpdate();
 		});
 		this.form.connect(() => this.scheduleSync(initialIds));
 		if (this.form.ready) this.scheduleSync(initialIds);
@@ -272,65 +344,14 @@ export class SeFormArray extends RadiantElement {
 		const hydratedContainer = this.preserveHydratedContainer();
 		if (hydratedContainer) return hydratedContainer;
 		const engine = this.resolveEngine();
-		if (this.ids.length > 0 && !engine) return null;
+		const ids = this.ids;
+		const renderedContainer = this.renderedContainer();
+		if (!engine && !this.isConnected && renderedContainer) return renderedContainer;
+		if (ids.length > 0 && !engine) return null;
 		const renderValues = this.form.ready ? this.form.getValues() : (config.initialFormValues ?? {});
 		const initialValues = this.rowInitialValues();
-		const isSingleField = usesScalarArrayItem(config, config.name, config.elements, renderValues);
-		const canAdd = !config.maxItems || this.ids.length < config.maxItems;
-		const canRemove = this.ids.length > (config.minItems ?? 0);
-		const removeLabel = config.removeButtonText || 'Remove item';
 
-		return (
-			<div class="se-form-array">
-				{this.ids.length === 0 ? (
-					<p class="se-form-array__empty">{config.emptyStateMessage || 'No items added yet'}</p>
-				) : null}
-				{this.ids.map((id, index) => {
-					const scope = arrayItemScope(config.name, index, id, {
-						scalar: isSingleField,
-						parentInstanceId: config.instanceId,
-					});
-					return (
-						<div class="se-form-array__item" key={id} data-se-row-id={id}>
-							<div class="se-form-array__fields">
-								<FormElements
-									elements={config.elements}
-									engine={engine}
-									initialValues={initialValues}
-									values={renderValues}
-									namePrefix={scope.namePrefix}
-									nameStrategy={scope.nameStrategy}
-									instanceId={scope.instanceId}
-								/>
-							</div>
-							{canRemove ? (
-								<RuiButton
-									type="button"
-									class="se-form-array__remove"
-									variant="outline"
-									size="sm"
-									square
-									data-action="remove"
-									data-id={id}
-									aria-label={removeLabel}
-								>
-									<TrashIcon />
-								</RuiButton>
-							) : null}
-						</div>
-					);
-				})}
-				{canAdd ? (
-					<RuiButton type="button" class="se-form-array__add" variant="outline" data-action="add">
-						<PlusIcon />
-						{config.addButtonText || 'Add item'}
-					</RuiButton>
-				) : null}
-				<p class="rui-field__error" data-rui-field-error role="alert" hidden={!this.fieldError}>
-					{this.fieldError}
-				</p>
-			</div>
-		);
+		return renderArrayContent({ config, engine, ids, initialValues, renderValues, fieldError: this.fieldError });
 	}
 }
 
@@ -343,6 +364,23 @@ export function FormArrayElements(config: ArrayElementsProps) {
 		ssrInitialRows: ssrInitialRows ?? [],
 		initialFormValues,
 	};
+	const initialValues = structuredClone(initialFormValues ?? {});
+	const initialRows = createInitialArrayValue(arrayConfig, () =>
+		createArrayItemDefaultValue({
+			...arrayConfig,
+			scalar: usesScalarArrayItem(arrayConfig, arrayConfig.name, arrayConfig.elements, initialValues),
+		}),
+	);
+	if (initialRows) setValueAtPath(initialValues, arrayConfig.name, initialRows);
+	const children = engine
+		? renderArrayContent({
+				config: arrayConfig,
+				engine,
+				ids: (initialRows ?? []).map((_, index) => `seed-${index}`),
+				initialValues,
+				renderValues: initialValues,
+			})
+		: null;
 
 	return (
 		<div class="se-form-field se-form-array-field" data-se-grid-theme={fieldHost.themeId} style={fieldHost.style}>
@@ -355,6 +393,7 @@ export function FormArrayElements(config: ArrayElementsProps) {
 			{fieldConfig.description ? <p class="se-form-array-field__description">{fieldConfig.description}</p> : null}
 			{jsx('se-form-array', {
 				config: arrayConfig,
+				children,
 			})}
 		</div>
 	);

@@ -1,7 +1,6 @@
 import { describe, expect, inject, test } from 'vitest';
 import { hasHydrationMarkers } from '@ecopages/jsx';
 import { FormController } from '@/adapters/radiant/controller';
-import { radiantAdapter } from '@/adapters/radiant';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
 import { FormRendererElement } from '@/components/internals/form-renderer';
@@ -30,11 +29,11 @@ describe('SSR array hydration', () => {
 		const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 		const isolatedApp = document.createElement('div');
 		isolatedApp.innerHTML = html;
+		const isolatedRenderer = isolatedApp.querySelector<FormRendererElement>('se-form-renderer');
 		const isolatedArray = isolatedApp.querySelector<SeFormArray>('se-form-array');
-		if (!isolatedArray) throw new Error('Expected server-rendered array host');
+		if (!isolatedRenderer || !isolatedArray) throw new Error('Expected server-rendered form hosts');
 		const isolatedRows = [...isolatedApp.querySelectorAll('.se-form-array__item[data-se-row-id]')];
-		isolatedArray.engine = engine;
-		isolatedApp.replaceChildren(isolatedArray);
+		isolatedRenderer.engine = engine;
 		const form = new FormController(arrayHost);
 
 		try {
@@ -45,7 +44,6 @@ describe('SSR array hydration', () => {
 			expect(isolatedApp.querySelector('.se-form-array__item[data-se-row-id="seed-1"]')).toBe(isolatedRows[1]);
 
 			renderer.engine = engine;
-			renderer.adapter = radiantAdapter;
 			document.body.append(app);
 			await expect.poll(() => form.ready).toBe(true);
 			expect(app.querySelector('.se-form-array__item[data-se-row-id="seed-0"]')).toBe(serverRows[0]);
@@ -102,8 +100,6 @@ describe('SSR array hydration', () => {
 
 		try {
 			renderer.engine = engine;
-			renderer.adapter = radiantAdapter;
-			arrayHost.engine = engine;
 			document.body.append(app);
 			await expect.poll(() => form.ready).toBe(true);
 			await expect
@@ -144,8 +140,6 @@ describe('SSR array hydration', () => {
 
 		try {
 			renderer.engine = engine;
-			renderer.adapter = radiantAdapter;
-			arrayHost.engine = engine;
 			document.body.append(app);
 			await expect.poll(() => form.ready).toBe(true);
 			await expect

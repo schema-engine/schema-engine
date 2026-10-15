@@ -7,9 +7,10 @@ descendants or use a global active form. `FormFieldElement` extends
 `RuiFieldElement`; Radiant UI continues to register controls and own validation,
 error presentation, and ARIA. `SeFormArray` uses the same controller for row edits.
 
-`FormEngineController` reads the nearest `formEngineContext` published by
-`se-form-renderer`. It subscribes only to that context and has no global engine
-fallback. A standalone host without a renderer must receive an engine explicitly.
+`FormEngineController` subscribes to the nearest `formEngineContext` published by
+`se-form-renderer`. Its initial read also checks the active owning field render,
+including during SSR. It has no global engine fallback. A standalone host without
+a renderer must receive an engine explicitly.
 
 ## Explicit lifecycle
 

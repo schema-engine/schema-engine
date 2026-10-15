@@ -3,4 +3,6 @@
 ---
 
 Remove the global engine fallback and Radiant adapter exports. Pass an engine to
-`FormRenderer`, and use `FormEngineController` for custom hosts inside a renderer.
+`FormRenderer` instead of wrapping it with the removed `FormEngineProvider` or
+`FormEngineProviderElement`. Use `FormEngineController` for custom hosts inside a
+renderer.

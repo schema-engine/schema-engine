@@ -1,8 +1,9 @@
 import { ContextSubscriptionRequestEvent } from '@ecopages/radiant/context';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { formEngineContext } from '@/components/provider';
+import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 
-/** Reads the nearest Radiant form engine context from a host. */
+/** Resolves the engine from the host's context or active render scope. */
 export class FormEngineController {
 	private unsubscribeContext?: () => void;
 	private formEngine?: FormEngine;
@@ -21,13 +22,7 @@ export class FormEngineController {
 	}
 
 	private readEngine(): FormEngine | undefined {
-		let engine: FormEngine | undefined;
-		this.host.dispatchEvent(
-			new ContextSubscriptionRequestEvent(formEngineContext, (context) => {
-				engine = context.engine;
-			}),
-		);
-		return engine;
+		return resolveFormEngine(this.host);
 	}
 
 	connect(onChange: () => void = () => {}): void {

@@ -53,8 +53,9 @@ changes, so a parent render by itself does not call `onChange` or dispatch a
 `form_change` action.
 
 Radiant `FormEngineController` subscribes to the nearest ancestor
-`formEngineContext`; renderer-owned field rendering resolves an explicit engine,
-then that context, then the engine owning the current render. `se-form-renderer`
+`formEngineContext` and resolves the active owning render on initial reads.
+Renderer-owned field rendering resolves an explicit engine, then
+that context, then the engine owning the current render. `se-form-renderer`
 publishes a plain engine snapshot on the context. There is no module-level engine
 registry or implicit single-engine fallback, so standalone hosts must receive an
 engine through a renderer context or an explicit prop.
