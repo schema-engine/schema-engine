@@ -32,6 +32,21 @@ function GridThemeStyle({ themeId, css }: { themeId: string; css: string }) {
 	);
 }
 
+const formConfigIdentities = new WeakMap<NormalizedFormConfig, number>();
+let nextFormConfigIdentity = 0;
+
+/**
+ * @remarks The normalized config identity marks the lifetime of the adapter's form instance.
+ */
+function getFormConfigIdentity(config: NormalizedFormConfig): number {
+	const existingIdentity = formConfigIdentities.get(config);
+	if (existingIdentity !== undefined) return existingIdentity;
+
+	const identity = nextFormConfigIdentity++;
+	formConfigIdentities.set(config, identity);
+	return identity;
+}
+
 function StepFields({
 	step,
 	config,
@@ -108,6 +123,7 @@ function FormRendererInner({
 	const { theme, css } = compiledGrid;
 	return (
 		<FormProvider
+			key={getFormConfigIdentity(config)}
 			config={config}
 			defaultValues={defaultValues}
 			onSubmit={onSubmit}

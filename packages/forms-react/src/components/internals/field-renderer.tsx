@@ -31,6 +31,7 @@ export function FormElement({ config, name, id, instanceId, className, style }: 
 		throw new Error(`FormElement config must be normalized before render (${elementType}).`);
 	}
 	const { shouldShow, shouldDisable, isRequired } = useConstraintLogic(
+		name ?? config.name,
 		'constraints' in config ? config.constraints : undefined,
 		isFieldRequired('rules' in config ? config.rules : undefined),
 	);

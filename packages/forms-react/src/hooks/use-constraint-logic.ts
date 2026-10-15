@@ -18,9 +18,9 @@ export type UseConstraintLogicResult = ConstraintEvaluationResult;
  * that the returned values are then matched against.
  */
 export function useConstraintLogic(
+	fieldPath: string,
 	constraints: readonly ConstraintLogic[] = [],
 	baseRequired = false,
-	fieldPath?: string,
 ): UseConstraintLogicResult {
 	const watchedFields = useMemo(() => resolveConstraintPaths(constraints, fieldPath), [constraints, fieldPath]);
 
