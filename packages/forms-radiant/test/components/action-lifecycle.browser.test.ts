@@ -45,6 +45,49 @@ test('submission action callback receives the successful action and nested value
 	});
 });
 
+test('refreshes action context between submission triggers and keeps form operations stable', async () => {
+	const engine = createFormEngine({ elements: [] });
+	const observed: Array<{ trigger: string; formData: Record<string, unknown>; form: unknown }> = [];
+	vi.spyOn(engine, 'getAction').mockReturnValue({
+		$type: 'submit',
+		schema: { '~standard': { version: 1, vendor: 'test', validate: (value: unknown) => ({ value }) } },
+		metadata: { name: 'Submit', defaultTriggers: ['form_submit_start', 'form_submit'] },
+		execute: async ({
+			trigger,
+			formData,
+			form,
+		}: {
+			trigger: string;
+			formData: Record<string, unknown>;
+			form: { setValue: (name: string, value: unknown) => void };
+		}) => {
+			observed.push({ trigger, formData, form });
+			if (trigger === 'form_submit_start') form.setValue('status', 'prepared');
+			return { success: true };
+		},
+	});
+	const host = document.createElement('rui-form');
+	provideTestFormStore(host, new FormStore({ defaultValues: { status: 'draft' } }));
+	const controller = new FormActionControllerElement();
+	controller.engine = engine;
+	controller.config = engine.defineForm({
+		id: 'fresh-submit-context',
+		steps: [{ id: 'main', title: 'Main', elements: [] }],
+		actions: [{ id: 'prepare', $type: 'submit', endpoint: '/save' }],
+	});
+	const complete = vi.fn();
+	host.addEventListener('se-action-submit-complete', complete);
+	host.append(controller);
+	document.body.append(host);
+	await expect.poll(() => controller.form.ready).toBe(true);
+	host.dispatchEvent(new CustomEvent('rui-submit'));
+	await expect.poll(() => complete.mock.calls.length).toBe(1);
+
+	expect(observed.map(({ trigger }) => trigger)).toEqual(['form_submit_start', 'form_submit']);
+	expect(observed[1]?.formData).toEqual({ status: 'prepared' });
+	expect(observed[1]?.form).toBe(observed[0]?.form);
+});
+
 test.each([false, true])(
 	'a stopping failure settles the lifecycle (callback rejection: %s)',
 	async (callbackRejects) => {

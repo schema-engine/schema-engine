@@ -1,4 +1,5 @@
 import type { NormalizedFormConfig } from '@schema-engine/forms';
+import { createInitialStepStates } from '@schema-engine/forms/engine';
 import type { ViewStep } from '@schema-engine/forms/recipes';
 import type { FormInstanceContextValue } from '@/contexts/form-instance-context';
 
@@ -58,11 +59,7 @@ export function deriveInitialInstance(config: FormMeta): FormInstanceContextValu
 		currentStep: 0,
 		totalSteps,
 		isWizard: false,
-		stepStates: {
-			completed: Array.from({ length: totalSteps }, () => false),
-			valid: Array.from({ length: totalSteps }, () => false),
-			visited: Array.from({ length: totalSteps }, (item, index) => index === 0),
-		},
+		stepStates: createInitialStepStates(totalSteps),
 		goToStep: () => {},
 		goToNextStep: () => {},
 		goToPreviousStep: () => {},

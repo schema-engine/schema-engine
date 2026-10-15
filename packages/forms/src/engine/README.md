@@ -18,8 +18,9 @@ The engine exports reusable helpers for paths, effective rules, and validation.
 For `validateFormValues`, omitted or empty `names` validates every named field.
 A non-empty list validates only the requested paths and their descendants.
 
-React delegates to these helpers. Radiant adoption is tracked by
-[#133](https://github.com/andeeplus/schema-engine/issues/133).
+React and Radiant delegate to these helpers. `runSubmissionLifecycle` accepts either a
+fixed context or a factory; use a factory when each submission trigger needs current form
+values and validation state.
 
 The public usage examples are in the [forms package README](../../README.md#engine-validation).
 

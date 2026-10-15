@@ -22,6 +22,12 @@ export class FormActionControllerElement extends RadiantElement {
 	@state onAction?: FormProviderProps['onAction'];
 
 	readonly form = new FormController(this);
+	private readonly actionForm = {
+		reset: () => this.form.reset(),
+		setValue: (name: string, value: unknown) => this.form.setValue(name, value),
+		getValue: (name: string) => this.form.getValue(name),
+		validate: () => this.form.trigger(),
+	};
 
 	private dispatcher?: ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>;
 	private mountedAt = 0;
@@ -143,7 +149,7 @@ export class FormActionControllerElement extends RadiantElement {
 				}
 				return dispatchedResults;
 			},
-			{ actions: this.config.actions ?? [], context: this.buildContext() },
+			{ actions: this.config.actions ?? [], context: () => this.buildContext() },
 		);
 		this.dispatchEvent(
 			new CustomEvent('se-action-submit-complete', {
@@ -176,12 +182,7 @@ export class FormActionControllerElement extends RadiantElement {
 			formState: form.formState,
 			currentStep: this.formInstance?.currentStep ?? 0,
 			mountedAt: this.mountedAt,
-			form: {
-				reset: () => form.reset(),
-				setValue: (name, value) => form.setValue(name, value),
-				getValue: (name) => form.getValue(name),
-				validate: () => form.trigger(),
-			},
+			form: this.actionForm,
 		});
 	}
 }
