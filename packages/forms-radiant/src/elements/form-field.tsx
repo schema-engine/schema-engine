@@ -3,7 +3,7 @@ import { RuiFieldElement, type RuiFieldProps } from '@ecopages/radiant-ui/field'
 import { jsx, type JsxCustomElementAttributes } from '@ecopages/jsx';
 import { FormController, formController } from '@/adapters/radiant/controller';
 import { readHydratedRules } from '@/components/internals/field-rule-hydrator';
-import type { ElementGridConfig } from '@schema-engine/forms/schemas';
+import type { ValidationRule, ElementGridConfig } from '@schema-engine/forms/schemas';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 
 /** RuiField's registration and presentation, with scoped programmatic form access. */
@@ -27,6 +27,7 @@ export class FormFieldElement extends RuiFieldElement {
 export function FormField({
 	children,
 	rules,
+	validationRules,
 	defaultValue,
 	defaultValueData,
 	class: className,
@@ -34,6 +35,7 @@ export function FormField({
 	style,
 	...props
 }: JsxCustomElementAttributes<FormFieldElement, RuiFieldProps> & {
+	validationRules?: ReadonlyArray<ValidationRule>;
 	grid?: ElementGridConfig;
 	style?: Record<string, string | number | undefined>;
 }) {
@@ -45,6 +47,7 @@ export function FormField({
 		'data-se-grid-theme': fieldHost.themeId,
 		style: fieldHost.style,
 		'prop:rules': rules,
+		'data-se-validation-rules': validationRules ? JSON.stringify(validationRules) : undefined,
 		'prop:defaultValue': defaultValue,
 		'data-default-value':
 			defaultValueData ?? (defaultValue !== undefined ? JSON.stringify(defaultValue) : undefined),

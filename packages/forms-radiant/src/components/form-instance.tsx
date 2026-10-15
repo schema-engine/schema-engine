@@ -38,7 +38,7 @@ export function FormInstance({
 		'prop:onSubmit': onSubmit,
 		isSubmitting,
 		children: (
-			<ConfiguredRuiForm config={config} initialValues={initialValues} onSubmit={onSubmit}>
+			<ConfiguredRuiForm config={config} initialValues={initialValues}>
 				<RecipeRenderer
 					initialValues={initialValues}
 					config={config}

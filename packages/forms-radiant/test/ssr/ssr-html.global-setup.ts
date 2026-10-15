@@ -1,9 +1,11 @@
+import { renderHydrationHtml } from './render-hydration-html';
 import type { TestProject } from 'vitest/node';
 import { getSsrAcceptanceEngine, renderSsrLayoutAcceptanceHtml } from './render-form-ssr-html';
 
 declare module 'vitest' {
 	interface ProvidedContext {
 		ssrLayoutHtml: string;
+		ssrHydrationHtml: string;
 		ssrLayoutCompiled: { theme: { id: string }; css: string };
 	}
 }
@@ -18,6 +20,7 @@ declare module 'vitest' {
  */
 export default function setup(project: TestProject): void {
 	const { theme, css } = getSsrAcceptanceEngine().getCompiledGrid();
+	project.provide('ssrHydrationHtml', Buffer.from(renderHydrationHtml()).toString('base64'));
 	project.provide('ssrLayoutHtml', renderSsrLayoutAcceptanceHtml());
 	project.provide('ssrLayoutCompiled', { theme: { id: theme.id }, css });
 }

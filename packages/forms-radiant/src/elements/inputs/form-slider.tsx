@@ -21,6 +21,7 @@ export function FormSlider({
 			grid={config.grid}
 			style={config.style}
 			rules={toFieldRules(config)}
+			validationRules={config.rules}
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}
 		>

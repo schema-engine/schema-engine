@@ -15,6 +15,7 @@ export function FormSwitch({
 		<FormField
 			name={config.name}
 			rules={toFieldRules(config)}
+			validationRules={config.rules}
 			defaultValueData={config.defaultValue !== undefined ? JSON.stringify(config.defaultValue) : undefined}
 			disabled={config.disabled}
 			grid={config.grid}

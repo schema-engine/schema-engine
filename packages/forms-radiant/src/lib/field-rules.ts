@@ -11,22 +11,7 @@ import {
 import { peekOwningFormEngine } from '@/contexts/form-engine-owner';
 import { expandValues } from '@/adapters/radiant/controller/values';
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const BASE64_PATTERN = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
-const HEX_PATTERN = /^[0-9A-Fa-f]*$/;
-
-const NATIVE_RUI_RULES = new Set([
-	'required',
-	'minLength',
-	'maxLength',
-	'min',
-	'max',
-	'pattern',
-	'email',
-	'base64',
-	'hex',
-	'minItems',
-]);
+const NATIVE_RUI_RULES = new Set(['required', 'minLength', 'maxLength', 'min', 'max', 'pattern']);
 
 function numericRule(value: number, message?: string) {
 	return message ? { value, message } : value;
@@ -103,33 +88,6 @@ export function toFieldRules(element: FieldRulesSource, registry?: ValidationReg
 				break;
 			case 'pattern':
 				fieldRules.pattern = { value: new RegExp(rule.value), message: rule.message ?? 'Invalid format' };
-				break;
-			case 'email':
-				fieldRules.pattern = {
-					value: rule.pattern ? new RegExp(rule.pattern) : EMAIL_PATTERN,
-					message: rule.message ?? 'Invalid email',
-				};
-				break;
-			case 'base64':
-				fieldRules.pattern = { value: BASE64_PATTERN, message: rule.message ?? 'Invalid Base64' };
-				break;
-			case 'hex':
-				fieldRules.pattern = { value: HEX_PATTERN, message: rule.message ?? 'Invalid hexadecimal value' };
-				break;
-			case 'phone':
-				if (resolvedRegistry) {
-					fieldRules.validate = toValidator(
-						[rule],
-						element.name,
-						'Enter a complete phone number',
-						resolvedRegistry,
-					);
-				}
-				break;
-			case 'minItems':
-				if (rule.value >= 1) {
-					fieldRules.required = rule.message ?? true;
-				}
 				break;
 			default:
 				break;

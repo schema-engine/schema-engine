@@ -20,6 +20,8 @@ import { fieldNamesForStep, validateCurrentStepFields } from '@/lib/validate-cur
 import { connectValidationDependencies } from '@/lib/validation-deps';
 import { applyConstraintRequired } from '@/lib/constraint-required-rules';
 import { shouldSurfaceDependentError } from '@schema-engine/forms/schemas/validation';
+import type { RuiFormElement } from '@ecopages/radiant-ui/form';
+import { expandValues } from '@/adapters/radiant/controller/values';
 import { FormController } from '@/adapters/radiant/controller';
 
 /**
@@ -133,10 +135,9 @@ export class FormInstanceElement extends RadiantElement {
 	}
 
 	private wireRuiForm(): void {
-		const ruiForm = this.form?.host ?? findNearestRuiForm(this);
-		if (ruiForm && typeof (ruiForm as { onSubmit?: unknown }).onSubmit !== 'function') {
-			(ruiForm as { onSubmit?: (data: Record<string, unknown>) => void }).onSubmit = (data) =>
-				this.onSubmit?.(data);
+		const ruiForm = (this.form?.host ?? findNearestRuiForm(this)) as RuiFormElement | undefined;
+		if (ruiForm) {
+			ruiForm.onSubmit = this.onSubmit ? (data) => this.onSubmit?.(expandValues(data)) : undefined;
 		}
 	}
 
