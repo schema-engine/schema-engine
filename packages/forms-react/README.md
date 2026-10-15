@@ -94,3 +94,21 @@ See [Getting started](../../apps/docs/src/content/docs/forms-react/getting-start
 Registry source type checks run through the registry workspace's `check-types`
 task in Turbo. Renderer actions import the dispatcher from
 `@schema-engine/forms/actions`.
+
+## Validation, navigation and action contexts
+
+The React Hook Form adapter delegates validation to `validateFormValues`, step
+state to `createStepMachine`, and submission triggers to `runSubmissionLifecycle`
+from `@schema-engine/forms`. Wizard Next validates nested fieldsets and live
+array rows; errors keep the nested value shape so field revalidation clears them.
+A `require` constraint supplies both the control's required state and validation.
+
+`executeAction(action)` dispatches only that action. Submission callbacks run
+after the engine action lifecycle succeeds, and React Hook Form performs the
+submission validation once. Step action metadata includes elapsed form time.
+Action handlers receive a framework-neutral `context.form` with `reset`,
+`setValue`, `getValue`, and `validate`; `validate()` resolves to the form validity.
+
+A changed `require` condition revalidates a touched or submitted dependent field.
+Submission failures use `action-N` result identifiers because dispatch results
+do not carry authored action ids.

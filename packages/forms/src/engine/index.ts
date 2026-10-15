@@ -17,4 +17,3 @@ export * from './step-machine';
 export * from './submission-lifecycle';
 export * from './form-action-context';
 export { ActionDispatcher } from '@schema-engine/actions';
-export type { ActionDispatcherOptions } from '@schema-engine/actions';
