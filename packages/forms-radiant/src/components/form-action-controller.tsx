@@ -124,8 +124,8 @@ export class FormActionControllerElement extends RadiantElement {
 	}
 
 	private async runSubmissionLifecycle(): Promise<void> {
-		this.dispatchEvent(new CustomEvent('se-action-submit-start', { bubbles: true, composed: true }));
 		if (!this.dispatcher || !this.form.ready) return;
+		this.dispatchEvent(new CustomEvent('se-action-submit-start', { bubbles: true, composed: true }));
 		const { succeeded, results } = await runSubmissionLifecycle(
 			async (input) => {
 				const dispatcher = this.dispatcher;

@@ -36,6 +36,10 @@ test('submission action callback receives the successful action and nested value
 	host.append(controller);
 	document.body.append(host);
 	await expect.poll(() => controller.form.ready).toBe(true);
+	const ready = vi.spyOn(controller.form, 'ready', 'get').mockReturnValue(false);
+	host.dispatchEvent(new CustomEvent('rui-submit'));
+	expect(events).toEqual([]);
+	ready.mockRestore();
 	host.dispatchEvent(new CustomEvent('rui-submit'));
 	await expect.poll(() => events).toEqual(['start', 'callback', 'complete']);
 	expect(controller.onAction).toHaveBeenCalledTimes(1);
