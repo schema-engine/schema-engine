@@ -8,7 +8,7 @@ import * as z from 'zod/mini';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@schema-engine/forms';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { WizardRecipe } from '@/components/schema-engine/forms/recipes/registrations/wizard';
-import { createFormEngine } from '@/registries/builder-registry';
+import { createFormEngine } from '@schema-engine/forms';
 import { useFormWatcher } from '@/adapters/rhf/hooks/use-form-watcher';
 
 const actionSchema = z.object({
