@@ -176,6 +176,10 @@ a registered handler with a `FormValidationError` naming the field and rule.
 The `relate` string and date bases coerce primitive values and `Date` instances;
 arbitrary objects are left unchanged for string comparisons and are invalid dates.
 
+Constraint `contains` and `not_contains` use text matching only for primitive
+string, number, boolean, and bigint values. Object-valued fields do not fall back
+to JavaScript's default object string.
+
 The `values` argument is the full nested form value tree. Omitting `names`, or
 passing an empty list, validates every named field. A non-empty `names` list
 validates only the requested paths and their descendants.

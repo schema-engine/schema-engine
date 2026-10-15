@@ -180,6 +180,16 @@ describe('evaluateResolvedConstraints', () => {
 			});
 			expect(result2.shouldShow).toBe(false);
 		});
+
+		test('does not stringify object values for text containment', () => {
+			const constraints: ConstraintLogic[] = [
+				{ field: 'value', operator: 'contains', value: 'object', action: 'show' },
+			];
+
+			const result = evaluate({ constraints, fieldValues: { value: { name: 'object' } } });
+
+			expect(result.shouldShow).toBe(false);
+		});
 	});
 
 	describe('not_contains operator', () => {
@@ -227,6 +237,16 @@ describe('evaluateResolvedConstraints', () => {
 				fieldValues: { email: 'spam@example.com' },
 			});
 			expect(result2.shouldShow).toBe(false);
+		});
+
+		test('does not stringify object values for negative text containment', () => {
+			const constraints: ConstraintLogic[] = [
+				{ field: 'value', operator: 'not_contains', value: 'object', action: 'show' },
+			];
+
+			const result = evaluate({ constraints, fieldValues: { value: { name: 'object' } } });
+
+			expect(result.shouldShow).toBe(false);
 		});
 	});
 
