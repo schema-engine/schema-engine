@@ -2,8 +2,6 @@
 
 se-form-renderer,
 se-form-instance,
-se-multi-step-form,
-se-view-provider,
 se-step-header,
 se-minimal-progress,
 se-step-indicators,
@@ -46,7 +44,6 @@ form.rui-form {
 
 .se-form-story--full se-form-renderer,
 .se-form-story--full se-form-instance,
-.se-form-story--full se-multi-step-form,
 .se-form-story--full .card-shell,
 .se-form-story--full .hero-shell,
 .se-form-story--full .split-screen-shell {

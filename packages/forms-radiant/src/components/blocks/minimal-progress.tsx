@@ -2,22 +2,22 @@ import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { getSlotConfig, type MinimalProgressConfig } from '@schema-engine/forms/recipes';
-import type { NormalizedFormConfig } from '@schema-engine/forms';
+import type { FormMeta } from '@/lib/instance-view';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { deriveInitialInstance } from '@/lib/instance-view';
 
 @customElement('se-minimal-progress')
 export class MinimalProgressElement extends RadiantElement {
-	@prop({ type: Object }) config?: NormalizedFormConfig;
+	@prop({ type: Object }) meta?: FormMeta;
 	@prop({ type: Object }) viewConfig?: Record<string, unknown>;
 
 	@contextSelector({ context: formInstanceContext })
 	instance?: FormInstanceContextValue;
 
 	override render(): JsxRenderable {
-		const config = this.config;
-		if (!config) return null;
-		const instance = this.instance ?? deriveInitialInstance(config);
+		const meta = this.meta;
+		if (!meta) return null;
+		const instance = this.instance ?? deriveInitialInstance(meta);
 
 		const progressConfig = getSlotConfig<MinimalProgressConfig>(this.viewConfig ?? {}, 'progress');
 		if (progressConfig.showPercentage === false) return null;
@@ -37,11 +37,11 @@ export class MinimalProgressElement extends RadiantElement {
 }
 
 export function MinimalProgressBlock(context?: {
-	config?: NormalizedFormConfig;
+	meta?: FormMeta;
 	viewConfig?: Record<string, unknown>;
 }): JsxRenderable {
 	return jsx('se-minimal-progress', {
-		config: context?.config,
+		meta: context?.meta,
 		viewConfig: context?.viewConfig ?? {},
 	});
 }

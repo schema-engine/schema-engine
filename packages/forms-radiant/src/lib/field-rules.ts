@@ -1,13 +1,9 @@
 import type { FieldRules } from '@ecopages/radiant-ui/form';
-import * as z from 'zod/mini';
+import { validateFieldValue } from '@schema-engine/forms';
 import type { ValidationRule } from '@schema-engine/forms/schemas';
 import type { ValidationRegistry } from '@schema-engine/forms/schemas/validation';
 import { createDebounceScope } from '@schema-engine/forms/lib/debounce';
-import {
-	createValidationContext,
-	createZodSchemaFromRules,
-	getValidationRulesForElement,
-} from '@schema-engine/forms/schemas/validation/utils';
+import { getValidationRulesForElement } from '@schema-engine/forms/schemas/validation/utils';
 import { peekOwningFormEngine } from '@/contexts/form-engine-owner';
 import { expandValues } from '@/adapters/radiant/controller/values';
 
@@ -47,14 +43,19 @@ function resolveValidationRegistry(registry?: ValidationRegistry): ValidationReg
 function toValidator(
 	rules: ReadonlyArray<ValidationRule>,
 	fieldPath: string | undefined,
-	fallbackMessage: string,
 	registry: ValidationRegistry,
 ) {
 	const debounceScope = createDebounceScope();
 	return async (value: unknown, values: Record<string, unknown>) => {
-		const context = createValidationContext({ values: expandValues(values ?? {}), fieldPath, debounceScope });
-		const result = await z.safeParseAsync(createZodSchemaFromRules(rules, context, registry), value);
-		return result.success || result.error.issues[0]?.message || fallbackMessage;
+		const message = await validateFieldValue({
+			element: { rules },
+			value,
+			values: expandValues(values ?? {}),
+			fieldPath: fieldPath ?? '',
+			registry,
+			debounceScope,
+		});
+		return message ?? true;
 	};
 }
 
@@ -95,7 +96,7 @@ export function toFieldRules(element: FieldRulesSource, registry?: ValidationReg
 	}
 
 	if (resolvedRegistry && resolved.some((rule) => !NATIVE_RUI_RULES.has(rule.type))) {
-		fieldRules.validate = toValidator(resolved, element.name, 'Validation failed', resolvedRegistry);
+		fieldRules.validate = toValidator(resolved, element.name, resolvedRegistry);
 	}
 
 	return fieldRules;
