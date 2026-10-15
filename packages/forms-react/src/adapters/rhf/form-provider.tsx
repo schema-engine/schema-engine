@@ -1,7 +1,7 @@
 import { FormProvider as RHFFormProvider, useForm } from 'react-hook-form';
 import { useCallback, useMemo, useRef } from 'react';
 import type { FormProviderProps } from '../types';
-import { ActionDispatcher } from '@schema-engine/actions';
+import { ActionDispatcher } from '@schema-engine/forms/actions';
 import { collectFieldDefaults, flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import { useFormEngine } from '@/hooks/use-form-context';
 import { useFormValidationResolver } from './hooks/use-form-validation-resolver';

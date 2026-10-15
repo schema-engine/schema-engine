@@ -7,7 +7,9 @@
 ---
 
 Forms and renderer runtime diagnostics use package-tagged `@ecopages/logger`
-instances. Debug output is disabled by default; warnings and errors remain visible.
+instances. Published forms expose action dispatch through `@schema-engine/forms/actions`;
+see the [forms API](./packages/forms/README.md#pre-publish-api) for the supported
+grid and recipe contracts. Debug output is disabled by default; warnings and errors remain visible.
 
 ## Why Schema Engine?
 

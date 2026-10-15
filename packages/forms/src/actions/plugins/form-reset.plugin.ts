@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
+import type { BuilderActionRuntimeContext, BuilderActionRegistration } from '@/types';
 import { FormActionTriggerSchema } from '../triggers';
 import { getAutoSaveDraftStorageKey, type AutoSaveStorage } from './auto-save.plugin';
 
@@ -11,8 +11,8 @@ export interface FormResetPluginConfig {
 	storage: AutoSaveStorage;
 	confirm?: (message: string) => boolean | Promise<boolean>;
 	clearDraft?: (formId: string) => void | Promise<void>;
-	resetForm?: (context: BuilderActionExecutionContext<FormResetAction>, resetToDefaults: boolean) => void;
-	onReset?: (context: BuilderActionExecutionContext<FormResetAction>) => void;
+	resetForm?: (context: BuilderActionRuntimeContext<FormResetAction>, resetToDefaults: boolean) => void;
+	onReset?: (context: BuilderActionRuntimeContext<FormResetAction>) => void;
 }
 
 /** Schema for the `reset` action configuration. */
@@ -32,7 +32,7 @@ export type FormResetAction = z.infer<typeof FormResetActionSchema>;
 /**
  * Default form reset implementation using React Hook Form methods
  */
-function defaultResetForm(context: BuilderActionExecutionContext<FormResetAction>, _resetToDefaults: boolean) {
+function defaultResetForm(context: BuilderActionRuntimeContext<FormResetAction>, _resetToDefaults: boolean) {
 	context.form.reset();
 }
 
@@ -57,7 +57,7 @@ export function formResetPlugin(
 			icon: 'refresh',
 			defaultTriggers: ['form_submit_success'],
 		},
-		execute: async (context: BuilderActionExecutionContext<FormResetAction>) => {
+		execute: async (context: BuilderActionRuntimeContext<FormResetAction>) => {
 			const action = context.config;
 			try {
 				if (action.confirmMessage) {

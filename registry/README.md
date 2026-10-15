@@ -50,3 +50,6 @@ is byte-identical to its shared original, so a base cannot accumulate copies tha
 All four trees typecheck here. The shadcn primitives these sources import (`@/components/ui/*`, `@/lib/utils`) belong to
 the consumer's install, so `registry/ui-stubs` stands in for them — see its README. A base can override a stub in
 `registry/<base>/ui-stubs` when its wrappers expect a different prop shape, which is why React Aria has its own.
+
+Run `pnpm --filter @schema-engine/registry-files check-types` to check all four
+registry source configurations; Turbo includes this workspace in `check-types`.

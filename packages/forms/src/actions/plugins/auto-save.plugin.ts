@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
+import type { BuilderActionRuntimeContext, BuilderActionRegistration } from '@/types';
 import { FormActionTriggerSchema } from '../triggers';
 
 /**
@@ -23,11 +23,11 @@ export interface AutoSavePluginConfig {
 	/** Checks whether saving is currently allowed, for example by a consent tool. */
 	shouldSave?: () => boolean | Promise<boolean>;
 	/** Called when auto-save succeeds */
-	onSave?: (data: unknown, context: BuilderActionExecutionContext<AutoSaveAction>) => void | Promise<void>;
+	onSave?: (data: unknown, context: BuilderActionRuntimeContext<AutoSaveAction>) => void | Promise<void>;
 	/** Called when auto-save fails */
-	onError?: (error: string, context: BuilderActionExecutionContext<AutoSaveAction>) => void | Promise<void>;
+	onError?: (error: string, context: BuilderActionRuntimeContext<AutoSaveAction>) => void | Promise<void>;
 	/** Custom storage key generator */
-	getStorageKey?: (context: BuilderActionExecutionContext<AutoSaveAction>) => string;
+	getStorageKey?: (context: BuilderActionRuntimeContext<AutoSaveAction>) => string;
 }
 
 /** Schema for the `auto_save` action configuration. */
@@ -68,7 +68,7 @@ export function autoSavePlugin(
 ): BuilderActionRegistration<'auto_save', typeof AutoSaveActionSchema> {
 	const { storage } = config;
 
-	const handler = async (context: BuilderActionExecutionContext<AutoSaveAction>) => {
+	const handler = async (context: BuilderActionRuntimeContext<AutoSaveAction>) => {
 		const action = context.config;
 		try {
 			if (config.shouldSave && !(await config.shouldSave())) {

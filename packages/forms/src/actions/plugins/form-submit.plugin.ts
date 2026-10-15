@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
+import type { BuilderActionRuntimeContext, BuilderActionRegistration } from '@/types';
 import { logger } from '@/lib/logger';
 import { FormActionTriggerSchema } from '../triggers';
 
@@ -12,12 +12,12 @@ export interface FormSubmitPluginConfig {
 	/** Transform data before sending */
 	transformData?: (
 		data: Record<string, unknown>,
-		context: BuilderActionExecutionContext<FormSubmitAction>,
+		context: BuilderActionRuntimeContext<FormSubmitAction>,
 	) => Record<string, unknown>;
 	/** Handle successful response */
-	onSuccess?: (data: unknown, context: BuilderActionExecutionContext<FormSubmitAction>) => void;
+	onSuccess?: (data: unknown, context: BuilderActionRuntimeContext<FormSubmitAction>) => void;
 	/** Handle error response */
-	onError?: (error: Error, context: BuilderActionExecutionContext<FormSubmitAction>) => void;
+	onError?: (error: Error, context: BuilderActionRuntimeContext<FormSubmitAction>) => void;
 }
 
 /** Schema for the `submit` action configuration. */
@@ -52,7 +52,7 @@ export function formSubmitPlugin(
 ): BuilderActionRegistration<'submit', typeof FormSubmitActionSchema> {
 	const { transformData = (data) => data, onSuccess = () => {}, onError = () => {} } = config;
 
-	const handler = async (context: BuilderActionExecutionContext<FormSubmitAction>) => {
+	const handler = async (context: BuilderActionRuntimeContext<FormSubmitAction>) => {
 		const action = context.config;
 		const request = config.request ?? fetch;
 

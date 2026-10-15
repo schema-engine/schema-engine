@@ -4,7 +4,7 @@ import { onContextUpdate } from '@ecopages/radiant/context';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import type { BuilderActionBaseContext, FormActionTrigger, FormConfigView } from '@schema-engine/forms';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
-import { ActionDispatcher } from '@schema-engine/actions';
+import { ActionDispatcher } from '@schema-engine/forms/actions';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
 import { whenEngineAvailable } from '@/contexts/resolve-form-engine';

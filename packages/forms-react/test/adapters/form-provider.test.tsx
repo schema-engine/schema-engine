@@ -6,7 +6,7 @@ import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/va
 import { mockDispatch } from '../utils/use-action-executor.mock';
 import { useFormContext as useReactHookFormContext } from 'react-hook-form';
 
-vi.mock('@schema-engine/actions', async () => {
+vi.mock('@schema-engine/forms/actions', async () => {
 	const { mockDispatch, mockDispatchSync } = await import('../utils/use-action-executor.mock');
 	return {
 		ActionDispatcher: class {

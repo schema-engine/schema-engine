@@ -25,9 +25,6 @@ import { GridGapTokens } from '@/schemas/base-field';
  * or `justifySelf` could never take effect. Resolving in one place also lets
  * `placeSelf` join the responsive cascade for free.
  *
- * Form-level `rows`, `autoFit`, `autoFill`, and `maxColumnWidth` are accepted
- * by the schema for compatibility but are not emitted to CSS yet.
- *
  * Only authored values are emitted, as custom properties (not camelCase CSS
  * keys) so the return type is a `--*` record assignable to React
  * `CSSProperties` and to inline `style` attributes without a cast. Neutral

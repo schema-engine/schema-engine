@@ -184,3 +184,7 @@ pnpm storybook   # port 6007
 From monorepo root: `pnpm dev:radiant-storybook`.
 
 Stories default to **client** render. Use the Storybook toolbar **Radiant render** control to spot-check `ssr-hydrate` and `ssr-static` on any story — same contract as radiant-ui. Play functions skip `ssr-static` (markup-only iframe, no client module). SSR layout acceptance renders the real `RecipeRenderer` through `renderToString`: `test/ssr/grid-layout-ssr.markup.test.ts` checks the emitted stylesheet and field variables, and `test/ssr/grid-layout-ssr.acceptance.browser.test.ts` loads that HTML in an isolated iframe without app JS and checks layout at two widths. Both share `test-utils/` with the React package.
+
+Published JavaScript files are marked as side effects so bundlers preserve
+custom element registration for every entry point. Supported Radiant peers are
+`>=0.3.0-rc.9 <0.4.0` (JSX and Radiant) and `>=0.1.0-rc.17 <0.2.0` (Radiant UI).
