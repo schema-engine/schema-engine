@@ -44,18 +44,11 @@ abstract class BaseRegistry<TKey extends string, TValue extends BaseRegistration
 | `size`           | Number of registered items                                  |
 | `clear()`        | Removes all items (useful for testing)                      |
 
-## ComponentRegistry
+## Renderable registrations
 
-A specialized registry for visual components that require a `render` method. Form elements and view recipes use this.
-
-```typescript
-abstract class ComponentRegistry<TKey extends string, TValue extends ComponentRegistration> extends BaseRegistry<
-	TKey,
-	TValue
-> {}
-```
-
-`ComponentRegistry` adds no runtime behavior today. Its value is the stronger type constraint that only renderable registrations can be stored in it.
+Extend `BaseRegistry<string, WidgetRegistration>` with a
+`ComponentRegistration` type when values must include a render function.
+The removed `ComponentRegistry` class added no runtime behavior.
 
 ## BaseRegistration
 

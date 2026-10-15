@@ -7,7 +7,7 @@ order: 2
 
 # Getting Started
 
-The API is split into two layers: what you provide at the call site (the base context) and what the action handler receives at runtime (the base context enriched with `config` and `trigger`). You only need to think about the base context when calling the executor or dispatcher.
+The API is split into two layers: what you provide at the call site (the base context) and what the action handler receives at runtime (the base context enriched with `config` and `trigger`). You only need to think about the base context when calling the dispatcher.
 
 ## 1. Define Your Base Context and Trigger
 
@@ -61,14 +61,14 @@ const logAction: ActionRegistration<LogActionConfig, BaseContext, MyTrigger> = {
 const registry = new ActionRegistry<BaseContext, MyTrigger>();
 registry.register(logAction);
 
-const executor = new ActionExecutor<BaseContext, MyTrigger>(registry);
+const dispatcher = new ActionDispatcher<BaseContext, MyTrigger>(registry);
 
 const baseContext: BaseContext = {
 	id: 'ctx-1',
 	data: {},
 };
 
-await executor.execute({
+await dispatcher.dispatch({
 	actions: [
 		{
 			id: 'log-1',
@@ -85,10 +85,10 @@ await executor.execute({
 
 There are two distinct context shapes:
 
-- `BaseContext` — what you pass to `execute()` or `dispatch()`.
-- `ActionRuntimeContext<LogActionConfig, BaseContext, MyTrigger>` — what the action handler receives, automatically constructed by the executor.
+- `BaseContext` — what you pass to `dispatch()` or `dispatchSync()`.
+- `ActionRuntimeContext<LogActionConfig, BaseContext, MyTrigger>` — what the action handler receives, automatically constructed by the dispatcher.
 
-The generics on `ActionRegistration`, `ActionExecutor`, and `ActionDispatcher` are all centered on the base context. The runtime enrichment happens internally.
+The generics on `ActionRegistration` and `ActionDispatcher` are all centered on the base context. The runtime enrichment happens internally.
 
 ## Next Steps
 

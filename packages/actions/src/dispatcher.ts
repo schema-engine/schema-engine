@@ -1,6 +1,5 @@
 import type { ActionConfigBase, ActionDispatchInput, ActionExecutionResult } from './types';
 import type { ActionRegistryProvider } from './registry';
-import { ActionExecutor } from './executor';
 import { Logger } from '@ecopages/logger';
 
 const logger = new Logger('[@schema-engine/actions]');
@@ -14,48 +13,10 @@ function isMetadataContext(value: unknown): value is MetadataContext {
 }
 
 /**
- * Action Dispatcher Options
- */
-export interface ActionDispatcherOptions {
-	/** Enable debug logging to console */
-	debug?: boolean;
-}
-
-/**
- * Action Dispatcher
- *
- * High-level orchestration layer for action execution with convenience methods.
- * Provides metadata merging, sync/async dispatch variants, and simplified API.
- *
- * This wraps ActionExecutor to provide domain-specific conveniences while
- * keeping the core executor clean and generic.
- *
- * @template TConfig - The action configuration type
- * @template TContext - Domain-specific context data
- * @template TTrigger - The trigger/event type
- *
- * @example
- * ```typescript
- * const dispatcher = new ActionDispatcher(registry, { debug: true });
- *
- * // Async dispatch with metadata
- * const results = await dispatcher.dispatch({
- *   actions,
- *   trigger: 'submit',
- *   context,
- *   metadata: { userId: '123' },
- * });
- *
- * // Fire-and-forget
- * dispatcher.dispatchSync({ actions, trigger: 'change', context });
- * ```
+ * Runs matching actions sequentially and merges caller metadata into their context.
  */
 export class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
-	private executor: ActionExecutor<TBaseContext, TTrigger>;
-
-	constructor(registry: ActionRegistryProvider<TBaseContext, TTrigger>, options: ActionDispatcherOptions = {}) {
-		this.executor = new ActionExecutor(registry, options);
-	}
+	constructor(private readonly registry: ActionRegistryProvider<TBaseContext, TTrigger>) {}
 
 	/**
 	 * Dispatch actions for a specific trigger with metadata merging
@@ -82,19 +43,51 @@ export class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 
 		const enhancedContext = metadata ? this.mergeMetadata(context, metadata) : context;
 
-		return this.executor.execute({
-			actions,
-			trigger,
-			context: enhancedContext,
-			triggeredBy,
-		});
+		const results: ActionExecutionResult[] = [];
+		for (const action of actions) {
+			if (action.enabled === false || !this.shouldExecute(action, trigger)) continue;
+			const registration = this.registry.getAction(action.$type);
+			if (!registration) {
+				const error = `No handler registered for action type: ${action.$type}`;
+				logger.error(error, { actionId: action.id, availableActions: this.registry.getActionTypes() });
+				results.push({ success: false, error, shouldContinue: true });
+				continue;
+			}
+			if (action.triggers === undefined && !(registration.metadata.defaultTriggers ?? []).includes(trigger))
+				continue;
+			logger.debug(`Executing action: ${action.id} (${action.$type})`);
+			let result: ActionExecutionResult;
+			try {
+				result = await registration.execute({
+					...enhancedContext,
+					config: action,
+					trigger,
+					...(triggeredBy ? { triggeredBy } : {}),
+				});
+			} catch (error) {
+				result = {
+					success: false,
+					error: error instanceof Error ? error.message : String(error),
+					shouldContinue: true,
+				};
+			}
+			results.push(result);
+			if (!result.success) logger.warn(`Action ${action.id} failed`, result);
+			if (!result.success && result.shouldContinue === false) break;
+		}
+		return results;
+	}
+
+	/** @remarks Explicit triggers can exclude an action before its registration is needed. */
+	private shouldExecute(action: ActionConfigBase, trigger: TTrigger): boolean {
+		return action.triggers === undefined || action.triggers.some((candidate) => candidate === trigger);
 	}
 
 	/**
 	 * Dispatch actions without waiting for results (fire-and-forget).
 	 *
 	 * **Contract:** Best-effort execution. Never throws to the caller. Handler failures
-	 * are returned as failed `ActionExecutionResult` entries (the executor does not reject).
+	 * are returned as failed `ActionExecutionResult` entries (dispatch does not reject).
 	 * If `dispatch()` itself rejects unexpectedly, the error is logged and swallowed.
 	 *
 	 * @param input - Actions, trigger, context, and optional metadata / triggeredBy
