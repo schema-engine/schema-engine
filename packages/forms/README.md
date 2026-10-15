@@ -184,9 +184,8 @@ The `values` argument is the full nested form value tree. Omitting `names`, or
 passing an empty list, validates every named field. A non-empty `names` list
 validates only the requested paths and their descendants.
 
-The current React and Radiant renderers still have their own validation paths;
-adoption of these shared helpers is tracked by [#138](https://github.com/andeeplus/schema-engine/issues/138)
-and [#133](https://github.com/andeeplus/schema-engine/issues/133), respectively.
+React uses these shared validation helpers. Radiant adoption is tracked by
+[#133](https://github.com/andeeplus/schema-engine/issues/133).
 
 ## Browser integrations
 
@@ -245,3 +244,11 @@ Recipe lookup accepts an engine or `{ getRecipe }` object. Grid configuration
 rejects unknown keys, including `rows`, `autoFit`, `autoFill`, and
 `maxColumnWidth`; automatic columns use `columns: 'auto'` and `minColumnWidth`.
 Recipe metadata has no `deprecated` property.
+
+React uses the engine's validation, step state, submission triggers and action
+context builder; see the [React adapter contract](../forms-react/README.md#validation-navigation-and-action-contexts).
+Action context form adapters must implement `reset`, `setValue`, `getValue` and
+`validate`, including for custom renderer integrations.
+
+The validation dependency index also tracks `require` constraints, so renderers
+can clear conditional required errors when a controlling value changes.

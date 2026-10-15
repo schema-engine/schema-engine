@@ -36,11 +36,9 @@ export interface BuilderActionBaseContext {
 		reset: () => void;
 		/** Set field value */
 		setValue: (name: string, value: unknown) => void;
-		/** Get field value (optional - use getValues if not available) */
-		getValue?: (name: string) => unknown;
-		/** Trigger validation (optional - use trigger if not available) */
-		validate?: () => Promise<boolean>;
-		[key: string]: unknown;
+		getValue: (name: string) => unknown;
+		/** Resolves to the validity of the whole form. */
+		validate: () => Promise<boolean>;
 	};
 }
 

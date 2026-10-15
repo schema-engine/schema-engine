@@ -1,5 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { buildDependencyIndex, createDefaultValidationRegistry, shouldSurfaceDependentError } from '@/schemas/validation';
+import {
+	buildDependencyIndex,
+	createDefaultValidationRegistry,
+	shouldSurfaceDependentError,
+} from '@/schemas/validation';
 
 const registry = createDefaultValidationRegistry();
 
@@ -33,6 +37,29 @@ describe('buildDependencyIndex', () => {
 
 		expect(index.watched).toEqual(['password']);
 		expect(index.dependentsOf('password')).toEqual(['confirmPassword']);
+	});
+
+	test('tracks require constraints without authored rules and keeps array rows independent', () => {
+		const elements = [
+			{
+				name: 'contacts',
+				elements: [
+					{
+						name: 'vatNumber',
+						constraints: [
+							{ field: 'customerType', action: 'require', operator: 'equals', value: 'company' },
+						],
+					},
+				],
+			},
+		];
+		const index = buildDependencyIndex(
+			elements,
+			{ contacts: [{ customerType: 'company' }, { customerType: 'individual' }] },
+			registry,
+		);
+		expect(index.dependentsOf('contacts.0.customerType')).toEqual(['contacts.0.vatNumber']);
+		expect(index.dependentsOf('contacts.1.customerType')).toEqual(['contacts.1.vatNumber']);
 	});
 
 	test('reports no dependents for a field nothing reads', () => {

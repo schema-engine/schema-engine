@@ -80,6 +80,8 @@ export function FormProvider({
 		form,
 		config,
 		submission,
+		actionExecutor,
+		buildActionContext: actionDispatchers.buildActionContext,
 		dispatchTrigger: actionDispatchers.dispatchTrigger,
 		onSubmit,
 		onAction,

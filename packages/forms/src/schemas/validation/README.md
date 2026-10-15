@@ -696,3 +696,8 @@ describe('Custom postal-code validation', () => {
 ---
 
 For more examples and advanced usage patterns, see the test files in the `test/schemas/validation/` directory.
+
+The dependency index includes `require` constraint references as well as rule
+`dependsOn` references. Changing a required condition revalidates the dependent
+field after it has been touched or the form submitted, keeping its error and
+required indicator in sync.

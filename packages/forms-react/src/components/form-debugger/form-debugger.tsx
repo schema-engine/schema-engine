@@ -230,14 +230,7 @@ function FormDebuggerPanel({
 	const { currentStep, totalSteps, stepStates, navigation, submissionState } = useFormInstanceActions();
 	const view = useOptionalViewContext();
 
-	const steps =
-		view?.steps ??
-		Array.from({ length: totalSteps }, (_, index) => ({
-			id: `step-${index}`,
-			title: `Step ${index + 1}`,
-			isVisited: stepStates?.visited[index],
-			isValid: stepStates?.valid[index],
-		}));
+	const steps = view?.steps ?? [];
 	const isMultiStep = totalSteps > 1;
 
 	return (
