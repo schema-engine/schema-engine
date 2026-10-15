@@ -42,3 +42,11 @@ join child names onto each item. Validation expands scalar child rules to each
 live item path (`tags.0`, `tags.1`) while keeping the container path (`tags`)
 available for container rules. Pass normalized elements to these helpers so
 custom array widgets receive the same path and default behavior as built-ins.
+
+## Registration storage
+
+`buildFormEngine` checks each supplied Standard Schema once, then stores elements,
+recipes, and actions in Maps keyed by `$type`. Later duplicates replace earlier
+registrations. `FormEngine` takes an isolated Map snapshot, and its lookup methods
+serve renderers and action dispatch. Construction does not instantiate temporary
+component or action registries.

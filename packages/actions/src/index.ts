@@ -8,7 +8,7 @@
  * ```typescript
  * import * as z from 'zod/mini';
  * import { Logger } from '@ecopages/logger';
- * import { ActionDispatcher, ActionExecutor, ActionRegistry } from '@schema-engine/actions';
+ * import { ActionDispatcher, ActionRegistry } from '@schema-engine/actions';
  *
  * const logger = new Logger('[my-app]');
  * const registry = new ActionRegistry<{ formId: string }, 'submit' | 'change'>();
@@ -33,5 +33,4 @@
 
 export * from './types';
 export * from './registry';
-export * from './executor';
 export * from './dispatcher';

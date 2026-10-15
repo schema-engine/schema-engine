@@ -14,10 +14,10 @@ The forms package uses these primitives for form actions.
 ## Lifecycle
 
 1. Register action types in an `ActionRegistry`.
-2. Provide action configs to the executor.
+2. Provide action configs to the dispatcher.
 3. Trigger execution with a trigger value and base context.
-4. The executor resolves matching registrations.
-5. The executor enriches the provided context with `config` and `trigger`.
+4. The dispatcher resolves matching registrations.
+5. The dispatcher enriches the provided context with `config` and `trigger`.
 6. Actions run sequentially and return normalized results.
 
 ## Registration Example
@@ -39,7 +39,7 @@ const registration = {
 
 ## Trigger Matching
 
-The executor checks action configs in order.
+The dispatcher checks action configs in order.
 
 - If the config has a `triggers` array, that list is used.
 - Otherwise the registration `metadata.defaultTriggers` is used.
@@ -64,7 +64,7 @@ That is why actions usually read `context.config` and `context.trigger` directly
 Actions run in array order, not registry registration order.
 
 ```typescript
-await executor.execute({
+await dispatcher.dispatch({
 	actions: [
 		{ id: 'a', $type: 'log', message: 'first' },
 		{ id: 'b', $type: 'log', message: 'second' },

@@ -220,3 +220,7 @@ for the generic registration and execution contracts.
 Plugin callbacks receive their concrete action configuration in `context.config`.
 Payload maps use `Record<string, unknown>`; submit response data stays `unknown`
 until a callback narrows it. Submit request adapters accept `RequestInit`.
+
+Form action results use `ActionExecutionResult` from `@schema-engine/forms`, which
+extends the generic action result with optional `redirectUrl` for browser navigation.
+Both renderers execute actions through `ActionDispatcher.dispatch` or `dispatchSync`.

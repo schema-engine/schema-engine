@@ -1,4 +1,4 @@
-import type { BuilderActionBaseContext } from '@/types';
+import type { AnyElementRegistration, AnyRecipeRegistration, AnyActionRegistration } from '@/types/registration';
 import type {
 	ActionRegistrationConstraint,
 	ElementRegistrationConstraint,
@@ -10,13 +10,10 @@ import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from 
 import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
 import { logger } from '@/lib/logger';
 import { compileGridTheme, getDefaultCompiledGrid, type CompiledGrid, type GridThemeOptions } from '@/lib/grid-styles';
-import { ElementRegistry, RecipeRegistry } from '@/registries';
 import { createFormConfigShape } from '@/schemas/form-config-shape';
-import { ActionRegistry } from '@schema-engine/actions';
 import * as z from 'zod/mini';
 import { isZodType } from '@/lib/zod-json-schema';
 import { assertStandardSchema } from '@/lib/standard-schema';
-import type { FormActionTrigger } from '@/actions';
 import { createDefaultValidationRegistry, type ValidationRegistry } from '@/schemas/validation';
 
 function createUnionSchema(schemas: z.ZodMiniType[]): z.ZodMiniType {
@@ -42,13 +39,13 @@ function createRegistrationSchema(registrations: Array<{ $type: string; schema: 
 }
 
 function createFormConfigSchema(
-	elementRegistry: ElementRegistry,
-	recipeRegistry: RecipeRegistry,
-	actionRegistry: ActionRegistry<BuilderActionBaseContext, FormActionTrigger>,
+	elementRegistry: Map<string, AnyElementRegistration>,
+	recipeRegistry: Map<string, AnyRecipeRegistration>,
+	actionRegistry: Map<string, AnyActionRegistration>,
 ) {
-	const elementsUnion = createRegistrationSchema(elementRegistry.getAll());
-	const recipesUnion = createRegistrationSchema(recipeRegistry.getAll());
-	const actionsUnion = createRegistrationSchema(actionRegistry.getAll());
+	const elementsUnion = createRegistrationSchema([...elementRegistry.values()]);
+	const recipesUnion = createRegistrationSchema([...recipeRegistry.values()]);
+	const actionsUnion = createRegistrationSchema([...actionRegistry.values()]);
 
 	return createFormConfigShape({
 		elements: elementsUnion,
@@ -69,13 +66,13 @@ export type FormEngineRegistrationLists = {
  * Later duplicate `$type` values overwrite earlier ones (last-wins).
  */
 export function buildFormEngine(lists: FormEngineRegistrationLists) {
-	const elementRegistry = new ElementRegistry();
-	const recipeRegistry = new RecipeRegistry();
-	const actionRegistry = new ActionRegistry<BuilderActionBaseContext, FormActionTrigger>();
+	const elementRegistry = new Map<string, AnyElementRegistration>();
+	const recipeRegistry = new Map<string, AnyRecipeRegistration>();
+	const actionRegistry = new Map<string, AnyActionRegistration>();
 
 	for (const element of lists.elements ?? []) {
 		assertStandardSchema(element.schema, `Element '${element.$type}' schema`);
-		elementRegistry.register(element as unknown as Parameters<ElementRegistry['register']>[0]);
+		elementRegistry.set(element.$type, element as AnyElementRegistration);
 	}
 
 	const validationRegistryInstance = createDefaultValidationRegistry();
@@ -83,13 +80,11 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 
 	for (const recipe of lists.recipes ?? []) {
 		assertStandardSchema(recipe.schema, `Recipe '${recipe.$type}' schema`);
-		recipeRegistry.register(recipe as unknown as Parameters<RecipeRegistry['register']>[0]);
+		recipeRegistry.set(recipe.$type, recipe as AnyRecipeRegistration);
 	}
 	for (const action of lists.actions ?? []) {
 		assertStandardSchema(action.schema, `Action '${action.$type}' schema`);
-		actionRegistry.register(
-			action as unknown as Parameters<ActionRegistry<BuilderActionBaseContext, FormActionTrigger>['register']>[0],
-		);
+		actionRegistry.set(action.$type, action as AnyActionRegistration);
 	}
 
 	logger.debug('Building FormEngine', {
@@ -101,41 +96,34 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 	const metadataCatalog = lists.catalog ?? new SchemaMetadataCatalog();
 
 	if (!lists.catalog) {
-		metadataCatalog.registerFromRegistry(elementRegistry, (item) => ({
-			id: `element:${item.$type}`,
-			componentType: ComponentType.Element,
-			title: item.metadata.name,
-			description: item.metadata.description,
-			category: item.metadata.category,
-		}));
-
-		metadataCatalog.registerFromRegistry(recipeRegistry, (item) => ({
-			id: `recipe:${item.$type}`,
-			componentType: ComponentType.Recipe,
-			title: item.metadata.name,
-			description: item.metadata.description,
-			category: item.metadata.category,
-		}));
-
-		metadataCatalog.registerFromRegistry(actionRegistry, (item) => ({
-			id: `action:${item.$type}`,
-			componentType: ComponentType.Action,
-			title: item.metadata.name,
-			description: item.metadata.description,
-		}));
+		for (const [componentType, registrations] of [
+			[ComponentType.Element, [...elementRegistry.values()]],
+			[ComponentType.Recipe, [...recipeRegistry.values()]],
+			[ComponentType.Action, [...actionRegistry.values()]],
+		] as const) {
+			for (const item of registrations) {
+				metadataCatalog.register(item.schema, {
+					id: `${componentType}:${item.$type}`,
+					componentType,
+					title: item.metadata.name,
+					description: item.metadata.description,
+					category: 'category' in item.metadata ? item.metadata.category : undefined,
+				});
+			}
+		}
 	}
 
 	const formConfigSchema = createFormConfigSchema(elementRegistry, recipeRegistry, actionRegistry);
-	const actionConfigValidators = createActionConfigValidatorMap(actionRegistry.getAll());
+	const actionConfigValidators = createActionConfigValidatorMap([...actionRegistry.values()]);
 	const schemaArtifacts = createFormEngineSchemaArtifacts(metadataCatalog, formConfigSchema, actionConfigValidators);
 
 	const compiledGrid =
 		lists.compiledGrid ?? (lists.grid === undefined ? getDefaultCompiledGrid() : compileGridTheme(lists.grid));
 
 	return new FormEngine({
-		elements: elementRegistry.getMap(),
-		recipes: recipeRegistry.getMap(),
-		actions: actionRegistry.getMap(),
+		elements: elementRegistry,
+		recipes: recipeRegistry,
+		actions: actionRegistry,
 		schemaArtifacts,
 		compiledGrid,
 		validationRegistry: validationRegistryInstance,
