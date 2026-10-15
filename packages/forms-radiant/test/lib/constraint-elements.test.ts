@@ -81,12 +81,14 @@ describe('collectConstrainedElements', () => {
 			id: 'ticket',
 			constraints: [{ field: 'subject', operator: 'equals', value: 'support', action: 'show' }],
 			isRequired: true,
+			disabled: false,
 		});
 		expect(result[1]).toEqual({
 			fieldName: 'extraGroup.detailsText',
 			id: 'details-text',
 			constraints: [{ field: 'ticket', operator: 'not_empty', action: 'show' }],
 			isRequired: false,
+			disabled: false,
 		});
 	});
 });
@@ -149,4 +151,25 @@ describe('createConstraintLookup', () => {
 	test('has no declarations for a config without constraints', () => {
 		expect(createConstraintLookup(undefined)('anything')).toBeUndefined();
 	});
+});
+
+test('id-only constraints retain their live lookup', () => {
+	const config: NormalizedFormConfig = {
+		id: 'ids',
+		steps: [
+			{
+				id: 'main',
+				title: 'Main',
+				elements: [
+					{
+						$type: 'input',
+						id: 'ref',
+						disabled: true,
+						constraints: [{ field: 'mode', operator: 'equals', value: 'manual', action: 'enable' }],
+					},
+				],
+			},
+		],
+	};
+	expect(createConstraintLookup(config)('ref')).toMatchObject({ fieldName: 'ref', disabled: true });
 });

@@ -6,6 +6,8 @@ import { getFormGridVariables } from '@schema-engine/forms/lib/grid-styles';
 import { applySlotDefaults } from '@schema-engine/forms/recipes';
 import type { RadiantRecipeAdapterPayload } from '@/recipes/types';
 import { FormElements } from './form-elements';
+import { collectFormDefaultValues } from '@/adapters/radiant/rui-form-shell';
+import { expandValues } from '@/adapters/radiant/controller/values';
 import { FormStep } from '@/components/form-step';
 
 /**
@@ -33,6 +35,7 @@ export function RecipeRenderer({
 	children?: JsxRenderable;
 	initialValues?: Record<string, unknown>;
 }): JsxRenderable {
+	const values = expandValues(initialValues ?? collectFormDefaultValues(config));
 	const { theme, css: gridThemeCss } = engine.getCompiledGrid();
 	const viewConfig = recipe
 		? applySlotDefaults((config.view ?? { $type: recipe.$type }) as Record<string, unknown>, recipe.slotDefaults)
@@ -51,7 +54,13 @@ export function RecipeRenderer({
 							data-se-grid-theme={theme.id}
 							style={getFormGridVariables(config.grid, theme)}
 						>
-							<FormElements elements={step.elements} engine={engine} initialValues={initialValues} />
+							<FormElements
+								elements={step.elements}
+								engine={engine}
+								initialValues={initialValues}
+								values={values}
+								constraintContext={{ values, initialValues }}
+							/>
 						</div>
 					) : null}
 				</FormStep>
