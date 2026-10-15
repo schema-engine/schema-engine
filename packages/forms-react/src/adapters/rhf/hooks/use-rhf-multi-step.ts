@@ -1,19 +1,17 @@
-import { useCallback, useMemo, useState } from 'react';
-import type { FieldValues, UseFormReturn } from 'react-hook-form';
-import type {
-	FormActionTrigger,
-	ActionExecutionResult,
-	BuilderActionBaseContext,
-	FormConfigView,
+import { useCallback, useMemo, useRef, useState } from 'react';
+import type { UseFormReturn } from 'react-hook-form';
+import {
+	collectStepFieldPaths,
+	createInitialStepStates,
+	createStepMachine,
+	type StepMachineAction,
+	type StepMachineState,
+	type StepStates,
+	type FormActionTrigger,
+	type ActionExecutionResult,
+	type FormConfigView,
 } from '@schema-engine/forms';
 import { logger } from '@/lib/logger';
-
-type StepStates = {
-	completed: boolean[];
-	valid: boolean[];
-	/** Index `0` is pre-visited: the first step is visible as soon as the form mounts. */
-	visited: boolean[];
-};
 
 type Navigation = {
 	canGoNext: boolean;
@@ -40,149 +38,90 @@ type DispatchTrigger = (
 	extraMetadata?: Record<string, unknown>,
 ) => Promise<ActionExecutionResult[]>;
 
-function fieldNamesForStep(step: FormConfigView['steps'][number] | undefined): string[] {
-	return (step?.elements ?? [])
-		.map((field) => field.name)
-		.filter((name): name is string => typeof name === 'string' && name.length > 0);
-}
-
 export function useRHFMultiStep(
 	config: FormConfigView,
-	form: UseFormReturn<FieldValues, any, FieldValues>,
+	form: UseFormReturn,
 	dispatchTrigger: DispatchTrigger,
 	options?: { onStepIndexChange?: (index: number) => void },
 ): MultiStepContextValue {
-	const { trigger, setFocus, formState, getValues } = form;
-	const onStepIndexChange = options?.onStepIndexChange;
 	const totalSteps = config.steps.length;
-
-	const [currentStepIndex, setCurrentStepIndex] = useState(0);
-	const [stepStates, setStepStates] = useState<StepStates>(() => ({
-		completed: config.steps.map(() => false),
-		valid: config.steps.map(() => false),
-		visited: config.steps.map((_, index) => index === 0),
+	const reduce = useMemo(() => createStepMachine(config), [config]);
+	const [state, setState] = useState<StepMachineState>(() => ({
+		...createInitialStepStates(totalSteps),
+		currentStepIndex: 0,
 	}));
+	const stateRef = useRef(state);
+	const navigating = useRef(false);
+	const onStepIndexChange = options?.onStepIndexChange;
 
 	const validateStep = useCallback(
-		async (stepIndex: number): Promise<boolean> => {
-			const fieldNames = fieldNamesForStep(config.steps[stepIndex]);
-			if (fieldNames.length === 0) return true;
-
+		async (index: number) => {
+			const names = collectStepFieldPaths(config.steps[index], form.getValues());
+			if (!names.length) return true;
 			try {
-				const isValid = await trigger(fieldNames);
-
-				if (!isValid) {
-					const firstInvalid = fieldNames.find((fieldName) => form.getFieldState(fieldName).invalid);
-
-					if (firstInvalid) {
-						setFocus(firstInvalid);
-						logger.debug(`Validation failed. Focused on field: ${firstInvalid}`);
-					}
+				const valid = await form.trigger(names);
+				if (!valid) {
+					const firstInvalid = names.find((name) => form.getFieldState(name).invalid);
+					if (firstInvalid) form.setFocus(firstInvalid);
 				}
-
-				setStepStates((prev) => ({
-					...prev,
-					valid: prev.valid.map((v, i) => (i === stepIndex ? isValid : v)),
-				}));
-
-				return isValid;
+				return valid;
 			} catch (error) {
-				logger.error('Validation error:', error as Error);
+				logger.error('Validation error:', error);
 				return false;
 			}
 		},
-		[config.steps, form, trigger, setFocus],
+		[config.steps, form],
 	);
 
-	const executeStepTrigger = useCallback(
-		async (
-			triggerName: Extract<FormActionTrigger, 'step_change' | 'step_enter' | 'step_leave'>,
-			stepIndex: number,
-		) => {
-			if (!config.actions || config.actions.length === 0) {
-				return;
+	const navigate = useCallback(
+		async (action: Exclude<StepMachineAction, { type: 'next' }> | { type: 'next' }) => {
+			if (navigating.current) return;
+			navigating.current = true;
+			try {
+				const previous = stateRef.current;
+				const next = reduce(
+					previous,
+					action.type === 'next'
+						? { type: 'next', isValid: await validateStep(previous.currentStepIndex) }
+						: action,
+				);
+				if (next.currentStepIndex !== previous.currentStepIndex) {
+					await dispatchTrigger('step_leave');
+					stateRef.current = next;
+					setState(next);
+					onStepIndexChange?.(next.currentStepIndex);
+					await dispatchTrigger('step_change');
+					await dispatchTrigger('step_enter');
+				} else {
+					stateRef.current = next;
+					setState(next);
+				}
+			} finally {
+				navigating.current = false;
 			}
-
-			const context: BuilderActionBaseContext = {
-				formId: config.id || 'unnamed-form',
-				formData: getValues(),
-				currentStep: stepIndex,
-				totalSteps: config.steps.length,
-				isValid: formState.isValid,
-				errors: formState.errors,
-				form,
-				metadata: {
-					stepStartTime: Date.now(),
-					totalFormTime: 0,
-					userInteractions: formState.submitCount + Object.keys(formState.touchedFields).length,
-				},
-			};
-
-			await dispatchTrigger(triggerName, context.metadata);
 		},
-		[config.actions, config.id, config.steps.length, getValues, formState, form, dispatchTrigger],
+		[reduce, dispatchTrigger, onStepIndexChange, validateStep],
 	);
 
-	const goToStepAsync = useCallback(
-		async (stepIndex: number) => {
-			if (stepIndex < 0 || stepIndex >= config.steps.length) {
-				return;
-			}
-
-			const previousStepIndex = currentStepIndex;
-
-			await executeStepTrigger('step_leave', previousStepIndex);
-
-			setCurrentStepIndex(stepIndex);
-			onStepIndexChange?.(stepIndex);
-			setStepStates((prev) => ({
-				...prev,
-				visited: prev.visited.map((v, i) => (i === stepIndex ? true : v)),
-			}));
-
-			logger.debug(`Navigated to step ${stepIndex}: ${config.steps[stepIndex]?.title}`);
-
-			await executeStepTrigger('step_change', stepIndex);
-			await executeStepTrigger('step_enter', stepIndex);
+	const goToStep = useCallback((index: number) => void navigate({ type: 'go-to', index }), [navigate]);
+	const goToPrevious = useCallback(() => void navigate({ type: 'previous' }), [navigate]);
+	const goToNext = useCallback(() => void navigate({ type: 'next' }), [navigate]);
+	const { currentStepIndex, ...stepStates } = state;
+	return {
+		currentStep: currentStepIndex,
+		totalSteps,
+		stepStates,
+		goToStep,
+		goToNext,
+		goToPrevious,
+		navigation: {
+			canGoNext: currentStepIndex < totalSteps - 1,
+			canGoPrevious: currentStepIndex > 0,
+			isFirstStep: currentStepIndex === 0,
+			isLastStep: currentStepIndex === totalSteps - 1,
+			goToStep,
+			goToNextStep: goToNext,
+			goToPreviousStep: goToPrevious,
 		},
-		[config.steps, currentStepIndex, executeStepTrigger, onStepIndexChange],
-	);
-
-	const goToNextStepAsync = useCallback(async () => {
-		const isValid = await validateStep(currentStepIndex);
-		if (isValid && currentStepIndex < config.steps.length - 1) {
-			setStepStates((prev) => ({
-				...prev,
-				completed: prev.completed.map((c, i) => (i === currentStepIndex ? true : c)),
-			}));
-			await goToStepAsync(currentStepIndex + 1);
-		}
-	}, [currentStepIndex, config.steps.length, validateStep, goToStepAsync]);
-
-	const goToPreviousStepAsync = useCallback(async () => {
-		if (currentStepIndex > 0) {
-			await goToStepAsync(currentStepIndex - 1);
-		}
-	}, [currentStepIndex, goToStepAsync]);
-
-	return useMemo(
-		() => ({
-			currentStep: currentStepIndex,
-			totalSteps,
-			goToStep: (step: number) => void goToStepAsync(step),
-			goToNext: () => void goToNextStepAsync(),
-			goToPrevious: () => void goToPreviousStepAsync(),
-			stepStates,
-			navigation: {
-				canGoNext: currentStepIndex < totalSteps - 1,
-				canGoPrevious: currentStepIndex > 0,
-				isFirstStep: currentStepIndex === 0,
-				isLastStep: currentStepIndex === totalSteps - 1,
-				goToStep: (step: number) => void goToStepAsync(step),
-				goToNextStep: () => void goToNextStepAsync(),
-				goToPreviousStep: () => void goToPreviousStepAsync(),
-			},
-		}),
-		[currentStepIndex, totalSteps, stepStates, goToStepAsync, goToNextStepAsync, goToPreviousStepAsync],
-	);
+	};
 }

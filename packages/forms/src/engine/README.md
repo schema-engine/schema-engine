@@ -2,8 +2,7 @@
 
 The engine exports reusable helpers for paths, effective rules, and validation.
 `validateFormValues` takes `ValidationElementTree`, and
-`collectStepFieldPaths` takes `ValidationStep`, both shaped from the engine's
-normalized form model.
+`collectStepFieldPaths` takes `ValidationStep`, both accepting structural read-only views or normalized snapshots.
 
 - `collectStepFieldPaths(step, values)` keeps container paths whole and expands
   field templates for live array rows.
@@ -19,9 +18,8 @@ normalized form model.
 For `validateFormValues`, omitted or empty `names` validates every named field.
 A non-empty list validates only the requested paths and their descendants.
 
-The React and Radiant renderers have not adopted these helpers yet. Their
-adoption is tracked by [#138](https://github.com/andeeplus/schema-engine/issues/138)
-and [#133](https://github.com/andeeplus/schema-engine/issues/133), respectively.
+React delegates to these helpers. Radiant adoption is tracked by
+[#133](https://github.com/andeeplus/schema-engine/issues/133).
 
 The public usage examples are in the [forms package README](../../README.md#engine-validation).
 
@@ -50,3 +48,11 @@ recipes, and actions in Maps keyed by `$type`. Later duplicates replace earlier
 registrations. `FormEngine` takes an isolated Map snapshot, and its lookup methods
 serve renderers and action dispatch. Construction does not instantiate temporary
 component or action registries.
+
+Validation helpers accept structural, read-only element views as well as normalized
+snapshots. The React adapter uses these same helpers and the step machine,
+submission lifecycle and context builder. `BuilderActionBaseContext.form` requires
+`reset`, `setValue`, `getValue` and `validate`; it does not expose renderer methods.
+
+Conditional `require` references participate in the shared validation dependency
+index, so changing a controlling value revalidates fields with visible errors.

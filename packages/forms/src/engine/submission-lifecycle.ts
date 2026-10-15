@@ -1,6 +1,7 @@
 import type { ActionDispatchInput, ActionExecutionResult } from '@schema-engine/actions';
 import type { FormActionTrigger } from '@/actions';
-import type { FormActionConfig } from '@/schemas/form-config';
+import type { FormConfigView } from '@/lib/normalized-form-config';
+type FormActionConfig = NonNullable<FormConfigView['actions']>[number];
 import type { BuilderActionBaseContext } from '@/types';
 
 type FormActionDispatch = (

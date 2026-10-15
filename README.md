@@ -244,3 +244,7 @@ The [registry package](./packages/registry/README.md) exposes one `BaseRegistry`
 class and registration types. The [actions package](./packages/actions/README.md)
 executes through `ActionDispatcher`; form-specific redirect results are described
 in the [forms action guide](./packages/forms/src/actions/README.md).
+
+The [React adapter](./packages/forms-react/README.md#validation-navigation-and-action-contexts)
+uses the engine's shared validation, navigation, submission and action context
+contracts, including nested errors and conditional required fields.

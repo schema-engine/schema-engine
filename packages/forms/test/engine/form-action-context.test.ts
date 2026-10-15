@@ -4,6 +4,8 @@ import { buildFormActionContext } from '@/index';
 const form = {
 	reset: () => undefined,
 	setValue: () => undefined,
+	getValue: () => undefined,
+	validate: async () => true,
 };
 
 describe('buildFormActionContext', () => {
