@@ -8,7 +8,6 @@ import {
 } from '@ecopages/radiant';
 import { provideContext, type ContextProvider } from '@ecopages/radiant/context';
 import type { JsxRenderable } from '@ecopages/jsx';
-import type { FormConfig } from '@schema-engine/forms/schemas';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { FormAdapter, FormProviderProps } from '@/adapters/types';
 import { resolveFormEngine, whenEngineAvailable } from '@/contexts/resolve-form-engine';
@@ -30,7 +29,7 @@ export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
  * @remarks
  * View-owned shell: the `FormRenderer` view authors the whole form tree as
  * light-DOM children, so SSR expands it without any derived tree here. The host
- * only publishes `formEngineContext`; `config` is the serializable attribute and
+ * only publishes `formEngineContext`;
  * `engine` / `adapter` / callbacks stay `@state` and are re-attached by the page
  * script, mirroring how `RuiForm` binds `resolver`.
  *
@@ -38,7 +37,6 @@ export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
  */
 @customElement('se-form-renderer')
 export class FormRendererElement extends RadiantElement {
-	@prop({ type: Object }) config!: FormConfig;
 	@state engine?: FormEngine;
 	@state adapter?: FormAdapter;
 	@prop({ type: Object }) defaultValues?: Record<string, unknown>;

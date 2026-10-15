@@ -3,13 +3,13 @@ import { customElement, onEvent, prop, RadiantElement } from '@ecopages/radiant'
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { DEFAULT_WIZARD_ACTION_LABELS, getSlotConfig, type WizardActionsConfig } from '@schema-engine/forms/recipes';
-import type { NormalizedFormConfig } from '@schema-engine/forms';
+import type { FormMeta } from '@/lib/instance-view';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { deriveFormSteps, deriveInitialInstance } from '@/lib/instance-view';
 
 @customElement('se-wizard-actions')
 export class WizardActionsElement extends RadiantElement {
-	@prop({ type: Object }) config?: NormalizedFormConfig;
+	@prop({ type: Object }) meta?: FormMeta;
 	@prop({ type: Object }) viewConfig?: Record<string, unknown>;
 
 	@contextSelector({ context: formInstanceContext })
@@ -26,16 +26,16 @@ export class WizardActionsElement extends RadiantElement {
 	}
 
 	override render(): JsxRenderable {
-		const config = this.config;
-		if (!config) return null;
-		const instance = this.instance ?? deriveInitialInstance(config);
+		const meta = this.meta;
+		if (!meta) return null;
+		const instance = this.instance ?? deriveInitialInstance(meta);
 
 		const actionsConfig = getSlotConfig<WizardActionsConfig>(this.viewConfig ?? {}, 'actions');
 		const labels = { ...DEFAULT_WIZARD_ACTION_LABELS, ...actionsConfig.labels };
 		const appearance = actionsConfig.appearance ?? 'default';
 		const showStepCounter = actionsConfig.showStepCounter ?? appearance === 'default';
 		const last = instance.currentStep >= instance.totalSteps - 1;
-		const steps = deriveFormSteps(config, instance);
+		const steps = deriveFormSteps(meta, instance);
 		const form = { isSubmitting: instance.isSubmitting };
 		return (
 			<div classes={['se-wizard-actions', appearance === 'minimal' && 'se-wizard-actions--minimal']}>
@@ -72,12 +72,9 @@ export class WizardActionsElement extends RadiantElement {
 	}
 }
 
-export function WizardActionsBlock(context?: {
-	config?: NormalizedFormConfig;
-	viewConfig?: Record<string, unknown>;
-}): JsxRenderable {
+export function WizardActionsBlock(context?: { meta?: FormMeta; viewConfig?: Record<string, unknown> }): JsxRenderable {
 	return jsx('se-wizard-actions', {
-		config: context?.config,
+		meta: context?.meta,
 		viewConfig: context?.viewConfig ?? {},
 	});
 }

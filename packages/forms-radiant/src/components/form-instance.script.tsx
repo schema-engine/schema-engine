@@ -7,71 +7,47 @@ import {
 	state,
 } from '@ecopages/radiant';
 import { onContextUpdate, provideContext, type ContextProvider } from '@ecopages/radiant/context';
-import { resolveFormRecipe, type NormalizedFormConfig, type RecipeRegistration } from '@schema-engine/forms';
+import { resolveFormRecipe, type NormalizedFormConfig } from '@schema-engine/forms';
 import { flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import type { FormEngine as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import { formInstanceContext, type FormInstanceContextValue, type StepStates } from '@/contexts/form-instance-context';
 import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
 import { whenEngineAvailable } from '@/contexts/resolve-form-engine';
 import { findNearestRuiForm } from '@/lib/rui-form-utils';
-import { createConstraintLookup } from '@/lib/constraint-elements';
-import { evaluateConstraints } from '@schema-engine/forms/constraints';
-import { fieldNamesForStep, validateCurrentStepFields } from '@/lib/validate-current-step';
 import { connectValidationDependencies } from '@/lib/validation-deps';
-import { applyConstraintRequired } from '@/lib/constraint-required-rules';
-import { shouldSurfaceDependentError } from '@schema-engine/forms/schemas/validation';
 import type { RuiFormElement } from '@ecopages/radiant-ui/form';
 import { expandValues } from '@/adapters/radiant/controller/values';
+import {
+	createStepMachine,
+	createInitialStepStates,
+	type StepMachineState,
+	type StepMachineAction,
+} from '@schema-engine/forms/engine';
+import { createInstanceNavigation } from '@/lib/instance-navigation';
+import { createLiveInstanceContext } from '@/lib/live-instance-context';
+import { syncConstraints } from '@/lib/constraint-sync';
+import type { FormProviderProps } from '@/adapters/types';
 import { FormController } from '@/adapters/radiant/controller';
 
-/**
- * Fields this wrapper owns, excluding those belonging to a nested constraint.
- *
- * @remarks
- * Without the guard, a constrained field inside a constrained fieldset would be
- * written twice in one pass and the later write — document order, so the inner
- * one — would silently win over its own parent's `disable`.
- */
-function ownedFields(wrapper: HTMLElement): HTMLElement[] {
-	return [...wrapper.querySelectorAll<HTMLElement>('se-field')].filter(
-		(field) => field.closest('[data-se-constraint-field]') === wrapper,
-	);
-}
-
-function createInitialStepStates(totalSteps: number): StepStates {
-	return {
-		completed: Array.from({ length: totalSteps }, () => false),
-		valid: Array.from({ length: totalSteps }, () => false),
-		visited: Array.from({ length: totalSteps }, () => false),
-	};
-}
-
-/**
- * Behavior host for one composed form instance.
- *
- * @remarks
- * View-owned shell: the `FormInstance` view authors `<rui-form>` and the recipe
- * chrome as light-DOM children, so SSR expands the whole form without a derived
- * tree. Step switching is pure DOM: each step's fields are authored once and the
- * `se-form-step` hosts toggle `hidden` from this host's step state.
- *
- * The host publishes `formInstanceContext` (step machine + navigation); recipe
- * blocks consume it and derive their chrome from the config and view-config
- * props authored alongside them.
- *
- * @element se-form-instance
- */
+/** Behavior and engine navigation state for one composed form. */
 @customElement('se-form-instance')
 export class FormInstanceElement extends RadiantElement {
 	/** Frozen config from `engine.defineForm` / `engine.validateForm` via `FormProvider`. */
 	@prop({ type: Object }) config!: NormalizedFormConfig;
 	@state engine?: CoreFormEngine;
 	@prop({ type: Object }) defaultValues?: Record<string, unknown>;
+	@state onChange?: FormProviderProps['onChange'];
+	private unwatchChanges?: () => void;
 	@state onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
 	@prop({ type: Boolean, defaultValue: false }) isSubmitting = false;
 
-	@state currentStep = 0;
-	@state stepStates: StepStates = { completed: [], valid: [], visited: [] };
+	@state machine: StepMachineState = { currentStepIndex: 0, ...createInitialStepStates(1) };
+	get currentStep(): number {
+		return this.machine.currentStepIndex;
+	}
+	get stepStates(): StepStates {
+		return this.machine;
+	}
 	private form?: FormController;
 	private unwatchValidationDependencies?: () => void;
 	private unsubscribeActiveEngine?: () => void;
@@ -86,7 +62,7 @@ export class FormInstanceElement extends RadiantElement {
 	constructor() {
 		super();
 		registerSsrPreparationCallback(this, () => this.publish());
-		this.publishLiveContexts();
+		this.provider.setContext(createLiveInstanceContext(this));
 	}
 
 	@onContextUpdate({ context: formEngineContext, requestUpdate: false })
@@ -115,6 +91,8 @@ export class FormInstanceElement extends RadiantElement {
 	override disconnectedCallback(): void {
 		this.unsubscribeActiveEngine?.();
 		this.stopWatchingValidationDependencies();
+		this.unwatchChanges?.();
+		this.unwatchChanges = undefined;
 		this.form?.disconnect();
 		this.form = undefined;
 		super.disconnectedCallback();
@@ -127,7 +105,7 @@ export class FormInstanceElement extends RadiantElement {
 		this.wireRuiForm();
 	}
 
-	@onUpdated(['currentStep', 'stepStates', 'isSubmitting', 'engine', 'onSubmit'])
+	@onUpdated(['machine', 'isSubmitting', 'engine', 'onSubmit'])
 	onInstanceStateUpdated(): void {
 		this.wireRuiForm();
 		this.connectForm();
@@ -141,11 +119,6 @@ export class FormInstanceElement extends RadiantElement {
 		}
 	}
 
-	/**
-	 * @remarks
-	 * `se-form-instance` wraps `rui-form`, so it sits above `formContext`. Point
-	 * the controller at the child form; do not ask FormController to search.
-	 */
 	private connectForm(): void {
 		const ruiForm = findNearestRuiForm(this);
 		this.stopWatchingValidationDependencies();
@@ -155,24 +128,21 @@ export class FormInstanceElement extends RadiantElement {
 			return;
 		}
 		if (this.form?.host === ruiForm) {
-			this.applyConstraints();
+			syncConstraints(this, this.config, this.form);
 			this.watchValidationDependencies();
 			return;
 		}
+		this.unwatchChanges?.();
+		this.unwatchChanges = undefined;
 		this.form?.disconnect();
 		this.form = new FormController(ruiForm);
 		this.form.connect(() => {
-			this.applyConstraints();
+			if (!this.unwatchChanges) this.unwatchChanges = this.form?.watchForm((values) => this.onChange?.(values));
+			syncConstraints(this, this.config, this.form);
 			this.watchValidationDependencies();
 		});
 	}
 
-	/**
-	 * @remarks
-	 * Idempotent because the context callback fires on every form update, while
-	 * the subscription must outlive them: it carries the previous value snapshot
-	 * that stops `validateField` from re-entering itself.
-	 */
 	private watchValidationDependencies(): void {
 		if (this.unwatchValidationDependencies || !this.config || !this.form?.ready || !this.engine) {
 			return;
@@ -189,128 +159,29 @@ export class FormInstanceElement extends RadiantElement {
 		this.unwatchValidationDependencies = undefined;
 	}
 
-	/**
-	 * Syncs every rendered constraint wrapper against the live value tree.
-	 *
-	 * @remarks
-	 * Driven by what is in the DOM rather than by selectors built from the config:
-	 * the config only knows authored template paths, while the renderer emits
-	 * composed ones, so matching config to DOM missed every field inside an array.
-	 * Each wrapper is evaluated at its own rendered path, which is also what scopes
-	 * a constraint's sibling lookup to the right array row.
-	 */
-	private applyConstraints(): void {
-		if (!this.config || !this.form?.ready) {
-			return;
-		}
-
-		const declaring = createConstraintLookup(this.config);
-		const values = this.form.getValues();
-
-		for (const target of this.querySelectorAll<HTMLElement>('[data-se-constraint-field]')) {
-			const fieldPath = target.getAttribute('data-se-constraint-field') ?? '';
-			const item = declaring(fieldPath);
-			if (!item) {
-				continue;
-			}
-
-			const { shouldShow, shouldDisable, isRequired } = evaluateConstraints({
-				constraints: item.constraints,
-				baseRequired: item.isRequired,
-				fieldPath,
-				values,
-			});
-
-			target.hidden = !shouldShow;
-			for (const field of ownedFields(target)) {
-				(field as HTMLElement & { disabled?: boolean }).disabled = item.disabled || shouldDisable;
-				const requiredChanged = applyConstraintRequired(field, isRequired);
-				const name = field.getAttribute('name');
-				const store = this.form?.store;
-				if (name && store) {
-					const { touched, isSubmitted } = store.getState();
-					if (
-						requiredChanged &&
-						shouldSurfaceDependentError({ touched: Boolean(touched[name]), submitted: isSubmitted })
-					) {
-						void store.validateField(name);
-					}
-				}
-			}
-		}
-	}
-
 	private resetStepState(): void {
-		const total = this.config?.steps.length ?? 1;
-		this.currentStep = 0;
-		this.stepStates = createInitialStepStates(total);
-		this.markStepVisited(0);
+		this.machine = { currentStepIndex: 0, ...createInitialStepStates(this.config?.steps.length ?? 1) };
 	}
 
-	private isLastStep(): boolean {
-		return this.currentStep >= (this.config?.steps.length ?? 1) - 1;
+	transition(action: StepMachineAction): void {
+		this.machine = createStepMachine(this.config ?? { steps: [{}] })(this.machine, action);
 	}
 
-	readonly markStepCompleted = (index: number): void => {
-		this.stepStates = {
-			...this.stepStates,
-			completed: this.stepStates.completed.map((value, stepIndex) => (stepIndex === index ? true : value)),
-			valid: this.stepStates.valid.map((value, stepIndex) => (stepIndex === index ? true : value)),
-		};
-	};
-
-	readonly markStepVisited = (index: number): void => {
-		this.stepStates = {
-			...this.stepStates,
-			visited: this.stepStates.visited.map((value, stepIndex) => (stepIndex === index ? true : value)),
-		};
-	};
-
-	readonly goToStep = (index: number): void => {
-		const total = this.config?.steps.length ?? 1;
-		if (index < 0 || index >= total) {
-			return;
-		}
-		this.currentStep = index;
-		this.markStepVisited(index);
-	};
-
-	readonly goToNextStep = async (): Promise<void> => {
-		if (this.isLastStep()) {
-			return;
-		}
-
-		const store = this.form?.store;
-		if (!store) {
-			return;
-		}
-
-		const isValid = await validateCurrentStepFields(
-			store,
-			fieldNamesForStep(this.config?.steps[this.currentStep], this.form?.getValues()),
-		);
-		if (!isValid) {
-			return;
-		}
-
-		this.markStepCompleted(this.currentStep);
-		this.markStepVisited(this.currentStep + 1);
-		this.currentStep += 1;
-	};
-
-	readonly goToPreviousStep = (): void => {
-		if (this.currentStep <= 0) {
-			return;
-		}
-		this.currentStep -= 1;
-	};
+	private readonly navigation = createInstanceNavigation(this, () => this.form);
+	readonly markStepCompleted = this.navigation.markStepCompleted;
+	readonly markStepVisited = this.navigation.markStepVisited;
+	readonly goToStep = this.navigation.goToStep;
+	readonly goToNextStep = this.navigation.goToNextStep;
+	readonly goToPreviousStep = this.navigation.goToPreviousStep;
 
 	getContextValue(): FormInstanceContextValue {
 		const totalSteps = this.config?.steps.length ?? 1;
 		return {
 			currentStep: this.currentStep,
 			totalSteps,
-			isWizard: this.resolveRecipe()?.kind === 'wizard',
+			isWizard: Boolean(
+				this.engine && this.config && resolveFormRecipe(this.config, this.engine)?.kind === 'wizard',
+			),
 			stepStates: this.stepStates,
 			goToStep: this.goToStep,
 			goToNextStep: this.goToNextStep,
@@ -321,41 +192,7 @@ export class FormInstanceElement extends RadiantElement {
 		};
 	}
 
-	private resolveRecipe(): RecipeRegistration<any, any> | undefined {
-		if (!this.engine || !this.config) {
-			return undefined;
-		}
-		return resolveFormRecipe(this.config, this.engine);
-	}
-
 	private publish(): void {
 		this.provider.setContext(this.getContextValue());
-	}
-
-	/**
-	 * Publishes the live context facade at construction.
-	 *
-	 * @remarks
-	 * Nested consumers construct while the SSR pipeline serializes authored
-	 * children — before this host's SSR preparation publishes fresh snapshots.
-	 * Getters defer to host state so those consumers read props applied after
-	 * construction; later `publish()` calls swap in a plain snapshot that
-	 * re-notifies subscribers on state changes.
-	 */
-	private publishLiveContexts(): void {
-		const context = {} as FormInstanceContextValue;
-		Object.defineProperties(context, {
-			currentStep: { get: () => this.currentStep },
-			totalSteps: { get: () => this.config?.steps.length ?? 1 },
-			isWizard: { get: () => this.resolveRecipe()?.kind === 'wizard' },
-			stepStates: { get: () => this.stepStates },
-			goToStep: { get: () => this.goToStep },
-			goToNextStep: { get: () => this.goToNextStep },
-			goToPreviousStep: { get: () => this.goToPreviousStep },
-			markStepCompleted: { get: () => this.markStepCompleted },
-			markStepVisited: { get: () => this.markStepVisited },
-			isSubmitting: { get: () => this.isSubmitting },
-		});
-		this.provider.setContext(context);
 	}
 }

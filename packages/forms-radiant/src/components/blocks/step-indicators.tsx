@@ -3,13 +3,13 @@ import { customElement, onEvent, prop, RadiantElement } from '@ecopages/radiant'
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { getSlotConfig, type StepIndicatorsConfig } from '@schema-engine/forms/recipes';
-import type { NormalizedFormConfig } from '@schema-engine/forms';
+import type { FormMeta } from '@/lib/instance-view';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { deriveFormSteps, deriveInitialInstance } from '@/lib/instance-view';
 
 @customElement('se-step-indicators')
 export class StepIndicatorsElement extends RadiantElement {
-	@prop({ type: Object }) config?: NormalizedFormConfig;
+	@prop({ type: Object }) meta?: FormMeta;
 	@prop({ type: Object }) viewConfig?: Record<string, unknown>;
 
 	@contextSelector({ context: formInstanceContext })
@@ -23,16 +23,16 @@ export class StepIndicatorsElement extends RadiantElement {
 	}
 
 	override render(): JsxRenderable {
-		const config = this.config;
-		if (!config) return null;
-		const instance = this.instance ?? deriveInitialInstance(config);
+		const meta = this.meta;
+		if (!meta) return null;
+		const instance = this.instance ?? deriveInitialInstance(meta);
 
 		const indicatorsConfig = getSlotConfig<StepIndicatorsConfig>(this.viewConfig ?? {}, 'progress');
 		const showNumbers = indicatorsConfig.showStepNumbers ?? true;
 		const showTitles = indicatorsConfig.showStepTitles ?? true;
 		const showDescriptions = indicatorsConfig.showStepDescriptions ?? false;
 		const sidebar = indicatorsConfig.orientation === 'sidebar';
-		const steps = deriveFormSteps(config, instance);
+		const steps = deriveFormSteps(meta, instance);
 		return (
 			<nav
 				aria-label={indicatorsConfig.labels?.regionAriaLabel ?? 'Form progress'}
@@ -81,11 +81,11 @@ export class StepIndicatorsElement extends RadiantElement {
 }
 
 export function StepIndicatorsBlock(context?: {
-	config?: NormalizedFormConfig;
+	meta?: FormMeta;
 	viewConfig?: Record<string, unknown>;
 }): JsxRenderable {
 	return jsx('se-step-indicators', {
-		config: context?.config,
+		meta: context?.meta,
 		viewConfig: context?.viewConfig ?? {},
 	});
 }

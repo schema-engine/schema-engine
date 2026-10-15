@@ -102,8 +102,9 @@ and use `watchField` / `watchForm` when an actual subscription is needed. Apply
 fallbacks at the read site (`form.getValue('title') ?? 'Untitled'`).
 
 `radiantAdapter` now supplies `FormProvider`; it does not emulate React hooks.
-`bindControlledFormElement(config, form)` now requires the scoped controller;
-its result is a render snapshot, without the old disconnected signal bindings.
+`combineHandlers` composes a control callback with a caller callback. The unused
+`bindControlledFormElement` export has been removed; use `form.field(name)` for
+scoped programmatic field access.
 
 `FormContextValue` is removed. `formState` uses Radiant UI's state contract
 (`touched`, `dirty`, and `isSubmitted`); it does not synthesize the former

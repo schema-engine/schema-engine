@@ -1,10 +1,11 @@
 import type { JsxRenderable } from '@ecopages/jsx';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
-import { type NormalizedFormConfig, type RecipeRegistration } from '@schema-engine/forms';
+import { type NormalizedFormConfig, resolveFormRecipe } from '@schema-engine/forms';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { getFormGridVariables } from '@schema-engine/forms/lib/grid-styles';
 import { applySlotDefaults } from '@schema-engine/forms/recipes';
 import type { RadiantRecipeAdapterPayload } from '@/recipes/types';
+import { createFormMeta } from '@/lib/instance-view';
 import { FormElements } from './form-elements';
 import { collectFormDefaultValues } from '@/adapters/radiant/rui-form-shell';
 import { expandValues } from '@/adapters/radiant/controller/values';
@@ -31,7 +32,7 @@ export function RecipeRenderer({
 }: {
 	config: NormalizedFormConfig;
 	engine: FormEngine;
-	recipe: RecipeRegistration<any, any> | undefined;
+	recipe: ReturnType<typeof resolveFormRecipe>;
 	children?: JsxRenderable;
 	initialValues?: Record<string, unknown>;
 }): JsxRenderable {
@@ -40,7 +41,8 @@ export function RecipeRenderer({
 	const viewConfig = recipe
 		? applySlotDefaults((config.view ?? { $type: recipe.$type }) as Record<string, unknown>, recipe.slotDefaults)
 		: ((config.view as Record<string, unknown> | undefined) ?? {});
-	const slotContext = { config, viewConfig };
+	const meta = createFormMeta(config);
+	const slotContext = { meta, viewConfig };
 	const isWizard = recipe?.kind === 'wizard';
 
 	const content = (
@@ -73,7 +75,7 @@ export function RecipeRenderer({
 		actions: adapter.slots.actions?.(slotContext),
 	};
 	const output = adapter.shell ? (
-		adapter.shell({ slots, viewConfig, config })
+		adapter.shell({ slots, viewConfig, meta })
 	) : (
 		<>
 			{slots.header}

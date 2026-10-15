@@ -1,10 +1,7 @@
 import { createContext } from '@ecopages/radiant/context';
 
-export interface StepStates {
-	completed: boolean[];
-	valid: boolean[];
-	visited: boolean[];
-}
+import type { StepStates } from '@schema-engine/forms/engine';
+export type { StepStates };
 
 export interface FormInstanceContextValue {
 	currentStep: number;

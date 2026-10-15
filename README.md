@@ -248,3 +248,5 @@ in the [forms action guide](./packages/forms/src/actions/README.md).
 The [React adapter](./packages/forms-react/README.md#validation-navigation-and-action-contexts)
 uses the engine's shared validation, navigation, submission and action context
 contracts, including nested errors and conditional required fields.
+
+Radiant forms share the engine step and submission lifecycle, publish nested provider callbacks, and serialize full config once per instance. See [Radiant rendering](./packages/forms-radiant/README.md#rendering-architecture).

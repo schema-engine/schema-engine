@@ -8,13 +8,19 @@ export function FormProvider<TFormData extends Record<string, unknown> = Record<
 	config,
 	defaultValues = {},
 	onSubmit,
+	onChange,
+	onAction,
 	children,
 	engine,
 }: FormProviderProps<TFormData> & { engine?: CoreFormEngine }) {
 	assertFormEngine(engine, config);
 	const normalizedConfig = engine.validateForm(config);
 	const actionController = normalizedConfig.actions?.length ? (
-		<FormActionController config={normalizedConfig} engine={engine} />
+		<FormActionController
+			config={normalizedConfig}
+			engine={engine}
+			onAction={onAction as FormProviderProps['onAction']}
+		/>
 	) : null;
 
 	return (
@@ -22,6 +28,7 @@ export function FormProvider<TFormData extends Record<string, unknown> = Record<
 			config={normalizedConfig}
 			engine={engine}
 			defaultValues={defaultValues}
+			onChange={onChange as FormProviderProps['onChange']}
 			onSubmit={onSubmit as ((data: Record<string, unknown>) => void | Promise<void>) | undefined}
 		>
 			{children}

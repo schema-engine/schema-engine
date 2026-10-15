@@ -41,7 +41,6 @@ export function FormRenderer({
 	return jsx('se-form-renderer', {
 		classes: ['se-form-renderer', className],
 		style,
-		config: props.config,
 		'prop:engine': resolvedEngine,
 		'prop:adapter': resolvedAdapter,
 		defaultValues: props.defaultValues,
@@ -51,6 +50,8 @@ export function FormRenderer({
 				config={props.config}
 				defaultValues={props.defaultValues}
 				onSubmit={props.onSubmit}
+				onChange={props.onChange}
+				onAction={props.onAction}
 				engine={resolvedEngine}
 			>
 				{children}

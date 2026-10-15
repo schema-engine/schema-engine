@@ -5,13 +5,14 @@ import { onContextUpdate } from '@ecopages/radiant/context';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import { RuiBadge } from '@ecopages/radiant-ui/badge';
 import { RuiButton } from '@ecopages/radiant-ui/button';
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { NormalizedFormConfig } from '@schema-engine/forms';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
+import type { FormInstanceElement } from '@/components/form-instance.script';
 import { findAncestorElement } from '@/lib/rui-form-utils';
 
-function findFormConfig(host: Node): FormConfig | undefined {
-	const owner = findAncestorElement(host, 'se-form-renderer', 'se-form-instance');
-	return owner ? (Reflect.get(owner, 'config') as FormConfig | undefined) : undefined;
+function findFormConfig(host: Node): NormalizedFormConfig | undefined {
+	const owner = findAncestorElement(host, 'se-form-instance') as FormInstanceElement | null;
+	return owner?.config;
 }
 
 function BugIcon() {
@@ -100,7 +101,7 @@ function DebuggerSteps({
 	stepStates,
 	showDetails,
 }: {
-	steps: FormConfig['steps'];
+	steps: NormalizedFormConfig['steps'];
 	currentStep: number;
 	stepStates: FormInstanceContextValue['stepStates'] | undefined;
 	showDetails: boolean;
@@ -186,7 +187,7 @@ function DebuggerNav({
 	currentStep,
 	stepStates,
 }: {
-	steps: FormConfig['steps'];
+	steps: NormalizedFormConfig['steps'];
 	currentStep: number;
 	stepStates: FormInstanceContextValue['stepStates'] | undefined;
 }) {
@@ -242,7 +243,6 @@ export class FormDebuggerElement extends RadiantElement {
 	@prop({ type: Boolean, defaultValue: false }) defaultOpen = false;
 	@prop({ type: Boolean, defaultValue: true }) showStepDetails = true;
 	@prop({ type: Boolean, defaultValue: true }) showFormState = true;
-	@prop({ type: Object }) config?: FormConfig;
 
 	@state open = false;
 	@state revision = 0;
@@ -283,7 +283,7 @@ export class FormDebuggerElement extends RadiantElement {
 		const formState = this.form.ready ? this.form.formState : undefined;
 		const currentStep = this.formInstance?.currentStep ?? 0;
 		const stepStates = this.formInstance?.stepStates;
-		const config = this.config ?? findFormConfig(this);
+		const config = findFormConfig(this);
 		const steps = config?.steps ?? [];
 		const isMultiStep = steps.length > 1;
 
@@ -318,11 +318,10 @@ export class FormDebuggerElement extends RadiantElement {
 	}
 }
 
-export function FormDebugger(props: FormDebuggerProps & { config?: FormConfig } = {}) {
+export function FormDebugger(props: FormDebuggerProps = {}) {
 	return jsx('se-form-debugger', {
 		defaultOpen: props.defaultOpen,
 		showStepDetails: props.showStepDetails,
 		showFormState: props.showFormState,
-		config: props.config,
 	});
 }
