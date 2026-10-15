@@ -1,3 +1,4 @@
+import type { FormFieldElement } from '@/elements/form-field';
 import type { FieldRules } from '@ecopages/radiant-ui/form';
 import { readHydratedRules } from '@/components/internals/field-rule-hydrator';
 
@@ -5,13 +6,13 @@ const REQUIRED_MARKER = '[data-se-required-marker]';
 
 const baselineRules = new WeakMap<HTMLElement, FieldRules>();
 
-function snapshotBaseline(field: HTMLElement): FieldRules {
+function snapshotBaseline(field: FormFieldElement): FieldRules {
 	const cached = baselineRules.get(field);
 	if (cached) {
 		return cached;
 	}
 
-	const liveRules = Reflect.get(field, 'rules') as FieldRules | undefined;
+	const liveRules = field.rules;
 	const hydrated = readHydratedRules(field);
 	const base = hydrated ?? liveRules ?? {};
 	baselineRules.set(field, base);
@@ -25,9 +26,9 @@ function snapshotBaseline(field: HTMLElement): FieldRules {
  * The WeakMap holds the original `FieldRules` object so `validate` functions and
  * `RegExp` patterns survive toggling. A JSON clone would strip both.
  */
-export function applyConstraintRequired(field: HTMLElement, isRequired: boolean): boolean {
+export function applyConstraintRequired(field: FormFieldElement, isRequired: boolean): boolean {
 	const base = snapshotBaseline(field);
-	const current = Reflect.get(field, 'rules') as FieldRules | undefined;
+	const current = field.rules;
 	const required = isRequired ? (typeof base.required === 'string' ? base.required : true) : base.required;
 	if (current?.required === required && field.hasAttribute('data-se-constraint-required') === isRequired) {
 		return false;
@@ -36,7 +37,7 @@ export function applyConstraintRequired(field: HTMLElement, isRequired: boolean)
 		...base,
 		required,
 	};
-	Reflect.set(field, 'rules', next);
+	field.rules = next;
 	field.toggleAttribute('data-se-constraint-required', isRequired);
 	field.querySelector(REQUIRED_MARKER)?.toggleAttribute('hidden', !isRequired);
 	(field as { onRulesUpdated?: () => void }).onRulesUpdated?.();
