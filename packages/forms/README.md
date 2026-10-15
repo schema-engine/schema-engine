@@ -172,6 +172,8 @@ Required rules, `relate`, constraint emptiness operators, and async skip checks
 share the same empty values: `undefined`, `null`, `''`, and `[]`. `false` and
 `0` count as present. `validateForm` and `validateElement` reject rules without
 a registered handler with a `FormValidationError` naming the field and rule.
+The `relate` string and date bases coerce primitive values and `Date` instances;
+arbitrary objects are left unchanged for string comparisons and are invalid dates.
 
 The `values` argument is the full nested form value tree. Omitting `names`, or
 passing an empty list, validates every named field. A non-empty `names` list

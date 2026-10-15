@@ -469,6 +469,10 @@ The declaring field's own value comes first in the list, then each entry of
 | `as`                 | `'auto'` | comparison basis: `string`, `number`, `date` (compared as timestamps), `boolean`, or `auto` to compare values unchanged.                                       |
 | `skipWhenIncomplete` | `true`   | stay quiet while any participating value is empty. Ignored by `atLeastOne`, `exactlyOne` and `allOrNone`, whose whole job is to fire on a partly filled group. |
 
+The `string` and `date` bases coerce primitive values and `Date` instances.
+Other objects stay unchanged for `string` comparisons and are treated as
+invalid dates. Their custom `toString` methods are not called.
+
 Because ordering reads left to right with the declaring field first, "this date
 must be after that one" is `descending`:
 
