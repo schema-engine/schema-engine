@@ -12,7 +12,6 @@ const meta = {
 	title: 'Recipes/Card Wizard',
 	argTypes: {
 		engine: { table: { disable: true } },
-		adapter: { table: { disable: true } },
 		config: {
 			control: 'object',
 			description: 'Form config with `view.$type: "card-wizard"`',

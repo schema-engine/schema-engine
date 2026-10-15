@@ -4,7 +4,6 @@ import {
 	withServerRadiantElementSsrRuntime,
 } from '@ecopages/radiant/server/radiant-element-ssr';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { radiantAdapter } from '@/adapters/radiant';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
 
@@ -84,7 +83,6 @@ export function renderArraySsrAcceptanceHtml(
 				FormRenderer({
 					config,
 					engine,
-					adapter: radiantAdapter,
 					defaultValues,
 				}),
 				{ mode: 'hydrate' },
@@ -100,7 +98,6 @@ export function renderArrayObjectDefaultsHtml(): string {
 				FormRenderer({
 					config: objectDefaultConfig,
 					engine,
-					adapter: radiantAdapter,
 					defaultValues: { members: [{ role: 'Admin' }] },
 				}),
 				{ mode: 'hydrate' },

@@ -5,9 +5,7 @@ import {
 	type RecipeRegistrationConstraint,
 	type ActionRegistrationConstraint,
 } from '@schema-engine/forms';
-import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { radiantRecipes } from '@/recipes/bind-recipes';
-import { registerFormEngine } from './active-engine';
 
 /**
  * Factory for a Radiant form engine with canonical view recipes already bound.
@@ -25,6 +23,5 @@ export function createRadiantFormEngine<
 		...options,
 		recipes: [...radiantRecipes, ...(options?.recipes ?? [])] as const,
 	});
-	registerFormEngine(engine as FormEngine);
 	return engine;
 }

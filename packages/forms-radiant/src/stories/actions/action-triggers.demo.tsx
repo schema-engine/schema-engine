@@ -15,7 +15,7 @@ import { FormRenderer } from '@/components/internals/form-renderer';
 import { FormController } from '@/adapters/radiant/controller';
 import { schemaFormRegistrations } from '@/registrations';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
-import { radiantAdapter, ValidationPresets } from '@/stories/shared/form-builder';
+import { ValidationPresets } from '@/stories/shared/form-builder';
 
 export interface ActionLogEntry {
 	id: string;
@@ -318,7 +318,7 @@ export function ActionTriggersDemo() {
 							<RuiHeadingDescription>Fill out the form to trigger actions</RuiHeadingDescription>
 						</RuiHeading>
 						<div class="se-action-demo__form">
-							<FormRenderer config={demoFormConfig} engine={demoEngine} adapter={radiantAdapter} />
+							<FormRenderer config={demoFormConfig} engine={demoEngine} />
 						</div>
 					</section>
 					<section class="se-action-demo__card">

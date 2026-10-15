@@ -1,2 +1,2 @@
 export * from './types';
-export { radiantAdapter, FormProvider, FormController, formController } from './radiant/index';
+export { FormProvider, FormController, FormEngineController, formController } from './radiant/index';

@@ -1,7 +1,7 @@
 import { eco } from '@ecopages/core';
 import type { JsxRenderable } from '@ecopages/jsx';
 import { FormRenderer } from '@schema-engine/forms-radiant';
-import { formEngine, radiantAdapter } from '@/lib/form-engine-setup';
+import { formEngine } from '@/lib/form-engine-setup';
 import type { FormConfig } from '@schema-engine/forms/schemas';
 import './form-renderer-preview.css';
 
@@ -13,7 +13,7 @@ import './form-renderer-preview.css';
  * `@jsxImportSource` pragma). This is a regular page component, not an island:
  * the form tree is authored here as
  * light-DOM children and expands on the server. The page script wires the
- * engine, adapter, and mock submission API after hydration. The configuration
+ * engine and mock submission API after hydration. The configuration
  * is declared inline in the demo page and passed as a prop, so the documented
  * snippet and the interactive demo share the same data.
  */
@@ -22,7 +22,7 @@ export const FormRendererPreview = eco.component<{ config: FormConfig }, JsxRend
 		return (
 			<div class="not-prose unstyled">
 				<div class="docs-form-renderer-preview">
-					<FormRenderer engine={formEngine} adapter={radiantAdapter} config={config} />
+					<FormRenderer engine={formEngine} config={config} />
 				</div>
 			</div>
 		);

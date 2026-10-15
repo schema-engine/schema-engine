@@ -17,5 +17,3 @@ export function defineStoryForm<const TConfig extends Parameters<typeof storyFor
 ) {
 	return storyFormEngine.defineForm(config);
 }
-
-export { radiantAdapter } from '@/adapters/radiant';

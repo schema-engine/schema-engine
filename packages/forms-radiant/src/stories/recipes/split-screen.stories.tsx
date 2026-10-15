@@ -13,7 +13,6 @@ const meta = {
 	title: 'Recipes/Split Screen',
 	argTypes: {
 		engine: { table: { disable: true } },
-		adapter: { table: { disable: true } },
 		config: {
 			control: 'object',
 			description: 'Form config with `view.$type: "split-screen"`',

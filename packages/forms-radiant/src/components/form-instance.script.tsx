@@ -6,13 +6,11 @@ import {
 	registerSsrPreparationCallback,
 	state,
 } from '@ecopages/radiant';
-import { onContextUpdate, provideContext, type ContextProvider } from '@ecopages/radiant/context';
+import { provideContext, type ContextProvider } from '@ecopages/radiant/context';
 import { resolveFormRecipe, type NormalizedFormConfig, type RecipeRegistration } from '@schema-engine/forms';
 import { flattenStepElements } from '@schema-engine/forms/lib/field-scope';
-import type { FormEngine as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import { formInstanceContext, type FormInstanceContextValue, type StepStates } from '@/contexts/form-instance-context';
-import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
-import { whenEngineAvailable } from '@/contexts/resolve-form-engine';
+import { FormController, FormEngineController } from '@/adapters/radiant/controller';
 import { findNearestRuiForm } from '@/lib/rui-form-utils';
 import { createConstraintLookup } from '@/lib/constraint-elements';
 import { evaluateConstraintLogic } from '@/hooks/constraint-logic';
@@ -20,7 +18,6 @@ import { fieldNamesForStep, validateCurrentStepFields } from '@/lib/validate-cur
 import { connectValidationDependencies } from '@/lib/validation-deps';
 import { applyConstraintRequired } from '@/lib/constraint-required-rules';
 import { shouldSurfaceDependentError } from '@schema-engine/forms/schemas/validation';
-import { FormController } from '@/adapters/radiant/controller';
 
 /**
  * Fields this wrapper owns, excluding those belonging to a nested constraint.
@@ -63,16 +60,15 @@ function createInitialStepStates(totalSteps: number): StepStates {
 export class FormInstanceElement extends RadiantElement {
 	/** Frozen config from `engine.defineForm` / `engine.validateForm` via `FormProvider`. */
 	@prop({ type: Object }) config!: NormalizedFormConfig;
-	@state engine?: CoreFormEngine;
 	@prop({ type: Object }) defaultValues?: Record<string, unknown>;
 	@state onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
 	@prop({ type: Boolean, defaultValue: false }) isSubmitting = false;
 
 	@state currentStep = 0;
 	@state stepStates: StepStates = { completed: [], valid: [], visited: [] };
+	private readonly formEngine = new FormEngineController(this);
 	private form?: FormController;
 	private unwatchValidationDependencies?: () => void;
-	private unsubscribeActiveEngine?: () => void;
 
 	@provideContext<typeof formInstanceContext>({
 		context: formInstanceContext,
@@ -87,23 +83,11 @@ export class FormInstanceElement extends RadiantElement {
 		this.publishLiveContexts();
 	}
 
-	@onContextUpdate({ context: formEngineContext, requestUpdate: false })
-	onFormEngine(value: FormEngineContextValue): void {
-		if (value.engine && !this.engine) {
-			this.engine = value.engine;
-			this.publish();
-		}
-	}
-
 	protected override onConnected(): void {
-		if (!this.engine) {
-			this.unsubscribeActiveEngine = whenEngineAvailable(this, this.engine, (engine) => {
-				if (!this.engine) {
-					this.engine = engine;
-				}
-				this.publish();
-			});
-		}
+		this.formEngine.connect(() => {
+			this.watchValidationDependencies();
+			this.publish();
+		});
 		this.resetStepState();
 		this.publish();
 		this.connectForm();
@@ -111,7 +95,7 @@ export class FormInstanceElement extends RadiantElement {
 	}
 
 	override disconnectedCallback(): void {
-		this.unsubscribeActiveEngine?.();
+		this.formEngine.disconnect();
 		this.stopWatchingValidationDependencies();
 		this.form?.disconnect();
 		this.form = undefined;
@@ -125,7 +109,7 @@ export class FormInstanceElement extends RadiantElement {
 		this.wireRuiForm();
 	}
 
-	@onUpdated(['currentStep', 'stepStates', 'isSubmitting', 'engine', 'onSubmit'])
+	@onUpdated(['currentStep', 'stepStates', 'isSubmitting', 'onSubmit'])
 	onInstanceStateUpdated(): void {
 		this.wireRuiForm();
 		this.connectForm();
@@ -173,13 +157,14 @@ export class FormInstanceElement extends RadiantElement {
 	 * that stops `validateField` from re-entering itself.
 	 */
 	private watchValidationDependencies(): void {
-		if (this.unwatchValidationDependencies || !this.config || !this.form?.ready || !this.engine) {
+		const engine = this.formEngine.engine;
+		if (this.unwatchValidationDependencies || !this.config || !this.form?.ready || !engine) {
 			return;
 		}
 		this.unwatchValidationDependencies = connectValidationDependencies(
 			this.form,
 			flattenStepElements(this.config.steps),
-			this.engine.getValidationRegistry(),
+			engine.getValidationRegistry(),
 		);
 	}
 
@@ -321,10 +306,11 @@ export class FormInstanceElement extends RadiantElement {
 	}
 
 	private resolveRecipe(): RecipeRegistration<any, any> | undefined {
-		if (!this.engine || !this.config) {
+		const engine = this.formEngine.engine;
+		if (!engine || !this.config) {
 			return undefined;
 		}
-		return resolveFormRecipe(this.config, this.engine);
+		return resolveFormRecipe(this.config, engine);
 	}
 
 	private publish(): void {

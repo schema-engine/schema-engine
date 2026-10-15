@@ -21,7 +21,3 @@ export interface FormProviderProps<TFormData = Record<string, unknown>> {
 	onChange?: (data: Partial<TFormData>) => void;
 	onAction?: (action: FormActionConfig, data: TFormData) => void | Promise<void>;
 }
-
-export interface FormAdapter<TFormData = Record<string, unknown>> {
-	FormProvider: (props: FormProviderProps<TFormData>) => JsxRenderable;
-}

@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
 import { createFormEngine } from '@schema-engine/forms';
 import { schemaFormRegistrations } from '@/registrations';
 import { formRendererMeta, renderFormStory } from '@/stories/shared/form-story';
-import { radiantAdapter } from '@/stories/shared/form-builder';
 import { getFieldControl, getSubmitButton } from '@/stories/shared/play';
 import { expect, waitFor } from 'storybook/test';
 import type { StoryContext } from 'storybook/internal/types';
@@ -14,7 +13,7 @@ const noRecipeEngine = createFormEngine({ elements: schemaFormRegistrations });
 const meta = {
 	...formRendererMeta,
 	title: 'Recipes/Missing wizard fallback',
-	render: (args) => renderFormStory({ ...args, engine: noRecipeEngine, adapter: radiantAdapter }),
+	render: (args) => renderFormStory({ ...args, engine: noRecipeEngine }),
 	args: {
 		config: {
 			id: 'missing-wizard',
