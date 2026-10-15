@@ -69,8 +69,8 @@ describe('collectStepFieldPaths', () => {
 			name: 'tags',
 			elements: [{ $type: 'input', name: 'ignored', rules: [{ type: 'required', message: 'Tag is required' }] }],
 		});
-		const tags: undefined[] = [undefined];
-		delete tags[0];
+		const tags: undefined[] = [];
+		tags.length = 1;
 		const values = { tags };
 
 		expect(collectStepFieldPaths({ elements: [element] }, values)).toEqual(['tags', 'tags.0']);
