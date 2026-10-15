@@ -103,23 +103,23 @@ export function mergePathValues(
  * @remarks
  * An empty parent array produces no child paths; a field whose value is an empty array still returns its own path.
  */
-export function expandFieldTemplatePaths(values: Record<string, unknown>, templatePath: string): string[] {
-	return expandTemplatePaths(values, templatePath, false);
+export function expandFieldTemplatePaths(values: Record<string, unknown>, fieldTemplatePath: string): string[] {
+	return expandTemplatePaths(values, fieldTemplatePath, false);
 }
 
 /**
  * Expand a container's parent path through each live array row, including an array at the path's end.
  */
-export function expandContainerParentPaths(values: Record<string, unknown>, templatePath: string): string[] {
-	return expandTemplatePaths(values, templatePath, true);
+export function expandContainerParentPaths(values: Record<string, unknown>, fieldTemplatePath: string): string[] {
+	return expandTemplatePaths(values, fieldTemplatePath, true);
 }
 
 function expandTemplatePaths(
 	values: Record<string, unknown>,
-	templatePath: string,
+	fieldTemplatePath: string,
 	expandTerminalArrays: boolean,
 ): string[] {
-	const parts = templatePath.split('.');
+	const parts = fieldTemplatePath.split('.');
 	const paths: string[] = [];
 	let expandedArray = false;
 
@@ -162,7 +162,7 @@ function expandTemplatePaths(
 	}
 
 	traverse(values, [], parts);
-	return paths.length > 0 ? paths : expandedArray ? [] : [templatePath];
+	return paths.length > 0 ? paths : expandedArray ? [] : [fieldTemplatePath];
 }
 
 function clonePlainValue(value: unknown): unknown {
@@ -209,4 +209,19 @@ function deepMerge(base: unknown, override: unknown): unknown {
 	}
 
 	return override === undefined ? base : override;
+}
+
+/**
+ * Drops array indices from a rendered field path.
+ *
+ * @remarks
+ * Constraint metadata collection walks the config, where array length is
+ * unknown, so it records the authored template (`contacts.email`). The renderer
+ * emits the composed path (`contacts.0.email`).
+ */
+export function templatePath(path: string): string {
+	return path
+		.split('.')
+		.filter((segment) => !/^\d+$/.test(segment))
+		.join('.');
 }

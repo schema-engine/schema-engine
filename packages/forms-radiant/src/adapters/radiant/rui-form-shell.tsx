@@ -27,11 +27,13 @@ function clearInvalidErrors(event: Event): void {
 export function ConfiguredRuiForm({
 	config,
 	defaultValues = {},
+	initialValues,
 	onSubmit,
 	children,
 }: {
 	config: FormConfigView;
 	defaultValues?: Partial<Record<string, unknown>>;
+	initialValues?: Record<string, unknown>;
 	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
 	children: JsxRenderable;
 }) {
@@ -43,7 +45,7 @@ export function ConfiguredRuiForm({
 			style={config.style}
 			mode="onSubmit"
 			reValidateMode="onChange"
-			defaultValues={collectFormDefaultValues(config, defaultValues)}
+			defaultValues={initialValues ?? collectFormDefaultValues(config, defaultValues)}
 			onSubmit={effectiveOnSubmit}
 			on:rui-invalid={rememberInvalidErrors}
 			on:rui-submit={clearInvalidErrors}

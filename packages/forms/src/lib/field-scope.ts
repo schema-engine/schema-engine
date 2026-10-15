@@ -129,9 +129,14 @@ export interface NamedElementNode<T extends object = object> {
  * Walk named elements depth-first, composing dotted paths the same way
  * fieldsets do at render time (`address.street`). Array indices are not
  * expanded here — consumers expand templates against live values.
+ * @param fallbackToId Use authored ids for unnamed constraint hosts.
  */
-export function walkNamedElements<T extends object>(elements: readonly T[], basePath = ''): NamedElementNode<T>[] {
-	return walkScopedElements(elements, basePath);
+export function walkNamedElements<T extends object>(
+	elements: readonly T[],
+	basePath = '',
+	fallbackToId = false,
+): NamedElementNode<T>[] {
+	return walkScopedElements(elements, basePath, false, 0, fallbackToId);
 }
 
 function walkScopedElements<T extends object>(
@@ -139,10 +144,11 @@ function walkScopedElements<T extends object>(
 	basePath: string,
 	replace = false,
 	arrayItemDepth = 0,
+	fallbackToId = false,
 ): NamedElementNode<T>[] {
 	const nodes: NamedElementNode<T>[] = [];
 	for (const element of elements) {
-		const name = getElementName(element);
+		const name = getElementName(element) ?? (fallbackToId ? getElementId(element) : undefined);
 		if (!name && !replace) continue;
 		const path = replace ? basePath : basePath ? `${basePath}.${name}` : name!;
 		const children = getElementChildren(element) as T[] | undefined;
@@ -151,7 +157,13 @@ function walkScopedElements<T extends object>(
 		if (children?.length) {
 			const scalarArrayItems = getElementContainerKind(element) === 'array' && children.length === 1;
 			nodes.push(
-				...walkScopedElements(children, path, scalarArrayItems, scalarArrayItems ? arrayItemDepth + 1 : 0),
+				...walkScopedElements(
+					children,
+					path,
+					scalarArrayItems,
+					scalarArrayItems ? arrayItemDepth + 1 : 0,
+					fallbackToId,
+				),
 			);
 		}
 	}

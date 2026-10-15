@@ -15,7 +15,7 @@ import { formEngineContext, type FormEngineContextValue } from '@/components/pro
 import { whenEngineAvailable } from '@/contexts/resolve-form-engine';
 import { findNearestRuiForm } from '@/lib/rui-form-utils';
 import { createConstraintLookup } from '@/lib/constraint-elements';
-import { evaluateConstraintLogic } from '@/hooks/constraint-logic';
+import { evaluateConstraints } from '@schema-engine/forms/constraints';
 import { fieldNamesForStep, validateCurrentStepFields } from '@/lib/validate-current-step';
 import { connectValidationDependencies } from '@/lib/validation-deps';
 import { applyConstraintRequired } from '@/lib/constraint-required-rules';
@@ -213,16 +213,16 @@ export class FormInstanceElement extends RadiantElement {
 				continue;
 			}
 
-			const { shouldShow, shouldDisable, isRequired } = evaluateConstraintLogic(
-				item.constraints,
-				item.isRequired,
+			const { shouldShow, shouldDisable, isRequired } = evaluateConstraints({
+				constraints: item.constraints,
+				baseRequired: item.isRequired,
 				fieldPath,
 				values,
-			);
+			});
 
 			target.hidden = !shouldShow;
 			for (const field of ownedFields(target)) {
-				(field as HTMLElement & { disabled?: boolean }).disabled = shouldDisable;
+				(field as HTMLElement & { disabled?: boolean }).disabled = item.disabled || shouldDisable;
 				const requiredChanged = applyConstraintRequired(field, isRequired);
 				const name = field.getAttribute('name');
 				const store = this.form?.store;
