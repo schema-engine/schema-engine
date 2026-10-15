@@ -58,6 +58,12 @@ class FieldArrayController implements FieldArrayValue {
 		return this.current().map(({ id }) => ({ id }));
 	}
 
+	adoptIds(ids: readonly string[]): void {
+		const rows = this.current();
+		if (rows.length !== ids.length) return;
+		this.rows = rows.map((row, index) => ({ ...row, id: ids[index] ?? row.id }));
+	}
+
 	private commit(rows: Row[]): void {
 		const values = rows.map(({ value }) => value);
 		this.rows = rows;
@@ -115,4 +121,15 @@ class FieldArrayController implements FieldArrayValue {
 	private validIndex(index: number, rows: Row[]): boolean {
 		return Number.isInteger(index) && index >= 0 && index < rows.length;
 	}
+}
+
+/**
+ * Adopts row ids already emitted by the server for the matching form field.
+ *
+ * @remarks
+ * The server seeds keys by array position. Hydration must keep those keys so
+ * existing row hosts stay mounted while the live controller takes ownership.
+ */
+export function adoptFieldArrayIds(store: FormStore, name: string, ids: readonly string[]): void {
+	arrays.get(store)?.get(name)?.adoptIds(ids);
 }

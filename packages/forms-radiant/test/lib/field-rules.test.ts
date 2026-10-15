@@ -70,6 +70,18 @@ describe('toFieldRules', () => {
 		expect(hexPattern?.value.test('deadbeef')).toBe(true);
 	});
 
+	test('validates minItems as an array rule rather than a required field', async () => {
+		const rules = toFieldRules(
+			{ rules: [{ type: 'minItems', value: 2, message: 'Add at least two contacts' }] },
+			registry,
+		);
+		const validate = rules?.validate as (value: unknown) => Promise<boolean | string>;
+
+		expect(rules?.required).toBeUndefined();
+		expect(await validate([{ name: 'Alice' }])).toBe('Add at least two contacts');
+		expect(await validate([{ name: 'Alice' }, { name: 'Bob' }])).toBe(true);
+	});
+
 	test('injects phone validation for phone-input when the author omitted the rule', async () => {
 		const phoneRegistry = createDefaultValidationRegistry();
 		phoneRegistry.register(createRadiantPhoneValidationRegistration());

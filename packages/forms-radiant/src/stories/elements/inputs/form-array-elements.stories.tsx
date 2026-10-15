@@ -7,6 +7,12 @@ import { clickSubmit, expectFieldError, expectNoFieldError, playFieldFocusAndTyp
 
 import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
 
+async function assertStaticArrayRows(canvasElement: HTMLElement, expected: number): Promise<boolean> {
+	if (!isStaticSsrPreview(canvasElement)) return false;
+	await expect(canvasElement.querySelectorAll('.se-form-array__item[data-se-row-id]')).toHaveLength(expected);
+	return true;
+}
+
 const emergencyContactsConfig = fieldFormConfig(
 	'emergency-contacts',
 	'Emergency contacts',
@@ -71,17 +77,19 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
 	play: async ({ canvasElement, step }) => {
-		if (isStaticSsrPreview(canvasElement)) return;
+		if (await assertStaticArrayRows(canvasElement, 1)) return;
 		await step('Array starts with one contact row', async () => {
-			await expect(within(canvasElement).getByText(/emergency contacts/i)).toBeInTheDocument();
-			await expect(within(canvasElement).getByLabelText(/full name/i)).toBeInTheDocument();
+			await expect(
+				within(canvasElement).getByText(/emergency contacts/i, { selector: '.se-form-array-field__label' }),
+			).toBeInTheDocument();
+			await waitFor(async () => expect(within(canvasElement).getByLabelText(/full name/i)).toBeInTheDocument());
 			await expect(within(canvasElement).getByLabelText(/phone number/i)).toBeInTheDocument();
 		});
 
 		await step('Can add another contact row', async () => {
 			const addButton = within(canvasElement).getByRole('button', { name: /add contact/i });
 			await userEvent.click(addButton);
-			await expect(within(canvasElement).getAllByLabelText(/full name/i)).toHaveLength(2);
+			await waitFor(async () => expect(within(canvasElement).getAllByLabelText(/full name/i)).toHaveLength(2));
 		});
 	},
 };
@@ -111,6 +119,9 @@ export const SingleField: Story = {
 				],
 			},
 		]),
+	},
+	play: async ({ canvasElement }) => {
+		await assertStaticArrayRows(canvasElement, 1);
 	},
 };
 
@@ -162,7 +173,7 @@ export const WithValidation: Story = {
 		),
 	},
 	play: async ({ canvasElement, step }) => {
-		if (isStaticSsrPreview(canvasElement)) return;
+		if (await assertStaticArrayRows(canvasElement, 1)) return;
 		await step('Empty submit shows nested field errors', async () => {
 			await clickSubmit(canvasElement, /submit references/i);
 			await expectFieldError(canvasElement, /name is required/i);
@@ -190,7 +201,7 @@ export const ControllerOperations: Story = {
 		onSubmit: fn(),
 	},
 	play: async ({ canvasElement, args, step }) => {
-		if (isStaticSsrPreview(canvasElement)) return;
+		if (await assertStaticArrayRows(canvasElement, 2)) return;
 		const canvas = within(canvasElement);
 		const arrayHost = canvasElement.querySelector<HTMLElement>('se-form-array');
 		if (!arrayHost) throw new Error('Expected array component');
@@ -201,6 +212,10 @@ export const ControllerOperations: Story = {
 		const stop = form.watchField('emergencyContacts', listener);
 
 		await step('Default values populate registered controls', async () => {
+			const firstNameField = canvasElement.querySelector<HTMLElement>(
+				'se-field[name="emergencyContacts.0.contactName"]',
+			);
+			if (!firstNameField) throw new Error('Expected first name field');
 			await waitFor(async () => expect(names().map((input) => input.value)).toEqual(['Alice', 'Bob']));
 		});
 		await step('Decorated fields and plain controller share live values', async () => {
@@ -215,6 +230,8 @@ export const ControllerOperations: Story = {
 		await step('Move and remove keep row identity, DOM values, and submission aligned', async () => {
 			const originalIds = array.fields;
 			array.move(0, 1);
+			await expect(form.getValue('emergencyContacts.0.contactName')).toBe('Typed Bob');
+			await expect(form.getValue('emergencyContacts.1.contactName')).toBe('Updated Alice');
 			await waitFor(async () =>
 				expect(names().map((input) => input.value)).toEqual(['Typed Bob', 'Updated Alice']),
 			);
@@ -254,7 +271,7 @@ if (!customElements.get('se-test-form-consumer')) customElements.define('se-test
 
 export const ControllerLifecycle: Story = {
 	play: async ({ canvasElement }) => {
-		if (isStaticSsrPreview(canvasElement)) return;
+		if (await assertStaticArrayRows(canvasElement, 1)) return;
 		const host = canvasElement.querySelector<HTMLElement>('se-form-array');
 		if (!host) throw new Error('Expected array component');
 		const first = new FormController(host);
@@ -281,5 +298,76 @@ export const ControllerLifecycle: Story = {
 		await expect(consumer.updates).toBe(disconnectedUpdates);
 		secondHost.remove();
 		first.disconnect();
+	},
+};
+
+export const InitialValuesSeedAddedRows: Story = {
+	args: {
+		config: fieldFormConfig('array-initial-values', 'Members', [
+			{
+				$type: 'arrayElements',
+				id: 'members',
+				name: 'members',
+				label: 'Members',
+				initialValues: { role: 'viewer' },
+				addButtonText: 'Add member',
+				elements: [
+					{
+						$type: 'input',
+						inputType: 'text',
+						id: 'role',
+						name: 'role',
+						label: 'Role',
+					},
+				],
+			},
+		]),
+	},
+	play: async ({ canvasElement, step }) => {
+		if (await assertStaticArrayRows(canvasElement, 0)) return;
+		await step('initialValues seed a newly added array row', async () => {
+			await userEvent.click(within(canvasElement).getByRole('button', { name: /add member/i }));
+			await expect(within(canvasElement).getByLabelText(/role/i)).toHaveValue('viewer');
+		});
+	},
+};
+
+export const MinimumItemsValidation: Story = {
+	args: {
+		config: fieldFormConfig('array-min-items', 'Contacts', [
+			{
+				$type: 'arrayElements',
+				id: 'contacts',
+				name: 'contacts',
+				label: 'Contacts',
+				rules: [{ type: 'minItems', value: 2, message: 'Add at least two contacts' }],
+				addButtonText: 'Add contact',
+				elements: [
+					{
+						$type: 'input',
+						inputType: 'text',
+						id: 'contact',
+						name: 'contact',
+						label: 'Contact',
+					},
+				],
+			},
+			{
+				$type: 'submit',
+				id: 'submit',
+				name: 'submit',
+				label: 'Submit contacts',
+			},
+		]),
+		defaultValues: { contacts: ['Alice'] },
+		onSubmit: fn(),
+	},
+	play: async ({ canvasElement, args, step }) => {
+		if (await assertStaticArrayRows(canvasElement, 1)) return;
+		await step('minItems on the array container blocks an undersized submit', async () => {
+			await clickSubmit(canvasElement, /submit contacts/i);
+			await expectFieldError(canvasElement, /add at least two contacts/i);
+			await expect(args.onSubmit).not.toHaveBeenCalled();
+		});
 	},
 };

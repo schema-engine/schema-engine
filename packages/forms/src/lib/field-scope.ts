@@ -179,16 +179,35 @@ function getArrayLength(value: unknown): number {
 	return Array.isArray(value) ? value.length : 0;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+export function usesScalarArrayItem(
+	element: object,
+	path: string,
+	children: readonly object[],
+	userDefaults: Record<string, unknown>,
+): boolean {
+	if (children.length !== 1) return false;
+	if (getElementChildren(children[0])?.length) return false;
+	const defaultItemValues = 'initialValues' in element ? element.initialValues : undefined;
+	const arrayValue = getValueAtPath(userDefaults, path) ?? getDefaultValue(element);
+	const firstItem = Array.isArray(arrayValue) ? arrayValue[0] : undefined;
+	return !isRecord(defaultItemValues) && !isRecord(firstItem) && !isRecord(getDefaultValue(children[0]));
+}
+
 function getArraySeedCount(
 	element: object,
 	children: readonly object[],
 	path: string,
 	userDefaults: Record<string, unknown>,
+	seedMinItems: boolean,
 ): number {
 	const fromValue = getArrayLength(getDefaultValue(element));
 	const fromUser = getArrayLength(getValueAtPath(userDefaults, path));
 	const fromChildren = children.some(treeHasDefaultValue) ? 1 : 0;
-	return Math.max(fromValue, fromUser, getMinItems(element), fromChildren);
+	return Math.max(fromValue, fromUser, seedMinItems ? getMinItems(element) : 0, fromChildren);
 }
 
 /**
@@ -204,14 +223,16 @@ function getArraySeedCount(
 export function collectFieldDefaults(
 	elements: readonly object[],
 	userDefaults: Record<string, unknown> = {},
+	options: { seedMinItems?: boolean } = {},
 ): Array<{ name: string; defaultValue?: unknown }> {
-	return collectScopedDefaults(elements, userDefaults);
+	return collectScopedDefaults(elements, userDefaults, undefined, options.seedMinItems ?? true);
 }
 
 function collectScopedDefaults(
 	elements: readonly object[],
 	userDefaults: Record<string, unknown>,
 	scope?: FieldScope,
+	seedMinItems = true,
 ): Array<{ name: string; defaultValue?: unknown }> {
 	const fields: Array<{ name: string; defaultValue?: unknown }> = [];
 
@@ -222,8 +243,8 @@ function collectScopedDefaults(
 		if (isArrayElements(element) && children?.length) {
 			if (!path) continue;
 			fields.push({ name: path, defaultValue: getDefaultValue(element) });
-			const scalar = children.length === 1;
-			const seedCount = getArraySeedCount(element, children, path, userDefaults);
+			const scalar = usesScalarArrayItem(element, path, children, userDefaults);
+			const seedCount = getArraySeedCount(element, children, path, userDefaults, seedMinItems);
 			for (let index = 0; index < seedCount; index += 1) {
 				fields.push(
 					...collectScopedDefaults(
@@ -233,6 +254,7 @@ function collectScopedDefaults(
 							scalar,
 							parentInstanceId: scope?.instanceId,
 						}),
+						seedMinItems,
 					),
 				);
 			}
@@ -244,7 +266,7 @@ function collectScopedDefaults(
 		fields.push({ name: path, defaultValue: getDefaultValue(element) });
 
 		if (children?.length) {
-			fields.push(...collectScopedDefaults(children, userDefaults, objectFieldScope(path, scope)));
+			fields.push(...collectScopedDefaults(children, userDefaults, objectFieldScope(path, scope), seedMinItems));
 		}
 	}
 

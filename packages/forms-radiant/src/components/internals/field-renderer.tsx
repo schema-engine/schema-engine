@@ -17,6 +17,8 @@ export interface FormElementProps {
 	name?: string;
 	id?: string;
 	instanceId?: string;
+	initialValues?: Record<string, unknown>;
+	values?: Record<string, unknown>;
 	className?: string;
 	style?: Record<string, string | number | undefined>;
 }
@@ -29,6 +31,8 @@ export function FormElement({
 	name,
 	id,
 	instanceId,
+	initialValues,
+	values,
 	className,
 	style,
 }: FormElementProps): JsxRenderable {
@@ -39,17 +43,23 @@ export function FormElement({
 
 	const constraints = 'constraints' in config ? config.constraints : undefined;
 	if (!constraints?.length) {
-		return renderRegisteredElement(config, resolvedEngine, {
-			name,
-			id,
-			instanceId,
-		});
+		return renderRegisteredElement(
+			config,
+			resolvedEngine,
+			{
+				name,
+				id,
+				instanceId,
+			},
+			{ values: values ?? initialValues, initialValues, fieldPath: name },
+		);
 	}
 
 	const { shouldShow } = evaluateConstraintLogic(
 		constraints,
 		isFieldRequired('rules' in config ? config.rules : undefined),
 		name ?? ('name' in config ? config.name : undefined),
+		values ?? initialValues ?? {},
 	);
 	const fieldName =
 		name ?? ('name' in config ? config.name : undefined) ?? id ?? ('id' in config ? config.id : undefined) ?? '';
@@ -75,7 +85,7 @@ export function FormElement({
 					id,
 					instanceId,
 				},
-				undefined,
+				{ values: values ?? initialValues, initialValues, fieldPath: name },
 				true,
 			)}
 		</div>

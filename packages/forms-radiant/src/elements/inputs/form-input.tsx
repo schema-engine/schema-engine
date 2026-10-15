@@ -31,6 +31,7 @@ export function FormInput({
 				id={config.id}
 				name={config.name}
 				type={inputType}
+				value={typeof config.defaultValue === 'string' ? config.defaultValue : undefined}
 				placeholder={placeholder}
 				disabled={config.disabled}
 				on:input={(event: Event) => {

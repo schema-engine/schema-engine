@@ -1,10 +1,14 @@
 import type { TestProject } from 'vitest/node';
 import { getSsrAcceptanceEngine, renderSsrLayoutAcceptanceHtml } from './render-form-ssr-html';
+import { renderArrayObjectDefaultsHtml, renderArraySsrAcceptanceHtml } from './render-form-array-ssr-html';
 
 declare module 'vitest' {
 	interface ProvidedContext {
 		ssrLayoutHtml: string;
 		ssrLayoutCompiled: { theme: { id: string }; css: string };
+		ssrArrayHtml: string;
+		ssrMinItemsHtml: string;
+		ssrObjectArrayDefaultsHtml: string;
 	}
 }
 
@@ -20,4 +24,12 @@ export default function setup(project: TestProject): void {
 	const { theme, css } = getSsrAcceptanceEngine().getCompiledGrid();
 	project.provide('ssrLayoutHtml', renderSsrLayoutAcceptanceHtml());
 	project.provide('ssrLayoutCompiled', { theme: { id: theme.id }, css });
+	const arrayHtml = renderArraySsrAcceptanceHtml().replaceAll('</script>', '<\\/script>');
+	project.provide('ssrArrayHtml', arrayHtml);
+	const minItemsHtml = renderArraySsrAcceptanceHtml({ contacts: [] }).replaceAll('</script>', '<\\/script>');
+	project.provide('ssrMinItemsHtml', minItemsHtml);
+	project.provide(
+		'ssrObjectArrayDefaultsHtml',
+		renderArrayObjectDefaultsHtml().replaceAll('</script>', '<\\/script>'),
+	);
 }

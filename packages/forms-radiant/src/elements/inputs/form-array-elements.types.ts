@@ -13,7 +13,7 @@ export const ArrayElementConfigSchema = z.extend(BaseFieldSchema, {
 	addButtonText: z.optional(z.string()).check(z.describe('Text for the add button')),
 	removeButtonText: z.optional(z.string()).check(z.describe('Text for the remove button')),
 	emptyStateMessage: z.optional(z.string()).check(z.describe('Message shown when array is empty')),
-	initialValues: z.optional(z.record(z.string(), z.any())).check(z.describe('Default values for new items')),
+	initialValues: z.optional(z.record(z.string(), z.unknown())).check(z.describe('Default values for new items')),
 	elements: elementChildrenSchema
 		.check(z.minLength(1))
 		.check(z.describe('Field definitions for each item in the array')),
@@ -28,5 +28,7 @@ export type ArrayElementsProps = ElementRenderProps<
 		onChange?: (value: unknown) => void;
 		onBlur?: () => void;
 		onFocus?: () => void;
+		ssrInitialRows?: readonly unknown[];
+		initialFormValues?: Record<string, unknown>;
 	}
 >;

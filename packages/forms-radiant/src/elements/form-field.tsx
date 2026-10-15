@@ -12,11 +12,34 @@ export class FormFieldElement extends RuiFieldElement {
 	@formController form!: FormController;
 
 	protected override onConnected(): void {
+		this.hydrateDefaultValue();
 		const rules = readHydratedRules(this);
 		if (rules) {
 			this.rules = rules;
 		}
 		super.onConnected();
+	}
+
+	/**
+	 * @remarks
+	 * RuiField prefers its object prop over the JSON attribute. Radiant exposes an
+	 * absent object prop as `null` during hydration, so decode the attribute first
+	 * to prevent null from erasing a server-rendered field default.
+	 */
+	private hydrateDefaultValue(): void {
+		if (this.defaultValue !== null) return;
+
+		const raw = this.defaultValueData ?? this.getAttribute('data-default-value');
+		if (!raw) {
+			this.defaultValue = undefined;
+			return;
+		}
+
+		try {
+			this.defaultValue = JSON.parse(raw) as unknown;
+		} catch {
+			this.defaultValue = undefined;
+		}
 	}
 
 	get field() {
@@ -46,8 +69,9 @@ export function FormField({
 		style: fieldHost.style,
 		'prop:rules': rules,
 		'prop:defaultValue': defaultValue,
-		'data-default-value':
-			defaultValueData ?? (defaultValue !== undefined ? JSON.stringify(defaultValue) : undefined),
+		data: {
+			defaultValue: defaultValueData ?? (defaultValue !== undefined ? JSON.stringify(defaultValue) : undefined),
+		},
 		children: (
 			<div class="rui-field" data-ref="field">
 				{children}

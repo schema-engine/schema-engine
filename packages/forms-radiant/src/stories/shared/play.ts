@@ -50,7 +50,10 @@ export async function clickSubmit(root: ParentNode, name: string | RegExp): Prom
 	await waitFor(
 		async () => {
 			await expect(queryDeep(root, 'rui-form'), 'Expected rui-form to be present').toBeTruthy();
-			await expect(queryDeep(root, 'rui-field, se-field'), 'Expected rui-field to be present').toBeTruthy();
+			await expect(
+				queryDeep(root, 'rui-field, se-field, se-form-array'),
+				'Expected a registered form field to be present',
+			).toBeTruthy();
 			await expect(getSubmitButton(root, name), `Expected submit control matching ${String(name)}`).toBeTruthy();
 		},
 		{ timeout: 5000 },
