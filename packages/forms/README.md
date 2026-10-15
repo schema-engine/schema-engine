@@ -9,6 +9,12 @@ registration contracts remain `StandardSchemaV1`, so custom elements, recipes,
 and actions can use Valibot, Effect Schema, Zod, or another compatible
 provider.
 
+## Logging
+
+Runtime diagnostics go through `@ecopages/logger` with the
+`[schema-engine/forms]` package tag. Debug output is disabled by default;
+warnings and errors keep their severity and diagnostic details.
+
 ## Compose an engine
 
 ```ts

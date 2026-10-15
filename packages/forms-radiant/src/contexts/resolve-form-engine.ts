@@ -1,12 +1,9 @@
+import { logger } from '@/lib/logger';
 import { ContextSubscriptionRequestEvent } from '@ecopages/radiant/context';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { formEngineContext } from '@/components/provider';
 import { peekOwningFormEngine } from '@/contexts/form-engine-owner';
-import {
-	getDefaultFormEngine,
-	getRegisteredEngineCount,
-	onRegisteredEngineChange,
-} from '@/registries/active-engine';
+import { getDefaultFormEngine, getRegisteredEngineCount, onRegisteredEngineChange } from '@/registries/active-engine';
 
 /**
  * Reads `formEngineContext` from the host or an ancestor.
@@ -37,9 +34,8 @@ function warnMultiEngineFallback(host: HTMLElement): void {
 		return;
 	}
 	warnedMultiEngine = true;
-	console.warn(
-		`[schema-engine/forms-radiant] Could not resolve FormEngine for <${host.tagName.toLowerCase()}>: ` +
-			'multiple engines are registered. Pass an explicit `engine` prop or wrap the host in `se-form-engine-provider`.',
+	logger.warn(
+		`Could not resolve FormEngine for <${host.tagName.toLowerCase()}>: multiple engines are registered. Pass an explicit \`engine\` prop or wrap the host in \`se-form-engine-provider\`.`,
 	);
 }
 

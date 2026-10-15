@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useCallback, useEffect, useRef } from 'react';
 import { useWatch, type Control } from 'react-hook-form';
 import type { FormActionTrigger, FormConfigView } from '@schema-engine/forms';
@@ -22,7 +23,7 @@ export function useFormWatcher({ control, config, onChange, dispatchTrigger }: U
 		async (data: any) => {
 			if (config.actions && config.actions.length > 0) {
 				await dispatchTrigger('form_change').catch((error) => {
-					console.error('Form change action execution failed:', error);
+					logger.error('Form change action execution failed:', error);
 				});
 			}
 

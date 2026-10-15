@@ -8,8 +8,8 @@ The engine uses Zod Mini for its first-party schemas and keeps Standard Schema a
 | ---------------------- | ------------------------------------------------------------------------------------------------------- |
 | `registry` / `actions` | `StandardSchemaV1` on every `BaseRegistration.schema`                                                   |
 | `forms`                | Zod Mini for first-party authoring and JSON Schema export; `~standard.validate` at registration/runtime |
-| `forms-react`          | Headless renderer; copied registry widgets carry their own field schemas                                  |
-| `forms-radiant`        | Radiant widgets and colocated field schemas; not required to match registry schemas                       |
+| `forms-react`          | Headless renderer; copied registry widgets carry their own field schemas                                |
+| `forms-radiant`        | Radiant widgets and colocated field schemas; not required to match registry schemas                     |
 
 Default widget `$type` schemas (for example `input`, `drop-zone`) live beside each implementation — shadcn registry sources and `forms-radiant` — not in `forms`. Custom registrations use the engine contract only (`defineInput`, `BaseFieldSchema`, Standard Schema). Shared docs examples use the overlapping subset both renderers support; library-shaped keys (iMask, drop-zone `accept`) are implementation contracts and may differ.
 
@@ -29,7 +29,8 @@ Form authors supply schema **input** (defaults stay optional). After `defineForm
 ## Forms logging
 
 `@schema-engine/forms` and the renderer packages use `@ecopages/logger` through
-the shared `logger` export (`@schema-engine/forms/lib/logger`). Tags identify
+each package’s shared `logger` instance. The forms instance is also exported as
+`@schema-engine/forms/lib/logger`. Tags identify
 the package (`[schema-engine/forms]`, `[schema-engine/forms-react]`, and so on).
 Debug output stays off unless the host enables Ecopages log levels.
 
