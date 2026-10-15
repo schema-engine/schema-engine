@@ -41,6 +41,18 @@ function hydrateReactFormDemos(): void {
 	}
 }
 
-hydrateReactFormDemos();
-document.addEventListener('eco:page-load', hydrateReactFormDemos);
-document.addEventListener('eco:after-swap', hydrateReactFormDemos);
+let initialized = false;
+
+/**
+ * Starts React form demo hydration for the current page and later route swaps.
+ *
+ * @remarks The route script can be evaluated repeatedly, so this installs its listeners only once.
+ */
+export function initializeReactFormDemos(): void {
+	if (initialized) return;
+	initialized = true;
+
+	hydrateReactFormDemos();
+	document.addEventListener('eco:page-load', hydrateReactFormDemos);
+	document.addEventListener('eco:after-swap', hydrateReactFormDemos);
+}
