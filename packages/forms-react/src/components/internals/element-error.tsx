@@ -1,4 +1,3 @@
-import { cx } from 'class-variance-authority';
 import type React from 'react';
 
 export interface ElementErrorProps {
@@ -11,14 +10,14 @@ export interface ElementErrorProps {
 
 export function ElementError({ title, message, componentType, className, style }: ElementErrorProps) {
 	return (
-		<div className={cx('rounded-lg border border-red-200 bg-red-50 p-4', className)} style={style}>
-			<div className="flex-1">
-				<p className="text-red-900 font-semibold flex gap-2">
-					<span className="text-red-600 text-lg font-semibold">[error] </span>
+		<div className={['se-element-error', className].filter(Boolean).join(' ')} style={style}>
+			<div className="se-element-error__content">
+				<p className="se-element-error__title">
+					<span className="se-element-error__marker">[error] </span>
 					{title}
 				</p>
-				{componentType && <p className="text-red-700 text-sm mt-1">Component: {componentType}</p>}
-				<p className="text-red-700 text-xs mt-2 font-mono bg-red-100 p-2 rounded">{message}</p>
+				{componentType && <p className="se-element-error__type">Component: {componentType}</p>}
+				<p className="se-element-error__message">{message}</p>
 			</div>
 		</div>
 	);

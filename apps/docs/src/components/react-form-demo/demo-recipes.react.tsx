@@ -1,7 +1,7 @@
 /** @jsxImportSource react */
 import type { ReactNode } from 'react';
 import { defineFormRecipe, cardSpec, wizardSpec, type FormShellLayout } from '@schema-engine/forms/recipes';
-import { useActiveStep, useViewConfig, useViewContext } from '@schema-engine/forms-react';
+import { useActiveStep, useViewConfig, useViewContext } from '@schema-engine/forms-react/hooks';
 
 type ShellProps = FormShellLayout<ReactNode>;
 

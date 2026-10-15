@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import * as z from 'zod/mini';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import { createFormEngine } from '@/registries/builder-registry';
+import { createFormEngine } from '@schema-engine/forms';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { rhfAdapter } from '@/adapters/react-hook-form';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';

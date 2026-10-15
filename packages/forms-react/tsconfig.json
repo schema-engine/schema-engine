@@ -26,7 +26,8 @@
 			],
 			"@/components/schema-engine/forms/*": ["../../registry/shared/forms/*"],
 			"@/components/ui/*": ["../../registry/ui-stubs/*"],
-			"@/*": ["./src/*"]
+			"@/*": ["./src/*"],
+			"@/lib/utils": ["../../registry/ui-stubs/lib/utils.ts"]
 		}
 	},
 	"include": ["src"],

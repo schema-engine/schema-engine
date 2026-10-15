@@ -42,6 +42,7 @@ const config: StorybookConfig = {
 			resolve: {
 				dedupe: ['react', 'react-dom', 'react-hook-form'],
 				alias: [
+					{ find: '@/lib/utils', replacement: resolve(__dirname, '../../../registry/ui-stubs/lib/utils.ts') },
 					{
 						find: '@/components/ui/schema-engine/components/combobox',
 						replacement: resolve(__dirname, '../../../registry/base-ui/primitives/combobox.tsx'),

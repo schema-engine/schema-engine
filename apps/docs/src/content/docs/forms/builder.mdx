@@ -94,7 +94,7 @@ of cloning child configs.
 
 ```tsx
 import { defineInput, elementChildrenSchema, objectFieldScope } from '@schema-engine/forms';
-import { FormElements } from '@schema-engine/forms-react';
+import { FormElements } from '@schema-engine/forms-react/primitives';
 import * as z from 'zod/mini';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
 
@@ -132,7 +132,7 @@ application field components or visual recipes: install Schema Engine registry
 items and pass their generated registrations explicitly.
 
 ```ts
-import { createFormEngine } from '@schema-engine/forms-react';
+import { createFormEngine } from '@schema-engine/forms';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
