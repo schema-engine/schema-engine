@@ -4,7 +4,8 @@ import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { renderRegisteredElement } from './render-registered-element';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
-import { evaluateConstraintLogic } from '@/hooks/constraint-logic';
+import { evaluateConstraints } from '@schema-engine/forms/constraints';
+import type { ConstraintEvaluationContext } from './render-registered-element';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 
 export interface FormElementProps {
@@ -20,6 +21,7 @@ export interface FormElementProps {
 	initialValues?: Record<string, unknown>;
 	values?: Record<string, unknown>;
 	className?: string;
+	constraintContext?: ConstraintEvaluationContext;
 	style?: Record<string, string | number | undefined>;
 }
 
@@ -35,6 +37,7 @@ export function FormElement({
 	values,
 	className,
 	style,
+	constraintContext,
 }: FormElementProps): JsxRenderable {
 	const resolvedEngine = resolveFormEngine(undefined, engine);
 	if (!resolvedEngine) {
@@ -42,6 +45,12 @@ export function FormElement({
 	}
 
 	const constraints = 'constraints' in config ? config.constraints : undefined;
+	const constraintValues = values ?? constraintContext?.values ?? initialValues ?? {};
+	const fieldConstraintContext: ConstraintEvaluationContext = {
+		values: constraintValues,
+		initialValues: initialValues ?? constraintContext?.initialValues,
+		fieldPath: name ?? constraintContext?.fieldPath,
+	};
 	if (!constraints?.length) {
 		return renderRegisteredElement(
 			config,
@@ -51,16 +60,17 @@ export function FormElement({
 				id,
 				instanceId,
 			},
-			{ values: values ?? initialValues, initialValues, fieldPath: name },
+			fieldConstraintContext,
 		);
 	}
 
-	const { shouldShow } = evaluateConstraintLogic(
+	const snapshot = evaluateConstraints({
 		constraints,
-		isFieldRequired('rules' in config ? config.rules : undefined),
-		name ?? ('name' in config ? config.name : undefined),
-		values ?? initialValues ?? {},
-	);
+		baseRequired: isFieldRequired('rules' in config ? config.rules : undefined),
+		fieldPath: fieldConstraintContext.fieldPath ?? ('name' in config ? config.name : undefined),
+		values: constraintValues,
+	});
+	const { shouldShow } = snapshot;
 	const fieldName =
 		name ?? ('name' in config ? config.name : undefined) ?? id ?? ('id' in config ? config.id : undefined) ?? '';
 	const fieldHost = mergeFieldGridHost(
@@ -85,8 +95,9 @@ export function FormElement({
 					id,
 					instanceId,
 				},
-				{ values: values ?? initialValues, initialValues, fieldPath: name },
+				fieldConstraintContext,
 				true,
+				snapshot,
 			)}
 		</div>
 	);

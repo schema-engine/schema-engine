@@ -30,3 +30,20 @@ export function renderWithOwningFormEngine<T>(engine: FormEngine, render: () => 
 export function peekOwningFormEngine(): FormEngine | undefined {
 	return owningEngine;
 }
+
+/** @remarks Synchronous container renders inherit the owning form's SSR snapshot. */
+let owningValues: Record<string, unknown> | undefined;
+
+export function peekOwningConstraintValues(): Record<string, unknown> | undefined {
+	return owningValues;
+}
+
+export function renderWithConstraintValues<T>(values: Record<string, unknown> | undefined, render: () => T): T {
+	const previous = owningValues;
+	owningValues = values ?? previous;
+	try {
+		return render();
+	} finally {
+		owningValues = previous;
+	}
+}

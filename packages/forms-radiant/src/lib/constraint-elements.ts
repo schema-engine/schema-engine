@@ -1,12 +1,15 @@
 import type { ConstraintLogic } from '@schema-engine/forms/schemas';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
-import type { NormalizedElementConfig, NormalizedFormConfig } from '@schema-engine/forms';
+import { walkNamedElements } from '@schema-engine/forms/lib/field-scope';
+import { templatePath } from '@schema-engine/forms/lib/path-values';
+import type { NormalizedFormConfig } from '@schema-engine/forms';
 
 export interface ConstrainedElementMetadata {
 	readonly fieldName: string;
 	readonly id?: string;
 	readonly constraints: ReadonlyArray<ConstraintLogic>;
 	readonly isRequired: boolean;
+	readonly disabled: boolean;
 }
 
 /**
@@ -20,48 +23,21 @@ export function collectConstrainedElements(config: NormalizedFormConfig | undefi
 
 	const result: ConstrainedElementMetadata[] = [];
 
-	function walk(elements: ReadonlyArray<NormalizedElementConfig>, basePath = ''): void {
-		for (const element of elements) {
-			const name = 'name' in element && typeof element.name === 'string' ? element.name : undefined;
-			const id = 'id' in element && typeof element.id === 'string' ? element.id : undefined;
-			const localName = name ?? id ?? '';
-			const fieldPath = basePath && localName ? `${basePath}.${localName}` : localName || basePath;
-
-			if ('constraints' in element && Array.isArray(element.constraints) && element.constraints.length > 0) {
+	for (const step of config.steps) {
+		for (const { path, element } of walkNamedElements(step.elements, '', true)) {
+			if ('constraints' in element && element.constraints?.length) {
 				result.push({
-					fieldName: fieldPath,
-					id,
+					fieldName: path,
+					id: 'id' in element ? element.id : undefined,
 					constraints: element.constraints,
+					disabled: 'disabled' in element && element.disabled === true,
 					isRequired: isFieldRequired('rules' in element ? element.rules : undefined),
 				});
-			}
-
-			if ('elements' in element && Array.isArray(element.elements)) {
-				walk(element.elements as unknown as ReadonlyArray<NormalizedElementConfig>, fieldPath);
 			}
 		}
 	}
 
-	for (const step of config.steps) {
-		walk(step.elements);
-	}
-
 	return result;
-}
-
-/**
- * Drops array indices from a rendered field path.
- *
- * @remarks
- * {@link collectConstrainedElements} walks the config, where array length is
- * unknown, so it records the authored template (`contacts.email`). The renderer
- * emits the composed path (`contacts.0.email`).
- */
-function templatePath(path: string): string {
-	return path
-		.split('.')
-		.filter((segment) => !/^\d+$/.test(segment))
-		.join('.');
 }
 
 /**
