@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useCallback } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import type { FormActionConfig } from '@schema-engine/forms/schemas';
@@ -58,7 +59,7 @@ export function useFormSubmitHandler({
 							await onAction?.(action, form.getValues());
 							setSubmissionSuccess();
 						} catch (actionError) {
-							console.error('Action callback failed:', actionError);
+							logger.error('Action callback failed:', actionError);
 							throw actionError;
 						}
 					} else {
@@ -108,7 +109,7 @@ export function useFormSubmitHandler({
 					await dispatchTrigger('form_submit_success');
 					await dispatchTrigger('form_submit_complete');
 				} catch (error) {
-					console.error('Form action execution failed:', error);
+					logger.error('Form action execution failed:', error);
 					setSubmissionError({
 						errors: [
 							{ actionId: 'unknown', message: error instanceof Error ? error.message : 'Unknown error' },
@@ -129,7 +130,7 @@ export function useFormSubmitHandler({
 				}
 				setSubmissionSuccess();
 			} catch (error) {
-				console.error('Form submission failed:', error);
+				logger.error('Form submission failed:', error);
 				setSubmissionError({
 					errors: [{ actionId: 'submit', message: error instanceof Error ? error.message : 'Unknown error' }],
 				});

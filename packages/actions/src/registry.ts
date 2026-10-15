@@ -72,8 +72,10 @@ export interface ActionRegistryProvider<
  * import { ActionRegistry } from '@schema-engine/actions';
  *
  * type MyTrigger = 'submit' | 'change';
+ * import { Logger } from '@ecopages/logger';
  * type MyContext = { formId: string; data: Record<string, unknown> };
  *
+ * const logger = new Logger('[my-app]');
  * const registry = new ActionRegistry<MyContext, MyTrigger>();
  *
  * registry.register({
@@ -84,7 +86,7 @@ export interface ActionRegistryProvider<
  *     defaultTriggers: ['change'],
  *   },
  *   execute: async (context) => {
- *     console.log(context);
+ *     logger.info(context);
  *     return { success: true };
  *   },
  * });

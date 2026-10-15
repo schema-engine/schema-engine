@@ -6,6 +6,9 @@
 
 ---
 
+Forms and renderer runtime diagnostics use package-tagged `@ecopages/logger`
+instances. Debug output is disabled by default; warnings and errors remain visible.
+
 ## Why Schema Engine?
 
 In modern software architecture, the layer between human intent and system behavior often remains a fragmented landscape of imperative logic and tightly coupled UI components.
