@@ -36,12 +36,14 @@ function evaluateConstraint(constraint: ConstraintLogic, watchedValue: unknown):
 			if (Array.isArray(value)) {
 				return value.includes(watchedValue);
 			}
-			return String(watchedValue || '').includes(String(value));
-		case 'not_contains':
+			return evaluateTextContainment(watchedValue, value) ?? false;
+		case 'not_contains': {
 			if (Array.isArray(value)) {
 				return !value.includes(watchedValue);
 			}
-			return !String(watchedValue || '').includes(String(value));
+			const containsText = evaluateTextContainment(watchedValue, value);
+			return containsText !== undefined && !containsText;
+		}
 		case 'greater_than':
 			return Number(watchedValue) > Number(value);
 		case 'less_than':
@@ -53,6 +55,19 @@ function evaluateConstraint(constraint: ConstraintLogic, watchedValue: unknown):
 		default:
 			return false;
 	}
+}
+
+function evaluateTextContainment(watchedValue: unknown, constraintValue: unknown): boolean | undefined {
+	const watchedText = toConstraintText(watchedValue || '');
+	const constraintText = toConstraintText(constraintValue);
+	if (watchedText === undefined || constraintText === undefined) return undefined;
+	return watchedText.includes(constraintText);
+}
+
+function toConstraintText(value: unknown): string | undefined {
+	if (typeof value === 'string') return value;
+	if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') return String(value);
+	return undefined;
 }
 
 /**

@@ -176,6 +176,10 @@ a registered handler with a `FormValidationError` naming the field and rule.
 The `relate` string and date bases coerce primitive values and `Date` instances;
 arbitrary objects are left unchanged for string comparisons and are invalid dates.
 
+Constraint `contains` and `not_contains` use text matching only for primitive
+string, number, boolean, and bigint values. Object-valued fields do not fall back
+to JavaScript's default object string.
+
 The `values` argument is the full nested form value tree. Omitting `names`, or
 passing an empty list, validates every named field. A non-empty `names` list
 validates only the requested paths and their descendants.
@@ -213,7 +217,7 @@ adapter.
 | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | `@schema-engine/forms`                                          | Engine, validation, actions, recipe protocol, adapter types (`@schema-engine/forms/adapters`) — no widget `$type` schemas |
 | `@schema-engine/forms-react`                                    | React renderer, RHF adapter, field-array operations, and headless `createFormEngine()` re-export                          |
-| `@schema-engine/forms-radiant`                                  | Radiant widgets, colocated field schemas, shells, blocks, and scoped form controllers                                     |
+| `@schema-engine/forms-radiant`                                  | Radiant widgets, default-aware SSR constraints, shells, blocks, and scoped form controllers                               |
 | Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Copied React widgets, colocated field schemas, and view recipes for the React adapter                                     |
 
 Custom fields use `defineInput` with any Standard Schema. Default widgets ship their own Zod schemas beside their registrations; those schemas are not engine contracts and may differ between React and Radiant.
@@ -226,3 +230,5 @@ normalized elements for default seeding and field traversal. Authoring JSON does
 not include this marker. Containers without an array marker use object paths.
 See [engine internals](src/engine/README.md#schema-artifacts-and-extension).
 `extend` also preserves an engine's custom schema metadata catalog.
+
+`templatePath` in `@schema-engine/forms/lib/path-values` removes numeric array indices from rendered paths for constraint declaration lookup, alongside `expandFieldTemplatePaths`.
