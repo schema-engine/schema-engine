@@ -1,6 +1,12 @@
 import { describe, expect, test } from 'vitest';
 import { collectFieldDefaults } from '@/lib/field-scope';
-import { expandFieldTemplatePaths, getValueAtPath, mergePathValues, setValueAtPath } from '@/lib/path-values';
+import {
+	expandContainerParentPaths,
+	expandFieldTemplatePaths,
+	getValueAtPath,
+	mergePathValues,
+	setValueAtPath,
+} from '@/lib/path-values';
 
 describe('path-values', () => {
 	test('expands array templates against live values', () => {
@@ -8,6 +14,32 @@ describe('path-values', () => {
 			'contacts.0.name',
 			'contacts.1.name',
 		]);
+	});
+
+	test('keeps missing child paths for each live array row', () => {
+		expect(
+			expandFieldTemplatePaths({ contacts: [{ email: 'ada@example.com' }, { name: 'Grace' }] }, 'contacts.email'),
+		).toEqual(['contacts.0.email', 'contacts.1.email']);
+	});
+
+	test('keeps own undefined child paths for each live array row', () => {
+		expect(expandFieldTemplatePaths({ contacts: [{ email: undefined }] }, 'contacts.email')).toEqual([
+			'contacts.0.email',
+		]);
+	});
+
+	test('does not expand child fields when a live array has no rows', () => {
+		expect(expandFieldTemplatePaths({ contacts: [] }, 'contacts.email')).toEqual([]);
+	});
+
+	test('preserves an array field path when the field has no rows', () => {
+		expect(expandFieldTemplatePaths({ languages: [] }, 'languages')).toEqual(['languages']);
+		expect(expandFieldTemplatePaths({ languages: ['en', 'es'] }, 'languages')).toEqual(['languages']);
+	});
+
+	test('expands a terminal parent array for nested container fields', () => {
+		expect(expandContainerParentPaths({ contacts: [{}, {}] }, 'contacts')).toEqual(['contacts.0', 'contacts.1']);
+		expect(expandContainerParentPaths({ contacts: [] }, 'contacts')).toEqual([]);
 	});
 
 	test('keeps the template when the value tree has no match yet', () => {

@@ -144,6 +144,34 @@ that omit `view` use the registered `bare-controls` recipe at **render** time.
 warns and shows fields without chrome. `validateForm` does apply kind and slot
 checks when `view.$type` is set.
 
+## Engine validation
+
+The forms package exports shared value-validation helpers from
+`@schema-engine/forms`. `validateFormValues` accepts a `ValidationElementTree`,
+and `collectStepFieldPaths` accepts a `ValidationStep`; both types follow the
+engine's normalized form model.
+
+- `collectStepFieldPaths(step, values)` walks named fields in nested containers
+  and expands field templates for each array row.
+- `effectiveRulesFor({ element, fieldPath, values, registry })` combines
+  configured and field-type default rules, then adds `required` when a `require`
+  constraint holds for the rendered field path. A sibling reference such as
+  `accountType` on `contacts.0.taxId` resolves to `contacts.0.accountType`, so
+  each array row uses its own value.
+- `validateFieldValue({ element, value, values, fieldPath, registry })` returns
+  the first validation message, or `undefined` when the value passes.
+- `validateFormValues({ elements, values, registry, names? })` validates the
+  selected paths and returns nested errors, such as
+  `errors.address.street.message`.
+
+The `values` argument is the full nested form value tree. Omitting `names`, or
+passing an empty list, validates every named field. A non-empty `names` list
+validates only the requested paths and their descendants.
+
+The current React and Radiant renderers still have their own validation paths;
+adoption of these shared helpers is tracked by [#138](https://github.com/andeeplus/schema-engine/issues/138)
+and [#133](https://github.com/andeeplus/schema-engine/issues/133), respectively.
+
 ## Who owns visual chrome
 
 | Layer                                                           | Owns                                                                                                                      |
