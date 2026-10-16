@@ -1,7 +1,6 @@
 import * as z from 'zod/mini';
 import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
 import { FormActionTriggerSchema } from '../triggers';
-import { GTMTracker } from '../../tools/gtm-tracker';
 
 /**
  * GTM Tracker Interface for GTM Plugin
@@ -15,8 +14,8 @@ export interface GTMTrackerInterface {
  * GTM Plugin Configuration
  */
 export interface GTMPluginConfig {
-	/** Custom GTM tracker implementation */
-	tracker?: GTMTrackerInterface;
+	/** GTM tracker implementation. Browser implementations live in the browser entry point. */
+	tracker: GTMTrackerInterface;
 	/** Called when GTM event is pushed successfully */
 	onPush?: (
 		eventName: string,
@@ -61,17 +60,11 @@ export const GTMEventActionSchema = z.object({
 
 export type GTMEventAction = z.infer<typeof GTMEventActionSchema>;
 
-const defaultTracker: GTMTrackerInterface = {
-	push: (eventName: string, eventData: Record<string, any>) => {
-		GTMTracker.push(eventName, eventData);
-	},
-};
-
 /** Creates a configured `gtm_event` action registration. */
 export function gtmPlugin(
-	config: GTMPluginConfig = {},
+	config: GTMPluginConfig,
 ): BuilderActionRegistration<'gtm_event', typeof GTMEventActionSchema> {
-	const tracker = config.tracker || defaultTracker;
+	const { tracker } = config;
 
 	return {
 		$type: 'gtm_event',

@@ -7,6 +7,7 @@ import { defineFormRecipe } from '@/recipes/define-form-recipe';
 import { defineRecipeSpec } from '@/recipes/define-recipe-spec';
 import { sidebarWizardSpec } from '@/recipes/built-in-specs';
 import { defineInput } from '@/types';
+import { logger } from '@/lib/logger';
 
 const cardRecipeSchema = z.strictObject({
 	$type: z.literal('card'),
@@ -104,7 +105,7 @@ describe('validateFormConfig', () => {
 	});
 
 	test('warns once per engine when a multi-step form has no wizard recipe registered', () => {
-		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const warn = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
 		const config = {
 			id: 'headless-wizard',
 			steps: [
@@ -118,7 +119,7 @@ describe('validateFormConfig', () => {
 			expect(resolveFormRecipe(config, lookup)).toBeUndefined();
 			expect(resolveFormRecipe(config, lookup)).toBeUndefined();
 			expect(warn).toHaveBeenCalledTimes(1);
-			expect(warn.mock.calls[0]?.[0]).toMatch(/no 'bare-controls' recipe is registered/i);
+			expect(warn.mock.calls[0]?.map(String).join(' ')).toMatch(/no 'bare-controls' recipe is registered/i);
 
 			expect(resolveFormRecipe(config, { getRecipe: () => undefined })).toBeUndefined();
 			expect(warn).toHaveBeenCalledTimes(2);
@@ -128,7 +129,7 @@ describe('validateFormConfig', () => {
 	});
 
 	test('stays silent for multi-step forms without an engine', () => {
-		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const warn = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
 		try {
 			expect(
 				resolveFormRecipe({

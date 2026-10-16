@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import type { BuilderActionExecutionContext } from '@/types';
 import { gtmPlugin, GTMEventActionSchema, type GTMEventAction } from '@/actions/plugins/gtm.plugin';
-import { GTMTracker } from '@/tools/gtm-tracker';
+import { GTMTracker } from '@/browser/tools/gtm-tracker';
 import { createMockBuilderContext, setupTestEnvironment } from '../__tools';
 
 type GTMEventActionInput = {
@@ -33,6 +33,13 @@ interface GTMEvent {
 const mockDataLayer: GTMEvent[] = [];
 
 const originalGTMTracker = GTMTracker;
+
+function createGTMPlugin(config: Omit<Parameters<typeof gtmPlugin>[0], 'tracker'> = {}) {
+	return gtmPlugin({
+		tracker: { push: (eventName, eventData) => GTMTracker.push(eventName, eventData) },
+		...config,
+	});
+}
 
 function createGTMContext(
 	action: GTMEventActionInput,
@@ -238,7 +245,7 @@ describe('GTMPlugin', () => {
 
 	describe('Action Execution', () => {
 		test('should execute basic GTM event', async () => {
-			const plugin = gtmPlugin();
+			const plugin = createGTMPlugin();
 
 			const action: GTMEventActionInput = {
 				id: 'test-gtm',
@@ -262,7 +269,7 @@ describe('GTMPlugin', () => {
 		});
 
 		test('should include static event data', async () => {
-			const plugin = gtmPlugin();
+			const plugin = createGTMPlugin();
 			const action: GTMEventActionInput = {
 				id: 'test-gtm',
 				$type: 'gtm_event',
@@ -285,7 +292,7 @@ describe('GTMPlugin', () => {
 		});
 
 		test('should include all form data when includeFormData is true', async () => {
-			const plugin = gtmPlugin();
+			const plugin = createGTMPlugin();
 			const action: GTMEventActionInput = {
 				id: 'test-gtm',
 				$type: 'gtm_event',
@@ -306,7 +313,7 @@ describe('GTMPlugin', () => {
 		});
 
 		test('should include specific form fields when includeFormData is array', async () => {
-			const plugin = gtmPlugin();
+			const plugin = createGTMPlugin();
 			const action: GTMEventActionInput = {
 				id: 'test-gtm',
 				$type: 'gtm_event',
@@ -326,7 +333,7 @@ describe('GTMPlugin', () => {
 		});
 
 		test('should exclude non-existent fields from specific inclusion', async () => {
-			const plugin = gtmPlugin();
+			const plugin = createGTMPlugin();
 			const action: GTMEventActionInput = {
 				id: 'test-gtm',
 				$type: 'gtm_event',
@@ -346,7 +353,7 @@ describe('GTMPlugin', () => {
 		});
 
 		test('should not include form data when includeFormData is false', async () => {
-			const plugin = gtmPlugin();
+			const plugin = createGTMPlugin();
 			const action: GTMEventActionInput = {
 				id: 'test-gtm',
 				$type: 'gtm_event',
@@ -363,7 +370,7 @@ describe('GTMPlugin', () => {
 		});
 
 		test('should include context metadata', async () => {
-			const plugin = gtmPlugin();
+			const plugin = createGTMPlugin();
 			const action: GTMEventActionInput = {
 				id: 'test-gtm',
 				$type: 'gtm_event',
@@ -382,7 +389,7 @@ describe('GTMPlugin', () => {
 		});
 
 		test('should include form validation state', async () => {
-			const plugin = gtmPlugin();
+			const plugin = createGTMPlugin();
 			const action: GTMEventActionInput = {
 				id: 'test-gtm',
 				$type: 'gtm_event',
@@ -407,7 +414,7 @@ describe('GTMPlugin', () => {
 				throw new Error('GTM push failed');
 			};
 
-			const plugin = gtmPlugin();
+			const plugin = createGTMPlugin();
 			const action: GTMEventActionInput = {
 				id: 'test-gtm',
 				$type: 'gtm_event',
@@ -427,7 +434,7 @@ describe('GTMPlugin', () => {
 				throw 'String error';
 			};
 
-			const plugin = gtmPlugin();
+			const plugin = createGTMPlugin();
 			const action: GTMEventActionInput = {
 				id: 'test-gtm',
 				$type: 'gtm_event',
@@ -445,7 +452,7 @@ describe('GTMPlugin', () => {
 
 	describe('Complex Event Scenarios', () => {
 		test('should handle multi-step form progress tracking', async () => {
-			const plugin = gtmPlugin();
+			const plugin = createGTMPlugin();
 			const stepActions: GTMEventActionInput[] = [
 				{
 					id: 'step-1-enter',
@@ -491,7 +498,7 @@ describe('GTMPlugin', () => {
 		});
 
 		test('should handle conversion tracking with complete user journey', async () => {
-			const plugin = gtmPlugin();
+			const plugin = createGTMPlugin();
 			const formData = {
 				name: 'John',
 				email: 'john@example.com',
@@ -555,7 +562,7 @@ describe('GTMPlugin', () => {
 
 	describe('Integration', () => {
 		test('should register GTM plugin and execute successfully', async () => {
-			const plugin = gtmPlugin();
+			const plugin = createGTMPlugin();
 			expect(plugin.$type).toBe('gtm_event');
 
 			const action: GTMEventActionInput = {
@@ -574,21 +581,17 @@ describe('GTMPlugin', () => {
 		});
 
 		test('should work with different GTM environments', async () => {
-			const plugin = gtmPlugin();
-			const originalConsoleLog = console.log;
-			const consoleMessages: string[] = [];
-
-			console.log = (...args: any[]) => {
-				consoleMessages.push(args.join(' '));
-			};
+			const events: string[] = [];
+			const plugin = gtmPlugin({
+				tracker: {
+					push: (eventName) => {
+						events.push(eventName);
+					},
+				},
+			});
 
 			// Remove window to simulate SSR
 			globalThis.window = undefined as any;
-
-			// Mock GTMTracker for SSR
-			GTMTracker.push = (event: string, data?: Record<string, any>) => {
-				console.log('[GTM] Server-side event (not sent):', event, data);
-			};
 
 			const action: GTMEventActionInput = {
 				id: 'ssr-test',
@@ -601,13 +604,11 @@ describe('GTMPlugin', () => {
 			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
-			expect(consoleMessages.some((msg) => msg.includes('Server-side event'))).toBe(true);
-
-			console.log = originalConsoleLog;
+			expect(events).toEqual(['ssr_event']);
 		});
 
 		test('should handle missing dataLayer gracefully', async () => {
-			const plugin = gtmPlugin();
+			const plugin = createGTMPlugin();
 			globalThis.window = {} as any;
 
 			const originalPush = GTMTracker.push.bind(GTMTracker);

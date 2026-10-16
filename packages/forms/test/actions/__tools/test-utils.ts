@@ -1,14 +1,5 @@
 import type { BuilderActionExecutionContext } from '@/types/actions';
-import { GDPRConsent } from '@/tools/gdpr-consent';
 import type { ActionRuntimeContext } from '@schema-engine/actions';
-
-/**
- * Mock GDPR consent for testing
- */
-export const mockGDPRConsent = {
-	hasConsent: () => true,
-	clearDraft: () => {},
-};
 
 /**
  * Create a mock builder action execution context with sensible defaults
@@ -131,8 +122,6 @@ export class MockLocalStorage {
  * Note: No longer needs to clear actionRegistry since actions are now per-engine
  */
 export function setupTestEnvironment(): MockLocalStorage {
-	setupGDPRMocks();
-
 	// Clear any existing window/global mocks
 	delete (global as any).window;
 
@@ -157,14 +146,6 @@ export function setupTestEnvironment(): MockLocalStorage {
 	};
 
 	return mockLocalStorage;
-}
-
-/**
- * Set up GDPR consent mocks
- */
-export function setupGDPRMocks(): void {
-	(GDPRConsent as any).hasConsent = mockGDPRConsent.hasConsent;
-	(GDPRConsent as any).clearDraft = mockGDPRConsent.clearDraft;
 }
 
 /**
