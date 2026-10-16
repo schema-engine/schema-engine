@@ -3,6 +3,20 @@ import { HtmlAttributesSchema } from './html-attributes';
 import { ValidationRuleSchema } from './validation/';
 
 /**
+ * Renderer style values vary across host adapters.
+ * @remarks This existential value boundary keeps React, Radiant, and custom adapter style contracts open.
+ */
+const RendererStyleValueSchema = z.any();
+
+export const RendererStyleSchema = z.record(z.string(), RendererStyleValueSchema);
+
+/**
+ * Constraint operands can be values from any registered field.
+ * @remarks Their concrete types are selected by the form's element registrations.
+ */
+const ConstraintValueSchema = z.any();
+
+/**
  * Semantic gap tokens for grid layouts.
  *
  * @remarks
@@ -135,7 +149,7 @@ export const ConstraintLogicSchema = z.object({
 		'is_empty',
 		'is_not_empty',
 	]),
-	value: z.any(),
+	value: ConstraintValueSchema,
 	action: z.enum(['show', 'hide', 'enable', 'disable', 'require']),
 });
 
@@ -154,12 +168,16 @@ export const BaseFieldSchema = z.object({
 
 	disabled: z.optional(z.boolean()).check(z.describe('Whether the field is disabled')),
 	readonly: z.optional(z.boolean()).check(z.describe('Whether the field is read-only')),
+	/**
+	 * Field values are element-specific and may be unconstrained in the shared schema.
+	 * @remarks The registered element schema validates configuration; field-value rules validate submitted values.
+	 */
 	defaultValue: z.optional(z.any()).check(z.describe('Default value for the field')),
 
 	rules: z.optional(z.array(ValidationRuleSchema)).check(z.describe('Validation rules')),
 
 	className: z.optional(z.string()).check(z.describe('CSS class name')),
-	style: z.optional(z.record(z.string(), z.any())).check(z.describe('Inline styles')),
+	style: z.optional(RendererStyleSchema).check(z.describe('Inline styles')),
 	htmlAttributes: z.optional(HtmlAttributesSchema),
 
 	grid: z.optional(ElementGridConfigSchema).check(z.describe('Grid positioning configuration')),

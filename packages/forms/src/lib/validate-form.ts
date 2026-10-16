@@ -1,7 +1,7 @@
+import type { AnyActionRegistration, AnyElementRegistration, AnyRecipeRegistration } from '@/types/registration';
 import type { FormConfig, FormConfigEnvelope, FormTaggedConfig } from '@/schemas/form-config';
 import type { ElementConfig } from '@/schemas/field-config';
 import { formConfigEnvelopeSchema } from '@/schemas/form-config';
-import type { BuilderActionRegistration, InputRegistration, RecipeRegistration, StaticRegistration } from '@/types';
 import { safeParseStandardSchema, type StandardSchemaIssue } from '@/lib/standard-schema';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import {
@@ -27,14 +27,14 @@ export class FormValidationError extends Error {
 	}
 }
 
-type ElementRegistration = InputRegistration<any, any, any> | StaticRegistration<any, any, any>;
+type ElementRegistration = AnyElementRegistration;
 
 export interface ValidateFormOptions {
 	/** Engine (or other owner) that produced this validation. Required to skip re-validation. */
 	owner: object;
-	getRecipe: (id: string) => RecipeRegistration<any, any> | undefined;
+	getRecipe: (id: string) => AnyRecipeRegistration | undefined;
 	getElement: (id: string) => ElementRegistration | undefined;
-	getAction: (id: string) => BuilderActionRegistration | undefined;
+	getAction: (id: string) => AnyActionRegistration | undefined;
 	hasValidation?: (type: string) => boolean;
 	parseFormConfig?: (config: unknown) => FormConfig;
 }
@@ -287,15 +287,18 @@ function parseElementList(
 	return { issues, items: next };
 }
 
-function brandElementTree(config: FormTaggedConfig): NormalizedElementConfig {
+function brandElementTree(
+	config: FormTaggedConfig,
+	getElement: ValidateFormOptions['getElement'],
+): NormalizedElementConfig {
 	const children = getElementChildren(config);
 	const next = children
 		? withElementChildren(
 				config,
-				children.map((child) => brandElementTree(child as FormTaggedConfig)),
+				children.map((child) => brandElementTree(child as FormTaggedConfig, getElement)),
 			)
 		: config;
-	return markNormalizedElementConfig(next as unknown as ElementConfig);
+	return markNormalizedElementConfig(next as unknown as ElementConfig, getElement(config.$type)?.containerKind);
 }
 
 /**
@@ -312,7 +315,7 @@ export function validateElementConfig(
 		const issues = parsed.issues.length ? parsed.issues : ['Invalid element configuration: missing $type.'];
 		throw new FormValidationError(issues[0] ?? 'Invalid element configuration', issues);
 	}
-	return brandElementTree(parsed.item);
+	return brandElementTree(parsed.item, options.getElement);
 }
 
 /**
@@ -326,12 +329,8 @@ export function validateFormConfig(config: unknown, options: ValidateFormOptions
 			return config as NormalizedFormConfig;
 		}
 		const formId = typeof config === 'object' && config !== null && 'id' in config ? String(config.id) : 'unknown';
-		throw new FormValidationError(
-			`Form '${formId}' was already normalized by a different engine. Pass the original authoring input or JSON to this engine instead.`,
-			[
-				`Form '${formId}' was already normalized by a different engine. Pass the original authoring input or JSON to this engine instead.`,
-			],
-		);
+		const message = `Form '${formId}' was already normalized by a different engine. Pass the original authoring input or JSON to this engine instead.`;
+		throw new FormValidationError(message, [message]);
 	}
 
 	let envelope: FormConfigEnvelope;
@@ -396,7 +395,9 @@ export function validateFormConfig(config: unknown, options: ValidateFormOptions
 			...envelope,
 			steps: steps.map((step) => ({
 				...step,
-				elements: step.elements.map((element) => brandElementTree(element as FormTaggedConfig)),
+				elements: step.elements.map((element) =>
+					brandElementTree(element as FormTaggedConfig, options.getElement),
+				),
 			})),
 			view: view.view ?? envelope.view,
 			actions: formActions.items ?? envelope.actions,

@@ -68,7 +68,7 @@ export const defaultValidations: AnyValidationRegistration[] = [
 		type: 'required',
 		category: 'generic',
 		handler: (rule: RequiredRule) =>
-			z.any().check(
+			z.unknown().check(
 				z.refine((val) => !isEmpty(val), {
 					message: rule.message || 'Required',
 				}),
@@ -153,12 +153,12 @@ export const defaultValidations: AnyValidationRegistration[] = [
 	{
 		type: 'minItems',
 		category: 'array',
-		handler: (rule: MinItemsRule) => z.array(z.any()).check(z.minLength(rule.value, rule.message)),
+		handler: (rule: MinItemsRule) => z.array(z.unknown()).check(z.minLength(rule.value, rule.message)),
 	},
 	{
 		type: 'maxItems',
 		category: 'array',
-		handler: (rule: MaxItemsRule) => z.array(z.any()).check(z.maxLength(rule.value, rule.message)),
+		handler: (rule: MaxItemsRule) => z.array(z.unknown()).check(z.maxLength(rule.value, rule.message)),
 	},
 	{
 		type: 'jwt',

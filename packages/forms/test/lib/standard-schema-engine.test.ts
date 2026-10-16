@@ -209,4 +209,32 @@ describe('native Standard Schema engine path', () => {
 		expect(input.schemas['element:default-fixture']?.required).toEqual(['$type', 'id']);
 		expect(output.schemas['element:default-fixture']?.required).toEqual(['$type', 'id', 'name']);
 	});
+
+	test('Standard JSON Schema wrapper forwards target and preserves input/output schema behavior', () => {
+		const schema = z.object({
+			$type: z.literal('standard-json-fixture'),
+			id: z.string(),
+			name: z._default(z.string(), 'untitled'),
+		});
+		const engine = createFormEngine({
+			elements: [
+				{
+					$type: 'standard-json-fixture',
+					schema,
+					metadata: { name: 'Standard JSON fixture', category: 'input' },
+					render: () => null,
+				},
+			],
+		});
+		const standardSchema = engine.getFormConfigStandardSchema()['~standard'];
+		const input = standardSchema.jsonSchema.input({ target: 'draft-7' });
+		const output = standardSchema.jsonSchema.output({ target: 'draft-7' });
+
+		expect(standardSchema.vendor).toBe('@schema-engine/forms');
+		expect(input.$schema).toBe('http://json-schema.org/draft-07/schema#');
+		expect(input.$id).toBe('form-config-schema');
+		expect(output.$schema).toBe('http://json-schema.org/draft-07/schema#');
+		expect(output.$id).toBe('form-config-schema');
+		expect(input).not.toEqual(output);
+	});
 });

@@ -1,3 +1,4 @@
+import { isPlainObject } from './is-plain-object.js';
 /**
  * Nested value-tree helpers shared by React and Radiant adapters.
  * Field *names* are composed in {@link ./field-scope.ts}; this module reads and writes values.
@@ -208,8 +209,4 @@ function deepMerge(base: unknown, override: unknown): unknown {
 	}
 
 	return override === undefined ? base : override;
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

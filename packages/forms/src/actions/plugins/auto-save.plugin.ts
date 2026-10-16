@@ -23,11 +23,11 @@ export interface AutoSavePluginConfig {
 	/** Checks whether saving is currently allowed, for example by a consent tool. */
 	shouldSave?: () => boolean | Promise<boolean>;
 	/** Called when auto-save succeeds */
-	onSave?: (data: unknown, context: BuilderActionExecutionContext<any>) => void | Promise<void>;
+	onSave?: (data: unknown, context: BuilderActionExecutionContext<AutoSaveAction>) => void | Promise<void>;
 	/** Called when auto-save fails */
-	onError?: (error: string, context: BuilderActionExecutionContext<any>) => void | Promise<void>;
+	onError?: (error: string, context: BuilderActionExecutionContext<AutoSaveAction>) => void | Promise<void>;
 	/** Custom storage key generator */
-	getStorageKey?: (context: BuilderActionExecutionContext<any>) => string;
+	getStorageKey?: (context: BuilderActionExecutionContext<AutoSaveAction>) => string;
 }
 
 /** Schema for the `auto_save` action configuration. */

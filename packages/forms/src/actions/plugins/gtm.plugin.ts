@@ -7,7 +7,7 @@ import { FormActionTriggerSchema } from '../triggers';
  */
 export interface GTMTrackerInterface {
 	/** Push event to GTM dataLayer */
-	push: (eventName: string, eventData: Record<string, any>) => void | Promise<void>;
+	push: (eventName: string, eventData: Record<string, unknown>) => void | Promise<void>;
 }
 
 /**
@@ -19,11 +19,11 @@ export interface GTMPluginConfig {
 	/** Called when GTM event is pushed successfully */
 	onPush?: (
 		eventName: string,
-		eventData: Record<string, any>,
-		context: BuilderActionExecutionContext<any>,
+		eventData: Record<string, unknown>,
+		context: BuilderActionExecutionContext<GTMEventAction>,
 	) => void | Promise<void>;
 	/** Called when GTM event push fails */
-	onError?: (error: string, context: BuilderActionExecutionContext<any>) => void | Promise<void>;
+	onError?: (error: string, context: BuilderActionExecutionContext<GTMEventAction>) => void | Promise<void>;
 }
 
 /** Schema for the `gtm_event` action configuration. */
@@ -39,7 +39,7 @@ export const GTMEventActionSchema = z.object({
 	/** Name of the GTM event to push to dataLayer */
 	eventName: z.string().check(z.minLength(1, 'Event name cannot be empty')),
 	/** Static data to include with the event */
-	eventData: z._default(z.optional(z.record(z.string(), z.any())), {}),
+	eventData: z._default(z.optional(z.record(z.string(), z.unknown())), {}),
 	/**
 	 * Form data inclusion strategy:
 	 * - false: No form data included
@@ -78,7 +78,7 @@ export function gtmPlugin(
 		execute: async (context: BuilderActionExecutionContext<GTMEventAction>) => {
 			const action = context.config;
 			try {
-				const eventData: Record<string, any> = {
+				const eventData: Record<string, unknown> = {
 					...action.eventData,
 					form_id: context.formId,
 					current_step: context.currentStep,
@@ -90,7 +90,7 @@ export function gtmPlugin(
 				if (action.includeFormData === true) {
 					eventData.form_data = context.formData;
 				} else if (Array.isArray(action.includeFormData)) {
-					const selectedData: Record<string, any> = {};
+					const selectedData: Record<string, unknown> = {};
 					for (const fieldName of action.includeFormData) {
 						if (fieldName in context.formData) {
 							selectedData[fieldName] = context.formData[fieldName];

@@ -1,5 +1,8 @@
-import type { BuilderActionRegistration, InputRegistration, RecipeRegistration, StaticRegistration } from '@/types';
+import type { AnyActionRegistration, AnyElementRegistration, AnyRecipeRegistration } from '@/types/registration';
+import { ComponentType } from './component-type';
 import { logger } from '@/lib/logger';
+import type { SchemaMetadataCatalog } from './schema-metadata-catalog';
+import { assertStandardSchema } from '@/lib/standard-schema';
 import type { StandardJSONSchemaV1 } from '@/lib/standard-json-schema';
 import * as z from 'zod/mini';
 import type { FormEngineSchemaArtifacts } from './schema-artifacts';
@@ -27,13 +30,32 @@ import type { RecipeDescriptor, ViewCatalog } from '@/recipes/types';
 import { generateZodJSONSchemaDocument } from '@/lib/zod-json-schema';
 export * from './component-type';
 
+function registerExtendedSchemaMetadata(
+	catalog: SchemaMetadataCatalog,
+	schema: unknown,
+	id: string,
+	componentType: ComponentType,
+	metadata: { name: string; description?: string; category?: string },
+): void {
+	catalog.register(
+		assertStandardSchema(schema, `Registration '${id}' schema`),
+		catalog.get(id) ?? {
+			id,
+			componentType,
+			title: metadata.name,
+			description: metadata.description,
+			category: metadata.category,
+		},
+	);
+}
+
 /**
  * Engine registries - internal storage for all registered components.
  */
 export interface EngineRegistries {
-	elements: Map<string, InputRegistration<any, any, any> | StaticRegistration<any, any, any>>;
-	recipes: Map<string, RecipeRegistration<any, any>>;
-	actions: Map<string, BuilderActionRegistration>;
+	elements: Map<string, AnyElementRegistration>;
+	recipes: Map<string, AnyRecipeRegistration>;
+	actions: Map<string, AnyActionRegistration>;
 	schemaArtifacts: FormEngineSchemaArtifacts;
 	compiledGrid: CompiledGrid;
 	validationRegistry: ValidationRegistry;
@@ -69,11 +91,11 @@ export class FormEngine<
 		});
 	}
 
-	getElement(id: string): InputRegistration<any, any, any> | StaticRegistration<any, any, any> | undefined {
+	getElement(id: string): AnyElementRegistration | undefined {
 		return this.registries.elements.get(id);
 	}
 
-	getAllElements(): (InputRegistration<any, any, any> | StaticRegistration<any, any, any>)[] {
+	getAllElements(): AnyElementRegistration[] {
 		return Array.from(this.registries.elements.values());
 	}
 
@@ -85,11 +107,11 @@ export class FormEngine<
 		return this.registries.elements.has(id);
 	}
 
-	getRecipe(id: string): RecipeRegistration<any, any> | undefined {
+	getRecipe(id: string): AnyRecipeRegistration | undefined {
 		return this.registries.recipes.get(id);
 	}
 
-	getAllRecipes(): RecipeRegistration<any, any>[] {
+	getAllRecipes(): AnyRecipeRegistration[] {
 		return Array.from(this.registries.recipes.values());
 	}
 
@@ -122,11 +144,11 @@ export class FormEngine<
 		return this.compiledGrid.theme;
 	}
 
-	getAction(id: string): BuilderActionRegistration | undefined {
+	getAction(id: string): AnyActionRegistration | undefined {
 		return this.registries.actions.get(id);
 	}
 
-	getAllActions(): BuilderActionRegistration[] {
+	getAllActions(): AnyActionRegistration[] {
 		return Array.from(this.registries.actions.values());
 	}
 
@@ -208,7 +230,7 @@ export class FormEngine<
 		return getAuthoringInstructionsFromCatalog(this.describeViewCatalog());
 	}
 
-	private generateRecipeViewSchema(recipe: RecipeRegistration<any, any>): Record<string, unknown> {
+	private generateRecipeViewSchema(recipe: AnyRecipeRegistration): Record<string, unknown> {
 		try {
 			return generateZodJSONSchemaDocument(
 				recipe.schema as z.ZodMiniType,
@@ -291,11 +313,42 @@ export class FormEngine<
 		LastWinsMerge<TRecipes, MergedRegistrationMap<TNewRecipes>>,
 		LastWinsMerge<TActions, MergedActionRegistrationMap<TNewActions>>
 	> {
+		const catalog = options?.catalog ?? this.schemaArtifacts.metadataCatalog.clone();
+		if (!options?.catalog) {
+			for (const element of options?.elements ?? []) {
+				registerExtendedSchemaMetadata(
+					catalog,
+					element.schema,
+					`element:${element.$type}`,
+					ComponentType.Element,
+					element.metadata,
+				);
+			}
+			for (const recipe of options?.recipes ?? []) {
+				registerExtendedSchemaMetadata(
+					catalog,
+					recipe.schema,
+					`recipe:${recipe.$type}`,
+					ComponentType.Recipe,
+					recipe.metadata,
+				);
+			}
+			for (const action of options?.actions ?? []) {
+				registerExtendedSchemaMetadata(
+					catalog,
+					action.schema,
+					`action:${action.$type}`,
+					ComponentType.Action,
+					action.metadata,
+				);
+			}
+		}
+
 		return buildFormEngine({
 			elements: [...this.getAllElements(), ...(options?.elements ?? [])],
 			recipes: [...this.getAllRecipes(), ...(options?.recipes ?? [])],
 			actions: [...this.getAllActions(), ...(options?.actions ?? [])],
-			catalog: options?.catalog,
+			catalog,
 			compiledGrid: this.compiledGrid,
 		}) as FormEngine<
 			LastWinsMerge<TElements, MergedRegistrationMap<TNewElements>>,
