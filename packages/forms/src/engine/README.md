@@ -20,7 +20,9 @@ A non-empty list validates only the requested paths and their descendants.
 
 React and Radiant delegate to these helpers. `runSubmissionLifecycle` accepts either a
 fixed context or a factory; use a factory when each submission trigger needs current form
-values and validation state.
+values and validation state. Its optional `onAction(action, data)` callback runs after each
+successful `form_submit` action. If the callback rejects, that action becomes a fatal failure
+and later submit actions stop before error and completion triggers run.
 
 The public usage examples are in the [forms package README](../../README.md#engine-validation).
 

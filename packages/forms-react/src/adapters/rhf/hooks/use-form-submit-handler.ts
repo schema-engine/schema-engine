@@ -19,6 +19,8 @@ interface SubmissionStateManager {
 	clearSubmission: () => void;
 }
 
+type NormalizedFormAction = NonNullable<FormConfigView['actions']>[number];
+
 interface UseFormSubmitHandlerOptions {
 	form: UseFormReturn;
 	config: FormConfigView;
@@ -27,7 +29,7 @@ interface UseFormSubmitHandlerOptions {
 	submission: SubmissionStateManager;
 	dispatchTrigger: (trigger: FormActionTrigger) => Promise<ActionExecutionResult[]>;
 	onSubmit?: (data: FieldValues) => void | Promise<void>;
-	onAction?: (action: FormActionConfig, data: FieldValues) => void | Promise<void>;
+	onAction?: (action: NormalizedFormAction, data: FieldValues) => void | Promise<void>;
 }
 
 export type SubmissionContextValue = {
@@ -42,6 +44,8 @@ export type SubmissionContextValue = {
  * - form_submit_start, form_submit, form_submit_success/error, form_submit_complete triggers
  * - Error handling and state management
  * - User-provided onSubmit and onAction callbacks
+ *
+ * @remarks Callbacks receive the frozen normalized action snapshot.
  */
 export function useFormSubmitHandler({
 	form,
@@ -104,7 +108,7 @@ export function useFormSubmitHandler({
 				try {
 					const { succeeded, results } = await runSubmissionLifecycle(
 						(input) => actionExecutor.dispatch(input),
-						{ actions: config.actions, context: buildActionContext() },
+						{ actions: config.actions, context: buildActionContext(), onAction },
 					);
 
 					const executionErrors = results.reduce<SubmissionError[]>((acc, result, index) => {
@@ -152,6 +156,7 @@ export function useFormSubmitHandler({
 		[
 			config,
 			onSubmit,
+			onAction,
 			actionExecutor,
 			buildActionContext,
 			dispatchTrigger,

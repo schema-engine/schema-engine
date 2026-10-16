@@ -1,5 +1,5 @@
 import './form-action-controller.css';
-import { customElement, RadiantElement, state } from '@ecopages/radiant';
+import { customElement, onUpdated, RadiantElement, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import type { BuilderActionBaseContext, FormActionTrigger, FormConfigView } from '@schema-engine/forms';
@@ -30,8 +30,10 @@ export class FormActionControllerElement extends RadiantElement {
 	};
 
 	private dispatcher?: ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>;
+	private dispatcherEngine?: FormEngine;
+	private submissionPromise?: Promise<boolean>;
 	private mountedAt = 0;
-	private didMount = false;
+	private mountedEngine?: FormEngine;
 	private watchingChanges = false;
 	private formInstance?: FormInstanceContextValue;
 	private unsubscribeActiveEngine?: () => void;
@@ -51,6 +53,12 @@ export class FormActionControllerElement extends RadiantElement {
 	}
 
 	protected override onConnected(): void {
+		const form = findAncestorElement(this, 'rui-form');
+		if (form) {
+			const onSubmit = () => void this.submit();
+			form.addEventListener('rui-submit', onSubmit);
+			this.registerCleanupCallback(() => form.removeEventListener('rui-submit', onSubmit));
+		}
 		const instance = findAncestorElement(this, 'se-form-instance') as FormInstanceElement | undefined;
 		if (!this.config && instance?.config) this.config = instance.config;
 		if (!this.engine) {
@@ -67,11 +75,19 @@ export class FormActionControllerElement extends RadiantElement {
 		this.onFormReady();
 	}
 
+	@onUpdated(['config', 'engine'])
+	onActionConfigurationUpdated(): void {
+		this.setupDispatcher();
+		this.onFormReady();
+	}
+
 	override disconnectedCallback(): void {
 		this.unsubscribeActiveEngine?.();
 		this.form.disconnect();
 		this.dispatcher = undefined;
-		this.didMount = false;
+		this.dispatcherEngine = undefined;
+		this.submissionPromise = undefined;
+		this.mountedEngine = undefined;
 		this.watchingChanges = false;
 		super.disconnectedCallback();
 	}
@@ -82,7 +98,13 @@ export class FormActionControllerElement extends RadiantElement {
 
 	private setupDispatcher(): void {
 		const config = this.config;
-		if (this.dispatcher || !this.engine || !config?.actions?.length) {
+		const engine = this.engine;
+		if (!engine || !config?.actions?.length) {
+			this.dispatcher = undefined;
+			this.dispatcherEngine = undefined;
+			return;
+		}
+		if (this.dispatcherEngine === engine) {
 			return;
 		}
 
@@ -91,22 +113,17 @@ export class FormActionControllerElement extends RadiantElement {
 			return;
 		}
 
-		this.dispatcher = new ActionDispatcher(this.engine);
+		this.dispatcher = new ActionDispatcher(engine);
+		this.dispatcherEngine = engine;
 		this.mountedAt = Date.now();
-
-		const onSubmit = () => void this.runSubmissionLifecycle();
-		form.addEventListener('rui-submit', onSubmit);
-		this.registerCleanupCallback(() => {
-			form.removeEventListener('rui-submit', onSubmit);
-		});
 	}
 
 	private onFormReady(): void {
 		if (!this.dispatcher || !this.form.ready) {
 			return;
 		}
-		if (!this.didMount) {
-			this.didMount = true;
+		if (this.mountedEngine !== this.dispatcherEngine) {
+			this.mountedEngine = this.dispatcherEngine;
 			void this.dispatch('form_mount');
 		}
 		if (this.watchingChanges) {
@@ -123,41 +140,36 @@ export class FormActionControllerElement extends RadiantElement {
 		});
 	}
 
-	private async runSubmissionLifecycle(): Promise<void> {
-		if (!this.dispatcher || !this.form.ready) return;
+	/** Runs submit actions before the form instance invokes its submission callback. */
+	submit(): Promise<boolean> {
+		if (this.submissionPromise) return this.submissionPromise;
+		this.setupDispatcher();
+		if (!this.dispatcher || !this.form.ready) return Promise.resolve(false);
 		this.dispatchEvent(new CustomEvent('se-action-submit-start', { bubbles: true, composed: true }));
-		const { succeeded, results } = await runSubmissionLifecycle(
-			async (input) => {
-				const dispatcher = this.dispatcher;
-				if (!dispatcher) return [];
-				const dispatchedResults: Awaited<ReturnType<typeof dispatcher.dispatch>> = [];
-				for (const action of input.actions) {
-					const dispatched = await dispatcher.dispatch({ ...input, actions: [action] });
-					if (input.trigger === 'form_submit' && dispatched[0]?.success) {
-						try {
-							await this.onAction?.(action, input.context.formData);
-						} catch (error) {
-							dispatched[0] = {
-								success: false,
-								shouldContinue: false,
-								error: error instanceof Error ? error.message : String(error),
-							};
-						}
-					}
-					dispatchedResults.push(...dispatched);
-					if (dispatched.some((result) => !result.success && result.shouldContinue === false)) break;
-				}
-				return dispatchedResults;
+		const submission = runSubmissionLifecycle((input) => this.dispatcher?.dispatch(input) ?? Promise.resolve([]), {
+			actions: this.config.actions ?? [],
+			context: () => this.buildContext(),
+			onAction: (action, data) => this.onAction?.(action, data),
+		}).then(({ succeeded, results }) => {
+			this.dispatchEvent(
+				new CustomEvent('se-action-submit-complete', {
+					bubbles: true,
+					composed: true,
+					detail: { succeeded, results },
+				}),
+			);
+			return succeeded;
+		});
+		this.submissionPromise = submission;
+		void submission.then(
+			() => {
+				if (this.submissionPromise === submission) this.submissionPromise = undefined;
 			},
-			{ actions: this.config.actions ?? [], context: () => this.buildContext() },
+			() => {
+				if (this.submissionPromise === submission) this.submissionPromise = undefined;
+			},
 		);
-		this.dispatchEvent(
-			new CustomEvent('se-action-submit-complete', {
-				bubbles: true,
-				composed: true,
-				detail: { succeeded, results },
-			}),
-		);
+		return submission;
 	}
 
 	private async dispatch(trigger: FormActionTrigger): Promise<Awaited<ReturnType<ActionDispatcher['dispatch']>>> {

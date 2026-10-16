@@ -120,3 +120,16 @@ Action handlers receive a framework-neutral `context.form` with `reset`,
 A changed `require` condition revalidates a touched or submitted dependent field.
 Submission failures use `action-N` result identifiers because dispatch results
 do not carry authored action ids.
+
+Successful `form_submit` actions call `onAction(action, data)` before the submission
+callback. A rejected action callback aborts the remaining submit actions and runs
+the error and completion triggers.
+
+## Renderer conformance
+
+Both renderer browser projects run the scenarios in
+[`test-utils/renderer-conformance.ts`](../../test-utils/renderer-conformance.ts)
+through their own `FormRenderer`. They cover array sibling constraints, nested
+wizard validation, required constraints, nested error clearing, Valibot action
+registration, submission aborts, and change and action callbacks. Run this suite
+with `pnpm exec vitest run --project browser test/conformance` from this package.

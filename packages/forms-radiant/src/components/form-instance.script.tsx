@@ -27,6 +27,7 @@ import { createInstanceNavigation } from '@/lib/instance-navigation';
 import { createLiveInstanceContext } from '@/lib/live-instance-context';
 import { syncConstraints } from '@/lib/constraint-sync';
 import type { FormProviderProps } from '@/adapters/types';
+import type { FormActionControllerElement } from './form-action-controller';
 import { FormController } from '@/adapters/radiant/controller';
 
 /** Behavior and engine navigation state for one composed form. */
@@ -73,6 +74,7 @@ export class FormInstanceElement extends RadiantElement {
 		}
 	}
 
+	/** @remarks Client mounting can connect this host before its authored form children are attached. */
 	protected override onConnected(): void {
 		if (!this.engine) {
 			this.unsubscribeActiveEngine = whenEngineAvailable(this, this.engine, (engine) => {
@@ -86,6 +88,11 @@ export class FormInstanceElement extends RadiantElement {
 		this.publish();
 		this.connectForm();
 		this.wireRuiForm();
+		queueMicrotask(() => {
+			if (!this.isConnected) return;
+			this.connectForm();
+			this.wireRuiForm();
+		});
 	}
 
 	override disconnectedCallback(): void {
@@ -114,8 +121,19 @@ export class FormInstanceElement extends RadiantElement {
 
 	private wireRuiForm(): void {
 		const ruiForm = (this.form?.host ?? findNearestRuiForm(this)) as RuiFormElement | undefined;
-		if (ruiForm) {
-			ruiForm.onSubmit = this.onSubmit ? (data) => this.onSubmit?.(expandValues(data)) : undefined;
+		const actions = this.querySelector<FormActionControllerElement>('se-form-action-controller');
+		const hasNativeSubmission = ruiForm?.hasAttribute('action') || ruiForm?.hasAttribute('method');
+		if (ruiForm && (this.onSubmit || (actions && hasNativeSubmission))) {
+			ruiForm.onSubmit = async (data) => {
+				if (actions && !(await actions.submit())) return;
+				if (this.onSubmit) {
+					await this.onSubmit(expandValues(data));
+					return;
+				}
+				ruiForm.querySelector<HTMLFormElement>('form[data-ref="form"]')?.submit();
+			};
+		} else if (ruiForm) {
+			ruiForm.onSubmit = undefined;
 		}
 	}
 
@@ -128,6 +146,7 @@ export class FormInstanceElement extends RadiantElement {
 			return;
 		}
 		if (this.form?.host === ruiForm) {
+			this.watchFormChanges();
 			syncConstraints(this, this.config, this.form);
 			this.watchValidationDependencies();
 			return;
@@ -137,9 +156,17 @@ export class FormInstanceElement extends RadiantElement {
 		this.form?.disconnect();
 		this.form = new FormController(ruiForm);
 		this.form.connect(() => {
-			if (!this.unwatchChanges) this.unwatchChanges = this.form?.watchForm((values) => this.onChange?.(values));
+			this.watchFormChanges();
 			syncConstraints(this, this.config, this.form);
 			this.watchValidationDependencies();
+		});
+	}
+
+	private watchFormChanges(): void {
+		if (!this.form?.ready || this.unwatchChanges) return;
+		this.unwatchChanges = this.form.watchForm((values) => {
+			syncConstraints(this, this.config, this.form);
+			this.onChange?.(values);
 		});
 	}
 

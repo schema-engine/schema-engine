@@ -82,6 +82,7 @@ View-owned shell, same authoring model as radiant-ui: the `FormRenderer` / `Form
 - Each field serializes engine validation rules in `data-se-validation-rules`; `se-field` rebuilds them with the owning engine registry on connection and reconnection. Native Radiant rules cover required, length, numeric bounds, and patterns; the registry validates the remaining rules, including cross-field and async rules. The legacy `reviveRules` export and `data-se-field-rules` channel have been removed.
 - `se-form-instance` owns submit callbacks in client renders and after hydration. Callbacks receive the nested value tree; attach or remove `instance.onSubmit` to switch between a callback and Radiant UI native submission configured with `action` or `method`.
 - Provider `onChange` receives nested value snapshots through `FormController.watchForm`; successful submission actions call `onAction` with their normalized action and the same nested values. Submission actions read a fresh form snapshot for each lifecycle trigger, and retain one form operations object so step timing resets on navigation. The instance uses the engine step machine, field validation, and submission lifecycle.
+- `form_mount` actions run once for each engine attached to a live form, including when the engine changes after connection.
 - The full normalized config is serialized once on `se-form-instance`. Recipe chrome receives one small `FormMeta` with form and step titles, descriptions, and ids; the debugger reads its owning instance.
 - Every step's fields are authored once inside `se-form-step`; hosts toggle their own `hidden` attribute from the step state, so SSR emits the full form and step switching is pure DOM.
 - Server-rendered constraints use the nested authored and caller defaults. Each field shares one constraint snapshot between its visibility wrapper and registered renderer. Live updates preserve an authored `disabled: true`, including when an `enable` constraint matches. Use `evaluateConstraints({ constraints, values, fieldPath, baseRequired })` from `@schema-engine/forms/constraints`; the Radiant `evaluateConstraintLogic` hook has been removed.
@@ -218,3 +219,19 @@ each engine. Use `engine.defineForm` to infer authoring inputs and normalized
 outputs for that engine. Radiant renderer props accept `FormEngineRuntime`, which
 omits registration extension. Registration files no longer augment a global
 `FormEngine` namespace.
+
+### Shared renderer conformance
+
+The browser project also mounts `FormRenderer` for the shared
+[`renderer conformance scenarios`](../../test-utils/renderer-conformance.ts):
+array sibling constraints, nested wizard validation, required constraints, nested
+error clearing, Valibot action registration, submission aborts, and change and
+action callbacks. Run `pnpm exec vitest run --project browser test/conformance`
+from this package.
+
+Live value changes refresh constraint presentation for every array row. Submission
+callbacks wait for the engine action lifecycle; an action failure with
+`shouldContinue: false` or a rejected `onAction` callback suppresses submission
+and runs the error and completion triggers. Client mounts retry form wiring after
+the authored children connect, and action controllers initialize when config and
+engine props arrive.
