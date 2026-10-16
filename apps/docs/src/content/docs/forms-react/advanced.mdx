@@ -35,54 +35,32 @@ Supported operators are `equals`, `not_equals`, `contains`, `not_contains`,
 
 ## Consent-aware drafts
 
-`useGDPRConsent` manages consent for the core draft-storage helper. It does not
-add a `gdpr` property to field configuration.
+Import the static browser helper from `@schema-engine/forms/browser`:
 
-```tsx
-import { useGDPRConsent } from '@schema-engine/forms-react';
+```ts
+import { GDPRConsent } from '@schema-engine/forms/browser';
 
-function DraftConsent() {
-	const consent = useGDPRConsent();
-
-	return consent.hasConsent() ? (
-		<button type="button" onClick={consent.revokeConsent}>
-			Revoke draft consent
-		</button>
-	) : (
-		<button type="button" onClick={consent.grantConsent}>
-			Allow draft storage
-		</button>
-	);
-}
+GDPRConsent.grantConsent();
+GDPRConsent.saveDraft('contact', { email: 'reader@example.com' });
+const draft = GDPRConsent.loadDraft('contact');
 ```
 
-Grant consent before using `GDPRConsent.saveDraft`; revoking consent also clears
-the package's `form_draft_` entries from local storage. Applications should
-still provide their own disclosure and retention policy.
+Grant consent before saving a draft. `GDPRConsent.revokeConsent()` clears the
+package's `form_draft_` entries from local storage. Consent is browser storage
+state; applications provide their own React subscriptions, disclosure, and
+retention policy.
 
 ## Analytics
 
-Use `useGTMTracker` for direct data-layer integration:
+```ts
+import { GTMTracker } from '@schema-engine/forms/browser';
 
-```tsx
-import { useGTMTracker } from '@schema-engine/forms-react';
-
-function TrackSubmit() {
-	const tracker = useGTMTracker();
-
-	return (
-		<button type="button" onClick={() => tracker.pushFormEvent('form_submit', undefined, { formId: 'contact' })}>
-			Track submit
-		</button>
-	);
-}
+GTMTracker.pushFormEvent('form_submit', undefined, { formId: 'contact' });
 ```
 
-The hook supports `form_mount`, `form_step_complete`, `form_submit`, and
-`form_abandon`. Avoid sending sensitive values; the tracker filters common
-password, SSN, and credit-card keys, but field-level minimization remains the
-application's responsibility.
+`pushFormEvent` accepts `form_mount`, `form_step_complete`, `form_submit`, and
+`form_abandon`. Applications choose the values they send. The helper filters
+common sensitive field names, but does not replace application data minimization.
 
-For config-driven analytics, register the core `gtm_event` action and place an
-action config in `form.actions`. See [Actions](/docs/forms/actions) for the
-action registration and trigger model.
+For config-driven analytics, register the `gtm_event` action and place an action
+config in `form.actions`. See [Actions](/docs/forms/actions).

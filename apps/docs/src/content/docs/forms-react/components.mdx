@@ -12,7 +12,7 @@ implementations are consumer-owned registry code. Install the matching Schema
 Engine registry item and import its generated registration barrel:
 
 ```ts
-import { createFormEngine } from '@schema-engine/forms-react';
+import { createFormEngine } from '@schema-engine/forms';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
 const engine = createFormEngine({ elements: schemaFormRegistrations });
@@ -77,7 +77,7 @@ binding:
 
 ```tsx
 import type { InputRegistration } from '@schema-engine/forms';
-import { useControlledFormElement } from '@schema-engine/forms-react';
+import { useControlledFormElement } from '@schema-engine/forms-react/hooks';
 import * as z from 'zod/mini';
 
 const RatingSchema = z.object({

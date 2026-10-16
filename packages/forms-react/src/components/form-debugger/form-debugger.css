@@ -132,3 +132,29 @@
 .form-debugger__pre {
 	@apply mt-2 max-h-40 overflow-auto rounded-md bg-muted p-2 text-[10px] font-mono;
 }
+
+.form-debugger__progress {
+	margin-top: 0.25rem;
+	height: 0.5rem;
+	width: 100%;
+	overflow: hidden;
+	border-radius: 9999px;
+	background: var(--muted);
+}
+.form-debugger__progress-fill {
+	height: 100%;
+	background: var(--primary);
+	transition: width 0.15s;
+}
+.form-debugger__step-title {
+	font-weight: 500;
+}
+.form-debugger__step-description {
+	font-size: 0.75rem;
+	color: var(--muted-foreground);
+}
+.form-debugger__details {
+	margin-top: 0.5rem;
+	display: grid;
+	gap: 0.25rem;
+}

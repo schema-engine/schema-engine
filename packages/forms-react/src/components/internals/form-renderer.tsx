@@ -130,7 +130,7 @@ function FormRendererInner({
 			onChange={onChange}
 			onAction={onAction}
 		>
-			<div className={`w-full min-h-full h-full ${className}`.trim()} style={style}>
+			<div className={`se-form ${className}`.trim()} style={style}>
 				<GridThemeStyle themeId={theme.id} css={css} />
 				<FormElementsRenderer config={config} theme={theme}>
 					{children}

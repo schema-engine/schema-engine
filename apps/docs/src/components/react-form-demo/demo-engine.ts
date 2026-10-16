@@ -1,4 +1,5 @@
-import { createFormEngine, rhfAdapter } from '@schema-engine/forms-react';
+import { createFormEngine } from '@schema-engine/forms';
+import { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
 import { demoFormRegistrations } from './demo-registrations.react';
 import { demoRecipeRegistrations } from './demo-recipes.react';
 import { createDocsDemoActions } from '@/lib/docs-demo-actions';

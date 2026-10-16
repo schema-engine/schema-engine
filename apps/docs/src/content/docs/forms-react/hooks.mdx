@@ -12,11 +12,13 @@ order: 6
 Recipe shells and blocks can access the active view with:
 
 ```tsx
+import { useViewContext, useFormNavigation, useActiveStep, useViewConfig } from '@schema-engine/forms-react/hooks';
+
 function ProgressBlock() {
 	const { steps, currentStepIndex } = useViewContext();
 	const navigation = useFormNavigation();
 	const activeStep = useActiveStep();
-	const config = useViewConfig<{ showPercentage?: boolean }>();
+	const config = useViewConfig<{ showPercentage?: boolean }>('progress');
 
 	return (
 		<div>
@@ -31,6 +33,8 @@ available only inside a `ViewProvider` or a slot block rendered by a recipe.
 
 ## Form hooks
 
+Import adapter hooks from `@schema-engine/forms-react/adapters`.
+
 `useFormContext` exposes adapter-neutral values, errors, submission state, and
 field operations. `useFormField` binds an element registration to that form.
 `useWatchField`, `useWatchForm`, and `useFieldArray` cover observation and
@@ -38,6 +42,8 @@ array editing. `useFieldArray` provides `fields` plus `append`, `prepend`,
 `insert`, `swap`, `move`, `update`, `replace`, and `remove`.
 
 ## Engine hooks
+
+Import engine hooks from `@schema-engine/forms-react/hooks`.
 
 `useFormEngine` reads the `FormEngine` supplied by `FormEngineProvider`, while
 `useFormInstanceActions` exposes current-step and submission actions.
