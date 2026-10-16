@@ -66,7 +66,7 @@ interface WidgetRegistration extends ComponentRegistration<string, unknown, { id
 	render: (props: { id: string }) => JSX.Element;
 }
 
-class WidgetRegistry extends ComponentRegistry<string, WidgetRegistration> {
+class WidgetRegistry extends BaseRegistry<string, WidgetRegistration> {
 	get registryName(): string {
 		return 'Widget';
 	}

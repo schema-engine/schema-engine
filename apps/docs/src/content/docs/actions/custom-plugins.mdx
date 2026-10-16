@@ -78,7 +78,7 @@ export const webhookAction: ActionRegistration<WebhookActionConfig, BaseContext,
 };
 ```
 
-The handler receives `BaseContext & { config: WebhookActionConfig; trigger: Trigger }`. That runtime shape is created by the executor; you do not provide it at the call site.
+The handler receives `BaseContext & { config: WebhookActionConfig; trigger: Trigger }`. That runtime shape is created by the dispatcher; you do not provide it at the call site.
 
 ## Register and Execute
 
@@ -86,14 +86,14 @@ The handler receives `BaseContext & { config: WebhookActionConfig; trigger: Trig
 const registry = new ActionRegistry<BaseContext, Trigger>();
 registry.register(webhookAction);
 
-const executor = new ActionExecutor<BaseContext, Trigger>(registry);
+const dispatcher = new ActionDispatcher<BaseContext, Trigger>(registry);
 
 const baseContext: BaseContext = {
 	entityId: 'entity-1',
 	data: { status: 'ready' },
 };
 
-await executor.execute({
+await dispatcher.dispatch({
 	actions: [
 		{
 			id: 'send-webhook',
@@ -118,7 +118,7 @@ await executor.execute({
 
 There are two layers:
 
-- `BaseContext` is what callers pass into `execute()` or `dispatch()`.
-- The action handler receives `ActionRuntimeContext<WebhookActionConfig, BaseContext, Trigger>`, which the executor constructs by adding `config` and `trigger`.
+- `BaseContext` is what callers pass into `dispatch()` or `dispatchSync()`.
+- The action handler receives `ActionRuntimeContext<WebhookActionConfig, BaseContext, Trigger>`, which the dispatcher constructs by adding `config` and `trigger`.
 
 This keeps the call site simple while preserving a strongly typed handler context.

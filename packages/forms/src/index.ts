@@ -84,7 +84,7 @@ export {
 export type { FieldScope, FieldNameStrategy, FieldOverlay, NamedElementNode } from './lib/field-scope';
 export { getValueAtPath, setValueAtPath, mergePathValues, expandFieldTemplatePaths } from './lib/path-values';
 export type { RecipeKind, RecipeSlot, RecipeMetadata, RecipeDescriptor, ViewCatalog } from './recipes/types';
-export type { ActionExecutionResult } from '@schema-engine/actions';
+export type { ActionExecutionResult } from './actions/types';
 export * from './schemas';
 export * from './actions';
 export * from './constraints';

@@ -20,41 +20,19 @@ class ActionRegistry<TBaseContext, TTrigger>
 }
 ```
 
-Inherited behavior from `BaseRegistry` includes `register`, `has`, `get`, `getAll`, `getAllKeys`, `size`, `clear`, and `getMap`.
-
-## ActionExecutor
-
-```typescript
-class ActionExecutor<TBaseContext = unknown, TTrigger = string> {
-	constructor(registry: ActionRegistryProvider<TBaseContext, TTrigger>, options?: ActionExecutorOptions);
-
-	execute<TConfig extends ActionConfigBase>(
-		input: ActionExecuteInput<TConfig, TBaseContext, TTrigger>,
-	): Promise<ActionExecutionResult[]>;
-}
-
-interface ActionExecutorOptions {
-	debug?: boolean;
-}
-```
-
-Before each action runs, the executor enriches the caller-provided `context` with `config` and `trigger`, then passes the result to the handler.
+Inherited behavior from `BaseRegistry` includes `register`, `has`, `get`, `getAll`, `getAllKeys`, `size`, `clear`.
 
 ## ActionDispatcher
 
 ```typescript
 class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
-	constructor(registry: ActionRegistryProvider<TBaseContext, TTrigger>, options?: ActionDispatcherOptions);
+	constructor(registry: ActionRegistryProvider<TBaseContext, TTrigger>);
 
 	dispatch<TConfig extends ActionConfigBase>(
 		input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>,
 	): Promise<ActionExecutionResult[]>;
 
 	dispatchSync<TConfig extends ActionConfigBase>(input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>): void;
-}
-
-interface ActionDispatcherOptions {
-	debug?: boolean;
 }
 ```
 
@@ -91,7 +69,7 @@ interface ActionRegistration<
 	TData = unknown,
 > extends BaseRegistration<TConfig, ActionMetadata<TTrigger>> {
 	$type: TConfig['$type'];
-	schema: StandardSchemaV1<TConfig>;
+	schema: StandardSchemaV1;
 	metadata: ActionMetadata<TTrigger>;
 	execute: ActionHandler<TConfig, TBaseContext, TTrigger, TData>;
 }
@@ -99,7 +77,7 @@ interface ActionRegistration<
 
 Zod Mini, Zod, Valibot, and Effect Schema values implement Standard Schema and remain valid `schema` values.
 
-`execute` receives an `ActionRuntimeContext` — the caller-provided `TBaseContext` enriched with `config` and `trigger` by the executor.
+`execute` receives an `ActionRuntimeContext` — the caller-provided `TBaseContext` enriched with `config` and `trigger` by the dispatcher.
 
 ## ActionRuntimeContext
 
@@ -111,14 +89,14 @@ type ActionRuntimeContext<TConfig = unknown, TBaseContext = unknown, TTrigger = 
 };
 ```
 
-The shape that action handlers receive at execution time. The executor creates this by spreading the caller-provided base context with the current `config` and `trigger`, and includes `triggeredBy` for nested dispatches.
+The shape that action handlers receive at execution time. The dispatcher creates this by spreading the caller-provided base context with the current `config` and `trigger`, and includes `triggeredBy` for nested dispatches.
 
-## ActionExecuteInput
+## ActionDispatchInput
 
-Object-based input for `ActionExecutor.execute()`.
+Object-based input for `ActionDispatcher.dispatch()` and `dispatchSync()`.
 
 ```typescript
-interface ActionExecuteInput<
+interface ActionDispatchInput<
 	TConfig extends ActionConfigBase = ActionConfigBase,
 	TBaseContext = unknown,
 	TTrigger = string,
@@ -127,19 +105,6 @@ interface ActionExecuteInput<
 	actions: readonly TConfig[];
 	context: TBaseContext;
 	triggeredBy?: TConfig;
-}
-```
-
-## ActionDispatchInput
-
-Extends `ActionExecuteInput` with optional metadata merging.
-
-```typescript
-interface ActionDispatchInput<
-	TConfig extends ActionConfigBase = ActionConfigBase,
-	TBaseContext = unknown,
-	TTrigger = string,
-> extends ActionExecuteInput<TConfig, TBaseContext, TTrigger> {
 	metadata?: Record<string, unknown>;
 }
 ```
@@ -174,7 +139,6 @@ interface ActionExecutionResult<TData = unknown> {
 	error?: string;
 	data?: TData;
 	shouldContinue?: boolean;
-	redirectUrl?: string;
 }
 ```
 
