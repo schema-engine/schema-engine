@@ -85,3 +85,22 @@ test('a form without onSubmit keeps native submission', async () => {
 	instance.onSubmit = undefined;
 	await expect.poll(() => form.onSubmit).toBeUndefined();
 });
+
+test('onChange receives a nested value tree and reconnects without duplicate watchers', async () => {
+	const { instance, root } = mount();
+	const onChange = vi.fn();
+	instance.onChange = onChange;
+	const field = root.querySelector('se-field[name="address.street"]') as FormFieldElement;
+	await expect.poll(() => field.form.ready).toBe(true);
+	await userEvent.fill(field.querySelector('input')!, 'changed');
+	await expect.poll(() => onChange.mock.calls.at(-1)?.[0].address).toEqual({ street: 'changed' });
+	onChange.mockClear();
+	root.remove();
+	document.body.append(root);
+	await expect.poll(() => field.form.ready).toBe(true);
+	onChange.mockClear();
+	field.form.setValue('address.street', 'reconnected');
+	await expect.poll(() => onChange.mock.calls.at(-1)?.[0].address).toEqual({ street: 'reconnected' });
+	const snapshots = onChange.mock.calls.filter(([values]) => values.address?.street === 'reconnected');
+	expect(snapshots).toHaveLength(1);
+});

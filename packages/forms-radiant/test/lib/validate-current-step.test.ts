@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { FormStore } from '@ecopages/radiant-ui/form';
-import { fieldNamesForStep, validateCurrentStepFields } from '@/lib/validate-current-step';
+import { validateCurrentStepFields } from '@/lib/validate-current-step';
+import { collectStepFieldPaths as fieldNamesForStep } from '@schema-engine/forms';
 
 function registerField(store: FormStore, name: string, getValue: () => unknown, requiredMessage: string) {
 	store.register({

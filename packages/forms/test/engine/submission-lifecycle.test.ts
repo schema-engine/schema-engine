@@ -36,4 +36,28 @@ describe('runSubmissionLifecycle', () => {
 		expect(result.succeeded).toBe(true);
 		expect(triggers).toEqual(['form_submit_start', 'form_submit', 'form_submit_success', 'form_submit_complete']);
 	});
+
+	test('rebuilds context before each lifecycle trigger when given a context factory', async () => {
+		const contexts = [
+			{ ...context, formData: { phase: 'start' } },
+			{ ...context, formData: { phase: 'submit' } },
+			{ ...context, formData: { phase: 'success' } },
+			{ ...context, formData: { phase: 'complete' } },
+		];
+		const dispatchedContexts: BuilderActionBaseContext[] = [];
+		let contextIndex = 0;
+		const dispatch = async ({
+			context: dispatchedContext,
+		}: ActionDispatchInput): Promise<ActionExecutionResult[]> => {
+			dispatchedContexts.push(dispatchedContext as BuilderActionBaseContext);
+			return [];
+		};
+
+		await runSubmissionLifecycle(dispatch, {
+			actions: [],
+			context: () => contexts[contextIndex++] ?? context,
+		});
+
+		expect(dispatchedContexts).toEqual(contexts);
+	});
 });

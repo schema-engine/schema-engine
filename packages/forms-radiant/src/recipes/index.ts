@@ -1,3 +1,4 @@
+export type { FormMeta } from '@/lib/instance-view';
 export { defineFormRecipe, defineRecipeSpec } from '@schema-engine/forms/recipes';
 export type { FormShellComponent, FormShellProps, RadiantRecipeAdapterPayload } from './types';
 export {

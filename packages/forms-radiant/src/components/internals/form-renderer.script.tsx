@@ -8,9 +8,9 @@ import {
 } from '@ecopages/radiant';
 import { provideContext, type ContextProvider } from '@ecopages/radiant/context';
 import type { JsxRenderable } from '@ecopages/jsx';
-import type { FormConfig } from '@schema-engine/forms/schemas';
 import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { FormProviderProps } from '@/adapters/types';
+import { resolveFormEngine, whenEngineAvailable } from '@/contexts/resolve-form-engine';
 import { formEngineContext, type FormEngineContextValue } from '../provider';
 
 export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
@@ -27,15 +27,14 @@ export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
  * @remarks
  * View-owned shell: the `FormRenderer` view authors the whole form tree as
  * light-DOM children, so SSR expands it without any derived tree here. The host
- * only publishes `formEngineContext`; `config` is the serializable attribute and
- * `engine` / callbacks stay `@state` and are re-attached by the page script,
- * mirroring how `RuiForm` binds `resolver`.
+ * only publishes `formEngineContext`;
+ * `engine` / callbacks stay `@state` and are re-attached by the page
+ * script, mirroring how `RuiForm` binds `resolver`.
  *
  * @element se-form-renderer
  */
 @customElement('se-form-renderer')
 export class FormRendererElement extends RadiantElement {
-	@prop({ type: Object }) config!: FormConfig;
 	@state engine?: FormEngine;
 	@prop({ type: Object }) defaultValues?: Record<string, unknown>;
 	@state onSubmit?: FormProviderProps['onSubmit'];
@@ -53,8 +52,23 @@ export class FormRendererElement extends RadiantElement {
 		this.publishContext();
 	}
 
+	private unsubscribeActiveEngine?: () => void;
+
 	protected override onConnected(): void {
+		if (!this.engine) {
+			this.unsubscribeActiveEngine = whenEngineAvailable(this, this.engine, (engine) => {
+				if (!this.engine) {
+					this.engine = engine;
+				}
+				this.publishContext();
+			});
+		}
 		this.publishContext();
+	}
+
+	override disconnectedCallback(): void {
+		this.unsubscribeActiveEngine?.();
+		super.disconnectedCallback();
 	}
 
 	@onUpdated(['engine'])
@@ -63,9 +77,10 @@ export class FormRendererElement extends RadiantElement {
 	}
 
 	private publishContext(): void {
-		if (!this.engine) {
+		const engine = resolveFormEngine(this, this.engine);
+		if (!engine) {
 			return;
 		}
-		this.provider.setContext({ engine: this.engine } satisfies FormEngineContextValue);
+		this.provider.setContext({ engine } satisfies FormEngineContextValue);
 	}
 }
