@@ -1,7 +1,7 @@
 import type { JsxRenderable } from '@ecopages/jsx';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import { type NormalizedFormConfig, resolveFormRecipe } from '@schema-engine/forms';
-import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { getFormGridVariables } from '@schema-engine/forms/lib/grid-styles';
 import { applySlotDefaults } from '@schema-engine/forms/recipes';
 import type { RadiantRecipeAdapterPayload } from '@/recipes/types';

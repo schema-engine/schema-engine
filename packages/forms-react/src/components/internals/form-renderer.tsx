@@ -19,7 +19,7 @@ import { FormElements } from './form-elements';
 import { useFormInstanceActions, useOptionalFormEngine } from '@/hooks/use-form-context';
 import { FormAdapterContext } from '../../adapters/context';
 import { FormEngineProvider } from '../form-engine-provider';
-import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { EngineOutputMaps, FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
 import { RecipeRenderer } from './recipe-renderer';
 import { getRenderableSteps, assertFormEngine, resolveFormRecipe } from '@schema-engine/forms/lib/validate-form';
@@ -65,17 +65,22 @@ function StepFields({
 	);
 }
 
-function FormElementsRenderer({
+function FormElementsRenderer<
+	TElements extends Record<string, unknown>,
+	TRecipes extends Record<string, unknown>,
+	TActions extends Record<string, unknown>,
+	TOutputs extends EngineOutputMaps,
+>({
 	config,
 	theme,
 	children,
 }: {
-	config: NormalizedFormConfig;
+	config: NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>;
 	theme: NormalizedGridTheme;
 	children?: React.ReactNode;
 }) {
 	const { currentStep } = useFormInstanceActions();
-	const engineContext = useOptionalFormEngine();
+	const engineContext = useOptionalFormEngine<TElements, TRecipes, TActions, TOutputs>();
 	const recipe = resolveFormRecipe(config, engineContext?.engine);
 	const steps = getRenderableSteps(config, recipe, currentStep);
 
@@ -98,15 +103,25 @@ function FormElementsRenderer({
 	);
 }
 
-export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
+export interface FormRendererProps<
+	TElements extends Record<string, unknown> = Record<string, unknown>,
+	TRecipes extends Record<string, unknown> = Record<string, unknown>,
+	TActions extends Record<string, unknown> = Record<string, unknown>,
+	TOutputs extends EngineOutputMaps = EngineOutputMaps,
+> extends Omit<FormProviderProps<Record<string, unknown>, TElements, TRecipes, TActions, TOutputs>, 'children'> {
 	className?: string;
 	style?: React.CSSProperties;
-	engine?: FormEngine;
+	engine?: FormEngine<TElements, TRecipes, TActions, TOutputs>;
 	adapter?: FormAdapter;
 	children?: React.ReactNode;
 }
 
-function FormRendererInner({
+function FormRendererInner<
+	TElements extends Record<string, unknown>,
+	TRecipes extends Record<string, unknown>,
+	TActions extends Record<string, unknown>,
+	TOutputs extends EngineOutputMaps,
+>({
 	config,
 	defaultValues,
 	onSubmit,
@@ -116,8 +131,8 @@ function FormRendererInner({
 	style,
 	compiledGrid,
 	children,
-}: Omit<FormRendererProps, 'engine' | 'adapter' | 'config'> & {
-	config: NormalizedFormConfig;
+}: Omit<FormRendererProps<TElements, TRecipes, TActions, TOutputs>, 'engine' | 'adapter' | 'config'> & {
+	config: NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>;
 	compiledGrid: CompiledGrid;
 }) {
 	const { theme, css } = compiledGrid;
@@ -140,14 +155,22 @@ function FormRendererInner({
 	);
 }
 
-export function FormRenderer({ engine, adapter, ...props }: FormRendererProps) {
-	const inheritedEngine = useOptionalFormEngine();
+export function FormRenderer<
+	TElements extends Record<string, unknown> = Record<string, unknown>,
+	TRecipes extends Record<string, unknown> = Record<string, unknown>,
+	TActions extends Record<string, unknown> = Record<string, unknown>,
+	TOutputs extends EngineOutputMaps = EngineOutputMaps,
+>({ engine, adapter, ...props }: FormRendererProps<TElements, TRecipes, TActions, TOutputs>) {
+	const inheritedEngine = useOptionalFormEngine<TElements, TRecipes, TActions, TOutputs>();
 	const inheritedAdapter = useContext(FormAdapterContext);
 	const resolvedEngine = engine ?? inheritedEngine?.engine;
 	const resolvedAdapter = adapter ?? inheritedAdapter ?? undefined;
 	const { config, compiledGrid } = useMemo(() => {
 		assertFormEngine(resolvedEngine, props.config);
-		return { config: resolvedEngine.validateForm(props.config), compiledGrid: resolvedEngine.getCompiledGrid() };
+		return {
+			config: resolvedEngine.validateForm(props.config),
+			compiledGrid: resolvedEngine.getCompiledGrid(),
+		};
 	}, [props.config, resolvedEngine]);
 	const innerProps = { ...props, config, compiledGrid };
 

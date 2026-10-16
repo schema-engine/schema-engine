@@ -1,8 +1,8 @@
 /**
  * Notification Action Registration
  *
- * Pre-configured notification action with type augmentation.
- * Import this file to register the notification action type and get a default configuration.
+ * Pre-configured notification action.
+ * Register this declaration on your engine to enable the notification action type and get a default configuration.
  *
  * @example
  * ```typescript
@@ -14,17 +14,9 @@
  * ```
  */
 
-import { notificationPlugin, NotificationActionSchema, type NotificationAction } from './notification.plugin';
+import { notificationPlugin, NotificationActionSchema } from './notification.plugin';
 import { logger } from '@/lib/logger';
 import type { BuilderActionRegistration } from '@/types';
-
-declare global {
-	namespace FormEngine {
-		interface ActionRegistry {
-			show_notification: NotificationAction;
-		}
-	}
-}
 
 /**
  * Default Notification Action Registration

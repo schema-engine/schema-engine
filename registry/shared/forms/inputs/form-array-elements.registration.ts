@@ -6,14 +6,6 @@ import { FormArrayElements } from './form-array-elements';
 import { ArrayElementConfigSchema } from './form-array-elements.types';
 import { defineInput } from '@schema-engine/forms';
 
-declare global {
-	namespace FormEngine {
-		interface ElementRegistry {
-			arrayElements: import('./form-array-elements.types').ArrayElementsConfig;
-		}
-	}
-}
-
 export const ArrayElementRegistration = defineInput({
 	$type: 'arrayElements',
 	containerKind: 'array',

@@ -2,6 +2,7 @@ import type { ContainerKind } from '../types/registration.js';
 import { isPlainObject } from './is-plain-object.js';
 import type { FormConfig, FormStep } from '@/schemas/form-config';
 import type { ElementConfig } from '@/schemas/field-config';
+import type { BaseField } from '@/schemas/base-field';
 
 const NORMALIZED_FORM_CONFIG = Symbol.for('@schema-engine/forms.normalized-form-config');
 const ELEMENT_CONTAINER_KIND = Symbol.for('@schema-engine/forms.container-kind');
@@ -20,8 +21,31 @@ export type DeepReadonly<T> = T extends (...args: never[]) => unknown
 			? { readonly [K in keyof T]: DeepReadonly<T[K]> }
 			: T;
 
-/** Readable form shape. Accepts authoring `FormConfig` and frozen normalized output. */
-export type FormConfigView = DeepReadonly<FormConfig>;
+/** Readable form shape. Accepts authoring config and frozen normalized output. */
+export type FormConfigView<
+	TElements extends Record<string, unknown> = Record<string, unknown>,
+	TRecipes extends Record<string, unknown> = Record<string, unknown>,
+	TActions extends Record<string, unknown> = Record<string, unknown>,
+> = DeepReadonly<FormConfig<TElements, TRecipes, TActions>>;
+
+type WithNormalizedChildren<T, TElements extends Record<string, unknown>> = {
+	[K in keyof T]: K extends 'elements' ? ReadonlyArray<NormalizedElementConfig<TElements>> : T[K];
+};
+
+type NormalizedElementShape<TElements extends Record<string, unknown>> = string extends keyof TElements
+	? DeepReadonly<BaseField> & {
+			readonly [key: string]: unknown;
+			readonly elements?: ReadonlyArray<NormalizedElementConfig<TElements>>;
+		}
+	: [keyof TElements] extends [never]
+		? never
+		: {
+				[K in keyof TElements & string]: WithNormalizedChildren<
+					DeepReadonly<{ readonly $type: K } & TElements[K] & BaseField>,
+					TElements
+				> &
+					DeepReadonly<BaseField> & { readonly $type: K; readonly [key: string]: unknown };
+			}[keyof TElements & string] & { readonly elements?: ReadonlyArray<NormalizedElementConfig<TElements>> };
 
 /**
  * Element produced by {@link FormEngine.validateElement} or as part of a
@@ -30,12 +54,16 @@ export type FormConfigView = DeepReadonly<FormConfig>;
  * Container children are typed for renderers via {@link WithNormalizedChildren}
  * / {@link ElementRenderProps}. The snapshot itself is frozen at runtime.
  */
-export type NormalizedElementConfig = DeepReadonly<ElementConfig> & {
-	readonly [NORMALIZED_ELEMENT_CONFIG]: true;
-};
+export type NormalizedElementConfig<TElements extends Record<string, unknown> = Record<string, unknown>> =
+	NormalizedElementShape<TElements> & {
+		readonly [NORMALIZED_ELEMENT_CONFIG]: true;
+	};
 
-type NormalizedStep = Omit<DeepReadonly<FormStep>, 'elements'> & {
-	readonly elements: ReadonlyArray<NormalizedElementConfig>;
+type NormalizedStep<TElements extends Record<string, unknown>, TActions extends Record<string, unknown>> = Omit<
+	DeepReadonly<FormStep<TElements, TActions>>,
+	'elements'
+> & {
+	readonly elements: ReadonlyArray<NormalizedElementConfig<TElements>>;
 };
 
 /**
@@ -44,8 +72,12 @@ type NormalizedStep = Omit<DeepReadonly<FormStep>, 'elements'> & {
  * Distinct from authoring input (`FormConfig` / JSON): registration schemas have already
  * applied defaults and transforms. Frozen at runtime and readonly in TypeScript.
  */
-export type NormalizedFormConfig = Omit<DeepReadonly<FormConfig>, 'steps'> & {
-	readonly steps: ReadonlyArray<NormalizedStep>;
+export type NormalizedFormConfig<
+	TElements extends Record<string, unknown> = Record<string, unknown>,
+	TRecipes extends Record<string, unknown> = Record<string, unknown>,
+	TActions extends Record<string, unknown> = Record<string, unknown>,
+> = Omit<DeepReadonly<FormConfig<TElements, TRecipes, TActions>>, 'steps'> & {
+	readonly steps: ReadonlyArray<NormalizedStep<TElements, TActions>>;
 	readonly [NORMALIZED_FORM_CONFIG]: NormalizedFormProvenance;
 };
 

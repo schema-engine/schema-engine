@@ -1,5 +1,5 @@
 import { createContext } from '@ecopages/radiant/context';
-import type { FormEngine as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 
 export interface FormEngineContextValue {
 	engine: CoreFormEngine;

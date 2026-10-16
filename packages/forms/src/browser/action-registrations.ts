@@ -1,26 +1,11 @@
-import {
-	autoSavePlugin,
-	AutoSaveActionSchema,
-	type AutoSaveAction,
-	type AutoSaveStorage,
-} from '../actions/plugins/auto-save.plugin';
-import { formResetPlugin, FormResetActionSchema, type FormResetAction } from '../actions/plugins/form-reset.plugin';
-import { gtmPlugin, GTMEventActionSchema, type GTMEventAction } from '../actions/plugins/gtm.plugin';
+import { autoSavePlugin, AutoSaveActionSchema, type AutoSaveStorage } from '../actions/plugins/auto-save.plugin';
+import { formResetPlugin, FormResetActionSchema } from '../actions/plugins/form-reset.plugin';
+import { gtmPlugin, GTMEventActionSchema } from '../actions/plugins/gtm.plugin';
 import { logger } from '@/lib/logger';
 import type { BuilderActionRegistration } from '@/types';
 import { GDPRConsent, type GDPRConsentTool } from './tools/gdpr-consent';
 import { GTMTracker } from './tools/gtm-tracker';
 import { localStorageAutoSaveStorage } from './tools/auto-save-storage';
-
-declare global {
-	namespace FormEngine {
-		interface ActionRegistry {
-			auto_save: AutoSaveAction;
-			reset: FormResetAction;
-			gtm_event: GTMEventAction;
-		}
-	}
-}
 
 export interface BrowserActionRegistrationsOptions {
 	storage?: AutoSaveStorage;

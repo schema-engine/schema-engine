@@ -191,14 +191,6 @@ const ActionSchema = z.object({
 
 type Action = z.infer<typeof ActionSchema>;
 
-declare global {
-	namespace FormEngine {
-		interface ActionRegistry {
-			log_message: Action;
-		}
-	}
-}
-
 const logMessage: BuilderActionRegistration<'log_message', typeof ActionSchema> = {
 	$type: 'log_message',
 	schema: ActionSchema,
@@ -220,6 +212,8 @@ for the generic registration and execution contracts.
 Plugin callbacks receive their concrete action configuration in `context.config`.
 Payload maps use `Record<string, unknown>`; submit response data stays `unknown`
 until a callback narrows it. Submit request adapters accept `RequestInit`.
+Register `logMessage` in `createFormEngine({ actions: [logMessage] })` to add its
+configuration type to that engine; no global namespace augmentation is needed.
 
 Form action results use `ActionExecutionResult` from `@schema-engine/forms`, which
 extends the generic action result with optional `redirectUrl` for browser navigation.

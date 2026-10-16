@@ -1,9 +1,11 @@
-import { FormProvider as RHFFormProvider, useForm } from 'react-hook-form';
+import type { EngineOutputMaps } from '@schema-engine/forms/engine/form-engine';
+import { FormProvider as RHFFormProvider, useForm, type FieldValues } from 'react-hook-form';
 import { useCallback, useMemo, useRef } from 'react';
 import type { FormProviderProps } from '../types';
 import { ActionDispatcher } from '@schema-engine/forms/actions';
 import { collectFieldDefaults, flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import { useFormEngine } from '@/hooks/use-form-context';
+import type { FormConfigView } from '@schema-engine/forms';
 import { useFormValidationResolver } from './hooks/use-form-validation-resolver';
 import { FormInstanceContext, type FormInstanceContextValue } from '@/components/provider';
 import { FormStepStateContext } from '@/components/form-step-state-context';
@@ -19,19 +21,26 @@ import { useValidationDependencies } from './hooks/use-validation-dependencies';
 /**
  * React Hook Form adapter implementation
  */
-export function FormProvider({
+export function FormProvider<
+	TFormData = Record<string, unknown>,
+	TElements extends Record<string, unknown> = Record<string, unknown>,
+	TRecipes extends Record<string, unknown> = Record<string, unknown>,
+	TActions extends Record<string, unknown> = Record<string, unknown>,
+	TOutputs extends EngineOutputMaps = EngineOutputMaps,
+>({
 	config,
 	defaultValues = {},
 	children,
 	onSubmit,
 	onChange,
 	onAction,
-}: FormProviderProps) {
-	const { engine } = useFormEngine();
+}: FormProviderProps<TFormData, TElements, TRecipes, TActions, TOutputs>) {
+	const { engine } = useFormEngine<TElements, TRecipes, TActions, TOutputs>();
+	const runtimeConfig = config as unknown as FormConfigView;
 	const actionExecutor = useMemo(() => new ActionDispatcher(engine), [engine]);
 	const submission = useSubmissionStateManager();
 
-	const formElements = useMemo(() => flattenStepElements(config.steps), [config.steps]);
+	const formElements = useMemo(() => flattenStepElements(runtimeConfig.steps), [runtimeConfig.steps]);
 	const fieldDefaults = useMemo(
 		() => collectFieldDefaults(formElements, defaultValues),
 		[formElements, defaultValues],
@@ -51,40 +60,55 @@ export function FormProvider({
 
 	const actionDispatchers = useFormActionDispatchers({
 		form,
-		config,
+		config: runtimeConfig,
 		actionExecutor,
 		getCurrentStep,
 	});
 
-	const multiStep = useRHFMultiStep(config, form, actionDispatchers.dispatchTrigger, {
+	const multiStep = useRHFMultiStep(runtimeConfig, form, actionDispatchers.dispatchTrigger, {
 		onStepIndexChange: (index) => {
 			currentStepRef.current = index;
 		},
 	});
 
 	useFormMountEffect({
-		actions: config.actions,
+		actions: runtimeConfig.actions,
 		dispatchTrigger: actionDispatchers.dispatchTrigger,
 	});
 
 	useValidationDependencies(form, formElements);
 
+	/**
+	 * Adapts React Hook Form's broad value record to the provider's declared data shape.
+	 *
+	 * @remarks
+	 * The config is normalized at runtime, so React Hook Form cannot infer the consumer's
+	 * TFormData; the provider generic is the consumer contract for this callback.
+	 */
+	const handleFormChange = useCallback(
+		(data: FieldValues) => onChange?.(data as unknown as Partial<TFormData>),
+		[onChange],
+	);
+	const handleFormSubmit = useCallback((data: FieldValues) => onSubmit?.(data as unknown as TFormData), [onSubmit]);
+
 	useFormWatcher({
 		control: form.control,
-		config,
-		onChange,
+		config: runtimeConfig,
+		onChange: handleFormChange,
 		dispatchTrigger: actionDispatchers.dispatchTrigger,
 	});
 
 	const { handleSubmit, ...submissionContext } = useFormSubmitHandler({
 		form,
-		config,
+		config: runtimeConfig,
 		submission,
 		actionExecutor,
 		buildActionContext: actionDispatchers.buildActionContext,
 		dispatchTrigger: actionDispatchers.dispatchTrigger,
-		onSubmit,
-		onAction,
+		onSubmit: handleFormSubmit,
+		onAction: onAction as unknown as
+			| ((action: import('@schema-engine/forms').FormActionConfig, data: FieldValues) => void | Promise<void>)
+			| undefined,
 	});
 
 	const { stepStates } = multiStep;
@@ -108,8 +132,8 @@ export function FormProvider({
 				<FormStepStateContext.Provider value={stepStates}>
 					<form
 						onSubmit={form.handleSubmit(handleSubmit)}
-						className={config.className}
-						style={config.style}
+						className={runtimeConfig.className}
+						style={runtimeConfig.style}
 						noValidate
 					>
 						{children}

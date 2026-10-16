@@ -1,6 +1,6 @@
 import * as z from 'zod/mini';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
-import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { ElementConfig, ElementGridConfig } from '@schema-engine/forms/schemas';
 import { rhfAdapter } from '@/adapters/react-hook-form';
 import { useControlledFormElement } from '@/hooks/use-field';
