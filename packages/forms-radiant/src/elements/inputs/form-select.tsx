@@ -41,6 +41,7 @@ export function FormSelect({
 			grid={config.grid}
 			style={config.style}
 			rules={toFieldRules(config)}
+			validationRules={config.rules}
 			defaultValue={serializeChoiceValue(config.defaultValue)}
 			disabled={config.disabled}
 		>
