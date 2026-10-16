@@ -1,6 +1,7 @@
 import type { BaseValidationRule } from './types.js';
 import type { ValidationRegistry } from './validation-registry.js';
-import { collectValidatableFields } from './utils.js';
+import { getValidationRulesForElement } from './utils.js';
+import { walkNamedElements } from '@/lib/field-scope.js';
 import { resolveFieldRef } from '@/lib/field-ref.js';
 import { expandFieldTemplatePaths } from '@/lib/path-values.js';
 
@@ -40,7 +41,7 @@ function collectRuleDependencies(
 }
 
 /**
- * Inverts each field's declared rule dependencies into a change-to-dependents map.
+ * Inverts each field's declared rule and require-constraint dependencies into a change-to-dependents map.
  *
  * @remarks
  * Only direct dependents, deliberately: if `c` depends on `b` and `b` on `a`,
@@ -61,9 +62,25 @@ export function buildDependencyIndex(
 ): DependencyIndex {
 	const dependents = new Map<string, string[]>();
 
-	for (const { path: templatePath, rules } of collectValidatableFields(elements, '', registry)) {
+	for (const { path: templatePath, element } of walkNamedElements(elements)) {
+		const rules = getValidationRulesForElement(element, registry);
+		const constraints = 'constraints' in element && Array.isArray(element.constraints) ? element.constraints : [];
+		const requiredReferences = constraints.flatMap((constraint: unknown) =>
+			typeof constraint === 'object' &&
+			constraint !== null &&
+			'action' in constraint &&
+			constraint.action === 'require' &&
+			'field' in constraint &&
+			typeof constraint.field === 'string'
+				? [constraint.field]
+				: [],
+		);
 		for (const fieldPath of expandFieldTemplatePaths(values, templatePath)) {
-			for (const dependency of collectRuleDependencies(rules, fieldPath, registry)) {
+			const dependencies = [
+				...collectRuleDependencies(rules, fieldPath, registry),
+				...requiredReferences.map((reference) => resolveFieldRef(reference, fieldPath)),
+			];
+			for (const dependency of dependencies) {
 				const existing = dependents.get(dependency);
 				if (!existing) {
 					dependents.set(dependency, [fieldPath]);

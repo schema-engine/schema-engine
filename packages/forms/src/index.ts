@@ -6,7 +6,8 @@
  */
 
 export { createFormEngine, FormEngine, SchemaMetadataCatalog, ActionDispatcher } from './engine';
-export type { CreateFormEngineOptions, ActionDispatcherOptions } from './engine';
+export type { CreateFormEngineOptions } from './engine';
+export { collectStepFieldPaths, effectiveRulesFor, validateFieldValue, validateFormValues } from './engine';
 export { createInitialStepStates, createStepMachine, runSubmissionLifecycle, buildFormActionContext } from './engine';
 export type {
 	StepStates,
@@ -16,7 +17,6 @@ export type {
 	SubmissionLifecycleResult,
 	FormActionContextFormState,
 } from './engine';
-export { collectStepFieldPaths, effectiveRulesFor, validateFieldValue, validateFormValues } from './engine';
 export type {
 	EffectiveRulesInput,
 	FieldValidationError,

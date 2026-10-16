@@ -7,7 +7,7 @@ import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@
 import { ArrayElementRegistration } from '@/components/schema-engine/forms/inputs/form-array-elements.registration';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { WizardRecipe } from '@/components/schema-engine/forms/recipes/registrations/wizard';
-import { createFormEngine } from '@/registries/builder-registry';
+import { createFormEngine } from '@schema-engine/forms';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { rhfAdapter } from '@/adapters/react-hook-form';
 

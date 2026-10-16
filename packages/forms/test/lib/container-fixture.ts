@@ -17,6 +17,13 @@ const engine = createFormEngine({
 			metadata: { name: 'Array', category: 'input' },
 			render: (_props: Record<string, unknown>) => null,
 		}),
+		defineInput({
+			$type: 'fieldSet',
+			containerKind: 'object',
+			schema: z.looseObject({ $type: z.literal('fieldSet') }),
+			metadata: { name: 'Fieldset', category: 'input' },
+			render: (_props: Record<string, unknown>) => null,
+		}),
 	],
 });
 export const normalizeContainerFixture = (value: unknown) => engine.validateElement(value);

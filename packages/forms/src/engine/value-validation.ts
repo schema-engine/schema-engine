@@ -6,7 +6,7 @@ import {
 	setValueAtPath,
 } from '../lib/path-values.js';
 import { walkNamedElements } from '../lib/field-scope.js';
-import type { NormalizedElementConfig, NormalizedFormConfig } from '../lib/normalized-form-config.js';
+import type { ConstraintLogic } from '../schemas/base-field.js';
 import {
 	createValidationContext,
 	createZodSchemaFromRules,
@@ -18,9 +18,18 @@ import type { ValidationRegistry } from '../schemas/validation/validation-regist
 import type { DebounceScope } from '../lib/debounce.js';
 import * as z from 'zod/mini';
 
-export type ValidationElement = NormalizedElementConfig;
+export interface ValidationElement {
+	readonly name?: string;
+	readonly id?: string;
+	readonly elements?: readonly ValidationElement[];
+	readonly $type?: string;
+	readonly rules?: readonly BaseValidationRule[];
+	readonly constraints?: readonly ConstraintLogic[];
+}
 export type ValidationElementTree = ReadonlyArray<ValidationElement>;
-export type ValidationStep = Pick<NormalizedFormConfig['steps'][number], 'elements'>;
+export interface ValidationStep {
+	readonly elements: readonly ValidationElement[];
+}
 
 export interface EffectiveRulesInput {
 	element: ValidationElement;

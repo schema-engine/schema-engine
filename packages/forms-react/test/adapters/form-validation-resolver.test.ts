@@ -44,6 +44,23 @@ describe('createFormValidationResolver', () => {
 		expect(resolved.errors).not.toHaveProperty('email');
 	});
 
+	test('returns nested field errors for RHF revalidation', async () => {
+		const resolver = createFormValidationResolver(
+			[
+				{
+					name: 'address',
+					elements: [{ name: 'street', rules: [{ type: 'required', message: 'Street is required' }] }],
+				},
+			],
+			registry,
+		);
+		const resolved = await resolver({ address: { street: '' } }, undefined, {
+			fields: {},
+			shouldUseNativeValidation: false,
+		});
+		expect(resolved.errors).toEqual({ address: { street: { type: 'validation', message: 'Street is required' } } });
+	});
+
 	test('rejects a phone country prefix while accepting a complete international number', async () => {
 		const engine = createFormEngine({ elements: [PhoneInputElementRegistration] });
 		const resolver = createFormValidationResolver(
