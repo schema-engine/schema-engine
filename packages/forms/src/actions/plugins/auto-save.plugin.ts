@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
+import type { BuilderActionRuntimeContext, BuilderActionRegistration } from '@/types';
 import { FormActionTriggerSchema } from '../triggers';
 
 /**
@@ -19,13 +19,15 @@ export interface AutoSaveStorage {
  */
 export interface AutoSavePluginConfig {
 	/** Custom storage implementation */
-	storage?: AutoSaveStorage;
+	storage: AutoSaveStorage;
+	/** Checks whether saving is currently allowed, for example by a consent tool. */
+	shouldSave?: () => boolean | Promise<boolean>;
 	/** Called when auto-save succeeds */
-	onSave?: (data: unknown, context: BuilderActionExecutionContext<any>) => void | Promise<void>;
+	onSave?: (data: unknown, context: BuilderActionRuntimeContext<AutoSaveAction>) => void | Promise<void>;
 	/** Called when auto-save fails */
-	onError?: (error: string, context: BuilderActionExecutionContext<any>) => void | Promise<void>;
+	onError?: (error: string, context: BuilderActionRuntimeContext<AutoSaveAction>) => void | Promise<void>;
 	/** Custom storage key generator */
-	getStorageKey?: (context: BuilderActionExecutionContext<any>) => string;
+	getStorageKey?: (context: BuilderActionRuntimeContext<AutoSaveAction>) => string;
 }
 
 /** Schema for the `auto_save` action configuration. */
@@ -48,29 +50,37 @@ export const AutoSaveActionSchema = z.object({
 
 export type AutoSaveAction = z.infer<typeof AutoSaveActionSchema>;
 
-const defaultStorage: AutoSaveStorage = {
-	save: (key: string, data: unknown) => {
-		localStorage.setItem(key, JSON.stringify(data));
-	},
-	load: (key: string) => {
-		const stored = localStorage.getItem(key);
-		return stored ? JSON.parse(stored) : null;
-	},
-	remove: (key: string) => {
-		localStorage.removeItem(key);
-	},
-};
+const autoSaveDraftKeyPrefix = 'autosave_';
+
+/** Builds the default storage key shared by auto-save and reset actions. */
+export function getAutoSaveDraftStorageKey(formId: string): string {
+	return `${autoSaveDraftKeyPrefix}${formId}`;
+}
+
+/** Identifies storage entries owned by the default auto-save key scheme. */
+export function isAutoSaveDraftStorageKey(key: string): boolean {
+	return key.startsWith(autoSaveDraftKeyPrefix);
+}
 
 /** Creates a configured `auto_save` action registration. */
 export function autoSavePlugin(
-	config: AutoSavePluginConfig = {},
+	config: AutoSavePluginConfig,
 ): BuilderActionRegistration<'auto_save', typeof AutoSaveActionSchema> {
-	const storage = config.storage || defaultStorage;
+	const { storage } = config;
 
-	const handler = async (context: BuilderActionExecutionContext<AutoSaveAction>) => {
+	const handler = async (context: BuilderActionRuntimeContext<AutoSaveAction>) => {
 		const action = context.config;
 		try {
-			const storageKey = action.storageKey || config.getStorageKey?.(context) || `autosave_${context.formId}`;
+			if (config.shouldSave && !(await config.shouldSave())) {
+				return {
+					success: true,
+					message: 'Auto-save skipped because permission was not granted',
+					shouldContinue: true,
+				};
+			}
+
+			const storageKey =
+				action.storageKey || config.getStorageKey?.(context) || getAutoSaveDraftStorageKey(context.formId);
 
 			const formData = context.formData;
 

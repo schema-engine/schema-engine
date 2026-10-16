@@ -5,7 +5,7 @@ import type { ElementConfig, ElementGridConfig } from '@schema-engine/forms/sche
 import { rhfAdapter } from '@/adapters/react-hook-form';
 import { useControlledFormElement } from '@/hooks/use-field';
 import { useGridThemeId } from '@/hooks/use-form-context';
-import { createFormEngine } from '@/registries/builder-registry';
+import { createFormEngine } from '@schema-engine/forms';
 
 const ssrInputSchema = z.object({
 	$type: z.literal('ssr-input'),

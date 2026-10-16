@@ -7,15 +7,17 @@
  * @example
  * ```typescript
  * import * as z from 'zod/mini';
- * import { ActionDispatcher, ActionExecutor, ActionRegistry } from '@schema-engine/actions';
+ * import { Logger } from '@ecopages/logger';
+ * import { ActionDispatcher, ActionRegistry } from '@schema-engine/actions';
  *
+ * const logger = new Logger('[my-app]');
  * const registry = new ActionRegistry<{ formId: string }, 'submit' | 'change'>();
  * registry.register({
  *   $type: 'log',
  *   schema: z.object({ id: z.string(), $type: z.literal('log'), message: z.string() }),
  *   metadata: { name: 'Log', defaultTriggers: ['change'] },
  *   execute: async (ctx) => {
- *     console.log(ctx.config.message, ctx);
+ *     logger.info(ctx.config.message, ctx);
  *     return { success: true };
  *   },
  * });
@@ -31,5 +33,4 @@
 
 export * from './types';
 export * from './registry';
-export * from './executor';
 export * from './dispatcher';

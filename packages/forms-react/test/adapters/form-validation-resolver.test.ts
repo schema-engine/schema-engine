@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { createFormEngine, createDefaultValidationRegistry } from '@schema-engine/forms';
 import { PhoneInputElementRegistration } from '@/components/schema-engine/forms/inputs/form-phone-input.registration';
 import { createFormValidationResolver } from '../../src/adapters/rhf/hooks/use-form-validation-resolver';
@@ -44,6 +44,23 @@ describe('createFormValidationResolver', () => {
 		expect(resolved.errors).not.toHaveProperty('email');
 	});
 
+	test('returns nested field errors for RHF revalidation', async () => {
+		const resolver = createFormValidationResolver(
+			[
+				{
+					name: 'address',
+					elements: [{ name: 'street', rules: [{ type: 'required', message: 'Street is required' }] }],
+				},
+			],
+			registry,
+		);
+		const resolved = await resolver({ address: { street: '' } }, undefined, {
+			fields: {},
+			shouldUseNativeValidation: false,
+		});
+		expect(resolved.errors).toEqual({ address: { street: { type: 'validation', message: 'Street is required' } } });
+	});
+
 	test('rejects a phone country prefix while accepting a complete international number', async () => {
 		const engine = createFormEngine({ elements: [PhoneInputElementRegistration] });
 		const resolver = createFormValidationResolver(
@@ -67,29 +84,31 @@ describe('createFormValidationResolver', () => {
 		expect(complete.errors).toEqual({});
 	});
 
-	test('validates nested fieldset children by composed path', async () => {
-		const resolver = createFormValidationResolver(
-			[
-				{
-					name: 'address',
-					$type: 'fieldset',
-					elements: [
-						{
-							name: 'street',
-							rules: [{ type: 'required', message: 'Street is required' }],
-						},
-					],
-				},
-			],
-			registry,
-		);
-		const resolved = await resolver({ address: { street: '' } }, undefined, {
-			fields: {},
-			shouldUseNativeValidation: false,
-		});
+	test('isolates debounced requests between resolver instances sharing a registry', async () => {
+		vi.useFakeTimers();
+		const fetchSpy = vi
+			.spyOn(globalThis, 'fetch')
+			.mockImplementation(async () => new Response(JSON.stringify({ valid: true }), { status: 200 }));
+		const asyncElements = [
+			{
+				name: 'email',
+				rules: [{ type: 'async', url: '/api/check', debounce: 300, disableCache: true }],
+			},
+		];
+		const firstResolver = createFormValidationResolver(asyncElements, registry);
+		const secondResolver = createFormValidationResolver(asyncElements, registry);
+		const options = { fields: {}, shouldUseNativeValidation: false };
 
-		expect(resolved.errors).toMatchObject({
-			'address.street': { message: 'Street is required' },
-		});
+		try {
+			const first = firstResolver({ email: 'first@example.com' }, undefined, options);
+			const second = secondResolver({ email: 'second@example.com' }, undefined, options);
+			await vi.advanceTimersByTimeAsync(300);
+			await Promise.all([first, second]);
+
+			expect(fetchSpy).toHaveBeenCalledTimes(2);
+		} finally {
+			fetchSpy.mockRestore();
+			vi.useRealTimers();
+		}
 	});
 });

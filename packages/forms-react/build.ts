@@ -10,7 +10,7 @@ import { buildLib } from '@schema-engine/scripts/esbuild-lib';
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const outputDir = path.join(cwd, 'dist');
 
-const entryDirs = ['src/adapters', 'src/components', 'src/contexts', 'src/hooks', 'src/registries', 'src/types'];
+const entryDirs = ['src/adapters', 'src/components', 'src/contexts', 'src/hooks', 'src/types'];
 const excludedCssFiles = ['styles.css'];
 
 const postcssPlugin = {
@@ -80,7 +80,6 @@ await buildLib({
 		{ prefix: '@/components/ui', dir: path.join(cwd, '../../registry/ui-stubs') },
 		{ prefix: '@', dir: path.join(cwd, 'src') },
 	],
-	external: ['react', 'react-dom', '@schema-engine/forms', '@ecopages/logger', 'zod/mini'],
 	plugins: [postcssPlugin],
 	onEnd: generateGlobalCSS,
 });

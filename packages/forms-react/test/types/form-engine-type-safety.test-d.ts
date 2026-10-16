@@ -3,7 +3,7 @@
  * Run via: bun run check-types (tsconfig.test-types.json)
  */
 
-import { createFormEngine } from '@/registries/builder-registry';
+import { createFormEngine } from '@schema-engine/forms';
 import type { FormEngine, FormEngineRuntime } from '@schema-engine/forms/engine';
 import type { GetElementConfig } from '@schema-engine/forms/schemas';
 

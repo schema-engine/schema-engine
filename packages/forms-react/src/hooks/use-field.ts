@@ -1,9 +1,12 @@
 import type React from 'react';
+import { useMemo } from 'react';
 import { isFieldRequired, type ElementConfig, type ElementGridConfig } from '@schema-engine/forms/schemas';
 import { mergeControlProps } from '@schema-engine/forms/schemas/html-attributes';
 import { getFieldGridVariables } from '@schema-engine/forms/lib/grid-styles';
-import { useFormField } from '@/adapters/context';
-import { useGridThemeId } from '@/hooks/use-form-context';
+import { effectiveRulesFor } from '@schema-engine/forms';
+import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
+import { useWatchForm, useFormField } from '@/adapters/context';
+import { useGridThemeId, useOptionalFormEngine } from '@/hooks/use-form-context';
 
 export interface FieldHostProps {
 	className: string;
@@ -56,7 +59,15 @@ export function useControlledFormElement(config: ElementConfig) {
 		throw new Error(`Field configuration is missing required "name" property. Config: ${JSON.stringify(config)}`);
 	}
 
-	const isRequired = isFieldRequired(config.rules);
+	const engineContext = useOptionalFormEngine();
+	const registry = useMemo(
+		() => engineContext?.engine.getValidationRegistry() ?? createDefaultValidationRegistry(),
+		[engineContext],
+	);
+	const values = useWatchForm();
+	const isRequired = isFieldRequired(
+		effectiveRulesFor({ element: config, fieldPath: config.name, values, registry }),
+	);
 	const { value, error, onChange, onBlur, name, disabled, ref } = useFormField<any>(config);
 
 	const fieldProps = mergeControlProps(
@@ -75,16 +86,12 @@ export function useControlledFormElement(config: ElementConfig) {
 
 	const labelProps = {
 		htmlFor: config.id,
-		className: `text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${
-			isRequired ? "after:content-['*'] after:text-red-500 after:ml-1" : ''
-		}`,
 	};
 
 	const errorProps = error
 		? {
 				id: `${config.id}-error`,
 				role: 'alert' as const,
-				className: 'text-sm text-destructive',
 			}
 		: null;
 

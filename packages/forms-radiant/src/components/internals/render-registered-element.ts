@@ -3,8 +3,8 @@ import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/e
 import { applyFieldOverlay } from '@schema-engine/forms';
 import type { NormalizedElementConfig, FieldOverlay } from '@schema-engine/forms';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
-import { evaluateConstraintLogic } from '@/hooks/constraint-logic';
-import { renderWithOwningFormEngine } from '@/contexts/form-engine-owner';
+import { evaluateConstraints } from '@schema-engine/forms/constraints';
+import { renderWithOwningFormEngine, renderWithConstraintValues } from '@/contexts/form-engine-owner';
 import { ElementError } from './element-error';
 import { getValueAtPath } from '@schema-engine/forms/lib/path-values';
 
@@ -55,11 +55,6 @@ function addFieldInitialValue(
  * (from a form or `engine.validateElement`). Field path overlays are
  * render-time only — the frozen config is not cloned.
  *
- * @remarks
- * Constraints evaluate against the `values` in `constraintContext` when the
- * caller has a live form store; without one (plain SSR authoring) they fall
- * back to an empty snapshot, which is the correct initial state for `show`
- * constraints.
  */
 export function renderRegisteredElement(
 	config: NormalizedElementConfig,
@@ -67,13 +62,16 @@ export function renderRegisteredElement(
 	overlays?: FieldOverlay,
 	constraintContext?: ConstraintEvaluationContext,
 	renderWhenHidden = false,
+	snapshot?: ReturnType<typeof evaluateConstraints>,
 ): JsxRenderable {
-	const { shouldShow, shouldDisable, isRequired } = evaluateConstraintLogic(
-		'constraints' in config ? config.constraints : undefined,
-		isFieldRequired('rules' in config ? config.rules : undefined),
-		constraintContext?.fieldPath ?? ('name' in config ? config.name : undefined),
-		constraintContext?.values ?? {},
-	);
+	const { shouldShow, shouldDisable, isRequired } =
+		snapshot ??
+		evaluateConstraints({
+			constraints: 'constraints' in config ? config.constraints : undefined,
+			baseRequired: isFieldRequired('rules' in config ? config.rules : undefined),
+			fieldPath: constraintContext?.fieldPath ?? ('name' in config ? config.name : undefined),
+			values: constraintContext?.values ?? {},
+		});
 
 	if (!shouldShow && !renderWhenHidden) {
 		return null;
@@ -109,5 +107,7 @@ export function renderRegisteredElement(
 		constraintContext?.initialValues,
 	);
 
-	return renderWithOwningFormEngine(engine, () => elementRegistration.render(renderConfig) as JsxRenderable);
+	return renderWithConstraintValues(constraintContext?.values, () =>
+		renderWithOwningFormEngine(engine, () => elementRegistration.render(renderConfig) as JsxRenderable),
+	);
 }

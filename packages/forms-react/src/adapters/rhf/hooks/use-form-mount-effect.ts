@@ -1,6 +1,7 @@
+import { logger } from '@/lib/logger';
 import { useEffect, useRef } from 'react';
 import type { FormActionTrigger, FormConfigView } from '@schema-engine/forms';
-import type { ActionExecutionResult } from '@schema-engine/actions';
+import type { ActionExecutionResult } from '@schema-engine/forms/actions';
 
 interface UseFormMountEffectOptions {
 	actions: FormConfigView['actions'];
@@ -25,7 +26,7 @@ export function useFormMountEffect({ actions, dispatchTrigger }: UseFormMountEff
 			try {
 				await dispatchTrigger('form_mount');
 			} catch (error) {
-				console.error('Form mount action execution failed:', error);
+				logger.error('Form mount action execution failed:', error);
 			}
 		};
 

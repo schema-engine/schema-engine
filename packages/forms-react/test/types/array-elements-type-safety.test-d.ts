@@ -3,7 +3,7 @@
  * Run via: pnpm check-types (tsconfig.test-types.json)
  */
 
-import { createFormEngine } from '@/registries/builder-registry';
+import { createFormEngine } from '@schema-engine/forms';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { SelectElementRegistration } from '@/components/schema-engine/forms/inputs/form-select.registration';
 import { TextareaElementRegistration } from '@/components/schema-engine/forms/inputs/form-textarea.registration';

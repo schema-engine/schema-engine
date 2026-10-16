@@ -6,6 +6,11 @@
 
 ---
 
+Forms and renderer runtime diagnostics use package-tagged `@ecopages/logger`
+instances. Published forms expose action dispatch through `@schema-engine/forms/actions`;
+see the [forms API](./packages/forms/README.md#pre-publish-api) for the supported
+grid and recipe contracts. Debug output is disabled by default; warnings and errors remain visible.
+
 ## Why Schema Engine?
 
 In modern software architecture, the layer between human intent and system behavior often remains a fragmented landscape of imperative logic and tightly coupled UI components.
@@ -146,13 +151,13 @@ graph TD
 
 ## 📦 Packages
 
-| Package                                                      | Version | Description                                                                                                                                                                                                                                                            |
-| ------------------------------------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **[@schema-engine/forms](./packages/forms)**                 | `0.1.0` | Contains `createFormEngine` and `FormEngine`. Handles validation logic, constraint evaluation, and state management.                                                                                                                                                   |
-| **[@schema-engine/forms-react](./packages/forms-react)**     | `0.1.0` | React Context bridge, hooks, adapters, full field-array operations, and rendering runtime. A new normalized config starts a fresh form instance; parent renders alone do not emit change events. Default view recipes live in the shadcn registry.                     |
-| **[@schema-engine/forms-radiant](./packages/forms-radiant)** | `0.1.0` | Radiant/JSX adapter with scoped form and engine controllers, optional decorators, array-level validation, initial row values, SSR default rows, and stable field-array row IDs. Binds canonical view recipes in-package; specs stay in `@schema-engine/forms/recipes`. |
-| **[@schema-engine/actions](./packages/actions)**             | `0.1.0` | A standalone, domain-agnostic command pattern implementation for handling system events.                                                                                                                                                                               |
-| **[@schema-engine/registry](./packages/registry)**           | `0.1.0` | The low-level type definitions and registry implementations that power the IoC container.                                                                                                                                                                              |
+| Package                                                      | Version | Description                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **[@schema-engine/forms](./packages/forms)**                 | `0.1.0` | Contains `createFormEngine` and `FormEngine`. Types form configurations from each engine's element, recipe, and action registrations; handles validation, constraint evaluation, and state management.                                                                                                                                                                                                 |
+| **[@schema-engine/forms-react](./packages/forms-react)**     | `0.1.0` | React rendering at the root, runtime and view hooks at `/hooks`, adapter contracts and hooks at `/adapters`, and rendering primitives at `/primitives`. The optional React Hook Form adapter lives at `/adapters/react-hook-form`; elements and recipes are consumer-owned. A new normalized config starts a fresh form instance. Default recipes live in the shadcn registry.                         |
+| **[@schema-engine/forms-radiant](./packages/forms-radiant)** | `0.1.0` | Radiant/JSX adapter with hydrated registry validation, nested submit values, SSR constraints evaluated against defaults, authored disabled preservation, scoped form and engine controllers, optional decorators, array-level validation, initial row values, SSR default rows, and stable field-array row IDs. Binds canonical view recipes in-package; specs stay in `@schema-engine/forms/recipes`. |
+| **[@schema-engine/actions](./packages/actions)**             | `0.1.0` | A standalone, domain-agnostic command pattern implementation for handling system events.                                                                                                                                                                                                                                                                                                               |
+| **[@schema-engine/registry](./packages/registry)**           | `0.1.0` | The low-level type definitions and registry implementations that power the IoC container.                                                                                                                                                                                                                                                                                                              |
 
 ---
 
@@ -234,3 +239,14 @@ Detailed architectural documentation is available in the [Documentation App](./a
 ## 📄 License
 
 MIT © Schema Engine Contributors
+
+The [registry package](./packages/registry/README.md) exposes one `BaseRegistry`
+class and registration types. The [actions package](./packages/actions/README.md)
+executes through `ActionDispatcher`; form-specific redirect results are described
+in the [forms action guide](./packages/forms/src/actions/README.md).
+
+The [React adapter](./packages/forms-react/README.md#validation-navigation-and-action-contexts)
+uses the engine's shared validation, navigation, submission and action context
+contracts, including nested errors and conditional required fields.
+
+Radiant forms share the engine step and submission lifecycle, refresh form snapshots for each submit trigger, publish nested provider callbacks, and serialize full config once per instance. See [Radiant rendering](./packages/forms-radiant/README.md#rendering-architecture).

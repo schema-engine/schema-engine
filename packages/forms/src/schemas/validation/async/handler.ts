@@ -1,22 +1,17 @@
 import * as z from 'zod/mini';
 import { asyncValidationCache } from './cache';
-import type { ValidationContext } from '../types.js';
-import { debounce } from '@/lib/debounce';
+import type { AsyncRule, ValidationContext } from '../types.js';
+import { isEmpty } from '../empty.js';
 
 /**
  * HTTP methods supported for async validation requests
  */
-export type AsyncValidationMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+export type AsyncValidationMethod = NonNullable<AsyncRule['method']>;
 
 /**
  * Expected response format for validation success determination
  */
-export interface AsyncValidationResponse {
-	valid?: boolean;
-	success?: boolean;
-	message?: string;
-	error?: string;
-}
+export type AsyncValidationResponse = NonNullable<AsyncRule['expectedResponse']>;
 
 /**
  * Cached validation result structure
@@ -24,44 +19,6 @@ export interface AsyncValidationResponse {
 interface CachedValidationResult {
 	valid: boolean;
 	message?: string;
-}
-
-/**
- * Interface for async validation rules with improved type safety
- */
-export interface AsyncRule {
-	/** Validation rule type identifier */
-	type: 'async';
-
-	/** The URL endpoint to validate against (can include field name as path parameter) */
-	url: string;
-
-	/** HTTP method for the validation request (defaults to POST) */
-	method?: AsyncValidationMethod;
-
-	/** Additional headers to send with the request */
-	headers?: Record<string, string>;
-
-	/** Extra payload data to include in request (value and dependsOn are sent automatically) */
-	extraPayload?: Record<string, unknown>;
-
-	/** Expected successful response for validation (if not provided, uses standard success check) */
-	expectedResponse?: AsyncValidationResponse;
-
-	/** Field names this validation depends on for cross-field validation */
-	dependencies?: string[];
-
-	/** Error message to display when validation fails (server message takes priority) */
-	message?: string;
-
-	/** Debounce delay in milliseconds (delays validation execution) */
-	debounce?: number;
-
-	/** Cache TTL in milliseconds (defaults to 5 minutes) */
-	cacheTTL?: number;
-
-	/** Whether to disable caching for this validation */
-	disableCache?: boolean;
 }
 
 /**
@@ -179,10 +136,9 @@ function handleErrorWithCache(
  * Includes debouncing, dependency resolution, and performance optimizations.
  */
 export function createAsyncValidationHandler(rule: AsyncRule, context: ValidationContext) {
-	return z.any().check(
+	return z.unknown().check(
 		z.superRefine(async (value: unknown, ctx) => {
-			/** Skip validation for empty values to prevent unnecessary API calls */
-			if (value === '' || value === null || value === undefined) {
+			if (isEmpty(value)) {
 				return;
 			}
 
@@ -195,7 +151,7 @@ export function createAsyncValidationHandler(rule: AsyncRule, context: Validatio
 			if (rule.dependencies?.length) {
 				const hasEmptyDependencies = rule.dependencies.some((dep) => {
 					const depValue = context.resolve(dep);
-					return depValue === '' || depValue === null || depValue === undefined;
+					return isEmpty(depValue);
 				});
 
 				if (hasEmptyDependencies) {
@@ -220,7 +176,7 @@ export function createAsyncValidationHandler(rule: AsyncRule, context: Validatio
 			 * Create unique debounce key excluding the changing value to ensure proper debouncing.
 			 */
 			const stablePayload = { dependsOn, ...rule.extraPayload };
-			const debounceKey = `async-validation:${rule.url}:${JSON.stringify(stablePayload)}`;
+			const debounceKey = `async-validation:${context.fieldPath}:${rule.url}:${JSON.stringify(stablePayload)}`;
 
 			/** Core validation function that performs the HTTP request and processes the response */
 			const performValidation = async () => {
@@ -282,7 +238,7 @@ export function createAsyncValidationHandler(rule: AsyncRule, context: Validatio
 
 			/** Execute validation with optional debouncing based on rule configuration */
 			if (rule.debounce && rule.debounce > 0) {
-				await debounce(performValidation, rule.debounce, debounceKey);
+				await context.debounceScope.debounce(performValidation, rule.debounce, debounceKey);
 			} else {
 				await performValidation();
 			}

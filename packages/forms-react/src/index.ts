@@ -1,13 +1,3 @@
-/**
- * @schema-engine/forms-react
- * React components and hooks for form engine
- */
-
+/** React rendering components. Hooks and adapter contracts have dedicated subpaths. */
 export * from '@/components';
-export * from '@/adapters';
-export * from '@/contexts';
-export * from '@/hooks';
-export * from '@/registries';
 export type { FormShellComponent, FormShellProps, ReactRecipeAdapterPayload } from '@/primitives';
-export { FormElements } from '@/components/internals/form-elements';
-export type { FormElementsProps } from '@/components/internals/form-elements';

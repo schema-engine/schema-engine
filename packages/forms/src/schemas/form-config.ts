@@ -30,12 +30,20 @@ export const FormViewConfigSchema = z.looseObject({
 
 /** Form step schema for multi-step forms - now contains fields directly. */
 export const FormStepSchema = createFormStepSchema({
+	/**
+	 * Element payloads are an existential boundary.
+	 * @remarks The owning engine selects and validates their types by `$type`.
+	 */
 	elements: z.any(),
 	actions: FormActionConfigSchema,
 });
 
 /** Complete form configuration schema. */
 export const FormConfigSchema = createFormConfigShape({
+	/**
+	 * Element payloads are an existential boundary.
+	 * @remarks The owning engine selects and validates their types by `$type`.
+	 */
 	elements: z.any(),
 	view: FormViewConfigSchema,
 	actions: FormActionConfigSchema,

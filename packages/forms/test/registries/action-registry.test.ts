@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { createFormEngine } from '@/engine/create-form-engine';
-import type { BuilderActionRegistration, BuilderActionExecutionContext } from '@/types';
+import type { BuilderActionRegistration, BuilderActionRuntimeContext } from '@/types';
 import * as z from 'zod/mini';
 import type { ActionExecutionResult } from '@schema-engine/actions';
 
@@ -19,7 +19,7 @@ describe('ActionRegistry', () => {
 			description: 'Logs a message',
 			defaultTriggers: ['form_submit'],
 		},
-		execute(_context: BuilderActionExecutionContext<LogActionConfig>): Promise<ActionExecutionResult> {
+		execute(_context: BuilderActionRuntimeContext<LogActionConfig>): Promise<ActionExecutionResult> {
 			return Promise.resolve({ success: true });
 		},
 	};
@@ -32,9 +32,7 @@ describe('ActionRegistry', () => {
 			description: 'Submits form data',
 			defaultTriggers: ['form_submit'],
 		},
-		execute: async (
-			_context: BuilderActionExecutionContext<SubmitActionConfig>,
-		): Promise<ActionExecutionResult> => {
+		execute: async (_context: BuilderActionRuntimeContext<SubmitActionConfig>): Promise<ActionExecutionResult> => {
 			return { success: true };
 		},
 	};

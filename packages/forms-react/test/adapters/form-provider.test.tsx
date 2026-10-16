@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { FormProvider } from '../../src/adapters/rhf/form-provider';
 import type { FormConfig } from '@schema-engine/forms/schemas';
@@ -6,7 +6,7 @@ import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/va
 import { mockDispatch } from '../utils/use-action-executor.mock';
 import { useFormContext as useReactHookFormContext } from 'react-hook-form';
 
-vi.mock('@schema-engine/actions', async () => {
+vi.mock('@schema-engine/forms/actions', async () => {
 	const { mockDispatch, mockDispatchSync } = await import('../utils/use-action-executor.mock');
 	return {
 		ActionDispatcher: class {
@@ -25,6 +25,9 @@ vi.mock('../../src/adapters/rhf/hooks/use-form-validation-resolver', () => ({
 }));
 
 describe('FormProvider', () => {
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
 	const config: FormConfig = {
 		id: 'test-form',
 		title: 'Test Form',
@@ -145,9 +148,10 @@ describe('FormProvider', () => {
 		});
 
 		await waitFor(() => {
-			expect(consoleError).toHaveBeenCalledWith('Form change action execution failed:', expect.any(Error));
+			const message = consoleError.mock.calls.flat().join(' ');
+			expect(message).toContain('[schema-engine/forms-react]');
+			expect(message).toContain('Form change action execution failed:');
+			expect(message).toContain('Error: form_change failed');
 		});
-
-		consoleError.mockRestore();
 	});
 });

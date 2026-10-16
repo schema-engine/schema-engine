@@ -1,8 +1,12 @@
+import type { ContainerKind } from '../types/registration.js';
+import { isPlainObject } from './is-plain-object.js';
 import type { FormConfig, FormStep } from '@/schemas/form-config';
 import type { ElementConfig } from '@/schemas/field-config';
 import type { BaseField } from '@/schemas/base-field';
 
 const NORMALIZED_FORM_CONFIG = Symbol.for('@schema-engine/forms.normalized-form-config');
+const ELEMENT_CONTAINER_KIND = Symbol.for('@schema-engine/forms.container-kind');
+
 const NORMALIZED_ELEMENT_CONFIG = Symbol.for('@schema-engine/forms.normalized-element-config');
 
 type NormalizedFormProvenance = {
@@ -77,14 +81,9 @@ export type NormalizedFormConfig<
 	readonly [NORMALIZED_FORM_CONFIG]: NormalizedFormProvenance;
 };
 
-function isPlainObject(value: object): value is Record<string, unknown> {
-	const proto = Object.getPrototypeOf(value);
-	return proto === Object.prototype || proto === null;
-}
-
 export function isNormalizedElementConfig(value: unknown): value is NormalizedElementConfig {
 	if (typeof value !== 'object' || value === null || !Object.isFrozen(value)) return false;
-	return (value as NormalizedElementConfig)[NORMALIZED_ELEMENT_CONFIG] === true;
+	return (value as NormalizedElementConfig)[NORMALIZED_ELEMENT_CONFIG];
 }
 
 /**
@@ -183,13 +182,25 @@ export function markNormalizedFormConfig(config: FormConfig, owner: object): Nor
 	return snapshot as unknown as NormalizedFormConfig;
 }
 
-export function markNormalizedElementConfig(config: ElementConfig): NormalizedElementConfig {
-	if (isNormalizedElementConfig(config)) {
+export function markNormalizedElementConfig(
+	config: ElementConfig | NormalizedElementConfig,
+	containerKind?: ContainerKind,
+): NormalizedElementConfig {
+	const alreadyNormalized = isNormalizedElementConfig(config);
+	const resolvedContainerKind = containerKind ?? (alreadyNormalized ? getElementContainerKind(config) : undefined);
+	if (alreadyNormalized && getElementContainerKind(config) === resolvedContainerKind) {
 		return config;
 	}
 
-	const snapshot = cloneFormValue(config, new WeakMap()) as object;
+	const snapshot = (alreadyNormalized ? { ...config } : cloneFormValue(config, new WeakMap())) as object;
 	attachElementBrand(snapshot);
+	if (resolvedContainerKind)
+		Object.defineProperty(snapshot, ELEMENT_CONTAINER_KIND, { value: resolvedContainerKind });
 	freezeOwnedTree(snapshot, new WeakSet());
 	return snapshot as unknown as NormalizedElementConfig;
+}
+
+/** Registration container semantics attached to normalized element snapshots. */
+export function getElementContainerKind(element: object): ContainerKind | undefined {
+	return (element as { [ELEMENT_CONTAINER_KIND]?: ContainerKind })[ELEMENT_CONTAINER_KIND];
 }

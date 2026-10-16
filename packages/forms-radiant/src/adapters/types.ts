@@ -1,5 +1,5 @@
-import type { FormActionConfig, FormConfig } from '@schema-engine/forms/schemas';
-import type { NormalizedFormConfig } from '@schema-engine/forms';
+import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { NormalizedFormConfig, FormConfigView } from '@schema-engine/forms';
 import type { FieldArrayValue } from '@schema-engine/forms/adapters';
 import type { JsxRenderable } from '@ecopages/jsx';
 
@@ -19,5 +19,5 @@ export interface FormProviderProps<TFormData = Record<string, unknown>> {
 	children?: JsxRenderable;
 	onSubmit?: (data: TFormData) => void | Promise<void>;
 	onChange?: (data: Partial<TFormData>) => void;
-	onAction?: (action: FormActionConfig, data: TFormData) => void | Promise<void>;
+	onAction?: (action: NonNullable<FormConfigView['actions']>[number], data: TFormData) => void | Promise<void>;
 }

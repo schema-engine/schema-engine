@@ -1,5 +1,6 @@
 import * as z from 'zod/mini';
-import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
+import type { BuilderActionRuntimeContext, BuilderActionRegistration } from '@/types';
+import { logger } from '@/lib/logger';
 import { FormActionTriggerSchema } from '../triggers';
 
 /**
@@ -7,18 +8,18 @@ import { FormActionTriggerSchema } from '../triggers';
  */
 export interface NotificationPluginConfig {
 	/** Custom success handler */
-	onSuccess?: (message: string, context: BuilderActionExecutionContext<any>) => void | Promise<void>;
+	onSuccess?: (message: string, context: BuilderActionRuntimeContext<NotificationAction>) => void | Promise<void>;
 	/** Custom error handler */
-	onError?: (message: string, context: BuilderActionExecutionContext<any>) => void | Promise<void>;
+	onError?: (message: string, context: BuilderActionRuntimeContext<NotificationAction>) => void | Promise<void>;
 	/** Custom warning handler */
-	onWarning?: (message: string, context: BuilderActionExecutionContext<any>) => void | Promise<void>;
+	onWarning?: (message: string, context: BuilderActionRuntimeContext<NotificationAction>) => void | Promise<void>;
 	/** Custom info handler */
-	onInfo?: (message: string, context: BuilderActionExecutionContext<any>) => void | Promise<void>;
+	onInfo?: (message: string, context: BuilderActionRuntimeContext<NotificationAction>) => void | Promise<void>;
 	/** Global handler for all notification types */
 	onNotification?: (
 		message: string,
 		variant: string,
-		context: BuilderActionExecutionContext<any>,
+		context: BuilderActionRuntimeContext<NotificationAction>,
 	) => void | Promise<void>;
 }
 
@@ -48,7 +49,7 @@ export type NotificationAction = z.infer<typeof NotificationActionSchema>;
 export function notificationPlugin(
 	config: NotificationPluginConfig = {},
 ): BuilderActionRegistration<'show_notification', typeof NotificationActionSchema> {
-	const handler = async (context: BuilderActionExecutionContext<NotificationAction>) => {
+	const handler = async (context: BuilderActionRuntimeContext<NotificationAction>) => {
 		const action = context.config;
 
 		try {
@@ -62,28 +63,28 @@ export function notificationPlugin(
 						if (config.onSuccess) {
 							await config.onSuccess(message, context);
 						} else {
-							console.log('success', { formId: context.formId, message });
+							logger.info('success', { formId: context.formId, message });
 						}
 						break;
 					case 'error':
 						if (config.onError) {
 							await config.onError(message, context);
 						} else {
-							console.error('error', { formId: context.formId, message });
+							logger.error('error', { formId: context.formId, message });
 						}
 						break;
 					case 'warning':
 						if (config.onWarning) {
 							await config.onWarning(message, context);
 						} else {
-							console.warn('warning', { formId: context.formId, message });
+							logger.warn('warning', { formId: context.formId, message });
 						}
 						break;
 					case 'info':
 						if (config.onInfo) {
 							await config.onInfo(message, context);
 						} else {
-							console.info('info', { formId: context.formId, message });
+							logger.info('info', { formId: context.formId, message });
 						}
 						break;
 				}

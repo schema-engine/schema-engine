@@ -4,105 +4,22 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # @schema-engine/forms-react
 
-The official React SDK for [Schema Engine](https://schema-engine.com). This package provides a type-safe, performant, and reliable way to render complex forms using JSON definitions.
+Render form configurations from `@schema-engine/forms` with React. Applications
+install consumer-owned element registrations and view recipes, then pass an
+engine and adapter to `FormEngineProvider`.
 
-## Key Features
+Create engines with `createFormEngine` from `@schema-engine/forms`. Import
+`FormEngineProvider` and `FormRenderer` from `@schema-engine/forms-react`.
+The React Hook Form adapter is available only from
+`@schema-engine/forms-react/adapters/react-hook-form`; install `react-hook-form`
+when choosing that adapter.
 
-- **End-to-End Type Safety**: Full TypeScript inference for form configurations, components, and actions.
-- **Universal Adapter System**: Includes a built-in React Hook Form adapter and supports custom adapters for any form library.
-- **Production-Ready Components**: A rich library of accessible, pre-styled form elements.
-- **View Recipes**: Compose registry-owned shells, progress, and actions via explicitly registered `view.$type` recipes (`card`, `card-wizard`, `hero-background`, …).
-- **Dynamic Lifecycle Actions**: Declaratively execute HTTP requests, redirects, and state updates based on form events.
+Use `/hooks` for runtime and view hooks, `/adapters` for adapter contracts and
+form hooks, and `/primitives` for `FormElement`, `FormElements`, and recipe
+contracts. `/contexts` supplies the view provider and context types.
 
-## Core Concepts
+The runtime exposes `se-*` class hooks and grid variables. Registry components
+choose their own UI library and styling dependencies.
 
-Understanding the architecture of Schema Engine is key to leveraging its full potential. The system allows you to define complex forms as serializable JSON data structures.
-
-### 1. Form Configuration
-
-The root object that defines the form's identity, behavior, and structure.
-
-```ts
-interface FormConfig {
-	id: string; // Unique identifier
-	title?: string; // Form title
-	view?: { $type: string }; // View recipe
-	steps: FormStep[]; // Array of steps (pages)
-	actions?: FormAction[]; // Global actions (e.g., submit)
-}
-```
-
-### 2. Steps & Elements
-
-Forms are divided into one or more **Steps**. Each step contains **Elements** (inputs, buttons, etc.).
-
-### 3. View Recipes
-
-Visual chrome is configured via `view.$type` recipes:
-
-```ts
-view: {
-  $type: 'card-wizard',
-  shell: { maxWidth: 'md', padding: 'md' },
-  progress: { showPercentage: true },
-}
-```
-
-Single-step recipes (`card`, `hero-background`, `split-screen`) compose a **shell** around the form. Multi-step recipes (`card-wizard`, `wizard`, `sidebar-wizard`, …) add **progress** and **actions** blocks on top.
-
-## Basic Usage
-
-Render a form by passing a configuration object to the `FormRenderer`.
-
-```tsx
-import { FormRenderer } from '@schema-engine/forms-react';
-
-const schema = {
-	id: 'contact-form',
-	title: 'Contact Us',
-	steps: [
-		{
-			id: 'contact-step',
-			title: 'Contact Details',
-			elements: [
-				{
-					$type: 'input',
-					name: 'email',
-					label: 'Email Address',
-					rules: [{ type: 'required' }, { type: 'email' }],
-				},
-				{
-					$type: 'submit',
-					label: 'Send Message',
-				},
-			],
-		},
-	],
-	actions: [
-		{
-			id: 'submit-action',
-			$type: 'submit',
-			endpoint: '/api/contact',
-			triggers: ['form_submit'],
-		},
-	],
-};
-
-export default function Page() {
-	return <FormRenderer config={schema} onSubmit={(data) => console.log(data)} />;
-}
-```
-
-## Documentation
-
-This Storybook serves as an interactive component playground. For detailed guides, API references, and tutorials, please visit our official documentation:
-
-[**schema-engine.com/docs/packages/forms-react**](https://schema-engine.com/docs/packages/forms-react)
-
-## Philosophy
-
-Schema Engine adheres to **Configuration over Code**. Define _what_ you want, not _how_ to build it. Decoupling form definition from implementation ensures:
-
-- **Portability**: Persist forms in databases and serve them dynamically to any client.
-- **Consistency**: Enforce design systems and validation rules uniformly across applications.
-- **Adaptability**: Switch underlying frameworks or platforms without rewriting business logic.
+See the [Getting started guide](https://schema-engine.com/docs/forms-react/getting-started)
+for installation and a complete rendering example.

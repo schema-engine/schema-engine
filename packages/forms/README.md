@@ -9,6 +9,12 @@ registration contracts remain `StandardSchemaV1`, so custom elements, recipes,
 and actions can use Valibot, Effect Schema, Zod, or another compatible
 provider.
 
+## Logging
+
+Runtime diagnostics go through `@ecopages/logger` with the
+`[schema-engine/forms]` package tag. Debug output is disabled by default;
+warnings and errors keep their severity and diagnostic details.
+
 ## Compose an engine
 
 ```ts
@@ -54,12 +60,14 @@ without marking that step complete or advancing. When `isValid` is false, it lea
 active step in place. Pass the resulting state to `buildViewModel` as `stepStates`.
 
 `runSubmissionLifecycle(dispatch, { actions, context })` dispatches the form submit start,
-submit, success or error, and complete triggers. The returned `succeeded` flag is false
-only when a submit action fails with `shouldContinue: false`; a failed action that allows
-continuation does not fail the submission. `buildFormActionContext` is an exported utility
-that constructs a form action context with form data and timing metadata, including a
-stable step start time that resets when the active step changes. The engine entry point also
-re-exports `ActionDispatcher` so both renderers can use the same action dispatcher class.
+submit, success or error, and complete triggers. Pass a fixed `context` when every trigger
+uses the same snapshot, or a context factory when each trigger needs a fresh form-state
+snapshot. The returned `succeeded` flag is false only when a submit action fails with
+`shouldContinue: false`; a failed action that allows continuation does not fail the
+submission. `buildFormActionContext` is an exported utility that constructs a form action
+context with form data and timing metadata, including a stable step start time that resets
+when the active step changes. The engine entry point also re-exports `ActionDispatcher` so
+both renderers can use the same action dispatcher class.
 
 An `arrayElements` row with one leaf child uses a scalar path when its seed is not object-shaped. A child container such as `fieldSet` stays under its own row object path. Object-shaped array `initialValues`, a child field's object-shaped `defaultValue`, or the first row object from form `defaultValues` (falling back to the array's `defaultValue`) also selects the object path.
 Use `engine.extend({ ... })` to add registrations without re-spreading shared barrels. Author forms with `engine.defineForm({ ... })` object literals.
@@ -144,25 +152,121 @@ that omit `view` use the registered `bare-controls` recipe at **render** time.
 warns and shows fields without chrome. `validateForm` does apply kind and slot
 checks when `view.$type` is set.
 
+## Engine validation
+
+The forms package exports shared value-validation helpers from
+`@schema-engine/forms`. `validateFormValues` accepts a `ValidationElementTree`,
+and `collectStepFieldPaths` accepts a `ValidationStep`; both types follow the
+engine's normalized form model.
+
+- `collectStepFieldPaths(step, values)` walks named fields in nested containers
+  and expands field templates for each array row. Scalar array child rules use
+  item paths such as `tags.0`, while the array container keeps its `tags` path.
+- `effectiveRulesFor({ element, fieldPath, values, registry })` combines
+  configured and field-type default rules, then adds `required` when a `require`
+  constraint holds for the rendered field path. A sibling reference such as
+  `accountType` on `contacts.0.taxId` resolves to `contacts.0.accountType`, so
+  each array row uses its own value.
+- `validateFieldValue({ element, value, values, fieldPath, registry, debounceScope? })` returns
+  the first validation message, or `undefined` when the value passes.
+- `validateFormValues({ elements, values, registry, names?, debounceScope? })` validates the
+  selected paths and returns nested errors, such as
+  `errors.address.street.message`.
+
+Pass a caller-owned `DebounceScope` to either helper to reuse async debounce
+state across validation calls for a form. Each rendered field path is keyed
+separately, and each form should own its scope.
+
+Required rules, `relate`, constraint emptiness operators, and async skip checks
+share the same empty values: `undefined`, `null`, `''`, and `[]`. `false` and
+`0` count as present. `validateForm` and `validateElement` reject rules without
+a registered handler with a `FormValidationError` naming the field and rule.
+The `relate` string and date bases coerce primitive values and `Date` instances;
+arbitrary objects are left unchanged for string comparisons and are invalid dates.
+
+Constraint `contains` and `not_contains` use text matching only for primitive
+string, number, boolean, and bigint values. Object-valued fields do not fall back
+to JavaScript's default object string.
+
+The `values` argument is the full nested form value tree. Omitting `names`, or
+passing an empty list, validates every named field. A non-empty `names` list
+validates only the requested paths and their descendants.
+
+React uses these shared validation helpers. Radiant adoption is tracked by
+[#133](https://github.com/andeeplus/schema-engine/issues/133).
+
+## Browser integrations
+
+The `@schema-engine/forms` root entry point is framework-agnostic and does not
+choose browser storage or analytics globals. Import browser tools and their
+preconfigured action registrations from `@schema-engine/forms/browser`:
+
+```ts
+import {
+	AutoSaveActionRegistration,
+	GTMActionRegistration,
+	GDPRConsent,
+	ResetActionRegistration,
+} from '@schema-engine/forms/browser';
+
+GDPRConsent.grantConsent();
+```
+
+The browser auto-save registration writes only after consent has been granted.
+It and the reset registration share the `autosave_<formId>` key, and revoking
+consent clears drafts stored under that key or a custom auto-save `storageKey`.
+Hosts using the root plugin factories provide their own `AutoSaveStorage`
+adapter.
+
 ## Who owns visual chrome
 
 | Layer                                                           | Owns                                                                                                                      |
 | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | `@schema-engine/forms`                                          | Engine, validation, actions, recipe protocol, adapter types (`@schema-engine/forms/adapters`) — no widget `$type` schemas |
 | `@schema-engine/forms-react`                                    | React renderer, RHF adapter, field-array operations, and headless `createFormEngine()` re-export                          |
-| `@schema-engine/forms-radiant`                                  | Radiant widgets, colocated field schemas, shells, blocks, and scoped form controllers                                     |
+| `@schema-engine/forms-radiant`                                  | Radiant widgets, default-aware SSR constraints, shells, blocks, and scoped form controllers                               |
 | Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Copied React widgets, colocated field schemas, and view recipes for the React adapter                                     |
 
 Custom fields use `defineInput` with any Standard Schema. Default widgets ship their own Zod schemas beside their registrations; those schemas are not engine contracts and may differ between React and Radiant.
 
 ### Engine-scoped config types
 
-Element, recipe, and action config types come from the registrations passed to
-`createFormEngine`. Two engines may expose different element sets independently.
-Use `engine.defineForm` to infer authoring input and normalized output for that
-engine. Generic `FormConfig` and `NormalizedFormConfig` types accept the engine
-maps; their defaults describe an open config for helpers without a concrete engine.
-`FormEngine` keeps schema input maps separate from its fourth generic, the parsed
-output maps, so defaults and transforms appear correctly in normalized configs.
-Renderers store the `FormEngineRuntime` contract, which omits registration extension.
-Registration files no longer augment a global `FormEngine` namespace.
+Element, recipe, and action config types come from each engine's registrations.
+Use `engine.defineForm` to infer its authoring inputs and normalized outputs.
+The `FormConfig` and `NormalizedFormConfig` types accept the same engine maps;
+their defaults stay open for helpers without a concrete engine. Parsed output
+maps remain separate from schema input maps, so defaults and transforms retain
+their output types. Renderer props use `FormEngineRuntime`, which omits
+registration extension.
+
+### Container registration semantics
+
+Set `containerKind: 'array'` on an array input registration, including custom
+widgets with a different `$type`. The engine carries this metadata into frozen
+normalized elements for default seeding and field traversal. Authoring JSON does
+not include this marker. Containers without an array marker use object paths.
+See [engine internals](src/engine/README.md#schema-artifacts-and-extension).
+`extend` also preserves an engine's custom schema metadata catalog.
+
+`templatePath` in `@schema-engine/forms/lib/path-values` removes numeric array indices from rendered paths for constraint declaration lookup, alongside `expandFieldTemplatePaths`.
+
+Engine construction builds registration Maps directly and validates each supplied
+schema once at that boundary. Form action results add optional browser redirects
+to the generic result; see [actions](./src/actions/README.md).
+
+## Pre-publish API
+
+Use `FormActionTrigger` and `BuilderActionRuntimeContext` for form actions. The
+`@schema-engine/forms/actions` entry exports `ActionDispatcher` for renderers.
+Recipe lookup accepts an engine or `{ getRecipe }` object. Grid configuration
+rejects unknown keys, including `rows`, `autoFit`, `autoFill`, and
+`maxColumnWidth`; automatic columns use `columns: 'auto'` and `minColumnWidth`.
+Recipe metadata has no `deprecated` property.
+
+React uses the engine's validation, step state, submission triggers and action
+context builder; see the [React adapter contract](../forms-react/README.md#validation-navigation-and-action-contexts).
+Action context form adapters must implement `reset`, `setValue`, `getValue` and
+`validate`, including for custom renderer integrations.
+
+The validation dependency index also tracks `require` constraints, so renderers
+can clear conditional required errors when a controlling value changes.

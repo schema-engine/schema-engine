@@ -131,7 +131,7 @@ describe('Radiant form engine resolution', () => {
 
 	test('an action controller dispatches its form-mount action after renderer context arrives', async () => {
 		const onPush = vi.fn();
-		const engine = createRadiantFormEngine({ actions: [gtmPlugin({ onPush })] });
+		const engine = createRadiantFormEngine({ actions: [gtmPlugin({ tracker: { push: vi.fn() }, onPush })] });
 		createRadiantFormEngine();
 		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
 		const form = document.createElement('rui-form');

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useFormContext, useWatchForm } from '@/adapters/context';
-import { cn } from '@/lib/utils';
 import { useFormInstanceActions } from '@/hooks/use-form-context';
 import { useOptionalViewContext } from '@/contexts/view-context';
 import './form-debugger.css';
@@ -65,9 +64,9 @@ function DebuggerProgress({ currentStep, totalSteps }: { currentStep: number; to
 	return (
 		<div>
 			<div className="form-debugger__section-title">Progress</div>
-			<div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-muted">
+			<div className="form-debugger__progress">
 				<div
-					className="h-full bg-primary transition-all"
+					className="form-debugger__progress-fill"
 					style={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }}
 				/>
 			</div>
@@ -93,18 +92,16 @@ function DebuggerSteps({
 	return (
 		<div>
 			<div className="form-debugger__section-title">Steps</div>
-			<div className="form-debugger__timeline mt-2">
+			<div className="form-debugger__timeline">
 				{steps.map((step, index) => (
 					<div
 						key={step.id}
-						className={cn('form-debugger__timeline-item', {
-							'form-debugger__timeline-item--active': index === currentStep,
-						})}
+						className={`form-debugger__timeline-item ${index === currentStep ? 'form-debugger__timeline-item--active' : ''}`}
 					>
 						<div>
-							<div className="font-medium">{step.title ?? `Step ${index + 1}`}</div>
+							<div className="form-debugger__step-title">{step.title ?? `Step ${index + 1}`}</div>
 							{step.description && showDetails && (
-								<div className="text-xs text-muted-foreground">{step.description}</div>
+								<div className="form-debugger__step-description">{step.description}</div>
 							)}
 							<div className="form-debugger__timeline-meta">
 								{step.isValid && (
@@ -139,7 +136,7 @@ function DebuggerFormState({
 	return (
 		<div>
 			<div className="form-debugger__section-title">Form state</div>
-			<div className="mt-2 space-y-1">
+			<div className="form-debugger__details">
 				<div className="form-debugger__detail-row">
 					<span className="form-debugger__detail-label">Submitting</span>
 					<code className="form-debugger__detail-value">{String(formState.isSubmitting)}</code>
@@ -199,11 +196,14 @@ function DebuggerNav({
 						type="button"
 						onClick={() => navigation.goToStep(index)}
 						disabled={!step.isVisited && index > currentStep}
-						className={cn('form-debugger__nav-dot', {
-							'form-debugger__nav-dot--active': index === currentStep,
-							'form-debugger__nav-dot--completed': index < currentStep,
-							'form-debugger__nav-dot--disabled': !step.isVisited && index > currentStep,
-						})}
+						className={[
+							'form-debugger__nav-dot',
+							index === currentStep && 'form-debugger__nav-dot--active',
+							index < currentStep && 'form-debugger__nav-dot--completed',
+							!step.isVisited && index > currentStep && 'form-debugger__nav-dot--disabled',
+						]
+							.filter(Boolean)
+							.join(' ')}
 						aria-label={`Go to ${step.title ?? `step ${index + 1}`}`}
 					/>
 				))}
@@ -230,14 +230,7 @@ function FormDebuggerPanel({
 	const { currentStep, totalSteps, stepStates, navigation, submissionState } = useFormInstanceActions();
 	const view = useOptionalViewContext();
 
-	const steps =
-		view?.steps ??
-		Array.from({ length: totalSteps }, (_, index) => ({
-			id: `step-${index}`,
-			title: `Step ${index + 1}`,
-			isVisited: stepStates?.visited[index],
-			isValid: stepStates?.valid[index],
-		}));
+	const steps = view?.steps ?? [];
 	const isMultiStep = totalSteps > 1;
 
 	return (
@@ -309,9 +302,7 @@ export function FormDebugger({
 		<div className="form-debugger">
 			<div
 				ref={panelRef}
-				className={cn('form-debugger__widget', {
-					'form-debugger__widget--expanded': isExpanded,
-				})}
+				className={`form-debugger__widget ${isExpanded ? 'form-debugger__widget--expanded' : ''}`}
 			>
 				{!isExpanded ? (
 					<button

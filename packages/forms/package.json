@@ -58,6 +58,10 @@
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
 		},
+		"./browser": {
+			"types": "./dist/browser/index.d.ts",
+			"import": "./dist/browser/index.js"
+		},
 		"./actions": {
 			"types": "./dist/actions/index.d.ts",
 			"import": "./dist/actions/index.js"
@@ -133,14 +137,6 @@
 		"./constraints/*": {
 			"types": "./dist/constraints/*.d.ts",
 			"import": "./dist/constraints/*.js"
-		},
-		"./tools": {
-			"types": "./dist/tools/index.d.ts",
-			"import": "./dist/tools/index.js"
-		},
-		"./tools/*": {
-			"types": "./dist/tools/*.d.ts",
-			"import": "./dist/tools/*.js"
 		},
 		"./recipes": {
 			"types": "./dist/recipes/index.d.ts",

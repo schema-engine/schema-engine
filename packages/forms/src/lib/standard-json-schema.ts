@@ -1,7 +1,12 @@
+import type { StandardJSONSchemaV1 } from '@standard-schema/spec';
+export type { StandardJSONSchemaV1 } from '@standard-schema/spec';
+
 /**
  * Loosely typed JSON Schema object used at the package boundary.
  * The serializer layer intentionally stays permissive so callers can inspect
  * emitted schemas without depending on a full JSON Schema AST type model.
+ * @remarks Values are existential JSON Schema nodes; callers inspecting nested
+ * vendor-specific keywords retain the permissive boundary used by the engine.
  */
 export type JSONSchemaObject = Record<string, any>;
 
@@ -10,34 +15,7 @@ export type JSONSchemaObject = Record<string, any>;
  * This mirrors the Standard JSON Schema target model and keeps room for
  * future target strings without another breaking type change.
  */
-export type JSONSchemaTarget = 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0' | ({} & string);
-
-/**
- * Options passed to Standard JSON Schema input and output converters.
- */
-export interface JSONSchemaOptions {
-	target: JSONSchemaTarget;
-	libraryOptions?: Record<string, unknown>;
-}
-
-/**
- * Minimal Standard JSON Schema v1 surface used by this workspace.
- * It intentionally models only the parts the engine needs to expose today.
- */
-export interface StandardJSONSchemaV1<Input = unknown, Output = Input> {
-	readonly '~standard': {
-		readonly version: 1;
-		readonly vendor: string;
-		readonly types?: {
-			readonly input: Input;
-			readonly output: Output;
-		};
-		readonly jsonSchema: {
-			readonly input: (options: JSONSchemaOptions) => JSONSchemaObject;
-			readonly output: (options: JSONSchemaOptions) => JSONSchemaObject;
-		};
-	};
-}
+export type JSONSchemaTarget = StandardJSONSchemaV1.Target;
 
 /**
  * Create a Standard JSON Schema wrapper for a schema generator.
@@ -45,8 +23,8 @@ export interface StandardJSONSchemaV1<Input = unknown, Output = Input> {
  */
 export function createStandardJSONSchema(
 	vendor: string,
-	generateInputSchema: (options: JSONSchemaOptions) => JSONSchemaObject,
-	generateOutputSchema: (options: JSONSchemaOptions) => JSONSchemaObject = generateInputSchema,
+	generateInputSchema: (options: StandardJSONSchemaV1.Options) => JSONSchemaObject,
+	generateOutputSchema: (options: StandardJSONSchemaV1.Options) => JSONSchemaObject = generateInputSchema,
 ): StandardJSONSchemaV1 {
 	return {
 		'~standard': {
@@ -68,10 +46,10 @@ export function createStandardJSONSchema(
 export function createStandardJSONSchemaRecord(
 	ids: string[],
 	vendor: string,
-	generateInputSchema: (id: string, options: JSONSchemaOptions) => JSONSchemaObject | undefined,
+	generateInputSchema: (id: string, options: StandardJSONSchemaV1.Options) => JSONSchemaObject | undefined,
 	generateOutputSchema: (
 		id: string,
-		options: JSONSchemaOptions,
+		options: StandardJSONSchemaV1.Options,
 	) => JSONSchemaObject | undefined = generateInputSchema,
 ): Record<string, StandardJSONSchemaV1> {
 	return Object.fromEntries(

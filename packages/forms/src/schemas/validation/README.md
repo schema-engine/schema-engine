@@ -2,6 +2,10 @@
 
 The Form Engine validation system provides a flexible, extensible way to define and execute validation rules for form fields. It builds first-party validators with [Zod Mini](https://zod.dev/) and follows a registry pattern for maximum flexibility.
 
+Examples that log messages use `logger` imported from `@schema-engine/forms/lib/logger`,
+which adds the `[schema-engine/forms]` package tag. Runtime diagnostics use this
+same logger; debug output is disabled by default.
+
 ## Table of Contents
 
 - [Core Concepts](#core-concepts)
@@ -33,7 +37,6 @@ The `ValidationRegistry` is the central hub that:
 
 - Stores all validation type implementations
 - Converts validation rules into Zod Mini schemas
-- Provides convenient preset builders
 - Manages custom validation registration
 
 ### Rule-to-Schema Generation
@@ -79,9 +82,9 @@ const schema = createZodSchemaFromRules(emailRules, createValidationContext(), r
 
 const result = schema.safeParse('user@example.com');
 if (result.success) {
-	console.log('Valid email:', result.data);
+	showValidationResult(result.data);
 } else {
-	console.log('Validation errors:', result.error.issues);
+	showValidationErrors(result.error.issues);
 }
 ```
 
@@ -117,7 +120,7 @@ import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/va
 
 const registry = createDefaultValidationRegistry();
 
-console.log(registry.getRegisteredTypes());
+const registeredTypes = registry.getRegisteredTypes();
 
 const stringValidations = registry.getByCategory('string');
 const numberValidations = registry.getByCategory('number');
@@ -142,15 +145,15 @@ customRegistry.register({
 
 ### String Validations
 
-| Type        | Parameters                | Description           | Zod Mini implementation              |
-| ----------- | ------------------------- | --------------------- | ------------------------------------ |
-| `required`  | `message?`                | Field is required     | `z.refine(...)`                      |
-| `email`     | `message?`                | Valid email address   | `z.email(message)`                   |
-| `minLength` | `value: number, message?` | Minimum string length | `z.string().check(z.minLength(...))` |
-| `maxLength` | `value: number, message?` | Maximum string length | `z.string().check(z.maxLength(...))` |
-| `pattern`   | `value: string, message?` | Regex pattern match   | `z.string().check(z.regex(...))`     |
-| `url`       | `message?`                | Valid URL             | `z.url(message)`                     |
-| `uuid`      | `version?, message?`      | Valid UUID            | `z.uuid(message)`                    |
+| Type        | Parameters                                     | Description                                             | Zod Mini implementation              |
+| ----------- | ---------------------------------------------- | ------------------------------------------------------- | ------------------------------------ |
+| `required`  | `message?`                                     | Field is required                                       | `z.refine(...)`                      |
+| `email`     | `pattern?: string, message?`                   | Valid email address, optionally restricted by a regex   | `z.email(...).check(z.regex(...))`   |
+| `minLength` | `value: number, message?`                      | Minimum string length                                   | `z.string().check(z.minLength(...))` |
+| `maxLength` | `value: number, message?`                      | Maximum string length                                   | `z.string().check(z.maxLength(...))` |
+| `pattern`   | `value: string, message?`                      | Regex pattern match                                     | `z.string().check(z.regex(...))`     |
+| `url`       | `protocol?: regex, hostname?: regex, message?` | URL matching the optional protocol and hostname regexes | `z.url({ protocol, hostname })`      |
+| `uuid`      | `version?: v1-v5, message?`                    | UUID, optionally restricted to a version                | `z.uuid({ version })`                |
 
 ### Number Validations
 
@@ -168,17 +171,19 @@ customRegistry.register({
 
 ### Network & Format Validations
 
-| Type     | Parameters                    | Description                        | Zod Mini implementation               |
-| -------- | ----------------------------- | ---------------------------------- | ------------------------------------- |
-| `ipv4`   | `message?`                    | IPv4 address validation            | `z.ipv4(message)`                     |
-| `ipv6`   | `message?`                    | IPv6 address validation with zones | `z.ipv6(message)` plus zone check     |
-| `jwt`    | `alg?: string, message?`      | JWT token validation               | `z.jwt(...)`                          |
-| `hash`   | `algorithm: string, message?` | Hash validation                    | `z.hash(...)`                         |
-| `base64` | `urlSafe?: boolean, message?` | Base64 encoding validation         | `z.base64(...)` or `z.base64url(...)` |
-| `cuid`   | `message?`                    | CUID validation                    | `z.cuid(...)`                         |
-| `cuid2`  | `message?`                    | CUID2 validation                   | `z.cuid2(...)`                        |
-| `ulid`   | `message?`                    | ULID validation                    | `z.ulid(...)`                         |
-| `hex`    | `message?`                    | Hexadecimal string validation      | `z.hex(...)`                          |
+| Type     | Parameters                     | Description                        | Zod Mini implementation               |
+| -------- | ------------------------------ | ---------------------------------- | ------------------------------------- |
+| `ipv4`   | `message?`                     | IPv4 address validation            | `z.ipv4(message)`                     |
+| `ipv6`   | `message?`                     | IPv6 address validation with zones | `z.ipv6(message)` plus zone check     |
+| `cidr`   | `version?: v4 or v6, message?` | IPv4 or IPv6 CIDR validation       | `z.cidrv4(...)` or `z.cidrv6(...)`    |
+| `phone`  | `message?`                     | E.164 phone number validation      | `z.e164(message)`                     |
+| `jwt`    | `alg?: string, message?`       | JWT token validation               | `z.jwt(...)`                          |
+| `hash`   | `algorithm: string, message?`  | Hash validation                    | `z.hash(...)`                         |
+| `base64` | `urlSafe?: boolean, message?`  | Base64 encoding validation         | `z.base64(...)` or `z.base64url(...)` |
+| `cuid`   | `message?`                     | CUID validation                    | `z.cuid(...)`                         |
+| `cuid2`  | `message?`                     | CUID2 validation                   | `z.cuid2(...)`                        |
+| `ulid`   | `message?`                     | ULID validation                    | `z.ulid(...)`                         |
+| `hex`    | `message?`                     | Hexadecimal string validation      | `z.hex(...)`                          |
 
 ### Date & Time Validations
 
@@ -208,9 +213,9 @@ The assertion table and reference scoping are under
 
 ### Async Validation
 
-| Type    | Parameters                                                                                  | Description            |
-| ------- | ------------------------------------------------------------------------------------------- | ---------------------- |
-| `async` | `url: string, method?, headers?, extraPayload?, expectedResponse?, dependencies?, message?` | Server-side validation |
+| Type    | Parameters                                                                                                               | Description            |
+| ------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------- |
+| `async` | `url, method?, headers?, extraPayload?, expectedResponse?, dependencies?, debounce?, cacheTTL?, disableCache?, message?` | Server-side validation |
 
 ```typescript
 {
@@ -226,7 +231,11 @@ The assertion table and reference scoping are under
 
 ### Phone Inputs
 
-The phone-input element registration includes a `phone` validator. Creating a form engine with that element registers the handler and applies `{ type: 'phone' }` to `phone-input` fields when the author omitted it. Pair the field with `required` when a number is mandatory. The forms package does not depend on a phone-number library.
+The core `phone` rule checks E.164 numbers. The phone-input registration can replace that handler with its region-aware validator and applies `{ type: 'phone' }` to `phone-input` fields when the author omitted it. Pair the field with `required` when a number is mandatory. The forms package does not depend on a phone-number library.
+
+Required validation, `relate` emptiness assertions, constraint `is_empty` and `is_not_empty`, and async validation skips share one definition of empty: `undefined`, `null`, `''`, and `[]`. Values such as `false` and `0` are present. `validateForm` and `validateElement` reject a rule without a registered handler with a `FormValidationError` that identifies the field and rule type.
+
+Debounced async rules share timers only within their caller-owned scope. Replacing a pending validation for the same rendered field path, endpoint, and dependency/extra payload resolves its parse as skipped, while the latest parse performs the request. Different forms use separate scopes, and different field paths in one scope do not cancel each other.
 
 ### Registering Custom Validations
 
@@ -340,7 +349,7 @@ const result = formSchema.safeParse({
 
 ### Validation Presets
 
-Use the `ValidationPresets` utility for convenient rule creation:
+Use the exported `ValidationPresets` utility for convenient rule creation:
 
 ```typescript
 import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
@@ -384,6 +393,8 @@ IPv4 and IPv6 rules delegate address parsing to Zod Mini. IPv6 also keeps suppor
 Every handler receives a `ValidationContext` alongside its rule:
 
 ```typescript
+import type { DebounceScope } from '@schema-engine/forms/lib/debounce';
+
 interface ValidationContext {
 	/** Nested value tree for the whole form. */
 	values: Record<string, unknown>;
@@ -391,6 +402,8 @@ interface ValidationContext {
 	fieldPath: string;
 	/** Reads another field relative to this one. */
 	resolve: (fieldRef: string) => unknown;
+	/** Carries keyed debounce timers for the caller-owned scope. */
+	debounceScope: DebounceScope;
 }
 ```
 
@@ -411,6 +424,22 @@ and is shared with constraints.
 The array-row case is the reason the reference is scoped rather than literal: a
 rule written once on `contacts.email` has to read _its own_ row's
 `accountType`, not row zero's.
+
+#### Async debounce ownership
+
+Async validation debouncing is scoped to an owner rather than a registry. Create
+one `DebounceScope` for each form or rendered field lifetime, then pass it to
+each context used for that owner's validations. A shared scope can serve several
+fields because the debounce key includes the rendered field path; separate forms
+must use separate scopes.
+
+```typescript
+import { createDebounceScope } from '@schema-engine/forms/lib/debounce';
+import { createValidationContext } from '@schema-engine/forms/schemas/validation';
+
+const debounceScope = createDebounceScope();
+const context = createValidationContext({ values, fieldPath: 'email', debounceScope });
+```
 
 #### The `relate` rule
 
@@ -443,6 +472,10 @@ The declaring field's own value comes first in the list, then each entry of
 | `includeSelf`        | `true`   | the declaring field's value participates, first. Turn it off for an assertion about a group the field merely belongs to.                                       |
 | `as`                 | `'auto'` | comparison basis: `string`, `number`, `date` (compared as timestamps), `boolean`, or `auto` to compare values unchanged.                                       |
 | `skipWhenIncomplete` | `true`   | stay quiet while any participating value is empty. Ignored by `atLeastOne`, `exactlyOne` and `allOrNone`, whose whole job is to fire on a partly filled group. |
+
+The `string` and `date` bases coerce primitive values and `Date` instances.
+Other objects stay unchanged for `string` comparisons and are treated as
+invalid dates. Their custom `toString` methods are not called.
 
 Because ordering reads left to right with the declaring field first, "this date
 must be after that one" is `descending`:
@@ -556,13 +589,21 @@ Two deliberate limits:
 - `registerMultiple(registrations: ValidationRegistration[]): void` - Register multiple validations
 - `unregister(type: string): boolean` - Remove a validation type
 - `has(type: string): boolean` - Check if validation type exists
-- `createSchema(rule: ValidationRule, context: ValidationContext): z.ZodMiniType | null` - Create a Zod Mini schema from one rule
+- `createSchema(rule: ValidationRule, context: ValidationContext): z.ZodMiniType | null` - Create a Zod Mini schema from one rule, or return `null` if no handler is registered
 - `getRegisteredTypes(): string[]` - Get all registered type names
 - `getByCategory(category: string): ValidationRegistration[]` - Get validations by category
 
-#### Properties
+### ValidationPresets
 
-- `presets: ValidationPresets` - Convenient preset builders
+`ValidationPresets` is a plain exported authoring helper, independent of any
+`ValidationRegistry` instance. Import it from
+`@schema-engine/forms/schemas/validation` to build serializable rule objects.
+
+### DebounceScope
+
+`createDebounceScope()` from `@schema-engine/forms/lib/debounce` creates keyed
+async validation state. Keep the scope with the form or field that owns it and
+pass it through `createValidationContext` (or the value-validation helpers).
 
 ### ValidationRegistration
 
@@ -659,3 +700,8 @@ describe('Custom postal-code validation', () => {
 ---
 
 For more examples and advanced usage patterns, see the test files in the `test/schemas/validation/` directory.
+
+The dependency index includes `require` constraint references as well as rule
+`dependsOn` references. Changing a required condition revalidates the dependent
+field after it has been touched or the form submitted, keeping its error and
+required indicator in sync.

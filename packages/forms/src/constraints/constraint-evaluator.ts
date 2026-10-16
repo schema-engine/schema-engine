@@ -1,6 +1,7 @@
 import type { ConstraintLogic } from '../schemas';
 import { getValueAtPath } from '@/lib/path-values';
 import { resolveFieldRef } from '@/lib/field-ref';
+import { isEmpty } from '@/schemas/validation/empty';
 
 /**
  * Result from evaluating constraint logic
@@ -35,29 +36,38 @@ function evaluateConstraint(constraint: ConstraintLogic, watchedValue: unknown):
 			if (Array.isArray(value)) {
 				return value.includes(watchedValue);
 			}
-			return String(watchedValue || '').includes(String(value));
-		case 'not_contains':
+			return evaluateTextContainment(watchedValue, value) ?? false;
+		case 'not_contains': {
 			if (Array.isArray(value)) {
 				return !value.includes(watchedValue);
 			}
-			return !String(watchedValue || '').includes(String(value));
+			const containsText = evaluateTextContainment(watchedValue, value);
+			return containsText !== undefined && !containsText;
+		}
 		case 'greater_than':
 			return Number(watchedValue) > Number(value);
 		case 'less_than':
 			return Number(watchedValue) < Number(value);
 		case 'is_empty':
-			if (Array.isArray(watchedValue)) {
-				return watchedValue.length === 0;
-			}
-			return !watchedValue || watchedValue === '' || watchedValue === null || watchedValue === undefined;
+			return isEmpty(watchedValue);
 		case 'is_not_empty':
-			if (Array.isArray(watchedValue)) {
-				return watchedValue.length > 0;
-			}
-			return Boolean(watchedValue);
+			return !isEmpty(watchedValue);
 		default:
 			return false;
 	}
+}
+
+function evaluateTextContainment(watchedValue: unknown, constraintValue: unknown): boolean | undefined {
+	const watchedText = toConstraintText(watchedValue || '');
+	const constraintText = toConstraintText(constraintValue);
+	if (watchedText === undefined || constraintText === undefined) return undefined;
+	return watchedText.includes(constraintText);
+}
+
+function toConstraintText(value: unknown): string | undefined {
+	if (typeof value === 'string') return value;
+	if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') return String(value);
+	return undefined;
 }
 
 /**

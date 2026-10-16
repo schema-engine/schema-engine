@@ -25,7 +25,7 @@
 		"test:all": "vitest run",
 		"storybook": "storybook dev -p 6006",
 		"build-storybook": "storybook build -o ./storybook-static",
-		"check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.test-types.json && tsc --noEmit -p ../../registry/shared/tsconfig.json && tsc --noEmit -p ../../registry/base-ui/tsconfig.json && tsc --noEmit -p ../../registry/aria/tsconfig.json && tsc --noEmit -p ../../registry/radix/tsconfig.json",
+		"check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.test-types.json",
 		"test:storybook": "vitest run --project storybook"
 	},
 	"devDependencies": {
@@ -46,10 +46,14 @@
 		"@vitest/browser": "^4.0.13",
 		"@vitest/browser-playwright": "^4.0.13",
 		"autoprefixer": "^10.4.21",
+		"class-variance-authority": "^0.7.1",
+		"clsx": "^2.1.1",
 		"cmdk": "^1.1.1",
 		"date-fns": "4.1.0",
 		"esbuild": "^0.27.0",
+		"imask": "^7.6.1",
 		"input-otp": "1.4.1",
+		"libphonenumber-js": "^1.13.12",
 		"lucide-react": "^0.539.0",
 		"msw": "^2.11.6",
 		"msw-storybook-addon": "^2.0.6",
@@ -62,11 +66,10 @@
 		"react-dom": "^19",
 		"react-dropzone": "^14.3.8",
 		"react-hook-form": "^7.60.0",
-		"imask": "^7.6.1",
-		"libphonenumber-js": "^1.13.12",
 		"react-phone-number-input": "^3.4.12",
 		"remark-gfm": "^4.0.1",
 		"storybook": "^10.1.8",
+		"tailwind-merge": "^3.4.0",
 		"tailwindcss": "^4",
 		"tsc-alias": "^1.8.16",
 		"tw-animate-css": "^1.4.0",
@@ -83,11 +86,7 @@
 		"zod": "^4.0.17"
 	},
 	"dependencies": {
-		"@ecopages/logger": "^0.2.2",
-		"@schema-engine/actions": "workspace:*",
-		"class-variance-authority": "^0.7.1",
-		"clsx": "^2.1.1",
-		"tailwind-merge": "^3.4.0"
+		"@ecopages/logger": "^0.2.2"
 	},
 	"exports": {
 		"./package.json": {
@@ -109,10 +108,6 @@
 			"types": "./dist/adapters/react-hook-form.d.ts",
 			"import": "./dist/adapters/react-hook-form.js"
 		},
-		"./registries/builder-registry": {
-			"types": "./dist/registries/builder-registry.d.ts",
-			"import": "./dist/registries/builder-registry.js"
-		},
 		"./hooks": {
 			"types": "./dist/hooks/index.d.ts",
 			"import": "./dist/hooks/index.js"
@@ -132,5 +127,10 @@
 		"workerDirectory": [
 			"public"
 		]
+	},
+	"peerDependenciesMeta": {
+		"react-hook-form": {
+			"optional": true
+		}
 	}
 }

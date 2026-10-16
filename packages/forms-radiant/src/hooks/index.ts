@@ -1,3 +1,2 @@
-export { bindControlledFormElement, combineHandlers, type BindControlledFormElementReturn } from './bind-field';
-export { evaluateConstraintLogic } from './constraint-logic';
+export { combineHandlers } from './bind-field';
 export { mergeFieldGridHost } from './grid-styles';

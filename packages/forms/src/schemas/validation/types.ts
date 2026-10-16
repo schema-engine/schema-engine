@@ -1,4 +1,16 @@
 import * as z from 'zod/mini';
+import type { DebounceScope } from '../../lib/debounce.js';
+
+const RegexPatternSchema = z.string().check(
+	z.refine((value) => {
+		try {
+			RegExp(value);
+			return true;
+		} catch {
+			return false;
+		}
+	}, 'Must be a valid regular expression'),
+);
 
 const BaseValidationRuleSchema = z.object({
 	type: z.string(),
@@ -24,7 +36,7 @@ const MaxLengthRuleSchema = z.object({
 
 const EmailRuleSchema = z.object({
 	type: z.literal('email'),
-	pattern: z.optional(z.string()),
+	pattern: z.optional(RegexPatternSchema),
 	message: z.optional(z.string()),
 });
 
@@ -35,14 +47,14 @@ const PhoneRuleSchema = z.object({
 
 const PatternRuleSchema = z.object({
 	type: z.literal('pattern'),
-	value: z.string(),
+	value: RegexPatternSchema,
 	message: z.optional(z.string()),
 });
 
 const UrlRuleSchema = z.object({
 	type: z.literal('url'),
-	protocol: z.optional(z.string()),
-	hostname: z.optional(z.string()),
+	protocol: z.optional(RegexPatternSchema),
+	hostname: z.optional(RegexPatternSchema),
 	message: z.optional(z.string()),
 });
 
@@ -152,7 +164,7 @@ const TimeRuleSchema = z.object({
 const AsyncRuleSchema = z.object({
 	type: z.literal('async'),
 	url: z.string(),
-	method: z._default(z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']), 'POST'),
+	method: z.optional(z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE'])),
 	headers: z.optional(z.record(z.string(), z.string())),
 	extraPayload: z.optional(z.record(z.string(), z.unknown())),
 	expectedResponse: z.optional(
@@ -294,6 +306,8 @@ export interface ValidationContext {
 	 * dotted name is absolute from the form root.
 	 */
 	readonly resolve: (fieldRef: string) => unknown;
+	/** Debounced work shared by parses that receive this scope. */
+	readonly debounceScope: DebounceScope;
 }
 
 /**
@@ -334,11 +348,7 @@ export interface ValidationRegistration<TRule extends { type: string } = { type:
  * This allows heterogeneous arrays (like defaultValidations) to be typed without 'any'.
  */
 export type AnyValidationRegistration =
-	| (ValidationRule extends infer T
-			? T extends ValidationRule
-				? ValidationRegistration<T>
-				: never
-			: never)
+	| (ValidationRule extends infer T ? (T extends ValidationRule ? ValidationRegistration<T> : never) : never)
 	| ValidationRegistration;
 
 /**

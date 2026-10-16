@@ -10,7 +10,6 @@ import {
 	loadIMask,
 	parseUnmaskMode,
 	readMaskValue,
-	type IMaskFactory,
 } from '@/lib/mask-options';
 import type { MaskedInputFieldProps } from './form-masked-input.types';
 
@@ -34,7 +33,7 @@ export class SeMaskedInput extends RadiantElement {
 	@query({ ref: 'input' }) input!: HTMLInputElement;
 	@query({ ref: 'control' }) control!: HTMLInputElement;
 
-	private maskInstance: ReturnType<IMaskFactory> | null = null;
+	private maskInstance: import('imask').InputMask<import('@/lib/mask-options').PatternMaskOptions> | null = null;
 	private attachGeneration = 0;
 
 	protected override onConnected(): void {
@@ -72,13 +71,13 @@ export class SeMaskedInput extends RadiantElement {
 		}
 
 		if (this.maskInstance) {
-			this.maskInstance.updateOptions(this.maskConfig() as never);
+			this.maskInstance.updateOptions(this.maskConfig());
 			this.syncValue();
 			this.setAttribute('data-ready', '');
 			return;
 		}
 
-		const instance = IMask(this.input, this.maskConfig() as never);
+		const instance = IMask(this.input, this.maskConfig());
 		this.maskInstance = instance;
 		if (this.defaultValue) {
 			instance.value = this.defaultValue;
@@ -147,6 +146,7 @@ export function FormMaskedInput({
 			grid={config.grid}
 			style={config.style}
 			rules={toFieldRules(config)}
+			validationRules={config.rules}
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}
 		>

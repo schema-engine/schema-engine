@@ -84,33 +84,8 @@ export type MergeRegistrationMapsLastWins<T extends readonly unknown[], TOutput 
 /** Engine element/recipe map for a registration list (see {@link MergeRegistrationMapsLastWins}). */
 export type MergedRegistrationMap<T extends readonly unknown[]> = AsRegistrationMap<MergeRegistrationMapsLastWins<T>>;
 
-/** Engine action map for a registration list (see {@link MergeActionRegistrationMapsLastWins}). */
-export type MergedActionRegistrationMap<T extends readonly unknown[]> = AsRegistrationMap<
-	MergeActionRegistrationMapsLastWins<T>
->;
-
-type ActionMapFromRegistration<R> = R extends { $type: infer TType extends string; schema: infer S }
-	? S extends StandardSchemaV1
-		? Record<TType, ExtractSchemaType<S>>
-		: Record<never, never>
-	: Record<never, never>;
-
-export type MergeActionRegistrationMaps<T extends readonly unknown[]> = [T[number]] extends [never]
-	? Record<never, never>
-	: UnionMergeMaps<ActionMapFromRegistration<T[number]>>;
-
-type FoldActionRegistrationMapsLastWins<T extends readonly unknown[]> = T extends readonly [
-	infer Head,
-	...infer Tail extends readonly unknown[],
-]
-	? LastWinsMerge<ActionMapFromRegistration<Head>, FoldActionRegistrationMapsLastWins<Tail>>
-	: Record<never, never>;
-
-export type MergeActionRegistrationMapsLastWins<T extends readonly unknown[]> = [T[number]] extends [never]
-	? Record<never, never>
-	: IsFixedLengthTuple<T> extends true
-		? FoldActionRegistrationMapsLastWins<T>
-		: MergeActionRegistrationMaps<T>;
+/** Action registrations use the same last-wins merge as elements and recipes. */
+export type MergedActionRegistrationMap<T extends readonly unknown[]> = MergedRegistrationMap<T>;
 
 /** Structural Standard Schema check used to reject `{}` and primitives at the factory. */
 export type StandardSchemaConstraint = {
@@ -125,6 +100,7 @@ export type ElementRegistrationConstraint = {
 	readonly metadata: { readonly name: string };
 	readonly render: (props: never) => unknown;
 	readonly validations?: readonly AnyValidationRegistration[];
+	readonly containerKind?: import('@/types/registration').ContainerKind;
 };
 
 export type RecipeRegistrationConstraint = {

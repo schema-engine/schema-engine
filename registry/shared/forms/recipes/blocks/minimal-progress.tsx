@@ -1,5 +1,5 @@
 import type { MinimalProgressConfig } from '@schema-engine/forms/recipes';
-import { useViewConfig, useViewContext } from '@schema-engine/forms-react/contexts';
+import { useViewConfig, useViewContext } from '@schema-engine/forms-react/hooks';
 import { Progress } from '@/components/ui/progress';
 
 export function MinimalProgress() {

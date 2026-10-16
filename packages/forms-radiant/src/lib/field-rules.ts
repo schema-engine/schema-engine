@@ -1,30 +1,13 @@
 import type { FieldRules } from '@ecopages/radiant-ui/form';
-import * as z from 'zod/mini';
+import { validateFieldValue } from '@schema-engine/forms';
 import type { ValidationRule } from '@schema-engine/forms/schemas';
 import type { ValidationRegistry } from '@schema-engine/forms/schemas/validation';
-import {
-	createValidationContext,
-	createZodSchemaFromRules,
-	getValidationRulesForElement,
-} from '@schema-engine/forms/schemas/validation/utils';
+import { createDebounceScope } from '@schema-engine/forms/lib/debounce';
+import { getValidationRulesForElement } from '@schema-engine/forms/schemas/validation/utils';
 import { peekOwningFormEngine } from '@/contexts/form-engine-owner';
 import { expandValues } from '@/adapters/radiant/controller/values';
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const BASE64_PATTERN = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
-const HEX_PATTERN = /^[0-9A-Fa-f]*$/;
-
-const NATIVE_RUI_RULES = new Set([
-	'required',
-	'minLength',
-	'maxLength',
-	'min',
-	'max',
-	'pattern',
-	'email',
-	'base64',
-	'hex',
-]);
+const NATIVE_RUI_RULES = new Set(['required', 'minLength', 'maxLength', 'min', 'max', 'pattern']);
 
 function numericRule(value: number, message?: string) {
 	return message ? { value, message } : value;
@@ -60,13 +43,19 @@ function resolveValidationRegistry(registry?: ValidationRegistry): ValidationReg
 function toValidator(
 	rules: ReadonlyArray<ValidationRule>,
 	fieldPath: string | undefined,
-	fallbackMessage: string,
 	registry: ValidationRegistry,
 ) {
+	const debounceScope = createDebounceScope();
 	return async (value: unknown, values: Record<string, unknown>) => {
-		const context = createValidationContext({ values: expandValues(values ?? {}), fieldPath });
-		const result = await z.safeParseAsync(createZodSchemaFromRules(rules, context, registry), value);
-		return result.success || result.error.issues[0]?.message || fallbackMessage;
+		const message = await validateFieldValue({
+			element: { rules },
+			value,
+			values: expandValues(values ?? {}),
+			fieldPath: fieldPath ?? '',
+			registry,
+			debounceScope,
+		});
+		return message ?? true;
 	};
 }
 
@@ -101,35 +90,13 @@ export function toFieldRules(element: FieldRulesSource, registry?: ValidationReg
 			case 'pattern':
 				fieldRules.pattern = { value: new RegExp(rule.value), message: rule.message ?? 'Invalid format' };
 				break;
-			case 'email':
-				fieldRules.pattern = {
-					value: rule.pattern ? new RegExp(rule.pattern) : EMAIL_PATTERN,
-					message: rule.message ?? 'Invalid email',
-				};
-				break;
-			case 'base64':
-				fieldRules.pattern = { value: BASE64_PATTERN, message: rule.message ?? 'Invalid Base64' };
-				break;
-			case 'hex':
-				fieldRules.pattern = { value: HEX_PATTERN, message: rule.message ?? 'Invalid hexadecimal value' };
-				break;
-			case 'phone':
-				if (resolvedRegistry) {
-					fieldRules.validate = toValidator(
-						[rule],
-						element.name,
-						'Enter a complete phone number',
-						resolvedRegistry,
-					);
-				}
-				break;
 			default:
 				break;
 		}
 	}
 
 	if (resolvedRegistry && resolved.some((rule) => !NATIVE_RUI_RULES.has(rule.type))) {
-		fieldRules.validate = toValidator(resolved, element.name, 'Validation failed', resolvedRegistry);
+		fieldRules.validate = toValidator(resolved, element.name, resolvedRegistry);
 	}
 
 	return fieldRules;

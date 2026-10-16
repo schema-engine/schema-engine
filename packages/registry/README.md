@@ -2,17 +2,14 @@
 
 Shared registry primitives for building typed registration systems across the Schema Engine workspace.
 
-This package provides two abstract base classes:
-
-- `BaseRegistry` for storing and retrieving typed registrations by `$type`
-- `ComponentRegistry` for registries that manage renderable component registrations
+This package provides `BaseRegistry` for storing and retrieving typed registrations by `$type`. Use the `ComponentRegistration` type when entries must include a render function.
 
 It is used by higher-level packages such as `@schema-engine/forms` and `@schema-engine/actions`, but it is also usable on its own for plugin systems and internal extension points.
 
 ## Installation
 
 ```bash
-bun add @schema-engine/registry
+pnpm add @schema-engine/registry
 ```
 
 ## Core Types
@@ -94,20 +91,19 @@ Available operations:
 - `getAllKeys()`
 - `size`
 - `clear()`
-- `getMap()`
 
-## Using `ComponentRegistry`
+## Storing renderable registrations
 
-Extend `ComponentRegistry` when registrations must include a `render` function.
+Extend `BaseRegistry` with the `ComponentRegistration` type when registrations must include a `render` function.
 
 ```typescript
 import * as z from 'zod/mini';
-import { ComponentRegistry } from '@schema-engine/registry';
+import { BaseRegistry } from '@schema-engine/registry';
 import type { ComponentRegistration } from '@schema-engine/registry';
 
 type WidgetRegistration = ComponentRegistration<string, { title: string }, { id: string }>;
 
-class WidgetRegistry extends ComponentRegistry<string, WidgetRegistration> {
+class WidgetRegistry extends BaseRegistry<string, WidgetRegistration> {
 	get registryName(): string {
 		return 'WidgetRegistry';
 	}
@@ -134,9 +130,28 @@ export * from '@schema-engine/registry';
 Main exports:
 
 - `BaseRegistry`
-- `ComponentRegistry`
 - `BaseRegistration`
 - `ComponentRegistration`
 - `ComponentMetadata`
 - `RegistrationMetadata`
 - `Brand`
+
+## Phantom brands
+
+`Brand<T, TBrand>` optionally tags a value's type without adding runtime fields.
+Plain `T` values remain assignable; differently branded values are incompatible
+when both carry a brand. It is a type distinction, not a runtime validator.
+
+```typescript
+import type { Brand } from '@schema-engine/registry';
+
+type ElementId = Brand<string, 'Element'>;
+const id: ElementId = 'text';
+```
+
+`getAll()` and `getAllKeys()` return fresh arrays. Mutating them does not change
+the registry; registration objects themselves are shared references. `BaseRegistry`
+stores schemas as supplied; validation belongs to the consuming domain boundary.
+
+The published registry uses a caret range for its logger dependency. Copied
+widget sources live in the separate, private `registry-files` workspace.

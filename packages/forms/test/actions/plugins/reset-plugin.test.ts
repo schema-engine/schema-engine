@@ -1,16 +1,24 @@
-import { describe, test, expect, beforeEach, afterEach } from 'vitest';
-import type { BuilderActionExecutionContext } from '@/types';
-import { formResetPlugin, FormResetActionSchema, type FormResetAction } from '@/actions/plugins/form-reset.plugin';
-import { GDPRConsent } from '@/tools/gdpr-consent';
-import { createMockBuilderContext, setupTestEnvironment } from '../__tools';
+import { describe, test, expect, beforeEach } from 'vitest';
+import type { BuilderActionRuntimeContext } from '@/types';
+import {
+	formResetPlugin as createFormResetPlugin,
+	FormResetActionSchema,
+	type FormResetAction,
+	type FormResetPluginConfig,
+} from '@/actions/plugins/form-reset.plugin';
+import { getAutoSaveDraftStorageKey } from '@/actions/plugins/auto-save.plugin';
+import { createMockBuilderContext } from '../__tools';
+import { MockAutoSaveStorage } from '../__tools/storage-utils';
+
+let storage: MockAutoSaveStorage;
+
+function createResetPlugin(config: Omit<FormResetPluginConfig, 'storage'> = {}) {
+	return createFormResetPlugin({ storage, ...config });
+}
 
 describe('ResetPlugin', () => {
 	beforeEach(() => {
-		setupTestEnvironment();
-	});
-
-	afterEach(() => {
-		delete (global as any).window;
+		storage = new MockAutoSaveStorage();
 	});
 
 	describe('Schema Validation', () => {
@@ -91,7 +99,7 @@ describe('ResetPlugin', () => {
 
 	describe('Plugin Factory', () => {
 		test('should create plugin with default configuration', () => {
-			const plugin = formResetPlugin();
+			const plugin = createResetPlugin();
 
 			expect(plugin.$type).toBe('reset');
 			expect(plugin.schema).toBe(FormResetActionSchema);
@@ -104,7 +112,7 @@ describe('ResetPlugin', () => {
 		test('should execute successful reset action', async () => {
 			let formResetCalled = false;
 
-			const plugin = formResetPlugin({
+			const plugin = createResetPlugin({
 				resetForm: (context) => {
 					formResetCalled = true;
 					context.form.reset();
@@ -131,7 +139,7 @@ describe('ResetPlugin', () => {
 		test('should reset with resetToDefaults=true', async () => {
 			let resetParams: any[] = [];
 
-			const plugin = formResetPlugin({
+			const plugin = createResetPlugin({
 				resetForm: (context, resetToDefaults) => {
 					context.form.reset();
 					resetParams = resetToDefaults ? [] : [{}];
@@ -155,7 +163,7 @@ describe('ResetPlugin', () => {
 		test('should reset with resetToDefaults=false', async () => {
 			let resetParams: any[] = [];
 
-			const plugin = formResetPlugin({
+			const plugin = createResetPlugin({
 				resetForm: (context, resetToDefaults) => {
 					context.form.reset();
 					resetParams = resetToDefaults ? [] : [{}];
@@ -177,10 +185,10 @@ describe('ResetPlugin', () => {
 		});
 
 		test('should call custom reset handler', async () => {
-			let customResetContext: BuilderActionExecutionContext<FormResetAction> | undefined = undefined;
+			let customResetContext: BuilderActionRuntimeContext<FormResetAction> | undefined = undefined;
 			let customResetToDefaults = true;
 
-			const plugin = formResetPlugin({
+			const plugin = createResetPlugin({
 				resetForm: (context, resetToDefaults) => {
 					customResetContext = context;
 					customResetToDefaults = resetToDefaults;
@@ -203,9 +211,9 @@ describe('ResetPlugin', () => {
 		});
 
 		test('should call onReset callback', async () => {
-			let onResetContext: BuilderActionExecutionContext<FormResetAction> | undefined = undefined;
+			let onResetContext: BuilderActionRuntimeContext<FormResetAction> | undefined = undefined;
 
-			const plugin = formResetPlugin({
+			const plugin = createResetPlugin({
 				onReset: (context) => {
 					onResetContext = context;
 				},
@@ -228,7 +236,7 @@ describe('ResetPlugin', () => {
 		test('should call clearDraft', async () => {
 			let clearDraftFormId = '';
 
-			const plugin = formResetPlugin({
+			const plugin = createResetPlugin({
 				clearDraft: (formId) => {
 					clearDraftFormId = formId;
 				},
@@ -251,7 +259,7 @@ describe('ResetPlugin', () => {
 		test('should handle confirmation dialog - confirmed', async () => {
 			let confirmMessage = '';
 
-			const plugin = formResetPlugin({
+			const plugin = createResetPlugin({
 				confirm: (message) => {
 					confirmMessage = message;
 					return true;
@@ -277,7 +285,7 @@ describe('ResetPlugin', () => {
 		test('should handle confirmation dialog - cancelled', async () => {
 			let confirmCalled = false;
 
-			const plugin = formResetPlugin({
+			const plugin = createResetPlugin({
 				confirm: () => {
 					confirmCalled = true;
 					return false;
@@ -305,7 +313,7 @@ describe('ResetPlugin', () => {
 		test('should handle async confirmation dialog', async () => {
 			let confirmMessage = '';
 
-			const plugin = formResetPlugin({
+			const plugin = createResetPlugin({
 				confirm: async (message) => {
 					confirmMessage = message;
 					return new Promise((resolve) => {
@@ -333,7 +341,7 @@ describe('ResetPlugin', () => {
 		test('should not show confirmation without confirmMessage', async () => {
 			let confirmCalled = false;
 
-			const plugin = formResetPlugin({
+			const plugin = createResetPlugin({
 				confirm: () => {
 					confirmCalled = true;
 					return true;
@@ -356,7 +364,7 @@ describe('ResetPlugin', () => {
 		});
 
 		test('should handle errors in custom handlers', async () => {
-			const plugin = formResetPlugin({
+			const plugin = createResetPlugin({
 				resetForm: () => {
 					throw new Error('Custom reset failed');
 				},
@@ -379,7 +387,7 @@ describe('ResetPlugin', () => {
 		});
 
 		test('should handle non-Error exceptions', async () => {
-			const plugin = formResetPlugin({
+			const plugin = createResetPlugin({
 				resetForm: () => {
 					throw 'String error';
 				},
@@ -404,7 +412,7 @@ describe('ResetPlugin', () => {
 
 	describe('Integration', () => {
 		test('should execute successfully with plugin', async () => {
-			const plugin = formResetPlugin({
+			const plugin = createResetPlugin({
 				onReset: () => {},
 			});
 
@@ -424,17 +432,16 @@ describe('ResetPlugin', () => {
 			expect(result.message).toBe('Form reset successfully');
 		});
 
-		test('should work with default window.confirm', async () => {
-			(global as any).window = { confirm: () => true };
-
-			const plugin = formResetPlugin();
+		test('should clear the auto-saved draft through the shared storage key', async () => {
+			const storageKey = getAutoSaveDraftStorageKey('test-form');
+			await storage.save(storageKey, { email: 'ada@example.com' });
+			const plugin = createResetPlugin();
 
 			const action: FormResetAction = {
 				id: 'test-reset',
 				$type: 'reset',
 				enabled: true,
 				resetToDefaults: true,
-				confirmMessage: 'Reset form?',
 			};
 
 			const context = createMockBuilderContext(action);
@@ -442,36 +449,7 @@ describe('ResetPlugin', () => {
 			const result = await plugin.execute(context);
 
 			expect(result.success).toBe(true);
-		});
-
-		test('should work with GDPR consent checking', async () => {
-			let gdprConsentChecked = false;
-			let draftCleared = false;
-
-			(GDPRConsent as any).hasConsent = () => {
-				gdprConsentChecked = true;
-				return true;
-			};
-
-			(GDPRConsent as any).clearDraft = () => {
-				draftCleared = true;
-			};
-
-			const plugin = formResetPlugin();
-
-			const action: FormResetAction = {
-				id: 'test-reset',
-				$type: 'reset',
-				enabled: true,
-				resetToDefaults: true,
-			};
-
-			const context = createMockBuilderContext(action);
-
-			await plugin.execute(context);
-
-			expect(gdprConsentChecked).toBe(true);
-			expect(draftCleared).toBe(true);
+			expect(await storage.load(storageKey)).toBeNull();
 		});
 	});
 });

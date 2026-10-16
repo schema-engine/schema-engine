@@ -27,7 +27,6 @@ Actions execute in response to form lifecycle triggers.
 ### Step Triggers
 
 - `step_change` - Navigation between steps
-- `step_submit` - Submission of the current step
 - `step_enter` - Entering a step
 - `step_leave` - Leaving a step
 - `step_view` - Step becomes visible (for analytics)
@@ -129,8 +128,9 @@ Use `defineAction` from `@schema-engine/actions` and specialize it with the form
 ```typescript
 import * as z from 'zod/mini';
 import { defineAction } from '@schema-engine/actions';
+import type { BuilderActionBaseContext, FormActionTrigger } from '@schema-engine/forms';
 
-const defineFormAction = defineAction<BuilderActionBaseContext, BuilderActionTrigger>();
+const defineFormAction = defineAction<BuilderActionBaseContext, FormActionTrigger>();
 
 const trackAction = defineFormAction({
 	$type: 'track_submit',

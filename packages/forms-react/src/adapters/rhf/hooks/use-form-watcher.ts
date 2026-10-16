@@ -1,7 +1,8 @@
+import { logger } from '@/lib/logger';
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useWatch, type Control, type FieldValues } from 'react-hook-form';
 import type { FormActionTrigger, FormConfigView } from '@schema-engine/forms';
-import type { ActionExecutionResult } from '@schema-engine/actions';
+import type { ActionExecutionResult } from '@schema-engine/forms/actions';
 
 interface UseFormWatcherOptions {
 	control: Control<FieldValues>;
@@ -39,7 +40,7 @@ export function useFormWatcher({ control, config, onChange, dispatchTrigger }: U
 		void (async () => {
 			if (currentConfig.actions && currentConfig.actions.length > 0) {
 				await currentDispatchTrigger('form_change').catch((error) => {
-					console.error('Form change action execution failed:', error);
+					logger.error('Form change action execution failed:', error);
 				});
 			}
 

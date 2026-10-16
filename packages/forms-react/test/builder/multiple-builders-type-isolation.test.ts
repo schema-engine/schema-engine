@@ -3,7 +3,7 @@
  */
 
 import { describe, test, expect } from 'vitest';
-import { createFormEngine } from '@/registries/builder-registry';
+import { createFormEngine } from '@schema-engine/forms';
 
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { TextareaElementRegistration } from '@/components/schema-engine/forms/inputs/form-textarea.registration';

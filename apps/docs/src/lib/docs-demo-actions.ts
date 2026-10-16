@@ -1,5 +1,6 @@
 import type { ActionRegistrationConstraint } from '@schema-engine/forms';
 import type { NotificationAction } from '@schema-engine/forms/actions';
+import { GDPRConsent, GTMTracker, localStorageAutoSaveStorage } from '@schema-engine/forms/browser';
 import {
 	autoSavePlugin,
 	formResetPlugin,
@@ -30,15 +31,22 @@ export function createDocsDemoActions(): ActionRegistrationConstraint[] {
 			},
 		}),
 		formResetPlugin({
+			storage: localStorageAutoSaveStorage,
 			onReset: (context) => {
 				console.log('[reset] form reset:', { formId: context.formId });
 			},
 		}),
 		autoSavePlugin({
+			storage: localStorageAutoSaveStorage,
+			shouldSave: () => GDPRConsent.hasConsent(),
 			onSave: (_data, context) => {
 				console.log('[autosave] form saved:', { formId: context.formId });
 			},
 		}),
-		gtmEventPlugin(),
+		gtmEventPlugin({
+			tracker: {
+				push: (eventName, eventData) => GTMTracker.push(eventName, eventData),
+			},
+		}),
 	];
 }

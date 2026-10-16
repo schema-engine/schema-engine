@@ -57,13 +57,12 @@ interface ActionExecutionResult<TData = unknown> {
 	error?: string;
 	data?: TData;
 	shouldContinue?: boolean;
-	redirectUrl?: string;
 }
 ```
 
 ## Execution Model
 
-The executor separates what callers provide from what handlers receive. Callers pass a `TBaseContext`. The executor internally enriches it before invoking `execute()`:
+The dispatcher separates what callers provide from what handlers receive. Callers pass a `TBaseContext`. The dispatcher internally enriches it before invoking `execute()`:
 
 ```typescript
 execute({

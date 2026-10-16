@@ -1,16 +1,18 @@
 import * as z from 'zod/mini';
-import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
+import type { BuilderActionRuntimeContext, BuilderActionRegistration } from '@/types';
 import { FormActionTriggerSchema } from '../triggers';
-import { GDPRConsent } from '../../tools/gdpr-consent';
+import { getAutoSaveDraftStorageKey, type AutoSaveStorage } from './auto-save.plugin';
 
 /**
  * Reset Plugin Configuration
  */
 export interface FormResetPluginConfig {
+	/** Storage used to remove a form's auto-saved draft. */
+	storage: AutoSaveStorage;
 	confirm?: (message: string) => boolean | Promise<boolean>;
-	clearDraft?: (formId: string) => void;
-	resetForm?: (context: BuilderActionExecutionContext<any>, resetToDefaults: boolean) => void;
-	onReset?: (context: BuilderActionExecutionContext<any>) => void;
+	clearDraft?: (formId: string) => void | Promise<void>;
+	resetForm?: (context: BuilderActionRuntimeContext<FormResetAction>, resetToDefaults: boolean) => void;
+	onReset?: (context: BuilderActionRuntimeContext<FormResetAction>) => void;
 }
 
 /** Schema for the `reset` action configuration. */
@@ -30,17 +32,18 @@ export type FormResetAction = z.infer<typeof FormResetActionSchema>;
 /**
  * Default form reset implementation using React Hook Form methods
  */
-function defaultResetForm(context: BuilderActionExecutionContext<any>, _resetToDefaults: boolean) {
+function defaultResetForm(context: BuilderActionRuntimeContext<FormResetAction>, _resetToDefaults: boolean) {
 	context.form.reset();
 }
 
 /** Creates a configured `reset` action registration. */
 export function formResetPlugin(
-	config: FormResetPluginConfig = {},
+	config: FormResetPluginConfig,
 ): BuilderActionRegistration<'reset', typeof FormResetActionSchema> {
 	const {
-		confirm = (message: string) => window.confirm(message),
-		clearDraft = (formId: string) => GDPRConsent.hasConsent() && GDPRConsent.clearDraft(formId),
+		storage,
+		confirm = () => false,
+		clearDraft = (formId: string) => storage.remove(getAutoSaveDraftStorageKey(formId)),
 		resetForm = defaultResetForm,
 		onReset = () => {},
 	} = config;
@@ -54,7 +57,7 @@ export function formResetPlugin(
 			icon: 'refresh',
 			defaultTriggers: ['form_submit_success'],
 		},
-		execute: async (context: BuilderActionExecutionContext<FormResetAction>) => {
+		execute: async (context: BuilderActionRuntimeContext<FormResetAction>) => {
 			const action = context.config;
 			try {
 				if (action.confirmMessage) {
@@ -68,7 +71,7 @@ export function formResetPlugin(
 					}
 				}
 
-				clearDraft(context.formId);
+				await clearDraft(context.formId);
 				resetForm(context, action.resetToDefaults);
 				onReset(context);
 

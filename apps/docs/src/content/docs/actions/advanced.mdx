@@ -12,7 +12,7 @@ order: 4
 Actions always execute sequentially.
 
 ```typescript
-const results = await executor.execute({
+const results = await dispatcher.dispatch({
 	actions: [action1, action2, action3],
 	trigger: 'submit',
 	context,
@@ -53,9 +53,7 @@ Disabled actions are skipped.
 
 ## Debug Logging
 
-```typescript
-const executor = new ActionExecutor(registry, { debug: true });
-```
+Action dispatch logs through `@ecopages/logger`. Enable debug output through the host's logger levels; `ActionDispatcher` has no debug constructor option.
 
 ## Custom Registry
 

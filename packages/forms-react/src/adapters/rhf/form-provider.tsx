@@ -2,7 +2,7 @@ import type { EngineOutputMaps } from '@schema-engine/forms/engine/form-engine';
 import { FormProvider as RHFFormProvider, useForm, type FieldValues } from 'react-hook-form';
 import { useCallback, useMemo, useRef } from 'react';
 import type { FormProviderProps } from '../types';
-import { ActionDispatcher } from '@schema-engine/actions';
+import { ActionDispatcher } from '@schema-engine/forms/actions';
 import { collectFieldDefaults, flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import { useFormEngine } from '@/hooks/use-form-context';
 import type { FormConfigView } from '@schema-engine/forms';
@@ -101,6 +101,8 @@ export function FormProvider<
 		form,
 		config: runtimeConfig,
 		submission,
+		actionExecutor,
+		buildActionContext: actionDispatchers.buildActionContext,
 		dispatchTrigger: actionDispatchers.dispatchTrigger,
 		onSubmit,
 		onAction: onAction as unknown as

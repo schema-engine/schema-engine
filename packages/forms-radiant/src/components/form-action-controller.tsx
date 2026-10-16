@@ -1,44 +1,74 @@
 import './form-action-controller.css';
-import { customElement, prop, RadiantElement } from '@ecopages/radiant';
+import { customElement, RadiantElement, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import type { BuilderActionBaseContext, FormActionTrigger, FormConfigView } from '@schema-engine/forms';
-import { ActionDispatcher } from '@schema-engine/actions';
+import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
+import { runSubmissionLifecycle, buildFormActionContext } from '@schema-engine/forms/engine';
+import type { FormProviderProps } from '@/adapters/types';
+import { ActionDispatcher } from '@schema-engine/forms/actions';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
-import { FormController, FormEngineController } from '@/adapters/radiant/controller';
+import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
+import { whenEngineAvailable } from '@/contexts/resolve-form-engine';
+import { FormController } from '@/adapters/radiant/controller';
+import type { FormInstanceElement } from './form-instance.script';
 import { findAncestorElement } from '@/lib/rui-form-utils';
 
 /** Dispatches configured form actions for Radiant form lifecycle events. */
 @customElement('se-form-action-controller')
 export class FormActionControllerElement extends RadiantElement {
-	@prop({ type: Object }) config!: FormConfigView;
+	@state config!: FormConfigView;
+	@state engine?: FormEngine;
+	@state onAction?: FormProviderProps['onAction'];
 
 	readonly form = new FormController(this);
-	private readonly formEngine = new FormEngineController(this);
+	private readonly actionForm = {
+		reset: () => this.form.reset(),
+		setValue: (name: string, value: unknown) => this.form.setValue(name, value),
+		getValue: (name: string) => this.form.getValue(name),
+		validate: () => this.form.trigger(),
+	};
 
 	private dispatcher?: ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>;
 	private mountedAt = 0;
 	private didMount = false;
 	private watchingChanges = false;
 	private formInstance?: FormInstanceContextValue;
+	private unsubscribeActiveEngine?: () => void;
 
 	@onContextUpdate({ context: formInstanceContext, requestUpdate: false })
 	onFormInstance(value: FormInstanceContextValue): void {
 		this.formInstance = value;
 	}
 
-	protected override onConnected(): void {
-		this.formEngine.connect(() => {
+	@onContextUpdate({ context: formEngineContext, requestUpdate: false })
+	onFormEngine(value: FormEngineContextValue): void {
+		if (value.engine && !this.engine) {
+			this.engine = value.engine;
 			this.setupDispatcher();
 			this.onFormReady();
-		});
+		}
+	}
+
+	protected override onConnected(): void {
+		const instance = findAncestorElement(this, 'se-form-instance') as FormInstanceElement | undefined;
+		if (!this.config && instance?.config) this.config = instance.config;
+		if (!this.engine) {
+			this.unsubscribeActiveEngine = whenEngineAvailable(this, this.engine, (engine) => {
+				if (!this.engine) {
+					this.engine = engine;
+				}
+				this.setupDispatcher();
+				this.onFormReady();
+			});
+		}
 		this.form.connect(() => this.onFormReady());
 		this.setupDispatcher();
 		this.onFormReady();
 	}
 
 	override disconnectedCallback(): void {
-		this.formEngine.disconnect();
+		this.unsubscribeActiveEngine?.();
 		this.form.disconnect();
 		this.dispatcher = undefined;
 		this.didMount = false;
@@ -52,8 +82,7 @@ export class FormActionControllerElement extends RadiantElement {
 
 	private setupDispatcher(): void {
 		const config = this.config;
-		const engine = this.formEngine.engine;
-		if (this.dispatcher || !engine || !config?.actions?.length) {
+		if (this.dispatcher || !this.engine || !config?.actions?.length) {
 			return;
 		}
 
@@ -62,7 +91,7 @@ export class FormActionControllerElement extends RadiantElement {
 			return;
 		}
 
-		this.dispatcher = new ActionDispatcher(engine);
+		this.dispatcher = new ActionDispatcher(this.engine);
 		this.mountedAt = Date.now();
 
 		const onSubmit = () => void this.runSubmissionLifecycle();
@@ -95,12 +124,33 @@ export class FormActionControllerElement extends RadiantElement {
 	}
 
 	private async runSubmissionLifecycle(): Promise<void> {
+		if (!this.dispatcher || !this.form.ready) return;
 		this.dispatchEvent(new CustomEvent('se-action-submit-start', { bubbles: true, composed: true }));
-		await this.dispatch('form_submit_start');
-		const results = await this.dispatch('form_submit');
-		const succeeded = results.every((result) => result.success || result.shouldContinue !== false);
-		await this.dispatch(succeeded ? 'form_submit_success' : 'form_submit_error');
-		await this.dispatch('form_submit_complete');
+		const { succeeded, results } = await runSubmissionLifecycle(
+			async (input) => {
+				const dispatcher = this.dispatcher;
+				if (!dispatcher) return [];
+				const dispatchedResults: Awaited<ReturnType<typeof dispatcher.dispatch>> = [];
+				for (const action of input.actions) {
+					const dispatched = await dispatcher.dispatch({ ...input, actions: [action] });
+					if (input.trigger === 'form_submit' && dispatched[0]?.success) {
+						try {
+							await this.onAction?.(action, input.context.formData);
+						} catch (error) {
+							dispatched[0] = {
+								success: false,
+								shouldContinue: false,
+								error: error instanceof Error ? error.message : String(error),
+							};
+						}
+					}
+					dispatchedResults.push(...dispatched);
+					if (dispatched.some((result) => !result.success && result.shouldContinue === false)) break;
+				}
+				return dispatchedResults;
+			},
+			{ actions: this.config.actions ?? [], context: () => this.buildContext() },
+		);
 		this.dispatchEvent(
 			new CustomEvent('se-action-submit-complete', {
 				bubbles: true,
@@ -121,35 +171,34 @@ export class FormActionControllerElement extends RadiantElement {
 			return [];
 		}
 
-		const formState = form.formState;
-		return this.dispatcher.dispatch({
-			actions: config.actions,
-			trigger,
-			context: {
-				formId: config.id || 'unnamed-form',
-				formData: form.getValues(),
-				currentStep: this.formInstance?.currentStep ?? 0,
-				totalSteps: this.formInstance?.totalSteps ?? config.steps?.length ?? 1,
-				isValid: formState.isValid,
-				errors: formState.errors,
-				metadata: {
-					stepStartTime: this.mountedAt,
-					totalFormTime: Date.now() - this.mountedAt,
-					userInteractions: Object.keys(formState.touched).length,
-				},
-				form: {
-					reset: () => form.reset(),
-					setValue: (name, value) => form.setValue(name, value),
-					getValue: (name) => form.getValue(name),
-					validate: () => form.trigger(),
-				},
-			},
+		return this.dispatcher.dispatch({ actions: config.actions, trigger, context: this.buildContext() });
+	}
+
+	private buildContext(): BuilderActionBaseContext {
+		const form = this.form;
+		return buildFormActionContext({
+			config: this.config,
+			values: form.getValues(),
+			formState: form.formState,
+			currentStep: this.formInstance?.currentStep ?? 0,
+			mountedAt: this.mountedAt,
+			form: this.actionForm,
 		});
 	}
 }
 
-export function FormActionController({ config }: { config: FormConfigView }) {
+export function FormActionController({
+	config,
+	engine,
+	onAction,
+}: {
+	config: FormConfigView;
+	engine?: FormEngine;
+	onAction?: FormProviderProps['onAction'];
+}) {
 	return jsx('se-form-action-controller', {
-		config,
+		'prop:config': config,
+		'prop:engine': engine,
+		'prop:onAction': onAction,
 	});
 }

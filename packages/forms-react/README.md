@@ -1,740 +1,122 @@
 # @schema-engine/forms-react
 
-React implementation of the JSON Form Engine with type-safe components, form adapters, and comprehensive validation support.
+React rendering for `@schema-engine/forms`. Applications supply element registrations and view recipes; an adapter supplies form state and field operations.
 
-> **Important:** This README is a package overview, not the API reference. For verified examples and API contracts, use the [Documentation App](../../apps/docs) — start with [Getting Started](../../apps/docs/src/content/docs/forms-react/getting-started.mdx) or [Quick Start](../../apps/docs/src/content/docs/getting-started/quick-start.mdx).
+## Logging
 
-## Overview
+Runtime diagnostics go through `@ecopages/logger` with the `[schema-engine/forms-react]` package tag. Debug output is disabled by default; warnings and errors keep their severity and diagnostic details.
 
-The React package provides production-ready components and hooks for building dynamic, JSON-configured forms. It integrates seamlessly with `@schema-engine/forms` and supports popular form libraries through an adapter system.
+## Install
 
-**Key Features:**
-
-- Runtime form engine, React Hook Form adapter, and headless recipe contracts
-- Registry-owned view recipes for visual chrome (`card`, `card-wizard`, `wizard`, …)
-- `FormDebugger` opt-in dev overlay (mount as a child of `FormRenderer`)
-- Comprehensive validation with 24 built-in rules
-- Action execution system for form lifecycle events
-- Grid-based responsive layouts
-- GDPR consent tracking
-- GTM analytics integration
-- Constraint logic and dynamic field behavior
-
-## Installation
-
-```bash
-pnpm add @schema-engine/forms-react @schema-engine/forms react-hook-form zod
+```sh
+pnpm add @schema-engine/forms @schema-engine/forms-react react react-dom zod
 ```
 
-## Quick Start
+For the React Hook Form adapter, also install its optional peer:
 
-### 1. Create a Form Engine
+```sh
+pnpm add react-hook-form
+```
 
-Import component registrations and build your engine:
+Install the [Schema Engine registry](../../registry) elements and recipes for your UI library. The imports below refer to the generated registration barrels in your application.
 
-```typescript
-import { createFormEngine } from '@schema-engine/forms-react';
+## Render a form
+
+```tsx
+import { createFormEngine } from '@schema-engine/forms';
+import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
+import { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
-import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
+import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes';
 
-const formEngine = createFormEngine({ elements: schemaFormRegistrations, recipes: schemaFormRecipeRegistrations });
-```
+const engine = createFormEngine({
+	elements: schemaFormRegistrations,
+	recipes: schemaFormRecipeRegistrations,
+});
 
-Install form elements from the GitHub registry first. Pick the aggregate that matches your shadcn base:
-
-- Base UI: `shadcn add andeeplus/schema-engine/schema-form`
-- Radix UI: `shadcn add andeeplus/schema-engine/schema-form-radix`
-- React Aria: `shadcn add andeeplus/schema-engine/schema-form-aria`
-
-Install the matching default recipe item to use the supplied `view.$type` implementations:
-
-- Base UI: `shadcn add andeeplus/schema-engine/schema-engine-form-recipes`
-- Radix UI: `shadcn add andeeplus/schema-engine/schema-engine-form-recipes-radix`
-- React Aria: `shadcn add andeeplus/schema-engine/schema-engine-form-recipes-aria`
-
-`createFormEngine()` is headless; add `schemaFormRecipeRegistrations` explicitly.
-
-### 2. Configure Your Form
-
-Create a JSON configuration:
-
-```typescript
-import type { FormConfig } from '@schema-engine/forms';
-
-const formConfig: FormConfig = {
-	id: 'contact-form',
-	title: 'Contact Us',
-	description: 'Get in touch with our team',
-	view: {
-		$type: 'card',
-		shell: { padding: 'md', shadowSize: 'md' },
-	},
+const config = engine.defineForm({
+	id: 'contact',
 	steps: [
 		{
-			id: 'step-1',
-			title: 'Your Information',
+			id: 'details',
 			elements: [
-				{
-					$type: 'input',
-					id: 'name',
-					name: 'name',
-					label: 'Full Name',
-					inputType: 'text',
-					rules: [
-						{ type: 'required', message: 'Name is required' },
-						{ type: 'minLength', value: 2, message: 'Name must be at least 2 characters' },
-					],
-				},
-				{
-					$type: 'input',
-					id: 'email',
-					name: 'email',
-					label: 'Email Address',
-					inputType: 'email',
-					rules: [
-						{ type: 'required', message: 'Email is required' },
-						{ type: 'email', message: 'Invalid email format' },
-					],
-				},
-				{
-					$type: 'textarea',
-					id: 'message',
-					name: 'message',
-					label: 'Message',
-					rows: 5,
-					rules: [
-						{ type: 'required', message: 'Message is required' },
-						{ type: 'maxLength', value: 500, message: 'Maximum 500 characters' },
-					],
-				},
+				{ $type: 'input', id: 'email', name: 'email', label: 'Email', rules: [{ type: 'email' }] },
+				{ $type: 'submit', id: 'send', label: 'Send' },
 			],
 		},
 	],
-};
-```
+});
 
-### 3. Render the Form
-
-```tsx
-import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
-import { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
-
-function ContactForm() {
-	const handleSubmit = (data) => {
-		console.log('Form submitted:', data);
-	};
-
+export function ContactForm() {
 	return (
-		<FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
-			<FormRenderer config={formConfig} onSubmit={handleSubmit} />
+		<FormEngineProvider engine={engine} adapter={rhfAdapter}>
+			<FormRenderer config={config} onSubmit={(values) => console.log(values)} />
 		</FormEngineProvider>
 	);
 }
 ```
 
-## Core Concepts
+`createFormEngine` comes from `@schema-engine/forms`. Register recipes explicitly to select them through `view.$type`.
 
-### Component Registration System
+## Public entry points
 
-The package uses explicit, per-component registration to ensure type safety and tree-shaking:
+| Import                                                | Purpose                                                                               |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `@schema-engine/forms-react`                          | Public components, including `FormEngineProvider`, `FormProvider`, and `FormRenderer` |
+| `@schema-engine/forms-react/hooks`                    | Engine, field, constraint, submission, and view hooks                                 |
+| `@schema-engine/forms-react/adapters`                 | Adapter contracts and adapter-neutral form hooks                                      |
+| `@schema-engine/forms-react/adapters/react-hook-form` | `rhfAdapter`; requires `react-hook-form`                                              |
+| `@schema-engine/forms-react/contexts`                 | View context provider and context types                                               |
+| `@schema-engine/forms-react/primitives`               | `FormElement`, `FormElements`, and React recipe contracts                             |
+| `@schema-engine/forms-react/components/form-debugger` | `FormDebugger`                                                                        |
 
-```typescript
-import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
+Use `useFormContext`, `useFormField`, `useWatchField`, `useWatchForm`, and `useFieldArray` from `/adapters` inside the active form. `useFieldArray` provides `fields`, `append`, `prepend`, `insert`, `swap`, `move`, `update`, `replace`, and `remove`.
 
-const engine = createFormEngine({ elements: schemaFormRegistrations });
-```
+Use `useFormEngine`, `useFormInstanceActions`, `useControlledFormElement`, `useFieldHost`, `useConstraintLogic`, and `useSubmissionState` from `/hooks`. View hooks (`useViewContext`, `useOptionalViewContext`, `useActiveStep`, `useFormNavigation`, and `useViewConfig`) also come from `/hooks`.
 
-**Benefits:**
+## Consumer-owned fields and styling
 
-- Only imported components affect bundle size
-- Type system only knows about registered components
-- Multiple builders with different components work correctly
-- No hidden magic, explicit imports
+`useControlledFormElement(config)` binds a field to the selected adapter and returns its value, error, handlers, control attributes, and field chrome attributes. Spread `fieldProps` onto the control, `labelProps` onto its label, and `errorProps` onto its error message when present. These attributes describe semantics and state; applications choose their styling.
 
-### Form Adapters
+The runtime exposes `se-*` class hooks and grid variables. Consumers do not need to scan the package's built files with Tailwind; applications own their styles, and registry components can bring their own UI library and styling dependencies. Use `useFieldHost` for the grid host of custom elements.
 
-Adapters bridge the gap between the form engine and form libraries. The package includes a React Hook Form adapter by default.
-`FormProvider` uses the engine and adapter from its surrounding `FormEngineProvider`; use `FormRenderer`'s `engine` prop when a form needs to select an engine directly.
-
-**Using the RHF Adapter:**
-
-```tsx
-import { FormEngineProvider } from '@schema-engine/forms-react';
-import { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
-
-<FormEngineProvider engine={formEngine} adapter={rhfAdapter}></FormEngineProvider>;
-```
-
-**Adapter Interface:**
-
-```typescript
-interface FormAdapter {
-	useFormContext: () => FormContextValue;
-	useFormField: (config: ElementConfig) => FormFieldValue;
-	useWatchField: (name: string | string[]) => any;
-	FormProvider: React.ComponentType<FormProviderProps>;
-	validateField: (name: string) => Promise<boolean>;
-	validateFields: (names: string[]) => Promise<boolean>;
-}
-```
-
-Custom adapters can be created to integrate with other form libraries (Formik, Final Form, etc.).
-
-### Form instance boundary
-
-`FormRenderer` keys the adapter's form instance to the identity of its normalized
-config. Passing a newly defined config starts a fresh instance with its new
-defaults and step state. Re-rendering the parent with the same config keeps the
-instance and only reports `onChange` or runs `form_change` actions when a field
-value changes.
-
-### Elements
-
-Pre-built form field components with validation and styling:
-
-- `input` - Text, email, password, tel, url inputs
-- `textarea` - Multi-line text input
-- `checkbox` - Single checkbox or checkbox group
-- `radio` - Radio button group
-- `select` - Dropdown select
-- `switch` - Toggle switch
-- `number` - Number input with increment/decrement
-- `array` - Dynamic array of form elements
-
-**Example - Select Field:**
-
-```typescript
-{
-  $type: 'select',
-  id: 'country',
-  name: 'country',
-  label: 'Country',
-  options: [
-    { value: 'us', label: 'United States' },
-    { value: 'ca', label: 'Canada' },
-    { value: 'uk', label: 'United Kingdom' }
-  ],
-	rules: [
-		{ type: 'required', message: 'Please select a country' }
-  ]
-}
-```
-
-### View recipes
-
-Visual chrome is selected with form-level `view.$type`. Install the matching
-registry recipe aggregate and register `schemaFormRecipeRegistrations` before
-using these default implementations:
-
-- `card`, `split-screen`, `hero-background` — single-step shells
-- `card-wizard`, `wizard`, `sidebar-wizard`, `hero-wizard`, `split-screen-wizard`, `bare-controls` — multi-step recipes
-
-```typescript
-{
-  id: 'contact-form',
-  view: {
-    $type: 'card',
-    shell: { maxWidth: 'md', padding: 'lg', shadowSize: 'lg' },
-  },
-  steps: [{ id: 'step-1', title: 'Contact', elements: [...] }],
-}
-```
-
-Mount `FormDebugger` as a child of `FormRenderer` when you want an opt-in inspector:
-
-```tsx
-import { FormDebugger } from '@schema-engine/forms-react/components/form-debugger';
-
-<FormRenderer config={config} engine={engine} adapter={adapter}>
-	<FormDebugger />
-</FormRenderer>;
-```
-
-**Example - Multi-Step Form:**
-
-```typescript
-const multiStepConfig: FormConfig = {
-  id: 'registration',
-  steps: [
-    {
-      id: 'personal',
-      title: 'Personal Information',
-      elements: [...]
-    },
-    {
-      id: 'account',
-      title: 'Account Details',
-      elements: [...]
-    },
-    {
-      id: 'preferences',
-      title: 'Preferences',
-      elements: [...]
-    }
-  ],
-  view: {
-    $type: 'wizard',
-    progress: { orientation: 'horizontal' },
-  }
-};
-```
-
-### Validation
-
-Validation rules are defined in the field configuration. The React package uses the validation system provided by `@schema-engine/forms`.
-
-For complete documentation on validation rules, custom validators, and advanced validation patterns, see the [@schema-engine/forms documentation](../forms/README.md#validation).
-
-**Quick Example:**
-
-```typescript
-{
-  $type: 'input',
-  id: 'phone',
-  name: 'phone',
-  label: 'Phone Number',
-	rules: [
-		{ type: 'required', message: 'Phone is required' },
-    {
-			type: 'pattern',
-      value: /^\+?[\d\s-()]+$/,
-      message: 'Invalid phone format'
-    }
-  ]
-}
-```
-
-### Actions
-
-Actions execute in response to form lifecycle events:
-
-**Trigger Types:**
-
-- `form_submit` - Form submission
-- `form_change` - Field value changes
-- `step_change` - Step navigation
-- `step_submit` - Step submission
-- `step_enter` / `step_leave` - Step lifecycle transitions
-
-**Example - Submit Action:**
-
-```typescript
-{
-  id: 'contact-form',
-  steps: [...],
-  actions: [
-    {
-      $type: 'submit',
-      id: 'api-submit',
-      endpoint: 'https://api.example.com/contact',
-      method: 'POST',
-      successMessage: 'Thank you for contacting us!',
-      errorMessage: 'Failed to submit form. Please try again.',
-      redirectUrl: '/thank-you'
-    }
-  ]
-}
-```
-
-### Grid Layout
-
-Forms support responsive grid layouts using CSS Grid. The engine owns the grid
-vocabulary (breakpoint thresholds, gap tokens, default minimum column width);
-each form describes its layout:
-
-```typescript
-// Engine: define the vocabulary once
-const engine = createFormEngine({
-  elements: [...],
-  grid: {
-    breakpoints: { sm: '30rem', lg: '64rem' },   // optional; library defaults otherwise
-    gap: { loose: '2rem' },                      // optional gap token overrides
-    responsive: { md: { loose: '2.5rem' } },     // optional per-breakpoint token values
-    minColumnWidth: '16rem',
-  },
-});
-
-// Form: describe the layout
-{
-  grid: {
-    columns: 1,
-    gap: 'default',            // none | compact | default | loose | wide, or a CSS value
-    responsive: {
-      sm: { columns: 2 },
-      lg: { columns: 3 },
-    },
-  },
-  steps: [
-    {
-      elements: [
-        { $type: 'input', id: 'firstName', name: 'firstName', label: 'First Name',
-          grid: { column: 'span 2' } },
-        { $type: 'input', id: 'email', name: 'email', label: 'Email',
-          grid: { responsive: { md: { column: '1 / -1' } } } },
-      ],
-    },
-  ],
-}
-```
-
-Behavior:
-
-- Breakpoints follow the **viewport width** (media queries), so forms inside a
-  narrow container still receive the desktop rules of the wide screen they
-  live on.
-- Sparse responsive entries inherit from the **preceding breakpoint**, then the
-  top-level value, then the theme default. Within an entry, `gapX`/`gapY` beat
-  the entry's `gap`.
-- `hidden` is part of per-field responsive entries; an explicit
-  `hidden: false` at a larger breakpoint undoes an earlier `hidden: true`.
-- The renderer emits the theme stylesheet and the form's CSS variables inline
-  during render, so SSR output is styled with no FOUC and hydration is not
-  required for layout. Hosts can still restyle every form by overriding the
-  `--se-grid-gap-*` tokens at `:root`.
-- Only authored values reach the markup. The stylesheet holds the neutral
-  defaults, the breakpoint cascade (each media query falls back through the
-  narrower slots), and the resets that stop a nested grid inheriting its
-  parent's placement — so a field with no `grid` config carries no inline style.
-- `placeItems`/`placeContent`/`placeSelf` are resolved into their axis
-  longhands before emission; the axis property wins when both are authored.
-  Field alignment defaults to `auto`, so form-level `justifyItems`/`alignItems`
-  still applies.
-- `engine.getCompiledGrid()` is computed once at engine construction (frozen
-  theme-plus-stylesheet pair); `getGridTheme()` reads its theme.
-  `engine.extend()` inherits that compiled grid; `grid` is not an extend option.
-  Breakpoint thresholds must preserve named order (`sm ≤ md ≤ lg ≤ xl ≤ 2xl`).
-- **SSR acceptance:** `test/ssr/grid-layout-ssr.markup.test.ts` renders the real
-  `FormRenderer` with `renderToStaticMarkup` and checks the emitted stylesheet
-  and field variables; `test/ssr/grid-layout-ssr.acceptance.browser.test.tsx`
-  loads that same HTML in an isolated iframe without app JS and checks layout at
-  two widths (browser vitest project). Both share `test-utils/`.
-
-## Hooks
-
-The package provides several hooks for form interactions. Responsive grid
-layout is pure CSS (media queries generated from the engine's grid theme); the
-former breakpoint hooks (`useBreakpoint`, `useFormGridStyles`,
-`useFieldGridStyles`, `BreakpointOverrideProvider`) were removed.
-
-The adapter-neutral `useFieldArray` hook exposes the complete field-array
-mutation surface: `append`, `prepend`, `insert`, `swap`, `move`, `update`,
-`replace`, and `remove`, alongside the current `fields`.
-
-### useFormEngine
-
-Access the form engine instance:
-
-```tsx
-import { useFormEngine } from '@schema-engine/forms-react';
-
-function MyComponent() {
-	const { engine } = useFormEngine();
-
-	const inputElement = engine.getElement('input');
-	const allElements = engine.getAllElements();
-
-	return <div />;
-}
-```
-
-### useFormInstance
-
-Access the React Hook Form instance:
-
-```tsx
-import { useFormInstance } from '@schema-engine/forms-react';
-
-function MyComponent() {
-	const { getValues, setValue, trigger, formState } = useFormInstance();
-
-	const currentValues = getValues();
-
-	return <div />;
-}
-```
-
-### useFormInstanceActions
-
-Access form actions, navigation, and trigger dispatch:
-
-```tsx
-import { useFormInstanceActions } from '@schema-engine/forms-react';
-
-function MyComponent() {
-	const { executeAction, currentStep, totalSteps, goToNext, goToPrevious, goToStep, dispatchTrigger } =
-		useFormInstanceActions();
-
-	const handleCustomAction = async () => {
-		const results = await dispatchTrigger('form_submit');
-		if (results[0]?.success) {
-			console.log('Action executed successfully');
-		}
-	};
-
-	return (
-		<div>
-			<span>
-				Step {currentStep + 1} of {totalSteps}
-			</span>
-			<button onClick={goToPrevious}>Back</button>
-			<button onClick={goToNext}>Next</button>
-			<button onClick={handleCustomAction}>Execute</button>
-		</div>
-	);
-}
-```
-
-### useControlledFormElement
-
-Create custom field components:
-
-```tsx
-import { useControlledFormElement } from '@schema-engine/forms-react';
-
-function CustomField(config) {
-	const { value, error, onChange, onBlur, isRequired } = useControlledFormElement(config);
-
-	return (
-		<div>
-			<input
-				value={value || ''}
-				onChange={(e) => onChange(e.target.value)}
-				onBlur={onBlur}
-				required={isRequired}
-			/>
-			{error && <span>{error}</span>}
-		</div>
-	);
-}
-```
-
-## Advanced Features
-
-### Constraint Logic
-
-Apply dynamic visibility and behavior based on form values:
-
-```typescript
-{
-  $type: 'input',
-  id: 'other-reason',
-  name: 'otherReason',
-  label: 'Please specify',
-  constraints: [
-    {
-      field: 'reason',
-      operator: 'equals',
-      value: 'other',
-      action: 'show'
-    }
-  ]
-}
-```
-
-Nested sibling references resolve from the rendered field path. For example,
-`accountType` on `contacts.0.email` reads `contacts.0.accountType`.
-
-### GDPR Consent
-
-Track and manage user consent with the `useGDPRConsent` hook (global consent state, not a per-field config property):
-
-```typescript
-{
-  $type: 'checkbox',
-  id: 'gdpr-consent',
-  name: 'gdprConsent',
-  label: 'I agree to the privacy policy',
-  rules: [
-    { type: 'required', message: 'You must accept the privacy policy' }
-  ]
-}
-```
-
-Use the `useGDPRConsent` hook to access consent state:
-
-```tsx
-import { useGDPRConsent } from '@schema-engine/forms-react';
-
-function ConsentStatus() {
-	const consent = useGDPRConsent();
-
-	return <div>{consent.hasConsent() ? 'Consented' : 'Not consented'}</div>;
-}
-```
-
-### GTM Tracking
-
-Integrate Google Tag Manager for form analytics:
-
-```tsx
-import { useGTMTracker } from '@schema-engine/forms-react';
-
-function MyForm() {
-	const tracker = useGTMTracker();
-
-	const handleSubmit = () => {
-		tracker.pushFormEvent('form_submit', { email: 'user@example.com' }, { formId: 'contact-form' });
-	};
-
-	return <button onClick={handleSubmit}>Track submit</button>;
-}
-```
-
-### Custom Components
-
-Register custom field components:
-
-```typescript
-import * as z from 'zod/mini';
-
-export function CustomDatePicker(props) {
-	const { value, error, onChange, onBlur } = useControlledFormElement(props);
-
-	return (
-		<div>
-			<DatePicker selected={value} onChange={onChange} onBlur={onBlur} />
-			{error && <span>{error}</span>}
-		</div>
-	);
-}
-
-export const CustomDatePickerSchema = z.object({
-	$type: z.literal("custom-date-picker"),
-	id: z.string(),
-	name: z.string(),
-	label: z.string(),
-	minDate: z.optional(z.date()),
-	maxDate: z.optional(z.date()),
-});
-
-export const CustomDatePickerRegistration = {
-	$type: "custom-date-picker",
-	render: CustomDatePicker,
-	schema: CustomDatePickerSchema,
-	metadata: {
-		name: "Custom Date Picker",
-		description: "Date selection with custom styling",
-		category: "input",
-	},
-};
-
-const engine = createFormEngine({ elements: [CustomDatePickerRegistration] });
-```
-
-### Custom recipes
-
-Compose a shell and slot blocks with `defineFormRecipe`, then register it:
-
-```typescript
-import * as z from 'zod/mini';
-import { defineFormRecipe, defineRecipeSpec } from '@schema-engine/forms/recipes';
-import type { FormShellProps } from '@schema-engine/forms-react/primitives';
-
-const brandSpec = defineRecipeSpec({
-	$type: 'brand',
-	kind: 'single-step',
-	slotSchemas: { shell: z.strictObject({ accent: z.optional(z.string()) }) },
-	metadata: { name: 'Brand', description: 'Branded form shell' },
-});
-
-function BrandShell({ slots }: FormShellProps) {
-	return (
-		<div className="brand-shell">
-			{slots.header}
-			{slots.content}
-			{slots.actions}
-		</div>
-	);
-}
-
-export const BrandRecipe = defineFormRecipe(brandSpec, {
-	shell: BrandShell,
-	slots: {},
-});
-
-const engine = createFormEngine({ recipes: [BrandRecipe] });
-```
-
-## Type Safety
-
-The package provides full TypeScript support with automatic type inference:
-
-```typescript
-import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
-
-const engine = createFormEngine({ elements: schemaFormRegistrations });
-
-const element = engine.getElement('input');
-const allElements = engine.getAllElements();
-
-const config: FormConfig = {
-	id: 'my-form',
-	steps: [
-		{
-			id: 'step-1',
-			elements: [
-				{
-					$type: 'input',
-					id: 'name',
-					name: 'name',
-					inputType: 'text',
-				},
-			],
-		},
-	],
-};
-```
-
-## Performance
-
-The package is optimized for performance:
-
-- **Tree-shaking** - Only imported components are bundled
-- **Code splitting** - Lazy load components and layouts
-- **Memoization** - Components use React.memo and useMemo
-- **Debouncing** - Field changes are debounced to reduce re-renders
-
-## Testing
-
-The package includes comprehensive test coverage:
-
-```bash
-pnpm test
-```
-
-```bash
-cd packages/forms-react && pnpm test:all
-```
-
-**Test categories:** builder pattern, registration, rendering, validation, multi-step navigation, action execution, hooks, and custom components.
-
-## Dependencies
-
-**Peer Dependencies** — install these alongside the package:
-
-- `@schema-engine/forms` - Core form engine
-- `react` ^19
-- `react-dom` ^19
-- `react-hook-form` ^7 - Form state management behind `rhfAdapter`
-- `typescript` ^5
-- `zod` ^4 - Required by `@schema-engine/forms` for its first-party `zod/mini` schemas
-
-`react` and `react-hook-form` are peers rather than dependencies so a consumer cannot end up with two copies: a second React breaks hooks, and a second `react-hook-form` makes `useFormContext` return `null`, because its context is matched by instance identity.
-
-Validation is resolved in-package by `createFormValidationResolver`, so `@hookform/resolvers` is not required.
-
-### Engine-scoped config types
+## Engine-scoped config types
 
 Element, recipe, and action config types come from the registrations passed to
-`createFormEngine`. Two engines may expose different element sets independently.
-Use `engine.defineForm` to infer authoring input and normalized output for that
-engine. Generic `FormConfig` and `NormalizedFormConfig` types accept the engine
-maps; their defaults describe an open config for helpers without a concrete engine.
-`FormEngine` keeps schema input maps separate from its fourth generic, the parsed
-output maps, so defaults and transforms appear correctly in normalized configs.
-Renderers store the `FormEngineRuntime` contract, which omits registration extension.
-Registration files no longer augment a global `FormEngine` namespace.
+each engine. `engine.defineForm` infers the engine's authoring inputs and
+normalized outputs, including schema defaults and transforms. The React provider
+and renderer preserve those engine maps through their props; registrations no
+longer augment a global `FormEngine` namespace.
 
-## License
+## Migration
 
-MIT
+- Import `createFormEngine` from `@schema-engine/forms`.
+- Import `rhfAdapter` only from `/adapters/react-hook-form`.
+- Move runtime and view hook imports to `/hooks`, and adapter hooks to `/adapters`.
+- Import `FormElement` and `FormElements` from `/primitives`.
+- Replace `useFormInstance` with `useFormContext` from `/adapters`.
+- Replace `useGDPRConsent` and `useGTMTracker` with `GDPRConsent` and `GTMTracker` from `@schema-engine/forms/browser`. These are static browser helpers; React state subscriptions belong to the application.
+
+See [Getting started](../../apps/docs/src/content/docs/forms-react/getting-started.mdx), [Hooks](../../apps/docs/src/content/docs/forms-react/hooks.mdx), and [Advanced usage](../../apps/docs/src/content/docs/forms-react/advanced.mdx).
+
+Registry source type checks run through the registry workspace's `check-types`
+task in Turbo. Renderer actions import the dispatcher from
+`@schema-engine/forms/actions`.
+
+## Validation, navigation and action contexts
+
+The React Hook Form adapter delegates validation to `validateFormValues`, step
+state to `createStepMachine`, and submission triggers to `runSubmissionLifecycle`
+from `@schema-engine/forms`. Wizard Next validates nested fieldsets and live
+array rows; errors keep the nested value shape so field revalidation clears them.
+A `require` constraint supplies both the control's required state and validation.
+
+`executeAction(action)` dispatches only that action. Submission callbacks run
+after the engine action lifecycle succeeds, and React Hook Form performs the
+submission validation once. Step action metadata includes elapsed form time.
+Action handlers receive a framework-neutral `context.form` with `reset`,
+`setValue`, `getValue`, and `validate`; `validate()` resolves to the form validity.
+
+A changed `require` condition revalidates a touched or submitted dependent field.
+Submission failures use `action-N` result identifiers because dispatch results
+do not carry authored action ids.

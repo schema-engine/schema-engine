@@ -10,7 +10,7 @@ import {
 } from '@schema-engine/forms';
 import { collectFieldDefaults, flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import { getValueAtPath, mergePathValues, setValueAtPath } from '@schema-engine/forms/lib/path-values';
-import { expandValues, flattenValues } from './controller/values';
+import { flattenValues } from './controller/values';
 import type { JsxRenderable } from '@ecopages/jsx';
 import { createArrayItemDefaultValue } from '@/lib/array-item-default';
 
@@ -88,24 +88,21 @@ function clearInvalidErrors(event: Event): void {
 export function ConfiguredRuiForm({
 	config,
 	defaultValues = {},
-	onSubmit,
+	initialValues,
 	children,
 }: {
 	config: FormConfigView;
 	defaultValues?: Partial<Record<string, unknown>>;
-	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
+	initialValues?: Record<string, unknown>;
 	children: JsxRenderable;
 }) {
-	const effectiveOnSubmit = (values: Record<string, unknown>) => onSubmit?.(expandValues(values));
-
 	return (
 		<RuiForm
 			class={config.className}
 			style={config.style}
 			mode="onSubmit"
 			reValidateMode="onChange"
-			defaultValues={collectFormDefaultValues(config, defaultValues)}
-			onSubmit={effectiveOnSubmit}
+			defaultValues={initialValues ?? collectFormDefaultValues(config, defaultValues)}
 			on:rui-invalid={rememberInvalidErrors}
 			on:rui-submit={clearInvalidErrors}
 		>

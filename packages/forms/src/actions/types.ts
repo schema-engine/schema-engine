@@ -1,5 +1,5 @@
+import type { ActionConfigBase, ActionExecutionResult as GenericActionExecutionResult } from '@schema-engine/actions';
 import * as z from 'zod/mini';
-import type { ActionConfigBase } from '@schema-engine/actions';
 import { FormSubmitActionSchema } from './plugins/form-submit.plugin';
 import { FormResetActionSchema } from './plugins/form-reset.plugin';
 import { NotificationActionSchema } from './plugins/notification.plugin';
@@ -32,3 +32,8 @@ export const FormActionConfigSchema = z.discriminatedUnion('$type', [
 	AutoSaveActionSchema,
 	GTMEventActionSchema,
 ] as const);
+
+/** Form actions may request browser navigation after completion. */
+export interface ActionExecutionResult<TData = unknown> extends GenericActionExecutionResult<TData> {
+	redirectUrl?: string;
+}

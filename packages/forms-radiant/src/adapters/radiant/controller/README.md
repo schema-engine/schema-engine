@@ -7,11 +7,6 @@ descendants or use a global active form. `FormFieldElement` extends
 `RuiFieldElement`; Radiant UI continues to register controls and own validation,
 error presentation, and ARIA. `SeFormArray` uses the same controller for row edits.
 
-`FormEngineController` subscribes to the nearest `formEngineContext` published by
-`se-form-renderer`. Its initial read also checks the active owning field render,
-including during SSR. It has no global engine fallback. A standalone host without
-a renderer must receive an engine explicitly.
-
 ## Explicit lifecycle
 
 This works with plain custom elements, without decorators or a Radiant base class:
@@ -40,35 +35,6 @@ context to become ready and then notifies on presentation changes. Reads and
 mutations require a ready form; use `form.ready` before reading during an early
 render. `disconnect` removes context subscriptions and all watches created by
 that controller. Reconnect after moving a host to another form.
-
-## Form engine resolution
-
-Use `FormEngineController` when a custom element needs the engine published by
-its nearest `se-form-renderer`:
-
-```ts
-import { FormEngineController } from '@schema-engine/forms-radiant/adapters/radiant';
-
-class EngineAwareHost extends HTMLElement {
-	readonly formEngine = new FormEngineController(this);
-
-	connectedCallback() {
-		this.formEngine.connect(() => {
-			if (this.formEngine.ready) {
-				this.dataset.engineReady = 'true';
-			}
-		});
-	}
-
-	disconnectedCallback() {
-		this.formEngine.disconnect();
-	}
-}
-```
-
-`engine` is a lazy snapshot, and `ready` reports whether one has been resolved.
-`connect` subscribes to later context updates; `disconnect` releases that
-subscription and clears the snapshot.
 
 ## Optional decorator
 
@@ -135,8 +101,10 @@ controller instead. Replace snapshot hook calls with `getValue` / `getValues`,
 and use `watchField` / `watchForm` when an actual subscription is needed. Apply
 fallbacks at the read site (`form.getValue('title') ?? 'Untitled'`).
 
-`bindControlledFormElement(config, form)` now requires the scoped controller;
-its result is a render snapshot, without the old disconnected signal bindings.
+`FormProvider` supplies the Radiant form integration; it does not emulate React hooks.
+`combineHandlers` composes a control callback with a caller callback. The unused
+`bindControlledFormElement` export has been removed; use `form.field(name)` for
+scoped programmatic field access.
 
 `FormContextValue` is removed. `formState` uses Radiant UI's state contract
 (`touched`, `dirty`, and `isSubmitted`); it does not synthesize the former

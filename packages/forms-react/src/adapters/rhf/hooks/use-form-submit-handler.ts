@@ -1,8 +1,14 @@
+import { logger } from '@/lib/logger';
 import { useCallback } from 'react';
-import type { UseFormReturn } from 'react-hook-form';
+import type { FieldValues, UseFormReturn } from 'react-hook-form';
 import type { FormActionConfig } from '@schema-engine/forms/schemas';
-import type { FormActionTrigger, FormConfigView } from '@schema-engine/forms';
-import type { ActionExecutionResult } from '@schema-engine/actions';
+import {
+	runSubmissionLifecycle,
+	type BuilderActionBaseContext,
+	type FormActionTrigger,
+	type FormConfigView,
+} from '@schema-engine/forms';
+import type { ActionDispatcher, ActionExecutionResult } from '@schema-engine/forms/actions';
 import type { SubmissionState, SubmissionError } from '@/hooks/use-submission-state';
 
 interface SubmissionStateManager {
@@ -14,12 +20,14 @@ interface SubmissionStateManager {
 }
 
 interface UseFormSubmitHandlerOptions {
-	form: UseFormReturn<any>;
+	form: UseFormReturn;
 	config: FormConfigView;
+	actionExecutor: ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>;
+	buildActionContext: () => BuilderActionBaseContext;
 	submission: SubmissionStateManager;
 	dispatchTrigger: (trigger: FormActionTrigger) => Promise<ActionExecutionResult[]>;
-	onSubmit?: (data: any) => void | Promise<void>;
-	onAction?: (action: FormActionConfig, data: any) => void | Promise<void>;
+	onSubmit?: (data: FieldValues) => void | Promise<void>;
+	onAction?: (action: FormActionConfig, data: FieldValues) => void | Promise<void>;
 }
 
 export type SubmissionContextValue = {
@@ -38,18 +46,21 @@ export type SubmissionContextValue = {
 export function useFormSubmitHandler({
 	form,
 	config,
+	actionExecutor,
+	buildActionContext,
 	submission,
 	dispatchTrigger,
 	onSubmit,
 	onAction,
-}: UseFormSubmitHandlerOptions): { handleSubmit: (data: any) => Promise<void> } & SubmissionContextValue {
+}: UseFormSubmitHandlerOptions): { handleSubmit: (data: FieldValues) => Promise<void> } & SubmissionContextValue {
 	const { submissionState, setSubmissionPending, setSubmissionSuccess, setSubmissionError, clearSubmission } =
 		submission;
 
 	const executeAction = useCallback(
 		async (action: FormActionConfig) => {
 			setSubmissionPending();
-			return dispatchTrigger('form_submit')
+			return actionExecutor
+				.dispatch({ actions: [action], trigger: 'form_submit', context: buildActionContext() })
 				.then(async (results) => {
 					const result = results[0] || { success: false, error: 'No result returned' };
 
@@ -58,7 +69,7 @@ export function useFormSubmitHandler({
 							await onAction?.(action, form.getValues());
 							setSubmissionSuccess();
 						} catch (actionError) {
-							console.error('Action callback failed:', actionError);
+							logger.error('Action callback failed:', actionError);
 							throw actionError;
 						}
 					} else {
@@ -74,41 +85,44 @@ export function useFormSubmitHandler({
 					return { success: false, error: errorMessage };
 				});
 		},
-		[form, onAction, dispatchTrigger, setSubmissionPending, setSubmissionSuccess, setSubmissionError],
+		[
+			form,
+			onAction,
+			actionExecutor,
+			buildActionContext,
+			setSubmissionPending,
+			setSubmissionSuccess,
+			setSubmissionError,
+		],
 	);
 
 	const handleSubmit = useCallback(
-		async (data: any) => {
-			await form.trigger();
+		async (data: FieldValues) => {
 			setSubmissionPending();
 
 			if (config.actions && config.actions.length > 0) {
 				try {
-					await dispatchTrigger('form_submit_start');
-
-					const results = await dispatchTrigger('form_submit');
+					const { succeeded, results } = await runSubmissionLifecycle(
+						(input) => actionExecutor.dispatch(input),
+						{ actions: config.actions, context: buildActionContext() },
+					);
 
 					const executionErrors = results.reduce<SubmissionError[]>((acc, result, index) => {
 						if (!result.success && result.shouldContinue === false) {
 							acc.push({
-								actionId: config.actions?.[index]?.id ?? `action-${index}`,
+								actionId: `action-${index}`,
 								message: result.error || 'Action execution failed',
 							});
 						}
 						return acc;
 					}, []);
 
-					if (executionErrors.length > 0) {
+					if (!succeeded) {
 						setSubmissionError({ errors: executionErrors });
-						await dispatchTrigger('form_submit_error');
-						await dispatchTrigger('form_submit_complete');
 						return;
 					}
-
-					await dispatchTrigger('form_submit_success');
-					await dispatchTrigger('form_submit_complete');
 				} catch (error) {
-					console.error('Form action execution failed:', error);
+					logger.error('Form action execution failed:', error);
 					setSubmissionError({
 						errors: [
 							{ actionId: 'unknown', message: error instanceof Error ? error.message : 'Unknown error' },
@@ -129,13 +143,22 @@ export function useFormSubmitHandler({
 				}
 				setSubmissionSuccess();
 			} catch (error) {
-				console.error('Form submission failed:', error);
+				logger.error('Form submission failed:', error);
 				setSubmissionError({
 					errors: [{ actionId: 'submit', message: error instanceof Error ? error.message : 'Unknown error' }],
 				});
 			}
 		},
-		[config, onSubmit, form, dispatchTrigger, setSubmissionPending, setSubmissionSuccess, setSubmissionError],
+		[
+			config,
+			onSubmit,
+			actionExecutor,
+			buildActionContext,
+			dispatchTrigger,
+			setSubmissionPending,
+			setSubmissionSuccess,
+			setSubmissionError,
+		],
 	);
 
 	return {

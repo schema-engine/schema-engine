@@ -7,6 +7,7 @@ import { defineFormRecipe } from '@/recipes/define-form-recipe';
 import { defineRecipeSpec } from '@/recipes/define-recipe-spec';
 import { sidebarWizardSpec } from '@/recipes/built-in-specs';
 import { defineInput } from '@/types';
+import { logger } from '@/lib/logger';
 
 const cardRecipeSchema = z.strictObject({
 	$type: z.literal('card'),
@@ -62,49 +63,22 @@ describe('validateFormConfig', () => {
 		expect(recipe).toBe(wizardRecipe);
 	});
 
-	test('accepts a getter function as the recipe lookup', () => {
-		const recipe = resolveFormRecipe(
-			{
-				id: 'contact',
-				view: { $type: 'card' },
-				steps: [{ id: 'main', title: 'Contact', elements: [] }],
-			},
-			(id) => (id === 'card' ? cardRecipe : undefined),
+	test.each([
+		['rows', 2],
+		['autoFit', true],
+		['autoFill', true],
+		['maxColumnWidth', '20rem'],
+	])('rejects unsupported grid key %s at every breakpoint', (key, value) => {
+		const engine = createEngine();
+		const form = { id: 'grid', steps: [{ id: 'main', title: 'Main', elements: [] }] };
+		expect(() => engine.validateForm({ ...form, grid: { [key]: value } })).toThrow(FormValidationError);
+		expect(() => engine.validateForm({ ...form, grid: { responsive: { md: { [key]: value } } } })).toThrow(
+			FormValidationError,
 		);
-
-		expect(recipe).toBe(cardRecipe);
-	});
-
-	test('rejects a serialized engine object without getRecipe', () => {
-		expect(() =>
-			resolveFormRecipe(
-				{
-					id: 'contact',
-					view: { $type: 'card' },
-					steps: [{ id: 'main', title: 'Contact', elements: [] }],
-				},
-				{} as never,
-			),
-		).toThrow(/no getRecipe/i);
-	});
-
-	test('rejects a serialized engine object for implicit multi-step lookup', () => {
-		expect(() =>
-			resolveFormRecipe(
-				{
-					id: 'onboarding',
-					steps: [
-						{ id: 'one', title: 'One', elements: [] },
-						{ id: 'two', title: 'Two', elements: [] },
-					],
-				},
-				{} as never,
-			),
-		).toThrow(/no getRecipe/i);
 	});
 
 	test('warns once per engine when a multi-step form has no wizard recipe registered', () => {
-		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const warn = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
 		const config = {
 			id: 'headless-wizard',
 			steps: [
@@ -118,7 +92,7 @@ describe('validateFormConfig', () => {
 			expect(resolveFormRecipe(config, lookup)).toBeUndefined();
 			expect(resolveFormRecipe(config, lookup)).toBeUndefined();
 			expect(warn).toHaveBeenCalledTimes(1);
-			expect(warn.mock.calls[0]?.[0]).toMatch(/no 'bare-controls' recipe is registered/i);
+			expect(warn.mock.calls[0]?.map(String).join(' ')).toMatch(/no 'bare-controls' recipe is registered/i);
 
 			expect(resolveFormRecipe(config, { getRecipe: () => undefined })).toBeUndefined();
 			expect(warn).toHaveBeenCalledTimes(2);
@@ -128,7 +102,7 @@ describe('validateFormConfig', () => {
 	});
 
 	test('stays silent for multi-step forms without an engine', () => {
-		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const warn = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
 		try {
 			expect(
 				resolveFormRecipe({
@@ -311,6 +285,36 @@ describe('validateFormConfig', () => {
 				steps: [{ id: 'main', title: 'Notes', elements: [{ $type: 'missing', id: 'x', name: 'x' }] }],
 			}),
 		).toThrow(/steps\[0\] \(id: 'main'\) elements\[0\] \(id: 'x'\).*Unknown element type 'missing'/s);
+	});
+
+	test('rejects a field rule that has no validation handler', () => {
+		const field = defineInput({
+			$type: 'field',
+			schema: z.looseObject({
+				$type: z.literal('field'),
+				id: z.string(),
+				name: z.string(),
+				rules: z.optional(z.array(z.looseObject({ type: z.string() }))),
+			}),
+			metadata: { name: 'Field', category: 'input' },
+			render: () => null,
+		});
+		const engine = createFormEngine({ elements: [field] });
+
+		expect(() =>
+			engine.validateForm({
+				id: 'unsupported-rule',
+				steps: [
+					{
+						id: 'main',
+						title: 'Main',
+						elements: [
+							{ $type: 'field', id: 'quantity', name: 'quantity', rules: [{ type: 'unregistered' }] },
+						],
+					},
+				],
+			}),
+		).toThrow(/field 'quantity'.*rule 'unregistered'/i);
 	});
 
 	test('marks validated forms and skips re-running registration transforms', () => {

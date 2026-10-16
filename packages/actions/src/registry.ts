@@ -11,7 +11,7 @@ type AnyActionRegistration<TBaseContext, TTrigger> = ActionRegistration<any, TBa
  * Action Registry Provider
  *
  * Interface for objects that can provide action registrations.
- * This allows the ActionExecutor to look up action handlers without
+ * This allows the ActionDispatcher to look up action handlers without
  * depending on a specific registry implementation.
  *
  * @template TContext - Domain-specific context data
@@ -72,8 +72,10 @@ export interface ActionRegistryProvider<
  * import { ActionRegistry } from '@schema-engine/actions';
  *
  * type MyTrigger = 'submit' | 'change';
+ * import { Logger } from '@ecopages/logger';
  * type MyContext = { formId: string; data: Record<string, unknown> };
  *
+ * const logger = new Logger('[my-app]');
  * const registry = new ActionRegistry<MyContext, MyTrigger>();
  *
  * registry.register({
@@ -84,7 +86,7 @@ export interface ActionRegistryProvider<
  *     defaultTriggers: ['change'],
  *   },
  *   execute: async (context) => {
- *     console.log(context);
+ *     logger.info(context);
  *     return { success: true };
  *   },
  * });

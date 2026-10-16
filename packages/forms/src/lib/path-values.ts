@@ -1,3 +1,4 @@
+import { isPlainObject } from './is-plain-object.js';
 /**
  * Nested value-tree helpers shared by React and Radiant adapters.
  * Field *names* are composed in {@link ./field-scope.ts}; this module reads and writes values.
@@ -97,12 +98,30 @@ export function mergePathValues(
 }
 
 /**
- * Expand a template path (`contacts.name`) against live values (`contacts.0.name`).
- * When the template has no matching array/object yet, the template itself is returned.
+ * Resolve a field path through live array rows while keeping an array at the field itself intact.
+ *
+ * @remarks
+ * An empty parent array produces no child paths; a field whose value is an empty array still returns its own path.
  */
-export function expandFieldTemplatePaths(values: Record<string, unknown>, templatePath: string): string[] {
-	const parts = templatePath.split('.');
+export function expandFieldTemplatePaths(values: Record<string, unknown>, fieldTemplatePath: string): string[] {
+	return expandTemplatePaths(values, fieldTemplatePath, false);
+}
+
+/**
+ * Expand a container's parent path through each live array row, including an array at the path's end.
+ */
+export function expandContainerParentPaths(values: Record<string, unknown>, fieldTemplatePath: string): string[] {
+	return expandTemplatePaths(values, fieldTemplatePath, true);
+}
+
+function expandTemplatePaths(
+	values: Record<string, unknown>,
+	fieldTemplatePath: string,
+	expandTerminalArrays: boolean,
+): string[] {
+	const parts = fieldTemplatePath.split('.');
 	const paths: string[] = [];
+	let expandedArray = false;
 
 	function traverse(obj: unknown, currentParts: string[], remainingParts: string[]): void {
 		if (remainingParts.length === 0) {
@@ -111,18 +130,24 @@ export function expandFieldTemplatePaths(values: Record<string, unknown>, templa
 		}
 
 		const [nextPart, ...rest] = remainingParts;
-		if (
-			obj === null ||
-			obj === undefined ||
-			typeof obj !== 'object' ||
-			RESERVED_PATH_KEYS.has(nextPart) ||
-			!Object.hasOwn(obj, nextPart)
-		) {
+		if (RESERVED_PATH_KEYS.has(nextPart)) {
 			return;
 		}
+
+		if (obj === null || obj === undefined || typeof obj !== 'object' || !Object.hasOwn(obj, nextPart)) {
+			paths.push([...currentParts, ...remainingParts].join('.'));
+			return;
+		}
+
 		const nextValue = (obj as Record<string, unknown>)[nextPart];
 
 		if (Array.isArray(nextValue)) {
+			if (rest.length === 0 && !expandTerminalArrays) {
+				paths.push([...currentParts, nextPart].join('.'));
+				return;
+			}
+
+			expandedArray = true;
 			for (let index = 0; index < nextValue.length; index += 1) {
 				traverse(nextValue[index], [...currentParts, nextPart, String(index)], rest);
 			}
@@ -131,11 +156,13 @@ export function expandFieldTemplatePaths(values: Record<string, unknown>, templa
 
 		if (nextValue !== undefined) {
 			traverse(nextValue, [...currentParts, nextPart], rest);
+		} else {
+			paths.push([...currentParts, nextPart, ...rest].join('.'));
 		}
 	}
 
 	traverse(values, [], parts);
-	return paths.length > 0 ? paths : [templatePath];
+	return paths.length > 0 ? paths : expandedArray ? [] : [fieldTemplatePath];
 }
 
 function clonePlainValue(value: unknown): unknown {
@@ -184,6 +211,17 @@ function deepMerge(base: unknown, override: unknown): unknown {
 	return override === undefined ? base : override;
 }
 
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
+/**
+ * Drops array indices from a rendered field path.
+ *
+ * @remarks
+ * Constraint metadata collection walks the config, where array length is
+ * unknown, so it records the authored template (`contacts.email`). The renderer
+ * emits the composed path (`contacts.0.email`).
+ */
+export function templatePath(path: string): string {
+	return path
+		.split('.')
+		.filter((segment) => !/^\d+$/.test(segment))
+		.join('.');
 }

@@ -11,12 +11,9 @@ export * from './notification.plugin';
 export * from './form-reset.plugin';
 export * from './form-submit.plugin';
 
-/** Pre-configured registrations for engine action maps. */
-export * from './auto-save.registration';
-export * from './gtm.registration';
-export * from './notification.registration';
-export * from './form-reset.registration';
+/** Runtime-neutral pre-configured registrations. */
 export * from './form-submit.registration';
+export * from './notification.registration';
 
 /** Convenience re-exports. */
 export * from './registrations';

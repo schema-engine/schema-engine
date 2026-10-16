@@ -3,6 +3,20 @@ import { HtmlAttributesSchema } from './html-attributes';
 import { ValidationRuleSchema } from './validation/';
 
 /**
+ * Renderer style values vary across host adapters.
+ * @remarks This existential value boundary keeps React, Radiant, and custom adapter style contracts open.
+ */
+const RendererStyleValueSchema = z.any();
+
+export const RendererStyleSchema = z.record(z.string(), RendererStyleValueSchema);
+
+/**
+ * Constraint operands can be values from any registered field.
+ * @remarks Their concrete types are selected by the form's element registrations.
+ */
+const ConstraintValueSchema = z.any();
+
+/**
  * Semantic gap tokens for grid layouts.
  *
  * @remarks
@@ -28,59 +42,12 @@ export const GridGapValueSchema = z
 	.union([z.enum(GridGapTokens), z.string()])
 	.check(z.describe('Semantic gap token (none | compact | default | loose | wide) or a raw CSS length.'));
 
-/**
- * Responsive breakpoint configuration for grid layout
- */
-export const GridBreakpointConfigSchema = z.object({
+const GridLayoutPropertiesSchema = z.strictObject({
 	columns: z.optional(z.union([z.number(), z.literal('auto')])),
-	rows: z
-		.optional(z.union([z.number(), z.literal('auto')]))
-		.check(z.describe('Deprecated: not emitted to grid CSS yet.')),
 	gap: z.optional(GridGapValueSchema),
 	gapX: z.optional(GridGapValueSchema),
 	gapY: z.optional(GridGapValueSchema),
 	minColumnWidth: z.optional(z.string()),
-	maxColumnWidth: z.optional(z.string()).check(z.describe('Deprecated: not emitted to grid CSS yet.')),
-});
-
-/**
- * Field-level responsive breakpoint configuration
- */
-export const FieldGridBreakpointSchema = z.object({
-	column: z.optional(z.union([z.number(), z.string()])),
-	row: z.optional(z.union([z.number(), z.string()])),
-	justifySelf: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
-	alignSelf: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
-	hidden: z.optional(z.boolean()),
-	marginBlockStart: z.optional(GridGapValueSchema),
-	marginBlockEnd: z.optional(GridGapValueSchema),
-});
-
-/**
- * Grid layout configuration schema
- */
-export const GridLayoutConfigSchema = z.object({
-	columns: z.optional(z.union([z.number(), z.literal('auto')])),
-	rows: z
-		.optional(z.union([z.number(), z.literal('auto')]))
-		.check(z.describe('Deprecated: not emitted to grid CSS yet.')),
-	gap: z.optional(GridGapValueSchema),
-	gapX: z.optional(GridGapValueSchema),
-	gapY: z.optional(GridGapValueSchema),
-	responsive: z.optional(
-		z.object({
-			default: z.optional(GridBreakpointConfigSchema),
-			sm: z.optional(GridBreakpointConfigSchema),
-			md: z.optional(GridBreakpointConfigSchema),
-			lg: z.optional(GridBreakpointConfigSchema),
-			xl: z.optional(GridBreakpointConfigSchema),
-			'2xl': z.optional(GridBreakpointConfigSchema),
-		}),
-	),
-	autoFit: z.optional(z.boolean()).check(z.describe('Deprecated: not emitted to grid CSS yet.')),
-	autoFill: z.optional(z.boolean()).check(z.describe('Deprecated: not emitted to grid CSS yet.')),
-	minColumnWidth: z.optional(z.string()),
-	maxColumnWidth: z.optional(z.string()).check(z.describe('Deprecated: not emitted to grid CSS yet.')),
 	justifyItems: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
 	alignItems: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
 	placeItems: z.optional(z.string()),
@@ -93,22 +60,34 @@ export const GridLayoutConfigSchema = z.object({
 	placeContent: z.optional(z.string()),
 });
 
-/**
- * Element grid configuration schema
- */
-export const ElementGridConfigSchema = z.object({
+export const GridBreakpointConfigSchema = z.pick(GridLayoutPropertiesSchema, {
+	columns: true,
+	gap: true,
+	gapX: true,
+	gapY: true,
+	minColumnWidth: true,
+});
+
+function responsiveSchema<T extends z.ZodMiniType>(schema: T) {
+	return z.optional(
+		z.strictObject({
+			default: z.optional(schema),
+			sm: z.optional(schema),
+			md: z.optional(schema),
+			lg: z.optional(schema),
+			xl: z.optional(schema),
+			'2xl': z.optional(schema),
+		}),
+	);
+}
+
+export const GridLayoutConfigSchema = z.extend(GridLayoutPropertiesSchema, {
+	responsive: responsiveSchema(GridBreakpointConfigSchema),
+});
+
+const ElementGridPropertiesSchema = z.strictObject({
 	column: z.optional(z.union([z.number(), z.string()])),
 	row: z.optional(z.union([z.number(), z.string()])),
-	responsive: z.optional(
-		z.object({
-			default: z.optional(FieldGridBreakpointSchema),
-			sm: z.optional(FieldGridBreakpointSchema),
-			md: z.optional(FieldGridBreakpointSchema),
-			lg: z.optional(FieldGridBreakpointSchema),
-			xl: z.optional(FieldGridBreakpointSchema),
-			'2xl': z.optional(FieldGridBreakpointSchema),
-		}),
-	),
 	justifySelf: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
 	alignSelf: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
 	placeSelf: z.optional(z.string()),
@@ -118,6 +97,14 @@ export const ElementGridConfigSchema = z.object({
 	marginBlockEnd: z
 		.optional(GridGapValueSchema)
 		.check(z.describe('Extra space after this element, on top of the grid row gap.')),
+});
+
+export const FieldGridBreakpointSchema = z.extend(z.omit(ElementGridPropertiesSchema, { placeSelf: true }), {
+	hidden: z.optional(z.boolean()),
+});
+
+export const ElementGridConfigSchema = z.extend(ElementGridPropertiesSchema, {
+	responsive: responsiveSchema(FieldGridBreakpointSchema),
 });
 
 /**
@@ -135,7 +122,7 @@ export const ConstraintLogicSchema = z.object({
 		'is_empty',
 		'is_not_empty',
 	]),
-	value: z.any(),
+	value: ConstraintValueSchema,
 	action: z.enum(['show', 'hide', 'enable', 'disable', 'require']),
 });
 
@@ -154,12 +141,16 @@ export const BaseFieldSchema = z.object({
 
 	disabled: z.optional(z.boolean()).check(z.describe('Whether the field is disabled')),
 	readonly: z.optional(z.boolean()).check(z.describe('Whether the field is read-only')),
+	/**
+	 * Field values are element-specific and may be unconstrained in the shared schema.
+	 * @remarks The registered element schema validates configuration; field-value rules validate submitted values.
+	 */
 	defaultValue: z.optional(z.any()).check(z.describe('Default value for the field')),
 
 	rules: z.optional(z.array(ValidationRuleSchema)).check(z.describe('Validation rules')),
 
 	className: z.optional(z.string()).check(z.describe('CSS class name')),
-	style: z.optional(z.record(z.string(), z.any())).check(z.describe('Inline styles')),
+	style: z.optional(RendererStyleSchema).check(z.describe('Inline styles')),
 	htmlAttributes: z.optional(HtmlAttributesSchema),
 
 	grid: z.optional(ElementGridConfigSchema).check(z.describe('Grid positioning configuration')),

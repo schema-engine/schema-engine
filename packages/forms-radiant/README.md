@@ -2,6 +2,12 @@
 
 Radiant/JSX adapter for the Schema Engine form system.
 
+## Logging
+
+Runtime diagnostics go through `@ecopages/logger` with the
+`[schema-engine/forms-radiant]` package tag. Debug output is disabled by default;
+warnings and errors keep their severity and diagnostic details.
+
 ## Why the recipe components ship in this package
 
 Unlike `@schema-engine/forms-react` — where the default view recipes live in the shadcn registry and consumers register them explicitly with `createFormEngine({ recipes })` — Radiant has no registry ecosystem to lean on. The shells and step blocks are therefore part of this package and `createRadiantFormEngine()` binds the canonical recipes automatically, so the package stays plug-and-play. The recipe specs themselves remain canonical in `@schema-engine/forms/recipes`.
@@ -73,9 +79,14 @@ that render forms.
 
 View-owned shell, same authoring model as radiant-ui: the `FormRenderer` / `FormInstance` views author the whole form tree as light-DOM children (authored children, no `<slot />` written by hosts), and `se-form-renderer` / `se-form-instance` are behavior-only hosts that publish context. There is no derived tree at the form level.
 
+- Each field serializes engine validation rules in `data-se-validation-rules`; `se-field` rebuilds them with the owning engine registry on connection and reconnection. Native Radiant rules cover required, length, numeric bounds, and patterns; the registry validates the remaining rules, including cross-field and async rules. The legacy `reviveRules` export and `data-se-field-rules` channel have been removed.
+- `se-form-instance` owns submit callbacks in client renders and after hydration. Callbacks receive the nested value tree; attach or remove `instance.onSubmit` to switch between a callback and Radiant UI native submission configured with `action` or `method`.
+- Provider `onChange` receives nested value snapshots through `FormController.watchForm`; successful submission actions call `onAction` with their normalized action and the same nested values. Submission actions read a fresh form snapshot for each lifecycle trigger, and retain one form operations object so step timing resets on navigation. The instance uses the engine step machine, field validation, and submission lifecycle.
+- The full normalized config is serialized once on `se-form-instance`. Recipe chrome receives one small `FormMeta` with form and step titles, descriptions, and ids; the debugger reads its owning instance.
 - Every step's fields are authored once inside `se-form-step`; hosts toggle their own `hidden` attribute from the step state, so SSR emits the full form and step switching is pure DOM.
+- Server-rendered constraints use the nested authored and caller defaults. Each field shares one constraint snapshot between its visibility wrapper and registered renderer. Live updates preserve an authored `disabled: true`, including when an `enable` constraint matches. Use `evaluateConstraints({ constraints, values, fieldPath, baseRequired })` from `@schema-engine/forms/constraints`; the Radiant `evaluateConstraintLogic` hook has been removed.
 - Conditional fields with constraints are wrapped in a plain `.se-form-constraint` container with `data-se-constraint-field`. `se-form-instance` listens to the form store and toggles `hidden` and the field's `disabled` reactively, without separate custom element wrappers or serialized JSON configs. It reads the rendered `data-se-constraint-field` values rather than building selectors from the config, so each row of an array resolves its own siblings. Constraint `require` updates the live `FieldRules` object (so `validate` functions and `RegExp` patterns survive) and toggles `[data-se-required-marker]` on the label.
-- Recipe chrome blocks read serializable `config` / `viewConfig` props plus the live `formInstanceContext`; where SSR cannot resolve context (authored children serialize before providers publish), they fall back to the initial step-0 state and hydrate the live values.
+- Recipe chrome blocks read serializable `meta` / `viewConfig` props plus the live `formInstanceContext`; where SSR cannot resolve context (authored children serialize before providers publish), they fall back to the initial step-0 state and hydrate the live values.
 - Published JS must keep element registrations: `sideEffects` marks the compiled chunks so bundlers do not drop the bare script imports.
 
 ### Script and view files
@@ -151,7 +162,9 @@ Fields and array components share Radiant UI's form store through
 `FormController`. Use it with explicit `connect` / `disconnect` lifecycle methods
 or the optional `@formController` decorator. `FormFieldElement` extends
 `RuiFieldElement` and exposes scoped form access; Radiant UI retains control
-registration, validation, and error presentation.
+registration, validation, and error presentation. Custom async validators keep
+debounce state in the field's validator closure, so one field instance cannot
+cancel another field's pending request.
 
 The controller provides snapshot reads, live watches with cleanup, field bindings,
 and array mutations with stable row IDs. See the [controller API and migration
@@ -169,6 +182,10 @@ array config's Add and Remove behavior.
 
 Field schemas live beside each registration under `src/elements/` (for example `form-input.types.ts` next to `form-input.registration.ts`). Component props stay on the widget modules. Radiant does not ship `date` or `date-range` widgets; those `$type`s exist only in the shadcn registry today. Registry and Radiant schemas may diverge where capabilities differ.
 
+Custom container registrations declare `containerKind: 'array'` or
+`containerKind: 'object'`. The forms engine uses this registration metadata to
+compose defaults and validation paths, independent of the widget `$type`.
+
 ## Development
 
 ```bash
@@ -181,14 +198,23 @@ From monorepo root: `pnpm dev:radiant-storybook`.
 
 Stories default to **client** render. Use the Storybook toolbar **Radiant render** control to spot-check `ssr-hydrate` and `ssr-static` on any story — same contract as radiant-ui. Play functions skip `ssr-static` (markup-only iframe, no client module). SSR layout acceptance renders the real `RecipeRenderer` through `renderToString`: `test/ssr/grid-layout-ssr.markup.test.ts` checks the emitted stylesheet and field variables, and `test/ssr/grid-layout-ssr.acceptance.browser.test.ts` loads that HTML in an isolated iframe without app JS and checks layout at two widths. Both share `test-utils/` with the React package.
 
+Published JavaScript files are marked as side effects so bundlers preserve
+custom element registration for every entry point. Supported Radiant peers are
+`>=0.3.0-rc.9 <0.4.0` (JSX and Radiant) and `>=0.1.0-rc.17 <0.2.0` (Radiant UI).
+
+### Custom recipe migration
+
+Custom shell props and slot factory contexts now receive `meta` in place of
+`config`. Import `FormMeta` from `@schema-engine/forms-radiant` when annotating
+these inputs. Replace chrome reads such as `context.config.steps` with
+`context.meta.steps`. Metadata includes form and step ids, titles, and descriptions;
+it omits elements, rules, defaults, and actions. Keep field rendering in the
+recipe content supplied by the renderer.
+
 ### Engine-scoped config types
 
 Element, recipe, and action config types come from the registrations passed to
-`createFormEngine`. Two engines may expose different element sets independently.
-Use `engine.defineForm` to infer authoring input and normalized output for that
-engine. Generic `FormConfig` and `NormalizedFormConfig` types accept the engine
-maps; their defaults describe an open config for helpers without a concrete engine.
-`FormEngine` keeps schema input maps separate from its fourth generic, the parsed
-output maps, so defaults and transforms appear correctly in normalized configs.
-Renderers store the `FormEngineRuntime` contract, which omits registration extension.
-Registration files no longer augment a global `FormEngine` namespace.
+each engine. Use `engine.defineForm` to infer authoring inputs and normalized
+outputs for that engine. Renderer props retain the engine's output maps through
+`FormEngineRuntime`, which omits registration extension. Registration files no
+longer augment a global `FormEngine` namespace.

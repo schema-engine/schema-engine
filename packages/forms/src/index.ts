@@ -6,7 +6,8 @@
  */
 
 export { createFormEngine, FormEngine, SchemaMetadataCatalog, ActionDispatcher } from './engine';
-export type { CreateFormEngineOptions, ActionDispatcherOptions } from './engine';
+export type { CreateFormEngineOptions } from './engine';
+export { collectStepFieldPaths, effectiveRulesFor, validateFieldValue, validateFormValues } from './engine';
 export { createInitialStepStates, createStepMachine, runSubmissionLifecycle, buildFormActionContext } from './engine';
 export type {
 	StepStates,
@@ -15,6 +16,16 @@ export type {
 	StepMachineReducer,
 	SubmissionLifecycleResult,
 	FormActionContextFormState,
+} from './engine';
+export type {
+	EffectiveRulesInput,
+	FieldValidationError,
+	FormValidationErrors,
+	ValidateFieldValueInput,
+	ValidateFormValuesInput,
+	ValidationElement,
+	ValidationElementTree,
+	ValidationStep,
 } from './engine';
 export type {
 	EngineRegistries,
@@ -27,12 +38,11 @@ export type {
 	BuilderActionBaseContext,
 	ElementMetadata,
 	BuilderActionRegistration,
-	BuilderActionTrigger,
-	BuilderActionExecutionContext,
 	BuilderActionRuntimeContext,
 	InputRegistration,
 	StaticRegistration,
 	RecipeRegistration,
+	ContainerKind,
 } from './types';
 export { defineInput, defineStatic } from './types';
 export type { ElementRenderProps, WithNormalizedChildren } from './types';
@@ -72,8 +82,7 @@ export {
 export type { FieldScope, FieldNameStrategy, FieldOverlay, NamedElementNode } from './lib/field-scope';
 export { getValueAtPath, setValueAtPath, mergePathValues, expandFieldTemplatePaths } from './lib/path-values';
 export type { RecipeKind, RecipeSlot, RecipeMetadata, RecipeDescriptor, ViewCatalog } from './recipes/types';
-export type { ActionExecutionResult } from '@schema-engine/actions';
+export type { ActionExecutionResult } from './actions/types';
 export * from './schemas';
 export * from './actions';
-export * from './tools';
 export * from './constraints';

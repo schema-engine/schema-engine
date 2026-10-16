@@ -6,7 +6,7 @@ const validate = () => true;
 describe('applyConstraintRequired', () => {
 	test('sets and clears the constraint-required marker', () => {
 		const field = document.createElement('se-field');
-		field.setAttribute('data-se-field-rules', JSON.stringify({ required: false }));
+		field.setAttribute('data-se-validation-rules', JSON.stringify([]));
 
 		expect(applyConstraintRequired(field, true)).toBe(true);
 		expect(applyConstraintRequired(field, true)).toBe(false);
@@ -16,7 +16,7 @@ describe('applyConstraintRequired', () => {
 		expect(applyConstraintRequired(field, false)).toBe(true);
 		expect(applyConstraintRequired(field, false)).toBe(false);
 		expect(field.hasAttribute('data-se-constraint-required')).toBe(false);
-		expect(Reflect.get(field, 'rules')).toMatchObject({ required: false });
+		expect(Reflect.get(field, 'rules')).toMatchObject({ required: undefined });
 	});
 
 	test('keeps authored validate functions and RegExp patterns when toggling required', () => {

@@ -22,16 +22,6 @@ export interface FieldGroupProps {
 	disabled?: boolean;
 }
 
-function serializeRules(rules: FieldRules | undefined): string | undefined {
-	if (!rules) {
-		return undefined;
-	}
-
-	return JSON.stringify(rules, (_key, value: unknown) =>
-		value instanceof RegExp ? { $type: 'regexp', source: value.source, flags: value.flags } : value,
-	);
-}
-
 /**
  * @remarks
  * Defaults use the JSON string channel because Radiant UI's Object-typed
@@ -57,8 +47,7 @@ export function FieldGroup({
 		<FormField
 			name={name ?? htmlFor ?? label}
 			rules={rules}
-			data-se-field-rules={serializeRules(rules)}
-			data-se-validation-rules={validationRules ? JSON.stringify(validationRules) : undefined}
+			validationRules={validationRules}
 			defaultValueData={defaultValue !== undefined ? JSON.stringify(defaultValue) : undefined}
 			disabled={disabled}
 			classes={['se-form-field', className]}

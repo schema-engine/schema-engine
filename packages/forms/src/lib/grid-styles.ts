@@ -25,9 +25,6 @@ import { GridGapTokens } from '@/schemas/base-field';
  * or `justifySelf` could never take effect. Resolving in one place also lets
  * `placeSelf` join the responsive cascade for free.
  *
- * Form-level `rows`, `autoFit`, `autoFill`, and `maxColumnWidth` are accepted
- * by the schema for compatibility but are not emitted to CSS yet.
- *
  * Only authored values are emitted, as custom properties (not camelCase CSS
  * keys) so the return type is a `--*` record assignable to React
  * `CSSProperties` and to inline `style` attributes without a cast. Neutral
@@ -201,16 +198,6 @@ function deepFreeze<T extends object>(value: T): T {
 	return value;
 }
 
-/**
- * Resolves the immutable grid theme from engine options.
- *
- * @remarks
- * Threshold overrides replace only the named breakpoint; the rest keep
- * library defaults. Thresholds accept `px`/`rem`/`em` lengths and must
- * preserve named cascade order. `rem`/`em` compare at a 16px root.
- * Media queries follow viewport width — a form inside a narrow sidebar
- * still receives the desktop rules of the wide screen it lives on.
- */
 /** Drops empty entries so an unramped theme normalizes to `{}` and emits nothing extra. */
 function resolveResponsiveGap(
 	overrides?: Partial<Record<GridBreakpointToken, GridGapScale>>,
@@ -226,6 +213,16 @@ function resolveResponsiveGap(
 	return resolved;
 }
 
+/**
+ * Resolves the immutable grid theme from engine options.
+ *
+ * @remarks
+ * Threshold overrides replace only the named breakpoint; the rest keep
+ * library defaults. Thresholds accept `px`/`rem`/`em` lengths and must
+ * preserve named cascade order. `rem`/`em` compare at a 16px root.
+ * Media queries follow viewport width — a form inside a narrow sidebar
+ * still receives the desktop rules of the wide screen it lives on.
+ */
 function resolveGridTheme(options?: GridThemeOptions): NormalizedGridTheme {
 	const breakpoints = { ...DEFAULT_BREAKPOINTS, ...options?.breakpoints };
 	const gap = { ...DEFAULT_GAP, ...options?.gap };
@@ -445,11 +442,7 @@ function getGridThemeCss(theme: NormalizedGridTheme): string {
 					.join('')
 			: '';
 		lines.push(
-			`@media (min-width:${theme.breakpoints[breakpoint]}){` +
-				(rampedTokens ? `${scope}{${rampedTokens}}` : '') +
-				`${gridScope}{${declarations(GRID_PROPERTIES, breakpoint)}}` +
-				`${fieldScope}{${declarations(FIELD_PROPERTIES, breakpoint)}}` +
-				`}`,
+			`@media (min-width:${theme.breakpoints[breakpoint]}){${rampedTokens ? `${scope}{${rampedTokens}}` : ''}${gridScope}{${declarations(GRID_PROPERTIES, breakpoint)}}${fieldScope}{${declarations(FIELD_PROPERTIES, breakpoint)}}}`,
 		);
 	}
 	return lines.join('\n');

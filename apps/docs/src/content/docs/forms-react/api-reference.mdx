@@ -10,6 +10,8 @@ order: 8
 ## Engine factory
 
 ```ts
+import { createFormEngine } from '@schema-engine/forms';
+
 const engine = createFormEngine({
 	elements: schemaFormRegistrations,
 	recipes: [...schemaFormRecipeRegistrations, customRecipe],
@@ -23,7 +25,9 @@ to add registrations later.
 ## FormElements
 
 ```tsx
-<FormElements elements={config.elements} namePrefix={config.name} nameStrategy="join" instanceId={itemId} />
+import { FormElements } from '@schema-engine/forms-react/primitives';
+
+<FormElements elements={config.elements} namePrefix={config.name} nameStrategy="join" instanceId={itemId} />;
 ```
 
 Fieldsets pass `namePrefix={config.name}`. Array items pass an
@@ -33,9 +37,12 @@ clone child configs to change `name` or `id`.
 ## Rendering
 
 ```tsx
+import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
+import { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
+
 <FormEngineProvider engine={engine} adapter={rhfAdapter}>
 	<FormRenderer config={formConfig} onSubmit={handleSubmit} />
-</FormEngineProvider>
+</FormEngineProvider>;
 ```
 
 `FormRenderer` validates the config once at the form boundary and renders the
@@ -46,6 +53,8 @@ active-step state, navigation, and the current slot configuration.
 ## View hooks
 
 ```ts
+import { useViewContext, useActiveStep, useFormNavigation, useViewConfig } from '@schema-engine/forms-react/hooks';
+
 useViewContext();
 useActiveStep();
 useFormNavigation();
@@ -62,7 +71,7 @@ as omitting `FormRenderer`, which still lives in this package.
 
 ## Form hooks
 
-The adapter exports `useFormContext`, `useFormField`, `useWatchField`,
+`@schema-engine/forms-react/adapters` exports `useFormContext`, `useFormField`, `useWatchField`,
 `useWatchForm`, and `useFieldArray`. They are adapter-neutral and can be used
 inside recipe blocks as well as ordinary form elements.
 

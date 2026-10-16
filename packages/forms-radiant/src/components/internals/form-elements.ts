@@ -8,6 +8,8 @@ import {
 } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { FormElement } from './field-renderer';
+import { peekOwningConstraintValues } from '@/contexts/form-engine-owner';
+import type { ConstraintEvaluationContext } from './render-registered-element';
 
 export interface FormElementsProps {
 	elements: ReadonlyArray<NormalizedElementConfig>;
@@ -19,6 +21,7 @@ export interface FormElementsProps {
 	namePrefix?: string;
 	nameStrategy?: FieldScope['nameStrategy'];
 	instanceId?: string;
+	constraintContext?: ConstraintEvaluationContext;
 }
 
 export function FormElements({
@@ -31,6 +34,7 @@ export function FormElements({
 	namePrefix,
 	nameStrategy,
 	instanceId,
+	constraintContext,
 }: FormElementsProps): JsxRenderable {
 	const scope: FieldScope = { namePrefix, nameStrategy, instanceId };
 
@@ -38,6 +42,7 @@ export function FormElements({
 		jsx(FormElement, {
 			key: composeElementKey(element, index, scope),
 			config: element,
+			constraintContext: constraintContext ?? { values: peekOwningConstraintValues() },
 			engine,
 			name: composeFieldName(element, scope),
 			id: composeFieldId(element, scope),

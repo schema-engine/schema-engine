@@ -25,6 +25,7 @@ type DefineElementRegistration<TType extends string, TSchema extends StandardSch
 	$type: TType;
 	schema: TSchema;
 	metadata: ElementMetadata;
+	containerKind?: import('./registration').ContainerKind;
 	render: (props: TProps) => unknown;
 };
 

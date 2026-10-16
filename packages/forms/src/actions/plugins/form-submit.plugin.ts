@@ -1,5 +1,6 @@
 import * as z from 'zod/mini';
-import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
+import type { BuilderActionRuntimeContext, BuilderActionRegistration } from '@/types';
+import { logger } from '@/lib/logger';
 import { FormActionTriggerSchema } from '../triggers';
 
 /**
@@ -7,13 +8,16 @@ import { FormActionTriggerSchema } from '../triggers';
  */
 export interface FormSubmitPluginConfig {
 	/** Custom request adapter (fetch, axios, etc.) */
-	request?: (url: string, options: any) => Promise<Response>;
+	request?: (url: string, options: RequestInit) => Promise<Response>;
 	/** Transform data before sending */
-	transformData?: (data: any, context: BuilderActionExecutionContext<any>) => any;
+	transformData?: (
+		data: Record<string, unknown>,
+		context: BuilderActionRuntimeContext<FormSubmitAction>,
+	) => Record<string, unknown>;
 	/** Handle successful response */
-	onSuccess?: (data: any, context: BuilderActionExecutionContext<any>) => void;
+	onSuccess?: (data: unknown, context: BuilderActionRuntimeContext<FormSubmitAction>) => void;
 	/** Handle error response */
-	onError?: (error: Error, context: BuilderActionExecutionContext<any>) => void;
+	onError?: (error: Error, context: BuilderActionRuntimeContext<FormSubmitAction>) => void;
 }
 
 /** Schema for the `submit` action configuration. */
@@ -48,7 +52,7 @@ export function formSubmitPlugin(
 ): BuilderActionRegistration<'submit', typeof FormSubmitActionSchema> {
 	const { transformData = (data) => data, onSuccess = () => {}, onError = () => {} } = config;
 
-	const handler = async (context: BuilderActionExecutionContext<FormSubmitAction>) => {
+	const handler = async (context: BuilderActionRuntimeContext<FormSubmitAction>) => {
 		const action = context.config;
 		const request = config.request ?? fetch;
 
@@ -93,7 +97,7 @@ export function formSubmitPlugin(
 							errorMessage = message;
 						}
 					} catch (parseError) {
-						console.warn('Failed to parse JSON error response:', parseError);
+						logger.warn('Failed to parse JSON error response', { error: parseError });
 					}
 				}
 				throw new Error(errorMessage);

@@ -1,5 +1,6 @@
-import { getElementChildren } from '@/lib/element-children';
-import { getValueAtPath } from '@/lib/path-values';
+import { getElementContainerKind } from './normalized-form-config.js';
+import { getElementChildren } from './element-children.js';
+import { getValueAtPath } from './path-values.js';
 
 /**
  * Shared field-path semantics for React and Radiant renderers.
@@ -120,30 +121,52 @@ export interface NamedElementNode<T extends object = object> {
 	readonly path: string;
 	readonly element: T;
 	readonly hasChildren: boolean;
+	/** Number of unnamed array item boundaries between this node and its path. */
+	readonly arrayItemDepth?: number;
 }
 
 /**
  * Walk named elements depth-first, composing dotted paths the same way
  * fieldsets do at render time (`address.street`). Array indices are not
- * expanded here — adapters expand templates against live values.
+ * expanded here — consumers expand templates against live values.
+ * @param fallbackToId Use authored ids for unnamed constraint hosts.
  */
-export function walkNamedElements<T extends object>(elements: readonly T[], basePath = ''): NamedElementNode<T>[] {
+export function walkNamedElements<T extends object>(
+	elements: readonly T[],
+	basePath = '',
+	fallbackToId = false,
+): NamedElementNode<T>[] {
+	return walkScopedElements(elements, basePath, false, 0, fallbackToId);
+}
+
+function walkScopedElements<T extends object>(
+	elements: readonly T[],
+	basePath: string,
+	replace = false,
+	arrayItemDepth = 0,
+	fallbackToId = false,
+): NamedElementNode<T>[] {
 	const nodes: NamedElementNode<T>[] = [];
-
 	for (const element of elements) {
-		const name = getElementName(element);
-		if (!name) continue;
-
-		const path = basePath ? `${basePath}.${name}` : name;
-		const children = getElementChildren(element);
+		const name = getElementName(element) ?? (fallbackToId ? getElementId(element) : undefined);
+		if (!name && !replace) continue;
+		const path = replace ? basePath : basePath ? `${basePath}.${name}` : name!;
+		const children = getElementChildren(element) as T[] | undefined;
 		const hasChildren = Boolean(children?.length);
-		nodes.push({ path, element, hasChildren });
-
+		nodes.push({ path, element, hasChildren, ...(arrayItemDepth > 0 ? { arrayItemDepth } : {}) });
 		if (children?.length) {
-			nodes.push(...walkNamedElements(children as T[], path));
+			const scalarArrayItems = getElementContainerKind(element) === 'array' && children.length === 1;
+			nodes.push(
+				...walkScopedElements(
+					children,
+					path,
+					scalarArrayItems,
+					scalarArrayItems ? arrayItemDepth + 1 : 0,
+					fallbackToId,
+				),
+			);
 		}
 	}
-
 	return nodes;
 }
 
@@ -154,10 +177,6 @@ export function walkLeafFields<T extends object>(elements: readonly T[], basePat
 function getDefaultValue(element: object): unknown {
 	if (!('defaultValue' in element)) return undefined;
 	return (element as { defaultValue?: unknown }).defaultValue;
-}
-
-function isArrayElements(element: object): boolean {
-	return '$type' in element && element.$type === 'arrayElements';
 }
 
 function getMinItems(element: object): number {
@@ -240,7 +259,7 @@ function collectScopedDefaults(
 		const children = getElementChildren(element) as object[] | undefined;
 		const path = composeFieldName(element, scope);
 
-		if (isArrayElements(element) && children?.length) {
+		if (getElementContainerKind(element) === 'array' && children?.length) {
 			if (!path) continue;
 			fields.push({ name: path, defaultValue: getDefaultValue(element) });
 			const scalar = usesScalarArrayItem(element, path, children, userDefaults);
