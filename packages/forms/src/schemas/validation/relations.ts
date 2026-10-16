@@ -1,8 +1,25 @@
 import * as z from 'zod/mini';
 import type { RelateRule, RelationAssert, ValidationRegistration } from './types.js';
+import { isEmpty } from './empty.js';
 
-function isEmpty(value: unknown): boolean {
-	return value === undefined || value === null || value === '';
+function stringifyComparable(value: unknown): string | undefined {
+	if (typeof value === 'string') {
+		return value;
+	}
+
+	if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+		return `${value}`;
+	}
+
+	if (typeof value === 'symbol') {
+		return `Symbol(${value.description ?? ''})`;
+	}
+
+	if (value instanceof Date) {
+		return Date.prototype.toString.call(value);
+	}
+
+	return undefined;
 }
 
 /**
@@ -22,11 +39,11 @@ function coerce(value: unknown, as: RelateRule['as']): unknown {
 
 	switch (as) {
 		case 'string':
-			return String(value);
+			return stringifyComparable(value) ?? value;
 		case 'number':
 			return Number(value);
 		case 'date':
-			return value instanceof Date ? value.getTime() : new Date(String(value)).getTime();
+			return value instanceof Date ? value.getTime() : new Date(stringifyComparable(value) ?? '').getTime();
 		case 'boolean':
 			return Boolean(value);
 		default:

@@ -37,6 +37,29 @@ describe('relate assertions', () => {
 		expect(await check(rule, 'a', { primary: 'a', secondary: 'b' })).toBe('These fields must be different');
 	});
 
+	test('string comparison coerces primitives without coercing arbitrary objects', async () => {
+		const rule: RelateRule = {
+			...BASE,
+			type: 'relate',
+			fields: ['confirmation'],
+			assert: 'allEqual',
+			as: 'string',
+		};
+		const first = {
+			toString: () => {
+				throw new Error('unexpected conversion');
+			},
+		};
+		const second = {
+			toString: () => {
+				throw new Error('unexpected conversion');
+			},
+		};
+
+		expect(await check(rule, 42, { confirmation: '42' })).toBe(true);
+		expect(await check(rule, first, { confirmation: second })).toBe('These fields must match');
+	});
+
 	test('ascending reads the declaring field first and allows equal neighbours', async () => {
 		const ascending: RelateRule = {
 			...BASE,
@@ -83,6 +106,20 @@ describe('relate assertions', () => {
 
 		expect(await check(rule, '', { phone: '', email: 'jane@example.com' })).toBe(true);
 		expect(await check(rule, '', { phone: '', email: '' })).toBe('Fill at least one of these fields');
+	});
+
+	test('emptiness treats empty arrays as empty and false or zero as filled', async () => {
+		const rule: RelateRule = {
+			...BASE,
+			type: 'relate',
+			fields: ['phone', 'email'],
+			assert: 'atLeastOne',
+			includeSelf: false,
+		};
+
+		expect(await check(rule, '', { phone: [], email: null })).toBe('Fill at least one of these fields');
+		expect(await check(rule, '', { phone: false, email: null })).toBe(true);
+		expect(await check(rule, '', { phone: 0, email: null })).toBe(true);
 	});
 
 	test('exactlyOne rejects both filled and neither filled', async () => {
@@ -149,6 +186,17 @@ describe('relate semantics', () => {
 
 		expect(await check(rule, '2026-02-01', { startDate: '2026-01-01' })).toBe(true);
 		expect(await check(rule, 'not-a-date', { startDate: '2026-01-01' })).toBe('Values must be in descending order');
+	});
+
+	test('date comparison does not call an arbitrary object toString method', async () => {
+		const rule: RelateRule = { ...BASE, type: 'relate', fields: ['startDate'], assert: 'descending', as: 'date' };
+		const value = {
+			toString: () => {
+				throw new Error('unexpected conversion');
+			},
+		};
+
+		expect(await check(rule, '2026-02-01', { startDate: value })).toBe('Values must be in descending order');
 	});
 
 	test('includeSelf false ignores the value under test even when it is listed', async () => {

@@ -11,7 +11,6 @@ function evaluate(input: {
 }
 
 describe('evaluateResolvedConstraints', () => {
-
 	describe('equals operator', () => {
 		test('should return true when values match exactly', () => {
 			const constraints: ConstraintLogic[] = [
@@ -346,7 +345,7 @@ describe('evaluateResolvedConstraints', () => {
 				},
 			];
 
-			const testCases = ['', null, undefined, false, 0];
+			const testCases = ['', null, undefined];
 
 			for (const testValue of testCases) {
 				const result = evaluate({
@@ -403,7 +402,7 @@ describe('evaluateResolvedConstraints', () => {
 				},
 			];
 
-			const testCases = ['text', 1, true, { key: 'value' }, ['item']];
+			const testCases = ['text', 1, true, false, 0, { key: 'value' }, ['item']];
 
 			for (const testValue of testCases) {
 				const result = evaluate({
@@ -483,7 +482,7 @@ describe('evaluateResolvedConstraints', () => {
 				},
 			];
 
-			const testCases = ['', null, undefined, false, 0];
+			const testCases = ['', null, undefined];
 
 			for (const testValue of testCases) {
 				const result = evaluate({
@@ -491,6 +490,22 @@ describe('evaluateResolvedConstraints', () => {
 					fieldValues: { required: testValue },
 				});
 				expect(result.shouldShow).toBe(false);
+			}
+		});
+
+		test('treats false and zero as non-empty values', () => {
+			const constraints: ConstraintLogic[] = [
+				{
+					field: 'quantity',
+					operator: 'is_not_empty',
+					value: null,
+					action: 'show',
+				},
+			];
+
+			for (const value of [false, 0]) {
+				const result = evaluate({ constraints, fieldValues: { quantity: value } });
+				expect(result.shouldShow).toBe(true);
 			}
 		});
 	});

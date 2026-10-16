@@ -7,121 +7,161 @@ import {
 	generateFormSchema,
 	getValidationRulesForElement,
 	createDefaultValidationRegistry,
+	ValidationPresets,
 	type MinItemsRule,
 	type MaxItemsRule,
 } from '../../../src/schemas/validation/';
 
-
 const validationRegistry = createDefaultValidationRegistry();
 
 describe('Validation', () => {
-	describe('ValidationRegistry.presets', () => {
+	describe('ValidationPresets', () => {
 		test('should generate string validations', () => {
-			const required = validationRegistry.presets.string.required();
+			const required = ValidationPresets.string.required();
 			expect(required.type).toBe('required');
 
-			const email = validationRegistry.presets.string.email();
+			const email = ValidationPresets.string.email();
 			expect(email.type).toBe('email');
 
-			const minLength = validationRegistry.presets.string.minLength(3);
+			const minLength = ValidationPresets.string.minLength(3);
 			expect(minLength.type).toBe('minLength');
 
-			const maxLength = validationRegistry.presets.string.maxLength(10);
+			const maxLength = ValidationPresets.string.maxLength(10);
 			expect(maxLength.type).toBe('maxLength');
 
-			const pattern = validationRegistry.presets.string.pattern('^[a-z]+$');
+			const pattern = ValidationPresets.string.pattern('^[a-z]+$');
 			expect(pattern.type).toBe('pattern');
 
-			const url = validationRegistry.presets.string.url();
+			const url = ValidationPresets.string.url();
 			expect(url.type).toBe('url');
 
-			const uuid = validationRegistry.presets.string.uuid();
+			const uuid = ValidationPresets.string.uuid();
 			expect(uuid.type).toBe('uuid');
 
-			const cuid = validationRegistry.presets.string.cuid();
+			const cuid = ValidationPresets.string.cuid();
 			expect(cuid.type).toBe('cuid');
 
-			const cuid2 = validationRegistry.presets.string.cuid2();
+			const cuid2 = ValidationPresets.string.cuid2();
 			expect(cuid2.type).toBe('cuid2');
 
-			const ulid = validationRegistry.presets.string.ulid();
+			const ulid = ValidationPresets.string.ulid();
 			expect(ulid.type).toBe('ulid');
 
-			const hex = validationRegistry.presets.string.hex();
+			const hex = ValidationPresets.string.hex();
 			expect(hex.type).toBe('hex');
 		});
 
 		test('should generate number validations', () => {
-			const min = validationRegistry.presets.number.min(5);
+			const min = ValidationPresets.number.min(5);
 			expect(min.type).toBe('min');
 
-			const max = validationRegistry.presets.number.max(10);
+			const max = ValidationPresets.number.max(10);
 			expect(max.type).toBe('max');
 		});
 
 		test('should generate array validations', () => {
-			const minItems = validationRegistry.presets.array.minItems(2);
+			const minItems = ValidationPresets.array.minItems(2);
 			expect(minItems.type).toBe('minItems');
 
-			const maxItems = validationRegistry.presets.array.maxItems(5);
+			const maxItems = ValidationPresets.array.maxItems(5);
 			expect(maxItems.type).toBe('maxItems');
 
-			const nonEmpty = validationRegistry.presets.array.nonEmpty();
+			const nonEmpty = ValidationPresets.array.nonEmpty();
 			expect(nonEmpty.type).toBe('minItems');
 			expect(nonEmpty.value).toBe(1);
 		});
 
 		test('should generate network validations', () => {
-			const ipv4 = validationRegistry.presets.network.ipv4();
+			const ipv4 = ValidationPresets.network.ipv4();
 			expect(ipv4.type).toBe('ipv4');
 
-			const ipv6 = validationRegistry.presets.network.ipv6();
+			const ipv6 = ValidationPresets.network.ipv6();
 			expect(ipv6.type).toBe('ipv6');
 		});
 
 		test('should generate date validations', () => {
-			const datetime = validationRegistry.presets.date.datetime();
+			const datetime = ValidationPresets.date.datetime();
 			expect(datetime.type).toBe('datetime');
 
-			const date = validationRegistry.presets.date.date();
+			const date = ValidationPresets.date.date();
 			expect(date.type).toBe('date');
 
-			const time = validationRegistry.presets.date.time();
+			const time = ValidationPresets.date.time();
 			expect(time.type).toBe('time');
 		});
 
 		test('should generate async validations', () => {
-			const async = validationRegistry.presets.custom.async('/api/validate');
+			const async = ValidationPresets.custom.async('/api/validate');
 			expect(async.type).toBe('async');
 			expect(async.url).toBe('/api/validate');
 		});
 	});
 
+	describe('built-in rule contracts', () => {
+		function parse(rule: { type: string; [key: string]: unknown }, value: unknown) {
+			return z.safeParse(createZodSchemaFromRules([rule], createValidationContext(), validationRegistry), value);
+		}
+
+		test('required rejects empty arrays while accepting false and zero', () => {
+			const required = ValidationPresets.array.required();
+
+			expect(parse(required, []).success).toBe(false);
+			expect(parse(ValidationPresets.boolean.required(), false).success).toBe(true);
+			expect(parse(ValidationPresets.number.required(), 0).success).toBe(true);
+		});
+
+		test('email, URL, UUID, CIDR, phone, and datetime options affect their schemas', () => {
+			expect(parse({ type: 'email', pattern: '^x@y\\.com$' }, 'a@b.co').success).toBe(false);
+			expect(parse({ type: 'email', pattern: '^x@y\\.com$' }, 'x@y.com').success).toBe(true);
+
+			expect(
+				parse({ type: 'url', protocol: '^https$', hostname: '^example\\.com$' }, 'http://example.com').success,
+			).toBe(false);
+			expect(
+				parse({ type: 'url', protocol: '^https$', hostname: '^example\\.com$' }, 'https://example.com').success,
+			).toBe(true);
+			expect(
+				parse({ type: 'url', protocol: '^https$', hostname: '^example\\.com$' }, 'https://other.com').success,
+			).toBe(false);
+
+			expect(parse({ type: 'uuid', version: 'v4' }, 'f47ac10b-58cc-11cf-a447-001122334455').success).toBe(false);
+			expect(parse({ type: 'uuid', version: 'v4' }, 'f47ac10b-58cc-41cf-a447-001122334455').success).toBe(true);
+
+			expect(parse({ type: 'cidr', version: 'v4' }, '2001:db8::/64').success).toBe(false);
+			expect(parse({ type: 'cidr', version: 'v4' }, '192.168.0.0/24').success).toBe(true);
+			expect(parse({ type: 'phone' }, '+15555555555').success).toBe(true);
+			expect(parse({ type: 'phone' }, 'not-a-phone-number').success).toBe(false);
+
+			expect(parse({ type: 'datetime', local: false }, '2024-01-01T12:00:00').success).toBe(false);
+			expect(parse({ type: 'datetime', local: true }, '2024-01-01T12:00:00').success).toBe(true);
+		});
+	});
+
 	describe('createZodSchemaFromRules', () => {
-		test('does not register phone validation by default', () => {
-			expect(validationRegistry.has('phone')).toBe(false);
+		test('registers phone validation by default', () => {
+			expect(validationRegistry.has('phone')).toBe(true);
 		});
 
 		test('injects defaultFor rules onto matching field types', () => {
-			validationRegistry.register({
+			const customRegistry = createDefaultValidationRegistry();
+			customRegistry.register({
 				type: 'phone',
 				category: 'string',
 				defaultFor: ['phone-input'],
 				handler: () => z.any(),
 			});
 
-			try {
-				expect(getValidationRulesForElement({ $type: 'phone-input' }, validationRegistry)).toEqual([{ type: 'phone' }]);
-				expect(
-					getValidationRulesForElement({
+			expect(getValidationRulesForElement({ $type: 'phone-input' }, customRegistry)).toEqual([{ type: 'phone' }]);
+			expect(
+				getValidationRulesForElement(
+					{
 						$type: 'phone-input',
 						rules: [{ type: 'required', message: 'Phone number is required' }],
-					}, validationRegistry),
-				).toEqual([{ type: 'required', message: 'Phone number is required' }, { type: 'phone' }]);
-				expect(getValidationRulesForElement({ $type: 'input' }, validationRegistry)).toBeUndefined();
-			} finally {
-				validationRegistry.unregister('phone');
-			}
+					},
+					customRegistry,
+				),
+			).toEqual([{ type: 'required', message: 'Phone number is required' }, { type: 'phone' }]);
+			expect(getValidationRulesForElement({ $type: 'input' }, customRegistry)).toBeUndefined();
 		});
 
 		test('uses the native IPv4 validator and preserves its configured message', () => {
@@ -151,7 +191,7 @@ describe('Validation', () => {
 		});
 
 		test('should create string schema with required validation', () => {
-			const rules = [validationRegistry.presets.string.required('Field is required')];
+			const rules = [ValidationPresets.string.required('Field is required')];
 			const schema = createZodSchemaFromRules(rules, createValidationContext(), validationRegistry);
 
 			expect(schema.parse('test')).toBe('test');
@@ -160,7 +200,7 @@ describe('Validation', () => {
 		});
 
 		test('should create email schema', () => {
-			const rules = [validationRegistry.presets.string.email('Invalid email')];
+			const rules = [ValidationPresets.string.email('Invalid email')];
 			const schema = createZodSchemaFromRules(rules, createValidationContext(), validationRegistry);
 
 			expect(schema.parse('test@example.com')).toBe('test@example.com');
@@ -168,7 +208,7 @@ describe('Validation', () => {
 		});
 
 		test('should create number schema with min validation', () => {
-			const rules = [validationRegistry.presets.number.min(5, 'Minimum 5')];
+			const rules = [ValidationPresets.number.min(5, 'Minimum 5')];
 			const schema = createZodSchemaFromRules(rules, createValidationContext(), validationRegistry);
 
 			expect(schema.parse(10)).toBe(10);
@@ -176,7 +216,7 @@ describe('Validation', () => {
 		});
 
 		test('should create array schema with minItems validation', () => {
-			const rules = [validationRegistry.presets.array.minItems(2, 'Min 2 items')];
+			const rules = [ValidationPresets.array.minItems(2, 'Min 2 items')];
 			const schema = createZodSchemaFromRules(rules, createValidationContext(), validationRegistry);
 
 			expect(schema.parse([1, 2])).toEqual([1, 2]);
@@ -185,9 +225,9 @@ describe('Validation', () => {
 
 		test('should combine multiple validation rules', () => {
 			const rules = [
-				validationRegistry.presets.string.required(),
-				validationRegistry.presets.string.minLength(3),
-				validationRegistry.presets.string.email(),
+				ValidationPresets.string.required(),
+				ValidationPresets.string.minLength(3),
+				ValidationPresets.string.email(),
 			];
 			const schema = createZodSchemaFromRules(rules, createValidationContext(), validationRegistry);
 
@@ -207,18 +247,15 @@ describe('Validation', () => {
 			const elements = [
 				{
 					name: 'username',
-					rules: [
-						validationRegistry.presets.string.required(),
-						validationRegistry.presets.string.minLength(3),
-					],
+					rules: [ValidationPresets.string.required(), ValidationPresets.string.minLength(3)],
 				},
 				{
 					name: 'email',
-					rules: [validationRegistry.presets.string.email()],
+					rules: [ValidationPresets.string.email()],
 				},
 				{
 					name: 'age',
-					rules: [validationRegistry.presets.number.min(18)],
+					rules: [ValidationPresets.number.min(18)],
 				},
 			];
 
@@ -248,8 +285,8 @@ describe('Validation', () => {
 
 		test('should skip elements without name or validation', () => {
 			const elements = [
-				{ name: 'valid', rules: [validationRegistry.presets.string.required()] },
-				{ name: '', rules: [validationRegistry.presets.string.required()] },
+				{ name: 'valid', rules: [ValidationPresets.string.required()] },
+				{ name: '', rules: [ValidationPresets.string.required()] },
 				{ name: 'no-rules', rules: [] },
 			];
 
@@ -263,14 +300,14 @@ describe('Validation', () => {
 		test('collects nested fieldset leaves by composed path', () => {
 			const fields = collectValidatableFields(
 				[
-				{
-					name: 'address',
-					$type: 'fieldset',
-					elements: [
-						{ name: 'street', rules: [validationRegistry.presets.string.required('Street is required')] },
-						{ $type: 'note', id: 'hint' },
-					],
-				},
+					{
+						name: 'address',
+						$type: 'fieldset',
+						elements: [
+							{ name: 'street', rules: [ValidationPresets.string.required('Street is required')] },
+							{ $type: 'note', id: 'hint' },
+						],
+					},
 				],
 				'',
 				validationRegistry,
@@ -315,15 +352,19 @@ describe('Validation', () => {
 
 	describe('Async Validation', () => {
 		test('should create async validation rule with dependencies', () => {
-			const rule = validationRegistry.presets.custom.async('/api/validate', {
+			const rule = ValidationPresets.custom.async('/api/validate', {
 				dependencies: ['field1'],
 			});
-			const schema = createZodSchemaFromRules([rule], createValidationContext({ values: { field1: 'value' } }), validationRegistry);
+			const schema = createZodSchemaFromRules(
+				[rule],
+				createValidationContext({ values: { field1: 'value' } }),
+				validationRegistry,
+			);
 			expect(schema).toBeDefined();
 		});
 
 		test('should handle async validation with expected response', () => {
-			const rule = validationRegistry.presets.custom.async('/api/validate', {
+			const rule = ValidationPresets.custom.async('/api/validate', {
 				expectedResponse: { valid: true },
 			});
 			const schema = createZodSchemaFromRules([rule], createValidationContext(), validationRegistry);
@@ -331,7 +372,7 @@ describe('Validation', () => {
 		});
 
 		test('should support cross-field validation structure', () => {
-			const rule = validationRegistry.presets.custom.async('/api/validate', {
+			const rule = ValidationPresets.custom.async('/api/validate', {
 				dependencies: ['otherField'],
 			});
 

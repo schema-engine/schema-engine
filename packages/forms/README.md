@@ -158,11 +158,22 @@ engine's normalized form model.
   constraint holds for the rendered field path. A sibling reference such as
   `accountType` on `contacts.0.taxId` resolves to `contacts.0.accountType`, so
   each array row uses its own value.
-- `validateFieldValue({ element, value, values, fieldPath, registry })` returns
+- `validateFieldValue({ element, value, values, fieldPath, registry, debounceScope? })` returns
   the first validation message, or `undefined` when the value passes.
-- `validateFormValues({ elements, values, registry, names? })` validates the
+- `validateFormValues({ elements, values, registry, names?, debounceScope? })` validates the
   selected paths and returns nested errors, such as
   `errors.address.street.message`.
+
+Pass a caller-owned `DebounceScope` to either helper to reuse async debounce
+state across validation calls for a form. Each rendered field path is keyed
+separately, and each form should own its scope.
+
+Required rules, `relate`, constraint emptiness operators, and async skip checks
+share the same empty values: `undefined`, `null`, `''`, and `[]`. `false` and
+`0` count as present. `validateForm` and `validateElement` reject rules without
+a registered handler with a `FormValidationError` naming the field and rule.
+The `relate` string and date bases coerce primitive values and `Date` instances;
+arbitrary objects are left unchanged for string comparisons and are invalid dates.
 
 The `values` argument is the full nested form value tree. Omitting `names`, or
 passing an empty list, validates every named field. A non-empty `names` list
