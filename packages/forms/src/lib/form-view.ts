@@ -91,7 +91,7 @@ export function getRenderableSteps<T extends FormConfigView>(
  *
  * The canonical entry point for render hosts (React `FormRenderer`, Radiant
  * `FormProvider`): normalize once at the boundary, then pass the frozen
- * the normalized config down. Renderers must not accept authoring input.
+ * normalized config down. Renderers must not accept authoring input.
  */
 export function assertFormEngine<E extends { validateForm: (config: unknown) => unknown }>(
 	engine: E | undefined,

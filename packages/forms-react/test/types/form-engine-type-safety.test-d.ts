@@ -47,7 +47,10 @@ void engine;
 void inputConfig;
 
 import type { FormRendererProps } from '@/components/internals/form-renderer';
+import { FormEngineContext } from '@/components/provider';
+import type { FormEngineContextValue } from '@/components/provider';
 import type { FormProviderProps } from '@/adapters/types';
+import type { ComponentProps } from 'react';
 import { defineInput } from '@schema-engine/forms/types';
 import * as z from 'zod/mini';
 
@@ -98,3 +101,23 @@ const transformedProvider: TransformedProvider = {
 };
 void transformedRenderer;
 void transformedProvider;
+
+type FormEngineContextStorage = NonNullable<ComponentProps<typeof FormEngineContext.Provider>['value']>;
+
+const validEngineContext: FormEngineContextStorage = { engine };
+const invalidEngineContext: FormEngineContextStorage = {
+	// @ts-expect-error -- the engine context requires a FormEngine runtime
+	engine: {},
+};
+type PartialEngineRuntime = Pick<
+	FormEngineContextValue['engine'],
+	'getElement' | 'getRecipe' | 'getValidationRegistry' | 'getGridTheme'
+>;
+declare const partialEngine: PartialEngineRuntime;
+const incompleteEngineContext: FormEngineContextStorage = {
+	// @ts-expect-error -- the engine context requires the complete runtime
+	engine: partialEngine,
+};
+void validEngineContext;
+void invalidEngineContext;
+void incompleteEngineContext;

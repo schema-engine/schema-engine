@@ -215,6 +215,6 @@ recipe content supplied by the renderer.
 
 Element, recipe, and action config types come from the registrations passed to
 each engine. Use `engine.defineForm` to infer authoring inputs and normalized
-outputs for that engine. Renderer props retain the engine's output maps through
-`FormEngineRuntime`, which omits registration extension. Registration files no
-longer augment a global `FormEngine` namespace.
+outputs for that engine. Radiant renderer props accept `FormEngineRuntime`, which
+omits registration extension. Registration files no longer augment a global
+`FormEngine` namespace.

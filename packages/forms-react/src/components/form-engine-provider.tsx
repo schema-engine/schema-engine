@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import type { EngineOutputMaps, FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import { FormAdapterContext } from '../adapters/context';
 import type { FormAdapter } from '../adapters/types';
-import { FormEngineContext } from './provider';
+import { FormEngineContext, createFormEngineContextValue } from './provider';
 
 export interface FormEngineProviderProps<
 	TElements extends Record<string, unknown> = Record<string, unknown>,
@@ -37,7 +37,9 @@ export function FormEngineProvider<
 
 	return (
 		<FormAdapterContext.Provider value={adapter}>
-			<FormEngineContext.Provider value={{ engine }}>{children}</FormEngineContext.Provider>
+			<FormEngineContext.Provider value={createFormEngineContextValue(engine)}>
+				{children}
+			</FormEngineContext.Provider>
 		</FormAdapterContext.Provider>
 	);
 }
