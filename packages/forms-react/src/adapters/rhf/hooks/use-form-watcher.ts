@@ -2,7 +2,7 @@ import { logger } from '@/lib/logger';
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useWatch, type Control, type FieldValues } from 'react-hook-form';
 import type { FormActionTrigger, FormConfigView } from '@schema-engine/forms';
-import type { ActionExecutionResult } from '@schema-engine/actions';
+import type { ActionExecutionResult } from '@schema-engine/forms/actions';
 
 interface UseFormWatcherOptions {
 	control: Control<FieldValues>;

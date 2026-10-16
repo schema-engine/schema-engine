@@ -6,7 +6,7 @@ import type {
 	ActionExecutionResult,
 	FormConfigView,
 } from '@schema-engine/forms';
-import type { ActionDispatcher } from '@schema-engine/actions';
+import type { ActionDispatcher } from '@schema-engine/forms/actions';
 
 interface UseFormActionDispatchersOptions {
 	form: UseFormReturn<any>;

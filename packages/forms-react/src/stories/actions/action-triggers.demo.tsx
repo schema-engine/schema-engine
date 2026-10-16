@@ -10,7 +10,7 @@ import { SUBMIT_FORM_MOCK_URL } from '../msw/submit-form';
 import { FormActionTriggerSchema, formResetPlugin, formSubmitPlugin } from '@schema-engine/forms/actions';
 import { localStorageAutoSaveStorage } from '@schema-engine/forms/browser';
 import * as z from 'zod/mini';
-import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@schema-engine/forms/types';
+import type { BuilderActionRuntimeContext, BuilderActionRegistration } from '@schema-engine/forms/types';
 import type { ActionExecutionResult } from '@schema-engine/forms';
 
 export interface ActionLogEntry {
@@ -90,7 +90,7 @@ function loggerPlugin(
 				'step_view',
 			],
 		},
-		execute: async (context: BuilderActionExecutionContext<LoggerAction>): Promise<ActionExecutionResult> => {
+		execute: async (context: BuilderActionRuntimeContext<LoggerAction>): Promise<ActionExecutionResult> => {
 			const currentFormData = context.formData;
 			const trigger = context.trigger;
 

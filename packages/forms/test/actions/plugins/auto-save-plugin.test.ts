@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach } from 'vitest';
-import type { BuilderActionExecutionContext } from '@/types';
+import type { BuilderActionRuntimeContext } from '@/types';
 import {
 	autoSavePlugin,
 	type AutoSaveAction,
@@ -312,7 +312,7 @@ describe('AutoSavePlugin', () => {
 
 		test('should call onSave handler when provided', async () => {
 			let savedData: unknown = null;
-			let savedContext: BuilderActionExecutionContext<AutoSaveAction> | null = null;
+			let savedContext: BuilderActionRuntimeContext<AutoSaveAction> | null = null;
 
 			const plugin = autoSavePlugin({
 				storage: mockStorage,
@@ -387,7 +387,7 @@ describe('AutoSavePlugin', () => {
 			const failingStorage = createFailingStorage('Storage failed');
 
 			let errorMessage = '';
-			let errorContext: BuilderActionExecutionContext<AutoSaveAction> | null = null;
+			let errorContext: BuilderActionRuntimeContext<AutoSaveAction> | null = null;
 
 			const plugin = autoSavePlugin({
 				storage: failingStorage,

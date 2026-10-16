@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from 'vitest';
-import type { BuilderActionExecutionContext } from '@/types';
+import type { BuilderActionRuntimeContext } from '@/types';
 import { gtmPlugin, GTMEventActionSchema, type GTMEventAction } from '@/actions/plugins/gtm.plugin';
 import { GTMTracker } from '@/browser/tools/gtm-tracker';
 import { createMockBuilderContext, setupTestEnvironment } from '../__tools';
@@ -43,7 +43,7 @@ function createGTMPlugin(config: Omit<Parameters<typeof gtmPlugin>[0], 'tracker'
 
 function createGTMContext(
 	action: GTMEventActionInput,
-	overrides?: Partial<BuilderActionExecutionContext<GTMEventAction>>,
+	overrides?: Partial<BuilderActionRuntimeContext<GTMEventAction>>,
 ) {
 	const normalizedAction: GTMEventAction = {
 		...action,

@@ -9,7 +9,7 @@ vi.mock('@/hooks/use-form-context', () => ({
 	useFormEngine: () => ({ engine: { getValidationRegistry: () => createDefaultValidationRegistry() } }),
 }));
 
-vi.mock('@schema-engine/actions', () => ({
+vi.mock('@schema-engine/forms/actions', () => ({
 	ActionDispatcher: class {
 		dispatch = vi.fn().mockResolvedValue([]);
 		dispatchSync = vi.fn();

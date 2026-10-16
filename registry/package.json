@@ -5,5 +5,8 @@
 	"dependencies": {
 		"@schema-engine/forms": "workspace:*",
 		"@schema-engine/forms-react": "workspace:*"
+	},
+	"scripts": {
+		"check-types": "tsc --noEmit -p shared/tsconfig.json && tsc --noEmit -p base-ui/tsconfig.json && tsc --noEmit -p aria/tsconfig.json && tsc --noEmit -p radix/tsconfig.json"
 	}
 }

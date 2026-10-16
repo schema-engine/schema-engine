@@ -2,14 +2,6 @@ import type { FormActionTrigger } from '../actions/triggers';
 import type { ActionRuntimeContext } from '@schema-engine/actions';
 
 /**
- * Action triggers for the builder pattern - events that can trigger action execution.
- *
- * These events define when actions should be executed in the form lifecycle.
- * This is an alias for ActionTrigger from ./actions/triggers for backward compatibility.
- */
-export type BuilderActionTrigger = FormActionTrigger;
-
-/**
  * Base action context for the builder pattern.
  *
  * Contains the caller-provided form state, validation state, and metadata.
@@ -61,8 +53,3 @@ export type BuilderActionRuntimeContext<TConfig = unknown> = ActionRuntimeContex
 	BuilderActionBaseContext,
 	FormActionTrigger
 >;
-
-/**
- * Execution context passed to form action handlers.
- */
-export type BuilderActionExecutionContext<TConfig = unknown> = BuilderActionRuntimeContext<TConfig>;

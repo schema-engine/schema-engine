@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@/types';
+import type { BuilderActionRuntimeContext, BuilderActionRegistration } from '@/types';
 import { logger } from '@/lib/logger';
 import { FormActionTriggerSchema } from '../triggers';
 
@@ -8,18 +8,18 @@ import { FormActionTriggerSchema } from '../triggers';
  */
 export interface NotificationPluginConfig {
 	/** Custom success handler */
-	onSuccess?: (message: string, context: BuilderActionExecutionContext<NotificationAction>) => void | Promise<void>;
+	onSuccess?: (message: string, context: BuilderActionRuntimeContext<NotificationAction>) => void | Promise<void>;
 	/** Custom error handler */
-	onError?: (message: string, context: BuilderActionExecutionContext<NotificationAction>) => void | Promise<void>;
+	onError?: (message: string, context: BuilderActionRuntimeContext<NotificationAction>) => void | Promise<void>;
 	/** Custom warning handler */
-	onWarning?: (message: string, context: BuilderActionExecutionContext<NotificationAction>) => void | Promise<void>;
+	onWarning?: (message: string, context: BuilderActionRuntimeContext<NotificationAction>) => void | Promise<void>;
 	/** Custom info handler */
-	onInfo?: (message: string, context: BuilderActionExecutionContext<NotificationAction>) => void | Promise<void>;
+	onInfo?: (message: string, context: BuilderActionRuntimeContext<NotificationAction>) => void | Promise<void>;
 	/** Global handler for all notification types */
 	onNotification?: (
 		message: string,
 		variant: string,
-		context: BuilderActionExecutionContext<NotificationAction>,
+		context: BuilderActionRuntimeContext<NotificationAction>,
 	) => void | Promise<void>;
 }
 
@@ -49,7 +49,7 @@ export type NotificationAction = z.infer<typeof NotificationActionSchema>;
 export function notificationPlugin(
 	config: NotificationPluginConfig = {},
 ): BuilderActionRegistration<'show_notification', typeof NotificationActionSchema> {
-	const handler = async (context: BuilderActionExecutionContext<NotificationAction>) => {
+	const handler = async (context: BuilderActionRuntimeContext<NotificationAction>) => {
 		const action = context.config;
 
 		try {

@@ -15,7 +15,7 @@ import { getElementChildren, withElementChildren } from '@/lib/element-children'
 
 export type { FormConfigView, NormalizedElementConfig, NormalizedFormConfig } from '@/lib/normalized-form-config';
 export { DEFAULT_WIZARD_RECIPE, assertFormEngine, getRenderableSteps, resolveFormRecipe } from '@/lib/form-view';
-export type { RecipeLookup, RecipeGetter, RecipeResolver } from '@/lib/form-view';
+export type { RecipeLookup } from '@/lib/form-view';
 
 export class FormValidationError extends Error {
 	constructor(
