@@ -9,7 +9,7 @@ import {
 import { onContextUpdate, provideContext, type ContextProvider } from '@ecopages/radiant/context';
 import { resolveFormRecipe, type NormalizedFormConfig } from '@schema-engine/forms';
 import { flattenStepElements } from '@schema-engine/forms/lib/field-scope';
-import type { FormEngine as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import { formInstanceContext, type FormInstanceContextValue, type StepStates } from '@/contexts/form-instance-context';
 import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
 import { whenEngineAvailable } from '@/contexts/resolve-form-engine';

@@ -3,7 +3,7 @@ import { customElement, RadiantElement, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import type { BuilderActionBaseContext, FormActionTrigger, FormConfigView } from '@schema-engine/forms';
-import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { runSubmissionLifecycle, buildFormActionContext } from '@schema-engine/forms/engine';
 import type { FormProviderProps } from '@/adapters/types';
 import { ActionDispatcher } from '@schema-engine/forms/actions';

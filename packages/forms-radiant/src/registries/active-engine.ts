@@ -1,4 +1,4 @@
-import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 
 const registeredEngines = new Set<FormEngine>();
 const registeredEngineListeners = new Set<(engine: FormEngine | undefined) => void>();

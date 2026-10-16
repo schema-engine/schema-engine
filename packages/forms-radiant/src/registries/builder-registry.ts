@@ -6,7 +6,6 @@ import {
 	type ActionRegistrationConstraint,
 } from '@schema-engine/forms';
 import { radiantRecipes } from '@/recipes/bind-recipes';
-import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { registerFormEngine } from './active-engine';
 
 /**
@@ -25,6 +24,6 @@ export function createRadiantFormEngine<
 		...options,
 		recipes: [...radiantRecipes, ...(options?.recipes ?? [])] as const,
 	});
-	registerFormEngine(engine as FormEngine);
+	registerFormEngine(engine);
 	return engine;
 }

@@ -89,6 +89,7 @@ export function FormProvider<
 		(data: FieldValues) => onChange?.(data as unknown as Partial<TFormData>),
 		[onChange],
 	);
+	const handleFormSubmit = useCallback((data: FieldValues) => onSubmit?.(data as unknown as TFormData), [onSubmit]);
 
 	useFormWatcher({
 		control: form.control,
@@ -104,9 +105,9 @@ export function FormProvider<
 		actionExecutor,
 		buildActionContext: actionDispatchers.buildActionContext,
 		dispatchTrigger: actionDispatchers.dispatchTrigger,
-		onSubmit,
+		onSubmit: handleFormSubmit,
 		onAction: onAction as unknown as
-			| ((action: import('@schema-engine/forms').FormActionConfig, data: TFormData) => void | Promise<void>)
+			| ((action: import('@schema-engine/forms').FormActionConfig, data: FieldValues) => void | Promise<void>)
 			| undefined,
 	});
 
