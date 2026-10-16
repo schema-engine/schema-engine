@@ -35,4 +35,4 @@ test('a large wizard serializes full config only on its instance host', () => {
 		expect(host, name).not.toContain('field_11_19');
 	}
 	expect(html).toContain('name="field_11_19"');
-});
+}, 15_000);

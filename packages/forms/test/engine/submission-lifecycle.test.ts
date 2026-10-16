@@ -15,6 +15,13 @@ function createDispatch(submitResults: ActionExecutionResult[]) {
 	return { dispatch, triggers };
 }
 
+async function dispatchSuccessfulSubmitActions({
+	actions,
+	trigger,
+}: ActionDispatchInput): Promise<ActionExecutionResult[]> {
+	return trigger === 'form_submit' ? actions.map(() => ({ success: true })) : [];
+}
+
 describe('runSubmissionLifecycle', () => {
 	test('treats an action that stops on failure as a failed submission', async () => {
 		const { dispatch, triggers } = createDispatch([{ success: false, shouldContinue: false }]);
@@ -59,5 +66,53 @@ describe('runSubmissionLifecycle', () => {
 		});
 
 		expect(dispatchedContexts).toEqual(contexts);
+	});
+
+	test('runs onAction after each successful submit action', async () => {
+		const actions = [
+			{ $type: 'submit', id: 'first', enabled: true, endpoint: '/save', method: 'POST' },
+			{ $type: 'submit', id: 'second', enabled: true, endpoint: '/save', method: 'POST' },
+		] as const;
+		const onActionCalls: Array<{ actionId: string; data: Record<string, unknown> }> = [];
+		await runSubmissionLifecycle(dispatchSuccessfulSubmitActions, {
+			actions,
+			context: { ...context, formData: { name: 'Ada' } },
+			onAction: (action, data) => {
+				onActionCalls.push({ actionId: action.id, data });
+			},
+		});
+
+		expect(onActionCalls).toEqual([
+			{ actionId: 'first', data: { name: 'Ada' } },
+			{ actionId: 'second', data: { name: 'Ada' } },
+		]);
+	});
+
+	test('turns an onAction rejection into a fatal submit result and stops later actions', async () => {
+		const actions = [
+			{ $type: 'submit', id: 'first', enabled: true, endpoint: '/save', method: 'POST' },
+			{ $type: 'submit', id: 'skipped', enabled: true, endpoint: '/save', method: 'POST' },
+		] as const;
+		const dispatchedIds: string[] = [];
+		const dispatch = async ({
+			actions: dispatched,
+			trigger,
+		}: ActionDispatchInput): Promise<ActionExecutionResult[]> => {
+			if (trigger !== 'form_submit') return [];
+			dispatchedIds.push(...dispatched.map((action) => action.id));
+			return dispatched.map(() => ({ success: true }));
+		};
+
+		const result = await runSubmissionLifecycle(dispatch, {
+			actions,
+			context,
+			onAction: () => Promise.reject(new Error('Callback stopped submission')),
+		});
+
+		expect(dispatchedIds).toEqual(['first']);
+		expect(result.succeeded).toBe(false);
+		expect(result.results).toEqual([
+			{ success: false, shouldContinue: false, error: 'Callback stopped submission' },
+		]);
 	});
 });

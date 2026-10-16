@@ -1,5 +1,5 @@
-import type { ElementConfig, FormActionConfig, FormConfig } from '@schema-engine/forms/schemas';
-import type { NormalizedFormConfig } from '@schema-engine/forms';
+import type { ElementConfig, FormConfig } from '@schema-engine/forms/schemas';
+import type { FormConfigView, NormalizedFormConfig } from '@schema-engine/forms';
 import type { FieldArrayValue } from '@schema-engine/forms/adapters';
 import type { ReactNode, RefCallback } from 'react';
 
@@ -46,7 +46,7 @@ export interface FormProviderProps<TFormData = Record<string, unknown>> {
 	/** Callback function executed whenever form data changes */
 	onChange?: (data: Partial<TFormData>) => void;
 	/** Callback function executed when a form action is triggered */
-	onAction?: (action: FormActionConfig, data: TFormData) => void | Promise<void>;
+	onAction?: (action: NonNullable<FormConfigView['actions']>[number], data: TFormData) => void | Promise<void>;
 }
 
 /**

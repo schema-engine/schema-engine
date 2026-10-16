@@ -62,9 +62,12 @@ active step in place. Pass the resulting state to `buildViewModel` as `stepState
 `runSubmissionLifecycle(dispatch, { actions, context })` dispatches the form submit start,
 submit, success or error, and complete triggers. Pass a fixed `context` when every trigger
 uses the same snapshot, or a context factory when each trigger needs a fresh form-state
-snapshot. The returned `succeeded` flag is false only when a submit action fails with
-`shouldContinue: false`; a failed action that allows continuation does not fail the
-submission. `buildFormActionContext` is an exported utility that constructs a form action
+snapshot. Pass `onAction(action, data)` to run a callback after each successful submit
+action. If it rejects, that action becomes a fatal failure and later submit actions stop.
+The returned `succeeded` flag is false when a submit action fails with
+`shouldContinue: false` or `onAction` rejects; a failed action that allows continuation
+does not fail the submission.
+`buildFormActionContext` is an exported utility that constructs a form action
 context with form data and timing metadata, including a stable step start time that resets
 when the active step changes. The engine entry point also re-exports `ActionDispatcher` so
 both renderers can use the same action dispatcher class.
