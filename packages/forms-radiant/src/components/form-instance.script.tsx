@@ -20,6 +20,7 @@ import { applyConstraintRequired } from '@/lib/constraint-required-rules';
 import { shouldSurfaceDependentError } from '@schema-engine/forms/schemas/validation';
 import type { RuiFormElement } from '@ecopages/radiant-ui/form';
 import { expandValues } from '@/adapters/radiant/controller/values';
+import { whenEngineAvailable } from '@/contexts/resolve-form-engine';
 
 /**
  * Fields this wrapper owns, excluding those belonging to a nested constraint.
@@ -71,6 +72,7 @@ export class FormInstanceElement extends RadiantElement {
 	private readonly formEngine = new FormEngineController(this);
 	private form?: FormController;
 	private unwatchValidationDependencies?: () => void;
+	private unsubscribeActiveEngine?: () => void;
 
 	@provideContext<typeof formInstanceContext>({
 		context: formInstanceContext,
@@ -90,6 +92,10 @@ export class FormInstanceElement extends RadiantElement {
 			this.watchValidationDependencies();
 			this.publish();
 		});
+		this.unsubscribeActiveEngine = whenEngineAvailable(this, undefined, () => {
+			this.watchValidationDependencies();
+			this.publish();
+		});
 		this.resetStepState();
 		this.publish();
 		this.connectForm();
@@ -98,6 +104,7 @@ export class FormInstanceElement extends RadiantElement {
 
 	override disconnectedCallback(): void {
 		this.formEngine.disconnect();
+	this.unsubscribeActiveEngine?.();
 		this.stopWatchingValidationDependencies();
 		this.form?.disconnect();
 		this.form = undefined;

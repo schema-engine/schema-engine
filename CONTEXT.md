@@ -29,7 +29,8 @@ Form authors supply schema **input** (defaults stay optional). After `defineForm
 ## Forms logging
 
 `@schema-engine/forms` and the renderer packages use `@ecopages/logger` through
-the shared `logger` export (`@schema-engine/forms/lib/logger`). Tags identify
+each package’s shared `logger` instance. The forms instance is also exported as
+`@schema-engine/forms/lib/logger`. Tags identify
 the package (`[schema-engine/forms]`, `[schema-engine/forms-react]`, and so on).
 Debug output stays off unless the host enables Ecopages log levels.
 
