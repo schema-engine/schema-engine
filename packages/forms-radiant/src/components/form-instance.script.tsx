@@ -121,11 +121,16 @@ export class FormInstanceElement extends RadiantElement {
 
 	private wireRuiForm(): void {
 		const ruiForm = (this.form?.host ?? findNearestRuiForm(this)) as RuiFormElement | undefined;
-		if (ruiForm && this.onSubmit) {
+		const actions = this.querySelector<FormActionControllerElement>('se-form-action-controller');
+		const hasNativeSubmission = ruiForm?.hasAttribute('action') || ruiForm?.hasAttribute('method');
+		if (ruiForm && (this.onSubmit || (actions && hasNativeSubmission))) {
 			ruiForm.onSubmit = async (data) => {
-				const actions = this.querySelector<FormActionControllerElement>('se-form-action-controller');
 				if (actions && !(await actions.submit())) return;
-				await this.onSubmit?.(expandValues(data));
+				if (this.onSubmit) {
+					await this.onSubmit(expandValues(data));
+					return;
+				}
+				ruiForm.querySelector<HTMLFormElement>('form[data-ref="form"]')?.submit();
 			};
 		} else if (ruiForm) {
 			ruiForm.onSubmit = undefined;

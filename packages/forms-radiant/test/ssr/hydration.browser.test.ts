@@ -3,6 +3,7 @@ import { afterEach, expect, inject, test, vi } from 'vitest';
 import { createFormEngine } from '@schema-engine/forms';
 import { RuiFormElement } from '@ecopages/radiant-ui/form';
 import { FormInstanceElement } from '@/components/form-instance.script';
+import { FormActionControllerElement } from '@/components/form-action-controller';
 import { FormFieldElement } from '@/elements/form-field';
 import { registerFormEngine, resetRegisteredFormEnginesForTests } from '@/registries/active-engine';
 
@@ -14,12 +15,14 @@ await Promise.all([
 ]);
 
 function mount() {
-	registerFormEngine(createFormEngine({ elements: [] }));
+	const engine = createFormEngine({ elements: [] });
+	registerFormEngine(engine);
 	const root = document.createElement('div');
 	root.innerHTML = atob(inject('ssrHydrationHtml'));
 	document.body.append(root);
 	return {
 		root,
+		engine,
 		instance: root.querySelector('se-form-instance') as FormInstanceElement,
 		form: root.querySelector('rui-form') as RuiFormElement,
 	};
@@ -84,6 +87,39 @@ test('a form without onSubmit keeps native submission', async () => {
 	await expect.poll(() => typeof form.onSubmit).toBe('function');
 	instance.onSubmit = undefined;
 	await expect.poll(() => form.onSubmit).toBeUndefined();
+});
+
+test.each([false, true])('native submission waits for successful actions (%s)', async (succeeded) => {
+	const { engine, instance, form } = mount();
+	vi.spyOn(engine, 'getAction').mockReturnValue({
+		$type: 'submit',
+		schema: { '~standard': { version: 1, vendor: 'test', validate: (value: unknown) => ({ value }) } },
+		metadata: { name: 'Submit', defaultTriggers: ['form_submit'] },
+		execute: async () => (succeeded ? { success: true } : { success: false, shouldContinue: false }),
+	});
+	const config = engine.defineForm({
+		id: 'native-action-submit',
+		steps: [{ id: 'main', title: 'Main', elements: [] }],
+		actions: [{ id: 'save', $type: 'submit', endpoint: '/save' }],
+	});
+	form.action = '/native';
+	const controller = new FormActionControllerElement();
+	controller.engine = engine;
+	controller.config = config;
+	form.append(controller);
+	instance.config = config;
+	const complete = vi.fn();
+	form.addEventListener('se-action-submit-complete', complete);
+	const nativeForm = form.querySelector<HTMLFormElement>('form[data-ref="form"]')!;
+	const nativeSubmit = vi.spyOn(nativeForm, 'submit').mockImplementation(() => {});
+	await expect.poll(() => controller.form.ready).toBe(true);
+	await expect.poll(() => typeof form.onSubmit).toBe('function');
+
+	nativeForm.requestSubmit();
+	await expect.poll(() => complete.mock.calls.length).toBe(1);
+
+	expect(complete.mock.calls[0]?.[0].detail.succeeded).toBe(succeeded);
+	expect(nativeSubmit).toHaveBeenCalledTimes(succeeded ? 1 : 0);
 });
 
 test('onChange receives a nested value tree and reconnects without duplicate watchers', async () => {
