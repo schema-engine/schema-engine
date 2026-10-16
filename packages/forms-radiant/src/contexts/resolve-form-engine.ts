@@ -1,6 +1,6 @@
 import { logger } from '@/lib/logger';
 import { ContextSubscriptionRequestEvent } from '@ecopages/radiant/context';
-import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { formEngineContext } from '@/components/provider';
 import { peekOwningFormEngine } from '@/contexts/form-engine-owner';
 import { getDefaultFormEngine, getRegisteredEngineCount, onRegisteredEngineChange } from '@/registries/active-engine';

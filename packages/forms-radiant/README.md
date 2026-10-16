@@ -212,6 +212,16 @@ these inputs. Replace chrome reads such as `context.config.steps` with
 it omits elements, rules, defaults, and actions. Keep field rendering in the
 recipe content supplied by the renderer.
 
+### Engine-scoped config types
+
+Element, recipe, and action config types come from the registrations passed to
+each engine. Use `engine.defineForm` to infer authoring inputs and normalized
+outputs for that engine. Radiant renderer props accept `FormEngineRuntime`, which
+omits registration extension. Registration files no longer augment a global
+`FormEngine` namespace.
+
+### Shared renderer conformance
+
 The browser project also mounts `FormRenderer` for the shared
 [`renderer conformance scenarios`](../../test-utils/renderer-conformance.ts):
 array sibling constraints, nested wizard validation, required constraints, nested

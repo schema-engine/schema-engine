@@ -1,8 +1,8 @@
 /**
  * Submit Action Registration
  *
- * Pre-configured submit action with type augmentation.
- * Import this file to register the submit action type and get a default configuration.
+ * Pre-configured submit action.
+ * Register this declaration on your engine to enable the submit action type and get a default configuration.
  *
  * @example
  * ```typescript
@@ -14,17 +14,9 @@
  * ```
  */
 
-import { formSubmitPlugin, FormSubmitActionSchema, type FormSubmitAction } from './form-submit.plugin';
+import { formSubmitPlugin, FormSubmitActionSchema } from './form-submit.plugin';
 import { logger } from '@/lib/logger';
 import type { BuilderActionRegistration } from '@/types';
-
-declare global {
-	namespace FormEngine {
-		interface ActionRegistry {
-			submit: FormSubmitAction;
-		}
-	}
-}
 
 /**
  * Default Submit Action Registration

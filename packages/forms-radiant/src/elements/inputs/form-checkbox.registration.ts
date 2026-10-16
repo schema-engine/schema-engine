@@ -1,15 +1,6 @@
 import { FormCheckbox } from './form-checkbox';
-import type { CheckboxFieldConfig } from './form-checkbox.types';
 import { CheckboxFieldConfigSchema } from './form-checkbox.types';
 import { defineInput } from '@schema-engine/forms';
-
-declare global {
-	namespace FormEngine {
-		interface ElementRegistry {
-			checkbox: CheckboxFieldConfig;
-		}
-	}
-}
 
 export const CheckboxElementRegistration = defineInput({
 	$type: 'checkbox',

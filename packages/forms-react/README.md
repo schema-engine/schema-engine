@@ -80,6 +80,14 @@ Use `useFormEngine`, `useFormInstanceActions`, `useControlledFormElement`, `useF
 
 The runtime exposes `se-*` class hooks and grid variables. Consumers do not need to scan the package's built files with Tailwind; applications own their styles, and registry components can bring their own UI library and styling dependencies. Use `useFieldHost` for the grid host of custom elements.
 
+## Engine-scoped config types
+
+Element, recipe, and action config types come from the registrations passed to
+each engine. `engine.defineForm` infers the engine's authoring inputs and
+normalized outputs, including schema defaults and transforms. The React provider
+and renderer preserve those engine maps through their props; registrations no
+longer augment a global `FormEngine` namespace.
+
 ## Migration
 
 - Import `createFormEngine` from `@schema-engine/forms`.

@@ -162,6 +162,7 @@ export const BaseFieldSchema = z.object({
  * Type definitions
  */
 export type BaseField = z.infer<typeof BaseFieldSchema>;
+export type BaseFieldInput = z.input<typeof BaseFieldSchema>;
 export type GridBreakpointConfig = z.infer<typeof GridBreakpointConfigSchema>;
 export type FieldGridBreakpointConfig = z.infer<typeof FieldGridBreakpointSchema>;
 export type ElementGridConfig = z.infer<typeof ElementGridConfigSchema>;

@@ -1,4 +1,5 @@
 import { describe, test, expect } from 'vitest';
+import type { ElementConfig } from '@schema-engine/forms/schemas';
 import { InputFieldSchema, type InputFieldConfig } from '@/components/schema-engine/forms/inputs/form-input.types';
 import {
 	TextareaFieldSchema,
@@ -64,8 +65,8 @@ describe('Clean Enhanced Field System', () => {
 		}
 	});
 
-	test('should work with ElementConfig union type', () => {
-		const inputConfig: FormEngine.ElementConfig = {
+	test('should validate configs for multiple registered field types', () => {
+		const inputConfig: ElementConfig = {
 			$type: 'input',
 			id: 'email',
 			name: 'email',
@@ -73,7 +74,7 @@ describe('Clean Enhanced Field System', () => {
 			inputMode: 'email',
 		};
 
-		const textareaConfig: FormEngine.ElementConfig = {
+		const textareaConfig: ElementConfig = {
 			$type: 'textarea',
 			id: 'bio',
 			name: 'bio',
@@ -281,8 +282,8 @@ describe('Clean Enhanced Field System', () => {
 		}
 	});
 
-	test('should support discriminated union for all field types', () => {
-		const fields: FormEngine.ElementConfig[] = [
+	test('should validate all registered field types', () => {
+		const fields: ElementConfig[] = [
 			{
 				$type: 'input',
 				id: 'email',

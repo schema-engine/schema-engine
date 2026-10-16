@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { EngineOutputMaps, FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { FormActionConfig } from '@schema-engine/forms/schemas';
 import type { ActionExecutionResult, FormActionTrigger } from '@schema-engine/forms';
 import type { SubmissionState } from '@/hooks/use-submission-state';
@@ -7,8 +7,27 @@ import type { SubmissionState } from '@/hooks/use-submission-state';
 /**
  * Form Engine context value
  */
-export interface FormEngineContextValue {
-	engine: FormEngine;
+export interface FormEngineContextValue<
+	TElements extends Record<string, unknown> = Record<string, unknown>,
+	TRecipes extends Record<string, unknown> = Record<string, unknown>,
+	TActions extends Record<string, unknown> = Record<string, unknown>,
+	TOutputs extends EngineOutputMaps = EngineOutputMaps,
+> {
+	engine: FormEngine<TElements, TRecipes, TActions, TOutputs>;
+}
+
+/**
+ * Erases registration maps for context storage.
+ *
+ * @remarks `useFormEngine` reapplies the consumer's maps after reading context.
+ */
+export function createFormEngineContextValue<
+	TElements extends Record<string, unknown>,
+	TRecipes extends Record<string, unknown>,
+	TActions extends Record<string, unknown>,
+	TOutputs extends EngineOutputMaps,
+>(engine: FormEngine<TElements, TRecipes, TActions, TOutputs>): FormEngineContextValue {
+	return { engine: engine as unknown as FormEngineContextValue['engine'] };
 }
 
 /**

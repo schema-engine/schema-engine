@@ -1,6 +1,7 @@
 import { buildFormEngine } from './build-form-engine';
 import type {
 	MergedRegistrationMap,
+	MergedOutputMap,
 	MergedActionRegistrationMap,
 	ElementRegistrationConstraint,
 	RecipeRegistrationConstraint,
@@ -38,7 +39,8 @@ export type FormEngineFromOptions<
 > = FormEngine<
 	MergedRegistrationMap<TElements>,
 	MergedRegistrationMap<TRecipes>,
-	MergedActionRegistrationMap<TActions>
+	MergedActionRegistrationMap<TActions>,
+	{ elements: MergedOutputMap<TElements>; recipes: MergedOutputMap<TRecipes>; actions: MergedOutputMap<TActions> }
 >;
 
 /**
@@ -65,5 +67,5 @@ export function createFormEngine<
 		actions: options?.actions,
 		catalog: options?.catalog,
 		grid: options?.grid,
-	}) as FormEngineFromOptions<TElements, TRecipes, TActions>;
+	}) as unknown as FormEngineFromOptions<TElements, TRecipes, TActions>;
 }

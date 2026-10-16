@@ -1,6 +1,6 @@
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { resolveFormRecipe, type NormalizedFormConfig } from '@schema-engine/forms';
-import type { FormEngine as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
 import { collectFormInitialValues, ConfiguredRuiForm } from '@/adapters/radiant/rui-form-shell';
 import { flattenValues } from '@/adapters/radiant/controller/values';

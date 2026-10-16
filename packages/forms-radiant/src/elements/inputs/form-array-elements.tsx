@@ -8,7 +8,7 @@ import { FormElements } from '@/components/internals/form-elements';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import type { ArrayElementsProps } from './form-array-elements.types';
 import { arrayItemScope, usesScalarArrayItem } from '@schema-engine/forms';
-import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { FormController, FormEngineController } from '@/adapters/radiant/controller';
 import { toFieldRules } from '@/lib/field-rules';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';

@@ -1,12 +1,17 @@
 import type { ReactNode } from 'react';
-import type { FormEngine as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { EngineOutputMaps, FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import { FormAdapterContext } from '../adapters/context';
 import type { FormAdapter } from '../adapters/types';
-import { FormEngineContext } from './provider';
+import { FormEngineContext, createFormEngineContextValue } from './provider';
 
-export interface FormEngineProviderProps {
+export interface FormEngineProviderProps<
+	TElements extends Record<string, unknown> = Record<string, unknown>,
+	TRecipes extends Record<string, unknown> = Record<string, unknown>,
+	TActions extends Record<string, unknown> = Record<string, unknown>,
+	TOutputs extends EngineOutputMaps = EngineOutputMaps,
+> {
 	children: ReactNode;
-	engine: CoreFormEngine;
+	engine: CoreFormEngine<TElements, TRecipes, TActions, TOutputs>;
 	/**
 	 * Form library adapter. Import e.g. `rhfAdapter` from
 	 * `@schema-engine/forms-react/adapters/react-hook-form`.
@@ -14,7 +19,12 @@ export interface FormEngineProviderProps {
 	adapter: FormAdapter;
 }
 
-export function FormEngineProvider({ children, engine, adapter }: FormEngineProviderProps) {
+export function FormEngineProvider<
+	TElements extends Record<string, unknown> = Record<string, unknown>,
+	TRecipes extends Record<string, unknown> = Record<string, unknown>,
+	TActions extends Record<string, unknown> = Record<string, unknown>,
+	TOutputs extends EngineOutputMaps = EngineOutputMaps,
+>({ children, engine, adapter }: FormEngineProviderProps<TElements, TRecipes, TActions, TOutputs>) {
 	if (!adapter) {
 		throw new Error(
 			'FormEngineProvider requires an adapter. Pass one explicitly, e.g. rhfAdapter from @schema-engine/forms-react/adapters/react-hook-form.',
@@ -27,7 +37,9 @@ export function FormEngineProvider({ children, engine, adapter }: FormEngineProv
 
 	return (
 		<FormAdapterContext.Provider value={adapter}>
-			<FormEngineContext.Provider value={{ engine }}>{children}</FormEngineContext.Provider>
+			<FormEngineContext.Provider value={createFormEngineContextValue(engine)}>
+				{children}
+			</FormEngineContext.Provider>
 		</FormAdapterContext.Provider>
 	);
 }

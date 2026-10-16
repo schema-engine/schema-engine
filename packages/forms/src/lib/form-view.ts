@@ -1,5 +1,5 @@
 import type { AnyRecipeRegistration } from '@/types/registration';
-import type { FormConfigView, NormalizedFormConfig } from '@/lib/normalized-form-config';
+import type { FormConfigView } from '@/lib/normalized-form-config';
 import { logger } from '@/lib/logger';
 
 /** Implicit `view.$type` for multi-step forms that omit `view`. */
@@ -91,9 +91,9 @@ export function getRenderableSteps<T extends FormConfigView>(
  *
  * The canonical entry point for render hosts (React `FormRenderer`, Radiant
  * `FormProvider`): normalize once at the boundary, then pass the frozen
- * {@link NormalizedFormConfig} down. Renderers must not accept authoring input.
+ * normalized config down. Renderers must not accept authoring input.
  */
-export function assertFormEngine<E extends { validateForm: (config: unknown) => NormalizedFormConfig }>(
+export function assertFormEngine<E extends { validateForm: (config: unknown) => unknown }>(
 	engine: E | undefined,
 	config: FormConfigView,
 ): asserts engine is E {

@@ -1,24 +1,34 @@
 import * as z from 'zod/mini';
-import { FormActionConfigSchema } from '../actions/types';
+import { FormActionConfigSchema, type FormActionConfig } from '../actions/types';
 import { createFormConfigShape, createFormStepSchema, TypedConfigEnvelopeSchema } from './form-config-shape';
-
-import type { FormActionConfig } from '../actions/types';
+import type { ElementConfig } from './field-config';
 
 export type { FormActionConfig } from '../actions/types';
 export { TypedConfigEnvelopeSchema } from './form-config-shape';
 
+/** Form view config for an engine's recipe map. */
+export type FormViewConfig<TRecipes extends Record<string, unknown> = Record<string, unknown>> =
+	string extends keyof TRecipes
+		? z.infer<typeof FormViewConfigSchema>
+		: [keyof TRecipes] extends [never]
+			? never
+			: {
+					[K in keyof TRecipes & string]: { readonly $type: K } & TRecipes[K] & {
+							[key: string]: unknown;
+						};
+				}[keyof TRecipes & string];
+
 /**
  * Form view configuration schema.
  *
- * Recipe registrations extend this with slot-specific keys (shell, header, progress, actions).
+ * Recipe registrations extend this with slot-specific keys (shell, header,
+ * progress, actions).
  */
 export const FormViewConfigSchema = z.looseObject({
 	$type: z.string(),
 });
 
-/**
- * Form step schema for multi-step forms - now contains fields directly
- */
+/** Form step schema for multi-step forms - now contains fields directly. */
 export const FormStepSchema = createFormStepSchema({
 	/**
 	 * Element payloads are an existential boundary.
@@ -28,9 +38,7 @@ export const FormStepSchema = createFormStepSchema({
 	actions: FormActionConfigSchema,
 });
 
-/**
- * Complete form configuration schema
- */
+/** Complete form configuration schema. */
 export const FormConfigSchema = createFormConfigShape({
 	/**
 	 * Element payloads are an existential boundary.
@@ -51,22 +59,18 @@ export const formConfigEnvelopeSchema = createFormConfigShape({
 	actions: TypedConfigEnvelopeSchema,
 });
 
-/**
- * Inferred types from schemas
- */
-export type FormViewConfig = z.infer<typeof FormViewConfigSchema>;
+/** Inferred view config from the runtime schema. */
+export type FormViewConfigSchemaOutput = z.infer<typeof FormViewConfigSchema>;
 
-/**
- * Runtime tagged config used inside the validation pipeline before narrowing.
- */
+/** Runtime tagged config used inside the validation pipeline before narrowing. */
 export type FormTaggedConfig = { $type: string } & Record<string, unknown>;
 
-export type FormConfigEnvelope = Omit<z.infer<typeof formConfigEnvelopeSchema>, 'steps' | 'view' | 'actions'> & {
+type InferredStep = z.infer<typeof FormStepSchema>;
+type InferredForm = z.infer<typeof FormConfigSchema>;
+
+export type FormConfigEnvelope = Omit<InferredForm, 'steps' | 'view' | 'actions'> & {
 	steps: Array<
-		Omit<
-			z.infer<typeof FormStepSchema>,
-			'elements' | 'actions' | 'onStepEnter' | 'onStepLeave' | 'onStepValidate'
-		> & {
+		Omit<InferredStep, 'elements' | 'actions' | 'onStepEnter' | 'onStepLeave' | 'onStepValidate'> & {
 			elements: FormTaggedConfig[];
 			actions?: FormTaggedConfig[];
 			onStepEnter?: FormTaggedConfig[];
@@ -78,28 +82,27 @@ export type FormConfigEnvelope = Omit<z.infer<typeof formConfigEnvelopeSchema>, 
 	actions?: FormTaggedConfig[];
 };
 
-/**
- * Form step configuration type with properly typed elements.
- */
-export type FormStep = Omit<
-	z.infer<typeof FormStepSchema>,
-	'elements' | 'actions' | 'onStepEnter' | 'onStepLeave' | 'onStepValidate'
-> & {
-	elements: FormTaggedConfig[];
-	actions?: Array<FormActionConfig>;
-	onStepEnter?: Array<FormActionConfig>;
-	onStepLeave?: Array<FormActionConfig>;
-	onStepValidate?: Array<FormActionConfig>;
+/** Form step config narrowed to the element and action maps of one engine. */
+export type FormStep<
+	TElements extends Record<string, unknown> = Record<string, unknown>,
+	TActions extends Record<string, unknown> = Record<string, unknown>,
+> = Omit<InferredStep, 'elements' | 'actions' | 'onStepEnter' | 'onStepLeave' | 'onStepValidate'> & {
+	elements: Array<ElementConfig<TElements>>;
+	actions?: Array<FormActionConfig<TActions>>;
+	onStepEnter?: Array<FormActionConfig<TActions>>;
+	onStepLeave?: Array<FormActionConfig<TActions>>;
+	onStepValidate?: Array<FormActionConfig<TActions>>;
 };
 
-/**
- * Form configuration type with strict typing for steps and view.
- * Includes additional properties not in the base schema for runtime handlers.
- */
-export type FormConfig = Omit<z.infer<typeof FormConfigSchema>, 'steps' | 'view' | 'actions'> & {
-	steps: Array<FormStep>;
-	view?: FormViewConfig;
-	actions?: Array<FormActionConfig>;
+/** Form config narrowed to one engine's registered elements, recipes, and actions. */
+export type FormConfig<
+	TElements extends Record<string, unknown> = Record<string, unknown>,
+	TRecipes extends Record<string, unknown> = Record<string, unknown>,
+	TActions extends Record<string, unknown> = Record<string, unknown>,
+> = Omit<InferredForm, 'steps' | 'view' | 'actions'> & {
+	steps: Array<FormStep<TElements, TActions>>;
+	view?: FormViewConfig<TRecipes>;
+	actions?: Array<FormActionConfig<TActions>>;
 	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
 	onChange?: (data: Record<string, unknown>) => void;
 };

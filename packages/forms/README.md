@@ -232,6 +232,16 @@ adapter.
 
 Custom fields use `defineInput` with any Standard Schema. Default widgets ship their own Zod schemas beside their registrations; those schemas are not engine contracts and may differ between React and Radiant.
 
+### Engine-scoped config types
+
+Element, recipe, and action config types come from each engine's registrations.
+Use `engine.defineForm` to infer its authoring inputs and normalized outputs.
+The `FormConfig` and `NormalizedFormConfig` types accept the same engine maps;
+their defaults stay open for helpers without a concrete engine. Parsed output
+maps remain separate from schema input maps, so defaults and transforms retain
+their output types. Renderer props use `FormEngineRuntime`, which omits
+registration extension.
+
 ### Container registration semantics
 
 Set `containerKind: 'array'` on an array input registration, including custom

@@ -8,7 +8,7 @@ import {
 } from '@ecopages/radiant';
 import { provideContext, type ContextProvider } from '@ecopages/radiant/context';
 import type { JsxRenderable } from '@ecopages/jsx';
-import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { FormProviderProps } from '@/adapters/types';
 import { resolveFormEngine, whenEngineAvailable } from '@/contexts/resolve-form-engine';
 import { formEngineContext, type FormEngineContextValue } from '../provider';

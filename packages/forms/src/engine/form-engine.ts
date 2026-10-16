@@ -11,6 +11,8 @@ import type { NormalizedElementConfig, NormalizedFormConfig } from '@/lib/normal
 import type { FormAuthoringInput } from '@/builder/form-authoring';
 import type {
 	LastWinsMerge,
+	EngineOutputMaps,
+	MergedOutputMap,
 	MergedRegistrationMap,
 	MergedActionRegistrationMap,
 	ElementRegistrationConstraint,
@@ -62,9 +64,10 @@ export interface EngineRegistries {
 }
 
 export class FormEngine<
-	TElements extends Record<string, unknown> = Record<never, unknown>,
-	TRecipes extends Record<string, unknown> = Record<never, unknown>,
-	TActions extends Record<string, unknown> = Record<never, unknown>,
+	TElements extends Record<string, unknown> = Record<string, unknown>,
+	TRecipes extends Record<string, unknown> = Record<string, unknown>,
+	TActions extends Record<string, unknown> = Record<string, unknown>,
+	TOutputs extends EngineOutputMaps = EngineOutputMaps,
 > {
 	private readonly registries: EngineRegistries;
 	private readonly schemaArtifacts: FormEngineSchemaArtifacts;
@@ -182,14 +185,16 @@ export class FormEngine<
 	 * Applies defaults and schema transforms. Prefer {@link defineForm} when authoring in TypeScript.
 	 * Returns a frozen {@link NormalizedFormConfig} owned by this engine.
 	 */
-	validateForm(config: unknown): NormalizedFormConfig {
+	validateForm(
+		config: unknown,
+	): NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']> {
 		return validateFormConfig(config, {
 			owner: this,
 			getRecipe: (id) => this.getRecipe(id),
 			getElement: (id) => this.getElement(id),
 			getAction: (id) => this.getAction(id),
 			hasValidation: (type) => this.validationRegistry.has(type),
-		});
+		}) as unknown as NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>;
 	}
 
 	/**
@@ -198,7 +203,7 @@ export class FormEngine<
 	 */
 	defineForm<const TConfig extends FormAuthoringInput<TElements, TRecipes, TActions>>(
 		config: TConfig,
-	): NormalizedFormConfig {
+	): NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']> {
 		return this.validateForm(config);
 	}
 
@@ -207,11 +212,11 @@ export class FormEngine<
 	 * Use for standalone or dynamically created fields that are not already inside a normalized form.
 	 * The normalized marker is applied only after this element and its children succeed.
 	 */
-	validateElement(config: unknown): NormalizedElementConfig {
+	validateElement(config: unknown): NormalizedElementConfig<TOutputs['elements']> {
 		return validateElementConfig(config, {
 			getElement: (id) => this.getElement(id),
 			hasValidation: (type) => this.validationRegistry.has(type),
-		});
+		}) as unknown as NormalizedElementConfig<TOutputs['elements']>;
 	}
 
 	describeRecipe($type: string): RecipeDescriptor {
@@ -311,7 +316,12 @@ export class FormEngine<
 	): FormEngine<
 		LastWinsMerge<TElements, MergedRegistrationMap<TNewElements>>,
 		LastWinsMerge<TRecipes, MergedRegistrationMap<TNewRecipes>>,
-		LastWinsMerge<TActions, MergedActionRegistrationMap<TNewActions>>
+		LastWinsMerge<TActions, MergedActionRegistrationMap<TNewActions>>,
+		{
+			elements: LastWinsMerge<TOutputs['elements'], MergedOutputMap<TNewElements>>;
+			recipes: LastWinsMerge<TOutputs['recipes'], MergedOutputMap<TNewRecipes>>;
+			actions: LastWinsMerge<TOutputs['actions'], MergedOutputMap<TNewActions>>;
+		}
 	> {
 		const catalog = options?.catalog ?? this.schemaArtifacts.metadataCatalog.clone();
 		if (!options?.catalog) {
@@ -350,10 +360,32 @@ export class FormEngine<
 			actions: [...this.getAllActions(), ...(options?.actions ?? [])],
 			catalog,
 			compiledGrid: this.compiledGrid,
-		}) as FormEngine<
+		}) as unknown as FormEngine<
 			LastWinsMerge<TElements, MergedRegistrationMap<TNewElements>>,
 			LastWinsMerge<TRecipes, MergedRegistrationMap<TNewRecipes>>,
-			LastWinsMerge<TActions, MergedActionRegistrationMap<TNewActions>>
+			LastWinsMerge<TActions, MergedActionRegistrationMap<TNewActions>>,
+			{
+				elements: LastWinsMerge<TOutputs['elements'], MergedOutputMap<TNewElements>>;
+				recipes: LastWinsMerge<TOutputs['recipes'], MergedOutputMap<TNewRecipes>>;
+				actions: LastWinsMerge<TOutputs['actions'], MergedOutputMap<TNewActions>>;
+			}
 		>;
 	}
 }
+
+/**
+ * Engine operations available while rendering a form.
+ *
+ * @remarks
+ * Registration extension belongs to engine construction. Omitting it allows a
+ * renderer to hold engines with different parsed output maps without widening
+ * their authoring or normalized return types on the constructed engine.
+ */
+export type FormEngineRuntime<
+	TElements extends Record<string, unknown> = Record<string, unknown>,
+	TRecipes extends Record<string, unknown> = Record<string, unknown>,
+	TActions extends Record<string, unknown> = Record<string, unknown>,
+	TOutputs extends EngineOutputMaps = EngineOutputMaps,
+> = Omit<FormEngine<TElements, TRecipes, TActions, TOutputs>, 'extend'>;
+
+export type { EngineOutputMaps } from '@/builder/types.utils';
