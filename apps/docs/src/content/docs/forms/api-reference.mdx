@@ -10,21 +10,27 @@ order: 7
 ## createFormEngine
 
 ```ts
-function createFormEngine<
-	const TElements extends readonly ElementRegistrationConstraint[] = readonly [],
-	const TRecipes extends readonly RecipeRegistrationConstraint[] = readonly [],
-	const TActions extends readonly ActionRegistrationConstraint[] = readonly [],
->(options?: {
+interface CreateFormEngineOptions<TElements, TRecipes, TActions> {
 	elements?: TElements;
 	recipes?: TRecipes;
 	actions?: TActions;
 	catalog?: SchemaMetadataCatalog;
-}): FormEngine<
-	AsRegistrationMap<MergeRegistrationMapsLastWins<TElements>>,
-	AsRegistrationMap<MergeRegistrationMapsLastWins<TRecipes>>,
-	AsRegistrationMap<MergeActionRegistrationMapsLastWins<TActions>>
->;
+	/** Breakpoint thresholds, gap tokens, and default min column width. */
+	grid?: GridThemeOptions;
+}
+
+function createFormEngine<
+	const TElements extends readonly ElementRegistrationConstraint[] = readonly [],
+	const TRecipes extends readonly RecipeRegistrationConstraint[] = readonly [],
+	const TActions extends readonly ActionRegistrationConstraint[] = readonly [],
+>(
+	options?: CreateFormEngineOptions<TElements, TRecipes, TActions>,
+): FormEngineFromOptions<TElements, TRecipes, TActions>;
 ```
+
+`FormEngineFromOptions` is the `FormEngine` typed from the merged registration
+lists. `grid` applies only to `createFormEngine`; engines built with
+`engine.extend()` inherit the source engine's grid theme.
 
 Each array is structurally constrained: `$type`, a Standard Schema
 (`~standard.validate`), and the registration's render/execute function.

@@ -108,7 +108,7 @@ export function useFormSubmitHandler({
 				try {
 					const { succeeded, results } = await runSubmissionLifecycle(
 						(input) => actionExecutor.dispatch(input),
-						{ actions: config.actions, context: buildActionContext(), onAction },
+						{ actions: config.actions, context: buildActionContext, onAction },
 					);
 
 					const executionErrors = results.reduce<SubmissionError[]>((acc, result, index) => {

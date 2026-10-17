@@ -35,7 +35,7 @@ function warnMultiEngineFallback(host: HTMLElement): void {
 	}
 	warnedMultiEngine = true;
 	logger.warn(
-		`Could not resolve FormEngine for <${host.tagName.toLowerCase()}>: multiple engines are registered. Pass an explicit \`engine\` prop or wrap the host in \`se-form-engine-provider\`.`,
+		`Could not resolve FormEngine for <${host.tagName.toLowerCase()}>: multiple engines are registered. Pass an explicit \`engine\` prop or render the host inside \`se-form-renderer\`.`,
 	);
 }
 

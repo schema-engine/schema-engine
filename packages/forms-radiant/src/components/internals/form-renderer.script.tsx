@@ -49,7 +49,6 @@ export class FormRendererElement extends RadiantElement {
 	constructor() {
 		super();
 		registerSsrPreparationCallback(this, () => this.publishContext());
-		this.publishContext();
 	}
 
 	private unsubscribeActiveEngine?: () => void;

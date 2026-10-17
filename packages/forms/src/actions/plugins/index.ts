@@ -4,7 +4,7 @@
  * registration with a plugin factory.
  */
 
-/** Plugin factory functions (require manual type registration). */
+/** Plugin factory functions; action config types come from the registrations passed to the engine. */
 export * from './auto-save.plugin';
 export * from './gtm.plugin';
 export * from './notification.plugin';

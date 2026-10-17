@@ -11,8 +11,8 @@ same logger; debug output is disabled by default.
 ## Built-in registrations
 
 Import runtime-neutral registrations from `@schema-engine/forms` and browser
-registrations from `@schema-engine/forms/browser`. Importing a registration
-also adds its `$type` to the form action configuration types.
+registrations from `@schema-engine/forms/browser`. Passing a registration to
+`createFormEngine({ actions })` adds its `$type` to that engine's action config types.
 
 ```typescript
 import { NotificationActionRegistration, SubmitActionRegistration, createFormEngine } from '@schema-engine/forms';
@@ -56,7 +56,7 @@ const formConfig = { id: 'contact', steps: [], actions };
 ```
 
 An action runs when its `triggers` contains the current event. When an action
-does not declare `triggers`, the executor uses the registration's
+does not declare `triggers`, the dispatcher uses the registration's
 `metadata.defaultTriggers`.
 
 ## Action triggers
@@ -78,7 +78,7 @@ The forms action trigger type contains these events:
 | `step_leave`           | A step stops being active              |
 | `step_view`            | A step becomes visible                 |
 
-Actions execute sequentially in the order provided to the executor.
+Actions execute sequentially in the order provided to the dispatcher.
 
 ## Plugin factories
 

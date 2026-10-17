@@ -149,6 +149,18 @@ Validates UUID format with optional version specification.
 
 **Zod Mini implementation:** `z.uuid(message)`
 
+### Phone
+
+Validates an international phone number in E.164 format (for example `+14155552671`).
+
+```typescript
+{ type: 'phone', message: 'Please enter a valid phone number' }
+```
+
+**Zod Mini implementation:** `z.e164(message)`
+
+A `phone-input` element registration can replace this handler with its own validator and apply the rule to its fields by default.
+
 ## Number Validations
 
 ### Min/Max Values
@@ -243,6 +255,18 @@ Validate IP addresses with explicit IPv4 or IPv6 rule types.
 The package registers IPv4 and IPv6 as separate validation rule types.
 
 IPv6 validation uses Zod Mini's native address parser and retains support for interface-scoped addresses such as `fe80::1%eth0`.
+
+### CIDR Range
+
+Validates a CIDR block. Omit `version` to accept either IPv4 or IPv6.
+
+```typescript
+{ type: 'cidr', message: 'Please enter a valid CIDR range' }
+
+{ type: 'cidr', version: 'v4', message: 'Please enter a valid IPv4 CIDR range' }
+```
+
+**Zod Mini implementation:** `z.cidrv4(message)`, `z.cidrv6(message)`, or a union of both
 
 ### JWT Token
 

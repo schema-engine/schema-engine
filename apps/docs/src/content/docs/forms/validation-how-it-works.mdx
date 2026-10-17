@@ -31,7 +31,6 @@ The `ValidationRegistry` is the central hub that manages all validation logic:
 
 - **Stores validation implementations** - Each validation type has a handler function
 - **Converts rules to Zod Mini schemas** - JSON rules become executable validators
-- **Provides convenient presets** - Common patterns made easy
 - **Manages custom registrations** - Extend with your own validation logic
 
 ### Rule-to-Schema Generation
@@ -181,8 +180,9 @@ The validation system organizes validators by category:
 - `minLength` / `maxLength` - String length constraints
 - `pattern` - Regex pattern matching
 - `uuid` - UUID format validation
+- `phone` - E.164 phone number format
 
-Phone-input integrations attach a `phone` validator on the element registration (`validations` + `defaultFor`). Creating a form engine with that element registers the handler and applies the rule to `phone-input` fields. `@schema-engine/forms` does not depend on a phone-number library.
+Phone-input integrations replace the core `phone` handler with their own libphonenumber-based validator on the element registration (`validations` + `defaultFor`). Creating a form engine with that element registers the replacement handler and applies the rule to `phone-input` fields. `@schema-engine/forms` does not depend on a phone-number library.
 
 ### Number Validations
 
@@ -195,6 +195,7 @@ Phone-input integrations attach a `phone` validator on the element registration 
 ### Network & Format Validations
 
 - `ipv4` / `ipv6` - IP address validation
+- `cidr` - CIDR range validation (`version?: 'v4' | 'v6'`)
 - `jwt` - JWT token validation
 - `hash` - Hash format validation
 - `base64` - Base64 encoding validation

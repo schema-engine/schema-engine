@@ -1,6 +1,6 @@
 import { ContextProvider, ContextSubscriptionRequestEvent } from '@ecopages/radiant/context';
 import { FormStore, formContext, type FormContextValue } from '@ecopages/radiant-ui/form';
-import { createFormEngine, gtmPlugin } from '@schema-engine/forms';
+import { gtmPlugin } from '@schema-engine/forms';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { formInstanceContext } from '@/contexts/form-instance-context';
 import { FormRendererElement } from '@/components/internals/form-renderer.script';
@@ -79,7 +79,7 @@ describe('Radiant form engine resolution', () => {
 
 	test('a form instance under the renderer resolves its engine when two engines exist', async () => {
 		const engineA = createRadiantFormEngine();
-		createFormEngine();
+		createRadiantFormEngine();
 		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
 		renderer.engine = engineA;

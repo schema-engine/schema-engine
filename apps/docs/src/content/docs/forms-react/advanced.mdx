@@ -45,8 +45,9 @@ GDPRConsent.saveDraft('contact', { email: 'reader@example.com' });
 const draft = GDPRConsent.loadDraft('contact');
 ```
 
-Grant consent before saving a draft. `GDPRConsent.revokeConsent()` clears the
-package's `form_draft_` entries from local storage. Consent is browser storage
+Grant consent before saving a draft. Drafts use the `autosave_<formId>` key shared with the auto-save and reset
+actions. `GDPRConsent.revokeConsent()` clears those drafts, custom auto-save keys,
+and legacy `form_draft_` entries from local storage. Consent is browser storage
 state; applications provide their own React subscriptions, disclosure, and
 retention policy.
 

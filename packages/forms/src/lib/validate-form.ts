@@ -35,7 +35,7 @@ export interface ValidateFormOptions {
 	getRecipe: (id: string) => AnyRecipeRegistration | undefined;
 	getElement: (id: string) => ElementRegistration | undefined;
 	getAction: (id: string) => AnyActionRegistration | undefined;
-	hasValidation?: (type: string) => boolean;
+	hasValidation: (type: string) => boolean;
 	parseFormConfig?: (config: unknown) => FormConfig;
 }
 
@@ -211,7 +211,7 @@ function unregisteredValidationRule(
 	item: FormTaggedConfig,
 	hasValidation: ValidateFormOptions['hasValidation'],
 ): string | undefined {
-	if (!hasValidation || !Array.isArray(item.rules)) return undefined;
+	if (!Array.isArray(item.rules)) return undefined;
 
 	for (const rule of item.rules) {
 		if (typeof rule !== 'object' || rule === null || !('type' in rule) || typeof rule.type !== 'string') {

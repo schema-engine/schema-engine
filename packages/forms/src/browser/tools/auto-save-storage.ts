@@ -29,7 +29,7 @@ function writeTrackedDraftKeys(storage: BrowserStorage, keys: Set<string>): void
 	storage.setItem(trackedDraftKeysStorageKey, JSON.stringify([...keys]));
 }
 
-/** Returns custom draft keys written through the browser auto-save adapter. */
+/** Returns draft keys written through the browser auto-save adapter. */
 export function getTrackedAutoSaveDraftKeys(storage: BrowserStorage): string[] {
 	return [...readTrackedDraftKeys(storage)];
 }
@@ -43,7 +43,7 @@ export function clearTrackedAutoSaveDrafts(storage: BrowserStorage): void {
 	writeTrackedDraftKeys(storage, new Set());
 }
 
-/** Removes a custom draft key and stops tracking it for consent revocation. */
+/** Removes a draft key and stops tracking it for consent revocation. */
 export function removeTrackedAutoSaveDraftKey(storage: BrowserStorage, key: string): void {
 	storage.removeItem(key);
 	const keys = readTrackedDraftKeys(storage);

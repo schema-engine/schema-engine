@@ -26,10 +26,8 @@ test('submission action callback receives the successful action and nested value
 		steps: [{ id: 'main', title: 'Main', elements: [] }],
 		actions: [{ id: 'save', $type: 'submit', endpoint: '/save' }],
 	});
-	controller.onAction = vi.fn(async (action, values) => {
+	controller.onAction = vi.fn(async () => {
 		events.push('callback');
-		expect(action.id).toBe('save');
-		expect(values).toEqual({ address: { street: 'Main' } });
 	});
 	host.addEventListener('se-action-submit-start', () => events.push('start'));
 	host.addEventListener('se-action-submit-complete', () => events.push('complete'));
@@ -43,6 +41,9 @@ test('submission action callback receives the successful action and nested value
 	host.dispatchEvent(new CustomEvent('rui-submit'));
 	await expect.poll(() => events).toEqual(['start', 'callback', 'complete']);
 	expect(controller.onAction).toHaveBeenCalledTimes(1);
+	expect(controller.onAction).toHaveBeenCalledWith(expect.objectContaining({ id: 'save' }), {
+		address: { street: 'Main' },
+	});
 	expect(execute.mock.calls.at(-1)?.[0]).toMatchObject({
 		trigger: 'form_submit',
 		formData: { address: { street: 'Main' } },
