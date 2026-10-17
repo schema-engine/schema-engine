@@ -15,6 +15,17 @@ export const conformanceAction = {
 	),
 };
 
+/**
+ * `$type` each renderer registers with `containerKind: 'array'` and its array widget.
+ *
+ * @remarks
+ * Each registration reuses its built-in array widget unchanged. Its props type pins
+ * `$type: 'arrayElements'`, which the widget never reads, so the registration
+ * widens the widget to `Omit<ArrayElementsProps, '$type'>` rather than rewriting
+ * `$type` at runtime, where it would mask a leftover `$type` check.
+ */
+export const customArrayType = 'repeater';
+
 export interface ConformanceMountOptions {
 	config: FormConfigView;
 	defaultValues?: Record<string, unknown>;
@@ -75,6 +86,85 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await userEvent.fill(queryAllByRole(host, 'textbox', { name: 'Kind' })[0], 'business');
 			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Email' }).length).toBe(1);
 			expect(getByRole(host, 'textbox', { name: 'Email' }).getAttribute('name')).toBe('contacts.0.email');
+		});
+		test('both renderers add the same row', async () => {
+			const onSubmit = vi.fn();
+			const host = await setup({
+				config: form([
+					{
+						$type: 'arrayElements',
+						id: 'members',
+						name: 'members',
+						initialValues: { role: 'user' },
+						elements: [{ ...input('fullName', 'Name'), defaultValue: 'x' }, input('role', 'Role')],
+					},
+				]),
+				onSubmit,
+			});
+			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Name' }).length).toBe(1);
+			await userEvent.click(getByRole(host, 'button', { name: 'Add item' }));
+			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Name' }).length).toBe(2);
+			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
+			const row = { fullName: 'x', role: 'user' };
+			expect(onSubmit).toHaveBeenCalledWith({ members: [row, row] });
+		});
+		test('a single-child array keeps object rows from form defaultValues', async () => {
+			const onSubmit = vi.fn();
+			const host = await setup({
+				config: form([
+					{ $type: 'arrayElements', id: 'members', name: 'members', elements: [input('role', 'Role')] },
+				]),
+				defaultValues: { members: [{ role: 'admin' }] },
+				onSubmit,
+			});
+			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Role' }).length).toBe(1);
+			expect(getByRole(host, 'textbox', { name: 'Role' }).getAttribute('name')).toBe('members.0.role');
+			await userEvent.click(getByRole(host, 'button', { name: 'Add item' }));
+			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Role' }).length).toBe(2);
+			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
+			expect(onSubmit).toHaveBeenCalledWith({ members: [{ role: 'admin' }, { role: '' }] });
+		});
+		test('both renderers add the same scalar row', async () => {
+			const onSubmit = vi.fn();
+			const host = await setup({
+				config: form([
+					{
+						$type: 'arrayElements',
+						id: 'tags',
+						name: 'tags',
+						elements: [{ ...input('tag', 'Tag'), defaultValue: 'x' }],
+					},
+				]),
+				onSubmit,
+			});
+			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Tag' }).length).toBe(1);
+			await userEvent.click(getByRole(host, 'button', { name: 'Add item' }));
+			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Tag' }).length).toBe(2);
+			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
+			expect(onSubmit).toHaveBeenCalledWith({ tags: ['x', 'x'] });
+		});
+		test(`seeds a custom array registration (${customArrayType}) to minItems`, async () => {
+			const onSubmit = vi.fn();
+			const host = await setup({
+				config: form([
+					{
+						$type: customArrayType,
+						id: 'tags',
+						name: 'tags',
+						minItems: 2,
+						elements: [input('label', 'Label'), input('color', 'Color')],
+					},
+				]),
+				onSubmit,
+			});
+			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Label' }).length).toBe(2);
+			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
+			const row = { label: '', color: '' };
+			expect(onSubmit).toHaveBeenCalledWith({ tags: [row, row] });
 		});
 		const address = {
 			$type: 'fieldSet',
