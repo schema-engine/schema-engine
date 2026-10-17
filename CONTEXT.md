@@ -43,7 +43,7 @@ inside `rui-form`; there is no global active form store. They read
 `formContext.store` instead of a private host field. Decorators are
 optional lifecycle wiring around that controller.
 Radiant UI registration uses flat dotted field names. Controller reads, action
-context values, constraints, and submission use the engine's nested value tree.
+context values and errors, constraints, and submission use the engine's nested value tree.
 
 ## React form state
 

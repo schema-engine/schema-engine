@@ -88,4 +88,4 @@ return {
 
 ## Form Integration
 
-Form action handlers receive a context with `formData`, `errors`, form state, and controller methods in addition to the action `config` and `trigger`.
+Form action handlers receive a context with `formData`, `errors`, form state, and controller methods in addition to the action `config` and `trigger`. `errors` is nested like `formData` in both renderers, so a handler reads `context.errors.address.street`.

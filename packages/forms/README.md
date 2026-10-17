@@ -66,10 +66,13 @@ snapshot. Pass `onAction(action, data)` to run a callback after each successful 
 action. If it rejects, that action becomes a fatal failure and later submit actions stop.
 The returned `succeeded` flag is false when a submit action fails with
 `shouldContinue: false` or `onAction` rejects; a failed action that allows continuation
-does not fail the submission.
+does not fail the submission. Each returned result carries the `actionId` of the
+configured action that produced it.
 `buildFormActionContext` is an exported utility that constructs a form action
 context with form data and timing metadata, including a stable step start time that resets
-when the active step changes. The engine entry point also re-exports `ActionDispatcher` so
+when the active step changes. Its form state takes `errors` and `touched` nested like the
+values, so a handler reads `context.errors.address.street` in every renderer, and
+`userInteractions` counts touched fields plus `submitCount`. The engine entry point also re-exports `ActionDispatcher` so
 both renderers can use the same action dispatcher class.
 
 An `arrayElements` row with one leaf child uses a scalar path when its seed is not object-shaped. A child container such as `fieldSet` stays under its own row object path. Object-shaped array `initialValues`, a child field's object-shaped `defaultValue`, or the first row object from form `defaultValues` (falling back to the array's `defaultValue`) also selects the object path.
@@ -170,15 +173,16 @@ engine's normalized form model.
   constraint holds for the rendered field path. A sibling reference such as
   `accountType` on `contacts.0.taxId` resolves to `contacts.0.accountType`, so
   each array row uses its own value.
-- `validateFieldValue({ element, value, values, fieldPath, registry, debounceScope? })` returns
+- `validateFieldValue({ element, value, values, fieldPath, registry, debounceScope })` returns
   the first validation message, or `undefined` when the value passes.
-- `validateFormValues({ elements, values, registry, names?, debounceScope? })` validates the
+- `validateFormValues({ elements, values, registry, names?, debounceScope })` validates the
   selected paths and returns nested errors, such as
   `errors.address.street.message`.
 
-Pass a caller-owned `DebounceScope` to either helper to reuse async debounce
+Both helpers require a caller-owned `DebounceScope`, which carries async debounce
 state across validation calls for a form. Each rendered field path is keyed
-separately, and each form should own its scope.
+separately, and each form should own its scope. A scope created per call would
+delay debounced rules without coalescing them.
 
 Required rules, `relate`, constraint emptiness operators, and async skip checks
 share the same empty values: `undefined`, `null`, `''`, and `[]`. `false` and

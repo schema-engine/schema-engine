@@ -22,7 +22,11 @@ React and Radiant delegate to these helpers. `runSubmissionLifecycle` accepts ei
 fixed context or a factory; use a factory when each submission trigger needs current form
 values and validation state. Its optional `onAction(action, data)` callback runs after each
 successful `form_submit` action. If the callback rejects, that action becomes a fatal failure
-and later submit actions stop before error and completion triggers run.
+and later submit actions stop before error and completion triggers run. Submit actions are
+dispatched one at a time, so each returned result carries its `actionId`.
+`buildFormActionContext` takes nested `errors` and `touched` trees; a renderer that keys
+them by flat field name expands them first. `validateFieldValue` and `validateFormValues`
+require a `debounceScope` owned by the form.
 
 The public usage examples are in the [forms package README](../../README.md#engine-validation).
 

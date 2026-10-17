@@ -19,7 +19,7 @@ describe('buildFormActionContext', () => {
 		const input = {
 			config: { id: 'contact', steps: [{}, {}] },
 			values: { email: 'person@example.com' },
-			formState: { isValid: true, errors: {}, touchedFields: { email: true }, submitCount: 2 },
+			formState: { isValid: true, errors: {}, touched: { email: true }, submitCount: 2 },
 			currentStep: 0,
 			mountedAt: 900,
 			form,
@@ -36,19 +36,21 @@ describe('buildFormActionContext', () => {
 		expect(nextStep.metadata).toEqual({ stepStartTime: 1_050, totalFormTime: 150, userInteractions: 3 });
 	});
 
-	test('reads touched interactions from the Radiant form state shape', () => {
-		vi.useFakeTimers();
-		vi.setSystemTime(2_000);
-
+	test('counts each touched nested field and array row field as one interaction', () => {
 		const context = buildFormActionContext({
 			config: { id: 'contact', steps: [{}] },
 			values: {},
-			formState: { isValid: false, errors: {}, touched: { email: true }, isSubmitted: true },
+			formState: {
+				isValid: false,
+				errors: {},
+				touched: { address: { street: true, city: true, zip: false }, contacts: [{ email: true }, undefined] },
+				submitCount: 1,
+			},
 			currentStep: 0,
 			mountedAt: 1_800,
 			form,
 		});
 
-		expect(context.metadata.userInteractions).toBe(2);
+		expect(context.metadata.userInteractions).toBe(4);
 	});
 });

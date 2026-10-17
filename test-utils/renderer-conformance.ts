@@ -26,6 +26,7 @@ export type ConformanceMount = (
 	options: ConformanceMountOptions,
 ) => Promise<{ host: HTMLElement; cleanup: () => void }>;
 
+const lastActionContext = () => conformanceAction.execute.mock.calls.at(-1)?.[0];
 const input = (name: string, label: string) => ({ $type: 'input', id: name, name, label });
 const form = (elements: FormConfigView['steps'][number]['elements']): FormConfigView => ({
 	id: 'conformance',
@@ -107,6 +108,21 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
 			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
 			expect(onSubmit).toHaveBeenCalledWith({ address: { street: 'Main Street' } });
+		});
+		test('handlers receive one errors shape', async () => {
+			const host = await setup({
+				config: {
+					...form([address, input('note', 'Note')]),
+					actions: [{ $type: 'conformance', id: 'changed', triggers: ['form_change'] }],
+				},
+			});
+			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+			await expect.poll(() => queryByText(host, 'Street is required') !== null).toBe(true);
+			await userEvent.fill(getByRole(host, 'textbox', { name: 'Note' }), 'Ring twice');
+			await expect.poll(() => lastActionContext()?.formData.note).toBe('Ring twice');
+			expect(lastActionContext()?.errors).toEqual({
+				address: { street: expect.objectContaining({ message: 'Street is required' }) },
+			});
 		});
 		test('a require constraint blocks submission until its condition is removed', async () => {
 			const onSubmit = vi.fn();

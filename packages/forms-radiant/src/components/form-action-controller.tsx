@@ -11,6 +11,7 @@ import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/f
 import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
 import { whenEngineAvailable } from '@/contexts/resolve-form-engine';
 import { FormController } from '@/adapters/radiant/controller';
+import { expandValues } from '@/adapters/radiant/controller/values';
 import type { FormInstanceElement } from './form-instance.script';
 import { findAncestorElement } from '@/lib/rui-form-utils';
 
@@ -52,6 +53,7 @@ export class FormActionControllerElement extends RadiantElement {
 		}
 	}
 
+	/** @remarks `connect` drops the controller's watch subscriptions, so the change watcher subscribes again. */
 	protected override onConnected(): void {
 		const form = findAncestorElement(this, 'rui-form');
 		if (form) {
@@ -70,6 +72,7 @@ export class FormActionControllerElement extends RadiantElement {
 				this.onFormReady();
 			});
 		}
+		this.watchingChanges = false;
 		this.form.connect(() => this.onFormReady());
 		this.setupDispatcher();
 		this.onFormReady();
@@ -186,12 +189,24 @@ export class FormActionControllerElement extends RadiantElement {
 		return this.dispatcher.dispatch({ actions: config.actions, trigger, context: this.buildContext() });
 	}
 
+	/**
+	 * @remarks
+	 * Radiant UI keys errors and touched state by flat field name; both are expanded
+	 * into the engine's nested tree. The store records only whether the form was
+	 * submitted, so `submitCount` is at most one.
+	 */
 	private buildContext(): BuilderActionBaseContext {
 		const form = this.form;
+		const { isValid, errors, touched, isSubmitted } = form.formState;
 		return buildFormActionContext({
 			config: this.config,
 			values: form.getValues(),
-			formState: form.formState,
+			formState: {
+				isValid,
+				errors: expandValues(errors),
+				touched: expandValues(touched),
+				submitCount: Number(isSubmitted),
+			},
 			currentStep: this.formInstance?.currentStep ?? 0,
 			mountedAt: this.mountedAt,
 			form: this.actionForm,
