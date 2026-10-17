@@ -9,9 +9,10 @@ export interface FormInstanceContextValue {
 	/** True when a wizard recipe owns navigation and steps toggle visibility. */
 	isWizard: boolean;
 	stepStates: StepStates;
-	goToStep: (index: number) => void;
-	goToNextStep: () => void;
-	goToPreviousStep: () => void;
+	goToStep: (index: number) => Promise<void>;
+	/** On the last step, validates it and records the result without moving. */
+	goToNextStep: () => Promise<void>;
+	goToPreviousStep: () => Promise<void>;
 	markStepCompleted: (index: number) => void;
 	markStepVisited: (index: number) => void;
 	isSubmitting: boolean;

@@ -14,10 +14,8 @@ import * as z from 'zod/mini';
  * @form_change - When any form field changes
  * @form_submit - When form submission is initiated
  * @step_change - When navigating between steps in multi-step forms
- * @step_submit - When submitting a specific step
  * @step_enter - When entering a specific step
  * @step_leave - When leaving a specific step
- * @step_view - When a step becomes visible (for analytics)
  * @form_submit_start - When submit process begins (after validation, before network request)
  * @form_submit_success - When submit completes successfully (internal lifecycle)
  * @form_submit_error - When submit fails (internal lifecycle)
@@ -32,10 +30,8 @@ export const FormActionTriggerSchema = z.enum([
 	'form_submit_error',
 	'form_submit_complete',
 	'step_change',
-	'step_submit',
 	'step_enter',
 	'step_leave',
-	'step_view',
 ]);
 
 export type FormActionTrigger = z.infer<typeof FormActionTriggerSchema>;

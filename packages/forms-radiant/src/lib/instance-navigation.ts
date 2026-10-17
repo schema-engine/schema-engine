@@ -43,8 +43,7 @@ export function createInstanceNavigation(host: FormInstanceElement, readForm: ()
 		},
 		goToStep: (index: number): Promise<void> => navigate({ type: 'go-to', index }),
 		goToNextStep: async (): Promise<void> => {
-			if (!readForm()?.store || host.currentStep >= host.config.steps.length - 1) return;
-			await navigate({ type: 'next' });
+			if (readForm()?.store) await navigate({ type: 'next' });
 		},
 		goToPreviousStep: (): Promise<void> => navigate({ type: 'previous' }),
 	};

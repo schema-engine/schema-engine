@@ -84,10 +84,8 @@ function loggerPlugin(
 				'form_submit_error',
 				'form_submit_complete',
 				'step_change',
-				'step_submit',
 				'step_enter',
 				'step_leave',
-				'step_view',
 			],
 		},
 		execute: async (context: BuilderActionRuntimeContext<LoggerAction>): Promise<ActionExecutionResult> => {

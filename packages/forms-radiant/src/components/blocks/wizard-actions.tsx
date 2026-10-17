@@ -17,12 +17,12 @@ export class WizardActionsElement extends RadiantElement {
 
 	@onEvent({ type: 'click', selector: '[data-se-view-previous]' })
 	onPrevious(): void {
-		this.instance?.goToPreviousStep();
+		void this.instance?.goToPreviousStep();
 	}
 
 	@onEvent({ type: 'click', selector: '[data-se-view-next]' })
 	onNext(): void {
-		this.instance?.goToNextStep();
+		void this.instance?.goToNextStep();
 	}
 
 	override render(): JsxRenderable {

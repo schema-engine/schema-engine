@@ -173,6 +173,13 @@ export class FormInstanceElement extends RadiantElement {
 		this.unwatchValidationDependencies = undefined;
 	}
 
+	/**
+	 * @remarks
+	 * A navigation still in flight applies its result after this reset, because
+	 * `createStepNavigator` (`@schema-engine/forms`, `engine/step-machine.ts`)
+	 * builds the next state from the one it read before validating. A guard here could drop that state but not the step triggers
+	 * the navigator dispatches after it, so the check belongs in the navigator.
+	 */
 	private resetStepState(): void {
 		this.machine = { currentStepIndex: 0, ...createInitialStepStates(this.config?.steps.length ?? 1) };
 	}

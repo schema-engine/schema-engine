@@ -41,3 +41,24 @@ test('Next validates the current step, blocks invalid navigation, and updates wi
 	await expect.poll(() => steps.map((step) => step.hidden)).toEqual([false, true]);
 	expect(instance.currentStep).toBe(0);
 });
+
+test('Next on the last step validates it and marks it valid', async () => {
+	const instance = new FormInstanceElement();
+	instance.config = {
+		id: 'wizard',
+		steps: [{ id: 'only', title: 'Only', elements: [{ $type: 'input', id: 'email', name: 'email' }] }],
+	};
+	const host = document.createElement('rui-form');
+	const store = new FormStore();
+	const validate = vi.spyOn(store, 'validateField').mockResolvedValue(true);
+	provideTestFormStore(host, store);
+	instance.append(host);
+	document.body.append(instance);
+	await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+	await instance.goToNextStep();
+
+	expect(validate).toHaveBeenCalledWith('email');
+	expect(instance.currentStep).toBe(0);
+	expect(instance.stepStates.valid).toEqual([true]);
+});
