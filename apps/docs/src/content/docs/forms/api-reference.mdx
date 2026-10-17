@@ -29,8 +29,9 @@ function createFormEngine<
 ```
 
 `FormEngineFromOptions` is the `FormEngine` typed from the merged registration
-lists. `grid` applies only to `createFormEngine`; engines built with
-`engine.extend()` inherit the source engine's grid theme.
+lists. `grid` is accepted by `createFormEngine` and by
+`createRadiantFormEngine`, which forwards it. `engine.extend()` takes no `grid`
+option; extended engines inherit the source engine's grid theme.
 
 Each array is structurally constrained: `$type`, a Standard Schema
 (`~standard.validate`), and the registration's render/execute function.

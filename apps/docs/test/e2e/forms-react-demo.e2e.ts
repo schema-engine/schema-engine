@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { expect as pwExpect } from '@playwright/test';
 import { chromium, type Browser, type Page } from 'playwright';
 
@@ -27,10 +27,16 @@ async function waitForReactFormHydration(page: Page): Promise<void> {
 describe('Forms React docs live demo', () => {
 	let browser: Browser;
 	let page: Page;
+	const pageErrors: string[] = [];
 
 	beforeAll(async () => {
 		browser = await chromium.launch();
 		page = await browser.newPage();
+		page.on('pageerror', (error) => pageErrors.push(error.message));
+	});
+
+	afterEach(() => {
+		expect(pageErrors.splice(0)).toEqual([]);
 	});
 
 	afterAll(async () => {
