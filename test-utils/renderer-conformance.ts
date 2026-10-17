@@ -438,7 +438,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 		});
 		test('a fieldset require constraint makes its children required, nested containers included', async () => {
 			const onSubmit = vi.fn();
-			const host = await setup({
+			const { host } = await setup({
 				config: form([
 					input('kind', 'Kind'),
 					{
@@ -481,7 +481,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 		});
 		test('an authored disabled array disables its rows and its add and remove controls', async () => {
 			const onChange = vi.fn();
-			const host = await setup({
+			const { host } = await setup({
 				config: form([
 					input('note', 'Note'),
 					{
@@ -511,7 +511,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 			expect(disabledControls()).toEqual([true, true, true, true, true]);
 		});
 		test('a row error follows its row when an earlier empty scalar row is removed', async () => {
-			const host = await setup({
+			const { host } = await setup({
 				config: {
 					...form([
 						{
@@ -539,7 +539,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 			expect(queryAllByText(host, 'Tag is required')).toHaveLength(1);
 		});
 		test('an array require constraint makes its rows required', async () => {
-			const host = await setup({
+			const { host } = await setup({
 				config: form([
 					input('kind', 'Kind'),
 					{
@@ -559,7 +559,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 				.toBe('true');
 		});
 		test('reValidateMode onBlur re-validates a field on blur, not on change', async () => {
-			const host = await setup({
+			const { host } = await setup({
 				config: {
 					...form([
 						{ ...input('fullName', 'Name'), rules: [{ type: 'required', message: 'Name is required' }] },
@@ -576,7 +576,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await expect.poll(() => queryByText(host, 'Name is required')).toBeNull();
 		});
 		test('validationMode onChange validates a field before the first submit', async () => {
-			const host = await setup({
+			const { host } = await setup({
 				config: {
 					...form([
 						{ ...input('fullName', 'Name'), rules: [{ type: 'required', message: 'Name is required' }] },
@@ -589,7 +589,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await expect.poll(() => queryByText(host, 'Name is required') !== null).toBe(true);
 		});
 		test('submitCount counts submit attempts that failed validation', async () => {
-			const host = await setup({
+			const { host } = await setup({
 				config: {
 					...form([
 						{ ...input('fullName', 'Name'), rules: [{ type: 'required', message: 'Name is required' }] },
