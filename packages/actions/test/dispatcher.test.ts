@@ -166,7 +166,7 @@ test('unregistered action with another trigger produces no result', async () => 
 	).toEqual([]);
 });
 
-test('looks up each matching registration once and skips explicit mismatches', async () => {
+test('runs actions that match by default or explicit triggers and skips explicit mismatches', async () => {
 	const dispatcher = new ActionDispatcher({
 		getAction: () => ({
 			$type: 'audit',

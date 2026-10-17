@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { userEvent } from 'vitest/browser';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as z from 'zod/mini';
-import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@schema-engine/forms';
+import type { BuilderActionRegistration } from '@schema-engine/forms';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { WizardRecipe } from '@/components/schema-engine/forms/recipes/registrations/wizard';
 import { createFormEngine } from '@schema-engine/forms';
@@ -23,7 +23,7 @@ const recordChange: BuilderActionRegistration<'record-change', typeof actionSche
 		name: 'Record change',
 		defaultTriggers: ['form_change'],
 	},
-	execute: async (_context: BuilderActionExecutionContext<z.output<typeof actionSchema>>) => ({ success: true }),
+	execute: async () => ({ success: true }),
 };
 
 const engine = createFormEngine({

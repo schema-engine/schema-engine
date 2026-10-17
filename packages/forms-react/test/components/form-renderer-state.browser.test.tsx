@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { userEvent } from 'vitest/browser';
 import { describe, expect, test, vi } from 'vitest';
 import * as z from 'zod/mini';
-import type { BuilderActionExecutionContext, BuilderActionRegistration } from '@schema-engine/forms';
+import type { BuilderActionRegistration } from '@schema-engine/forms';
 import { ArrayElementRegistration } from '@/components/schema-engine/forms/inputs/form-array-elements.registration';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { WizardRecipe } from '@/components/schema-engine/forms/recipes/registrations/wizard';
@@ -24,7 +24,7 @@ function createEngine(onAction?: () => void) {
 			name: 'Record change',
 			defaultTriggers: ['form_change'],
 		},
-		execute: async (_context: BuilderActionExecutionContext<z.output<typeof actionSchema>>) => {
+		execute: async () => {
 			onAction?.();
 			return { success: true };
 		},
