@@ -8,7 +8,7 @@ export const conformanceAction = {
 	$type: 'conformance',
 	schema: v.object({ $type: v.literal('conformance'), id: v.string(), triggers: v.optional(v.array(v.string())) }),
 	metadata: { name: 'Conformance' },
-	execute: vi.fn(async (context: BuilderActionRuntimeContext) =>
+	execute: vi.fn(async (context: BuilderActionRuntimeContext<{ id: string }>) =>
 		context.config.id === 'abort'
 			? { success: false, shouldContinue: false, error: 'Submission stopped' }
 			: { success: true },
@@ -196,12 +196,17 @@ export function rendererConformance(mount: ConformanceMount): void {
 			$type: 'fieldSet',
 			id: 'address',
 			name: 'address',
-			elements: [{ ...input('street', 'Street'), rules: [{ type: 'required', message: 'Street is required' }] }],
+			elements: [
+				{ ...input('street', 'Street'), rules: [{ type: 'required' as const, message: 'Street is required' }] },
+			],
 		};
 		test('wizard Next validates a required child inside a fieldset', async () => {
-			const config = form([address]);
-			config.view = { $type: 'wizard', actions: { showStepCounter: true } };
-			config.steps.push({ id: 'second', title: 'Second', elements: [input('last', 'Last')] });
+			const base = form([address]);
+			const config: FormConfigView = {
+				...base,
+				view: { $type: 'wizard', actions: { showStepCounter: true } },
+				steps: [...base.steps, { id: 'second', title: 'Second', elements: [input('last', 'Last')] }],
+			};
 			const host = await setup({ config });
 			await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
 			await expect.poll(() => queryByText(host, 'Street is required') !== null).toBe(true);

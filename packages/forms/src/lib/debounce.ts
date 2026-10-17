@@ -57,18 +57,3 @@ export function createDebounceScope(): DebounceScope {
 		},
 	};
 }
-
-/** Creates a debounced callback whose timer is private to that callback. */
-export function createDebounced<TArgs extends unknown[]>(fn: (...args: TArgs) => unknown, delay: number) {
-	let timeout: ReturnType<typeof setTimeout> | undefined;
-
-	return (...args: TArgs): void => {
-		if (timeout) {
-			clearTimeout(timeout);
-		}
-
-		timeout = setTimeout(() => {
-			fn(...args);
-		}, delay);
-	};
-}

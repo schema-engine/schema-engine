@@ -4,8 +4,6 @@ import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
-const docsE2ePort = 4173;
-const docsE2eBaseUrl = `http://localhost:${docsE2ePort}`;
 
 export default defineConfig({
 	root: dirname,
@@ -50,9 +48,6 @@ export default defineConfig({
 					globalSetup: ['./test/e2e/global-setup.ts'],
 					hookTimeout: 180_000,
 					testTimeout: 60_000,
-					env: {
-						DOCS_E2E_BASE_URL: docsE2eBaseUrl,
-					},
 				},
 			},
 		],

@@ -31,7 +31,6 @@ describe('FormProvider', () => {
 	const config: FormConfig = {
 		id: 'test-form',
 		title: 'Test Form',
-		mode: 'wizard',
 		steps: [{ id: 'step-1', title: 'Step 1', elements: [{ name: 'field1', $type: 'input', inputType: 'text' }] }],
 		actions: [
 			{

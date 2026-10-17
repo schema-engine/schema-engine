@@ -1,8 +1,9 @@
-import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, inject, test } from 'vitest';
 import { expect as pwExpect } from '@playwright/test';
 import { chromium, type Browser, type Page } from 'playwright';
+import { basicContactFormConfig } from '../../src/lib/form-configs/basic-contact';
 
-const baseUrl = process.env.DOCS_E2E_BASE_URL ?? 'http://127.0.0.1:4173';
+const baseUrl = inject('docsBaseUrl');
 const gettingStartedPath = '/docs/forms-react/getting-started';
 
 /** Waits until the React island hydrator binds RHF to the live demo form. */
@@ -59,20 +60,24 @@ describe('Forms React docs live demo', () => {
 		await pwExpect(emailError).toContainText(/email/i);
 	});
 
-	test('keeps controlled field state after typing', async () => {
+	test('keeps a typed value in form state across a validation render', async () => {
 		await page.goto(`${baseUrl}${gettingStartedPath}`, { waitUntil: 'networkidle' });
 		await waitForReactFormHydration(page);
 
 		const name = page.locator('.docs-react-form-demo input[name="name"]');
+		const email = page.locator('.docs-react-form-demo input[name="email"]');
 		await name.fill('Docs e2e');
+		await page.locator('.docs-react-form-demo button[type="submit"]').click();
+
+		await pwExpect(email).toHaveAttribute('aria-invalid', 'true', { timeout: 10_000 });
+		await pwExpect(name).not.toHaveAttribute('aria-invalid', 'true');
 		await pwExpect(name).toHaveValue('Docs e2e');
 	});
 
-	test('ships serialized demo config for client hydration', async () => {
-		const response = await page.goto(`${baseUrl}${gettingStartedPath}`, { waitUntil: 'domcontentloaded' });
-		const html = await response?.text();
-		expect(html).toBeTruthy();
-		expect(html).toContain('data-se-react-form-demo-root="true"');
-		expect(html).toContain('data-se-form-config');
+	test('ships the demo config serialized for client hydration', async () => {
+		await page.goto(`${baseUrl}${gettingStartedPath}`, { waitUntil: 'domcontentloaded' });
+		const root = page.locator('.docs-react-form-demo[data-se-react-form-demo-root="true"]');
+		const serialized = await root.getAttribute('data-se-form-config');
+		expect(JSON.parse(serialized ?? 'null')).toEqual(basicContactFormConfig);
 	});
 });

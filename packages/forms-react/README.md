@@ -95,7 +95,7 @@ longer augment a global `FormEngine` namespace.
 - Move runtime and view hook imports to `/hooks`, and adapter hooks to `/adapters`.
 - Import `FormElement` and `FormElements` from `/primitives`.
 - Replace `useFormInstance` with `useFormContext` from `/adapters`.
-- Replace `useGDPRConsent` and `useGTMTracker` with `GDPRConsent` and `GTMTracker` from `@schema-engine/forms/browser`. These are static browser helpers; React state subscriptions belong to the application.
+- Replace `useGDPRConsent` and `useGTMTracker` with `GDPRConsent` and `GTMTracker` from `@schema-engine/forms/browser`. `GDPRConsent` is a shared `GDPRConsentTool` backed by `localStorage` (`createGDPRConsent` builds one over other storage) and `GTMTracker` exposes static methods. Neither is a hook, so React state subscriptions belong to the application.
 
 See [Getting started](../../apps/docs/src/content/docs/forms-react/getting-started.mdx), [Hooks](../../apps/docs/src/content/docs/forms-react/hooks.mdx), and [Advanced usage](../../apps/docs/src/content/docs/forms-react/advanced.mdx).
 
