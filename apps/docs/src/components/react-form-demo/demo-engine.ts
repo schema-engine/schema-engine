@@ -11,8 +11,8 @@ import { createDocsDemoActions } from '@/lib/docs-demo-actions';
  * Self-contained inside the docs app source: the dev client transform refuses
  * entrypoints outside `src/`, so the demo graph must not reach into the
  * `registry/shared/` shadcn sources that the package aliases expose. The
- * adapter imports through the package root so dev vendoring keeps one module
- * instance for the form contexts.
+ * adapter imports from `@schema-engine/forms-react/adapters/react-hook-form`,
+ * the subpath that keeps `react-hook-form` an optional peer.
  */
 export const docsReactFormEngine = createFormEngine({
 	elements: demoFormRegistrations,

@@ -53,6 +53,11 @@ export function combineHandlers<T>(controllerHandler: (value: T) => void, propsH
 /**
  * Field chrome and value binding for consumer-owned registry components.
  * Goes through the active FormAdapter — not a specific form library.
+ *
+ * @remarks
+ * The field value is `any` because one hook serves every registry input: each
+ * component binds `value` to its own control type (string, number, array), and
+ * `unknown` would force a cast in every consumer.
  */
 export function useControlledFormElement(config: ElementConfig) {
 	if (!config.name) {

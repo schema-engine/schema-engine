@@ -56,7 +56,7 @@ export function FormElement({ config, name, id, instanceId, className, style }: 
 		);
 	}
 
-	const Component = elementRegistration.render as React.ComponentType<any>;
+	const Component = elementRegistration.render as React.ComponentType<Record<string, unknown>>;
 
 	const enhancedConfig = applyFieldOverlay(
 		{

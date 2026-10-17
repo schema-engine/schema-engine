@@ -5,7 +5,7 @@ import type { ActionRuntimeContext } from '@schema-engine/actions';
  * Base action context for the builder pattern.
  *
  * Contains the caller-provided form state, validation state, and metadata.
- * The action executor enriches this base context with `config` and `trigger`
+ * The action dispatcher enriches this base context with `config` and `trigger`
  * before invoking action handlers.
  */
 export interface BuilderActionBaseContext {

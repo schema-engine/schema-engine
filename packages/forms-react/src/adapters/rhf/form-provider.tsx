@@ -5,7 +5,7 @@ import type { FormProviderProps } from '../types';
 import { ActionDispatcher } from '@schema-engine/forms/actions';
 import { collectFieldDefaults, flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import { useFormEngine } from '@/hooks/use-form-context';
-import type { FormConfigView } from '@schema-engine/forms';
+import type { FormActionConfig, FormConfigView } from '@schema-engine/forms';
 import { useFormValidationResolver } from './hooks/use-form-validation-resolver';
 import { FormInstanceContext, type FormInstanceContextValue } from '@/components/provider';
 import { FormStepStateContext } from '@/components/form-step-state-context';
@@ -90,6 +90,13 @@ export function FormProvider<
 		[onChange],
 	);
 	const handleFormSubmit = useCallback((data: FieldValues) => onSubmit?.(data as unknown as TFormData), [onSubmit]);
+	const handleFormAction = useMemo(
+		() =>
+			onAction &&
+			((action: NonNullable<FormConfigView['actions']>[number], data: FieldValues) =>
+				onAction(action as FormActionConfig<TOutputs['actions']>, data as TFormData)),
+		[onAction],
+	);
 
 	useFormWatcher({
 		control: form.control,
@@ -106,9 +113,7 @@ export function FormProvider<
 		buildActionContext: actionDispatchers.buildActionContext,
 		dispatchTrigger: actionDispatchers.dispatchTrigger,
 		onSubmit: handleFormSubmit,
-		onAction: onAction as unknown as
-			| ((action: import('@schema-engine/forms').FormActionConfig, data: FieldValues) => void | Promise<void>)
-			| undefined,
+		onAction: handleFormAction,
 	});
 
 	const { stepStates } = multiStep;

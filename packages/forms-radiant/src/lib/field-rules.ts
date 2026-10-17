@@ -27,6 +27,10 @@ export interface FieldRulesSource {
 	name?: string;
 }
 
+function resolveValidationRegistry(registry?: ValidationRegistry): ValidationRegistry | undefined {
+	return registry ?? peekOwningFormEngine()?.getValidationRegistry();
+}
+
 /**
  * Builds a Radiant UI validator that rebuilds its schema on every call.
  *
@@ -36,10 +40,6 @@ export interface FieldRulesSource {
  * invocation whose context produced it. Radiant UI hands `validate` the form's
  * flat values, which are expanded into the engine's nested tree first.
  */
-function resolveValidationRegistry(registry?: ValidationRegistry): ValidationRegistry | undefined {
-	return registry ?? peekOwningFormEngine()?.getValidationRegistry();
-}
-
 function toValidator(
 	rules: ReadonlyArray<ValidationRule>,
 	fieldPath: string | undefined,

@@ -77,7 +77,7 @@ export interface ActionExecutionResult<TData = unknown> {
 	data?: TData;
 	/**
 	 * Whether to continue after this action fails.
-
+	 *
 	 * @remarks
 	 * The dispatcher stops after a failed action only when this is `false`. Form submissions also
 	 * fail only for unsuccessful actions with `shouldContinue: false`; omitted or `true` continues.

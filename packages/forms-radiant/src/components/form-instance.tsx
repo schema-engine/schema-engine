@@ -41,7 +41,6 @@ export function FormInstance({
 		defaultValues,
 		'prop:onSubmit': onSubmit,
 		'prop:onChange': onChange,
-		onChange,
 		isSubmitting,
 		children: (
 			<ConfiguredRuiForm

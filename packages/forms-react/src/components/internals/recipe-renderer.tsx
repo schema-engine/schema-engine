@@ -6,7 +6,9 @@ import { useFormInstanceActions } from '@/hooks/use-form-context';
 import { ViewProvider } from '@/contexts/view-context';
 import type { ReactRecipeAdapterPayload } from '@/primitives';
 
-function getRecipeAdapter(registration: RecipeRegistration<any, any, ReactRecipeAdapterPayload>): {
+type ReactRecipeRegistration = RecipeRegistration<string, RecipeRegistration['schema'], ReactRecipeAdapterPayload>;
+
+function getRecipeAdapter(registration: ReactRecipeRegistration): {
 	adapter: ReactRecipeAdapterPayload;
 	kind: RecipeKind;
 } {
@@ -25,7 +27,7 @@ function renderSlotBlock(Component: React.FC | undefined): React.ReactNode {
 
 interface RecipeRendererProps {
 	config: FormConfigView;
-	recipe: RecipeRegistration<any, any> | undefined;
+	recipe: RecipeRegistration | undefined;
 	children?: React.ReactNode;
 	renderFields: () => React.ReactNode;
 }
@@ -42,7 +44,7 @@ export function RecipeRenderer({ config, recipe, children, renderFields }: Recip
 		);
 	}
 
-	const { adapter, kind } = getRecipeAdapter(recipe as RecipeRegistration<any, any, ReactRecipeAdapterPayload>);
+	const { adapter, kind } = getRecipeAdapter(recipe as ReactRecipeRegistration);
 	const viewConfig = applySlotDefaults(
 		(config.view ?? { $type: recipe.$type }) as Record<string, unknown>,
 		recipe.slotDefaults,

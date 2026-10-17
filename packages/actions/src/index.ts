@@ -25,7 +25,7 @@
  * const dispatcher = new ActionDispatcher(registry);
  * await dispatcher.dispatch({
  *   actions: [{ id: '1', $type: 'log', message: 'hello' }],
- *   trigger: 'submit',
+ *   trigger: 'change',
  *   context: { formId: 'demo' },
  * });
  * ```
