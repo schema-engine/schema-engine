@@ -3,8 +3,7 @@ import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import type { FieldSetProps } from './form-fieldset.types';
 import { objectFieldScope } from '@schema-engine/forms';
-import { isRenderedRequired } from '@/lib/field-rules';
-import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { withContainerState } from '@/lib/field-rules';
 import './form-fieldset.css';
 
 /**
@@ -15,21 +14,12 @@ import './form-fieldset.css';
  * live rule. Both are what live constraint sync composes for the children
  * afterwards. A fieldset whose only required source is its own required rule
  * passes nothing down, because sync governs no field without a constraint
- * wrapper around it. Arrays do not pass either state to their rows.
+ * wrapper around it. Arrays pass both to their rows the same way.
  */
 export function FormFieldSet(config: FieldSetProps) {
 	const scope = objectFieldScope(config.name, config);
 	const fieldHost = mergeFieldGridHost(config.grid, config.style);
-	const required =
-		isRenderedRequired(config) && (Boolean(config.constraints?.length) || !isFieldRequired(config.rules));
-	const elements =
-		config.disabled || required
-			? config.elements.map((element) => ({
-					...element,
-					...(config.disabled ? { disabled: true } : {}),
-					...(required ? { required: true } : {}),
-				}))
-			: config.elements;
+	const elements = withContainerState(config, config.elements);
 
 	return (
 		<fieldset class="se-form-field se-fieldset" data-se-grid-theme={fieldHost.themeId} style={fieldHost.style}>

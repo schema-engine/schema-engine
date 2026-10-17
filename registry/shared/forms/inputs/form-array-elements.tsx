@@ -15,11 +15,21 @@ interface ArrayItemProps {
 	config: ArrayElementsProps;
 	scalar: boolean;
 	canRemove: boolean;
+	disabled: boolean;
 	removeButtonText?: string;
 	onRemove: (index: number) => void;
 }
 
-function ArrayItem({ index, instanceId, config, scalar, canRemove, removeButtonText, onRemove }: ArrayItemProps) {
+function ArrayItem({
+	index,
+	instanceId,
+	config,
+	scalar,
+	canRemove,
+	disabled,
+	removeButtonText,
+	onRemove,
+}: ArrayItemProps) {
 	const scope = arrayItemScope(config.name, index, instanceId, {
 		scalar,
 		parentInstanceId: config.instanceId,
@@ -42,6 +52,7 @@ function ArrayItem({ index, instanceId, config, scalar, canRemove, removeButtonT
 						type="button"
 						variant="outline"
 						size="icon-sm"
+						disabled={disabled}
 						onClick={() => onRemove(index)}
 						aria-label={removeButtonText || 'Remove item'}
 					>
@@ -58,6 +69,7 @@ interface ArrayItemsListProps {
 	config: ArrayElementsProps;
 	scalar: boolean;
 	canRemove: boolean;
+	disabled: boolean;
 	removeButtonText?: string;
 	emptyStateMessage: string;
 	onRemove: (index: number) => void;
@@ -68,6 +80,7 @@ function ArrayItemsList({
 	config,
 	scalar,
 	canRemove,
+	disabled,
 	removeButtonText,
 	emptyStateMessage,
 	onRemove,
@@ -86,6 +99,7 @@ function ArrayItemsList({
 					config={config}
 					scalar={scalar}
 					canRemove={canRemove}
+					disabled={disabled}
 					removeButtonText={removeButtonText}
 					onRemove={onRemove}
 				/>
@@ -96,17 +110,18 @@ function ArrayItemsList({
 
 interface ArrayActionsProps {
 	canAdd: boolean;
+	disabled: boolean;
 	addButtonText?: string;
 	onAdd: () => void;
 }
 
-function ArrayActions({ canAdd, addButtonText, onAdd }: ArrayActionsProps) {
+function ArrayActions({ canAdd, disabled, addButtonText, onAdd }: ArrayActionsProps) {
 	if (!canAdd) {
 		return null;
 	}
 
 	return (
-		<Button type="button" variant="outline" onClick={onAdd} className="w-full">
+		<Button type="button" variant="outline" disabled={disabled} onClick={onAdd} className="w-full">
 			<Plus />
 			{addButtonText || 'Add item'}
 		</Button>
@@ -116,6 +131,8 @@ function ArrayActions({ canAdd, addButtonText, onAdd }: ArrayActionsProps) {
 /**
  * Array field that manages dynamic lists of form fields.
  * Field paths and instance ids are composed at render time.
+ *
+ * @remarks A disabled array disables its add and remove buttons; its rows are disabled by the renderer.
  */
 export function FormArrayElements(config: ArrayElementsProps) {
 	const { fields, append, remove } = useFieldArray(config.name);
@@ -124,6 +141,8 @@ export function FormArrayElements(config: ArrayElementsProps) {
 	const { fieldState, containerStyles } = useControlledFormElement(config as unknown as ElementConfig);
 
 	const scalar = usesScalarArrayItem(config, config.name, config.elements, getValues());
+
+	const disabled = Boolean(config.disabled);
 
 	const handleAdd = () => {
 		append(createArrayRowDefault(config, scalar));
@@ -155,12 +174,13 @@ export function FormArrayElements(config: ArrayElementsProps) {
 					config={config}
 					scalar={scalar}
 					canRemove={canRemove}
+					disabled={disabled}
 					removeButtonText={removeButtonText}
 					emptyStateMessage={emptyStateMessage}
 					onRemove={handleRemove}
 				/>
 
-				<ArrayActions canAdd={canAdd} addButtonText={addButtonText} onAdd={handleAdd} />
+				<ArrayActions canAdd={canAdd} disabled={disabled} addButtonText={addButtonText} onAdd={handleAdd} />
 			</div>
 		</FieldGroup>
 	);

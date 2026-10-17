@@ -10,7 +10,7 @@ import type { ArrayElementsProps } from './form-array-elements.types';
 import { arrayItemScope, createArrayRowDefault, seedArrayRows, usesScalarArrayItem } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { FormController, FormEngineController } from '@/adapters/radiant/controller';
-import { toFieldRules } from '@/lib/field-rules';
+import { toFieldRules, withContainerState } from '@/lib/field-rules';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { adoptFieldArrayIds } from '@/adapters/radiant/controller/field-array';
 import { getValueAtPath, setValueAtPath } from '@schema-engine/forms/lib/path-values';
@@ -78,11 +78,19 @@ interface ArrayContentProps {
 	fieldError?: string;
 }
 
+/**
+ * @remarks
+ * A disabled array, authored or by a constraint, renders its rows and its add
+ * and remove buttons disabled, and its rows get the required marker as a
+ * fieldset's children do (`withContainerState`).
+ */
 function renderArrayContent({ config, engine, ids, initialValues, renderValues, fieldError }: ArrayContentProps) {
 	const isSingleField = usesScalarArrayItem(config, config.name, config.elements, renderValues);
 	const canAdd = !config.maxItems || ids.length < config.maxItems;
 	const canRemove = ids.length > (config.minItems ?? 0);
 	const removeLabel = config.removeButtonText || 'Remove item';
+	const disabled = config.disabled === true;
+	const elements = withContainerState(config, config.elements);
 
 	return (
 		<div class="se-form-array">
@@ -98,7 +106,7 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 					<div class="se-form-array__item" key={id} data-se-row-id={id}>
 						<div class="se-form-array__fields">
 							<FormElements
-								elements={config.elements}
+								elements={elements}
 								engine={engine}
 								initialValues={initialValues}
 								values={renderValues}
@@ -114,6 +122,7 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 								variant="outline"
 								size="sm"
 								square
+								disabled={disabled}
 								data-action="remove"
 								data-id={id}
 								aria-label={removeLabel}
@@ -125,7 +134,13 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 				);
 			})}
 			{canAdd ? (
-				<RuiButton type="button" class="se-form-array__add" variant="outline" data-action="add">
+				<RuiButton
+					type="button"
+					class="se-form-array__add"
+					variant="outline"
+					disabled={disabled}
+					data-action="add"
+				>
 					<PlusIcon />
 					{config.addButtonText || 'Add item'}
 				</RuiButton>

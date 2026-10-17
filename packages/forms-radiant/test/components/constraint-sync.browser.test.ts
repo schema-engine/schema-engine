@@ -174,7 +174,7 @@ test('a child keeps its own required marker after live sync', async () => {
 	}
 });
 
-test('a row field of an authored disabled array stays enabled after live sync, as it renders', async () => {
+test('a row field of an authored disabled array stays disabled after live sync, as it renders', async () => {
 	const host = document.createElement('div');
 	document.body.append(host);
 	const root = createRoot(host);
@@ -214,7 +214,7 @@ test('a row field of an authored disabled array stays enabled after live sync, a
 		form.setValue('contacts.0.phone', 'hide');
 
 		await expect.poll(() => email()!.closest<HTMLElement>('[data-se-constraint-field]')!.hidden).toBe(true);
-		expect(email()!.disabled).toBe(false);
+		expect(email()!.disabled).toBe(true);
 	} finally {
 		form.disconnect();
 		root.unmount();
