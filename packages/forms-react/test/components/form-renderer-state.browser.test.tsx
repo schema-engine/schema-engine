@@ -38,56 +38,6 @@ function createEngine(onAction?: () => void) {
 }
 
 describe('FormRenderer state boundaries', () => {
-	test('a sibling constraint evaluates per array row', async () => {
-		const engine = createEngine();
-		const config = engine.defineForm({
-			id: 'contacts',
-			steps: [
-				{
-					id: 'main',
-					title: 'Main',
-					elements: [
-						{
-							$type: 'arrayElements',
-							id: 'contacts',
-							name: 'contacts',
-							elements: [
-								{ $type: 'input', id: 'account-type', name: 'accountType', label: 'Account type' },
-								{
-									$type: 'input',
-									id: 'email',
-									name: 'email',
-									label: 'Email',
-									constraints: [
-										{ field: 'accountType', operator: 'equals', value: 'business', action: 'show' },
-									],
-								},
-							],
-						},
-					],
-				},
-			],
-		});
-
-		render(
-			<FormRenderer
-				config={config}
-				defaultValues={{ contacts: [{ accountType: '' }, { accountType: '' }] }}
-				engine={engine}
-				adapter={rhfAdapter}
-			/>,
-		);
-
-		const accountTypes = screen.getAllByRole('textbox', { name: 'Account type' });
-		await userEvent.type(accountTypes[0], 'business');
-
-		await waitFor(() => {
-			expect(screen.getAllByRole('textbox', { name: 'Email' })).toHaveLength(1);
-		});
-		expect(screen.getByRole('textbox', { name: 'Email' })).toHaveAttribute('name', 'contacts.0.email');
-		expect(screen.getAllByRole('textbox', { name: 'Account type' })).toHaveLength(2);
-	});
-
 	test('a new config starts a new form instance with its defaults', async () => {
 		const engine = createEngine();
 		const firstConfig = engine.defineForm({

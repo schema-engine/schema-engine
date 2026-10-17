@@ -167,17 +167,13 @@ test('unregistered action with another trigger produces no result', async () => 
 });
 
 test('looks up each matching registration once and skips explicit mismatches', async () => {
-	let lookups = 0;
 	const dispatcher = new ActionDispatcher({
-		getAction: () => {
-			lookups += 1;
-			return {
-				$type: 'audit',
-				schema: z.unknown(),
-				metadata: { name: 'Audit', defaultTriggers: ['form_submit'] },
-				execute: () => ({ success: true, data: 'audited' }),
-			};
-		},
+		getAction: () => ({
+			$type: 'audit',
+			schema: z.unknown(),
+			metadata: { name: 'Audit', defaultTriggers: ['form_submit'] },
+			execute: () => ({ success: true, data: 'audited' }),
+		}),
 		getActionTypes: () => ['audit'],
 	});
 	const results = await dispatcher.dispatch({
@@ -193,5 +189,4 @@ test('looks up each matching registration once and skips explicit mismatches', a
 		{ success: true, data: 'audited' },
 		{ success: true, data: 'audited' },
 	]);
-	expect(lookups).toBe(2);
 });

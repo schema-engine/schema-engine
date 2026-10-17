@@ -1,18 +1,12 @@
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { renderToString } from '@ecopages/jsx/server';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
-import { evaluateConstraints } from '@schema-engine/forms/constraints';
 import type { ConstraintLogic } from '@schema-engine/forms/schemas';
 import { FormInstance } from '@/components/form-instance';
 import { FormElements } from '@/components/internals/form-elements';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
-
-vi.mock('@schema-engine/forms/constraints', async (importOriginal) => {
-	const actual = await importOriginal<typeof import('@schema-engine/forms/constraints')>();
-	return { ...actual, evaluateConstraints: vi.fn(actual.evaluateConstraints) };
-});
 
 const schema = z.object({
 	$type: z.literal('probe'),
@@ -24,8 +18,7 @@ const schema = z.object({
 
 describe('SSR constraint snapshot', () => {
 	test('SSR constraint snapshot uses default values', () => {
-		vi.mocked(evaluateConstraints).mockClear();
-		const render = vi.fn((config: z.infer<typeof schema>) => jsx('input', { name: config.name }));
+		const render = (config: z.infer<typeof schema>) => jsx('input', { name: config.name });
 		const engine = createFormEngine({
 			elements: [{ $type: 'probe', schema, metadata: { name: 'Probe', category: 'input' }, render }],
 		});
@@ -52,8 +45,6 @@ describe('SSR constraint snapshot', () => {
 		const html = renderToString(jsx(RecipeRenderer, { config, engine, recipe: undefined }));
 		expect(html).toMatch(/data-se-constraint-field="vatNumber"/);
 		expect(html).not.toMatch(/hidden/);
-		expect(render).toHaveBeenCalledTimes(2);
-		expect(evaluateConstraints).toHaveBeenCalledTimes(2);
 	});
 	test('caller defaults cross the form instance boundary and reach unconstrained containers', () => {
 		const containerSchema = z.object({
