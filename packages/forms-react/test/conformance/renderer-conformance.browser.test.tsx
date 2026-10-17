@@ -1,19 +1,34 @@
 import { render } from '@testing-library/react';
-import { createFormEngine } from '@schema-engine/forms';
-import { rendererConformance, conformanceAction } from '../../../../test-utils/renderer-conformance';
+import * as z from 'zod/mini';
+import { createFormEngine, defineInput } from '@schema-engine/forms';
+import { rendererConformance, conformanceAction, customArrayType } from '../../../../test-utils/renderer-conformance';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { rhfAdapter } from '@/adapters/react-hook-form';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { ArrayElementRegistration } from '@/components/schema-engine/forms/inputs/form-array-elements.registration';
+import {
+	ArrayElementConfigSchema,
+	type ArrayElementsProps,
+} from '@/components/schema-engine/forms/inputs/form-array-elements.types';
+import { FormArrayElements } from '@/components/schema-engine/forms/inputs/form-array-elements';
 import { FieldSetRegistration } from '@/components/schema-engine/forms/inputs/form-fieldset.registration';
 import { SubmitButtonElementRegistration } from '@/components/schema-engine/forms/actions/submit-button.registration';
 import { WizardRecipe } from '@/components/schema-engine/forms/recipes/registrations/wizard';
+
+const CustomArrayRegistration = defineInput({
+	$type: customArrayType,
+	containerKind: 'array',
+	schema: z.extend(ArrayElementConfigSchema, { $type: z.literal(customArrayType) }),
+	metadata: { name: 'Repeater', category: 'input' },
+	render: FormArrayElements as (props: Omit<ArrayElementsProps, '$type'>) => ReturnType<typeof FormArrayElements>,
+});
 
 rendererConformance(async ({ config, ...props }) => {
 	const engine = createFormEngine({
 		elements: [
 			InputElementRegistration,
 			ArrayElementRegistration,
+			CustomArrayRegistration,
 			FieldSetRegistration,
 			SubmitButtonElementRegistration,
 		],

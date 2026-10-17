@@ -13,6 +13,8 @@ import {
 	walkNamedElements,
 	walkLeafFields,
 	collectFieldDefaults,
+	collectInitialValues,
+	createArrayRowDefault,
 	flattenStepElements,
 } from '@/lib/field-scope';
 
@@ -118,7 +120,7 @@ describe('named element tree walk', () => {
 		expect(walkLeafFields([contacts]).map((node) => node.path)).toEqual(['contacts.name']);
 	});
 
-	test('seeds object-array child defaults at item index 0', () => {
+	test('seeds one whole row when an object-array child declares a default', () => {
 		const contacts = {
 			$type: 'arrayElements',
 			name: 'contacts',
@@ -130,8 +132,7 @@ describe('named element tree walk', () => {
 
 		expect(collectFieldDefaults([contacts].map(normalizeContainerFixture))).toEqual([
 			{ name: 'contacts', defaultValue: undefined },
-			{ name: 'contacts.0.name', defaultValue: 'Ada' },
-			{ name: 'contacts.0.email', defaultValue: undefined },
+			{ name: 'contacts.0', defaultValue: { name: 'Ada', email: '' } },
 		]);
 	});
 
@@ -179,12 +180,11 @@ describe('named element tree walk', () => {
 
 		expect(collectFieldDefaults([members].map(normalizeContainerFixture))).toEqual([
 			{ name: 'members', defaultValue: undefined },
-			{ name: 'members.0.address', defaultValue: undefined },
-			{ name: 'members.0.address.street', defaultValue: '1 Main' },
+			{ name: 'members.0', defaultValue: { address: { street: '1 Main' } } },
 		]);
 	});
 
-	test('seeds minItems slots and nested array paths', () => {
+	test('seeds minItems rows with nested array rows', () => {
 		const phones = {
 			$type: 'arrayElements',
 			name: 'phones',
@@ -202,10 +202,8 @@ describe('named element tree walk', () => {
 				(field) => field.defaultValue !== undefined,
 			),
 		).toEqual([
-			{ name: 'contacts.0.name', defaultValue: 'Ada' },
-			{ name: 'contacts.0.phones.0', defaultValue: '555' },
-			{ name: 'contacts.1.name', defaultValue: 'Ada' },
-			{ name: 'contacts.1.phones.0', defaultValue: '555' },
+			{ name: 'contacts.0', defaultValue: { name: 'Ada', phones: ['555'] } },
+			{ name: 'contacts.1', defaultValue: { name: 'Ada', phones: ['555'] } },
 		]);
 	});
 
@@ -227,6 +225,91 @@ describe('named element tree walk', () => {
 			{ name: 'contacts.0.name', defaultValue: 'Ada' },
 			{ name: 'contacts.1.name', defaultValue: 'Ada' },
 		]);
+	});
+});
+
+describe('array row defaults', () => {
+	test('returns an independent copy of initialValues for each row', () => {
+		const members = {
+			$type: 'arrayElements',
+			name: 'members',
+			initialValues: { tags: ['a'] },
+			elements: [{ $type: 'input', name: 'fullName' }],
+		};
+		const first = createArrayRowDefault(members, false) as { tags: string[] };
+		const second = createArrayRowDefault(members, false) as { tags: string[] };
+
+		expect(first.tags).toEqual(['a']);
+		expect(first.tags).not.toBe(second.tags);
+		expect(first.tags).not.toBe(members.initialValues.tags);
+	});
+
+	test('pads provider rows to minItems after the merge, including nested arrays', () => {
+		const phones = {
+			$type: 'arrayElements',
+			name: 'phones',
+			minItems: 2,
+			elements: [
+				{ $type: 'input', name: 'number' },
+				{ $type: 'input', name: 'kind', defaultValue: 'mobile' },
+			],
+		};
+		const contacts = {
+			$type: 'arrayElements',
+			name: 'contacts',
+			minItems: 2,
+			initialValues: { role: 'user' },
+			elements: [{ $type: 'input', name: 'role' }, phones],
+		};
+
+		expect(
+			collectInitialValues([contacts].map(normalizeContainerFixture), {
+				contacts: [{ role: 'admin', phones: [{ number: '1' }] }],
+			}),
+		).toEqual({
+			contacts: [
+				{
+					role: 'admin',
+					phones: [
+						{ number: '1', kind: 'mobile' },
+						{ number: '', kind: 'mobile' },
+					],
+				},
+				{
+					role: 'user',
+					phones: [
+						{ number: '', kind: 'mobile' },
+						{ number: '', kind: 'mobile' },
+					],
+				},
+			],
+		});
+	});
+
+	test('merges row initialValues over child defaults', () => {
+		const members = {
+			$type: 'arrayElements',
+			name: 'members',
+			initialValues: { role: 'user' },
+			elements: [
+				{ $type: 'input', name: 'fullName', defaultValue: 'x' },
+				{ $type: 'input', name: 'role', defaultValue: 'guest' },
+				{ $type: 'input', name: 'email' },
+			],
+		};
+
+		expect(createArrayRowDefault(members, false)).toEqual({ fullName: 'x', role: 'user', email: '' });
+	});
+
+	test('uses the single child default as a scalar row', () => {
+		const tags = {
+			$type: 'arrayElements',
+			name: 'tags',
+			elements: [{ $type: 'input', name: 'tag', defaultValue: 'Ada' }],
+		};
+
+		expect(createArrayRowDefault(tags, true)).toBe('Ada');
+		expect(createArrayRowDefault(tags, false)).toEqual({ tag: 'Ada' });
 	});
 });
 

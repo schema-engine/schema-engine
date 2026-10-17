@@ -1,6 +1,7 @@
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
-import { applyFieldOverlay } from '@schema-engine/forms';
+import { applyFieldOverlay, getElementChildren, seedArrayRows, usesScalarArrayItem } from '@schema-engine/forms';
+import { getElementContainerKind } from '@schema-engine/forms/lib/normalized-form-config';
 import type { NormalizedElementConfig, FieldOverlay } from '@schema-engine/forms';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { evaluateConstraints } from '@schema-engine/forms/constraints';
@@ -19,22 +20,19 @@ function addArrayInitialValues(
 	config: NormalizedElementConfig,
 	values: Record<string, unknown> | undefined,
 	initialValues: Record<string, unknown> | undefined,
-):
-	| NormalizedElementConfig
-	| (NormalizedElementConfig & {
-			ssrInitialRows: readonly unknown[];
-			initialFormValues: Record<string, unknown>;
-	  }) {
-	if (config.$type !== 'arrayElements') return config;
+): NormalizedElementConfig & {
+	ssrInitialRows: readonly unknown[];
+	initialFormValues: Record<string, unknown>;
+} {
 	const path = 'name' in config ? config.name : '';
-	const configuredValues = getValueAtPath(values ?? initialValues ?? {}, path);
+	const formValues = values ?? initialValues ?? {};
+	const configuredValues = getValueAtPath(formValues, path);
 	const defaultValues = 'defaultValue' in config ? config.defaultValue : undefined;
-	const rows = Array.isArray(configuredValues) ? configuredValues : Array.isArray(defaultValues) ? defaultValues : [];
-	const minItems = 'minItems' in config && typeof config.minItems === 'number' ? config.minItems : 0;
-	const count = Math.max(rows.length, minItems);
+	const rows = [configuredValues, defaultValues].find(Array.isArray);
+	const children = (getElementChildren(config) ?? []) as object[];
 	return {
 		...config,
-		ssrInitialRows: Array.from({ length: count }, (_, index) => rows[index]),
+		ssrInitialRows: seedArrayRows(config, rows, usesScalarArrayItem(config, path, children, formValues)),
 		initialFormValues: initialValues ?? {},
 	};
 }
@@ -44,7 +42,7 @@ function addFieldInitialValue(
 	initialValues: Record<string, unknown> | undefined,
 	fieldPath: string | undefined,
 ): NormalizedElementConfig {
-	if (config.$type === 'arrayElements' || !initialValues || !fieldPath) return config;
+	if (!initialValues || !fieldPath) return config;
 	const value = getValueAtPath(initialValues, fieldPath);
 	if (value === undefined) return config;
 	return { ...config, defaultValue: value } as NormalizedElementConfig;
@@ -96,16 +94,14 @@ export function renderRegisteredElement(
 		},
 		overlays,
 	);
-	const withInitialValue = addFieldInitialValue(
-		enhancedConfig,
-		constraintContext?.initialValues,
-		constraintContext?.fieldPath ?? ('name' in config ? config.name : undefined),
-	);
-	const renderConfig = addArrayInitialValues(
-		withInitialValue,
-		constraintContext?.values,
-		constraintContext?.initialValues,
-	);
+	const renderConfig =
+		getElementContainerKind(config) === 'array'
+			? addArrayInitialValues(enhancedConfig, constraintContext?.values, constraintContext?.initialValues)
+			: addFieldInitialValue(
+					enhancedConfig,
+					constraintContext?.initialValues,
+					constraintContext?.fieldPath ?? ('name' in config ? config.name : undefined),
+				);
 
 	return renderWithConstraintValues(constraintContext?.values, () =>
 		renderWithOwningFormEngine(engine, () => elementRegistration.render(renderConfig) as JsxRenderable),

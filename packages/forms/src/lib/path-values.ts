@@ -165,7 +165,8 @@ function expandTemplatePaths(
 	return paths.length > 0 ? paths : expandedArray ? [] : [fieldTemplatePath];
 }
 
-function clonePlainValue(value: unknown): unknown {
+/** Deep copy of plain objects and arrays into null-prototype value maps, skipping reserved path keys. */
+export function clonePlainValue(value: unknown): unknown {
 	if (Array.isArray(value)) {
 		return value.map(clonePlainValue);
 	}

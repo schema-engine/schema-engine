@@ -39,9 +39,12 @@ without mutating the source engine's catalog.
 
 Container registrations declare `containerKind: 'array'` (or `'object'`).
 Normalization stores that metadata on the frozen element without adding JSON
-keys. `collectFieldDefaults` and `walkNamedElements` read the metadata rather
-than a widget `$type`. A one-child array uses scalar item paths; other arrays
-join child names onto each item. Validation expands scalar child rules to each
+keys. `collectFieldDefaults`, `collectInitialValues`, `createArrayRowDefault`
+and `walkNamedElements` detect arrays by the metadata rather than a widget `$type`. A new row
+starts from `createArrayRowDefault`: child `defaultValue`s with the container's
+`initialValues` merged over them (see [CONTEXT.md](../../../../CONTEXT.md#array-rows)). A one-child array whose child is a leaf and whose seeds are not object-shaped
+uses scalar item paths (`usesScalarArrayItem`); other arrays join child names
+onto each item. Validation expands scalar child rules to each
 live item path (`tags.0`, `tags.1`) while keeping the container path (`tags`)
 available for container rules. Pass normalized elements to these helpers so
 custom array widgets receive the same path and default behavior as built-ins.

@@ -85,7 +85,10 @@ export {
 	walkNamedElements,
 	walkLeafFields,
 	collectFieldDefaults,
+	collectInitialValues,
 	usesScalarArrayItem,
+	createArrayRowDefault,
+	seedArrayRows,
 	flattenStepElements,
 } from './lib/field-scope';
 export type { FieldScope, FieldNameStrategy, FieldOverlay, NamedElementNode } from './lib/field-scope';
