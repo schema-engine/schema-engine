@@ -14,8 +14,10 @@ import type { FieldArrayValue, FormFieldValue } from '../../types';
  * asks `formContext` on the host, then on ancestors, until a store answers. It
  * does not search descendants or the document. Reads are snapshots. `watchField`
  * and `watchForm` subscribe and return cleanup functions. `connect` waits for
- * context readiness and presentation updates; call `disconnect` when a manually
- * managed host disconnects.
+ * context readiness and presentation updates and keeps existing watch
+ * subscriptions, each on the store it subscribed to; call `disconnect` when a
+ * manually managed host disconnects or moves to another form, which also ends
+ * every watch subscription.
  */
 export class FormController {
 	private unsubscribeContext?: () => void;
@@ -70,7 +72,7 @@ export class FormController {
 	}
 
 	connect(onChange: () => void = () => {}): void {
-		this.disconnect();
+		this.releaseContext();
 		const target = this.providerHost();
 		target.dispatchEvent(
 			new ContextSubscriptionRequestEvent(
@@ -90,11 +92,15 @@ export class FormController {
 	}
 
 	disconnect(): void {
+		this.releaseContext();
+		for (const unsubscribe of this.subscriptions) unsubscribe();
+		this.subscriptions.clear();
+	}
+
+	private releaseContext(): void {
 		this.unsubscribeContext?.();
 		this.unsubscribeContext = undefined;
 		this.formStore = undefined;
-		for (const unsubscribe of this.subscriptions) unsubscribe();
-		this.subscriptions.clear();
 	}
 
 	getValues(): Record<string, unknown> {

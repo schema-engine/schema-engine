@@ -18,8 +18,9 @@ interface ConstraintState {
  *
  * @remarks
  * A field's flags compose its own authored state with every constraint wrapper
- * around it, the field's own and its containers'. For `disabled` this is what
- * render composes too; constraint `required` reaches a field only through this sync.
+ * around it, the field's own and its containers'. Render composes the same:
+ * `disabled` through a fieldset, and `required` as the field's required marker;
+ * the live `required` rule reaches a field only through this sync.
  * Applying only the nearest declaring item's flags would give an unconstrained
  * child of a constrained fieldset the fieldset's `disabled` instead of its own.
  */

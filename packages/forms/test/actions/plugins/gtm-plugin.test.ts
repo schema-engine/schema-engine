@@ -1,5 +1,6 @@
 import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import type { BuilderActionRuntimeContext } from '@/types';
+import type { FormActionTrigger } from '@/actions';
 import { gtmPlugin, GTMEventActionSchema, type GTMEventAction } from '@/actions/plugins/gtm.plugin';
 import { GTMTracker } from '@/browser/tools/gtm-tracker';
 import { createMockBuilderContext, setupTestEnvironment } from '../__tools';
@@ -12,16 +13,7 @@ type GTMEventActionInput = {
 	description?: string;
 	eventData?: Record<string, any>;
 	includeFormData?: boolean | string[];
-	triggers?: (
-		| 'form_mount'
-		| 'form_change'
-		| 'form_submit'
-		| 'step_change'
-		| 'step_submit'
-		| 'step_enter'
-		| 'step_leave'
-		| 'step_view'
-	)[];
+	triggers?: FormActionTrigger[];
 };
 
 interface GTMEvent {
@@ -131,7 +123,7 @@ describe('GTMPlugin', () => {
 					source: 'newsletter',
 				},
 				includeFormData: ['email', 'userType'],
-				triggers: ['form_submit', 'step_submit'],
+				triggers: ['form_submit', 'step_leave'],
 			};
 
 			expect(GTMEventActionSchema.parse(fullAction)).toEqual(fullAction);
@@ -157,6 +149,12 @@ describe('GTMPlugin', () => {
 			};
 
 			expect(() => GTMEventActionSchema.parse(invalidAction)).toThrow();
+		});
+
+		test.each(['step_submit', 'step_view'])('rejects the %s trigger, which no renderer dispatches', (trigger) => {
+			const action = { id: 'test-gtm', $type: 'gtm_event', eventName: 'step', triggers: [trigger] };
+
+			expect(GTMEventActionSchema.safeParse(action).success).toBe(false);
 		});
 
 		test('should default includeFormData to false', () => {

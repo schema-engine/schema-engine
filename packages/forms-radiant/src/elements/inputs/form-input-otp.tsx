@@ -2,6 +2,7 @@ import './form-input-otp.css';
 import { customElement, onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { isRenderedRequired } from '@/lib/field-rules';
 import { FieldGroup } from '../field-group';
 import type { InputOTPFieldProps } from './form-input-otp.types';
 
@@ -134,7 +135,7 @@ export function FormInputOTP({
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
-			required={isFieldRequired(config.rules)}
+			required={isFieldRequired(config.rules) || isRenderedRequired(config)}
 			description={config.description}
 			grid={config.grid}
 			style={config.style}

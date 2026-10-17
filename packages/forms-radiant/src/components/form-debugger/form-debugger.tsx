@@ -267,11 +267,11 @@ export class FormDebuggerElement extends RadiantElement {
 		const action = target?.dataset.seDebuggerAction;
 		if (action === 'open') this.open = true;
 		if (action === 'close') this.open = false;
-		if (action === 'previous') this.formInstance?.goToPreviousStep();
-		if (action === 'next') this.formInstance?.goToNextStep();
+		if (action === 'previous') void this.formInstance?.goToPreviousStep();
+		if (action === 'next') void this.formInstance?.goToNextStep();
 		if (action === 'goto') {
 			const index = Number(target?.dataset.seDebuggerStep);
-			if (Number.isInteger(index)) this.formInstance?.goToStep(index);
+			if (Number.isInteger(index)) void this.formInstance?.goToStep(index);
 		}
 	}
 

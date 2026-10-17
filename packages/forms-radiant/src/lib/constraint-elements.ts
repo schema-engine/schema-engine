@@ -3,6 +3,7 @@ import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { walkNamedElements } from '@schema-engine/forms/lib/field-scope';
 import { templatePath } from '@schema-engine/forms/lib/path-values';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
+import { getElementContainerKind } from '@schema-engine/forms/lib/normalized-form-config';
 
 export interface ConstrainedElementMetadata {
 	readonly fieldName: string;
@@ -69,6 +70,10 @@ export function createConstraintLookup(
  * @remarks
  * Constraint sync needs the authored state on its own: the field's live
  * `disabled` already includes what a constraint applied at render.
+ *
+ * An array container does not count: render does not pass its `disabled` down
+ * to the rows, so sync must not either, or a row field would render enabled and
+ * turn disabled on the first store change.
  */
 export function createAuthoredDisabledLookup(
 	config: NormalizedFormConfig | undefined,
@@ -76,7 +81,7 @@ export function createAuthoredDisabledLookup(
 	const disabled = new Set<string>();
 	for (const step of config?.steps ?? []) {
 		for (const { path, element } of walkNamedElements(step.elements, '', true)) {
-			if ('disabled' in element && element.disabled === true) {
+			if ('disabled' in element && element.disabled === true && getElementContainerKind(element) !== 'array') {
 				disabled.add(path);
 			}
 		}
