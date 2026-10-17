@@ -273,6 +273,8 @@ const HomeFooterColumn = ({ title, links }: HomeFooterColumnData) => (
 	</div>
 );
 
+const copyrightYear = new Date().getFullYear();
+
 const HomeFooterBar = () => (
 	<div class="home-footer__bar">
 		<p>
@@ -286,7 +288,7 @@ const HomeFooterBar = () => (
 			<a href="https://github.com/ecopages/ecopages" target="_blank" rel="noopener noreferrer">
 				Ecopages
 			</a>
-			© {new Date().getFullYear()}
+			© {copyrightYear}
 		</p>
 	</div>
 );
