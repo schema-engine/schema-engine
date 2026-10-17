@@ -1,13 +1,14 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import {
 	collectStepFieldPaths,
 	createInitialStepStates,
 	createStepMachine,
-	type StepMachineAction,
+	createStepNavigator,
+	type StepActionTrigger,
 	type StepMachineState,
+	type StepNavigationAction,
 	type StepStates,
-	type FormActionTrigger,
 	type ActionExecutionResult,
 	type FormConfigView,
 } from '@schema-engine/forms';
@@ -34,10 +35,15 @@ export type MultiStepContextValue = {
 };
 
 type DispatchTrigger = (
-	trigger: Extract<FormActionTrigger, 'step_change' | 'step_enter' | 'step_leave'>,
+	trigger: StepActionTrigger,
 	extraMetadata?: Record<string, unknown>,
 ) => Promise<ActionExecutionResult[]>;
 
+/**
+ * @remarks The navigator is created on first navigation, outside render as the React refs rule
+ * requires, and lives as long as the hook, so its in-flight guard survives re-renders; the reducer
+ * and callbacks are read through a ref.
+ */
 export function useRHFMultiStep(
 	config: FormConfigView,
 	form: UseFormReturn,
@@ -51,7 +57,6 @@ export function useRHFMultiStep(
 		currentStepIndex: 0,
 	}));
 	const stateRef = useRef(state);
-	const navigating = useRef(false);
 	const onStepIndexChange = options?.onStepIndexChange;
 
 	const validateStep = useCallback(
@@ -73,39 +78,31 @@ export function useRHFMultiStep(
 		[config.steps, form],
 	);
 
-	const navigate = useCallback(
-		async (action: Exclude<StepMachineAction, { type: 'next' }> | { type: 'next' }) => {
-			if (navigating.current) return;
-			navigating.current = true;
-			try {
-				const previous = stateRef.current;
-				const next = reduce(
-					previous,
-					action.type === 'next'
-						? { type: 'next', isValid: await validateStep(previous.currentStepIndex) }
-						: action,
-				);
-				if (next.currentStepIndex !== previous.currentStepIndex) {
-					await dispatchTrigger('step_leave');
-					stateRef.current = next;
-					setState(next);
-					onStepIndexChange?.(next.currentStepIndex);
-					await dispatchTrigger('step_change');
-					await dispatchTrigger('step_enter');
-				} else {
-					stateRef.current = next;
-					setState(next);
-				}
-			} finally {
-				navigating.current = false;
-			}
-		},
-		[reduce, dispatchTrigger, onStepIndexChange, validateStep],
-	);
+	const latest = useRef({ reduce, validateStep, dispatchTrigger, onStepIndexChange });
+	useEffect(() => {
+		latest.current = { reduce, validateStep, dispatchTrigger, onStepIndexChange };
+	}, [reduce, validateStep, dispatchTrigger, onStepIndexChange]);
 
-	const goToStep = useCallback((index: number) => void navigate({ type: 'go-to', index }), [navigate]);
-	const goToPrevious = useCallback(() => void navigate({ type: 'previous' }), [navigate]);
-	const goToNext = useCallback(() => void navigate({ type: 'next' }), [navigate]);
+	const navigator = useRef<((action: StepNavigationAction) => Promise<void>) | undefined>(undefined);
+	const navigate = useCallback((action: StepNavigationAction) => {
+		navigator.current ??= createStepNavigator({
+			reduce: (current, next) => latest.current.reduce(current, next),
+			getState: () => stateRef.current,
+			setState: (next) => {
+				const indexChanged = next.currentStepIndex !== stateRef.current.currentStepIndex;
+				stateRef.current = next;
+				setState(next);
+				if (indexChanged) latest.current.onStepIndexChange?.(next.currentStepIndex);
+			},
+			validateStep: (index) => latest.current.validateStep(index),
+			dispatchTrigger: (trigger) => latest.current.dispatchTrigger(trigger),
+		});
+		void navigator.current(action);
+	}, []);
+
+	const goToStep = useCallback((index: number) => navigate({ type: 'go-to', index }), [navigate]);
+	const goToPrevious = useCallback(() => navigate({ type: 'previous' }), [navigate]);
+	const goToNext = useCallback(() => navigate({ type: 'next' }), [navigate]);
 	const { currentStepIndex, ...stepStates } = state;
 	return {
 		currentStep: currentStepIndex,
