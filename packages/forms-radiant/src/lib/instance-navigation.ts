@@ -9,7 +9,7 @@ import { validateCurrentStepFields } from './validate-current-step';
  * dispatches nothing.
  */
 export function createInstanceNavigation(host: FormInstanceElement, readForm: () => FormController | undefined) {
-	const navigate = createStepNavigator({
+	const { navigate, cancel } = createStepNavigator({
 		reduce: (state, action) => createStepMachine(host.config ?? { steps: [{}] })(state, action),
 		getState: () => host.machine,
 		setState: (machine) => {
@@ -46,5 +46,6 @@ export function createInstanceNavigation(host: FormInstanceElement, readForm: ()
 			if (readForm()?.store) await navigate({ type: 'next' });
 		},
 		goToPreviousStep: (): Promise<void> => navigate({ type: 'previous' }),
+		cancel,
 	};
 }

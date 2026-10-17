@@ -358,23 +358,11 @@ export function validateFormConfig(config: unknown, options: ValidateFormOptions
 		const stepLocation = itemLocation('steps', stepIndex, step);
 		const elements = parseElementList(step.elements, options.getElement, options.hasValidation, stepLocation);
 		const actions = parseActions(step.actions, stepLocation, 'actions');
-		const onStepEnter = parseActions(step.onStepEnter, stepLocation, 'onStepEnter');
-		const onStepLeave = parseActions(step.onStepLeave, stepLocation, 'onStepLeave');
-		const onStepValidate = parseActions(step.onStepValidate, stepLocation, 'onStepValidate');
-		issues.push(
-			...elements.issues,
-			...actions.issues,
-			...onStepEnter.issues,
-			...onStepLeave.issues,
-			...onStepValidate.issues,
-		);
+		issues.push(...elements.issues, ...actions.issues);
 		return {
 			...step,
 			elements: elements.items ?? step.elements,
 			actions: actions.items ?? step.actions,
-			onStepEnter: onStepEnter.items ?? step.onStepEnter,
-			onStepLeave: onStepLeave.items ?? step.onStepLeave,
-			onStepValidate: onStepValidate.items ?? step.onStepValidate,
 		};
 	});
 

@@ -88,3 +88,27 @@ export function buildFormActionContext<TForm extends BuilderActionBaseContext['f
 		form,
 	};
 }
+
+interface ActionScopes<TAction> {
+	actions?: readonly TAction[];
+	steps: readonly { actions?: readonly TAction[] }[];
+}
+
+/**
+ * Lists the actions a trigger dispatches while the step at `stepIndex` is active: the
+ * form's `actions`, then that step's.
+ *
+ * @remarks
+ * The step navigator dispatches `step_leave` while the step being left is active and
+ * `step_change` and `step_enter` once the entered step is, so a step's actions see the
+ * step triggers of navigation into and out of that step, plus every other trigger fired
+ * while it is current.
+ */
+export function collectStepActions<TAction>(config: ActionScopes<TAction>, stepIndex: number): TAction[] {
+	return [...(config.actions ?? []), ...(config.steps[stepIndex]?.actions ?? [])];
+}
+
+/** Whether the form or any of its steps configures an action. */
+export function hasConfiguredActions(config: ActionScopes<unknown>): boolean {
+	return Boolean(config.actions?.length) || config.steps.some((step) => Boolean(step.actions?.length));
+}

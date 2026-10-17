@@ -8,6 +8,7 @@ import {
 	type StepActionTrigger,
 	type StepMachineState,
 	type StepNavigationAction,
+	type StepNavigator,
 	type StepStates,
 	type ActionExecutionResult,
 	type FormConfigView,
@@ -42,7 +43,8 @@ type DispatchTrigger = (
 /**
  * @remarks The navigator is created on first navigation, outside render as the React refs rule
  * requires, and lives as long as the hook, so its in-flight guard survives re-renders; the reducer
- * and callbacks are read through a ref.
+ * and callbacks are read through a ref. Unmounting, which a replaced config causes, cancels the
+ * navigation in flight so it dispatches no step trigger for the discarded form.
  */
 export function useRHFMultiStep(
 	config: FormConfigView,
@@ -83,7 +85,8 @@ export function useRHFMultiStep(
 		latest.current = { reduce, validateStep, dispatchTrigger, onStepIndexChange };
 	}, [reduce, validateStep, dispatchTrigger, onStepIndexChange]);
 
-	const navigator = useRef<((action: StepNavigationAction) => Promise<void>) | undefined>(undefined);
+	const navigator = useRef<StepNavigator | undefined>(undefined);
+	useEffect(() => () => navigator.current?.cancel(), []);
 	const navigate = useCallback((action: StepNavigationAction) => {
 		navigator.current ??= createStepNavigator({
 			reduce: (current, next) => latest.current.reduce(current, next),
@@ -97,7 +100,7 @@ export function useRHFMultiStep(
 			validateStep: (index) => latest.current.validateStep(index),
 			dispatchTrigger: (trigger) => latest.current.dispatchTrigger(trigger),
 		});
-		void navigator.current(action);
+		void navigator.current.navigate(action);
 	}, []);
 
 	const goToStep = useCallback((index: number) => navigate({ type: 'go-to', index }), [navigate]);

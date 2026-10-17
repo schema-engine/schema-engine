@@ -46,6 +46,36 @@ metadata: {
 }
 ```
 
+## Step Actions
+
+A step can declare its own `actions`. They are active while that step is the current
+one: every trigger runs the form's `actions` first, then the current step's.
+
+- `step_leave` fires while the step being left is current, so it runs that step's actions,
+  whether the user moves on with Next, goes back with Previous, or jumps to another step.
+- `step_change` and `step_enter` fire once the new step is current, so they run the entered
+  step's actions. The first step is current on mount; it sees `step_enter` only when the
+  user returns to it.
+- Completing the last step is a submission, not a step trigger. Track it with
+  `form_submit_success`.
+
+```json
+{
+	"id": "preferences",
+	"title": "Preferences",
+	"elements": [],
+	"actions": [
+		{
+			"id": "preferences-view",
+			"$type": "gtm_event",
+			"eventName": "form_step_view",
+			"eventData": { "step_name": "preferences" },
+			"triggers": ["step_enter"]
+		}
+	]
+}
+```
+
 ## Built-in Plugins
 
 ### Submit

@@ -76,7 +76,11 @@ The forms action trigger type contains these events:
 | `step_enter`           | A step becomes active                  |
 | `step_leave`           | A step stops being active              |
 
-Actions execute sequentially in the order provided to the dispatcher.
+Actions execute sequentially in the order provided to the dispatcher. Both renderers
+dispatch the form's `actions` and then the current step's `actions`, so a step's
+`step_enter` action runs on entering that step and its `step_leave` action on leaving it.
+The first step is current on mount, so its `step_enter` runs only when the user returns to it.
+Completing the last step is a submission: use `form_submit_success`, not `step_leave`.
 
 ## Plugin factories
 

@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import type { FieldValues, UseFormReturn } from 'react-hook-form';
 import type { FormActionConfig } from '@schema-engine/forms/schemas';
 import {
+	collectStepActions,
 	runSubmissionLifecycle,
 	type BuilderActionBaseContext,
 	type FormActionTrigger,
@@ -28,6 +29,7 @@ interface UseFormSubmitHandlerOptions {
 	buildActionContext: () => BuilderActionBaseContext;
 	submission: SubmissionStateManager;
 	dispatchTrigger: (trigger: FormActionTrigger) => Promise<ActionExecutionResult[]>;
+	getCurrentStep: () => number;
 	onSubmit?: (data: FieldValues) => void | Promise<void>;
 	onAction?: (action: NormalizedFormAction, data: FieldValues) => void | Promise<void>;
 }
@@ -54,6 +56,7 @@ export function useFormSubmitHandler({
 	buildActionContext,
 	submission,
 	dispatchTrigger,
+	getCurrentStep,
 	onSubmit,
 	onAction,
 }: UseFormSubmitHandlerOptions): { handleSubmit: (data: FieldValues) => Promise<void> } & SubmissionContextValue {
@@ -104,11 +107,12 @@ export function useFormSubmitHandler({
 		async (data: FieldValues) => {
 			setSubmissionPending();
 
-			if (config.actions && config.actions.length > 0) {
+			const actions = collectStepActions(config, getCurrentStep());
+			if (actions.length > 0) {
 				try {
 					const { succeeded, results } = await runSubmissionLifecycle(
 						(input) => actionExecutor.dispatch(input),
-						{ actions: config.actions, context: buildActionContext, onAction },
+						{ actions, context: buildActionContext, onAction },
 					);
 
 					const executionErrors: SubmissionError[] = results
@@ -157,6 +161,7 @@ export function useFormSubmitHandler({
 			actionExecutor,
 			buildActionContext,
 			dispatchTrigger,
+			getCurrentStep,
 			setSubmissionPending,
 			setSubmissionSuccess,
 			setSubmissionError,

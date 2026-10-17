@@ -20,9 +20,6 @@ export function createFormStepSchema(parts: { elements: z.ZodMiniType; actions: 
 		constraints: z.optional(z.array(z.unknown())),
 		className: z.optional(z.string()),
 		style: z.optional(RendererStyleSchema),
-		onStepEnter: z.optional(z.array(parts.actions)),
-		onStepLeave: z.optional(z.array(parts.actions)),
-		onStepValidate: z.optional(z.array(parts.actions)),
 		actions: z.optional(z.array(parts.actions)),
 	});
 }

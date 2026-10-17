@@ -5,7 +5,7 @@ import type { FormProviderProps } from '../types';
 import { ActionDispatcher } from '@schema-engine/forms/actions';
 import { collectInitialValues, flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import { useFormEngine } from '@/hooks/use-form-context';
-import type { FormActionConfig, FormConfigView } from '@schema-engine/forms';
+import { collectStepActions, type FormActionConfig, type FormConfigView } from '@schema-engine/forms';
 import { useFormValidationResolver } from './hooks/use-form-validation-resolver';
 import { FormInstanceContext, type FormInstanceContextValue } from '@/components/provider';
 import { FormStepStateContext } from '@/components/form-step-state-context';
@@ -69,8 +69,9 @@ export function FormProvider<
 		},
 	});
 
+	const mountActions = useMemo(() => collectStepActions(runtimeConfig, 0), [runtimeConfig]);
 	useFormMountEffect({
-		actions: runtimeConfig.actions,
+		actions: mountActions,
 		dispatchTrigger: actionDispatchers.dispatchTrigger,
 	});
 
@@ -116,6 +117,7 @@ export function FormProvider<
 		actionExecutor,
 		buildActionContext: actionDispatchers.buildActionContext,
 		dispatchTrigger: actionDispatchers.dispatchTrigger,
+		getCurrentStep,
 		onSubmit: handleFormSubmit,
 		onAction: handleFormAction,
 	});

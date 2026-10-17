@@ -4,6 +4,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/components/schema-engine/forms/lib/utils';
 
+/**
+ * @remarks
+ * Next and Submit carry distinct keys so React replaces the button instead of turning
+ * Next into a submit button while its click is still being handled, which submitted the
+ * form on arriving at the last step.
+ */
 export function WizardActions() {
 	const { navigation, form, steps, currentStepIndex } = useViewContext();
 	const config = useViewConfig<WizardActionsConfig>('actions');
@@ -29,11 +35,12 @@ export function WizardActions() {
 			) : null}
 			<div className="flex gap-2">
 				{navigation.isLastStep ? (
-					<Button type="submit" aria-label={labels.submitAriaLabel}>
+					<Button key="submit" type="submit" aria-label={labels.submitAriaLabel}>
 						{form.isSubmitting ? labels.submitting : labels.submit}
 					</Button>
 				) : (
 					<Button
+						key="next"
 						type="button"
 						onClick={navigation.goToNextStep}
 						disabled={!navigation.canGoNext}

@@ -19,8 +19,11 @@ For `validateFormValues`, omitted or empty `names` validates every named field.
 A non-empty list validates only the requested paths and their descendants.
 
 React and Radiant delegate to these helpers. `createStepNavigator` owns the wizard's
-in-flight guard and `step_leave` / `step_change` / `step_enter` order; a renderer supplies
-its step state, step validation and trigger dispatch. `runSubmissionLifecycle` accepts either a
+in-flight guard, the `step_leave` / `step_change` / `step_enter` order and `cancel`, which a
+renderer calls on every step state reset so a navigation in flight neither writes state nor
+dispatches after it; a renderer supplies its step state, step validation and trigger dispatch.
+`collectStepActions` gives the actions a trigger dispatches on the current step: the
+form's, then that step's (see [CONTEXT.md](../../../../CONTEXT.md#wizard-navigation)). `runSubmissionLifecycle` accepts either a
 fixed context or a factory; use a factory when each submission trigger needs current form
 values and validation state. Its optional `onAction(action, data)` callback runs after each
 successful `form_submit` action. If the callback rejects, that action becomes a fatal failure

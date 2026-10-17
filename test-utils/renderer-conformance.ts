@@ -33,9 +33,12 @@ export interface ConformanceMountOptions {
 	onChange?: (data: Record<string, unknown>) => void;
 	onAction?: () => void;
 }
-export type ConformanceMount = (
-	options: ConformanceMountOptions,
-) => Promise<{ host: HTMLElement; cleanup: () => void }>;
+export type ConformanceMount = (options: ConformanceMountOptions) => Promise<{
+	host: HTMLElement;
+	cleanup: () => void;
+	/** Renders the same renderer again with a replaced config and the original callbacks. */
+	update: (config: FormConfigView) => Promise<void>;
+}>;
 
 const lastActionContext = () => conformanceAction.execute.mock.calls.at(-1)?.[0];
 const input = (name: string, label: string) => ({ $type: 'input', id: name, name, label });
@@ -69,10 +72,10 @@ export function rendererConformance(mount: ConformanceMount): void {
 		const setup = async (options: ConformanceMountOptions) => {
 			const result = await mount(options);
 			cleanup = result.cleanup;
-			return result.host;
+			return result;
 		};
 		test('resolves sibling show constraints independently in two array rows', async () => {
-			const host = await setup({
+			const { host } = await setup({
 				config: form([
 					{
 						$type: 'arrayElements',
@@ -97,7 +100,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 		});
 		test('both renderers add the same row', async () => {
 			const onSubmit = vi.fn();
-			const host = await setup({
+			const { host } = await setup({
 				config: form([
 					{
 						$type: 'arrayElements',
@@ -119,7 +122,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 		});
 		test('a single-child array keeps object rows from form defaultValues', async () => {
 			const onSubmit = vi.fn();
-			const host = await setup({
+			const { host } = await setup({
 				config: form([
 					{ $type: 'arrayElements', id: 'members', name: 'members', elements: [input('role', 'Role')] },
 				]),
@@ -136,7 +139,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 		});
 		test('both renderers add the same scalar row', async () => {
 			const onSubmit = vi.fn();
-			const host = await setup({
+			const { host } = await setup({
 				config: form([
 					{
 						$type: 'arrayElements',
@@ -156,7 +159,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 		});
 		test('keeps empty scalar rows seeded to minItems and added after them', async () => {
 			const onSubmit = vi.fn();
-			const host = await setup({
+			const { host } = await setup({
 				config: form([
 					{ $type: 'arrayElements', id: 'tags', name: 'tags', minItems: 2, elements: [input('tag', 'Tag')] },
 				]),
@@ -174,7 +177,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 		});
 		test(`seeds a custom array registration (${customArrayType}) to minItems`, async () => {
 			const onSubmit = vi.fn();
-			const host = await setup({
+			const { host } = await setup({
 				config: form([
 					{
 						$type: customArrayType,
@@ -207,7 +210,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 				view: { $type: 'wizard', actions: { showStepCounter: true } },
 				steps: [...base.steps, { id: 'second', title: 'Second', elements: [input('last', 'Last')] }],
 			};
-			const host = await setup({ config });
+			const { host } = await setup({ config });
 			await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
 			await expect.poll(() => queryByText(host, 'Street is required') !== null).toBe(true);
 			expect(queryAllByRole(host, 'textbox', { name: 'Last' })).toHaveLength(0);
@@ -217,7 +220,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Last' }).length).toBe(1);
 		});
 		test('dispatches step leave, change and enter when the wizard advances', async () => {
-			const host = await setup({
+			const { host } = await setup({
 				config: {
 					...wizard([input('first', 'First')], [input('last', 'Last')]),
 					actions: [
@@ -238,8 +241,121 @@ export function rendererConformance(mount: ConformanceMount): void {
 					['enter', 1],
 				]);
 		});
+		test('runs the current step actions after the form actions on each step trigger', async () => {
+			const [first, second] = wizard([input('first', 'First')], [input('last', 'Last')]).steps;
+			const { host } = await setup({
+				config: {
+					...wizard(),
+					actions: [{ $type: 'conformance', id: 'form-enter', triggers: ['step_enter'] }],
+					steps: [
+						{
+							...first,
+							actions: [
+								{ $type: 'conformance', id: 'leave-first', triggers: ['step_leave'] },
+								{ $type: 'conformance', id: 'enter-first', triggers: ['step_enter'] },
+								{ $type: 'conformance', id: 'change-first', triggers: ['step_change'] },
+							],
+						},
+						{
+							...second,
+							actions: [
+								{ $type: 'conformance', id: 'change-second', triggers: ['step_change'] },
+								{ $type: 'conformance', id: 'enter-second', triggers: ['step_enter'] },
+							],
+						},
+					],
+				},
+			});
+			await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
+			await expect.poll(actionIds).toEqual(['leave-first', 'change-second', 'form-enter', 'enter-second']);
+		});
+		test('change and submit triggers run only the current step actions when the form has none', async () => {
+			const onSubmit = vi.fn();
+			const [first, last] = wizard([input('first', 'First')], [input('last', 'Last')]).steps;
+			const { host } = await setup({
+				config: {
+					...wizard(),
+					steps: [
+						{
+							...first,
+							actions: [
+								{ $type: 'conformance', id: 'first-change', triggers: ['form_change'] },
+								{ $type: 'conformance', id: 'first-submit', triggers: ['form_submit'] },
+							],
+						},
+						{
+							...last,
+							actions: [
+								{ $type: 'conformance', id: 'last-change', triggers: ['form_change'] },
+								{ $type: 'conformance', id: 'last-submit', triggers: ['form_submit'] },
+							],
+						},
+					],
+				},
+				onSubmit,
+			});
+			await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
+			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Last' }).length).toBe(1);
+			conformanceAction.execute.mockClear();
+			await userEvent.fill(getByRole(host, 'textbox', { name: 'Last' }), 'Lovelace');
+			await expect.poll(actionIds).toContain('last-change');
+			expect(onSubmit).not.toHaveBeenCalled();
+			await userEvent.click(getByRole(host, 'button', { name: 'Submit form' }));
+			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
+			expect(actionIds().filter((id, index, ids) => id !== ids[index - 1])).toEqual([
+				'last-change',
+				'last-submit',
+			]);
+		});
+		test('a config replaced while Next validates keeps the new form on its first step', async () => {
+			const pending: Array<(response: Response) => void> = [];
+			vi.stubGlobal(
+				'fetch',
+				vi.fn(() => new Promise<Response>((resolve) => pending.push(resolve))),
+			);
+			const config: FormConfigView = {
+				...wizard(
+					[
+						{
+							...input('handle', 'Handle'),
+							rules: [{ type: 'async', url: '/conformance-race', debounce: 0, disableCache: true }],
+						},
+					],
+					[input('second', 'Second')],
+					[input('third', 'Third')],
+				),
+				actions: [
+					{ $type: 'conformance', id: 'change', triggers: ['step_change'] },
+					{ $type: 'conformance', id: 'enter', triggers: ['step_enter'] },
+				],
+			};
+			try {
+				const { host, update } = await setup({ config });
+				await userEvent.fill(getByRole(host, 'textbox', { name: 'Handle' }), 'ada');
+				await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
+				await expect.poll(() => pending.length).toBeGreaterThan(0);
+				await update({ ...config, id: 'conformance-replaced' });
+				let read = 0;
+				for (const resolve of pending.splice(0)) {
+					const response = new Response(JSON.stringify({ valid: true }));
+					const json = response.json.bind(response);
+					response.json = () => {
+						read += 1;
+						return json();
+					};
+					resolve(response);
+				}
+				await expect.poll(() => read).toBeGreaterThan(0);
+				await new Promise((resolve) => setTimeout(resolve, 50));
+				expect(actionIds()).toEqual([]);
+				expect(queryAllByRole(host, 'textbox', { name: 'Second' })).toHaveLength(0);
+				expect(queryAllByRole(host, 'textbox', { name: 'Handle' })).toHaveLength(1);
+			} finally {
+				vi.unstubAllGlobals();
+			}
+		});
 		test('ignores Next activated again before step validation finishes', async () => {
-			const host = await setup({
+			const { host } = await setup({
 				config: {
 					...wizard(
 						[input('first', 'First')],
@@ -266,7 +382,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 		});
 		test('clears a nested validation error after a failed submission', async () => {
 			const onSubmit = vi.fn();
-			const host = await setup({ config: { ...form([address]), reValidateMode: 'onChange' }, onSubmit });
+			const { host } = await setup({ config: { ...form([address]), reValidateMode: 'onChange' }, onSubmit });
 			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
 			await expect.poll(() => queryByText(host, 'Street is required') !== null).toBe(true);
 			expect(onSubmit).not.toHaveBeenCalled();
@@ -278,7 +394,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 			expect(onSubmit).toHaveBeenCalledWith({ address: { street: 'Main Street' } });
 		});
 		test('handlers receive one errors shape', async () => {
-			const host = await setup({
+			const { host } = await setup({
 				config: {
 					...form([address, input('note', 'Note')]),
 					actions: [{ $type: 'conformance', id: 'changed', triggers: ['form_change'] }],
@@ -294,7 +410,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 		});
 		test('a require constraint blocks submission until its condition is removed', async () => {
 			const onSubmit = vi.fn();
-			const host = await setup({
+			const { host } = await setup({
 				config: form([
 					input('kind', 'Kind'),
 					{
@@ -325,7 +441,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 				'fetch',
 				vi.fn(async () => new Response(JSON.stringify({ valid: false, message: 'Handle is taken' }))),
 			);
-			const host = await setup({
+			const { host } = await setup({
 				config: {
 					...form([
 						{
@@ -352,7 +468,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 		test('an aborting submit action runs error and complete triggers without success', async () => {
 			const onSubmit = vi.fn();
 			const onAction = vi.fn();
-			const host = await setup({
+			const { host } = await setup({
 				config: {
 					...form([input('fullName', 'Name')]),
 					actions: [
@@ -376,7 +492,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 			const onAction = vi.fn(() => {
 				throw new Error('Callback stopped submission');
 			});
-			const host = await setup({
+			const { host } = await setup({
 				config: {
 					...form([input('fullName', 'Name')]),
 					actions: [
@@ -398,7 +514,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 		test('runs a Valibot action registration and forwards change and action callbacks', async () => {
 			const onChange = vi.fn();
 			const onAction = vi.fn();
-			const host = await setup({
+			const { host } = await setup({
 				config: {
 					...form([input('fullName', 'Name')]),
 					actions: [{ $type: 'conformance', id: 'changed', triggers: ['form_submit'] }],
