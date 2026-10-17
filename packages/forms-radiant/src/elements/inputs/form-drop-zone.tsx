@@ -3,7 +3,6 @@ import { customElement, onEvent, prop, query, RadiantElement, state } from '@eco
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
-import { toFieldRules } from '@/lib/field-rules';
 import type { DropZoneFieldProps } from './form-drop-zone.types';
 
 type AcceptMap = Record<string, string[]>;
@@ -212,8 +211,7 @@ export function FormDropZone({
 			description={config.description}
 			grid={config.grid}
 			style={config.style}
-			rules={toFieldRules(config)}
-			validationRules={config.rules}
+			validation={config}
 			defaultValue={config.defaultValue ?? []}
 			disabled={config.disabled}
 		>

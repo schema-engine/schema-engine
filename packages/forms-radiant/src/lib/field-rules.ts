@@ -59,11 +59,18 @@ function toValidator(
 	};
 }
 
+/** The element's authored rules plus the rules its registration attaches by default (`defaultFor`). */
+export function resolveElementRules(
+	element: FieldRulesSource,
+	registry?: ValidationRegistry,
+): ReadonlyArray<ValidationRule> | undefined {
+	const resolvedRegistry = resolveValidationRegistry(registry);
+	return resolvedRegistry ? getValidationRulesForElement(element, resolvedRegistry) : element.rules;
+}
+
 export function toFieldRules(element: FieldRulesSource, registry?: ValidationRegistry): FieldRules | undefined {
 	const resolvedRegistry = resolveValidationRegistry(registry);
-	const resolved = resolvedRegistry
-		? getValidationRulesForElement<ValidationRule>(element, resolvedRegistry)
-		: element.rules;
+	const resolved = resolveElementRules(element, resolvedRegistry);
 	if (!resolved?.length) {
 		return undefined;
 	}

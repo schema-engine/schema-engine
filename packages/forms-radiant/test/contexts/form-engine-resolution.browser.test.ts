@@ -77,7 +77,7 @@ describe('Radiant form engine resolution', () => {
 		vi.restoreAllMocks();
 	});
 
-	test('a form instance under the renderer resolves its engine when two engines exist', async () => {
+	test('a form instance under the renderer resolves the renderer engine when two engines exist', async () => {
 		const engineA = createRadiantFormEngine();
 		createRadiantFormEngine();
 		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -92,26 +92,32 @@ describe('Radiant form engine resolution', () => {
 		await vi.waitFor(() => {
 			expect(observed.isWizard).toBe(true);
 		});
+		expect(instance.engine).toBe(engineA);
 		expect(warn).not.toHaveBeenCalled();
 		observed.disconnect();
 	});
 
-	test('a form instance without a renderer does not resolve the only created engine', async () => {
+	test('a form instance with no engine in its tree reports it and does not pick the only created engine', async () => {
 		const engine = createRadiantFormEngine();
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 		const instance = document.createElement('se-form-instance') as FormInstanceElement;
 		instance.config = twoStepForm(engine);
 		document.body.append(instance);
+		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 		const observed = observeInstanceContext(instance);
 
-		await vi.waitFor(() => {
-			expect(observed.isWizard).toBe(false);
-		});
+		expect(instance.engine).toBeUndefined();
+		expect(observed.isWizard).toBe(false);
+		expect(warn).toHaveBeenCalledExactlyOnceWith(
+			expect.stringContaining('[schema-engine/forms-radiant]'),
+			expect.any(String),
+			expect.stringContaining('Could not resolve FormEngine for <se-form-instance>'),
+		);
 		observed.disconnect();
 	});
 
 	test('a connected form instance publishes its recipe after renderer context arrives', async () => {
 		const engine = createRadiantFormEngine();
-		createRadiantFormEngine();
 		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
 		const instance = document.createElement('se-form-instance') as FormInstanceElement;
 		instance.config = twoStepForm(engine);
@@ -132,7 +138,6 @@ describe('Radiant form engine resolution', () => {
 	test('an action controller dispatches its form-mount action after renderer context arrives', async () => {
 		const onPush = vi.fn();
 		const engine = createRadiantFormEngine({ actions: [gtmPlugin({ tracker: { push: vi.fn() }, onPush })] });
-		createRadiantFormEngine();
 		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
 		const form = document.createElement('rui-form');
 		const controller = document.createElement('se-form-action-controller') as FormActionControllerElement;
@@ -161,7 +166,6 @@ describe('Radiant form engine resolution', () => {
 
 	test('a form array renders its fields after renderer context arrives', async () => {
 		const engine = createRadiantFormEngine({ elements: [InputElementRegistration, ArrayElementRegistration] });
-		createRadiantFormEngine();
 		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
 		const form = document.createElement('rui-form');
 		const array = document.createElement('se-form-array') as SeFormArray;
@@ -190,7 +194,6 @@ describe('Radiant form engine resolution', () => {
 
 	test('a form array with seeded rows waits for renderer context before rendering fields', async () => {
 		const engine = createRadiantFormEngine({ elements: [InputElementRegistration, ArrayElementRegistration] });
-		createRadiantFormEngine();
 		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
 		const form = document.createElement('rui-form');
 		const array = document.createElement('se-form-array') as SeFormArray;

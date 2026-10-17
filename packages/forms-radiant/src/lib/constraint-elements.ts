@@ -62,3 +62,28 @@ export function createConstraintLookup(
 
 	return (renderedPath) => declarations.get(renderedPath) ?? declarations.get(templatePath(renderedPath));
 }
+
+/**
+ * Whether a rendered field is authored `disabled`, itself or through a containing element.
+ *
+ * @remarks
+ * Constraint sync needs the authored state on its own: the field's live
+ * `disabled` already includes what a constraint applied at render.
+ */
+export function createAuthoredDisabledLookup(
+	config: NormalizedFormConfig | undefined,
+): (renderedPath: string) => boolean {
+	const disabled = new Set<string>();
+	for (const step of config?.steps ?? []) {
+		for (const { path, element } of walkNamedElements(step.elements, '', true)) {
+			if ('disabled' in element && element.disabled === true) {
+				disabled.add(path);
+			}
+		}
+	}
+
+	return (renderedPath) => {
+		const segments = templatePath(renderedPath).split('.');
+		return segments.some((_, index) => disabled.has(segments.slice(0, index + 1).join('.')));
+	};
+}

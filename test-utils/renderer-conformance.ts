@@ -49,6 +49,13 @@ const form = (elements: FormConfigView['steps'][number]['elements']): FormConfig
 	],
 });
 
+const wizard = (...steps: FormConfigView['steps'][number]['elements'][]): FormConfigView => ({
+	id: 'conformance',
+	view: { $type: 'wizard', actions: { showStepCounter: true } },
+	steps: steps.map((elements, index) => ({ id: `step${index}`, title: `Step ${index + 1}`, elements })),
+});
+const actionIds = () => conformanceAction.execute.mock.calls.map(([context]) => context.config.id);
+
 /** @remarks Both browser projects execute these assertions against their own FormRenderer. */
 export function rendererConformance(mount: ConformanceMount): void {
 	describe('FormRenderer conformance', () => {
@@ -185,6 +192,54 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
 			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Last' }).length).toBe(1);
 		});
+		test('dispatches step leave, change and enter when the wizard advances', async () => {
+			const host = await setup({
+				config: {
+					...wizard([input('first', 'First')], [input('last', 'Last')]),
+					actions: [
+						{ $type: 'conformance', id: 'leave', triggers: ['step_leave'] },
+						{ $type: 'conformance', id: 'change', triggers: ['step_change'] },
+						{ $type: 'conformance', id: 'enter', triggers: ['step_enter'] },
+					],
+				},
+			});
+			await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
+			await expect
+				.poll(() =>
+					conformanceAction.execute.mock.calls.map(([context]) => [context.config.id, context.currentStep]),
+				)
+				.toEqual([
+					['leave', 0],
+					['change', 1],
+					['enter', 1],
+				]);
+		});
+		test('ignores Next activated again before step validation finishes', async () => {
+			const host = await setup({
+				config: {
+					...wizard(
+						[input('first', 'First')],
+						[
+							{
+								...input('second', 'Second'),
+								rules: [{ type: 'required', message: 'Second is required' }],
+							},
+						],
+						[input('third', 'Third')],
+					),
+					actions: [{ $type: 'conformance', id: 'change', triggers: ['step_change'] }],
+				},
+			});
+			const next = getByRole(host, 'button', { name: 'Go to next step' });
+			next.click();
+			next.click();
+			await expect.poll(() => queryAllByRole(host, 'textbox', { name: /^Second/ }).length).toBe(1);
+			await expect.poll(actionIds).toEqual(['change']);
+			expect(queryAllByRole(host, 'textbox', { name: 'Third' })).toHaveLength(0);
+			expect(queryByText(host, 'Second is required')).toBeNull();
+			await userEvent.fill(getByRole(host, 'textbox', { name: /^Second/ }), 'filled');
+			expect(actionIds()).toEqual(['change']);
+		});
 		test('clears a nested validation error after a failed submission', async () => {
 			const onSubmit = vi.fn();
 			const host = await setup({ config: { ...form([address]), reValidateMode: 'onChange' }, onSubmit });
@@ -244,9 +299,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 				onAction,
 			});
 			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
-			await expect
-				.poll(() => conformanceAction.execute.mock.calls.map(([context]) => context.config.id))
-				.toEqual(['abort', 'error', 'complete']);
+			await expect.poll(actionIds).toEqual(['abort', 'error', 'complete']);
 			expect(onSubmit).not.toHaveBeenCalled();
 			expect(onAction).not.toHaveBeenCalled();
 		});
@@ -270,9 +323,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 				onAction,
 			});
 			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
-			await expect
-				.poll(() => conformanceAction.execute.mock.calls.map(([context]) => context.config.id))
-				.toEqual(['first', 'error', 'complete']);
+			await expect.poll(actionIds).toEqual(['first', 'error', 'complete']);
 			expect(onSubmit).not.toHaveBeenCalled();
 			expect(onAction).toHaveBeenCalledTimes(1);
 		});

@@ -2,8 +2,8 @@ import { FormField } from '@/elements/form-field';
 import type { JsxRenderable } from '@ecopages/jsx';
 import { RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
 import { RuiLabel } from '@ecopages/radiant-ui/label';
-import type { FieldRules } from '@ecopages/radiant-ui/form';
-import type { ElementGridConfig, ValidationRule } from '@schema-engine/forms/schemas';
+import type { ElementGridConfig } from '@schema-engine/forms/schemas';
+import type { FieldRulesSource } from '@/lib/field-rules';
 
 export interface FieldGroupProps {
 	label: string;
@@ -16,8 +16,7 @@ export interface FieldGroupProps {
 	style?: Record<string, string | number | undefined>;
 	grid?: ElementGridConfig;
 	name?: string;
-	rules?: FieldRules;
-	validationRules?: ReadonlyArray<ValidationRule>;
+	validation?: FieldRulesSource;
 	defaultValue?: unknown;
 	disabled?: boolean;
 }
@@ -38,16 +37,14 @@ export function FieldGroup({
 	style,
 	grid,
 	name,
-	rules,
-	validationRules,
+	validation,
 	defaultValue,
 	disabled,
 }: FieldGroupProps) {
 	return (
 		<FormField
 			name={name ?? htmlFor ?? label}
-			rules={rules}
-			validationRules={validationRules}
+			validation={validation}
 			defaultValueData={defaultValue !== undefined ? JSON.stringify(defaultValue) : undefined}
 			disabled={disabled}
 			classes={['se-form-field', className]}

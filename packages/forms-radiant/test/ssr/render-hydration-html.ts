@@ -11,6 +11,12 @@ import { SelectFieldConfigSchema } from '@/elements/inputs/form-select.types';
 import { CheckboxFieldConfigSchema } from '@/elements/inputs/form-checkbox.types';
 import { SliderFieldConfigSchema } from '@/elements/inputs/form-slider.types';
 import { ConfiguredRuiForm } from '@/adapters/radiant/rui-form-shell';
+import { FormInput } from '@/elements/inputs/form-input';
+import { FormPhoneInput } from '@/elements/inputs/form-phone-input';
+import { InputFieldSchema } from '@/elements/inputs/form-input.types';
+import { PhoneInputFieldSchema } from '@/elements/inputs/form-phone-input.types';
+import { renderWithOwningFormEngine } from '@/contexts/form-engine-owner';
+import { createHydrationEngine } from './hydration-engine';
 
 await import('@/components/form-instance.script');
 
@@ -43,6 +49,10 @@ export function renderHydrationHtml(): string {
 				CheckboxFieldConfigSchema.parse({ $type: 'checkbox', id: 'accepted', name: 'accepted', rules }),
 			),
 			jsx(FormSlider, SliderFieldConfigSchema.parse({ $type: 'slider', id: 'amount', name: 'amount', rules })),
+			...renderWithOwningFormEngine(createHydrationEngine(), () => [
+				FormInput(InputFieldSchema.parse({ $type: 'input', id: 'contact', name: 'contact' })),
+				FormPhoneInput(PhoneInputFieldSchema.parse({ $type: 'phone-input', id: 'phone', name: 'phone' })),
+			]),
 		];
 		return renderToString(
 			jsx('se-form-instance', {
