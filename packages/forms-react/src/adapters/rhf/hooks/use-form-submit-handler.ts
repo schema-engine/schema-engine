@@ -19,7 +19,7 @@ interface SubmissionStateManager {
 	clearSubmission: () => void;
 }
 
-type NormalizedFormAction = NonNullable<FormConfigView['actions']>[number];
+export type NormalizedFormAction = NonNullable<FormConfigView['actions']>[number];
 
 interface UseFormSubmitHandlerOptions {
 	form: UseFormReturn;
