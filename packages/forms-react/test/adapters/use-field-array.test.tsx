@@ -5,7 +5,7 @@ import { act, render, screen } from '@testing-library/react';
 import { useFieldArray } from '@/adapters/rhf/hooks/use-field-array';
 import type { FieldArrayValue } from '@schema-engine/forms/adapters';
 
-type Values = Record<string, unknown[]>;
+type Values = Record<string, Array<string | { label: string }>>;
 
 const emptyTagsAreInvalid: Resolver<Values> = async (values) => {
 	const errors = (values.tags ?? []).map((tag) => (tag ? undefined : { type: 'required', message: 'Required' }));

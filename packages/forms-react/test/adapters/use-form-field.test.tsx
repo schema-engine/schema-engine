@@ -169,6 +169,11 @@ describe('useControlledFormElement under FormRenderer', () => {
 		);
 	}
 
+	/**
+	 * @remarks
+	 * `vi.fn` drops the generic signature of the adapter's `useWatchField`, so the
+	 * spy is passed back as that type.
+	 */
 	function renderForm(fields: ElementConfig[], onRender?: (name: string) => void) {
 		const useWatchField = vi.fn(rhfAdapter.useWatchField);
 		const engine = createFormEngine({
@@ -177,13 +182,13 @@ describe('useControlledFormElement under FormRenderer', () => {
 					$type: 'field',
 					schema: z.looseObject({ $type: z.literal('field'), id: z.string(), name: z.string() }),
 					metadata: { name: 'Field', category: 'input' },
-					render: (config) => <ConfiguredInput {...config} onRender={onRender} />,
+					render: (config: ElementConfig) => <ConfiguredInput {...config} onRender={onRender} />,
 				}),
 				defineInput({
 					$type: 'required-field',
 					schema: z.looseObject({ $type: z.literal('required-field'), id: z.string(), name: z.string() }),
 					metadata: { name: 'Required field', category: 'input' },
-					render: (config) => <ConfiguredInput {...config} />,
+					render: (config: ElementConfig) => <ConfiguredInput {...config} />,
 					validations: [
 						{
 							type: 'required',
@@ -197,7 +202,7 @@ describe('useControlledFormElement under FormRenderer', () => {
 					$type: 'pair',
 					schema: z.looseObject({ $type: z.literal('pair'), id: z.string(), name: z.string() }),
 					metadata: { name: 'Pair', category: 'input' },
-					render: (config) => (
+					render: (config: ElementConfig) => (
 						<>
 							<ConfiguredInput {...config} />
 							<ConfiguredInput
@@ -214,7 +219,7 @@ describe('useControlledFormElement under FormRenderer', () => {
 			<FormRenderer
 				config={engine.validateForm({ id: 'fields', steps: [{ id: 'main', title: 'Main', elements: fields }] })}
 				engine={engine}
-				adapter={{ ...rhfAdapter, useWatchField }}
+				adapter={{ ...rhfAdapter, useWatchField: useWatchField as typeof rhfAdapter.useWatchField }}
 			/>,
 		);
 		return useWatchField;
