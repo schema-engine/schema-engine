@@ -73,10 +73,8 @@ The forms action trigger type contains these events:
 | `form_submit_error`    | Submission fails                       |
 | `form_submit_complete` | Submission finishes with either result |
 | `step_change`          | The active step changes                |
-| `step_submit`          | A step is submitted                    |
 | `step_enter`           | A step becomes active                  |
 | `step_leave`           | A step stops being active              |
-| `step_view`            | A step becomes visible                 |
 
 Actions execute sequentially in the order provided to the dispatcher.
 

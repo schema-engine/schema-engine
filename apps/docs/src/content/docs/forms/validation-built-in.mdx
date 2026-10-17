@@ -582,7 +582,8 @@ For server-side validation that requires network requests, with built-in caching
 With `debounce`, a newer validation of the same field replaces a pending one and only the
 latest request is sent. A replaced validation of the same value shares that request's
 result; one of a different value fails with `Validation pending`, so a submit-time check
-superseded by a later edit never passes.
+superseded by a later edit never passes. Neither renderer shows that message while the
+user types: each shows the result for the latest value.
 
 ### Dependency Resolution
 
