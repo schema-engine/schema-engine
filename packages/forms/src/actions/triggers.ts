@@ -8,7 +8,7 @@ import * as z from 'zod/mini';
  *
  * Lifecycle Chains:
  * - Submit: form_submit → form_submit_start → form_submit_success/form_submit_error → form_submit_complete
- * - Step: step_change → step_enter/step_leave
+ * - Step: step_leave → step_change → step_enter
  *
  * @form_mount - When form is initialized
  * @form_change - When any form field changes

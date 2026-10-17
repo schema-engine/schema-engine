@@ -116,7 +116,7 @@ export class FormActionControllerElement extends RadiantElement {
 		}
 		if (this.mountedEngine !== this.dispatcherEngine) {
 			this.mountedEngine = this.dispatcherEngine;
-			void this.dispatch('form_mount');
+			void this.dispatchTrigger('form_mount');
 		}
 		if (this.watchingChanges) {
 			return;
@@ -128,7 +128,7 @@ export class FormActionControllerElement extends RadiantElement {
 				initial = false;
 				return;
 			}
-			void this.dispatch('form_change');
+			void this.dispatchTrigger('form_change');
 		});
 	}
 
@@ -164,7 +164,8 @@ export class FormActionControllerElement extends RadiantElement {
 		return submission;
 	}
 
-	private async dispatch(trigger: FormActionTrigger): Promise<Awaited<ReturnType<ActionDispatcher['dispatch']>>> {
+	/** Dispatches one trigger's configured actions; resolves empty when no actions are configured or before the dispatcher and form are ready. */
+	async dispatchTrigger(trigger: FormActionTrigger): Promise<Awaited<ReturnType<ActionDispatcher['dispatch']>>> {
 		const config = this.config;
 		if (!this.dispatcher || !config?.actions?.length) {
 			return [];

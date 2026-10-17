@@ -87,6 +87,14 @@ engine rather than in each renderer, because the constraint subsystem already
 demonstrated what happens when a decision of this class is made twice.
 See [the controller contract](./packages/forms-radiant/src/adapters/radiant/controller/README.md).
 
+## Wizard navigation
+
+The engine's step navigator (`createStepNavigator`) owns wizard navigation for every
+renderer: it ignores a request while another is in flight, validates the active step
+before `next`, and dispatches `step_leave` before the step changes and `step_change`
+then `step_enter` after. A renderer supplies where its step state lives, how to
+validate a step and how to dispatch a trigger, so a new renderer inherits the guard and the trigger order.
+
 ## Grid theme ownership
 
 Responsive grid layout is pure CSS. The **engine** owns the grid vocabulary —
