@@ -14,6 +14,7 @@ interface CreateFormEngineOptions<TElements, TRecipes, TActions> {
 	elements?: TElements;
 	recipes?: TRecipes;
 	actions?: TActions;
+	/** Extra schema metadata entries; copied, with every registration's entry written over it. */
 	catalog?: SchemaMetadataCatalog;
 	/** Breakpoint thresholds, gap tokens, and default min column width. */
 	grid?: GridThemeOptions;

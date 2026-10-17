@@ -18,7 +18,8 @@ import type {
 	ActionRegistrationConstraint,
 } from '@/builder/types.utils';
 import type { ExtendFormEngineOptions } from './create-form-engine';
-import { buildFormEngine, registerSchemaMetadata } from './build-form-engine';
+import { buildFormEngine } from './build-form-engine';
+import { SchemaMetadataCatalog } from './schema-metadata-catalog';
 import type { CompiledGrid, NormalizedGridTheme } from '@/lib/grid-styles';
 import type { ValidationRegistry } from '@/schemas/validation/validation-registry';
 import {
@@ -221,7 +222,7 @@ export class FormEngine<
 				this.schemaArtifacts.metadataRegistry,
 				{
 					target: 'draft-2020-12',
-					schemaId: `recipe:${recipe.$type}`,
+					schemaId: SchemaMetadataCatalog.entryId(ComponentType.Recipe, recipe.$type),
 				},
 			) as Record<string, unknown>;
 		} catch (error) {
@@ -302,24 +303,11 @@ export class FormEngine<
 			actions: LastWinsMerge<TOutputs['actions'], MergedOutputMap<TNewActions>>;
 		}
 	> {
-		const catalog = options?.catalog ?? this.schemaArtifacts.metadataCatalog.clone();
-		if (!options?.catalog) {
-			for (const element of options?.elements ?? []) {
-				registerSchemaMetadata(catalog, ComponentType.Element, element);
-			}
-			for (const recipe of options?.recipes ?? []) {
-				registerSchemaMetadata(catalog, ComponentType.Recipe, recipe);
-			}
-			for (const action of options?.actions ?? []) {
-				registerSchemaMetadata(catalog, ComponentType.Action, action);
-			}
-		}
-
 		return buildFormEngine({
 			elements: [...this.getAllElements(), ...(options?.elements ?? [])],
 			recipes: [...this.getAllRecipes(), ...(options?.recipes ?? [])],
 			actions: [...this.getAllActions(), ...(options?.actions ?? [])],
-			catalog,
+			catalog: options?.catalog ?? this.schemaArtifacts.metadataCatalog,
 			compiledGrid: this.compiledGrid,
 		}) as unknown as FormEngine<
 			LastWinsMerge<TElements, MergedRegistrationMap<TNewElements>>,
