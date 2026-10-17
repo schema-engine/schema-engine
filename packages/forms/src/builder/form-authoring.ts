@@ -72,7 +72,13 @@ export interface FormAuthoringInput<
 	steps: Array<FormAuthoringStep<TElements, TActions>>;
 	view?: DiscriminatedConfigs<TRecipes>;
 	grid?: GridLayoutConfig;
+	/**
+	 * When a field validates before the form is submitted.
+	 *
+	 * @remarks Both renderers honour it. Unset, React validates on blur and Radiant on submit.
+	 */
 	validationMode?: 'onSubmit' | 'onChange' | 'onBlur' | 'all';
+	/** When a field re-validates after a submit; unset, on change in both renderers. */
 	reValidateMode?: 'onSubmit' | 'onChange' | 'onBlur';
 	className?: string;
 	style?: Record<string, unknown>;

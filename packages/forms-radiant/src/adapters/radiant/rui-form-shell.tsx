@@ -43,8 +43,8 @@ export function ConfiguredRuiForm({
 		<RuiForm
 			class={config.className}
 			style={config.style}
-			mode="onSubmit"
-			reValidateMode="onChange"
+			mode={config.validationMode ?? 'onSubmit'}
+			reValidateMode={config.reValidateMode ?? 'onChange'}
 			defaultValues={initialValues ?? collectFormDefaultValues(config, defaultValues)}
 			on:rui-invalid={rememberInvalidErrors}
 			on:rui-submit={clearInvalidErrors}
