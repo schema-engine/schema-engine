@@ -78,6 +78,20 @@ new ID for the updated row, and `replace` creates new IDs for all rows. Array
 operations reindex errors, touched flags, and dirty flags alongside values.
 Invalid insertion, update, swap, and move indices are ignored.
 
+## Engine access
+
+`FormEngineController` resolves the `FormEngine` for a host, the way
+`FormController` resolves the form store. Construct it with
+`new FormEngineController(host)`.
+
+- `engine` returns the engine from the host's `formEngineContext` (for example
+  inside `se-form-renderer`), then the active render scope. It is cached until
+  `disconnect`.
+- `ready` is `true` once `engine` resolves.
+- `connect(onChange?)` subscribes to `formEngineContext` and calls `onChange`
+  whenever the context supplies an engine.
+- `disconnect()` removes that subscription and clears the cached engine.
+
 ## Runtime boundary
 
 Radiant UI publishes the live store on `formContext`. `FormController` reads
