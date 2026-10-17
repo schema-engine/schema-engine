@@ -1,5 +1,4 @@
 import { describe, expect, inject, test } from 'vitest';
-import { hasHydrationMarkers } from '@ecopages/jsx';
 import { FormController } from '@/adapters/radiant/controller';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
@@ -20,7 +19,7 @@ describe('SSR array hydration', () => {
 		const arrayHost = app.querySelector<SeFormArray>('se-form-array');
 		if (!renderer || !arrayHost) throw new Error('Expected rendered form and array hosts');
 		const serverRows = [...app.querySelectorAll('.se-form-array__item[data-se-row-id]')];
-		expect(hasHydrationMarkers(arrayHost)).toBe(true);
+		expect(arrayHost.hasAttribute('data-radiant-ssr')).toBe(true);
 		expect([...app.querySelectorAll<HTMLInputElement>('.rui-input')].map(({ value }) => value)).toEqual([
 			'Alice',
 			'Bob',

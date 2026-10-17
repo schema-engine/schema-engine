@@ -2,7 +2,6 @@ import './form-array-elements.css';
 import { customElement, onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { RuiButton } from '@ecopages/radiant-ui/button';
-import { hasHydrationMarkers } from '@ecopages/jsx';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { FormElements } from '@/components/internals/form-elements';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
@@ -262,7 +261,7 @@ export class SeFormArray extends RadiantElement {
 	 * @remarks Reusing the node lets its child controls upgrade against the server rows. Later updates render the current keyed rows normally.
 	 */
 	private preserveHydratedContainer(): HTMLElement | undefined {
-		if (this.preservedHydratedContainer || !this.isConnected || !hasHydrationMarkers(this)) return undefined;
+		if (this.preservedHydratedContainer || !this.isConnected || !this.isServerRendered) return undefined;
 		const container = this.renderedContainer();
 		if (container) this.preservedHydratedContainer = true;
 		return container;
@@ -307,7 +306,7 @@ export class SeFormArray extends RadiantElement {
 		this.renderedIds = initialIds;
 		this.formEngine.connect(() => {
 			this.registerArrayField();
-			if (!hasHydrationMarkers(this)) this.requestUpdate();
+			if (!this.isServerRendered) this.requestUpdate();
 		});
 		this.form.connect(() => this.scheduleSync(initialIds));
 		if (this.form.ready) this.scheduleSync(initialIds);

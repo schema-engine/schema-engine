@@ -47,11 +47,12 @@ test.each(['confirm', 'choice', 'accepted', 'amount'])(
 		await expect.poll(() => typeof field.rules?.validate).toBe('function');
 		const store = field.form.store;
 		expect(store).toBeDefined();
+		const mismatch = name === 'amount' ? 7 : 'different';
 		store?.setValue('password', 'secret');
 		if (name === 'confirm') {
 			await userEvent.fill(field.querySelector('textarea')!, 'different');
 		} else {
-			store?.setValue(name, 'different');
+			store?.setValue(name, mismatch);
 		}
 		store?.markTouched(name);
 		await store?.validateField(name);
@@ -60,7 +61,7 @@ test.each(['confirm', 'choice', 'accepted', 'amount'])(
 		document.body.append(root);
 		const reconnectedStore = field.form.store;
 		reconnectedStore?.setValue('password', 'changed');
-		reconnectedStore?.setValue(name, 'different');
+		reconnectedStore?.setValue(name, mismatch);
 		await reconnectedStore?.validateField(name);
 		expect(reconnectedStore?.getState().errors[name]?.message).toBe('Must match password');
 	},
