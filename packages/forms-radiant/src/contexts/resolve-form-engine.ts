@@ -3,44 +3,46 @@ import { ContextSubscriptionRequestEvent } from '@ecopages/radiant/context';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { formEngineContext } from '@/components/provider';
 import { peekOwningFormEngine } from '@/contexts/form-engine-owner';
-import { getDefaultFormEngine, getRegisteredEngineCount, onRegisteredEngineChange } from '@/registries/active-engine';
 
 /**
  * Reads `formEngineContext` from the host or an ancestor.
  */
 export function readFormEngineFromContext(host: HTMLElement): FormEngine | undefined {
-	let current: Node | null = host;
-	while (current) {
-		if (current instanceof HTMLElement) {
-			let engine: FormEngine | undefined;
-			current.dispatchEvent(
-				new ContextSubscriptionRequestEvent(formEngineContext, (context) => {
-					engine = context.engine;
-				}),
-			);
-			if (engine) {
-				return engine;
-			}
-		}
-		current = current.parentNode;
-	}
-	return undefined;
+	let engine: FormEngine | undefined;
+	host.dispatchEvent(
+		new ContextSubscriptionRequestEvent(formEngineContext, (context) => {
+			engine = context.engine;
+		}),
+	);
+	return engine;
 }
 
-let warnedMultiEngine = false;
+const reportedHosts = new WeakSet<HTMLElement>();
 
-function warnMultiEngineFallback(host: HTMLElement): void {
-	if (warnedMultiEngine) {
+/**
+ * Reports a host that no engine can reach, once per host.
+ *
+ * @remarks
+ * A host under `se-form-renderer` stays quiet because the renderer's engine can
+ * still arrive after the host connects, and a detached host (server rendering)
+ * stays quiet because its engine is supplied by the render in progress.
+ */
+function reportMissingEngine(host: HTMLElement): void {
+	if (!host.isConnected || host.closest('se-form-renderer') || reportedHosts.has(host)) {
 		return;
 	}
-	warnedMultiEngine = true;
+	reportedHosts.add(host);
 	logger.warn(
-		`Could not resolve FormEngine for <${host.tagName.toLowerCase()}>: multiple engines are registered. Pass an explicit \`engine\` prop or render the host inside \`se-form-renderer\`.`,
+		`Could not resolve FormEngine for <${host.tagName.toLowerCase()}>: no engine reaches it. Pass an explicit \`engine\` prop or render the host inside \`se-form-renderer\`.`,
 	);
 }
 
 /**
- * Resolves the engine for a host: explicit prop, context, render scope, then registered default.
+ * Resolves the engine for a host: explicit prop, context, then owning render.
+ *
+ * @remarks
+ * There is no module-level engine registry: an engine reaches a host only
+ * through one of those three paths, however many engines the page has created.
  */
 export function resolveFormEngine(host?: HTMLElement, explicit?: FormEngine): FormEngine | undefined {
 	if (explicit) {
@@ -55,29 +57,8 @@ export function resolveFormEngine(host?: HTMLElement, explicit?: FormEngine): Fo
 	}
 
 	const owning = peekOwningFormEngine();
-	if (owning) {
-		return owning;
+	if (!owning && host) {
+		reportMissingEngine(host);
 	}
-
-	const fallback = getDefaultFormEngine();
-	if (!fallback && host && getRegisteredEngineCount() > 1) {
-		warnMultiEngineFallback(host);
-	}
-	return fallback;
-}
-
-/**
- * Invokes `apply` when an engine becomes available on `host`, then on later registry updates until `dispose`.
- */
-export function whenEngineAvailable(
-	host: HTMLElement,
-	explicit: FormEngine | undefined,
-	apply: (engine: FormEngine) => void,
-): () => void {
-	return onRegisteredEngineChange(() => {
-		const engine = resolveFormEngine(host, explicit);
-		if (engine) {
-			apply(engine);
-		}
-	});
+	return owning;
 }

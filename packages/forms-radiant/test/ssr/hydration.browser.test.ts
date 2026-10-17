@@ -5,7 +5,7 @@ import { RuiFormElement } from '@ecopages/radiant-ui/form';
 import { FormInstanceElement } from '@/components/form-instance.script';
 import { FormActionControllerElement } from '@/components/form-action-controller';
 import { FormFieldElement } from '@/elements/form-field';
-import { registerFormEngine, resetRegisteredFormEnginesForTests } from '@/registries/active-engine';
+import { FormRendererElement } from '@/components/internals/form-renderer.script';
 
 await Promise.all([
 	import('@/elements/inputs/form-textarea'),
@@ -16,10 +16,12 @@ await Promise.all([
 
 function mount() {
 	const engine = createFormEngine({ elements: [] });
-	registerFormEngine(engine);
+	const renderer = new FormRendererElement();
+	renderer.engine = engine;
 	const root = document.createElement('div');
 	root.innerHTML = atob(inject('ssrHydrationHtml'));
-	document.body.append(root);
+	renderer.append(root);
+	document.body.append(renderer);
 	return {
 		root,
 		engine,
@@ -30,7 +32,6 @@ function mount() {
 
 afterEach(() => {
 	document.body.replaceChildren();
-	resetRegisteredFormEnginesForTests();
 	vi.restoreAllMocks();
 });
 

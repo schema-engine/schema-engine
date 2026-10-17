@@ -8,6 +8,8 @@ Runtime diagnostics go through `@ecopages/logger` with the
 `[schema-engine/forms-radiant]` package tag. Debug output is disabled by default;
 warnings and errors keep their severity and diagnostic details.
 
+A connected host that no engine reaches (no `engine` prop, no `se-form-renderer` above it, no render in progress) logs one warning for that host. Engines are never resolved implicitly, however many exist.
+
 ## Why the recipe components ship in this package
 
 Unlike `@schema-engine/forms-react` — where the default view recipes live in the shadcn registry and consumers register them explicitly with `createFormEngine({ recipes })` — Radiant has no registry ecosystem to lean on. The shells and step blocks are therefore part of this package and `createRadiantFormEngine()` binds the canonical recipes automatically, so the package stays plug-and-play. The recipe specs themselves remain canonical in `@schema-engine/forms/recipes`.

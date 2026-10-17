@@ -12,7 +12,7 @@ import { flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import { formInstanceContext, type FormInstanceContextValue, type StepStates } from '@/contexts/form-instance-context';
 import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
-import { whenEngineAvailable } from '@/contexts/resolve-form-engine';
+import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import { findNearestRuiForm } from '@/lib/rui-form-utils';
 import { connectValidationDependencies } from '@/lib/validation-deps';
 import type { RuiFormElement } from '@ecopages/radiant-ui/form';
@@ -24,7 +24,6 @@ import {
 	type StepMachineAction,
 } from '@schema-engine/forms/engine';
 import { createInstanceNavigation } from '@/lib/instance-navigation';
-import { createLiveInstanceContext } from '@/lib/live-instance-context';
 import { syncConstraints } from '@/lib/constraint-sync';
 import type { FormProviderProps } from '@/adapters/types';
 import type { FormActionControllerElement } from './form-action-controller';
@@ -51,7 +50,6 @@ export class FormInstanceElement extends RadiantElement {
 	}
 	private form?: FormController;
 	private unwatchValidationDependencies?: () => void;
-	private unsubscribeActiveEngine?: () => void;
 
 	@provideContext<typeof formInstanceContext>({
 		context: formInstanceContext,
@@ -63,7 +61,7 @@ export class FormInstanceElement extends RadiantElement {
 	constructor() {
 		super();
 		registerSsrPreparationCallback(this, () => this.publish());
-		this.provider.setContext(createLiveInstanceContext(this));
+		this.publish();
 	}
 
 	@onContextUpdate({ context: formEngineContext, requestUpdate: false })
@@ -77,12 +75,7 @@ export class FormInstanceElement extends RadiantElement {
 	/** @remarks Client mounting can connect this host before its authored form children are attached. */
 	protected override onConnected(): void {
 		if (!this.engine) {
-			this.unsubscribeActiveEngine = whenEngineAvailable(this, this.engine, (engine) => {
-				if (!this.engine) {
-					this.engine = engine;
-				}
-				this.publish();
-			});
+			this.engine = resolveFormEngine(this);
 		}
 		this.resetStepState();
 		this.publish();
@@ -96,7 +89,6 @@ export class FormInstanceElement extends RadiantElement {
 	}
 
 	override disconnectedCallback(): void {
-		this.unsubscribeActiveEngine?.();
 		this.stopWatchingValidationDependencies();
 		this.unwatchChanges?.();
 		this.unwatchChanges = undefined;
