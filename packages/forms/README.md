@@ -59,6 +59,14 @@ reducer completes the active step and advances. On the final step, it updates va
 without marking that step complete or advancing. When `isValid` is false, it leaves the
 active step in place. Pass the resulting state to `buildViewModel` as `stepStates`.
 
+`createStepNavigator({ reduce, getState, setState, validateStep, dispatchTrigger })` wraps
+that reducer in the navigation both renderers share. It returns `navigate(action)`, which
+takes `{ type: 'next' }` without `isValid`, `{ type: 'previous' }` or
+`{ type: 'go-to', index }`. `next` awaits `validateStep` for the
+active step before reducing. A request made while another is in flight resolves without doing anything, so a
+double click on Next advances one step. When the step index changes, `step_leave` runs
+before the new state is set and `step_change` then `step_enter` run after it.
+
 `runSubmissionLifecycle(dispatch, { actions, context })` dispatches the form submit start,
 submit, success or error, and complete triggers. Pass a fixed `context` when every trigger
 uses the same snapshot, or a context factory when each trigger needs a fresh form-state

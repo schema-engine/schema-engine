@@ -3,7 +3,8 @@ import { RuiFieldElement, type RuiFieldProps } from '@ecopages/radiant-ui/field'
 import { jsx, type JsxCustomElementAttributes } from '@ecopages/jsx';
 import { FormController, formController } from '@/adapters/radiant/controller';
 import { readHydratedRules } from '@/components/internals/field-rule-hydrator';
-import type { ValidationRule, ElementGridConfig } from '@schema-engine/forms/schemas';
+import type { ElementGridConfig } from '@schema-engine/forms/schemas';
+import { resolveElementRules, toFieldRules, type FieldRulesSource } from '@/lib/field-rules';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 
 /** RuiField's registration and presentation, with scoped programmatic form access. */
@@ -47,29 +48,36 @@ export class FormFieldElement extends RuiFieldElement {
 	}
 }
 
+/**
+ * @remarks
+ * `validation` takes the element's `rules`, `$type` and `name`. The live rules
+ * and `data-se-validation-rules` come from one merged list. The hydrator
+ * rebuilds rules from the attribute alone and has no `$type` to look up
+ * `defaultFor` rules again, so the serialized list must already include them.
+ */
 export function FormField({
 	children,
-	rules,
-	validationRules,
+	validation,
 	defaultValue,
 	defaultValueData,
 	class: className,
 	grid,
 	style,
 	...props
-}: JsxCustomElementAttributes<FormFieldElement, RuiFieldProps> & {
-	validationRules?: ReadonlyArray<ValidationRule>;
+}: Omit<JsxCustomElementAttributes<FormFieldElement, RuiFieldProps>, 'rules'> & {
+	validation?: FieldRulesSource;
 	grid?: ElementGridConfig;
 	style?: Record<string, string | number | undefined>;
 }) {
 	const fieldHost = mergeFieldGridHost(grid, style);
+	const validationRules = validation ? resolveElementRules(validation) : undefined;
 
 	return jsx('se-field', {
 		...props,
 		classes: ['se-form-field', className],
 		'data-se-grid-theme': fieldHost.themeId,
 		style: fieldHost.style,
-		'prop:rules': rules,
+		'prop:rules': toFieldRules({ rules: validationRules, name: validation?.name }),
 		'data-se-validation-rules': validationRules ? JSON.stringify(validationRules) : undefined,
 		'prop:defaultValue': defaultValue,
 		data: {

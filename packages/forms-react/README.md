@@ -106,7 +106,8 @@ task in Turbo. Renderer actions import the dispatcher from
 ## Validation, navigation and action contexts
 
 The React Hook Form adapter delegates validation to `validateFormValues`, step
-state to `createStepMachine`, and submission triggers to `runSubmissionLifecycle`
+state to `createStepMachine`, navigation (the in-flight guard and step triggers) to
+`createStepNavigator`, and submission triggers to `runSubmissionLifecycle`
 from `@schema-engine/forms`. Wizard Next validates nested fieldsets and live
 array rows; errors keep the nested value shape so field revalidation clears them.
 A `require` constraint supplies both the control's required state and validation.

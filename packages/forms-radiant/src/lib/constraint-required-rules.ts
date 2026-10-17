@@ -39,7 +39,7 @@ export function applyConstraintRequired(field: FormFieldElement, isRequired: boo
 	};
 	field.rules = next;
 	field.toggleAttribute('data-se-constraint-required', isRequired);
-	field.querySelector(REQUIRED_MARKER)?.toggleAttribute('hidden', !isRequired);
+	field.querySelector(REQUIRED_MARKER)?.toggleAttribute('hidden', !required);
 	(field as { onRulesUpdated?: () => void }).onRulesUpdated?.();
 	return true;
 }

@@ -1,25 +1,29 @@
 import { userEvent } from 'vitest/browser';
 import { afterEach, expect, inject, test, vi } from 'vitest';
-import { createFormEngine } from '@schema-engine/forms';
 import { RuiFormElement } from '@ecopages/radiant-ui/form';
 import { FormInstanceElement } from '@/components/form-instance.script';
 import { FormActionControllerElement } from '@/components/form-action-controller';
 import { FormFieldElement } from '@/elements/form-field';
-import { registerFormEngine, resetRegisteredFormEnginesForTests } from '@/registries/active-engine';
+import { FormRendererElement } from '@/components/internals/form-renderer.script';
+import { createHydrationEngine } from './hydration-engine';
 
 await Promise.all([
 	import('@/elements/inputs/form-textarea'),
 	import('@/elements/inputs/form-select'),
 	import('@/elements/inputs/form-checkbox'),
 	import('@/elements/inputs/form-slider'),
+	import('@/elements/inputs/form-input'),
+	import('@/elements/inputs/form-phone-input'),
 ]);
 
 function mount() {
-	const engine = createFormEngine({ elements: [] });
-	registerFormEngine(engine);
+	const engine = createHydrationEngine();
+	const renderer = new FormRendererElement();
+	renderer.engine = engine;
 	const root = document.createElement('div');
 	root.innerHTML = atob(inject('ssrHydrationHtml'));
-	document.body.append(root);
+	renderer.append(root);
+	document.body.append(renderer);
 	return {
 		root,
 		engine,
@@ -30,7 +34,6 @@ function mount() {
 
 afterEach(() => {
 	document.body.replaceChildren();
-	resetRegisteredFormEnginesForTests();
 	vi.restoreAllMocks();
 });
 
@@ -139,4 +142,18 @@ test('onChange receives a nested value tree and reconnects without duplicate wat
 	await expect.poll(() => onChange.mock.calls.at(-1)?.[0].address).toEqual({ street: 'reconnected' });
 	const snapshots = onChange.mock.calls.filter(([values]) => values.address?.street === 'reconnected');
 	expect(snapshots).toHaveLength(1);
+});
+
+test.each([
+	['contact', 'not an email', 'Enter an email'],
+	['phone', '+1555', 'Enter a complete phone number'],
+])('hydrated %s reports the rule its registration attaches by default', async (name, value, message) => {
+	const { root } = mount();
+	const field = root.querySelector(`se-field[name="${name}"]`) as FormFieldElement;
+	await expect.poll(() => field.form.ready).toBe(true);
+	const store = field.form.store!;
+	store.setValue(name, value);
+	store.markTouched(name);
+	await store.validateField(name);
+	expect(store.getState().errors[name]?.message).toBe(message);
 });

@@ -18,7 +18,9 @@ The engine exports reusable helpers for paths, effective rules, and validation.
 For `validateFormValues`, omitted or empty `names` validates every named field.
 A non-empty list validates only the requested paths and their descendants.
 
-React and Radiant delegate to these helpers. `runSubmissionLifecycle` accepts either a
+React and Radiant delegate to these helpers. `createStepNavigator` owns the wizard's
+in-flight guard and `step_leave` / `step_change` / `step_enter` order; a renderer supplies
+its step state, step validation and trigger dispatch. `runSubmissionLifecycle` accepts either a
 fixed context or a factory; use a factory when each submission trigger needs current form
 values and validation state. Its optional `onAction(action, data)` callback runs after each
 successful `form_submit` action. If the callback rejects, that action becomes a fatal failure
@@ -41,9 +43,12 @@ without mutating the source engine's catalog.
 
 Container registrations declare `containerKind: 'array'` (or `'object'`).
 Normalization stores that metadata on the frozen element without adding JSON
-keys. `collectFieldDefaults` and `walkNamedElements` read the metadata rather
-than a widget `$type`. A one-child array uses scalar item paths; other arrays
-join child names onto each item. Validation expands scalar child rules to each
+keys. `collectFieldDefaults`, `collectInitialValues`, `createArrayRowDefault`
+and `walkNamedElements` detect arrays by the metadata rather than a widget `$type`. A new row
+starts from `createArrayRowDefault`: child `defaultValue`s with the container's
+`initialValues` merged over them (see [CONTEXT.md](../../../../CONTEXT.md#array-rows)). A one-child array whose child is a leaf and whose seeds are not object-shaped
+uses scalar item paths (`usesScalarArrayItem`); other arrays join child names
+onto each item. Validation expands scalar child rules to each
 live item path (`tags.0`, `tags.1`) while keeping the container path (`tags`)
 available for container rules. Pass normalized elements to these helpers so
 custom array widgets receive the same path and default behavior as built-ins.
@@ -57,8 +62,8 @@ serve renderers and action dispatch. Construction does not instantiate temporary
 component or action registries.
 
 Validation helpers accept structural, read-only element views as well as normalized
-snapshots. The React adapter uses these same helpers and the step machine,
-submission lifecycle and context builder. `BuilderActionBaseContext.form` requires
+snapshots. Both renderers use these same helpers, the step machine and
+step navigator, the submission lifecycle and the context builder. `BuilderActionBaseContext.form` requires
 `reset`, `setValue`, `getValue` and `validate`; it does not expose renderer methods.
 
 Conditional `require` references participate in the shared validation dependency

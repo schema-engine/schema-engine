@@ -8,12 +8,21 @@
 export { createFormEngine, FormEngine, SchemaMetadataCatalog, ActionDispatcher } from './engine';
 export type { CreateFormEngineOptions } from './engine';
 export { collectStepFieldPaths, effectiveRulesFor, validateFieldValue, validateFormValues } from './engine';
-export { createInitialStepStates, createStepMachine, runSubmissionLifecycle, buildFormActionContext } from './engine';
+export {
+	createInitialStepStates,
+	createStepMachine,
+	createStepNavigator,
+	runSubmissionLifecycle,
+	buildFormActionContext,
+} from './engine';
 export type {
 	StepStates,
 	StepMachineState,
 	StepMachineAction,
 	StepMachineReducer,
+	StepNavigationAction,
+	StepActionTrigger,
+	StepNavigatorOptions,
 	SubmissionActionResult,
 	SubmissionLifecycleResult,
 	FormActionContextFormState,
@@ -77,7 +86,10 @@ export {
 	walkNamedElements,
 	walkLeafFields,
 	collectFieldDefaults,
+	collectInitialValues,
 	usesScalarArrayItem,
+	createArrayRowDefault,
+	seedArrayRows,
 	flattenStepElements,
 } from './lib/field-scope';
 export type { FieldScope, FieldNameStrategy, FieldOverlay, NamedElementNode } from './lib/field-scope';

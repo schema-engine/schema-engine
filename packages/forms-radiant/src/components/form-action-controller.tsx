@@ -9,7 +9,7 @@ import type { FormProviderProps } from '@/adapters/types';
 import { ActionDispatcher } from '@schema-engine/forms/actions';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
-import { whenEngineAvailable } from '@/contexts/resolve-form-engine';
+import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import { FormController } from '@/adapters/radiant/controller';
 import { expandValues } from '@/adapters/radiant/controller/values';
 import type { FormInstanceElement } from './form-instance.script';
@@ -37,7 +37,6 @@ export class FormActionControllerElement extends RadiantElement {
 	private mountedEngine?: FormEngine;
 	private watchingChanges = false;
 	private formInstance?: FormInstanceContextValue;
-	private unsubscribeActiveEngine?: () => void;
 
 	@onContextUpdate({ context: formInstanceContext, requestUpdate: false })
 	onFormInstance(value: FormInstanceContextValue): void {
@@ -64,13 +63,7 @@ export class FormActionControllerElement extends RadiantElement {
 		const instance = findAncestorElement(this, 'se-form-instance') as FormInstanceElement | undefined;
 		if (!this.config && instance?.config) this.config = instance.config;
 		if (!this.engine) {
-			this.unsubscribeActiveEngine = whenEngineAvailable(this, this.engine, (engine) => {
-				if (!this.engine) {
-					this.engine = engine;
-				}
-				this.setupDispatcher();
-				this.onFormReady();
-			});
+			this.engine = resolveFormEngine(this);
 		}
 		this.watchingChanges = false;
 		this.form.connect(() => this.onFormReady());
@@ -85,7 +78,6 @@ export class FormActionControllerElement extends RadiantElement {
 	}
 
 	override disconnectedCallback(): void {
-		this.unsubscribeActiveEngine?.();
 		this.form.disconnect();
 		this.dispatcher = undefined;
 		this.dispatcherEngine = undefined;
@@ -127,7 +119,7 @@ export class FormActionControllerElement extends RadiantElement {
 		}
 		if (this.mountedEngine !== this.dispatcherEngine) {
 			this.mountedEngine = this.dispatcherEngine;
-			void this.dispatch('form_mount');
+			void this.dispatchTrigger('form_mount');
 		}
 		if (this.watchingChanges) {
 			return;
@@ -139,7 +131,7 @@ export class FormActionControllerElement extends RadiantElement {
 				initial = false;
 				return;
 			}
-			void this.dispatch('form_change');
+			void this.dispatchTrigger('form_change');
 		});
 	}
 
@@ -175,7 +167,8 @@ export class FormActionControllerElement extends RadiantElement {
 		return submission;
 	}
 
-	private async dispatch(trigger: FormActionTrigger): Promise<Awaited<ReturnType<ActionDispatcher['dispatch']>>> {
+	/** Dispatches one trigger's configured actions; resolves empty when no actions are configured or before the dispatcher and form are ready. */
+	async dispatchTrigger(trigger: FormActionTrigger): Promise<Awaited<ReturnType<ActionDispatcher['dispatch']>>> {
 		const config = this.config;
 		if (!this.dispatcher || !config?.actions?.length) {
 			return [];
