@@ -142,7 +142,7 @@ describe('createAsyncValidationHandler debounce', () => {
 		vi.useRealTimers();
 	});
 
-	test('settles a superseded parse and sends only the latest request', async () => {
+	test('a superseded async validation never passes submission', async () => {
 		const schema = createAsyncValidationHandler(
 			{ type: 'async', url: '/api/check', debounce: 300, disableCache: true },
 			createValidationContext({ fieldPath: 'email' }),
@@ -152,13 +152,48 @@ describe('createAsyncValidationHandler debounce', () => {
 		await vi.advanceTimersByTimeAsync(100);
 		const second = schema.safeParseAsync('second@example.com');
 
-		await expect(first).resolves.toMatchObject({ success: true });
+		await expect(first).resolves.toMatchObject({ error: { issues: [{ message: 'Validation pending' }] } });
 		await vi.advanceTimersByTimeAsync(300);
 		await expect(second).resolves.toMatchObject({ success: true });
 
 		expect(fetchSpy).toHaveBeenCalledOnce();
 		const [, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
 		expect(JSON.parse(init.body as string)).toEqual({ value: 'second@example.com' });
+	});
+
+	test('a superseded parse of the same value shares the latest request result', async () => {
+		fetchSpy.mockImplementation(
+			async () => new Response(JSON.stringify({ valid: false, message: 'Email is taken' }), { status: 200 }),
+		);
+		const schema = createAsyncValidationHandler(
+			{ type: 'async', url: '/api/check', debounce: 300, disableCache: true },
+			createValidationContext({ fieldPath: 'email' }),
+		);
+
+		const first = schema.safeParseAsync('taken@example.com');
+		await vi.advanceTimersByTimeAsync(100);
+		const second = schema.safeParseAsync('taken@example.com');
+		await vi.advanceTimersByTimeAsync(300);
+
+		const messages = (await Promise.all([first, second])).map((result) => result.error?.issues[0]?.message);
+		expect(messages).toEqual(['Email is taken', 'Email is taken']);
+		expect(fetchSpy).toHaveBeenCalledOnce();
+	});
+
+	test('a same-value parse replaced again by a different value does not pass', async () => {
+		const schema = createAsyncValidationHandler(
+			{ type: 'async', url: '/api/check', debounce: 300, disableCache: true },
+			createValidationContext({ fieldPath: 'email' }),
+		);
+
+		const first = schema.safeParseAsync('same@example.com');
+		const second = schema.safeParseAsync('same@example.com');
+		const third = schema.safeParseAsync('other@example.com');
+		await vi.advanceTimersByTimeAsync(300);
+
+		const messages = (await Promise.all([first, second, third])).map((result) => result.error?.issues[0]?.message);
+		expect(messages).toEqual(['Validation pending', 'Validation pending', undefined]);
+		expect(fetchSpy).toHaveBeenCalledOnce();
 	});
 
 	test('separate validation contexts do not cancel each other', async () => {

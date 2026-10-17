@@ -40,8 +40,12 @@ export interface EffectiveRulesInput {
 
 export interface ValidateFieldValueInput extends EffectiveRulesInput {
 	value: unknown;
-	/** Reuse keyed async validation state for this caller's form lifetime. */
-	debounceScope?: DebounceScope;
+	/**
+	 * Keyed async validation state for this caller's form lifetime.
+	 *
+	 * @remarks Required: a fresh scope per call delays debounced rules without coalescing them.
+	 */
+	debounceScope: DebounceScope;
 }
 
 export interface ValidateFormValuesInput {
@@ -49,8 +53,8 @@ export interface ValidateFormValuesInput {
 	values: Record<string, unknown>;
 	registry: ValidationRegistry;
 	names?: readonly string[];
-	/** Reuse keyed async validation state for this caller's form lifetime. */
-	debounceScope?: DebounceScope;
+	/** Keyed async validation state for this caller's form lifetime; see `ValidateFieldValueInput`. */
+	debounceScope: DebounceScope;
 }
 
 export interface FieldValidationError {
