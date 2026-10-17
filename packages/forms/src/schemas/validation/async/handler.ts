@@ -110,26 +110,32 @@ function handleValidationFailure(ctx: z.core.$RefinementCtx, message: string): v
 	});
 }
 
-/**
- * Creates and caches error result, then adds issue to context.
- */
-function handleErrorWithCache(
-	ctx: z.core.$RefinementCtx,
+/** @remarks Skips the cache when `disableCache` is set. */
+function cacheError(
 	cache: typeof asyncValidationCache,
 	url: string,
 	payload: Record<string, unknown>,
 	message: string,
 	cacheTTL: number,
 	disableCache?: boolean,
-): void {
+): CachedValidationResult {
 	const errorResult: CachedValidationResult = { valid: false, message };
 
 	if (!disableCache) {
 		cache.set(url, payload, errorResult, cacheTTL);
 	}
 
-	handleValidationFailure(ctx, message);
+	return errorResult;
 }
+
+/**
+ * Result of a parse whose debounced request was replaced by one for a different value.
+ *
+ * @remarks
+ * The request for this value never ran, so the parse cannot report it valid; a
+ * submit-time validation superseded by a later edit must not pass.
+ */
+const SUPERSEDED_RESULT: CachedValidationResult = { valid: false, message: 'Validation pending' };
 
 /**
  * Creates a Zod Mini async validation handler for server-side validation.
@@ -179,7 +185,7 @@ export function createAsyncValidationHandler(rule: AsyncRule, context: Validatio
 			const debounceKey = `async-validation:${context.fieldPath}:${rule.url}:${JSON.stringify(stablePayload)}`;
 
 			/** Core validation function that performs the HTTP request and processes the response */
-			const performValidation = async () => {
+			const performValidation = async (): Promise<CachedValidationResult> => {
 				try {
 					const method = rule.method ?? 'POST';
 					const hasBody = method !== 'GET';
@@ -195,8 +201,7 @@ export function createAsyncValidationHandler(rule: AsyncRule, context: Validatio
 
 					if (!response.ok) {
 						const errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-						handleErrorWithCache(
-							ctx,
+						return cacheError(
 							asyncValidationCache,
 							rule.url,
 							payload,
@@ -204,7 +209,6 @@ export function createAsyncValidationHandler(rule: AsyncRule, context: Validatio
 							CACHE_TTL.HTTP_ERROR,
 							rule.disableCache,
 						);
-						return;
 					}
 
 					const data = await response.json();
@@ -219,13 +223,10 @@ export function createAsyncValidationHandler(rule: AsyncRule, context: Validatio
 						asyncValidationCache.set(rule.url, payload, cacheResult, rule.cacheTTL);
 					}
 
-					if (!isValid && cacheResult.message) {
-						handleValidationFailure(ctx, cacheResult.message);
-					}
+					return cacheResult;
 				} catch (error) {
 					const errorMessage = error instanceof Error ? error.message : 'Async validation failed';
-					handleErrorWithCache(
-						ctx,
+					return cacheError(
 						asyncValidationCache,
 						rule.url,
 						payload,
@@ -237,10 +238,21 @@ export function createAsyncValidationHandler(rule: AsyncRule, context: Validatio
 			};
 
 			/** Execute validation with optional debouncing based on rule configuration */
+			let result: CachedValidationResult;
 			if (rule.debounce && rule.debounce > 0) {
-				await context.debounceScope.debounce(performValidation, rule.debounce, debounceKey);
+				const outcome = await context.debounceScope.debounce(
+					performValidation,
+					rule.debounce,
+					debounceKey,
+					JSON.stringify(value),
+				);
+				result = outcome.status === 'completed' ? outcome.value : SUPERSEDED_RESULT;
 			} else {
-				await performValidation();
+				result = await performValidation();
+			}
+
+			if (!result.valid && result.message) {
+				handleValidationFailure(ctx, result.message);
 			}
 		}),
 	);

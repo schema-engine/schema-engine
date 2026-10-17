@@ -235,7 +235,7 @@ The core `phone` rule checks E.164 numbers. The phone-input registration can rep
 
 Required validation, `relate` emptiness assertions, constraint `is_empty` and `is_not_empty`, and async validation skips share one definition of empty: `undefined`, `null`, `''`, and `[]`. Values such as `false` and `0` are present. `validateForm` and `validateElement` reject a rule without a registered handler with a `FormValidationError` that identifies the field and rule type.
 
-Debounced async rules share timers only within their caller-owned scope. Replacing a pending validation for the same rendered field path, endpoint, and dependency/extra payload resolves its parse as skipped, while the latest parse performs the request. Different forms use separate scopes, and different field paths in one scope do not cancel each other.
+Debounced async rules share timers only within their caller-owned scope. Replacing a pending validation for the same rendered field path, endpoint, and dependency/extra payload sends only the latest request. A replaced parse of the same value shares that request's result. A replaced parse of a different value fails at once with `Validation pending`, because its value was never checked, so a superseded submit-time validation cannot pass. Different forms use separate scopes, and different field paths in one scope do not cancel each other.
 
 ### Registering Custom Validations
 
@@ -603,7 +603,10 @@ Two deliberate limits:
 
 `createDebounceScope()` from `@schema-engine/forms/lib/debounce` creates keyed
 async validation state. Keep the scope with the form or field that owns it and
-pass it through `createValidationContext` (or the value-validation helpers).
+pass it through `createValidationContext` (or the value-validation helpers, which
+require it). `debounce(fn, delay, key, input)` replaces a pending call with the
+same `key`: the replaced call shares the new call's outcome when `input` matches
+and resolves `{ status: 'skipped' }` otherwise.
 
 ### ValidationRegistration
 

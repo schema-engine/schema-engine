@@ -58,7 +58,9 @@ describe('collectStepFieldPaths', () => {
 		const step = { elements: [element] };
 
 		expect(collectStepFieldPaths(step, values)).toEqual(['tags', 'tags.0', 'tags.1']);
-		await expect(validateFormValues({ elements: [element], values, registry })).resolves.toEqual({
+		await expect(
+			validateFormValues({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
+		).resolves.toEqual({
 			tags: [{ type: 'validation', message: 'Tag is required' }],
 		});
 	});
@@ -74,7 +76,9 @@ describe('collectStepFieldPaths', () => {
 		const values = { tags };
 
 		expect(collectStepFieldPaths({ elements: [element] }, values)).toEqual(['tags', 'tags.0']);
-		await expect(validateFormValues({ elements: [element], values, registry })).resolves.toEqual({
+		await expect(
+			validateFormValues({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
+		).resolves.toEqual({
 			tags: [{ type: 'validation', message: 'Tag is required' }],
 		});
 	});
@@ -97,7 +101,9 @@ describe('collectStepFieldPaths', () => {
 		const values = { groups: [{ tags: [''] }] };
 
 		expect(collectStepFieldPaths({ elements: [element] }, values)).toContain('groups.0.tags.0');
-		await expect(validateFormValues({ elements: [element], values, registry })).resolves.toEqual({
+		await expect(
+			validateFormValues({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
+		).resolves.toEqual({
 			groups: [{ tags: [{ type: 'validation', message: 'Tag is required' }] }],
 		});
 	});
@@ -123,7 +129,9 @@ describe('collectStepFieldPaths', () => {
 		const values = { groups: [['']] };
 
 		expect(collectStepFieldPaths({ elements: [element] }, values)).toEqual(['groups', 'groups.0', 'groups.0.0']);
-		await expect(validateFormValues({ elements: [element], values, registry })).resolves.toEqual({
+		await expect(
+			validateFormValues({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
+		).resolves.toEqual({
 			groups: [[{ type: 'validation', message: 'Tag is required' }]],
 		});
 	});
@@ -167,12 +175,13 @@ describe('validateFieldValue', () => {
 			values: { accountType: 'business', taxId: '' },
 			fieldPath: 'taxId',
 			registry,
+			debounceScope: createDebounceScope(),
 		});
 
 		expect(message).toBe('Required');
 	});
 
-	test('settles superseded async validations across value snapshots', async () => {
+	test('a superseded async validation never passes submission', async () => {
 		vi.useFakeTimers();
 		const fetchSpy = vi
 			.spyOn(globalThis, 'fetch')
@@ -203,7 +212,7 @@ describe('validateFieldValue', () => {
 				debounceScope,
 			});
 
-			await expect(first).resolves.toBeUndefined();
+			await expect(first).resolves.toBe('Validation pending');
 			await vi.advanceTimersByTimeAsync(300);
 			await expect(second).resolves.toBeUndefined();
 
@@ -234,6 +243,7 @@ describe('validateFormValues', () => {
 			elements,
 			values: { address: { street: '' }, email: '' },
 			registry,
+			debounceScope: createDebounceScope(),
 			names: ['address.street'],
 		});
 
@@ -252,6 +262,7 @@ describe('validateFormValues', () => {
 			elements: [languages],
 			values: { languages: [] },
 			registry,
+			debounceScope: createDebounceScope(),
 		});
 
 		expect(getValueAtPath(errors, 'languages')).toEqual({
@@ -270,6 +281,7 @@ describe('validateFormValues', () => {
 			elements: [contacts],
 			values: { contacts: [{ email: 'ada@example.com' }, { name: 'Grace' }, { email: undefined }] },
 			registry,
+			debounceScope: createDebounceScope(),
 		});
 
 		expect(getValueAtPath(errors, 'contacts.1.email')).toEqual({
@@ -299,6 +311,7 @@ describe('validateFormValues', () => {
 			elements: [contacts],
 			values: { contacts: [{ phones: ['555'] }] },
 			registry,
+			debounceScope: createDebounceScope(),
 		});
 
 		expect(errors).toEqual({});

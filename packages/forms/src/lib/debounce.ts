@@ -1,12 +1,27 @@
 export type DebounceOutcome<T> = { status: 'completed'; value: T } | { status: 'skipped' };
 
 export interface DebounceScope {
-	debounce<T>(fn: () => Promise<T> | T, delay: number, key: string): Promise<DebounceOutcome<T>>;
+	/**
+	 * Runs `fn` after `delay` unless a later call with the same `key` replaces it.
+	 *
+	 * @remarks
+	 * A replaced call whose `input` equals the replacing call's settles with that
+	 * call's outcome, since the same work is still running. Any other replaced call
+	 * resolves `skipped` at once.
+	 */
+	debounce<T>(fn: () => Promise<T> | T, delay: number, key: string, input: string): Promise<DebounceOutcome<T>>;
 }
 
+/**
+ * @remarks
+ * `settle` takes `unknown` results because one map holds calls of every result
+ * type; a key is reused only by calls of the same type, so the replaced call
+ * narrows the outcome back to its own.
+ */
 interface PendingDebounce {
 	timeout: ReturnType<typeof setTimeout>;
-	skip: () => void;
+	input: string;
+	settle: (outcome: DebounceOutcome<unknown> | Promise<DebounceOutcome<unknown>>) => void;
 }
 
 /** Creates keyed debounce state private to its owner. */
@@ -14,14 +29,9 @@ export function createDebounceScope(): DebounceScope {
 	const pending = new Map<string, PendingDebounce>();
 
 	return {
-		debounce<T>(fn: () => Promise<T> | T, delay: number, key: string): Promise<DebounceOutcome<T>> {
+		debounce<T>(fn: () => Promise<T> | T, delay: number, key: string, input: string): Promise<DebounceOutcome<T>> {
 			const existing = pending.get(key);
-			if (existing) {
-				clearTimeout(existing.timeout);
-				existing.skip();
-			}
-
-			return new Promise((resolve, reject) => {
+			const outcome = new Promise<DebounceOutcome<T>>((resolve, reject) => {
 				const timeout = setTimeout(async () => {
 					pending.delete(key);
 					try {
@@ -33,9 +43,17 @@ export function createDebounceScope(): DebounceScope {
 
 				pending.set(key, {
 					timeout,
-					skip: () => resolve({ status: 'skipped' }),
+					input,
+					settle: (next) => resolve(next as DebounceOutcome<T> | Promise<DebounceOutcome<T>>),
 				});
 			});
+
+			if (existing) {
+				clearTimeout(existing.timeout);
+				existing.settle(existing.input === input ? outcome : { status: 'skipped' });
+			}
+
+			return outcome;
 		},
 	};
 }
