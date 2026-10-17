@@ -19,9 +19,12 @@ pnpm generate:llms
 pnpm test:e2e
 ```
 
-`pnpm test:e2e` builds the site, serves the production preview, and runs Playwright
-checks that Forms React doc embeds hydrate (React island host + hydration script)
-and that the getting-started demo surfaces validation after submit. Install the
+`pnpm test:e2e` builds the site, serves the production preview on a free port, and
+runs Playwright checks that the getting-started Forms React embed ships its
+serialized config, hydrates, keeps typed values, and surfaces validation after
+submit. Set `DOCS_E2E_BASE_URL` to test an already running server instead of
+starting a preview (the site is still built first); setup fails when that server
+does not answer within five seconds. Install the
 browser once with `pnpm exec playwright install chromium` inside `apps/docs` if
 Playwright reports a missing executable.
 
@@ -31,4 +34,4 @@ Open `/docs/getting-started/introduction` after starting the dev server.
 The docs app consumes their published workspace entrypoints, so restart the dev
 server after changing either package source.
 
-React registry sources declare their JSX runtime explicitly and resolve Forms React through package exports. Keep provider and hook imports on the same package graph; source aliases in registry configuration create a second set of contexts when the app consumes built packages. For the same reason, do not list `@schema-engine/forms-react` or its subpaths in the React plugin's `runtimeModules`: Ecopages builds each entry as a separate vendor, so every subpath would bundle its own copy of the contexts.
+React registry sources declare their JSX runtime explicitly and resolve Forms React through package exports. Keep provider and hook imports on the same package graph; source aliases in registry configuration create a second set of contexts when the app consumes built packages. For the same reason, `@schema-engine/forms-react` and its subpaths stay out of the React plugin's `runtimeModules`; the `@remarks` on the config in [eco.config.ts](./eco.config.ts) explains why.

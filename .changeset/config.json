@@ -1,6 +1,6 @@
 {
 	"$schema": "https://unpkg.com/@changesets/config@3.1.1/schema.json",
-	"changelog": "@changesets/cli/changelog",
+	"changelog": ["@changesets/changelog-github", { "repo": "andeeplus/schema-engine" }],
 	"commit": false,
 	"fixed": [["@schema-engine/forms", "@schema-engine/forms-react", "@schema-engine/forms-radiant"]],
 	"linked": [],

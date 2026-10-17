@@ -19,7 +19,6 @@ vi.mock('@schema-engine/forms/actions', () => ({
 const config: FormConfig = {
 	id: 'dependency-form',
 	title: 'Dependency Form',
-	mode: 'wizard',
 	steps: [
 		{
 			id: 'step-1',

@@ -14,7 +14,7 @@ import { useSubmissionStateManager } from '@/hooks/use-submission-state';
 import { useFormActionDispatchers } from './hooks/use-form-action-dispatchers';
 import { useFormMountEffect } from './hooks/use-form-mount-effect';
 import { useFormWatcher } from './hooks/use-form-watcher';
-import { useFormSubmitHandler } from './hooks/use-form-submit-handler';
+import { useFormSubmitHandler, type NormalizedFormAction } from './hooks/use-form-submit-handler';
 import { useValidationDependencies } from './hooks/use-validation-dependencies';
 
 /**
@@ -87,12 +87,18 @@ export function FormProvider<
 		(data: FieldValues) => onChange?.(data as unknown as Partial<TFormData>),
 		[onChange],
 	);
+	/** @remarks Casts the submitted values to TFormData for the same reason as {@link handleFormChange}. */
 	const handleFormSubmit = useCallback((data: FieldValues) => onSubmit?.(data as unknown as TFormData), [onSubmit]);
+	/**
+	 * @remarks
+	 * The action comes from this config's `actions`, which the runtime view types loosely;
+	 * the provider generics describe its payload. The values cast follows {@link handleFormChange}.
+	 */
 	const handleFormAction = useMemo(
 		() =>
 			onAction &&
-			((action: NonNullable<FormConfigView['actions']>[number], data: FieldValues) =>
-				onAction(action as FormActionConfig<TOutputs['actions']>, data as TFormData)),
+			((action: NormalizedFormAction, data: FieldValues) =>
+				onAction(action as FormActionConfig<TOutputs['actions']>, data as unknown as TFormData)),
 		[onAction],
 	);
 

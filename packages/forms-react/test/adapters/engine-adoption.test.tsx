@@ -4,14 +4,14 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
 import { useFormContext, useController } from 'react-hook-form';
 import * as z from 'zod/mini';
-import { createFormEngine, type BuilderActionRuntimeContext, type FormConfigView } from '@schema-engine/forms';
+import { createFormEngine, type BuilderActionRuntimeContext } from '@schema-engine/forms';
 import { FormProvider } from '../../src/adapters/rhf/form-provider';
 import { FormEngineContext } from '../../src/components/provider';
 import { FormAdapterContext } from '../../src/adapters/context';
 import { rhfAdapter } from '../../src/adapters/react-hook-form';
 import { useFormInstanceActions } from '../../src/hooks/use-form-context';
 import { useControlledFormElement } from '../../src/hooks/use-field';
-import type { ElementConfig, FormActionConfig } from '@schema-engine/forms/schemas';
+import type { ElementConfig, FormActionConfig, FormConfig } from '@schema-engine/forms/schemas';
 
 const handled: string[] = [];
 const contexts: BuilderActionRuntimeContext[] = [];
@@ -49,7 +49,7 @@ const street: ElementConfig = {
 	id: 'street',
 	rules: [{ type: 'minLength', value: 3, message: 'Street is too short' }],
 };
-const config: FormConfigView = {
+const config: FormConfig = {
 	id: 'adoption',
 	reValidateMode: 'onChange',
 	steps: [
@@ -112,7 +112,7 @@ function Controls({ action }: { action?: FormActionConfig }) {
 	);
 }
 function mount(
-	formConfig: FormConfigView,
+	formConfig: FormConfig,
 	children: React.ReactNode,
 	onAction?: (action: FormActionConfig, data: Record<string, unknown>) => void,
 ) {
@@ -226,8 +226,8 @@ test('step triggers carry the elapsed form time and destination step', async () 
 		{
 			...config,
 			steps: [
-				{ id: 'one', elements: [] },
-				{ id: 'two', elements: [] },
+				{ id: 'one', title: 'One', elements: [] },
+				{ id: 'two', title: 'Two', elements: [] },
 			],
 			actions: [{ $type: 'probe', id: 'step', triggers: ['step_change'] }],
 		},

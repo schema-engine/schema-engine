@@ -6,3 +6,7 @@ find the full documentation for it [in our repository](https://github.com/change
 
 We have a quick list of common questions to get you started engaging with this project in
 [our documentation](https://github.com/changesets/changesets/blob/main/docs/common-questions.md)
+
+Changelog entries link each change to its pull request and author through
+`@changesets/changelog-github`, which queries the GitHub API, so
+`pnpm changeset version` needs a token: `GITHUB_TOKEN=$(gh auth token) pnpm changeset version`.
