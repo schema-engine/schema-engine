@@ -1,12 +1,5 @@
 @import 'tailwindcss';
-@import '@ecopages/radiant-ui/tokens/colors/palettes';
-@import '@ecopages/radiant-ui/tokens/spacing/default';
-@import '@ecopages/radiant-ui/tokens/radius/soft';
-@import '@ecopages/radiant-ui/tokens/elevation/default';
-@import '@ecopages/radiant-ui/tokens/typography/default';
-@import '@ecopages/radiant-ui/tokens/motion/default';
-@import '@ecopages/radiant-ui/tokens/system';
-@import '@ecopages/radiant-ui/tokens/semantic';
+@import '@ecopages/radiant-ui/themes/default';
 @import './theme.css';
 @import '@ecopages/radiant-ui/styles.css';
 @import '@ecopages/radiant-ui/toast/styles.css';

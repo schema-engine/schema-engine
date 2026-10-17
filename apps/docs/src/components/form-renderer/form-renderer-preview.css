@@ -1,5 +1,5 @@
 .docs-form-renderer-preview {
-	@apply block w-full p-5 text-left bg-background-code rounded-md;
+	@apply block w-full p-5 text-left bg-muted rounded-md;
 }
 
 /*
