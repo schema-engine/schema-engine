@@ -41,7 +41,7 @@ We have distilled interface requirements into four core concepts that are comple
 We reject the compromise between dynamic behavior and static analysis. Through advanced TypeScript inference, your runtime schema dictates your compile-time types.
 
 ```typescript
-import { createFormEngine } from '@schema-engine/forms-react';
+import { createFormEngine } from '@schema-engine/forms';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
 const engine = createFormEngine({ elements: schemaFormRegistrations });
@@ -171,7 +171,7 @@ pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-
 ```
 
 ```typescript
-import { createFormEngine } from '@schema-engine/forms-react';
+import { createFormEngine } from '@schema-engine/forms';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 

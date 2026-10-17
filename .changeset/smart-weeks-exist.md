@@ -2,4 +2,4 @@
 '@schema-engine/forms': minor
 ---
 
-Allow submission lifecycle triggers to receive fresh form action contexts.
+`runSubmissionLifecycle` accepts a context factory as well as a context object, so each submission trigger receives a fresh form action context.

@@ -10,4 +10,4 @@ Migrate first-party schemas and JSON Schema generation to Zod Mini. Built-in sch
 
 Form authors may omit `inputType` on `input` fields; it defaults to `text`. Renderers still receive the parsed output type.
 
-Move phone-number validation from the Forms defaults to the phone-input integrations. The React registry item and the Radiant phone-input registration provide the validator and attach it through `defineInput({ validations })` when the element is added to a form engine.
+Phone-input integrations replace the core E.164 `phone` handler with a libphonenumber validator, attached through `defineInput({ validations })` and applied to `phone-input` by default.

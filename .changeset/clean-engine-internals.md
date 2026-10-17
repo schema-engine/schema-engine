@@ -3,4 +3,4 @@
 '@schema-engine/forms-radiant': patch
 ---
 
-Preserve custom schema catalogs when extending engines and declare array container semantics on registrations. Reuse the Standard JSON Schema spec types and shared runtime registration aliases; type form callbacks and action plugin payloads without implicit any.
+The engine's field walk now identifies array containers by their registration, not by `$type`. Custom array element registrations must declare `containerKind: 'array'`; an element whose `$type` is `'arrayElements'` is no longer treated as an array without it. Custom schema catalogs are preserved when extending engines, and form callbacks and action plugin payloads are typed without implicit `any`.

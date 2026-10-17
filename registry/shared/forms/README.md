@@ -25,7 +25,7 @@ Files land under `@components/schema-engine/forms`. Schema Engine primitives (fi
 Register everything with the generated barrel:
 
 ```typescript
-import { createFormEngine } from '@schema-engine/forms-react';
+import { createFormEngine } from '@schema-engine/forms';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 

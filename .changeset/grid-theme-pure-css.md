@@ -4,7 +4,7 @@
 ---
 
 Grid layout becomes theme-driven pure CSS. The engine owns the grid vocabulary
-through a new `grid` option on `createFormEngine`/`createFormEngine` variants:
+through a new `grid` option on `createFormEngine` (and `createRadiantFormEngine`):
 breakpoint thresholds (`sm`…`2xl`), gap token definitions
 (`none | compact | default | loose | wide`), and the default minimum column
 width. Forms describe layout with `columns`, `gap`/`gapX`/`gapY`, responsive

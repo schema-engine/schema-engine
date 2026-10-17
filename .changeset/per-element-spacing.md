@@ -15,7 +15,7 @@ Let a single element set its own vertical rhythm, and let non-input elements sit
 
 They ride the shared field property table rather than a parallel mechanism, so they inherit the breakpoint cascade and the inheritance resets that stop a nested field picking up its parent's values — and one system keeps owning the block axis instead of two competing over it.
 
-This works for any element that renders a `.se-form-field` host carrying the owning engine's theme id. Inputs already got that from the field primitive; content and decoration elements did not, so they were silently ignoring their whole `grid` config, placement included. `@schema-engine/forms-react` now exports `useFieldHost(grid, style)` for elements that build their own container, matching `mergeFieldGridHost` in `@schema-engine/forms-radiant`:
+This works for any element that renders a `.se-form-field` host carrying the owning engine's theme id. Inputs already got that from the field primitive; content and decoration elements did not, so they were silently ignoring their whole `grid` config, placement included. `@schema-engine/forms-react/hooks` now exports `useFieldHost(grid, style)` for elements that build their own container, matching `mergeFieldGridHost` in `@schema-engine/forms-radiant`:
 
 ```tsx
 <div {...useFieldHost(config.grid, config.style)}>…</div>

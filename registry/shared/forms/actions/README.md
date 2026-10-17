@@ -12,7 +12,7 @@ Each action follows a consistent 3-file pattern:
 
 - `[name].types.ts` - TypeScript types and Zod schemas
 - `[name].tsx` - React component implementation
-- `[name].registration.ts` - Element registration with type augmentation
+- `[name].registration.ts` - Element registration (`defineStatic`)
 
 ## Submit Button
 

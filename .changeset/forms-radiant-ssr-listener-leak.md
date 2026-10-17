@@ -2,4 +2,4 @@
 '@schema-engine/forms-radiant': patch
 ---
 
-Avoid attaching `eco:after-swap` listeners during SSR so Radiant's minimal document environment does not leak EventTarget listeners. Document-level installation is idempotent via `ensureDocumentFieldRuleHydrator`.
+Stop attaching document-level `eco:after-swap` listeners, so Radiant's minimal SSR document environment no longer leaks EventTarget listeners. Each `se-field` restores its serialized validation rules when it connects; call `hydrateFieldRules(root)` to re-apply them to a swapped subtree.

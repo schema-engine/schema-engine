@@ -31,9 +31,6 @@ builders directly:
   rather than optional because an omitted context is invisible: that is how
   cross-field rules came to pass silently on one renderer.
 - `category` gains `'cross-field'`.
-- `@schema-engine/forms-radiant`'s `toFieldRules(rules, fieldType)` becomes
-  `toFieldRules(element)`, taking `{ rules, $type, name }`, because resolving a
-  reference needs the field's rendered path.
 
 Cross-field rules are not revalidated when a field they read changes; that is
 tracked separately.

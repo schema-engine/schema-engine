@@ -121,6 +121,28 @@ Reset form to initial state:
 }
 ```
 
+### Registering browser actions
+
+Auto-save, GTM, and Reset use browser storage, consent, `window.confirm`, and
+the GTM data layer, so their registrations import from
+`@schema-engine/forms/browser`, not the package root:
+
+```ts
+import { createFormEngine } from '@schema-engine/forms';
+import {
+	AutoSaveActionRegistration,
+	GTMActionRegistration,
+	ResetActionRegistration,
+} from '@schema-engine/forms/browser';
+
+const engine = createFormEngine({
+	actions: [AutoSaveActionRegistration, GTMActionRegistration, ResetActionRegistration],
+});
+```
+
+Use `createBrowserActionRegistrations({ storage, consent, confirm })` from the
+same subpath to supply your own storage, consent tool, or confirm dialog.
+
 ## Creating Custom Actions
 
 Use `defineAction` from `@schema-engine/actions` and specialize it with the forms runtime types:

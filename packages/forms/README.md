@@ -195,8 +195,7 @@ The `values` argument is the full nested form value tree. Omitting `names`, or
 passing an empty list, validates every named field. A non-empty `names` list
 validates only the requested paths and their descendants.
 
-React uses these shared validation helpers. Radiant adoption is tracked by
-[#133](https://github.com/andeeplus/schema-engine/issues/133).
+React and Radiant use these shared validation helpers.
 
 ## Browser integrations
 
@@ -226,7 +225,7 @@ adapter.
 | Layer                                                           | Owns                                                                                                                      |
 | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | `@schema-engine/forms`                                          | Engine, validation, actions, recipe protocol, adapter types (`@schema-engine/forms/adapters`) — no widget `$type` schemas |
-| `@schema-engine/forms-react`                                    | React renderer, RHF adapter, field-array operations, and headless `createFormEngine()` re-export                          |
+| `@schema-engine/forms-react`                                    | React renderer components; adapter contracts at `/adapters`, optional RHF adapter at `/adapters/react-hook-form`          |
 | `@schema-engine/forms-radiant`                                  | Radiant widgets, default-aware SSR constraints, shells, blocks, and scoped form controllers                               |
 | Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Copied React widgets, colocated field schemas, and view recipes for the React adapter                                     |
 

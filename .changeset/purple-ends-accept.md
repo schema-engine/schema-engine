@@ -6,4 +6,4 @@ Replace disconnected Radiant snapshot hooks and the global active store with a s
 
 FormController and wrapping hosts read the live store from Radiant UI `formContext` (rc.17+), not a private host field.
 
-This removes useFormContext, useFormField, useWatchField, useWatchForm, useFieldArray, and getActiveFormStore. Use controller reads, watches, field bindings, and fieldArray operations instead. bindControlledFormElement now requires an explicit controller. Defaults and submissions use nested values.
+This removes useFormContext, useFormField, useWatchField, useWatchForm, useFieldArray, and getActiveFormStore. Use controller reads, watches, field bindings, and fieldArray operations instead. Defaults and submissions use nested values.
