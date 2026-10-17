@@ -42,6 +42,7 @@ export class FormActionControllerElement extends RadiantElement {
 	private mountedEngine?: FormEngine;
 	private watchingChanges = false;
 	private formInstance?: FormInstanceContextValue;
+	private submitAttempts = 0;
 
 	@onContextUpdate({ context: formInstanceContext, requestUpdate: false })
 	onFormInstance(value: FormInstanceContextValue): void {
@@ -60,9 +61,16 @@ export class FormActionControllerElement extends RadiantElement {
 	protected override onConnected(): void {
 		const form = findAncestorElement(this, 'rui-form');
 		if (form) {
-			const onSubmit = () => void this.submit();
+			const countAttempt = () => {
+				this.submitAttempts += 1;
+			};
+			const onSubmit = () => void this.submit().finally(countAttempt);
 			form.addEventListener('rui-submit', onSubmit);
-			this.registerCleanupCallback(() => form.removeEventListener('rui-submit', onSubmit));
+			form.addEventListener('rui-invalid', countAttempt);
+			this.registerCleanupCallback(() => {
+				form.removeEventListener('rui-submit', onSubmit);
+				form.removeEventListener('rui-invalid', countAttempt);
+			});
 		}
 		const instance = findAncestorElement(this, 'se-form-instance') as FormInstanceElement | undefined;
 		if (!this.config && instance?.config) this.config = instance.config;
@@ -130,6 +138,7 @@ export class FormActionControllerElement extends RadiantElement {
 		this.watchingChanges = true;
 		let initial = true;
 		this.form.watchForm(() => {
+			if (!this.form.formState.isSubmitted) this.submitAttempts = 0;
 			if (initial) {
 				initial = false;
 				return;
@@ -193,11 +202,15 @@ export class FormActionControllerElement extends RadiantElement {
 	 * @remarks
 	 * Radiant UI keys errors and touched state by flat field name; both are expanded
 	 * into the engine's nested tree. The store records only whether the form was
-	 * submitted, so `submitCount` is at most one.
+	 * submitted, so `submitCount` counts the attempts Radiant UI reports instead:
+	 * `rui-invalid` for one that failed validation, and `rui-submit` once its
+	 * submission lifecycle has run, which is when React Hook Form counts it too.
+	 * A reset clears the store's submitted flag and notifies the store, and the
+	 * change watcher then clears the count.
 	 */
 	private buildContext(): BuilderActionBaseContext {
 		const form = this.form;
-		const { isValid, errors, touched, isSubmitted } = form.formState;
+		const { isValid, errors, touched } = form.formState;
 		return buildFormActionContext({
 			config: this.config,
 			values: form.getValues(),
@@ -205,7 +218,7 @@ export class FormActionControllerElement extends RadiantElement {
 				isValid,
 				errors: expandValues(errors),
 				touched: expandValues(touched),
-				submitCount: Number(isSubmitted),
+				submitCount: this.submitAttempts,
 			},
 			currentStep: this.formInstance?.currentStep ?? 0,
 			mountedAt: this.mountedAt,

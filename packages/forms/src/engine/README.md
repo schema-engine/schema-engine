@@ -13,7 +13,10 @@ The engine exports reusable helpers for paths, effective rules, and validation.
 - `validateFieldValue` validates one field against the full nested values tree
   and its rendered path, returning the first issue message or `undefined`.
 - `validateFormValues` validates named fields, filters to `names` when supplied,
-  and writes failures into a nested error object with `setValueAtPath`.
+  and writes failures into a nested error object with `setValueAtPath`. A field
+  inside a fieldset or array whose `require` constraint holds is required, at any
+  depth; `effectiveRulesFor` and `validateFieldValue` take that as
+  `inheritedRequired`. A container's own `required` rule does not pass down.
 
 For `validateFormValues`, omitted or empty `names` validates every named field.
 A non-empty list validates only the requested paths and their descendants.
@@ -40,10 +43,14 @@ The public usage examples are in the [forms package README](../../README.md#engi
 `FormActionContextFormState` no longer accepts `touchedFields` or `isSubmitted`. Pass
 `touched` and `submitCount`, both required, and nest `errors` and `touched` like the
 values (`{ address: { street: … } }`, not `{ 'address.street': … }`). A React Hook Form
-caller passes `touchedFields` as `touched`; a caller that only knows whether the form
-was submitted passes `Number(isSubmitted)`. Radiant does that: Radiant UI's form store
-keeps a submitted flag rather than a count, so its `submitCount`, and the submission
-share of `userInteractions`, is at most one, while React counts every submit attempt.
+caller passes `touchedFields` as `touched`.
+
+`submitCount` is the number of submit attempts since the form was last reset,
+including attempts that failed validation. An attempt counts once its validation has
+failed, or once its submission lifecycle has run, so the triggers of a submission
+see the attempts before it. React passes React Hook Form's `submitCount`, which counts
+this way. Radiant UI's form store keeps only a submitted flag, so Radiant counts the
+`rui-invalid` and `rui-submit` events of its form instead.
 
 ## Schema artifacts and extension
 

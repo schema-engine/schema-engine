@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { getByRole, queryAllByRole, queryByText } from '@testing-library/dom';
+import { getByRole, queryAllByRole, queryAllByText, queryByText } from '@testing-library/dom';
 import { userEvent } from 'vitest/browser';
 import * as v from 'valibot';
 import type { BuilderActionRuntimeContext, FormConfigView } from '@schema-engine/forms';
@@ -435,6 +435,179 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
 			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
 			expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ kind: 'personal' }));
+		});
+		test('a fieldset require constraint makes its children required, nested containers included', async () => {
+			const onSubmit = vi.fn();
+			const { host } = await setup({
+				config: form([
+					input('kind', 'Kind'),
+					{
+						$type: 'fieldSet',
+						id: 'company',
+						name: 'company',
+						constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'require' }],
+						elements: [
+							input('vat', 'VAT'),
+							{ $type: 'fieldSet', id: 'office', name: 'office', elements: [input('street', 'Street')] },
+							{
+								$type: 'arrayElements',
+								id: 'phones',
+								name: 'phones',
+								elements: [input('phone', 'Phone')],
+							},
+						],
+					},
+				]),
+				defaultValues: { kind: 'business', company: { phones: [''] } },
+				onSubmit,
+			});
+			const required = ['VAT', 'Street', 'Phone'];
+			await expect
+				.poll(() => queryAllByRole(host, 'textbox', { name: /^(VAT|Street|Phone)\s*\*/ }).length)
+				.toBe(3);
+			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+			await expect
+				.poll(() =>
+					required.map((name) =>
+						getByRole(host, 'textbox', { name: new RegExp(`^${name}`) }).getAttribute('aria-invalid'),
+					),
+				)
+				.toEqual(['true', 'true', 'true']);
+			expect(onSubmit).not.toHaveBeenCalled();
+			await userEvent.fill(getByRole(host, 'textbox', { name: 'Kind' }), 'personal');
+			await expect.poll(() => queryAllByRole(host, 'textbox', { name: /\*/ }).length).toBe(0);
+			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
+		});
+		test('an authored disabled array disables its rows and its add and remove controls', async () => {
+			const onChange = vi.fn();
+			const { host } = await setup({
+				config: form([
+					input('note', 'Note'),
+					{
+						$type: 'arrayElements',
+						id: 'tags',
+						name: 'tags',
+						disabled: true,
+						elements: [
+							{
+								...input('tag', 'Tag'),
+								constraints: [{ field: 'note', operator: 'not_equals', value: 'hide', action: 'show' }],
+							},
+						],
+					},
+				]),
+				defaultValues: { tags: ['a', 'b'] },
+				onChange,
+			});
+			const disabledControls = () =>
+				[
+					...queryAllByRole(host, 'textbox', { name: 'Tag' }),
+					...queryAllByRole(host, 'button', { name: /^(Add|Remove) item$/ }),
+				].map((control) => (control as HTMLInputElement | HTMLButtonElement).disabled);
+			await expect.poll(disabledControls).toEqual([true, true, true, true, true]);
+			await userEvent.fill(getByRole(host, 'textbox', { name: 'Note' }), 'shown');
+			await expect.poll(() => onChange.mock.lastCall?.[0].note).toBe('shown');
+			expect(disabledControls()).toEqual([true, true, true, true, true]);
+		});
+		test('a row error follows its row when an earlier empty scalar row is removed', async () => {
+			const { host } = await setup({
+				config: {
+					...form([
+						{
+							$type: 'arrayElements',
+							id: 'tags',
+							name: 'tags',
+							elements: [
+								{ ...input('tag', 'Tag'), rules: [{ type: 'required', message: 'Tag is required' }] },
+							],
+						},
+					]),
+					validationMode: 'onBlur',
+				},
+				defaultValues: { tags: ['', '', ''] },
+			});
+			const tags = () => queryAllByRole(host, 'textbox', { name: /^Tag/ });
+			await expect.poll(() => tags().length).toBe(3);
+			await userEvent.click(tags()[2]);
+			await userEvent.tab();
+			await expect
+				.poll(() => tags().map((tag) => tag.getAttribute('aria-invalid')))
+				.toEqual(['false', 'false', 'true']);
+			await userEvent.click(queryAllByRole(host, 'button', { name: 'Remove item' })[0]);
+			await expect.poll(() => tags().map((tag) => tag.getAttribute('aria-invalid'))).toEqual(['false', 'true']);
+			expect(queryAllByText(host, 'Tag is required')).toHaveLength(1);
+		});
+		test('an array require constraint makes its rows required', async () => {
+			const { host } = await setup({
+				config: form([
+					input('kind', 'Kind'),
+					{
+						$type: 'arrayElements',
+						id: 'phones',
+						name: 'phones',
+						constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'require' }],
+						elements: [input('phone', 'Phone')],
+					},
+				]),
+				defaultValues: { kind: 'business', phones: [''] },
+			});
+			await expect.poll(() => queryAllByRole(host, 'textbox', { name: /^Phone\s*\*/ }).length).toBe(1);
+			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+			await expect
+				.poll(() => getByRole(host, 'textbox', { name: /^Phone/ }).getAttribute('aria-invalid'))
+				.toBe('true');
+		});
+		test('reValidateMode onBlur re-validates a field on blur, not on change', async () => {
+			const { host } = await setup({
+				config: {
+					...form([
+						{ ...input('fullName', 'Name'), rules: [{ type: 'required', message: 'Name is required' }] },
+					]),
+					validationMode: 'onSubmit',
+					reValidateMode: 'onBlur',
+				},
+			});
+			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+			await expect.poll(() => queryByText(host, 'Name is required') !== null).toBe(true);
+			await userEvent.type(getByRole(host, 'textbox', { name: /^Name/ }), 'Ada');
+			expect(queryByText(host, 'Name is required')).not.toBeNull();
+			await userEvent.tab();
+			await expect.poll(() => queryByText(host, 'Name is required')).toBeNull();
+		});
+		test('validationMode onChange validates a field before the first submit', async () => {
+			const { host } = await setup({
+				config: {
+					...form([
+						{ ...input('fullName', 'Name'), rules: [{ type: 'required', message: 'Name is required' }] },
+					]),
+					validationMode: 'onChange',
+				},
+			});
+			await userEvent.type(getByRole(host, 'textbox', { name: /^Name/ }), 'a');
+			await userEvent.clear(getByRole(host, 'textbox', { name: /^Name/ }));
+			await expect.poll(() => queryByText(host, 'Name is required') !== null).toBe(true);
+		});
+		test('submitCount counts submit attempts that failed validation', async () => {
+			const { host } = await setup({
+				config: {
+					...form([
+						{ ...input('fullName', 'Name'), rules: [{ type: 'required', message: 'Name is required' }] },
+					]),
+					actions: [{ $type: 'conformance', id: 'submitted', triggers: ['form_submit'] }],
+				},
+			});
+			const name = getByRole(host, 'textbox', { name: /^Name/ });
+			await userEvent.click(name);
+			await userEvent.tab();
+			for (let attempt = 0; attempt < 2; attempt += 1) {
+				await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+				await expect.poll(() => queryByText(host, 'Name is required') !== null).toBe(true);
+			}
+			await userEvent.fill(name, 'Ada');
+			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+			await expect.poll(actionIds).toEqual(['submitted']);
+			expect(lastActionContext()?.metadata.userInteractions).toBe(3);
 		});
 		test('typing over a debounced async check shows only the latest result', async () => {
 			vi.stubGlobal(

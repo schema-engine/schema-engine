@@ -3,7 +3,7 @@ import { validateFieldValue } from '@schema-engine/forms';
 import type { ValidationRule } from '@schema-engine/forms/schemas';
 import type { ValidationRegistry } from '@schema-engine/forms/schemas/validation';
 import { createDebounceScope } from '@schema-engine/forms/lib/debounce';
-import { getValidationRulesForElement } from '@schema-engine/forms/schemas/validation/utils';
+import { getValidationRulesForElement, isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { peekOwningFormEngine } from '@/contexts/form-engine-owner';
 import { expandValues } from '@/adapters/radiant/controller/values';
 
@@ -39,6 +39,29 @@ export interface FieldRulesSource {
  */
 export function isRenderedRequired(config: object): boolean {
 	return 'required' in config && config.required === true;
+}
+
+/**
+ * A container's child elements with the container's `disabled` and `required` passed down.
+ *
+ * @remarks
+ * `required` passes when the render overlay marks the container required and
+ * either the container declares constraints or its own required rule is not the
+ * source; constraint sync then applies the live rule.
+ */
+export function withContainerState<T extends object>(
+	config: { disabled?: boolean; constraints?: readonly unknown[]; rules?: ReadonlyArray<ValidationRule> },
+	elements: readonly T[],
+): readonly T[] {
+	const disabled = config.disabled === true;
+	const required =
+		isRenderedRequired(config) && (Boolean(config.constraints?.length) || !isFieldRequired(config.rules));
+	if (!disabled && !required) return elements;
+	return elements.map((element) => ({
+		...element,
+		...(disabled ? { disabled: true } : {}),
+		...(required ? { required: true } : {}),
+	}));
 }
 
 function resolveValidationRegistry(registry?: ValidationRegistry): ValidationRegistry | undefined {

@@ -87,10 +87,10 @@ View-owned shell, same authoring model as radiant-ui: the `FormRenderer` / `Form
 - `se-form-instance` owns submit callbacks in client renders and after hydration. Callbacks receive the nested value tree; attach or remove `instance.onSubmit` to switch between a callback and Radiant UI native submission configured with `action` or `method`.
 - Provider `onChange` receives nested value snapshots through `FormController.watchForm`; successful submission actions call `onAction` with their normalized action and the same nested values. Submission actions read a fresh form snapshot for each lifecycle trigger, and retain one form operations object so step timing resets on navigation. The instance uses the engine step navigator, field validation, and submission lifecycle; wizard navigation dispatches `step_leave`, `step_change` and `step_enter` through `se-form-action-controller` and ignores a step request while another navigation, including its step triggers, is in flight. Every trigger dispatches the form's actions and then the current step's (`collectStepActions`); the controller renders when the form or any step configures an action. A config change or reconnection resets the step state and cancels the navigation in flight, so it neither writes its step state nor dispatches a step trigger after the reset. Disconnecting the instance cancels it too.
 - `form_mount` actions run once for each engine attached to a live form, including when the engine changes after connection. `form_change` actions keep running after the action controller reconnects.
-- Action handlers read `context.errors` nested like the values (`errors.address.street`), as in React. `userInteractions` counts touched fields plus one once the form is submitted, since Radiant UI records only whether it was submitted. The `se-action-submit-complete` event's `detail.results` entries carry the `actionId` of the action that produced them.
+- Action handlers read `context.errors` nested like the values (`errors.address.street`), as in React. `userInteractions` counts touched fields plus `submitCount`, which counts submit attempts since the last reset, failed ones included, as React does: Radiant UI records only whether the form was submitted, so the renderer counts its form's `rui-invalid` and `rui-submit` events. Radiant UI marks every registered field touched on submit, while React Hook Form does not, so the touched share can still differ. The `se-action-submit-complete` event's `detail.results` entries carry the `actionId` of the action that produced them.
 - The full normalized config is serialized once on `se-form-instance`. Recipe chrome receives one small `FormMeta` with form and step titles, descriptions, and ids; the debugger reads its owning instance.
 - Every step's fields are authored once inside `se-form-step`; hosts toggle their own `hidden` attribute from the step state, so SSR emits the full form and step switching is pure DOM.
-- Server-rendered constraints use the nested authored and caller defaults. Each field shares one constraint snapshot between its visibility wrapper and registered renderer. Live updates preserve an authored `disabled: true`, including when an `enable` constraint matches. A field's `disabled` and `required` compose its own authored state with every constraint wrapper around it, so a child of a constrained fieldset keeps its own `disabled`; a fieldset disabled by authoring or by a constraint renders its children disabled, and one required by a matching `require` constraint renders them with their required marker, and live sync keeps them so. An authored `disabled` array does not disable its rows, at render or in live sync. Use `evaluateConstraints({ constraints, values, fieldPath, baseRequired })` from `@schema-engine/forms/constraints`; the Radiant `evaluateConstraintLogic` hook has been removed.
+- Server-rendered constraints use the nested authored and caller defaults. Each field shares one constraint snapshot between its visibility wrapper and registered renderer. Live updates preserve an authored `disabled: true`, including when an `enable` constraint matches. A field's `disabled` and `required` compose its own authored state with every constraint wrapper around it, so a child of a constrained fieldset keeps its own `disabled`; a fieldset disabled by authoring or by a constraint renders its children disabled, and one required by a matching `require` constraint renders them with their required marker, and live sync keeps them so. An array passes both to its rows the same way: a disabled array, authored or by a constraint, renders its rows and its add and remove buttons disabled, and live sync keeps an authored `disabled` array's rows disabled. Use `evaluateConstraints({ constraints, values, fieldPath, baseRequired })` from `@schema-engine/forms/constraints`; the Radiant `evaluateConstraintLogic` hook has been removed.
 - Conditional fields with constraints are wrapped in a plain `.se-form-constraint` container with `data-se-constraint-field`. `se-form-instance` listens to the form store and toggles `hidden` and the field's `disabled` reactively, without separate custom element wrappers or serialized JSON configs. It reads the rendered `data-se-constraint-field` values rather than building selectors from the config, so each row of an array resolves its own siblings. Constraint `require` updates the live `FieldRules` object (so `validate` functions and `RegExp` patterns survive) and toggles `[data-se-required-marker]` on the label.
 - Recipe chrome blocks read serializable `meta` / `viewConfig` props plus the live `formInstanceContext`; where SSR cannot resolve context (authored children serialize before providers publish), they fall back to the initial step-0 state and hydrate the live values.
 - Published JS must keep element registrations: `sideEffects` marks the compiled chunks so bundlers do not drop the bare script imports.
@@ -174,7 +174,9 @@ cancel another field's pending request. When a later validation of the same
 field supersedes an earlier one, the earlier call resolves with the later
 result, so a debounced async check superseded by the next keystroke never shows
 `Validation pending`, and a submit-time check waits for the check of the latest
-value.
+value. `config.validationMode` and `config.reValidateMode` set the `rui-form`
+`mode` and `reValidateMode`; unset, fields validate on submit and re-validate on
+change.
 
 The controller provides snapshot reads, live watches with cleanup, field bindings,
 and array mutations with stable row IDs. See the [controller API and migration
@@ -234,9 +236,10 @@ omits registration extension. Registration files no longer augment a global
 
 The browser project also mounts `FormRenderer` for the shared
 [`renderer conformance scenarios`](../../test-utils/renderer-conformance.ts):
-array sibling constraints, nested wizard validation, required constraints, nested
-error clearing, Valibot action registration, submission aborts, and change and
-action callbacks. Run `pnpm exec vitest run --project browser test/conformance`
+array sibling constraints, the state that follows scalar array rows, nested wizard
+validation, required constraints on fields and containers, disabled arrays,
+`validationMode`, nested error clearing, Valibot action registration, submission
+aborts, submit attempt counts, and change and action callbacks. Run `pnpm exec vitest run --project browser test/conformance`
 from this package.
 
 Live value changes refresh constraint presentation for every array row. Submission

@@ -89,7 +89,7 @@ configured action that produced it.
 context with form data and timing metadata, including a stable step start time that resets
 when the active step changes. Its form state takes `errors` and `touched` nested like the
 values, so a handler reads `context.errors.address.street` in every renderer, and
-`userInteractions` counts touched fields plus `submitCount` (at most one in Radiant).
+`userInteractions` counts touched fields plus `submitCount`, the submit attempts since the last reset, failed ones included.
 The form state no longer accepts `touchedFields` or `isSubmitted`: pass `touched` and
 `submitCount`, both required (see [action context form state](src/engine/README.md#action-context-form-state)).
 The engine entry point also re-exports `ActionDispatcher` so
