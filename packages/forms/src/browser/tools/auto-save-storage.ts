@@ -29,11 +29,6 @@ function writeTrackedDraftKeys(storage: BrowserStorage, keys: Set<string>): void
 	storage.setItem(trackedDraftKeysStorageKey, JSON.stringify([...keys]));
 }
 
-/** Returns draft keys written through the browser auto-save adapter. */
-export function getTrackedAutoSaveDraftKeys(storage: BrowserStorage): string[] {
-	return [...readTrackedDraftKeys(storage)];
-}
-
 /** Removes all tracked draft keys and their storage metadata. */
 export function clearTrackedAutoSaveDrafts(storage: BrowserStorage): void {
 	for (const key of readTrackedDraftKeys(storage)) {
@@ -59,23 +54,29 @@ function trackAutoSaveDraftKey(storage: BrowserStorage, key: string): void {
 	writeTrackedDraftKeys(storage, keys);
 }
 
-function createAutoSaveStorage(resolveStorage: () => BrowserStorage): AutoSaveStorage {
+function createAutoSaveStorage(resolveStorage: () => BrowserStorage) {
 	return {
-		save: (key, data) => {
+		save: (key: string, data: unknown): void => {
 			const storage = resolveStorage();
 			trackAutoSaveDraftKey(storage, key);
 			storage.setItem(key, JSON.stringify(data));
 		},
-		load: (key) => {
+		load: (key: string): unknown => {
 			const stored = resolveStorage().getItem(key);
 			return stored === null ? null : JSON.parse(stored);
 		},
-		remove: (key) => removeTrackedAutoSaveDraftKey(resolveStorage(), key),
-	};
+		remove: (key: string): void => removeTrackedAutoSaveDraftKey(resolveStorage(), key),
+	} satisfies AutoSaveStorage;
 }
 
-/** Adapts a Web Storage implementation to the engine's auto-save storage port. */
-export function createLocalStorageAutoSaveStorage(storage: BrowserStorage): AutoSaveStorage {
+/**
+ * Adapts a Web Storage implementation to the engine's auto-save storage port.
+ *
+ * @remarks
+ * The adapter is synchronous, so callers that need a result in the same tick,
+ * such as the consent tool's drafts, can use it without awaiting.
+ */
+export function createLocalStorageAutoSaveStorage(storage: BrowserStorage) {
 	return createAutoSaveStorage(() => storage);
 }
 

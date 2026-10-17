@@ -35,7 +35,7 @@ Supported operators are `equals`, `not_equals`, `contains`, `not_contains`,
 
 ## Consent-aware drafts
 
-Import the static browser helper from `@schema-engine/forms/browser`:
+Import the browser helper from `@schema-engine/forms/browser`:
 
 ```ts
 import { GDPRConsent } from '@schema-engine/forms/browser';
@@ -46,8 +46,8 @@ const draft = GDPRConsent.loadDraft('contact');
 ```
 
 Grant consent before saving a draft. Drafts use the `autosave_<formId>` key shared with the auto-save and reset
-actions. `GDPRConsent.revokeConsent()` clears those drafts, custom auto-save keys,
-and legacy `form_draft_` entries from local storage. Consent is browser storage
+actions. `GDPRConsent.revokeConsent()` clears drafts that the browser auto-save adapter
+or `GDPRConsent.saveDraft` wrote, under either the default key or a custom `storageKey`. Consent is browser storage
 state; applications provide their own React subscriptions, disclosure, and
 retention policy.
 
