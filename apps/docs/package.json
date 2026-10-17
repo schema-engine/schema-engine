@@ -9,6 +9,7 @@
 		"dev": "ecopages dev",
 		"prebuild": "pnpm generate:llms",
 		"build": "ecopages build",
+		"check-types": "pnpm build && tsc --noEmit && tsc --noEmit -p tsconfig.test-types.json",
 		"preview": "ecopages preview",
 		"test:e2e": "vitest run --project e2e",
 		"pretest:e2e": "pnpm build",

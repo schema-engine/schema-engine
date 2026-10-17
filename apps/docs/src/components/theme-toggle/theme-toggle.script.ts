@@ -81,7 +81,7 @@ export class ThemeToggle extends RuiCycleToggleElement {
 
 export type ThemeToggleProps = RuiCycleToggleProps & { id?: string };
 
-declare module '@ecopages/jsx/jsx-runtime' {
+declare module '@ecopages/jsx' {
 	interface JsxCustomIntrinsicElements {
 		'theme-toggle': JsxCustomElementAttributes<ThemeToggle, ThemeToggleProps>;
 	}

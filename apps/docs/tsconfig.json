@@ -27,9 +27,18 @@
 		"skipLibCheck": true,
 		"strict": true,
 		"target": "ES2021",
-		"types": ["node"],
+		"types": ["node", "ecopages-content-processor"],
 		"useDefineForClassFields": true,
 		"verbatimModuleSyntax": true
 	},
-	"include": ["src", "eco.config.ts", "modules.d.ts"]
+	"include": ["src", "eco.config.ts", "modules.d.ts"],
+	"exclude": [
+		"src/components/api-field",
+		"src/components/burger",
+		"src/components/code-preview.tsx",
+		"src/components/header",
+		"src/components/lit-counter",
+		"src/components/navigation",
+		"src/components/switch"
+	]
 }

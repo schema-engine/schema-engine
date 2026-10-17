@@ -16,8 +16,15 @@ pnpm install
 pnpm dev
 pnpm build
 pnpm generate:llms
+pnpm check-types
 pnpm test:e2e
 ```
+
+`pnpm check-types` builds the site first, because the content processor writes the
+`ecopages:content/*` module types during the build, then type-checks `src` and
+`test`. The e2e `inject('docsBaseUrl')` typing comes from the `ProvidedContext`
+augmentation in `test/e2e/global-setup.ts`, so that check covers it. Unused
+components that no longer type-check are excluded in `tsconfig.json`.
 
 `pnpm test:e2e` builds the site, serves the production preview on a free port, and
 runs Playwright checks that the getting-started Forms React embed ships its
