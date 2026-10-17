@@ -139,4 +139,64 @@ describe('SSR constraint snapshot', () => {
 		expect(fieldHost('address.city')).toMatch(/\sdisabled/);
 		expect(fieldHost('mode')).not.toMatch(/\sdisabled/);
 	});
+
+	test.each([
+		[
+			'its own',
+			'city',
+			{ constraints: [{ field: 'mode', operator: 'equals', value: 'need', action: 'require' }] },
+			{},
+		],
+		[
+			'a fieldset',
+			'address.city',
+			{},
+			{ constraints: [{ field: 'mode', operator: 'equals', value: 'need', action: 'require' }] },
+		],
+		[
+			'an outer fieldset',
+			'address.inner.city',
+			{},
+			{
+				constraints: [{ field: 'mode', operator: 'equals', value: 'need', action: 'require' }],
+				elements: [
+					{
+						$type: 'fieldSet',
+						id: 'inner',
+						name: 'inner',
+						elements: [{ $type: 'input', id: 'city', name: 'city', label: 'City' }],
+					},
+				],
+			},
+		],
+	])('a field required by %s require constraint shows its marker at render', (_, name, field, fieldSet) => {
+		const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+		const config = engine.validateForm({
+			id: 'required-at-render',
+			steps: [
+				{
+					id: 'main',
+					title: 'Main',
+					elements: [
+						{ $type: 'input', id: 'mode', name: 'mode', label: 'Mode' },
+						{ $type: 'input', id: 'city', name: 'city', label: 'City', ...field },
+						{
+							$type: 'fieldSet',
+							id: 'address',
+							name: 'address',
+							elements: [{ $type: 'input', id: 'city', name: 'city', label: 'City' }],
+							...fieldSet,
+						},
+					],
+				},
+			],
+		});
+		const marker = (mode: string) =>
+			renderToString(jsx(FormInstance, { config, engine, defaultValues: { mode } }))
+				.split('<se-field')
+				.find((host) => host.includes(`name="${name}"`))
+				?.match(/<span data-se-required-marker[^>]*>/)?.[0];
+		expect(marker('need')).not.toMatch(/hidden/);
+		expect(marker('open')).toMatch(/hidden/);
+	});
 });

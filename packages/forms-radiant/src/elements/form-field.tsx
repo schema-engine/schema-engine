@@ -1,6 +1,7 @@
 import { customElement } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { RuiFieldElement, type RuiFieldProps } from '@ecopages/radiant-ui/field';
+import type { FieldRules } from '@ecopages/radiant-ui/form';
 import { jsx, type JsxCustomElementAttributes } from '@ecopages/jsx';
 import { FormController, formController } from '@/adapters/radiant/controller';
 import { readHydratedRules } from '@/components/internals/field-rule-hydrator';
@@ -67,16 +68,29 @@ export class FormFieldElement extends RuiFieldElement {
 	}
 }
 
+/** Runs a hand-written `validate` after the validator derived from the engine rules; the first failure wins. */
+function withCustomValidate(rules: FieldRules | undefined, validate: FieldRules['validate']): FieldRules | undefined {
+	if (!validate) return rules;
+	const derived =
+		typeof rules?.validate === 'function' ? { '@schema-engine/rules': rules.validate } : rules?.validate;
+	const custom = typeof validate === 'function' ? { custom: validate } : validate;
+	return { ...rules, validate: { ...derived, ...custom } };
+}
+
 /**
  * @remarks
  * `validation` takes the element's `rules`, `$type` and `name`. The live rules
  * and `data-se-validation-rules` come from one merged list. The hydrator
  * rebuilds rules from the attribute alone and has no `$type` to look up
  * `defaultFor` rules again, so the serialized list must already include them.
+ *
+ * `validate` adds a client-side check to those rules. A function cannot be
+ * serialized, so a server-rendered field has it only once it renders on the client.
  */
 export function FormField({
 	children,
 	validation,
+	validate,
 	defaultValue,
 	defaultValueData,
 	class: className,
@@ -85,6 +99,7 @@ export function FormField({
 	...props
 }: Omit<JsxCustomElementAttributes<FormFieldElement, RuiFieldProps>, 'rules'> & {
 	validation?: FieldRulesSource;
+	validate?: FieldRules['validate'];
 	grid?: ElementGridConfig;
 	style?: Record<string, string | number | undefined>;
 }) {
@@ -96,7 +111,7 @@ export function FormField({
 		classes: ['se-form-field', className],
 		'data-se-grid-theme': fieldHost.themeId,
 		style: fieldHost.style,
-		'prop:rules': toFieldRules({ rules: validationRules, name: validation?.name }),
+		'prop:rules': withCustomValidate(toFieldRules({ rules: validationRules, name: validation?.name }), validate),
 		'data-se-validation-rules': validationRules ? JSON.stringify(validationRules) : undefined,
 		'prop:defaultValue': defaultValue,
 		data: {

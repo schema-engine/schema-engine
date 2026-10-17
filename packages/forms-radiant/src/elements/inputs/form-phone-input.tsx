@@ -14,6 +14,7 @@ import { RuiAutocomplete, RuiAutocompleteCollection, RuiAutocompleteEmpty } from
 import { RuiListbox, RuiListboxOption, RuiListboxOptionIndicator } from '@ecopages/radiant-ui/listbox';
 import type { CountryCode } from 'libphonenumber-js';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { isRenderedRequired } from '@/lib/field-rules';
 import { FieldGroup } from '../field-group';
 import {
 	detectCountryFromInput,
@@ -226,7 +227,7 @@ export function FormPhoneInput({
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
-			required={isFieldRequired(config.rules)}
+			required={isFieldRequired(config.rules) || isRenderedRequired(config)}
 			description={config.description}
 			grid={config.grid}
 			style={config.style}

@@ -1,5 +1,6 @@
 import { RuiInput } from '@ecopages/radiant-ui/input';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { isRenderedRequired } from '@/lib/field-rules';
 import { FieldGroup } from '../field-group';
 import type { InputFieldProps } from './form-input.types';
 
@@ -17,7 +18,7 @@ export function FormInput({
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
-			required={isFieldRequired(config.rules)}
+			required={isFieldRequired(config.rules) || isRenderedRequired(config)}
 			description={config.description}
 			grid={config.grid}
 			style={config.style}

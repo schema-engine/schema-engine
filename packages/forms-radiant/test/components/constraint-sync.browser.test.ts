@@ -173,3 +173,51 @@ test('a child keeps its own required marker after live sync', async () => {
 		cleanup();
 	}
 });
+
+test('a row field of an authored disabled array stays enabled after live sync, as it renders', async () => {
+	const host = document.createElement('div');
+	document.body.append(host);
+	const root = createRoot(host);
+	const config = engine.validateForm({
+		id: 'disabled-array',
+		steps: [
+			{
+				id: 'main',
+				title: 'Main',
+				elements: [
+					{
+						$type: 'arrayElements',
+						id: 'contacts',
+						name: 'contacts',
+						disabled: true,
+						elements: [
+							{
+								$type: 'input',
+								id: 'email',
+								name: 'email',
+								constraints: [{ field: 'phone', operator: 'equals', value: 'hide', action: 'hide' }],
+							},
+							{ $type: 'input', id: 'phone', name: 'phone' },
+						],
+					},
+				],
+			},
+		],
+	});
+	root.render(FormRenderer({ config, engine, defaultValues: { contacts: [{ email: '', phone: '' }] } }));
+	const form = new FormController(host.querySelector('rui-form')!);
+	try {
+		await expect.poll(() => form.ready).toBe(true);
+		const email = () => host.querySelector<FormFieldElement>('se-field[name="contacts.0.email"]');
+		await expect.poll(() => email()).not.toBeNull();
+
+		form.setValue('contacts.0.phone', 'hide');
+
+		await expect.poll(() => email()!.closest<HTMLElement>('[data-se-constraint-field]')!.hidden).toBe(true);
+		expect(email()!.disabled).toBe(false);
+	} finally {
+		form.disconnect();
+		root.unmount();
+		host.remove();
+	}
+});

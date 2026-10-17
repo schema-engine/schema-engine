@@ -7,6 +7,7 @@ import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { evaluateConstraints } from '@schema-engine/forms/constraints';
 import { renderWithOwningFormEngine, renderWithConstraintValues } from '@/contexts/form-engine-owner';
 import { ElementError } from './element-error';
+import { isRenderedRequired } from '@/lib/field-rules';
 import { getValueAtPath } from '@schema-engine/forms/lib/path-values';
 
 /** Live values the constraint snapshot is evaluated against. */
@@ -53,6 +54,10 @@ function addFieldInitialValue(
  * (from a form or `engine.validateElement`). Field path overlays are
  * render-time only — the frozen config is not cloned.
  *
+ * @remarks
+ * `disabled` and `required` compose with the values a container passed down,
+ * so a fieldset's own and constraint-driven state reaches its children at
+ * render the way live constraint sync composes it afterwards.
  */
 export function renderRegisteredElement(
 	config: NormalizedElementConfig,
@@ -90,7 +95,7 @@ export function renderRegisteredElement(
 		{
 			...config,
 			disabled: ('disabled' in config ? config.disabled : false) || shouldDisable,
-			required: isRequired,
+			required: isRenderedRequired(config) || isRequired,
 		},
 		overlays,
 	);

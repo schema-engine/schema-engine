@@ -297,6 +297,35 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
 			expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ kind: 'personal' }));
 		});
+		test('typing over a debounced async check shows only the latest result', async () => {
+			vi.stubGlobal(
+				'fetch',
+				vi.fn(async () => new Response(JSON.stringify({ valid: false, message: 'Handle is taken' }))),
+			);
+			const host = await setup({
+				config: {
+					...form([
+						{
+							...input('handle', 'Handle'),
+							rules: [{ type: 'async', url: '/conformance-check', debounce: 50, disableCache: true }],
+						},
+					]),
+					reValidateMode: 'onChange',
+				},
+			});
+			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+			const shown: string[] = [];
+			const observer = new MutationObserver(() => shown.push(host.textContent ?? ''));
+			observer.observe(host, { subtree: true, childList: true, characterData: true });
+			try {
+				await userEvent.type(getByRole(host, 'textbox', { name: 'Handle' }), 'ada');
+				await expect.poll(() => queryByText(host, 'Handle is taken') !== null).toBe(true);
+				expect(shown.some((text) => text.includes('Validation pending'))).toBe(false);
+			} finally {
+				observer.disconnect();
+				vi.unstubAllGlobals();
+			}
+		});
 		test('an aborting submit action runs error and complete triggers without success', async () => {
 			const onSubmit = vi.fn();
 			const onAction = vi.fn();
