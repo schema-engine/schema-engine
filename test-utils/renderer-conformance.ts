@@ -154,6 +154,24 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
 			expect(onSubmit).toHaveBeenCalledWith({ tags: ['x', 'x'] });
 		});
+		test('keeps empty scalar rows seeded to minItems and added after them', async () => {
+			const onSubmit = vi.fn();
+			const host = await setup({
+				config: form([
+					{ $type: 'arrayElements', id: 'tags', name: 'tags', minItems: 2, elements: [input('tag', 'Tag')] },
+				]),
+				onSubmit,
+			});
+			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Tag' }).length).toBe(2);
+			await userEvent.click(getByRole(host, 'button', { name: 'Add item' }));
+			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Tag' }).length).toBe(3);
+			await userEvent.fill(queryAllByRole(host, 'textbox', { name: 'Tag' })[2], 'c');
+			await userEvent.click(queryAllByRole(host, 'button', { name: 'Remove item' })[0]);
+			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Tag' }).length).toBe(2);
+			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
+			expect(onSubmit).toHaveBeenCalledWith({ tags: ['', 'c'] });
+		});
 		test(`seeds a custom array registration (${customArrayType}) to minItems`, async () => {
 			const onSubmit = vi.fn();
 			const host = await setup({
