@@ -27,6 +27,7 @@ import { FormController } from '@/adapters/radiant/controller';
 /** Behavior and engine navigation state for one composed form. */
 @customElement('se-form-instance')
 export class FormInstanceElement extends RadiantElement {
+	private readonly navigation = createInstanceNavigation(this, () => this.form);
 	/** Frozen config from `engine.defineForm` / `engine.validateForm` via `FormProvider`. */
 	@prop({ type: Object }) config!: NormalizedFormConfig;
 	@state engine?: CoreFormEngine;
@@ -84,6 +85,7 @@ export class FormInstanceElement extends RadiantElement {
 	}
 
 	override disconnectedCallback(): void {
+		this.navigation.cancel();
 		this.stopWatchingValidationDependencies();
 		this.unwatchChanges?.();
 		this.unwatchChanges = undefined;
@@ -173,18 +175,12 @@ export class FormInstanceElement extends RadiantElement {
 		this.unwatchValidationDependencies = undefined;
 	}
 
-	/**
-	 * @remarks
-	 * A navigation still in flight applies its result after this reset, because
-	 * `createStepNavigator` (`@schema-engine/forms`, `engine/step-machine.ts`)
-	 * builds the next state from the one it read before validating. A guard here could drop that state but not the step triggers
-	 * the navigator dispatches after it, so the check belongs in the navigator.
-	 */
+	/** @remarks Cancels a navigation in flight so it cannot overwrite the reset state or dispatch step triggers after it. */
 	private resetStepState(): void {
+		this.navigation.cancel();
 		this.machine = { currentStepIndex: 0, ...createInitialStepStates(this.config?.steps.length ?? 1) };
 	}
 
-	private readonly navigation = createInstanceNavigation(this, () => this.form);
 	readonly markStepCompleted = this.navigation.markStepCompleted;
 	readonly markStepVisited = this.navigation.markStepVisited;
 	readonly goToStep = this.navigation.goToStep;

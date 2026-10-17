@@ -35,8 +35,13 @@ rendererConformance(async ({ config, ...props }) => {
 		recipes: [WizardRecipe],
 		actions: [conformanceAction],
 	});
-	const view = render(
-		<FormRenderer {...props} config={engine.validateForm(config)} engine={engine} adapter={rhfAdapter} />,
+	const renderConfig = (next: typeof config) => (
+		<FormRenderer {...props} config={engine.validateForm(next)} engine={engine} adapter={rhfAdapter} />
 	);
-	return { host: view.container, cleanup: view.unmount };
+	const view = render(renderConfig(config));
+	return {
+		host: view.container,
+		cleanup: view.unmount,
+		update: async (next) => view.rerender(renderConfig(next)),
+	};
 });

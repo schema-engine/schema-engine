@@ -22,6 +22,7 @@ export type {
 	StepMachineReducer,
 	StepNavigationAction,
 	StepActionTrigger,
+	StepNavigator,
 	StepNavigatorOptions,
 	SubmissionActionResult,
 	SubmissionLifecycleResult,
