@@ -1,8 +1,8 @@
 import type React from 'react';
 import { useFormEngine, useConstraintLogic } from '@/hooks';
-import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { applyFieldOverlay, type NormalizedElementConfig } from '@schema-engine/forms';
 import { isNormalizedElementConfig } from '@schema-engine/forms/lib/normalized-form-config';
+import { FieldConstraintContext, isElementRequired } from '@/contexts/field-constraint-context';
 import { ElementError } from './element-error';
 
 export interface FormElementProps {
@@ -23,6 +23,11 @@ export interface FormElementProps {
 
 /**
  * Renders a registered element. Config must already be normalized.
+ *
+ * @remarks
+ * Constraints are evaluated once here, with the field type's default rules in the
+ * base required flag, and handed to the element's `useControlledFormElement`
+ * through {@link FieldConstraintContext}.
  */
 export function FormElement({ config, name, id, instanceId, className, style }: FormElementProps) {
 	const { engine } = useFormEngine();
@@ -30,11 +35,13 @@ export function FormElement({ config, name, id, instanceId, className, style }: 
 	if (!isNormalizedElementConfig(config)) {
 		throw new Error(`FormElement config must be normalized before render (${elementType}).`);
 	}
-	const { shouldShow, shouldDisable } = useConstraintLogic(
-		name ?? config.name,
+	const fieldPath = name ?? config.name;
+	const constraints = useConstraintLogic(
+		fieldPath,
 		'constraints' in config ? config.constraints : undefined,
-		isFieldRequired('rules' in config ? config.rules : undefined),
+		isElementRequired(config, engine.getValidationRegistry()),
 	);
+	const { shouldShow, shouldDisable } = constraints;
 
 	if (!shouldShow) {
 		return null;
@@ -66,5 +73,9 @@ export function FormElement({ config, name, id, instanceId, className, style }: 
 		{ name, id, instanceId },
 	);
 
-	return <Component {...enhancedConfig} />;
+	return (
+		<FieldConstraintContext.Provider value={{ fieldPath, constraints }}>
+			<Component {...enhancedConfig} />
+		</FieldConstraintContext.Provider>
+	);
 }

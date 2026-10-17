@@ -6,6 +6,10 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { FormAdapterContext, useFormContext } from '@/adapters/context';
 import { rhfAdapter } from '@/adapters/rhf';
 import { useControlledFormElement } from '@/hooks/use-field';
+import * as z from 'zod/mini';
+import { createFormEngine, defineInput } from '@schema-engine/forms';
+import type { ElementConfig } from '@schema-engine/forms/schemas';
+import { FormRenderer } from '@/components/internals/form-renderer';
 
 function AdapterForm({
 	defaultValues,
@@ -148,5 +152,109 @@ describe('RHF useFormField adapter contract', () => {
 		fireEvent.change(screen.getByTestId('accountType'), { target: { value: 'business' } });
 
 		expect(screen.getByTestId('company')).toBeRequired();
+	});
+});
+
+describe('useControlledFormElement under FormRenderer', () => {
+	function ConfiguredInput({ onRender, ...config }: ElementConfig & { onRender?: (name: string) => void }) {
+		onRender?.(config.name ?? '');
+		const { fieldProps, value, onChange } = useControlledFormElement(config);
+		return (
+			<input
+				data-testid={config.id}
+				value={(value as string) ?? ''}
+				onChange={(event) => onChange(event.target.value)}
+				{...fieldProps}
+			/>
+		);
+	}
+
+	function renderForm(fields: ElementConfig[], onRender?: (name: string) => void) {
+		const useWatchField = vi.fn(rhfAdapter.useWatchField);
+		const engine = createFormEngine({
+			elements: [
+				defineInput({
+					$type: 'field',
+					schema: z.looseObject({ $type: z.literal('field'), id: z.string(), name: z.string() }),
+					metadata: { name: 'Field', category: 'input' },
+					render: (config) => <ConfiguredInput {...config} onRender={onRender} />,
+				}),
+				defineInput({
+					$type: 'required-field',
+					schema: z.looseObject({ $type: z.literal('required-field'), id: z.string(), name: z.string() }),
+					metadata: { name: 'Required field', category: 'input' },
+					render: (config) => <ConfiguredInput {...config} />,
+					validations: [
+						{
+							type: 'required',
+							category: 'string',
+							defaultFor: ['required-field'],
+							handler: () => z.string().check(z.minLength(1)),
+						},
+					],
+				}),
+				defineInput({
+					$type: 'pair',
+					schema: z.looseObject({ $type: z.literal('pair'), id: z.string(), name: z.string() }),
+					metadata: { name: 'Pair', category: 'input' },
+					render: (config) => (
+						<>
+							<ConfiguredInput {...config} />
+							<ConfiguredInput
+								$type="required-field"
+								id={`${config.id}-extra`}
+								name={`${config.name}Extra`}
+							/>
+						</>
+					),
+				}),
+			],
+		});
+		render(
+			<FormRenderer
+				config={engine.validateForm({ id: 'fields', steps: [{ id: 'main', title: 'Main', elements: fields }] })}
+				engine={engine}
+				adapter={{ ...rhfAdapter, useWatchField }}
+			/>,
+		);
+		return useWatchField;
+	}
+
+	test('watches constraint paths once per render of a constrained field', () => {
+		const renders: string[] = [];
+		const useWatchField = renderForm(
+			[
+				{ $type: 'field', id: 'accountType', name: 'accountType' },
+				{
+					$type: 'field',
+					id: 'company',
+					name: 'company',
+					constraints: [{ field: 'accountType', operator: 'equals', value: 'business', action: 'require' }],
+				},
+			],
+			(name) => renders.push(name),
+		);
+		const constraintWatches = () =>
+			useWatchField.mock.calls.filter(([names]) => Array.isArray(names) && names.includes('accountType')).length;
+		const companyRenders = () => renders.filter((name) => name === 'company').length;
+
+		expect(constraintWatches()).toBeGreaterThan(0);
+		expect(constraintWatches()).toBeLessThanOrEqual(companyRenders());
+		fireEvent.change(screen.getByTestId('accountType'), { target: { value: 'business' } });
+		expect(screen.getByTestId('company')).toBeRequired();
+		expect(constraintWatches()).toBeLessThanOrEqual(companyRenders());
+	});
+
+	test('marks a field required from the default rules registered for its type', () => {
+		renderForm([{ $type: 'required-field', id: 'email', name: 'email' }]);
+
+		expect(screen.getByTestId('email')).toBeRequired();
+	});
+
+	test('a control bound to another name evaluates its own required state', () => {
+		renderForm([{ $type: 'pair', id: 'phone', name: 'phone' }]);
+
+		expect(screen.getByTestId('phone')).not.toBeRequired();
+		expect(screen.getByTestId('phone-extra')).toBeRequired();
 	});
 });
