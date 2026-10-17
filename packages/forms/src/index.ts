@@ -23,6 +23,7 @@ export type {
 	StepNavigationAction,
 	StepActionTrigger,
 	StepNavigatorOptions,
+	SubmissionActionResult,
 	SubmissionLifecycleResult,
 	FormActionContextFormState,
 } from './engine';

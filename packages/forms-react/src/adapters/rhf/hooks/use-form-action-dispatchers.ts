@@ -50,18 +50,17 @@ export function useFormActionDispatchers({
 		[form],
 	);
 
-	const buildActionContext = useCallback(
-		(): BuilderActionBaseContext =>
-			buildFormActionContext({
-				config,
-				values: form.getValues(),
-				formState: form.formState,
-				currentStep: getCurrentStep?.() ?? 0,
-				mountedAt: formMountTime,
-				form: formAdapter,
-			}),
-		[form, config, getCurrentStep, formAdapter, formMountTime],
-	);
+	const buildActionContext = useCallback((): BuilderActionBaseContext => {
+		const { isValid, errors, touchedFields, submitCount } = form.formState;
+		return buildFormActionContext({
+			config,
+			values: form.getValues(),
+			formState: { isValid, errors, touched: touchedFields, submitCount },
+			currentStep: getCurrentStep?.() ?? 0,
+			mountedAt: formMountTime,
+			form: formAdapter,
+		});
+	}, [form, config, getCurrentStep, formAdapter, formMountTime]);
 
 	const dispatchTrigger = useCallback(
 		async (

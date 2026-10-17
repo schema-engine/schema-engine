@@ -207,6 +207,44 @@ test.each([false, true])(
 		await expect.poll(() => complete.mock.calls.length).toBe(1);
 		expect(executed).toEqual(['first']);
 		expect(controller.onAction).toHaveBeenCalledTimes(callbackRejects ? 1 : 0);
-		expect(complete.mock.calls[0]?.[0].detail.succeeded).toBe(false);
+		expect(complete.mock.calls[0]?.[0].detail).toEqual({
+			succeeded: false,
+			results: [expect.objectContaining({ actionId: 'first', success: false, shouldContinue: false })],
+		});
 	},
 );
+
+test('form_change actions keep running after the controller reconnects', async () => {
+	const engine = createFormEngine({ elements: [] });
+	const changes: unknown[] = [];
+	vi.spyOn(engine, 'getAction').mockReturnValue({
+		$type: 'change',
+		schema: { '~standard': { version: 1, vendor: 'test', validate: (value: unknown) => ({ value }) } },
+		metadata: { name: 'Change', defaultTriggers: ['form_change'] },
+		execute: async ({ formData }: { formData: Record<string, unknown> }) => {
+			changes.push(formData.note);
+			return { success: true };
+		},
+	});
+	const host = document.createElement('rui-form');
+	const store = new FormStore({ defaultValues: { note: '' } });
+	provideTestFormStore(host, store);
+	const controller = new FormActionControllerElement();
+	controller.engine = engine;
+	controller.config = engine.defineForm({
+		id: 'changes',
+		steps: [{ id: 'main', title: 'Main', elements: [] }],
+		actions: [{ id: 'changed', $type: 'change' }],
+	});
+	host.append(controller);
+	document.body.append(host);
+	await expect.poll(() => controller.form.ready).toBe(true);
+
+	store.setValue('note', 'first');
+	await expect.poll(() => changes.at(-1)).toBe('first');
+	controller.remove();
+	host.append(controller);
+	await expect.poll(() => controller.form.ready).toBe(true);
+	store.setValue('note', 'second');
+	await expect.poll(() => changes.at(-1)).toBe('second');
+});

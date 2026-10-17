@@ -574,10 +574,15 @@ For server-side validation that requires network requests, with built-in caching
 | `extraPayload`     | `object`   | Extra request fields; `value` and `dependsOn` are added automatically |
 | `expectedResponse` | `object`   | Expected response format for success                                  |
 | `dependencies`     | `string[]` | Fields that trigger re-validation when changed                        |
-| `debounce`         | `number`   | Delay in ms before making API call                                    |
+| `debounce`         | `number`   | Delay in ms before making API call; see below for replaced calls      |
 | `cacheTTL`         | `number`   | Cache time-to-live in milliseconds (default: 5 minutes)               |
 | `disableCache`     | `boolean`  | Whether to disable request caching (default: false)                   |
 | `message`          | `string`   | Error message to show on validation failure                           |
+
+With `debounce`, a newer validation of the same field replaces a pending one and only the
+latest request is sent. A replaced validation of the same value shares that request's
+result; one of a different value fails with `Validation pending`, so a submit-time check
+superseded by a later edit never passes.
 
 ### Dependency Resolution
 

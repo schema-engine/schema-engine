@@ -5,6 +5,7 @@ import type { FormActionTrigger } from '@/actions';
 import type { BuilderActionBaseContext } from '@/types';
 
 const context = {} as BuilderActionBaseContext;
+const saveAction = { $type: 'submit', id: 'save', enabled: true, endpoint: '/save', method: 'POST' } as const;
 
 function createDispatch(submitResults: ActionExecutionResult[]) {
 	const triggers: FormActionTrigger[] = [];
@@ -22,15 +23,24 @@ async function dispatchSuccessfulSubmitActions({
 	return trigger === 'form_submit' ? actions.map(() => ({ success: true })) : [];
 }
 
+/** Runs only the actions whose triggers include the dispatched one, as the dispatcher does. */
+async function dispatchRejectingSecond({ actions, trigger }: ActionDispatchInput): Promise<ActionExecutionResult[]> {
+	return actions
+		.filter((action) => action.triggers?.includes(trigger))
+		.map((action) =>
+			action.id === 'second' ? { success: false, shouldContinue: false, error: 'Rejected' } : { success: true },
+		);
+}
+
 describe('runSubmissionLifecycle', () => {
 	test('treats an action that stops on failure as a failed submission', async () => {
 		const { dispatch, triggers } = createDispatch([{ success: false, shouldContinue: false }]);
 
-		const result = await runSubmissionLifecycle(dispatch, { actions: [], context });
+		const result = await runSubmissionLifecycle(dispatch, { actions: [saveAction], context });
 
 		expect(result).toEqual({
 			succeeded: false,
-			results: [{ success: false, shouldContinue: false }],
+			results: [{ actionId: 'save', success: false, shouldContinue: false }],
 		});
 		expect(triggers).toEqual(['form_submit_start', 'form_submit', 'form_submit_error', 'form_submit_complete']);
 	});
@@ -38,7 +48,7 @@ describe('runSubmissionLifecycle', () => {
 	test('allows a failed action to continue the submission when requested', async () => {
 		const { dispatch, triggers } = createDispatch([{ success: false, shouldContinue: true }]);
 
-		const result = await runSubmissionLifecycle(dispatch, { actions: [], context });
+		const result = await runSubmissionLifecycle(dispatch, { actions: [saveAction], context });
 
 		expect(result.succeeded).toBe(true);
 		expect(triggers).toEqual(['form_submit_start', 'form_submit', 'form_submit_success', 'form_submit_complete']);
@@ -61,11 +71,29 @@ describe('runSubmissionLifecycle', () => {
 		};
 
 		await runSubmissionLifecycle(dispatch, {
-			actions: [],
+			actions: [saveAction],
 			context: () => contexts[contextIndex++] ?? context,
 		});
 
 		expect(dispatchedContexts).toEqual(contexts);
+	});
+
+	test('submission errors name the failing action', async () => {
+		const actions = [
+			{ ...saveAction, id: 'first', triggers: ['form_submit'] },
+			{ ...saveAction, id: 'later', triggers: ['form_mount'] },
+			{ ...saveAction, id: 'second', triggers: ['form_submit'] },
+		];
+
+		const result = await runSubmissionLifecycle(dispatchRejectingSecond, { actions, context });
+
+		expect(result).toEqual({
+			succeeded: false,
+			results: [
+				{ actionId: 'first', success: true },
+				{ actionId: 'second', success: false, shouldContinue: false, error: 'Rejected' },
+			],
+		});
 	});
 
 	test('runs onAction after each successful submit action', async () => {
@@ -112,7 +140,7 @@ describe('runSubmissionLifecycle', () => {
 		expect(dispatchedIds).toEqual(['first']);
 		expect(result.succeeded).toBe(false);
 		expect(result.results).toEqual([
-			{ success: false, shouldContinue: false, error: 'Callback stopped submission' },
+			{ actionId: 'first', success: false, shouldContinue: false, error: 'Callback stopped submission' },
 		]);
 	});
 });
