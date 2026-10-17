@@ -17,12 +17,7 @@ import { findNearestRuiForm } from '@/lib/rui-form-utils';
 import { connectValidationDependencies } from '@/lib/validation-deps';
 import type { RuiFormElement } from '@ecopages/radiant-ui/form';
 import { expandValues } from '@/adapters/radiant/controller/values';
-import {
-	createStepMachine,
-	createInitialStepStates,
-	type StepMachineState,
-	type StepMachineAction,
-} from '@schema-engine/forms/engine';
+import { createInitialStepStates, type StepMachineState } from '@schema-engine/forms/engine';
 import { createInstanceNavigation } from '@/lib/instance-navigation';
 import { syncConstraints } from '@/lib/constraint-sync';
 import type { FormProviderProps } from '@/adapters/types';
@@ -180,10 +175,6 @@ export class FormInstanceElement extends RadiantElement {
 
 	private resetStepState(): void {
 		this.machine = { currentStepIndex: 0, ...createInitialStepStates(this.config?.steps.length ?? 1) };
-	}
-
-	transition(action: StepMachineAction): void {
-		this.machine = createStepMachine(this.config ?? { steps: [{}] })(this.machine, action);
 	}
 
 	private readonly navigation = createInstanceNavigation(this, () => this.form);
