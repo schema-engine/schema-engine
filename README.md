@@ -166,7 +166,7 @@ graph TD
 See the full walkthrough in [Quick Start](./apps/docs/src/content/docs/getting-started/quick-start.mdx). Minimal verified setup:
 
 ```bash
-pnpm add @schema-engine/forms @schema-engine/forms-react react-hook-form zod
+pnpm add @schema-engine/forms @schema-engine/forms-react react react-dom react-hook-form zod
 pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-engine/schema-engine-form-recipes
 ```
 
