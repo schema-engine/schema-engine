@@ -1,7 +1,6 @@
 import { RuiInput } from '@ecopages/radiant-ui/input';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
-import { toFieldRules } from '@/lib/field-rules';
 import type { InputFieldProps } from './form-input.types';
 
 export function FormInput({
@@ -22,8 +21,7 @@ export function FormInput({
 			description={config.description}
 			grid={config.grid}
 			style={config.style}
-			rules={toFieldRules(config)}
-			validationRules={config.rules}
+			validation={config}
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}
 		>

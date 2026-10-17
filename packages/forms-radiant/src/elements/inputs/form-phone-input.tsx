@@ -1,5 +1,3 @@
-import { getValidationRulesForElement } from '@schema-engine/forms/schemas/validation/utils';
-import { peekOwningFormEngine } from '@/contexts/form-engine-owner';
 import './form-phone-input.css';
 import { customElement, onEvent, onUpdated, prop, query, RadiantElement, state } from '@ecopages/radiant';
 import { jsx, unsafeHtml, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
@@ -17,7 +15,6 @@ import { RuiListbox, RuiListboxOption, RuiListboxOptionIndicator } from '@ecopag
 import type { CountryCode } from 'libphonenumber-js';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
-import { toFieldRules } from '@/lib/field-rules';
 import {
 	detectCountryFromInput,
 	formatPhoneInputValue,
@@ -223,9 +220,6 @@ export function FormPhoneInput({
 	onFocus: propsOnFocus,
 	...config
 }: PhoneInputFieldProps) {
-	const owningEngine = peekOwningFormEngine();
-	const registry = owningEngine?.getValidationRegistry();
-
 	return (
 		<FieldGroup
 			name={config.name}
@@ -236,8 +230,7 @@ export function FormPhoneInput({
 			description={config.description}
 			grid={config.grid}
 			style={config.style}
-			rules={toFieldRules(config, registry)}
-			validationRules={registry ? getValidationRulesForElement(config, registry) : config.rules}
+			validation={config}
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}
 		>
