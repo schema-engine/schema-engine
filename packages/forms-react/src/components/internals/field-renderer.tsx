@@ -1,8 +1,10 @@
 import type React from 'react';
+import { useContext, useMemo } from 'react';
 import { useFormEngine, useConstraintLogic } from '@/hooks';
 import { applyFieldOverlay, type NormalizedElementConfig } from '@schema-engine/forms';
 import { isNormalizedElementConfig } from '@schema-engine/forms/lib/normalized-form-config';
-import { FieldConstraintContext, isElementRequired } from '@/contexts/field-constraint-context';
+import { FieldConstraintContext, InheritedFieldStateContext } from '@/contexts/field-constraint-context';
+import { isElementRequired } from '@/hooks/is-element-required';
 import { ElementError } from './element-error';
 
 export interface FormElementProps {
@@ -27,7 +29,9 @@ export interface FormElementProps {
  * @remarks
  * Constraints are evaluated once here, with the field type's default rules in the
  * base required flag, and handed to the element's `useControlledFormElement`
- * through {@link FieldConstraintContext}.
+ * through {@link FieldConstraintContext}. The element's disabled state and the
+ * `require` constraints around it reach the elements inside it through
+ * {@link InheritedFieldStateContext}.
  */
 export function FormElement({ config, name, id, instanceId, className, style }: FormElementProps) {
 	const { engine } = useFormEngine();
@@ -36,12 +40,17 @@ export function FormElement({ config, name, id, instanceId, className, style }: 
 		throw new Error(`FormElement config must be normalized before render (${elementType}).`);
 	}
 	const fieldPath = name ?? config.name;
-	const constraints = useConstraintLogic(
+	const inherited = useContext(InheritedFieldStateContext);
+	const evaluated = useConstraintLogic(
 		fieldPath,
 		'constraints' in config ? config.constraints : undefined,
-		isElementRequired(config, engine.getValidationRegistry()),
+		inherited.required,
 	);
+	const ownRequired = isElementRequired(config, engine.getValidationRegistry());
+	const constraints = { ...evaluated, isRequired: evaluated.isRequired || ownRequired };
 	const { shouldShow, shouldDisable } = constraints;
+	const disabled = ('disabled' in config && config.disabled === true) || shouldDisable || inherited.disabled;
+	const passedDown = useMemo(() => ({ disabled, required: evaluated.isRequired }), [disabled, evaluated.isRequired]);
 
 	if (!shouldShow) {
 		return null;
@@ -65,17 +74,13 @@ export function FormElement({ config, name, id, instanceId, className, style }: 
 
 	const Component = elementRegistration.render as React.ComponentType<Record<string, unknown>>;
 
-	const enhancedConfig = applyFieldOverlay(
-		{
-			...config,
-			disabled: ('disabled' in config ? config.disabled : false) || shouldDisable,
-		},
-		{ name, id, instanceId },
-	);
+	const enhancedConfig = applyFieldOverlay({ ...config, disabled }, { name, id, instanceId });
 
 	return (
-		<FieldConstraintContext.Provider value={{ fieldPath, constraints }}>
-			<Component {...enhancedConfig} />
-		</FieldConstraintContext.Provider>
+		<InheritedFieldStateContext.Provider value={passedDown}>
+			<FieldConstraintContext.Provider value={{ fieldPath, constraints }}>
+				<Component {...enhancedConfig} />
+			</FieldConstraintContext.Provider>
+		</InheritedFieldStateContext.Provider>
 	);
 }

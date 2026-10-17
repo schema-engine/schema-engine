@@ -1,6 +1,4 @@
 import { createContext } from 'react';
-import { getValidationRulesForElement, isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
-import type { ValidationRegistry } from '@schema-engine/forms/schemas/validation';
 import type { UseConstraintLogicResult } from '@/hooks/use-constraint-logic';
 
 export interface FieldConstraints {
@@ -18,10 +16,19 @@ export interface FieldConstraints {
  */
 export const FieldConstraintContext = createContext<FieldConstraints | null>(null);
 
-/** Base required flag before constraints: authored rules plus the type's default rules. */
-export function isElementRequired(
-	element: Parameters<typeof getValidationRulesForElement>[0],
-	registry: ValidationRegistry,
-): boolean {
-	return isFieldRequired(getValidationRulesForElement(element, registry));
+/**
+ * State a container passes to every element inside it, at any depth.
+ *
+ * @remarks
+ * `disabled` is the container's authored or constraint-driven disabled state.
+ * `required` holds while a `require` constraint of the container, or of a
+ * container around it, holds; a container's own `required` rule does not pass
+ * down. Fieldsets and arrays both pass it, so a disabled array disables its rows.
+ * The engine's `validateFormValues` applies the same `require` rule.
+ */
+export interface InheritedFieldState {
+	disabled: boolean;
+	required: boolean;
 }
+
+export const InheritedFieldStateContext = createContext<InheritedFieldState>({ disabled: false, required: false });

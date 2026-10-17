@@ -36,6 +36,8 @@ export interface EffectiveRulesInput {
 	fieldPath: string;
 	values: Record<string, unknown>;
 	registry: ValidationRegistry;
+	/** Set when a `require` constraint of a container around the field holds. */
+	inheritedRequired?: boolean;
 }
 
 export interface ValidateFieldValueInput extends EffectiveRulesInput {
@@ -67,6 +69,7 @@ export type FormValidationErrors = Record<string, unknown>;
 interface FieldElementPath {
 	readonly element: ValidationElement;
 	readonly fieldPath: string;
+	readonly hasChildren: boolean;
 }
 
 function expandContainerTemplatePaths(values: Record<string, unknown>, templatePath: string): string[] {
@@ -110,7 +113,7 @@ function fieldElementPathsFor(elements: ValidationElementTree, values: Record<st
 			: hasChildren
 				? expandContainerTemplatePaths(values, path)
 				: expandFieldTemplatePaths(values, path);
-		return paths.map((fieldPath) => ({ element, fieldPath }));
+		return paths.map((fieldPath) => ({ element, fieldPath, hasChildren }));
 	});
 }
 
@@ -137,13 +140,19 @@ export function collectStepFieldPaths(
  * Constraint references use the rendered path, so each row of an array evaluates
  * against its own sibling values.
  */
-export function effectiveRulesFor({ element, fieldPath, values, registry }: EffectiveRulesInput): BaseValidationRule[] {
+export function effectiveRulesFor({
+	element,
+	fieldPath,
+	values,
+	registry,
+	inheritedRequired = false,
+}: EffectiveRulesInput): BaseValidationRule[] {
 	const rules = getValidationRulesForElement<BaseValidationRule>(element, registry) ?? [];
 	const isRequired = evaluateConstraints({
 		constraints: element.constraints,
 		values,
 		fieldPath,
-		baseRequired: isFieldRequired(rules),
+		baseRequired: isFieldRequired(rules) || inheritedRequired,
 	}).isRequired;
 
 	if (!isRequired || isFieldRequired(rules)) {
@@ -164,8 +173,9 @@ export async function validateFieldValue({
 	fieldPath,
 	registry,
 	debounceScope,
+	inheritedRequired,
 }: ValidateFieldValueInput): Promise<string | undefined> {
-	const rules = effectiveRulesFor({ element, values, fieldPath, registry });
+	const rules = effectiveRulesFor({ element, values, fieldPath, registry, inheritedRequired });
 	if (rules.length === 0) {
 		return undefined;
 	}
@@ -190,6 +200,10 @@ export async function validateFieldValue({
  * @remarks
  * `names` limits validation to matching paths and their descendants, which lets
  * callers validate a wizard step without surfacing errors from later steps.
+ *
+ * A field inside a container (fieldset or array) whose `require` constraint
+ * holds is required, at any depth. The container's own `required` rule does not
+ * pass down.
  */
 export async function validateFormValues({
 	elements,
@@ -198,9 +212,16 @@ export async function validateFormValues({
 	names,
 	debounceScope,
 }: ValidateFormValuesInput): Promise<FormValidationErrors> {
-	const fields = fieldElementPathsFor(elements, values).filter(({ fieldPath }) => pathIsRequested(fieldPath, names));
+	const allFields = fieldElementPathsFor(elements, values);
+	const requiredContainers = allFields
+		.filter(
+			({ element, fieldPath, hasChildren }) =>
+				hasChildren && evaluateConstraints({ constraints: element.constraints, values, fieldPath }).isRequired,
+		)
+		.map(({ fieldPath }) => `${fieldPath}.`);
+	const fields = allFields.filter(({ fieldPath }) => pathIsRequested(fieldPath, names));
 	const messages = await Promise.all(
-		fields.map(async ({ element, fieldPath }) => ({
+		fields.map(async ({ element, fieldPath, hasChildren }) => ({
 			fieldPath,
 			message: await validateFieldValue({
 				element,
@@ -209,6 +230,7 @@ export async function validateFormValues({
 				fieldPath,
 				registry,
 				debounceScope,
+				inheritedRequired: !hasChildren && requiredContainers.some((prefix) => fieldPath.startsWith(prefix)),
 			}),
 		})),
 	);

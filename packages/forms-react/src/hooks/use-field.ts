@@ -6,7 +6,8 @@ import { getFieldGridVariables } from '@schema-engine/forms/lib/grid-styles';
 import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
 import { useFormField } from '@/adapters/context';
 import { useConstraintLogic } from '@/hooks/use-constraint-logic';
-import { FieldConstraintContext, isElementRequired } from '@/contexts/field-constraint-context';
+import { FieldConstraintContext } from '@/contexts/field-constraint-context';
+import { isElementRequired } from '@/hooks/is-element-required';
 import { useGridThemeId, useOptionalFormEngine } from '@/hooks/use-form-context';
 
 export interface FieldHostProps {

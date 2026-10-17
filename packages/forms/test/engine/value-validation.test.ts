@@ -252,6 +252,47 @@ describe('validateFormValues', () => {
 		});
 	});
 
+	test('requires every field inside a container while its require constraint holds', async () => {
+		const company = normalizeElement({
+			$type: 'fieldset',
+			name: 'company',
+			constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'require' }],
+			elements: [
+				{ $type: 'input', name: 'vat' },
+				{ $type: 'fieldset', name: 'office', elements: [{ $type: 'input', name: 'street' }] },
+			],
+		});
+		const validate = (kind: string) =>
+			validateFormValues({
+				elements: [{ $type: 'input', name: 'kind' }, company],
+				values: { kind, company: { vat: '', office: { street: '' } } },
+				registry,
+				debounceScope: createDebounceScope(),
+			});
+
+		expect(await validate('business')).toMatchObject({
+			company: { vat: { type: 'validation' }, office: { street: { type: 'validation' } } },
+		});
+		expect(await validate('personal')).toEqual({});
+	});
+
+	test("does not pass a container's own required rule to the fields inside it", async () => {
+		const company = normalizeElement({
+			$type: 'fieldset',
+			name: 'company',
+			rules: [{ type: 'required' }],
+			elements: [{ $type: 'input', name: 'vat' }],
+		});
+		const errors = await validateFormValues({
+			elements: [company],
+			values: { company: { vat: '' } },
+			registry,
+			debounceScope: createDebounceScope(),
+		});
+
+		expect(getValueAtPath(errors, 'company.vat')).toBeUndefined();
+	});
+
 	test('validates minItems on an empty array-valued field', async () => {
 		const languages = normalizeElement({
 			$type: 'input',
