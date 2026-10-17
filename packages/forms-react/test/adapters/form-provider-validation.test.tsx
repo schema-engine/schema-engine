@@ -19,7 +19,6 @@ vi.mock('@schema-engine/forms/actions', () => ({
 const config: FormConfig = {
 	id: 'validation-form',
 	title: 'Validation Form',
-	mode: 'wizard',
 	steps: [
 		{
 			id: 'step-1',
@@ -37,7 +36,7 @@ const config: FormConfig = {
 };
 
 function ValidationProbe({ name }: { name: string }) {
-	const { register, formState } = useReactHookFormContext();
+	const { register, formState } = useReactHookFormContext<Record<string, string>>();
 	return (
 		<>
 			<input data-testid={name} {...register(name)} />

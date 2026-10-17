@@ -5,7 +5,7 @@ describe('forms package export contract', () => {
 	test('resolveFormRecipe accepts an engine lookup from the published package', () => {
 		const recipe = {
 			$type: 'card',
-			kind: 'single-step',
+			kind: 'single-step' as const,
 			slots: [],
 			schema: { '~standard': { version: 1, vendor: 'test', validate: (value: unknown) => ({ value }) } },
 			metadata: { name: 'Card', description: 'Card' },
