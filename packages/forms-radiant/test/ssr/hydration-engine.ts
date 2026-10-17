@@ -22,7 +22,8 @@ const emailForInputs: ValidationRegistration<EmailRule> = {
  *
  * @remarks
  * The `submit` action lets a test author an `actions` entry; the fixture form
- * declares none, and a test that runs one replaces its `execute`.
+ * declares none, and a test that runs one returns its own registration from
+ * `getAction`.
  */
 export function createHydrationEngine() {
 	return createFormEngine({

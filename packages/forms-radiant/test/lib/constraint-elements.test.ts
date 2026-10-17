@@ -160,25 +160,31 @@ describe('createConstraintLookup', () => {
 	});
 });
 
+/**
+ * @remarks
+ * The element authors an `id` and no `name`, which is the case under test, so
+ * it cannot go through `normalizedTestConfig`: authored elements require `name`.
+ */
+const idOnlyConfig = {
+	id: 'ids',
+	steps: [
+		{
+			id: 'main',
+			title: 'Main',
+			elements: [
+				{
+					$type: 'input',
+					id: 'ref',
+					disabled: true,
+					constraints: [{ field: 'mode', operator: 'equals', value: 'manual', action: 'enable' }],
+				},
+			],
+		},
+	],
+} as unknown as NormalizedFormConfig;
+
 test('id-only constraints retain their live lookup', () => {
-	const config = {
-		id: 'ids',
-		steps: [
-			{
-				id: 'main',
-				title: 'Main',
-				elements: [
-					{
-						$type: 'input',
-						id: 'ref',
-						disabled: true,
-						constraints: [{ field: 'mode', operator: 'equals', value: 'manual', action: 'enable' }],
-					},
-				],
-			},
-		],
-	} as unknown as NormalizedFormConfig;
-	expect(createConstraintLookup(config)('ref')).toMatchObject({ fieldName: 'ref', disabled: true });
+	expect(createConstraintLookup(idOnlyConfig)('ref')).toMatchObject({ fieldName: 'ref', disabled: true });
 });
 
 describe('createAuthoredDisabledLookup', () => {

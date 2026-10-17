@@ -8,7 +8,7 @@ import { resolveFormEngine } from '@/contexts/resolve-form-engine';
  * The parts of a rendered `se-field` that rule hydration and constraint sync use.
  *
  * @remarks
- * Structural, so the rule helpers also accept a field before its element upgrades.
+ * Structural, so unit tests can pass an `se-field` whose element is not defined.
  */
 export type FieldRulesHost = HTMLElement & { name?: string; rules?: FieldRules; onRulesUpdated?: () => void };
 

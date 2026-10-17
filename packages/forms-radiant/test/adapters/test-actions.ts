@@ -2,7 +2,7 @@ import * as z from 'zod/mini';
 import type { BuilderActionRuntimeContext } from '@schema-engine/forms';
 import type { FormActionTrigger } from '@schema-engine/forms/actions';
 
-/** The parts of an action result the action controller reads. */
+/** The parts of an action result the submission lifecycle reads. */
 type TestActionResult = { success: boolean; shouldContinue?: boolean };
 
 const testActionSchema = <TType extends string>($type: TType) =>
@@ -11,8 +11,8 @@ const testActionSchema = <TType extends string>($type: TType) =>
 export type TestActionContext = BuilderActionRuntimeContext<{ id: string; endpoint?: string }>;
 
 /**
- * Action registration whose config is `{ id, endpoint? }`, so a test engine
- * types the `actions` it accepts and runs the test's `execute`.
+ * Action registration with config `{ $type, id, endpoint? }`. An engine built
+ * with it accepts matching `actions` entries and runs `execute`.
  */
 export function testAction<const TType extends string>(
 	$type: TType,
