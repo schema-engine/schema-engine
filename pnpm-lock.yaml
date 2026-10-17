@@ -240,7 +240,7 @@ importers:
         specifier: ^0.2.2
         version: 0.2.3(typescript@5.9.3)
       '@schema-engine/registry':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../registry
       typescript:
         specifier: ^5
@@ -268,10 +268,10 @@ importers:
         specifier: ^0.2.2
         version: 0.2.3(typescript@5.9.3)
       '@schema-engine/actions':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../actions
       '@schema-engine/registry':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../registry
       '@standard-schema/spec':
         specifier: ^1.1.0

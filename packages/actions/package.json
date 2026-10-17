@@ -34,7 +34,7 @@
 	},
 	"dependencies": {
 		"@ecopages/logger": "^0.2.2",
-		"@schema-engine/registry": "workspace:*"
+		"@schema-engine/registry": "workspace:^"
 	},
 	"devDependencies": {
 		"@schema-engine/scripts": "workspace:*",
