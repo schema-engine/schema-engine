@@ -123,6 +123,29 @@ describe('FormProvider', () => {
 		expect(submitStartIndex).toBeLessThan(formSubmitIndex);
 	});
 
+	it('gives form_submit the values written by a form_submit_start action', async () => {
+		mockDispatch.mockImplementation((input) => {
+			if (input.trigger === 'form_submit_start') {
+				input.context.form.setValue('field1', 'prepared');
+			}
+			return Promise.resolve([{ success: true }]);
+		});
+
+		render(
+			<FormProvider config={config}>
+				<RegisteredInput />
+				<button type="submit">Submit</button>
+			</FormProvider>,
+		);
+
+		fireEvent.click(screen.getByText('Submit'));
+
+		await waitFor(() => {
+			const submitCall = mockDispatch.mock.calls.find((call) => call[0]?.trigger === 'form_submit');
+			expect(submitCall?.[0].context.formData).toMatchObject({ field1: 'prepared' });
+		});
+	});
+
 	it('should keep consumer onChange callbacks non-blocking when form_change actions fail', async () => {
 		const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 		const onChange = vi.fn(() => undefined);
