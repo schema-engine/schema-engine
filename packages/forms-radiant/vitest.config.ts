@@ -34,6 +34,42 @@ const alias = [
  */
 const radiantPlugins = await radiant({ jsxImportSource: '@ecopages/jsx', decorators: 'babel' });
 
+/**
+ * Dependencies the browser project pre-bundles before any test runs.
+ *
+ * @remarks
+ * On a cold Vite cache, a dependency first reached through a dynamic import or
+ * a lazily loaded element is optimized mid-run, and Vite reloads the page
+ * ("Vite unexpectedly reloaded a test"). Listing every Radiant UI entry the
+ * renderer imports, plus the input libraries it loads lazily, keeps the first
+ * optimization complete.
+ */
+const browserOptimizedDeps = [
+	'@ecopages/radiant-ui/alert',
+	'@ecopages/radiant-ui/autocomplete',
+	'@ecopages/radiant-ui/badge',
+	'@ecopages/radiant-ui/button',
+	'@ecopages/radiant-ui/checkbox',
+	'@ecopages/radiant-ui/checkbox-group',
+	'@ecopages/radiant-ui/combobox',
+	'@ecopages/radiant-ui/field',
+	'@ecopages/radiant-ui/form',
+	'@ecopages/radiant-ui/heading',
+	'@ecopages/radiant-ui/input',
+	'@ecopages/radiant-ui/label',
+	'@ecopages/radiant-ui/listbox',
+	'@ecopages/radiant-ui/number-field',
+	'@ecopages/radiant-ui/radio-group',
+	'@ecopages/radiant-ui/select',
+	'@ecopages/radiant-ui/slider',
+	'@ecopages/radiant-ui/switch',
+	'@ecopages/radiant-ui/tag-group',
+	'@ecopages/radiant-ui/textarea',
+	'country-flag-icons/string/3x2',
+	'imask',
+	'libphonenumber-js',
+];
+
 export default defineConfig({
 	resolve: { alias },
 	test: {
@@ -52,6 +88,7 @@ export default defineConfig({
 			{
 				plugins: radiantPlugins,
 				resolve: { alias },
+				optimizeDeps: { include: browserOptimizedDeps },
 				test: {
 					name: 'browser',
 					include: ['test/**/*.browser.test.ts'],

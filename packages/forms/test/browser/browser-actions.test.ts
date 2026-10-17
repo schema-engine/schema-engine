@@ -52,6 +52,22 @@ describe('browser action registrations', () => {
 		expect(localStorage.length).toBe(0);
 	});
 
+	test('consent revocation clears drafts saved through the consent tool without scanning storage', () => {
+		const entries = new Map<string, string>();
+		const consent = createGDPRConsent({
+			getItem: (key) => entries.get(key) ?? null,
+			setItem: (key, value) => void entries.set(key, value),
+			removeItem: (key) => void entries.delete(key),
+		});
+
+		consent.grantConsent();
+		expect(consent.saveDraft('contact', { email: 'ada@example.com' })).toBe(true);
+		expect(consent.loadDraft('contact')).toEqual({ email: 'ada@example.com' });
+
+		consent.revokeConsent();
+		expect(entries.size).toBe(0);
+	});
+
 	test('reset removes the draft written by the auto-save registration', async () => {
 		const localStorage = new MockLocalStorage();
 		const consent = createGDPRConsent(localStorage);

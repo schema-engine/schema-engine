@@ -9,6 +9,8 @@ import type { ConstraintLogic } from '@schema-engine/forms/schemas/base-field';
 
 export type UseConstraintLogicResult = ConstraintEvaluationResult;
 
+const noConstraints: readonly ConstraintLogic[] = [];
+
 /**
  * Evaluate constraint logic for a field against the active adapter's watched values.
  *
@@ -19,7 +21,7 @@ export type UseConstraintLogicResult = ConstraintEvaluationResult;
  */
 export function useConstraintLogic(
 	fieldPath: string,
-	constraints: readonly ConstraintLogic[] = [],
+	constraints: readonly ConstraintLogic[] = noConstraints,
 	baseRequired = false,
 ): UseConstraintLogicResult {
 	const watchedFields = useMemo(() => resolveConstraintPaths(constraints, fieldPath), [constraints, fieldPath]);

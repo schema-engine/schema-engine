@@ -54,6 +54,32 @@ function createFormConfigSchema(
 	});
 }
 
+/**
+ * Writes a registration's catalog entry, keyed `${componentType}:${$type}`.
+ *
+ * @remarks
+ * Overwrites any existing entry for that id, so an overriding registration's
+ * title and description follow the same last-wins rule as the registration.
+ */
+export function registerSchemaMetadata(
+	catalog: SchemaMetadataCatalog,
+	componentType: ComponentType,
+	registration: {
+		$type: string;
+		schema: unknown;
+		metadata: { name: string; description?: string; category?: string };
+	},
+): void {
+	const id = `${componentType}:${registration.$type}`;
+	catalog.register(assertStandardSchema(registration.schema, `Registration '${id}' schema`), {
+		id,
+		componentType,
+		title: registration.metadata.name,
+		description: registration.metadata.description,
+		category: registration.metadata.category,
+	});
+}
+
 export type FormEngineRegistrationLists = {
 	elements?: readonly ElementRegistrationConstraint[];
 	recipes?: readonly RecipeRegistrationConstraint[];
@@ -102,13 +128,7 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 			[ComponentType.Action, [...actionRegistry.values()]],
 		] as const) {
 			for (const item of registrations) {
-				metadataCatalog.register(item.schema, {
-					id: `${componentType}:${item.$type}`,
-					componentType,
-					title: item.metadata.name,
-					description: item.metadata.description,
-					category: 'category' in item.metadata ? item.metadata.category : undefined,
-				});
+				registerSchemaMetadata(metadataCatalog, componentType, item);
 			}
 		}
 	}
