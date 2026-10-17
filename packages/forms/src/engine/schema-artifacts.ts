@@ -1,7 +1,7 @@
 import * as z from 'zod/mini';
 import type { StandardJSONSchemaV1 } from '@standard-schema/spec';
 import type { AnyActionRegistration } from '@/types/registration';
-import type { ComponentType } from './component-type';
+import { ComponentType } from './component-type';
 import { SchemaMetadataCatalog } from './schema-metadata-catalog';
 import { generateZodJSONSchemaCollection, generateZodJSONSchemaDocument, isZodType } from '@/lib/zod-json-schema';
 import {
@@ -151,7 +151,7 @@ function createFormEngineJSONSchemaSerializer(
 			? generateZodJSONSchemaDocument(validator, metadataRegistry, {
 					target: options?.target,
 					io: options?.io,
-					schemaId: `action:${actionType}`,
+					schemaId: SchemaMetadataCatalog.entryId(ComponentType.Action, actionType),
 				})
 			: undefined;
 	};

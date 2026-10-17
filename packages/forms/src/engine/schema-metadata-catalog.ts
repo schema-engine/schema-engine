@@ -22,6 +22,11 @@ export class SchemaMetadataCatalog {
 	private schemasById = new Map<string, StandardSchemaV1>();
 	private idBySchema = new WeakMap<object, string>();
 
+	/** Catalog and JSON Schema id of a registration, such as `element:text`. */
+	static entryId(componentType: ComponentType, $type: string): string {
+		return `${componentType}:${$type}`;
+	}
+
 	/**
 	 * Associate a validator schema with catalog metadata.
 	 */
