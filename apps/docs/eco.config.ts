@@ -11,7 +11,15 @@ import { createDocsMdxPlugins } from './src/mdx/plugins';
 import { docsFrontmatterSchema } from './src/content/docs';
 import { devToolbar } from '@ecopages/dev-toolbar/config';
 
-/** @remarks Install Radiant's server runtime before React routes import the shared docs shell. */
+/**
+ * @remarks
+ * Install Radiant's server runtime before React routes import the shared docs shell.
+ *
+ * `@schema-engine/forms-react` stays out of `runtimeModules`: Ecopages bundles each
+ * runtime module as its own vendor and rewrites exact specifiers only, so the root,
+ * `/hooks` and `/adapters/react-hook-form` would each carry a copy of the shared
+ * context chunk. Bundling the package with the page script keeps one copy.
+ */
 const config = await new ConfigBuilder()
 	.setRootDir(import.meta.dirname)
 	.setBaseUrl(process.env.ECOPAGES_BASE_URL ?? 'http://localhost:3000')
@@ -19,7 +27,7 @@ const config = await new ConfigBuilder()
 		reactPlugin({
 			extensions: ['.react.tsx'],
 			explicitGraph: true,
-			runtimeModules: ['@schema-engine/forms-react', 'react-hook-form'],
+			runtimeModules: ['react-hook-form'],
 			mdx: {
 				enabled: true,
 				extensions: ['.react.mdx'],

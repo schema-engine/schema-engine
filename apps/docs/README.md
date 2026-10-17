@@ -31,4 +31,4 @@ Open `/docs/getting-started/introduction` after starting the dev server.
 The docs app consumes their published workspace entrypoints, so restart the dev
 server after changing either package source.
 
-React registry sources declare their JSX runtime explicitly and resolve Forms React through package exports. Keep provider and hook imports on the same package graph; source aliases in registry configuration create a second set of contexts when the app consumes built packages.
+React registry sources declare their JSX runtime explicitly and resolve Forms React through package exports. Keep provider and hook imports on the same package graph; source aliases in registry configuration create a second set of contexts when the app consumes built packages. For the same reason, do not list `@schema-engine/forms-react` or its subpaths in the React plugin's `runtimeModules`: Ecopages builds each entry as a separate vendor, so every subpath would bundle its own copy of the contexts.

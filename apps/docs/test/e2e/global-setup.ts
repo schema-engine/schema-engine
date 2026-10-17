@@ -26,6 +26,13 @@ async function waitForServer(baseUrl: string): Promise<void> {
 
 let previewProcess: ChildProcess | undefined;
 
+/**
+ * Reuses a running docs preview, or starts one outside CI.
+ *
+ * @remarks
+ * The spawned preview drops `VITEST` from its environment: the Ecopages CLI
+ * skips running when that variable is set, so the preview would exit at once.
+ */
 export async function setup(): Promise<void> {
 	const configuredBaseUrl = process.env.DOCS_E2E_BASE_URL ?? defaultBaseUrl;
 	process.env.DOCS_E2E_BASE_URL = configuredBaseUrl;
@@ -44,7 +51,7 @@ export async function setup(): Promise<void> {
 	previewProcess = spawn('pnpm', ['exec', 'ecopages', 'preview', '-p', String(port)], {
 		cwd: docsRoot,
 		stdio: ['ignore', 'pipe', 'pipe'],
-		env: process.env,
+		env: { ...process.env, VITEST: undefined },
 	});
 	previewProcess.stderr?.on('data', (chunk: Buffer) => {
 		stderrChunks.push(chunk.toString());
@@ -55,10 +62,7 @@ export async function setup(): Promise<void> {
 		await waitForServer(defaultBaseUrl);
 	} catch (error) {
 		const details = stderrChunks.join('').trim();
-		throw new Error(
-			details.length > 0 ? `${String(error)}\n${details}` : String(error),
-			{ cause: error },
-		);
+		throw new Error(details.length > 0 ? `${String(error)}\n${details}` : String(error), { cause: error });
 	}
 }
 
