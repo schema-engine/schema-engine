@@ -70,7 +70,7 @@ export function ContactForm() {
 | `@schema-engine/forms-react/primitives`               | `FormElement`, `FormElements`, and React recipe contracts                             |
 | `@schema-engine/forms-react/components/form-debugger` | `FormDebugger`                                                                        |
 
-Use `useFormContext`, `useFormField`, `useWatchField`, `useWatchForm`, and `useFieldArray` from `/adapters` inside the active form. `useFieldArray` provides `fields`, `append`, `prepend`, `insert`, `swap`, `move`, `update`, `replace`, and `remove`; it keeps falsy scalar rows such as `tags: ['', '']`, which React Hook Form's own `useFieldArray` drops.
+Use `useFormContext`, `useFormField`, `useWatchField`, `useWatchForm`, and `useFieldArray` from `/adapters` inside the active form. `useFieldArray` provides `fields`, `append`, `prepend`, `insert`, `swap`, `move`, `update`, `replace`, and `remove`; it keeps falsy scalar rows such as `tags: ['', '']`, which React Hook Form's own `useFieldArray` drops. Errors and touched state move with their rows and an added row is focused, falsy rows or not; dirty state stays React Hook Form's comparison with the default values, index by index. An operation naming a row that does not exist does nothing, `remove` removes a repeated index once, and rows get new ids when the array is replaced from outside with different contents, such as by `reset`.
 
 Use `useFormEngine`, `useFormInstanceActions`, `useControlledFormElement`, `useFieldHost`, `useConstraintLogic`, and `useSubmissionState` from `/hooks`. View hooks (`useViewContext`, `useOptionalViewContext`, `useActiveStep`, `useFormNavigation`, and `useViewConfig`) also come from `/hooks`.
 
@@ -111,6 +111,12 @@ state to `createStepMachine`, navigation (the in-flight guard and step triggers)
 from `@schema-engine/forms`. Wizard Next validates nested fieldsets and live
 array rows; errors keep the nested value shape so field revalidation clears them.
 A `require` constraint supplies both the control's required state and validation.
+A `require` constraint on a fieldset or array makes every field inside it required,
+nested containers included, and a disabled fieldset or array, authored or by a
+constraint, disables every field inside it; a disabled array also disables its add
+and remove buttons. `config.validationMode` and `config.reValidateMode` set React
+Hook Form's `mode` and `reValidateMode`; unset, fields validate on blur and
+re-validate on change.
 
 `executeAction(action)` dispatches only that action. Submission callbacks run
 after the engine action lifecycle succeeds, and React Hook Form performs the
@@ -130,8 +136,8 @@ the error and completion triggers.
 Both renderer browser projects run the scenarios in
 [`test-utils/renderer-conformance.ts`](../../test-utils/renderer-conformance.ts)
 through their own `FormRenderer`. They cover array sibling constraints, empty
-scalar array rows, nested wizard validation, required constraints, nested error
-clearing, Valibot action registration, submission aborts, and change and action
-callbacks. The action context's `submitCount` is the one difference they leave
-open: React counts every submit attempt, Radiant reports at most one. Run this suite
+scalar array rows and the state that follows them, nested wizard validation,
+required constraints on fields and containers, disabled arrays, `validationMode`,
+nested error clearing, Valibot action registration, submission aborts, submit
+attempt counts, and change and action callbacks. Run this suite
 with `pnpm exec vitest run --project browser test/conformance` from this package.

@@ -110,7 +110,23 @@ least one when any descendant declares a `defaultValue`; a supplied array is pad
 `minItems`. `collectInitialValues` applies both to a form's initial values.
 Every helper detects arrays by the registration's `containerKind: 'array'`,
 never by `$type`, so custom array widgets seed like `arrayElements`.
-A scalar row may hold `''`, `0` or `false`; both renderers keep it.
+A scalar row may hold `''`, `0` or `false`; both renderers keep it. Errors and
+touched state follow their row through every field-array operation, an operation
+naming a row that does not exist does nothing, and `remove` removes a repeated
+index once.
+
+## Container state
+
+A fieldset or array passes two states to every field inside it, at any depth.
+While a container's `require` constraint holds, the fields inside it are
+required; the container's own `required` rule does not pass down. A disabled
+container, authored or by a constraint, disables them, and a disabled array
+disables its add and remove buttons too. React validates the inherited
+requirement through `validateFormValues`, Radiant through live constraint sync.
+Two Radiant gaps remain: a container that declares any constraint also passes
+its own `required` rule down, and the add and remove buttons take the array's
+disabled state at render only, so a `disable` constraint that starts to hold
+later disables the rows but not the buttons.
 
 ## Grid theme ownership
 
