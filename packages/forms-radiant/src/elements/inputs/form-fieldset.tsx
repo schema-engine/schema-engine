@@ -5,9 +5,17 @@ import type { FieldSetProps } from './form-fieldset.types';
 import { objectFieldScope } from '@schema-engine/forms';
 import './form-fieldset.css';
 
+/**
+ * @remarks
+ * A disabled fieldset, authored or by a constraint, renders its children
+ * disabled, which is what live constraint sync composes for them afterwards.
+ */
 export function FormFieldSet(config: FieldSetProps) {
 	const scope = objectFieldScope(config.name, config);
 	const fieldHost = mergeFieldGridHost(config.grid, config.style);
+	const elements = config.disabled
+		? config.elements.map((element) => ({ ...element, disabled: true }))
+		: config.elements;
 
 	return (
 		<fieldset class="se-form-field se-fieldset" data-se-grid-theme={fieldHost.themeId} style={fieldHost.style}>
@@ -15,7 +23,7 @@ export function FormFieldSet(config: FieldSetProps) {
 			{config.description ? <p class="se-fieldset__description">{config.description}</p> : null}
 			<div class="se-fieldset__fields">
 				<FormElements
-					elements={config.elements}
+					elements={elements}
 					engine={resolveFormEngine()}
 					namePrefix={scope.namePrefix}
 					instanceId={scope.instanceId}

@@ -7,6 +7,8 @@ import type { ConstraintLogic } from '@schema-engine/forms/schemas';
 import { FormInstance } from '@/components/form-instance';
 import { FormElements } from '@/components/internals/form-elements';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
+import { createRadiantFormEngine } from '@/registries/builder-registry';
+import { schemaFormRegistrations } from '@/registrations';
 
 const schema = z.object({
 	$type: z.literal('probe'),
@@ -102,5 +104,39 @@ describe('SSR constraint snapshot', () => {
 		);
 		expect(html).toMatch(/data-se-constraint-field="group.vatNumber"/);
 		expect(html).not.toMatch(/hidden/);
+	});
+
+	test.each([
+		['an authored', { disabled: true }],
+		['a constraint', { constraints: [{ field: 'mode', operator: 'equals', value: 'lock', action: 'disable' }] }],
+	])('%s disabled fieldset renders its children disabled', (_, fieldSet) => {
+		const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+		const config = engine.validateForm({
+			id: 'disabled-fieldset',
+			steps: [
+				{
+					id: 'main',
+					title: 'Main',
+					elements: [
+						{ $type: 'input', id: 'mode', name: 'mode', defaultValue: 'lock' },
+						{
+							$type: 'fieldSet',
+							id: 'address',
+							name: 'address',
+							elements: [{ $type: 'input', id: 'city', name: 'city' }],
+							...fieldSet,
+						},
+					],
+				},
+			],
+		});
+		const html = renderToString(jsx(FormInstance, { config, engine }));
+		const fieldHost = (name: string) =>
+			html
+				.split('<se-field')
+				.find((field) => field.includes(`name="${name}"`))
+				?.split('>')[0];
+		expect(fieldHost('address.city')).toMatch(/\sdisabled/);
+		expect(fieldHost('mode')).not.toMatch(/\sdisabled/);
 	});
 });

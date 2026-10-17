@@ -2,7 +2,6 @@ import { FormField } from '@/elements/form-field';
 import { RuiSwitch } from '@ecopages/radiant-ui/switch';
 import { RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
 import { RuiLabel } from '@ecopages/radiant-ui/label';
-import { toFieldRules } from '@/lib/field-rules';
 import type { SwitchFieldProps } from './form-switch.types';
 
 export function FormSwitch({
@@ -14,8 +13,7 @@ export function FormSwitch({
 	return (
 		<FormField
 			name={config.name}
-			rules={toFieldRules(config)}
-			validationRules={config.rules}
+			validation={config}
 			defaultValueData={config.defaultValue !== undefined ? JSON.stringify(config.defaultValue) : undefined}
 			disabled={config.disabled}
 			grid={config.grid}
