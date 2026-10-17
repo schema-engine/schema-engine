@@ -9,7 +9,7 @@ import type { FormProviderProps } from '@/adapters/types';
 import { ActionDispatcher } from '@schema-engine/forms/actions';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
-import { whenEngineAvailable } from '@/contexts/resolve-form-engine';
+import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import { FormController } from '@/adapters/radiant/controller';
 import type { FormInstanceElement } from './form-instance.script';
 import { findAncestorElement } from '@/lib/rui-form-utils';
@@ -36,7 +36,6 @@ export class FormActionControllerElement extends RadiantElement {
 	private mountedEngine?: FormEngine;
 	private watchingChanges = false;
 	private formInstance?: FormInstanceContextValue;
-	private unsubscribeActiveEngine?: () => void;
 
 	@onContextUpdate({ context: formInstanceContext, requestUpdate: false })
 	onFormInstance(value: FormInstanceContextValue): void {
@@ -62,13 +61,7 @@ export class FormActionControllerElement extends RadiantElement {
 		const instance = findAncestorElement(this, 'se-form-instance') as FormInstanceElement | undefined;
 		if (!this.config && instance?.config) this.config = instance.config;
 		if (!this.engine) {
-			this.unsubscribeActiveEngine = whenEngineAvailable(this, this.engine, (engine) => {
-				if (!this.engine) {
-					this.engine = engine;
-				}
-				this.setupDispatcher();
-				this.onFormReady();
-			});
+			this.engine = resolveFormEngine(this);
 		}
 		this.form.connect(() => this.onFormReady());
 		this.setupDispatcher();
@@ -82,7 +75,6 @@ export class FormActionControllerElement extends RadiantElement {
 	}
 
 	override disconnectedCallback(): void {
-		this.unsubscribeActiveEngine?.();
 		this.form.disconnect();
 		this.dispatcher = undefined;
 		this.dispatcherEngine = undefined;

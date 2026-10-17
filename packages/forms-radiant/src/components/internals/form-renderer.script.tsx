@@ -10,7 +10,7 @@ import { provideContext, type ContextProvider } from '@ecopages/radiant/context'
 import type { JsxRenderable } from '@ecopages/jsx';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { FormProviderProps } from '@/adapters/types';
-import { resolveFormEngine, whenEngineAvailable } from '@/contexts/resolve-form-engine';
+import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import { formEngineContext, type FormEngineContextValue } from '../provider';
 
 export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
@@ -51,23 +51,8 @@ export class FormRendererElement extends RadiantElement {
 		registerSsrPreparationCallback(this, () => this.publishContext());
 	}
 
-	private unsubscribeActiveEngine?: () => void;
-
 	protected override onConnected(): void {
-		if (!this.engine) {
-			this.unsubscribeActiveEngine = whenEngineAvailable(this, this.engine, (engine) => {
-				if (!this.engine) {
-					this.engine = engine;
-				}
-				this.publishContext();
-			});
-		}
 		this.publishContext();
-	}
-
-	override disconnectedCallback(): void {
-		this.unsubscribeActiveEngine?.();
-		super.disconnectedCallback();
 	}
 
 	@onUpdated(['engine'])
