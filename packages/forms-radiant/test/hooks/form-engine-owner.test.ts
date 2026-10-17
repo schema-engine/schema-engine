@@ -40,7 +40,20 @@ function createProbeEngine(breakpoints: { md: string }, onRender: () => void) {
 }
 
 function createNestedProbeEngines(captured: string[]) {
-	let engineB: ReturnType<typeof createFormEngine>;
+	const engineB = createFormEngine({
+		grid: { breakpoints: { md: '60rem' } },
+		elements: [
+			{
+				$type: 'child-probe',
+				schema: childProbeSchema,
+				metadata: { name: 'Child probe', category: 'input' },
+				render: () => {
+					captured.push(mergeFieldGridHost().themeId);
+					return null;
+				},
+			},
+		],
+	});
 	const engineA = createFormEngine({
 		grid: { breakpoints: { md: '50rem' } },
 		elements: [
@@ -54,20 +67,6 @@ function createNestedProbeEngines(captured: string[]) {
 						engineB.validateElement({ $type: 'child-probe', id: 'child', name: 'child' }),
 						engineB,
 					);
-					captured.push(mergeFieldGridHost().themeId);
-					return null;
-				},
-			},
-		],
-	});
-	engineB = createFormEngine({
-		grid: { breakpoints: { md: '60rem' } },
-		elements: [
-			{
-				$type: 'child-probe',
-				schema: childProbeSchema,
-				metadata: { name: 'Child probe', category: 'input' },
-				render: () => {
 					captured.push(mergeFieldGridHost().themeId);
 					return null;
 				},

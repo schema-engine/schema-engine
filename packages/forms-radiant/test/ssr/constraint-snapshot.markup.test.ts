@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { renderToString } from '@ecopages/jsx/server';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import * as z from 'zod/mini';
-import { createFormEngine } from '@schema-engine/forms';
+import { createFormEngine, type ElementRenderProps } from '@schema-engine/forms';
 import type { ConstraintLogic } from '@schema-engine/forms/schemas';
 import { FormInstance } from '@/components/form-instance';
 import { FormElements } from '@/components/internals/form-elements';
@@ -67,7 +67,7 @@ describe('SSR constraint snapshot', () => {
 					$type: 'group',
 					schema: containerSchema,
 					metadata: { name: 'Group', category: 'layout' },
-					render: (config: z.infer<typeof containerSchema>) =>
+					render: (config: ElementRenderProps<typeof containerSchema>) =>
 						jsx(FormElements, { elements: config.elements, namePrefix: config.name }),
 				},
 			],

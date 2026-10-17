@@ -3,18 +3,19 @@ import { FormStore } from '@ecopages/radiant-ui/form';
 import { FormInstanceElement } from '@/components/form-instance.script';
 import { FormStepElement } from '@/components/form-step';
 import { provideTestFormStore } from '../adapters/test-form';
+import { normalizedTestConfig } from '../adapters/test-config';
 
 afterEach(() => document.body.replaceChildren());
 
 test('Next validates the current step, blocks invalid navigation, and updates wizard visibility', async () => {
 	const instance = new FormInstanceElement();
-	instance.config = {
+	instance.config = normalizedTestConfig({
 		id: 'wizard',
 		steps: [
 			{ id: 'first', title: 'First', elements: [{ $type: 'input', id: 'email', name: 'email' }] },
 			{ id: 'second', title: 'Second', elements: [] },
 		],
-	};
+	});
 	const host = document.createElement('rui-form');
 	const store = new FormStore();
 	const validate = vi.spyOn(store, 'validateField').mockResolvedValue(false);
@@ -44,10 +45,10 @@ test('Next validates the current step, blocks invalid navigation, and updates wi
 
 test('Next on the last step validates it and marks it valid', async () => {
 	const instance = new FormInstanceElement();
-	instance.config = {
+	instance.config = normalizedTestConfig({
 		id: 'wizard',
 		steps: [{ id: 'only', title: 'Only', elements: [{ $type: 'input', id: 'email', name: 'email' }] }],
-	};
+	});
 	const host = document.createElement('rui-form');
 	const store = new FormStore();
 	const validate = vi.spyOn(store, 'validateField').mockResolvedValue(true);

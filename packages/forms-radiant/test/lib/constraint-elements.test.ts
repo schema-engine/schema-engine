@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
+import { normalizedTestConfig } from '../adapters/test-config';
 import {
 	collectConstrainedElements,
 	createAuthoredDisabledLookup,
@@ -10,7 +11,7 @@ describe('collectConstrainedElements', () => {
 	test('returns empty array when config is undefined or has no constrained elements', () => {
 		expect(collectConstrainedElements(undefined)).toEqual([]);
 
-		const config: NormalizedFormConfig = {
+		const config = normalizedTestConfig({
 			id: 'test-form',
 			title: 'Test',
 			steps: [
@@ -27,13 +28,13 @@ describe('collectConstrainedElements', () => {
 					],
 				},
 			],
-		};
+		});
 
 		expect(collectConstrainedElements(config)).toEqual([]);
 	});
 
 	test('collects constrained elements from steps and nested containers', () => {
-		const config: NormalizedFormConfig = {
+		const config = normalizedTestConfig({
 			id: 'contact-form',
 			title: 'Contact',
 			steps: [
@@ -69,14 +70,16 @@ describe('collectConstrainedElements', () => {
 									id: 'details-text',
 									name: 'detailsText',
 									label: 'Details',
-									constraints: [{ field: 'ticket', operator: 'not_empty', action: 'show' }],
+									constraints: [
+										{ field: 'ticket', operator: 'is_not_empty', value: undefined, action: 'show' },
+									],
 								},
 							],
 						},
 					],
 				},
 			],
-		};
+		});
 
 		const result = collectConstrainedElements(config);
 		expect(result).toHaveLength(2);
@@ -90,7 +93,7 @@ describe('collectConstrainedElements', () => {
 		expect(result[1]).toEqual({
 			fieldName: 'extraGroup.detailsText',
 			id: 'details-text',
-			constraints: [{ field: 'ticket', operator: 'not_empty', action: 'show' }],
+			constraints: [{ field: 'ticket', operator: 'is_not_empty', action: 'show' }],
 			isRequired: false,
 			disabled: false,
 		});
@@ -158,7 +161,7 @@ describe('createConstraintLookup', () => {
 });
 
 test('id-only constraints retain their live lookup', () => {
-	const config: NormalizedFormConfig = {
+	const config = {
 		id: 'ids',
 		steps: [
 			{
@@ -174,12 +177,12 @@ test('id-only constraints retain their live lookup', () => {
 				],
 			},
 		],
-	};
+	} as unknown as NormalizedFormConfig;
 	expect(createConstraintLookup(config)('ref')).toMatchObject({ fieldName: 'ref', disabled: true });
 });
 
 describe('createAuthoredDisabledLookup', () => {
-	const config: NormalizedFormConfig = {
+	const config = normalizedTestConfig({
 		id: 'authored',
 		steps: [
 			{
@@ -211,7 +214,7 @@ describe('createAuthoredDisabledLookup', () => {
 				],
 			},
 		],
-	};
+	});
 	const authoredDisabled = createAuthoredDisabledLookup(config);
 
 	test('a disabled container disables its children but not a sibling sharing its prefix', () => {

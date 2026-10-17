@@ -5,13 +5,21 @@ import { toFieldRules } from '@/lib/field-rules';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 
 /**
+ * The parts of a rendered `se-field` that rule hydration and constraint sync use.
+ *
+ * @remarks
+ * Structural, so the rule helpers also accept a field before its element upgrades.
+ */
+export type FieldRulesHost = HTMLElement & { name?: string; rules?: FieldRules; onRulesUpdated?: () => void };
+
+/**
  * The field's rendered path, which cross-field references resolve against.
  *
  * @remarks
  * The attribute is read before the property because Radiant can apply client
  * properties after connect, and hydration runs on connect.
  */
-function readFieldName(field: FormFieldElement): string | undefined {
+function readFieldName(field: FieldRulesHost): string | undefined {
 	return field.getAttribute('name') ?? field.name;
 }
 
@@ -21,7 +29,7 @@ function readFieldName(field: FormFieldElement): string | undefined {
  * a single function or a record of them, when markup hydration runs again
  * after client properties have been applied.
  */
-export function readHydratedRules(field: FormFieldElement): FieldRules | undefined {
+export function readHydratedRules(field: FieldRulesHost): FieldRules | undefined {
 	const currentRules = field.rules;
 	if (currentRules && typeof currentRules === 'object' && currentRules.validate) {
 		return undefined;

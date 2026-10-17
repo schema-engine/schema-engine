@@ -1,24 +1,19 @@
 import { afterEach, expect, test, vi } from 'vitest';
 import { createFormEngine } from '@schema-engine/forms';
-import { FormStore } from '@ecopages/radiant-ui/form';
+import { FormStore, type FieldValues } from '@ecopages/radiant-ui/form';
 import { FormActionControllerElement } from '@/components/form-action-controller';
 import { FormRendererElement } from '@/components/internals/form-renderer.script';
 import { provideTestFormStore } from '../adapters/test-form';
+import { testAction, type TestActionContext } from '../adapters/test-actions';
 
 afterEach(() => document.body.replaceChildren());
 
 test('submission action callback receives the successful action and nested values in lifecycle order', async () => {
-	const engine = createFormEngine({ elements: [] });
 	const events: string[] = [];
-	const execute = vi.fn(async () => ({ success: true }));
-	vi.spyOn(engine, 'getAction').mockReturnValue({
-		$type: 'submit',
-		schema: { '~standard': { version: 1, vendor: 'test', validate: (value: unknown) => ({ value }) } },
-		metadata: { name: 'Submit', defaultTriggers: ['form_submit'] },
-		execute,
-	});
+	const execute = vi.fn(async (_context: TestActionContext) => ({ success: true }));
+	const engine = createFormEngine({ elements: [], actions: [testAction('submit', ['form_submit'], execute)] });
 	const host = document.createElement('rui-form');
-	const store = new FormStore({ defaultValues: { 'address.street': 'Main' } });
+	const store = new FormStore<FieldValues>({ defaultValues: { 'address.street': 'Main' } });
 	provideTestFormStore(host, store);
 	const controller = new FormActionControllerElement();
 	controller.engine = engine;
@@ -52,18 +47,10 @@ test('submission action callback receives the successful action and nested value
 });
 
 test('rebuilds the dispatcher when the form engine changes', async () => {
-	const engineA = createFormEngine({ elements: [] });
-	const engineB = createFormEngine({ elements: [] });
 	const executeA = vi.fn(async () => ({ success: true }));
 	const executeB = vi.fn(async () => ({ success: true }));
-	const actionRegistration = (execute: typeof executeA) => ({
-		$type: 'submit',
-		schema: { '~standard': { version: 1, vendor: 'test', validate: (value: unknown) => ({ value }) } },
-		metadata: { name: 'Submit', defaultTriggers: ['form_submit'] },
-		execute,
-	});
-	vi.spyOn(engineA, 'getAction').mockReturnValue(actionRegistration(executeA));
-	vi.spyOn(engineB, 'getAction').mockReturnValue(actionRegistration(executeB));
+	const engineA = createFormEngine({ elements: [], actions: [testAction('submit', ['form_submit'], executeA)] });
+	const engineB = createFormEngine({ elements: [], actions: [testAction('submit', ['form_submit'], executeB)] });
 	const host = document.createElement('rui-form');
 	provideTestFormStore(host, new FormStore());
 	const controller = new FormActionControllerElement();
@@ -93,18 +80,10 @@ test('rebuilds the dispatcher when the form engine changes', async () => {
 });
 
 test('runs mount actions after the form engine changes', async () => {
-	const engineA = createFormEngine({ elements: [] });
-	const engineB = createFormEngine({ elements: [] });
 	const executeA = vi.fn(async () => ({ success: true }));
 	const executeB = vi.fn(async () => ({ success: true }));
-	const actionRegistration = (execute: typeof executeA) => ({
-		$type: 'mount',
-		schema: { '~standard': { version: 1, vendor: 'test', validate: (value: unknown) => ({ value }) } },
-		metadata: { name: 'Mount', defaultTriggers: ['form_mount'] },
-		execute,
-	});
-	vi.spyOn(engineA, 'getAction').mockReturnValue(actionRegistration(executeA));
-	vi.spyOn(engineB, 'getAction').mockReturnValue(actionRegistration(executeB));
+	const engineA = createFormEngine({ elements: [], actions: [testAction('mount', ['form_mount'], executeA)] });
+	const engineB = createFormEngine({ elements: [], actions: [testAction('mount', ['form_mount'], executeB)] });
 	const host = document.createElement('rui-form');
 	provideTestFormStore(host, new FormStore());
 	const controller = new FormActionControllerElement();
@@ -128,28 +107,19 @@ test('runs mount actions after the form engine changes', async () => {
 });
 
 test('refreshes action context between submission triggers and keeps form operations stable', async () => {
-	const engine = createFormEngine({ elements: [] });
 	const observed: Array<{ trigger: string; formData: Record<string, unknown>; form: unknown }> = [];
-	vi.spyOn(engine, 'getAction').mockReturnValue({
-		$type: 'submit',
-		schema: { '~standard': { version: 1, vendor: 'test', validate: (value: unknown) => ({ value }) } },
-		metadata: { name: 'Submit', defaultTriggers: ['form_submit_start', 'form_submit'] },
-		execute: async ({
-			trigger,
-			formData,
-			form,
-		}: {
-			trigger: string;
-			formData: Record<string, unknown>;
-			form: { setValue: (name: string, value: unknown) => void };
-		}) => {
-			observed.push({ trigger, formData, form });
-			if (trigger === 'form_submit_start') form.setValue('status', 'prepared');
-			return { success: true };
-		},
+	const engine = createFormEngine({
+		elements: [],
+		actions: [
+			testAction('submit', ['form_submit_start', 'form_submit'], async ({ trigger, formData, form }) => {
+				observed.push({ trigger, formData, form });
+				if (trigger === 'form_submit_start') form.setValue('status', 'prepared');
+				return { success: true };
+			}),
+		],
 	});
 	const host = document.createElement('rui-form');
-	provideTestFormStore(host, new FormStore({ defaultValues: { status: 'draft' } }));
+	provideTestFormStore(host, new FormStore<FieldValues>({ defaultValues: { status: 'draft' } }));
 	const controller = new FormActionControllerElement();
 	controller.engine = engine;
 	controller.config = engine.defineForm({
@@ -173,16 +143,15 @@ test('refreshes action context between submission triggers and keeps form operat
 test.each([false, true])(
 	'a stopping failure settles the lifecycle (callback rejection: %s)',
 	async (callbackRejects) => {
-		const engine = createFormEngine({ elements: [] });
 		const executed: string[] = [];
-		vi.spyOn(engine, 'getAction').mockReturnValue({
-			$type: 'submit',
-			schema: { '~standard': { version: 1, vendor: 'test', validate: (value: unknown) => ({ value }) } },
-			metadata: { name: 'Submit', defaultTriggers: ['form_submit'] },
-			execute: async ({ config }: { config: { id: string } }) => {
-				executed.push(config.id);
-				return callbackRejects ? { success: true } : { success: false, shouldContinue: false };
-			},
+		const engine = createFormEngine({
+			elements: [],
+			actions: [
+				testAction('submit', ['form_submit'], async ({ config }) => {
+					executed.push(config.id);
+					return callbackRejects ? { success: true } : { success: false, shouldContinue: false };
+				}),
+			],
 		});
 		const host = document.createElement('rui-form');
 		provideTestFormStore(host, new FormStore());
@@ -216,19 +185,18 @@ test.each([false, true])(
 );
 
 test('form_change actions keep running after the controller reconnects', async () => {
-	const engine = createFormEngine({ elements: [] });
 	const changes: unknown[] = [];
-	vi.spyOn(engine, 'getAction').mockReturnValue({
-		$type: 'change',
-		schema: { '~standard': { version: 1, vendor: 'test', validate: (value: unknown) => ({ value }) } },
-		metadata: { name: 'Change', defaultTriggers: ['form_change'] },
-		execute: async ({ formData }: { formData: Record<string, unknown> }) => {
-			changes.push(formData.note);
-			return { success: true };
-		},
+	const engine = createFormEngine({
+		elements: [],
+		actions: [
+			testAction('change', ['form_change'], async ({ formData }) => {
+				changes.push(formData.note);
+				return { success: true };
+			}),
+		],
 	});
 	const host = document.createElement('rui-form');
-	const store = new FormStore({ defaultValues: { note: '' } });
+	const store = new FormStore<FieldValues>({ defaultValues: { note: '' } });
 	provideTestFormStore(host, store);
 	const controller = new FormActionControllerElement();
 	controller.engine = engine;
@@ -251,21 +219,20 @@ test('form_change actions keep running after the controller reconnects', async (
 });
 
 test('form_change actions run after mount when the renderer context supplies the engine', async () => {
-	const engine = createFormEngine({ elements: [] });
 	const changes: unknown[] = [];
-	vi.spyOn(engine, 'getAction').mockReturnValue({
-		$type: 'change',
-		schema: { '~standard': { version: 1, vendor: 'test', validate: (value: unknown) => ({ value }) } },
-		metadata: { name: 'Change', defaultTriggers: ['form_change'] },
-		execute: async ({ formData }: { formData: Record<string, unknown> }) => {
-			changes.push(formData.note);
-			return { success: true };
-		},
+	const engine = createFormEngine({
+		elements: [],
+		actions: [
+			testAction('change', ['form_change'], async ({ formData }) => {
+				changes.push(formData.note);
+				return { success: true };
+			}),
+		],
 	});
 	const renderer = new FormRendererElement();
 	renderer.engine = engine;
 	const host = document.createElement('rui-form');
-	const store = new FormStore({ defaultValues: { note: '' } });
+	const store = new FormStore<FieldValues>({ defaultValues: { note: '' } });
 	provideTestFormStore(host, store);
 	const controller = new FormActionControllerElement();
 	controller.config = engine.defineForm({

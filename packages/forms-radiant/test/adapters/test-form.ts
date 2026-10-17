@@ -5,24 +5,34 @@ import { flattenValues } from '@/adapters/radiant/controller/values';
 
 const noopUnregister = () => {};
 
-export function provideTestFormStore(host: HTMLElement, store: FormStore): void {
-	void new ContextProvider(host as never, {
-		context: formContext,
-		initialValue: {
-			ready: true,
-			store,
-			revision: 0,
-			fields: {},
-			errors: {},
-			actions: {
-				register: () => noopUnregister,
-				updateFieldOptions: () => {},
-				handleFieldChange: () => {},
-				handleFieldBlur: () => {},
-				subscribePresentation: () => noopUnregister,
-			},
-		} satisfies FormContextValue,
-	});
+/**
+ * Publishes `formContext` on a plain element, standing in for `rui-form`.
+ *
+ * @remarks
+ * `ContextProvider` types its host as a Radiant element, but it only listens
+ * for and dispatches context events on it, which any element supports.
+ */
+export function provideTestFormStore(host: HTMLElement, store?: FormStore, ready = true) {
+	return new ContextProvider<typeof formContext>(
+		host as unknown as ConstructorParameters<typeof ContextProvider>[0],
+		{
+			context: formContext,
+			initialValue: {
+				ready,
+				store,
+				revision: 0,
+				fields: {},
+				errors: {},
+				actions: {
+					register: () => noopUnregister,
+					updateFieldOptions: () => {},
+					handleFieldChange: () => {},
+					handleFieldBlur: () => {},
+					subscribePresentation: () => noopUnregister,
+				},
+			} satisfies FormContextValue,
+		},
+	);
 }
 
 export function createTestForm(defaultValues: Record<string, unknown> = {}) {

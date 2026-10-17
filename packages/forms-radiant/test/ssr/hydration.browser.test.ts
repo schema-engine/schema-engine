@@ -6,6 +6,7 @@ import { FormActionControllerElement } from '@/components/form-action-controller
 import { FormFieldElement } from '@/elements/form-field';
 import { FormRendererElement } from '@/components/internals/form-renderer.script';
 import { createHydrationEngine } from './hydration-engine';
+import { testAction } from '../adapters/test-actions';
 
 await Promise.all([
 	import('@/elements/inputs/form-textarea'),
@@ -112,12 +113,11 @@ test('a form without onSubmit keeps native submission', async () => {
 
 test.each([false, true])('native submission waits for successful actions (%s)', async (succeeded) => {
 	const { engine, instance, form } = mount();
-	vi.spyOn(engine, 'getAction').mockReturnValue({
-		$type: 'submit',
-		schema: { '~standard': { version: 1, vendor: 'test', validate: (value: unknown) => ({ value }) } },
-		metadata: { name: 'Submit', defaultTriggers: ['form_submit'] },
-		execute: async () => (succeeded ? { success: true } : { success: false, shouldContinue: false }),
-	});
+	vi.spyOn(engine, 'getAction').mockReturnValue(
+		testAction('submit', ['form_submit'], async () =>
+			succeeded ? { success: true } : { success: false, shouldContinue: false },
+		),
+	);
 	const config = engine.defineForm({
 		id: 'native-action-submit',
 		steps: [{ id: 'main', title: 'Main', elements: [] }],
