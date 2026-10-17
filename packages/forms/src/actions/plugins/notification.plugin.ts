@@ -18,7 +18,7 @@ export interface NotificationPluginConfig {
 	/** Global handler for all notification types */
 	onNotification?: (
 		message: string,
-		variant: string,
+		variant: NotificationAction['variant'],
 		context: BuilderActionRuntimeContext<NotificationAction>,
 	) => void | Promise<void>;
 }

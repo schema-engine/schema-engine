@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
-import { FormStore } from '@ecopages/radiant-ui/form';
-import type { NormalizedFormConfig } from '@schema-engine/forms';
+import { FormStore, type FieldValues } from '@ecopages/radiant-ui/form';
+import { normalizedTestConfig } from '../adapters/test-config';
 import { FormInstanceElement } from '@/components/form-instance.script';
 import { provideTestFormStore } from '../adapters/test-form';
 import { createRoot } from '@ecopages/jsx/client';
@@ -12,7 +12,7 @@ import { schemaFormRegistrations } from '@/registrations';
 
 test('authored disabled survives live constraint sync', async () => {
 	const instance = new FormInstanceElement();
-	instance.config = {
+	instance.config = normalizedTestConfig({
 		id: 'disabled-form',
 		steps: [
 			{
@@ -29,9 +29,9 @@ test('authored disabled survives live constraint sync', async () => {
 				],
 			},
 		],
-	} satisfies NormalizedFormConfig;
+	});
 	const form = document.createElement('rui-form');
-	const store = new FormStore({ defaultValues: { mode: 'manual' } });
+	const store = new FormStore<FieldValues>({ defaultValues: { mode: 'manual' } });
 	provideTestFormStore(form, store);
 	const wrapper = document.createElement('div');
 	wrapper.setAttribute('data-se-constraint-field', 'ref');

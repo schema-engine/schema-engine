@@ -1,5 +1,6 @@
-import { ContextProvider, ContextSubscriptionRequestEvent } from '@ecopages/radiant/context';
-import { FormStore, formContext, type FormContextValue } from '@ecopages/radiant-ui/form';
+import { ContextSubscriptionRequestEvent } from '@ecopages/radiant/context';
+import { FormStore, type FieldValues } from '@ecopages/radiant-ui/form';
+import { provideTestFormStore } from '../adapters/test-form';
 import { gtmPlugin } from '@schema-engine/forms';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { formInstanceContext } from '@/contexts/form-instance-context';
@@ -9,9 +10,8 @@ import { FormActionControllerElement } from '@/components/form-action-controller
 import { SeFormArray } from '@/elements/inputs/form-array-elements';
 import { InputElementRegistration } from '@/elements/inputs/form-input.registration';
 import { ArrayElementRegistration } from '@/elements/inputs/form-array-elements.registration';
+import type { ArrayElementsProps } from '@/elements/inputs/form-array-elements.types';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-
-const noopUnregister = () => {};
 
 function twoStepForm(engine: ReturnType<typeof createRadiantFormEngine>) {
 	return engine.defineForm({
@@ -50,25 +50,25 @@ function observeInstanceContext(host: FormInstanceElement) {
 		},
 	};
 }
-
-function provideFormContext(host: HTMLElement, store?: FormStore, ready = false) {
-	return new ContextProvider<typeof formContext>(host, {
-		context: formContext,
-		initialValue: {
-			ready,
-			store,
-			revision: 0,
-			fields: {},
-			errors: {},
-			actions: {
-				register: () => noopUnregister,
-				updateFieldOptions: () => {},
-				handleFieldChange: () => {},
-				handleFieldBlur: () => {},
-				subscribePresentation: () => noopUnregister,
-			},
-		} satisfies FormContextValue,
+/**
+ * The validated `contacts` array, typed as the props `se-form-array` takes.
+ *
+ * @remarks
+ * `validateElement` returns the frozen, deeply readonly snapshot, while
+ * registration render props are typed mutable. The renderer hands render
+ * functions that same snapshot, so the conversion matches runtime.
+ */
+function contactsArray(engine: ReturnType<typeof createArrayEngine>): ArrayElementsProps {
+	const config = engine.validateElement({
+		$type: 'arrayElements',
+		name: 'contacts',
+		elements: [{ $type: 'input', name: 'email', label: 'Email' }],
 	});
+	return config as unknown as ArrayElementsProps;
+}
+
+function createArrayEngine() {
+	return createRadiantFormEngine({ elements: [InputElementRegistration, ArrayElementRegistration] });
 }
 
 describe('Radiant form engine resolution', () => {
@@ -153,7 +153,7 @@ describe('Radiant form engine resolution', () => {
 				},
 			],
 		});
-		provideFormContext(form, new FormStore(), true);
+		provideTestFormStore(form, new FormStore());
 		form.append(controller);
 		renderer.append(form);
 		document.body.append(renderer);
@@ -165,16 +165,12 @@ describe('Radiant form engine resolution', () => {
 	});
 
 	test('a form array renders its fields after renderer context arrives', async () => {
-		const engine = createRadiantFormEngine({ elements: [InputElementRegistration, ArrayElementRegistration] });
+		const engine = createArrayEngine();
 		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
 		const form = document.createElement('rui-form');
 		const array = document.createElement('se-form-array') as SeFormArray;
-		array.config = engine.validateElement({
-			$type: 'arrayElements',
-			name: 'contacts',
-			elements: [{ $type: 'input', name: 'email', label: 'Email' }],
-		});
-		const formProvider = provideFormContext(form);
+		array.config = contactsArray(engine);
+		const formProvider = provideTestFormStore(form, undefined, false);
 		form.append(array);
 		renderer.append(form);
 		document.body.append(renderer);
@@ -182,7 +178,7 @@ describe('Radiant form engine resolution', () => {
 			expect(array.querySelector('.se-form-array__empty')).not.toBeNull();
 		});
 		formProvider.setContext({
-			store: new FormStore({ defaultValues: { contacts: [{ email: 'person@example.test' }] } }),
+			store: new FormStore<FieldValues>({ defaultValues: { contacts: [{ email: 'person@example.test' }] } }),
 		});
 		expect(array.querySelector('input')).toBeNull();
 
@@ -193,19 +189,14 @@ describe('Radiant form engine resolution', () => {
 	});
 
 	test('a form array with seeded rows waits for renderer context before rendering fields', async () => {
-		const engine = createRadiantFormEngine({ elements: [InputElementRegistration, ArrayElementRegistration] });
+		const engine = createArrayEngine();
 		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
 		const form = document.createElement('rui-form');
 		const array = document.createElement('se-form-array') as SeFormArray;
-		array.config = engine.validateElement({
-			$type: 'arrayElements',
-			name: 'contacts',
-			elements: [{ $type: 'input', name: 'email', label: 'Email' }],
-		});
-		provideFormContext(
+		array.config = contactsArray(engine);
+		provideTestFormStore(
 			form,
-			new FormStore({ defaultValues: { contacts: [{ email: 'person@example.test' }] } }),
-			true,
+			new FormStore<FieldValues>({ defaultValues: { contacts: [{ email: 'person@example.test' }] } }),
 		);
 		form.append(array);
 		renderer.append(form);

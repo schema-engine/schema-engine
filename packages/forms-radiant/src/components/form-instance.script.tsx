@@ -37,7 +37,21 @@ export class FormInstanceElement extends RadiantElement {
 	@state onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
 	@prop({ type: Boolean, defaultValue: false }) isSubmitting = false;
 
-	@state machine: StepMachineState = { currentStepIndex: 0, ...createInitialStepStates(1) };
+	@state private machineState: StepMachineState = { currentStepIndex: 0, ...createInitialStepStates(1) };
+	get machine(): StepMachineState {
+		return this.machineState;
+	}
+	/**
+	 * @remarks
+	 * Publishes the instance context in the same turn, not from the batched
+	 * `@onUpdated` callback, because the step navigator dispatches `step_change`
+	 * right after it applies the new state and the action context reads the
+	 * current step from this context.
+	 */
+	set machine(machine: StepMachineState) {
+		this.machineState = machine;
+		this.publish();
+	}
 	get currentStep(): number {
 		return this.machine.currentStepIndex;
 	}
@@ -74,7 +88,6 @@ export class FormInstanceElement extends RadiantElement {
 			this.engine = resolveFormEngine(this);
 		}
 		this.resetStepState();
-		this.publish();
 		this.connectForm();
 		this.wireRuiForm();
 		queueMicrotask(() => {
@@ -101,7 +114,7 @@ export class FormInstanceElement extends RadiantElement {
 		this.wireRuiForm();
 	}
 
-	@onUpdated(['machine', 'isSubmitting', 'engine', 'onSubmit'])
+	@onUpdated(['machineState', 'isSubmitting', 'engine', 'onSubmit'])
 	onInstanceStateUpdated(): void {
 		this.wireRuiForm();
 		this.connectForm();

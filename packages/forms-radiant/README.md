@@ -20,6 +20,12 @@ Unlike `@schema-engine/forms-react` — where the default view recipes live in t
 pnpm add @schema-engine/forms-radiant @schema-engine/forms @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
 ```
 
+The package is tested against Radiant `0.3.0-rc.9` and Radiant UI `0.1.0-rc.17`.
+On Radiant `0.3.0`, server-rendered form markup is escaped twice (for example
+`data-se-validation-rules="[{&amp;quot;type…`), so hydrated fields lose the
+validation rules serialized in the markup. Use `0.3.0-rc.9` for server-rendered
+forms until Radiant fixes that.
+
 Load Tailwind preflight (via Radiant core), theme, and component styles:
 
 ```ts

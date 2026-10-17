@@ -1,6 +1,6 @@
 'use client';
 
-import { format } from 'date-fns';
+import { format, subMonths } from 'date-fns';
 import { CalendarIcon, CheckIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 import { useRef, useState, useSyncExternalStore, type ComponentProps } from 'react';
@@ -111,6 +111,7 @@ function DateRangePicker({
 	const [draft, setDraft] = useState<DraftRange | undefined>(() => toDraftRange(value));
 	const [syncedValue, setSyncedValue] = useState(() => rangeKey(value, false));
 	const openedDraftRef = useRef<DraftRange | undefined>(undefined);
+	const [today] = useState(() => new Date());
 	const compact = useCompactLayout();
 	const minDate = parseISODate(min);
 	const maxDate = parseISODate(max);
@@ -235,14 +236,7 @@ function DateRangePicker({
 								mode="range"
 								numberOfMonths={months}
 								selected={draft}
-								defaultMonth={
-									draft?.from ??
-									(() => {
-										const month = new Date();
-										month.setMonth(month.getMonth() - (months > 1 ? 1 : 0));
-										return month;
-									})()
-								}
+								defaultMonth={draft?.from ?? subMonths(today, months > 1 ? 1 : 0)}
 								disabled={(date: Date) => {
 									if (minDate && date < minDate) {
 										return true;

@@ -9,8 +9,10 @@ import {
 	splitScreenSpec,
 	splitScreenWizardSpec,
 	wizardSpec,
+	type RecipeSlot,
 	type RecipeSpec,
 } from '@schema-engine/forms/recipes';
+import type * as z from 'zod/mini';
 import {
 	StepHeaderBlock,
 	MinimalProgressBlock,
@@ -21,7 +23,11 @@ import {
 import { CardShell, HeroShell, SidebarShell, SplitScreenShell, StackShell } from '@/components/shells';
 import type { RadiantRecipeAdapterPayload } from './types';
 
-function bind<TSpec extends RecipeSpec>(spec: TSpec, render: RadiantRecipeAdapterPayload) {
+function bind<
+	TType extends string,
+	TSchema extends z.ZodMiniType,
+	TSlots extends Partial<Record<RecipeSlot, z.ZodMiniType>>,
+>(spec: RecipeSpec<TType, TSchema, TSlots>, render: RadiantRecipeAdapterPayload) {
 	return defineFormRecipe(spec, render);
 }
 

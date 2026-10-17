@@ -73,7 +73,7 @@ export class RadiantDocsPagination extends RadiantElement {
 	}
 }
 
-declare module '@ecopages/jsx/jsx-runtime' {
+declare module '@ecopages/jsx' {
 	interface JsxCustomIntrinsicElements {
 		'radiant-docs-pagination': JsxCustomElementAttributes<RadiantDocsPagination>;
 	}

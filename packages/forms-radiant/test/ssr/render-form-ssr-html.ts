@@ -2,7 +2,6 @@ import { renderToString } from '@ecopages/jsx/server';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
-import type { FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { ElementGridConfig } from '@schema-engine/forms/schemas';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
@@ -53,12 +52,10 @@ function createSsrAcceptanceEngine() {
 	});
 }
 
-let cachedEngine: FormEngine | undefined;
+let cachedEngine: ReturnType<typeof createSsrAcceptanceEngine> | undefined;
 
-export function getSsrAcceptanceEngine(): FormEngine {
-	if (!cachedEngine) {
-		cachedEngine = createSsrAcceptanceEngine();
-	}
+export function getSsrAcceptanceEngine() {
+	cachedEngine ??= createSsrAcceptanceEngine();
 	return cachedEngine;
 }
 
