@@ -17,12 +17,13 @@ function readFieldName(field: FormFieldElement): string | undefined {
 
 /**
  * @remarks
- * Serialized rules cannot carry validator functions. Preserve live validators
- * when markup hydration runs again after client properties have been applied.
+ * Serialized rules cannot carry validator functions. Preserve live validators,
+ * a single function or a record of them, when markup hydration runs again
+ * after client properties have been applied.
  */
 export function readHydratedRules(field: FormFieldElement): FieldRules | undefined {
 	const currentRules = field.rules;
-	if (currentRules && typeof currentRules === 'object' && typeof currentRules.validate === 'function') {
+	if (currentRules && typeof currentRules === 'object' && currentRules.validate) {
 		return undefined;
 	}
 

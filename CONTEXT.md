@@ -94,6 +94,8 @@ renderer: it ignores a request while another is in flight, validates the active 
 before `next`, and dispatches `step_leave` before the step changes and `step_change`
 then `step_enter` after. A renderer supplies where its step state lives, how to
 validate a step and how to dispatch a trigger, so a new renderer inherits the guard and the trigger order.
+The navigator does not notice a step state reset made while a navigation is in flight:
+that navigation applies the state it computed before the reset.
 
 ## Array rows
 

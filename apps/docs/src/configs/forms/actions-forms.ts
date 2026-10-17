@@ -9,7 +9,6 @@ import type { FormConfig } from '@schema-engine/forms/schemas';
 /**
  * Form configuration with simplified action system
  * - Global actions run automatically based on triggers
- * - Step actions run only for specific steps
  */
 export const actionsFormConfig: FormConfig = {
 	id: 'enhanced-actions-demo',
@@ -62,21 +61,6 @@ export const actionsFormConfig: FormConfig = {
 					rules: [ValidationPresets.string.required('Date of Birth is required')],
 				},
 			],
-			actions: [
-				{
-					id: 'step1-completion-tracking',
-					$type: 'gtm_event',
-					description: 'Track completion of user info step',
-					eventName: 'form_step_complete',
-					eventData: {
-						step_name: 'user_info',
-						step_number: 1,
-					},
-					includeFormData: false,
-					triggers: ['step_submit'],
-					enabled: true,
-				},
-			],
 		},
 		{
 			id: 'contact-info',
@@ -120,21 +104,6 @@ export const actionsFormConfig: FormConfig = {
 					rules: [ValidationPresets.string.required('ZIP Code is required')],
 				},
 			],
-			actions: [
-				{
-					id: 'step2-completion-tracking',
-					$type: 'gtm_event',
-					description: 'Track completion of contact info step',
-					eventName: 'form_step_complete',
-					eventData: {
-						step_name: 'contact_info',
-						step_number: 2,
-					},
-					includeFormData: false,
-					triggers: ['step_submit'],
-					enabled: true,
-				},
-			],
 		},
 		{
 			id: 'preferences',
@@ -171,22 +140,6 @@ export const actionsFormConfig: FormConfig = {
 					rules: [ValidationPresets.string.required('Please select at least one area of interest')],
 				},
 			],
-			actions: [
-				{
-					id: 'step3-completion-tracking',
-					$type: 'gtm_event',
-					description: 'Track completion of preferences step',
-					eventName: 'form_step_complete',
-					eventData: {
-						step_name: 'preferences',
-						step_number: 3,
-						final_step: true,
-					},
-					includeFormData: false,
-					triggers: ['step_submit'],
-					enabled: true,
-				},
-			],
 		},
 	],
 	actions: [
@@ -209,6 +162,18 @@ export const actionsFormConfig: FormConfig = {
 			},
 			includeFormData: false,
 			triggers: ['form_mount'],
+			enabled: true,
+		},
+		{
+			id: 'global-step-tracking',
+			$type: 'gtm_event',
+			description: 'Track each wizard step the user reaches',
+			eventName: 'form_step_view',
+			eventData: {
+				form_type: 'enhanced_demo',
+			},
+			includeFormData: false,
+			triggers: ['step_enter'],
 			enabled: true,
 		},
 		{

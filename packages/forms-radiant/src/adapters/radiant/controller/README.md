@@ -33,8 +33,11 @@ customElements.define('form-summary', FormSummary);
 Place the consumer inside `rui-form`. `connect` waits for the ancestor form's
 context to become ready and then notifies on presentation changes. Reads and
 mutations require a ready form; use `form.ready` before reading during an early
-render. `disconnect` removes context subscriptions and all watches created by
-that controller. Reconnect after moving a host to another form.
+render. `connect` replaces only the context subscription, so a watch created
+before it (or before a second `connect`) keeps running. `disconnect` removes
+context subscriptions and all watches created by that controller. A watch
+stays on the store it subscribed to, so after moving a host to another form call
+`disconnect`, then `connect`, then watch again.
 
 ## Optional decorator
 

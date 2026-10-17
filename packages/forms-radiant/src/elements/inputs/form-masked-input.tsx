@@ -2,6 +2,7 @@ import './form-masked-input.css';
 import { customElement, onUpdated, prop, query, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { isRenderedRequired } from '@/lib/field-rules';
 import { FieldGroup } from '../field-group';
 import {
 	createPatternMaskOptions,
@@ -140,7 +141,7 @@ export function FormMaskedInput({
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
-			required={isFieldRequired(config.rules)}
+			required={isFieldRequired(config.rules) || isRenderedRequired(config)}
 			description={config.description}
 			grid={config.grid}
 			style={config.style}

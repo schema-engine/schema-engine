@@ -7,6 +7,7 @@ import {
 	RuiNumberFieldSteppers,
 } from '@ecopages/radiant-ui/number-field';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { isRenderedRequired } from '@/lib/field-rules';
 import { FieldGroup } from '../field-group';
 import type { NumberFieldProps } from './form-number.types';
 
@@ -22,7 +23,7 @@ export function FormNumber({
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
-			required={isFieldRequired(config.rules)}
+			required={isFieldRequired(config.rules) || isRenderedRequired(config)}
 			description={config.description}
 			grid={config.grid}
 			style={config.style}

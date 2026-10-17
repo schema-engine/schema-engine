@@ -1,5 +1,6 @@
 import { RuiTextarea } from '@ecopages/radiant-ui/textarea';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { isRenderedRequired } from '@/lib/field-rules';
 import { FieldGroup } from '../field-group';
 import type { TextareaFieldProps } from './form-textarea.types';
 
@@ -15,7 +16,7 @@ export function FormTextarea({
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
-			required={isFieldRequired(config.rules)}
+			required={isFieldRequired(config.rules) || isRenderedRequired(config)}
 			description={config.description}
 			grid={config.grid}
 			style={config.style}

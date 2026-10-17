@@ -19,7 +19,7 @@ export class StepIndicatorsElement extends RadiantElement {
 	onStepClick(event: Event): void {
 		const target = (event.target as Element | null)?.closest<HTMLElement>('[data-se-view-step]');
 		const index = Number(target?.dataset.seViewStep);
-		if (Number.isInteger(index)) this.instance?.goToStep(index);
+		if (Number.isInteger(index)) void this.instance?.goToStep(index);
 	}
 
 	override render(): JsxRenderable {

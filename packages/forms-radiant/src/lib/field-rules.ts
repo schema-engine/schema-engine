@@ -27,6 +27,20 @@ export interface FieldRulesSource {
 	name?: string;
 }
 
+/**
+ * Whether the render overlay marks an element required.
+ *
+ * @remarks
+ * `renderRegisteredElement` overlays `required` on the config it renders: the
+ * element's own required rule, a matching `require` constraint, or one passed
+ * down by a fieldset. Element schemas do not declare it. Inputs show it as the
+ * required marker only; it never enters the serialized rules, so constraint
+ * sync, which owns the live `required` rule, can lift it again.
+ */
+export function isRenderedRequired(config: object): boolean {
+	return 'required' in config && config.required === true;
+}
+
 function resolveValidationRegistry(registry?: ValidationRegistry): ValidationRegistry | undefined {
 	return registry ?? peekOwningFormEngine()?.getValidationRegistry();
 }
@@ -39,6 +53,13 @@ function resolveValidationRegistry(registry?: ValidationRegistry): ValidationReg
  * form's current values through its context, so a schema is only correct for the
  * invocation whose context produced it. Radiant UI hands `validate` the form's
  * flat values, which are expanded into the engine's nested tree first.
+ *
+ * A call that a later call replaces resolves with the latest call's result.
+ * Radiant UI writes whatever a validator returns, so without this a debounced
+ * async check superseded by the next keystroke would show its `Validation
+ * pending` failure between keystrokes. React Hook Form drops such results the
+ * same way. A submit-time check still cannot pass on a value it never checked:
+ * it waits for the check of the value the user typed last.
  */
 function toValidator(
 	rules: ReadonlyArray<ValidationRule>,
@@ -46,16 +67,27 @@ function toValidator(
 	registry: ValidationRegistry,
 ) {
 	const debounceScope = createDebounceScope();
-	return async (value: unknown, values: Record<string, unknown>) => {
-		const message = await validateFieldValue({
+	let latest: Promise<string | true> = Promise.resolve(true);
+	const settle = async (run: Promise<string | true>): Promise<string | true> => {
+		try {
+			const result = await run;
+			if (run === latest) return result;
+		} catch (error) {
+			if (run === latest) throw error;
+		}
+		return settle(latest);
+	};
+	return (value: unknown, values: Record<string, unknown>) => {
+		const run = validateFieldValue({
 			element: { rules },
 			value,
 			values: expandValues(values ?? {}),
 			fieldPath: fieldPath ?? '',
 			registry,
 			debounceScope,
-		});
-		return message ?? true;
+		}).then((message) => message ?? true);
+		latest = run;
+		return settle(run);
 	};
 }
 

@@ -10,6 +10,7 @@ import {
 } from '@ecopages/radiant-ui/select';
 import { RuiTagGroup } from '@ecopages/radiant-ui/tag-group';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { isRenderedRequired } from '@/lib/field-rules';
 import { FieldGroup } from '../field-group';
 import { parseChoiceValue, serializeChoiceValue } from '@/lib/choice-value';
 import type { SelectFieldProps } from './form-select.types';
@@ -35,7 +36,7 @@ export function FormSelect({
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
-			required={isFieldRequired(config.rules)}
+			required={isFieldRequired(config.rules) || isRenderedRequired(config)}
 			description={config.description}
 			grid={config.grid}
 			style={config.style}
