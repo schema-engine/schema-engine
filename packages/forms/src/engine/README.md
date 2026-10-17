@@ -32,14 +32,28 @@ require a `debounceScope` owned by the form.
 
 The public usage examples are in the [forms package README](../../README.md#engine-validation).
 
+## Action context form state
+
+`FormActionContextFormState` no longer accepts `touchedFields` or `isSubmitted`. Pass
+`touched` and `submitCount`, both required, and nest `errors` and `touched` like the
+values (`{ address: { street: … } }`, not `{ 'address.street': … }`). A React Hook Form
+caller passes `touchedFields` as `touched`; a caller that only knows whether the form
+was submitted passes `Number(isSubmitted)`. Radiant does that: Radiant UI's form store
+keeps a submitted flag rather than a count, so its `submitCount`, and the submission
+share of `userInteractions`, is at most one, while React counts every submit attempt.
+
 ## Schema artifacts and extension
 
-`extend` inherits the source engine's schema metadata catalog and compiled grid.
-An explicit `catalog` on `extend` replaces that catalog. JSON Schema generation
-uses `StandardJSONSchemaV1` from `@standard-schema/spec` and keeps the existing
-forms vendor, schema ids, targets and input/output documents. Inherited
-catalogs are copied; schemas for added or overridden registrations are updated
-without mutating the source engine's catalog.
+A `catalog` passed to `createFormEngine` is a base: the engine copies it and writes
+every registration's entry over it, keyed `${componentType}:${$type}`
+(`SchemaMetadataCatalog.entryId`). A registration's entry replaces any entry with that
+id wholesale, schema, title and description included, and the supplied catalog is not
+mutated. `extend` rebuilds the catalog the same way from the source engine's catalog,
+or from an explicit `catalog` passed to `extend`, so custom entries carry over and
+added or overridden registrations replace theirs without touching the source engine.
+The compiled grid is inherited. JSON Schema generation uses `StandardJSONSchemaV1`
+from `@standard-schema/spec` and keeps the existing forms vendor, schema ids, targets
+and input/output documents.
 
 Container registrations declare `containerKind: 'array'` (or `'object'`).
 Normalization stores that metadata on the frozen element without adding JSON

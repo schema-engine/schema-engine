@@ -55,13 +55,13 @@ function createFormConfigSchema(
 }
 
 /**
- * Writes a registration's catalog entry, keyed `${componentType}:${$type}`.
+ * Writes a registration's catalog entry, keyed by {@link SchemaMetadataCatalog.entryId}.
  *
  * @remarks
  * Overwrites any existing entry for that id, so an overriding registration's
  * title and description follow the same last-wins rule as the registration.
  */
-export function registerSchemaMetadata(
+function registerSchemaMetadata(
 	catalog: SchemaMetadataCatalog,
 	componentType: ComponentType,
 	registration: {
@@ -70,7 +70,7 @@ export function registerSchemaMetadata(
 		metadata: { name: string; description?: string; category?: string };
 	},
 ): void {
-	const id = `${componentType}:${registration.$type}`;
+	const id = SchemaMetadataCatalog.entryId(componentType, registration.$type);
 	catalog.register(assertStandardSchema(registration.schema, `Registration '${id}' schema`), {
 		id,
 		componentType,
@@ -119,17 +119,14 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 		actions: actionRegistry.size,
 	});
 
-	const metadataCatalog = lists.catalog ?? new SchemaMetadataCatalog();
-
-	if (!lists.catalog) {
-		for (const [componentType, registrations] of [
-			[ComponentType.Element, [...elementRegistry.values()]],
-			[ComponentType.Recipe, [...recipeRegistry.values()]],
-			[ComponentType.Action, [...actionRegistry.values()]],
-		] as const) {
-			for (const item of registrations) {
-				registerSchemaMetadata(metadataCatalog, componentType, item);
-			}
+	const metadataCatalog = lists.catalog?.clone() ?? new SchemaMetadataCatalog();
+	for (const [componentType, registrations] of [
+		[ComponentType.Element, elementRegistry],
+		[ComponentType.Recipe, recipeRegistry],
+		[ComponentType.Action, actionRegistry],
+	] as const) {
+		for (const item of registrations.values()) {
+			registerSchemaMetadata(metadataCatalog, componentType, item);
 		}
 	}
 

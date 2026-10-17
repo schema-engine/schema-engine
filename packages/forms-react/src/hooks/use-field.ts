@@ -1,12 +1,12 @@
 import type React from 'react';
-import { useMemo } from 'react';
-import { isFieldRequired, type ElementConfig, type ElementGridConfig } from '@schema-engine/forms/schemas';
+import { useContext, useMemo } from 'react';
+import type { ElementConfig, ElementGridConfig } from '@schema-engine/forms/schemas';
 import { mergeControlProps } from '@schema-engine/forms/schemas/html-attributes';
 import { getFieldGridVariables } from '@schema-engine/forms/lib/grid-styles';
 import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
-import { getValidationRulesForElement } from '@schema-engine/forms/schemas/validation/utils';
 import { useFormField } from '@/adapters/context';
 import { useConstraintLogic } from '@/hooks/use-constraint-logic';
+import { FieldConstraintContext, isElementRequired } from '@/contexts/field-constraint-context';
 import { useGridThemeId, useOptionalFormEngine } from '@/hooks/use-form-context';
 
 export interface FieldHostProps {
@@ -60,8 +60,10 @@ export function combineHandlers<T>(controllerHandler: (value: T) => void, propsH
  * component binds `value` to its own control type (string, number, array), and
  * `unknown` would force a cast in every consumer.
  *
- * `isRequired` subscribes only to the paths the field's constraints name, so an
- * unconstrained field does not re-render when another field changes.
+ * Under `FormElement`, `isRequired` comes from the constraints that element
+ * already evaluated for this field path. A field rendered without one watches
+ * only the paths its constraints name, so an unconstrained field does not
+ * re-render when another field changes.
  */
 export function useControlledFormElement(config: ElementConfig) {
 	if (!config.name) {
@@ -73,11 +75,14 @@ export function useControlledFormElement(config: ElementConfig) {
 		() => engineContext?.engine.getValidationRegistry() ?? createDefaultValidationRegistry(),
 		[engineContext],
 	);
-	const { isRequired } = useConstraintLogic(
+	const rendered = useContext(FieldConstraintContext);
+	const evaluated = rendered?.fieldPath === config.name ? rendered.constraints : undefined;
+	const standalone = useConstraintLogic(
 		config.name,
-		config.constraints,
-		isFieldRequired(getValidationRulesForElement(config, registry)),
+		evaluated ? undefined : config.constraints,
+		!evaluated && isElementRequired(config, registry),
 	);
+	const { isRequired } = evaluated ?? standalone;
 	const { value, error, onChange, onBlur, name, disabled, ref } = useFormField<any>(config);
 
 	const fieldProps = mergeControlProps(

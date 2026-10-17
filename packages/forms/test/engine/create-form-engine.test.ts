@@ -196,6 +196,25 @@ test('extend preserves an explicitly supplied metadata catalog', () => {
 	expect(extended.hasElement('note')).toBe(true);
 });
 
+test('a supplied catalog is copied and gains every registration entry', () => {
+	const catalog = new SchemaMetadataCatalog();
+	catalog.register(z.object({ tag: z.string() }), {
+		id: 'custom:metadata',
+		title: 'Custom metadata',
+		componentType: ComponentType.Element,
+	});
+	const engine = createFormEngine({ elements: [noteElement], catalog });
+	const extended = createFormEngine({ elements: [noteElement] }).extend({ elements: [textareaElement], catalog });
+
+	expect(Object.keys(engine.generateJSONSchemaCollection().schemas)).toEqual(['custom:metadata', 'element:note']);
+	expect(Object.keys(extended.generateJSONSchemaCollection().schemas)).toEqual([
+		'custom:metadata',
+		'element:note',
+		'element:textarea',
+	]);
+	expect(catalog.getRegisteredSchemas()).toHaveLength(1);
+});
+
 test('extend replaces the catalog schema for an overridden registration', () => {
 	const replacement = defineInput({
 		$type: 'note',

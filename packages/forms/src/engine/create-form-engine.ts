@@ -19,6 +19,10 @@ export interface CreateFormEngineOptions<
 	elements?: TElements;
 	recipes?: TRecipes;
 	actions?: TActions;
+	/**
+	 * Extra schema metadata entries. The engine copies the catalog and writes every
+	 * registration's entry over it, so an entry with a registration's id is replaced.
+	 */
 	catalog?: SchemaMetadataCatalog;
 	/** Engine-level grid vocabulary: breakpoint thresholds, gap tokens, default min column width. */
 	grid?: GridThemeOptions;
