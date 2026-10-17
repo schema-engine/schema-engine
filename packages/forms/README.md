@@ -80,11 +80,14 @@ configured action that produced it.
 context with form data and timing metadata, including a stable step start time that resets
 when the active step changes. Its form state takes `errors` and `touched` nested like the
 values, so a handler reads `context.errors.address.street` in every renderer, and
-`userInteractions` counts touched fields plus `submitCount`. The engine entry point also re-exports `ActionDispatcher` so
+`userInteractions` counts touched fields plus `submitCount` (at most one in Radiant).
+The form state no longer accepts `touchedFields` or `isSubmitted`: pass `touched` and
+`submitCount`, both required (see [action context form state](src/engine/README.md#action-context-form-state)).
+The engine entry point also re-exports `ActionDispatcher` so
 both renderers can use the same action dispatcher class.
 
 An `arrayElements` row with one leaf child uses a scalar path when its seed is not object-shaped. A child container such as `fieldSet` stays under its own row object path. Object-shaped array `initialValues`, a child field's object-shaped `defaultValue`, or the first row object from form `defaultValues` (falling back to the array's `defaultValue`) also selects the object path.
-Use `engine.extend({ ... })` to add registrations without re-spreading shared barrels. Author forms with `engine.defineForm({ ... })` object literals.
+Use `engine.extend({ ... })` to add registrations without re-spreading shared barrels. A `catalog` passed to `createFormEngine` or `extend` is a copied base: every registration writes its own entry over it, and `extend` rebuilds from the source engine's catalog, or from its own `catalog` when one is passed, so custom entries carry over. Author forms with `engine.defineForm({ ... })` object literals.
 
 Extra DOM attributes on the focusable control (for example `data-testid`) belong in `htmlAttributes` on the field config. Unknown top-level keys are stripped during validation; reserved control props cannot be authored inside the bag.
 
@@ -260,7 +263,6 @@ widgets with a different `$type`. The engine carries this metadata into frozen
 normalized elements for default seeding and field traversal. Authoring JSON does
 not include this marker. Containers without an array marker use object paths.
 See [engine internals](src/engine/README.md#schema-artifacts-and-extension).
-`extend` also preserves an engine's custom schema metadata catalog.
 
 `templatePath` in `@schema-engine/forms/lib/path-values` removes numeric array indices from rendered paths for constraint declaration lookup, alongside `expandFieldTemplatePaths`.
 

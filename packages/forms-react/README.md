@@ -70,7 +70,7 @@ export function ContactForm() {
 | `@schema-engine/forms-react/primitives`               | `FormElement`, `FormElements`, and React recipe contracts                             |
 | `@schema-engine/forms-react/components/form-debugger` | `FormDebugger`                                                                        |
 
-Use `useFormContext`, `useFormField`, `useWatchField`, `useWatchForm`, and `useFieldArray` from `/adapters` inside the active form. `useFieldArray` provides `fields`, `append`, `prepend`, `insert`, `swap`, `move`, `update`, `replace`, and `remove`.
+Use `useFormContext`, `useFormField`, `useWatchField`, `useWatchForm`, and `useFieldArray` from `/adapters` inside the active form. `useFieldArray` provides `fields`, `append`, `prepend`, `insert`, `swap`, `move`, `update`, `replace`, and `remove`; it keeps falsy scalar rows such as `tags: ['', '']`, which React Hook Form's own `useFieldArray` drops.
 
 Use `useFormEngine`, `useFormInstanceActions`, `useControlledFormElement`, `useFieldHost`, `useConstraintLogic`, and `useSubmissionState` from `/hooks`. View hooks (`useViewContext`, `useOptionalViewContext`, `useActiveStep`, `useFormNavigation`, and `useViewConfig`) also come from `/hooks`.
 
@@ -129,7 +129,9 @@ the error and completion triggers.
 
 Both renderer browser projects run the scenarios in
 [`test-utils/renderer-conformance.ts`](../../test-utils/renderer-conformance.ts)
-through their own `FormRenderer`. They cover array sibling constraints, nested
-wizard validation, required constraints, nested error clearing, Valibot action
-registration, submission aborts, and change and action callbacks. Run this suite
+through their own `FormRenderer`. They cover array sibling constraints, empty
+scalar array rows, nested wizard validation, required constraints, nested error
+clearing, Valibot action registration, submission aborts, and change and action
+callbacks. The action context's `submitCount` is the one difference they leave
+open: React counts every submit attempt, Radiant reports at most one. Run this suite
 with `pnpm exec vitest run --project browser test/conformance` from this package.

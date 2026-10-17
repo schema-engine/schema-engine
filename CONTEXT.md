@@ -108,6 +108,7 @@ least one when any descendant declares a `defaultValue`; a supplied array is pad
 `minItems`. `collectInitialValues` applies both to a form's initial values.
 Every helper detects arrays by the registration's `containerKind: 'array'`,
 never by `$type`, so custom array widgets seed like `arrayElements`.
+A scalar row may hold `''`, `0` or `false`; both renderers keep it.
 
 ## Grid theme ownership
 
