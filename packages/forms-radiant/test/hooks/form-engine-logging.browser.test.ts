@@ -1,5 +1,7 @@
 import { afterEach, expect, test, vi } from 'vitest';
+import { createFormEngine } from '@schema-engine/forms';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
+import { renderWithOwningFormEngine } from '@/contexts/form-engine-owner';
 
 afterEach(() => {
 	document.body.replaceChildren();
@@ -56,6 +58,18 @@ test('stays quiet when no host is given', () => {
 	const output = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
 	expect(resolveFormEngine()).toBeUndefined();
+
+	expect(output).not.toHaveBeenCalled();
+});
+
+test('resolves an explicit engine or the owning render without reporting', () => {
+	const output = vi.spyOn(console, 'warn').mockImplementation(() => {});
+	const engine = createFormEngine();
+	const host = document.createElement('div');
+	document.body.append(host);
+
+	expect(resolveFormEngine(host, engine)).toBe(engine);
+	expect(renderWithOwningFormEngine(engine, () => resolveFormEngine(host))).toBe(engine);
 
 	expect(output).not.toHaveBeenCalled();
 });

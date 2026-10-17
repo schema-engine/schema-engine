@@ -8,7 +8,7 @@ Runtime diagnostics go through `@ecopages/logger` with the
 `[schema-engine/forms-radiant]` package tag. Debug output is disabled by default;
 warnings and errors keep their severity and diagnostic details.
 
-A connected host that no engine reaches (no `engine` prop, no `se-form-renderer` above it, no render in progress) logs one warning for that host. Engines are never resolved implicitly, however many exist.
+A connected host that no engine reaches logs one warning for that host. Hosts under `se-form-renderer` and detached hosts stay quiet, since an engine can still arrive.
 
 ## Why the recipe components ship in this package
 
@@ -49,6 +49,8 @@ const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 ```
 
 `engine` is a live JavaScript value. `se-form-renderer` publishes it to descendant hosts through `formEngineContext`.
+
+A host resolves its engine from an explicit `engine`, then the nearest `se-form-renderer` context, then the render in progress. There is no module-level default, however many engines have been created.
 
 ### Registering only the elements a form uses
 

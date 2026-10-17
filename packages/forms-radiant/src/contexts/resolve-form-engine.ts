@@ -24,8 +24,9 @@ const reportedHosts = new WeakSet<HTMLElement>();
  *
  * @remarks
  * A host under `se-form-renderer` stays quiet because the renderer's engine can
- * still arrive after the host connects, and a detached host (server rendering)
- * stays quiet because its engine is supplied by the render in progress.
+ * still arrive after the host connects, and a detached host (server rendering,
+ * or before the host is attached) stays quiet because it cannot reach an
+ * ancestor context yet.
  */
 function reportMissingEngine(host: HTMLElement): void {
 	if (!host.isConnected || host.closest('se-form-renderer') || reportedHosts.has(host)) {
