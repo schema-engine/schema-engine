@@ -111,15 +111,12 @@ export function useFormSubmitHandler({
 						{ actions: config.actions, context: buildActionContext, onAction },
 					);
 
-					const executionErrors = results.reduce<SubmissionError[]>((acc, result, index) => {
-						if (!result.success && result.shouldContinue === false) {
-							acc.push({
-								actionId: `action-${index}`,
-								message: result.error || 'Action execution failed',
-							});
-						}
-						return acc;
-					}, []);
+					const executionErrors: SubmissionError[] = results
+						.filter((result) => !result.success && result.shouldContinue === false)
+						.map((result) => ({
+							actionId: result.actionId,
+							message: result.error || 'Action execution failed',
+						}));
 
 					if (!succeeded) {
 						setSubmissionError({ errors: executionErrors });

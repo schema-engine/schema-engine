@@ -118,8 +118,7 @@ Action handlers receive a framework-neutral `context.form` with `reset`,
 `setValue`, `getValue`, and `validate`; `validate()` resolves to the form validity.
 
 A changed `require` condition revalidates a touched or submitted dependent field.
-Submission failures use `action-N` result identifiers because dispatch results
-do not carry authored action ids.
+Submission errors name the failing action by its configured `id`.
 
 Successful `form_submit` actions call `onAction(action, data)` before the submission
 callback. A rejected action callback aborts the remaining submit actions and runs

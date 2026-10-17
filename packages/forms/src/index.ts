@@ -14,6 +14,7 @@ export type {
 	StepMachineState,
 	StepMachineAction,
 	StepMachineReducer,
+	SubmissionActionResult,
 	SubmissionLifecycleResult,
 	FormActionContextFormState,
 } from './engine';

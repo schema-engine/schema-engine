@@ -27,6 +27,8 @@ const engine = createFormEngine({
 				if ((context.config as { id: string }).id === 'mounted')
 					validationResults.push(await context.form.validate());
 				contexts.push(context);
+				if ((context.config as { id: string }).id === 'abort')
+					return { success: false, shouldContinue: false, error: 'Rejected' };
 				return { success: true, data: { id: (context.config as { id: string }).id } };
 			},
 		},
@@ -90,6 +92,9 @@ function Controls({ action }: { action?: FormActionConfig }) {
 		<>
 			<output aria-label="step">{currentStep}</output>
 			<output aria-label="submission">{submissionState.status}</output>
+			<output aria-label="submission errors">
+				{submissionState.errors.map(({ actionId, message }) => `${actionId}: ${message}`).join(', ')}
+			</output>
 			<output aria-label="action result">{JSON.stringify(actionResult)}</output>
 			<button type="button" onClick={goToNext}>
 				Next
@@ -281,4 +286,22 @@ test('submission validates once before invoking the submit callback', async () =
 	await userEvent.click(screen.getByRole('button', { name: 'Submit once' }));
 	await waitFor(() => expect(submitted).toHaveBeenCalledWith({ email: 'a@example.com' }));
 	expect(fetch).toHaveBeenCalledTimes(1);
+});
+
+test('submission errors name the failing action', async () => {
+	mount(
+		{
+			id: 'failing-actions',
+			steps: [{ id: 'one', title: 'One', elements: [] }],
+			actions: [
+				{ $type: 'probe', id: 'first', triggers: ['form_submit'] },
+				{ $type: 'probe', id: 'mounted-only', triggers: ['form_mount'] },
+				{ $type: 'probe', id: 'abort', triggers: ['form_submit'] },
+			],
+		},
+		<Controls />,
+	);
+	await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+	await waitFor(() => expect(screen.getByLabelText('submission')).toHaveTextContent('error'));
+	expect(screen.getByLabelText('submission errors')).toHaveTextContent('abort: Rejected');
 });
