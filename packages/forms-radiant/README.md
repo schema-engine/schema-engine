@@ -212,6 +212,10 @@ Stories default to **client** render. Use the Storybook toolbar **Radiant render
 Published JavaScript files are marked as side effects so bundlers preserve
 custom element registration for every entry point. Supported Radiant peers are
 `>=0.3.0-rc.9 <0.4.0` (JSX and Radiant) and `>=0.1.0-rc.17 <0.2.0` (Radiant UI).
+The package is tested against `0.3.0-rc.9` and `0.1.0-rc.17`. Server rendering on
+Radiant `0.3.0` double-escapes attribute values and text below a host that reads
+its light DOM while preparing for SSR, which breaks hydration; stay on the release
+candidates for server-rendered forms until Radiant fixes that.
 
 ### Custom recipe migration
 
