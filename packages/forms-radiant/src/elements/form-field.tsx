@@ -1,4 +1,5 @@
 import { customElement } from '@ecopages/radiant';
+import { onContextUpdate } from '@ecopages/radiant/context';
 import { RuiFieldElement, type RuiFieldProps } from '@ecopages/radiant-ui/field';
 import { jsx, type JsxCustomElementAttributes } from '@ecopages/jsx';
 import { FormController, formController } from '@/adapters/radiant/controller';
@@ -6,6 +7,8 @@ import { readHydratedRules } from '@/components/internals/field-rule-hydrator';
 import type { ElementGridConfig } from '@schema-engine/forms/schemas';
 import { resolveElementRules, toFieldRules, type FieldRulesSource } from '@/lib/field-rules';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
+import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
+import { replaceBaselineRules } from '@/lib/constraint-required-rules';
 
 /** RuiField's registration and presentation, with scoped programmatic form access. */
 @customElement('se-field')
@@ -19,6 +22,22 @@ export class FormFieldElement extends RuiFieldElement {
 			this.rules = rules;
 		}
 		super.onConnected();
+	}
+
+	/**
+	 * @remarks
+	 * During hydration the renderer's engine can arrive after the field connects,
+	 * when `onConnected` could build only the registry-free rules. The validator
+	 * that registry-backed rules (such as `relate`) need is attached once the
+	 * engine reaches the field.
+	 */
+	@onContextUpdate({ context: formEngineContext, requestUpdate: false })
+	onFormEngine({ engine }: FormEngineContextValue): void {
+		if (!engine) return;
+		const rules = readHydratedRules(this);
+		if (rules?.validate) {
+			replaceBaselineRules(this, rules);
+		}
 	}
 
 	/**

@@ -16,10 +16,10 @@ await Promise.all([
 	import('@/elements/inputs/form-phone-input'),
 ]);
 
-function mount() {
+function mount({ engineAfterConnect = false } = {}) {
 	const engine = createHydrationEngine();
 	const renderer = new FormRendererElement();
-	renderer.engine = engine;
+	if (!engineAfterConnect) renderer.engine = engine;
 	const root = document.createElement('div');
 	root.innerHTML = atob(inject('ssrHydrationHtml'));
 	renderer.append(root);
@@ -27,6 +27,7 @@ function mount() {
 	return {
 		root,
 		engine,
+		renderer,
 		instance: root.querySelector('se-form-instance') as FormInstanceElement,
 		form: root.querySelector('rui-form') as RuiFormElement,
 	};
@@ -63,6 +64,23 @@ test.each(['confirm', 'choice', 'accepted', 'amount'])(
 		expect(reconnectedStore?.getState().errors[name]?.message).toBe('Must match password');
 	},
 );
+
+test('a hydrated field gains its cross-field validator when the engine arrives late', async () => {
+	const { root, engine, renderer } = mount({ engineAfterConnect: true });
+	const field = root.querySelector('se-field[name="confirm"]') as FormFieldElement;
+	await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+	expect(field.rules?.validate).toBeUndefined();
+
+	renderer.engine = engine;
+
+	await expect.poll(() => typeof field.rules?.validate).toBe('function');
+	const store = field.form.store!;
+	store.setValue('password', 'secret');
+	store.setValue('confirm', 'different');
+	store.markTouched('confirm');
+	await store.validateField('confirm');
+	expect(store.getState().errors.confirm?.message).toBe('Must match password');
+});
 
 test('hydrated submit delivers the nested value tree', async () => {
 	const { instance, form } = mount();

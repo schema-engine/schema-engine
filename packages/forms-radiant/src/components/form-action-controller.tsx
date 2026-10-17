@@ -52,7 +52,6 @@ export class FormActionControllerElement extends RadiantElement {
 		}
 	}
 
-	/** @remarks `connect` drops the controller's watch subscriptions, so the change watcher subscribes again. */
 	protected override onConnected(): void {
 		const form = findAncestorElement(this, 'rui-form');
 		if (form) {
@@ -65,7 +64,6 @@ export class FormActionControllerElement extends RadiantElement {
 		if (!this.engine) {
 			this.engine = resolveFormEngine(this);
 		}
-		this.watchingChanges = false;
 		this.form.connect(() => this.onFormReady());
 		this.setupDispatcher();
 		this.onFormReady();

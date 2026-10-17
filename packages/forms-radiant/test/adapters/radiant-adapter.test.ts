@@ -65,6 +65,17 @@ describe('FormController with Radiant UI store', () => {
 		expect(formListener).toHaveBeenCalledTimes(2);
 	});
 
+	test('connecting keeps existing watch subscriptions', () => {
+		const { form, store } = createTestForm({ title: 'Initial' });
+		const listener = vi.fn();
+		form.watchForm(listener);
+
+		form.connect();
+		store.setValue('title', 'Changed');
+
+		expect(listener).toHaveBeenLastCalledWith({ title: 'Changed' });
+	});
+
 	test('uses the nearest form and never selects an unrelated form', () => {
 		const outer = createTestForm({ title: 'Outer' });
 		const inner = createTestForm({ title: 'Inner' });

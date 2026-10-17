@@ -2,6 +2,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { createFormEngine } from '@schema-engine/forms';
 import { FormStore } from '@ecopages/radiant-ui/form';
 import { FormActionControllerElement } from '@/components/form-action-controller';
+import { FormRendererElement } from '@/components/internals/form-renderer.script';
 import { provideTestFormStore } from '../adapters/test-form';
 
 afterEach(() => document.body.replaceChildren());
@@ -247,4 +248,37 @@ test('form_change actions keep running after the controller reconnects', async (
 	await expect.poll(() => controller.form.ready).toBe(true);
 	store.setValue('note', 'second');
 	await expect.poll(() => changes.at(-1)).toBe('second');
+});
+
+test('form_change actions run after mount when the renderer context supplies the engine', async () => {
+	const engine = createFormEngine({ elements: [] });
+	const changes: unknown[] = [];
+	vi.spyOn(engine, 'getAction').mockReturnValue({
+		$type: 'change',
+		schema: { '~standard': { version: 1, vendor: 'test', validate: (value: unknown) => ({ value }) } },
+		metadata: { name: 'Change', defaultTriggers: ['form_change'] },
+		execute: async ({ formData }: { formData: Record<string, unknown> }) => {
+			changes.push(formData.note);
+			return { success: true };
+		},
+	});
+	const renderer = new FormRendererElement();
+	renderer.engine = engine;
+	const host = document.createElement('rui-form');
+	const store = new FormStore({ defaultValues: { note: '' } });
+	provideTestFormStore(host, store);
+	const controller = new FormActionControllerElement();
+	controller.config = engine.defineForm({
+		id: 'context-changes',
+		steps: [{ id: 'main', title: 'Main', elements: [] }],
+		actions: [{ id: 'changed', $type: 'change' }],
+	});
+	host.append(controller);
+	renderer.append(host);
+	document.body.append(renderer);
+	await expect.poll(() => controller.form.ready).toBe(true);
+
+	store.setValue('note', 'typed');
+
+	await expect.poll(() => changes.at(-1)).toBe('typed');
 });
