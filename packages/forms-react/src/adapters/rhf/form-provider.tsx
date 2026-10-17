@@ -3,7 +3,7 @@ import { FormProvider as RHFFormProvider, useForm, type FieldValues } from 'reac
 import { useCallback, useMemo, useRef } from 'react';
 import type { FormProviderProps } from '../types';
 import { ActionDispatcher } from '@schema-engine/forms/actions';
-import { collectFieldDefaults, flattenStepElements } from '@schema-engine/forms/lib/field-scope';
+import { collectInitialValues, flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import { useFormEngine } from '@/hooks/use-form-context';
 import type { FormActionConfig, FormConfigView } from '@schema-engine/forms';
 import { useFormValidationResolver } from './hooks/use-form-validation-resolver';
@@ -11,7 +11,6 @@ import { FormInstanceContext, type FormInstanceContextValue } from '@/components
 import { FormStepStateContext } from '@/components/form-step-state-context';
 import { useRHFMultiStep } from './hooks/use-rhf-multi-step';
 import { useSubmissionStateManager } from '@/hooks/use-submission-state';
-import { useFormDefaultValues } from './hooks/use-form-default-values';
 import { useFormActionDispatchers } from './hooks/use-form-action-dispatchers';
 import { useFormMountEffect } from './hooks/use-form-mount-effect';
 import { useFormWatcher } from './hooks/use-form-watcher';
@@ -41,11 +40,10 @@ export function FormProvider<
 	const submission = useSubmissionStateManager();
 
 	const formElements = useMemo(() => flattenStepElements(runtimeConfig.steps), [runtimeConfig.steps]);
-	const fieldDefaults = useMemo(
-		() => collectFieldDefaults(formElements, defaultValues),
+	const formDefaultValues = useMemo(
+		() => collectInitialValues(formElements, defaultValues),
 		[formElements, defaultValues],
 	);
-	const formDefaultValues = useFormDefaultValues(fieldDefaults, defaultValues);
 	const formValidationResolver = useFormValidationResolver(formElements, engine.getValidationRegistry());
 
 	const form = useForm({

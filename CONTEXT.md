@@ -87,6 +87,20 @@ engine rather than in each renderer, because the constraint subsystem already
 demonstrated what happens when a decision of this class is made twice.
 See [the controller contract](./packages/forms-radiant/src/adapters/radiant/controller/README.md).
 
+## Array rows
+
+A **row default** is the value a new array row starts with, whether the user
+adds it or the form seeds it. `createArrayRowDefault` in `@schema-engine/forms`
+is the single rule: each named child contributes its `defaultValue` (`''` for a
+leaf without one, child containers recurse), then the container's
+`initialValues` record is shallow-merged over it. A scalar row (one leaf child,
+no object-shaped seed) is that child's default, without `initialValues`. **Seeded rows** come from
+`seedArrayRows`: an array without a value starts with `minItems` rows, and at
+least one when any descendant declares a `defaultValue`; a supplied array is padded to
+`minItems`. `collectInitialValues` applies both to a form's initial values.
+Every helper detects arrays by the registration's `containerKind: 'array'`,
+never by `$type`, so custom array widgets seed like `arrayElements`.
+
 ## Grid theme ownership
 
 Responsive grid layout is pure CSS. The **engine** owns the grid vocabulary —

@@ -7,7 +7,7 @@ import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { FormElements } from '@/components/internals/form-elements';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import type { ArrayElementsProps } from './form-array-elements.types';
-import { arrayItemScope, usesScalarArrayItem } from '@schema-engine/forms';
+import { arrayItemScope, createArrayRowDefault, seedArrayRows, usesScalarArrayItem } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { FormController, FormEngineController } from '@/adapters/radiant/controller';
 import { toFieldRules } from '@/lib/field-rules';
@@ -17,7 +17,6 @@ import { getValueAtPath, setValueAtPath } from '@schema-engine/forms/lib/path-va
 import { formContext, type FormContextValue } from '@ecopages/radiant-ui/form';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { readValue } from '@/adapters/radiant/controller/values';
-import { createArrayItemDefaultValue } from '@/lib/array-item-default';
 
 function TrashIcon() {
 	return (
@@ -58,19 +57,16 @@ function PlusIcon() {
 	);
 }
 
-function createInitialArrayValue(config: ArrayElementsProps, emptyItem: () => unknown): unknown[] | undefined {
-	const values = getValueAtPath(config.initialFormValues ?? {}, config.name);
-	const configuredRows = Array.isArray(values)
-		? values
-		: Array.isArray(config.defaultValue)
-			? config.defaultValue
-			: undefined;
-	const rows = configuredRows ?? [];
-	const count = Math.max(config.minItems ?? 0, rows.length);
-	if (!count && !configuredRows) return undefined;
-	return Array.from({ length: count }, (_, index) =>
-		index < rows.length ? structuredClone(rows[index]) : emptyItem(),
+function createInitialArrayValue(config: ArrayElementsProps, values: Record<string, unknown>): unknown[] | undefined {
+	const formValue = getValueAtPath(config.initialFormValues ?? {}, config.name);
+	const configuredRows = [formValue, config.defaultValue].find(Array.isArray);
+	const scalar = usesScalarArrayItem(config, config.name, config.elements, values);
+	const rows = seedArrayRows(
+		config,
+		configuredRows?.map((row) => structuredClone(row)),
+		scalar,
 	);
+	return rows.length || configuredRows ? rows : undefined;
 }
 
 interface ArrayContentProps {
@@ -199,7 +195,11 @@ export class SeFormArray extends RadiantElement {
 	}
 
 	private initialArrayValue(): unknown[] | undefined {
-		return createInitialArrayValue(this.config, () => this.emptyItem());
+		return createInitialArrayValue(this.config, this.currentValues());
+	}
+
+	private currentValues(): Record<string, unknown> {
+		return this.form.ready ? this.form.getValues() : (this.config.initialFormValues ?? {});
 	}
 
 	private rowInitialValues(): Record<string, unknown> {
@@ -280,11 +280,11 @@ export class SeFormArray extends RadiantElement {
 	}
 
 	private emptyItem(): unknown {
-		const values = this.form.ready ? this.form.getValues() : (this.config.initialFormValues ?? {});
-		return createArrayItemDefaultValue({
-			...this.config,
-			scalar: usesScalarArrayItem(this.config, this.config.name, this.config.elements, values),
-		});
+		const { config } = this;
+		return createArrayRowDefault(
+			config,
+			usesScalarArrayItem(config, config.name, config.elements, this.currentValues()),
+		);
 	}
 
 	protected override onConnected(): void {
@@ -348,7 +348,7 @@ export class SeFormArray extends RadiantElement {
 		const renderedContainer = this.renderedContainer();
 		if (!engine && !this.isConnected && renderedContainer) return renderedContainer;
 		if (ids.length > 0 && !engine) return null;
-		const renderValues = this.form.ready ? this.form.getValues() : (config.initialFormValues ?? {});
+		const renderValues = this.currentValues();
 		const initialValues = this.rowInitialValues();
 
 		return renderArrayContent({ config, engine, ids, initialValues, renderValues, fieldError: this.fieldError });
@@ -365,12 +365,7 @@ export function FormArrayElements(config: ArrayElementsProps) {
 		initialFormValues,
 	};
 	const initialValues = structuredClone(initialFormValues ?? {});
-	const initialRows = createInitialArrayValue(arrayConfig, () =>
-		createArrayItemDefaultValue({
-			...arrayConfig,
-			scalar: usesScalarArrayItem(arrayConfig, arrayConfig.name, arrayConfig.elements, initialValues),
-		}),
-	);
+	const initialRows = createInitialArrayValue(arrayConfig, initialValues);
 	if (initialRows) setValueAtPath(initialValues, arrayConfig.name, initialRows);
 	const children = engine
 		? renderArrayContent({
