@@ -2,6 +2,9 @@ import { describe, expect, test } from 'vitest';
 import { collectFormInitialValues } from '@/adapters/radiant/rui-form-shell';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
+import * as z from 'zod/mini';
+import { defineInput } from '@schema-engine/forms';
+import { ArrayElementConfigSchema } from '@/elements/inputs/form-array-elements.types';
 
 const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 
@@ -88,12 +91,41 @@ function createNestedArrayForm() {
 }
 
 describe('Radiant form initial values', () => {
-	test('uses array initialValues for minItems rows beyond child defaults', () => {
+	test('merges array initialValues over child defaults in every seeded row', () => {
 		const values = collectFormInitialValues(createArrayForm());
 
-		expect(values).toMatchObject({
-			contacts: [{ role: 'Guest' }, { role: 'Viewer' }],
+		expect(values).toEqual({ contacts: [{ role: 'Viewer' }, { role: 'Viewer' }] });
+	});
+
+	test('seeds a custom array registration to minItems', () => {
+		const repeater = defineInput({
+			$type: 'repeater',
+			containerKind: 'array',
+			schema: z.extend(ArrayElementConfigSchema, { $type: z.literal('repeater') }),
+			metadata: { name: 'Repeater', category: 'input' },
+			render: () => null,
 		});
+		const customEngine = createRadiantFormEngine({ elements: [...schemaFormRegistrations, repeater] });
+		const form = customEngine.validateForm({
+			id: 'custom-array',
+			steps: [
+				{
+					id: 'main',
+					title: 'Main',
+					elements: [
+						{
+							$type: 'repeater',
+							id: 'tags',
+							name: 'tags',
+							minItems: 2,
+							elements: [{ $type: 'input', id: 'tag', name: 'tag', label: 'Tag' }],
+						},
+					],
+				},
+			],
+		});
+
+		expect(collectFormInitialValues(form)).toEqual({ tags: ['', ''] });
 	});
 
 	test('preserves provider rows and uses array initialValues for remaining minItems rows', () => {

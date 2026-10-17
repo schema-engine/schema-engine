@@ -95,6 +95,20 @@ before `next`, and dispatches `step_leave` before the step changes and `step_cha
 then `step_enter` after. A renderer supplies where its step state lives, how to
 validate a step and how to dispatch a trigger, so a new renderer inherits the guard and the trigger order.
 
+## Array rows
+
+A **row default** is the value a new array row starts with, whether the user
+adds it or the form seeds it. `createArrayRowDefault` in `@schema-engine/forms`
+is the single rule: each named child contributes its `defaultValue` (`''` for a
+leaf without one, child containers recurse), then the container's
+`initialValues` record is shallow-merged over it. A scalar row (one leaf child,
+no object-shaped seed) is that child's default, without `initialValues`. **Seeded rows** come from
+`seedArrayRows`: an array without a value starts with `minItems` rows, and at
+least one when any descendant declares a `defaultValue`; a supplied array is padded to
+`minItems`. `collectInitialValues` applies both to a form's initial values.
+Every helper detects arrays by the registration's `containerKind: 'array'`,
+never by `$type`, so custom array widgets seed like `arrayElements`.
+
 ## Grid theme ownership
 
 Responsive grid layout is pure CSS. The **engine** owns the grid vocabulary —

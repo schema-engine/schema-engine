@@ -93,9 +93,21 @@ describe('path-values', () => {
 		};
 
 		expect(mergePathValues(collectFieldDefaults([contacts, tags].map(normalizeContainerFixture)))).toEqual({
-			contacts: [{ name: 'Ada' }],
+			contacts: [{ name: 'Ada', email: '' }],
 			tags: ['work'],
 		});
+	});
+
+	test('user defaults override one nested field default and keep its siblings', () => {
+		expect(
+			mergePathValues(
+				[
+					{ name: 'profile.name', defaultValue: 'Ada' },
+					{ name: 'profile.email', defaultValue: 'ada@example.com' },
+				],
+				{ profile: { email: 'override@example.com' } },
+			),
+		).toEqual({ profile: { name: 'Ada', email: 'override@example.com' } });
 	});
 
 	test('rejects prototype-polluting path keys on write', () => {

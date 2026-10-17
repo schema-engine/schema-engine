@@ -179,8 +179,9 @@ for the removed snapshot hooks.
 `arrayElements` registers the array name as a field. A `minItems` rule in
 `rules` checks the row count at submission. The `minItems` config property seeds
 the initial row count, and the built-in Remove control keeps that count as its
-floor. `maxItems` caps the built-in Add control. `initialValues` seeds rows
-created by Add or to meet the `minItems` floor. Rows supplied through form `defaultValues` are included in
+floor. `maxItems` caps the built-in Add control. Rows created by Add or to
+meet the `minItems` floor use the engine's row default: child `defaultValue`s
+with `initialValues` merged over them. Rows supplied through form `defaultValues` are included in
 server markup with deterministic IDs, which the connected array host adopts
 during hydration. Direct `FormController.fieldArray` mutations do not apply the
 array config's Add and Remove behavior.
