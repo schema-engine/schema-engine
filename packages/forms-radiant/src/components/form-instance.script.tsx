@@ -87,7 +87,6 @@ export class FormInstanceElement extends RadiantElement {
 			this.engine = resolveFormEngine(this);
 		}
 		this.resetStepState();
-		this.publish();
 		this.connectForm();
 		this.wireRuiForm();
 		queueMicrotask(() => {
