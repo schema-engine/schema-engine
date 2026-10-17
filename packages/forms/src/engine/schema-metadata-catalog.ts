@@ -1,4 +1,3 @@
-import type { BaseRegistration } from '@schema-engine/registry';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { ComponentType } from './component-type';
 
@@ -43,18 +42,6 @@ export class SchemaMetadataCatalog {
 			catalog.register(schema, entry);
 		}
 		return catalog;
-	}
-
-	/**
-	 * Populate the catalog from a component registry.
-	 */
-	registerFromRegistry<T extends BaseRegistration>(
-		registry: { getAll(): T[] },
-		metadataBuilder: (item: T) => SchemaMetadataEntry,
-	): void {
-		for (const item of registry.getAll()) {
-			this.register(item.schema, metadataBuilder(item));
-		}
 	}
 
 	get(id: string): SchemaMetadataEntry | undefined {
