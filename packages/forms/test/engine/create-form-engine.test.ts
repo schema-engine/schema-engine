@@ -210,3 +210,20 @@ test('extend replaces the catalog schema for an overridden registration', () => 
 	expect(schemas['element:note'].properties).toHaveProperty('revision');
 	expect(base.generateJSONSchemaCollection().schemas).toHaveProperty('element:note');
 });
+
+test('extend replaces the catalog title and description for an overridden registration', () => {
+	const replacement = defineInput({
+		$type: 'note',
+		schema: noteSchema,
+		metadata: { name: 'Revised note', description: 'A dated note', category: 'input' },
+		render: () => null,
+	});
+	const base = createFormEngine({ elements: [noteElement] });
+	const extended = base.extend({ elements: [replacement] });
+
+	expect(extended.getSchemaCatalog().get('element:note')).toMatchObject({
+		title: 'Revised note',
+		description: 'A dated note',
+	});
+	expect(base.getSchemaCatalog().get('element:note')?.title).toBe('Note');
+});

@@ -15,10 +15,10 @@ the selected recipe.
 
 Choose how you author form configuration based on where the data lives:
 
-| Mode | Use when | API |
-| --- | --- | --- |
-| **TypeScript in your app** | The form is hardcoded next to a known engine | `engine.defineForm({ ... })` — full typing from your registrations |
-| **Portable JSON** | CMS, API, storage, or shared files across systems | Plain `FormConfig` (or raw JSON) + `engine.validateForm(unknown)` |
+| Mode                       | Use when                                          | API                                                                |
+| -------------------------- | ------------------------------------------------- | ------------------------------------------------------------------ |
+| **TypeScript in your app** | The form is hardcoded next to a known engine      | `engine.defineForm({ ... })` — full typing from your registrations |
+| **Portable JSON**          | CMS, API, storage, or shared files across systems | Plain `FormConfig` (or raw JSON) + `engine.validateForm(unknown)`  |
 
 `defineForm` and `validateForm` run the same validation pipeline. `defineForm`
 only adds compile-time checks for the engine you built. The exported `FormConfig`

@@ -1,15 +1,12 @@
 import { logger } from '@/lib/logger';
-import { getAutoSaveDraftStorageKey, isAutoSaveDraftStorageKey } from '../../actions/plugins/auto-save.plugin';
-import { clearTrackedAutoSaveDrafts, getTrackedAutoSaveDraftKeys } from './auto-save-storage';
+import { getAutoSaveDraftStorageKey } from '../../actions/plugins/auto-save.plugin';
+import { clearTrackedAutoSaveDrafts, createLocalStorageAutoSaveStorage } from './auto-save-storage';
 
 const consentKey = 'gdpr_consent_form_autosave';
 const consentVersion = '1.0';
-const legacyDraftKeyPrefix = 'form_draft_';
 
 export interface BrowserStorage {
-	readonly length: number;
 	getItem: (key: string) => string | null;
-	key: (index: number) => string | null;
 	removeItem: (key: string) => void;
 	setItem: (key: string, value: string) => void;
 }
@@ -53,17 +50,17 @@ function isConsentStatus(value: unknown): value is GDPRConsentStatus {
 	);
 }
 
-function isLegacyDraft(value: unknown): value is { data: Record<string, unknown>; version: string } {
-	return isRecord(value) && isRecord(value.data) && typeof value.version === 'string';
-}
-
 /**
  * Creates consent and draft tools backed by browser storage.
  *
  * @remarks Supplying a storage adapter keeps consent behavior testable without
- * a browser and lets hosts provide an isolated storage instance.
+ * a browser and lets hosts provide an isolated storage instance. Drafts go
+ * through the same tracked adapter as the auto-save action, so revoking consent
+ * clears both.
  */
 export function createGDPRConsent(storage: BrowserStorage | undefined = browserLocalStorage()): GDPRConsentTool {
+	const drafts = storage ? createLocalStorageAutoSaveStorage(storage) : undefined;
+
 	const isLocalStorageAvailable = (): boolean => {
 		if (!storage) return false;
 
@@ -118,16 +115,6 @@ export function createGDPRConsent(storage: BrowserStorage | undefined = browserL
 
 		try {
 			storage.removeItem(consentKey);
-			const trackedDraftKeys = new Set(getTrackedAutoSaveDraftKeys(storage));
-			const legacyDraftKeys = Array.from({ length: storage.length }, (_, index) => storage.key(index)).filter(
-				(key): key is string =>
-					key !== null &&
-					(key.startsWith(legacyDraftKeyPrefix) ||
-						(isAutoSaveDraftStorageKey(key) && !trackedDraftKeys.has(key))),
-			);
-			for (const key of legacyDraftKeys) {
-				storage.removeItem(key);
-			}
 			clearTrackedAutoSaveDrafts(storage);
 			logger.info('Consent revoked and auto-saved data cleared');
 		} catch (error) {
@@ -145,7 +132,7 @@ export function createGDPRConsent(storage: BrowserStorage | undefined = browserL
 		if (!isLocalStorageAvailable()) return false;
 
 		try {
-			storage?.setItem(getAutoSaveDraftStorageKey(formId), JSON.stringify(data));
+			drafts?.save(getAutoSaveDraftStorageKey(formId), data);
 			return true;
 		} catch (error) {
 			logger.error('Failed to save form draft', { formId, error });
@@ -154,21 +141,11 @@ export function createGDPRConsent(storage: BrowserStorage | undefined = browserL
 	};
 
 	const loadDraft = (formId: string): Record<string, unknown> | null => {
-		if (!hasConsent() || !storage) return null;
+		if (!hasConsent() || !drafts) return null;
 
 		try {
-			const value = storage.getItem(getAutoSaveDraftStorageKey(formId));
-			if (!value) return null;
-
-			const parsed: unknown = JSON.parse(value);
-			if (isLegacyDraft(parsed)) {
-				if (parsed.version !== consentVersion) {
-					storage.removeItem(getAutoSaveDraftStorageKey(formId));
-					return null;
-				}
-				return parsed.data;
-			}
-			return isRecord(parsed) ? parsed : null;
+			const draft = drafts.load(getAutoSaveDraftStorageKey(formId));
+			return isRecord(draft) ? draft : null;
 		} catch (error) {
 			logger.error('Failed to load form draft', { formId, error });
 			return null;
@@ -177,7 +154,7 @@ export function createGDPRConsent(storage: BrowserStorage | undefined = browserL
 
 	const clearDraft = (formId: string): void => {
 		try {
-			storage?.removeItem(getAutoSaveDraftStorageKey(formId));
+			drafts?.remove(getAutoSaveDraftStorageKey(formId));
 		} catch (error) {
 			logger.error('Failed to clear form draft', { formId, error });
 		}
@@ -196,43 +173,5 @@ export function createGDPRConsent(storage: BrowserStorage | undefined = browserL
 	};
 }
 
-const defaultConsent = createGDPRConsent();
-
-/** Browser-local consent facade retained for existing forms integrations. */
-export class GDPRConsent {
-	static isLocalStorageAvailable(): boolean {
-		return defaultConsent.isLocalStorageAvailable();
-	}
-
-	static getConsent(): GDPRConsentStatus | null {
-		return defaultConsent.getConsent();
-	}
-
-	static hasConsent(): boolean {
-		return defaultConsent.hasConsent();
-	}
-
-	static grantConsent(): void {
-		defaultConsent.grantConsent();
-	}
-
-	static revokeConsent(): void {
-		defaultConsent.revokeConsent();
-	}
-
-	static needsConsentUpdate(): boolean {
-		return defaultConsent.needsConsentUpdate();
-	}
-
-	static saveDraft(formId: string, data: Record<string, unknown>): boolean {
-		return defaultConsent.saveDraft(formId, data);
-	}
-
-	static loadDraft(formId: string): Record<string, unknown> | null {
-		return defaultConsent.loadDraft(formId);
-	}
-
-	static clearDraft(formId: string): void {
-		defaultConsent.clearDraft(formId);
-	}
-}
+/** Consent and draft tools backed by the browser's `localStorage`. */
+export const GDPRConsent: GDPRConsentTool = createGDPRConsent();

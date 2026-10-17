@@ -8,8 +8,8 @@ import { FormActionTriggerSchema } from '../triggers';
 export interface AutoSaveStorage {
 	/** Save form data to storage */
 	save: (key: string, data: unknown) => Promise<void> | void;
-	/** Load form data from storage */
-	load: (key: string) => Promise<unknown> | void;
+	/** Load form data from storage, synchronously or as a promise. */
+	load: (key: string) => unknown;
 	/** Remove form data from storage */
 	remove: (key: string) => Promise<void> | void;
 }
@@ -55,11 +55,6 @@ const autoSaveDraftKeyPrefix = 'autosave_';
 /** Builds the default storage key shared by auto-save and reset actions. */
 export function getAutoSaveDraftStorageKey(formId: string): string {
 	return `${autoSaveDraftKeyPrefix}${formId}`;
-}
-
-/** Identifies storage entries owned by the default auto-save key scheme. */
-export function isAutoSaveDraftStorageKey(key: string): boolean {
-	return key.startsWith(autoSaveDraftKeyPrefix);
 }
 
 /** Creates a configured `auto_save` action registration. */

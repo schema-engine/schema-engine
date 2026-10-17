@@ -3,9 +3,10 @@ import { useMemo } from 'react';
 import { isFieldRequired, type ElementConfig, type ElementGridConfig } from '@schema-engine/forms/schemas';
 import { mergeControlProps } from '@schema-engine/forms/schemas/html-attributes';
 import { getFieldGridVariables } from '@schema-engine/forms/lib/grid-styles';
-import { effectiveRulesFor } from '@schema-engine/forms';
 import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
-import { useWatchForm, useFormField } from '@/adapters/context';
+import { getValidationRulesForElement } from '@schema-engine/forms/schemas/validation/utils';
+import { useFormField } from '@/adapters/context';
+import { useConstraintLogic } from '@/hooks/use-constraint-logic';
 import { useGridThemeId, useOptionalFormEngine } from '@/hooks/use-form-context';
 
 export interface FieldHostProps {
@@ -58,6 +59,9 @@ export function combineHandlers<T>(controllerHandler: (value: T) => void, propsH
  * The field value is `any` because one hook serves every registry input: each
  * component binds `value` to its own control type (string, number, array), and
  * `unknown` would force a cast in every consumer.
+ *
+ * `isRequired` subscribes only to the paths the field's constraints name, so an
+ * unconstrained field does not re-render when another field changes.
  */
 export function useControlledFormElement(config: ElementConfig) {
 	if (!config.name) {
@@ -69,9 +73,10 @@ export function useControlledFormElement(config: ElementConfig) {
 		() => engineContext?.engine.getValidationRegistry() ?? createDefaultValidationRegistry(),
 		[engineContext],
 	);
-	const values = useWatchForm();
-	const isRequired = isFieldRequired(
-		effectiveRulesFor({ element: config, fieldPath: config.name, values, registry }),
+	const { isRequired } = useConstraintLogic(
+		config.name,
+		config.constraints,
+		isFieldRequired(getValidationRulesForElement(config, registry)),
 	);
 	const { value, error, onChange, onBlur, name, disabled, ref } = useFormField<any>(config);
 

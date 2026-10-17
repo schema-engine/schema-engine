@@ -6,7 +6,6 @@ import {
 	type ValidationRule,
 } from '../../../src/schemas/validation';
 
-
 const validationRegistry = createDefaultValidationRegistry();
 
 describe('Dual Usage Pattern: JSON + Presets', () => {

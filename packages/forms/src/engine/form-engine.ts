@@ -1,8 +1,6 @@
 import type { AnyActionRegistration, AnyElementRegistration, AnyRecipeRegistration } from '@/types/registration';
 import { ComponentType } from './component-type';
 import { logger } from '@/lib/logger';
-import type { SchemaMetadataCatalog } from './schema-metadata-catalog';
-import { assertStandardSchema } from '@/lib/standard-schema';
 import type { StandardJSONSchemaV1 } from '@/lib/standard-json-schema';
 import * as z from 'zod/mini';
 import type { FormEngineSchemaArtifacts } from './schema-artifacts';
@@ -20,7 +18,7 @@ import type {
 	ActionRegistrationConstraint,
 } from '@/builder/types.utils';
 import type { ExtendFormEngineOptions } from './create-form-engine';
-import { buildFormEngine } from './build-form-engine';
+import { buildFormEngine, registerSchemaMetadata } from './build-form-engine';
 import type { CompiledGrid, NormalizedGridTheme } from '@/lib/grid-styles';
 import type { ValidationRegistry } from '@/schemas/validation/validation-registry';
 import {
@@ -31,25 +29,6 @@ import {
 import type { RecipeDescriptor, ViewCatalog } from '@/recipes/types';
 import { generateZodJSONSchemaDocument } from '@/lib/zod-json-schema';
 export * from './component-type';
-
-function registerExtendedSchemaMetadata(
-	catalog: SchemaMetadataCatalog,
-	schema: unknown,
-	id: string,
-	componentType: ComponentType,
-	metadata: { name: string; description?: string; category?: string },
-): void {
-	catalog.register(
-		assertStandardSchema(schema, `Registration '${id}' schema`),
-		catalog.get(id) ?? {
-			id,
-			componentType,
-			title: metadata.name,
-			description: metadata.description,
-			category: metadata.category,
-		},
-	);
-}
 
 /**
  * Engine registries - internal storage for all registered components.
@@ -326,31 +305,13 @@ export class FormEngine<
 		const catalog = options?.catalog ?? this.schemaArtifacts.metadataCatalog.clone();
 		if (!options?.catalog) {
 			for (const element of options?.elements ?? []) {
-				registerExtendedSchemaMetadata(
-					catalog,
-					element.schema,
-					`element:${element.$type}`,
-					ComponentType.Element,
-					element.metadata,
-				);
+				registerSchemaMetadata(catalog, ComponentType.Element, element);
 			}
 			for (const recipe of options?.recipes ?? []) {
-				registerExtendedSchemaMetadata(
-					catalog,
-					recipe.schema,
-					`recipe:${recipe.$type}`,
-					ComponentType.Recipe,
-					recipe.metadata,
-				);
+				registerSchemaMetadata(catalog, ComponentType.Recipe, recipe);
 			}
 			for (const action of options?.actions ?? []) {
-				registerExtendedSchemaMetadata(
-					catalog,
-					action.schema,
-					`action:${action.$type}`,
-					ComponentType.Action,
-					action.metadata,
-				);
+				registerSchemaMetadata(catalog, ComponentType.Action, action);
 			}
 		}
 
