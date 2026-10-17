@@ -16,6 +16,7 @@ declare global {
 	/**
 	 * Attribute bag for a custom element declared in `JSX.IntrinsicElements`.
 	 *
+	 * @remarks
 	 * Ecopages 0.2 stopped shipping this global, but its own
 	 * `@ecopages/scripts-injector` types still reference it, so the app supplies it.
 	 */
