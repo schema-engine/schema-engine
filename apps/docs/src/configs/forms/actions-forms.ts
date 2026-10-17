@@ -9,6 +9,7 @@ import type { FormConfig } from '@schema-engine/forms/schemas';
 /**
  * Form configuration with simplified action system
  * - Global actions run automatically based on triggers
+ * - Step actions run after them while their step is current
  */
 export const actionsFormConfig: FormConfig = {
 	id: 'enhanced-actions-demo',
@@ -61,6 +62,21 @@ export const actionsFormConfig: FormConfig = {
 					rules: [ValidationPresets.string.required('Date of Birth is required')],
 				},
 			],
+			actions: [
+				{
+					id: 'step1-leave-tracking',
+					$type: 'gtm_event',
+					description: 'Track leaving the user info step by Next or a step jump',
+					eventName: 'form_step_leave',
+					eventData: {
+						step_name: 'user_info',
+						step_number: 1,
+					},
+					includeFormData: false,
+					triggers: ['step_leave'],
+					enabled: true,
+				},
+			],
 		},
 		{
 			id: 'contact-info',
@@ -104,6 +120,21 @@ export const actionsFormConfig: FormConfig = {
 					rules: [ValidationPresets.string.required('ZIP Code is required')],
 				},
 			],
+			actions: [
+				{
+					id: 'step2-view-tracking',
+					$type: 'gtm_event',
+					description: 'Track reaching the contact info step',
+					eventName: 'form_step_view',
+					eventData: {
+						step_name: 'contact_info',
+						step_number: 2,
+					},
+					includeFormData: false,
+					triggers: ['step_enter'],
+					enabled: true,
+				},
+			],
 		},
 		{
 			id: 'preferences',
@@ -140,6 +171,35 @@ export const actionsFormConfig: FormConfig = {
 					rules: [ValidationPresets.string.required('Please select at least one area of interest')],
 				},
 			],
+			actions: [
+				{
+					id: 'step3-view-tracking',
+					$type: 'gtm_event',
+					description: 'Track reaching the preferences step',
+					eventName: 'form_step_view',
+					eventData: {
+						step_name: 'preferences',
+						step_number: 3,
+					},
+					includeFormData: false,
+					triggers: ['step_enter'],
+					enabled: true,
+				},
+				{
+					id: 'step3-completion-tracking',
+					$type: 'gtm_event',
+					description: 'Track completing the last step, which is a successful submission',
+					eventName: 'form_step_complete',
+					eventData: {
+						step_name: 'preferences',
+						step_number: 3,
+						final_step: true,
+					},
+					includeFormData: false,
+					triggers: ['form_submit_success'],
+					enabled: true,
+				},
+			],
 		},
 	],
 	actions: [
@@ -162,18 +222,6 @@ export const actionsFormConfig: FormConfig = {
 			},
 			includeFormData: false,
 			triggers: ['form_mount'],
-			enabled: true,
-		},
-		{
-			id: 'global-step-tracking',
-			$type: 'gtm_event',
-			description: 'Track each wizard step the user reaches',
-			eventName: 'form_step_view',
-			eventData: {
-				form_type: 'enhanced_demo',
-			},
-			includeFormData: false,
-			triggers: ['step_enter'],
 			enabled: true,
 		},
 		{

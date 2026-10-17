@@ -6,7 +6,7 @@ import type {
 	ActionExecutionResult,
 	FormConfigView,
 } from '@schema-engine/forms';
-import { buildFormActionContext } from '@schema-engine/forms';
+import { buildFormActionContext, collectStepActions } from '@schema-engine/forms';
 import type { ActionDispatcher } from '@schema-engine/forms/actions';
 
 interface UseFormActionDispatchersOptions {
@@ -68,25 +68,25 @@ export function useFormActionDispatchers({
 			extraMetadata?: Record<string, unknown>,
 		): Promise<ActionExecutionResult[]> => {
 			return actionExecutor.dispatch({
-				actions: config.actions ?? [],
+				actions: collectStepActions(config, getCurrentStep?.() ?? 0),
 				trigger,
 				context: buildActionContext(),
 				metadata: extraMetadata,
 			});
 		},
-		[config.actions, buildActionContext, actionExecutor],
+		[config, getCurrentStep, buildActionContext, actionExecutor],
 	);
 
 	const dispatchTriggerSync = useCallback(
 		(trigger: FormActionTrigger, extraMetadata?: Record<string, unknown>) => {
 			actionExecutor.dispatchSync({
-				actions: config.actions ?? [],
+				actions: collectStepActions(config, getCurrentStep?.() ?? 0),
 				trigger,
 				context: buildActionContext(),
 				metadata: extraMetadata,
 			});
 		},
-		[config.actions, buildActionContext, actionExecutor],
+		[config, getCurrentStep, buildActionContext, actionExecutor],
 	);
 
 	return {

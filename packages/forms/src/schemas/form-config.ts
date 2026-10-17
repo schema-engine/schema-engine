@@ -70,12 +70,9 @@ type InferredForm = z.infer<typeof FormConfigSchema>;
 
 export type FormConfigEnvelope = Omit<InferredForm, 'steps' | 'view' | 'actions'> & {
 	steps: Array<
-		Omit<InferredStep, 'elements' | 'actions' | 'onStepEnter' | 'onStepLeave' | 'onStepValidate'> & {
+		Omit<InferredStep, 'elements' | 'actions'> & {
 			elements: FormTaggedConfig[];
 			actions?: FormTaggedConfig[];
-			onStepEnter?: FormTaggedConfig[];
-			onStepLeave?: FormTaggedConfig[];
-			onStepValidate?: FormTaggedConfig[];
 		}
 	>;
 	view?: FormViewConfig;
@@ -86,12 +83,10 @@ export type FormConfigEnvelope = Omit<InferredForm, 'steps' | 'view' | 'actions'
 export type FormStep<
 	TElements extends Record<string, unknown> = Record<string, unknown>,
 	TActions extends Record<string, unknown> = Record<string, unknown>,
-> = Omit<InferredStep, 'elements' | 'actions' | 'onStepEnter' | 'onStepLeave' | 'onStepValidate'> & {
+> = Omit<InferredStep, 'elements' | 'actions'> & {
 	elements: Array<ElementConfig<TElements>>;
+	/** Actions dispatched after the form's actions on every trigger while this step is current. */
 	actions?: Array<FormActionConfig<TActions>>;
-	onStepEnter?: Array<FormActionConfig<TActions>>;
-	onStepLeave?: Array<FormActionConfig<TActions>>;
-	onStepValidate?: Array<FormActionConfig<TActions>>;
 };
 
 /** Form config narrowed to one engine's registered elements, recipes, and actions. */

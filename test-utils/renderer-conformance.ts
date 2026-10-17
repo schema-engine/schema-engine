@@ -241,6 +241,72 @@ export function rendererConformance(mount: ConformanceMount): void {
 					['enter', 1],
 				]);
 		});
+		test('runs the current step actions after the form actions on each step trigger', async () => {
+			const [first, second] = wizard([input('first', 'First')], [input('last', 'Last')]).steps;
+			const { host } = await setup({
+				config: {
+					...wizard(),
+					actions: [{ $type: 'conformance', id: 'form-enter', triggers: ['step_enter'] }],
+					steps: [
+						{
+							...first,
+							actions: [
+								{ $type: 'conformance', id: 'leave-first', triggers: ['step_leave'] },
+								{ $type: 'conformance', id: 'enter-first', triggers: ['step_enter'] },
+								{ $type: 'conformance', id: 'change-first', triggers: ['step_change'] },
+							],
+						},
+						{
+							...second,
+							actions: [
+								{ $type: 'conformance', id: 'change-second', triggers: ['step_change'] },
+								{ $type: 'conformance', id: 'enter-second', triggers: ['step_enter'] },
+							],
+						},
+					],
+				},
+			});
+			await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
+			await expect.poll(actionIds).toEqual(['leave-first', 'change-second', 'form-enter', 'enter-second']);
+		});
+		test('change and submit triggers run only the current step actions when the form has none', async () => {
+			const onSubmit = vi.fn();
+			const [first, last] = wizard([input('first', 'First')], [input('last', 'Last')]).steps;
+			const { host } = await setup({
+				config: {
+					...wizard(),
+					steps: [
+						{
+							...first,
+							actions: [
+								{ $type: 'conformance', id: 'first-change', triggers: ['form_change'] },
+								{ $type: 'conformance', id: 'first-submit', triggers: ['form_submit'] },
+							],
+						},
+						{
+							...last,
+							actions: [
+								{ $type: 'conformance', id: 'last-change', triggers: ['form_change'] },
+								{ $type: 'conformance', id: 'last-submit', triggers: ['form_submit'] },
+							],
+						},
+					],
+				},
+				onSubmit,
+			});
+			await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
+			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Last' }).length).toBe(1);
+			conformanceAction.execute.mockClear();
+			await userEvent.fill(getByRole(host, 'textbox', { name: 'Last' }), 'Lovelace');
+			await expect.poll(actionIds).toContain('last-change');
+			expect(onSubmit).not.toHaveBeenCalled();
+			await userEvent.click(getByRole(host, 'button', { name: 'Submit form' }));
+			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
+			expect(actionIds().filter((id, index, ids) => id !== ids[index - 1])).toEqual([
+				'last-change',
+				'last-submit',
+			]);
+		});
 		test('a config replaced while Next validates keeps the new form on its first step', async () => {
 			const pending: Array<(response: Response) => void> = [];
 			vi.stubGlobal(

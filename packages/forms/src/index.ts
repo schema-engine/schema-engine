@@ -14,6 +14,8 @@ export {
 	createStepNavigator,
 	runSubmissionLifecycle,
 	buildFormActionContext,
+	collectStepActions,
+	hasConfiguredActions,
 } from './engine';
 export type {
 	StepStates,
