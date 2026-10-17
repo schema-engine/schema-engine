@@ -94,8 +94,19 @@ renderer: it ignores a request while another is in flight, validates the active 
 before `next`, and dispatches `step_leave` before the step changes and `step_change`
 then `step_enter` after. A renderer supplies where its step state lives, how to
 validate a step and how to dispatch a trigger, so a new renderer inherits the guard and the trigger order.
-The navigator does not notice a step state reset made while a navigation is in flight:
-that navigation applies the state it computed before the reset.
+A step state reset calls the navigator's `cancel`: the navigation in flight writes no
+state and dispatches no further trigger, and the next request is accepted at once.
+Radiant cancels when its config changes or the instance disconnects or reconnects; React
+cancels on unmount, which a replaced config causes.
+
+A step's **step actions** (its `actions`) are active while that step is current: every
+trigger dispatches the form's `actions`, then the current step's, and
+`collectStepActions` is the single rule both renderers use. Because `step_leave`
+fires while the step being left is current and `step_change` and `step_enter` once the
+entered step is, a step's `step_enter` action runs on entering that step and its
+`step_leave` action on leaving it, by Next, Previous or a jump. Completing the last
+step is a submission, not a step trigger: track it with `form_submit_success`.
+Steps have no separate enter, leave or validate hooks.
 
 ## Array rows
 

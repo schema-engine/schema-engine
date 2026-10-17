@@ -4,7 +4,12 @@ import { onContextUpdate } from '@ecopages/radiant/context';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import type { BuilderActionBaseContext, FormActionTrigger, FormConfigView } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
-import { runSubmissionLifecycle, buildFormActionContext } from '@schema-engine/forms/engine';
+import {
+	runSubmissionLifecycle,
+	buildFormActionContext,
+	collectStepActions,
+	hasConfiguredActions,
+} from '@schema-engine/forms/engine';
 import type { FormProviderProps } from '@/adapters/types';
 import { ActionDispatcher } from '@schema-engine/forms/actions';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
@@ -100,7 +105,7 @@ export class FormActionControllerElement extends RadiantElement {
 	private setupDispatcher(): void {
 		const config = this.config;
 		const engine = this.engine;
-		if (!engine || !config?.actions?.length) {
+		if (!engine || !config || !hasConfiguredActions(config)) {
 			this.dispatcher = undefined;
 			this.dispatcherEngine = undefined;
 			return;
@@ -149,7 +154,7 @@ export class FormActionControllerElement extends RadiantElement {
 		if (!this.dispatcher || !this.form.ready) return Promise.resolve(false);
 		this.dispatchEvent(new CustomEvent('se-action-submit-start', { bubbles: true, composed: true }));
 		const submission = runSubmissionLifecycle((input) => this.dispatcher?.dispatch(input) ?? Promise.resolve([]), {
-			actions: this.config.actions ?? [],
+			actions: this.activeActions(),
 			context: () => this.buildContext(),
 			onAction: (action, data) => this.onAction?.(action, data),
 		}).then(({ succeeded, results }) => {
@@ -174,10 +179,10 @@ export class FormActionControllerElement extends RadiantElement {
 		return submission;
 	}
 
-	/** Dispatches one trigger's configured actions; resolves empty when no actions are configured or before the dispatcher and form are ready. */
+	/** Dispatches one trigger's actions for the current step; resolves empty when none are configured or before the dispatcher and form are ready. */
 	async dispatchTrigger(trigger: FormActionTrigger): Promise<Awaited<ReturnType<ActionDispatcher['dispatch']>>> {
-		const config = this.config;
-		if (!this.dispatcher || !config?.actions?.length) {
+		const actions = this.activeActions();
+		if (!this.dispatcher || !actions.length) {
 			return [];
 		}
 
@@ -186,7 +191,11 @@ export class FormActionControllerElement extends RadiantElement {
 			return [];
 		}
 
-		return this.dispatcher.dispatch({ actions: config.actions, trigger, context: this.buildContext() });
+		return this.dispatcher.dispatch({ actions, trigger, context: this.buildContext() });
+	}
+
+	private activeActions() {
+		return this.config ? collectStepActions(this.config, this.formInstance?.currentStep ?? 0) : [];
 	}
 
 	/**

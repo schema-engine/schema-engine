@@ -60,12 +60,21 @@ without marking that step complete or advancing. When `isValid` is false, it lea
 active step in place. Pass the resulting state to `buildViewModel` as `stepStates`.
 
 `createStepNavigator({ reduce, getState, setState, validateStep, dispatchTrigger })` wraps
-that reducer in the navigation both renderers share. It returns `navigate(action)`, which
-takes `{ type: 'next' }` without `isValid`, `{ type: 'previous' }` or
+that reducer in the navigation both renderers share. It returns `{ navigate, cancel }`.
+`navigate(action)` takes `{ type: 'next' }` without `isValid`, `{ type: 'previous' }` or
 `{ type: 'go-to', index }`. `next` awaits `validateStep` for the
 active step before reducing. A request made while another is in flight resolves without doing anything, so a
 double click on Next advances one step. When the step index changes, `step_leave` runs
-before the new state is set and `step_change` then `step_enter` run after it.
+before the new state is set and `step_change` then `step_enter` run after it. Call
+`cancel()` when you reset the step state: the navigation in flight then writes no state
+and dispatches no further trigger, and the next request is accepted without waiting for it.
+
+`collectStepActions(config, stepIndex)` lists the actions a trigger dispatches while that
+step is current: the form's `actions`, then the step's own. `hasConfiguredActions(config)`
+reports whether the form or any step configures one. Steps no longer accept
+`onStepEnter`, `onStepLeave` or `onStepValidate`; those hooks never ran. Move an enter or
+leave hook into the step's `actions` with `triggers: ['step_enter']` or `['step_leave']`;
+`onStepValidate` has no replacement. A JSON config that still sets them has the keys stripped.
 
 `runSubmissionLifecycle(dispatch, { actions, context })` dispatches the form submit start,
 submit, success or error, and complete triggers. Pass a fixed `context` when every trigger

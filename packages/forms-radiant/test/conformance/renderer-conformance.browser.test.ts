@@ -28,7 +28,9 @@ rendererConformance(async ({ config, ...props }) => {
 
 	document.body.append(host);
 	const root = createRoot(host);
-	root.render(FormRenderer({ ...props, config: engine.validateForm(config), engine }));
+	const renderConfig = (next: typeof config) =>
+		root.render(FormRenderer({ ...props, config: engine.validateForm(next), engine }));
+	renderConfig(config);
 	const form = new FormController(host.querySelector('rui-form')!);
 	await expect.poll(() => form.ready).toBe(true);
 	return {
@@ -38,5 +40,6 @@ rendererConformance(async ({ config, ...props }) => {
 			root.unmount();
 			host.remove();
 		},
+		update: async (next) => renderConfig(next),
 	};
 });

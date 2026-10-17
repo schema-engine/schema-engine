@@ -72,6 +72,7 @@ function DemoStepIndicators() {
 	);
 }
 
+/** @remarks Next and Submit carry distinct keys so React never turns Next into a submit button mid-click. */
 function DemoWizardActions() {
 	const { navigation, form } = useViewContext();
 	return (
@@ -87,6 +88,7 @@ function DemoWizardActions() {
 			<div className="se-demo-actions__forward">
 				{navigation.isLastStep ? (
 					<button
+						key="submit"
 						type="submit"
 						className="rui-button rui-button--filled rui-button--md"
 						disabled={form.isSubmitting}
@@ -95,6 +97,7 @@ function DemoWizardActions() {
 					</button>
 				) : (
 					<button
+						key="next"
 						type="button"
 						className="rui-button rui-button--filled rui-button--md"
 						onClick={navigation.goToNextStep}

@@ -47,9 +47,7 @@ export type FormAuthoringStep<
 	constraints?: unknown[];
 	className?: string;
 	style?: Record<string, unknown>;
-	onStepEnter?: Array<FormAuthoringAction<TActions>>;
-	onStepLeave?: Array<FormAuthoringAction<TActions>>;
-	onStepValidate?: Array<FormAuthoringAction<TActions>>;
+	/** Actions dispatched after the form's actions on every trigger while this step is current. */
 	actions?: Array<FormAuthoringAction<TActions>>;
 };
 

@@ -86,6 +86,19 @@ export function createStepMachine(config: { steps: readonly unknown[] }): StepMa
 	};
 }
 
+/** Wizard navigation returned by {@link createStepNavigator}. */
+export interface StepNavigator {
+	navigate: (action: StepNavigationAction) => Promise<void>;
+	/**
+	 * Abandons the navigation in flight, if any.
+	 *
+	 * @remarks
+	 * Call it with every step state reset. The abandoned navigation writes no state and
+	 * dispatches no further trigger, and the next request is accepted without waiting for it.
+	 */
+	cancel: () => void;
+}
+
 /**
  * Creates the navigation sequence both renderers share around the step machine.
  *
@@ -93,7 +106,9 @@ export function createStepMachine(config: { steps: readonly unknown[] }): StepMa
  * A request made while another is in flight is ignored, so a second Next cannot advance
  * using the validity of the step the first Next validated. When the step index changes,
  * `step_leave` runs before the new state is applied and `step_change` then `step_enter`
- * run after it; no step trigger runs when the index stays the same.
+ * run after it; no step trigger runs when the index stays the same. Each navigation holds
+ * a token that `cancel` revokes, and it checks the token after every await, so a reset
+ * made while it validates or dispatches is not overwritten.
  */
 export function createStepNavigator({
 	reduce,
@@ -101,30 +116,41 @@ export function createStepNavigator({
 	setState,
 	validateStep,
 	dispatchTrigger,
-}: StepNavigatorOptions): (action: StepNavigationAction) => Promise<void> {
-	let navigating = false;
+}: StepNavigatorOptions): StepNavigator {
+	let active: object | undefined;
 
-	return async (action) => {
-		if (navigating) return;
-		navigating = true;
+	const navigate = async (action: StepNavigationAction): Promise<void> => {
+		if (active) return;
+		const token = {};
+		active = token;
+		const cancelled = () => active !== token;
 		try {
 			const previous = getState();
-			const next = reduce(
-				previous,
+			const machineAction: StepMachineAction =
 				action.type === 'next'
 					? { type: 'next', isValid: await validateStep(previous.currentStepIndex) }
-					: action,
-			);
+					: action;
+			if (cancelled()) return;
+			const next = reduce(previous, machineAction);
 			if (next.currentStepIndex === previous.currentStepIndex) {
 				setState(next);
 				return;
 			}
 			await dispatchTrigger('step_leave');
+			if (cancelled()) return;
 			setState(next);
 			await dispatchTrigger('step_change');
+			if (cancelled()) return;
 			await dispatchTrigger('step_enter');
 		} finally {
-			navigating = false;
+			if (active === token) active = undefined;
 		}
+	};
+
+	return {
+		navigate,
+		cancel: () => {
+			active = undefined;
+		},
 	};
 }
