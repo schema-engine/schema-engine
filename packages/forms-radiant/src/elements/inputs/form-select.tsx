@@ -12,7 +12,6 @@ import { RuiTagGroup } from '@ecopages/radiant-ui/tag-group';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
 import { parseChoiceValue, serializeChoiceValue } from '@/lib/choice-value';
-import { toFieldRules } from '@/lib/field-rules';
 import type { SelectFieldProps } from './form-select.types';
 
 export function FormSelect({
@@ -40,8 +39,7 @@ export function FormSelect({
 			description={config.description}
 			grid={config.grid}
 			style={config.style}
-			rules={toFieldRules(config)}
-			validationRules={config.rules}
+			validation={config}
 			defaultValue={serializeChoiceValue(config.defaultValue)}
 			disabled={config.disabled}
 		>

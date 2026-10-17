@@ -3,7 +3,6 @@ import { customElement, onEvent, prop, RadiantElement, state } from '@ecopages/r
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
-import { toFieldRules } from '@/lib/field-rules';
 import type { InputOTPFieldProps } from './form-input-otp.types';
 
 function sanitizeChar(value: string, pattern: 'numeric' | 'alphanumeric') {
@@ -139,8 +138,7 @@ export function FormInputOTP({
 			description={config.description}
 			grid={config.grid}
 			style={config.style}
-			rules={toFieldRules(config)}
-			validationRules={config.rules}
+			validation={config}
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}
 		>

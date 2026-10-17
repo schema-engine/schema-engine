@@ -8,7 +8,6 @@ import {
 } from '@ecopages/radiant-ui/number-field';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { FieldGroup } from '../field-group';
-import { toFieldRules } from '@/lib/field-rules';
 import type { NumberFieldProps } from './form-number.types';
 
 export function FormNumber({
@@ -27,8 +26,7 @@ export function FormNumber({
 			description={config.description}
 			grid={config.grid}
 			style={config.style}
-			rules={toFieldRules(config)}
-			validationRules={config.rules}
+			validation={config}
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}
 		>

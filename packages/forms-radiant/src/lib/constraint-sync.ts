@@ -1,34 +1,39 @@
 import type { FormFieldElement } from '@/elements/form-field';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
 import type { FormController } from '@/adapters/radiant/controller';
-import { createConstraintLookup } from './constraint-elements';
+import { createAuthoredDisabledLookup, createConstraintLookup } from './constraint-elements';
 import { evaluateConstraints } from '@schema-engine/forms/constraints';
 import { applyConstraintRequired } from './constraint-required-rules';
 import { shouldSurfaceDependentError } from '@schema-engine/forms/schemas/validation';
 
-/**
- * Fields this wrapper owns, excluding those belonging to a nested constraint.
- *
- * @remarks
- * Without the guard, a constrained field inside a constrained fieldset would be
- * written twice in one pass and the later write — document order, so the inner
- * one — would silently win over its own parent's `disable`.
- */
-function ownedFields(wrapper: HTMLElement): FormFieldElement[] {
-	return [...wrapper.querySelectorAll<FormFieldElement>('se-field')].filter(
-		(field) => field.closest('[data-se-constraint-field]') === wrapper,
-	);
+const CONSTRAINT_TARGET = '[data-se-constraint-field]';
+
+interface ConstraintState {
+	readonly disabled: boolean;
+	readonly required: boolean;
 }
 
+/**
+ * Applies live constraint results to the form's wrappers and fields.
+ *
+ * @remarks
+ * A field's flags compose its own authored state with every constraint wrapper
+ * around it, the field's own and its containers'. For `disabled` this is what
+ * render composes too; constraint `required` reaches a field only through this sync.
+ * Applying only the nearest declaring item's flags would give an unconstrained
+ * child of a constrained fieldset the fieldset's `disabled` instead of its own.
+ */
 export function syncConstraints(root: ParentNode, config: NormalizedFormConfig, form?: FormController): void {
 	if (!config || !form?.ready) {
 		return;
 	}
 
 	const declaring = createConstraintLookup(config);
+	const authoredDisabled = createAuthoredDisabledLookup(config);
 	const values = form.getValues();
+	const states = new Map<Element, ConstraintState>();
 
-	for (const target of root.querySelectorAll<HTMLElement>('[data-se-constraint-field]')) {
+	for (const target of root.querySelectorAll<HTMLElement>(CONSTRAINT_TARGET)) {
 		const fieldPath = target.getAttribute('data-se-constraint-field') ?? '';
 		const item = declaring(fieldPath);
 		if (!item) {
@@ -43,19 +48,40 @@ export function syncConstraints(root: ParentNode, config: NormalizedFormConfig, 
 		});
 
 		target.hidden = !shouldShow;
-		for (const field of ownedFields(target)) {
-			field.disabled = item.disabled || shouldDisable;
-			const requiredChanged = applyConstraintRequired(field, isRequired);
-			const name = field.getAttribute('name');
-			const store = form?.store;
-			if (name && store) {
-				const { touched, isSubmitted } = store.getState();
-				if (
-					requiredChanged &&
-					shouldSurfaceDependentError({ touched: Boolean(touched[name]), submitted: isSubmitted })
-				) {
-					void store.validateField(name);
-				}
+		states.set(target, { disabled: item.disabled || shouldDisable, required: isRequired });
+	}
+
+	for (const field of root.querySelectorAll<FormFieldElement>(`${CONSTRAINT_TARGET} se-field`)) {
+		const name = field.getAttribute('name');
+		let governed = false;
+		let disabled = authoredDisabled(name ?? '');
+		let required = false;
+		for (
+			let target = field.closest(CONSTRAINT_TARGET);
+			target;
+			target = target.parentElement?.closest(CONSTRAINT_TARGET) ?? null
+		) {
+			const state = states.get(target);
+			if (state) {
+				governed = true;
+				disabled ||= state.disabled;
+				required ||= state.required;
+			}
+		}
+		if (!governed) {
+			continue;
+		}
+
+		field.disabled = disabled;
+		const requiredChanged = applyConstraintRequired(field, required);
+		const store = form.store;
+		if (name && store) {
+			const { touched, isSubmitted } = store.getState();
+			if (
+				requiredChanged &&
+				shouldSurfaceDependentError({ touched: Boolean(touched[name]), submitted: isSubmitted })
+			) {
+				void store.validateField(name);
 			}
 		}
 	}
