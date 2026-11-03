@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { ContentScanner, compareEntriesByField } from '@ecopages/content-processor';
-import appConfig from '../eco.config';
 import { docsFrontmatterSchema, LLM_SECTION_ORDER } from '../src/content/docs';
 import { generateLlmDocs } from '../src/lib/llm-docs';
 
@@ -15,7 +14,7 @@ const LLMS_HEADER = [
 ];
 
 const scanner = new ContentScanner({
-	contentRoot: join(appConfig.absolutePaths.srcDir, 'content/docs'),
+	contentRoot: join(ROOT_DIR, 'src/content/docs'),
 	orderBy: compareEntriesByField('order'),
 	schema: docsFrontmatterSchema,
 });

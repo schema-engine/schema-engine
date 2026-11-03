@@ -20,9 +20,9 @@ Unlike `@schema-engine/forms-react` — where the default view recipes live in t
 pnpm add @schema-engine/forms-radiant @schema-engine/forms @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
 ```
 
-The package is tested against Radiant `0.4.0` and Radiant UI `0.2.1`. Radiant
-`0.3.x` is not supported: its server renderer escapes form markup twice, so
-hydrated fields lose the validation rules serialized in the markup.
+The package targets Radiant `0.6.x` and Radiant UI `0.3.x`. Radiant `0.3.x`
+is not supported: its server renderer escapes form markup twice, so hydrated
+fields lose the validation rules serialized in the markup.
 
 Load Tailwind preflight (via Radiant core), theme, and component styles:
 
@@ -32,7 +32,7 @@ import '@ecopages/radiant-ui/themes/default';
 import '@ecopages/radiant-ui/styles.css';
 ```
 
-`@schema-engine/forms-radiant` already imports `radiant-ui-core.css` from source. Apps that load the compiled package should import the emitted stylesheet — published JS does not execute CSS:
+Apps should also import the emitted package stylesheet; published JS does not execute CSS:
 
 ```ts
 import '@schema-engine/forms-radiant/index.css';
@@ -133,10 +133,13 @@ are view-only.
 
 The re-export is what carries the registration at the source level: without it,
 a view that only named `'se-form-instance'` as a string literal would have no
-reference to the script module at all. It does not by itself survive a
-consumer's bundler, though — this package's published output still needs its
-own `sideEffects` accounting, tracked separately from this split.
+reference to the script module at all. The package's `sideEffects` entries
+also retain the published entry point and chunks when a consumer bundles them.
 `internals/form-renderer.script.tsx` is the same shape.
+
+Radiant maps camelCase `@prop` names to kebab-case HTML attributes. For raw
+HTML, write `default-country`, `input-mode`, and `max-files`; JSX property
+names stay camelCase.
 
 Behavior that does not need the element — DOM queries, value diffing, path maths
 — belongs in `lib/` instead, where it is testable without registering a custom
@@ -190,11 +193,13 @@ for the removed snapshot hooks.
 `arrayElements` registers the array name as a field. A `minItems` rule in
 `rules` checks the row count at submission. The `minItems` config property seeds
 the initial row count, and the built-in Remove control keeps that count as its
-floor. `maxItems` caps the built-in Add control. Rows created by Add or to
-meet the `minItems` floor use the engine's row default: child `defaultValue`s
-with `initialValues` merged over them. Rows supplied through form `defaultValues` are included in
-server markup with deterministic IDs, which the connected array host adopts
-during hydration. Direct `FormController.fieldArray` mutations do not apply the
+floor. `maxItems` caps the built-in Add control. `initialValues` is merged over
+child `defaultValue`s for rows created by Add or to meet the `minItems` floor.
+Rows supplied through form `defaultValues` are included in server markup with
+deterministic IDs. During hydration, the connected array host retains those row
+nodes even when the array view has no JSX binding markers of its own. Replacing
+the renderer's engine updates the array's field rendering. Direct
+`FormController.fieldArray` mutations do not apply the
 array config's Add and Remove behavior.
 
 Field schemas live beside each registration under `src/elements/` (for example `form-input.types.ts` next to `form-input.registration.ts`). Component props stay on the widget modules. Radiant does not ship `date` or `date-range` widgets; those `$type`s exist only in the shadcn registry today. Registry and Radiant schemas may diverge where capabilities differ.
