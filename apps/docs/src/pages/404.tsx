@@ -2,10 +2,10 @@ import { eco } from '@ecopages/core';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { BaseLayout } from '@/layouts/base-layout';
 import type { JsxRenderable } from '@ecopages/jsx';
-import type { Error404TemplateProps } from '@ecopages/core';
+import type { ErrorPageTemplateProps } from '@ecopages/core';
 import './404.css';
 
-const Error404 = eco.page<Error404TemplateProps, JsxRenderable>({
+const Error404 = eco.page<ErrorPageTemplateProps, JsxRenderable>({
 	layout: BaseLayout,
 	render: () => {
 		return (

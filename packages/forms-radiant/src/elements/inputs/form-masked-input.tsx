@@ -30,8 +30,8 @@ export class SeMaskedInput extends RadiantElement {
 	@prop({ type: Boolean, defaultValue: false }) disabled = false;
 	@prop({ type: Object }) definitions?: Record<string, string>;
 
-	@query({ ref: 'input' }) input!: HTMLInputElement;
-	@query({ ref: 'control' }) control!: HTMLInputElement;
+	@query({ ref: 'input' }) input!: HTMLInputElement | null;
+	@query({ ref: 'control' }) control!: HTMLInputElement | null;
 
 	private maskInstance: import('imask').InputMask<import('@/lib/mask-options').PatternMaskOptions> | null = null;
 	private attachGeneration = 0;

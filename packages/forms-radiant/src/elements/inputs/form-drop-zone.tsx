@@ -72,7 +72,7 @@ export class SeDropZone extends RadiantElement {
 	@state dragging = false;
 	@state files: File[] = [];
 
-	@query({ ref: 'input' }) fileInput!: HTMLInputElement;
+	@query({ ref: 'input' }) fileInput!: HTMLInputElement | null;
 
 	@onEvent({ type: 'dragover', selector: '[data-ref="surface"]' })
 	onDragOver(event: Event) {

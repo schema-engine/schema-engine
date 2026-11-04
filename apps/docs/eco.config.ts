@@ -1,6 +1,6 @@
 import path from 'node:path';
 import '@ecopages/radiant/server/install-ssr-runtime';
-import { ConfigBuilder } from '@ecopages/core/config-builder';
+import { defineConfig } from '@ecopages/core/config';
 import { postcssProcessorPlugin } from '@ecopages/postcss-processor/plugin';
 import { tailwindV4Preset } from '@ecopages/postcss-processor/presets/tailwind-v4';
 import { reactPlugin } from '@ecopages/react';
@@ -20,22 +20,20 @@ import { devToolbar } from '@ecopages/dev-toolbar/config';
  * `/hooks` and `/adapters/react-hook-form` would each carry a copy of the shared
  * context chunk. Bundling the package with the page script keeps one copy.
  */
-const config = await new ConfigBuilder()
-	.setRootDir(import.meta.dirname)
-	.setBaseUrl(process.env.ECOPAGES_BASE_URL ?? 'http://localhost:3000')
-	.setIntegrations([
+export default defineConfig({
+	rootDir: import.meta.dirname,
+	baseUrl: process.env.ECOPAGES_BASE_URL ?? 'http://localhost:3000',
+	integrations: [
 		reactPlugin({
 			extensions: ['.react.tsx'],
 			explicitGraph: true,
 			runtimeModules: ['react-hook-form'],
 			mdx: {
-				enabled: true,
 				extensions: ['.react.mdx'],
 			},
 		}),
 		ecopagesJsxPlugin({
 			mdx: {
-				enabled: true,
 				extensions: ['.radiant.mdx', '.mdx'],
 				compilerOptions: { mdxExtensions: ['.radiant.mdx', '.mdx'] },
 				...createDocsMdxPlugins({
@@ -48,14 +46,14 @@ const config = await new ConfigBuilder()
 				}),
 			},
 		}),
-	])
-	.setDefaultMetadata({
+	],
+	defaultMetadata: {
 		title: 'Schema Engine | Docs',
 		description:
 			'JSON-driven, type-safe forms with Zod Mini validation and Standard Schema registrations. Four first-party packages: forms, forms-react, actions, and registry.',
 		keywords: ['schema-engine', 'forms', 'json', 'zod', 'react'],
-	})
-	.setProcessors([
+	},
+	processors: [
 		postcssProcessorPlugin(
 			tailwindV4Preset({
 				referencePath: path.resolve(import.meta.dirname, 'src/styles/tailwind.css'),
@@ -74,15 +72,13 @@ const config = await new ConfigBuilder()
 				},
 			},
 		}),
-	])
-	.setAdditionalWatchPaths([
+	],
+	additionalWatchPaths: [
 		'src/data',
 		'src/content',
 		'../../registry/shared/forms',
 		'../../packages/forms-react/.storybook/ui',
 		'../../packages/forms-radiant/dist',
-	])
-	.setDevToolbar(devToolbar())
-	.build();
-
-export default config;
+	],
+	devToolbar: devToolbar(),
+});

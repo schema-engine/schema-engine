@@ -53,8 +53,8 @@ export class SePhoneInput extends RadiantElement {
 	@state country: CountryCode = 'US';
 	@state countries: PhoneCountryOption[] = [];
 
-	@query({ ref: 'number' }) numberInput!: HTMLInputElement;
-	@query({ ref: 'control' }) control!: HTMLInputElement;
+	@query({ ref: 'number' }) numberInput!: HTMLInputElement | null;
+	@query({ ref: 'control' }) control!: HTMLInputElement | null;
 
 	private e164 = '';
 	private lib?: LibPhoneNumber;

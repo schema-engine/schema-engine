@@ -33,9 +33,9 @@
 		"@schema-engine/actions": "workspace:*",
 		"@schema-engine/forms": "workspace:*",
 		"@schema-engine/scripts": "workspace:*",
-		"@storybook/addon-docs": "^10.1.8",
-		"@storybook/addon-vitest": "^10.1.8",
-		"@storybook/react-vite": "^10.1.8",
+		"@storybook/addon-docs": "^10.5.2",
+		"@storybook/addon-vitest": "^10.5.2",
+		"@storybook/react-vite": "^10.5.2",
 		"@tailwindcss/postcss": "^4.1.18",
 		"@tailwindcss/vite": "^4.1.18",
 		"@testing-library/dom": "^10.4.1",
@@ -88,7 +88,7 @@
 		"zod": "^4.0.17"
 	},
 	"dependencies": {
-		"@ecopages/logger": "^0.2.2"
+		"@ecopages/logger": "^0.2.3"
 	},
 	"exports": {
 		"./package.json": {

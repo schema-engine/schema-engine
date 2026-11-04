@@ -158,6 +158,7 @@ export class SeFormArray extends RadiantElement {
 
 	readonly form = new FormController(this);
 	private readonly formEngine = new FormEngineController(this);
+	private contextEngine?: FormEngine;
 	private unregisterArrayField?: () => void;
 	private isArrayFieldRegistered = false;
 	private formContext?: FormContextValue;
@@ -306,7 +307,10 @@ export class SeFormArray extends RadiantElement {
 		this.renderedIds = initialIds;
 		this.formEngine.connect(() => {
 			this.registerArrayField();
-			if (!this.isServerRendered) this.requestUpdate();
+			const engine = this.formEngine.engine;
+			const engineChanged = this.contextEngine !== undefined && this.contextEngine !== engine;
+			this.contextEngine = engine;
+			if (!this.isServerRendered || engineChanged) this.requestUpdate();
 		});
 		this.form.connect(() => this.scheduleSync(initialIds));
 		if (this.form.ready) this.scheduleSync(initialIds);
