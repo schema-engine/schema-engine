@@ -1,6 +1,6 @@
 import { createRouter } from '@ecopages/browser-router/client';
 import { isServer } from '@ecopages/radiant/is-server';
-import '@/lib/form-engine-setup';
+import { installPreviewEngineBinding } from '@/lib/preview-engine-binding';
 import { installDocsToastShell } from '@/lib/docs-toast-shell';
 
 const BASE_LAYOUT_CLIENT = Symbol.for('@schema-engine/docs.base-layout-client');
@@ -12,6 +12,7 @@ function installBaseLayoutClient(): void {
 
 	Reflect.set(document, BASE_LAYOUT_CLIENT, true);
 	installDocsToastShell();
+	installPreviewEngineBinding();
 	createRouter();
 }
 
