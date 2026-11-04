@@ -1,79 +1,100 @@
-import type { ActionConfigBase, ActionDispatchInput, ActionExecutionResult } from './types';
+import type {
+	ActionConfigBase,
+	ActionDispatchInput,
+	ActionDispatchResult,
+	ActionExecutionResult,
+	ActionSequenceEntry,
+} from './types';
 import type { ActionRegistryProvider } from './registry';
 import { Logger } from '@ecopages/logger';
 
 const logger = new Logger('[@schema-engine/actions]');
 
-type MetadataContext = {
-	metadata?: Record<string, unknown>;
-};
+type MetadataContext = { metadata?: Record<string, unknown> };
 
 function isMetadataContext(value: unknown): value is MetadataContext {
 	return typeof value === 'object' && value !== null;
 }
 
-/**
- * Runs matching actions sequentially and merges caller metadata into their context.
- */
+function isGroup<T extends ActionConfigBase>(entry: ActionSequenceEntry<T>): entry is readonly T[] {
+	return Array.isArray(entry);
+}
+
+function isCancellation(error: unknown, signal: AbortSignal): boolean {
+	return signal.aborted && error instanceof Error && error.name === 'AbortError';
+}
+
+/** Dispatches actions in sequence, allowing groups to execute concurrently. */
 export class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 	constructor(private readonly registry: ActionRegistryProvider<TBaseContext, TTrigger>) {}
 
-	/**
-	 * Dispatch actions for a specific trigger with metadata merging
-	 *
-	 * Merges additional metadata into the context and executes all matching actions.
-	 * Returns empty array if no actions are provided.
-	 *
-	 * @param actions - Array of action configurations to potentially execute
-	 * @param trigger - The trigger/event that is causing execution
-	 * @param context - Domain-specific context data
-	 * @param metadata - Additional metadata to merge into context
-	 * @returns Array of execution results
-	 */
 	async dispatch<TConfig extends ActionConfigBase>({
 		actions,
 		trigger,
 		context,
 		metadata,
 		triggeredBy,
-	}: ActionDispatchInput<TConfig, TBaseContext, TTrigger>): Promise<ActionExecutionResult[]> {
-		if (!actions || actions.length === 0) {
-			return [];
-		}
-
+	}: ActionDispatchInput<TConfig, TBaseContext, TTrigger>): Promise<ActionDispatchResult[]> {
+		if (!actions?.length) return [];
 		const enhancedContext = metadata ? this.mergeMetadata(context, metadata) : context;
-
-		const results: ActionExecutionResult[] = [];
-		for (const action of actions) {
-			if (action.enabled === false || !this.shouldExecute(action, trigger)) continue;
-			const registration = this.registry.getAction(action.$type);
-			if (!registration) {
-				const error = `No handler registered for action type: ${action.$type}`;
-				logger.error(error, { actionId: action.id, availableActions: this.registry.getActionTypes() });
-				results.push({ success: false, error, shouldContinue: true });
-				continue;
-			}
-			if (action.triggers === undefined && !(registration.metadata.defaultTriggers ?? []).includes(trigger))
-				continue;
-			logger.debug(`Executing action: ${action.id} (${action.$type})`);
-			let result: ActionExecutionResult;
-			try {
-				result = await registration.execute({
-					...enhancedContext,
-					config: action,
-					trigger,
-					...(triggeredBy ? { triggeredBy } : {}),
-				});
-			} catch (error) {
-				result = {
-					success: false,
-					error: error instanceof Error ? error.message : String(error),
-					shouldContinue: true,
+		const results: ActionDispatchResult[] = [];
+		for (const [sequenceIndex, entry] of actions.entries()) {
+			const controller = new AbortController();
+			const run = async (action: TConfig, groupIndex?: number): Promise<ActionDispatchResult | undefined> => {
+				if (action.enabled === false || !this.shouldExecute(action, trigger)) return undefined;
+				const registration = this.registry.getAction(action.$type);
+				if (!registration) {
+					const error = `No handler registered for action type: ${action.$type}`;
+					logger.error(error, { actionId: action.id, availableActions: this.registry.getActionTypes() });
+					return {
+						actionId: action.id,
+						sequenceIndex,
+						...(groupIndex === undefined ? {} : { groupIndex }),
+						status: 'failed',
+						cancellationRequested: false,
+						success: false,
+						error,
+						shouldContinue: true,
+					};
+				}
+				if (action.triggers === undefined && !(registration.metadata.defaultTriggers ?? []).includes(trigger))
+					return undefined;
+				logger.debug(`Executing action: ${action.id} (${action.$type})`);
+				let result: ActionExecutionResult;
+				let cancelled = false;
+				try {
+					result = await registration.execute({
+						...enhancedContext,
+						config: action,
+						trigger,
+						signal: controller.signal,
+						...(triggeredBy ? { triggeredBy } : {}),
+					});
+				} catch (error) {
+					cancelled = isCancellation(error, controller.signal);
+					result = {
+						success: false,
+						error: error instanceof Error ? error.message : String(error),
+						cause: error,
+						shouldContinue: true,
+					};
+				}
+				const cancellationRequested = controller.signal.aborted;
+				if (!result.success && result.shouldContinue === false) controller.abort();
+				if (!result.success) logger.warn(`Action ${action.id} failed`, result);
+				return {
+					...result,
+					actionId: action.id,
+					sequenceIndex,
+					...(groupIndex === undefined ? {} : { groupIndex }),
+					status: cancelled ? 'cancelled' : result.success ? 'succeeded' : 'failed',
+					cancellationRequested,
 				};
-			}
-			results.push(result);
-			if (!result.success) logger.warn(`Action ${action.id} failed`, result);
-			if (!result.success && result.shouldContinue === false) break;
+			};
+			const groupResults = isGroup(entry) ? await Promise.all(entry.map(run)) : [await run(entry)];
+			const executed = groupResults.filter((result): result is ActionDispatchResult => result !== undefined);
+			results.push(...executed);
+			if (executed.some((result) => !result.success && result.shouldContinue === false)) break;
 		}
 		return results;
 	}
@@ -83,37 +104,14 @@ export class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 		return action.triggers === undefined || action.triggers.some((candidate) => candidate === trigger);
 	}
 
-	/**
-	 * Dispatch actions without waiting for results (fire-and-forget).
-	 *
-	 * **Contract:** Best-effort execution. Never throws to the caller. Handler failures
-	 * are returned as failed `ActionExecutionResult` entries (dispatch does not reject).
-	 * If `dispatch()` itself rejects unexpectedly, the error is logged and swallowed.
-	 *
-	 * @param input - Actions, trigger, context, and optional metadata / triggeredBy
-	 */
+	/** @remarks Best-effort dispatch never rejects to its caller. */
 	dispatchSync<TConfig extends ActionConfigBase>(input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>): void {
-		void this.dispatch(input).catch((error) => {
-			logger.error('dispatchSync failed:', error);
-		});
+		void this.dispatch(input).catch((error) => logger.error('dispatchSync failed:', error));
 	}
 
-	/**
-	 * Merge additional metadata into context
-	 *
-	 * Handles contexts that may or may not have a metadata property.
-	 *
-	 * @param context - The original context
-	 * @param metadata - Metadata to merge in
-	 * @returns Enhanced context with merged metadata
-	 */
 	private mergeMetadata(context: TBaseContext, metadata: Record<string, unknown>): TBaseContext {
-		if (!isMetadataContext(context)) {
-			return context;
-		}
-
+		if (!isMetadataContext(context)) return context;
 		const existingMetadata = context.metadata;
-
 		return {
 			...context,
 			metadata: {

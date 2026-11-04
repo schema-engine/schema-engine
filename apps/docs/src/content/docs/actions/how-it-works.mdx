@@ -17,8 +17,8 @@ The forms package uses these primitives for form actions.
 2. Provide action configs to the dispatcher.
 3. Trigger execution with a trigger value and base context.
 4. The dispatcher resolves matching registrations.
-5. The dispatcher enriches the provided context with `config` and `trigger`.
-6. Actions run sequentially and return normalized results.
+5. The dispatcher enriches the provided context with `config`, `trigger` and a cancellation `signal`.
+6. Sequence entries run in order; actions in an inner array run concurrently and return identified results.
 
 ## Registration Example
 
@@ -53,6 +53,7 @@ execute({
 	...context,
 	config: action,
 	trigger,
+	signal,
 	...(triggeredBy ? { triggeredBy } : {}),
 });
 ```
@@ -61,7 +62,7 @@ That is why actions usually read `context.config` and `context.trigger` directly
 
 ## Execution Order
 
-Actions run in array order, not registry registration order.
+Sequence entries run in array order, not registry registration order. Inner arrays run as parallel groups.
 
 ```typescript
 await dispatcher.dispatch({

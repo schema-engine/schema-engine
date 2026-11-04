@@ -185,7 +185,7 @@ test('runs actions that match by default or explicit triggers and skips explicit
 		trigger: 'form_submit',
 		context: {},
 	});
-	expect(results).toEqual([
+	expect(results).toMatchObject([
 		{ success: true, data: 'audited' },
 		{ success: true, data: 'audited' },
 	]);

@@ -8,7 +8,7 @@ export const realtimeDashboardPlay = async ({ canvasElement, step }: StoryContex
 		const formTitle = await canvas.findByText(/Action Triggers Interactive Demo/i);
 		await expect(formTitle).toBeInTheDocument();
 
-		const mountBadge = await canvas.findByText(/form_mount/i);
+		const mountBadge = await canvas.findByTestId('form_mount');
 		await expect(mountBadge).toBeInTheDocument();
 	});
 

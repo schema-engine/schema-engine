@@ -1,35 +1,39 @@
-import type { ActionDispatchInput, ActionExecutionResult } from '@schema-engine/actions';
+import type { ActionDispatchInput, ActionExecutionResult, ActionSequenceEntry } from '@schema-engine/actions';
 import type { FormActionTrigger } from '@/actions';
 import type { FormConfigView } from '@/lib/normalized-form-config';
-type FormActionConfig = NonNullable<FormConfigView['actions']>[number];
 import type { BuilderActionBaseContext } from '@/types';
+
+type Entry = NonNullable<FormConfigView['actions']>[number];
+type FormActionConfig = Exclude<Entry, readonly unknown[]>;
 
 type FormActionDispatch = (
 	input: ActionDispatchInput<FormActionConfig, BuilderActionBaseContext, FormActionTrigger>,
-) => Promise<ActionExecutionResult[]>;
+) => Promise<Array<ActionExecutionResult & { actionId?: string; sequenceIndex?: number; groupIndex?: number }>>;
 
 interface RunSubmissionLifecycleOptions {
-	actions: readonly FormActionConfig[];
+	actions: readonly ActionSequenceEntry<FormActionConfig>[];
 	context: BuilderActionBaseContext | (() => BuilderActionBaseContext);
 	onAction?: (action: FormActionConfig, data: BuilderActionBaseContext['formData']) => void | Promise<void>;
 }
 
-/** A `form_submit` result tagged with the configured action that produced it. */
-export type SubmissionActionResult = ActionExecutionResult & { actionId: string };
+export type SubmissionActionResult = ActionExecutionResult & {
+	actionId: string;
+	sequenceIndex?: number;
+	groupIndex?: number;
+	status?: 'succeeded' | 'failed' | 'cancelled';
+	cancellationRequested?: boolean;
+};
 
 export interface SubmissionLifecycleResult {
 	succeeded: boolean;
 	results: SubmissionActionResult[];
 }
 
-/**
- * Runs the shared form submission action triggers and returns the submit action results.
- *
- * @remarks
- * Pass a context factory when each trigger needs a fresh form-state snapshot.
- * Submit actions are dispatched one at a time so each result carries its action id;
- * an action that does not run on `form_submit` contributes no result.
- */
+function isGroup(entry: ActionSequenceEntry<FormActionConfig>): entry is readonly FormActionConfig[] {
+	return Array.isArray(entry);
+}
+
+/** Runs the shared form submission action triggers and returns the submit action results. */
 export async function runSubmissionLifecycle(
 	dispatch: FormActionDispatch,
 	{ actions, context, onAction }: RunSubmissionLifecycleOptions,
@@ -39,24 +43,38 @@ export async function runSubmissionLifecycle(
 	const dispatchSubmit = async (): Promise<SubmissionActionResult[]> => {
 		const submitContext = currentContext();
 		const results: SubmissionActionResult[] = [];
-		for (const action of actions) {
-			const [result] = await dispatch({ actions: [action], trigger: 'form_submit', context: submitContext });
-			if (!result) continue;
-			let tagged: SubmissionActionResult = { ...result, actionId: action.id };
-			if (tagged.success && onAction) {
-				try {
-					await onAction(action, submitContext.formData);
-				} catch (error) {
-					tagged = {
-						actionId: action.id,
-						success: false,
-						shouldContinue: false,
-						error: error instanceof Error ? error.message : String(error),
-					};
+		for (const [sequenceIndex, entry] of actions.entries()) {
+			const actionsInEntry = isGroup(entry) ? entry : [entry];
+			const dispatched = await dispatch({ actions: [entry], trigger: 'form_submit', context: submitContext });
+			for (const result of dispatched) {
+				const action = isGroup(entry)
+					? result.groupIndex !== undefined
+						? entry[result.groupIndex]
+						: actionsInEntry.find((candidate) => candidate.id === result.actionId)
+					: entry;
+				if (!action) throw new Error('A grouped action result must identify its action.');
+				let tagged: SubmissionActionResult = {
+					...result,
+					actionId: action.id,
+					...(result.sequenceIndex === undefined ? {} : { sequenceIndex }),
+				};
+				if (result.success && onAction && action) {
+					try {
+						await onAction(action, submitContext.formData);
+					} catch (error) {
+						tagged = {
+							...tagged,
+							...(tagged.status ? { status: 'failed' as const } : {}),
+							success: false,
+							shouldContinue: false,
+							error: error instanceof Error ? error.message : String(error),
+							cause: error,
+						};
+					}
 				}
+				results.push(tagged);
 			}
-			results.push(tagged);
-			if (!tagged.success && tagged.shouldContinue === false) break;
+			if (results.some((result) => !result.success && result.shouldContinue === false)) break;
 		}
 		return results;
 	};
@@ -66,6 +84,5 @@ export async function runSubmissionLifecycle(
 	const succeeded = results.every((result) => result.success || result.shouldContinue !== false);
 	await dispatchTrigger(succeeded ? 'form_submit_success' : 'form_submit_error');
 	await dispatchTrigger('form_submit_complete');
-
 	return { succeeded, results };
 }

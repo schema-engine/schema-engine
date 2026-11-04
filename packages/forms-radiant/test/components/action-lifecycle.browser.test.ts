@@ -249,3 +249,57 @@ test('form_change actions run after mount when the renderer context supplies the
 
 	await expect.poll(() => changes.at(-1)).toBe('typed');
 });
+
+test('reports outcomes of grouped submit actions to the Radiant host', async () => {
+	const engine = createFormEngine({
+		elements: [],
+		actions: [
+			testAction('submit', ['form_submit', 'form_change'], async ({ config }) =>
+				config.id === 'bad'
+					? { success: false, shouldContinue: false, error: 'Rejected' }
+					: { success: true, data: 'saved' },
+			),
+		],
+	});
+	const host = document.createElement('rui-form');
+	provideTestFormStore(host, new FormStore());
+	const controller = new FormActionControllerElement();
+	controller.engine = engine;
+	controller.config = engine.defineForm({
+		id: 'actions',
+		steps: [{ id: 'main', title: 'Main', elements: [] }],
+		actions: [
+			[
+				{ id: 'ok', $type: 'submit', endpoint: '/ok' },
+				{ id: 'bad', $type: 'submit', endpoint: '/bad' },
+			],
+		],
+	});
+	const complete = vi.fn();
+	const outcomes = vi.fn();
+	host.addEventListener('se-action-results', outcomes);
+	host.addEventListener('se-action-submit-complete', complete);
+	host.append(controller);
+	document.body.append(host);
+	await expect.poll(() => controller.form.ready).toBe(true);
+	await controller.dispatchTrigger('form_change');
+	expect(outcomes.mock.calls[0][0].detail).toMatchObject({
+		trigger: 'form_change',
+		results: [{ actionId: 'ok' }, { actionId: 'bad' }],
+	});
+	await controller.dispatchTrigger('form_submit');
+	expect(outcomes.mock.calls[1][0].detail).toMatchObject({
+		trigger: 'form_submit',
+		results: [{ actionId: 'ok' }, { actionId: 'bad' }],
+	});
+	host.dispatchEvent(new CustomEvent('rui-submit'));
+	await expect.poll(() => complete.mock.calls.length).toBe(1);
+	const event = complete.mock.calls[0][0] as CustomEvent;
+	expect(event.detail).toMatchObject({
+		succeeded: false,
+		results: [
+			{ actionId: 'ok', success: true, data: 'saved' },
+			{ actionId: 'bad', success: false, error: 'Rejected' },
+		],
+	});
+});

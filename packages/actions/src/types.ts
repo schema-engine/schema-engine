@@ -37,6 +37,8 @@ export type ActionRuntimeContext<TConfig = unknown, TBaseContext = unknown, TTri
 	trigger: TTrigger;
 	/** Action config that triggered nested execution, when applicable */
 	triggeredBy?: TConfig;
+	/** Cooperative cancellation for the current action. */
+	signal: AbortSignal;
 };
 
 /**
@@ -73,6 +75,8 @@ export interface ActionExecutionResult<TData = unknown> {
 	message?: string;
 	/** Error message if action failed */
 	error?: string;
+	/** Original error thrown by the handler, when available. */
+	cause?: unknown;
 	/** Data returned by the action (e.g., API response) */
 	data?: TData;
 	/**
@@ -84,6 +88,18 @@ export interface ActionExecutionResult<TData = unknown> {
 	 */
 	shouldContinue?: boolean;
 }
+
+/** An action result annotated by the dispatcher for correlation with its configuration. */
+export type ActionDispatchResult<TData = unknown> = ActionExecutionResult<TData> & {
+	actionId: string;
+	sequenceIndex: number;
+	groupIndex?: number;
+	status: 'succeeded' | 'failed' | 'cancelled';
+	cancellationRequested: boolean;
+};
+
+/** A sequence entry is either one action or a group that runs concurrently. */
+export type ActionSequenceEntry<TConfig extends ActionConfigBase> = TConfig | readonly TConfig[];
 
 /**
  * Action Handler Function Type
@@ -173,7 +189,7 @@ export interface ActionDispatchInput<
 	TTrigger = string,
 > {
 	trigger: TTrigger;
-	actions: readonly TConfig[];
+	actions: readonly ActionSequenceEntry<TConfig>[];
 	context: TBaseContext;
 	triggeredBy?: TConfig;
 	metadata?: Record<string, unknown>;

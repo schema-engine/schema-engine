@@ -2,7 +2,7 @@
  * @schema-engine/actions
  *
  * Domain-agnostic action system for event-driven architectures: register handlers,
- * execute them sequentially, and dispatch by trigger from any host (forms, workflows, UI).
+ * execute them in sequence or parallel groups, and dispatch by trigger from any host (forms, workflows, UI).
  *
  * @example
  * ```typescript

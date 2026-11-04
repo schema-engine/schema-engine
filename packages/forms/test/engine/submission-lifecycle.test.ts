@@ -26,9 +26,11 @@ async function dispatchSuccessfulSubmitActions({
 /** Runs only the actions whose triggers include the dispatched one, as the dispatcher does. */
 async function dispatchRejectingSecond({ actions, trigger }: ActionDispatchInput): Promise<ActionExecutionResult[]> {
 	return actions
-		.filter((action) => action.triggers?.includes(trigger))
+		.filter((action) => 'id' in action && action.triggers?.includes(trigger))
 		.map((action) =>
-			action.id === 'second' ? { success: false, shouldContinue: false, error: 'Rejected' } : { success: true },
+			'id' in action && action.id === 'second'
+				? { success: false, shouldContinue: false, error: 'Rejected' }
+				: { success: true },
 		);
 }
 
@@ -127,7 +129,7 @@ describe('runSubmissionLifecycle', () => {
 			trigger,
 		}: ActionDispatchInput): Promise<ActionExecutionResult[]> => {
 			if (trigger !== 'form_submit') return [];
-			dispatchedIds.push(...dispatched.map((action) => action.id));
+			dispatchedIds.push(...dispatched.map((action) => ('id' in action ? action.id : 'group')));
 			return dispatched.map(() => ({ success: true }));
 		};
 
@@ -139,7 +141,7 @@ describe('runSubmissionLifecycle', () => {
 
 		expect(dispatchedIds).toEqual(['first']);
 		expect(result.succeeded).toBe(false);
-		expect(result.results).toEqual([
+		expect(result.results).toMatchObject([
 			{ actionId: 'first', success: false, shouldContinue: false, error: 'Callback stopped submission' },
 		]);
 	});
