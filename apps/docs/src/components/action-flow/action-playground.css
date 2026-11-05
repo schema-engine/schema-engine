@@ -1,0 +1,349 @@
+@import '@ecopages/radiant-ui/spinner/styles.css';
+
+se-action-playground {
+	display: block;
+}
+
+.action-flow {
+	display: grid;
+	gap: 1.25rem;
+	margin-block: 1.5rem;
+}
+
+.action-playground {
+	display: grid;
+	gap: 0.95rem;
+	padding: 1rem 1.1rem 1.1rem;
+	border: 1px solid color-mix(in oklab, var(--color-border, var(--border)) 80%, transparent);
+	border-radius: 1.15rem;
+	background: color-mix(in oklab, var(--background) 88%, var(--color-muted, var(--muted)) 12%);
+	color: var(--foreground);
+	isolation: isolate;
+}
+
+.action-playground__header {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.8rem;
+}
+
+.action-playground__control {
+	flex-shrink: 0;
+	width: 2.75rem;
+	height: 2.75rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
+	border-radius: 999px;
+	color: var(--color-primary-foreground, var(--on-primary, #fff));
+	background: var(--color-foreground, var(--foreground));
+	cursor: pointer;
+	transition:
+		background-color 150ms ease,
+		color 150ms ease,
+		transform 150ms ease;
+}
+
+.action-playground__control[data-phase='running'] {
+	background: var(--color-primary, var(--primary));
+}
+
+.action-playground__control[data-phase='done'] {
+	color: var(--color-foreground, var(--foreground));
+	background: color-mix(in oklab, var(--color-muted, var(--muted)) 80%, var(--background));
+}
+
+.action-playground__control:focus-visible {
+	outline: 2px solid var(--color-ring, var(--primary));
+	outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.action-playground__control:hover {
+		transform: scale(1.04);
+	}
+
+	.action-playground__control:active {
+		transform: scale(0.97);
+	}
+}
+
+.action-playground__copy {
+	min-width: 0;
+	padding-top: 0.15rem;
+}
+
+.action-playground__title {
+	margin: 0;
+	font-size: 0.95rem;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	line-height: 1.3;
+	text-wrap: balance;
+}
+
+.action-playground__description {
+	margin: 0.18rem 0 0;
+	font-size: 0.82rem;
+	line-height: 1.45;
+	color: var(--color-muted-foreground, var(--muted-foreground));
+}
+
+.action-playground__stage {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: 0;
+	padding: 0.85rem 0.9rem 0.75rem;
+	border-radius: 1rem;
+	background:
+		radial-gradient(circle at 1px 1px, color-mix(in oklab, var(--color-border, var(--border)) 55%, transparent) 1px, transparent 0)
+			0 0 / 12px 12px,
+		color-mix(in oklab, var(--background) 70%, transparent);
+}
+
+.action-playground__nodes {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+}
+
+.action-playground__nodes--group {
+	gap: 0.55rem;
+	padding: 0.4rem 0.5rem 0.2rem;
+	border: 1px dashed color-mix(in oklab, var(--color-border, var(--border)) 85%, transparent);
+	border-radius: 1.15rem;
+	background: color-mix(in oklab, var(--background) 55%, transparent);
+}
+
+.action-playground__connector {
+	width: 1.35rem;
+	height: 3.5rem;
+	flex-shrink: 0;
+	position: relative;
+}
+
+.action-playground__connector::before {
+	content: '';
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 1.75rem;
+	height: 1px;
+	background: color-mix(in oklab, var(--color-muted-foreground, var(--muted-foreground)) 28%, transparent);
+	transition: background-color 150ms ease;
+}
+
+.action-playground__connector[data-status='succeeded']::before,
+.action-playground__connector[data-status='running']::before {
+	background: color-mix(in oklab, var(--color-primary, var(--primary)) 70%, transparent);
+}
+
+.action-playground__connector[data-status='failed']::before {
+	background: color-mix(in oklab, var(--color-destructive, var(--error)) 70%, transparent);
+}
+
+.action-playground__connector--join {
+	width: 1.6rem;
+}
+
+.action-playground__connector--join::after {
+	content: '';
+	position: absolute;
+	top: calc(1.75rem - 3px);
+	right: 0;
+	width: 6px;
+	height: 6px;
+	border-right: 1px solid color-mix(in oklab, var(--color-muted-foreground, var(--muted-foreground)) 45%, transparent);
+	border-top: 1px solid color-mix(in oklab, var(--color-muted-foreground, var(--muted-foreground)) 45%, transparent);
+	transform: rotate(45deg);
+}
+
+.action-node {
+	appearance: none;
+	background: transparent;
+	border: 0;
+	padding: 0;
+	display: grid;
+	justify-items: center;
+	grid-template-rows: 3.5rem auto;
+	gap: 0.4rem;
+	min-width: 4.25rem;
+	cursor: pointer;
+	color: inherit;
+}
+
+.action-node:focus-visible .action-node__orb {
+	outline: 2px solid var(--color-ring, var(--primary));
+	outline-offset: 3px;
+}
+
+.action-node__orb {
+	position: relative;
+	width: 3.5rem;
+	height: 3.5rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 999px;
+	border: 1.5px solid color-mix(in oklab, var(--color-border, var(--border)) 88%, transparent);
+	background: color-mix(in oklab, var(--background) 92%, transparent);
+	box-shadow: 0 1px 2px color-mix(in oklab, var(--foreground) 6%, transparent);
+	overflow: visible;
+	transition:
+		background-color 150ms ease,
+		border-color 150ms ease,
+		color 150ms ease,
+		box-shadow 150ms ease,
+		transform 150ms ease;
+}
+
+.action-node__ring {
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	pointer-events: none;
+	opacity: 0;
+}
+
+.action-node__value {
+	position: relative;
+	z-index: 1;
+	max-width: calc(100% - 0.5rem);
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: 0.68rem;
+	font-variant-numeric: tabular-nums;
+	line-height: 1.1;
+	letter-spacing: -0.02em;
+	text-align: center;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.action-node[data-status='idle'] .action-node__value:empty::before {
+	content: '';
+	display: block;
+	width: 0.35rem;
+	height: 0.35rem;
+	margin-inline: auto;
+	border-radius: 999px;
+	background: color-mix(in oklab, var(--color-muted-foreground, var(--muted-foreground)) 45%, transparent);
+}
+
+.action-node__label {
+	font-size: 0.7rem;
+	font-weight: 500;
+	letter-spacing: 0.02em;
+	color: var(--color-muted-foreground, var(--muted-foreground));
+}
+
+.action-node[data-status='running']:not(.action-node--result) .action-node__orb {
+	border-color: transparent;
+	box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-primary, var(--primary)) 12%, transparent);
+}
+
+.action-node[data-status='running']:not(.action-node--result) .action-node__ring {
+	opacity: 1;
+	background: conic-gradient(from 0deg, transparent 42%, var(--color-primary, var(--primary)) 82%, transparent);
+	mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+	-webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+	animation: action-node-spin 900ms linear infinite;
+}
+
+.action-node--result[data-status='running'] .action-node__orb {
+	border-color: color-mix(in oklab, var(--color-primary, var(--primary)) 65%, transparent);
+	box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-primary, var(--primary)) 12%, transparent);
+	color: var(--color-primary, var(--primary));
+}
+
+.action-node[data-status='succeeded'] .action-node__orb {
+	background: color-mix(in oklab, var(--color-primary, var(--primary)) 14%, var(--background));
+	border-color: color-mix(in oklab, var(--color-primary, var(--primary)) 65%, transparent);
+	color: var(--color-primary, var(--primary));
+}
+
+.action-node[data-status='failed'] .action-node__orb {
+	background: color-mix(in oklab, var(--color-destructive, var(--error)) 14%, var(--background));
+	border-color: color-mix(in oklab, var(--color-destructive, var(--error)) 70%, transparent);
+	color: var(--color-destructive, var(--error));
+}
+
+.action-node[data-status='cancelled'] .action-node__orb {
+	border-style: dashed;
+	color: var(--color-muted-foreground, var(--muted-foreground));
+}
+
+.action-node--result {
+	min-width: 5.5rem;
+}
+
+.action-node--result .action-node__orb {
+	width: auto;
+	min-width: 5.25rem;
+	max-width: 11.5rem;
+	padding: 0 0.7rem;
+	border-radius: 1rem;
+}
+
+.action-playground__code {
+	margin: 0;
+	padding: 0.8rem 0.95rem;
+	overflow-x: auto;
+	border-radius: 0.85rem;
+	background: var(--color-muted, var(--muted));
+	color: var(--color-foreground, var(--foreground));
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: 0.78rem;
+	line-height: 1.45;
+}
+
+.action-playground__code code {
+	display: block;
+	font-family: inherit;
+	font-size: inherit;
+	line-height: inherit;
+	color: inherit;
+	background: none;
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+	box-shadow: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.action-node:hover .action-node__orb {
+		transform: translateY(-1px);
+	}
+
+	.action-node:active .action-node__orb {
+		transform: scale(0.97);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.action-playground__control,
+	.action-node__orb,
+	.action-playground__connector::before {
+		transition: none;
+	}
+
+	.action-node[data-status='running']:not(.action-node--result) .action-node__ring {
+		animation: none;
+		background: var(--color-primary, var(--primary));
+		mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+		-webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+		opacity: 1;
+	}
+
+	.action-playground .rui-spinner {
+		animation: none;
+	}
+}
+
+@keyframes action-node-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}

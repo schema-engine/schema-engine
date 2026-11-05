@@ -1,32 +1,28 @@
 import { eco } from '@ecopages/core';
 import type { JsxRenderable } from '@ecopages/jsx';
-import './action-flow.css';
+import type { PlaygroundExampleId } from './action-playground-session';
+// oxlint-disable-next-line import/no-unassigned-import -- custom-element types
+import './action-playground.script.tsx';
+import './action-playground.css';
+
+const EXAMPLES: PlaygroundExampleId[] = ['sequential', 'parallel', 'short-circuit'];
+
+export const ActionPlayground = eco.component<{ example: PlaygroundExampleId }, JsxRenderable>({
+	dependencies: {
+		scripts: ['./action-playground.script.tsx'],
+	},
+	render: ({ example }) => <se-action-playground example={example} />,
+});
 
 export const ActionFlow = eco.component<Record<string, never>, JsxRenderable>({
+	dependencies: {
+		scripts: ['./action-playground.script.tsx'],
+	},
 	render: () => (
-		<figure class="action-flow not-prose" aria-label="Action execution flow">
-			<figcaption>From trigger to results</figcaption>
-			<ol class="action-flow__steps">
-				<li data-flow-step="trigger">
-					<strong>Trigger</strong>
-					<span>A caller dispatches an event and context.</span>
-				</li>
-				<li data-flow-step="match">
-					<strong>Match</strong>
-					<span>The dispatcher selects enabled actions for the trigger.</span>
-				</li>
-				<li data-flow-step="execute">
-					<strong>Execute in order</strong>
-					<span>Each matching action receives its config and trigger.</span>
-				</li>
-				<li data-flow-step="result">
-					<strong>Stop or continue</strong>
-					<span>
-						After each action, the dispatcher decides whether to continue. A failed action stops later
-						actions only when it returns <code>shouldContinue: false</code>.
-					</span>
-				</li>
-			</ol>
-		</figure>
+		<div class="action-flow not-prose unstyled">
+			{EXAMPLES.map((example) => (
+				<ActionPlayground example={example} />
+			))}
+		</div>
 	),
 });
