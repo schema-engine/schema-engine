@@ -113,8 +113,14 @@ export class RadiantCodeTabs extends RadiantElement {
 				<RuiTabPanels>
 					{tabs.map((tab) => (
 						<RuiTabPanel id={tab.id} class="code-tabs__panel" selected={tab.id === selectedKey}>
-							<div class="code-tabs__body">
-								<span class="code-tabs__code">{isRichTab(tab) ? unsafeHtml(tab.html) : tab.code}</span>
+							<div class="code-tabs__body unstyled">
+								{isRichTab(tab) ? (
+									<div class="code-tabs__code">{unsafeHtml(tab.html)}</div>
+								) : (
+									<pre class="code-tabs__code">
+										<code>{tab.code}</code>
+									</pre>
+								)}
 								<RuiButton
 									size="sm"
 									variant="ghost"
