@@ -8,7 +8,7 @@ Domain-agnostic action execution primitives for event-driven architectures.
 
 - `ActionRegistration`: describes an action type
 - `ActionRegistry`: stores action registrations
-- `ActionDispatcher`: executes action configs sequentially for a trigger
+- `ActionDispatcher`: executes a sequence of actions or parallel action groups for a trigger
 
 The package is intended to be reusable across different domains such as forms, workflows, UI interactions, and state transitions.
 
@@ -24,7 +24,7 @@ The package has no schema-library runtime dependency. Action registrations use t
 
 The dispatcher separates the caller-provided base context from the runtime context seen by action handlers.
 
-Provide base domain context to the dispatcher. Before each action runs, the dispatcher enriches that context with the action config and trigger and passes the merged object to `execute()`.
+Provide base domain context to the dispatcher. Before each action runs, the dispatcher enriches that context with the action config, trigger and cancellation signal and passes the merged object to `execute()`.
 
 At runtime the call shape is effectively:
 
@@ -33,12 +33,13 @@ execute({
 	...context,
 	config: action,
 	trigger,
+	signal,
 });
 ```
 
 That means call sites stay simple, while handlers still receive a strongly typed runtime context.
 
-Actions execute sequentially in their configured order. When an action fails,
+Actions execute sequentially in their configured order; an inner array executes its actions concurrently and joins before the next entry. When an action fails,
 execution stops only when its result sets `shouldContinue: false`; an omitted
 value or `true` allows later actions to run. For forms, only an unsuccessful
 action with `shouldContinue: false` makes the submission fail.
@@ -203,7 +204,7 @@ class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 
 	dispatch<TConfig extends ActionConfigBase>(
 		input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>,
-	): Promise<ActionExecutionResult[]>;
+	): Promise<ActionDispatchResult[]>;
 
 	dispatchSync<TConfig extends ActionConfigBase>(input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>): void;
 }
@@ -224,8 +225,7 @@ MIT
 ## Dispatch behavior
 
 `ActionDispatcher` is the execution entry point. It skips disabled actions and
-explicit trigger mismatches before looking up a registration. Matching actions
-run sequentially, with one registration lookup each. Missing registrations
+explicit trigger mismatches before looking up a registration. Matching actions run in sequence except within an inner array, with one registration lookup each. Missing registrations
 produce a failed result. Thrown handlers become failed results and execution
 continues; an unsuccessful result with `shouldContinue: false` stops the sequence.
 `dispatch` merges optional metadata into object contexts without mutating the
@@ -234,3 +234,9 @@ Logging uses `@ecopages/logger`; enable debug output through the host's log leve
 The former `ActionExecutor`, its `execute` method, and the `debug` constructor
 option have been removed. Use `ActionDispatcher.dispatch` instead.
 Browser redirects belong to the forms package's `ActionExecutionResult` type.
+
+## Parallel groups and results
+
+In `actions: [first, [second, third], last]`, `second` and `third` start together. A failure with `shouldContinue: false` requests cancellation of sibling handlers through their `signal`, waits for every started handler to settle, and stops the later sequence. Other failures are reported and allow the sequence to continue. A handler must observe the signal; a handler that ignores it can keep the dispatcher waiting indefinitely. Cancellation does not undo a remote side effect.
+
+`dispatch` returns results in configuration order, each with `actionId`, `sequenceIndex`, optional `groupIndex`, `status` (`succeeded`, `failed`, or `cancelled`), `cancellationRequested`, and the handler's data or error. A thrown value is retained in `cause` when available. `cancelled` denotes an abort error observed after cancellation, not merely a cancellation request. Indexes refer to original input positions, including positions occupied by skipped actions. Direct callers constructing `ActionRuntimeContext` must supply a signal. Existing flat sequences still run in order; the correlation fields are added to their result objects too. A caller can use these outcomes for application-specific recovery.

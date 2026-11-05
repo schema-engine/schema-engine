@@ -72,11 +72,11 @@ export type FormConfigEnvelope = Omit<InferredForm, 'steps' | 'view' | 'actions'
 	steps: Array<
 		Omit<InferredStep, 'elements' | 'actions'> & {
 			elements: FormTaggedConfig[];
-			actions?: FormTaggedConfig[];
+			actions?: Array<FormTaggedConfig | FormTaggedConfig[]>;
 		}
 	>;
 	view?: FormViewConfig;
-	actions?: FormTaggedConfig[];
+	actions?: Array<FormTaggedConfig | FormTaggedConfig[]>;
 };
 
 /** Form step config narrowed to the element and action maps of one engine. */
@@ -86,7 +86,7 @@ export type FormStep<
 > = Omit<InferredStep, 'elements' | 'actions'> & {
 	elements: Array<ElementConfig<TElements>>;
 	/** Actions dispatched after the form's actions on every trigger while this step is current. */
-	actions?: Array<FormActionConfig<TActions>>;
+	actions?: Array<FormActionConfig<TActions> | FormActionConfig<TActions>[]>;
 };
 
 /** Form config narrowed to one engine's registered elements, recipes, and actions. */
@@ -97,7 +97,7 @@ export type FormConfig<
 > = Omit<InferredForm, 'steps' | 'view' | 'actions'> & {
 	steps: Array<FormStep<TElements, TActions>>;
 	view?: FormViewConfig<TRecipes>;
-	actions?: Array<FormActionConfig<TActions>>;
+	actions?: Array<FormActionConfig<TActions> | FormActionConfig<TActions>[]>;
 	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
 	onChange?: (data: Record<string, unknown>) => void;
 };

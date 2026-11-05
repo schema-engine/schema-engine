@@ -1,6 +1,6 @@
 import type { EngineOutputMaps } from '@schema-engine/forms/engine/form-engine';
 import type { ElementConfig, FormActionConfig, FormConfig } from '@schema-engine/forms/schemas';
-import type { NormalizedFormConfig } from '@schema-engine/forms';
+import type { FormActionTrigger, NormalizedFormConfig, SubmissionActionResult } from '@schema-engine/forms';
 import type { FieldArrayValue } from '@schema-engine/forms/adapters';
 import type { ReactNode, RefCallback } from 'react';
 
@@ -56,6 +56,8 @@ export interface FormProviderProps<
 	onChange?: (data: Partial<TFormData>) => void;
 	/** Callback function executed when a form action is triggered */
 	onAction?: (action: FormActionConfig<TOutputs['actions']>, data: TFormData) => void | Promise<void>;
+	/** Results of each action trigger, including submission failures. */
+	onActionResults?: (results: readonly SubmissionActionResult[], trigger: FormActionTrigger) => void | Promise<void>;
 }
 
 /**

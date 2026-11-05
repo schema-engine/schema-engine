@@ -11,7 +11,8 @@ import {
 	hasConfiguredActions,
 } from '@schema-engine/forms/engine';
 import type { FormProviderProps } from '@/adapters/types';
-import { ActionDispatcher } from '@schema-engine/forms/actions';
+import { ActionDispatcher, type ActionDispatchInput } from '@schema-engine/forms/actions';
+import type { FormActionConfig } from '@schema-engine/forms/schemas';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
@@ -153,11 +154,19 @@ export class FormActionControllerElement extends RadiantElement {
 		this.setupDispatcher();
 		if (!this.dispatcher || !this.form.ready) return Promise.resolve(false);
 		this.dispatchEvent(new CustomEvent('se-action-submit-start', { bubbles: true, composed: true }));
-		const submission = runSubmissionLifecycle((input) => this.dispatcher?.dispatch(input) ?? Promise.resolve([]), {
+		const submission = runSubmissionLifecycle((input) => this.dispatchActions(input, true), {
 			actions: this.activeActions(),
 			context: () => this.buildContext(),
 			onAction: (action, data) => this.onAction?.(action, data),
 		}).then(({ succeeded, results }) => {
+			if (results.length)
+				this.dispatchEvent(
+					new CustomEvent('se-action-results', {
+						bubbles: true,
+						composed: true,
+						detail: { trigger: 'form_submit', results },
+					}),
+				);
 			this.dispatchEvent(
 				new CustomEvent('se-action-submit-complete', {
 					bubbles: true,
@@ -191,7 +200,23 @@ export class FormActionControllerElement extends RadiantElement {
 			return [];
 		}
 
-		return this.dispatcher.dispatch({ actions, trigger, context: this.buildContext() });
+		return this.dispatchActions({ actions, trigger, context: this.buildContext() });
+	}
+
+	private async dispatchActions(
+		input: ActionDispatchInput<FormActionConfig, BuilderActionBaseContext, FormActionTrigger>,
+		suppressSubmitReport = false,
+	) {
+		const results = (await this.dispatcher?.dispatch(input)) ?? [];
+		if (!(suppressSubmitReport && input.trigger === 'form_submit') && results.length)
+			this.dispatchEvent(
+				new CustomEvent('se-action-results', {
+					bubbles: true,
+					composed: true,
+					detail: { trigger: input.trigger, results },
+				}),
+			);
+		return results;
 	}
 
 	private activeActions() {

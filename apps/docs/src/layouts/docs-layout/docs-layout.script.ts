@@ -8,7 +8,7 @@ import '@ecopages/radiant-ui/toast';
 /* oxlint-enable import/no-unassigned-import */
 
 import { isServer } from '@ecopages/radiant/is-server';
-import '@/lib/form-engine-setup';
+import { installPreviewEngineBinding } from '@/lib/preview-engine-binding';
 import { installDocsToastShell } from '@/lib/docs-toast-shell';
 
 const docsContentSelector = '.docs-layout__content';
@@ -37,6 +37,7 @@ function installDocsLayoutClient(): void {
 
 	Reflect.set(document, DOCS_LAYOUT_CLIENT, true);
 	installDocsToastShell();
+	installPreviewEngineBinding();
 	document.addEventListener('eco:after-swap', onDocsLayoutAfterSwap);
 }
 

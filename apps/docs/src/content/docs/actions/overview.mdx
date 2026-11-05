@@ -1,6 +1,6 @@
 ---
 title: 'Overview'
-description: 'Domain-agnostic sequential action execution system.'
+description: 'Domain-agnostic action execution with sequential and parallel groups.'
 group: Actions
 order: 1
 ---
@@ -17,7 +17,7 @@ It provides:
 
 - action registrations
 - a registry for resolving action types
-- a sequential dispatcher with metadata merging
+- a dispatcher with sequential and parallel execution and metadata merging
 
 The package is reusable across domains. It is not form-specific.
 
@@ -29,13 +29,14 @@ The package is reusable across domains. It is not form-specific.
 
 The dispatcher separates the caller-provided base context from the runtime context seen by action handlers.
 
-When an action runs, the dispatcher enriches the base context with the current action config and trigger before calling `execute()`.
+When an action runs, the dispatcher enriches the base context with the current action config, trigger and cancellation signal before calling `execute()`.
 
 ```typescript
 execute({
 	...context,
 	config: action,
 	trigger,
+	signal,
 });
 ```
 

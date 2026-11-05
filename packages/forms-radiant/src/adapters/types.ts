@@ -19,5 +19,8 @@ export interface FormProviderProps<TFormData = Record<string, unknown>> {
 	children?: JsxRenderable;
 	onSubmit?: (data: TFormData) => void | Promise<void>;
 	onChange?: (data: Partial<TFormData>) => void;
-	onAction?: (action: NonNullable<FormConfigView['actions']>[number], data: TFormData) => void | Promise<void>;
+	onAction?: (
+		action: Exclude<NonNullable<FormConfigView['actions']>[number], readonly unknown[]>,
+		data: TFormData,
+	) => void | Promise<void>;
 }

@@ -6,6 +6,7 @@ import { useFormContext, useController } from 'react-hook-form';
 import * as z from 'zod/mini';
 import { createFormEngine, type BuilderActionRuntimeContext } from '@schema-engine/forms';
 import { FormProvider } from '../../src/adapters/rhf/form-provider';
+import { FormRenderer } from '../../src/components/internals/form-renderer';
 import { FormEngineContext } from '../../src/components/provider';
 import { FormAdapterContext } from '../../src/adapters/context';
 import { rhfAdapter } from '../../src/adapters/react-hook-form';
@@ -20,7 +21,7 @@ const engine = createFormEngine({
 	actions: [
 		{
 			$type: 'probe',
-			schema: z.object({ $type: z.literal('probe'), id: z.string() }),
+			schema: z.object({ $type: z.literal('probe'), id: z.string(), triggers: z.optional(z.array(z.string())) }),
 			metadata: { name: 'Probe', category: 'test' },
 			execute: async (context: BuilderActionRuntimeContext) => {
 				handled.push((context.config as { id: string }).id);
@@ -212,7 +213,7 @@ test('executeAction runs only the given action and reports its result', async ()
 	await userEvent.click(screen.getByRole('button', { name: 'Execute' }));
 	await waitFor(() => expect(screen.getByLabelText('submission')).toHaveTextContent('success'));
 	expect(handled).toEqual(['publish']);
-	expect(JSON.parse(screen.getByLabelText('action result').textContent!)).toEqual({
+	expect(JSON.parse(screen.getByLabelText('action result').textContent!)).toMatchObject({
 		success: true,
 		data: { id: 'publish' },
 	});
@@ -304,4 +305,67 @@ test('submission errors name the failing action', async () => {
 	await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
 	await waitFor(() => expect(screen.getByLabelText('submission')).toHaveTextContent('error'));
 	expect(screen.getByLabelText('submission errors')).toHaveTextContent('abort: Rejected');
+});
+
+function ManualSubmitTrigger() {
+	const { dispatchTrigger } = useFormInstanceActions();
+	return (
+		<button type="button" onClick={() => void dispatchTrigger('form_submit')}>
+			Dispatch submit
+		</button>
+	);
+}
+
+test('reports grouped action outcomes through the React renderer', async () => {
+	const results = vi.fn();
+	const formConfig: FormConfig = {
+		id: 'parallel',
+		steps: [{ id: 'one', title: 'One', elements: [] }],
+		actions: [
+			[
+				{ id: 'ok', $type: 'probe', triggers: ['form_submit'] },
+				{ id: 'abort', $type: 'probe', triggers: ['form_submit'] },
+			],
+			{ id: 'mounted', $type: 'probe', triggers: ['form_mount'] },
+		],
+	};
+	render(
+		<FormRenderer config={formConfig} engine={engine} adapter={rhfAdapter} onActionResults={results}>
+			<Controls action={{ id: 'manual', $type: 'probe', triggers: ['form_submit'] }} />
+			<ManualSubmitTrigger />
+		</FormRenderer>,
+	);
+	await waitFor(() =>
+		expect(results).toHaveBeenCalledWith(
+			expect.arrayContaining([expect.objectContaining({ actionId: 'mounted' })]),
+			'form_mount',
+		),
+	);
+	results.mockClear();
+	await userEvent.click(screen.getByRole('button', { name: 'Execute' }));
+	await waitFor(() =>
+		expect(results).toHaveBeenCalledWith(
+			expect.arrayContaining([expect.objectContaining({ actionId: 'manual' })]),
+			'form_submit',
+		),
+	);
+	results.mockClear();
+	await userEvent.click(screen.getByRole('button', { name: 'Dispatch submit' }));
+	await waitFor(() =>
+		expect(results).toHaveBeenCalledWith(
+			expect.arrayContaining([expect.objectContaining({ actionId: 'abort' })]),
+			'form_submit',
+		),
+	);
+	results.mockClear();
+	await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+	await waitFor(() =>
+		expect(results).toHaveBeenCalledWith(
+			expect.arrayContaining([
+				expect.objectContaining({ actionId: 'ok', success: true, data: { id: 'ok' } }),
+				expect.objectContaining({ actionId: 'abort', success: false, error: 'Rejected' }),
+			]),
+			'form_submit',
+		),
+	);
 });

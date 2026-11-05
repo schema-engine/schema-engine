@@ -241,7 +241,7 @@ Detailed architectural documentation is available in the [Documentation App](./a
 MIT © Schema Engine Contributors
 
 The [registry package](./packages/registry/README.md) exposes one `BaseRegistry`
-class and registration types. The [actions package](./packages/actions/README.md)
+class and registration types. Action sequences support concurrent groups and cooperative cancellation; the [actions package](./packages/actions/README.md)
 executes through `ActionDispatcher`; form-specific redirect results are described
 in the [forms action guide](./packages/forms/src/actions/README.md).
 

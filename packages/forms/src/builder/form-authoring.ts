@@ -48,7 +48,7 @@ export type FormAuthoringStep<
 	className?: string;
 	style?: Record<string, unknown>;
 	/** Actions dispatched after the form's actions on every trigger while this step is current. */
-	actions?: Array<FormAuthoringAction<TActions>>;
+	actions?: Array<FormAuthoringAction<TActions> | FormAuthoringAction<TActions>[]>;
 };
 
 /**
@@ -80,7 +80,7 @@ export interface FormAuthoringInput<
 	reValidateMode?: 'onSubmit' | 'onChange' | 'onBlur';
 	className?: string;
 	style?: Record<string, unknown>;
-	actions?: Array<FormAuthoringAction<TActions>>;
+	actions?: Array<FormAuthoringAction<TActions> | FormAuthoringAction<TActions>[]>;
 	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
 	onChange?: (data: Record<string, unknown>) => void;
 }
