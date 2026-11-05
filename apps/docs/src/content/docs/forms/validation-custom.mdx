@@ -545,39 +545,28 @@ Place expensive validations last in the rule chain:
 
 ### Debouncing Async Validations
 
-For async validations, consider implementing debouncing to avoid excessive API calls:
+Use the built-in async rule to debounce server-side validation. A pending check
+replaced by a different value settles with `Validation pending`; a check replaced
+by the same value shares the latest result. Checks for separate fields do not
+cancel one another. See [Async Validation](/docs/forms/validation-built-in#async-validation)
+for the request and response contract.
 
 ```typescript
-let debounceTimer;
+import type { AsyncRule } from '@schema-engine/forms/schemas/validation';
 
-validationRegistry.register({
-	type: 'debouncedAsync',
-	category: 'generic',
-	handler: (rule) => {
-		return z.string().check(
-			z.refine(async (value) => {
-				clearTimeout(debounceTimer);
-
-				return new Promise((resolve) => {
-					debounceTimer = setTimeout(async () => {
-						try {
-							const response = await fetch(rule.value?.url, {
-								method: 'POST',
-								body: JSON.stringify({ value }),
-								headers: { 'Content-Type': 'application/json' },
-							});
-							const result = await response.json();
-							resolve(result.valid);
-						} catch (error) {
-							resolve(false);
-						}
-					}, rule.value?.delay || 300);
-				});
-			}, rule.message),
-		);
-	},
-});
+const usernameRule = {
+	type: 'async',
+	url: '/api/check-username',
+	method: 'POST',
+	expectedResponse: { valid: true },
+	debounce: 500,
+	message: 'Username is unavailable',
+} satisfies AsyncRule;
 ```
+
+Debouncing replaces pending timers; it does not cancel a request that has
+already started. If custom validation needs request cancellation or ordering,
+its implementation must handle those separately.
 
 ## Best Practices
 
@@ -637,29 +626,29 @@ validationRegistry.register({
 
 ### 4. Document Your Validations
 
-Keep documentation for custom validations:
+Keep documentation for custom validations. This illustrative function accepts
+only `example-valid` so the registration demonstrates both outcomes. Replace it
+with your own validation logic; it does not validate real Australian Business
+Numbers or their checksums.
 
 ```typescript
+import * as z from 'zod/mini';
+import { createFormEngine } from '@schema-engine/forms';
+
+const engine = createFormEngine();
+const validationRegistry = engine.getValidationRegistry();
+const validateAbn = (value: string) => value === 'example-valid';
+
 /**
- * Validates Australian Business Number (ABN)
+ * Illustrates delegating a custom rule to an application validator.
  *
- * @param rule.value - Not used
- * @param rule.message - Custom error message
- *
- * Format: 11 digits with optional spaces (XX XXX XXX XXX)
- * Validates using ABN checksum algorithm
- *
- * @example
- * { type: 'australianABN', message: 'Please enter a valid ABN' }
+ * @remarks `validateAbn` is a placeholder, not an ABN checksum or registry check.
  */
 validationRegistry.register({
 	type: 'australianABN',
 	category: 'string',
-	handler: (rule) => {
-		return z
-			.string()
-			.check(z.refine((abn) => {}, rule.message || 'Please enter a valid Australian Business Number'));
-	},
+	handler: (rule) =>
+		z.string().check(z.refine((abn) => validateAbn(abn), rule.message || 'Please enter a valid ABN')),
 });
 ```
 
