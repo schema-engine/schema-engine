@@ -53,6 +53,11 @@ with its defaults and step state. The change watcher subscribes to field value
 changes, so a parent render by itself does not call `onChange` or dispatch a
 `form_change` action.
 
+The React Hook Form adapter converts the engine's null-prototype value maps to
+ordinary records at its boundary. React Hook Form does not clone null-prototype
+records, so passing them directly aliases its initial and live values and makes
+reset restore edited values. Nested maps and array rows follow the same rule.
+
 Radiant `FormEngineController` subscribes to the nearest ancestor
 `formEngineContext` and resolves the active owning render on initial reads.
 Renderer-owned field rendering resolves an explicit engine, then
