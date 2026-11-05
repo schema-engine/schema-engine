@@ -30,7 +30,7 @@ class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 
 	dispatch<TConfig extends ActionConfigBase>(
 		input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>,
-	): Promise<ActionExecutionResult[]>;
+	): Promise<ActionDispatchResult[]>;
 
 	dispatchSync<TConfig extends ActionConfigBase>(input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>): void;
 }
@@ -77,7 +77,7 @@ interface ActionRegistration<
 
 Zod Mini, Zod, Valibot, and Effect Schema values implement Standard Schema and remain valid `schema` values.
 
-`execute` receives an `ActionRuntimeContext` — the caller-provided `TBaseContext` enriched with `config` and `trigger` by the dispatcher.
+`execute` receives an `ActionRuntimeContext` — the caller-provided `TBaseContext` enriched with `config`, `trigger`, and `signal` by the dispatcher.
 
 ## ActionRuntimeContext
 
@@ -86,10 +86,11 @@ type ActionRuntimeContext<TConfig = unknown, TBaseContext = unknown, TTrigger = 
 	config: TConfig;
 	trigger: TTrigger;
 	triggeredBy?: TConfig;
+	signal: AbortSignal;
 };
 ```
 
-The shape that action handlers receive at execution time. The dispatcher creates this by spreading the caller-provided base context with the current `config` and `trigger`, and includes `triggeredBy` for nested dispatches.
+The shape that action handlers receive at execution time. The dispatcher creates this by spreading the caller-provided base context with the current `config`, `trigger`, and `signal`, and includes `triggeredBy` for nested dispatches.
 
 ## ActionDispatchInput
 
@@ -102,7 +103,7 @@ interface ActionDispatchInput<
 	TTrigger = string,
 > {
 	trigger: TTrigger;
-	actions: readonly TConfig[];
+	actions: readonly (TConfig | readonly TConfig[])[];
 	context: TBaseContext;
 	triggeredBy?: TConfig;
 	metadata?: Record<string, unknown>;
@@ -137,10 +138,32 @@ interface ActionExecutionResult<TData = unknown> {
 	success: boolean;
 	message?: string;
 	error?: string;
+	cause?: unknown;
 	data?: TData;
 	shouldContinue?: boolean;
 }
 ```
+
+## ActionDispatchResult
+
+`dispatch` returns one result per executed action in configuration order. In addition
+to the handler's `ActionExecutionResult`, each result has:
+
+```typescript
+type ActionDispatchResult<TData = unknown> = ActionExecutionResult<TData> & {
+	actionId: string;
+	sequenceIndex: number;
+	groupIndex?: number;
+	status: 'succeeded' | 'failed' | 'cancelled';
+	cancellationRequested: boolean;
+};
+```
+
+Indexes refer to the original action sequence and, for a group member, its index
+inside that group. Disabled or nonmatching actions retain their positions in the
+input, even though they produce no result. `cancelled` means an abort error was
+observed after cancellation was requested; the remote side effect may still have
+occurred. Direct callers constructing `ActionRuntimeContext` must provide `signal`.
 
 ## defineAction
 

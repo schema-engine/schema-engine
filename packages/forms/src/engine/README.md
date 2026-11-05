@@ -30,8 +30,7 @@ form's, then that step's (see [CONTEXT.md](../../../../CONTEXT.md#wizard-navigat
 fixed context or a factory; use a factory when each submission trigger needs current form
 values and validation state. Its optional `onAction(action, data)` callback runs after each
 successful `form_submit` action. If the callback rejects, that action becomes a fatal failure
-and later submit actions stop before error and completion triggers run. Submit actions are
-dispatched one at a time, so each returned result carries its `actionId`.
+and later submit actions stop before error and completion triggers run. Submit sequence entries are dispatched in order; grouped actions run concurrently. Each returned result carries its `actionId`.
 `buildFormActionContext` takes nested `errors` and `touched` trees; a renderer that keys
 them by flat field name expands them first. `validateFieldValue` and `validateFormValues`
 require a `debounceScope` owned by the form.

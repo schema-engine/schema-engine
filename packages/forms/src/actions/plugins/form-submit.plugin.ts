@@ -81,6 +81,7 @@ export function formSubmitPlugin(
 			const requestOptions = {
 				method: action.method,
 				body: formData,
+				signal: context.signal,
 			};
 
 			const response = await request(action.endpoint, requestOptions);
@@ -115,6 +116,7 @@ export function formSubmitPlugin(
 				shouldContinue: true,
 			};
 		} catch (error) {
+			if (context.signal?.aborted && error instanceof Error && error.name === 'AbortError') throw error;
 			const err = error instanceof Error ? error : new Error('Submit failed');
 
 			onError(err, context);
@@ -122,6 +124,7 @@ export function formSubmitPlugin(
 			return {
 				success: false,
 				error: action.errorMessage || err.message,
+				cause: error,
 				shouldContinue: false,
 			};
 		}

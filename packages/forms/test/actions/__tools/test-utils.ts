@@ -16,6 +16,7 @@ export function createMockBuilderContext<TConfig = unknown>(
 		isValid: true,
 		errors: {},
 		trigger: 'form_submit',
+		signal: new AbortController().signal,
 		form: {
 			reset: () => {},
 			setValue: () => {},

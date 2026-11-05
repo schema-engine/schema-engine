@@ -76,7 +76,7 @@ The forms action trigger type contains these events:
 | `step_enter`           | A step becomes active                  |
 | `step_leave`           | A step stops being active              |
 
-Actions execute sequentially in the order provided to the dispatcher. Both renderers
+Actions execute sequentially in the order provided to the dispatcher, except that an inner array is a parallel group. Both renderers
 dispatch the form's `actions` and then the current step's `actions`, so a step's
 `step_enter` action runs on entering that step and its `step_leave` action on leaving it.
 The first step is current on mount, so its `step_enter` runs only when the user returns to it.
@@ -219,4 +219,4 @@ configuration type to that engine; no global namespace augmentation is needed.
 
 Form action results use `ActionExecutionResult` from `@schema-engine/forms`, which
 extends the generic action result with optional `redirectUrl` for browser navigation.
-Both renderers execute actions through `ActionDispatcher.dispatch` or `dispatchSync`.
+Both renderers execute actions through `ActionDispatcher.dispatch` or `dispatchSync`; see the [actions package](../../../actions/README.md#parallel-groups-and-results) for cancellation and result semantics.

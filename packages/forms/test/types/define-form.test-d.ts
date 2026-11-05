@@ -361,7 +361,10 @@ engine.defineForm({
 
 const _normalizedCount: number = defined.steps[0].elements[0].count;
 const _normalizedRecipeTitle: string = defined.view!.header.title;
-const _normalizedRetries: number = actionForm.actions![0].retries;
+const normalizedAction = actionForm.actions![0];
+if ('retries' in normalizedAction) {
+	const _normalizedRetries: number = normalizedAction.retries;
+}
 const extendedOutputs = engine.extend({ actions: [pingAction] });
 const _extendedCount: number = extendedOutputs.validateElement({ $type: 'note', name: 'n', id: 'n' }).count;
 

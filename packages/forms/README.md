@@ -76,7 +76,7 @@ reports whether the form or any step configures one. Steps no longer accept
 leave hook into the step's `actions` with `triggers: ['step_enter']` or `['step_leave']`;
 `onStepValidate` has no replacement. A JSON config that still sets them has the keys stripped.
 
-`runSubmissionLifecycle(dispatch, { actions, context })` dispatches the form submit start,
+Action lists may contain inner arrays for parallel groups; see the [actions guide](./src/actions/README.md). `runSubmissionLifecycle(dispatch, { actions, context })` dispatches the form submit start,
 submit, success or error, and complete triggers. Pass a fixed `context` when every trigger
 uses the same snapshot, or a context factory when each trigger needs a fresh form-state
 snapshot. Pass `onAction(action, data)` to run a callback after each successful submit

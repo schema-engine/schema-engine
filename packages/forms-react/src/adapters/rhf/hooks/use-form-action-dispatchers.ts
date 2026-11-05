@@ -1,13 +1,10 @@
 import { useCallback, useMemo, useState } from 'react';
+import { logger } from '@/lib/logger';
 import type { UseFormReturn } from 'react-hook-form';
-import type {
-	FormActionTrigger,
-	BuilderActionBaseContext,
-	ActionExecutionResult,
-	FormConfigView,
-} from '@schema-engine/forms';
+import type { FormActionTrigger, BuilderActionBaseContext, FormConfigView } from '@schema-engine/forms';
 import { buildFormActionContext, collectStepActions } from '@schema-engine/forms';
-import type { ActionDispatcher } from '@schema-engine/forms/actions';
+import type { ActionDispatcher, ActionDispatchInput, ActionDispatchResult } from '@schema-engine/forms/actions';
+import type { FormActionConfig } from '@schema-engine/forms/schemas';
 
 interface UseFormActionDispatchersOptions {
 	form: UseFormReturn;
@@ -16,14 +13,19 @@ interface UseFormActionDispatchersOptions {
 	getCurrentStep?: () => number;
 	/** Seed for elapsed-time metadata; defaults to the form mount. */
 	formMountTime?: number;
+	onActionResults?: (results: readonly ActionDispatchResult[], trigger: FormActionTrigger) => void | Promise<void>;
 }
 
 interface UseFormActionDispatchersReturn {
 	buildActionContext: () => BuilderActionBaseContext;
+	dispatchActions: (
+		input: ActionDispatchInput<FormActionConfig, BuilderActionBaseContext, FormActionTrigger>,
+		suppressSubmitReport?: boolean,
+	) => Promise<ActionDispatchResult[]>;
 	dispatchTrigger: (
 		trigger: FormActionTrigger,
 		extraMetadata?: Record<string, unknown>,
-	) => Promise<ActionExecutionResult[]>;
+	) => Promise<ActionDispatchResult[]>;
 	dispatchTriggerSync: (trigger: FormActionTrigger, extraMetadata?: Record<string, unknown>) => void;
 }
 
@@ -37,6 +39,7 @@ export function useFormActionDispatchers({
 	actionExecutor,
 	getCurrentStep,
 	formMountTime: formMountTimeProp,
+	onActionResults,
 }: UseFormActionDispatchersOptions): UseFormActionDispatchersReturn {
 	const [formMountTime] = useState(() => formMountTimeProp ?? Date.now());
 
@@ -62,35 +65,43 @@ export function useFormActionDispatchers({
 		});
 	}, [form, config, getCurrentStep, formAdapter, formMountTime]);
 
-	const dispatchTrigger = useCallback(
+	const dispatchActions = useCallback(
 		async (
-			trigger: FormActionTrigger,
-			extraMetadata?: Record<string, unknown>,
-		): Promise<ActionExecutionResult[]> => {
-			return actionExecutor.dispatch({
+			input: ActionDispatchInput<FormActionConfig, BuilderActionBaseContext, FormActionTrigger>,
+			suppressSubmitReport = false,
+		): Promise<ActionDispatchResult[]> => {
+			const results = await actionExecutor.dispatch(input);
+			if (!(suppressSubmitReport && input.trigger === 'form_submit') && results.length) {
+				try {
+					await onActionResults?.(results, input.trigger);
+				} catch (error) {
+					logger.error('Action results callback failed:', error);
+				}
+			}
+			return results;
+		},
+		[actionExecutor, onActionResults],
+	);
+	const dispatchTrigger = useCallback(
+		(trigger: FormActionTrigger, extraMetadata?: Record<string, unknown>): Promise<ActionDispatchResult[]> =>
+			dispatchActions({
 				actions: collectStepActions(config, getCurrentStep?.() ?? 0),
 				trigger,
 				context: buildActionContext(),
 				metadata: extraMetadata,
-			});
-		},
-		[config, getCurrentStep, buildActionContext, actionExecutor],
+			}),
+		[config, getCurrentStep, buildActionContext, dispatchActions],
 	);
-
 	const dispatchTriggerSync = useCallback(
 		(trigger: FormActionTrigger, extraMetadata?: Record<string, unknown>) => {
-			actionExecutor.dispatchSync({
-				actions: collectStepActions(config, getCurrentStep?.() ?? 0),
-				trigger,
-				context: buildActionContext(),
-				metadata: extraMetadata,
-			});
+			void dispatchTrigger(trigger, extraMetadata).catch((error) => logger.error('dispatchSync failed:', error));
 		},
-		[config, getCurrentStep, buildActionContext, actionExecutor],
+		[dispatchTrigger],
 	);
 
 	return {
 		buildActionContext,
+		dispatchActions,
 		dispatchTrigger,
 		dispatchTriggerSync,
 	};

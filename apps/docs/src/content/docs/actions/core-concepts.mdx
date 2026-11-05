@@ -31,7 +31,7 @@ interface ActionRegistration<
 
 Zod Mini, Zod, Valibot, and Effect Schema values implement Standard Schema and remain valid `schema` values.
 
-`execute` receives the `ActionRuntimeContext` — the caller-provided base context enriched with `config` and `trigger`.
+`execute` receives the `ActionRuntimeContext` — the caller-provided base context enriched with `config`, `trigger`, and `signal`.
 
 ## ActionConfigBase
 
@@ -55,6 +55,7 @@ interface ActionExecutionResult<TData = unknown> {
 	success: boolean;
 	message?: string;
 	error?: string;
+	cause?: unknown;
 	data?: TData;
 	shouldContinue?: boolean;
 }
@@ -69,6 +70,7 @@ execute({
 	...context,
 	config: action,
 	trigger,
+	signal,
 });
 ```
 
@@ -78,6 +80,7 @@ The resulting `ActionRuntimeContext` is what the handler sees:
 type ActionRuntimeContext<TConfig, TBaseContext, TTrigger> = TBaseContext & {
 	config: TConfig;
 	trigger: TTrigger;
+	signal: AbortSignal;
 };
 ```
 
