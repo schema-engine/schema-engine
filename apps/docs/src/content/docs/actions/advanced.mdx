@@ -9,7 +9,7 @@ order: 4
 
 ## Sequential Execution
 
-Actions always execute sequentially.
+Flat action arrays execute sequentially. An inner array runs its actions concurrently.
 
 ```typescript
 const results = await dispatcher.dispatch({
@@ -20,6 +20,23 @@ const results = await dispatcher.dispatch({
 ```
 
 `action2` will not start until `action1` finishes.
+
+## Parallel groups
+
+```typescript
+const results = await dispatcher.dispatch({
+	actions: [action1, [action2, action3], action4],
+	trigger: 'submit',
+	context,
+});
+```
+
+The group settles before `action4` starts. A failure with `shouldContinue: false`
+requests cancellation of the other group members via `context.signal` and stops
+later actions after the started members settle. Handlers must observe the signal;
+an uncooperative handler can keep dispatch pending. Cancellation does not undo a
+remote side effect. Results include each action's ID, status, cancellation request,
+error and data so application code can decide how to recover.
 
 ## Stop on Failure
 
@@ -88,6 +105,7 @@ describe('logAction', () => {
 			id: 'ctx-1',
 			data: {},
 			trigger: 'submit',
+			signal: new AbortController().signal,
 			config: {
 				id: 'log-1',
 				$type: 'log',

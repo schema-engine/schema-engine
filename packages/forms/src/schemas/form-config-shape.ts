@@ -20,7 +20,7 @@ export function createFormStepSchema(parts: { elements: z.ZodMiniType; actions: 
 		constraints: z.optional(z.array(z.unknown())),
 		className: z.optional(z.string()),
 		style: z.optional(RendererStyleSchema),
-		actions: z.optional(z.array(parts.actions)),
+		actions: z.optional(z.array(z.union([parts.actions, z.array(parts.actions)]))),
 	});
 }
 
@@ -41,6 +41,6 @@ export function createFormConfigShape(parts: { elements: z.ZodMiniType; view: z.
 		reValidateMode: z.optional(z.enum(['onSubmit', 'onChange', 'onBlur'])),
 		className: z.optional(z.string()),
 		style: z.optional(RendererStyleSchema),
-		actions: z.optional(z.array(parts.actions)),
+		actions: z.optional(z.array(z.union([parts.actions, z.array(parts.actions)]))),
 	});
 }

@@ -171,27 +171,44 @@ function parseTypedConfig(
 }
 
 function parseTypedList(
-	items: FormTaggedConfig[] | undefined,
+	items: Array<FormTaggedConfig | FormTaggedConfig[]> | undefined,
 	kind: 'element' | 'action',
 	getRegistration: (id: string) => { schema: StandardSchemaV1 } | undefined,
 	registerHint: string,
 	parentLocation: string,
 	itemKind: string,
-): { issues: string[]; items?: FormTaggedConfig[] } {
+): { issues: string[]; items?: Array<FormTaggedConfig | FormTaggedConfig[]> } {
 	if (!items) return { issues: [] };
 
-	const next: FormTaggedConfig[] = [];
+	const next: Array<FormTaggedConfig | FormTaggedConfig[]> = [];
 	const issues: string[] = [];
-	for (let index = 0; index < items.length; index += 1) {
-		const item = items[index];
-		const location = `${parentLocation} ${itemLocation(itemKind, index, { id: item.id })}`;
+	const parseItem = (item: FormTaggedConfig, location: string): FormTaggedConfig | undefined => {
 		const result = parseTypedConfig(kind, item, getRegistration, registerHint);
 		if (!result.ok) {
 			issues.push(prefixed(location, result.issue));
+			return undefined;
+		}
+		return result.data;
+	};
+	for (let index = 0; index < items.length; index += 1) {
+		const item = items[index];
+		if (Array.isArray(item)) {
+			const group = item
+				.map((action, actionIndex) =>
+					parseItem(
+						action,
+						`${parentLocation} ${itemKind}[${index}] ${itemLocation('actions', actionIndex, { id: action.id })}`,
+					),
+				)
+				.filter((action): action is FormTaggedConfig => action !== undefined);
+			next.push(group);
 			continue;
 		}
-		next.push(result.data);
+		const location = `${parentLocation} ${itemLocation(itemKind, index, { id: item.id })}`;
+		const parsed = parseItem(item, location);
+		if (parsed) next.push(parsed);
 	}
+
 	return { issues, items: next };
 }
 
@@ -344,7 +361,11 @@ export function validateFormConfig(config: unknown, options: ValidateFormOptions
 	}
 
 	const issues: string[] = [];
-	const parseActions = (items: FormTaggedConfig[] | undefined, parentLocation: string, itemKind: string) =>
+	const parseActions = (
+		items: Array<FormTaggedConfig | FormTaggedConfig[]> | undefined,
+		parentLocation: string,
+		itemKind: string,
+	) =>
 		parseTypedList(
 			items,
 			'action',

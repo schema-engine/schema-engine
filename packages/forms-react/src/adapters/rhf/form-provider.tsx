@@ -33,6 +33,7 @@ export function FormProvider<
 	onSubmit,
 	onChange,
 	onAction,
+	onActionResults,
 }: FormProviderProps<TFormData, TElements, TRecipes, TActions, TOutputs>) {
 	const { engine } = useFormEngine<TElements, TRecipes, TActions, TOutputs>();
 	const runtimeConfig = config as unknown as FormConfigView;
@@ -61,6 +62,7 @@ export function FormProvider<
 		config: runtimeConfig,
 		actionExecutor,
 		getCurrentStep,
+		onActionResults,
 	});
 
 	const multiStep = useRHFMultiStep(runtimeConfig, form, actionDispatchers.dispatchTrigger, {
@@ -114,12 +116,13 @@ export function FormProvider<
 		form,
 		config: runtimeConfig,
 		submission,
-		actionExecutor,
 		buildActionContext: actionDispatchers.buildActionContext,
 		dispatchTrigger: actionDispatchers.dispatchTrigger,
 		getCurrentStep,
 		onSubmit: handleFormSubmit,
 		onAction: handleFormAction,
+		onActionResults,
+		dispatchActions: actionDispatchers.dispatchActions,
 	});
 
 	const { stepStates } = multiStep;

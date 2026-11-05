@@ -129,7 +129,7 @@ Action handlers receive a framework-neutral `context.form` with `reset`,
 A changed `require` condition revalidates a touched or submitted dependent field.
 Submission errors name the failing action by its configured `id`.
 
-Successful `form_submit` actions call `onAction(action, data)` before the submission
+Form action lists support parallel groups as described in the [actions guide](../forms/src/actions/README.md). `onActionResults(results, trigger)` receives nonempty results for each trigger, including the full submitted sequence, action positions, errors and data. Successful `form_submit` actions call `onAction(action, data)` before the submission
 callback. A rejected action callback aborts the remaining submit actions and runs
 the error and completion triggers.
 

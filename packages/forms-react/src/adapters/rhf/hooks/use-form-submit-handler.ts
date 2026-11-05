@@ -8,8 +8,9 @@ import {
 	type BuilderActionBaseContext,
 	type FormActionTrigger,
 	type FormConfigView,
+	type SubmissionActionResult,
 } from '@schema-engine/forms';
-import type { ActionDispatcher, ActionExecutionResult } from '@schema-engine/forms/actions';
+import type { ActionDispatchInput, ActionDispatchResult, ActionExecutionResult } from '@schema-engine/forms/actions';
 import type { SubmissionState, SubmissionError } from '@/hooks/use-submission-state';
 
 interface SubmissionStateManager {
@@ -20,18 +21,22 @@ interface SubmissionStateManager {
 	clearSubmission: () => void;
 }
 
-export type NormalizedFormAction = NonNullable<FormConfigView['actions']>[number];
+export type NormalizedFormAction = Exclude<NonNullable<FormConfigView['actions']>[number], readonly unknown[]>;
 
 interface UseFormSubmitHandlerOptions {
 	form: UseFormReturn;
 	config: FormConfigView;
-	actionExecutor: ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>;
 	buildActionContext: () => BuilderActionBaseContext;
 	submission: SubmissionStateManager;
 	dispatchTrigger: (trigger: FormActionTrigger) => Promise<ActionExecutionResult[]>;
 	getCurrentStep: () => number;
 	onSubmit?: (data: FieldValues) => void | Promise<void>;
 	onAction?: (action: NormalizedFormAction, data: FieldValues) => void | Promise<void>;
+	onActionResults?: (results: readonly SubmissionActionResult[], trigger: FormActionTrigger) => void | Promise<void>;
+	dispatchActions: (
+		input: ActionDispatchInput<FormActionConfig, BuilderActionBaseContext, FormActionTrigger>,
+		suppressSubmitReport?: boolean,
+	) => Promise<ActionDispatchResult[]>;
 }
 
 export type SubmissionContextValue = {
@@ -52,13 +57,14 @@ export type SubmissionContextValue = {
 export function useFormSubmitHandler({
 	form,
 	config,
-	actionExecutor,
 	buildActionContext,
 	submission,
 	dispatchTrigger,
 	getCurrentStep,
 	onSubmit,
 	onAction,
+	onActionResults,
+	dispatchActions,
 }: UseFormSubmitHandlerOptions): { handleSubmit: (data: FieldValues) => Promise<void> } & SubmissionContextValue {
 	const { submissionState, setSubmissionPending, setSubmissionSuccess, setSubmissionError, clearSubmission } =
 		submission;
@@ -66,8 +72,7 @@ export function useFormSubmitHandler({
 	const executeAction = useCallback(
 		async (action: FormActionConfig) => {
 			setSubmissionPending();
-			return actionExecutor
-				.dispatch({ actions: [action], trigger: 'form_submit', context: buildActionContext() })
+			return dispatchActions({ actions: [action], trigger: 'form_submit', context: buildActionContext() })
 				.then(async (results) => {
 					const result = results[0] || { success: false, error: 'No result returned' };
 
@@ -95,7 +100,7 @@ export function useFormSubmitHandler({
 		[
 			form,
 			onAction,
-			actionExecutor,
+			dispatchActions,
 			buildActionContext,
 			setSubmissionPending,
 			setSubmissionSuccess,
@@ -111,10 +116,19 @@ export function useFormSubmitHandler({
 			if (actions.length > 0) {
 				try {
 					const { succeeded, results } = await runSubmissionLifecycle(
-						(input) => actionExecutor.dispatch(input),
-						{ actions, context: buildActionContext, onAction },
+						(input) => dispatchActions(input, true),
+						{
+							actions,
+							context: buildActionContext,
+							onAction,
+						},
 					);
 
+					try {
+						if (results.length) await onActionResults?.(results, 'form_submit');
+					} catch (error) {
+						logger.error('Action results callback failed:', error);
+					}
 					const executionErrors: SubmissionError[] = results
 						.filter((result) => !result.success && result.shouldContinue === false)
 						.map((result) => ({
@@ -158,7 +172,8 @@ export function useFormSubmitHandler({
 			config,
 			onSubmit,
 			onAction,
-			actionExecutor,
+			onActionResults,
+			dispatchActions,
 			buildActionContext,
 			dispatchTrigger,
 			getCurrentStep,

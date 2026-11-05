@@ -127,6 +127,7 @@ function FormRendererInner<
 	onSubmit,
 	onChange,
 	onAction,
+	onActionResults,
 	className = '',
 	style,
 	compiledGrid,
@@ -144,6 +145,7 @@ function FormRendererInner<
 			onSubmit={onSubmit}
 			onChange={onChange}
 			onAction={onAction}
+			onActionResults={onActionResults}
 		>
 			<div className={`se-form ${className}`.trim()} style={style}>
 				<GridThemeStyle themeId={theme.id} css={css} />
