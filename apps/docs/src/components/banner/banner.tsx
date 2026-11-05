@@ -21,7 +21,7 @@ export function BannerTitle({ children, class: className }: BannerTitleProps) {
 export const Banner = eco.component<BannerProps, JsxRenderable>({
 	render: ({ children, type = 'info', class: className }) => {
 		return (
-			<div class={cn(`eco-banner eco-banner--${type}`, className)} role="alert">
+			<div class={cn(`eco-banner eco-banner--${type}`, className)} role={type === 'alert' ? 'alert' : undefined}>
 				{children}
 			</div>
 		);
