@@ -231,6 +231,7 @@ Detailed architectural documentation is available in the [Documentation App](./a
 - **[Quick Start](./apps/docs/src/content/docs/getting-started/quick-start.mdx)**
 - **[Forms — Core Concepts](./apps/docs/src/content/docs/forms/core-concepts.mdx)**
 - **[Component Registry](./apps/docs/src/content/docs/registry/overview.mdx)**
+- **[shadcn Registry Sources](./registry/README.md)**
 - **[Action System](./apps/docs/src/content/docs/actions/overview.mdx)**
 - **[Forms React — Getting Started](./apps/docs/src/content/docs/forms-react/getting-started.mdx)**
 

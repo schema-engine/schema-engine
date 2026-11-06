@@ -5,6 +5,7 @@ The registry ships three component-base ports. Pick the aggregate that matches y
 Registry field and recipe components are plain React TSX; consumers compile them with their app `jsx` settings (typically `react-jsx`). Shared registry imports resolve `@schema-engine/forms-react` through its package exports, keeping providers and hooks on the same runtime instance.
 
 Form elements and view recipes live in `registry/shared/forms`. Each base only owns Schema Engine primitives (and React Aria wrapper overlays).
+The generated root `registry.json` lists all three ports and resolves each source path from the repository root. Shared implementations remain in `registry/shared`; the catalog selects a base-specific override where one exists. This keeps every source path inside the registry root for the shadcn CLI.
 
 ## Base UI (default)
 

@@ -15,7 +15,6 @@ type ItemType = 'registry:lib' | 'registry:ui' | 'registry:item' | 'registry:com
 
 interface CatalogFile {
 	path: string;
-	sourcePath: string;
 	type: ItemType;
 	target: string;
 }
@@ -373,28 +372,19 @@ function resolveDep(base: Base, dep: string): string {
 	return isSameRepo ? `${GITHUB}/${itemName(base, dep)}` : dep;
 }
 
-interface FileCandidate {
-	path: string;
-	sourcePath: string;
-}
-
 /**
  * Both form wrappers and primitives resolve the same way: a base-specific file
  * wins when it exists, otherwise the shared implementation is used.
  */
-function preferOverride(override: FileCandidate, shared: FileCandidate): FileCandidate {
-	return existsSync(join(root, override.sourcePath)) ? override : shared;
+function preferOverride(override: string, shared: string): string {
+	return existsSync(join(root, override)) ? override : shared;
 }
 
 function formFile(base: Base, rel: string): CatalogFile {
-	const { path, sourcePath } = preferOverride(
-		{ path: `overlays/forms/${rel}`, sourcePath: `registry/${base.id}/overlays/forms/${rel}` },
-		{ path: `../shared/forms/${rel}`, sourcePath: `${SHARED_FORMS_ROOT}/${rel}` },
-	);
+	const path = preferOverride(`registry/${base.id}/overlays/forms/${rel}`, `${SHARED_FORMS_ROOT}/${rel}`);
 
 	return {
 		path,
-		sourcePath,
 		type: rel.endsWith('.tsx') ? 'registry:component' : 'registry:lib',
 		target: `@components/schema-engine/forms/${rel}`,
 	};
@@ -402,20 +392,16 @@ function formFile(base: Base, rel: string): CatalogFile {
 
 function primitiveFile(base: Base, name: PrimitiveName): CatalogFile {
 	const rel = `${name}.tsx`;
-	const { path, sourcePath } = preferOverride(
-		{ path: `primitives/${rel}`, sourcePath: `registry/${base.id}/primitives/${rel}` },
-		{ path: `../shared/primitives/${rel}`, sourcePath: `${SHARED_PRIMITIVES_ROOT}/${rel}` },
-	);
+	const path = preferOverride(`registry/${base.id}/primitives/${rel}`, `${SHARED_PRIMITIVES_ROOT}/${rel}`);
 
-	return { path, sourcePath, type: 'registry:ui', target: `@ui/schema-engine/components/${rel}` };
+	return { path, type: 'registry:ui', target: `@ui/schema-engine/components/${rel}` };
 }
 
 function primitiveFiles(base: Base, name: PrimitiveName): CatalogFile[] {
 	const files = [primitiveFile(base, name)];
 	if (name === 'phone-input') {
 		files.push({
-			path: '../shared/primitives/phone-country.ts',
-			sourcePath: `${SHARED_PRIMITIVES_ROOT}/phone-country.ts`,
+			path: `${SHARED_PRIMITIVES_ROOT}/phone-country.ts`,
 			type: 'registry:lib',
 			target: '@ui/schema-engine/components/phone-country.ts',
 		});
@@ -423,38 +409,32 @@ function primitiveFiles(base: Base, name: PrimitiveName): CatalogFile[] {
 	if (name === 'date-picker') {
 		files.push(
 			{
-				path: '../shared/primitives/calendar.tsx',
-				sourcePath: `${SHARED_PRIMITIVES_ROOT}/calendar.tsx`,
+				path: `${SHARED_PRIMITIVES_ROOT}/calendar.tsx`,
 				type: 'registry:ui',
 				target: '@ui/schema-engine/components/calendar.tsx',
 			},
 			{
-				path: '../shared/primitives/date-input.tsx',
-				sourcePath: `${SHARED_PRIMITIVES_ROOT}/date-input.tsx`,
+				path: `${SHARED_PRIMITIVES_ROOT}/date-input.tsx`,
 				type: 'registry:ui',
 				target: '@ui/schema-engine/components/date-input.tsx',
 			},
 			{
-				path: '../shared/primitives/date-picker.tsx',
-				sourcePath: `${SHARED_PRIMITIVES_ROOT}/date-picker.tsx`,
+				path: `${SHARED_PRIMITIVES_ROOT}/date-picker.tsx`,
 				type: 'registry:ui',
 				target: '@ui/schema-engine/components/date-picker.tsx',
 			},
 			{
-				path: '../shared/primitives/date-range-picker.tsx',
-				sourcePath: `${SHARED_PRIMITIVES_ROOT}/date-range-picker.tsx`,
+				path: `${SHARED_PRIMITIVES_ROOT}/date-range-picker.tsx`,
 				type: 'registry:ui',
 				target: '@ui/schema-engine/components/date-range-picker.tsx',
 			},
 			{
-				path: '../shared/primitives/date-range-presets.ts',
-				sourcePath: `${SHARED_PRIMITIVES_ROOT}/date-range-presets.ts`,
+				path: `${SHARED_PRIMITIVES_ROOT}/date-range-presets.ts`,
 				type: 'registry:lib',
 				target: '@ui/schema-engine/components/date-range-presets.ts',
 			},
 			{
-				path: '../shared/primitives/date-utils.ts',
-				sourcePath: `${SHARED_PRIMITIVES_ROOT}/date-utils.ts`,
+				path: `${SHARED_PRIMITIVES_ROOT}/date-utils.ts`,
 				type: 'registry:lib',
 				target: '@ui/schema-engine/components/date-utils.ts',
 			},
@@ -507,8 +487,7 @@ function buildElementItem(base: Base, spec: ElementSpec): CatalogItem {
 
 function recipeFile(rel: string): CatalogFile {
 	return {
-		path: `../shared/forms/recipes/${rel}`,
-		sourcePath: `${SHARED_FORMS_ROOT}/recipes/${rel}`,
+		path: `${SHARED_FORMS_ROOT}/recipes/${rel}`,
 		type: rel.endsWith('.tsx') ? 'registry:component' : 'registry:lib',
 		target: `@components/schema-engine/forms/recipes/${rel}`,
 	};
@@ -655,13 +634,13 @@ const OVERRIDE_ROOTS: Array<{ overrideDir: (base: Base) => string; sharedDir: st
 function checkOverrideIsNotACopy(base: Base, file: CatalogFile, errors: string[]): void {
 	for (const { overrideDir, sharedDir } of OVERRIDE_ROOTS) {
 		const prefix = `${overrideDir(base)}/`;
-		if (!file.sourcePath.startsWith(prefix)) continue;
+		if (!file.path.startsWith(prefix)) continue;
 
-		const sharedPath = join(root, sharedDir, file.sourcePath.slice(prefix.length));
+		const sharedPath = join(root, sharedDir, file.path.slice(prefix.length));
 		if (!existsSync(sharedPath)) return;
 
-		if (readFileSync(join(root, file.sourcePath), 'utf8') === readFileSync(sharedPath, 'utf8')) {
-			errors.push(`${file.sourcePath} is identical to the shared original; delete the override`);
+		if (readFileSync(join(root, file.path), 'utf8') === readFileSync(sharedPath, 'utf8')) {
+			errors.push(`${file.path} is identical to the shared original; delete the override`);
 		}
 	}
 }
@@ -676,8 +655,8 @@ export function validateCatalog(): string[] {
 			names.add(item.name);
 
 			for (const file of item.files) {
-				if (!existsSync(join(root, file.sourcePath))) {
-					errors.push(`${item.name} missing file ${file.sourcePath}`);
+				if (!existsSync(join(root, file.path))) {
+					errors.push(`${item.name} missing file ${file.path}`);
 					continue;
 				}
 				if (!file.target.startsWith('@components/') && !file.target.startsWith('@ui/')) {
@@ -689,8 +668,8 @@ export function validateCatalog(): string[] {
 			if (item.name === base.aggregateName) continue;
 
 			const imports = item.files
-				.filter((file) => existsSync(join(root, file.sourcePath)))
-				.flatMap((file) => collectImports(readFileSync(join(root, file.sourcePath), 'utf8')));
+				.filter((file) => existsSync(join(root, file.path)))
+				.flatMap((file) => collectImports(readFileSync(join(root, file.path), 'utf8')));
 
 			for (const spec of imports) {
 				if (spec.includes('@schema-engine/forms-react/components/internals')) {
@@ -868,19 +847,7 @@ function renderRecipeManifest(scan: RecipeScanEntry[]): string {
 
 function toRegistryItem(item: CatalogItem) {
 	const { registration: _registration, ...rest } = item;
-	return {
-		...rest,
-		files: rest.files.map(({ sourcePath: _sourcePath, ...file }) => file),
-	};
-}
-
-function buildBaseRegistry(entry: BaseCatalog) {
-	return {
-		$schema: 'https://ui.shadcn.com/schema/registry.json',
-		name: `schema-engine-${entry.base.id}`,
-		homepage: `https://github.com/${GITHUB}`,
-		items: entry.catalog.map(toRegistryItem),
-	};
+	return rest;
 }
 
 function buildRootRegistry() {
@@ -888,7 +855,7 @@ function buildRootRegistry() {
 		$schema: 'https://ui.shadcn.com/schema/registry.json',
 		name: 'schema-engine',
 		homepage: `https://github.com/${GITHUB}`,
-		include: BASES.map((base) => `registry/${base.id}/registry.json`),
+		items: catalog.map(toRegistryItem),
 	};
 }
 
@@ -905,13 +872,6 @@ export function buildOutputs(): Map<string, string> {
 	outputs.set(`${SHARED_FORMS_ROOT}/registrations.ts`, renderRegistrations(elementRegistrations()));
 	outputs.set(`${SHARED_FORMS_ROOT}/recipes/registrations.ts`, renderRecipeRegistrations(recipeScan));
 	outputs.set(`${SHARED_FORMS_ROOT}/recipes/manifest.json`, renderRecipeManifest(recipeScan));
-
-	for (const entry of catalogsByBase) {
-		outputs.set(
-			`registry/${entry.base.id}/registry.json`,
-			`${JSON.stringify(buildBaseRegistry(entry), null, 2)}\n`,
-		);
-	}
 
 	return outputs;
 }
