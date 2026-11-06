@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'vitest';
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
 import { catalog, validateCatalog } from '../../../../scripts/generate-schema-engine-registry.ts';
 
 const github = 'andeeplus/schema-engine';
@@ -16,6 +18,27 @@ const RECIPE_AGGREGATES = [
 ];
 
 describe('schema-engine GitHub registry catalog', () => {
+	test('registry source files stay within their manifest directory and exist', () => {
+		const repo = path.resolve(import.meta.dirname, '../../../..');
+		type Manifest = { include?: string[]; items?: Array<{ name: string; files?: Array<{ path: string }> }> };
+		const names = new Set<string>();
+		const check = (manifestPath: string) => {
+			const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as Manifest;
+			const manifestDir = path.dirname(manifestPath);
+			for (const item of manifest.items ?? []) {
+				names.add(item.name);
+				for (const file of item.files ?? []) {
+					expect(path.isAbsolute(file.path), `${item.name}: ${file.path}`).toBe(false);
+					expect(file.path.split(/[\\/]+/), `${item.name}: ${file.path}`).not.toContain('..');
+					expect(existsSync(path.resolve(manifestDir, file.path)), `${item.name}: ${file.path}`).toBe(true);
+				}
+			}
+			for (const include of manifest.include ?? []) check(path.resolve(manifestDir, include));
+		};
+		check(path.join(repo, 'registry.json'));
+		for (const { name } of AGGREGATES) expect(names.has(name), name).toBe(true);
+		for (const name of RECIPE_AGGREGATES) expect(names.has(name), name).toBe(true);
+	});
 	test('catalog is internally consistent', () => {
 		expect(validateCatalog()).toEqual([]);
 	});
@@ -66,12 +89,14 @@ describe('schema-engine GitHub registry catalog', () => {
 		const sharedWrapper = catalog.find((entry) => entry.name === 'schema-engine-form-input');
 		const radixWrapper = catalog.find((entry) => entry.name === 'schema-engine-form-input-radix');
 		const ariaWrapper = catalog.find((entry) => entry.name === 'schema-engine-form-input-aria');
-		expect(sharedWrapper?.files[0]?.path).toBe('../shared/forms/inputs/form-input.tsx');
-		expect(radixWrapper?.files[0]?.path).toBe('../shared/forms/inputs/form-input.tsx');
-		expect(ariaWrapper?.files[0]?.path).toBe('../shared/forms/inputs/form-input.tsx');
+		expect(sharedWrapper?.files[0]?.path).toBe('registry/shared/forms/inputs/form-input.tsx');
+		expect(radixWrapper?.files[0]?.path).toBe('registry/shared/forms/inputs/form-input.tsx');
+		expect(ariaWrapper?.files[0]?.path).toBe('registry/shared/forms/inputs/form-input.tsx');
 
 		const ariaCheckbox = catalog.find((entry) => entry.name === 'schema-engine-form-checkbox-aria');
-		expect(ariaCheckbox?.files.some((file) => file.path === 'overlays/forms/inputs/form-checkbox.tsx')).toBe(true);
+		expect(
+			ariaCheckbox?.files.some((file) => file.path === 'registry/aria/overlays/forms/inputs/form-checkbox.tsx'),
+		).toBe(true);
 	});
 
 	test('item names are unique across all bases', () => {
