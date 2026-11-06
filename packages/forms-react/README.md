@@ -58,6 +58,8 @@ export function ContactForm() {
 
 `createFormEngine` comes from `@schema-engine/forms`. Register recipes explicitly to select them through `view.$type`.
 
+The React Hook Form adapter keeps initial values separate from live field values. A reset action restores those initial values, including authored and provider defaults, nested fields, and seeded array rows; an input without a default returns to its initial empty state.
+
 ## Public entry points
 
 | Import                                                | Purpose                                                                               |

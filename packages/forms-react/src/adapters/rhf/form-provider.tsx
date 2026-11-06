@@ -17,6 +17,22 @@ import { useFormWatcher } from './hooks/use-form-watcher';
 import { useFormSubmitHandler, type NormalizedFormAction } from './hooks/use-form-submit-handler';
 import { useValidationDependencies } from './hooks/use-validation-dependencies';
 
+/** @remarks React Hook Form does not clone null-prototype records, so its defaults and live values would share state. */
+function toReactHookFormValue(value: unknown): unknown {
+	if (Array.isArray(value)) return value.map(toReactHookFormValue);
+	if (value && typeof value === 'object') {
+		const prototype = Object.getPrototypeOf(value);
+		if (prototype === null || prototype === Object.prototype) {
+			return toReactHookFormValues(value as Record<string, unknown>);
+		}
+	}
+	return value;
+}
+
+function toReactHookFormValues(values: Record<string, unknown>): Record<string, unknown> {
+	return Object.fromEntries(Object.entries(values).map(([key, value]) => [key, toReactHookFormValue(value)]));
+}
+
 /**
  * React Hook Form adapter implementation
  */
@@ -42,7 +58,7 @@ export function FormProvider<
 
 	const formElements = useMemo(() => flattenStepElements(runtimeConfig.steps), [runtimeConfig.steps]);
 	const formDefaultValues = useMemo(
-		() => collectInitialValues(formElements, defaultValues),
+		() => toReactHookFormValues(collectInitialValues(formElements, defaultValues)),
 		[formElements, defaultValues],
 	);
 	const formValidationResolver = useFormValidationResolver(formElements, engine.getValidationRegistry());
