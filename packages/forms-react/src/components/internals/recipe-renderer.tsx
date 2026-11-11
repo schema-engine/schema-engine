@@ -18,10 +18,6 @@ function getRecipeAdapter(registration: ReactRecipeRegistration): ReactRecipeAda
 	return payload;
 }
 
-/**
- * @remarks
- * Slot elements are built once per recipe so React skips a slot whose view context did not change.
- */
 function renderSlotBlock(Component: React.FC | undefined): React.ReactNode {
 	if (!Component) return null;
 	return <Component />;
@@ -54,6 +50,7 @@ export function RecipeRenderer({ config, recipe, children, renderFields }: Recip
 		[recipe, config, currentStep, navigation, isSubmitting, stepStates],
 	);
 	const adapter = recipe ? getRecipeAdapter(recipe as ReactRecipeRegistration) : undefined;
+	/** @remarks Slot elements are built once per recipe so React skips a slot whose view context did not change. */
 	const blocks = useMemo(
 		() =>
 			adapter && {

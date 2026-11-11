@@ -15,7 +15,7 @@ function mergeDeep(base: unknown, override: unknown): unknown {
  *
  * @remarks
  * Runs before the view schema parses, so schema defaults fill only what neither the author
- * nor the recipe set. A key the author sets to `undefined` keeps the recipe default.
+ * nor the recipe set. Arrays and other non-plain values replace the default whole. A key the author sets to `undefined` keeps the recipe default.
  */
 export function mergeSlotDefaults(
 	view: Record<string, unknown>,

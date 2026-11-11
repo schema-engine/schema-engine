@@ -41,7 +41,9 @@ describe('recipe view model', () => {
 		});
 
 		render(<FormRenderer config={config} engine={engine} adapter={rhfAdapter} />);
+		expect(screen.getByText('counting-form')).toBeInTheDocument();
 		const rendersBefore = slotRenders;
+		expect(rendersBefore).toBeGreaterThan(0);
 		await userEvent.fill(screen.getByRole('textbox', { name: 'Name' }), 'Ada');
 
 		expect(screen.getByRole('textbox', { name: 'Name' })).toHaveValue('Ada');

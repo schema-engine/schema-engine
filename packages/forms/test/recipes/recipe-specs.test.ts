@@ -215,8 +215,15 @@ describe('normalized slot defaults', () => {
 	});
 
 	test('shows the defaults in the view JSON Schema', () => {
-		const shell = JSON.stringify(engine.describeRecipe('card').viewSchema);
-		expect(shell).toContain('"default":"md"');
+		const viewSchema = engine.describeRecipe('card').viewSchema as {
+			$defs: Record<
+				string,
+				{ properties: Record<string, { properties: Record<string, { default?: unknown }> }> }
+			>;
+		};
+		const properties = viewSchema.$defs['recipe:card'].properties;
+		expect(properties.shell.properties.maxWidth.default).toBe('md');
+		expect(properties.actions.properties.align.default).toBe('end');
 	});
 
 	test('getSlotConfig completes a view that was not normalized', () => {

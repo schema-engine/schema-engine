@@ -82,6 +82,9 @@ function FormElementsRenderer<
 	const { currentStep } = useFormInstanceActions();
 	const engineContext = useOptionalFormEngine<TElements, TRecipes, TActions, TOutputs>();
 	const recipe = config.view ? engineContext?.engine.getRecipe(config.view.$type) : undefined;
+	if (config.view && !recipe) {
+		throw new Error(`Form '${config.id}' uses view '${config.view.$type}' but the engine has no such recipe.`);
+	}
 	const steps = getRenderableSteps(config, currentStep);
 
 	if (steps.length === 0) return null;

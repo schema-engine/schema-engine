@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { createFormEngine } from '@schema-engine/forms';
 
 describe('forms package export contract', () => {
-	test('createFormEngine accepts defaultWizardRecipe from the published package', () => {
+	test('createFormEngine rejects an unregistered defaultWizardRecipe from the published package', () => {
 		expect(() => createFormEngine({ defaultWizardRecipe: 'missing' })).toThrow(/defaultWizardRecipe/);
 	});
 

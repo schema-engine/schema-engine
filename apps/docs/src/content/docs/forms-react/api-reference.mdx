@@ -54,11 +54,12 @@ active-step state, navigation, and the current slot configuration.
 
 ```ts
 import { useViewContext, useActiveStep, useFormNavigation, useViewConfig } from '@schema-engine/forms-react/hooks';
+import { StepHeaderConfigSchema } from '@schema-engine/forms/recipes/built-in';
 
 useViewContext();
 useActiveStep();
 useFormNavigation();
-useViewConfig('header', StepHeaderConfigSchema); // typed as the schema output
+useViewConfig('header', StepHeaderConfigSchema);
 ```
 
 Shells and slot blocks are ordinary components. Bind them to a canonical spec

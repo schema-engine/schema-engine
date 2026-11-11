@@ -46,7 +46,8 @@ export interface ViewModel {
  * @remarks
  * A normalized view already holds the schema output, so the parse is a no-op there; it also
  * fills the schema defaults for a view that was not normalized, such as a serialized or
- * hand-built one, instead of returning a partial config typed as complete.
+ * hand-built one, instead of returning a partial config typed as complete. Throws a Zod error
+ * when the slot config is invalid.
  */
 export function getSlotConfig<TSchema extends z.ZodMiniType>(
 	viewConfig: Record<string, unknown>,
