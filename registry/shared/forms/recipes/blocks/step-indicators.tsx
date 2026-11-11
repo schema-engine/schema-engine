@@ -94,7 +94,11 @@ export function StepIndicators() {
 										) : null}
 									</span>
 								) : null}
-								{step.isCompleted ? <span className="sr-only">{labels.completed}</span> : null}
+								{step.isCompleted ? (
+									<span className="sr-only">
+										{formatStepLabel(labels.completed, index + 1, steps.length)}
+									</span>
+								) : null}
 							</Button>
 						</li>
 					);

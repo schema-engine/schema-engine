@@ -79,7 +79,13 @@ export class StepIndicatorsElement extends RadiantElement {
 										</span>
 									) : null}
 									{step.isCompleted ? (
-										<span class="se-visually-hidden">{indicatorsConfig.labels.completed}</span>
+										<span class="se-visually-hidden">
+											{formatStepLabel(
+												indicatorsConfig.labels.completed,
+												step.index + 1,
+												steps.length,
+											)}
+										</span>
 									) : null}
 								</RuiButton>
 							</li>

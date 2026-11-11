@@ -66,7 +66,10 @@ export const StepIndicatorsConfigSchema = z.strictObject({
 	labels: z.prefault(
 		z.strictObject({
 			regionAriaLabel: z._default(z.string(), 'Form progress'),
-			completed: z._default(z.string(), 'Completed'),
+			completed: z._default(
+				z.string().check(z.describe('Template with {current} and {total}, the status of a finished step')),
+				'Step {current}, completed',
+			),
 			untitledStep: z._default(
 				z.string().check(z.describe('Template with {current} and {total}')),
 				'Step {current}',
