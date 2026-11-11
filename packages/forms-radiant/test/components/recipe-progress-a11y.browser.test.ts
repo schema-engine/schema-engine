@@ -3,6 +3,7 @@ import { page } from 'vitest/browser';
 import * as z from 'zod/mini';
 import { createInitialStepStates } from '@schema-engine/forms/engine';
 import { MinimalProgressConfigSchema, StepIndicatorsConfigSchema } from '@schema-engine/forms/recipes/built-in';
+import '@/components/blocks/wizard-blocks.css';
 import { MinimalProgressElement } from '@/components/blocks/minimal-progress';
 import { StepIndicatorsElement } from '@/components/blocks/step-indicators';
 import { deriveInitialInstance, type FormMeta } from '@/lib/instance-view';
@@ -46,9 +47,9 @@ test('step indicators expose the current and completed steps', async () => {
 	await mountIndicators(createMeta(['One', 'Two', 'Three']));
 
 	await expect.element(page.getByRole('button', { name: /Two/ })).toHaveAttribute('aria-current', 'step');
-	await expect.element(page.getByRole('button', { name: /One/ })).toHaveAccessibleName(/Completed/);
+	await expect.element(page.getByRole('button', { name: /One/ })).toHaveAccessibleName(/completed/);
 	await expect.element(page.getByRole('button', { name: /Three/ })).not.toHaveAttribute('aria-current');
-	await expect.element(page.getByRole('button', { name: /Three/ })).not.toHaveAccessibleName(/Completed/);
+	await expect.element(page.getByRole('button', { name: /Three/ })).not.toHaveAccessibleName(/completed/);
 });
 
 test('the completed check glyph is hidden from assistive technology', async () => {
@@ -58,10 +59,18 @@ test('the completed check glyph is hidden from assistive technology', async () =
 	expect(glyph?.textContent).toBe('✓');
 });
 
-test('the completed status is localizable', async () => {
-	await mountIndicators(createMeta(['One', 'Two', 'Three']), { labels: { completed: 'Abgeschlossen' } });
+test('a completed step keeps its number in the name when titles are hidden', async () => {
+	await mountIndicators(createMeta(['One', 'Two', 'Three']), { showStepTitles: false });
 
-	await expect.element(page.getByRole('button', { name: /One/ })).toHaveAccessibleName(/Abgeschlossen/);
+	await expect.element(page.getByRole('button', { name: 'Step 1, completed' })).toBeInTheDocument();
+});
+
+test('the completed status is localizable', async () => {
+	await mountIndicators(createMeta(['One', 'Two', 'Three']), {
+		labels: { completed: 'Schritt {current} abgeschlossen' },
+	});
+
+	await expect.element(page.getByRole('button', { name: /One/ })).toHaveAccessibleName(/Schritt 1 abgeschlossen/);
 });
 
 test('an untitled step falls back to a localizable title', async () => {
@@ -72,13 +81,22 @@ test('an untitled step falls back to a localizable title', async () => {
 
 test('minimal progress is a labelled progressbar and not a navigation landmark', async () => {
 	await mountProgress(createMeta(['One', 'Two', 'Three']));
-	const bar = page.getByRole('progressbar', { name: 'Form progress' });
+	const bar = page.getByRole('progressbar', { name: 'Progress' });
 
 	await expect.element(bar).toHaveAttribute('aria-valuemin', '0');
 	await expect.element(bar).toHaveAttribute('aria-valuemax', '100');
 	await expect.element(bar).toHaveAttribute('aria-valuenow', '67');
 	await expect.element(bar).toHaveAttribute('aria-valuetext', 'Step 2 of 3');
 	expect(document.querySelector('nav')).toBeNull();
+});
+
+test('the progress bar is named by the localizable visible label', async () => {
+	await mountProgress(createMeta(['One', 'Two', 'Three']), {
+		showPercentage: false,
+		labels: { progress: 'Fortschritt' },
+	});
+
+	await expect.element(page.getByRole('progressbar', { name: 'Fortschritt' })).toBeInTheDocument();
 });
 
 test('the progress value text is localizable', async () => {
@@ -94,6 +112,19 @@ test('the visible percentage is hidden from assistive technology', async () => {
 	const percentage = [...element.querySelectorAll('span')].find((span) => span.textContent === '67%');
 
 	expect(percentage?.getAttribute('aria-hidden')).toBe('true');
+});
+
+test('only the percentage is styled as a muted figure, not the progress label', async () => {
+	const without = await mountProgress(createMeta(['One', 'Two', 'Three']), { showPercentage: false });
+	const label = without.querySelector('.se-minimal-progress__labels span')!;
+
+	expect(label.textContent).toBe('Progress');
+	expect(getComputedStyle(label).fontVariantNumeric).toBe('normal');
+
+	const withPercentage = await mountProgress(createMeta(['One', 'Two', 'Three']));
+	const percentage = withPercentage.querySelector('.se-minimal-progress__percentage')!;
+
+	expect(getComputedStyle(percentage).fontVariantNumeric).toBe('tabular-nums');
 });
 
 test('showPercentage false keeps the bar', async () => {

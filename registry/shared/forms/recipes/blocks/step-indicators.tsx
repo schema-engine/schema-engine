@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Check } from 'lucide-react';
-import { formatStepCounter, StepIndicatorsConfigSchema } from '@schema-engine/forms/recipes/built-in';
+import { formatStepLabel, StepIndicatorsConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import { useFormNavigation, useIsMobile, useViewConfig, useViewContext } from '@schema-engine/forms-react/hooks';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/components/schema-engine/forms/lib/utils';
@@ -84,7 +84,7 @@ export function StepIndicators() {
 												)}
 											>
 												{step.title ||
-													formatStepCounter(labels.untitledStep, index + 1, steps.length)}
+													formatStepLabel(labels.untitledStep, index + 1, steps.length)}
 											</span>
 										) : null}
 										{showStepDescriptions && step.description ? (
@@ -94,7 +94,11 @@ export function StepIndicators() {
 										) : null}
 									</span>
 								) : null}
-								{step.isCompleted ? <span className="sr-only">{labels.completed}</span> : null}
+								{step.isCompleted ? (
+									<span className="sr-only">
+										{formatStepLabel(labels.completed, index + 1, steps.length)}
+									</span>
+								) : null}
 							</Button>
 						</li>
 					);

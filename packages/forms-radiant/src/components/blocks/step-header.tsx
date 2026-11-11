@@ -2,7 +2,7 @@ import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { RuiHeading, RuiHeadingDescription, RuiHeadingTitle } from '@ecopages/radiant-ui/heading';
-import { formatStepCounter, type StepHeaderConfig } from '@schema-engine/forms/recipes/built-in';
+import { formatStepLabel, type StepHeaderConfig } from '@schema-engine/forms/recipes/built-in';
 import type { FormMeta } from '@/lib/instance-view';
 import type { RecipeSlotContext } from '@/recipes/types';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
@@ -31,7 +31,7 @@ export class StepHeaderElement extends RadiantElement {
 		const title = step.title || (headerConfig.fallbackToFormTitle ? meta.title : undefined);
 		const description = step.description || meta.description;
 		const showCounter = headerConfig.showStepCounter;
-		const counter = showCounter ? formatStepCounter(headerConfig.labels.stepCounter, stepIndex + 1, total) : null;
+		const counter = showCounter ? formatStepLabel(headerConfig.labels.stepCounter, stepIndex + 1, total) : null;
 
 		if (!title && !description && !counter) return null;
 

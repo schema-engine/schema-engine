@@ -45,6 +45,7 @@ describe('recipe blocks honour the slot config the spec accepts', () => {
 
 		expect(screen.getByText('Progress')).toBeInTheDocument();
 		expect(screen.queryByText('33%')).toBeNull();
+		expect(screen.getByRole('progressbar')).toBeInTheDocument();
 	});
 
 	test('showPercentage true shows the percentage', () => {
@@ -97,15 +98,24 @@ describe('recipe progress blocks expose the right semantics', () => {
 		await userEvent.click(screen.getByRole('button', { name: 'Go to next step' }));
 
 		expect(screen.getByRole('button', { current: 'step' })).toHaveAccessibleName(/Two/);
-		expect(screen.getByRole('button', { name: /One/ })).toHaveAccessibleName(/Completed/);
-		expect(screen.getByRole('button', { name: /Three/ })).not.toHaveAccessibleName(/Completed/);
+		expect(screen.getByRole('button', { name: /One/ })).toHaveAccessibleName(/completed/);
+		expect(screen.getByRole('button', { name: /Three/ })).not.toHaveAccessibleName(/completed/);
+	});
+
+	test('a completed step keeps its number in the name when titles are hidden', async () => {
+		renderForm({ view: { $type: 'wizard', progress: { showStepTitles: false } } });
+		await userEvent.click(screen.getByRole('button', { name: 'Go to next step' }));
+
+		expect(screen.getByRole('button', { name: 'Step 1, completed' })).toBeInTheDocument();
 	});
 
 	test('the completed status is localizable', async () => {
-		renderForm({ view: { $type: 'wizard', progress: { labels: { completed: 'Abgeschlossen' } } } });
+		renderForm({
+			view: { $type: 'wizard', progress: { labels: { completed: 'Schritt {current} abgeschlossen' } } },
+		});
 		await userEvent.click(screen.getByRole('button', { name: 'Go to next step' }));
 
-		expect(screen.getByRole('button', { name: /One/ })).toHaveAccessibleName(/Abgeschlossen/);
+		expect(screen.getByRole('button', { name: /One/ })).toHaveAccessibleName(/Schritt 1 abgeschlossen/);
 	});
 
 	test('an untitled step falls back to a localizable title', () => {
@@ -123,7 +133,7 @@ describe('recipe progress blocks expose the right semantics', () => {
 
 	test('minimal progress is a labelled progressbar and not a navigation landmark', async () => {
 		renderForm({ view: { $type: 'card-wizard' } });
-		const bar = screen.getByRole('progressbar', { name: 'Form progress' });
+		const bar = screen.getByRole('progressbar', { name: 'Progress' });
 
 		expect(screen.queryByRole('navigation')).toBeNull();
 		expect(bar).toHaveAttribute('aria-valuemin', '0');
@@ -135,6 +145,14 @@ describe('recipe progress blocks expose the right semantics', () => {
 
 		expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '67');
 		expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuetext', 'Step 2 of 3');
+	});
+
+	test('the progress bar is named by the localizable visible label', () => {
+		renderForm({
+			view: { $type: 'card-wizard', progress: { showPercentage: false, labels: { progress: 'Fortschritt' } } },
+		});
+
+		expect(screen.getByRole('progressbar', { name: 'Fortschritt' })).toBeInTheDocument();
 	});
 
 	test('the progress value text is localizable', () => {

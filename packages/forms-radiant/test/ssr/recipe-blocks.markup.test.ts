@@ -34,6 +34,12 @@ describe('recipe blocks honour the slot config the spec accepts', () => {
 		expect(html).not.toContain('Step 1 of 3');
 	});
 
+	test('the actions step counter is a polite live region', () => {
+		expect(render({ view: { $type: 'wizard' } })).toMatch(
+			/class="se-wizard-actions__counter"[^>]*aria-live="polite"/,
+		);
+	});
+
 	test('the actions step counter keeps its English default', () => {
 		expect(render({ view: { $type: 'wizard' } })).toContain('Step 1 of 3');
 	});

@@ -29,7 +29,7 @@
 	font-size: 0.875rem;
 }
 
-.se-minimal-progress__labels span:last-child {
+.se-minimal-progress__percentage {
 	font-variant-numeric: tabular-nums;
 	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
 }
