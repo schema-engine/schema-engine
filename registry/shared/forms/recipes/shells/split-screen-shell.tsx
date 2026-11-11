@@ -24,7 +24,7 @@ export function SplitScreenShell({ slots, viewConfig }: FormShellProps) {
 		contentAlignment: alignment,
 	} = getSlotConfig(viewConfig, 'shell', SplitScreenShellConfigSchema);
 	const { form, activeStep } = useViewContext();
-	const title = form.title || activeStep.title;
+	const title = slots.header ? form.title : form.title || activeStep.title;
 
 	return (
 		<div className="flex min-h-svh w-full flex-col md:flex-row">

@@ -99,6 +99,7 @@ export function SplitScreenShell({ slots, viewConfig, meta }: FormShellProps): J
 			{jsx('se-split-screen-side', {
 				class: `split-screen-shell__side split-screen-shell__side--${sideWidth}${sidePlacement === 'right' ? ' split-screen-shell__side--right' : ''}`,
 				sideContent: sideContent ?? '',
+				hasHeader: Boolean(slots.header),
 				meta,
 			})}
 			<main classes={['split-screen-shell__main', `split-screen-shell__main--${contentAlignment}`]}>
@@ -114,6 +115,7 @@ export function SplitScreenShell({ slots, viewConfig, meta }: FormShellProps): J
 @customElement('se-split-screen-side')
 export class SplitScreenSideElement extends RadiantElement {
 	@prop({ type: String }) sideContent = '';
+	@prop({ type: Boolean }) hasHeader = false;
 	@prop({ type: Object }) meta?: FormMeta;
 
 	@contextSelector({ context: formInstanceContext })
@@ -124,7 +126,7 @@ export class SplitScreenSideElement extends RadiantElement {
 		if (!meta) return <slot />;
 		const instance = this.instance ?? deriveInitialInstance(meta);
 		const step = meta.steps[instance.currentStep] ?? meta.steps[0];
-		const title = meta.title || step?.title;
+		const title = this.hasHeader ? meta.title : meta.title || step?.title;
 		const sideContent = this.sideContent;
 		if (!title && !sideContent) return null;
 		return (

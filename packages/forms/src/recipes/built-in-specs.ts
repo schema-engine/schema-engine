@@ -125,6 +125,7 @@ export const splitScreenWizardSpec = defineRecipeSpec({
 		progress: StepIndicatorsConfigSchema,
 		actions: WizardActionsConfigSchema,
 	},
+	slotDefaults: { header: { fallbackToFormTitle: false } },
 	metadata: {
 		name: 'Split screen wizard',
 		description: 'Multi-step wizard with a marketing side panel.',

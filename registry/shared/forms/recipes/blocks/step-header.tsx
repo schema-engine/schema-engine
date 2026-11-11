@@ -12,16 +12,24 @@ const titleSizes = {
 const alignments = {
 	start: 'text-left',
 	center: 'text-center',
-	end: 'text-right',
 } as const;
 
 export function StepHeader() {
 	const { form } = useViewContext();
 	const step = useActiveStep();
-	const { showDescription, showStepCounter, labels, size, align, titleAs, inheritColor, counterPlacement } =
-		useViewConfig('header', StepHeaderConfigSchema);
+	const {
+		showDescription,
+		showStepCounter,
+		labels,
+		size,
+		align,
+		fallbackToFormTitle,
+		titleAs,
+		inheritColor,
+		counterPlacement,
+	} = useViewConfig('header', StepHeaderConfigSchema);
 
-	const title = step.title || form.title;
+	const title = step.title || (fallbackToFormTitle ? form.title : undefined);
 	const description = step.description || form.description;
 	const counterText = showStepCounter ? formatStepCounter(labels.stepCounter, step.index + 1, step.total) : null;
 	const Title = titleAs as ElementType;

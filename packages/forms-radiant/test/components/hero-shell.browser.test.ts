@@ -7,7 +7,9 @@ afterEach(() => document.body.replaceChildren());
 function mountHero(shell: Record<string, unknown>) {
 	const host = document.createElement('div');
 	document.body.append(host);
-	createRoot(host).render(HeroShell({ slots: {}, viewConfig: { shell: { contentWidth: 'md', ...shell } } }));
+	createRoot(host).render(
+		HeroShell({ slots: { content: null }, viewConfig: { shell: { contentWidth: 'md', ...shell } } }),
+	);
 	return host;
 }
 

@@ -1,3 +1,12 @@
+.se-step-header--inherit-color,
+.se-step-header--inherit-color :is(.rui-heading__title, .rui-heading__description, .se-step-header__counter) {
+	color: inherit;
+}
+
+.se-step-header--inherit-color :is(.rui-heading__description, .se-step-header__counter) {
+	opacity: 0.8;
+}
+
 .se-step-header__counter {
 	margin: 0;
 	font-size: 0.875rem;

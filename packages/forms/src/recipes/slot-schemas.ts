@@ -37,6 +37,7 @@ export const StepHeaderConfigSchema = z.strictObject({
 	),
 	size: z._default(z.enum(['sm', 'md', 'lg']), 'md'),
 	align: z._default(z.enum(['start', 'center']), 'start'),
+	fallbackToFormTitle: z._default(z.boolean(), true),
 	titleAs: z._default(z.enum(['h1', 'h2']), 'h2'),
 	inheritColor: z._default(z.boolean(), false),
 	counterPlacement: z._default(z.enum(['before', 'after']), 'after'),
@@ -71,6 +72,10 @@ export const WizardActionsConfigSchema = z.strictObject({
 			submit: z._default(z.string(), 'Submit'),
 			submitAriaLabel: z._default(z.string(), 'Submit form'),
 			submitting: z._default(z.string(), 'Submitting...'),
+			stepCounter: z._default(
+				z.string().check(z.describe('Template with {current} and {total}')),
+				'Step {current} of {total}',
+			),
 		}),
 		{},
 	),

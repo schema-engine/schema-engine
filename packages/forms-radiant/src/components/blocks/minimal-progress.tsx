@@ -21,14 +21,14 @@ export class MinimalProgressElement extends RadiantElement {
 		const instance = this.instance ?? deriveInitialInstance(meta);
 
 		const config = this.slotConfig;
-		if (!config?.showPercentage) return null;
+		if (!config) return null;
 		const { labels } = config;
 		const percent = Math.round(((instance.currentStep + 1) / instance.totalSteps) * 100);
 		return (
 			<nav aria-label={labels.regionAriaLabel} class="se-minimal-progress">
 				<div class="se-minimal-progress__labels">
 					<span>{labels.progress}</span>
-					<span>{percent}%</span>
+					{config.showPercentage ? <span>{percent}%</span> : null}
 				</div>
 				<div class="se-minimal-progress__track" aria-hidden="true">
 					<div class="se-minimal-progress__fill" style={{ width: `${percent}%` }} />
