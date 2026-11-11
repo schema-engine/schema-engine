@@ -86,6 +86,7 @@ export type FormEngineRegistrationLists = {
 	recipes?: readonly RecipeRegistrationConstraint[];
 	actions?: readonly ActionRegistrationConstraint[];
 	catalog?: SchemaMetadataCatalog;
+	defaultWizardRecipe?: string;
 } & ({ grid?: GridThemeOptions; compiledGrid?: never } | { grid?: never; compiledGrid: CompiledGrid });
 
 /**
@@ -113,6 +114,21 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 	for (const action of lists.actions ?? []) {
 		assertStandardSchema(action.schema, `Action '${action.$type}' schema`);
 		actionRegistry.set(action.$type, action as AnyActionRegistration);
+	}
+
+	const defaultWizardRecipe = lists.defaultWizardRecipe;
+	if (defaultWizardRecipe !== undefined) {
+		const recipe = recipeRegistry.get(defaultWizardRecipe);
+		if (!recipe) {
+			throw new Error(
+				`defaultWizardRecipe '${defaultWizardRecipe}' is not a registered recipe. Register it with createFormEngine({ recipes: [...] }).`,
+			);
+		}
+		if (recipe.kind !== 'wizard') {
+			throw new Error(
+				`defaultWizardRecipe '${defaultWizardRecipe}' has kind '${recipe.kind}'; it must be a wizard recipe.`,
+			);
+		}
 	}
 
 	logger.debug('Building FormEngine', {
@@ -146,6 +162,7 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 		schemaArtifacts,
 		compiledGrid,
 		validationRegistry: validationRegistryInstance,
+		defaultWizardRecipe,
 	});
 }
 

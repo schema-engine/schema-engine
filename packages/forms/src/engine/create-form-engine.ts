@@ -24,16 +24,25 @@ export interface CreateFormEngineOptions<
 	 * registration's entry over it, so an entry with a registration's id is replaced.
 	 */
 	catalog?: SchemaMetadataCatalog;
+	/**
+	 * Recipe `validateForm` writes as `view` for a multi-step form that omits one. Defaults to `'bare-controls'`.
+	 *
+	 * @remarks
+	 * Must name a registered `wizard`-kind recipe, or the engine build throws. {@link FormEngine.extend}
+	 * inherits it. Without this option and without a registered `bare-controls`, a multi-step form
+	 * without `view` stays without one and `validateForm` warns.
+	 */
+	defaultWizardRecipe?: string;
 	/** Engine-level grid vocabulary: breakpoint thresholds, gap tokens, default min column width. */
 	grid?: GridThemeOptions;
 }
 
-/** Options for {@link FormEngine.extend}; grid theme is always inherited from the source engine. */
+/** Options for {@link FormEngine.extend}; grid theme and default wizard recipe are always inherited from the source engine. */
 export type ExtendFormEngineOptions<
 	TElements extends readonly ElementRegistrationConstraint[] = readonly [],
 	TRecipes extends readonly RecipeRegistrationConstraint[] = readonly [],
 	TActions extends readonly ActionRegistrationConstraint[] = readonly [],
-> = Omit<CreateFormEngineOptions<TElements, TRecipes, TActions>, 'grid'>;
+> = Omit<CreateFormEngineOptions<TElements, TRecipes, TActions>, 'grid' | 'defaultWizardRecipe'>;
 
 /** {@link FormEngine} specialization produced from registration lists. */
 export type FormEngineFromOptions<
@@ -71,5 +80,6 @@ export function createFormEngine<
 		actions: options?.actions,
 		catalog: options?.catalog,
 		grid: options?.grid,
+		defaultWizardRecipe: options?.defaultWizardRecipe,
 	}) as unknown as FormEngineFromOptions<TElements, TRecipes, TActions>;
 }

@@ -1,6 +1,6 @@
 import type React from 'react';
 import { type FormConfigView, type RecipeRegistration } from '@schema-engine/forms';
-import { applySlotDefaults, buildViewModel, type RecipeKind } from '@schema-engine/forms/recipes';
+import { buildViewModel, type RecipeKind } from '@schema-engine/forms/recipes';
 import { useFormContext } from '@/adapters/context';
 import { useFormInstanceActions } from '@/hooks/use-form-context';
 import { ViewProvider } from '@/contexts/view-context';
@@ -45,10 +45,7 @@ export function RecipeRenderer({ config, recipe, children, renderFields }: Recip
 	}
 
 	const { adapter, kind } = getRecipeAdapter(recipe as ReactRecipeRegistration);
-	const viewConfig = applySlotDefaults(
-		(config.view ?? { $type: recipe.$type }) as Record<string, unknown>,
-		recipe.slotDefaults,
-	);
+	const viewConfig = config.view as Record<string, unknown>;
 
 	const viewContext = buildViewModel({
 		config,

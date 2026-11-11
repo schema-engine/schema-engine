@@ -64,11 +64,9 @@ export {
 	FormValidationError,
 	getRenderableSteps,
 	assertFormEngine,
-	resolveFormRecipe,
 	validateElementConfig,
 	validateFormConfig,
 } from './lib/validate-form';
-export type { RecipeLookup } from './lib/form-view';
 export { isNormalizedElementConfig } from './lib/normalized-form-config';
 export type { FormConfigView, NormalizedElementConfig, NormalizedFormConfig } from './lib/normalized-form-config';
 export type { FormAuthoringInput, FormAuthoringStep, AuthoringElement } from './builder/form-authoring';

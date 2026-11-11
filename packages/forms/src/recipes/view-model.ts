@@ -46,22 +46,6 @@ export function getSlotConfig<TConfig = Record<string, unknown>>(
 	return ((viewConfig[slot] as TConfig | undefined) ?? {}) as TConfig;
 }
 
-export function applySlotDefaults(
-	viewConfig: Record<string, unknown>,
-	defaults?: Partial<Record<RecipeSlot, Record<string, unknown>>>,
-): Record<string, unknown> {
-	if (!defaults) return viewConfig;
-
-	const next = { ...viewConfig };
-	for (const [slot, slotDefaults] of Object.entries(defaults)) {
-		next[slot] = {
-			...slotDefaults,
-			...(viewConfig[slot] as Record<string, unknown> | undefined),
-		};
-	}
-	return next;
-}
-
 export function buildViewModel({
 	config,
 	kind,

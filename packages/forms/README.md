@@ -30,7 +30,7 @@ const engine = createFormEngine({
 `createFormEngine` registers elements, recipes, and actions in one declarative
 call. A recipe is the single view protocol: it declares the recipe kind,
 shell/slot keys, validation schema, metadata, and framework adapter payload.
-Forms select one recipe with `view.$type`. `@schema-engine/forms/recipes` is the protocol (`defineRecipeSpec`, the renderer-neutral `defineFormRecipe`, the view model; adapters wrap it as `defineRecipe` to type the render payload against the spec's slots); `@schema-engine/forms/recipes/built-in` holds the nine built-in specs (moved off `/recipes`), their slot schemas and config types. `defineRecipeSpec` keeps the concrete view schema type, so `defineForm` types each declared slot's config and rejects slot keys the recipe does not declare. `slotDefaults` are typed against the slot schemas and parsed when the spec is defined. `createFormEngine` enforces the kind rules (single-step recipes declare no `progress` slot, wizard recipes declare `actions`) for every registration.
+Forms select one recipe with `view.$type`. `@schema-engine/forms/recipes` is the protocol (`defineRecipeSpec`, the renderer-neutral `defineFormRecipe`, the view model; adapters wrap it as `defineRecipe` to type the render payload against the spec's slots); `@schema-engine/forms/recipes/built-in` holds the nine built-in specs (moved off `/recipes`), their slot schemas and config types. `defineRecipeSpec` keeps the concrete view schema type, so `defineForm` types each declared slot's config and rejects slot keys the recipe does not declare. `slotDefaults` are typed against the slot schemas and validated when the spec is defined. `createFormEngine` enforces the kind rules (single-step recipes declare no `progress` slot, wizard recipes declare `actions`) for every registration.
 
 ```ts
 const contactForm = engine.defineForm({
@@ -173,10 +173,15 @@ rule outranks a bare class. `engine.extend()` inherits the source engine's grid 
 `grid` is not an extend option.
 
 Single-step forms may omit `view` to render fields directly. Multi-step forms
-that omit `view` use the registered `bare-controls` recipe at **render** time.
-`engine.validateForm` still succeeds if that recipe is missing; the renderer
-warns and shows fields without chrome. `validateForm` does apply kind and slot
-checks when `view.$type` is set.
+that omit `view` get `{ $type: 'bare-controls' }` written by `validateForm`;
+`createFormEngine({ defaultWizardRecipe })` names a different wizard recipe
+(the engine build throws for a name that is not a registered wizard recipe, and
+`engine.extend()` inherits it). If the default recipe is not registered,
+`validateForm` still succeeds, warns, and leaves the form without a `view`, so
+renderers show fields without chrome. `validateForm` also merges the recipe's
+`slotDefaults` under the author's slot config (deep for plain objects) and stores
+the result in `view`; renderers read it and apply no defaults. It checks kind and
+slot config when `view.$type` is set.
 
 ## Engine validation
 

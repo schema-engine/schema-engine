@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { defineRecipeSpec } from '@/recipes/define-recipe-spec';
 import { cardSpec, wizardSpec, builtInRecipeSpecs } from '@/recipes/built-in-specs';
 import { FormActionsConfigSchema, StepHeaderConfigSchema, WizardActionsConfigSchema } from '@/recipes/slot-schemas';
-import { applySlotDefaults, buildViewModel } from '@/recipes/view-model';
+import { buildViewModel } from '@/recipes/view-model';
 import { createInitialStepStates } from '@/engine/step-machine';
 
 describe('defineRecipeSpec', () => {
@@ -113,14 +113,6 @@ describe('built-in recipe specs', () => {
 });
 
 describe('view model', () => {
-	test('applies slot defaults under author overrides', () => {
-		const view = applySlotDefaults(
-			{ $type: 'card', header: { size: 'lg' } },
-			{ header: { align: 'center', size: 'md' } },
-		);
-		expect(view.header).toEqual({ align: 'center', size: 'lg' });
-	});
-
 	test('builds steps with stable index and total', () => {
 		const model = buildViewModel({
 			config: {

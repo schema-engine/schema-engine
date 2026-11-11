@@ -41,6 +41,7 @@ export interface EngineRegistries {
 	schemaArtifacts: FormEngineSchemaArtifacts;
 	compiledGrid: CompiledGrid;
 	validationRegistry: ValidationRegistry;
+	defaultWizardRecipe?: string;
 }
 
 export class FormEngine<
@@ -62,6 +63,7 @@ export class FormEngine<
 			schemaArtifacts: registries.schemaArtifacts,
 			compiledGrid: registries.compiledGrid,
 			validationRegistry: registries.validationRegistry,
+			defaultWizardRecipe: registries.defaultWizardRecipe,
 		};
 		this.schemaArtifacts = registries.schemaArtifacts;
 		this.compiledGrid = registries.compiledGrid;
@@ -171,6 +173,7 @@ export class FormEngine<
 		return validateFormConfig(config, {
 			owner: this,
 			getRecipe: (id) => this.getRecipe(id),
+			defaultWizardRecipe: this.registries.defaultWizardRecipe,
 			getElement: (id) => this.getElement(id),
 			getAction: (id) => this.getAction(id),
 			hasValidation: (type) => this.validationRegistry.has(type),
@@ -309,6 +312,7 @@ export class FormEngine<
 			actions: [...this.getAllActions(), ...(options?.actions ?? [])],
 			catalog: options?.catalog ?? this.schemaArtifacts.metadataCatalog,
 			compiledGrid: this.compiledGrid,
+			defaultWizardRecipe: this.registries.defaultWizardRecipe,
 		}) as unknown as FormEngine<
 			LastWinsMerge<TElements, MergedRegistrationMap<TNewElements>>,
 			LastWinsMerge<TRecipes, MergedRegistrationMap<TNewRecipes>>,

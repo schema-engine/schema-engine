@@ -76,7 +76,7 @@ Wizard recipes require **at least two steps**. Set `view.$type` to a wizard reci
 
 <FormConfigCode config={viewRecipesDemoConfig} />
 
-If you omit `view.$type` on a multi-step form, the engine uses the registered `bare-controls` recipe. If that recipe is not registered, fields render without chrome and the renderer warns once per engine.
+If you omit `view.$type` on a multi-step form, `validateForm` writes the engine's default wizard recipe as `view` (`bare-controls` unless `createFormEngine({ defaultWizardRecipe })` names another wizard recipe). If that recipe is not registered, the form keeps no `view`, `validateForm` warns, and fields render without chrome.
 
 See [Registration Flow](/docs/examples/registration-flow) for a full wizard configuration.
 

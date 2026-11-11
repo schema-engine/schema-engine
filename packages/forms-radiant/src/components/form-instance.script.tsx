@@ -7,7 +7,7 @@ import {
 	state,
 } from '@ecopages/radiant';
 import { onContextUpdate, provideContext, type ContextProvider } from '@ecopages/radiant/context';
-import { resolveFormRecipe, type NormalizedFormConfig } from '@schema-engine/forms';
+import type { NormalizedFormConfig } from '@schema-engine/forms';
 import { flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import { formInstanceContext, type FormInstanceContextValue, type StepStates } from '@/contexts/form-instance-context';
@@ -205,9 +205,7 @@ export class FormInstanceElement extends RadiantElement {
 		return {
 			currentStep: this.currentStep,
 			totalSteps,
-			isWizard: Boolean(
-				this.engine && this.config && resolveFormRecipe(this.config, this.engine)?.kind === 'wizard',
-			),
+			isWizard: this.config?.view ? this.engine?.getRecipe(this.config.view.$type)?.kind === 'wizard' : false,
 			stepStates: this.stepStates,
 			goToStep: this.goToStep,
 			goToNextStep: this.goToNextStep,
