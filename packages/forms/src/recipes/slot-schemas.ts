@@ -49,6 +49,10 @@ export const MinimalProgressConfigSchema = z.strictObject({
 		z.strictObject({
 			regionAriaLabel: z._default(z.string(), 'Form progress'),
 			progress: z._default(z.string(), 'Progress'),
+			valueText: z._default(
+				z.string().check(z.describe('Template with {current} and {total}, read as the bar value')),
+				'Step {current} of {total}',
+			),
 		}),
 		{},
 	),
@@ -59,7 +63,17 @@ export const StepIndicatorsConfigSchema = z.strictObject({
 	showStepNumbers: z._default(z.boolean(), true),
 	showStepTitles: z._default(z.boolean(), true),
 	showStepDescriptions: z._default(z.boolean(), false),
-	labels: z.prefault(z.strictObject({ regionAriaLabel: z._default(z.string(), 'Form progress') }), {}),
+	labels: z.prefault(
+		z.strictObject({
+			regionAriaLabel: z._default(z.string(), 'Form progress'),
+			completed: z._default(z.string(), 'Completed'),
+			untitledStep: z._default(
+				z.string().check(z.describe('Template with {current} and {total}')),
+				'Step {current}',
+			),
+		}),
+		{},
+	),
 });
 
 export const WizardActionsConfigSchema = z.strictObject({

@@ -2,7 +2,7 @@ import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, onEvent, prop, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { RuiButton } from '@ecopages/radiant-ui/button';
-import { type StepIndicatorsConfig } from '@schema-engine/forms/recipes/built-in';
+import { formatStepCounter, type StepIndicatorsConfig } from '@schema-engine/forms/recipes/built-in';
 import type { FormMeta } from '@/lib/instance-view';
 import type { RecipeSlotContext } from '@/recipes/types';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
@@ -54,23 +54,32 @@ export class StepIndicatorsElement extends RadiantElement {
 										completed: step.isCompleted,
 									}}
 									prop:disabled={disabled}
+									aria-current={step.isActive ? 'step' : undefined}
 								>
 									{showNumbers ? (
 										<span class="se-step-indicators__number">
-											{step.isCompleted ? '✓' : step.index + 1}
+											{step.isCompleted ? <span aria-hidden="true">✓</span> : step.index + 1}
 										</span>
 									) : null}
 									{showTitles || (showDescriptions && step.description) ? (
 										<span class="se-step-indicators__copy">
 											{showTitles ? (
 												<span class="se-step-indicators__title">
-													{step.title || `Step ${step.index + 1}`}
+													{step.title ||
+														formatStepCounter(
+															indicatorsConfig.labels.untitledStep,
+															step.index + 1,
+															steps.length,
+														)}
 												</span>
 											) : null}
 											{showDescriptions && step.description ? (
 												<small>{step.description}</small>
 											) : null}
 										</span>
+									) : null}
+									{step.isCompleted ? (
+										<span class="se-visually-hidden">{indicatorsConfig.labels.completed}</span>
 									) : null}
 								</RuiButton>
 							</li>

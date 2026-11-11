@@ -90,3 +90,64 @@ describe('recipe blocks honour the slot config the spec accepts', () => {
 		expect(screen.getByRole('complementary')).toHaveTextContent('Sign up');
 	});
 });
+
+describe('recipe progress blocks expose the right semantics', () => {
+	test('step indicators expose the current and completed steps', async () => {
+		renderForm({ view: { $type: 'wizard' } });
+		await userEvent.click(screen.getByRole('button', { name: 'Go to next step' }));
+
+		expect(screen.getByRole('button', { current: 'step' })).toHaveAccessibleName(/Two/);
+		expect(screen.getByRole('button', { name: /One/ })).toHaveAccessibleName(/Completed/);
+		expect(screen.getByRole('button', { name: /Three/ })).not.toHaveAccessibleName(/Completed/);
+	});
+
+	test('the completed status is localizable', async () => {
+		renderForm({ view: { $type: 'wizard', progress: { labels: { completed: 'Abgeschlossen' } } } });
+		await userEvent.click(screen.getByRole('button', { name: 'Go to next step' }));
+
+		expect(screen.getByRole('button', { name: /One/ })).toHaveAccessibleName(/Abgeschlossen/);
+	});
+
+	test('an untitled step falls back to a localizable title', () => {
+		renderForm({
+			view: { $type: 'wizard', progress: { labels: { untitledStep: 'Schritt {current}' } } },
+			steps: [
+				{ id: 'one', title: '', elements: [] },
+				{ id: 'two', title: '', elements: [] },
+			],
+		});
+
+		expect(screen.getByRole('button', { name: /Schritt 1/ })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: /Schritt 2/ })).toBeInTheDocument();
+	});
+
+	test('minimal progress is a labelled progressbar and not a navigation landmark', async () => {
+		renderForm({ view: { $type: 'card-wizard' } });
+		const bar = screen.getByRole('progressbar', { name: 'Form progress' });
+
+		expect(screen.queryByRole('navigation')).toBeNull();
+		expect(bar).toHaveAttribute('aria-valuemin', '0');
+		expect(bar).toHaveAttribute('aria-valuemax', '100');
+		expect(bar).toHaveAttribute('aria-valuenow', '33');
+		expect(bar).toHaveAttribute('aria-valuetext', 'Step 1 of 3');
+
+		await userEvent.click(screen.getByRole('button', { name: 'Go to next step' }));
+
+		expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '67');
+		expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuetext', 'Step 2 of 3');
+	});
+
+	test('the progress value text is localizable', () => {
+		renderForm({
+			view: { $type: 'card-wizard', progress: { labels: { valueText: 'Schritt {current} von {total}' } } },
+		});
+
+		expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuetext', 'Schritt 1 von 3');
+	});
+
+	test('the visible percentage is hidden from assistive technology', () => {
+		renderForm({ view: { $type: 'card-wizard' } });
+
+		expect(screen.getByText('33%')).toHaveAttribute('aria-hidden', 'true');
+	});
+});
