@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
 import { defineRecipeSpec } from '@schema-engine/forms/recipes';
@@ -48,5 +48,29 @@ describe('recipe view model', () => {
 
 		expect(screen.getByRole('textbox', { name: 'Name' })).toHaveValue('Ada');
 		expect(slotRenders).toBe(rendersBefore);
+	});
+
+	test('throws when the engine no longer resolves the config view recipe', () => {
+		const recipe = defineRecipe(
+			defineRecipeSpec({
+				$type: 'orphaned',
+				kind: 'single-step',
+				metadata: { name: 'Orphaned', description: 'Registered, then unresolvable' },
+				slotSchemas: { header: z.strictObject({}) },
+			}),
+			{ slots: { header: () => <header /> } },
+		);
+		const engine = createFormEngine({ elements: [InputElementRegistration], recipes: [recipe] });
+		const config = engine.defineForm({
+			id: 'orphan-form',
+			view: { $type: 'orphaned' },
+			steps: [{ id: 'main', title: 'Main', elements: [] }],
+		});
+		vi.spyOn(engine, 'getRecipe').mockReturnValue(undefined);
+		vi.spyOn(console, 'error').mockImplementation(() => {});
+
+		expect(() => render(<FormRenderer config={config} engine={engine} adapter={rhfAdapter} />)).toThrow(
+			"Form 'orphan-form' uses view 'orphaned' but the engine has no such recipe.",
+		);
 	});
 });

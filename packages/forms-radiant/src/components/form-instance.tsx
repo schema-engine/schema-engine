@@ -1,6 +1,7 @@
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
 import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
+import { getViewRecipe } from '@schema-engine/forms/recipes';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
 import { collectFormInitialValues, ConfiguredRuiForm } from '@/adapters/radiant/rui-form-shell';
 import { flattenValues } from '@/adapters/radiant/controller/values';
@@ -51,7 +52,7 @@ export function FormInstance({
 				<RecipeRenderer
 					config={config}
 					engine={engine}
-					recipe={config.view ? engine.getRecipe(config.view.$type) : undefined}
+					recipe={getViewRecipe(engine, config)}
 					initialValues={initialValues}
 				>
 					{children}

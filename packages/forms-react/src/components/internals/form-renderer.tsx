@@ -21,6 +21,7 @@ import { FormAdapterContext } from '../../adapters/context';
 import { FormEngineProvider } from '../form-engine-provider';
 import type { EngineOutputMaps, FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
+import { getViewRecipe } from '@schema-engine/forms/recipes';
 import { RecipeRenderer } from './recipe-renderer';
 import { getRenderableSteps, assertFormEngine } from '@schema-engine/forms/lib/validate-form';
 
@@ -81,10 +82,7 @@ function FormElementsRenderer<
 }) {
 	const { currentStep } = useFormInstanceActions();
 	const engineContext = useOptionalFormEngine<TElements, TRecipes, TActions, TOutputs>();
-	const recipe = config.view ? engineContext?.engine.getRecipe(config.view.$type) : undefined;
-	if (config.view && !recipe) {
-		throw new Error(`Form '${config.id}' uses view '${config.view.$type}' but the engine has no such recipe.`);
-	}
+	const recipe = engineContext ? getViewRecipe(engineContext.engine, config) : undefined;
 	const steps = getRenderableSteps(config, currentStep);
 
 	if (steps.length === 0) return null;

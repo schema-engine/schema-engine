@@ -6,6 +6,7 @@ import {
 	registerSsrPreparationCallback,
 	state,
 } from '@ecopages/radiant';
+import { getViewRecipe } from '@schema-engine/forms/recipes';
 import { onContextUpdate, provideContext, type ContextProvider } from '@ecopages/radiant/context';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
 import { flattenStepElements } from '@schema-engine/forms/lib/field-scope';
@@ -205,7 +206,7 @@ export class FormInstanceElement extends RadiantElement {
 		return {
 			currentStep: this.currentStep,
 			totalSteps,
-			isWizard: this.config?.view ? this.engine?.getRecipe(this.config.view.$type)?.kind === 'wizard' : false,
+			isWizard: this.config && this.engine ? getViewRecipe(this.engine, this.config)?.kind === 'wizard' : false,
 			stepStates: this.stepStates,
 			goToStep: this.goToStep,
 			goToNextStep: this.goToNextStep,

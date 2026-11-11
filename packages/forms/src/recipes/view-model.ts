@@ -1,6 +1,7 @@
 import * as z from 'zod/mini';
 import type { FormConfigView } from '@/lib/normalized-form-config';
 import type { StepStates } from '@/engine/step-machine';
+import type { AnyRecipeRegistration } from '@/types/registration';
 import type { RecipeKind, RecipeSlot } from './types';
 
 export interface ViewNavigation {
@@ -54,6 +55,25 @@ export function getSlotConfig<TSchema extends z.ZodMiniType>(
 	_schema: TSchema,
 ): z.output<TSchema> {
 	return viewConfig[slot] as z.output<TSchema>;
+}
+
+/**
+ * Resolves the recipe a normalized form's `view` selects, or `undefined` when the form has no view.
+ *
+ * @remarks
+ * Throws when `view.$type` is not registered on the engine, so a config normalized elsewhere fails
+ * loudly instead of rendering without chrome.
+ */
+export function getViewRecipe(
+	engine: { getRecipe(id: string): AnyRecipeRegistration | undefined },
+	config: { id: string; view?: { $type: string } },
+): AnyRecipeRegistration | undefined {
+	if (!config.view) return undefined;
+	const recipe = engine.getRecipe(config.view.$type);
+	if (!recipe) {
+		throw new Error(`Form '${config.id}' uses view '${config.view.$type}' but the engine has no such recipe.`);
+	}
+	return recipe;
 }
 
 /** Projects form steps and the live step state onto the {@link ViewStep} list both renderers expose to recipe blocks. */
