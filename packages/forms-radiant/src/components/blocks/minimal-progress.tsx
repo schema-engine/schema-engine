@@ -1,7 +1,7 @@
 import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
-import { formatStepCounter, type MinimalProgressConfig } from '@schema-engine/forms/recipes/built-in';
+import { formatStepLabel, type MinimalProgressConfig } from '@schema-engine/forms/recipes/built-in';
 import type { FormMeta } from '@/lib/instance-view';
 import type { RecipeSlotContext } from '@/recipes/types';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
@@ -46,7 +46,7 @@ export class MinimalProgressElement extends RadiantElement {
 					aria-valuemin={0}
 					aria-valuemax={100}
 					aria-valuenow={percent}
-					aria-valuetext={formatStepCounter(labels.valueText, current, instance.totalSteps)}
+					aria-valuetext={formatStepLabel(labels.valueText, current, instance.totalSteps)}
 				>
 					<div class="se-minimal-progress__track" aria-hidden="true">
 						<div class="se-minimal-progress__fill" style={{ width: `${percent}%` }} />

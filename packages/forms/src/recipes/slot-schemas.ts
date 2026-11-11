@@ -122,8 +122,8 @@ export type FormActionsConfig = z.infer<typeof FormActionsConfigSchema>;
 /**
  * @remarks
  * Fills every `{current}` and `{total}` in a label template; other text is left as is.
- * Also formats the progress value text and the untitled step title.
+ * Also formats the progress value text, the untitled step title and the completed status.
  */
-export function formatStepCounter(template: string, current: number, total: number): string {
+export function formatStepLabel(template: string, current: number, total: number): string {
 	return template.replaceAll('{current}', String(current)).replaceAll('{total}', String(total));
 }

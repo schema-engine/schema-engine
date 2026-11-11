@@ -1,4 +1,4 @@
-import { formatStepCounter, MinimalProgressConfigSchema } from '@schema-engine/forms/recipes/built-in';
+import { formatStepLabel, MinimalProgressConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import { useViewConfig, useViewContext } from '@schema-engine/forms-react/hooks';
 
 /**
@@ -30,7 +30,7 @@ export function MinimalProgress() {
 				aria-valuemin={0}
 				aria-valuemax={100}
 				aria-valuenow={progressValue}
-				aria-valuetext={formatStepCounter(labels.valueText, currentStepIndex + 1, steps.length)}
+				aria-valuetext={formatStepLabel(labels.valueText, currentStepIndex + 1, steps.length)}
 				className="h-2 w-full overflow-hidden rounded-full bg-secondary"
 			>
 				<div aria-hidden className="h-full bg-primary" style={{ width: `${progressValue}%` }} />

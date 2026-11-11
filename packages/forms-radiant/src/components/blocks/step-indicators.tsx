@@ -2,7 +2,7 @@ import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, onEvent, prop, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { RuiButton } from '@ecopages/radiant-ui/button';
-import { formatStepCounter, type StepIndicatorsConfig } from '@schema-engine/forms/recipes/built-in';
+import { formatStepLabel, type StepIndicatorsConfig } from '@schema-engine/forms/recipes/built-in';
 import type { FormMeta } from '@/lib/instance-view';
 import type { RecipeSlotContext } from '@/recipes/types';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
@@ -66,7 +66,7 @@ export class StepIndicatorsElement extends RadiantElement {
 											{showTitles ? (
 												<span class="se-step-indicators__title">
 													{step.title ||
-														formatStepCounter(
+														formatStepLabel(
 															indicatorsConfig.labels.untitledStep,
 															step.index + 1,
 															steps.length,

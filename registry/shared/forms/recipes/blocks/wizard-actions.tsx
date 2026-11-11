@@ -1,4 +1,4 @@
-import { formatStepCounter, WizardActionsConfigSchema } from '@schema-engine/forms/recipes/built-in';
+import { formatStepLabel, WizardActionsConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import { useViewConfig, useViewContext } from '@schema-engine/forms-react/hooks';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,7 +27,7 @@ export function WizardActions() {
 			</Button>
 			{showStepCounter ? (
 				<Badge variant="secondary" aria-live="polite">
-					{formatStepCounter(labels.stepCounter, currentStepIndex + 1, steps.length)}
+					{formatStepLabel(labels.stepCounter, currentStepIndex + 1, steps.length)}
 				</Badge>
 			) : null}
 			<div className="flex gap-2">

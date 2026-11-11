@@ -2,7 +2,7 @@ import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, onEvent, prop, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { RuiButton } from '@ecopages/radiant-ui/button';
-import { formatStepCounter, type WizardActionsConfig } from '@schema-engine/forms/recipes/built-in';
+import { formatStepLabel, type WizardActionsConfig } from '@schema-engine/forms/recipes/built-in';
 import type { FormMeta } from '@/lib/instance-view';
 import type { RecipeSlotContext } from '@/recipes/types';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
@@ -49,7 +49,7 @@ export class WizardActionsElement extends RadiantElement {
 				</RuiButton>
 				{showStepCounter ? (
 					<span class="se-wizard-actions__counter">
-						{formatStepCounter(labels.stepCounter, instance.currentStep + 1, steps.length)}
+						{formatStepLabel(labels.stepCounter, instance.currentStep + 1, steps.length)}
 					</span>
 				) : null}
 				<div class="se-wizard-actions__forward">
