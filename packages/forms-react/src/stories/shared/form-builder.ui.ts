@@ -64,8 +64,6 @@ export function getEngine(): typeof baseUIEngine {
 	return baseUIEngine;
 }
 
-export function defineStoryForm<const TConfig extends Parameters<typeof baseUIEngine.defineForm>[0]>(config: TConfig) {
-	return baseUIEngine.defineForm(config);
-}
+export const defineStoryForm = baseUIEngine.defineForm.bind(baseUIEngine);
 
 export { rhfAdapter } from '@/adapters/react-hook-form';

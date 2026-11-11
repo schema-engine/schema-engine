@@ -16,7 +16,7 @@ test('recipe source tabs preserve whitespace and copy the active file', async ()
 		const source = codeTabs.locator('.code-tabs__code').first();
 		await pwExpect(source).toBeVisible();
 		const expected = readFileSync(
-			resolve(process.cwd(), '../../registry/shared/forms/recipes/recipe-registry.ts'),
+			resolve(process.cwd(), '../../registry/shared/forms/recipes/registrations/card.ts'),
 			'utf8',
 		);
 		expect(await source.textContent()).toBe(expected);

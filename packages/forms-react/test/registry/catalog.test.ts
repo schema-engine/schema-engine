@@ -70,7 +70,6 @@ describe('schema-engine GitHub registry catalog', () => {
 			const item = catalog.find((entry) => entry.name === name);
 			expect(item).toBeDefined();
 			expect(item?.files.some((file) => file.target.endsWith('/recipes/registrations.ts'))).toBe(true);
-			expect(item?.files.some((file) => file.target.endsWith('/recipes/recipe-registry.ts'))).toBe(true);
 			expect(item?.registryDependencies).toEqual(
 				expect.arrayContaining(['button', 'badge', 'progress', 'separator']),
 			);

@@ -30,7 +30,7 @@ const engine = createFormEngine({
 `createFormEngine` registers elements, recipes, and actions in one declarative
 call. A recipe is the single view protocol: it declares the recipe kind,
 shell/slot keys, validation schema, metadata, and framework adapter payload.
-Forms select one recipe with `view.$type`.
+Forms select one recipe with `view.$type`. `defineRecipeSpec` keeps the concrete view schema type, so `defineForm` types each declared slot's config and rejects slot keys the recipe does not declare.
 
 ```ts
 const contactForm = engine.defineForm({

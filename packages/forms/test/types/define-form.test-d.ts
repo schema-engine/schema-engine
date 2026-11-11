@@ -28,18 +28,14 @@ const noteElement = defineInput({
 	render: () => null,
 });
 
-const cardSchema = z.object({
-	$type: z.literal('card'),
-	header: z._default(z.object({ title: z._default(z.string(), 'Untitled') }), { title: 'Untitled' }),
-});
-
 const cardRecipe = defineFormRecipe(
 	defineRecipeSpec({
 		$type: 'card',
 		kind: 'single-step',
 		metadata: { name: 'Card' },
-		slotSchemas: { header: z.object({ title: z.string() }) },
-		schema: cardSchema,
+		slotSchemas: {
+			header: z._default(z.object({ title: z._default(z.string(), 'Untitled') }), { title: 'Untitled' }),
+		},
 	}),
 	{},
 );
@@ -360,7 +356,7 @@ engine.defineForm({
 });
 
 const _normalizedCount: number = defined.steps[0].elements[0].count;
-const _normalizedRecipeTitle: string = defined.view!.header.title;
+const _normalizedRecipeTitle: string = defined.view!.header!.title;
 const normalizedAction = actionForm.actions![0];
 if ('retries' in normalizedAction) {
 	const _normalizedRetries: number = normalizedAction.retries;

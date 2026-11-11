@@ -1,6 +1,4 @@
-import type * as z from 'zod/mini';
 import { defineRecipeSpec } from './define-recipe-spec';
-import type { RecipeSpec } from './types';
 import {
 	CardShellConfigSchema,
 	FormActionsConfigSchema,
@@ -145,13 +143,3 @@ export const builtInRecipeSpecs = {
 	'hero-wizard': heroWizardSpec,
 	'split-screen-wizard': splitScreenWizardSpec,
 } as const;
-
-export type RecipeConfigOf<S extends RecipeSpec> = { $type: S['$type'] } & {
-	[K in keyof S['slotSchemas'] as S['slotSchemas'][K] extends z.ZodMiniType ? K : never]?: z.infer<
-		NonNullable<S['slotSchemas'][K]>
-	>;
-};
-
-export type BuiltInRecipeRegistry = {
-	[K in keyof typeof builtInRecipeSpecs]: RecipeConfigOf<(typeof builtInRecipeSpecs)[K]>;
-};

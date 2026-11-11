@@ -40,7 +40,6 @@ describe('createFormEngine', () => {
 				kind: 'single-step',
 				metadata: { name: 'Card' },
 				slotSchemas: { shell: z.strictObject({}) },
-				schema: z.object({ $type: z.literal('card') }),
 			}),
 			{},
 		);

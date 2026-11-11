@@ -810,8 +810,6 @@ function renderRecipeRegistrations(scan: RecipeScanEntry[]): string {
  */
 ${imports}
 
-export type { BuiltInRecipeRegistry } from './recipe-registry';
-
 export {
 	${idents.join(',\n\t')},
 };
@@ -823,8 +821,6 @@ export const schemaFormRecipeRegistrations = [
 }
 
 interface RecipeManifest {
-	/** The one-time registry augmentation file. */
-	registry: string;
 	recipes: Array<{ id: string; title: string; files: string[] }>;
 }
 
@@ -834,7 +830,6 @@ interface RecipeManifest {
  */
 function renderRecipeManifest(scan: RecipeScanEntry[]): string {
 	const manifest: RecipeManifest = {
-		registry: 'recipe-registry.ts',
 		recipes: scan.map(({ stem, source }) => ({
 			id: stem,
 			title: recipeTitle(stem),
