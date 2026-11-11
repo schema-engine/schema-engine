@@ -37,7 +37,10 @@ export function StepHeader() {
 	if (!title && !description && !counterText) return null;
 
 	return (
-		<header className={cn('max-w-none space-y-2', alignments[align], inheritColor && 'text-inherit')}>
+		<header
+			data-align={align}
+			className={cn('max-w-none space-y-2', alignments[align], inheritColor && 'text-inherit')}
+		>
 			{counterText && counterPlacement === 'before' ? (
 				<p className={cn('text-sm text-muted-foreground', inheritColor && 'text-inherit opacity-80')}>
 					{counterText}
