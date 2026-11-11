@@ -1,5 +1,6 @@
 import * as z from 'zod/mini';
-import type { RecipeKind, RecipeMetadata, RecipeSlot, RecipeSpec } from './types';
+import { assertRecipeKindSlots } from './assert-recipe-kind';
+import type { RecipeKind, RecipeMetadata, RecipeSlot, RecipeSlotDefaults, RecipeSpec } from './types';
 import { RECIPE_SLOT_ORDER } from './types';
 
 export type RecipeSlotSchemas = Partial<Record<RecipeSlot, z.ZodMiniType>>;
@@ -35,12 +36,24 @@ function mergeRecipeSlotSchemas<const TType extends string, const TSlots extends
 	return z.strictObject(shape) as unknown as RecipeViewSchema<TType, TSlots>;
 }
 
-export function assertRecipeSlotSchemas(kind: RecipeKind, slotSchemas: RecipeSlotSchemas): void {
-	if (kind === 'single-step' && slotSchemas.progress) {
-		throw new Error("Recipes with kind 'single-step' cannot declare a progress slot.");
-	}
-	if (kind === 'wizard' && !slotSchemas.actions) {
-		throw new Error("Recipes with kind 'wizard' must declare an actions slot.");
+function assertSlotDefaults(
+	$type: string,
+	slotSchemas: RecipeSlotSchemas,
+	slotDefaults: Record<string, unknown> | undefined,
+): void {
+	for (const [slot, value] of Object.entries(slotDefaults ?? {})) {
+		const schema = slotSchemas[slot as RecipeSlot];
+		if (!schema) {
+			throw new Error(`Recipe '${$type}' slotDefaults.${slot}: the recipe does not declare a '${slot}' slot.`);
+		}
+		const result = z.safeParse(schema, value);
+		if (!result.success) {
+			const problems = result.error.issues.map((issue) => {
+				const keys = [...issue.path, ...('keys' in issue && Array.isArray(issue.keys) ? issue.keys : [])];
+				return `${keys.join('.') || '(value)'}: ${issue.message}`;
+			});
+			throw new Error(`Recipe '${$type}' slotDefaults.${slot} is invalid: ${problems.join('; ')}`);
+		}
 	}
 }
 
@@ -59,13 +72,13 @@ export function defineRecipeSpec<
 	kind: RecipeKind;
 	metadata: RecipeMetadata;
 	slotSchemas?: TSlots;
-	slotDefaults?: RecipeSpec['slotDefaults'];
+	slotDefaults?: RecipeSlotDefaults<TSlots>;
 }): RecipeSpec<TType, RecipeViewSchema<TType, TSlots>, TSlots> {
 	const slotSchemas = (definition.slotSchemas ?? {}) as TSlots;
-	assertRecipeSlotSchemas(definition.kind, slotSchemas);
-	const schema = mergeRecipeSlotSchemas(definition.$type, slotSchemas);
 	const slots = RECIPE_SLOT_ORDER.filter((slot) => slotSchemas[slot]);
-
+	assertRecipeKindSlots({ $type: definition.$type, kind: definition.kind, slots });
+	assertSlotDefaults(definition.$type, slotSchemas, definition.slotDefaults);
+	const schema = mergeRecipeSlotSchemas(definition.$type, slotSchemas);
 	return {
 		$type: definition.$type,
 		kind: definition.kind,
