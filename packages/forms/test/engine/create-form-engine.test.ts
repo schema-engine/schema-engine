@@ -66,6 +66,19 @@ describe('createFormEngine', () => {
 		expect(() => createFormEngine({ recipes: [wizard] })).toThrow(/'hand-wizard'.*actions slot/);
 	});
 
+	test('accepts a hand-written wizard registration that declares actions', () => {
+		const wizard = {
+			$type: 'hand-wizard',
+			kind: 'wizard',
+			slots: ['actions'],
+			schema: z.strictObject({ $type: z.literal('hand-wizard') }),
+			metadata: { name: 'Hand wizard' },
+			render: {},
+		} as const;
+
+		expect(createFormEngine({ recipes: [wizard] }).hasRecipe('hand-wizard')).toBe(true);
+	});
+
 	test('rejects a hand-written single-step registration with a progress slot', () => {
 		const card = {
 			$type: 'hand-card',

@@ -19,6 +19,11 @@ export type RecipeViewSchema<TType extends string, TSlots extends RecipeSlotSche
 	z.core.$strict
 >;
 
+/**
+ * @remarks
+ * The shape is assembled dynamically from the same slot schemas that `RecipeViewSchema` maps over,
+ * so the cast only restores the static type TypeScript cannot derive from a loop.
+ */
 function mergeRecipeSlotSchemas<const TType extends string, const TSlots extends RecipeSlotSchemas>(
 	$type: TType,
 	slotSchemas: TSlots,
@@ -36,6 +41,11 @@ function mergeRecipeSlotSchemas<const TType extends string, const TSlots extends
 	return z.strictObject(shape) as unknown as RecipeViewSchema<TType, TSlots>;
 }
 
+/**
+ * @remarks
+ * Validation only: the parsed output is discarded, so defaults are applied as authored input
+ * and should not rely on slot schema defaults or transforms.
+ */
 function assertSlotDefaults(
 	$type: string,
 	slotSchemas: RecipeSlotSchemas,
