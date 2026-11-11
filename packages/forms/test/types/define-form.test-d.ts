@@ -64,6 +64,16 @@ engine.defineForm({
 	},
 	steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'note', id: 'n1', name: 'n1' }] }],
 });
+engine.defineForm({
+	id: 'unknown-nested-slot-key',
+	view: {
+		$type: 'card',
+		// @ts-expect-error -- unknown keys are rejected inside nested slot objects too
+		actions: { labels: { bogus: 1 } },
+	},
+	steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'note', id: 'n1', name: 'n1' }] }],
+});
+
 type _defineFormReturnsNormalized = Assert<typeof defined extends NormalizedFormConfig ? true : false>;
 
 const rawForm: FormConfig = {
