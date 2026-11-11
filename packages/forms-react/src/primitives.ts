@@ -5,7 +5,14 @@
  * package implementation paths.
  */
 import type React from 'react';
-import type { FormShellLayout } from '@schema-engine/forms/recipes';
+import {
+	defineFormRecipe,
+	type FormShellLayout,
+	type RecipeRenderPayload,
+	type RecipeSlot,
+	type RecipeSpec,
+} from '@schema-engine/forms/recipes';
+import type * as z from 'zod/mini';
 
 export { FormElement } from './components/internals/field-renderer';
 export type { FormElementProps } from './components/internals/field-renderer';
@@ -18,4 +25,19 @@ export type FormShellComponent = React.FC<FormShellProps>;
 export interface ReactRecipeAdapterPayload {
 	shell?: FormShellComponent;
 	slots: Partial<Record<'header' | 'progress' | 'actions', React.FC>>;
+}
+
+/**
+ * Binds a recipe spec to React components, requiring exactly the slots the spec declares.
+ *
+ * @remarks
+ * Wraps the renderer-neutral `defineFormRecipe`; the payload type is what makes a missing or
+ * extra slot a compile error.
+ */
+export function defineRecipe<
+	const TType extends string,
+	TSlots extends Partial<Record<RecipeSlot, z.ZodMiniType>>,
+	TSchema extends z.ZodMiniType,
+>(spec: RecipeSpec<TType, TSchema, TSlots>, payload: RecipeRenderPayload<TSlots, FormShellComponent, React.FC>) {
+	return defineFormRecipe(spec, payload);
 }

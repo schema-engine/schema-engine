@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest';
 import * as z from 'zod/mini';
 import { validateRegistrationConfig } from '@schema-engine/forms/lib/standard-schema';
-import { defineFormRecipe, defineRecipeSpec } from '@schema-engine/forms/recipes';
+import { defineRecipeSpec } from '@schema-engine/forms/recipes';
+import { defineRecipe } from '@/primitives';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
 describe('recipe protocol', () => {
@@ -24,7 +25,7 @@ describe('recipe protocol', () => {
 	});
 
 	test('bound recipes reuse canonical slot schemas', () => {
-		const recipe = defineFormRecipe(
+		const recipe = defineRecipe(
 			defineRecipeSpec({
 				$type: 'brand',
 				kind: 'single-step',
@@ -34,7 +35,7 @@ describe('recipe protocol', () => {
 					header: z.strictObject({ size: z.optional(z.enum(['sm', 'md'])) }),
 				},
 			}),
-			{ shell: () => null, slots: {} },
+			{ shell: () => null, slots: { header: () => null } },
 		);
 
 		expect(() =>
