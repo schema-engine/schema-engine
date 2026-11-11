@@ -142,9 +142,9 @@
 			"types": "./dist/recipes/index.d.ts",
 			"import": "./dist/recipes/index.js"
 		},
-		"./recipes/*": {
-			"types": "./dist/recipes/*.d.ts",
-			"import": "./dist/recipes/*.js"
+		"./recipes/built-in": {
+			"types": "./dist/recipes/built-in.d.ts",
+			"import": "./dist/recipes/built-in.js"
 		},
 		"./lib/validate-form": {
 			"types": "./dist/lib/validate-form.d.ts",

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 import * as builtIn from '@/recipes/built-in';
 import * as protocol from '@/recipes';
@@ -18,5 +19,13 @@ describe('recipe entry points', () => {
 		expect(builtIn).toHaveProperty('CardShellConfigSchema');
 		expect(builtIn).toHaveProperty('formatStepCounter');
 		expect(builtIn).not.toHaveProperty('defineRecipeSpec');
+	});
+
+	test('package exports expose only the protocol and built-in subpaths', () => {
+		const { exports } = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')) as {
+			exports: Record<string, unknown>;
+		};
+		const recipeSubpaths = Object.keys(exports).filter((key) => key.startsWith('./recipes'));
+		expect(recipeSubpaths.sort()).toEqual(['./recipes', './recipes/built-in']);
 	});
 });
