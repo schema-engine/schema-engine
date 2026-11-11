@@ -36,7 +36,11 @@ export class MinimalProgressElement extends RadiantElement {
 			<div class="se-minimal-progress">
 				<div class="se-minimal-progress__labels">
 					<span>{labels.progress}</span>
-					{config.showPercentage ? <span aria-hidden="true">{percent}%</span> : null}
+					{config.showPercentage ? (
+						<span class="se-minimal-progress__percentage" aria-hidden="true">
+							{percent}%
+						</span>
+					) : null}
 				</div>
 				<div
 					class="se-minimal-progress__bar"

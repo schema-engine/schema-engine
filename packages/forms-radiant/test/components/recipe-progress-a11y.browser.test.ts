@@ -3,6 +3,7 @@ import { page } from 'vitest/browser';
 import * as z from 'zod/mini';
 import { createInitialStepStates } from '@schema-engine/forms/engine';
 import { MinimalProgressConfigSchema, StepIndicatorsConfigSchema } from '@schema-engine/forms/recipes/built-in';
+import '@/components/blocks/wizard-blocks.css';
 import { MinimalProgressElement } from '@/components/blocks/minimal-progress';
 import { StepIndicatorsElement } from '@/components/blocks/step-indicators';
 import { deriveInitialInstance, type FormMeta } from '@/lib/instance-view';
@@ -102,6 +103,19 @@ test('the visible percentage is hidden from assistive technology', async () => {
 	const percentage = [...element.querySelectorAll('span')].find((span) => span.textContent === '67%');
 
 	expect(percentage?.getAttribute('aria-hidden')).toBe('true');
+});
+
+test('only the percentage is styled as a muted figure, not the progress label', async () => {
+	const without = await mountProgress(createMeta(['One', 'Two', 'Three']), { showPercentage: false });
+	const label = without.querySelector('.se-minimal-progress__labels span')!;
+
+	expect(label.textContent).toBe('Progress');
+	expect(getComputedStyle(label).fontVariantNumeric).toBe('normal');
+
+	const withPercentage = await mountProgress(createMeta(['One', 'Two', 'Three']));
+	const percentage = withPercentage.querySelector('.se-minimal-progress__percentage')!;
+
+	expect(getComputedStyle(percentage).fontVariantNumeric).toBe('tabular-nums');
 });
 
 test('showPercentage false keeps the bar', async () => {
