@@ -12,7 +12,8 @@ import { deriveInitialInstance } from '@/lib/instance-view';
  * A custom progress bar rather than a landmark, a `meter` or a native `progress`: the track and
  * fill are styled in the block's CSS, which native `progress` cannot do consistently across
  * browsers. The track and fill are presentational and `aria-valuetext` announces the step, so the
- * visible percentage is hidden from assistive technology.
+ * visible percentage is hidden from assistive technology. The bar is named by the visible label so
+ * the two cannot drift apart.
  */
 @customElement('se-minimal-progress')
 export class MinimalProgressElement extends RadiantElement {
@@ -30,12 +31,13 @@ export class MinimalProgressElement extends RadiantElement {
 		const config = this.slotConfig;
 		if (!config) return null;
 		const { labels } = config;
+		const labelId = `${meta.id}-progress-label`;
 		const current = instance.currentStep + 1;
 		const percent = Math.round((current / instance.totalSteps) * 100);
 		return (
 			<div class="se-minimal-progress">
 				<div class="se-minimal-progress__labels">
-					<span>{labels.progress}</span>
+					<span id={labelId}>{labels.progress}</span>
 					{config.showPercentage ? (
 						<span class="se-minimal-progress__percentage" aria-hidden="true">
 							{percent}%
@@ -46,7 +48,7 @@ export class MinimalProgressElement extends RadiantElement {
 					class="se-minimal-progress__bar"
 					// oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- styled custom bar, see class remarks
 					role="progressbar"
-					aria-label={labels.regionAriaLabel}
+					aria-labelledby={labelId}
 					aria-valuemin={0}
 					aria-valuemax={100}
 					aria-valuenow={percent}

@@ -47,7 +47,6 @@ export const MinimalProgressConfigSchema = z.strictObject({
 	showPercentage: z._default(z.boolean(), true),
 	labels: z.prefault(
 		z.strictObject({
-			regionAriaLabel: z._default(z.string(), 'Form progress'),
 			progress: z._default(z.string(), 'Progress'),
 			valueText: z._default(
 				z.string().check(z.describe('Template with {current} and {total}, read as the bar value')),

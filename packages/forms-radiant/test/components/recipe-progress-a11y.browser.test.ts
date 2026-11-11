@@ -81,13 +81,22 @@ test('an untitled step falls back to a localizable title', async () => {
 
 test('minimal progress is a labelled progressbar and not a navigation landmark', async () => {
 	await mountProgress(createMeta(['One', 'Two', 'Three']));
-	const bar = page.getByRole('progressbar', { name: 'Form progress' });
+	const bar = page.getByRole('progressbar', { name: 'Progress' });
 
 	await expect.element(bar).toHaveAttribute('aria-valuemin', '0');
 	await expect.element(bar).toHaveAttribute('aria-valuemax', '100');
 	await expect.element(bar).toHaveAttribute('aria-valuenow', '67');
 	await expect.element(bar).toHaveAttribute('aria-valuetext', 'Step 2 of 3');
 	expect(document.querySelector('nav')).toBeNull();
+});
+
+test('the progress bar is named by the localizable visible label', async () => {
+	await mountProgress(createMeta(['One', 'Two', 'Three']), {
+		showPercentage: false,
+		labels: { progress: 'Fortschritt' },
+	});
+
+	await expect.element(page.getByRole('progressbar', { name: 'Fortschritt' })).toBeInTheDocument();
 });
 
 test('the progress value text is localizable', async () => {

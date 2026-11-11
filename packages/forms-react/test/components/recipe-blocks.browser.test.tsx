@@ -132,7 +132,7 @@ describe('recipe progress blocks expose the right semantics', () => {
 
 	test('minimal progress is a labelled progressbar and not a navigation landmark', async () => {
 		renderForm({ view: { $type: 'card-wizard' } });
-		const bar = screen.getByRole('progressbar', { name: 'Form progress' });
+		const bar = screen.getByRole('progressbar', { name: 'Progress' });
 
 		expect(screen.queryByRole('navigation')).toBeNull();
 		expect(bar).toHaveAttribute('aria-valuemin', '0');
@@ -144,6 +144,14 @@ describe('recipe progress blocks expose the right semantics', () => {
 
 		expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '67');
 		expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuetext', 'Step 2 of 3');
+	});
+
+	test('the progress bar is named by the localizable visible label', () => {
+		renderForm({
+			view: { $type: 'card-wizard', progress: { showPercentage: false, labels: { progress: 'Fortschritt' } } },
+		});
+
+		expect(screen.getByRole('progressbar', { name: 'Fortschritt' })).toBeInTheDocument();
 	});
 
 	test('the progress value text is localizable', () => {
