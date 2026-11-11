@@ -41,20 +41,19 @@ export interface ViewModel {
 }
 
 /**
- * Reads one slot's complete config from a view.
+ * Reads one slot's complete config from a normalized view.
  *
  * @remarks
- * A normalized view already holds the schema output, so the parse is a no-op there; it also
- * fills the schema defaults for a view that was not normalized, such as a serialized or
- * hand-built one, instead of returning a partial config typed as complete. Throws a Zod error
- * when the slot config is invalid.
+ * `schema` only types the result. The view is already complete, and parsing it again with the
+ * block's own strict schema would reject a custom recipe whose slot schema extends the block's
+ * with extra keys.
  */
 export function getSlotConfig<TSchema extends z.ZodMiniType>(
 	viewConfig: Record<string, unknown>,
 	slot: RecipeSlot,
-	schema: TSchema,
+	_schema: TSchema,
 ): z.output<TSchema> {
-	return z.parse(schema, viewConfig[slot] ?? {});
+	return viewConfig[slot] as z.output<TSchema>;
 }
 
 /** Projects form steps and the live step state onto the {@link ViewStep} list both renderers expose to recipe blocks. */

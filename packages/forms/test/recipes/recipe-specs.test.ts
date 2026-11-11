@@ -235,11 +235,8 @@ describe('normalized slot defaults', () => {
 		expect(recipeSchema.properties.shell.required ?? []).not.toContain('maxWidth');
 	});
 
-	test('getSlotConfig completes a view that was not normalized', () => {
-		expect(getSlotConfig({}, 'shell', CardShellConfigSchema)).toEqual({
-			maxWidth: 'md',
-			padding: 'md',
-			shadowSize: 'md',
-		});
+	test('getSlotConfig reads a slot extended with extra keys without parsing it', () => {
+		const view = { shell: { maxWidth: 'lg', padding: 'md', shadowSize: 'md', accent: 'red' } };
+		expect(getSlotConfig(view, 'shell', CardShellConfigSchema)).toMatchObject({ maxWidth: 'lg', accent: 'red' });
 	});
 });
