@@ -68,11 +68,12 @@ export function HeroShell({ slots, viewConfig }: FormShellProps): JsxRenderable 
 		HeroShellConfigSchema,
 	);
 	return (
-		<div class="hero-shell" style={{ backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined }}>
+		<div
+			class="hero-shell"
+			style={{ backgroundImage: backgroundImage ? `url(${JSON.stringify(backgroundImage)})` : undefined }}
+		>
 			{backgroundVideo ? (
-				<video autoplay muted loop class="hero-shell__video">
-					<source src={backgroundVideo} type="video/mp4" />
-				</video>
+				<video autoplay muted loop playsinline src={backgroundVideo} class="hero-shell__video" />
 			) : null}
 			<div class="hero-shell__overlay" />
 			<div classes={['hero-shell__content', `hero-shell__content--${contentWidth}`]}>
