@@ -218,6 +218,10 @@ export class FormEngine<
 		return getAuthoringInstructionsFromCatalog(this.describeViewCatalog());
 	}
 
+	/**
+	 * @remarks
+	 * Generated as input: authors may omit prefaulted slots and defaulted keys, so only `$type` is required.
+	 */
 	private generateRecipeViewSchema(recipe: AnyRecipeRegistration): Record<string, unknown> {
 		try {
 			return generateZodJSONSchemaDocument(
@@ -225,6 +229,7 @@ export class FormEngine<
 				this.schemaArtifacts.metadataRegistry,
 				{
 					target: 'draft-2020-12',
+					io: 'input',
 					schemaId: SchemaMetadataCatalog.entryId(ComponentType.Recipe, recipe.$type),
 				},
 			) as Record<string, unknown>;

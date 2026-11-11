@@ -226,6 +226,15 @@ describe('normalized slot defaults', () => {
 		expect(properties.actions.properties.align.default).toBe('end');
 	});
 
+	test('lists only $type as required in the authoring view JSON Schema', () => {
+		const viewSchema = engine.describeRecipe('card').viewSchema as {
+			$defs: Record<string, { required?: string[]; properties: Record<string, { required?: string[] }> }>;
+		};
+		const recipeSchema = viewSchema.$defs['recipe:card'];
+		expect(recipeSchema.required).toEqual(['$type']);
+		expect(recipeSchema.properties.shell.required ?? []).not.toContain('maxWidth');
+	});
+
 	test('getSlotConfig completes a view that was not normalized', () => {
 		expect(getSlotConfig({}, 'shell', CardShellConfigSchema)).toEqual({
 			maxWidth: 'md',
