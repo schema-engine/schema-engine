@@ -119,6 +119,11 @@ export type StepIndicatorsConfig = z.infer<typeof StepIndicatorsConfigSchema>;
 export type WizardActionsConfig = z.infer<typeof WizardActionsConfigSchema>;
 export type FormActionsConfig = z.infer<typeof FormActionsConfigSchema>;
 
+/**
+ * @remarks
+ * Fills every `{current}` and `{total}` in a label template; other text is left as is.
+ * Also formats the progress value text and the untitled step title.
+ */
 export function formatStepCounter(template: string, current: number, total: number): string {
 	return template.replaceAll('{current}', String(current)).replaceAll('{total}', String(total));
 }

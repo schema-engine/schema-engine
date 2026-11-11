@@ -6,8 +6,7 @@ import { useViewConfig, useViewContext } from '@schema-engine/forms-react/hooks'
  * A custom progress bar rather than a landmark or a `meter`: the form is partway through a
  * task, not navigating, and the value is a step position. The track and fill are presentational;
  * the visible percentage is hidden from assistive technology because `aria-valuetext` already
- * announces the step. The registry ships no CSS files, so the bar uses the fewest Tailwind
- * classes it can.
+ * announces the step.
  */
 export function MinimalProgress() {
 	const { steps, currentStepIndex } = useViewContext();

@@ -126,7 +126,7 @@ export class SplitScreenSideElement extends RadiantElement {
 		if (!meta) return <slot />;
 		const instance = this.instance ?? deriveInitialInstance(meta);
 		const step = meta.steps[instance.currentStep] ?? meta.steps[0];
-		const title = this.hasHeader ? meta.title : meta.title || step?.title;
+		const title = meta.title || (this.hasHeader ? undefined : step?.title);
 		const sideContent = this.sideContent;
 		if (!title && !sideContent) return null;
 		return (

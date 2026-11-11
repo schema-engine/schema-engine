@@ -23,7 +23,7 @@ describe('hero shell', () => {
 		expect(video).not.toHaveClass('-z-10');
 	});
 
-	test('plays the video inline and does not declare a container type', () => {
+	test('plays the video inline from its src without a declared type', () => {
 		const video = renderHero({ backgroundVideo: '/hero.webm' }).querySelector('video') as HTMLVideoElement;
 
 		expect(video.playsInline).toBe(true);
@@ -45,5 +45,6 @@ describe('hero shell', () => {
 		const root = renderHero({ backgroundImage: 'x"); color: red; background: url("y' });
 
 		expect(root.style.color).toBe('');
+		expect(getComputedStyle(root).backgroundImage).toContain('x%22)');
 	});
 });
