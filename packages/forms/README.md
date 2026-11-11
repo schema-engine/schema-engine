@@ -57,7 +57,7 @@ the first step starts visited. `createStepMachine(config)` returns a reducer for
 value; the reducer does not validate fields. When it is true on a non-final step, the
 reducer completes the active step and advances. On the final step, it updates validity
 without marking that step complete or advancing. When `isValid` is false, it leaves the
-active step in place. Pass the resulting state to `buildViewModel` as `stepStates`.
+active step in place. Pass the resulting state to `buildViewModel` as `stepStates`; `buildViewSteps(steps, currentStep, stepStates)` is the step projection `buildViewModel` and Radiant's blocks share.
 
 `createStepNavigator({ reduce, getState, setState, validateStep, dispatchTrigger })` wraps
 that reducer in the navigation both renderers share. It returns `{ navigate, cancel }`.

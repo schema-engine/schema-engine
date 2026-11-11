@@ -1,6 +1,7 @@
+import { useMemo } from 'react';
 import type React from 'react';
 import { type FormConfigView, type RecipeRegistration } from '@schema-engine/forms';
-import { buildViewModel, type RecipeKind } from '@schema-engine/forms/recipes';
+import { buildViewModel } from '@schema-engine/forms/recipes';
 import { useFormContext } from '@/adapters/context';
 import { useFormInstanceActions } from '@/hooks/use-form-context';
 import { ViewProvider } from '@/contexts/view-context';
@@ -8,18 +9,19 @@ import type { ReactRecipeAdapterPayload } from '@/primitives';
 
 type ReactRecipeRegistration = RecipeRegistration<string, RecipeRegistration['schema'], ReactRecipeAdapterPayload>;
 
-function getRecipeAdapter(registration: ReactRecipeRegistration): {
-	adapter: ReactRecipeAdapterPayload;
-	kind: RecipeKind;
-} {
+function getRecipeAdapter(registration: ReactRecipeRegistration): ReactRecipeAdapterPayload {
 	const payload = registration.render;
 	if (!payload?.slots) {
 		throw new Error(`Recipe '${registration.$type}' is missing a React render payload.`);
 	}
 
-	return { adapter: payload, kind: registration.kind };
+	return payload;
 }
 
+/**
+ * @remarks
+ * Slot elements are built once per recipe so React skips a slot whose view context did not change.
+ */
 function renderSlotBlock(Component: React.FC | undefined): React.ReactNode {
 	if (!Component) return null;
 	return <Component />;
@@ -35,7 +37,33 @@ interface RecipeRendererProps {
 export function RecipeRenderer({ config, recipe, children, renderFields }: RecipeRendererProps) {
 	const { formState } = useFormContext();
 	const { stepStates, currentStep, navigation } = useFormInstanceActions();
-	if (!recipe) {
+	const { isSubmitting } = formState;
+	const viewContext = useMemo(
+		() =>
+			recipe
+				? buildViewModel({
+						config,
+						kind: recipe.kind,
+						currentStepIndex: currentStep,
+						navigation,
+						isSubmitting,
+						viewConfig: config.view as Record<string, unknown>,
+						stepStates,
+					})
+				: undefined,
+		[recipe, config, currentStep, navigation, isSubmitting, stepStates],
+	);
+	const adapter = recipe ? getRecipeAdapter(recipe as ReactRecipeRegistration) : undefined;
+	const blocks = useMemo(
+		() =>
+			adapter && {
+				header: renderSlotBlock(adapter.slots.header),
+				progress: renderSlotBlock(adapter.slots.progress),
+				actions: renderSlotBlock(adapter.slots.actions),
+			},
+		[adapter],
+	);
+	if (!adapter || !blocks || !viewContext) {
 		return (
 			<>
 				{renderFields()}
@@ -44,18 +72,7 @@ export function RecipeRenderer({ config, recipe, children, renderFields }: Recip
 		);
 	}
 
-	const { adapter, kind } = getRecipeAdapter(recipe as ReactRecipeRegistration);
-	const viewConfig = config.view as Record<string, unknown>;
-
-	const viewContext = buildViewModel({
-		config,
-		kind,
-		currentStepIndex: currentStep,
-		navigation,
-		isSubmitting: formState.isSubmitting,
-		viewConfig,
-		stepStates,
-	});
+	const { viewConfig } = viewContext;
 
 	const content = (
 		<>
@@ -64,12 +81,7 @@ export function RecipeRenderer({ config, recipe, children, renderFields }: Recip
 		</>
 	);
 
-	const slots = {
-		header: renderSlotBlock(adapter.slots.header),
-		progress: renderSlotBlock(adapter.slots.progress),
-		content,
-		actions: renderSlotBlock(adapter.slots.actions),
-	};
+	const slots = { ...blocks, content };
 
 	const Shell = adapter.shell;
 	if (!Shell) {

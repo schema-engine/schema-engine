@@ -56,6 +56,25 @@ export function getSlotConfig<TSchema extends z.ZodMiniType>(
 	return z.parse(schema, viewConfig[slot] ?? {});
 }
 
+/** Projects form steps and the live step state onto the {@link ViewStep} list both renderers expose to recipe blocks. */
+export function buildViewSteps(
+	steps: ReadonlyArray<{ id: string; title?: string; description?: string }>,
+	currentStep: number,
+	stepStates: StepStates,
+): ViewStep[] {
+	return steps.map((step, index) => ({
+		id: step.id,
+		title: step.title,
+		description: step.description,
+		index,
+		total: steps.length,
+		isActive: index === currentStep,
+		isCompleted: stepStates.completed[index] ?? false,
+		isValid: stepStates.valid[index] ?? false,
+		isVisited: stepStates.visited[index] ?? false,
+	}));
+}
+
 export function buildViewModel({
 	config,
 	kind,
@@ -73,17 +92,7 @@ export function buildViewModel({
 	viewConfig: Record<string, unknown>;
 	stepStates: StepStates;
 }): ViewModel {
-	const steps: ViewStep[] = config.steps.map((step, index) => ({
-		id: step.id,
-		title: step.title,
-		description: step.description,
-		index,
-		total: config.steps.length,
-		isActive: index === currentStepIndex,
-		isCompleted: stepStates?.completed[index] ?? false,
-		isValid: stepStates?.valid[index] ?? false,
-		isVisited: stepStates?.visited[index] ?? false,
-	}));
+	const steps = buildViewSteps(config.steps, currentStepIndex, stepStates);
 
 	const activeStep = steps[currentStepIndex] ?? steps[0];
 	if (!activeStep) {

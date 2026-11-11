@@ -9,7 +9,7 @@ import {
 	StepHeaderConfigSchema,
 	WizardActionsConfigSchema,
 } from '@/recipes/slot-schemas';
-import { buildViewModel, getSlotConfig } from '@/recipes/view-model';
+import { buildViewModel, buildViewSteps, getSlotConfig } from '@/recipes/view-model';
 import { createInitialStepStates } from '@/engine/step-machine';
 
 describe('defineRecipeSpec', () => {
@@ -116,6 +116,52 @@ describe('built-in recipe specs', () => {
 				shell: { showSeparator: false },
 			}).success,
 		).toBe(true);
+	});
+});
+
+describe('buildViewSteps', () => {
+	test('projects active, completed, valid and visited flags per step', () => {
+		const steps = buildViewSteps(
+			[{ id: 'one', title: 'One', description: 'First' }, { id: 'two' }, { id: 'three', title: 'Three' }],
+			1,
+			{ completed: [true, false, false], valid: [true, true, false], visited: [true, true, false] },
+		);
+
+		expect(steps).toEqual([
+			{
+				id: 'one',
+				title: 'One',
+				description: 'First',
+				index: 0,
+				total: 3,
+				isActive: false,
+				isCompleted: true,
+				isValid: true,
+				isVisited: true,
+			},
+			{
+				id: 'two',
+				title: undefined,
+				description: undefined,
+				index: 1,
+				total: 3,
+				isActive: true,
+				isCompleted: false,
+				isValid: true,
+				isVisited: true,
+			},
+			{
+				id: 'three',
+				title: 'Three',
+				description: undefined,
+				index: 2,
+				total: 3,
+				isActive: false,
+				isCompleted: false,
+				isValid: false,
+				isVisited: false,
+			},
+		]);
 	});
 });
 

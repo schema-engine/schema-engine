@@ -1,6 +1,6 @@
 import type { NormalizedFormConfig } from '@schema-engine/forms';
 import { createInitialStepStates } from '@schema-engine/forms/engine';
-import type { ViewStep } from '@schema-engine/forms/recipes';
+import { buildViewSteps, type ViewStep } from '@schema-engine/forms/recipes';
 import type { FormInstanceContextValue } from '@/contexts/form-instance-context';
 
 /** Serializable form chrome without field definitions, rules, or defaults. */
@@ -32,17 +32,7 @@ export function deriveFormSteps(
 	config: FormMeta,
 	instance: Pick<FormInstanceContextValue, 'currentStep' | 'stepStates'>,
 ): ViewStep[] {
-	return config.steps.map((step, index) => ({
-		id: step.id,
-		title: step.title,
-		description: step.description,
-		index,
-		total: config.steps.length,
-		isActive: index === instance.currentStep,
-		isCompleted: instance.stepStates.completed[index] ?? false,
-		isValid: instance.stepStates.valid[index] ?? false,
-		isVisited: instance.stepStates.visited[index] ?? false,
-	}));
+	return buildViewSteps(config.steps, instance.currentStep, instance.stepStates);
 }
 
 /**
