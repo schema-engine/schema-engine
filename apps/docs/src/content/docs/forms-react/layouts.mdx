@@ -91,8 +91,8 @@ Canonical source is `registry/shared/forms/recipes`. After `shadcn add`, files l
 ```typescript
 import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
-import { defineFormRecipe, defineRecipeSpec } from '@schema-engine/forms/recipes';
-import type { FormShellProps } from '@schema-engine/forms-react/primitives';
+import { defineRecipeSpec } from '@schema-engine/forms/recipes';
+import { defineRecipe, type FormShellProps } from '@schema-engine/forms-react/primitives';
 
 function BrandShell({ slots }: FormShellProps) {
 	return (
@@ -104,7 +104,7 @@ function BrandShell({ slots }: FormShellProps) {
 	);
 }
 
-const BrandRecipe = defineFormRecipe(
+const BrandRecipe = defineRecipe(
 	defineRecipeSpec({
 		$type: 'brand',
 		kind: 'single-step',

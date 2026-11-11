@@ -63,7 +63,7 @@ useViewConfig('header', StepHeaderConfigSchema);
 ```
 
 Shells and slot blocks are ordinary components. Bind them to a canonical spec
-with `defineFormRecipe(spec, { shell, slots })` from `@schema-engine/forms/recipes`.
+with `defineRecipe(spec, { shell, slots })` from `@schema-engine/forms-react/primitives`; it requires exactly the slots the spec declares.
 Built-in specs are exported from `@schema-engine/forms/recipes/built-in`. The package root
 `@schema-engine/forms` does not re-export them.
 
