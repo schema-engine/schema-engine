@@ -13,21 +13,31 @@ export type DiscriminatedConfigs<TMap extends Record<string, unknown>> = string 
 			}[keyof TMap];
 
 /**
- * Rejects `view` keys that the selected recipe does not declare.
+ * Rejects `view` keys, and keys inside each slot, that the selected recipe does not declare.
  *
  * @remarks
  * `defineForm` infers its config through a generic constraint, which skips excess property
- * checks. This maps undeclared keys to `never` so a misspelled or undeclared slot is a type error.
+ * checks. This maps undeclared keys to `never` so a misspelled or undeclared slot, or an
+ * unknown key inside a slot, is a type error. Exactness stops at the slot's own keys: objects
+ * nested deeper inside a slot config are not checked.
  */
 export type ExactViewConfig<TView, TRecipes extends Record<string, unknown>> = TView extends {
 	readonly $type: infer K;
 }
-	? {
-			[P in keyof TView]: P extends keyof Extract<DiscriminatedConfigs<TRecipes>, { readonly $type: K }>
-				? TView[P]
-				: never;
-		}
+	? ExactSlots<TView, Extract<DiscriminatedConfigs<TRecipes>, { readonly $type: K }>>
 	: TView;
+
+type ExactSlots<TView, TDeclared> = {
+	[P in keyof TView]: P extends keyof TDeclared
+		? P extends '$type'
+			? TView[P]
+			: ExactSlot<TView[P], NonNullable<TDeclared[P]>>
+		: never;
+};
+
+type ExactSlot<TSlot, TDeclared> = TSlot extends object
+	? { [Q in keyof TSlot]: Q extends keyof TDeclared ? TSlot[Q] : never }
+	: TSlot;
 
 export type FormAuthoringAction<TActions extends Record<string, unknown>> = DiscriminatedConfigs<TActions>;
 
