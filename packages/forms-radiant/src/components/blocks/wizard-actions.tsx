@@ -48,7 +48,7 @@ export class WizardActionsElement extends RadiantElement {
 					{labels.previous}
 				</RuiButton>
 				{showStepCounter ? (
-					<span class="se-wizard-actions__counter">
+					<span class="se-wizard-actions__counter" aria-live="polite">
 						{formatStepLabel(labels.stepCounter, instance.currentStep + 1, steps.length)}
 					</span>
 				) : null}

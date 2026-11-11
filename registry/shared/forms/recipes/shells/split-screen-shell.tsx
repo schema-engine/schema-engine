@@ -16,6 +16,13 @@ const contentAlignment = {
 	bottom: 'justify-end',
 } as const;
 
+/**
+ * @remarks
+ * The panel shows the form title. When the recipe has a header slot, that header must set
+ * `fallbackToFormTitle: false` in its slot defaults, or the form title is repeated in the header
+ * for steps without a title. A custom recipe that reuses this shell with a header slot must set
+ * that default too.
+ */
 export function SplitScreenShell({ slots, viewConfig }: FormShellProps) {
 	const {
 		sideContent,
