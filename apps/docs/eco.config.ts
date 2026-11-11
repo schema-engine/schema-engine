@@ -14,11 +14,6 @@ import { devToolbar } from '@ecopages/dev-toolbar/config';
 /**
  * @remarks
  * Install Radiant's server runtime before React routes import the shared docs shell.
- *
- * `@schema-engine/forms-react` stays out of `runtimeModules`: Ecopages bundles each
- * runtime module as its own vendor and rewrites exact specifiers only, so the root,
- * `/hooks` and `/adapters/react-hook-form` would each carry a copy of the shared
- * context chunk. Bundling the package with the page script keeps one copy.
  */
 export default defineConfig({
 	rootDir: import.meta.dirname,
@@ -27,7 +22,6 @@ export default defineConfig({
 		reactPlugin({
 			extensions: ['.react.tsx'],
 			explicitGraph: true,
-			runtimeModules: ['react-hook-form'],
 			mdx: {
 				extensions: ['.react.mdx'],
 			},

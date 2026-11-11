@@ -71,6 +71,7 @@ describe('SSR array markup', () => {
 		const html = renderArraySsrAcceptanceHtml();
 
 		expect(html.match(/class="se-form-array__item"/g) ?? []).toHaveLength(2);
+		expect(html).not.toContain('<template data-radiant-slotted');
 		expect(html).toContain('data-se-row-id="seed-0"');
 		expect(html).toContain('data-se-row-id="seed-1"');
 		expect(html).toContain('data-default-value');
