@@ -1,8 +1,15 @@
 import { describe, expect, test } from 'vitest';
 import { defineRecipeSpec } from '@/recipes/define-recipe-spec';
 import { cardSpec, wizardSpec, builtInRecipeSpecs } from '@/recipes/built-in-specs';
-import { FormActionsConfigSchema, StepHeaderConfigSchema, WizardActionsConfigSchema } from '@/recipes/slot-schemas';
-import { buildViewModel } from '@/recipes/view-model';
+import { createFormEngine } from '@/engine/create-form-engine';
+import { defineFormRecipe } from '@/recipes/define-form-recipe';
+import {
+	CardShellConfigSchema,
+	FormActionsConfigSchema,
+	StepHeaderConfigSchema,
+	WizardActionsConfigSchema,
+} from '@/recipes/slot-schemas';
+import { buildViewModel, getSlotConfig } from '@/recipes/view-model';
 import { createInitialStepStates } from '@/engine/step-machine';
 
 describe('defineRecipeSpec', () => {
@@ -140,5 +147,37 @@ describe('view model', () => {
 		expect(model.activeStep.index).toBe(1);
 		expect(model.activeStep.total).toBe(2);
 		expect(model.steps).toHaveLength(2);
+	});
+});
+
+describe('normalized slot defaults', () => {
+	const engine = createFormEngine({ recipes: [defineFormRecipe(cardSpec, {})] });
+	const steps = [{ id: 'main', title: 'Main', elements: [] }];
+
+	test('fills slots the author omits from the slot schema defaults', () => {
+		const form = engine.defineForm({ id: 'card', steps, view: { $type: 'card' } });
+		expect(form.view?.shell).toEqual({ maxWidth: 'md', padding: 'md', shadowSize: 'md' });
+		expect(form.view?.actions).toEqual({
+			labels: { submit: 'Submit', submitAriaLabel: 'Submit form', submitting: 'Submitting...' },
+			align: 'end',
+		});
+	});
+
+	test('layers author keys over recipe defaults over schema defaults', () => {
+		const form = engine.defineForm({ id: 'card', steps, view: { $type: 'card', header: { size: 'lg' } } });
+		expect(form.view?.header).toMatchObject({ size: 'lg', align: 'center', titleAs: 'h2' });
+	});
+
+	test('shows the defaults in the view JSON Schema', () => {
+		const shell = JSON.stringify(engine.describeRecipe('card').viewSchema);
+		expect(shell).toContain('"default":"md"');
+	});
+
+	test('getSlotConfig completes a view that was not normalized', () => {
+		expect(getSlotConfig({}, 'shell', CardShellConfigSchema)).toEqual({
+			maxWidth: 'md',
+			padding: 'md',
+			shadowSize: 'md',
+		});
 	});
 });

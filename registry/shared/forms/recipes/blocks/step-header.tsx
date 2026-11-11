@@ -1,5 +1,5 @@
 import type { ElementType } from 'react';
-import { formatStepCounter, type StepHeaderConfig } from '@schema-engine/forms/recipes/built-in';
+import { formatStepCounter, StepHeaderConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import { useActiveStep, useViewConfig, useViewContext } from '@schema-engine/forms-react/hooks';
 import { cn } from '@/components/schema-engine/forms/lib/utils';
 
@@ -18,24 +18,12 @@ const alignments = {
 export function StepHeader() {
 	const { form } = useViewContext();
 	const step = useActiveStep();
-	const {
-		showDescription = true,
-		showStepCounter = false,
-		labels,
-		size = 'md',
-		align = 'start',
-		titleAs = 'h2',
-		inheritColor = false,
-		counterPlacement = 'after',
-	} = useViewConfig<StepHeaderConfig>('header');
+	const { showDescription, showStepCounter, labels, size, align, titleAs, inheritColor, counterPlacement } =
+		useViewConfig('header', StepHeaderConfigSchema);
 
 	const title = step.title || form.title;
 	const description = step.description || form.description;
-	const counterText = showStepCounter
-		? labels?.stepCounter
-			? formatStepCounter(labels.stepCounter, step.index + 1, step.total)
-			: `Step ${step.index + 1} of ${step.total}`
-		: null;
+	const counterText = showStepCounter ? formatStepCounter(labels.stepCounter, step.index + 1, step.total) : null;
 	const Title = titleAs as ElementType;
 
 	if (!title && !description && !counterText) return null;

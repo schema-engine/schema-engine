@@ -1,4 +1,4 @@
-import { DEFAULT_WIZARD_ACTION_LABELS, type WizardActionsConfig } from '@schema-engine/forms/recipes/built-in';
+import { WizardActionsConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import { useViewConfig, useViewContext } from '@schema-engine/forms-react/hooks';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,10 +12,7 @@ import { cn } from '@/components/schema-engine/forms/lib/utils';
  */
 export function WizardActions() {
 	const { navigation, form, steps, currentStepIndex } = useViewContext();
-	const config = useViewConfig<WizardActionsConfig>('actions');
-	const labels = { ...DEFAULT_WIZARD_ACTION_LABELS, ...config.labels };
-	const appearance = config.appearance ?? 'default';
-	const showStepCounter = config.showStepCounter ?? appearance === 'default';
+	const { labels, appearance, showStepCounter } = useViewConfig('actions', WizardActionsConfigSchema);
 
 	return (
 		<div className={cn('flex items-center justify-between gap-4', appearance === 'minimal' && 'w-full')}>

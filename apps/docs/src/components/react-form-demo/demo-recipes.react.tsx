@@ -1,7 +1,7 @@
 /** @jsxImportSource react */
 import type { ReactNode } from 'react';
 import { defineFormRecipe, type FormShellLayout } from '@schema-engine/forms/recipes';
-import { cardSpec, wizardSpec } from '@schema-engine/forms/recipes/built-in';
+import { StepHeaderConfigSchema, cardSpec, wizardSpec } from '@schema-engine/forms/recipes/built-in';
 import { useActiveStep, useViewConfig, useViewContext } from '@schema-engine/forms-react/hooks';
 
 type ShellProps = FormShellLayout<ReactNode>;
@@ -36,7 +36,7 @@ function DemoCardShell({ slots, viewConfig }: ShellProps) {
 function DemoStepHeader() {
 	const { form } = useViewContext();
 	const step = useActiveStep();
-	const { showDescription = true, showStepCounter = false } = useViewConfig('header');
+	const { showDescription, showStepCounter } = useViewConfig('header', StepHeaderConfigSchema);
 	const title = step.title || form.title;
 	const description = step.description || form.description;
 	const counter = showStepCounter ? `Step ${step.index + 1} of ${step.total}` : null;

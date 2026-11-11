@@ -5,10 +5,10 @@ import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import type { FormMeta } from '@/lib/instance-view';
 import { getSlotConfig } from '@schema-engine/forms/recipes';
 import {
-	type CardShellConfig,
-	type HeroShellConfig,
-	type SidebarShellConfig,
-	type SplitScreenShellConfig,
+	CardShellConfigSchema,
+	HeroShellConfigSchema,
+	SidebarShellConfigSchema,
+	SplitScreenShellConfigSchema,
 } from '@schema-engine/forms/recipes/built-in';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { deriveInitialInstance } from '@/lib/instance-view';
@@ -29,7 +29,7 @@ export function StackShell({ slots }: FormShellProps): JsxRenderable {
 }
 
 export function SidebarShell({ slots, viewConfig }: FormShellProps): JsxRenderable {
-	const { showSeparator = true } = getSlotConfig<SidebarShellConfig>(viewConfig, 'shell');
+	const { showSeparator } = getSlotConfig(viewConfig, 'shell', SidebarShellConfigSchema);
 	return (
 		<div classes={['se-sidebar-shell', !showSeparator && 'se-sidebar-shell--no-separator']}>
 			{slots.progress ? <aside class="se-sidebar-shell__progress">{slots.progress}</aside> : null}
@@ -44,7 +44,7 @@ export function SidebarShell({ slots, viewConfig }: FormShellProps): JsxRenderab
 }
 
 export function CardShell({ slots, viewConfig }: FormShellProps): JsxRenderable {
-	const { maxWidth = 'md', padding = 'md', shadowSize = 'md' } = getSlotConfig<CardShellConfig>(viewConfig, 'shell');
+	const { maxWidth, padding, shadowSize } = getSlotConfig(viewConfig, 'shell', CardShellConfigSchema);
 	return (
 		<div class="card-shell">
 			<div classes={['card-shell__card', `card-shell__card--${maxWidth}`, `card-shell__shadow--${shadowSize}`]}>
@@ -62,11 +62,11 @@ export function CardShell({ slots, viewConfig }: FormShellProps): JsxRenderable 
 }
 
 export function HeroShell({ slots, viewConfig }: FormShellProps): JsxRenderable {
-	const {
-		backgroundImage,
-		backgroundVideo,
-		contentWidth = 'md',
-	} = getSlotConfig<HeroShellConfig>(viewConfig, 'shell');
+	const { backgroundImage, backgroundVideo, contentWidth } = getSlotConfig(
+		viewConfig,
+		'shell',
+		HeroShellConfigSchema,
+	);
 	return (
 		<div class="hero-shell" style={{ backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined }}>
 			{backgroundVideo ? (
@@ -88,12 +88,11 @@ export function HeroShell({ slots, viewConfig }: FormShellProps): JsxRenderable 
 }
 
 export function SplitScreenShell({ slots, viewConfig, meta }: FormShellProps): JsxRenderable {
-	const {
-		sideContent,
-		sidePlacement = 'left',
-		sideWidth = 'normal',
-		contentAlignment = 'center',
-	} = getSlotConfig<SplitScreenShellConfig>(viewConfig, 'shell');
+	const { sideContent, sidePlacement, sideWidth, contentAlignment } = getSlotConfig(
+		viewConfig,
+		'shell',
+		SplitScreenShellConfigSchema,
+	);
 	return (
 		<div class="split-screen-shell">
 			{jsx('se-split-screen-side', {

@@ -3,7 +3,7 @@ import { customElement, onEvent, prop, RadiantElement } from '@ecopages/radiant'
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { getSlotConfig } from '@schema-engine/forms/recipes';
-import { type StepIndicatorsConfig } from '@schema-engine/forms/recipes/built-in';
+import { StepIndicatorsConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import type { FormMeta } from '@/lib/instance-view';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { deriveFormSteps, deriveInitialInstance } from '@/lib/instance-view';
@@ -28,15 +28,15 @@ export class StepIndicatorsElement extends RadiantElement {
 		if (!meta) return null;
 		const instance = this.instance ?? deriveInitialInstance(meta);
 
-		const indicatorsConfig = getSlotConfig<StepIndicatorsConfig>(this.viewConfig ?? {}, 'progress');
-		const showNumbers = indicatorsConfig.showStepNumbers ?? true;
-		const showTitles = indicatorsConfig.showStepTitles ?? true;
-		const showDescriptions = indicatorsConfig.showStepDescriptions ?? false;
+		const indicatorsConfig = getSlotConfig(this.viewConfig ?? {}, 'progress', StepIndicatorsConfigSchema);
+		const showNumbers = indicatorsConfig.showStepNumbers;
+		const showTitles = indicatorsConfig.showStepTitles;
+		const showDescriptions = indicatorsConfig.showStepDescriptions;
 		const sidebar = indicatorsConfig.orientation === 'sidebar';
 		const steps = deriveFormSteps(meta, instance);
 		return (
 			<nav
-				aria-label={indicatorsConfig.labels?.regionAriaLabel ?? 'Form progress'}
+				aria-label={indicatorsConfig.labels.regionAriaLabel}
 				classes={['se-step-indicators', sidebar && 'se-step-indicators--sidebar']}
 			>
 				<ol class="se-step-indicators__list">

@@ -3,7 +3,7 @@ import { customElement, onEvent, prop, RadiantElement } from '@ecopages/radiant'
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { getSlotConfig } from '@schema-engine/forms/recipes';
-import { DEFAULT_WIZARD_ACTION_LABELS, type WizardActionsConfig } from '@schema-engine/forms/recipes/built-in';
+import { WizardActionsConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import type { FormMeta } from '@/lib/instance-view';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { deriveFormSteps, deriveInitialInstance } from '@/lib/instance-view';
@@ -31,10 +31,11 @@ export class WizardActionsElement extends RadiantElement {
 		if (!meta) return null;
 		const instance = this.instance ?? deriveInitialInstance(meta);
 
-		const actionsConfig = getSlotConfig<WizardActionsConfig>(this.viewConfig ?? {}, 'actions');
-		const labels = { ...DEFAULT_WIZARD_ACTION_LABELS, ...actionsConfig.labels };
-		const appearance = actionsConfig.appearance ?? 'default';
-		const showStepCounter = actionsConfig.showStepCounter ?? appearance === 'default';
+		const { labels, appearance, showStepCounter } = getSlotConfig(
+			this.viewConfig ?? {},
+			'actions',
+			WizardActionsConfigSchema,
+		);
 		const last = instance.currentStep >= instance.totalSteps - 1;
 		const steps = deriveFormSteps(meta, instance);
 		const form = { isSubmitting: instance.isSubmitting };

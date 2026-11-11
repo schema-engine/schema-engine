@@ -58,7 +58,7 @@ import { useViewContext, useActiveStep, useFormNavigation, useViewConfig } from 
 useViewContext();
 useActiveStep();
 useFormNavigation();
-useViewConfig<MySlotConfig>('header');
+useViewConfig('header', StepHeaderConfigSchema); // typed as the schema output
 ```
 
 Shells and slot blocks are ordinary components. Bind them to a canonical spec

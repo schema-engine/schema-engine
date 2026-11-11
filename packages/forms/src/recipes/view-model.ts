@@ -1,3 +1,4 @@
+import * as z from 'zod/mini';
 import type { FormConfigView } from '@/lib/normalized-form-config';
 import type { StepStates } from '@/engine/step-machine';
 import type { RecipeKind, RecipeSlot } from './types';
@@ -39,11 +40,20 @@ export interface ViewModel {
 	viewConfig: Record<string, unknown>;
 }
 
-export function getSlotConfig<TConfig = Record<string, unknown>>(
+/**
+ * Reads one slot's complete config from a view.
+ *
+ * @remarks
+ * A normalized view already holds the schema output, so the parse is a no-op there; it also
+ * fills the schema defaults for a view that was not normalized, such as a serialized or
+ * hand-built one, instead of returning a partial config typed as complete.
+ */
+export function getSlotConfig<TSchema extends z.ZodMiniType>(
 	viewConfig: Record<string, unknown>,
 	slot: RecipeSlot,
-): TConfig {
-	return ((viewConfig[slot] as TConfig | undefined) ?? {}) as TConfig;
+	schema: TSchema,
+): z.output<TSchema> {
+	return z.parse(schema, viewConfig[slot] ?? {});
 }
 
 export function buildViewModel({

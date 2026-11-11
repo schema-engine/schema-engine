@@ -3,7 +3,7 @@ import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { getSlotConfig } from '@schema-engine/forms/recipes';
-import { DEFAULT_FORM_ACTION_LABELS, type FormActionsConfig } from '@schema-engine/forms/recipes/built-in';
+import { FormActionsConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 
 /**
@@ -25,9 +25,7 @@ export class FormActionsElement extends RadiantElement {
 	instance?: FormInstanceContextValue;
 
 	override render(): JsxRenderable {
-		const actionsConfig = getSlotConfig<FormActionsConfig>(this.viewConfig ?? {}, 'actions');
-		const labels = { ...DEFAULT_FORM_ACTION_LABELS, ...actionsConfig.labels };
-		const align = actionsConfig.align ?? 'end';
+		const { labels, align } = getSlotConfig(this.viewConfig ?? {}, 'actions', FormActionsConfigSchema);
 		const isSubmitting = this.instance?.isSubmitting ?? false;
 		return (
 			<div classes={['se-form-actions', `se-form-actions--align-${align}`]}>

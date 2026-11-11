@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Check } from 'lucide-react';
-import type { StepIndicatorsConfig } from '@schema-engine/forms/recipes/built-in';
+import { StepIndicatorsConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import { useFormNavigation, useIsMobile, useViewConfig, useViewContext } from '@schema-engine/forms-react/hooks';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/components/schema-engine/forms/lib/utils';
@@ -8,17 +8,12 @@ import { cn } from '@/components/schema-engine/forms/lib/utils';
 export function StepIndicators() {
 	const { steps, currentStepIndex } = useViewContext();
 	const navigation = useFormNavigation();
-	const config = useViewConfig<StepIndicatorsConfig>('progress');
+	const { orientation, showStepNumbers, showStepTitles, showStepDescriptions, labels } = useViewConfig(
+		'progress',
+		StepIndicatorsConfigSchema,
+	);
 	const isMobile = useIsMobile();
-	const {
-		orientation = 'horizontal',
-		showStepNumbers = true,
-		showStepTitles = true,
-		showStepDescriptions = false,
-		labels,
-	} = config;
 	const sidebar = orientation === 'sidebar' && !isMobile;
-	const regionLabel = labels?.regionAriaLabel ?? 'Form progress';
 	const stepRefs = useRef<(HTMLLIElement | null)[]>([]);
 	const containerRef = useRef<HTMLElement>(null);
 
@@ -31,7 +26,7 @@ export function StepIndicators() {
 
 	return (
 		<nav
-			aria-label={regionLabel}
+			aria-label={labels.regionAriaLabel}
 			ref={containerRef}
 			className={cn('relative flex min-w-0', sidebar ? 'overflow-visible' : 'overflow-x-auto scroll-smooth')}
 		>

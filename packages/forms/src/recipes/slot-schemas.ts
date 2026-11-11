@@ -1,103 +1,94 @@
 import * as z from 'zod/mini';
 
 export const CardShellConfigSchema = z.strictObject({
-	maxWidth: z.optional(z.enum(['sm', 'md', 'lg', 'xl'])),
-	padding: z.optional(z.enum(['sm', 'md', 'lg'])),
-	shadowSize: z.optional(z.enum(['sm', 'md', 'lg', 'xl'])),
+	maxWidth: z._default(z.enum(['sm', 'md', 'lg', 'xl']), 'md'),
+	padding: z._default(z.enum(['sm', 'md', 'lg']), 'md'),
+	shadowSize: z._default(z.enum(['sm', 'md', 'lg', 'xl']), 'md'),
 });
 
 export const HeroShellConfigSchema = z.strictObject({
 	backgroundImage: z.optional(z.string()),
 	backgroundVideo: z.optional(z.string()),
-	contentWidth: z.optional(z.enum(['sm', 'md', 'lg', 'xl'])),
+	contentWidth: z._default(z.enum(['sm', 'md', 'lg', 'xl']), 'md'),
 });
 
 export const SplitScreenShellConfigSchema = z.strictObject({
 	sideContent: z.optional(z.string()),
-	sidePlacement: z.optional(z.enum(['left', 'right'])),
-	sideWidth: z.optional(z.enum(['narrow', 'normal', 'wide'])),
-	contentAlignment: z.optional(z.enum(['top', 'center', 'bottom'])),
+	sidePlacement: z._default(z.enum(['left', 'right']), 'left'),
+	sideWidth: z._default(z.enum(['narrow', 'normal', 'wide']), 'normal'),
+	contentAlignment: z._default(z.enum(['top', 'center', 'bottom']), 'center'),
 });
 
 export const SidebarShellConfigSchema = z.strictObject({
-	showSeparator: z.optional(z.boolean()),
+	showSeparator: z._default(z.boolean(), true),
 });
 
 export const StepHeaderConfigSchema = z.strictObject({
-	showDescription: z.optional(z.boolean()),
-	showStepCounter: z.optional(z.boolean()),
-	labels: z.optional(
+	showDescription: z._default(z.boolean(), true),
+	showStepCounter: z._default(z.boolean(), false),
+	labels: z.prefault(
 		z.strictObject({
-			stepCounter: z.optional(z.string()).check(z.describe('Template with {current} and {total}')),
+			stepCounter: z._default(
+				z.string().check(z.describe('Template with {current} and {total}')),
+				'Step {current} of {total}',
+			),
 		}),
+		{},
 	),
-	size: z.optional(z.enum(['sm', 'md', 'lg'])),
-	align: z.optional(z.enum(['start', 'center'])),
-	titleAs: z.optional(z.enum(['h1', 'h2'])),
-	inheritColor: z.optional(z.boolean()),
-	counterPlacement: z.optional(z.enum(['before', 'after'])),
+	size: z._default(z.enum(['sm', 'md', 'lg']), 'md'),
+	align: z._default(z.enum(['start', 'center']), 'start'),
+	titleAs: z._default(z.enum(['h1', 'h2']), 'h2'),
+	inheritColor: z._default(z.boolean(), false),
+	counterPlacement: z._default(z.enum(['before', 'after']), 'after'),
 });
 
 export const MinimalProgressConfigSchema = z.strictObject({
-	showPercentage: z.optional(z.boolean()),
-	labels: z.optional(
+	showPercentage: z._default(z.boolean(), true),
+	labels: z.prefault(
 		z.strictObject({
-			regionAriaLabel: z.optional(z.string()),
-			progress: z.optional(z.string()),
+			regionAriaLabel: z._default(z.string(), 'Form progress'),
+			progress: z._default(z.string(), 'Progress'),
 		}),
+		{},
 	),
 });
 
 export const StepIndicatorsConfigSchema = z.strictObject({
-	orientation: z.optional(z.enum(['horizontal', 'sidebar'])),
-	showStepNumbers: z.optional(z.boolean()),
-	showStepTitles: z.optional(z.boolean()),
-	showStepDescriptions: z.optional(z.boolean()),
-	labels: z.optional(z.strictObject({ regionAriaLabel: z.optional(z.string()) })),
+	orientation: z._default(z.enum(['horizontal', 'sidebar']), 'horizontal'),
+	showStepNumbers: z._default(z.boolean(), true),
+	showStepTitles: z._default(z.boolean(), true),
+	showStepDescriptions: z._default(z.boolean(), false),
+	labels: z.prefault(z.strictObject({ regionAriaLabel: z._default(z.string(), 'Form progress') }), {}),
 });
 
 export const WizardActionsConfigSchema = z.strictObject({
-	labels: z.optional(
+	labels: z.prefault(
 		z.strictObject({
-			previous: z.optional(z.string()),
-			previousAriaLabel: z.optional(z.string()),
-			next: z.optional(z.string()),
-			nextAriaLabel: z.optional(z.string()),
-			submit: z.optional(z.string()),
-			submitAriaLabel: z.optional(z.string()),
-			submitting: z.optional(z.string()),
+			previous: z._default(z.string(), 'Previous'),
+			previousAriaLabel: z._default(z.string(), 'Go to previous step'),
+			next: z._default(z.string(), 'Next'),
+			nextAriaLabel: z._default(z.string(), 'Go to next step'),
+			submit: z._default(z.string(), 'Submit'),
+			submitAriaLabel: z._default(z.string(), 'Submit form'),
+			submitting: z._default(z.string(), 'Submitting...'),
 		}),
+		{},
 	),
-	showStepCounter: z.optional(z.boolean()),
-	appearance: z.optional(z.enum(['default', 'minimal'])),
+	showStepCounter: z._default(z.boolean(), true),
+	appearance: z._default(z.enum(['default', 'minimal']), 'default'),
 });
-
-export const DEFAULT_WIZARD_ACTION_LABELS = {
-	previous: 'Previous',
-	previousAriaLabel: 'Go to previous step',
-	next: 'Next',
-	nextAriaLabel: 'Go to next step',
-	submit: 'Submit',
-	submitAriaLabel: 'Submit form',
-	submitting: 'Submitting...',
-} as const;
 
 export const FormActionsConfigSchema = z.strictObject({
-	labels: z.optional(
+	labels: z.prefault(
 		z.strictObject({
-			submit: z.optional(z.string()),
-			submitAriaLabel: z.optional(z.string()),
-			submitting: z.optional(z.string()),
+			submit: z._default(z.string(), 'Submit'),
+			submitAriaLabel: z._default(z.string(), 'Submit form'),
+			submitting: z._default(z.string(), 'Submitting...'),
 		}),
+		{},
 	),
-	align: z.optional(z.enum(['start', 'center', 'end'])),
+	align: z._default(z.enum(['start', 'center', 'end']), 'end'),
 });
-
-export const DEFAULT_FORM_ACTION_LABELS = {
-	submit: 'Submit',
-	submitAriaLabel: 'Submit form',
-	submitting: 'Submitting...',
-} as const;
 
 export type CardShellConfig = z.infer<typeof CardShellConfigSchema>;
 export type HeroShellConfig = z.infer<typeof HeroShellConfigSchema>;
