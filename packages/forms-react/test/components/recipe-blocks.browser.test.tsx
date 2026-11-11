@@ -57,7 +57,8 @@ describe('recipe blocks honour the slot config the spec accepts', () => {
 	test('the card header is centered', () => {
 		renderForm({ view: { $type: 'card' }, steps: [{ id: 'one', title: 'One', elements: [] }] });
 
-		expect(screen.getByRole('banner')).toHaveClass('text-center');
+		expect(screen.getByRole('banner')).toHaveAttribute('data-align', 'center');
+		expect(screen.getByRole('banner')).toHaveClass('data-[align=center]:text-center');
 	});
 
 	test('a split-screen-wizard shows the form title once when its steps have no title', () => {

@@ -3,6 +3,12 @@ import { getByRole, queryAllByRole, queryAllByText, queryByRole, queryByText, wi
 import { userEvent } from 'vitest/browser';
 import * as v from 'valibot';
 import type { BuilderActionRuntimeContext, FormConfigView } from '@schema-engine/forms';
+import {
+	builtInRecipeSpecs,
+	MinimalProgressConfigSchema,
+	SplitScreenShellConfigSchema,
+	StepIndicatorsConfigSchema,
+} from '@schema-engine/forms/recipes/built-in';
 
 export const conformanceAction = {
 	$type: 'conformance',
@@ -63,7 +69,7 @@ const recipeTitles = ['Profile', 'Plan', 'Review'];
 const formTitle = 'Account setup';
 const headerLabels = { stepCounter: 'Section {current} of {total}' };
 const indicatorLabels = { regionAriaLabel: 'Application progress', completed: 'Done' };
-const progressLabels = { regionAriaLabel: 'Application progress', valueText: 'Stage {current} of {total}' };
+const progressLabels = { progress: 'Application progress', valueText: 'Stage {current} of {total}' };
 const wizardActionLabels = {
 	previous: 'Back',
 	previousAriaLabel: 'Back one step',
@@ -83,18 +89,27 @@ interface RecipeCase {
 	sideContent?: string;
 }
 
-/** @remarks One entry per built-in recipe; the declared slots mirror each recipe spec. */
-const recipeCases: RecipeCase[] = [
-	{ $type: 'card', steps: 1, header: true, progress: undefined },
-	{ $type: 'split-screen', steps: 1, header: false, progress: undefined, sideContent: 'Welcome aboard' },
-	{ $type: 'hero-background', steps: 1, header: true, progress: undefined },
-	{ $type: 'bare-controls', steps: 3, header: false, progress: undefined },
-	{ $type: 'card-wizard', steps: 3, header: true, progress: 'minimal' },
-	{ $type: 'wizard', steps: 3, header: true, progress: 'indicators' },
-	{ $type: 'sidebar-wizard', steps: 3, header: true, progress: 'indicators' },
-	{ $type: 'hero-wizard', steps: 3, header: true, progress: 'minimal' },
-	{ $type: 'split-screen-wizard', steps: 3, header: true, progress: 'indicators', sideContent: 'Welcome aboard' },
-];
+/**
+ * @remarks
+ * Derived from the built-in specs so a new built-in recipe cannot skip conformance: the declared
+ * slots come from each spec's slot schemas, and the progress kind from the schema it uses.
+ */
+const recipeCases: RecipeCase[] = Object.values(builtInRecipeSpecs).map((spec) => {
+	const schemas: Partial<Record<string, unknown>> = spec.slotSchemas;
+	const progress = schemas.progress;
+	return {
+		$type: spec.$type,
+		steps: spec.kind === 'wizard' ? 3 : 1,
+		header: 'header' in schemas,
+		progress:
+			progress === StepIndicatorsConfigSchema
+				? 'indicators'
+				: progress === MinimalProgressConfigSchema
+					? 'minimal'
+					: undefined,
+		sideContent: schemas.shell === SplitScreenShellConfigSchema ? 'Welcome aboard' : undefined,
+	};
+});
 
 const recipeForm = ({ $type, steps, header, progress, sideContent }: RecipeCase): FormConfigView => {
 	const wizardKind = steps > 1;
@@ -771,6 +786,15 @@ export function rendererConformance(mount: ConformanceMount): void {
 			expect(onChange).toHaveBeenLastCalledWith({ fullName: 'Ada' });
 		});
 		describe('built-in recipes', () => {
+			test('every built-in spec has a conformance case', () => {
+				expect(recipeCases).toHaveLength(Object.keys(builtInRecipeSpecs).length);
+				expect(recipeCases.map((recipe) => recipe.$type).sort()).toEqual(
+					Object.values(builtInRecipeSpecs)
+						.map((spec) => spec.$type)
+						.sort(),
+				);
+			});
+
 			test.each(recipeCases.map((recipe) => [recipe.$type, recipe] as const))(
 				'%s renders every declared slot with the authored labels',
 				async (_name, recipe) => {

@@ -9,11 +9,6 @@ const titleSizes = {
 	lg: 'text-4xl',
 } as const;
 
-const alignments = {
-	start: 'text-left',
-	center: 'text-center',
-} as const;
-
 export function StepHeader() {
 	const { form } = useViewContext();
 	const step = useActiveStep();
@@ -39,7 +34,10 @@ export function StepHeader() {
 	return (
 		<header
 			data-align={align}
-			className={cn('max-w-none space-y-2', alignments[align], inheritColor && 'text-inherit')}
+			className={cn(
+				'max-w-none space-y-2 data-[align=start]:text-left data-[align=center]:text-center',
+				inheritColor && 'text-inherit',
+			)}
 		>
 			{counterText && counterPlacement === 'before' ? (
 				<p className={cn('text-sm text-muted-foreground', inheritColor && 'text-inherit opacity-80')}>
