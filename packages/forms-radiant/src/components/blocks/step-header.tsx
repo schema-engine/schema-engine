@@ -2,16 +2,16 @@ import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { RuiHeading, RuiHeadingDescription, RuiHeadingTitle } from '@ecopages/radiant-ui/heading';
-import { getSlotConfig } from '@schema-engine/forms/recipes';
-import { formatStepCounter, StepHeaderConfigSchema } from '@schema-engine/forms/recipes/built-in';
+import { formatStepCounter, type StepHeaderConfig } from '@schema-engine/forms/recipes/built-in';
 import type { FormMeta } from '@/lib/instance-view';
+import type { RecipeSlotContext } from '@/recipes/types';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { deriveInitialInstance } from '@/lib/instance-view';
 
 @customElement('se-step-header')
 export class StepHeaderElement extends RadiantElement {
 	@prop({ type: Object }) meta?: FormMeta;
-	@prop({ type: Object }) viewConfig?: Record<string, unknown>;
+	@prop({ type: Object }) slotConfig?: StepHeaderConfig;
 
 	@contextSelector({ context: formInstanceContext })
 	instance?: FormInstanceContextValue;
@@ -21,7 +21,8 @@ export class StepHeaderElement extends RadiantElement {
 		if (!meta) return null;
 		const instance = this.instance ?? deriveInitialInstance(meta);
 
-		const headerConfig = getSlotConfig(this.viewConfig ?? {}, 'header', StepHeaderConfigSchema);
+		const headerConfig = this.slotConfig;
+		if (!headerConfig) return null;
 		const stepIndex = meta.steps[instance.currentStep] ? instance.currentStep : 0;
 		const step = meta.steps[stepIndex];
 		if (!step) return null;
@@ -51,9 +52,9 @@ export class StepHeaderElement extends RadiantElement {
 	}
 }
 
-export function StepHeaderBlock(context?: { meta?: FormMeta; viewConfig?: Record<string, unknown> }): JsxRenderable {
+export function StepHeaderBlock(context?: RecipeSlotContext): JsxRenderable {
 	return jsx('se-step-header', {
 		meta: context?.meta,
-		viewConfig: context?.viewConfig ?? {},
+		slotConfig: context?.slotConfig,
 	});
 }

@@ -2,8 +2,8 @@ import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { RuiButton } from '@ecopages/radiant-ui/button';
-import { getSlotConfig } from '@schema-engine/forms/recipes';
-import { FormActionsConfigSchema } from '@schema-engine/forms/recipes/built-in';
+import { type FormActionsConfig } from '@schema-engine/forms/recipes/built-in';
+import type { RecipeSlotContext } from '@/recipes/types';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 
 /**
@@ -19,13 +19,14 @@ import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/f
  */
 @customElement('se-form-actions')
 export class FormActionsElement extends RadiantElement {
-	@prop({ type: Object }) viewConfig?: Record<string, unknown>;
+	@prop({ type: Object }) slotConfig?: FormActionsConfig;
 
 	@contextSelector({ context: formInstanceContext })
 	instance?: FormInstanceContextValue;
 
 	override render(): JsxRenderable {
-		const { labels, align } = getSlotConfig(this.viewConfig ?? {}, 'actions', FormActionsConfigSchema);
+		if (!this.slotConfig) return null;
+		const { labels, align } = this.slotConfig;
 		const isSubmitting = this.instance?.isSubmitting ?? false;
 		return (
 			<div classes={['se-form-actions', `se-form-actions--align-${align}`]}>
@@ -37,8 +38,8 @@ export class FormActionsElement extends RadiantElement {
 	}
 }
 
-export function FormActionsBlock(context?: { viewConfig?: Record<string, unknown> }): JsxRenderable {
+export function FormActionsBlock(context?: RecipeSlotContext): JsxRenderable {
 	return jsx('se-form-actions', {
-		viewConfig: context?.viewConfig ?? {},
+		slotConfig: context?.slotConfig,
 	});
 }

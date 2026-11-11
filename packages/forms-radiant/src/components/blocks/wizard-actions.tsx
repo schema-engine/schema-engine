@@ -2,16 +2,16 @@ import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, onEvent, prop, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { RuiButton } from '@ecopages/radiant-ui/button';
-import { getSlotConfig } from '@schema-engine/forms/recipes';
-import { WizardActionsConfigSchema } from '@schema-engine/forms/recipes/built-in';
+import { type WizardActionsConfig } from '@schema-engine/forms/recipes/built-in';
 import type { FormMeta } from '@/lib/instance-view';
+import type { RecipeSlotContext } from '@/recipes/types';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { deriveFormSteps, deriveInitialInstance } from '@/lib/instance-view';
 
 @customElement('se-wizard-actions')
 export class WizardActionsElement extends RadiantElement {
 	@prop({ type: Object }) meta?: FormMeta;
-	@prop({ type: Object }) viewConfig?: Record<string, unknown>;
+	@prop({ type: Object }) slotConfig?: WizardActionsConfig;
 
 	@contextSelector({ context: formInstanceContext })
 	instance?: FormInstanceContextValue;
@@ -31,11 +31,8 @@ export class WizardActionsElement extends RadiantElement {
 		if (!meta) return null;
 		const instance = this.instance ?? deriveInitialInstance(meta);
 
-		const { labels, appearance, showStepCounter } = getSlotConfig(
-			this.viewConfig ?? {},
-			'actions',
-			WizardActionsConfigSchema,
-		);
+		if (!this.slotConfig) return null;
+		const { labels, appearance, showStepCounter } = this.slotConfig;
 		const last = instance.currentStep >= instance.totalSteps - 1;
 		const steps = deriveFormSteps(meta, instance);
 		const form = { isSubmitting: instance.isSubmitting };
@@ -74,9 +71,9 @@ export class WizardActionsElement extends RadiantElement {
 	}
 }
 
-export function WizardActionsBlock(context?: { meta?: FormMeta; viewConfig?: Record<string, unknown> }): JsxRenderable {
+export function WizardActionsBlock(context?: RecipeSlotContext): JsxRenderable {
 	return jsx('se-wizard-actions', {
 		meta: context?.meta,
-		viewConfig: context?.viewConfig ?? {},
+		slotConfig: context?.slotConfig,
 	});
 }

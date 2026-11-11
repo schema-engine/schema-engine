@@ -1,16 +1,16 @@
 import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
-import { getSlotConfig } from '@schema-engine/forms/recipes';
-import { MinimalProgressConfigSchema } from '@schema-engine/forms/recipes/built-in';
+import { type MinimalProgressConfig } from '@schema-engine/forms/recipes/built-in';
 import type { FormMeta } from '@/lib/instance-view';
+import type { RecipeSlotContext } from '@/recipes/types';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { deriveInitialInstance } from '@/lib/instance-view';
 
 @customElement('se-minimal-progress')
 export class MinimalProgressElement extends RadiantElement {
 	@prop({ type: Object }) meta?: FormMeta;
-	@prop({ type: Object }) viewConfig?: Record<string, unknown>;
+	@prop({ type: Object }) slotConfig?: MinimalProgressConfig;
 
 	@contextSelector({ context: formInstanceContext })
 	instance?: FormInstanceContextValue;
@@ -20,12 +20,9 @@ export class MinimalProgressElement extends RadiantElement {
 		if (!meta) return null;
 		const instance = this.instance ?? deriveInitialInstance(meta);
 
-		const { showPercentage, labels } = getSlotConfig(
-			this.viewConfig ?? {},
-			'progress',
-			MinimalProgressConfigSchema,
-		);
-		if (!showPercentage) return null;
+		const config = this.slotConfig;
+		if (!config?.showPercentage) return null;
+		const { labels } = config;
 		const percent = Math.round(((instance.currentStep + 1) / instance.totalSteps) * 100);
 		return (
 			<nav aria-label={labels.regionAriaLabel} class="se-minimal-progress">
@@ -41,12 +38,9 @@ export class MinimalProgressElement extends RadiantElement {
 	}
 }
 
-export function MinimalProgressBlock(context?: {
-	meta?: FormMeta;
-	viewConfig?: Record<string, unknown>;
-}): JsxRenderable {
+export function MinimalProgressBlock(context?: RecipeSlotContext): JsxRenderable {
 	return jsx('se-minimal-progress', {
 		meta: context?.meta,
-		viewConfig: context?.viewConfig ?? {},
+		slotConfig: context?.slotConfig,
 	});
 }
