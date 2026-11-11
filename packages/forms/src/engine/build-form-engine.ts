@@ -15,6 +15,7 @@ import * as z from 'zod/mini';
 import { isZodType } from '@/lib/zod-json-schema';
 import { assertRecipeKindSlots } from '@/recipes/assert-recipe-kind';
 import { assertStandardSchema } from '@/lib/standard-schema';
+import { DEFAULT_WIZARD_RECIPE } from '@/lib/form-view';
 import { createDefaultValidationRegistry, type ValidationRegistry } from '@/schemas/validation';
 
 function createUnionSchema(schemas: z.ZodMiniType[]): z.ZodMiniType {
@@ -117,8 +118,9 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 	}
 
 	const defaultWizardRecipe = lists.defaultWizardRecipe;
-	if (defaultWizardRecipe !== undefined) {
-		const recipe = recipeRegistry.get(defaultWizardRecipe);
+	const checkedDefault = defaultWizardRecipe ?? DEFAULT_WIZARD_RECIPE;
+	if (defaultWizardRecipe !== undefined || recipeRegistry.has(checkedDefault)) {
+		const recipe = recipeRegistry.get(checkedDefault);
 		if (!recipe) {
 			throw new Error(
 				`defaultWizardRecipe '${defaultWizardRecipe}' is not a registered recipe. Register it with createFormEngine({ recipes: [...] }).`,
@@ -126,7 +128,7 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 		}
 		if (recipe.kind !== 'wizard') {
 			throw new Error(
-				`defaultWizardRecipe '${defaultWizardRecipe}' has kind '${recipe.kind}'; it must be a wizard recipe.`,
+				`defaultWizardRecipe '${checkedDefault}' has kind '${recipe.kind}'; it must be a wizard recipe.`,
 			);
 		}
 	}

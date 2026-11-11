@@ -81,6 +81,19 @@ describe('validateFormConfig', () => {
 		expect(engine.extend().validateForm(twoStepForm).view?.$type).toBe('wizard');
 	});
 
+	test('rejects a single-step recipe registered as the implicit bare-controls default', () => {
+		const singleStepBare = defineFormRecipe(
+			defineRecipeSpec({
+				$type: 'bare-controls',
+				kind: 'single-step',
+				metadata: { name: 'Bare', description: 'Single-step recipe named like the default' },
+				slotSchemas: { shell: z.strictObject({}) },
+			}),
+			{},
+		);
+		expect(() => createFormEngine({ recipes: [singleStepBare] })).toThrow(/must be a wizard recipe/);
+	});
+
 	test.each([
 		['an unregistered recipe', 'missing'],
 		['a single-step recipe', 'card'],
