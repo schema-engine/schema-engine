@@ -104,11 +104,13 @@ describe('validateFormConfig', () => {
 		);
 	});
 
-	test('warns on each validateForm and leaves the view unset when no default wizard recipe is registered', () => {
+	test('warns once per form id and leaves the view unset when no default wizard recipe is registered', () => {
 		const warn = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
 		try {
 			const engine = createEngine();
 			expect(engine.validateForm(twoStepForm).view).toBeUndefined();
+			expect(warn).toHaveBeenCalledTimes(1);
+			engine.validateForm(twoStepForm);
 			expect(warn).toHaveBeenCalledTimes(1);
 			engine.validateForm({ ...twoStepForm, id: 'another' });
 			expect(warn).toHaveBeenCalledTimes(2);

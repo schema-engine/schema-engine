@@ -96,10 +96,19 @@ function parseRegistration(schema: StandardSchemaV1, config: object, invalidPref
 	return { ok: true, data: result.data };
 }
 
+/**
+ * Form ids already warned about, per owner.
+ *
+ * @remarks
+ * A renderer re-validates an inline raw config on every render, so the missing-recipe warning
+ * would otherwise repeat for the same form.
+ */
+const warnedMissingWizardRecipe = new WeakMap<object, Set<string>>();
+
 function parseView(
 	authored: FormTaggedConfig | undefined,
 	form: { id: string; stepCount: number },
-	options: Pick<ValidateFormOptions, 'getRecipe' | 'defaultWizardRecipe'>,
+	options: Pick<ValidateFormOptions, 'getRecipe' | 'defaultWizardRecipe' | 'owner'>,
 ): { issues: string[]; view?: FormTaggedConfig } {
 	const { getRecipe } = options;
 	const stepCount = form.stepCount;
@@ -109,6 +118,10 @@ function parseView(
 		if (stepCount < 2) return { issues: [] };
 		const defaultRecipe = options.defaultWizardRecipe ?? DEFAULT_WIZARD_RECIPE;
 		if (!getRecipe(defaultRecipe)) {
+			const warned = warnedMissingWizardRecipe.get(options.owner) ?? new Set<string>();
+			warnedMissingWizardRecipe.set(options.owner, warned);
+			if (warned.has(form.id)) return { issues: [] };
+			warned.add(form.id);
 			logger.warn(
 				`Form '${form.id}' has ${stepCount} steps but no '${defaultRecipe}' recipe is registered. The form renders every step on a single page without a view layout. Register a wizard recipe with createFormEngine({ recipes: [...] }) or set an explicit view.$type.`,
 			);
