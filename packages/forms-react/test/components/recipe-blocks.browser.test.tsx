@@ -45,6 +45,7 @@ describe('recipe blocks honour the slot config the spec accepts', () => {
 
 		expect(screen.getByText('Progress')).toBeInTheDocument();
 		expect(screen.queryByText('33%')).toBeNull();
+		expect(screen.getByRole('progressbar')).toBeInTheDocument();
 	});
 
 	test('showPercentage true shows the percentage', () => {
