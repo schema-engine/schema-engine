@@ -6,7 +6,7 @@ Engine repository. Read it first.
 ## What this repo is
 
 Schema Engine is a JSON-driven form system. Visual chrome is not in the
-core engine: specs live in `@schema-engine/forms/recipes`, React
+core engine: specs live in `@schema-engine/forms/recipes/built-in`, React
 implementations in the shadcn registry, Radiant implementations in
 `@schema-engine/forms-radiant`.
 

@@ -63,7 +63,7 @@ useViewConfig<MySlotConfig>('header');
 
 Shells and slot blocks are ordinary components. Bind them to a canonical spec
 with `defineFormRecipe(spec, { shell, slots })` from `@schema-engine/forms/recipes`.
-Built-in specs are exported from that subpath. The package root
+Built-in specs are exported from `@schema-engine/forms/recipes/built-in`. The package root
 `@schema-engine/forms` does not re-export them.
 
 `createFormEngine()` does not bind default recipes. That is not the same

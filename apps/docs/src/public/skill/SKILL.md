@@ -42,7 +42,7 @@ and cross-adapter previews stay identical.
 
 React default shells and blocks live in the shadcn registry item
 `schema-engine-form-recipes` (source: `registry/shared/forms/recipes`). Specs
-live in `@schema-engine/forms/recipes`.
+live in `@schema-engine/forms/recipes/built-in`.
 
 The docs app's default previews use `@schema-engine/forms-radiant`. Forms
 React demo pages are EcoPages JSX pages that mount `ReactFormPreview` (the Radiant-styled demo kit) as a React island.

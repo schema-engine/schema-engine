@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Check } from 'lucide-react';
-import type { StepIndicatorsConfig } from '@schema-engine/forms/recipes';
+import type { StepIndicatorsConfig } from '@schema-engine/forms/recipes/built-in';
 import { useFormNavigation, useIsMobile, useViewConfig, useViewContext } from '@schema-engine/forms-react/hooks';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/components/schema-engine/forms/lib/utils';

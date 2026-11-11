@@ -1,4 +1,5 @@
-import { defineFormRecipe, splitScreenSpec } from '@schema-engine/forms/recipes';
+import { defineFormRecipe } from '@schema-engine/forms/recipes';
+import { splitScreenSpec } from '@schema-engine/forms/recipes/built-in';
 import { FormActions } from '../blocks/form-actions';
 import { SplitScreenShell } from '../shells/split-screen-shell';
 

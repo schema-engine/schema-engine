@@ -2,7 +2,8 @@ import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { RuiButton } from '@ecopages/radiant-ui/button';
-import { DEFAULT_FORM_ACTION_LABELS, getSlotConfig, type FormActionsConfig } from '@schema-engine/forms/recipes';
+import { getSlotConfig } from '@schema-engine/forms/recipes';
+import { DEFAULT_FORM_ACTION_LABELS, type FormActionsConfig } from '@schema-engine/forms/recipes/built-in';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 
 /**

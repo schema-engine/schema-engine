@@ -1,4 +1,5 @@
-import { cardWizardSpec, defineFormRecipe } from '@schema-engine/forms/recipes';
+import { defineFormRecipe } from '@schema-engine/forms/recipes';
+import { cardWizardSpec } from '@schema-engine/forms/recipes/built-in';
 import { MinimalProgress } from '../blocks/minimal-progress';
 import { StepHeader } from '../blocks/step-header';
 import { WizardActions } from '../blocks/wizard-actions';

@@ -1,17 +1,15 @@
+import { defineFormRecipe, type RecipeSlot, type RecipeSpec } from '@schema-engine/forms/recipes';
 import {
 	bareControlsSpec,
 	cardSpec,
 	cardWizardSpec,
-	defineFormRecipe,
 	heroBackgroundSpec,
 	heroWizardSpec,
 	sidebarWizardSpec,
 	splitScreenSpec,
 	splitScreenWizardSpec,
 	wizardSpec,
-	type RecipeSlot,
-	type RecipeSpec,
-} from '@schema-engine/forms/recipes';
+} from '@schema-engine/forms/recipes/built-in';
 import type * as z from 'zod/mini';
 import {
 	StepHeaderBlock,

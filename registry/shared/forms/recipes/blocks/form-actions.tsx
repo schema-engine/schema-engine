@@ -1,4 +1,4 @@
-import { DEFAULT_FORM_ACTION_LABELS, type FormActionsConfig } from '@schema-engine/forms/recipes';
+import { DEFAULT_FORM_ACTION_LABELS, type FormActionsConfig } from '@schema-engine/forms/recipes/built-in';
 import { useViewConfig, useViewContext } from '@schema-engine/forms-react/hooks';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/components/schema-engine/forms/lib/utils';
