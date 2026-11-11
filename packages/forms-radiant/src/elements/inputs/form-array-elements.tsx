@@ -364,17 +364,17 @@ export class SeFormArray extends RadiantElement {
  * `this.slotted`, which lets Radiant mark their position instead of serializing a second copy in a slotted template.
  */
 export function FormArrayElements(config: ArrayElementsProps) {
-	const { ssrInitialRows, initialFormValues, ...fieldConfig } = config;
+	const { ssrInitialRows: _ssrInitialRows, initialFormValues, ...fieldConfig } = config;
 	const engine = resolveFormEngine();
 	const fieldHost = mergeFieldGridHost(fieldConfig.grid, fieldConfig.style, engine?.getGridTheme().id);
+	const initialValues = structuredClone(initialFormValues ?? {});
+	const initialRows = createInitialArrayValue({ ...fieldConfig, initialFormValues }, initialValues);
+	if (initialRows) setValueAtPath(initialValues, fieldConfig.name, initialRows);
 	const arrayConfig = {
 		...fieldConfig,
-		ssrInitialRows: ssrInitialRows ?? [],
+		ssrInitialRows: initialRows ?? [],
 		initialFormValues,
 	};
-	const initialValues = structuredClone(initialFormValues ?? {});
-	const initialRows = createInitialArrayValue(arrayConfig, initialValues);
-	if (initialRows) setValueAtPath(initialValues, arrayConfig.name, initialRows);
 	const children = engine
 		? renderArrayContent({
 				config: arrayConfig,
