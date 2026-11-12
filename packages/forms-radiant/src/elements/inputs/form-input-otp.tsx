@@ -1,5 +1,5 @@
 import './form-input-otp.css';
-import { customElement, prop, query } from '@ecopages/radiant';
+import { customElement, prop, query, state } from '@ecopages/radiant';
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
@@ -21,13 +21,33 @@ function sanitizeChar(value: string, pattern: 'numeric' | 'alphanumeric') {
 	return /^[a-zA-Z0-9]$/.test(char) ? char : '';
 }
 
+/**
+ * @remarks
+ * The characters live in `slots`, one entry per slot, so filling or clearing a
+ * slot never moves another. `value` is the slots joined, so an incomplete code
+ * is a shorter string that a length rule rejects. Writing a value that equals
+ * the current one is a no-op, which keeps a store echo from re-spreading a code
+ * with gaps from the first slot.
+ */
 @customElement('se-input-otp', { hostAttributes: fieldControlHostAttributes('[data-ref="group"]') })
 export class SeInputOtp extends FormAssociatedElement {
-	@prop({ type: String }) value = '';
 	@prop({ type: Number, defaultValue: 6 }) length = 6;
 	@prop({ type: String, defaultValue: 'numeric' }) pattern: 'numeric' | 'alphanumeric' = 'numeric';
 
+	@state slots: string[] = [];
+
 	@query({ ref: 'slot', all: true }) slotInputs!: HTMLInputElement[];
+
+	get value(): string {
+		return this.slots.join('');
+	}
+
+	set value(next: string) {
+		if (next === this.value) {
+			return;
+		}
+		this.fill(next);
+	}
 
 	protected override formValue(): FormValue {
 		return this.value;
@@ -41,15 +61,23 @@ export class SeInputOtp extends FormAssociatedElement {
 		releaseFieldAria(this);
 	}
 
+	private fill(text: string) {
+		const chars = text
+			.split('')
+			.map((char) => sanitizeChar(char, this.pattern))
+			.filter(Boolean);
+		this.slots = Array.from({ length: this.length }, (_, index) => chars[index] ?? '');
+	}
+
 	private readonly onSlotInput = (event: Event) => {
 		const input = event.target as HTMLInputElement;
 		const index = this.slotInputs.indexOf(input);
 		const char = sanitizeChar(input.value, this.pattern);
 		input.value = char;
 
-		const chars = this.value.padEnd(this.length, ' ').split('').slice(0, this.length);
-		chars[index] = char || ' ';
-		this.value = chars.join('').replace(/ +$/g, '').replace(/ /g, '');
+		const slots = Array.from({ length: this.length }, (_, slot) => this.slots[slot] ?? '');
+		slots[index] = char;
+		this.slots = slots;
 
 		if (char) {
 			this.slotInputs[index + 1]?.focus();
@@ -71,20 +99,13 @@ export class SeInputOtp extends FormAssociatedElement {
 	private readonly onSlotPaste = (event: Event) => {
 		const pasteEvent = event as ClipboardEvent;
 		pasteEvent.preventDefault();
-		const text = pasteEvent.clipboardData?.getData('text') ?? '';
-		this.value = text
-			.split('')
-			.map((char) => sanitizeChar(char, this.pattern))
-			.filter(Boolean)
-			.slice(0, this.length)
-			.join('');
+		this.fill(pasteEvent.clipboardData?.getData('text') ?? '');
 		emitControlChange(this, this.value);
 	};
 
 	override render(): JsxRenderable {
 		const length = this.length || 6;
 		const firstHalf = Math.ceil(length / 2);
-		const chars = this.value.split('');
 
 		return (
 			<fieldset class="se-otp" data-ref="group">
@@ -97,6 +118,7 @@ export class SeInputOtp extends FormAssociatedElement {
 					<input
 						class="rui-input se-otp__slot"
 						data-ref="slot"
+						aria-label={`Character ${index + 1} of ${length}`}
 						maxlength={1}
 						inputmode={this.pattern === 'numeric' ? 'numeric' : 'text'}
 						autocomplete={index === 0 ? 'one-time-code' : 'off'}
@@ -104,7 +126,7 @@ export class SeInputOtp extends FormAssociatedElement {
 						on:input={this.onSlotInput}
 						on:keydown={this.onSlotKeydown}
 						on:paste={this.onSlotPaste}
-						prop:value={chars[index] ?? ''}
+						prop:value={this.slots[index] ?? ''}
 					/>,
 				])}
 			</fieldset>
