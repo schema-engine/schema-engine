@@ -221,3 +221,206 @@ test('a row field of an authored disabled array stays disabled after live sync, 
 		host.remove();
 	}
 });
+
+const wrapperSources = ['Array', 'Box', 'City'] as const;
+
+async function mountNestedWrappers() {
+	const host = document.createElement('div');
+	document.body.append(host);
+	const root = createRoot(host);
+	const trigger = (source: string, kind: 'lock' | 'need') => ({
+		field: `ctl.${kind}${source}`,
+		operator: 'equals',
+		value: 'x',
+		action: kind === 'lock' ? 'disable' : 'require',
+	});
+	const constraintsFor = (source: string) => [trigger(source, 'lock'), trigger(source, 'need')];
+	const config = engine.validateForm({
+		id: 'nested-wrappers',
+		steps: [
+			{
+				id: 'main',
+				title: 'Main',
+				elements: [
+					{
+						$type: 'fieldSet',
+						id: 'ctl',
+						name: 'ctl',
+						elements: wrapperSources.flatMap((source) => [
+							{ $type: 'input', id: `lock${source}`, name: `lock${source}` },
+							{ $type: 'input', id: `need${source}`, name: `need${source}` },
+						]),
+					},
+					{
+						$type: 'arrayElements',
+						id: 'rows',
+						name: 'rows',
+						constraints: constraintsFor('Array'),
+						elements: [
+							{ $type: 'input', id: 'label', name: 'label' },
+							{
+								$type: 'fieldSet',
+								id: 'box',
+								name: 'box',
+								constraints: constraintsFor('Box'),
+								elements: [
+									{
+										$type: 'input',
+										id: 'city',
+										name: 'city',
+										label: 'City',
+										constraints: constraintsFor('City'),
+									},
+								],
+							},
+						],
+					},
+				],
+			},
+		],
+	});
+	root.render(FormRenderer({ config, engine, defaultValues: { rows: [{ label: '', box: { city: '' } }] } }));
+	const form = new FormController(host.querySelector('rui-form')!);
+	await expect.poll(() => form.ready).toBe(true);
+	const city = () => host.querySelector<FormFieldElement>('se-field[name="rows.0.box.city"]');
+	await expect.poll(() => city()).not.toBeNull();
+	return {
+		form,
+		city: city()!,
+		cleanup: () => {
+			form.disconnect();
+			root.unmount();
+			host.remove();
+		},
+	};
+}
+
+test.each(wrapperSources)('a field takes the disable of the %s wrapper around it and releases it', async (source) => {
+	const { form, city, cleanup } = await mountNestedWrappers();
+	try {
+		expect(city.disabled).toBe(false);
+		form.setValue(`ctl.lock${source}`, 'x');
+		await expect.poll(() => city.disabled).toBe(true);
+		form.setValue(`ctl.lock${source}`, '');
+		await expect.poll(() => city.disabled).toBe(false);
+	} finally {
+		cleanup();
+	}
+});
+
+test.each(wrapperSources)('a field takes the require of the %s wrapper around it and releases it', async (source) => {
+	const { form, city, cleanup } = await mountNestedWrappers();
+	try {
+		const marker = () => city.querySelector('[data-se-required-marker]')!.hasAttribute('hidden');
+		expect(marker()).toBe(true);
+		form.setValue(`ctl.need${source}`, 'x');
+		await expect.poll(() => city.rules?.required).toBe(true);
+		expect(marker()).toBe(false);
+		form.setValue(`ctl.need${source}`, '');
+		await expect.poll(() => city.rules?.required).toBeFalsy();
+		expect(marker()).toBe(true);
+	} finally {
+		cleanup();
+	}
+});
+
+test('a field keeps the union of its wrappers while one of them releases', async () => {
+	const { form, city, cleanup } = await mountNestedWrappers();
+	try {
+		for (const source of wrapperSources) {
+			form.setValue(`ctl.lock${source}`, 'x');
+			form.setValue(`ctl.need${source}`, 'x');
+		}
+		await expect.poll(() => city.disabled && city.rules?.required === true).toBe(true);
+
+		form.setValue('ctl.lockArray', '');
+		form.setValue('ctl.needArray', '');
+		form.setValue('ctl.lockBox', '');
+		form.setValue('ctl.needBox', '');
+		await expect.poll(() => form.getValue('ctl.lockBox')).toBe('');
+		expect(city.disabled).toBe(true);
+		expect(city.rules?.required).toBe(true);
+
+		form.setValue('ctl.lockCity', '');
+		form.setValue('ctl.needCity', '');
+		await expect.poll(() => city.disabled).toBe(false);
+		expect(city.rules?.required).toBeFalsy();
+	} finally {
+		cleanup();
+	}
+});
+
+async function mountRequireOnDependent() {
+	const host = document.createElement('div');
+	document.body.append(host);
+	const root = createRoot(host);
+	const config = engine.validateForm({
+		id: 'require-revalidation',
+		steps: [
+			{
+				id: 'main',
+				title: 'Main',
+				elements: [
+					{ $type: 'input', id: 'mode', name: 'mode' },
+					{
+						$type: 'input',
+						id: 'code',
+						name: 'code',
+						constraints: [{ field: 'mode', operator: 'equals', value: 'need', action: 'require' }],
+					},
+				],
+			},
+		],
+	});
+	root.render(FormRenderer({ config, engine }));
+	const form = new FormController(host.querySelector('rui-form')!);
+	await expect.poll(() => form.ready).toBe(true);
+	const code = host.querySelector<FormFieldElement>('se-field[name="code"]')!;
+	return {
+		form,
+		code,
+		host,
+		cleanup: () => {
+			form.disconnect();
+			root.unmount();
+			host.remove();
+		},
+	};
+}
+
+test('a constraint that turns require on shows no error on a field nobody has reached', async () => {
+	const { form, code, cleanup } = await mountRequireOnDependent();
+	try {
+		form.setValue('mode', 'need');
+		await expect.poll(() => code.rules?.required).toBe(true);
+		await new Promise((resolve) => setTimeout(resolve, 50));
+		expect(form.store!.getFieldError('code')).toBeUndefined();
+	} finally {
+		cleanup();
+	}
+});
+
+test('a constraint that turns require on validates a field the user already touched', async () => {
+	const { form, code, cleanup } = await mountRequireOnDependent();
+	try {
+		await form.store!.handleFieldBlur('code');
+		form.setValue('mode', 'need');
+		await expect.poll(() => code.rules?.required).toBe(true);
+		await expect.poll(() => form.store!.getFieldError('code')).toBeTruthy();
+	} finally {
+		cleanup();
+	}
+});
+
+test('a constraint that turns require on validates any field once the form was submitted', async () => {
+	const { form, code, host, cleanup } = await mountRequireOnDependent();
+	try {
+		host.querySelector('form')!.requestSubmit();
+		await expect.poll(() => form.store!.getState().isSubmitted).toBe(true);
+		form.setValue('mode', 'need');
+		await expect.poll(() => code.rules?.required).toBe(true);
+		await expect.poll(() => form.store!.getFieldError('code')).toBeTruthy();
+	} finally {
+		cleanup();
+	}
+});
