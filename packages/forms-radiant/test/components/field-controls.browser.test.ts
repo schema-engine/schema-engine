@@ -49,7 +49,7 @@ test('a programmatic write reaches the visible phone number', async () => {
 	expect(host.querySelector('se-phone-input')!.getAttribute('data-country')).toBe('US');
 });
 
-test('a reset clears the visible phone number and the OTP slots', async () => {
+test('a reset clears the visible phone number', async () => {
 	const { host, field } = await mount(phone);
 	await expect.poll(() => host.querySelector('se-phone-input[data-ready]')).toBeTruthy();
 	const number = host.querySelector<HTMLInputElement>('se-phone-input [data-ref="number"]')!;
@@ -60,6 +60,7 @@ test('a reset clears the visible phone number and the OTP slots', async () => {
 	field.form.reset();
 
 	await expect.poll(() => number.value).toBe('');
+	expect(field.form.getValue('contact') ?? '').toBe('');
 });
 
 test('a reset clears the OTP slots', async () => {
@@ -105,4 +106,49 @@ test('a phone input submits its E.164 number in native form data', async () => {
 	await userEvent.type(host.querySelector<HTMLInputElement>('se-phone-input [data-ref="number"]')!, '4155550123');
 
 	await expect.poll(() => new FormData(host.querySelector('form')!).get('contact')).toBe('+14155550123');
+});
+
+test('a programmatic write reaches the visible masked input and the OTP slots', async () => {
+	const masked_ = await mount(masked);
+	await expect.poll(() => masked_.host.querySelector('se-masked-input[data-ready]')).toBeTruthy();
+	masked_.field.form.setValue('zip', '12345');
+	await expect
+		.poll(() => masked_.host.querySelector<HTMLInputElement>('se-masked-input input')!.value)
+		.toBe('123-45');
+	document.body.replaceChildren();
+
+	const code = await mount(otp);
+	code.field.form.setValue('code', '123456');
+	await expect
+		.poll(() =>
+			Array.from(code.host.querySelectorAll<HTMLInputElement>('se-input-otp input'))
+				.map((slot) => slot.value)
+				.join(''),
+		)
+		.toBe('123456');
+});
+
+test('the default masked value is submitted masked', async () => {
+	const { host } = await mount(masked);
+	await expect.poll(() => host.querySelector('se-masked-input[data-ready]')).toBeTruthy();
+	await userEvent.type(host.querySelector<HTMLInputElement>('se-masked-input input')!, '12345');
+
+	await expect.poll(() => new FormData(host.querySelector('form')!).get('zip')).toBe('123-45');
+});
+
+test('a drop zone stores its files and a reset clears them and the file input', async () => {
+	const { host, field } = await mount({ $type: 'drop-zone', id: 'upload', name: 'upload', label: 'Upload' });
+	const input = host.querySelector<HTMLInputElement>('se-drop-zone input[type="file"]')!;
+	const transfer = new DataTransfer();
+	transfer.items.add(new File(['hello'], 'hello.txt', { type: 'text/plain' }));
+
+	input.files = transfer.files;
+	input.dispatchEvent(new Event('change', { bubbles: true }));
+
+	await expect.poll(() => (field.form.getValue('upload') as File[]).map((file) => file.name)).toEqual(['hello.txt']);
+
+	field.form.reset();
+
+	await expect.poll(() => input.files?.length).toBe(0);
+	expect(field.form.getValue('upload') ?? []).toEqual([]);
 });

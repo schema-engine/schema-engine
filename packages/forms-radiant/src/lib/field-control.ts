@@ -1,4 +1,4 @@
-import { registerFieldControl } from '@ecopages/radiant-ui/form';
+import { registerFieldControl, RUI_FIELD_MANAGED_ATTR } from '@ecopages/radiant-ui/form';
 
 /** The attribute that names, as a selector, the control inside a host that carries the label and ARIA. */
 export const FIELD_ARIA_TARGET_ATTR = 'data-rui-aria-target';
@@ -35,7 +35,7 @@ export function releaseFieldAria(host: HTMLElement): void {
 		'aria-disabled',
 		'aria-describedby',
 		'aria-labelledby',
-		'data-rui-field-managed',
+		RUI_FIELD_MANAGED_ATTR,
 	]) {
 		host.removeAttribute(attribute);
 	}

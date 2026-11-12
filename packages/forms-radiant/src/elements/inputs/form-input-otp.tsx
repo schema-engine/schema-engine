@@ -61,12 +61,16 @@ export class SeInputOtp extends FormAssociatedElement {
 		releaseFieldAria(this);
 	}
 
+	private padSlots(chars: readonly string[]) {
+		return Array.from({ length: this.length }, (_, index) => chars[index] ?? '');
+	}
+
 	private fill(text: string) {
 		const chars = text
 			.split('')
 			.map((char) => sanitizeChar(char, this.pattern))
 			.filter(Boolean);
-		this.slots = Array.from({ length: this.length }, (_, index) => chars[index] ?? '');
+		this.slots = this.padSlots(chars);
 	}
 
 	private readonly onSlotInput = (event: Event) => {
@@ -75,7 +79,7 @@ export class SeInputOtp extends FormAssociatedElement {
 		const char = sanitizeChar(input.value, this.pattern);
 		input.value = char;
 
-		const slots = Array.from({ length: this.length }, (_, slot) => this.slots[slot] ?? '');
+		const slots = this.padSlots(this.slots);
 		slots[index] = char;
 		this.slots = slots;
 
@@ -104,7 +108,7 @@ export class SeInputOtp extends FormAssociatedElement {
 	};
 
 	override render(): JsxRenderable {
-		const length = this.length || 6;
+		const { length } = this;
 		const firstHalf = Math.ceil(length / 2);
 
 		return (
