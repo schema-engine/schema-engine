@@ -33,6 +33,9 @@ const logAction: BuilderActionRegistration<'log', typeof logActionSchema> = {
 	execute: async () => ({ success: true }),
 };
 
+const invalidRecipe = { ...cardRecipe, slots: ['shell', 'progress'] };
+const validRecipe = { ...cardRecipe, metadata: { name: 'Valid card' } };
+
 describe('engine registries', () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
@@ -95,6 +98,21 @@ describe('engine registries', () => {
 			expect(Object.isFrozen(engine.getAction('log'))).toBe(true);
 		});
 
+		test('leaves the registrations it was given spy-able and assignable', () => {
+			const action: BuilderActionRegistration<'log', typeof logActionSchema> = {
+				...logAction,
+				execute: async () => ({ success: true }),
+			};
+
+			createFormEngine({ actions: [action] });
+
+			expect(Object.isFrozen(action)).toBe(false);
+			const spy = vi.spyOn(action, 'execute');
+			expect(spy).toBeDefined();
+			action.metadata = { name: 'Renamed', defaultTriggers: ['form_submit'] };
+			expect(action.metadata.name).toBe('Renamed');
+		});
+
 		test('keeps an extended engine independent of the one it extends', () => {
 			const base = createFormEngine({ elements: [noteElement] });
 			const extended = base.extend({ actions: [logAction] });
@@ -102,6 +120,26 @@ describe('engine registries', () => {
 			expect(base.hasAction('log')).toBe(false);
 			expect(extended.hasAction('log')).toBe(true);
 			expect(extended.hasElement('note')).toBe(true);
+		});
+	});
+
+	describe('Recipes are checked as winners only', () => {
+		test('an invalid recipe on its own fails the engine build', () => {
+			expect(() => createFormEngine({ recipes: [invalidRecipe as never] })).toThrow(
+				/cannot declare a progress slot/,
+			);
+		});
+
+		test('the same recipe overridden later by a valid one builds', () => {
+			const engine = createFormEngine({ recipes: [invalidRecipe as never, validRecipe] });
+
+			expect(engine.getRecipe('card')?.metadata.name).toBe('Valid card');
+		});
+
+		test('an overridden recipe with a non-Standard Schema schema builds', () => {
+			const engine = createFormEngine({ recipes: [{ ...cardRecipe, schema: {} } as never, validRecipe] });
+
+			expect(engine.getRecipeIds()).toEqual(['card']);
 		});
 	});
 });

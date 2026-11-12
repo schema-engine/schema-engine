@@ -59,6 +59,13 @@ export class FormEngine<
 	private readonly compiledGrid: CompiledGrid;
 	private readonly validationRegistry: ValidationRegistry;
 
+	/**
+	 * @remarks
+	 * Shares the registries it receives instead of copying them. They are
+	 * read-only, so engines built by `extend` can share them safely. Construct
+	 * engines with `createFormEngine`; passing a registry that changes later is
+	 * unsupported.
+	 */
 	constructor(registries: EngineRegistries) {
 		this.registries = {
 			elements: registries.elements,
