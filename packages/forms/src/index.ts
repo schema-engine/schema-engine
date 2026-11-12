@@ -67,6 +67,15 @@ export {
 	validateElementConfig,
 	validateFormConfig,
 } from './lib/validate-form';
+export { compileAppearance, getAppearanceAttributes } from './lib/appearance';
+export type {
+	AppearanceInput,
+	AppearanceOptions,
+	ResolvedAppearanceAxes,
+	AppearanceSelection,
+	AppearanceTokens,
+	CompiledAppearance,
+} from './lib/appearance';
 export { isNormalizedElementConfig } from './lib/normalized-form-config';
 export type { FormConfigView, NormalizedElementConfig, NormalizedFormConfig } from './lib/normalized-form-config';
 export type { FormAuthoringInput, FormAuthoringStep, AuthoringElement } from './builder/form-authoring';

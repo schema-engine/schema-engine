@@ -244,6 +244,7 @@ export function FormPhoneInput(config: PhoneInputFieldProps) {
 			required={isFieldRequired(config.rules) || isRenderedRequired(config)}
 			description={config.description}
 			grid={config.grid}
+			appearance={config.appearance}
 			style={config.style}
 			validation={config}
 			defaultValue={config.defaultValue}

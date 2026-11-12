@@ -21,6 +21,7 @@ import type { ExtendFormEngineOptions } from './create-form-engine';
 import { buildFormEngine } from './build-form-engine';
 import { SchemaMetadataCatalog } from './schema-metadata-catalog';
 import type { CompiledGrid, NormalizedGridTheme } from '@/lib/grid-styles';
+import type { CompiledAppearance, ResolvedAppearanceAxes } from '@/lib/appearance';
 import type { ValidationRegistry } from '@/schemas/validation/validation-registry';
 import {
 	describeRecipeFromRegistration,
@@ -40,6 +41,7 @@ export interface EngineRegistries {
 	actions: Map<string, AnyActionRegistration>;
 	schemaArtifacts: FormEngineSchemaArtifacts;
 	compiledGrid: CompiledGrid;
+	compiledAppearance: CompiledAppearance;
 	validationRegistry: ValidationRegistry;
 	defaultWizardRecipe?: string;
 }
@@ -49,6 +51,7 @@ export class FormEngine<
 	TRecipes extends Record<string, unknown> = Record<string, unknown>,
 	TActions extends Record<string, unknown> = Record<string, unknown>,
 	TOutputs extends EngineOutputMaps = EngineOutputMaps,
+	TAppearance extends Record<string, string> = ResolvedAppearanceAxes,
 > {
 	private readonly registries: EngineRegistries;
 	private readonly schemaArtifacts: FormEngineSchemaArtifacts;
@@ -62,6 +65,7 @@ export class FormEngine<
 			actions: new Map(registries.actions),
 			schemaArtifacts: registries.schemaArtifacts,
 			compiledGrid: registries.compiledGrid,
+			compiledAppearance: registries.compiledAppearance,
 			validationRegistry: registries.validationRegistry,
 			defaultWizardRecipe: registries.defaultWizardRecipe,
 		};
@@ -118,6 +122,17 @@ export class FormEngine<
 	 */
 	getCompiledGrid(): CompiledGrid {
 		return this.compiledGrid;
+	}
+
+	/**
+	 * The engine's immutable appearance vocabulary: axes, their values, and the token stylesheet.
+	 *
+	 * @remarks
+	 * Renderers emit `css` once per form next to the grid theme and put `id` on the form element as
+	 * `data-se-appearance-theme`, which scopes the token rules to this engine's forms.
+	 */
+	getAppearance(): CompiledAppearance {
+		return this.registries.compiledAppearance;
 	}
 
 	getValidationRegistry(): ValidationRegistry {
@@ -177,6 +192,7 @@ export class FormEngine<
 			getElement: (id) => this.getElement(id),
 			getAction: (id) => this.getAction(id),
 			hasValidation: (type) => this.validationRegistry.has(type),
+			appearance: this.registries.compiledAppearance,
 		}) as unknown as NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>;
 	}
 
@@ -184,8 +200,8 @@ export class FormEngine<
 	 * Author a form from this engine's registered elements, recipes, and actions.
 	 * Same runtime pipeline as {@link validateForm}.
 	 */
-	defineForm<const TConfig extends FormAuthoringInput<TElements, TRecipes, TActions>>(
-		config: TConfig & { view?: ExactViewConfig<TConfig['view'], TRecipes> },
+	defineForm<const TConfig extends FormAuthoringInput<TElements, TRecipes, TActions, TAppearance>>(
+		config: TConfig & { view?: ExactViewConfig<TConfig['view'], TRecipes, TAppearance> },
 	): NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']> {
 		return this.validateForm(config);
 	}
@@ -199,6 +215,7 @@ export class FormEngine<
 		return validateElementConfig(config, {
 			getElement: (id) => this.getElement(id),
 			hasValidation: (type) => this.validationRegistry.has(type),
+			appearance: this.registries.compiledAppearance,
 		}) as unknown as NormalizedElementConfig<TOutputs['elements']>;
 	}
 
@@ -309,7 +326,8 @@ export class FormEngine<
 			elements: LastWinsMerge<TOutputs['elements'], MergedOutputMap<TNewElements>>;
 			recipes: LastWinsMerge<TOutputs['recipes'], MergedOutputMap<TNewRecipes>>;
 			actions: LastWinsMerge<TOutputs['actions'], MergedOutputMap<TNewActions>>;
-		}
+		},
+		TAppearance
 	> {
 		return buildFormEngine({
 			elements: [...this.getAllElements(), ...(options?.elements ?? [])],
@@ -317,6 +335,7 @@ export class FormEngine<
 			actions: [...this.getAllActions(), ...(options?.actions ?? [])],
 			catalog: options?.catalog ?? this.schemaArtifacts.metadataCatalog,
 			compiledGrid: this.compiledGrid,
+			compiledAppearance: this.registries.compiledAppearance,
 			defaultWizardRecipe: this.registries.defaultWizardRecipe,
 		}) as unknown as FormEngine<
 			LastWinsMerge<TElements, MergedRegistrationMap<TNewElements>>,
@@ -326,7 +345,8 @@ export class FormEngine<
 				elements: LastWinsMerge<TOutputs['elements'], MergedOutputMap<TNewElements>>;
 				recipes: LastWinsMerge<TOutputs['recipes'], MergedOutputMap<TNewRecipes>>;
 				actions: LastWinsMerge<TOutputs['actions'], MergedOutputMap<TNewActions>>;
-			}
+			},
+			TAppearance
 		>;
 	}
 }
@@ -344,6 +364,7 @@ export type FormEngineRuntime<
 	TRecipes extends Record<string, unknown> = Record<string, unknown>,
 	TActions extends Record<string, unknown> = Record<string, unknown>,
 	TOutputs extends EngineOutputMaps = EngineOutputMaps,
-> = Omit<FormEngine<TElements, TRecipes, TActions, TOutputs>, 'extend'>;
+	TAppearance extends Record<string, string> = ResolvedAppearanceAxes,
+> = Omit<FormEngine<TElements, TRecipes, TActions, TOutputs, TAppearance>, 'extend'>;
 
 export type { EngineOutputMaps } from '@/builder/types.utils';

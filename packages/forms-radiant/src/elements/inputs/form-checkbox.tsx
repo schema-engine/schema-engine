@@ -11,6 +11,7 @@ export function FormCheckbox(config: CheckboxFieldProps) {
 			name={config.name}
 			description={config.description}
 			grid={config.grid}
+			appearance={config.appearance}
 			style={config.style}
 			validation={config}
 			defaultValue={config.defaultValue}

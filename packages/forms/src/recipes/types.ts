@@ -49,6 +49,15 @@ export interface RecipeSpec<
 	slots: RecipeSlot[];
 	slotSchemas: TSlots;
 	slotDefaults?: RecipeSlotDefaults<TSlots>;
+	/**
+	 * Appearance axes each slot supports (`{ shell: ['size', 'surface'] }`); undeclared axes fail validation on that slot.
+	 *
+	 * @remarks
+	 * A slot that declares axes must accept an `appearance` key in its schema, so authored
+	 * configs type-check and the JSON Schema lists it. `validateForm` handles the key itself and
+	 * writes the resolved selection back, so the slot schema never sees it.
+	 */
+	appearanceAxes?: { [K in keyof TSlots]?: readonly string[] };
 	metadata: RecipeMetadata;
 	schema: TSchema;
 }

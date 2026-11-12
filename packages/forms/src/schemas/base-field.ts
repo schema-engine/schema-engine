@@ -29,6 +29,18 @@ export const RendererStyleSchema = z.record(z.string(), z.union([z.string(), z.n
 export type RendererStyle = z.infer<typeof RendererStyleSchema>;
 
 /**
+ * A pick of named appearance values, one per axis: `{ size: 'compact' }`.
+ *
+ * @remarks
+ * The shape is open because the axes belong to the engine (`createFormEngine({ appearance })`).
+ * `validateForm` checks each axis and value against the engine's vocabulary and the element's declared
+ * axes, and writes the resolved selection back.
+ */
+export const AppearanceConfigSchema = z.record(z.string(), z.string());
+
+export type AppearanceConfig = z.infer<typeof AppearanceConfigSchema>;
+
+/**
  * Constraint operands can be values from any registered field.
  * @remarks Their concrete types are selected by the form's element registrations.
  */
@@ -192,7 +204,8 @@ export const BaseFieldSchema = z.object({
 	rules: z.optional(z.array(ValidationRuleSchema)).check(z.describe('Validation rules')),
 
 	className: z.optional(z.string()).check(z.describe('CSS class name')),
-	style: z.optional(RendererStyleSchema).check(z.describe('Inline styles')),
+	style: z.optional(RendererStyleSchema).check(z.describe('CSS custom properties')),
+	appearance: z.optional(AppearanceConfigSchema).check(z.describe('Named appearance values, one per axis')),
 	htmlAttributes: z.optional(HtmlAttributesSchema),
 
 	grid: z.optional(ElementGridConfigSchema).check(z.describe('Grid positioning configuration')),

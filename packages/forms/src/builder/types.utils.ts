@@ -101,6 +101,7 @@ export type ElementRegistrationConstraint = {
 	readonly render: (props: never) => unknown;
 	readonly validations?: readonly AnyValidationRegistration[];
 	readonly containerKind?: import('@/types/registration').ContainerKind;
+	readonly appearanceAxes?: readonly string[];
 };
 
 export type RecipeRegistrationConstraint = {

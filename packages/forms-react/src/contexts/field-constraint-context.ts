@@ -1,4 +1,5 @@
 import { createContext } from 'react';
+import type { AppearanceSelection } from '@schema-engine/forms/lib/appearance';
 import type { UseConstraintLogicResult } from '@/hooks/use-constraint-logic';
 
 export interface FieldConstraints {
@@ -32,3 +33,13 @@ export interface InheritedFieldState {
 }
 
 export const InheritedFieldStateContext = createContext<InheritedFieldState>({ disabled: false, required: false });
+
+/**
+ * Appearance `FormElement` resolved for the element it renders.
+ *
+ * @remarks
+ * Field hosts (`FieldGroupRoot`, `useFieldHost`) read it through `useFieldAppearanceAttributes`, so a
+ * registry component does not thread `appearance` into its host by hand. A nested element's own
+ * `FormElement` provides its own value, so a container's appearance never reaches its children's hosts.
+ */
+export const FieldAppearanceContext = createContext<AppearanceSelection | undefined>(undefined);

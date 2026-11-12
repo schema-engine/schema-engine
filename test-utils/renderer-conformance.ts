@@ -224,6 +224,99 @@ export function rendererConformance(mount: ConformanceMount): void {
 				expect(fieldHost(host, 'Email').style.getPropertyValue('--gap')).toBe('2rem');
 			});
 		});
+		describe('appearance', () => {
+			const sizedForm = (appearance: Record<string, string>, fieldAppearance?: Record<string, string>) => ({
+				...form([{ ...input('email', 'Email'), appearance: fieldAppearance }, input('name', 'Name')]),
+				appearance,
+			});
+			test('a form-level value reaches the form, the step and a field without its own', async () => {
+				const { host } = await setup({ config: sizedForm({ size: 'compact' }) });
+				expect(formElement(host).getAttribute('data-se-size')).toBe('compact');
+				expect(stepElement(host, 'main').getAttribute('data-se-size')).toBe('compact');
+				expect(fieldHost(host, 'Name').getAttribute('data-se-size')).toBe('compact');
+			});
+			test('a field overrides the form value and its neighbours keep it', async () => {
+				const { host } = await setup({ config: sizedForm({ size: 'compact' }, { size: 'comfortable' }) });
+				expect(fieldHost(host, 'Email').getAttribute('data-se-size')).toBe('comfortable');
+				expect(fieldHost(host, 'Name').getAttribute('data-se-size')).toBe('compact');
+			});
+			test('a step overrides the form value', async () => {
+				const base = sizedForm({ size: 'compact' });
+				const { host } = await setup({
+					config: { ...base, steps: [{ ...base.steps[0], appearance: { size: 'default' } }] },
+				});
+				expect(formElement(host).getAttribute('data-se-size')).toBe('compact');
+				expect(stepElement(host, 'main').getAttribute('data-se-size')).toBe('default');
+				expect(fieldHost(host, 'Name').getAttribute('data-se-size')).toBe('default');
+			});
+			test('a form without appearance emits no appearance attributes', async () => {
+				const { host } = await setup({ config: form([input('email', 'Email')]) });
+				const attributed = Array.from(host.querySelectorAll('*')).filter((element) =>
+					element.getAttributeNames().some((name) => /^data-se-(size|surface)$/.test(name)),
+				);
+				expect(attributed).toHaveLength(0);
+			});
+			test('a recipe slot takes an appearance', async () => {
+				const cardCase = recipeCases.find((recipe) => recipe.$type === 'card');
+				if (!cardCase) throw new Error('The card recipe has no conformance case.');
+				const base = recipeForm(cardCase);
+				const { host } = await setup({
+					config: {
+						...base,
+						view: { ...base.view, $type: 'card', shell: { appearance: { surface: 'elevated' } } },
+					},
+				});
+				const shells = host.querySelectorAll<HTMLElement>('[data-se-surface="elevated"]');
+				expect(shells).toHaveLength(1);
+				expect(shells[0]).not.toBe(formElement(host));
+				expect(shells[0].contains(getByRole(host, 'textbox', { name: 'Field 1' }))).toBe(true);
+			});
+			test('a form-level value reaches a slot that supports the axis', async () => {
+				const cardCase = recipeCases.find((recipe) => recipe.$type === 'card');
+				if (!cardCase) throw new Error('The card recipe has no conformance case.');
+				const { host } = await setup({ config: { ...recipeForm(cardCase), appearance: { size: 'compact' } } });
+				const sized = Array.from(host.querySelectorAll<HTMLElement>('[data-se-size="compact"]'));
+				expect(sized.some((element) => element.contains(getByRole(host, 'textbox', { name: 'Field 1' })))).toBe(
+					true,
+				);
+				expect(sized.filter((element) => element !== formElement(host)).length).toBeGreaterThan(2);
+			});
+			test('structural slot config is unaffected by appearance', async () => {
+				const config: FormConfigView = {
+					id: 'conformance',
+					view: {
+						$type: 'card-wizard',
+						header: { showDescription: false },
+						shell: { appearance: { size: 'compact' } },
+					},
+					steps: [
+						{ id: 'one', title: 'One', description: 'Hidden description', elements: [input('a', 'A')] },
+						{ id: 'two', title: 'Two', elements: [input('b', 'B')] },
+					],
+				};
+				const { host } = await setup({ config });
+				expect(getByRole(host, 'heading', { name: 'One' })).toBeTruthy();
+				expect(queryByText(host, 'Hidden description')).toBeNull();
+			});
+			test('axis tokens apply to the element that carries the attribute', async () => {
+				const { host } = await setup({ config: sizedForm({ size: 'compact' }) });
+				expect(getComputedStyle(formElement(host)).getPropertyValue('--se-size-padding')).toBe('1rem');
+				expect(getComputedStyle(fieldHost(host, 'Email')).getPropertyValue('--se-size-padding')).toBe('1rem');
+			});
+			test('an author class outranks axis styles', async () => {
+				const author = document.createElement('style');
+				author.textContent = '.author-padding { --se-size-padding: 7px; }';
+				document.head.prepend(author);
+				try {
+					const { host } = await setup({
+						config: { ...sizedForm({ size: 'compact' }), className: 'author-padding' },
+					});
+					expect(getComputedStyle(formElement(host)).getPropertyValue('--se-size-padding')).toBe('7px');
+				} finally {
+					author.remove();
+				}
+			});
+		});
 		test('resolves sibling show constraints independently in two array rows', async () => {
 			const { host } = await setup({
 				config: form([

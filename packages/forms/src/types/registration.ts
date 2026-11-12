@@ -25,6 +25,12 @@ export type InputRegistration<
 		$type: TType;
 		schema: TSchema;
 		containerKind?: ContainerKind;
+		/**
+		 * Appearance axes this element supports (`['size']`); undeclared axes fail validation on it.
+		 *
+		 * @remarks Values the form, step or a containing element picks for a supported axis reach this element.
+		 */
+		appearanceAxes?: readonly string[];
 		metadata: ElementMetadata;
 		render: (props: TProps) => unknown;
 		validations?: readonly AnyValidationRegistration[];
@@ -44,6 +50,12 @@ export type StaticRegistration<
 		$type: TType;
 		schema: TSchema;
 		containerKind?: ContainerKind;
+		/**
+		 * Appearance axes this element supports (`['size']`); undeclared axes fail validation on it.
+		 *
+		 * @remarks Values the form, step or a containing element picks for a supported axis reach this element.
+		 */
+		appearanceAxes?: readonly string[];
 		metadata: ElementMetadata;
 		render: (props: TProps) => unknown;
 	},
@@ -68,6 +80,8 @@ export type RecipeRegistration<
 		schema: TSchema;
 		metadata: import('@/recipes/types').RecipeMetadata;
 		slotDefaults?: Partial<Record<import('@/recipes/types').RecipeSlot, Record<string, unknown>>>;
+		/** Appearance axes each slot supports; see {@link import('@/recipes/types').RecipeSpec.appearanceAxes}. */
+		appearanceAxes?: Partial<Record<import('@/recipes/types').RecipeSlot, readonly string[]>>;
 		/** Adapter render payload (shell + slot components). */
 		render: TRender;
 	},

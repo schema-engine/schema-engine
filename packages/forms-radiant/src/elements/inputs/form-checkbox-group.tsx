@@ -21,6 +21,7 @@ export function FormCheckboxGroup(config: CheckboxGroupFieldProps) {
 			required={isFieldRequired(config.rules) || isRenderedRequired(config)}
 			description={config.description}
 			grid={config.grid}
+			appearance={config.appearance}
 			style={config.style}
 			validation={config}
 			defaultValue={serializeChoiceValue(config.defaultValue)}

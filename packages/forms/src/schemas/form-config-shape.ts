@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import { GridLayoutConfigSchema, RendererStyleSchema } from './base-field';
+import { AppearanceConfigSchema, GridLayoutConfigSchema, RendererStyleSchema } from './base-field';
 
 /**
  * Envelope for a registered config object. Per-item Standard Schema validation
@@ -20,6 +20,7 @@ export function createFormStepSchema(parts: { elements: z.ZodMiniType; actions: 
 		constraints: z.optional(z.array(z.unknown())),
 		className: z.optional(z.string()),
 		style: z.optional(RendererStyleSchema),
+		appearance: z.optional(AppearanceConfigSchema),
 		actions: z.optional(z.array(z.union([parts.actions, z.array(parts.actions)]))),
 	});
 }
@@ -41,6 +42,7 @@ export function createFormConfigShape(parts: { elements: z.ZodMiniType; view: z.
 		reValidateMode: z.optional(z.enum(['onSubmit', 'onChange', 'onBlur'])),
 		className: z.optional(z.string()),
 		style: z.optional(RendererStyleSchema),
+		appearance: z.optional(AppearanceConfigSchema),
 		actions: z.optional(z.array(z.union([parts.actions, z.array(parts.actions)]))),
 	});
 }

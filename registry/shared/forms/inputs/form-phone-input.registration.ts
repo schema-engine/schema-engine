@@ -22,6 +22,7 @@ export { createPhoneValidationRegistration };
 
 export const PhoneInputElementRegistration = defineInput({
 	$type: 'phone-input',
+	appearanceAxes: ['size'],
 	render: FormPhoneInput,
 	schema: PhoneInputFieldSchema,
 	validations: [createPhoneValidationRegistration()],

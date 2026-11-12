@@ -3,6 +3,7 @@ import { onContextUpdate } from '@ecopages/radiant/context';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { formElement } from '@/lib/define-element';
+import { getAppearanceAttributes, type AppearanceSelection } from '@schema-engine/forms/lib/appearance';
 
 /**
  * Visibility host for one authored step.
@@ -64,6 +65,7 @@ export function FormStep({
 	hidden = false,
 	class: className,
 	style,
+	appearance,
 	children,
 }: {
 	stepId: string;
@@ -74,6 +76,8 @@ export function FormStep({
 	class?: string;
 	/** The step's authored custom properties. */
 	style?: Record<string, string | number | undefined>;
+	/** The step's resolved appearance, emitted as `data-se-<axis>` attributes. */
+	appearance?: AppearanceSelection;
 	children: JsxRenderable;
 }): JsxRenderable {
 	return (
@@ -83,6 +87,7 @@ export function FormStep({
 			classes={['se-form-step', className]}
 			style={style}
 			data-se-step={stepId}
+			{...getAppearanceAttributes(appearance)}
 		>
 			{children}
 		</FormStepElement>

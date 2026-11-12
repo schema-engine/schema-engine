@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useGridThemeId } from '@schema-engine/forms-react/hooks';
+import { useFieldAppearanceAttributes, useGridThemeId } from '@schema-engine/forms-react/hooks';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
@@ -141,10 +141,12 @@ interface FieldGroupRootProps extends React.ComponentProps<'div'> {
  * `se-form-field` carries the grid CSS variables consumed by the theme
  * stylesheet the engine generates (`engine.getCompiledGrid().css`), and
  * `data-se-grid-theme` scopes them to the owning engine so nested grids stay
- * isolated. Both are set here, so field components never carry the theme id.
+ * isolated. Both are set here, so field components never carry the theme id. The element's resolved
+ * `appearance` is emitted as `data-se-<axis>` attributes the same way.
  */
 export function FieldGroupRoot({ className, hasError, ...props }: FieldGroupRootProps) {
 	const gridThemeId = useGridThemeId();
+	const appearance = useFieldAppearanceAttributes();
 
 	return (
 		<div
@@ -152,6 +154,7 @@ export function FieldGroupRoot({ className, hasError, ...props }: FieldGroupRoot
 			data-slot="field-group-root"
 			data-error={hasError ? 'true' : 'false'}
 			data-se-grid-theme={gridThemeId}
+			{...appearance}
 			{...props}
 		/>
 	);

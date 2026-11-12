@@ -10,6 +10,7 @@ import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from 
 import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
 import { logger } from '@/lib/logger';
 import { compileGridTheme, getDefaultCompiledGrid, type CompiledGrid, type GridThemeOptions } from '@/lib/grid-styles';
+import { compileAppearance, type AppearanceOptions, type CompiledAppearance } from '@/lib/appearance';
 import { createFormConfigShape } from '@/schemas/form-config-shape';
 import * as z from 'zod/mini';
 import { isZodType } from '@/lib/zod-json-schema';
@@ -88,7 +89,11 @@ export type FormEngineRegistrationLists = {
 	actions?: readonly ActionRegistrationConstraint[];
 	catalog?: SchemaMetadataCatalog;
 	defaultWizardRecipe?: string;
-} & ({ grid?: GridThemeOptions; compiledGrid?: never } | { grid?: never; compiledGrid: CompiledGrid });
+} & ({ grid?: GridThemeOptions; compiledGrid?: never } | { grid?: never; compiledGrid: CompiledGrid }) &
+	(
+		| { appearance?: AppearanceOptions; compiledAppearance?: never }
+		| { appearance?: never; compiledAppearance: CompiledAppearance }
+	);
 
 /**
  * Single construction path for {@link createFormEngine} and {@link FormEngine.extend}.
@@ -157,12 +162,15 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 	const compiledGrid =
 		lists.compiledGrid ?? (lists.grid === undefined ? getDefaultCompiledGrid() : compileGridTheme(lists.grid));
 
+	const compiledAppearance = lists.compiledAppearance ?? compileAppearance(lists.appearance);
+
 	return new FormEngine({
 		elements: elementRegistry,
 		recipes: recipeRegistry,
 		actions: actionRegistry,
 		schemaArtifacts,
 		compiledGrid,
+		compiledAppearance,
 		validationRegistry: validationRegistryInstance,
 		defaultWizardRecipe,
 	});
