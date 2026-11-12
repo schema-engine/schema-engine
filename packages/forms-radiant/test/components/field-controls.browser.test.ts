@@ -1,5 +1,6 @@
-import { afterEach, expect, test } from 'vitest';
+import { afterEach, expect, test, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
+import { FormFieldElement } from '@/elements/form-field';
 import { mountField as mount } from './mount-field';
 
 afterEach(() => document.body.replaceChildren());
@@ -151,4 +152,28 @@ test('a drop zone stores its files and a reset clears them and the file input', 
 
 	await expect.poll(() => input.files?.length).toBe(0);
 	expect(field.form.getValue('upload') ?? []).toEqual([]);
+});
+
+test('a field observes no mutations and resyncs once for each custom control it holds', async () => {
+	const observed: Node[] = [];
+	const NativeObserver = window.MutationObserver;
+	window.MutationObserver = class extends NativeObserver {
+		override observe(target: Node, options?: MutationObserverInit) {
+			observed.push(target);
+			super.observe(target, options);
+		}
+	};
+	const resync = vi.spyOn(FormFieldElement.prototype, 'resyncControl');
+	try {
+		const { host } = await mount(otp);
+		await expect
+			.poll(() => host.querySelector('se-input-otp [data-ref="group"]')?.getAttribute('aria-labelledby'))
+			.toBeTruthy();
+		await userEvent.type(host.querySelector<HTMLInputElement>('se-input-otp input')!, '1');
+
+		expect(observed.some((target) => target instanceof Element && target.closest('se-field'))).toBe(false);
+		expect(resync).toHaveBeenCalledTimes(1);
+	} finally {
+		window.MutationObserver = NativeObserver;
+	}
 });

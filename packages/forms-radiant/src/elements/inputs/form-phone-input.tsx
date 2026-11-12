@@ -20,7 +20,7 @@ import {
 	emitControlChange,
 	fieldControlHostAttributes,
 	registerValueControl,
-	releaseFieldAria,
+	syncFieldControl,
 } from '@/lib/field-control';
 import { FieldGroup } from '../field-group';
 import {
@@ -81,7 +81,7 @@ export class SePhoneInput extends FormAssociatedElement {
 	}
 
 	protected override onConnected(): void {
-		releaseFieldAria(this);
+		syncFieldControl(this);
 		void this.boot();
 		this.registerCleanupCallback(() => {
 			this.bootGeneration += 1;

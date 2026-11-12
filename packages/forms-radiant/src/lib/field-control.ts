@@ -1,4 +1,5 @@
 import { registerFieldControl, RUI_FIELD_MANAGED_ATTR } from '@ecopages/radiant-ui/form';
+import type { FormFieldElement } from '@/elements/form-field';
 
 /** The attribute that names, as a selector, the control inside a host that carries the label and ARIA. */
 export const FIELD_ARIA_TARGET_ATTR = 'data-rui-aria-target';
@@ -39,6 +40,19 @@ export function releaseFieldAria(host: HTMLElement): void {
 	]) {
 		host.removeAttribute(attribute);
 	}
+}
+
+/**
+ * Hands a custom control host's label and ARIA to the control it renders.
+ *
+ * @remarks
+ * Call it from the host's `onConnected`: it strips the ARIA the field wrote on the
+ * host, then asks the enclosing `se-field` to sync once, which is what lets the
+ * field stop observing its subtree.
+ */
+export function syncFieldControl(host: HTMLElement): void {
+	releaseFieldAria(host);
+	host.closest<FormFieldElement>('se-field')?.resyncControl();
 }
 
 /**

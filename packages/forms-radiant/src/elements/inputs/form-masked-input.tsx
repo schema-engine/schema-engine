@@ -8,7 +8,7 @@ import {
 	emitControlChange,
 	fieldControlHostAttributes,
 	registerValueControl,
-	releaseFieldAria,
+	syncFieldControl,
 } from '@/lib/field-control';
 import { FieldGroup } from '../field-group';
 import {
@@ -59,7 +59,7 @@ export class SeMaskedInput extends FormAssociatedElement {
 	}
 
 	protected override onConnected(): void {
-		releaseFieldAria(this);
+		syncFieldControl(this);
 		void this.attachMask();
 		this.registerCleanupCallback(() => {
 			this.attachGeneration += 1;

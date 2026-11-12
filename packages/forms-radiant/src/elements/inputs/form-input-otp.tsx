@@ -8,7 +8,7 @@ import {
 	emitControlChange,
 	fieldControlHostAttributes,
 	registerValueControl,
-	releaseFieldAria,
+	syncFieldControl,
 } from '@/lib/field-control';
 import { FieldGroup } from '../field-group';
 import type { InputOTPFieldProps } from './form-input-otp.types';
@@ -59,7 +59,7 @@ export class SeInputOtp extends FormAssociatedElement {
 	}
 
 	protected override onConnected(): void {
-		releaseFieldAria(this);
+		syncFieldControl(this);
 	}
 
 	private padSlots(chars: readonly string[]) {

@@ -14,8 +14,6 @@ import { formElement } from '@/lib/define-element';
 export class FormFieldElement extends RuiFieldElement {
 	@formController form!: FormController;
 
-	private renderObserver?: MutationObserver;
-
 	protected override onConnected(): void {
 		this.hydrateDefaultValue();
 		const rules = readHydratedRules(this);
@@ -23,24 +21,20 @@ export class FormFieldElement extends RuiFieldElement {
 			this.rules = rules;
 		}
 		super.onConnected();
-		this.renderObserver ??= new MutationObserver(() => this.syncRenderedTarget());
-		this.renderObserver.observe(this, { childList: true, subtree: true });
-	}
-
-	override disconnectedCallback(): void {
-		this.renderObserver?.disconnect();
-		super.disconnectedCallback();
 	}
 
 	/**
+	 * Syncs the label and ARIA onto the control a custom host rendered, once.
+	 *
 	 * @remarks
 	 * A custom host that renders its own control, such as the masked, phone and
 	 * OTP inputs, renders after the field first synced. That sync finds no
 	 * `data-rui-aria-target` inside the host, so the label and ARIA never reach
-	 * the control. Syncing again once the target exists, and only while it is
-	 * unmanaged, ends the loop the field's own DOM writes would otherwise start.
+	 * the control. The host calls this from its `onConnected` through
+	 * `syncFieldControl`; syncing only while the target is unmanaged ends the loop
+	 * the field's own DOM writes would otherwise start.
 	 */
-	private syncRenderedTarget(): void {
+	resyncControl(): void {
 		const control = findFieldControl(this);
 		const selector = control?.getAttribute(FIELD_ARIA_TARGET_ATTR);
 		const target = selector ? control?.querySelector(selector) : null;
