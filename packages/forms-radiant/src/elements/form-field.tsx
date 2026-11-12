@@ -2,12 +2,14 @@ import { RuiFieldElement, type RuiFieldProps } from '@ecopages/radiant-ui/field'
 import { findFieldControl, RUI_FIELD_MANAGED_ATTR, type FieldRules } from '@ecopages/radiant-ui/form';
 import type { JsxCustomElementAttributes } from '@ecopages/jsx';
 import { readHydratedRules } from '@/components/internals/field-rule-hydrator';
+import { formEngineContext } from '@/components/provider';
+import { resolveFormEngine } from '@/contexts/resolve-form-engine';
+import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { ElementGridConfig } from '@schema-engine/forms/schemas';
 import { resolveElementRules, toFieldRules, type FieldRulesSource } from '@/lib/field-rules';
 import { FIELD_ARIA_TARGET_ATTR } from '@/lib/field-control';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
-import { formElement } from '@/lib/define-element';
-import { onUpdated } from '@ecopages/radiant';
+import { customElement, onUpdated } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { constraintContext, formValuesContext, type ConstraintState } from '@/contexts/constraint-context';
 import { FormController } from '@/adapters/radiant/controller';
@@ -16,15 +18,17 @@ import { shouldSurfaceDependentError } from '@schema-engine/forms/schemas/valida
 const REQUIRED_MARKER = '[data-se-required-marker]';
 
 /** RuiField's registration and presentation, restoring hydrated rules and defaults. */
-@formElement('se-field')
+@customElement('se-field')
 export class FormFieldElement extends RuiFieldElement {
 	private constraint?: ConstraintState;
 	private isAuthoredDisabled?: (renderedPath: string) => boolean;
 	private authoredRules?: FieldRules;
 	private appliedRules?: FieldRules;
+	private hydratedEngine?: FormEngine;
 
 	protected override onConnected(): void {
 		this.hydrateDefaultValue();
+		this.hydratedEngine = resolveFormEngine(this);
 		const rules = readHydratedRules(this);
 		if (rules) {
 			this.rules = rules;
@@ -47,6 +51,23 @@ export class FormFieldElement extends RuiFieldElement {
 		if (this.authoredRules === undefined || this.rules === this.appliedRules) return;
 		this.authoredRules = this.rules ?? {};
 		this.applyConstraint();
+	}
+
+	/**
+	 * Rebuilds the hydrated rules with the validators of an engine bound after this field connected.
+	 *
+	 * @remarks
+	 * Serialized rules cannot carry custom validators; without an engine only the native rules
+	 * are restored. A field that connected with its engine already has them.
+	 */
+	@onContextUpdate({ context: formEngineContext, select: (context) => context?.engine, requestUpdate: false })
+	onRendererEngine(engine: FormEngine | undefined): void {
+		if (!engine || !this.isConnected || engine === this.hydratedEngine) return;
+		this.hydratedEngine = engine;
+		const rules = readHydratedRules(this);
+		if (!rules) return;
+		this.rules = rules;
+		this.onRulesUpdated();
 	}
 
 	@onContextUpdate({ context: constraintContext, requestUpdate: false })

@@ -1,12 +1,11 @@
 import { contextSelector } from '@ecopages/radiant/context';
-import { prop, RadiantElement } from '@ecopages/radiant';
+import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { formatStepLabel, type MinimalProgressConfig } from '@schema-engine/forms/recipes/built-in';
 import type { FormMeta } from '@/lib/instance-view';
 import type { RecipeSlotContext } from '@/recipes/types';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { deriveInitialInstance } from '@/lib/instance-view';
-import { formElement } from '@/lib/define-element';
 
 /**
  * @remarks
@@ -16,7 +15,7 @@ import { formElement } from '@/lib/define-element';
  * visible percentage is hidden from assistive technology. The bar is named by the visible label so
  * the two cannot drift apart.
  */
-@formElement('se-minimal-progress')
+@customElement('se-minimal-progress')
 export class MinimalProgressElement extends RadiantElement {
 	declare readonly [JSX_PROPS]?: { meta?: FormMeta; slotConfig?: MinimalProgressConfig };
 

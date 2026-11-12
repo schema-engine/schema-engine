@@ -112,7 +112,7 @@ describe('Radiant form engine resolution', () => {
 		observed.disconnect();
 	});
 
-	test('replacing the engine of a connected renderer warns once and leaves resolved hosts on their engine', async () => {
+	test('a form instance follows the engine its connected renderer is rebound to', async () => {
 		const engineA = createRadiantFormEngine();
 		const engineB = createRadiantFormEngine();
 		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -124,15 +124,61 @@ describe('Radiant form engine resolution', () => {
 		document.body.append(renderer);
 		await vi.waitFor(() => expect(instance.engine).toBe(engineA));
 
-		const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 		renderer.engine = engineB;
-		await nextFrame();
-		renderer.engine = engineA;
-		await nextFrame();
 
-		expect(instance.engine).toBe(engineA);
-		const reports = warn.mock.calls.filter((call) => String(call.at(-1)).includes('engine changed after'));
-		expect(reports).toHaveLength(1);
+		await vi.waitFor(() => expect(instance.engine).toBe(engineB));
+		expect(warn).not.toHaveBeenCalled();
+	});
+
+	test('a form instance keeps an engine assigned to it over the renderer engine', async () => {
+		const own = createRadiantFormEngine();
+		const bound = createRadiantFormEngine();
+		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
+		const instance = document.createElement('se-form-instance') as FormInstanceElement;
+		instance.config = twoStepForm(own);
+		instance.engine = own;
+		renderer.append(instance);
+		document.body.append(renderer);
+
+		renderer.engine = bound;
+		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+		expect(instance.engine).toBe(own);
+	});
+
+	test('a form instance resolves an engine bound to its renderer after both connected', async () => {
+		const engine = createRadiantFormEngine();
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
+		const instance = document.createElement('se-form-instance') as FormInstanceElement;
+		instance.config = twoStepForm(engine);
+		renderer.append(instance);
+		document.body.append(renderer);
+		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+		expect(instance.engine).toBeUndefined();
+
+		renderer.engine = engine;
+
+		await vi.waitFor(() => expect(instance.engine).toBe(engine));
+		expect(warn).not.toHaveBeenCalled();
+	});
+
+	test('a renderer adopts an engine assigned before it upgrades and the hosts below resolve it', async () => {
+		const engine = createRadiantFormEngine();
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const inert = document.implementation.createHTMLDocument('');
+		const renderer = inert.createElement('se-form-renderer');
+		Reflect.set(renderer, 'engine', engine);
+		const instance = inert.createElement('se-form-instance');
+		renderer.append(instance);
+		expect(renderer).not.toBeInstanceOf(FormRendererElement);
+
+		document.body.append(document.adoptNode(renderer));
+
+		expect(renderer).toBeInstanceOf(FormRendererElement);
+		expect((renderer as FormRendererElement).engine).toBe(engine);
+		await vi.waitFor(() => expect((instance as FormInstanceElement).engine).toBe(engine));
+		expect(warn).not.toHaveBeenCalled();
 	});
 
 	test('a renderer without an engine resolves one that an ancestor answers for the context', async () => {
@@ -155,7 +201,7 @@ describe('Radiant form engine resolution', () => {
 		expect(warn).not.toHaveBeenCalled();
 	});
 
-	test('a form instance with no engine in its tree reports it and does not pick the only created engine', async () => {
+	test('a form instance with no engine in its tree stays without one and does not pick the only created engine', async () => {
 		const engine = createRadiantFormEngine();
 		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 		const instance = document.createElement('se-form-instance') as FormInstanceElement;
@@ -166,29 +212,8 @@ describe('Radiant form engine resolution', () => {
 
 		expect(instance.engine).toBeUndefined();
 		expect(observed.isWizard).toBe(false);
-		expect(warn).toHaveBeenCalledExactlyOnceWith(
-			expect.stringContaining('[schema-engine/forms-radiant]'),
-			expect.any(String),
-			expect.stringContaining('Could not resolve FormEngine for <se-form-instance>'),
-		);
+		expect(warn).not.toHaveBeenCalled();
 		observed.disconnect();
-	});
-
-	test('a form instance under a renderer that was never given an engine reports one configuration error', async () => {
-		const engine = createRadiantFormEngine();
-		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
-		const instance = document.createElement('se-form-instance') as FormInstanceElement;
-		instance.config = twoStepForm(engine);
-		renderer.append(instance);
-		document.body.append(renderer);
-		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-
-		expect(instance.engine).toBeUndefined();
-		const reports = warn.mock.calls.filter((call) =>
-			String(call.at(-1)).includes('Could not resolve FormEngine for <se-form-instance>'),
-		);
-		expect(reports).toHaveLength(1);
 	});
 
 	test('a form instance dispatches its form-mount action with the engine its renderer was bound to', async () => {
@@ -241,7 +266,7 @@ describe('Radiant form engine resolution', () => {
 		});
 	});
 
-	test('a form array resolves its engine at connect and does not wait for a later one', async () => {
+	test('a form array renders its fields when its renderer is given the engine after connect', async () => {
 		const engine = createArrayEngine();
 		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
@@ -256,15 +281,12 @@ describe('Radiant form engine resolution', () => {
 		renderer.append(form);
 		document.body.append(renderer);
 		await vi.waitFor(() => expect(array.form.ready).toBe(true));
+		expect(array.querySelector('input')).toBeNull();
 
 		renderer.engine = engine;
-		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
-		expect(array.querySelector('input')).toBeNull();
-		const reports = warn.mock.calls.filter((call) =>
-			String(call.at(-1)).includes('Could not resolve FormEngine for <se-form-array>'),
-		);
-		expect(reports).toHaveLength(1);
+		await vi.waitFor(() => expect(array.querySelector('input')).not.toBeNull());
+		expect(warn).not.toHaveBeenCalled();
 	});
 
 	test('a form array with seeded rows renders its fields when the renderer has its engine before connect', async () => {

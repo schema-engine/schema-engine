@@ -1,5 +1,5 @@
 import './form-masked-input.css';
-import { bindTo, onUpdated, prop, query, state } from '@ecopages/radiant';
+import { customElement, bindTo, onUpdated, prop, query, state } from '@ecopages/radiant';
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
@@ -19,7 +19,6 @@ import {
 	readMaskValue,
 } from '@/lib/mask-options';
 import type { MaskedInputFieldProps } from './form-masked-input.types';
-import { formElement } from '@/lib/define-element';
 
 /**
  * @remarks
@@ -27,7 +26,7 @@ import { formElement } from '@/lib/define-element';
  * typed value, as `unmask` selects. IMask owns the visible text, so a write to
  * `value` is pushed into the mask instance instead of rendered.
  */
-@formElement('se-masked-input', { hostAttributes: fieldControlHostAttributes('[data-ref="input"]') })
+@customElement('se-masked-input', { hostAttributes: fieldControlHostAttributes('[data-ref="input"]') })
 export class SeMaskedInput extends FormAssociatedElement {
 	declare readonly [JSX_PROPS]?: Partial<
 		Pick<

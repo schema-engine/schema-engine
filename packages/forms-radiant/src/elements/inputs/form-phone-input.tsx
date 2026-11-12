@@ -1,5 +1,5 @@
 import './form-phone-input.css';
-import { bindTo, onUpdated, prop, state } from '@ecopages/radiant';
+import { customElement, bindTo, onUpdated, prop, state } from '@ecopages/radiant';
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { unsafeHtml } from '@ecopages/jsx/jsx-runtime';
@@ -38,7 +38,6 @@ import {
 	type PhoneCountryOption,
 } from '@/lib/phone-number';
 import type { PhoneInputFieldProps } from './form-phone-input.types';
-import { formElement } from '@/lib/define-element';
 
 function PhoneFlag({ code, class: className }: { code?: string; class: string }) {
 	const svg = code ? countryFlagSvg(code) : '';
@@ -56,7 +55,7 @@ function PhoneFlag({ code, class: className }: { code?: string; class: string })
  * libphonenumber has loaded, and `committed` keeps the host's own writes from
  * being re-parsed.
  */
-@formElement('se-phone-input', { hostAttributes: fieldControlHostAttributes('[data-ref="number"]') })
+@customElement('se-phone-input', { hostAttributes: fieldControlHostAttributes('[data-ref="number"]') })
 export class SePhoneInput extends FormAssociatedElement {
 	declare readonly [JSX_PROPS]?: Partial<
 		Pick<

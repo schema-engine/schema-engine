@@ -1,4 +1,5 @@
 import {
+	customElement,
 	onEvent,
 	onUpdated,
 	query,
@@ -9,12 +10,13 @@ import {
 } from '@ecopages/radiant';
 import type { JSX_PROPS } from '@ecopages/jsx';
 import { getViewRecipe } from '@schema-engine/forms/recipes';
-import { provideContext, type ContextProvider } from '@ecopages/radiant/context';
+import { onContextUpdate, provideContext, type ContextProvider } from '@ecopages/radiant/context';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
 import { flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import { formInstanceContext, type FormInstanceContextValue, type StepStates } from '@/contexts/form-instance-context';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
+import { formEngineContext } from '@/components/provider';
 import { connectValidationDependencies } from '@/lib/validation-deps';
 import type { RuiFormElement } from '@ecopages/radiant-ui/form';
 import { expandValues } from '@/adapters/radiant/controller/values';
@@ -27,7 +29,6 @@ import { logger } from '@/lib/logger';
 import type { FormProviderProps } from '@/adapters/types';
 import { FormController } from '@/adapters/radiant/controller';
 import { FormActions, type SubmissionOutcome } from '@/adapters/radiant/form-actions';
-import { formElement } from '@/lib/define-element';
 
 /** Properties of `<se-form-instance>`. */
 export interface FormInstanceProps {
@@ -45,7 +46,7 @@ export interface SubmissionCompleteDetail extends SubmissionOutcome {
 }
 
 /** Behavior and engine navigation state for one composed form. */
-@formElement('se-form-instance')
+@customElement('se-form-instance')
 export class FormInstanceElement extends RadiantElement {
 	declare readonly [JSX_PROPS]?: FormInstanceProps;
 
@@ -91,6 +92,7 @@ export class FormInstanceElement extends RadiantElement {
 		return this.machine;
 	}
 	private form?: FormController;
+	private rendererEngine?: CoreFormEngine;
 	private unwatchValidationDependencies?: () => void;
 
 	@provideContext<typeof formInstanceContext>({
@@ -114,15 +116,28 @@ export class FormInstanceElement extends RadiantElement {
 
 	/**
 	 * @remarks
-	 * The engine is resolved here, once: an explicit `engine`, then the enclosing
-	 * `se-form-renderer`'s context, then the owning render. A host that finds none
-	 * reports a configuration error and stays without one. The `rui-form` is a
-	 * light-DOM descendant the view authors, so it exists when this host connects.
+	 * The engine is an explicit `engine`, then the enclosing `se-form-renderer`'s
+	 * context (see {@link onRendererEngine}), then the owning render. The `rui-form`
+	 * is a light-DOM descendant the view authors, so it exists when this host connects.
 	 */
 	protected override onConnected(): void {
 		this.engine ??= resolveFormEngine(this);
 		this.resetStepState();
 		this.connectForm();
+	}
+
+	/**
+	 * Follows the engine the enclosing renderer publishes, including one bound after this host connected.
+	 *
+	 * @remarks
+	 * An `engine` assigned to this host directly wins: only an unset engine, or one that came
+	 * from the renderer, is replaced.
+	 */
+	@onContextUpdate({ context: formEngineContext, select: (context) => context?.engine, requestUpdate: false })
+	onRendererEngine(engine: CoreFormEngine | undefined): void {
+		if (!engine) return;
+		if (this.engine === undefined || this.engine === this.rendererEngine) this.engine = engine;
+		this.rendererEngine = engine;
 	}
 
 	override disconnectedCallback(): void {

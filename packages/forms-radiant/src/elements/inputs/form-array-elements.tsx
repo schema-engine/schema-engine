@@ -1,10 +1,11 @@
 import './form-array-elements.css';
-import { onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
+import { customElement, onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { FormElements } from '@/components/internals/form-elements';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
+import { formEngineContext } from '@/components/provider';
 import type { ArrayElementsProps } from './form-array-elements.types';
 import { arrayItemScope, createArrayRowDefault, seedArrayRows, usesScalarArrayItem } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
@@ -17,7 +18,6 @@ import { getValueAtPath, setValueAtPath } from '@schema-engine/forms/lib/path-va
 import { formContext, type FormContextValue } from '@ecopages/radiant-ui/form';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { readValue } from '@/adapters/radiant/controller/values';
-import { formElement } from '@/lib/define-element';
 
 function TrashIcon() {
 	return (
@@ -159,7 +159,7 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 	);
 }
 
-@formElement('se-form-array')
+@customElement('se-form-array')
 export class SeFormArray extends RadiantElement {
 	declare readonly [JSX_PROPS]?: { config: ArrayElementsProps };
 
@@ -174,9 +174,11 @@ export class SeFormArray extends RadiantElement {
 	private renderedIds: string[] = [];
 
 	@state private fieldError?: string;
+	private formContextValue?: FormContextValue;
 
 	@onContextUpdate({ context: formContext, requestUpdate: false })
 	onFormContext(value: FormContextValue): void {
+		this.formContextValue = value;
 		this.fieldError = value.fields[this.config?.name ?? '']?.error;
 		this.describeGroup();
 		if (!value.ready || !this.config?.name) {
@@ -185,6 +187,23 @@ export class SeFormArray extends RadiantElement {
 			this.isArrayFieldRegistered = false;
 			return;
 		}
+		this.scheduleSync(this.renderedIds.length ? this.renderedIds : this.initialIds());
+		this.registerArrayField(value);
+	}
+
+	/**
+	 * Follows the engine the enclosing renderer publishes, including one bound after this host connected.
+	 *
+	 * @remarks
+	 * The array registers with the form and seeds its rows only once it has an engine, so the
+	 * form context it already received is replayed when the engine arrives.
+	 */
+	@onContextUpdate({ context: formEngineContext, select: (context) => context?.engine, requestUpdate: false })
+	onRendererEngine(engine: FormEngine | undefined): void {
+		if (!engine || this.engine === engine) return;
+		this.engine = engine;
+		const value = this.formContextValue;
+		if (!value?.ready || !this.config?.name) return;
 		this.scheduleSync(this.renderedIds.length ? this.renderedIds : this.initialIds());
 		this.registerArrayField(value);
 	}
@@ -244,7 +263,7 @@ export class SeFormArray extends RadiantElement {
 
 	/**
 	 * @remarks
-	 * Resolved once, in `onConnected`, like the other hosts. A host that is not connected is
+	 * Read from the renderer's context (see {@link onRendererEngine}). A host that is not connected is
 	 * being rendered by the owning render, which is the only place its engine can come from.
 	 */
 	private resolveEngine(): FormEngine | undefined {

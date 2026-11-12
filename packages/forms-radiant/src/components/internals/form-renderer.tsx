@@ -1,8 +1,8 @@
+import { FormRendererElement, type FormRendererProps } from './form-renderer.script';
 import type { JsxRenderable } from '@ecopages/jsx';
 import { assertFormEngine } from '@schema-engine/forms';
 import { FormProvider } from '@/adapters/radiant/form-provider';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
-import { FormRendererElement, type FormRendererProps } from './form-renderer.script';
 
 export { FormRendererElement, type FormRendererProps };
 
@@ -12,6 +12,10 @@ export { FormRendererElement, type FormRendererProps };
  * @remarks
  * View-owned shell: the form tree is authored here as light-DOM children so
  * SSR expands it. The live `engine` is re-attached on the client.
+ *
+ * The host module is imported before `FormProvider`, which defines the hosts below
+ * the renderer: a host asks for the renderer's context when it connects, so the
+ * renderer must be defined, and publishing, before server-rendered hosts upgrade.
  */
 export function FormRenderer({
 	engine,

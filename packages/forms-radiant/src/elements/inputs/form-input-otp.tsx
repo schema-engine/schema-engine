@@ -1,5 +1,5 @@
 import './form-input-otp.css';
-import { prop, query, state } from '@ecopages/radiant';
+import { customElement, prop, query, state } from '@ecopages/radiant';
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
@@ -12,7 +12,6 @@ import {
 } from '@/lib/field-control';
 import { FieldGroup } from '../field-group';
 import type { InputOTPFieldProps } from './form-input-otp.types';
-import { formElement } from '@/lib/define-element';
 
 function sanitizeChar(value: string, pattern: 'numeric' | 'alphanumeric') {
 	const char = value.slice(-1);
@@ -30,7 +29,7 @@ function sanitizeChar(value: string, pattern: 'numeric' | 'alphanumeric') {
  * the current one is a no-op, which keeps a store echo from re-spreading a code
  * with gaps from the first slot.
  */
-@formElement('se-input-otp', { hostAttributes: fieldControlHostAttributes('[data-ref="group"]') })
+@customElement('se-input-otp', { hostAttributes: fieldControlHostAttributes('[data-ref="group"]') })
 export class SeInputOtp extends FormAssociatedElement {
 	declare readonly [JSX_PROPS]?: Partial<Pick<SeInputOtp, 'name' | 'disabled' | 'length' | 'pattern'>>;
 

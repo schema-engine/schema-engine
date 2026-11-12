@@ -1,8 +1,7 @@
-import { bindTo, onUpdated, prop, RadiantElement, state } from '@ecopages/radiant';
+import { customElement, bindTo, onUpdated, prop, RadiantElement, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
-import { formElement } from '@/lib/define-element';
 
 /**
  * Visibility host for one authored step.
@@ -18,7 +17,7 @@ import { formElement } from '@/lib/define-element';
  *
  * @element se-form-step
  */
-@formElement('se-form-step')
+@customElement('se-form-step')
 export class FormStepElement extends RadiantElement {
 	declare readonly [JSX_PROPS]?: { stepIndex?: number };
 

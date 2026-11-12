@@ -8,48 +8,26 @@ afterEach(() => {
 	vi.restoreAllMocks();
 });
 
-test('tags the missing engine warning with the Radiant package and reports each host once', () => {
+test('stays quiet for a connected host that no engine reaches, because one may be bound later', () => {
 	const output = vi.spyOn(console, 'warn').mockImplementation(() => {});
 	const host = document.createElement('div');
-	const other = document.createElement('section');
-	document.body.append(host, other);
+	document.body.append(host);
 
 	expect(resolveFormEngine(host)).toBeUndefined();
-	expect(resolveFormEngine(host)).toBeUndefined();
-	expect(resolveFormEngine(other)).toBeUndefined();
 
-	expect(output).toHaveBeenCalledTimes(2);
-	expect(output).toHaveBeenNthCalledWith(
-		1,
-		expect.stringContaining('[schema-engine/forms-radiant]'),
-		expect.any(String),
-		expect.stringContaining('Could not resolve FormEngine for <div>'),
-	);
-	expect(output).toHaveBeenNthCalledWith(
-		2,
-		expect.stringContaining('[schema-engine/forms-radiant]'),
-		expect.any(String),
-		expect.stringContaining('Could not resolve FormEngine for <section>'),
-	);
+	expect(output).not.toHaveBeenCalled();
 });
 
-test('reports a host under a renderer that was never given an engine', () => {
+test('stays quiet for a host under a renderer that was not given an engine yet', () => {
 	const output = vi.spyOn(console, 'warn').mockImplementation(() => {});
 	const renderer = document.createElement('se-form-renderer');
 	const host = document.createElement('div');
 	renderer.append(host);
 	document.body.append(renderer);
-	output.mockClear();
 
 	expect(resolveFormEngine(host)).toBeUndefined();
-	expect(resolveFormEngine(host)).toBeUndefined();
 
-	expect(output).toHaveBeenCalledOnce();
-	expect(output).toHaveBeenCalledWith(
-		expect.stringContaining('[schema-engine/forms-radiant]'),
-		expect.any(String),
-		expect.stringContaining('Could not resolve FormEngine for <div>'),
-	);
+	expect(output).not.toHaveBeenCalled();
 });
 
 test('stays quiet for a host that is not attached to the document', () => {
