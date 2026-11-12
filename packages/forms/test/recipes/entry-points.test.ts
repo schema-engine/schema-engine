@@ -10,14 +10,14 @@ describe('recipe entry points', () => {
 		expect(protocol).not.toHaveProperty('cardSpec');
 		expect(protocol).not.toHaveProperty('builtInRecipeSpecs');
 		expect(protocol).not.toHaveProperty('CardShellConfigSchema');
-		expect(protocol).not.toHaveProperty('formatStepCounter');
+		expect(protocol).not.toHaveProperty('formatStepLabel');
 	});
 
-	test('the built-in entry exports the specs, slot schemas and formatStepCounter', () => {
+	test('the built-in entry exports the specs, slot schemas and formatStepLabel', () => {
 		expect(Object.keys(builtIn.builtInRecipeSpecs)).toHaveLength(9);
 		expect(builtIn).toHaveProperty('cardSpec');
 		expect(builtIn).toHaveProperty('CardShellConfigSchema');
-		expect(builtIn).toHaveProperty('formatStepCounter');
+		expect(builtIn).toHaveProperty('formatStepLabel');
 		expect(builtIn).not.toHaveProperty('defineRecipeSpec');
 	});
 

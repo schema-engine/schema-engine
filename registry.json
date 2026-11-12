@@ -928,7 +928,6 @@
       "registryDependencies": [
         "button",
         "badge",
-        "progress",
         "separator",
         "andeeplus/schema-engine/schema-engine-form-utils"
       ],
@@ -1974,7 +1973,6 @@
       "registryDependencies": [
         "button",
         "badge",
-        "progress",
         "separator",
         "andeeplus/schema-engine/schema-engine-form-utils-radix"
       ],
@@ -3018,7 +3016,6 @@
       "registryDependencies": [
         "button",
         "badge",
-        "progress",
         "separator",
         "andeeplus/schema-engine/schema-engine-form-utils-aria"
       ],

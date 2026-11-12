@@ -68,11 +68,12 @@ export function HeroShell({ slots, viewConfig }: FormShellProps): JsxRenderable 
 		HeroShellConfigSchema,
 	);
 	return (
-		<div class="hero-shell" style={{ backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined }}>
+		<div
+			class="hero-shell"
+			style={{ backgroundImage: backgroundImage ? `url(${JSON.stringify(backgroundImage)})` : undefined }}
+		>
 			{backgroundVideo ? (
-				<video autoplay muted loop class="hero-shell__video">
-					<source src={backgroundVideo} type="video/mp4" />
-				</video>
+				<video autoplay muted loop playsinline src={backgroundVideo} class="hero-shell__video" />
 			) : null}
 			<div class="hero-shell__overlay" />
 			<div classes={['hero-shell__content', `hero-shell__content--${contentWidth}`]}>
@@ -87,6 +88,13 @@ export function HeroShell({ slots, viewConfig }: FormShellProps): JsxRenderable 
 	);
 }
 
+/**
+ * @remarks
+ * The panel shows the form title. When the recipe has a header slot, that header must set
+ * `fallbackToFormTitle: false` in its slot defaults, or the form title is repeated in the header
+ * for steps without a title. A custom recipe that reuses this shell with a header slot must set
+ * that default too.
+ */
 export function SplitScreenShell({ slots, viewConfig, meta }: FormShellProps): JsxRenderable {
 	const { sideContent, sidePlacement, sideWidth, contentAlignment } = getSlotConfig(
 		viewConfig,
@@ -98,6 +106,7 @@ export function SplitScreenShell({ slots, viewConfig, meta }: FormShellProps): J
 			{jsx('se-split-screen-side', {
 				class: `split-screen-shell__side split-screen-shell__side--${sideWidth}${sidePlacement === 'right' ? ' split-screen-shell__side--right' : ''}`,
 				sideContent: sideContent ?? '',
+				hasHeader: Boolean(slots.header),
 				meta,
 			})}
 			<main classes={['split-screen-shell__main', `split-screen-shell__main--${contentAlignment}`]}>
@@ -113,6 +122,7 @@ export function SplitScreenShell({ slots, viewConfig, meta }: FormShellProps): J
 @customElement('se-split-screen-side')
 export class SplitScreenSideElement extends RadiantElement {
 	@prop({ type: String }) sideContent = '';
+	@prop({ type: Boolean }) hasHeader = false;
 	@prop({ type: Object }) meta?: FormMeta;
 
 	@contextSelector({ context: formInstanceContext })
@@ -123,7 +133,7 @@ export class SplitScreenSideElement extends RadiantElement {
 		if (!meta) return <slot />;
 		const instance = this.instance ?? deriveInitialInstance(meta);
 		const step = meta.steps[instance.currentStep] ?? meta.steps[0];
-		const title = meta.title || step?.title;
+		const title = meta.title || (this.hasHeader ? undefined : step?.title);
 		const sideContent = this.sideContent;
 		if (!title && !sideContent) return null;
 		return (

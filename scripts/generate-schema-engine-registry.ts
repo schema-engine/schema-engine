@@ -190,7 +190,7 @@ const FORM_RUNTIME_DEPENDENCIES = ['@schema-engine/forms-react', '@schema-engine
 
 const DEFAULT_RECIPE_ITEM = 'schema-engine-form-recipes';
 const DEFAULT_RECIPE_RUNTIME_DEPENDENCIES = [...FORM_RUNTIME_DEPENDENCIES, 'lucide-react'];
-const DEFAULT_RECIPE_REGISTRY_DEPENDENCIES = ['button', 'badge', 'progress', 'separator', UTILS];
+const DEFAULT_RECIPE_REGISTRY_DEPENDENCIES = ['button', 'badge', 'separator', UTILS];
 
 function listRelativeSourceFiles(absDir: string, prefix = ''): string[] {
 	const files: string[] = [];

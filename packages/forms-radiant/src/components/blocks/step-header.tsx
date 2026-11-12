@@ -2,7 +2,7 @@ import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { RuiHeading, RuiHeadingDescription, RuiHeadingTitle } from '@ecopages/radiant-ui/heading';
-import { formatStepCounter, type StepHeaderConfig } from '@schema-engine/forms/recipes/built-in';
+import { formatStepLabel, type StepHeaderConfig } from '@schema-engine/forms/recipes/built-in';
 import type { FormMeta } from '@/lib/instance-view';
 import type { RecipeSlotContext } from '@/recipes/types';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
@@ -28,15 +28,20 @@ export class StepHeaderElement extends RadiantElement {
 		if (!step) return null;
 		const total = meta.steps.length;
 
-		const title = step.title || meta.title;
+		const title = step.title || (headerConfig.fallbackToFormTitle ? meta.title : undefined);
 		const description = step.description || meta.description;
 		const showCounter = headerConfig.showStepCounter;
-		const counter = showCounter ? formatStepCounter(headerConfig.labels.stepCounter, stepIndex + 1, total) : null;
+		const counter = showCounter ? formatStepLabel(headerConfig.labels.stepCounter, stepIndex + 1, total) : null;
 
 		if (!title && !description && !counter) return null;
 
 		return (
-			<RuiHeading as="header" size={headerConfig.size} class="se-step-header">
+			<RuiHeading
+				as="header"
+				size={headerConfig.size}
+				align={headerConfig.align}
+				class={headerConfig.inheritColor ? 'se-step-header se-step-header--inherit-color' : 'se-step-header'}
+			>
 				{counter && headerConfig.counterPlacement === 'before' ? (
 					<p class="se-step-header__counter">{counter}</p>
 				) : null}
