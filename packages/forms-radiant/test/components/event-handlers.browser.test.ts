@@ -1,6 +1,7 @@
 import { afterEach, expect, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { createRoot } from '@ecopages/jsx/client';
+import type { FormInstanceElement } from '@/components/form-instance.script';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
@@ -100,6 +101,33 @@ test('Enter on an early wizard step does not submit and shows no errors on later
 	await userEvent.keyboard('{Enter}');
 	await new Promise((resolve) => setTimeout(resolve, 50));
 
+	expect(submitted).toBe(0);
+	expect(invalid).toBe(0);
+});
+
+test('Enter in the only text input of a wizard goes to the next step instead of submitting', async () => {
+	let submitted = 0;
+	const host = await mount(
+		{
+			id: 'single-input-wizard',
+			view: { $type: 'wizard' },
+			steps: [
+				{ id: 'one', title: 'One', elements: [text('only')] },
+				{ id: 'two', title: 'Two', elements: [] },
+			],
+		},
+		() => submitted++,
+	);
+	const form = host.querySelector('rui-form')!;
+	const instance = host.querySelector<FormInstanceElement>('se-form-instance')!;
+	let invalid = 0;
+	form.addEventListener('rui-invalid', () => invalid++);
+	await expect.poll(() => host.querySelector('se-wizard-actions button')).toBeTruthy();
+
+	await userEvent.click(form.querySelector<HTMLInputElement>('input[name="only"]')!);
+	await userEvent.keyboard('{Enter}');
+
+	await expect.poll(() => instance.currentStep).toBe(1);
 	expect(submitted).toBe(0);
 	expect(invalid).toBe(0);
 });

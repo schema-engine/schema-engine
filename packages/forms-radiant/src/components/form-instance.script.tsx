@@ -1,4 +1,12 @@
-import { onUpdated, query, RadiantElement, registerSsrPreparationCallback, state, prop } from '@ecopages/radiant';
+import {
+	onEvent,
+	onUpdated,
+	query,
+	RadiantElement,
+	registerSsrPreparationCallback,
+	state,
+	prop,
+} from '@ecopages/radiant';
 import type { JSX_PROPS } from '@ecopages/jsx';
 import { getViewRecipe } from '@schema-engine/forms/recipes';
 import { provideContext, type ContextProvider } from '@ecopages/radiant/context';
@@ -131,6 +139,24 @@ export class FormInstanceElement extends RadiantElement {
 	onEngineUpdated(): void {
 		this.connectForm();
 		this.publish();
+	}
+
+	/**
+	 * Turns a native submit before the last step of a wizard into Next.
+	 *
+	 * @remarks
+	 * Removing the submit button only stops implicit submission when the form has two or
+	 * more fields that block it. A wizard with one text input would submit on Enter, and
+	 * `rui-form` would then mark the later steps invalid. The capture phase runs before
+	 * `rui-form` sees the event.
+	 */
+	@onEvent({ type: 'submit', host: true, options: { capture: true } })
+	onNativeSubmit(event: Event): void {
+		const { isWizard, currentStep, totalSteps } = this.getContextValue();
+		if (!isWizard || currentStep >= totalSteps - 1) return;
+		event.preventDefault();
+		event.stopPropagation();
+		void this.goToNextStep();
 	}
 
 	/**
