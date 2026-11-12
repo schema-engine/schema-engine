@@ -54,7 +54,7 @@ function ArrayItem({
 						size="icon-sm"
 						disabled={disabled}
 						onClick={() => onRemove(index)}
-						aria-label={removeButtonText || 'Remove item'}
+						aria-label={`${removeButtonText || 'Remove item'} ${index + 1}`}
 					>
 						<Trash2 />
 					</Button>
