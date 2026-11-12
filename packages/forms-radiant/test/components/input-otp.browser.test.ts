@@ -89,3 +89,13 @@ test('an empty optional code is valid and an authored length rule replaces the d
 	await expect(field.form.trigger()).resolves.toBe(false);
 	expect(field.form.field('code').error).toBe('Four at least');
 });
+
+test('an incomplete code shows the configured message once the field blurs', async () => {
+	const { host } = await mountField({ ...otp, incompleteMessage: 'Finish the code' });
+	const slots = () => Array.from(host.querySelectorAll<HTMLInputElement>('se-input-otp input'));
+
+	await userEvent.type(slots()[0]!, '123');
+	slots()[3]!.blur();
+
+	await expect.element(page.getByText('Finish the code')).toBeInTheDocument();
+});
