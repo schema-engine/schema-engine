@@ -5,6 +5,7 @@ import type { BuilderActionBaseContext } from './actions.js';
 import type { FormActionTrigger } from '../actions/triggers';
 import type { ActionRegistration, ActionConfigBase } from '@schema-engine/actions';
 import type { AnyValidationRegistration } from '@/schemas/validation/types';
+import type { AppearanceAxisList, SlotAppearanceAxes } from '@/lib/appearance';
 
 /**
  * Input element registration - form inputs, selects, checkboxes, and interactive elements.
@@ -30,7 +31,7 @@ export type InputRegistration<
 		 *
 		 * @remarks Values the form, step or a containing element picks for a supported axis reach this element.
 		 */
-		appearanceAxes?: readonly string[];
+		appearanceAxes?: AppearanceAxisList;
 		metadata: ElementMetadata;
 		render: (props: TProps) => unknown;
 		validations?: readonly AnyValidationRegistration[];
@@ -55,7 +56,7 @@ export type StaticRegistration<
 		 *
 		 * @remarks Values the form, step or a containing element picks for a supported axis reach this element.
 		 */
-		appearanceAxes?: readonly string[];
+		appearanceAxes?: AppearanceAxisList;
 		metadata: ElementMetadata;
 		render: (props: TProps) => unknown;
 	},
@@ -81,7 +82,7 @@ export type RecipeRegistration<
 		metadata: import('@/recipes/types').RecipeMetadata;
 		slotDefaults?: Partial<Record<import('@/recipes/types').RecipeSlot, Record<string, unknown>>>;
 		/** Appearance axes each slot supports; see {@link import('@/recipes/types').RecipeSpec.appearanceAxes}. */
-		appearanceAxes?: Partial<Record<import('@/recipes/types').RecipeSlot, readonly string[]>>;
+		appearanceAxes?: SlotAppearanceAxes<import('@/recipes/types').RecipeSlot>;
 		/** Adapter render payload (shell + slot components). */
 		render: TRender;
 	},

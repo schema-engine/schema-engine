@@ -78,7 +78,12 @@ export type {
 } from './lib/appearance';
 export { isNormalizedElementConfig } from './lib/normalized-form-config';
 export type { FormConfigView, NormalizedElementConfig, NormalizedFormConfig } from './lib/normalized-form-config';
-export type { FormAuthoringInput, FormAuthoringStep, AuthoringElement } from './builder/form-authoring';
+export type {
+	FormAuthoringInput,
+	FormAuthoringStep,
+	AuthoringElement,
+	ExactFormAppearance,
+} from './builder/form-authoring';
 export type {
 	ElementRegistrationConstraint,
 	RecipeRegistrationConstraint,

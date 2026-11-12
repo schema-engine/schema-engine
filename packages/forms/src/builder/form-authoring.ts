@@ -41,10 +41,53 @@ type ExactSlots<TView, TDeclared, TAppearance extends Record<string, string>> = 
 };
 
 /**
- * A slot's `appearance` pick is held to the engine's axes and values: an undeclared axis or value maps to `never`.
+ * An `appearance` pick is held to the engine's axes and values: an undeclared axis or value maps to `never`.
+ *
+ * @remarks
+ * Needed because `defineForm` infers its config through a generic constraint, which allows extra
+ * keys: `{ size: 'compact', density: 'high' }` satisfies a weak type with an optional `size`.
  */
-type ExactAppearance<TPick, TAppearance extends Record<string, string>> = {
+export type ExactAppearance<TPick, TAppearance extends Record<string, string>> = {
 	[A in keyof TPick]: A extends keyof TAppearance ? Extract<TPick[A], TAppearance[A]> : never;
+};
+
+type ExactElementList<TElements, TAppearance extends Record<string, string>> = TElements extends readonly unknown[]
+	? { [I in keyof TElements]: ExactElement<TElements[I], TAppearance> }
+	: TElements;
+
+type ExactElement<TElement, TAppearance extends Record<string, string>> = TElement extends object
+	? {
+			[K in keyof TElement]: K extends 'appearance'
+				? ExactAppearance<TElement[K], TAppearance>
+				: K extends 'elements'
+					? ExactElementList<TElement[K], TAppearance>
+					: TElement[K];
+		}
+	: TElement;
+
+type ExactSteps<TSteps, TAppearance extends Record<string, string>> = TSteps extends readonly unknown[]
+	? {
+			[I in keyof TSteps]: TSteps[I] extends object
+				? {
+						[K in keyof TSteps[I]]: K extends 'appearance'
+							? ExactAppearance<TSteps[I][K], TAppearance>
+							: K extends 'elements'
+								? ExactElementList<TSteps[I][K], TAppearance>
+								: TSteps[I][K];
+					}
+				: TSteps[I];
+		}
+	: TSteps;
+
+/**
+ * Holds the form's, every step's and every element's `appearance` to the engine's axes and values.
+ */
+export type ExactFormAppearance<
+	TConfig extends { appearance?: unknown; steps?: unknown },
+	TAppearance extends Record<string, string>,
+> = {
+	appearance?: ExactAppearance<TConfig['appearance'], TAppearance>;
+	steps?: ExactSteps<TConfig['steps'], TAppearance>;
 };
 
 type ExactSlot<TSlot, TDeclared, TAppearance extends Record<string, string>> = TSlot extends
@@ -90,10 +133,9 @@ export type AuthoringElement<
 	: [keyof TElements] extends [never]
 		? never
 		: {
-				[K in keyof TElements]: { readonly $type: K } & WithEngineChildren<
-					TElements[K],
-					TElements,
-					TAppearance
+				[K in keyof TElements]: { readonly $type: K } & Omit<
+					WithEngineChildren<TElements[K], TElements, TAppearance>,
+					'appearance'
 				> & { appearance?: AppearanceInput<TAppearance> };
 			}[keyof TElements];
 

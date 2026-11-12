@@ -39,17 +39,17 @@ export interface CompiledAppearance {
 const BUILT_IN_APPEARANCE = {
 	size: {
 		compact: {
-			'--se-size-padding': '1rem',
+			'--se-size-padding': 'var(--space-block, 1rem)',
 			'--se-size-max-width': '24rem',
 			'--se-size-font-size': '0.875rem',
 		},
 		default: {
-			'--se-size-padding': '1.5rem',
+			'--se-size-padding': 'var(--space-block-lg, 1.5rem)',
 			'--se-size-max-width': '28rem',
 			'--se-size-font-size': '1rem',
 		},
 		comfortable: {
-			'--se-size-padding': '2rem',
+			'--se-size-padding': 'var(--space-block-xl, 2rem)',
 			'--se-size-max-width': '32rem',
 			'--se-size-font-size': '1.0625rem',
 		},
@@ -93,6 +93,12 @@ export type ResolvedAppearanceAxes<TOptions extends AppearanceOptions = Record<n
 		| (A extends keyof TOptions ? AppearanceAxisValueNames<TOptions[A]> : never);
 };
 
+/** The axes an element or a recipe slot declares it supports. */
+export type AppearanceAxisList = readonly string[];
+
+/** The axes each slot of a recipe supports, keyed by slot name. */
+export type SlotAppearanceAxes<TSlot extends PropertyKey = string> = { [K in TSlot]?: AppearanceAxisList };
+
 /** Authoring shape of a pick: any declared axis, restricted to its values. */
 export type AppearanceInput<TAxes extends Record<string, string>> = { readonly [A in keyof TAxes]?: TAxes[A] };
 
@@ -101,9 +107,14 @@ const VALUE_NAME = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
 const UNSAFE_TOKEN_VALUE = /[{};<]|\/\*/;
 
 /**
- * Names the renderers already use for `data-se-*` attributes, so an axis cannot overwrite one.
+ * Suffixes of the `data-se-*` attributes the renderers already write, which an axis cannot reuse.
+ *
+ * @remarks
+ * `getAppearanceAttributes` spreads after these on the same elements, so an axis named like one
+ * would overwrite it. A test scans the renderer sources for `data-se-*` names, so a renderer that
+ * adds an attribute fails it until the name is listed here.
  */
-const RESERVED_AXES = new Set([
+export const RENDERER_DATA_ATTRIBUTES = [
 	'step',
 	'grid-theme',
 	'appearance-theme',
@@ -112,7 +123,12 @@ const RESERVED_AXES = new Set([
 	'constraints',
 	'base-required',
 	'validation-rules',
-]);
+	'last-invalid',
+	'row-id',
+	'required-marker',
+] as const;
+
+const RESERVED_AXES: ReadonlySet<string> = new Set(RENDERER_DATA_ATTRIBUTES);
 
 function isNameList(axis: AppearanceAxisOptions): axis is readonly string[] {
 	return Array.isArray(axis);

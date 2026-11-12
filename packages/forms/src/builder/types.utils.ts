@@ -1,5 +1,6 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { AnyValidationRegistration } from '@/schemas/validation/types';
+import type { AppearanceAxisList, SlotAppearanceAxes } from '@/lib/appearance';
 
 /** Coerce inferred registration maps into the engine generic constraint. */
 export type AsRegistrationMap<T> = T extends Record<string, unknown> ? T : Record<never, never>;
@@ -101,7 +102,7 @@ export type ElementRegistrationConstraint = {
 	readonly render: (props: never) => unknown;
 	readonly validations?: readonly AnyValidationRegistration[];
 	readonly containerKind?: import('@/types/registration').ContainerKind;
-	readonly appearanceAxes?: readonly string[];
+	readonly appearanceAxes?: AppearanceAxisList;
 };
 
 export type RecipeRegistrationConstraint = {
@@ -109,6 +110,7 @@ export type RecipeRegistrationConstraint = {
 	readonly schema: StandardSchemaConstraint;
 	readonly kind: 'single-step' | 'wizard';
 	readonly slots: readonly string[];
+	readonly appearanceAxes?: SlotAppearanceAxes;
 	readonly metadata: { readonly name: string };
 	readonly render: unknown;
 };

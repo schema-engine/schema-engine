@@ -2,6 +2,7 @@ import * as z from 'zod/mini';
 import { assertRecipeKindSlots } from './assert-recipe-kind';
 import type { RecipeKind, RecipeMetadata, RecipeSlot, RecipeSlotDefaults, RecipeSpec } from './types';
 import { RECIPE_SLOT_ORDER } from './types';
+import type { SlotAppearanceAxes } from '@/lib/appearance';
 
 export type RecipeSlotSchemas = Partial<Record<RecipeSlot, z.ZodMiniType>>;
 
@@ -74,7 +75,7 @@ function assertSlotDefaults(
 function assertAppearanceAxes(
 	$type: string,
 	slotSchemas: RecipeSlotSchemas,
-	appearanceAxes: Record<string, readonly string[] | undefined> | undefined,
+	appearanceAxes: SlotAppearanceAxes | undefined,
 ): void {
 	for (const [slot, axes] of Object.entries(appearanceAxes ?? {})) {
 		if (!axes) continue;
@@ -110,7 +111,7 @@ export function defineRecipeSpec<
 	metadata: RecipeMetadata;
 	slotSchemas?: TSlots;
 	slotDefaults?: RecipeSlotDefaults<TSlots>;
-	appearanceAxes?: { [K in keyof TSlots]?: readonly string[] };
+	appearanceAxes?: SlotAppearanceAxes<keyof TSlots>;
 }): RecipeSpec<TType, RecipeViewSchema<TType, TSlots>, TSlots> {
 	const slotSchemas = (definition.slotSchemas ?? {}) as TSlots;
 	const slots = RECIPE_SLOT_ORDER.filter((slot) => slotSchemas[slot]);

@@ -118,12 +118,13 @@ A form, a step and a field each take `className` and `style` as an escape hatch
 for CSS the engine's vocabulary does not cover. `className` is applied as written
 to the form element or the step element (`<div class="se-form-step">` in React,
 `<se-form-step>` in Radiant, both marked `data-se-step`). On a field it is
-passed to the control by the React registry inputs and is not applied by the Radiant ones.
+applied to the field host, the element that carries the field's `style` and `data-se-*` attributes, in both renderers.
 `style` accepts only CSS custom properties: keys that start with `--` and string
 or number values. Custom properties mean the same in every renderer and write
 the same in JSON or YAML, whereas a named property such as `maxWidth` would be
 read as camelCase `CSSProperties` by React and as a plain record by Radiant.
-`validateForm` rejects any other key and names it.
+`validateForm` rejects any other key and names it, and a string value that contains
+`;`, `{` or `}`, which would start another declaration once the markup is server rendered.
 
 ```ts
 { id: 'checkout', className: 'checkout-step', style: { '--accent': '#f60' }, title: 'Checkout', elements: [] }
@@ -135,7 +136,7 @@ The engine also owns the appearance vocabulary through the optional `appearance`
 option. `size` (`compact | default | comfortable`) and `surface`
 (`flat | outlined | elevated`) are built in; a host adds an axis, or lists more
 values on a built-in one, and may map each value to the CSS custom properties it
-sets (tokens a host sets for a built-in value are merged over the built-in ones, per token):
+sets (the built-in `size` paddings fall back to the host theme's `--space-block*` variables, so `size: default` looks like no pick in a themed app) (tokens a host sets for a built-in value are merged over the built-in ones, per token):
 
 ```ts
 const engine = createFormEngine({
@@ -163,7 +164,7 @@ Each element registration declares the axes it supports with `appearanceAxes`
 (`defineInput({ $type: 'input', appearanceAxes: ['size'], ... })`), and each
 recipe spec declares them per slot (`defineRecipeSpec({ appearanceAxes: { shell: ['size', 'surface'] } })`);
 a slot that declares axes must accept an `appearance` key in its schema. An axis that is not
-declared fails validation. `validateForm` rejects an unknown axis, an undeclared axis for that
+declared fails validation, and the engine build rejects a registration that declares an axis the vocabulary lacks (a typo such as `'sise'`), naming the registration and the axis. `AppearanceAxisList` is the shared type of those declarations. `validateForm` rejects an unknown axis, an undeclared axis for that
 owner and an unknown value, naming the path and the allowed values, and writes the resolved
 appearance (for a field: form, then step, then containing elements, then the field itself; for a view slot: the form, then the slot itself; each keeping
 only the axes it supports) into the normalized config. `engine.getAppearance()` returns the frozen

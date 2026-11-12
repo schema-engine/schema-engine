@@ -89,3 +89,32 @@ const bareSpec = defineRecipeSpec({
 	appearanceAxes: { shell: ['size'] },
 });
 void bareSpec;
+
+engine.defineForm({
+	id: 'form-mixed',
+	// @ts-expect-error -- 'density' is not an axis, even beside a known one
+	appearance: { size: 'compact', density: 'high' },
+	steps,
+});
+
+engine.defineForm({
+	id: 'step-mixed',
+	// @ts-expect-error -- 'density' is not an axis, even beside a known one
+	steps: [{ ...steps[0], appearance: { size: 'compact', density: 'high' } }],
+});
+
+engine.defineForm({
+	id: 'field-mixed',
+	// @ts-expect-error -- 'density' is not an axis, even beside a known one
+	steps: [{ ...steps[0], elements: [{ ...element, appearance: { size: 'compact', density: 'high' } }] }],
+});
+
+engine.defineForm({
+	id: 'slot-mixed',
+	steps,
+	view: {
+		$type: 'card',
+		// @ts-expect-error -- 'density' is not an axis, even beside a known one
+		shell: { appearance: { surface: 'elevated', density: 'high' } },
+	},
+});

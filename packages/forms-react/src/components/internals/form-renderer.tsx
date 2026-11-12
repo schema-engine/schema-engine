@@ -157,7 +157,7 @@ function FormRendererInner<
 }: Omit<FormRendererProps<TElements, TRecipes, TActions, TOutputs>, 'engine' | 'adapter' | 'config'> & {
 	config: NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>;
 	compiledGrid: CompiledGrid;
-	compiledAppearance?: CompiledAppearance;
+	compiledAppearance: CompiledAppearance;
 }) {
 	const { theme, css } = compiledGrid;
 	return (
@@ -172,7 +172,7 @@ function FormRendererInner<
 		>
 			<div className={`se-form ${className}`.trim()} style={style}>
 				<GridThemeStyle themeId={theme.id} css={css} />
-				{compiledAppearance && compiledAppearance.css !== '' && (
+				{compiledAppearance.css !== '' && (
 					<AppearanceThemeStyle themeId={compiledAppearance.id} css={compiledAppearance.css} />
 				)}
 				<FormElementsRenderer config={config} theme={theme}>

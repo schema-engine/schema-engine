@@ -1,5 +1,6 @@
 import type * as z from 'zod/mini';
 import type { ComponentMetadata } from '@schema-engine/registry';
+import type { SlotAppearanceAxes } from '@/lib/appearance';
 
 export type RecipeKind = 'single-step' | 'wizard';
 
@@ -57,7 +58,7 @@ export interface RecipeSpec<
 	 * configs type-check and the JSON Schema lists it. `validateForm` does not pass the key to the slot schema when it
 	 * parses the view, and writes the resolved selection back, so a renderer reading the normalized slot sees it.
 	 */
-	appearanceAxes?: { [K in keyof TSlots]?: readonly string[] };
+	appearanceAxes?: SlotAppearanceAxes<keyof TSlots>;
 	metadata: RecipeMetadata;
 	schema: TSchema;
 }

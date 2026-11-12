@@ -76,6 +76,13 @@ describe('engine appearance vocabulary', () => {
 		expect(css.replaceAll(/:where\([^)]*\)/g, '')).not.toContain('[data-se-');
 	});
 
+	test('the built-in size paddings fall back to the host theme spacing', () => {
+		const { css } = engine.getAppearance();
+		expect(css).toContain('--se-size-padding:var(--space-block, 1rem);');
+		expect(css).toContain('--se-size-padding:var(--space-block-lg, 1.5rem);');
+		expect(css).toContain('--se-size-padding:var(--space-block-xl, 2rem);');
+	});
+
 	test('identical vocabularies share a theme id and different ones do not', () => {
 		const a = createFormEngine({ appearance: { tone: ['x'] } }).getAppearance().id;
 		expect(createFormEngine({ appearance: { tone: ['x'] } }).getAppearance().id).toBe(a);
@@ -99,6 +106,58 @@ describe('engine appearance vocabulary', () => {
 		expect(extended.getAppearance().axes).toEqual(themed.getAppearance().axes);
 		expect(extended.validateForm(form({ appearance: { tone: 'brand' } })).appearance).toEqual({ tone: 'brand' });
 		expect(() => extended.validateForm(form({ appearance: { density: 'high' } }))).toThrowError(/density/);
+	});
+});
+
+describe('registration axis declarations', () => {
+	test('an element declaring an axis the vocabulary lacks fails the engine build, naming both', () => {
+		const typo = defineInput({
+			$type: 'typo',
+			schema: z.extend(BaseFieldSchema, { $type: z.literal('typo') }),
+			appearanceAxes: ['sise'],
+			metadata: { name: 'Typo', category: 'input' },
+			render: () => null,
+		});
+		expect(() => createFormEngine({ elements: [typo] })).toThrowError(/typo.*unknown appearance axis 'sise'/s);
+	});
+
+	test('an element may declare an axis a host adds', () => {
+		const toned = defineInput({
+			$type: 'toned',
+			schema: z.extend(BaseFieldSchema, { $type: z.literal('toned') }),
+			appearanceAxes: ['tone'],
+			metadata: { name: 'Toned', category: 'input' },
+			render: () => null,
+		});
+		expect(() => createFormEngine({ elements: [toned] })).toThrowError(/unknown appearance axis 'tone'/);
+		expect(() => createFormEngine({ elements: [toned], appearance: { tone: ['brand'] } })).not.toThrow();
+	});
+
+	test('a recipe slot declaring an axis the vocabulary lacks fails the engine build, naming both', () => {
+		const typo = defineFormRecipe(
+			defineRecipeSpec({
+				$type: 'typo-card',
+				kind: 'single-step',
+				metadata: { name: 'Typo card' },
+				slotSchemas: { shell: z.strictObject({ appearance: z.optional(z.record(z.string(), z.string())) }) },
+				appearanceAxes: { shell: ['surfce'] },
+			}),
+			{},
+		);
+		expect(() => createFormEngine({ recipes: [typo] })).toThrowError(
+			/typo-card.*shell.*unknown appearance axis 'surfce'/s,
+		);
+	});
+
+	test('extend checks the added registrations against the inherited vocabulary', () => {
+		const typo = defineInput({
+			$type: 'typo',
+			schema: z.extend(BaseFieldSchema, { $type: z.literal('typo') }),
+			appearanceAxes: ['sise'],
+			metadata: { name: 'Typo', category: 'input' },
+			render: () => null,
+		});
+		expect(() => engine.extend({ elements: [typo] })).toThrowError(/unknown appearance axis 'sise'/);
 	});
 });
 

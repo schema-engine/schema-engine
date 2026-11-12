@@ -14,7 +14,7 @@ import type { FormShellProps } from '@schema-engine/forms-react/primitives';
 const cardStyle: React.CSSProperties = {
 	maxWidth: 'var(--se-size-max-width, 28rem)',
 	borderWidth: 'var(--se-surface-border-width, 1px)',
-	boxShadow: 'var(--se-surface-shadow, 0 8px 24px color-mix(in srgb, currentColor 10%, transparent))',
+	boxShadow: 'var(--se-surface-shadow, 0 8px 24px color-mix(in srgb, var(--on-surface, #000) 10%, transparent))',
 };
 
 const sectionStyle: React.CSSProperties = { padding: 'var(--se-size-padding, 1.5rem)' };

@@ -251,7 +251,7 @@ CSS custom properties a value stands for (`--se-size-padding`, `--se-surface-sha
 `appearance: { size: 'compact' }`. A renderer never defaults or interprets a pick; it emits it.
 
 Each element registration declares the axes it supports (`appearanceAxes`), and each recipe
-spec declares them per slot (`appearanceAxes: { shell: ['size', 'surface'] }`). An axis
+spec declares them per slot; the engine build rejects an axis the vocabulary does not declare (`appearanceAxes: { shell: ['size', 'surface'] }`). An axis
 that is not declared fails validation naming the axis and the owner, so the same config means
 the same thing in every renderer. `validateForm` checks every pick against the vocabulary and the
 declarations (an unknown axis, an undeclared axis for that owner, an unknown value), then writes
@@ -262,6 +262,8 @@ takes the form's picks and then its own. Each owner keeps only the axes it suppo
 parsing and writes it back, so a custom element whose schema is strict still supports axes. A recipe slot
 schema that declares axes must still accept an `appearance` key so authored configs type-check; the
 engine does not pass it to the schema when parsing the view and writes the resolved pick back.
+
+The names of the other `data-se-*` attributes the renderers write (`RENDERER_DATA_ATTRIBUTES`) are reserved and cannot be axes; a test scans the renderer sources so the list cannot drift.
 
 Both renderers emit the resolved selection as `data-se-<axis>="<value>"` on the form element
 (the one carrying `className` and `style`: `<form>` in React, `rui-form` in Radiant), the step
@@ -275,7 +277,7 @@ fallback. What a host's own axis looks like is the host's CSS, keyed on the same
 that declares no tokens inherits the surrounding value's tokens through custom-property inheritance,
 and a form of another engine nested inside a form is not supported. The DOM contract is the same in
 every renderer; the visual effect of a built-in value is not yet: `size` changes a field's font size in
-Radiant only, and both card shells read the tokens. The field host that carries the attributes is the
+Radiant only, and both card shells read the tokens. A field's `className` is applied to the same field host, the element that carries its `style` and the attributes, in both renderers. The field host that carries the attributes is the
 inner `.se-form-field` (the Radiant constraint wrapper around it carries only grid placement).
 
 `maxWidth`, `padding` and `shadowSize` are axes now, not slot config. `contentWidth`, `sideWidth` and
