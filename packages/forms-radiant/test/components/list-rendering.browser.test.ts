@@ -5,6 +5,7 @@ import { createInitialStepStates } from '@schema-engine/forms/engine';
 import { StepIndicatorsConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { StepIndicatorsElement } from '@/components/blocks/step-indicators';
+import type { SeFormArray } from '@/elements/inputs/form-array-elements';
 import { FormController } from '@/adapters/radiant/controller';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
@@ -37,10 +38,10 @@ async function mountArray() {
 	};
 	createRoot(host).render(FormRenderer({ config: engine.validateForm(config), engine }));
 	await expect.poll(() => host.querySelectorAll('.se-form-array__item')).toHaveLength(3);
-	const arrayHost = host.querySelector('se-form-array') as HTMLElement;
+	const arrayHost = host.querySelector('se-form-array') as SeFormArray;
 	const form = new FormController(arrayHost);
 	await expect.poll(() => form.ready).toBe(true);
-	return { host, form };
+	return { host, form, arrayHost };
 }
 
 function rowsById(host: HTMLElement) {
@@ -114,6 +115,19 @@ test('adding a row does not touch the rows already rendered', async () => {
 	).toEqual([]);
 });
 
+test('existing rows follow a change to the array config', async () => {
+	const { host, arrayHost } = await mountArray();
+	const rows = [...rowsById(host).values()];
+	arrayHost.config = { ...arrayHost.config, disabled: true, removeButtonText: 'Drop' };
+	await expect
+		.poll(() => [...host.querySelectorAll<HTMLInputElement>('input')].every((input) => input.disabled))
+		.toBe(true);
+	const removes = [...host.querySelectorAll<HTMLButtonElement>('.se-form-array__remove')];
+	expect(removes.map((button) => button.disabled)).toEqual([true, true, true]);
+	expect(removes.map((button) => button.getAttribute('aria-label'))).toEqual(['Drop 1', 'Drop 2', 'Drop 3']);
+	expect([...rowsById(host).values()]).toEqual(rows);
+});
+
 test('typing into a row survives a sibling being added', async () => {
 	const { host, form } = await mountArray();
 	const first = inputOf([...rowsById(host).values()][0]!);
@@ -171,4 +185,18 @@ test('navigating a wizard keeps the step indicator nodes and only changes their 
 	expect(items.map((item) => item.querySelector('button'))).toEqual(buttons);
 	expect(buttons[0]?.hasAttribute('aria-current')).toBe(false);
 	expect(buttons[0]?.dataset.completed).toBeDefined();
+});
+
+test('step indicators follow a change to their config', async () => {
+	const meta = createMeta(['One', 'Two']);
+	const element = new StepIndicatorsElement();
+	element.meta = meta;
+	element.slotConfig = z.parse(StepIndicatorsConfigSchema, {});
+	Reflect.set(element, 'instance', instanceAt(meta, 0));
+	document.body.append(element);
+	await expect.poll(() => element.querySelectorAll('.se-step-indicators__number')).toHaveLength(2);
+	const items = [...element.querySelectorAll('.se-step-indicators__item')];
+	element.slotConfig = z.parse(StepIndicatorsConfigSchema, { showStepNumbers: false });
+	await expect.poll(() => element.querySelectorAll('.se-step-indicators__number')).toHaveLength(0);
+	expect([...element.querySelectorAll('.se-step-indicators__item')]).toEqual(items);
 });

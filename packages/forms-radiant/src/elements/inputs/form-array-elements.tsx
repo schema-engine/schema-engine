@@ -79,17 +79,19 @@ function createInitialArrayValue(config: ArrayElementsProps, values: Record<stri
  *
  * @remarks
  * `index` is part of the row because the row's field names (`contacts.0.role`) and its remove label
- * are built from it. A row whose index moves is a new object under the same key, so the renderer
- * patches its nodes in place; a row whose index is unchanged stays the same object and is skipped.
+ * are built from it, and `config` and `engine` because the row callback runs once per item. A row whose
+ * index, config or engine changes is a new object under the same key, so the renderer patches its nodes
+ * in place; an unchanged row stays the same object and is skipped.
  */
 interface ArrayRow {
 	readonly id: string;
 	readonly index: number;
+	readonly config: ArrayElementsProps;
+	readonly engine?: FormEngine;
 }
 
 interface ArrayContentProps {
 	config: ArrayElementsProps;
-	engine?: FormEngine;
 	rows: State<readonly ArrayRow[]>;
 	initialValues: Record<string, unknown>;
 	renderValues: Record<string, unknown>;
@@ -110,15 +112,11 @@ function arrayErrorId(config: ArrayElementsProps): string {
 	return `${config.instanceId ?? config.id ?? config.name}-error`;
 }
 
-function renderArrayContent({ config, engine, rows, initialValues, renderValues, fieldError }: ArrayContentProps) {
+function renderArrayContent({ config, rows, initialValues, renderValues, fieldError }: ArrayContentProps) {
 	const isSingleField = usesScalarArrayItem(config, config.name, config.elements, renderValues);
 	const count = computed(() => rows.get().length);
-	const removeLabel = config.removeButtonText || 'Remove item';
-	const disabled = config.disabled === true;
-	const elements = withContainerState(config, config.elements);
-	const minItems = config.minItems ?? 0;
 	const maxItems = config.maxItems;
-	const childrenHost = mergeChildrenGridHost(config.elements, engine);
+	const disabled = config.disabled === true;
 
 	return (
 		<div class="se-form-array">
@@ -128,7 +126,12 @@ function renderArrayContent({ config, engine, rows, initialValues, renderValues,
 				) : null,
 			)}
 			<MapItems each={rows}>
-				{({ id, index }) => {
+				{({ id, index, config, engine }) => {
+					const removeLabel = config.removeButtonText || 'Remove item';
+					const disabled = config.disabled === true;
+					const elements = withContainerState(config, config.elements);
+					const minItems = config.minItems ?? 0;
+					const childrenHost = mergeChildrenGridHost(config.elements, engine);
 					const scope = arrayItemScope(config.name, index, id, {
 						scalar: isSingleField,
 						parentInstanceId: config.instanceId,
@@ -347,21 +350,26 @@ export class SeFormArray extends RadiantElement {
 	 * Publishes the row ids to the list signal.
 	 *
 	 * @remarks
-	 * A row whose id and index are unchanged keeps its object, so `MapItems` skips it. The first
+	 * A row whose id, index, config and engine are unchanged keeps its object, so `MapItems` skips it. The first
 	 * hydrated render places the server rows through `this.slotted` and has no list mounted, so the first
-	 * change after it renders the host once to mount the list in their place.
+	 * change of the ids after it renders the host once to mount the list in their place. A config or engine
+	 * change alone leaves the server rows in place.
 	 */
 	private setRows(ids: readonly string[]): void {
+		const { config } = this;
+		const engine = this.resolveEngine();
 		const current = peek(this.rows);
-		if (ids.length === current.length && ids.every((id, index) => id === current[index]?.id)) return;
 		const known = new Map(current.map((row) => [row.id, row]));
-		this.rows.set(
-			ids.map((id, index) => {
-				const row = known.get(id);
-				return row?.index === index ? row : { id, index };
-			}),
-		);
-		if (this.viewHoldsServerRows) {
+		const next = ids.map((id, index) => {
+			const row = known.get(id);
+			return row?.index === index && row.config === config && row.engine === engine
+				? row
+				: { id, index, config, engine };
+		});
+		if (next.length === current.length && next.every((row, index) => row === current[index])) return;
+		this.rows.set(next);
+		const sameShape = next.length === current.length && next.every((row, index) => row.id === current[index]?.id);
+		if (this.viewHoldsServerRows && !sameShape) {
 			this.viewHoldsServerRows = false;
 			this.requestUpdate();
 		}
@@ -437,12 +445,12 @@ export class SeFormArray extends RadiantElement {
 		const engine = this.resolveEngine();
 		if (!engine && !this.isConnected) return this.slotted;
 		if (!engine && this.renderedIds().length > 0) return null;
+		this.setRows(this.renderedIds());
 		const renderValues = this.currentValues();
 		const initialValues = this.rowInitialValues();
 
 		return renderArrayContent({
 			config,
-			engine,
 			rows: this.rows,
 			initialValues,
 			renderValues,
@@ -472,9 +480,13 @@ export function FormArrayElements(config: ArrayElementsProps) {
 	const children = engine
 		? renderArrayContent({
 				config: arrayConfig,
-				engine,
 				rows: createState<readonly ArrayRow[]>(
-					(initialRows ?? []).map((_, index) => ({ id: `seed-${index}`, index })),
+					(initialRows ?? []).map((_, index) => ({
+						id: `seed-${index}`,
+						index,
+						config: arrayConfig,
+						engine,
+					})),
 				),
 				initialValues,
 				renderValues: initialValues,
