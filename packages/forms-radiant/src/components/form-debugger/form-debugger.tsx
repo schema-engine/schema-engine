@@ -1,19 +1,12 @@
 import { FormController, formController } from '@/adapters/radiant/controller';
 import './form-debugger.css';
 import { customElement, prop, RadiantElement, state } from '@ecopages/radiant';
-import { onContextUpdate } from '@ecopages/radiant/context';
+import { contextSelector } from '@ecopages/radiant/context';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import { RuiBadge } from '@ecopages/radiant-ui/badge';
 import { RuiButton } from '@ecopages/radiant-ui/button';
-import type { NormalizedFormConfig } from '@schema-engine/forms';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
-import type { FormInstanceElement } from '@/components/form-instance.script';
-import { findAncestorElement } from '@/lib/rui-form-utils';
-
-function findFormConfig(host: Node): NormalizedFormConfig | undefined {
-	const owner = findAncestorElement(host, 'se-form-instance') as FormInstanceElement | null;
-	return owner?.config;
-}
+import type { FormMeta } from '@/lib/instance-view';
 
 function BugIcon() {
 	return (
@@ -103,7 +96,7 @@ function DebuggerSteps({
 	stepStates,
 	showDetails,
 }: {
-	steps: NormalizedFormConfig['steps'];
+	steps: FormMeta['steps'];
 	currentStep: number;
 	stepStates: FormInstanceContextValue['stepStates'] | undefined;
 	showDetails: boolean;
@@ -195,7 +188,7 @@ function DebuggerNav({
 	onPrevious: () => void;
 	onNext: () => void;
 	onGoTo: (index: number) => void;
-	steps: NormalizedFormConfig['steps'];
+	steps: FormMeta['steps'];
 	currentStep: number;
 	stepStates: FormInstanceContextValue['stepStates'] | undefined;
 }) {
@@ -246,20 +239,14 @@ export class FormDebuggerElement extends RadiantElement {
 	@prop({ type: Boolean, defaultValue: true }) showFormState = true;
 
 	@state open = false;
-	@state revision = 0;
 
 	@formController form!: FormController;
 
-	private formInstance?: FormInstanceContextValue;
+	@contextSelector({ context: formInstanceContext })
+	private instance?: FormInstanceContextValue;
 
 	protected override onConnected(): void {
 		this.open = this.defaultOpen;
-	}
-
-	@onContextUpdate({ context: formInstanceContext, requestUpdate: false })
-	onFormInstance(value: FormInstanceContextValue): void {
-		this.formInstance = value;
-		this.revision += 1;
 	}
 
 	private readonly openPanel = (): void => {
@@ -271,15 +258,15 @@ export class FormDebuggerElement extends RadiantElement {
 	};
 
 	private readonly goPrevious = (): void => {
-		void this.formInstance?.goToPreviousStep();
+		void this.instance?.goToPreviousStep();
 	};
 
 	private readonly goNext = (): void => {
-		void this.formInstance?.goToNextStep();
+		void this.instance?.goToNextStep();
 	};
 
 	private readonly goToStep = (index: number): void => {
-		void this.formInstance?.goToStep(index);
+		void this.instance?.goToStep(index);
 	};
 
 	override render() {
@@ -288,17 +275,17 @@ export class FormDebuggerElement extends RadiantElement {
 		}
 
 		const formState = this.form.ready ? this.form.formState : undefined;
-		const currentStep = this.formInstance?.currentStep ?? 0;
-		const stepStates = this.formInstance?.stepStates;
-		const config = findFormConfig(this);
-		const steps = config?.steps ?? [];
+		const currentStep = this.instance?.currentStep ?? 0;
+		const stepStates = this.instance?.stepStates;
+		const meta = this.instance?.meta;
+		const steps = meta?.steps ?? [];
 		const isMultiStep = steps.length > 1;
 
 		return (
 			<div class="se-form-debugger se-form-debugger--expanded">
 				<section class="se-form-debugger__panel" aria={{ label: 'Form debugger' }}>
 					<DebuggerHeader
-						title={config?.title ?? 'Form Debugger'}
+						title={meta?.title ?? 'Form Debugger'}
 						currentStep={currentStep}
 						totalSteps={steps.length}
 						onClose={this.closePanel}

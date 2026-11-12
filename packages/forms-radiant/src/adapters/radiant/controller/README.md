@@ -91,8 +91,12 @@ Invalid insertion, update, swap, and move indices are ignored.
   inside `se-form-renderer`), then the active render scope. It is cached until
   `disconnect`.
 - `ready` is `true` once `engine` resolves.
-- `connect(onChange?)` subscribes to `formEngineContext` and calls `onChange`
-  whenever the context supplies an engine.
+- `connect(onChange?)` subscribes to `formEngineContext`, caches the engine the
+  context supplies, and calls `onChange` each time the context publishes one,
+  including a value already published when `connect` runs. A published value
+  without an engine does not call it. Hosts of this package do not wait for a
+  late engine: the app binds it before they upgrade and they resolve it once, at
+  connect.
 - `disconnect()` removes that subscription and clears the cached engine.
 
 ## Runtime boundary

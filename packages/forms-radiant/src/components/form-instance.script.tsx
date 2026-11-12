@@ -19,6 +19,7 @@ import { connectValidationDependencies } from '@/lib/validation-deps';
 import type { RuiFormElement } from '@ecopages/radiant-ui/form';
 import { expandValues } from '@/adapters/radiant/controller/values';
 import { createInitialStepStates, hasConfiguredActions, type StepMachineState } from '@schema-engine/forms/engine';
+import { createFormMeta, type FormMeta } from '@/lib/instance-view';
 import { createInstanceNavigation } from '@/lib/instance-navigation';
 import { syncConstraints } from '@/lib/constraint-sync';
 import { logger } from '@/lib/logger';
@@ -87,7 +88,7 @@ export class FormInstanceElement extends RadiantElement {
 
 	@provideContext<typeof formInstanceContext>({
 		context: formInstanceContext,
-		initialValue: {} as FormInstanceContextValue,
+		initialValue: undefined,
 		serialize: () => ({}),
 	})
 	provider!: ContextProvider<typeof formInstanceContext>;
@@ -272,6 +273,7 @@ export class FormInstanceElement extends RadiantElement {
 			totalSteps,
 			isWizard: this.config && this.engine ? getViewRecipe(this.engine, this.config)?.kind === 'wizard' : false,
 			stepStates: this.stepStates,
+			meta: this.meta(),
 			goToStep: this.goToStep,
 			goToNextStep: this.goToNextStep,
 			goToPreviousStep: this.goToPreviousStep,
@@ -279,6 +281,19 @@ export class FormInstanceElement extends RadiantElement {
 			markStepVisited: this.markStepVisited,
 			isSubmitting: this.submitting,
 		};
+	}
+
+	private metaSource?: NormalizedFormConfig;
+	private metaValue?: FormMeta;
+
+	/** @remarks Memoized per config so consumers see a new `meta` only when the config changes. */
+	private meta(): FormMeta | undefined {
+		if (!this.config) return undefined;
+		if (this.metaSource !== this.config) {
+			this.metaSource = this.config;
+			this.metaValue = createFormMeta(this.config);
+		}
+		return this.metaValue;
 	}
 
 	private publish(): void {

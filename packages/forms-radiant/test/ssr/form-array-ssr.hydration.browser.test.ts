@@ -1,11 +1,9 @@
 import { describe, expect, inject, test } from 'vitest';
-import { jsx } from '@ecopages/jsx/jsx-runtime';
 import { FormController } from '@/adapters/radiant/controller';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
 import { FormRendererElement } from '@/components/internals/form-renderer';
 import type { SeFormArray } from '@/elements/inputs/form-array-elements';
-import { InputElementRegistration } from '@/elements/inputs/form-input.registration';
 
 describe('SSR array hydration', () => {
 	test('adopts server rows and keeps their authored values as reset defaults', async () => {
@@ -82,20 +80,6 @@ describe('SSR array hydration', () => {
 			await expect
 				.poll(() => [...app.querySelectorAll<HTMLInputElement>('.rui-input')].map(({ value }) => value))
 				.toEqual(['Alice', 'Bob']);
-
-			const replacementEngine = createRadiantFormEngine({
-				elements: [
-					...schemaFormRegistrations,
-					{
-						...InputElementRegistration,
-						render: () => jsx('span', { children: 'Replacement engine field' }),
-					},
-				],
-			});
-			renderer.engine = replacementEngine;
-			await expect
-				.poll(() => [...arrayHost.querySelectorAll('.se-form-array__item')].map((row) => row.textContent))
-				.toEqual(['Replacement engine field', 'Replacement engine field']);
 		} finally {
 			form.disconnect();
 			app.remove();

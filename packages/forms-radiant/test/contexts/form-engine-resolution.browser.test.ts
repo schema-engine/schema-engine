@@ -31,7 +31,7 @@ function observeInstanceContext(host: FormInstanceElement) {
 		new ContextSubscriptionRequestEvent(
 			formInstanceContext,
 			(context) => {
-				isWizard = context.isWizard;
+				isWizard = context?.isWizard;
 			},
 			undefined,
 			true,
@@ -159,9 +159,10 @@ describe('Radiant form engine resolution', () => {
 		});
 	});
 
-	test('a form array renders its fields after renderer context arrives', async () => {
+	test('a form array renders its fields once the form store arrives', async () => {
 		const engine = createArrayEngine();
 		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
+		renderer.engine = engine;
 		const form = document.createElement('rui-form');
 		const array = document.createElement('se-form-array') as SeFormArray;
 		array.config = contactsArray(engine);
@@ -173,11 +174,9 @@ describe('Radiant form engine resolution', () => {
 			expect(array.querySelector('.se-form-array__empty')).not.toBeNull();
 		});
 		formProvider.setContext({
+			ready: true,
 			store: new FormStore<FieldValues>({ defaultValues: { contacts: [{ email: 'person@example.test' }] } }),
 		});
-		expect(array.querySelector('input')).toBeNull();
-
-		renderer.engine = engine;
 		await vi.waitFor(() => {
 			expect(array.querySelector('input')).not.toBeNull();
 		});
