@@ -57,7 +57,7 @@ describe('recipe blocks honour the slot config the spec accepts', () => {
 	});
 
 	test('the card header is centered', () => {
-		expect(render({ view: { $type: 'card' }, steps: [steps[0]] })).toContain('rui-heading--align-center');
+		expect(render({ view: { $type: 'card' }, steps: [steps[0]] })).toContain('data-align="center"');
 	});
 
 	test('the header inherits color when asked to', () => {

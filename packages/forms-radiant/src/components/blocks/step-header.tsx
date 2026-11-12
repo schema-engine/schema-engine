@@ -39,7 +39,7 @@ export class StepHeaderElement extends RadiantElement {
 			<RuiHeading
 				as="header"
 				size={headerConfig.size}
-				align={headerConfig.align}
+				data={{ align: headerConfig.align }}
 				class={headerConfig.inheritColor ? 'se-step-header se-step-header--inherit-color' : 'se-step-header'}
 			>
 				{counter && headerConfig.counterPlacement === 'before' ? (

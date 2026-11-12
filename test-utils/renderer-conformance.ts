@@ -1,8 +1,14 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { getByRole, queryAllByRole, queryAllByText, queryByText } from '@testing-library/dom';
+import { getByRole, queryAllByRole, queryAllByText, queryByRole, queryByText, within } from '@testing-library/dom';
 import { userEvent } from 'vitest/browser';
 import * as v from 'valibot';
 import type { BuilderActionRuntimeContext, FormConfigView } from '@schema-engine/forms';
+import {
+	builtInRecipeSpecs,
+	MinimalProgressConfigSchema,
+	SplitScreenShellConfigSchema,
+	StepIndicatorsConfigSchema,
+} from '@schema-engine/forms/recipes/built-in';
 
 export const conformanceAction = {
 	$type: 'conformance',
@@ -58,6 +64,83 @@ const wizard = (...steps: FormConfigView['steps'][number]['elements'][]): FormCo
 	view: { $type: 'wizard', actions: { showStepCounter: true } },
 	steps: steps.map((elements, index) => ({ id: `step${index}`, title: `Step ${index + 1}`, elements })),
 });
+
+const recipeTitles = ['Profile', 'Plan', 'Review'];
+const formTitle = 'Account setup';
+const headerLabels = { stepCounter: 'Section {current} of {total}' };
+const indicatorLabels = { regionAriaLabel: 'Application progress', completed: 'Done' };
+const progressLabels = { progress: 'Application progress', valueText: 'Stage {current} of {total}' };
+const wizardActionLabels = {
+	previous: 'Back',
+	previousAriaLabel: 'Back one step',
+	next: 'Continue',
+	nextAriaLabel: 'Continue to next step',
+	submit: 'Send',
+	submitAriaLabel: 'Send application',
+	stepCounter: 'Page {current} of {total}',
+};
+const singleActionLabels = { submit: 'Send', submitAriaLabel: 'Send application' };
+
+interface RecipeCase {
+	$type: string;
+	steps: number;
+	header: boolean;
+	progress: 'indicators' | 'minimal' | undefined;
+	sideContent?: string;
+}
+
+/**
+ * @remarks
+ * Derived from the built-in specs so a new built-in recipe cannot skip conformance: the declared
+ * slots come from each spec's slot schemas, and the progress kind from the schema it uses.
+ */
+const recipeCases: RecipeCase[] = Object.values(builtInRecipeSpecs).map((spec) => {
+	const schemas: Partial<Record<string, unknown>> = spec.slotSchemas;
+	const progress = schemas.progress;
+	return {
+		$type: spec.$type,
+		steps: spec.kind === 'wizard' ? 3 : 1,
+		header: 'header' in schemas,
+		progress:
+			progress === StepIndicatorsConfigSchema
+				? 'indicators'
+				: progress === MinimalProgressConfigSchema
+					? 'minimal'
+					: undefined,
+		sideContent: schemas.shell === SplitScreenShellConfigSchema ? 'Welcome aboard' : undefined,
+	};
+});
+
+const recipeForm = ({ $type, steps, header, progress, sideContent }: RecipeCase): FormConfigView => {
+	const wizardKind = steps > 1;
+	const view: { $type: string; [slot: string]: unknown } = {
+		$type,
+		actions: wizardKind
+			? { labels: wizardActionLabels, showStepCounter: true }
+			: { labels: singleActionLabels, align: 'center' },
+	};
+	if (header) {
+		view.header = { align: 'center', titleAs: 'h1', showStepCounter: true, labels: headerLabels };
+	}
+	if (progress === 'indicators') view.progress = { labels: indicatorLabels };
+	if (progress === 'minimal') view.progress = { labels: progressLabels };
+	if (sideContent) view.shell = { sideContent };
+	return {
+		id: 'conformance',
+		title: formTitle,
+		view,
+		steps: recipeTitles.slice(0, steps).map((title, index) => ({
+			id: `step${index}`,
+			title,
+			elements: [input(`field${index}`, `Field ${index + 1}`)],
+		})),
+	};
+};
+
+const activeIndicator = (host: HTMLElement) =>
+	within(getByRole(host, 'navigation', { name: 'Application progress' }))
+		.getAllByRole('button')
+		.filter((button) => button.getAttribute('aria-current') === 'step');
 const actionIds = () => conformanceAction.execute.mock.calls.map(([context]) => context.config.id);
 
 /** @remarks Both browser projects execute these assertions against their own FormRenderer. */
@@ -701,6 +784,96 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await expect.poll(() => onAction.mock.calls.length).toBe(1);
 			expect(onAction).toHaveBeenCalledWith(expect.objectContaining({ id: 'changed' }), { fullName: 'Ada' });
 			expect(onChange).toHaveBeenLastCalledWith({ fullName: 'Ada' });
+		});
+		describe('built-in recipes', () => {
+			test('every built-in spec has a conformance case', () => {
+				expect(recipeCases).toHaveLength(Object.keys(builtInRecipeSpecs).length);
+				expect(recipeCases.map((recipe) => recipe.$type).sort()).toEqual(
+					Object.values(builtInRecipeSpecs)
+						.map((spec) => spec.$type)
+						.sort(),
+				);
+			});
+
+			test.each(recipeCases.map((recipe) => [recipe.$type, recipe] as const))(
+				'%s renders every declared slot with the authored labels',
+				async (_name, recipe) => {
+					const { host } = await setup({ config: recipeForm(recipe) });
+					const wizardKind = recipe.steps > 1;
+
+					if (recipe.header) {
+						expect(getByRole(host, 'heading', { level: 1, name: 'Profile' })).toBeTruthy();
+						expect(getByRole(host, 'heading', { level: 1 }).parentElement?.getAttribute('data-align')).toBe(
+							'center',
+						);
+						expect(queryByText(host, `Section 1 of ${recipe.steps}`)).not.toBeNull();
+					} else {
+						expect(queryAllByRole(host, 'heading', { name: 'Profile' })).toHaveLength(0);
+						expect(queryByText(host, /^Section \d+ of/)).toBeNull();
+					}
+
+					if (recipe.progress === 'indicators') {
+						const active = activeIndicator(host);
+						expect(active).toHaveLength(1);
+						expect(active[0].textContent).toContain('Profile');
+					} else {
+						expect(queryByRole(host, 'navigation')).toBeNull();
+					}
+					if (recipe.progress === 'minimal') {
+						const bar = getByRole(host, 'progressbar', { name: 'Application progress' });
+						expect(bar.getAttribute('aria-valuenow')).toBe('33');
+						expect(bar.getAttribute('aria-valuetext')).toBe('Stage 1 of 3');
+					} else {
+						expect(queryByRole(host, 'progressbar')).toBeNull();
+					}
+
+					if (wizardKind) {
+						const previous = getByRole(host, 'button', { name: 'Back one step' });
+						expect(previous.textContent).toBe('Back');
+						expect(previous.hasAttribute('disabled')).toBe(true);
+						expect(getByRole(host, 'button', { name: 'Continue to next step' }).textContent).toBe(
+							'Continue',
+						);
+						expect(queryByText(host, 'Page 1 of 3')).not.toBeNull();
+						expect(queryByRole(host, 'button', { name: 'Send application' })).toBeNull();
+					} else {
+						expect(getByRole(host, 'button', { name: 'Send application' }).textContent).toBe('Send');
+					}
+
+					if (recipe.sideContent) expect(queryByText(host, recipe.sideContent)).not.toBeNull();
+					const titleCount = queryAllByText(host, formTitle).length;
+					expect(titleCount).toBe(recipe.$type.startsWith('split-screen') ? 1 : 0);
+				},
+			);
+
+			test.each(
+				recipeCases.filter((recipe) => recipe.steps > 1).map((recipe) => [recipe.$type, recipe] as const),
+			)('%s marks the active step and moves progress when Next is activated', async (_name, recipe) => {
+				const { host } = await setup({ config: recipeForm(recipe) });
+				await userEvent.click(getByRole(host, 'button', { name: 'Continue to next step' }));
+				await expect.poll(() => queryByText(host, 'Page 2 of 3') !== null).toBe(true);
+				expect(queryByText(host, 'Section 2 of 3') !== null).toBe(recipe.header);
+				if (recipe.header) expect(getByRole(host, 'heading', { level: 1, name: 'Plan' })).toBeTruthy();
+				if (recipe.progress === 'indicators') {
+					const active = activeIndicator(host);
+					expect(active).toHaveLength(1);
+					expect(active[0].textContent).toContain('Plan');
+					const first = within(getByRole(host, 'navigation', { name: 'Application progress' })).getAllByRole(
+						'button',
+					)[0];
+					expect(first.hasAttribute('aria-current')).toBe(false);
+					expect(first.textContent).toContain('Done');
+				}
+				if (recipe.progress === 'minimal') {
+					const bar = getByRole(host, 'progressbar', { name: 'Application progress' });
+					expect(bar.getAttribute('aria-valuenow')).toBe('67');
+					expect(bar.getAttribute('aria-valuetext')).toBe('Stage 2 of 3');
+				}
+				await userEvent.click(getByRole(host, 'button', { name: 'Continue to next step' }));
+				await expect.poll(() => queryByRole(host, 'button', { name: 'Send application' }) !== null).toBe(true);
+				expect(queryByRole(host, 'button', { name: 'Continue to next step' })).toBeNull();
+				expect(getByRole(host, 'button', { name: 'Send application' }).textContent).toBe('Send');
+			});
 		});
 	});
 }

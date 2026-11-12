@@ -7,6 +7,20 @@
 	opacity: 0.8;
 }
 
+.se-step-header[data-align='start'] {
+	align-items: flex-start;
+	text-align: left;
+}
+
+.se-step-header[data-align='center'] {
+	align-items: center;
+	text-align: center;
+}
+
+.se-step-header[data-align='center'] .rui-heading__description {
+	margin-inline: auto;
+}
+
 .se-step-header__counter {
 	margin: 0;
 	font-size: 0.875rem;

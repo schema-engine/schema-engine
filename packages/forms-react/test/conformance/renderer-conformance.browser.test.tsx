@@ -13,7 +13,7 @@ import {
 import { FormArrayElements } from '@/components/schema-engine/forms/inputs/form-array-elements';
 import { FieldSetRegistration } from '@/components/schema-engine/forms/inputs/form-fieldset.registration';
 import { SubmitButtonElementRegistration } from '@/components/schema-engine/forms/actions/submit-button.registration';
-import { WizardRecipe } from '@/components/schema-engine/forms/recipes/registrations/wizard';
+import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
 const CustomArrayRegistration = defineInput({
 	$type: customArrayType,
@@ -32,7 +32,7 @@ rendererConformance(async ({ config, ...props }) => {
 			FieldSetRegistration,
 			SubmitButtonElementRegistration,
 		],
-		recipes: [WizardRecipe],
+		recipes: [...schemaFormRecipeRegistrations],
 		actions: [conformanceAction],
 	});
 	const renderConfig = (next: typeof config) => (
