@@ -11,7 +11,14 @@ import { SeFormArray } from '@/elements/inputs/form-array-elements';
 import { InputElementRegistration } from '@/elements/inputs/form-input.registration';
 import { ArrayElementRegistration } from '@/elements/inputs/form-array-elements.registration';
 import type { ArrayElementsProps } from '@/elements/inputs/form-array-elements.types';
+import { customElement } from '@ecopages/radiant';
 import { afterEach, describe, expect, test, vi } from 'vitest';
+
+function defineLateRenderer(): void {
+	@customElement('se-late-renderer')
+	class LateRenderer extends FormRendererElement {}
+	void LateRenderer;
+}
 
 function twoStepForm(engine: ReturnType<typeof createRadiantFormEngine>) {
 	return engine.defineForm({
@@ -201,19 +208,62 @@ describe('Radiant form engine resolution', () => {
 		expect(warn).not.toHaveBeenCalled();
 	});
 
-	test('a form instance with no engine in its tree stays without one and does not pick the only created engine', async () => {
+	test('a form instance with no engine stays quiet until the form is used, then reports once', async () => {
 		const engine = createRadiantFormEngine();
 		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
 		const instance = document.createElement('se-form-instance') as FormInstanceElement;
 		instance.config = twoStepForm(engine);
-		document.body.append(instance);
+		const field = document.createElement('input');
+		instance.append(field);
+		renderer.append(instance);
+		document.body.append(renderer);
 		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-		const observed = observeInstanceContext(instance);
-
 		expect(instance.engine).toBeUndefined();
-		expect(observed.isWizard).toBe(false);
 		expect(warn).not.toHaveBeenCalled();
-		observed.disconnect();
+
+		field.focus();
+		field.blur();
+		field.focus();
+
+		const reports = warn.mock.calls.filter((call) => String(call.at(-1)).includes('without a FormEngine'));
+		expect(reports).toHaveLength(1);
+	});
+
+	test('a form instance bound before use never reports a missing engine', async () => {
+		const engine = createRadiantFormEngine();
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
+		const instance = document.createElement('se-form-instance') as FormInstanceElement;
+		instance.config = twoStepForm(engine);
+		const field = document.createElement('input');
+		instance.append(field);
+		renderer.append(instance);
+		document.body.append(renderer);
+		renderer.engine = engine;
+		await vi.waitFor(() => expect(instance.engine).toBe(engine));
+
+		field.focus();
+
+		expect(warn).not.toHaveBeenCalled();
+	});
+
+	test('a form instance connected before its renderer is defined still receives the engine', async () => {
+		const engine = createRadiantFormEngine();
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const tag = 'se-late-renderer';
+		const renderer = document.createElement(tag);
+		const instance = document.createElement('se-form-instance') as FormInstanceElement;
+		instance.config = twoStepForm(engine);
+		renderer.append(instance);
+		document.body.append(renderer);
+		Reflect.set(renderer, 'engine', engine);
+		expect(instance.engine).toBeUndefined();
+
+		defineLateRenderer();
+
+		await vi.waitFor(() => expect(instance.engine).toBe(engine));
+		expect(warn).not.toHaveBeenCalled();
 	});
 
 	test('a form instance dispatches its form-mount action with the engine its renderer was bound to', async () => {

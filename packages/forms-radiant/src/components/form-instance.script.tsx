@@ -30,6 +30,9 @@ import type { FormProviderProps } from '@/adapters/types';
 import { FormController } from '@/adapters/radiant/controller';
 import { FormActions, type SubmissionOutcome } from '@/adapters/radiant/form-actions';
 
+const MISSING_ENGINE_MESSAGE =
+	'The form is in use without a FormEngine, so the engine validation rules and actions do not run. Assign `engine` to the enclosing `se-form-renderer`, or pass `engine` to `FormRenderer`.';
+
 /** Properties of `<se-form-instance>`. */
 export interface FormInstanceProps {
 	config: NormalizedFormConfig;
@@ -93,6 +96,7 @@ export class FormInstanceElement extends RadiantElement {
 	}
 	private form?: FormController;
 	private rendererEngine?: CoreFormEngine;
+	private reportedMissingEngine = false;
 	private unwatchValidationDependencies?: () => void;
 
 	@provideContext<typeof formInstanceContext>({
@@ -165,6 +169,21 @@ export class FormInstanceElement extends RadiantElement {
 	}
 
 	/**
+	 * Reports, once per form, that the form is in use without an engine.
+	 *
+	 * @remarks
+	 * A host stays quiet while it connects because the app may bind the engine to the renderer
+	 * later. Focusing into the form or submitting it is the point where it is in use, and without
+	 * an engine the engine rules, validators and actions do not run.
+	 */
+	@onEvent({ type: 'focusin', host: true })
+	warnWithoutEngine(): void {
+		if (this.engine || this.reportedMissingEngine) return;
+		this.reportedMissingEngine = true;
+		logger.warn(MISSING_ENGINE_MESSAGE);
+	}
+
+	/**
 	 * Turns a native submit before the last step of a wizard into Next.
 	 *
 	 * @remarks
@@ -175,6 +194,7 @@ export class FormInstanceElement extends RadiantElement {
 	 */
 	@onEvent({ type: 'submit', host: true, options: { capture: true } })
 	onNativeSubmit(event: Event): void {
+		this.warnWithoutEngine();
 		const { isWizard, currentStep, totalSteps } = this.getContextValue();
 		if (!isWizard || currentStep >= totalSteps - 1) return;
 		event.preventDefault();
