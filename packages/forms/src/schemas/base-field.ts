@@ -10,16 +10,34 @@ import { ValidationRuleSchema } from './validation/';
  * `style` as camelCase `CSSProperties` and Radiant as a plain record, so a named CSS property such as
  * `maxWidth` would render differently, and it could not be written portably in JSON or YAML.
  * Styling beyond custom properties goes through `className` or the form's `appearance`.
+ *
+ * A string value may not contain `;`, `{` or `}`: renderers write the value into a declaration, so
+ * those characters would let one entry carry further declarations once the markup is server rendered.
  */
 export const RendererStyleSchema = z.record(z.string(), z.union([z.string(), z.number()])).check(
 	z.superRefine((style, ctx) => {
-		for (const key of Object.keys(style)) {
-			if (!/^--./.test(key)) {
+		for (const [key, value] of Object.entries(style)) {
+			if (!key.startsWith('--')) {
 				ctx.addIssue({
 					code: 'custom',
 					input: style,
 					path: [key],
 					message: `style accepts CSS custom properties only: '${key}' must start with '--'.`,
+				});
+			} else if (key.length === 2) {
+				ctx.addIssue({
+					code: 'custom',
+					input: style,
+					path: [key],
+					message: `style accepts CSS custom properties only: the name after '--' must not be empty.`,
+				});
+			}
+			if (typeof value === 'string' && /[;{}]/.test(value)) {
+				ctx.addIssue({
+					code: 'custom',
+					input: style,
+					path: [key],
+					message: `style '${key}' must be a single value: it cannot contain ';', '{' or '}', which would start another declaration.`,
 				});
 			}
 		}

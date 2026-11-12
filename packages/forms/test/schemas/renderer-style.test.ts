@@ -43,6 +43,32 @@ describe('RendererStyleSchema', () => {
 		expect(message).toContain(Object.keys(style)[0]);
 	});
 
+	test('rejects the key "--", saying the property name is empty', () => {
+		const result = z.safeParse(RendererStyleSchema, { '--': '1' });
+		expect(result.success).toBe(false);
+		const message = JSON.stringify(result.error?.issues);
+		expect(message).toContain('must not be empty');
+		expect(message).not.toContain("must start with '--'");
+	});
+
+	test.each([
+		['a semicolon', '1rem; color: red'],
+		['an opening brace', '1rem {'],
+		['a closing brace', '1rem }'],
+	])('rejects a value with %s, naming the key', (_name, value) => {
+		const result = z.safeParse(RendererStyleSchema, { '--gap': value });
+		expect(result.success).toBe(false);
+		const message = JSON.stringify(result.error?.issues);
+		expect(message).toContain('--gap');
+		expect(message).toContain('declaration');
+	});
+
+	test('accepts values that merely look like CSS', () => {
+		expect(z.safeParse(RendererStyleSchema, { '--url': 'url("a.png")', '--font': '"A, B", serif' }).success).toBe(
+			true,
+		);
+	});
+
 	test.each([
 		['an object', { '--accent': { nested: true } }],
 		['a boolean', { '--accent': true }],
