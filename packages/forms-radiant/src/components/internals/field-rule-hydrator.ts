@@ -62,22 +62,16 @@ const DERIVED_VALIDATOR_KEY = '@schema-engine/rules';
  * @remarks
  * The serialized rules are the authored baseline, so the native rules and the derived validator are
  * replaced and nothing else is: a hand-written validator, which `withCustomValidate` keeps beside
- * the derived one under another key, survives. `previous` is the derived function of an earlier
- * rebuild, which a bare `validate` function is when no hand-written one exists.
+ * the derived one under another key, survives. A bare `validate` function is always the derived one,
+ * because `FormField` puts a hand-written validator in a record, so it is replaced.
  */
-export function rebuildHydratedRules(
-	field: FieldRulesHost,
-	engine: FormEngine,
-	previous?: unknown,
-): FieldRules | undefined {
+export function rebuildHydratedRules(field: FieldRulesHost, engine: FormEngine): FieldRules | undefined {
 	const derived = readSerializedRules(field, engine);
 	if (!derived) return undefined;
 	const { validate: current, ...rest } = field.rules ?? {};
 	const kept: Record<string, FieldValidator> =
 		typeof current === 'function'
-			? current === previous
-				? {}
-				: { custom: current }
+			? {}
 			: Object.fromEntries(Object.entries(current ?? {}).filter(([key]) => key !== DERIVED_VALIDATOR_KEY));
 	const { validate: freshValidate, ...native } = derived;
 	const fresh = typeof freshValidate === 'function' ? freshValidate : undefined;
