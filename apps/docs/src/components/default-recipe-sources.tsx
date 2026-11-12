@@ -31,6 +31,7 @@ export const DefaultRecipeSources = eco.component({
 								<code class="text-sm font-normal text-muted-foreground">view.$type: '{recipe.id}'</code>
 							</h4>
 							<CodeTabs
+								name={`recipe-${recipe.id}`}
 								label={`${recipe.title} source files`}
 								tabs={recipeTabs(recipe)}
 								copyLabel="Copy file"
@@ -50,6 +51,7 @@ export const DefaultRecipeSources = eco.component({
 								<code class="text-sm font-normal text-muted-foreground">view.$type: '{recipe.id}'</code>
 							</h4>
 							<CodeTabs
+								name={`recipe-${recipe.id}`}
 								label={`${recipe.title} source files`}
 								tabs={recipeTabs(recipe)}
 								copyLabel="Copy file"

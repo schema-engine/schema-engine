@@ -24,6 +24,7 @@ export type RadiantCodeTabItem =
 	  };
 
 export type RadiantCodeTabsProps = {
+	name: string;
 	label?: string;
 	tabs?: RadiantCodeTabItem[];
 	copyLabel?: string;
@@ -39,12 +40,20 @@ function tabClipboardText(tab: RadiantCodeTabItem): string {
 	return isRichTab(tab) ? tab.content : tab.code;
 }
 
+const COPY_STATUS_TIMEOUT_MS = 2000;
+
 /**
  * Docs-specific code presentation that delegates tab selection and keyboard
  * interaction to `RuiTabs` while retaining code-copying behavior.
+ *
+ * @remarks
+ * `RuiTab` and `RuiTabPanel` stamp their key as a literal DOM id, so `name`
+ * prefixes every key to keep ids unique when several instances share a page.
+ * `name` must be unique per page and id-safe.
  */
 @customElement('radiant-code-tabs')
 export class RadiantCodeTabs extends RadiantElement {
+	@prop({ type: String }) name = '';
 	@prop({ type: Array }) tabs: RadiantCodeTabItem[] = [];
 	@prop({ type: String }) label = '';
 	@prop({ type: String }) copyLabel = 'Copy code';
@@ -52,43 +61,45 @@ export class RadiantCodeTabs extends RadiantElement {
 	@prop({ type: String, reflect: true }) selectedKey = '';
 	@state copyStatus = '';
 
-	private resolveTabs(): RadiantCodeTabItem[] {
-		if (Array.isArray(this.tabs) && this.tabs.length > 0) {
-			return this.tabs;
-		}
+	private copyStatusTimer: ReturnType<typeof setTimeout> | undefined;
 
-		const tabsAttribute = this.getAttribute('tabs');
-		if (!tabsAttribute) {
-			return [];
-		}
+	private tabKey(tab: RadiantCodeTabItem): string {
+		return `${this.name}-${tab.id}`;
+	}
 
-		try {
-			const parsed = JSON.parse(tabsAttribute) as unknown;
-			return Array.isArray(parsed) ? (parsed as RadiantCodeTabItem[]) : [];
-		} catch {
-			return [];
-		}
+	private announce(message: string): void {
+		clearTimeout(this.copyStatusTimer);
+		this.copyStatus = message;
+		this.copyStatusTimer = setTimeout(() => {
+			this.copyStatus = '';
+		}, COPY_STATUS_TIMEOUT_MS);
 	}
 
 	private handleCopy = async (tab: RadiantCodeTabItem): Promise<void> => {
 		try {
 			await navigator.clipboard.writeText(tabClipboardText(tab));
-			this.copyStatus = `${tab.label} copied to clipboard`;
-		} catch (error) {
-			console.error('Failed to copy code', error);
+			this.announce(`${tab.label} copied to clipboard`);
+		} catch {
+			this.announce(`Failed to copy ${tab.label}`);
 		}
 	};
 
+	override disconnectedCallback(): void {
+		clearTimeout(this.copyStatusTimer);
+		super.disconnectedCallback();
+	}
+
 	@onEvent({ selector: 'rui-tabs', type: 'rui-change' })
 	onTabChange(event: Event): void {
-		const detail = (event as CustomEvent<{ value?: string }>).detail;
-		if (detail?.value) {
-			this.selectedKey = detail.value;
+		const value = (event as CustomEvent<{ value?: string }>).detail?.value;
+		const tab = this.tabs.find((candidate) => this.tabKey(candidate) === value);
+		if (tab) {
+			this.selectedKey = tab.id;
 		}
 	}
 
 	override render() {
-		const tabs = this.resolveTabs();
+		const tabs = this.tabs;
 		if (tabs.length === 0) {
 			return null;
 		}
@@ -98,10 +109,10 @@ export class RadiantCodeTabs extends RadiantElement {
 		const tabListLabel = this.label || 'Code examples';
 
 		return (
-			<RuiTabs variant="boxed" value={selectedKey} label={tabListLabel}>
+			<RuiTabs variant="boxed" value={`${this.name}-${selectedKey}`} label={tabListLabel}>
 				<RuiTabList aria-label={tabListLabel} class="code-tabs__list">
 					{tabs.map((tab) => (
-						<RuiTab id={tab.id} class="code-tabs__tab" selected={tab.id === selectedKey}>
+						<RuiTab id={this.tabKey(tab)} class="code-tabs__tab" selected={tab.id === selectedKey}>
 							{renderTabLabel({
 								id: tab.id,
 								label: tab.label,
@@ -112,7 +123,7 @@ export class RadiantCodeTabs extends RadiantElement {
 				</RuiTabList>
 				<RuiTabPanels>
 					{tabs.map((tab) => (
-						<RuiTabPanel id={tab.id} class="code-tabs__panel" selected={tab.id === selectedKey}>
+						<RuiTabPanel id={this.tabKey(tab)} class="code-tabs__panel" selected={tab.id === selectedKey}>
 							<div class="code-tabs__body unstyled">
 								{isRichTab(tab) ? (
 									<div class="code-tabs__code">{unsafeHtml(tab.html)}</div>
