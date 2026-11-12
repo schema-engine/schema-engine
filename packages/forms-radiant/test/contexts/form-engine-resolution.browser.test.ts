@@ -96,6 +96,21 @@ describe('Radiant form engine resolution', () => {
 		observed.disconnect();
 	});
 
+	test('a form instance republishes isWizard when its engine is assigned after connect', async () => {
+		const engine = createRadiantFormEngine();
+		vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const instance = document.createElement('se-form-instance') as FormInstanceElement;
+		instance.config = twoStepForm(engine);
+		document.body.append(instance);
+		const observed = observeInstanceContext(instance);
+		await vi.waitFor(() => expect(observed.isWizard).toBe(false));
+
+		instance.engine = engine;
+
+		await vi.waitFor(() => expect(observed.isWizard).toBe(true));
+		observed.disconnect();
+	});
+
 	test('a form instance with no engine in its tree reports it and does not pick the only created engine', async () => {
 		const engine = createRadiantFormEngine();
 		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});

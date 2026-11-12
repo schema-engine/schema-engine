@@ -129,6 +129,12 @@ export class FormInstanceElement extends RadiantElement {
 		this.connectForm();
 	}
 
+	@onUpdated(['engine'])
+	onEngineUpdated(): void {
+		this.connectForm();
+		this.publish();
+	}
+
 	/**
 	 * Connects the `rui-form`'s controller once per form element, then keeps
 	 * constraints, validation dependencies and actions in step with the config
@@ -204,17 +210,24 @@ export class FormInstanceElement extends RadiantElement {
 		this.publish();
 	}
 
-	/** Builds the actions for the current config and engine, or drops them when the form configures none. */
+	/**
+	 * Builds the actions for the current engine, or drops them when the form configures none.
+	 *
+	 * @remarks
+	 * `FormProvider` re-validates the config on each render, so a new but equal config
+	 * must not rebuild the actions: that would fire `form_mount` again and reset the
+	 * submit attempts. Only an engine change rebuilds them.
+	 */
 	private syncActions(): void {
 		const { config, engine, form } = this;
 		if (!form || !config || !engine || !hasConfiguredActions(config)) {
 			this.disposeActions();
 			return;
 		}
-		if (this.actions?.config !== config || this.actions.engine !== engine) {
+		if (this.actions?.engine !== engine) {
 			this.disposeActions();
 			this.actions = new FormActions({
-				config,
+				config: () => this.config,
 				engine,
 				form,
 				currentStep: () => this.currentStep,

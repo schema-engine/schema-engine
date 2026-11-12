@@ -23,7 +23,13 @@ function mountActions(
 	provideTestFormStore(host, options.store ?? new FormStore());
 	document.body.append(host);
 	const form = new FormController(host);
-	const formActions = new FormActions({ config, engine, form, currentStep: () => 0, onAction: options.onAction });
+	const formActions = new FormActions({
+		config: () => config,
+		engine,
+		form,
+		currentStep: () => 0,
+		onAction: options.onAction,
+	});
 	return { host, form, formActions };
 }
 
@@ -196,6 +202,37 @@ test('the instance runs mount actions again after its engine changes', async () 
 
 	await expect.poll(() => executeB.mock.calls.length).toBe(1);
 	expect(executeA).toHaveBeenCalledTimes(1);
+});
+
+test('the instance rebuilds its actions when only the engine changes', async () => {
+	const executeA = vi.fn(async () => ({ success: true }));
+	const executeB = vi.fn(async () => ({ success: true }));
+	const engineA = createFormEngine({ elements: [], actions: [testAction('mount', ['form_mount'], executeA)] });
+	const engineB = createFormEngine({ elements: [], actions: [testAction('mount', ['form_mount'], executeB)] });
+	const config = engineA.defineForm({ ...oneStep('engine-only'), actions: [{ id: 'mount', $type: 'mount' }] });
+	const { instance } = mountInstance(engineA, config);
+	document.body.append(instance);
+	await expect.poll(() => executeA.mock.calls.length).toBe(1);
+
+	instance.engine = engineB;
+
+	await expect.poll(() => executeB.mock.calls.length).toBe(1);
+	expect(executeA).toHaveBeenCalledTimes(1);
+});
+
+test('re-rendering with an equal but new config does not fire form_mount again', async () => {
+	const execute = vi.fn(async () => ({ success: true }));
+	const engine = createFormEngine({ elements: [], actions: [testAction('mount', ['form_mount'], execute)] });
+	const define = () => engine.defineForm({ ...oneStep('equal-config'), actions: [{ id: 'mount', $type: 'mount' }] });
+	const { instance } = mountInstance(engine, define());
+	document.body.append(instance);
+	await expect.poll(() => execute.mock.calls.length).toBe(1);
+
+	instance.config = define();
+	await nextFrame();
+	await nextFrame();
+
+	expect(execute).toHaveBeenCalledTimes(1);
 });
 
 test('form_change actions keep running after the instance reconnects', async () => {
