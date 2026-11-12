@@ -172,7 +172,15 @@ rows. A step takes its own `grid`, which replaces the form's for that step.
 in the template at a breakpoint, a template area no field claims, `areas` beside
 `columns` or `minColumnWidth` or width fields, an `area` beside `width`,
 `offset`, `column` or `row`, and an `area` on a container's child (containers
-take no `areas`). Names are CSS identifiers.
+take no `areas`). Names are ASCII CSS identifiers and cannot be `auto`, `span`,
+`none`, `default` or a CSS-wide keyword; the exported JSON Schema carries the
+same pattern. A field with no `area` is auto-placed, two fields may claim one
+area (for fields never shown together), a field hidden at a breakpoint need not
+be in that breakpoint's template, and raw `column`/`row` on other fields work as
+usual. A step with no fields under a form-level `areas` needs `grid: {}`, or
+validation reports the template areas as unclaimed. `stepGrid(config, step)` is
+the one place the step-replaces-form rule lives; renderers and validation both
+use it.
 
 This applies to any element rendering a `.se-form-field` host with the engine's
 theme id — not only inputs. Renderers expose a helper for elements that build

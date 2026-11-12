@@ -95,7 +95,7 @@ least readable:
 3. Raw grid lines (`column`, `row`) as the escape hatch.
 
 A grid uses either `width`/`offset`, `areas` or `columns`; raw lines can sit
-next to widths.
+next to widths or areas.
 
 ### Rows of fields: `width` and `offset`
 
@@ -168,6 +168,21 @@ column count comes from the rows, so a grid with `areas` sets no `columns`.
 slot before it). A responsive record must include `default`. A field's `area`
 is also responsive through `grid.responsive`, so a field can claim a different
 area when the template changes.
+
+A few things the template does not police:
+
+- A field with no `area` in an areas grid is auto-placed: it fills a `.` cell
+  if one is free, otherwise it opens an implicit row after the drawn ones. A raw
+  `column` or `row` on such a field works as it does anywhere else.
+- Two fields may claim the same area. That is meant for fields that are never
+  shown together (constraints, or `hidden` at a breakpoint); if both show, they
+  are drawn over the same cells.
+- A field hidden at a breakpoint (`grid.responsive.<slot>.hidden`) need not be in
+  that breakpoint's template, and the hidden state carries to wider
+  breakpoints until a slot shows it again.
+- A step with no fields under a form-level `areas` gets `grid: {}`, an empty own
+  grid that replaces the form's. Otherwise every template area counts as
+  unclaimed on that step.
 
 A step takes its own `grid`, which replaces the form's grid for that step. An
 areas template names specific fields, so each wizard step draws its own. A

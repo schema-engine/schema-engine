@@ -217,10 +217,14 @@ rows draw, one pair per slot the author wrote. The stylesheet reads
 resets it like any other grid property. A field's `grid.area` is emitted as its
 `grid-column` and `grid-row` (a lone name there means that area's start and end
 lines), so it rides the shared field table with no new rule. Area names are
-ASCII CSS identifiers, which the schema enforces: a name is the only author text
-that lands in the stylesheet's `var()`, so it cannot carry CSS. A step's `grid`
-replaces the form's grid for that step (renderers read `step.grid ?? grid`),
-because a template names specific fields. Validation reads templates and areas
+ASCII CSS identifiers, which the schema enforces (and the JSON Schema export
+carries as a case-explicit pattern): the pattern keeps quotes, `;` and
+whitespace out of the quoted template and out of the area value. It does not
+sanitize the other authored values that reach `var()`, such as raw `column`/`row`
+and gaps, which stay the author's CSS. A step's `grid` replaces the form's grid
+for that step (`stepGrid(config, step)` in `form-view.ts` is the one owner of
+the rule, used by validation and both renderers), because a template names
+specific fields. Validation reads templates and areas
 through the same cascade the stylesheet applies and rejects ragged or
 non-rectangular templates, an area outside the template at any breakpoint, an
 unclaimed template area, `areas` beside `columns`, `minColumnWidth`, `width` or
