@@ -191,6 +191,22 @@ the longhands in the generated rule and would reset them; the split follows the
 CSS grammar, so a two-keyword axis value such as `safe center` stays on one
 axis.
 
+Named widths are the same mechanism, not a second one. An element's `grid.width`
+(`full | three-quarters | two-thirds | half | third | quarter | auto`) and
+`grid.offset` (the same names without `full` and `auto`) resolve to spans and
+start lines on 12 tracks and are emitted into the shared `grid-column` slot, so
+they inherit the breakpoint cascade (`grid.responsive`) and the inheritance
+resets. They are one declaration, so a slot that authors only one of the two
+carries the other from the narrower slots, as `columns` and `minColumnWidth` do
+for the template. A step whose top-level elements use `width` or `offset` gets
+the 12-track template and a `--se-grid-default-column` of `1 / -1` inline from
+`getFormGridVariables`, which the stylesheet resets on every grid and reads as
+the fallback of a field's `grid-column`, so a field with no width fills the
+row. A grid uses either `columns` (and `minColumnWidth`) or widths: validation
+rejects both together, and rejects a field that sets `width` or `offset` with a
+raw `column`. Raw `column`, `row` and `placeSelf` remain the escape hatch, and
+`column: 2` is a grid line, not a span.
+
 Two contracts follow from the field rule outranking a component's own class.
 Gap tokens (`--se-grid-gap-*`) are never declared on an element — the engine
 declares `--se-grid-gap-base-*` and reads the public token with that as the
