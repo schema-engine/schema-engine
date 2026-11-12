@@ -100,7 +100,7 @@ View-owned shell, same authoring model as radiant-ui: the `FormRenderer` / `Form
 - Every step's fields are authored once inside `se-form-step`, which carries `data-se-step`, the step's authored `className` and its custom-property `style` (the `[hidden]` binding is unaffected); hosts bind their own `hidden` attribute to the instance's step state (the view writes it only for the server markup; from connect on the step owns it and follows every value the instance publishes, so a wizard that becomes a non-wizard shows its steps), so SSR emits the full form and step switching is pure DOM. A native submit (Enter in a text input) before the last step of a wizard is intercepted by `se-form-instance` and goes to the next step, whatever the number of fields.
 - Server-rendered constraints use the nested authored and caller defaults. Each field shares one constraint snapshot between its visibility wrapper and registered renderer. Live updates preserve an authored `disabled: true`, including when an `enable` constraint matches. A field's `disabled` and `required` compose its own authored state with every constraint wrapper around it, so a child of a constrained fieldset keeps its own `disabled`; a fieldset disabled by authoring or by a constraint renders its children disabled, and one required by a matching `require` constraint renders them with their required marker, and the constraint hosts keep them so. An array passes both to its rows the same way: a disabled array, authored or by a constraint, renders its rows and its add and remove buttons disabled, and an authored `disabled` array's rows stay disabled while its constraints change. Use `evaluateConstraints({ constraints, values, fieldPath, baseRequired })` from `@schema-engine/forms/constraints`; the Radiant `evaluateConstraintLogic` hook has been removed.
 - Conditional fields with constraints are wrapped in an `se-constraint` host (class `.se-form-constraint`) that carries its rendered path as `data-se-constraint-field` (the path the server snapshot was evaluated with; an element without a name uses its enclosing array row or object, so its sibling references resolve there), its constraints as the JSON attribute `data-se-constraints` and `data-se-base-required` when the element's own rules require it. `se-form-instance` provides the live value tree and the authored-`disabled` lookup through `formValuesContext`, and the host reads them with `@onContextUpdate`. It evaluates only when a value its constraints read changes, writes the native `hidden` property (the view passes the same plain `hidden` attribute on the server), and provides `constraintContext` (`disabled`, `required`) composed with the wrappers around it, so a nested wrapper and every `se-field` inside read one nearest provider. A wrapper asks its parent for the context it composes with, because a request from the host itself would be answered by its own provider. Nothing sweeps the form on a store notification, and each row of an array resolves its own siblings through its rendered path. Until the instance publishes values the host keeps the snapshot it was rendered with, on the server and when it hydrates. `se-field` composes its authored `disabled` and rules with that context (rules set on the field from outside, as a re-render does, become its new authored baseline): a `require` updates the live `FieldRules` object (so `validate` functions and `RegExp` patterns survive), toggles `[data-se-required-marker]` on the label, and validates the field when it was touched or the form was submitted. A field with no `se-constraint` around it gets no live constraint handling.
-- Resolved `appearance` is emitted as `data-se-<axis>` attributes on `rui-form`, `se-form-step`, each field host (`FieldGroup` and `FormField` take `appearance`) and the card shell, next to `data-se-appearance-theme` on `rui-form` and the engine's token stylesheet. `src/styles/appearance.css` and the shell CSS only read the tokens (`--se-size-*`, `--se-surface-*`) inside `:where()`; the card shell no longer takes `maxWidth`, `padding` or `shadowSize`.
+- Resolved `appearance` is emitted as `data-se-<axis>` attributes on `rui-form`, `se-form-step`, each field host (`FieldGroup` and `FormField` take `appearance`) and the card shell, next to `data-se-theme` on `rui-form` and the layout theme's stylesheet, which carries the token rules. `src/styles/appearance.css` and the shell CSS only read the tokens (`--se-size-*`, `--se-surface-*`) inside `:where()`; the card shell no longer takes `maxWidth`, `padding` or `shadowSize`.
 - Every `se-*` host declares its public props with `JSX_PROPS`, and the views render the host class (`<FormStepElement stepIndex={i} />`), so a misspelled or dead prop is a compile error; internal `@state` is `protected`. A `se-split-screen-side` without `meta` renders its children.
 - `FieldGroup` composes the label, required marker, description and error for every field element, checkbox, switch and radio included, and `RequiredMarker` is the one marker `se-field` toggles for a constraint. A field without a `label` renders the label from its `name`, visually hidden (`.se-visually-hidden`), so the control keeps an accessible name. `FormRenderer`, `FormElements`, `FormElement` and `FieldGroup` take `class`, not `className`. The input and textarea views forward every parsed config key (`autoComplete`, `autoFocus`, `inputMode`, `spellCheck`, `cols`, `wrap`, `resize`). An array renders as a `fieldset` named by its label, its error in a `[data-rui-field-error]` region, and each remove button is named `<removeButtonText> <row number>`; the drop zone outlines itself while its file input has keyboard focus.
 - Recipe chrome blocks read serializable `meta` / `slotConfig` props (the block's own slot config, not the whole view) plus the live `formInstanceContext` (a value that is absent before the instance publishes, and that carries the form `meta`); where SSR cannot resolve context (authored children serialize before providers publish), they fall back to the initial step-0 state and hydrate the live values.
@@ -157,9 +157,10 @@ element: `lib/authored-disabled.ts`, `lib/validate-current-step.ts` and
 
 ## Grid layout
 
-Responsive grid layout is **pure CSS**. The engine owns the grid vocabulary —
+Responsive grid layout is **pure CSS**. The layout theme owns the grid vocabulary —
 breakpoint thresholds, gap tokens, and the default minimum column width — via
-`createRadiantFormEngine({ grid: { breakpoints, gap, minColumnWidth } })`;
+`createRadiantFormEngine({ layout: { grid: { breakpoints, gap, minColumnWidth } } })`
+(or a theme compiled with `createLayoutTheme` from `@schema-engine/layout`, shareable between engines);
 forms describe their layout with `columns`, `gap`/`gapX`/`gapY`
 (`none | compact | default | loose | wide` or a CSS value), `responsive`
 entries per breakpoint, `areas` rows for a drawn layout, and per-field placement
@@ -167,15 +168,19 @@ entries per breakpoint, `areas` rows for a drawn layout, and per-field placement
 `areas` template, or raw `grid.column`/`grid.row` lines) with per-breakpoint
 `hidden` overrides. A step's own `grid` replaces the form's for that step.
 
-The renderer emits the generated theme stylesheet (scoped to
-`data-se-grid-theme`) and the form's CSS variables inline during render, so
+The renderer emits the layout theme's one stylesheet (scoped to
+`data-se-theme`, grid rules and appearance token rules together) and the form's CSS variables inline
+during render, so
 SSR output is styled with no FOUC and hydration is not required for layout.
 Media queries follow the viewport width. Sparse responsive entries inherit
 from the preceding breakpoint, then the top-level value; `gapX`/`gapY` beat an
 entry's `gap`. Only authored values are emitted inline — the generated
 stylesheet supplies the defaults, chains each breakpoint back through the
 narrower ones, and resets the variables at every host so nested grids stay
-isolated. Breakpoint thresholds on the engine must keep named order
+isolated. The stylesheet selects only `.se-grid`, `.se-grid-item` and `[data-se-theme]`: the
+renderer adds `se-grid` beside `se-form-grid` on step grids and container inner grids, and
+`se-grid-item` beside `se-form-field` on field hosts (`mergeFieldGridHost`,
+`mergeChildrenGridHost`). Breakpoint thresholds in the theme must keep named order
 (`sm ≤ md ≤ lg ≤ xl ≤ 2xl`); `rem`/`em` compare at a 16px root.
 
 ## MVP elements

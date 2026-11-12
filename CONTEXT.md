@@ -163,15 +163,37 @@ its own `required` rule down, and the add and remove buttons take the array's
 disabled state at render only, so a `disable` constraint that starts to hold
 later disables the rows but not the buttons.
 
+## Layout theme
+
+Grid and appearance live in `@schema-engine/layout`, which knows nothing about
+forms, so any container of items can use it. `createLayoutTheme({ grid,
+appearance }, { reservedNames })` compiles both into one **layout theme**: one
+`id`, one stylesheet (`css`) and one hash function. Renderers put that id on
+the form, grid and item elements as the single `data-se-theme` attribute and
+emit the stylesheet once. `createFormEngine` and `createRadiantFormEngine` take
+the theme as `layout`, either a compiled theme or inline `{ grid, appearance }`
+options; there are no separate `grid` or `appearance` options. Engines built on
+one compiled theme share its id and stylesheet, so a form embedded in a page
+matches the page, and `engine.extend()` inherits the theme. `reservedNames` is a
+compiler input: each domain lists the `data-se-*` attributes its renderers
+already write, and an axis cannot reuse one (forms passes
+`RENDERER_DATA_ATTRIBUTES`; an engine re-checks a theme compiled elsewhere).
+
+The layout stylesheet knows no domain. It selects only `.se-grid`,
+`.se-grid-item` and `[data-se-theme]`, and there is no alias for another class.
+A renderer adds those two classes beside its own (`se-form-grid se-grid`,
+`se-form-field se-grid-item`) on step grids, field hosts and container inner
+grids; the forms classes stay as styling hooks.
+
 ## Grid theme ownership
 
-Responsive grid layout is pure CSS. The **engine** owns the grid vocabulary —
-breakpoint thresholds (`sm`…`2xl`), gap tokens (`none | compact | default |
-loose | wide`), and the default minimum column width — through the `grid`
-option on engine creation. The **form** owns layout intent: `columns`,
+Responsive grid layout is pure CSS. The **layout theme** owns the grid
+vocabulary — breakpoint thresholds (`sm`…`2xl`), gap tokens (`none | compact |
+default | loose | wide`), and the default minimum column width — through the
+`grid` half of `layout`. The **form** owns layout intent: `columns`,
 `gap`/`gapX`/`gapY` selection, `responsive` entries per breakpoint, and
 per-field `grid` placement. Renderers emit the theme-scoped stylesheet
-(`data-se-grid-theme` identity) and per-form CSS variables inline during
+(`data-se-theme` identity) and per-container CSS variables inline during
 render, so responsive behavior is media-query driven with no runtime
 observers, SSR output is styled before hydration, and two engines with
 different themes cannot overwrite each other. Field names must not collide
@@ -200,7 +222,7 @@ resets. They are one declaration, so a slot that authors only one of the two
 carries the other from the narrower slots, as `columns` and `minColumnWidth` do
 for the template. A step whose top-level elements use `width` or `offset` gets
 the 12-track template and a `--se-grid-default-column` of `1 / -1` inline from
-`getFormGridVariables`, which the stylesheet resets on every grid and reads as
+`getGridVariables`, which the stylesheet resets on every grid and reads as
 the fallback of a field's `grid-column`, so a field with no width fills the
 row. A grid uses areas, `columns` (and `minColumnWidth`) or widths: validation
 rejects both together, a field that sets `width` or `offset` with a raw
@@ -232,8 +254,9 @@ unclaimed template area, `areas` beside `columns`, `minColumnWidth`, `width` or
 no `areas`, so `area` on a container's child is rejected.
 
 Containers are grids too. A fieldset, and each array row, lays its direct
-children out in an inner `se-form-grid` carrying the engine's theme id, built
-with the same `getFormGridVariables(undefined, theme, children)` a step uses.
+children out in an inner `se-form-grid se-grid` carrying the engine's theme id, built
+with the same `getGridVariables(undefined, theme, children)` a step uses; a field
+host takes its variables from `getGridItemVariables(grid)`.
 The grid rule resets `--se-grid-default-column` on every grid and the inner
 grid declares its own, so a child's width and default placement come from its
 container and never from the step around it. The step's `columns` and a
@@ -241,13 +264,13 @@ container's child widths therefore do not conflict; the over-width and raw
 column checks apply to every element at any depth.
 
 Two contracts follow from the field rule outranking a component's own class.
-Gap tokens (`--se-grid-gap-*`) are never declared on an element — the engine
+Gap tokens (`--se-grid-gap-*`) are never declared on an element — the theme
 declares `--se-grid-gap-base-*` and reads the public token with that as the
 fallback — so a host's `:root` override still applies. Gap tokens may change by
-breakpoint through the engine's `responsive` option, which is breakpoint-major
+breakpoint through the theme's `grid.responsive` option, which is breakpoint-major
 like a form's own: each entry lists the tokens that change at that width. A ramp
 redeclares only the base variable inside the generated media queries, so a form
-selecting `gap: 'default'` inherits the rhythm and rhythm stays engine vocabulary
+selecting `gap: 'default'` inherits the rhythm and rhythm stays theme vocabulary
 rather than form intent. A host override replaces the token at every width, ramp
 included, since the public token is the first `var()` argument.
 
@@ -255,7 +278,7 @@ Per-element rhythm is part of the same mechanism, not a second one. An element's
 `grid.marginBlockStart` / `grid.marginBlockEnd` take the same gap tokens and ride
 the shared field property table, so they inherit the breakpoint cascade and the
 inheritance resets and one system keeps owning the block axis. They apply to any
-element that renders a `.se-form-field` host carrying the engine's theme id —
+element that renders a `.se-grid-item` host (`se-form-field se-grid-item`) carrying the engine's theme id —
 inputs get it from the field primitive, and a content or decoration element opts
 in with `useFieldHost` (React) or `mergeFieldGridHost` (Radiant). An element
 without that host ignores its `grid` config entirely. And a field host with
@@ -264,8 +287,8 @@ responsive `hidden` toggles against rather than forcing `block`.
 
 ## Appearance ownership
 
-Named appearance mirrors the grid split. The **engine** owns the vocabulary through the
-`appearance` option on engine creation: the axes (`size` as `compact | default | comfortable`
+Named appearance mirrors the grid split. The **layout theme** owns the vocabulary through the
+`appearance` half of `layout`: the axes (`size` as `compact | default | comfortable`
 and `surface` as `flat | outlined | elevated` ship built in; a host adds an axis such as `tone`
 or lists more values on a built-in one), the closed value list of each, and optionally the
 CSS custom properties a value stands for (`--se-size-padding`, `--se-surface-shadow`). The
@@ -285,14 +308,20 @@ parsing and writes it back, so a custom element whose schema is strict still sup
 schema that declares axes must still accept an `appearance` key so authored configs type-check; the
 engine does not pass it to the schema when parsing the view and writes the resolved pick back.
 
-The names of the other `data-se-*` attributes the renderers write (`RENDERER_DATA_ATTRIBUTES`) are reserved and cannot be axes; a test scans the renderer sources so the list cannot drift.
+The names of the other `data-se-*` attributes the renderers write (`RENDERER_DATA_ATTRIBUTES`, which includes `theme`) are reserved and cannot be axes; forms passes the list to the layout compiler as `reservedNames`, and a test scans the renderer sources so the list cannot drift.
+
+The pure appearance helpers live in `@schema-engine/layout`: checking a pick against the vocabulary
+(`checkAppearance`), merging a parent pick with a child's (`mergeAppearance`), keeping the axes an owner
+supports, and producing the attributes (`getAppearanceAttributes`). Walking the form tree is forms' job:
+`resolveAppearance` in `lib/resolve-appearance.ts` is the one place the inheritance rule lives, called for
+the form, each step, each element and each view slot.
 
 Both renderers emit the resolved selection as `data-se-<axis>="<value>"` on the form element
 (the one carrying `className` and `style`: `<form>` in React, `rui-form` in Radiant), the step
-element (`data-se-step`), the field host and the slot elements, and they emit the engine's token
-stylesheet once per form next to the grid theme. Token rules are written as
+element (`data-se-step`), the field host and the slot elements. The token rules are part of the
+layout theme's one stylesheet, emitted once per form. They are written as
 `:where(<theme scope> [data-se-size="compact"])`, so they add no specificity and an author's
-`className` always wins; the scope is `data-se-appearance-theme`, the engine's appearance id,
+`className` always wins; the scope is `data-se-theme`, the layout theme's id,
 on the form element, so two engines with different tokens cannot overwrite each other. Shells read
 the tokens (`var(--se-size-padding, 1.5rem)`) and keep the look of an unstyled form as the
 fallback. What a host's own axis looks like is the host's CSS, keyed on the same attributes. A value
