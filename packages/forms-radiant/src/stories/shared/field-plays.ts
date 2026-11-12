@@ -7,7 +7,6 @@ import {
 	getFieldControl,
 	playCheckboxByLabel,
 	playFieldFocusAndType,
-	playOtpValue,
 	playSelectOption,
 	playSliderToValue,
 } from './play';
@@ -58,4 +57,4 @@ export function createValidationFieldPlay(
 	});
 }
 
-export { playCheckboxByLabel, playOtpValue, playSelectOption, playSliderToValue };
+export { playCheckboxByLabel, playSelectOption, playSliderToValue };
