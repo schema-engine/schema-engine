@@ -210,9 +210,15 @@ array config's Add and Remove behavior.
 
 `masked-input`, `phone-input` and `input-otp` are form-associated custom elements
 registered with Radiant UI's `registerFieldControl`. Each exposes its value as
-`value`, so the field's label, `aria-invalid` and `aria-describedby` land on the
-visible input (or, for the OTP, on the slot group) and a form reset or
-`FormController.setValue` repaints it. Each host calls `syncFieldControl` from its `onConnected`, which asks its `se-field` to sync the label and ARIA onto the rendered control once; the field observes no mutations. They submit through native `FormData`
+`value`, and a form reset or `FormController.setValue` repaints it. Each host
+declares its ARIA target with `fieldControlHostAttributes` and paints the
+field's `id`, label and ARIA onto it declaratively: it reads `fieldContext` with
+`@contextSelector` into a field decorated with
+`@bindTo(fieldAriaBindings(selector))` from `@ecopages/radiant-ui/field`, so the
+field writes nothing on the host and observes no mutations. The hosts do not
+spread `fieldAria(field)` in `render()`: an attribute that appears on a rendered
+element, such as `aria-describedby` when an error shows, makes Radiant replace the
+element, which drops its focus and detaches the mask. They submit through native `FormData`
 and fire a bubbling `rui-change`. The OTP keeps one entry per slot, so a
 character stays in its slot; its value is the slots joined, and an incomplete
 code is a shorter string. The `input-otp` field schema adds a default `pattern` rule that accepts an empty code or one with every slot filled and reports "Enter all N characters" (or the config's `incompleteMessage`) otherwise, unless the author wrote a `minLength`, `maxLength` or `pattern` rule, so `validateForm` output and headless `validateFormValues` carry it too. `drop-zone` is registered

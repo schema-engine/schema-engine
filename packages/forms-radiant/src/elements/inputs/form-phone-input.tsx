@@ -17,12 +17,9 @@ import { RuiListbox, RuiListboxOption, RuiListboxOptionIndicator } from '@ecopag
 import type { CountryCode } from 'libphonenumber-js';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
-import {
-	emitControlChange,
-	fieldControlHostAttributes,
-	registerValueControl,
-	syncFieldControl,
-} from '@/lib/field-control';
+import { emitControlChange, fieldControlHostAttributes, registerValueControl } from '@/lib/field-control';
+import { contextSelector } from '@ecopages/radiant/context';
+import { fieldAriaBindings, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
 import { FieldGroup } from '../field-group';
 import {
 	detectCountryFromInput,
@@ -74,6 +71,10 @@ export class SePhoneInput extends FormAssociatedElement {
 	@state @bindTo({ bool: 'data-ready' }) protected ready = false;
 	@state protected countries: PhoneCountryOption[] = [];
 	@state protected display = '';
+	@contextSelector({ context: fieldContext })
+	@bindTo(fieldAriaBindings('[data-ref="number"]'))
+	@state
+	protected field?: FieldContextValue = undefined;
 
 	private committed = '';
 	private lib?: LibPhoneNumber;
@@ -88,7 +89,6 @@ export class SePhoneInput extends FormAssociatedElement {
 	}
 
 	protected override onConnected(): void {
-		syncFieldControl(this);
 		void this.boot();
 		this.registerCleanupCallback(() => {
 			this.bootGeneration += 1;
@@ -249,6 +249,7 @@ export function FormPhoneInput(config: PhoneInputFieldProps) {
 			disabled={config.disabled}
 		>
 			<SePhoneInput
+				{...fieldControlHostAttributes('[data-ref="number"]')}
 				name={config.name}
 				placeholder={config.placeholder}
 				disabled={config.disabled}

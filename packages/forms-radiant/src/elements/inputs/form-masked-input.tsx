@@ -4,12 +4,9 @@ import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-as
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
-import {
-	emitControlChange,
-	fieldControlHostAttributes,
-	registerValueControl,
-	syncFieldControl,
-} from '@/lib/field-control';
+import { emitControlChange, fieldControlHostAttributes, registerValueControl } from '@/lib/field-control';
+import { contextSelector } from '@ecopages/radiant/context';
+import { fieldAriaBindings, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
 import { FieldGroup } from '../field-group';
 import {
 	createPatternMaskOptions,
@@ -62,6 +59,10 @@ export class SeMaskedInput extends FormAssociatedElement {
 	@prop({ type: Object }) definitions?: Record<string, string>;
 
 	@state @bindTo({ bool: 'data-ready' }) protected ready = false;
+	@contextSelector({ context: fieldContext })
+	@bindTo(fieldAriaBindings('[data-ref="input"]'))
+	@state
+	protected field?: FieldContextValue = undefined;
 
 	@query({ ref: 'input' }) input!: HTMLInputElement | null;
 
@@ -78,7 +79,6 @@ export class SeMaskedInput extends FormAssociatedElement {
 	}
 
 	protected override onConnected(): void {
-		syncFieldControl(this);
 		void this.attachMask();
 		this.registerCleanupCallback(() => {
 			this.attachGeneration += 1;
@@ -206,6 +206,7 @@ export function FormMaskedInput(config: MaskedInputFieldProps) {
 			disabled={config.disabled}
 		>
 			<SeMaskedInput
+				{...fieldControlHostAttributes('[data-ref="input"]')}
 				name={config.name}
 				placeholder={config.placeholder}
 				disabled={config.disabled}

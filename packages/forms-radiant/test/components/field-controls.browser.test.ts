@@ -1,6 +1,5 @@
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, expect, test } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
-import { FormFieldElement } from '@/elements/form-field';
 import { formOf, mountField as mount } from './mount-field';
 
 afterEach(() => document.body.replaceChildren());
@@ -22,6 +21,31 @@ test('a required masked input carries its label and ARIA on the visible input', 
 	expect(document.getElementById(describedBy.split(' ').at(-1)!)?.textContent).toBe('Required');
 	expect(host.querySelectorAll('se-field input')).toHaveLength(1);
 	expect(host.querySelector('se-masked-input')!.hasAttribute('aria-invalid')).toBe(false);
+});
+
+test('a phone input labels its number input and leaves the host free of ARIA', async () => {
+	const { host } = await mount({ ...phone, label: 'Mobile phone' });
+	await expect.poll(() => host.querySelector('se-phone-input[data-ready]')).toBeTruthy();
+
+	await expect.element(page.getByRole('textbox', { name: /^Mobile phone/ })).toBeInTheDocument();
+	const phoneHost = host.querySelector('se-phone-input')!;
+	expect(phoneHost.hasAttribute('aria-labelledby')).toBe(false);
+	expect(phoneHost.hasAttribute('aria-invalid')).toBe(false);
+});
+
+test.each([
+	['masked-input', masked, 'se-masked-input input'],
+	['phone-input', phone, 'se-phone-input [data-ref="number"]'],
+])('a %s keeps the same input when its field becomes invalid', async (_name, element, selector) => {
+	const { host } = await mount({ ...element, rules: [{ type: 'required', message: 'Required' }] });
+	await expect.poll(() => host.querySelector('se-field')?.querySelector(selector)?.id).toBeTruthy();
+	const input = host.querySelector<HTMLInputElement>(selector)!;
+	input.focus();
+
+	await userEvent.tab();
+
+	await expect.poll(() => input.getAttribute('aria-invalid')).toBe('true');
+	expect(host.querySelector(selector)).toBe(input);
 });
 
 test('a reset clears the visible masked input', async () => {
@@ -156,7 +180,7 @@ test('a drop zone stores its files and a reset clears them and the file input', 
 	expect(formOf(field).getValue('upload') ?? []).toEqual([]);
 });
 
-test('a field observes no mutations and resyncs once for each custom control it holds', async () => {
+test('a field observes no mutations and leaves every custom control host free of ARIA', async () => {
 	const observed: Node[] = [];
 	const NativeObserver = window.MutationObserver;
 	window.MutationObserver = class extends NativeObserver {
@@ -165,16 +189,17 @@ test('a field observes no mutations and resyncs once for each custom control it 
 			super.observe(target, options);
 		}
 	};
-	const resync = vi.spyOn(FormFieldElement.prototype, 'resyncControl');
 	try {
 		const { host } = await mount(otp);
-		await expect
-			.poll(() => host.querySelector('se-input-otp [data-ref="group"]')?.getAttribute('aria-labelledby'))
-			.toBeTruthy();
+		const group = () => host.querySelector('se-input-otp [data-ref="group"]');
+		await expect.poll(() => group()?.getAttribute('aria-labelledby')).toBeTruthy();
 		await userEvent.type(host.querySelector<HTMLInputElement>('se-input-otp input')!, '1');
 
 		expect(observed.some((target) => target instanceof Element && target.closest('se-field'))).toBe(false);
-		expect(resync).toHaveBeenCalledTimes(1);
+		const otpHost = host.querySelector('se-input-otp')!;
+		expect(otpHost.hasAttribute('id')).toBe(false);
+		expect(otpHost.hasAttribute('aria-labelledby')).toBe(false);
+		expect(group()?.id).toBe(host.querySelector('se-field label')?.getAttribute('for'));
 	} finally {
 		window.MutationObserver = NativeObserver;
 	}

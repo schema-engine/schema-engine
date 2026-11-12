@@ -1,5 +1,4 @@
-import { registerFieldControl, RUI_FIELD_MANAGED_ATTR } from '@ecopages/radiant-ui/form';
-import type { FormFieldElement } from '@/elements/form-field';
+import { registerFieldControl } from '@ecopages/radiant-ui/form';
 
 /** The attribute that names, as a selector, the control inside a host that carries the label and ARIA. */
 export const FIELD_ARIA_TARGET_ATTR = 'data-rui-aria-target';
@@ -9,50 +8,18 @@ export const FIELD_ARIA_TARGET_ATTR = 'data-rui-aria-target';
  *
  * @remarks
  * `data-rui-control` lets the field see focus leaving the host, and
- * `data-rui-aria-target` names the visible input inside it, so the label and
- * the ARIA state land on the input the user types in.
+ * `data-rui-aria-target` names the visible input inside it. Declaring a target
+ * makes the host paint the field's label and ARIA state onto it itself, with
+ * `fieldAria(field)` from `@ecopages/radiant-ui/field`.
+ *
+ * @remarks
+ * A host that a view creates on the client only receives these from its decorator
+ * once it connects, after the field around it connected and synced. Spread them on
+ * the element in the view too, so the field sees the declaration on its first sync
+ * and leaves the host free of ARIA.
  */
 export function fieldControlHostAttributes(ariaTarget: string): Record<string, string> {
 	return { 'data-rui-control': '', [FIELD_ARIA_TARGET_ATTR]: ariaTarget };
-}
-
-/**
- * Removes the ARIA state `rui-field` wrote on a host before its own control rendered.
- *
- * @remarks
- * A field connects, and syncs once, before the host renders the control that
- * `data-rui-aria-target` names. That sync finds no target and falls back to the
- * host, leaving an id, `aria-invalid`, `aria-required`, `aria-labelledby` and
- * `aria-describedby` on a generic element, where they are invalid ARIA. The next
- * sync, after the render, writes the same state on the control.
- */
-export function releaseFieldAria(host: HTMLElement): void {
-	if (host.id.startsWith('rui-field-')) {
-		host.removeAttribute('id');
-	}
-	for (const attribute of [
-		'aria-invalid',
-		'aria-required',
-		'aria-disabled',
-		'aria-describedby',
-		'aria-labelledby',
-		RUI_FIELD_MANAGED_ATTR,
-	]) {
-		host.removeAttribute(attribute);
-	}
-}
-
-/**
- * Hands a custom control host's label and ARIA to the control it renders.
- *
- * @remarks
- * Call it from the host's `onConnected`: it strips the ARIA the field wrote on the
- * host, then asks the enclosing `se-field` to sync once, which is what lets the
- * field stop observing its subtree.
- */
-export function syncFieldControl(host: HTMLElement): void {
-	releaseFieldAria(host);
-	host.closest<FormFieldElement>('se-field')?.resyncControl();
 }
 
 /**

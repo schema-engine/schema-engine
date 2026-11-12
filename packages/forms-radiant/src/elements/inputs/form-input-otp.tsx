@@ -1,15 +1,12 @@
 import './form-input-otp.css';
-import { customElement, prop, query, state } from '@ecopages/radiant';
+import { bindTo, customElement, prop, query, state } from '@ecopages/radiant';
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
-import {
-	emitControlChange,
-	fieldControlHostAttributes,
-	registerValueControl,
-	syncFieldControl,
-} from '@/lib/field-control';
+import { emitControlChange, fieldControlHostAttributes, registerValueControl } from '@/lib/field-control';
+import { contextSelector } from '@ecopages/radiant/context';
+import { fieldAriaBindings, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
 import { FieldGroup } from '../field-group';
 import type { InputOTPFieldProps } from './form-input-otp.types';
 
@@ -37,6 +34,10 @@ export class SeInputOtp extends FormAssociatedElement {
 	@prop({ type: String, defaultValue: 'numeric' }) pattern: 'numeric' | 'alphanumeric' = 'numeric';
 
 	@state protected slots: string[] = [];
+	@contextSelector({ context: fieldContext })
+	@bindTo(fieldAriaBindings('[data-ref="group"]'))
+	@state
+	protected field?: FieldContextValue = undefined;
 
 	@query({ ref: 'slot', all: true }) slotInputs!: HTMLInputElement[];
 
@@ -57,10 +58,6 @@ export class SeInputOtp extends FormAssociatedElement {
 
 	protected override restoreFormState(state: FormValue): void {
 		this.value = typeof state === 'string' ? state : '';
-	}
-
-	protected override onConnected(): void {
-		syncFieldControl(this);
 	}
 
 	private padSlots(chars: readonly string[]) {
@@ -158,6 +155,7 @@ export function FormInputOTP(config: InputOTPFieldProps) {
 			disabled={config.disabled}
 		>
 			<SeInputOtp
+				{...fieldControlHostAttributes('[data-ref="group"]')}
 				name={config.name}
 				length={config.length ?? 6}
 				pattern={config.pattern ?? 'numeric'}
