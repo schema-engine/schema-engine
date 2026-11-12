@@ -239,3 +239,39 @@ in with `useFieldHost` (React) or `mergeFieldGridHost` (Radiant). An element
 without that host ignores its `grid` config entirely. And a field host with
 its own layout sets `--se-field-display-mode` instead of `display`, which
 responsive `hidden` toggles against rather than forcing `block`.
+
+## Appearance ownership
+
+Named appearance mirrors the grid split. The **engine** owns the vocabulary through the
+`appearance` option on engine creation: the axes (`size` as `compact | default | comfortable`
+and `surface` as `flat | outlined | elevated` ship built in; a host adds an axis such as `tone`
+or lists more values on a built-in one), the closed value list of each, and optionally the
+CSS custom properties a value stands for (`--se-size-padding`, `--se-surface-shadow`). The
+**form** owns intent: a form, a step, a field or a view slot picks a value per axis with
+`appearance: { size: 'compact' }`. A renderer never defaults or interprets a pick; it emits it.
+
+Each element registration declares the axes it supports (`appearanceAxes`), and each recipe
+spec declares them per slot (`appearanceAxes: { shell: ['size', 'surface'] }`). An axis
+that is not declared fails validation naming the axis and the owner, so the same config means
+the same thing in every renderer. `validateForm` checks every pick against the vocabulary and the
+declarations (an unknown axis, an undeclared axis for that owner, an unknown value), then writes
+the **resolved appearance** into the normalized config the way it writes the resolved view: the
+form's picks, then the step's, then each containing element's, then the element's or slot's own,
+each owner keeping only the axes it supports. An element without a resolved pick carries no
+`appearance` key. A registration's own schema never sees the key; the engine strips it before
+parsing and writes it back, so a custom registration whose schema is strict still supports axes.
+
+Both renderers emit the resolved selection as `data-se-<axis>="<value>"` on the form element
+(the one carrying `className` and `style`: `<form>` in React, `rui-form` in Radiant), the step
+element (`data-se-step`), the field host and the slot elements, and they emit the engine's token
+stylesheet once per form next to the grid theme. Token rules are written as
+`:where(<theme scope> [data-se-size="compact"])`, so they add no specificity and an author's
+`className` always wins; the scope is `data-se-appearance-theme`, the engine's appearance id,
+on the form element, so two engines with different tokens cannot overwrite each other. Shells read
+the tokens (`var(--se-size-padding, 1.5rem)`) and keep the look of an unstyled form as the
+fallback. What a host's own axis looks like is the host's CSS, keyed on the same attributes.
+
+`maxWidth`, `padding` and `shadowSize` are axes now, not slot config. `contentWidth`, `sideWidth` and
+the structural keys (`showDescription`, `orientation`, `labels`, `align`) stay in slot config
+because they change layout or content, not appearance. `style` is the escape hatch for what the
+vocabulary does not cover and accepts only `--custom-property` keys with string or number values.

@@ -30,7 +30,7 @@ const engine = createFormEngine({
 `createFormEngine` registers elements, recipes, and actions in one declarative
 call. A recipe is the single view protocol: it declares the recipe kind,
 shell/slot keys, validation schema, metadata, and framework adapter payload.
-Forms select one recipe with `view.$type`. `@schema-engine/forms/recipes` is the protocol (`defineRecipeSpec`, the renderer-neutral `defineFormRecipe`, the view model; adapters wrap it as `defineRecipe` to type the render payload against the spec's slots); `@schema-engine/forms/recipes/built-in` holds the nine built-in specs (moved off `/recipes`), their slot schemas and config types. `defineRecipeSpec` keeps the concrete view schema type, so `defineForm` types each declared slot's config and rejects slot keys the recipe does not declare. `slotDefaults` are typed against the slot schemas and validated when the spec is defined. Each slot schema owns its defaults (including default labels), and each declared slot defaults to `{}` in the view schema, so the normalized `view` is complete and the view JSON Schema shows every default. `getSlotConfig(viewConfig, slot, schema)` returns `z.output<schema>`. The wizard `actions` slot's `showStepCounter` defaults to `true` regardless of `appearance`. `createFormEngine` enforces the kind rules (single-step recipes declare no `progress` slot, wizard recipes declare `actions`) for every registration. In `split-screen-wizard` the side panel shows the form title and the header shows the step title (`header.fallbackToFormTitle` defaults to `false` there, `true` elsewhere); a single-step `split-screen` keeps its panel title.
+Forms select one recipe with `view.$type`. `@schema-engine/forms/recipes` is the protocol (`defineRecipeSpec`, the renderer-neutral `defineFormRecipe`, the view model; adapters wrap it as `defineRecipe` to type the render payload against the spec's slots); `@schema-engine/forms/recipes/built-in` holds the nine built-in specs (moved off `/recipes`), their slot schemas and config types. `defineRecipeSpec` keeps the concrete view schema type, so `defineForm` types each declared slot's config and rejects slot keys the recipe does not declare. `slotDefaults` are typed against the slot schemas and validated when the spec is defined. Each slot schema owns its defaults (including default labels), and each declared slot defaults to `{}` in the view schema, so the normalized `view` is complete and the view JSON Schema shows every default. `getSlotConfig(viewConfig, slot, schema)` returns `z.output<schema>`. The wizard `actions` slot's `showStepCounter` defaults to `true` regardless of `variant`. `createFormEngine` enforces the kind rules (single-step recipes declare no `progress` slot, wizard recipes declare `actions`) for every registration. In `split-screen-wizard` the side panel shows the form title and the header shows the step title (`header.fallbackToFormTitle` defaults to `false` there, `true` elsewhere); a single-step `split-screen` keeps its panel title.
 
 ```ts
 const contactForm = engine.defineForm({
@@ -127,6 +127,50 @@ read as camelCase `CSSProperties` by React and as a plain record by Radiant.
 ```ts
 { id: 'checkout', className: 'checkout-step', style: { '--accent': '#f60' }, title: 'Checkout', elements: [] }
 ```
+
+### Appearance
+
+The engine also owns the appearance vocabulary through the optional `appearance`
+option. `size` (`compact | default | comfortable`) and `surface`
+(`flat | outlined | elevated`) are built in; a host adds an axis, or lists more
+values on a built-in one, and may map each value to the CSS custom properties it
+sets:
+
+```ts
+const engine = createFormEngine({
+	appearance: {
+		tone: ['neutral', 'brand'],
+		size: ['dense'],
+		surface: { elevated: { '--se-surface-shadow': '0 2px 4px rgb(0 0 0 / 0.2)' } },
+	},
+});
+```
+
+A form, a step, a field and a view slot pick values with `appearance`, and the
+typed `defineForm` narrows the values to the engine's axes:
+
+```ts
+engine.defineForm({
+	id: 'checkout',
+	appearance: { size: 'compact' },
+	view: { $type: 'card', shell: { appearance: { surface: 'elevated' } } },
+	steps: [{ id: 'pay', title: 'Pay', appearance: { size: 'default' }, elements: [] }],
+});
+```
+
+Each element registration declares the axes it supports with `appearanceAxes`
+(`defineInput({ $type: 'input', appearanceAxes: ['size'], ... })`), and each
+recipe spec declares them per slot (`defineRecipeSpec({ appearanceAxes: { shell: ['size', 'surface'] } })`);
+a slot that declares axes must accept an `appearance` key in its schema. An axis that is not
+declared fails validation. `validateForm` rejects an unknown axis, an undeclared axis for that
+owner and an unknown value, naming the path and the allowed values, and writes the resolved
+appearance (form, then step, then containing element, then the element or slot itself, each keeping
+only the axes it supports) into the normalized config. `engine.getAppearance()` returns the frozen
+vocabulary (`axes`, the token stylesheet `css`, and the `id` that scopes it); `engine.extend()`
+inherits it, and `appearance` is not an extend option. Renderers emit `data-se-<axis>` attributes
+and the token stylesheet; token rules sit inside `:where()`, so an author's `className` wins. The
+built-in card shell no longer takes `maxWidth`, `padding` or `shadowSize`: they are `size` and
+`surface` values. The wizard `actions` slot's former `appearance` key is now `variant`.
 
 ### Grid theme
 
