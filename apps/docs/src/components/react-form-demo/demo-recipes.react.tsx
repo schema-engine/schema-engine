@@ -1,8 +1,14 @@
 /** @jsxImportSource react */
 import type { ReactNode } from 'react';
-import { defineFormRecipe, type FormShellLayout } from '@schema-engine/forms/recipes';
-import { cardSpec, wizardSpec } from '@schema-engine/forms/recipes/built-in';
+import { defineRecipeSpec, getSlotConfig, type FormShellLayout } from '@schema-engine/forms/recipes';
+import {
+	CardShellConfigSchema,
+	StepHeaderConfigSchema,
+	cardSpec,
+	wizardSpec,
+} from '@schema-engine/forms/recipes/built-in';
 import { useActiveStep, useViewConfig, useViewContext } from '@schema-engine/forms-react/hooks';
+import { defineRecipe } from '@schema-engine/forms-react/primitives';
 
 type ShellProps = FormShellLayout<ReactNode>;
 
@@ -16,7 +22,7 @@ type ShellProps = FormShellLayout<ReactNode>;
  */
 
 function DemoCardShell({ slots, viewConfig }: ShellProps) {
-	const padding = (((viewConfig.shell ?? {}) as Record<string, unknown>).padding as string | undefined) ?? 'lg';
+	const { padding } = getSlotConfig(viewConfig, 'shell', CardShellConfigSchema);
 	return (
 		<div className="se-demo-shell">
 			<div className="se-demo-shell__card">
@@ -36,7 +42,7 @@ function DemoCardShell({ slots, viewConfig }: ShellProps) {
 function DemoStepHeader() {
 	const { form } = useViewContext();
 	const step = useActiveStep();
-	const { showDescription = true, showStepCounter = false } = useViewConfig('header');
+	const { showDescription, showStepCounter } = useViewConfig('header', StepHeaderConfigSchema);
 	const title = step.title || form.title;
 	const description = step.description || form.description;
 	const counter = showStepCounter ? `Step ${step.index + 1} of ${step.total}` : null;
@@ -123,12 +129,30 @@ function DemoFormActions() {
 	);
 }
 
-export const DemoCardRecipe = defineFormRecipe(cardSpec, {
+const demoShellDefaults = { shell: { padding: 'lg' } } as const;
+
+const demoCardSpec = defineRecipeSpec({
+	$type: cardSpec.$type,
+	kind: cardSpec.kind,
+	metadata: cardSpec.metadata,
+	slotSchemas: cardSpec.slotSchemas,
+	slotDefaults: { ...cardSpec.slotDefaults, ...demoShellDefaults },
+});
+
+const demoWizardSpec = defineRecipeSpec({
+	$type: wizardSpec.$type,
+	kind: wizardSpec.kind,
+	metadata: wizardSpec.metadata,
+	slotSchemas: { ...wizardSpec.slotSchemas, shell: CardShellConfigSchema },
+	slotDefaults: { ...wizardSpec.slotDefaults, ...demoShellDefaults },
+});
+
+export const DemoCardRecipe = defineRecipe(demoCardSpec, {
 	shell: DemoCardShell,
 	slots: { header: DemoStepHeader, actions: DemoFormActions },
 });
 
-export const DemoWizardRecipe = defineFormRecipe(wizardSpec, {
+export const DemoWizardRecipe = defineRecipe(demoWizardSpec, {
 	shell: DemoCardShell,
 	slots: { header: DemoStepHeader, progress: DemoStepIndicators, actions: DemoWizardActions },
 });

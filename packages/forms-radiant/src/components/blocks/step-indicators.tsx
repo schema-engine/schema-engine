@@ -2,16 +2,16 @@ import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, onEvent, prop, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { RuiButton } from '@ecopages/radiant-ui/button';
-import { getSlotConfig } from '@schema-engine/forms/recipes';
 import { type StepIndicatorsConfig } from '@schema-engine/forms/recipes/built-in';
 import type { FormMeta } from '@/lib/instance-view';
+import type { RecipeSlotContext } from '@/recipes/types';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { deriveFormSteps, deriveInitialInstance } from '@/lib/instance-view';
 
 @customElement('se-step-indicators')
 export class StepIndicatorsElement extends RadiantElement {
 	@prop({ type: Object }) meta?: FormMeta;
-	@prop({ type: Object }) viewConfig?: Record<string, unknown>;
+	@prop({ type: Object }) slotConfig?: StepIndicatorsConfig;
 
 	@contextSelector({ context: formInstanceContext })
 	instance?: FormInstanceContextValue;
@@ -28,15 +28,16 @@ export class StepIndicatorsElement extends RadiantElement {
 		if (!meta) return null;
 		const instance = this.instance ?? deriveInitialInstance(meta);
 
-		const indicatorsConfig = getSlotConfig<StepIndicatorsConfig>(this.viewConfig ?? {}, 'progress');
-		const showNumbers = indicatorsConfig.showStepNumbers ?? true;
-		const showTitles = indicatorsConfig.showStepTitles ?? true;
-		const showDescriptions = indicatorsConfig.showStepDescriptions ?? false;
+		const indicatorsConfig = this.slotConfig;
+		if (!indicatorsConfig) return null;
+		const showNumbers = indicatorsConfig.showStepNumbers;
+		const showTitles = indicatorsConfig.showStepTitles;
+		const showDescriptions = indicatorsConfig.showStepDescriptions;
 		const sidebar = indicatorsConfig.orientation === 'sidebar';
 		const steps = deriveFormSteps(meta, instance);
 		return (
 			<nav
-				aria-label={indicatorsConfig.labels?.regionAriaLabel ?? 'Form progress'}
+				aria-label={indicatorsConfig.labels.regionAriaLabel}
 				classes={['se-step-indicators', sidebar && 'se-step-indicators--sidebar']}
 			>
 				<ol class="se-step-indicators__list">
@@ -81,12 +82,9 @@ export class StepIndicatorsElement extends RadiantElement {
 	}
 }
 
-export function StepIndicatorsBlock(context?: {
-	meta?: FormMeta;
-	viewConfig?: Record<string, unknown>;
-}): JsxRenderable {
+export function StepIndicatorsBlock(context?: RecipeSlotContext): JsxRenderable {
 	return jsx('se-step-indicators', {
 		meta: context?.meta,
-		viewConfig: context?.viewConfig ?? {},
+		slotConfig: context?.slotConfig,
 	});
 }

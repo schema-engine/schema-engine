@@ -1,5 +1,5 @@
 import { getSlotConfig } from '@schema-engine/forms/recipes';
-import { type HeroShellConfig } from '@schema-engine/forms/recipes/built-in';
+import { HeroShellConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import type { FormShellProps } from '@schema-engine/forms-react/primitives';
 import { cn } from '@/components/schema-engine/forms/lib/utils';
 
@@ -11,11 +11,11 @@ const contentWidths = {
 } as const;
 
 export function HeroShell({ slots, viewConfig }: FormShellProps) {
-	const {
-		backgroundImage,
-		backgroundVideo,
-		contentWidth = 'md',
-	} = getSlotConfig<HeroShellConfig>(viewConfig, 'shell');
+	const { backgroundImage, backgroundVideo, contentWidth } = getSlotConfig(
+		viewConfig,
+		'shell',
+		HeroShellConfigSchema,
+	);
 
 	return (
 		<div

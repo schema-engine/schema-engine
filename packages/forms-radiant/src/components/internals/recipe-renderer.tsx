@@ -1,9 +1,9 @@
 import type { JsxRenderable } from '@ecopages/jsx';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
-import { type NormalizedFormConfig, resolveFormRecipe } from '@schema-engine/forms';
+import type { NormalizedFormConfig, RecipeRegistration } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { getFormGridVariables } from '@schema-engine/forms/lib/grid-styles';
-import { applySlotDefaults } from '@schema-engine/forms/recipes';
+import type { RecipeSlot } from '@schema-engine/forms/recipes';
 import type { RadiantRecipeAdapterPayload } from '@/recipes/types';
 import { createFormMeta } from '@/lib/instance-view';
 import { FormElements } from './form-elements';
@@ -32,17 +32,18 @@ export function RecipeRenderer({
 }: {
 	config: NormalizedFormConfig;
 	engine: FormEngine;
-	recipe: ReturnType<typeof resolveFormRecipe>;
+	recipe: RecipeRegistration | undefined;
 	children?: JsxRenderable;
 	initialValues?: Record<string, unknown>;
 }): JsxRenderable {
 	const values = expandValues(initialValues ?? collectFormDefaultValues(config));
 	const { theme, css: gridThemeCss } = engine.getCompiledGrid();
-	const viewConfig = recipe
-		? applySlotDefaults((config.view ?? { $type: recipe.$type }) as Record<string, unknown>, recipe.slotDefaults)
-		: ((config.view as Record<string, unknown> | undefined) ?? {});
+	const viewConfig = (config.view as Record<string, unknown> | undefined) ?? {};
 	const meta = createFormMeta(config);
-	const slotContext = { meta, viewConfig };
+	const slotContext = (slot: Exclude<RecipeSlot, 'shell'>) => ({
+		meta,
+		slotConfig: viewConfig[slot] as Record<string, unknown> | undefined,
+	});
 	const isWizard = recipe?.kind === 'wizard';
 
 	const content = (
@@ -75,10 +76,10 @@ export function RecipeRenderer({
 	const adapter = recipe.render as RadiantRecipeAdapterPayload;
 	if (!adapter?.slots) throw new Error(`Recipe '${recipe.$type}' is missing a Radiant adapter payload.`);
 	const slots = {
-		header: adapter.slots.header?.(slotContext),
-		progress: adapter.slots.progress?.(slotContext),
+		header: adapter.slots.header?.(slotContext('header')),
+		progress: adapter.slots.progress?.(slotContext('progress')),
 		content,
-		actions: adapter.slots.actions?.(slotContext),
+		actions: adapter.slots.actions?.(slotContext('actions')),
 	};
 	const output = adapter.shell ? (
 		adapter.shell({ slots, viewConfig, meta })

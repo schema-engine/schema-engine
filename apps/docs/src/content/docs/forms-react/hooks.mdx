@@ -13,12 +13,13 @@ Recipe shells and blocks can access the active view with:
 
 ```tsx
 import { useViewContext, useFormNavigation, useActiveStep, useViewConfig } from '@schema-engine/forms-react/hooks';
+import { MinimalProgressConfigSchema } from '@schema-engine/forms/recipes/built-in';
 
 function ProgressBlock() {
 	const { steps, currentStepIndex } = useViewContext();
 	const navigation = useFormNavigation();
 	const activeStep = useActiveStep();
-	const config = useViewConfig<{ showPercentage?: boolean }>('progress');
+	const { showPercentage } = useViewConfig('progress', MinimalProgressConfigSchema);
 
 	return (
 		<div>
@@ -28,8 +29,9 @@ function ProgressBlock() {
 }
 ```
 
-`useViewConfig` reads the configuration for the current recipe slot. It is
-available only inside a `ViewProvider` or a slot block rendered by a recipe.
+`useViewConfig(slot, schema)` reads the configuration for the current recipe slot
+and returns the slot schema's output: `validateForm` already filled every
+default, so blocks need no fallbacks. It is available only inside a `ViewProvider` or a slot block rendered by a recipe.
 
 ## Form hooks
 

@@ -27,7 +27,7 @@ export function describeViewCatalogFromRecipes(
 		recipes: recipes.map((recipe) => describeRecipeFromRegistration(recipe, generateViewSchema)),
 		rules: {
 			noViewSingleStep: 'Omit view for a single-step form to render fields only.',
-			noViewMultiStep: `Omit view for a multi-step form to use the registered default wizard recipe (${DEFAULT_WIZARD_RECIPE}). If that recipe is not registered, validateForm still succeeds and render warns, then every step renders on a single page without chrome.`,
+			noViewMultiStep: `Omit view for a multi-step form and validateForm writes the engine's default wizard recipe as its view (${DEFAULT_WIZARD_RECIPE} unless createFormEngine({ defaultWizardRecipe }) names another). If that recipe is not registered, validateForm still succeeds and warns, then every step renders on a single page without chrome.`,
 			oneViewPerForm:
 				'Each form has at most one view. Recipes are code-defined; forms select view.$type and pass slot config.',
 		},

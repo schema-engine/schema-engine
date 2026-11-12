@@ -12,10 +12,12 @@ import {
 	type NormalizedFormConfig,
 } from '@/lib/normalized-form-config';
 import { getElementChildren, withElementChildren } from '@/lib/element-children';
+import { DEFAULT_WIZARD_RECIPE } from '@/lib/form-view';
+import { logger } from '@/lib/logger';
+import { mergeSlotDefaults } from '@/recipes/merge-slot-defaults';
 
 export type { FormConfigView, NormalizedElementConfig, NormalizedFormConfig } from '@/lib/normalized-form-config';
-export { DEFAULT_WIZARD_RECIPE, assertFormEngine, getRenderableSteps, resolveFormRecipe } from '@/lib/form-view';
-export type { RecipeLookup } from '@/lib/form-view';
+export { DEFAULT_WIZARD_RECIPE, assertFormEngine, getRenderableSteps } from '@/lib/form-view';
 
 export class FormValidationError extends Error {
 	constructor(
@@ -33,6 +35,8 @@ export interface ValidateFormOptions {
 	/** Engine (or other owner) that produced this validation. Required to skip re-validation. */
 	owner: object;
 	getRecipe: (id: string) => AnyRecipeRegistration | undefined;
+	/** `view.$type` written for a multi-step form that omits `view`. Defaults to {@link DEFAULT_WIZARD_RECIPE}. */
+	defaultWizardRecipe?: string;
 	getElement: (id: string) => ElementRegistration | undefined;
 	getAction: (id: string) => AnyActionRegistration | undefined;
 	hasValidation: (type: string) => boolean;
@@ -92,13 +96,38 @@ function parseRegistration(schema: StandardSchemaV1, config: object, invalidPref
 	return { ok: true, data: result.data };
 }
 
+/**
+ * Form ids already warned about, per owner.
+ *
+ * @remarks
+ * A renderer re-validates an inline raw config on every render, so the missing-recipe warning
+ * would otherwise repeat for the same form.
+ */
+const warnedMissingWizardRecipe = new WeakMap<object, Set<string>>();
+
 function parseView(
-	view: FormTaggedConfig | undefined,
-	stepCount: number,
-	getRecipe: ValidateFormOptions['getRecipe'],
+	authored: FormTaggedConfig | undefined,
+	form: { id: string; stepCount: number },
+	options: Pick<ValidateFormOptions, 'getRecipe' | 'defaultWizardRecipe' | 'owner'>,
 ): { issues: string[]; view?: FormTaggedConfig } {
+	const { getRecipe } = options;
+	const stepCount = form.stepCount;
+	let view = authored;
 	if (!view) {
-		return { issues: stepCount === 0 ? ['Form must have at least one step.'] : [] };
+		if (stepCount === 0) return { issues: ['Form must have at least one step.'] };
+		if (stepCount < 2) return { issues: [] };
+		const defaultRecipe = options.defaultWizardRecipe ?? DEFAULT_WIZARD_RECIPE;
+		if (!getRecipe(defaultRecipe)) {
+			const warned = warnedMissingWizardRecipe.get(options.owner) ?? new Set<string>();
+			warnedMissingWizardRecipe.set(options.owner, warned);
+			if (warned.has(form.id)) return { issues: [] };
+			warned.add(form.id);
+			logger.warn(
+				`Form '${form.id}' has ${stepCount} steps but no '${defaultRecipe}' recipe is registered. The form renders every step on a single page without a view layout. Register a wizard recipe with createFormEngine({ recipes: [...] }) or set an explicit view.$type.`,
+			);
+			return { issues: [] };
+		}
+		view = { $type: defaultRecipe };
 	}
 
 	const recipeType = view.$type;
@@ -125,7 +154,11 @@ function parseView(
 		);
 	}
 
-	const parsed = parseRegistration(recipe.schema, view, `Invalid view configuration for recipe '${recipeType}'`);
+	const parsed = parseRegistration(
+		recipe.schema,
+		mergeSlotDefaults(view, recipe.slotDefaults),
+		`Invalid view configuration for recipe '${recipeType}'`,
+	);
 	if (!parsed.ok) {
 		issues.push(parsed.issue);
 		return { issues, view };
@@ -389,8 +422,8 @@ export function validateFormConfig(config: unknown, options: ValidateFormOptions
 
 	const view = parseView(
 		envelope.view && typeof envelope.view.$type === 'string' ? envelope.view : undefined,
-		envelope.steps.length,
-		options.getRecipe,
+		{ id: envelope.id, stepCount: envelope.steps.length },
+		options,
 	);
 	const formActions = parseActions(envelope.actions, 'form', 'actions');
 	issues.push(...view.issues, ...formActions.issues);

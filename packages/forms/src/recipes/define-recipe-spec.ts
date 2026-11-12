@@ -6,15 +6,16 @@ import { RECIPE_SLOT_ORDER } from './types';
 export type RecipeSlotSchemas = Partial<Record<RecipeSlot, z.ZodMiniType>>;
 
 /**
- * Strict view schema of a spec: the literal `$type` plus each declared slot as an optional key.
+ * Strict view schema of a spec: the literal `$type` plus each declared slot, which defaults to `{}`.
  *
  * @remarks
- * Keeping the concrete object type, rather than `z.ZodMiniType`, lets the engine infer the
+ * A slot is an optional key on input and always present on output, parsed from `{}` when the author
+ * omits it, so each slot schema's own defaults fill it. Keeping the concrete object type, rather than `z.ZodMiniType`, lets the engine infer the
  * authoring type of `view` from a registration.
  */
 export type RecipeViewSchema<TType extends string, TSlots extends RecipeSlotSchemas> = z.ZodMiniObject<
 	{ $type: z.ZodMiniLiteral<TType> } & {
-		[K in keyof TSlots]: TSlots[K] extends z.ZodMiniType ? z.ZodMiniOptional<TSlots[K]> : never;
+		[K in keyof TSlots]: TSlots[K] extends z.ZodMiniType ? z.ZodMiniPrefault<TSlots[K]> : never;
 	},
 	z.core.$strict
 >;
@@ -34,7 +35,7 @@ function mergeRecipeSlotSchemas<const TType extends string, const TSlots extends
 
 	for (const [slot, schema] of Object.entries(slotSchemas)) {
 		if (schema) {
-			shape[slot] = z.optional(schema);
+			shape[slot] = z.prefault(schema, {});
 		}
 	}
 
@@ -43,8 +44,8 @@ function mergeRecipeSlotSchemas<const TType extends string, const TSlots extends
 
 /**
  * @remarks
- * Validation only: the parsed output is discarded, so defaults are applied as authored input
- * and should not rely on slot schema defaults or transforms.
+ * Validation only: the parsed output is discarded. The defaults are merged under the author's
+ * slot config before the view schema parses, so schema defaults still fill what they leave unset.
  */
 function assertSlotDefaults(
 	$type: string,

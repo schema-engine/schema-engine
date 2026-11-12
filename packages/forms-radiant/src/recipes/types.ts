@@ -6,7 +6,8 @@ import type * as z from 'zod/mini';
 /** Serializable render inputs handed to recipe slot factories. */
 export interface RecipeSlotContext {
 	meta?: FormMeta;
-	viewConfig?: Record<string, unknown>;
+	/** The config of the slot being rendered, taken from the normalized view. */
+	slotConfig?: Record<string, unknown>;
 }
 
 export type FormShellProps = FormShellLayout<JsxRenderable> & { meta?: FormMeta };

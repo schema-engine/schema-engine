@@ -41,6 +41,7 @@ export interface EngineRegistries {
 	schemaArtifacts: FormEngineSchemaArtifacts;
 	compiledGrid: CompiledGrid;
 	validationRegistry: ValidationRegistry;
+	defaultWizardRecipe?: string;
 }
 
 export class FormEngine<
@@ -62,6 +63,7 @@ export class FormEngine<
 			schemaArtifacts: registries.schemaArtifacts,
 			compiledGrid: registries.compiledGrid,
 			validationRegistry: registries.validationRegistry,
+			defaultWizardRecipe: registries.defaultWizardRecipe,
 		};
 		this.schemaArtifacts = registries.schemaArtifacts;
 		this.compiledGrid = registries.compiledGrid;
@@ -171,6 +173,7 @@ export class FormEngine<
 		return validateFormConfig(config, {
 			owner: this,
 			getRecipe: (id) => this.getRecipe(id),
+			defaultWizardRecipe: this.registries.defaultWizardRecipe,
 			getElement: (id) => this.getElement(id),
 			getAction: (id) => this.getAction(id),
 			hasValidation: (type) => this.validationRegistry.has(type),
@@ -215,6 +218,10 @@ export class FormEngine<
 		return getAuthoringInstructionsFromCatalog(this.describeViewCatalog());
 	}
 
+	/**
+	 * @remarks
+	 * Generated as input: authors may omit prefaulted slots and defaulted keys, so only `$type` is required.
+	 */
 	private generateRecipeViewSchema(recipe: AnyRecipeRegistration): Record<string, unknown> {
 		try {
 			return generateZodJSONSchemaDocument(
@@ -222,6 +229,7 @@ export class FormEngine<
 				this.schemaArtifacts.metadataRegistry,
 				{
 					target: 'draft-2020-12',
+					io: 'input',
 					schemaId: SchemaMetadataCatalog.entryId(ComponentType.Recipe, recipe.$type),
 				},
 			) as Record<string, unknown>;
@@ -309,6 +317,7 @@ export class FormEngine<
 			actions: [...this.getAllActions(), ...(options?.actions ?? [])],
 			catalog: options?.catalog ?? this.schemaArtifacts.metadataCatalog,
 			compiledGrid: this.compiledGrid,
+			defaultWizardRecipe: this.registries.defaultWizardRecipe,
 		}) as unknown as FormEngine<
 			LastWinsMerge<TElements, MergedRegistrationMap<TNewElements>>,
 			LastWinsMerge<TRecipes, MergedRegistrationMap<TNewRecipes>>,

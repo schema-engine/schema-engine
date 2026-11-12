@@ -35,9 +35,11 @@ type ExactSlots<TView, TDeclared> = {
 		: never;
 };
 
-type ExactSlot<TSlot, TDeclared> = TSlot extends object
-	? { [Q in keyof TSlot]: Q extends keyof TDeclared ? TSlot[Q] : never }
-	: TSlot;
+type ExactSlot<TSlot, TDeclared> = TSlot extends readonly unknown[] | ((...args: never[]) => unknown)
+	? TSlot
+	: TSlot extends object
+		? { [Q in keyof TSlot]: Q extends keyof TDeclared ? ExactSlot<TSlot[Q], NonNullable<TDeclared[Q]>> : never }
+		: TSlot;
 
 export type FormAuthoringAction<TActions extends Record<string, unknown>> = DiscriminatedConfigs<TActions>;
 

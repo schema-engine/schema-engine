@@ -1,4 +1,5 @@
 import { createContext, useContext, type ReactNode } from 'react';
+import type * as z from 'zod/mini';
 import type { RecipeSlot, ViewModel, ViewNavigation } from '@schema-engine/forms/recipes';
 import { getSlotConfig } from '@schema-engine/forms/recipes';
 
@@ -30,6 +31,7 @@ export function useFormNavigation(): ViewNavigation {
 	return useViewContext().navigation;
 }
 
-export function useViewConfig<TConfig = Record<string, unknown>>(slot: RecipeSlot): TConfig {
-	return getSlotConfig<TConfig>(useViewContext().viewConfig, slot);
+/** Reads the complete config of one slot, typed by the slot schema's output. */
+export function useViewConfig<TSchema extends z.ZodMiniType>(slot: RecipeSlot, schema: TSchema): z.output<TSchema> {
+	return getSlotConfig(useViewContext().viewConfig, slot, schema);
 }

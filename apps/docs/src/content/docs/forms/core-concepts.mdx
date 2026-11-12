@@ -66,10 +66,13 @@ validated at the same boundary; the normalized marker is applied only after that
 succeeds. They return a frozen `NormalizedFormConfig` owned by that engine.
 Snapshot isolation copies plain objects and arrays; other objects currently
 remain shared. A form normalized by one engine cannot be passed to another;
-start from authoring input or JSON instead. They do **not** apply the default
-wizard recipe. A multi-step form that omits `view` validates successfully; at
-render, `resolveFormRecipe` uses registered `bare-controls`, or renders fields
-without chrome and warns once per engine.
+start from authoring input or JSON instead. They write the resolved `view`:
+a multi-step form that omits `view` gets `{ $type: 'bare-controls' }` (or the
+engine's `defaultWizardRecipe`), and each slot config is the recipe's
+`slotDefaults` under the author's keys, merged deep. When the default recipe is
+not registered the form validates without a `view`, `validateForm` warns, and
+the renderer paints fields without chrome. Renderers read the normalized `view`
+and do not apply defaults themselves.
 
 React and Radiant render that normalized form. They do not re-parse element
 input schemas. A field created outside a form must go through

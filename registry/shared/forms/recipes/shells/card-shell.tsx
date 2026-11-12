@@ -1,5 +1,5 @@
 import { getSlotConfig } from '@schema-engine/forms/recipes';
-import { type CardShellConfig } from '@schema-engine/forms/recipes/built-in';
+import { CardShellConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import type { FormShellProps } from '@schema-engine/forms-react/primitives';
 import { cn } from '@/components/schema-engine/forms/lib/utils';
 
@@ -24,7 +24,7 @@ const shadows = {
 } as const;
 
 export function CardShell({ slots, viewConfig }: FormShellProps) {
-	const { maxWidth = 'md', padding = 'md', shadowSize = 'md' } = getSlotConfig<CardShellConfig>(viewConfig, 'shell');
+	const { maxWidth, padding, shadowSize } = getSlotConfig(viewConfig, 'shell', CardShellConfigSchema);
 	const paddingClass = paddings[padding];
 
 	return (

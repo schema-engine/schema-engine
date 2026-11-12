@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@/engine/create-form-engine';
-import { DEFAULT_WIZARD_RECIPE, FormValidationError, getRenderableSteps, resolveFormRecipe } from '@/lib/validate-form';
+import { FormValidationError, getRenderableSteps } from '@/lib/validate-form';
 import { isNormalizedFormConfig, isNormalizedElementConfig } from '@/lib/normalized-form-config';
 import { defineFormRecipe } from '@/recipes/define-form-recipe';
 import { defineRecipeSpec } from '@/recipes/define-recipe-spec';
@@ -31,24 +31,76 @@ const wizardRecipe = defineFormRecipe(
 	{},
 );
 
+const bareControlsRecipe = defineFormRecipe(
+	defineRecipeSpec({
+		$type: 'bare-controls',
+		kind: 'wizard',
+		metadata: { name: 'Bare controls', description: 'Bare wizard recipe' },
+		slotSchemas: { actions: z.strictObject({}) },
+	}),
+	{},
+);
+
+const nestedDefaultsRecipe = defineFormRecipe(
+	defineRecipeSpec({
+		$type: 'nested',
+		kind: 'single-step',
+		metadata: { name: 'Nested', description: 'Recipe with nested slot defaults' },
+		slotSchemas: {
+			header: z.strictObject({
+				size: z.optional(z.string()),
+				labels: z.optional(z.strictObject({ a: z.optional(z.string()), b: z.optional(z.string()) })),
+			}),
+		},
+		slotDefaults: { header: { size: 'sm', labels: { a: 'A', b: 'default b' } } },
+	}),
+	{},
+);
+
+const twoStepForm = {
+	id: 'wizard',
+	steps: [
+		{ id: 'one', title: 'One', elements: [] },
+		{ id: 'two', title: 'Two', elements: [] },
+	],
+};
+
 function createEngine() {
 	return createFormEngine({ recipes: [cardRecipe, wizardRecipe] });
 }
 
 describe('validateFormConfig', () => {
-	test('resolves the registered default wizard recipe for multi-step forms', () => {
-		const recipe = resolveFormRecipe(
-			{
-				id: 'wizard',
-				steps: [
-					{ id: 'one', title: 'One', elements: [] },
-					{ id: 'two', title: 'Two', elements: [] },
-				],
-			},
-			{ getRecipe: (id) => (id === DEFAULT_WIZARD_RECIPE ? wizardRecipe : undefined) },
-		);
+	test('writes the default wizard recipe as the view of a multi-step form without view', () => {
+		const engine = createFormEngine({ recipes: [bareControlsRecipe] });
+		expect(engine.validateForm(twoStepForm).view?.$type).toBe('bare-controls');
+	});
 
-		expect(recipe).toBe(wizardRecipe);
+	test('writes the engine defaultWizardRecipe as the view', () => {
+		const engine = createFormEngine({ recipes: [cardRecipe, wizardRecipe], defaultWizardRecipe: 'wizard' });
+		expect(engine.validateForm(twoStepForm).view?.$type).toBe('wizard');
+		expect(engine.extend().validateForm(twoStepForm).view?.$type).toBe('wizard');
+	});
+
+	test('rejects a single-step recipe registered as the implicit bare-controls default', () => {
+		const singleStepBare = defineFormRecipe(
+			defineRecipeSpec({
+				$type: 'bare-controls',
+				kind: 'single-step',
+				metadata: { name: 'Bare', description: 'Single-step recipe named like the default' },
+				slotSchemas: { shell: z.strictObject({}) },
+			}),
+			{},
+		);
+		expect(() => createFormEngine({ recipes: [singleStepBare] })).toThrow(/must be a wizard recipe/);
+	});
+
+	test.each([
+		['an unregistered recipe', 'missing'],
+		['a single-step recipe', 'card'],
+	])('rejects defaultWizardRecipe naming %s at engine build', (_label, name) => {
+		expect(() => createFormEngine({ recipes: [cardRecipe], defaultWizardRecipe: name })).toThrow(
+			/defaultWizardRecipe/,
+		);
 	});
 
 	test.each([
@@ -65,46 +117,30 @@ describe('validateFormConfig', () => {
 		);
 	});
 
-	test('warns once per engine when a multi-step form has no wizard recipe registered', () => {
+	test('warns once per form id and leaves the view unset when no default wizard recipe is registered', () => {
 		const warn = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
-		const config = {
-			id: 'headless-wizard',
-			steps: [
-				{ id: 'one', title: 'One', elements: [] },
-				{ id: 'two', title: 'Two', elements: [] },
-			],
-		};
-		const lookup = { getRecipe: () => undefined };
-
 		try {
-			expect(resolveFormRecipe(config, lookup)).toBeUndefined();
-			expect(resolveFormRecipe(config, lookup)).toBeUndefined();
+			const engine = createEngine();
+			expect(engine.validateForm(twoStepForm).view).toBeUndefined();
 			expect(warn).toHaveBeenCalledTimes(1);
-			expect(warn.mock.calls[0]?.map(String).join(' ')).toMatch(/no 'bare-controls' recipe is registered/i);
-
-			expect(resolveFormRecipe(config, { getRecipe: () => undefined })).toBeUndefined();
+			engine.validateForm(twoStepForm);
+			expect(warn).toHaveBeenCalledTimes(1);
+			engine.validateForm({ ...twoStepForm, id: 'another' });
 			expect(warn).toHaveBeenCalledTimes(2);
+			expect(warn.mock.calls[0]?.map(String).join(' ')).toMatch(/no 'bare-controls' recipe is registered/i);
 		} finally {
 			warn.mockRestore();
 		}
 	});
 
-	test('stays silent for multi-step forms without an engine', () => {
-		const warn = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
-		try {
-			expect(
-				resolveFormRecipe({
-					id: 'no-engine-wizard',
-					steps: [
-						{ id: 'one', title: 'One', elements: [] },
-						{ id: 'two', title: 'Two', elements: [] },
-					],
-				}),
-			).toBeUndefined();
-			expect(warn).not.toHaveBeenCalled();
-		} finally {
-			warn.mockRestore();
-		}
+	test('keeps nested recipe defaults the author did not set', () => {
+		const engine = createFormEngine({ recipes: [nestedDefaultsRecipe] });
+		const form = engine.validateForm({
+			id: 'nested',
+			steps: [{ id: 'one', title: 'One', elements: [] }],
+			view: { $type: 'nested', header: { labels: { b: 'B' } } },
+		});
+		expect(form.view).toEqual({ $type: 'nested', header: { size: 'sm', labels: { a: 'A', b: 'B' } } });
 	});
 
 	test('accepts a single-step form without view', () => {
@@ -225,7 +261,7 @@ describe('validateFormConfig', () => {
 		});
 	});
 
-	test('flattens every step when no recipe is resolved', () => {
+	test('flattens every step when the form has no view', () => {
 		const config = {
 			id: 'headless-wizard',
 			steps: [
@@ -234,8 +270,8 @@ describe('validateFormConfig', () => {
 			],
 		};
 
-		expect(getRenderableSteps(config, undefined, 0).map((step) => step.id)).toEqual(['one', 'two']);
-		expect(getRenderableSteps(config, wizardRecipe, 1).map((step) => step.id)).toEqual(['two']);
+		expect(getRenderableSteps(config, 0).map((step) => step.id)).toEqual(['one', 'two']);
+		expect(getRenderableSteps({ ...config, view: { $type: 'wizard' } }, 1).map((step) => step.id)).toEqual(['two']);
 	});
 
 	test('validates registered Zod elements through defineForm', () => {

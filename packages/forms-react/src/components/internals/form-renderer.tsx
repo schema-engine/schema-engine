@@ -21,8 +21,9 @@ import { FormAdapterContext } from '../../adapters/context';
 import { FormEngineProvider } from '../form-engine-provider';
 import type { EngineOutputMaps, FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
+import { getViewRecipe } from '@schema-engine/forms/recipes';
 import { RecipeRenderer } from './recipe-renderer';
-import { getRenderableSteps, assertFormEngine, resolveFormRecipe } from '@schema-engine/forms/lib/validate-form';
+import { getRenderableSteps, assertFormEngine } from '@schema-engine/forms/lib/validate-form';
 
 function GridThemeStyle({ themeId, css }: { themeId: string; css: string }) {
 	return (
@@ -81,8 +82,8 @@ function FormElementsRenderer<
 }) {
 	const { currentStep } = useFormInstanceActions();
 	const engineContext = useOptionalFormEngine<TElements, TRecipes, TActions, TOutputs>();
-	const recipe = resolveFormRecipe(config, engineContext?.engine);
-	const steps = getRenderableSteps(config, recipe, currentStep);
+	const recipe = engineContext ? getViewRecipe(engineContext.engine, config) : undefined;
+	const steps = getRenderableSteps(config, currentStep);
 
 	if (steps.length === 0) return null;
 

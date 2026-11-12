@@ -92,6 +92,19 @@ engine rather than in each renderer, because the constraint subsystem already
 demonstrated what happens when a decision of this class is made twice.
 See [the controller contract](./packages/forms-radiant/src/adapters/radiant/controller/README.md).
 
+## Recipes and the resolved view
+
+A form selects a recipe with `view.$type`. `validateForm` writes the **resolved view**
+into the normalized config: every slot the recipe declares is present and complete, so
+renderers and blocks read it without parsing or defaulting. A slot's keys resolve in
+this precedence: the author's config, then the recipe's **slot defaults**
+(`slotDefaults` on the spec), then the slot schema's own defaults.
+
+A multi-step form that omits `view` gets the engine's **default wizard recipe**
+(`bare-controls`, or `createFormEngine({ defaultWizardRecipe })`) as its resolved view.
+Engine build rejects a default that is not a wizard recipe. When the default is not
+registered, `validateForm` warns once per form id and every step renders on one page.
+
 ## Wizard navigation
 
 The engine's step navigator (`createStepNavigator`) owns wizard navigation for every
