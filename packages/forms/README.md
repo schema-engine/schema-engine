@@ -164,7 +164,7 @@ span.
 
 This applies to any element rendering a `.se-form-field` host with the engine's
 theme id — not only inputs. Renderers expose a helper for elements that build
-their own container (`useFieldHost` in React, `mergeFieldGridHost` in Radiant). Every engine exposes a frozen
+their own container (`useFieldHost` in React, `mergeFieldGridHost` in Radiant). A custom container whose children use `width` or `offset` must lay them out on its own grid with `useChildGridProps` (React) or `mergeChildrenGridHost` (Radiant). Every engine exposes a frozen
 `engine.getCompiledGrid()` (theme plus stylesheet), with `getGridTheme()` as a
 convenience getter, computed once at construction (library defaults apply when
 `grid` is omitted). Configured breakpoint

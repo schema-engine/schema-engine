@@ -310,7 +310,7 @@ function namedPlacementIssue(item: FormTaggedConfig): string | undefined {
 	}
 	const overflow = namedPlacementOverflow(item);
 	if (overflow) {
-		return `${label} sets grid 'width' and 'offset' that span ${overflow.tracks} of ${WIDTH_TRACKS} tracks at ${overflow.slot === 'default' ? 'the default width' : `'${overflow.slot}'`}; together they must fit in ${WIDTH_TRACKS} tracks.`;
+		return `${label} sets grid 'width' and 'offset' that span ${overflow.tracks} of ${WIDTH_TRACKS} tracks at ${overflow.slot === 'default' ? 'default' : `'${overflow.slot}'`}; together they must fit in ${WIDTH_TRACKS} tracks.`;
 	}
 	return undefined;
 }

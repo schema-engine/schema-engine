@@ -106,14 +106,10 @@ export type GridOffsetName = (typeof GridOffsetNames)[number];
 const ElementGridPropertiesSchema = z.strictObject({
 	width: z
 		.optional(z.enum(GridWidthNames))
-		.check(
-			z.describe('Named share of the row (full | three-quarters | two-thirds | half | third | quarter | auto).'),
-		),
+		.check(z.describe(`Named share of the row (${GridWidthNames.join(' | ')}).`)),
 	offset: z
 		.optional(z.enum(GridOffsetNames))
-		.check(
-			z.describe('Named empty space before the field (three-quarters | two-thirds | half | third | quarter).'),
-		),
+		.check(z.describe(`Named empty space before the field (${GridOffsetNames.join(' | ')}).`)),
 	column: z.optional(z.union([z.number(), z.string()])),
 	row: z.optional(z.union([z.number(), z.string()])),
 	justifySelf: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
