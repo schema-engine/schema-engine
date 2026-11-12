@@ -8,7 +8,7 @@ import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import type { ArrayElementsProps } from './form-array-elements.types';
 import { arrayItemScope, createArrayRowDefault, seedArrayRows, usesScalarArrayItem } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
-import { FormController, FormEngineController } from '@/adapters/radiant/controller';
+import { FormController } from '@/adapters/radiant/controller';
 import { toFieldRules, withContainerState } from '@/lib/field-rules';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { adoptFieldArrayIds } from '@/adapters/radiant/controller/field-array';
@@ -123,8 +123,6 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 								size="sm"
 								square
 								disabled={disabled}
-								data-action="remove"
-								data-id={id}
 								aria-label={removeLabel}
 							>
 								<TrashIcon />
@@ -134,13 +132,7 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 				);
 			})}
 			{canAdd ? (
-				<RuiButton
-					type="button"
-					class="se-form-array__add"
-					variant="outline"
-					disabled={disabled}
-					data-action="add"
-				>
+				<RuiButton type="button" class="se-form-array__add" variant="outline" disabled={disabled}>
 					<PlusIcon />
 					{config.addButtonText || 'Add item'}
 				</RuiButton>
@@ -155,28 +147,20 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 @formElement('se-form-array')
 export class SeFormArray extends RadiantElement {
 	@prop({ type: Object }) config!: ArrayElementsProps;
-	@state fieldError?: string;
 
 	readonly form = new FormController(this);
-	private readonly formEngine = new FormEngineController(this);
-	private contextEngine?: FormEngine;
+	@state private engine?: FormEngine;
 	private unregisterArrayField?: () => void;
 	private isArrayFieldRegistered = false;
-	private formContext?: FormContextValue;
 	private initialized = false;
-	private initializing = false;
 	private preservedHydratedContainer = false;
 	private renderedIds: string[] = [];
 
+	@state fieldError?: string;
+
 	@onContextUpdate({ context: formContext, requestUpdate: false })
 	onFormContext(value: FormContextValue): void {
-		this.formContext = value;
-		const fieldError = value.fields[this.config?.name ?? '']?.error;
-		if (fieldError !== this.fieldError) {
-			this.fieldError = fieldError;
-			this.requestUpdate();
-		}
-
+		this.fieldError = value.fields[this.config?.name ?? '']?.error;
 		if (!value.ready || !this.config?.name) {
 			this.unregisterArrayField?.();
 			this.unregisterArrayField = undefined;
@@ -184,12 +168,15 @@ export class SeFormArray extends RadiantElement {
 			return;
 		}
 		this.scheduleSync(this.renderedIds.length ? this.renderedIds : this.initialIds());
-		this.registerArrayField();
+		this.registerArrayField(value);
 	}
 
-	private registerArrayField(): void {
-		const value = this.formContext;
-		if (!value?.ready || !this.config?.name || !this.resolveEngine() || this.isArrayFieldRegistered) return;
+	/**
+	 * @remarks
+	 * Registering publishes `formContext` again, synchronously, so the flag is set before the call.
+	 */
+	private registerArrayField(value: FormContextValue): void {
+		if (this.isArrayFieldRegistered || !this.resolveEngine()) return;
 
 		const name = this.config.name;
 		this.isArrayFieldRegistered = true;
@@ -225,8 +212,13 @@ export class SeFormArray extends RadiantElement {
 		return values;
 	}
 
+	/**
+	 * @remarks
+	 * Resolved once, in `onConnected`, like the other hosts. A host that is not connected is
+	 * being rendered by the owning render, which is the only place its engine can come from.
+	 */
 	private resolveEngine(): FormEngine | undefined {
-		return this.formEngine.engine;
+		return this.engine ?? (this.isConnected ? undefined : resolveFormEngine(this));
 	}
 
 	private get ids(): string[] {
@@ -256,22 +248,17 @@ export class SeFormArray extends RadiantElement {
 	}
 
 	private syncRows(initialIds: readonly string[]): void {
-		if (!this.form.ready || this.initializing || !this.config) return;
+		if (!this.form.ready || !this.config) return;
 		if (!this.initialized) {
 			this.initialized = true;
-			this.initializing = true;
-			try {
-				const array = this.form.fieldArray(this.config.name);
-				const currentIds = array.fields.map(({ id }) => id);
-				const count = Math.max(this.config.minItems ?? 0, initialIds.length) - currentIds.length;
-				if (count > 0) array.append(Array.from({ length: count }, () => this.emptyItem()));
-				const store = this.form.store;
-				const seededIds = array.fields.map(({ id }) => id);
-				if (store && initialIds.length === seededIds.length) {
-					adoptFieldArrayIds(store, this.config.name, initialIds);
-				}
-			} finally {
-				this.initializing = false;
+			const array = this.form.fieldArray(this.config.name);
+			const currentIds = array.fields.map(({ id }) => id);
+			const count = Math.max(this.config.minItems ?? 0, initialIds.length) - currentIds.length;
+			if (count > 0) array.append(Array.from({ length: count }, () => this.emptyItem()));
+			const store = this.form.store;
+			const seededIds = array.fields.map(({ id }) => id);
+			if (store && initialIds.length === seededIds.length) {
+				adoptFieldArrayIds(store, this.config.name, initialIds);
 			}
 		}
 		const ids = this.ids;
@@ -290,16 +277,9 @@ export class SeFormArray extends RadiantElement {
 	}
 
 	protected override onConnected(): void {
+		this.engine ??= resolveFormEngine(this);
 		const initialIds = this.initialIds();
 		this.renderedIds = initialIds;
-		this.formEngine.connect(() => {
-			this.registerArrayField();
-			const engine = this.formEngine.engine;
-			const engineChanged = this.contextEngine !== undefined && this.contextEngine !== engine;
-			this.contextEngine = engine;
-			if (!this.isServerRendered || engineChanged) this.requestUpdate();
-		});
-		this.form.connect(() => this.scheduleSync(initialIds));
 		if (this.form.ready) this.scheduleSync(initialIds);
 	}
 
@@ -308,20 +288,25 @@ export class SeFormArray extends RadiantElement {
 	}
 
 	override disconnectedCallback(): void {
-		this.formEngine.disconnect();
+		this.engine = undefined;
 		this.form.disconnect();
-		this.formContext = undefined;
 		this.unregisterArrayField?.();
 		this.unregisterArrayField = undefined;
 		this.isArrayFieldRegistered = false;
 		this.initialized = false;
-		this.initializing = false;
 		this.renderedIds = [];
 		super.disconnectedCallback();
 	}
 
-	@onEvent({ type: 'click', selector: '[data-action="add"]' })
-	onAdd() {
+	/**
+	 * @remarks
+	 * The buttons are not wired in the view: the first hydrated render adopts server markup that carries no handlers,
+	 * so the host listens for them. `closest('se-form-array')` must be this host, or a nested array's buttons would
+	 * also add to or remove from the outer array.
+	 */
+	@onEvent({ type: 'click', selector: '.se-form-array__add' })
+	onAdd(event: Event): void {
+		if (!this.ownsControl(event)) return;
 		const maxItems = this.config.maxItems;
 		if (maxItems && this.ids.length >= maxItems) {
 			return;
@@ -329,16 +314,19 @@ export class SeFormArray extends RadiantElement {
 		this.form.fieldArray(this.config.name).append(this.emptyItem());
 	}
 
-	@onEvent({ type: 'click', selector: '[data-action="remove"]' })
-	onRemove(event: Event) {
-		const button = (event.target as HTMLElement).closest('[data-action="remove"]');
-		const id = button?.getAttribute('data-id');
-		const minItems = this.config.minItems ?? 0;
-		if (this.ids.length <= minItems) {
+	@onEvent({ type: 'click', selector: '.se-form-array__remove' })
+	onRemove(event: Event): void {
+		if (!this.ownsControl(event)) return;
+		const id = (event.target as Element).closest('[data-se-row-id]')?.getAttribute('data-se-row-id');
+		if (this.ids.length <= (this.config.minItems ?? 0)) {
 			return;
 		}
 		const index = this.ids.indexOf(id ?? '');
 		if (index >= 0) this.form.fieldArray(this.config.name).remove(index);
+	}
+
+	private ownsControl(event: Event): boolean {
+		return (event.target as Element | null)?.closest('se-form-array') === this;
 	}
 
 	override render(): JsxRenderable {
@@ -354,7 +342,14 @@ export class SeFormArray extends RadiantElement {
 		const renderValues = this.currentValues();
 		const initialValues = this.rowInitialValues();
 
-		return renderArrayContent({ config, engine, ids, initialValues, renderValues, fieldError: this.fieldError });
+		return renderArrayContent({
+			config,
+			engine,
+			ids,
+			initialValues,
+			renderValues,
+			fieldError: this.fieldError,
+		});
 	}
 }
 

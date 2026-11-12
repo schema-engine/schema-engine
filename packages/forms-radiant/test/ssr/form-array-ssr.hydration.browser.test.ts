@@ -1,13 +1,24 @@
-import { describe, expect, inject, test } from 'vitest';
-import { jsx } from '@ecopages/jsx/jsx-runtime';
+import { afterEach, beforeEach, describe, expect, inject, test, vi } from 'vitest';
 import { FormController } from '@/adapters/radiant/controller';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
 import { FormRendererElement } from '@/components/internals/form-renderer';
 import type { SeFormArray } from '@/elements/inputs/form-array-elements';
-import { InputElementRegistration } from '@/elements/inputs/form-input.registration';
 
 describe('SSR array hydration', () => {
+	const warn = vi.spyOn(console, 'warn');
+
+	beforeEach(() => {
+		warn.mockClear();
+	});
+
+	afterEach(() => {
+		const engineWarnings = warn.mock.calls.filter((call) =>
+			String(call.at(-1)).includes('Could not resolve FormEngine'),
+		);
+		expect(engineWarnings).toEqual([]);
+	});
+
 	test('adopts server rows and keeps their authored values as reset defaults', async () => {
 		expect(customElements.get('se-form-renderer')).toBe(FormRendererElement);
 		const html = inject('ssrArrayHtml').replaceAll('<\\/script>', '</script>');
@@ -69,7 +80,7 @@ describe('SSR array hydration', () => {
 			form.setValue('contacts.0.role', 'Edited Alice');
 			await expect.poll(() => app.querySelector<HTMLInputElement>('.rui-input')?.value).toBe('Edited Alice');
 
-			const addButton = arrayHost.querySelector<HTMLButtonElement>('[data-action="add"]');
+			const addButton = arrayHost.querySelector<HTMLButtonElement>('.se-form-array__add');
 			if (!addButton) throw new Error('Expected array add button');
 			addButton.click();
 			await expect
@@ -82,20 +93,6 @@ describe('SSR array hydration', () => {
 			await expect
 				.poll(() => [...app.querySelectorAll<HTMLInputElement>('.rui-input')].map(({ value }) => value))
 				.toEqual(['Alice', 'Bob']);
-
-			const replacementEngine = createRadiantFormEngine({
-				elements: [
-					...schemaFormRegistrations,
-					{
-						...InputElementRegistration,
-						render: () => jsx('span', { children: 'Replacement engine field' }),
-					},
-				],
-			});
-			renderer.engine = replacementEngine;
-			await expect
-				.poll(() => [...arrayHost.querySelectorAll('.se-form-array__item')].map((row) => row.textContent))
-				.toEqual(['Replacement engine field', 'Replacement engine field']);
 		} finally {
 			form.disconnect();
 			app.remove();
@@ -163,7 +160,7 @@ describe('SSR array hydration', () => {
 					members: [{ role: 'Admin' }, { role: '' }],
 				});
 
-			const addButton = arrayHost.querySelector<HTMLButtonElement>('[data-action="add"]');
+			const addButton = arrayHost.querySelector<HTMLButtonElement>('.se-form-array__add');
 			if (!addButton) throw new Error('Expected array add button');
 			addButton.click();
 			await expect

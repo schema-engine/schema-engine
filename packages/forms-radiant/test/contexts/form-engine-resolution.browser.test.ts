@@ -32,7 +32,7 @@ function observeInstanceContext(host: FormInstanceElement) {
 		new ContextSubscriptionRequestEvent(
 			formInstanceContext,
 			(context) => {
-				isWizard = context.isWizard;
+				isWizard = context?.isWizard;
 			},
 			undefined,
 			true,
@@ -218,9 +218,10 @@ describe('Radiant form engine resolution', () => {
 		});
 	});
 
-	test('a form array renders its fields after renderer context arrives', async () => {
+	test('a form array renders its fields once the form store arrives', async () => {
 		const engine = createArrayEngine();
 		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
+		renderer.engine = engine;
 		const form = document.createElement('rui-form');
 		const array = document.createElement('se-form-array') as SeFormArray;
 		array.config = contactsArray(engine);
@@ -232,18 +233,17 @@ describe('Radiant form engine resolution', () => {
 			expect(array.querySelector('.se-form-array__empty')).not.toBeNull();
 		});
 		formProvider.setContext({
+			ready: true,
 			store: new FormStore<FieldValues>({ defaultValues: { contacts: [{ email: 'person@example.test' }] } }),
 		});
-		expect(array.querySelector('input')).toBeNull();
-
-		renderer.engine = engine;
 		await vi.waitFor(() => {
 			expect(array.querySelector('input')).not.toBeNull();
 		});
 	});
 
-	test('a form array with seeded rows waits for renderer context before rendering fields', async () => {
+	test('a form array resolves its engine at connect and does not wait for a later one', async () => {
 		const engine = createArrayEngine();
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
 		const form = document.createElement('rui-form');
 		const array = document.createElement('se-form-array') as SeFormArray;
@@ -255,15 +255,35 @@ describe('Radiant form engine resolution', () => {
 		form.append(array);
 		renderer.append(form);
 		document.body.append(renderer);
-
-		await vi.waitFor(() => {
-			expect(array.form.ready).toBe(true);
-		});
-		expect(array.querySelector('input')).toBeNull();
+		await vi.waitFor(() => expect(array.form.ready).toBe(true));
 
 		renderer.engine = engine;
-		await vi.waitFor(() => {
-			expect(array.querySelector('input')).not.toBeNull();
-		});
+		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+		expect(array.querySelector('input')).toBeNull();
+		const reports = warn.mock.calls.filter((call) =>
+			String(call.at(-1)).includes('Could not resolve FormEngine for <se-form-array>'),
+		);
+		expect(reports).toHaveLength(1);
+	});
+
+	test('a form array with seeded rows renders its fields when the renderer has its engine before connect', async () => {
+		const engine = createArrayEngine();
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
+		const form = document.createElement('rui-form');
+		const array = document.createElement('se-form-array') as SeFormArray;
+		array.config = contactsArray(engine);
+		provideTestFormStore(
+			form,
+			new FormStore<FieldValues>({ defaultValues: { contacts: [{ email: 'person@example.test' }] } }),
+		);
+		renderer.engine = engine;
+		form.append(array);
+		renderer.append(form);
+		document.body.append(renderer);
+
+		await vi.waitFor(() => expect(array.querySelector('input')).not.toBeNull());
+		expect(warn).not.toHaveBeenCalled();
 	});
 });

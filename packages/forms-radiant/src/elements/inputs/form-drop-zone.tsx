@@ -1,5 +1,5 @@
 import './form-drop-zone.css';
-import { onEvent, prop, query, RadiantElement, state } from '@ecopages/radiant';
+import { prop, query, RadiantElement, state } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
@@ -75,21 +75,18 @@ export class SeDropZone extends RadiantElement {
 
 	@query({ ref: 'input' }) fileInput!: HTMLInputElement | null;
 
-	@onEvent({ type: 'dragover', selector: '[data-ref="surface"]' })
-	onDragOver(event: Event) {
+	private readonly onDragOver = (event: Event) => {
 		event.preventDefault();
 		if (!this.disabled) {
 			this.dragging = true;
 		}
-	}
+	};
 
-	@onEvent({ type: 'dragleave', selector: '[data-ref="surface"]' })
-	onDragLeave() {
+	private readonly onDragLeave = () => {
 		this.dragging = false;
-	}
+	};
 
-	@onEvent({ type: 'drop', selector: '[data-ref="surface"]' })
-	onDrop(event: Event) {
+	private readonly onDrop = (event: Event) => {
 		event.preventDefault();
 		this.dragging = false;
 		if (this.disabled) {
@@ -97,20 +94,18 @@ export class SeDropZone extends RadiantElement {
 		}
 		const dataTransfer = (event as DragEvent).dataTransfer;
 		this.applyFiles(Array.from(dataTransfer?.files ?? []));
-	}
+	};
 
-	@onEvent({ type: 'click', selector: '[data-ref="surface"]' })
-	onSurfaceClick() {
+	private readonly onSurfaceClick = () => {
 		if (!this.disabled) {
 			this.fileInput?.click();
 		}
-	}
+	};
 
-	@onEvent({ type: 'change', selector: '[data-ref="input"]' })
-	onInputChange(event: Event) {
+	private readonly onInputChange = (event: Event) => {
 		const input = event.target as HTMLInputElement;
 		this.applyFiles(Array.from(input.files ?? []));
-	}
+	};
 
 	private applyFiles(nextFiles: File[]) {
 		const accepted = nextFiles.filter((file) => {
@@ -170,12 +165,16 @@ export class SeDropZone extends RadiantElement {
 		return (
 			<div
 				class="se-dropzone"
-				data-ref="surface"
+				on:dragover={this.onDragOver}
+				on:dragleave={this.onDragLeave}
+				on:drop={this.onDrop}
+				on:click={this.onSurfaceClick}
 				data-dragging={this.dragging ? 'true' : 'false'}
 				data-disabled={this.disabled ? 'true' : 'false'}
 			>
 				<input
 					data-ref="input"
+					on:change={this.onInputChange}
 					data-rui-control
 					class="se-dropzone__input"
 					type="file"

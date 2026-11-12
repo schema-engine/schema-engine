@@ -50,6 +50,7 @@ export function deriveInitialInstance(config: FormMeta): FormInstanceContextValu
 		totalSteps,
 		isWizard: false,
 		stepStates: createInitialStepStates(totalSteps),
+		meta: config,
 		goToStep: async () => {},
 		goToNextStep: async () => {},
 		goToPreviousStep: async () => {},

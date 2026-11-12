@@ -1,5 +1,5 @@
 import { userEvent } from 'vitest/browser';
-import { afterEach, expect, inject, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, inject, test, vi } from 'vitest';
 import { RuiFormElement } from '@ecopages/radiant-ui/form';
 import { FormInstanceElement } from '@/components/form-instance.script';
 import { FormFieldElement } from '@/elements/form-field';
@@ -34,9 +34,19 @@ function mount({ bindBeforeUpgrade = false } = {}) {
 	};
 }
 
+const warn = vi.spyOn(console, 'warn');
+
+beforeEach(() => {
+	warn.mockClear();
+});
+
 afterEach(() => {
+	const engineWarnings = warn.mock.calls.filter((call) =>
+		String(call.at(-1)).includes('Could not resolve FormEngine'),
+	);
 	document.body.replaceChildren();
 	vi.restoreAllMocks();
+	expect(engineWarnings).toEqual([]);
 });
 
 test.each(['confirm', 'choice', 'accepted', 'amount'])(

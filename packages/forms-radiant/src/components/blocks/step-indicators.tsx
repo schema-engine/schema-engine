@@ -1,5 +1,5 @@
 import { contextSelector } from '@ecopages/radiant/context';
-import { onEvent, prop, RadiantElement } from '@ecopages/radiant';
+import { prop, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { formatStepLabel, type StepIndicatorsConfig } from '@schema-engine/forms/recipes/built-in';
@@ -17,11 +17,8 @@ export class StepIndicatorsElement extends RadiantElement {
 	@contextSelector({ context: formInstanceContext })
 	instance?: FormInstanceContextValue;
 
-	@onEvent({ type: 'click', selector: '[data-se-view-step]' })
-	onStepClick(event: Event): void {
-		const target = (event.target as Element | null)?.closest<HTMLElement>('[data-se-view-step]');
-		const index = Number(target?.dataset.seViewStep);
-		if (Number.isInteger(index)) void this.instance?.goToStep(index);
+	private goToStep(index: number): void {
+		void this.instance?.goToStep(index);
 	}
 
 	override render(): JsxRenderable {
@@ -49,8 +46,8 @@ export class StepIndicatorsElement extends RadiantElement {
 								<RuiButton
 									type="button"
 									variant="ghost"
+									on:click={() => this.goToStep(step.index)}
 									data={{
-										seViewStep: step.index,
 										active: step.isActive,
 										completed: step.isCompleted,
 									}}

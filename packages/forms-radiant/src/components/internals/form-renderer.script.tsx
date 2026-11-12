@@ -59,7 +59,7 @@ export class FormRendererElement extends RadiantElement {
 
 	@provideContext<typeof formEngineContext>({
 		context: formEngineContext,
-		initialValue: {} as FormEngineContextValue,
+		initialValue: {},
 		serialize: () => ({}),
 	})
 	provider!: ContextProvider<typeof formEngineContext>;

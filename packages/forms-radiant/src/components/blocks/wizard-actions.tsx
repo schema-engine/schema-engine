@@ -1,5 +1,5 @@
 import { contextSelector } from '@ecopages/radiant/context';
-import { onEvent, prop, RadiantElement } from '@ecopages/radiant';
+import { prop, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { formatStepLabel, type WizardActionsConfig } from '@schema-engine/forms/recipes/built-in';
@@ -9,6 +9,11 @@ import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/f
 import { deriveFormSteps, deriveInitialInstance } from '@/lib/instance-view';
 import { formElement } from '@/lib/define-element';
 
+/**
+ * @remarks
+ * The submit button is rendered only on the last step. A hidden submit button is still the form's default button, so
+ * Enter in a field on an earlier step would submit the form.
+ */
 @formElement('se-wizard-actions')
 export class WizardActionsElement extends RadiantElement {
 	@prop({ type: Object }) meta?: FormMeta;
@@ -17,15 +22,13 @@ export class WizardActionsElement extends RadiantElement {
 	@contextSelector({ context: formInstanceContext })
 	instance?: FormInstanceContextValue;
 
-	@onEvent({ type: 'click', selector: '[data-se-view-previous]' })
-	onPrevious(): void {
+	private readonly goPrevious = (): void => {
 		void this.instance?.goToPreviousStep();
-	}
+	};
 
-	@onEvent({ type: 'click', selector: '[data-se-view-next]' })
-	onNext(): void {
+	private readonly goNext = (): void => {
 		void this.instance?.goToNextStep();
-	}
+	};
 
 	override render(): JsxRenderable {
 		const meta = this.meta;
@@ -41,7 +44,7 @@ export class WizardActionsElement extends RadiantElement {
 				<RuiButton
 					type="button"
 					variant={appearance === 'minimal' ? 'ghost' : 'outline'}
-					data={{ seViewPrevious: true }}
+					on:click={this.goPrevious}
 					prop:disabled={instance.currentStep === 0}
 					aria-label={labels.previousAriaLabel}
 				>
@@ -53,23 +56,19 @@ export class WizardActionsElement extends RadiantElement {
 					</span>
 				) : null}
 				<div class="se-wizard-actions__forward">
-					<RuiButton
-						type="submit"
-						hidden={!last}
-						prop:disabled={instance.isSubmitting}
-						aria-label={labels.submitAriaLabel}
-					>
-						{instance.isSubmitting ? labels.submitting : labels.submit}
-					</RuiButton>
-					<RuiButton
-						type="button"
-						data={{ seViewNext: true }}
-						hidden={last}
-						prop:disabled={instance.currentStep >= instance.totalSteps - 1}
-						aria-label={labels.nextAriaLabel}
-					>
-						{labels.next}
-					</RuiButton>
+					{last ? (
+						<RuiButton
+							type="submit"
+							prop:disabled={instance.isSubmitting}
+							aria-label={labels.submitAriaLabel}
+						>
+							{instance.isSubmitting ? labels.submitting : labels.submit}
+						</RuiButton>
+					) : (
+						<RuiButton type="button" on:click={this.goNext} aria-label={labels.nextAriaLabel}>
+							{labels.next}
+						</RuiButton>
+					)}
 				</div>
 			</div>
 		);

@@ -1,4 +1,12 @@
-import { onUpdated, query, RadiantElement, registerSsrPreparationCallback, state, prop } from '@ecopages/radiant';
+import {
+	onEvent,
+	onUpdated,
+	query,
+	RadiantElement,
+	registerSsrPreparationCallback,
+	state,
+	prop,
+} from '@ecopages/radiant';
 import type { JSX_PROPS } from '@ecopages/jsx';
 import { getViewRecipe } from '@schema-engine/forms/recipes';
 import { provideContext, type ContextProvider } from '@ecopages/radiant/context';
@@ -11,6 +19,7 @@ import { connectValidationDependencies } from '@/lib/validation-deps';
 import type { RuiFormElement } from '@ecopages/radiant-ui/form';
 import { expandValues } from '@/adapters/radiant/controller/values';
 import { createInitialStepStates, hasConfiguredActions, type StepMachineState } from '@schema-engine/forms/engine';
+import { createFormMeta, type FormMeta } from '@/lib/instance-view';
 import { createInstanceNavigation } from '@/lib/instance-navigation';
 import { syncConstraints } from '@/lib/constraint-sync';
 import { logger } from '@/lib/logger';
@@ -85,7 +94,7 @@ export class FormInstanceElement extends RadiantElement {
 
 	@provideContext<typeof formInstanceContext>({
 		context: formInstanceContext,
-		initialValue: {} as FormInstanceContextValue,
+		initialValue: undefined,
 		serialize: () => ({}),
 	})
 	provider!: ContextProvider<typeof formInstanceContext>;
@@ -93,7 +102,6 @@ export class FormInstanceElement extends RadiantElement {
 	constructor() {
 		super();
 		registerSsrPreparationCallback(this, () => this.publish());
-		this.publish();
 	}
 
 	/**
@@ -131,6 +139,24 @@ export class FormInstanceElement extends RadiantElement {
 	onEngineUpdated(): void {
 		this.connectForm();
 		this.publish();
+	}
+
+	/**
+	 * Turns a native submit before the last step of a wizard into Next.
+	 *
+	 * @remarks
+	 * Removing the submit button only stops implicit submission when the form has two or
+	 * more fields that block it. A wizard with one text input would submit on Enter, and
+	 * `rui-form` would then mark the later steps invalid. The capture phase runs before
+	 * `rui-form` sees the event.
+	 */
+	@onEvent({ type: 'submit', host: true, options: { capture: true } })
+	onNativeSubmit(event: Event): void {
+		const { isWizard, currentStep, totalSteps } = this.getContextValue();
+		if (!isWizard || currentStep >= totalSteps - 1) return;
+		event.preventDefault();
+		event.stopPropagation();
+		void this.goToNextStep();
 	}
 
 	/**
@@ -283,6 +309,7 @@ export class FormInstanceElement extends RadiantElement {
 			totalSteps,
 			isWizard: this.config && this.engine ? getViewRecipe(this.engine, this.config)?.kind === 'wizard' : false,
 			stepStates: this.stepStates,
+			meta: this.meta(),
 			goToStep: this.goToStep,
 			goToNextStep: this.goToNextStep,
 			goToPreviousStep: this.goToPreviousStep,
@@ -290,6 +317,19 @@ export class FormInstanceElement extends RadiantElement {
 			markStepVisited: this.markStepVisited,
 			isSubmitting: this.submitting,
 		};
+	}
+
+	private metaSource?: NormalizedFormConfig;
+	private metaValue?: FormMeta;
+
+	/** @remarks Memoized per config so consumers see a new `meta` only when the config changes. */
+	private meta(): FormMeta | undefined {
+		if (!this.config) return undefined;
+		if (this.metaSource !== this.config) {
+			this.metaSource = this.config;
+			this.metaValue = createFormMeta(this.config);
+		}
+		return this.metaValue;
 	}
 
 	private publish(): void {

@@ -16,7 +16,7 @@ import { FormStep } from '@/components/form-step';
  *
  * @remarks
  * View-owned shell: no per-step filtering and no slot projection. The
- * `se-form-step` hosts toggle their own `hidden` attribute from the instance's
+ * `se-form-step` hosts bind their own `hidden` attribute to the instance's
  * step state, so SSR emits the whole form and step switching is pure DOM.
  */
 function GridThemeStyle({ themeId, css }: { themeId: string; css: string }): JsxRenderable {
@@ -50,7 +50,7 @@ export function RecipeRenderer({
 		<>
 			<GridThemeStyle themeId={theme.id} css={gridThemeCss} />
 			{config.steps.map((step, index) => (
-				<FormStep key={step.id} stepIndex={index} isWizard={isWizard}>
+				<FormStep key={step.id} stepIndex={index} hidden={isWizard && index !== 0}>
 					{step.elements.length ? (
 						<div
 							class="se-form-elements se-form-grid"

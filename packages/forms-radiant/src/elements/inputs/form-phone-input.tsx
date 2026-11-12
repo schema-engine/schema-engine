@@ -1,5 +1,5 @@
 import './form-phone-input.css';
-import { onEvent, onUpdated, prop, query, RadiantElement, state } from '@ecopages/radiant';
+import { onUpdated, prop, query, RadiantElement, state } from '@ecopages/radiant';
 import { jsx, unsafeHtml, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import {
 	RuiSelect,
@@ -77,8 +77,7 @@ export class SePhoneInput extends RadiantElement {
 		}
 	}
 
-	@onEvent({ type: 'rui-change', selector: 'rui-select' })
-	onCountryChange(event: Event) {
+	private readonly onCountryChange = (event: Event) => {
 		event.stopPropagation();
 		if (!this.lib) {
 			return;
@@ -86,12 +85,11 @@ export class SePhoneInput extends RadiantElement {
 		const next = (event as CustomEvent<{ value?: string | readonly string[] }>).detail?.value;
 		this.setCountry(resolvePhoneCountry(this.lib, next, this.country));
 		this.applyNumber(this.numberInput?.value ?? this.e164);
-	}
+	};
 
-	@onEvent({ type: 'input', selector: '[data-ref="number"]' })
-	onNumberInput(event: Event) {
+	private readonly onNumberInput = (event: Event) => {
 		this.applyNumber((event.target as HTMLInputElement).value);
-	}
+	};
 
 	private async boot() {
 		const generation = ++this.bootGeneration;
@@ -169,7 +167,12 @@ export class SePhoneInput extends RadiantElement {
 		return (
 			<div class="se-phone">
 				<input class="se-phone__value" data-ref="control" data-rui-control name={this.name} tabindex={-1} />
-				<RuiSelect label="Country" value={this.country} disabled={this.disabled || this.countries.length === 0}>
+				<RuiSelect
+					label="Country"
+					on:rui-change={this.onCountryChange}
+					value={this.country}
+					disabled={this.disabled || this.countries.length === 0}
+				>
 					<RuiSelectControl>
 						<RuiSelectTrigger disabled={this.disabled || this.countries.length === 0}>
 							<RuiSelectValue>
@@ -203,6 +206,7 @@ export class SePhoneInput extends RadiantElement {
 				<input
 					id={this.inputId}
 					data-ref="number"
+					on:input={this.onNumberInput}
 					class="rui-input se-phone__number"
 					type="tel"
 					autocomplete="tel"
