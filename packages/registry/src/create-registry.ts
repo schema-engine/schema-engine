@@ -47,9 +47,11 @@ export function assertStandardSchema(schema: unknown, context = 'Registration sc
  * A later registration with the same `$type` replaces the earlier one without a
  * warning, so `[...defaults, custom]` is the way to override. A replaced key
  * keeps its first position. Only the winning registration of each key is
- * checked. The registry stores a frozen shallow copy of each winner and leaves
- * the objects you passed untouched, so they stay assignable and spy-able; the
- * copy shares nested values such as `schema` with the original.
+ * checked. The registry stores a frozen shallow copy of each winner, taken at
+ * build, and leaves the objects you passed untouched. Later assignments to or
+ * spies on those objects do not reach the registry, so patch before building or
+ * build a new registry. The copy shares nested values such as `schema` with the
+ * original.
  *
  * Use {@link BaseRegistry} instead when registrations arrive at runtime.
  */

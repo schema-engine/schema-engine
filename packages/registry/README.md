@@ -78,7 +78,7 @@ widgets.size;
 
 - Last wins, silently: a later registration with the same `$type` replaces the earlier one, so `[...defaults, custom]` is how you override. The key keeps its first position.
 - Each winning `schema` is checked at build; an overridden registration is not checked. A value without `~standard.validate` throws `Widget 'card' schema must implement Standard Schema (~standard.validate).`, naming the `kind` and the `$type`.
-- The result is frozen and has no `register` or `clear`. `all()` and `keys()` return frozen arrays, and each stored registration is a frozen shallow copy of the winner. The objects you passed stay untouched, so you can still assign to them or spy on their methods; nested values such as `schema` are shared with the original. Build a new registry from a new list to change the contents.
+- The result is frozen and has no `register` or `clear`. `all()` and `keys()` return frozen arrays, and each stored registration is a frozen shallow copy of the winner. The copy is a snapshot taken at build: the objects you passed stay untouched, but assigning to them or spying on their methods afterwards does not reach the registry, so patch or spy before building, or build a new registry. Nested values such as `schema` are shared with the original. Build a new registry from a new list to change the contents.
 - Type the result with `ReadOnlyRegistry<TRegistration>`.
 
 `assertStandardSchema(schema, context)` is exported for code that needs the same check outside a registry.

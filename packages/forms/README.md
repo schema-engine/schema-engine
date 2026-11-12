@@ -376,7 +376,7 @@ See [engine internals](src/engine/README.md#schema-artifacts-and-extension).
 
 Engine construction stores elements, recipes and actions in read-only registries
 from `@schema-engine/registry` (last registration wins, no override warning) and
-checks each winning schema once at that boundary. It stores frozen shallow copies and leaves the registration objects you passed untouched. Form action results add optional browser redirects
+checks each winning schema once at that boundary. It stores frozen shallow copies taken at build and leaves the registration objects you passed untouched; changes to them afterwards do not reach the engine. Form action results add optional browser redirects
 to the generic result; see [actions](./src/actions/README.md).
 
 ## Pre-publish API
