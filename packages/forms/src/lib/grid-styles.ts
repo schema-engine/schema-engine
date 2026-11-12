@@ -5,10 +5,14 @@ import type {
 	GridOffsetName,
 	GridWidthName,
 } from '@/schemas/base-field';
+import type { DeepReadonly } from '@/lib/deep-readonly';
 import { GridGapTokens } from '@/schemas/base-field';
 import {
+	areasTemplateValue,
 	BREAKPOINT_ORDER,
 	carryNamedPlacement,
+	CASCADE_SLOTS,
+	gridAreaTemplates,
 	usesGridWidths,
 	WIDTH_SPANS,
 	WIDTH_TRACKS,
@@ -356,6 +360,7 @@ function gridThemeId(
  */
 const GRID_PROPERTIES: readonly ResponsiveProperty[] = [
 	['grid-template-columns', 'se-grid-template', 'repeat(1, minmax(0, 1fr))'],
+	['grid-template-areas', 'se-grid-areas', 'none'],
 	['row-gap', 'se-grid-gap-y', DEFAULT_GAP_CSS],
 	['column-gap', 'se-grid-gap-x', DEFAULT_GAP_CSS],
 ];
@@ -536,6 +541,7 @@ interface FormGridEntry {
 
 /** Placement a single cascade slot may set; the top-level config is the `default` slot. */
 interface FieldGridEntry {
+	area?: string;
 	width?: GridWidthName;
 	offset?: GridOffsetName;
 	column?: number | string;
@@ -569,9 +575,13 @@ function emitGapEntry(variables: CssVariables, slot: CascadeSlot, entry: FormGri
  * When `elements` (the step's top-level elements, the ones this grid places)
  * use named widths, the grid gets 12 tracks and a `1 / -1` default placement
  * for fields that set no width. Validation keeps that from meeting `columns`.
+ *
+ * A grid with `areas` gets the template of each slot that sets one: the quoted
+ * rows as `--se-grid-areas` and the track count they draw as `--se-grid-template`,
+ * derived from the rows rather than authored, as with named widths.
  */
 export function getFormGridVariables(
-	grid: GridLayoutConfig | undefined,
+	grid: DeepReadonly<GridLayoutConfig> | undefined,
 	theme: NormalizedGridTheme,
 	elements: readonly unknown[],
 ): CssVariables {
@@ -602,6 +612,17 @@ export function getFormGridVariables(
 	if (usesGridWidths(elements)) {
 		variables['--se-grid-template'] = `repeat(${WIDTH_TRACKS}, minmax(0, 1fr))`;
 		variables[DEFAULT_COLUMN_VARIABLE] = '1 / -1';
+	}
+
+	const templates = gridAreaTemplates(grid);
+	for (const slot of CASCADE_SLOTS) {
+		const rows = templates[slot];
+		if (!rows) continue;
+		variables[customProperty('se-grid-areas', slot)] = areasTemplateValue(rows);
+		variables[customProperty('se-grid-template', slot)] = toGridTemplate(
+			rows[0]?.length ?? 1,
+			theme.minColumnWidth,
+		);
 	}
 
 	const responsive = grid?.responsive;
@@ -648,6 +669,10 @@ function emitFieldEntry(
 		carryNamedPlacement(named, entry);
 		variables[customProperty('se-field-grid-column', slot)] = namedColumn(named);
 	}
+	if (entry.area !== undefined) {
+		variables[customProperty('se-field-grid-column', slot)] = entry.area;
+		variables[customProperty('se-field-grid-row', slot)] = entry.area;
+	}
 	if (entry.column !== undefined) {
 		variables[customProperty('se-field-grid-column', slot)] = formatGridLine(entry.column);
 	}
@@ -674,8 +699,10 @@ function emitFieldEntry(
  * Each slot emits exactly what its entry authored — no value is carried across
  * breakpoints, because the generated stylesheet already falls back through the
  * narrower slots. The one exception is `width` and `offset`, which share the
- * single `grid-column` declaration (see {@link namedColumn}). An element without
- * a `grid` config produces no inline style.
+ * single `grid-column` declaration (see {@link namedColumn}). An `area` is one
+ * name written to both `grid-column` and `grid-row`, where a lone name reads as
+ * that area's start and end lines. An element without a `grid` config produces
+ * no inline style.
  * `placeSelf` is applied before the axis properties, so those win.
  *
  * `marginBlockStart`/`marginBlockEnd` accept the same gap tokens as the grid, so

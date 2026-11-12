@@ -1,5 +1,6 @@
 import type { ContainerKind } from '../types/registration.js';
 import { isPlainObject } from './is-plain-object.js';
+import type { DeepReadonly } from './deep-readonly.js';
 import type { FormConfig, FormStep } from '@/schemas/form-config';
 import type { ElementConfig } from '@/schemas/field-config';
 import type { BaseField } from '@/schemas/base-field';
@@ -13,13 +14,7 @@ type NormalizedFormProvenance = {
 	readonly owner: object;
 };
 
-export type DeepReadonly<T> = T extends (...args: never[]) => unknown
-	? T
-	: T extends ReadonlyArray<infer U>
-		? ReadonlyArray<DeepReadonly<U>>
-		: T extends object
-			? { readonly [K in keyof T]: DeepReadonly<T[K]> }
-			: T;
+export type { DeepReadonly };
 
 /** Readable form shape. Accepts authoring config and frozen normalized output. */
 export type FormConfigView<

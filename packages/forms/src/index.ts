@@ -63,6 +63,7 @@ export {
 	DEFAULT_WIZARD_RECIPE,
 	FormValidationError,
 	getRenderableSteps,
+	stepGrid,
 	assertFormEngine,
 	validateElementConfig,
 	validateFormConfig,

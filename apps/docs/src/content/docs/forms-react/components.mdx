@@ -67,7 +67,8 @@ properties (keys that start with `--`) and validation rejects any other key.
 ```
 
 Responsive placement belongs to the element's `grid` property (named `width` and
-`offset`, or raw lines) and the form's top-level `grid` configuration; see
+`offset`, an `area` of the grid's `areas`, or raw lines) and the form's top-level
+`grid` configuration, which a step can replace with its own `grid`; see
 [Placing fields in the grid](/docs/forms/core-concepts#placing-fields-in-the-grid). View chrome belongs to `view`, not to a step or
 element; see [View recipes](/docs/forms-react/layouts).
 

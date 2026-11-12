@@ -6,7 +6,12 @@ import { rhfAdapter } from '@/adapters/react-hook-form';
 import { useControlledFormElement } from '@/hooks/use-field';
 import { useGridThemeId } from '@/hooks/use-form-context';
 import { createFormEngine } from '@schema-engine/forms';
-import { SSR_WIDTH_FIELDS, ssrNestedFields } from '../../../../test-utils/ssr-grid-acceptance';
+import {
+	SSR_WIDTH_FIELDS,
+	ssrAreasForm,
+	ssrNestedFields,
+	ssrSteppedForm,
+} from '../../../../test-utils/ssr-grid-acceptance';
 import { ArrayElementRegistration } from '@/components/schema-engine/forms/inputs/form-array-elements.registration';
 import { FieldSetRegistration } from '@/components/schema-engine/forms/inputs/form-fieldset.registration';
 
@@ -156,4 +161,16 @@ export function getSsrNestedWidthsFixture() {
 		cachedNestedFixture = { engine, config, adapter };
 	}
 	return cachedNestedFixture;
+}
+
+/** Same engine as {@link getSsrAcceptanceFixture}, with a step grid that draws its layout from areas. */
+export function getSsrAreasFixture() {
+	const { engine, adapter } = getSsrAcceptanceFixture();
+	return { engine, config: engine.validateForm(ssrAreasForm('ssr-input')), adapter };
+}
+
+/** Same engine, with a step that draws its own responsive template beside a step on the form grid. */
+export function getSsrSteppedFixture() {
+	const { engine, adapter } = getSsrAcceptanceFixture();
+	return { engine, config: engine.validateForm(ssrSteppedForm('ssr-input')), adapter };
 }
