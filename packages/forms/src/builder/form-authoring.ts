@@ -1,5 +1,4 @@
-import type { GridLayoutConfig } from '@schema-engine/layout';
-import type { AppearanceInput } from '@/lib/appearance';
+import type { AppearanceInput, GridLayoutConfig } from '@schema-engine/layout';
 
 /**
  * Discriminated union of `{ $type }` plus the registered config for each key.

@@ -1,6 +1,6 @@
 import * as z from 'zod/mini';
 import { HtmlAttributesSchema } from './html-attributes';
-import { ElementGridConfigSchema } from '@schema-engine/layout';
+import { AppearanceConfigSchema, ElementGridConfigSchema } from '@schema-engine/layout';
 import { ValidationRuleSchema } from './validation/';
 
 /**
@@ -46,18 +46,6 @@ export const RendererStyleSchema = z.record(z.string(), z.union([z.string(), z.n
 );
 
 export type RendererStyle = z.infer<typeof RendererStyleSchema>;
-
-/**
- * A pick of named appearance values, one per axis: `{ size: 'compact' }`.
- *
- * @remarks
- * The shape is open because the axes belong to the engine (`createFormEngine({ appearance })`).
- * `validateForm` checks each axis and value against the engine's vocabulary and the element's declared
- * axes, and writes the resolved selection back.
- */
-export const AppearanceConfigSchema = z.record(z.string(), z.string());
-
-export type AppearanceConfig = z.infer<typeof AppearanceConfigSchema>;
 
 /**
  * Constraint operands can be values from any registered field.

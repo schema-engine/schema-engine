@@ -1,6 +1,6 @@
 import type * as z from 'zod/mini';
 import type { ComponentMetadata } from '@schema-engine/registry';
-import type { SlotAppearanceAxes } from '@/lib/appearance';
+import type { SlotAppearanceAxes } from '@schema-engine/layout';
 
 export type RecipeKind = 'single-step' | 'wizard';
 

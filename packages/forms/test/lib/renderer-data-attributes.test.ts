@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { createFormEngine } from '@/engine/create-form-engine';
-import { RENDERER_DATA_ATTRIBUTES } from '@/lib/appearance';
+import { RENDERER_DATA_ATTRIBUTES } from '@/lib/renderer-data-attributes';
 
 const repositoryRoot = resolve(__dirname, '../../../..');
 const rendererSources = ['packages/forms-react/src', 'packages/forms-radiant/src', 'registry/shared'];

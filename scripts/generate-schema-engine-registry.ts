@@ -77,7 +77,7 @@ const PRIMITIVES: Record<PrimitiveName, PrimitiveSpec> = {
 		title: 'Schema Engine field',
 		description: 'Label, description, and error chrome for Schema Engine fields.',
 		registryDependencies: ['label'],
-		dependencies: ['@schema-engine/forms', '@schema-engine/forms-react'],
+		dependencies: ['@schema-engine/forms', '@schema-engine/forms-react', '@schema-engine/layout'],
 	},
 	combobox: {
 		title: 'Schema Engine combobox',
@@ -186,7 +186,12 @@ const BASES: Base[] = [
 	},
 ];
 
-const FORM_RUNTIME_DEPENDENCIES = ['@schema-engine/forms-react', '@schema-engine/forms', 'zod'];
+const FORM_RUNTIME_DEPENDENCIES = [
+	'@schema-engine/forms-react',
+	'@schema-engine/forms',
+	'@schema-engine/layout',
+	'zod',
+];
 
 const DEFAULT_RECIPE_ITEM = 'schema-engine-form-recipes';
 const DEFAULT_RECIPE_RUNTIME_DEPENDENCIES = [...FORM_RUNTIME_DEPENDENCIES, 'lucide-react'];
@@ -578,6 +583,7 @@ const REGISTRY_DEP_BY_IMPORT: Array<[string, string]> = [
 const TRACKED_NPM_DEPENDENCIES = [
 	'@schema-engine/forms-react',
 	'@schema-engine/forms',
+	'@schema-engine/layout',
 	'zod',
 	'clsx',
 	'tailwind-merge',

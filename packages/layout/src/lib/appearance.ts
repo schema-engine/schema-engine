@@ -1,17 +1,19 @@
 /**
- * Named appearance values a form picks and both renderers emit as data attributes.
+ * Named appearance values a document picks and renderers emit as data attributes.
  *
  * @remarks
- * The engine owns the vocabulary: which axes exist (`size`, `surface`, and any a host adds), the
+ * The theme owns the vocabulary: which axes exist (`size`, `surface`, and any a host adds), the
  * closed list of values on each, and optionally the CSS custom properties a value stands for. The
- * form owns intent: it picks a value per axis on the form, a step, a field or a view slot.
- * `validateForm` checks the pick against the vocabulary and the registration's declared axes, and
- * writes the resolved selection into the normalized config. A renderer emits it as
- * `data-se-<axis>="<value>"` and reads nothing else, so React and Radiant share one DOM contract.
+ * document owns intent: it picks a value per axis on the document, a container, an item or a slot.
+ * A domain checks the pick against the vocabulary and the owner's declared axes
+ * ({@link checkAppearance}), merges it with the pick it inherits ({@link mergeAppearance}), and a
+ * renderer emits the result as `data-se-<axis>="<value>"` ({@link getAppearanceAttributes}).
+ * Walking the document tree to inherit picks belongs to the domain, because only it knows the
+ * tree's shape.
  *
  * Compile once at the engine boundary ({@link compileAppearance}). Token rules are emitted inside
  * `:where()`, so they add no specificity and an author's `className` always wins; they are scoped to
- * the engine by `data-se-appearance-theme`, so two engines with different tokens cannot overwrite
+ * the theme by `data-se-appearance-theme`, so two engines with different tokens cannot overwrite
  * each other.
  */
 
@@ -21,14 +23,14 @@ export type AppearanceTokens = Readonly<Record<`--${string}`, string | number>>;
 /** An axis's values: names only (the host styles them) or names with the custom properties each sets. */
 export type AppearanceAxisOptions = readonly string[] | Readonly<Record<string, AppearanceTokens>>;
 
-/** Engine `appearance` option: axis name to its values. */
+/** The `appearance` option of a theme: axis name to its values. */
 export type AppearanceOptions = Readonly<Record<string, AppearanceAxisOptions>>;
 
 /** A pick of one value per axis. */
 export type AppearanceSelection = Readonly<Record<string, string>>;
 
 export interface CompiledAppearance {
-	/** Identity of the vocabulary, written to `data-se-appearance-theme` on the form element. */
+	/** Identity of the vocabulary, written to `data-se-appearance-theme` on the root element. */
 	readonly id: string;
 	/** Axis name to its closed value list, built-in axes first. */
 	readonly axes: Readonly<Record<string, readonly string[]>>;
@@ -83,9 +85,9 @@ type AppearanceAxisValueNames<TAxis> = TAxis extends readonly (infer V extends s
 		: never;
 
 /**
- * Axis-to-value-union map of an engine: the built-in axes extended by a host's `appearance` option.
+ * Axis-to-value-union map of a theme: the built-in axes extended by a host's `appearance` option.
  *
- * @remarks Typed authoring narrows `appearance` to these literals. `TOptions` should be a const-inferred option.
+ * @remarks Typed authoring narrows a pick to these literals. `TOptions` should be a const-inferred option.
  */
 export type ResolvedAppearanceAxes<TOptions extends AppearanceOptions = Record<never, never>> = {
 	[A in keyof BuiltInAppearanceAxes | (keyof TOptions & string)]:
@@ -106,30 +108,6 @@ const AXIS_NAME = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const VALUE_NAME = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
 const UNSAFE_TOKEN_VALUE = /[{};<]|\/\*/;
 
-/**
- * Suffixes of the `data-se-*` attributes the renderers already write, which an axis cannot reuse.
- *
- * @remarks
- * `getAppearanceAttributes` spreads after these on the same elements, so an axis named like one
- * would overwrite it. A test scans the renderer sources for `data-se-*` names, so a renderer that
- * adds an attribute fails it until the name is listed here.
- */
-export const RENDERER_DATA_ATTRIBUTES = [
-	'step',
-	'grid-theme',
-	'appearance-theme',
-	'appearance-css',
-	'constraint-field',
-	'constraints',
-	'base-required',
-	'validation-rules',
-	'last-invalid',
-	'row-id',
-	'required-marker',
-] as const;
-
-const RESERVED_AXES: ReadonlySet<string> = new Set(RENDERER_DATA_ATTRIBUTES);
-
 function isNameList(axis: AppearanceAxisOptions): axis is readonly string[] {
 	return Array.isArray(axis);
 }
@@ -138,7 +116,10 @@ function axisEntries(axis: AppearanceAxisOptions): Array<[string, AppearanceToke
 	return isNameList(axis) ? axis.map((name) => [name, {}]) : Object.entries(axis);
 }
 
-function mergeAxes(options: AppearanceOptions | undefined): Map<string, Map<string, AppearanceTokens>> {
+function mergeAxes(
+	options: AppearanceOptions | undefined,
+	reserved: ReadonlySet<string>,
+): Map<string, Map<string, AppearanceTokens>> {
 	const axes = new Map<string, Map<string, AppearanceTokens>>();
 	const add = (axisName: string, entries: Array<[string, AppearanceTokens]>) => {
 		if (!AXIS_NAME.test(axisName)) {
@@ -146,9 +127,9 @@ function mergeAxes(options: AppearanceOptions | undefined): Map<string, Map<stri
 				`Invalid appearance axis name '${axisName}': use lowercase letters, digits and hyphens, starting with a letter.`,
 			);
 		}
-		if (RESERVED_AXES.has(axisName)) {
+		if (reserved.has(axisName)) {
 			throw new Error(
-				`Invalid appearance axis name '${axisName}': data-se-${axisName} is reserved by the renderers.`,
+				`Invalid appearance axis name '${axisName}': data-se-${axisName} is reserved by the renderer.`,
 			);
 		}
 		const values = axes.get(axisName) ?? new Map<string, AppearanceTokens>();
@@ -200,17 +181,32 @@ function appearanceThemeId(axes: Map<string, Map<string, AppearanceTokens>>): st
 	return `a${(hash >>> 0).toString(36)}`;
 }
 
+/** Inputs to {@link compileAppearance} that come from the domain rather than the author. */
+export interface AppearanceCompilerOptions {
+	/**
+	 * Suffixes of the `data-se-*` attributes the domain's renderers already write, which an axis cannot reuse.
+	 *
+	 * @remarks
+	 * {@link getAppearanceAttributes} spreads after a renderer's own attributes on the same elements, so
+	 * an axis named like one would overwrite it. Each domain lists its own, so this package hard-codes none.
+	 */
+	readonly reservedNames?: readonly string[];
+}
+
 /**
- * Compiles an engine's `appearance` option over the built-in `size` and `surface` axes.
+ * Compiles an `appearance` option over the built-in `size` and `surface` axes.
  *
  * @remarks
  * A host adds an axis by naming it, or extends one by listing more values: values union with the
  * built-in ones, and tokens a host sets for a built-in value are merged over the built-in tokens, per token. Axis names
  * become `data-se-<axis>` attribute names and values go into attribute selectors, so both are
- * restricted to plain identifiers. Throws on a name, value or token that is not.
+ * restricted to plain identifiers. Throws on a name, value or token that is not, and on an axis named in `reservedNames`.
  */
-export function compileAppearance(options?: AppearanceOptions): CompiledAppearance {
-	const axes = mergeAxes(options);
+export function compileAppearance(
+	options?: AppearanceOptions,
+	compiler: AppearanceCompilerOptions = {},
+): CompiledAppearance {
+	const axes = mergeAxes(options, new Set(compiler.reservedNames));
 	const id = appearanceThemeId(axes);
 	return Object.freeze({
 		id,
@@ -223,7 +219,7 @@ export function compileAppearance(options?: AppearanceOptions): CompiledAppearan
 
 let cachedDefaultCompiledAppearance: CompiledAppearance | undefined;
 
-/** Frozen library-default vocabulary; shared by engines built without an `appearance` option. */
+/** Frozen library-default vocabulary; shared by every theme built without an `appearance` option. */
 export function getDefaultCompiledAppearance(): CompiledAppearance {
 	cachedDefaultCompiledAppearance ??= compileAppearance();
 	return cachedDefaultCompiledAppearance;
@@ -232,12 +228,24 @@ export function getDefaultCompiledAppearance(): CompiledAppearance {
 /**
  * The `data-se-<axis>` attributes for a resolved selection.
  *
- * @remarks Both renderers spread this on the form, step, field host and slot elements.
+ * @remarks A renderer spreads this on every element that carries a pick.
  */
 export function getAppearanceAttributes(appearance: AppearanceSelection | undefined): Record<string, string> {
 	const attributes: Record<string, string> = {};
 	for (const [axis, value] of Object.entries(appearance ?? {})) attributes[`data-se-${axis}`] = value;
 	return attributes;
+}
+
+/**
+ * A child's picks laid over the picks it inherits: the child's value wins per axis.
+ *
+ * @remarks Pure merge; checking that the child's axes are valid is {@link checkAppearance}'s job.
+ */
+export function mergeAppearance(
+	inherited: AppearanceSelection | undefined,
+	own: AppearanceSelection | undefined,
+): Record<string, string> {
+	return { ...inherited, ...own };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -248,7 +256,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * Checks an authored pick against the vocabulary and, when given, the axes its owner supports.
  *
  * @param subject Names the owner in a message, for example `Element 'fieldSet'`.
- * @param supported The axes the owner declares; an owner that declares none passes `[]`. Omit it for the form and steps, which accept every axis.
+ * @param supported The axes the owner declares; an owner that declares none passes `[]`. Omit it for an owner that accepts every axis.
  * @returns One message per problem, without a location prefix, and the valid picks.
  */
 export function checkAppearance(

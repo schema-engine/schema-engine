@@ -5,7 +5,6 @@ import { BaseFieldSchema } from '@/schemas/base-field';
 import { defineInput } from '@/types';
 import { defineFormRecipe, defineRecipeSpec } from '@/recipes';
 import { cardSpec, cardWizardSpec } from '@/recipes/built-in-specs';
-import { getAppearanceAttributes } from '@/lib/appearance';
 
 const noteSchema = z.extend(BaseFieldSchema, { $type: z.literal('note') });
 const fieldSetSchema = z.extend(BaseFieldSchema, {
@@ -240,14 +239,6 @@ describe('appearance resolution', () => {
 		const config = engine.validateForm(form());
 		expect('appearance' in config.steps[0].elements[0]).toBe(false);
 		expect('appearance' in config).toBe(false);
-	});
-
-	test('attributes name each axis', () => {
-		expect(getAppearanceAttributes({ size: 'compact', surface: 'flat' })).toEqual({
-			'data-se-size': 'compact',
-			'data-se-surface': 'flat',
-		});
-		expect(getAppearanceAttributes(undefined)).toEqual({});
 	});
 
 	test('validateElement resolves a standalone element', () => {

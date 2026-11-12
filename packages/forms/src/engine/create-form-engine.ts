@@ -9,8 +9,7 @@ import type {
 } from '@/builder/types.utils';
 import type { FormEngine } from './form-engine';
 import type { SchemaMetadataCatalog } from './schema-metadata-catalog';
-import type { GridThemeOptions } from '@schema-engine/layout';
-import type { AppearanceOptions, ResolvedAppearanceAxes } from '@/lib/appearance';
+import type { AppearanceOptions, GridThemeOptions, ResolvedAppearanceAxes } from '@schema-engine/layout';
 
 export interface CreateFormEngineOptions<
 	TElements extends readonly ElementRegistrationConstraint[] = readonly [],

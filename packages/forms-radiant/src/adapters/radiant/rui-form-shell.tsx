@@ -3,7 +3,7 @@ import type { FormConfigView } from '@schema-engine/forms';
 import { collectInitialValues, flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import { flattenValues } from './controller/values';
 import type { JsxRenderable } from '@ecopages/jsx';
-import { getAppearanceAttributes } from '@schema-engine/forms/lib/appearance';
+import { getAppearanceAttributes } from '@schema-engine/layout';
 
 export function collectFormDefaultValues(
 	config: FormConfigView,

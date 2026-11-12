@@ -1,4 +1,4 @@
-import { getDefaultCompiledAppearance } from '@schema-engine/forms/lib/appearance';
+import { getDefaultCompiledAppearance } from '@schema-engine/layout';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { FormProvider } from '../../src/adapters/rhf/form-provider';

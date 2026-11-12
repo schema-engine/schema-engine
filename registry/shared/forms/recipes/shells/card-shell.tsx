@@ -1,5 +1,5 @@
 import type React from 'react';
-import { getAppearanceAttributes } from '@schema-engine/forms/lib/appearance';
+import { getAppearanceAttributes } from '@schema-engine/layout';
 import { getSlotConfig } from '@schema-engine/forms/recipes';
 import { CardShellConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import type { FormShellProps } from '@schema-engine/forms-react/primitives';

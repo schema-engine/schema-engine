@@ -16,7 +16,7 @@ import { adoptFieldArrayIds } from '@/adapters/radiant/controller/field-array';
 import { getValueAtPath, setValueAtPath } from '@schema-engine/forms/lib/path-values';
 import { formContext, type FormContextValue } from '@ecopages/radiant-ui/form';
 import { mergeChildrenGridHost, mergeFieldGridHost } from '@/hooks/grid-styles';
-import { getAppearanceAttributes } from '@schema-engine/forms/lib/appearance';
+import { getAppearanceAttributes } from '@schema-engine/layout';
 import { readValue } from '@/adapters/radiant/controller/values';
 import { formElement } from '@/lib/define-element';
 

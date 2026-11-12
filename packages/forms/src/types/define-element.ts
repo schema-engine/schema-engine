@@ -3,7 +3,7 @@ import type { ElementMetadata } from './metadata';
 import type { InputRegistration, StaticRegistration } from './registration';
 import type { NormalizedElementConfig } from '@/lib/normalized-form-config';
 import type { AnyValidationRegistration } from '@/schemas/validation/types';
-import type { AppearanceAxisList } from '@/lib/appearance';
+import type { AppearanceAxisList } from '@schema-engine/layout';
 
 type InferOutput<TSchema> = TSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TSchema> : never;
 

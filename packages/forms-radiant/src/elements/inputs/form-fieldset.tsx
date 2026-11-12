@@ -1,4 +1,4 @@
-import { getAppearanceAttributes } from '@schema-engine/forms/lib/appearance';
+import { getAppearanceAttributes } from '@schema-engine/layout';
 import { FormElements } from '@/components/internals/form-elements';
 import { mergeChildrenGridHost, mergeFieldGridHost } from '@/hooks/grid-styles';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';

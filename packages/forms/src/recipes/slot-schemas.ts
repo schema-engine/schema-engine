@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import { AppearanceConfigSchema } from '@/schemas/base-field';
+import { AppearanceConfigSchema } from '@schema-engine/layout';
 
 /**
  * Appearance pick for a slot that declares axes in its spec's `appearanceAxes`.

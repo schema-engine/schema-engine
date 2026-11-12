@@ -6,10 +6,15 @@
  * (`@schema-engine/layout`); the responsive behavior lives in
  * the theme stylesheet the engine generates and the renderer emits inline.
  */
-import { getGridVariables, type CompiledGrid, type NormalizedGridTheme } from '@schema-engine/layout';
+import {
+	getGridVariables,
+	type CompiledGrid,
+	type NormalizedGridTheme,
+	getAppearanceAttributes,
+	type CompiledAppearance,
+} from '@schema-engine/layout';
 import type React from 'react';
 import { useContext, useMemo } from 'react';
-import { getAppearanceAttributes, type CompiledAppearance } from '@schema-engine/forms/lib/appearance';
 import { FormProvider } from '../form-provider';
 import type { FormAdapter, FormProviderProps } from '../../adapters/types';
 import { FormElements } from './form-elements';

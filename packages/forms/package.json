@@ -107,10 +107,6 @@
 			"types": "./dist/lib/debounce.d.ts",
 			"import": "./dist/lib/debounce.js"
 		},
-		"./lib/appearance": {
-			"types": "./dist/lib/appearance.d.ts",
-			"import": "./dist/lib/appearance.js"
-		},
 		"./lib/standard-schema": {
 			"types": "./dist/lib/standard-schema.d.ts",
 			"import": "./dist/lib/standard-schema.js"

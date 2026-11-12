@@ -1,8 +1,7 @@
 import type React from 'react';
 import { FormElements } from '@schema-engine/forms-react/primitives';
 import { objectFieldScope } from '@schema-engine/forms';
-import { getGridItemVariables } from '@schema-engine/layout';
-import { getAppearanceAttributes } from '@schema-engine/forms/lib/appearance';
+import { getGridItemVariables, getAppearanceAttributes } from '@schema-engine/layout';
 import { useChildGridProps, useGridThemeId } from '@schema-engine/forms-react/hooks';
 import { FieldSet } from '@/components/ui/schema-engine/components/field';
 import type { FieldSetProps } from './form-fieldset.types';

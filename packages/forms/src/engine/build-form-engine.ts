@@ -12,12 +12,15 @@ import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from 
 import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
 import { logger } from '@/lib/logger';
 import {
+	compileAppearance,
 	compileGridTheme,
 	getDefaultCompiledGrid,
+	type AppearanceOptions,
+	type CompiledAppearance,
 	type CompiledGrid,
 	type GridThemeOptions,
 } from '@schema-engine/layout';
-import { compileAppearance, type AppearanceOptions, type CompiledAppearance } from '@/lib/appearance';
+import { RENDERER_DATA_ATTRIBUTES } from '@/lib/renderer-data-attributes';
 import { createFormConfigShape } from '@/schemas/form-config-shape';
 import * as z from 'zod/mini';
 import { isZodType } from '@/lib/zod-json-schema';
@@ -121,7 +124,8 @@ export type FormEngineRegistrationLists = {
  * Later duplicate `$type` values overwrite earlier ones (last-wins).
  */
 export function buildFormEngine(lists: FormEngineRegistrationLists) {
-	const compiledAppearance = lists.compiledAppearance ?? compileAppearance(lists.appearance);
+	const compiledAppearance =
+		lists.compiledAppearance ?? compileAppearance(lists.appearance, { reservedNames: RENDERER_DATA_ATTRIBUTES });
 	const elementRegistry = createRegistry('Element', (lists.elements ?? []) as readonly AnyElementRegistration[]);
 	const recipeRegistry = createRegistry('Recipe', (lists.recipes ?? []) as readonly AnyRecipeRegistration[]);
 	const actionRegistry = createRegistry('Action', (lists.actions ?? []) as readonly AnyActionRegistration[]);

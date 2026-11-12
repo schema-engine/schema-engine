@@ -5,7 +5,7 @@ import { BaseFieldSchema } from '@/schemas/base-field';
 import { defineFormRecipe, defineRecipeSpec } from '@/recipes';
 import { cardSpec } from '@/recipes/built-in-specs';
 import { defineInput } from '@/types';
-import type { ResolvedAppearanceAxes } from '@/lib/appearance';
+import type { ResolvedAppearanceAxes } from '@schema-engine/layout';
 
 const note = defineInput({
 	$type: 'note',

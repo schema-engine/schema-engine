@@ -5,7 +5,7 @@ import type { BuilderActionBaseContext } from './actions.js';
 import type { FormActionTrigger } from '../actions/triggers';
 import type { ActionRegistration, ActionConfigBase } from '@schema-engine/actions';
 import type { AnyValidationRegistration } from '@/schemas/validation/types';
-import type { AppearanceAxisList, SlotAppearanceAxes } from '@/lib/appearance';
+import type { AppearanceAxisList, SlotAppearanceAxes } from '@schema-engine/layout';
 
 /**
  * Input element registration - form inputs, selects, checkboxes, and interactive elements.

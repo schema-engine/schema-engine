@@ -1,6 +1,6 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { AnyValidationRegistration } from '@/schemas/validation/types';
-import type { AppearanceAxisList, SlotAppearanceAxes } from '@/lib/appearance';
+import type { AppearanceAxisList, SlotAppearanceAxes } from '@schema-engine/layout';
 
 /** Coerce inferred registration maps into the engine generic constraint. */
 export type AsRegistrationMap<T> = T extends Record<string, unknown> ? T : Record<never, never>;

@@ -4,8 +4,8 @@ import {
 	type ElementRegistrationConstraint,
 	type RecipeRegistrationConstraint,
 	type ActionRegistrationConstraint,
-	type AppearanceOptions,
 } from '@schema-engine/forms';
+import type { AppearanceOptions } from '@schema-engine/layout';
 import { radiantRecipes } from '@/recipes/bind-recipes';
 
 /**
