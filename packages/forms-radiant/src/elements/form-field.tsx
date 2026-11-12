@@ -1,7 +1,7 @@
 import { RuiFieldElement, type RuiFieldProps } from '@ecopages/radiant-ui/field';
 import type { FieldRules } from '@ecopages/radiant-ui/form';
 import type { JsxCustomElementAttributes } from '@ecopages/jsx';
-import { readHydratedRules } from '@/components/internals/field-rule-hydrator';
+import { readHydratedRules, rebuildHydratedRules } from '@/components/internals/field-rule-hydrator';
 import { formEngineContext } from '@/components/provider';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
@@ -24,6 +24,7 @@ export class FormFieldElement extends RuiFieldElement {
 	private authoredRules?: FieldRules;
 	private appliedRules?: FieldRules;
 	private hydratedEngine?: FormEngine;
+	private derivedValidator?: unknown;
 
 	protected override onConnected(): void {
 		this.hydrateDefaultValue();
@@ -53,18 +54,20 @@ export class FormFieldElement extends RuiFieldElement {
 	}
 
 	/**
-	 * Rebuilds the hydrated rules with the validators of an engine bound after this field connected.
+	 * Rebuilds the derived rules with the registry of the engine the renderer publishes.
 	 *
 	 * @remarks
-	 * Serialized rules cannot carry custom validators; without an engine only the native rules
-	 * are restored. A field that connected with its engine already has them.
+	 * Serialized rules cannot carry custom validators, and a validator closes over the registry it was built
+	 * with, so every engine that arrives or replaces another rebuilds them from the serialized baseline, in
+	 * this one place. A field that connected with its engine has them already.
 	 */
 	@onContextUpdate({ context: formEngineContext, select: (context) => context?.engine, requestUpdate: false })
 	onRendererEngine(engine: FormEngine | undefined): void {
 		if (!engine || !this.isConnected || engine === this.hydratedEngine) return;
 		this.hydratedEngine = engine;
-		const rules = readHydratedRules(this);
+		const rules = rebuildHydratedRules(this, engine, this.derivedValidator);
 		if (!rules) return;
+		this.derivedValidator = typeof rules.validate === 'function' ? rules.validate : undefined;
 		this.rules = rules;
 		this.onRulesUpdated();
 	}
