@@ -192,8 +192,8 @@ CSS grammar, so a two-keyword axis value such as `safe center` stays on one
 axis.
 
 Named widths are the same mechanism, not a second one. An element's `grid.width`
-(`full | three-quarters | two-thirds | half | third | quarter | auto`) and
-`grid.offset` (the same names without `full` and `auto`) resolve to spans and
+(`full | three-quarters | two-thirds | half | third | quarter`) and
+`grid.offset` (the same names without `full`) resolve to spans and
 start lines on 12 tracks and are emitted into the shared `grid-column` slot, so
 they inherit the breakpoint cascade (`grid.responsive`) and the inheritance
 resets. They are one declaration, so a slot that authors only one of the two
@@ -203,9 +203,20 @@ the 12-track template and a `--se-grid-default-column` of `1 / -1` inline from
 `getFormGridVariables`, which the stylesheet resets on every grid and reads as
 the fallback of a field's `grid-column`, so a field with no width fills the
 row. A grid uses either `columns` (and `minColumnWidth`) or widths: validation
-rejects both together, and rejects a field that sets `width` or `offset` with a
-raw `column`. Raw `column`, `row` and `placeSelf` remain the escape hatch, and
-`column: 2` is a grid line, not a span.
+rejects both together, a field that sets `width` or `offset` with a raw
+`column`, an offset plus width past 12 tracks (counting values carried from
+narrower slots). A raw `column` field beside width fields counts the same 12
+tracks (`span 2` is a sixth of the row). Raw `column`, `row` and `placeSelf`
+remain the escape hatch, and `column: 2` is a grid line, not a span.
+
+Containers are grids too. A fieldset, and each array row, lays its direct
+children out in an inner `se-form-grid` carrying the engine's theme id, built
+with the same `getFormGridVariables(undefined, theme, children)` a step uses.
+The grid rule resets `--se-grid-default-column` on every grid and the inner
+grid declares its own, so a child's width and default placement come from its
+container and never from the step around it. The step's `columns` and a
+container's child widths therefore do not conflict; the over-width and raw
+column checks apply to every element at any depth.
 
 Two contracts follow from the field rule outranking a component's own class.
 Gap tokens (`--se-grid-gap-*`) are never declared on an element — the engine

@@ -1,5 +1,5 @@
 import { FormElements } from '@/components/internals/form-elements';
-import { mergeFieldGridHost } from '@/hooks/grid-styles';
+import { mergeChildrenGridHost, mergeFieldGridHost } from '@/hooks/grid-styles';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import type { FieldSetProps } from './form-fieldset.types';
 import { objectFieldScope } from '@schema-engine/forms';
@@ -20,12 +20,17 @@ export function FormFieldSet(config: FieldSetProps) {
 	const scope = objectFieldScope(config.name, config);
 	const fieldHost = mergeFieldGridHost(config.grid, config.style);
 	const elements = withContainerState(config, config.elements);
+	const childrenHost = mergeChildrenGridHost(config.elements);
 
 	return (
 		<fieldset class="se-form-field se-fieldset" data-se-grid-theme={fieldHost.themeId} style={fieldHost.style}>
 			{config.legend ? <legend class="se-fieldset__legend">{config.legend}</legend> : null}
 			{config.description ? <p class="se-fieldset__description">{config.description}</p> : null}
-			<div class="se-fieldset__fields">
+			<div
+				class="se-fieldset__fields se-form-grid"
+				data-se-grid-theme={childrenHost.themeId}
+				style={childrenHost.style}
+			>
 				<FormElements
 					elements={elements}
 					engine={resolveFormEngine()}

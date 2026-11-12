@@ -1,8 +1,13 @@
 import { describe, test } from 'vitest';
-import { expectSsrGridAcceptance, expectSsrWidthsAcceptance } from '../../../../test-utils/ssr-grid-acceptance';
+import {
+	expectSsrGridAcceptance,
+	expectSsrNestedWidthsAcceptance,
+	expectSsrWidthsAcceptance,
+} from '../../../../test-utils/ssr-grid-acceptance';
 import {
 	getSsrAcceptanceEngine,
 	renderSsrLayoutAcceptanceHtml,
+	renderSsrNestedWidthsAcceptanceHtml,
 	renderSsrWidthsAcceptanceHtml,
 } from './render-form-ssr-html';
 
@@ -13,5 +18,13 @@ describe('SSR grid layout acceptance', () => {
 
 	test('named widths and offsets lay out on twelve tracks at two widths', async () => {
 		await expectSsrWidthsAcceptance(renderSsrWidthsAcceptanceHtml(), getSsrAcceptanceEngine().getCompiledGrid());
+	});
+
+	test('a fieldset and an array row lay their children out on their own twelve tracks', async () => {
+		await expectSsrNestedWidthsAcceptance(
+			renderSsrNestedWidthsAcceptanceHtml(),
+			getSsrAcceptanceEngine().getCompiledGrid(),
+			['Nest', 'Row'],
+		);
 	});
 });

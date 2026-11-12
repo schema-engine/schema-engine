@@ -6,7 +6,9 @@ import { rhfAdapter } from '@/adapters/react-hook-form';
 import { useControlledFormElement } from '@/hooks/use-field';
 import { useGridThemeId } from '@/hooks/use-form-context';
 import { createFormEngine } from '@schema-engine/forms';
-import { SSR_WIDTH_FIELDS } from '../../../../test-utils/ssr-grid-acceptance';
+import { SSR_WIDTH_FIELDS, ssrNestedFields } from '../../../../test-utils/ssr-grid-acceptance';
+import { ArrayElementRegistration } from '@/components/schema-engine/forms/inputs/form-array-elements.registration';
+import { FieldSetRegistration } from '@/components/schema-engine/forms/inputs/form-fieldset.registration';
 
 const ssrInputSchema = z.object({
 	$type: z.literal('ssr-input'),
@@ -34,6 +36,8 @@ function SsrFixtureInput(config: SsrInputConfig) {
 function createSsrAcceptanceEngine() {
 	return createFormEngine({
 		elements: [
+			FieldSetRegistration,
+			ArrayElementRegistration,
 			{
 				$type: 'ssr-input',
 				schema: ssrInputSchema,
@@ -118,4 +122,38 @@ export function getSsrWidthsFixture() {
 		cachedWidthsFixture = { engine, config, adapter };
 	}
 	return cachedWidthsFixture;
+}
+
+let cachedNestedFixture: ReturnType<typeof getSsrAcceptanceFixture> | undefined;
+
+/** Same engine, with a fieldset and an array row whose children set widths. */
+export function getSsrNestedWidthsFixture() {
+	if (!cachedNestedFixture) {
+		const { engine, adapter } = getSsrAcceptanceFixture();
+		const children = (prefix: 'Nest' | 'Row') =>
+			ssrNestedFields(prefix).map(({ id, label, grid }) => ({ $type: 'ssr-input', id, name: id, label, grid }));
+		const config = engine.validateForm({
+			id: 'ssr-nested-widths-acceptance',
+			title: 'SSR nested widths acceptance',
+			steps: [
+				{
+					id: 'main',
+					title: 'Main',
+					elements: [
+						{ $type: 'fieldSet', id: 'group', name: 'group', legend: 'Group', elements: children('Nest') },
+						{
+							$type: 'arrayElements',
+							id: 'rows',
+							name: 'rows',
+							label: 'Rows',
+							minItems: 1,
+							elements: children('Row'),
+						},
+					],
+				},
+			],
+		});
+		cachedNestedFixture = { engine, config, adapter };
+	}
+	return cachedNestedFixture;
 }

@@ -20,8 +20,3 @@
 	font-size: 0.875rem;
 	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
 }
-
-.se-fieldset__fields {
-	display: grid;
-	gap: 1rem;
-}
