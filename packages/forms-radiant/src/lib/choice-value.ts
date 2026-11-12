@@ -22,11 +22,3 @@ export function serializeChoiceValue(value: unknown): string | undefined {
 
 	return undefined;
 }
-
-export function parseChoiceValue(value: string, multiple: boolean): string | string[] {
-	if (!multiple) {
-		return value;
-	}
-
-	return value === '' ? [] : value.split(',').filter(Boolean);
-}

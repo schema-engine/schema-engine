@@ -15,11 +15,4 @@ export const FieldSetConfigSchema = z.extend(BaseFieldSchema, {
 export type FieldSetConfig = z.output<typeof FieldSetConfigSchema>;
 export type FieldSetInput = z.input<typeof FieldSetConfigSchema>;
 
-export type FieldSetProps = ElementRenderProps<
-	typeof FieldSetConfigSchema,
-	{
-		onChange?: (value: unknown) => void;
-		onBlur?: () => void;
-		onFocus?: () => void;
-	}
->;
+export type FieldSetProps = ElementRenderProps<typeof FieldSetConfigSchema>;

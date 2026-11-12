@@ -14,11 +14,7 @@ export const PhoneInputFieldSchema = z.extend(BaseFieldSchema, {
 /** Serializable input accepted by the phone-input registration. */
 export type PhoneInputFieldConfig = z.input<typeof PhoneInputFieldSchema>;
 
-export type PhoneInputFieldProps = z.output<typeof PhoneInputFieldSchema> & {
-	onChange?: (value: string) => void;
-	onBlur?: () => void;
-	onFocus?: () => void;
-};
+export type PhoneInputFieldProps = z.output<typeof PhoneInputFieldSchema>;
 
 export const phoneInputFieldExample: PhoneInputFieldConfig = {
 	$type: 'phone-input',

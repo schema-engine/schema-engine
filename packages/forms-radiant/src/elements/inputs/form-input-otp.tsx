@@ -1,8 +1,15 @@
 import './form-input-otp.css';
-import { customElement, prop, RadiantElement, state } from '@ecopages/radiant';
+import { customElement, prop, query } from '@ecopages/radiant';
+import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
+import {
+	emitControlChange,
+	fieldControlHostAttributes,
+	registerValueControl,
+	releaseFieldAria,
+} from '@/lib/field-control';
 import { FieldGroup } from '../field-group';
 import type { InputOTPFieldProps } from './form-input-otp.types';
 
@@ -14,18 +21,29 @@ function sanitizeChar(value: string, pattern: 'numeric' | 'alphanumeric') {
 	return /^[a-zA-Z0-9]$/.test(char) ? char : '';
 }
 
-@customElement('se-input-otp')
-export class SeInputOtp extends RadiantElement {
-	@prop({ type: String }) name = '';
+@customElement('se-input-otp', { hostAttributes: fieldControlHostAttributes('[data-ref="group"]') })
+export class SeInputOtp extends FormAssociatedElement {
+	@prop({ type: String }) value = '';
 	@prop({ type: Number, defaultValue: 6 }) length = 6;
 	@prop({ type: String, defaultValue: 'numeric' }) pattern: 'numeric' | 'alphanumeric' = 'numeric';
-	@prop({ type: Boolean, defaultValue: false }) disabled = false;
 
-	@state value = '';
+	@query({ ref: 'slot', all: true }) slotInputs!: HTMLInputElement[];
+
+	protected override formValue(): FormValue {
+		return this.value;
+	}
+
+	protected override restoreFormState(state: FormValue): void {
+		this.value = typeof state === 'string' ? state : '';
+	}
+
+	protected override onConnected(): void {
+		releaseFieldAria(this);
+	}
 
 	private readonly onSlotInput = (event: Event) => {
 		const input = event.target as HTMLInputElement;
-		const index = Number(input.dataset.otpIndex);
+		const index = this.slotInputs.indexOf(input);
 		const char = sanitizeChar(input.value, this.pattern);
 		input.value = char;
 
@@ -34,50 +52,34 @@ export class SeInputOtp extends RadiantElement {
 		this.value = chars.join('').replace(/ +$/g, '').replace(/ /g, '');
 
 		if (char) {
-			const next = this.querySelector<HTMLInputElement>(`[data-otp-index="${index + 1}"]`);
-			next?.focus();
+			this.slotInputs[index + 1]?.focus();
 		}
 
-		this.dispatchChange();
+		emitControlChange(this, this.value);
 	};
 
 	private readonly onSlotKeydown = (event: Event) => {
 		const keyEvent = event as KeyboardEvent;
-		if (keyEvent.key !== 'Backspace') {
-			return;
-		}
-
 		const input = keyEvent.target as HTMLInputElement;
-		const index = Number(input.dataset.otpIndex);
-		if (input.value) {
+		if (keyEvent.key !== 'Backspace' || input.value) {
 			return;
 		}
 
-		const previous = this.querySelector<HTMLInputElement>(`[data-otp-index="${index - 1}"]`);
-		previous?.focus();
+		this.slotInputs[this.slotInputs.indexOf(input) - 1]?.focus();
 	};
 
 	private readonly onSlotPaste = (event: Event) => {
 		const pasteEvent = event as ClipboardEvent;
 		pasteEvent.preventDefault();
 		const text = pasteEvent.clipboardData?.getData('text') ?? '';
-		const chars = text
+		this.value = text
 			.split('')
 			.map((char) => sanitizeChar(char, this.pattern))
 			.filter(Boolean)
-			.slice(0, this.length);
-		this.value = chars.join('');
-		this.dispatchChange();
+			.slice(0, this.length)
+			.join('');
+		emitControlChange(this, this.value);
 	};
-
-	private dispatchChange() {
-		this.dispatchEvent(new CustomEvent('change', { bubbles: true, detail: { value: this.value } }));
-		const hidden = this.querySelector<HTMLInputElement>('[data-rui-control]');
-		if (hidden) {
-			hidden.value = this.value;
-			hidden.dispatchEvent(new Event('input', { bubbles: true }));
-		}
-	}
 
 	override render(): JsxRenderable {
 		const length = this.length || 6;
@@ -85,53 +87,34 @@ export class SeInputOtp extends RadiantElement {
 		const chars = this.value.split('');
 
 		return (
-			<fieldset class="se-otp">
-				<input class="se-otp__value" data-rui-control name={this.name} value={this.value} tabindex={-1} />
-				{Array.from({ length: firstHalf }, (_, index) => (
+			<fieldset class="se-otp" data-ref="group">
+				{Array.from({ length }, (_, index) => [
+					index === firstHalf ? (
+						<span class="se-otp__separator" aria-hidden="true">
+							-
+						</span>
+					) : null,
 					<input
 						class="rui-input se-otp__slot"
-						data-otp-index={String(index)}
+						data-ref="slot"
 						maxlength={1}
 						inputmode={this.pattern === 'numeric' ? 'numeric' : 'text'}
 						autocomplete={index === 0 ? 'one-time-code' : 'off'}
-						disabled={this.disabled}
+						disabled={this.effectiveDisabled}
 						on:input={this.onSlotInput}
 						on:keydown={this.onSlotKeydown}
 						on:paste={this.onSlotPaste}
-						value={chars[index] ?? ''}
-					/>
-				))}
-				<span class="se-otp__separator" aria-hidden="true">
-					-
-				</span>
-				{Array.from({ length: length - firstHalf }, (_, offset) => {
-					const index = firstHalf + offset;
-					return (
-						<input
-							class="rui-input se-otp__slot"
-							data-otp-index={String(index)}
-							maxlength={1}
-							inputmode={this.pattern === 'numeric' ? 'numeric' : 'text'}
-							autocomplete="off"
-							disabled={this.disabled}
-							on:input={this.onSlotInput}
-							on:keydown={this.onSlotKeydown}
-							on:paste={this.onSlotPaste}
-							value={chars[index] ?? ''}
-						/>
-					);
-				})}
+						prop:value={chars[index] ?? ''}
+					/>,
+				])}
 			</fieldset>
 		);
 	}
 }
 
-export function FormInputOTP({
-	onChange: propsOnChange,
-	onBlur: propsOnBlur,
-	onFocus: propsOnFocus,
-	...config
-}: InputOTPFieldProps) {
+registerValueControl('se-input-otp');
+
+export function FormInputOTP(config: InputOTPFieldProps) {
 	return (
 		<FieldGroup
 			name={config.name}
@@ -151,11 +134,6 @@ export function FormInputOTP({
 				length: config.length ?? 6,
 				pattern: config.pattern ?? 'numeric',
 				disabled: config.disabled,
-				'on:change': (event: Event) => {
-					propsOnChange?.((event as CustomEvent<{ value?: string }>).detail?.value ?? '');
-				},
-				'on:blur': propsOnBlur,
-				'on:focus': propsOnFocus,
 			})}
 		</FieldGroup>
 	);

@@ -1,5 +1,6 @@
 import './form-phone-input.css';
-import { customElement, onUpdated, prop, query, RadiantElement, state } from '@ecopages/radiant';
+import { bindTo, customElement, onUpdated, prop, state } from '@ecopages/radiant';
+import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
 import { jsx, unsafeHtml, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import {
 	RuiSelect,
@@ -15,6 +16,12 @@ import { RuiListbox, RuiListboxOption, RuiListboxOptionIndicator } from '@ecopag
 import type { CountryCode } from 'libphonenumber-js';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
+import {
+	emitControlChange,
+	fieldControlHostAttributes,
+	registerValueControl,
+	releaseFieldAria,
+} from '@/lib/field-control';
 import { FieldGroup } from '../field-group';
 import {
 	detectCountryFromInput,
@@ -40,39 +47,59 @@ function PhoneFlag({ code, class: className }: { code?: string; class: string })
 	);
 }
 
-@customElement('se-phone-input')
-export class SePhoneInput extends RadiantElement {
-	@prop({ type: String }) name = '';
+/**
+ * @remarks
+ * `value` is the E.164 number the field submits. The visible text is `display`
+ * and the country picker is `country`; a write to `value` re-derives both once
+ * libphonenumber has loaded, and `committed` keeps the host's own writes from
+ * being re-parsed.
+ */
+@customElement('se-phone-input', { hostAttributes: fieldControlHostAttributes('[data-ref="number"]') })
+export class SePhoneInput extends FormAssociatedElement {
+	@prop({ type: String }) value = '';
 	@prop({ type: String }) inputId = '';
 	@prop({ type: String }) placeholder = '';
 	@prop({ type: String }) defaultCountry = 'US';
-	@prop({ type: String }) defaultValue = '';
 	@prop({ type: Boolean, defaultValue: false }) international = false;
-	@prop({ type: Boolean, defaultValue: false }) disabled = false;
 
-	@state country: CountryCode = 'US';
+	@state @bindTo({ attr: 'data-country' }) country: CountryCode = 'US';
+	@state @bindTo({ bool: 'data-ready' }) ready = false;
 	@state countries: PhoneCountryOption[] = [];
+	@state display = '';
 
-	@query({ ref: 'number' }) numberInput!: HTMLInputElement | null;
-	@query({ ref: 'control' }) control!: HTMLInputElement | null;
-
-	private e164 = '';
+	private committed = '';
 	private lib?: LibPhoneNumber;
 	private bootGeneration = 0;
 
+	protected override formValue(): FormValue {
+		return this.value;
+	}
+
+	protected override restoreFormState(state: FormValue): void {
+		this.value = typeof state === 'string' ? state : '';
+	}
+
 	protected override onConnected(): void {
+		releaseFieldAria(this);
 		void this.boot();
 		this.registerCleanupCallback(() => {
 			this.bootGeneration += 1;
 			this.lib = undefined;
-			this.removeAttribute('data-ready');
+			this.ready = false;
 		});
 	}
 
-	@onUpdated(['defaultCountry', 'defaultValue', 'international'])
+	@onUpdated(['value'])
+	onValueUpdated(): void {
+		if (this.lib && this.value !== this.committed) {
+			this.hydrateFromValue(this.value);
+		}
+	}
+
+	@onUpdated(['defaultCountry', 'international'])
 	onConfigUpdated(): void {
 		if (this.lib) {
-			this.hydrateFromValue(this.e164 || this.defaultValue);
+			this.hydrateFromValue(this.value);
 		}
 	}
 
@@ -82,8 +109,8 @@ export class SePhoneInput extends RadiantElement {
 			return;
 		}
 		const next = (event as CustomEvent<{ value?: string | readonly string[] }>).detail?.value;
-		this.setCountry(resolvePhoneCountry(this.lib, next, this.country));
-		this.applyNumber(this.numberInput?.value ?? this.e164);
+		this.country = resolvePhoneCountry(this.lib, next, this.country);
+		this.applyNumber(this.display);
 	};
 
 	private readonly onNumberInput = (event: Event) => {
@@ -99,8 +126,8 @@ export class SePhoneInput extends RadiantElement {
 
 		this.lib = lib;
 		this.countries = listPhoneCountries(lib);
-		this.hydrateFromValue(this.control?.value || this.defaultValue);
-		this.setAttribute('data-ready', '');
+		this.hydrateFromValue(this.value);
+		this.ready = true;
 	}
 
 	private hydrateFromValue(value: string) {
@@ -110,47 +137,28 @@ export class SePhoneInput extends RadiantElement {
 
 		const fallback = resolvePhoneCountry(this.lib, this.defaultCountry);
 		const hydrated = hydratePhoneValue(this.lib, value, fallback, this.international);
-		this.setCountry(hydrated.country);
-		this.e164 = hydrated.e164;
-		this.applyDisplay(hydrated.display);
-		this.syncControl(hydrated.e164);
-	}
-
-	private setCountry(code: CountryCode) {
-		if (this.country !== code) {
-			this.country = code;
-		}
-		this.setAttribute('data-country', code);
+		this.country = hydrated.country;
+		this.display = hydrated.display;
+		this.committed = hydrated.e164;
+		this.value = hydrated.e164;
 	}
 
 	private applyNumber(raw: string) {
-		if (!this.lib) {
-			this.e164 = raw;
-			this.syncControl(raw);
+		let next = raw;
+		if (this.lib) {
+			this.country = detectCountryFromInput(this.lib, raw, this.country);
+			this.display = formatPhoneInputValue(this.lib, raw, this.country, this.international);
+			next = phoneInputToE164(this.lib, raw, this.country);
+		} else {
+			this.display = raw;
+		}
+
+		this.committed = next;
+		if (next === this.value) {
 			return;
 		}
-
-		this.setCountry(detectCountryFromInput(this.lib, raw, this.country));
-		const display = formatPhoneInputValue(this.lib, raw, this.country, this.international);
-		this.e164 = phoneInputToE164(this.lib, raw, this.country);
-		this.applyDisplay(display);
-		this.syncControl(this.e164);
-	}
-
-	private applyDisplay(display: string) {
-		if (this.numberInput && this.numberInput.value !== display) {
-			this.numberInput.value = display;
-		}
-	}
-
-	private syncControl(value: string) {
-		if (!this.control || this.control.value === value) {
-			return;
-		}
-
-		this.control.value = value;
-		this.control.dispatchEvent(new Event('input', { bubbles: true }));
-		this.dispatchEvent(new CustomEvent('change', { bubbles: true, detail: { value } }));
+		this.value = next;
+		emitControlChange(this, next);
 	}
 
 	private selectedCountry() {
@@ -158,31 +166,27 @@ export class SePhoneInput extends RadiantElement {
 	}
 
 	override render(): JsxRenderable {
-		const display = this.lib
-			? formatPhoneInputValue(this.lib, this.e164, this.country, this.international)
-			: this.e164;
 		const selected = this.selectedCountry();
 
 		return (
 			<div class="se-phone">
-				<input class="se-phone__value" data-ref="control" data-rui-control name={this.name} tabindex={-1} />
 				<RuiSelect
 					label="Country"
 					on:rui-change={this.onCountryChange}
 					value={this.country}
-					disabled={this.disabled || this.countries.length === 0}
+					disabled={this.effectiveDisabled || this.countries.length === 0}
 				>
 					<RuiSelectControl>
-						<RuiSelectTrigger disabled={this.disabled || this.countries.length === 0}>
+						<RuiSelectTrigger disabled={this.effectiveDisabled || this.countries.length === 0}>
 							<RuiSelectValue>
 								<PhoneFlag code={selected?.code} class="se-phone__flag" />
 							</RuiSelectValue>
 						</RuiSelectTrigger>
-						<RuiSelectToggle disabled={this.disabled || this.countries.length === 0} />
+						<RuiSelectToggle disabled={this.effectiveDisabled || this.countries.length === 0} />
 					</RuiSelectControl>
 					<RuiSelectListbox>
 						<RuiAutocomplete>
-							<RuiSelectSearch placeholder="Search country..." disabled={this.disabled} />
+							<RuiSelectSearch placeholder="Search country..." disabled={this.effectiveDisabled} />
 							<RuiAutocompleteCollection>
 								<RuiListbox embedded selectionMode="single" value={this.country} label="Countries">
 									{this.countries.map((option) => (
@@ -203,15 +207,15 @@ export class SePhoneInput extends RadiantElement {
 					</RuiSelectListbox>
 				</RuiSelect>
 				<input
-					id={this.inputId}
+					id={this.inputId || undefined}
 					data-ref="number"
 					on:input={this.onNumberInput}
 					class="rui-input se-phone__number"
 					type="tel"
 					autocomplete="tel"
 					placeholder={this.placeholder}
-					disabled={this.disabled}
-					value={display}
+					disabled={this.effectiveDisabled}
+					prop:value={this.display}
 					spellcheck={false}
 				/>
 			</div>
@@ -219,12 +223,9 @@ export class SePhoneInput extends RadiantElement {
 	}
 }
 
-export function FormPhoneInput({
-	onChange: propsOnChange,
-	onBlur: propsOnBlur,
-	onFocus: propsOnFocus,
-	...config
-}: PhoneInputFieldProps) {
+registerValueControl('se-phone-input');
+
+export function FormPhoneInput(config: PhoneInputFieldProps) {
 	return (
 		<FieldGroup
 			name={config.name}
@@ -246,12 +247,7 @@ export function FormPhoneInput({
 				inputId: config.id ?? '',
 				defaultCountry: config.defaultCountry ?? 'US',
 				international: Boolean(config.international),
-				defaultValue: typeof config.defaultValue === 'string' ? config.defaultValue : '',
-				'on:change': (event: Event) => {
-					propsOnChange?.((event as CustomEvent<{ value?: string }>).detail?.value ?? '');
-				},
-				'on:blur': propsOnBlur,
-				'on:focus': propsOnFocus,
+				value: typeof config.defaultValue === 'string' ? config.defaultValue : '',
 			})}
 		</FieldGroup>
 	);

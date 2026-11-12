@@ -16,8 +16,4 @@ export const InputOTPFieldConfigSchema = z.extend(BaseFieldSchema, {
 export type InputOTPFieldExtension = z.infer<typeof InputOTPFieldExtensionSchema>;
 export type InputOTPFieldConfig = z.infer<typeof InputOTPFieldConfigSchema>;
 
-export type InputOTPFieldProps = InputOTPFieldConfig & {
-	onChange?: (value: string) => void;
-	onBlur?: () => void;
-	onFocus?: () => void;
-};
+export type InputOTPFieldProps = InputOTPFieldConfig;

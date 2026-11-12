@@ -4,12 +4,7 @@ import { isRenderedRequired } from '@/lib/field-rules';
 import { FieldGroup } from '../field-group';
 import type { SliderFieldProps } from './form-slider.types';
 
-export function FormSlider({
-	onChange: propsOnChange,
-	onBlur: propsOnBlur,
-	onFocus: propsOnFocus,
-	...config
-}: SliderFieldProps) {
+export function FormSlider(config: SliderFieldProps) {
 	return (
 		<FieldGroup
 			name={config.name}
@@ -33,12 +28,6 @@ export function FormSlider({
 				disabled={config.disabled}
 				showValue
 				value={config.defaultValue}
-				on:change={(event: Event) => {
-					const detail = (event as CustomEvent<{ value?: number }>).detail;
-					propsOnChange?.(detail?.value ?? 0);
-				}}
-				on:blur={propsOnBlur}
-				on:focus={propsOnFocus}
 			/>
 		</FieldGroup>
 	);

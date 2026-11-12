@@ -12,15 +12,10 @@ import { RuiTagGroup } from '@ecopages/radiant-ui/tag-group';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
 import { FieldGroup } from '../field-group';
-import { parseChoiceValue, serializeChoiceValue } from '@/lib/choice-value';
+import { serializeChoiceValue } from '@/lib/choice-value';
 import type { SelectFieldProps } from './form-select.types';
 
-export function FormSelect({
-	onChange: propsOnChange,
-	onBlur: propsOnBlur,
-	onFocus: propsOnFocus,
-	...config
-}: SelectFieldProps) {
+export function FormSelect(config: SelectFieldProps) {
 	const isMultiple = Boolean(config.multiple);
 	const selectionMode = isMultiple ? 'multiple' : 'single';
 	const options = config.options.map((option) => ({
@@ -49,12 +44,6 @@ export function FormSelect({
 				disabled={config.disabled}
 				selectionMode={selectionMode}
 				{...(config.defaultValue === undefined ? {} : { value: config.defaultValue })}
-				on:change={(event: Event) => {
-					const detail = (event as CustomEvent<{ value: string }>).detail;
-					propsOnChange?.(parseChoiceValue(detail?.value ?? '', isMultiple));
-				}}
-				on:blur={propsOnBlur}
-				on:focus={propsOnFocus}
 			>
 				<RuiSelectControl>
 					<RuiSelectTrigger disabled={config.disabled}>

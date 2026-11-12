@@ -206,6 +206,16 @@ the renderer's engine updates the array's field rendering. Direct
 `FormController.fieldArray` mutations do not apply the
 array config's Add and Remove behavior.
 
+`masked-input`, `phone-input` and `input-otp` are form-associated custom elements
+registered with Radiant UI's `registerFieldControl`. Each exposes its value as
+`value`, so the field's label, `aria-invalid` and `aria-describedby` land on the
+visible input (or, for the OTP, on the slot group) and a form reset or
+`FormController.setValue` repaints it. They submit through native `FormData`
+and fire a bubbling `rui-change`. `drop-zone` is registered the same way with
+its file input as the submitted control, and its `value` is the accepted file
+list. Input views take no element-level `onChange`, `onBlur` or `onFocus`:
+observe values with `FormController.watchField` or the `rui-change` event.
+
 Field schemas live beside each registration under `src/elements/` (for example `form-input.types.ts` next to `form-input.registration.ts`). Component props stay on the widget modules. Radiant does not ship `date` or `date-range` widgets; those `$type`s exist only in the shadcn registry today. Registry and Radiant schemas may diverge where capabilities differ.
 
 Custom container registrations declare `containerKind: 'array'` or

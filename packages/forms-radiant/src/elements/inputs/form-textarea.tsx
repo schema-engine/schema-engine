@@ -4,12 +4,7 @@ import { isRenderedRequired } from '@/lib/field-rules';
 import { FieldGroup } from '../field-group';
 import type { TextareaFieldProps } from './form-textarea.types';
 
-export function FormTextarea({
-	onChange: propsOnChange,
-	onBlur: propsOnBlur,
-	onFocus: propsOnFocus,
-	...config
-}: TextareaFieldProps) {
+export function FormTextarea(config: TextareaFieldProps) {
 	return (
 		<FieldGroup
 			name={config.name}
@@ -31,12 +26,6 @@ export function FormTextarea({
 				rows={config.rows}
 				style={{ fontFamily: 'inherit' }}
 				disabled={config.disabled}
-				on:input={(event: Event) => {
-					const target = event.target as HTMLTextAreaElement;
-					propsOnChange?.(target.value);
-				}}
-				on:blur={propsOnBlur}
-				on:focus={propsOnFocus}
 			/>
 		</FieldGroup>
 	);

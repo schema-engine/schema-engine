@@ -1,17 +1,20 @@
 import { customElement } from '@ecopages/radiant';
 import { RuiFieldElement, type RuiFieldProps } from '@ecopages/radiant-ui/field';
-import type { FieldRules } from '@ecopages/radiant-ui/form';
+import { findFieldControl, RUI_FIELD_MANAGED_ATTR, type FieldRules } from '@ecopages/radiant-ui/form';
 import { jsx, type JsxCustomElementAttributes } from '@ecopages/jsx';
 import { FormController, formController } from '@/adapters/radiant/controller';
 import { readHydratedRules } from '@/components/internals/field-rule-hydrator';
 import type { ElementGridConfig } from '@schema-engine/forms/schemas';
 import { resolveElementRules, toFieldRules, type FieldRulesSource } from '@/lib/field-rules';
+import { FIELD_ARIA_TARGET_ATTR } from '@/lib/field-control';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 
 /** RuiField's registration and presentation, with scoped programmatic form access. */
 @customElement('se-field')
 export class FormFieldElement extends RuiFieldElement {
 	@formController form!: FormController;
+
+	private renderObserver?: MutationObserver;
 
 	protected override onConnected(): void {
 		this.hydrateDefaultValue();
@@ -20,6 +23,30 @@ export class FormFieldElement extends RuiFieldElement {
 			this.rules = rules;
 		}
 		super.onConnected();
+		this.renderObserver ??= new MutationObserver(() => this.syncRenderedTarget());
+		this.renderObserver.observe(this, { childList: true, subtree: true });
+	}
+
+	override disconnectedCallback(): void {
+		this.renderObserver?.disconnect();
+		super.disconnectedCallback();
+	}
+
+	/**
+	 * @remarks
+	 * A custom host that renders its own control, such as the masked, phone and
+	 * OTP inputs, renders after the field first synced. That sync finds no
+	 * `data-rui-aria-target` inside the host, so the label and ARIA never reach
+	 * the control. Syncing again once the target exists, and only while it is
+	 * unmanaged, ends the loop the field's own DOM writes would otherwise start.
+	 */
+	private syncRenderedTarget(): void {
+		const control = findFieldControl(this);
+		const selector = control?.getAttribute(FIELD_ARIA_TARGET_ATTR);
+		const target = selector ? control?.querySelector(selector) : null;
+		if (target && !target.hasAttribute(RUI_FIELD_MANAGED_ATTR)) {
+			this.onPresentationUpdated();
+		}
 	}
 
 	/**
