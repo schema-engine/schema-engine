@@ -60,3 +60,32 @@ test('Backspace in an empty slot moves focus to the previous slot', async () => 
 
 	expect(document.activeElement).toBe(slots()[0]);
 });
+
+test('an incomplete code is invalid by default and keeps its slots positional', async () => {
+	const { field, slots, values } = await mountOtp();
+	await userEvent.type(slots()[0]!, '1');
+	await userEvent.type(slots()[2]!, '3456');
+	await expect.poll(() => values()).toEqual(['1', '', '3', '4', '5', '6']);
+
+	await expect(field.form.trigger()).resolves.toBe(false);
+	expect(field.form.field('code').error).toBe('Enter all 6 characters');
+	expect(values()).toEqual(['1', '', '3', '4', '5', '6']);
+
+	await userEvent.type(slots()[1]!, '2');
+	await expect(field.form.trigger()).resolves.toBe(true);
+});
+
+test('an empty optional code is valid and an authored length rule replaces the default', async () => {
+	const optional = await mountOtp();
+	await expect(optional.field.form.trigger()).resolves.toBe(true);
+	document.body.replaceChildren();
+
+	const { field } = await mountField({
+		...otp,
+		rules: [{ type: 'minLength', value: 4, message: 'Four at least' }],
+	});
+	const inputs = () => Array.from(document.querySelectorAll<HTMLInputElement>('se-input-otp input'));
+	await userEvent.type(inputs()[0]!, '12');
+	await expect(field.form.trigger()).resolves.toBe(false);
+	expect(field.form.field('code').error).toBe('Four at least');
+});

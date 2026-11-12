@@ -213,7 +213,7 @@ visible input (or, for the OTP, on the slot group) and a form reset or
 `FormController.setValue` repaints it. They submit through native `FormData`
 and fire a bubbling `rui-change`. The OTP keeps one entry per slot, so a
 character stays in its slot; its value is the slots joined, and an incomplete
-code is a shorter string for a length rule to reject. `drop-zone` is registered
+code is a shorter string. `FormInputOTP` adds a default `pattern` rule that accepts an empty code or one with every slot filled and reports "Enter all N characters" otherwise, unless the author wrote a `minLength`, `maxLength` or `pattern` rule. `drop-zone` is registered
 with its file input as the submitted control, and its host exposes the accepted
 files as `files`.
 
