@@ -15,18 +15,16 @@ import {
 	type NamedPlacement,
 } from '@/lib/grid-placement';
 
-export type { GridBreakpointToken };
-
 /**
  * Maps authored grid values to theme-scoped CSS variables.
  *
  * @remarks
- * The engine owns the grid vocabulary: breakpoint thresholds, gap tokens,
- * and the default minimum column width. The form owns layout intent:
- * columns, responsive changes, gap selection, field placement.
+ * The theme owns the grid vocabulary: breakpoint thresholds, gap tokens,
+ * and the default minimum column width. The document owns layout intent:
+ * columns, responsive changes, gap selection, item placement.
  *
  * Compile once at the engine boundary ({@link compileGridTheme}); renderers
- * emit the resulting stylesheet and per-form CSS variables inline. Breakpoint
+ * emit the resulting stylesheet and per-container CSS variables inline. Breakpoint
  * behavior lives entirely in the generated media queries — no runtime
  * observers, and layout is correct with JavaScript disabled.
  *
@@ -574,7 +572,7 @@ function emitGapEntry(variables: CssVariables, slot: CascadeSlot, entry: FormGri
  * rows as `--se-grid-areas` and the track count they draw as `--se-grid-template`,
  * derived from the rows rather than authored, as with named widths.
  */
-export function getFormGridVariables(
+export function getGridVariables(
 	grid: DeepReadonly<GridLayoutConfig> | undefined,
 	theme: NormalizedGridTheme,
 	elements: readonly unknown[],
@@ -706,7 +704,7 @@ function emitFieldEntry(
  * inheritance resets for free — and keeps a single system owning the block axis
  * instead of two fighting over it.
  */
-export function getFieldGridVariables(grid?: ElementGridConfig): CssVariables {
+export function getGridItemVariables(grid?: ElementGridConfig): CssVariables {
 	const variables: CssVariables = {};
 	const [alignSelf, justifySelf] = splitPlaceShorthand(grid?.placeSelf);
 

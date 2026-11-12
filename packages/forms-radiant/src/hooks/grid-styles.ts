@@ -1,10 +1,10 @@
-import type { ElementGridConfig } from '@schema-engine/forms/schemas';
 import {
 	getDefaultGridTheme,
-	getFieldGridVariables,
-	getFormGridVariables,
+	getGridItemVariables,
+	getGridVariables,
 	type CssVariables,
-} from '@schema-engine/forms/lib/grid-styles';
+	type ElementGridConfig,
+} from '@schema-engine/layout';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 
@@ -26,7 +26,7 @@ export function mergeFieldGridHost(
 ): { themeId: string; style: HostStyle } {
 	return {
 		themeId: themeId ?? resolveFormEngine()?.getGridTheme().id ?? getDefaultGridTheme().id,
-		style: { ...getFieldGridVariables(grid), ...style },
+		style: { ...getGridItemVariables(grid), ...style },
 	};
 }
 
@@ -46,5 +46,5 @@ export function mergeChildrenGridHost(
 	engine?: FormEngine,
 ): { themeId: string; style: CssVariables } {
 	const theme = (engine ?? resolveFormEngine())?.getGridTheme() ?? getDefaultGridTheme();
-	return { themeId: theme.id, style: getFormGridVariables(undefined, theme, elements) };
+	return { themeId: theme.id, style: getGridVariables(undefined, theme, elements) };
 }

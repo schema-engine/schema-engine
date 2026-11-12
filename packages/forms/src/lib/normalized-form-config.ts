@@ -1,6 +1,6 @@
 import type { ContainerKind } from '../types/registration.js';
 import { isPlainObject } from './is-plain-object.js';
-import type { DeepReadonly } from './deep-readonly.js';
+import type { DeepReadonly } from '@schema-engine/layout';
 import type { FormConfig, FormStep } from '@/schemas/form-config';
 import type { ElementConfig } from '@/schemas/field-config';
 import type { BaseField } from '@/schemas/base-field';

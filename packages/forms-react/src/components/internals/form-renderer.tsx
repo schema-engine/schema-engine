@@ -3,14 +3,10 @@
  *
  * @remarks
  * Variable emission is shared with the Radiant renderer
- * (`@schema-engine/forms/lib/grid-styles`); the responsive behavior lives in
+ * (`@schema-engine/layout`); the responsive behavior lives in
  * the theme stylesheet the engine generates and the renderer emits inline.
  */
-import {
-	getFormGridVariables,
-	type CompiledGrid,
-	type NormalizedGridTheme,
-} from '@schema-engine/forms/lib/grid-styles';
+import { getGridVariables, type CompiledGrid, type NormalizedGridTheme } from '@schema-engine/layout';
 import type React from 'react';
 import { useContext, useMemo } from 'react';
 import { getAppearanceAttributes, type CompiledAppearance } from '@schema-engine/forms/lib/appearance';
@@ -77,7 +73,7 @@ function StepFields({
 				<div
 					className="se-form-grid"
 					data-se-grid-theme={theme.id}
-					style={getFormGridVariables(stepGrid(config, step), theme, step.elements)}
+					style={getGridVariables(stepGrid(config, step), theme, step.elements)}
 				>
 					<FormElements elements={step.elements} />
 				</div>

@@ -1,8 +1,8 @@
 import type React from 'react';
 import { useContext, useMemo } from 'react';
-import type { ElementConfig, ElementGridConfig } from '@schema-engine/forms/schemas';
+import type { ElementConfig } from '@schema-engine/forms/schemas';
 import { mergeControlProps } from '@schema-engine/forms/schemas/html-attributes';
-import { getFieldGridVariables } from '@schema-engine/forms/lib/grid-styles';
+import { getGridItemVariables, type ElementGridConfig } from '@schema-engine/layout';
 import { getAppearanceAttributes } from '@schema-engine/forms/lib/appearance';
 import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
 import { useFormField } from '@/adapters/context';
@@ -63,7 +63,7 @@ export function useFieldHost(grid?: ElementGridConfig, style?: React.CSSProperti
 	return {
 		className: className ? `se-form-field ${className}` : 'se-form-field',
 		'data-se-grid-theme': themeId,
-		style: { ...getFieldGridVariables(grid), ...style },
+		style: { ...getGridItemVariables(grid), ...style },
 		...appearance,
 	};
 }
@@ -138,7 +138,7 @@ export function useControlledFormElement(config: ElementConfig) {
 		: null;
 
 	const containerStyles: React.CSSProperties = {
-		...getFieldGridVariables(config.grid),
+		...getGridItemVariables(config.grid),
 		...config.style,
 	};
 

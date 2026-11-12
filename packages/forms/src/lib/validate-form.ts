@@ -1,6 +1,5 @@
 import type { AnyActionRegistration, AnyElementRegistration, AnyRecipeRegistration } from '@/types/registration';
 import type { FormConfig, FormConfigEnvelope, FormTaggedConfig } from '@/schemas/form-config';
-import type { GridLayoutConfig } from '@/schemas/grid';
 import type { ElementConfig } from '@/schemas/field-config';
 import { formConfigEnvelopeSchema } from '@/schemas/form-config';
 import { safeParseStandardSchema, type StandardSchemaIssue } from '@/lib/standard-schema';
@@ -29,7 +28,8 @@ import {
 	WIDTH_TRACKS,
 	type CascadeSlot,
 	type GridAreaTemplates,
-} from '@/lib/grid-placement';
+	type GridLayoutConfig,
+} from '@schema-engine/layout';
 import { logger } from '@/lib/logger';
 import { mergeSlotDefaults } from '@/recipes/merge-slot-defaults';
 import { isPlainObject } from '@/lib/is-plain-object';

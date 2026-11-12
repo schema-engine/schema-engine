@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useFieldHost } from '@/hooks/use-field';
-import { getDefaultGridTheme } from '@schema-engine/forms/lib/grid-styles';
+import { getDefaultGridTheme } from '@schema-engine/layout';
 
 describe('useFieldHost', () => {
 	test('gives any element the grid host attributes, not just inputs', () => {

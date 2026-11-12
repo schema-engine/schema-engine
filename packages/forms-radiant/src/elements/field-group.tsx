@@ -3,7 +3,7 @@ import type { JsxRenderable } from '@ecopages/jsx';
 import { RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
 import { RuiLabel } from '@ecopages/radiant-ui/label';
 import type { AppearanceSelection } from '@schema-engine/forms/lib/appearance';
-import type { ElementGridConfig } from '@schema-engine/forms/schemas';
+import type { ElementGridConfig } from '@schema-engine/layout';
 import type { FieldRulesSource } from '@/lib/field-rules';
 
 export interface FieldGroupProps {

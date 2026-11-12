@@ -1,7 +1,7 @@
 import { useContext, useMemo } from 'react';
 import type { StepStates } from '@schema-engine/forms';
 import type { EngineOutputMaps } from '@schema-engine/forms/engine/form-engine';
-import { getDefaultGridTheme, getFormGridVariables, type CssVariables } from '@schema-engine/forms/lib/grid-styles';
+import { getDefaultGridTheme, getGridVariables, type CssVariables } from '@schema-engine/layout';
 import { FormEngineContext, FormInstanceContext } from '../components/provider';
 import { FormStepStateContext } from '../components/form-step-state-context';
 import type { FormEngineContextValue, FormInstanceContextValue } from '../components/provider';
@@ -78,6 +78,6 @@ export function useChildGridProps(elements: readonly unknown[]): {
 	return {
 		className: 'se-form-grid',
 		'data-se-grid-theme': theme.id,
-		style: getFormGridVariables(undefined, theme, elements),
+		style: getGridVariables(undefined, theme, elements),
 	};
 }

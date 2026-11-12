@@ -1,6 +1,6 @@
 import * as z from 'zod/mini';
 import { HtmlAttributesSchema } from './html-attributes';
-import { ElementGridConfigSchema } from './grid';
+import { ElementGridConfigSchema } from '@schema-engine/layout';
 import { ValidationRuleSchema } from './validation/';
 
 /**

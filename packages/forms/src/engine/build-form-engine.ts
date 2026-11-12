@@ -9,7 +9,12 @@ import { ComponentType } from '@/engine/component-type';
 import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from '@/engine/schema-artifacts';
 import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
 import { logger } from '@/lib/logger';
-import { compileGridTheme, getDefaultCompiledGrid, type CompiledGrid, type GridThemeOptions } from '@/lib/grid-styles';
+import {
+	compileGridTheme,
+	getDefaultCompiledGrid,
+	type CompiledGrid,
+	type GridThemeOptions,
+} from '@schema-engine/layout';
 import { compileAppearance, type AppearanceOptions, type CompiledAppearance } from '@/lib/appearance';
 import { createFormConfigShape } from '@/schemas/form-config-shape';
 import * as z from 'zod/mini';

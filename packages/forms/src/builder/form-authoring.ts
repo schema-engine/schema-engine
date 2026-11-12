@@ -1,4 +1,4 @@
-import type { GridLayoutConfig } from '@/schemas/grid';
+import type { GridLayoutConfig } from '@schema-engine/layout';
 import type { AppearanceInput } from '@/lib/appearance';
 
 /**

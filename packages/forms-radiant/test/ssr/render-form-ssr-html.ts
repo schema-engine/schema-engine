@@ -2,7 +2,7 @@ import { renderToString } from '@ecopages/jsx/server';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
-import type { ElementGridConfig } from '@schema-engine/forms/schemas';
+import type { ElementGridConfig } from '@schema-engine/layout';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { SSR_WIDTH_FIELDS, ssrAreasForm, ssrSteppedForm } from '../../../../test-utils/ssr-grid-acceptance';

@@ -20,7 +20,7 @@ import type {
 import type { ExtendFormEngineOptions } from './create-form-engine';
 import { buildFormEngine } from './build-form-engine';
 import { SchemaMetadataCatalog } from './schema-metadata-catalog';
-import type { CompiledGrid, NormalizedGridTheme } from '@/lib/grid-styles';
+import type { CompiledGrid, NormalizedGridTheme } from '@schema-engine/layout';
 import type { CompiledAppearance, ResolvedAppearanceAxes } from '@/lib/appearance';
 import type { ValidationRegistry } from '@/schemas/validation/validation-registry';
 import {

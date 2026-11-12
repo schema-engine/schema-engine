@@ -9,7 +9,7 @@ import type {
 } from '@/builder/types.utils';
 import type { FormEngine } from './form-engine';
 import type { SchemaMetadataCatalog } from './schema-metadata-catalog';
-import type { GridThemeOptions } from '@/lib/grid-styles';
+import type { GridThemeOptions } from '@schema-engine/layout';
 import type { AppearanceOptions, ResolvedAppearanceAxes } from '@/lib/appearance';
 
 export interface CreateFormEngineOptions<

@@ -1,7 +1,7 @@
 import type React from 'react';
 import { FormElements } from '@schema-engine/forms-react/primitives';
 import { objectFieldScope } from '@schema-engine/forms';
-import { getFieldGridVariables } from '@schema-engine/forms/lib/grid-styles';
+import { getGridItemVariables } from '@schema-engine/layout';
 import { getAppearanceAttributes } from '@schema-engine/forms/lib/appearance';
 import { useChildGridProps, useGridThemeId } from '@schema-engine/forms-react/hooks';
 import { FieldSet } from '@/components/ui/schema-engine/components/field';
@@ -16,7 +16,7 @@ export function FormFieldSet({ ...config }: FieldSetProps) {
 	const scope = objectFieldScope(config.name, config);
 	const gridThemeId = useGridThemeId();
 	const childGrid = useChildGridProps(config.elements);
-	const style: React.CSSProperties = { ...getFieldGridVariables(config.grid), ...config.style };
+	const style: React.CSSProperties = { ...getGridItemVariables(config.grid), ...config.style };
 
 	return (
 		<div

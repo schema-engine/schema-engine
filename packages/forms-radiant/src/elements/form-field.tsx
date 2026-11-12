@@ -3,7 +3,7 @@ import { RuiFieldElement, type RuiFieldProps } from '@ecopages/radiant-ui/field'
 import { findFieldControl, RUI_FIELD_MANAGED_ATTR, type FieldRules } from '@ecopages/radiant-ui/form';
 import type { JsxCustomElementAttributes } from '@ecopages/jsx';
 import { readHydratedRules } from '@/components/internals/field-rule-hydrator';
-import type { ElementGridConfig } from '@schema-engine/forms/schemas';
+import type { ElementGridConfig } from '@schema-engine/layout';
 import { resolveElementRules, toFieldRules, type FieldRulesSource } from '@/lib/field-rules';
 import { FIELD_ARIA_TARGET_ATTR } from '@/lib/field-control';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';

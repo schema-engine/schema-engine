@@ -44,6 +44,7 @@
 		"@ecopages/logger": "^0.2.3",
 		"@standard-schema/spec": "^1.1.0",
 		"@schema-engine/actions": "workspace:^",
+		"@schema-engine/layout": "workspace:^",
 		"@schema-engine/registry": "workspace:^"
 	},
 	"peerDependencies": {
@@ -109,10 +110,6 @@
 		"./lib/appearance": {
 			"types": "./dist/lib/appearance.d.ts",
 			"import": "./dist/lib/appearance.js"
-		},
-		"./lib/grid-styles": {
-			"types": "./dist/lib/grid-styles.d.ts",
-			"import": "./dist/lib/grid-styles.js"
 		},
 		"./lib/standard-schema": {
 			"types": "./dist/lib/standard-schema.d.ts",

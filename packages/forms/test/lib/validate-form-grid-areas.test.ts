@@ -3,7 +3,7 @@ import * as z from 'zod/mini';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { FormValidationError } from '@/lib/validate-form';
 import { defineInput } from '@/types';
-import { ElementGridConfigSchema } from '@/schemas/grid';
+import { ElementGridConfigSchema } from '@schema-engine/layout';
 import { elementChildrenSchema } from '@/lib/element-children';
 
 const formWith = (elements: unknown[], grid?: unknown) => ({
