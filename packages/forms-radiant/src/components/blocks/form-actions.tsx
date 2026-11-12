@@ -30,7 +30,7 @@ export class FormActionsElement extends RadiantElement {
 		const isSubmitting = this.instance?.isSubmitting ?? false;
 		return (
 			<div classes={['se-form-actions', `se-form-actions--align-${align}`]}>
-				<RuiButton type="submit" aria-label={labels.submitAriaLabel}>
+				<RuiButton type="submit" prop:disabled={isSubmitting} aria-label={labels.submitAriaLabel}>
 					{isSubmitting ? labels.submitting : labels.submit}
 				</RuiButton>
 			</div>

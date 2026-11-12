@@ -21,6 +21,9 @@ import { expandValues } from '@/adapters/radiant/controller/values';
 import type { FormInstanceElement } from './form-instance.script';
 import { findAncestorElement } from '@/lib/rui-form-utils';
 
+/** What a submission's actions produced, in the shape `runSubmissionLifecycle` resolves. */
+export type SubmissionOutcome = Awaited<ReturnType<typeof runSubmissionLifecycle>>;
+
 /** Dispatches configured form actions for Radiant form lifecycle events. */
 @customElement('se-form-action-controller')
 export class FormActionControllerElement extends RadiantElement {
@@ -38,7 +41,6 @@ export class FormActionControllerElement extends RadiantElement {
 
 	private dispatcher?: ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>;
 	private dispatcherEngine?: FormEngine;
-	private submissionPromise?: Promise<boolean>;
 	private mountedAt = 0;
 	private mountedEngine?: FormEngine;
 	private watchingChanges = false;
@@ -65,13 +67,8 @@ export class FormActionControllerElement extends RadiantElement {
 			const countAttempt = () => {
 				this.submitAttempts += 1;
 			};
-			const onSubmit = () => void this.submit().finally(countAttempt);
-			form.addEventListener('rui-submit', onSubmit);
 			form.addEventListener('rui-invalid', countAttempt);
-			this.registerCleanupCallback(() => {
-				form.removeEventListener('rui-submit', onSubmit);
-				form.removeEventListener('rui-invalid', countAttempt);
-			});
+			this.registerCleanupCallback(() => form.removeEventListener('rui-invalid', countAttempt));
 		}
 		const instance = findAncestorElement(this, 'se-form-instance') as FormInstanceElement | undefined;
 		if (!this.config && instance?.config) this.config = instance.config;
@@ -93,7 +90,6 @@ export class FormActionControllerElement extends RadiantElement {
 		this.form.disconnect();
 		this.dispatcher = undefined;
 		this.dispatcherEngine = undefined;
-		this.submissionPromise = undefined;
 		this.mountedEngine = undefined;
 		this.watchingChanges = false;
 		super.disconnectedCallback();
@@ -148,44 +144,34 @@ export class FormActionControllerElement extends RadiantElement {
 		});
 	}
 
-	/** Runs submit actions before the form instance invokes its submission callback. */
-	submit(): Promise<boolean> {
-		if (this.submissionPromise) return this.submissionPromise;
+	/**
+	 * Runs submit actions before the form instance invokes its submission callback.
+	 *
+	 * @remarks
+	 * Resolves unsuccessful when the dispatcher or form is not ready. The caller
+	 * reports the submission's start and completion.
+	 */
+	async submit(): Promise<SubmissionOutcome> {
 		this.setupDispatcher();
-		if (!this.dispatcher || !this.form.ready) return Promise.resolve(false);
-		this.dispatchEvent(new CustomEvent('se-action-submit-start', { bubbles: true, composed: true }));
-		const submission = runSubmissionLifecycle((input) => this.dispatchActions(input, true), {
-			actions: this.activeActions(),
-			context: () => this.buildContext(),
-			onAction: (action, data) => this.onAction?.(action, data),
-		}).then(({ succeeded, results }) => {
-			if (results.length)
+		if (!this.dispatcher || !this.form.ready) return { succeeded: false, results: [] };
+		try {
+			const outcome = await runSubmissionLifecycle((input) => this.dispatchActions(input, true), {
+				actions: this.activeActions(),
+				context: () => this.buildContext(),
+				onAction: (action, data) => this.onAction?.(action, data),
+			});
+			if (outcome.results.length)
 				this.dispatchEvent(
 					new CustomEvent('se-action-results', {
 						bubbles: true,
 						composed: true,
-						detail: { trigger: 'form_submit', results },
+						detail: { trigger: 'form_submit', results: outcome.results },
 					}),
 				);
-			this.dispatchEvent(
-				new CustomEvent('se-action-submit-complete', {
-					bubbles: true,
-					composed: true,
-					detail: { succeeded, results },
-				}),
-			);
-			return succeeded;
-		});
-		this.submissionPromise = submission;
-		void submission.then(
-			() => {
-				if (this.submissionPromise === submission) this.submissionPromise = undefined;
-			},
-			() => {
-				if (this.submissionPromise === submission) this.submissionPromise = undefined;
-			},
-		);
-		return submission;
+			return outcome;
+		} finally {
+			this.submitAttempts += 1;
+		}
 	}
 
 	/** Dispatches one trigger's actions for the current step; resolves empty when none are configured or before the dispatcher and form are ready. */
@@ -228,8 +214,8 @@ export class FormActionControllerElement extends RadiantElement {
 	 * Radiant UI keys errors and touched state by flat field name; both are expanded
 	 * into the engine's nested tree. The store records only whether the form was
 	 * submitted, so `submitCount` counts the attempts Radiant UI reports instead:
-	 * `rui-invalid` for one that failed validation, and `rui-submit` once its
-	 * submission lifecycle has run, which is when React Hook Form counts it too.
+	 * `rui-invalid` for one that failed validation, and a finished submission
+	 * lifecycle, which is when React Hook Form counts it too.
 	 * A reset clears the store's submitted flag and notifies the store, and the
 	 * change watcher then clears the count.
 	 */

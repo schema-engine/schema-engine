@@ -40,25 +40,12 @@ export class SeSubmissionAlert extends RadiantElement {
 			const custom = event as CustomEvent<{ succeeded?: boolean }>;
 			this.setStatus(custom.detail?.succeeded !== false ? 'success' : 'error');
 		};
-		const onRuiSubmit = () => {
-			const hasActionController = !!form.querySelector('se-form-action-controller');
-			if (hasActionController) {
-				return;
-			}
-			const config = this.config;
-			if (config?.showOn?.includes('pending')) {
-				this.setStatus('pending');
-			} else {
-				this.setStatus('success');
-			}
-		};
 		const onInvalid = () => {
 			this.setStatus('error');
 		};
 
 		form.addEventListener('se-action-submit-start', onSubmitStart);
 		form.addEventListener('se-action-submit-complete', onSubmitComplete);
-		form.addEventListener('rui-submit', onRuiSubmit);
 		form.addEventListener('rui-invalid', onInvalid);
 		this.registerCleanupCallback(() => {
 			if (this.dismissTimer) {
@@ -66,7 +53,6 @@ export class SeSubmissionAlert extends RadiantElement {
 			}
 			form.removeEventListener('se-action-submit-start', onSubmitStart);
 			form.removeEventListener('se-action-submit-complete', onSubmitComplete);
-			form.removeEventListener('rui-submit', onRuiSubmit);
 			form.removeEventListener('rui-invalid', onInvalid);
 		});
 	}

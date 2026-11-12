@@ -25,7 +25,6 @@ export function FormInstance({
 	defaultValues,
 	onSubmit,
 	onChange,
-	isSubmitting = false,
 	children,
 }: {
 	config: NormalizedFormConfig;
@@ -33,7 +32,6 @@ export function FormInstance({
 	defaultValues?: Record<string, unknown>;
 	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
 	onChange?: (data: Record<string, unknown>) => void;
-	isSubmitting?: boolean;
 	children?: JsxRenderable;
 }): JsxRenderable {
 	const initialValues = collectFormInitialValues(config, defaultValues);
@@ -42,7 +40,6 @@ export function FormInstance({
 		defaultValues,
 		'prop:onSubmit': onSubmit,
 		'prop:onChange': onChange,
-		isSubmitting,
 		children: (
 			<ConfiguredRuiForm
 				config={config}

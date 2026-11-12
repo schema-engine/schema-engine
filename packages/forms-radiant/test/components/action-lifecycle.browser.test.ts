@@ -25,17 +25,15 @@ test('submission action callback receives the successful action and nested value
 	controller.onAction = vi.fn(async () => {
 		events.push('callback');
 	});
-	host.addEventListener('se-action-submit-start', () => events.push('start'));
-	host.addEventListener('se-action-submit-complete', () => events.push('complete'));
 	host.append(controller);
 	document.body.append(host);
 	await expect.poll(() => controller.form.ready).toBe(true);
 	const ready = vi.spyOn(controller.form, 'ready', 'get').mockReturnValue(false);
-	host.dispatchEvent(new CustomEvent('rui-submit'));
+	await expect(controller.submit()).resolves.toEqual({ succeeded: false, results: [] });
 	expect(events).toEqual([]);
 	ready.mockRestore();
-	host.dispatchEvent(new CustomEvent('rui-submit'));
-	await expect.poll(() => events).toEqual(['start', 'callback', 'complete']);
+	await expect(controller.submit()).resolves.toMatchObject({ succeeded: true });
+	expect(events).toEqual(['callback']);
 	expect(controller.onAction).toHaveBeenCalledTimes(1);
 	expect(controller.onAction).toHaveBeenCalledWith(expect.objectContaining({ id: 'save' }), {
 		address: { street: 'Main' },
@@ -60,8 +58,6 @@ test('rebuilds the dispatcher when the form engine changes', async () => {
 		steps: [{ id: 'main', title: 'Main', elements: [] }],
 		actions: [{ id: 'save-a', $type: 'submit', endpoint: '/save' }],
 	});
-	const complete = vi.fn();
-	host.addEventListener('se-action-submit-complete', complete);
 	host.append(controller);
 	document.body.append(host);
 	await expect.poll(() => controller.form.ready).toBe(true);
@@ -72,8 +68,7 @@ test('rebuilds the dispatcher when the form engine changes', async () => {
 		steps: [{ id: 'main', title: 'Main', elements: [] }],
 		actions: [{ id: 'save-b', $type: 'submit', endpoint: '/save' }],
 	});
-	host.dispatchEvent(new CustomEvent('rui-submit'));
-	await expect.poll(() => complete.mock.calls.length).toBe(1);
+	await controller.submit();
 
 	expect(executeA).not.toHaveBeenCalled();
 	expect(executeB).toHaveBeenCalledOnce();
@@ -127,13 +122,10 @@ test('refreshes action context between submission triggers and keeps form operat
 		steps: [{ id: 'main', title: 'Main', elements: [] }],
 		actions: [{ id: 'prepare', $type: 'submit', endpoint: '/save' }],
 	});
-	const complete = vi.fn();
-	host.addEventListener('se-action-submit-complete', complete);
 	host.append(controller);
 	document.body.append(host);
 	await expect.poll(() => controller.form.ready).toBe(true);
-	host.dispatchEvent(new CustomEvent('rui-submit'));
-	await expect.poll(() => complete.mock.calls.length).toBe(1);
+	await controller.submit();
 
 	expect(observed.map(({ trigger }) => trigger)).toEqual(['form_submit_start', 'form_submit']);
 	expect(observed[1]?.formData).toEqual({ status: 'prepared' });
@@ -168,16 +160,13 @@ test.each([false, true])(
 		controller.onAction = vi.fn(async () => {
 			throw new Error('callback failure');
 		});
-		const complete = vi.fn();
-		host.addEventListener('se-action-submit-complete', complete);
 		host.append(controller);
 		document.body.append(host);
 		await expect.poll(() => controller.form.ready).toBe(true);
-		host.dispatchEvent(new CustomEvent('rui-submit'));
-		await expect.poll(() => complete.mock.calls.length).toBe(1);
+		const outcome = await controller.submit();
 		expect(executed).toEqual(['first']);
 		expect(controller.onAction).toHaveBeenCalledTimes(callbackRejects ? 1 : 0);
-		expect(complete.mock.calls[0]?.[0].detail).toEqual({
+		expect(outcome).toEqual({
 			succeeded: false,
 			results: [expect.objectContaining({ actionId: 'first', success: false, shouldContinue: false })],
 		});
@@ -275,10 +264,8 @@ test('reports outcomes of grouped submit actions to the Radiant host', async () 
 			],
 		],
 	});
-	const complete = vi.fn();
 	const outcomes = vi.fn();
 	host.addEventListener('se-action-results', outcomes);
-	host.addEventListener('se-action-submit-complete', complete);
 	host.append(controller);
 	document.body.append(host);
 	await expect.poll(() => controller.form.ready).toBe(true);
@@ -292,10 +279,8 @@ test('reports outcomes of grouped submit actions to the Radiant host', async () 
 		trigger: 'form_submit',
 		results: [{ actionId: 'ok' }, { actionId: 'bad' }],
 	});
-	host.dispatchEvent(new CustomEvent('rui-submit'));
-	await expect.poll(() => complete.mock.calls.length).toBe(1);
-	const event = complete.mock.calls[0][0] as CustomEvent;
-	expect(event.detail).toMatchObject({
+	const outcome = await controller.submit();
+	expect(outcome).toMatchObject({
 		succeeded: false,
 		results: [
 			{ actionId: 'ok', success: true, data: 'saved' },

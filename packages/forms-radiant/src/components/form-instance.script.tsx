@@ -22,7 +22,8 @@ import { createInitialStepStates, type StepMachineState } from '@schema-engine/f
 import { createInstanceNavigation } from '@/lib/instance-navigation';
 import { syncConstraints } from '@/lib/constraint-sync';
 import type { FormProviderProps } from '@/adapters/types';
-import type { FormActionControllerElement } from './form-action-controller';
+import type { FormActionControllerElement, SubmissionOutcome } from './form-action-controller';
+import { logger } from '@/lib/logger';
 import { FormController } from '@/adapters/radiant/controller';
 
 /** Behavior and engine navigation state for one composed form. */
@@ -36,7 +37,10 @@ export class FormInstanceElement extends RadiantElement {
 	@state onChange?: FormProviderProps['onChange'];
 	private unwatchChanges?: () => void;
 	@state onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
-	@prop({ type: Boolean, defaultValue: false }) isSubmitting = false;
+	@state private submitting = false;
+	get isSubmitting(): boolean {
+		return this.submitting;
+	}
 
 	@state private machineState: StepMachineState = { currentStepIndex: 0, ...createInitialStepStates(1) };
 	get machine(): StepMachineState {
@@ -115,7 +119,7 @@ export class FormInstanceElement extends RadiantElement {
 		this.wireRuiForm();
 	}
 
-	@onUpdated(['machineState', 'isSubmitting', 'engine', 'onSubmit'])
+	@onUpdated(['machineState', 'engine', 'onSubmit'])
 	onInstanceStateUpdated(): void {
 		this.wireRuiForm();
 		this.connectForm();
@@ -124,20 +128,53 @@ export class FormInstanceElement extends RadiantElement {
 
 	private wireRuiForm(): void {
 		const ruiForm = (this.form?.host ?? findNearestRuiForm(this)) as RuiFormElement | undefined;
+		if (!ruiForm) return;
 		const actions = this.querySelector<FormActionControllerElement>('se-form-action-controller');
-		const hasNativeSubmission = ruiForm?.hasAttribute('action') || ruiForm?.hasAttribute('method');
-		if (ruiForm && (this.onSubmit || (actions && hasNativeSubmission))) {
-			ruiForm.onSubmit = async (data) => {
-				if (actions && !(await actions.submit())) return;
+		ruiForm.onSubmit =
+			this.onSubmit || actions ? (data) => this.submitForm(ruiForm, data, actions ?? undefined) : undefined;
+	}
+
+	/**
+	 * Runs one submission and reports it with `se-action-submit-start` and
+	 * `se-action-submit-complete` on the `rui-form`, whether or not actions are configured.
+	 *
+	 * @remarks
+	 * The instance owns the submitting state because Radiant UI clears its own
+	 * `isSubmitting` after validation, before it awaits `onSubmit`. A rejected
+	 * `onSubmit` completes the submission as unsuccessful and is logged, not rethrown:
+	 * the event is how the page learns of it.
+	 */
+	private async submitForm(
+		ruiForm: RuiFormElement,
+		data: Record<string, unknown>,
+		actions: FormActionControllerElement | undefined,
+	): Promise<void> {
+		const announce = (type: string, detail?: unknown) =>
+			ruiForm.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
+		this.setSubmitting(true);
+		announce('se-action-submit-start');
+		let outcome: SubmissionOutcome = { succeeded: true, results: [] };
+		try {
+			if (actions) outcome = await actions.submit();
+			if (outcome.succeeded) {
 				if (this.onSubmit) {
 					await this.onSubmit(expandValues(data));
-					return;
+				} else if (ruiForm.hasAttribute('action') || ruiForm.hasAttribute('method')) {
+					ruiForm.querySelector<HTMLFormElement>('form[data-ref="form"]')?.submit();
 				}
-				ruiForm.querySelector<HTMLFormElement>('form[data-ref="form"]')?.submit();
-			};
-		} else if (ruiForm) {
-			ruiForm.onSubmit = undefined;
+			}
+		} catch (error) {
+			outcome = { succeeded: false, results: outcome.results };
+			logger.error('Form submission failed', error);
+		} finally {
+			this.setSubmitting(false);
+			announce('se-action-submit-complete', outcome);
 		}
+	}
+
+	private setSubmitting(submitting: boolean): void {
+		this.submitting = submitting;
+		this.publish();
 	}
 
 	private connectForm(): void {
@@ -213,7 +250,7 @@ export class FormInstanceElement extends RadiantElement {
 			goToPreviousStep: this.goToPreviousStep,
 			markStepCompleted: this.markStepCompleted,
 			markStepVisited: this.markStepVisited,
-			isSubmitting: this.isSubmitting,
+			isSubmitting: this.submitting,
 		};
 	}
 
