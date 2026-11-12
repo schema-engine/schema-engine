@@ -1,5 +1,5 @@
 import { contextSelector } from '@ecopages/radiant/context';
-import { prop, RadiantElement } from '@ecopages/radiant';
+import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { formatStepLabel, type WizardActionsConfig } from '@schema-engine/forms/recipes/built-in';
@@ -7,14 +7,13 @@ import type { FormMeta } from '@/lib/instance-view';
 import type { RecipeSlotContext } from '@/recipes/types';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { deriveFormSteps, deriveInitialInstance } from '@/lib/instance-view';
-import { formElement } from '@/lib/define-element';
 
 /**
  * @remarks
  * The submit button is rendered only on the last step. A hidden submit button is still the form's default button, so
  * Enter in a field on an earlier step would submit the form.
  */
-@formElement('se-wizard-actions')
+@customElement('se-wizard-actions')
 export class WizardActionsElement extends RadiantElement {
 	declare readonly [JSX_PROPS]?: { meta?: FormMeta; slotConfig?: WizardActionsConfig };
 
@@ -32,6 +31,12 @@ export class WizardActionsElement extends RadiantElement {
 		void this.instance?.goToNextStep();
 	};
 
+	/**
+	 * @remarks
+	 * The forward button is keyed because Radiant now keeps an element when only its attributes change. Without
+	 * keys, the click on Next would flip the same button to `type="submit"` before the browser runs its
+	 * activation behaviour, and that click would submit the form.
+	 */
 	override render(): JsxRenderable {
 		const meta = this.meta;
 		if (!meta) return null;
@@ -60,6 +65,7 @@ export class WizardActionsElement extends RadiantElement {
 				<div class="se-wizard-actions__forward">
 					{last ? (
 						<RuiButton
+							key="submit"
 							type="submit"
 							prop:disabled={instance.isSubmitting}
 							aria-label={labels.submitAriaLabel}
@@ -67,7 +73,7 @@ export class WizardActionsElement extends RadiantElement {
 							{instance.isSubmitting ? labels.submitting : labels.submit}
 						</RuiButton>
 					) : (
-						<RuiButton type="button" on:click={this.goNext} aria-label={labels.nextAriaLabel}>
+						<RuiButton key="next" type="button" on:click={this.goNext} aria-label={labels.nextAriaLabel}>
 							{labels.next}
 						</RuiButton>
 					)}

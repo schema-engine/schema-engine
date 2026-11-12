@@ -1,5 +1,5 @@
 import './form-phone-input.css';
-import { bindTo, onUpdated, prop, state } from '@ecopages/radiant';
+import { customElement, bindTo, onUpdated, prop, state } from '@ecopages/radiant';
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { unsafeHtml } from '@ecopages/jsx/jsx-runtime';
@@ -17,12 +17,9 @@ import { RuiListbox, RuiListboxOption, RuiListboxOptionIndicator } from '@ecopag
 import type { CountryCode } from 'libphonenumber-js';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
-import {
-	emitControlChange,
-	fieldControlHostAttributes,
-	registerValueControl,
-	syncFieldControl,
-} from '@/lib/field-control';
+import { emitControlChange, registerValueControl } from '@/lib/field-control';
+import { contextSelector } from '@ecopages/radiant/context';
+import { fieldAria, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
 import { FieldGroup } from '../field-group';
 import {
 	detectCountryFromInput,
@@ -38,7 +35,6 @@ import {
 	type PhoneCountryOption,
 } from '@/lib/phone-number';
 import type { PhoneInputFieldProps } from './form-phone-input.types';
-import { formElement } from '@/lib/define-element';
 
 function PhoneFlag({ code, class: className }: { code?: string; class: string }) {
 	const svg = code ? countryFlagSvg(code) : '';
@@ -56,7 +52,9 @@ function PhoneFlag({ code, class: className }: { code?: string; class: string })
  * libphonenumber has loaded, and `committed` keeps the host's own writes from
  * being re-parsed.
  */
-@formElement('se-phone-input', { hostAttributes: fieldControlHostAttributes('[data-ref="number"]') })
+@customElement('se-phone-input', {
+	hostAttributes: { 'data-rui-control': '', 'data-rui-aria-target': '[data-ref="number"]' },
+})
 export class SePhoneInput extends FormAssociatedElement {
 	declare readonly [JSX_PROPS]?: Partial<
 		Pick<
@@ -75,6 +73,9 @@ export class SePhoneInput extends FormAssociatedElement {
 	@state @bindTo({ bool: 'data-ready' }) protected ready = false;
 	@state protected countries: PhoneCountryOption[] = [];
 	@state protected display = '';
+	@contextSelector({ context: fieldContext })
+	@state
+	protected field?: FieldContextValue = undefined;
 
 	private committed = '';
 	private lib?: LibPhoneNumber;
@@ -89,7 +90,6 @@ export class SePhoneInput extends FormAssociatedElement {
 	}
 
 	protected override onConnected(): void {
-		syncFieldControl(this);
 		void this.boot();
 		this.registerCleanupCallback(() => {
 			this.bootGeneration += 1;
@@ -217,6 +217,7 @@ export class SePhoneInput extends FormAssociatedElement {
 				</RuiSelect>
 				<input
 					id={this.inputId || undefined}
+					{...fieldAria(this.field)}
 					data-ref="number"
 					on:input={this.onNumberInput}
 					class="rui-input se-phone__number"

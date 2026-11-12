@@ -1,14 +1,15 @@
 import { getAppearanceAttributes, type AppearanceSelection } from '@schema-engine/forms/lib/appearance';
 import { RuiFieldElement, type RuiFieldProps } from '@ecopages/radiant-ui/field';
-import { findFieldControl, RUI_FIELD_MANAGED_ATTR, type FieldRules } from '@ecopages/radiant-ui/form';
+import type { FieldRules } from '@ecopages/radiant-ui/form';
 import type { JsxCustomElementAttributes } from '@ecopages/jsx';
-import { readHydratedRules } from '@/components/internals/field-rule-hydrator';
+import { readHydratedRules, rebuildHydratedRules } from '@/components/internals/field-rule-hydrator';
+import { formEngineContext } from '@/components/provider';
+import { resolveFormEngine } from '@/contexts/resolve-form-engine';
+import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { ElementGridConfig } from '@schema-engine/forms/schemas';
 import { resolveElementRules, toFieldRules, type FieldRulesSource } from '@/lib/field-rules';
-import { FIELD_ARIA_TARGET_ATTR } from '@/lib/field-control';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
-import { formElement } from '@/lib/define-element';
-import { onUpdated } from '@ecopages/radiant';
+import { customElement, onUpdated } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { constraintContext, formValuesContext, type ConstraintState } from '@/contexts/constraint-context';
 import { FormController } from '@/adapters/radiant/controller';
@@ -17,19 +18,19 @@ import { shouldSurfaceDependentError } from '@schema-engine/forms/schemas/valida
 const REQUIRED_MARKER = '[data-se-required-marker]';
 
 /** RuiField's registration and presentation, restoring hydrated rules and defaults. */
-@formElement('se-field')
+@customElement('se-field')
 export class FormFieldElement extends RuiFieldElement {
 	private constraint?: ConstraintState;
 	private isAuthoredDisabled?: (renderedPath: string) => boolean;
 	private authoredRules?: FieldRules;
 	private appliedRules?: FieldRules;
+	private hydratedEngine?: FormEngine;
 
 	protected override onConnected(): void {
 		this.hydrateDefaultValue();
+		this.hydratedEngine = resolveFormEngine(this);
 		const rules = readHydratedRules(this);
-		if (rules) {
-			this.rules = rules;
-		}
+		if (rules) this.rules = rules;
 		super.onConnected();
 		this.authoredRules ??= this.rules ?? {};
 		this.applyConstraint();
@@ -48,6 +49,24 @@ export class FormFieldElement extends RuiFieldElement {
 		if (this.authoredRules === undefined || this.rules === this.appliedRules) return;
 		this.authoredRules = this.rules ?? {};
 		this.applyConstraint();
+	}
+
+	/**
+	 * Rebuilds the derived rules with the registry of the engine the renderer publishes.
+	 *
+	 * @remarks
+	 * Serialized rules cannot carry custom validators, and a validator closes over the registry it was built
+	 * with, so every engine that arrives or replaces another rebuilds them from the serialized baseline, in
+	 * this one place. A field that connected with its engine has them already.
+	 */
+	@onContextUpdate({ context: formEngineContext, select: (context) => context?.engine, requestUpdate: false })
+	onRendererEngine(engine: FormEngine | undefined): void {
+		if (!engine || !this.isConnected || engine === this.hydratedEngine) return;
+		this.hydratedEngine = engine;
+		const rules = rebuildHydratedRules(this, engine);
+		if (!rules) return;
+		this.rules = rules;
+		this.onRulesUpdated();
 	}
 
 	@onContextUpdate({ context: constraintContext, requestUpdate: false })
@@ -102,26 +121,6 @@ export class FormFieldElement extends RuiFieldElement {
 		const { touched, isSubmitted } = store.getState();
 		if (shouldSurfaceDependentError({ touched: Boolean(touched[name]), submitted: isSubmitted })) {
 			void store.validateField(name);
-		}
-	}
-
-	/**
-	 * Syncs the label and ARIA onto the control a custom host rendered, once.
-	 *
-	 * @remarks
-	 * A custom host that renders its own control, such as the masked, phone and
-	 * OTP inputs, renders after the field first synced. That sync finds no
-	 * `data-rui-aria-target` inside the host, so the label and ARIA never reach
-	 * the control. The host calls this from its `onConnected` through
-	 * `syncFieldControl`; syncing only while the target is unmanaged ends the loop
-	 * the field's own DOM writes would otherwise start.
-	 */
-	resyncControl(): void {
-		const control = findFieldControl(this);
-		const selector = control?.getAttribute(FIELD_ARIA_TARGET_ATTR);
-		const target = selector ? control?.querySelector(selector) : null;
-		if (target && !target.hasAttribute(RUI_FIELD_MANAGED_ATTR)) {
-			this.onPresentationUpdated();
 		}
 	}
 

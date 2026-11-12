@@ -1,4 +1,5 @@
 import {
+	customElement,
 	onEvent,
 	onUpdated,
 	query,
@@ -9,12 +10,13 @@ import {
 } from '@ecopages/radiant';
 import type { JSX_PROPS } from '@ecopages/jsx';
 import { getViewRecipe } from '@schema-engine/forms/recipes';
-import { provideContext, type ContextProvider } from '@ecopages/radiant/context';
+import { onContextUpdate, provideContext, type ContextProvider } from '@ecopages/radiant/context';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
 import { flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import { formInstanceContext, type FormInstanceContextValue, type StepStates } from '@/contexts/form-instance-context';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
+import { formEngineContext } from '@/components/provider';
 import { connectValidationDependencies } from '@/lib/validation-deps';
 import type { RuiFormElement } from '@ecopages/radiant-ui/form';
 import { expandValues } from '@/adapters/radiant/controller/values';
@@ -27,7 +29,9 @@ import { logger } from '@/lib/logger';
 import type { FormProviderProps } from '@/adapters/types';
 import { FormController } from '@/adapters/radiant/controller';
 import { FormActions, type SubmissionOutcome } from '@/adapters/radiant/form-actions';
-import { formElement } from '@/lib/define-element';
+
+const MISSING_ENGINE_MESSAGE =
+	'The form is in use without a FormEngine, so the engine validation rules and actions do not run. Assign `engine` to the enclosing `se-form-renderer`, or pass `engine` to `FormRenderer`.';
 
 /** Properties of `<se-form-instance>`. */
 export interface FormInstanceProps {
@@ -45,7 +49,7 @@ export interface SubmissionCompleteDetail extends SubmissionOutcome {
 }
 
 /** Behavior and engine navigation state for one composed form. */
-@formElement('se-form-instance')
+@customElement('se-form-instance')
 export class FormInstanceElement extends RadiantElement {
 	declare readonly [JSX_PROPS]?: FormInstanceProps;
 
@@ -91,6 +95,8 @@ export class FormInstanceElement extends RadiantElement {
 		return this.machine;
 	}
 	private form?: FormController;
+	private rendererEngine?: CoreFormEngine;
+	private reportedMissingEngine = false;
 	private unwatchValidationDependencies?: () => void;
 
 	@provideContext<typeof formInstanceContext>({
@@ -114,15 +120,28 @@ export class FormInstanceElement extends RadiantElement {
 
 	/**
 	 * @remarks
-	 * The engine is resolved here, once: an explicit `engine`, then the enclosing
-	 * `se-form-renderer`'s context, then the owning render. A host that finds none
-	 * reports a configuration error and stays without one. The `rui-form` is a
-	 * light-DOM descendant the view authors, so it exists when this host connects.
+	 * The engine is an explicit `engine`, then the enclosing `se-form-renderer`'s
+	 * context (see {@link onRendererEngine}), then the owning render. The `rui-form`
+	 * is a light-DOM descendant the view authors, so it exists when this host connects.
 	 */
 	protected override onConnected(): void {
 		this.engine ??= resolveFormEngine(this);
 		this.resetStepState();
 		this.connectForm();
+	}
+
+	/**
+	 * Follows the engine the enclosing renderer publishes, including one bound after this host connected.
+	 *
+	 * @remarks
+	 * An `engine` assigned to this host directly wins: only an unset engine, or one that came
+	 * from the renderer, is replaced.
+	 */
+	@onContextUpdate({ context: formEngineContext, select: (context) => context?.engine, requestUpdate: false })
+	onRendererEngine(engine: CoreFormEngine | undefined): void {
+		if (!engine) return;
+		if (this.engine === undefined || this.engine === this.rendererEngine) this.engine = engine;
+		this.rendererEngine = engine;
 	}
 
 	override disconnectedCallback(): void {
@@ -150,6 +169,21 @@ export class FormInstanceElement extends RadiantElement {
 	}
 
 	/**
+	 * Reports, once per form, that the form is in use without an engine.
+	 *
+	 * @remarks
+	 * A host stays quiet while it connects because the app may bind the engine to the renderer
+	 * later. Focusing into the form or submitting it is the point where it is in use, and without
+	 * an engine the engine rules, validators and actions do not run.
+	 */
+	@onEvent({ type: 'focusin', host: true })
+	warnWithoutEngine(): void {
+		if (this.engine || this.reportedMissingEngine) return;
+		this.reportedMissingEngine = true;
+		logger.warn(MISSING_ENGINE_MESSAGE);
+	}
+
+	/**
 	 * Turns a native submit before the last step of a wizard into Next.
 	 *
 	 * @remarks
@@ -160,6 +194,7 @@ export class FormInstanceElement extends RadiantElement {
 	 */
 	@onEvent({ type: 'submit', host: true, options: { capture: true } })
 	onNativeSubmit(event: Event): void {
+		this.warnWithoutEngine();
 		const { isWizard, currentStep, totalSteps } = this.getContextValue();
 		if (!isWizard || currentStep >= totalSteps - 1) return;
 		event.preventDefault();

@@ -1,18 +1,14 @@
 import './form-input-otp.css';
-import { prop, query, state } from '@ecopages/radiant';
+import { customElement, prop, query, state } from '@ecopages/radiant';
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
-import {
-	emitControlChange,
-	fieldControlHostAttributes,
-	registerValueControl,
-	syncFieldControl,
-} from '@/lib/field-control';
+import { emitControlChange, registerValueControl } from '@/lib/field-control';
+import { contextSelector } from '@ecopages/radiant/context';
+import { fieldAria, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
 import { FieldGroup } from '../field-group';
 import type { InputOTPFieldProps } from './form-input-otp.types';
-import { formElement } from '@/lib/define-element';
 
 function sanitizeChar(value: string, pattern: 'numeric' | 'alphanumeric') {
 	const char = value.slice(-1);
@@ -30,7 +26,9 @@ function sanitizeChar(value: string, pattern: 'numeric' | 'alphanumeric') {
  * the current one is a no-op, which keeps a store echo from re-spreading a code
  * with gaps from the first slot.
  */
-@formElement('se-input-otp', { hostAttributes: fieldControlHostAttributes('[data-ref="group"]') })
+@customElement('se-input-otp', {
+	hostAttributes: { 'data-rui-control': '', 'data-rui-aria-target': '[data-ref="group"]' },
+})
 export class SeInputOtp extends FormAssociatedElement {
 	declare readonly [JSX_PROPS]?: Partial<Pick<SeInputOtp, 'name' | 'disabled' | 'length' | 'pattern'>>;
 
@@ -38,6 +36,9 @@ export class SeInputOtp extends FormAssociatedElement {
 	@prop({ type: String, defaultValue: 'numeric' }) pattern: 'numeric' | 'alphanumeric' = 'numeric';
 
 	@state protected slots: string[] = [];
+	@contextSelector({ context: fieldContext })
+	@state
+	protected field?: FieldContextValue = undefined;
 
 	@query({ ref: 'slot', all: true }) slotInputs!: HTMLInputElement[];
 
@@ -58,10 +59,6 @@ export class SeInputOtp extends FormAssociatedElement {
 
 	protected override restoreFormState(state: FormValue): void {
 		this.value = typeof state === 'string' ? state : '';
-	}
-
-	protected override onConnected(): void {
-		syncFieldControl(this);
 	}
 
 	private padSlots(chars: readonly string[]) {
@@ -115,7 +112,7 @@ export class SeInputOtp extends FormAssociatedElement {
 		const firstHalf = Math.ceil(length / 2);
 
 		return (
-			<fieldset class="se-otp" data-ref="group">
+			<fieldset class="se-otp" data-ref="group" {...fieldAria(this.field)}>
 				{Array.from({ length }, (_, index) => [
 					index === firstHalf ? (
 						<span class="se-otp__separator" aria-hidden="true">

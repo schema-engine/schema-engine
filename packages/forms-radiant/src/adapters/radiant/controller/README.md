@@ -95,9 +95,9 @@ Invalid insertion, update, swap, and move indices are ignored.
 - `connect(onChange?)` subscribes to `formEngineContext`, caches the engine the
   context supplies, and calls `onChange` each time the context publishes one,
   including a value already published when `connect` runs. A published value
-  without an engine does not call it. Hosts of this package do not wait for a
-  late engine: the app binds it before they upgrade and they resolve it once, at
-  connect.
+  without an engine does not call it. The hosts of this package follow
+  `formEngineContext` themselves with `@onContextUpdate`, so an engine the app
+  binds to the renderer after they connect reaches them.
 - `disconnect()` removes that subscription and clears the cached engine.
 
 ## Runtime boundary

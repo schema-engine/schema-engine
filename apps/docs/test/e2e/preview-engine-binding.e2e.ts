@@ -28,7 +28,7 @@ test('previews bind the engine on load and after client navigation without engin
 		await page.locator('.docs-form-renderer-preview rui-form').first().waitFor();
 
 		expect(await page.evaluate(() => Reflect.get(window, '__blankedPreview'))).toBe(false);
-		expect(messages.filter((text) => text.includes('Could not resolve FormEngine'))).toEqual([]);
+		expect(messages.filter((text) => /engine|@ecopages\/radiant|upgrade/i.test(text))).toEqual([]);
 	} finally {
 		await browser.close();
 	}
