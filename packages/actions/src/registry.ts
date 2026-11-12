@@ -69,8 +69,9 @@ export interface ActionRegistryProvider<
  *
  * @remarks
  * A later registration with the same `$type` replaces an earlier one without a
- * warning. Every schema must implement Standard Schema; the constructor throws
- * naming the offending `$type`. To register actions at runtime, implement
+ * warning. Every winning schema must implement Standard Schema; the constructor
+ * throws naming the offending `$type`. The registrations are held in a private
+ * field, so the registry cannot be changed, and subclasses may add their own fields. To register actions at runtime, implement
  * {@link ActionRegistryProvider} on a `BaseRegistry` subclass instead.
  *
  * @example
@@ -112,7 +113,6 @@ export class ActionRegistry<
 
 	constructor(registrations: readonly TRegistration[]) {
 		this.#registry = createRegistry('Action', registrations);
-		Object.freeze(this);
 	}
 
 	get kind(): string {

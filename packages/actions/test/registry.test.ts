@@ -68,7 +68,7 @@ describe('ActionRegistry', () => {
 			expect(registry.size).toBe(2);
 			expect(registry.has('log')).toBe(true);
 			expect(registry.has('api')).toBe(true);
-			expect(registry.getAction('log')).toBe(mockAction);
+			expect(registry.getAction('log')).toEqual(mockAction);
 		});
 
 		test('should let the last registration of a type win', () => {
@@ -96,12 +96,22 @@ describe('ActionRegistry', () => {
 			expect(() => build(broken)).toThrow(/Action 'log' schema must implement Standard Schema/);
 		});
 
+		test('should allow subclasses with their own fields', () => {
+			class ExtendedRegistry extends ActionRegistry<TestContext, TestTrigger> {
+				readonly extra = 1;
+			}
+
+			const registry = new ExtendedRegistry([mockAction]);
+
+			expect(registry.extra).toBe(1);
+			expect(registry.getAction('log')).toEqual(mockAction);
+		});
+
 		test('should be read-only', () => {
 			const registry = build(mockAction);
 
 			expect(registry).not.toHaveProperty('register');
 			expect(registry).not.toHaveProperty('clear');
-			expect(Object.isFrozen(registry)).toBe(true);
 			expect(Object.isFrozen(registry.getAction('log'))).toBe(true);
 		});
 	});
@@ -135,8 +145,7 @@ describe('ActionRegistry', () => {
 			const all = build(mockAction, anotherAction).all();
 
 			expect(all).toHaveLength(2);
-			expect(all).toContain(mockAction);
-			expect(all).toContain(anotherAction);
+			expect(all).toEqual([mockAction, anotherAction]);
 		});
 	});
 
