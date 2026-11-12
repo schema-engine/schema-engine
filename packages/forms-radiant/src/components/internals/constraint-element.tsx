@@ -1,4 +1,4 @@
-import { bindTo, onUpdated, prop, RadiantElement } from '@ecopages/radiant';
+import { onUpdated, prop, RadiantElement } from '@ecopages/radiant';
 import {
 	ContextSubscriptionRequestEvent,
 	onContextUpdate,
@@ -24,11 +24,11 @@ const NO_CONSTRAINTS: ConstraintState = { disabled: false, required: false };
  *
  * @remarks
  * The view renders the element from a constraint snapshot and passes whether it is
- * concealed, which the host paints as `hidden` so markup rendered through the Radiant
- * server bridge carries it; the plain `hidden` the view passes too covers markup
- * rendered without the bridge. Until the
- * instance publishes values the host keeps that snapshot. The host re-evaluates only when a
- * value one of its constraints reads changed, so typing in an unrelated field costs it
+ * hidden as the plain `hidden` attribute, which is the one source of truth: the host
+ * writes the native `hidden` property and declares no binding for it, because a
+ * `@bindTo` on `hidden` would make the Radiant server bridge drop the attribute
+ * whenever the prop is false. Until the instance publishes values the host keeps that
+ * snapshot. The host re-evaluates only when a value one of its constraints reads changed, so typing in an unrelated field costs it
  * a comparison. It provides `constraintContext` with its own `disabled` and `required`
  * composed with those of the wrappers around it, which is what the fields inside read.
  *
@@ -43,22 +43,13 @@ export class ConstraintElement extends RadiantElement {
 		'data-se-constraint-field': string;
 		'data-se-constraints': string;
 		'data-se-base-required'?: '';
-		concealed?: boolean;
+		hidden?: boolean;
 	};
 
 	/** Rendered path of the constrained element; scopes the sibling lookups of its constraints. */
 	@prop({ type: String, attribute: 'data-se-constraint-field' }) fieldPath = '';
 	@prop({ type: Array, attribute: 'data-se-constraints' }) constraints: ConstraintLogic[] = [];
 	@prop({ type: Boolean, attribute: 'data-se-base-required' }) baseRequired = false;
-
-	/**
-	 * @remarks
-	 * Read from the server-rendered `hidden` attribute when the host upgrades, so hydration
-	 * keeps the snapshot until the first evaluation.
-	 */
-	@prop({ type: Boolean, attribute: 'hidden' })
-	@bindTo({ bool: 'hidden' })
-	concealed = false;
 
 	@provideContext<typeof constraintContext>({ context: constraintContext, initialValue: undefined })
 	protected provider!: ContextProvider<typeof constraintContext>;
@@ -115,7 +106,7 @@ export class ConstraintElement extends RadiantElement {
 			fieldPath,
 			values,
 		});
-		this.concealed = !shouldShow;
+		this.hidden = !shouldShow;
 		this.own = { disabled: shouldDisable, required: isRequired };
 		this.publish();
 	}

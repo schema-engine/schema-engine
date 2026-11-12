@@ -89,7 +89,6 @@ export function FormElement({
 			data-se-base-required={baseRequired ? '' : undefined}
 			data-se-grid-theme={fieldHost.themeId}
 			style={fieldHost.style}
-			concealed={!shouldShow}
 			hidden={!shouldShow}
 		>
 			{renderRegisteredElement(
