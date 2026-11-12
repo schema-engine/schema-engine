@@ -32,11 +32,11 @@ describe('SSR grid layout acceptance', () => {
 		);
 	});
 
-	test('a drawn layout places fields by area from CSS alone', async () => {
+	test('A drawn layout places fields', async () => {
 		await expectSsrAreasAcceptance(renderSsrAreasAcceptanceHtml(), getSsrAcceptanceEngine().getCompiledGrid());
 	});
 
-	test('a step draws its own template by breakpoint while another step keeps the form grid', async () => {
+	test('The template changes by breakpoint and each wizard step draws its own template', async () => {
 		await expectSsrSteppedAcceptance(renderSsrSteppedAcceptanceHtml(), getSsrAcceptanceEngine().getCompiledGrid());
 	});
 });

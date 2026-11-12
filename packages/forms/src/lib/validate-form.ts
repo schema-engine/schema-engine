@@ -13,12 +13,13 @@ import {
 	type NormalizedFormConfig,
 } from '@/lib/normalized-form-config';
 import { getElementChildren, withElementChildren } from '@/lib/element-children';
-import { DEFAULT_WIZARD_RECIPE } from '@/lib/form-view';
+import { DEFAULT_WIZARD_RECIPE, stepGrid } from '@/lib/form-view';
 import {
 	areaNames,
 	areaTemplateIssues,
 	cascadeValues,
 	elementAreaSlots,
+	elementHiddenSlots,
 	elementGridKeys,
 	elementUsesGridWidths,
 	GRID_TEMPLATE_KEYS,
@@ -33,7 +34,7 @@ import { logger } from '@/lib/logger';
 import { mergeSlotDefaults } from '@/recipes/merge-slot-defaults';
 
 export type { FormConfigView, NormalizedElementConfig, NormalizedFormConfig } from '@/lib/normalized-form-config';
-export { DEFAULT_WIZARD_RECIPE, assertFormEngine, getRenderableSteps } from '@/lib/form-view';
+export { DEFAULT_WIZARD_RECIPE, assertFormEngine, getRenderableSteps, stepGrid } from '@/lib/form-view';
 
 export class FormValidationError extends Error {
 	constructor(
@@ -365,7 +366,9 @@ function templateTrackKeys(grid: GridLayoutConfig | undefined): string[] {
 }
 
 /**
- * Why a grid's `areas` cannot be a template.
+ * Why a grid's `areas` cannot be a template: it sets `columns` or
+ * `minColumnWidth` beside them, a responsive record has no `default`, or a
+ * template has rows of unequal length or a non-rectangular area.
  *
  * @remarks
  * Nothing here depends on the fields, so a grid shared by several steps is
@@ -404,6 +407,7 @@ function fieldPlacementIssues(
 	grid: GridLayoutConfig | undefined,
 	scope: GridScope,
 	templatesValid: boolean,
+	sharedBySteps: boolean,
 ): string[] {
 	const usesAreas = gridUsesAreas(grid);
 	const issues: string[] = [];
@@ -422,7 +426,7 @@ function fieldPlacementIssues(
 			issues.push(`${elementLabel(element)} sets grid 'area' but the ${label.toLowerCase()} has no 'areas'.`);
 		}
 	} else if (templatesValid) {
-		issues.push(...areaClaimIssues(label, gridAreaTemplates(grid), claimants));
+		issues.push(...areaClaimIssues(label, gridAreaTemplates(grid), claimants, sharedBySteps));
 	}
 	return issues.map((issue) => prefixed(scope.location, issue));
 }
@@ -431,18 +435,20 @@ function areaClaimIssues(
 	label: string,
 	templates: GridAreaTemplates,
 	claimants: readonly FormTaggedConfig[],
+	sharedBySteps: boolean,
 ): string[] {
 	const issues: string[] = [];
 	const templateBySlot = cascadeValues(templates);
 	const claims = claimants.map((element) => ({
 		element,
 		bySlot: cascadeValues(elementAreaSlots(element)),
+		hiddenBySlot: cascadeValues(elementHiddenSlots(element)),
 	}));
 
-	for (const { element, bySlot } of claims) {
+	for (const { element, bySlot, hiddenBySlot } of claims) {
 		for (const [index, { slot, value: area }] of bySlot.entries()) {
 			const rows = templateBySlot[index]?.value;
-			if (area === undefined || rows === undefined) continue;
+			if (area === undefined || rows === undefined || hiddenBySlot[index]?.value) continue;
 			const names = areaNames(rows);
 			if (names.includes(area)) continue;
 			issues.push(
@@ -452,7 +458,7 @@ function areaClaimIssues(
 		}
 	}
 
-	const hint = label === 'Form grid' ? '; a form template applies to every step without a grid of its own' : '';
+	const hint = sharedBySteps ? '; a form template applies to every step without a grid of its own' : '';
 	const reported = new Set<string>();
 	for (const [index, { slot, value: rows }] of templateBySlot.entries()) {
 		if (rows === undefined) continue;
@@ -462,19 +468,6 @@ function areaClaimIssues(
 			reported.add(name);
 			issues.push(`${label} area '${name}'${atSlot(slot)} is not claimed by any field${hint}.`);
 		}
-	}
-	return issues;
-}
-
-/**
- * Checks a grid and the fields it lays out: its template, and the placements
- * that cannot share a grid (areas, columns and widths).
- */
-function gridIssues(label: string, grid: GridLayoutConfig | undefined, scopes: readonly GridScope[]): string[] {
-	const shape = templateIssues(label, grid);
-	const issues = [...shape];
-	for (const scope of scopes) {
-		issues.push(...fieldPlacementIssues(label, grid, scope, shape.length === 0));
 	}
 	return issues;
 }
@@ -628,19 +621,15 @@ export function validateFormConfig(config: unknown, options: ValidateFormOptions
 		};
 	});
 
-	const scopeOf = (step: (typeof steps)[number], index: number): GridScope => ({
-		location: itemLocation('steps', index, step),
-		elements: step.elements,
-	});
-	issues.push(
-		...gridIssues(
-			'Form grid',
-			envelope.grid,
-			steps.flatMap((step, index) => (step.grid ? [] : [scopeOf(step, index)])),
-		),
-	);
+	const formShape = templateIssues('Form grid', envelope.grid);
+	issues.push(...formShape);
 	steps.forEach((step, index) => {
-		if (step.grid) issues.push(...gridIssues('Step grid', step.grid, [scopeOf(step, index)]));
+		const own = step.grid !== undefined;
+		const label = own ? 'Step grid' : 'Form grid';
+		const shape = own ? templateIssues(label, step.grid) : formShape;
+		if (own) issues.push(...shape);
+		const scope = { location: itemLocation('steps', index, step), elements: step.elements };
+		issues.push(...fieldPlacementIssues(label, stepGrid(envelope, step), scope, shape.length === 0, !own));
 	});
 
 	const view = parseView(

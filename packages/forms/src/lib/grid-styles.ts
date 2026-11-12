@@ -5,7 +5,7 @@ import type {
 	GridOffsetName,
 	GridWidthName,
 } from '@/schemas/base-field';
-import type { DeepReadonly } from '@/lib/normalized-form-config';
+import type { DeepReadonly } from '@/lib/deep-readonly';
 import { GridGapTokens } from '@/schemas/base-field';
 import {
 	areasTemplateValue,

@@ -23,7 +23,7 @@ import type { EngineOutputMaps, FormEngineRuntime as FormEngine } from '@schema-
 import type { NormalizedFormConfig } from '@schema-engine/forms';
 import { getViewRecipe } from '@schema-engine/forms/recipes';
 import { RecipeRenderer } from './recipe-renderer';
-import { getRenderableSteps, assertFormEngine } from '@schema-engine/forms/lib/validate-form';
+import { getRenderableSteps, assertFormEngine, stepGrid } from '@schema-engine/forms/lib/validate-form';
 
 function GridThemeStyle({ themeId, css }: { themeId: string; css: string }) {
 	return (
@@ -63,7 +63,7 @@ function StepFields({
 		<div
 			className="se-form-grid"
 			data-se-grid-theme={theme.id}
-			style={getFormGridVariables(step.grid ?? config.grid, theme, step.elements)}
+			style={getFormGridVariables(stepGrid(config, step), theme, step.elements)}
 		>
 			<FormElements elements={step.elements} />
 		</div>

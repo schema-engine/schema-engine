@@ -190,6 +190,15 @@ export function elementAreaSlots(element: unknown): Partial<Record<CascadeSlot, 
 	return areas;
 }
 
+/** Whether an element hides itself at each slot it sets `hidden`, in cascade order within a slot. */
+export function elementHiddenSlots(element: unknown): Partial<Record<CascadeSlot, boolean>> {
+	const hidden: Partial<Record<CascadeSlot, boolean>> = {};
+	for (const { slot, entry } of elementGridSlots(element)) {
+		if (typeof entry.hidden === 'boolean') hidden[slot] = entry.hidden;
+	}
+	return hidden;
+}
+
 /**
  * What each slot resolves to: the value set at that slot, else the last one a
  * narrower slot set.

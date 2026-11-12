@@ -41,7 +41,7 @@ describe('named grid areas', () => {
 	const claiming = (...names: string[]) => names.map((name) => fieldNamed(name, { area: name }));
 	const drawn = ['a a a b b b', 'a a a c c c', 'd d e e e e'];
 
-	test('accepts the drawn layout with every area claimed', () => {
+	test('A drawn layout is accepted when every area is claimed', () => {
 		expect(() => engine.validateForm(formWith(claiming('a', 'b', 'c', 'd', 'e'), { areas: drawn }))).not.toThrow();
 	});
 
@@ -70,7 +70,7 @@ describe('named grid areas', () => {
 		expect(attempt).toThrow(/areas.*row 2 has 1 cell but row 1 has 2/);
 	});
 
-	test('rejects a non-rectangular area naming it', () => {
+	test('A non-rectangular area fails validation', () => {
 		const attempt = () => engine.validateForm(formWith(claiming('a', 'b'), { areas: ['b a', 'b b'] }));
 		expect(attempt).toThrow(FormValidationError);
 		expect(attempt).toThrow(/area 'b' is not rectangular/);
@@ -89,7 +89,7 @@ describe('named grid areas', () => {
 		expect(attempt).toThrow(/'lg'.*not rectangular/);
 	});
 
-	test('rejects a field area missing from the template, naming the area and the template', () => {
+	test('An unknown area fails validation', () => {
 		const attempt = () => engine.validateForm(formWith(claiming('a', 'c'), { areas: ['a b'] }));
 		expect(attempt).toThrow(/'c'.*not in the grid areas \(a, b\)/);
 	});
@@ -105,7 +105,7 @@ describe('named grid areas', () => {
 		expect(attempt).toThrow(/'a'.*'area'.*no 'areas'/);
 	});
 
-	test('rejects a template area that no field claims', () => {
+	test('An unclaimed area fails validation', () => {
 		const attempt = () => engine.validateForm(formWith(claiming('a'), { areas: ['a b'] }));
 		expect(attempt).toThrow(/area 'b'.*not claimed/);
 	});
@@ -125,7 +125,7 @@ describe('named grid areas', () => {
 		['columns', { columns: 2 }, 'columns'],
 		['a responsive columns entry', { responsive: { md: { columns: 2 } } }, 'columns'],
 		['a minimum column width', { minColumnWidth: '12rem' }, 'minColumnWidth'],
-	])('rejects areas together with %s', (_label, extra, key) => {
+	])('areas and columns cannot be mixed (%s)', (_label, extra, key) => {
 		const attempt = () => engine.validateForm(formWith(claiming('a', 'b'), { areas: ['a b'], ...extra }));
 		expect(attempt).toThrow(FormValidationError);
 		expect(attempt).toThrow(new RegExp(`'areas' and '${key}'.*a grid uses areas, widths or columns`));
@@ -170,6 +170,31 @@ describe('named grid areas', () => {
 		);
 	});
 
+	test('a field hidden at a breakpoint need not be in that template', () => {
+		const grid = { areas: { default: ['a', 'b'], md: ['a'] } };
+		const elements = [
+			fieldNamed('a', { area: 'a' }),
+			fieldNamed('b', { area: 'b', responsive: { md: { hidden: true } } }),
+		];
+		expect(() => engine.validateForm(formWith(elements, grid))).not.toThrow();
+	});
+
+	test('the hidden state carries to wider breakpoints until a slot shows the field again', () => {
+		const grid = { areas: { default: ['a', 'b'], md: ['a'], xl: ['a b'] } };
+		const hiddenUntilXl = [
+			fieldNamed('a', { area: 'a' }),
+			fieldNamed('b', { area: 'b', responsive: { md: { hidden: true }, xl: { hidden: false } } }),
+		];
+		expect(() => engine.validateForm(formWith(hiddenUntilXl, grid))).not.toThrow();
+		const hiddenForever = [
+			fieldNamed('a', { area: 'a' }),
+			fieldNamed('b', { area: 'b', responsive: { md: { hidden: true } } }),
+		];
+		expect(() => engine.validateForm(formWith(hiddenForever, grid))).not.toThrow();
+		const shownAtMd = [fieldNamed('a', { area: 'a' }), fieldNamed('b', { area: 'b' })];
+		expect(() => engine.validateForm(formWith(shownAtMd, grid))).toThrow(/'b'.*'md'.*not in the grid areas/);
+	});
+
 	test('a responsive default area beats the top-level one', () => {
 		const grid = { areas: ['a b'] };
 		const elements = [fieldNamed('a', { area: 'a', responsive: { default: { area: 'c' } } }), ...claiming('b')];
@@ -183,7 +208,7 @@ describe('named grid areas', () => {
 			steps: steps.map((step, index) => ({ id: `s${index}`, title: `Step ${index}`, elements: [], ...step })),
 		});
 
-		test('a step draws its own template while the others keep the form grid', () => {
+		test('Each wizard step draws its own template', () => {
 			const form = stepped({ columns: 2 }, [
 				{
 					id: 'address',
