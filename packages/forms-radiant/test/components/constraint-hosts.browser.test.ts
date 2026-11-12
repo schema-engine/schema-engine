@@ -622,3 +622,21 @@ test('a server-rendered hidden wrapper keeps its snapshot while no instance publ
 		host.remove();
 	}
 });
+
+test('rules set on a constrained field from outside become its baseline for the next constraint change', async () => {
+	const { form, code, cleanup } = await mountRequireOnDependent();
+	try {
+		form.setValue('mode', 'need');
+		await expect.poll(() => code.rules?.required).toBe(true);
+
+		code.rules = { maxLength: 5 };
+		await expect.poll(() => code.rules?.required).toBe(true);
+		expect(code.rules?.maxLength).toBe(5);
+
+		form.setValue('mode', '');
+		await expect.poll(() => code.rules?.required).toBeFalsy();
+		expect(code.rules?.maxLength).toBe(5);
+	} finally {
+		cleanup();
+	}
+});

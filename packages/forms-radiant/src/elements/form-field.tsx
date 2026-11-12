@@ -7,6 +7,7 @@ import { resolveElementRules, toFieldRules, type FieldRulesSource } from '@/lib/
 import { FIELD_ARIA_TARGET_ATTR } from '@/lib/field-control';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { formElement } from '@/lib/define-element';
+import { onUpdated } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { constraintContext, formValuesContext, type ConstraintState } from '@/contexts/constraint-context';
 import { FormController } from '@/adapters/radiant/controller';
@@ -20,6 +21,7 @@ export class FormFieldElement extends RuiFieldElement {
 	private constraint?: ConstraintState;
 	private isAuthoredDisabled?: (renderedPath: string) => boolean;
 	private authoredRules?: FieldRules;
+	private appliedRules?: FieldRules;
 
 	protected override onConnected(): void {
 		this.hydrateDefaultValue();
@@ -29,6 +31,21 @@ export class FormFieldElement extends RuiFieldElement {
 		}
 		super.onConnected();
 		this.authoredRules ??= this.rules ?? {};
+		this.applyConstraint();
+	}
+
+	/**
+	 * Takes rules set from outside as the new authored baseline, then reapplies the constraint.
+	 *
+	 * @remarks
+	 * A re-render can reuse this element with new `rules`. Only the object `applyConstraint`
+	 * wrote is its own; any other is authored, and keeping the first baseline would
+	 * overwrite it with stale rules on the next constraint change.
+	 */
+	@onUpdated(['rules'])
+	onExternalRules(): void {
+		if (this.authoredRules === undefined || this.rules === this.appliedRules) return;
+		this.authoredRules = this.rules ?? {};
 		this.applyConstraint();
 	}
 
@@ -74,7 +91,8 @@ export class FormFieldElement extends RuiFieldElement {
 				: true
 			: authored.required;
 		if (this.rules?.required === required) return;
-		this.rules = { ...authored, required };
+		this.appliedRules = { ...authored, required };
+		this.rules = this.appliedRules;
 		this.querySelector(REQUIRED_MARKER)?.toggleAttribute('hidden', !required);
 		this.onRulesUpdated();
 
