@@ -10,6 +10,7 @@ import { provideContext, type ContextProvider } from '@ecopages/radiant/context'
 import type { JsxRenderable } from '@ecopages/jsx';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { FormProviderProps } from '@/adapters/types';
+import { logger } from '@/lib/logger';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import { formEngineContext, type FormEngineContextValue } from '../provider';
 
@@ -36,6 +37,8 @@ export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
 @customElement('se-form-renderer')
 export class FormRendererElement extends RadiantElement {
 	@state private boundEngine?: FormEngine;
+	private publishedEngine?: FormEngine;
+	private reportedReplacement = false;
 	/**
 	 * The engine every host below this renderer resolves at connect time.
 	 *
@@ -46,7 +49,8 @@ export class FormRendererElement extends RadiantElement {
 	 * `se-form-renderer` is defined), and the renderer adopts it when it upgrades.
 	 * The children then resolve it from the context the renderer publishes on connect.
 	 * A host resolves it once, at connect, and never waits for a later one; a host
-	 * without an engine reports a configuration error.
+	 * without an engine reports a configuration error. Replacing it after connect
+	 * is reported once and does not reach hosts that already resolved.
 	 *
 	 * This is an accessor over private state, not a decorated field, because a
 	 * field would replace the value assigned before the upgrade when the element is constructed.
@@ -88,8 +92,21 @@ export class FormRendererElement extends RadiantElement {
 		this.publishContext();
 	}
 
+	/**
+	 * @remarks
+	 * Hosts below resolve their engine once, at connect, so replacing a bound engine
+	 * on a connected renderer cannot reach them: it is reported once and the published
+	 * context follows only for hosts that connect afterwards.
+	 */
 	@onUpdated(['boundEngine'])
 	onEngineUpdated(): void {
+		const replaced = this.publishedEngine && this.boundEngine && this.publishedEngine !== this.boundEngine;
+		if (replaced && this.isConnected && !this.reportedReplacement) {
+			this.reportedReplacement = true;
+			logger.warn(
+				'The engine changed after `se-form-renderer` connected. Hosts below keep the engine they resolved at connect: bind the engine before the renderer connects.',
+			);
+		}
 		this.publishContext();
 	}
 
@@ -98,6 +115,7 @@ export class FormRendererElement extends RadiantElement {
 		if (!engine) {
 			return;
 		}
+		this.publishedEngine = engine;
 		this.provider.setContext({ engine } satisfies FormEngineContextValue);
 	}
 }

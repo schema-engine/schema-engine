@@ -111,6 +111,29 @@ describe('Radiant form engine resolution', () => {
 		observed.disconnect();
 	});
 
+	test('replacing the engine of a connected renderer warns once and leaves resolved hosts on their engine', async () => {
+		const engineA = createRadiantFormEngine();
+		const engineB = createRadiantFormEngine();
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
+		const instance = document.createElement('se-form-instance') as FormInstanceElement;
+		instance.config = twoStepForm(engineA);
+		renderer.engine = engineA;
+		renderer.append(instance);
+		document.body.append(renderer);
+		await vi.waitFor(() => expect(instance.engine).toBe(engineA));
+
+		const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+		renderer.engine = engineB;
+		await nextFrame();
+		renderer.engine = engineA;
+		await nextFrame();
+
+		expect(instance.engine).toBe(engineA);
+		const reports = warn.mock.calls.filter((call) => String(call.at(-1)).includes('engine changed after'));
+		expect(reports).toHaveLength(1);
+	});
+
 	test('a form instance with no engine in its tree reports it and does not pick the only created engine', async () => {
 		const engine = createRadiantFormEngine();
 		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
