@@ -1,3 +1,4 @@
+import { getCustomElementTagName } from '@ecopages/jsx';
 import { afterEach, expect, test, vi } from 'vitest';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { deferFormElements, defineFormElements } from '@/define';
@@ -15,7 +16,8 @@ test('deferred hosts leave server-rendered elements alone until defineFormElemen
 
 	deferFormElements();
 	await import('@/components/internals/form-renderer.script');
-	await import('@/components/form-instance.script');
+	const { FormInstanceElement } = await import('@/components/form-instance.script');
+	expect(getCustomElementTagName(FormInstanceElement)).toBe('se-form-instance');
 	expect(customElements.get('se-form-renderer')).toBeUndefined();
 	expect(customElements.get('se-form-instance')).toBeUndefined();
 

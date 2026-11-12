@@ -143,27 +143,6 @@ export class SeInputOtp extends FormAssociatedElement {
 
 registerValueControl('se-input-otp');
 
-/**
- * The element's validation with a default rule that accepts an empty code or one with every slot filled,
- * when the author wrote no length or pattern rule.
- *
- * @remarks
- * `value` joins the filled slots, so a code with a gap is a shorter string. Without a
- * length rule it would submit as if it were complete. A `pattern` rather than `minLength`
- * keeps an empty optional code valid; `required` still rejects it.
- */
-function withCompleteCodeRule(config: InputOTPFieldProps): InputOTPFieldProps {
-	const length = config.length ?? 6;
-	const authored = config.rules?.some((rule) => ['minLength', 'maxLength', 'pattern'].includes(rule.type));
-	if (authored) return config;
-	const complete = {
-		type: 'pattern',
-		value: `^(.{${length}})?$`,
-		message: `Enter all ${length} characters`,
-	} as const;
-	return { ...config, rules: [...(config.rules ?? []), complete] };
-}
-
 export function FormInputOTP(config: InputOTPFieldProps) {
 	return (
 		<FieldGroup
@@ -175,7 +154,7 @@ export function FormInputOTP(config: InputOTPFieldProps) {
 			description={config.description}
 			grid={config.grid}
 			style={config.style}
-			validation={withCompleteCodeRule(config)}
+			validation={config}
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}
 		>

@@ -97,11 +97,6 @@ export class StepIndicatorsElement extends RadiantElement {
 	}
 }
 
-export function StepIndicatorsBlock(context?: RecipeSlotContext): JsxRenderable {
-	return (
-		<StepIndicatorsElement
-			meta={context?.meta}
-			slotConfig={context?.slotConfig as StepIndicatorsConfig | undefined}
-		/>
-	);
+export function StepIndicatorsBlock(context?: RecipeSlotContext<StepIndicatorsConfig>): JsxRenderable {
+	return <StepIndicatorsElement meta={context?.meta} slotConfig={context?.slotConfig} />;
 }
