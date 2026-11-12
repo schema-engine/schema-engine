@@ -45,6 +45,7 @@ export function FormElements({
 			constraintContext: constraintContext ?? { values: peekOwningConstraintValues() },
 			engine,
 			name: composeFieldName(element, scope),
+			scopePath: namePrefix,
 			id: composeFieldId(element, scope),
 			instanceId,
 			initialValues,

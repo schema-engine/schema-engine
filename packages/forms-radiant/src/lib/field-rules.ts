@@ -47,7 +47,7 @@ export function isRenderedRequired(config: object): boolean {
  * @remarks
  * `required` passes when the render overlay marks the container required and
  * either the container declares constraints or its own required rule is not the
- * source; constraint sync then applies the live rule.
+ * source; `se-field` then applies the live rule from the constraint context.
  */
 export function withContainerState<T extends object>(
 	config: { disabled?: boolean; constraints?: readonly unknown[]; rules?: ReadonlyArray<ValidationRule> },

@@ -57,7 +57,7 @@ function addFieldInitialValue(
  * @remarks
  * `disabled` and `required` compose with the values a container passed down,
  * so a fieldset's or array's own and constraint-driven state reaches the fields
- * inside it at render the way live constraint sync composes it afterwards.
+ * inside it at render the way the constraint hosts compose it afterwards.
  */
 export function renderRegisteredElement(
 	config: NormalizedElementConfig,

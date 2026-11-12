@@ -29,7 +29,7 @@ export interface FieldGroupProps {
  * The required marker every field label carries.
  *
  * @remarks
- * Constraint sync shows and hides it through `data-se-required-marker`, so every
+ * `se-field` shows and hides it through `data-se-required-marker`, so every
  * element prints it with this component, hidden until the field is required.
  */
 export function RequiredMarker({ required = false }: { required?: boolean }) {
