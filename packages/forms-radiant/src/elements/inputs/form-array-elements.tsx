@@ -240,32 +240,18 @@ export class SeFormArray extends RadiantElement {
 	}
 
 	private initialIds(): string[] {
-		const container = this.renderedContainer();
-		const rendered = Array.from(container?.children ?? [])
-			.filter((row) => row.getAttribute('class')?.split(/\s+/).includes('se-form-array__item'))
-			.map((row) => row.getAttribute('data-se-row-id'))
-			.filter((id): id is string => Boolean(id));
-		if (rendered.length) return rendered;
 		return (this.config.ssrInitialRows ?? []).map((_, index) => `seed-${index}`);
 	}
 
-	private renderedContainer(): HTMLElement | undefined {
-		return Array.from(this.children).find(
-			(child): child is HTMLElement =>
-				child.getAttribute('class')?.split(/\s+/).includes('se-form-array') ?? false,
-		);
-	}
-
 	/**
-	 * Returns the existing server container on the first hydrated render.
+	 * Whether the first hydrated render places the server rows through `this.slotted`.
 	 *
-	 * @remarks Reusing the node lets its child controls upgrade against the server rows. Later updates render the current keyed rows normally.
+	 * @remarks Placing the slotted nodes keeps the server container, so its child controls upgrade against the server rows. Later updates render the current keyed rows normally.
 	 */
-	private preserveHydratedContainer(): HTMLElement | undefined {
-		if (this.preservedHydratedContainer || !this.isConnected || !this.isServerRendered) return undefined;
-		const container = this.renderedContainer();
-		if (container) this.preservedHydratedContainer = true;
-		return container;
+	private preserveHydratedContainer(): boolean {
+		if (this.preservedHydratedContainer || !this.isConnected || !this.isServerRendered) return false;
+		this.preservedHydratedContainer = this.slotted !== null;
+		return this.preservedHydratedContainer;
 	}
 
 	private syncRows(initialIds: readonly string[]): void {
@@ -359,12 +345,10 @@ export class SeFormArray extends RadiantElement {
 		if (!config) {
 			return null;
 		}
-		const hydratedContainer = this.preserveHydratedContainer();
-		if (hydratedContainer) return hydratedContainer;
+		if (this.preserveHydratedContainer()) return this.slotted;
 		const engine = this.resolveEngine();
+		if (!engine && !this.isConnected) return this.slotted;
 		const ids = this.ids;
-		const renderedContainer = this.renderedContainer();
-		if (!engine && !this.isConnected && renderedContainer) return renderedContainer;
 		if (ids.length > 0 && !engine) return null;
 		const renderValues = this.currentValues();
 		const initialValues = this.rowInitialValues();
@@ -373,6 +357,12 @@ export class SeFormArray extends RadiantElement {
 	}
 }
 
+/**
+ * @remarks
+ * The server rows are rendered here and handed to `se-form-array` as children: the host's own view is serialized after
+ * the owning render's engine scope has closed, so it cannot render rows itself on the server. The host places them with
+ * `this.slotted`, which lets Radiant mark their position instead of serializing a second copy in a slotted template.
+ */
 export function FormArrayElements(config: ArrayElementsProps) {
 	const { ssrInitialRows, initialFormValues, ...fieldConfig } = config;
 	const engine = resolveFormEngine();
