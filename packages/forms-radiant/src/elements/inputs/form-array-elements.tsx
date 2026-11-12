@@ -122,8 +122,6 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 								size="sm"
 								square
 								disabled={disabled}
-								data-action="remove"
-								data-id={id}
 								aria-label={removeLabel}
 							>
 								<TrashIcon />
@@ -133,13 +131,7 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 				);
 			})}
 			{canAdd ? (
-				<RuiButton
-					type="button"
-					class="se-form-array__add"
-					variant="outline"
-					disabled={disabled}
-					data-action="add"
-				>
+				<RuiButton type="button" class="se-form-array__add" variant="outline" disabled={disabled}>
 					<PlusIcon />
 					{config.addButtonText || 'Add item'}
 				</RuiButton>
@@ -319,8 +311,15 @@ export class SeFormArray extends RadiantElement {
 		super.disconnectedCallback();
 	}
 
-	@onEvent({ type: 'click', selector: '[data-action="add"]' })
-	onAdd() {
+	/**
+	 * @remarks
+	 * The buttons are not wired in the view: the first hydrated render adopts server markup that carries no handlers,
+	 * so the host listens for them. `closest('se-form-array')` must be this host, or a nested array's buttons would
+	 * also add to or remove from the outer array.
+	 */
+	@onEvent({ type: 'click', selector: '.se-form-array__add' })
+	onAdd(event: Event): void {
+		if (!this.ownsControl(event)) return;
 		const maxItems = this.config.maxItems;
 		if (maxItems && this.ids.length >= maxItems) {
 			return;
@@ -328,16 +327,19 @@ export class SeFormArray extends RadiantElement {
 		this.form.fieldArray(this.config.name).append(this.emptyItem());
 	}
 
-	@onEvent({ type: 'click', selector: '[data-action="remove"]' })
-	onRemove(event: Event) {
-		const button = (event.target as HTMLElement).closest('[data-action="remove"]');
-		const id = button?.getAttribute('data-id');
-		const minItems = this.config.minItems ?? 0;
-		if (this.ids.length <= minItems) {
+	@onEvent({ type: 'click', selector: '.se-form-array__remove' })
+	onRemove(event: Event): void {
+		if (!this.ownsControl(event)) return;
+		const id = (event.target as Element).closest('[data-se-row-id]')?.getAttribute('data-se-row-id');
+		if (this.ids.length <= (this.config.minItems ?? 0)) {
 			return;
 		}
 		const index = this.ids.indexOf(id ?? '');
 		if (index >= 0) this.form.fieldArray(this.config.name).remove(index);
+	}
+
+	private ownsControl(event: Event): boolean {
+		return (event.target as Element | null)?.closest('se-form-array') === this;
 	}
 
 	override render(): JsxRenderable {
@@ -353,7 +355,14 @@ export class SeFormArray extends RadiantElement {
 		const renderValues = this.currentValues();
 		const initialValues = this.rowInitialValues();
 
-		return renderArrayContent({ config, engine, ids, initialValues, renderValues, fieldError: this.fieldError });
+		return renderArrayContent({
+			config,
+			engine,
+			ids,
+			initialValues,
+			renderValues,
+			fieldError: this.fieldError,
+		});
 	}
 }
 

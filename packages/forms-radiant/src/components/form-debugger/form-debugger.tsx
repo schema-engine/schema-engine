@@ -1,6 +1,6 @@
 import { FormController, formController } from '@/adapters/radiant/controller';
 import './form-debugger.css';
-import { customElement, onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
+import { customElement, prop, RadiantElement, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import { RuiBadge } from '@ecopages/radiant-ui/badge';
@@ -34,7 +34,7 @@ function CloseIcon() {
 	);
 }
 
-function DebuggerToggle() {
+function DebuggerToggle({ onOpen }: { onOpen: () => void }) {
 	return (
 		<div class="se-form-debugger se-form-debugger--collapsed">
 			<RuiButton
@@ -43,7 +43,7 @@ function DebuggerToggle() {
 				size="lg"
 				square
 				class="se-form-debugger__toggle"
-				data={{ seDebuggerAction: 'open' }}
+				on:click={onOpen}
 				aria={{ label: 'Open form debugger' }}
 			>
 				<BugIcon />
@@ -56,7 +56,9 @@ function DebuggerHeader({
 	title,
 	currentStep,
 	totalSteps,
+	onClose,
 }: {
+	onClose: () => void;
 	title: string;
 	currentStep: number;
 	totalSteps: number;
@@ -77,7 +79,7 @@ function DebuggerHeader({
 				size="sm"
 				square
 				class="se-form-debugger__close-button"
-				data={{ seDebuggerAction: 'close' }}
+				on:click={onClose}
 				aria={{ label: 'Close debugger' }}
 			>
 				<CloseIcon />
@@ -186,20 +188,20 @@ function DebuggerNav({
 	steps,
 	currentStep,
 	stepStates,
+	onPrevious,
+	onNext,
+	onGoTo,
 }: {
+	onPrevious: () => void;
+	onNext: () => void;
+	onGoTo: (index: number) => void;
 	steps: NormalizedFormConfig['steps'];
 	currentStep: number;
 	stepStates: FormInstanceContextValue['stepStates'] | undefined;
 }) {
 	return (
 		<footer class="se-form-debugger__nav">
-			<RuiButton
-				type="button"
-				variant="outline"
-				size="sm"
-				data={{ seDebuggerAction: 'previous' }}
-				disabled={currentStep === 0}
-			>
+			<RuiButton type="button" variant="outline" size="sm" on:click={onPrevious} disabled={currentStep === 0}>
 				Previous
 			</RuiButton>
 			<div class="se-form-debugger__nav-dots">
@@ -210,9 +212,8 @@ function DebuggerNav({
 						data={{
 							active: index === currentStep,
 							completed: index < currentStep,
-							seDebuggerAction: 'goto',
-							seDebuggerStep: index,
 						}}
+						on:click={() => onGoTo(index)}
 						disabled={!stepStates?.visited?.[index] && index > currentStep}
 						aria-label={`Go to ${step.title ?? `step ${index + 1}`}`}
 					/>
@@ -222,7 +223,7 @@ function DebuggerNav({
 				type="button"
 				variant="outline"
 				size="sm"
-				data={{ seDebuggerAction: 'next' }}
+				on:click={onNext}
 				disabled={currentStep >= steps.length - 1}
 			>
 				Next
@@ -261,23 +262,29 @@ export class FormDebuggerElement extends RadiantElement {
 		this.revision += 1;
 	}
 
-	@onEvent({ type: 'click', selector: '[data-se-debugger-action]' })
-	onAction(event: Event): void {
-		const target = (event.target as HTMLElement).closest<HTMLElement>('[data-se-debugger-action]');
-		const action = target?.dataset.seDebuggerAction;
-		if (action === 'open') this.open = true;
-		if (action === 'close') this.open = false;
-		if (action === 'previous') void this.formInstance?.goToPreviousStep();
-		if (action === 'next') void this.formInstance?.goToNextStep();
-		if (action === 'goto') {
-			const index = Number(target?.dataset.seDebuggerStep);
-			if (Number.isInteger(index)) void this.formInstance?.goToStep(index);
-		}
-	}
+	private readonly openPanel = (): void => {
+		this.open = true;
+	};
+
+	private readonly closePanel = (): void => {
+		this.open = false;
+	};
+
+	private readonly goPrevious = (): void => {
+		void this.formInstance?.goToPreviousStep();
+	};
+
+	private readonly goNext = (): void => {
+		void this.formInstance?.goToNextStep();
+	};
+
+	private readonly goToStep = (index: number): void => {
+		void this.formInstance?.goToStep(index);
+	};
 
 	override render() {
 		if (!this.open) {
-			return <DebuggerToggle />;
+			return <DebuggerToggle onOpen={this.openPanel} />;
 		}
 
 		const formState = this.form.ready ? this.form.formState : undefined;
@@ -294,6 +301,7 @@ export class FormDebuggerElement extends RadiantElement {
 						title={config?.title ?? 'Form Debugger'}
 						currentStep={currentStep}
 						totalSteps={steps.length}
+						onClose={this.closePanel}
 					/>
 					<div class="se-form-debugger__content">
 						{isMultiStep ? <DebuggerProgress currentStep={currentStep} totalSteps={steps.length} /> : null}
@@ -310,7 +318,14 @@ export class FormDebuggerElement extends RadiantElement {
 						) : null}
 					</div>
 					{isMultiStep ? (
-						<DebuggerNav steps={steps} currentStep={currentStep} stepStates={stepStates} />
+						<DebuggerNav
+							steps={steps}
+							currentStep={currentStep}
+							stepStates={stepStates}
+							onPrevious={this.goPrevious}
+							onNext={this.goNext}
+							onGoTo={this.goToStep}
+						/>
 					) : null}
 				</section>
 			</div>

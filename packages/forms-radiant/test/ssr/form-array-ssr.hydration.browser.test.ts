@@ -69,7 +69,7 @@ describe('SSR array hydration', () => {
 			form.setValue('contacts.0.role', 'Edited Alice');
 			await expect.poll(() => app.querySelector<HTMLInputElement>('.rui-input')?.value).toBe('Edited Alice');
 
-			const addButton = arrayHost.querySelector<HTMLButtonElement>('[data-action="add"]');
+			const addButton = arrayHost.querySelector<HTMLButtonElement>('.se-form-array__add');
 			if (!addButton) throw new Error('Expected array add button');
 			addButton.click();
 			await expect
@@ -163,7 +163,7 @@ describe('SSR array hydration', () => {
 					members: [{ role: 'Admin' }, { role: '' }],
 				});
 
-			const addButton = arrayHost.querySelector<HTMLButtonElement>('[data-action="add"]');
+			const addButton = arrayHost.querySelector<HTMLButtonElement>('.se-form-array__add');
 			if (!addButton) throw new Error('Expected array add button');
 			addButton.click();
 			await expect

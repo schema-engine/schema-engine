@@ -59,7 +59,7 @@ async function mount(onSubmit: () => Promise<void>, options: { actions?: boolean
 	form.addEventListener('se-action-submit-complete', (event) =>
 		events.push(`complete:${(event as CustomEvent).detail.succeeded}`),
 	);
-	await expect.poll(() => form.querySelector('button[type="submit"]')).toBeTruthy();
+	await expect.poll(() => form.querySelector('button[type="submit"], .se-wizard-actions button')).toBeTruthy();
 	return { host, form, events, submit: () => form.querySelector<HTMLButtonElement>('button[type="submit"]')! };
 }
 
@@ -83,8 +83,8 @@ test('the last step of a wizard shows the submitting state', async () => {
 	const { host, submit, form } = await mount(() => pending.promise, { steps: 2 });
 	expect(host.querySelector('se-wizard-actions')).toBeTruthy();
 
-	form.querySelector<HTMLButtonElement>('[data-se-view-next]')!.click();
-	await expect.poll(() => submit().hidden).toBe(false);
+	form.querySelector<HTMLButtonElement>('.se-wizard-actions__forward button[type="button"]')!.click();
+	await expect.poll(() => form.querySelector('button[type="submit"]')).toBeTruthy();
 	submit().click();
 
 	await expect.poll(() => submit().disabled).toBe(true);

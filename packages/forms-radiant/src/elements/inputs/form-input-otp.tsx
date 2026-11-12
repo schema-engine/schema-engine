@@ -1,5 +1,5 @@
 import './form-input-otp.css';
-import { customElement, onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
+import { customElement, prop, RadiantElement, state } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
@@ -23,8 +23,7 @@ export class SeInputOtp extends RadiantElement {
 
 	@state value = '';
 
-	@onEvent({ type: 'input', selector: '[data-otp-index]' })
-	onSlotInput(event: Event) {
+	private readonly onSlotInput = (event: Event) => {
 		const input = event.target as HTMLInputElement;
 		const index = Number(input.dataset.otpIndex);
 		const char = sanitizeChar(input.value, this.pattern);
@@ -40,10 +39,9 @@ export class SeInputOtp extends RadiantElement {
 		}
 
 		this.dispatchChange();
-	}
+	};
 
-	@onEvent({ type: 'keydown', selector: '[data-otp-index]' })
-	onSlotKeydown(event: Event) {
+	private readonly onSlotKeydown = (event: Event) => {
 		const keyEvent = event as KeyboardEvent;
 		if (keyEvent.key !== 'Backspace') {
 			return;
@@ -57,10 +55,9 @@ export class SeInputOtp extends RadiantElement {
 
 		const previous = this.querySelector<HTMLInputElement>(`[data-otp-index="${index - 1}"]`);
 		previous?.focus();
-	}
+	};
 
-	@onEvent({ type: 'paste', selector: '[data-otp-index]' })
-	onSlotPaste(event: Event) {
+	private readonly onSlotPaste = (event: Event) => {
 		const pasteEvent = event as ClipboardEvent;
 		pasteEvent.preventDefault();
 		const text = pasteEvent.clipboardData?.getData('text') ?? '';
@@ -71,7 +68,7 @@ export class SeInputOtp extends RadiantElement {
 			.slice(0, this.length);
 		this.value = chars.join('');
 		this.dispatchChange();
-	}
+	};
 
 	private dispatchChange() {
 		this.dispatchEvent(new CustomEvent('change', { bubbles: true, detail: { value: this.value } }));
@@ -98,6 +95,9 @@ export class SeInputOtp extends RadiantElement {
 						inputmode={this.pattern === 'numeric' ? 'numeric' : 'text'}
 						autocomplete={index === 0 ? 'one-time-code' : 'off'}
 						disabled={this.disabled}
+						on:input={this.onSlotInput}
+						on:keydown={this.onSlotKeydown}
+						on:paste={this.onSlotPaste}
 						value={chars[index] ?? ''}
 					/>
 				))}
@@ -114,6 +114,9 @@ export class SeInputOtp extends RadiantElement {
 							inputmode={this.pattern === 'numeric' ? 'numeric' : 'text'}
 							autocomplete="off"
 							disabled={this.disabled}
+							on:input={this.onSlotInput}
+							on:keydown={this.onSlotKeydown}
+							on:paste={this.onSlotPaste}
 							value={chars[index] ?? ''}
 						/>
 					);
