@@ -2,6 +2,7 @@ import './form-array-elements.css';
 import { onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { RuiButton } from '@ecopages/radiant-ui/button';
+import { RuiFieldError } from '@ecopages/radiant-ui/field';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { FormElements } from '@/components/internals/form-elements';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
@@ -9,8 +10,9 @@ import type { ArrayElementsProps } from './form-array-elements.types';
 import { arrayItemScope, createArrayRowDefault, seedArrayRows, usesScalarArrayItem } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { FormController } from '@/adapters/radiant/controller';
-import { toFieldRules, withContainerState } from '@/lib/field-rules';
+import { isRenderedRequired, toFieldRules, withContainerState } from '@/lib/field-rules';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
+import { RequiredMarker } from '../field-group';
 import { adoptFieldArrayIds } from '@/adapters/radiant/controller/field-array';
 import { getValueAtPath, setValueAtPath } from '@schema-engine/forms/lib/path-values';
 import { formContext, type FormContextValue } from '@ecopages/radiant-ui/form';
@@ -123,7 +125,7 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 								size="sm"
 								square
 								disabled={disabled}
-								aria-label={removeLabel}
+								aria-label={`${removeLabel} ${index + 1}`}
 							>
 								<TrashIcon />
 							</RuiButton>
@@ -137,9 +139,7 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 					{config.addButtonText || 'Add item'}
 				</RuiButton>
 			) : null}
-			<p class="rui-field__error" data-rui-field-error role="alert" hidden={!fieldError}>
-				{fieldError}
-			</p>
+			<RuiFieldError hidden={!fieldError}>{fieldError}</RuiFieldError>
 		</div>
 	);
 }
@@ -382,18 +382,23 @@ export function FormArrayElements(config: ArrayElementsProps) {
 		: null;
 
 	return (
-		<div class="se-form-field se-form-array-field" data-se-grid-theme={fieldHost.themeId} style={fieldHost.style}>
+		<fieldset
+			class="se-form-field se-form-array-field"
+			aria-label={fieldConfig.label ? undefined : fieldConfig.name}
+			data-se-grid-theme={fieldHost.themeId}
+			style={fieldHost.style}
+		>
 			{fieldConfig.label ? (
-				<p class="se-form-array-field__label">
+				<legend class="se-form-array-field__label">
 					{fieldConfig.label}
-					{isFieldRequired(fieldConfig.rules) ? <span data-se-required-marker>{' *'}</span> : null}
-				</p>
+					<RequiredMarker required={isFieldRequired(fieldConfig.rules) || isRenderedRequired(fieldConfig)} />
+				</legend>
 			) : null}
 			{fieldConfig.description ? <p class="se-form-array-field__description">{fieldConfig.description}</p> : null}
 			{jsx('se-form-array', {
 				config: arrayConfig,
 				children,
 			})}
-		</div>
+		</fieldset>
 	);
 }

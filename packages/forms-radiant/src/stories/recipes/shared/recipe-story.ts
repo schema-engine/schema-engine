@@ -12,7 +12,7 @@ export function recipeStoryMeta(options: {
 		...formRendererMeta,
 		args: {
 			...formRendererMeta.args,
-			className: layout === 'fullscreen' ? 'se-form-story--full' : '',
+			class: layout === 'fullscreen' ? 'se-form-story--full' : '',
 		},
 		parameters: {
 			...formRendererMeta.parameters,

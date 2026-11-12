@@ -13,7 +13,13 @@ export { FormRendererElement, type FormRendererProps } from './form-renderer.scr
  * View-owned shell: the form tree is authored here as light-DOM children so
  * SSR expands it. The live `engine` is re-attached on the client.
  */
-export function FormRenderer({ engine, className, style, children, ...props }: FormRendererProps): JsxRenderable {
+export function FormRenderer({
+	engine,
+	class: className,
+	style,
+	children,
+	...props
+}: FormRendererProps): JsxRenderable {
 	const resolvedEngine = resolveFormEngine(undefined, engine);
 	assertFormEngine(resolvedEngine, props.config);
 

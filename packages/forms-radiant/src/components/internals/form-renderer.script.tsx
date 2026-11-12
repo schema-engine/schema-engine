@@ -9,7 +9,7 @@ import { formEngineContext, type FormEngineContextValue } from '../provider';
 import { formElement } from '@/lib/define-element';
 
 export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
-	className?: string;
+	class?: string;
 	style?: Record<string, string | number | undefined>;
 	engine?: FormEngine;
 	/** Rendered inside the form after its fields, for opt-in tools such as FormDebugger. */

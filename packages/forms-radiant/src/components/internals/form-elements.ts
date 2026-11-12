@@ -14,7 +14,7 @@ import type { ConstraintEvaluationContext } from './render-registered-element';
 export interface FormElementsProps {
 	elements: ReadonlyArray<NormalizedElementConfig>;
 	engine?: FormEngine;
-	className?: string;
+	class?: string;
 	style?: Record<string, string | number | undefined>;
 	initialValues?: Record<string, unknown>;
 	values?: Record<string, unknown>;
@@ -27,7 +27,7 @@ export interface FormElementsProps {
 export function FormElements({
 	elements,
 	engine,
-	className,
+	class: className,
 	style,
 	initialValues,
 	values,
@@ -49,7 +49,7 @@ export function FormElements({
 			instanceId,
 			initialValues,
 			values,
-			className,
+			class: className,
 			style,
 		}),
 	);

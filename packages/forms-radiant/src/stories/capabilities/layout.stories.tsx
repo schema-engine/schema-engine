@@ -5,7 +5,7 @@ import { responsiveColumnsPlay, responsiveFieldSpansPlay } from './layout.play';
 const meta = {
 	...formRendererMeta,
 	args: {
-		className: 'se-form-story--full',
+		class: 'se-form-story--full',
 		config: {
 			id: 'layout-responsive-columns',
 			title: 'Responsive columns',

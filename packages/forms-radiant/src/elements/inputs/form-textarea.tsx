@@ -24,7 +24,10 @@ export function FormTextarea(config: TextareaFieldProps) {
 				name={config.name}
 				placeholder={config.placeholder}
 				rows={config.rows}
-				style={{ fontFamily: 'inherit' }}
+				cols={config.cols}
+				wrap={config.wrap}
+				spellcheck={config.spellCheck}
+				style={{ fontFamily: 'inherit', resize: config.resize }}
 				disabled={config.disabled}
 			/>
 		</FieldGroup>

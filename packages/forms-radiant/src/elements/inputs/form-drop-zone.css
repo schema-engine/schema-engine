@@ -24,6 +24,11 @@ se-drop-zone {
 	outline-offset: 2px;
 }
 
+.se-dropzone:has(.se-dropzone__input:focus-visible) {
+	outline: 2px solid var(--focus-ring, Highlight);
+	outline-offset: 2px;
+}
+
 .se-dropzone[data-disabled='true'] {
 	cursor: not-allowed;
 	opacity: 0.6;

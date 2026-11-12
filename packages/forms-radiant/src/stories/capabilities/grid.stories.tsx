@@ -5,7 +5,7 @@ import { autoFitColumnsPlay, columnSpansPlay, rowAndColumnGapPlay, twoColumnsPer
 const meta = {
 	...formRendererMeta,
 	args: {
-		className: 'se-form-story--full',
+		class: 'se-form-story--full',
 		config: {
 			id: 'grid-two-columns',
 			title: 'Two-column form',
