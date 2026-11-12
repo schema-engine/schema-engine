@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import * as z from 'zod/mini';
 import { ActionDispatcher } from '../src/dispatcher';
 import { ActionRegistry } from '../src/registry';
-import type { ActionConfigBase } from '../src/types';
+import type { ActionConfigBase, ActionRegistration } from '../src/types';
 
 type Config = ActionConfigBase & { behavior: 'wait' | 'fail' | 'optional' | 'later' };
 
@@ -20,14 +20,13 @@ function setup(
 		signal: AbortSignal,
 	) => Promise<{ success: boolean; error?: string; data?: unknown; shouldContinue?: boolean }>,
 ) {
-	const registry = new ActionRegistry<unknown, string>([
-		{
-			$type: 'work',
-			schema: z.any(),
-			metadata: { name: 'work', description: 'work', defaultTriggers: ['submit'] },
-			execute: ({ config, signal }) => run(config as Config, signal),
-		},
-	]);
+	const work: ActionRegistration = {
+		$type: 'work',
+		schema: z.any(),
+		metadata: { name: 'work', description: 'work', defaultTriggers: ['submit'] },
+		execute: ({ config, signal }) => run(config as Config, signal),
+	};
+	const registry = new ActionRegistry([work]);
 	return new ActionDispatcher(registry);
 }
 

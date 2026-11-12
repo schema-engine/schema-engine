@@ -45,7 +45,11 @@ describe('createRegistry', () => {
 
 	describe('Scenario: A registration without a Standard Schema is rejected at build', () => {
 		it('throws naming the $type and the kind', () => {
-			const broken = { $type: 'broken', schema: { parse: () => undefined }, metadata: { name: 'Broken' } };
+			const broken = {
+				$type: 'broken',
+				schema: { parse: () => undefined },
+				metadata: { name: 'Broken' },
+			} as unknown as BaseRegistration;
 
 			expect(() => createRegistry('Widget', [createItem('ok', 'Ok'), broken])).toThrow(
 				/Widget 'broken' schema must implement Standard Schema/,
