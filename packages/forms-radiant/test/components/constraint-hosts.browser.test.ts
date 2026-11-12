@@ -1,4 +1,8 @@
 import { expect, test } from 'vitest';
+import { jsx } from '@ecopages/jsx/jsx-runtime';
+import * as z from 'zod/mini';
+import { defineInput } from '@schema-engine/forms';
+import type { ConstraintLogic } from '@schema-engine/forms/schemas';
 import type { ConstraintElement } from '@/components/internals/constraint-element';
 import { createRoot } from '@ecopages/jsx/client';
 import { FormController } from '@/adapters/radiant/controller';
@@ -638,5 +642,61 @@ test('rules set on a constrained field from outside become its baseline for the 
 		expect(code.rules?.maxLength).toBe(5);
 	} finally {
 		cleanup();
+	}
+});
+
+test('an unnamed constrained element in an array row resolves its siblings in that row, before and after hydration', async () => {
+	const note = defineInput({
+		$type: 'note',
+		schema: z.looseObject({
+			$type: z.literal('note'),
+			id: z.string(),
+			constraints: z.optional(z.custom<ConstraintLogic[]>()),
+		}),
+		metadata: { name: 'Note', category: 'input' },
+		render: () => jsx('p', { children: 'note' }),
+	});
+	const noteEngine = createRadiantFormEngine({ elements: [...schemaFormRegistrations, note] });
+	const host = document.createElement('div');
+	document.body.append(host);
+	const root = createRoot(host);
+	const config = noteEngine.validateForm({
+		id: 'unnamed',
+		steps: [
+			{
+				id: 'main',
+				title: 'Main',
+				elements: [
+					{
+						$type: 'arrayElements',
+						id: 'rows',
+						name: 'rows',
+						elements: [
+							{ $type: 'input', id: 'kind', name: 'kind' },
+							{ $type: 'note', id: 'remark', constraints: hideWhen('kind', 'hide') },
+						],
+					},
+				],
+			},
+		],
+	});
+	root.render(
+		FormRenderer({ config, engine: noteEngine, defaultValues: { rows: [{ kind: 'hide' }, { kind: 'show' }] } }),
+	);
+	const hidden = () => [...host.querySelectorAll<HTMLElement>('se-constraint')].map((wrapper) => wrapper.hidden);
+	const form = new FormController(host.querySelector('rui-form')!);
+	try {
+		await expect.poll(() => hidden().length).toBe(2);
+		expect(hidden()).toEqual([true, false]);
+		await expect.poll(() => form.ready).toBe(true);
+		expect(hidden()).toEqual([true, false]);
+		form.setValue('rows.1.kind', 'hide');
+		await expect.poll(hidden).toEqual([true, true]);
+		form.setValue('rows.0.kind', 'show');
+		await expect.poll(hidden).toEqual([false, true]);
+	} finally {
+		form.disconnect();
+		root.unmount();
+		host.remove();
 	}
 });

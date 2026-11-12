@@ -17,6 +17,8 @@ export interface FormElementProps {
 	config: NormalizedElementConfig;
 	engine?: FormEngine;
 	name?: string;
+	/** Path of the enclosing array row or object, which an element without a name resolves its sibling references in. */
+	scopePath?: string;
 	id?: string;
 	instanceId?: string;
 	initialValues?: Record<string, unknown>;
@@ -32,6 +34,7 @@ export function FormElement({
 	config,
 	engine,
 	name,
+	scopePath,
 	id,
 	instanceId,
 	initialValues,
@@ -66,15 +69,20 @@ export function FormElement({
 	}
 
 	const baseRequired = isFieldRequired('rules' in config ? config.rules : undefined);
+	const fieldPath =
+		fieldConstraintContext.fieldPath ??
+		('name' in config ? config.name : undefined) ??
+		scopePath ??
+		id ??
+		('id' in config ? config.id : undefined) ??
+		'';
 	const snapshot = evaluateConstraints({
 		constraints,
 		baseRequired,
-		fieldPath: fieldConstraintContext.fieldPath ?? ('name' in config ? config.name : undefined),
+		fieldPath,
 		values: constraintValues,
 	});
 	const { shouldShow } = snapshot;
-	const fieldName =
-		name ?? ('name' in config ? config.name : undefined) ?? id ?? ('id' in config ? config.id : undefined) ?? '';
 	const fieldHost = mergeFieldGridHost(
 		'grid' in config ? config.grid : undefined,
 		style,
@@ -84,7 +92,7 @@ export function FormElement({
 	return (
 		<ConstraintElement
 			classes={['se-form-field', 'se-form-constraint', className]}
-			data-se-constraint-field={fieldName}
+			data-se-constraint-field={fieldPath}
 			data-se-constraints={JSON.stringify(constraints)}
 			data-se-base-required={baseRequired ? '' : undefined}
 			data-se-grid-theme={fieldHost.themeId}
