@@ -66,6 +66,13 @@ test('adding a row to a nested array leaves the outer array alone', async () => 
 	inner.querySelector<HTMLButtonElement>('.se-form-array__remove')!.click();
 	await expect.poll(() => rows(inner).length).toBe(1);
 	expect(rows(outer).length).toBe(1);
+
+	outer.querySelector<HTMLButtonElement>(':scope > .se-form-array > .se-form-array__add')!.click();
+	await expect.poll(() => rows(outer).length).toBe(2);
+	outer
+		.querySelector<HTMLButtonElement>(':scope > .se-form-array > .se-form-array__item > .se-form-array__remove')!
+		.click();
+	await expect.poll(() => rows(outer).length).toBe(1);
 });
 
 test('Enter on an early wizard step does not submit and shows no errors on later steps', async () => {
