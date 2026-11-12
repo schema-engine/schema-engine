@@ -115,26 +115,24 @@ describe('Radiant form engine resolution', () => {
 		observed.disconnect();
 	});
 
-	test('a connected form instance publishes its recipe after renderer context arrives', async () => {
+	test('a form instance under a renderer that was never given an engine reports one configuration error', async () => {
 		const engine = createRadiantFormEngine();
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
 		const instance = document.createElement('se-form-instance') as FormInstanceElement;
 		instance.config = twoStepForm(engine);
 		renderer.append(instance);
 		document.body.append(renderer);
-		const observed = observeInstanceContext(instance);
+		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
-		await vi.waitFor(() => {
-			expect(observed.isWizard).toBe(false);
-		});
-		renderer.engine = engine;
-		await vi.waitFor(() => {
-			expect(observed.isWizard).toBe(true);
-		});
-		observed.disconnect();
+		expect(instance.engine).toBeUndefined();
+		const reports = warn.mock.calls.filter((call) =>
+			String(call.at(-1)).includes('Could not resolve FormEngine for <se-form-instance>'),
+		);
+		expect(reports).toHaveLength(1);
 	});
 
-	test('a form instance dispatches its form-mount action after renderer context arrives', async () => {
+	test('a form instance dispatches its form-mount action with the engine its renderer was bound to', async () => {
 		const onPush = vi.fn();
 		const engine = createRadiantFormEngine({ actions: [gtmPlugin({ tracker: { push: vi.fn() }, onPush })] });
 		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
@@ -152,10 +150,10 @@ describe('Radiant form engine resolution', () => {
 			],
 		});
 		instance.append(document.createElement('rui-form'));
+		renderer.engine = engine;
 		renderer.append(instance);
 		document.body.append(renderer);
 
-		renderer.engine = engine;
 		await vi.waitFor(() => {
 			expect(onPush).toHaveBeenCalledWith('renderer-engine-arrived', expect.any(Object), expect.any(Object));
 		});

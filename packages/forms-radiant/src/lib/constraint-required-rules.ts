@@ -42,17 +42,3 @@ export function applyConstraintRequired(field: FieldRulesHost, isRequired: boole
 	field.onRulesUpdated?.();
 	return true;
 }
-
-/**
- * Replaces a field's authored rules, keeping the constraint-required state applied over them.
- *
- * @remarks
- * The baseline is cached on the first constraint sync, so rules rebuilt after
- * it, such as a hydrated field's validator once its engine arrives, must
- * replace the cached baseline as well, or the next sync restores the old rules.
- */
-export function replaceBaselineRules(field: FieldRulesHost, rules: FieldRules): void {
-	baselineRules.set(field, rules);
-	field.rules = rules;
-	applyConstraintRequired(field, field.hasAttribute('data-se-constraint-required'));
-}

@@ -33,17 +33,23 @@ test('tags the missing engine warning with the Radiant package and reports each 
 	);
 });
 
-test('stays quiet for a host under a renderer whose engine has not arrived yet', () => {
+test('reports a host under a renderer that was never given an engine', () => {
 	const output = vi.spyOn(console, 'warn').mockImplementation(() => {});
 	const renderer = document.createElement('se-form-renderer');
 	const host = document.createElement('div');
 	renderer.append(host);
 	document.body.append(renderer);
+	output.mockClear();
 
 	expect(resolveFormEngine(host)).toBeUndefined();
-	expect(resolveFormEngine(renderer)).toBeUndefined();
+	expect(resolveFormEngine(host)).toBeUndefined();
 
-	expect(output).not.toHaveBeenCalled();
+	expect(output).toHaveBeenCalledOnce();
+	expect(output).toHaveBeenCalledWith(
+		expect.stringContaining('[schema-engine/forms-radiant]'),
+		expect.any(String),
+		expect.stringContaining('Could not resolve FormEngine for <div>'),
+	);
 });
 
 test('stays quiet for a host that is not attached to the document', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { applyConstraintRequired, replaceBaselineRules } from '@/lib/constraint-required-rules';
+import { applyConstraintRequired } from '@/lib/constraint-required-rules';
 
 const validate = () => true;
 
@@ -49,17 +49,5 @@ describe('applyConstraintRequired', () => {
 
 		expect(applyConstraintRequired(field, true)).toBe(true);
 		expect(nestedResult).toBe(false);
-	});
-
-	test('keeps rules rebuilt after the first sync when required toggles again', () => {
-		const field = document.createElement('se-field');
-		field.setAttribute('data-se-validation-rules', JSON.stringify([]));
-		applyConstraintRequired(field, true);
-
-		replaceBaselineRules(field, { validate });
-		expect(Reflect.get(field, 'rules')).toMatchObject({ required: true, validate });
-
-		applyConstraintRequired(field, false);
-		expect(Reflect.get(field, 'rules')).toMatchObject({ required: undefined, validate });
 	});
 });

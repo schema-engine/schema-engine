@@ -9,12 +9,11 @@ import {
 } from '@ecopages/radiant';
 import type { JSX_PROPS } from '@ecopages/jsx';
 import { getViewRecipe } from '@schema-engine/forms/recipes';
-import { onContextUpdate, provideContext, type ContextProvider } from '@ecopages/radiant/context';
+import { provideContext, type ContextProvider } from '@ecopages/radiant/context';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
 import { flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import { formInstanceContext, type FormInstanceContextValue, type StepStates } from '@/contexts/form-instance-context';
-import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import { connectValidationDependencies } from '@/lib/validation-deps';
 import type { RuiFormElement } from '@ecopages/radiant-ui/form';
@@ -99,19 +98,15 @@ export class FormInstanceElement extends RadiantElement {
 		this.publish();
 	}
 
-	@onContextUpdate({ context: formEngineContext, requestUpdate: false })
-	onFormEngine(value: FormEngineContextValue): void {
-		if (value.engine && !this.engine) {
-			this.engine = value.engine;
-			this.publish();
-		}
-	}
-
-	/** @remarks The `rui-form` is a light-DOM descendant the view authors, so it exists when this host connects. */
+	/**
+	 * @remarks
+	 * The engine is resolved here, once: an explicit `engine`, then the enclosing
+	 * `se-form-renderer`'s context, then the owning render. A host that finds none
+	 * reports a configuration error and stays without one. The `rui-form` is a
+	 * light-DOM descendant the view authors, so it exists when this host connects.
+	 */
 	protected override onConnected(): void {
-		if (!this.engine) {
-			this.engine = resolveFormEngine(this);
-		}
+		this.engine ??= resolveFormEngine(this);
 		this.resetStepState();
 		this.connectForm();
 	}
@@ -131,12 +126,6 @@ export class FormInstanceElement extends RadiantElement {
 	onConfigUpdated(): void {
 		this.resetStepState();
 		this.connectForm();
-	}
-
-	@onUpdated(['engine'])
-	onEngineUpdated(): void {
-		this.connectForm();
-		this.publish();
 	}
 
 	/**

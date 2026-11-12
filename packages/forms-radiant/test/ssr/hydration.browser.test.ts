@@ -16,11 +16,12 @@ await Promise.all([
 	import('@/elements/inputs/form-phone-input'),
 ]);
 
-function mount({ engineAfterConnect = false } = {}) {
+function mount({ bindBeforeUpgrade = false } = {}) {
 	const engine = createHydrationEngine();
-	const renderer = new FormRendererElement();
-	if (!engineAfterConnect) renderer.engine = engine;
-	const root = document.createElement('div');
+	const owner = bindBeforeUpgrade ? document.implementation.createHTMLDocument() : document;
+	const renderer = owner.createElement('se-form-renderer') as FormRendererElement;
+	renderer.engine = engine;
+	const root = owner.createElement('div');
 	root.innerHTML = atob(inject('ssrHydrationHtml'));
 	renderer.append(root);
 	document.body.append(renderer);
@@ -66,13 +67,9 @@ test.each(['confirm', 'choice', 'accepted', 'amount'])(
 	},
 );
 
-test('a hydrated field gains its cross-field validator when the engine arrives late', async () => {
-	const { root, engine, renderer } = mount({ engineAfterConnect: true });
+test('a hydrated field has its cross-field validator from first connect when the engine is bound before upgrade', async () => {
+	const { root } = mount({ bindBeforeUpgrade: true });
 	const field = root.querySelector('se-field[name="confirm"]') as FormFieldElement;
-	await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-	expect(field.rules?.validate).toBeUndefined();
-
-	renderer.engine = engine;
 
 	await expect.poll(() => typeof field.rules?.validate).toBe('function');
 	const store = field.form.store!;

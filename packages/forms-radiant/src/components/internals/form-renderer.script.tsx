@@ -35,7 +35,28 @@ export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
  */
 @customElement('se-form-renderer')
 export class FormRendererElement extends RadiantElement {
-	@state engine?: FormEngine;
+	@state private boundEngine?: FormEngine;
+	/**
+	 * The engine every host below this renderer resolves at connect time.
+	 *
+	 * @remarks
+	 * The engine of a server-rendered form is not serialized, so the app binds it
+	 * explicitly, before the renderer's children connect: assign it to an element
+	 * that is not upgraded yet (still detached from its document, or before
+	 * `se-form-renderer` is defined), and the renderer adopts it when it upgrades.
+	 * The children then resolve it from the context the renderer publishes on connect.
+	 * A host resolves it once, at connect, and never waits for a later one; a host
+	 * without an engine reports a configuration error.
+	 *
+	 * This is an accessor over private state, not a decorated field, because a
+	 * field would replace the value assigned before the upgrade when the element is constructed.
+	 */
+	get engine(): FormEngine | undefined {
+		return this.boundEngine;
+	}
+	set engine(engine: FormEngine | undefined) {
+		this.boundEngine = engine;
+	}
 	@prop({ type: Object }) defaultValues?: Record<string, unknown>;
 
 	@provideContext<typeof formEngineContext>({
@@ -48,13 +69,26 @@ export class FormRendererElement extends RadiantElement {
 	constructor() {
 		super();
 		registerSsrPreparationCallback(this, () => this.publishContext());
+		this.adoptEngineAssignedBeforeUpgrade();
+	}
+
+	/**
+	 * @remarks
+	 * Assigning `engine` to an element before its class is defined creates an own
+	 * property that shadows the accessor, so it is removed and assigned again.
+	 */
+	private adoptEngineAssignedBeforeUpgrade(): void {
+		if (!Object.hasOwn(this, 'engine')) return;
+		const { engine } = this;
+		Reflect.deleteProperty(this, 'engine');
+		this.engine = engine;
 	}
 
 	protected override onConnected(): void {
 		this.publishContext();
 	}
 
-	@onUpdated(['engine'])
+	@onUpdated(['boundEngine'])
 	onEngineUpdated(): void {
 		this.publishContext();
 	}
