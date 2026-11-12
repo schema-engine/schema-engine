@@ -191,7 +191,7 @@ export function FormField({
 		<FormFieldElement
 			{...props}
 			classes={['se-form-field', className]}
-			data-se-grid-theme={fieldHost.themeId}
+			data-se-theme={fieldHost.themeId}
 			style={fieldHost.style}
 			{...getAppearanceAttributes(appearance)}
 			rules={withCustomValidate(toFieldRules({ rules: validationRules, name: validation?.name }), validate)}

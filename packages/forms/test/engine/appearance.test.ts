@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { BaseFieldSchema } from '@/schemas/base-field';
+import { createLayoutTheme, getDefaultLayoutTheme } from '@schema-engine/layout';
 import { defineInput } from '@/types';
 import { defineFormRecipe, defineRecipeSpec } from '@/recipes';
 import { cardSpec, cardWizardSpec } from '@/recipes/built-in-specs';
@@ -50,42 +51,34 @@ const form = (
 
 describe('engine appearance vocabulary', () => {
 	test('ships the size and surface axes', () => {
-		expect(engine.getAppearance().axes).toEqual({
+		expect(engine.getLayout().axes).toEqual({
 			size: ['compact', 'default', 'comfortable'],
 			surface: ['flat', 'outlined', 'elevated'],
 		});
 	});
 
 	test('a host adds an axis and extends a built-in one', () => {
-		const themed = createFormEngine({ appearance: { tone: ['neutral', 'brand'], size: ['dense'] } });
-		expect(themed.getAppearance().axes).toEqual({
+		const themed = createFormEngine({ layout: { appearance: { tone: ['neutral', 'brand'], size: ['dense'] } } });
+		expect(themed.getLayout().axes).toEqual({
 			size: ['compact', 'default', 'comfortable', 'dense'],
 			surface: ['flat', 'outlined', 'elevated'],
 			tone: ['neutral', 'brand'],
 		});
 	});
 
-	test('token values compile into zero-specificity rules scoped by the theme id', () => {
-		const themed = createFormEngine({ appearance: { tone: { brand: { '--se-tone-accent': '#f60' } } } });
-		const { id, css } = themed.getAppearance();
-		expect(css).toContain(`[data-se-appearance-theme="${id}"]`);
-		expect(css).toContain('[data-se-tone="brand"]');
+	test('token values compile into the engine stylesheet, scoped by the one theme id', () => {
+		const themed = createFormEngine({
+			layout: { appearance: { tone: { brand: { '--se-tone-accent': '#f60' } } } },
+		});
+		const { id, css } = themed.getLayout();
+		expect(css).toContain(`:where([data-se-theme="${id}"] [data-se-tone="brand"],`);
 		expect(css).toContain('--se-tone-accent:#f60');
-		expect(css).toContain(':where([data-se-appearance-theme="' + id + '"] [data-se-tone="brand"],');
-		expect(css.replaceAll(/:where\([^)]*\)/g, '')).not.toContain('[data-se-');
-	});
-
-	test('the built-in size paddings fall back to the host theme spacing', () => {
-		const { css } = engine.getAppearance();
-		expect(css).toContain('--se-size-padding:var(--space-block, 1rem);');
-		expect(css).toContain('--se-size-padding:var(--space-block-lg, 1.5rem);');
-		expect(css).toContain('--se-size-padding:var(--space-block-xl, 2rem);');
 	});
 
 	test('identical vocabularies share a theme id and different ones do not', () => {
-		const a = createFormEngine({ appearance: { tone: ['x'] } }).getAppearance().id;
-		expect(createFormEngine({ appearance: { tone: ['x'] } }).getAppearance().id).toBe(a);
-		expect(createFormEngine({ appearance: { tone: ['y'] } }).getAppearance().id).not.toBe(a);
+		const a = createFormEngine({ layout: { appearance: { tone: ['x'] } } }).getLayout().id;
+		expect(createFormEngine({ layout: { appearance: { tone: ['x'] } } }).getLayout().id).toBe(a);
+		expect(createFormEngine({ layout: { appearance: { tone: ['y'] } } }).getLayout().id).not.toBe(a);
 	});
 
 	test.each([
@@ -96,15 +89,55 @@ describe('engine appearance vocabulary', () => {
 		['an axis name a renderer already uses', { step: ['a'] }],
 		['a token value that could close the style element', { tone: { brand: { '--x': '</style>' } } }],
 	])('rejects %s', (_name, appearance) => {
-		expect(() => createFormEngine({ appearance })).toThrowError(/appearance/i);
+		expect(() => createFormEngine({ layout: { appearance } })).toThrowError(/appearance/i);
 	});
 
-	test('extend inherits the appearance vocabulary', () => {
-		const themed = createFormEngine({ appearance: { tone: ['neutral', 'brand'] } });
+	test('extend inherits the layout theme', () => {
+		const themed = createFormEngine({ layout: { appearance: { tone: ['neutral', 'brand'] } } });
 		const extended = themed.extend({ elements: [note] });
-		expect(extended.getAppearance().axes).toEqual(themed.getAppearance().axes);
+		expect(extended.getLayout()).toBe(themed.getLayout());
 		expect(extended.validateForm(form({ appearance: { tone: 'brand' } })).appearance).toEqual({ tone: 'brand' });
 		expect(() => extended.validateForm(form({ appearance: { density: 'high' } }))).toThrowError(/density/);
+	});
+});
+
+describe('the layout option', () => {
+	test('a compiled theme is used as given, so engines can share it', () => {
+		const theme = createLayoutTheme({
+			grid: { minColumnWidth: '10rem' },
+			appearance: { tone: ['neutral', 'brand'] },
+		});
+		const first = createFormEngine({ layout: theme });
+		const second = createFormEngine({ elements: [note], layout: theme });
+		expect(first.getLayout()).toBe(theme);
+		expect(second.getLayout()).toBe(theme);
+		expect(first.getLayout().id).toBe(second.getLayout().id);
+	});
+
+	test('inline options compile to the same theme as createLayoutTheme', () => {
+		const options = { grid: { minColumnWidth: '10rem' }, appearance: { tone: ['neutral', 'brand'] } };
+		expect(createFormEngine({ layout: options }).getLayout().id).toBe(createLayoutTheme(options).id);
+	});
+
+	test('an engine without a layout runs on the library default theme', () => {
+		expect(createFormEngine().getLayout()).toBe(getDefaultLayoutTheme());
+	});
+
+	test('a compiled theme is checked against the renderer attribute names it skipped at compile time', () => {
+		const theme = createLayoutTheme({ appearance: { step: ['a'] } });
+		expect(() => createFormEngine({ layout: theme })).toThrowError(/'step'.*reserved/);
+	});
+
+	test('an element may declare an axis the theme adds', () => {
+		const theme = createLayoutTheme({ appearance: { tone: ['brand'] } });
+		const toned = defineInput({
+			$type: 'toned',
+			schema: z.extend(BaseFieldSchema, { $type: z.literal('toned') }),
+			appearanceAxes: ['tone'],
+			metadata: { name: 'Toned', category: 'input' },
+			render: () => null,
+		});
+		expect(() => createFormEngine({ elements: [toned], layout: theme })).not.toThrow();
 	});
 });
 
@@ -151,7 +184,9 @@ describe('registration axis declarations', () => {
 			render: () => null,
 		});
 		expect(() => createFormEngine({ elements: [toned] })).toThrowError(/unknown appearance axis 'tone'/);
-		expect(() => createFormEngine({ elements: [toned], appearance: { tone: ['brand'] } })).not.toThrow();
+		expect(() =>
+			createFormEngine({ elements: [toned], layout: { appearance: { tone: ['brand'] } } }),
+		).not.toThrow();
 	});
 
 	test('a recipe slot declaring an axis the vocabulary lacks fails the engine build, naming both', () => {
@@ -270,7 +305,7 @@ describe('appearance validation', () => {
 	test('a host axis the element does not declare fails on that element', () => {
 		const themed = createFormEngine({
 			elements: [fieldset, note],
-			appearance: { tone: ['neutral', 'brand'] },
+			layout: { appearance: { tone: ['neutral', 'brand'] } },
 		});
 		expect(() =>
 			themed.validateForm(
@@ -289,7 +324,10 @@ describe('appearance validation', () => {
 			metadata: { name: 'Toned', category: 'input' },
 			render: () => null,
 		});
-		const themed = createFormEngine({ elements: [toned, plain], appearance: { tone: ['neutral', 'brand'] } });
+		const themed = createFormEngine({
+			elements: [toned, plain],
+			layout: { appearance: { tone: ['neutral', 'brand'] } },
+		});
 		const config = themed.validateForm(
 			form({ appearance: { tone: 'brand' } }, [
 				{ $type: 'toned', id: 'a', name: 'a' },

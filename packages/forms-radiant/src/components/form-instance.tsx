@@ -54,7 +54,7 @@ export function FormInstance({
 				config={config}
 				defaultValues={defaultValues}
 				initialValues={flattenValues(initialValues)}
-				appearanceThemeId={engine.getAppearance().id}
+				layoutThemeId={engine.getLayout().id}
 			>
 				<RecipeRenderer
 					config={config}

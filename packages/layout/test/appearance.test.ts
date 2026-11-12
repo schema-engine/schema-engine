@@ -3,6 +3,7 @@ import {
 	checkAppearance,
 	compileAppearance,
 	getAppearanceAttributes,
+	getAppearanceCss,
 	getDefaultCompiledAppearance,
 	mergeAppearance,
 	pickSupportedAppearance,
@@ -25,24 +26,18 @@ describe('compileAppearance', () => {
 	});
 
 	test('token values compile into zero-specificity rules scoped by the theme id', () => {
-		const { id, css } = compileAppearance({ tone: { brand: { '--se-tone-accent': '#f60' } } });
-		expect(css).toContain(`[data-se-appearance-theme="${id}"]`);
+		const css = getAppearanceCss(compileAppearance({ tone: { brand: { '--se-tone-accent': '#f60' } } }), 'lx');
+		expect(css).toContain('[data-se-theme="lx"]');
 		expect(css).toContain('--se-tone-accent:#f60');
-		expect(css).toContain(`:where([data-se-appearance-theme="${id}"] [data-se-tone="brand"],`);
+		expect(css).toContain(':where([data-se-theme="lx"] [data-se-tone="brand"],');
 		expect(css.replaceAll(/:where\([^)]*\)/g, '')).not.toContain('[data-se-');
 	});
 
 	test('the built-in size paddings fall back to the host theme spacing', () => {
-		const { css } = compileAppearance();
+		const css = getAppearanceCss(compileAppearance(), 'lx');
 		expect(css).toContain('--se-size-padding:var(--space-block, 1rem);');
 		expect(css).toContain('--se-size-padding:var(--space-block-lg, 1.5rem);');
 		expect(css).toContain('--se-size-padding:var(--space-block-xl, 2rem);');
-	});
-
-	test('identical vocabularies share a theme id and different ones do not', () => {
-		const a = compileAppearance({ tone: ['x'] }).id;
-		expect(compileAppearance({ tone: ['x'] }).id).toBe(a);
-		expect(compileAppearance({ tone: ['y'] }).id).not.toBe(a);
 	});
 
 	test('the library default is shared', () => {

@@ -117,7 +117,7 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 					<div class="se-form-array__item" key={id} data-se-row-id={id}>
 						<div
 							class="se-form-array__fields se-form-grid"
-							data-se-grid-theme={childrenHost.themeId}
+							data-se-theme={childrenHost.themeId}
 							style={childrenHost.style}
 						>
 							<FormElements
@@ -398,7 +398,7 @@ export class SeFormArray extends RadiantElement {
 export function FormArrayElements(config: ArrayElementsProps) {
 	const { ssrInitialRows: _ssrInitialRows, initialFormValues, ...fieldConfig } = config;
 	const engine = resolveFormEngine();
-	const fieldHost = mergeFieldGridHost(fieldConfig.grid, fieldConfig.style, engine?.getGridTheme().id);
+	const fieldHost = mergeFieldGridHost(fieldConfig.grid, fieldConfig.style, engine?.getLayout().id);
 	const initialValues = structuredClone(initialFormValues ?? {});
 	const initialRows = createInitialArrayValue({ ...fieldConfig, initialFormValues }, initialValues);
 	if (initialRows) setValueAtPath(initialValues, fieldConfig.name, initialRows);
@@ -421,7 +421,7 @@ export function FormArrayElements(config: ArrayElementsProps) {
 		<fieldset
 			classes={['se-form-field', 'se-form-array-field', fieldConfig.className]}
 			aria-label={fieldConfig.label ? undefined : fieldConfig.name}
-			data-se-grid-theme={fieldHost.themeId}
+			data-se-theme={fieldHost.themeId}
 			style={fieldHost.style}
 			{...getAppearanceAttributes(fieldConfig.appearance)}
 		>

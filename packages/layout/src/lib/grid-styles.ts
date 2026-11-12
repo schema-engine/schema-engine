@@ -23,7 +23,7 @@ import {
  * and the default minimum column width. The document owns layout intent:
  * columns, responsive changes, gap selection, item placement.
  *
- * Compile once at the engine boundary ({@link compileGridTheme}); renderers
+ * Compile once at the engine boundary ({@link createLayoutTheme}); renderers
  * emit the resulting stylesheet and per-container CSS variables inline. Breakpoint
  * behavior lives entirely in the generated media queries — no runtime
  * observers, and layout is correct with JavaScript disabled.
@@ -107,20 +107,6 @@ export interface NormalizedGridTheme {
 	/** Token overrides per breakpoint; only the tokens a width changes. */
 	readonly responsive: Readonly<Partial<Record<GridBreakpointToken, Readonly<GridGapScale>>>>;
 	readonly minColumnWidth: string;
-	/** Stable identity of the normalized theme; scopes the generated stylesheet. */
-	readonly id: string;
-}
-
-/**
- * Immutable engine grid configuration: the resolved theme and its stylesheet.
- *
- * @remarks
- * Produced once by {@link compileGridTheme}. Renderers consume this value;
- * {@link FormEngine.extend} carries the same object unchanged.
- */
-export interface CompiledGrid {
-	readonly theme: NormalizedGridTheme;
-	readonly css: string;
 }
 
 const DEFAULT_BREAKPOINTS: Record<GridBreakpointToken, string> = {
@@ -194,8 +180,6 @@ type CssLengthUnit = 'px' | 'rem' | 'em';
 /** CSS property, its variable base name, and the value used when unauthored. */
 type ResponsiveProperty = readonly [property: string, variable: string, fallback: string];
 
-let cachedDefaultCompiledGrid: CompiledGrid | undefined;
-
 function deepFreeze<T extends object>(value: T): T {
 	Object.freeze(value);
 	for (const child of Object.values(value)) {
@@ -222,7 +206,7 @@ function resolveResponsiveGap(
 }
 
 /**
- * Resolves the immutable grid theme from engine options.
+ * Resolves the immutable grid theme from the `grid` option of a layout theme.
  *
  * @remarks
  * Threshold overrides replace only the named breakpoint; the rest keep
@@ -231,7 +215,7 @@ function resolveResponsiveGap(
  * Media queries follow viewport width — a form inside a narrow sidebar
  * still receives the desktop rules of the wide screen it lives on.
  */
-function resolveGridTheme(options?: GridThemeOptions): NormalizedGridTheme {
+export function resolveGridTheme(options?: GridThemeOptions): NormalizedGridTheme {
 	const breakpoints = { ...DEFAULT_BREAKPOINTS, ...options?.breakpoints };
 	const gap = { ...DEFAULT_GAP, ...options?.gap };
 	const responsive = resolveResponsiveGap(options?.responsive);
@@ -242,34 +226,7 @@ function resolveGridTheme(options?: GridThemeOptions): NormalizedGridTheme {
 		gap,
 		responsive,
 		minColumnWidth,
-		id: gridThemeId({ breakpoints, gap, responsive, minColumnWidth }),
 	});
-}
-
-/**
- * Compiles engine grid options into the frozen theme-plus-stylesheet pair.
- *
- * @remarks
- * This is the single construction boundary. Callers that only need the
- * library default should use {@link getDefaultCompiledGrid} so the pair is
- * shared across engines.
- */
-export function compileGridTheme(options?: GridThemeOptions): CompiledGrid {
-	const theme = resolveGridTheme(options);
-	return Object.freeze({ theme, css: getGridThemeCss(theme) });
-}
-
-/** Frozen library-default compiled grid; shared by engines built without a `grid` option. */
-export function getDefaultCompiledGrid(): CompiledGrid {
-	if (!cachedDefaultCompiledGrid) {
-		cachedDefaultCompiledGrid = compileGridTheme();
-	}
-	return cachedDefaultCompiledGrid;
-}
-
-/** Frozen library-default theme; shared by engines built without a `grid` option. */
-export function getDefaultGridTheme(): NormalizedGridTheme {
-	return getDefaultCompiledGrid().theme;
 }
 
 function isCssLengthUnit(unit: string | undefined): unit is CssLengthUnit {
@@ -309,7 +266,7 @@ function assertBreakpointOrder(breakpoints: Record<GridBreakpointToken, string>)
  * These come from consumer options, so `{ md, lg }` and `{ lg, md }` describe
  * one theme with different `JSON.stringify` output. Hashing that directly would
  * mint two ids for the same theme and emit its stylesheet twice under different
- * scopes, defeating the sharing {@link getDefaultCompiledGrid} exists for.
+ * scopes, defeating the sharing of one compiled theme between engines.
  */
 function canonicalResponsiveGap(
 	responsive: Readonly<Partial<Record<GridBreakpointToken, Readonly<GridGapScale>>>>,
@@ -325,21 +282,14 @@ function canonicalResponsiveGap(
 	});
 }
 
-/** Stable theme identity from the normalized options. */
-function gridThemeId(
-	theme: Pick<NormalizedGridTheme, 'breakpoints' | 'gap' | 'responsive' | 'minColumnWidth'>,
-): string {
-	const serialized = JSON.stringify({
+/** The normalized grid theme in a stable shape, for hashing into a layout theme id. */
+export function canonicalGridTheme(theme: NormalizedGridTheme) {
+	return {
 		breakpoints: theme.breakpoints,
 		gap: theme.gap,
 		responsive: canonicalResponsiveGap(theme.responsive),
 		minColumnWidth: theme.minColumnWidth,
-	});
-	let hash = 5381;
-	for (let index = 0; index < serialized.length; index += 1) {
-		hash = ((hash << 5) + hash + serialized.charCodeAt(index)) | 0;
-	}
-	return `g${(hash >>> 0).toString(36)}`;
+	};
 }
 
 /**
@@ -439,14 +389,15 @@ function inheritanceResets(...tables: readonly (readonly ResponsiveProperty[])[]
  * Generates the theme-scoped stylesheet.
  *
  * @remarks
- * Rules are scoped under `[data-se-grid-theme="<id>"]`, which the renderer
- * places on every form grid container, so two engines with different themes
- * cannot overwrite each other. Field rules are scoped under the grid that
- * carries the theme attribute on each field host so nested grids do not leak
- * styles across themes.
+ * Rules are scoped under `[data-se-theme="<id>"]`, which the renderer
+ * places on every grid container and item, so two engines with different themes
+ * cannot overwrite each other. Item rules are scoped under the item that
+ * carries the theme attribute so nested grids do not leak styles across themes.
+ *
+ * @param themeId The id of the layout theme this grid belongs to.
  */
-function getGridThemeCss(theme: NormalizedGridTheme): string {
-	const scope = `[data-se-grid-theme="${theme.id}"]`;
+export function getGridThemeCss(theme: NormalizedGridTheme, themeId: string): string {
+	const scope = `[data-se-theme="${themeId}"]`;
 	const gridScope = `.se-form-grid${scope}`;
 	const fieldScope = `.se-form-field${scope}`;
 	const tokens = GridGapTokens.map((token) => `${gapBaseVariable(token)}:${theme.gap[token]};`).join('');

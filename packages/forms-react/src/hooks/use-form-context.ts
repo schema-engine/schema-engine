@@ -1,7 +1,7 @@
 import { useContext, useMemo } from 'react';
 import type { StepStates } from '@schema-engine/forms';
 import type { EngineOutputMaps } from '@schema-engine/forms/engine/form-engine';
-import { getDefaultGridTheme, getGridVariables, type CssVariables } from '@schema-engine/layout';
+import { getDefaultLayoutTheme, getGridVariables, type CssVariables } from '@schema-engine/layout';
 import { FormEngineContext, FormInstanceContext } from '../components/provider';
 import { FormStepStateContext } from '../components/form-step-state-context';
 import type { FormEngineContextValue, FormInstanceContextValue } from '../components/provider';
@@ -47,16 +47,16 @@ export function useOptionalFormEngine<
 }
 
 /**
- * Theme id of the grid that owns the field being rendered.
+ * Id of the layout theme that owns the field being rendered.
  *
  * @remarks
- * Field hosts set `data-se-grid-theme` to this value so the engine's generated
+ * Field hosts set `data-se-theme` to this value so the engine's generated
  * stylesheet matches them and nested grids stay isolated. Single resolver for
  * the React renderer — the engine context is the only source, with the library
  * default for hosts rendered outside a `FormEngineProvider`.
  */
-export function useGridThemeId(): string {
-	return useOptionalFormEngine()?.engine.getGridTheme().id ?? getDefaultGridTheme().id;
+export function useLayoutThemeId(): string {
+	return (useOptionalFormEngine()?.engine.getLayout() ?? getDefaultLayoutTheme()).id;
 }
 
 /**
@@ -71,13 +71,13 @@ export function useGridThemeId(): string {
  */
 export function useChildGridProps(elements: readonly unknown[]): {
 	className: string;
-	'data-se-grid-theme': string;
+	'data-se-theme': string;
 	style: CssVariables;
 } {
-	const theme = useOptionalFormEngine()?.engine.getGridTheme() ?? getDefaultGridTheme();
+	const layout = useOptionalFormEngine()?.engine.getLayout() ?? getDefaultLayoutTheme();
 	return {
 		className: 'se-form-grid',
-		'data-se-grid-theme': theme.id,
-		style: getGridVariables(undefined, theme, elements),
+		'data-se-theme': layout.id,
+		style: getGridVariables(undefined, layout.grid, elements),
 	};
 }

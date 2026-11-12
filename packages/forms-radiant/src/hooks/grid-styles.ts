@@ -1,5 +1,5 @@
 import {
-	getDefaultGridTheme,
+	getDefaultLayoutTheme,
 	getGridItemVariables,
 	getGridVariables,
 	type CssVariables,
@@ -17,7 +17,7 @@ type HostStyle = Record<string, string | number | undefined>;
  * Single theme-id resolver for the Radiant renderer: an explicit id from the
  * renderer, else the engine rendering this field, else the library default for
  * hosts rendered outside any engine. Callers set
- * `data-se-grid-theme={themeId}` so the engine's generated field rules match.
+ * `data-se-theme={themeId}` so the engine's generated field rules match.
  */
 export function mergeFieldGridHost(
 	grid?: ElementGridConfig,
@@ -25,7 +25,7 @@ export function mergeFieldGridHost(
 	themeId?: string,
 ): { themeId: string; style: HostStyle } {
 	return {
-		themeId: themeId ?? resolveFormEngine()?.getGridTheme().id ?? getDefaultGridTheme().id,
+		themeId: themeId ?? (resolveFormEngine()?.getLayout() ?? getDefaultLayoutTheme()).id,
 		style: { ...getGridItemVariables(grid), ...style },
 	};
 }
@@ -35,7 +35,7 @@ export function mergeFieldGridHost(
  *
  * @remarks
  * A container (a fieldset, an array row) lays its direct children out the way a
- * step does: put `se-form-grid`, `data-se-grid-theme={themeId}` and `style` on
+ * step does: put `se-form-grid`, `data-se-theme={themeId}` and `style` on
  * the wrapper of its `FormElements`. The grid takes twelve tracks when a child
  * sets `width` or `offset`, and otherwise stays the engine's single column. The
  * theme comes from the given engine, else the engine rendering this element,
@@ -45,6 +45,6 @@ export function mergeChildrenGridHost(
 	elements: readonly unknown[],
 	engine?: FormEngine,
 ): { themeId: string; style: CssVariables } {
-	const theme = (engine ?? resolveFormEngine())?.getGridTheme() ?? getDefaultGridTheme();
-	return { themeId: theme.id, style: getGridVariables(undefined, theme, elements) };
+	const layout = (engine ?? resolveFormEngine())?.getLayout() ?? getDefaultLayoutTheme();
+	return { themeId: layout.id, style: getGridVariables(undefined, layout.grid, elements) };
 }

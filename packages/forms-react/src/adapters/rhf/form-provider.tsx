@@ -165,7 +165,7 @@ export function FormProvider<
 						onSubmit={form.handleSubmit(handleSubmit)}
 						className={runtimeConfig.className}
 						style={runtimeConfig.style}
-						data-se-appearance-theme={engine.getAppearance().id}
+						data-se-theme={engine.getLayout().id}
 						{...getAppearanceAttributes(runtimeConfig.appearance)}
 						noValidate
 					>

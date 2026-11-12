@@ -9,9 +9,8 @@
  */
 export const RENDERER_DATA_ATTRIBUTES = [
 	'step',
-	'grid-theme',
-	'appearance-theme',
-	'appearance-css',
+	'theme',
+	'theme-css',
 	'constraint-field',
 	'constraints',
 	'base-required',

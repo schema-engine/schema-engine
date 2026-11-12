@@ -5,7 +5,7 @@ import { BaseFieldSchema } from '@/schemas/base-field';
 import { defineFormRecipe, defineRecipeSpec } from '@/recipes';
 import { cardSpec } from '@/recipes/built-in-specs';
 import { defineInput } from '@/types';
-import type { ResolvedAppearanceAxes } from '@schema-engine/layout';
+import { createLayoutTheme, type ResolvedAppearanceAxes } from '@schema-engine/layout';
 
 const note = defineInput({
 	$type: 'note',
@@ -18,7 +18,7 @@ const note = defineInput({
 const engine = createFormEngine({
 	elements: [note],
 	recipes: [defineFormRecipe(cardSpec, {})],
-	appearance: { tone: ['neutral', 'brand'], size: ['dense'] },
+	layout: { appearance: { tone: ['neutral', 'brand'], size: ['dense'] } },
 });
 const element = { $type: 'note' as const, id: 'n', name: 'n' };
 const steps = [{ id: 'main', title: 'Main', elements: [element] }];
@@ -117,4 +117,20 @@ engine.defineForm({
 		// @ts-expect-error -- 'density' is not an axis, even beside a known one
 		shell: { appearance: { surface: 'elevated', density: 'high' } },
 	},
+});
+
+const sharedTheme = createLayoutTheme({ appearance: { tone: ['neutral', 'brand'], size: ['dense'] } });
+const sharedEngine = createFormEngine({ elements: [note], layout: sharedTheme });
+
+sharedEngine.defineForm({
+	id: 'compiled-theme',
+	appearance: { size: 'dense', tone: 'brand' },
+	steps,
+});
+
+sharedEngine.defineForm({
+	id: 'compiled-theme-value',
+	// @ts-expect-error -- 'loud' is not a tone value of the compiled theme
+	appearance: { tone: 'loud' },
+	steps,
 });

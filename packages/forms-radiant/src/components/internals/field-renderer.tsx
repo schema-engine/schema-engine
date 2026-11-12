@@ -86,7 +86,7 @@ export function FormElement({
 	const fieldHost = mergeFieldGridHost(
 		'grid' in config ? config.grid : undefined,
 		style,
-		resolvedEngine.getGridTheme().id,
+		resolvedEngine.getLayout().id,
 	);
 
 	return (
@@ -95,7 +95,7 @@ export function FormElement({
 			data-se-constraint-field={fieldPath}
 			data-se-constraints={JSON.stringify(constraints)}
 			data-se-base-required={baseRequired ? '' : undefined}
-			data-se-grid-theme={fieldHost.themeId}
+			data-se-theme={fieldHost.themeId}
 			style={fieldHost.style}
 			hidden={!shouldShow}
 		>

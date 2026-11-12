@@ -108,7 +108,7 @@ export function FormSubmissionAlert(config: SubmissionAlertProps) {
 	return (
 		<SeSubmissionAlert
 			classes={['se-form-field', config.className]}
-			data-se-grid-theme={fieldHost.themeId}
+			data-se-theme={fieldHost.themeId}
 			style={fieldHost.style}
 			config={config}
 		/>

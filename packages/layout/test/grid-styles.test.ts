@@ -1,18 +1,15 @@
 import { describe, expect, test } from 'vitest';
-import {
-	compileGridTheme,
-	getDefaultCompiledGrid,
-	getDefaultGridTheme,
-	getGridItemVariables,
-	getGridVariables,
-} from '@/lib/grid-styles';
+import { getGridItemVariables, getGridVariables, type GridThemeOptions } from '@/lib/grid-styles';
+import { createLayoutTheme, getDefaultLayoutTheme } from '@/lib/layout-theme';
 import { usesGridWidths } from '@/lib/grid-placement';
 import { ElementGridConfigSchema, GridGapTokens, GridLayoutConfigSchema, type GridLayoutConfig } from '@/schemas/grid';
 
-const theme = (options?: Parameters<typeof compileGridTheme>[0]) => compileGridTheme(options).theme;
-const css = (options?: Parameters<typeof compileGridTheme>[0]) => compileGridTheme(options).css;
+const layout = (grid?: GridThemeOptions) => createLayoutTheme({ grid });
+const theme = (grid?: GridThemeOptions) => layout(grid).grid;
+const css = (grid?: GridThemeOptions) => layout(grid).css;
+const themeId = (grid?: GridThemeOptions) => layout(grid).id;
 
-describe('compileGridTheme', () => {
+describe('the grid half of a layout theme', () => {
 	test('keeps library defaults for unconfigured tokens', () => {
 		expect(theme().breakpoints).toEqual({ sm: '40rem', md: '48rem', lg: '64rem', xl: '80rem', '2xl': '96rem' });
 		expect(theme().gap.default).toBe('var(--space-stack, 1rem)');
@@ -44,8 +41,8 @@ describe('compileGridTheme', () => {
 	});
 
 	test('produces a stable identity from normalized options', () => {
-		expect(theme({ breakpoints: { lg: '70rem' } }).id).toBe(theme({ breakpoints: { lg: '70rem' } }).id);
-		expect(theme().id).not.toBe(theme({ minColumnWidth: '10rem' }).id);
+		expect(themeId({ breakpoints: { lg: '70rem' } })).toBe(themeId({ breakpoints: { lg: '70rem' } }));
+		expect(themeId()).not.toBe(themeId({ minColumnWidth: '10rem' }));
 	});
 
 	test('returns a frozen theme graph', () => {
@@ -56,21 +53,21 @@ describe('compileGridTheme', () => {
 		expect(resolved.gap.default).toBe('var(--space-stack, 1rem)');
 	});
 
-	test('shares the library-default compiled pair', () => {
-		expect(getDefaultCompiledGrid()).toBe(getDefaultCompiledGrid());
-		expect(getDefaultGridTheme()).toBe(getDefaultCompiledGrid().theme);
+	test('shares the library-default theme', () => {
+		expect(getDefaultLayoutTheme()).toBe(getDefaultLayoutTheme());
+		expect(getDefaultLayoutTheme().grid).toEqual(theme());
 	});
 });
 
 describe('generated stylesheet', () => {
 	test('scopes rules to the theme identity', () => {
-		expect(css()).toContain(`.se-form-grid[data-se-grid-theme="${theme().id}"]{`);
+		expect(css()).toContain(`.se-form-grid[data-se-theme="${themeId()}"]{`);
 		expect(css()).not.toMatch(/(^|\n)\.se-form-grid\{/);
 	});
 
 	test('scopes field rules to the field host theme attribute', () => {
-		expect(css()).toContain(`.se-form-field[data-se-grid-theme="${theme().id}"]{`);
-		expect(css()).not.toContain(`.se-form-grid[data-se-grid-theme="${theme().id}"] .se-form-field{`);
+		expect(css()).toContain(`.se-form-field[data-se-theme="${themeId()}"]{`);
+		expect(css()).not.toContain(`.se-form-grid[data-se-theme="${themeId()}"] .se-form-field{`);
 	});
 
 	test('generates media queries per configured breakpoint', () => {
@@ -361,17 +358,17 @@ describe('responsive gap tokens', () => {
 	});
 
 	test('theme identity ignores the order breakpoints and tokens were authored in', () => {
-		const a = theme({ responsive: { md: { default: '1.25rem', loose: '2rem' }, lg: { default: '1.5rem' } } });
-		const b = theme({ responsive: { lg: { default: '1.5rem' }, md: { loose: '2rem', default: '1.25rem' } } });
-		expect(a.id).toBe(b.id);
+		const a = themeId({ responsive: { md: { default: '1.25rem', loose: '2rem' }, lg: { default: '1.5rem' } } });
+		const b = themeId({ responsive: { lg: { default: '1.5rem' }, md: { loose: '2rem', default: '1.25rem' } } });
+		expect(a).toBe(b);
 	});
 
 	test('a ramped theme is a different theme from an unramped one', () => {
-		expect(theme(ramped).id).not.toBe(theme({ gap: { default: '1rem' } }).id);
+		expect(themeId(ramped)).not.toBe(themeId({ gap: { default: '1rem' } }));
 	});
 
 	test('an empty responsive entry does not change the theme or its output', () => {
-		expect(theme({ responsive: { md: {} } }).id).toBe(theme().id);
+		expect(themeId({ responsive: { md: {} } })).toBe(themeId());
 		expect(css({ responsive: { md: {} } })).toBe(css());
 	});
 

@@ -2,10 +2,10 @@ import * as z from 'zod/mini';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { ElementConfig } from '@schema-engine/forms/schemas';
-import type { ElementGridConfig } from '@schema-engine/layout';
+import type { ElementGridConfig, LayoutInput } from '@schema-engine/layout';
 import { rhfAdapter } from '@/adapters/react-hook-form';
 import { useControlledFormElement } from '@/hooks/use-field';
-import { useGridThemeId } from '@/hooks/use-form-context';
+import { useLayoutThemeId } from '@/hooks/use-form-context';
 import { createFormEngine } from '@schema-engine/forms';
 import {
 	SSR_WIDTH_FIELDS,
@@ -28,19 +28,21 @@ type SsrInputConfig = z.infer<typeof ssrInputSchema>;
 
 function SsrFixtureInput(config: SsrInputConfig) {
 	const { containerStyles } = useControlledFormElement(config as unknown as ElementConfig);
-	const gridThemeId = useGridThemeId();
+	const layoutThemeId = useLayoutThemeId();
 	const label = config.label ?? config.name;
 
 	return (
-		<div className="se-form-field" data-se-grid-theme={gridThemeId} style={containerStyles}>
+		<div className="se-form-field" data-se-theme={layoutThemeId} style={containerStyles}>
 			<label htmlFor={config.id}>{label}</label>
 			<input id={config.id} name={config.name} aria-label={label} readOnly />
 		</div>
 	);
 }
 
-function createSsrAcceptanceEngine() {
+/** The fixture engine; pass `layout` to put it on a shared or customised layout theme. */
+export function createSsrAcceptanceEngine<const TLayout extends LayoutInput = Record<never, never>>(layout?: TLayout) {
 	return createFormEngine({
+		layout,
 		elements: [
 			FieldSetRegistration,
 			ArrayElementRegistration,

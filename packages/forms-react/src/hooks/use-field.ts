@@ -8,11 +8,11 @@ import { useFormField } from '@/adapters/context';
 import { useConstraintLogic } from '@/hooks/use-constraint-logic';
 import { FieldHostContext, FieldConstraintContext } from '@/contexts/field-constraint-context';
 import { isElementRequired } from '@/hooks/is-element-required';
-import { useGridThemeId, useOptionalFormEngine } from '@/hooks/use-form-context';
+import { useLayoutThemeId, useOptionalFormEngine } from '@/hooks/use-form-context';
 
 export interface FieldHostProps {
 	className: string;
-	'data-se-grid-theme': string;
+	'data-se-theme': string;
 	style: React.CSSProperties;
 	[appearanceAttribute: `data-se-${string}`]: string;
 }
@@ -55,13 +55,13 @@ export function useFieldClassName(): string | undefined {
  * matches on `.se-form-field` scoped by the owning engine's theme id.
  */
 export function useFieldHost(grid?: ElementGridConfig, style?: React.CSSProperties): FieldHostProps {
-	const themeId = useGridThemeId();
+	const themeId = useLayoutThemeId();
 	const appearance = useFieldAppearanceAttributes();
 	const className = useFieldClassName();
 
 	return {
 		className: className ? `se-form-field ${className}` : 'se-form-field',
-		'data-se-grid-theme': themeId,
+		'data-se-theme': themeId,
 		style: { ...getGridItemVariables(grid), ...style },
 		...appearance,
 	};

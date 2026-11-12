@@ -12,3 +12,4 @@ export * from './lib/appearance';
 export * from './lib/deep-readonly';
 export * from './lib/grid-placement';
 export * from './lib/grid-styles';
+export * from './lib/layout-theme';

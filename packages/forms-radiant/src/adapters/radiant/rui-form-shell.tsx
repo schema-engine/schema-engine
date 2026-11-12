@@ -33,21 +33,21 @@ export function ConfiguredRuiForm({
 	config,
 	defaultValues = {},
 	initialValues,
-	appearanceThemeId,
+	layoutThemeId,
 	children,
 }: {
 	config: FormConfigView;
 	defaultValues?: Partial<Record<string, unknown>>;
 	initialValues?: Record<string, unknown>;
-	/** The engine's appearance theme id, which scopes its token rules to this form. */
-	appearanceThemeId?: string;
+	/** The engine's layout theme id, which scopes its token rules to this form. */
+	layoutThemeId?: string;
 	children: JsxRenderable;
 }) {
 	return (
 		<RuiForm
 			class={config.className}
 			style={config.style}
-			data-se-appearance-theme={appearanceThemeId}
+			data-se-theme={layoutThemeId}
 			{...getAppearanceAttributes(config.appearance)}
 			mode={config.validationMode ?? 'onSubmit'}
 			reValidateMode={config.reValidateMode ?? 'onChange'}

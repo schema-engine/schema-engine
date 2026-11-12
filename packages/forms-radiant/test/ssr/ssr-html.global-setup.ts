@@ -18,7 +18,7 @@ declare module 'vitest' {
 		ssrSteppedHtml: string;
 		ssrNestedWidthsHtml: string;
 		ssrHydrationHtml: string;
-		ssrLayoutCompiled: { theme: { id: string }; css: string };
+		ssrLayoutTheme: { id: string; css: string };
 		ssrArrayHtml: string;
 		ssrMinItemsHtml: string;
 		ssrObjectArrayDefaultsHtml: string;
@@ -34,7 +34,7 @@ declare module 'vitest' {
  * renderer's real output instead of markup the test rebuilt itself.
  */
 export default function setup(project: TestProject): void {
-	const { theme, css } = getSsrAcceptanceEngine().getCompiledGrid();
+	const { id, css } = getSsrAcceptanceEngine().getLayout();
 	project.provide('ssrHydrationHtml', Buffer.from(renderHydrationHtml()).toString('base64'));
 	project.provide('ssrLayoutHtml', renderSsrLayoutAcceptanceHtml());
 	project.provide('ssrWidthsHtml', renderSsrWidthsAcceptanceHtml());
@@ -44,7 +44,7 @@ export default function setup(project: TestProject): void {
 		'ssrNestedWidthsHtml',
 		renderSsrNestedWidthsAcceptanceHtml().replaceAll('</script>', '<\\/script>'),
 	);
-	project.provide('ssrLayoutCompiled', { theme: { id: theme.id }, css });
+	project.provide('ssrLayoutTheme', { id, css });
 	const arrayHtml = renderArraySsrAcceptanceHtml().replaceAll('</script>', '<\\/script>');
 	project.provide('ssrArrayHtml', arrayHtml);
 	const minItemsHtml = renderArraySsrAcceptanceHtml({ contacts: [] }).replaceAll('</script>', '<\\/script>');

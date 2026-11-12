@@ -11,9 +11,9 @@
  * Walking the document tree to inherit picks belongs to the domain, because only it knows the
  * tree's shape.
  *
- * Compile once at the engine boundary ({@link compileAppearance}). Token rules are emitted inside
- * `:where()`, so they add no specificity and an author's `className` always wins; they are scoped to
- * the theme by `data-se-appearance-theme`, so two engines with different tokens cannot overwrite
+ * Compile once at the engine boundary ({@link createLayoutTheme} does, with the grid). Token rules are
+ * emitted inside `:where()`, so they add no specificity and an author's `className` always wins; they
+ * are scoped to the theme by `data-se-theme`, so two engines with different tokens cannot overwrite
  * each other.
  */
 
@@ -30,12 +30,10 @@ export type AppearanceOptions = Readonly<Record<string, AppearanceAxisOptions>>;
 export type AppearanceSelection = Readonly<Record<string, string>>;
 
 export interface CompiledAppearance {
-	/** Identity of the vocabulary, written to `data-se-appearance-theme` on the root element. */
-	readonly id: string;
 	/** Axis name to its closed value list, built-in axes first. */
 	readonly axes: Readonly<Record<string, readonly string[]>>;
-	/** Token rules for every value that declares tokens. Empty when none do. */
-	readonly css: string;
+	/** The custom properties each value sets, by axis and value. Values that set none are empty. */
+	readonly tokens: Readonly<Record<string, Readonly<Record<string, AppearanceTokens>>>>;
 }
 
 const BUILT_IN_APPEARANCE = {
@@ -158,27 +156,27 @@ function mergeAxes(
 	return axes;
 }
 
-function renderTokenRules(themeId: string, axes: Map<string, Map<string, AppearanceTokens>>): string {
+/**
+ * The token rules of a compiled appearance, scoped to the layout theme with the given id.
+ *
+ * @remarks
+ * Every rule sits inside `:where()`, so it adds no specificity, and matches both a descendant of the
+ * theme root and the root itself. Empty when no value declares tokens.
+ */
+export function getAppearanceCss(appearance: CompiledAppearance, themeId: string): string {
 	const rules: string[] = [];
-	for (const [axisName, values] of axes) {
-		for (const [value, tokens] of values) {
-			const declarations = Object.entries(tokens).map(([token, tokenValue]) => `${token}:${tokenValue};`);
+	const scope = `[data-se-theme="${themeId}"]`;
+	for (const [axisName, values] of Object.entries(appearance.axes)) {
+		for (const value of values) {
+			const declarations = Object.entries(appearance.tokens[axisName]?.[value] ?? {}).map(
+				([token, tokenValue]) => `${token}:${tokenValue};`,
+			);
 			if (declarations.length === 0) continue;
-			const scope = `[data-se-appearance-theme="${themeId}"]`;
 			const match = `[data-se-${axisName}="${value}"]`;
 			rules.push(`:where(${scope} ${match},${scope}${match}){${declarations.join('')}}`);
 		}
 	}
 	return rules.join('\n');
-}
-
-function appearanceThemeId(axes: Map<string, Map<string, AppearanceTokens>>): string {
-	const serialized = JSON.stringify([...axes].map(([axis, values]) => [axis, [...values]]));
-	let hash = 5381;
-	for (let index = 0; index < serialized.length; index += 1) {
-		hash = ((hash << 5) + hash + serialized.charCodeAt(index)) | 0;
-	}
-	return `a${(hash >>> 0).toString(36)}`;
 }
 
 /** Inputs to {@link compileAppearance} that come from the domain rather than the author. */
@@ -207,13 +205,15 @@ export function compileAppearance(
 	compiler: AppearanceCompilerOptions = {},
 ): CompiledAppearance {
 	const axes = mergeAxes(options, new Set(compiler.reservedNames));
-	const id = appearanceThemeId(axes);
 	return Object.freeze({
-		id,
 		axes: Object.freeze(
 			Object.fromEntries([...axes].map(([axis, values]) => [axis, Object.freeze([...values.keys()])])),
 		),
-		css: renderTokenRules(id, axes),
+		tokens: Object.freeze(
+			Object.fromEntries(
+				[...axes].map(([axis, values]) => [axis, Object.freeze(Object.fromEntries(values))] as const),
+			),
+		),
 	});
 }
 

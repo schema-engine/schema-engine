@@ -9,13 +9,13 @@ import type {
 } from '@/builder/types.utils';
 import type { FormEngine } from './form-engine';
 import type { SchemaMetadataCatalog } from './schema-metadata-catalog';
-import type { AppearanceOptions, GridThemeOptions, ResolvedAppearanceAxes } from '@schema-engine/layout';
+import type { LayoutAxes, LayoutInput } from '@schema-engine/layout';
 
 export interface CreateFormEngineOptions<
 	TElements extends readonly ElementRegistrationConstraint[] = readonly [],
 	TRecipes extends readonly RecipeRegistrationConstraint[] = readonly [],
 	TActions extends readonly ActionRegistrationConstraint[] = readonly [],
-	TAppearance extends AppearanceOptions = Record<never, never>,
+	TLayout extends LayoutInput = Record<never, never>,
 > {
 	elements?: TElements;
 	recipes?: TRecipes;
@@ -34,39 +34,43 @@ export interface CreateFormEngineOptions<
 	 * without `view` stays without one and `validateForm` warns.
 	 */
 	defaultWizardRecipe?: string;
-	/** Engine-level grid vocabulary: breakpoint thresholds, gap tokens, default min column width. */
-	grid?: GridThemeOptions;
 	/**
-	 * Engine-level appearance vocabulary: the named axes a form picks values on, over the built-in
-	 * `size` (`compact | default | comfortable`) and `surface` (`flat | outlined | elevated`).
+	 * The layout theme: a compiled theme from `createLayoutTheme`, or inline `{ grid, appearance }` options.
 	 *
 	 * @remarks
-	 * An axis lists its values by name, or maps each value to the CSS custom properties it sets.
-	 * Listing more values for a built-in axis extends it. Elements and recipe slots declare which axes
-	 * they support. {@link FormEngine.extend} inherits it.
+	 * `grid` is the grid vocabulary (breakpoint thresholds, gap tokens, default min column width).
+	 * `appearance` is the named axes a form picks values on, over the built-in `size`
+	 * (`compact | default | comfortable`) and `surface` (`flat | outlined | elevated`); an axis lists
+	 * its values by name, or maps each value to the CSS custom properties it sets. Elements and
+	 * recipe slots declare which axes they support.
+	 *
+	 * Pass one compiled theme to several engines and they share its `data-se-theme` and stylesheet,
+	 * so an embedded form matches its page. Inline options compile a theme of the engine's own, with
+	 * the renderer's `data-se-*` attribute names reserved so an axis cannot reuse one.
+	 * {@link FormEngine.extend} inherits it.
 	 */
-	appearance?: TAppearance;
+	layout?: TLayout;
 }
 
-/** Options for {@link FormEngine.extend}; grid theme, appearance vocabulary and default wizard recipe are always inherited from the source engine. */
+/** Options for {@link FormEngine.extend}; layout theme and default wizard recipe are always inherited from the source engine. */
 export type ExtendFormEngineOptions<
 	TElements extends readonly ElementRegistrationConstraint[] = readonly [],
 	TRecipes extends readonly RecipeRegistrationConstraint[] = readonly [],
 	TActions extends readonly ActionRegistrationConstraint[] = readonly [],
-> = Omit<CreateFormEngineOptions<TElements, TRecipes, TActions>, 'grid' | 'appearance' | 'defaultWizardRecipe'>;
+> = Omit<CreateFormEngineOptions<TElements, TRecipes, TActions>, 'layout' | 'defaultWizardRecipe'>;
 
 /** {@link FormEngine} specialization produced from registration lists. */
 export type FormEngineFromOptions<
 	TElements extends readonly ElementRegistrationConstraint[],
 	TRecipes extends readonly RecipeRegistrationConstraint[],
 	TActions extends readonly ActionRegistrationConstraint[],
-	TAppearance extends AppearanceOptions = Record<never, never>,
+	TLayout extends LayoutInput = Record<never, never>,
 > = FormEngine<
 	MergedRegistrationMap<TElements>,
 	MergedRegistrationMap<TRecipes>,
 	MergedActionRegistrationMap<TActions>,
 	{ elements: MergedOutputMap<TElements>; recipes: MergedOutputMap<TRecipes>; actions: MergedOutputMap<TActions> },
-	ResolvedAppearanceAxes<TAppearance>
+	LayoutAxes<TLayout>
 >;
 
 /**
@@ -84,17 +88,16 @@ export function createFormEngine<
 	const TElements extends readonly ElementRegistrationConstraint[] = readonly [],
 	const TRecipes extends readonly RecipeRegistrationConstraint[] = readonly [],
 	const TActions extends readonly ActionRegistrationConstraint[] = readonly [],
-	const TAppearance extends AppearanceOptions = Record<never, never>,
+	const TLayout extends LayoutInput = Record<never, never>,
 >(
-	options?: CreateFormEngineOptions<TElements, TRecipes, TActions, TAppearance>,
-): FormEngineFromOptions<TElements, TRecipes, TActions, TAppearance> {
+	options?: CreateFormEngineOptions<TElements, TRecipes, TActions, TLayout>,
+): FormEngineFromOptions<TElements, TRecipes, TActions, TLayout> {
 	return buildFormEngine({
 		elements: options?.elements,
 		recipes: options?.recipes,
 		actions: options?.actions,
 		catalog: options?.catalog,
-		grid: options?.grid,
-		appearance: options?.appearance,
+		layout: options?.layout,
 		defaultWizardRecipe: options?.defaultWizardRecipe,
-	}) as unknown as FormEngineFromOptions<TElements, TRecipes, TActions, TAppearance>;
+	}) as unknown as FormEngineFromOptions<TElements, TRecipes, TActions, TLayout>;
 }

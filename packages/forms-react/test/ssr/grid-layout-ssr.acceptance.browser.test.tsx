@@ -17,26 +17,26 @@ import {
 
 describe('SSR grid layout acceptance', () => {
 	test('responsive layout at two widths without application JavaScript', async () => {
-		await expectSsrGridAcceptance(renderSsrLayoutAcceptanceHtml(), getSsrAcceptanceEngine().getCompiledGrid());
+		await expectSsrGridAcceptance(renderSsrLayoutAcceptanceHtml(), getSsrAcceptanceEngine().getLayout());
 	});
 
 	test('named widths and offsets lay out on twelve tracks at two widths', async () => {
-		await expectSsrWidthsAcceptance(renderSsrWidthsAcceptanceHtml(), getSsrAcceptanceEngine().getCompiledGrid());
+		await expectSsrWidthsAcceptance(renderSsrWidthsAcceptanceHtml(), getSsrAcceptanceEngine().getLayout());
 	});
 
 	test('a fieldset and an array row lay their children out on their own twelve tracks', async () => {
 		await expectSsrNestedWidthsAcceptance(
 			renderSsrNestedWidthsAcceptanceHtml(),
-			getSsrAcceptanceEngine().getCompiledGrid(),
+			getSsrAcceptanceEngine().getLayout(),
 			['Nest', 'Row'],
 		);
 	});
 
 	test('A drawn layout places fields', async () => {
-		await expectSsrAreasAcceptance(renderSsrAreasAcceptanceHtml(), getSsrAcceptanceEngine().getCompiledGrid());
+		await expectSsrAreasAcceptance(renderSsrAreasAcceptanceHtml(), getSsrAcceptanceEngine().getLayout());
 	});
 
 	test('The template changes by breakpoint and each wizard step draws its own template', async () => {
-		await expectSsrSteppedAcceptance(renderSsrSteppedAcceptanceHtml(), getSsrAcceptanceEngine().getCompiledGrid());
+		await expectSsrSteppedAcceptance(renderSsrSteppedAcceptanceHtml(), getSsrAcceptanceEngine().getLayout());
 	});
 });

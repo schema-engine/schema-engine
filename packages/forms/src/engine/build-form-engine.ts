@@ -12,13 +12,12 @@ import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from 
 import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
 import { logger } from '@/lib/logger';
 import {
-	compileAppearance,
-	compileGridTheme,
-	getDefaultCompiledGrid,
-	type AppearanceOptions,
-	type CompiledAppearance,
-	type CompiledGrid,
-	type GridThemeOptions,
+	assertAxesNotReserved,
+	createLayoutTheme,
+	getDefaultLayoutTheme,
+	isLayoutTheme,
+	type LayoutInput,
+	type LayoutTheme,
 } from '@schema-engine/layout';
 import { RENDERER_DATA_ATTRIBUTES } from '@/lib/renderer-data-attributes';
 import { createFormConfigShape } from '@/schemas/form-config-shape';
@@ -97,11 +96,11 @@ function registerSchemaMetadata(
  * Rejects an axis a registration declares that the engine's vocabulary does not, so a typo such as
  * `'sise'` fails the build instead of silently making the axis unsupported.
  */
-function assertDeclaredAxes(owner: string, axes: readonly string[] | undefined, appearance: CompiledAppearance): void {
+function assertDeclaredAxes(owner: string, axes: readonly string[] | undefined, layout: LayoutTheme): void {
 	for (const axis of axes ?? []) {
-		if (!(axis in appearance.axes)) {
+		if (!(axis in layout.axes)) {
 			throw new Error(
-				`${owner} declares unknown appearance axis '${axis}'. Declared axes: ${Object.keys(appearance.axes).join(', ')}. Add it with createFormEngine({ appearance: { ${axis}: [...] } }).`,
+				`${owner} declares unknown appearance axis '${axis}'. Declared axes: ${Object.keys(layout.axes).join(', ')}. Add it with createFormEngine({ layout: { appearance: { ${axis}: [...] } } }).`,
 			);
 		}
 	}
@@ -113,30 +112,44 @@ export type FormEngineRegistrationLists = {
 	actions?: readonly ActionRegistrationConstraint[];
 	catalog?: SchemaMetadataCatalog;
 	defaultWizardRecipe?: string;
-} & ({ grid?: GridThemeOptions; compiledGrid?: never } | { grid?: never; compiledGrid: CompiledGrid }) &
-	(
-		| { appearance?: AppearanceOptions; compiledAppearance?: never }
-		| { appearance?: never; compiledAppearance: CompiledAppearance }
-	);
+	layout?: LayoutInput;
+};
+
+/**
+ * The layout theme an engine runs on: the library default, a theme compiled elsewhere, or one
+ * compiled from inline options.
+ *
+ * @remarks
+ * Forms passes its renderer attributes as `reservedNames`, so an axis cannot overwrite a
+ * `data-se-*` attribute a renderer writes. A theme compiled elsewhere skipped that check, so it is
+ * re-checked here.
+ */
+function resolveLayout(layout: LayoutInput | undefined): LayoutTheme {
+	if (layout === undefined) return getDefaultLayoutTheme();
+	if (isLayoutTheme(layout)) {
+		assertAxesNotReserved(layout, RENDERER_DATA_ATTRIBUTES);
+		return layout;
+	}
+	return createLayoutTheme(layout, { reservedNames: RENDERER_DATA_ATTRIBUTES });
+}
 
 /**
  * Single construction path for {@link createFormEngine} and {@link FormEngine.extend}.
  * Later duplicate `$type` values overwrite earlier ones (last-wins).
  */
 export function buildFormEngine(lists: FormEngineRegistrationLists) {
-	const compiledAppearance =
-		lists.compiledAppearance ?? compileAppearance(lists.appearance, { reservedNames: RENDERER_DATA_ATTRIBUTES });
+	const layout = resolveLayout(lists.layout);
 	const elementRegistry = createRegistry('Element', (lists.elements ?? []) as readonly AnyElementRegistration[]);
 	const recipeRegistry = createRegistry('Recipe', (lists.recipes ?? []) as readonly AnyRecipeRegistration[]);
 	const actionRegistry = createRegistry('Action', (lists.actions ?? []) as readonly AnyActionRegistration[]);
 
 	for (const element of elementRegistry.all()) {
-		assertDeclaredAxes(`Element '${element.$type}'`, element.appearanceAxes, compiledAppearance);
+		assertDeclaredAxes(`Element '${element.$type}'`, element.appearanceAxes, layout);
 	}
 	for (const recipe of recipeRegistry.all()) {
 		assertRecipeKindSlots(recipe);
 		for (const [slot, axes] of Object.entries(recipe.appearanceAxes ?? {})) {
-			assertDeclaredAxes(`Recipe '${recipe.$type}' slot '${slot}'`, axes, compiledAppearance);
+			assertDeclaredAxes(`Recipe '${recipe.$type}' slot '${slot}'`, axes, layout);
 		}
 	}
 
@@ -180,16 +193,12 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 	const actionConfigValidators = createActionConfigValidatorMap(actionRegistry.all());
 	const schemaArtifacts = createFormEngineSchemaArtifacts(metadataCatalog, formConfigSchema, actionConfigValidators);
 
-	const compiledGrid =
-		lists.compiledGrid ?? (lists.grid === undefined ? getDefaultCompiledGrid() : compileGridTheme(lists.grid));
-
 	return new FormEngine({
 		elements: elementRegistry,
 		recipes: recipeRegistry,
 		actions: actionRegistry,
 		schemaArtifacts,
-		compiledGrid,
-		compiledAppearance,
+		layout,
 		validationRegistry: validationRegistryInstance,
 		defaultWizardRecipe,
 	});

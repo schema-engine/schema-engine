@@ -29,7 +29,7 @@ function dataAttributeNames(): Set<string> {
 
 describe('renderer data attributes', () => {
 	test('every data-se-* name a renderer writes is reserved or a built-in axis', () => {
-		const axes = Object.keys(createFormEngine().getAppearance().axes);
+		const axes = Object.keys(createFormEngine().getLayout().axes);
 		const unaccounted = [...dataAttributeNames()].filter(
 			(name) => !(RENDERER_DATA_ATTRIBUTES as readonly string[]).includes(name) && !axes.includes(name),
 		);
@@ -37,6 +37,6 @@ describe('renderer data attributes', () => {
 	});
 
 	test.each(RENDERER_DATA_ATTRIBUTES)('an axis named %s is rejected', (name) => {
-		expect(() => createFormEngine({ appearance: { [name]: ['a'] } })).toThrowError(/reserved/);
+		expect(() => createFormEngine({ layout: { appearance: { [name]: ['a'] } } })).toThrowError(/reserved/);
 	});
 });

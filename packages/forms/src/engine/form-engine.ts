@@ -21,12 +21,7 @@ import type {
 import type { ExtendFormEngineOptions } from './create-form-engine';
 import { buildFormEngine } from './build-form-engine';
 import { SchemaMetadataCatalog } from './schema-metadata-catalog';
-import type {
-	CompiledAppearance,
-	CompiledGrid,
-	NormalizedGridTheme,
-	ResolvedAppearanceAxes,
-} from '@schema-engine/layout';
+import type { LayoutTheme, ResolvedAppearanceAxes } from '@schema-engine/layout';
 import type { ValidationRegistry } from '@/schemas/validation/validation-registry';
 import {
 	describeRecipeFromRegistration,
@@ -45,8 +40,7 @@ export interface EngineRegistries {
 	recipes: RecipeRegistry;
 	actions: ActionRegistrationRegistry;
 	schemaArtifacts: FormEngineSchemaArtifacts;
-	compiledGrid: CompiledGrid;
-	compiledAppearance: CompiledAppearance;
+	layout: LayoutTheme;
 	validationRegistry: ValidationRegistry;
 	defaultWizardRecipe?: string;
 }
@@ -60,7 +54,7 @@ export class FormEngine<
 > {
 	private readonly registries: EngineRegistries;
 	private readonly schemaArtifacts: FormEngineSchemaArtifacts;
-	private readonly compiledGrid: CompiledGrid;
+	private readonly layout: LayoutTheme;
 	private readonly validationRegistry: ValidationRegistry;
 
 	/**
@@ -76,13 +70,12 @@ export class FormEngine<
 			recipes: registries.recipes,
 			actions: registries.actions,
 			schemaArtifacts: registries.schemaArtifacts,
-			compiledGrid: registries.compiledGrid,
-			compiledAppearance: registries.compiledAppearance,
+			layout: registries.layout,
 			validationRegistry: registries.validationRegistry,
 			defaultWizardRecipe: registries.defaultWizardRecipe,
 		};
 		this.schemaArtifacts = registries.schemaArtifacts;
-		this.compiledGrid = registries.compiledGrid;
+		this.layout = registries.layout;
 		this.validationRegistry = registries.validationRegistry;
 
 		logger.debug('FormEngine initialized', {
@@ -125,35 +118,21 @@ export class FormEngine<
 	}
 
 	/**
-	 * The engine's immutable compiled grid: the resolved theme and its stylesheet.
+	 * The engine's immutable layout theme: grid vocabulary, appearance vocabulary, one id and one stylesheet.
 	 *
 	 * @remarks
-	 * Compiled once when the engine is built. Renderers emit `css` inside the
-	 * rendered form markup (React hoists and dedupes by key; Radiant renders it
-	 * inline), so SSR output is styled with no FOUC and no runtime injection.
+	 * Compiled once when the engine is built (or taken as given from `createFormEngine({ layout })`).
+	 * Renderers emit `css` inside the rendered form markup (React hoists and dedupes by key; Radiant
+	 * renders it inline), so SSR output is styled with no FOUC and no runtime injection, and put `id`
+	 * on the form, grid and item elements as `data-se-theme`. Engines built on the same theme share
+	 * its id and stylesheet.
 	 */
-	getCompiledGrid(): CompiledGrid {
-		return this.compiledGrid;
-	}
-
-	/**
-	 * The engine's immutable appearance vocabulary: axes, their values, and the token stylesheet.
-	 *
-	 * @remarks
-	 * Renderers emit `css` once per form next to the grid theme and put `id` on the form element as
-	 * `data-se-appearance-theme`, which scopes the token rules to this engine's forms.
-	 */
-	getAppearance(): CompiledAppearance {
-		return this.registries.compiledAppearance;
+	getLayout(): LayoutTheme {
+		return this.layout;
 	}
 
 	getValidationRegistry(): ValidationRegistry {
 		return this.validationRegistry;
-	}
-
-	/** The engine's immutable grid theme (computed once at construction). */
-	getGridTheme(): NormalizedGridTheme {
-		return this.compiledGrid.theme;
 	}
 
 	getAction(id: string): AnyActionRegistration | undefined {
@@ -204,7 +183,7 @@ export class FormEngine<
 			getElement: (id) => this.getElement(id),
 			getAction: (id) => this.getAction(id),
 			hasValidation: (type) => this.validationRegistry.has(type),
-			appearance: this.registries.compiledAppearance,
+			axes: this.layout.axes,
 		}) as unknown as NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>;
 	}
 
@@ -230,7 +209,7 @@ export class FormEngine<
 		return validateElementConfig(config, {
 			getElement: (id) => this.getElement(id),
 			hasValidation: (type) => this.validationRegistry.has(type),
-			appearance: this.registries.compiledAppearance,
+			axes: this.layout.axes,
 		}) as unknown as NormalizedElementConfig<TOutputs['elements']>;
 	}
 
@@ -349,8 +328,7 @@ export class FormEngine<
 			recipes: [...this.getAllRecipes(), ...(options?.recipes ?? [])],
 			actions: [...this.getAllActions(), ...(options?.actions ?? [])],
 			catalog: options?.catalog ?? this.schemaArtifacts.metadataCatalog,
-			compiledGrid: this.compiledGrid,
-			compiledAppearance: this.registries.compiledAppearance,
+			layout: this.layout,
 			defaultWizardRecipe: this.registries.defaultWizardRecipe,
 		}) as unknown as FormEngine<
 			LastWinsMerge<TElements, MergedRegistrationMap<TNewElements>>,

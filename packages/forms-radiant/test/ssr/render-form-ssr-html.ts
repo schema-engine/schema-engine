@@ -2,7 +2,7 @@ import { renderToString } from '@ecopages/jsx/server';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
-import type { ElementGridConfig } from '@schema-engine/layout';
+import type { ElementGridConfig, LayoutInput } from '@schema-engine/layout';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { SSR_WIDTH_FIELDS, ssrAreasForm, ssrSteppedForm } from '../../../../test-utils/ssr-grid-acceptance';
@@ -31,7 +31,7 @@ function SsrFixtureInput(config: SsrInputConfig) {
 
 	return jsx('div', {
 		class: 'se-form-field',
-		'data-se-grid-theme': host.themeId,
+		'data-se-theme': host.themeId,
 		style: host.style,
 		children: [
 			jsx('label', { for: config.id, children: label }),
@@ -40,8 +40,10 @@ function SsrFixtureInput(config: SsrInputConfig) {
 	});
 }
 
-function createSsrAcceptanceEngine() {
+/** The fixture engine; pass `layout` to put it on a shared or customised layout theme. */
+export function createSsrAcceptanceEngine<const TLayout extends LayoutInput = Record<never, never>>(layout?: TLayout) {
 	return createFormEngine({
+		layout,
 		elements: [
 			{
 				$type: 'ssr-input',

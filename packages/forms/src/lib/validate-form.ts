@@ -62,8 +62,8 @@ export interface ValidateFormOptions {
 	getAction: (id: string) => AnyActionRegistration | undefined;
 	hasValidation: (type: string) => boolean;
 	parseFormConfig?: (config: unknown) => FormConfig;
-	/** Appearance vocabulary the picks are checked against. Defaults to the built-in `size` and `surface` axes. */
-	appearance?: CompiledAppearance;
+	/** Appearance axes the picks are checked against. Defaults to the built-in `size` and `surface` axes. */
+	axes?: CompiledAppearance['axes'];
 }
 
 function formatIssuePath(path: StandardSchemaIssue['path']): string {
@@ -639,10 +639,10 @@ function brandElementTree(
  */
 export function validateElementConfig(
 	config: unknown,
-	options: Pick<ValidateFormOptions, 'getElement' | 'hasValidation' | 'appearance'>,
+	options: Pick<ValidateFormOptions, 'getElement' | 'hasValidation' | 'axes'>,
 ): NormalizedElementConfig {
 	const parsed = parseElementNode(config, options.getElement, options.hasValidation, '', {
-		axes: (options.appearance ?? getDefaultCompiledAppearance()).axes,
+		axes: options.axes ?? getDefaultCompiledAppearance().axes,
 		inherited: {},
 	});
 	if (parsed.issues.length > 0 || !parsed.item) {
@@ -692,7 +692,7 @@ export function validateFormConfig(config: unknown, options: ValidateFormOptions
 			itemKind,
 		);
 
-	const { axes } = options.appearance ?? getDefaultCompiledAppearance();
+	const axes = options.axes ?? getDefaultCompiledAppearance().axes;
 	const formScope: AppearanceScope = { axes, inherited: {} };
 	const formAppearance = resolveAppearance(envelope.appearance, formScope, { subject: 'The form', location: 'form' });
 	issues.push(...formAppearance.issues);

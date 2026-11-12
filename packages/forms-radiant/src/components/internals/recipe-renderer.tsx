@@ -20,12 +20,8 @@ import { FormStep } from '@/components/form-step';
  * `se-form-step` hosts bind their own `hidden` attribute to the instance's
  * step state, so SSR emits the whole form and step switching is pure DOM.
  */
-function GridThemeStyle({ themeId, css }: { themeId: string; css: string }): JsxRenderable {
-	return jsx('style', { 'data-se-grid-theme': themeId, children: css });
-}
-
-function AppearanceThemeStyle({ themeId, css }: { themeId: string; css: string }): JsxRenderable {
-	return jsx('style', { 'data-se-appearance-css': themeId, children: css });
+function LayoutThemeStyle({ themeId, css }: { themeId: string; css: string }): JsxRenderable {
+	return jsx('style', { 'data-se-theme-css': themeId, children: css });
 }
 
 export function RecipeRenderer({
@@ -42,8 +38,7 @@ export function RecipeRenderer({
 	initialValues?: Record<string, unknown>;
 }): JsxRenderable {
 	const values = expandValues(initialValues ?? collectFormDefaultValues(config));
-	const { theme, css: gridThemeCss } = engine.getCompiledGrid();
-	const appearance = engine.getAppearance();
+	const layout = engine.getLayout();
 	const viewConfig = (config.view as Record<string, unknown> | undefined) ?? {};
 	const meta = createFormMeta(config);
 	const slotContext = (slot: Exclude<RecipeSlot, 'shell'>) => ({
@@ -54,8 +49,7 @@ export function RecipeRenderer({
 
 	const content = (
 		<>
-			<GridThemeStyle themeId={theme.id} css={gridThemeCss} />
-			{appearance.css === '' ? null : <AppearanceThemeStyle themeId={appearance.id} css={appearance.css} />}
+			<LayoutThemeStyle themeId={layout.id} css={layout.css} />
 			{config.steps.map((step, index) => (
 				<FormStep
 					key={step.id}
@@ -69,8 +63,8 @@ export function RecipeRenderer({
 					{step.elements.length ? (
 						<div
 							class="se-form-elements se-form-grid"
-							data-se-grid-theme={theme.id}
-							style={getGridVariables(stepGrid(config, step), theme, step.elements)}
+							data-se-theme={layout.id}
+							style={getGridVariables(stepGrid(config, step), layout.grid, step.elements)}
 						>
 							<FormElements
 								elements={step.elements}
