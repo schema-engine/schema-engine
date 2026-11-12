@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest';
+import type { ConstraintElement } from '@/components/internals/constraint-element';
 import { createRoot } from '@ecopages/jsx/client';
 import { FormController } from '@/adapters/radiant/controller';
 import { FormRenderer } from '@/components/internals/form-renderer';
@@ -435,5 +436,189 @@ test('turning require on and off keeps the authored rule objects', async () => {
 		expect(code.rules?.validate).toBe(before?.validate);
 	} finally {
 		cleanup();
+	}
+});
+
+async function mountForm(elements: Record<string, unknown>[], defaultValues?: Record<string, unknown>) {
+	const host = document.createElement('div');
+	document.body.append(host);
+	const root = createRoot(host);
+	const config = engine.validateForm({ id: 'hosts', steps: [{ id: 'main', title: 'Main', elements }] });
+	root.render(FormRenderer({ config, engine, defaultValues }));
+	const form = new FormController(host.querySelector('rui-form')!);
+	await expect.poll(() => form.ready).toBe(true);
+	return {
+		form,
+		host,
+		cleanup: () => {
+			form.disconnect();
+			root.unmount();
+			host.remove();
+		},
+	};
+}
+
+const hideWhen = (field: string, value: string) => [{ field, operator: 'equals', value, action: 'hide' }];
+
+const rowForm = [
+	{
+		$type: 'arrayElements',
+		id: 'rows',
+		name: 'rows',
+		elements: [
+			{ $type: 'input', id: 'kind', name: 'kind' },
+			{ $type: 'input', id: 'tag', name: 'tag', constraints: hideWhen('kind', 'hide') },
+		],
+	},
+];
+
+test('changing constraints or fieldPath on a connected host re-evaluates it', async () => {
+	const { form, host, cleanup } = await mountForm(
+		[
+			{ $type: 'input', id: 'mode', name: 'mode' },
+			{ $type: 'input', id: 'ref', name: 'ref', constraints: hideWhen('mode', 'hide') },
+		],
+		{ mode: '' },
+	);
+	try {
+		const wrapper = host.querySelector<ConstraintElement>('se-constraint')!;
+		form.setValue('mode', 'hide');
+		await expect.poll(() => wrapper.hidden).toBe(true);
+
+		wrapper.constraints = hideWhen('mode', 'other') as typeof wrapper.constraints;
+		await expect.poll(() => wrapper.hidden).toBe(false);
+
+		wrapper.constraints = hideWhen('mode', 'hide') as typeof wrapper.constraints;
+		await expect.poll(() => wrapper.hidden).toBe(true);
+	} finally {
+		cleanup();
+	}
+});
+
+test('changing the fieldPath of a connected host resolves its siblings in the new row', async () => {
+	const { host, cleanup } = await mountForm(rowForm, { rows: [{ kind: 'hide' }, { kind: 'show' }] });
+	try {
+		const wrapper = () => host.querySelector<ConstraintElement>('[data-se-constraint-field="rows.0.tag"]')!;
+		const first = wrapper();
+		await expect.poll(() => first.hidden).toBe(true);
+
+		first.fieldPath = 'rows.1.tag';
+
+		await expect.poll(() => first.hidden).toBe(false);
+	} finally {
+		cleanup();
+	}
+});
+
+test('a require released on a touched field clears its error', async () => {
+	const { form, host, cleanup } = await mountForm([
+		{ $type: 'input', id: 'mode', name: 'mode' },
+		{
+			$type: 'input',
+			id: 'code',
+			name: 'code',
+			constraints: [{ field: 'mode', operator: 'equals', value: 'need', action: 'require' }],
+		},
+	]);
+	try {
+		const code = host.querySelector<FormFieldElement>('se-field[name="code"]')!;
+		await form.store!.handleFieldBlur('code');
+		form.setValue('mode', 'need');
+		await expect.poll(() => form.store!.getFieldError('code')).toBeTruthy();
+
+		form.setValue('mode', '');
+
+		await expect.poll(() => code.rules?.required).toBeFalsy();
+		await expect.poll(() => form.store!.getFieldError('code')).toBeUndefined();
+	} finally {
+		cleanup();
+	}
+});
+
+test('a require released after submit clears its error', async () => {
+	const { form, host, cleanup } = await mountForm([
+		{ $type: 'input', id: 'mode', name: 'mode' },
+		{
+			$type: 'input',
+			id: 'code',
+			name: 'code',
+			constraints: [{ field: 'mode', operator: 'equals', value: 'need', action: 'require' }],
+		},
+	]);
+	try {
+		host.querySelector('form')!.requestSubmit();
+		await expect.poll(() => form.store!.getState().isSubmitted).toBe(true);
+		form.setValue('mode', 'need');
+		await expect.poll(() => form.store!.getFieldError('code')).toBeTruthy();
+
+		form.setValue('mode', '');
+
+		await expect.poll(() => form.store!.getFieldError('code')).toBeUndefined();
+	} finally {
+		cleanup();
+	}
+});
+
+test('array rows evaluate their constraints independently, including a row added later', async () => {
+	const { form, host, cleanup } = await mountForm(rowForm, { rows: [{ kind: 'hide' }, { kind: 'show' }] });
+	try {
+		const hidden = () => [...host.querySelectorAll<HTMLElement>('se-constraint')].map((wrapper) => wrapper.hidden);
+		await expect.poll(hidden).toEqual([true, false]);
+
+		form.setValue('rows.0.kind', 'show');
+		await expect.poll(hidden).toEqual([false, false]);
+
+		form.setValue('rows.1.kind', 'hide');
+		await expect.poll(hidden).toEqual([false, true]);
+
+		form.fieldArray('rows').append({ kind: 'hide', tag: '' });
+		await expect.poll(hidden).toEqual([false, true, true]);
+
+		form.setValue('rows.2.kind', 'show');
+		await expect.poll(hidden).toEqual([false, true, false]);
+	} finally {
+		cleanup();
+	}
+});
+
+test('a server-hidden wrapper stays hidden through hydration until values say otherwise', async () => {
+	const hiddenStates: boolean[] = [];
+	const observer = new MutationObserver((records) => {
+		for (const record of records) {
+			if (record.target.nodeName === 'SE-CONSTRAINT') hiddenStates.push((record.target as HTMLElement).hidden);
+		}
+	});
+	observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['hidden'] });
+	const { form, cleanup } = await mountForm(
+		[
+			{ $type: 'input', id: 'mode', name: 'mode' },
+			{ $type: 'input', id: 'ref', name: 'ref', constraints: hideWhen('mode', 'hide') },
+		],
+		{ mode: 'hide' },
+	);
+	try {
+		const wrapper = document.querySelector<ConstraintElement>('se-constraint')!;
+		await new Promise((resolve) => setTimeout(resolve, 100));
+		expect(wrapper.hidden).toBe(true);
+		expect(hiddenStates).not.toContain(false);
+
+		form.setValue('mode', 'show');
+		await expect.poll(() => wrapper.hidden).toBe(false);
+	} finally {
+		observer.disconnect();
+		cleanup();
+	}
+});
+
+test('a server-rendered hidden wrapper keeps its snapshot while no instance publishes values', async () => {
+	const host = document.createElement('div');
+	host.innerHTML = `<se-constraint hidden data-se-constraint-field="ref" data-se-constraints='${JSON.stringify(hideWhen('mode', 'hide'))}'></se-constraint>`;
+	document.body.append(host);
+	try {
+		const wrapper = host.querySelector<ConstraintElement>('se-constraint')!;
+		await new Promise((resolve) => setTimeout(resolve, 100));
+		expect(wrapper.hidden).toBe(true);
+	} finally {
+		host.remove();
 	}
 });
