@@ -58,9 +58,10 @@ class FormSummary extends RadiantElement {
 The decorator connects on mount, requests an update when the form changes, and
 cleans up on disconnect. It uses the same controller as the explicit lifecycle.
 It supports TC39 standard field decorators and TypeScript
-`experimentalDecorators`, the same dual dispatch as Radiant. A subclass of
-`RuiFieldElement` can use the decorator too; shipped fields expose it as
-`fieldElement.form` and expose their own binding as `fieldElement.field`.
+`experimentalDecorators`, the same dual dispatch as Radiant. The shipped
+`se-field` host has no controller of its own, so a field is not updated on
+every store notification; construct `new FormController(fieldElement)` where you
+need one.
 
 ## Reads, watches, and mutations
 

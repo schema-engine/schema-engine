@@ -1,6 +1,6 @@
 import { contextSelector } from '@ecopages/radiant/context';
 import { prop, RadiantElement } from '@ecopages/radiant';
-import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { formatStepLabel, type MinimalProgressConfig } from '@schema-engine/forms/recipes/built-in';
 import type { FormMeta } from '@/lib/instance-view';
 import type { RecipeSlotContext } from '@/recipes/types';
@@ -18,11 +18,13 @@ import { formElement } from '@/lib/define-element';
  */
 @formElement('se-minimal-progress')
 export class MinimalProgressElement extends RadiantElement {
+	declare readonly [JSX_PROPS]?: { meta?: FormMeta; slotConfig?: MinimalProgressConfig };
+
 	@prop({ type: Object }) meta?: FormMeta;
 	@prop({ type: Object }) slotConfig?: MinimalProgressConfig;
 
 	@contextSelector({ context: formInstanceContext })
-	instance?: FormInstanceContextValue;
+	protected instance?: FormInstanceContextValue;
 
 	override render(): JsxRenderable {
 		const meta = this.meta;
@@ -64,9 +66,6 @@ export class MinimalProgressElement extends RadiantElement {
 	}
 }
 
-export function MinimalProgressBlock(context?: RecipeSlotContext): JsxRenderable {
-	return jsx('se-minimal-progress', {
-		meta: context?.meta,
-		slotConfig: context?.slotConfig,
-	});
+export function MinimalProgressBlock(context?: RecipeSlotContext<MinimalProgressConfig>): JsxRenderable {
+	return <MinimalProgressElement meta={context?.meta} slotConfig={context?.slotConfig} />;
 }

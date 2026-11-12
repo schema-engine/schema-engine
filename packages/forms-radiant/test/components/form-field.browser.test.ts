@@ -6,6 +6,8 @@ import { FormField, type FormFieldElement } from '@/elements/form-field';
 import { renderWithOwningFormEngine } from '@/contexts/form-engine-owner';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 
+import { formOf } from './mount-field';
+
 afterEach(() => document.body.replaceChildren());
 
 test('a FormField validate prop runs after the rules derived from its validation config', async () => {
@@ -23,8 +25,8 @@ test('a FormField validate prop runs after the rules derived from its validation
 	);
 	root.render(jsx(ConfiguredRuiForm, { config, children: field }));
 	const element = host.querySelector('se-field') as FormFieldElement;
-	await expect.poll(() => element.form.ready).toBe(true);
-	const store = element.form.store!;
+	await expect.poll(() => formOf(element).ready).toBe(true);
+	const store = formOf(element).store!;
 	const errorFor = async (value: string) => {
 		store.setValue('email', value);
 		await store.validateField('email');

@@ -1,7 +1,7 @@
 import { prop, RadiantElement, state } from '@ecopages/radiant';
 import { RuiAlert, RuiAlertIcon } from '@ecopages/radiant-ui/alert';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
-import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import type { SubmissionAlertProps } from './form-submission-alert.types';
 import { formElement } from '@/lib/define-element';
 
@@ -9,9 +9,11 @@ type AlertStatus = 'idle' | 'pending' | 'success' | 'error';
 
 @formElement('se-submission-alert')
 export class SeSubmissionAlert extends RadiantElement {
+	declare readonly [JSX_PROPS]?: { config: SubmissionAlertProps };
+
 	@prop({ type: Object }) config!: SubmissionAlertProps;
 
-	@state status: AlertStatus = 'idle';
+	@state protected status: AlertStatus = 'idle';
 	private dismissTimer?: ReturnType<typeof setTimeout>;
 
 	private setStatus(next: AlertStatus): void {
@@ -103,10 +105,12 @@ export class SeSubmissionAlert extends RadiantElement {
 export function FormSubmissionAlert(config: SubmissionAlertProps) {
 	const fieldHost = mergeFieldGridHost(config.grid, config.style);
 
-	return jsx('se-submission-alert', {
-		classes: ['se-form-field'],
-		'data-se-grid-theme': fieldHost.themeId,
-		style: fieldHost.style,
-		config,
-	});
+	return (
+		<SeSubmissionAlert
+			classes={['se-form-field']}
+			data-se-grid-theme={fieldHost.themeId}
+			style={fieldHost.style}
+			config={config}
+		/>
+	);
 }

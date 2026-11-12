@@ -6,12 +6,16 @@ import type { ElementGridConfig } from '@schema-engine/forms/schemas';
 import type { FieldRulesSource } from '@/lib/field-rules';
 
 export interface FieldGroupProps {
-	label: string;
+	/** Omit when the control renders its own label, as a checkbox does. */
+	label?: string;
 	htmlFor?: string;
+	/** Hides the label visually; it stays the control's accessible name. */
 	hiddenLabel?: boolean;
+	/** Places the label after the control, as a switch does. */
+	labelAfter?: boolean;
 	required?: boolean;
 	description?: string;
-	className?: string;
+	class?: string;
 	children: JsxRenderable;
 	style?: Record<string, string | number | undefined>;
 	grid?: ElementGridConfig;
@@ -22,6 +26,23 @@ export interface FieldGroupProps {
 }
 
 /**
+ * The required marker every field label carries.
+ *
+ * @remarks
+ * Constraint sync shows and hides it through `data-se-required-marker`, so every
+ * element prints it with this component, hidden until the field is required.
+ */
+export function RequiredMarker({ required = false }: { required?: boolean }) {
+	return (
+		<span data-se-required-marker hidden={!required}>
+			{' *'}
+		</span>
+	);
+}
+
+/**
+ * Label, description and error around one control, inside the field host.
+ *
  * @remarks
  * Defaults use the JSON string channel because Radiant UI's Object-typed
  * defaultValue prop rejects serialized scalars during attribute adoption.
@@ -30,9 +51,10 @@ export function FieldGroup({
 	label,
 	htmlFor,
 	hiddenLabel = false,
+	labelAfter = false,
 	required = false,
 	description,
-	className,
+	class: className,
 	children,
 	style,
 	grid,
@@ -41,25 +63,26 @@ export function FieldGroup({
 	defaultValue,
 	disabled,
 }: FieldGroupProps) {
+	const labelElement = label ? (
+		<RuiLabel htmlFor={htmlFor} class={hiddenLabel ? 'se-visually-hidden' : undefined}>
+			{label}
+			<RequiredMarker required={required} />
+		</RuiLabel>
+	) : null;
+
 	return (
 		<FormField
-			name={name ?? htmlFor ?? label}
+			name={name ?? htmlFor ?? label ?? ''}
 			validation={validation}
 			defaultValueData={defaultValue !== undefined ? JSON.stringify(defaultValue) : undefined}
 			disabled={disabled}
-			classes={['se-form-field', className]}
+			class={className}
 			grid={grid}
 			style={style}
 		>
-			{!hiddenLabel ? (
-				<RuiLabel htmlFor={htmlFor}>
-					{label}
-					<span data-se-required-marker hidden={!required}>
-						{' *'}
-					</span>
-				</RuiLabel>
-			) : null}
+			{labelAfter ? null : labelElement}
 			{children}
+			{labelAfter ? labelElement : null}
 			{description ? <RuiFieldDescription>{description}</RuiFieldDescription> : null}
 			<RuiFieldError />
 		</FormField>

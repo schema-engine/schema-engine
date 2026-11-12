@@ -27,7 +27,7 @@ async function mountIndicators(meta: FormMeta, slotConfig: Record<string, unknow
 	const element = new StepIndicatorsElement();
 	element.meta = meta;
 	element.slotConfig = z.parse(StepIndicatorsConfigSchema, slotConfig);
-	element.instance = createInstance(meta, 1, [true, false, false]);
+	Reflect.set(element, 'instance', createInstance(meta, 1, [true, false, false]));
 	document.body.append(element);
 	await expect.poll(() => element.querySelector('.se-step-indicators')).toBeTruthy();
 	return element;
@@ -37,7 +37,7 @@ async function mountProgress(meta: FormMeta, slotConfig: Record<string, unknown>
 	const element = new MinimalProgressElement();
 	element.meta = meta;
 	element.slotConfig = z.parse(MinimalProgressConfigSchema, slotConfig);
-	element.instance = createInstance(meta, 1, [true, false, false]);
+	Reflect.set(element, 'instance', createInstance(meta, 1, [true, false, false]));
 	document.body.append(element);
 	await expect.poll(() => element.querySelector('.se-minimal-progress')).toBeTruthy();
 	return element;

@@ -1,6 +1,6 @@
 import { contextSelector } from '@ecopages/radiant/context';
 import { prop, RadiantElement } from '@ecopages/radiant';
-import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { formatStepLabel, type WizardActionsConfig } from '@schema-engine/forms/recipes/built-in';
 import type { FormMeta } from '@/lib/instance-view';
@@ -16,11 +16,13 @@ import { formElement } from '@/lib/define-element';
  */
 @formElement('se-wizard-actions')
 export class WizardActionsElement extends RadiantElement {
+	declare readonly [JSX_PROPS]?: { meta?: FormMeta; slotConfig?: WizardActionsConfig };
+
 	@prop({ type: Object }) meta?: FormMeta;
 	@prop({ type: Object }) slotConfig?: WizardActionsConfig;
 
 	@contextSelector({ context: formInstanceContext })
-	instance?: FormInstanceContextValue;
+	protected instance?: FormInstanceContextValue;
 
 	private readonly goPrevious = (): void => {
 		void this.instance?.goToPreviousStep();
@@ -75,9 +77,6 @@ export class WizardActionsElement extends RadiantElement {
 	}
 }
 
-export function WizardActionsBlock(context?: RecipeSlotContext): JsxRenderable {
-	return jsx('se-wizard-actions', {
-		meta: context?.meta,
-		slotConfig: context?.slotConfig,
-	});
+export function WizardActionsBlock(context?: RecipeSlotContext<WizardActionsConfig>): JsxRenderable {
+	return <WizardActionsElement meta={context?.meta} slotConfig={context?.slotConfig} />;
 }

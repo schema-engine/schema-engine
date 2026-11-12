@@ -20,7 +20,7 @@ export interface FormElementProps {
 	instanceId?: string;
 	initialValues?: Record<string, unknown>;
 	values?: Record<string, unknown>;
-	className?: string;
+	class?: string;
 	constraintContext?: ConstraintEvaluationContext;
 	style?: Record<string, string | number | undefined>;
 }
@@ -35,7 +35,7 @@ export function FormElement({
 	instanceId,
 	initialValues,
 	values,
-	className,
+	class: className,
 	style,
 	constraintContext,
 }: FormElementProps): JsxRenderable {

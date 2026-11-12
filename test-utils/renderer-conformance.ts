@@ -252,7 +252,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await userEvent.click(getByRole(host, 'button', { name: 'Add item' }));
 			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Tag' }).length).toBe(3);
 			await userEvent.fill(queryAllByRole(host, 'textbox', { name: 'Tag' })[2], 'c');
-			await userEvent.click(queryAllByRole(host, 'button', { name: 'Remove item' })[0]);
+			await userEvent.click(queryAllByRole(host, 'button', { name: 'Remove item 1' })[0]);
 			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Tag' }).length).toBe(2);
 			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
 			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
@@ -586,7 +586,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 			const disabledControls = () =>
 				[
 					...queryAllByRole(host, 'textbox', { name: 'Tag' }),
-					...queryAllByRole(host, 'button', { name: /^(Add|Remove) item$/ }),
+					...queryAllByRole(host, 'button', { name: /^(Add item|Remove item \d+)$/ }),
 				].map((control) => (control as HTMLInputElement | HTMLButtonElement).disabled);
 			await expect.poll(disabledControls).toEqual([true, true, true, true, true]);
 			await userEvent.fill(getByRole(host, 'textbox', { name: 'Note' }), 'shown');
@@ -617,7 +617,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await expect
 				.poll(() => tags().map((tag) => tag.getAttribute('aria-invalid')))
 				.toEqual(['false', 'false', 'true']);
-			await userEvent.click(queryAllByRole(host, 'button', { name: 'Remove item' })[0]);
+			await userEvent.click(queryAllByRole(host, 'button', { name: 'Remove item 1' })[0]);
 			await expect.poll(() => tags().map((tag) => tag.getAttribute('aria-invalid'))).toEqual(['false', 'true']);
 			expect(queryAllByText(host, 'Tag is required')).toHaveLength(1);
 		});

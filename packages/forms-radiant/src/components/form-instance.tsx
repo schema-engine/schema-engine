@@ -1,4 +1,4 @@
-import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import type { JsxRenderable } from '@ecopages/jsx';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
 import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import { getViewRecipe } from '@schema-engine/forms/recipes';
@@ -8,7 +8,9 @@ import { flattenValues } from '@/adapters/radiant/controller/values';
 import type { FormProviderProps } from '@/adapters/types';
 
 /** Registers `<se-form-instance>` when this view is imported. */
-export { FormInstanceElement } from './form-instance.script';
+import { FormInstanceElement } from './form-instance.script';
+
+export { FormInstanceElement };
 
 /**
  * JSX view around `<se-form-instance>`.
@@ -19,7 +21,7 @@ export { FormInstanceElement } from './form-instance.script';
  * while the enclosing `se-form-renderer` publishes it to this host through
  * `formEngineContext`, which is how an element hydrated from server markup gets
  * it. The element re-attaches `engine`, `onSubmit`, `onChange` and `onAction`
- * through `prop:` bindings, mirroring `RuiForm`'s `prop:resolver`.
+ * as properties, mirroring `RuiForm`'s `prop:resolver`.
  */
 export function FormInstance({
 	config,
@@ -39,14 +41,15 @@ export function FormInstance({
 	children?: JsxRenderable;
 }): JsxRenderable {
 	const initialValues = collectFormInitialValues(config, defaultValues);
-	return jsx('se-form-instance', {
-		config,
-		defaultValues,
-		'prop:engine': engine,
-		'prop:onSubmit': onSubmit,
-		'prop:onChange': onChange,
-		'prop:onAction': onAction,
-		children: (
+	return (
+		<FormInstanceElement
+			config={config}
+			defaultValues={defaultValues}
+			engine={engine}
+			onSubmit={onSubmit}
+			onChange={onChange}
+			onAction={onAction}
+		>
 			<ConfiguredRuiForm
 				config={config}
 				defaultValues={defaultValues}
@@ -61,6 +64,6 @@ export function FormInstance({
 					{children}
 				</RecipeRenderer>
 			</ConfiguredRuiForm>
-		),
-	});
+		</FormInstanceElement>
+	);
 }

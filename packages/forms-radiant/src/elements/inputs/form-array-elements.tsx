@@ -2,15 +2,16 @@ import './form-array-elements.css';
 import { onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { RuiButton } from '@ecopages/radiant-ui/button';
-import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { FormElements } from '@/components/internals/form-elements';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import type { ArrayElementsProps } from './form-array-elements.types';
 import { arrayItemScope, createArrayRowDefault, seedArrayRows, usesScalarArrayItem } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { FormController } from '@/adapters/radiant/controller';
-import { toFieldRules, withContainerState } from '@/lib/field-rules';
+import { isRenderedRequired, toFieldRules, withContainerState } from '@/lib/field-rules';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
+import { RequiredMarker } from '../field-group';
 import { adoptFieldArrayIds } from '@/adapters/radiant/controller/field-array';
 import { getValueAtPath, setValueAtPath } from '@schema-engine/forms/lib/path-values';
 import { formContext, type FormContextValue } from '@ecopages/radiant-ui/form';
@@ -80,10 +81,18 @@ interface ArrayContentProps {
 
 /**
  * @remarks
+ * The error region stamps the contract `RuiFieldError` does, by hand: that view passes its children
+ * through but is always rendered hidden, and no `rui-field` wraps the array to reveal it. Its `id`
+ * is what the owning fieldset's `aria-describedby` points at while the array has an error.
+ *
  * A disabled array, authored or by a constraint, renders its rows and its add
  * and remove buttons disabled, and its rows get the required marker as a
  * fieldset's children do (`withContainerState`).
  */
+function arrayErrorId(config: ArrayElementsProps): string {
+	return `${config.instanceId ?? config.id ?? config.name}-error`;
+}
+
 function renderArrayContent({ config, engine, ids, initialValues, renderValues, fieldError }: ArrayContentProps) {
 	const isSingleField = usesScalarArrayItem(config, config.name, config.elements, renderValues);
 	const canAdd = !config.maxItems || ids.length < config.maxItems;
@@ -123,7 +132,7 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 								size="sm"
 								square
 								disabled={disabled}
-								aria-label={removeLabel}
+								aria-label={`${removeLabel} ${index + 1}`}
 							>
 								<TrashIcon />
 							</RuiButton>
@@ -137,7 +146,13 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 					{config.addButtonText || 'Add item'}
 				</RuiButton>
 			) : null}
-			<p class="rui-field__error" data-rui-field-error role="alert" hidden={!fieldError}>
+			<p
+				class="rui-field__error"
+				id={arrayErrorId(config)}
+				data-rui-field-error
+				role="alert"
+				hidden={!fieldError}
+			>
 				{fieldError}
 			</p>
 		</div>
@@ -146,6 +161,8 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 
 @formElement('se-form-array')
 export class SeFormArray extends RadiantElement {
+	declare readonly [JSX_PROPS]?: { config: ArrayElementsProps };
+
 	@prop({ type: Object }) config!: ArrayElementsProps;
 
 	readonly form = new FormController(this);
@@ -156,11 +173,12 @@ export class SeFormArray extends RadiantElement {
 	private preservedHydratedContainer = false;
 	private renderedIds: string[] = [];
 
-	@state fieldError?: string;
+	@state private fieldError?: string;
 
 	@onContextUpdate({ context: formContext, requestUpdate: false })
 	onFormContext(value: FormContextValue): void {
 		this.fieldError = value.fields[this.config?.name ?? '']?.error;
+		this.describeGroup();
 		if (!value.ready || !this.config?.name) {
 			this.unregisterArrayField?.();
 			this.unregisterArrayField = undefined;
@@ -169,6 +187,18 @@ export class SeFormArray extends RadiantElement {
 		}
 		this.scheduleSync(this.renderedIds.length ? this.renderedIds : this.initialIds());
 		this.registerArrayField(value);
+	}
+
+	/**
+	 * @remarks
+	 * The fieldset is rendered by `FormArrayElements`, outside this host's view, so its
+	 * `aria-describedby` is written here, only while the error region has text.
+	 */
+	private describeGroup(): void {
+		const group = this.parentElement;
+		if (!group?.matches('fieldset') || !this.config) return;
+		if (this.fieldError) group.setAttribute('aria-describedby', arrayErrorId(this.config));
+		else group.removeAttribute('aria-describedby');
 	}
 
 	/**
@@ -382,18 +412,20 @@ export function FormArrayElements(config: ArrayElementsProps) {
 		: null;
 
 	return (
-		<div class="se-form-field se-form-array-field" data-se-grid-theme={fieldHost.themeId} style={fieldHost.style}>
+		<fieldset
+			class="se-form-field se-form-array-field"
+			aria-label={fieldConfig.label ? undefined : fieldConfig.name}
+			data-se-grid-theme={fieldHost.themeId}
+			style={fieldHost.style}
+		>
 			{fieldConfig.label ? (
-				<p class="se-form-array-field__label">
+				<legend class="se-form-array-field__label">
 					{fieldConfig.label}
-					{isFieldRequired(fieldConfig.rules) ? <span data-se-required-marker>{' *'}</span> : null}
-				</p>
+					<RequiredMarker required={isFieldRequired(fieldConfig.rules) || isRenderedRequired(fieldConfig)} />
+				</legend>
 			) : null}
 			{fieldConfig.description ? <p class="se-form-array-field__description">{fieldConfig.description}</p> : null}
-			{jsx('se-form-array', {
-				config: arrayConfig,
-				children,
-			})}
-		</div>
+			<SeFormArray config={arrayConfig}>{children}</SeFormArray>
+		</fieldset>
 	);
 }

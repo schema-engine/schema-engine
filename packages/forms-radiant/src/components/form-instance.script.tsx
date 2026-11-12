@@ -28,7 +28,7 @@ import { FormController } from '@/adapters/radiant/controller';
 import { FormActions, type SubmissionOutcome } from '@/adapters/radiant/form-actions';
 import { formElement } from '@/lib/define-element';
 
-/** Properties of `<se-form-instance>`; `FormInstance` sets the function and engine ones through `prop:` bindings. */
+/** Properties of `<se-form-instance>`. */
 export interface FormInstanceProps {
 	config: NormalizedFormConfig;
 	defaultValues?: Record<string, unknown>;

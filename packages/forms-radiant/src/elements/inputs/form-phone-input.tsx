@@ -1,7 +1,8 @@
 import './form-phone-input.css';
 import { bindTo, onUpdated, prop, state } from '@ecopages/radiant';
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
-import { jsx, unsafeHtml, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
+import { unsafeHtml } from '@ecopages/jsx/jsx-runtime';
 import {
 	RuiSelect,
 	RuiSelectControl,
@@ -57,16 +58,23 @@ function PhoneFlag({ code, class: className }: { code?: string; class: string })
  */
 @formElement('se-phone-input', { hostAttributes: fieldControlHostAttributes('[data-ref="number"]') })
 export class SePhoneInput extends FormAssociatedElement {
+	declare readonly [JSX_PROPS]?: Partial<
+		Pick<
+			SePhoneInput,
+			'name' | 'disabled' | 'value' | 'inputId' | 'placeholder' | 'defaultCountry' | 'international'
+		>
+	>;
+
 	@prop({ type: String }) value = '';
 	@prop({ type: String }) inputId = '';
 	@prop({ type: String }) placeholder = '';
 	@prop({ type: String }) defaultCountry = 'US';
 	@prop({ type: Boolean, defaultValue: false }) international = false;
 
-	@state @bindTo({ attr: 'data-country' }) country: CountryCode = 'US';
-	@state @bindTo({ bool: 'data-ready' }) ready = false;
-	@state countries: PhoneCountryOption[] = [];
-	@state display = '';
+	@state @bindTo({ attr: 'data-country' }) protected country: CountryCode = 'US';
+	@state @bindTo({ bool: 'data-ready' }) protected ready = false;
+	@state protected countries: PhoneCountryOption[] = [];
+	@state protected display = '';
 
 	private committed = '';
 	private lib?: LibPhoneNumber;
@@ -241,15 +249,15 @@ export function FormPhoneInput(config: PhoneInputFieldProps) {
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}
 		>
-			{jsx('se-phone-input', {
-				name: config.name,
-				placeholder: config.placeholder,
-				disabled: config.disabled,
-				inputId: config.id ?? '',
-				defaultCountry: config.defaultCountry ?? 'US',
-				international: Boolean(config.international),
-				value: typeof config.defaultValue === 'string' ? config.defaultValue : '',
-			})}
+			<SePhoneInput
+				name={config.name}
+				placeholder={config.placeholder}
+				disabled={config.disabled}
+				inputId={config.id ?? ''}
+				defaultCountry={config.defaultCountry ?? 'US'}
+				international={Boolean(config.international)}
+				value={typeof config.defaultValue === 'string' ? config.defaultValue : ''}
+			/>
 		</FieldGroup>
 	);
 }

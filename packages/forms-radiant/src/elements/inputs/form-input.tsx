@@ -27,6 +27,10 @@ export function FormInput(config: InputFieldProps) {
 				type={inputType}
 				value={typeof config.defaultValue === 'string' ? config.defaultValue : undefined}
 				placeholder={placeholder}
+				autocomplete={config.autoComplete}
+				autofocus={config.autoFocus}
+				inputMode={config.inputMode}
+				spellcheck={config.spellCheck}
 				disabled={config.disabled}
 			/>
 		</FieldGroup>

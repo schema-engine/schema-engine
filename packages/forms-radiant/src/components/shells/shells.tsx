@@ -1,5 +1,4 @@
-import type { JsxRenderable } from '@ecopages/jsx';
-import { jsx } from '@ecopages/jsx/jsx-runtime';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { contextSelector } from '@ecopages/radiant/context';
 import { prop, RadiantElement } from '@ecopages/radiant';
 import type { FormMeta } from '@/lib/instance-view';
@@ -104,12 +103,12 @@ export function SplitScreenShell({ slots, viewConfig, meta }: FormShellProps): J
 	);
 	return (
 		<div class="split-screen-shell">
-			{jsx('se-split-screen-side', {
-				class: `split-screen-shell__side split-screen-shell__side--${sideWidth}${sidePlacement === 'right' ? ' split-screen-shell__side--right' : ''}`,
-				sideContent: sideContent ?? '',
-				hasHeader: Boolean(slots.header),
-				meta,
-			})}
+			<SplitScreenSideElement
+				class={`split-screen-shell__side split-screen-shell__side--${sideWidth}${sidePlacement === 'right' ? ' split-screen-shell__side--right' : ''}`}
+				sideContent={sideContent ?? ''}
+				hasHeader={Boolean(slots.header)}
+				meta={meta}
+			/>
 			<main classes={['split-screen-shell__main', `split-screen-shell__main--${contentAlignment}`]}>
 				{slots.header}
 				{slots.progress}
@@ -122,16 +121,18 @@ export function SplitScreenShell({ slots, viewConfig, meta }: FormShellProps): J
 
 @formElement('se-split-screen-side')
 export class SplitScreenSideElement extends RadiantElement {
+	declare readonly [JSX_PROPS]?: Partial<Pick<SplitScreenSideElement, 'sideContent' | 'hasHeader' | 'meta'>>;
+
 	@prop({ type: String }) sideContent = '';
 	@prop({ type: Boolean }) hasHeader = false;
 	@prop({ type: Object }) meta?: FormMeta;
 
 	@contextSelector({ context: formInstanceContext })
-	instance?: FormInstanceContextValue;
+	protected instance?: FormInstanceContextValue;
 
 	override render(): JsxRenderable {
 		const meta = this.meta;
-		if (!meta) return <slot />;
+		if (!meta) return this.slotted;
 		const instance = this.instance ?? deriveInitialInstance(meta);
 		const step = meta.steps[instance.currentStep] ?? meta.steps[0];
 		const title = meta.title || (this.hasHeader ? undefined : step?.title);

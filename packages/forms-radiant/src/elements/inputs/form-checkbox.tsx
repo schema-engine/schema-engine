@@ -1,18 +1,20 @@
-import { FormField } from '@/elements/form-field';
 import '@ecopages/radiant-ui/checkbox-group';
 import { RuiCheckbox } from '@ecopages/radiant-ui/checkbox';
-import { RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
+import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { isRenderedRequired } from '@/lib/field-rules';
+import { FieldGroup, RequiredMarker } from '../field-group';
 import type { CheckboxFieldProps } from './form-checkbox.types';
 
 export function FormCheckbox(config: CheckboxFieldProps) {
 	return (
-		<FormField
+		<FieldGroup
 			name={config.name}
-			validation={config}
-			defaultValueData={config.defaultValue !== undefined ? JSON.stringify(config.defaultValue) : undefined}
-			disabled={config.disabled}
+			description={config.description}
 			grid={config.grid}
 			style={config.style}
+			validation={config}
+			defaultValue={config.defaultValue}
+			disabled={config.disabled}
 		>
 			<RuiCheckbox
 				id={config.id}
@@ -20,10 +22,9 @@ export function FormCheckbox(config: CheckboxFieldProps) {
 				indeterminate={config.indeterminate}
 				disabled={config.disabled}
 			>
-				{config.label}
+				<span class={config.label ? undefined : 'se-visually-hidden'}>{config.label || config.name}</span>
+				<RequiredMarker required={isFieldRequired(config.rules) || isRenderedRequired(config)} />
 			</RuiCheckbox>
-			{config.description ? <RuiFieldDescription>{config.description}</RuiFieldDescription> : null}
-			<RuiFieldError />
-		</FormField>
+		</FieldGroup>
 	);
 }

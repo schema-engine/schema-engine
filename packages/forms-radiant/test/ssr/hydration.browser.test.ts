@@ -7,6 +7,8 @@ import { FormRendererElement } from '@/components/internals/form-renderer.script
 import { createHydrationEngine } from './hydration-engine';
 import { testAction } from '../adapters/test-actions';
 
+import { formOf } from '../components/mount-field';
+
 await Promise.all([
 	import('@/elements/inputs/form-textarea'),
 	import('@/elements/inputs/form-select'),
@@ -55,7 +57,7 @@ test.each(['confirm', 'choice', 'accepted', 'amount'])(
 		const { root } = mount();
 		const field = root.querySelector(`se-field[name="${name}"]`) as FormFieldElement;
 		await expect.poll(() => typeof field.rules?.validate).toBe('function');
-		const store = field.form.store;
+		const store = formOf(field).store;
 		expect(store).toBeDefined();
 		const mismatch = name === 'amount' ? 7 : 'different';
 		store?.setValue('password', 'secret');
@@ -69,7 +71,7 @@ test.each(['confirm', 'choice', 'accepted', 'amount'])(
 		expect(store?.getState().errors[name]?.message).toBe('Must match password');
 		root.remove();
 		document.body.append(root);
-		const reconnectedStore = field.form.store;
+		const reconnectedStore = formOf(field).store;
 		reconnectedStore?.setValue('password', 'changed');
 		reconnectedStore?.setValue(name, mismatch);
 		await reconnectedStore?.validateField(name);
@@ -82,7 +84,7 @@ test('a hydrated field has its cross-field validator from first connect when the
 	const field = root.querySelector('se-field[name="confirm"]') as FormFieldElement;
 
 	await expect.poll(() => typeof field.rules?.validate).toBe('function');
-	const store = field.form.store!;
+	const store = formOf(field).store!;
 	store.setValue('password', 'secret');
 	store.setValue('confirm', 'different');
 	store.markTouched('confirm');
@@ -97,7 +99,7 @@ test('hydrated submit delivers the nested value tree', async () => {
 	await expect.poll(() => typeof form.onSubmit).toBe('function');
 	for (const field of form.querySelectorAll('se-field:not([name="address.street"])')) field.remove();
 	const field = form.querySelector('se-field') as FormFieldElement;
-	field.form.store?.setValue('address', { street: 'old' });
+	formOf(field).store?.setValue('address', { street: 'old' });
 	await userEvent.fill(field.querySelector('input')!, 'x');
 	form.querySelector('form')!.requestSubmit();
 	await expect.poll(() => onSubmit.mock.calls).toEqual([[{ address: { street: 'x' } }]]);
@@ -146,15 +148,15 @@ test('onChange receives a nested value tree and reconnects without duplicate wat
 	const onChange = vi.fn();
 	instance.onChange = onChange;
 	const field = root.querySelector('se-field[name="address.street"]') as FormFieldElement;
-	await expect.poll(() => field.form.ready).toBe(true);
+	await expect.poll(() => formOf(field).ready).toBe(true);
 	await userEvent.fill(field.querySelector('input')!, 'changed');
 	await expect.poll(() => onChange.mock.calls.at(-1)?.[0].address).toEqual({ street: 'changed' });
 	onChange.mockClear();
 	root.remove();
 	document.body.append(root);
-	await expect.poll(() => field.form.ready).toBe(true);
+	await expect.poll(() => formOf(field).ready).toBe(true);
 	onChange.mockClear();
-	field.form.setValue('address.street', 'reconnected');
+	formOf(field).setValue('address.street', 'reconnected');
 	await expect.poll(() => onChange.mock.calls.at(-1)?.[0].address).toEqual({ street: 'reconnected' });
 	const snapshots = onChange.mock.calls.filter(([values]) => values.address?.street === 'reconnected');
 	expect(snapshots).toHaveLength(1);
@@ -166,8 +168,8 @@ test.each([
 ])('hydrated %s reports the rule its registration attaches by default', async (name, value, message) => {
 	const { root } = mount();
 	const field = root.querySelector(`se-field[name="${name}"]`) as FormFieldElement;
-	await expect.poll(() => field.form.ready).toBe(true);
-	const store = field.form.store!;
+	await expect.poll(() => formOf(field).ready).toBe(true);
+	const store = formOf(field).store!;
 	store.setValue(name, value);
 	store.markTouched(name);
 	await store.validateField(name);
