@@ -27,10 +27,20 @@ async function resolveDocsEntryDependencies(slug: string) {
 	});
 }
 
+/**
+ * @remarks
+ * Returns `undefined` for an empty slug so the layout renders no pagination
+ * instead of matching a `/docs/` href that no nav item has.
+ */
+function docsHref(slug: string | string[] | undefined): string | undefined {
+	const segments = [slug ?? []].flat().filter(Boolean);
+	return segments.length > 0 ? `${DOCS_ROOT}/${segments.join('/')}` : undefined;
+}
+
 export default eco.page<{ entry: Entry }, JsxRenderable>({
 	layout: {
 		component: DocsLayout,
-		props: ({ params }) => ({ currentHref: `${DOCS_ROOT}/${[params?.slug ?? []].flat().join('/')}` }),
+		props: ({ params }) => ({ currentHref: docsHref(params?.slug) }),
 	},
 	/**
 	 * @remarks MDX entry assets still flow through `getEntryDependencies`; the
