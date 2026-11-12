@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Trash2, Plus } from 'lucide-react';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
-import { useControlledFormElement } from '@schema-engine/forms-react/hooks';
+import { useChildGridProps, useControlledFormElement } from '@schema-engine/forms-react/hooks';
 import { useFieldArray, useFormContext } from '@schema-engine/forms-react/adapters';
 import { FormElements } from '@schema-engine/forms-react/primitives';
 import { arrayItemScope, createArrayRowDefault, usesScalarArrayItem } from '@schema-engine/forms';
@@ -34,17 +34,20 @@ function ArrayItem({
 		scalar,
 		parentInstanceId: config.instanceId,
 	});
+	const childGrid = useChildGridProps(config.elements);
 
 	return (
 		<div className={cn('space-y-3 p-4 border border-border rounded-lg')}>
 			<div className="flex items-start justify-between gap-3">
 				<div className="flex-1">
-					<FormElements
-						elements={config.elements}
-						namePrefix={scope.namePrefix}
-						nameStrategy={scope.nameStrategy}
-						instanceId={scope.instanceId}
-					/>
+					<div {...childGrid}>
+						<FormElements
+							elements={config.elements}
+							namePrefix={scope.namePrefix}
+							nameStrategy={scope.nameStrategy}
+							instanceId={scope.instanceId}
+						/>
+					</div>
 				</div>
 
 				{canRemove && (

@@ -150,9 +150,21 @@ breakpoint like the rest of `grid`:
   grid: { marginBlockEnd: 'wide', responsive: { lg: { marginBlockEnd: 'loose' } } } }
 ```
 
+Fields can also be placed by name instead of CSS grid lines:
+`grid: { width: 'half', offset: 'quarter' }` (`width` is `full | three-quarters |
+two-thirds | half | third | quarter`, `offset` the same without `full`), with per-breakpoint changes in `grid.responsive` like any other key. A
+step whose top-level fields use `width` or `offset` is laid out on 12 tracks and a
+field that sets no width fills the row. `validateForm` rejects a form grid that
+sets `columns` or `minColumnWidth` alongside such a field, and a field that sets
+`width` or `offset` together with a raw `column`, an offset plus width past 12
+tracks. Fieldsets and array rows lay their children out on their own grid, so
+the same keys work on a container's children. Raw `column`, `row` and
+`placeSelf` remain the escape hatch; `column: 2` means the grid line 2, not a
+span.
+
 This applies to any element rendering a `.se-form-field` host with the engine's
 theme id — not only inputs. Renderers expose a helper for elements that build
-their own container (`useFieldHost` in React, `mergeFieldGridHost` in Radiant). Every engine exposes a frozen
+their own container (`useFieldHost` in React, `mergeFieldGridHost` in Radiant). A custom container whose children use `width` or `offset` must lay them out on its own grid with `useChildGridProps` (React) or `mergeChildrenGridHost` (Radiant). Every engine exposes a frozen
 `engine.getCompiledGrid()` (theme plus stylesheet), with `getGridTheme()` as a
 convenience getter, computed once at construction (library defaults apply when
 `grid` is omitted). Configured breakpoint

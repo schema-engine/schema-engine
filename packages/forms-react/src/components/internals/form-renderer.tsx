@@ -60,7 +60,11 @@ function StepFields({
 	if (!step.elements.length) return null;
 
 	return (
-		<div className="se-form-grid" data-se-grid-theme={theme.id} style={getFormGridVariables(config.grid, theme)}>
+		<div
+			className="se-form-grid"
+			data-se-grid-theme={theme.id}
+			style={getFormGridVariables(config.grid, theme, step.elements)}
+		>
 			<FormElements elements={step.elements} />
 		</div>
 	);

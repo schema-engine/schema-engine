@@ -83,3 +83,53 @@ Authors supply schema **input**; defaulted properties stay optional in
 children are typed from the same engine registrations as top-level fields.
 Containers render those children with `FormElements` and a field scope instead
 of cloning configuration to change paths.
+
+## Placing fields in the grid
+
+A form's `grid` sets its layout (`columns`, `gap`, `responsive`), and each
+element's own `grid` places it. For the common layouts, name the width:
+
+```ts
+{ $type: 'input', id: 'first', name: 'first', grid: { width: 'half' } },
+{ $type: 'input', id: 'last', name: 'last', grid: { width: 'half' } },
+{ $type: 'input', id: 'bio', name: 'bio', grid: { width: 'half', offset: 'quarter' } },
+```
+
+`width` is `full`, `three-quarters`, `two-thirds`, `half`, `third`, or
+`quarter`. `offset` leaves empty space before the field and takes the same names
+except `full`, so `half` with a `quarter` offset is centred in its row. A width
+on its own is the share of the row the field takes; the grid decides where it
+lands, so two `half` fields share a row. Leave the width out for a field that
+fills the row.
+
+Both change by breakpoint through the element's `grid.responsive`, like every
+other placement key. A slot that sets only the width keeps the offset of the
+slot before it, and the other way round:
+
+```ts
+{ grid: { width: 'full', responsive: { md: { width: 'third' } } } }
+```
+
+A grid whose fields use `width` or `offset` is laid out on 12 tracks, so each
+name is a whole number of tracks (`half` is 6, `third` is 4, `quarter` is 3), and
+a field in that grid that sets no width fills the row. Fieldsets and array rows
+lay out their children on their own grid, so `width` and `offset` work on a
+container's children the same way, and the step's `columns` do not conflict
+with them.
+
+Validation enforces the two ways of placing a field:
+
+- A form grid that sets `columns` or `minColumnWidth` (at any breakpoint) cannot
+  contain a top-level field that uses `width` or `offset`: a grid uses either
+  columns or widths.
+- A field that sets `width` or `offset` cannot also set a raw `column`.
+- A field's `offset` plus `width` must fit in 12 tracks, counting the value
+  each carries from a narrower breakpoint: `two-thirds` after a `half` offset
+  is rejected.
+
+Raw `column`, `row` and `placeSelf` stay available as the escape hatch for
+anything the names do not cover. `column: 2` is a CSS grid line, not a span:
+it starts the field at line 2. Use `column: 'span 2'` to span two columns, or
+`column: '4 / 10'` for explicit lines. A raw `column` field may sit next to
+width fields, but it counts tracks of the 12 the widths use there, so
+`column: 'span 2'` is two of twelve, a sixth of the row.
