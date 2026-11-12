@@ -77,11 +77,6 @@ export class WizardActionsElement extends RadiantElement {
 	}
 }
 
-export function WizardActionsBlock(context?: RecipeSlotContext): JsxRenderable {
-	return (
-		<WizardActionsElement
-			meta={context?.meta}
-			slotConfig={context?.slotConfig as WizardActionsConfig | undefined}
-		/>
-	);
+export function WizardActionsBlock(context?: RecipeSlotContext<WizardActionsConfig>): JsxRenderable {
+	return <WizardActionsElement meta={context?.meta} slotConfig={context?.slotConfig} />;
 }

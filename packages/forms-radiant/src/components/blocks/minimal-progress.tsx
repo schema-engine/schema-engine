@@ -66,11 +66,6 @@ export class MinimalProgressElement extends RadiantElement {
 	}
 }
 
-export function MinimalProgressBlock(context?: RecipeSlotContext): JsxRenderable {
-	return (
-		<MinimalProgressElement
-			meta={context?.meta}
-			slotConfig={context?.slotConfig as MinimalProgressConfig | undefined}
-		/>
-	);
+export function MinimalProgressBlock(context?: RecipeSlotContext<MinimalProgressConfig>): JsxRenderable {
+	return <MinimalProgressElement meta={context?.meta} slotConfig={context?.slotConfig} />;
 }

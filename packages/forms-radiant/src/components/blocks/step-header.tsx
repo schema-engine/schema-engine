@@ -60,6 +60,6 @@ export class StepHeaderElement extends RadiantElement {
 	}
 }
 
-export function StepHeaderBlock(context?: RecipeSlotContext): JsxRenderable {
-	return <StepHeaderElement meta={context?.meta} slotConfig={context?.slotConfig as StepHeaderConfig | undefined} />;
+export function StepHeaderBlock(context?: RecipeSlotContext<StepHeaderConfig>): JsxRenderable {
+	return <StepHeaderElement meta={context?.meta} slotConfig={context?.slotConfig} />;
 }

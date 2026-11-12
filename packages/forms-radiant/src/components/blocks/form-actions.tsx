@@ -41,6 +41,6 @@ export class FormActionsElement extends RadiantElement {
 	}
 }
 
-export function FormActionsBlock(context?: RecipeSlotContext): JsxRenderable {
-	return <FormActionsElement slotConfig={context?.slotConfig as FormActionsConfig | undefined} />;
+export function FormActionsBlock(context?: RecipeSlotContext<FormActionsConfig>): JsxRenderable {
+	return <FormActionsElement slotConfig={context?.slotConfig} />;
 }
