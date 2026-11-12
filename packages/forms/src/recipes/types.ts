@@ -53,6 +53,23 @@ export interface RecipeSpec<
 	schema: TSchema;
 }
 
+/**
+ * Render payload an adapter binds to a spec: `slots` holds exactly the spec's non-shell slots,
+ * each required. `shell` is required only when the spec declares a shell config; a spec without
+ * one may still bind a shell component (the stack shell has no config).
+ *
+ * @remarks
+ * Adapters supply the component types, so a payload that omits a declared slot, or adds an
+ * undeclared one, fails to type-check at the binding site.
+ */
+export type RecipeRenderPayload<
+	TSlots extends Partial<Record<RecipeSlot, z.ZodMiniType>>,
+	TShell,
+	TSlot,
+> = ('shell' extends keyof TSlots ? { shell: TShell } : { shell?: TShell }) & {
+	slots: { [K in Exclude<keyof TSlots, 'shell'>]-?: TSlot };
+};
+
 export interface FormShellLayout<TNode> {
 	slots: {
 		header?: TNode;

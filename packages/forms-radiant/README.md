@@ -10,6 +10,8 @@ warnings and errors keep their severity and diagnostic details.
 
 A connected host that no engine reaches logs one warning for that host. Hosts under `se-form-renderer` and detached hosts stay quiet, since an engine can still arrive.
 
+`defineRecipe(spec, payload)` binds a spec to Radiant components: `payload.slots` must hold exactly the spec's non-shell slots, and `shell` is required when the spec declares a shell config. A missing or undeclared slot is a type error.
+
 ## Why the recipe components ship in this package
 
 Unlike `@schema-engine/forms-react` — where the default view recipes live in the shadcn registry and consumers register them explicitly with `createFormEngine({ recipes })` — Radiant has no registry ecosystem to lean on. The shells and step blocks are therefore part of this package and `createRadiantFormEngine()` binds the canonical recipes automatically, so the package stays plug-and-play. The recipe specs themselves remain canonical in `@schema-engine/forms/recipes/built-in`.

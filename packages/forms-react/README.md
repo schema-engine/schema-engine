@@ -62,15 +62,15 @@ The React Hook Form adapter keeps initial values separate from live field values
 
 ## Public entry points
 
-| Import                                                | Purpose                                                                               |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `@schema-engine/forms-react`                          | Public components, including `FormEngineProvider`, `FormProvider`, and `FormRenderer` |
-| `@schema-engine/forms-react/hooks`                    | Engine, field, constraint, submission, and view hooks                                 |
-| `@schema-engine/forms-react/adapters`                 | Adapter contracts and adapter-neutral form hooks                                      |
-| `@schema-engine/forms-react/adapters/react-hook-form` | `rhfAdapter`; requires `react-hook-form`                                              |
-| `@schema-engine/forms-react/contexts`                 | View context provider and context types                                               |
-| `@schema-engine/forms-react/primitives`               | `FormElement`, `FormElements`, and React recipe contracts                             |
-| `@schema-engine/forms-react/components/form-debugger` | `FormDebugger`                                                                        |
+| Import                                                | Purpose                                                                                               |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `@schema-engine/forms-react`                          | Public components, including `FormEngineProvider`, `FormProvider`, and `FormRenderer`                 |
+| `@schema-engine/forms-react/hooks`                    | Engine, field, constraint, submission, and view hooks                                                 |
+| `@schema-engine/forms-react/adapters`                 | Adapter contracts and adapter-neutral form hooks                                                      |
+| `@schema-engine/forms-react/adapters/react-hook-form` | `rhfAdapter`; requires `react-hook-form`                                                              |
+| `@schema-engine/forms-react/contexts`                 | View context provider and context types                                                               |
+| `@schema-engine/forms-react/primitives`               | `FormElement`, `FormElements`, `defineRecipe` (binds a spec to components) and React recipe contracts |
+| `@schema-engine/forms-react/components/form-debugger` | `FormDebugger`                                                                                        |
 
 Use `useFormContext`, `useFormField`, `useWatchField`, `useWatchForm`, and `useFieldArray` from `/adapters` inside the active form. `useFieldArray` provides `fields`, `append`, `prepend`, `insert`, `swap`, `move`, `update`, `replace`, and `remove`; it keeps falsy scalar rows such as `tags: ['', '']`, which React Hook Form's own `useFieldArray` drops. Errors and touched state move with their rows and an added row is focused, falsy rows or not; dirty state stays React Hook Form's comparison with the default values, index by index. An operation naming a row that does not exist does nothing, `remove` removes a repeated index once, and rows get new ids when the array is replaced from outside with different contents, such as by `reset`.
 
