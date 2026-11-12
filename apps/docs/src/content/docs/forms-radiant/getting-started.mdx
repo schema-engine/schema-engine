@@ -101,32 +101,25 @@ const engine = createRadiantFormEngine({
 
 ## Server-rendered forms and engine binding
 
-The engine is not serialized into server-rendered markup. Importing
-`@schema-engine/forms-radiant` defines the form elements, which upgrade the
-forms already in the document before an engine exists. To give them an engine,
-bind first and define after: defer the definitions, import the package and your
-engine, make the engine reachable, then define.
+The engine is not serialized into server-rendered markup, so the app assigns it
+to each `se-form-renderer`. Assign it before or after the renderer upgrades: the
+hosts below it read the engine from the renderer's context and follow it when it
+arrives or changes.
 
 ```typescript
-const { deferFormElements, defineFormElements } = await import('@schema-engine/forms-radiant/define');
-deferFormElements();
-
-// Dynamic imports only: static imports are hoisted above deferFormElements().
-const [{ formEngine }, { formEngineContext }] = await Promise.all([
-	import('./form-engine'),
-	import('@schema-engine/forms-radiant'),
-]);
+import { formEngine } from './form-engine';
 
 document.querySelectorAll('se-form-renderer').forEach((renderer) => {
 	renderer.engine = formEngine;
 });
-defineFormElements();
 ```
 
-Instead of assigning `engine` to each renderer, you can answer the
-`formEngineContext` request from the document, as the docs site does in
-`apps/docs/src/lib/preview-engine-binding.ts`. A form that is only rendered on
-the client passes `engine` to `FormRenderer` and needs none of this.
+A client-side router that swaps in a parsed page does not upgrade it first. Assign
+the engine to the incoming renderers in the router's `eco:before-swap` event
+(`event.detail.newDocument`), as the docs site does in
+`apps/docs/src/lib/preview-engine-binding.ts`; they upgrade with the engine
+already set. A form that is only rendered on the client passes `engine` to
+`FormRenderer` and needs none of this.
 
 ## Storybook
 
