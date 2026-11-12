@@ -78,11 +78,15 @@ custom array widgets receive the same path and default behavior as built-ins.
 
 ## Registration storage
 
-`buildFormEngine` checks each supplied Standard Schema once, then stores elements,
-recipes, and actions in Maps keyed by `$type`. Later duplicates replace earlier
-registrations. `FormEngine` takes an isolated Map snapshot, and its lookup methods
-serve renderers and action dispatch. Construction does not instantiate temporary
-component or action registries.
+`buildFormEngine` stores elements, recipes, and actions in three read-only
+registries from `@schema-engine/registry`, built with `createRegistry`. Each
+registry checks every supplied Standard Schema once, at build, and throws naming
+the offending kind and `$type` (for example `Element 'note' schema must implement
+Standard Schema`). Later duplicates replace earlier registrations without a
+warning. The registries and their registrations are frozen, so `FormEngine`
+shares them with engines built by `extend` without copying, and its lookup
+methods serve renderers and action dispatch. The `getAll*` and `get*Ids` methods
+return fresh arrays.
 
 Validation helpers accept structural, read-only element views as well as normalized
 snapshots. Both renderers use these same helpers, the step machine and
