@@ -110,8 +110,8 @@ export function defineRecipeSpec<
 	kind: RecipeKind;
 	metadata: RecipeMetadata;
 	slotSchemas?: TSlots;
-	slotDefaults?: RecipeSlotDefaults<TSlots>;
-	appearanceAxes?: SlotAppearanceAxes<keyof TSlots>;
+	slotDefaults?: RecipeSlotDefaults<NoInfer<TSlots>>;
+	appearanceAxes?: SlotAppearanceAxes<keyof NoInfer<TSlots>>;
 }): RecipeSpec<TType, RecipeViewSchema<TType, TSlots>, TSlots> {
 	const slotSchemas = (definition.slotSchemas ?? {}) as TSlots;
 	const slots = RECIPE_SLOT_ORDER.filter((slot) => slotSchemas[slot]);
