@@ -16,6 +16,9 @@ export type GridBreakpointToken = (typeof BREAKPOINT_ORDER)[number];
 
 export type CascadeSlot = 'default' | GridBreakpointToken;
 
+/** Every slot of the cascade, narrowest first. */
+export const CASCADE_SLOTS: readonly CascadeSlot[] = ['default', ...BREAKPOINT_ORDER];
+
 /** Tracks a grid has once its fields use named widths. */
 export const WIDTH_TRACKS = 12;
 
@@ -111,4 +114,153 @@ export function namedPlacementOverflow(element: unknown): { slot: CascadeSlot; t
 		if (tracks > WIDTH_TRACKS) return { slot, tracks };
 	}
 	return undefined;
+}
+
+/** The cells of each row of a template; `.` marks an empty cell. */
+export type GridAreaRows = readonly (readonly string[])[];
+
+/** Templates by the slot that sets them. */
+export type GridAreaTemplates = Partial<Record<CascadeSlot, GridAreaRows>>;
+
+const EMPTY_CELL = '.';
+
+function splitRow(row: unknown): string[] {
+	if (typeof row !== 'string') return [];
+	return row
+		.trim()
+		.split(/\s+/)
+		.filter(Boolean)
+		.map((cell) => (/^\.+$/.test(cell) ? EMPTY_CELL : cell));
+}
+
+function toRows(rows: unknown): GridAreaRows | undefined {
+	return Array.isArray(rows) ? rows.map(splitRow) : undefined;
+}
+
+/**
+ * The templates a grid's `areas` sets, by slot. An array is the `default` template.
+ *
+ * @remarks
+ * A run of dots is one empty cell, normalised to a single `.`, so a template
+ * compares and emits the same however the author spaced it.
+ */
+export function gridAreaTemplates(grid: unknown): GridAreaTemplates {
+	if (!isRecord(grid) || grid.areas === undefined) return {};
+	if (Array.isArray(grid.areas)) {
+		const rows = toRows(grid.areas);
+		return rows ? { default: rows } : {};
+	}
+	if (!isRecord(grid.areas)) return {};
+	const templates: GridAreaTemplates = {};
+	for (const slot of CASCADE_SLOTS) {
+		const rows = toRows(grid.areas[slot]);
+		if (rows) templates[slot] = rows;
+	}
+	return templates;
+}
+
+/** Whether a grid draws its layout with `areas`. */
+export function gridUsesAreas(grid: unknown): boolean {
+	return Object.keys(gridAreaTemplates(grid)).length > 0;
+}
+
+/** Area names a template uses, in order of first appearance. */
+export function areaNames(rows: GridAreaRows): string[] {
+	const names = new Set<string>();
+	for (const row of rows) {
+		for (const cell of row) if (cell !== EMPTY_CELL) names.add(cell);
+	}
+	return [...names];
+}
+
+/** The `grid-template-areas` value for a template: one quoted string per row. */
+export function areasTemplateValue(rows: GridAreaRows): string {
+	return rows.map((row) => `"${row.join(' ')}"`).join(' ');
+}
+
+/**
+ * The area an element authored at each slot it sets one. Within a slot,
+ * `responsive.default` beats the top level, as in emission.
+ */
+export function elementAreaSlots(element: unknown): Partial<Record<CascadeSlot, string>> {
+	const areas: Partial<Record<CascadeSlot, string>> = {};
+	for (const { slot, entry } of elementGridSlots(element)) {
+		if (typeof entry.area === 'string') areas[slot] = entry.area;
+	}
+	return areas;
+}
+
+/**
+ * What each slot resolves to: the value set at that slot, else the last one a
+ * narrower slot set.
+ *
+ * @remarks
+ * Emission falls back through narrower slots in the stylesheet, so validation
+ * reads templates and areas the same way to check what a viewport gets.
+ */
+export function cascadeValues<T>(
+	authored: Partial<Record<CascadeSlot, T>>,
+): Array<{ slot: CascadeSlot; value: T | undefined }> {
+	let carried: T | undefined;
+	return CASCADE_SLOTS.map((slot) => {
+		carried = authored[slot] ?? carried;
+		return { slot, value: carried };
+	});
+}
+
+export interface AreaTemplateIssue {
+	slot: CascadeSlot;
+	message: string;
+}
+
+function cellCount(count: number): string {
+	return `${count} ${count === 1 ? 'cell' : 'cells'}`;
+}
+
+function isRectangle(rows: GridAreaRows, name: string): boolean {
+	const cells: Array<[row: number, column: number]> = [];
+	rows.forEach((row, rowIndex) =>
+		row.forEach((cell, columnIndex) => {
+			if (cell === name) cells.push([rowIndex, columnIndex]);
+		}),
+	);
+	const rowsUsed = cells.map(([row]) => row);
+	const columnsUsed = cells.map(([, column]) => column);
+	const height = Math.max(...rowsUsed) - Math.min(...rowsUsed) + 1;
+	const width = Math.max(...columnsUsed) - Math.min(...columnsUsed) + 1;
+	return height * width === cells.length;
+}
+
+/**
+ * Why CSS would drop a template: rows of unequal length, or an area whose cells
+ * do not fill a rectangle.
+ *
+ * @remarks
+ * Rows of unequal length stop the check for that template, as no area can be
+ * located in a ragged one.
+ */
+export function areaTemplateIssues(templates: GridAreaTemplates): AreaTemplateIssue[] {
+	const issues: AreaTemplateIssue[] = [];
+	for (const slot of CASCADE_SLOTS) {
+		const rows = templates[slot];
+		if (!rows) continue;
+		const width = rows[0]?.length ?? 0;
+		const ragged = rows.findIndex((row) => row.length !== width);
+		if (ragged !== -1) {
+			issues.push({
+				slot,
+				message: `row ${ragged + 1} has ${cellCount(rows[ragged]?.length ?? 0)} but row 1 has ${width}.`,
+			});
+			continue;
+		}
+		for (const name of areaNames(rows)) {
+			if (!isRectangle(rows, name)) {
+				issues.push({
+					slot,
+					message: `area '${name}' is not rectangular; CSS drops the whole template unless every area fills a rectangle.`,
+				});
+			}
+		}
+	}
+	return issues;
 }

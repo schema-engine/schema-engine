@@ -15,11 +15,18 @@ import {
 import { getElementChildren, withElementChildren } from '@/lib/element-children';
 import { DEFAULT_WIZARD_RECIPE } from '@/lib/form-view';
 import {
+	areaNames,
+	areaTemplateIssues,
+	cascadeValues,
+	elementAreaSlots,
 	elementGridKeys,
 	elementUsesGridWidths,
 	GRID_TEMPLATE_KEYS,
+	gridAreaTemplates,
 	namedPlacementOverflow,
 	WIDTH_TRACKS,
+	type CascadeSlot,
+	type GridAreaTemplates,
 } from '@/lib/grid-placement';
 import { logger } from '@/lib/logger';
 import { mergeSlotDefaults } from '@/recipes/merge-slot-defaults';
@@ -289,6 +296,9 @@ function elementLabel(item: Record<string, unknown>): string {
 	return typeof item.id === 'string' ? `Element '${item.id}'` : 'Element';
 }
 
+/** Placement keys that cannot sit beside a field's `area`, which is a placement of its own. */
+const AREA_EXCLUSIVE_KEYS = ['width', 'offset', 'column', 'row'] as const;
+
 function quotedKeys(keys: readonly string[]): string {
 	return keys.map((key) => `'${key}'`).join(' and ');
 }
@@ -315,21 +325,153 @@ function namedPlacementIssue(item: FormTaggedConfig): string | undefined {
 	return undefined;
 }
 
-/** A grid sets its own tracks with `columns` or gets twelve from its fields' widths, not both. */
-function columnsWithNamedWidths(
-	grid: GridLayoutConfig | undefined,
-	steps: readonly { elements: readonly FormTaggedConfig[] }[],
-): string | undefined {
+/** The slot as it reads in a message: nothing for the default width, else ` at 'md'`. */
+function atSlot(slot: CascadeSlot): string {
+	return slot === 'default' ? '' : ` at '${slot}'`;
+}
+
+/**
+ * Why a field's `area` cannot sit beside its other placement, or inside a container.
+ *
+ * @remarks
+ * An area is a placement of its own: it resolves to the field's column and row,
+ * so a width, offset or raw line set next to it would fight it. A container lays
+ * its children out in a grid that takes no `areas`, so a child has no template
+ * to name.
+ */
+function areaPlacementIssue(item: FormTaggedConfig, nested: boolean): string | undefined {
+	const keys = elementGridKeys(item);
+	if (!keys.has('area')) return undefined;
+	const label = elementLabel(item);
+	if (nested) {
+		return `${label} sets grid 'area' inside a container; a container lays its children out without areas.`;
+	}
+	const others = AREA_EXCLUSIVE_KEYS.filter((key) => keys.has(key));
+	if (others.length === 0) return undefined;
+	return `${label} sets grid ${quotedKeys(['area', ...others])}; use an area or a width, offset or raw line, not both.`;
+}
+
+interface GridScope {
+	/** Where the step sits in the form, prefixed to every issue that names its fields. */
+	location: string;
+	elements: readonly FormTaggedConfig[];
+}
+
+/** Template shape: a template needs its own tracks, so it is checked once per grid, not per step. */
+function templateIssues(label: string, grid: GridLayoutConfig | undefined): string[] {
+	const templates = gridAreaTemplates(grid);
+	if (Object.keys(templates).length === 0) return [];
+	const issues: string[] = [];
 	const entries = [grid, ...Object.values(grid?.responsive ?? {})];
-	const set = GRID_TEMPLATE_KEYS.filter((key) => entries.some((entry) => entry?.[key] !== undefined));
-	if (set.length === 0) return undefined;
-	for (const step of steps) {
-		const element = step.elements.find(elementUsesGridWidths);
-		if (element) {
-			return `Form grid sets ${quotedKeys(set)} but ${elementLabel(element)} uses 'width' or 'offset'; a grid uses either columns or widths.`;
+	const tracks = GRID_TEMPLATE_KEYS.filter((key) => entries.some((entry) => entry?.[key] !== undefined));
+	if (tracks.length > 0) {
+		issues.push(`${label} sets ${quotedKeys(['areas', ...tracks])}; a grid uses areas, widths or columns.`);
+	}
+	if (templates.default === undefined) {
+		issues.push(
+			`${label} 'areas' per breakpoint must include 'default', the layout below the narrowest breakpoint.`,
+		);
+	}
+	for (const { slot, message } of areaTemplateIssues(templates)) {
+		issues.push(`${label} areas${atSlot(slot)}: ${message}`);
+	}
+	return issues;
+}
+
+/**
+ * Why a step's fields do not fit the grid that lays them out.
+ *
+ * @remarks
+ * Fields are checked against the cascade the stylesheet applies: a field's area
+ * at a breakpoint is the last one set at or below it, and so is the template.
+ * That is what a viewport gets, and it catches a template that changes at `md`
+ * under a field that kept its `default` area.
+ */
+function fieldPlacementIssues(
+	label: string,
+	grid: GridLayoutConfig | undefined,
+	scope: GridScope,
+	templatesValid: boolean,
+): string[] {
+	const templates = gridAreaTemplates(grid);
+	const usesAreas = Object.keys(templates).length > 0;
+	const entries = [grid, ...Object.values(grid?.responsive ?? {})];
+	const tracks = GRID_TEMPLATE_KEYS.filter((key) => entries.some((entry) => entry?.[key] !== undefined));
+	const issues: string[] = [];
+
+	const widths = scope.elements.find(elementUsesGridWidths);
+	if (widths && usesAreas) {
+		issues.push(
+			`${label} sets 'areas' but ${elementLabel(widths)} uses 'width' or 'offset'; a grid uses areas, widths or columns.`,
+		);
+	} else if (widths && tracks.length > 0) {
+		issues.push(
+			`${label} sets ${quotedKeys(tracks)} but ${elementLabel(widths)} uses 'width' or 'offset'; a grid uses areas, widths or columns.`,
+		);
+	}
+
+	const claimants = scope.elements.filter((element) => Object.keys(elementAreaSlots(element)).length > 0);
+	if (!usesAreas) {
+		for (const element of claimants) {
+			issues.push(
+				`${elementLabel(element as Record<string, unknown>)} sets grid 'area' but the ${label.toLowerCase()} has no 'areas'.`,
+			);
+		}
+		return issues.map((issue) => prefixed(scope.location, issue));
+	}
+	if (templatesValid) issues.push(...areaClaimIssues(label, templates, claimants));
+	return issues.map((issue) => prefixed(scope.location, issue));
+}
+
+function areaClaimIssues(
+	label: string,
+	templates: GridAreaTemplates,
+	claimants: readonly FormTaggedConfig[],
+): string[] {
+	const issues: string[] = [];
+	const templateBySlot = cascadeValues(templates);
+	const claims = claimants.map((element) => ({
+		element,
+		bySlot: cascadeValues(elementAreaSlots(element)),
+	}));
+
+	for (const { element, bySlot } of claims) {
+		for (const [index, { slot, value: area }] of bySlot.entries()) {
+			const rows = templateBySlot[index]?.value;
+			if (area === undefined || rows === undefined) continue;
+			const names = areaNames(rows);
+			if (names.includes(area)) continue;
+			issues.push(
+				`${elementLabel(element)} claims area '${area}'${atSlot(slot)}, which is not in the grid areas (${names.join(', ')}).`,
+			);
+			break;
 		}
 	}
-	return undefined;
+
+	const reported = new Set<string>();
+	for (const [index, { slot, value: rows }] of templateBySlot.entries()) {
+		if (rows === undefined) continue;
+		for (const name of areaNames(rows)) {
+			const claimed = claims.some(({ bySlot }) => bySlot[index]?.value === name);
+			if (claimed || reported.has(name)) continue;
+			reported.add(name);
+			issues.push(`${label} area '${name}'${atSlot(slot)} is not claimed by any field.`);
+		}
+	}
+	return issues;
+}
+
+/**
+ * Checks a grid and the fields it lays out: its template, and the placements
+ * that cannot share a grid (areas, columns and widths).
+ */
+function gridIssues(label: string, grid: GridLayoutConfig | undefined, scopes: readonly GridScope[]): string[] {
+	const shape = templateIssues(label, grid);
+	const issues = [...shape];
+	for (const scope of scopes) {
+		issues.push(...fieldPlacementIssues(label, grid, scope, shape.length === 0));
+	}
+	return issues;
 }
 
 function parseElementNode(
@@ -337,6 +479,7 @@ function parseElementNode(
 	getElement: ValidateFormOptions['getElement'],
 	hasValidation: ValidateFormOptions['hasValidation'],
 	location: string,
+	nested = false,
 ): { issues: string[]; item?: FormTaggedConfig } {
 	const fail = (message: string) => ({
 		issues: [location ? prefixed(location, message) : message],
@@ -354,6 +497,8 @@ function parseElementNode(
 	}
 	const placementIssue = namedPlacementIssue(parsed.data);
 	if (placementIssue) return fail(placementIssue);
+	const areaIssue = areaPlacementIssue(parsed.data, nested);
+	if (areaIssue) return fail(areaIssue);
 
 	const children = getElementChildren(parsed.data);
 	if (!children) {
@@ -364,7 +509,7 @@ function parseElementNode(
 	const issues: string[] = [];
 	for (let index = 0; index < children.length; index += 1) {
 		const child = children[index];
-		const nested = parseElementNode(child, getElement, hasValidation, childLocation(location, index, child));
+		const nested = parseElementNode(child, getElement, hasValidation, childLocation(location, index, child), true);
 		issues.push(...nested.issues);
 		if (nested.item) nextChildren.push(nested.item);
 	}
@@ -478,8 +623,20 @@ export function validateFormConfig(config: unknown, options: ValidateFormOptions
 		};
 	});
 
-	const widthsConflict = columnsWithNamedWidths(envelope.grid, steps);
-	if (widthsConflict) issues.push(widthsConflict);
+	const scopeOf = (step: (typeof steps)[number], index: number): GridScope => ({
+		location: itemLocation('steps', index, step),
+		elements: step.elements as FormTaggedConfig[],
+	});
+	issues.push(
+		...gridIssues(
+			'Form grid',
+			envelope.grid,
+			steps.flatMap((step, index) => (step.grid ? [] : [scopeOf(step, index)])),
+		),
+	);
+	steps.forEach((step, index) => {
+		if (step.grid) issues.push(...gridIssues('Step grid', step.grid, [scopeOf(step, index)]));
+	});
 
 	const view = parseView(
 		envelope.view && typeof envelope.view.$type === 'string' ? envelope.view : undefined,

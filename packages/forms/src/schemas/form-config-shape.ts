@@ -18,6 +18,9 @@ export function createFormStepSchema(parts: { elements: z.ZodMiniType; actions: 
 		elements: z.array(parts.elements),
 		rules: z.optional(z.unknown()),
 		constraints: z.optional(z.array(z.unknown())),
+		grid: z
+			.optional(z.lazy(() => GridLayoutConfigSchema))
+			.check(z.describe("Grid for this step's fields; replaces the form's grid for the step.")),
 		className: z.optional(z.string()),
 		style: z.optional(RendererStyleSchema),
 		actions: z.optional(z.array(z.union([parts.actions, z.array(parts.actions)]))),

@@ -7,7 +7,12 @@ import {
 	getFormGridVariables,
 } from '@/lib/grid-styles';
 import { usesGridWidths } from '@/lib/grid-placement';
-import { GridGapTokens, type GridLayoutConfig } from '@/schemas/base-field';
+import {
+	ElementGridConfigSchema,
+	GridGapTokens,
+	GridLayoutConfigSchema,
+	type GridLayoutConfig,
+} from '@/schemas/base-field';
 
 const theme = (options?: Parameters<typeof compileGridTheme>[0]) => compileGridTheme(options).theme;
 const css = (options?: Parameters<typeof compileGridTheme>[0]) => compileGridTheme(options).css;
@@ -543,5 +548,92 @@ describe('named widths and offsets', () => {
 		expect(usesGridWidths([{ $type: 'field' }, { $type: 'field', grid: {} }])).toBe(false);
 		expect(usesGridWidths([{ $type: 'field' }, widthElement({ width: 'half' })])).toBe(true);
 		expect(usesGridWidths([widthElement({ width: undefined, offset: undefined })])).toBe(false);
+	});
+});
+
+describe('named grid areas', () => {
+	const drawn = ['a a a b b b', 'a a a c c c', 'd d e e e e'];
+
+	test('a template travels as one custom property with the columns it draws', () => {
+		const variables = getFormGridVariables({ areas: drawn }, theme(), []);
+		expect(variables['--se-grid-areas']).toBe('"a a a b b b" "a a a c c c" "d d e e e e"');
+		expect(variables['--se-grid-template']).toBe('repeat(6, minmax(0, 1fr))');
+	});
+
+	test('a responsive record emits one property pair per breakpoint it sets', () => {
+		const variables = getFormGridVariables({ areas: { default: ['a', 'b'], md: ['a b'] } }, theme(), []);
+		expect(variables['--se-grid-areas']).toBe('"a" "b"');
+		expect(variables['--se-grid-template']).toBe('repeat(1, minmax(0, 1fr))');
+		expect(variables['--se-grid-areas-md']).toBe('"a b"');
+		expect(variables['--se-grid-template-md']).toBe('repeat(2, minmax(0, 1fr))');
+		expect(Object.keys(variables).some((name) => name.endsWith('-lg'))).toBe(false);
+	});
+
+	test('extra whitespace and empty cells survive normalisation', () => {
+		const variables = getFormGridVariables({ areas: ['  a   .  ', 'b b'] }, theme(), []);
+		expect(variables['--se-grid-areas']).toBe('"a ." "b b"');
+	});
+
+	test('areas keep the authored gap and add no default column', () => {
+		const variables = getFormGridVariables({ gap: 'loose', areas: ['a b'] }, theme(), []);
+		expect(variables['--se-grid-gap-x']).toBeDefined();
+		expect(variables).not.toHaveProperty('--se-grid-default-column');
+	});
+
+	test('a grid without areas emits no template areas', () => {
+		expect(getFormGridVariables({ columns: 2 }, theme(), [])).not.toHaveProperty('--se-grid-areas');
+	});
+
+	test('an element area travels as its column and row', () => {
+		expect(getFieldGridVariables({ area: 'a' })).toEqual({
+			'--se-field-grid-column': 'a',
+			'--se-field-grid-row': 'a',
+		});
+	});
+
+	test('a responsive area emits only the breakpoint the author wrote', () => {
+		const variables = getFieldGridVariables({ area: 'a', responsive: { md: { area: 'b' } } });
+		expect(variables).toEqual({
+			'--se-field-grid-column': 'a',
+			'--se-field-grid-row': 'a',
+			'--se-field-grid-column-md': 'b',
+			'--se-field-grid-row-md': 'b',
+		});
+	});
+
+	test('the stylesheet reads the template areas through the breakpoint cascade and resets them', () => {
+		expect(css()).toContain('grid-template-areas:var(--se-grid-areas, none);');
+		expect(css()).toContain(
+			'grid-template-areas:var(--se-grid-areas-md, var(--se-grid-areas-sm, var(--se-grid-areas, none)));',
+		);
+		expect(css()).toContain('--se-grid-areas:initial;');
+		expect(css()).toContain('--se-grid-areas-2xl:initial;');
+	});
+
+	test.each([['a;color:red'], ['a"b'], ['1a'], ['a b'], ['auto'], ['span'], ['inherit'], [''], ['a{}']])(
+		'rejects %j as an area name',
+		(name) => {
+			expect(ElementGridConfigSchema.safeParse({ area: name }).success).toBe(false);
+		},
+	);
+
+	test.each([['a'], ['street'], ['zip-code'], ['_x'], ['Area2']])('accepts %j as an area name', (name) => {
+		expect(ElementGridConfigSchema.safeParse({ area: name }).success).toBe(true);
+		expect(GridLayoutConfigSchema.safeParse({ areas: [`${name} .`] }).success).toBe(true);
+	});
+
+	test('a reserved keyword is not an area name in a template either', () => {
+		expect(GridLayoutConfigSchema.safeParse({ areas: ['auto b'] }).success).toBe(false);
+	});
+
+	test.each([[['a;b']], [['a "b"']], [[]], [{ default: [] }], [{ xs: ['a'] }]])(
+		'rejects the malformed areas %j',
+		(areas) => {
+			expect(GridLayoutConfigSchema.safeParse({ areas }).success).toBe(false);
+		},
+	);
+
+	test('areas are not a responsive grid key and not a container key', () => {
+		expect(GridLayoutConfigSchema.safeParse({ responsive: { md: { areas: ['a'] } } }).success).toBe(false);
 	});
 });

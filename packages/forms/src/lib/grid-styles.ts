@@ -5,10 +5,14 @@ import type {
 	GridOffsetName,
 	GridWidthName,
 } from '@/schemas/base-field';
+import type { DeepReadonly } from '@/lib/normalized-form-config';
 import { GridGapTokens } from '@/schemas/base-field';
 import {
+	areasTemplateValue,
 	BREAKPOINT_ORDER,
 	carryNamedPlacement,
+	CASCADE_SLOTS,
+	gridAreaTemplates,
 	usesGridWidths,
 	WIDTH_SPANS,
 	WIDTH_TRACKS,
@@ -356,6 +360,7 @@ function gridThemeId(
  */
 const GRID_PROPERTIES: readonly ResponsiveProperty[] = [
 	['grid-template-columns', 'se-grid-template', 'repeat(1, minmax(0, 1fr))'],
+	['grid-template-areas', 'se-grid-areas', 'none'],
 	['row-gap', 'se-grid-gap-y', DEFAULT_GAP_CSS],
 	['column-gap', 'se-grid-gap-x', DEFAULT_GAP_CSS],
 ];
@@ -536,6 +541,7 @@ interface FormGridEntry {
 
 /** Placement a single cascade slot may set; the top-level config is the `default` slot. */
 interface FieldGridEntry {
+	area?: string;
 	width?: GridWidthName;
 	offset?: GridOffsetName;
 	column?: number | string;
@@ -571,7 +577,7 @@ function emitGapEntry(variables: CssVariables, slot: CascadeSlot, entry: FormGri
  * for fields that set no width. Validation keeps that from meeting `columns`.
  */
 export function getFormGridVariables(
-	grid: GridLayoutConfig | undefined,
+	grid: DeepReadonly<GridLayoutConfig> | undefined,
 	theme: NormalizedGridTheme,
 	elements: readonly unknown[],
 ): CssVariables {
@@ -602,6 +608,17 @@ export function getFormGridVariables(
 	if (usesGridWidths(elements)) {
 		variables['--se-grid-template'] = `repeat(${WIDTH_TRACKS}, minmax(0, 1fr))`;
 		variables[DEFAULT_COLUMN_VARIABLE] = '1 / -1';
+	}
+
+	const templates = gridAreaTemplates(grid);
+	for (const slot of CASCADE_SLOTS) {
+		const rows = templates[slot];
+		if (!rows) continue;
+		variables[customProperty('se-grid-areas', slot)] = areasTemplateValue(rows);
+		variables[customProperty('se-grid-template', slot)] = toGridTemplate(
+			rows[0]?.length ?? 1,
+			theme.minColumnWidth,
+		);
 	}
 
 	const responsive = grid?.responsive;
@@ -647,6 +664,10 @@ function emitFieldEntry(
 	if (entry.width !== undefined || entry.offset !== undefined) {
 		carryNamedPlacement(named, entry);
 		variables[customProperty('se-field-grid-column', slot)] = namedColumn(named);
+	}
+	if (entry.area !== undefined) {
+		variables[customProperty('se-field-grid-column', slot)] = entry.area;
+		variables[customProperty('se-field-grid-row', slot)] = entry.area;
 	}
 	if (entry.column !== undefined) {
 		variables[customProperty('se-field-grid-column', slot)] = formatGridLine(entry.column);

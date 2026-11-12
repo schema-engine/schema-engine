@@ -42,7 +42,83 @@ export const GridGapValueSchema = z
 	.union([z.enum(GridGapTokens), z.string()])
 	.check(z.describe('Semantic gap token (none | compact | default | loose | wide) or a raw CSS length.'));
 
+/**
+ * Words that are not valid grid area names: `grid-area` reads `auto` and `span`
+ * as placement keywords, and the CSS-wide keywords reset a declaration.
+ */
+const RESERVED_AREA_NAMES = [
+	'auto',
+	'span',
+	'none',
+	'default',
+	'inherit',
+	'initial',
+	'unset',
+	'revert',
+	'revert-layer',
+];
+
+const AREA_NAME_SOURCE = `(?!(?:${RESERVED_AREA_NAMES.join('|')})(?![\\w-]))-?[_a-z][_a-z0-9-]*`;
+
+/**
+ * Name of a grid area: an ASCII CSS identifier that is not a reserved word.
+ *
+ * @remarks
+ * Names are written into a custom property that the stylesheet reads as CSS, so
+ * the pattern is the injection guard. Nothing outside `[a-z0-9_-]` can reach the
+ * property, which rules out quotes, semicolons, braces and whitespace.
+ */
+export const GridAreaNameSchema = z
+	.string()
+	.check(
+		z.regex(
+			new RegExp(`^${AREA_NAME_SOURCE}$`, 'i'),
+			'Area names are CSS identifiers such as "header" or "side-2".',
+		),
+		z.describe('Name of a cell group in the grid template: a CSS identifier such as "header" or "side-2".'),
+	);
+
+/** One row of a template: area names or `.` for an empty cell, separated by spaces. */
+const GridAreaRowSchema = z
+	.string()
+	.check(
+		z.regex(
+			new RegExp(`^\\s*(?:\\.+|${AREA_NAME_SOURCE})(?:\\s+(?:\\.+|${AREA_NAME_SOURCE}))*\\s*$`, 'i'),
+			'A grid areas row lists area names (CSS identifiers) or "." for an empty cell, separated by spaces.',
+		),
+	);
+
+const GridAreaRowsSchema = z.array(GridAreaRowSchema).check(z.minLength(1));
+
+/**
+ * A drawn layout: rows of area names, optionally per breakpoint.
+ *
+ * @remarks
+ * The column count comes from the rows, so a grid with `areas` sets no
+ * `columns`. Rows of one template must be the same length and each name must
+ * fill a rectangle; `validateForm` checks both, as CSS drops a template that
+ * breaks either.
+ */
+export const GridAreasSchema = z
+	.union([
+		GridAreaRowsSchema,
+		z.strictObject({
+			default: z.optional(GridAreaRowsSchema),
+			sm: z.optional(GridAreaRowsSchema),
+			md: z.optional(GridAreaRowsSchema),
+			lg: z.optional(GridAreaRowsSchema),
+			xl: z.optional(GridAreaRowsSchema),
+			'2xl': z.optional(GridAreaRowsSchema),
+		}),
+	])
+	.check(
+		z.describe(
+			'Rows of area names separated by spaces ("." is an empty cell), or a record of them per breakpoint (default, sm ... 2xl).',
+		),
+	);
+
 const GridLayoutPropertiesSchema = z.strictObject({
+	areas: z.optional(GridAreasSchema),
 	columns: z.optional(z.union([z.number(), z.literal('auto')])),
 	gap: z.optional(GridGapValueSchema),
 	gapX: z.optional(GridGapValueSchema),
@@ -104,6 +180,9 @@ export const GridOffsetNames = ['three-quarters', 'two-thirds', 'half', 'third',
 export type GridOffsetName = (typeof GridOffsetNames)[number];
 
 const ElementGridPropertiesSchema = z.strictObject({
+	area: z
+		.optional(GridAreaNameSchema)
+		.check(z.describe('Name of the cell group this field fills in the grid areas template.')),
 	width: z
 		.optional(z.enum(GridWidthNames))
 		.check(z.describe(`Named share of the row (${GridWidthNames.join(' | ')}).`)),
