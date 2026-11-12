@@ -71,7 +71,7 @@ describe('RadiantCodeTabs', () => {
 			expect(codeTabs.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toBe('Bash');
 		});
 		expect(changeSpy).toHaveBeenCalledTimes(1);
-		expect(codeTabs.getAttribute('selectedkey') ?? codeTabs.getAttribute('selected-key')).toBe('bash');
+		expect(codeTabs.getAttribute('selected-key')).toBe('bash');
 	});
 
 	it('announces a copy and clears the status after two seconds', async () => {

@@ -105,11 +105,12 @@ export class RadiantCodeTabs extends RadiantElement {
 		}
 
 		const requestedSelectedKey = this.selectedKey || this.defaultSelectedKey;
-		const selectedKey = tabs.some((tab) => tab.id === requestedSelectedKey) ? requestedSelectedKey : tabs[0]?.id;
+		const selectedTab = tabs.find((tab) => tab.id === requestedSelectedKey) ?? tabs[0]!;
+		const selectedKey = selectedTab.id;
 		const tabListLabel = this.label || 'Code examples';
 
 		return (
-			<RuiTabs variant="boxed" value={`${this.name}-${selectedKey}`} label={tabListLabel}>
+			<RuiTabs variant="boxed" value={this.tabKey(selectedTab)} label={tabListLabel}>
 				<RuiTabList aria-label={tabListLabel} class="code-tabs__list">
 					{tabs.map((tab) => (
 						<RuiTab id={this.tabKey(tab)} class="code-tabs__tab" selected={tab.id === selectedKey}>
