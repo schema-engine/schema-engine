@@ -204,7 +204,7 @@ floor. `maxItems` caps the built-in Add control. `initialValues` is merged over
 child `defaultValue`s for rows created by Add or to meet the `minItems` floor.
 Rows supplied through form `defaultValues` are included in server markup with
 deterministic IDs. During hydration, the connected array host retains those row
-nodes even when the array view has no JSX binding markers of its own. The array host reads its engine from the renderer's context and registers with the form once it has one. Direct
+nodes even when the array view has no JSX binding markers of its own. The array host reads its engine from the renderer's context and registers with the form once it has one. Its error is a controlled `RuiFieldError`; the array fieldset's `aria-describedby` points at it while it shows a message. Direct
 `FormController.fieldArray` mutations do not apply the
 array config's Add and Remove behavior.
 

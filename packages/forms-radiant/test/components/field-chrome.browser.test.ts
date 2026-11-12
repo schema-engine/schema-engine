@@ -124,6 +124,7 @@ test('an array error is shown with its message and the group is described by it'
 	]);
 	const group = host.querySelector('fieldset')!;
 	const region = host.querySelector<HTMLElement>('.se-form-array [data-rui-field-error]')!;
+	expect(region.hasAttribute('data-rui-field-error-controlled')).toBe(true);
 	expect(region.hidden).toBe(true);
 	expect(group.hasAttribute('aria-describedby')).toBe(false);
 
