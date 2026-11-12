@@ -2,7 +2,7 @@ import './form-array-elements.css';
 import { onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { RuiButton } from '@ecopages/radiant-ui/button';
-import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { FormElements } from '@/components/internals/form-elements';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import type { ArrayElementsProps } from './form-array-elements.types';
@@ -150,6 +150,8 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 
 @formElement('se-form-array')
 export class SeFormArray extends RadiantElement {
+	declare readonly [JSX_PROPS]?: { config: ArrayElementsProps };
+
 	@prop({ type: Object }) config!: ArrayElementsProps;
 
 	readonly form = new FormController(this);
@@ -160,7 +162,7 @@ export class SeFormArray extends RadiantElement {
 	private preservedHydratedContainer = false;
 	private renderedIds: string[] = [];
 
-	@state fieldError?: string;
+	@state private fieldError?: string;
 
 	@onContextUpdate({ context: formContext, requestUpdate: false })
 	onFormContext(value: FormContextValue): void {
@@ -399,10 +401,7 @@ export function FormArrayElements(config: ArrayElementsProps) {
 				</legend>
 			) : null}
 			{fieldConfig.description ? <p class="se-form-array-field__description">{fieldConfig.description}</p> : null}
-			{jsx('se-form-array', {
-				config: arrayConfig,
-				children,
-			})}
+			<SeFormArray config={arrayConfig}>{children}</SeFormArray>
 		</fieldset>
 	);
 }

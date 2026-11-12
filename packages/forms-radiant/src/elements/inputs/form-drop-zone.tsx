@@ -1,7 +1,7 @@
 import './form-drop-zone.css';
 import { onUpdated, prop, query, RadiantElement, state } from '@ecopages/radiant';
 import { registerFieldControl, type FieldControlAdapter } from '@ecopages/radiant-ui/form';
-import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
 import { emitControlChange } from '@/lib/field-control';
@@ -65,6 +65,10 @@ function formatFileNames(files: File[]) {
 
 @formElement('se-drop-zone')
 export class SeDropZone extends RadiantElement {
+	declare readonly [JSX_PROPS]?: Partial<
+		Pick<SeDropZone, 'name' | 'maxFiles' | 'maxSize' | 'minSize' | 'disabled' | 'accept'>
+	>;
+
 	@prop({ type: String }) name = '';
 	@prop({ type: Number, defaultValue: 1 }) maxFiles = 1;
 	@prop({ type: Number, defaultValue: 0 }) maxSize = 0;
@@ -72,8 +76,8 @@ export class SeDropZone extends RadiantElement {
 	@prop({ type: Boolean, defaultValue: false }) disabled = false;
 	@prop({ type: Object }) accept?: AcceptMap;
 
-	@state dragging = false;
-	@state files: File[] = [];
+	@state protected dragging = false;
+	@state protected files: File[] = [];
 
 	@query({ ref: 'input' }) fileInput!: HTMLInputElement | null;
 
@@ -222,14 +226,14 @@ export function FormDropZone(config: DropZoneFieldProps) {
 			defaultValue={config.defaultValue ?? []}
 			disabled={config.disabled}
 		>
-			{jsx('se-drop-zone', {
-				name: config.name,
-				maxFiles: config.maxFiles ?? 1,
-				maxSize: config.maxSize ?? 0,
-				minSize: config.minSize ?? 0,
-				accept: config.accept,
-				disabled: config.disabled,
-			})}
+			<SeDropZone
+				name={config.name}
+				maxFiles={config.maxFiles ?? 1}
+				maxSize={config.maxSize ?? 0}
+				minSize={config.minSize ?? 0}
+				accept={config.accept}
+				disabled={config.disabled}
+			/>
 		</FieldGroup>
 	);
 }

@@ -1,6 +1,6 @@
 import { contextSelector } from '@ecopages/radiant/context';
 import { prop, RadiantElement } from '@ecopages/radiant';
-import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { formatStepLabel, type StepIndicatorsConfig } from '@schema-engine/forms/recipes/built-in';
 import type { FormMeta } from '@/lib/instance-view';
@@ -11,11 +11,13 @@ import { formElement } from '@/lib/define-element';
 
 @formElement('se-step-indicators')
 export class StepIndicatorsElement extends RadiantElement {
+	declare readonly [JSX_PROPS]?: { meta?: FormMeta; slotConfig?: StepIndicatorsConfig };
+
 	@prop({ type: Object }) meta?: FormMeta;
 	@prop({ type: Object }) slotConfig?: StepIndicatorsConfig;
 
 	@contextSelector({ context: formInstanceContext })
-	instance?: FormInstanceContextValue;
+	protected instance?: FormInstanceContextValue;
 
 	private goToStep(index: number): void {
 		void this.instance?.goToStep(index);
@@ -96,8 +98,10 @@ export class StepIndicatorsElement extends RadiantElement {
 }
 
 export function StepIndicatorsBlock(context?: RecipeSlotContext): JsxRenderable {
-	return jsx('se-step-indicators', {
-		meta: context?.meta,
-		slotConfig: context?.slotConfig,
-	});
+	return (
+		<StepIndicatorsElement
+			meta={context?.meta}
+			slotConfig={context?.slotConfig as StepIndicatorsConfig | undefined}
+		/>
+	);
 }

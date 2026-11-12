@@ -100,6 +100,7 @@ View-owned shell, same authoring model as radiant-ui: the `FormRenderer` / `Form
 - Every step's fields are authored once inside `se-form-step`; hosts bind their own `hidden` attribute to the instance's step state (the view writes it only for the server markup; from connect on the step owns it and follows every value the instance publishes, so a wizard that becomes a non-wizard shows its steps), so SSR emits the full form and step switching is pure DOM. A native submit (Enter in a text input) before the last step of a wizard is intercepted by `se-form-instance` and goes to the next step, whatever the number of fields.
 - Server-rendered constraints use the nested authored and caller defaults. Each field shares one constraint snapshot between its visibility wrapper and registered renderer. Live updates preserve an authored `disabled: true`, including when an `enable` constraint matches. A field's `disabled` and `required` compose its own authored state with every constraint wrapper around it, so a child of a constrained fieldset keeps its own `disabled`; a fieldset disabled by authoring or by a constraint renders its children disabled, and one required by a matching `require` constraint renders them with their required marker, and live sync keeps them so. An array passes both to its rows the same way: a disabled array, authored or by a constraint, renders its rows and its add and remove buttons disabled, and live sync keeps an authored `disabled` array's rows disabled. Use `evaluateConstraints({ constraints, values, fieldPath, baseRequired })` from `@schema-engine/forms/constraints`; the Radiant `evaluateConstraintLogic` hook has been removed.
 - Conditional fields with constraints are wrapped in a plain `.se-form-constraint` container with `data-se-constraint-field`. `se-form-instance` listens to the form store and toggles `hidden` and the field's `disabled` reactively, without separate custom element wrappers or serialized JSON configs. It reads the rendered `data-se-constraint-field` values rather than building selectors from the config, so each row of an array resolves its own siblings. Constraint `require` updates the live `FieldRules` object (so `validate` functions and `RegExp` patterns survive) and toggles `[data-se-required-marker]` on the label.
+- Every `se-*` host declares its public props with `JSX_PROPS`, and the views render the host class (`<FormStepElement stepIndex={i} />`), so a misspelled or dead prop is a compile error; internal `@state` is `protected`. A `se-split-screen-side` without `meta` renders its children.
 - `FieldGroup` composes the label, required marker, description and error for every field element, checkbox, switch and radio included, and `RequiredMarker` is the one marker constraint sync toggles. A field without a `label` renders the label from its `name`, visually hidden (`.se-visually-hidden`), so the control keeps an accessible name. `FormRenderer`, `FormElements`, `FormElement` and `FieldGroup` take `class`, not `className`. The input and textarea views forward every parsed config key (`autoComplete`, `autoFocus`, `inputMode`, `spellCheck`, `cols`, `wrap`, `resize`). An array renders as a `fieldset` named by its label, its error in a `[data-rui-field-error]` region, and each remove button is named `<removeButtonText> <row number>`; the drop zone outlines itself while its file input has keyboard focus.
 - Recipe chrome blocks read serializable `meta` / `slotConfig` props (the block's own slot config, not the whole view) plus the live `formInstanceContext` (a value that is absent before the instance publishes, and that carries the form `meta`); where SSR cannot resolve context (authored children serialize before providers publish), they fall back to the initial step-0 state and hydrate the live values.
 - Published JS must keep element registrations: `sideEffects` marks the compiled chunks so bundlers do not drop the bare script imports.
@@ -120,10 +121,12 @@ export class FormInstanceElement extends RadiantElement { … }
 ```tsx
 // form-instance.tsx
 /** Registers `<se-form-instance>` when this view is imported. */
-export { FormInstanceElement } from './form-instance.script';
+import { FormInstanceElement } from './form-instance.script';
+
+export { FormInstanceElement };
 
 export function FormInstance({ config, … }) {
-	return jsx('se-form-instance', { config, children: … });
+	return <FormInstanceElement config={config}>…</FormInstanceElement>;
 }
 ```
 
@@ -179,7 +182,8 @@ isolated. Breakpoint thresholds on the engine must keep named order
 Fields and array components share Radiant UI's form store through
 `FormController`. Use it with explicit `connect` / `disconnect` lifecycle methods
 or the optional `@formController` decorator. `FormFieldElement` extends
-`RuiFieldElement` and exposes scoped form access; Radiant UI retains control
+`RuiFieldElement` with no form access of its own (construct a `FormController` on
+it when needed); Radiant UI retains control
 registration, validation, and error presentation. Custom async validators keep
 debounce state in the field's validator closure, so one field instance cannot
 cancel another field's pending request. When a later validation of the same

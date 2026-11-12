@@ -1,7 +1,7 @@
 import './form-masked-input.css';
 import { bindTo, onUpdated, prop, query, state } from '@ecopages/radiant';
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
-import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
 import {
@@ -29,6 +29,26 @@ import { formElement } from '@/lib/define-element';
  */
 @formElement('se-masked-input', { hostAttributes: fieldControlHostAttributes('[data-ref="input"]') })
 export class SeMaskedInput extends FormAssociatedElement {
+	declare readonly [JSX_PROPS]?: Partial<
+		Pick<
+			SeMaskedInput,
+			| 'name'
+			| 'disabled'
+			| 'value'
+			| 'inputId'
+			| 'mask'
+			| 'unmask'
+			| 'placeholder'
+			| 'autoComplete'
+			| 'inputMode'
+			| 'placeholderChar'
+			| 'lazy'
+			| 'overwrite'
+			| 'autoFocus'
+			| 'definitions'
+		>
+	>;
+
 	@prop({ type: String }) value = '';
 	@prop({ type: String }) inputId = '';
 	@prop({ type: String }) mask = '';
@@ -42,7 +62,7 @@ export class SeMaskedInput extends FormAssociatedElement {
 	@prop({ type: Boolean, defaultValue: false }) autoFocus = false;
 	@prop({ type: Object }) definitions?: Record<string, string>;
 
-	@state @bindTo({ bool: 'data-ready' }) ready = false;
+	@state @bindTo({ bool: 'data-ready' }) protected ready = false;
 
 	@query({ ref: 'input' }) input!: HTMLInputElement | null;
 
@@ -186,22 +206,22 @@ export function FormMaskedInput(config: MaskedInputFieldProps) {
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}
 		>
-			{jsx('se-masked-input', {
-				name: config.name,
-				placeholder: config.placeholder,
-				disabled: config.disabled,
-				inputId: config.id ?? '',
-				mask: config.mask,
-				unmask: config.unmask === 'typed' ? 'typed' : config.unmask ? 'true' : '',
-				lazy: config.lazy ?? true,
-				overwrite: Boolean(config.overwrite),
-				placeholderChar: config.placeholderChar ?? '',
-				definitions: config.definitions,
-				autoComplete: config.autoComplete ?? '',
-				inputMode: config.inputMode ?? '',
-				autoFocus: Boolean(config.autoFocus),
-				value: typeof config.defaultValue === 'string' ? config.defaultValue : '',
-			})}
+			<SeMaskedInput
+				name={config.name}
+				placeholder={config.placeholder}
+				disabled={config.disabled}
+				inputId={config.id ?? ''}
+				mask={config.mask}
+				unmask={config.unmask === 'typed' ? 'typed' : config.unmask ? 'true' : ''}
+				lazy={config.lazy ?? true}
+				overwrite={Boolean(config.overwrite)}
+				placeholderChar={config.placeholderChar ?? ''}
+				definitions={config.definitions}
+				autoComplete={config.autoComplete ?? ''}
+				inputMode={config.inputMode ?? ''}
+				autoFocus={Boolean(config.autoFocus)}
+				value={typeof config.defaultValue === 'string' ? config.defaultValue : ''}
+			/>
 		</FieldGroup>
 	);
 }

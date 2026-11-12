@@ -1,6 +1,6 @@
 import { contextSelector } from '@ecopages/radiant/context';
 import { prop, RadiantElement } from '@ecopages/radiant';
-import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { type FormActionsConfig } from '@schema-engine/forms/recipes/built-in';
 import type { RecipeSlotContext } from '@/recipes/types';
@@ -20,10 +20,12 @@ import { formElement } from '@/lib/define-element';
  */
 @formElement('se-form-actions')
 export class FormActionsElement extends RadiantElement {
+	declare readonly [JSX_PROPS]?: { slotConfig?: FormActionsConfig };
+
 	@prop({ type: Object }) slotConfig?: FormActionsConfig;
 
 	@contextSelector({ context: formInstanceContext })
-	instance?: FormInstanceContextValue;
+	protected instance?: FormInstanceContextValue;
 
 	override render(): JsxRenderable {
 		if (!this.slotConfig) return null;
@@ -40,7 +42,5 @@ export class FormActionsElement extends RadiantElement {
 }
 
 export function FormActionsBlock(context?: RecipeSlotContext): JsxRenderable {
-	return jsx('se-form-actions', {
-		slotConfig: context?.slotConfig,
-	});
+	return <FormActionsElement slotConfig={context?.slotConfig as FormActionsConfig | undefined} />;
 }

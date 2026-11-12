@@ -1,7 +1,7 @@
 import { afterEach, expect, test, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { FormFieldElement } from '@/elements/form-field';
-import { mountField as mount } from './mount-field';
+import { formOf, mountField as mount } from './mount-field';
 
 afterEach(() => document.body.replaceChildren());
 
@@ -31,19 +31,19 @@ test('a reset clears the visible masked input', async () => {
 
 	await userEvent.type(input, '12345');
 	await expect.poll(() => input.value).toBe('123-45');
-	expect(field.form.getValue('zip')).toBe('123-45');
+	expect(formOf(field).getValue('zip')).toBe('123-45');
 
-	field.form.reset();
+	formOf(field).reset();
 
 	await expect.poll(() => input.value).toBe('');
-	expect(field.form.getValue('zip') ?? '').toBe('');
+	expect(formOf(field).getValue('zip') ?? '').toBe('');
 });
 
 test('a programmatic write reaches the visible phone number', async () => {
 	const { host, field } = await mount(phone);
 	await expect.poll(() => host.querySelector('se-phone-input[data-ready]')).toBeTruthy();
 
-	field.form.setValue('contact', '+14155550123');
+	formOf(field).setValue('contact', '+14155550123');
 
 	const number = host.querySelector<HTMLInputElement>('se-phone-input [data-ref="number"]')!;
 	await expect.poll(() => number.value).toBe('(415) 555-0123');
@@ -56,12 +56,12 @@ test('a reset clears the visible phone number', async () => {
 	const number = host.querySelector<HTMLInputElement>('se-phone-input [data-ref="number"]')!;
 	await userEvent.type(number, '4155550123');
 	await expect.poll(() => number.value).toBe('(415) 555-0123');
-	expect(field.form.getValue('contact')).toBe('+14155550123');
+	expect(formOf(field).getValue('contact')).toBe('+14155550123');
 
-	field.form.reset();
+	formOf(field).reset();
 
 	await expect.poll(() => number.value).toBe('');
-	expect(field.form.getValue('contact') ?? '').toBe('');
+	expect(formOf(field).getValue('contact') ?? '').toBe('');
 });
 
 test('a reset clears the OTP slots', async () => {
@@ -75,9 +75,9 @@ test('a reset clears the OTP slots', async () => {
 				.join(''),
 		)
 		.toBe('123');
-	expect(field.form.getValue('code')).toBe('123');
+	expect(formOf(field).getValue('code')).toBe('123');
 
-	field.form.reset();
+	formOf(field).reset();
 
 	await expect
 		.poll(() =>
@@ -86,7 +86,7 @@ test('a reset clears the OTP slots', async () => {
 				.join(''),
 		)
 		.toBe('');
-	expect(field.form.getValue('code') ?? '').toBe('');
+	expect(formOf(field).getValue('code') ?? '').toBe('');
 });
 
 test.each([
@@ -112,14 +112,14 @@ test('a phone input submits its E.164 number in native form data', async () => {
 test('a programmatic write reaches the visible masked input and the OTP slots', async () => {
 	const masked_ = await mount(masked);
 	await expect.poll(() => masked_.host.querySelector('se-masked-input[data-ready]')).toBeTruthy();
-	masked_.field.form.setValue('zip', '12345');
+	formOf(masked_.field).setValue('zip', '12345');
 	await expect
 		.poll(() => masked_.host.querySelector<HTMLInputElement>('se-masked-input input')!.value)
 		.toBe('123-45');
 	document.body.replaceChildren();
 
 	const code = await mount(otp);
-	code.field.form.setValue('code', '123456');
+	formOf(code.field).setValue('code', '123456');
 	await expect
 		.poll(() =>
 			Array.from(code.host.querySelectorAll<HTMLInputElement>('se-input-otp input'))
@@ -146,12 +146,14 @@ test('a drop zone stores its files and a reset clears them and the file input', 
 	input.files = transfer.files;
 	input.dispatchEvent(new Event('change', { bubbles: true }));
 
-	await expect.poll(() => (field.form.getValue('upload') as File[]).map((file) => file.name)).toEqual(['hello.txt']);
+	await expect
+		.poll(() => (formOf(field).getValue('upload') as File[]).map((file) => file.name))
+		.toEqual(['hello.txt']);
 
-	field.form.reset();
+	formOf(field).reset();
 
 	await expect.poll(() => input.files?.length).toBe(0);
-	expect(field.form.getValue('upload') ?? []).toEqual([]);
+	expect(formOf(field).getValue('upload') ?? []).toEqual([]);
 });
 
 test('a field observes no mutations and resyncs once for each custom control it holds', async () => {

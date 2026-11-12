@@ -2,7 +2,7 @@ import { FormController, formController } from '@/adapters/radiant/controller';
 import './form-debugger.css';
 import { prop, RadiantElement, state } from '@ecopages/radiant';
 import { contextSelector } from '@ecopages/radiant/context';
-import { jsx } from '@ecopages/jsx/jsx-runtime';
+import type { JSX_PROPS } from '@ecopages/jsx';
 import { RuiBadge } from '@ecopages/radiant-ui/badge';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
@@ -235,11 +235,13 @@ export interface FormDebuggerProps {
 /** Opt-in floating inspector for values, errors, and multi-step progress. */
 @formElement('se-form-debugger')
 export class FormDebuggerElement extends RadiantElement {
+	declare readonly [JSX_PROPS]?: FormDebuggerProps;
+
 	@prop({ type: Boolean, defaultValue: false }) defaultOpen = false;
 	@prop({ type: Boolean, defaultValue: true }) showStepDetails = true;
 	@prop({ type: Boolean, defaultValue: true }) showFormState = true;
 
-	@state open = false;
+	@state protected open = false;
 
 	@formController form!: FormController;
 
@@ -322,9 +324,11 @@ export class FormDebuggerElement extends RadiantElement {
 }
 
 export function FormDebugger(props: FormDebuggerProps = {}) {
-	return jsx('se-form-debugger', {
-		defaultOpen: props.defaultOpen,
-		showStepDetails: props.showStepDetails,
-		showFormState: props.showFormState,
-	});
+	return (
+		<FormDebuggerElement
+			defaultOpen={props.defaultOpen}
+			showStepDetails={props.showStepDetails}
+			showFormState={props.showFormState}
+		/>
+	);
 }

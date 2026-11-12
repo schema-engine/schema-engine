@@ -1,6 +1,6 @@
 import { bindTo, onUpdated, prop, RadiantElement, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
-import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { formElement } from '@/lib/define-element';
 
@@ -20,6 +20,8 @@ import { formElement } from '@/lib/define-element';
  */
 @formElement('se-form-step')
 export class FormStepElement extends RadiantElement {
+	declare readonly [JSX_PROPS]?: { stepIndex?: number };
+
 	@prop({ type: Number, defaultValue: 0 }) stepIndex = 0;
 
 	@state
@@ -66,9 +68,9 @@ export function FormStep({
 	hidden?: boolean;
 	children: JsxRenderable;
 }): JsxRenderable {
-	return jsx('se-form-step', {
-		stepIndex,
-		hidden,
-		children,
-	});
+	return (
+		<FormStepElement stepIndex={stepIndex} hidden={hidden}>
+			{children}
+		</FormStepElement>
+	);
 }

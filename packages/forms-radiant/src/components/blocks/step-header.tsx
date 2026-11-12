@@ -1,6 +1,6 @@
 import { contextSelector } from '@ecopages/radiant/context';
 import { prop, RadiantElement } from '@ecopages/radiant';
-import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { RuiHeading, RuiHeadingDescription, RuiHeadingTitle } from '@ecopages/radiant-ui/heading';
 import { formatStepLabel, type StepHeaderConfig } from '@schema-engine/forms/recipes/built-in';
 import type { FormMeta } from '@/lib/instance-view';
@@ -11,11 +11,13 @@ import { formElement } from '@/lib/define-element';
 
 @formElement('se-step-header')
 export class StepHeaderElement extends RadiantElement {
+	declare readonly [JSX_PROPS]?: { meta?: FormMeta; slotConfig?: StepHeaderConfig };
+
 	@prop({ type: Object }) meta?: FormMeta;
 	@prop({ type: Object }) slotConfig?: StepHeaderConfig;
 
 	@contextSelector({ context: formInstanceContext })
-	instance?: FormInstanceContextValue;
+	protected instance?: FormInstanceContextValue;
 
 	override render(): JsxRenderable {
 		const meta = this.meta;
@@ -59,8 +61,5 @@ export class StepHeaderElement extends RadiantElement {
 }
 
 export function StepHeaderBlock(context?: RecipeSlotContext): JsxRenderable {
-	return jsx('se-step-header', {
-		meta: context?.meta,
-		slotConfig: context?.slotConfig,
-	});
+	return <StepHeaderElement meta={context?.meta} slotConfig={context?.slotConfig as StepHeaderConfig | undefined} />;
 }

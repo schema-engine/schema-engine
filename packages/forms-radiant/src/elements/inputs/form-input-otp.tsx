@@ -1,7 +1,7 @@
 import './form-input-otp.css';
 import { prop, query, state } from '@ecopages/radiant';
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
-import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
 import {
@@ -32,10 +32,12 @@ function sanitizeChar(value: string, pattern: 'numeric' | 'alphanumeric') {
  */
 @formElement('se-input-otp', { hostAttributes: fieldControlHostAttributes('[data-ref="group"]') })
 export class SeInputOtp extends FormAssociatedElement {
+	declare readonly [JSX_PROPS]?: Partial<Pick<SeInputOtp, 'name' | 'disabled' | 'length' | 'pattern'>>;
+
 	@prop({ type: Number, defaultValue: 6 }) length = 6;
 	@prop({ type: String, defaultValue: 'numeric' }) pattern: 'numeric' | 'alphanumeric' = 'numeric';
 
-	@state slots: string[] = [];
+	@state protected slots: string[] = [];
 
 	@query({ ref: 'slot', all: true }) slotInputs!: HTMLInputElement[];
 
@@ -177,12 +179,12 @@ export function FormInputOTP(config: InputOTPFieldProps) {
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}
 		>
-			{jsx('se-input-otp', {
-				name: config.name,
-				length: config.length ?? 6,
-				pattern: config.pattern ?? 'numeric',
-				disabled: config.disabled,
-			})}
+			<SeInputOtp
+				name={config.name}
+				length={config.length ?? 6}
+				pattern={config.pattern ?? 'numeric'}
+				disabled={config.disabled}
+			/>
 		</FieldGroup>
 	);
 }

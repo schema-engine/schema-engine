@@ -35,8 +35,8 @@ export const HydratedField: Story = {
 		await waitFor(() => expect(canvas.getByLabelText('Name')).toHaveValue('Ada'));
 		const field = canvasElement.querySelector('se-field');
 		if (!(field instanceof FormFieldElement)) throw new Error('Expected hydrated field');
-		await expect(field.form.ready).toBe(true);
 		const form = new FormController(field);
+		await expect(form.ready).toBe(true);
 		await userEvent.clear(canvas.getByLabelText('Name'));
 		await expect(await form.trigger()).toBe(false);
 		await expect(form.field('name').error).toBe('Name is required');

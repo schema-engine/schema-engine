@@ -6,7 +6,12 @@ import type * as z from 'zod/mini';
 /** Serializable render inputs handed to recipe slot factories. */
 export interface RecipeSlotContext {
 	meta?: FormMeta;
-	/** The config of the slot being rendered, taken from the normalized view. */
+	/**
+	 * The config of the slot being rendered, taken from the normalized view.
+	 *
+	 * @remarks
+	 * The view schema has already parsed it, so a block narrows it to its own config type.
+	 */
 	slotConfig?: Record<string, unknown>;
 }
 

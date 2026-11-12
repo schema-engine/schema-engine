@@ -1,7 +1,6 @@
 import { RuiFieldElement, type RuiFieldProps } from '@ecopages/radiant-ui/field';
 import { findFieldControl, RUI_FIELD_MANAGED_ATTR, type FieldRules } from '@ecopages/radiant-ui/form';
-import { jsx, type JsxCustomElementAttributes } from '@ecopages/jsx';
-import { FormController, formController } from '@/adapters/radiant/controller';
+import type { JsxCustomElementAttributes } from '@ecopages/jsx';
 import { readHydratedRules } from '@/components/internals/field-rule-hydrator';
 import type { ElementGridConfig } from '@schema-engine/forms/schemas';
 import { resolveElementRules, toFieldRules, type FieldRulesSource } from '@/lib/field-rules';
@@ -9,11 +8,9 @@ import { FIELD_ARIA_TARGET_ATTR } from '@/lib/field-control';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { formElement } from '@/lib/define-element';
 
-/** RuiField's registration and presentation, with scoped programmatic form access. */
+/** RuiField's registration and presentation, restoring hydrated rules and defaults. */
 @formElement('se-field')
 export class FormFieldElement extends RuiFieldElement {
-	@formController form!: FormController;
-
 	protected override onConnected(): void {
 		this.hydrateDefaultValue();
 		const rules = readHydratedRules(this);
@@ -64,10 +61,6 @@ export class FormFieldElement extends RuiFieldElement {
 			this.defaultValue = undefined;
 		}
 	}
-
-	get field() {
-		return this.form.field(this.name);
-	}
 }
 
 /** Runs a hand-written `validate` after the validator derived from the engine rules; the first failure wins. */
@@ -108,21 +101,23 @@ export function FormField({
 	const fieldHost = mergeFieldGridHost(grid, style);
 	const validationRules = validation ? resolveElementRules(validation) : undefined;
 
-	return jsx('se-field', {
-		...props,
-		classes: ['se-form-field', className],
-		'data-se-grid-theme': fieldHost.themeId,
-		style: fieldHost.style,
-		'prop:rules': withCustomValidate(toFieldRules({ rules: validationRules, name: validation?.name }), validate),
-		'data-se-validation-rules': validationRules ? JSON.stringify(validationRules) : undefined,
-		'prop:defaultValue': defaultValue,
-		data: {
-			defaultValue: defaultValueData ?? (defaultValue !== undefined ? JSON.stringify(defaultValue) : undefined),
-		},
-		children: (
+	return (
+		<FormFieldElement
+			{...props}
+			classes={['se-form-field', className]}
+			data-se-grid-theme={fieldHost.themeId}
+			style={fieldHost.style}
+			rules={withCustomValidate(toFieldRules({ rules: validationRules, name: validation?.name }), validate)}
+			data-se-validation-rules={validationRules ? JSON.stringify(validationRules) : undefined}
+			defaultValue={defaultValue}
+			data={{
+				defaultValue:
+					defaultValueData ?? (defaultValue !== undefined ? JSON.stringify(defaultValue) : undefined),
+			}}
+		>
 			<div class="rui-field" data-ref="field">
 				{children}
 			</div>
-		),
-	});
+		</FormFieldElement>
+	);
 }
