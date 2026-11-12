@@ -27,8 +27,8 @@ export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
  * @remarks
  * View-owned shell: the `FormRenderer` view authors the whole form tree as
  * light-DOM children, so SSR expands it without any derived tree here. The host
- * only publishes `formEngineContext`; `engine` stays `@state` and is re-attached
- * by the page script, mirroring how `RuiForm` binds `resolver`. Submission belongs
+ * only publishes `formEngineContext`; the app binds `engine` before the renderer
+ * upgrades (see `engine`). Submission belongs
  * to `se-form-instance`.
  *
  * @element se-form-renderer

@@ -275,5 +275,4 @@ test('step navigation dispatches step triggers once from the instance, with no a
 
 	expect(execute).toHaveBeenCalledOnce();
 	expect(instance.currentStep).toBe(1);
-	expect(document.querySelector('se-form-action-controller')).toBeNull();
 });

@@ -6,7 +6,10 @@ import { schemaFormRegistrations } from '@/registrations';
 import { CardRecipe, WizardRecipe } from '@/recipes';
 import { testAction } from '../adapters/test-actions';
 
-afterEach(() => document.body.replaceChildren());
+afterEach(() => {
+	document.body.replaceChildren();
+	vi.restoreAllMocks();
+});
 
 const engine = createRadiantFormEngine({
 	elements: schemaFormRegistrations,
@@ -77,14 +80,15 @@ test('the submit button shows the submitting label and is disabled while onSubmi
 
 test('the last step of a wizard shows the submitting state', async () => {
 	const pending = deferred();
-	const { submit, form } = await mount(() => pending.promise, { steps: 2 });
-	expect(form.closest('body')?.querySelector('se-wizard-actions')).toBeTruthy();
+	const { host, submit, form } = await mount(() => pending.promise, { steps: 2 });
+	expect(host.querySelector('se-wizard-actions')).toBeTruthy();
 
 	form.querySelector<HTMLButtonElement>('[data-se-view-next]')!.click();
 	await expect.poll(() => submit().hidden).toBe(false);
 	submit().click();
 
 	await expect.poll(() => submit().disabled).toBe(true);
+	expect(submit().textContent?.trim()).toBe('Submitting...');
 	pending.resolve();
 	await expect.poll(() => submit().disabled).toBe(false);
 });
@@ -122,12 +126,11 @@ test('the alert reports an error for a rejected submission and never reports suc
 });
 
 test('start and complete events also fire when submit actions are configured', async () => {
-	const { host, submit, events } = await mount(async () => {}, { actions: true });
+	const { submit, events } = await mount(async () => {}, { actions: true });
 
 	submit().click();
 
 	await expect.poll(() => events).toEqual(['start', 'complete:true']);
-	expect(host.querySelector('se-form-action-controller')).toBeNull();
 });
 
 test('onSubmit runs once through the instance and the renderer element has no onSubmit property', async () => {

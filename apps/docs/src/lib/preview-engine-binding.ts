@@ -23,11 +23,11 @@ function parkPreviews(root: ParentNode): DocumentFragment[] {
 }
 
 /** Binds the engine to each parked renderer, then returns the previews to the containers in the live document. */
-function restorePreviews(parked: DocumentFragment[], engine: typeof formEngine): void {
+function restorePreviews(parked: DocumentFragment[], engine: typeof formEngine | undefined): void {
 	const containers = document.querySelectorAll(PREVIEW_SELECTOR);
 	parked.forEach((fragment, index) => {
 		for (const renderer of fragment.querySelectorAll<FormRendererElement>('se-form-renderer')) {
-			renderer.engine = engine;
+			if (engine) renderer.engine = engine;
 		}
 		containers[index]?.append(fragment);
 	});
@@ -49,7 +49,10 @@ export function installPreviewEngineBinding(): void {
 
 	let parked = parkPreviews(document);
 	const engine = import('@/lib/form-engine-setup').then((module) => module.formEngine);
-	void engine.then((resolved) => restorePreviews(parked, resolved));
+	engine.then(
+		(resolved) => restorePreviews(parked, resolved),
+		() => restorePreviews(parked, undefined),
+	);
 
 	document.addEventListener('eco:before-swap', (event) => {
 		parked = parkPreviews((event as CustomEvent<{ newDocument: Document }>).detail.newDocument);

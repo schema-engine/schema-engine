@@ -4,6 +4,7 @@ import { buildFormActionContext, collectStepActions, runSubmissionLifecycle } fr
 import { ActionDispatcher, type ActionDispatchInput } from '@schema-engine/forms/actions';
 import type { FormActionConfig } from '@schema-engine/forms/schemas';
 import type { FormProviderProps } from '@/adapters/types';
+import { logger } from '@/lib/logger';
 import { expandValues } from './controller/values';
 import type { FormController } from './controller';
 
@@ -66,7 +67,7 @@ export class FormActions {
 		const { form } = this.options;
 		if (this.started || !form.ready) return;
 		this.started = true;
-		void this.dispatchTrigger('form_mount');
+		this.dispatchQuietly('form_mount');
 		let initial = true;
 		this.unwatchChanges = form.watchForm(() => {
 			if (!form.formState.isSubmitted) this.submitAttempts = 0;
@@ -74,8 +75,14 @@ export class FormActions {
 				initial = false;
 				return;
 			}
-			void this.dispatchTrigger('form_change');
+			this.dispatchQuietly('form_change');
 		});
+	}
+
+	private dispatchQuietly(trigger: FormActionTrigger): void {
+		this.dispatchTrigger(trigger).catch((error: unknown) =>
+			logger.error(`Form action trigger ${trigger} failed`, error),
+		);
 	}
 
 	dispose(): void {

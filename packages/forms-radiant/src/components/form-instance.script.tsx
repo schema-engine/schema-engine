@@ -115,6 +115,7 @@ export class FormInstanceElement extends RadiantElement {
 		this.navigation.cancel();
 		this.stopWatchingValidationDependencies();
 		this.disposeActions();
+		if (this.form?.host) (this.form.host as RuiFormElement).onSubmit = undefined;
 		this.unwatchChanges?.();
 		this.unwatchChanges = undefined;
 		this.form?.disconnect();
@@ -174,6 +175,7 @@ export class FormInstanceElement extends RadiantElement {
 	 * logged, not rethrown: the event is how the page learns of it.
 	 */
 	private async submitForm(ruiForm: RuiFormElement, data: Record<string, unknown>): Promise<void> {
+		if (this.submitting) return;
 		const announce = (type: string, detail?: unknown) =>
 			ruiForm.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
 		this.setSubmitting(true);
