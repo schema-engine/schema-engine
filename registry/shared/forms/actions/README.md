@@ -29,7 +29,7 @@ The submit button component provides a button that submits the form while displa
 	label: 'Submit Form', // Button text
 	disabled: false, // Optional: disable button
 	className: 'custom-class', // Optional: custom CSS classes
-	style: { marginTop: '1rem' }, // Optional: inline styles
+	style: { '--button-margin': '1rem' }, // Optional: CSS custom properties only
 }
 ```
 
@@ -94,8 +94,7 @@ const formConfig = {
 	label: 'Submit',
 	className: 'btn-large btn-primary',
 	style: {
-		marginTop: '1.5rem',
-		width: '100%',
+		'--button-margin': '1.5rem',
 	},
 }
 ```
