@@ -113,7 +113,6 @@ function arrayErrorId(config: ArrayElementsProps): string {
 }
 
 function renderArrayContent({ config, rows, initialValues, renderValues, fieldError }: ArrayContentProps) {
-	const isSingleField = usesScalarArrayItem(config, config.name, config.elements, renderValues);
 	const count = computed(() => rows.get().length);
 	const maxItems = config.maxItems;
 	const disabled = config.disabled === true;
@@ -132,6 +131,7 @@ function renderArrayContent({ config, rows, initialValues, renderValues, fieldEr
 					const elements = withContainerState(config, config.elements);
 					const minItems = config.minItems ?? 0;
 					const childrenHost = mergeChildrenGridHost(config.elements, engine);
+					const isSingleField = usesScalarArrayItem(config, config.name, config.elements, renderValues);
 					const scope = arrayItemScope(config.name, index, id, {
 						scalar: isSingleField,
 						parentInstanceId: config.instanceId,

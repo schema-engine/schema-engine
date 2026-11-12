@@ -128,6 +128,31 @@ test('existing rows follow a change to the array config', async () => {
 	expect([...rowsById(host).values()]).toEqual(rows);
 });
 
+test('a scalar array that gains named children names its fields by child', async () => {
+	const { host, form, arrayHost } = await mountArray();
+	arrayHost.config = {
+		...arrayHost.config,
+		elements: [
+			{ $type: 'input', name: 'first', label: 'First' },
+			{ $type: 'input', name: 'second', label: 'Second' },
+		],
+	} as typeof arrayHost.config;
+	await expect
+		.poll(() => [...host.querySelectorAll('input')].map((input) => input.name))
+		.toEqual([
+			'contacts.0.first',
+			'contacts.0.second',
+			'contacts.1.first',
+			'contacts.1.second',
+			'contacts.2.first',
+			'contacts.2.second',
+		]);
+	const input = host.querySelector<HTMLInputElement>('input[name="contacts.0.second"]')!;
+	input.value = 'typed';
+	input.dispatchEvent(new Event('input', { bubbles: true }));
+	await expect.poll(() => form.getValue('contacts.0.second')).toBe('typed');
+});
+
 test('typing into a row survives a sibling being added', async () => {
 	const { host, form } = await mountArray();
 	const first = inputOf([...rowsById(host).values()][0]!);
