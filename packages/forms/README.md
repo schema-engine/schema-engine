@@ -116,8 +116,9 @@ elements: [
 
 A form, a step and a field each take `className` and `style` as an escape hatch
 for CSS the engine's vocabulary does not cover. `className` is applied as written
-to the form element, the step element (`<div class="se-form-step">` in React,
-`<se-form-step>` in Radiant, both marked `data-se-step`) or the field control.
+to the form element or the step element (`<div class="se-form-step">` in React,
+`<se-form-step>` in Radiant, both marked `data-se-step`). On a field it is
+passed to the control by the React registry inputs and is not applied by the Radiant ones.
 `style` accepts only CSS custom properties: keys that start with `--` and string
 or number values. Custom properties mean the same in every renderer and write
 the same in JSON or YAML, whereas a named property such as `maxWidth` would be
@@ -134,7 +135,7 @@ The engine also owns the appearance vocabulary through the optional `appearance`
 option. `size` (`compact | default | comfortable`) and `surface`
 (`flat | outlined | elevated`) are built in; a host adds an axis, or lists more
 values on a built-in one, and may map each value to the CSS custom properties it
-sets:
+sets (tokens a host sets for a built-in value are merged over the built-in ones, per token):
 
 ```ts
 const engine = createFormEngine({
@@ -164,7 +165,7 @@ recipe spec declares them per slot (`defineRecipeSpec({ appearanceAxes: { shell:
 a slot that declares axes must accept an `appearance` key in its schema. An axis that is not
 declared fails validation. `validateForm` rejects an unknown axis, an undeclared axis for that
 owner and an unknown value, naming the path and the allowed values, and writes the resolved
-appearance (form, then step, then containing element, then the element or slot itself, each keeping
+appearance (for a field: form, then step, then containing elements, then the field itself; for a view slot: the form, then the slot itself; each keeping
 only the axes it supports) into the normalized config. `engine.getAppearance()` returns the frozen
 vocabulary (`axes`, the token stylesheet `css`, and the `id` that scopes it); `engine.extend()`
 inherits it, and `appearance` is not an extend option. Renderers emit `data-se-<axis>` attributes

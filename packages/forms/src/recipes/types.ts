@@ -54,8 +54,8 @@ export interface RecipeSpec<
 	 *
 	 * @remarks
 	 * A slot that declares axes must accept an `appearance` key in its schema, so authored
-	 * configs type-check and the JSON Schema lists it. `validateForm` handles the key itself and
-	 * writes the resolved selection back, so the slot schema never sees it.
+	 * configs type-check and the JSON Schema lists it. `validateForm` does not pass the key to the slot schema when it
+	 * parses the view, and writes the resolved selection back, so a renderer reading the normalized slot sees it.
 	 */
 	appearanceAxes?: { [K in keyof TSlots]?: readonly string[] };
 	metadata: RecipeMetadata;

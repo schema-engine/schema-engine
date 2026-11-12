@@ -72,7 +72,7 @@ describe('engine appearance vocabulary', () => {
 		expect(css).toContain(`[data-se-appearance-theme="${id}"]`);
 		expect(css).toContain('[data-se-tone="brand"]');
 		expect(css).toContain('--se-tone-accent:#f60');
-		expect(css.startsWith(':where(') || css.includes('\n:where(')).toBe(true);
+		expect(css).toContain(':where([data-se-appearance-theme="' + id + '"] [data-se-tone="brand"],');
 		expect(css.replaceAll(/:where\([^)]*\)/g, '')).not.toContain('[data-se-');
 	});
 
@@ -87,13 +87,18 @@ describe('engine appearance vocabulary', () => {
 		['an empty value list entry', { tone: [''] }],
 		['a value that would break a selector', { tone: ['a"]'] }],
 		['a token that is not a custom property', { tone: { brand: { color: 'red' } } }],
+		['an axis name a renderer already uses', { step: ['a'] }],
+		['a token value that could close the style element', { tone: { brand: { '--x': '</style>' } } }],
 	])('rejects %s', (_name, appearance) => {
 		expect(() => createFormEngine({ appearance })).toThrowError(/appearance/i);
 	});
 
 	test('extend inherits the appearance vocabulary', () => {
-		const themed = createFormEngine({ appearance: { tone: ['neutral'] } });
-		expect(themed.extend({ elements: [note] }).getAppearance()).toBe(themed.getAppearance());
+		const themed = createFormEngine({ appearance: { tone: ['neutral', 'brand'] } });
+		const extended = themed.extend({ elements: [note] });
+		expect(extended.getAppearance().axes).toEqual(themed.getAppearance().axes);
+		expect(extended.validateForm(form({ appearance: { tone: 'brand' } })).appearance).toEqual({ tone: 'brand' });
+		expect(() => extended.validateForm(form({ appearance: { density: 'high' } }))).toThrowError(/density/);
 	});
 });
 
@@ -184,7 +189,7 @@ describe('appearance validation', () => {
 	});
 
 	test('a non-string value is rejected', () => {
-		expect(() => engine.validateForm(form({ appearance: { size: 3 } }))).toThrowError(/appearance/);
+		expect(() => engine.validateForm(form({ appearance: { size: 3 } }))).toThrowError(/string.*appearance.*size/s);
 		expect(() =>
 			engine.validateForm(form({}, [{ $type: 'note', id: 'n', name: 'n', appearance: { size: 3 } }])),
 		).toThrowError(/appearance\.size/);
@@ -288,10 +293,10 @@ describe('recipe slot appearance', () => {
 		expect(view.header.showDescription).toBe(false);
 	});
 
-	test('a card shell no longer takes maxWidth, padding or shadowSize', () => {
-		for (const key of ['maxWidth', 'padding', 'shadowSize']) {
-			expect(() => engine.validateForm(cardForm({ shell: { [key]: 'md' } }))).toThrowError();
-		}
+	test.each(['maxWidth', 'padding', 'shadowSize'])('a card shell no longer takes %s', (key) => {
+		expect(() => engine.validateForm(cardForm({ shell: { [key]: 'md' } }))).toThrowError(
+			new RegExp(`Invalid view configuration.*${key}`, 's'),
+		);
 	});
 
 	test('a slot that declares axes must accept the appearance key', () => {

@@ -218,10 +218,11 @@ export function rendererConformance(mount: ConformanceMount): void {
 				expect(entered.hidden).toBe(false);
 			});
 			test('a form and a field render their custom properties', async () => {
-				const base = form([{ ...input('email', 'Email'), style: { '--gap': '2rem' } }]);
+				const base = form([{ ...input('email', 'Email'), style: { '--gap': '2rem', '--columns': 2 } }]);
 				const { host } = await setup({ config: { ...base, style: { '--gap': '3rem' } } });
 				expect(formElement(host).style.getPropertyValue('--gap')).toBe('3rem');
 				expect(fieldHost(host, 'Email').style.getPropertyValue('--gap')).toBe('2rem');
+				expect(fieldHost(host, 'Email').style.getPropertyValue('--columns')).toBe('2');
 			});
 		});
 		describe('appearance', () => {
@@ -275,11 +276,15 @@ export function rendererConformance(mount: ConformanceMount): void {
 				const cardCase = recipeCases.find((recipe) => recipe.$type === 'card');
 				if (!cardCase) throw new Error('The card recipe has no conformance case.');
 				const { host } = await setup({ config: { ...recipeForm(cardCase), appearance: { size: 'compact' } } });
-				const sized = Array.from(host.querySelectorAll<HTMLElement>('[data-se-size="compact"]'));
-				expect(sized.some((element) => element.contains(getByRole(host, 'textbox', { name: 'Field 1' })))).toBe(
-					true,
+				const textbox = getByRole(host, 'textbox', { name: 'Field 1' });
+				const shell = Array.from(host.querySelectorAll<HTMLElement>('[data-se-size="compact"]')).find(
+					(element) =>
+						element !== formElement(host) &&
+						element !== stepElement(host, 'step0') &&
+						element !== fieldHost(host, 'Field 1') &&
+						element.contains(textbox),
 				);
-				expect(sized.filter((element) => element !== formElement(host)).length).toBeGreaterThan(2);
+				expect(shell).toBeDefined();
 			});
 			test('structural slot config is unaffected by appearance', async () => {
 				const config: FormConfigView = {
@@ -295,6 +300,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 					],
 				};
 				const { host } = await setup({ config });
+				expect(host.querySelector('[data-se-size="compact"]')).not.toBeNull();
 				expect(getByRole(host, 'heading', { name: 'One' })).toBeTruthy();
 				expect(queryByText(host, 'Hidden description')).toBeNull();
 			});

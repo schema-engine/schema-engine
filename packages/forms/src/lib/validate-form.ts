@@ -250,7 +250,7 @@ function withSlotAppearance(
 	const next: FormTaggedConfig = { ...view };
 	for (const [slot, selection] of Object.entries(resolved)) {
 		const slotConfig = view[slot];
-		next[slot] = { ...(isPlainObject(slotConfig) ? slotConfig : {}), appearance: selection };
+		if (isPlainObject(slotConfig)) next[slot] = { ...slotConfig, appearance: selection };
 	}
 	return next;
 }

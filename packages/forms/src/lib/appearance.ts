@@ -98,7 +98,21 @@ export type AppearanceInput<TAxes extends Record<string, string>> = { readonly [
 
 const AXIS_NAME = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const VALUE_NAME = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
-const UNSAFE_TOKEN_VALUE = /[{};]/;
+const UNSAFE_TOKEN_VALUE = /[{};<]|\/\*/;
+
+/**
+ * Names the renderers already use for `data-se-*` attributes, so an axis cannot overwrite one.
+ */
+const RESERVED_AXES = new Set([
+	'step',
+	'grid-theme',
+	'appearance-theme',
+	'appearance-css',
+	'constraint-field',
+	'constraints',
+	'base-required',
+	'validation-rules',
+]);
 
 function isNameList(axis: AppearanceAxisOptions): axis is readonly string[] {
 	return Array.isArray(axis);
@@ -114,6 +128,11 @@ function mergeAxes(options: AppearanceOptions | undefined): Map<string, Map<stri
 		if (!AXIS_NAME.test(axisName)) {
 			throw new Error(
 				`Invalid appearance axis name '${axisName}': use lowercase letters, digits and hyphens, starting with a letter.`,
+			);
+		}
+		if (RESERVED_AXES.has(axisName)) {
+			throw new Error(
+				`Invalid appearance axis name '${axisName}': data-se-${axisName} is reserved by the renderers.`,
 			);
 		}
 		const values = axes.get(axisName) ?? new Map<string, AppearanceTokens>();
@@ -170,7 +189,7 @@ function appearanceThemeId(axes: Map<string, Map<string, AppearanceTokens>>): st
  *
  * @remarks
  * A host adds an axis by naming it, or extends one by listing more values: values union with the
- * built-in ones, and tokens a host sets for a built-in value replace the built-in tokens. Axis names
+ * built-in ones, and tokens a host sets for a built-in value are merged over the built-in tokens, per token. Axis names
  * become `data-se-<axis>` attribute names and values go into attribute selectors, so both are
  * restricted to plain identifiers. Throws on a name, value or token that is not.
  */

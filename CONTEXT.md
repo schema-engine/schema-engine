@@ -256,10 +256,12 @@ that is not declared fails validation naming the axis and the owner, so the same
 the same thing in every renderer. `validateForm` checks every pick against the vocabulary and the
 declarations (an unknown axis, an undeclared axis for that owner, an unknown value), then writes
 the **resolved appearance** into the normalized config the way it writes the resolved view: the
-form's picks, then the step's, then each containing element's, then the element's or slot's own,
-each owner keeping only the axes it supports. An element without a resolved pick carries no
-`appearance` key. A registration's own schema never sees the key; the engine strips it before
-parsing and writes it back, so a custom registration whose schema is strict still supports axes.
+form's picks, then the step's, then each containing element's, then the field's own; a view slot
+takes the form's picks and then its own. Each owner keeps only the axes it supports. An element without a resolved pick carries no
+`appearance` key. An element registration's schema never sees the key; the engine strips it before
+parsing and writes it back, so a custom element whose schema is strict still supports axes. A recipe slot
+schema that declares axes must still accept an `appearance` key so authored configs type-check; the
+engine does not pass it to the schema when parsing the view and writes the resolved pick back.
 
 Both renderers emit the resolved selection as `data-se-<axis>="<value>"` on the form element
 (the one carrying `className` and `style`: `<form>` in React, `rui-form` in Radiant), the step
@@ -269,7 +271,12 @@ stylesheet once per form next to the grid theme. Token rules are written as
 `className` always wins; the scope is `data-se-appearance-theme`, the engine's appearance id,
 on the form element, so two engines with different tokens cannot overwrite each other. Shells read
 the tokens (`var(--se-size-padding, 1.5rem)`) and keep the look of an unstyled form as the
-fallback. What a host's own axis looks like is the host's CSS, keyed on the same attributes.
+fallback. What a host's own axis looks like is the host's CSS, keyed on the same attributes. A value
+that declares no tokens inherits the surrounding value's tokens through custom-property inheritance,
+and a form of another engine nested inside a form is not supported. The DOM contract is the same in
+every renderer; the visual effect of a built-in value is not yet: `size` changes a field's font size in
+Radiant only, and both card shells read the tokens. The field host that carries the attributes is the
+inner `.se-form-field` (the Radiant constraint wrapper around it carries only grid placement).
 
 `maxWidth`, `padding` and `shadowSize` are axes now, not slot config. `contentWidth`, `sideWidth` and
 the structural keys (`showDescription`, `orientation`, `labels`, `align`) stay in slot config

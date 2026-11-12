@@ -29,7 +29,7 @@ The submit button component provides a button that submits the form while displa
 	label: 'Submit Form', // Button text
 	disabled: false, // Optional: disable button
 	className: 'custom-class', // Optional: custom CSS classes
-	style: { '--button-margin': '1rem' }, // Optional: CSS custom properties only
+	style: { '--button-margin': '1rem' }, // Optional: CSS custom properties only, read by your own CSS
 }
 ```
 
