@@ -4,6 +4,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { queryDeep } from '@/stories/shared/dom-utils';
 import type { StoryContext } from 'storybook/internal/types';
 
+import type { SePhoneInput } from '@/elements/inputs/form-phone-input';
 import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
 
 async function waitForPhoneReady(canvasElement: HTMLElement) {
@@ -105,7 +106,7 @@ export const ArrowCountrySelection: Story = {
 	play: async ({ canvasElement, step }: StoryContext) => {
 		if (isStaticSsrPreview(canvasElement)) return;
 		await waitForPhoneReady(canvasElement);
-		const host = queryDeep(canvasElement, 'se-phone-input') as HTMLElement;
+		const host = queryDeep(canvasElement, 'se-phone-input') as SePhoneInput;
 
 		await step('Arrow keys move the active country and Enter selects it', async () => {
 			await expect(host.getAttribute('data-country')).toBe('US');
@@ -141,7 +142,7 @@ export const CallingCodeCountry: Story = {
 	play: async ({ canvasElement, step }: StoryContext) => {
 		if (isStaticSsrPreview(canvasElement)) return;
 		await waitForPhoneReady(canvasElement);
-		const host = queryDeep(canvasElement, 'se-phone-input') as HTMLElement;
+		const host = queryDeep(canvasElement, 'se-phone-input') as SePhoneInput;
 
 		await step('Typing an international prefix selects that country', async () => {
 			await expect(host.getAttribute('data-country')).toBe('US');
@@ -155,17 +156,15 @@ export const CallingCodeCountry: Story = {
 			});
 			await waitFor(async () => {
 				const visible = queryDeep(canvasElement, '[data-ref="number"]') as HTMLInputElement;
-				const stored = queryDeep(canvasElement, '[data-ref="control"]') as HTMLInputElement;
 				await expect(visible.value).toContain('+44');
-				await expect(stored.value).toBe('+44');
+				await expect(host.value).toBe('+44');
 			});
 
 			await userEvent.type(input as HTMLInputElement, '20');
 			await waitFor(async () => {
 				const visible = queryDeep(canvasElement, '[data-ref="number"]') as HTMLInputElement;
-				const stored = queryDeep(canvasElement, '[data-ref="control"]') as HTMLInputElement;
 				await expect(visible.value).not.toContain('+');
-				await expect(stored.value.startsWith('+44')).toBe(true);
+				await expect(host.value.startsWith('+44')).toBe(true);
 			});
 		});
 	},

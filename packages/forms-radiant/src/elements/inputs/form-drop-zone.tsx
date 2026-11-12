@@ -1,8 +1,10 @@
 import './form-drop-zone.css';
-import { prop, query, RadiantElement, state } from '@ecopages/radiant';
+import { onUpdated, prop, query, RadiantElement, state } from '@ecopages/radiant';
+import { registerFieldControl, type FieldControlAdapter } from '@ecopages/radiant-ui/form';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
+import { emitControlChange } from '@/lib/field-control';
 import { FieldGroup } from '../field-group';
 import type { DropZoneFieldProps } from './form-drop-zone.types';
 import { formElement } from '@/lib/define-element';
@@ -122,16 +124,11 @@ export class SeDropZone extends RadiantElement {
 		});
 
 		this.files = accepted.slice(0, this.maxFiles || accepted.length);
-		this.syncNativeInput();
-		this.dispatchEvent(
-			new CustomEvent('change', {
-				bubbles: true,
-				detail: { files: this.files },
-			}),
-		);
+		emitControlChange(this, this.files);
 	}
 
-	private syncNativeInput() {
+	@onUpdated(['files'])
+	syncNativeInput(): void {
 		if (!this.fileInput || typeof DataTransfer === 'undefined') {
 			return;
 		}
@@ -195,13 +192,22 @@ export class SeDropZone extends RadiantElement {
 	}
 }
 
-export function FormDropZone({
-	onChange: propsOnChange,
-	onDropChange,
-	onBlur: propsOnBlur,
-	onFocus: propsOnFocus,
-	...config
-}: DropZoneFieldProps) {
+/**
+ * @remarks
+ * The file input inside the host is the submitted control, so the field names
+ * that input and the host only carries the files the store reads and writes.
+ */
+const dropZoneControl: FieldControlAdapter = {
+	read: (host) => Reflect.get(host, 'files'),
+	write: (host, value) => {
+		Reflect.set(host, 'files', Array.isArray(value) ? value : []);
+	},
+	submission: 'native',
+};
+
+registerFieldControl('se-drop-zone', dropZoneControl);
+
+export function FormDropZone(config: DropZoneFieldProps) {
 	return (
 		<FieldGroup
 			name={config.name}
@@ -223,13 +229,6 @@ export function FormDropZone({
 				minSize: config.minSize ?? 0,
 				accept: config.accept,
 				disabled: config.disabled,
-				'on:change': (event: Event) => {
-					const files = (event as CustomEvent<{ files?: File[] }>).detail?.files ?? [];
-					propsOnChange?.(files);
-					onDropChange?.(files);
-				},
-				'on:blur': propsOnBlur,
-				'on:focus': propsOnFocus,
 			})}
 		</FieldGroup>
 	);

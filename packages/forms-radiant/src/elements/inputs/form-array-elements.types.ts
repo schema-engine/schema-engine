@@ -25,9 +25,6 @@ export type ArrayElementsInput = z.input<typeof ArrayElementConfigSchema>;
 export type ArrayElementsProps = ElementRenderProps<
 	typeof ArrayElementConfigSchema,
 	{
-		onChange?: (value: unknown) => void;
-		onBlur?: () => void;
-		onFocus?: () => void;
 		ssrInitialRows?: readonly unknown[];
 		initialFormValues?: Record<string, unknown>;
 	}

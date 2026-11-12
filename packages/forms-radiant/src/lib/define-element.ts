@@ -20,8 +20,8 @@ let deferring = false;
  * (host attributes, prop metadata, `observedAttributes`, `customElements.define`)
  * is deferred as one unit, which assumes the stamp is independent of it.
  */
-export function formElement(tag: string) {
-	const register = customElement(tag);
+export function formElement(tag: string, options?: Parameters<typeof customElement>[1]) {
+	const register = customElement(tag, options);
 	return <T extends CustomElementConstructor>(target: T, context: ClassDecoratorContext<T>): void => {
 		register(target, {
 			...context,

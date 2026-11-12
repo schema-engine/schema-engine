@@ -13,15 +13,10 @@ import { RuiTagGroup } from '@ecopages/radiant-ui/tag-group';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
 import { FieldGroup } from '../field-group';
-import { parseChoiceValue, serializeChoiceValue } from '@/lib/choice-value';
+import { serializeChoiceValue } from '@/lib/choice-value';
 import type { ComboboxFieldProps } from './form-combobox.types';
 
-export function FormCombobox({
-	onChange: propsOnChange,
-	onBlur: propsOnBlur,
-	onFocus: propsOnFocus,
-	...config
-}: ComboboxFieldProps) {
+export function FormCombobox(config: ComboboxFieldProps) {
 	const isMultiple = Boolean(config.multiple);
 	const options = config.options.map((option) => ({
 		value: String(option.value),
@@ -48,12 +43,6 @@ export function FormCombobox({
 				disabled={config.disabled}
 				selectionMode={isMultiple ? 'multiple' : 'single'}
 				value={config.defaultValue}
-				on:change={(event: Event) => {
-					const detail = (event as CustomEvent<{ value: string }>).detail;
-					propsOnChange?.(parseChoiceValue(detail?.value ?? '', isMultiple));
-				}}
-				on:blur={propsOnBlur}
-				on:focus={propsOnFocus}
 			>
 				<RuiComboboxControl>
 					{isMultiple ? (

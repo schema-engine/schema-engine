@@ -16,11 +16,7 @@ export const TextareaFieldSchema = z.extend(BaseFieldSchema, {
 
 export type TextareaFieldConfig = z.infer<typeof TextareaFieldSchema>;
 
-export type TextareaFieldProps = TextareaFieldConfig & {
-	onChange?: (value: string) => void;
-	onBlur?: () => void;
-	onFocus?: () => void;
-};
+export type TextareaFieldProps = TextareaFieldConfig;
 
 export const textareaFieldExample: TextareaFieldConfig = {
 	$type: 'textarea',

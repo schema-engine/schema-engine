@@ -17,8 +17,4 @@ export const SliderFieldConfigSchema = z.extend(BaseFieldSchema, {
 export type SliderFieldExtension = z.infer<typeof SliderFieldExtensionSchema>;
 export type SliderFieldConfig = z.infer<typeof SliderFieldConfigSchema>;
 
-export type SliderFieldProps = SliderFieldConfig & {
-	onChange?: (value: number) => void;
-	onBlur?: () => void;
-	onFocus?: () => void;
-};
+export type SliderFieldProps = SliderFieldConfig;

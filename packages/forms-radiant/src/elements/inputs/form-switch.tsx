@@ -4,12 +4,7 @@ import { RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
 import { RuiLabel } from '@ecopages/radiant-ui/label';
 import type { SwitchFieldProps } from './form-switch.types';
 
-export function FormSwitch({
-	onChange: propsOnChange,
-	onBlur: propsOnBlur,
-	onFocus: propsOnFocus,
-	...config
-}: SwitchFieldProps) {
+export function FormSwitch(config: SwitchFieldProps) {
 	return (
 		<FormField
 			name={config.name}
@@ -19,17 +14,7 @@ export function FormSwitch({
 			grid={config.grid}
 			style={config.style}
 		>
-			<RuiSwitch
-				id={config.id}
-				name={config.name}
-				disabled={config.disabled}
-				on:change={(event: Event) => {
-					const detail = (event as CustomEvent<{ checked: boolean }>).detail;
-					propsOnChange?.(detail?.checked ?? false);
-				}}
-				on:blur={propsOnBlur}
-				on:focus={propsOnFocus}
-			/>
+			<RuiSwitch id={config.id} name={config.name} disabled={config.disabled} />
 			{config.label ? <RuiLabel htmlFor={config.id}>{config.label}</RuiLabel> : null}
 			{config.description ? <RuiFieldDescription>{config.description}</RuiFieldDescription> : null}
 			<RuiFieldError />

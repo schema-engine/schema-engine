@@ -5,12 +5,7 @@ import { RuiLabel } from '@ecopages/radiant-ui/label';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import type { RadioFieldProps } from './form-radio.types';
 
-export function FormRadio({
-	onChange: propsOnChange,
-	onBlur: propsOnBlur,
-	onFocus: propsOnFocus,
-	...config
-}: RadioFieldProps) {
+export function FormRadio(config: RadioFieldProps) {
 	const isRequired = isFieldRequired(config.rules);
 	const options = config.options.map((option) => ({
 		value: String(option.value),
@@ -33,17 +28,7 @@ export function FormRadio({
 					{isRequired ? ' *' : ''}
 				</RuiLabel>
 			) : null}
-			<RuiRadioGroup
-				name={config.name}
-				options={options}
-				value={config.defaultValue}
-				on:change={(event: Event) => {
-					const detail = (event as CustomEvent<{ value: string }>).detail;
-					propsOnChange?.(detail?.value ?? '');
-				}}
-				on:blur={propsOnBlur}
-				on:focus={propsOnFocus}
-			/>
+			<RuiRadioGroup name={config.name} options={options} value={config.defaultValue} />
 			{config.description ? <RuiFieldDescription>{config.description}</RuiFieldDescription> : null}
 			<RuiFieldError />
 		</FormField>

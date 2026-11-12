@@ -11,12 +11,7 @@ import { isRenderedRequired } from '@/lib/field-rules';
 import { FieldGroup } from '../field-group';
 import type { NumberFieldProps } from './form-number.types';
 
-export function FormNumber({
-	onChange: propsOnChange,
-	onBlur: propsOnBlur,
-	onFocus: propsOnFocus,
-	...config
-}: NumberFieldProps) {
+export function FormNumber(config: NumberFieldProps) {
 	return (
 		<FieldGroup
 			name={config.name}
@@ -37,12 +32,6 @@ export function FormNumber({
 				maxValue={config.max}
 				step={config.step}
 				disabled={config.disabled}
-				on:change={(event: Event) => {
-					const detail = (event as CustomEvent<{ value: number }>).detail;
-					propsOnChange?.(detail?.value ?? '');
-				}}
-				on:blur={propsOnBlur}
-				on:focus={propsOnFocus}
 			>
 				<RuiNumberFieldGroup>
 					<RuiNumberFieldInput placeholder={config.placeholder} />

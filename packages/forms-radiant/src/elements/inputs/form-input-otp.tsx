@@ -1,8 +1,15 @@
 import './form-input-otp.css';
-import { prop, RadiantElement, state } from '@ecopages/radiant';
+import { prop, query, state } from '@ecopages/radiant';
+import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
+import {
+	emitControlChange,
+	fieldControlHostAttributes,
+	registerValueControl,
+	syncFieldControl,
+} from '@/lib/field-control';
 import { FieldGroup } from '../field-group';
 import type { InputOTPFieldProps } from './form-input-otp.types';
 import { formElement } from '@/lib/define-element';
@@ -15,124 +22,126 @@ function sanitizeChar(value: string, pattern: 'numeric' | 'alphanumeric') {
 	return /^[a-zA-Z0-9]$/.test(char) ? char : '';
 }
 
-@formElement('se-input-otp')
-export class SeInputOtp extends RadiantElement {
-	@prop({ type: String }) name = '';
+/**
+ * @remarks
+ * The characters live in `slots`, one entry per slot, so filling or clearing a
+ * slot never moves another. `value` is the slots joined, so an incomplete code
+ * is a shorter string that a length rule rejects. Writing a value that equals
+ * the current one is a no-op, which keeps a store echo from re-spreading a code
+ * with gaps from the first slot.
+ */
+@formElement('se-input-otp', { hostAttributes: fieldControlHostAttributes('[data-ref="group"]') })
+export class SeInputOtp extends FormAssociatedElement {
 	@prop({ type: Number, defaultValue: 6 }) length = 6;
 	@prop({ type: String, defaultValue: 'numeric' }) pattern: 'numeric' | 'alphanumeric' = 'numeric';
-	@prop({ type: Boolean, defaultValue: false }) disabled = false;
 
-	@state value = '';
+	@state slots: string[] = [];
+
+	@query({ ref: 'slot', all: true }) slotInputs!: HTMLInputElement[];
+
+	get value(): string {
+		return this.slots.join('');
+	}
+
+	set value(next: string) {
+		if (next === this.value) {
+			return;
+		}
+		this.fill(next);
+	}
+
+	protected override formValue(): FormValue {
+		return this.value;
+	}
+
+	protected override restoreFormState(state: FormValue): void {
+		this.value = typeof state === 'string' ? state : '';
+	}
+
+	protected override onConnected(): void {
+		syncFieldControl(this);
+	}
+
+	private padSlots(chars: readonly string[]) {
+		return Array.from({ length: this.length }, (_, index) => chars[index] ?? '');
+	}
+
+	private fill(text: string) {
+		const chars = text
+			.split('')
+			.map((char) => sanitizeChar(char, this.pattern))
+			.filter(Boolean);
+		this.slots = this.padSlots(chars);
+	}
 
 	private readonly onSlotInput = (event: Event) => {
 		const input = event.target as HTMLInputElement;
-		const index = Number(input.dataset.otpIndex);
+		const index = this.slotInputs.indexOf(input);
 		const char = sanitizeChar(input.value, this.pattern);
 		input.value = char;
 
-		const chars = this.value.padEnd(this.length, ' ').split('').slice(0, this.length);
-		chars[index] = char || ' ';
-		this.value = chars.join('').replace(/ +$/g, '').replace(/ /g, '');
+		const slots = this.padSlots(this.slots);
+		slots[index] = char;
+		this.slots = slots;
 
 		if (char) {
-			const next = this.querySelector<HTMLInputElement>(`[data-otp-index="${index + 1}"]`);
-			next?.focus();
+			this.slotInputs[index + 1]?.focus();
 		}
 
-		this.dispatchChange();
+		emitControlChange(this, this.value);
 	};
 
 	private readonly onSlotKeydown = (event: Event) => {
 		const keyEvent = event as KeyboardEvent;
-		if (keyEvent.key !== 'Backspace') {
-			return;
-		}
-
 		const input = keyEvent.target as HTMLInputElement;
-		const index = Number(input.dataset.otpIndex);
-		if (input.value) {
+		if (keyEvent.key !== 'Backspace' || input.value) {
 			return;
 		}
 
-		const previous = this.querySelector<HTMLInputElement>(`[data-otp-index="${index - 1}"]`);
-		previous?.focus();
+		this.slotInputs[this.slotInputs.indexOf(input) - 1]?.focus();
 	};
 
 	private readonly onSlotPaste = (event: Event) => {
 		const pasteEvent = event as ClipboardEvent;
 		pasteEvent.preventDefault();
-		const text = pasteEvent.clipboardData?.getData('text') ?? '';
-		const chars = text
-			.split('')
-			.map((char) => sanitizeChar(char, this.pattern))
-			.filter(Boolean)
-			.slice(0, this.length);
-		this.value = chars.join('');
-		this.dispatchChange();
+		this.fill(pasteEvent.clipboardData?.getData('text') ?? '');
+		emitControlChange(this, this.value);
 	};
 
-	private dispatchChange() {
-		this.dispatchEvent(new CustomEvent('change', { bubbles: true, detail: { value: this.value } }));
-		const hidden = this.querySelector<HTMLInputElement>('[data-rui-control]');
-		if (hidden) {
-			hidden.value = this.value;
-			hidden.dispatchEvent(new Event('input', { bubbles: true }));
-		}
-	}
-
 	override render(): JsxRenderable {
-		const length = this.length || 6;
+		const { length } = this;
 		const firstHalf = Math.ceil(length / 2);
-		const chars = this.value.split('');
 
 		return (
-			<fieldset class="se-otp">
-				<input class="se-otp__value" data-rui-control name={this.name} value={this.value} tabindex={-1} />
-				{Array.from({ length: firstHalf }, (_, index) => (
+			<fieldset class="se-otp" data-ref="group">
+				{Array.from({ length }, (_, index) => [
+					index === firstHalf ? (
+						<span class="se-otp__separator" aria-hidden="true">
+							-
+						</span>
+					) : null,
 					<input
 						class="rui-input se-otp__slot"
-						data-otp-index={String(index)}
+						data-ref="slot"
+						aria-label={`Character ${index + 1} of ${length}`}
 						maxlength={1}
 						inputmode={this.pattern === 'numeric' ? 'numeric' : 'text'}
 						autocomplete={index === 0 ? 'one-time-code' : 'off'}
-						disabled={this.disabled}
+						disabled={this.effectiveDisabled}
 						on:input={this.onSlotInput}
 						on:keydown={this.onSlotKeydown}
 						on:paste={this.onSlotPaste}
-						value={chars[index] ?? ''}
-					/>
-				))}
-				<span class="se-otp__separator" aria-hidden="true">
-					-
-				</span>
-				{Array.from({ length: length - firstHalf }, (_, offset) => {
-					const index = firstHalf + offset;
-					return (
-						<input
-							class="rui-input se-otp__slot"
-							data-otp-index={String(index)}
-							maxlength={1}
-							inputmode={this.pattern === 'numeric' ? 'numeric' : 'text'}
-							autocomplete="off"
-							disabled={this.disabled}
-							on:input={this.onSlotInput}
-							on:keydown={this.onSlotKeydown}
-							on:paste={this.onSlotPaste}
-							value={chars[index] ?? ''}
-						/>
-					);
-				})}
+						prop:value={this.slots[index] ?? ''}
+					/>,
+				])}
 			</fieldset>
 		);
 	}
 }
 
-export function FormInputOTP({
-	onChange: propsOnChange,
-	onBlur: propsOnBlur,
-	onFocus: propsOnFocus,
-	...config
-}: InputOTPFieldProps) {
+registerValueControl('se-input-otp');
+
+export function FormInputOTP(config: InputOTPFieldProps) {
 	return (
 		<FieldGroup
 			name={config.name}
@@ -152,11 +161,6 @@ export function FormInputOTP({
 				length: config.length ?? 6,
 				pattern: config.pattern ?? 'numeric',
 				disabled: config.disabled,
-				'on:change': (event: Event) => {
-					propsOnChange?.((event as CustomEvent<{ value?: string }>).detail?.value ?? '');
-				},
-				'on:blur': propsOnBlur,
-				'on:focus': propsOnFocus,
 			})}
 		</FieldGroup>
 	);

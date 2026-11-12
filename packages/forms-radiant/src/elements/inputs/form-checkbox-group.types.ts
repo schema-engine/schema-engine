@@ -22,8 +22,4 @@ export type CheckboxGroupOption = z.infer<typeof CheckboxGroupOptionSchema>;
 export type CheckboxGroupFieldExtension = z.infer<typeof CheckboxGroupFieldExtensionSchema>;
 export type CheckboxGroupFieldConfig = z.infer<typeof CheckboxGroupFieldConfigSchema>;
 
-export type CheckboxGroupFieldProps = CheckboxGroupFieldConfig & {
-	onChange?: (value: (string | number)[]) => void;
-	onBlur?: () => void;
-	onFocus?: () => void;
-};
+export type CheckboxGroupFieldProps = CheckboxGroupFieldConfig;

@@ -2,15 +2,10 @@ import { RuiCheckboxGroup } from '@ecopages/radiant-ui/checkbox-group';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
 import { FieldGroup } from '../field-group';
-import { parseChoiceValue, serializeChoiceValue } from '@/lib/choice-value';
+import { serializeChoiceValue } from '@/lib/choice-value';
 import type { CheckboxGroupFieldProps } from './form-checkbox-group.types';
 
-export function FormCheckboxGroup({
-	onChange: propsOnChange,
-	onBlur: propsOnBlur,
-	onFocus: propsOnFocus,
-	...config
-}: CheckboxGroupFieldProps) {
+export function FormCheckboxGroup(config: CheckboxGroupFieldProps) {
 	const options = config.options.map((option) => ({
 		value: String(option.value),
 		label: option.label,
@@ -37,12 +32,6 @@ export function FormCheckboxGroup({
 				disabled={config.disabled}
 				options={options}
 				value={config.defaultValue}
-				on:change={(event: Event) => {
-					const detail = (event as CustomEvent<{ value: string }>).detail;
-					propsOnChange?.(parseChoiceValue(detail?.value ?? '', true) as string[]);
-				}}
-				on:blur={propsOnBlur}
-				on:focus={propsOnFocus}
 			/>
 		</FieldGroup>
 	);

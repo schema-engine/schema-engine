@@ -22,11 +22,7 @@ export const MaskedInputFieldSchema = z.extend(BaseFieldSchema, {
 
 export type MaskedInputFieldConfig = z.infer<typeof MaskedInputFieldSchema>;
 
-export type MaskedInputFieldProps = MaskedInputFieldConfig & {
-	onChange?: (value: string) => void;
-	onBlur?: () => void;
-	onFocus?: () => void;
-};
+export type MaskedInputFieldProps = MaskedInputFieldConfig;
 
 export const maskedInputFieldExample: MaskedInputFieldConfig = {
 	$type: 'masked-input',

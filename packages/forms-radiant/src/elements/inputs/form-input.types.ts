@@ -17,11 +17,7 @@ export const InputFieldSchema = z.extend(BaseFieldSchema, {
 export type InputFieldConfig = z.input<typeof InputFieldSchema>;
 export type InputFieldOutput = z.output<typeof InputFieldSchema>;
 
-export type InputFieldProps = InputFieldOutput & {
-	onChange?: (value: string) => void;
-	onBlur?: () => void;
-	onFocus?: () => void;
-};
+export type InputFieldProps = InputFieldOutput;
 
 export const inputFieldExample: InputFieldConfig = {
 	$type: 'input',
