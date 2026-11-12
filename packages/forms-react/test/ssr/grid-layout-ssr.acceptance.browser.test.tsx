@@ -1,13 +1,17 @@
 import { describe, test } from 'vitest';
 import {
+	expectSsrAreasAcceptance,
 	expectSsrGridAcceptance,
 	expectSsrNestedWidthsAcceptance,
+	expectSsrSteppedAcceptance,
 	expectSsrWidthsAcceptance,
 } from '../../../../test-utils/ssr-grid-acceptance';
 import {
 	getSsrAcceptanceEngine,
+	renderSsrAreasAcceptanceHtml,
 	renderSsrLayoutAcceptanceHtml,
 	renderSsrNestedWidthsAcceptanceHtml,
+	renderSsrSteppedAcceptanceHtml,
 	renderSsrWidthsAcceptanceHtml,
 } from './render-form-ssr-html';
 
@@ -26,5 +30,13 @@ describe('SSR grid layout acceptance', () => {
 			getSsrAcceptanceEngine().getCompiledGrid(),
 			['Nest', 'Row'],
 		);
+	});
+
+	test('A drawn layout places fields', async () => {
+		await expectSsrAreasAcceptance(renderSsrAreasAcceptanceHtml(), getSsrAcceptanceEngine().getCompiledGrid());
+	});
+
+	test('The template changes by breakpoint and each wizard step draws its own template', async () => {
+		await expectSsrSteppedAcceptance(renderSsrSteppedAcceptanceHtml(), getSsrAcceptanceEngine().getCompiledGrid());
 	});
 });
