@@ -4,6 +4,8 @@ import { onContextUpdate } from '@ecopages/radiant/context';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { RuiFieldError } from '@ecopages/radiant-ui/field';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
+import { MapItems } from '@ecopages/jsx/client';
+import { computed, peek, state as createState, type State } from '@ecopages/signals';
 import { FormElements } from '@/components/internals/form-elements';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import { formEngineContext } from '@/components/provider';
@@ -71,10 +73,23 @@ function createInitialArrayValue(config: ArrayElementsProps, values: Record<stri
 	return rows.length || configuredRows ? rows : undefined;
 }
 
+/**
+ * One row of the array, as `MapItems` receives it.
+ *
+ * @remarks
+ * `index` is part of the row because the row's field names (`contacts.0.role`) and its remove label
+ * are built from it. A row whose index moves is a new object under the same key, so the renderer
+ * patches its nodes in place; a row whose index is unchanged stays the same object and is skipped.
+ */
+interface ArrayRow {
+	readonly id: string;
+	readonly index: number;
+}
+
 interface ArrayContentProps {
 	config: ArrayElementsProps;
 	engine?: FormEngine;
-	ids: readonly string[];
+	rows: State<readonly ArrayRow[]>;
 	initialValues: Record<string, unknown>;
 	renderValues: Record<string, unknown>;
 	fieldError?: string;
@@ -94,59 +109,68 @@ function arrayErrorId(config: ArrayElementsProps): string {
 	return `${config.instanceId ?? config.id ?? config.name}-error`;
 }
 
-function renderArrayContent({ config, engine, ids, initialValues, renderValues, fieldError }: ArrayContentProps) {
+function renderArrayContent({ config, engine, rows, initialValues, renderValues, fieldError }: ArrayContentProps) {
 	const isSingleField = usesScalarArrayItem(config, config.name, config.elements, renderValues);
-	const canAdd = !config.maxItems || ids.length < config.maxItems;
-	const canRemove = ids.length > (config.minItems ?? 0);
+	const count = computed(() => rows.get().length);
 	const removeLabel = config.removeButtonText || 'Remove item';
 	const disabled = config.disabled === true;
 	const elements = withContainerState(config, config.elements);
+	const minItems = config.minItems ?? 0;
+	const maxItems = config.maxItems;
 
 	return (
 		<div class="se-form-array">
-			{ids.length === 0 ? (
-				<p class="se-form-array__empty">{config.emptyStateMessage || 'No items added yet'}</p>
-			) : null}
-			{ids.map((id, index) => {
-				const scope = arrayItemScope(config.name, index, id, {
-					scalar: isSingleField,
-					parentInstanceId: config.instanceId,
-				});
-				return (
-					<div class="se-form-array__item" key={id} data-se-row-id={id}>
-						<div class="se-form-array__fields">
-							<FormElements
-								elements={elements}
-								engine={engine}
-								initialValues={initialValues}
-								values={renderValues}
-								namePrefix={scope.namePrefix}
-								nameStrategy={scope.nameStrategy}
-								instanceId={scope.instanceId}
-							/>
+			{computed(() =>
+				count.get() === 0 ? (
+					<p class="se-form-array__empty">{config.emptyStateMessage || 'No items added yet'}</p>
+				) : null,
+			)}
+			<MapItems each={rows}>
+				{({ id, index }) => {
+					const scope = arrayItemScope(config.name, index, id, {
+						scalar: isSingleField,
+						parentInstanceId: config.instanceId,
+					});
+					return (
+						<div class="se-form-array__item" key={id} data-se-row-id={id}>
+							<div class="se-form-array__fields">
+								<FormElements
+									elements={elements}
+									engine={engine}
+									initialValues={initialValues}
+									values={renderValues}
+									namePrefix={scope.namePrefix}
+									nameStrategy={scope.nameStrategy}
+									instanceId={scope.instanceId}
+								/>
+							</div>
+							{computed(() =>
+								count.get() > minItems ? (
+									<RuiButton
+										type="button"
+										class="se-form-array__remove"
+										variant="outline"
+										size="sm"
+										square
+										disabled={disabled}
+										aria-label={`${removeLabel} ${index + 1}`}
+									>
+										<TrashIcon />
+									</RuiButton>
+								) : null,
+							)}
 						</div>
-						{canRemove ? (
-							<RuiButton
-								type="button"
-								class="se-form-array__remove"
-								variant="outline"
-								size="sm"
-								square
-								disabled={disabled}
-								aria-label={`${removeLabel} ${index + 1}`}
-							>
-								<TrashIcon />
-							</RuiButton>
-						) : null}
-					</div>
-				);
-			})}
-			{canAdd ? (
-				<RuiButton type="button" class="se-form-array__add" variant="outline" disabled={disabled}>
-					<PlusIcon />
-					{config.addButtonText || 'Add item'}
-				</RuiButton>
-			) : null}
+					);
+				}}
+			</MapItems>
+			{computed(() =>
+				!maxItems || count.get() < maxItems ? (
+					<RuiButton type="button" class="se-form-array__add" variant="outline" disabled={disabled}>
+						<PlusIcon />
+						{config.addButtonText || 'Add item'}
+					</RuiButton>
+				) : null,
+			)}
 			<RuiFieldError id={arrayErrorId(config)} error={fieldError ?? ''} />
 		</div>
 	);
@@ -164,7 +188,8 @@ export class SeFormArray extends RadiantElement {
 	private isArrayFieldRegistered = false;
 	private initialized = false;
 	private preservedHydratedContainer = false;
-	private renderedIds: string[] = [];
+	private readonly rows = createState<readonly ArrayRow[]>([]);
+	private viewHoldsServerRows = false;
 
 	@state private fieldError?: string;
 	private formContextValue?: FormContextValue;
@@ -180,7 +205,7 @@ export class SeFormArray extends RadiantElement {
 			this.isArrayFieldRegistered = false;
 			return;
 		}
-		this.scheduleSync(this.renderedIds.length ? this.renderedIds : this.initialIds());
+		this.scheduleSync(this.renderedIds().length ? this.renderedIds() : this.initialIds());
 		this.registerArrayField(value);
 	}
 
@@ -197,7 +222,7 @@ export class SeFormArray extends RadiantElement {
 		this.engine = engine;
 		const value = this.formContextValue;
 		if (!value?.ready || !this.config?.name) return;
-		this.scheduleSync(this.renderedIds.length ? this.renderedIds : this.initialIds());
+		this.scheduleSync(this.renderedIds().length ? this.renderedIds() : this.initialIds());
 		this.registerArrayField(value);
 	}
 
@@ -286,6 +311,7 @@ export class SeFormArray extends RadiantElement {
 	private preserveHydratedContainer(): boolean {
 		if (this.preservedHydratedContainer || !this.isConnected || !this.isServerRendered) return false;
 		this.preservedHydratedContainer = this.slotted !== null;
+		this.viewHoldsServerRows = this.preservedHydratedContainer;
 		return this.preservedHydratedContainer;
 	}
 
@@ -304,8 +330,33 @@ export class SeFormArray extends RadiantElement {
 			}
 		}
 		const ids = this.ids;
-		if (ids.length !== this.renderedIds.length || ids.some((id, index) => id !== this.renderedIds[index])) {
-			this.renderedIds = ids;
+		this.setRows(ids);
+	}
+
+	private renderedIds(): string[] {
+		return peek(this.rows).map(({ id }) => id);
+	}
+
+	/**
+	 * Publishes the row ids to the list signal.
+	 *
+	 * @remarks
+	 * A row whose id and index are unchanged keeps its object, so `MapItems` skips it. The first
+	 * hydrated render places the server rows through `this.slotted` and has no list mounted, so the first
+	 * change after it renders the host once to mount the list in their place.
+	 */
+	private setRows(ids: readonly string[]): void {
+		const current = peek(this.rows);
+		if (ids.length === current.length && ids.every((id, index) => id === current[index]?.id)) return;
+		const known = new Map(current.map((row) => [row.id, row]));
+		this.rows.set(
+			ids.map((id, index) => {
+				const row = known.get(id);
+				return row?.index === index ? row : { id, index };
+			}),
+		);
+		if (this.viewHoldsServerRows) {
+			this.viewHoldsServerRows = false;
 			this.requestUpdate();
 		}
 	}
@@ -321,7 +372,7 @@ export class SeFormArray extends RadiantElement {
 	protected override onConnected(): void {
 		this.engine ??= resolveFormEngine(this);
 		const initialIds = this.initialIds();
-		this.renderedIds = initialIds;
+		this.setRows(initialIds);
 		if (this.form.ready) this.scheduleSync(initialIds);
 	}
 
@@ -336,7 +387,7 @@ export class SeFormArray extends RadiantElement {
 		this.unregisterArrayField = undefined;
 		this.isArrayFieldRegistered = false;
 		this.initialized = false;
-		this.renderedIds = [];
+		this.rows.set([]);
 		super.disconnectedCallback();
 	}
 
@@ -379,15 +430,14 @@ export class SeFormArray extends RadiantElement {
 		if (this.preserveHydratedContainer()) return this.slotted;
 		const engine = this.resolveEngine();
 		if (!engine && !this.isConnected) return this.slotted;
-		const ids = this.ids;
-		if (ids.length > 0 && !engine) return null;
+		if (!engine && this.renderedIds().length > 0) return null;
 		const renderValues = this.currentValues();
 		const initialValues = this.rowInitialValues();
 
 		return renderArrayContent({
 			config,
 			engine,
-			ids,
+			rows: this.rows,
 			initialValues,
 			renderValues,
 			fieldError: this.fieldError,
@@ -417,7 +467,9 @@ export function FormArrayElements(config: ArrayElementsProps) {
 		? renderArrayContent({
 				config: arrayConfig,
 				engine,
-				ids: (initialRows ?? []).map((_, index) => `seed-${index}`),
+				rows: createState<readonly ArrayRow[]>(
+					(initialRows ?? []).map((_, index) => ({ id: `seed-${index}`, index })),
+				),
 				initialValues,
 				renderValues: initialValues,
 			})
