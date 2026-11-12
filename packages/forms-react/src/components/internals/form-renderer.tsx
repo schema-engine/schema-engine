@@ -63,7 +63,7 @@ function StepFields({
 		<div
 			className="se-form-grid"
 			data-se-grid-theme={theme.id}
-			style={getFormGridVariables(config.grid, theme, step.elements)}
+			style={getFormGridVariables(step.grid ?? config.grid, theme, step.elements)}
 		>
 			<FormElements elements={step.elements} />
 		</div>

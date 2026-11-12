@@ -5,7 +5,7 @@ import { createFormEngine } from '@schema-engine/forms';
 import type { ElementGridConfig } from '@schema-engine/forms/schemas';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
-import { SSR_WIDTH_FIELDS } from '../../../../test-utils/ssr-grid-acceptance';
+import { SSR_WIDTH_FIELDS, ssrAreasForm, ssrSteppedForm } from '../../../../test-utils/ssr-grid-acceptance';
 
 const ssrInputSchema = z.object({
 	$type: z.literal('ssr-input'),
@@ -132,4 +132,22 @@ export function renderSsrWidthsAcceptanceHtml(): string {
 	const body = renderToString(RecipeRenderer({ config, engine, recipe: undefined }), { mode: 'plain' });
 
 	return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${body}</body></html>`;
+}
+
+function renderForm(form: unknown): string {
+	const engine = getSsrAcceptanceEngine();
+	const config = engine.validateForm(form);
+	const body = renderToString(RecipeRenderer({ config, engine, recipe: undefined }), { mode: 'plain' });
+
+	return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${body}</body></html>`;
+}
+
+/** SSR document for the drawn layout fixture, produced by the renderer itself. */
+export function renderSsrAreasAcceptanceHtml(): string {
+	return renderForm(ssrAreasForm('ssr-input'));
+}
+
+/** SSR document for the stepped fixture: one step with its own template and one without. */
+export function renderSsrSteppedAcceptanceHtml(): string {
+	return renderForm(ssrSteppedForm('ssr-input'));
 }

@@ -2,7 +2,9 @@ import { renderHydrationHtml } from './render-hydration-html';
 import type { TestProject } from 'vitest/node';
 import {
 	getSsrAcceptanceEngine,
+	renderSsrAreasAcceptanceHtml,
 	renderSsrLayoutAcceptanceHtml,
+	renderSsrSteppedAcceptanceHtml,
 	renderSsrWidthsAcceptanceHtml,
 } from './render-form-ssr-html';
 import { renderSsrNestedWidthsAcceptanceHtml } from './render-nested-widths-ssr-html';
@@ -12,6 +14,8 @@ declare module 'vitest' {
 	interface ProvidedContext {
 		ssrLayoutHtml: string;
 		ssrWidthsHtml: string;
+		ssrAreasHtml: string;
+		ssrSteppedHtml: string;
 		ssrNestedWidthsHtml: string;
 		ssrHydrationHtml: string;
 		ssrLayoutCompiled: { theme: { id: string }; css: string };
@@ -34,6 +38,8 @@ export default function setup(project: TestProject): void {
 	project.provide('ssrHydrationHtml', Buffer.from(renderHydrationHtml()).toString('base64'));
 	project.provide('ssrLayoutHtml', renderSsrLayoutAcceptanceHtml());
 	project.provide('ssrWidthsHtml', renderSsrWidthsAcceptanceHtml());
+	project.provide('ssrAreasHtml', renderSsrAreasAcceptanceHtml());
+	project.provide('ssrSteppedHtml', renderSsrSteppedAcceptanceHtml());
 	project.provide(
 		'ssrNestedWidthsHtml',
 		renderSsrNestedWidthsAcceptanceHtml().replaceAll('</script>', '<\\/script>'),
