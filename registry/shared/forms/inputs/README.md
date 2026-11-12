@@ -228,8 +228,11 @@ when a chips-based multi-selection is needed.
 	label: 'Enter Code',
 	length: 6,
 	pattern: 'numeric', // numeric, alphanumeric
+	incompleteMessage: 'Enter all 6 characters', // optional, shown for a partly filled code
 }
 ```
+
+The field schema adds an exact-length rule that accepts an empty code or one with every slot filled, unless you write a `minLength`, `maxLength` or `pattern` rule. Headless `validateFormValues` and the renderer apply the same rule.
 
 ## Features
 
