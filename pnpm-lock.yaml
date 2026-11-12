@@ -13,6 +13,28 @@ catalogs:
 overrides:
   react: ^19.3.0
   react-dom: ^19.3.0
+  ecopages: file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-0.7.0.tgz
+  '@ecopages/browser-router': file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-browser-router-0.7.0.tgz
+  '@ecopages/content-processor': file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-content-processor-0.7.0.tgz
+  '@ecopages/core': file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz
+  '@ecopages/dev-toolbar': file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz
+  '@ecopages/ecopages-jsx': file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-ecopages-jsx-0.7.0.tgz
+  '@ecopages/file-system': file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-file-system-0.7.0.tgz
+  '@ecopages/image-processor': file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-image-processor-0.7.0.tgz
+  '@ecopages/jsx': file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz
+  '@ecopages/kitajs': file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-kitajs-0.7.0.tgz
+  '@ecopages/lightningcss-processor': file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-lightningcss-processor-0.7.0.tgz
+  '@ecopages/lit': file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-lit-0.7.0.tgz
+  '@ecopages/mdx': file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-mdx-0.7.0.tgz
+  '@ecopages/postcss-processor': file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-postcss-processor-0.7.0.tgz
+  '@ecopages/radiant': file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-0.8.2.tgz
+  '@ecopages/radiant-themes': file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-themes-0.3.4.tgz
+  '@ecopages/radiant-ui': file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-ui-0.3.4.tgz
+  '@ecopages/react': file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-react-0.7.0.tgz
+  '@ecopages/react-router': file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-react-router-0.7.0.tgz
+  '@ecopages/signals': file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz
+  '@ecopages/storybook-radiant-vite': file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-storybook-radiant-vite-0.2.2.tgz
+  '@ecopages/vite-plugin-radiant': file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-vite-plugin-radiant-0.2.2.tgz
 
 importers:
 
@@ -69,10 +91,10 @@ importers:
         version: 15.5.2
       oxlint:
         specifier: latest
-        version: 1.93.0(oxlint-tsgolint@7.0.2006)
+        version: 1.93.0(oxlint-tsgolint@7.0.2007)
       oxlint-tsgolint:
         specifier: latest
-        version: 7.0.2006
+        version: 7.0.2007
       prettier:
         specifier: ^3.9.6
         version: 3.9.9
@@ -132,44 +154,44 @@ importers:
         version: 1.4.0
     devDependencies:
       '@ecopages/browser-router':
-        specifier: 0.7.0
-        version: 0.7.0(@ecopages/core@0.7.0(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3))
+        specifier: file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-browser-router-0.7.0.tgz
+        version: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-browser-router-0.7.0.tgz(@ecopages/core@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz(@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))(typescript@5.9.3))
       '@ecopages/content-processor':
-        specifier: 0.7.0
-        version: 0.7.0(@ecopages/core@0.7.0(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3))(typescript@5.9.3)
+        specifier: file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-content-processor-0.7.0.tgz
+        version: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-content-processor-0.7.0.tgz(@ecopages/core@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz(@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))(typescript@5.9.3))(typescript@5.9.3)
       '@ecopages/core':
-        specifier: 0.7.0
-        version: 0.7.0(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3)
+        specifier: file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz
+        version: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz(@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))(typescript@5.9.3)
       '@ecopages/dev-toolbar':
-        specifier: 0.7.0
-        version: 0.7.0(@ecopages/signals@0.8.2)
+        specifier: file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz
+        version: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz)
       '@ecopages/ecopages-jsx':
-        specifier: 0.7.0
-        version: 0.7.0(@ecopages/core@0.7.0(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3))(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2))(@ecopages/radiant@0.8.2(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2)))(typescript@5.9.3)
+        specifier: file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-ecopages-jsx-0.7.0.tgz
+        version: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-ecopages-jsx-0.7.0.tgz(60eb4d7a8912020deeebe536968d9f02)
       '@ecopages/file-system':
-        specifier: 0.7.0
-        version: 0.7.0
+        specifier: file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-file-system-0.7.0.tgz
+        version: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-file-system-0.7.0.tgz
       '@ecopages/jsx':
-        specifier: 0.8.2
-        version: 0.8.2(@ecopages/signals@0.8.2)
+        specifier: file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz
+        version: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz)
       '@ecopages/postcss-processor':
-        specifier: 0.7.0
-        version: 0.7.0(@ecopages/core@0.7.0(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3))(@tailwindcss/postcss@4.3.3)(tailwindcss@4.3.3)(typescript@5.9.3)
+        specifier: file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-postcss-processor-0.7.0.tgz
+        version: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-postcss-processor-0.7.0.tgz(@ecopages/core@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz(@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))(typescript@5.9.3))(@tailwindcss/postcss@4.3.3)(tailwindcss@4.3.3)(typescript@5.9.3)
       '@ecopages/radiant':
-        specifier: 0.8.2
-        version: 0.8.2(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2))
+        specifier: file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-0.8.2.tgz
+        version: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-0.8.2.tgz(@ecopages/jsx@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))
       '@ecopages/radiant-ui':
-        specifier: 0.3.4
-        version: 0.3.4(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2))(@ecopages/radiant@0.8.2(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2)))(@ecopages/signals@0.8.2)
+        specifier: file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-ui-0.3.4.tgz
+        version: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-ui-0.3.4.tgz(a379c23cb5603c5d6f998b1fe846f64a)
       '@ecopages/react':
-        specifier: 0.7.0
-        version: 0.7.0(@ecopages/core@0.7.0(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)
+        specifier: file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-react-0.7.0.tgz
+        version: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-react-0.7.0.tgz(@ecopages/core@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz(@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))(typescript@5.9.3))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)
       '@ecopages/scripts-injector':
         specifier: ^0.1.5
         version: 0.1.5(typescript@5.9.3)
       '@ecopages/signals':
-        specifier: 0.8.2
-        version: 0.8.2
+        specifier: file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz
+        version: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz
       '@mdx-js/esbuild':
         specifier: ^3.1.1
         version: 3.1.1(esbuild@0.27.7)
@@ -201,8 +223,8 @@ importers:
         specifier: ^4.0.13
         version: 4.1.11(msw@2.15.0(@types/node@24.13.6)(typescript@5.9.3))(playwright@1.63.0)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))(vitest@4.1.11)
       ecopages:
-        specifier: 0.6.1
-        version: 0.6.1(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3)
+        specifier: file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-0.7.0.tgz
+        version: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-0.7.0.tgz(@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))(typescript@5.9.3)
       playwright:
         specifier: ^1.63.0
         version: 1.63.0
@@ -307,9 +329,21 @@ importers:
 
   packages/forms-radiant:
     dependencies:
+      '@ecopages/jsx':
+        specifier: file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz
+        version: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz)
       '@ecopages/logger':
         specifier: ^0.2.3
         version: 0.2.3(typescript@5.9.3)
+      '@ecopages/radiant':
+        specifier: file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-0.8.2.tgz
+        version: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-0.8.2.tgz(@ecopages/jsx@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))
+      '@ecopages/radiant-ui':
+        specifier: file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-ui-0.3.4.tgz
+        version: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-ui-0.3.4.tgz(a379c23cb5603c5d6f998b1fe846f64a)
+      '@ecopages/signals':
+        specifier: file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz
+        version: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz
       '@schema-engine/actions':
         specifier: workspace:*
         version: link:../actions
@@ -335,24 +369,12 @@ importers:
       '@babel/plugin-transform-class-properties':
         specifier: ^7.28.0
         version: 7.29.7(@babel/core@7.29.7)
-      '@ecopages/jsx':
-        specifier: 0.8.2
-        version: 0.8.2(@ecopages/signals@0.8.2)
-      '@ecopages/radiant':
-        specifier: 0.8.2
-        version: 0.8.2(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2))
-      '@ecopages/radiant-ui':
-        specifier: 0.3.4
-        version: 0.3.4(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2))(@ecopages/radiant@0.8.2(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2)))(@ecopages/signals@0.8.2)
-      '@ecopages/signals':
-        specifier: 0.8.2
-        version: 0.8.2
       '@ecopages/storybook-radiant-vite':
-        specifier: 0.2.2
-        version: 0.2.2(@babel/core@7.29.7)(@babel/plugin-proposal-decorators@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-class-properties@7.29.7(@babel/core@7.29.7))(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2))(@ecopages/radiant@0.8.2(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2)))(@ecopages/signals@0.8.2)(@rolldown/plugin-babel@0.2.4(@babel/core@7.29.7)(@babel/runtime@7.29.7)(rolldown@1.2.11)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(nitro@3.0.260311-beta(dotenv@8.6.0)(giget@2.0.0)(jiti@2.7.0)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
+        specifier: file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-storybook-radiant-vite-0.2.2.tgz
+        version: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-storybook-radiant-vite-0.2.2.tgz(fda09c8eff5617d5a70ba8bebadf4742)
       '@ecopages/vite-plugin-radiant':
-        specifier: 0.2.2
-        version: 0.2.2(@babel/core@7.29.7)(@babel/plugin-proposal-decorators@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-class-properties@7.29.7(@babel/core@7.29.7))(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2))(@ecopages/radiant@0.8.2(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2)))(@ecopages/signals@0.8.2)(@rolldown/plugin-babel@0.2.4(@babel/core@7.29.7)(@babel/runtime@7.29.7)(rolldown@1.2.11)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(nitro@3.0.260311-beta(dotenv@8.6.0)(giget@2.0.0)(jiti@2.7.0)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
+        specifier: file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-vite-plugin-radiant-0.2.2.tgz
+        version: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-vite-plugin-radiant-0.2.2.tgz(d34eecf3f74fba5aad4b0beb9d13bbde)
       '@rolldown/plugin-babel':
         specifier: ^0.2.1
         version: 0.2.4(@babel/core@7.29.7)(@babel/runtime@7.29.7)(rolldown@1.2.11)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
@@ -884,28 +906,23 @@ packages:
   '@date-fns/tz@1.5.0':
     resolution: {integrity: sha512-lwYN/vDPeNRULcepoE/LO2Pgx+7/RV+S9ARfbc9lr2DtGkOD7pAiruHvbR1RX3Qyf6ja47EWJDMsNK5vK08DJg==}
 
-  '@ecopages/browser-router@0.7.0':
-    resolution: {integrity: sha512-MuTBJY1VEbV5VdRG3Wef4IYAKWJxvB0DCsIIHeXkiOaiM8jZH7Wfygq05yHhZ4u8/DPu27L3I3cG1X7yrNTXYA==}
+  '@ecopages/browser-router@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-browser-router-0.7.0.tgz':
+    resolution: {integrity: sha512-9Yi3fpyHwiInotnJ5m/IENF8Eop9/X0BuIeNe/3a7bPrMXNMWeCJnmv5SzQoE8I5DeneSIs8LAdqvgX2iJCHXg==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-browser-router-0.7.0.tgz}
+    version: 0.7.0
     engines: {node: ^24.22.0 || >=26.0.0}
     peerDependencies:
       '@ecopages/core': 0.7.0
 
-  '@ecopages/content-processor@0.7.0':
-    resolution: {integrity: sha512-ozNTUqK5INPntQ3GcRZdvyA4okx3caHUQzOMVoVpcmdRNqjL+6C0Y/I8CDToWCdMmdB13JIhikp9w5s0aplGdg==}
+  '@ecopages/content-processor@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-content-processor-0.7.0.tgz':
+    resolution: {integrity: sha512-2tnX5oWGE5qgc/o40ftTqMIB+z8odbCCh8sN/p8FDj2H8bU6/kXsWeFQZGNxah09EyZdfBGEp+gI8I6FgbDZ2w==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-content-processor-0.7.0.tgz}
+    version: 0.7.0
     engines: {node: ^24.22.0 || >=26.0.0}
     peerDependencies:
       '@ecopages/core': 0.7.0
 
-  '@ecopages/core@0.6.1':
-    resolution: {integrity: sha512-j7eM5OfERcRkbeGSo7O3HhRF++Bo8EinNJ7ZI/3Y8XC+wdHzeE8ncVquTU7rfFV7R7YFzXXoyHVWWBsXDwoBRw==}
-    peerDependencies:
-      '@ecopages/dev-toolbar': 0.6.1
-    peerDependenciesMeta:
-      '@ecopages/dev-toolbar':
-        optional: true
-
-  '@ecopages/core@0.7.0':
-    resolution: {integrity: sha512-QZubcfD/jNzf83o1QMEkeiwIJOXWI5rviUPY7T1cacNSqs/BxVMQSkhlHlwcY6/TapCQUn6fwV5KwVDknkV0og==}
+  '@ecopages/core@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz':
+    resolution: {integrity: sha512-hjnO+sFunhwekCwMyKmOZ2wJIqoyGr/LLySdXLWw7IVDhhbGo7W3+ktm1aF3rEJE0EgOdhxokXY6wJsYe+56SQ==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz}
+    version: 0.7.0
     engines: {node: ^24.22.0 || >=26.0.0}
     peerDependencies:
       '@ecopages/dev-toolbar': 0.7.0
@@ -913,27 +930,28 @@ packages:
       '@ecopages/dev-toolbar':
         optional: true
 
-  '@ecopages/dev-toolbar@0.7.0':
-    resolution: {integrity: sha512-HyvIl08H9mfTOcNbTpvLYi56q3roEz+KrYTch3+Kl20e+BUmn2B01obc5bHiqV3NyC16Pbwjbh+NL6cXrJknqw==}
+  '@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz':
+    resolution: {integrity: sha512-vesNlj8wcTneS/pk6w8vBfvdHje/IB9GW7cj4XOurxz+3soN70QCyKvEjBqN5CRxLKHjr8aGIZNLg499ILy3vQ==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz}
+    version: 0.7.0
     engines: {node: ^24.22.0 || >=26.0.0}
 
-  '@ecopages/ecopages-jsx@0.7.0':
-    resolution: {integrity: sha512-BiZ/pvzGmTgruV9B2NNuLJjmN1vTZFD+2wsNlIlx/Y+aeUYtCugaUhqE0TCy+MouoUpn311bd2+HVBKUq4NL1g==}
+  '@ecopages/ecopages-jsx@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-ecopages-jsx-0.7.0.tgz':
+    resolution: {integrity: sha512-3hPfgNdEDumcf625K+8EAxp+sxwbBFyrtHyOmTWZRPlS2j9KK0UlB4MAGia8vxQLVyHh+jpswOxUxBJsX1gMbg==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-ecopages-jsx-0.7.0.tgz}
+    version: 0.7.0
     engines: {node: ^24.22.0 || >=26.0.0}
     peerDependencies:
       '@ecopages/core': 0.7.0
       '@ecopages/jsx': ^0.8.2
       '@ecopages/radiant': ^0.8.2
 
-  '@ecopages/file-system@0.6.1':
-    resolution: {integrity: sha512-nT2LKeKLiteOdtjEFwEyXxEKndDf/KypQoxNbqqBLgeUprDKq6xy2idjQ2Xk0QU/f5FJBVHEmBJQI8ktmir2Kg==}
-
-  '@ecopages/file-system@0.7.0':
-    resolution: {integrity: sha512-mK3RZUto/KqTDiqX1ZuP6I5AcATXG9apHKx/hnlRMLoci3K5hsm9lUnV9NLxQlmqJ3w/X88aoQS0VHK5NuCMmw==}
+  '@ecopages/file-system@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-file-system-0.7.0.tgz':
+    resolution: {integrity: sha512-rMvmJaUj/waJ0k6zfbQUHklqcG8icqBnODhaHu4CwT5rKmZyhxTy5+m/nal7Jfj62QdqH/2Xcr7eQ/HiCou1Mg==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-file-system-0.7.0.tgz}
+    version: 0.7.0
     engines: {node: ^24.22.0 || >=26.0.0}
 
-  '@ecopages/jsx@0.8.2':
-    resolution: {integrity: sha512-BxC/H7B3BsuGdywirCiaZ9IIrrqQmjhJdfnskBsPk+qavwPrvEhe9jHwzCPeqTXJhONrPpx2apgowGZnxBf50Q==}
+  '@ecopages/jsx@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz':
+    resolution: {integrity: sha512-j/L5S8yW7prMhl8hfKK/PUrwq9PzhrR9wYJdVRLDxyKWlZxwAa7XNnIhGMOf1mH/VtAfO3kXclyNgjB8Rj/Zug==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz}
+    version: 0.8.2
     peerDependencies:
       '@ecopages/signals': '>=0.8.2'
 
@@ -942,15 +960,17 @@ packages:
     peerDependencies:
       typescript: ^5.0.0
 
-  '@ecopages/mdx@0.7.0':
-    resolution: {integrity: sha512-Lw9PHqN6XWhXfRDdCxlovJWREN0/W80jz+XW9TDkyivO2YV4bmvtrgBaCJry2GV+bNpwdSPkp+EGWxGXzkrsdw==}
+  '@ecopages/mdx@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-mdx-0.7.0.tgz':
+    resolution: {integrity: sha512-wqoD+cR1vxRu4PkiDxeVNVZsbojoThNNBn2L2nSLjsxnlg0UzMheB3q5eEq6TqW2Nwv8214iBiCCxu5cw47n4g==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-mdx-0.7.0.tgz}
+    version: 0.7.0
     engines: {node: ^24.22.0 || >=26.0.0}
     peerDependencies:
       '@ecopages/core': 0.7.0
       '@mdx-js/mdx': ^3.1.0
 
-  '@ecopages/postcss-processor@0.7.0':
-    resolution: {integrity: sha512-j214BOYW3Plr4gDPuiGjut9qf8COOzzwOSqI+QgjcFdPIovdHjIZjW10wWNEqld//p1bvRuRdZr3iVGs05Rt2A==}
+  '@ecopages/postcss-processor@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-postcss-processor-0.7.0.tgz':
+    resolution: {integrity: sha512-iB57VsoNb2ygTVqFi7g54sjoL1v3y/6PnEf/e22ZYb7Njtnk0PezXj7eizo+yMOdFeRWIXp8ka2xrcogjnTwBg==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-postcss-processor-0.7.0.tgz}
+    version: 0.7.0
     engines: {node: ^24.22.0 || >=26.0.0}
     peerDependencies:
       '@ecopages/core': 0.7.0
@@ -962,20 +982,23 @@ packages:
       tailwindcss:
         optional: true
 
-  '@ecopages/radiant-ui@0.3.4':
-    resolution: {integrity: sha512-dOPAA4SMHqrDwvs6R8F3fctkpD+ik79LCrSl7zseqMgtMy+0duOXt9zv2goFAQ8hAopsFh9RTDt2WivWq+rHSQ==}
+  '@ecopages/radiant-ui@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-ui-0.3.4.tgz':
+    resolution: {integrity: sha512-WuGZRZUe7AEsRFaUjfRU7WyRDoLiJZIxLWZqZutikOYIche67ZerUreUhDP/5Jq8hUhfHw5bwNUAK5fKNHy6jw==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-ui-0.3.4.tgz}
+    version: 0.3.4
     peerDependencies:
       '@ecopages/jsx': '>=0.8.2'
       '@ecopages/radiant': '>=0.8.2'
       '@ecopages/signals': '>=0.8.2'
 
-  '@ecopages/radiant@0.8.2':
-    resolution: {integrity: sha512-5nGsgmmmDR1pc9lkIToGEZpwWfsQfk9HDl/4HWX4mx+NuB34dmszOkAkPeJSUHx6kVtBpqqjMd9QaG+rO4zSwA==}
+  '@ecopages/radiant@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-0.8.2.tgz':
+    resolution: {integrity: sha512-eMyG55RRWVx3XhKW24+8fbTo8B65KNihho/V9zJFFXYqqav58TshbLFnmvBeaN4WuLB5DJssNzXJLhxK5CpqaA==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-0.8.2.tgz}
+    version: 0.8.2
     peerDependencies:
       '@ecopages/jsx': '>=0.8.2'
 
-  '@ecopages/react@0.7.0':
-    resolution: {integrity: sha512-4Qf2Re9rGFvkQuLpWYTyqUlHATmGASRJRQx678seKfsd/xBubdlSRX3U93gx0qnBbp6kVPqoNAj7zKsYz1iDnw==}
+  '@ecopages/react@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-react-0.7.0.tgz':
+    resolution: {integrity: sha512-wG6L7B0Kr6/3uec7Y1zhCY4AVrH/pYGCJ1EhqHRPtUxefhbawc014feFzr0VntIGbCtxuYkpkWOofaBiaAWSxg==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-react-0.7.0.tgz}
+    version: 0.7.0
     engines: {node: ^24.22.0 || >=26.0.0}
     peerDependencies:
       '@ecopages/core': 0.7.0
@@ -989,32 +1012,35 @@ packages:
     peerDependencies:
       typescript: ^5.0.0
 
-  '@ecopages/signals@0.8.2':
-    resolution: {integrity: sha512-k8S5veRDLAXL6Is+VpkqbkxWIRQUvei+lkVWMTfruJPCOfnbSMCGSvDawJIcTIEAxKJ5Q5j41ygVEtnR5a4pjw==}
+  '@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz':
+    resolution: {integrity: sha512-ZSlzxhcB5fnJDrcY3iV96hk5ttpFJXiYF4J5G/pjalFENXtiOVc5LDAjTee/2tmPjle895Nus3OrearlR1B1vw==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz}
+    version: 0.8.2
 
-  '@ecopages/storybook-radiant-vite@0.2.2':
-    resolution: {integrity: sha512-FlGN859ZbfP0JiDaRXElO9ciCEaVKuiFjev2T6TjT9fVaMsVZwl+TFA8SRExtzXQfrmLpVwsIfo2muSRqIyAtA==}
+  '@ecopages/storybook-radiant-vite@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-storybook-radiant-vite-0.2.2.tgz':
+    resolution: {integrity: sha512-pOnbK4yv4PjNotpHhhVuiMRs/7G6/I0CKHFjkfAHtN5hsDBrRarb6tn4ner7ndlJBY5qgqPqNWpL2Omp9ip8yQ==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-storybook-radiant-vite-0.2.2.tgz}
+    version: 0.2.2
     peerDependencies:
-      '@ecopages/jsx': '>=0.8.1'
-      '@ecopages/radiant': '>=0.8.1'
-      '@ecopages/signals': '>=0.8.1'
+      '@ecopages/jsx': '>=0.8.2'
+      '@ecopages/radiant': '>=0.8.2'
+      '@ecopages/signals': '>=0.8.2'
       storybook: ^10.5.2
       vite: ^8.0.0
     peerDependenciesMeta:
       vite:
         optional: true
 
-  '@ecopages/vite-plugin-radiant@0.2.2':
-    resolution: {integrity: sha512-pny0hdr//3PYh4rqQMmnlFksngWXVi0oEHxmHRFYVNXMcvOg54ctYIBsyIW/IH7ULb4LoJ6iWPpDf9iLeZf2uQ==}
+  '@ecopages/vite-plugin-radiant@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-vite-plugin-radiant-0.2.2.tgz':
+    resolution: {integrity: sha512-0K2UDwnDoMmXEpnD1fBygHwT7bT9f/pLaMsY8H9C3trpsAlM1A9vJQsAzuN3ncTSZUxYy+sztlpeV+LaXU9fng==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-vite-plugin-radiant-0.2.2.tgz}
+    version: 0.2.2
     engines: {node: '>=18'}
     peerDependencies:
       '@babel/core': ^7.0.0
       '@babel/plugin-proposal-decorators': ^7.0.0
       '@babel/plugin-syntax-typescript': ^7.0.0
       '@babel/plugin-transform-class-properties': ^7.0.0
-      '@ecopages/jsx': '>=0.8.1'
-      '@ecopages/radiant': '>=0.8.1'
-      '@ecopages/signals': '>=0.8.1'
+      '@ecopages/jsx': '>=0.8.2'
+      '@ecopages/radiant': '>=0.8.2'
+      '@ecopages/signals': '>=0.8.2'
       '@rolldown/plugin-babel': ^0.2.0
       nitro: ^3
       vite: ^8.0.0
@@ -1953,33 +1979,33 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@oxlint-tsgolint/darwin-arm64@7.0.2006':
-    resolution: {integrity: sha512-uc0MEHXZUDW23Zmo5X28eSNeSnP17jKnh9GiehpVZqhfy99ks8spyXT5Llar3tjDN7ppnQN0Qd9FK6WNkdD+fQ==}
+  '@oxlint-tsgolint/darwin-arm64@7.0.2007':
+    resolution: {integrity: sha512-bjNxPFyu1wNK74epHzXrtVLrj7oEuB8jQvJZDSia2d5EZ/0YgnyhI37E9U530IUZlNCqlTWjko1iT3CKAYF9+A==}
     cpu: [arm64]
     os: [darwin]
 
-  '@oxlint-tsgolint/darwin-x64@7.0.2006':
-    resolution: {integrity: sha512-+x1/pa3S3VMC9cif8XKTOCQUuqRT+wu1Ix+FK5svXa2xbXCuE7+4S0SfmuSnK/mk9AI5+xBxZFhILxmCPUZ1hA==}
+  '@oxlint-tsgolint/darwin-x64@7.0.2007':
+    resolution: {integrity: sha512-dCd7mzk2FeTaU46LLeXy5mQyEFICaPqlew/LpehNzEuL86D0jTYlwZHbibRqdRrvkSNgq1szz/7014FIHgyV1g==}
     cpu: [x64]
     os: [darwin]
 
-  '@oxlint-tsgolint/linux-arm64@7.0.2006':
-    resolution: {integrity: sha512-90v7HX8m54kHXn5DpjNEN18Fb7xwJMREe/wji3USyAf9pTMv7a3qZ3cPoLViIcIzxPLmkcYZIs1j1H3Z2gbVLA==}
+  '@oxlint-tsgolint/linux-arm64@7.0.2007':
+    resolution: {integrity: sha512-qb0XUQXuTmQ8H++zsx/tQitG0/fU3BE16KGp1qXExeDgRzEc7WIlCuN1i+rmA40lty9gQs+x3a73BFODVhTZqA==}
     cpu: [arm64]
     os: [linux]
 
-  '@oxlint-tsgolint/linux-x64@7.0.2006':
-    resolution: {integrity: sha512-/k0wsEqHiA5dWBJYuld3Vecv6bIhKCasxpho/aFkvh870Qox33MuTkKUGWIVm/njAxw7W4pu1a/Xfa3jwuKuPQ==}
+  '@oxlint-tsgolint/linux-x64@7.0.2007':
+    resolution: {integrity: sha512-75vx0067HSgxq/HEZzlHwqhcujn3bshg43fVLTx604jZdZZMQfPVCcxTh2RTEShP7ACT1PRty6vboZlWh5RtEA==}
     cpu: [x64]
     os: [linux]
 
-  '@oxlint-tsgolint/win32-arm64@7.0.2006':
-    resolution: {integrity: sha512-CQT5sqcLZLNZSWLzUUEjQmp74UX8h1agp3ZJ8pfRktHbx6gfBa8a7CjrnRrZ9VXlwnXVkpw7m5KBO6y+S5MQRA==}
+  '@oxlint-tsgolint/win32-arm64@7.0.2007':
+    resolution: {integrity: sha512-6zl7I+BvScfOPtnPtSEP5JA+z8NkDPGd47YnQChL5lLF/Dzs7Rasr1G+q0zGlQcP8OEgW43hW4QlUTXxPfD13Q==}
     cpu: [arm64]
     os: [win32]
 
-  '@oxlint-tsgolint/win32-x64@7.0.2006':
-    resolution: {integrity: sha512-VZsGowXcp3vQNkjoGeVCOTf4aGrRpRk6bBJWhefnJVPr6z+dX+LKqqHfwaqnFvg66Q2iJpXqklRW38YO21ee+Q==}
+  '@oxlint-tsgolint/win32-x64@7.0.2007':
+    resolution: {integrity: sha512-VptFHYhBm0SIWCUkx89hmTrKVOQsDg0iB1YE3EBlvRRtCHGUd3pU1kMxPBg1wOd83ZMmIn7zB6maBROtpmrP5g==}
     cpu: [x64]
     os: [win32]
 
@@ -3737,9 +3763,10 @@ packages:
     resolution: {integrity: sha512-IrPdXQsk2BbzvCBGBOTmmSH5SodmqZNt4ERAZDmW4CT+tL8VtvinqywuANaFu4bOMWki16nqf0e4oC0QIaDr/g==}
     engines: {node: '>=10'}
 
-  ecopages@0.6.1:
-    resolution: {integrity: sha512-6rMClDvbOwEy2K68N9ug8V8VVQVc76yuQGqsmDcNbQTbr7ER7kZrguhGDRAY4ZScXn64Dcl1+7r76KNPNPHZHA==}
-    engines: {node: '>=24.0.0'}
+  ecopages@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-0.7.0.tgz:
+    resolution: {integrity: sha512-vEnBSRBFDvdo5baWDrxwHxqu9aCFeGLdqbtx4BxBOSNIPXdiA84UKb2YiKasorQKR99rTnMa2vavnlNTL0pJ0g==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-0.7.0.tgz}
+    version: 0.7.0
+    engines: {node: ^24.22.0 || >=26.0.0}
     hasBin: true
     peerDependencies:
       typescript: ^5
@@ -4782,8 +4809,8 @@ packages:
   oxc-resolver@11.24.2:
     resolution: {integrity: sha512-FY91FiDBj7ls5MsFS9jN3tjz2o0/zsdSsymlakySaBwVJZorHhkWyICLZMKxlu1R9vYo+sd3z1jwb4J8x7bNDw==}
 
-  oxlint-tsgolint@7.0.2006:
-    resolution: {integrity: sha512-5B3UtH71kycPHUC1kFEIffivEAs49SUmkJuHZOZnTY0NPj4legp0bcsCQucuLVNCoJzDucS68P2C4WIhP+LypQ==}
+  oxlint-tsgolint@7.0.2007:
+    resolution: {integrity: sha512-i8X2qf6VVqFzoNVP34joMKuZpO6T2uXMOgKJaSPFc6p+E3FTnbIGPRbI8K4ZApmtDTMu2CIeGfpzeK1zzGwfnA==}
     hasBin: true
 
   oxlint@1.93.0:
@@ -5803,7 +5830,7 @@ snapshots:
     dependencies:
       '@babel/compat-data': 7.29.7
       '@babel/helper-validator-option': 7.29.7
-      browserslist: 4.29.1
+      browserslist: 4.29.5
       lru-cache: 5.1.1
       semver: 6.3.1
 
@@ -6153,15 +6180,15 @@ snapshots:
 
   '@date-fns/tz@1.5.0': {}
 
-  '@ecopages/browser-router@0.7.0(@ecopages/core@0.7.0(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3))':
+  '@ecopages/browser-router@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-browser-router-0.7.0.tgz(@ecopages/core@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz(@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))(typescript@5.9.3))':
     dependencies:
-      '@ecopages/core': 0.7.0(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3)
+      '@ecopages/core': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz(@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))(typescript@5.9.3)
       morphdom: 2.7.8
 
-  '@ecopages/content-processor@0.7.0(@ecopages/core@0.7.0(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3))(typescript@5.9.3)':
+  '@ecopages/content-processor@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-content-processor-0.7.0.tgz(@ecopages/core@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz(@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))(typescript@5.9.3))(typescript@5.9.3)':
     dependencies:
-      '@ecopages/core': 0.7.0(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3)
-      '@ecopages/file-system': 0.7.0
+      '@ecopages/core': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz(@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))(typescript@5.9.3)
+      '@ecopages/file-system': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-file-system-0.7.0.tgz
       '@ecopages/logger': 0.2.3(typescript@5.9.3)
       remark-frontmatter: 5.0.0
       unified: 11.0.5
@@ -6171,10 +6198,10 @@ snapshots:
       - supports-color
       - typescript
 
-  '@ecopages/core@0.6.1(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3)':
+  '@ecopages/core@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz(@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))(typescript@5.9.3)':
     dependencies:
       '@clack/prompts': 1.8.1
-      '@ecopages/file-system': 0.6.1
+      '@ecopages/file-system': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-file-system-0.7.0.tgz
       '@ecopages/logger': 0.2.3(typescript@5.9.3)
       '@ecopages/scripts-injector': 0.1.5(typescript@5.9.3)
       '@jridgewell/remapping': 2.3.5
@@ -6186,70 +6213,47 @@ snapshots:
       rolldown: 1.2.11
       ws: 8.21.3
     optionalDependencies:
-      '@ecopages/dev-toolbar': 0.7.0(@ecopages/signals@0.8.2)
+      '@ecopages/dev-toolbar': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz)
     transitivePeerDependencies:
       - bufferutil
       - typescript
       - utf-8-validate
 
-  '@ecopages/core@0.7.0(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3)':
+  '@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz)':
     dependencies:
-      '@clack/prompts': 1.8.1
-      '@ecopages/file-system': 0.7.0
-      '@ecopages/logger': 0.2.3(typescript@5.9.3)
-      '@ecopages/scripts-injector': 0.1.5(typescript@5.9.3)
-      '@jridgewell/remapping': 2.3.5
-      '@standard-schema/spec': 1.1.0
-      '@standard-schema/utils': 0.3.0
-      magic-string: 1.4.5
-      oxc-parser: 0.141.0
-      oxc-resolver: 11.24.2
-      rolldown: 1.2.11
-      ws: 8.21.3
-    optionalDependencies:
-      '@ecopages/dev-toolbar': 0.7.0(@ecopages/signals@0.8.2)
-    transitivePeerDependencies:
-      - bufferutil
-      - typescript
-      - utf-8-validate
-
-  '@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2)':
-    dependencies:
-      '@ecopages/jsx': 0.8.2(@ecopages/signals@0.8.2)
-      '@ecopages/radiant': 0.8.2(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2))
+      '@ecopages/jsx': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz)
+      '@ecopages/radiant': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-0.8.2.tgz(@ecopages/jsx@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))
       axe-core: 4.13.0
     transitivePeerDependencies:
       - '@ecopages/signals'
 
-  '@ecopages/ecopages-jsx@0.7.0(@ecopages/core@0.7.0(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3))(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2))(@ecopages/radiant@0.8.2(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2)))(typescript@5.9.3)':
+  '@ecopages/ecopages-jsx@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-ecopages-jsx-0.7.0.tgz(60eb4d7a8912020deeebe536968d9f02)':
     dependencies:
-      '@ecopages/core': 0.7.0(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3)
-      '@ecopages/file-system': 0.7.0
-      '@ecopages/jsx': 0.8.2(@ecopages/signals@0.8.2)
-      '@ecopages/mdx': 0.7.0(@ecopages/core@0.7.0(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3))(@mdx-js/mdx@3.1.1)(typescript@5.9.3)
-      '@ecopages/radiant': 0.8.2(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2))
+      '@ecopages/core': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz(@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))(typescript@5.9.3)
+      '@ecopages/file-system': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-file-system-0.7.0.tgz
+      '@ecopages/jsx': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz)
+      '@ecopages/mdx': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-mdx-0.7.0.tgz(@ecopages/core@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz(@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))(typescript@5.9.3))(@mdx-js/mdx@3.1.1)(typescript@5.9.3)
+      '@ecopages/radiant': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-0.8.2.tgz(@ecopages/jsx@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))
       '@mdx-js/mdx': 3.1.1
       vfile: 6.0.3
     transitivePeerDependencies:
       - supports-color
       - typescript
 
-  '@ecopages/file-system@0.6.1': {}
+  '@ecopages/file-system@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-file-system-0.7.0.tgz': {}
 
-  '@ecopages/file-system@0.7.0': {}
-
-  '@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2)':
+  '@ecopages/jsx@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz)':
     dependencies:
-      '@ecopages/signals': 0.8.2
+      '@ecopages/signals': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz
 
   '@ecopages/logger@0.2.3(typescript@5.9.3)':
     dependencies:
       typescript: 5.9.3
 
-  '@ecopages/mdx@0.7.0(@ecopages/core@0.7.0(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3))(@mdx-js/mdx@3.1.1)(typescript@5.9.3)':
+  '@ecopages/mdx@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-mdx-0.7.0.tgz(@ecopages/core@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz(@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))(typescript@5.9.3))(@mdx-js/mdx@3.1.1)(typescript@5.9.3)':
     dependencies:
-      '@ecopages/core': 0.7.0(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3)
-      '@ecopages/file-system': 0.7.0
+      '@ecopages/core': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz(@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))(typescript@5.9.3)
+      '@ecopages/file-system': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-file-system-0.7.0.tgz
       '@ecopages/logger': 0.2.3(typescript@5.9.3)
       '@mdx-js/mdx': 3.1.1
       source-map: 0.8.0
@@ -6257,13 +6261,13 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@ecopages/postcss-processor@0.7.0(@ecopages/core@0.7.0(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3))(@tailwindcss/postcss@4.3.3)(tailwindcss@4.3.3)(typescript@5.9.3)':
+  '@ecopages/postcss-processor@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-postcss-processor-0.7.0.tgz(@ecopages/core@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz(@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))(typescript@5.9.3))(@tailwindcss/postcss@4.3.3)(tailwindcss@4.3.3)(typescript@5.9.3)':
     dependencies:
-      '@ecopages/core': 0.7.0(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3)
-      '@ecopages/file-system': 0.7.0
+      '@ecopages/core': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz(@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))(typescript@5.9.3)
+      '@ecopages/file-system': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-file-system-0.7.0.tgz
       '@ecopages/logger': 0.2.3(typescript@5.9.3)
       autoprefixer: 10.6.1(postcss@8.5.28)
-      browserslist: 4.29.1
+      browserslist: 4.29.5
       cssnano: 9.9.0(postcss@8.5.28)
       postcss: 8.5.28
       postcss-import: 16.2.0(postcss@8.5.28)
@@ -6274,22 +6278,22 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@ecopages/radiant-ui@0.3.4(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2))(@ecopages/radiant@0.8.2(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2)))(@ecopages/signals@0.8.2)':
+  '@ecopages/radiant-ui@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-ui-0.3.4.tgz(a379c23cb5603c5d6f998b1fe846f64a)':
     dependencies:
-      '@ecopages/jsx': 0.8.2(@ecopages/signals@0.8.2)
-      '@ecopages/radiant': 0.8.2(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2))
-      '@ecopages/signals': 0.8.2
+      '@ecopages/jsx': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz)
+      '@ecopages/radiant': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-0.8.2.tgz(@ecopages/jsx@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))
+      '@ecopages/signals': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz
 
-  '@ecopages/radiant@0.8.2(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2))':
+  '@ecopages/radiant@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-0.8.2.tgz(@ecopages/jsx@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))':
     dependencies:
-      '@ecopages/jsx': 0.8.2(@ecopages/signals@0.8.2)
+      '@ecopages/jsx': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz)
 
-  '@ecopages/react@0.7.0(@ecopages/core@0.7.0(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)':
+  '@ecopages/react@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-react-0.7.0.tgz(@ecopages/core@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz(@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))(typescript@5.9.3))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)':
     dependencies:
-      '@ecopages/core': 0.7.0(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3)
-      '@ecopages/file-system': 0.7.0
+      '@ecopages/core': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz(@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))(typescript@5.9.3)
+      '@ecopages/file-system': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-file-system-0.7.0.tgz
       '@ecopages/logger': 0.2.3(typescript@5.9.3)
-      '@ecopages/mdx': 0.7.0(@ecopages/core@0.7.0(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3))(@mdx-js/mdx@3.1.1)(typescript@5.9.3)
+      '@ecopages/mdx': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-mdx-0.7.0.tgz(@ecopages/core@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz(@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))(typescript@5.9.3))(@mdx-js/mdx@3.1.1)(typescript@5.9.3)
       '@mdx-js/mdx': 3.1.1
       '@types/react': 19.3.0
       '@types/react-dom': 19.3.0(@types/react@19.3.0)
@@ -6304,14 +6308,14 @@ snapshots:
     dependencies:
       typescript: 5.9.3
 
-  '@ecopages/signals@0.8.2': {}
+  '@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz': {}
 
-  '@ecopages/storybook-radiant-vite@0.2.2(@babel/core@7.29.7)(@babel/plugin-proposal-decorators@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-class-properties@7.29.7(@babel/core@7.29.7))(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2))(@ecopages/radiant@0.8.2(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2)))(@ecopages/signals@0.8.2)(@rolldown/plugin-babel@0.2.4(@babel/core@7.29.7)(@babel/runtime@7.29.7)(rolldown@1.2.11)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(nitro@3.0.260311-beta(dotenv@8.6.0)(giget@2.0.0)(jiti@2.7.0)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))':
+  '@ecopages/storybook-radiant-vite@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-storybook-radiant-vite-0.2.2.tgz(fda09c8eff5617d5a70ba8bebadf4742)':
     dependencies:
-      '@ecopages/jsx': 0.8.2(@ecopages/signals@0.8.2)
-      '@ecopages/radiant': 0.8.2(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2))
-      '@ecopages/signals': 0.8.2
-      '@ecopages/vite-plugin-radiant': 0.2.2(@babel/core@7.29.7)(@babel/plugin-proposal-decorators@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-class-properties@7.29.7(@babel/core@7.29.7))(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2))(@ecopages/radiant@0.8.2(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2)))(@ecopages/signals@0.8.2)(@rolldown/plugin-babel@0.2.4(@babel/core@7.29.7)(@babel/runtime@7.29.7)(rolldown@1.2.11)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(nitro@3.0.260311-beta(dotenv@8.6.0)(giget@2.0.0)(jiti@2.7.0)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
+      '@ecopages/jsx': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz)
+      '@ecopages/radiant': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-0.8.2.tgz(@ecopages/jsx@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))
+      '@ecopages/signals': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz
+      '@ecopages/vite-plugin-radiant': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-vite-plugin-radiant-0.2.2.tgz(d34eecf3f74fba5aad4b0beb9d13bbde)
       '@storybook/builder-vite': 10.6.0(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
       '@storybook/global': 5.0.0
       esbuild: 0.28.2
@@ -6328,13 +6332,13 @@ snapshots:
       - nitro
       - supports-color
 
-  '@ecopages/vite-plugin-radiant@0.2.2(@babel/core@7.29.7)(@babel/plugin-proposal-decorators@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-class-properties@7.29.7(@babel/core@7.29.7))(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2))(@ecopages/radiant@0.8.2(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2)))(@ecopages/signals@0.8.2)(@rolldown/plugin-babel@0.2.4(@babel/core@7.29.7)(@babel/runtime@7.29.7)(rolldown@1.2.11)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(nitro@3.0.260311-beta(dotenv@8.6.0)(giget@2.0.0)(jiti@2.7.0)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))':
+  '@ecopages/vite-plugin-radiant@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-vite-plugin-radiant-0.2.2.tgz(d34eecf3f74fba5aad4b0beb9d13bbde)':
     dependencies:
       '@babel/parser': 7.29.9
       '@babel/traverse': 7.29.8
-      '@ecopages/jsx': 0.8.2(@ecopages/signals@0.8.2)
-      '@ecopages/radiant': 0.8.2(@ecopages/jsx@0.8.2(@ecopages/signals@0.8.2))
-      '@ecopages/signals': 0.8.2
+      '@ecopages/jsx': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz)
+      '@ecopages/radiant': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-0.8.2.tgz(@ecopages/jsx@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))
+      '@ecopages/signals': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz
       parse5: 7.3.0
       picomatch: 4.0.7
       vite: 8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
@@ -7009,22 +7013,22 @@ snapshots:
   '@oxc-resolver/binding-win32-x64-msvc@11.24.2':
     optional: true
 
-  '@oxlint-tsgolint/darwin-arm64@7.0.2006':
+  '@oxlint-tsgolint/darwin-arm64@7.0.2007':
     optional: true
 
-  '@oxlint-tsgolint/darwin-x64@7.0.2006':
+  '@oxlint-tsgolint/darwin-x64@7.0.2007':
     optional: true
 
-  '@oxlint-tsgolint/linux-arm64@7.0.2006':
+  '@oxlint-tsgolint/linux-arm64@7.0.2007':
     optional: true
 
-  '@oxlint-tsgolint/linux-x64@7.0.2006':
+  '@oxlint-tsgolint/linux-x64@7.0.2007':
     optional: true
 
-  '@oxlint-tsgolint/win32-arm64@7.0.2006':
+  '@oxlint-tsgolint/win32-arm64@7.0.2007':
     optional: true
 
-  '@oxlint-tsgolint/win32-x64@7.0.2006':
+  '@oxlint-tsgolint/win32-x64@7.0.2007':
     optional: true
 
   '@oxlint/binding-android-arm-eabi@1.93.0':
@@ -8493,7 +8497,7 @@ snapshots:
   caniuse-api@4.0.0:
     dependencies:
       browserslist: 4.29.5
-      caniuse-lite: 1.0.30001812
+      caniuse-lite: 1.0.30001826
 
   caniuse-lite@1.0.30001812: {}
 
@@ -8686,11 +8690,11 @@ snapshots:
 
   dotenv@8.6.0: {}
 
-  ecopages@0.6.1(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3):
+  ecopages@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-0.7.0.tgz(@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))(typescript@5.9.3):
     dependencies:
       '@clack/prompts': 1.8.1
-      '@ecopages/core': 0.6.1(@ecopages/dev-toolbar@0.7.0(@ecopages/signals@0.8.2))(typescript@5.9.3)
-      '@ecopages/file-system': 0.6.1
+      '@ecopages/core': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz(@ecopages/dev-toolbar@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz(@ecopages/signals@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz))(typescript@5.9.3)
+      '@ecopages/file-system': file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-file-system-0.7.0.tgz
       '@ecopages/logger': 0.2.3(typescript@5.9.3)
       giget: 2.0.0
       tsx: 4.23.15
@@ -10107,16 +10111,16 @@ snapshots:
       '@oxc-resolver/binding-win32-arm64-msvc': 11.24.2
       '@oxc-resolver/binding-win32-x64-msvc': 11.24.2
 
-  oxlint-tsgolint@7.0.2006:
+  oxlint-tsgolint@7.0.2007:
     optionalDependencies:
-      '@oxlint-tsgolint/darwin-arm64': 7.0.2006
-      '@oxlint-tsgolint/darwin-x64': 7.0.2006
-      '@oxlint-tsgolint/linux-arm64': 7.0.2006
-      '@oxlint-tsgolint/linux-x64': 7.0.2006
-      '@oxlint-tsgolint/win32-arm64': 7.0.2006
-      '@oxlint-tsgolint/win32-x64': 7.0.2006
+      '@oxlint-tsgolint/darwin-arm64': 7.0.2007
+      '@oxlint-tsgolint/darwin-x64': 7.0.2007
+      '@oxlint-tsgolint/linux-arm64': 7.0.2007
+      '@oxlint-tsgolint/linux-x64': 7.0.2007
+      '@oxlint-tsgolint/win32-arm64': 7.0.2007
+      '@oxlint-tsgolint/win32-x64': 7.0.2007
 
-  oxlint@1.93.0(oxlint-tsgolint@7.0.2006):
+  oxlint@1.93.0(oxlint-tsgolint@7.0.2007):
     optionalDependencies:
       '@oxlint/binding-android-arm-eabi': 1.93.0
       '@oxlint/binding-android-arm64': 1.93.0
@@ -10137,7 +10141,7 @@ snapshots:
       '@oxlint/binding-win32-arm64-msvc': 1.93.0
       '@oxlint/binding-win32-ia32-msvc': 1.93.0
       '@oxlint/binding-win32-x64-msvc': 1.93.0
-      oxlint-tsgolint: 7.0.2006
+      oxlint-tsgolint: 7.0.2007
 
   p-filter@2.1.0:
     dependencies:

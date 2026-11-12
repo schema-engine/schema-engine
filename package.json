@@ -79,7 +79,29 @@
 	"pnpm": {
 		"overrides": {
 			"react": "^19.3.0",
-			"react-dom": "^19.3.0"
+			"react-dom": "^19.3.0",
+			"ecopages": "file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-0.7.0.tgz",
+			"@ecopages/browser-router": "file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-browser-router-0.7.0.tgz",
+			"@ecopages/content-processor": "file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-content-processor-0.7.0.tgz",
+			"@ecopages/core": "file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-core-0.7.0.tgz",
+			"@ecopages/dev-toolbar": "file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-dev-toolbar-0.7.0.tgz",
+			"@ecopages/ecopages-jsx": "file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-ecopages-jsx-0.7.0.tgz",
+			"@ecopages/file-system": "file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-file-system-0.7.0.tgz",
+			"@ecopages/image-processor": "file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-image-processor-0.7.0.tgz",
+			"@ecopages/jsx": "file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz",
+			"@ecopages/kitajs": "file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-kitajs-0.7.0.tgz",
+			"@ecopages/lightningcss-processor": "file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-lightningcss-processor-0.7.0.tgz",
+			"@ecopages/lit": "file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-lit-0.7.0.tgz",
+			"@ecopages/mdx": "file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-mdx-0.7.0.tgz",
+			"@ecopages/postcss-processor": "file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-postcss-processor-0.7.0.tgz",
+			"@ecopages/radiant": "file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-0.8.2.tgz",
+			"@ecopages/radiant-themes": "file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-themes-0.3.4.tgz",
+			"@ecopages/radiant-ui": "file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-ui-0.3.4.tgz",
+			"@ecopages/react": "file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-react-0.7.0.tgz",
+			"@ecopages/react-router": "file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-react-router-0.7.0.tgz",
+			"@ecopages/signals": "file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-signals-0.8.2.tgz",
+			"@ecopages/storybook-radiant-vite": "file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-storybook-radiant-vite-0.2.2.tgz",
+			"@ecopages/vite-plugin-radiant": "file:/private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-vite-plugin-radiant-0.2.2.tgz"
 		},
 		"onlyBuiltDependencies": [
 			"core-js-pure",
