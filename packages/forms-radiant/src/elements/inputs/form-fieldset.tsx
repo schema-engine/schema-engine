@@ -1,3 +1,4 @@
+import { getAppearanceAttributes } from '@schema-engine/forms/lib/appearance';
 import { FormElements } from '@/components/internals/form-elements';
 import { mergeChildrenGridHost, mergeFieldGridHost } from '@/hooks/grid-styles';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
@@ -23,7 +24,12 @@ export function FormFieldSet(config: FieldSetProps) {
 	const childrenHost = mergeChildrenGridHost(config.elements);
 
 	return (
-		<fieldset class="se-form-field se-fieldset" data-se-grid-theme={fieldHost.themeId} style={fieldHost.style}>
+		<fieldset
+			classes={['se-form-field', 'se-fieldset', config.className]}
+			data-se-grid-theme={fieldHost.themeId}
+			style={fieldHost.style}
+			{...getAppearanceAttributes(config.appearance)}
+		>
 			{config.legend ? <legend class="se-fieldset__legend">{config.legend}</legend> : null}
 			{config.description ? <p class="se-fieldset__description">{config.description}</p> : null}
 			<div

@@ -4,6 +4,7 @@ import { defineInput } from '@schema-engine/forms';
 
 export const SelectElementRegistration = defineInput({
 	$type: 'select',
+	appearanceAxes: ['size'],
 	render: FormSelect,
 	schema: SelectFieldConfigSchema,
 	metadata: {

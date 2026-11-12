@@ -12,7 +12,7 @@ export function FormInput({
 	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
 		useControlledFormElement(config);
 
-	const { inputType, autoComplete, autoFocus, inputMode, spellCheck, placeholder, className } = config;
+	const { inputType, autoComplete, autoFocus, inputMode, spellCheck, placeholder } = config;
 
 	return (
 		<FieldGroup
@@ -36,7 +36,6 @@ export function FormInput({
 				autoFocus={autoFocus}
 				inputMode={inputMode}
 				spellCheck={spellCheck}
-				className={className}
 			/>
 		</FieldGroup>
 	);

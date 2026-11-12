@@ -2,6 +2,7 @@ import * as z from 'zod/mini';
 import { assertRecipeKindSlots } from './assert-recipe-kind';
 import type { RecipeKind, RecipeMetadata, RecipeSlot, RecipeSlotDefaults, RecipeSpec } from './types';
 import { RECIPE_SLOT_ORDER } from './types';
+import type { SlotAppearanceAxes } from '@/lib/appearance';
 
 export type RecipeSlotSchemas = Partial<Record<RecipeSlot, z.ZodMiniType>>;
 
@@ -69,6 +70,32 @@ function assertSlotDefaults(
 }
 
 /**
+ * Validation only: a slot that declares appearance axes must exist and must accept the `appearance` key.
+ */
+function assertAppearanceAxes(
+	$type: string,
+	slotSchemas: RecipeSlotSchemas,
+	appearanceAxes: SlotAppearanceAxes | undefined,
+): void {
+	for (const [slot, axes] of Object.entries(appearanceAxes ?? {})) {
+		if (!axes) continue;
+		const schema = slotSchemas[slot as RecipeSlot];
+		if (!schema) {
+			throw new Error(`Recipe '${$type}' appearanceAxes.${slot}: the recipe does not declare a '${slot}' slot.`);
+		}
+		const result = z.safeParse(schema, { appearance: {} });
+		const rejectsKey = result.error?.issues.some(
+			(issue) => issue.code === 'unrecognized_keys' && issue.keys.includes('appearance'),
+		);
+		if (rejectsKey) {
+			throw new Error(
+				`Recipe '${$type}' appearanceAxes.${slot}: the '${slot}' slot schema must accept an 'appearance' key (z.optional(AppearanceConfigSchema)).`,
+			);
+		}
+	}
+}
+
+/**
  * Declares a recipe's `$type`, kind, slot schemas, and metadata.
  *
  * @remarks
@@ -84,11 +111,13 @@ export function defineRecipeSpec<
 	metadata: RecipeMetadata;
 	slotSchemas?: TSlots;
 	slotDefaults?: RecipeSlotDefaults<TSlots>;
+	appearanceAxes?: SlotAppearanceAxes<keyof TSlots>;
 }): RecipeSpec<TType, RecipeViewSchema<TType, TSlots>, TSlots> {
 	const slotSchemas = (definition.slotSchemas ?? {}) as TSlots;
 	const slots = RECIPE_SLOT_ORDER.filter((slot) => slotSchemas[slot]);
 	assertRecipeKindSlots({ $type: definition.$type, kind: definition.kind, slots });
 	assertSlotDefaults(definition.$type, slotSchemas, definition.slotDefaults);
+	assertAppearanceAxes(definition.$type, slotSchemas, definition.appearanceAxes);
 	const schema = mergeRecipeSlotSchemas(definition.$type, slotSchemas);
 	return {
 		$type: definition.$type,
@@ -96,6 +125,7 @@ export function defineRecipeSpec<
 		slots,
 		slotSchemas,
 		slotDefaults: definition.slotDefaults,
+		appearanceAxes: definition.appearanceAxes,
 		metadata: definition.metadata,
 		schema,
 	};

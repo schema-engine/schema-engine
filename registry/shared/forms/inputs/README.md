@@ -267,7 +267,8 @@ All fields support validation through the `rules` property:
 
 ## Styling
 
-Fields support inline styles and CSS classes:
+Fields support CSS classes and, as an escape hatch, CSS custom properties through `style`
+(keys must start with `--`; any other key fails validation):
 
 ```typescript
 {
@@ -275,8 +276,7 @@ Fields support inline styles and CSS classes:
 	name: 'fieldName',
 	label: 'Field',
 	style: {
-		marginBottom: '1rem',
-		padding: '0.5rem',
+		'--field-gap': '1rem',
 	},
 	className: 'my-custom-class',
 }

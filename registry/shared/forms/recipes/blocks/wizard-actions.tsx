@@ -12,13 +12,13 @@ import { cn } from '@/components/schema-engine/forms/lib/utils';
  */
 export function WizardActions() {
 	const { navigation, form, steps, currentStepIndex } = useViewContext();
-	const { labels, appearance, showStepCounter } = useViewConfig('actions', WizardActionsConfigSchema);
+	const { labels, variant, showStepCounter } = useViewConfig('actions', WizardActionsConfigSchema);
 
 	return (
-		<div className={cn('flex items-center justify-between gap-4', appearance === 'minimal' && 'w-full')}>
+		<div className={cn('flex items-center justify-between gap-4', variant === 'minimal' && 'w-full')}>
 			<Button
 				type="button"
-				variant={appearance === 'minimal' ? 'ghost' : 'outline'}
+				variant={variant === 'minimal' ? 'ghost' : 'outline'}
 				onClick={navigation.goToPreviousStep}
 				disabled={navigation.isFirstStep}
 				aria-label={labels.previousAriaLabel}

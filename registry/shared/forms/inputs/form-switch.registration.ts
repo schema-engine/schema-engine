@@ -4,6 +4,7 @@ import { defineInput } from '@schema-engine/forms';
 
 export const SwitchElementRegistration = defineInput({
 	$type: 'switch',
+	appearanceAxes: ['size'],
 	render: FormSwitch,
 	schema: SwitchFieldConfigSchema,
 	metadata: {

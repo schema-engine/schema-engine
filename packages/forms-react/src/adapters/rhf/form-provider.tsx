@@ -5,6 +5,7 @@ import type { FormProviderProps } from '../types';
 import { ActionDispatcher } from '@schema-engine/forms/actions';
 import { collectInitialValues, flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import { useFormEngine } from '@/hooks/use-form-context';
+import { getAppearanceAttributes } from '@schema-engine/forms/lib/appearance';
 import { collectStepActions, type FormActionConfig, type FormConfigView } from '@schema-engine/forms';
 import { useFormValidationResolver } from './hooks/use-form-validation-resolver';
 import { FormInstanceContext, type FormInstanceContextValue } from '@/components/provider';
@@ -164,6 +165,8 @@ export function FormProvider<
 						onSubmit={form.handleSubmit(handleSubmit)}
 						className={runtimeConfig.className}
 						style={runtimeConfig.style}
+						data-se-appearance-theme={engine.getAppearance().id}
+						{...getAppearanceAttributes(runtimeConfig.appearance)}
 						noValidate
 					>
 						{children}

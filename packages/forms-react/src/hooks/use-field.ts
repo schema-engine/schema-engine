@@ -3,10 +3,11 @@ import { useContext, useMemo } from 'react';
 import type { ElementConfig, ElementGridConfig } from '@schema-engine/forms/schemas';
 import { mergeControlProps } from '@schema-engine/forms/schemas/html-attributes';
 import { getFieldGridVariables } from '@schema-engine/forms/lib/grid-styles';
+import { getAppearanceAttributes } from '@schema-engine/forms/lib/appearance';
 import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
 import { useFormField } from '@/adapters/context';
 import { useConstraintLogic } from '@/hooks/use-constraint-logic';
-import { FieldConstraintContext } from '@/contexts/field-constraint-context';
+import { FieldHostContext, FieldConstraintContext } from '@/contexts/field-constraint-context';
 import { isElementRequired } from '@/hooks/is-element-required';
 import { useGridThemeId, useOptionalFormEngine } from '@/hooks/use-form-context';
 
@@ -14,6 +15,28 @@ export interface FieldHostProps {
 	className: string;
 	'data-se-grid-theme': string;
 	style: React.CSSProperties;
+	[appearanceAttribute: `data-se-${string}`]: string;
+}
+
+/**
+ * `data-se-<axis>` attributes for the element `FormElement` is rendering.
+ *
+ * @remarks
+ * Spread onto the field's host element. `FieldGroupRoot` and {@link useFieldHost} already do; call it
+ * for a host built by hand. Empty outside a `FormElement` or for an element with no appearance.
+ */
+export function useFieldAppearanceAttributes(): Record<string, string> {
+	return getAppearanceAttributes(useContext(FieldHostContext)?.appearance);
+}
+
+/**
+ * The authored `className` of the element `FormElement` is rendering, for its field host.
+ *
+ * @remarks `FieldGroupRoot` and {@link useFieldHost} already apply it. The host is the element that
+ * carries the field's `style` and `data-se-*` attributes, in both renderers.
+ */
+export function useFieldClassName(): string | undefined {
+	return useContext(FieldHostContext)?.className;
 }
 
 /**
@@ -34,11 +57,14 @@ export interface FieldHostProps {
  */
 export function useFieldHost(grid?: ElementGridConfig, style?: React.CSSProperties): FieldHostProps {
 	const themeId = useGridThemeId();
+	const appearance = useFieldAppearanceAttributes();
+	const className = useFieldClassName();
 
 	return {
-		className: 'se-form-field',
+		className: className ? `se-form-field ${className}` : 'se-form-field',
 		'data-se-grid-theme': themeId,
 		style: { ...getFieldGridVariables(grid), ...style },
+		...appearance,
 	};
 }
 

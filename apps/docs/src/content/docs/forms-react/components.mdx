@@ -49,6 +49,8 @@ engine.
 Every field has a `$type` and `name`; the remaining properties come from that
 registration's schema. Shared properties include `label`, `description`,
 `defaultValue`, `rules`, `constraints`, `grid`, `className`, and `style`.
+`className` and `style` are escape hatches: `style` accepts only CSS custom
+properties (keys that start with `--`) and validation rejects any other key.
 
 ```json
 {

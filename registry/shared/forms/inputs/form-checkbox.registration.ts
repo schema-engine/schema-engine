@@ -4,6 +4,7 @@ import { defineInput } from '@schema-engine/forms';
 
 export const CheckboxElementRegistration = defineInput({
 	$type: 'checkbox',
+	appearanceAxes: ['size'],
 	render: FormCheckbox,
 	schema: CheckboxFieldConfigSchema,
 	metadata: {

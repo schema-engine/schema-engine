@@ -10,6 +10,7 @@ import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from 
 import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
 import { logger } from '@/lib/logger';
 import { compileGridTheme, getDefaultCompiledGrid, type CompiledGrid, type GridThemeOptions } from '@/lib/grid-styles';
+import { compileAppearance, type AppearanceOptions, type CompiledAppearance } from '@/lib/appearance';
 import { createFormConfigShape } from '@/schemas/form-config-shape';
 import * as z from 'zod/mini';
 import { isZodType } from '@/lib/zod-json-schema';
@@ -82,25 +83,45 @@ function registerSchemaMetadata(
 	});
 }
 
+/**
+ * Rejects an axis a registration declares that the engine's vocabulary does not, so a typo such as
+ * `'sise'` fails the build instead of silently making the axis unsupported.
+ */
+function assertDeclaredAxes(owner: string, axes: readonly string[] | undefined, appearance: CompiledAppearance): void {
+	for (const axis of axes ?? []) {
+		if (!(axis in appearance.axes)) {
+			throw new Error(
+				`${owner} declares unknown appearance axis '${axis}'. Declared axes: ${Object.keys(appearance.axes).join(', ')}. Add it with createFormEngine({ appearance: { ${axis}: [...] } }).`,
+			);
+		}
+	}
+}
+
 export type FormEngineRegistrationLists = {
 	elements?: readonly ElementRegistrationConstraint[];
 	recipes?: readonly RecipeRegistrationConstraint[];
 	actions?: readonly ActionRegistrationConstraint[];
 	catalog?: SchemaMetadataCatalog;
 	defaultWizardRecipe?: string;
-} & ({ grid?: GridThemeOptions; compiledGrid?: never } | { grid?: never; compiledGrid: CompiledGrid });
+} & ({ grid?: GridThemeOptions; compiledGrid?: never } | { grid?: never; compiledGrid: CompiledGrid }) &
+	(
+		| { appearance?: AppearanceOptions; compiledAppearance?: never }
+		| { appearance?: never; compiledAppearance: CompiledAppearance }
+	);
 
 /**
  * Single construction path for {@link createFormEngine} and {@link FormEngine.extend}.
  * Later duplicate `$type` values overwrite earlier ones (last-wins).
  */
 export function buildFormEngine(lists: FormEngineRegistrationLists) {
+	const compiledAppearance = lists.compiledAppearance ?? compileAppearance(lists.appearance);
 	const elementRegistry = new Map<string, AnyElementRegistration>();
 	const recipeRegistry = new Map<string, AnyRecipeRegistration>();
 	const actionRegistry = new Map<string, AnyActionRegistration>();
 
 	for (const element of lists.elements ?? []) {
 		assertStandardSchema(element.schema, `Element '${element.$type}' schema`);
+		assertDeclaredAxes(`Element '${element.$type}'`, element.appearanceAxes, compiledAppearance);
 		elementRegistry.set(element.$type, element as AnyElementRegistration);
 	}
 
@@ -110,6 +131,9 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 	for (const recipe of lists.recipes ?? []) {
 		assertStandardSchema(recipe.schema, `Recipe '${recipe.$type}' schema`);
 		assertRecipeKindSlots(recipe);
+		for (const [slot, axes] of Object.entries(recipe.appearanceAxes ?? {})) {
+			assertDeclaredAxes(`Recipe '${recipe.$type}' slot '${slot}'`, axes, compiledAppearance);
+		}
 		recipeRegistry.set(recipe.$type, recipe as AnyRecipeRegistration);
 	}
 	for (const action of lists.actions ?? []) {
@@ -163,6 +187,7 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 		actions: actionRegistry,
 		schemaArtifacts,
 		compiledGrid,
+		compiledAppearance,
 		validationRegistry: validationRegistryInstance,
 		defaultWizardRecipe,
 	});

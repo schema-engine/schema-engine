@@ -1,9 +1,15 @@
 import * as z from 'zod/mini';
+import { AppearanceConfigSchema } from '@/schemas/base-field';
+
+/**
+ * Appearance pick for a slot that declares axes in its spec's `appearanceAxes`.
+ *
+ * @remarks The slot's width, padding and shadow are `size` and `surface` values, not slot config.
+ */
+const SlotAppearance = z.optional(AppearanceConfigSchema);
 
 export const CardShellConfigSchema = z.strictObject({
-	maxWidth: z._default(z.enum(['sm', 'md', 'lg', 'xl']), 'md'),
-	padding: z._default(z.enum(['sm', 'md', 'lg']), 'md'),
-	shadowSize: z._default(z.enum(['sm', 'md', 'lg', 'xl']), 'md'),
+	appearance: SlotAppearance,
 });
 
 export const HeroShellConfigSchema = z.strictObject({
@@ -96,7 +102,7 @@ export const WizardActionsConfigSchema = z.strictObject({
 		{},
 	),
 	showStepCounter: z._default(z.boolean(), true),
-	appearance: z._default(z.enum(['default', 'minimal']), 'default'),
+	variant: z._default(z.enum(['default', 'minimal']), 'default'),
 });
 
 export const FormActionsConfigSchema = z.strictObject({

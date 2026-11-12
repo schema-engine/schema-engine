@@ -10,11 +10,13 @@ import type {
 import type { FormEngine } from './form-engine';
 import type { SchemaMetadataCatalog } from './schema-metadata-catalog';
 import type { GridThemeOptions } from '@/lib/grid-styles';
+import type { AppearanceOptions, ResolvedAppearanceAxes } from '@/lib/appearance';
 
 export interface CreateFormEngineOptions<
 	TElements extends readonly ElementRegistrationConstraint[] = readonly [],
 	TRecipes extends readonly RecipeRegistrationConstraint[] = readonly [],
 	TActions extends readonly ActionRegistrationConstraint[] = readonly [],
+	TAppearance extends AppearanceOptions = Record<never, never>,
 > {
 	elements?: TElements;
 	recipes?: TRecipes;
@@ -35,25 +37,37 @@ export interface CreateFormEngineOptions<
 	defaultWizardRecipe?: string;
 	/** Engine-level grid vocabulary: breakpoint thresholds, gap tokens, default min column width. */
 	grid?: GridThemeOptions;
+	/**
+	 * Engine-level appearance vocabulary: the named axes a form picks values on, over the built-in
+	 * `size` (`compact | default | comfortable`) and `surface` (`flat | outlined | elevated`).
+	 *
+	 * @remarks
+	 * An axis lists its values by name, or maps each value to the CSS custom properties it sets.
+	 * Listing more values for a built-in axis extends it. Elements and recipe slots declare which axes
+	 * they support. {@link FormEngine.extend} inherits it.
+	 */
+	appearance?: TAppearance;
 }
 
-/** Options for {@link FormEngine.extend}; grid theme and default wizard recipe are always inherited from the source engine. */
+/** Options for {@link FormEngine.extend}; grid theme, appearance vocabulary and default wizard recipe are always inherited from the source engine. */
 export type ExtendFormEngineOptions<
 	TElements extends readonly ElementRegistrationConstraint[] = readonly [],
 	TRecipes extends readonly RecipeRegistrationConstraint[] = readonly [],
 	TActions extends readonly ActionRegistrationConstraint[] = readonly [],
-> = Omit<CreateFormEngineOptions<TElements, TRecipes, TActions>, 'grid' | 'defaultWizardRecipe'>;
+> = Omit<CreateFormEngineOptions<TElements, TRecipes, TActions>, 'grid' | 'appearance' | 'defaultWizardRecipe'>;
 
 /** {@link FormEngine} specialization produced from registration lists. */
 export type FormEngineFromOptions<
 	TElements extends readonly ElementRegistrationConstraint[],
 	TRecipes extends readonly RecipeRegistrationConstraint[],
 	TActions extends readonly ActionRegistrationConstraint[],
+	TAppearance extends AppearanceOptions = Record<never, never>,
 > = FormEngine<
 	MergedRegistrationMap<TElements>,
 	MergedRegistrationMap<TRecipes>,
 	MergedActionRegistrationMap<TActions>,
-	{ elements: MergedOutputMap<TElements>; recipes: MergedOutputMap<TRecipes>; actions: MergedOutputMap<TActions> }
+	{ elements: MergedOutputMap<TElements>; recipes: MergedOutputMap<TRecipes>; actions: MergedOutputMap<TActions> },
+	ResolvedAppearanceAxes<TAppearance>
 >;
 
 /**
@@ -71,15 +85,17 @@ export function createFormEngine<
 	const TElements extends readonly ElementRegistrationConstraint[] = readonly [],
 	const TRecipes extends readonly RecipeRegistrationConstraint[] = readonly [],
 	const TActions extends readonly ActionRegistrationConstraint[] = readonly [],
+	const TAppearance extends AppearanceOptions = Record<never, never>,
 >(
-	options?: CreateFormEngineOptions<TElements, TRecipes, TActions>,
-): FormEngineFromOptions<TElements, TRecipes, TActions> {
+	options?: CreateFormEngineOptions<TElements, TRecipes, TActions, TAppearance>,
+): FormEngineFromOptions<TElements, TRecipes, TActions, TAppearance> {
 	return buildFormEngine({
 		elements: options?.elements,
 		recipes: options?.recipes,
 		actions: options?.actions,
 		catalog: options?.catalog,
 		grid: options?.grid,
+		appearance: options?.appearance,
 		defaultWizardRecipe: options?.defaultWizardRecipe,
-	}) as unknown as FormEngineFromOptions<TElements, TRecipes, TActions>;
+	}) as unknown as FormEngineFromOptions<TElements, TRecipes, TActions, TAppearance>;
 }

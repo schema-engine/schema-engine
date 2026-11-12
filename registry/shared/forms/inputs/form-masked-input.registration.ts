@@ -20,6 +20,7 @@ import { defineInput } from '@schema-engine/forms';
 
 export const MaskedInputElementRegistration = defineInput({
 	$type: 'masked-input',
+	appearanceAxes: ['size'],
 	render: FormMaskedInput,
 	schema: MaskedInputFieldSchema,
 	metadata: {

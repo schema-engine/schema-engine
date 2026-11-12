@@ -1,6 +1,6 @@
 /** @jsxImportSource react */
 import type { ReactNode } from 'react';
-import { defineRecipeSpec, getSlotConfig, type FormShellLayout } from '@schema-engine/forms/recipes';
+import { defineRecipeSpec, type FormShellLayout } from '@schema-engine/forms/recipes';
 import {
 	CardShellConfigSchema,
 	StepHeaderConfigSchema,
@@ -23,13 +23,12 @@ type ShellProps = FormShellLayout<ReactNode>;
  * with the docs shell), so React demos match the Radiant demos visually.
  */
 
-function DemoCardShell({ slots, viewConfig }: ShellProps) {
-	const { padding } = getSlotConfig(viewConfig, 'shell', CardShellConfigSchema);
+function DemoCardShell({ slots }: ShellProps) {
 	return (
 		<div className="se-demo-shell">
 			<div className="se-demo-shell__card">
 				{slots.header ? (
-					<div className={`se-demo-shell__header se-demo-shell__header--${padding}`}>{slots.header}</div>
+					<div className={'se-demo-shell__header se-demo-shell__header--lg'}>{slots.header}</div>
 				) : null}
 				<div className="se-demo-shell__content">
 					{slots.progress}
@@ -141,14 +140,13 @@ function DemoFormActions() {
 	);
 }
 
-const demoShellDefaults = { shell: { padding: 'lg' } } as const;
-
 const demoCardSpec = defineRecipeSpec({
 	$type: cardSpec.$type,
 	kind: cardSpec.kind,
 	metadata: cardSpec.metadata,
 	slotSchemas: cardSpec.slotSchemas,
-	slotDefaults: { ...cardSpec.slotDefaults, ...demoShellDefaults },
+	slotDefaults: cardSpec.slotDefaults,
+	appearanceAxes: cardSpec.appearanceAxes,
 });
 
 const demoWizardSpec = defineRecipeSpec({
@@ -156,7 +154,8 @@ const demoWizardSpec = defineRecipeSpec({
 	kind: wizardSpec.kind,
 	metadata: wizardSpec.metadata,
 	slotSchemas: { ...wizardSpec.slotSchemas, shell: CardShellConfigSchema },
-	slotDefaults: { ...wizardSpec.slotDefaults, ...demoShellDefaults },
+	slotDefaults: wizardSpec.slotDefaults,
+	appearanceAxes: { shell: ['size', 'surface'] },
 });
 
 export const DemoCardRecipe = defineRecipe(demoCardSpec, {

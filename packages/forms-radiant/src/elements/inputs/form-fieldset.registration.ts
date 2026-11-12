@@ -4,6 +4,7 @@ import { defineInput } from '@schema-engine/forms';
 
 export const FieldSetRegistration = defineInput({
 	$type: 'fieldSet',
+	appearanceAxes: ['size'],
 	render: FormFieldSet,
 	schema: FieldSetConfigSchema,
 	metadata: {
