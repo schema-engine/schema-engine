@@ -1,5 +1,5 @@
 import { contextSelector } from '@ecopages/radiant/context';
-import { customElement, prop, RadiantElement } from '@ecopages/radiant';
+import { prop, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { RuiHeading, RuiHeadingDescription, RuiHeadingTitle } from '@ecopages/radiant-ui/heading';
 import { formatStepLabel, type StepHeaderConfig } from '@schema-engine/forms/recipes/built-in';
@@ -7,8 +7,9 @@ import type { FormMeta } from '@/lib/instance-view';
 import type { RecipeSlotContext } from '@/recipes/types';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { deriveInitialInstance } from '@/lib/instance-view';
+import { formElement } from '@/lib/define-element';
 
-@customElement('se-step-header')
+@formElement('se-step-header')
 export class StepHeaderElement extends RadiantElement {
 	@prop({ type: Object }) meta?: FormMeta;
 	@prop({ type: Object }) slotConfig?: StepHeaderConfig;

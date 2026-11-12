@@ -1,5 +1,5 @@
 import './form-array-elements.css';
-import { customElement, onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
+import { onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
@@ -16,6 +16,7 @@ import { getValueAtPath, setValueAtPath } from '@schema-engine/forms/lib/path-va
 import { formContext, type FormContextValue } from '@ecopages/radiant-ui/form';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { readValue } from '@/adapters/radiant/controller/values';
+import { formElement } from '@/lib/define-element';
 
 function TrashIcon() {
 	return (
@@ -143,7 +144,7 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 	);
 }
 
-@customElement('se-form-array')
+@formElement('se-form-array')
 export class SeFormArray extends RadiantElement {
 	@prop({ type: Object }) config!: ArrayElementsProps;
 

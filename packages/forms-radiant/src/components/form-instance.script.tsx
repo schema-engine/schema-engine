@@ -1,12 +1,4 @@
-import {
-	customElement,
-	onUpdated,
-	query,
-	RadiantElement,
-	registerSsrPreparationCallback,
-	state,
-	prop,
-} from '@ecopages/radiant';
+import { onUpdated, query, RadiantElement, registerSsrPreparationCallback, state, prop } from '@ecopages/radiant';
 import type { JSX_PROPS } from '@ecopages/jsx';
 import { getViewRecipe } from '@schema-engine/forms/recipes';
 import { provideContext, type ContextProvider } from '@ecopages/radiant/context';
@@ -26,6 +18,7 @@ import { logger } from '@/lib/logger';
 import type { FormProviderProps } from '@/adapters/types';
 import { FormController } from '@/adapters/radiant/controller';
 import { FormActions, type SubmissionOutcome } from '@/adapters/radiant/form-actions';
+import { formElement } from '@/lib/define-element';
 
 /** Properties of `<se-form-instance>`; `FormInstance` sets the function and engine ones through `prop:` bindings. */
 export interface FormInstanceProps {
@@ -37,8 +30,13 @@ export interface FormInstanceProps {
 	onAction?: FormProviderProps['onAction'];
 }
 
+/** Detail of `se-action-submit-complete`; `error` is set when `onSubmit` or the action lifecycle threw. */
+export interface SubmissionCompleteDetail extends SubmissionOutcome {
+	error?: unknown;
+}
+
 /** Behavior and engine navigation state for one composed form. */
-@customElement('se-form-instance')
+@formElement('se-form-instance')
 export class FormInstanceElement extends RadiantElement {
 	declare readonly [JSX_PROPS]?: FormInstanceProps;
 
@@ -130,6 +128,12 @@ export class FormInstanceElement extends RadiantElement {
 		this.connectForm();
 	}
 
+	@onUpdated(['engine'])
+	onEngineUpdated(): void {
+		this.connectForm();
+		this.publish();
+	}
+
 	/**
 	 * Connects the `rui-form`'s controller once per form element, then keeps
 	 * constraints, validation dependencies and actions in step with the config
@@ -166,7 +170,7 @@ export class FormInstanceElement extends RadiantElement {
 
 	/**
 	 * Runs one submission and reports it with `se-action-submit-start` and
-	 * `se-action-submit-complete` on the `rui-form`, whether or not actions are configured.
+	 * `se-action-submit-complete` (with `error` when it threw) on the `rui-form`, whether or not actions are configured.
 	 *
 	 * @remarks
 	 * The instance owns the submitting state because Radiant UI clears its own
@@ -181,7 +185,7 @@ export class FormInstanceElement extends RadiantElement {
 			ruiForm.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
 		this.setSubmitting(true);
 		announce('se-action-submit-start');
-		let outcome: SubmissionOutcome = { succeeded: true, results: [] };
+		let outcome: SubmissionCompleteDetail = { succeeded: true, results: [] };
 		try {
 			if (this.actions) outcome = await this.actions.submit();
 			if (outcome.succeeded) {
@@ -192,7 +196,7 @@ export class FormInstanceElement extends RadiantElement {
 				}
 			}
 		} catch (error) {
-			outcome = { succeeded: false, results: outcome.results };
+			outcome = { succeeded: false, results: outcome.results, error };
 			logger.error('Form submission failed', error);
 		} finally {
 			this.setSubmitting(false);
@@ -205,17 +209,24 @@ export class FormInstanceElement extends RadiantElement {
 		this.publish();
 	}
 
-	/** Builds the actions for the current config and engine, or drops them when the form configures none. */
+	/**
+	 * Builds the actions for the current engine, or drops them when the form configures none.
+	 *
+	 * @remarks
+	 * `FormProvider` re-validates the config on each render, so a new but equal config
+	 * must not rebuild the actions: that would fire `form_mount` again and reset the
+	 * submit attempts. Only an engine change rebuilds them.
+	 */
 	private syncActions(): void {
 		const { config, engine, form } = this;
 		if (!form || !config || !engine || !hasConfiguredActions(config)) {
 			this.disposeActions();
 			return;
 		}
-		if (this.actions?.config !== config || this.actions.engine !== engine) {
+		if (this.actions?.engine !== engine) {
 			this.disposeActions();
 			this.actions = new FormActions({
-				config,
+				config: () => this.config,
 				engine,
 				form,
 				currentStep: () => this.currentStep,

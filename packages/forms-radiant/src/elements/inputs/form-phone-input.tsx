@@ -1,5 +1,5 @@
 import './form-phone-input.css';
-import { customElement, onUpdated, prop, query, RadiantElement, state } from '@ecopages/radiant';
+import { onUpdated, prop, query, RadiantElement, state } from '@ecopages/radiant';
 import { jsx, unsafeHtml, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import {
 	RuiSelect,
@@ -30,6 +30,7 @@ import {
 	type PhoneCountryOption,
 } from '@/lib/phone-number';
 import type { PhoneInputFieldProps } from './form-phone-input.types';
+import { formElement } from '@/lib/define-element';
 
 function PhoneFlag({ code, class: className }: { code?: string; class: string }) {
 	const svg = code ? countryFlagSvg(code) : '';
@@ -40,7 +41,7 @@ function PhoneFlag({ code, class: className }: { code?: string; class: string })
 	);
 }
 
-@customElement('se-phone-input')
+@formElement('se-phone-input')
 export class SePhoneInput extends RadiantElement {
 	@prop({ type: String }) name = '';
 	@prop({ type: String }) inputId = '';

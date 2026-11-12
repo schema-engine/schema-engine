@@ -1,12 +1,13 @@
-import { customElement, prop, RadiantElement, state } from '@ecopages/radiant';
+import { prop, RadiantElement, state } from '@ecopages/radiant';
 import { RuiAlert, RuiAlertIcon } from '@ecopages/radiant-ui/alert';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import type { SubmissionAlertProps } from './form-submission-alert.types';
+import { formElement } from '@/lib/define-element';
 
 type AlertStatus = 'idle' | 'pending' | 'success' | 'error';
 
-@customElement('se-submission-alert')
+@formElement('se-submission-alert')
 export class SeSubmissionAlert extends RadiantElement {
 	@prop({ type: Object }) config!: SubmissionAlertProps;
 

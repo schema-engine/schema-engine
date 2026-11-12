@@ -12,7 +12,8 @@ import type { FormController } from './controller';
 export type SubmissionOutcome = Awaited<ReturnType<typeof runSubmissionLifecycle>>;
 
 export interface FormActionsOptions {
-	config: FormConfigView;
+	/** Reads the current config on each trigger, so a re-validated equal config does not rebuild the actions. */
+	config: () => FormConfigView;
 	engine: FormEngine;
 	/** The form instance's controller, scoped to its `rui-form`. */
 	form: FormController;
@@ -24,9 +25,10 @@ export interface FormActionsOptions {
  * Runs the configured form actions of one form instance.
  *
  * @remarks
- * Built by `se-form-instance` for one config and engine, and discarded with
- * either. It reports through `se-action-results` events on the `rui-form`;
- * the instance reports the submission itself.
+ * Built by `se-form-instance` for one engine and discarded with it; the config
+ * is read through a getter, so the actions outlive a config change. It reports
+ * through `se-action-results` events on the `rui-form`; the instance reports the
+ * submission itself.
  */
 export class FormActions {
 	private readonly dispatcher: ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>;
@@ -39,12 +41,10 @@ export class FormActions {
 		this.submitAttempts += 1;
 	};
 
-	readonly config: FormConfigView;
 	readonly engine: FormEngine;
 
 	constructor(private readonly options: FormActionsOptions) {
-		const { config, engine, form } = options;
-		this.config = config;
+		const { engine, form } = options;
 		this.engine = engine;
 		this.dispatcher = new ActionDispatcher(engine);
 		this.actionForm = {
@@ -137,7 +137,7 @@ export class FormActions {
 	}
 
 	private activeActions() {
-		return collectStepActions(this.options.config, this.options.currentStep());
+		return collectStepActions(this.options.config(), this.options.currentStep());
 	}
 
 	/**
@@ -151,10 +151,10 @@ export class FormActions {
 	 * change watcher then clears the count.
 	 */
 	private buildContext(): BuilderActionBaseContext {
-		const { config, form, currentStep } = this.options;
+		const { form, currentStep } = this.options;
 		const { isValid, errors, touched } = form.formState;
 		return buildFormActionContext({
-			config,
+			config: this.options.config(),
 			values: form.getValues(),
 			formState: {
 				isValid,
