@@ -1,4 +1,4 @@
-import { eco } from '@ecopages/core';
+import { eco, type LayoutProps } from '@ecopages/core';
 import type { JsxRenderable } from '@ecopages/jsx';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { RuiChip } from '@ecopages/radiant-ui/chip';
@@ -17,7 +17,6 @@ import {
 } from '@ecopages/radiant-ui/sidebar';
 import { RuiToc } from '@ecopages/radiant-ui/toc';
 import { docsNav } from '@/lib/docs-nav';
-import { flattenContentNav } from '@/lib/content-nav';
 
 import { Logo } from '@/components/logo/logo';
 import { GITHUB_MARK_PATH } from '@/components/github-mark';
@@ -28,9 +27,6 @@ import { DocsPagination } from './components/docs-pagination';
 import { getGroupIcon } from './get-group-icon';
 import './docs-layout.css';
 
-const paginationData = JSON.stringify({
-	pages: flattenContentNav(docsNav).map(({ href, title }) => ({ href, title })),
-});
 const ECO_NAVIGATION_EVENTS = 'eco:page-load,eco:after-swap';
 const DOCS_SIDEBAR_ID = 'docs-sidebar';
 
@@ -101,16 +97,17 @@ const DocsSiteHeader = () => (
 	</div>
 );
 
-export const DocsLayout = eco.layout<JsxRenderable>({
+export type DocsLayoutProps = LayoutProps<JsxRenderable> & {
+	currentHref?: string;
+};
+
+export const DocsLayout = eco.layout<JsxRenderable, DocsLayoutProps>({
 	dependencies: {
 		scripts: ['./docs-layout.script.ts'],
 	},
-	render: ({ children }) => {
+	render: ({ children, currentHref }) => {
 		return (
 			<BaseLayout showHeader={false}>
-				<script type="application/json" id="docs-pagination-data">
-					{paginationData}
-				</script>
 				<RuiSidebarProvider
 					layout="docs"
 					class="docs-layout"
@@ -136,7 +133,7 @@ export const DocsLayout = eco.layout<JsxRenderable>({
 					<RuiSidebarInset>
 						<div class="docs-layout__content">
 							<div class="prose">{children}</div>
-							<DocsPagination />
+							<DocsPagination currentHref={currentHref} />
 						</div>
 					</RuiSidebarInset>
 					<RuiToc

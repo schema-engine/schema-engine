@@ -5,6 +5,7 @@ import { getComponent, getEntryDependencies } from 'ecopages:content/docs/server
 import type { Entry } from 'ecopages:content/docs';
 import { CopyForLlm } from '@/components/copy-for-llm';
 import { DocsBreadcrumb } from '@/components/docs-breadcrumb';
+import { DOCS_ROOT } from '@/content/docs';
 import { DocsLayout } from '@/layouts/docs-layout';
 import { ReactFormDemoEmbed } from '@/components/react-form-demo/react-form-demo-embed';
 import { ReactFormPreview } from '@/components/react-form-demo/react-form-preview.react';
@@ -27,7 +28,10 @@ async function resolveDocsEntryDependencies(slug: string) {
 }
 
 export default eco.page<{ entry: Entry }, JsxRenderable>({
-	layout: DocsLayout,
+	layout: {
+		component: DocsLayout,
+		props: ({ params }) => ({ currentHref: `${DOCS_ROOT}/${[params?.slug ?? []].flat().join('/')}` }),
+	},
 	/**
 	 * @remarks MDX entry assets still flow through `getEntryDependencies`; the
 	 * page's own components are picked up from the static imports above.
