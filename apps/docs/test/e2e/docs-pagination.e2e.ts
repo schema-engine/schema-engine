@@ -20,8 +20,8 @@ test('pagination links are in the server HTML and follow client navigation', asy
 		await next.click();
 		await page.waitForURL(`**${nextHref}`);
 		await page.waitForFunction(
-			(href) => document.querySelector('.docs-layout__pagination a.prev')?.getAttribute('href') !== href,
-			nextHref,
+			(href) => document.querySelector('.docs-layout__pagination a.prev')?.getAttribute('href') === href,
+			pagePath,
 		);
 		expect(await page.locator('.docs-layout__pagination a.prev').getAttribute('href')).toBe(pagePath);
 	} finally {
