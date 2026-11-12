@@ -7,12 +7,7 @@ import {
 	getFormGridVariables,
 } from '@/lib/grid-styles';
 import { usesGridWidths } from '@/lib/grid-placement';
-import {
-	ElementGridConfigSchema,
-	GridGapTokens,
-	GridLayoutConfigSchema,
-	type GridLayoutConfig,
-} from '@/schemas/base-field';
+import { ElementGridConfigSchema, GridGapTokens, GridLayoutConfigSchema, type GridLayoutConfig } from '@/schemas/grid';
 
 const theme = (options?: Parameters<typeof compileGridTheme>[0]) => compileGridTheme(options).theme;
 const css = (options?: Parameters<typeof compileGridTheme>[0]) => compileGridTheme(options).css;

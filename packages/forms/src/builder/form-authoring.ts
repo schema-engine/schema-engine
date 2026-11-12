@@ -1,4 +1,4 @@
-import type { GridLayoutConfig } from '@/schemas/base-field';
+import type { GridLayoutConfig } from '@/schemas/grid';
 import type { AppearanceInput } from '@/lib/appearance';
 
 /**

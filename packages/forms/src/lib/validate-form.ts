@@ -1,6 +1,6 @@
 import type { AnyActionRegistration, AnyElementRegistration, AnyRecipeRegistration } from '@/types/registration';
 import type { FormConfig, FormConfigEnvelope, FormTaggedConfig } from '@/schemas/form-config';
-import type { GridLayoutConfig } from '@/schemas/base-field';
+import type { GridLayoutConfig } from '@/schemas/grid';
 import type { ElementConfig } from '@/schemas/field-config';
 import { formConfigEnvelopeSchema } from '@/schemas/form-config';
 import { safeParseStandardSchema, type StandardSchemaIssue } from '@/lib/standard-schema';

@@ -1,12 +1,6 @@
-import type {
-	ElementGridConfig,
-	GridGapToken,
-	GridLayoutConfig,
-	GridOffsetName,
-	GridWidthName,
-} from '@/schemas/base-field';
+import type { ElementGridConfig, GridGapToken, GridLayoutConfig, GridOffsetName, GridWidthName } from '@/schemas/grid';
 import type { DeepReadonly } from '@/lib/deep-readonly';
-import { GridGapTokens } from '@/schemas/base-field';
+import { GridGapTokens } from '@/schemas/grid';
 import {
 	areasTemplateValue,
 	BREAKPOINT_ORDER,

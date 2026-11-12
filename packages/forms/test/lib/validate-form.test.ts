@@ -7,7 +7,7 @@ import { defineFormRecipe } from '@/recipes/define-form-recipe';
 import { defineRecipeSpec } from '@/recipes/define-recipe-spec';
 import { sidebarWizardSpec } from '@/recipes/built-in-specs';
 import { defineInput } from '@/types';
-import { ElementGridConfigSchema } from '@/schemas/base-field';
+import { ElementGridConfigSchema } from '@/schemas/grid';
 import { elementChildrenSchema } from '@/lib/element-children';
 import { logger } from '@/lib/logger';
 

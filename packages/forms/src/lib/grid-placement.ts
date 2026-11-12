@@ -1,4 +1,4 @@
-import type { GridBreakpointConfig, GridOffsetName, GridWidthName } from '@/schemas/base-field';
+import type { GridBreakpointConfig, GridOffsetName, GridWidthName } from '@/schemas/grid';
 
 /**
  * Reads of an element's grid placement shared by the stylesheet emitter and
