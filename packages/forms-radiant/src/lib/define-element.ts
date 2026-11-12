@@ -1,3 +1,4 @@
+import { CUSTOM_ELEMENT_TAG_NAME } from '@ecopages/jsx';
 import { customElement } from '@ecopages/radiant';
 
 const RENDERER_TAG = 'se-form-renderer';
@@ -12,6 +13,12 @@ let deferring = false;
  * the server-rendered elements already in the document, so an app cannot bind an
  * engine to those elements first. While `deferFormElements()` is in effect the
  * definition waits for `defineFormElements()`.
+ *
+ * @remarks
+ * The tag is stamped on the class immediately, so a view can render the host
+ * while it is deferred. Everything else Radiant does in its class initializer
+ * (host attributes, prop metadata, `observedAttributes`, `customElements.define`)
+ * is deferred as one unit, which assumes the stamp is independent of it.
  */
 export function formElement(tag: string, options?: Parameters<typeof customElement>[1]) {
 	const register = customElement(tag, options);
@@ -20,6 +27,7 @@ export function formElement(tag: string, options?: Parameters<typeof customEleme
 			...context,
 			addInitializer: (initializer) =>
 				context.addInitializer(function (this: T) {
+					Reflect.set(this, CUSTOM_ELEMENT_TAG_NAME, tag);
 					const define = () => initializer.call(this);
 					if (deferring) pending.set(tag, define);
 					else define();
