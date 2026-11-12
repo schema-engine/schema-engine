@@ -183,7 +183,7 @@ const engine = createFormEngine({
 const contactFormSchema = {
 	id: 'contact-form',
 	title: 'Contact Sales',
-	view: { $type: 'card', shell: { padding: 'md' } },
+	view: { $type: 'card', shell: { appearance: { size: 'default' } } },
 	steps: [
 		{
 			id: 'step-1',

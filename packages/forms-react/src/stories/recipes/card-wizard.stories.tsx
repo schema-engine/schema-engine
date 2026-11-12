@@ -40,7 +40,7 @@ export const Default: Story = {
 			...FormTemplates.registrationForm,
 			view: {
 				$type: 'card-wizard',
-				shell: { maxWidth: 'md', padding: 'md', shadowSize: 'md' },
+				shell: { appearance: { size: 'default', surface: 'elevated' } },
 				progress: { showPercentage: true },
 			},
 		},
@@ -53,7 +53,7 @@ export const WithoutProgress: Story = {
 			...FormTemplates.registrationForm,
 			view: {
 				$type: 'card-wizard',
-				shell: { maxWidth: 'md', padding: 'md', shadowSize: 'md' },
+				shell: { appearance: { size: 'default', surface: 'elevated' } },
 				progress: { showPercentage: false },
 			},
 		},

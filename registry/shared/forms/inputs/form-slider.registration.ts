@@ -4,6 +4,7 @@ import { defineInput } from '@schema-engine/forms';
 
 export const SliderElementRegistration = defineInput({
 	$type: 'slider',
+	appearanceAxes: ['size'],
 	render: FormSlider,
 	schema: SliderFieldConfigSchema,
 	metadata: {

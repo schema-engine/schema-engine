@@ -12,7 +12,7 @@ describe('recipe view schemas accept partial slot config', () => {
 		expect(() =>
 			validateRegistrationConfig(CardRecipe.schema, {
 				$type: 'card',
-				shell: { maxWidth: 'md', padding: 'md' },
+				shell: { appearance: { size: 'default' } },
 			}),
 		).not.toThrow();
 	});
@@ -30,7 +30,7 @@ describe('recipe view schemas accept partial slot config', () => {
 		expect(() =>
 			validateRegistrationConfig(CardWizardRecipe.schema, {
 				$type: 'card-wizard',
-				shell: { maxWidth: 'md', padding: 'md' },
+				shell: { appearance: { size: 'default' } },
 			}),
 		).not.toThrow();
 	});
@@ -49,7 +49,7 @@ describe('recipe view schemas accept partial slot config', () => {
 			validateRegistrationConfig(CardRecipe.schema, {
 				$type: 'card',
 				// @ts-expect-error -- slot config rejects $type at compile time too
-				shell: { $type: 'card', maxWidth: 'md' },
+				shell: { $type: 'card', appearance: { size: 'default' } },
 			}),
 		).toThrow();
 	});

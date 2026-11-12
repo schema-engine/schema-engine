@@ -3,12 +3,60 @@ import { HtmlAttributesSchema } from './html-attributes';
 import { ValidationRuleSchema } from './validation/';
 
 /**
- * Renderer style values vary across host adapters.
- * @remarks This existential value boundary keeps React, Radiant, and custom adapter style contracts open.
+ * Inline style: CSS custom properties only, keyed `--name`, with string or number values.
+ *
+ * @remarks
+ * Custom properties are the one style shape that means the same in every renderer: React reads
+ * `style` as camelCase `CSSProperties` and Radiant as a plain record, so a named CSS property such as
+ * `maxWidth` would render differently, and it could not be written portably in JSON or YAML.
+ * Styling beyond custom properties goes through `className` or the form's `appearance`.
+ *
+ * A string value may not contain `;`, `{` or `}`: renderers write the value into a declaration, so
+ * those characters would let one entry carry further declarations once the markup is server rendered.
  */
-const RendererStyleValueSchema = z.any();
+export const RendererStyleSchema = z.record(z.string(), z.union([z.string(), z.number()])).check(
+	z.superRefine((style, ctx) => {
+		for (const [key, value] of Object.entries(style)) {
+			if (!key.startsWith('--')) {
+				ctx.addIssue({
+					code: 'custom',
+					input: style,
+					path: [key],
+					message: `style accepts CSS custom properties only: '${key}' must start with '--'.`,
+				});
+			} else if (key.length === 2) {
+				ctx.addIssue({
+					code: 'custom',
+					input: style,
+					path: [key],
+					message: `style accepts CSS custom properties only: the name after '--' must not be empty.`,
+				});
+			}
+			if (typeof value === 'string' && /[;{}]/.test(value)) {
+				ctx.addIssue({
+					code: 'custom',
+					input: style,
+					path: [key],
+					message: `style '${key}' must be a single value: it cannot contain ';', '{' or '}', which would start another declaration.`,
+				});
+			}
+		}
+	}),
+);
 
-export const RendererStyleSchema = z.record(z.string(), RendererStyleValueSchema);
+export type RendererStyle = z.infer<typeof RendererStyleSchema>;
+
+/**
+ * A pick of named appearance values, one per axis: `{ size: 'compact' }`.
+ *
+ * @remarks
+ * The shape is open because the axes belong to the engine (`createFormEngine({ appearance })`).
+ * `validateForm` checks each axis and value against the engine's vocabulary and the element's declared
+ * axes, and writes the resolved selection back.
+ */
+export const AppearanceConfigSchema = z.record(z.string(), z.string());
+
+export type AppearanceConfig = z.infer<typeof AppearanceConfigSchema>;
 
 /**
  * Constraint operands can be values from any registered field.
@@ -174,7 +222,8 @@ export const BaseFieldSchema = z.object({
 	rules: z.optional(z.array(ValidationRuleSchema)).check(z.describe('Validation rules')),
 
 	className: z.optional(z.string()).check(z.describe('CSS class name')),
-	style: z.optional(RendererStyleSchema).check(z.describe('Inline styles')),
+	style: z.optional(RendererStyleSchema).check(z.describe('CSS custom properties')),
+	appearance: z.optional(AppearanceConfigSchema).check(z.describe('Named appearance values, one per axis')),
 	htmlAttributes: z.optional(HtmlAttributesSchema),
 
 	grid: z.optional(ElementGridConfigSchema).check(z.describe('Grid positioning configuration')),

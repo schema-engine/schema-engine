@@ -4,6 +4,7 @@ import {
 	type ElementRegistrationConstraint,
 	type RecipeRegistrationConstraint,
 	type ActionRegistrationConstraint,
+	type AppearanceOptions,
 } from '@schema-engine/forms';
 import { radiantRecipes } from '@/recipes/bind-recipes';
 
@@ -18,7 +19,8 @@ export function createRadiantFormEngine<
 	const TElements extends readonly ElementRegistrationConstraint[] = readonly [],
 	const TRecipes extends readonly RecipeRegistrationConstraint[] = readonly [],
 	const TActions extends readonly ActionRegistrationConstraint[] = readonly [],
->(options?: CreateFormEngineOptions<TElements, TRecipes, TActions>) {
+	const TAppearance extends AppearanceOptions = Record<never, never>,
+>(options?: CreateFormEngineOptions<TElements, TRecipes, TActions, TAppearance>) {
 	return createFormEngine({
 		...options,
 		recipes: [...radiantRecipes, ...(options?.recipes ?? [])] as const,

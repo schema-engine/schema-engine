@@ -1,4 +1,5 @@
 @import './styles/hosts.css';
+@import './styles/appearance.css';
 @import './components/shells/card-shell.css';
 @import './components/shells/hero-shell.css';
 @import './components/shells/split-screen-shell.css';

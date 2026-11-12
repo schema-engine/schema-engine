@@ -13,40 +13,10 @@
 	box-sizing: border-box;
 	flex: 0 1 auto;
 	background: var(--surface, #fff);
-	border: 1px solid var(--border, currentColor);
+	width: min(100%, var(--se-size-max-width, 28rem));
+	border: var(--se-surface-border-width, 1px) solid var(--border, currentColor);
 	border-radius: var(--radius-control, 0.75rem);
-}
-
-.card-shell__card--sm {
-	width: min(100%, 24rem);
-}
-
-.card-shell__card--md {
-	width: min(100%, 28rem);
-}
-
-.card-shell__card--lg {
-	width: min(100%, 32rem);
-}
-
-.card-shell__card--xl {
-	width: min(100%, 36rem);
-}
-
-.card-shell__shadow--sm {
-	box-shadow: 0 1px 2px color-mix(in srgb, var(--on-surface, #000) 8%, transparent);
-}
-
-.card-shell__shadow--md {
-	box-shadow: 0 8px 24px color-mix(in srgb, var(--on-surface, #000) 10%, transparent);
-}
-
-.card-shell__shadow--lg {
-	box-shadow: 0 16px 40px color-mix(in srgb, var(--on-surface, #000) 12%, transparent);
-}
-
-.card-shell__shadow--xl {
-	box-shadow: 0 24px 56px color-mix(in srgb, var(--on-surface, #000) 14%, transparent);
+	box-shadow: var(--se-surface-shadow, 0 8px 24px color-mix(in srgb, var(--on-surface, #000) 10%, transparent));
 }
 
 .card-shell__header {
@@ -71,16 +41,8 @@
 	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
 }
 
-.card-shell__padding--sm {
-	padding: var(--space-block, 1rem);
-}
-
-.card-shell__padding--md {
-	padding: var(--space-block-lg, 1.5rem);
-}
-
-.card-shell__padding--lg {
-	padding: var(--space-block-xl, 2rem);
+.card-shell__section {
+	padding: var(--se-size-padding, var(--space-block-lg, 1.5rem));
 }
 
 .card-shell__content {

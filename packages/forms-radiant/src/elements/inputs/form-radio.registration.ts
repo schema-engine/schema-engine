@@ -4,6 +4,7 @@ import { defineInput } from '@schema-engine/forms';
 
 export const RadioElementRegistration = defineInput({
 	$type: 'radio',
+	appearanceAxes: ['size'],
 	render: FormRadio,
 	schema: RadioFieldConfigSchema,
 	metadata: {

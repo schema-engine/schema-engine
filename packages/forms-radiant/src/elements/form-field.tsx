@@ -1,3 +1,4 @@
+import { getAppearanceAttributes, type AppearanceSelection } from '@schema-engine/forms/lib/appearance';
 import { RuiFieldElement, type RuiFieldProps } from '@ecopages/radiant-ui/field';
 import { findFieldControl, RUI_FIELD_MANAGED_ATTR, type FieldRules } from '@ecopages/radiant-ui/form';
 import type { JsxCustomElementAttributes } from '@ecopages/jsx';
@@ -175,8 +176,10 @@ export function FormField({
 	class: className,
 	grid,
 	style,
+	appearance,
 	...props
 }: Omit<JsxCustomElementAttributes<FormFieldElement, RuiFieldProps>, 'rules'> & {
+	appearance?: AppearanceSelection;
 	validation?: FieldRulesSource;
 	validate?: FieldRules['validate'];
 	grid?: ElementGridConfig;
@@ -191,6 +194,7 @@ export function FormField({
 			classes={['se-form-field', className]}
 			data-se-grid-theme={fieldHost.themeId}
 			style={fieldHost.style}
+			{...getAppearanceAttributes(appearance)}
 			rules={withCustomValidate(toFieldRules({ rules: validationRules, name: validation?.name }), validate)}
 			data-se-validation-rules={validationRules ? JSON.stringify(validationRules) : undefined}
 			defaultValue={defaultValue}
