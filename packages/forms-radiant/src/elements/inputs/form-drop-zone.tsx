@@ -222,6 +222,7 @@ export function FormDropZone(config: DropZoneFieldProps) {
 			description={config.description}
 			grid={config.grid}
 			appearance={config.appearance}
+			class={config.className}
 			style={config.style}
 			validation={config}
 			defaultValue={config.defaultValue ?? []}

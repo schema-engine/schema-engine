@@ -226,8 +226,15 @@ export function rendererConformance(mount: ConformanceMount): void {
 			});
 		});
 		describe('appearance', () => {
-			const sizedForm = (appearance: Record<string, string>, fieldAppearance?: Record<string, string>) => ({
-				...form([{ ...input('email', 'Email'), appearance: fieldAppearance }, input('name', 'Name')]),
+			const sizedForm = (
+				appearance: Record<string, string>,
+				fieldAppearance?: Record<string, string>,
+				fieldClassName?: string,
+			) => ({
+				...form([
+					{ ...input('email', 'Email'), appearance: fieldAppearance, className: fieldClassName },
+					input('name', 'Name'),
+				]),
 				appearance,
 			});
 			test('a form-level value reaches the form, the step and a field without its own', async () => {
@@ -308,6 +315,31 @@ export function rendererConformance(mount: ConformanceMount): void {
 				const { host } = await setup({ config: sizedForm({ size: 'compact' }) });
 				expect(getComputedStyle(formElement(host)).getPropertyValue('--se-size-padding')).toBe('1rem');
 				expect(getComputedStyle(fieldHost(host, 'Email')).getPropertyValue('--se-size-padding')).toBe('1rem');
+			});
+			test('a field className lands on the field host', async () => {
+				const { host } = await setup({
+					config: form([{ ...input('email', 'Email'), className: 'author-field' }, input('name', 'Name')]),
+				});
+				expect(fieldHost(host, 'Email').classList.contains('author-field')).toBe(true);
+				expect(fieldHost(host, 'Name').classList.contains('author-field')).toBe(false);
+			});
+			test('an author class on a field outranks the field axis styles', async () => {
+				const author = document.createElement('style');
+				author.textContent = '.author-field { --se-size-padding: 7px; }';
+				document.head.prepend(author);
+				try {
+					const { host } = await setup({
+						config: sizedForm({ size: 'default' }, { size: 'compact' }, 'author-field'),
+					});
+					expect(getComputedStyle(fieldHost(host, 'Email')).getPropertyValue('--se-size-padding')).toBe(
+						'7px',
+					);
+					expect(getComputedStyle(fieldHost(host, 'Name')).getPropertyValue('--se-size-padding')).not.toBe(
+						'7px',
+					);
+				} finally {
+					author.remove();
+				}
 			});
 			test('an author class outranks axis styles', async () => {
 				const author = document.createElement('style');

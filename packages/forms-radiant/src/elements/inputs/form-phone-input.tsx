@@ -245,6 +245,7 @@ export function FormPhoneInput(config: PhoneInputFieldProps) {
 			description={config.description}
 			grid={config.grid}
 			appearance={config.appearance}
+			class={config.className}
 			style={config.style}
 			validation={config}
 			defaultValue={config.defaultValue}

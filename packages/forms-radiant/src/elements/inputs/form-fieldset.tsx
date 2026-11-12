@@ -25,7 +25,7 @@ export function FormFieldSet(config: FieldSetProps) {
 
 	return (
 		<fieldset
-			class="se-form-field se-fieldset"
+			classes={['se-form-field', 'se-fieldset', config.className]}
 			data-se-grid-theme={fieldHost.themeId}
 			style={fieldHost.style}
 			{...getAppearanceAttributes(config.appearance)}

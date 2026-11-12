@@ -20,7 +20,7 @@ export function FormFieldSet({ ...config }: FieldSetProps) {
 
 	return (
 		<div
-			className="se-form-field space-y-4"
+			className={`se-form-field space-y-4 ${config.className ?? ''}`.trim()}
 			data-se-grid-theme={gridThemeId}
 			style={style}
 			{...getAppearanceAttributes(config.appearance)}

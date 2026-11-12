@@ -4,7 +4,7 @@ import { useFormEngine, useConstraintLogic } from '@/hooks';
 import { applyFieldOverlay, type NormalizedElementConfig } from '@schema-engine/forms';
 import { isNormalizedElementConfig } from '@schema-engine/forms/lib/normalized-form-config';
 import {
-	FieldAppearanceContext,
+	FieldHostContext,
 	FieldConstraintContext,
 	InheritedFieldStateContext,
 } from '@/contexts/field-constraint-context';
@@ -83,9 +83,9 @@ export function FormElement({ config, name, id, instanceId, className, style }: 
 	return (
 		<InheritedFieldStateContext.Provider value={passedDown}>
 			<FieldConstraintContext.Provider value={{ fieldPath, constraints }}>
-				<FieldAppearanceContext.Provider value={config.appearance}>
+				<FieldHostContext.Provider value={{ appearance: config.appearance, className: config.className }}>
 					<Component {...enhancedConfig} />
-				</FieldAppearanceContext.Provider>
+				</FieldHostContext.Provider>
 			</FieldConstraintContext.Provider>
 		</InheritedFieldStateContext.Provider>
 	);

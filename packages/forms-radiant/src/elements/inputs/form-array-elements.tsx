@@ -419,7 +419,7 @@ export function FormArrayElements(config: ArrayElementsProps) {
 
 	return (
 		<fieldset
-			class="se-form-field se-form-array-field"
+			classes={['se-form-field', 'se-form-array-field', fieldConfig.className]}
 			aria-label={fieldConfig.label ? undefined : fieldConfig.name}
 			data-se-grid-theme={fieldHost.themeId}
 			style={fieldHost.style}
