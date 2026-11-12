@@ -62,3 +62,21 @@ test('a hand-written validator survives the replacement of the engine', async ()
 	await expect.poll(async () => (await validate(field, 'x@a.test')) === true).toBe(false);
 	expect(await validate(field, 'no@b.test')).toBe('Not that');
 });
+
+test('a field connected to an already bound engine drops the first engine validator when the engine is replaced', async () => {
+	const renderer = document.createElement('se-form-renderer') as FormRendererElement;
+	renderer.engine = engineRequiring('@a.test');
+	const field = document.createElement('se-field') as FormFieldElement;
+	field.setAttribute('name', 'work');
+	field.setAttribute('data-se-validation-rules', JSON.stringify([{ type: 'email' }]));
+	document.body.append(renderer);
+	await expect.poll(() => renderer.provider.getContext().engine).toBeDefined();
+	renderer.append(field);
+	expect(typeof field.rules?.validate).toBe('function');
+	await expect.poll(() => validate(field, 'x@b.test')).toBe('Use @a.test');
+
+	renderer.engine = engineRequiring('@b.test');
+
+	await expect.poll(() => validate(field, 'x@b.test')).toBe(true);
+	expect(await validate(field, 'x@a.test')).toBe('Use @b.test');
+});

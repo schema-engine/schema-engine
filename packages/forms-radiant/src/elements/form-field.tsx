@@ -30,9 +30,7 @@ export class FormFieldElement extends RuiFieldElement {
 		this.hydrateDefaultValue();
 		this.hydratedEngine = resolveFormEngine(this);
 		const rules = readHydratedRules(this);
-		if (rules) {
-			this.rules = rules;
-		}
+		if (rules) this.adoptDerivedRules(rules);
 		super.onConnected();
 		this.authoredRules ??= this.rules ?? {};
 		this.applyConstraint();
@@ -67,9 +65,20 @@ export class FormFieldElement extends RuiFieldElement {
 		this.hydratedEngine = engine;
 		const rules = rebuildHydratedRules(this, engine, this.derivedValidator);
 		if (!rules) return;
+		this.adoptDerivedRules(rules);
+		this.onRulesUpdated();
+	}
+
+	/**
+	 * Takes rules built from the serialized rules and records their derived validator.
+	 *
+	 * @remarks
+	 * Every path that derives rules goes through here, so a rebuild can tell the derived validator,
+	 * which it replaces, from a hand-written one, which it keeps.
+	 */
+	private adoptDerivedRules(rules: FieldRules): void {
 		this.derivedValidator = typeof rules.validate === 'function' ? rules.validate : undefined;
 		this.rules = rules;
-		this.onRulesUpdated();
 	}
 
 	@onContextUpdate({ context: constraintContext, requestUpdate: false })
