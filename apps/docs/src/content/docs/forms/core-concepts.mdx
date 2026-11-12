@@ -87,7 +87,19 @@ of cloning configuration to change paths.
 ## Placing fields in the grid
 
 A form's `grid` sets its layout (`columns`, `gap`, `responsive`), and each
-element's own `grid` places it. For the common layouts, name the width:
+element's own `grid` places it. There are three levels, from the most to the
+least readable:
+
+1. `width` and `offset` for fields that flow in rows.
+2. `areas` for a layout you draw as rows of names.
+3. Raw grid lines (`column`, `row`) as the escape hatch.
+
+A grid uses either `width`/`offset`, `areas` or `columns`; raw lines can sit
+next to widths.
+
+### Rows of fields: `width` and `offset`
+
+For the common layouts, name the width:
 
 ```ts
 { $type: 'input', id: 'first', name: 'first', grid: { width: 'half' } },
@@ -120,12 +132,82 @@ with them.
 Validation enforces the two ways of placing a field:
 
 - A form grid that sets `columns` or `minColumnWidth` (at any breakpoint) cannot
-  contain a top-level field that uses `width` or `offset`: a grid uses either
-  columns or widths.
+  contain a top-level field that uses `width` or `offset`: a grid uses areas,
+  widths or columns.
 - A field that sets `width` or `offset` cannot also set a raw `column`.
 - A field's `offset` plus `width` must fit in 12 tracks, counting the value
   each carries from a narrower breakpoint: `two-thirds` after a `half` offset
   is rejected.
+
+### Drawn layouts: `areas`
+
+When a field spans several rows or columns next to stacked fields, `width` and
+`offset` cannot say it. Draw the layout instead: the grid's `areas` is a list
+of rows, each row lists area names separated by spaces, and `.` is an empty
+cell. A field claims a name with `grid.area`.
+
+```yaml
+grid:
+    areas:
+        default: ['a', 'b', 'c', 'd', 'e']
+        md:
+            - 'a a a b b b'
+            - 'a a a c c c'
+            - 'd d e e e e'
+elements:
+    - { $type: input, id: a, name: a, grid: { area: a } }
+    - { $type: input, id: b, name: b, grid: { area: b } }
+    # c, d and e claim their own area the same way
+```
+
+Below `md` the five fields stack. From `md`, `a` spans three columns and two
+rows, `b` and `c` stack beside it, and `d` and `e` share the last row. The
+column count comes from the rows, so a grid with `areas` sets no `columns`.
+`areas` is an array for one layout at every width, or a record keyed `default`,
+`sm`, `md`, `lg`, `xl` and `2xl` (a slot you leave out keeps the layout of the
+slot before it). A responsive record must include `default`. A field's `area`
+is also responsive through `grid.responsive`, so a field can claim a different
+area when the template changes.
+
+A step takes its own `grid`, which replaces the form's grid for that step. An
+areas template names specific fields, so each wizard step draws its own:
+
+```ts
+{
+  id: 'checkout',
+  grid: { columns: 2 },
+  steps: [
+    {
+      id: 'address',
+      title: 'Address',
+      grid: { areas: ['street street', 'city zip'] },
+      elements: [
+        { $type: 'input', id: 'street', name: 'street', grid: { area: 'street' } },
+        { $type: 'input', id: 'city', name: 'city', grid: { area: 'city' } },
+        { $type: 'input', id: 'zip', name: 'zip', grid: { area: 'zip' } },
+      ],
+    },
+    { id: 'payment', title: 'Payment', elements: [/* two columns, from the form grid */] },
+  ],
+}
+```
+
+Validation names the path of whatever it rejects:
+
+- Rows of one template must have the same number of cells, and each name's cells
+  must form a rectangle. CSS drops a whole template that breaks either rule.
+- Every field `area` must be in the template at each breakpoint where the grid
+  draws one, and every area in the template must be claimed by a field.
+- `areas` cannot be mixed with `columns` or `minColumnWidth`, or with `width` or
+  `offset` on the grid's fields: a grid uses areas, widths or columns.
+- A field cannot set `area` together with `width`, `offset`, `column` or `row`.
+- Names are CSS identifiers (`street`, `side-2`), and `auto`, `span` and the CSS
+  keywords are reserved. A name is written into a CSS custom property, so
+  anything that is not an identifier is rejected.
+- Fieldsets and array rows lay their children out without `areas`, so `area` is
+  rejected on a container's children. Use `width` and `offset` there.
+
+### Raw grid lines
 
 Raw `column`, `row` and `placeSelf` stay available as the escape hatch for
 anything the names do not cover. `column: 2` is a CSS grid line, not a span:

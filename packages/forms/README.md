@@ -162,6 +162,18 @@ the same keys work on a container's children. Raw `column`, `row` and
 `placeSelf` remain the escape hatch; `column: 2` means the grid line 2, not a
 span.
 
+Layouts that width and offset cannot say (a field spanning rows beside stacked
+fields) are drawn with `areas`: `grid: { areas: ['a a a b b b', 'a a a c c c', 'd d e e e e'] }`
+(or a record keyed `default`, `sm` ... `2xl`, which must include `default`), and
+each field claims a name with `grid: { area: 'a' }`, also responsive through
+`grid.responsive`. `.` is an empty cell and the column count comes from the
+rows. A step takes its own `grid`, which replaces the form's for that step.
+`validateForm` rejects ragged or non-rectangular templates, an `area` that is not
+in the template at a breakpoint, a template area no field claims, `areas` beside
+`columns` or `minColumnWidth` or width fields, an `area` beside `width`,
+`offset`, `column` or `row`, and an `area` on a container's child (containers
+take no `areas`). Names are CSS identifiers.
+
 This applies to any element rendering a `.se-form-field` host with the engine's
 theme id — not only inputs. Renderers expose a helper for elements that build
 their own container (`useFieldHost` in React, `mergeFieldGridHost` in Radiant). A custom container whose children use `width` or `offset` must lay them out on its own grid with `useChildGridProps` (React) or `mergeChildrenGridHost` (Radiant). Every engine exposes a frozen

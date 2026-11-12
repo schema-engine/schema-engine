@@ -209,6 +209,24 @@ narrower slots). A raw `column` field beside width fields counts the same 12
 tracks (`span 2` is a sixth of the row). Raw `column`, `row` and `placeSelf`
 remain the escape hatch, and `column: 2` is a grid line, not a span.
 
+Drawn layouts are the same mechanism again. A grid's `areas` (an array of row
+strings, or a record per cascade slot) is emitted as a `--se-grid-areas` custom
+property of quoted rows, with `--se-grid-template` carrying the track count the
+rows draw, one pair per slot the author wrote. The stylesheet reads
+`grid-template-areas` through the breakpoint cascade with a `none` fallback and
+resets it like any other grid property. A field's `grid.area` is emitted as its
+`grid-column` and `grid-row` (a lone name there means that area's start and end
+lines), so it rides the shared field table with no new rule. Area names are
+ASCII CSS identifiers, which the schema enforces: a name is the only author text
+that lands in the stylesheet's `var()`, so it cannot carry CSS. A step's `grid`
+replaces the form's grid for that step (renderers read `step.grid ?? grid`),
+because a template names specific fields. Validation reads templates and areas
+through the same cascade the stylesheet applies and rejects ragged or
+non-rectangular templates, an area outside the template at any breakpoint, an
+unclaimed template area, `areas` beside `columns`, `minColumnWidth`, `width` or
+`offset`, and `area` beside `width`, `offset`, `column` or `row`. Containers take
+no `areas`, so `area` on a container's child is rejected.
+
 Containers are grids too. A fieldset, and each array row, lays its direct
 children out in an inner `se-form-grid` carrying the engine's theme id, built
 with the same `getFormGridVariables(undefined, theme, children)` a step uses.
