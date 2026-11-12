@@ -2,7 +2,7 @@ import type { JsxRenderable } from '@ecopages/jsx';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import type { NormalizedFormConfig, RecipeRegistration } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
-import { getGridVariables } from '@schema-engine/layout';
+import { GRID_CLASS, getGridVariables } from '@schema-engine/layout';
 import { stepGrid } from '@schema-engine/forms/lib/validate-form';
 import type { RecipeSlot } from '@schema-engine/forms/recipes';
 import type { RadiantRecipeAdapterPayload } from '@/recipes/types';
@@ -62,7 +62,7 @@ export function RecipeRenderer({
 				>
 					{step.elements.length ? (
 						<div
-							class="se-form-elements se-form-grid"
+							class={`se-form-elements se-form-grid ${GRID_CLASS}`}
 							data-se-theme={layout.id}
 							style={getGridVariables(stepGrid(config, step), layout.grid, step.elements)}
 						>

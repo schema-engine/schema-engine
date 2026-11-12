@@ -6,7 +6,7 @@
  * (`@schema-engine/layout`); the responsive behavior lives in
  * the theme stylesheet the engine generates and the renderer emits inline.
  */
-import { getAppearanceAttributes, getGridVariables, type LayoutTheme } from '@schema-engine/layout';
+import { GRID_CLASS, getAppearanceAttributes, getGridVariables, type LayoutTheme } from '@schema-engine/layout';
 import type React from 'react';
 import { useContext, useMemo } from 'react';
 import { FormProvider } from '../form-provider';
@@ -62,7 +62,7 @@ function StepFields({
 		>
 			{step.elements.length > 0 && (
 				<div
-					className="se-form-grid"
+					className={`se-form-grid ${GRID_CLASS}`}
 					data-se-theme={layout.id}
 					style={getGridVariables(stepGrid(config, step), layout.grid, step.elements)}
 				>

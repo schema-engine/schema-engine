@@ -32,7 +32,7 @@ function SsrFixtureInput(config: SsrInputConfig) {
 	const label = config.label ?? config.name;
 
 	return (
-		<div className="se-form-field" data-se-theme={layoutThemeId} style={containerStyles}>
+		<div className="se-form-field se-grid-item" data-se-theme={layoutThemeId} style={containerStyles}>
 			<label htmlFor={config.id}>{label}</label>
 			<input id={config.id} name={config.name} aria-label={label} readOnly />
 		</div>

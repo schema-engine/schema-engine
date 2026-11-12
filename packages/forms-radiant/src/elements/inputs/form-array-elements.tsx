@@ -16,7 +16,7 @@ import { adoptFieldArrayIds } from '@/adapters/radiant/controller/field-array';
 import { getValueAtPath, setValueAtPath } from '@schema-engine/forms/lib/path-values';
 import { formContext, type FormContextValue } from '@ecopages/radiant-ui/form';
 import { mergeChildrenGridHost, mergeFieldGridHost } from '@/hooks/grid-styles';
-import { getAppearanceAttributes } from '@schema-engine/layout';
+import { GRID_CLASS, GRID_ITEM_CLASS, getAppearanceAttributes } from '@schema-engine/layout';
 import { readValue } from '@/adapters/radiant/controller/values';
 import { formElement } from '@/lib/define-element';
 
@@ -116,7 +116,7 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 				return (
 					<div class="se-form-array__item" key={id} data-se-row-id={id}>
 						<div
-							class="se-form-array__fields se-form-grid"
+							class={`se-form-array__fields se-form-grid ${GRID_CLASS}`}
 							data-se-theme={childrenHost.themeId}
 							style={childrenHost.style}
 						>
@@ -419,7 +419,7 @@ export function FormArrayElements(config: ArrayElementsProps) {
 
 	return (
 		<fieldset
-			classes={['se-form-field', 'se-form-array-field', fieldConfig.className]}
+			classes={['se-form-field', GRID_ITEM_CLASS, 'se-form-array-field', fieldConfig.className]}
 			aria-label={fieldConfig.label ? undefined : fieldConfig.name}
 			data-se-theme={fieldHost.themeId}
 			style={fieldHost.style}

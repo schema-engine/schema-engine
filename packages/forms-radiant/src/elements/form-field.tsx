@@ -1,4 +1,9 @@
-import { getAppearanceAttributes, type AppearanceSelection, type ElementGridConfig } from '@schema-engine/layout';
+import {
+	GRID_ITEM_CLASS,
+	getAppearanceAttributes,
+	type AppearanceSelection,
+	type ElementGridConfig,
+} from '@schema-engine/layout';
 import { RuiFieldElement, type RuiFieldProps } from '@ecopages/radiant-ui/field';
 import { findFieldControl, RUI_FIELD_MANAGED_ATTR, type FieldRules } from '@ecopages/radiant-ui/form';
 import type { JsxCustomElementAttributes } from '@ecopages/jsx';
@@ -190,7 +195,7 @@ export function FormField({
 	return (
 		<FormFieldElement
 			{...props}
-			classes={['se-form-field', className]}
+			classes={['se-form-field', GRID_ITEM_CLASS, className]}
 			data-se-theme={fieldHost.themeId}
 			style={fieldHost.style}
 			{...getAppearanceAttributes(appearance)}

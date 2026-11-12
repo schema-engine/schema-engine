@@ -5,7 +5,7 @@ import * as z from 'zod/mini';
  *
  * @remarks
  * Tokens are indirections to overridable CSS variables: the renderer emits
- * `var(--se-grid-gap-<token>)`, so hosts restyle every form by overriding the
+ * `var(--se-grid-gap-<token>)`, so hosts restyle every grid by overriding the
  * token at `:root`. Raw CSS strings (e.g. `'1.5rem'`) are the one-off escape
  * hatch.
  */
@@ -109,7 +109,7 @@ const GridAreaRowsSchema = z.array(GridAreaRowSchema).check(z.minLength(1));
  * @remarks
  * The column count comes from the rows, so a grid with `areas` sets no
  * `columns`. Rows of one template must be the same length and each name must
- * fill a rectangle; `validateForm` checks both, as CSS drops a template that
+ * fill a rectangle; the domain validator checks both, as CSS drops a template that
  * breaks either.
  */
 const GridAreasSchema = z

@@ -4,6 +4,7 @@ import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import type { SubmissionAlertProps } from './form-submission-alert.types';
 import { formElement } from '@/lib/define-element';
+import { GRID_ITEM_CLASS } from '@schema-engine/layout';
 
 type AlertStatus = 'idle' | 'pending' | 'success' | 'error';
 
@@ -107,7 +108,7 @@ export function FormSubmissionAlert(config: SubmissionAlertProps) {
 
 	return (
 		<SeSubmissionAlert
-			classes={['se-form-field', config.className]}
+			classes={['se-form-field', GRID_ITEM_CLASS, config.className]}
 			data-se-theme={fieldHost.themeId}
 			style={fieldHost.style}
 			config={config}

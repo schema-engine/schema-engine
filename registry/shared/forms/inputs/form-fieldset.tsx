@@ -1,7 +1,7 @@
 import type React from 'react';
 import { FormElements } from '@schema-engine/forms-react/primitives';
 import { objectFieldScope } from '@schema-engine/forms';
-import { getGridItemVariables, getAppearanceAttributes } from '@schema-engine/layout';
+import { GRID_ITEM_CLASS, getAppearanceAttributes, getGridItemVariables } from '@schema-engine/layout';
 import { useChildGridProps, useLayoutThemeId } from '@schema-engine/forms-react/hooks';
 import { FieldSet } from '@/components/ui/schema-engine/components/field';
 import type { FieldSetProps } from './form-fieldset.types';
@@ -19,7 +19,7 @@ export function FormFieldSet({ ...config }: FieldSetProps) {
 
 	return (
 		<div
-			className={`se-form-field space-y-4 ${config.className ?? ''}`.trim()}
+			className={`se-form-field ${GRID_ITEM_CLASS} space-y-4 ${config.className ?? ''}`.trim()}
 			data-se-theme={layoutThemeId}
 			style={style}
 			{...getAppearanceAttributes(config.appearance)}

@@ -35,7 +35,7 @@ export function mergeFieldGridHost(
  *
  * @remarks
  * A container (a fieldset, an array row) lays its direct children out the way a
- * step does: put `se-form-grid`, `data-se-theme={themeId}` and `style` on
+ * step does: put `se-form-grid`, `se-grid`, `data-se-theme={themeId}` and `style` on
  * the wrapper of its `FormElements`. The grid takes twelve tracks when a child
  * sets `width` or `offset`, and otherwise stays the engine's single column. The
  * theme comes from the given engine, else the engine rendering this element,

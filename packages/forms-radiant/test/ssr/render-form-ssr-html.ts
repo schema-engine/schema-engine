@@ -30,7 +30,7 @@ function SsrFixtureInput(config: SsrInputConfig) {
 	const label = config.label ?? config.name;
 
 	return jsx('div', {
-		class: 'se-form-field',
+		class: 'se-form-field se-grid-item',
 		'data-se-theme': host.themeId,
 		style: host.style,
 		children: [
@@ -68,7 +68,7 @@ export function getSsrAcceptanceEngine() {
  * @remarks
  * Goes through {@link RecipeRenderer} rather than re-deriving the markup from
  * the grid helpers, so a renderer that stops emitting the theme stylesheet, the
- * grid container, or the `se-form-field` class fails this test.
+ * grid container, or the `se-grid-item` class fails this test.
  */
 export function renderSsrLayoutAcceptanceHtml(): string {
 	const engine = getSsrAcceptanceEngine();

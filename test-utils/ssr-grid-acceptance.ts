@@ -19,8 +19,8 @@ export interface LayoutThemeLike {
  * renderer emitted none (React drops an empty style object entirely).
  */
 function fieldStyle(html: string, label: string): string {
-	const host = new RegExp(`<div class="se-form-field"[^>]*?>\\s*<label[^>]*>${label}<`).exec(html);
-	if (!host) throw new Error(`No .se-form-field host found for ${label}`);
+	const host = new RegExp(`<div class="[^"]*\\bse-grid-item\\b[^"]*"[^>]*?>\\s*<label[^>]*>${label}<`).exec(html);
+	if (!host) throw new Error(`No .se-grid-item host found for ${label}`);
 	return /style="([^"]*)"/.exec(host[0])?.[1] ?? '';
 }
 
@@ -37,8 +37,8 @@ export function expectSsrGridMarkup(html: string, layout: LayoutThemeLike): void
 	expect(html).not.toMatch(/<script\b/i);
 	expect(html).toContain(layout.css.slice(0, 48));
 	expect(html).toContain(`data-se-theme="${layout.id}"`);
-	expect(html).toContain('se-form-grid');
-	expect(html).toContain('se-form-field');
+	expect(html).toContain('se-grid');
+	expect(html).toContain('se-grid-item');
 
 	const tracked = fieldStyle(html, 'Tracked field');
 	expect(tracked).toMatch(/--se-field-grid-column:\s*span 1/);
@@ -130,12 +130,12 @@ async function loadSsrFrame(html: string, width: number): Promise<{ frame: HTMLI
 }
 
 function fieldHost(doc: Document, label: RegExp): HTMLElement {
-	const matches = Array.from(doc.querySelectorAll<HTMLElement>('.se-form-field')).filter((node) =>
+	const matches = Array.from(doc.querySelectorAll<HTMLElement>('.se-grid-item')).filter((node) =>
 		label.test(node.textContent ?? ''),
 	);
 	const innermost = matches.find((node) => !matches.some((other) => other !== node && node.contains(other)));
 	if (!innermost) {
-		throw new Error(`Expected a .se-form-field host for ${label}`);
+		throw new Error(`Expected a .se-grid-item host for ${label}`);
 	}
 	return innermost;
 }
@@ -151,15 +151,15 @@ export async function expectSsrGridAcceptance(html: string, layout: LayoutThemeL
 	expect(html).not.toMatch(/<script\b/i);
 	expect(html).toContain(layout.css.slice(0, 48));
 	expect(html).toContain(`data-se-theme="${layout.id}"`);
-	expect(html).toContain('se-form-grid');
-	expect(html).toContain('se-form-field');
+	expect(html).toContain('se-grid');
+	expect(html).toContain('se-grid-item');
 
 	const { frame, doc } = await loadSsrFrame(html, 375);
 	try {
 		const style = doc.querySelector('style[data-se-theme-css]') ?? doc.querySelector('style');
 		expect(style?.textContent).toContain(layout.css.slice(0, 48));
 
-		const grid = doc.querySelector<HTMLElement>('.se-form-grid[data-se-theme]');
+		const grid = doc.querySelector<HTMLElement>('.se-grid[data-se-theme]');
 		expect(grid).toBeTruthy();
 		expect(getComputedStyle(grid!).gridTemplateColumns.split(' ').length).toBe(1);
 		expect(getComputedStyle(fieldHost(doc, /tracked field/i)).display).not.toBe('none');
@@ -210,7 +210,7 @@ export async function expectSsrWidthsAcceptance(html: string, layout: LayoutThem
 
 	const { frame, doc } = await loadSsrFrame(html, 375);
 	try {
-		const grid = doc.querySelector<HTMLElement>('.se-form-grid[data-se-theme]');
+		const grid = doc.querySelector<HTMLElement>('.se-grid[data-se-theme]');
 		expect(grid).toBeTruthy();
 		const rect = (label: RegExp) => fieldHost(doc, label).getBoundingClientRect();
 		const measure = () => {
@@ -290,9 +290,9 @@ export async function expectSsrNestedWidthsAcceptance(
 	try {
 		for (const group of groups) {
 			const first = fieldHost(doc, new RegExp(`${group} A`));
-			const grid = first.parentElement?.closest<HTMLElement>('.se-form-grid[data-se-theme]');
+			const grid = first.parentElement?.closest<HTMLElement>('.se-grid[data-se-theme]');
 			expect(grid, `${group} children sit in their own grid`).toBeTruthy();
-			expect(grid).not.toBe(doc.querySelector('.se-form-grid[data-se-theme]'));
+			expect(grid).not.toBe(doc.querySelector('.se-grid[data-se-theme]'));
 			expect(getComputedStyle(grid!).gridTemplateColumns.split(' ').length).toBe(12);
 
 			const bounds = grid!.getBoundingClientRect();
@@ -380,7 +380,7 @@ export function ssrSteppedForm(type: string) {
 
 /** The grid container that holds a field host. */
 function gridOf(doc: Document, label: RegExp): HTMLElement {
-	const grid = fieldHost(doc, label).parentElement?.closest<HTMLElement>('.se-form-grid[data-se-theme]');
+	const grid = fieldHost(doc, label).parentElement?.closest<HTMLElement>('.se-grid[data-se-theme]');
 	if (!grid) throw new Error(`Expected ${label} to sit in a grid`);
 	return grid;
 }
@@ -392,7 +392,7 @@ function gridOf(doc: Document, label: RegExp): HTMLElement {
  * @param html Server-rendered document for {@link ssrAreasForm}.
  */
 export function expectSsrAreasMarkup(html: string): void {
-	const grid = /<div[^>]*class="[^"]*se-form-grid[^"]*"[^>]*>/.exec(html)?.[0] ?? '';
+	const grid = /<div[^>]*class="(?:[^"]*\s)?se-grid(?:\s[^"]*)?"[^>]*>/.exec(html)?.[0] ?? '';
 	const decoded = grid.replaceAll(/&quot;|&#34;|&#x22;/g, '"');
 	expect(decoded).toMatch(/--se-grid-areas:\s*"a a a b b b" "a a a c c c" "d d e e e e"/);
 	expect(decoded).toMatch(/--se-grid-template:\s*repeat\(6, minmax\(0, 1fr\)\)/);

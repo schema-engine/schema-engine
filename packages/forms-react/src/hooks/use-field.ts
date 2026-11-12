@@ -2,7 +2,12 @@ import type React from 'react';
 import { useContext, useMemo } from 'react';
 import type { ElementConfig } from '@schema-engine/forms/schemas';
 import { mergeControlProps } from '@schema-engine/forms/schemas/html-attributes';
-import { getGridItemVariables, type ElementGridConfig, getAppearanceAttributes } from '@schema-engine/layout';
+import {
+	GRID_ITEM_CLASS,
+	getAppearanceAttributes,
+	getGridItemVariables,
+	type ElementGridConfig,
+} from '@schema-engine/layout';
 import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
 import { useFormField } from '@/adapters/context';
 import { useConstraintLogic } from '@/hooks/use-constraint-logic';
@@ -52,7 +57,7 @@ export function useFieldClassName(): string | undefined {
  *
  * Without it an element ignores its `grid` config entirely — placement and
  * `marginBlockStart`/`marginBlockEnd` alike — because the generated stylesheet
- * matches on `.se-form-field` scoped by the owning engine's theme id.
+ * matches on `.se-grid-item` scoped by the owning engine's theme id.
  */
 export function useFieldHost(grid?: ElementGridConfig, style?: React.CSSProperties): FieldHostProps {
 	const themeId = useLayoutThemeId();
@@ -60,7 +65,7 @@ export function useFieldHost(grid?: ElementGridConfig, style?: React.CSSProperti
 	const className = useFieldClassName();
 
 	return {
-		className: className ? `se-form-field ${className}` : 'se-form-field',
+		className: ['se-form-field', GRID_ITEM_CLASS, className].filter(Boolean).join(' '),
 		'data-se-theme': themeId,
 		style: { ...getGridItemVariables(grid), ...style },
 		...appearance,

@@ -76,13 +76,13 @@ export interface GridThemeOptions {
 	 * Token values that change from a breakpoint up.
 	 *
 	 * @remarks
-	 * Breakpoint-major, like a form's own `responsive`: one entry per width
+	 * Breakpoint-major, like a document's own `responsive`: one entry per width
 	 * listing the tokens that change there, rather than one entry per token
 	 * listing its widths. Base values stay in `gap`, so there is no `default`
 	 * entry here — and no collision between the `default` *token* and a
 	 * `default` *slot*.
 	 *
-	 * Tokens are axis-agnostic: a form picks which token each axis uses via
+	 * Tokens are axis-agnostic: a document picks which token each axis uses via
 	 * `gapX`/`gapY`, so a theme never declares an axis.
 	 *
 	 * ```ts
@@ -128,7 +128,7 @@ const DEFAULT_GAP: Record<GridGapToken, string> = {
 const DEFAULT_MIN_COLUMN_WIDTH = '15.625rem';
 
 /**
- * Public gap tokens. Hosts override these at `:root` to restyle every form.
+ * Public gap tokens. Hosts override these at `:root` to restyle every grid.
  *
  * @remarks
  * The engine must never declare these on an element: an element's own
@@ -212,7 +212,7 @@ function resolveResponsiveGap(
  * Threshold overrides replace only the named breakpoint; the rest keep
  * library defaults. Thresholds accept `px`/`rem`/`em` lengths and must
  * preserve named cascade order. `rem`/`em` compare at a 16px root.
- * Media queries follow viewport width — a form inside a narrow sidebar
+ * Media queries follow viewport width — a grid inside a narrow sidebar
  * still receives the desktop rules of the wide screen it lives on.
  */
 export function resolveGridTheme(options?: GridThemeOptions): NormalizedGridTheme {
@@ -293,6 +293,20 @@ export function canonicalGridTheme(theme: NormalizedGridTheme) {
 }
 
 /**
+ * Class a grid container carries, and the stylesheet's hook for it.
+ *
+ * @remarks
+ * Neutral on purpose: a domain's renderer adds this beside its own class,
+ * so a step, a page section and a container of any domain share one set of rules. The stylesheet
+ * keys on this class, {@link GRID_ITEM_CLASS} and `[data-se-theme]` only, with no alias for a
+ * domain's own class.
+ */
+export const GRID_CLASS = 'se-grid';
+
+/** Class an element placed in a grid carries, and the stylesheet's hook for it. See {@link GRID_CLASS}. */
+export const GRID_ITEM_CLASS = 'se-grid-item';
+
+/**
  * Grid container properties that change per breakpoint.
  *
  * @remarks
@@ -325,7 +339,7 @@ const DEFAULT_COLUMN_VARIABLE = '--se-grid-default-column';
  * @remarks
  * `justify-self`/`align-self` fall back to `auto`, which defers to the grid's
  * own `justify-items`/`align-items`. Any other fallback would silently beat
- * form-level alignment on every field.
+ * grid-level alignment on every item.
  */
 const FIELD_PROPERTIES: readonly ResponsiveProperty[] = [
 	['display', 'se-field-display', FIELD_DISPLAY_MODE],
@@ -393,18 +407,19 @@ function inheritanceResets(...tables: readonly (readonly ResponsiveProperty[])[]
  * places on every grid container and item, so two engines with different themes
  * cannot overwrite each other. Item rules are scoped under the item that
  * carries the theme attribute so nested grids do not leak styles across themes.
+ * Selectors use only {@link GRID_CLASS}, {@link GRID_ITEM_CLASS} and that attribute.
  *
  * @param themeId The id of the layout theme this grid belongs to.
  */
 export function getGridThemeCss(theme: NormalizedGridTheme, themeId: string): string {
 	const scope = `[data-se-theme="${themeId}"]`;
-	const gridScope = `.se-form-grid${scope}`;
-	const fieldScope = `.se-form-field${scope}`;
+	const gridScope = `.${GRID_CLASS}${scope}`;
+	const itemScope = `.${GRID_ITEM_CLASS}${scope}`;
 	const tokens = GridGapTokens.map((token) => `${gapBaseVariable(token)}:${theme.gap[token]};`).join('');
 	const lines: string[] = [
 		`${scope}{${tokens}}`,
 		`${gridScope}{${inheritanceResets(GRID_PROPERTIES, GRID_ALIGNMENT_PROPERTIES)}${DEFAULT_COLUMN_VARIABLE}:initial;display:grid;${declarations(GRID_PROPERTIES)}${declarations(GRID_ALIGNMENT_PROPERTIES)}}`,
-		`${fieldScope}{${inheritanceResets(FIELD_PROPERTIES)}${declarations(FIELD_PROPERTIES)}}`,
+		`${itemScope}{${inheritanceResets(FIELD_PROPERTIES)}${declarations(FIELD_PROPERTIES)}}`,
 	];
 	for (const breakpoint of BREAKPOINT_ORDER) {
 		const ramped = theme.responsive[breakpoint];
@@ -414,7 +429,7 @@ export function getGridThemeCss(theme: NormalizedGridTheme, themeId: string): st
 					.join('')
 			: '';
 		lines.push(
-			`@media (min-width:${theme.breakpoints[breakpoint]}){${rampedTokens ? `${scope}{${rampedTokens}}` : ''}${gridScope}{${declarations(GRID_PROPERTIES, breakpoint)}}${fieldScope}{${declarations(FIELD_PROPERTIES, breakpoint)}}}`,
+			`@media (min-width:${theme.breakpoints[breakpoint]}){${rampedTokens ? `${scope}{${rampedTokens}}` : ''}${gridScope}{${declarations(GRID_PROPERTIES, breakpoint)}}${itemScope}{${declarations(FIELD_PROPERTIES, breakpoint)}}}`,
 		);
 	}
 	return lines.join('\n');
@@ -474,7 +489,7 @@ function customProperty(name: string, slot: CascadeSlot): `--${string}` {
 }
 
 /** Layout values a single cascade slot may set; the top-level config is the `default` slot. */
-interface FormGridEntry {
+interface GridEntry {
 	columns?: number | 'auto';
 	minColumnWidth?: string;
 	gap?: string;
@@ -483,7 +498,7 @@ interface FormGridEntry {
 }
 
 /** Placement a single cascade slot may set; the top-level config is the `default` slot. */
-interface FieldGridEntry {
+interface GridItemEntry {
 	area?: string;
 	width?: GridWidthName;
 	offset?: GridOffsetName;
@@ -496,7 +511,7 @@ interface FieldGridEntry {
 	marginBlockEnd?: string;
 }
 
-function emitGapEntry(variables: CssVariables, slot: CascadeSlot, entry: FormGridEntry | undefined): void {
+function emitGapEntry(variables: CssVariables, slot: CascadeSlot, entry: GridEntry | undefined): void {
 	if (!entry) return;
 	const entryGap = resolveGridGap(entry.gap);
 	const gapX = resolveGridGap(entry.gapX) ?? entryGap;
@@ -506,7 +521,7 @@ function emitGapEntry(variables: CssVariables, slot: CascadeSlot, entry: FormGri
 }
 
 /**
- * Resolves a form grid against the engine theme into one inline style record.
+ * Resolves a grid against the theme into one inline style record.
  *
  * @remarks
  * Only values an author wrote are emitted; the generated stylesheet falls back
@@ -544,7 +559,7 @@ export function getGridVariables(
 
 	let columns: number | 'auto' = 1;
 	let minColumnWidth = theme.minColumnWidth;
-	const emitTemplate = (slot: CascadeSlot, entry: FormGridEntry | undefined): void => {
+	const emitTemplate = (slot: CascadeSlot, entry: GridEntry | undefined): void => {
 		if (!entry) return;
 		if (entry.columns === undefined && entry.minColumnWidth === undefined) return;
 		if (entry.columns !== undefined) columns = entry.columns;
@@ -604,7 +619,7 @@ function formatGridLine(value: number | string): string {
 function emitFieldEntry(
 	variables: CssVariables,
 	slot: CascadeSlot,
-	entry: FieldGridEntry | undefined,
+	entry: GridItemEntry | undefined,
 	named: NamedPlacement = {},
 ): void {
 	if (!entry) return;
@@ -650,7 +665,7 @@ function emitFieldEntry(
  *
  * `marginBlockStart`/`marginBlockEnd` accept the same gap tokens as the grid, so
  * a one-off rhythm around a non-input element reads in the same vocabulary as
- * the form's spacing. They ride the shared field property table rather than a
+ * the grid's spacing. They ride the shared field property table rather than a
  * separate mechanism, which is what gives them the breakpoint cascade and the
  * inheritance resets for free — and keeps a single system owning the block axis
  * instead of two fighting over it.

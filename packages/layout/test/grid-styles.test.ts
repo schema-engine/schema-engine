@@ -61,13 +61,13 @@ describe('the grid half of a layout theme', () => {
 
 describe('generated stylesheet', () => {
 	test('scopes rules to the theme identity', () => {
-		expect(css()).toContain(`.se-form-grid[data-se-theme="${themeId()}"]{`);
-		expect(css()).not.toMatch(/(^|\n)\.se-form-grid\{/);
+		expect(css()).toContain(`.se-grid[data-se-theme="${themeId()}"]{`);
+		expect(css()).not.toMatch(/(^|\n)\.se-grid\{/);
 	});
 
 	test('scopes field rules to the field host theme attribute', () => {
-		expect(css()).toContain(`.se-form-field[data-se-theme="${themeId()}"]{`);
-		expect(css()).not.toContain(`.se-form-grid[data-se-theme="${themeId()}"] .se-form-field{`);
+		expect(css()).toContain(`.se-grid-item[data-se-theme="${themeId()}"]{`);
+		expect(css()).not.toContain(`.se-grid[data-se-theme="${themeId()}"] .se-form-field{`);
 	});
 
 	test('generates media queries per configured breakpoint', () => {

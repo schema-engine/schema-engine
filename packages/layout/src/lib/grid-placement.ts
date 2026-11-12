@@ -32,7 +32,7 @@ export const WIDTH_SPANS: Readonly<Record<GridWidthName, number>> = {
 };
 
 /**
- * Form grid keys that define the template, and so cannot meet named widths.
+ * Grid keys that define the template, and so cannot meet named widths.
  *
  * @remarks
  * Typed against the breakpoint schema so a renamed key fails to compile here.

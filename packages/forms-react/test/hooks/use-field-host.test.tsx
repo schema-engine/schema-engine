@@ -6,7 +6,7 @@ import { getDefaultLayoutTheme } from '@schema-engine/layout';
 describe('useFieldHost', () => {
 	test('gives any element the grid host attributes, not just inputs', () => {
 		const { result } = renderHook(() => useFieldHost({ column: 'span 2' }));
-		expect(result.current.className).toBe('se-form-field');
+		expect(result.current.className).toBe('se-form-field se-grid-item');
 		expect(result.current['data-se-theme']).toBe(getDefaultLayoutTheme().id);
 		expect(result.current.style).toMatchObject({ '--se-field-grid-column': 'span 2' });
 	});

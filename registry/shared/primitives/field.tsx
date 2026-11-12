@@ -1,4 +1,5 @@
 import type React from 'react';
+import { GRID_ITEM_CLASS } from '@schema-engine/layout';
 import { useFieldAppearanceAttributes, useFieldClassName, useLayoutThemeId } from '@schema-engine/forms-react/hooks';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
@@ -138,7 +139,7 @@ interface FieldGroupRootProps extends React.ComponentProps<'div'> {
  * Root wrapper for a single form field on the form grid.
  *
  * @remarks
- * `se-form-field` carries the grid CSS variables consumed by the theme
+ * `se-form-field` and `se-grid-item` carry the grid CSS variables consumed by the theme
  * stylesheet the engine generates (`engine.getLayout().css`), and
  * `data-se-theme` scopes them to the owning engine so nested grids stay
  * isolated. Both are set here, so field components never carry the theme id. The element's resolved
@@ -151,7 +152,7 @@ export function FieldGroupRoot({ className, hasError, ...props }: FieldGroupRoot
 
 	return (
 		<div
-			className={cn('se-form-field space-y-2', fieldClassName, className)}
+			className={cn('se-form-field', GRID_ITEM_CLASS, 'space-y-2', fieldClassName, className)}
 			data-slot="field-group-root"
 			data-error={hasError ? 'true' : 'false'}
 			data-se-theme={layoutThemeId}
