@@ -41,13 +41,15 @@ export function assertStandardSchema(schema: unknown, context = 'Registration sc
  *
  * @param kind - Label for errors, for example `Element`
  * @param registrations - Registrations to store, keyed by `$type`
- * @throws {Error} Naming the `$type` when a registration's schema is not a Standard Schema
+ * @throws {Error} Naming the `$type` when a winning registration's schema is not a Standard Schema
  *
  * @remarks
  * A later registration with the same `$type` replaces the earlier one without a
  * warning, so `[...defaults, custom]` is the way to override. A replaced key
- * keeps its first position. The registrations are frozen in place (shallow), so
- * the same objects can safely be shared between registries.
+ * keeps its first position. Only the winning registration of each key is
+ * checked. The registry stores a frozen shallow copy of each winner and leaves
+ * the objects you passed untouched, so they stay assignable and spy-able; the
+ * copy shares nested values such as `schema` with the original.
  *
  * Use {@link BaseRegistry} instead when registrations arrive at runtime.
  */
@@ -55,10 +57,14 @@ export function createRegistry<TRegistration extends BaseRegistration>(
 	kind: string,
 	registrations: readonly TRegistration[],
 ): ReadOnlyRegistry<TRegistration> {
-	const entries = new Map<string, TRegistration>();
+	const winners = new Map<string, TRegistration>();
 	for (const registration of registrations) {
-		assertStandardSchema(registration.schema, `${kind} '${registration.$type}' schema`);
-		entries.set(registration.$type, Object.freeze(registration));
+		winners.set(registration.$type, registration);
+	}
+	const entries = new Map<string, Readonly<TRegistration>>();
+	for (const [key, registration] of winners) {
+		assertStandardSchema(registration.schema, `${kind} '${key}' schema`);
+		entries.set(key, Object.freeze({ ...registration }));
 	}
 	const all = Object.freeze([...entries.values()]);
 	const keys = Object.freeze([...entries.keys()]);

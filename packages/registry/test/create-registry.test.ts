@@ -23,7 +23,8 @@ describe('createRegistry', () => {
 
 			const registry = createRegistry('Widget', [first, second]);
 
-			expect(registry.get('card')).toBe(second);
+			expect(registry.get('card')).toEqual(second);
+			expect(registry.get('card')?.metadata.name).toBe('Second');
 			expect(registry.size).toBe(1);
 			expect(registry.all()).toEqual([second]);
 			for (const spy of spies) {
@@ -40,6 +41,22 @@ describe('createRegistry', () => {
 
 			expect(registry.keys()).toEqual(['a', 'b']);
 			expect(registry.get('a')?.metadata.name).toBe('A2');
+		});
+	});
+
+	describe('Scenario: Only the winning registration is checked', () => {
+		it('accepts an overridden registration whose schema is not a Standard Schema', () => {
+			const broken = { $type: 'card', metadata: { name: 'Broken' } } as unknown as BaseRegistration;
+
+			const registry = createRegistry('Widget', [broken, createItem('card', 'Valid')]);
+
+			expect(registry.get('card')?.metadata.name).toBe('Valid');
+		});
+
+		it('rejects a winning registration whose schema is not a Standard Schema', () => {
+			const broken = { $type: 'card', metadata: { name: 'Broken' } } as unknown as BaseRegistration;
+
+			expect(() => createRegistry('Widget', [createItem('card', 'Valid'), broken])).toThrow(/Widget 'card'/);
 		});
 	});
 
@@ -72,14 +89,30 @@ describe('createRegistry', () => {
 			expect(Object.isFrozen(registry)).toBe(true);
 		});
 
-		it('freezes its entries and the arrays it returns', () => {
+		it('freezes a copy of each entry and the arrays it returns', () => {
 			const item = createItem('card', 'Card');
 			const registry = createRegistry('Widget', [item]);
 
 			expect(Object.isFrozen(registry.get('card'))).toBe(true);
+			expect(registry.get('card')).not.toBe(item);
 			expect(Object.isFrozen(registry.all())).toBe(true);
 			expect(Object.isFrozen(registry.keys())).toBe(true);
 			expect(() => (registry.all() as BaseRegistration[]).push(createItem('x', 'X'))).toThrow(TypeError);
+		});
+
+		it('leaves the registrations it was given unfrozen, spy-able and assignable', () => {
+			const item = { ...createItem('card', 'Card'), execute: () => 'ran' };
+			const overridden = { ...createItem('card', 'Overridden'), execute: () => 'ran' };
+
+			createRegistry('Widget', [overridden, item]);
+
+			expect(Object.isFrozen(item)).toBe(false);
+			expect(Object.isFrozen(overridden)).toBe(false);
+			const spy = vi.spyOn(item, 'execute');
+			item.execute();
+			expect(spy).toHaveBeenCalledTimes(1);
+			item.metadata = { name: 'Renamed' };
+			expect(item.metadata.name).toBe('Renamed');
 		});
 
 		it('is not affected by later changes to the input list', () => {
@@ -104,6 +137,7 @@ describe('createRegistry', () => {
 			expect(registry.get('nope')).toBeUndefined();
 			expect(registry.keys()).toEqual(['card']);
 			expect(registry.all()).toEqual([card]);
+			expect(registry.get('card')).toEqual(card);
 		});
 
 		it('builds an empty registry from an empty list', () => {

@@ -4,7 +4,7 @@ Shared registry primitives for building typed registration systems across the Sc
 
 This package provides one registry mechanism for typed registrations keyed by `$type`:
 
-- `createRegistry(kind, registrations)` builds a read-only, frozen registry from a list. Every package that stores registrations (the forms engine, `@schema-engine/actions`) uses it.
+- `createRegistry(kind, registrations)` builds a read-only, frozen registry from a list. The forms engine stores its elements, recipes and actions with it, and `@schema-engine/actions` builds `ActionRegistry` on it. `ValidationRegistry` in `@schema-engine/forms` is the one registry that does not use it yet.
 - `BaseRegistry` is the mutable opt-in for runtime plugin systems that register after construction.
 
 Use the `ComponentRegistration` type when entries must include a render function.
@@ -77,8 +77,8 @@ widgets.size;
 ```
 
 - Last wins, silently: a later registration with the same `$type` replaces the earlier one, so `[...defaults, custom]` is how you override. The key keeps its first position.
-- Each `schema` is checked at build. A value without `~standard.validate` throws `Widget 'card' schema must implement Standard Schema (~standard.validate).`, naming the `kind` and the `$type`.
-- The result is frozen and has no `register` or `clear`. `all()` and `keys()` return frozen arrays, and the registrations are frozen in place (shallow), so one registration object can be shared by several registries. Build a new registry from a new list to change the contents.
+- Each winning `schema` is checked at build; an overridden registration is not checked. A value without `~standard.validate` throws `Widget 'card' schema must implement Standard Schema (~standard.validate).`, naming the `kind` and the `$type`.
+- The result is frozen and has no `register` or `clear`. `all()` and `keys()` return frozen arrays, and each stored registration is a frozen shallow copy of the winner. The objects you passed stay untouched, so you can still assign to them or spy on their methods; nested values such as `schema` are shared with the original. Build a new registry from a new list to change the contents.
 - Type the result with `ReadOnlyRegistry<TRegistration>`.
 
 `assertStandardSchema(schema, context)` is exported for code that needs the same check outside a registry.
