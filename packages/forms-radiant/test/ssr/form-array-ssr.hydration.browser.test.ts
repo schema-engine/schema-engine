@@ -1,4 +1,4 @@
-import { describe, expect, inject, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, inject, test, vi } from 'vitest';
 import { FormController } from '@/adapters/radiant/controller';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
@@ -6,6 +6,19 @@ import { FormRendererElement } from '@/components/internals/form-renderer';
 import type { SeFormArray } from '@/elements/inputs/form-array-elements';
 
 describe('SSR array hydration', () => {
+	const warn = vi.spyOn(console, 'warn');
+
+	beforeEach(() => {
+		warn.mockClear();
+	});
+
+	afterEach(() => {
+		const engineWarnings = warn.mock.calls.filter((call) =>
+			String(call.at(-1)).includes('Could not resolve FormEngine'),
+		);
+		expect(engineWarnings).toEqual([]);
+	});
+
 	test('adopts server rows and keeps their authored values as reset defaults', async () => {
 		expect(customElements.get('se-form-renderer')).toBe(FormRendererElement);
 		const html = inject('ssrArrayHtml').replaceAll('<\\/script>', '</script>');
