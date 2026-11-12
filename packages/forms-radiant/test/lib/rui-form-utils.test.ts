@@ -1,29 +1,22 @@
 import { describe, expect, test } from 'vitest';
-import { findNearestRuiForm } from '@/lib/rui-form-utils';
+import { findAncestorElement } from '@/lib/rui-form-utils';
 
-describe('findNearestRuiForm', () => {
-	test('finds rui-form nested inside the host', () => {
-		const host = document.createElement('se-form-instance');
-		const ruiForm = document.createElement('rui-form');
-		host.append(ruiForm);
+describe('findAncestorElement', () => {
+	test('finds the nearest ancestor with one of the local names', () => {
+		const outer = document.createElement('rui-form');
+		const inner = document.createElement('se-form-instance');
+		const host = document.createElement('div');
+		outer.append(inner);
+		inner.append(host);
 
-		expect(findNearestRuiForm(host)).toBe(ruiForm);
+		expect(findAncestorElement(host, 'rui-form')).toBe(outer);
+		expect(findAncestorElement(host, 'rui-form', 'se-form-instance')).toBe(inner);
 	});
 
-	test('finds an ancestor rui-form', () => {
-		const ruiForm = document.createElement('rui-form');
+	test('returns null when no ancestor matches', () => {
 		const host = document.createElement('div');
-		ruiForm.append(host);
+		document.createElement('rui-form').append(host);
 
-		expect(findNearestRuiForm(host)).toBe(ruiForm);
-	});
-
-	test('does not select an unrelated rui-form in the document', () => {
-		const root = document.createElement('div');
-		const other = document.createElement('rui-form');
-		const host = document.createElement('div');
-		root.append(other, host);
-
-		expect(findNearestRuiForm(host)).toBeNull();
+		expect(findAncestorElement(host, 'se-form-instance')).toBeNull();
 	});
 });

@@ -3,10 +3,10 @@ import { FormStore, type FieldValues } from '@ecopages/radiant-ui/form';
 import { provideTestFormStore } from '../adapters/test-form';
 import { gtmPlugin } from '@schema-engine/forms';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
+import { formEngineContext } from '@/components/provider';
 import { formInstanceContext } from '@/contexts/form-instance-context';
 import { FormRendererElement } from '@/components/internals/form-renderer.script';
 import { FormInstanceElement } from '@/components/form-instance.script';
-import { FormActionControllerElement } from '@/components/form-action-controller';
 import { SeFormArray } from '@/elements/inputs/form-array-elements';
 import { InputElementRegistration } from '@/elements/inputs/form-input.registration';
 import { ArrayElementRegistration } from '@/elements/inputs/form-array-elements.registration';
@@ -97,6 +97,64 @@ describe('Radiant form engine resolution', () => {
 		observed.disconnect();
 	});
 
+	test('a form instance republishes isWizard when its engine is assigned after connect', async () => {
+		const engine = createRadiantFormEngine();
+		vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const instance = document.createElement('se-form-instance') as FormInstanceElement;
+		instance.config = twoStepForm(engine);
+		document.body.append(instance);
+		const observed = observeInstanceContext(instance);
+		await vi.waitFor(() => expect(observed.isWizard).toBe(false));
+
+		instance.engine = engine;
+
+		await vi.waitFor(() => expect(observed.isWizard).toBe(true));
+		observed.disconnect();
+	});
+
+	test('replacing the engine of a connected renderer warns once and leaves resolved hosts on their engine', async () => {
+		const engineA = createRadiantFormEngine();
+		const engineB = createRadiantFormEngine();
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
+		const instance = document.createElement('se-form-instance') as FormInstanceElement;
+		instance.config = twoStepForm(engineA);
+		renderer.engine = engineA;
+		renderer.append(instance);
+		document.body.append(renderer);
+		await vi.waitFor(() => expect(instance.engine).toBe(engineA));
+
+		const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+		renderer.engine = engineB;
+		await nextFrame();
+		renderer.engine = engineA;
+		await nextFrame();
+
+		expect(instance.engine).toBe(engineA);
+		const reports = warn.mock.calls.filter((call) => String(call.at(-1)).includes('engine changed after'));
+		expect(reports).toHaveLength(1);
+	});
+
+	test('a renderer without an engine resolves one that an ancestor answers for the context', async () => {
+		const engine = createRadiantFormEngine();
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const provider = document.createElement('div');
+		provider.addEventListener('context-subscription-request', (event) => {
+			if (!(event instanceof ContextSubscriptionRequestEvent) || event.context !== formEngineContext) return;
+			event.stopPropagation();
+			event.callback({ engine }, () => {});
+		});
+		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
+		const instance = document.createElement('se-form-instance') as FormInstanceElement;
+		instance.config = twoStepForm(engine);
+		renderer.append(instance);
+		provider.append(renderer);
+		document.body.append(provider);
+
+		await vi.waitFor(() => expect(instance.engine).toBe(engine));
+		expect(warn).not.toHaveBeenCalled();
+	});
+
 	test('a form instance with no engine in its tree reports it and does not pick the only created engine', async () => {
 		const engine = createRadiantFormEngine();
 		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -116,32 +174,29 @@ describe('Radiant form engine resolution', () => {
 		observed.disconnect();
 	});
 
-	test('a connected form instance publishes its recipe after renderer context arrives', async () => {
+	test('a form instance under a renderer that was never given an engine reports one configuration error', async () => {
 		const engine = createRadiantFormEngine();
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
 		const instance = document.createElement('se-form-instance') as FormInstanceElement;
 		instance.config = twoStepForm(engine);
 		renderer.append(instance);
 		document.body.append(renderer);
-		const observed = observeInstanceContext(instance);
+		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
-		await vi.waitFor(() => {
-			expect(observed.isWizard).toBe(false);
-		});
-		renderer.engine = engine;
-		await vi.waitFor(() => {
-			expect(observed.isWizard).toBe(true);
-		});
-		observed.disconnect();
+		expect(instance.engine).toBeUndefined();
+		const reports = warn.mock.calls.filter((call) =>
+			String(call.at(-1)).includes('Could not resolve FormEngine for <se-form-instance>'),
+		);
+		expect(reports).toHaveLength(1);
 	});
 
-	test('an action controller dispatches its form-mount action after renderer context arrives', async () => {
+	test('a form instance dispatches its form-mount action with the engine its renderer was bound to', async () => {
 		const onPush = vi.fn();
 		const engine = createRadiantFormEngine({ actions: [gtmPlugin({ tracker: { push: vi.fn() }, onPush })] });
 		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
-		const form = document.createElement('rui-form');
-		const controller = document.createElement('se-form-action-controller') as FormActionControllerElement;
-		controller.config = engine.defineForm({
+		const instance = document.createElement('se-form-instance') as FormInstanceElement;
+		instance.config = engine.defineForm({
 			id: 'engine-context-actions',
 			steps: [{ id: 'main', title: 'Main', elements: [] }],
 			actions: [
@@ -153,12 +208,11 @@ describe('Radiant form engine resolution', () => {
 				},
 			],
 		});
-		provideTestFormStore(form, new FormStore());
-		form.append(controller);
-		renderer.append(form);
+		instance.append(document.createElement('rui-form'));
+		renderer.engine = engine;
+		renderer.append(instance);
 		document.body.append(renderer);
 
-		renderer.engine = engine;
 		await vi.waitFor(() => {
 			expect(onPush).toHaveBeenCalledWith('renderer-engine-arrived', expect.any(Object), expect.any(Object));
 		});

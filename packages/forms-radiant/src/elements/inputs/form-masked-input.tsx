@@ -1,5 +1,5 @@
 import './form-masked-input.css';
-import { customElement, onUpdated, prop, query, RadiantElement } from '@ecopages/radiant';
+import { onUpdated, prop, query, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
@@ -12,8 +12,9 @@ import {
 	readMaskValue,
 } from '@/lib/mask-options';
 import type { MaskedInputFieldProps } from './form-masked-input.types';
+import { formElement } from '@/lib/define-element';
 
-@customElement('se-masked-input')
+@formElement('se-masked-input')
 export class SeMaskedInput extends RadiantElement {
 	@prop({ type: String }) name = '';
 	@prop({ type: String }) inputId = '';

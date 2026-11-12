@@ -2,7 +2,6 @@ import { userEvent } from 'vitest/browser';
 import { afterEach, expect, inject, test, vi } from 'vitest';
 import { RuiFormElement } from '@ecopages/radiant-ui/form';
 import { FormInstanceElement } from '@/components/form-instance.script';
-import { FormActionControllerElement } from '@/components/form-action-controller';
 import { FormFieldElement } from '@/elements/form-field';
 import { FormRendererElement } from '@/components/internals/form-renderer.script';
 import { createHydrationEngine } from './hydration-engine';
@@ -17,11 +16,12 @@ await Promise.all([
 	import('@/elements/inputs/form-phone-input'),
 ]);
 
-function mount({ engineAfterConnect = false } = {}) {
+function mount({ bindBeforeUpgrade = false } = {}) {
 	const engine = createHydrationEngine();
-	const renderer = new FormRendererElement();
-	if (!engineAfterConnect) renderer.engine = engine;
-	const root = document.createElement('div');
+	const owner = bindBeforeUpgrade ? document.implementation.createHTMLDocument() : document;
+	const renderer = owner.createElement('se-form-renderer') as FormRendererElement;
+	renderer.engine = engine;
+	const root = owner.createElement('div');
 	root.innerHTML = atob(inject('ssrHydrationHtml'));
 	renderer.append(root);
 	document.body.append(renderer);
@@ -67,13 +67,9 @@ test.each(['confirm', 'choice', 'accepted', 'amount'])(
 	},
 );
 
-test('a hydrated field gains its cross-field validator when the engine arrives late', async () => {
-	const { root, engine, renderer } = mount({ engineAfterConnect: true });
+test('a hydrated field has its cross-field validator from first connect when the engine is bound before upgrade', async () => {
+	const { root } = mount({ bindBeforeUpgrade: true });
 	const field = root.querySelector('se-field[name="confirm"]') as FormFieldElement;
-	await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-	expect(field.rules?.validate).toBeUndefined();
-
-	renderer.engine = engine;
 
 	await expect.poll(() => typeof field.rules?.validate).toBe('function');
 	const store = field.form.store!;
@@ -97,45 +93,36 @@ test('hydrated submit delivers the nested value tree', async () => {
 	await expect.poll(() => onSubmit.mock.calls).toEqual([[{ address: { street: 'x' } }]]);
 });
 
-test('a form without onSubmit keeps native submission', async () => {
+test('a form without onSubmit keeps native submission until a callback is set', async () => {
 	const { instance, form } = mount();
-	await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-	expect(form.onSubmit).toBeUndefined();
+	await expect.poll(() => typeof form.onSubmit).toBe('function');
 	for (const field of form.querySelectorAll('se-field')) field.remove();
 	form.action = '/native';
 	const nativeSubmit = vi.spyOn(form.querySelector('form')!, 'submit').mockImplementation(() => {});
 	form.querySelector('form')!.requestSubmit();
 	await expect.poll(() => nativeSubmit.mock.calls.length).toBe(1);
-	instance.onSubmit = vi.fn();
-	await expect.poll(() => typeof form.onSubmit).toBe('function');
-	instance.onSubmit = undefined;
-	await expect.poll(() => form.onSubmit).toBeUndefined();
+	const onSubmit = vi.fn();
+	instance.onSubmit = onSubmit;
+	form.querySelector('form')!.requestSubmit();
+	await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
+	expect(nativeSubmit).toHaveBeenCalledTimes(1);
 });
 
 test.each([false, true])('native submission waits for successful actions (%s)', async (succeeded) => {
 	const { engine, instance, form } = mount();
-	vi.spyOn(engine, 'getAction').mockReturnValue(
-		testAction('submit', ['form_submit'], async () =>
-			succeeded ? { success: true } : { success: false, shouldContinue: false },
-		),
-	);
-	const config = engine.defineForm({
+	const execute = vi.fn(async () => (succeeded ? { success: true } : { success: false, shouldContinue: false }));
+	vi.spyOn(engine, 'getAction').mockReturnValue(testAction('submit', ['form_mount', 'form_submit'], execute));
+	form.action = '/native';
+	const nativeForm = form.querySelector<HTMLFormElement>('form[data-ref="form"]')!;
+	const nativeSubmit = vi.spyOn(nativeForm, 'submit').mockImplementation(() => {});
+	const complete = vi.fn();
+	form.addEventListener('se-action-submit-complete', complete);
+	instance.config = engine.defineForm({
 		id: 'native-action-submit',
 		steps: [{ id: 'main', title: 'Main', elements: [] }],
 		actions: [{ id: 'save', $type: 'submit', endpoint: '/save' }],
 	});
-	form.action = '/native';
-	const controller = new FormActionControllerElement();
-	controller.engine = engine;
-	controller.config = config;
-	form.append(controller);
-	instance.config = config;
-	const complete = vi.fn();
-	form.addEventListener('se-action-submit-complete', complete);
-	const nativeForm = form.querySelector<HTMLFormElement>('form[data-ref="form"]')!;
-	const nativeSubmit = vi.spyOn(nativeForm, 'submit').mockImplementation(() => {});
-	await expect.poll(() => controller.form.ready).toBe(true);
-	await expect.poll(() => typeof form.onSubmit).toBe('function');
+	await expect.poll(() => execute.mock.calls.length).toBe(1);
 
 	nativeForm.requestSubmit();
 	await expect.poll(() => complete.mock.calls.length).toBe(1);

@@ -49,7 +49,7 @@ including attempts that failed validation. An attempt counts once its validation
 failed, or once its submission lifecycle has run, so the triggers of a submission
 see the attempts before it. React passes React Hook Form's `submitCount`, which counts
 this way. Radiant UI's form store keeps only a submitted flag, so Radiant counts the
-`rui-invalid` and `rui-submit` events of its form instead.
+`rui-invalid` events of its form and its finished submission lifecycles instead.
 
 ## Schema artifacts and extension
 

@@ -1,5 +1,5 @@
 import { contextSelector } from '@ecopages/radiant/context';
-import { customElement, onEvent, prop, RadiantElement } from '@ecopages/radiant';
+import { onEvent, prop, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { formatStepLabel, type WizardActionsConfig } from '@schema-engine/forms/recipes/built-in';
@@ -7,8 +7,9 @@ import type { FormMeta } from '@/lib/instance-view';
 import type { RecipeSlotContext } from '@/recipes/types';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { deriveFormSteps, deriveInitialInstance } from '@/lib/instance-view';
+import { formElement } from '@/lib/define-element';
 
-@customElement('se-wizard-actions')
+@formElement('se-wizard-actions')
 export class WizardActionsElement extends RadiantElement {
 	@prop({ type: Object }) meta?: FormMeta;
 	@prop({ type: Object }) slotConfig?: WizardActionsConfig;
@@ -35,7 +36,6 @@ export class WizardActionsElement extends RadiantElement {
 		const { labels, appearance, showStepCounter } = this.slotConfig;
 		const last = instance.currentStep >= instance.totalSteps - 1;
 		const steps = deriveFormSteps(meta, instance);
-		const form = { isSubmitting: instance.isSubmitting };
 		return (
 			<div classes={['se-wizard-actions', appearance === 'minimal' && 'se-wizard-actions--minimal']}>
 				<RuiButton
@@ -53,8 +53,13 @@ export class WizardActionsElement extends RadiantElement {
 					</span>
 				) : null}
 				<div class="se-wizard-actions__forward">
-					<RuiButton type="submit" hidden={!last} aria-label={labels.submitAriaLabel}>
-						{form.isSubmitting ? labels.submitting : labels.submit}
+					<RuiButton
+						type="submit"
+						hidden={!last}
+						prop:disabled={instance.isSubmitting}
+						aria-label={labels.submitAriaLabel}
+					>
+						{instance.isSubmitting ? labels.submitting : labels.submit}
 					</RuiButton>
 					<RuiButton
 						type="button"

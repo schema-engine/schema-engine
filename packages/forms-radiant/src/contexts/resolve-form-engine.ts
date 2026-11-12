@@ -5,11 +5,15 @@ import { formEngineContext } from '@/components/provider';
 import { peekOwningFormEngine } from '@/contexts/form-engine-owner';
 
 /**
- * Reads `formEngineContext` from the host or an ancestor.
+ * Reads `formEngineContext` from the nearest provider above the host.
+ *
+ * @remarks
+ * The request starts at the parent, so `se-form-renderer` does not read the
+ * context it provides itself and an app can provide the engine above a renderer.
  */
 export function readFormEngineFromContext(host: HTMLElement): FormEngine | undefined {
 	let engine: FormEngine | undefined;
-	host.dispatchEvent(
+	(host.parentElement ?? host).dispatchEvent(
 		new ContextSubscriptionRequestEvent(formEngineContext, (context) => {
 			engine = context.engine;
 		}),
@@ -23,18 +27,18 @@ const reportedHosts = new WeakSet<HTMLElement>();
  * Reports a host that no engine can reach, once per host.
  *
  * @remarks
- * A host under `se-form-renderer` stays quiet because the renderer's engine can
- * still arrive after the host connects, and a detached host (server rendering,
- * or before the host is attached) stays quiet because it cannot reach an
- * ancestor context yet.
+ * A detached host (server rendering, or before the host is attached) stays
+ * quiet because it cannot reach an ancestor context yet. A connected host under
+ * `se-form-renderer` reports too: the renderer must have its engine before its
+ * children connect, so a missing one is a configuration error.
  */
 function reportMissingEngine(host: HTMLElement): void {
-	if (!host.isConnected || host.closest('se-form-renderer') || reportedHosts.has(host)) {
+	if (!host.isConnected || reportedHosts.has(host)) {
 		return;
 	}
 	reportedHosts.add(host);
 	logger.warn(
-		`Could not resolve FormEngine for <${host.tagName.toLowerCase()}>: no engine reaches it. Pass an explicit \`engine\` prop or render the host inside \`se-form-renderer\`.`,
+		`Could not resolve FormEngine for <${host.tagName.toLowerCase()}>: no engine reaches it. Pass an explicit \`engine\` prop, or give the enclosing \`se-form-renderer\` its engine before the host connects.`,
 	);
 }
 

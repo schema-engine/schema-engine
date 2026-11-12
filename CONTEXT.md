@@ -44,6 +44,12 @@ inside `rui-form`; there is no global active form store. They read
 optional lifecycle wiring around that controller.
 Radiant UI registration uses flat dotted field names. Controller reads, action
 context values and errors, constraints, and submission use the engine's nested value tree.
+`se-form-instance` coordinates one submission per form instance: it owns the
+submitting state and the submission events, and runs the configured form actions
+through a plain `FormActions` object built for its config and engine, not through
+elements that find each other in the document. The app binds the client engine to
+`se-form-renderer` before the renderer's children connect, and the instance and
+fields resolve it once, at connect; they do not catch up with an engine that arrives later.
 
 ## React form state
 

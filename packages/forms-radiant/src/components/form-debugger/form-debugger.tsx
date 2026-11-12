@@ -1,6 +1,6 @@
 import { FormController, formController } from '@/adapters/radiant/controller';
 import './form-debugger.css';
-import { customElement, onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
+import { onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import { RuiBadge } from '@ecopages/radiant-ui/badge';
@@ -9,6 +9,7 @@ import type { NormalizedFormConfig } from '@schema-engine/forms';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import type { FormInstanceElement } from '@/components/form-instance.script';
 import { findAncestorElement } from '@/lib/rui-form-utils';
+import { formElement } from '@/lib/define-element';
 
 function findFormConfig(host: Node): NormalizedFormConfig | undefined {
 	const owner = findAncestorElement(host, 'se-form-instance') as FormInstanceElement | null;
@@ -238,7 +239,7 @@ export interface FormDebuggerProps {
 }
 
 /** Opt-in floating inspector for values, errors, and multi-step progress. */
-@customElement('se-form-debugger')
+@formElement('se-form-debugger')
 export class FormDebuggerElement extends RadiantElement {
 	@prop({ type: Boolean, defaultValue: false }) defaultOpen = false;
 	@prop({ type: Boolean, defaultValue: true }) showStepDetails = true;

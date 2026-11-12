@@ -1,7 +1,8 @@
-import { customElement, onUpdated, prop, RadiantElement } from '@ecopages/radiant';
+import { onUpdated, prop, RadiantElement } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
+import { formElement } from '@/lib/define-element';
 
 /**
  * Visibility host for one authored step.
@@ -18,7 +19,7 @@ import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/f
  *
  * @element se-form-step
  */
-@customElement('se-form-step')
+@formElement('se-form-step')
 export class FormStepElement extends RadiantElement {
 	@prop({ type: Number, defaultValue: 0 }) stepIndex = 0;
 	@prop({ type: Boolean, defaultValue: false }) isWizard = false;

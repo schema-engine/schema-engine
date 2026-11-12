@@ -1,12 +1,13 @@
-import { customElement, prop, RadiantElement, state } from '@ecopages/radiant';
+import { prop, RadiantElement, state } from '@ecopages/radiant';
 import { RuiAlert, RuiAlertIcon } from '@ecopages/radiant-ui/alert';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import type { SubmissionAlertProps } from './form-submission-alert.types';
+import { formElement } from '@/lib/define-element';
 
 type AlertStatus = 'idle' | 'pending' | 'success' | 'error';
 
-@customElement('se-submission-alert')
+@formElement('se-submission-alert')
 export class SeSubmissionAlert extends RadiantElement {
 	@prop({ type: Object }) config!: SubmissionAlertProps;
 
@@ -40,25 +41,12 @@ export class SeSubmissionAlert extends RadiantElement {
 			const custom = event as CustomEvent<{ succeeded?: boolean }>;
 			this.setStatus(custom.detail?.succeeded !== false ? 'success' : 'error');
 		};
-		const onRuiSubmit = () => {
-			const hasActionController = !!form.querySelector('se-form-action-controller');
-			if (hasActionController) {
-				return;
-			}
-			const config = this.config;
-			if (config?.showOn?.includes('pending')) {
-				this.setStatus('pending');
-			} else {
-				this.setStatus('success');
-			}
-		};
 		const onInvalid = () => {
 			this.setStatus('error');
 		};
 
 		form.addEventListener('se-action-submit-start', onSubmitStart);
 		form.addEventListener('se-action-submit-complete', onSubmitComplete);
-		form.addEventListener('rui-submit', onRuiSubmit);
 		form.addEventListener('rui-invalid', onInvalid);
 		this.registerCleanupCallback(() => {
 			if (this.dismissTimer) {
@@ -66,7 +54,6 @@ export class SeSubmissionAlert extends RadiantElement {
 			}
 			form.removeEventListener('se-action-submit-start', onSubmitStart);
 			form.removeEventListener('se-action-submit-complete', onSubmitComplete);
-			form.removeEventListener('rui-submit', onRuiSubmit);
 			form.removeEventListener('rui-invalid', onInvalid);
 		});
 	}

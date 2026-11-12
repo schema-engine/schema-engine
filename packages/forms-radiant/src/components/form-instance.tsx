@@ -5,6 +5,7 @@ import { getViewRecipe } from '@schema-engine/forms/recipes';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
 import { collectFormInitialValues, ConfiguredRuiForm } from '@/adapters/radiant/rui-form-shell';
 import { flattenValues } from '@/adapters/radiant/controller/values';
+import type { FormProviderProps } from '@/adapters/types';
 
 /** Registers `<se-form-instance>` when this view is imported. */
 export { FormInstanceElement } from './form-instance.script';
@@ -16,8 +17,9 @@ export { FormInstanceElement } from './form-instance.script';
  * View-owned shell: the `ConfiguredRuiForm` tree is authored as light-DOM
  * children so SSR expands it. The recipe renderer receives the live `engine`,
  * while the enclosing `se-form-renderer` publishes it to this host through
- * `formEngineContext`. The element re-attaches `onSubmit` through a `prop:`
- * binding, mirroring `RuiForm`'s `prop:resolver`.
+ * `formEngineContext`, which is how an element hydrated from server markup gets
+ * it. The element re-attaches `engine`, `onSubmit`, `onChange` and `onAction`
+ * through `prop:` bindings, mirroring `RuiForm`'s `prop:resolver`.
  */
 export function FormInstance({
 	config,
@@ -25,7 +27,7 @@ export function FormInstance({
 	defaultValues,
 	onSubmit,
 	onChange,
-	isSubmitting = false,
+	onAction,
 	children,
 }: {
 	config: NormalizedFormConfig;
@@ -33,16 +35,17 @@ export function FormInstance({
 	defaultValues?: Record<string, unknown>;
 	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
 	onChange?: (data: Record<string, unknown>) => void;
-	isSubmitting?: boolean;
+	onAction?: FormProviderProps['onAction'];
 	children?: JsxRenderable;
 }): JsxRenderable {
 	const initialValues = collectFormInitialValues(config, defaultValues);
 	return jsx('se-form-instance', {
 		config,
 		defaultValues,
+		'prop:engine': engine,
 		'prop:onSubmit': onSubmit,
 		'prop:onChange': onChange,
-		isSubmitting,
+		'prop:onAction': onAction,
 		children: (
 			<ConfiguredRuiForm
 				config={config}
