@@ -42,10 +42,15 @@ export class FormStepElement extends RadiantElement {
 		this.syncHidden();
 	}
 
+	/**
+	 * @remarks
+	 * The instance publishes before it has resolved its engine, with `isWizard` false, so a non-wizard value is
+	 * ignored rather than unhiding the steps the server rendered hidden.
+	 */
 	private syncHidden(): void {
 		const { instance } = this;
-		if (!instance) return;
-		this.hiddenStep = instance.isWizard && instance.currentStep !== this.stepIndex;
+		if (!instance?.isWizard) return;
+		this.hiddenStep = instance.currentStep !== this.stepIndex;
 	}
 }
 
