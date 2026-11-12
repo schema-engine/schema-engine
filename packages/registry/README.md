@@ -2,7 +2,12 @@
 
 Shared registry primitives for building typed registration systems across the Schema Engine workspace.
 
-This package provides `BaseRegistry` for storing and retrieving typed registrations by `$type`. Use the `ComponentRegistration` type when entries must include a render function.
+This package provides one registry mechanism for typed registrations keyed by `$type`:
+
+- `createRegistry(kind, registrations)` builds a read-only, frozen registry from a list. Every package that stores registrations (the forms engine, `@schema-engine/actions`) uses it.
+- `BaseRegistry` is the mutable opt-in for runtime plugin systems that register after construction.
+
+Use the `ComponentRegistration` type when entries must include a render function.
 
 It is used by higher-level packages such as `@schema-engine/forms` and `@schema-engine/actions`, but it is also usable on its own for plugin systems and internal extension points.
 
@@ -44,9 +49,43 @@ import type { ComponentRegistration } from '@schema-engine/registry';
 type WidgetRegistration = ComponentRegistration<string, { title: string }, { id: string }>;
 ```
 
-## Using `BaseRegistry`
+## Using `createRegistry`
 
-Extend `BaseRegistry` when you need a typed lookup table keyed by `$type`.
+`createRegistry(kind, registrations)` builds a registry once, from a list.
+
+```typescript
+import * as z from 'zod/mini';
+import { createRegistry } from '@schema-engine/registry';
+import type { BaseRegistration } from '@schema-engine/registry';
+
+const defaults: BaseRegistration[] = [
+	{ $type: 'card', schema: z.object({ title: z.string() }), metadata: { name: 'Card' } },
+];
+const custom: BaseRegistration = {
+	$type: 'card',
+	schema: z.object({ title: z.string(), tone: z.string() }),
+	metadata: { name: 'Tonal Card' },
+};
+
+const widgets = createRegistry('Widget', [...defaults, custom]);
+
+widgets.get('card')?.metadata.name; // 'Tonal Card'
+widgets.has('card');
+widgets.all();
+widgets.keys();
+widgets.size;
+```
+
+- Last wins, silently: a later registration with the same `$type` replaces the earlier one, so `[...defaults, custom]` is how you override. The key keeps its first position.
+- Each `schema` is checked at build. A value without `~standard.validate` throws `Widget 'card' schema must implement Standard Schema (~standard.validate).`, naming the `kind` and the `$type`.
+- The result is frozen and has no `register` or `clear`. `all()` and `keys()` return frozen arrays, and the registrations are frozen in place (shallow), so one registration object can be shared by several registries. Build a new registry from a new list to change the contents.
+- Type the result with `ReadOnlyRegistry<TRegistration>`.
+
+`assertStandardSchema(schema, context)` is exported for code that needs the same check outside a registry.
+
+## Using `BaseRegistry` (mutable opt-in)
+
+Extend `BaseRegistry` only when registrations arrive at runtime, for example a plugin system. It is mutable, warns when `register` overrides a key, and does not check schemas.
 
 ```typescript
 import * as z from 'zod/mini';
@@ -94,7 +133,7 @@ Available operations:
 
 ## Storing renderable registrations
 
-Extend `BaseRegistry` with the `ComponentRegistration` type when registrations must include a `render` function.
+`createRegistry` and `BaseRegistry` both accept the `ComponentRegistration` type when registrations must include a `render` function. This example uses the mutable `BaseRegistry`.
 
 ```typescript
 import * as z from 'zod/mini';
@@ -129,7 +168,8 @@ export * from '@schema-engine/registry';
 
 Main exports:
 
-- `BaseRegistry`
+- `createRegistry`, `assertStandardSchema`, `ReadOnlyRegistry`
+- `BaseRegistry` (mutable)
 - `BaseRegistration`
 - `ComponentRegistration`
 - `ComponentMetadata`
@@ -149,9 +189,9 @@ type ElementId = Brand<string, 'Element'>;
 const id: ElementId = 'text';
 ```
 
-`getAll()` and `getAllKeys()` return fresh arrays. Mutating them does not change
+`BaseRegistry.getAll()` and `getAllKeys()` return fresh arrays. Mutating them does not change
 the registry; registration objects themselves are shared references. `BaseRegistry`
-stores schemas as supplied; validation belongs to the consuming domain boundary.
+stores schemas as supplied; use `createRegistry` when the schemas must be checked.
 
 The published registry uses a caret range for its logger dependency. Copied
 widget sources live in the separate, private `registry-files` workspace.

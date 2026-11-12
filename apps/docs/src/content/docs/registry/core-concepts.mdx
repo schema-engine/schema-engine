@@ -13,9 +13,35 @@ Registry schemas use the provider-neutral `StandardSchemaV1` contract. The
 examples can be authored with Zod Mini, Zod, Valibot, Effect Schema, or another
 Standard Schema implementation.
 
-## BaseRegistry
+## createRegistry
 
-The abstract base class that provides common registration, retrieval, and management functionality. All registries in the schema-engine ecosystem extend this class.
+Builds a read-only registry from a list. Every package that stores registrations uses it.
+
+```typescript
+function createRegistry<TRegistration extends BaseRegistration>(
+	kind: string,
+	registrations: readonly TRegistration[],
+): ReadOnlyRegistry<TRegistration>;
+
+interface ReadOnlyRegistry<TRegistration extends BaseRegistration> {
+	readonly kind: string;
+	readonly size: number;
+	get(key: string): TRegistration | undefined;
+	has(key: string): boolean;
+	all(): readonly TRegistration[];
+	keys(): readonly string[];
+}
+```
+
+| Behavior         | Description                                                                                     |
+| ---------------- | ----------------------------------------------------------------------------------------------- |
+| Last wins        | A later registration with the same `$type` replaces the earlier one, with no warning.           |
+| Checked at build | A schema without `~standard.validate` throws, naming the `kind` and the registration's `$type`. |
+| Frozen           | No `register` or `clear`. The registry, its arrays and its registrations are frozen.            |
+
+## BaseRegistry (mutable opt-in)
+
+The abstract base class for plugin systems that register at runtime. Prefer `createRegistry` unless you need `register` after construction.
 
 ```typescript
 abstract class BaseRegistry<TKey extends string, TValue extends BaseRegistration> {
@@ -46,8 +72,7 @@ abstract class BaseRegistry<TKey extends string, TValue extends BaseRegistration
 
 ## Renderable registrations
 
-Extend `BaseRegistry<string, WidgetRegistration>` with a
-`ComponentRegistration` type when values must include a render function.
+Use a `ComponentRegistration` type with `createRegistry`, or with `BaseRegistry<string, WidgetRegistration>`, when values must include a render function.
 The removed `ComponentRegistry` class added no runtime behavior.
 
 ## BaseRegistration
