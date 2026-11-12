@@ -80,3 +80,15 @@ test('a field connected to an already bound engine drops the first engine valida
 	await expect.poll(() => validate(field, 'x@b.test')).toBe(true);
 	expect(await validate(field, 'x@a.test')).toBe('Use @b.test');
 });
+
+test('a client-rendered derived validator stays a single function when the engine arrives', async () => {
+	const { renderer, field } = mountField();
+	const rendered = () => true;
+	field.rules = { validate: rendered };
+
+	renderer.engine = engineRequiring('@a.test');
+
+	await expect.poll(() => field.rules?.validate).not.toBe(rendered);
+	expect(typeof field.rules?.validate).toBe('function');
+	expect(await validate(field, 'x@b.test')).toBe('Use @a.test');
+});
