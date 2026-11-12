@@ -1,12 +1,4 @@
-import {
-	customElement,
-	onUpdated,
-	query,
-	RadiantElement,
-	registerSsrPreparationCallback,
-	state,
-	prop,
-} from '@ecopages/radiant';
+import { onUpdated, query, RadiantElement, registerSsrPreparationCallback, state, prop } from '@ecopages/radiant';
 import type { JSX_PROPS } from '@ecopages/jsx';
 import { getViewRecipe } from '@schema-engine/forms/recipes';
 import { provideContext, type ContextProvider } from '@ecopages/radiant/context';
@@ -25,6 +17,7 @@ import { logger } from '@/lib/logger';
 import type { FormProviderProps } from '@/adapters/types';
 import { FormController } from '@/adapters/radiant/controller';
 import { FormActions, type SubmissionOutcome } from '@/adapters/radiant/form-actions';
+import { formElement } from '@/lib/define-element';
 
 /** Properties of `<se-form-instance>`; `FormInstance` sets the function and engine ones through `prop:` bindings. */
 export interface FormInstanceProps {
@@ -42,7 +35,7 @@ export interface SubmissionCompleteDetail extends SubmissionOutcome {
 }
 
 /** Behavior and engine navigation state for one composed form. */
-@customElement('se-form-instance')
+@formElement('se-form-instance')
 export class FormInstanceElement extends RadiantElement {
 	declare readonly [JSX_PROPS]?: FormInstanceProps;
 

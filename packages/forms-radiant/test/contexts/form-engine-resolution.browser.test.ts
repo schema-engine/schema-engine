@@ -3,6 +3,7 @@ import { FormStore, type FieldValues } from '@ecopages/radiant-ui/form';
 import { provideTestFormStore } from '../adapters/test-form';
 import { gtmPlugin } from '@schema-engine/forms';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
+import { formEngineContext } from '@/components/provider';
 import { formInstanceContext } from '@/contexts/form-instance-context';
 import { FormRendererElement } from '@/components/internals/form-renderer.script';
 import { FormInstanceElement } from '@/components/form-instance.script';
@@ -132,6 +133,26 @@ describe('Radiant form engine resolution', () => {
 		expect(instance.engine).toBe(engineA);
 		const reports = warn.mock.calls.filter((call) => String(call.at(-1)).includes('engine changed after'));
 		expect(reports).toHaveLength(1);
+	});
+
+	test('a renderer without an engine resolves one that an ancestor answers for the context', async () => {
+		const engine = createRadiantFormEngine();
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const provider = document.createElement('div');
+		provider.addEventListener('context-subscription-request', (event) => {
+			if (!(event instanceof ContextSubscriptionRequestEvent) || event.context !== formEngineContext) return;
+			event.stopPropagation();
+			event.callback({ engine }, () => {});
+		});
+		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
+		const instance = document.createElement('se-form-instance') as FormInstanceElement;
+		instance.config = twoStepForm(engine);
+		renderer.append(instance);
+		provider.append(renderer);
+		document.body.append(provider);
+
+		await vi.waitFor(() => expect(instance.engine).toBe(engine));
+		expect(warn).not.toHaveBeenCalled();
 	});
 
 	test('a form instance with no engine in its tree reports it and does not pick the only created engine', async () => {

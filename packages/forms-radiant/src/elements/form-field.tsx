@@ -1,4 +1,3 @@
-import { customElement } from '@ecopages/radiant';
 import { RuiFieldElement, type RuiFieldProps } from '@ecopages/radiant-ui/field';
 import type { FieldRules } from '@ecopages/radiant-ui/form';
 import { jsx, type JsxCustomElementAttributes } from '@ecopages/jsx';
@@ -7,9 +6,10 @@ import { readHydratedRules } from '@/components/internals/field-rule-hydrator';
 import type { ElementGridConfig } from '@schema-engine/forms/schemas';
 import { resolveElementRules, toFieldRules, type FieldRulesSource } from '@/lib/field-rules';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
+import { formElement } from '@/lib/define-element';
 
 /** RuiField's registration and presentation, with scoped programmatic form access. */
-@customElement('se-field')
+@formElement('se-field')
 export class FormFieldElement extends RuiFieldElement {
 	@formController form!: FormController;
 

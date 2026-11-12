@@ -5,11 +5,15 @@ import { formEngineContext } from '@/components/provider';
 import { peekOwningFormEngine } from '@/contexts/form-engine-owner';
 
 /**
- * Reads `formEngineContext` from the host or an ancestor.
+ * Reads `formEngineContext` from the nearest provider above the host.
+ *
+ * @remarks
+ * The request starts at the parent, so `se-form-renderer` does not read the
+ * context it provides itself and an app can provide the engine above a renderer.
  */
 export function readFormEngineFromContext(host: HTMLElement): FormEngine | undefined {
 	let engine: FormEngine | undefined;
-	host.dispatchEvent(
+	(host.parentElement ?? host).dispatchEvent(
 		new ContextSubscriptionRequestEvent(formEngineContext, (context) => {
 			engine = context.engine;
 		}),

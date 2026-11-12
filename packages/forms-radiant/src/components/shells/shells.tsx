@@ -1,7 +1,7 @@
 import type { JsxRenderable } from '@ecopages/jsx';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import { contextSelector } from '@ecopages/radiant/context';
-import { customElement, prop, RadiantElement } from '@ecopages/radiant';
+import { prop, RadiantElement } from '@ecopages/radiant';
 import type { FormMeta } from '@/lib/instance-view';
 import { getSlotConfig } from '@schema-engine/forms/recipes';
 import {
@@ -16,6 +16,7 @@ import type { FormShellProps } from '@/recipes/types';
 import './card-shell.css';
 import './hero-shell.css';
 import './split-screen-shell.css';
+import { formElement } from '@/lib/define-element';
 
 export function StackShell({ slots }: FormShellProps): JsxRenderable {
 	return (
@@ -119,7 +120,7 @@ export function SplitScreenShell({ slots, viewConfig, meta }: FormShellProps): J
 	);
 }
 
-@customElement('se-split-screen-side')
+@formElement('se-split-screen-side')
 export class SplitScreenSideElement extends RadiantElement {
 	@prop({ type: String }) sideContent = '';
 	@prop({ type: Boolean }) hasHeader = false;

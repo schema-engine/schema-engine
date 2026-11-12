@@ -1,63 +1,62 @@
 import { isServer } from '@ecopages/radiant/is-server';
-import type { FormRendererElement } from '@schema-engine/forms-radiant';
+import { ContextEventsTypes, ContextSubscriptionRequestEvent } from '@ecopages/radiant/context';
 import type { formEngine } from '@/lib/form-engine-setup';
 
 const PREVIEW_ENGINE_BINDING = Symbol.for('@schema-engine/docs.preview-engine-binding');
-const PREVIEW_SELECTOR = '.docs-form-renderer-preview';
+
+type DocsEngine = typeof formEngine;
+
+/** Imports the engine module with the form elements deferred, so the server-rendered previews stay inert until the engine can be provided. */
+async function loadEngine() {
+	const { deferFormElements } = await import('@schema-engine/forms-radiant/define');
+	deferFormElements();
+	const [{ formEngine: engine }, { formEngineContext }] = await Promise.all([
+		import('@/lib/form-engine-setup'),
+		import('@schema-engine/forms-radiant'),
+	]);
+	return { engine, formEngineContext };
+}
 
 /**
- * Moves the server-rendered children of each preview out of the tree they are in.
+ * Answers every form engine request that reaches the document with the docs engine.
  *
  * @remarks
- * The form hosts upgrade, parent first, as soon as their elements are defined
- * and attached to the live document, and each resolves its engine once, when it
- * connects. A parked preview cannot upgrade, so the engine can be assigned to
- * its renderer first.
+ * Form hosts resolve their engine once, when they connect, from the context above
+ * them. The document is the provider, so a preview resolves it at whatever moment it
+ * connects, including when the router rebuilds a page's previews while swapping it in.
  */
-function parkPreviews(root: ParentNode): DocumentFragment[] {
-	return Array.from(root.querySelectorAll(PREVIEW_SELECTOR), (container) => {
-		const parked = container.ownerDocument.createDocumentFragment();
-		parked.append(...container.childNodes);
-		return parked;
-	});
-}
-
-/** Binds the engine to each parked renderer, then returns the previews to the containers in the live document. */
-function restorePreviews(parked: DocumentFragment[], engine: typeof formEngine | undefined): void {
-	const containers = document.querySelectorAll(PREVIEW_SELECTOR);
-	parked.forEach((fragment, index) => {
-		for (const renderer of fragment.querySelectorAll<FormRendererElement>('se-form-renderer')) {
-			if (engine) renderer.engine = engine;
-		}
-		containers[index]?.append(fragment);
+function provideEngine(engine: DocsEngine, formEngineContext: unknown): void {
+	document.addEventListener(ContextEventsTypes.SUBSCRIPTION_REQUEST, (event) => {
+		if (!(event instanceof ContextSubscriptionRequestEvent) || event.context !== formEngineContext) return;
+		event.stopPropagation();
+		event.markHandled();
+		event.callback({ engine }, () => {});
 	});
 }
 
 /**
- * Binds the docs engine to every form preview, on first load and after each client-side navigation.
+ * Provides the docs engine to every form preview, on first load and after each client-side navigation.
  *
  * @remarks
- * Live engine objects are not serialized into server-rendered previews, and
- * importing the engine module defines the form elements. So previews are parked
- * before that import starts and restored with the engine bound, which is also how
- * the incoming page's previews are handled: they are parked in the incoming
- * document before it is swapped in, and restored once the swap is done.
+ * Live engine objects are not serialized into server-rendered previews, and the
+ * form elements would upgrade them as soon as they are defined. So the elements
+ * are defined only after the engine exists and the document provides it ("provide,
+ * then define"); the server markup stays visible and untouched meanwhile. A page
+ * navigated to afterwards finds the provider already in place. If the engine cannot
+ * load, the server markup stays as it is.
  */
 export function installPreviewEngineBinding(): void {
 	if (isServer || typeof document === 'undefined' || PREVIEW_ENGINE_BINDING in document) return;
 	Reflect.set(document, PREVIEW_ENGINE_BINDING, true);
 
-	let parked = parkPreviews(document);
-	const engine = import('@/lib/form-engine-setup').then((module) => module.formEngine);
-	engine.then(
-		(resolved) => restorePreviews(parked, resolved),
-		() => restorePreviews(parked, undefined),
+	loadEngine().then(
+		async ({ engine, formEngineContext }) => {
+			const { defineFormElements } = await import('@schema-engine/forms-radiant/define');
+			provideEngine(engine, formEngineContext);
+			defineFormElements();
+		},
+		(error: unknown) => {
+			console.error('The docs form engine failed to load; form previews stay as server-rendered.', error);
+		},
 	);
-
-	document.addEventListener('eco:before-swap', (event) => {
-		parked = parkPreviews((event as CustomEvent<{ newDocument: Document }>).detail.newDocument);
-	});
-	document.addEventListener('eco:after-swap', () => {
-		void engine.then((resolved) => restorePreviews(parked, resolved));
-	});
 }

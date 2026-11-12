@@ -1,10 +1,11 @@
 import './form-input-otp.css';
-import { customElement, onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
+import { onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
 import { FieldGroup } from '../field-group';
 import type { InputOTPFieldProps } from './form-input-otp.types';
+import { formElement } from '@/lib/define-element';
 
 function sanitizeChar(value: string, pattern: 'numeric' | 'alphanumeric') {
 	const char = value.slice(-1);
@@ -14,7 +15,7 @@ function sanitizeChar(value: string, pattern: 'numeric' | 'alphanumeric') {
 	return /^[a-zA-Z0-9]$/.test(char) ? char : '';
 }
 
-@customElement('se-input-otp')
+@formElement('se-input-otp')
 export class SeInputOtp extends RadiantElement {
 	@prop({ type: String }) name = '';
 	@prop({ type: Number, defaultValue: 6 }) length = 6;

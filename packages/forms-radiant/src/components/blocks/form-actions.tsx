@@ -1,10 +1,11 @@
 import { contextSelector } from '@ecopages/radiant/context';
-import { customElement, prop, RadiantElement } from '@ecopages/radiant';
+import { prop, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { type FormActionsConfig } from '@schema-engine/forms/recipes/built-in';
 import type { RecipeSlotContext } from '@/recipes/types';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
+import { formElement } from '@/lib/define-element';
 
 /**
  * Submit-only action bar for single-step recipes.
@@ -17,7 +18,7 @@ import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/f
  *
  * @element se-form-actions
  */
-@customElement('se-form-actions')
+@formElement('se-form-actions')
 export class FormActionsElement extends RadiantElement {
 	@prop({ type: Object }) slotConfig?: FormActionsConfig;
 

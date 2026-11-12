@@ -1,11 +1,4 @@
-import {
-	customElement,
-	onUpdated,
-	prop,
-	RadiantElement,
-	registerSsrPreparationCallback,
-	state,
-} from '@ecopages/radiant';
+import { onUpdated, prop, RadiantElement, registerSsrPreparationCallback, state } from '@ecopages/radiant';
 import { provideContext, type ContextProvider } from '@ecopages/radiant/context';
 import type { JsxRenderable } from '@ecopages/jsx';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
@@ -13,6 +6,7 @@ import type { FormProviderProps } from '@/adapters/types';
 import { logger } from '@/lib/logger';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import { formEngineContext, type FormEngineContextValue } from '../provider';
+import { formElement } from '@/lib/define-element';
 
 export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
 	className?: string;
@@ -34,7 +28,7 @@ export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
  *
  * @element se-form-renderer
  */
-@customElement('se-form-renderer')
+@formElement('se-form-renderer')
 export class FormRendererElement extends RadiantElement {
 	@state private boundEngine?: FormEngine;
 	private publishedEngine?: FormEngine;
