@@ -1,7 +1,9 @@
 import { describe, inject, test } from 'vitest';
 import {
+	expectSsrAreasAcceptance,
 	expectSsrGridAcceptance,
 	expectSsrNestedWidthsAcceptance,
+	expectSsrSteppedAcceptance,
 	expectSsrWidthsAcceptance,
 } from '../../../../test-utils/ssr-grid-acceptance';
 
@@ -17,5 +19,13 @@ describe('SSR grid layout acceptance', () => {
 	test('a fieldset and an array row lay their children out on their own twelve tracks', async () => {
 		const html = inject('ssrNestedWidthsHtml').replaceAll('<\\/script>', '</script>');
 		await expectSsrNestedWidthsAcceptance(html, inject('ssrLayoutCompiled'), ['Nest', 'Row']);
+	});
+
+	test('A drawn layout places fields', async () => {
+		await expectSsrAreasAcceptance(inject('ssrAreasHtml'), inject('ssrLayoutCompiled'));
+	});
+
+	test('The template changes by breakpoint and each wizard step draws its own template', async () => {
+		await expectSsrSteppedAcceptance(inject('ssrSteppedHtml'), inject('ssrLayoutCompiled'));
 	});
 });

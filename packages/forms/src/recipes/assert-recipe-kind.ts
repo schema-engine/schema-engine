@@ -5,8 +5,9 @@ import type { RecipeKind } from './types';
  * wizard recipes must declare `actions`.
  *
  * @remarks
- * Runs in `defineRecipeSpec` for an early failure and in `buildFormEngine` for every
- * registration, including hand-written ones with a non-Zod schema.
+ * Runs in `defineRecipeSpec` for an early failure and in `buildFormEngine` for each
+ * winning registration (a recipe overridden later in the list is skipped), including
+ * hand-written ones with a non-Zod schema.
  */
 export function assertRecipeKindSlots(recipe: {
 	readonly $type: string;

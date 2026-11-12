@@ -224,6 +224,26 @@ the same keys work on a container's children. Raw `column`, `row` and
 `placeSelf` remain the escape hatch; `column: 2` means the grid line 2, not a
 span.
 
+Layouts that width and offset cannot say (a field spanning rows beside stacked
+fields) are drawn with `areas`: `grid: { areas: ['a a a b b b', 'a a a c c c', 'd d e e e e'] }`
+(or a record keyed `default`, `sm` ... `2xl`, which must include `default`), and
+each field claims a name with `grid: { area: 'a' }`, also responsive through
+`grid.responsive`. `.` is an empty cell and the column count comes from the
+rows. A step takes its own `grid`, which replaces the form's for that step.
+`validateForm` rejects ragged or non-rectangular templates, an `area` that is not
+in the template at a breakpoint, a template area no field claims, `areas` beside
+`columns` or `minColumnWidth` or width fields, an `area` beside `width`,
+`offset`, `column` or `row`, and an `area` on a container's child (containers
+take no `areas`). Names are ASCII CSS identifiers and cannot be `auto`, `span`,
+`none`, `default` or a CSS-wide keyword; the exported JSON Schema carries the
+same pattern. A field with no `area` is auto-placed, two fields may claim one
+area (for fields never shown together), a field hidden at a breakpoint need not
+be in that breakpoint's template, and raw `column`/`row` on other fields work as
+usual. A step with no fields under a form-level `areas` needs `grid: {}`, or
+validation reports the template areas as unclaimed. `stepGrid(config, step)` is
+the one place the step-replaces-form rule lives; renderers and validation both
+use it.
+
 This applies to any element rendering a `.se-form-field` host with the engine's
 theme id — not only inputs. Renderers expose a helper for elements that build
 their own container (`useFieldHost` in React, `mergeFieldGridHost` in Radiant). A custom container whose children use `width` or `offset` must lay them out on its own grid with `useChildGridProps` (React) or `mergeChildrenGridHost` (Radiant). Every engine exposes a frozen
@@ -354,8 +374,9 @@ See [engine internals](src/engine/README.md#schema-artifacts-and-extension).
 
 `templatePath` in `@schema-engine/forms/lib/path-values` removes numeric array indices from rendered paths for constraint declaration lookup, alongside `expandFieldTemplatePaths`.
 
-Engine construction builds registration Maps directly and validates each supplied
-schema once at that boundary. Form action results add optional browser redirects
+Engine construction stores elements, recipes and actions in read-only registries
+from `@schema-engine/registry` (last registration wins, no override warning) and
+checks each winning schema once at that boundary. It stores frozen shallow copies taken at build and leaves the registration objects you passed untouched; changes to them afterwards do not reach the engine. Form action results add optional browser redirects
 to the generic result; see [actions](./src/actions/README.md).
 
 ## Pre-publish API

@@ -46,7 +46,7 @@ export type {
 	FormEngineSchemaMetadata,
 	SchemaMetadataEntry,
 } from './engine';
-export { ElementRegistry, RecipeRegistry } from './registries';
+export type { ElementRegistry, RecipeRegistry, ActionRegistrationRegistry } from './registries';
 export type {
 	BuilderActionBaseContext,
 	ElementMetadata,
@@ -63,6 +63,7 @@ export {
 	DEFAULT_WIZARD_RECIPE,
 	FormValidationError,
 	getRenderableSteps,
+	stepGrid,
 	assertFormEngine,
 	validateElementConfig,
 	validateFormConfig,

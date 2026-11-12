@@ -1,11 +1,11 @@
-/**
- * Registries module - Registry system for form engine components
- *
- * All registries extend BaseRegistry and provide type-safe storage
- * for elements and recipes.
- *
- * Note: ActionRegistry is imported from @schema-engine/actions
- */
+import type { ReadOnlyRegistry } from '@schema-engine/registry';
+import type { AnyActionRegistration, AnyElementRegistration, AnyRecipeRegistration } from '@/types/registration';
 
-export * from './element-registry';
-export * from './recipe-registry';
+/** The engine's read-only store of element registrations. */
+export type ElementRegistry = ReadOnlyRegistry<AnyElementRegistration>;
+
+/** The engine's read-only store of view recipe registrations. */
+export type RecipeRegistry = ReadOnlyRegistry<AnyRecipeRegistration>;
+
+/** The engine's read-only store of action registrations. */
+export type ActionRegistrationRegistry = ReadOnlyRegistry<AnyActionRegistration>;

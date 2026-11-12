@@ -11,16 +11,17 @@
  * import { ActionDispatcher, ActionRegistry } from '@schema-engine/actions';
  *
  * const logger = new Logger('[my-app]');
- * const registry = new ActionRegistry<{ formId: string }, 'submit' | 'change'>();
- * registry.register({
- *   $type: 'log',
- *   schema: z.object({ id: z.string(), $type: z.literal('log'), message: z.string() }),
- *   metadata: { name: 'Log', defaultTriggers: ['change'] },
- *   execute: async (ctx) => {
- *     logger.info(ctx.config.message, ctx);
- *     return { success: true };
+ * const registry = new ActionRegistry<{ formId: string }, 'submit' | 'change'>([
+ *   {
+ *     $type: 'log',
+ *     schema: z.object({ id: z.string(), $type: z.literal('log'), message: z.string() }),
+ *     metadata: { name: 'Log', defaultTriggers: ['change'] },
+ *     execute: async (ctx) => {
+ *       logger.info(ctx.config.message, ctx);
+ *       return { success: true };
+ *     },
  *   },
- * });
+ * ]);
  *
  * const dispatcher = new ActionDispatcher(registry);
  * await dispatcher.dispatch({
