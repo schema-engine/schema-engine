@@ -80,7 +80,7 @@ Use `useFormEngine`, `useFormInstanceActions`, `useControlledFormElement`, `useF
 
 `useControlledFormElement(config)` binds a field to the selected adapter and returns its value, error, handlers, control attributes, and field chrome attributes. Spread `fieldProps` onto the control, `labelProps` onto its label, and `errorProps` onto its error message when present. These attributes describe semantics and state; applications choose their styling.
 
-The runtime exposes `se-*` class hooks and grid variables. Consumers do not need to scan the package's built files with Tailwind; applications own their styles, and registry components can bring their own UI library and styling dependencies. Use `useFieldHost` for the grid host of custom elements. A custom container whose children use `width` or `offset` spreads `useChildGridProps(elements)` on the wrapper of its `FormElements`, so the children lay out on the container's own grid.
+The runtime exposes `se-*` class hooks and grid variables. Consumers do not need to scan the package's built files with Tailwind; applications own their styles, and registry components can bring their own UI library and styling dependencies. Use `useFieldHost` for the grid host of custom elements. A custom container whose children use `width` or `offset` spreads `useChildGridProps(elements)` on the wrapper of its `FormElements`, so the children lay out on the container's own grid. Each step is laid out on its own `grid` when it has one, else on the form's.
 
 ## Engine-scoped config types
 

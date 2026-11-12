@@ -126,10 +126,10 @@ A grid whose fields use `width` or `offset` is laid out on 12 tracks, so each
 name is a whole number of tracks (`half` is 6, `third` is 4, `quarter` is 3), and
 a field in that grid that sets no width fills the row. Fieldsets and array rows
 lay out their children on their own grid, so `width` and `offset` work on a
-container's children the same way, and the step's `columns` do not conflict
+container's children the same way, and the enclosing grid's `columns` do not conflict
 with them.
 
-Validation enforces the two ways of placing a field:
+Validation enforces these rules for named widths:
 
 - A form grid that sets `columns` or `minColumnWidth` (at any breakpoint) cannot
   contain a top-level field that uses `width` or `offset`: a grid uses areas,
@@ -170,7 +170,9 @@ is also responsive through `grid.responsive`, so a field can claim a different
 area when the template changes.
 
 A step takes its own `grid`, which replaces the form's grid for that step. An
-areas template names specific fields, so each wizard step draws its own:
+areas template names specific fields, so each wizard step draws its own. A
+form-level `areas` applies to every step without a `grid` of its own, and each of
+those steps must then claim every area in it:
 
 ```ts
 {
@@ -201,9 +203,10 @@ Validation names the path of whatever it rejects:
 - `areas` cannot be mixed with `columns` or `minColumnWidth`, or with `width` or
   `offset` on the grid's fields: a grid uses areas, widths or columns.
 - A field cannot set `area` together with `width`, `offset`, `column` or `row`.
-- Names are CSS identifiers (`street`, `side-2`), and `auto`, `span` and the CSS
-  keywords are reserved. A name is written into a CSS custom property, so
-  anything that is not an identifier is rejected.
+- Names are ASCII CSS identifiers (`street`, `side-2`) and cannot be `auto`,
+  `span`, `none`, `default`, `inherit`, `initial`, `unset`, `revert` or
+  `revert-layer`. A name is written into a CSS custom property, so anything
+  that is not an identifier is rejected.
 - Fieldsets and array rows lay their children out without `areas`, so `area` is
   rejected on a container's children. Use `width` and `offset` there.
 

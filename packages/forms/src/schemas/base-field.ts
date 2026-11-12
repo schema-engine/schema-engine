@@ -44,7 +44,8 @@ export const GridGapValueSchema = z
 
 /**
  * Words that are not valid grid area names: `grid-area` reads `auto` and `span`
- * as placement keywords, and the CSS-wide keywords reset a declaration.
+ * as placement keywords, the CSS-wide keywords reset a declaration, and `none`
+ * and `default` are excluded from a `<custom-ident>` by the CSS grammar.
  */
 const RESERVED_AREA_NAMES = [
 	'auto',
@@ -65,7 +66,7 @@ const AREA_NAME_SOURCE = `(?!(?:${RESERVED_AREA_NAMES.join('|')})(?![\\w-]))-?[_
  *
  * @remarks
  * Names are written into a custom property that the stylesheet reads as CSS, so
- * the pattern is the injection guard. Nothing outside `[a-z0-9_-]` can reach the
+ * the pattern is the injection guard. Nothing outside `[A-Za-z0-9_-]` can reach the
  * property, which rules out quotes, semicolons, braces and whitespace.
  */
 export const GridAreaNameSchema = z

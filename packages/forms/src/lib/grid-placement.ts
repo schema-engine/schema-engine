@@ -62,7 +62,7 @@ export function elementGridSlots(element: unknown): Array<{ slot: CascadeSlot; e
 	const slots: Array<{ slot: CascadeSlot; entry: Record<string, unknown> }> = [{ slot: 'default', entry: grid }];
 	const responsive = grid.responsive;
 	if (!isRecord(responsive)) return slots;
-	for (const slot of ['default', ...BREAKPOINT_ORDER] as const) {
+	for (const slot of CASCADE_SLOTS) {
 		const entry = responsive[slot];
 		if (isRecord(entry)) slots.push({ slot, entry });
 	}

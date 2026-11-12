@@ -202,7 +202,7 @@ for the template. A step whose top-level elements use `width` or `offset` gets
 the 12-track template and a `--se-grid-default-column` of `1 / -1` inline from
 `getFormGridVariables`, which the stylesheet resets on every grid and reads as
 the fallback of a field's `grid-column`, so a field with no width fills the
-row. A grid uses either `columns` (and `minColumnWidth`) or widths: validation
+row. A grid uses areas, `columns` (and `minColumnWidth`) or widths: validation
 rejects both together, a field that sets `width` or `offset` with a raw
 `column`, an offset plus width past 12 tracks (counting values carried from
 narrower slots). A raw `column` field beside width fields counts the same 12

@@ -575,6 +575,10 @@ function emitGapEntry(variables: CssVariables, slot: CascadeSlot, entry: FormGri
  * When `elements` (the step's top-level elements, the ones this grid places)
  * use named widths, the grid gets 12 tracks and a `1 / -1` default placement
  * for fields that set no width. Validation keeps that from meeting `columns`.
+ *
+ * A grid with `areas` gets the template of each slot that sets one: the quoted
+ * rows as `--se-grid-areas` and the track count they draw as `--se-grid-template`,
+ * derived from the rows rather than authored, as with named widths.
  */
 export function getFormGridVariables(
 	grid: DeepReadonly<GridLayoutConfig> | undefined,
@@ -695,8 +699,10 @@ function emitFieldEntry(
  * Each slot emits exactly what its entry authored — no value is carried across
  * breakpoints, because the generated stylesheet already falls back through the
  * narrower slots. The one exception is `width` and `offset`, which share the
- * single `grid-column` declaration (see {@link namedColumn}). An element without
- * a `grid` config produces no inline style.
+ * single `grid-column` declaration (see {@link namedColumn}). An `area` is one
+ * name written to both `grid-column` and `grid-row`, where a lone name reads as
+ * that area's start and end lines. An element without a `grid` config produces
+ * no inline style.
  * `placeSelf` is applied before the axis properties, so those win.
  *
  * `marginBlockStart`/`marginBlockEnd` accept the same gap tokens as the grid, so

@@ -23,6 +23,7 @@ import {
 	elementUsesGridWidths,
 	GRID_TEMPLATE_KEYS,
 	gridAreaTemplates,
+	gridUsesAreas,
 	namedPlacementOverflow,
 	WIDTH_TRACKS,
 	type CascadeSlot,
@@ -357,13 +358,24 @@ interface GridScope {
 	elements: readonly FormTaggedConfig[];
 }
 
-/** Template shape: a template needs its own tracks, so it is checked once per grid, not per step. */
-function templateIssues(label: string, grid: GridLayoutConfig | undefined): string[] {
-	const templates = gridAreaTemplates(grid);
-	if (Object.keys(templates).length === 0) return [];
-	const issues: string[] = [];
+/** The grid keys that set its own tracks (`columns`, `minColumnWidth`), at any breakpoint. */
+function templateTrackKeys(grid: GridLayoutConfig | undefined): string[] {
 	const entries = [grid, ...Object.values(grid?.responsive ?? {})];
-	const tracks = GRID_TEMPLATE_KEYS.filter((key) => entries.some((entry) => entry?.[key] !== undefined));
+	return GRID_TEMPLATE_KEYS.filter((key) => entries.some((entry) => entry?.[key] !== undefined));
+}
+
+/**
+ * Why a grid's `areas` cannot be a template.
+ *
+ * @remarks
+ * Nothing here depends on the fields, so a grid shared by several steps is
+ * checked once rather than once per step.
+ */
+function templateIssues(label: string, grid: GridLayoutConfig | undefined): string[] {
+	if (!gridUsesAreas(grid)) return [];
+	const templates = gridAreaTemplates(grid);
+	const issues: string[] = [];
+	const tracks = templateTrackKeys(grid);
 	if (tracks.length > 0) {
 		issues.push(`${label} sets ${quotedKeys(['areas', ...tracks])}; a grid uses areas, widths or columns.`);
 	}
@@ -393,33 +405,25 @@ function fieldPlacementIssues(
 	scope: GridScope,
 	templatesValid: boolean,
 ): string[] {
-	const templates = gridAreaTemplates(grid);
-	const usesAreas = Object.keys(templates).length > 0;
-	const entries = [grid, ...Object.values(grid?.responsive ?? {})];
-	const tracks = GRID_TEMPLATE_KEYS.filter((key) => entries.some((entry) => entry?.[key] !== undefined));
+	const usesAreas = gridUsesAreas(grid);
 	const issues: string[] = [];
 
 	const widths = scope.elements.find(elementUsesGridWidths);
-	if (widths && usesAreas) {
+	const exclusive = usesAreas ? ['areas'] : templateTrackKeys(grid);
+	if (widths && exclusive.length > 0) {
 		issues.push(
-			`${label} sets 'areas' but ${elementLabel(widths)} uses 'width' or 'offset'; a grid uses areas, widths or columns.`,
-		);
-	} else if (widths && tracks.length > 0) {
-		issues.push(
-			`${label} sets ${quotedKeys(tracks)} but ${elementLabel(widths)} uses 'width' or 'offset'; a grid uses areas, widths or columns.`,
+			`${label} sets ${quotedKeys(exclusive)} but ${elementLabel(widths)} uses 'width' or 'offset'; a grid uses areas, widths or columns.`,
 		);
 	}
 
 	const claimants = scope.elements.filter((element) => Object.keys(elementAreaSlots(element)).length > 0);
 	if (!usesAreas) {
 		for (const element of claimants) {
-			issues.push(
-				`${elementLabel(element as Record<string, unknown>)} sets grid 'area' but the ${label.toLowerCase()} has no 'areas'.`,
-			);
+			issues.push(`${elementLabel(element)} sets grid 'area' but the ${label.toLowerCase()} has no 'areas'.`);
 		}
-		return issues.map((issue) => prefixed(scope.location, issue));
+	} else if (templatesValid) {
+		issues.push(...areaClaimIssues(label, gridAreaTemplates(grid), claimants));
 	}
-	if (templatesValid) issues.push(...areaClaimIssues(label, templates, claimants));
 	return issues.map((issue) => prefixed(scope.location, issue));
 }
 
@@ -448,6 +452,7 @@ function areaClaimIssues(
 		}
 	}
 
+	const hint = label === 'Form grid' ? '; a form template applies to every step without a grid of its own' : '';
 	const reported = new Set<string>();
 	for (const [index, { slot, value: rows }] of templateBySlot.entries()) {
 		if (rows === undefined) continue;
@@ -455,7 +460,7 @@ function areaClaimIssues(
 			const claimed = claims.some(({ bySlot }) => bySlot[index]?.value === name);
 			if (claimed || reported.has(name)) continue;
 			reported.add(name);
-			issues.push(`${label} area '${name}'${atSlot(slot)} is not claimed by any field.`);
+			issues.push(`${label} area '${name}'${atSlot(slot)} is not claimed by any field${hint}.`);
 		}
 	}
 	return issues;
@@ -625,7 +630,7 @@ export function validateFormConfig(config: unknown, options: ValidateFormOptions
 
 	const scopeOf = (step: (typeof steps)[number], index: number): GridScope => ({
 		location: itemLocation('steps', index, step),
-		elements: step.elements as FormTaggedConfig[],
+		elements: step.elements,
 	});
 	issues.push(
 		...gridIssues(

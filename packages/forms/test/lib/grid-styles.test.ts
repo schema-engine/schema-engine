@@ -570,13 +570,13 @@ describe('named grid areas', () => {
 	});
 
 	test('extra whitespace and empty cells survive normalisation', () => {
-		const variables = getFormGridVariables({ areas: ['  a   .  ', 'b b'] }, theme(), []);
-		expect(variables['--se-grid-areas']).toBe('"a ." "b b"');
+		const variables = getFormGridVariables({ areas: ['  a   .  ', 'b ...'] }, theme(), []);
+		expect(variables['--se-grid-areas']).toBe('"a ." "b ."');
 	});
 
 	test('areas keep the authored gap and add no default column', () => {
 		const variables = getFormGridVariables({ gap: 'loose', areas: ['a b'] }, theme(), []);
-		expect(variables['--se-grid-gap-x']).toBeDefined();
+		expect(variables['--se-grid-gap-x']).toBe('var(--se-grid-gap-loose, var(--se-grid-gap-base-loose))');
 		expect(variables).not.toHaveProperty('--se-grid-default-column');
 	});
 
@@ -610,30 +610,46 @@ describe('named grid areas', () => {
 		expect(css()).toContain('--se-grid-areas-2xl:initial;');
 	});
 
-	test.each([['a;color:red'], ['a"b'], ['1a'], ['a b'], ['auto'], ['span'], ['inherit'], [''], ['a{}']])(
-		'rejects %j as an area name',
+	test.each([
+		['a;color:red'],
+		['a"b'],
+		['1a'],
+		['a b'],
+		['auto'],
+		['span'],
+		['inherit'],
+		['none'],
+		['default'],
+		['initial'],
+		['unset'],
+		['revert'],
+		['revert-layer'],
+		[''],
+		['a{}'],
+	])('rejects %j as an area name', (name) => {
+		expect(ElementGridConfigSchema.safeParse({ area: name }).success).toBe(false);
+	});
+
+	test.each([['a'], ['street'], ['zip-code'], ['_x'], ['Area2'], ['auto-x'], ['span2'], ['none-of']])(
+		'accepts %j as an area name',
 		(name) => {
-			expect(ElementGridConfigSchema.safeParse({ area: name }).success).toBe(false);
+			expect(ElementGridConfigSchema.safeParse({ area: name }).success).toBe(true);
+			expect(GridLayoutConfigSchema.safeParse({ areas: [`${name} .`] }).success).toBe(true);
 		},
 	);
-
-	test.each([['a'], ['street'], ['zip-code'], ['_x'], ['Area2']])('accepts %j as an area name', (name) => {
-		expect(ElementGridConfigSchema.safeParse({ area: name }).success).toBe(true);
-		expect(GridLayoutConfigSchema.safeParse({ areas: [`${name} .`] }).success).toBe(true);
-	});
 
 	test('a reserved keyword is not an area name in a template either', () => {
 		expect(GridLayoutConfigSchema.safeParse({ areas: ['auto b'] }).success).toBe(false);
 	});
 
-	test.each([[['a;b']], [['a "b"']], [[]], [{ default: [] }], [{ xs: ['a'] }]])(
+	test.each([[['a;b']], [['a "b"']], [[]], [['']], [['   ']], [{ default: [] }], [{ xs: ['a'] }]])(
 		'rejects the malformed areas %j',
 		(areas) => {
 			expect(GridLayoutConfigSchema.safeParse({ areas }).success).toBe(false);
 		},
 	);
 
-	test('areas are not a responsive grid key and not a container key', () => {
+	test('areas are not a responsive grid key', () => {
 		expect(GridLayoutConfigSchema.safeParse({ responsive: { md: { areas: ['a'] } } }).success).toBe(false);
 	});
 });
