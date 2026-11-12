@@ -38,10 +38,9 @@ export class FormRendererElement extends RadiantElement {
 	 * subscribe to the context, so an engine that arrives or changes later reaches them.
 	 *
 	 * @remarks
-	 * `toAttribute` omits the attribute: Radiant serializes an object prop into the server
-	 * markup, and the client would read that plain JSON back over the live engine.
+	 * Property-only (`attribute: false`): a live engine is never serialized into the server markup.
 	 */
-	@prop({ type: Object, transform: { toAttribute: () => null } }) engine?: FormEngine;
+	@prop({ type: Object, attribute: false }) engine?: FormEngine;
 	@prop({ type: Object }) defaultValues?: Record<string, unknown>;
 
 	@provideContext<typeof formEngineContext>({
