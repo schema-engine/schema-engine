@@ -137,6 +137,10 @@ export const SSR_WIDTH_FIELDS = [
 	{ id: 'plain', label: 'Plain', grid: undefined },
 ] as const;
 
+function near(actual: number, expected: number): void {
+	expect(Math.abs(actual - expected)).toBeLessThan(1);
+}
+
 /**
  * Asserts the named width layout of the SSR document at a narrow and a wide
  * viewport, from CSS alone.
@@ -152,7 +156,6 @@ export async function expectSsrWidthsAcceptance(html: string, compiled: Compiled
 		const grid = doc.querySelector<HTMLElement>('.se-form-grid[data-se-grid-theme]');
 		expect(grid).toBeTruthy();
 		const rect = (label: RegExp) => fieldHost(doc, label).getBoundingClientRect();
-		const near = (actual: number, expected: number) => expect(Math.abs(actual - expected)).toBeLessThan(1);
 		const measure = () => {
 			const bounds = grid!.getBoundingClientRect();
 			const gap = Number.parseFloat(getComputedStyle(grid!).columnGap);

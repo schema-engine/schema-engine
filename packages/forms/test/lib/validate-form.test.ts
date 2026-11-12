@@ -70,6 +70,13 @@ function createEngine() {
 	return createFormEngine({ recipes: [cardRecipe, wizardRecipe] });
 }
 
+const formWith = (elements: unknown[], grid?: unknown) => ({
+	id: 'widths',
+	...(grid ? { grid } : {}),
+	steps: [{ id: 'main', title: 'Main', elements }],
+});
+const field = (name: string, grid?: unknown) => ({ $type: 'field', id: name, name, ...(grid ? { grid } : {}) });
+
 describe('validateFormConfig', () => {
 	test('writes the default wizard recipe as the view of a multi-step form without view', () => {
 		const engine = createFormEngine({ recipes: [bareControlsRecipe] });
@@ -131,13 +138,6 @@ describe('validateFormConfig', () => {
 			render: () => null,
 		});
 		const engine = createFormEngine({ elements: [gridField] });
-		const formWith = (elements: unknown[], grid?: unknown) => ({
-			id: 'widths',
-			...(grid ? { grid } : {}),
-			steps: [{ id: 'main', title: 'Main', elements }],
-		});
-		const field = (name: string, grid?: unknown) => ({ $type: 'field', id: name, name, ...(grid ? { grid } : {}) });
-
 		test('accepts widths and offsets on a grid that sets no columns', () => {
 			expect(() =>
 				engine.validateForm(

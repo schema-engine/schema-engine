@@ -429,9 +429,9 @@ describe('per-element spacing', () => {
 	});
 });
 
-describe('named widths and offsets', () => {
-	const widthElement = (grid: Parameters<typeof getFieldGridVariables>[0]) => ({ $type: 'field', grid });
+const widthElement = (grid: Parameters<typeof getFieldGridVariables>[0]) => ({ $type: 'field', grid });
 
+describe('named widths and offsets', () => {
 	test.each([
 		['full', 'span 12'],
 		['three-quarters', 'span 9'],
