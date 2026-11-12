@@ -6,6 +6,7 @@ import { rhfAdapter } from '@/adapters/react-hook-form';
 import { useControlledFormElement } from '@/hooks/use-field';
 import { useGridThemeId } from '@/hooks/use-form-context';
 import { createFormEngine } from '@schema-engine/forms';
+import { SSR_WIDTH_FIELDS } from '../../../../test-utils/ssr-grid-acceptance';
 
 const ssrInputSchema = z.object({
 	$type: z.literal('ssr-input'),
@@ -89,4 +90,32 @@ export function getSsrAcceptanceFixture() {
 		cachedFixture = { engine, config, adapter: rhfAdapter };
 	}
 	return cachedFixture;
+}
+
+let cachedWidthsFixture: ReturnType<typeof getSsrAcceptanceFixture> | undefined;
+
+/** Same engine as {@link getSsrAcceptanceFixture}, with a form that places fields by named width. */
+export function getSsrWidthsFixture() {
+	if (!cachedWidthsFixture) {
+		const { engine, adapter } = getSsrAcceptanceFixture();
+		const config = engine.validateForm({
+			id: 'ssr-widths-acceptance',
+			title: 'SSR widths acceptance',
+			steps: [
+				{
+					id: 'main',
+					title: 'Main',
+					elements: SSR_WIDTH_FIELDS.map(({ id, label, grid }) => ({
+						$type: 'ssr-input',
+						id,
+						name: id,
+						label,
+						grid,
+					})),
+				},
+			],
+		});
+		cachedWidthsFixture = { engine, config, adapter };
+	}
+	return cachedWidthsFixture;
 }

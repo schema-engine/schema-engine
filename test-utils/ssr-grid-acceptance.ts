@@ -120,3 +120,74 @@ export async function expectSsrGridAcceptance(html: string, compiled: CompiledGr
 		frame.remove();
 	}
 }
+
+/**
+ * Fields of the named width acceptance fixture, authored once for both
+ * renderers so their fixtures cannot drift apart.
+ *
+ * @remarks
+ * `Responsive` is full width until `md` (48rem by default) and a third from
+ * there. `Plain` sets no grid config and must fill the row.
+ */
+export const SSR_WIDTH_FIELDS = [
+	{ id: 'half-a', label: 'Half A', grid: { width: 'half' } },
+	{ id: 'half-b', label: 'Half B', grid: { width: 'half' } },
+	{ id: 'responsive', label: 'Responsive', grid: { width: 'full', responsive: { md: { width: 'third' } } } },
+	{ id: 'centred', label: 'Centred', grid: { width: 'half', offset: 'quarter' } },
+	{ id: 'plain', label: 'Plain', grid: undefined },
+] as const;
+
+/**
+ * Asserts the named width layout of the SSR document at a narrow and a wide
+ * viewport, from CSS alone.
+ *
+ * @param html Server-rendered document for a form built from {@link SSR_WIDTH_FIELDS}.
+ */
+export async function expectSsrWidthsAcceptance(html: string, compiled: CompiledGridLike): Promise<void> {
+	expect(html).not.toMatch(/<script\b/i);
+	expect(html).toContain(compiled.css.slice(0, 48));
+
+	const { frame, doc } = await loadSsrFrame(html, 375);
+	try {
+		const grid = doc.querySelector<HTMLElement>('.se-form-grid[data-se-grid-theme]');
+		expect(grid).toBeTruthy();
+		const rect = (label: RegExp) => fieldHost(doc, label).getBoundingClientRect();
+		const near = (actual: number, expected: number) => expect(Math.abs(actual - expected)).toBeLessThan(1);
+		const measure = () => {
+			const bounds = grid!.getBoundingClientRect();
+			const gap = Number.parseFloat(getComputedStyle(grid!).columnGap);
+			const track = (bounds.width - 11 * gap) / 12;
+			return { bounds, gap, span: (count: number) => count * track + (count - 1) * gap };
+		};
+
+		for (const width of [375, 1280]) {
+			frame.style.width = `${width}px`;
+			await waitForFrameLayout();
+			const { bounds, gap, span } = measure();
+			expect(getComputedStyle(grid!).gridTemplateColumns.split(' ').length).toBe(12);
+
+			const halfA = rect(/half a/i);
+			const halfB = rect(/half b/i);
+			near(halfA.top, halfB.top);
+			near(halfA.width, span(6));
+			near(halfB.width, span(6));
+			near(halfB.left - halfA.left, span(6) + gap);
+
+			const centred = rect(/centred/i);
+			near(centred.width, span(6));
+			near(centred.left - bounds.left, bounds.right - centred.right);
+
+			near(rect(/plain/i).width, bounds.width);
+		}
+
+		frame.style.width = '375px';
+		await waitForFrameLayout();
+		near(rect(/responsive/i).width, measure().bounds.width);
+
+		frame.style.width = '1280px';
+		await waitForFrameLayout();
+		near(rect(/responsive/i).width, measure().span(4));
+	} finally {
+		frame.remove();
+	}
+}

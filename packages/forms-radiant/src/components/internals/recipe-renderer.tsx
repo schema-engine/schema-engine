@@ -55,7 +55,7 @@ export function RecipeRenderer({
 						<div
 							class="se-form-elements se-form-grid"
 							data-se-grid-theme={theme.id}
-							style={getFormGridVariables(config.grid, theme)}
+							style={getFormGridVariables(config.grid, theme, step.elements)}
 						>
 							<FormElements
 								elements={step.elements}
