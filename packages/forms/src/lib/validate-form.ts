@@ -14,7 +14,13 @@ import {
 } from '@/lib/normalized-form-config';
 import { getElementChildren, withElementChildren } from '@/lib/element-children';
 import { DEFAULT_WIZARD_RECIPE } from '@/lib/form-view';
-import { elementGridKeys, elementUsesGridWidths } from '@/lib/grid-styles';
+import {
+	elementGridKeys,
+	elementUsesGridWidths,
+	GRID_TEMPLATE_KEYS,
+	namedPlacementOverflow,
+	WIDTH_TRACKS,
+} from '@/lib/grid-placement';
 import { logger } from '@/lib/logger';
 import { mergeSlotDefaults } from '@/recipes/merge-slot-defaults';
 
@@ -283,26 +289,44 @@ function elementLabel(item: Record<string, unknown>): string {
 	return typeof item.id === 'string' ? `Element '${item.id}'` : 'Element';
 }
 
-/** A field places itself with named widths or with raw grid lines, not both. */
-function namedAndRawPlacement(item: FormTaggedConfig): string | undefined {
+function quotedKeys(keys: readonly string[]): string {
+	return keys.map((key) => `'${key}'`).join(' and ');
+}
+
+/**
+ * Why a field's named placement is invalid, or `undefined` when it is fine.
+ *
+ * @remarks
+ * Applies at every depth: a container lays its children out in a grid of its
+ * own, so a nested field's tracks add up the same way a top-level field's do.
+ */
+function namedPlacementIssue(item: FormTaggedConfig): string | undefined {
 	const keys = elementGridKeys(item);
-	if (!keys.has('column')) return undefined;
 	const named = ['width', 'offset'].filter((key) => keys.has(key));
 	if (named.length === 0) return undefined;
-	const quoted = named.map((key) => `'${key}'`).join(' and ');
-	return `${elementLabel(item)} sets grid ${quoted} and 'column'; use named widths or a raw column, not both.`;
+	const label = elementLabel(item);
+	if (keys.has('column')) {
+		return `${label} sets grid ${quotedKeys(named)} and 'column'; use named widths or a raw column, not both.`;
+	}
+	const overflow = namedPlacementOverflow(item);
+	if (overflow) {
+		return `${label} sets grid 'width' and 'offset' that span ${overflow.tracks} of ${WIDTH_TRACKS} tracks at ${overflow.slot === 'default' ? 'the default width' : `'${overflow.slot}'`}; together they must fit in ${WIDTH_TRACKS} tracks.`;
+	}
+	return undefined;
 }
 
 /** A grid sets its own tracks with `columns` or gets twelve from its fields' widths, not both. */
-function columnsWithNamedWidths(grid: GridLayoutConfig | undefined, steps: readonly { elements: unknown[] }[]) {
-	const columnKeys = ['columns', 'minColumnWidth'];
-	const sets = (entry: unknown) =>
-		typeof entry === 'object' && entry !== null && columnKeys.some((key) => key in entry);
-	if (!sets(grid) && !Object.values(grid?.responsive ?? {}).some(sets)) return undefined;
+function columnsWithNamedWidths(
+	grid: GridLayoutConfig | undefined,
+	steps: readonly { elements: readonly FormTaggedConfig[] }[],
+): string | undefined {
+	const entries = [grid, ...Object.values(grid?.responsive ?? {})];
+	const set = GRID_TEMPLATE_KEYS.filter((key) => entries.some((entry) => entry?.[key] !== undefined));
+	if (set.length === 0) return undefined;
 	for (const step of steps) {
 		const element = step.elements.find(elementUsesGridWidths);
 		if (element) {
-			return `Form grid sets 'columns' but ${elementLabel(element as FormTaggedConfig)} uses 'width' or 'offset'; a grid uses either columns or widths.`;
+			return `Form grid sets ${quotedKeys(set)} but ${elementLabel(element)} uses 'width' or 'offset'; a grid uses either columns or widths.`;
 		}
 	}
 	return undefined;
@@ -328,8 +352,8 @@ function parseElementNode(
 	if (!parsed.ok) {
 		return fail(parsed.issue);
 	}
-	const placementConflict = namedAndRawPlacement(parsed.data);
-	if (placementConflict) return fail(placementConflict);
+	const placementIssue = namedPlacementIssue(parsed.data);
+	if (placementIssue) return fail(placementIssue);
 
 	const children = getElementChildren(parsed.data);
 	if (!children) {

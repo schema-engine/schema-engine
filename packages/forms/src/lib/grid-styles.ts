@@ -6,6 +6,18 @@ import type {
 	GridWidthName,
 } from '@/schemas/base-field';
 import { GridGapTokens } from '@/schemas/base-field';
+import {
+	BREAKPOINT_ORDER,
+	carryNamedPlacement,
+	usesGridWidths,
+	WIDTH_SPANS,
+	WIDTH_TRACKS,
+	type CascadeSlot,
+	type GridBreakpointToken,
+	type NamedPlacement,
+} from '@/lib/grid-placement';
+
+export type { GridBreakpointToken };
 
 /**
  * Maps authored grid values to theme-scoped CSS variables.
@@ -37,11 +49,6 @@ import { GridGapTokens } from '@/schemas/base-field';
  * defaults, the breakpoint cascade, and the resets that stop a nested grid
  * inheriting its parent's placement all live in the generated stylesheet.
  */
-
-const BREAKPOINT_ORDER = ['sm', 'md', 'lg', 'xl', '2xl'] as const;
-
-/** Named breakpoint tokens. Thresholds are configured on the engine. */
-export type GridBreakpointToken = (typeof BREAKPOINT_ORDER)[number];
 
 /**
  * Inline style consisting only of CSS custom properties.
@@ -186,7 +193,6 @@ const FIELD_DISPLAY_MODE = 'var(--se-field-display-mode, block)';
 /** Root font size used when comparing `rem`/`em` breakpoint thresholds. */
 const ROOT_FONT_PX = 16;
 
-type CascadeSlot = 'default' | GridBreakpointToken;
 type CssLengthUnit = 'px' | 'rem' | 'em';
 
 /** CSS property, its variable base name, and the value used when unauthored. */
@@ -567,7 +573,7 @@ function emitGapEntry(variables: CssVariables, slot: CascadeSlot, entry: FormGri
 export function getFormGridVariables(
 	grid: GridLayoutConfig | undefined,
 	theme: NormalizedGridTheme,
-	elements?: readonly unknown[],
+	elements: readonly unknown[],
 ): CssVariables {
 	const variables: CssVariables = {};
 
@@ -611,52 +617,6 @@ export function getFormGridVariables(
 	return variables;
 }
 
-/** Tracks a grid has once its fields use named widths. */
-const WIDTH_TRACKS = 12;
-
-const WIDTH_SPANS: Record<Exclude<GridWidthName, 'auto'>, number> = {
-	full: 12,
-	'three-quarters': 9,
-	'two-thirds': 8,
-	half: 6,
-	third: 4,
-	quarter: 3,
-};
-
-/**
- * Keys an element's `grid` config sets, at the top level or in any breakpoint.
- *
- * @remarks
- * Takes the element as `unknown` because it reads elements the registered
- * schema has not narrowed: a registration may declare `grid` loosely.
- */
-export function elementGridKeys(element: unknown): ReadonlySet<string> {
-	const keys = new Set<string>();
-	if (typeof element !== 'object' || element === null || !('grid' in element)) return keys;
-	const grid = element.grid;
-	if (typeof grid !== 'object' || grid === null) return keys;
-	const collect = (entry: unknown) => {
-		if (typeof entry !== 'object' || entry === null) return;
-		for (const key of Object.keys(entry)) keys.add(key);
-	};
-	collect(grid);
-	const responsive = 'responsive' in grid ? grid.responsive : undefined;
-	if (typeof responsive === 'object' && responsive !== null) Object.values(responsive).forEach(collect);
-	keys.delete('responsive');
-	return keys;
-}
-
-/** Whether an element's grid config sets `width` or `offset`, at any breakpoint. */
-export function elementUsesGridWidths(element: unknown): boolean {
-	const keys = elementGridKeys(element);
-	return keys.has('width') || keys.has('offset');
-}
-
-/** Whether any of a grid's elements uses named widths or offsets. */
-export function usesGridWidths(elements: readonly unknown[] | undefined): boolean {
-	return elements?.some(elementUsesGridWidths) ?? false;
-}
-
 /**
  * `grid-column` for a width and offset.
  *
@@ -664,13 +624,11 @@ export function usesGridWidths(elements: readonly unknown[] | undefined): boolea
  * Both names resolve into one declaration, so a slot that authors only one of
  * them is emitted together with the other as the narrower slots left it —
  * the same coupling `columns` and `minColumnWidth` have for the grid template.
- * An offset with no width runs to the end of the row; an `auto` width keeps
- * only the start line.
+ * An offset with no width runs to the end of the row.
  */
-function namedColumn(width: GridWidthName | undefined, offset: GridOffsetName | undefined): string {
+function namedColumn({ width, offset }: NamedPlacement): string {
 	const start = offset === undefined ? undefined : WIDTH_SPANS[offset] + 1;
 	if (width === undefined) return start === undefined ? 'auto' : `${start} / -1`;
-	if (width === 'auto') return start === undefined ? 'auto' : String(start);
 	const span = `span ${WIDTH_SPANS[width]}`;
 	return start === undefined ? span : `${start} / ${span}`;
 }
@@ -683,13 +641,12 @@ function emitFieldEntry(
 	variables: CssVariables,
 	slot: CascadeSlot,
 	entry: FieldGridEntry | undefined,
-	named: { width?: GridWidthName; offset?: GridOffsetName } = {},
+	named: NamedPlacement = {},
 ): void {
 	if (!entry) return;
 	if (entry.width !== undefined || entry.offset !== undefined) {
-		named.width = entry.width ?? named.width;
-		named.offset = entry.offset ?? named.offset;
-		variables[customProperty('se-field-grid-column', slot)] = namedColumn(named.width, named.offset);
+		carryNamedPlacement(named, entry);
+		variables[customProperty('se-field-grid-column', slot)] = namedColumn(named);
 	}
 	if (entry.column !== undefined) {
 		variables[customProperty('se-field-grid-column', slot)] = formatGridLine(entry.column);
@@ -732,7 +689,7 @@ export function getFieldGridVariables(grid?: ElementGridConfig): CssVariables {
 	const variables: CssVariables = {};
 	const [alignSelf, justifySelf] = splitPlaceShorthand(grid?.placeSelf);
 
-	const named: { width?: GridWidthName; offset?: GridOffsetName } = {};
+	const named: NamedPlacement = {};
 	emitFieldEntry(variables, 'default', { alignSelf, justifySelf });
 	emitFieldEntry(variables, 'default', grid, named);
 	emitFieldEntry(variables, 'default', grid?.responsive?.default, named);

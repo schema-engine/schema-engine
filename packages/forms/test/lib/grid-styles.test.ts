@@ -5,8 +5,8 @@ import {
 	getDefaultGridTheme,
 	getFieldGridVariables,
 	getFormGridVariables,
-	usesGridWidths,
 } from '@/lib/grid-styles';
+import { usesGridWidths } from '@/lib/grid-placement';
 import { GridGapTokens, type GridLayoutConfig } from '@/schemas/base-field';
 
 const theme = (options?: Parameters<typeof compileGridTheme>[0]) => compileGridTheme(options).theme;
@@ -127,20 +127,20 @@ describe('generated stylesheet', () => {
 
 describe('getFormGridVariables', () => {
 	test('maps a gap token to its theme variable on both axes and leaves columns to the stylesheet', () => {
-		const variables = getFormGridVariables({ gap: 'loose' }, theme());
+		const variables = getFormGridVariables({ gap: 'loose' }, theme(), []);
 		expect(variables['--se-grid-gap-y']).toBe('var(--se-grid-gap-loose, var(--se-grid-gap-base-loose))');
 		expect(variables['--se-grid-gap-x']).toBe('var(--se-grid-gap-loose, var(--se-grid-gap-base-loose))');
 		expect(variables['--se-grid-template']).toBeUndefined();
 	});
 
 	test('passes raw CSS gap values through untouched', () => {
-		const variables = getFormGridVariables({ gap: '1.5rem' }, theme());
+		const variables = getFormGridVariables({ gap: '1.5rem' }, theme(), []);
 		expect(variables['--se-grid-gap-y']).toBe('1.5rem');
 	});
 
 	test('emits nothing when no layout is authored', () => {
-		expect(getFormGridVariables(undefined, theme())).toEqual({});
-		expect(getFormGridVariables({}, theme())).toEqual({});
+		expect(getFormGridVariables(undefined, theme(), [])).toEqual({});
+		expect(getFormGridVariables({}, theme(), [])).toEqual({});
 	});
 
 	test('sparse responsive entries inherit the preceding breakpoint', () => {
@@ -151,7 +151,7 @@ describe('getFormGridVariables', () => {
 				md: { gap: 'loose' },
 			},
 		};
-		const variables = getFormGridVariables(grid, theme());
+		const variables = getFormGridVariables(grid, theme(), []);
 		expect(variables['--se-grid-template-sm']).toBe('repeat(2, minmax(0, 1fr))');
 		expect(variables['--se-grid-gap-y-md']).toBe('var(--se-grid-gap-loose, var(--se-grid-gap-base-loose))');
 		expect(variables['--se-grid-template']).toBe('repeat(1, minmax(0, 1fr))');
@@ -159,7 +159,7 @@ describe('getFormGridVariables', () => {
 	});
 
 	test('axis gaps beat the entry gap within the same breakpoint', () => {
-		const variables = getFormGridVariables({ responsive: { sm: { gap: 'loose', gapX: 'compact' } } }, theme());
+		const variables = getFormGridVariables({ responsive: { sm: { gap: 'loose', gapX: 'compact' } } }, theme(), []);
 		expect(variables['--se-grid-gap-x-sm']).toBe('var(--se-grid-gap-compact, var(--se-grid-gap-base-compact))');
 		expect(variables['--se-grid-gap-y-sm']).toBe('var(--se-grid-gap-loose, var(--se-grid-gap-base-loose))');
 	});
@@ -169,13 +169,13 @@ describe('getFormGridVariables', () => {
 			gap: 'compact',
 			responsive: { default: { gap: 'wide', gapY: 'loose' } },
 		};
-		const variables = getFormGridVariables(grid, theme());
+		const variables = getFormGridVariables(grid, theme(), []);
 		expect(variables['--se-grid-gap-y']).toBe('var(--se-grid-gap-loose, var(--se-grid-gap-base-loose))');
 		expect(variables['--se-grid-gap-x']).toBe('var(--se-grid-gap-wide, var(--se-grid-gap-base-wide))');
 	});
 
 	test('auto columns inline the minimum width into the authored slot', () => {
-		const variables = getFormGridVariables({ columns: 'auto', minColumnWidth: '220px' }, theme());
+		const variables = getFormGridVariables({ columns: 'auto', minColumnWidth: '220px' }, theme(), []);
 		expect(variables['--se-grid-template']).toBe('repeat(auto-fit, minmax(min(220px, 100%), 1fr))');
 	});
 
@@ -183,25 +183,30 @@ describe('getFormGridVariables', () => {
 		const variables = getFormGridVariables(
 			{ columns: 'auto', responsive: { md: { minColumnWidth: '10rem' } } },
 			theme(),
+			[],
 		);
 		expect(variables['--se-grid-template-md']).toBe('repeat(auto-fit, minmax(min(10rem, 100%), 1fr))');
 	});
 
 	test('emits only the authored alignment axes', () => {
-		const variables = getFormGridVariables({ justifyItems: 'center' }, theme());
+		const variables = getFormGridVariables({ justifyItems: 'center' }, theme(), []);
 		expect(variables['--se-grid-justify-items']).toBe('center');
 		expect(variables['--se-grid-align-items']).toBeUndefined();
 		expect(Object.keys(variables).every((key) => key.startsWith('--'))).toBe(true);
 	});
 
 	test('keeps multi-keyword alignment values in one axis', () => {
-		const variables = getFormGridVariables({ placeContent: 'first baseline' }, theme());
+		const variables = getFormGridVariables({ placeContent: 'first baseline' }, theme(), []);
 		expect(variables['--se-grid-align-content']).toBe('first baseline');
 		expect(variables['--se-grid-justify-content']).toBe('first baseline');
 	});
 
 	test('resolves place-* shorthands into both axes', () => {
-		const variables = getFormGridVariables({ placeItems: 'center start', placeContent: 'space-between' }, theme());
+		const variables = getFormGridVariables(
+			{ placeItems: 'center start', placeContent: 'space-between' },
+			theme(),
+			[],
+		);
 		expect(variables['--se-grid-align-items']).toBe('center');
 		expect(variables['--se-grid-justify-items']).toBe('start');
 		expect(variables['--se-grid-align-content']).toBe('space-between');
@@ -210,7 +215,7 @@ describe('getFormGridVariables', () => {
 	});
 
 	test('axis properties beat the place-* shorthand', () => {
-		const variables = getFormGridVariables({ placeItems: 'center', justifyItems: 'end' }, theme());
+		const variables = getFormGridVariables({ placeItems: 'center', justifyItems: 'end' }, theme(), []);
 		expect(variables['--se-grid-justify-items']).toBe('end');
 		expect(variables['--se-grid-align-items']).toBe('center');
 	});
@@ -219,6 +224,7 @@ describe('getFormGridVariables', () => {
 		const variables = getFormGridVariables(
 			{ columns: 3, responsive: { sm: { columns: 4 }, '2xl': { columns: 6 } } },
 			theme(),
+			[],
 		);
 		expect(variables['--se-grid-template']).toBe('repeat(3, minmax(0, 1fr))');
 		expect(variables['--se-grid-template-sm']).toBe('repeat(4, minmax(0, 1fr))');
@@ -374,7 +380,7 @@ describe('responsive gap tokens', () => {
 	});
 
 	test('the ramp is invisible to the form: a token still emits one variable reference', () => {
-		const variables = getFormGridVariables({ gap: 'default' }, theme(ramped));
+		const variables = getFormGridVariables({ gap: 'default' }, theme(ramped), []);
 		expect(variables['--se-grid-gap-y']).toBe('var(--se-grid-gap-default, var(--se-grid-gap-base-default))');
 		expect(variables['--se-grid-gap-x']).toBe('var(--se-grid-gap-default, var(--se-grid-gap-base-default))');
 	});
@@ -439,7 +445,6 @@ describe('named widths and offsets', () => {
 		['half', 'span 6'],
 		['third', 'span 4'],
 		['quarter', 'span 3'],
-		['auto', 'auto'],
 	] as const)('width %s emits %s', (width, column) => {
 		expect(getFieldGridVariables({ width })).toEqual({ '--se-field-grid-column': column });
 	});
@@ -452,10 +457,6 @@ describe('named widths and offsets', () => {
 		expect(getFieldGridVariables({ width: 'half', offset: 'quarter' })).toEqual({
 			'--se-field-grid-column': '4 / span 6',
 		});
-	});
-
-	test('an auto width with an offset only pins the start line', () => {
-		expect(getFieldGridVariables({ width: 'auto', offset: 'third' })).toEqual({ '--se-field-grid-column': '5' });
 	});
 
 	test('width changes by breakpoint and stays out of unauthored slots', () => {
@@ -492,6 +493,14 @@ describe('named widths and offsets', () => {
 
 	test('raw column placement still emits the authored line', () => {
 		expect(getFieldGridVariables({ column: '4 / 10' })).toEqual({ '--se-field-grid-column': '4 / 10' });
+	});
+
+	test('a raw column field beside width fields keeps the twelve tracks and its own lines', () => {
+		const elements = [widthElement({ width: 'half' }), widthElement({ column: 'span 2' })];
+		expect(getFormGridVariables(undefined, theme(), elements)['--se-grid-template']).toBe(
+			'repeat(12, minmax(0, 1fr))',
+		);
+		expect(getFieldGridVariables({ column: 'span 2' })).toEqual({ '--se-field-grid-column': 'span 2' });
 	});
 
 	test('the stylesheet makes a field without a width fill the row when its grid has widths', () => {
@@ -532,6 +541,7 @@ describe('named widths and offsets', () => {
 
 	test('usesGridWidths ignores elements without grid config', () => {
 		expect(usesGridWidths([{ $type: 'field' }, { $type: 'field', grid: {} }])).toBe(false);
-		expect(usesGridWidths([{ $type: 'field' }, widthElement({ width: 'auto' })])).toBe(true);
+		expect(usesGridWidths([{ $type: 'field' }, widthElement({ width: 'half' })])).toBe(true);
+		expect(usesGridWidths([widthElement({ width: undefined, offset: undefined })])).toBe(false);
 	});
 });

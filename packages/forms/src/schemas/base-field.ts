@@ -91,14 +91,14 @@ export const GridLayoutConfigSchema = z.extend(GridLayoutPropertiesSchema, {
  * @remarks
  * A grid whose fields use `width` or `offset` is laid out on 12 tracks, so
  * every name is a whole number of tracks: `full` 12, `three-quarters` 9,
- * `two-thirds` 8, `half` 6, `third` 4, `quarter` 3. `auto` leaves the width to
- * the grid's own placement.
+ * `two-thirds` 8, `half` 6, `third` 4, `quarter` 3. A field that sets no width
+ * fills the row.
  */
-export const GridWidthNames = ['full', 'three-quarters', 'two-thirds', 'half', 'third', 'quarter', 'auto'] as const;
+export const GridWidthNames = ['full', 'three-quarters', 'two-thirds', 'half', 'third', 'quarter'] as const;
 
 export type GridWidthName = (typeof GridWidthNames)[number];
 
-/** Named offsets: the widths that are a fraction of the row, without `full` and `auto`. */
+/** Named offsets: the widths that are a fraction of the row, without `full`. */
 export const GridOffsetNames = ['three-quarters', 'two-thirds', 'half', 'third', 'quarter'] as const;
 
 export type GridOffsetName = (typeof GridOffsetNames)[number];
