@@ -85,8 +85,9 @@ export const resolveConstraintPath = resolveFieldRef;
  * Every value path a constraint set depends on, in declaration order.
  *
  * @remarks
- * React needs the list separately from evaluation so it can subscribe to exactly
- * those paths; Radiant reads a whole-store snapshot and does not.
+ * Renderers need the list separately from evaluation so they can react to exactly
+ * those paths: React subscribes to them, and Radiant's `se-constraint` compares only
+ * their values to skip evaluation when an unrelated field changes.
  */
 export function resolveConstraintPaths(constraints: readonly ConstraintLogic[] = [], fieldPath?: string): string[] {
 	return constraints.map((constraint) => resolveConstraintPath(constraint.field, fieldPath));
