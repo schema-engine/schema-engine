@@ -7,6 +7,7 @@ import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import { evaluateConstraints } from '@schema-engine/forms/constraints';
 import type { ConstraintEvaluationContext } from './render-registered-element';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
+import { ConstraintElement } from './constraint-element';
 
 export interface FormElementProps {
 	/**
@@ -64,9 +65,10 @@ export function FormElement({
 		);
 	}
 
+	const baseRequired = isFieldRequired('rules' in config ? config.rules : undefined);
 	const snapshot = evaluateConstraints({
 		constraints,
-		baseRequired: isFieldRequired('rules' in config ? config.rules : undefined),
+		baseRequired,
 		fieldPath: fieldConstraintContext.fieldPath ?? ('name' in config ? config.name : undefined),
 		values: constraintValues,
 	});
@@ -80,11 +82,14 @@ export function FormElement({
 	);
 
 	return (
-		<div
+		<ConstraintElement
 			classes={['se-form-field', 'se-form-constraint', className]}
 			data-se-constraint-field={fieldName}
+			data-se-constraints={JSON.stringify(constraints)}
+			data-se-base-required={baseRequired ? '' : undefined}
 			data-se-grid-theme={fieldHost.themeId}
 			style={fieldHost.style}
+			concealed={!shouldShow}
 			hidden={!shouldShow}
 		>
 			{renderRegisteredElement(
@@ -99,6 +104,6 @@ export function FormElement({
 				true,
 				snapshot,
 			)}
-		</div>
+		</ConstraintElement>
 	);
 }

@@ -5,7 +5,7 @@ import { toFieldRules } from '@/lib/field-rules';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 
 /**
- * The parts of a rendered `se-field` that rule hydration and constraint sync use.
+ * The parts of a rendered `se-field` that rule hydration uses.
  *
  * @remarks
  * Structural, so unit tests can pass an `se-field` whose element is not defined.

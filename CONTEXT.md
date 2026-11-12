@@ -157,7 +157,7 @@ While a container's `require` constraint holds, the fields inside it are
 required; the container's own `required` rule does not pass down. A disabled
 container, authored or by a constraint, disables them, and a disabled array
 disables its add and remove buttons too. React validates the inherited
-requirement through `validateFormValues`, Radiant through live constraint sync.
+requirement through `validateFormValues`, Radiant through its `se-constraint` hosts.
 Two Radiant gaps remain: a container that declares any constraint also passes
 its own `required` rule down, and the add and remove buttons take the array's
 disabled state at render only, so a `disable` constraint that starts to hold

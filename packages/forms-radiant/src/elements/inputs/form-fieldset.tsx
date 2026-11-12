@@ -10,11 +10,11 @@ import './form-fieldset.css';
  * @remarks
  * A disabled fieldset, authored or by a constraint, renders its children
  * disabled. A fieldset with a matching `require` constraint, or inside one,
- * renders them with their required marker; constraint sync then applies the
- * live rule. Both are what live constraint sync composes for the children
- * afterwards. A fieldset whose only required source is its own required rule
- * passes nothing down, because sync governs no field without a constraint
- * wrapper around it. Arrays pass both to their rows the same way.
+ * renders them with their required marker. Both are what the constraint hosts
+ * compose for the children afterwards, and each `se-field` then applies the live rule. A
+ * fieldset whose only required source is its own required rule passes nothing
+ * down, because no constraint host governs a field without a constraint wrapper
+ * around it. Arrays pass both to their rows the same way.
  */
 export function FormFieldSet(config: FieldSetProps) {
 	const scope = objectFieldScope(config.name, config);

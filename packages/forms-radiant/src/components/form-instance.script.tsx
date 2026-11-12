@@ -21,7 +21,8 @@ import { expandValues } from '@/adapters/radiant/controller/values';
 import { createInitialStepStates, hasConfiguredActions, type StepMachineState } from '@schema-engine/forms/engine';
 import { createFormMeta, type FormMeta } from '@/lib/instance-view';
 import { createInstanceNavigation } from '@/lib/instance-navigation';
-import { syncConstraints } from '@/lib/constraint-sync';
+import { createAuthoredDisabledLookup } from '@/lib/authored-disabled';
+import { formValuesContext, type FormValuesContextValue } from '@/contexts/constraint-context';
 import { logger } from '@/lib/logger';
 import type { FormProviderProps } from '@/adapters/types';
 import { FormController } from '@/adapters/radiant/controller';
@@ -98,6 +99,13 @@ export class FormInstanceElement extends RadiantElement {
 		serialize: () => ({}),
 	})
 	provider!: ContextProvider<typeof formInstanceContext>;
+
+	@provideContext<typeof formValuesContext>({
+		context: formValuesContext,
+		initialValue: undefined,
+		serialize: () => ({}),
+	})
+	protected valuesProvider!: ContextProvider<typeof formValuesContext>;
 
 	constructor() {
 		super();
@@ -188,7 +196,6 @@ export class FormInstanceElement extends RadiantElement {
 
 	private onFormReady(): void {
 		this.watchFormChanges();
-		syncConstraints(this, this.config, this.form);
 		this.watchValidationDependencies();
 		this.syncActions();
 	}
@@ -267,9 +274,13 @@ export class FormInstanceElement extends RadiantElement {
 	}
 
 	private watchFormChanges(): void {
-		if (!this.form?.ready || this.unwatchChanges) return;
+		if (!this.form?.ready) return;
+		if (this.unwatchChanges) {
+			this.publishFormValues();
+			return;
+		}
 		this.unwatchChanges = this.form.watchForm((values) => {
-			syncConstraints(this, this.config, this.form);
+			this.publishFormValues(values);
 			this.onChange?.(values);
 		});
 	}
@@ -330,6 +341,27 @@ export class FormInstanceElement extends RadiantElement {
 			this.metaValue = createFormMeta(this.config);
 		}
 		return this.metaValue;
+	}
+
+	private authoredDisabled?: {
+		config: NormalizedFormConfig;
+		lookup: FormValuesContextValue['isAuthoredDisabled'];
+	};
+
+	/**
+	 * Hands the live values to the constraint hosts and fields.
+	 *
+	 * @remarks
+	 * The authored-disabled lookup is rebuilt only when the config changes, so a field that
+	 * selects it is notified by a new config and not by a value change.
+	 */
+	private publishFormValues(values = this.form?.getValues()): void {
+		const { config } = this;
+		if (!values || !config) return;
+		if (this.authoredDisabled?.config !== config) {
+			this.authoredDisabled = { config, lookup: createAuthoredDisabledLookup(config) };
+		}
+		this.valuesProvider.setContext({ values, isAuthoredDisabled: this.authoredDisabled.lookup });
 	}
 
 	private publish(): void {

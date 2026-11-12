@@ -175,3 +175,18 @@ test.each([
 	await store.validateField(name);
 	expect(store.getState().errors[name]?.message).toBe(message);
 });
+
+test('a hydrated constraint host keeps its server node and follows the form values', async () => {
+	const { root } = mount();
+	const wrapper = root.querySelector<HTMLElement>('se-constraint[data-se-constraint-field="vat"]')!;
+	const field = wrapper.querySelector('se-field[name="vat"]') as FormFieldElement;
+	expect(wrapper.hidden).toBe(true);
+	await expect.poll(() => formOf(field).ready).toBe(true);
+	expect(wrapper.hidden).toBe(true);
+	expect(root.querySelector('se-constraint[data-se-constraint-field="vat"]')).toBe(wrapper);
+
+	formOf(field).setValue('contact', 'show');
+	await expect.poll(() => wrapper.hidden).toBe(false);
+	formOf(field).setValue('contact', 'other');
+	await expect.poll(() => wrapper.hidden).toBe(true);
+});

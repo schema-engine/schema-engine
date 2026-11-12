@@ -1,8 +1,4 @@
 import { expect, test } from 'vitest';
-import { FormStore, type FieldValues } from '@ecopages/radiant-ui/form';
-import { normalizedTestConfig } from '../adapters/test-config';
-import { FormInstanceElement } from '@/components/form-instance.script';
-import { provideTestFormStore } from '../adapters/test-form';
 import { createRoot } from '@ecopages/jsx/client';
 import { FormController } from '@/adapters/radiant/controller';
 import { FormRenderer } from '@/components/internals/form-renderer';
@@ -10,46 +6,48 @@ import type { FormFieldElement } from '@/elements/form-field';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
 
-test('authored disabled survives live constraint sync', async () => {
-	const instance = new FormInstanceElement();
-	instance.config = normalizedTestConfig({
+const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+
+test('authored disabled survives live constraints', async () => {
+	const host = document.createElement('div');
+	document.body.append(host);
+	const root = createRoot(host);
+	const config = engine.validateForm({
 		id: 'disabled-form',
 		steps: [
 			{
 				id: 'main',
 				title: 'Main',
 				elements: [
+					{ $type: 'input', id: 'mode', name: 'mode' },
 					{
 						$type: 'input',
 						id: 'ref',
 						name: 'ref',
 						disabled: true,
-						constraints: [{ field: 'mode', operator: 'equals', value: 'manual', action: 'enable' }],
+						constraints: [
+							{ field: 'mode', operator: 'equals', value: 'manual', action: 'enable' },
+							{ field: 'mode', operator: 'equals', value: 'manual', action: 'hide' },
+						],
 					},
 				],
 			},
 		],
 	});
-	const form = document.createElement('rui-form');
-	const store = new FormStore<FieldValues>({ defaultValues: { mode: 'manual' } });
-	provideTestFormStore(form, store);
-	const wrapper = document.createElement('div');
-	wrapper.setAttribute('data-se-constraint-field', 'ref');
-	const field = document.createElement('se-field');
-	field.setAttribute('name', 'ref');
-	wrapper.append(field);
-	form.append(wrapper);
-	instance.append(form);
-	document.body.append(instance);
+	root.render(FormRenderer({ config, engine }));
+	const form = new FormController(host.querySelector('rui-form')!);
 	try {
-		store.setValue('mode', 'manual');
-		await expect.poll(() => (field as HTMLElement & { disabled?: boolean }).disabled).toBe(true);
+		await expect.poll(() => form.ready).toBe(true);
+		const field = host.querySelector<FormFieldElement>('se-field[name="ref"]')!;
+		form.setValue('mode', 'manual');
+		await expect.poll(() => host.querySelector('se-constraint')?.hasAttribute('hidden')).toBe(true);
+		expect(field.disabled).toBe(true);
 	} finally {
-		instance.remove();
+		form.disconnect();
+		root.unmount();
+		host.remove();
 	}
 });
-
-const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 
 async function mountFieldSet(fieldSet: Record<string, unknown>) {
 	const host = document.createElement('div');
@@ -94,7 +92,7 @@ async function mountFieldSet(fieldSet: Record<string, unknown>) {
 	};
 }
 
-test('a child keeps its own disabled state after live sync', async () => {
+test('a child keeps its own disabled state after live constraints', async () => {
 	const { form, street, city, wrapper, cleanup } = await mountFieldSet({
 		constraints: [{ field: 'mode', operator: 'equals', value: 'hide', action: 'hide' }],
 	});
@@ -149,17 +147,15 @@ test('a fieldset require reaches its children and releases them', async () => {
 	});
 	try {
 		form.setValue('mode', 'need');
-		await expect.poll(() => city.hasAttribute('data-se-constraint-required')).toBe(true);
-		expect(city.rules?.required).toBe(true);
+		await expect.poll(() => city.rules?.required).toBe(true);
 		form.setValue('mode', 'open');
-		await expect.poll(() => city.hasAttribute('data-se-constraint-required')).toBe(false);
-		expect(city.rules?.required).toBeFalsy();
+		await expect.poll(() => city.rules?.required).toBeFalsy();
 	} finally {
 		cleanup();
 	}
 });
 
-test('a child keeps its own required marker after live sync', async () => {
+test('a child keeps its own required marker after live constraints', async () => {
 	const { form, city, wrapper, cleanup } = await mountFieldSet({
 		constraints: [{ field: 'mode', operator: 'equals', value: 'hide', action: 'hide' }],
 		elements: [{ $type: 'input', id: 'city', name: 'city', label: 'City', rules: [{ type: 'required' }] }],
@@ -174,7 +170,7 @@ test('a child keeps its own required marker after live sync', async () => {
 	}
 });
 
-test('a row field of an authored disabled array stays disabled after live sync, as it renders', async () => {
+test('a row field of an authored disabled array stays disabled after live constraints, as it renders', async () => {
 	const host = document.createElement('div');
 	document.body.append(host);
 	const root = createRoot(host);
@@ -224,17 +220,19 @@ test('a row field of an authored disabled array stays disabled after live sync, 
 
 const wrapperSources = ['Array', 'Box', 'City'] as const;
 
+const trigger = (source: string, kind: 'lock' | 'need') => ({
+	field: `ctl.${kind}${source}`,
+	operator: 'equals',
+	value: 'x',
+	action: kind === 'lock' ? 'disable' : 'require',
+});
+
+const constraintsFor = (source: string) => [trigger(source, 'lock'), trigger(source, 'need')];
+
 async function mountNestedWrappers() {
 	const host = document.createElement('div');
 	document.body.append(host);
 	const root = createRoot(host);
-	const trigger = (source: string, kind: 'lock' | 'need') => ({
-		field: `ctl.${kind}${source}`,
-		operator: 'equals',
-		value: 'x',
-		action: kind === 'lock' ? 'disable' : 'require',
-	});
-	const constraintsFor = (source: string) => [trigger(source, 'lock'), trigger(source, 'need')];
 	const config = engine.validateForm({
 		id: 'nested-wrappers',
 		steps: [
@@ -337,7 +335,7 @@ test('a field keeps the union of its wrappers while one of them releases', async
 		form.setValue('ctl.needArray', '');
 		form.setValue('ctl.lockBox', '');
 		form.setValue('ctl.needBox', '');
-		await expect.poll(() => form.getValue('ctl.lockBox')).toBe('');
+		await new Promise((resolve) => setTimeout(resolve, 50));
 		expect(city.disabled).toBe(true);
 		expect(city.rules?.required).toBe(true);
 
@@ -420,6 +418,21 @@ test('a constraint that turns require on validates any field once the form was s
 		form.setValue('mode', 'need');
 		await expect.poll(() => code.rules?.required).toBe(true);
 		await expect.poll(() => form.store!.getFieldError('code')).toBeTruthy();
+	} finally {
+		cleanup();
+	}
+});
+
+test('turning require on and off keeps the authored rule objects', async () => {
+	const { form, code, cleanup } = await mountRequireOnDependent();
+	try {
+		const before = code.rules;
+		form.setValue('mode', 'need');
+		await expect.poll(() => code.rules?.required).toBe(true);
+		expect(code.rules?.validate).toBe(before?.validate);
+		form.setValue('mode', '');
+		await expect.poll(() => code.rules?.required).toBeFalsy();
+		expect(code.rules?.validate).toBe(before?.validate);
 	} finally {
 		cleanup();
 	}

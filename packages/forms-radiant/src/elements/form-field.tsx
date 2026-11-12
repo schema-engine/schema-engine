@@ -7,10 +7,20 @@ import { resolveElementRules, toFieldRules, type FieldRulesSource } from '@/lib/
 import { FIELD_ARIA_TARGET_ATTR } from '@/lib/field-control';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { formElement } from '@/lib/define-element';
+import { onContextUpdate } from '@ecopages/radiant/context';
+import { constraintContext, formValuesContext, type ConstraintState } from '@/contexts/constraint-context';
+import { FormController } from '@/adapters/radiant/controller';
+import { shouldSurfaceDependentError } from '@schema-engine/forms/schemas/validation';
+
+const REQUIRED_MARKER = '[data-se-required-marker]';
 
 /** RuiField's registration and presentation, restoring hydrated rules and defaults. */
 @formElement('se-field')
 export class FormFieldElement extends RuiFieldElement {
+	private constraint?: ConstraintState;
+	private isAuthoredDisabled?: (renderedPath: string) => boolean;
+	private authoredRules?: FieldRules;
+
 	protected override onConnected(): void {
 		this.hydrateDefaultValue();
 		const rules = readHydratedRules(this);
@@ -18,6 +28,62 @@ export class FormFieldElement extends RuiFieldElement {
 			this.rules = rules;
 		}
 		super.onConnected();
+		this.authoredRules ??= this.rules ?? {};
+		this.applyConstraint();
+	}
+
+	@onContextUpdate({ context: constraintContext, requestUpdate: false })
+	onConstraint(constraint: ConstraintState | undefined): void {
+		this.constraint = constraint;
+		this.applyConstraint();
+	}
+
+	@onContextUpdate({
+		context: formValuesContext,
+		select: (form) => form?.isAuthoredDisabled,
+		requestUpdate: false,
+	})
+	onAuthoredDisabled(isAuthoredDisabled: ((renderedPath: string) => boolean) | undefined): void {
+		this.isAuthoredDisabled = isAuthoredDisabled;
+		this.applyConstraint();
+	}
+
+	/**
+	 * Composes the field's authored state with the constraint wrappers around it.
+	 *
+	 * @remarks
+	 * A field outside every wrapper never receives a constraint and keeps what render gave
+	 * it. The live `disabled` already holds what a constraint applied at render, so the
+	 * authored state comes from the config lookup, and the authored rules are kept as
+	 * the object they were, because a clone would strip `validate` functions and `RegExp`
+	 * patterns. It waits for the constraint context, the authored-disabled lookup and the authored
+	 * rules, so an authored `disabled` is never lifted while the lookup is still on its
+	 * way; a field inside a wrapper that has not evaluated yet keeps its render state too. A `required` that changes validates the field when the
+	 * user has reached it, as a dependent field is.
+	 */
+	private applyConstraint(): void {
+		const { constraint, isAuthoredDisabled, authoredRules: authored } = this;
+		if (!constraint || !isAuthoredDisabled || !authored) return;
+		const name = this.getAttribute('name') ?? this.name;
+
+		this.disabled = isAuthoredDisabled(name) || constraint.disabled;
+
+		const required = constraint.required
+			? typeof authored.required === 'string'
+				? authored.required
+				: true
+			: authored.required;
+		if (this.rules?.required === required) return;
+		this.rules = { ...authored, required };
+		this.querySelector(REQUIRED_MARKER)?.toggleAttribute('hidden', !required);
+		this.onRulesUpdated();
+
+		const store = new FormController(this).store;
+		if (!store || !name) return;
+		const { touched, isSubmitted } = store.getState();
+		if (shouldSurfaceDependentError({ touched: Boolean(touched[name]), submitted: isSubmitted })) {
+			void store.validateField(name);
+		}
 	}
 
 	/**
