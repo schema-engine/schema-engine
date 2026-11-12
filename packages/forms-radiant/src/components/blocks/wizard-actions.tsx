@@ -31,6 +31,12 @@ export class WizardActionsElement extends RadiantElement {
 		void this.instance?.goToNextStep();
 	};
 
+	/**
+	 * @remarks
+	 * The forward button is keyed because Radiant now keeps an element when only its attributes change. Without
+	 * keys, the click on Next would flip the same button to `type="submit"` before the browser runs its
+	 * activation behaviour, and that click would submit the form.
+	 */
 	override render(): JsxRenderable {
 		const meta = this.meta;
 		if (!meta) return null;
@@ -59,6 +65,7 @@ export class WizardActionsElement extends RadiantElement {
 				<div class="se-wizard-actions__forward">
 					{last ? (
 						<RuiButton
+							key="submit"
 							type="submit"
 							prop:disabled={instance.isSubmitting}
 							aria-label={labels.submitAriaLabel}
@@ -66,7 +73,7 @@ export class WizardActionsElement extends RadiantElement {
 							{instance.isSubmitting ? labels.submitting : labels.submit}
 						</RuiButton>
 					) : (
-						<RuiButton type="button" on:click={this.goNext} aria-label={labels.nextAriaLabel}>
+						<RuiButton key="next" type="button" on:click={this.goNext} aria-label={labels.nextAriaLabel}>
 							{labels.next}
 						</RuiButton>
 					)}
