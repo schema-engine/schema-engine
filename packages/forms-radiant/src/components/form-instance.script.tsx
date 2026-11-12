@@ -1,5 +1,5 @@
 import {
-	customElement,
+	onEvent,
 	onUpdated,
 	query,
 	RadiantElement,
@@ -26,6 +26,7 @@ import { logger } from '@/lib/logger';
 import type { FormProviderProps } from '@/adapters/types';
 import { FormController } from '@/adapters/radiant/controller';
 import { FormActions, type SubmissionOutcome } from '@/adapters/radiant/form-actions';
+import { formElement } from '@/lib/define-element';
 
 /** Properties of `<se-form-instance>`; `FormInstance` sets the function and engine ones through `prop:` bindings. */
 export interface FormInstanceProps {
@@ -37,8 +38,13 @@ export interface FormInstanceProps {
 	onAction?: FormProviderProps['onAction'];
 }
 
+/** Detail of `se-action-submit-complete`; `error` is set when `onSubmit` or the action lifecycle threw. */
+export interface SubmissionCompleteDetail extends SubmissionOutcome {
+	error?: unknown;
+}
+
 /** Behavior and engine navigation state for one composed form. */
-@customElement('se-form-instance')
+@formElement('se-form-instance')
 export class FormInstanceElement extends RadiantElement {
 	declare readonly [JSX_PROPS]?: FormInstanceProps;
 
@@ -96,7 +102,6 @@ export class FormInstanceElement extends RadiantElement {
 	constructor() {
 		super();
 		registerSsrPreparationCallback(this, () => this.publish());
-		this.publish();
 	}
 
 	/**
@@ -128,6 +133,30 @@ export class FormInstanceElement extends RadiantElement {
 	onConfigUpdated(): void {
 		this.resetStepState();
 		this.connectForm();
+	}
+
+	@onUpdated(['engine'])
+	onEngineUpdated(): void {
+		this.connectForm();
+		this.publish();
+	}
+
+	/**
+	 * Turns a native submit before the last step of a wizard into Next.
+	 *
+	 * @remarks
+	 * Removing the submit button only stops implicit submission when the form has two or
+	 * more fields that block it. A wizard with one text input would submit on Enter, and
+	 * `rui-form` would then mark the later steps invalid. The capture phase runs before
+	 * `rui-form` sees the event.
+	 */
+	@onEvent({ type: 'submit', host: true, options: { capture: true } })
+	onNativeSubmit(event: Event): void {
+		const { isWizard, currentStep, totalSteps } = this.getContextValue();
+		if (!isWizard || currentStep >= totalSteps - 1) return;
+		event.preventDefault();
+		event.stopPropagation();
+		void this.goToNextStep();
 	}
 
 	/**
@@ -166,7 +195,7 @@ export class FormInstanceElement extends RadiantElement {
 
 	/**
 	 * Runs one submission and reports it with `se-action-submit-start` and
-	 * `se-action-submit-complete` on the `rui-form`, whether or not actions are configured.
+	 * `se-action-submit-complete` (with `error` when it threw) on the `rui-form`, whether or not actions are configured.
 	 *
 	 * @remarks
 	 * The instance owns the submitting state because Radiant UI clears its own
@@ -181,7 +210,7 @@ export class FormInstanceElement extends RadiantElement {
 			ruiForm.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
 		this.setSubmitting(true);
 		announce('se-action-submit-start');
-		let outcome: SubmissionOutcome = { succeeded: true, results: [] };
+		let outcome: SubmissionCompleteDetail = { succeeded: true, results: [] };
 		try {
 			if (this.actions) outcome = await this.actions.submit();
 			if (outcome.succeeded) {
@@ -192,7 +221,7 @@ export class FormInstanceElement extends RadiantElement {
 				}
 			}
 		} catch (error) {
-			outcome = { succeeded: false, results: outcome.results };
+			outcome = { succeeded: false, results: outcome.results, error };
 			logger.error('Form submission failed', error);
 		} finally {
 			this.setSubmitting(false);
@@ -205,17 +234,24 @@ export class FormInstanceElement extends RadiantElement {
 		this.publish();
 	}
 
-	/** Builds the actions for the current config and engine, or drops them when the form configures none. */
+	/**
+	 * Builds the actions for the current engine, or drops them when the form configures none.
+	 *
+	 * @remarks
+	 * `FormProvider` re-validates the config on each render, so a new but equal config
+	 * must not rebuild the actions: that would fire `form_mount` again and reset the
+	 * submit attempts. Only an engine change rebuilds them.
+	 */
 	private syncActions(): void {
 		const { config, engine, form } = this;
 		if (!form || !config || !engine || !hasConfiguredActions(config)) {
 			this.disposeActions();
 			return;
 		}
-		if (this.actions?.config !== config || this.actions.engine !== engine) {
+		if (this.actions?.engine !== engine) {
 			this.disposeActions();
 			this.actions = new FormActions({
-				config,
+				config: () => this.config,
 				engine,
 				form,
 				currentStep: () => this.currentStep,

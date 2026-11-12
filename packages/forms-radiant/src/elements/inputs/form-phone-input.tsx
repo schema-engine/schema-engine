@@ -1,5 +1,5 @@
 import './form-phone-input.css';
-import { bindTo, customElement, onUpdated, prop, state } from '@ecopages/radiant';
+import { bindTo, onUpdated, prop, state } from '@ecopages/radiant';
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
 import { jsx, unsafeHtml, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import {
@@ -37,6 +37,7 @@ import {
 	type PhoneCountryOption,
 } from '@/lib/phone-number';
 import type { PhoneInputFieldProps } from './form-phone-input.types';
+import { formElement } from '@/lib/define-element';
 
 function PhoneFlag({ code, class: className }: { code?: string; class: string }) {
 	const svg = code ? countryFlagSvg(code) : '';
@@ -54,7 +55,7 @@ function PhoneFlag({ code, class: className }: { code?: string; class: string })
  * libphonenumber has loaded, and `committed` keeps the host's own writes from
  * being re-parsed.
  */
-@customElement('se-phone-input', { hostAttributes: fieldControlHostAttributes('[data-ref="number"]') })
+@formElement('se-phone-input', { hostAttributes: fieldControlHostAttributes('[data-ref="number"]') })
 export class SePhoneInput extends FormAssociatedElement {
 	@prop({ type: String }) value = '';
 	@prop({ type: String }) inputId = '';

@@ -1,5 +1,5 @@
 import './form-drop-zone.css';
-import { customElement, onUpdated, prop, query, RadiantElement, state } from '@ecopages/radiant';
+import { onUpdated, prop, query, RadiantElement, state } from '@ecopages/radiant';
 import { registerFieldControl, type FieldControlAdapter } from '@ecopages/radiant-ui/form';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
@@ -7,6 +7,7 @@ import { isRenderedRequired } from '@/lib/field-rules';
 import { emitControlChange } from '@/lib/field-control';
 import { FieldGroup } from '../field-group';
 import type { DropZoneFieldProps } from './form-drop-zone.types';
+import { formElement } from '@/lib/define-element';
 
 type AcceptMap = Record<string, string[]>;
 
@@ -62,7 +63,7 @@ function formatFileNames(files: File[]) {
 	return new Intl.ListFormat('en').format(files.map((file) => file.name));
 }
 
-@customElement('se-drop-zone')
+@formElement('se-drop-zone')
 export class SeDropZone extends RadiantElement {
 	@prop({ type: String }) name = '';
 	@prop({ type: Number, defaultValue: 1 }) maxFiles = 1;

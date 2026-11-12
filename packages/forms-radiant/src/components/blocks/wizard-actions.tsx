@@ -1,5 +1,5 @@
 import { contextSelector } from '@ecopages/radiant/context';
-import { customElement, prop, RadiantElement } from '@ecopages/radiant';
+import { prop, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { formatStepLabel, type WizardActionsConfig } from '@schema-engine/forms/recipes/built-in';
@@ -7,13 +7,14 @@ import type { FormMeta } from '@/lib/instance-view';
 import type { RecipeSlotContext } from '@/recipes/types';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { deriveFormSteps, deriveInitialInstance } from '@/lib/instance-view';
+import { formElement } from '@/lib/define-element';
 
 /**
  * @remarks
  * The submit button is rendered only on the last step. A hidden submit button is still the form's default button, so
  * Enter in a field on an earlier step would submit the form.
  */
-@customElement('se-wizard-actions')
+@formElement('se-wizard-actions')
 export class WizardActionsElement extends RadiantElement {
 	@prop({ type: Object }) meta?: FormMeta;
 	@prop({ type: Object }) slotConfig?: WizardActionsConfig;

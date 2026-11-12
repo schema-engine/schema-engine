@@ -80,6 +80,37 @@ test('a step whose index changes is judged against the current step, not step 0'
 	await expect.poll(() => steps.map((step) => step.hidden)).toEqual([false, true]);
 });
 
+test('a hidden step unhides when the config changes from a wizard to a non-wizard view', async () => {
+	const instance = new FormInstanceElement();
+	const engine = createRadiantFormEngine({ elements: schemaFormRegistrations, recipes: [WizardRecipe] });
+	instance.engine = engine;
+	instance.config = engine.validateForm({
+		id: 'wizard',
+		view: { $type: 'wizard' },
+		steps: [
+			{ id: 'first', title: 'First', elements: [] },
+			{ id: 'second', title: 'Second', elements: [] },
+		],
+	});
+	const host = document.createElement('rui-form');
+	provideTestFormStore(host, new FormStore());
+	const step = new FormStepElement();
+	host.append(step);
+	instance.append(host);
+	document.body.append(instance);
+	await expect.poll(() => step.hidden).toBe(false);
+	await instance.goToNextStep();
+	await expect.poll(() => step.hidden).toBe(true);
+
+	instance.config = engine.validateForm({
+		id: 'plain',
+		view: { $type: 'card' },
+		steps: [{ id: 'only', title: 'Only', elements: [] }],
+	});
+
+	await expect.poll(() => step.hidden).toBe(false);
+});
+
 test('Next on the last step validates it and marks it valid', async () => {
 	const instance = new FormInstanceElement();
 	instance.config = normalizedTestConfig({

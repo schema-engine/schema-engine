@@ -1,7 +1,8 @@
-import { bindTo, customElement, onUpdated, prop, RadiantElement, state } from '@ecopages/radiant';
+import { bindTo, onUpdated, prop, RadiantElement, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
+import { formElement } from '@/lib/define-element';
 
 /**
  * Visibility host for one authored step.
@@ -17,7 +18,7 @@ import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/f
  *
  * @element se-form-step
  */
-@customElement('se-form-step')
+@formElement('se-form-step')
 export class FormStepElement extends RadiantElement {
 	@prop({ type: Number, defaultValue: 0 }) stepIndex = 0;
 
@@ -27,6 +28,12 @@ export class FormStepElement extends RadiantElement {
 
 	private instance?: FormInstanceContextValue;
 
+	/**
+	 * @remarks
+	 * The view writes `hidden` once, for the server-rendered markup. From connect on the
+	 * host owns it through `hiddenStep` and follows every value the instance publishes,
+	 * so a view update never competes with the current step.
+	 */
 	protected override onConnected(): void {
 		this.hiddenStep = this.hasAttribute('hidden');
 	}
@@ -42,15 +49,10 @@ export class FormStepElement extends RadiantElement {
 		this.syncHidden();
 	}
 
-	/**
-	 * @remarks
-	 * The instance publishes before it has resolved its engine, with `isWizard` false, so a non-wizard value is
-	 * ignored rather than unhiding the steps the server rendered hidden.
-	 */
 	private syncHidden(): void {
 		const { instance } = this;
-		if (!instance?.isWizard) return;
-		this.hiddenStep = instance.currentStep !== this.stepIndex;
+		if (instance?.isWizard === undefined) return;
+		this.hiddenStep = instance.isWizard && instance.currentStep !== this.stepIndex;
 	}
 }
 

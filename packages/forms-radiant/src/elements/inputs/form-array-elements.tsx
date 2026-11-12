@@ -1,5 +1,5 @@
 import './form-array-elements.css';
-import { customElement, onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
+import { onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
@@ -8,7 +8,7 @@ import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import type { ArrayElementsProps } from './form-array-elements.types';
 import { arrayItemScope, createArrayRowDefault, seedArrayRows, usesScalarArrayItem } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
-import { FormController, FormEngineController } from '@/adapters/radiant/controller';
+import { FormController } from '@/adapters/radiant/controller';
 import { toFieldRules, withContainerState } from '@/lib/field-rules';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { adoptFieldArrayIds } from '@/adapters/radiant/controller/field-array';
@@ -16,6 +16,7 @@ import { getValueAtPath, setValueAtPath } from '@schema-engine/forms/lib/path-va
 import { formContext, type FormContextValue } from '@ecopages/radiant-ui/form';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { readValue } from '@/adapters/radiant/controller/values';
+import { formElement } from '@/lib/define-element';
 
 function TrashIcon() {
 	return (
@@ -143,12 +144,12 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 	);
 }
 
-@customElement('se-form-array')
+@formElement('se-form-array')
 export class SeFormArray extends RadiantElement {
 	@prop({ type: Object }) config!: ArrayElementsProps;
 
 	readonly form = new FormController(this);
-	private readonly formEngine = new FormEngineController(this);
+	@state private engine?: FormEngine;
 	private unregisterArrayField?: () => void;
 	private isArrayFieldRegistered = false;
 	private initialized = false;
@@ -211,8 +212,13 @@ export class SeFormArray extends RadiantElement {
 		return values;
 	}
 
+	/**
+	 * @remarks
+	 * Resolved once, in `onConnected`, like the other hosts. A host that is not connected is
+	 * being rendered by the owning render, which is the only place its engine can come from.
+	 */
 	private resolveEngine(): FormEngine | undefined {
-		return this.formEngine.engine;
+		return this.engine ?? (this.isConnected ? undefined : resolveFormEngine(this));
 	}
 
 	private get ids(): string[] {
@@ -271,6 +277,7 @@ export class SeFormArray extends RadiantElement {
 	}
 
 	protected override onConnected(): void {
+		this.engine ??= resolveFormEngine(this);
 		const initialIds = this.initialIds();
 		this.renderedIds = initialIds;
 		if (this.form.ready) this.scheduleSync(initialIds);
@@ -281,7 +288,7 @@ export class SeFormArray extends RadiantElement {
 	}
 
 	override disconnectedCallback(): void {
-		this.formEngine.disconnect();
+		this.engine = undefined;
 		this.form.disconnect();
 		this.unregisterArrayField?.();
 		this.unregisterArrayField = undefined;

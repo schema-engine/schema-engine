@@ -125,6 +125,21 @@ test('the alert reports an error for a rejected submission and never reports suc
 	expect(events).toEqual(['start', 'complete:false']);
 });
 
+test('se-action-submit-complete carries the error of a rejected onSubmit', async () => {
+	vi.spyOn(console, 'error').mockImplementation(() => {});
+	const failure = new Error('500');
+	const { form, submit } = await mount(async () => {
+		throw failure;
+	});
+	const details: unknown[] = [];
+	form.addEventListener('se-action-submit-complete', (event) => details.push((event as CustomEvent).detail));
+
+	submit().click();
+
+	await expect.poll(() => details).toHaveLength(1);
+	expect(details[0]).toMatchObject({ succeeded: false, error: failure });
+});
+
 test('start and complete events also fire when submit actions are configured', async () => {
 	const { submit, events } = await mount(async () => {}, { actions: true });
 
