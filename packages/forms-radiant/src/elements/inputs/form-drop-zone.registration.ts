@@ -4,6 +4,7 @@ import { defineInput } from '@schema-engine/forms';
 
 export const DropZoneElementRegistration = defineInput({
 	$type: 'drop-zone',
+	appearanceAxes: ['size'],
 	render: FormDropZone,
 	schema: DropZoneFieldSchema,
 	metadata: {

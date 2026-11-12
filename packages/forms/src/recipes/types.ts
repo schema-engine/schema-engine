@@ -1,5 +1,6 @@
 import type * as z from 'zod/mini';
 import type { ComponentMetadata } from '@schema-engine/registry';
+import type { SlotAppearanceAxes } from '@/lib/appearance';
 
 export type RecipeKind = 'single-step' | 'wizard';
 
@@ -49,6 +50,15 @@ export interface RecipeSpec<
 	slots: RecipeSlot[];
 	slotSchemas: TSlots;
 	slotDefaults?: RecipeSlotDefaults<TSlots>;
+	/**
+	 * Appearance axes each slot supports (`{ shell: ['size', 'surface'] }`); undeclared axes fail validation on that slot.
+	 *
+	 * @remarks
+	 * A slot that declares axes must accept an `appearance` key in its schema, so authored
+	 * configs type-check and the JSON Schema lists it. `validateForm` does not pass the key to the slot schema when it
+	 * parses the view, and writes the resolved selection back, so a renderer reading the normalized slot sees it.
+	 */
+	appearanceAxes?: SlotAppearanceAxes<keyof TSlots>;
 	metadata: RecipeMetadata;
 	schema: TSchema;
 }

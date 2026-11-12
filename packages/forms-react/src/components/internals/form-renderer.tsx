@@ -13,6 +13,7 @@ import {
 } from '@schema-engine/forms/lib/grid-styles';
 import type React from 'react';
 import { useContext, useMemo } from 'react';
+import { getAppearanceAttributes, type CompiledAppearance } from '@schema-engine/forms/lib/appearance';
 import { FormProvider } from '../form-provider';
 import type { FormAdapter, FormProviderProps } from '../../adapters/types';
 import { FormElements } from './form-elements';
@@ -28,6 +29,14 @@ import { getRenderableSteps, assertFormEngine } from '@schema-engine/forms/lib/v
 function GridThemeStyle({ themeId, css }: { themeId: string; css: string }) {
 	return (
 		<style href={`se-grid-theme-${themeId}`} precedence="se-grid-theme" data-se-grid-theme={themeId}>
+			{css}
+		</style>
+	);
+}
+
+function AppearanceThemeStyle({ themeId, css }: { themeId: string; css: string }) {
+	return (
+		<style href={`se-appearance-theme-${themeId}`} precedence="se-grid-theme" data-se-appearance-css={themeId}>
 			{css}
 		</style>
 	);
@@ -57,15 +66,22 @@ function StepFields({
 	config: NormalizedFormConfig;
 	theme: NormalizedGridTheme;
 }) {
-	if (!step.elements.length) return null;
-
 	return (
 		<div
-			className="se-form-grid"
-			data-se-grid-theme={theme.id}
-			style={getFormGridVariables(config.grid, theme, step.elements)}
+			className={`se-form-step ${step.className ?? ''}`.trim()}
+			data-se-step={step.id}
+			style={step.style}
+			{...getAppearanceAttributes(step.appearance)}
 		>
-			<FormElements elements={step.elements} />
+			{step.elements.length > 0 && (
+				<div
+					className="se-form-grid"
+					data-se-grid-theme={theme.id}
+					style={getFormGridVariables(config.grid, theme, step.elements)}
+				>
+					<FormElements elements={step.elements} />
+				</div>
+			)}
 		</div>
 	);
 }
@@ -136,10 +152,12 @@ function FormRendererInner<
 	className = '',
 	style,
 	compiledGrid,
+	compiledAppearance,
 	children,
 }: Omit<FormRendererProps<TElements, TRecipes, TActions, TOutputs>, 'engine' | 'adapter' | 'config'> & {
 	config: NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>;
 	compiledGrid: CompiledGrid;
+	compiledAppearance: CompiledAppearance;
 }) {
 	const { theme, css } = compiledGrid;
 	return (
@@ -154,6 +172,9 @@ function FormRendererInner<
 		>
 			<div className={`se-form ${className}`.trim()} style={style}>
 				<GridThemeStyle themeId={theme.id} css={css} />
+				{compiledAppearance.css !== '' && (
+					<AppearanceThemeStyle themeId={compiledAppearance.id} css={compiledAppearance.css} />
+				)}
 				<FormElementsRenderer config={config} theme={theme}>
 					{children}
 				</FormElementsRenderer>
@@ -172,14 +193,15 @@ export function FormRenderer<
 	const inheritedAdapter = useContext(FormAdapterContext);
 	const resolvedEngine = engine ?? inheritedEngine?.engine;
 	const resolvedAdapter = adapter ?? inheritedAdapter ?? undefined;
-	const { config, compiledGrid } = useMemo(() => {
+	const { config, compiledGrid, compiledAppearance } = useMemo(() => {
 		assertFormEngine(resolvedEngine, props.config);
 		return {
 			config: resolvedEngine.validateForm(props.config),
 			compiledGrid: resolvedEngine.getCompiledGrid(),
+			compiledAppearance: resolvedEngine.getAppearance(),
 		};
 	}, [props.config, resolvedEngine]);
-	const innerProps = { ...props, config, compiledGrid };
+	const innerProps = { ...props, config, compiledGrid, compiledAppearance };
 
 	if (!resolvedEngine) {
 		return <FormRendererInner {...innerProps} />;

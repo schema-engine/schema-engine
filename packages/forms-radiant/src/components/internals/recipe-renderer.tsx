@@ -23,6 +23,10 @@ function GridThemeStyle({ themeId, css }: { themeId: string; css: string }): Jsx
 	return jsx('style', { 'data-se-grid-theme': themeId, children: css });
 }
 
+function AppearanceThemeStyle({ themeId, css }: { themeId: string; css: string }): JsxRenderable {
+	return jsx('style', { 'data-se-appearance-css': themeId, children: css });
+}
+
 export function RecipeRenderer({
 	config,
 	engine,
@@ -38,6 +42,7 @@ export function RecipeRenderer({
 }): JsxRenderable {
 	const values = expandValues(initialValues ?? collectFormDefaultValues(config));
 	const { theme, css: gridThemeCss } = engine.getCompiledGrid();
+	const appearance = engine.getAppearance();
 	const viewConfig = (config.view as Record<string, unknown> | undefined) ?? {};
 	const meta = createFormMeta(config);
 	const slotContext = (slot: Exclude<RecipeSlot, 'shell'>) => ({
@@ -49,8 +54,17 @@ export function RecipeRenderer({
 	const content = (
 		<>
 			<GridThemeStyle themeId={theme.id} css={gridThemeCss} />
+			{appearance.css === '' ? null : <AppearanceThemeStyle themeId={appearance.id} css={appearance.css} />}
 			{config.steps.map((step, index) => (
-				<FormStep key={step.id} stepIndex={index} hidden={isWizard && index !== 0}>
+				<FormStep
+					key={step.id}
+					stepId={step.id}
+					stepIndex={index}
+					hidden={isWizard && index !== 0}
+					class={step.className}
+					style={step.style}
+					appearance={step.appearance}
+				>
 					{step.elements.length ? (
 						<div
 							class="se-form-elements se-form-grid"

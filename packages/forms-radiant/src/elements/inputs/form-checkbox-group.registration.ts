@@ -4,6 +4,7 @@ import { defineInput } from '@schema-engine/forms';
 
 export const CheckboxGroupElementRegistration = defineInput({
 	$type: 'checkbox-group',
+	appearanceAxes: ['size'],
 	render: FormCheckboxGroup,
 	schema: CheckboxGroupFieldConfigSchema,
 	metadata: {

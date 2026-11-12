@@ -13,7 +13,7 @@ const steps = [{ id: 'main', title: 'Main', elements: [] }];
 engine.defineForm({
 	id: 'valid',
 	steps,
-	view: { $type: 'card', shell: { maxWidth: 'md' } },
+	view: { $type: 'card', shell: { appearance: { size: 'default' } } },
 });
 
 engine.defineForm({
@@ -21,7 +21,7 @@ engine.defineForm({
 	steps,
 	view: {
 		$type: 'card',
-		// @ts-expect-error -- maxWidth only accepts the shell's size tokens
+		// @ts-expect-error -- the shell takes appearance, not the removed maxWidth
 		shell: { maxWidth: 'huge' },
 	},
 });

@@ -155,7 +155,7 @@ typed object to `engine.defineForm()`:
 const form = engine.defineForm({
 	id: 'contact',
 	title: 'Contact',
-	view: { $type: 'card', shell: { maxWidth: 'md' } },
+	view: { $type: 'card', shell: { appearance: { size: 'default' } } },
 	steps: [
 		{
 			id: 'details',
@@ -191,7 +191,7 @@ const config: FormConfig = {
 	steps: [{ id: 'details', title: 'Contact details', elements: [] }],
 	view: {
 		$type: 'card',
-		shell: { padding: 'md' },
+		shell: { appearance: { size: 'default' } },
 	},
 };
 ```

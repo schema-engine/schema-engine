@@ -34,6 +34,8 @@ export function FormSelect(config: SelectFieldProps) {
 			required={isFieldRequired(config.rules) || isRenderedRequired(config)}
 			description={config.description}
 			grid={config.grid}
+			appearance={config.appearance}
+			class={config.className}
 			style={config.style}
 			validation={config}
 			defaultValue={serializeChoiceValue(config.defaultValue)}

@@ -2,6 +2,7 @@ import { FormField } from '@/elements/form-field';
 import type { JsxRenderable } from '@ecopages/jsx';
 import { RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
 import { RuiLabel } from '@ecopages/radiant-ui/label';
+import type { AppearanceSelection } from '@schema-engine/forms/lib/appearance';
 import type { ElementGridConfig } from '@schema-engine/forms/schemas';
 import type { FieldRulesSource } from '@/lib/field-rules';
 
@@ -19,6 +20,8 @@ export interface FieldGroupProps {
 	children: JsxRenderable;
 	style?: Record<string, string | number | undefined>;
 	grid?: ElementGridConfig;
+	/** The field's resolved appearance, emitted on the host as `data-se-<axis>` attributes. */
+	appearance?: AppearanceSelection;
 	name?: string;
 	validation?: FieldRulesSource;
 	defaultValue?: unknown;
@@ -57,6 +60,7 @@ export function FieldGroup({
 	class: className,
 	children,
 	style,
+	appearance,
 	grid,
 	name,
 	validation,
@@ -79,6 +83,7 @@ export function FieldGroup({
 			class={className}
 			grid={grid}
 			style={style}
+			appearance={appearance}
 		>
 			{labelAfter ? null : labelElement}
 			{children}
