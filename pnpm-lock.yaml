@@ -950,7 +950,7 @@ packages:
     engines: {node: ^24.22.0 || >=26.0.0}
 
   '@ecopages/jsx@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz':
-    resolution: {integrity: sha512-j/L5S8yW7prMhl8hfKK/PUrwq9PzhrR9wYJdVRLDxyKWlZxwAa7XNnIhGMOf1mH/VtAfO3kXclyNgjB8Rj/Zug==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz}
+    resolution: {integrity: sha512-fWO1sq/Lu6TxPlICs5bgw2xRmKkfy5RenI0GPWb6MnjhlvNkfjc1ZL84zCunACnIpY2W/dHQ1ihO5m46O/Q0XQ==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-jsx-0.8.2.tgz}
     version: 0.8.2
     peerDependencies:
       '@ecopages/signals': '>=0.8.2'
@@ -983,7 +983,7 @@ packages:
         optional: true
 
   '@ecopages/radiant-ui@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-ui-0.3.4.tgz':
-    resolution: {integrity: sha512-WuGZRZUe7AEsRFaUjfRU7WyRDoLiJZIxLWZqZutikOYIche67ZerUreUhDP/5Jq8hUhfHw5bwNUAK5fKNHy6jw==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-ui-0.3.4.tgz}
+    resolution: {integrity: sha512-5dp7uLfk1jEE3w5J7x7j8YilOO9zEsGs+76ZzdTu9TCPpRT+I3IOviizscZuNN4eeGdU6CX7JY6zUsgNPPiw4Q==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-ui-0.3.4.tgz}
     version: 0.3.4
     peerDependencies:
       '@ecopages/jsx': '>=0.8.2'
@@ -991,7 +991,7 @@ packages:
       '@ecopages/signals': '>=0.8.2'
 
   '@ecopages/radiant@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-0.8.2.tgz':
-    resolution: {integrity: sha512-eMyG55RRWVx3XhKW24+8fbTo8B65KNihho/V9zJFFXYqqav58TshbLFnmvBeaN4WuLB5DJssNzXJLhxK5CpqaA==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-0.8.2.tgz}
+    resolution: {integrity: sha512-FjfMPr/s9lJrOoX33k7XgRpsUzYLD0m8ghI3jmGnmVIibK8Arsg07wED1wkoqzd5xMmcvGe4lgtltIQ6cRnAPQ==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-radiant-0.8.2.tgz}
     version: 0.8.2
     peerDependencies:
       '@ecopages/jsx': '>=0.8.2'
@@ -1030,7 +1030,7 @@ packages:
         optional: true
 
   '@ecopages/vite-plugin-radiant@file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-vite-plugin-radiant-0.2.2.tgz':
-    resolution: {integrity: sha512-0K2UDwnDoMmXEpnD1fBygHwT7bT9f/pLaMsY8H9C3trpsAlM1A9vJQsAzuN3ncTSZUxYy+sztlpeV+LaXU9fng==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-vite-plugin-radiant-0.2.2.tgz}
+    resolution: {integrity: sha512-1gEeW+T+vzhMNxcGBzeIVK2jzs0/kCRDujnoM4r7qZ0MvUeS3iyQ7MqWMrEw7V5QoWcJ5/y0HZOPIFZeiW9FXg==, tarball: file:../../../../../../private/tmp/claude-501/-Users-andeeplus-github-schema-engine/fbb034f7-b7a5-40db-b1db-0a0eaa9db10a/scratchpad/tarballs/ecopages-vite-plugin-radiant-0.2.2.tgz}
     version: 0.2.2
     engines: {node: '>=18'}
     peerDependencies:
