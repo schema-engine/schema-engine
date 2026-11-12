@@ -111,6 +111,26 @@ describe('RadiantCodeTabs', () => {
 		});
 	});
 
+	it('clears the failed copy status after two seconds', async () => {
+		vi.useFakeTimers();
+		const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+		mockClipboard(vi.fn().mockRejectedValue(new Error('denied')));
+		const codeTabs = createCodeTabs();
+		codeTabs.selectedKey = 'js';
+		const copyButton = await mount(codeTabs);
+
+		await user.click(copyButton);
+		await vi.waitFor(() => {
+			expect(status(codeTabs)).toBe('Failed to copy JavaScript');
+		});
+
+		vi.advanceTimersByTime(2000);
+
+		await vi.waitFor(() => {
+			expect(status(codeTabs)).toBe('');
+		});
+	});
+
 	it('keeps every id unique and every tab wired to its own panel across instances', async () => {
 		const install = createCodeTabs('install');
 		const usage = createCodeTabs('usage');
