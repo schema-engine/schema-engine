@@ -59,7 +59,22 @@ const RESERVED_AREA_NAMES = [
 	'revert-layer',
 ];
 
-const AREA_NAME_SOURCE = `(?!(?:${RESERVED_AREA_NAMES.join('|')})(?![\\w-]))-?[_a-z][_a-z0-9-]*`;
+/**
+ * A word as a pattern that matches it in any letter case.
+ *
+ * @remarks
+ * Spelled with character classes instead of an `i` flag because the JSON Schema
+ * export keeps only a regex's source, so a flag would be lost and editors would
+ * accept `AUTO` and reject `Street`.
+ */
+function anyCase(word: string): string {
+	return word
+		.split('')
+		.map((char) => (/[a-z]/i.test(char) ? `[${char.toLowerCase()}${char.toUpperCase()}]` : char))
+		.join('');
+}
+
+const AREA_NAME_SOURCE = `(?!(?:${RESERVED_AREA_NAMES.map(anyCase).join('|')})(?![\\w-]))-?[_a-zA-Z][_a-zA-Z0-9-]*`;
 
 /**
  * Name of a grid area: an ASCII CSS identifier that is not a reserved word.
@@ -69,22 +84,35 @@ const AREA_NAME_SOURCE = `(?!(?:${RESERVED_AREA_NAMES.join('|')})(?![\\w-]))-?[_
  * the pattern is the injection guard. Nothing outside `[A-Za-z0-9_-]` can reach the
  * property, which rules out quotes, semicolons, braces and whitespace.
  */
-export const GridAreaNameSchema = z
+const GridAreaNameSchema = z
 	.string()
 	.check(
-		z.regex(
-			new RegExp(`^${AREA_NAME_SOURCE}$`, 'i'),
-			'Area names are CSS identifiers such as "header" or "side-2".',
-		),
+		z.regex(new RegExp(`^${AREA_NAME_SOURCE}$`), 'Area names are CSS identifiers such as "header" or "side-2".'),
 		z.describe('Name of a cell group in the grid template: a CSS identifier such as "header" or "side-2".'),
 	);
+
+/** A value per cascade slot (`default`, `sm` ... `2xl`), each optional. */
+function perBreakpoint<T extends z.ZodMiniType>(schema: T) {
+	return z.strictObject({
+		default: z.optional(schema),
+		sm: z.optional(schema),
+		md: z.optional(schema),
+		lg: z.optional(schema),
+		xl: z.optional(schema),
+		'2xl': z.optional(schema),
+	});
+}
+
+function responsiveSchema<T extends z.ZodMiniType>(schema: T) {
+	return z.optional(perBreakpoint(schema));
+}
 
 /** One row of a template: area names or `.` for an empty cell, separated by spaces. */
 const GridAreaRowSchema = z
 	.string()
 	.check(
 		z.regex(
-			new RegExp(`^\\s*(?:\\.+|${AREA_NAME_SOURCE})(?:\\s+(?:\\.+|${AREA_NAME_SOURCE}))*\\s*$`, 'i'),
+			new RegExp(`^\\s*(?:\\.+|${AREA_NAME_SOURCE})(?:\\s+(?:\\.+|${AREA_NAME_SOURCE}))*\\s*$`),
 			'A grid areas row lists area names (CSS identifiers) or "." for an empty cell, separated by spaces.',
 		),
 	);
@@ -100,18 +128,8 @@ const GridAreaRowsSchema = z.array(GridAreaRowSchema).check(z.minLength(1));
  * fill a rectangle; `validateForm` checks both, as CSS drops a template that
  * breaks either.
  */
-export const GridAreasSchema = z
-	.union([
-		GridAreaRowsSchema,
-		z.strictObject({
-			default: z.optional(GridAreaRowsSchema),
-			sm: z.optional(GridAreaRowsSchema),
-			md: z.optional(GridAreaRowsSchema),
-			lg: z.optional(GridAreaRowsSchema),
-			xl: z.optional(GridAreaRowsSchema),
-			'2xl': z.optional(GridAreaRowsSchema),
-		}),
-	])
+const GridAreasSchema = z
+	.union([GridAreaRowsSchema, perBreakpoint(GridAreaRowsSchema)])
 	.check(
 		z.describe(
 			'Rows of area names separated by spaces ("." is an empty cell), or a record of them per breakpoint (default, sm ... 2xl).',
@@ -144,19 +162,6 @@ export const GridBreakpointConfigSchema = z.pick(GridLayoutPropertiesSchema, {
 	gapY: true,
 	minColumnWidth: true,
 });
-
-function responsiveSchema<T extends z.ZodMiniType>(schema: T) {
-	return z.optional(
-		z.strictObject({
-			default: z.optional(schema),
-			sm: z.optional(schema),
-			md: z.optional(schema),
-			lg: z.optional(schema),
-			xl: z.optional(schema),
-			'2xl': z.optional(schema),
-		}),
-	);
-}
 
 export const GridLayoutConfigSchema = z.extend(GridLayoutPropertiesSchema, {
 	responsive: responsiveSchema(GridBreakpointConfigSchema),
