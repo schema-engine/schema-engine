@@ -94,7 +94,6 @@ export class FormInstanceElement extends RadiantElement {
 	constructor() {
 		super();
 		registerSsrPreparationCallback(this, () => this.publish());
-		this.publish();
 	}
 
 	/**
