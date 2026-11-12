@@ -13,7 +13,8 @@ import { devToolbar } from '@ecopages/dev-toolbar/config';
 
 /**
  * @remarks
- * Install Radiant's server runtime before React routes import the shared docs shell.
+ * Radiant's server runtime is installed first so Radiant hosts render on the
+ * server in every route, including the React-owned demo previews.
  */
 export default defineConfig({
 	rootDir: import.meta.dirname,
@@ -22,14 +23,9 @@ export default defineConfig({
 		reactPlugin({
 			extensions: ['.react.tsx'],
 			explicitGraph: true,
-			mdx: {
-				extensions: ['.react.mdx'],
-			},
 		}),
 		ecopagesJsxPlugin({
 			mdx: {
-				extensions: ['.radiant.mdx', '.mdx'],
-				compilerOptions: { mdxExtensions: ['.radiant.mdx', '.mdx'] },
 				...createDocsMdxPlugins({
 					rehypePrettyCode: {
 						theme: {
@@ -58,7 +54,7 @@ export default defineConfig({
 				collections: {
 					docs: {
 						contentDir: 'content/docs',
-						extensions: ['.radiant.mdx', '.react.mdx', '.mdx'],
+						extensions: ['.mdx'],
 						orderBy: compareEntriesByField('order'),
 						schema: docsFrontmatterSchema,
 						entryType: './src/content/docs#DocsFrontmatter',

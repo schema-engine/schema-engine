@@ -31,7 +31,7 @@ test('sequential actions complete after submission', async () => {
 		const email = demo.locator('input[name="email"]');
 		await email.fill('test@example.com');
 		await demo.locator('button[type="submit"]').click();
-		await pwExpect(page.getByText('Submitted successfully', { exact: true })).toBeVisible();
+		await pwExpect(page.getByRole('status').getByText('Submitted successfully', { exact: true })).toBeVisible();
 		await pwExpect(email).toHaveValue('');
 		expect(await page.evaluate(() => Reflect.get(window, '__actionEvents'))).toEqual([
 			'submit',
@@ -56,7 +56,7 @@ test('sequential actions work after navigating within the docs', async () => {
 		const email = demo.locator('input[name="email"]');
 		await email.fill('test@example.com');
 		await demo.locator('button[type="submit"]').click();
-		await pwExpect(page.getByText('Submitted successfully', { exact: true })).toBeVisible();
+		await pwExpect(page.getByRole('status').getByText('Submitted successfully', { exact: true })).toBeVisible();
 		await pwExpect(email).toHaveValue('');
 	} finally {
 		await browser.close();
@@ -79,7 +79,7 @@ test('invalid submission does not run success actions', async () => {
 		await demo.locator('button[type="submit"]').click();
 		await pwExpect(email).toHaveAttribute('aria-invalid', 'true');
 		await pwExpect(demo.getByText('Email is required', { exact: true })).toBeVisible();
-		await pwExpect(page.getByText('Submitted successfully', { exact: true })).toHaveCount(0);
+		await pwExpect(page.getByRole('status').getByText('Submitted successfully', { exact: true })).toHaveCount(0);
 		expect(await page.evaluate(() => Reflect.get(window, '__actionEvents'))).toEqual([]);
 	} finally {
 		await browser.close();

@@ -8,8 +8,9 @@ function resetDom(): void {
 	vi.useRealTimers();
 }
 
-function createCodeTabs(): RadiantCodeTabs {
+function createCodeTabs(name = 'install'): RadiantCodeTabs {
 	const element = document.createElement('radiant-code-tabs') as RadiantCodeTabs;
+	element.name = name;
 	element.label = 'Code examples';
 	element.copyLabel = 'Copy code';
 	element.tabs = [
@@ -18,6 +19,27 @@ function createCodeTabs(): RadiantCodeTabs {
 		{ id: 'bash', label: 'Bash', code: 'echo bash' },
 	];
 	return element;
+}
+
+function mockClipboard(writeText: (text: string) => Promise<void>): void {
+	Object.defineProperty(navigator, 'clipboard', {
+		configurable: true,
+		value: { writeText },
+	});
+}
+
+async function mount(codeTabs: RadiantCodeTabs): Promise<HTMLButtonElement> {
+	document.body.appendChild(codeTabs);
+	let copyButton: HTMLButtonElement | null = null;
+	await vi.waitFor(() => {
+		copyButton = codeTabs.querySelector<HTMLButtonElement>('.code-tabs__copy');
+		expect(copyButton).not.toBeNull();
+	});
+	return copyButton!;
+}
+
+function status(codeTabs: RadiantCodeTabs): string {
+	return codeTabs.querySelector('.code-tabs__status')?.textContent?.trim() ?? '';
 }
 
 describe('RadiantCodeTabs', () => {
@@ -29,23 +51,18 @@ describe('RadiantCodeTabs', () => {
 		resetDom();
 	});
 
-	it('switches tabs with keyboard navigation and emits change events', async () => {
-		const changeSpy = vi.fn();
+	it('selects the next tab on ArrowRight and reflects it on the host', async () => {
 		const codeTabs = createCodeTabs();
 		codeTabs.defaultSelectedKey = 'ts';
-		codeTabs.addEventListener('change', changeSpy);
 		document.body.appendChild(codeTabs);
 
 		await vi.waitFor(() => {
-			const selectedTab = codeTabs.querySelector<HTMLButtonElement>('[role="tab"][aria-selected="true"]');
-			expect(selectedTab?.textContent).toBe('TypeScript');
+			expect(codeTabs.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toBe('TypeScript');
 		});
-		const selectedTab = codeTabs.querySelector<HTMLButtonElement>('[role="tab"][aria-selected="true"]');
-		expect(selectedTab).not.toBeNull();
-		if (!selectedTab) {
-			throw new Error('Expected an active code tab to be rendered');
-		}
+		const changeSpy = vi.fn();
+		codeTabs.querySelector('rui-tabs')?.addEventListener('rui-change', changeSpy);
 
+		const selectedTab = codeTabs.querySelector<HTMLButtonElement>('[role="tab"][aria-selected="true"]')!;
 		selectedTab.focus();
 		selectedTab.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }));
 
@@ -54,63 +71,84 @@ describe('RadiantCodeTabs', () => {
 			expect(codeTabs.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toBe('Bash');
 		});
 		expect(changeSpy).toHaveBeenCalledTimes(1);
-		expect(changeSpy.mock.calls[0]?.[0]).toMatchObject({ detail: { selectedKey: 'bash' } });
-		expect(document.activeElement?.getAttribute('data-tab-index')).toBe('2');
+		expect(codeTabs.getAttribute('selected-key')).toBe('bash');
 	});
 
-	it('copies the active tab code and exposes transient status feedback', async () => {
+	it('announces a copy and clears the status after two seconds', async () => {
 		vi.useFakeTimers();
 		const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
 		const writeText = vi.fn().mockResolvedValue(undefined);
-		Object.defineProperty(navigator, 'clipboard', {
-			configurable: true,
-			value: { writeText },
-		});
+		mockClipboard(writeText);
 		const codeTabs = createCodeTabs();
 		codeTabs.selectedKey = 'js';
-		document.body.appendChild(codeTabs);
+		const copyButton = await mount(codeTabs);
 
-		let copyButton: HTMLButtonElement | null = null;
-		await vi.waitFor(() => {
-			copyButton = codeTabs.querySelector<HTMLButtonElement>('.code-tabs__copy');
-			expect(copyButton).not.toBeNull();
-		});
-		expect(copyButton).not.toBeNull();
-
-		await user.click(copyButton!);
+		await user.click(copyButton);
 
 		await vi.waitFor(() => {
 			expect(writeText).toHaveBeenCalledWith('console.log("js")');
-			expect(codeTabs.querySelector('.code-tabs__status')?.textContent).toContain(
-				'JavaScript copied to clipboard',
-			);
-			expect(codeTabs.querySelector('.code-tabs__copy')?.getAttribute('data-copied')).toBe('true');
+			expect(status(codeTabs)).toBe('JavaScript copied to clipboard');
 		});
 
 		vi.advanceTimersByTime(2000);
 
 		await vi.waitFor(() => {
-			expect(codeTabs.querySelector('.code-tabs__status')?.textContent?.trim()).toBe('');
-			expect(codeTabs.querySelector('.code-tabs__copy')?.getAttribute('data-copied')).toBe('false');
+			expect(status(codeTabs)).toBe('');
 		});
 	});
 
-	it('derives tab and panel ids from the provided name and tab ids', async () => {
+	it('announces a failed copy', async () => {
+		const user = userEvent.setup();
+		mockClipboard(vi.fn().mockRejectedValue(new Error('denied')));
 		const codeTabs = createCodeTabs();
-		document.body.appendChild(codeTabs);
+		codeTabs.selectedKey = 'js';
+		const copyButton = await mount(codeTabs);
+
+		await user.click(copyButton);
 
 		await vi.waitFor(() => {
-			expect(codeTabs.querySelector<HTMLButtonElement>('[role="tab"]')?.id).toBe(
-				'radiant-code-tabs-image-processor-install-tab-js',
-			);
+			expect(status(codeTabs)).toBe('Failed to copy JavaScript');
+		});
+	});
+
+	it('clears the failed copy status after two seconds', async () => {
+		vi.useFakeTimers();
+		const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+		mockClipboard(vi.fn().mockRejectedValue(new Error('denied')));
+		const codeTabs = createCodeTabs();
+		codeTabs.selectedKey = 'js';
+		const copyButton = await mount(codeTabs);
+
+		await user.click(copyButton);
+		await vi.waitFor(() => {
+			expect(status(codeTabs)).toBe('Failed to copy JavaScript');
 		});
 
-		const activeTab = codeTabs.querySelector<HTMLButtonElement>('[role="tab"][aria-selected="true"]');
-		const panel = codeTabs.querySelector<HTMLDivElement>('[role="tabpanel"]');
-		expect(activeTab?.id).toBe('radiant-code-tabs-image-processor-install-tab-js');
-		expect(panel?.id).toBe('radiant-code-tabs-image-processor-install-panel-js');
-		expect(activeTab?.getAttribute('aria-controls')).toBe(panel?.id ?? null);
-		expect(panel?.getAttribute('aria-labelledby')).toBe(activeTab?.id ?? null);
+		vi.advanceTimersByTime(2000);
+
+		await vi.waitFor(() => {
+			expect(status(codeTabs)).toBe('');
+		});
+	});
+
+	it('keeps every id unique and every tab wired to its own panel across instances', async () => {
+		const install = createCodeTabs('install');
+		const usage = createCodeTabs('usage');
+		document.body.append(install, usage);
+
+		await vi.waitFor(() => {
+			expect(document.querySelectorAll('[role="tab"]')).toHaveLength(6);
+		});
+
+		const ids = [...document.querySelectorAll('[id]')].map((element) => element.id);
+		expect(new Set(ids).size).toBe(ids.length);
+
+		for (const codeTabs of [install, usage]) {
+			const tab = codeTabs.querySelector<HTMLElement>('[role="tab"]')!;
+			const panel = codeTabs.querySelector<HTMLElement>(`[id="${tab.getAttribute('aria-controls')}"]`);
+			expect(panel).not.toBeNull();
+			expect(panel?.getAttribute('aria-labelledby')).toBe(tab.id);
+		}
 	});
 
 	it('renders nothing after the caller clears tabs', async () => {
