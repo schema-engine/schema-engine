@@ -81,13 +81,18 @@ interface ArrayContentProps {
 
 /**
  * @remarks
- * The error region stamps the contract `RuiFieldError` does, by hand: that view is always hidden and
- * ignores children, and no `rui-field` wraps the array to fill it.
+ * The error region stamps the contract `RuiFieldError` does, by hand: that view passes its children
+ * through but is always rendered hidden, and no `rui-field` wraps the array to reveal it. Its `id`
+ * is what the owning fieldset's `aria-describedby` points at while the array has an error.
  *
  * A disabled array, authored or by a constraint, renders its rows and its add
  * and remove buttons disabled, and its rows get the required marker as a
  * fieldset's children do (`withContainerState`).
  */
+function arrayErrorId(config: ArrayElementsProps): string {
+	return `${config.instanceId ?? config.id ?? config.name}-error`;
+}
+
 function renderArrayContent({ config, engine, ids, initialValues, renderValues, fieldError }: ArrayContentProps) {
 	const isSingleField = usesScalarArrayItem(config, config.name, config.elements, renderValues);
 	const canAdd = !config.maxItems || ids.length < config.maxItems;
@@ -141,7 +146,13 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 					{config.addButtonText || 'Add item'}
 				</RuiButton>
 			) : null}
-			<p class="rui-field__error" data-rui-field-error role="alert" hidden={!fieldError}>
+			<p
+				class="rui-field__error"
+				id={arrayErrorId(config)}
+				data-rui-field-error
+				role="alert"
+				hidden={!fieldError}
+			>
 				{fieldError}
 			</p>
 		</div>
@@ -167,6 +178,7 @@ export class SeFormArray extends RadiantElement {
 	@onContextUpdate({ context: formContext, requestUpdate: false })
 	onFormContext(value: FormContextValue): void {
 		this.fieldError = value.fields[this.config?.name ?? '']?.error;
+		this.describeGroup();
 		if (!value.ready || !this.config?.name) {
 			this.unregisterArrayField?.();
 			this.unregisterArrayField = undefined;
@@ -175,6 +187,18 @@ export class SeFormArray extends RadiantElement {
 		}
 		this.scheduleSync(this.renderedIds.length ? this.renderedIds : this.initialIds());
 		this.registerArrayField(value);
+	}
+
+	/**
+	 * @remarks
+	 * The fieldset is rendered by `FormArrayElements`, outside this host's view, so its
+	 * `aria-describedby` is written here, only while the error region has text.
+	 */
+	private describeGroup(): void {
+		const group = this.parentElement;
+		if (!group?.matches('fieldset') || !this.config) return;
+		if (this.fieldError) group.setAttribute('aria-describedby', arrayErrorId(this.config));
+		else group.removeAttribute('aria-describedby');
 	}
 
 	/**

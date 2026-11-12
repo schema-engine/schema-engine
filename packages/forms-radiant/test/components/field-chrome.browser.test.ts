@@ -108,7 +108,31 @@ test('array rows sit in a named group with row-specific remove buttons', async (
 		button.getAttribute('aria-label'),
 	);
 	expect(new Set(names).size).toBe(2);
-	expect(host.querySelector('.se-form-array [data-rui-field-error]')).toBeTruthy();
+});
+
+test('an array error is shown with its message and the group is described by it', async () => {
+	const host = await mountElements([
+		{
+			$type: 'arrayElements',
+			id: 'contacts',
+			name: 'contacts',
+			label: 'Contacts',
+			rules: [{ type: 'required', message: 'Add at least one contact' }],
+			elements: [{ $type: 'input', name: 'item', label: 'Item' }],
+		},
+		{ $type: 'submit', id: 'send', name: 'send', label: 'Send' },
+	]);
+	const group = host.querySelector('fieldset')!;
+	const region = host.querySelector<HTMLElement>('.se-form-array [data-rui-field-error]')!;
+	expect(region.hidden).toBe(true);
+	expect(group.hasAttribute('aria-describedby')).toBe(false);
+
+	await userEvent.click(page.getByRole('button', { name: 'Send' }).element());
+
+	await expect.poll(() => region.hidden).toBe(false);
+	expect(region.textContent).toBe('Add at least one contact');
+	expect(group.getAttribute('aria-describedby')).toBe(region.id);
+	expect(region.id).not.toBe('');
 });
 
 test('the drop zone shows a focus indicator when tabbed to', async () => {
