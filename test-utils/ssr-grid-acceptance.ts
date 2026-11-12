@@ -259,3 +259,194 @@ export async function expectSsrNestedWidthsAcceptance(
 		frame.remove();
 	}
 }
+
+/** Rows of the drawn layout from the issue: `a` spans three columns and two rows. */
+export const SSR_AREA_ROWS = ['a a a b b b', 'a a a c c c', 'd d e e e e'] as const;
+
+/**
+ * Config of a form that draws its layout, authored once for both renderers.
+ *
+ * @param type The `$type` of the renderer's fixture input.
+ * @remarks
+ * The step grid carries the template and five fields each claim one area, so
+ * the placement comes from the step grid and the fields' `area` alone.
+ */
+export function ssrAreasForm(type: string) {
+	return {
+		id: 'ssr-areas-acceptance',
+		title: 'SSR areas acceptance',
+		steps: [
+			{
+				id: 'main',
+				title: 'Main',
+				grid: { areas: [...SSR_AREA_ROWS] },
+				elements: ['a', 'b', 'c', 'd', 'e'].map((area) => ({
+					$type: type,
+					id: `area-${area}`,
+					name: `area-${area}`,
+					label: `Area ${area.toUpperCase()}`,
+					grid: { area },
+				})),
+			},
+		],
+	};
+}
+
+/**
+ * Config of a two-step form where one step draws its own responsive template,
+ * authored once for both renderers.
+ *
+ * @param type The `$type` of the renderer's fixture input.
+ * @remarks
+ * The `address` step stacks its fields from `default` and draws two rows from
+ * `md`. The form grid has two columns, which the other step keeps.
+ */
+export function ssrSteppedForm(type: string) {
+	const input = (label: string, grid?: { area: string }) => ({
+		$type: type,
+		id: label.toLowerCase().replace(' ', '-'),
+		name: label.toLowerCase().replace(' ', '-'),
+		label,
+		grid,
+	});
+	return {
+		id: 'ssr-stepped-acceptance',
+		title: 'SSR stepped acceptance',
+		grid: { columns: 2 },
+		steps: [
+			{
+				id: 'address',
+				title: 'Address',
+				grid: { areas: { default: ['street', 'city', 'zip'], md: ['street street', 'city zip'] } },
+				elements: ['Street', 'City', 'Zip'].map((label) => input(label, { area: label.toLowerCase() })),
+			},
+			{ id: 'other', title: 'Other', elements: [input('Other A'), input('Other B')] },
+		],
+	};
+}
+
+/** The grid container that holds a field host. */
+function gridOf(doc: Document, label: RegExp): HTMLElement {
+	const grid = fieldHost(doc, label).parentElement?.closest<HTMLElement>('.se-form-grid[data-se-grid-theme]');
+	if (!grid) throw new Error(`Expected ${label} to sit in a grid`);
+	return grid;
+}
+
+/**
+ * Asserts the SSR markup of the drawn layout: the template and each area travel
+ * as custom properties, and the field carries no CSS the author did not write.
+ *
+ * @param html Server-rendered document for {@link ssrAreasForm}.
+ */
+export function expectSsrAreasMarkup(html: string): void {
+	const grid = /<div[^>]*class="[^"]*se-form-grid[^"]*"[^>]*>/.exec(html)?.[0] ?? '';
+	const decoded = grid.replaceAll(/&quot;|&#34;|&#x22;/g, '"');
+	expect(decoded).toMatch(/--se-grid-areas:\s*"a a a b b b" "a a a c c c" "d d e e e e"/);
+	expect(decoded).toMatch(/--se-grid-template:\s*repeat\(6, minmax\(0, 1fr\)\)/);
+	const field = fieldStyle(html, 'Area A');
+	expect(field).toMatch(/--se-field-grid-column:\s*a/);
+	expect(field).toMatch(/--se-field-grid-row:\s*a/);
+	expect(field).not.toContain('grid-area');
+}
+
+/**
+ * Asserts that a drawn layout places fields from CSS alone: `a` spans three
+ * columns and two rows, `b` and `c` stack beside it, and `d` and `e` share the
+ * last row at two and four columns wide.
+ *
+ * @param html Server-rendered document for {@link ssrAreasForm}.
+ */
+export async function expectSsrAreasAcceptance(html: string, compiled: CompiledGridLike): Promise<void> {
+	expect(html).not.toMatch(/<script\b/i);
+	expect(html).toContain(compiled.css.slice(0, 48));
+
+	const { frame, doc } = await loadSsrFrame(html, 800);
+	try {
+		const grid = gridOf(doc, /Area A/);
+		expect(getComputedStyle(grid).gridTemplateColumns.split(' ').length).toBe(6);
+		const bounds = grid.getBoundingClientRect();
+		const gap = Number.parseFloat(getComputedStyle(grid).columnGap);
+		const rowGap = Number.parseFloat(getComputedStyle(grid).rowGap);
+		const span = (count: number) => (count * (bounds.width - 5 * gap)) / 6 + (count - 1) * gap;
+		const rect = (label: RegExp) => fieldHost(doc, label).getBoundingClientRect();
+		const [a, b, c, d, e] = [/Area A/, /Area B/, /Area C/, /Area D/, /Area E/].map(rect) as [
+			DOMRect,
+			DOMRect,
+			DOMRect,
+			DOMRect,
+			DOMRect,
+		];
+
+		near(a.left, bounds.left);
+		near(a.width, span(3));
+		near(a.top, b.top);
+		near(a.height, b.height + rowGap + c.height);
+		near(a.bottom, c.bottom);
+
+		near(b.left - a.left, span(3) + gap);
+		near(b.width, span(3));
+		near(c.left, b.left);
+		near(c.width, span(3));
+		expect(c.top).toBeGreaterThan(b.bottom - 1);
+
+		near(d.left, bounds.left);
+		near(d.width, span(2));
+		near(e.left - d.left, span(2) + gap);
+		near(e.width, span(4));
+		near(d.top, e.top);
+		expect(d.top).toBeGreaterThan(a.bottom - 1);
+	} finally {
+		frame.remove();
+	}
+}
+
+/**
+ * Asserts that a step draws its own template by breakpoint while another step
+ * keeps the form's two columns: the address fields stack until `md` and then
+ * share a row, and the other step's fields sit side by side at both widths.
+ *
+ * @param html Server-rendered document for {@link ssrSteppedForm}.
+ */
+export async function expectSsrSteppedAcceptance(html: string, compiled: CompiledGridLike): Promise<void> {
+	expect(html).toContain(compiled.css.slice(0, 48));
+
+	const { frame, doc } = await loadSsrFrame(html, 375);
+	try {
+		const addressGrid = gridOf(doc, /Street/);
+		const otherGrid = gridOf(doc, /Other A/);
+		expect(addressGrid).not.toBe(otherGrid);
+		const rect = (label: RegExp) => fieldHost(doc, label).getBoundingClientRect();
+		const columns = (grid: HTMLElement) => getComputedStyle(grid).gridTemplateColumns.split(' ').length;
+
+		for (const width of [375, 1280]) {
+			frame.style.width = `${width}px`;
+			await waitForFrameLayout();
+			expect(columns(otherGrid)).toBe(2);
+			near(rect(/Other A/).top, rect(/Other B/).top);
+			expect(rect(/Other B/).left).toBeGreaterThan(rect(/Other A/).right - 1);
+		}
+
+		frame.style.width = '375px';
+		await waitForFrameLayout();
+		expect(columns(addressGrid)).toBe(1);
+		const [street, city, zip] = [/Street/, /City/, /Zip/].map(rect) as [DOMRect, DOMRect, DOMRect];
+		near(city.left, street.left);
+		near(zip.left, street.left);
+		expect(city.top).toBeGreaterThan(street.bottom - 1);
+		expect(zip.top).toBeGreaterThan(city.bottom - 1);
+
+		frame.style.width = '1280px';
+		await waitForFrameLayout();
+		expect(columns(addressGrid)).toBe(2);
+		const wide = { street: rect(/Street/), city: rect(/City/), zip: rect(/Zip/) };
+		const bounds = addressGrid.getBoundingClientRect();
+		const gap = Number.parseFloat(getComputedStyle(addressGrid).columnGap);
+		near(wide.street.width, bounds.width);
+		near(wide.city.top, wide.zip.top);
+		expect(wide.city.top).toBeGreaterThan(wide.street.bottom - 1);
+		near(wide.city.width, (bounds.width - gap) / 2);
+		near(wide.zip.left - wide.city.left, (bounds.width - gap) / 2 + gap);
+	} finally {
+		frame.remove();
+	}
+}

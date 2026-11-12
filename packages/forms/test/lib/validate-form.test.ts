@@ -177,7 +177,7 @@ describe('validateFormConfig', () => {
 		])('rejects a grid with %s when a field uses width', (_label, grid, key) => {
 			const attempt = () => engine.validateForm(formWith([fieldNamed('a', { width: 'half' })], grid));
 			expect(attempt).toThrow(FormValidationError);
-			expect(attempt).toThrow(/uses either columns or widths/);
+			expect(attempt).toThrow(/uses areas, widths or columns/);
 			expect(attempt).toThrow(new RegExp(`Form grid sets '${key}'`));
 			expect(attempt).toThrow(/'a'/);
 		});
@@ -200,9 +200,9 @@ describe('validateFormConfig', () => {
 			const grid = { columns: 3 };
 			expect(() =>
 				engine.validateForm(formWith([fieldNamed('a', { responsive: { md: { width: 'third' } } })], grid)),
-			).toThrow(/uses either columns or widths/);
+			).toThrow(/uses areas, widths or columns/);
 			expect(() => engine.validateForm(formWith([fieldNamed('a', { offset: 'half' })], grid))).toThrow(
-				/uses either columns or widths/,
+				/uses areas, widths or columns/,
 			);
 		});
 

@@ -35,7 +35,7 @@
 		"@ecopages/radiant-ui": ">=0.3.5",
 		"@ecopages/signals": ">=0.8.3",
 		"@schema-engine/forms": "workspace:*",
-		"typescript": "^5",
+		"typescript": "^5.4",
 		"zod": "^4.0.17"
 	},
 	"devDependencies": {

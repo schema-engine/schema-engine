@@ -83,8 +83,7 @@ The handler receives `BaseContext & { config: WebhookActionConfig; trigger: Trig
 ## Register and Execute
 
 ```typescript
-const registry = new ActionRegistry<BaseContext, Trigger>();
-registry.register(webhookAction);
+const registry = new ActionRegistry<BaseContext, Trigger>([webhookAction]);
 
 const dispatcher = new ActionDispatcher<BaseContext, Trigger>(registry);
 

@@ -4,6 +4,21 @@ import type { FormConfigView } from '@/lib/normalized-form-config';
 export const DEFAULT_WIZARD_RECIPE = 'bare-controls';
 
 /**
+ * The grid that lays out a step's fields: the step's own `grid`, else the form's.
+ *
+ * @remarks
+ * A step grid replaces the form grid rather than merging with it, because a
+ * template such as `areas` names specific fields. The one place the rule lives,
+ * so validation and every renderer agree on it.
+ */
+export function stepGrid<TGrid>(
+	config: { readonly grid?: TGrid | undefined },
+	step: { readonly grid?: TGrid | undefined },
+): TGrid | undefined {
+	return step.grid ?? config.grid;
+}
+
+/**
  * Steps to paint for a normalized form.
  *
  * A recipe owns wizard navigation, so with a `view` only the current step is rendered.

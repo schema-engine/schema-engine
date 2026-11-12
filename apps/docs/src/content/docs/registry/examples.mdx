@@ -7,18 +7,48 @@ order: 4
 
 # Examples
 
-Learn how to build your own registry by extending the base classes.
+Learn how to build your own registry. Start with `createRegistry`; reach for the mutable `BaseRegistry` only when registrations arrive at runtime.
 
 ```typescript
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import * as z from 'zod/mini';
 ```
 
-## Creating a Plugin Registry
+## Creating a Read-Only Registry
 
-Here's how to create a simple plugin registry:
+Build the registry once from a list. A later registration with the same `$type` wins, so appending a custom entry overrides a default.
 
 ```typescript
+import * as z from 'zod/mini';
+import { createRegistry } from '@schema-engine/registry';
+import type { BaseRegistration } from '@schema-engine/registry';
+
+interface PluginRegistration extends BaseRegistration {
+	execute: () => Promise<void>;
+}
+
+const defaults: PluginRegistration[] = [
+	{ $type: 'cache', schema: z.object({}), metadata: { name: 'Cache' }, execute: async () => {} },
+];
+const custom: PluginRegistration = {
+	$type: 'cache',
+	schema: z.object({ ttl: z.number() }),
+	metadata: { name: 'Tuned Cache' },
+	execute: async () => {},
+};
+
+const plugins = createRegistry('Plugin', [...defaults, custom]);
+
+plugins.get('cache')?.metadata.name; // 'Tuned Cache'
+```
+
+## Creating a Plugin Registry (mutable)
+
+Here's how to create a plugin registry that accepts registrations at runtime:
+
+```typescript
+import { BaseRegistry } from '@schema-engine/registry';
+
 interface PluginRegistration extends BaseRegistration {
 	$type: string;
 	schema: StandardSchemaV1;

@@ -160,9 +160,10 @@ breakpoint thresholds, gap tokens, and the default minimum column width — via
 `createRadiantFormEngine({ grid: { breakpoints, gap, minColumnWidth } })`;
 forms describe their layout with `columns`, `gap`/`gapX`/`gapY`
 (`none | compact | default | loose | wide` or a CSS value), `responsive`
-entries per breakpoint, and per-field placement (`grid.width`/`grid.offset`
-names on a 12-track grid, or raw `grid.column`/`grid.row` lines) with
-per-breakpoint `hidden` overrides.
+entries per breakpoint, `areas` rows for a drawn layout, and per-field placement
+(`grid.width`/`grid.offset` names on a 12-track grid, `grid.area` names from the
+`areas` template, or raw `grid.column`/`grid.row` lines) with per-breakpoint
+`hidden` overrides. A step's own `grid` replaces the form's for that step.
 
 The renderer emits the generated theme stylesheet (scoped to
 `data-se-grid-theme`) and the form's CSS variables inline during render, so
@@ -247,7 +248,7 @@ pnpm storybook   # port 6007
 
 From monorepo root: `pnpm dev:radiant-storybook`.
 
-Stories default to **client** render. Use the Storybook toolbar **Radiant render** control to spot-check `ssr-hydrate` and `ssr-static` on any story — same contract as radiant-ui. Play functions skip `ssr-static` (markup-only iframe, no client module). SSR layout acceptance renders the real `RecipeRenderer` through `renderToString`: `test/ssr/grid-layout-ssr.markup.test.ts` checks the emitted stylesheet and field variables, and `test/ssr/grid-layout-ssr.acceptance.browser.test.ts` loads that HTML in an isolated iframe without app JS and checks layout at two widths, including the named width layout. Both share `test-utils/` with the React package.
+Stories default to **client** render. Use the Storybook toolbar **Radiant render** control to spot-check `ssr-hydrate` and `ssr-static` on any story — same contract as radiant-ui. Play functions skip `ssr-static` (markup-only iframe, no client module). SSR layout acceptance renders the real `RecipeRenderer` through `renderToString`: `test/ssr/grid-layout-ssr.markup.test.ts` checks the emitted stylesheet and field variables, and `test/ssr/grid-layout-ssr.acceptance.browser.test.ts` loads that HTML in an isolated iframe without app JS and checks layout at two widths, including the named width layout, a drawn areas layout, and a step that draws its own template beside a step on the form grid. Both share `test-utils/` with the React package.
 
 Published JavaScript files are marked as side effects so bundlers preserve
 custom element registration for every entry point. Supported Radiant peers are

@@ -101,6 +101,10 @@ function assertAppearanceAxes(
  * @remarks
  * Single-step recipes cannot declare `progress`; their `actions` slot is the
  * submit-only bar. Wizard recipes must declare `actions`.
+ *
+ * The slots come from `slotSchemas` alone: `slotDefaults` and `appearanceAxes` are
+ * checked against them but take no part in inference, so a spec can add a slot to
+ * another spec's schemas while reusing that spec's defaults.
  */
 export function defineRecipeSpec<
 	const TType extends string,

@@ -31,8 +31,13 @@ const engine = createFormEngine({
 ```
 
 Registration IDs are the `$type` values used in serialized configuration.
-Duplicate `$type` values follow last-wins semantics. Spread shared barrels and
-append overrides:
+Each list is stored in a read-only registry from `@schema-engine/registry`. A
+registration whose schema is not a Standard Schema throws when the engine is
+built, naming its `$type`. Only the winning registration of each `$type` is checked. The engine stores a frozen
+shallow copy of each winner, taken when it is built. Your objects are left untouched, but changing or spying on
+them afterwards does not reach the engine: spy or patch before building, or build a new engine.
+Duplicate `$type` values follow last-wins semantics, with no warning. Spread
+shared barrels and append overrides:
 
 ```ts
 const engine = createFormEngine({
