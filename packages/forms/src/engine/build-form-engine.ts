@@ -1,3 +1,5 @@
+import { createRegistry } from '@schema-engine/registry';
+import type { ActionRegistrationRegistry, ElementRegistry, RecipeRegistry } from '@/registries';
 import type { AnyElementRegistration, AnyRecipeRegistration, AnyActionRegistration } from '@/types/registration';
 import type {
 	ActionRegistrationConstraint,
@@ -42,13 +44,13 @@ function createRegistrationSchema(registrations: Array<{ $type: string; schema: 
 }
 
 function createFormConfigSchema(
-	elementRegistry: Map<string, AnyElementRegistration>,
-	recipeRegistry: Map<string, AnyRecipeRegistration>,
-	actionRegistry: Map<string, AnyActionRegistration>,
+	elementRegistry: ElementRegistry,
+	recipeRegistry: RecipeRegistry,
+	actionRegistry: ActionRegistrationRegistry,
 ) {
-	const elementsUnion = createRegistrationSchema([...elementRegistry.values()]);
-	const recipesUnion = createRegistrationSchema([...recipeRegistry.values()]);
-	const actionsUnion = createRegistrationSchema([...actionRegistry.values()]);
+	const elementsUnion = createRegistrationSchema([...elementRegistry.all()]);
+	const recipesUnion = createRegistrationSchema([...recipeRegistry.all()]);
+	const actionsUnion = createRegistrationSchema([...actionRegistry.all()]);
 
 	return createFormConfigShape({
 		elements: elementsUnion,
@@ -115,31 +117,22 @@ export type FormEngineRegistrationLists = {
  */
 export function buildFormEngine(lists: FormEngineRegistrationLists) {
 	const compiledAppearance = lists.compiledAppearance ?? compileAppearance(lists.appearance);
-	const elementRegistry = new Map<string, AnyElementRegistration>();
-	const recipeRegistry = new Map<string, AnyRecipeRegistration>();
-	const actionRegistry = new Map<string, AnyActionRegistration>();
+	const elementRegistry = createRegistry('Element', (lists.elements ?? []) as readonly AnyElementRegistration[]);
+	const recipeRegistry = createRegistry('Recipe', (lists.recipes ?? []) as readonly AnyRecipeRegistration[]);
+	const actionRegistry = createRegistry('Action', (lists.actions ?? []) as readonly AnyActionRegistration[]);
 
-	for (const element of lists.elements ?? []) {
-		assertStandardSchema(element.schema, `Element '${element.$type}' schema`);
+	for (const element of elementRegistry.all()) {
 		assertDeclaredAxes(`Element '${element.$type}'`, element.appearanceAxes, compiledAppearance);
-		elementRegistry.set(element.$type, element as AnyElementRegistration);
 	}
-
-	const validationRegistryInstance = createDefaultValidationRegistry();
-	registerLastWinsElementValidations(lists.elements ?? [], validationRegistryInstance);
-
-	for (const recipe of lists.recipes ?? []) {
-		assertStandardSchema(recipe.schema, `Recipe '${recipe.$type}' schema`);
+	for (const recipe of recipeRegistry.all()) {
 		assertRecipeKindSlots(recipe);
 		for (const [slot, axes] of Object.entries(recipe.appearanceAxes ?? {})) {
 			assertDeclaredAxes(`Recipe '${recipe.$type}' slot '${slot}'`, axes, compiledAppearance);
 		}
-		recipeRegistry.set(recipe.$type, recipe as AnyRecipeRegistration);
 	}
-	for (const action of lists.actions ?? []) {
-		assertStandardSchema(action.schema, `Action '${action.$type}' schema`);
-		actionRegistry.set(action.$type, action as AnyActionRegistration);
-	}
+
+	const validationRegistryInstance = createDefaultValidationRegistry();
+	registerLastWinsElementValidations(lists.elements ?? [], validationRegistryInstance);
 
 	const defaultWizardRecipe = lists.defaultWizardRecipe;
 	const checkedDefault = defaultWizardRecipe ?? DEFAULT_WIZARD_RECIPE;
@@ -169,13 +162,13 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 		[ComponentType.Recipe, recipeRegistry],
 		[ComponentType.Action, actionRegistry],
 	] as const) {
-		for (const item of registrations.values()) {
+		for (const item of registrations.all()) {
 			registerSchemaMetadata(metadataCatalog, componentType, item);
 		}
 	}
 
 	const formConfigSchema = createFormConfigSchema(elementRegistry, recipeRegistry, actionRegistry);
-	const actionConfigValidators = createActionConfigValidatorMap([...actionRegistry.values()]);
+	const actionConfigValidators = createActionConfigValidatorMap(actionRegistry.all());
 	const schemaArtifacts = createFormEngineSchemaArtifacts(metadataCatalog, formConfigSchema, actionConfigValidators);
 
 	const compiledGrid =

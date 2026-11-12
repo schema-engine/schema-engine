@@ -1,4 +1,5 @@
 import type { AnyActionRegistration, AnyElementRegistration, AnyRecipeRegistration } from '@/types/registration';
+import type { ActionRegistrationRegistry, ElementRegistry, RecipeRegistry } from '@/registries';
 import { ComponentType } from './component-type';
 import { logger } from '@/lib/logger';
 import type { StandardJSONSchemaV1 } from '@/lib/standard-json-schema';
@@ -36,9 +37,9 @@ export * from './component-type';
  * Engine registries - internal storage for all registered components.
  */
 export interface EngineRegistries {
-	elements: Map<string, AnyElementRegistration>;
-	recipes: Map<string, AnyRecipeRegistration>;
-	actions: Map<string, AnyActionRegistration>;
+	elements: ElementRegistry;
+	recipes: RecipeRegistry;
+	actions: ActionRegistrationRegistry;
 	schemaArtifacts: FormEngineSchemaArtifacts;
 	compiledGrid: CompiledGrid;
 	compiledAppearance: CompiledAppearance;
@@ -58,11 +59,18 @@ export class FormEngine<
 	private readonly compiledGrid: CompiledGrid;
 	private readonly validationRegistry: ValidationRegistry;
 
+	/**
+	 * @remarks
+	 * Shares the registries it receives instead of copying them. They are
+	 * read-only, so engines built by `extend` can share them safely. Construct
+	 * engines with `createFormEngine`; passing a registry that changes later is
+	 * unsupported.
+	 */
 	constructor(registries: EngineRegistries) {
 		this.registries = {
-			elements: new Map(registries.elements),
-			recipes: new Map(registries.recipes),
-			actions: new Map(registries.actions),
+			elements: registries.elements,
+			recipes: registries.recipes,
+			actions: registries.actions,
 			schemaArtifacts: registries.schemaArtifacts,
 			compiledGrid: registries.compiledGrid,
 			compiledAppearance: registries.compiledAppearance,
@@ -85,11 +93,11 @@ export class FormEngine<
 	}
 
 	getAllElements(): AnyElementRegistration[] {
-		return Array.from(this.registries.elements.values());
+		return [...this.registries.elements.all()];
 	}
 
 	getElementIds(): string[] {
-		return Array.from(this.registries.elements.keys());
+		return [...this.registries.elements.keys()];
 	}
 
 	hasElement(id: string): boolean {
@@ -101,11 +109,11 @@ export class FormEngine<
 	}
 
 	getAllRecipes(): AnyRecipeRegistration[] {
-		return Array.from(this.registries.recipes.values());
+		return [...this.registries.recipes.all()];
 	}
 
 	getRecipeIds(): string[] {
-		return Array.from(this.registries.recipes.keys());
+		return [...this.registries.recipes.keys()];
 	}
 
 	hasRecipe(id: string): boolean {
@@ -149,11 +157,11 @@ export class FormEngine<
 	}
 
 	getAllActions(): AnyActionRegistration[] {
-		return Array.from(this.registries.actions.values());
+		return [...this.registries.actions.all()];
 	}
 
 	getActionTypes(): string[] {
-		return Array.from(this.registries.actions.keys());
+		return [...this.registries.actions.keys()];
 	}
 
 	hasAction(id: string): boolean {

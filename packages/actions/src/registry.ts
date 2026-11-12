@@ -1,5 +1,5 @@
 import type { ActionRegistration } from './types';
-import { BaseRegistry } from '@schema-engine/registry';
+import { createRegistry, type ReadOnlyRegistry } from '@schema-engine/registry';
 
 /**
  * Registry storage must be able to hold heterogeneous action config shapes.
@@ -61,11 +61,18 @@ export interface ActionRegistryProvider<
 /**
  * Action Registry
  *
- * Generic, domain-agnostic registry for managing action registrations.
- * Provides storage, retrieval, and lookup capabilities for actions.
+ * Generic, domain-agnostic, read-only registry of action registrations, built
+ * from a list on the shared {@link createRegistry} mechanism.
  *
  * @template TContext - Domain-specific context data
  * @template TTrigger - The trigger/event type
+ *
+ * @remarks
+ * A later registration with the same `$type` replaces an earlier one without a
+ * warning. Every winning schema must implement Standard Schema; the constructor
+ * throws naming the offending `$type`. The registrations are held in a private
+ * field, so the registry cannot be changed, and subclasses may add their own fields. To register actions at runtime, implement
+ * {@link ActionRegistryProvider} on a `BaseRegistry` subclass instead.
  *
  * @example
  * ```typescript
@@ -76,20 +83,21 @@ export interface ActionRegistryProvider<
  * type MyContext = { formId: string; data: Record<string, unknown> };
  *
  * const logger = new Logger('[my-app]');
- * const registry = new ActionRegistry<MyContext, MyTrigger>();
- *
- * registry.register({
- *   $type: 'log',
- *   metadata: {
- *     name: 'Log Action',
- *     description: 'Logs data',
- *     defaultTriggers: ['change'],
+ * const registry = new ActionRegistry<MyContext, MyTrigger>([
+ *   {
+ *     $type: 'log',
+ *     schema: logSchema,
+ *     metadata: {
+ *       name: 'Log Action',
+ *       description: 'Logs data',
+ *       defaultTriggers: ['change'],
+ *     },
+ *     execute: async (context) => {
+ *       logger.info(context);
+ *       return { success: true };
+ *     },
  *   },
- *   execute: async (context) => {
- *     logger.info(context);
- *     return { success: true };
- *   },
- * });
+ * ]);
  *
  * const action = registry.getAction('log');
  * ```
@@ -99,11 +107,36 @@ export class ActionRegistry<
 	TTrigger = string,
 	TRegistration extends AnyActionRegistration<TBaseContext, TTrigger> = AnyActionRegistration<TBaseContext, TTrigger>,
 >
-	extends BaseRegistry<string, TRegistration>
-	implements ActionRegistryProvider<TBaseContext, TTrigger, TRegistration>
+	implements ReadOnlyRegistry<TRegistration>, ActionRegistryProvider<TBaseContext, TTrigger, TRegistration>
 {
-	get registryName(): string {
-		return 'ActionRegistry';
+	readonly #registry: ReadOnlyRegistry<TRegistration>;
+
+	constructor(registrations: readonly TRegistration[]) {
+		this.#registry = createRegistry('Action', registrations);
+	}
+
+	get kind(): string {
+		return this.#registry.kind;
+	}
+
+	get size(): number {
+		return this.#registry.size;
+	}
+
+	get(key: string): TRegistration | undefined {
+		return this.#registry.get(key);
+	}
+
+	has(key: string): boolean {
+		return this.#registry.has(key);
+	}
+
+	all(): readonly TRegistration[] {
+		return this.#registry.all();
+	}
+
+	keys(): readonly string[] {
+		return this.#registry.keys();
 	}
 
 	/**
@@ -117,6 +150,6 @@ export class ActionRegistry<
 	 * Get all registered action types
 	 */
 	getActionTypes(): string[] {
-		return this.getAllKeys();
+		return [...this.keys()];
 	}
 }

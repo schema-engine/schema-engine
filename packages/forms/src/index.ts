@@ -46,7 +46,7 @@ export type {
 	FormEngineSchemaMetadata,
 	SchemaMetadataEntry,
 } from './engine';
-export { ElementRegistry, RecipeRegistry } from './registries';
+export type { ElementRegistry, RecipeRegistry, ActionRegistrationRegistry } from './registries';
 export type {
 	BuilderActionBaseContext,
 	ElementMetadata,

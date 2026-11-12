@@ -5,23 +5,7 @@ export type StandardSchemaIssue = StandardSchemaV1.Issue;
 export type StandardSchemaSafeParseResult<T> =
 	{ success: true; data: T } | { success: false; error: { issues: StandardSchemaIssue[] } };
 
-function hasStandardSchemaShape(schema: unknown): schema is StandardSchemaV1 {
-	if (schema === null || (typeof schema !== 'object' && typeof schema !== 'function')) {
-		return false;
-	}
-
-	return typeof (schema as StandardSchemaV1)['~standard']?.validate === 'function';
-}
-
-/**
- * Require a registration schema to implement Standard Schema before registration.
- */
-export function assertStandardSchema(schema: unknown, context = 'Registration schema'): StandardSchemaV1 {
-	if (!hasStandardSchemaShape(schema)) {
-		throw new Error(`${context} must implement Standard Schema (~standard.validate).`);
-	}
-	return schema;
-}
+export { assertStandardSchema } from '@schema-engine/registry';
 
 /**
  * Validate `value` with a Standard Schema and return parsed data.

@@ -374,8 +374,9 @@ See [engine internals](src/engine/README.md#schema-artifacts-and-extension).
 
 `templatePath` in `@schema-engine/forms/lib/path-values` removes numeric array indices from rendered paths for constraint declaration lookup, alongside `expandFieldTemplatePaths`.
 
-Engine construction builds registration Maps directly and validates each supplied
-schema once at that boundary. Form action results add optional browser redirects
+Engine construction stores elements, recipes and actions in read-only registries
+from `@schema-engine/registry` (last registration wins, no override warning) and
+checks each winning schema once at that boundary. It stores frozen shallow copies taken at build and leaves the registration objects you passed untouched; changes to them afterwards do not reach the engine. Form action results add optional browser redirects
 to the generic result; see [actions](./src/actions/README.md).
 
 ## Pre-publish API
