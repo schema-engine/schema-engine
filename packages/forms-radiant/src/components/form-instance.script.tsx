@@ -36,6 +36,11 @@ export interface FormInstanceProps {
 	onAction?: FormProviderProps['onAction'];
 }
 
+/** Detail of `se-action-submit-complete`; `error` is set when `onSubmit` or the action lifecycle threw. */
+export interface SubmissionCompleteDetail extends SubmissionOutcome {
+	error?: unknown;
+}
+
 /** Behavior and engine navigation state for one composed form. */
 @customElement('se-form-instance')
 export class FormInstanceElement extends RadiantElement {
@@ -171,7 +176,7 @@ export class FormInstanceElement extends RadiantElement {
 
 	/**
 	 * Runs one submission and reports it with `se-action-submit-start` and
-	 * `se-action-submit-complete` on the `rui-form`, whether or not actions are configured.
+	 * `se-action-submit-complete` (with `error` when it threw) on the `rui-form`, whether or not actions are configured.
 	 *
 	 * @remarks
 	 * The instance owns the submitting state because Radiant UI clears its own
@@ -186,7 +191,7 @@ export class FormInstanceElement extends RadiantElement {
 			ruiForm.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
 		this.setSubmitting(true);
 		announce('se-action-submit-start');
-		let outcome: SubmissionOutcome = { succeeded: true, results: [] };
+		let outcome: SubmissionCompleteDetail = { succeeded: true, results: [] };
 		try {
 			if (this.actions) outcome = await this.actions.submit();
 			if (outcome.succeeded) {
@@ -197,7 +202,7 @@ export class FormInstanceElement extends RadiantElement {
 				}
 			}
 		} catch (error) {
-			outcome = { succeeded: false, results: outcome.results };
+			outcome = { succeeded: false, results: outcome.results, error };
 			logger.error('Form submission failed', error);
 		} finally {
 			this.setSubmitting(false);
