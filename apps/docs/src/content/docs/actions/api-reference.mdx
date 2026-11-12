@@ -27,7 +27,7 @@ class ActionRegistry<TBaseContext, TTrigger>
 }
 ```
 
-`ActionRegistry` is built from a list with `createRegistry` from `@schema-engine/registry`. It is read-only and frozen. A later registration with the same `$type` replaces an earlier one without a warning, and a registration whose schema is not a Standard Schema throws at construction, naming its `$type`. There is no `register` or `clear`; to register at runtime, implement `ActionRegistryProvider` yourself.
+`ActionRegistry` is built from a list with `createRegistry` from `@schema-engine/registry`. It is read-only and frozen. A later registration with the same `$type` replaces an earlier one without a warning, and a winning registration whose schema is not a Standard Schema throws at construction, naming its `$type`. Subclasses may add their own fields. There is no `register` or `clear`; to register at runtime, implement `ActionRegistryProvider` yourself.
 
 ## ActionDispatcher
 

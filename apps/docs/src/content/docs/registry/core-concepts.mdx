@@ -15,7 +15,7 @@ Standard Schema implementation.
 
 ## createRegistry
 
-Builds a read-only registry from a list. Every package that stores registrations uses it.
+Builds a read-only registry from a list. The forms engine uses it for elements, recipes and actions, and `ActionRegistry` is built on it. `ValidationRegistry` in `@schema-engine/forms` does not use it yet.
 
 ```typescript
 function createRegistry<TRegistration extends BaseRegistration>(
@@ -36,8 +36,8 @@ interface ReadOnlyRegistry<TRegistration extends BaseRegistration> {
 | Behavior         | Description                                                                                     |
 | ---------------- | ----------------------------------------------------------------------------------------------- |
 | Last wins        | A later registration with the same `$type` replaces the earlier one, with no warning.           |
-| Checked at build | A schema without `~standard.validate` throws, naming the `kind` and the registration's `$type`. |
-| Frozen           | No `register` or `clear`. The registry, its arrays and its registrations are frozen.            |
+| Checked at build | A winning schema without `~standard.validate` throws, naming the `kind` and the registration's `$type`. |
+| Frozen           | No `register` or `clear`. The registry, its arrays and its stored copies are frozen. Your objects are untouched. |
 
 ## BaseRegistry (mutable opt-in)
 

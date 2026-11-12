@@ -18,7 +18,7 @@ function createRegistry<TRegistration extends BaseRegistration>(
 ): ReadOnlyRegistry<TRegistration>;
 ```
 
-Builds a frozen, read-only registry. A later registration with the same `$type` replaces an earlier one without a warning and keeps its first position. Throws `<kind> '<$type>' schema must implement Standard Schema (~standard.validate).` when a schema is not a Standard Schema. Registrations are frozen in place (shallow).
+Builds a frozen, read-only registry. A later registration with the same `$type` replaces an earlier one without a warning and keeps its first position. Throws `<kind> '<$type>' schema must implement Standard Schema (~standard.validate).` when a winning registration's schema is not a Standard Schema; an overridden registration is not checked. The registry stores a frozen shallow copy of each winner and leaves the objects you passed untouched.
 
 ### ReadOnlyRegistry
 

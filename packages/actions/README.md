@@ -158,7 +158,7 @@ An action executes when either:
 
 ## Custom Registries
 
-`ActionRegistry` is built once from a list: a later registration with the same `$type` wins without a warning, a schema that is not a Standard Schema throws at construction naming its `$type`, and the registry is frozen. To register actions at runtime, implement `ActionRegistryProvider` from the package root:
+`ActionRegistry` is built once from a list: a later registration with the same `$type` wins without a warning, a winning schema that is not a Standard Schema throws at construction naming its `$type`, and the registry cannot be changed. Subclasses may add their own fields. To register actions at runtime, implement `ActionRegistryProvider` from the package root:
 
 ```typescript
 class MyActionRegistry<TBaseContext, TTrigger> implements ActionRegistryProvider<TBaseContext, TTrigger> {

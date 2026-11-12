@@ -33,7 +33,9 @@ const engine = createFormEngine({
 Registration IDs are the `$type` values used in serialized configuration.
 Each list is stored in a read-only registry from `@schema-engine/registry`. A
 registration whose schema is not a Standard Schema throws when the engine is
-built, naming its `$type`. The engine freezes the registrations it stores.
+built, naming its `$type`. Only the winning registration of each `$type` is checked. The engine stores a frozen
+shallow copy of each winner and leaves the objects you passed untouched, so you can still assign to them or
+spy on their methods after the engine is built.
 Duplicate `$type` values follow last-wins semantics, with no warning. Spread
 shared barrels and append overrides:
 

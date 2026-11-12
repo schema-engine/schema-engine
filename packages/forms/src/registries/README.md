@@ -13,8 +13,10 @@ These are type aliases of `ReadOnlyRegistry<AnyElementRegistration>`,
 `ReadOnlyRegistry<AnyRecipeRegistration>` and
 `ReadOnlyRegistry<AnyActionRegistration>`; they are not classes to instantiate.
 `buildFormEngine` builds them: later duplicates win without a warning, each
-schema is checked as a Standard Schema, and the registrations are frozen. There
-is no `register` or `clear`.
+winning schema is checked as a Standard Schema, and the stored registrations are
+frozen shallow copies of the ones you passed, which stay untouched. Recipes are
+also slot-checked and axis-checked for winners only. There is no `register` or
+`clear`.
 
 Register components through `createFormEngine({ elements, recipes, actions })`.
 Per-engine typing comes from the registration tuples you pass, not from these

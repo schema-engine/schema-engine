@@ -19,6 +19,14 @@ import * as z from 'zod/mini';
 Build the registry once from a list. A later registration with the same `$type` wins, so appending a custom entry overrides a default.
 
 ```typescript
+import * as z from 'zod/mini';
+import { createRegistry } from '@schema-engine/registry';
+import type { BaseRegistration } from '@schema-engine/registry';
+
+interface PluginRegistration extends BaseRegistration {
+	execute: () => Promise<void>;
+}
+
 const defaults: PluginRegistration[] = [
 	{ $type: 'cache', schema: z.object({}), metadata: { name: 'Cache' }, execute: async () => {} },
 ];
@@ -39,6 +47,8 @@ plugins.get('cache')?.metadata.name; // 'Tuned Cache'
 Here's how to create a plugin registry that accepts registrations at runtime:
 
 ```typescript
+import { BaseRegistry } from '@schema-engine/registry';
+
 interface PluginRegistration extends BaseRegistration {
 	$type: string;
 	schema: StandardSchemaV1;
