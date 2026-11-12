@@ -30,7 +30,7 @@ const engine = createFormEngine({
 `createFormEngine` registers elements, recipes, and actions in one declarative
 call. A recipe is the single view protocol: it declares the recipe kind,
 shell/slot keys, validation schema, metadata, and framework adapter payload.
-Forms select one recipe with `view.$type`. `@schema-engine/forms/recipes` is the protocol (`defineRecipeSpec`, the renderer-neutral `defineFormRecipe`, the view model; adapters wrap it as `defineRecipe` to type the render payload against the spec's slots); `@schema-engine/forms/recipes/built-in` holds the nine built-in specs (moved off `/recipes`), their slot schemas and config types. `defineRecipeSpec` keeps the concrete view schema type, so `defineForm` types each declared slot's config and rejects slot keys the recipe does not declare. `slotDefaults` are typed against the slot schemas and validated when the spec is defined. Each slot schema owns its defaults (including default labels), and each declared slot defaults to `{}` in the view schema, so the normalized `view` is complete and the view JSON Schema shows every default. `getSlotConfig(viewConfig, slot, schema)` returns `z.output<schema>`. The wizard `actions` slot's `showStepCounter` defaults to `true` regardless of `appearance`. `createFormEngine` enforces the kind rules (single-step recipes declare no `progress` slot, wizard recipes declare `actions`) for every registration. In `split-screen-wizard` the side panel shows the form title and the header shows the step title (`header.fallbackToFormTitle` defaults to `false` there, `true` elsewhere); a single-step `split-screen` keeps its panel title.
+Forms select one recipe with `view.$type`. `@schema-engine/forms/recipes` is the protocol (`defineRecipeSpec`, the renderer-neutral `defineFormRecipe`, the view model; adapters wrap it as `defineRecipe` to type the render payload against the spec's slots); `@schema-engine/forms/recipes/built-in` holds the nine built-in specs (moved off `/recipes`), their slot schemas and config types. `defineRecipeSpec` keeps the concrete view schema type, so `defineForm` types each declared slot's config and rejects slot keys the recipe does not declare. `slotDefaults` are typed against the slot schemas and validated when the spec is defined. Each slot schema owns its defaults (including default labels), and each declared slot defaults to `{}` in the view schema, so the normalized `view` is complete and the view JSON Schema shows every default. `getSlotConfig(viewConfig, slot, schema)` returns `z.output<schema>`. The wizard `actions` slot's `showStepCounter` defaults to `true` regardless of `variant`. `createFormEngine` enforces the kind rules (single-step recipes declare no `progress` slot, wizard recipes declare `actions`) for every registration. In `split-screen-wizard` the side panel shows the form title and the header shows the step title (`header.fallbackToFormTitle` defaults to `false` there, `true` elsewhere); a single-step `split-screen` keeps its panel title.
 
 ```ts
 const contactForm = engine.defineForm({
@@ -112,6 +112,68 @@ elements: [
 ];
 ```
 
+### Class and style
+
+A form, a step and a field each take `className` and `style` as an escape hatch
+for CSS the engine's vocabulary does not cover. `className` is applied as written
+to the form element or the step element (`<div class="se-form-step">` in React,
+`<se-form-step>` in Radiant, both marked `data-se-step`). On a field it is
+applied to the field host, the element that carries the field's `style` and `data-se-*` attributes, in both renderers.
+`style` accepts only CSS custom properties: keys that start with `--` and string
+or number values. Custom properties mean the same in every renderer and write
+the same in JSON or YAML, whereas a named property such as `maxWidth` would be
+read as camelCase `CSSProperties` by React and as a plain record by Radiant.
+`validateForm` rejects any other key and names it, and a string value that contains
+`;`, `{` or `}`, which would start another declaration once the markup is server rendered.
+
+```ts
+{ id: 'checkout', className: 'checkout-step', style: { '--accent': '#f60' }, title: 'Checkout', elements: [] }
+```
+
+### Appearance
+
+The engine also owns the appearance vocabulary through the optional `appearance`
+option. `size` (`compact | default | comfortable`) and `surface`
+(`flat | outlined | elevated`) are built in; a host adds an axis, or lists more
+values on a built-in one, and may map each value to the CSS custom properties it
+sets (the built-in `size` paddings fall back to the host theme's `--space-block*` variables, so `size: default` looks like no pick in a themed app) (tokens a host sets for a built-in value are merged over the built-in ones, per token):
+
+```ts
+const engine = createFormEngine({
+	appearance: {
+		tone: ['neutral', 'brand'],
+		size: ['dense'],
+		surface: { elevated: { '--se-surface-shadow': '0 2px 4px rgb(0 0 0 / 0.2)' } },
+	},
+});
+```
+
+A form, a step, a field and a view slot pick values with `appearance`, and the
+typed `defineForm` narrows the values to the engine's axes:
+
+```ts
+engine.defineForm({
+	id: 'checkout',
+	appearance: { size: 'compact' },
+	view: { $type: 'card', shell: { appearance: { surface: 'elevated' } } },
+	steps: [{ id: 'pay', title: 'Pay', appearance: { size: 'default' }, elements: [] }],
+});
+```
+
+Each element registration declares the axes it supports with `appearanceAxes`
+(`defineInput({ $type: 'input', appearanceAxes: ['size'], ... })`), and each
+recipe spec declares them per slot (`defineRecipeSpec({ appearanceAxes: { shell: ['size', 'surface'] } })`);
+a slot that declares axes must accept an `appearance` key in its schema. An axis that is not
+declared fails validation, and the engine build rejects a registration that declares an axis the vocabulary lacks (a typo such as `'sise'`), naming the registration and the axis. `AppearanceAxisList` is the shared type of those declarations. `validateForm` rejects an unknown axis, an undeclared axis for that
+owner and an unknown value, naming the path and the allowed values, and writes the resolved
+appearance (for a field: form, then step, then containing elements, then the field itself; for a view slot: the form, then the slot itself; each keeping
+only the axes it supports) into the normalized config. `engine.getAppearance()` returns the frozen
+vocabulary (`axes`, the token stylesheet `css`, and the `id` that scopes it); `engine.extend()`
+inherits it, and `appearance` is not an extend option. Renderers emit `data-se-<axis>` attributes
+and the token stylesheet; token rules sit inside `:where()`, so an author's `className` wins. The
+built-in card shell no longer takes `maxWidth`, `padding` or `shadowSize`: they are `size` and
+`surface` values. The wizard `actions` slot's former `appearance` key is now `variant`.
+
 ### Grid theme
 
 The engine also owns the grid layout vocabulary through the optional `grid`
@@ -150,9 +212,21 @@ breakpoint like the rest of `grid`:
   grid: { marginBlockEnd: 'wide', responsive: { lg: { marginBlockEnd: 'loose' } } } }
 ```
 
+Fields can also be placed by name instead of CSS grid lines:
+`grid: { width: 'half', offset: 'quarter' }` (`width` is `full | three-quarters |
+two-thirds | half | third | quarter`, `offset` the same without `full`), with per-breakpoint changes in `grid.responsive` like any other key. A
+step whose top-level fields use `width` or `offset` is laid out on 12 tracks and a
+field that sets no width fills the row. `validateForm` rejects a form grid that
+sets `columns` or `minColumnWidth` alongside such a field, and a field that sets
+`width` or `offset` together with a raw `column`, an offset plus width past 12
+tracks. Fieldsets and array rows lay their children out on their own grid, so
+the same keys work on a container's children. Raw `column`, `row` and
+`placeSelf` remain the escape hatch; `column: 2` means the grid line 2, not a
+span.
+
 This applies to any element rendering a `.se-form-field` host with the engine's
 theme id — not only inputs. Renderers expose a helper for elements that build
-their own container (`useFieldHost` in React, `mergeFieldGridHost` in Radiant). Every engine exposes a frozen
+their own container (`useFieldHost` in React, `mergeFieldGridHost` in Radiant). A custom container whose children use `width` or `offset` must lay them out on its own grid with `useChildGridProps` (React) or `mergeChildrenGridHost` (Radiant). Every engine exposes a frozen
 `engine.getCompiledGrid()` (theme plus stylesheet), with `getGridTheme()` as a
 convenience getter, computed once at construction (library defaults apply when
 `grid` is omitted). Configured breakpoint

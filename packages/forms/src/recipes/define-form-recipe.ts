@@ -21,6 +21,7 @@ export function defineFormRecipe<
 		schema: spec.schema,
 		metadata: spec.metadata,
 		slotDefaults: spec.slotDefaults,
+		appearanceAxes: spec.appearanceAxes,
 		render,
 	} as RecipeRegistration<TType, TSchema, TRender>;
 }

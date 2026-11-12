@@ -15,6 +15,8 @@ The Radiant adapter ships its own shells and wizard blocks. These live
 previews use the same `FormConfig` JSON as the React adapter while rendering
 with Ecopages and Radiant UI elements.
 
+The shells take the same named `appearance` as the React recipes: set `view.shell.appearance` (for example `{ size: 'comfortable', surface: 'elevated' }` on the card shell) or a form-level `appearance`, and the shell reads the engine's `--se-size-*` and `--se-surface-*` tokens. Radiant elements emit the picked values as `data-se-<axis>` attributes, so a host axis is styled with CSS keyed on those attributes.
+
 ## Wizard shell
 
 The registration demo declares its form inline and renders it with the

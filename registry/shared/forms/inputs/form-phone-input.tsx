@@ -15,7 +15,7 @@ export function FormPhoneInput({
 		config as unknown as ElementConfig,
 	);
 
-	const { defaultCountry, international, placeholder, className } = config;
+	const { defaultCountry, international, placeholder } = config;
 
 	return (
 		<FieldGroup
@@ -36,7 +36,6 @@ export function FormPhoneInput({
 				onBlur={combineHandlers(onBlur, propsOnBlur)}
 				onFocus={propsOnFocus}
 				placeholder={placeholder}
-				className={className}
 			/>
 		</FieldGroup>
 	);

@@ -1,5 +1,6 @@
 import type { AnyActionRegistration, AnyElementRegistration, AnyRecipeRegistration } from '@/types/registration';
 import type { FormConfig, FormConfigEnvelope, FormTaggedConfig } from '@/schemas/form-config';
+import type { GridLayoutConfig } from '@/schemas/base-field';
 import type { ElementConfig } from '@/schemas/field-config';
 import { formConfigEnvelopeSchema } from '@/schemas/form-config';
 import { safeParseStandardSchema, type StandardSchemaIssue } from '@/lib/standard-schema';
@@ -13,8 +14,22 @@ import {
 } from '@/lib/normalized-form-config';
 import { getElementChildren, withElementChildren } from '@/lib/element-children';
 import { DEFAULT_WIZARD_RECIPE } from '@/lib/form-view';
+import {
+	elementGridKeys,
+	elementUsesGridWidths,
+	GRID_TEMPLATE_KEYS,
+	namedPlacementOverflow,
+	WIDTH_TRACKS,
+} from '@/lib/grid-placement';
 import { logger } from '@/lib/logger';
 import { mergeSlotDefaults } from '@/recipes/merge-slot-defaults';
+import { isPlainObject } from '@/lib/is-plain-object';
+import {
+	checkAppearance,
+	getDefaultCompiledAppearance,
+	pickSupportedAppearance,
+	type CompiledAppearance,
+} from '@/lib/appearance';
 
 export type { FormConfigView, NormalizedElementConfig, NormalizedFormConfig } from '@/lib/normalized-form-config';
 export { DEFAULT_WIZARD_RECIPE, assertFormEngine, getRenderableSteps } from '@/lib/form-view';
@@ -41,6 +56,16 @@ export interface ValidateFormOptions {
 	getAction: (id: string) => AnyActionRegistration | undefined;
 	hasValidation: (type: string) => boolean;
 	parseFormConfig?: (config: unknown) => FormConfig;
+	/** Appearance vocabulary the picks are checked against. Defaults to the built-in `size` and `surface` axes. */
+	appearance?: CompiledAppearance;
+}
+
+/**
+ * Appearance picks that reach an element: the vocabulary, and what the form, step and containing elements chose.
+ */
+interface AppearanceScope {
+	axes: CompiledAppearance['axes'];
+	inherited: Readonly<Record<string, string>>;
 }
 
 function formatIssuePath(path: StandardSchemaIssue['path']): string {
@@ -109,6 +134,7 @@ function parseView(
 	authored: FormTaggedConfig | undefined,
 	form: { id: string; stepCount: number },
 	options: Pick<ValidateFormOptions, 'getRecipe' | 'defaultWizardRecipe' | 'owner'>,
+	appearance: AppearanceScope,
 ): { issues: string[]; view?: FormTaggedConfig } {
 	const { getRecipe } = options;
 	const stepCount = form.stepCount;
@@ -154,9 +180,10 @@ function parseView(
 		);
 	}
 
+	const slotAppearance = resolveSlotAppearance(view, recipe, appearance, issues);
 	const parsed = parseRegistration(
 		recipe.schema,
-		mergeSlotDefaults(view, recipe.slotDefaults),
+		mergeSlotDefaults(slotAppearance.withoutAppearance, recipe.slotDefaults),
 		`Invalid view configuration for recipe '${recipeType}'`,
 	);
 	if (!parsed.ok) {
@@ -178,7 +205,54 @@ function parseView(
 		}
 	}
 
-	return { issues, view: parsed.data };
+	return { issues, view: withSlotAppearance(parsed.data, slotAppearance.resolved) };
+}
+
+/**
+ * Checks each slot's authored `appearance` and resolves the selection the slot renders with.
+ *
+ * @remarks
+ * The key is removed from the view before the slot schemas parse it, so a registration's slot
+ * schema only has to type it; the engine owns the vocabulary check. The form's picks reach a
+ * slot for the axes the recipe declares on it, and the slot's own pick wins.
+ */
+function resolveSlotAppearance(
+	view: FormTaggedConfig,
+	recipe: AnyRecipeRegistration,
+	appearance: AppearanceScope,
+	issues: string[],
+): { withoutAppearance: FormTaggedConfig; resolved: Record<string, Record<string, string>> } {
+	const withoutAppearance: FormTaggedConfig = { ...view };
+	const resolved: Record<string, Record<string, string>> = {};
+	for (const slot of recipe.slots) {
+		const authoredSlot = view[slot];
+		const supported = recipe.appearanceAxes?.[slot];
+		const checked = checkAppearance(isPlainObject(authoredSlot) ? authoredSlot.appearance : undefined, {
+			axes: appearance.axes,
+			supported: supported ?? [],
+			subject: `Slot '${slot}' of recipe '${recipe.$type}'`,
+		});
+		issues.push(...checked.issues.map((issue) => prefixed(`view.${slot}`, issue)));
+		const selection = pickSupportedAppearance({ ...appearance.inherited, ...checked.appearance }, supported);
+		if (Object.keys(selection).length > 0) resolved[slot] = selection;
+		if (isPlainObject(authoredSlot) && 'appearance' in authoredSlot) {
+			const { appearance: _authored, ...rest } = authoredSlot;
+			withoutAppearance[slot] = rest;
+		}
+	}
+	return { withoutAppearance, resolved };
+}
+
+function withSlotAppearance(
+	view: FormTaggedConfig,
+	resolved: Record<string, Record<string, string>>,
+): FormTaggedConfig {
+	const next: FormTaggedConfig = { ...view };
+	for (const [slot, selection] of Object.entries(resolved)) {
+		const slotConfig = view[slot];
+		if (isPlainObject(slotConfig)) next[slot] = { ...slotConfig, appearance: selection };
+	}
+	return next;
 }
 
 function parseTypedConfig(
@@ -276,11 +350,60 @@ function unregisteredValidationRule(
 	return undefined;
 }
 
+function elementLabel(item: Record<string, unknown>): string {
+	if (typeof item.name === 'string') return `Field '${item.name}'`;
+	return typeof item.id === 'string' ? `Element '${item.id}'` : 'Element';
+}
+
+function quotedKeys(keys: readonly string[]): string {
+	return keys.map((key) => `'${key}'`).join(' and ');
+}
+
+/**
+ * Why a field's named placement is invalid, or `undefined` when it is fine.
+ *
+ * @remarks
+ * Applies at every depth: a container lays its children out in a grid of its
+ * own, so a nested field's tracks add up the same way a top-level field's do.
+ */
+function namedPlacementIssue(item: FormTaggedConfig): string | undefined {
+	const keys = elementGridKeys(item);
+	const named = ['width', 'offset'].filter((key) => keys.has(key));
+	if (named.length === 0) return undefined;
+	const label = elementLabel(item);
+	if (keys.has('column')) {
+		return `${label} sets grid ${quotedKeys(named)} and 'column'; use named widths or a raw column, not both.`;
+	}
+	const overflow = namedPlacementOverflow(item);
+	if (overflow) {
+		return `${label} sets grid 'width' and 'offset' that span ${overflow.tracks} of ${WIDTH_TRACKS} tracks at ${overflow.slot === 'default' ? 'default' : `'${overflow.slot}'`}; together they must fit in ${WIDTH_TRACKS} tracks.`;
+	}
+	return undefined;
+}
+
+/** A grid sets its own tracks with `columns` or gets twelve from its fields' widths, not both. */
+function columnsWithNamedWidths(
+	grid: GridLayoutConfig | undefined,
+	steps: readonly { elements: readonly FormTaggedConfig[] }[],
+): string | undefined {
+	const entries = [grid, ...Object.values(grid?.responsive ?? {})];
+	const set = GRID_TEMPLATE_KEYS.filter((key) => entries.some((entry) => entry?.[key] !== undefined));
+	if (set.length === 0) return undefined;
+	for (const step of steps) {
+		const element = step.elements.find(elementUsesGridWidths);
+		if (element) {
+			return `Form grid sets ${quotedKeys(set)} but ${elementLabel(element)} uses 'width' or 'offset'; a grid uses either columns or widths.`;
+		}
+	}
+	return undefined;
+}
+
 function parseElementNode(
 	item: unknown,
 	getElement: ValidateFormOptions['getElement'],
 	hasValidation: ValidateFormOptions['hasValidation'],
 	location: string,
+	appearance: AppearanceScope,
 ): { issues: string[]; item?: FormTaggedConfig } {
 	const fail = (message: string) => ({
 		issues: [location ? prefixed(location, message) : message],
@@ -292,21 +415,46 @@ function parseElementNode(
 	const unregisteredRule = unregisteredValidationRule(item, hasValidation);
 	if (unregisteredRule) return fail(unregisteredRule);
 
-	const parsed = parseTypedConfig('element', item, getElement, 'createFormEngine({ elements: [...] })');
+	const { appearance: authoredAppearance, ...authored } = item;
+	const parsed = parseTypedConfig(
+		'element',
+		authored as FormTaggedConfig,
+		getElement,
+		'createFormEngine({ elements: [...] })',
+	);
 	if (!parsed.ok) {
 		return fail(parsed.issue);
 	}
+	const placementIssue = namedPlacementIssue(parsed.data);
+	if (placementIssue) return fail(placementIssue);
+
+	const supported = getElement(item.$type)?.appearanceAxes;
+	const checked = checkAppearance(authoredAppearance, {
+		axes: appearance.axes,
+		supported: supported ?? [],
+		subject: `Element '${item.$type}'`,
+	});
+	const issues = checked.issues.map((issue) => (location ? prefixed(location, issue) : issue));
+	const own = { ...appearance.inherited, ...checked.appearance };
+	const selection = pickSupportedAppearance(own, supported);
+	const resolved = Object.keys(selection).length > 0 ? { ...parsed.data, appearance: selection } : parsed.data;
 
 	const children = getElementChildren(parsed.data);
 	if (!children) {
-		return { issues: [], item: parsed.data };
+		return issues.length > 0 ? { issues } : { issues: [], item: resolved };
 	}
 
 	const nextChildren: FormTaggedConfig[] = [];
-	const issues: string[] = [];
+	const childScope = { axes: appearance.axes, inherited: own };
 	for (let index = 0; index < children.length; index += 1) {
 		const child = children[index];
-		const nested = parseElementNode(child, getElement, hasValidation, childLocation(location, index, child));
+		const nested = parseElementNode(
+			child,
+			getElement,
+			hasValidation,
+			childLocation(location, index, child),
+			childScope,
+		);
 		issues.push(...nested.issues);
 		if (nested.item) nextChildren.push(nested.item);
 	}
@@ -315,7 +463,7 @@ function parseElementNode(
 		return { issues };
 	}
 
-	return { issues: [], item: withElementChildren(parsed.data, nextChildren) };
+	return { issues: [], item: withElementChildren(resolved, nextChildren) };
 }
 
 function parseElementList(
@@ -323,6 +471,7 @@ function parseElementList(
 	getElement: ValidateFormOptions['getElement'],
 	hasValidation: ValidateFormOptions['hasValidation'],
 	parentLocation: string,
+	appearance: AppearanceScope,
 ): { issues: string[]; items?: FormTaggedConfig[] } {
 	if (!items) return { issues: [] };
 
@@ -330,7 +479,13 @@ function parseElementList(
 	const issues: string[] = [];
 	for (let index = 0; index < items.length; index += 1) {
 		const item = items[index];
-		const parsed = parseElementNode(item, getElement, hasValidation, childLocation(parentLocation, index, item));
+		const parsed = parseElementNode(
+			item,
+			getElement,
+			hasValidation,
+			childLocation(parentLocation, index, item),
+			appearance,
+		);
 		issues.push(...parsed.issues);
 		if (parsed.item) next.push(parsed.item);
 	}
@@ -358,9 +513,12 @@ function brandElementTree(
  */
 export function validateElementConfig(
 	config: unknown,
-	options: Pick<ValidateFormOptions, 'getElement' | 'hasValidation'>,
+	options: Pick<ValidateFormOptions, 'getElement' | 'hasValidation' | 'appearance'>,
 ): NormalizedElementConfig {
-	const parsed = parseElementNode(config, options.getElement, options.hasValidation, '');
+	const parsed = parseElementNode(config, options.getElement, options.hasValidation, '', {
+		axes: (options.appearance ?? getDefaultCompiledAppearance()).axes,
+		inherited: {},
+	});
 	if (parsed.issues.length > 0 || !parsed.item) {
 		const issues = parsed.issues.length ? parsed.issues : ['Invalid element configuration: missing $type.'];
 		throw new FormValidationError(issues[0] ?? 'Invalid element configuration', issues);
@@ -408,22 +566,38 @@ export function validateFormConfig(config: unknown, options: ValidateFormOptions
 			itemKind,
 		);
 
+	const { axes } = options.appearance ?? getDefaultCompiledAppearance();
+	const formAppearance = checkAppearance(envelope.appearance, { axes, subject: 'The form' });
+	issues.push(...formAppearance.issues.map((issue) => prefixed('form', issue)));
+
 	const steps = envelope.steps.map((step, stepIndex) => {
 		const stepLocation = itemLocation('steps', stepIndex, step);
-		const elements = parseElementList(step.elements, options.getElement, options.hasValidation, stepLocation);
+		const stepAppearance = checkAppearance(step.appearance, { axes, subject: 'The step' });
+		issues.push(...stepAppearance.issues.map((issue) => prefixed(stepLocation, issue)));
+		const resolvedStepAppearance = { ...formAppearance.appearance, ...stepAppearance.appearance };
+		const elements = parseElementList(step.elements, options.getElement, options.hasValidation, stepLocation, {
+			axes,
+			inherited: resolvedStepAppearance,
+		});
 		const actions = parseActions(step.actions, stepLocation, 'actions');
 		issues.push(...elements.issues, ...actions.issues);
+		const { appearance: _authored, ...rest } = step;
 		return {
-			...step,
+			...rest,
+			...(Object.keys(resolvedStepAppearance).length > 0 && { appearance: resolvedStepAppearance }),
 			elements: elements.items ?? step.elements,
 			actions: actions.items ?? step.actions,
 		};
 	});
 
+	const widthsConflict = columnsWithNamedWidths(envelope.grid, steps);
+	if (widthsConflict) issues.push(widthsConflict);
+
 	const view = parseView(
 		envelope.view && typeof envelope.view.$type === 'string' ? envelope.view : undefined,
 		{ id: envelope.id, stepCount: envelope.steps.length },
 		options,
+		{ axes, inherited: formAppearance.appearance },
 	);
 	const formActions = parseActions(envelope.actions, 'form', 'actions');
 	issues.push(...view.issues, ...formActions.issues);
@@ -432,9 +606,11 @@ export function validateFormConfig(config: unknown, options: ValidateFormOptions
 		throw new FormValidationError(issues[0] ?? 'Invalid form configuration', issues);
 	}
 
+	const { appearance: _authoredForm, ...envelopeRest } = envelope;
 	return markNormalizedFormConfig(
 		{
-			...envelope,
+			...envelopeRest,
+			...(Object.keys(formAppearance.appearance).length > 0 && { appearance: formAppearance.appearance }),
 			steps: steps.map((step) => ({
 				...step,
 				elements: step.elements.map((element) =>

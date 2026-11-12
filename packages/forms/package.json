@@ -106,6 +106,10 @@
 			"types": "./dist/lib/debounce.d.ts",
 			"import": "./dist/lib/debounce.js"
 		},
+		"./lib/appearance": {
+			"types": "./dist/lib/appearance.d.ts",
+			"import": "./dist/lib/appearance.js"
+		},
 		"./lib/grid-styles": {
 			"types": "./dist/lib/grid-styles.d.ts",
 			"import": "./dist/lib/grid-styles.js"

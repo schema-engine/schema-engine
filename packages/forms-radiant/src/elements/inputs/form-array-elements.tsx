@@ -17,7 +17,8 @@ import { RequiredMarker } from '../field-group';
 import { adoptFieldArrayIds } from '@/adapters/radiant/controller/field-array';
 import { getValueAtPath, setValueAtPath } from '@schema-engine/forms/lib/path-values';
 import { formContext, type FormContextValue } from '@ecopages/radiant-ui/form';
-import { mergeFieldGridHost } from '@/hooks/grid-styles';
+import { mergeChildrenGridHost, mergeFieldGridHost } from '@/hooks/grid-styles';
+import { getAppearanceAttributes } from '@schema-engine/forms/lib/appearance';
 import { readValue } from '@/adapters/radiant/controller/values';
 
 function TrashIcon() {
@@ -101,6 +102,7 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 	const removeLabel = config.removeButtonText || 'Remove item';
 	const disabled = config.disabled === true;
 	const elements = withContainerState(config, config.elements);
+	const childrenHost = mergeChildrenGridHost(config.elements, engine);
 
 	return (
 		<div class="se-form-array">
@@ -114,7 +116,11 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 				});
 				return (
 					<div class="se-form-array__item" key={id} data-se-row-id={id}>
-						<div class="se-form-array__fields">
+						<div
+							class="se-form-array__fields se-form-grid"
+							data-se-grid-theme={childrenHost.themeId}
+							style={childrenHost.style}
+						>
 							<FormElements
 								elements={elements}
 								engine={engine}
@@ -425,10 +431,11 @@ export function FormArrayElements(config: ArrayElementsProps) {
 
 	return (
 		<fieldset
-			class="se-form-field se-form-array-field"
+			classes={['se-form-field', 'se-form-array-field', fieldConfig.className]}
 			aria-label={fieldConfig.label ? undefined : fieldConfig.name}
 			data-se-grid-theme={fieldHost.themeId}
 			style={fieldHost.style}
+			{...getAppearanceAttributes(fieldConfig.appearance)}
 		>
 			{fieldConfig.label ? (
 				<legend class="se-form-array-field__label">

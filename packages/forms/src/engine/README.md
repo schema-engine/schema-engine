@@ -60,7 +60,7 @@ id wholesale, schema, title and description included, and the supplied catalog i
 mutated. `extend` rebuilds the catalog the same way from the source engine's catalog,
 or from an explicit `catalog` passed to `extend`, so custom entries carry over and
 added or overridden registrations replace theirs without touching the source engine.
-The compiled grid is inherited. JSON Schema generation uses `StandardJSONSchemaV1`
+The compiled grid and the compiled appearance vocabulary (`getAppearance()`: axes, token stylesheet, theme id) are inherited. JSON Schema generation uses `StandardJSONSchemaV1`
 from `@standard-schema/spec` and keeps the existing forms vendor, schema ids, targets
 and input/output documents.
 

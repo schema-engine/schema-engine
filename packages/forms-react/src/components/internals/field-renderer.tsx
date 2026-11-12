@@ -3,7 +3,11 @@ import { useContext, useMemo } from 'react';
 import { useFormEngine, useConstraintLogic } from '@/hooks';
 import { applyFieldOverlay, type NormalizedElementConfig } from '@schema-engine/forms';
 import { isNormalizedElementConfig } from '@schema-engine/forms/lib/normalized-form-config';
-import { FieldConstraintContext, InheritedFieldStateContext } from '@/contexts/field-constraint-context';
+import {
+	FieldHostContext,
+	FieldConstraintContext,
+	InheritedFieldStateContext,
+} from '@/contexts/field-constraint-context';
 import { isElementRequired } from '@/hooks/is-element-required';
 import { ElementError } from './element-error';
 
@@ -79,7 +83,9 @@ export function FormElement({ config, name, id, instanceId, className, style }: 
 	return (
 		<InheritedFieldStateContext.Provider value={passedDown}>
 			<FieldConstraintContext.Provider value={{ fieldPath, constraints }}>
-				<Component {...enhancedConfig} />
+				<FieldHostContext.Provider value={{ appearance: config.appearance, className: config.className }}>
+					<Component {...enhancedConfig} />
+				</FieldHostContext.Provider>
 			</FieldConstraintContext.Provider>
 		</InheritedFieldStateContext.Provider>
 	);

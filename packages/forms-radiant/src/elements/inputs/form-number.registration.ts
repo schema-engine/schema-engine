@@ -4,6 +4,7 @@ import { defineInput } from '@schema-engine/forms';
 
 export const NumberElementRegistration = defineInput({
 	$type: 'number',
+	appearanceAxes: ['size'],
 	render: FormNumber,
 	schema: NumberFieldConfigSchema,
 	metadata: {

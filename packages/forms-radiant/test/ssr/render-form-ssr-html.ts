@@ -5,6 +5,7 @@ import { createFormEngine } from '@schema-engine/forms';
 import type { ElementGridConfig } from '@schema-engine/forms/schemas';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
+import { SSR_WIDTH_FIELDS } from '../../../../test-utils/ssr-grid-acceptance';
 
 const ssrInputSchema = z.object({
 	$type: z.literal('ssr-input'),
@@ -98,6 +99,32 @@ export function renderSsrLayoutAcceptanceHtml(): string {
 						label: 'Visible field',
 					},
 				],
+			},
+		],
+	});
+
+	const body = renderToString(RecipeRenderer({ config, engine, recipe: undefined }), { mode: 'plain' });
+
+	return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${body}</body></html>`;
+}
+
+/** SSR document for the named width fixture, produced by the renderer itself. */
+export function renderSsrWidthsAcceptanceHtml(): string {
+	const engine = getSsrAcceptanceEngine();
+	const config = engine.validateForm({
+		id: 'ssr-widths-acceptance',
+		title: 'SSR widths acceptance',
+		steps: [
+			{
+				id: 'main',
+				title: 'Main',
+				elements: SSR_WIDTH_FIELDS.map(({ id, label, grid }) => ({
+					$type: 'ssr-input',
+					id,
+					name: id,
+					label,
+					grid,
+				})),
 			},
 		],
 	});

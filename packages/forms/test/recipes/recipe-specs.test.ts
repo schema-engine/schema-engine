@@ -103,7 +103,9 @@ describe('built-in recipe specs', () => {
 	});
 
 	test('card schema accepts shell config without nested $type', () => {
-		expect(cardSpec.schema.safeParse({ $type: 'card', shell: { padding: 'md' } }).success).toBe(true);
+		expect(cardSpec.schema.safeParse({ $type: 'card', shell: { appearance: { size: 'compact' } } }).success).toBe(
+			true,
+		);
 		expect(cardSpec.schema.safeParse({ $type: 'card', shell: { $type: 'card' } }).success).toBe(false);
 	});
 
@@ -202,7 +204,7 @@ describe('normalized slot defaults', () => {
 
 	test('fills slots the author omits from the slot schema defaults', () => {
 		const form = engine.defineForm({ id: 'card', steps, view: { $type: 'card' } });
-		expect(form.view?.shell).toEqual({ maxWidth: 'md', padding: 'md', shadowSize: 'md' });
+		expect(form.view?.shell).toEqual({});
 		expect(form.view?.actions).toEqual({
 			labels: { submit: 'Submit', submitAriaLabel: 'Submit form', submitting: 'Submitting...' },
 			align: 'end',
@@ -222,7 +224,7 @@ describe('normalized slot defaults', () => {
 			>;
 		};
 		const properties = viewSchema.$defs['recipe:card'].properties;
-		expect(properties.shell.properties.maxWidth.default).toBe('md');
+		expect(properties.header.properties.titleAs.default).toBe('h2');
 		expect(properties.actions.properties.align.default).toBe('end');
 	});
 

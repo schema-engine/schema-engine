@@ -2,6 +2,7 @@ import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import type { FormMeta } from '@/lib/instance-view';
+import { getAppearanceAttributes } from '@schema-engine/forms/lib/appearance';
 import { getSlotConfig } from '@schema-engine/forms/recipes';
 import {
 	CardShellConfigSchema,
@@ -43,14 +44,12 @@ export function SidebarShell({ slots, viewConfig }: FormShellProps): JsxRenderab
 }
 
 export function CardShell({ slots, viewConfig }: FormShellProps): JsxRenderable {
-	const { maxWidth, padding, shadowSize } = getSlotConfig(viewConfig, 'shell', CardShellConfigSchema);
+	const { appearance } = getSlotConfig(viewConfig, 'shell', CardShellConfigSchema);
 	return (
 		<div class="card-shell">
-			<div classes={['card-shell__card', `card-shell__card--${maxWidth}`, `card-shell__shadow--${shadowSize}`]}>
-				{slots.header ? (
-					<div classes={['card-shell__header', `card-shell__padding--${padding}`]}>{slots.header}</div>
-				) : null}
-				<div classes={['card-shell__content', `card-shell__padding--${padding}`]}>
+			<div class="card-shell__card" {...getAppearanceAttributes(appearance)}>
+				{slots.header ? <div class="card-shell__header card-shell__section">{slots.header}</div> : null}
+				<div class="card-shell__content card-shell__section">
 					{slots.progress}
 					{slots.content}
 					{slots.actions}
