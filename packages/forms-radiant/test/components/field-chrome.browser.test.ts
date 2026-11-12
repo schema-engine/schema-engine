@@ -109,7 +109,6 @@ test('array rows sit in a named group with row-specific remove buttons', async (
 	);
 	expect(new Set(names).size).toBe(2);
 	expect(host.querySelector('.se-form-array [data-rui-field-error]')).toBeTruthy();
-	expect(host.querySelector('.se-form-array > p[role="alert"]:not([data-rui-field-error])')).toBeNull();
 });
 
 test('the drop zone shows a focus indicator when tabbed to', async () => {

@@ -2,7 +2,6 @@ import './form-array-elements.css';
 import { onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { RuiButton } from '@ecopages/radiant-ui/button';
-import { RuiFieldError } from '@ecopages/radiant-ui/field';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import { FormElements } from '@/components/internals/form-elements';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
@@ -82,6 +81,9 @@ interface ArrayContentProps {
 
 /**
  * @remarks
+ * The error region stamps the contract `RuiFieldError` does, by hand: that view is always hidden and
+ * ignores children, and no `rui-field` wraps the array to fill it.
+ *
  * A disabled array, authored or by a constraint, renders its rows and its add
  * and remove buttons disabled, and its rows get the required marker as a
  * fieldset's children do (`withContainerState`).
@@ -139,7 +141,9 @@ function renderArrayContent({ config, engine, ids, initialValues, renderValues, 
 					{config.addButtonText || 'Add item'}
 				</RuiButton>
 			) : null}
-			<RuiFieldError hidden={!fieldError}>{fieldError}</RuiFieldError>
+			<p class="rui-field__error" data-rui-field-error role="alert" hidden={!fieldError}>
+				{fieldError}
+			</p>
 		</div>
 	);
 }
