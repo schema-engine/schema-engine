@@ -17,9 +17,9 @@ import { RuiListbox, RuiListboxOption, RuiListboxOptionIndicator } from '@ecopag
 import type { CountryCode } from 'libphonenumber-js';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
-import { emitControlChange, fieldControlHostAttributes, registerValueControl } from '@/lib/field-control';
+import { emitControlChange, registerValueControl } from '@/lib/field-control';
 import { contextSelector } from '@ecopages/radiant/context';
-import { fieldAriaBindings, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
+import { fieldAria, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
 import { FieldGroup } from '../field-group';
 import {
 	detectCountryFromInput,
@@ -52,7 +52,9 @@ function PhoneFlag({ code, class: className }: { code?: string; class: string })
  * libphonenumber has loaded, and `committed` keeps the host's own writes from
  * being re-parsed.
  */
-@customElement('se-phone-input', { hostAttributes: fieldControlHostAttributes('[data-ref="number"]') })
+@customElement('se-phone-input', {
+	hostAttributes: { 'data-rui-control': '', 'data-rui-aria-target': '[data-ref="number"]' },
+})
 export class SePhoneInput extends FormAssociatedElement {
 	declare readonly [JSX_PROPS]?: Partial<
 		Pick<
@@ -72,7 +74,6 @@ export class SePhoneInput extends FormAssociatedElement {
 	@state protected countries: PhoneCountryOption[] = [];
 	@state protected display = '';
 	@contextSelector({ context: fieldContext })
-	@bindTo(fieldAriaBindings('[data-ref="number"]'))
 	@state
 	protected field?: FieldContextValue = undefined;
 
@@ -216,6 +217,7 @@ export class SePhoneInput extends FormAssociatedElement {
 				</RuiSelect>
 				<input
 					id={this.inputId || undefined}
+					{...fieldAria(this.field)}
 					data-ref="number"
 					on:input={this.onNumberInput}
 					class="rui-input se-phone__number"
@@ -249,7 +251,6 @@ export function FormPhoneInput(config: PhoneInputFieldProps) {
 			disabled={config.disabled}
 		>
 			<SePhoneInput
-				{...fieldControlHostAttributes('[data-ref="number"]')}
 				name={config.name}
 				placeholder={config.placeholder}
 				disabled={config.disabled}

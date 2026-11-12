@@ -4,9 +4,9 @@ import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-as
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
-import { emitControlChange, fieldControlHostAttributes, registerValueControl } from '@/lib/field-control';
+import { emitControlChange, registerValueControl } from '@/lib/field-control';
 import { contextSelector } from '@ecopages/radiant/context';
-import { fieldAriaBindings, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
+import { fieldAria, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
 import { FieldGroup } from '../field-group';
 import {
 	createPatternMaskOptions,
@@ -23,7 +23,9 @@ import type { MaskedInputFieldProps } from './form-masked-input.types';
  * typed value, as `unmask` selects. IMask owns the visible text, so a write to
  * `value` is pushed into the mask instance instead of rendered.
  */
-@customElement('se-masked-input', { hostAttributes: fieldControlHostAttributes('[data-ref="input"]') })
+@customElement('se-masked-input', {
+	hostAttributes: { 'data-rui-control': '', 'data-rui-aria-target': '[data-ref="input"]' },
+})
 export class SeMaskedInput extends FormAssociatedElement {
 	declare readonly [JSX_PROPS]?: Partial<
 		Pick<
@@ -60,7 +62,6 @@ export class SeMaskedInput extends FormAssociatedElement {
 
 	@state @bindTo({ bool: 'data-ready' }) protected ready = false;
 	@contextSelector({ context: fieldContext })
-	@bindTo(fieldAriaBindings('[data-ref="input"]'))
 	@state
 	protected field?: FieldContextValue = undefined;
 
@@ -173,6 +174,7 @@ export class SeMaskedInput extends FormAssociatedElement {
 			<div class="se-masked">
 				<input
 					id={this.inputId || undefined}
+					{...fieldAria(this.field)}
 					data-ref="input"
 					class="rui-input se-masked__input"
 					type="text"
@@ -206,7 +208,6 @@ export function FormMaskedInput(config: MaskedInputFieldProps) {
 			disabled={config.disabled}
 		>
 			<SeMaskedInput
-				{...fieldControlHostAttributes('[data-ref="input"]')}
 				name={config.name}
 				placeholder={config.placeholder}
 				disabled={config.disabled}
