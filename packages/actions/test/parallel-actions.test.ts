@@ -20,13 +20,14 @@ function setup(
 		signal: AbortSignal,
 	) => Promise<{ success: boolean; error?: string; data?: unknown; shouldContinue?: boolean }>,
 ) {
-	const registry = new ActionRegistry();
-	registry.register({
-		$type: 'work',
-		schema: z.any(),
-		metadata: { name: 'work', description: 'work', defaultTriggers: ['submit'] },
-		execute: ({ config, signal }) => run(config as Config, signal),
-	});
+	const registry = new ActionRegistry<unknown, string>([
+		{
+			$type: 'work',
+			schema: z.any(),
+			metadata: { name: 'work', description: 'work', defaultTriggers: ['submit'] },
+			execute: ({ config, signal }) => run(config as Config, signal),
+		},
+	]);
 	return new ActionDispatcher(registry);
 }
 

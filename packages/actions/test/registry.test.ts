@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'vitest';
+import { describe, test, expect } from 'vitest';
 import { ActionRegistry } from '../src/registry';
 import type { ActionRegistration } from '../src/types';
 import * as z from 'zod/mini';
@@ -23,8 +23,6 @@ interface TestContext {
 }
 
 describe('ActionRegistry', () => {
-	let registry: ActionRegistry<TestContext, TestTrigger>;
-
 	const mockAction: ActionRegistration<LogActionConfig, TestContext, TestTrigger> = {
 		$type: 'log',
 		schema: z.object({
@@ -60,28 +58,20 @@ describe('ActionRegistry', () => {
 		},
 	};
 
-	beforeEach(() => {
-		registry = new ActionRegistry<TestContext, TestTrigger>();
-	});
+	type Registrations = ConstructorParameters<typeof ActionRegistry<TestContext, TestTrigger>>[0];
+	const build = (...actions: Registrations[number][]) => new ActionRegistry<TestContext, TestTrigger>(actions);
 
-	describe('register', () => {
-		test('should register an action', () => {
-			registry.register(mockAction);
-
-			expect(registry.has('log')).toBe(true);
-			expect(registry.getAction('log')).toEqual(mockAction);
-		});
-
-		test('should allow registering multiple actions', () => {
-			registry.register(mockAction);
-			registry.register(anotherAction);
+	describe('construction', () => {
+		test('should store the registrations it is built from', () => {
+			const registry = build(mockAction, anotherAction);
 
 			expect(registry.size).toBe(2);
 			expect(registry.has('log')).toBe(true);
 			expect(registry.has('api')).toBe(true);
+			expect(registry.getAction('log')).toBe(mockAction);
 		});
 
-		test('should override when registering duplicate type', () => {
+		test('should let the last registration of a type win', () => {
 			const updated: ActionRegistration<LogActionConfig, TestContext, TestTrigger> = {
 				...mockAction,
 				metadata: {
@@ -90,49 +80,60 @@ describe('ActionRegistry', () => {
 				},
 			};
 
-			registry.register(mockAction);
-			registry.register(updated);
+			const registry = build(mockAction, updated);
 
 			expect(registry.size).toBe(1);
 			expect(registry.getAction('log')?.metadata.name).toBe('Updated Log Action');
+		});
+
+		test('should reject a registration whose schema is not a Standard Schema', () => {
+			const broken = { ...mockAction, schema: {} } as unknown as ActionRegistration<
+				LogActionConfig,
+				TestContext,
+				TestTrigger
+			>;
+
+			expect(() => build(broken)).toThrow(/Action 'log' schema must implement Standard Schema/);
+		});
+
+		test('should be read-only', () => {
+			const registry = build(mockAction);
+
+			expect(registry).not.toHaveProperty('register');
+			expect(registry).not.toHaveProperty('clear');
+			expect(Object.isFrozen(registry)).toBe(true);
+			expect(Object.isFrozen(registry.getAction('log'))).toBe(true);
 		});
 	});
 
 	describe('has', () => {
 		test('should return true for registered action', () => {
-			registry.register(mockAction);
-			expect(registry.has('log')).toBe(true);
+			expect(build(mockAction).has('log')).toBe(true);
 		});
 
 		test('should return false for unregistered action', () => {
-			expect(registry.has('non-existent')).toBe(false);
+			expect(build().has('non-existent')).toBe(false);
 		});
 	});
 
 	describe('getAction', () => {
 		test('should retrieve registered action', () => {
-			registry.register(mockAction);
-			const retrieved = registry.getAction('log');
-
-			expect(retrieved).toEqual(mockAction);
+			expect(build(mockAction).getAction('log')).toEqual(mockAction);
 		});
 
 		test('should return undefined for unregistered action', () => {
-			const retrieved = registry.getAction('non-existent');
-			expect(retrieved).toBeUndefined();
+			expect(build().getAction('non-existent')).toBeUndefined();
 		});
 	});
 
-	describe('getAll', () => {
+	describe('all', () => {
 		test('should return empty array when no actions registered', () => {
-			expect(registry.getAll()).toEqual([]);
+			expect(build().all()).toEqual([]);
 		});
 
 		test('should return all registered actions', () => {
-			registry.register(mockAction);
-			registry.register(anotherAction);
+			const all = build(mockAction, anotherAction).all();
 
-			const all = registry.getAll();
 			expect(all).toHaveLength(2);
 			expect(all).toContain(mockAction);
 			expect(all).toContain(anotherAction);
@@ -141,45 +142,22 @@ describe('ActionRegistry', () => {
 
 	describe('getActionTypes', () => {
 		test('should return empty array when no actions registered', () => {
-			expect(registry.getActionTypes()).toEqual([]);
+			expect(build().getActionTypes()).toEqual([]);
 		});
 
 		test('should return all registered types', () => {
-			registry.register(mockAction);
-			registry.register(anotherAction);
-
-			const types = registry.getActionTypes();
-			expect(types).toHaveLength(2);
-			expect(types).toContain('log');
-			expect(types).toContain('api');
+			expect(build(mockAction, anotherAction).getActionTypes()).toEqual(['log', 'api']);
 		});
 	});
 
 	describe('size', () => {
 		test('should return 0 for empty registry', () => {
-			expect(registry.size).toBe(0);
+			expect(build().size).toBe(0);
 		});
 
 		test('should return correct count', () => {
-			registry.register(mockAction);
-			expect(registry.size).toBe(1);
-
-			registry.register(anotherAction);
-			expect(registry.size).toBe(2);
-		});
-	});
-
-	describe('clear', () => {
-		test('should remove all actions', () => {
-			registry.register(mockAction);
-			registry.register(anotherAction);
-			expect(registry.size).toBe(2);
-
-			registry.clear();
-
-			expect(registry.size).toBe(0);
-			expect(registry.has('log')).toBe(false);
-			expect(registry.has('api')).toBe(false);
+			expect(build(mockAction).size).toBe(1);
+			expect(build(mockAction, anotherAction).size).toBe(2);
 		});
 	});
 });
