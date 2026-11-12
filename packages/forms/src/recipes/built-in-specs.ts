@@ -11,7 +11,8 @@ import {
 	WizardActionsConfigSchema,
 } from './slot-schemas';
 
-const MINIMAL_ACTIONS = { appearance: 'minimal', showStepCounter: false } as const;
+const MINIMAL_ACTIONS = { variant: 'minimal', showStepCounter: false } as const;
+const CARD_SHELL_AXES = ['size', 'surface'] as const;
 const CENTERED_HEADER = { align: 'center', size: 'md' } as const;
 const HERO_HEADER = { align: 'center', size: 'lg', titleAs: 'h1', inheritColor: true } as const;
 const WIZARD_PROGRESS_HEADER = { showStepCounter: true, counterPlacement: 'before' } as const;
@@ -21,6 +22,7 @@ export const cardSpec = defineRecipeSpec({
 	kind: 'single-step',
 	slotSchemas: { shell: CardShellConfigSchema, header: StepHeaderConfigSchema, actions: FormActionsConfigSchema },
 	slotDefaults: { header: CENTERED_HEADER },
+	appearanceAxes: { shell: CARD_SHELL_AXES },
 	metadata: { name: 'Card', description: 'Single-step form in a centered card shell.', category: 'layout' },
 });
 
@@ -64,6 +66,7 @@ export const cardWizardSpec = defineRecipeSpec({
 		actions: WizardActionsConfigSchema,
 	},
 	slotDefaults: { header: { ...CENTERED_HEADER, ...WIZARD_PROGRESS_HEADER }, actions: MINIMAL_ACTIONS },
+	appearanceAxes: { shell: CARD_SHELL_AXES },
 	metadata: {
 		name: 'Card wizard',
 		description: 'Multi-step wizard inside a card shell with progress bar.',

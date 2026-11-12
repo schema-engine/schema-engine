@@ -2,6 +2,7 @@ import { customElement, bindTo, onUpdated, prop, RadiantElement, state } from '@
 import { onContextUpdate } from '@ecopages/radiant/context';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
+import { getAppearanceAttributes, type AppearanceSelection } from '@schema-engine/forms/lib/appearance';
 
 /**
  * Visibility host for one authored step.
@@ -58,17 +59,35 @@ export class FormStepElement extends RadiantElement {
 }
 
 export function FormStep({
+	stepId,
 	stepIndex,
 	hidden = false,
+	class: className,
+	style,
+	appearance,
 	children,
 }: {
+	stepId: string;
 	stepIndex: number;
 	/** The server-rendered visibility: true for every step but the first of a wizard. */
 	hidden?: boolean;
+	/** The step's authored `className`. */
+	class?: string;
+	/** The step's authored custom properties. */
+	style?: Record<string, string | number | undefined>;
+	/** The step's resolved appearance, emitted as `data-se-<axis>` attributes. */
+	appearance?: AppearanceSelection;
 	children: JsxRenderable;
 }): JsxRenderable {
 	return (
-		<FormStepElement stepIndex={stepIndex} hidden={hidden}>
+		<FormStepElement
+			stepIndex={stepIndex}
+			hidden={hidden}
+			classes={['se-form-step', className]}
+			style={style}
+			data-se-step={stepId}
+			{...getAppearanceAttributes(appearance)}
+		>
 			{children}
 		</FormStepElement>
 	);

@@ -43,14 +43,14 @@ export class WizardActionsElement extends RadiantElement {
 		const instance = this.instance ?? deriveInitialInstance(meta);
 
 		if (!this.slotConfig) return null;
-		const { labels, appearance, showStepCounter } = this.slotConfig;
+		const { labels, variant, showStepCounter } = this.slotConfig;
 		const last = instance.currentStep >= instance.totalSteps - 1;
 		const steps = deriveFormSteps(meta, instance);
 		return (
-			<div classes={['se-wizard-actions', appearance === 'minimal' && 'se-wizard-actions--minimal']}>
+			<div classes={['se-wizard-actions', variant === 'minimal' && 'se-wizard-actions--minimal']}>
 				<RuiButton
 					type="button"
-					variant={appearance === 'minimal' ? 'ghost' : 'outline'}
+					variant={variant === 'minimal' ? 'ghost' : 'outline'}
 					on:click={this.goPrevious}
 					prop:disabled={instance.currentStep === 0}
 					aria-label={labels.previousAriaLabel}

@@ -77,13 +77,14 @@ async function loadSsrFrame(html: string, width: number): Promise<{ frame: HTMLI
 }
 
 function fieldHost(doc: Document, label: RegExp): HTMLElement {
-	const match = Array.from(doc.querySelectorAll<HTMLElement>('.se-form-field')).find((node) =>
+	const matches = Array.from(doc.querySelectorAll<HTMLElement>('.se-form-field')).filter((node) =>
 		label.test(node.textContent ?? ''),
 	);
-	if (!match) {
+	const innermost = matches.find((node) => !matches.some((other) => other !== node && node.contains(other)));
+	if (!innermost) {
 		throw new Error(`Expected a .se-form-field host for ${label}`);
 	}
-	return match;
+	return innermost;
 }
 
 /**
@@ -116,6 +117,144 @@ export async function expectSsrGridAcceptance(html: string, compiled: CompiledGr
 		expect(getComputedStyle(grid!).gridTemplateColumns.split(' ').length).toBe(2);
 		expect(getComputedStyle(hiddenHost).display).toBe('none');
 		expect(getComputedStyle(hiddenHost).gridColumn).toBe('span 2');
+	} finally {
+		frame.remove();
+	}
+}
+
+/**
+ * Fields of the named width acceptance fixture, authored once for both
+ * renderers so their fixtures cannot drift apart.
+ *
+ * @remarks
+ * `Responsive` is full width until `md` (48rem by default) and a third from
+ * there. `Plain` sets no grid config and must fill the row. The two raw fields
+ * keep CSS grid semantics on the twelve tracks: `span 2` is two of twelve.
+ */
+export const SSR_WIDTH_FIELDS = [
+	{ id: 'half-a', label: 'Half A', grid: { width: 'half' } },
+	{ id: 'half-b', label: 'Half B', grid: { width: 'half' } },
+	{ id: 'responsive', label: 'Responsive', grid: { width: 'full', responsive: { md: { width: 'third' } } } },
+	{ id: 'centred', label: 'Centred', grid: { width: 'half', offset: 'quarter' } },
+	{ id: 'plain', label: 'Plain', grid: undefined },
+	{ id: 'raw-span', label: 'Raw span', grid: { column: 'span 2' } },
+	{ id: 'raw-lines', label: 'Raw lines', grid: { column: '4 / 10' } },
+] as const;
+
+function near(actual: number, expected: number): void {
+	expect(Math.abs(actual - expected)).toBeLessThan(1);
+}
+
+/**
+ * Asserts the named width layout of the SSR document at a narrow and a wide
+ * viewport, from CSS alone.
+ *
+ * @param html Server-rendered document for a form built from {@link SSR_WIDTH_FIELDS}.
+ */
+export async function expectSsrWidthsAcceptance(html: string, compiled: CompiledGridLike): Promise<void> {
+	expect(html).not.toMatch(/<script\b/i);
+	expect(html).toContain(compiled.css.slice(0, 48));
+
+	const { frame, doc } = await loadSsrFrame(html, 375);
+	try {
+		const grid = doc.querySelector<HTMLElement>('.se-form-grid[data-se-grid-theme]');
+		expect(grid).toBeTruthy();
+		const rect = (label: RegExp) => fieldHost(doc, label).getBoundingClientRect();
+		const measure = () => {
+			const bounds = grid!.getBoundingClientRect();
+			const gap = Number.parseFloat(getComputedStyle(grid!).columnGap);
+			const track = (bounds.width - 11 * gap) / 12;
+			return { bounds, gap, span: (count: number) => count * track + (count - 1) * gap };
+		};
+
+		for (const width of [375, 1280]) {
+			frame.style.width = `${width}px`;
+			await waitForFrameLayout();
+			const { bounds, gap, span } = measure();
+			expect(getComputedStyle(grid!).gridTemplateColumns.split(' ').length).toBe(12);
+
+			const halfA = rect(/half a/i);
+			const halfB = rect(/half b/i);
+			near(halfA.top, halfB.top);
+			near(halfA.width, span(6));
+			near(halfB.width, span(6));
+			near(halfB.left - halfA.left, span(6) + gap);
+
+			const centred = rect(/centred/i);
+			near(centred.width, span(6));
+			near(centred.left - bounds.left, bounds.right - centred.right);
+
+			near(rect(/plain/i).width, bounds.width);
+
+			near(rect(/raw span/i).width, span(2));
+			const rawLines = rect(/raw lines/i);
+			expect(getComputedStyle(fieldHost(doc, /raw lines/i)).gridColumn).toBe('4 / 10');
+			near(rawLines.width, span(6));
+			near(rawLines.left - bounds.left, span(3) + gap);
+		}
+
+		frame.style.width = '375px';
+		await waitForFrameLayout();
+		near(rect(/responsive/i).width, measure().bounds.width);
+
+		frame.style.width = '1280px';
+		await waitForFrameLayout();
+		near(rect(/responsive/i).width, measure().span(4));
+	} finally {
+		frame.remove();
+	}
+}
+
+/**
+ * Children of a container, authored once for both renderers: two halves and a
+ * sibling that sets no width. The fieldset and the array row use the same
+ * three, with the label prefix telling the groups apart.
+ */
+export function ssrNestedFields(prefix: 'Nest' | 'Row') {
+	return [
+		{ id: `${prefix.toLowerCase()}-a`, label: `${prefix} A`, grid: { width: 'half' } },
+		{ id: `${prefix.toLowerCase()}-b`, label: `${prefix} B`, grid: { width: 'half' } },
+		{ id: `${prefix.toLowerCase()}-plain`, label: `${prefix} plain`, grid: undefined },
+	] as const;
+}
+
+/**
+ * Asserts that a container lays its children out on its own twelve tracks:
+ * two halves share a row and a sibling with no width fills the next one.
+ *
+ * @param html Server-rendered document holding, for each of `groups`, a container
+ * whose children are {@link ssrNestedFields} with that prefix: a fieldset for
+ * `'Nest'` and an array row for `'Row'`.
+ */
+export async function expectSsrNestedWidthsAcceptance(
+	html: string,
+	compiled: CompiledGridLike,
+	groups: readonly ('Nest' | 'Row')[],
+): Promise<void> {
+	expect(html).toContain(compiled.css.slice(0, 48));
+
+	const { frame, doc } = await loadSsrFrame(html, 800);
+	try {
+		for (const group of groups) {
+			const first = fieldHost(doc, new RegExp(`${group} A`));
+			const grid = first.parentElement?.closest<HTMLElement>('.se-form-grid[data-se-grid-theme]');
+			expect(grid, `${group} children sit in their own grid`).toBeTruthy();
+			expect(grid).not.toBe(doc.querySelector('.se-form-grid[data-se-grid-theme]'));
+			expect(getComputedStyle(grid!).gridTemplateColumns.split(' ').length).toBe(12);
+
+			const bounds = grid!.getBoundingClientRect();
+			const gap = Number.parseFloat(getComputedStyle(grid!).columnGap);
+			const half = ((bounds.width - 11 * gap) / 12) * 6 + 5 * gap;
+			const a = first.getBoundingClientRect();
+			const b = fieldHost(doc, new RegExp(`${group} B`)).getBoundingClientRect();
+			const plain = fieldHost(doc, new RegExp(`${group} plain`)).getBoundingClientRect();
+			near(a.top, b.top);
+			near(a.width, half);
+			near(b.width, half);
+			near(b.left - a.left, half + gap);
+			expect(plain.top).toBeGreaterThan(a.bottom - 1);
+			near(plain.width, bounds.width);
+		}
 	} finally {
 		frame.remove();
 	}

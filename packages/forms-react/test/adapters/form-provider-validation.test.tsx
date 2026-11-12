@@ -1,3 +1,4 @@
+import { getDefaultCompiledAppearance } from '@schema-engine/forms/lib/appearance';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { FormProvider } from '../../src/adapters/rhf/form-provider';
@@ -6,7 +7,12 @@ import type { FormConfig } from '@schema-engine/forms/schemas';
 import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
 
 vi.mock('@/hooks/use-form-context', () => ({
-	useFormEngine: () => ({ engine: { getValidationRegistry: () => createDefaultValidationRegistry() } }),
+	useFormEngine: () => ({
+		engine: {
+			getValidationRegistry: () => createDefaultValidationRegistry(),
+			getAppearance: () => getDefaultCompiledAppearance(),
+		},
+	}),
 }));
 
 vi.mock('@schema-engine/forms/actions', () => ({

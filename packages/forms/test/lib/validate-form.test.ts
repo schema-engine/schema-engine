@@ -7,6 +7,8 @@ import { defineFormRecipe } from '@/recipes/define-form-recipe';
 import { defineRecipeSpec } from '@/recipes/define-recipe-spec';
 import { sidebarWizardSpec } from '@/recipes/built-in-specs';
 import { defineInput } from '@/types';
+import { ElementGridConfigSchema } from '@/schemas/base-field';
+import { elementChildrenSchema } from '@/lib/element-children';
 import { logger } from '@/lib/logger';
 
 const cardRecipe = defineFormRecipe(
@@ -69,6 +71,13 @@ function createEngine() {
 	return createFormEngine({ recipes: [cardRecipe, wizardRecipe] });
 }
 
+const formWith = (elements: unknown[], grid?: unknown) => ({
+	id: 'widths',
+	...(grid ? { grid } : {}),
+	steps: [{ id: 'main', title: 'Main', elements }],
+});
+const fieldNamed = (name: string, grid?: unknown) => ({ $type: 'field', id: name, name, ...(grid ? { grid } : {}) });
+
 describe('validateFormConfig', () => {
 	test('writes the default wizard recipe as the view of a multi-step form without view', () => {
 		const engine = createFormEngine({ recipes: [bareControlsRecipe] });
@@ -115,6 +124,205 @@ describe('validateFormConfig', () => {
 		expect(() => engine.validateForm({ ...form, grid: { responsive: { md: { [key]: value } } } })).toThrow(
 			FormValidationError,
 		);
+	});
+
+	describe('named grid widths', () => {
+		const gridField = defineInput({
+			$type: 'field',
+			schema: z.looseObject({
+				$type: z.literal('field'),
+				id: z.string(),
+				name: z.string(),
+				grid: z.optional(ElementGridConfigSchema),
+			}),
+			metadata: { name: 'Field', category: 'input' },
+			render: () => null,
+		});
+		const group = defineInput({
+			$type: 'group',
+			containerKind: 'object',
+			schema: z.looseObject({
+				$type: z.literal('group'),
+				id: z.string(),
+				name: z.string(),
+				elements: elementChildrenSchema,
+			}),
+			metadata: { name: 'Group', category: 'input' },
+			render: () => null,
+		});
+		const engine = createFormEngine({ elements: [gridField, group] });
+		test('accepts widths and offsets on a grid that sets no columns', () => {
+			expect(() =>
+				engine.validateForm(
+					formWith(
+						[fieldNamed('a', { width: 'half' }), fieldNamed('b', { width: 'half', offset: 'quarter' })],
+						{
+							gap: 'loose',
+						},
+					),
+				),
+			).not.toThrow();
+		});
+
+		test.each([
+			['columns', { columns: 3 }, 'columns'],
+			['auto columns', { columns: 'auto' }, 'columns'],
+			['a responsive columns entry', { responsive: { md: { columns: 2 } } }, 'columns'],
+			['a minimum column width', { minColumnWidth: '12rem' }, 'minColumnWidth'],
+			[
+				'a responsive minimum column width',
+				{ responsive: { lg: { minColumnWidth: '12rem' } } },
+				'minColumnWidth',
+			],
+		])('rejects a grid with %s when a field uses width', (_label, grid, key) => {
+			const attempt = () => engine.validateForm(formWith([fieldNamed('a', { width: 'half' })], grid));
+			expect(attempt).toThrow(FormValidationError);
+			expect(attempt).toThrow(/uses either columns or widths/);
+			expect(attempt).toThrow(new RegExp(`Form grid sets '${key}'`));
+			expect(attempt).toThrow(/'a'/);
+		});
+
+		test('ignores grid keys that are present but undefined', () => {
+			expect(() =>
+				engine.validateForm(
+					formWith([fieldNamed('a', { width: undefined, column: 2 })], {
+						columns: undefined,
+						minColumnWidth: undefined,
+					}),
+				),
+			).not.toThrow();
+			expect(() =>
+				engine.validateForm(formWith([fieldNamed('a', { offset: undefined, column: 2 })])),
+			).not.toThrow();
+		});
+
+		test('rejects columns when a field uses a responsive width or an offset', () => {
+			const grid = { columns: 3 };
+			expect(() =>
+				engine.validateForm(formWith([fieldNamed('a', { responsive: { md: { width: 'third' } } })], grid)),
+			).toThrow(/uses either columns or widths/);
+			expect(() => engine.validateForm(formWith([fieldNamed('a', { offset: 'half' })], grid))).toThrow(
+				/uses either columns or widths/,
+			);
+		});
+
+		test('keeps columns working when no field uses width', () => {
+			expect(() =>
+				engine.validateForm(formWith([fieldNamed('a', { column: 'span 2' })], { columns: 3 })),
+			).not.toThrow();
+		});
+
+		test.each([
+			['a width and a raw column', { width: 'half', column: 2 }],
+			['an offset and a raw column', { offset: 'quarter', column: '4 / 10' }],
+			['a responsive width next to a column', { column: 2, responsive: { md: { width: 'half' } } }],
+			['a width next to a responsive column', { width: 'half', responsive: { md: { column: 2 } } }],
+		])('rejects a field that sets %s', (_label, grid) => {
+			const attempt = () => engine.validateForm(formWith([fieldNamed('a', grid)]));
+			expect(attempt).toThrow(FormValidationError);
+			expect(attempt).toThrow(/'a'.*'(width|offset)'.*'column'|'a'.*'column'.*'(width|offset)'/);
+		});
+
+		test('allows a width with a raw row', () => {
+			expect(() => engine.validateForm(formWith([fieldNamed('a', { width: 'half', row: 2 })]))).not.toThrow();
+		});
+
+		test.each([['wide'], ['full-ish']])('rejects the unknown width %s', (width) => {
+			expect(() => engine.validateForm(formWith([fieldNamed('a', { width })]))).toThrow(FormValidationError);
+		});
+
+		test.each([['full'], ['auto']])('rejects %s as an offset', (offset) => {
+			expect(() => engine.validateForm(formWith([fieldNamed('a', { offset })]))).toThrow(FormValidationError);
+		});
+
+		test('rejects auto as a width', () => {
+			expect(() => engine.validateForm(formWith([fieldNamed('a', { width: 'auto' })]))).toThrow(
+				FormValidationError,
+			);
+		});
+
+		test('accepts widths on a container and on its children', () => {
+			const form = formWith([
+				{
+					$type: 'group',
+					id: 'g',
+					name: 'g',
+					grid: { width: 'half' },
+					elements: [fieldNamed('inner', { width: 'half' }), fieldNamed('other', { offset: 'quarter' })],
+				},
+			]);
+			expect(() => engine.validateForm(form)).not.toThrow();
+		});
+
+		test('keeps the step columns apart from the widths of a container children', () => {
+			const form = formWith(
+				[{ $type: 'group', id: 'g', name: 'g', elements: [fieldNamed('inner', { width: 'half' })] }],
+				{ columns: 3 },
+			);
+			expect(() => engine.validateForm(form)).not.toThrow();
+		});
+
+		test('rejects a nested width and offset past the twelve tracks, naming its path', () => {
+			const form = formWith([
+				{
+					$type: 'group',
+					id: 'g',
+					name: 'g',
+					elements: [fieldNamed('inner', { width: 'two-thirds', offset: 'half' })],
+				},
+			]);
+			const attempt = () => engine.validateForm(form);
+			expect(attempt).toThrow(/elements\[0\].*elements\[0\].*'inner'.*'width'.*'offset'.*12 tracks/);
+		});
+
+		test('rejects a nested width next to a raw column', () => {
+			const form = formWith([
+				{ $type: 'group', id: 'g', name: 'g', elements: [fieldNamed('inner', { width: 'half', column: 2 })] },
+			]);
+			expect(() => engine.validateForm(form)).toThrow(/'inner'.*'width' and 'column'/);
+		});
+
+		test.each([
+			['two-thirds beside a half offset', { width: 'two-thirds', offset: 'half' }],
+			['three-quarters beside a third offset', { width: 'three-quarters', offset: 'third' }],
+			['full beside any offset', { width: 'full', offset: 'quarter' }],
+			[
+				'a wider width that meets the offset carried from a narrower slot',
+				{ width: 'half', offset: 'half', responsive: { md: { width: 'two-thirds' } } },
+			],
+			[
+				'a wider offset that meets the width carried from a narrower slot',
+				{ width: 'half', offset: 'quarter', responsive: { lg: { offset: 'two-thirds' } } },
+			],
+			[
+				'an offset in responsive.default',
+				{ width: 'three-quarters', responsive: { default: { offset: 'half' } } },
+			],
+		])('rejects %s past the twelve tracks', (_label, grid) => {
+			const attempt = () => engine.validateForm(formWith([fieldNamed('a', grid)]));
+			expect(attempt).toThrow(FormValidationError);
+			expect(attempt).toThrow(/'a'.*'width'.*'offset'.*12 tracks/);
+		});
+
+		test.each([
+			['half beside a half offset', { width: 'half', offset: 'half' }],
+			['half centred', { width: 'half', offset: 'quarter' }],
+			[
+				'a width that shrinks the sum below twelve',
+				{ width: 'two-thirds', offset: 'third', responsive: { md: { width: 'third' } } },
+			],
+			['an offset on its own', { offset: 'three-quarters' }],
+		])('accepts %s', (_label, grid) => {
+			expect(() => engine.validateForm(formWith([fieldNamed('a', grid)]))).not.toThrow();
+		});
+
+		test('allows a raw column field next to width fields', () => {
+			expect(() =>
+				engine.validateForm(
+					formWith([fieldNamed('a', { width: 'half' }), fieldNamed('b', { column: 'span 2' })]),
+				),
+			).not.toThrow();
+		});
 	});
 
 	test('warns once per form id and leaves the view unset when no default wizard recipe is registered', () => {

@@ -4,6 +4,7 @@ import { defineInput } from '@schema-engine/forms';
 
 export const ArrayElementRegistration = defineInput({
 	$type: 'arrayElements',
+	appearanceAxes: ['size'],
 	containerKind: 'array',
 	render: FormArrayElements,
 	schema: ArrayElementConfigSchema,

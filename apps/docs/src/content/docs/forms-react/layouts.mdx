@@ -62,13 +62,15 @@ const formConfig: FormConfig = {
 	id: 'contact',
 	view: {
 		$type: 'card',
-		shell: { maxWidth: 'md', padding: 'lg', shadowSize: 'md' },
+		shell: { appearance: { size: 'comfortable', surface: 'elevated' } },
 	},
 	steps: [{ id: 'step-1', title: 'Contact', elements: [/* ... */] }],
 };
 ```
 
 ## Multi-step
+
+Recipe slots, steps, fields and the form take a named `appearance`: the engine declares the axes (`size`: `compact | default | comfortable`, `surface`: `flat | outlined | elevated`, plus any a host adds), each element or slot declares the axes it supports, and both renderers emit the picked value as `data-se-<axis>`. The card shell's width, padding and shadow are `size` and `surface` values. Structural slot config such as `header.showDescription` is unchanged.
 
 Wizard recipes require **at least two steps**. Set `view.$type` to a wizard recipe such as `wizard` or `card-wizard`. The live demo renders exactly the configuration below:
 

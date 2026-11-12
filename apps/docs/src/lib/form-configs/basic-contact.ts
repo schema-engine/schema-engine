@@ -47,6 +47,6 @@ export const basicContactFormConfig: FormConfig = {
 	],
 	view: {
 		$type: 'card',
-		shell: { padding: 'md', shadowSize: 'md' },
+		shell: { appearance: { size: 'default', surface: 'elevated' } },
 	},
 };
