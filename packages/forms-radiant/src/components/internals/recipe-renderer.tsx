@@ -50,7 +50,14 @@ export function RecipeRenderer({
 		<>
 			<GridThemeStyle themeId={theme.id} css={gridThemeCss} />
 			{config.steps.map((step, index) => (
-				<FormStep key={step.id} stepIndex={index} hidden={isWizard && index !== 0}>
+				<FormStep
+					key={step.id}
+					stepId={step.id}
+					stepIndex={index}
+					hidden={isWizard && index !== 0}
+					class={step.className}
+					style={step.style}
+				>
 					{step.elements.length ? (
 						<div
 							class="se-form-elements se-form-grid"

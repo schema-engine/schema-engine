@@ -112,6 +112,22 @@ elements: [
 ];
 ```
 
+### Class and style
+
+A form, a step and a field each take `className` and `style` as an escape hatch
+for CSS the engine's vocabulary does not cover. `className` is applied as written
+to the form element, the step element (`<div class="se-form-step">` in React,
+`<se-form-step>` in Radiant, both marked `data-se-step`) or the field control.
+`style` accepts only CSS custom properties: keys that start with `--` and string
+or number values. Custom properties mean the same in every renderer and write
+the same in JSON or YAML, whereas a named property such as `maxWidth` would be
+read as camelCase `CSSProperties` by React and as a plain record by Radiant.
+`validateForm` rejects any other key and names it.
+
+```ts
+{ id: 'checkout', className: 'checkout-step', style: { '--accent': '#f60' }, title: 'Checkout', elements: [] }
+```
+
 ### Grid theme
 
 The engine also owns the grid layout vocabulary through the optional `grid`

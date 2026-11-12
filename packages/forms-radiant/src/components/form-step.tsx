@@ -59,17 +59,31 @@ export class FormStepElement extends RadiantElement {
 }
 
 export function FormStep({
+	stepId,
 	stepIndex,
 	hidden = false,
+	class: className,
+	style,
 	children,
 }: {
+	stepId: string;
 	stepIndex: number;
 	/** The server-rendered visibility: true for every step but the first of a wizard. */
 	hidden?: boolean;
+	/** The step's authored `className`. */
+	class?: string;
+	/** The step's authored custom properties. */
+	style?: Record<string, string | number | undefined>;
 	children: JsxRenderable;
 }): JsxRenderable {
 	return (
-		<FormStepElement stepIndex={stepIndex} hidden={hidden}>
+		<FormStepElement
+			stepIndex={stepIndex}
+			hidden={hidden}
+			classes={['se-form-step', className]}
+			style={style}
+			data-se-step={stepId}
+		>
 			{children}
 		</FormStepElement>
 	);

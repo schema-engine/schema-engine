@@ -57,15 +57,17 @@ function StepFields({
 	config: NormalizedFormConfig;
 	theme: NormalizedGridTheme;
 }) {
-	if (!step.elements.length) return null;
-
 	return (
-		<div
-			className="se-form-grid"
-			data-se-grid-theme={theme.id}
-			style={getFormGridVariables(config.grid, theme, step.elements)}
-		>
-			<FormElements elements={step.elements} />
+		<div className={`se-form-step ${step.className ?? ''}`.trim()} data-se-step={step.id} style={step.style}>
+			{step.elements.length > 0 && (
+				<div
+					className="se-form-grid"
+					data-se-grid-theme={theme.id}
+					style={getFormGridVariables(config.grid, theme, step.elements)}
+				>
+					<FormElements elements={step.elements} />
+				</div>
+			)}
 		</div>
 	);
 }

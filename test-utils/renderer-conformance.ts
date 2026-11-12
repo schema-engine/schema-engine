@@ -137,6 +137,22 @@ const recipeForm = ({ $type, steps, header, progress, sideContent }: RecipeCase)
 	};
 };
 
+/** @remarks The element a form's `className`, `style` and `appearance` land on: `<form>` in React, `<rui-form>` in Radiant. */
+const formElement = (host: HTMLElement) => {
+	const element = host.querySelector<HTMLElement>('rui-form, form');
+	if (!element) throw new Error('No form element rendered.');
+	return element;
+};
+const stepElement = (host: HTMLElement, id: string) => {
+	const element = host.querySelector<HTMLElement>(`[data-se-step="${id}"]`);
+	if (!element) throw new Error(`No element rendered for step '${id}'.`);
+	return element;
+};
+const fieldHost = (host: HTMLElement, label: string) => {
+	const element = getByRole(host, 'textbox', { name: label }).closest<HTMLElement>('.se-form-field');
+	if (!element) throw new Error(`No field host rendered for '${label}'.`);
+	return element;
+};
 const activeIndicator = (host: HTMLElement) =>
 	within(getByRole(host, 'navigation', { name: 'Application progress' }))
 		.getAllByRole('button')
@@ -157,6 +173,57 @@ export function rendererConformance(mount: ConformanceMount): void {
 			cleanup = result.cleanup;
 			return result;
 		};
+		describe('class and custom properties', () => {
+			test('a step renders its className and custom properties', async () => {
+				const base = form([input('email', 'Email')]);
+				const { host } = await setup({
+					config: {
+						...base,
+						steps: [{ ...base.steps[0], className: 'checkout-step', style: { '--accent': '#f60' } }],
+					},
+				});
+				const step = stepElement(host, 'main');
+				expect(step.classList.contains('checkout-step')).toBe(true);
+				expect(step.style.getPropertyValue('--accent')).toBe('#f60');
+			});
+			test('a step without className or style carries neither', async () => {
+				const { host } = await setup({ config: form([input('email', 'Email')]) });
+				const step = stepElement(host, 'main');
+				expect(step.className).not.toContain('undefined');
+				expect(step.getAttribute('style') ?? '').toBe('');
+			});
+			test('step className and style leave wizard step visibility to the navigation', async () => {
+				const config = wizard([input('first', 'First')], [input('last', 'Last')]);
+				const { host } = await setup({
+					config: {
+						...config,
+						steps: config.steps.map((step) => ({
+							...step,
+							className: `styled-${step.id}`,
+							style: { '--accent': step.id },
+						})),
+					},
+				});
+				const first = stepElement(host, 'step0');
+				const second = host.querySelector<HTMLElement>('[data-se-step="step1"]');
+				expect(first.classList.contains('styled-step0')).toBe(true);
+				expect(first.style.getPropertyValue('--accent')).toBe('step0');
+				expect(first.hidden).toBe(false);
+				expect(second === null || second.hidden).toBe(true);
+				await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
+				await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Last' }).length).toBe(1);
+				const entered = stepElement(host, 'step1');
+				expect(entered.classList.contains('styled-step1')).toBe(true);
+				expect(entered.style.getPropertyValue('--accent')).toBe('step1');
+				expect(entered.hidden).toBe(false);
+			});
+			test('a form and a field render their custom properties', async () => {
+				const base = form([{ ...input('email', 'Email'), style: { '--gap': '2rem' } }]);
+				const { host } = await setup({ config: { ...base, style: { '--gap': '3rem' } } });
+				expect(formElement(host).style.getPropertyValue('--gap')).toBe('3rem');
+				expect(fieldHost(host, 'Email').style.getPropertyValue('--gap')).toBe('2rem');
+			});
+		});
 		test('resolves sibling show constraints independently in two array rows', async () => {
 			const { host } = await setup({
 				config: form([
