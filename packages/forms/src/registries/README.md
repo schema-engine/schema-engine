@@ -1,17 +1,29 @@
 # Registries
 
-`ElementRegistry` and `RecipeRegistry` are optional typed `BaseRegistry`
-containers for field registrations and view recipes. They store registrations
-without validating schemas. Engine construction builds its own Maps directly
-and checks each supplied schema at that boundary. Form actions are also stored
-in a Map; execution uses the actions package's `ActionDispatcher`.
+The engine stores its registrations in three read-only registries built with
+`createRegistry` from `@schema-engine/registry`:
+
+- `ElementRegistry`: field and static element registrations.
+- `RecipeRegistry`: view recipes that own the shell, header, progress, and
+  action slots of a form view.
+- `ActionRegistrationRegistry`: form action registrations. Execution uses the
+  actions package's `ActionDispatcher`.
+
+These are type aliases of `ReadOnlyRegistry<AnyElementRegistration>`,
+`ReadOnlyRegistry<AnyRecipeRegistration>` and
+`ReadOnlyRegistry<AnyActionRegistration>`; they are not classes to instantiate.
+`buildFormEngine` builds them: later duplicates win without a warning, each
+winning schema is checked as a Standard Schema, and the stored registrations are
+frozen shallow copies of the ones you passed, which stay untouched. Recipes are
+also slot-checked and axis-checked for winners only. There is no `register` or
+`clear`.
 
 Register components through `createFormEngine({ elements, recipes, actions })`.
-Recipes own the
-shell, header, progress, and action slots for a form view.
+Per-engine typing comes from the registration tuples you pass, not from these
+runtime registries.
 
 Input and static registrations may declare `containerKind: 'object' | 'array'`.
 The [engine](../engine/README.md#schema-artifacts-and-extension) preserves this
 metadata during normalization; it is independent of the widget name.
-Runtime maps use the documented `AnyElementRegistration`,
+Runtime registries use the documented `AnyElementRegistration`,
 `AnyRecipeRegistration` and `AnyActionRegistration` existential aliases.

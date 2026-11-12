@@ -7,7 +7,7 @@ Domain-agnostic action execution primitives for event-driven architectures.
 `@schema-engine/actions` provides a small, generic action system built around three pieces:
 
 - `ActionRegistration`: describes an action type
-- `ActionRegistry`: stores action registrations
+- `ActionRegistry`: a read-only registry built from a list of action registrations
 - `ActionDispatcher`: executes a sequence of actions or parallel action groups for a trigger
 
 The package is intended to be reusable across different domains such as forms, workflows, UI interactions, and state transitions.
@@ -88,8 +88,7 @@ const logAction: ActionRegistration<LogActionConfig, BaseContext, MyTrigger> = {
 	},
 };
 
-const registry = new ActionRegistry<BaseContext, MyTrigger>();
-registry.register(logAction);
+const registry = new ActionRegistry<BaseContext, MyTrigger>([logAction]);
 
 const dispatcher = new ActionDispatcher<BaseContext, MyTrigger>(registry);
 
@@ -159,7 +158,7 @@ An action executes when either:
 
 ## Custom Registries
 
-If you want to provide your own registry implementation, use `ActionRegistryProvider` from the package root:
+`ActionRegistry` is built once from a list: a later registration with the same `$type` wins without a warning, a winning schema that is not a Standard Schema throws at construction naming its `$type`, and the registry cannot be changed. Subclasses may add their own fields. To register actions at runtime, implement `ActionRegistryProvider` from the package root:
 
 ```typescript
 class MyActionRegistry<TBaseContext, TTrigger> implements ActionRegistryProvider<TBaseContext, TTrigger> {
@@ -185,16 +184,18 @@ class MyActionRegistry<TBaseContext, TTrigger> implements ActionRegistryProvider
 
 ```typescript
 class ActionRegistry<TBaseContext, TTrigger> {
-	register(action: ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>): void;
+	constructor(registrations: readonly ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>[]);
 	has(type: string): boolean;
+	get(type: string): ActionRegistration<ActionConfigBase, TBaseContext, TTrigger> | undefined;
 	getAction(type: string): ActionRegistration<ActionConfigBase, TBaseContext, TTrigger> | undefined;
 	getActionTypes(): string[];
-	getAll(): ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>[];
-	getAllKeys(): string[];
-	get size(): number;
-	clear(): void;
+	all(): readonly ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>[];
+	keys(): readonly string[];
+	readonly size: number;
 }
 ```
+
+It is built on `createRegistry` from `@schema-engine/registry` and has no `register` or `clear`.
 
 ### ActionDispatcher
 

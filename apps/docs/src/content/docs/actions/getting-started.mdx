@@ -58,8 +58,7 @@ const logAction: ActionRegistration<LogActionConfig, BaseContext, MyTrigger> = {
 ## 4. Register and Execute
 
 ```typescript
-const registry = new ActionRegistry<BaseContext, MyTrigger>();
-registry.register(logAction);
+const registry = new ActionRegistry<BaseContext, MyTrigger>([logAction]);
 
 const dispatcher = new ActionDispatcher<BaseContext, MyTrigger>(registry);
 

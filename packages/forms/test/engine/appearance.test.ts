@@ -121,6 +121,28 @@ describe('registration axis declarations', () => {
 		expect(() => createFormEngine({ elements: [typo] })).toThrowError(/typo.*unknown appearance axis 'sise'/s);
 	});
 
+	test('an overridden element that declares an unknown axis does not fail the build', () => {
+		const typo = defineInput({
+			$type: 'typo',
+			schema: z.extend(BaseFieldSchema, { $type: z.literal('typo') }),
+			appearanceAxes: ['sise'],
+			metadata: { name: 'Typo', category: 'input' },
+			render: () => null,
+		});
+		const fixed = defineInput({
+			$type: 'typo',
+			schema: z.extend(BaseFieldSchema, { $type: z.literal('typo') }),
+			appearanceAxes: ['size'],
+			metadata: { name: 'Fixed', category: 'input' },
+			render: () => null,
+		});
+
+		const built = createFormEngine({ elements: [typo, fixed] });
+
+		expect(built.getElement('typo')?.metadata.name).toBe('Fixed');
+		expect(() => createFormEngine({ elements: [fixed, typo] })).toThrowError(/unknown appearance axis 'sise'/);
+	});
+
 	test('an element may declare an axis a host adds', () => {
 		const toned = defineInput({
 			$type: 'toned',

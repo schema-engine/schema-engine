@@ -9,9 +9,39 @@ order: 3
 
 Complete API documentation for `@schema-engine/registry`.
 
+## createRegistry
+
+```typescript
+function createRegistry<TRegistration extends BaseRegistration>(
+	kind: string,
+	registrations: readonly TRegistration[],
+): ReadOnlyRegistry<TRegistration>;
+```
+
+Builds a frozen, read-only registry. A later registration with the same `$type` replaces an earlier one without a warning and keeps its first position. Throws `<kind> '<$type>' schema must implement Standard Schema (~standard.validate).` when a winning registration's schema is not a Standard Schema; an overridden registration is not checked. The registry stores a frozen shallow copy of each winner and leaves the objects you passed untouched.
+
+### ReadOnlyRegistry
+
+| Member     | Returns                      | Description                              |
+| ---------- | ---------------------------- | ---------------------------------------- |
+| `kind`     | `string`                     | The label passed to `createRegistry`     |
+| `size`     | `number`                     | Count of distinct `$type` keys           |
+| `get(key)` | `TRegistration \| undefined` | Gets a registration by `$type`           |
+| `has(key)` | `boolean`                    | Checks if the key exists                 |
+| `all()`    | `readonly TRegistration[]`   | Frozen array in first-registration order |
+| `keys()`   | `readonly string[]`          | Frozen array of keys in the same order   |
+
+## assertStandardSchema
+
+```typescript
+function assertStandardSchema(schema: unknown, context?: string): StandardSchemaV1;
+```
+
+Throws `<context> must implement Standard Schema (~standard.validate).` unless `schema` has a `~standard.validate` function.
+
 ## BaseRegistry
 
-Abstract class for all registries.
+Abstract, mutable class for plugin systems that register at runtime. Prefer `createRegistry` otherwise.
 
 ```typescript
 abstract class BaseRegistry<TKey extends string, TValue extends BaseRegistration> {
