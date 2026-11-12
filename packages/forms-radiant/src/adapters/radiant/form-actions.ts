@@ -1,0 +1,163 @@
+import type { BuilderActionBaseContext, FormActionTrigger, FormConfigView } from '@schema-engine/forms';
+import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
+import { buildFormActionContext, collectStepActions, runSubmissionLifecycle } from '@schema-engine/forms/engine';
+import { ActionDispatcher, type ActionDispatchInput } from '@schema-engine/forms/actions';
+import type { FormActionConfig } from '@schema-engine/forms/schemas';
+import type { FormProviderProps } from '@/adapters/types';
+import { expandValues } from './controller/values';
+import type { FormController } from './controller';
+
+/** What a submission's actions produced, in the shape `runSubmissionLifecycle` resolves. */
+export type SubmissionOutcome = Awaited<ReturnType<typeof runSubmissionLifecycle>>;
+
+export interface FormActionsOptions {
+	config: FormConfigView;
+	engine: FormEngine;
+	/** The form instance's controller, scoped to its `rui-form`. */
+	form: FormController;
+	currentStep: () => number;
+	onAction?: FormProviderProps['onAction'];
+}
+
+/**
+ * Runs the configured form actions of one form instance.
+ *
+ * @remarks
+ * Built by `se-form-instance` for one config and engine, and discarded with
+ * either. It reports through `se-action-results` events on the `rui-form`;
+ * the instance reports the submission itself.
+ */
+export class FormActions {
+	private readonly dispatcher: ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>;
+	private readonly mountedAt = Date.now();
+	private readonly actionForm: BuilderActionBaseContext['form'];
+	private unwatchChanges?: () => void;
+	private started = false;
+	private submitAttempts = 0;
+	private readonly countInvalid = () => {
+		this.submitAttempts += 1;
+	};
+
+	readonly config: FormConfigView;
+	readonly engine: FormEngine;
+
+	constructor(private readonly options: FormActionsOptions) {
+		const { config, engine, form } = options;
+		this.config = config;
+		this.engine = engine;
+		this.dispatcher = new ActionDispatcher(engine);
+		this.actionForm = {
+			reset: () => form.reset(),
+			setValue: (name, value) => form.setValue(name, value),
+			getValue: (name) => form.getValue(name),
+			validate: () => form.trigger(),
+		};
+		form.host.addEventListener('rui-invalid', this.countInvalid);
+	}
+
+	/**
+	 * Dispatches `form_mount` and starts `form_change` dispatching, once, when the form is ready.
+	 *
+	 * @remarks
+	 * Safe to call on every readiness notification. The change watcher skips its
+	 * initial snapshot, and clears the attempt count when the form is not submitted.
+	 */
+	start(): void {
+		const { form } = this.options;
+		if (this.started || !form.ready) return;
+		this.started = true;
+		void this.dispatchTrigger('form_mount');
+		let initial = true;
+		this.unwatchChanges = form.watchForm(() => {
+			if (!form.formState.isSubmitted) this.submitAttempts = 0;
+			if (initial) {
+				initial = false;
+				return;
+			}
+			void this.dispatchTrigger('form_change');
+		});
+	}
+
+	dispose(): void {
+		this.options.form.host.removeEventListener('rui-invalid', this.countInvalid);
+		this.unwatchChanges?.();
+		this.unwatchChanges = undefined;
+	}
+
+	/**
+	 * Runs the submit actions before the form instance invokes its submission callback.
+	 *
+	 * @remarks
+	 * Resolves unsuccessful when the form is not ready. The caller reports the
+	 * submission's start and completion.
+	 */
+	async submit(): Promise<SubmissionOutcome> {
+		if (!this.options.form.ready) return { succeeded: false, results: [] };
+		try {
+			const outcome = await runSubmissionLifecycle((input) => this.dispatchActions(input, true), {
+				actions: this.activeActions(),
+				context: () => this.buildContext(),
+				onAction: (action, data) => this.options.onAction?.(action, data),
+			});
+			this.report('form_submit', outcome.results);
+			return outcome;
+		} finally {
+			this.submitAttempts += 1;
+		}
+	}
+
+	/** Dispatches one trigger's actions for the current step; resolves empty when none are configured or before the form is ready. */
+	async dispatchTrigger(trigger: FormActionTrigger): Promise<Awaited<ReturnType<ActionDispatcher['dispatch']>>> {
+		const actions = this.activeActions();
+		if (!actions.length || !this.options.form.ready) return [];
+		return this.dispatchActions({ actions, trigger, context: this.buildContext() });
+	}
+
+	private async dispatchActions(
+		input: ActionDispatchInput<FormActionConfig, BuilderActionBaseContext, FormActionTrigger>,
+		suppressSubmitReport = false,
+	) {
+		const results = (await this.dispatcher.dispatch(input)) ?? [];
+		if (!(suppressSubmitReport && input.trigger === 'form_submit')) this.report(input.trigger, results);
+		return results;
+	}
+
+	private report(trigger: FormActionTrigger, results: unknown[]): void {
+		if (!results.length) return;
+		this.options.form.host.dispatchEvent(
+			new CustomEvent('se-action-results', { bubbles: true, composed: true, detail: { trigger, results } }),
+		);
+	}
+
+	private activeActions() {
+		return collectStepActions(this.options.config, this.options.currentStep());
+	}
+
+	/**
+	 * @remarks
+	 * Radiant UI keys errors and touched state by flat field name; both are expanded
+	 * into the engine's nested tree. The store records only whether the form was
+	 * submitted, so `submitCount` counts the attempts Radiant UI reports instead:
+	 * `rui-invalid` for one that failed validation, and a finished submission
+	 * lifecycle, which is when React Hook Form counts it too.
+	 * A reset clears the store's submitted flag and notifies the store, and the
+	 * change watcher then clears the count.
+	 */
+	private buildContext(): BuilderActionBaseContext {
+		const { config, form, currentStep } = this.options;
+		const { isValid, errors, touched } = form.formState;
+		return buildFormActionContext({
+			config,
+			values: form.getValues(),
+			formState: {
+				isValid,
+				errors: expandValues(errors),
+				touched: expandValues(touched),
+				submitCount: this.submitAttempts,
+			},
+			currentStep: currentStep(),
+			mountedAt: this.mountedAt,
+			form: this.actionForm,
+		});
+	}
+}

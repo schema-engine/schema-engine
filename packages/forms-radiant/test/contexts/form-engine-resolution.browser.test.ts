@@ -6,7 +6,6 @@ import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { formInstanceContext } from '@/contexts/form-instance-context';
 import { FormRendererElement } from '@/components/internals/form-renderer.script';
 import { FormInstanceElement } from '@/components/form-instance.script';
-import { FormActionControllerElement } from '@/components/form-action-controller';
 import { SeFormArray } from '@/elements/inputs/form-array-elements';
 import { InputElementRegistration } from '@/elements/inputs/form-input.registration';
 import { ArrayElementRegistration } from '@/elements/inputs/form-array-elements.registration';
@@ -135,13 +134,12 @@ describe('Radiant form engine resolution', () => {
 		observed.disconnect();
 	});
 
-	test('an action controller dispatches its form-mount action after renderer context arrives', async () => {
+	test('a form instance dispatches its form-mount action after renderer context arrives', async () => {
 		const onPush = vi.fn();
 		const engine = createRadiantFormEngine({ actions: [gtmPlugin({ tracker: { push: vi.fn() }, onPush })] });
 		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
-		const form = document.createElement('rui-form');
-		const controller = document.createElement('se-form-action-controller') as FormActionControllerElement;
-		controller.config = engine.defineForm({
+		const instance = document.createElement('se-form-instance') as FormInstanceElement;
+		instance.config = engine.defineForm({
 			id: 'engine-context-actions',
 			steps: [{ id: 'main', title: 'Main', elements: [] }],
 			actions: [
@@ -153,9 +151,8 @@ describe('Radiant form engine resolution', () => {
 				},
 			],
 		});
-		provideTestFormStore(form, new FormStore());
-		form.append(controller);
-		renderer.append(form);
+		instance.append(document.createElement('rui-form'));
+		renderer.append(instance);
 		document.body.append(renderer);
 
 		renderer.engine = engine;

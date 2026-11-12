@@ -122,9 +122,21 @@ test('the alert reports an error for a rejected submission and never reports suc
 });
 
 test('start and complete events also fire when submit actions are configured', async () => {
-	const { submit, events } = await mount(async () => {}, { actions: true });
+	const { host, submit, events } = await mount(async () => {}, { actions: true });
 
 	submit().click();
 
 	await expect.poll(() => events).toEqual(['start', 'complete:true']);
+	expect(host.querySelector('se-form-action-controller')).toBeNull();
+});
+
+test('onSubmit runs once through the instance and the renderer element has no onSubmit property', async () => {
+	const onSubmit = vi.fn(async () => {});
+	const { host, submit, events } = await mount(onSubmit);
+
+	submit().click();
+
+	await expect.poll(() => events).toEqual(['start', 'complete:true']);
+	expect(onSubmit).toHaveBeenCalledOnce();
+	expect('onSubmit' in host.querySelector('se-form-renderer')!).toBe(false);
 });

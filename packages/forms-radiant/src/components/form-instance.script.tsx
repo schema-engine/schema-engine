@@ -1,11 +1,13 @@
 import {
 	customElement,
 	onUpdated,
-	prop,
+	query,
 	RadiantElement,
 	registerSsrPreparationCallback,
 	state,
+	prop,
 } from '@ecopages/radiant';
+import type { JSX_PROPS } from '@ecopages/jsx';
 import { getViewRecipe } from '@schema-engine/forms/recipes';
 import { onContextUpdate, provideContext, type ContextProvider } from '@ecopages/radiant/context';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
@@ -14,33 +16,51 @@ import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/e
 import { formInstanceContext, type FormInstanceContextValue, type StepStates } from '@/contexts/form-instance-context';
 import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
-import { findNearestRuiForm } from '@/lib/rui-form-utils';
 import { connectValidationDependencies } from '@/lib/validation-deps';
 import type { RuiFormElement } from '@ecopages/radiant-ui/form';
 import { expandValues } from '@/adapters/radiant/controller/values';
-import { createInitialStepStates, type StepMachineState } from '@schema-engine/forms/engine';
+import { createInitialStepStates, hasConfiguredActions, type StepMachineState } from '@schema-engine/forms/engine';
 import { createInstanceNavigation } from '@/lib/instance-navigation';
 import { syncConstraints } from '@/lib/constraint-sync';
-import type { FormProviderProps } from '@/adapters/types';
-import type { FormActionControllerElement, SubmissionOutcome } from './form-action-controller';
 import { logger } from '@/lib/logger';
+import type { FormProviderProps } from '@/adapters/types';
 import { FormController } from '@/adapters/radiant/controller';
+import { FormActions, type SubmissionOutcome } from '@/adapters/radiant/form-actions';
+
+/** Properties of `<se-form-instance>`; `FormInstance` sets the function and engine ones through `prop:` bindings. */
+export interface FormInstanceProps {
+	config: NormalizedFormConfig;
+	defaultValues?: Record<string, unknown>;
+	engine?: CoreFormEngine;
+	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
+	onChange?: FormProviderProps['onChange'];
+	onAction?: FormProviderProps['onAction'];
+}
 
 /** Behavior and engine navigation state for one composed form. */
 @customElement('se-form-instance')
 export class FormInstanceElement extends RadiantElement {
-	private readonly navigation = createInstanceNavigation(this, () => this.form);
+	declare readonly [JSX_PROPS]?: FormInstanceProps;
+
+	private readonly navigation = createInstanceNavigation(
+		this,
+		() => this.form,
+		() => this.actions,
+	);
 	/** Frozen config from `engine.defineForm` / `engine.validateForm` via `FormProvider`. */
 	@prop({ type: Object }) config!: NormalizedFormConfig;
 	@state engine?: CoreFormEngine;
 	@prop({ type: Object }) defaultValues?: Record<string, unknown>;
 	@state onChange?: FormProviderProps['onChange'];
-	private unwatchChanges?: () => void;
+	@state onAction?: FormProviderProps['onAction'];
 	@state onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
 	@state private submitting = false;
 	get isSubmitting(): boolean {
 		return this.submitting;
 	}
+	@query({ selector: 'rui-form' }) private ruiForm!: RuiFormElement | null;
+	private unwatchChanges?: () => void;
+	private actions?: FormActions;
 
 	@state private machineState: StepMachineState = { currentStepIndex: 0, ...createInitialStepStates(1) };
 	get machine(): StepMachineState {
@@ -87,24 +107,19 @@ export class FormInstanceElement extends RadiantElement {
 		}
 	}
 
-	/** @remarks Client mounting can connect this host before its authored form children are attached. */
+	/** @remarks The `rui-form` is a light-DOM descendant the view authors, so it exists when this host connects. */
 	protected override onConnected(): void {
 		if (!this.engine) {
 			this.engine = resolveFormEngine(this);
 		}
 		this.resetStepState();
 		this.connectForm();
-		this.wireRuiForm();
-		queueMicrotask(() => {
-			if (!this.isConnected) return;
-			this.connectForm();
-			this.wireRuiForm();
-		});
 	}
 
 	override disconnectedCallback(): void {
 		this.navigation.cancel();
 		this.stopWatchingValidationDependencies();
+		this.disposeActions();
 		this.unwatchChanges?.();
 		this.unwatchChanges = undefined;
 		this.form?.disconnect();
@@ -116,22 +131,46 @@ export class FormInstanceElement extends RadiantElement {
 	onConfigUpdated(): void {
 		this.resetStepState();
 		this.connectForm();
-		this.wireRuiForm();
 	}
 
-	@onUpdated(['machineState', 'engine', 'onSubmit'])
-	onInstanceStateUpdated(): void {
-		this.wireRuiForm();
+	@onUpdated(['engine'])
+	onEngineUpdated(): void {
 		this.connectForm();
 		this.publish();
 	}
 
-	private wireRuiForm(): void {
-		const ruiForm = (this.form?.host ?? findNearestRuiForm(this)) as RuiFormElement | undefined;
-		if (!ruiForm) return;
-		const actions = this.querySelector<FormActionControllerElement>('se-form-action-controller');
-		ruiForm.onSubmit =
-			this.onSubmit || actions ? (data) => this.submitForm(ruiForm, data, actions ?? undefined) : undefined;
+	/**
+	 * Connects the `rui-form`'s controller once per form element, then keeps
+	 * constraints, validation dependencies and actions in step with the config
+	 * and engine each time it runs.
+	 */
+	private connectForm(): void {
+		const ruiForm = this.ruiForm;
+		this.stopWatchingValidationDependencies();
+		if (!ruiForm) {
+			this.disposeActions();
+			this.form?.disconnect();
+			this.form = undefined;
+			return;
+		}
+		if (this.form?.host === ruiForm) {
+			this.onFormReady();
+			return;
+		}
+		this.unwatchChanges?.();
+		this.unwatchChanges = undefined;
+		this.disposeActions();
+		this.form?.disconnect();
+		this.form = new FormController(ruiForm);
+		ruiForm.onSubmit = (data) => this.submitForm(ruiForm, data);
+		this.form.connect(() => this.onFormReady());
+	}
+
+	private onFormReady(): void {
+		this.watchFormChanges();
+		syncConstraints(this, this.config, this.form);
+		this.watchValidationDependencies();
+		this.syncActions();
 	}
 
 	/**
@@ -140,22 +179,19 @@ export class FormInstanceElement extends RadiantElement {
 	 *
 	 * @remarks
 	 * The instance owns the submitting state because Radiant UI clears its own
-	 * `isSubmitting` after validation, before it awaits `onSubmit`. A rejected
-	 * `onSubmit` completes the submission as unsuccessful and is logged, not rethrown:
-	 * the event is how the page learns of it.
+	 * `isSubmitting` after validation, before it awaits `onSubmit`. With no
+	 * `onSubmit`, a form with `action` or `method` submits natively once its actions
+	 * succeed. A rejected `onSubmit` completes the submission as unsuccessful and is
+	 * logged, not rethrown: the event is how the page learns of it.
 	 */
-	private async submitForm(
-		ruiForm: RuiFormElement,
-		data: Record<string, unknown>,
-		actions: FormActionControllerElement | undefined,
-	): Promise<void> {
+	private async submitForm(ruiForm: RuiFormElement, data: Record<string, unknown>): Promise<void> {
 		const announce = (type: string, detail?: unknown) =>
 			ruiForm.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
 		this.setSubmitting(true);
 		announce('se-action-submit-start');
 		let outcome: SubmissionOutcome = { succeeded: true, results: [] };
 		try {
-			if (actions) outcome = await actions.submit();
+			if (this.actions) outcome = await this.actions.submit();
 			if (outcome.succeeded) {
 				if (this.onSubmit) {
 					await this.onSubmit(expandValues(data));
@@ -177,29 +213,29 @@ export class FormInstanceElement extends RadiantElement {
 		this.publish();
 	}
 
-	private connectForm(): void {
-		const ruiForm = findNearestRuiForm(this);
-		this.stopWatchingValidationDependencies();
-		if (!ruiForm) {
-			this.form?.disconnect();
-			this.form = undefined;
+	/** Builds the actions for the current config and engine, or drops them when the form configures none. */
+	private syncActions(): void {
+		const { config, engine, form } = this;
+		if (!form || !config || !engine || !hasConfiguredActions(config)) {
+			this.disposeActions();
 			return;
 		}
-		if (this.form?.host === ruiForm) {
-			this.watchFormChanges();
-			syncConstraints(this, this.config, this.form);
-			this.watchValidationDependencies();
-			return;
+		if (this.actions?.config !== config || this.actions.engine !== engine) {
+			this.disposeActions();
+			this.actions = new FormActions({
+				config,
+				engine,
+				form,
+				currentStep: () => this.currentStep,
+				onAction: (action, data) => this.onAction?.(action, data),
+			});
 		}
-		this.unwatchChanges?.();
-		this.unwatchChanges = undefined;
-		this.form?.disconnect();
-		this.form = new FormController(ruiForm);
-		this.form.connect(() => {
-			this.watchFormChanges();
-			syncConstraints(this, this.config, this.form);
-			this.watchValidationDependencies();
-		});
+		this.actions.start();
+	}
+
+	private disposeActions(): void {
+		this.actions?.dispose();
+		this.actions = undefined;
 	}
 
 	private watchFormChanges(): void {
