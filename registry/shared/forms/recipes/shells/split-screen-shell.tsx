@@ -1,4 +1,5 @@
-import { getSlotConfig, type SplitScreenShellConfig } from '@schema-engine/forms/recipes';
+import { getSlotConfig } from '@schema-engine/forms/recipes';
+import { type SplitScreenShellConfig } from '@schema-engine/forms/recipes/built-in';
 import { useViewContext } from '@schema-engine/forms-react/hooks';
 import type { FormShellProps } from '@schema-engine/forms-react/primitives';
 import { cn } from '@/components/schema-engine/forms/lib/utils';

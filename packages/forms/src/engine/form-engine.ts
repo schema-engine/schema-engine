@@ -6,7 +6,7 @@ import * as z from 'zod/mini';
 import type { FormEngineSchemaArtifacts } from './schema-artifacts';
 import { validateElementConfig, validateFormConfig } from '@/lib/validate-form';
 import type { NormalizedElementConfig, NormalizedFormConfig } from '@/lib/normalized-form-config';
-import type { FormAuthoringInput } from '@/builder/form-authoring';
+import type { ExactViewConfig, FormAuthoringInput } from '@/builder/form-authoring';
 import type {
 	LastWinsMerge,
 	EngineOutputMaps,
@@ -182,7 +182,7 @@ export class FormEngine<
 	 * Same runtime pipeline as {@link validateForm}.
 	 */
 	defineForm<const TConfig extends FormAuthoringInput<TElements, TRecipes, TActions>>(
-		config: TConfig,
+		config: TConfig & { view?: ExactViewConfig<TConfig['view'], TRecipes> },
 	): NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']> {
 		return this.validateForm(config);
 	}

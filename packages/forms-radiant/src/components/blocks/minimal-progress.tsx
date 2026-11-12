@@ -1,7 +1,8 @@
 import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
-import { getSlotConfig, type MinimalProgressConfig } from '@schema-engine/forms/recipes';
+import { getSlotConfig } from '@schema-engine/forms/recipes';
+import { type MinimalProgressConfig } from '@schema-engine/forms/recipes/built-in';
 import type { FormMeta } from '@/lib/instance-view';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { deriveInitialInstance } from '@/lib/instance-view';

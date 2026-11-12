@@ -47,26 +47,17 @@ const noteElement = defineInput({
 	render: () => null,
 });
 
-const cardRecipeSchema = z.pipe(
-	z.object({
-		$type: z.literal('card'),
-		header: z._default(z.object({ title: z._default(z.string(), 'Untitled') }), { title: 'Untitled' }),
-	}),
-	z.transform((view) => ({
-		...view,
-		header: { title: view.header.title.toUpperCase() },
-	})),
-);
-
 const cardRecipe = defineFormRecipe(
 	defineRecipeSpec({
 		$type: 'card',
 		kind: 'single-step',
 		metadata: { name: 'Card', description: 'Card with defaults' },
 		slotSchemas: {
-			header: z._default(z.object({ title: z._default(z.string(), 'Untitled') }), { title: 'Untitled' }),
+			header: z.pipe(
+				z._default(z.object({ title: z._default(z.string(), 'Untitled') }), { title: 'Untitled' }),
+				z.transform((header) => ({ title: header.title.toUpperCase() })),
+			),
 		},
-		schema: cardRecipeSchema,
 	}),
 	{},
 );

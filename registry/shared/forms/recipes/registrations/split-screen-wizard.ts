@@ -1,4 +1,5 @@
-import { defineFormRecipe, splitScreenWizardSpec } from '@schema-engine/forms/recipes';
+import { defineFormRecipe } from '@schema-engine/forms/recipes';
+import { splitScreenWizardSpec } from '@schema-engine/forms/recipes/built-in';
 import { StepHeader } from '../blocks/step-header';
 import { StepIndicators } from '../blocks/step-indicators';
 import { WizardActions } from '../blocks/wizard-actions';

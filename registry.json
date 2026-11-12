@@ -970,11 +970,6 @@
           "target": "@components/schema-engine/forms/recipes/index.ts"
         },
         {
-          "path": "registry/shared/forms/recipes/recipe-registry.ts",
-          "type": "registry:lib",
-          "target": "@components/schema-engine/forms/recipes/recipe-registry.ts"
-        },
-        {
           "path": "registry/shared/forms/recipes/registrations/bare-controls.ts",
           "type": "registry:lib",
           "target": "@components/schema-engine/forms/recipes/registrations/bare-controls.ts"
@@ -2021,11 +2016,6 @@
           "target": "@components/schema-engine/forms/recipes/index.ts"
         },
         {
-          "path": "registry/shared/forms/recipes/recipe-registry.ts",
-          "type": "registry:lib",
-          "target": "@components/schema-engine/forms/recipes/recipe-registry.ts"
-        },
-        {
           "path": "registry/shared/forms/recipes/registrations/bare-controls.ts",
           "type": "registry:lib",
           "target": "@components/schema-engine/forms/recipes/registrations/bare-controls.ts"
@@ -3068,11 +3058,6 @@
           "path": "registry/shared/forms/recipes/index.ts",
           "type": "registry:lib",
           "target": "@components/schema-engine/forms/recipes/index.ts"
-        },
-        {
-          "path": "registry/shared/forms/recipes/recipe-registry.ts",
-          "type": "registry:lib",
-          "target": "@components/schema-engine/forms/recipes/recipe-registry.ts"
         },
         {
           "path": "registry/shared/forms/recipes/registrations/bare-controls.ts",

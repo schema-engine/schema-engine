@@ -3,13 +3,13 @@ import { jsx } from '@ecopages/jsx/jsx-runtime';
 import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import type { FormMeta } from '@/lib/instance-view';
+import { getSlotConfig } from '@schema-engine/forms/recipes';
 import {
-	getSlotConfig,
 	type CardShellConfig,
 	type HeroShellConfig,
 	type SidebarShellConfig,
 	type SplitScreenShellConfig,
-} from '@schema-engine/forms/recipes';
+} from '@schema-engine/forms/recipes/built-in';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { deriveInitialInstance } from '@/lib/instance-view';
 import type { FormShellProps } from '@/recipes/types';

@@ -9,26 +9,15 @@ import { sidebarWizardSpec } from '@/recipes/built-in-specs';
 import { defineInput } from '@/types';
 import { logger } from '@/lib/logger';
 
-const cardRecipeSchema = z.strictObject({
-	$type: z.literal('card'),
-	shell: z.optional(z.strictObject({ padding: z.optional(z.enum(['sm', 'md', 'lg'])) })),
-});
-
 const cardRecipe = defineFormRecipe(
 	defineRecipeSpec({
 		$type: 'card',
 		kind: 'single-step',
 		metadata: { name: 'Card', description: 'Card shell recipe' },
 		slotSchemas: { shell: z.strictObject({ padding: z.optional(z.enum(['sm', 'md', 'lg'])) }) },
-		schema: cardRecipeSchema,
 	}),
 	{},
 );
-
-const wizardRecipeSchema = z.strictObject({
-	$type: z.literal('wizard'),
-	actions: z.optional(z.strictObject({ labels: z.optional(z.strictObject({ next: z.optional(z.string()) })) })),
-});
 
 const wizardRecipe = defineFormRecipe(
 	defineRecipeSpec({
@@ -38,7 +27,6 @@ const wizardRecipe = defineFormRecipe(
 		slotSchemas: {
 			actions: z.strictObject({ labels: z.optional(z.strictObject({ next: z.optional(z.string()) })) }),
 		},
-		schema: wizardRecipeSchema,
 	}),
 	{},
 );

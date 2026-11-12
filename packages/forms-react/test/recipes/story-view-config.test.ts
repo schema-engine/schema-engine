@@ -48,6 +48,7 @@ describe('recipe view schemas accept partial slot config', () => {
 		expect(() =>
 			validateRegistrationConfig(CardRecipe.schema, {
 				$type: 'card',
+				// @ts-expect-error -- slot config rejects $type at compile time too
 				shell: { $type: 'card', maxWidth: 'md' },
 			}),
 		).toThrow();

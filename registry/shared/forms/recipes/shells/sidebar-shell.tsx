@@ -1,6 +1,7 @@
 import { Separator } from '@/components/ui/separator';
 import { useIsMobile } from '@schema-engine/forms-react/hooks';
-import { getSlotConfig, type SidebarShellConfig } from '@schema-engine/forms/recipes';
+import { getSlotConfig } from '@schema-engine/forms/recipes';
+import { type SidebarShellConfig } from '@schema-engine/forms/recipes/built-in';
 import type { FormShellProps } from '@schema-engine/forms-react/primitives';
 
 export function SidebarShell({ slots, viewConfig }: FormShellProps) {

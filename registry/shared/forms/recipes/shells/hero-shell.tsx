@@ -1,4 +1,5 @@
-import { getSlotConfig, type HeroShellConfig } from '@schema-engine/forms/recipes';
+import { getSlotConfig } from '@schema-engine/forms/recipes';
+import { type HeroShellConfig } from '@schema-engine/forms/recipes/built-in';
 import type { FormShellProps } from '@schema-engine/forms-react/primitives';
 import { cn } from '@/components/schema-engine/forms/lib/utils';
 

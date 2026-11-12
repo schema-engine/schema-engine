@@ -1,4 +1,4 @@
-import * as z from 'zod/mini';
+import type * as z from 'zod/mini';
 import type { ComponentMetadata } from '@schema-engine/registry';
 
 export type RecipeKind = 'single-step' | 'wizard';
@@ -7,17 +7,8 @@ export type RecipeSlot = 'shell' | 'header' | 'progress' | 'actions';
 
 export const RECIPE_SLOT_ORDER = ['shell', 'header', 'progress', 'actions'] as const satisfies readonly RecipeSlot[];
 
-/**
- * Base view configuration schema — recipe registrations extend this with slot keys.
- */
-export const BaseViewConfigSchema = z.strictObject({
-	$type: z.string().check(z.describe('Recipe type identifier')),
-});
-
 export interface RecipeMetadata extends ComponentMetadata {
 	category?: string;
-	example?: unknown;
-	preview?: string;
 }
 
 export interface RecipeDescriptor {
@@ -37,6 +28,17 @@ export interface ViewCatalog {
 	};
 }
 
+/**
+ * Slot config applied beneath a form's own slot config, typed as the input of each declared slot schema.
+ *
+ * @remarks
+ * Undeclared slots and misspelled keys are compile errors; `defineRecipeSpec` also parses each
+ * default against its slot schema.
+ */
+export type RecipeSlotDefaults<TSlots extends Partial<Record<RecipeSlot, z.ZodMiniType>>> = {
+	[K in keyof TSlots]?: TSlots[K] extends z.ZodMiniType ? z.input<TSlots[K]> : never;
+};
+
 export interface RecipeSpec<
 	TType extends string = string,
 	TSchema extends z.ZodMiniType = z.ZodMiniType,
@@ -46,7 +48,7 @@ export interface RecipeSpec<
 	kind: RecipeKind;
 	slots: RecipeSlot[];
 	slotSchemas: TSlots;
-	slotDefaults?: Partial<Record<RecipeSlot, Record<string, unknown>>>;
+	slotDefaults?: RecipeSlotDefaults<TSlots>;
 	metadata: RecipeMetadata;
 	schema: TSchema;
 }

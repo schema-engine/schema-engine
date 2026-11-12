@@ -1,5 +1,4 @@
 {
-  "registry": "recipe-registry.ts",
   "recipes": [
     {
       "id": "bare-controls",

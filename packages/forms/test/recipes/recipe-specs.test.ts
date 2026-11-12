@@ -45,6 +45,50 @@ describe('defineRecipeSpec', () => {
 	});
 });
 
+describe('defineRecipeSpec slotDefaults', () => {
+	const base = {
+		$type: 'defaults',
+		kind: 'single-step',
+		metadata: { name: 'Defaults' },
+		slotSchemas: { header: StepHeaderConfigSchema },
+	} as const;
+
+	test('fails at definition naming the recipe, slot and key', () => {
+		expect(() =>
+			defineRecipeSpec({
+				...base,
+				// @ts-expect-error -- 'befor' is not a counterPlacement value
+				slotDefaults: { header: { counterPlacement: 'befor' } },
+			}),
+		).toThrow(/'defaults' slotDefaults\.header.*counterPlacement/);
+	});
+
+	test('fails on an unknown key in a declared slot', () => {
+		expect(() =>
+			defineRecipeSpec({
+				...base,
+				// @ts-expect-error -- 'sizee' is not a header key
+				slotDefaults: { header: { sizee: 'sm' } },
+			}),
+		).toThrow(/'defaults' slotDefaults\.header.*sizee/);
+	});
+
+	test('fails on a default for an undeclared slot', () => {
+		expect(() =>
+			defineRecipeSpec({
+				...base,
+				// @ts-expect-error -- the recipe declares no progress slot
+				slotDefaults: { progress: {} },
+			}),
+		).toThrow(/slotDefaults\.progress.*does not declare/);
+	});
+
+	test('accepts a valid partial default', () => {
+		const spec = defineRecipeSpec({ ...base, slotDefaults: { header: { counterPlacement: 'before' } } });
+		expect(spec.slotDefaults).toEqual({ header: { counterPlacement: 'before' } });
+	});
+});
+
 describe('built-in recipe specs', () => {
 	test('declare unique $type values', () => {
 		const types = Object.values(builtInRecipeSpecs).map((spec) => spec.$type);

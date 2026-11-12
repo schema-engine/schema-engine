@@ -40,7 +40,6 @@ describe('createFormEngine', () => {
 				kind: 'single-step',
 				metadata: { name: 'Card' },
 				slotSchemas: { shell: z.strictObject({}) },
-				schema: z.object({ $type: z.literal('card') }),
 			}),
 			{},
 		);
@@ -52,6 +51,45 @@ describe('createFormEngine', () => {
 
 		expect(engine.hasElement('note')).toBe(true);
 		expect(engine.hasRecipe('card')).toBe(true);
+	});
+
+	test('rejects a hand-written wizard registration without an actions slot', () => {
+		const wizard = {
+			$type: 'hand-wizard',
+			kind: 'wizard',
+			slots: ['header'],
+			schema: z.strictObject({ $type: z.literal('hand-wizard') }),
+			metadata: { name: 'Hand wizard' },
+			render: {},
+		} as const;
+
+		expect(() => createFormEngine({ recipes: [wizard] })).toThrow(/'hand-wizard'.*actions slot/);
+	});
+
+	test('accepts a hand-written wizard registration that declares actions', () => {
+		const wizard = {
+			$type: 'hand-wizard',
+			kind: 'wizard',
+			slots: ['actions'],
+			schema: z.strictObject({ $type: z.literal('hand-wizard') }),
+			metadata: { name: 'Hand wizard' },
+			render: {},
+		} as const;
+
+		expect(createFormEngine({ recipes: [wizard] }).hasRecipe('hand-wizard')).toBe(true);
+	});
+
+	test('rejects a hand-written single-step registration with a progress slot', () => {
+		const card = {
+			$type: 'hand-card',
+			kind: 'single-step',
+			slots: ['progress'],
+			schema: z.strictObject({ $type: z.literal('hand-card') }),
+			metadata: { name: 'Hand card' },
+			render: {},
+		} as const;
+
+		expect(() => createFormEngine({ recipes: [card] })).toThrow(/'hand-card'.*progress slot/);
 	});
 
 	test('last registration wins for duplicate $type at runtime', () => {

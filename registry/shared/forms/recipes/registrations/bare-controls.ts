@@ -1,4 +1,5 @@
-import { bareControlsSpec, defineFormRecipe } from '@schema-engine/forms/recipes';
+import { defineFormRecipe } from '@schema-engine/forms/recipes';
+import { bareControlsSpec } from '@schema-engine/forms/recipes/built-in';
 import { WizardActions } from '../blocks/wizard-actions';
 import { StackShell } from '../shells/stack-shell';
 

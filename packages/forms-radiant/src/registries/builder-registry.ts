@@ -11,7 +11,7 @@ import { radiantRecipes } from '@/recipes/bind-recipes';
  * Factory for a Radiant form engine with canonical view recipes already bound.
  *
  * Radiant has no shadcn registry, so shells and step blocks ship in this
- * package. Specs remain in `@schema-engine/forms/recipes`. Register elements
+ * package. Specs remain in `@schema-engine/forms/recipes/built-in`. Register elements
  * explicitly; caller recipes are appended so same-`$type` overrides last-win.
  */
 export function createRadiantFormEngine<

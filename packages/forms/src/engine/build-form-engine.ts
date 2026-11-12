@@ -13,6 +13,7 @@ import { compileGridTheme, getDefaultCompiledGrid, type CompiledGrid, type GridT
 import { createFormConfigShape } from '@/schemas/form-config-shape';
 import * as z from 'zod/mini';
 import { isZodType } from '@/lib/zod-json-schema';
+import { assertRecipeKindSlots } from '@/recipes/assert-recipe-kind';
 import { assertStandardSchema } from '@/lib/standard-schema';
 import { createDefaultValidationRegistry, type ValidationRegistry } from '@/schemas/validation';
 
@@ -106,6 +107,7 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 
 	for (const recipe of lists.recipes ?? []) {
 		assertStandardSchema(recipe.schema, `Recipe '${recipe.$type}' schema`);
+		assertRecipeKindSlots(recipe);
 		recipeRegistry.set(recipe.$type, recipe as AnyRecipeRegistration);
 	}
 	for (const action of lists.actions ?? []) {

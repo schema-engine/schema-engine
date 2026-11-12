@@ -1,6 +1,4 @@
-import type * as z from 'zod/mini';
 import { defineRecipeSpec } from './define-recipe-spec';
-import type { RecipeSpec } from './types';
 import {
 	CardShellConfigSchema,
 	FormActionsConfigSchema,
@@ -13,10 +11,10 @@ import {
 	WizardActionsConfigSchema,
 } from './slot-schemas';
 
-const MINIMAL_ACTIONS = { appearance: 'minimal', showStepCounter: false };
-const CENTERED_HEADER = { align: 'center', size: 'md' };
-const HERO_HEADER = { align: 'center', size: 'lg', titleAs: 'h1', inheritColor: true };
-const WIZARD_PROGRESS_HEADER = { showStepCounter: true, counterPlacement: 'before' };
+const MINIMAL_ACTIONS = { appearance: 'minimal', showStepCounter: false } as const;
+const CENTERED_HEADER = { align: 'center', size: 'md' } as const;
+const HERO_HEADER = { align: 'center', size: 'lg', titleAs: 'h1', inheritColor: true } as const;
+const WIZARD_PROGRESS_HEADER = { showStepCounter: true, counterPlacement: 'before' } as const;
 
 export const cardSpec = defineRecipeSpec({
 	$type: 'card',
@@ -145,13 +143,3 @@ export const builtInRecipeSpecs = {
 	'hero-wizard': heroWizardSpec,
 	'split-screen-wizard': splitScreenWizardSpec,
 } as const;
-
-export type RecipeConfigOf<S extends RecipeSpec> = { $type: S['$type'] } & {
-	[K in keyof S['slotSchemas'] as S['slotSchemas'][K] extends z.ZodMiniType ? K : never]?: z.infer<
-		NonNullable<S['slotSchemas'][K]>
-	>;
-};
-
-export type BuiltInRecipeRegistry = {
-	[K in keyof typeof builtInRecipeSpecs]: RecipeConfigOf<(typeof builtInRecipeSpecs)[K]>;
-};
