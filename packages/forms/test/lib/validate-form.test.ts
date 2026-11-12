@@ -7,6 +7,7 @@ import { defineFormRecipe } from '@/recipes/define-form-recipe';
 import { defineRecipeSpec } from '@/recipes/define-recipe-spec';
 import { sidebarWizardSpec } from '@/recipes/built-in-specs';
 import { defineInput } from '@/types';
+import { ElementGridConfigSchema } from '@/schemas/base-field';
 import { logger } from '@/lib/logger';
 
 const cardRecipe = defineFormRecipe(
@@ -115,6 +116,88 @@ describe('validateFormConfig', () => {
 		expect(() => engine.validateForm({ ...form, grid: { responsive: { md: { [key]: value } } } })).toThrow(
 			FormValidationError,
 		);
+	});
+
+	describe('named grid widths', () => {
+		const gridField = defineInput({
+			$type: 'field',
+			schema: z.looseObject({
+				$type: z.literal('field'),
+				id: z.string(),
+				name: z.string(),
+				grid: z.optional(ElementGridConfigSchema),
+			}),
+			metadata: { name: 'Field', category: 'input' },
+			render: () => null,
+		});
+		const engine = createFormEngine({ elements: [gridField] });
+		const formWith = (elements: unknown[], grid?: unknown) => ({
+			id: 'widths',
+			...(grid ? { grid } : {}),
+			steps: [{ id: 'main', title: 'Main', elements }],
+		});
+		const field = (name: string, grid?: unknown) => ({ $type: 'field', id: name, name, ...(grid ? { grid } : {}) });
+
+		test('accepts widths and offsets on a grid that sets no columns', () => {
+			expect(() =>
+				engine.validateForm(
+					formWith([field('a', { width: 'half' }), field('b', { width: 'half', offset: 'quarter' })], {
+						gap: 'loose',
+					}),
+				),
+			).not.toThrow();
+		});
+
+		test.each([
+			['columns', { columns: 3 }],
+			['auto columns', { columns: 'auto' }],
+			['a responsive columns entry', { responsive: { md: { columns: 2 } } }],
+			['a minimum column width', { minColumnWidth: '12rem' }],
+		])('rejects a grid with %s when a field uses width', (_label, grid) => {
+			const attempt = () => engine.validateForm(formWith([field('a', { width: 'half' })], grid));
+			expect(attempt).toThrow(FormValidationError);
+			expect(attempt).toThrow(/uses either columns or widths/);
+			expect(attempt).toThrow(/'a'/);
+		});
+
+		test('rejects columns when a field uses a responsive width or an offset', () => {
+			const grid = { columns: 3 };
+			expect(() =>
+				engine.validateForm(formWith([field('a', { responsive: { md: { width: 'third' } } })], grid)),
+			).toThrow(/uses either columns or widths/);
+			expect(() => engine.validateForm(formWith([field('a', { offset: 'half' })], grid))).toThrow(
+				/uses either columns or widths/,
+			);
+		});
+
+		test('keeps columns working when no field uses width', () => {
+			expect(() =>
+				engine.validateForm(formWith([field('a', { column: 'span 2' })], { columns: 3 })),
+			).not.toThrow();
+		});
+
+		test.each([
+			['a width and a raw column', { width: 'half', column: 2 }],
+			['an offset and a raw column', { offset: 'quarter', column: '4 / 10' }],
+			['a responsive width next to a column', { column: 2, responsive: { md: { width: 'half' } } }],
+			['a width next to a responsive column', { width: 'half', responsive: { md: { column: 2 } } }],
+		])('rejects a field that sets %s', (_label, grid) => {
+			const attempt = () => engine.validateForm(formWith([field('a', grid)]));
+			expect(attempt).toThrow(FormValidationError);
+			expect(attempt).toThrow(/'a'.*'(width|offset)'.*'column'|'a'.*'column'.*'(width|offset)'/);
+		});
+
+		test('allows a width with a raw row', () => {
+			expect(() => engine.validateForm(formWith([field('a', { width: 'half', row: 2 })]))).not.toThrow();
+		});
+
+		test.each([['wide'], ['full-ish']])('rejects the unknown width %s', (width) => {
+			expect(() => engine.validateForm(formWith([field('a', { width })]))).toThrow(FormValidationError);
+		});
+
+		test.each([['full'], ['auto']])('rejects %s as an offset', (offset) => {
+			expect(() => engine.validateForm(formWith([field('a', { offset })]))).toThrow(FormValidationError);
+		});
 	});
 
 	test('warns once per form id and leaves the view unset when no default wizard recipe is registered', () => {

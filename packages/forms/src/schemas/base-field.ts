@@ -85,7 +85,35 @@ export const GridLayoutConfigSchema = z.extend(GridLayoutPropertiesSchema, {
 	responsive: responsiveSchema(GridBreakpointConfigSchema),
 });
 
+/**
+ * Named field widths, as shares of the row.
+ *
+ * @remarks
+ * A grid whose fields use `width` or `offset` is laid out on 12 tracks, so
+ * every name is a whole number of tracks: `full` 12, `three-quarters` 9,
+ * `two-thirds` 8, `half` 6, `third` 4, `quarter` 3. `auto` leaves the width to
+ * the grid's own placement.
+ */
+export const GridWidthNames = ['full', 'three-quarters', 'two-thirds', 'half', 'third', 'quarter', 'auto'] as const;
+
+export type GridWidthName = (typeof GridWidthNames)[number];
+
+/** Named offsets: the widths that are a fraction of the row, without `full` and `auto`. */
+export const GridOffsetNames = ['three-quarters', 'two-thirds', 'half', 'third', 'quarter'] as const;
+
+export type GridOffsetName = (typeof GridOffsetNames)[number];
+
 const ElementGridPropertiesSchema = z.strictObject({
+	width: z
+		.optional(z.enum(GridWidthNames))
+		.check(
+			z.describe('Named share of the row (full | three-quarters | two-thirds | half | third | quarter | auto).'),
+		),
+	offset: z
+		.optional(z.enum(GridOffsetNames))
+		.check(
+			z.describe('Named empty space before the field (three-quarters | two-thirds | half | third | quarter).'),
+		),
 	column: z.optional(z.union([z.number(), z.string()])),
 	row: z.optional(z.union([z.number(), z.string()])),
 	justifySelf: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),

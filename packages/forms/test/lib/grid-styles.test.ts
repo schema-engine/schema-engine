@@ -5,6 +5,7 @@ import {
 	getDefaultGridTheme,
 	getFieldGridVariables,
 	getFormGridVariables,
+	usesGridWidths,
 } from '@/lib/grid-styles';
 import { GridGapTokens, type GridLayoutConfig } from '@/schemas/base-field';
 
@@ -111,7 +112,7 @@ describe('generated stylesheet', () => {
 
 	test('media queries fall back through narrower slots so sparse values cascade', () => {
 		expect(css()).toContain(
-			'grid-column:var(--se-field-grid-column-md, var(--se-field-grid-column-sm, var(--se-field-grid-column, auto)))',
+			'grid-column:var(--se-field-grid-column-md, var(--se-field-grid-column-sm, var(--se-field-grid-column, var(--se-grid-default-column, auto))))',
 		);
 	});
 
@@ -425,5 +426,112 @@ describe('per-element spacing', () => {
 	test('the stylesheet resets every spacing slot so nested fields do not inherit it', () => {
 		expect(css()).toContain('--se-field-margin-block-end:initial;');
 		expect(css()).toContain('--se-field-margin-block-start-2xl:initial;');
+	});
+});
+
+describe('named widths and offsets', () => {
+	const widthElement = (grid: Parameters<typeof getFieldGridVariables>[0]) => ({ $type: 'field', grid });
+
+	test.each([
+		['full', 'span 12'],
+		['three-quarters', 'span 9'],
+		['two-thirds', 'span 8'],
+		['half', 'span 6'],
+		['third', 'span 4'],
+		['quarter', 'span 3'],
+		['auto', 'auto'],
+	] as const)('width %s emits %s', (width, column) => {
+		expect(getFieldGridVariables({ width })).toEqual({ '--se-field-grid-column': column });
+	});
+
+	test('offset starts the field after the skipped tracks and runs to the end of the row', () => {
+		expect(getFieldGridVariables({ offset: 'quarter' })).toEqual({ '--se-field-grid-column': '4 / -1' });
+	});
+
+	test('half with a quarter offset is centred in the 12 tracks', () => {
+		expect(getFieldGridVariables({ width: 'half', offset: 'quarter' })).toEqual({
+			'--se-field-grid-column': '4 / span 6',
+		});
+	});
+
+	test('an auto width with an offset only pins the start line', () => {
+		expect(getFieldGridVariables({ width: 'auto', offset: 'third' })).toEqual({ '--se-field-grid-column': '5' });
+	});
+
+	test('width changes by breakpoint and stays out of unauthored slots', () => {
+		const variables = getFieldGridVariables({ width: 'full', responsive: { md: { width: 'third' } } });
+		expect(variables).toEqual({
+			'--se-field-grid-column': 'span 12',
+			'--se-field-grid-column-md': 'span 4',
+		});
+	});
+
+	test('a slot that changes only the width keeps the offset of the slot before it', () => {
+		const variables = getFieldGridVariables({
+			width: 'half',
+			offset: 'quarter',
+			responsive: { md: { width: 'third' } },
+		});
+		expect(variables['--se-field-grid-column']).toBe('4 / span 6');
+		expect(variables['--se-field-grid-column-md']).toBe('4 / span 4');
+	});
+
+	test('a slot that changes only the offset keeps the width of the slot before it', () => {
+		const variables = getFieldGridVariables({
+			width: 'third',
+			responsive: { lg: { offset: 'third' } },
+		});
+		expect(variables['--se-field-grid-column']).toBe('span 4');
+		expect(variables['--se-field-grid-column-lg']).toBe('5 / span 4');
+	});
+
+	test('responsive.default overrides the top-level width', () => {
+		const variables = getFieldGridVariables({ width: 'full', responsive: { default: { width: 'half' } } });
+		expect(variables['--se-field-grid-column']).toBe('span 6');
+	});
+
+	test('raw column placement still emits the authored line', () => {
+		expect(getFieldGridVariables({ column: '4 / 10' })).toEqual({ '--se-field-grid-column': '4 / 10' });
+	});
+
+	test('the stylesheet makes a field without a width fill the row when its grid has widths', () => {
+		expect(css()).toContain('--se-grid-default-column:initial;');
+		expect(css()).toContain('var(--se-field-grid-column, var(--se-grid-default-column, auto))');
+	});
+
+	test('a grid whose fields use widths gets twelve tracks and a full-row default', () => {
+		const variables = getFormGridVariables(undefined, theme(), [widthElement({ width: 'half' })]);
+		expect(variables['--se-grid-template']).toBe('repeat(12, minmax(0, 1fr))');
+		expect(variables['--se-grid-default-column']).toBe('1 / -1');
+	});
+
+	test('an offset alone also switches the grid to twelve tracks', () => {
+		const variables = getFormGridVariables(undefined, theme(), [widthElement({ offset: 'quarter' })]);
+		expect(variables['--se-grid-template']).toBe('repeat(12, minmax(0, 1fr))');
+	});
+
+	test('a responsive width switches the grid to twelve tracks', () => {
+		const variables = getFormGridVariables(undefined, theme(), [
+			widthElement({ responsive: { md: { width: 'half' } } }),
+		]);
+		expect(variables['--se-grid-template']).toBe('repeat(12, minmax(0, 1fr))');
+	});
+
+	test('widths keep the authored gap', () => {
+		const variables = getFormGridVariables({ gap: '1rem' }, theme(), [widthElement({ width: 'half' })]);
+		expect(variables['--se-grid-gap-x']).toBe('1rem');
+	});
+
+	test('a grid without widths emits no template or default column', () => {
+		const variables = getFormGridVariables(undefined, theme(), [
+			widthElement({ column: 'span 2' }),
+			{ $type: 'field' },
+		]);
+		expect(variables).toEqual({});
+	});
+
+	test('usesGridWidths ignores elements without grid config', () => {
+		expect(usesGridWidths([{ $type: 'field' }, { $type: 'field', grid: {} }])).toBe(false);
+		expect(usesGridWidths([{ $type: 'field' }, widthElement({ width: 'auto' })])).toBe(true);
 	});
 });
