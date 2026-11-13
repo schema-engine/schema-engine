@@ -31,9 +31,10 @@ The recipes copy their stylesheet with them. Import it once in your global style
 ```css
 @import 'tailwindcss';
 @import './components/schema-engine/forms/recipes/recipes.css' layer(components);
+@import './components/ui/schema-engine/components/controls.css';
 ```
 
-The path is relative to your global stylesheet: `./components/schema-engine/forms/recipes/recipes.css` from a Vite `src/index.css`, `../components/schema-engine/forms/recipes/recipes.css` from a Next.js `app/globals.css`.
+The path is relative to your global stylesheet: `./components/schema-engine/forms/recipes/recipes.css` from a Vite `src/index.css`, `../components/schema-engine/forms/recipes/recipes.css` from a Next.js `app/globals.css`. The second, unlayered import is the control height of the `size` appearance axis; it comes with the field primitive, and [View recipes](/docs/forms-react/layouts#default-registry-recipes) says why it is not layered.
 
 Then import their generated registration barrels:
 

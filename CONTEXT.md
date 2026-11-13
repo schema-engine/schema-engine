@@ -372,7 +372,7 @@ the tokens (`var(--se-space, 1.5rem)`) and keep the look of an unstyled form as 
 fallback. The built-in tokens name no host theme: a renderer's fallback is where its host theme
 variables belong (Radiant's card reads `var(--se-space, var(--space-block-lg, 1.5rem))`), and the
 built-in `size.default` sets its tokens to `initial`, which hands them back to the component's
-fallback, so `size: default` looks like no pick in a themed app, also inside a `compact` form. `size` sets a control height the same way (`--se-control-height`, from the hooks `--se-control-height-compact` and `--se-control-height-comfortable`): Radiant maps it onto its `--size-control-md`, the React registry controls that carry `data-se-control` read it. What a host's own axis looks like is the host's CSS, keyed on the same attributes. A value
+fallback, so `size: default` looks like no pick in a themed app, also inside a `compact` form. `size` sets a control height the same way (`--se-control-height`, from the hooks `--se-control-height-compact` and `--se-control-height-comfortable`): Radiant maps it onto its `--size-control-md`, the React registry controls that carry `data-se-control` read it through `controls.css`, which an app imports unlayered because a shadcn control's height is a Tailwind utility that outranks every layered rule. What a host's own axis looks like is the host's CSS, keyed on the same attributes. A value
 that declares no tokens inherits the surrounding value's tokens through custom-property inheritance,
 also from a pick made outside a nested form of another theme, until that form picks a value that
 declares those tokens. The DOM contract is the same in

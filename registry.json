@@ -39,8 +39,14 @@
           "path": "registry/shared/primitives/field.tsx",
           "type": "registry:ui",
           "target": "@ui/schema-engine/components/field.tsx"
+        },
+        {
+          "path": "registry/shared/primitives/controls.css",
+          "type": "registry:file",
+          "target": "@ui/schema-engine/components/controls.css"
         }
-      ]
+      ],
+      "docs": "Import controls.css once in your global stylesheet, unlayered and after Tailwind and the recipe styles: @import \"./components/ui/schema-engine/components/controls.css\"; (adjust the path to your ui alias). It lets the size appearance axis set the height of the form controls that carry data-se-control."
     },
     {
       "name": "schema-engine-form-combobox-primitive",
@@ -951,7 +957,8 @@
         "button",
         "badge",
         "separator",
-        "andeeplus/schema-engine/schema-engine-form-utils"
+        "andeeplus/schema-engine/schema-engine-form-utils",
+        "andeeplus/schema-engine/schema-engine-form-field-primitive"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -985,11 +992,6 @@
           "path": "registry/shared/forms/recipes/blocks/wizard-actions.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/blocks/wizard-actions.tsx"
-        },
-        {
-          "path": "registry/shared/forms/recipes/controls.css",
-          "type": "registry:file",
-          "target": "@components/schema-engine/forms/recipes/controls.css"
         },
         {
           "path": "registry/shared/forms/recipes/index.ts",
@@ -1119,8 +1121,14 @@
           "path": "registry/shared/primitives/field.tsx",
           "type": "registry:ui",
           "target": "@ui/schema-engine/components/field.tsx"
+        },
+        {
+          "path": "registry/shared/primitives/controls.css",
+          "type": "registry:file",
+          "target": "@ui/schema-engine/components/controls.css"
         }
-      ]
+      ],
+      "docs": "Import controls.css once in your global stylesheet, unlayered and after Tailwind and the recipe styles: @import \"./components/ui/schema-engine/components/controls.css\"; (adjust the path to your ui alias). It lets the size appearance axis set the height of the form controls that carry data-se-control."
     },
     {
       "name": "schema-engine-form-combobox-primitive-radix",
@@ -2034,7 +2042,8 @@
         "button",
         "badge",
         "separator",
-        "andeeplus/schema-engine/schema-engine-form-utils-radix"
+        "andeeplus/schema-engine/schema-engine-form-utils-radix",
+        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -2068,11 +2077,6 @@
           "path": "registry/shared/forms/recipes/blocks/wizard-actions.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/blocks/wizard-actions.tsx"
-        },
-        {
-          "path": "registry/shared/forms/recipes/controls.css",
-          "type": "registry:file",
-          "target": "@components/schema-engine/forms/recipes/controls.css"
         },
         {
           "path": "registry/shared/forms/recipes/index.ts",
@@ -2202,8 +2206,14 @@
           "path": "registry/shared/primitives/field.tsx",
           "type": "registry:ui",
           "target": "@ui/schema-engine/components/field.tsx"
+        },
+        {
+          "path": "registry/shared/primitives/controls.css",
+          "type": "registry:file",
+          "target": "@ui/schema-engine/components/controls.css"
         }
-      ]
+      ],
+      "docs": "Import controls.css once in your global stylesheet, unlayered and after Tailwind and the recipe styles: @import \"./components/ui/schema-engine/components/controls.css\"; (adjust the path to your ui alias). It lets the size appearance axis set the height of the form controls that carry data-se-control."
     },
     {
       "name": "schema-engine-form-combobox-primitive-aria",
@@ -3115,7 +3125,8 @@
         "button",
         "badge",
         "separator",
-        "andeeplus/schema-engine/schema-engine-form-utils-aria"
+        "andeeplus/schema-engine/schema-engine-form-utils-aria",
+        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -3149,11 +3160,6 @@
           "path": "registry/shared/forms/recipes/blocks/wizard-actions.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/blocks/wizard-actions.tsx"
-        },
-        {
-          "path": "registry/shared/forms/recipes/controls.css",
-          "type": "registry:file",
-          "target": "@components/schema-engine/forms/recipes/controls.css"
         },
         {
           "path": "registry/shared/forms/recipes/index.ts",

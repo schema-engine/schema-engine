@@ -79,7 +79,6 @@ describe('schema-engine GitHub registry catalog', () => {
 			const item = catalog.find((entry) => entry.name === name);
 			const stylesheets = item?.files.filter((file) => file.path.endsWith('.css')) ?? [];
 			expect(stylesheets.map((file) => file.target).toSorted()).toEqual([
-				'@components/schema-engine/forms/recipes/controls.css',
 				'@components/schema-engine/forms/recipes/recipes.css',
 				'@components/schema-engine/forms/recipes/shells/card-shell.css',
 			]);
@@ -87,6 +86,32 @@ describe('schema-engine GitHub registry catalog', () => {
 			expect(item?.docs).toContain('recipes.css');
 		});
 	}
+
+	for (const name of [
+		'schema-engine-form-field-primitive',
+		'schema-engine-form-field-primitive-radix',
+		'schema-engine-form-field-primitive-aria',
+	]) {
+		test(`${name} ships controls.css as its own file, outside the recipes entry point`, () => {
+			const item = catalog.find((entry) => entry.name === name);
+			const stylesheet = item?.files.find((file) => file.path.endsWith('controls.css'));
+			expect(stylesheet).toEqual({
+				path: 'registry/shared/primitives/controls.css',
+				type: 'registry:file',
+				target: '@ui/schema-engine/components/controls.css',
+			});
+			expect(item?.docs).toContain('unlayered');
+		});
+	}
+
+	test('every recipes item depends on the field primitive that carries controls.css', () => {
+		for (const name of RECIPE_AGGREGATES) {
+			const item = catalog.find((entry) => entry.name === name);
+			expect(item?.registryDependencies.some((dep) => dep.includes('schema-engine-form-field-primitive'))).toBe(
+				true,
+			);
+		}
+	});
 
 	test('every recipe group that ships a stylesheet also lists the recipes.css entry point', () => {
 		const manifest = JSON.parse(
@@ -97,8 +122,7 @@ describe('schema-engine GitHub registry catalog', () => {
 		) as { recipes: Array<{ id: string; files: string[] }> };
 		const styled = manifest.recipes.filter((recipe) => recipe.files.some((file) => file.endsWith('-shell.css')));
 		expect(styled.map((recipe) => recipe.id)).toEqual(expect.arrayContaining(['card', 'card-wizard']));
-		for (const recipe of styled)
-			expect(recipe.files, recipe.id).toEqual(expect.arrayContaining(['recipes.css', 'controls.css']));
+		for (const recipe of styled) expect(recipe.files, recipe.id).toContain('recipes.css');
 	});
 
 	test('every file has an @components or @ui target', () => {

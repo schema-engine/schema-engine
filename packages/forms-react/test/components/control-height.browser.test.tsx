@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { createFormEngine } from '@schema-engine/forms';
 import {
 	controlHeightAcceptance,
@@ -9,15 +9,36 @@ import {
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { rhfAdapter } from '@/adapters/react-hook-form';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
+import { MaskedInputElementRegistration } from '@/components/schema-engine/forms/inputs/form-masked-input.registration';
 import { SubmitButtonElementRegistration } from '@/components/schema-engine/forms/actions/submit-button.registration';
-import '@/components/schema-engine/forms/recipes/recipes.css';
+import recipesCss from '@/components/schema-engine/forms/recipes/recipes.css?inline';
+import '@/components/ui/schema-engine/components/controls.css';
 
-const engine = createFormEngine({ elements: [InputElementRegistration, SubmitButtonElementRegistration] });
+const engine = createFormEngine({
+	elements: [InputElementRegistration, MaskedInputElementRegistration, SubmitButtonElementRegistration],
+});
 
 /**
- * The registry controls are shadcn components, which this suite stands in for with bare elements, so a
- * control has no height of its own: the heights asserted are the renderer-neutral fallbacks of the axis.
+ * The documented install of a shadcn app, with Tailwind's cascade layers.
+ *
+ * @remarks
+ * The registry controls are shadcn components, whose height is a Tailwind utility (`h-8`) in the
+ * `utilities` layer, and utilities outrank every rule in `components`. The stock height here is 32px on
+ * every control, set from that layer. `recipes.css` goes into `components`, as the install says; the
+ * control stylesheet is imported above, unlayered, which is the only way it outranks the utility. Without
+ * a pick it must roll back to the 32px of the utility.
  */
+const stylesheet = document.createElement('style');
+stylesheet.textContent = [
+	'@layer base, components, utilities;',
+	'@layer base { *, *::before, *::after { box-sizing: border-box; } }',
+	`@layer components { ${recipesCss} }`,
+	'@layer utilities { input, button { height: 32px; } }',
+].join('\n');
+
+beforeAll(() => document.head.prepend(stylesheet));
+afterAll(() => stylesheet.remove());
+
 describe('React registry controls follow the size axis', () => {
 	controlHeightAcceptance(
 		async ({ config }) => {
@@ -26,8 +47,47 @@ describe('React registry controls follow the size axis', () => {
 			);
 			return { host: view.container, cleanup: view.unmount, update: async () => undefined };
 		},
-		{ compact: { input: 28, button: 28 }, comfortable: { input: 36, button: 36 } },
+		{
+			unpicked: { input: 32, button: 32 },
+			compact: { input: 28, button: 28 },
+			comfortable: { input: 36, button: 36 },
+		},
 	);
+
+	test.each([
+		['compact', 28],
+		['comfortable', 36],
+		['default', 32],
+	])('a masked input follows the size pick %s beside the plain input', (size, height) => {
+		const view = render(
+			<FormRenderer
+				config={engine.validateForm({
+					...controlHeightForm(size),
+					steps: [
+						{
+							id: 'main',
+							title: 'Main',
+							elements: [
+								{ $type: 'masked-input', id: 'iban', name: 'iban', label: 'IBAN', mask: 'aa00' },
+								{ $type: 'input', id: 'email', name: 'email', label: 'Email' },
+							],
+						},
+					],
+				})}
+				engine={engine}
+				adapter={rhfAdapter}
+			/>,
+		);
+		try {
+			const heights = Array.from(
+				view.container.querySelectorAll('input'),
+				(input) => input.getBoundingClientRect().height,
+			);
+			expect(heights).toEqual([height, height]);
+		} finally {
+			view.unmount();
+		}
+	});
 
 	test('a host class on a control outranks the stylesheet height', () => {
 		const author = document.createElement('style');

@@ -96,6 +96,7 @@ function ComboboxInput({
 		<PopoverTrigger
 			type="button"
 			role="combobox"
+			data-se-control
 			aria-expanded={open}
 			disabled={disabled}
 			className={cn(

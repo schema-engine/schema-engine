@@ -8,12 +8,12 @@
  * rolls the declaration back to the control's own height, so an unpicked control keeps the look of your ui
  * components.
  *
- * Every rule sits inside :where(), so it adds no specificity and a host class on the same element wins.
- * The height goes into the same cascade layer as the rest of recipes.css (`components` with Tailwind), so a
- * height utility on the ui component itself (shadcn's `h-8`, say) outranks it: drop that utility from the
- * component, or read var(--se-control-height, <your height>) there, to let the axis size it.
+ * Import this file unlayered, after Tailwind and after the layered recipes.css. A shadcn control sets its
+ * height with a Tailwind utility (`h-8`), and utilities outrank every rule in the `components` layer, so
+ * only an unlayered rule can let the size pick win; `revert-layer` then falls back to that utility when
+ * nothing is picked. The rule sits inside :where(), so an unlayered class of yours on the same element still
+ * wins. The cost: while a size is picked, a Tailwind height utility passed to the control loses to this rule.
  */
 :where([data-se-control]) {
-	box-sizing: border-box;
 	height: var(--se-control-height, revert-layer);
 }
