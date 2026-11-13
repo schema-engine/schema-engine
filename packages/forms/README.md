@@ -24,11 +24,12 @@ const engine = createFormEngine({
 	elements: [textInputRegistration],
 	recipes: [cardRecipe],
 	actions: [submitActionRegistration],
+	validations: [postcodeRule],
 });
 ```
 
-`createFormEngine` registers elements, recipes, and actions in one declarative
-call. A recipe is the single view protocol: it declares the recipe kind,
+`createFormEngine` registers elements, recipes, actions and custom validation
+rules in one declarative call. A recipe is the single view protocol: it declares the recipe kind,
 shell/slot keys, validation schema, metadata, and framework adapter payload.
 Forms select one recipe with `view.$type`. `@schema-engine/forms/recipes` is the forms protocol: `formRecipeProtocol` declares the slots (`shell`, `header`, `progress`, `actions`), the kinds (`single-step`, `wizard`) and the kind rules on top of the domain-neutral recipe machinery in [`@schema-engine/layout`](../layout/README.md#recipe-protocol) (`formRecipeProtocol.slots` is the slot order). `defineRecipeSpec`, the renderer-neutral `defineFormRecipe` and the view model are typed by it (adapters wrap `defineFormRecipe` as `defineRecipe` to type the render payload against the spec's slots); `@schema-engine/forms/recipes/built-in` holds the nine built-in specs (moved off `/recipes`), their slot schemas and config types. `defineRecipeSpec` keeps the concrete view schema type, so `defineForm` types each declared slot's config and rejects slot keys the recipe does not declare. `slotDefaults` are typed against the slot schemas and validated when the spec is defined. Each slot schema owns its defaults (including default labels), and each declared slot defaults to `{}` in the view schema, so the normalized `view` is complete and the view JSON Schema shows every default. `getSlotConfig(viewConfig, slot, schema)` returns `z.output<schema>`. The wizard `actions` slot's `showStepCounter` defaults to `true` regardless of `variant`. `createFormEngine` runs the protocol's kind rules (single-step recipes declare no `progress` slot, wizard recipes declare `actions`) on every winning registration, and an error names the recipe and the rule. In `split-screen-wizard` the side panel shows the form title and the header shows the step title (`header.fallbackToFormTitle` defaults to `false` there, `true` elsewhere); a single-step `split-screen` keeps its panel title.
 
@@ -346,6 +347,39 @@ slot config when `view.$type` is set.
 
 ## Engine validation
 
+Validation rules are registrations like elements, recipes and actions: `$type`
+(the `type` authors write in a field's `rules`), `schema` (a Standard Schema for the
+rule object), `metadata`, and the handler fields `category`, `handler`, and optionally
+`dependsOn` and `defaultFor`. The engine builds a read-only registry
+(`engine.getValidationRegistry()`, with `kind` `'Validation'` and no `register` or `clear`) from, in
+order, the built-in rules, the `validations` of the winning elements, and
+`createFormEngine({ validations: [...] })`. A later registration of the same
+`$type` wins without a warning, and a schema that is not a Standard Schema throws
+at build. `engine.extend({ validations })` adds to the source engine's list. The
+per-field-type default rules (`defaultFor`) are derived from the registrations at
+build.
+
+```ts
+import * as z from 'zod/mini';
+import { createFormEngine } from '@schema-engine/forms';
+
+const postcode = {
+	$type: 'postcode',
+	schema: z.object({ type: z.literal('postcode'), message: z.optional(z.string()) }),
+	metadata: { name: 'Postcode' },
+	category: 'string',
+	handler: (rule: { type: 'postcode'; message?: string }) =>
+		z.string().check(z.regex(/^[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2}$/, rule.message ?? 'Invalid postcode')),
+} as const;
+
+const engine = createFormEngine({ validations: [postcode] });
+```
+
+Field rules then use it as `{ type: 'postcode', message: '...' }`. Rule objects keep
+`type`; only the registration is keyed by `$type`. See the
+[validation guide](./src/schemas/validation/README.md) and the
+[custom validations page](../../apps/docs/src/content/docs/forms/validation-custom.mdx).
+
 The forms package exports shared value-validation helpers from
 `@schema-engine/forms`. `validateFormValues` accepts a `ValidationElementTree`,
 and `collectStepFieldPaths` accepts a `ValidationStep`; both types follow the
@@ -441,7 +475,7 @@ See [engine internals](src/engine/README.md#schema-artifacts-and-extension).
 
 `templatePath` in `@schema-engine/forms/lib/path-values` removes numeric array indices from rendered paths for constraint declaration lookup, alongside `expandFieldTemplatePaths`.
 
-Engine construction stores elements, recipes and actions in read-only registries
+Engine construction stores elements, recipes, actions and validation rules in read-only registries
 from `@schema-engine/registry` (last registration wins, no override warning) and
 checks each winning schema once at that boundary. It stores frozen shallow copies taken at build and leaves the registration objects you passed untouched; changes to them afterwards do not reach the engine. Form action results add optional browser redirects
 to the generic result; see [actions](./src/actions/README.md).

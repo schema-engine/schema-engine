@@ -15,7 +15,7 @@ Standard Schema implementation.
 
 ## createRegistry
 
-Builds a read-only registry from a list. The forms engine uses it for elements, recipes and actions, and `ActionRegistry` is built on it. `ValidationRegistry` in `@schema-engine/forms` does not use it yet.
+Builds a read-only registry from a list. The forms engine uses it for elements, recipes, actions and validation rules, and `ActionRegistry` is built on it. `ValidationRegistry` in `@schema-engine/forms` is a read-only registry of this kind with a few validation lookups added.
 
 ```typescript
 function createRegistry<TRegistration extends BaseRegistration>(
