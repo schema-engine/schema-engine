@@ -33,7 +33,7 @@ export function SidebarShell({ slots, viewConfig }: FormShellProps) {
 		<div className="se-sidebar-shell" {...appearanceAttributes}>
 			{slots.progress ? <aside className="se-sidebar-shell__progress">{slots.progress}</aside> : null}
 			{showSeparator ? (
-				<Separator orientation="vertical" className="se-sidebar-shell__separator bg-border" />
+				<Separator orientation="vertical" className="se-sidebar-shell__separator h-auto w-px bg-border" />
 			) : null}
 			<div className="se-sidebar-shell__main">
 				{slots.header}

@@ -553,8 +553,9 @@ export function rendererConformance(mount: ConformanceMount): void {
 		 * Each shell that declares `size` alone gets the pick on its `shell` slot. The carrier is the element
 		 * that holds the pick, and the measures are its own padding and how far the first field sits inside it,
 		 * which add up the padding and gaps every panel between them takes from the token. The literals hold for
-		 * the built-in `size` axis, no host theme variables and a host wider than the shells' breakpoints. Both
-		 * renderers assert the same literals, so equal spacing follows from both suites passing.
+		 * the built-in `size` axis, no host theme variables and a viewport narrower than the shells' 768px
+		 * breakpoint (the browser projects' default; a host element's width does not change a media query), where
+		 * the split screen and the sidebar stack. Both renderers assert the same literals, so equal spacing follows from both suites passing.
 		 */
 		describe('shell spacing parity', () => {
 			const shellAxes = (recipe: RecipeCase): readonly string[] => {
@@ -590,6 +591,9 @@ export function rendererConformance(mount: ConformanceMount): void {
 				const style = getComputedStyle(carrier);
 				return { padding: style.paddingTop, gap: style.rowGap, insetLeft: field.left - inside.left };
 			};
+			test('the viewport is below the 768px breakpoint the literals assume', () => {
+				expect(window.innerWidth).toBeLessThan(768);
+			});
 			test('the spaced recipes are found', () => {
 				expect(spacedRecipes.map((recipe) => recipe.$type).toSorted()).toEqual(SPACED_RECIPES);
 			});
