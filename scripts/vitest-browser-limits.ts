@@ -2,12 +2,12 @@
  * Most browser test files a Vitest browser project runs at once.
  *
  * @remarks
- * Vitest loads each browser test file in its own iframe of one Chromium page and sends every
- * `userEvent` call to Playwright through a single provider session. With a file per core, a
- * test that types many characters queues one command per keystroke behind every other file's
- * commands, and under CPU contention (a turbo run, or several worktrees running the
- * pre-commit hook) it exceeds the 15 s test timeout. Two files at a time keeps the browser
- * busy without starving a test of its own commands.
+ * Vitest opens a Playwright page for each worker, so a file per core means that many pages in
+ * one Chromium process. Every `userEvent` call is a Playwright call, and `type` makes a
+ * keydown and a keyup call for each character. The pages compete for the one Chromium process,
+ * the one Playwright connection and the Node event loop, so under CPU contention (a turbo run,
+ * or several worktrees running the pre-commit hook) a test that types many characters exceeds
+ * the 15 s test timeout. Two files at a time keeps the browser busy without starving a test.
  */
 export const BROWSER_MAX_WORKERS = 2;
 

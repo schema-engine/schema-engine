@@ -37,12 +37,14 @@ Type-checking the whole workspace is not part of the hook because it also builds
 pnpm turbo check-types
 ```
 
-Turbo builds each package's sibling dependencies (`build:lib`) before it type-checks or tests the package, so these commands work from a checkout with no `dist` folders. To work on one package, filter to it:
+Turbo builds each package's sibling dependencies (`build:lib`) before it type-checks or tests the package, so these commands work from a checkout with no `dist` folders. To work on one package, filter turbo to it:
 
 ```sh
-pnpm --filter @schema-engine/forms-react test:all
-pnpm --filter @schema-engine/forms-react check-types
+pnpm turbo test:all --filter=@schema-engine/forms-react
+pnpm turbo check-types --filter=@schema-engine/forms-react
 ```
+
+`pnpm --filter <package> test:all` skips turbo and so skips the sibling builds. It works only after `pnpm turbo build:lib` has built them.
 
 Turbo caches `test:all` and `check-types` results. Add `--force` to run them again regardless of the cache.
 
@@ -50,6 +52,6 @@ Never skip the hook with `--no-verify` or `HUSKY=0`. If it fails, the failure is
 
 ## Browser tests
 
-- Browser projects run at most two test files at a time and run one after another (`unit`, then `browser`, then `storybook`), set by `browserProjectLimits` in [`scripts/vitest-browser-limits.ts`](./scripts/vitest-browser-limits.ts). A project that runs a file per core made tests time out whenever the machine was busy.
-- Prefer `userEvent.fill` over `userEvent.type` when a test only needs a value in the field. `type` sends one command to the browser per character, so a long string can exhaust the 15 s test timeout on a busy machine. Use `type` and `keyboard` when the keystrokes are the behaviour under test.
+- In `forms-react` and `forms-radiant`, each browser project runs at most two test files at a time, and a package's projects run one after another (`unit`, then `browser`, then `storybook`), set by `browserProjectLimits` in [`scripts/vitest-browser-limits.ts`](./scripts/vitest-browser-limits.ts). `forms-react`'s `test:all` includes its storybook project; `forms-radiant`'s does not (`pnpm turbo test:storybook --filter=@schema-engine/forms-radiant` runs it). `docs` runs its files one at a time (`fileParallelism: false`) and starts after both packages finish. Turbo runs `forms-react` and `forms-radiant` in parallel, so up to four browser files can run together. A project that ran a file per core made tests time out whenever the machine was busy.
+- Prefer `userEvent.fill` over `userEvent.type` when a test only needs a value in the field. `type` makes Playwright calls for every character (a keydown and a keyup), so a long string can exhaust the 15 s test timeout on a busy machine. Storybook `play` functions use Storybook's own `userEvent`, which acts inside the page and has no `fill`; this applies to the Vitest `userEvent` only. Use `type` and `keyboard` when the keystrokes are the behaviour under test.
 - Do not fix a slow test by raising its timeout or adding retries; find what is slow.
