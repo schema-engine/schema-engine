@@ -94,6 +94,9 @@ importers:
 
   apps/docs:
     dependencies:
+      '@base-ui/react':
+        specifier: ^1.1.0
+        version: 1.8.0(@date-fns/tz@1.5.0)(@types/react@19.3.0)(date-fns@4.1.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@schema-engine/actions':
         specifier: workspace:*
         version: link:../../packages/actions
@@ -109,6 +112,9 @@ importers:
       '@schema-engine/layout':
         specifier: workspace:*
         version: link:../../packages/layout
+      class-variance-authority:
+        specifier: ^0.7.1
+        version: 0.7.1
       clsx:
         specifier: ^2.1.1
         version: 2.1.1

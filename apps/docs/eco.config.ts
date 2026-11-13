@@ -16,9 +16,14 @@ import { configuredSiteOrigin, DOCS_SITEMAP_EXTRA_URLS } from './src/lib/docs/si
  * @remarks
  * Radiant's server runtime is installed first so Radiant hosts render on the
  * server in every route, including the React-owned demo previews.
+ *
+ * `DOCS_DIST_DIR` and `DOCS_WORK_DIR` move the output and work directories, so a dev server the
+ * end-to-end suite starts never writes into the production `dist` the other tests serve.
  */
 export default defineConfig({
 	rootDir: import.meta.dirname,
+	distDir: process.env.DOCS_DIST_DIR ?? 'dist',
+	workDir: process.env.DOCS_WORK_DIR ?? '.eco',
 	baseUrl: configuredSiteOrigin(),
 	sitemap: {
 		enabled: true,

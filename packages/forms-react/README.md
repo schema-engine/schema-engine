@@ -139,7 +139,9 @@ nested containers included, and a disabled fieldset or array, authored or by a
 constraint, disables every field inside it; a disabled array also disables its add
 and remove buttons. `config.validationMode` and `config.reValidateMode` set React
 Hook Form's `mode` and `reValidateMode`; unset, fields validate on blur and
-re-validate on change.
+re-validate on change. After a submit, or after a step check (Next) that failed,
+a field with an error re-validates on every change, so its error clears as soon
+as the value is valid.
 
 `executeAction(action)` dispatches only that action. Submission callbacks run
 after the engine action lifecycle succeeds, and React Hook Form performs the

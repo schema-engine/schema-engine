@@ -12,7 +12,27 @@ import { ReactFormDemoEmbed } from '@/components/react-form-demo/react-form-demo
 import { ReactFormPreview } from '@/components/react-form-demo/react-form-preview.react';
 
 /** Sections whose pages embed React live demos. */
-const REACT_DEMO_SECTIONS = ['forms-react', 'styling'];
+const REACT_DEMO_SECTIONS = ['forms-react/', 'styling/'];
+
+/**
+ * Single pages outside those sections that embed React live demos.
+ *
+ * @remarks
+ * `shadcn` marks a page that renders the copied registry source: only those pages load its engine
+ * code and stylesheets.
+ */
+const REACT_DEMO_PAGES: Record<string, { shadcn: boolean }> = {
+	'examples/react-forms': { shadcn: true },
+};
+
+/**
+ * @remarks
+ * Imported on demand: a static import here would let the page collect the engine's stylesheets for
+ * every route, and the docs build then ships them on pages that never show the shadcn example.
+ */
+async function loadShadcnDemoEmbed() {
+	return (await import('@/components/react-form-demo/shadcn-form-demo-embed')).ShadcnFormDemoEmbed;
+}
 
 /**
  * @remarks
@@ -23,11 +43,12 @@ const REACT_DEMO_SECTIONS = ['forms-react', 'styling'];
  */
 async function resolveDocsEntryDependencies(slug: string) {
 	const entryDependencies = await getEntryDependencies(slug);
-	if (!REACT_DEMO_SECTIONS.some((section) => slug.startsWith(`${section}/`))) {
+	const page = REACT_DEMO_PAGES[slug];
+	if (!page && !REACT_DEMO_SECTIONS.some((section) => slug.startsWith(section))) {
 		return entryDependencies;
 	}
 	return mergePageDependencies(entryDependencies, {
-		components: [ReactFormDemoEmbed, ReactFormPreview],
+		components: [ReactFormDemoEmbed, ReactFormPreview, ...(page?.shadcn ? [await loadShadcnDemoEmbed()] : [])],
 	});
 }
 
