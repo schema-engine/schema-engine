@@ -29,6 +29,37 @@ describe('toFieldRules', () => {
 		expect(toFieldRules({ rules: [] }, registry)).toBeUndefined();
 	});
 
+	test('leaves minLength and pattern to the engine on an optional field, so an empty value is valid', async () => {
+		const rules = toFieldRules(
+			{
+				rules: [
+					{ type: 'minLength', value: 3, message: 'Too short' },
+					{ type: 'pattern', value: '^[a-z]+$', message: 'Letters only' },
+				],
+			},
+			registry,
+		);
+		const validate = rules?.validate as (value: unknown) => Promise<boolean | string>;
+
+		expect(rules?.minLength).toBeUndefined();
+		expect(rules?.pattern).toBeUndefined();
+		expect(await validate('')).toBe(true);
+		expect(await validate('ab')).toBe('Too short');
+		expect(await validate('ab1')).toBe('Letters only');
+	});
+
+	test('keeps minLength and pattern native on a required field', () => {
+		const rules = toFieldRules(
+			{
+				rules: [{ type: 'required' }, { type: 'minLength', value: 3 }, { type: 'pattern', value: '^[a-z]+$' }],
+			},
+			registry,
+		);
+
+		expect(rules?.minLength).toBe(3);
+		expect(rules?.pattern).toBeDefined();
+	});
+
 	test('uses the phone validator for complete numbers', async () => {
 		const phoneRegistry = createDefaultValidationRegistry([createRadiantPhoneValidationRegistration()]);
 		const rules = toFieldRules({ rules: [{ type: 'phone' }] }, phoneRegistry);

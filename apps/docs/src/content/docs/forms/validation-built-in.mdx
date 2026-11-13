@@ -8,6 +8,14 @@ order: 8
 
 Form Engine ships 24 built-in validation types. Each rule can be used directly in a form configuration.
 
+**Format rules skip an empty value.** A rule that judges the shape of a value (`email`, `url`, `pattern`,
+`minLength`, `phone`, `uuid`, `date` and the other string and date rules) passes `undefined`, `null` and
+`''`, so an optional field can be left blank, as in a native `<input type="email">`. Add `required` when the
+field is mandatory; it is the rule that rejects an empty value, and it reports alone for one. A filled value is
+checked as before. Rules for lists and numbers, such as `minItems`, are unchanged: a list with `minItems: 1` is
+not valid when empty. A custom validation you register in the `string` or `date` category is skipped for an
+empty value the same way.
+
 **Note:** Complete step elements need `$type`, `id`, and `name` per your engine
 registrations. Examples below sometimes show only `rules` or partial fields.
 

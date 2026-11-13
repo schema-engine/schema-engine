@@ -115,10 +115,46 @@ export function createValidationContext({
 	};
 }
 
+/** The categories of rule that judge the shape of a value rather than whether there is one. */
+const FORMAT_CATEGORIES: ReadonlySet<string> = new Set(['string', 'date']);
+
+/**
+ * Lets a format rule pass an empty value (`undefined`, `null` or `''`).
+ *
+ * @remarks
+ * Whether a value is present is the `required` rule's question, so an optional field left blank has no
+ * shape to check, as in a native `<input type="email">`. The rule's own issues are re-raised unchanged,
+ * so a filled value reports the same message and path as before. A rule whose schema is async (a
+ * consumer's phone validator) is awaited, so the wrapper is async too only for a filled value.
+ */
+function skippingEmpty(schema: z.ZodMiniType): z.ZodMiniType {
+	return z.unknown().check(
+		z.superRefine((value, context) => {
+			if (value === undefined || value === null || value === '') return;
+			const report = (result: Awaited<ReturnType<typeof z.safeParseAsync>>) => {
+				if (result.success) return;
+				for (const issue of result.error.issues) {
+					context.addIssue({ code: 'custom', message: issue.message, path: issue.path });
+				}
+			};
+			try {
+				report(z.safeParse(schema, value));
+			} catch {
+				return z.safeParseAsync(schema, value).then(report);
+			}
+		}),
+	);
+}
+
 /**
  * Combines a field's rules into one Zod Mini schema.
  *
  * @remarks
+ * A rule of the `string` or `date` category (email, url, pattern, minLength, phone and the other formats,
+ * including a consumer's registrations in those categories) passes an empty value, so an optional field
+ * can be left blank; `required` is what rejects it. Rules of other categories, such as `minItems`, are
+ * unchanged.
+ *
  * `context` is required. Callers with no form values to offer pass
  * `createValidationContext()` explicitly, so omitting the form context is a
  * decision in the diff rather than an accident nobody notices until a
@@ -137,7 +173,8 @@ export function createZodSchemaFromRules(
 	for (const rule of rules) {
 		const ruleSchema = registry.createSchema(rule as ValidationRule, context);
 		if (ruleSchema) {
-			schemas.push(ruleSchema);
+			const category = registry.get(rule.type)?.category;
+			schemas.push(category && FORMAT_CATEGORIES.has(category) ? skippingEmpty(ruleSchema) : ruleSchema);
 		}
 	}
 

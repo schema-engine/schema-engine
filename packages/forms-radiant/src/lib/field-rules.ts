@@ -9,6 +9,19 @@ import { expandValues } from '@/adapters/radiant/controller/values';
 
 const NATIVE_RUI_RULES = new Set(['required', 'minLength', 'maxLength', 'min', 'max', 'pattern']);
 
+/**
+ * The rules Radiant UI checks itself.
+ *
+ * @remarks
+ * Radiant UI runs `minLength` and `pattern` on an empty value, but the engine's format rules skip one so an
+ * optional field can be left blank. Those two stay native only on a required field, where an empty value is
+ * rejected anyway; otherwise the engine's validator checks them, and an empty optional field is valid.
+ */
+function nativeRulesFor(rules: ReadonlyArray<ValidationRule>): ReadonlySet<string> {
+	if (rules.some((rule) => rule.type === 'required')) return NATIVE_RUI_RULES;
+	return new Set([...NATIVE_RUI_RULES].filter((type) => type !== 'minLength' && type !== 'pattern'));
+}
+
 function numericRule(value: number, message?: string) {
 	return message ? { value, message } : value;
 }
@@ -131,8 +144,10 @@ export function toFieldRules(element: FieldRulesSource, registry?: ValidationReg
 	}
 
 	const fieldRules: FieldRules = {};
+	const native = nativeRulesFor(resolved);
 
 	for (const rule of resolved) {
+		if (!native.has(rule.type)) continue;
 		switch (rule.type) {
 			case 'required':
 				fieldRules.required = rule.message ?? true;
@@ -157,7 +172,7 @@ export function toFieldRules(element: FieldRulesSource, registry?: ValidationReg
 		}
 	}
 
-	if (resolvedRegistry && resolved.some((rule) => !NATIVE_RUI_RULES.has(rule.type))) {
+	if (resolvedRegistry && resolved.some((rule) => !native.has(rule.type))) {
 		fieldRules.validate = toValidator(resolved, element.name, resolvedRegistry);
 	}
 

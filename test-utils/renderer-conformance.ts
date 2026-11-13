@@ -697,6 +697,44 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Email' }).length).toBe(1);
 			expect(getByRole(host, 'textbox', { name: 'Email' }).getAttribute('name')).toBe('contacts.0.email');
 		});
+		describe('format rules on an optional field', () => {
+			const optionalEmail = () =>
+				form([{ ...input('email', 'Email'), rules: [{ type: 'email', message: 'Bad email' }] }]);
+			test('an optional email field can be left empty', async () => {
+				const onSubmit = vi.fn();
+				const { host } = await setup({ config: optionalEmail(), onSubmit });
+				await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+				await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
+				expect(queryByText(host, 'Bad email')).toBeNull();
+			});
+			test('an optional field with a pattern and a minLength rule can be left empty', async () => {
+				const onSubmit = vi.fn();
+				const { host } = await setup({
+					config: form([
+						{
+							...input('code', 'Code'),
+							rules: [
+								{ type: 'pattern', value: '^[a-z]+$', message: 'Letters only' },
+								{ type: 'minLength', value: 3, message: 'Too short' },
+							],
+						},
+					]),
+					onSubmit,
+				});
+				await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+				await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
+				expect(queryByText(host, 'Letters only')).toBeNull();
+				expect(queryByText(host, 'Too short')).toBeNull();
+			});
+			test('a filled optional email field is still checked', async () => {
+				const onSubmit = vi.fn();
+				const { host } = await setup({ config: optionalEmail(), onSubmit });
+				await userEvent.fill(getByRole(host, 'textbox', { name: 'Email' }), 'not-an-email');
+				await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+				await expect.poll(() => queryAllByText(host, 'Bad email').length).toBeGreaterThan(0);
+				expect(onSubmit).not.toHaveBeenCalled();
+			});
+		});
 		test('both renderers add the same row', async () => {
 			const onSubmit = vi.fn();
 			const { host } = await setup({
