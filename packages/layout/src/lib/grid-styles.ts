@@ -359,27 +359,72 @@ const GRID_ALIGNMENT_PROPERTIES: readonly ResponsiveProperty[] = [
 	['align-content', 'se-grid-align-content', 'start'],
 ];
 
+/** Removes the space after each comma of a stylesheet-only fallback, which `var()` ignores. */
+function tight(fallback: string): string {
+	return fallback.replaceAll(', ', ',');
+}
+
 /**
- * `var(--x-md, var(--x-sm, var(--x, fallback)))`.
+ * Name of the stylesheet-private custom property that gates one cascade slot of one table row.
  *
  * @remarks
- * Walking narrower slots in the fallback chain is what lets a renderer emit
- * only the breakpoints an author actually wrote: an unset slot resolves to the
- * nearest narrower one, so the cascade lives in the stylesheet instead of
- * being pre-expanded into every element's inline style.
+ * A gate is declared inside the slot's media query as a copy of the public slot variable, so
+ * outside that query it is the guaranteed-invalid value and the `var()` chain skips it. The names
+ * are private to the stylesheet (a form never writes them, and they carry no contract) and carry
+ * the theme id: custom properties inherit, so a gate named alike in two themes would let a theme
+ * with a wider threshold read the gate its ancestor's narrower query declared. Within one theme
+ * every element the rules reach declares its own gates wherever the query applies, so no reset
+ * is needed.
+ *
+ * Read a name in devtools as theme id, table (`g` grid, `i` item), the property's row in that
+ * table, and the breakpoint token: `--l1abc-i1md` is the `md` gate of the item `grid-column`.
  */
-function cascadingVar(variable: string, fallback: string, breakpoint?: GridBreakpointToken): string {
-	const narrower = breakpoint ? BREAKPOINT_ORDER.slice(0, BREAKPOINT_ORDER.indexOf(breakpoint) + 1) : [];
-	let value = `var(--${variable}, ${fallback})`;
-	for (const slot of narrower) {
-		value = `var(--${variable}-${slot}, ${value})`;
+function gateName(themeId: string, table: string, row: number, slot: GridBreakpointToken): string {
+	return `--${themeId}-${table}${row}${slot}`;
+}
+
+/**
+ * `var(--g-2xl, var(--g-xl, ... var(--x, fallback)))`: the widest slot whose media query applies wins.
+ *
+ * @remarks
+ * The chain is written once, in the base rule. A slot's gate is declared only inside its media
+ * query (see {@link gateName}), so the cascade across widths costs one short declaration per slot
+ * instead of restating the whole chain in every query. An unset slot resolves to the nearest
+ * narrower one, so a renderer emits only the breakpoints an author wrote.
+ */
+function cascadingVar(themeId: string, table: string, row: number, variable: string, fallback: string): string {
+	let value = `var(--${variable},${tight(fallback)})`;
+	for (const slot of BREAKPOINT_ORDER) {
+		value = `var(${gateName(themeId, table, row, slot)},${value})`;
 	}
 	return value;
 }
 
-function declarations(properties: readonly ResponsiveProperty[], breakpoint?: GridBreakpointToken): string {
+function declarations(themeId: string, table: string, properties: readonly ResponsiveProperty[]): string {
 	return properties
-		.map(([property, variable, fallback]) => `${property}:${cascadingVar(variable, fallback, breakpoint)};`)
+		.map(
+			([property, variable, fallback], row) =>
+				`${property}:${cascadingVar(themeId, table, row, variable, fallback)};`,
+		)
+		.join('');
+}
+
+/** Alignment is authored once for all widths, so it has no slots and no gates. */
+function flatDeclarations(properties: readonly ResponsiveProperty[]): string {
+	return properties
+		.map(([property, variable, fallback]) => `${property}:var(--${variable},${tight(fallback)});`)
+		.join('');
+}
+
+/** One slot's gates: each property's public slot variable, copied inside the slot's media query. */
+function gates(
+	themeId: string,
+	table: string,
+	properties: readonly ResponsiveProperty[],
+	slot: GridBreakpointToken,
+): string {
+	return properties
+		.map(([, variable], row) => `${gateName(themeId, table, row, slot)}:var(--${variable}-${slot});`)
 		.join('');
 }
 
@@ -390,12 +435,16 @@ function declarations(properties: readonly ResponsiveProperty[], breakpoint?: Gr
  * Custom properties inherit, so a nested grid or item would otherwise pick up
  * its ancestor's placement. `initial` makes `var()` fall through to the chain
  * above, and an inline value on the same element still wins the cascade.
+ * Only a table with slots resets them: alignment is authored once for all widths, so its
+ * slot variables are never written and never read.
  */
-function inheritanceResets(...tables: readonly (readonly ResponsiveProperty[])[]): string {
-	return tables
-		.flat()
-		.flatMap(([, variable]) => [variable, ...BREAKPOINT_ORDER.map((slot) => `${variable}-${slot}`)])
-		.map((name) => `--${name}:initial;`)
+function inheritanceResets(properties: readonly ResponsiveProperty[], withSlots: boolean): string {
+	return properties
+		.flatMap(([, variable]) => [
+			`--${variable}`,
+			...(withSlots ? BREAKPOINT_ORDER.map((slot) => `--${variable}-${slot}`) : []),
+		])
+		.map((name) => `${name}:initial;`)
 		.join('');
 }
 
@@ -409,6 +458,9 @@ function inheritanceResets(...tables: readonly (readonly ResponsiveProperty[])[]
  * carries the theme attribute so nested grids do not leak styles across themes.
  * Selectors use only {@link GRID_CLASS}, {@link GRID_ITEM_CLASS} and that attribute.
  *
+ * Each responsive property is declared once, in the base rule, as a `var()` chain over the
+ * slot gates ({@link gateName}); a media query only declares the gates of its slot.
+ *
  * @param theme The resolved grid vocabulary.
  * @param themeId The id of the layout theme the rules are scoped to.
  */
@@ -419,8 +471,8 @@ export function getGridThemeCss(theme: NormalizedGridTheme, themeId: string): st
 	const tokens = GridGapTokens.map((token) => `${gapBaseVariable(token)}:${theme.gap[token]};`).join('');
 	const lines: string[] = [
 		`${scope}{${tokens}}`,
-		`${gridScope}{${inheritanceResets(GRID_PROPERTIES, GRID_ALIGNMENT_PROPERTIES)}${DEFAULT_COLUMN_VARIABLE}:initial;display:grid;${declarations(GRID_PROPERTIES)}${declarations(GRID_ALIGNMENT_PROPERTIES)}}`,
-		`${itemScope}{${inheritanceResets(ITEM_PROPERTIES)}${declarations(ITEM_PROPERTIES)}}`,
+		`${gridScope}{${inheritanceResets(GRID_PROPERTIES, true)}${inheritanceResets(GRID_ALIGNMENT_PROPERTIES, false)}${DEFAULT_COLUMN_VARIABLE}:initial;display:grid;${declarations(themeId, 'g', GRID_PROPERTIES)}${flatDeclarations(GRID_ALIGNMENT_PROPERTIES)}}`,
+		`${itemScope}{${inheritanceResets(ITEM_PROPERTIES, true)}${declarations(themeId, 'i', ITEM_PROPERTIES)}}`,
 	];
 	for (const breakpoint of BREAKPOINT_ORDER) {
 		const ramped = theme.responsive[breakpoint];
@@ -430,7 +482,7 @@ export function getGridThemeCss(theme: NormalizedGridTheme, themeId: string): st
 					.join('')
 			: '';
 		lines.push(
-			`@media (min-width:${theme.breakpoints[breakpoint]}){${rampedTokens ? `${scope}{${rampedTokens}}` : ''}${gridScope}{${declarations(GRID_PROPERTIES, breakpoint)}}${itemScope}{${declarations(ITEM_PROPERTIES, breakpoint)}}}`,
+			`@media (min-width:${theme.breakpoints[breakpoint]}){${rampedTokens ? `${scope}{${rampedTokens}}` : ''}${gridScope}{${gates(themeId, 'g', GRID_PROPERTIES, breakpoint)}}${itemScope}{${gates(themeId, 'i', ITEM_PROPERTIES, breakpoint)}}}`,
 		);
 	}
 	return lines.join('\n');

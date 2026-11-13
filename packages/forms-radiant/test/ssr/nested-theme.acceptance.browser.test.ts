@@ -2,6 +2,7 @@ import { describe, inject, test } from 'vitest';
 import {
 	expectAuthorClassOutranksNestedTokens,
 	expectNestedFormUsesOwnThemeTokens,
+	expectNestedGuestIgnoresHostSlots,
 	expectNestedFormUsesOwnThemeTokensWithoutScope,
 	expectReenteredThemeUsesOwnTokens,
 	nestedHostTheme,
@@ -35,6 +36,14 @@ describe('a form nested in another theme grid', () => {
 	test('keeps an author class above the axis tokens of both themes', async () => {
 		await expectAuthorClassOutranksNestedTokens(
 			inject('ssrNestedThemeAuthorHtml'),
+			nestedHostTheme,
+			inject('ssrNestedTheme'),
+		);
+	});
+
+	test('does not read the host item placement at a width its own breakpoints have not reached', async () => {
+		await expectNestedGuestIgnoresHostSlots(
+			inject('ssrNestedThemeHtml'),
 			nestedHostTheme,
 			inject('ssrNestedTheme'),
 		);
