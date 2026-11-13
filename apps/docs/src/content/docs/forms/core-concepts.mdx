@@ -23,6 +23,10 @@ Choose how you author form configuration based on where the data lives:
 only adds compile-time checks for the engine you built. The exported `FormConfig`
 type is envelope-level: it does not narrow each `$type` until validation runs.
 
+Both throw a `FormValidationError` on an invalid form. `engine.safeValidateForm(json)`
+returns `{ success, data | issues }` instead, and each issue carries the config `path`
+it is about (see [Form configuration errors](/docs/forms/validation-how-it-works#form-configuration-errors)).
+
 With `FormRenderer`, passing a plain config is enough — the renderer calls
 `validateForm` at the form boundary. Pre-validate only when you need a
 `NormalizedFormConfig` outside the renderer (caching, tests, custom pipelines).

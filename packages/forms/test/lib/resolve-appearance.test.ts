@@ -8,7 +8,7 @@ describe('resolveAppearance', () => {
 	test('an owner that accepts every axis renders with its pick laid over the inherited one', () => {
 		const resolved = resolveAppearance({ size: 'compact' }, scope({ size: 'default', surface: 'flat' }), {
 			subject: 'The step',
-			location: 'steps[0]',
+			path: ['steps', 0],
 		});
 		expect(resolved.selection).toEqual({ size: 'compact', surface: 'flat' });
 		expect(resolved.childScope.inherited).toEqual({ size: 'compact', surface: 'flat' });
@@ -17,7 +17,7 @@ describe('resolveAppearance', () => {
 	test('an owner keeps only the axes it supports but still passes every axis to its children', () => {
 		const resolved = resolveAppearance(undefined, scope({ size: 'compact', surface: 'flat' }), {
 			subject: "Element 'note'",
-			location: 'elements[0]',
+			path: ['steps', 0, 'elements', 0],
 			supported: ['size'],
 		});
 		expect(resolved.selection).toEqual({ size: 'compact' });
@@ -27,20 +27,19 @@ describe('resolveAppearance', () => {
 	test('an owner that supports nothing renders with no pick', () => {
 		const resolved = resolveAppearance(undefined, scope({ size: 'compact' }), {
 			subject: "Element 'note'",
-			location: '',
+			path: [],
 			supported: [],
 		});
 		expect(resolved.selection).toEqual({});
 	});
 
-	test('issues carry the owner location, or none for a standalone element', () => {
+	test('issues carry the owner path under the appearance key, or only the key for a standalone element', () => {
 		const owner = { subject: "Element 'note'", supported: ['size'] };
-		expect(resolveAppearance({ size: 'huge' }, scope(), { ...owner, location: 'elements[0]' }).issues[0]).toMatch(
-			/^elements\[0\]: appearance\.size/,
-		);
-		expect(resolveAppearance({ size: 'huge' }, scope(), { ...owner, location: '' }).issues[0]).toMatch(
-			/^appearance\.size/,
-		);
+		const nested = resolveAppearance({ size: 'huge' }, scope(), { ...owner, path: ['steps', 0, 'elements', 0] });
+		expect(nested.issues[0]?.path).toEqual(['steps', 0, 'elements', 0, 'appearance', 'size']);
+		expect(nested.issues[0]?.message).toMatch(/'huge' is not a value of 'size'/);
+		const standalone = resolveAppearance({ size: 'huge' }, scope(), { ...owner, path: [] });
+		expect(standalone.issues[0]?.path).toEqual(['appearance', 'size']);
 	});
 });
 

@@ -60,10 +60,14 @@ describe('resolveRecipeView', () => {
 			scope(),
 		);
 		expect(resolved.issues).toEqual([
-			expect.stringContaining(
-				"view.shell: appearance.size: Slot 'shell' of recipe 'hero' does not support the axis 'size'",
-			),
-			expect.stringContaining("view.media: appearance.size: 'huge' is not a value of 'size'"),
+			{
+				path: ['shell', 'appearance', 'size'],
+				message: expect.stringContaining("Slot 'shell' of recipe 'hero' does not support the axis 'size'"),
+			},
+			{
+				path: ['media', 'appearance', 'size'],
+				message: expect.stringContaining("'huge' is not a value of 'size'"),
+			},
 		]);
 	});
 
@@ -84,7 +88,10 @@ describe('resolveRecipeView', () => {
 		const lenient = { ...hero, $type: 'lenient', schema: z.looseObject({ $type: z.literal('lenient') }) };
 		const resolved = resolveRecipeView(lenient, { $type: 'lenient', aside: {} }, scope());
 		expect(resolved.issues).toEqual([
-			"Recipe 'lenient' does not accept view key 'aside'. Allowed: shell, media, content.",
+			{
+				path: ['aside'],
+				message: "Recipe 'lenient' does not accept view key 'aside'. Allowed: shell, media, content.",
+			},
 		]);
 		expect(resolved.view).toBeDefined();
 	});
@@ -92,7 +99,7 @@ describe('resolveRecipeView', () => {
 	test('names a recipe with no slots in the rejection', () => {
 		const bare = { ...hero, $type: 'bare', slots: [], schema: z.looseObject({ $type: z.literal('bare') }) };
 		expect(resolveRecipeView(bare, { $type: 'bare', content: {} }, scope()).issues).toEqual([
-			"Recipe 'bare' does not accept view key 'content'. Allowed: (none).",
+			{ path: ['content'], message: "Recipe 'bare' does not accept view key 'content'. Allowed: (none)." },
 		]);
 	});
 
@@ -101,7 +108,10 @@ describe('resolveRecipeView', () => {
 		const resolved = resolveRecipeView(stripped, { $type: 'stripped' }, scope());
 		expect(resolved.view).toBeUndefined();
 		expect(resolved.issues).toEqual([
-			"Invalid view configuration for recipe 'stripped': parsed output is missing $type.",
+			{
+				path: ['$type'],
+				message: "Invalid view configuration for recipe 'stripped': parsed output is missing $type.",
+			},
 		]);
 	});
 

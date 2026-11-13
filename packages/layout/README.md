@@ -109,12 +109,12 @@ Both return a record of `--*` custom properties that is assignable to React `CSS
 
 Walking a document tree to inherit picks belongs to each domain, because only it knows the tree's shape. The pure steps are here:
 
-| Function                               | Does                                                        |
-| -------------------------------------- | ----------------------------------------------------------- |
-| `checkAppearance(authored, options)`   | Checks a pick against the vocabulary and the owner's axes   |
-| `mergeAppearance(inherited, own)`      | Lays a child's pick over the pick it inherits               |
-| `pickSupportedAppearance(picks, axes)` | Keeps the axes an owner supports                            |
-| `getAppearanceAttributes(selection)`   | Produces the `data-se-<axis>` attributes a renderer spreads |
+| Function                               | Does                                                                                                               |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `checkAppearance(authored, options)`   | Checks a pick against the vocabulary and the owner's axes; each issue is a `LayoutIssue` at `['appearance', axis]` |
+| `mergeAppearance(inherited, own)`      | Lays a child's pick over the pick it inherits                                                                      |
+| `pickSupportedAppearance(picks, axes)` | Keeps the axes an owner supports                                                                                   |
+| `getAppearanceAttributes(selection)`   | Produces the `data-se-<axis>` attributes a renderer spreads                                                        |
 
 `AppearanceConfigSchema` is the open schema of a pick (`{ size: 'compact' }`); `createAppearanceSchema` is the one closed over a theme's axes.
 
@@ -165,7 +165,7 @@ const registry = createRecipeRegistry(sectionProtocol, [bindRecipe(hero, { shell
 - Rules run in `defineProtocolRecipeSpec` and, in `createRecipeRegistry`, on each winning registration of a `$type` (a recipe overridden later in the list is skipped). The registry is the read-only one from `@schema-engine/registry`.
 - `defineProtocolRecipeSpec` checks `slotDefaults` against the slot schemas and requires a slot that declares `appearanceAxes` to accept an `appearance` key. It keeps the concrete view schema type, so a domain can infer the authoring type of a view from a registration.
 - The protocol types are `RecipeProtocol`, `RecipeRule` and `RecipeShape` (what a rule reads), with `SlotOf` and `KindOf` to get the names back from a protocol, and `ProtocolRecipeSpec` and `ProtocolRecipeRegistration` for the spec and its binding. These carry the `Protocol` prefix because `@schema-engine/forms` exports narrower `RecipeSpec` and `RecipeRegistration` types of its own. `assertRecipeRules(protocol, recipe)` is the check both entry points run, for a domain that validates a recipe outside a registry.
-- `resolveRecipeView(recipe, view, scope)` resolves the view a document selects, for a winning registration: the recipe defaults laid under the author's slot config, each slot's `appearance` (the scope's inherited picks for the axes the slot declares, the slot's own pick winning, invalid picks reported as `view.<slot>: appearance...`), the schema parse, and any key the recipe does not declare. It returns `{ issues, view }`, or `{ issues, schemaIssues }` when the schema rejects the view, so the domain formats schema issues its own way. It does not change the view it is given. What needs the whole document (a kind that wants a number of steps, a default recipe) stays with the domain.
+- `resolveRecipeView(recipe, view, scope)` resolves the view a document selects, for a winning registration: the recipe defaults laid under the author's slot config, each slot's `appearance` (the scope's inherited picks for the axes the slot declares, the slot's own pick winning, invalid picks reported at `[slot, 'appearance', axis]`), the schema parse, and any key the recipe does not declare. It returns `{ issues, view }`, or `{ issues, schemaIssues }` when the schema rejects the view, so the domain formats schema issues its own way. Each of `issues` is a `LayoutIssue`, `{ message, path }`, with a path relative to the view that the domain lays under the view's own location. It does not change the view it is given. What needs the whole document (a kind that wants a number of steps, a default recipe) stays with the domain.
 - `mergeSlotDefaults(view, slotDefaults)` lays a view's slot config over the recipe defaults, deep for plain objects. `readSlotConfig(viewConfig, slot, schema)` reads one slot of a resolved view, and `RecipeViewModel` is the part of a renderer's view model that every domain shares.
 
 The render payload is opaque here: `bindRecipe(spec, render)` stores whatever a domain's renderers need. Forms declares its protocol in [`@schema-engine/forms/recipes`](../forms/README.md); the built-in form recipes stay there.

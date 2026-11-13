@@ -1,5 +1,6 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { checkAppearance, mergeAppearance, pickSupportedAppearance, type SlotAppearanceAxes } from '../lib/appearance';
+import type { LayoutIssue } from '../lib/layout-issue';
 import type { LayoutTheme } from '../lib/layout-theme';
 import { mergeSlotDefaults } from './merge-slot-defaults';
 
@@ -31,8 +32,8 @@ export type RecipeViewInput = Readonly<Record<string, unknown>> & { readonly $ty
  * the domain knows how it reports a schema's issues.
  */
 export interface ResolvedRecipeView {
-	/** One message per problem, already naming the recipe or the slot. */
-	issues: string[];
+	/** One issue per problem, with a path relative to the view (`[slot, 'appearance', axis]`, `[key]`). */
+	issues: LayoutIssue[];
 	view?: Record<string, unknown>;
 	schemaIssues?: StandardSchemaV1.Issue[];
 }
@@ -80,7 +81,7 @@ export function resolveRecipeView(
 	view: RecipeViewInput,
 	scope: RecipeViewScope,
 ): ResolvedRecipeView {
-	const issues: string[] = [];
+	const issues: LayoutIssue[] = [];
 	const stripped: Record<string, unknown> = { ...view };
 	const resolved: Record<string, Record<string, string>> = {};
 	for (const slot of recipe.slots) {
@@ -91,7 +92,7 @@ export function resolveRecipeView(
 			subject: `Slot '${slot}' of recipe '${recipe.$type}'`,
 			supported,
 		});
-		issues.push(...checked.issues.map((issue) => `view.${slot}: ${issue}`));
+		issues.push(...checked.issues.map((issue) => ({ ...issue, path: [slot, ...issue.path] })));
 		const selection = pickSupportedAppearance(mergeAppearance(scope.inherited, checked.appearance), supported);
 		if (Object.keys(selection).length > 0) resolved[slot] = selection;
 		if (isPlainRecord(authoredSlot)) stripped[slot] = withoutAppearance(authoredSlot);
@@ -101,16 +102,20 @@ export function resolveRecipeView(
 	if (parsed.issues !== undefined) return { issues, schemaIssues: [...parsed.issues] };
 	const output = parsed.value;
 	if (typeof output !== 'object' || output === null || !('$type' in output) || typeof output.$type !== 'string') {
-		issues.push(`Invalid view configuration for recipe '${recipe.$type}': parsed output is missing $type.`);
+		issues.push({
+			path: ['$type'],
+			message: `Invalid view configuration for recipe '${recipe.$type}': parsed output is missing $type.`,
+		});
 		return { issues };
 	}
 
 	const allowedSlots = new Set<string>(recipe.slots);
 	for (const key of Object.keys(view)) {
 		if (key !== '$type' && !allowedSlots.has(key)) {
-			issues.push(
-				`Recipe '${recipe.$type}' does not accept view key '${key}'. Allowed: ${[...allowedSlots].join(', ') || '(none)'}.`,
-			);
+			issues.push({
+				path: [key],
+				message: `Recipe '${recipe.$type}' does not accept view key '${key}'. Allowed: ${[...allowedSlots].join(', ') || '(none)'}.`,
+			});
 		}
 	}
 
