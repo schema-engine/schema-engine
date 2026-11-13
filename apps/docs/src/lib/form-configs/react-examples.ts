@@ -1,12 +1,11 @@
 import type { FormConfig } from '@schema-engine/forms/schemas';
 
 /**
- * Configs the React examples page adds to the ones the Radiant examples already share. Each is
- * rendered live and serialized into its code block from the one object, so a snippet cannot drift
- * from its demo.
+ * Every built-in rule family a text form needs, each with its own message.
+ *
+ * @remarks The React examples page renders this and the shadcn config below live and serializes each
+ * into its code block from the one object, so a snippet cannot drift from its demo.
  */
-
-/** Every built-in rule family a text form needs, each with its own message. */
 export const validationDemoConfig: FormConfig = {
 	id: 'validation-demo',
 	title: 'Join the beta',

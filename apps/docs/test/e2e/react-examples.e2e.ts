@@ -164,6 +164,8 @@ describe('React examples page', () => {
 
 		await form.locator('input[name="email"]').fill('ada@example.com');
 		await form.locator('input[name="password"]').fill('correct-horse');
+		await form.locator('input[name="password"]').blur();
+		await pwExpect(form.locator('input[name="password"]')).not.toHaveAttribute('aria-invalid', 'true');
 		await next.click();
 		await pwExpect(form.locator('select[name="role"]')).toBeVisible();
 
@@ -180,14 +182,15 @@ describe('React examples page', () => {
 		await expectNoReload();
 	});
 
-	test('the actions form submits through its configured pipeline and shows the result', async () => {
+	test('the actions form submits through its pipeline, shows the result and resets its fields', async () => {
 		await open();
 		const form = demo(page, 'actions');
 		await form.locator('input[name="email"]').fill('ada@example.com');
 		await form.locator('button[type="submit"]').click();
-		await pwExpect(form.locator('[data-se-demo-result]')).toContainText('Form submitted successfully.', {
+		await pwExpect(form.locator('[data-se-demo-result]')).toContainText('"email": "ada@example.com"', {
 			timeout: 10_000,
 		});
+		await pwExpect(form.locator('input[name="email"]')).toHaveValue('');
 		await expectNoReload();
 	});
 
@@ -215,14 +218,14 @@ describe('React examples page', () => {
 			(window as unknown as { __noReload: boolean }).__noReload = true;
 		});
 
-		await page.locator(`a[href="${examplesPath}"]`).first().click();
+		await page.locator(`#docs-sidebar a[href="${examplesPath}"]:visible`).first().click();
 		await page.waitForURL(`**${examplesPath}`);
 		await waitForHydration(page);
 		const form = demo(page, 'basic');
 		await form.locator('button[type="submit"]').click();
 		await pwExpect(form.locator('input[name="email"]')).toHaveAttribute('aria-invalid', 'true');
 
-		await page.locator('a[href="/docs/forms-react/getting-started"]').first().click();
+		await page.locator('#docs-sidebar a[href="/docs/forms-react/getting-started"]:visible').first().click();
 		await page.waitForURL('**/docs/forms-react/getting-started');
 		await waitForHydration(page, 1);
 		await page.locator('.docs-react-form-demo button[type="submit"]').click();

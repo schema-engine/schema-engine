@@ -11,8 +11,9 @@ import { DocsLayout } from '@/layouts/docs-layout';
 import { ReactFormDemoEmbed } from '@/components/react-form-demo/react-form-demo-embed';
 import { ReactFormPreview } from '@/components/react-form-demo/react-form-preview.react';
 
-/** Slug prefixes of the sections and pages that embed React live demos. */
-const REACT_DEMO_PREFIXES = ['forms-react/', 'styling/', 'examples/react-forms'];
+/** Sections whose pages embed React live demos, and single pages outside them that do. */
+const REACT_DEMO_SECTIONS = ['forms-react/', 'styling/'];
+const REACT_DEMO_PAGES = ['examples/react-forms'];
 
 /**
  * @remarks
@@ -23,7 +24,7 @@ const REACT_DEMO_PREFIXES = ['forms-react/', 'styling/', 'examples/react-forms']
  */
 async function resolveDocsEntryDependencies(slug: string) {
 	const entryDependencies = await getEntryDependencies(slug);
-	if (!REACT_DEMO_PREFIXES.some((prefix) => slug.startsWith(prefix))) {
+	if (!REACT_DEMO_SECTIONS.some((section) => slug.startsWith(section)) && !REACT_DEMO_PAGES.includes(slug)) {
 		return entryDependencies;
 	}
 	return mergePageDependencies(entryDependencies, {

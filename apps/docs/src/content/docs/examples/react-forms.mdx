@@ -14,7 +14,7 @@ import { shadcnContactFormConfig, validationDemoConfig } from '@/lib/form-config
 
 # React Forms
 
-Each form on this page is a live `@schema-engine/forms-react` form. The code block under it is serialized from the same object the form renders, so the two cannot drift. Submit handling is local: a valid submit shows the submitted values under the form and sends nothing anywhere.
+Each form on this page is a live `@schema-engine/forms-react` form. The code block under it is serialized from the same object the form renders, so the two cannot drift. Submit handling is local: a valid submit shows the submitted values under the form and nothing reaches a server.
 
 Most examples use the docs' Radiant-styled demo kit, so they share their configuration with the Radiant examples ([Basic form](/docs/examples/basic-form), [Contact form](/docs/examples/contact-form), [Registration flow](/docs/examples/registration-flow), [Survey form](/docs/examples/survey-form), [Sequential actions](/docs/examples/sequential-actions)). The last section uses source copied from the shadcn registry.
 
@@ -56,7 +56,7 @@ The `wizard` recipe owns progress and navigation. Fill the first step and select
 
 ## Submission and actions
 
-The `actions` array runs the submit request, a notification and a reset in order, on the submit lifecycle triggers. The request goes to a mock endpoint the docs install in the browser. See [Actions](/docs/forms/actions).
+The submit request runs on `form_submit`; a notification and a reset then run on `form_submit_success`, so the fields empty while the result stays under the form. The request goes to a mock endpoint the docs install in the browser. See [Actions](/docs/forms/actions).
 
 <ReactFormDemoEmbed config={sequentialActionsDemoConfig} />
 
@@ -64,7 +64,7 @@ The `actions` array runs the submit request, a notification and a reset in order
 
 ## Copied shadcn source
 
-This form renders with the registry's `input` field and `card` recipe, copied into the docs app the way `shadcn add` copies them, not with the demo kit. The files come from `registry.json` and the repository's shadcn components, are rewritten to the app's `@/` aliases, and land under `src/generated/shadcn` before every build.
+This form renders with the registry's `input` field and `card` recipe, copied into the docs app the way `shadcn add` copies them, not with the demo kit. The files come from `registry.json` and the repository's shadcn components, have their `@/` imports pointed at the copy, are written as `.react.tsx`, and land under `src/generated/shadcn` before dev and build.
 
 <ReactFormDemoEmbed config={shadcnContactFormConfig} kit="shadcn" />
 

@@ -3,7 +3,7 @@ import { once } from 'node:events';
 import { createServer, type AddressInfo } from 'node:net';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { expect as pwExpect } from '@playwright/test';
 import { chromium, type Browser, type Page } from 'playwright';
 import { copyRegistryDemo } from '../../scripts/copy-registry-demo';
@@ -41,8 +41,9 @@ async function waitForServer(baseUrl: string, server: ChildProcess, stderr: stri
 			const response = await fetch(`${baseUrl}${examplesPath}`, { signal: AbortSignal.timeout(30_000) });
 			if (response.ok) return;
 		} catch {
-			await new Promise((resolve) => setTimeout(resolve, 1000));
+			/* the server is not listening yet */
 		}
+		await new Promise((resolve) => setTimeout(resolve, 1000));
 	}
 	throw new Error(`Timed out waiting for the docs dev server at ${baseUrl}`);
 }
@@ -83,6 +84,10 @@ describe('docs dev server source boundary', () => {
 		});
 	}, 240_000);
 
+	afterEach(() => {
+		problems.length = 0;
+	});
+
 	afterAll(async () => {
 		await page?.close();
 		await browser?.close();
@@ -100,14 +105,20 @@ describe('docs dev server source boundary', () => {
 	test('the shadcn example hydrates, validates and submits on one React context', async () => {
 		await page.goto(`${baseUrl}${examplesPath}`, { waitUntil: 'networkidle' });
 		const demo = page.locator('[data-se-react-form-demo-kit="shadcn"]');
-		await page.waitForFunction(
-			() => {
-				const form = document.querySelector('[data-se-react-form-demo-kit="shadcn"] form');
-				return !!form && Object.keys(form).some((key) => key.startsWith('__react'));
-			},
-			undefined,
-			{ timeout: 60_000 },
-		);
+		await page
+			.waitForFunction(
+				() => {
+					const form = document.querySelector('[data-se-react-form-demo-kit="shadcn"] form');
+					return !!form && Object.keys(form).some((key) => key.startsWith('__react'));
+				},
+				undefined,
+				{ timeout: 60_000 },
+			)
+			.catch((error: unknown) => {
+				throw new Error(`The shadcn demo never hydrated. Console errors: ${JSON.stringify(problems)}`, {
+					cause: error,
+				});
+			});
 
 		await demo.locator('button[type="submit"]').click();
 		await pwExpect(demo.locator('input[name="name"]')).toHaveAttribute('aria-invalid', 'true');

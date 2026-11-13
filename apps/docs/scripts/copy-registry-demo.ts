@@ -1,5 +1,6 @@
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, posix } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const repoRoot = join(import.meta.dirname, '../../..');
 const appRoot = join(import.meta.dirname, '..');
@@ -103,7 +104,7 @@ export async function copyRegistryDemo(root = REGISTRY_DEMO_ROOT, alias = REGIST
 	return copies.map(([, target]) => target);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
 	const written = await copyRegistryDemo();
 	console.log(`[docs] Copied ${written.length} registry files to src/generated/shadcn`);
 }

@@ -44,10 +44,15 @@ async function mountDemo(element: HTMLElement): Promise<void> {
 	}
 	mounted.add(element);
 
-	installMockFormApi();
-	const config = readFormConfig(element);
-	const engine = await resolveEngine(element);
-	hydrateRoot(element, <ReactFormContent config={config} engine={engine} />);
+	try {
+		installMockFormApi();
+		const config = readFormConfig(element);
+		const engine = await resolveEngine(element);
+		hydrateRoot(element, <ReactFormContent config={config} engine={engine} />);
+	} catch (error) {
+		mounted.delete(element);
+		console.error('[docs] React form demo failed to hydrate.', error);
+	}
 }
 
 function hydrateReactFormDemos(): void {
