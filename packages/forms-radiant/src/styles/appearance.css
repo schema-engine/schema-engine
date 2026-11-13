@@ -1,19 +1,31 @@
 /*
- * The built-in size axis is renderer-neutral: compact and comfortable read these hooks. Radiant maps
- * them to its theme spacing, with the neutral values as fallbacks, so a themed app keeps its rhythm.
+ * The built-in size axis is renderer-neutral: compact and comfortable read the hooks an author sets
+ * (--se-space-compact and the others), then the renderer property of the same name (--se-renderer-space-compact and the
+ * others), then a neutral value. Radiant sets only the renderer properties, from its theme, so a hook an author sets
+ * on :root or any ancestor reaches the pick and wins, and a form with no author hook follows the theme.
  *
- * The mapping sits on the form element, the one themed element that is neither a grid nor an item. Every
- * grid and item carries data-se-theme too, and a declaration on each of them would replace the hook a
- * host set on the form's class for the picks on steps and fields below it. Every form maps its own
- * hooks, a form nested in another theme's grid item included, so it resolves the --size-control-*
- * values of the wrapper it sits in. A host sets a hook on the form's own class (a rule with any
- * specificity beats this zero-specificity one); an element below the form inherits it.
+ * The renderer properties are declared on the form element (the one themed element that is neither a grid nor an
+ * item), not on :root, so their var(--size-control-*) resolves at the form and sees the values of a wrapper
+ * that scopes a theme, also for a form nested in another theme's grid item.
+ * Radiant never declares the author hooks, so it cannot replace one an author set above or on the form.
  */
 :where([data-se-theme]:not(.se-grid, .se-grid-item)) {
-	--se-space-compact: var(--space-block, 1rem);
-	--se-space-comfortable: var(--space-block-xl, 2rem);
-	--se-control-height-compact: var(--size-control-sm, 1.75rem);
-	--se-control-height-comfortable: var(--size-control-lg, 2.25rem);
+	--se-renderer-space-compact: var(--space-4, 1rem);
+	--se-renderer-space-comfortable: var(--space-8, 2rem);
+	--se-renderer-control-height-compact: var(--size-control-sm, 1.75rem);
+	--se-renderer-control-height-comfortable: var(--size-control-lg, 2.25rem);
+}
+
+/*
+ * The layout theme's loose and wide grid gaps read --space-block-lg and --space-block-xl, hooks Radiant UI
+ * does not define. Radiant maps them to its spacing scale on :root, at zero specificity, so a spacing pack
+ * reaches the gaps and an app's own unlayered rule for either hook wins (this package's index.css is unlayered, so a
+ * rule an app puts in a cascade layer loses to it). A gap the engine's grid theme sets itself
+ * never reads them.
+ */
+:where(:root) {
+	--space-block-lg: var(--space-6, 1.5rem);
+	--space-block-xl: var(--space-8, 2rem);
 }
 
 /*

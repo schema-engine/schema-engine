@@ -17,7 +17,7 @@ import { contactFormConfig } from '@/lib/form-configs/homepage-contact';
 pnpm add @schema-engine/forms-radiant @schema-engine/forms @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
 ```
 
-The peers need `@ecopages/radiant`, `@ecopages/jsx` and `@ecopages/signals` 0.8.3 or later and `@ecopages/radiant-ui` 0.3.6 or later.
+The peers need `@ecopages/radiant`, `@ecopages/jsx` and `@ecopages/signals` 0.9.0 or later and `@ecopages/radiant-ui` 0.4.0 or later.
 
 Load one Radiant UI theme, its aggregate stylesheet and this adapter's stylesheet once, in your global stylesheet:
 
@@ -148,11 +148,18 @@ A form that is only rendered on the client passes `engine` to
 ### Layout stylesheet per form
 
 Radiant has no head hoisting, so each form carries an identical, self-contained copy of its layout
-theme's stylesheet. Every form is therefore styled before hydration, whatever the render order,
-streaming, caching or removal of the other forms, and compression makes the repeated copies
-cheap. React hoists the equal stylesheets of its forms to one element instead; the stylesheet
-content is the same. A host that also wants the rules in its own head can
-serve the theme's `css`; the forms keep their copies, which hold the same rules:
+theme's stylesheet (`<style data-se-theme-css="<id>">`, about 11 kB raw for the default theme). Every form is
+therefore styled before hydration, whatever the render order, streaming, caching or removal of the other forms, and
+compression makes the repeated copies cheap on the wire. React hoists the equal stylesheets of its forms to one
+element instead; the stylesheet content is the same.
+
+On a page with very many Radiant forms, WebKit spends more time styling, because every form brings its own copy.
+In a one-off headless run with one small form per copy, WebKit needed about 37 ms for 25 forms and 390 ms for
+100, against 3 and 11 ms with one copy, while Chromium and Firefox stayed under 17 ms for 100. For the usual page
+with one form, or a few, the cost is negligible.
+
+A host that also wants the rules in its own head can serve the theme's `css`; the forms keep their copies, which hold
+the same rules:
 
 ```typescript
 const { id, css } = formEngine.getLayout();

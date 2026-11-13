@@ -111,7 +111,7 @@ test.each([
 	['default', '24px', 448],
 	['comfortable', '56px', 512],
 ])('size %s follows the host theme spacing and keeps its width', async (size, padding, width) => {
-	const restore = setHostTheme({ '--space-block': '12px', '--space-block-lg': '24px', '--space-block-xl': '56px' });
+	const restore = setHostTheme({ '--space-4': '12px', '--space-6': '24px', '--space-8': '56px' });
 	try {
 		const picked = await card({ size });
 		expect(picked.sectionPadding).toBe(padding);
@@ -147,11 +147,11 @@ test('an explicit surface elevated pick looks like no pick under a themed shadow
 });
 
 test('an engine whose host sets the theme spacing is followed by the size tokens', async () => {
-	document.documentElement.style.setProperty('--space-block-lg', '40px');
+	document.documentElement.style.setProperty('--space-6', '40px');
 	try {
 		const themed = await card({ size: 'default' });
 		expect(themed.sectionPadding).toBe('40px');
 	} finally {
-		document.documentElement.style.removeProperty('--space-block-lg');
+		document.documentElement.style.removeProperty('--space-6');
 	}
 });

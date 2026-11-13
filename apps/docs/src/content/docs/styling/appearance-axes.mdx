@@ -60,11 +60,11 @@ The engine ships `size` and `surface`. They are in `builtInAxes`, the default li
 
 **`size`** (`compact`, `default`, `comfortable`) sets how much room components take:
 
-| Value         | `--se-space`                        | `--se-font-size` | `--se-measure` | `--se-control-height`                           |
-| ------------- | ----------------------------------- | ---------------- | -------------- | ----------------------------------------------- |
-| `compact`     | `var(--se-space-compact, 1rem)`     | `0.875rem`       | `24rem`        | `var(--se-control-height-compact, 1.75rem)`     |
-| `default`     | `initial`                           | `initial`        | `initial`      | `initial`                                       |
-| `comfortable` | `var(--se-space-comfortable, 2rem)` | `1.0625rem`      | `32rem`        | `var(--se-control-height-comfortable, 2.25rem)` |
+| Value         | `--se-space`                                                              | `--se-font-size` | `--se-measure` | `--se-control-height`                                                                          |
+| ------------- | ------------------------------------------------------------------------- | ---------------- | -------------- | ---------------------------------------------------------------------------------------------- |
+| `compact`     | `var(--se-space-compact, var(--se-renderer-space-compact, 1rem))`         | `0.875rem`       | `24rem`        | `var(--se-control-height-compact, var(--se-renderer-control-height-compact, 1.75rem))`         |
+| `default`     | `initial`                                                                 | `initial`        | `initial`      | `initial`                                                                                      |
+| `comfortable` | `var(--se-space-comfortable, var(--se-renderer-space-comfortable, 2rem))` | `1.0625rem`      | `32rem`        | `var(--se-control-height-comfortable, var(--se-renderer-control-height-comfortable, 2.25rem))` |
 
 **`surface`** (`flat`, `outlined`, `elevated`, default `elevated`) sets how a container sets itself apart:
 
@@ -78,7 +78,7 @@ A token set to `initial` hands the token back to the component's own fallback. S
 
 `--se-measure` is the readable width of a block: the card is that wide, so a `compact` card is `24rem` and a `comfortable` one `32rem`. The card shells of both renderers read all the tokens above; `--se-control-height` also sizes single-line controls (Radiant maps it onto its `--size-control-md`, and the React registry controls that carry `data-se-control` read it through `controls.css`, see [View recipes](/docs/forms-react/layouts)). The DOM contract is the same in every renderer; the visual effect of a built-in value is not yet. `size` changes a field's font size in Radiant only.
 
-The compact and comfortable values of `--se-space` and `--se-control-height` read hooks (`--se-space-compact` and the others). A host sets the hooks to retune a value without redefining the axis; see [Theming](/docs/styling/theming).
+The compact and comfortable values of `--se-space` and `--se-control-height` read hooks (`--se-space-compact` and the others). An author sets the hooks, on `:root` or any ancestor, to retune a value without redefining the axis; see [Theming](/docs/styling/theming). Each hook falls back to a `--se-renderer-*` twin (`--se-renderer-space-compact` and the others), set by renderers, not by apps, and then to the neutral value.
 
 ## Pick a value
 
