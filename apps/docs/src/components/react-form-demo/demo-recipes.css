@@ -11,13 +11,18 @@
 	padding: var(--space-4, 1rem) 0;
 }
 
+/* Reads the same appearance tokens as the Radiant and registry card shells; the fallbacks are the unpicked look. */
 .se-demo-shell__card {
 	display: grid;
 	gap: var(--space-4, 1rem);
-	border: 1px solid var(--border, currentColor);
+	box-sizing: border-box;
+	max-width: var(--se-measure, none);
+	margin-inline: auto;
+	border: var(--se-border-width, 1px) solid var(--border, currentColor);
 	border-radius: var(--radius-lg, 0.75rem);
-	padding: var(--space-5, 1.25rem);
-	background: var(--surface, #fff);
+	box-shadow: var(--se-shadow, none);
+	padding: var(--se-space, var(--space-5, 1.25rem));
+	background: var(--se-surface-background, var(--surface, #fff));
 }
 
 .se-demo-shell__header {

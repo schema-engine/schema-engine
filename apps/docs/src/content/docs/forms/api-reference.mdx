@@ -39,8 +39,9 @@ function createFormEngine<
 `FormEngineFromOptions` is the `FormEngine` typed from the merged registration
 lists. `layout` is accepted by `createFormEngine` and by
 `createRadiantFormEngine`, which forwards it. Pass one theme compiled with
-`createLayoutTheme` (from `@schema-engine/layout`) to several engines and they share its
-`data-se-theme` and one stylesheet; inline options compile a theme of the engine's own.
+`createLayoutTheme` (from `@schema-engine/layout`) to several engines and they carry the same
+`data-se-theme` and the same stylesheet content (React hoists one element; Radiant inlines an identical
+copy per form, by design); inline options compile a theme of the engine's own.
 `engine.extend()` does not take `layout`; extended engines inherit the source
 engine's layout theme, which `engine.getLayout()` returns (`id`, `grid`, `axes`, `appearance`, `css`).
 The `grid` and `appearance` engine options no longer exist.
@@ -50,6 +51,9 @@ Each array is structurally constrained: `$type`, a Standard Schema
 Duplicate `$type` values follow last-wins at runtime. Tuples and inline arrays
 use last-wins typing; open `T[]` values use a union of configs for the same
 `$type`. Spread shared registration barrels and append overrides when needed.
+
+`engine.getSchemaCatalog()` lists the registered elements, recipes, actions and axes
+([Registries](/docs/registry/registries)).
 
 `validations` takes validation registrations (`$type`, `schema`, `metadata`, `category`, `handler`)
 and is not typed per engine: field `rules` keep their `type` string. See
@@ -147,9 +151,17 @@ interface RecipeRegistration<TType, TSchema, TRender = unknown> {
 	slots: Array<'shell' | 'header' | 'progress' | 'actions'>;
 	schema: TSchema;
 	metadata: RecipeMetadata;
+	/** Slot config applied beneath the view's own slot config. */
+	slotDefaults?: Partial<Record<'shell' | 'header' | 'progress' | 'actions', Record<string, unknown>>>;
+	/** Appearance axes each slot supports, for example `{ shell: ['size', 'surface'] }`. */
+	appearanceAxes?: Partial<Record<'shell' | 'header' | 'progress' | 'actions', readonly string[]>>;
 	render: TRender;
 }
 ```
+
+The recipe protocol (the slots, the kinds, the rules that check them) is declared once per domain with
+`defineRecipeProtocol` from `@schema-engine/layout`; forms declares `shell | header | progress | actions` and
+`single-step | wizard`. See [Recipes](/docs/styling/recipes#a-custom-recipe-shell-in-react-and-in-radiant).
 
 See [Form engine setup](/docs/forms/builder) for adapter factories and
 composition rules.

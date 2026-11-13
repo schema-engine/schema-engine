@@ -11,6 +11,9 @@ import { DocsLayout } from '@/layouts/docs-layout';
 import { ReactFormDemoEmbed } from '@/components/react-form-demo/react-form-demo-embed';
 import { ReactFormPreview } from '@/components/react-form-demo/react-form-preview.react';
 
+/** Sections whose pages embed React live demos. */
+const REACT_DEMO_SECTIONS = ['forms-react', 'styling'];
+
 /**
  * @remarks
  * MDX entries only contribute their own module identity to
@@ -20,7 +23,7 @@ import { ReactFormPreview } from '@/components/react-form-demo/react-form-previe
  */
 async function resolveDocsEntryDependencies(slug: string) {
 	const entryDependencies = await getEntryDependencies(slug);
-	if (!slug.startsWith('forms-react/')) {
+	if (!REACT_DEMO_SECTIONS.some((section) => slug.startsWith(`${section}/`))) {
 		return entryDependencies;
 	}
 	return mergePageDependencies(entryDependencies, {

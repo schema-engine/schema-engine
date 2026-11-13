@@ -3,6 +3,7 @@ import '@ecopages/radiant-ui/radiant-ui-core.css';
 import '@ecopages/radiant-ui/themes/default';
 import '@ecopages/radiant-ui/styles.css';
 import '@/styles/appearance.css';
+import { getByRole } from '@testing-library/dom';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { createRoot } from '@ecopages/jsx/client';
 import { FormController } from '@/adapters/radiant/controller';
@@ -92,6 +93,90 @@ describe('Radiant controls under a theme that sets the control size', () => {
 		} finally {
 			cleanup();
 			author.remove();
+		}
+	});
+});
+
+describe('a size hook set on the form class', () => {
+	const author = document.createElement('style');
+	beforeAll(() => {
+		author.textContent = '.tight-controls { --se-control-height-compact: 18px; }';
+		document.head.append(author);
+	});
+	afterAll(() => author.remove());
+
+	const formWith = (stepSize?: string, fieldSize?: string) => ({
+		...controlHeightForm(undefined, stepSize),
+		className: 'tight-controls',
+		steps: [
+			{
+				id: 'main',
+				title: 'Main',
+				appearance: stepSize ? { size: stepSize } : undefined,
+				elements: [
+					{
+						$type: 'input',
+						id: 'email',
+						name: 'email',
+						label: 'Email',
+						appearance: fieldSize ? { size: fieldSize } : undefined,
+					},
+					{ $type: 'submit', id: 'submit', name: 'controlHeightSubmit', label: 'Send' },
+				],
+			},
+		],
+	});
+
+	test('reaches a pick on a step, which sits below the grids that carry the theme', async () => {
+		const { host, cleanup } = await mountRadiant({ config: formWith('compact') });
+		try {
+			expect(readControlHeights(host)).toEqual({ input: 18, button: 18 });
+		} finally {
+			cleanup();
+		}
+	});
+
+	test('reaches a pick on a field', async () => {
+		const { host, cleanup } = await mountRadiant({ config: formWith(undefined, 'compact') });
+		try {
+			expect(readControlHeights(host).input).toBe(18);
+		} finally {
+			cleanup();
+		}
+	});
+});
+
+describe('a form nested in a grid item of another theme', () => {
+	test('maps its own hooks from the wrapper it sits in', async () => {
+		const { host, cleanup } = await mountRadiant({ config: controlHeightForm() });
+		const wrapper = document.createElement('div');
+		wrapper.style.setProperty('--size-control-sm', '40px');
+		host.querySelector('.se-grid-item')!.append(wrapper);
+		const root = createRoot(wrapper);
+		const compactForm = {
+			id: 'nested-control-height',
+			appearance: { size: 'compact' },
+			steps: [
+				{
+					id: 'nested',
+					title: 'Nested',
+					elements: [
+						{ $type: 'input', id: 'other', name: 'other', label: 'Other' },
+						{ $type: 'submit', id: 'go', name: 'nestedSubmit', label: 'Go' },
+					],
+				},
+			],
+		};
+		root.render(FormRenderer({ config: engine.validateForm(compactForm), engine }));
+		const nested = new FormController(wrapper.querySelector('rui-form')!);
+		try {
+			await expect.poll(() => nested.ready).toBe(true);
+			expect(getByRole(wrapper, 'textbox', { name: 'Other' }).getBoundingClientRect().height).toBe(40);
+			expect(getByRole(wrapper, 'button', { name: 'Go' }).getBoundingClientRect().height).toBe(40);
+		} finally {
+			nested.disconnect();
+			root.unmount();
+			cleanup();
 		}
 	});
 });

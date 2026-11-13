@@ -14,7 +14,18 @@ The Radiant adapter ships its own shells and wizard blocks. These live
 previews use the same `FormConfig` JSON as the React adapter while rendering
 with Ecopages and Radiant UI elements.
 
-The shells take the same named `appearance` as the React recipes: set `view.shell.appearance` (for example `{ size: 'comfortable', surface: 'elevated' }` on the card shell) or a form-level `appearance`, and the shell reads the layout theme's semantic tokens (`--se-space`, `--se-border-width`, `--se-shadow`). Radiant elements emit the picked values as `data-se-<axis>` attributes, so a host axis is styled with CSS keyed on those attributes. `size` also sets the height of inputs, selects, number fields and buttons: `compact` uses the theme's `--size-control-sm` and `comfortable` its `--size-control-lg`, and no pick or `default` keeps the theme's `--size-control-md`.
+## Appearance in Radiant
+
+The shells take the same named `appearance` as the React recipes: set `view.shell.appearance` (for example `{ size: 'comfortable', surface: 'elevated' }` on the card shell) or a form-level `appearance`, and the shell reads the layout theme's semantic tokens (`--se-space`, `--se-measure`, `--se-border-width`, `--se-shadow`, `--se-surface-background`). Radiant elements emit the picked values as `data-se-<axis>` attributes, so a host axis is styled with CSS keyed on those attributes. The built-in `card` and `card-wizard` shells declare `size` and `surface`; the other shells declare no axes, so an `appearance` on their `shell` slot is rejected.
+
+`size` also sets the height of inputs, selects, number fields and buttons: `compact` uses the `--se-control-height-compact` hook, which Radiant maps to its `--size-control-sm`, and `comfortable` uses `--se-control-height-comfortable`, mapped to `--size-control-lg`. No pick or `default` keeps the theme's `--size-control-md`. A field's font size follows `--se-font-size` in Radiant only.
+
+Two Radiant details matter when you tune it:
+
+- Radiant maps the size hooks (`--se-space-compact`, `--se-control-height-compact` and their `comfortable` twins) to its theme on the form element, so set them on the form's own `className`; a value set on `:root` or a wrapper above the form is replaced there. A hook on the form's class reaches a pick on the card shell, a step or a field.
+- Radiant UI computes `--size-control-*` on `:root`, so a scoped `--rui-density` does not resize controls below it. [Theming](/docs/styling/theming#radiant-the-spacing-tokens-of-its-own-theme) has the wrapper rule.
+
+Each form carries an identical copy of the layout stylesheet by design; see [Layout stylesheet per form](/docs/forms-radiant/getting-started#layout-stylesheet-per-form). [Styling and layout](/docs/styling/overview) lists which tool fits which job, and [Recipes](/docs/styling/recipes) has copy-paste configs with their CSS, rendered with these shells.
 
 ## Wizard shell
 

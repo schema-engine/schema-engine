@@ -1,0 +1,10 @@
+/* The compact hooks: set them on the form's own class. The pick on the card shell, a step or a field inherits them. */
+.tight-form {
+	--se-space-compact: 0.5rem;
+	--se-control-height-compact: 1.5rem;
+}
+
+/* --se-measure is a literal value of the pick: win on the element that carries it. */
+.tight-form [data-se-size='compact'] {
+	--se-measure: 28rem;
+}

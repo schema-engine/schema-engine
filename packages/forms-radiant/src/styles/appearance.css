@@ -1,8 +1,15 @@
 /*
  * The built-in size axis is renderer-neutral: compact and comfortable read these hooks. Radiant maps
  * them to its theme spacing, with the neutral values as fallbacks, so a themed app keeps its rhythm.
+ *
+ * The mapping sits on the form element, the one themed element that is neither a grid nor an item. Every
+ * grid and item carries data-se-theme too, and a declaration on each of them would replace the hook a
+ * host set on the form's class for the picks on steps and fields below it. Every form maps its own
+ * hooks, a form nested in another theme's grid item included, so it resolves the --size-control-*
+ * values of the wrapper it sits in. A host sets a hook on the form's own class (a rule with any
+ * specificity beats this zero-specificity one); an element below the form inherits it.
  */
-:where([data-se-theme]) {
+:where([data-se-theme]:not(.se-grid, .se-grid-item)) {
 	--se-space-compact: var(--space-block, 1rem);
 	--se-space-comfortable: var(--space-block-xl, 2rem);
 	--se-control-height-compact: var(--size-control-sm, 1.75rem);

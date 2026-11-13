@@ -43,6 +43,11 @@ const engine = createFormEngine({
 });
 ```
 
+Each list is stored in a read-only registry: a later `$type` replaces an earlier one, and a
+schema that is not a Standard Schema fails the build. `validations` adds custom rules and
+`layout` sets the [layout theme](#the-layout-theme-and-appearance); see
+[Registries](/docs/registry/registries).
+
 ## Form configuration
 
 ```ts
@@ -183,9 +188,9 @@ A few things the template does not police:
 - A field hidden at a breakpoint (`grid.responsive.<slot>.hidden`) need not be in
   that breakpoint's template, and the hidden state carries to wider
   breakpoints until a slot shows it again.
-- A step with no fields under a form-level `areas` gets `grid: {}`, an empty own
-  grid that replaces the form's. Otherwise every template area counts as
-  unclaimed on that step.
+- A step with no fields under a form-level `areas` needs `grid: {}` from the
+  author: an empty grid of its own that replaces the form's. Without it, every
+  template area counts as unclaimed on that step and validation rejects it.
 
 A step takes its own `grid`, which replaces the form's grid for that step. An
 areas template names specific fields, so each wizard step draws its own. A
@@ -237,94 +242,36 @@ it starts the field at line 2. Use `column: 'span 2'` to span two columns, or
 width fields, but it counts tracks of the 12 the widths use there, so
 `column: 'span 2'` is two of twelve, a sixth of the row.
 
-## The layout theme
+## The layout theme and appearance
 
 The grid vocabulary (breakpoint thresholds, gap tokens, the default minimum column
-width) and the appearance axes (`size` and `surface` built in, plus any you
-define) belong to one **layout theme**, compiled by `@schema-engine/layout`. Pass it to
-the engine as `layout`, inline or compiled once and shared:
+width) and the appearance axes (`size` and `surface` built in, plus any you define)
+belong to one **layout theme**, compiled by `@schema-engine/layout` and passed to the
+engine as `layout`, either compiled once or as inline `{ grid, appearance }` options:
 
 ```ts
 import { createFormEngine } from '@schema-engine/forms';
-import { builtInAxes, createLayoutTheme, defineAxis } from '@schema-engine/layout';
+import { createLayoutTheme } from '@schema-engine/layout';
 
-const tone = defineAxis({
-	$type: 'tone',
-	metadata: { name: 'Tone' },
-	default: 'neutral',
-	values: { neutral: {}, brand: { '--se-accent': '#f60' } },
-});
+const theme = createLayoutTheme({ grid: { breakpoints: { md: '50rem' } } });
 
-// Inline: the engine compiles a theme of its own.
-const engine = createFormEngine({
-	elements,
-	layout: {
-		grid: { breakpoints: { md: '50rem' }, gap: { default: '1rem' } },
-		appearance: [...builtInAxes, tone],
-	},
-});
-
-// Shared: both engines carry the same `data-se-theme` and one stylesheet.
-const theme = createLayoutTheme({ appearance: [...builtInAxes, tone] });
 const checkout = createFormEngine({ elements, layout: theme });
 const profile = createFormEngine({ elements, layout: theme });
 ```
 
-A form element, its grids and its items carry one `data-se-theme` attribute, and the
-theme's stylesheet is emitted once. The stylesheet selects only `.se-grid`,
-`.se-grid-item` and `[data-se-theme]`; the renderers add those classes beside
-`se-form-grid` and `se-form-field`, which stay available for your own styles.
+Engines built on one compiled theme carry the same `data-se-theme` and the same stylesheet
+content. React hoists the equal stylesheets to one element; Radiant puts an identical copy in
+each form, by design. A form of one engine can sit inside a grid item of another: the nearest
+theme's token rules apply.
 
-A form of one engine can sit inside a grid item of another, for example a form embedded
-in a page grid. Each theme's token rules reach only the elements whose nearest theme is
-that theme, so the embedded form picks `tone: brand` with its own theme's token
-whichever stylesheet comes later, and your own class still wins. Tokens are custom
-properties, so a pick made outside the embedded form still reaches it until the form
-picks a value that declares those tokens (the built-in `size.default` resets them).
+A form, a step, a field or a recipe slot picks a named value per axis with
+`appearance: { size: 'compact' }`, and the renderer writes `data-se-size="compact"`.
+A registration declares the axes it responds to with `appearanceAxes`, and `validateForm`
+rejects a pick on any other axis, an unknown axis and an unknown value.
 
-The theme's stylesheet also carries each token rule as an `@scope` block, which keeps
-the nearest theme exact when a theme is nested below another theme and then below
-itself (A in B in A). A browser without `@scope` ignores those blocks and uses the plain
-rules, which are right for every other nesting. Because scope proximity outranks source
-order, a zero-specificity author rule such as `:where(.x)` loses to a token rule in a
-browser with `@scope`; a class with any specificity still wins.
+The full guides are in [Styling](/docs/styling/overview):
 
-### Appearance axes
-
-An appearance axis is one independent dimension of appearance with 2 to 5 named values.
-Each value stands for a set of semantic CSS tokens (`--se-space`, `--se-font-size`,
-`--se-measure`, `--se-control-height`, `--se-border-width`, `--se-shadow`, `--se-surface-background`) that
-components read. Components never read the axis value, and a token never names one
-component. `size` and `surface` are built in.
-
-Define an axis with `defineAxis` and list it after `builtInAxes`. An axis listed later with
-the same `$type` replaces the earlier one, so this also overrides a built-in axis:
-
-```ts
-const size = defineAxis({
-	$type: 'size',
-	metadata: { name: 'Size' },
-	default: 'default',
-	values: {
-		compact: { '--se-space': '0.5rem' },
-		default: { '--se-space': 'initial' },
-		comfortable: { '--se-space': '2rem' },
-	},
-});
-
-const engine = createFormEngine({ elements, layout: { appearance: [...builtInAxes, size] } });
-```
-
-Keep the axis list inline, as above, or declare it `as const`: a list stored in a plain
-variable widens, and typed `defineForm` stops narrowing the values. The card's width is the readable measure `--se-measure`, which `size` sets (24rem compact,
-32rem comfortable), so overriding the compact spacing does not resize the card. `size` also sets the control height `--se-control-height`, through the hooks `--se-control-height-compact` (`1.75rem`) and `--se-control-height-comfortable` (`2.25rem`) that a renderer maps to its theme: Radiant uses the theme's small and large control sizes, and a `default` pick keeps the theme's own height.
-
-A registration declares the axes it responds to (`appearanceAxes: ['tone']`); the engine
-build throws, naming the registration, when it declares an axis the theme lacks. A form, a
-step, a field or a recipe slot picks a value with `appearance: { tone: 'brand' }`, and the
-renderer emits `data-se-tone="brand"`. Your CSS reads the tokens the value sets. The JSON
-Schema the engine exports lists every axis on the form and its steps, and on an element or a
-recipe slot only the axes it declares, each as an enum of its values, so `appearance.size`
-is an enum an editor can autocomplete and an axis the field does not declare is rejected. This
-holds for top-level elements and recipe slots; the children of a fieldset or an array row are not
-checked in the exported schema, though `validateForm` checks them.
+- [Layout themes](/docs/styling/layout-themes): the options, sharing a theme, the neutral `.se-grid`, `.se-grid-item` and `[data-se-theme]` hooks, the `--se-item-*` properties and nested themes.
+- [Appearance axes](/docs/styling/appearance-axes): the definition, what makes a good axis, `size` and `surface`, `defineAxis` and host axes.
+- [Theming](/docs/styling/theming): the custom properties a host overrides.
+- [Recipes](/docs/styling/recipes): copy-paste configs with their CSS, rendered live.

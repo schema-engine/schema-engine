@@ -19,12 +19,17 @@ pnpm add @schema-engine/forms-radiant @schema-engine/forms @schema-engine/layout
 
 The peers need `@ecopages/radiant`, `@ecopages/jsx` and `@ecopages/signals` 0.8.3 or later and `@ecopages/radiant-ui` 0.3.6 or later.
 
-Load Radiant UI theme and styles once in your app entry:
+Load one Radiant UI theme, its aggregate stylesheet and this adapter's stylesheet once, in your global stylesheet:
 
-```typescript
-import '@ecopages/radiant-ui/themes/default';
-import '@ecopages/radiant-ui/styles.css';
+```css
+@import '@ecopages/radiant-ui/themes/default';
+@import '@ecopages/radiant-ui/styles.css';
+@import '@schema-engine/forms-radiant/index.css';
 ```
+
+Published JavaScript does not execute CSS, so the adapter's own styles (host display rules, the card, hero and split-screen shells, the fieldset, array and drop-zone CSS) come from `index.css`. An app with Tailwind imports `tailwindcss` first. An app without it imports `@ecopages/radiant-ui/radiant-ui-core.css` first, so headings, lists and controls are not left on user-agent margins. A bundler that loads CSS from JavaScript takes the same three lines as side-effect imports (`import '@ecopages/radiant-ui/styles.css';`).
+
+Import one theme, never two. Dark mode is a `dark` class on an ancestor, usually `<html class="dark">`; Radiant UI does not follow `prefers-color-scheme` by itself, so set the class from the visitor's preference. Colour, spacing and radius come from Radiant UI's semantic roles (`--primary`, `--space-*`, `--radius-control`), which a host retunes with [Theming](/docs/styling/theming).
 
 ## 2. Create a form engine
 
@@ -102,7 +107,10 @@ const engine = createRadiantFormEngine({
 
 ## Server-rendered forms and engine binding
 
-The engine is not serialized into server-rendered markup, so the app assigns it
+Radiant UI views rendered on the server do not register their elements in the browser, so
+the module that builds your engine must reach the client: it imports `@schema-engine/forms-radiant`,
+which registers the form hosts and the Radiant UI components they use. The engine is not
+serialized into server-rendered markup, so the app assigns it
 to each `se-form-renderer`. Assign it before or after the renderer upgrades: the
 hosts below it read the engine from the renderer's context and follow it when it
 arrives or changes.
@@ -142,13 +150,18 @@ A form that is only rendered on the client passes `engine` to
 Radiant has no head hoisting, so each form carries an identical, self-contained copy of its layout
 theme's stylesheet. Every form is therefore styled before hydration, whatever the render order,
 streaming, caching or removal of the other forms, and compression makes the repeated copies
-negligible (about 350 B gzip for three forms). A host that also wants the rules in its own head can
+cheap. React hoists the equal stylesheets of its forms to one element instead; the stylesheet
+content is the same. A host that also wants the rules in its own head can
 serve the theme's `css`; the forms keep their copies, which hold the same rules:
 
 ```typescript
 const { id, css } = formEngine.getLayout();
 const head = `<style data-se-theme-css="${id}">${css}</style>`;
 ```
+
+## Style it
+
+[Styling and layout](/docs/styling/overview) says which tool fits which job, and [Recipes](/docs/styling/recipes) has copy-paste configs and CSS, each rendered live with this adapter.
 
 ## Storybook
 

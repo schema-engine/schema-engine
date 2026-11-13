@@ -50,10 +50,10 @@ export interface LayoutThemeCompilerOptions {
  *
  * @remarks
  * Produced once by {@link createLayoutTheme}, frozen, and safe to share between consumers: engines
- * built on the same theme carry the same `data-se-theme` and share one stylesheet on a page.
+ * built on the same theme carry the same `data-se-theme` and the same stylesheet content.
  * A renderer puts `id` on the elements the stylesheet should reach, as `data-se-theme`, and
  * emits `css` for each form it renders: React hoists equal stylesheets to one element, while
- * Radiant inlines an identical copy per form.
+ * Radiant inlines an identical copy per form, by design.
  */
 export interface LayoutTheme<TAxes extends Record<string, string> = Record<string, string>> {
 	/** Identity of the whole theme; the value of `data-se-theme` and the scope of every rule in `css`. */

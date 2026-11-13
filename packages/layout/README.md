@@ -206,3 +206,7 @@ Left internal on purpose: `compileAppearance`, `getAppearanceCss`, `resolveGridT
 ## Tests
 
 `pnpm --filter @schema-engine/layout test:all` runs the grid compiler, placement, theme, appearance and recipe protocol unit tests. The renderer packages run the shared acceptance harnesses in `test-utils/` against this package's output.
+
+## Documentation
+
+Guides with copy-paste recipes: [Layout themes](../../apps/docs/src/content/docs/styling/layout-themes.mdx), [Appearance axes](../../apps/docs/src/content/docs/styling/appearance-axes.mdx), [Theming](../../apps/docs/src/content/docs/styling/theming.mdx) and [Recipes](../../apps/docs/src/content/docs/styling/recipes.mdx).

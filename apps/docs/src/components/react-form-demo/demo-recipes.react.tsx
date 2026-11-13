@@ -1,6 +1,7 @@
 /** @jsxImportSource react */
 import type { ReactNode } from 'react';
-import { defineRecipeSpec, type FormShellLayout } from '@schema-engine/forms/recipes';
+import { getAppearanceAttributes } from '@schema-engine/layout';
+import { defineRecipeSpec, getSlotConfig, type FormShellLayout } from '@schema-engine/forms/recipes';
 import {
 	CardShellConfigSchema,
 	StepHeaderConfigSchema,
@@ -23,10 +24,11 @@ type ShellProps = FormShellLayout<ReactNode>;
  * with the docs shell), so React demos match the Radiant demos visually.
  */
 
-function DemoCardShell({ slots }: ShellProps) {
+function DemoCardShell({ slots, viewConfig }: ShellProps) {
+	const { appearance } = getSlotConfig(viewConfig, 'shell', CardShellConfigSchema);
 	return (
 		<div className="se-demo-shell">
-			<div className="se-demo-shell__card">
+			<div className="se-demo-shell__card" {...getAppearanceAttributes(appearance)}>
 				{slots.header ? (
 					<div className={'se-demo-shell__header se-demo-shell__header--lg'}>{slots.header}</div>
 				) : null}
