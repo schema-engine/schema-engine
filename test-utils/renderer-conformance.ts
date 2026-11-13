@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { getByRole, queryAllByRole, queryAllByText, queryByRole, queryByText, within } from '@testing-library/dom';
 import { userEvent } from 'vitest/browser';
 import * as v from 'valibot';
+import { builtInAxes, defineAxis } from '@schema-engine/layout';
 import type { BuilderActionRuntimeContext, FormConfigView } from '@schema-engine/forms';
 import {
 	builtInRecipeSpecs,
@@ -20,6 +21,24 @@ export const conformanceAction = {
 			: { success: true },
 	),
 };
+
+/**
+ * The host axis every conformance engine adds beside the built-in ones.
+ *
+ * @remarks `brand` sets `--se-tone-accent`, which the host-axis test reads back from computed style.
+ */
+export const conformanceToneAxis = defineAxis({
+	$type: 'tone',
+	metadata: { name: 'Tone' },
+	default: 'neutral',
+	values: { neutral: {}, brand: { '--se-tone-accent': 'rgb(255, 102, 0)' } },
+});
+
+/** The axes the conformance input registration declares: the built-in `size` and the host `tone`. */
+export const conformanceInputAxes = ['size', 'tone'];
+
+/** The `layout` option of every conformance engine: the built-in axes plus {@link conformanceToneAxis}. */
+export const conformanceLayout = { appearance: [...builtInAxes, conformanceToneAxis] } as const;
 
 /**
  * `$type` each renderer registers with `containerKind: 'array'` and its array widget.
@@ -313,8 +332,38 @@ export function rendererConformance(mount: ConformanceMount): void {
 			});
 			test('axis tokens apply to the element that carries the attribute', async () => {
 				const { host } = await setup({ config: sizedForm({ size: 'compact' }) });
-				expect(getComputedStyle(formElement(host)).getPropertyValue('--se-size-padding')).toBe('1rem');
-				expect(getComputedStyle(fieldHost(host, 'Email')).getPropertyValue('--se-size-padding')).toBe('1rem');
+				expect(getComputedStyle(formElement(host)).getPropertyValue('--se-space')).toBe('1rem');
+				expect(getComputedStyle(fieldHost(host, 'Email')).getPropertyValue('--se-space')).toBe('1rem');
+			});
+			test('a host axis reaches the form and the step as an attribute and as its tokens', async () => {
+				const { host } = await setup({
+					config: { ...form([input('email', 'Email')]), appearance: { tone: 'brand' } },
+				});
+				for (const element of [formElement(host), stepElement(host, 'main')]) {
+					expect(element.getAttribute('data-se-tone')).toBe('brand');
+					expect(getComputedStyle(element).getPropertyValue('--se-tone-accent').trim()).toBe(
+						'rgb(255, 102, 0)',
+					);
+				}
+			});
+			test('a field whose registration declares a host axis carries its own pick, and the form pick otherwise', async () => {
+				const { host } = await setup({
+					config: {
+						...form([{ ...input('email', 'Email'), appearance: { tone: 'brand' } }, input('name', 'Name')]),
+						appearance: { tone: 'neutral' },
+					},
+				});
+				const email = fieldHost(host, 'Email');
+				expect(email.getAttribute('data-se-tone')).toBe('brand');
+				expect(getComputedStyle(email).getPropertyValue('--se-tone-accent').trim()).toBe('rgb(255, 102, 0)');
+				expect(fieldHost(host, 'Name').getAttribute('data-se-tone')).toBe('neutral');
+			});
+			test('a host axis value that sets no token leaves the neighbours alone', async () => {
+				const { host } = await setup({
+					config: { ...form([input('email', 'Email')]), appearance: { tone: 'neutral' } },
+				});
+				expect(formElement(host).getAttribute('data-se-tone')).toBe('neutral');
+				expect(getComputedStyle(formElement(host)).getPropertyValue('--se-tone-accent').trim()).toBe('');
 			});
 			test('a field className lands on the field host', async () => {
 				const { host } = await setup({
@@ -325,31 +374,27 @@ export function rendererConformance(mount: ConformanceMount): void {
 			});
 			test('an author class on a field outranks the field axis styles', async () => {
 				const author = document.createElement('style');
-				author.textContent = '.author-field { --se-size-padding: 7px; }';
+				author.textContent = '.author-field { --se-space: 7px; }';
 				document.head.prepend(author);
 				try {
 					const { host } = await setup({
-						config: sizedForm({ size: 'default' }, { size: 'compact' }, 'author-field'),
+						config: sizedForm({ size: 'compact' }, { size: 'comfortable' }, 'author-field'),
 					});
-					expect(getComputedStyle(fieldHost(host, 'Email')).getPropertyValue('--se-size-padding')).toBe(
-						'7px',
-					);
-					expect(getComputedStyle(fieldHost(host, 'Name')).getPropertyValue('--se-size-padding')).not.toBe(
-						'7px',
-					);
+					expect(getComputedStyle(fieldHost(host, 'Email')).getPropertyValue('--se-space')).toBe('7px');
+					expect(getComputedStyle(fieldHost(host, 'Name')).getPropertyValue('--se-space')).not.toBe('7px');
 				} finally {
 					author.remove();
 				}
 			});
 			test('an author class outranks axis styles', async () => {
 				const author = document.createElement('style');
-				author.textContent = '.author-padding { --se-size-padding: 7px; }';
+				author.textContent = '.author-padding { --se-space: 7px; }';
 				document.head.prepend(author);
 				try {
 					const { host } = await setup({
 						config: { ...sizedForm({ size: 'compact' }), className: 'author-padding' },
 					});
-					expect(getComputedStyle(formElement(host)).getPropertyValue('--se-size-padding')).toBe('7px');
+					expect(getComputedStyle(formElement(host)).getPropertyValue('--se-space')).toBe('7px');
 				} finally {
 					author.remove();
 				}

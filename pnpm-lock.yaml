@@ -46,6 +46,9 @@ importers:
       '@schema-engine/forms-react':
         specifier: workspace:*
         version: link:packages/forms-react
+      '@schema-engine/layout':
+        specifier: workspace:*
+        version: link:packages/layout
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.2

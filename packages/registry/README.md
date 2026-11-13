@@ -9,7 +9,7 @@ This package provides one registry mechanism for typed registrations keyed by `$
 
 Use the `ComponentRegistration` type when entries must include a render function.
 
-It is used by higher-level packages such as `@schema-engine/forms` and `@schema-engine/actions`, but it is also usable on its own for plugin systems and internal extension points.
+It is used by higher-level packages such as `@schema-engine/forms`, `@schema-engine/actions` and `@schema-engine/layout` (which stores appearance axes in it), but it is also usable on its own for plugin systems and internal extension points.
 
 ## Installation
 

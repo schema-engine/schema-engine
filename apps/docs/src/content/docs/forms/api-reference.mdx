@@ -19,8 +19,8 @@ interface CreateFormEngineOptions<TElements, TRecipes, TActions, TLayout> {
 	/**
 	 * The layout theme: a compiled theme from `createLayoutTheme`, or inline
 	 * `{ grid, appearance }` options. `grid` holds breakpoint thresholds, gap tokens and the
-	 * default min column width; `appearance` holds the axes and their values, over the
-	 * built-in `size` and `surface`.
+	 * default min column width; `appearance` is the list of axes built with `defineAxis`
+	 * (default `builtInAxes`: `size` and `surface`). The last axis of a `$type` wins.
 	 */
 	layout?: TLayout;
 }
@@ -41,7 +41,7 @@ lists. `layout` is accepted by `createFormEngine` and by
 `createLayoutTheme` (from `@schema-engine/layout`) to several engines and they share its
 `data-se-theme` and one stylesheet; inline options compile a theme of the engine's own.
 `engine.extend()` does not take `layout`; extended engines inherit the source
-engine's layout theme, which `engine.getLayout()` returns (`id`, `grid`, `axes`, `css`).
+engine's layout theme, which `engine.getLayout()` returns (`id`, `grid`, `axes`, `appearance`, `css`).
 The `grid` and `appearance` engine options no longer exist.
 
 Each array is structurally constrained: `$type`, a Standard Schema

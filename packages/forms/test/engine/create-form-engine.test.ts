@@ -243,11 +243,18 @@ test('a supplied catalog is copied and gains every registration entry', () => {
 	const engine = createFormEngine({ elements: [noteElement], catalog });
 	const extended = createFormEngine({ elements: [noteElement] }).extend({ elements: [textareaElement], catalog });
 
-	expect(Object.keys(engine.generateJSONSchemaCollection().schemas)).toEqual(['custom:metadata', 'element:note']);
+	expect(Object.keys(engine.generateJSONSchemaCollection().schemas)).toEqual([
+		'custom:metadata',
+		'element:note',
+		'axis:size',
+		'axis:surface',
+	]);
 	expect(Object.keys(extended.generateJSONSchemaCollection().schemas)).toEqual([
 		'custom:metadata',
 		'element:note',
 		'element:textarea',
+		'axis:size',
+		'axis:surface',
 	]);
 	expect(catalog.getRegisteredSchemas()).toHaveLength(1);
 });

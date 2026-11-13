@@ -5,7 +5,20 @@ import { BaseFieldSchema } from '@/schemas/base-field';
 import { defineFormRecipe, defineRecipeSpec } from '@/recipes';
 import { cardSpec } from '@/recipes/built-in-specs';
 import { defineInput } from '@/types';
-import { createLayoutTheme, type ResolvedAppearanceAxes } from '@schema-engine/layout';
+import { builtInAxes, createLayoutTheme, defineAxis, type ResolvedAppearanceAxes } from '@schema-engine/layout';
+
+const tone = defineAxis({
+	$type: 'tone',
+	metadata: { name: 'Tone' },
+	default: 'neutral',
+	values: { neutral: {}, brand: {} },
+});
+const spacing = defineAxis({
+	$type: 'size',
+	metadata: { name: 'Size' },
+	default: 'dense',
+	values: { dense: {}, airy: {} },
+});
 
 const note = defineInput({
 	$type: 'note',
@@ -18,7 +31,7 @@ const note = defineInput({
 const engine = createFormEngine({
 	elements: [note],
 	recipes: [defineFormRecipe(cardSpec, {})],
-	layout: { appearance: { tone: ['neutral', 'brand'], size: ['dense'] } },
+	layout: { appearance: [...builtInAxes, tone] },
 });
 const element = { $type: 'note' as const, id: 'n', name: 'n' };
 const steps = [{ id: 'main', title: 'Main', elements: [element] }];
@@ -30,8 +43,8 @@ expectTypeOf<ResolvedAppearanceAxes>().toEqualTypeOf<{
 
 engine.defineForm({
 	id: 'valid',
-	appearance: { size: 'dense', surface: 'outlined', tone: 'brand' },
-	steps: [{ ...steps[0], appearance: { size: 'compact' } }],
+	appearance: { size: 'compact', surface: 'outlined', tone: 'brand' },
+	steps: [{ ...steps[0], appearance: { size: 'comfortable' } }],
 	view: { $type: 'card', shell: { appearance: { surface: 'elevated' } } },
 });
 
@@ -119,7 +132,7 @@ engine.defineForm({
 	},
 });
 
-const sharedTheme = createLayoutTheme({ appearance: { tone: ['neutral', 'brand'], size: ['dense'] } });
+const sharedTheme = createLayoutTheme({ appearance: [...builtInAxes, tone, spacing] });
 const sharedEngine = createFormEngine({ elements: [note], layout: sharedTheme });
 
 sharedEngine.defineForm({
@@ -134,3 +147,15 @@ sharedEngine.defineForm({
 	appearance: { tone: 'loud' },
 	steps,
 });
+
+sharedEngine.defineForm({
+	id: 'replaced-axis-value',
+	// @ts-expect-error -- 'compact' belongs to the built-in size, which the later size axis replaced
+	appearance: { size: 'compact' },
+	steps,
+});
+
+expectTypeOf<ResolvedAppearanceAxes<[typeof tone, typeof spacing]>>().toEqualTypeOf<{
+	tone: 'neutral' | 'brand';
+	size: 'dense' | 'airy';
+}>();

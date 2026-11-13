@@ -70,7 +70,7 @@ const formConfig: FormConfig = {
 
 ## Multi-step
 
-Recipe slots, steps, fields and the form take a named `appearance`: the engine's layout theme declares the axes (`size`: `compact | default | comfortable`, `surface`: `flat | outlined | elevated`, plus any a host adds), each element or slot declares the axes it supports, and both renderers emit the picked value as `data-se-<axis>`. The card shell's width, padding and shadow are `size` and `surface` values. Structural slot config such as `header.showDescription` is unchanged.
+Recipe slots, steps, fields and the form take a named `appearance`: the engine's layout theme declares the axes (`size`: `compact | default | comfortable`, `surface`: `flat | outlined | elevated`, plus any a host adds), each element or slot declares the axes it supports, and both renderers emit the picked value as `data-se-<axis>`. The card shell reads the semantic tokens those values set (`--se-space`, `--se-border-width`, `--se-shadow`) and maps the spacing to its own width. Structural slot config such as `header.showDescription` is unchanged.
 
 Wizard recipes require **at least two steps**. Set `view.$type` to a wizard recipe such as `wizard` or `card-wizard`. The live demo renders exactly the configuration below:
 

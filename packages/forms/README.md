@@ -137,13 +137,20 @@ forms. The engine takes them together as the `layout` option, either inline or a
 once with `createLayoutTheme` and shared between engines (the same `data-se-theme` and one stylesheet):
 
 ```ts
-import { createLayoutTheme } from '@schema-engine/layout';
+import { builtInAxes, createLayoutTheme, defineAxis } from '@schema-engine/layout';
 
-const engine = createFormEngine({
-	layout: { grid: { minColumnWidth: '12rem' }, appearance: { tone: ['neutral', 'brand'] } },
+const tone = defineAxis({
+	$type: 'tone',
+	metadata: { name: 'Tone' },
+	default: 'neutral',
+	values: { neutral: {}, brand: { '--se-accent': '#f60' } },
 });
 
-const theme = createLayoutTheme({ appearance: { tone: ['neutral', 'brand'] } });
+const engine = createFormEngine({
+	layout: { grid: { minColumnWidth: '12rem' }, appearance: [...builtInAxes, tone] },
+});
+
+const theme = createLayoutTheme({ appearance: [...builtInAxes, tone] });
 const checkout = createFormEngine({ elements, layout: theme });
 const profile = createFormEngine({ elements, layout: theme });
 ```
@@ -151,7 +158,7 @@ const profile = createFormEngine({ elements, layout: theme });
 Inline options are compiled with the renderer's `data-se-*` attribute names reserved
 (`RENDERER_DATA_ATTRIBUTES`), so an axis cannot reuse one; a theme you compile yourself is re-checked
 against that list when the engine is built. `engine.getLayout()` returns the frozen theme: `id`
-(the `data-se-theme` value), `grid`, `axes` and the stylesheet `css`. `engine.extend()` inherits it,
+(the `data-se-theme` value), `grid`, `axes` (axis name to its values), `appearance` (the axes as a read-only registry) and the stylesheet `css`. `engine.extend()` inherits it,
 and `layout` is not an extend option.
 
 Moving to the layout theme removed these, with no aliases:
@@ -163,23 +170,47 @@ Moving to the layout theme removed these, with no aliases:
 
 ### Appearance
 
-The layout theme owns the appearance vocabulary through its optional `appearance`
-half. `size` (`compact | default | comfortable`) and `surface`
-(`flat | outlined | elevated`) are built in; a host adds an axis, or lists more
-values on a built-in one, and may map each value to the CSS custom properties it
-sets (the built-in `size` paddings fall back to the host theme's `--space-block*` variables, so `size: default` looks like no pick in a themed app) (tokens a host sets for a built-in value are merged over the built-in ones, per token):
+An **appearance axis** is one independent dimension of appearance with 2 to 5 named
+values; each value stands for a set of semantic CSS tokens that components read (see
+[`@schema-engine/layout`](../layout/README.md#appearance-axes) for `defineAxis` and the rules
+for a good axis). The layout theme declares the axes in its `appearance` list, held in a
+read-only registry. `builtInAxes` is the default: `size` (`compact | default | comfortable`)
+and `surface` (`flat | outlined | elevated`). A host adds an axis by listing it after the
+built-ins; an axis listed later with the same `$type` replaces the earlier one, so a host
+overrides a built-in axis the same way. The built-in tokens name no host theme; a renderer
+maps them to its own (Radiant's card falls back to `--space-block-lg`), and `size: default`
+sets its tokens to `initial`, so it looks like no pick in a themed app.
 
 ```ts
-const engine = createFormEngine({
-	layout: {
-		appearance: {
-			tone: ['neutral', 'brand'],
-			size: ['dense'],
-			surface: { elevated: { '--se-surface-shadow': '0 2px 4px rgb(0 0 0 / 0.2)' } },
-		},
+import { builtInAxes, defineAxis } from '@schema-engine/layout';
+
+const tone = defineAxis({
+	$type: 'tone',
+	metadata: { name: 'Tone' },
+	default: 'neutral',
+	values: { neutral: {}, brand: { '--se-accent': '#f60' } },
+});
+const size = defineAxis({
+	$type: 'size',
+	metadata: { name: 'Size' },
+	default: 'default',
+	values: {
+		compact: { '--se-space': '0.5rem' },
+		default: { '--se-space': 'initial' },
+		comfortable: { '--se-space': '2rem' },
 	},
 });
+
+const engine = createFormEngine({ layout: { appearance: [...builtInAxes, tone, size] } });
 ```
+
+Keep the axis list inline, as above, or declare it `as const`: a list stored in a plain
+variable widens, and typed `defineForm` stops narrowing the values. The card's width is the readable measure `--se-measure`, which `size` sets (24rem compact,
+32rem comfortable), so overriding the compact spacing does not resize the card.
+
+The engine lists every axis in its schema catalog (`axis:size`) and in the JSON Schema
+export, where `appearance.size` is an enum of the axis's values, so an editor autocompletes
+a form's and a step's picks. Element and recipe slot picks stay an open record of axis names to values.
 
 A form, a step, a field and a view slot pick values with `appearance`, and the
 typed `defineForm` narrows the values to the engine's axes:
@@ -204,8 +235,9 @@ only the axes it supports) into the normalized config. The inheritance walk is `
 (`lib/resolve-appearance.ts`); checking, merging and attribute helpers are in `@schema-engine/layout`.
 Renderers emit `data-se-<axis>` attributes and the token rules, which are part of the layout
 theme's one stylesheet and sit inside `:where()`, so an author's `className` wins. The
-built-in card shell no longer takes `maxWidth`, `padding` or `shadowSize`: they are `size` and
-`surface` values. The wizard `actions` slot's former `appearance` key is now `variant`.
+built-in card shell no longer takes `maxWidth`, `padding` or `shadowSize`: it reads the semantic
+tokens `--se-space`, `--se-border-width`, `--se-shadow` and `--se-surface-background`, and maps
+`--se-space` to its own width. The wizard `actions` slot's former `appearance` key is now `variant`.
 
 ### Grid theme
 

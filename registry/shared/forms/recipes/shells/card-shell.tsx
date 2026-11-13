@@ -5,19 +5,22 @@ import { CardShellConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import type { FormShellProps } from '@schema-engine/forms-react/primitives';
 
 /**
- * Card geometry read from the layout theme's appearance tokens.
+ * Card geometry read from the layout theme's semantic appearance tokens.
  *
  * @remarks
- * The card's `appearance` (`size`, `surface`) sets `--se-size-*` and `--se-surface-*` through the
- * layout theme's token rules; the fallbacks are the look of an unstyled card, so a form that picks nothing renders as before.
+ * The card's `appearance` (`size`, `surface`) sets `--se-space`, `--se-border-width`, `--se-shadow`
+ * and `--se-surface-background` through the layout theme's token rules; the fallbacks are the look
+ * of an unstyled card, so a form that picks nothing renders as before. The card's width is the
+ * readable measure, `--se-measure`.
  */
 const cardStyle: React.CSSProperties = {
-	maxWidth: 'var(--se-size-max-width, 28rem)',
-	borderWidth: 'var(--se-surface-border-width, 1px)',
-	boxShadow: 'var(--se-surface-shadow, 0 8px 24px color-mix(in srgb, var(--on-surface, #000) 10%, transparent))',
+	maxWidth: 'var(--se-measure, 28rem)',
+	backgroundColor: 'var(--se-surface-background, var(--color-card))',
+	borderWidth: 'var(--se-border-width, 1px)',
+	boxShadow: 'var(--se-shadow, 0 8px 24px color-mix(in srgb, var(--on-surface, #000) 10%, transparent))',
 };
 
-const sectionStyle: React.CSSProperties = { padding: 'var(--se-size-padding, 1.5rem)' };
+const sectionStyle: React.CSSProperties = { padding: 'var(--se-space, 1.5rem)' };
 
 export function CardShell({ slots, viewConfig }: FormShellProps) {
 	const { appearance } = getSlotConfig(viewConfig, 'shell', CardShellConfigSchema);

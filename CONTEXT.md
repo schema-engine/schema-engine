@@ -304,14 +304,32 @@ without that host ignores its `grid` config entirely. And a field host with
 its own layout sets `--se-field-display-mode` instead of `display`, which
 responsive `hidden` toggles against rather than forcing `block`.
 
+## Appearance axis
+
+An **appearance axis** is one independent dimension of appearance, with 2 to 5 named values. Each value
+stands for a set of semantic CSS tokens, which components read; components never read an axis
+value. The theme declares the axes (`defineAxis`, held in a read-only registry), a registration
+declares which axes it responds to (`appearanceAxes`), and a document picks values that pass down
+from the document to a container to an item or slot, a closer pick winning. A good axis:
+
+- is orthogonal to the other axes;
+- means the same on every component, so a token names a role (`--se-space`, `--se-shadow`), never a
+  component; an idea that fits one component is slot config;
+- has a small closed set of named values, because a raw value is a token override;
+- controls appearance only, never structure, which is slot config or the grid.
+
+`size` and `surface` are built in. The catalog and the JSON Schema export list each axis and its
+values, so `appearance.size` on a form and its steps is an enum in an editor.
+
 ## Appearance ownership
 
 Named appearance mirrors the grid split. The **layout theme** owns the vocabulary through the
-`appearance` half of `layout`: the axes (`size` as `compact | default | comfortable`
-and `surface` as `flat | outlined | elevated` ship built in; a host adds an axis such as `tone`
-or lists more values on a built-in one), the closed value list of each, and optionally the
-CSS custom properties a value stands for (`--se-size-padding`, `--se-surface-shadow`). The
-**form** owns intent: a form, a step, a field or a view slot picks a value per axis with
+`appearance` half of `layout`: a list of **appearance axes** built with `defineAxis` and stored in a
+registry. `builtInAxes` (`size` as `compact | default | comfortable` and `surface` as
+`flat | outlined | elevated`) is the default list; a host writes
+`appearance: [...builtInAxes, tone]` to add an axis such as `tone`, and an axis listed later with
+the same `$type` replaces the earlier one. Each value stands for semantic CSS custom properties
+(`--se-space`, `--se-shadow`). The **form** owns intent: a form, a step, a field or a view slot picks a value per axis with
 `appearance: { size: 'compact' }`. A renderer never defaults or interprets a pick; it emits it.
 
 Each element registration declares the axes it supports (`appearanceAxes`), and each recipe
@@ -342,15 +360,18 @@ layout theme's one stylesheet, emitted once per form. They are written as
 `:where(<theme scope> [data-se-size="compact"])`, so they add no specificity and an author's
 `className` always wins; the scope is `data-se-theme`, the layout theme's id, which sits on the
 form element and also on every grid and item, so two engines with different tokens cannot overwrite each other. Shells read
-the tokens (`var(--se-size-padding, 1.5rem)`) and keep the look of an unstyled form as the
-fallback. What a host's own axis looks like is the host's CSS, keyed on the same attributes. A value
+the tokens (`var(--se-space, 1.5rem)`) and keep the look of an unstyled form as the
+fallback. The built-in tokens name no host theme: a renderer's fallback is where its host theme
+variables belong (Radiant's card reads `var(--se-space, var(--space-block-lg, 1.5rem))`), and the
+built-in `size.default` sets its tokens to `initial`, which hands them back to the component's
+fallback, so `size: default` looks like no pick in a themed app, also inside a `compact` form. What a host's own axis looks like is the host's CSS, keyed on the same attributes. A value
 that declares no tokens inherits the surrounding value's tokens through custom-property inheritance,
 and a form of another engine nested inside a form is not supported. The DOM contract is the same in
 every renderer; the visual effect of a built-in value is not yet: `size` changes a field's font size in
 Radiant only, and both card shells read the tokens. A field's `className` is applied to the same field host, the element that carries its `style` and the attributes, in both renderers. The field host that carries the attributes is the
 inner `.se-form-field` (the Radiant constraint wrapper around it carries only grid placement).
 
-`maxWidth`, `padding` and `shadowSize` are axes now, not slot config. `contentWidth`, `sideWidth` and
+`maxWidth`, `padding` and `shadowSize` are gone: the `size` and `surface` tokens set the padding, border and shadow, and the card's width is the readable measure `--se-measure`. `contentWidth`, `sideWidth` and
 the structural keys (`showDescription`, `orientation`, `labels`, `align`) stay in slot config
 because they change layout or content, not appearance. `style` is the escape hatch for what the
 vocabulary does not cover and accepts only `--custom-property` keys with string or number values.

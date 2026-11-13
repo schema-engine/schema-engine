@@ -13,6 +13,7 @@ import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
 import { logger } from '@/lib/logger';
 import {
 	assertAxesNotReserved,
+	createAppearanceSchema,
 	createLayoutTheme,
 	getDefaultLayoutTheme,
 	isLayoutTheme,
@@ -53,6 +54,7 @@ function createFormConfigSchema(
 	elementRegistry: ElementRegistry,
 	recipeRegistry: RecipeRegistry,
 	actionRegistry: ActionRegistrationRegistry,
+	layout: LayoutTheme,
 ) {
 	const elementsUnion = createRegistrationSchema([...elementRegistry.all()]);
 	const recipesUnion = createRegistrationSchema([...recipeRegistry.all()]);
@@ -62,6 +64,7 @@ function createFormConfigSchema(
 		elements: elementsUnion,
 		view: recipeRegistry.size > 0 ? recipesUnion : z.never(),
 		actions: actionsUnion,
+		appearance: createAppearanceSchema(layout.appearance),
 	});
 }
 
@@ -92,14 +95,14 @@ function registerSchemaMetadata(
 }
 
 /**
- * Rejects an axis a registration declares that the engine's vocabulary does not, so a typo such as
- * `'sise'` fails the build instead of silently making the axis unsupported.
+ * Rejects an axis a registration declares that the layout theme's axis registry does not hold, so a
+ * typo such as `'sise'` fails the build instead of silently making the axis unsupported.
  */
 function assertDeclaredAxes(owner: string, axes: readonly string[] | undefined, layout: LayoutTheme): void {
 	for (const axis of axes ?? []) {
-		if (!(axis in layout.axes)) {
+		if (!layout.appearance.has(axis)) {
 			throw new Error(
-				`${owner} declares unknown appearance axis '${axis}'. Declared axes: ${Object.keys(layout.axes).join(', ')}. Add it with createFormEngine({ layout: { appearance: { ${axis}: [...] } } }).`,
+				`${owner} declares unknown appearance axis '${axis}'. Declared axes: ${layout.appearance.keys().join(', ')}. Add it with createFormEngine({ layout: { appearance: [...builtInAxes, defineAxis({ $type: '${axis}', ... })] } }).`,
 			);
 		}
 	}
@@ -124,7 +127,8 @@ export type FormEngineRegistrationLists = {
  * re-checked here.
  *
  * A value that is not a compiled theme must be `{ grid, appearance }` options and nothing else. A
- * spread copy or a structured clone of a theme has `id`, `axes` and `css` keys and lost its brand;
+ * spread copy or a JSON copy of a theme has `id`, `axes` and `css` keys and lost its brand (a
+ * structured clone of one throws instead, because the theme holds functions);
  * compiling it as options would drop its appearance axes and change its id without a word, so it
  * throws instead.
  */
@@ -179,13 +183,14 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 		[ComponentType.Element, elementRegistry],
 		[ComponentType.Recipe, recipeRegistry],
 		[ComponentType.Action, actionRegistry],
+		[ComponentType.Axis, layout.appearance],
 	] as const) {
 		for (const item of registrations.all()) {
 			registerSchemaMetadata(metadataCatalog, componentType, item);
 		}
 	}
 
-	const formConfigSchema = createFormConfigSchema(elementRegistry, recipeRegistry, actionRegistry);
+	const formConfigSchema = createFormConfigSchema(elementRegistry, recipeRegistry, actionRegistry, layout);
 	const actionConfigValidators = createActionConfigValidatorMap(actionRegistry.all());
 	const schemaArtifacts = createFormEngineSchemaArtifacts(metadataCatalog, formConfigSchema, actionConfigValidators);
 

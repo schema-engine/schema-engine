@@ -237,25 +237,32 @@ width fields, but it counts tracks of the 12 the widths use there, so
 ## The layout theme
 
 The grid vocabulary (breakpoint thresholds, gap tokens, the default minimum column
-width) and the appearance vocabulary (the `size` and `surface` axes, plus any you
-add) belong to one **layout theme**, compiled by `@schema-engine/layout`. Pass it to
+width) and the appearance axes (`size` and `surface` built in, plus any you
+define) belong to one **layout theme**, compiled by `@schema-engine/layout`. Pass it to
 the engine as `layout`, inline or compiled once and shared:
 
 ```ts
 import { createFormEngine } from '@schema-engine/forms';
-import { createLayoutTheme } from '@schema-engine/layout';
+import { builtInAxes, createLayoutTheme, defineAxis } from '@schema-engine/layout';
+
+const tone = defineAxis({
+	$type: 'tone',
+	metadata: { name: 'Tone' },
+	default: 'neutral',
+	values: { neutral: {}, brand: { '--se-accent': '#f60' } },
+});
 
 // Inline: the engine compiles a theme of its own.
 const engine = createFormEngine({
 	elements,
 	layout: {
 		grid: { breakpoints: { md: '50rem' }, gap: { default: '1rem' } },
-		appearance: { tone: ['neutral', 'brand'] },
+		appearance: [...builtInAxes, tone],
 	},
 });
 
 // Shared: both engines carry the same `data-se-theme` and one stylesheet.
-const theme = createLayoutTheme({ appearance: { tone: ['neutral', 'brand'] } });
+const theme = createLayoutTheme({ appearance: [...builtInAxes, tone] });
 const checkout = createFormEngine({ elements, layout: theme });
 const profile = createFormEngine({ elements, layout: theme });
 ```
@@ -264,3 +271,40 @@ A form element, its grids and its items carry one `data-se-theme` attribute, and
 theme's stylesheet is emitted once. The stylesheet selects only `.se-grid`,
 `.se-grid-item` and `[data-se-theme]`; the renderers add those classes beside
 `se-form-grid` and `se-form-field`, which stay available for your own styles.
+
+### Appearance axes
+
+An appearance axis is one independent dimension of appearance with 2 to 5 named values.
+Each value stands for a set of semantic CSS tokens (`--se-space`, `--se-font-size`,
+`--se-measure`, `--se-border-width`, `--se-shadow`, `--se-surface-background`) that
+components read. Components never read the axis value, and a token never names one
+component. `size` and `surface` are built in.
+
+Define an axis with `defineAxis` and list it after `builtInAxes`. An axis listed later with
+the same `$type` replaces the earlier one, so this also overrides a built-in axis:
+
+```ts
+const size = defineAxis({
+	$type: 'size',
+	metadata: { name: 'Size' },
+	default: 'default',
+	values: {
+		compact: { '--se-space': '0.5rem' },
+		default: { '--se-space': 'initial' },
+		comfortable: { '--se-space': '2rem' },
+	},
+});
+
+const engine = createFormEngine({ elements, layout: { appearance: [...builtInAxes, size] } });
+```
+
+Keep the axis list inline, as above, or declare it `as const`: a list stored in a plain
+variable widens, and typed `defineForm` stops narrowing the values. The card's width is the readable measure `--se-measure`, which `size` sets (24rem compact,
+32rem comfortable), so overriding the compact spacing does not resize the card.
+
+A registration declares the axes it responds to (`appearanceAxes: ['tone']`); the engine
+build throws, naming the registration, when it declares an axis the theme lacks. A form, a
+step, a field or a recipe slot picks a value with `appearance: { tone: 'brand' }`, and the
+renderer emits `data-se-tone="brand"`. Your CSS reads the tokens the value sets. The JSON
+Schema the engine exports lists every axis on the form and its steps, so `appearance.size`
+is an enum an editor can autocomplete.

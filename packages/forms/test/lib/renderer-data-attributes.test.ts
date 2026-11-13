@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
+import { builtInAxes, defineAxis } from '@schema-engine/layout';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { RENDERER_DATA_ATTRIBUTES } from '@/lib/renderer-data-attributes';
 
@@ -37,6 +38,7 @@ describe('renderer data attributes', () => {
 	});
 
 	test.each(RENDERER_DATA_ATTRIBUTES)('an axis named %s is rejected', (name) => {
-		expect(() => createFormEngine({ layout: { appearance: { [name]: ['a'] } } })).toThrowError(/reserved/);
+		const reserved = defineAxis({ $type: name, metadata: { name }, default: 'a', values: { a: {}, b: {} } });
+		expect(() => createFormEngine({ layout: { appearance: [...builtInAxes, reserved] } })).toThrowError(/reserved/);
 	});
 });

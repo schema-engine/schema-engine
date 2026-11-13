@@ -10,6 +10,7 @@ export const ComponentType = {
 	Element: 'element',
 	Recipe: 'recipe',
 	Action: 'action',
+	Axis: 'axis',
 } as const;
 
 /**
