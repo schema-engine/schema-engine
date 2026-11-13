@@ -52,7 +52,12 @@ figure[data-rehype-pretty-code-figure] pre > code {
 	@apply rounded-none border-none bg-transparent p-0 font-mono text-[0.875em] leading-relaxed;
 }
 
-figure[data-rehype-pretty-code-figure] pre > code > .line {
+/**
+ * Blank source lines render as a lone space in a grid item, which collapses to zero height.
+ * rehype-pretty-code marks lines with `data-line` and no `line` class, so the rule needs both
+ * selectors to hold across Shiki and plugin versions.
+ */
+figure[data-rehype-pretty-code-figure] pre > code > :is(.line, [data-line]) {
 	min-height: 1lh;
 }
 
