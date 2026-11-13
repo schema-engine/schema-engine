@@ -127,7 +127,7 @@ function friendlyMessage(problem: YAMLError | YAMLWarning): string {
 		case 'MULTIPLE_DOCS':
 			return 'A file holds one document; remove the extra `---`.';
 		case 'MULTILINE_IMPLICIT_KEY':
-			return 'Bad indentation: line this up with the keys above it, or put the whole key on one line.';
+			return 'Bad indentation or a missing colon: line this up with the keys above it, or put the whole key on one line.';
 		case 'TAG_RESOLVE_FAILED': {
 			const tag = /Unresolved tag: (\S+)/.exec(problem.message)?.[1];
 			const name = tag ? `${shortTag(tag)} ` : '';
@@ -165,7 +165,7 @@ function parserProblems(doc: Document.Parsed): Array<{ message: string; position
 /** The text of an error `toJS` throws, with the alias limit said in terms an author can use. */
 function conversionMessage(error: unknown): string {
 	if (error instanceof Error && /alias count/i.test(error.message)) {
-		return `The document uses aliases (*name) more than ${MAX_ALIAS_COUNT} times in all. Write the repeated value out, or use fewer or smaller anchors.`;
+		return `The document has more than ${MAX_ALIAS_COUNT} alias expansions (*name) in all. Write the repeated value out, or use fewer or smaller anchors.`;
 	}
 	return error instanceof Error ? error.message : 'The document could not be read';
 }
@@ -188,7 +188,8 @@ function conversionMessage(error: unknown): string {
  *
  * Anchors, aliases and merge keys (`<<: *defaults`) work within the text. A text with more than 100
  * alias expansions is reported as an issue at line 1, not thrown. An issue inside a merged value
- * points at the map that merges it, because the merged keys have no place of their own.
+ * points at the map that merges it, because the merged keys have no place of their own. A merge
+ * source that is not a map (`<<: 5`) is reported at line 1, column 1.
  */
 export function safeParseYaml<T>(
 	text: string,
@@ -196,7 +197,7 @@ export function safeParseYaml<T>(
 	options?: YamlParseOptions,
 ): YamlParseResult<T> {
 	const lineCounter = new LineCounter();
-	const source = text.startsWith('﻿') ? text.slice(1) : text;
+	const source = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
 	const doc = parseDocument(source, {
 		lineCounter,
 		version: '1.2',

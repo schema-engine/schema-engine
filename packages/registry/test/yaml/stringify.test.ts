@@ -74,6 +74,18 @@ describe('stringifyYaml', () => {
 		expect(() => stringifyYaml({ a: 1 }, { schemaUrl: 'https://example.com\nb: 2' })).toThrow(TypeError);
 	});
 
+	test.each([
+		['a map', { '<<': { port: 80 }, name: 'a' }],
+		['a scalar', { '<<': 5 }],
+		['a list', { nested: { '<<': [1, 2] } }],
+		['a short leaf map', { a: { '<<': 'x' } }],
+	])('a literal << key with %s round-trips and is not read as a merge', (_name, value) => {
+		const text = stringifyYaml(value);
+
+		expect(text).toContain('"<<":');
+		expect(parseYaml(text, accept)).toEqual(value);
+	});
+
 	test('round-trips values through parseYaml', () => {
 		const value = {
 			title: 'Contact',

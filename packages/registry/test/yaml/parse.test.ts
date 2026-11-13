@@ -209,7 +209,7 @@ describe('syntax errors', () => {
 
 		expect(result).toMatchObject({ success: false, issues: [{ path: [], line: 1, column: 1 }] });
 		if (!result.success) {
-			expect(result.issues[0]?.message).toMatch(/more than 100 times/);
+			expect(result.issues[0]?.message).toMatch(/more than 100 alias expansions/);
 			expect(result.issues[0]?.message).not.toMatch(/resource exhaustion/);
 		}
 		expect(validate).not.toHaveBeenCalled();
@@ -295,6 +295,18 @@ describe('anchors, merge keys, keys and byte order marks', () => {
 		expect(result.issues.find((found) => found.path.join('.') === 'servers.0.port')).toMatchObject({
 			line: 5,
 			column: 5,
+		});
+	});
+
+	test.each(['5', '[1, 2]'])('a merge source that is not a map (<<: %s) is reported at 1:1', (source) => {
+		const validate = vi.fn(accept);
+
+		const result = safeParseYaml(`a:\n  <<: ${source}\n`, validate);
+
+		expect(validate).not.toHaveBeenCalled();
+		expect(result).toEqual({
+			success: false,
+			issues: [{ message: 'Merge sources must be maps or map aliases', path: [], line: 1, column: 1 }],
 		});
 	});
 

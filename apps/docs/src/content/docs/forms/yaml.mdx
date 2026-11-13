@@ -209,8 +209,8 @@ export const text = stringifyYaml(form, { schemaUrl: './contact.schema.json' });
                 name: name
     ```
 
-    A text that uses aliases more than 100 times in all is reported as an issue, which guards against files
-    that expand to enormous values. An issue inside merged values points at the map that merges them.
+    A text with more than 100 alias expansions in all is reported as an issue, which guards against files
+    that expand to enormous values. An issue inside merged values points at the map that merges them, and a merge source that is not a map (`<<: 5`) is reported at line 1, column 1.
 
 - Tags are not supported. `!!binary`, `!!set`, `!!timestamp`, `!custom` and the like are reported as issues, so the
   engine only ever sees plain values.

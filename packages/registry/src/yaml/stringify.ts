@@ -38,9 +38,11 @@ function isShortLeafMap(map: YAMLMap): boolean {
  * Write a value as YAML text.
  *
  * @remarks
- * An object that appears twice is written out twice, not as an anchor and an alias. A short map of scalars under a key is written in flow style (`grid: { width: half }`); every
- * other collection, including a sequence item, is written in block style. Lines are not folded.
- * Strings that would read as another type are quoted, so `"1.10"` stays a string when parsed back.
+ * An object that appears twice is written out twice, not as an anchor and an alias. A short map of
+ * scalars under a key is written in flow style (`grid: { width: half }`); every other collection,
+ * including a sequence item, is written in block style. Lines are not folded.
+ * Strings that would read as another type are quoted, so `"1.10"` stays a string when parsed back,
+ * and so is a key named `<<`, which `parseYaml` would otherwise read as a merge key.
  * `no` and `on` are not quoted, because YAML 1.2 reads them as strings; a YAML 1.1 reader would not.
  */
 export function stringifyYaml(value: unknown, options?: StringifyYamlOptions): string {
@@ -50,6 +52,11 @@ export function stringifyYaml(value: unknown, options?: StringifyYamlOptions): s
 	}
 	const doc = new Document(value, { version: '1.2', aliasDuplicateObjects: false });
 	visit(doc, {
+		Pair(_key, pair) {
+			if (isScalar(pair.key) && pair.key.value === '<<') {
+				pair.key.type = 'QUOTE_DOUBLE';
+			}
+		},
 		Map(_key, map, path) {
 			if (isPair(path.at(-1)) && isShortLeafMap(map)) {
 				map.flow = true;

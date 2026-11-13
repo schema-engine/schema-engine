@@ -221,7 +221,7 @@ if (!result.success) {
 
 - `no`, `yes`, `on` and `off` are strings in YAML 1.2 and stay strings here. A YAML 1.1 reader, such as PyYAML or an older editor plugin, reads them as booleans, and `stringifyYaml` does not quote them.
 - An unquoted `1.10` is the number `1.1` in every YAML version. Only quoting keeps it a string: write `version: "1.10"`. `stringifyYaml` quotes such strings for you.
-- There is no loader, plugin or CLI, no multi-document files and no includes across files. Anchors, aliases and merge keys (`<<: *defaults`) work inside one file. A text with more than 100 alias expansions is reported as an issue at line 1, which guards against files that expand to enormous values. An issue inside merged values points at the map that merges them.
+- There is no loader, plugin or CLI, no multi-document files and no includes across files. Anchors, aliases and merge keys (`<<: *defaults`) work inside one file. A text with more than 100 alias expansions is reported as an issue at line 1, which guards against files that expand to enormous values. An issue inside merged values points at the map that merges them. A merge source that is not a map (`<<: 5`) is reported at line 1, column 1. A literal `<<` key written by `stringifyYaml` is quoted, so it reads back as a plain key.
 
 ## Package Exports
 
