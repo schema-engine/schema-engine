@@ -3,6 +3,8 @@ import { customElement, bindTo, onUpdated, prop, state } from '@ecopages/radiant
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { unsafeHtml } from '@ecopages/jsx/jsx-runtime';
+import { MapItems } from '@ecopages/jsx/client';
+import { peek, state as createState } from '@ecopages/signals';
 import {
 	RuiSelect,
 	RuiSelectControl,
@@ -71,11 +73,20 @@ export class SePhoneInput extends FormAssociatedElement {
 
 	@state @bindTo({ attr: 'data-country' }) protected country: CountryCode = 'US';
 	@state @bindTo({ bool: 'data-ready' }) protected ready = false;
-	@state protected countries: PhoneCountryOption[] = [];
 	@state protected display = '';
 	@contextSelector({ context: fieldContext })
 	@state
 	protected field?: FieldContextValue = undefined;
+
+	/**
+	 * The country options `MapItems` renders.
+	 *
+	 * @remarks
+	 * A signal rather than `@state`, so the option list is a keyed list in the view and `render()` does
+	 * not map over it. `ready` flips after it is set, which is what re-renders the host's
+	 * `disabled` state and selected flag.
+	 */
+	private readonly countries = createState<readonly PhoneCountryOption[]>([]);
 
 	private committed = '';
 	private lib?: LibPhoneNumber;
@@ -134,7 +145,7 @@ export class SePhoneInput extends FormAssociatedElement {
 		}
 
 		this.lib = lib;
-		this.countries = listPhoneCountries(lib);
+		this.countries.set(listPhoneCountries(lib));
 		this.hydrateFromValue(this.value);
 		this.ready = true;
 	}
@@ -171,7 +182,7 @@ export class SePhoneInput extends FormAssociatedElement {
 	}
 
 	private selectedCountry() {
-		return this.countries.find((option) => option.code === this.country);
+		return peek(this.countries).find((option) => option.code === this.country);
 	}
 
 	override render(): JsxRenderable {
@@ -183,32 +194,34 @@ export class SePhoneInput extends FormAssociatedElement {
 					label="Country"
 					on:rui-change={this.onCountryChange}
 					value={this.country}
-					disabled={this.effectiveDisabled || this.countries.length === 0}
+					disabled={this.effectiveDisabled || !this.ready}
 				>
 					<RuiSelectControl>
-						<RuiSelectTrigger disabled={this.effectiveDisabled || this.countries.length === 0}>
+						<RuiSelectTrigger disabled={this.effectiveDisabled || !this.ready}>
 							<RuiSelectValue>
 								<PhoneFlag code={selected?.code} class="se-phone__flag" />
 							</RuiSelectValue>
 						</RuiSelectTrigger>
-						<RuiSelectToggle disabled={this.effectiveDisabled || this.countries.length === 0} />
+						<RuiSelectToggle disabled={this.effectiveDisabled || !this.ready} />
 					</RuiSelectControl>
 					<RuiSelectListbox>
 						<RuiAutocomplete>
 							<RuiSelectSearch placeholder="Search country..." disabled={this.effectiveDisabled} />
 							<RuiAutocompleteCollection>
 								<RuiListbox embedded selectionMode="single" value={this.country} label="Countries">
-									{this.countries.map((option) => (
-										<RuiListboxOption
-											value={option.code}
-											label={`${option.name} ${option.code} +${option.callingCode}`}
-										>
-											<PhoneFlag code={option.code} class="se-phone__option-flag" />
-											<span class="se-phone__option-name">{option.name}</span>
-											<span class="se-phone__option-code">+{option.callingCode}</span>
-											<RuiListboxOptionIndicator />
-										</RuiListboxOption>
-									))}
+									<MapItems each={this.countries}>
+										{(option) => (
+											<RuiListboxOption
+												value={option.code}
+												label={`${option.name} ${option.code} +${option.callingCode}`}
+											>
+												<PhoneFlag code={option.code} class="se-phone__option-flag" />
+												<span class="se-phone__option-name">{option.name}</span>
+												<span class="se-phone__option-code">+{option.callingCode}</span>
+												<RuiListboxOptionIndicator />
+											</RuiListboxOption>
+										)}
+									</MapItems>
 								</RuiListbox>
 								<RuiAutocompleteEmpty>No country found.</RuiAutocompleteEmpty>
 							</RuiAutocompleteCollection>
