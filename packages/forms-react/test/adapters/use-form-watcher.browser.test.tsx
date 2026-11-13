@@ -110,7 +110,7 @@ describe('useFormWatcher', () => {
 		const onChange = vi.fn();
 		const view = render(<WatcherHarness onChange={onChange} />);
 
-		await userEvent.type(screen.getByRole('textbox', { name: 'Email' }), 'edited');
+		await userEvent.fill(screen.getByRole('textbox', { name: 'Email' }), 'edited');
 		await waitFor(() => expect(onChange).toHaveBeenLastCalledWith({ email: 'edited', contacts: [{ email: '' }] }));
 		const priorCalls = onChange.mock.calls.length;
 

@@ -96,7 +96,7 @@ describe('FormRenderer state boundaries', () => {
 		});
 		render(<FormRenderer config={config} engine={engine} adapter={rhfAdapter} />);
 		const email = screen.getByRole('textbox', { name: 'Email' });
-		await userEvent.type(email, 'reader@example.com');
+		await userEvent.fill(email, 'reader@example.com');
 		await userEvent.fill(screen.getByRole('textbox', { name: 'Name' }), 'Grace');
 		await userEvent.click(screen.getByRole('checkbox', { name: 'Consent' }));
 		await userEvent.fill(screen.getByRole('textbox', { name: 'City' }), 'Lisbon');
