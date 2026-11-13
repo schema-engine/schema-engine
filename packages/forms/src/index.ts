@@ -65,9 +65,11 @@ export {
 	getRenderableSteps,
 	stepGrid,
 	assertFormEngine,
+	safeValidateFormConfig,
 	validateElementConfig,
 	validateFormConfig,
 } from './lib/validate-form';
+export type { FormValidationIssue, FormValidationResult } from './lib/validate-form';
 export { isNormalizedElementConfig } from './lib/normalized-form-config';
 export type { FormConfigView, NormalizedElementConfig, NormalizedFormConfig } from './lib/normalized-form-config';
 export type {

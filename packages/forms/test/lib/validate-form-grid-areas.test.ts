@@ -38,6 +38,11 @@ describe('named grid areas', () => {
 		render: () => null,
 	});
 	const engine = createFormEngine({ elements: [gridField, group] });
+
+	const issuePaths = (form: unknown) => {
+		const result = engine.safeValidateForm(form);
+		return result.success ? [] : result.issues.map((issue) => issue.path);
+	};
 	const claiming = (...names: string[]) => names.map((name) => fieldNamed(name, { area: name }));
 	const drawn = ['a a a b b b', 'a a a c c c', 'd d e e e e'];
 
@@ -235,11 +240,12 @@ describe('named grid areas', () => {
 			expect(() => engine.validateForm(form)).not.toThrow();
 		});
 
-		test('rejects the template of a step against that step fields, naming the step', () => {
+		test('rejects the template of a step against that step fields, at the step grid', () => {
 			const form = stepped({ columns: 2 }, [
 				{ id: 'address', grid: { areas: ['street zip'] }, elements: claiming('street') },
 			]);
-			expect(() => engine.validateForm(form)).toThrow(/steps\[0\].*'address'.*'zip'.*not claimed/);
+			expect(issuePaths(form)).toEqual([['steps', 0, 'grid', 'areas']]);
+			expect(() => engine.validateForm(form)).toThrow(/^steps\[0\]\.grid\.areas: .*'zip'.*not claimed/);
 		});
 
 		test('rejects step columns next to step widths', () => {
@@ -249,7 +255,8 @@ describe('named grid areas', () => {
 
 		test('a form template applies to the fields of every step without its own grid', () => {
 			const form = stepped({ areas: ['a b'] }, [{ elements: claiming('a') }]);
-			expect(() => engine.validateForm(form)).toThrow(/steps\[0\].*area 'b'.*not claimed/);
+			expect(issuePaths(form)).toEqual([['grid', 'areas']]);
+			expect(() => engine.validateForm(form)).toThrow(/^grid\.areas: .*area 'b'.*not claimed/);
 		});
 
 		test('rejects step areas next to step columns', () => {

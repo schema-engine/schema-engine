@@ -322,7 +322,9 @@ describe('appearance validation', () => {
 	});
 
 	test('a non-string value is rejected', () => {
-		expect(() => engine.validateForm(form({ appearance: { size: 3 } }))).toThrowError(/string.*appearance.*size/s);
+		expect(() => engine.validateForm(form({ appearance: { size: 3 } }))).toThrowError(
+			/^appearance\.size: Expected string/,
+		);
 		expect(() =>
 			engine.validateForm(form({}, [{ $type: 'note', id: 'n', name: 'n', appearance: { size: 3 } }])),
 		).toThrowError(/appearance\.size/);
@@ -431,7 +433,7 @@ describe('recipe slot appearance', () => {
 
 	test.each(['maxWidth', 'padding', 'shadowSize'])('a card shell no longer takes %s', (key) => {
 		expect(() => engine.validateForm(cardForm({ shell: { [key]: 'md' } }))).toThrowError(
-			new RegExp(`Invalid view configuration.*${key}`, 's'),
+			new RegExp(`^view\\.shell: Unrecognized key: ${key}`),
 		);
 	});
 

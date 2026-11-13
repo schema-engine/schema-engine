@@ -50,6 +50,47 @@ const contactForm = engine.defineForm({
 
 `defineForm` is the typed authoring API for that engine's registrations. `validateForm(input: unknown)` validates external JSON. Both run the same pipeline: envelope parse, Standard Schema dispatch by `$type` (including nested child elements), recipe-kind checks, and schema defaults/transforms. The normalized marker is applied only after that succeeds. `defineForm` and `validateForm` return a frozen `NormalizedFormConfig` owned by that engine. Snapshot isolation copies plain objects and arrays, so caller data of those kinds is not frozen. Other objects currently remain shared. A normalized form cannot be reused on another engine; pass the original authoring input or JSON instead. Renderers consume that normalized output. They do not re-run registration input schemas. Standalone or dynamically created fields that are not already inside a form must go through `engine.validateElement()` first. Containers render children with `FormElements` and a field scope (`namePrefix`, `instanceId`); they do not clone normalized configs to change paths.
 
+### Validation errors
+
+`validateForm` throws a `FormValidationError` for a form that does not validate. Its `issues` list every
+problem, each shaped like a Standard Schema issue: `{ message, path }`. `path` is the config key the
+issue is about, in object keys and array indexes, so a caller can find it without parsing the message.
+A nested element carries its whole path, and an issue about the form itself has the path `[]`:
+
+| Problem                                          | `path`                                                           |
+| ------------------------------------------------ | ---------------------------------------------------------------- |
+| A field's `grid.width` is not a named width      | `['steps', 0, 'elements', 2, 'grid', 'width']`                   |
+| A child of a fieldset has a rule with no handler | `['steps', 0, 'elements', 1, 'elements', 0, 'rules', 0, 'type']` |
+| `view.$type` is not a registered recipe          | `['view', '$type']`                                              |
+| An element's `appearance` picks an unknown value | `['steps', 0, 'elements', 0, 'appearance', 'size']`              |
+| A step grid's `areas` is not a valid template    | `['steps', 0, 'grid', 'areas']`                                  |
+
+A schema issue keeps the path the schema gave it, laid under the location of the element, action or view
+it validated. A check the engine makes (the view, recipe kind, grid, areas, appearance picks and rules)
+points at the key it rejects. `validateElement` reports paths relative to the element.
+
+`error.message` lists the issues one per line as `<path>: <message>`, with array indexes in brackets
+(`steps[0].elements[2].grid.width: Expected one of full, three-quarters, ...`), and the bare message for
+an issue about the whole form. `FormValidationIssue` and `FormValidationResult` are exported.
+
+`engine.safeValidateForm(config)` runs the same validation and returns a result instead of throwing, in the
+shape `safeParseStandardSchema` uses elsewhere:
+
+```ts
+const result = engine.safeValidateForm(json);
+if (!result.success) {
+	for (const { path, message } of result.issues) {
+		console.error(path.join('.'), message);
+	}
+	return;
+}
+render(result.data); // the same frozen NormalizedFormConfig validateForm returns
+```
+
+It still throws for a misuse of the API, such as a registration whose Standard Schema is async. A YAML or
+editor integration can pass `(value) => engine.safeValidateForm(value)` as its validator and map each
+`path` to a source location.
+
 ### Shared step and submission logic
 
 `createInitialStepStates(totalSteps)` creates completion, validity, and visitation arrays;
@@ -407,7 +448,8 @@ delay debounced rules without coalescing them.
 Required rules, `relate`, constraint emptiness operators, and async skip checks
 share the same empty values: `undefined`, `null`, `''`, and `[]`. `false` and
 `0` count as present. `validateForm` and `validateElement` reject rules without
-a registered handler with a `FormValidationError` naming the field and rule.
+a registered handler with a `FormValidationError` naming the field and rule, at the path of that
+rule's `type`.
 The `relate` string and date bases coerce primitive values and `Date` instances;
 arbitrary objects are left unchanged for string comparisons and are invalid dates.
 

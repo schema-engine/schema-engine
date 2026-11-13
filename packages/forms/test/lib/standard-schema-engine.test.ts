@@ -76,12 +76,14 @@ describe('native Standard Schema engine path', () => {
 			],
 		});
 
-		expect(() =>
-			engine.validateForm({
-				id: 'path-fixture',
-				steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'path-fixture' }] }],
-			}),
-		).toThrow(/Name is invalid \(profile\.name\)/);
+		const validated = engine.safeValidateForm({
+			id: 'path-fixture',
+			steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'path-fixture' }] }],
+		});
+		expect(validated).toEqual({
+			success: false,
+			issues: [{ path: ['steps', 0, 'elements', 0, 'profile', 'name'], message: 'Name is invalid' }],
+		});
 	});
 
 	test('createFormEngine -> defineForm accepts a hand-written Standard Schema', () => {
@@ -150,8 +152,14 @@ describe('native Standard Schema engine path', () => {
 			});
 		} catch (error) {
 			expect(error).toBeInstanceOf(FormValidationError);
+			expect((error as FormValidationError).issues).toEqual([
+				{
+					path: ['steps', 0, 'elements', 0],
+					message: expect.stringContaining('Invalid minimal-fixture config'),
+				},
+			]);
 			expect((error as FormValidationError).message).toMatch(
-				/steps\[0\] \(id: 'main'\) elements\[0\] \(id: 'field-1'\).*Invalid element configuration for 'minimal-fixture'/s,
+				/^steps\[0\]\.elements\[0\]: Invalid minimal-fixture config/,
 			);
 			expect((error as FormValidationError).message).not.toMatch(/\.run/);
 		}

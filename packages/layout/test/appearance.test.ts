@@ -206,21 +206,27 @@ describe('checkAppearance', () => {
 	test('names an unknown value with the allowed ones', () => {
 		const { issues, appearance } = checkAppearance({ surface: 'elevatd' }, { axes, subject: 'The root' });
 		expect(issues).toEqual([
-			"appearance.surface: 'elevatd' is not a value of 'surface'. Allowed: flat, outlined, elevated.",
+			{
+				path: ['appearance', 'surface'],
+				message: "'elevatd' is not a value of 'surface'. Allowed: flat, outlined, elevated.",
+			},
 		]);
 		expect(appearance).toEqual({});
 	});
 
 	test('names an unknown axis with the declared ones', () => {
 		const { issues } = checkAppearance({ density: 'high' }, { axes, subject: 'The root' });
-		expect(issues[0]).toMatch(/appearance\.density: unknown axis 'density'. Declared axes: size, surface, tone/);
+		expect(issues[0]?.path).toEqual(['appearance', 'density']);
+		expect(issues[0]?.message).toMatch(/Unknown axis 'density'. Declared axes: size, surface, tone/);
 	});
 
 	test('rejects a non-string value and a non-object pick', () => {
-		expect(checkAppearance({ size: 3 }, { axes, subject: 'The root' }).issues[0]).toMatch(
-			/appearance\.size: expected one of/,
-		);
-		expect(checkAppearance('compact', { axes, subject: 'The root' }).issues[0]).toMatch(/expected an object/);
+		const nonString = checkAppearance({ size: 3 }, { axes, subject: 'The root' }).issues[0];
+		expect(nonString?.path).toEqual(['appearance', 'size']);
+		expect(nonString?.message).toMatch(/^Expected one of/);
+		const nonObject = checkAppearance('compact', { axes, subject: 'The root' }).issues[0];
+		expect(nonObject?.path).toEqual(['appearance']);
+		expect(nonObject?.message).toMatch(/Expected an object/);
 	});
 
 	test('an owner rejects an axis it does not support, naming the owner', () => {
@@ -229,7 +235,10 @@ describe('checkAppearance', () => {
 			{ axes, subject: "Element 'note'", supported: ['size'] },
 		);
 		expect(issues).toEqual([
-			"appearance.tone: Element 'note' does not support the axis 'tone'. Supported axes: size.",
+			{
+				path: ['appearance', 'tone'],
+				message: "Element 'note' does not support the axis 'tone'. Supported axes: size.",
+			},
 		]);
 	});
 
@@ -239,14 +248,14 @@ describe('checkAppearance', () => {
 			const authored = JSON.parse(`{"${key}":"x"}`);
 			const { issues, appearance } = checkAppearance(authored, { axes, subject: 'The root' });
 			expect(issues).toHaveLength(1);
-			expect(issues[0]).toMatch(new RegExp(`unknown axis '${key}'`));
+			expect(issues[0]?.message).toMatch(new RegExp(`Unknown axis '${key}'`));
 			expect(appearance).toEqual({});
 		},
 	);
 
 	test('an owner that supports nothing says so', () => {
 		const { issues } = checkAppearance({ size: 'compact' }, { axes, subject: "Element 'note'", supported: [] });
-		expect(issues[0]).toMatch(/Supported axes: \(none\)/);
+		expect(issues[0]?.message).toMatch(/Supported axes: \(none\)/);
 	});
 });
 
