@@ -47,6 +47,8 @@ const SUPPORTED_VALUE_EXPORTS = [
 	'pickSupportedAppearance',
 	'readSlotConfig',
 	'resolveRecipeView',
+	'withAppearanceAxes',
+	'withSlotAppearanceAxes',
 ];
 
 const INTERNAL_EXPORTS = [

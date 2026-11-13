@@ -323,5 +323,8 @@ A registration declares the axes it responds to (`appearanceAxes: ['tone']`); th
 build throws, naming the registration, when it declares an axis the theme lacks. A form, a
 step, a field or a recipe slot picks a value with `appearance: { tone: 'brand' }`, and the
 renderer emits `data-se-tone="brand"`. Your CSS reads the tokens the value sets. The JSON
-Schema the engine exports lists every axis on the form and its steps, so `appearance.size`
-is an enum an editor can autocomplete.
+Schema the engine exports lists every axis on the form and its steps, and on an element or a
+recipe slot only the axes it declares, each as an enum of its values, so `appearance.size`
+is an enum an editor can autocomplete and an axis the field does not declare is rejected. This
+holds for top-level elements and recipe slots; the children of a fieldset or an array row are not
+checked in the exported schema, though `validateForm` checks them.
