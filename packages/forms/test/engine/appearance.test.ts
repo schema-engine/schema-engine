@@ -90,10 +90,12 @@ describe('engine appearance vocabulary', () => {
 
 	test('token values compile into the engine stylesheet, scoped by the one theme id', () => {
 		const { id, css } = createFormEngine({ layout: toned }).getLayout();
-		expect(css).toContain(
-			`:where([data-se-theme="${id}"][data-se-tone="brand"],[data-se-theme="${id}"] [data-se-tone="brand"]:not(`,
-		);
-		expect(css).toContain('--se-tone-accent:#f60');
+		const rules = css.split('\n').filter((line) => line.includes('[data-se-tone="brand"]'));
+		expect(rules.length).toBeGreaterThan(0);
+		for (const rule of rules) {
+			expect(rule).toContain(`[data-se-theme="${id}"]`);
+			expect(rule).toContain('{--se-tone-accent:#f60;}');
+		}
 	});
 
 	test('identical vocabularies share a theme id and different ones do not', () => {

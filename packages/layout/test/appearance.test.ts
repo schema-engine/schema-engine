@@ -10,10 +10,22 @@ import {
 	pickSupportedAppearance,
 } from '@/lib/appearance';
 
-/** The declaration block of the rule for one axis value of theme `lx`, such as `{--se-space:1rem;}`. */
+const isScopeRule = (line: string) => line.startsWith('@scope ');
+
+/** The plain rule for one axis value, as a line of the stylesheet. */
+function plainRuleOf(css: string, attribute: string): string | undefined {
+	return css.split('\n').find((line) => !isScopeRule(line) && line.includes(attribute));
+}
+
+/** The `@scope` rule for one axis value, as a line of the stylesheet. */
+function scopeRuleOf(css: string, attribute: string): string | undefined {
+	return css.split('\n').find((line) => isScopeRule(line) && line.includes(attribute));
+}
+
+/** The declaration block of the rule for one axis value, such as `{--se-space:1rem;}`. */
 function declarationsOf(css: string, attribute: string): string | undefined {
-	const rule = css.split('\n').find((line) => line.startsWith(`:where([data-se-theme="lx"]${attribute},`));
-	return rule?.slice(rule.lastIndexOf('){') + 1);
+	const rule = plainRuleOf(css, attribute);
+	return rule?.slice(rule.indexOf('{'));
 }
 
 const metadata = { name: 'Tone' };
@@ -175,16 +187,36 @@ describe('compileAppearance', () => {
 		expect(css).toContain('--se-accent:#f60');
 		const rules = css.split('\n');
 		expect(rules.length).toBeGreaterThan(0);
-		for (const rule of rules) expect(rule).toMatch(/^:where\(.*\)\{[^{}]*\}$/);
+		for (const rule of rules) {
+			expect(rule).toMatch(
+				isScopeRule(rule) ? /^@scope \(.+\) to \(.+\)\{:where\(.+\)\{[^{}]*\}\}$/ : /^:where\(.+\)\{[^{}]*\}$/,
+			);
+		}
 	});
 
-	test('a rule stops at the first element of another theme, so the nearest theme wins', () => {
+	test('a plain rule leaves out whatever sits at or below an element of another theme', () => {
+		const rule = plainRuleOf(getAppearanceCss(compileAppearance([tone]), 'lx'), '[data-se-tone="brand"]');
+		expect(rule).toContain('[data-se-theme="lx"]');
+		expect(rule).toContain(':not([data-se-theme]:not([data-se-theme="lx"])');
+		expect(rule).toMatch(/\[data-se-theme="lx"\] \[data-se-theme\]:not\(\[data-se-theme="lx"\]\) \*/);
+	});
+
+	test('a scope rule runs from the theme root down to the nearest other theme and sets the same tokens', () => {
 		const css = getAppearanceCss(compileAppearance([tone]), 'lx');
-		const scope = '[data-se-theme="lx"]';
-		const foreign = `[data-se-theme]:not(${scope})`;
-		expect(css).toBe(
-			`:where(${scope}[data-se-tone="brand"],${scope} [data-se-tone="brand"]:not(${foreign},${scope} ${foreign} *)){--se-accent:#f60;}`,
+		const rule = scopeRuleOf(css, '[data-se-tone="brand"]');
+		expect(rule).toMatch(
+			/^@scope \(\[data-se-theme="lx"\]\) to \(\[data-se-theme\]:not\(\[data-se-theme="lx"\]\)\)/,
 		);
+		expect(rule).toContain(':scope[data-se-tone="brand"]');
+		expect(rule?.endsWith(`${declarationsOf(css, '[data-se-tone="brand"]')}}`)).toBe(true);
+	});
+
+	test('scope rules come after every plain rule', () => {
+		const lines = getAppearanceCss(compileAppearance(), 'lx').split('\n');
+		const firstScope = lines.findIndex(isScopeRule);
+		expect(firstScope).toBeGreaterThan(0);
+		expect(lines.slice(firstScope).every(isScopeRule)).toBe(true);
+		expect(lines.slice(0, firstScope).some(isScopeRule)).toBe(false);
 	});
 
 	test('rejects an axis that has no Standard Schema', () => {

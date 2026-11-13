@@ -25,7 +25,7 @@ import type { LayoutTheme, LayoutThemeCompilerOptions } from './layout-theme';
  * Compile once, where the theme is built ({@link createLayoutTheme} does, with the grid). Token rules are
  * emitted inside `:where()`, so they add no specificity and an author's `className` always wins; they
  * are scoped to the theme by `data-se-theme` and the nearest theme above an element wins, so two themes
- * with different tokens cannot overwrite each other.
+ * with different tokens cannot overwrite each other ({@link getAppearanceCss} has the details).
  */
 
 /** Custom properties a value stands for, keyed `--name`. */
@@ -287,34 +287,42 @@ export interface CompiledAppearance {
  *
  * @remarks
  * Every rule sits inside `:where()`, so it adds no specificity and an author's class always wins.
- * A rule matches an element that carries the theme and the pick together, or a descendant of the
- * theme's root with no element of another theme between. Every grid and item carries
- * `data-se-theme`, so a form of theme B inside a grid item of theme A has both themes above it;
- * an element at or below another theme's element is excluded, so only the nearest theme's rule
- * matches, whatever the order of the stylesheets. Empty when no value declares tokens.
+ * Every grid and item carries `data-se-theme`, so a form of theme B inside a grid item of theme A
+ * has both themes above it; the nearest theme's rule must be the one that matches, whatever the
+ * order of the stylesheets. Empty when no value declares tokens. Two sets of rules say so:
  *
- * Plain selectors, so it needs no script and holds in server-rendered output in every browser that
- * supports `:where()` and complex selectors in `:not()`. `@scope ... to ...` also expresses "down to
- * the nearest theme" and tracks nesting exactly, but a browser without it would drop every token
- * rule. The cost of plain selectors is one case that gets no tokens rather than the wrong ones: the
- * descendants of a theme re-entered below another theme (A in B in A), because "no other theme
- * between" cannot be written without `@scope`. Revisit once `@scope` is in every browser the
- * renderers support.
+ * 1. Plain rules, which match an element that carries the theme and the pick together, or a
+ * descendant of the theme's root with no element of another theme between. They need only
+ * `:where()` and complex selectors in `:not()`, so they hold in server-rendered output in every
+ * browser the renderers support. They cannot say "no other theme between" for a theme re-entered
+ * below another theme (A in B in A): its descendants match no plain rule, so they inherit the
+ * custom properties of the nearest element that did.
+ * 2. `@scope` rules, emitted after the plain ones: the theme's roots down to the nearest element of
+ * another theme. A browser without `@scope` drops the block and keeps the plain rules; one with it
+ * is exact, A in B in A included. About 1.4 KB per theme with the built-in axes.
+ *
+ * The `@scope` rules change one cascade detail: scope proximity outranks source order, and an
+ * unscoped rule is the farthest from any root. A zero-specificity author rule such as `:where(.x)`
+ * therefore loses to a token rule in a browser with `@scope`, where it won on order alone before;
+ * a class with any specificity still wins.
  */
 export function getAppearanceCss(appearance: CompiledAppearance, themeId: string): string {
-	const rules: string[] = [];
+	const plain: string[] = [];
+	const scoped: string[] = [];
 	const scope = `[data-se-theme="${themeId}"]`;
 	const foreign = `[data-se-theme]:not(${scope})`;
 	for (const axis of appearance.registry.all()) {
 		for (const [value, tokens] of Object.entries(axis.values)) {
 			const declarations = Object.entries(tokens).map(([token, tokenValue]) => `${token}:${tokenValue};`);
 			if (declarations.length === 0) continue;
+			const block = `{${declarations.join('')}}`;
 			const match = `[data-se-${axis.$type}="${value}"]`;
 			const descendant = `${scope} ${match}:not(${foreign},${scope} ${foreign} *)`;
-			rules.push(`:where(${scope}${match},${descendant}){${declarations.join('')}}`);
+			plain.push(`:where(${scope}${match},${descendant})${block}`);
+			scoped.push(`@scope (${scope}) to (${foreign}){:where(:scope${match},${match})${block}}`);
 		}
 	}
-	return rules.join('\n');
+	return [...plain, ...scoped].join('\n');
 }
 
 /**

@@ -7,7 +7,7 @@ import {
 	renderSsrSteppedAcceptanceHtml,
 	renderSsrWidthsAcceptanceHtml,
 } from './render-form-ssr-html';
-import { renderNestedThemeGuestHtml } from './render-nested-theme-ssr-html';
+import { renderNestedThemeGuestHtml, renderReenteredThemeHtml } from './render-nested-theme-ssr-html';
 import { renderSsrNestedWidthsAcceptanceHtml } from './render-nested-widths-ssr-html';
 import { renderArrayObjectDefaultsHtml, renderArraySsrAcceptanceHtml } from './render-form-array-ssr-html';
 
@@ -23,6 +23,7 @@ declare module 'vitest' {
 		ssrNestedThemeHtml: string;
 		ssrNestedThemeAuthorHtml: string;
 		ssrNestedTheme: { id: string; css: string };
+		ssrReenteredThemeHtml: string;
 		ssrArrayHtml: string;
 		ssrMinItemsHtml: string;
 		ssrObjectArrayDefaultsHtml: string;
@@ -53,6 +54,7 @@ export default function setup(project: TestProject): void {
 	project.provide('ssrNestedThemeHtml', nested.html);
 	project.provide('ssrNestedThemeAuthorHtml', renderNestedThemeGuestHtml(true).html);
 	project.provide('ssrNestedTheme', nested.layout);
+	project.provide('ssrReenteredThemeHtml', renderReenteredThemeHtml());
 	const arrayHtml = renderArraySsrAcceptanceHtml().replaceAll('</script>', '<\\/script>');
 	project.provide('ssrArrayHtml', arrayHtml);
 	const minItemsHtml = renderArraySsrAcceptanceHtml({ contacts: [] }).replaceAll('</script>', '<\\/script>');

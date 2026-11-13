@@ -126,7 +126,7 @@ export function expectSharedLayoutTheme(html: string, layout: LayoutThemeLike, d
 	if (dedupes) expect(sheets).toHaveLength(1);
 }
 
-export async function waitForFrameLayout(): Promise<void> {
+async function waitForFrameLayout(): Promise<void> {
 	await new Promise<void>((resolve) => {
 		requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
 	});

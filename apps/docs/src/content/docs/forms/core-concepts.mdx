@@ -277,9 +277,14 @@ in a page grid. Each theme's token rules reach only the elements whose nearest t
 that theme, so the embedded form picks `tone: brand` with its own theme's token
 whichever stylesheet comes later, and your own class still wins. Tokens are custom
 properties, so a pick made outside the embedded form still reaches it until the form
-picks a value that declares those tokens (the built-in `size.default` resets them). The
-descendants of a theme nested below another theme and then below itself (A in B in A)
-get no tokens of their own.
+picks a value that declares those tokens (the built-in `size.default` resets them).
+
+The theme's stylesheet also carries each token rule as an `@scope` block, which keeps
+the nearest theme exact when a theme is nested below another theme and then below
+itself (A in B in A). A browser without `@scope` ignores those blocks and uses the plain
+rules, which are right for every other nesting. Because scope proximity outranks source
+order, a zero-specificity author rule such as `:where(.x)` loses to a token rule in a
+browser with `@scope`; a class with any specificity still wins.
 
 ### Appearance axes
 
