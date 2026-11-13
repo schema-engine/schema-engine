@@ -1,10 +1,9 @@
-import { RadiantElement, customElement, prop, state } from '@ecopages/radiant';
+import { RadiantElement, customElement, onUpdated, prop, state } from '@ecopages/radiant';
 import type { JsxCustomElementAttributes } from '@ecopages/jsx';
 import { RuiSpinner } from '@ecopages/radiant-ui/spinner';
 import {
-	createActionPlaygroundSession,
+	ActionPlaygroundSession,
 	idlePlaygroundSnapshot,
-	type ActionPlaygroundSession,
 	type PlaygroundExampleId,
 	type PlaygroundNode,
 	type PlaygroundSnapshot,
@@ -162,11 +161,32 @@ export class ActionPlaygroundElement extends RadiantElement {
 	private session: ActionPlaygroundSession | null = null;
 	private unsubscribe: (() => void) | null = null;
 	private sessionKey = '';
-	private listening = false;
+
+	protected override onConnected(): void {
+		this.addEventListener('click', this.onHostClick);
+		this.syncSession();
+		this.setAttribute('data-ready', '');
+	}
 
 	override disconnectedCallback(): void {
+		this.removeEventListener('click', this.onHostClick);
 		this.tearDownSession();
 		super.disconnectedCallback();
+	}
+
+	@onUpdated(['example', 'delayMs'])
+	protected syncSession(): void {
+		if (!this.isConnected) return;
+		const key = `${this.example}:${this.delayMs}`;
+		if (this.session && this.sessionKey === key) return;
+		this.tearDownSession();
+		const options = this.delayMs >= 0 ? { delayMs: this.delayMs } : {};
+		this.session = new ActionPlaygroundSession(this.example, options);
+		this.sessionKey = key;
+		this.unsubscribe = this.session.subscribe(() => {
+			this.revision += 1;
+		});
+		this.revision += 1;
 	}
 
 	private tearDownSession(): void {
@@ -175,42 +195,25 @@ export class ActionPlaygroundElement extends RadiantElement {
 		this.session?.dispose();
 		this.session = null;
 		this.sessionKey = '';
-		if (this.listening) {
-			this.removeEventListener('click', this.onHostClick);
-			this.listening = false;
-		}
-	}
-
-	private ensureSession(): ActionPlaygroundSession {
-		const key = `${this.example}:${this.delayMs}`;
-		if (this.session && this.sessionKey === key) return this.session;
-		this.tearDownSession();
-		const delayMs = this.delayMs >= 0 ? this.delayMs : undefined;
-		this.session = createActionPlaygroundSession(this.example, delayMs === undefined ? {} : { delayMs });
-		this.sessionKey = key;
-		this.unsubscribe = this.session.subscribe(() => {
-			this.revision += 1;
-		});
-		if (!this.listening) {
-			this.addEventListener('click', this.onHostClick);
-			this.listening = true;
-			this.setAttribute('data-ready', '');
-		}
-		return this.session;
 	}
 
 	private onHostClick = (event: Event) => {
-		const target = (event.target as HTMLElement | null)?.closest('[data-node-id], .action-playground__control');
+		if (!(event.target instanceof Element)) return;
+		const target = event.target.closest('[data-node-id], .action-playground__control');
 		if (!(target instanceof HTMLElement) || !this.contains(target)) return;
-		this.handleActivate(target.dataset.nodeId ?? 'result');
+		this.activate(target.dataset.nodeId ?? 'result');
 	};
 
-	private handleActivate(target: string): void {
-		void this.ensureSession().activate(target);
+	private activate(target: string): void {
+		const session = this.session;
+		if (!session) return;
+		const { phase } = session.snapshot();
+		if (phase === 'running') session.interrupt();
+		else if (phase === 'done') session.reset();
+		else void session.run(target);
 	}
 
 	override render() {
-		if (this.isConnected) this.ensureSession();
 		const snapshot = this.session?.snapshot() ?? idlePlaygroundSnapshot(this.example);
 		const message = liveMessage(snapshot);
 

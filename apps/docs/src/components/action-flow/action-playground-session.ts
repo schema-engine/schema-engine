@@ -3,6 +3,7 @@ import {
 	ActionRegistry,
 	type ActionConfigBase,
 	type ActionDispatchResult,
+	type ActionRuntimeContext,
 	type ActionSequenceEntry,
 } from '@schema-engine/actions';
 import * as z from 'zod/mini';
@@ -150,19 +151,6 @@ function findConfig(actions: readonly ActionSequenceEntry<DemoConfig>[], id: str
 	return flatten(actions).find((action) => action.id === id);
 }
 
-function combineSignals(signals: AbortSignal[]): AbortSignal {
-	if (typeof AbortSignal.any === 'function') return AbortSignal.any(signals);
-	const controller = new AbortController();
-	for (const signal of signals) {
-		if (signal.aborted) {
-			controller.abort();
-			break;
-		}
-		signal.addEventListener('abort', () => controller.abort(), { once: true });
-	}
-	return controller.signal;
-}
-
 function isAbort(error: unknown): boolean {
 	return error instanceof Error && error.name === 'AbortError';
 }
@@ -207,178 +195,163 @@ export function idlePlaygroundSnapshot(example: PlaygroundExampleId): Playground
 	};
 }
 
-export type ActionPlaygroundSession = {
+type PlaygroundContext = { runSignal: AbortSignal };
+
+type Listener = (snapshot: PlaygroundSnapshot) => void;
+
+/**
+ * One playground's dispatch state, driven by a real `ActionDispatcher`.
+ *
+ * @remarks
+ * Each run owns an `AbortController` that is passed to actions through the
+ * dispatch context. Aborting it is the single signal that a run is stale:
+ * stale actions stop updating state and a stale dispatch result is dropped.
+ */
+export class ActionPlaygroundSession {
 	readonly example: PlaygroundExampleId;
-	snapshot(): PlaygroundSnapshot;
-	subscribe(listener: (snapshot: PlaygroundSnapshot) => void): () => void;
-	activate(target: string): Promise<void>;
-	dispose(): void;
-};
 
-export function createActionPlaygroundSession(
-	example: PlaygroundExampleId,
-	options: ActionPlaygroundOptions = {},
-): ActionPlaygroundSession {
-	const definition = PLAYGROUND_EXAMPLES[example];
-	const sleepImpl = options.sleep ?? sleep;
-	const delayFor = () => options.delayMs ?? jitter(500, 900);
+	readonly #definition: ExampleDefinition;
+	readonly #sleep: PlaygroundSleep;
+	readonly #delayMs: number | undefined;
+	readonly #listeners = new Set<Listener>();
+	readonly #dispatcher: ActionDispatcher<PlaygroundContext, 'submit'>;
+	#nodes: PlaygroundNode[];
+	#result: PlaygroundNode = { ...RESULT_NODE, status: 'idle' };
+	#phase: PlaygroundSnapshot['phase'] = 'idle';
+	#run: AbortController | null = null;
 
-	let runId = 0;
-	let phase: PlaygroundSnapshot['phase'] = 'idle';
-	let nodes = idleNodes(definition.actions);
-	let result: PlaygroundNode = { ...RESULT_NODE, status: 'idle' };
-	let demoAbort = new AbortController();
-	const listeners = new Set<(snapshot: PlaygroundSnapshot) => void>();
+	constructor(example: PlaygroundExampleId, options: ActionPlaygroundOptions = {}) {
+		this.example = example;
+		this.#definition = PLAYGROUND_EXAMPLES[example];
+		this.#sleep = options.sleep ?? sleep;
+		this.#delayMs = options.delayMs;
+		this.#nodes = idleNodes(this.#definition.actions);
 
-	const snapshot = (): PlaygroundSnapshot => ({
-		example: definition.id,
-		name: definition.name,
-		description: definition.description,
-		code: definition.code,
-		nodes: nodes.map((node) => ({ ...node })),
-		result: { ...result },
-		phase,
-	});
+		const registry = new ActionRegistry<PlaygroundContext, 'submit'>();
+		registry.register({
+			$type: 'work',
+			schema: demoSchema,
+			metadata: { name: 'Work', defaultTriggers: ['submit'] },
+			execute: (context) => this.#execute(context),
+		});
+		this.#dispatcher = new ActionDispatcher(registry);
+	}
 
-	const emit = () => {
-		const next = snapshot();
-		for (const listener of listeners) listener(next);
-	};
+	snapshot(): PlaygroundSnapshot {
+		const { id, name, description, code } = this.#definition;
+		return {
+			example: id,
+			name,
+			description,
+			code,
+			nodes: this.#nodes.map((node) => ({ ...node })),
+			result: { ...this.#result },
+			phase: this.#phase,
+		};
+	}
 
-	const mark = (id: string, status: NodeStatus, value: string | undefined, currentRun: number) => {
-		if (currentRun !== runId) return;
-		if (id === 'result') {
-			result = { ...result, status, ...(value === undefined ? {} : { value }) };
-		} else {
-			nodes = nodes.map((node) =>
-				node.id === id
-					? { ...node, status, ...(value === undefined ? { value: undefined } : { value }) }
-					: node,
-			);
-		}
-		emit();
-	};
+	subscribe(listener: Listener): () => void {
+		this.#listeners.add(listener);
+		return () => {
+			this.#listeners.delete(listener);
+		};
+	}
 
-	const registry = new ActionRegistry<Record<string, never>, 'submit'>();
-	registry.register({
-		$type: 'work',
-		schema: demoSchema,
-		metadata: { name: 'Work', defaultTriggers: ['submit'] },
-		execute: async (context) => {
-			const config = context.config;
-			const currentRun = runId;
-			mark(config.id, 'running', undefined, currentRun);
-			try {
-				await sleepImpl(delayFor(), combineSignals([context.signal, demoAbort.signal]));
-			} catch (error) {
-				if (isAbort(error)) {
-					mark(config.id, 'cancelled', undefined, currentRun);
-					return { success: false, error: 'interrupted', shouldContinue: false };
-				}
-				throw error;
-			}
-			if (config.fail) {
-				mark(config.id, 'failed', config.result, currentRun);
-				return {
-					success: false,
-					error: config.result ?? 'failed',
-					shouldContinue: config.shouldContinue,
-				};
-			}
-			mark(config.id, 'succeeded', config.result, currentRun);
-			return { success: true, data: config.result };
-		},
-	});
-	const dispatcher = new ActionDispatcher(registry);
+	/**
+	 * Dispatches the whole sequence for `'result'`, or only the action with that id.
+	 *
+	 * @remarks Starting a run supersedes any run still in flight.
+	 */
+	async run(target: string): Promise<void> {
+		const actions = this.#actionsFor(target);
+		if (actions.length === 0) return;
 
-	const resetVisuals = () => {
-		nodes = idleNodes(definition.actions);
-		result = { ...RESULT_NODE, status: 'idle' };
-		phase = 'idle';
-		emit();
-	};
-
-	const interrupt = () => {
-		runId += 1;
-		demoAbort.abort();
-		demoAbort = new AbortController();
-		nodes = nodes.map((node) => (node.status === 'running' ? { ...node, status: 'cancelled' as const } : node));
-		if (result.status === 'running') result = { ...result, status: 'cancelled', value: 'interrupted' };
-		phase = 'done';
-		emit();
-	};
-
-	const run = async (target: string) => {
-		const currentRun = ++runId;
-		demoAbort.abort();
-		demoAbort = new AbortController();
-		nodes = idleNodes(definition.actions);
-		result = { ...RESULT_NODE, status: 'running' };
-		phase = 'running';
-		emit();
-
-		const actions =
-			target === 'result'
-				? definition.actions
-				: (() => {
-						const config = findConfig(definition.actions, target);
-						return config ? [config] : [];
-					})();
-
-		if (actions.length === 0) {
-			phase = 'idle';
-			result = { ...RESULT_NODE, status: 'idle' };
-			emit();
-			return;
-		}
+		const run = this.#startRun();
+		this.#nodes = idleNodes(this.#definition.actions);
+		this.#result = { ...RESULT_NODE, status: 'running' };
+		this.#phase = 'running';
+		this.#emit();
 
 		try {
-			const results = await dispatcher.dispatch({
+			const results = await this.#dispatcher.dispatch({
 				actions,
 				trigger: 'submit',
-				context: {},
+				context: { runSignal: run.signal },
 			});
-			if (currentRun !== runId) return;
-			const summary = summarize(results);
-			result = { ...RESULT_NODE, ...summary };
-			phase = 'done';
-			emit();
+			if (run.signal.aborted) return;
+			this.#result = { ...RESULT_NODE, ...summarize(results) };
 		} catch (error) {
-			if (currentRun !== runId) return;
-			result = {
+			if (run.signal.aborted) return;
+			this.#result = {
 				...RESULT_NODE,
 				status: 'failed',
 				value: error instanceof Error ? error.message : String(error),
 			};
-			phase = 'done';
-			emit();
 		}
-	};
+		this.#phase = 'done';
+		this.#emit();
+	}
 
-	return {
-		example: definition.id,
-		snapshot,
-		subscribe(listener) {
-			listeners.add(listener);
-			return () => {
-				listeners.delete(listener);
-			};
-		},
-		async activate(target) {
-			if (phase === 'running') {
-				interrupt();
-				return;
-			}
-			if (phase === 'done') {
-				resetVisuals();
-				return;
-			}
-			await run(target);
-		},
-		dispose() {
-			runId += 1;
-			demoAbort.abort();
-			listeners.clear();
-		},
-	};
+	interrupt(): void {
+		this.#run?.abort();
+		this.#nodes = this.#nodes.map((node) => (node.status === 'running' ? { ...node, status: 'cancelled' } : node));
+		if (this.#result.status === 'running')
+			this.#result = { ...this.#result, status: 'cancelled', value: 'interrupted' };
+		this.#phase = 'done';
+		this.#emit();
+	}
+
+	reset(): void {
+		this.#run?.abort();
+		this.#nodes = idleNodes(this.#definition.actions);
+		this.#result = { ...RESULT_NODE, status: 'idle' };
+		this.#phase = 'idle';
+		this.#emit();
+	}
+
+	dispose(): void {
+		this.#run?.abort();
+		this.#listeners.clear();
+	}
+
+	#startRun(): AbortController {
+		this.#run?.abort();
+		this.#run = new AbortController();
+		return this.#run;
+	}
+
+	#actionsFor(target: string): readonly ActionSequenceEntry<DemoConfig>[] {
+		if (target === 'result') return this.#definition.actions;
+		const config = findConfig(this.#definition.actions, target);
+		return config ? [config] : [];
+	}
+
+	#emit(): void {
+		const next = this.snapshot();
+		for (const listener of this.#listeners) listener(next);
+	}
+
+	#mark(runSignal: AbortSignal, id: string, status: NodeStatus, value?: string): void {
+		if (runSignal.aborted) return;
+		this.#nodes = this.#nodes.map((node) => (node.id === id ? { ...node, status, value } : node));
+		this.#emit();
+	}
+
+	async #execute(context: ActionRuntimeContext<DemoConfig, PlaygroundContext, 'submit'>) {
+		const { config, runSignal } = context;
+		this.#mark(runSignal, config.id, 'running');
+		try {
+			await this.#sleep(this.#delayMs ?? jitter(500, 900), AbortSignal.any([context.signal, runSignal]));
+		} catch (error) {
+			if (!isAbort(error)) throw error;
+			this.#mark(runSignal, config.id, 'cancelled');
+			return { success: false, error: 'interrupted', shouldContinue: false };
+		}
+		if (config.fail) {
+			this.#mark(runSignal, config.id, 'failed', config.result);
+			return { success: false, error: config.result ?? 'failed', shouldContinue: config.shouldContinue };
+		}
+		this.#mark(runSignal, config.id, 'succeeded', config.result);
+		return { success: true, data: config.result };
+	}
 }

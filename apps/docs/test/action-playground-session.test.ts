@@ -1,7 +1,8 @@
 import { describe, expect, test, vi } from 'vitest';
 import {
-	createActionPlaygroundSession,
+	ActionPlaygroundSession,
 	type PlaygroundSleep,
+	type PlaygroundSnapshot,
 } from '../src/components/action-flow/action-playground-session';
 
 function createGate() {
@@ -35,7 +36,7 @@ function createGate() {
 	};
 }
 
-function statusOf(snapshot: ReturnType<ReturnType<typeof createActionPlaygroundSession>['snapshot']>, id: string) {
+function statusOf(snapshot: PlaygroundSnapshot, id: string) {
 	if (id === 'result') return snapshot.result.status;
 	return snapshot.nodes.find((node) => node.id === id)?.status;
 }
@@ -43,8 +44,8 @@ function statusOf(snapshot: ReturnType<ReturnType<typeof createActionPlaygroundS
 describe('action playground session', () => {
 	test('starts the next sequential action only after the previous one finishes', async () => {
 		const gate = createGate();
-		const session = createActionPlaygroundSession('sequential', { sleep: gate.sleep });
-		const running = session.activate('result');
+		const session = new ActionPlaygroundSession('sequential', { sleep: gate.sleep });
+		const running = session.run('result');
 		await vi.waitFor(() => {
 			expect(statusOf(session.snapshot(), 'serialize')).toBe('running');
 		});
@@ -68,8 +69,8 @@ describe('action playground session', () => {
 
 	test('starts every member of a parallel group before any of them finishes', async () => {
 		const gate = createGate();
-		const session = createActionPlaygroundSession('parallel', { sleep: gate.sleep });
-		const running = session.activate('result');
+		const session = new ActionPlaygroundSession('parallel', { sleep: gate.sleep });
+		const running = session.run('result');
 		await vi.waitFor(() => {
 			expect(session.snapshot().nodes.map((node) => node.status)).toEqual(['running', 'running', 'running']);
 		});
@@ -84,8 +85,8 @@ describe('action playground session', () => {
 
 	test('skips later actions when a failure sets shouldContinue false', async () => {
 		const gate = createGate();
-		const session = createActionPlaygroundSession('short-circuit', { sleep: gate.sleep });
-		const running = session.activate('result');
+		const session = new ActionPlaygroundSession('short-circuit', { sleep: gate.sleep });
+		const running = session.run('result');
 		await vi.waitFor(() => {
 			expect(statusOf(session.snapshot(), 'authorize')).toBe('running');
 		});
@@ -104,8 +105,8 @@ describe('action playground session', () => {
 
 	test('runs a single node without starting its siblings', async () => {
 		const gate = createGate();
-		const session = createActionPlaygroundSession('sequential', { sleep: gate.sleep });
-		const running = session.activate('persist');
+		const session = new ActionPlaygroundSession('sequential', { sleep: gate.sleep });
+		const running = session.run('persist');
 		await vi.waitFor(() => {
 			expect(statusOf(session.snapshot(), 'persist')).toBe('running');
 		});
@@ -120,12 +121,12 @@ describe('action playground session', () => {
 
 	test('interrupt cancels the running action and leaves later ones idle', async () => {
 		const gate = createGate();
-		const session = createActionPlaygroundSession('sequential', { sleep: gate.sleep });
-		const running = session.activate('result');
+		const session = new ActionPlaygroundSession('sequential', { sleep: gate.sleep });
+		const running = session.run('result');
 		await vi.waitFor(() => {
 			expect(statusOf(session.snapshot(), 'serialize')).toBe('running');
 		});
-		await session.activate('result');
+		session.interrupt();
 		await running;
 		expect(statusOf(session.snapshot(), 'serialize')).toBe('cancelled');
 		expect(statusOf(session.snapshot(), 'persist')).toBe('idle');
@@ -133,16 +134,33 @@ describe('action playground session', () => {
 		session.dispose();
 	});
 
-	test('activate after completion resets without dispatching', async () => {
-		const session = createActionPlaygroundSession('sequential', {
+	test('reset after completion returns to idle without dispatching', async () => {
+		const session = new ActionPlaygroundSession('sequential', {
 			sleep: async () => undefined,
 			delayMs: 0,
 		});
-		await session.activate('result');
+		await session.run('result');
 		expect(session.snapshot().phase).toBe('done');
-		await session.activate('result');
+		session.reset();
 		expect(session.snapshot().phase).toBe('idle');
 		expect(session.snapshot().nodes.every((node) => node.status === 'idle')).toBe(true);
 		session.dispose();
+	});
+
+	test('dispose stops a pending run from updating the snapshot or notifying listeners', async () => {
+		const gate = createGate();
+		const session = new ActionPlaygroundSession('sequential', { sleep: gate.sleep });
+		const listener = vi.fn();
+		session.subscribe(listener);
+		const running = session.run('result');
+		await vi.waitFor(() => {
+			expect(statusOf(session.snapshot(), 'serialize')).toBe('running');
+		});
+		const before = session.snapshot();
+		listener.mockClear();
+		session.dispose();
+		await running;
+		expect(listener).not.toHaveBeenCalled();
+		expect(session.snapshot()).toEqual(before);
 	});
 });
