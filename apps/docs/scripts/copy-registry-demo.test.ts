@@ -35,7 +35,7 @@ describe('copyRegistryDemo', () => {
 	});
 
 	test('copies the input field, the card recipe, their primitives and styles to shadcn target paths', () => {
-		const copied = files.map((file) => relative(root, file)).sort();
+		const copied = files.map((file) => relative(root, file));
 		expect(copied).toEqual(
 			expect.arrayContaining([
 				'components/schema-engine/forms/inputs/form-input.react.tsx',

@@ -3,12 +3,9 @@ import type { ReactNode } from 'react';
 import { eco } from '@ecopages/core';
 import type { FormConfig } from '@schema-engine/forms/schemas';
 import { docsReactFormEngine } from './demo-engine';
-import { ReactFormContent, type ReactDemoKit } from './react-form-content.react';
-import { docsShadcnFormEngine } from './shadcn-engine';
+import { ReactFormContent } from './react-form-content.react';
 import { installMockFormApi } from '@/lib/mock-form-api';
 import './demo-recipes.css';
-import '@/generated/shadcn/components/schema-engine/forms/recipes/recipes.css';
-import '@/generated/shadcn/components/ui/schema-engine/components/controls.css';
 
 /**
  * Live React form preview for docs demos.
@@ -22,13 +19,11 @@ import '@/generated/shadcn/components/ui/schema-engine/components/controls.css';
  * {@link FormRendererPreview} from `@/components/form-renderer` instead and do
  * not need a React pragma.
  *
- * `kit="shadcn"` renders with the copied registry source instead of the Radiant-styled demo kit.
+ * The copied shadcn source renders through `ShadcnFormPreview`, which only the pages that show it load.
  */
-export const ReactFormPreview = eco.component<{ config: FormConfig; kit?: ReactDemoKit }, ReactNode>({
-	render: ({ config, kit = 'demo' }) => {
+export const ReactFormPreview = eco.component<{ config: FormConfig }, ReactNode>({
+	render: ({ config }) => {
 		installMockFormApi();
-		return (
-			<ReactFormContent config={config} engine={kit === 'shadcn' ? docsShadcnFormEngine : docsReactFormEngine} />
-		);
+		return <ReactFormContent config={config} engine={docsReactFormEngine} />;
 	},
 });

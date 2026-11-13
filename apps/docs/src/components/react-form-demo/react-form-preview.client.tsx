@@ -28,8 +28,9 @@ function readFormConfig(element: HTMLElement): FormConfig {
  * Resolves the engine a demo names.
  *
  * @remarks
- * The shadcn engine loads on demand so pages without a shadcn demo do not download the copied
- * registry source and Base UI.
+ * Nothing else in the client graph imports the shadcn engine, so its code, the copied registry
+ * source and Base UI sit in a chunk that only a page with a `kit="shadcn"` demo requests. Its CSS
+ * ships separately, through `ShadcnFormPreview`.
  */
 async function resolveEngine(element: HTMLElement): Promise<FormEngineRuntime> {
 	if (element.getAttribute(KIT_ATTR) === 'shadcn') {

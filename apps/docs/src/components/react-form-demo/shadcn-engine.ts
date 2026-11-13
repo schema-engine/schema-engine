@@ -4,7 +4,7 @@ import { CardRecipe } from '@/generated/shadcn/components/schema-engine/forms/re
 import { brandTheme } from '@/lib/recipes/brand-theme';
 
 /**
- * Docs React engine built from the shadcn registry source, copied the way `shadcn add` copies it.
+ * Docs React engine built from the shadcn registry source, copied into the docs app (see `scripts/copy-registry-demo.ts` for how it differs from a real install).
  *
  * @remarks
  * The files under `@/generated/shadcn` are written by `scripts/copy-registry-demo.ts` before dev and

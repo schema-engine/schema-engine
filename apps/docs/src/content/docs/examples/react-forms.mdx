@@ -5,6 +5,7 @@ order: 6
 ---
 
 import { ReactFormDemoEmbed } from '@/components/react-form-demo/react-form-demo-embed';
+import { ShadcnFormDemoEmbed } from '@/components/react-form-demo/shadcn-form-demo-embed';
 import { FormConfigCode } from '@/components/form-config-code';
 import { basicContactFormConfig } from '@/lib/form-configs/basic-contact';
 import { contactFormDemoConfig } from '@/lib/form-configs/contact-with-constraints';
@@ -64,9 +65,9 @@ The submit request runs on `form_submit`; a notification and a reset then run on
 
 ## Copied shadcn source
 
-This form renders with the registry's `input` field and `card` recipe, copied into the docs app the way `shadcn add` copies them, not with the demo kit. The files come from `registry.json` and the repository's shadcn components, have their `@/` imports pointed at the copy, are written as `.react.tsx`, and land under `src/generated/shadcn` before dev and build.
+This form renders with the registry's `input` field and `card` recipe, not with the demo kit. The docs app copies the same files, to the same target paths and with the same import rewrites that `shadcn add` applies, into `src/generated/shadcn` before dev and build; it does not run the CLI. The files are read from `registry.json`, the shadcn `input`, `label` and `button` come from this repository's own copies, and components are written as `.react.tsx` for the docs' React integration.
 
-<ReactFormDemoEmbed config={shadcnContactFormConfig} kit="shadcn" />
+<ShadcnFormDemoEmbed config={shadcnContactFormConfig} />
 
 <FormConfigCode config={shadcnContactFormConfig} rootName="shadcnContactFormConfig" />
 

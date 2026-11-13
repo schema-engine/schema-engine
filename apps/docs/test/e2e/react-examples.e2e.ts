@@ -61,12 +61,14 @@ describe('React examples page', () => {
 		await page.goto(`${baseUrl}${examplesPath}`, { waitUntil: 'networkidle' });
 		await waitForHydration(page);
 		await page.evaluate(() => {
-			(window as unknown as { __noReload: boolean }).__noReload = true;
+			(window as unknown as { noReloadMarker: boolean }).noReloadMarker = true;
 		});
 	}
 
 	async function expectNoReload(): Promise<void> {
-		expect(await page.evaluate(() => (window as unknown as { __noReload?: boolean }).__noReload)).toBe(true);
+		expect(await page.evaluate(() => (window as unknown as { noReloadMarker?: boolean }).noReloadMarker)).toBe(
+			true,
+		);
 		expect(new URL(page.url()).search).toBe('');
 		expect(new URL(page.url()).pathname).toBe(examplesPath);
 	}
@@ -164,7 +166,6 @@ describe('React examples page', () => {
 
 		await form.locator('input[name="email"]').fill('ada@example.com');
 		await form.locator('input[name="password"]').fill('correct-horse');
-		await form.locator('input[name="password"]').blur();
 		await pwExpect(form.locator('input[name="password"]')).not.toHaveAttribute('aria-invalid', 'true');
 		await next.click();
 		await pwExpect(form.locator('select[name="role"]')).toBeVisible();
@@ -215,7 +216,7 @@ describe('React examples page', () => {
 	test('navigating between docs pages hydrates the demos of the page that arrives', async () => {
 		await page.goto(`${baseUrl}/docs/examples/basic-form`, { waitUntil: 'networkidle' });
 		await page.evaluate(() => {
-			(window as unknown as { __noReload: boolean }).__noReload = true;
+			(window as unknown as { noReloadMarker: boolean }).noReloadMarker = true;
 		});
 
 		await page.locator(`#docs-sidebar a[href="${examplesPath}"]:visible`).first().click();
@@ -239,7 +240,36 @@ describe('React examples page', () => {
 		await waitForHydration(page);
 		await demo(page, 'shadcn').locator('button[type="submit"]').click();
 		await pwExpect(demo(page, 'shadcn').locator('input[name="name"]')).toHaveAttribute('aria-invalid', 'true');
-		expect(await page.evaluate(() => (window as unknown as { __noReload?: boolean }).__noReload)).toBe(true);
+		expect(await page.evaluate(() => (window as unknown as { noReloadMarker?: boolean }).noReloadMarker)).toBe(
+			true,
+		);
+	});
+
+	test('only the page that shows the shadcn example downloads its engine and stylesheets', async () => {
+		const sheets = async (path: string): Promise<string[]> => {
+			const html = await (await fetch(`${baseUrl}${path}`)).text();
+			const hrefs = [...html.matchAll(/href="(\/assets\/[a-f0-9]+\.css)"/g)].map((match) => match[1]!);
+			const bodies = await Promise.all(hrefs.map(async (href) => (await fetch(`${baseUrl}${href}`)).text()));
+			return bodies.filter(
+				(css) => css.includes(':where(.se-card-shell)') || css.includes('--se-control-height,revert-layer'),
+			);
+		};
+		expect(await sheets('/docs/examples/basic-form')).toEqual([]);
+		expect(await sheets('/docs/forms-react/getting-started')).toEqual([]);
+		expect(await sheets('/docs/styling/recipes')).toEqual([]);
+		expect((await sheets(examplesPath)).length).toBe(2);
+
+		const requested: string[] = [];
+		const onRequest = (request: { url: () => string }) => requested.push(request.url());
+		page.on('request', onRequest);
+		await page.goto(`${baseUrl}/docs/forms-react/getting-started`, { waitUntil: 'networkidle' });
+		await waitForHydration(page, 1);
+		expect(requested.filter((url) => /shadcn-engine/.test(url))).toEqual([]);
+
+		requested.length = 0;
+		await open();
+		page.off('request', onRequest);
+		expect(requested.filter((url) => /shadcn-engine/.test(url))).not.toEqual([]);
 	});
 
 	test('the Radiant examples stay live and link to their React counterparts', async () => {

@@ -12,3 +12,5 @@ src/components/ui
 
 # copied from registry/ before dev/build
 src/generated
+dist-dev-smoke
+.eco-dev-smoke

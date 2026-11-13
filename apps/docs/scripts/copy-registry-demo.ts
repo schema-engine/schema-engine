@@ -45,16 +45,24 @@ function resolveTarget(target: string): string {
 }
 
 /**
- * Copies the registry source the shadcn example renders, the way `shadcn add` would into an app.
+ * Copies the registry source the shadcn example renders into the docs app.
  *
  * @remarks
- * The files are read from `registry.json` and the repository so the example cannot drift from the
- * published source. They land under `src/generated/shadcn` because the Ecopages dev client transform
- * refuses entrypoints outside `src/`, so the demo graph cannot import `registry/` directly. Imports
- * of the consumer's `@/` aliases are pointed at the copy. Components are written as `.react.tsx`, the
- * extension the docs' React integration owns, because the docs default to the Ecopages JSX runtime
- * while registry source is plain React; imports of them gain the `.react` suffix and the files get
- * the React JSX pragma.
+ * It applies what `shadcn add` applies to a registry item: the file list and target paths come from
+ * `registry.json`, resolved through the `@components` and `@ui` aliases, and the consumer's `@/`
+ * imports are pointed at the copy. It does not run the CLI. The files land under `src/generated/shadcn`
+ * because the Ecopages dev client transform refuses entrypoints outside `src/`, so the demo graph
+ * cannot import `registry/` directly.
+ *
+ * Deviations from a real install:
+ * - the shadcn `input`, `label` and `button` come from `packages/forms-react/.storybook/ui`, and
+ *   `lib/utils.ts` from `registry/ui-stubs`, not from the shadcn registry;
+ * - only the `input` field and the `card` recipe are copied, not the whole `schema-engine-form-recipes` item;
+ * - components are written as `.react.tsx`, the extension the docs' React integration owns (the docs
+ *   default to the Ecopages JSX runtime), imports of them gain the `.react` suffix and the files get the
+ *   React JSX pragma;
+ * - the recipe and control CSS are imported from a component, unlayered, where an app would import
+ *   them once in its global stylesheet.
  */
 export async function copyRegistryDemo(root = REGISTRY_DEMO_ROOT, alias = REGISTRY_DEMO_ALIAS): Promise<string[]> {
 	const catalog = JSON.parse(await readFile(join(repoRoot, 'registry.json'), 'utf8')) as { items: RegistryItem[] };

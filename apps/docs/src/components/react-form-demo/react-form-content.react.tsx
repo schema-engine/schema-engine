@@ -5,9 +5,6 @@ import type { FormEngineRuntime } from '@schema-engine/forms/engine/form-engine'
 import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
 import { rhfAdapter } from './demo-engine';
 
-/** Which docs React engine renders a demo: the Radiant-styled kit, or the copied shadcn registry source. */
-export type ReactDemoKit = 'demo' | 'shadcn';
-
 /**
  * A form with the result region the docs demos show after a valid submit.
  *

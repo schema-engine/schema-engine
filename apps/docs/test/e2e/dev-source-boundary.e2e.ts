@@ -1,5 +1,6 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { once } from 'node:events';
+import { rm } from 'node:fs/promises';
 import { createServer, type AddressInfo } from 'node:net';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,6 +11,10 @@ import { copyRegistryDemo } from '../../scripts/copy-registry-demo';
 
 const docsRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const examplesPath = '/docs/examples/react-forms';
+
+/** Output of the dev server, apart from the `dist` and `.eco` the production preview serves. */
+const DEV_DIST_DIR = 'dist-dev-smoke';
+const DEV_WORK_DIR = '.eco-dev-smoke';
 
 /**
  * Console errors that mean the demo graph broke: a missing provider, a module outside `src/`, or one
@@ -68,7 +73,7 @@ describe('docs dev server source boundary', () => {
 		server = spawn('pnpm', ['exec', 'ecopages', 'dev', '-p', String(port)], {
 			cwd: docsRoot,
 			stdio: ['ignore', 'ignore', 'pipe'],
-			env: { ...process.env, VITEST: undefined },
+			env: { ...process.env, VITEST: undefined, DOCS_DIST_DIR: DEV_DIST_DIR, DOCS_WORK_DIR: DEV_WORK_DIR },
 			detached: true,
 		});
 		server.stderr?.on('data', (chunk: Buffer) => stderr.push(chunk.toString()));
@@ -100,6 +105,9 @@ describe('docs dev server source boundary', () => {
 			}
 			await Promise.race([exited, new Promise((resolve) => setTimeout(resolve, 3000))]);
 		}
+		await Promise.all(
+			[DEV_DIST_DIR, DEV_WORK_DIR].map((dir) => rm(path.join(docsRoot, dir), { recursive: true, force: true })),
+		);
 	});
 
 	test('the shadcn example hydrates, validates and submits on one React context', async () => {
