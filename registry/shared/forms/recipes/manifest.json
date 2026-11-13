@@ -17,7 +17,8 @@
         "blocks/step-header.tsx",
         "blocks/form-actions.tsx",
         "shells/card-shell.tsx",
-        "shells/card-shell.css"
+        "shells/card-shell.css",
+        "recipes.css"
       ]
     },
     {
@@ -29,7 +30,8 @@
         "blocks/step-header.tsx",
         "blocks/wizard-actions.tsx",
         "shells/card-shell.tsx",
-        "shells/card-shell.css"
+        "shells/card-shell.css",
+        "recipes.css"
       ]
     },
     {

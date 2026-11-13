@@ -1,5 +1,5 @@
 /*
- * Entry point for the Schema Engine default recipe styles.
+ * Generated entry point for the Schema Engine default recipe styles.
  * Import this one file from the app's global stylesheet; each shell's file sits beside its component.
  */
 @import './shells/card-shell.css';

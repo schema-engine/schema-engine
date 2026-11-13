@@ -946,7 +946,7 @@
       "type": "registry:item",
       "title": "Schema Engine default recipes (Base UI)",
       "description": "Default Base UI view recipes and the generated recipe registration barrel.",
-      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createFormEngine({ recipes: [...] }). Import the recipe styles once in your global stylesheet: @import \"./components/schema-engine/forms/recipes/recipes.css\" layer(components); (adjust the path to your components alias).",
+      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createFormEngine({ recipes: [...] }). Import the recipe styles once in your global stylesheet: @import \"./components/schema-engine/forms/recipes/recipes.css\" layer(components); (the path is relative to that stylesheet: ../components/... from a Next.js app/globals.css).",
       "registryDependencies": [
         "button",
         "badge",
@@ -2024,7 +2024,7 @@
       "type": "registry:item",
       "title": "Schema Engine default recipes (Radix UI)",
       "description": "Default Radix UI view recipes and the generated recipe registration barrel.",
-      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createFormEngine({ recipes: [...] }). Import the recipe styles once in your global stylesheet: @import \"./components/schema-engine/forms/recipes/recipes.css\" layer(components); (adjust the path to your components alias).",
+      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createFormEngine({ recipes: [...] }). Import the recipe styles once in your global stylesheet: @import \"./components/schema-engine/forms/recipes/recipes.css\" layer(components); (the path is relative to that stylesheet: ../components/... from a Next.js app/globals.css).",
       "registryDependencies": [
         "button",
         "badge",
@@ -3100,7 +3100,7 @@
       "type": "registry:item",
       "title": "Schema Engine default recipes (React Aria)",
       "description": "Default React Aria view recipes and the generated recipe registration barrel.",
-      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createFormEngine({ recipes: [...] }). Import the recipe styles once in your global stylesheet: @import \"./components/schema-engine/forms/recipes/recipes.css\" layer(components); (adjust the path to your components alias).",
+      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createFormEngine({ recipes: [...] }). Import the recipe styles once in your global stylesheet: @import \"./components/schema-engine/forms/recipes/recipes.css\" layer(components); (the path is relative to that stylesheet: ../components/... from a Next.js app/globals.css).",
       "registryDependencies": [
         "button",
         "badge",

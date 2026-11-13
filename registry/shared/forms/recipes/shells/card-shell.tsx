@@ -4,7 +4,7 @@ import { CardShellConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import type { FormShellProps } from '@schema-engine/forms-react/primitives';
 
 /**
- * Card shell. Its look lives in `card-shell.css`, which the app imports through `recipes.css`.
+ * Styles live in `card-shell.css`, which the app imports through `recipes.css`.
  *
  * @remarks
  * The card's `appearance` (`size`, `surface`) is emitted as `data-se-*` attributes; the layout theme's

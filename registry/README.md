@@ -38,7 +38,7 @@ A recipe item ships its CSS beside the components, as `registry:file` entries th
 @import './components/schema-engine/forms/recipes/recipes.css' layer(components);
 ```
 
-Adjust the path to your `components` alias. The `layer(components)` keeps the recipe rules below Tailwind utilities; without Tailwind, import the file plain. Every rule sits inside `:where()`, so a host class on the same element wins either way. The shells carry no inline styles and read the appearance tokens (`--se-space`, `--se-measure`, `--se-border-width`, `--se-shadow`, `--se-surface-background`) that the form's layout theme declares for the `data-se-size` and `data-se-surface` attributes, so one `appearance` config looks the same here as in Radiant.
+The path is relative to your global stylesheet: `./components/schema-engine/forms/recipes/recipes.css` from a Vite `src/index.css`, `../components/schema-engine/forms/recipes/recipes.css` from a Next.js `app/globals.css`. The `layer(components)` keeps the recipe rules below Tailwind utilities; without Tailwind, import the file plain. Every rule sits inside `:where()`, so a host class on the same element wins either way. The card shell, the only shell with styles so far, carries no inline styles and reads the appearance tokens (`--se-space`, `--se-measure`, `--se-border-width`, `--se-shadow`, `--se-surface-background`) that the form's layout theme declares for the `data-se-size` and `data-se-surface` attributes. With the built-in axes and no host theme overrides, one `appearance` config gives the same card geometry here as in Radiant.
 
 ## Source trees
 

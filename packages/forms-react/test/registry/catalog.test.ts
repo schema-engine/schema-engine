@@ -87,6 +87,18 @@ describe('schema-engine GitHub registry catalog', () => {
 		});
 	}
 
+	test('every recipe group that ships a stylesheet also lists the recipes.css entry point', () => {
+		const manifest = JSON.parse(
+			readFileSync(
+				path.resolve(import.meta.dirname, '../../../../registry/shared/forms/recipes/manifest.json'),
+				'utf8',
+			),
+		) as { recipes: Array<{ id: string; files: string[] }> };
+		const styled = manifest.recipes.filter((recipe) => recipe.files.some((file) => file.endsWith('-shell.css')));
+		expect(styled.map((recipe) => recipe.id)).toEqual(expect.arrayContaining(['card', 'card-wizard']));
+		for (const recipe of styled) expect(recipe.files, recipe.id).toContain('recipes.css');
+	});
+
 	test('every file has an @components or @ui target', () => {
 		for (const item of catalog) {
 			for (const file of item.files) {

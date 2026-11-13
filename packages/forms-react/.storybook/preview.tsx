@@ -3,7 +3,7 @@ import { initialize, mswLoader } from 'msw-storybook-addon';
 import { submitFormHandler } from '../src/stories/msw/submit-form';
 import { StoryWrapper } from '../src/stories/shared/story-wrapper';
 import '../src/styles/global.css';
-import '../../../registry/shared/forms/recipes/recipes.css';
+import './recipes.css';
 
 initialize({
 	onUnhandledRequest: 'bypass',

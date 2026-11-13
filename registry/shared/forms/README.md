@@ -20,12 +20,14 @@ Install the default visual recipes separately when a form uses a supplied `view.
 pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-engine-form-recipes
 ```
 
-The recipes item also copies the recipe stylesheets (`recipes/recipes.css` and one file per shell). Import the entry point once in your global stylesheet, into the `components` layer so Tailwind utilities and your own classes win:
+The recipes item also copies the recipe stylesheets (`recipes/recipes.css` and one file per shell that has styles). Import the entry point once in your global stylesheet, after Tailwind and into the `components` layer so Tailwind utilities and your own classes win:
 
 ```css
 @import 'tailwindcss';
 @import './components/schema-engine/forms/recipes/recipes.css' layer(components);
 ```
+
+The path is relative to your global stylesheet: `./components/schema-engine/forms/recipes/recipes.css` from a Vite `src/index.css`, `../components/schema-engine/forms/recipes/recipes.css` from a Next.js `app/globals.css`.
 
 Files land under `@components/schema-engine/forms`. Schema Engine primitives (field chrome, phone, dropzone, chips combobox) land under `@ui/schema-engine/components`. Official shadcn primitives (`button`, `input`, `select`, …) stay on the shadcn registry.
 

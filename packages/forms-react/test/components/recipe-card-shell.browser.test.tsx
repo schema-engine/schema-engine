@@ -13,14 +13,17 @@ afterEach(() => {
 /**
  * Mounts the card shell inside a themed scope with the engine's token stylesheet in the head.
  *
- * @remarks The tokens (`--se-space`, `--se-border-width`, ...) are declared by the layout theme for the
- * attribute values, so the scope carries `data-se-theme` and the stylesheet is loaded.
+ * @remarks
+ * The tokens (`--se-space`, `--se-border-width`, ...) are declared by the layout theme for the
+ * attribute values, so the scope carries `data-se-theme` and the stylesheet is loaded. The host CSS
+ * goes before every other stylesheet, so a host rule beats the recipe rules only by specificity, which
+ * is what `:where()` guarantees; a recipe rule with a specificity of its own would win on source order.
  */
-function mountCard(pick?: Record<string, string>, extraCss = '') {
+function mountCard(pick?: Record<string, string>, hostCss = '') {
 	const style = document.createElement('style');
 	style.dataset.cardShellTest = '';
-	style.textContent = `${layout.css}\n${extraCss}`;
-	document.head.append(style);
+	style.textContent = `${layout.css}\n${hostCss}`;
+	document.head.prepend(style);
 	const view = render(
 		<div data-se-theme={layout.id} style={{ width: '1200px' }}>
 			<CardShell
