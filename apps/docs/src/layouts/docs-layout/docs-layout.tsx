@@ -29,6 +29,16 @@ import './docs-layout.css';
 const ECO_NAVIGATION_EVENTS = 'eco:page-load,eco:after-swap';
 const DOCS_SIDEBAR_ID = 'docs-sidebar';
 
+/**
+ * Page-section headings for the "On this page" list.
+ *
+ * @remarks
+ * Every engine form root carries `data-se-theme`, so a heading inside a rendered form demo is
+ * not a page section. Listing it would also make `RuiToc` give it an `id` at runtime, before
+ * React hydrates the island, and the server-rendered heading then mismatches in dev.
+ */
+const TOC_HEADING_SELECTOR = 'h2:not([data-se-theme] *),h3:not([data-se-theme] *)';
+
 const DocsNavigation = () => (
 	<>
 		{docsNav.sections.map((section, index) => (
@@ -139,7 +149,7 @@ export const DocsLayout = eco.layout<JsxRenderable, DocsLayoutProps>({
 					<RuiToc
 						class="docs-layout__toc"
 						target=".docs-layout__content"
-						headingSelector="h2,h3"
+						headingSelector={TOC_HEADING_SELECTOR}
 						label="On this page"
 						scrollOffset={120}
 						navigationEvents={ECO_NAVIGATION_EVENTS}
