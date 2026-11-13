@@ -33,6 +33,11 @@ describe('generateFormConfigSchema with an element that pipes a transform', () =
 		expect(schema.$defs['element:piped']?.required).not.toContain('length');
 	});
 
+	test('the schema collection and the form config schema default alike', () => {
+		expect(() => engine.generateJSONSchemaCollection()).not.toThrow();
+		expect(() => engine.generateJSONSchemaCollection({ io: 'output' })).toThrow(/Transforms cannot be represented/);
+	});
+
 	test('output mode still throws, since a transform has no JSON Schema for its output', () => {
 		expect(() => engine.generateFormConfigSchema({ io: 'output' })).toThrow(/Transforms cannot be represented/);
 	});

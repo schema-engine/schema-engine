@@ -36,7 +36,7 @@ export function generateZodJSONSchemaCollection(
 ): JSONSchemaObject {
 	return z.toJSONSchema(metadataRegistry, {
 		target: options?.target || 'draft-2020-12',
-		io: options?.io || 'output',
+		io: options?.io || 'input',
 		uri: options?.uri || ((id: string) => `#/definitions/${id}`),
 	}) as JSONSchemaObject;
 }
@@ -57,7 +57,7 @@ export function generateZodJSONSchemaDocument(
 ): JSONSchemaObject {
 	const schema = z.toJSONSchema(validator, {
 		target: options?.target || 'draft-2020-12',
-		io: options?.io || 'output',
+		io: options?.io || 'input',
 		metadata: metadataRegistry,
 	}) as JSONSchemaObject & { $id?: string };
 

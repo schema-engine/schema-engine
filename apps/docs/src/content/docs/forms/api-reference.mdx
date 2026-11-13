@@ -121,15 +121,14 @@ for the paths and a copy-pasteable example.
 
 JSON Schema conversion is backed by Zod Mini for first-party schemas. Use
 `io: 'input'` for authoring input (where defaulted fields are optional) or
-`io: 'output'` for parsed output. `generateFormConfigSchema()` defaults to `'input'`, since it
-describes what authors write; `generateJSONSchemaCollection()` and `generateActionConfigSchema()`
-default to `'output'`. An element whose schema pipes a transform (Radiant's `input-otp`) has no
-JSON Schema for its output side, so `io: 'output'` throws for a form config that registers one.
+`io: 'output'` for parsed output. Every generator defaults to `'input'`, since the export describes
+what authors write. An element whose schema pipes a transform (Radiant's `input-otp`) has no
+JSON Schema for its output side, so `io: 'output'` throws for an engine that registers one.
 
 ```ts
-engine.generateJSONSchemaCollection({ io: 'input' });
+engine.generateJSONSchemaCollection(); // io: 'input'
 engine.generateFormConfigSchema(); // io: 'input'
-engine.generateActionConfigSchema('submit', { io: 'input' });
+engine.generateActionConfigSchema('submit', { io: 'output' });
 ```
 
 In these schemas an `appearance` pick is closed over the axes its owner declares. The form and
