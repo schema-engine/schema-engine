@@ -57,7 +57,10 @@ function NumberField({
 			onValueChange={(next) => onChange?.(next ?? '')}
 			className={cn('w-full', className)}
 		>
-			<NumberFieldPrimitive.Group className="flex h-8 w-full overflow-hidden rounded-lg border border-input bg-background transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 has-disabled:opacity-50">
+			<NumberFieldPrimitive.Group
+				data-se-control
+				className="flex h-8 w-full overflow-hidden rounded-lg border border-input bg-background transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 has-disabled:opacity-50"
+			>
 				<NumberFieldPrimitive.Input
 					placeholder={placeholder}
 					autoComplete={autoComplete}
@@ -69,12 +72,14 @@ function NumberField({
 				/>
 				<div className="flex shrink-0 border-s border-input">
 					<NumberFieldPrimitive.Decrement
+						data-se-control
 						className="text-muted-foreground inline-flex size-8 items-center justify-center transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
 						aria-label="Decrease value"
 					>
 						<Minus className="size-3.5" />
 					</NumberFieldPrimitive.Decrement>
 					<NumberFieldPrimitive.Increment
+						data-se-control
 						className="text-muted-foreground inline-flex size-8 items-center justify-center border-s border-input transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
 						aria-label="Increase value"
 					>

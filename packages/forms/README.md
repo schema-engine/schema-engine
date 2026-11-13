@@ -286,7 +286,7 @@ const engine = createFormEngine({ layout: { appearance: [...builtInAxes, tone, s
 
 Keep the axis list inline, as above, or declare it `as const`: a list stored in a plain
 variable widens, and typed `defineForm` stops narrowing the values. The card's width is the readable measure `--se-measure`, which `size` sets (24rem compact,
-32rem comfortable), so overriding the compact spacing does not resize the card.
+32rem comfortable), so overriding the compact spacing does not resize the card. `size` also sets the control height `--se-control-height`, through the hooks `--se-control-height-compact` (`1.75rem`) and `--se-control-height-comfortable` (`2.25rem`) that a renderer maps to its theme.
 
 The engine lists every axis in its schema catalog (`axis:size`) and in the JSON Schema
 export, where `appearance.size` is an enum of the axis's values, so an editor autocompletes

@@ -195,7 +195,7 @@ const FORM_RUNTIME_DEPENDENCIES = [
 
 const DEFAULT_RECIPE_ITEM = 'schema-engine-form-recipes';
 const DEFAULT_RECIPE_RUNTIME_DEPENDENCIES = [...FORM_RUNTIME_DEPENDENCIES, 'lucide-react'];
-const DEFAULT_RECIPE_REGISTRY_DEPENDENCIES = ['button', 'badge', 'separator', UTILS];
+const DEFAULT_RECIPE_REGISTRY_DEPENDENCIES = ['button', 'badge', 'separator', UTILS, PRIMITIVE_ITEM.field];
 
 function listRelativeSourceFiles(absDir: string, prefix = ''): string[] {
 	const files: string[] = [];
@@ -247,7 +247,7 @@ const ELEMENTS: ElementSpec[] = [
 		stem: 'actions/submit-button',
 		title: 'Submit button',
 		ident: 'SubmitButtonElementRegistration',
-		registryDependencies: ['button'],
+		registryDependencies: ['button', PRIMITIVE_ITEM.field],
 	},
 	{
 		stem: 'inputs/form-fieldset',
@@ -404,6 +404,13 @@ function primitiveFile(base: Base, name: PrimitiveName): CatalogFile {
 
 function primitiveFiles(base: Base, name: PrimitiveName): CatalogFile[] {
 	const files = [primitiveFile(base, name)];
+	if (name === 'field') {
+		files.push({
+			path: `${SHARED_PRIMITIVES_ROOT}/controls.css`,
+			type: 'registry:file',
+			target: '@ui/schema-engine/components/controls.css',
+		});
+	}
 	if (name === 'phone-input') {
 		files.push({
 			path: `${SHARED_PRIMITIVES_ROOT}/phone-country.ts`,
@@ -453,6 +460,17 @@ function elementSlug(stem: string): string {
 	return stem.slice(stem.lastIndexOf('/') + 1).replace(/^form-/, '');
 }
 
+/**
+ * How an app loads the control height stylesheet.
+ *
+ * @remarks
+ * It is a separate import from `recipes.css` and goes unlayered, after the layered one: an unlayered
+ * rule outranks the Tailwind utilities layer, which is the only way the size pick can beat the fixed
+ * height a shadcn control carries. With no pick the rule reverts to that height.
+ */
+const CONTROLS_STYLESHEET_DOCS =
+	'Import controls.css once in your global stylesheet, unlayered and after Tailwind and the recipe styles: @import "./components/ui/schema-engine/components/controls.css"; (adjust the path to your ui alias). It lets the size appearance axis set the height of the form controls that carry data-se-control.';
+
 function buildPrimitiveItem(base: Base, name: PrimitiveName): CatalogItem {
 	const spec = PRIMITIVES[name];
 	const override = base.primitives?.[name] ?? {};
@@ -467,6 +485,7 @@ function buildPrimitiveItem(base: Base, name: PrimitiveName): CatalogItem {
 		),
 		dependencies: override.dependencies ?? spec.dependencies,
 		files: primitiveFiles(base, name),
+		...(name === 'field' ? { docs: CONTROLS_STYLESHEET_DOCS } : {}),
 	};
 }
 

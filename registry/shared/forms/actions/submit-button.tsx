@@ -9,6 +9,7 @@ export function SubmitButton({ label, disabled, onClick, className, id, name, ht
 
 	return (
 		<Button
+			data-se-control
 			{...mergeControlProps(
 				{
 					type: 'submit' as const,

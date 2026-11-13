@@ -70,6 +70,7 @@ export function FormSelect({
 				disabled={fieldProps.disabled}
 			>
 				<SelectTrigger
+					data-se-control={isMultiple ? undefined : ''}
 					{...fieldProps}
 					className={isMultiple ? 'h-auto min-h-8 w-full' : undefined}
 					onBlur={combineHandlers(onBlur, propsOnBlur)}

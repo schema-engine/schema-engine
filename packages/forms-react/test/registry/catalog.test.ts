@@ -87,6 +87,52 @@ describe('schema-engine GitHub registry catalog', () => {
 		});
 	}
 
+	for (const name of [
+		'schema-engine-form-field-primitive',
+		'schema-engine-form-field-primitive-radix',
+		'schema-engine-form-field-primitive-aria',
+	]) {
+		test(`${name} ships controls.css as its own file, outside the recipes entry point`, () => {
+			const item = catalog.find((entry) => entry.name === name);
+			const stylesheet = item?.files.find((file) => file.path.endsWith('controls.css'));
+			expect(stylesheet).toEqual({
+				path: 'registry/shared/primitives/controls.css',
+				type: 'registry:file',
+				target: '@ui/schema-engine/components/controls.css',
+			});
+			expect(item?.docs).toContain('unlayered');
+		});
+	}
+
+	test('every element that carries data-se-control depends on the field primitive that carries controls.css', () => {
+		const sourceRoot = path.resolve(import.meta.dirname, '../../../..');
+		const marked = catalog.filter(
+			(item) =>
+				item.type === 'registry:item' &&
+				item.files.some(
+					(file) =>
+						file.path.endsWith('.tsx') &&
+						readFileSync(path.resolve(sourceRoot, file.path), 'utf8').includes('data-se-control'),
+				),
+		);
+		expect(marked.map((item) => item.name)).toContain('schema-engine-form-submit-button');
+		for (const item of marked) {
+			expect(
+				item.registryDependencies.some((dep) => dep.includes('schema-engine-form-field-primitive')),
+				item.name,
+			).toBe(true);
+		}
+	});
+
+	test('every recipes item depends on the field primitive that carries controls.css', () => {
+		for (const name of RECIPE_AGGREGATES) {
+			const item = catalog.find((entry) => entry.name === name);
+			expect(item?.registryDependencies.some((dep) => dep.includes('schema-engine-form-field-primitive'))).toBe(
+				true,
+			);
+		}
+	});
+
 	test('every recipe group that ships a stylesheet also lists the recipes.css entry point', () => {
 		const manifest = JSON.parse(
 			readFileSync(

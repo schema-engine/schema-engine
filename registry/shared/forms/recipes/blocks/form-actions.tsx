@@ -23,7 +23,7 @@ export function FormActions() {
 				align === 'end' && 'justify-end',
 			)}
 		>
-			<Button type="submit" aria-label={labels.submitAriaLabel}>
+			<Button data-se-control type="submit" aria-label={labels.submitAriaLabel}>
 				{form.isSubmitting ? labels.submitting : labels.submit}
 			</Button>
 		</div>
