@@ -35,8 +35,8 @@ export function createAppearanceSchema(axes: AxisRegistry, supported?: readonly 
 
 /**
  * @remarks
- * The schemas inside a Zod Mini schema's definition are typed as the core base, though a mini
- * schema only ever holds mini schemas. A schema from another Zod flavour is left as it is.
+ * Only narrows the members of a schema's definition, which Zod types as the core base. A classic
+ * Zod schema passes too, since it has the same methods, and is rewritten the same way.
  */
 function isMiniSchema(schema: z.core.$ZodType): schema is z.ZodMiniType {
 	return 'check' in schema && typeof schema.check === 'function';
