@@ -3,6 +3,7 @@ import '@ecopages/radiant-ui/radiant-ui-core.css';
 import '@ecopages/radiant-ui/themes/default';
 import '@ecopages/radiant-ui/styles.css';
 import '@/styles/appearance.css';
+import { getByRole } from '@testing-library/dom';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { createRoot } from '@ecopages/jsx/client';
 import { FormController } from '@/adapters/radiant/controller';
@@ -140,6 +141,41 @@ describe('a size hook set on the form class', () => {
 		try {
 			expect(readControlHeights(host).input).toBe(18);
 		} finally {
+			cleanup();
+		}
+	});
+});
+
+describe('a form nested in a grid item of another theme', () => {
+	test('maps its own hooks from the wrapper it sits in', async () => {
+		const { host, cleanup } = await mountRadiant({ config: controlHeightForm() });
+		const wrapper = document.createElement('div');
+		wrapper.style.setProperty('--size-control-sm', '40px');
+		host.querySelector('.se-grid-item')!.append(wrapper);
+		const root = createRoot(wrapper);
+		const compactForm = {
+			id: 'nested-control-height',
+			appearance: { size: 'compact' },
+			steps: [
+				{
+					id: 'nested',
+					title: 'Nested',
+					elements: [
+						{ $type: 'input', id: 'other', name: 'other', label: 'Other' },
+						{ $type: 'submit', id: 'go', name: 'nestedSubmit', label: 'Go' },
+					],
+				},
+			],
+		};
+		root.render(FormRenderer({ config: engine.validateForm(compactForm), engine }));
+		const nested = new FormController(wrapper.querySelector('rui-form')!);
+		try {
+			await expect.poll(() => nested.ready).toBe(true);
+			expect(getByRole(wrapper, 'textbox', { name: 'Other' }).getBoundingClientRect().height).toBe(40);
+			expect(getByRole(wrapper, 'button', { name: 'Go' }).getBoundingClientRect().height).toBe(40);
+		} finally {
+			nested.disconnect();
+			root.unmount();
 			cleanup();
 		}
 	});
