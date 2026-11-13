@@ -54,7 +54,7 @@ export interface ValidationRegistry extends ReadOnlyRegistry<AnyValidationRegist
 	 * it: a renderer that did exactly that is why cross-field rules were inert on
 	 * one of the two renderers. Build it with `createValidationContext`.
 	 */
-	createSchema(rule: { type: string }, context: ValidationContext): z.ZodMiniType | null;
+	createSchema<T extends { type: string }>(rule: T, context: ValidationContext): z.ZodMiniType | null;
 }
 
 function deriveDefaultRules(
@@ -94,7 +94,7 @@ export function createValidationRegistry(registrations: readonly AnyValidationRe
 		getRegisteredTypes: () => [...registry.keys()],
 		getByCategory: (category: string) =>
 			registry.all().filter((registration) => registration.category === category),
-		createSchema: (rule: { type: string }, context: ValidationContext) => {
+		createSchema: <T extends { type: string }>(rule: T, context: ValidationContext) => {
 			const registration = registry.get(rule.type) as StoredValidationRegistration | undefined;
 			if (!registration) {
 				return null;
