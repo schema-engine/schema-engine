@@ -1,6 +1,6 @@
 import type { ContainerKind } from '../types/registration.js';
 import { isPlainObject } from './is-plain-object.js';
-import type { DeepReadonly } from '@schema-engine/layout';
+import type { DeepReadonly } from './deep-readonly.js';
 import type { FormConfig, FormStep } from '@/schemas/form-config';
 import type { ElementConfig } from '@/schemas/field-config';
 import type { BaseField } from '@/schemas/base-field';
@@ -10,11 +10,15 @@ const ELEMENT_CONTAINER_KIND = Symbol.for('@schema-engine/forms.container-kind')
 
 const NORMALIZED_ELEMENT_CONFIG = Symbol.for('@schema-engine/forms.normalized-element-config');
 
+/**
+ * Re-exported because the public config types below are built from it: a consumer's declaration
+ * emit has to be able to name it from this subpath.
+ */
+export type { DeepReadonly };
+
 type NormalizedFormProvenance = {
 	readonly owner: object;
 };
-
-export type { DeepReadonly };
 
 /** Readable form shape. Accepts authoring config and frozen normalized output. */
 export type FormConfigView<

@@ -5,6 +5,7 @@ import {
 	type RegistrationMetadata,
 } from '@schema-engine/registry';
 import * as z from 'zod/mini';
+import type { LayoutTheme, LayoutThemeCompilerOptions } from './layout-theme';
 
 /**
  * Appearance axes a document picks values on and renderers emit as data attributes.
@@ -302,18 +303,6 @@ export function getAppearanceCss(appearance: CompiledAppearance, themeId: string
 	return rules.join('\n');
 }
 
-/** Inputs to {@link compileAppearance} that come from the domain rather than the author. */
-export interface AppearanceCompilerOptions {
-	/**
-	 * Suffixes of the `data-se-*` attributes the domain's renderers already write, which an axis cannot reuse.
-	 *
-	 * @remarks
-	 * {@link getAppearanceAttributes} spreads after a renderer's own attributes on the same elements, so
-	 * an axis named like one would overwrite it. Each domain lists its own, so this package hard-codes none.
-	 */
-	readonly reservedNames?: readonly string[];
-}
-
 /**
  * Compiles a list of axes into the theme's appearance vocabulary.
  *
@@ -326,7 +315,7 @@ export interface AppearanceCompilerOptions {
  */
 export function compileAppearance(
 	axes: readonly AnyAxisRegistration[] = builtInAxes,
-	compiler: AppearanceCompilerOptions = {},
+	compiler: LayoutThemeCompilerOptions = {},
 ): CompiledAppearance {
 	const registry = createRegistry<AnyAxisRegistration>('Axis', axes);
 	const reserved = new Set(compiler.reservedNames);
@@ -378,7 +367,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  */
 export function checkAppearance(
 	authored: unknown,
-	options: { axes: CompiledAppearance['axes']; subject: string; supported?: readonly string[] },
+	options: { axes: LayoutTheme['axes']; subject: string; supported?: readonly string[] },
 ): { issues: string[]; appearance: Record<string, string> } {
 	const issues: string[] = [];
 	const appearance: Record<string, string> = {};

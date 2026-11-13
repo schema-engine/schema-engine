@@ -1,6 +1,6 @@
 /* The field-host rule outranks a bare display, so declare the mode it reads. */
 .se-fieldset {
-	--se-field-display-mode: grid;
+	--se-item-display-mode: grid;
 	display: grid;
 	gap: 1rem;
 	margin: 0;

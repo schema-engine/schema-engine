@@ -20,7 +20,7 @@ Unlike `@schema-engine/forms-react` — where the default view recipes live in t
 pnpm add @schema-engine/forms-radiant @schema-engine/forms @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
 ```
 
-The peer ranges are `@ecopages/radiant`, `@ecopages/jsx` and `@ecopages/signals` `>=0.8.3`, and `@ecopages/radiant-ui` `>=0.3.5`.
+The peer ranges are `@ecopages/radiant`, `@ecopages/jsx` and `@ecopages/signals` `>=0.8.3`, and `@ecopages/radiant-ui` `>=0.3.6`.
 
 Load Tailwind preflight (via Radiant core), theme, and component styles:
 
@@ -285,7 +285,7 @@ Stories default to **client** render. Use the Storybook toolbar **Radiant render
 
 Published JavaScript files are marked as side effects so bundlers preserve
 custom element registration for every entry point. Supported Radiant peers are
-`>=0.8.3` (JSX, Radiant and Signals) and `>=0.3.5` (Radiant UI).
+`>=0.8.3` (JSX, Radiant and Signals) and `>=0.3.6` (Radiant UI).
 
 ### Custom recipe migration
 

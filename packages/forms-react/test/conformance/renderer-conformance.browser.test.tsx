@@ -20,6 +20,7 @@ import { FormArrayElements } from '@/components/schema-engine/forms/inputs/form-
 import { FieldSetRegistration } from '@/components/schema-engine/forms/inputs/form-fieldset.registration';
 import { SubmitButtonElementRegistration } from '@/components/schema-engine/forms/actions/submit-button.registration';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
+import '@/components/schema-engine/forms/recipes/recipes.css';
 
 const CustomArrayRegistration = defineInput({
 	$type: customArrayType,

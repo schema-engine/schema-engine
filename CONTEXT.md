@@ -295,13 +295,13 @@ included, since the public token is the first `var()` argument.
 
 Per-element rhythm is part of the same mechanism, not a second one. An element's
 `grid.marginBlockStart` / `grid.marginBlockEnd` take the same gap tokens and ride
-the shared field property table, so they inherit the breakpoint cascade and the
+the shared item property table, so they inherit the breakpoint cascade and the
 inheritance resets and one system keeps owning the block axis. They apply to any
 element that renders a `.se-grid-item` host (`se-form-field se-grid-item`) carrying the engine's theme id —
 inputs get it from the field primitive, and a content or decoration element opts
 in with `useFieldHost` (React) or `mergeFieldGridHost` (Radiant). An element
-without that host ignores its `grid` config entirely. And a field host with
-its own layout sets `--se-field-display-mode` instead of `display`, which
+without that host ignores its `grid` config entirely. And an item host with
+its own layout sets `--se-item-display-mode` instead of `display`, which
 responsive `hidden` toggles against rather than forcing `block`.
 
 ## Appearance axis
