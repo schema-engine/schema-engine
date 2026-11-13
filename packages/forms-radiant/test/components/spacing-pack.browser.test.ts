@@ -53,3 +53,18 @@ test.each([
 	addStyle(compactPack);
 	expect(await contentPadding({ size })).toBe(padding);
 });
+
+test.each([
+	['default', '24px', '32px'],
+	['compact pack', '20px', '24px'],
+])('the loose and wide grid gaps follow the %s', async (label, loose, wide) => {
+	addStyle(layout.css);
+	if (label === 'compact pack') addStyle(compactPack);
+	const grid = document.createElement('div');
+	grid.dataset.seTheme = layout.id;
+	grid.style.rowGap = 'var(--se-grid-gap-base-loose)';
+	grid.style.columnGap = 'var(--se-grid-gap-base-wide)';
+	document.body.append(grid);
+	expect(getComputedStyle(grid).rowGap).toBe(loose);
+	expect(getComputedStyle(grid).columnGap).toBe(wide);
+});

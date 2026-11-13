@@ -128,9 +128,12 @@ export function controlHeightHookAcceptance(mount: ConformanceMount): void {
 		['the body', () => document.body],
 	])('a size hook set on %s', (_label, ancestor) => {
 		let cleanup: (() => void) | undefined;
-		afterEach(() => {
+		const release = () => {
 			cleanup?.();
 			cleanup = undefined;
+		};
+		afterEach(() => {
+			release();
 			for (const name of Object.keys(hooks)) ancestor().style.removeProperty(name);
 		});
 		const heights = async (size?: string) => {
@@ -142,19 +145,16 @@ export function controlHeightHookAcceptance(mount: ConformanceMount): void {
 		test('reaches a compact and a comfortable pick', async () => {
 			for (const [name, value] of Object.entries(hooks)) ancestor().style.setProperty(name, value);
 			expect(await heights('compact')).toEqual({ input: 18, button: 18 });
-			cleanup?.();
-			cleanup = undefined;
+			release();
 			expect(await heights('comfortable')).toEqual({ input: 52, button: 52 });
 		});
 
 		test('leaves no pick and default on the height the theme gives', async () => {
 			const unpicked = await heights();
-			cleanup?.();
-			cleanup = undefined;
+			release();
 			for (const [name, value] of Object.entries(hooks)) ancestor().style.setProperty(name, value);
 			expect(await heights()).toEqual(unpicked);
-			cleanup?.();
-			cleanup = undefined;
+			release();
 			expect(await heights('default')).toEqual(unpicked);
 		});
 	});

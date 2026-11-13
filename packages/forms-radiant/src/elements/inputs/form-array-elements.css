@@ -20,7 +20,7 @@
 .se-form-array-field__description {
 	margin: 0 0 0.75rem;
 	font-size: 0.875rem;
-	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
+	color: color-mix(in srgb, currentColor 65%, transparent);
 }
 
 .se-form-array__item {
@@ -57,7 +57,7 @@
 	padding: 1.5rem 1rem;
 	text-align: center;
 	font-size: 0.875rem;
-	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
+	color: color-mix(in srgb, currentColor 65%, transparent);
 	border: 1px dashed var(--border, currentColor);
 	border-radius: var(--radius-control, 0.5rem);
 }

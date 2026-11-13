@@ -18,5 +18,5 @@
 .se-fieldset__description {
 	margin: 0;
 	font-size: 0.875rem;
-	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
+	color: color-mix(in srgb, currentColor 65%, transparent);
 }

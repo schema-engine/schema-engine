@@ -339,8 +339,8 @@ describe('layout themes page', () => {
 			none: '0',
 			compact: '0.5rem',
 			default: 'var(--space-stack, 1rem)',
-			loose: 'var(--space-6, 1.5rem)',
-			wide: 'var(--space-8, 2rem)',
+			loose: 'var(--space-block-lg, 1.5rem)',
+			wide: 'var(--space-block-xl, 2rem)',
 		});
 	});
 
@@ -446,11 +446,11 @@ describe('appearance axes page', () => {
 		const axes = Object.fromEntries(layout.builtInAxes.map((axis) => [axis.$type, axis.values]));
 		expect(axes.size).toEqual({
 			compact: {
-				'--se-space': 'var(--se-space-compact, var(--se-host-space-compact, 1rem))',
+				'--se-space': 'var(--se-space-compact, var(--se-renderer-space-compact, 1rem))',
 				'--se-font-size': '0.875rem',
 				'--se-measure': '24rem',
 				'--se-control-height':
-					'var(--se-control-height-compact, var(--se-host-control-height-compact, 1.75rem))',
+					'var(--se-control-height-compact, var(--se-renderer-control-height-compact, 1.75rem))',
 			},
 			default: {
 				'--se-space': 'initial',
@@ -459,11 +459,11 @@ describe('appearance axes page', () => {
 				'--se-control-height': 'initial',
 			},
 			comfortable: {
-				'--se-space': 'var(--se-space-comfortable, var(--se-host-space-comfortable, 2rem))',
+				'--se-space': 'var(--se-space-comfortable, var(--se-renderer-space-comfortable, 2rem))',
 				'--se-font-size': '1.0625rem',
 				'--se-measure': '32rem',
 				'--se-control-height':
-					'var(--se-control-height-comfortable, var(--se-host-control-height-comfortable, 2.25rem))',
+					'var(--se-control-height-comfortable, var(--se-renderer-control-height-comfortable, 2.25rem))',
 			},
 		});
 		expect(axes.surface).toEqual({

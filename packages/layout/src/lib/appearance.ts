@@ -185,10 +185,11 @@ const sizeAxis = defineAxis({
 	default: 'default',
 	values: {
 		compact: {
-			'--se-space': 'var(--se-space-compact, var(--se-host-space-compact, 1rem))',
+			'--se-space': 'var(--se-space-compact, var(--se-renderer-space-compact, 1rem))',
 			'--se-font-size': '0.875rem',
 			'--se-measure': '24rem',
-			'--se-control-height': 'var(--se-control-height-compact, var(--se-host-control-height-compact, 1.75rem))',
+			'--se-control-height':
+				'var(--se-control-height-compact, var(--se-renderer-control-height-compact, 1.75rem))',
 		},
 		default: {
 			'--se-space': 'initial',
@@ -197,11 +198,11 @@ const sizeAxis = defineAxis({
 			'--se-control-height': 'initial',
 		},
 		comfortable: {
-			'--se-space': 'var(--se-space-comfortable, var(--se-host-space-comfortable, 2rem))',
+			'--se-space': 'var(--se-space-comfortable, var(--se-renderer-space-comfortable, 2rem))',
 			'--se-font-size': '1.0625rem',
 			'--se-measure': '32rem',
 			'--se-control-height':
-				'var(--se-control-height-comfortable, var(--se-host-control-height-comfortable, 2.25rem))',
+				'var(--se-control-height-comfortable, var(--se-renderer-control-height-comfortable, 2.25rem))',
 		},
 	},
 });
@@ -238,7 +239,7 @@ const surfaceAxis = defineAxis({
  *
  * @remarks
  * The tokens are renderer-neutral and name no host theme; `size` reads hooks an author sets (`--se-space-compact`,
- * `--se-control-height-compact` and their `comfortable` twins), then the `--se-host-*` twin of each, which a renderer sets from its host theme, then a neutral value. `size.default` and the background of
+ * `--se-control-height-compact` and their `comfortable` twins), then the `--se-renderer-*` twin of each, which a renderer sets from its theme, then a neutral value. `size.default` and the background of
  * `surface.elevated` are `initial`, which hands the token back to the component's own fallback, so
  * a renderer's fallbacks, which it maps to its host theme, stay in force and `size: default`
  * looks like no pick, also inside a `compact` form. Override an axis by listing another

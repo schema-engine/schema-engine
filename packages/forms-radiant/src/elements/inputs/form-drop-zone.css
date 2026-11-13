@@ -55,5 +55,5 @@ se-drop-zone {
 .se-dropzone__caption {
 	margin: 0;
 	font-size: 0.75rem;
-	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
+	color: color-mix(in srgb, currentColor 65%, transparent);
 }

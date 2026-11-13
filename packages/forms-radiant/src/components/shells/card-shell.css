@@ -37,13 +37,13 @@
 
 .card-shell__description {
 	margin: 0 0 0.5rem;
-	color: var(--on-surface-muted, color-mix(in srgb, currentColor 70%, transparent));
+	color: color-mix(in srgb, currentColor 70%, transparent);
 }
 
 .card-shell__step-counter {
 	display: block;
 	font-size: 0.875rem;
-	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
+	color: color-mix(in srgb, currentColor 65%, transparent);
 }
 
 .card-shell__section {

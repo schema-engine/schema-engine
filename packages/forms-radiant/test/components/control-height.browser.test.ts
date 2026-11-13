@@ -254,7 +254,7 @@ describe('a size hook set above the form', () => {
 				const form = getComputedStyle(host.querySelector('rui-form')!);
 				return {
 					space: form.getPropertyValue('--se-space').trim(),
-					host: form.getPropertyValue('--se-host-space-compact').trim(),
+					host: form.getPropertyValue('--se-renderer-space-compact').trim(),
 				};
 			} finally {
 				cleanup();
