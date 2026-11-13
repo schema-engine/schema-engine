@@ -272,7 +272,19 @@ variable widens, and typed `defineForm` stops narrowing the values. The card's w
 
 The engine lists every axis in its schema catalog (`axis:size`) and in the JSON Schema
 export, where `appearance.size` is an enum of the axis's values, so an editor autocompletes
-a form's and a step's picks. Element and recipe slot picks stay an open record of axis names to values.
+a form's and a step's picks. An element's `appearance` lists exactly the axes its registration
+declares in `appearanceAxes`, and a recipe slot's lists exactly the axes the recipe declares for it
+(`appearanceAxes: { shell: ['size', 'surface'] }`), each an enum of its values with
+`additionalProperties: false`, so an undeclared axis is rejected. Validation checks the pick on
+every element and slot, so every one gets the key: an owner that declares none gets a closed
+`appearance` with no axes. The lists come from the registry and declarations validation checks
+(`checkAppearance`), so the export and validation cannot drift; a parity test walks fixture
+elements (open, strict, non-strict without an `appearance` key, piped) and the built-in recipes
+through both. The limits: a schema that is an object, or a pipe or prefault of one, is rewritten, but
+a lazy schema keeps its own `appearance`; the children of a fieldset or an array row are loosely
+typed in the export, so their `appearance` is not checked there (validation still checks it); and a
+native Standard Schema element contributes an envelope of its `$type` and the same closed
+`appearance`. The catalog keeps each registration's own validator schema, so `getBySchema` finds it.
 
 A form, a step, a field and a view slot pick values with `appearance`, and the
 typed `defineForm` narrows the values to the engine's axes:
