@@ -18,5 +18,6 @@ export * from './recipes/bind-recipe';
 export * from './recipes/define-recipe-spec';
 export * from './recipes/merge-slot-defaults';
 export * from './recipes/protocol';
+export * from './recipes/resolve-recipe-view';
 export * from './recipes/types';
 export * from './recipes/view-model';

@@ -79,7 +79,7 @@ export function defineRecipeProtocol<const TSlot extends string, const TKind ext
  * @throws {Error} Naming the recipe, and the rule when one fails
  *
  * @remarks
- * Runs in `defineRecipeSpec` for an early failure and in {@link createRecipeRegistry} for each winning
+ * Runs in `defineProtocolRecipeSpec` for an early failure and in {@link createRecipeRegistry} for each winning
  * registration, which also covers hand-written recipes whose schema is not a Zod schema.
  *
  * The vocabulary is checked before any rule runs, so the narrowing of the recipe to the protocol's

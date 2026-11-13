@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import * as z from 'zod/mini';
 import { bindRecipe } from '@/recipes/bind-recipe';
 import { defineRecipeProtocol, createRecipeRegistry } from '@/recipes/protocol';
-import { defineRecipeSpec } from '@/recipes/define-recipe-spec';
+import { defineProtocolRecipeSpec } from '@/recipes/define-recipe-spec';
 import { getSlotConfig } from '@/recipes/view-model';
 import { mergeSlotDefaults } from '@/recipes/merge-slot-defaults';
 import { ContentConfigSchema, MediaConfigSchema, ShellConfigSchema, sectionProtocol } from './section-protocol';
@@ -30,9 +30,9 @@ describe('defineRecipeProtocol', () => {
 	});
 });
 
-describe('defineRecipeSpec against a protocol', () => {
+describe('defineProtocolRecipeSpec against a protocol', () => {
 	test('lists the declared slots in protocol order, whatever order the schemas were written in', () => {
-		const spec = defineRecipeSpec(sectionProtocol, {
+		const spec = defineProtocolRecipeSpec(sectionProtocol, {
 			$type: 'hero',
 			kind: 'section',
 			metadata,
@@ -43,7 +43,7 @@ describe('defineRecipeSpec against a protocol', () => {
 	});
 
 	test('builds a strict view schema that fills each declared slot', () => {
-		const spec = defineRecipeSpec(sectionProtocol, {
+		const spec = defineProtocolRecipeSpec(sectionProtocol, {
 			$type: 'hero',
 			kind: 'section',
 			metadata,
@@ -55,7 +55,7 @@ describe('defineRecipeSpec against a protocol', () => {
 
 	test('runs the protocol rules, naming the recipe and the rule', () => {
 		expect(() =>
-			defineRecipeSpec(sectionProtocol, {
+			defineProtocolRecipeSpec(sectionProtocol, {
 				$type: 'bare-hero',
 				kind: 'section',
 				metadata,
@@ -66,7 +66,7 @@ describe('defineRecipeSpec against a protocol', () => {
 
 	test('rejects a slot the protocol does not declare', () => {
 		expect(() =>
-			defineRecipeSpec(sectionProtocol, {
+			defineProtocolRecipeSpec(sectionProtocol, {
 				$type: 'odd',
 				kind: 'section',
 				metadata,
@@ -77,7 +77,7 @@ describe('defineRecipeSpec against a protocol', () => {
 
 	test('rejects a kind the protocol does not declare', () => {
 		expect(() =>
-			defineRecipeSpec(sectionProtocol, {
+			defineProtocolRecipeSpec(sectionProtocol, {
 				$type: 'odd',
 				kind: 'wizard' as never,
 				metadata,
@@ -88,7 +88,7 @@ describe('defineRecipeSpec against a protocol', () => {
 
 	test('validates slot defaults against the slot schema', () => {
 		expect(() =>
-			defineRecipeSpec(sectionProtocol, {
+			defineProtocolRecipeSpec(sectionProtocol, {
 				$type: 'hero',
 				kind: 'section',
 				metadata,
@@ -100,7 +100,7 @@ describe('defineRecipeSpec against a protocol', () => {
 
 	test('rejects slot defaults for a slot the recipe does not declare', () => {
 		expect(() =>
-			defineRecipeSpec(sectionProtocol, {
+			defineProtocolRecipeSpec(sectionProtocol, {
 				$type: 'hero',
 				kind: 'section',
 				metadata,
@@ -112,7 +112,7 @@ describe('defineRecipeSpec against a protocol', () => {
 
 	test('requires a slot that declares appearance axes to accept an appearance key', () => {
 		expect(() =>
-			defineRecipeSpec(sectionProtocol, {
+			defineProtocolRecipeSpec(sectionProtocol, {
 				$type: 'hero',
 				kind: 'section',
 				metadata,
@@ -122,7 +122,7 @@ describe('defineRecipeSpec against a protocol', () => {
 		).toThrow(/appearanceAxes.content: the 'content' slot schema must accept an 'appearance' key/);
 
 		expect(() =>
-			defineRecipeSpec(sectionProtocol, {
+			defineProtocolRecipeSpec(sectionProtocol, {
 				$type: 'hero',
 				kind: 'section',
 				metadata,
@@ -135,7 +135,7 @@ describe('defineRecipeSpec against a protocol', () => {
 
 describe('createRecipeRegistry', () => {
 	const valid = bindRecipe(
-		defineRecipeSpec(sectionProtocol, {
+		defineProtocolRecipeSpec(sectionProtocol, {
 			$type: 'hero',
 			kind: 'section',
 			metadata,
@@ -201,7 +201,7 @@ describe('createRecipeRegistry', () => {
 
 describe('bindRecipe', () => {
 	test('copies the spec fields and attaches the render payload', () => {
-		const spec = defineRecipeSpec(sectionProtocol, {
+		const spec = defineProtocolRecipeSpec(sectionProtocol, {
 			$type: 'hero',
 			kind: 'section',
 			metadata,

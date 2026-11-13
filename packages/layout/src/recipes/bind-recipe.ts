@@ -1,6 +1,6 @@
 import type * as z from 'zod/mini';
 import type { SlotAppearanceAxes } from '../lib/appearance';
-import type { RecipeRegistration, RecipeSlotSchemas, RecipeSpec } from './types';
+import type { ProtocolRecipeRegistration, ProtocolRecipeSlotSchemas, ProtocolRecipeSpec } from './types';
 
 /**
  * @remarks
@@ -16,12 +16,12 @@ export function bindRecipe<
 	TKind extends string,
 	const TType extends string,
 	TSchema extends z.ZodMiniType,
-	TSlots extends RecipeSlotSchemas<TSlot>,
+	TSlots extends ProtocolRecipeSlotSchemas<TSlot>,
 	TRender,
 >(
-	spec: RecipeSpec<TSlot, TKind, TType, TSchema, TSlots>,
+	spec: ProtocolRecipeSpec<TSlot, TKind, TType, TSchema, TSlots>,
 	render: TRender,
-): RecipeRegistration<TSlot, TKind, TType, TSchema, TRender> {
+): ProtocolRecipeRegistration<TSlot, TKind, TType, TSchema, TRender> {
 	return {
 		$type: spec.$type,
 		kind: spec.kind,

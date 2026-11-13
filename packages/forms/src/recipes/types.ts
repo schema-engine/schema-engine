@@ -1,15 +1,11 @@
 import type * as z from 'zod/mini';
-import type {
-	RecipeMetadata,
-	RecipeSlotSchemas as ProtocolSlotSchemas,
-	RecipeSpec as ProtocolRecipeSpec,
-} from '@schema-engine/layout';
+import type { RecipeMetadata, ProtocolRecipeSlotSchemas, ProtocolRecipeSpec } from '@schema-engine/layout';
 import type { RecipeKind, RecipeSlot } from './protocol';
 
 export type { RecipeKind, RecipeSlot } from './protocol';
 export type { RecipeMetadata, RecipeSlotDefaults } from '@schema-engine/layout';
 
-export type RecipeSlotSchemas = ProtocolSlotSchemas<RecipeSlot>;
+export type RecipeSlotSchemas = ProtocolRecipeSlotSchemas<RecipeSlot>;
 
 export interface RecipeDescriptor {
 	$type: string;

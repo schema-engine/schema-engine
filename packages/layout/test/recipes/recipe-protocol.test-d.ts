@@ -2,13 +2,13 @@ import { expectTypeOf } from 'vitest';
 import * as z from 'zod/mini';
 import { bindRecipe } from '@/recipes/bind-recipe';
 import { createRecipeRegistry, defineRecipeProtocol, type KindOf, type SlotOf } from '@/recipes/protocol';
-import { defineRecipeSpec } from '@/recipes/define-recipe-spec';
+import { defineProtocolRecipeSpec } from '@/recipes/define-recipe-spec';
 import { ContentConfigSchema, MediaConfigSchema, sectionProtocol } from './section-protocol';
 
 expectTypeOf<SlotOf<typeof sectionProtocol>>().toEqualTypeOf<'shell' | 'media' | 'content'>();
 expectTypeOf<KindOf<typeof sectionProtocol>>().toEqualTypeOf<'section'>();
 
-const hero = defineRecipeSpec(sectionProtocol, {
+const hero = defineProtocolRecipeSpec(sectionProtocol, {
 	$type: 'hero',
 	kind: 'section',
 	metadata: { name: 'Hero' },
@@ -23,7 +23,7 @@ expectTypeOf(hero.slotSchemas).toHaveProperty('media');
 expectTypeOf(hero.slotSchemas).toHaveProperty('content');
 expectTypeOf(hero.schema.shape.$type).toEqualTypeOf<z.ZodMiniLiteral<'hero'>>();
 
-defineRecipeSpec(sectionProtocol, {
+defineProtocolRecipeSpec(sectionProtocol, {
 	$type: 'outside-slot',
 	kind: 'section',
 	metadata: { name: 'Outside' },
@@ -34,7 +34,7 @@ defineRecipeSpec(sectionProtocol, {
 	},
 });
 
-defineRecipeSpec(sectionProtocol, {
+defineProtocolRecipeSpec(sectionProtocol, {
 	$type: 'wrong-kind',
 	// @ts-expect-error a kind outside the protocol is a type error
 	kind: 'wizard',
@@ -42,7 +42,7 @@ defineRecipeSpec(sectionProtocol, {
 	slotSchemas: { content: ContentConfigSchema },
 });
 
-defineRecipeSpec(sectionProtocol, {
+defineProtocolRecipeSpec(sectionProtocol, {
 	$type: 'undeclared-default',
 	kind: 'section',
 	metadata: { name: 'Default' },
@@ -51,7 +51,7 @@ defineRecipeSpec(sectionProtocol, {
 	slotDefaults: { media: {} },
 });
 
-defineRecipeSpec(sectionProtocol, {
+defineProtocolRecipeSpec(sectionProtocol, {
 	$type: 'undeclared-axis',
 	kind: 'section',
 	metadata: { name: 'Axis' },
@@ -60,7 +60,7 @@ defineRecipeSpec(sectionProtocol, {
 	appearanceAxes: { media: ['size'] },
 });
 
-defineRecipeSpec(sectionProtocol, {
+defineProtocolRecipeSpec(sectionProtocol, {
 	$type: 'bad-default-value',
 	kind: 'section',
 	metadata: { name: 'Value' },

@@ -6,25 +6,25 @@ export interface RecipeMetadata extends ComponentMetadata {
 	category?: string;
 }
 
-export type RecipeSlotSchemas<TSlot extends string = string> = Partial<Record<TSlot, z.ZodMiniType>>;
+export type ProtocolRecipeSlotSchemas<TSlot extends string = string> = Partial<Record<TSlot, z.ZodMiniType>>;
 
 /**
  * Slot config applied beneath a view's own slot config, typed as the input of each declared slot schema.
  *
  * @remarks
- * Undeclared slots and misspelled keys are compile errors; `defineRecipeSpec` also parses each
+ * Undeclared slots and misspelled keys are compile errors; `defineProtocolRecipeSpec` also parses each
  * default against its slot schema.
  */
 export type RecipeSlotDefaults<TSlots extends Partial<Record<string, z.ZodMiniType>>> = {
 	[K in keyof TSlots]?: TSlots[K] extends z.ZodMiniType ? z.input<TSlots[K]> : never;
 };
 
-export interface RecipeSpec<
+export interface ProtocolRecipeSpec<
 	TSlot extends string = string,
 	TKind extends string = string,
 	TType extends string = string,
 	TSchema extends z.ZodMiniType = z.ZodMiniType,
-	TSlots extends RecipeSlotSchemas<TSlot> = RecipeSlotSchemas<TSlot>,
+	TSlots extends ProtocolRecipeSlotSchemas<TSlot> = ProtocolRecipeSlotSchemas<TSlot>,
 > {
 	$type: TType;
 	kind: TKind;
@@ -52,7 +52,7 @@ export interface RecipeSpec<
  * `render` is whatever the domain's renderers need (shell and slot components); this package never
  * reads it.
  */
-export interface RecipeRegistration<
+export interface ProtocolRecipeRegistration<
 	TSlot extends string = string,
 	TKind extends string = string,
 	TType extends string = string,
