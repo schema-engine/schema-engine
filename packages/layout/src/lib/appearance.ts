@@ -5,6 +5,7 @@ import {
 	type RegistrationMetadata,
 } from '@schema-engine/registry';
 import * as z from 'zod/mini';
+import type { LayoutIssue } from './layout-issue';
 import type { LayoutTheme, LayoutThemeCompilerOptions } from './layout-theme';
 
 /**
@@ -385,38 +386,45 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  *
  * @param subject Names the owner in a message, for example `Element 'fieldSet'`.
  * @param supported The axes the owner declares; an owner that declares none passes `[]`. Omit it for an owner that accepts every axis.
- * @returns One message per problem, without a location prefix, and the valid picks.
+ * @returns One issue per problem, with a path relative to the authored pick (`['appearance', axis]`), and the valid picks.
  */
 export function checkAppearance(
 	authored: unknown,
 	options: { axes: LayoutTheme['axes']; subject: string; supported?: readonly string[] },
-): { issues: string[]; appearance: Record<string, string> } {
-	const issues: string[] = [];
+): { issues: LayoutIssue[]; appearance: Record<string, string> } {
+	const issues: LayoutIssue[] = [];
 	const appearance: Record<string, string> = {};
 	if (authored === undefined) return { issues, appearance };
 	if (!isRecord(authored)) {
-		return { issues: ['appearance: expected an object of axis names to values.'], appearance };
+		return {
+			issues: [{ path: ['appearance'], message: 'Expected an object of axis names to values.' }],
+			appearance,
+		};
 	}
 	const declared = Object.keys(options.axes).join(', ');
 	for (const [axis, value] of Object.entries(authored)) {
 		const values = Object.hasOwn(options.axes, axis) ? options.axes[axis] : undefined;
 		if (!values) {
-			issues.push(`appearance.${axis}: unknown axis '${axis}'. Declared axes: ${declared}.`);
+			issues.push({ path: ['appearance', axis], message: `Unknown axis '${axis}'. Declared axes: ${declared}.` });
 			continue;
 		}
 		if (options.supported !== undefined && !options.supported.includes(axis)) {
 			const supported = options.supported.length > 0 ? options.supported.join(', ') : '(none)';
-			issues.push(
-				`appearance.${axis}: ${options.subject} does not support the axis '${axis}'. Supported axes: ${supported}.`,
-			);
+			issues.push({
+				path: ['appearance', axis],
+				message: `${options.subject} does not support the axis '${axis}'. Supported axes: ${supported}.`,
+			});
 			continue;
 		}
 		if (typeof value !== 'string') {
-			issues.push(`appearance.${axis}: expected one of ${values.join(', ')}.`);
+			issues.push({ path: ['appearance', axis], message: `Expected one of ${values.join(', ')}.` });
 			continue;
 		}
 		if (!values.includes(value)) {
-			issues.push(`appearance.${axis}: '${value}' is not a value of '${axis}'. Allowed: ${values.join(', ')}.`);
+			issues.push({
+				path: ['appearance', axis],
+				message: `'${value}' is not a value of '${axis}'. Allowed: ${values.join(', ')}.`,
+			});
 			continue;
 		}
 		appearance[axis] = value;

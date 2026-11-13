@@ -5,7 +5,12 @@ import { logger } from '@/lib/logger';
 import type { StandardJSONSchemaV1 } from '@/lib/standard-json-schema';
 import * as z from 'zod/mini';
 import type { FormEngineSchemaArtifacts } from './schema-artifacts';
-import { validateElementConfig, validateFormConfig } from '@/lib/validate-form';
+import {
+	safeValidateFormConfig,
+	validateElementConfig,
+	validateFormConfig,
+	type FormValidationResult,
+} from '@/lib/validate-form';
 import type { NormalizedElementConfig, NormalizedFormConfig } from '@/lib/normalized-form-config';
 import type { ExactFormAppearance, ExactViewConfig, FormAuthoringInput } from '@/builder/form-authoring';
 import type {
@@ -180,15 +185,44 @@ export class FormEngine<
 	validateForm(
 		config: unknown,
 	): NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']> {
-		return validateFormConfig(config, {
+		return validateFormConfig(config, this.validateOptions()) as unknown as NormalizedFormConfig<
+			TOutputs['elements'],
+			TOutputs['recipes'],
+			TOutputs['actions']
+		>;
+	}
+
+	/**
+	 * Same validation as {@link validateForm}, returned as a result instead of thrown.
+	 *
+	 * @returns `{ success: true, data }` with the frozen normalized form, or `{ success: false, issues }`
+	 * with the problems found and the config path each is about (`['steps', 0, 'elements', 2, 'grid', 'width']`;
+	 * `[]` for the whole form). The shape fits a YAML or editor integration that points an issue at a location.
+	 *
+	 * @remarks
+	 * A malformed form envelope (its own shape, such as `steps` not being an array) stops the deeper
+	 * checks and is reported alone; once it parses, element, action, grid and view issues come together.
+	 *
+	 * Still throws for a misuse of the API, such as a registration whose Standard Schema is async.
+	 */
+	safeValidateForm(
+		config: unknown,
+	): FormValidationResult<NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>> {
+		return safeValidateFormConfig(config, this.validateOptions()) as FormValidationResult<
+			NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>
+		>;
+	}
+
+	private validateOptions() {
+		return {
 			owner: this,
-			getRecipe: (id) => this.getRecipe(id),
+			getRecipe: (id: string) => this.getRecipe(id),
 			defaultWizardRecipe: this.registries.defaultWizardRecipe,
-			getElement: (id) => this.getElement(id),
-			getAction: (id) => this.getAction(id),
-			hasValidation: (type) => this.validationRegistry.has(type),
+			getElement: (id: string) => this.getElement(id),
+			getAction: (id: string) => this.getAction(id),
+			hasValidation: (type: string) => this.validationRegistry.has(type),
 			axes: this.layout.axes,
-		}) as unknown as NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>;
+		};
 	}
 
 	/**

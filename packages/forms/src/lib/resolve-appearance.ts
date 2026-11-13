@@ -1,4 +1,10 @@
-import { checkAppearance, mergeAppearance, pickSupportedAppearance, type LayoutTheme } from '@schema-engine/layout';
+import {
+	checkAppearance,
+	mergeAppearance,
+	pickSupportedAppearance,
+	type LayoutIssue,
+	type LayoutTheme,
+} from '@schema-engine/layout';
 
 /**
  * Appearance picks that reach a part of the form: the vocabulary, and what the form, step and
@@ -11,8 +17,8 @@ export interface AppearanceScope {
 
 /** What {@link resolveAppearance} found for one owner in the form tree. */
 export interface ResolvedAppearance {
-	/** One message per problem, already prefixed with the owner's location. */
-	readonly issues: string[];
+	/** One issue per problem, with the path of the owner's `appearance` key in the form. */
+	readonly issues: LayoutIssue[];
 	/** The pick the owner renders with. Empty means the owner carries no `appearance` key. */
 	readonly selection: Record<string, string>;
 	/** The scope for the owner's children: what it inherited, with its own pick laid over it. */
@@ -24,7 +30,7 @@ export interface ResolvedAppearance {
  * merges it over what it inherits, and keeps the axes the owner supports.
  *
  * @param owner.subject Names the owner in a message, for example `Element 'fieldSet'`.
- * @param owner.location Where the owner sits, prefixed to each issue. Empty for a standalone element.
+ * @param owner.path Where the owner sits in the form, prefixed to each issue's path. Empty for the form and a standalone element.
  * @param owner.supported The axes the owner declares; an owner that declares none passes `[]`. Omit it
  * for the form and its steps, which accept every axis.
  *
@@ -37,7 +43,7 @@ export interface ResolvedAppearance {
 export function resolveAppearance(
 	authored: unknown,
 	scope: AppearanceScope,
-	owner: { subject: string; location: string; supported?: readonly string[] },
+	owner: { subject: string; path: ReadonlyArray<PropertyKey>; supported?: readonly string[] },
 ): ResolvedAppearance {
 	const checked = checkAppearance(authored, {
 		axes: scope.axes,
@@ -46,7 +52,7 @@ export function resolveAppearance(
 	});
 	const own = mergeAppearance(scope.inherited, checked.appearance);
 	return {
-		issues: checked.issues.map((issue) => (owner.location ? `${owner.location}: ${issue}` : issue)),
+		issues: checked.issues.map((issue) => ({ ...issue, path: [...owner.path, ...issue.path] })),
 		selection: owner.supported === undefined ? own : pickSupportedAppearance(own, owner.supported),
 		childScope: { axes: scope.axes, inherited: own },
 	};

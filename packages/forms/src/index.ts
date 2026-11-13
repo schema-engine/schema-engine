@@ -62,12 +62,15 @@ export type { ElementRenderProps, WithNormalizedChildren } from './types';
 export {
 	DEFAULT_WIZARD_RECIPE,
 	FormValidationError,
+	formatIssuePath,
 	getRenderableSteps,
 	stepGrid,
 	assertFormEngine,
+	safeValidateFormConfig,
 	validateElementConfig,
 	validateFormConfig,
 } from './lib/validate-form';
+export type { FormValidationIssue, FormValidationResult } from './lib/validate-form';
 export { isNormalizedElementConfig } from './lib/normalized-form-config';
 export type { FormConfigView, NormalizedElementConfig, NormalizedFormConfig } from './lib/normalized-form-config';
 export type {

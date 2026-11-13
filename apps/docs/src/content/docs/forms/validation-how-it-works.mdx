@@ -226,6 +226,52 @@ if (!result.success) {
 }
 ```
 
+### Form configuration errors
+
+The errors above are about a field's _value_. A form's _configuration_ (a width that does not exist, a
+recipe that is not registered, a rule with no handler) is checked by `engine.validateForm`, which throws a
+`FormValidationError` listing the problems it found. Each issue has a `message` and the `path` of the config key it
+is about, so you can point at the mistake without parsing English:
+
+| Problem                                           | `path`                                                           |
+| ------------------------------------------------- | ---------------------------------------------------------------- |
+| The third field of step 1 has `grid.width: halve` | `['steps', 0, 'elements', 2, 'grid', 'width']`                   |
+| A fieldset child uses a rule with no handler      | `['steps', 0, 'elements', 1, 'elements', 0, 'rules', 0, 'type']` |
+| `view.$type` is not a registered recipe           | `['view', '$type']`                                              |
+| A problem with the whole form                     | `[]`                                                             |
+
+`error.message` has one line per issue, `<path>: <message>`, with array indexes in brackets and the `id` of each
+element or step the path passes:
+
+```text
+steps[0] (contact).elements[2] (email).grid.width: Expected one of full, three-quarters, two-thirds, half, third, quarter.
+view.$type: Unknown view recipe 'nope'. Register it with createFormEngine({ recipes: [...] }).
+```
+
+A malformed form envelope (its own shape, such as `steps` not being an array) stops the deeper checks and is
+reported alone. An unrecognized key is reported at the key itself, for example `['view', 'shell', 'bogus']`.
+
+Use `engine.safeValidateForm` when you would rather branch on a result than catch:
+
+```typescript
+import { formatIssuePath } from '@schema-engine/forms';
+
+export function loadForm(json: unknown) {
+	const result = engine.safeValidateForm(json);
+	if (!result.success) {
+		for (const { path, message } of result.issues) {
+			console.error(`${formatIssuePath(path) || '(form)'}: ${message}`);
+		}
+		return undefined;
+	}
+	return result.data; // the same frozen NormalizedFormConfig validateForm returns
+}
+```
+
+The `{ message, path }` shape is a Standard Schema issue, so a YAML loader or an editor can map each `path` to
+a line or a field. `FormRenderer` and the Radiant provider call `validateForm`, so an invalid config thrown at
+render time shows the same lines in the error message.
+
 ### Custom Error Messages
 
 Always provide user-friendly error messages:

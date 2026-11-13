@@ -82,6 +82,7 @@ export { GRID_CLASS, GRID_ITEM_CLASS, getGridItemVariables, getGridVariables } f
 export type { CssVariables, GridGapScale, GridThemeOptions, NormalizedGridTheme } from './lib/grid-styles';
 
 export { assertAxesNotReserved, createLayoutTheme, getDefaultLayoutTheme, isLayoutTheme } from './lib/layout-theme';
+export type { LayoutIssue } from './lib/layout-issue';
 export type {
 	LayoutAxes,
 	LayoutInput,

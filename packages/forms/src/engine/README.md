@@ -37,6 +37,16 @@ require a `debounceScope` owned by the form.
 
 The public usage examples are in the [forms package README](../../README.md#engine-validation).
 
+## Form configuration validation
+
+`validateForm` and `safeValidateForm` share one pipeline (`safeValidateFormConfig` in `lib/validate-form.ts`).
+`validateForm` throws a `FormValidationError`; `safeValidateForm` returns `{ success: true, data }` or
+`{ success: false, issues }` with the same issues. Each issue is `{ message, path }`, the path in config keys
+and indexes (`['steps', 0, 'elements', 2, 'grid', 'width']`, `[]` for the whole form). See
+[Validation errors](../../README.md#validation-errors) for the paths each check reports. Registration
+checks made at build time (`buildFormEngine`) throw a plain `Error` naming the registration; they are not
+form issues.
+
 ## Action context form state
 
 `FormActionContextFormState` no longer accepts `touchedFields` or `isSubmitted`. Pass

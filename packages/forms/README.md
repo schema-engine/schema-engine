@@ -50,6 +50,67 @@ const contactForm = engine.defineForm({
 
 `defineForm` is the typed authoring API for that engine's registrations. `validateForm(input: unknown)` validates external JSON. Both run the same pipeline: envelope parse, Standard Schema dispatch by `$type` (including nested child elements), recipe-kind checks, and schema defaults/transforms. The normalized marker is applied only after that succeeds. `defineForm` and `validateForm` return a frozen `NormalizedFormConfig` owned by that engine. Snapshot isolation copies plain objects and arrays, so caller data of those kinds is not frozen. Other objects currently remain shared. A normalized form cannot be reused on another engine; pass the original authoring input or JSON instead. Renderers consume that normalized output. They do not re-run registration input schemas. Standalone or dynamically created fields that are not already inside a form must go through `engine.validateElement()` first. Containers render children with `FormElements` and a field scope (`namePrefix`, `instanceId`); they do not clone normalized configs to change paths.
 
+### Validation errors
+
+`validateForm` throws a `FormValidationError` for a form that does not validate. Its `issues` list the
+problems found, each shaped like a Standard Schema issue: `{ message, path }`. `path` is the config key the
+issue is about, in object keys and array indexes, so a caller can find it without parsing the message.
+A nested element carries its whole path, and an issue about the form itself has the path `[]`:
+
+| Problem                                          | `path`                                                           |
+| ------------------------------------------------ | ---------------------------------------------------------------- |
+| A field's `grid.width` is not a named width      | `['steps', 0, 'elements', 2, 'grid', 'width']`                   |
+| A child of a fieldset has a rule with no handler | `['steps', 0, 'elements', 1, 'elements', 0, 'rules', 0, 'type']` |
+| `view.$type` is not a registered recipe          | `['view', '$type']`                                              |
+| An element's `appearance` picks an unknown value | `['steps', 0, 'elements', 0, 'appearance', 'size']`              |
+| A step grid's `areas` is not a valid template    | `['steps', 0, 'grid', 'areas']`                                  |
+
+A schema issue keeps the path the schema gave it, laid under the location of the element, action or view
+it validated. A check the engine makes (the view, recipe kind, grid, areas, appearance picks and rules)
+points at the key it rejects, always a key the author wrote: a field whose `area` resolves through the
+breakpoint cascade is reported at the `area` it set, and the message says where a viewport lands.
+`validateElement` reports paths relative to the element. A malformed form envelope (its own shape, such as
+`steps` not being an array) stops the deeper checks and is reported alone; once it parses, the element,
+action, grid and view issues come together.
+
+An unrecognized key is reported at the key (`['view', 'shell', 'bogus']`), as the engine does for a view.
+`zod/mini` loads no locale, so its own messages are all `Invalid input`; the engine rewrites that fallback
+from what the issue reports (`Expected one of half, third, ...`, `Must be at least 3 characters.`,
+`Invalid email format.`) because these are author diagnostics, not copy shown to a form's users. A message a
+schema or its author wrote is kept, and a host that wants Zod's own wording loads a locale once with
+`z.config(z.locales.en())`, after which its messages pass through untouched. That reaches the engine's own
+schemas only when the host shares forms' Zod instance; schemas the host builds for its registrations always get it.
+
+`error.message` lists the issues one per line as `<path>: <message>`, with array indexes in brackets and the
+`id` of each element, step or action the path passes
+(`steps[0] (main).elements[2] (email).grid.width: Expected one of full, three-quarters, ...`), and the bare
+message for an issue about the whole form. The ids only decorate the message; `issue.path` and
+`issue.message` stay clean. `formatIssuePath(path, source?)` makes the same text, with the ids when you
+pass the config. `FormValidationIssue` and `FormValidationResult` are exported.
+
+`engine.safeValidateForm(config)` runs the same validation and returns a result instead of throwing:
+`{ success: true, data }` or `{ success: false, issues }`. (Unlike `safeParseStandardSchema`, which nests
+the issues under `error`, the issues are on the result, the shape a YAML layer's validator returns.)
+
+```ts
+import { formatIssuePath } from '@schema-engine/forms';
+
+export function loadForm(json: unknown) {
+	const result = engine.safeValidateForm(json);
+	if (!result.success) {
+		for (const { path, message } of result.issues) {
+			console.error(`${formatIssuePath(path) || '(form)'}: ${message}`);
+		}
+		return undefined;
+	}
+	return result.data; // the same frozen NormalizedFormConfig validateForm returns
+}
+```
+
+It still throws for a misuse of the API, such as a registration whose Standard Schema is async. A YAML or
+editor integration can pass `(value) => engine.safeValidateForm(value)` as its validator and map each
+`path` to a source location.
+
 ### Shared step and submission logic
 
 `createInitialStepStates(totalSteps)` creates completion, validity, and visitation arrays;
@@ -407,7 +468,8 @@ delay debounced rules without coalescing them.
 Required rules, `relate`, constraint emptiness operators, and async skip checks
 share the same empty values: `undefined`, `null`, `''`, and `[]`. `false` and
 `0` count as present. `validateForm` and `validateElement` reject rules without
-a registered handler with a `FormValidationError` naming the field and rule.
+a registered handler with a `FormValidationError` naming the field and rule, at the path of that
+rule's `type`.
 The `relate` string and date bases coerce primitive values and `Date` instances;
 arbitrary objects are left unchanged for string comparisons and are invalid dates.
 
