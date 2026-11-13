@@ -27,7 +27,7 @@ test('explains action flow with reduced motion and links the form guide to actio
 				.evaluate((el) => getComputedStyle(el).animationName),
 		).toBe('none');
 		await page.goto(`${baseUrl}/docs/forms/actions`, { waitUntil: 'networkidle' });
-		expect(await page.locator('.eco-banner a[href="/docs/actions/overview"]').count()).toBe(1);
+		expect(await page.locator('.rui-alert a[href="/docs/actions/overview"]').count()).toBe(1);
 	} finally {
 		await browser.close();
 	}
