@@ -34,8 +34,20 @@ function toneAxis(accents: { brand: string; muted: string }) {
 /** The page's own theme, whose `tone: brand` accent is red and `tone: muted` accent is orange. */
 export const nestedHostTheme = createLayoutTheme({ appearance: [...builtInAxes, toneAxis(ACCENTS.host)] });
 
-/** Layout input of the embedded form's theme, whose `tone: brand` accent is blue and `tone: muted` accent is purple. */
-export const nestedGuestLayout = { appearance: [...builtInAxes, toneAxis(ACCENTS.guest)] } satisfies LayoutInput;
+/**
+ * Layout input of the embedded form's theme, whose `tone: brand` accent is blue and `tone: muted` accent is purple.
+ *
+ * @remarks
+ * Its `md` breakpoint is wider than the host's, so between the two widths the host's `md` slot
+ * applies and the guest's does not.
+ */
+export const nestedGuestLayout = {
+	grid: { breakpoints: { md: '60rem' } },
+	appearance: [...builtInAxes, toneAxis(ACCENTS.guest)],
+} satisfies LayoutInput;
+
+/** A viewport width past the host's `md` (48rem) and short of the guest's (60rem). */
+const BETWEEN_BREAKPOINTS_PX = 800;
 
 /**
  * Config of the embedded form, authored once for both renderers.
@@ -268,4 +280,54 @@ export async function expectAuthorClassOutranksNestedTokens(
 			expect(accentOf(required(doc, '.se-form-field'))).toBe(AUTHOR_ACCENT);
 		},
 	);
+}
+
+/**
+ * A page whose grid item places itself with an `md` slot and holds the guest form.
+ *
+ * @remarks
+ * Stands for a host that places the item the form sits in, so the item's own slot is what the
+ * guest's items must not read.
+ */
+function placedHostItemDocument(guestHtml: string, host: LayoutThemeLike): string {
+	return [
+		'<!DOCTYPE html><html><head><meta charset="utf-8">',
+		`<style>${host.css}</style>`,
+		'</head><body>',
+		`<div class="se-grid" data-se-theme="${host.id}">`,
+		`<div class="se-grid-item" data-se-theme="${host.id}" id="host-placed" style="--se-item-grid-column-md:span 6">${guestHtml}</div>`,
+		'</div>',
+		'</body></html>',
+	].join('');
+}
+
+/**
+ * Asserts that a form of a theme with other breakpoints, nested in a grid item of another theme,
+ * does not read the placement that item's theme applied at a width the form's theme has not reached.
+ *
+ * @param guestHtml The renderer's server output for {@link nestedThemeForm} on {@link nestedGuestLayout}.
+ * @remarks
+ * At 800px the host's `md` slot applies and the guest's does not. Custom properties inherit, so a
+ * guest field would take the host item's `span 6` if the stylesheet's private cascade variables
+ * were named alike in both themes. The theme id in those names is what this guards.
+ */
+export async function expectNestedGuestIgnoresHostSlots(
+	guestHtml: string,
+	host: LayoutThemeLike,
+	guest: LayoutThemeLike,
+): Promise<void> {
+	expect(host.id).not.toBe(guest.id);
+	expect(guestHtml).toContain(`data-se-theme="${guest.id}"`);
+	const { frame, doc } = await loadSsrFrame(placedHostItemDocument(guestHtml, host), BETWEEN_BREAKPOINTS_PX);
+	try {
+		expect(getComputedStyle(required(doc, '#host-placed')).gridColumn, 'host item at its md').toBe('span 6');
+		expect(getComputedStyle(required(doc, '.se-form-field')).gridColumn, 'guest field below its md').toBe('auto');
+
+		frame.style.width = '400px';
+		await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+		expect(getComputedStyle(required(doc, '#host-placed')).gridColumn, 'host item below its md').toBe('auto');
+		expect(getComputedStyle(required(doc, '.se-form-field')).gridColumn, 'guest field narrow').toBe('auto');
+	} finally {
+		frame.remove();
+	}
 }
