@@ -19,7 +19,7 @@ function mountActions(
 	config: FormConfigView,
 	options: { store?: FormStore; onAction?: ConstructorParameters<typeof FormActions>[0]['onAction'] } = {},
 ) {
-	const host = document.createElement('rui-form');
+	const host = document.createElement('div');
 	provideTestFormStore(host, options.store ?? new FormStore());
 	document.body.append(host);
 	const form = new FormController(host);
