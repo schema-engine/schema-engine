@@ -12,7 +12,12 @@
  * `getGridThemeCss`, `getAppearanceCss`) stay internal: a theme is the one way to get a stylesheet.
  */
 
-export { AppearanceConfigSchema, createAppearanceSchema } from './schemas/appearance';
+export {
+	AppearanceConfigSchema,
+	createAppearanceSchema,
+	withAppearanceAxes,
+	withSlotAppearanceAxes,
+} from './schemas/appearance';
 export type { AppearanceConfig } from './schemas/appearance';
 
 export {
