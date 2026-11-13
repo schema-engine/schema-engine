@@ -18,10 +18,10 @@ const DEV_WORK_DIR = '.eco-dev-smoke';
 
 /**
  * Console errors that mean the demo graph broke: a missing provider, a module outside `src/`, or one
- * that failed to load. React's dev-only hydration-mismatch warning on the docs heading ids is not one.
+ * that failed to load, or a server-rendered tree React could not hydrate.
  */
 const BOUNDARY_ERROR =
-	/must be used within|outside .*src|failed to resolve|failed to fetch dynamically imported module|cannot find module/i;
+	/must be used within|outside .*src|failed to resolve|failed to fetch dynamically imported module|cannot find module|hydrated but some attributes/i;
 
 async function findFreePort(): Promise<number> {
 	const server = createServer();
@@ -153,6 +153,38 @@ describe('docs dev server source boundary', () => {
 			'aria-invalid',
 			'true',
 		);
+		expect(problems).toEqual([]);
+	}, 120_000);
+
+	test.each(['/docs/forms-react/layouts', '/docs/styling/recipes'])(
+		'%s hydrates its form demos without a mismatch in dev',
+		async (pagePath) => {
+			await page.goto(`${baseUrl}${pagePath}`, { waitUntil: 'networkidle' });
+			await page.waitForFunction(
+				() => {
+					const form = document.querySelector('[data-se-theme] form, form[data-se-theme]');
+					return !!form && Object.keys(form).some((key) => key.startsWith('__react'));
+				},
+				undefined,
+				{ timeout: 60_000 },
+			);
+			expect(problems).toEqual([]);
+		},
+		120_000,
+	);
+
+	test('On this page lists page sections but not the headings inside a rendered form demo', async () => {
+		await page.goto(`${baseUrl}/docs/forms-react/getting-started`, { waitUntil: 'networkidle' });
+		await page.waitForSelector('.rui-toc__link');
+
+		const demoHeading = page.locator('[data-se-theme] h2').first();
+		expect(await demoHeading.textContent()).toBe('Your Information');
+		expect(await demoHeading.getAttribute('id')).toBeNull();
+
+		const entries = await page.locator('.rui-toc__link').allTextContents();
+		expect(entries).toContain('Live example');
+		expect(entries).toContain('3. Render the Form');
+		expect(entries).not.toContain('Your Information');
 		expect(problems).toEqual([]);
 	}, 120_000);
 });
