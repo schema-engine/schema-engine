@@ -1,4 +1,3 @@
-/** @jsxImportSource @ecopages/jsx */
 import { RadiantElement } from '@ecopages/radiant/core/radiant-element';
 import { customElement } from '@ecopages/radiant/decorators/custom-element';
 import { onEvent } from '@ecopages/radiant/decorators/on-event';
@@ -37,12 +36,6 @@ async function copyTextToClipboard(text: string): Promise<void> {
 
 /**
  * Copies the page's Markdown export to the clipboard.
- *
- * @remarks
- * The `@jsxImportSource` pragma here and in `copy-for-llm-icons.tsx` is load-bearing, as in
- * `code-tabs.script.tsx`: the client build shares this module with the React graph, which compiled
- * it with React's JSX runtime and made `render()` return a React element that Radiant stringified
- * to `[object Object]`.
  */
 @customElement('radiant-copy-for-llm')
 export class RadiantCopyForLlm extends RadiantElement {
