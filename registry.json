@@ -242,7 +242,8 @@
       "title": "Submit button",
       "description": "Schema Engine submit-button form element.",
       "registryDependencies": [
-        "button"
+        "button",
+        "andeeplus/schema-engine/schema-engine-form-field-primitive"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -1327,7 +1328,8 @@
       "title": "Submit button",
       "description": "Schema Engine submit-button form element.",
       "registryDependencies": [
-        "button"
+        "button",
+        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -2410,7 +2412,8 @@
       "title": "Submit button",
       "description": "Schema Engine submit-button form element.",
       "registryDependencies": [
-        "button"
+        "button",
+        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
         "@schema-engine/forms-react",

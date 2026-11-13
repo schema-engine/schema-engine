@@ -104,6 +104,26 @@ describe('schema-engine GitHub registry catalog', () => {
 		});
 	}
 
+	test('every element that carries data-se-control depends on the field primitive that carries controls.css', () => {
+		const sourceRoot = path.resolve(import.meta.dirname, '../../../..');
+		const marked = catalog.filter(
+			(item) =>
+				item.type === 'registry:item' &&
+				item.files.some(
+					(file) =>
+						file.path.endsWith('.tsx') &&
+						readFileSync(path.resolve(sourceRoot, file.path), 'utf8').includes('data-se-control'),
+				),
+		);
+		expect(marked.map((item) => item.name)).toContain('schema-engine-form-submit-button');
+		for (const item of marked) {
+			expect(
+				item.registryDependencies.some((dep) => dep.includes('schema-engine-form-field-primitive')),
+				item.name,
+			).toBe(true);
+		}
+	});
+
 	test('every recipes item depends on the field primitive that carries controls.css', () => {
 		for (const name of RECIPE_AGGREGATES) {
 			const item = catalog.find((entry) => entry.name === name);

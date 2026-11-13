@@ -247,7 +247,7 @@ const ELEMENTS: ElementSpec[] = [
 		stem: 'actions/submit-button',
 		title: 'Submit button',
 		ident: 'SubmitButtonElementRegistration',
-		registryDependencies: ['button'],
+		registryDependencies: ['button', PRIMITIVE_ITEM.field],
 	},
 	{
 		stem: 'inputs/form-fieldset',
