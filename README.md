@@ -245,6 +245,7 @@ Detailed architectural documentation is available in the [Documentation App](./a
 - **[shadcn Registry Sources](./registry/README.md)**
 - **[Action System](./apps/docs/src/content/docs/actions/overview.mdx)**
 - **[Forms React — Getting Started](./apps/docs/src/content/docs/forms-react/getting-started.mdx)**
+- **[Contributing](./CONTRIBUTING.md)**: the pre-commit hook and how to run its checks locally
 
 ---
 
