@@ -481,61 +481,67 @@ const validAddress = {
 Pass several custom validations at once. A later entry replaces an earlier one with the same `$type`:
 
 ```typescript
-const customValidations = [
-	{
-		$type: 'postalCode',
-		schema: z.looseObject({ type: z.literal('postalCode') }),
-		metadata: { name: 'postalCode' },
-		category: 'string',
-		handler: (rule) => {
-			const country = rule.value?.country || 'US';
-			const patterns = {
-				US: /^\d{5}(-\d{4})?$/,
-				CA: /^[A-Za-z]\d[A-Za-z] \d[A-Za-z]\d$/,
-				UK: /^[A-Za-z]{1,2}\d[A-Za-z\d]? \d[A-Za-z]{2}$/,
-			};
+import * as z from 'zod/mini';
+import { createFormEngine } from '@schema-engine/forms';
+import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
 
-			const pattern = patterns[country];
-			return z.string().check(z.regex(pattern, rule.message || `Invalid ${country} postal code`));
-		},
+type PostalCodeRule = { type: 'postalCode'; country?: 'US' | 'CA' | 'UK'; message?: string };
+type WorkingHoursRule = { type: 'workingHours'; message?: string };
+type FileSizeRule = { type: 'fileSize'; maxSize?: number; message?: string };
+
+const postalCode: ValidationRegistration<PostalCodeRule> = {
+	$type: 'postalCode',
+	schema: z.looseObject({ type: z.literal('postalCode') }),
+	metadata: { name: 'Postal code' },
+	category: 'string',
+	handler: (rule) => {
+		const country = rule.country ?? 'US';
+		const patterns = {
+			US: /^\d{5}(-\d{4})?$/,
+			CA: /^[A-Za-z]\d[A-Za-z] \d[A-Za-z]\d$/,
+			UK: /^[A-Za-z]{1,2}\d[A-Za-z\d]? \d[A-Za-z]{2}$/,
+		};
+
+		return z.string().check(z.regex(patterns[country], rule.message || `Invalid ${country} postal code`));
 	},
-	{
-		$type: 'workingHours',
-		schema: z.looseObject({ type: z.literal('workingHours') }),
-		metadata: { name: 'workingHours' },
-		category: 'time',
-		handler: (rule) => {
-			return z.string().check(
-				z.refine((time) => {
-					const [hours, minutes] = time.split(':').map(Number);
-					const totalMinutes = hours * 60 + minutes;
+};
 
-					return totalMinutes >= 540 && totalMinutes <= 1020;
-				}, rule.message || 'Time must be during working hours (9 AM - 5 PM)'),
-			);
-		},
-	},
-	{
-		$type: 'fileSize',
-		schema: z.looseObject({ type: z.literal('fileSize') }),
-		metadata: { name: 'fileSize' },
-		category: 'file',
-		handler: (rule) => {
-			const maxSize = rule.value?.maxSize || 1024 * 1024;
+const workingHours: ValidationRegistration<WorkingHoursRule> = {
+	$type: 'workingHours',
+	schema: z.looseObject({ type: z.literal('workingHours') }),
+	metadata: { name: 'Working hours' },
+	category: 'date',
+	handler: (rule) =>
+		z.string().check(
+			z.refine((time) => {
+				const [hours, minutes] = time.split(':').map(Number);
+				const totalMinutes = hours * 60 + minutes;
 
-			return z.instanceof(File).check(
+				return totalMinutes >= 540 && totalMinutes <= 1020;
+			}, rule.message || 'Time must be during working hours (9 AM - 5 PM)'),
+		),
+};
+
+const fileSize: ValidationRegistration<FileSizeRule> = {
+	$type: 'fileSize',
+	schema: z.looseObject({ type: z.literal('fileSize') }),
+	metadata: { name: 'File size' },
+	category: 'generic',
+	handler: (rule) => {
+		const maxSize = rule.maxSize ?? 1024 * 1024;
+
+		return z
+			.instanceof(File)
+			.check(
 				z.refine(
-					(file) => {
-						return file.size <= maxSize;
-					},
+					(file) => file.size <= maxSize,
 					rule.message || `File size must be less than ${maxSize / 1024 / 1024}MB`,
 				),
 			);
-		},
 	},
-];
+};
 
-const engine = createFormEngine({ validations: customValidations });
+export const engine = createFormEngine({ validations: [postalCode, workingHours, fileSize] });
 ```
 
 ## Testing Custom Validations
@@ -734,7 +740,7 @@ if (validationRegistry.has('postalCode')) {
 	console.log('Postal code validation is available');
 }
 
-const types = validationRegistry.getRegisteredTypes();
+const types = validationRegistry.keys();
 console.log('Available validations:', types);
 
 const stringValidations = validationRegistry.getByCategory('string');

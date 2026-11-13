@@ -9,6 +9,7 @@ import { ValidationPresets } from '../../../src/schemas/validation/presets';
 const globalRegistry = createDefaultValidationRegistry();
 import type { AnyValidationRegistration, ValidationRegistration } from '../../../src/schemas/validation/types';
 import { createValidationContext } from '../../../src/schemas/validation/utils';
+import { logger } from '../../../src/lib/logger';
 
 const looseRule = z.looseObject({ type: z.string(), message: z.optional(z.string()) });
 
@@ -82,7 +83,7 @@ describe('ValidationRegistry', () => {
 
 	describe('Built-in Validations', () => {
 		it('should have all required built-in validation types', () => {
-			const types = globalRegistry.getRegisteredTypes();
+			const types = globalRegistry.keys();
 			expect(types).toContain('required');
 			expect(types).toContain('email');
 			expect(types).toContain('minLength');
@@ -276,8 +277,7 @@ describe('ValidationRegistry', () => {
 		});
 
 		it('lets the later registration of a type win without logging', () => {
-			const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-			const debug = vi.spyOn(console, 'debug').mockImplementation(() => {});
+			const spies = (['debug', 'info', 'warn', 'error'] as const).map((level) => vi.spyOn(logger, level));
 			const registry = createValidationRegistry([
 				registration('test', { handler: () => z.string() }),
 				registration('test', { handler: () => z.number() }),
@@ -286,10 +286,10 @@ describe('ValidationRegistry', () => {
 			const schema = registry.createSchema({ type: 'test' }, createValidationContext());
 			expect(schema?.parse(123)).toBe(123);
 			expect(registry.size).toBe(1);
-			expect(warn).not.toHaveBeenCalled();
-			expect(debug).not.toHaveBeenCalled();
-			warn.mockRestore();
-			debug.mockRestore();
+			for (const spy of spies) {
+				expect(spy).not.toHaveBeenCalled();
+				spy.mockRestore();
+			}
 		});
 	});
 });

@@ -421,7 +421,7 @@ describe('Validation', () => {
 		});
 
 		test('should get registered validation types', () => {
-			const types = validationRegistry.getRegisteredTypes();
+			const types = validationRegistry.keys();
 			expect(types).toContain('required');
 			expect(types).toContain('email');
 			expect(types).toContain('async');

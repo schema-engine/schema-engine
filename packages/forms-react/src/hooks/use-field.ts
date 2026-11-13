@@ -8,12 +8,26 @@ import {
 	getGridItemVariables,
 	type ElementGridConfig,
 } from '@schema-engine/layout';
-import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
+import { createDefaultValidationRegistry, type ValidationRegistry } from '@schema-engine/forms/schemas/validation';
 import { useFormField } from '@/adapters/context';
 import { useConstraintLogic } from '@/hooks/use-constraint-logic';
 import { FieldHostContext, FieldConstraintContext } from '@/contexts/field-constraint-context';
 import { isElementRequired } from '@/hooks/is-element-required';
 import { useLayoutThemeId, useOptionalFormEngine } from '@/hooks/use-form-context';
+
+let fallbackValidationRegistry: ValidationRegistry | undefined;
+
+/**
+ * The built-in validation registry a field uses when it renders outside a form engine.
+ *
+ * @remarks
+ * Built on first use and shared. A registry is read-only, and building one checks every built-in
+ * rule's schema, so a field should not build its own on each mount.
+ */
+function getFallbackValidationRegistry(): ValidationRegistry {
+	fallbackValidationRegistry ??= createDefaultValidationRegistry();
+	return fallbackValidationRegistry;
+}
 
 export interface FieldHostProps {
 	className: string;
@@ -103,7 +117,7 @@ export function useControlledFormElement(config: ElementConfig) {
 
 	const engineContext = useOptionalFormEngine();
 	const registry = useMemo(
-		() => engineContext?.engine.getValidationRegistry() ?? createDefaultValidationRegistry(),
+		() => engineContext?.engine.getValidationRegistry() ?? getFallbackValidationRegistry(),
 		[engineContext],
 	);
 	const rendered = useContext(FieldConstraintContext);

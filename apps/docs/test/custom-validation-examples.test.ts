@@ -69,6 +69,7 @@ test('the documented debounced async rule settles replaced checks and keeps fiel
 
 test.each([
 	['### Simple Custom Validation', ''],
+	['## Several Validations at Once', ''],
 	['### 4. Document Your Validations', ''],
 	[
 		'### Debouncing Async Validations',

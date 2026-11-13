@@ -5,6 +5,7 @@ import { validateFormValues } from '@/engine/value-validation';
 import { createDebounceScope } from '@/lib/debounce';
 import { logger } from '@/lib/logger';
 import { defineInput } from '@/types';
+import type { ValidationRegistrationConstraint } from '@/schemas/validation/types';
 
 type PostcodeRule = { type: 'postcode'; message?: string };
 
@@ -107,6 +108,42 @@ describe('engine validation registry', () => {
 		const engine = createFormEngine({ elements: [element], validations: [postcode] });
 
 		expect(schemaFor(engine, { type: 'postcode' })?.safeParse('SW1A 1AA').success).toBe(true);
+	});
+
+	test('keeps the same winning element validation when the engine is extended with no options', () => {
+		const a1 = declaring('input-a', { $type: 'x', handler: () => z.number() });
+		const b = declaring('input-b', { $type: 'x', handler: () => z.string() });
+		const a2 = declaring('input-a', { $type: 'x', handler: () => z.boolean() });
+
+		const built = createFormEngine({ elements: [a1, b, a2] });
+		const extended = built.extend();
+
+		const accepts = (engine: typeof built) =>
+			[true, 'text', 42].map((value) => schemaFor(engine, { type: 'x' })?.safeParse(value).success);
+		expect(accepts(extended)).toEqual(accepts(built));
+		expect(accepts(extended)).toEqual([false, true, false]);
+	});
+
+	test('freezes the default rules a field type receives', () => {
+		const phone = declaring('phone-input', { $type: 'phone', handler: () => z.string() });
+		const registry = createFormEngine({
+			elements: [phone],
+			validations: [{ ...postcode, $type: 'phone', defaultFor: ['phone-input'] }],
+		}).getValidationRegistry();
+
+		const rules = registry.getDefaultRulesForFieldType('phone-input');
+		expect(rules).toEqual([{ type: 'phone' }]);
+		expect(Object.isFrozen(rules)).toBe(true);
+		expect(Object.isFrozen(rules[0])).toBe(true);
+		expect(registry.getDefaultRulesForFieldType('no-such-type')).toEqual([]);
+	});
+
+	test('does not see validations added to the list after the engine is built', () => {
+		const list: ValidationRegistrationConstraint[] = [postcode];
+		const engine = createFormEngine({ validations: list });
+		list.push({ ...postcode, $type: 'late-rule' });
+
+		expect(engine.extend().getValidationRegistry().has('late-rule')).toBe(false);
 	});
 
 	test('keeps engine validations when the engine is extended', () => {

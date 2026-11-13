@@ -23,7 +23,7 @@ import { buildFormEngine } from './build-form-engine';
 import { SchemaMetadataCatalog } from './schema-metadata-catalog';
 import type { LayoutTheme, ResolvedAppearanceAxes } from '@schema-engine/layout';
 import type { ValidationRegistry } from '@/schemas/validation/validation-registry';
-import type { AnyValidationRegistration } from '@/schemas/validation/types';
+import type { ValidationRegistrationConstraint } from '@/schemas/validation/types';
 import {
 	describeRecipeFromRegistration,
 	describeViewCatalogFromRecipes,
@@ -44,7 +44,7 @@ export interface EngineRegistries {
 	layout: LayoutTheme;
 	validationRegistry: ValidationRegistry;
 	/** The validations passed to `createFormEngine`, kept so {@link FormEngine.extend} can rebuild the registry. */
-	validations: readonly AnyValidationRegistration[];
+	validations: readonly ValidationRegistrationConstraint[];
 	defaultWizardRecipe?: string;
 }
 

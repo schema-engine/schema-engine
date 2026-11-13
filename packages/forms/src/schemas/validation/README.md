@@ -123,7 +123,7 @@ import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/va
 
 const registry = createDefaultValidationRegistry();
 
-const registeredTypes = registry.getRegisteredTypes();
+const registeredTypes = registry.keys();
 
 const stringValidations = registry.getByCategory('string');
 const numberValidations = registry.getByCategory('number');
@@ -598,10 +598,10 @@ Build one with `createValidationRegistry(list)` or `createDefaultValidationRegis
 
 - `has(type: string): boolean` - Check if validation type exists
 - `get(type: string): ValidationRegistration | undefined` - The registration for a type
-- `keys()` / `getRegisteredTypes()` - All registered type names, in first-registration order
+- `keys()` - All registered type names, in first-registration order
 - `createSchema(rule: ValidationRule, context: ValidationContext): z.ZodMiniType | null` - Create a Zod Mini schema from one rule, or return `null` if no handler is registered
 - `getByCategory(category: string): ValidationRegistration[]` - Get validations by category
-- `getDefaultRulesForFieldType(fieldType: string): BaseValidationRule[]` - The `defaultFor` rules for a field `$type`, derived at build
+- `getDefaultRulesForFieldType(fieldType: string): readonly BaseValidationRule[]` - The `defaultFor` rules for a field `$type`, derived at build and frozen. A replaced registration keeps the position its first registration had among a field type's defaults
 - `getRuleDependencies(rule): readonly string[]` - The field references a rule's `dependsOn` reports
 
 ### ValidationPresets
@@ -636,6 +636,11 @@ interface ValidationRegistration extends BaseRegistration {
 	defaultFor?: readonly string[];
 }
 ```
+
+Everything that takes validations (`createFormEngine({ validations })`, an element's `validations`,
+`createValidationRegistry`, `createDefaultValidationRegistry`) accepts `ValidationRegistrationConstraint`.
+It erases the rule type, so a `ValidationRegistration<PostcodeRule>` is accepted as it is, and it requires
+`handler` to return a Zod Mini schema.
 
 ### ValidationRule Types
 

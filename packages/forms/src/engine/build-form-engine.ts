@@ -5,8 +5,8 @@ import type {
 	ActionRegistrationConstraint,
 	ElementRegistrationConstraint,
 	RecipeRegistrationConstraint,
-	ValidationRegistrationConstraint,
 } from '@/builder/types.utils';
+import type { ValidationRegistrationConstraint } from '@/schemas/validation/types';
 import { FormEngine } from '@/engine/form-engine';
 import { ComponentType } from '@/engine/component-type';
 import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from '@/engine/schema-artifacts';
@@ -28,7 +28,6 @@ import { isZodType } from '@/lib/zod-json-schema';
 import { assertDefaultWizardRecipe, createFormRecipeRegistry } from '@/recipes/protocol';
 import { assertStandardSchema } from '@/lib/standard-schema';
 import { createDefaultValidationRegistry } from '@/schemas/validation';
-import type { AnyValidationRegistration } from '@/schemas/validation/types';
 
 function createUnionSchema(schemas: z.ZodMiniType[]): z.ZodMiniType {
 	if (schemas.length === 0) {
@@ -170,9 +169,9 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 		}
 	}
 
-	const validations = (lists.validations ?? []) as readonly AnyValidationRegistration[];
+	const validations = Object.freeze([...(lists.validations ?? [])]);
 	const validationRegistry = createDefaultValidationRegistry([
-		...collectElementValidations(lists.elements ?? []),
+		...collectElementValidations(elementRegistry.all() as readonly ElementRegistrationConstraint[]),
 		...validations,
 	]);
 
@@ -213,15 +212,17 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 }
 
 /**
- * Validations declared by the winning element of each `$type`, in list order.
+ * Validations declared by the winning element of each `$type`, in the element registry's order.
  *
  * @remarks
- * An element replaced by a later one with the same `$type` contributes nothing. Validations keep
- * list order, so when two elements declare the same validation `$type` the later element wins.
+ * An element replaced by a later one with the same `$type` contributes nothing. The order is the
+ * registry's: a replaced `$type` keeps the position of its first registration, as it does for
+ * every other lookup. When two elements declare the same validation `$type`, the one later in that
+ * order wins. {@link FormEngine.extend} rebuilds from the same registry order, so an extended
+ * engine with no new elements keeps the same winner.
  */
-function collectElementValidations(elements: readonly ElementRegistrationConstraint[]): AnyValidationRegistration[] {
-	const lastIndexByType = new Map(elements.map((element, index) => [element.$type, index]));
-	return elements.flatMap((element, index) =>
-		lastIndexByType.get(element.$type) === index ? [...(element.validations ?? [])] : [],
-	);
+function collectElementValidations(
+	elements: readonly ElementRegistrationConstraint[],
+): ValidationRegistrationConstraint[] {
+	return elements.flatMap((element) => element.validations ?? []);
 }

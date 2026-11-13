@@ -4,7 +4,7 @@ import type { ElementMetadata } from './metadata';
 import type { BuilderActionBaseContext } from './actions.js';
 import type { FormActionTrigger } from '../actions/triggers';
 import type { ActionRegistration, ActionConfigBase } from '@schema-engine/actions';
-import type { AnyValidationRegistration } from '@/schemas/validation/types';
+import type { ValidationRegistrationConstraint } from '@/schemas/validation/types';
 import type { AppearanceAxisList, SlotAppearanceAxes } from '@schema-engine/layout';
 
 /**
@@ -34,7 +34,7 @@ export type InputRegistration<
 		appearanceAxes?: AppearanceAxisList;
 		metadata: ElementMetadata;
 		render: (props: TProps) => unknown;
-		validations?: readonly AnyValidationRegistration[];
+		validations?: readonly ValidationRegistrationConstraint[];
 	},
 	'Input'
 >;

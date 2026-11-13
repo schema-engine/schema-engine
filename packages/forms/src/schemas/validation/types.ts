@@ -361,6 +361,25 @@ export type AnyValidationRegistration =
 	| ValidationRegistration;
 
 /**
+ * A validation registration as `createFormEngine({ validations })`, an element's `validations` and the
+ * registry factories accept it.
+ *
+ * @remarks
+ * `handler` and `dependsOn` take `never`, so a registration typed for one rule shape, such as
+ * `ValidationRegistration<PostcodeRule>`, is accepted without widening its rule type. `handler` still
+ * has to return a Zod Mini schema: a handler that returns anything else does not compile.
+ */
+export type ValidationRegistrationConstraint = {
+	readonly $type: string;
+	readonly schema: { readonly '~standard': { readonly validate: (value: unknown) => unknown } };
+	readonly metadata: { readonly name: string };
+	readonly category: ValidationRegistration['category'];
+	readonly handler: (rule: never, context: ValidationContext) => z.ZodMiniType;
+	readonly dependsOn?: (rule: never) => readonly string[];
+	readonly defaultFor?: readonly string[];
+};
+
+/**
  * Mapping of validation rule types to their specific rule interfaces.
  */
 export type ValidationTypeMap = {
