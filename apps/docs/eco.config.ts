@@ -7,9 +7,8 @@ import { tailwindV4Preset } from '@ecopages/lightningcss-processor/presets/tailw
 import { reactPlugin } from '@ecopages/react';
 import { ecopagesJsxPlugin } from '@ecopages/ecopages-jsx';
 import { contentProcessorPlugin } from '@ecopages/content-processor/plugin';
-import { compareEntriesByField } from '@ecopages/content-processor';
 import { createDocsMdxPlugins } from './src/mdx/plugins';
-import { docsFrontmatterSchema } from './src/content/docs';
+import { compareDocsEntries, docsFrontmatterSchema } from './src/content/docs';
 import { devToolbar } from '@ecopages/dev-toolbar/config';
 import { configuredSiteOrigin, DOCS_SITEMAP_EXTRA_URLS } from './src/lib/docs/site-meta';
 
@@ -58,7 +57,7 @@ export default defineConfig({
 					docs: {
 						contentDir: 'content/docs',
 						extensions: ['.mdx'],
-						orderBy: compareEntriesByField('order'),
+						orderBy: compareDocsEntries,
 						schema: docsFrontmatterSchema,
 						entryType: './src/content/docs#DocsFrontmatter',
 					},
