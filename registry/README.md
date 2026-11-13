@@ -31,7 +31,7 @@ Shells and blocks are consumer-owned registry source and are selected through ex
 
 ## Recipe styles
 
-A recipe item ships its CSS beside the components, as `registry:file` entries the shadcn CLI copies to the `target` as given (`@components/schema-engine/forms/recipes/recipes.css` and one file per shell, such as `shells/card-shell.css`). Nothing imports the CSS for you, so import the entry point once in the app's global stylesheet, after Tailwind, into the `components` layer:
+A recipe item ships its CSS beside the components, as `registry:file` entries the shadcn CLI copies to the `target` as given (`@components/schema-engine/forms/recipes/recipes.css` and one file per shell and block that has layout, such as `shells/card-shell.css` or `blocks/form-actions.css`). Nothing imports the CSS for you, so import the entry point once in the app's global stylesheet, after Tailwind, into the `components` layer:
 
 ```css
 @import 'tailwindcss';

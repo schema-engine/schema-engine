@@ -156,6 +156,43 @@ const recipeForm = ({ $type, steps, header, progress, sideContent }: RecipeCase)
 	};
 };
 
+/** The built-in recipes whose shell declares `size` alone, and the picks the spacing checks make. */
+const SPACED_RECIPES = ['hero-background', 'hero-wizard', 'sidebar-wizard', 'split-screen', 'split-screen-wizard'];
+const SIZES = ['compact', 'comfortable'] as const;
+
+/**
+ * What a `size` pick on the shell slot of each spaced recipe measures, in CSS pixels.
+ *
+ * @remarks
+ * The hero pads itself and centres a 28rem column, the sidebar gaps its slots and the split screen pads its
+ * content panel. A shell that stopped reading `--se-space` would keep its unpicked spacing instead.
+ */
+const SPACED_SHELL_MEASURES: Record<
+	string,
+	Record<(typeof SIZES)[number], { padding: string; gap: string; insetLeft: number }>
+> = {
+	'hero-background': {
+		compact: { padding: '16px', gap: 'normal', insetLeft: 392 },
+		comfortable: { padding: '32px', gap: 'normal', insetLeft: 408 },
+	},
+	'hero-wizard': {
+		compact: { padding: '16px', gap: 'normal', insetLeft: 392 },
+		comfortable: { padding: '32px', gap: 'normal', insetLeft: 408 },
+	},
+	'sidebar-wizard': {
+		compact: { padding: '0px', gap: '16px', insetLeft: 0 },
+		comfortable: { padding: '0px', gap: '32px', insetLeft: 0 },
+	},
+	'split-screen': {
+		compact: { padding: '0px', gap: 'normal', insetLeft: 16 },
+		comfortable: { padding: '0px', gap: 'normal', insetLeft: 32 },
+	},
+	'split-screen-wizard': {
+		compact: { padding: '0px', gap: 'normal', insetLeft: 16 },
+		comfortable: { padding: '0px', gap: 'normal', insetLeft: 32 },
+	},
+};
+
 /** @remarks The element a form's `className`, `style` and `appearance` land on: `<form>` in React, `<rui-form>` in Radiant. */
 const formElement = (host: HTMLElement) => {
 	const element = host.querySelector<HTMLElement>('rui-form, form');
@@ -505,6 +542,60 @@ export function rendererConformance(mount: ConformanceMount): void {
 				if (edge === 'right') expect(button.right).toBe(bar.right);
 				if (edge === 'center') expect(button.left - bar.left).toBeCloseTo(bar.right - button.right, 0);
 			});
+		});
+		/**
+		 * The spacing parity checks of the shells that read the `size` token (`--se-space`) beside the card.
+		 *
+		 * @remarks
+		 * Each shell that declares `size` alone gets the pick on its `shell` slot. The carrier is the element
+		 * that holds the pick, and the measures are its own padding and how far the first field sits inside it,
+		 * which add up the padding and gaps every panel between them takes from the token. The literals hold for
+		 * the built-in `size` axis, no host theme variables and a host wider than the shells' breakpoints. Both
+		 * renderers assert the same literals, so equal spacing follows from both suites passing.
+		 */
+		describe('shell spacing parity', () => {
+			const spacedRecipes = recipeCases.filter((recipe) => {
+				const axes: readonly string[] | undefined =
+					builtInRecipeSpecs[recipe.$type as keyof typeof builtInRecipeSpecs]?.appearanceAxes?.shell;
+				return axes?.includes('size') && !axes.includes('surface');
+			});
+			const measureShell = async (recipe: RecipeCase, size: (typeof SIZES)[number]) => {
+				const base = recipeForm(recipe);
+				const { host } = await setup({
+					config: {
+						...base,
+						view: {
+							...base.view,
+							shell: { ...(base.view as { shell?: object }).shell, appearance: { size } },
+						},
+					},
+				});
+				host.style.width = '1200px';
+				const textbox = getByRole(host, 'textbox', { name: 'Field 1' });
+				const carrier = Array.from(host.querySelectorAll<HTMLElement>(`[data-se-size="${size}"]`)).find(
+					(element) =>
+						element !== formElement(host) &&
+						!element.classList.contains('se-form-field') &&
+						!element.hasAttribute('data-se-step') &&
+						element.contains(textbox),
+				);
+				if (!carrier) throw new Error(`No shell of ${recipe.$type} carries the pick.`);
+				const inside = carrier.getBoundingClientRect();
+				const field = fieldHost(host, 'Field 1').getBoundingClientRect();
+				const style = getComputedStyle(carrier);
+				return { padding: style.paddingTop, gap: style.rowGap, insetLeft: field.left - inside.left };
+			};
+			test('the spaced recipes are found', () => {
+				expect(spacedRecipes.map((recipe) => recipe.$type).toSorted()).toEqual(SPACED_RECIPES);
+			});
+			test.each(SPACED_RECIPES.flatMap((type) => SIZES.map((size) => [type, size] as const)))(
+				'%s with size %s has the same spacing in every renderer',
+				async (type, size) => {
+					const recipe = recipeCases.find((candidate) => candidate.$type === type);
+					if (!recipe) throw new Error(`No conformance case for ${type}.`);
+					expect(await measureShell(recipe, size)).toEqual(SPACED_SHELL_MEASURES[type]?.[size]);
+				},
+			);
 		});
 		/**
 		 * The card parity checks, run against both renderers with their own stylesheets.

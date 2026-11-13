@@ -4,7 +4,8 @@ import { AppearanceConfigSchema } from '@schema-engine/layout';
 /**
  * Appearance pick for a slot that declares axes in its spec's `appearanceAxes`.
  *
- * @remarks The slot's width, padding and shadow are `size` and `surface` values, not slot config.
+ * @remarks The slot's width, padding and shadow are `size` and `surface` values, not slot config. The hero, split
+ * screen and sidebar shells declare `size` alone: it sets their padding and gaps through `--se-space`.
  */
 const SlotAppearance = z.optional(AppearanceConfigSchema);
 
@@ -13,12 +14,14 @@ export const CardShellConfigSchema = z.strictObject({
 });
 
 export const HeroShellConfigSchema = z.strictObject({
+	appearance: SlotAppearance,
 	backgroundImage: z.optional(z.string()),
 	backgroundVideo: z.optional(z.string()),
 	contentWidth: z._default(z.enum(['sm', 'md', 'lg', 'xl']), 'md'),
 });
 
 export const SplitScreenShellConfigSchema = z.strictObject({
+	appearance: SlotAppearance,
 	sideContent: z.optional(z.string()),
 	sidePlacement: z._default(z.enum(['left', 'right']), 'left'),
 	sideWidth: z._default(z.enum(['narrow', 'normal', 'wide']), 'normal'),
@@ -26,6 +29,7 @@ export const SplitScreenShellConfigSchema = z.strictObject({
 });
 
 export const SidebarShellConfigSchema = z.strictObject({
+	appearance: SlotAppearance,
 	showSeparator: z._default(z.boolean(), true),
 });
 

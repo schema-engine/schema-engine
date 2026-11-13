@@ -1,0 +1,47 @@
+/*
+ * Sidebar shell styles for the React registry recipes.
+ *
+ * Every rule sits inside :where(), so it adds no specificity and a host class on the same element wins.
+ * The gaps read the semantic `size` token --se-space, as the Radiant sidebar does; the fallbacks are the look
+ * of an unpicked shell. The stacked variant is the small-screen layout, where the progress slot joins the
+ * column.
+ *
+ * Import this file into the `components` layer when the app uses Tailwind, so utility classes still outrank
+ * it: `@import "./components/schema-engine/forms/recipes/recipes.css" layer(components);`
+ */
+:where(.se-sidebar-shell) {
+	display: flex;
+	width: 100%;
+	flex-direction: row;
+	align-items: stretch;
+}
+
+:where(.se-sidebar-shell--stacked) {
+	min-width: 0;
+	max-width: 40rem;
+	flex-direction: column;
+	gap: var(--se-space, 1.5rem);
+	margin-inline: auto;
+}
+
+:where(.se-sidebar-shell__progress) {
+	flex-shrink: 0;
+	align-self: stretch;
+	width: 18rem;
+	padding-right: var(--se-space, 2rem);
+}
+
+:where(.se-sidebar-shell__separator) {
+	align-self: stretch;
+	width: 1px;
+	height: auto;
+}
+
+:where(.se-sidebar-shell__main) {
+	display: flex;
+	min-width: 0;
+	flex: 1;
+	flex-direction: column;
+	gap: var(--se-space, 1.5rem);
+	padding-left: var(--se-space, 2rem);
+}

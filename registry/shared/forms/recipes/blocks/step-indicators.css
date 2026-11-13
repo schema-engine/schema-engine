@@ -1,0 +1,101 @@
+/*
+ * Layout of the step indicators: a row of steps that scrolls sideways, or a column beside the form.
+ *
+ * Every rule sits inside :where(), so it adds no specificity and a host class on the same element wins.
+ * Colours and the step number's border stay with your ui theme (Tailwind classes on the elements).
+ *
+ * Import this file into the `components` layer when the app uses Tailwind, as recipes.css says.
+ */
+:where(.se-step-indicators) {
+	position: relative;
+	display: flex;
+	width: 100%;
+	min-width: 0;
+	overflow-x: auto;
+	scroll-behavior: smooth;
+}
+
+:where(.se-step-indicators--sidebar) {
+	overflow: visible;
+}
+
+:where(.se-step-indicators__list) {
+	position: relative;
+	display: flex;
+	min-width: 100%;
+	margin: 0;
+	padding: 0;
+	gap: 0.5rem;
+	list-style: none;
+}
+
+:where(.se-step-indicators--sidebar .se-step-indicators__list) {
+	min-width: 0;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+:where(.se-step-indicators__item) {
+	display: flex;
+	flex: 1 1 0;
+	min-width: 7.5rem;
+}
+
+:where(.se-step-indicators--sidebar .se-step-indicators__item) {
+	width: 100%;
+	min-width: 0;
+}
+
+:where(.se-step-indicators__button) {
+	display: flex;
+	width: 100%;
+	height: auto;
+	min-width: 0;
+	flex-shrink: 1;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.75rem;
+	border-radius: var(--radius-control, 0.75rem);
+	text-align: center;
+	white-space: normal;
+}
+
+:where(.se-step-indicators--sidebar .se-step-indicators__button) {
+	flex-direction: row;
+	justify-content: flex-start;
+	text-align: left;
+}
+
+:where(.se-step-indicators__number) {
+	display: inline-flex;
+	width: 2rem;
+	height: 2rem;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	border-radius: 999px;
+}
+
+:where(.se-step-indicators__copy) {
+	display: flex;
+	width: 100%;
+	min-width: 0;
+	flex-direction: column;
+	gap: 0.25rem;
+	align-items: center;
+	text-align: center;
+	line-height: 1.25rem;
+}
+
+:where(.se-step-indicators--sidebar .se-step-indicators__copy) {
+	width: auto;
+	align-items: flex-start;
+	text-align: left;
+}
+
+:where(.se-step-indicators__title) {
+	display: block;
+	overflow-wrap: break-word;
+	text-wrap: balance;
+}

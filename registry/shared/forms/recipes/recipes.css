@@ -3,4 +3,12 @@
  * Import this one file from the app's global stylesheet; each shell's file sits beside its component.
  */
 @import './blocks/form-actions.css';
+@import './blocks/minimal-progress.css';
+@import './blocks/step-header.css';
+@import './blocks/step-indicators.css';
+@import './blocks/wizard-actions.css';
 @import './shells/card-shell.css';
+@import './shells/hero-shell.css';
+@import './shells/sidebar-shell.css';
+@import './shells/split-screen-shell.css';
+@import './shells/stack-shell.css';

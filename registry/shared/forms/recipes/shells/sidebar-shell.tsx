@@ -1,16 +1,26 @@
 import { Separator } from '@/components/ui/separator';
+import { getAppearanceAttributes } from '@schema-engine/layout';
 import { useIsMobile } from '@schema-engine/forms-react/hooks';
 import { getSlotConfig } from '@schema-engine/forms/recipes';
 import { SidebarShellConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import type { FormShellProps } from '@schema-engine/forms-react/primitives';
 
+/**
+ * Styles live in `sidebar-shell.css`, which the app imports through `recipes.css`.
+ *
+ * @remarks
+ * The shell's `appearance` (`size`) is emitted as `data-se-*` attributes and the layout theme's token
+ * rules turn it into `--se-space`, which the stylesheet reads for the gaps. On a small screen the
+ * progress slot joins the column instead of sitting beside it.
+ */
 export function SidebarShell({ slots, viewConfig }: FormShellProps) {
 	const isMobile = useIsMobile();
-	const { showSeparator } = getSlotConfig(viewConfig, 'shell', SidebarShellConfigSchema);
+	const { appearance, showSeparator } = getSlotConfig(viewConfig, 'shell', SidebarShellConfigSchema);
+	const appearanceAttributes = getAppearanceAttributes(appearance);
 
 	if (isMobile) {
 		return (
-			<div className="flex min-w-0 w-full flex-col gap-6">
+			<div className="se-sidebar-shell se-sidebar-shell--stacked" {...appearanceAttributes}>
 				{slots.header}
 				{slots.progress}
 				{slots.content}
@@ -20,12 +30,12 @@ export function SidebarShell({ slots, viewConfig }: FormShellProps) {
 	}
 
 	return (
-		<div className="flex w-full flex-row items-stretch">
-			{slots.progress ? (
-				<aside className="w-72 shrink-0 self-stretch pr-8 lg:pr-12">{slots.progress}</aside>
+		<div className="se-sidebar-shell" {...appearanceAttributes}>
+			{slots.progress ? <aside className="se-sidebar-shell__progress">{slots.progress}</aside> : null}
+			{showSeparator ? (
+				<Separator orientation="vertical" className="se-sidebar-shell__separator bg-border" />
 			) : null}
-			{showSeparator ? <Separator orientation="vertical" className="h-auto w-px self-stretch bg-border" /> : null}
-			<div className="flex min-w-0 flex-1 flex-col gap-6 pl-8 lg:pl-12">
+			<div className="se-sidebar-shell__main">
 				{slots.header}
 				{slots.content}
 				{slots.actions}

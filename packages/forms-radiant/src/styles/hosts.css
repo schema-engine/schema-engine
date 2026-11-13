@@ -90,7 +90,7 @@ form.rui-form:has(.split-screen-shell) {
 .se-sidebar-shell {
 	display: flex;
 	flex-direction: column;
-	gap: var(--space-block-lg, 1.5rem);
+	gap: var(--se-space, var(--space-block-lg, 1.5rem));
 	min-width: 0;
 	min-height: 0;
 	width: 100%;
@@ -134,7 +134,7 @@ form.rui-form:has(.split-screen-shell) {
 		display: grid;
 		grid-template-columns: min(18rem, 33%) 1fr;
 		grid-template-areas: 'progress main';
-		column-gap: var(--space-block-xl, 2rem);
+		column-gap: var(--se-space, var(--space-block-xl, 2rem));
 		align-items: stretch;
 		max-width: none;
 		margin-inline: 0;
@@ -155,7 +155,7 @@ form.rui-form:has(.split-screen-shell) {
 		grid-area: main;
 		flex-direction: column;
 		justify-content: flex-start;
-		gap: var(--space-block-lg, 1.5rem);
+		gap: var(--se-space, var(--space-block-lg, 1.5rem));
 		min-width: 0;
 	}
 

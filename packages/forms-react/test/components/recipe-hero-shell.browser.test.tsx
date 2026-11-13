@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { HeroShell } from '@/components/schema-engine/forms/recipes/shells/hero-shell';
+import '@/components/schema-engine/forms/recipes/recipes.css';
 
 function renderHero(shell: Record<string, unknown>) {
 	const { container } = render(
@@ -13,14 +14,13 @@ describe('hero shell', () => {
 	test('layers the video above the shell background and below the overlay and content', () => {
 		const root = renderHero({ backgroundVideo: '/hero.webm' });
 		const video = root.querySelector('video') as HTMLVideoElement;
-		const overlay = root.querySelector('div.bg-black\\/50') as HTMLElement;
-		const content = root.querySelector('p')?.closest('div.relative') as HTMLElement;
+		const overlay = root.querySelector('.se-hero-shell__overlay') as HTMLElement;
+		const content = root.querySelector('.se-hero-shell__content') as HTMLElement;
 
-		expect(root).toHaveClass('isolate');
-		expect(video).toHaveClass('z-0');
-		expect(overlay).toHaveClass('z-1');
-		expect(content).toHaveClass('z-2');
-		expect(video).not.toHaveClass('-z-10');
+		expect(getComputedStyle(root).isolation).toBe('isolate');
+		expect(getComputedStyle(video).zIndex).toBe('0');
+		expect(getComputedStyle(overlay).zIndex).toBe('1');
+		expect(getComputedStyle(content).zIndex).toBe('2');
 	});
 
 	test('plays the video inline from its src without a declared type', () => {
@@ -46,5 +46,13 @@ describe('hero shell', () => {
 
 		expect(root.style.color).toBe('');
 		expect(getComputedStyle(root).backgroundImage).toContain('x%22)');
+		expect(root.getAttribute('style')).toMatch(/^--se-hero-image:/);
+	});
+
+	test('hands the background image over as data, not as inline layout', () => {
+		const root = renderHero({ backgroundImage: '/hero.jpg' });
+
+		expect(root.style.getPropertyValue('--se-hero-image')).toContain('/hero.jpg');
+		expect(root.style.backgroundImage).toBe('');
 	});
 });

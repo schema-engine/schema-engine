@@ -5,6 +5,7 @@ import { createFormEngine } from '@schema-engine/forms';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { rhfAdapter } from '@/adapters/react-hook-form';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
+import '@/components/schema-engine/forms/recipes/recipes.css';
 
 const engine = createFormEngine({ recipes: [...schemaFormRecipeRegistrations] });
 
@@ -54,11 +55,23 @@ describe('recipe blocks honour the slot config the spec accepts', () => {
 		expect(screen.getByText('33%')).toBeInTheDocument();
 	});
 
+	test('the progress fill takes its width from a custom property, not an inline width', () => {
+		renderForm({ view: { $type: 'card-wizard' } });
+
+		const fill = screen.getByRole('progressbar').firstElementChild as HTMLElement;
+		expect(fill.style.width).toBe('');
+		expect(fill.style.getPropertyValue('--se-progress')).toBe('33%');
+		expect(fill.getBoundingClientRect().width).toBeCloseTo(
+			(screen.getByRole('progressbar').getBoundingClientRect().width * 33) / 100,
+			0,
+		);
+	});
+
 	test('the card header is centered', () => {
 		renderForm({ view: { $type: 'card' }, steps: [{ id: 'one', title: 'One', elements: [] }] });
 
 		expect(screen.getByRole('banner')).toHaveAttribute('data-align', 'center');
-		expect(screen.getByRole('banner')).toHaveClass('data-[align=center]:text-center');
+		expect(getComputedStyle(screen.getByRole('banner')).textAlign).toBe('center');
 	});
 
 	test('a split-screen-wizard shows the form title once when its steps have no title', () => {

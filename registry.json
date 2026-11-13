@@ -980,9 +980,19 @@
           "target": "@components/schema-engine/forms/recipes/blocks/form-actions.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/blocks/minimal-progress.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/minimal-progress.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/blocks/minimal-progress.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/blocks/minimal-progress.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/blocks/step-header.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/step-header.css"
         },
         {
           "path": "registry/shared/forms/recipes/blocks/step-header.tsx",
@@ -990,9 +1000,19 @@
           "target": "@components/schema-engine/forms/recipes/blocks/step-header.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/blocks/step-indicators.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/step-indicators.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/blocks/step-indicators.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/blocks/step-indicators.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/blocks/wizard-actions.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/wizard-actions.css"
         },
         {
           "path": "registry/shared/forms/recipes/blocks/wizard-actions.tsx",
@@ -1070,9 +1090,19 @@
           "target": "@components/schema-engine/forms/recipes/shells/card-shell.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/shells/hero-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/hero-shell.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/shells/hero-shell.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/shells/hero-shell.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/shells/sidebar-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/sidebar-shell.css"
         },
         {
           "path": "registry/shared/forms/recipes/shells/sidebar-shell.tsx",
@@ -1080,9 +1110,19 @@
           "target": "@components/schema-engine/forms/recipes/shells/sidebar-shell.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/shells/split-screen-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/split-screen-shell.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/shells/split-screen-shell.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/shells/split-screen-shell.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/shells/stack-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/stack-shell.css"
         },
         {
           "path": "registry/shared/forms/recipes/shells/stack-shell.tsx",
@@ -2071,9 +2111,19 @@
           "target": "@components/schema-engine/forms/recipes/blocks/form-actions.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/blocks/minimal-progress.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/minimal-progress.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/blocks/minimal-progress.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/blocks/minimal-progress.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/blocks/step-header.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/step-header.css"
         },
         {
           "path": "registry/shared/forms/recipes/blocks/step-header.tsx",
@@ -2081,9 +2131,19 @@
           "target": "@components/schema-engine/forms/recipes/blocks/step-header.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/blocks/step-indicators.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/step-indicators.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/blocks/step-indicators.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/blocks/step-indicators.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/blocks/wizard-actions.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/wizard-actions.css"
         },
         {
           "path": "registry/shared/forms/recipes/blocks/wizard-actions.tsx",
@@ -2161,9 +2221,19 @@
           "target": "@components/schema-engine/forms/recipes/shells/card-shell.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/shells/hero-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/hero-shell.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/shells/hero-shell.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/shells/hero-shell.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/shells/sidebar-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/sidebar-shell.css"
         },
         {
           "path": "registry/shared/forms/recipes/shells/sidebar-shell.tsx",
@@ -2171,9 +2241,19 @@
           "target": "@components/schema-engine/forms/recipes/shells/sidebar-shell.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/shells/split-screen-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/split-screen-shell.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/shells/split-screen-shell.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/shells/split-screen-shell.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/shells/stack-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/stack-shell.css"
         },
         {
           "path": "registry/shared/forms/recipes/shells/stack-shell.tsx",
@@ -3160,9 +3240,19 @@
           "target": "@components/schema-engine/forms/recipes/blocks/form-actions.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/blocks/minimal-progress.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/minimal-progress.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/blocks/minimal-progress.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/blocks/minimal-progress.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/blocks/step-header.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/step-header.css"
         },
         {
           "path": "registry/shared/forms/recipes/blocks/step-header.tsx",
@@ -3170,9 +3260,19 @@
           "target": "@components/schema-engine/forms/recipes/blocks/step-header.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/blocks/step-indicators.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/step-indicators.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/blocks/step-indicators.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/blocks/step-indicators.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/blocks/wizard-actions.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/wizard-actions.css"
         },
         {
           "path": "registry/shared/forms/recipes/blocks/wizard-actions.tsx",
@@ -3250,9 +3350,19 @@
           "target": "@components/schema-engine/forms/recipes/shells/card-shell.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/shells/hero-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/hero-shell.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/shells/hero-shell.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/shells/hero-shell.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/shells/sidebar-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/sidebar-shell.css"
         },
         {
           "path": "registry/shared/forms/recipes/shells/sidebar-shell.tsx",
@@ -3260,9 +3370,19 @@
           "target": "@components/schema-engine/forms/recipes/shells/sidebar-shell.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/shells/split-screen-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/split-screen-shell.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/shells/split-screen-shell.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/shells/split-screen-shell.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/shells/stack-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/stack-shell.css"
         },
         {
           "path": "registry/shared/forms/recipes/shells/stack-shell.tsx",

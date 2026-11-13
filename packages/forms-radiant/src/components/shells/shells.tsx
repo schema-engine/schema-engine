@@ -29,9 +29,12 @@ export function StackShell({ slots }: FormShellProps): JsxRenderable {
 }
 
 export function SidebarShell({ slots, viewConfig }: FormShellProps): JsxRenderable {
-	const { showSeparator } = getSlotConfig(viewConfig, 'shell', SidebarShellConfigSchema);
+	const { appearance, showSeparator } = getSlotConfig(viewConfig, 'shell', SidebarShellConfigSchema);
 	return (
-		<div classes={['se-sidebar-shell', !showSeparator && 'se-sidebar-shell--no-separator']}>
+		<div
+			classes={['se-sidebar-shell', !showSeparator && 'se-sidebar-shell--no-separator']}
+			{...getAppearanceAttributes(appearance)}
+		>
 			{slots.progress ? <aside class="se-sidebar-shell__progress">{slots.progress}</aside> : null}
 			<div class="se-sidebar-shell__separator" aria-hidden="true" />
 			<div class="se-sidebar-shell__main">
@@ -60,7 +63,7 @@ export function CardShell({ slots, viewConfig }: FormShellProps): JsxRenderable 
 }
 
 export function HeroShell({ slots, viewConfig }: FormShellProps): JsxRenderable {
-	const { backgroundImage, backgroundVideo, contentWidth } = getSlotConfig(
+	const { appearance, backgroundImage, backgroundVideo, contentWidth } = getSlotConfig(
 		viewConfig,
 		'shell',
 		HeroShellConfigSchema,
@@ -69,6 +72,7 @@ export function HeroShell({ slots, viewConfig }: FormShellProps): JsxRenderable 
 		<div
 			class="hero-shell"
 			style={{ backgroundImage: backgroundImage ? `url(${JSON.stringify(backgroundImage)})` : undefined }}
+			{...getAppearanceAttributes(appearance)}
 		>
 			{backgroundVideo ? (
 				<video autoplay muted loop playsinline src={backgroundVideo} class="hero-shell__video" />
@@ -94,13 +98,13 @@ export function HeroShell({ slots, viewConfig }: FormShellProps): JsxRenderable 
  * that default too.
  */
 export function SplitScreenShell({ slots, viewConfig, meta }: FormShellProps): JsxRenderable {
-	const { sideContent, sidePlacement, sideWidth, contentAlignment } = getSlotConfig(
+	const { appearance, sideContent, sidePlacement, sideWidth, contentAlignment } = getSlotConfig(
 		viewConfig,
 		'shell',
 		SplitScreenShellConfigSchema,
 	);
 	return (
-		<div class="split-screen-shell">
+		<div class="split-screen-shell" {...getAppearanceAttributes(appearance)}>
 			<SplitScreenSideElement
 				class={`split-screen-shell__side split-screen-shell__side--${sideWidth}${sidePlacement === 'right' ? ' split-screen-shell__side--right' : ''}`}
 				sideContent={sideContent ?? ''}

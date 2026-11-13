@@ -1,8 +1,9 @@
 import type { FormShellProps } from '@schema-engine/forms-react/primitives';
 
+/** Styles live in `stack-shell.css`, which the app imports through `recipes.css`. */
 export function StackShell({ slots }: FormShellProps) {
 	return (
-		<div className="flex min-w-0 w-full flex-col gap-6">
+		<div className="se-stack-shell">
 			{slots.header}
 			{slots.progress}
 			{slots.content}

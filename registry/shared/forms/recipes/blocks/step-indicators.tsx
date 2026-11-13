@@ -28,9 +28,9 @@ export function StepIndicators() {
 		<nav
 			aria-label={labels.regionAriaLabel}
 			ref={containerRef}
-			className={cn('relative flex min-w-0', sidebar ? 'overflow-visible' : 'overflow-x-auto scroll-smooth')}
+			className={cn('se-step-indicators', sidebar && 'se-step-indicators--sidebar')}
 		>
-			<ol className={cn('relative flex', sidebar ? 'min-w-0 flex-col gap-1' : 'min-w-full gap-2')}>
+			<ol className="se-step-indicators__list">
 				{steps.map((step, index) => {
 					const isDisabled = !step.isVisited && index > currentStepIndex;
 					return (
@@ -39,7 +39,7 @@ export function StepIndicators() {
 							ref={(element) => {
 								stepRefs.current[index] = element;
 							}}
-							className={cn('flex', sidebar ? 'min-w-0 w-full' : 'min-w-30 flex-1')}
+							className="se-step-indicators__item"
 						>
 							<Button
 								type="button"
@@ -48,7 +48,7 @@ export function StepIndicators() {
 								disabled={isDisabled}
 								aria-current={step.isActive ? 'step' : undefined}
 								className={cn(
-									'flex h-auto w-full min-w-0 shrink gap-2 whitespace-normal rounded-xl p-3',
+									'se-step-indicators__button h-auto whitespace-normal rounded-xl p-3',
 									sidebar
 										? 'flex-row items-center justify-start text-left'
 										: 'flex-col items-center text-center',
@@ -58,7 +58,7 @@ export function StepIndicators() {
 								{showStepNumbers ? (
 									<span
 										className={cn(
-											'flex size-8 shrink-0 items-center justify-center rounded-full border text-sm font-semibold tabular-nums',
+											'se-step-indicators__number border text-sm font-semibold tabular-nums',
 											step.isCompleted && 'border-primary bg-primary text-primary-foreground',
 											step.isActive && !step.isCompleted && 'border-primary text-primary',
 											!step.isActive &&
@@ -70,16 +70,11 @@ export function StepIndicators() {
 									</span>
 								) : null}
 								{showStepTitles || (showStepDescriptions && step.description) ? (
-									<span
-										className={cn(
-											'min-w-0 space-y-1 leading-5',
-											sidebar ? 'text-left' : 'w-full text-center',
-										)}
-									>
+									<span className="se-step-indicators__copy">
 										{showStepTitles ? (
 											<span
 												className={cn(
-													'block text-sm font-medium text-balance wrap-break-word',
+													'se-step-indicators__title text-sm font-medium',
 													step.isActive ? 'text-foreground' : 'text-muted-foreground',
 												)}
 											>

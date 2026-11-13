@@ -1,0 +1,36 @@
+/*
+ * Layout of the minimal progress bar.
+ *
+ * Every rule sits inside :where(), so it adds no specificity and a host class on the same element wins.
+ * The fill's width is data: the component hands it over as the custom property --se-progress (`50%`), so no
+ * inline style carries layout. Colours stay with your ui theme (Tailwind classes on the track and the fill).
+ *
+ * Import this file into the `components` layer when the app uses Tailwind, as recipes.css says.
+ */
+:where(.se-minimal-progress) {
+	display: flex;
+	width: 100%;
+	min-width: 0;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+:where(.se-minimal-progress__labels) {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+}
+
+:where(.se-minimal-progress__track) {
+	width: 100%;
+	height: 0.5rem;
+	overflow: hidden;
+	border-radius: 999px;
+}
+
+:where(.se-minimal-progress__fill) {
+	width: var(--se-progress, 0%);
+	height: 100%;
+	border-radius: inherit;
+}
