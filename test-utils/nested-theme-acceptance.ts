@@ -16,7 +16,7 @@ import type { LayoutThemeLike } from './ssr-grid-acceptance';
 export const NESTED_ACCENTS = { host: 'red', guest: 'blue' } as const;
 
 /** The class the author's own stylesheet uses to set the accent token. */
-export const NESTED_AUTHOR_CLASS = 'author-accent';
+const NESTED_AUTHOR_CLASS = 'author-accent';
 const AUTHOR_ACCENT = 'green';
 
 function toneAxis(accent: string) {
@@ -123,9 +123,9 @@ async function inEachOrder(
  * @param host The theme of the page around the form.
  * @param guest The theme of the embedded form's engine.
  * @remarks
- * Runs with the host's stylesheet before and after the guest's, because a descendant rule from
- * each theme matches the same element and only the later one used to win. The form element
- * carries the theme and the pick together; the step and the field only inherit it.
+ * Runs with the host's stylesheet before and after the guest's, so the result cannot depend on
+ * which comes later. The form element carries the theme and the pick together; the step and the
+ * field only inherit it. The host's own items keep the host's token.
  */
 export async function expectNestedFormUsesOwnThemeTokens(
 	guestHtml: string,
@@ -164,6 +164,7 @@ export async function expectAuthorClassOutranksNestedTokens(
 	host: LayoutThemeLike,
 	guest: LayoutThemeLike,
 ): Promise<void> {
+	expect(guestHtml).toContain(`data-se-theme="${guest.id}"`);
 	await inEachOrder(
 		(_order, doc) => {
 			const step = required(doc, `.${NESTED_AUTHOR_CLASS}`);
@@ -174,5 +175,4 @@ export async function expectAuthorClassOutranksNestedTokens(
 		(order) =>
 			nestedThemeDocument(guestHtml, host, order, `.${NESTED_AUTHOR_CLASS}{--se-accent:${AUTHOR_ACCENT};}`),
 	);
-	expect(guestHtml).toContain(`data-se-theme="${guest.id}"`);
 }

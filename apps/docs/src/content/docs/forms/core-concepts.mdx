@@ -277,8 +277,9 @@ in a page grid. Each theme's token rules reach only the elements whose nearest t
 that theme, so the embedded form picks `tone: brand` with its own theme's token
 whichever stylesheet comes later, and your own class still wins. Tokens are custom
 properties, so a pick made outside the embedded form still reaches it until the form
-picks a value on that axis. A theme nested below another theme and then below itself
-(A in B in A) gets no tokens.
+picks a value that declares those tokens (the built-in `size.default` resets them). The
+descendants of a theme nested below another theme and then below itself (A in B in A)
+get no tokens of their own.
 
 ### Appearance axes
 
