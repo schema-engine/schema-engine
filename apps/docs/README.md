@@ -39,7 +39,7 @@ the site too. Unused components that no longer type-check are excluded in `tscon
 `pnpm test:all` runs the unit and browser projects (the unit project includes `test/styling-docs.test.ts`, which type-checks and runs the snippets of the styling and registries pages, checks the documented messages against the engine and resolves every internal link and heading fragment) (the root pre-commit `turbo test:all` calls it). `pnpm test:e2e` builds the site, serves the production preview on a free port, and
 runs Playwright checks that the getting-started Forms React embed ships its
 serialized config, hydrates, keeps typed values, and surfaces validation after
-submit, and that the Radiant previews on the homepage and sequential-actions page submit and reset after direct or client-side navigation, and (`styling-pages.e2e.ts`) that every styling page loads, each recipe renders and lays out as documented in both renderers, and every source tab copies the text it shows. Set `DOCS_E2E_BASE_URL` to test an already running server instead of
+submit, and that the Radiant previews on the homepage and sequential-actions page submit and reset after direct or client-side navigation, and (`styling-pages.e2e.ts`) that every styling page loads, each recipe renders and lays out as documented (in React too for the recipes that have a React demo), and every source tab copies the text it shows. Set `DOCS_E2E_BASE_URL` to test an already running server instead of
 starting a preview (the site is still built first); setup fails when that server
 does not answer within five seconds. Install the
 browser once with `pnpm exec playwright install chromium` inside `apps/docs` if

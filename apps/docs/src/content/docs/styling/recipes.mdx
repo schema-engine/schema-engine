@@ -43,7 +43,7 @@ export function Contact() {
 
 In React, create the engine with the registrations and recipes you copied from the shadcn registry, as [Forms React](/docs/forms-react/getting-started) shows, and render `FormRenderer` with the same `config`. The recipes that use `fieldSet` need the fieldset registration in your engine.
 
-The demos on this page run on one docs engine per renderer, built on the theme of the [brand theme recipe](#a-brand-theme-with-a-host-tone-axis). A recipe that does not name a theme runs on the default one and renders the same without it.
+The React demos use the docs' Radiant-styled demo kit, not the shadcn registry components, so fallbacks such as the card's maximum width and shadow differ from a registry install. The demos on this page run on one docs engine per renderer, built on the theme of the [brand theme recipe](#a-brand-theme-with-a-host-tone-axis). A recipe that does not name a theme runs on the default one and renders the same without it.
 
 ## A contact card with two half-width fields
 
@@ -73,7 +73,7 @@ The rules for areas, and every validation error, are in [Drawn layouts](/docs/fo
 
 ## A brand theme with a host tone axis
 
-The built-in axes are `size` and `surface`. A host adds its own with `defineAxis`: here `tone`, whose values set the colour roles Radiant UI (`--primary`, `--on-primary`) and shadcn (`--primary`, `--primary-foreground`) components read. The theme tab builds it; every engine receives it as `layout`. The form picks `tone: 'brand'` once, on the form, and the submit button, the checkbox and the border recolor. Try `forest` in the config tab.
+The built-in axes are `size` and `surface`. A host adds its own with `defineAxis`: here `tone`, whose values set the colour roles Radiant UI (`--primary`, `--on-primary`) and shadcn (`--primary`, `--primary-foreground`) components read. The theme tab builds it; every engine receives it as `layout`. The form picks `tone: 'brand'` once, on the form, and the submit button, the checkbox and the border recolor. Try `forest` after you paste it; the tab is static.
 
 The CSS reads `--primary` and keys one rule on the `data-se-tone` attribute the renderer writes on the form element.
 
