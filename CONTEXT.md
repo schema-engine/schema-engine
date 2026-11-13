@@ -224,9 +224,10 @@ thresholds must preserve named cascade order (`sm ≤ md ≤ lg ≤ xl ≤ 2xl`)
 `rem`/`em` lengths are compared at a 16px root.
 
 The split between the two is strict: **the stylesheet owns behavior** —
-neutral defaults, the breakpoint cascade (each media query falls back through
-the narrower slots), and the `initial` resets that stop a nested grid or field
-inheriting its parent's placement. The cascade is written once per property as a `var()` chain over private, theme-scoped custom properties that each media query fills from the public `-<breakpoint>` variable, so the stylesheet stays small enough to repeat per form (a test holds the default theme to a size budget); the public variable names and the computed values are unchanged. **Inline custom properties carry only
+neutral defaults, the breakpoint cascade, and the `initial` resets that stop a
+nested grid or field inheriting its parent's placement; the cascade is written
+once per property over private, theme-scoped gates (the layout README, "The
+stylesheet hooks", has the mechanism). **Inline custom properties carry only
 values** an author wrote, so an element without a `grid` config emits no style
 attribute. `place-*` shorthands are resolved into their axis longhands before
 emission rather than declared in CSS, because a shorthand would have to follow

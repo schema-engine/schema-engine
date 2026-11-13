@@ -375,9 +375,12 @@ function tight(fallback: string): string {
  * with a wider threshold read the gate its ancestor's narrower query declared. Within one theme
  * every element the rules reach declares its own gates wherever the query applies, so no reset
  * is needed.
+ *
+ * Read a name in devtools as theme id, table (`g` grid, `i` item), the property's row in that
+ * table, and the breakpoint token: `--l1abc-i1md` is the `md` gate of the item `grid-column`.
  */
 function gateName(themeId: string, table: string, row: number, slot: GridBreakpointToken): string {
-	return `--${themeId}-${table}${row}${BREAKPOINT_ORDER.indexOf(slot)}`;
+	return `--${themeId}-${table}${row}${slot}`;
 }
 
 /**
