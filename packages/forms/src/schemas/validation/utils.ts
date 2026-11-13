@@ -139,7 +139,8 @@ function skippingEmpty(schema: z.ZodMiniType): z.ZodMiniType {
 			};
 			try {
 				report(z.safeParse(schema, value));
-			} catch {
+			} catch (error) {
+				if (!(error instanceof z.core.$ZodAsyncError)) throw error;
 				return z.safeParseAsync(schema, value).then(report);
 			}
 		}),
