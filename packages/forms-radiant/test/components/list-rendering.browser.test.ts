@@ -130,13 +130,13 @@ test('existing rows follow a change to the array config', async () => {
 
 test('a scalar array that gains named children names its fields by child', async () => {
 	const { host, form, arrayHost } = await mountArray();
-	arrayHost.config = {
+	Reflect.set(arrayHost, 'config', {
 		...arrayHost.config,
 		elements: [
 			{ $type: 'input', name: 'first', label: 'First' },
 			{ $type: 'input', name: 'second', label: 'Second' },
 		],
-	} as typeof arrayHost.config;
+	});
 	await expect
 		.poll(() => [...host.querySelectorAll('input')].map((input) => input.name))
 		.toEqual([
