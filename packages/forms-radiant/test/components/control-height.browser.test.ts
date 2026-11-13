@@ -9,6 +9,7 @@ import { FormController } from '@/adapters/radiant/controller';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
+import type { ConformanceMount } from '../../../../test-utils/renderer-conformance';
 import {
 	controlHeightAcceptance,
 	controlHeightForm,
@@ -34,29 +35,50 @@ afterAll(() => {
 	for (const name of Object.keys(THEME)) document.documentElement.style.removeProperty(name);
 });
 
-async function mountRadiant({ config }: { config: Parameters<typeof engine.validateForm>[0] }) {
-	const host = document.createElement('div');
-	document.body.append(host);
-	const root = createRoot(host);
-	root.render(FormRenderer({ config: engine.validateForm(config), engine }));
-	const form = new FormController(host.querySelector('rui-form')!);
-	await expect.poll(() => form.ready).toBe(true);
-	return {
-		host,
-		cleanup: () => {
-			form.disconnect();
-			root.unmount();
-			host.remove();
-		},
-		update: async () => undefined,
+/**
+ * Mounts the form the way the conformance suite does, optionally inside a wrapper that sets its own theme variables.
+ *
+ * @remarks The wrapper is the form's direct parent, which is where a theme scoped to a section of the page sets them.
+ */
+function mountIn(wrapperTheme?: Record<string, string>): ConformanceMount {
+	return async ({ config }) => {
+		const host = document.createElement('div');
+		for (const [name, value] of Object.entries(wrapperTheme ?? {})) host.style.setProperty(name, value);
+		document.body.append(host);
+		const root = createRoot(host);
+		root.render(FormRenderer({ config: engine.validateForm(config), engine }));
+		const form = new FormController(host.querySelector('rui-form')!);
+		await expect.poll(() => form.ready).toBe(true);
+		return {
+			host,
+			cleanup: () => {
+				form.disconnect();
+				root.unmount();
+				host.remove();
+			},
+			update: async () => undefined,
+		};
 	};
 }
+
+const mountRadiant = mountIn();
 
 describe('Radiant controls under a theme that sets the control size', () => {
 	controlHeightAcceptance(mountRadiant, {
 		unpicked: { input: 44, button: 44 },
 		compact: { input: 20, button: 20 },
 		comfortable: { input: 60, button: 60 },
+	});
+
+	describe('a theme scoped to a wrapper below the root theme', () => {
+		controlHeightAcceptance(
+			mountIn({ '--size-control-sm': '22px', '--size-control-md': '30px', '--size-control-lg': '40px' }),
+			{
+				unpicked: { input: 30, button: 30 },
+				compact: { input: 22, button: 22 },
+				comfortable: { input: 40, button: 40 },
+			},
+		);
 	});
 
 	test('an author class that sets the control size on a field host outranks the pick', async () => {
