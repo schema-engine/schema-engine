@@ -61,6 +61,30 @@ export function useRHFMultiStep(
 	const stateRef = useRef(state);
 	const onStepIndexChange = options?.onStepIndexChange;
 
+	/**
+	 * @remarks
+	 * React Hook Form applies `reValidateMode` only after a submit, and a step check is a `trigger`,
+	 * not a submit. Without this, an error a failed step check left stays until the field blurs,
+	 * and on mousedown of Next that blur removes the error text, shifts the button and loses the click.
+	 * Once a step check has failed, a field that has an error is validated again on every change, as
+	 * it is after a failed submit. After a submit React Hook Form already does that, so the extra
+	 * `trigger` is skipped there and async rules do not run twice. A reset, which React Hook Form
+	 * reports without a field name, clears the flag.
+	 */
+	const stepCheckFailed = useRef(false);
+	useEffect(() => {
+		const subscription = form.watch((_values, { name }) => {
+			if (!name) {
+				stepCheckFailed.current = false;
+				return;
+			}
+			if (stepCheckFailed.current && !form.formState.isSubmitted && form.getFieldState(name).invalid) {
+				void form.trigger(name);
+			}
+		});
+		return () => subscription.unsubscribe();
+	}, [form]);
+
 	const validateStep = useCallback(
 		async (index: number) => {
 			const names = collectStepFieldPaths(config.steps[index], form.getValues());
@@ -68,6 +92,7 @@ export function useRHFMultiStep(
 			try {
 				const valid = await form.trigger(names);
 				if (!valid) {
+					stepCheckFailed.current = true;
 					const firstInvalid = names.find((name) => form.getFieldState(name).invalid);
 					if (firstInvalid) form.setFocus(firstInvalid);
 				}

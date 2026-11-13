@@ -1,9 +1,9 @@
 /** @jsxImportSource react */
 import type { ReactNode } from 'react';
-import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
 import { eco } from '@ecopages/core';
 import type { FormConfig } from '@schema-engine/forms/schemas';
-import { docsReactFormEngine, rhfAdapter } from './demo-engine';
+import { docsReactFormEngine } from './demo-engine';
+import { ReactFormContent } from './react-form-content.react';
 import { installMockFormApi } from '@/lib/mock-form-api';
 import './demo-recipes.css';
 
@@ -18,21 +18,12 @@ import './demo-recipes.css';
  * the client hydration script ships on the route. Radiant live previews use
  * {@link FormRendererPreview} from `@/components/form-renderer` instead and do
  * not need a React pragma.
+ *
+ * The copied shadcn source renders through `ShadcnFormPreview`, which only the pages that show it load.
  */
-function Preview({ config, onSubmit }: { config: FormConfig; onSubmit?: (data: Record<string, unknown>) => void }) {
-	return (
-		<FormEngineProvider engine={docsReactFormEngine} adapter={rhfAdapter}>
-			<FormRenderer config={config} engine={docsReactFormEngine} adapter={rhfAdapter} onSubmit={onSubmit} />
-		</FormEngineProvider>
-	);
-}
-
-export const ReactFormPreview = eco.component<
-	{ config: FormConfig; onSubmit?: (data: Record<string, unknown>) => void },
-	ReactNode
->({
-	render: (props) => {
+export const ReactFormPreview = eco.component<{ config: FormConfig }, ReactNode>({
+	render: ({ config }) => {
 		installMockFormApi();
-		return <Preview {...props} />;
+		return <ReactFormContent config={config} engine={docsReactFormEngine} />;
 	},
 });

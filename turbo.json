@@ -47,6 +47,34 @@
 			"dependsOn": ["^build:lib"],
 			"persistent": true
 		},
+		"@schema-engine/docs#build": {
+			"dependsOn": ["^build", "^build:lib"],
+			"outputs": [".eco/**"],
+			"inputs": [
+				"$TURBO_DEFAULT$",
+				"$TURBO_ROOT$/registry.json",
+				"$TURBO_ROOT$/registry/**",
+				"$TURBO_ROOT$/packages/forms-react/.storybook/ui/**"
+			]
+		},
+		"@schema-engine/docs#check-types": {
+			"dependsOn": ["^check-types", "^build:lib"],
+			"inputs": [
+				"$TURBO_DEFAULT$",
+				"$TURBO_ROOT$/registry.json",
+				"$TURBO_ROOT$/registry/**",
+				"$TURBO_ROOT$/packages/forms-react/.storybook/ui/**"
+			]
+		},
+		"@schema-engine/docs#test:all": {
+			"dependsOn": ["^build:lib", "^test:all"],
+			"inputs": [
+				"$TURBO_DEFAULT$",
+				"$TURBO_ROOT$/registry.json",
+				"$TURBO_ROOT$/registry/**",
+				"$TURBO_ROOT$/packages/forms-react/.storybook/ui/**"
+			]
+		},
 		"@schema-engine/registry#test:all": {
 			"dependsOn": ["build:lib", "^test:all"]
 		}
