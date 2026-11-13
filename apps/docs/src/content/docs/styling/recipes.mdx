@@ -25,8 +25,8 @@ Each recipe is a complete form config, the CSS it needs, and a live demo. The de
 Set up your app as the getting-started page for your renderer says ([Forms Radiant](/docs/forms-radiant/getting-started) or [Forms React](/docs/forms-react/getting-started)), then:
 
 1. Copy the config tab into a module and render it.
-2. Copy the CSS tab into your global stylesheet, or import it as a file. Every recipe CSS is scoped by the class its config puts on the form with `className`.
-3. If the recipe has a theme or engine tab, build your engine with it, as that tab shows.
+2. Copy the CSS tab into your global stylesheet, or import it as a file. Every recipe CSS is scoped by the class its config puts on the form with `className`, so it only applies once pasted with that config.
+3. If the recipe has a theme or engine tab, build your engine with it, as that tab shows. A React app also needs `pnpm add @schema-engine/layout` for a theme tab, which imports `createLayoutTheme` and `defineAxis` from it (Radiant installs it as a peer).
 
 In Radiant:
 
@@ -73,7 +73,7 @@ The rules for areas, and every validation error, are in [Drawn layouts](/docs/fo
 
 ## A brand theme with a host tone axis
 
-The built-in axes are `size` and `surface`. A host adds its own with `defineAxis`: here `tone`, whose values set the colour roles Radiant UI and shadcn components read. The theme tab builds it; every engine receives it as `layout`. The form picks `tone: 'brand'` once, on the form, and the submit button, the checkbox and the border recolor. Try `forest` in the config tab.
+The built-in axes are `size` and `surface`. A host adds its own with `defineAxis`: here `tone`, whose values set the colour roles Radiant UI (`--primary`, `--on-primary`) and shadcn (`--primary`, `--primary-foreground`) components read. The theme tab builds it; every engine receives it as `layout`. The form picks `tone: 'brand'` once, on the form, and the submit button, the checkbox and the border recolor. Try `forest` in the config tab.
 
 The CSS reads `--primary` and keys one rule on the `data-se-tone` attribute the renderer writes on the form element.
 
@@ -89,7 +89,7 @@ Each form picks its own tone. React hoists the shared stylesheet to one element;
 
 ## Overriding size tokens
 
-`size: compact` reads two hooks, `--se-space-compact` and `--se-control-height-compact`, so tighten them on the form's class. `--se-font-size` and `--se-measure` have a literal value on the element that carries the pick, so override those with a rule that targets that element and has the specificity of a class. The form picks `compact` on the card shell.
+`size: compact` reads two hooks, `--se-space-compact` and `--se-control-height-compact`, so tighten them on the form's class: the pick on the card shell, a step or a field inherits them. `--se-measure` has a literal value on the element that carries the pick, so override it with a rule that targets that element and has the specificity of a class. The form picks `compact` on the card shell.
 
 <RecipeDemo recipe={tightSizeRecipe} />
 
@@ -99,12 +99,23 @@ A recipe is a registration: a spec (`$type`, kind, slot schemas) bound to the co
 
 Register it when you build the engine, then select it with `view.$type`:
 
-```ts
-// React
-const engine = createFormEngine({ elements, recipes: [BrandFrameRecipe] });
+In React:
 
-// Radiant
-const engine = createRadiantFormEngine({ elements: schemaFormRegistrations, recipes: [BrandFrameRecipe] });
+```ts
+import { createFormEngine } from '@schema-engine/forms';
+import { elements } from './registrations';
+import { BrandFrameRecipe } from './brand-frame.react';
+
+export const engine = createFormEngine({ elements, recipes: [BrandFrameRecipe] });
+```
+
+In Radiant:
+
+```ts
+import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+import { BrandFrameRecipe } from './brand-frame.radiant';
+
+export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations, recipes: [BrandFrameRecipe] });
 ```
 
 <RecipeDemo recipe={brandFrameRecipe} />

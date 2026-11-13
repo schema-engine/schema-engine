@@ -68,19 +68,45 @@ describe('styling docs pages', () => {
 	});
 
 	/** Rectangles of named inputs of one recipe, read in one frame so a reflow cannot split them. */
-	async function rects(recipe: string, names: string[]): Promise<Array<{ x: number; y: number; width: number }>> {
+	async function rects(
+		recipe: string,
+		names: string[],
+		renderer = 'radiant',
+	): Promise<Array<{ x: number; y: number; width: number }>> {
 		await page.evaluate(
 			() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
 		);
 		return page.evaluate(
-			([id, fields]) =>
+			([id, fields, which]) =>
 				fields!.map((name) => {
-					const input = document.querySelector(`[data-recipe="${id}"] input[name$="${name}"]`)!;
+					const input = document.querySelector(
+						`[data-recipe="${id}"] [data-renderer="${which}"] input[name$="${name}"]`,
+					)!;
 					const { x, y, width } = input.getBoundingClientRect();
 					return { x, y, width };
 				}),
-			[recipe, names] as [string, string[]],
+			[recipe, names, renderer] as [string, string[], string],
 		);
+	}
+
+	/** Selects each tab of a recipe, clicks its copy button and compares the clipboard with the text shown. */
+	async function expectEveryTabCopies(id: string): Promise<void> {
+		const tabsHost = page.locator(`[data-recipe="${id}"] radiant-code-tabs`);
+		await tabsHost.scrollIntoViewIfNeeded();
+		const tabs = tabsHost.getByRole('tab');
+		const count = await tabs.count();
+		expect(count, id).toBeGreaterThanOrEqual(3);
+		for (let index = 0; index < count; index += 1) {
+			const tab = tabs.nth(index);
+			await tab.click();
+			await pwExpect(tab).toHaveAttribute('aria-selected', 'true');
+			const panel = tabsHost.getByRole('tabpanel').filter({ visible: true });
+			const shown = await panel.locator('.code-tabs__code').textContent();
+			await panel.locator('.code-tabs__copy').click();
+			const copied = await page.evaluate(() => navigator.clipboard.readText());
+			expect(copied, `${id} tab ${index}`).toBe(shown);
+			expect(copied.length).toBeGreaterThan(40);
+		}
 	}
 
 	describe('recipes page', () => {
@@ -106,8 +132,8 @@ describe('styling docs pages', () => {
 			}
 		});
 
-		test('a half-width pair shares a row and the rest fill it', async () => {
-			const [first, last, email] = await rects('contact-card', ['first', 'last', 'email']);
+		test.each(['radiant', 'react'])('%s: a half-width pair shares a row and the rest fill it', async (renderer) => {
+			const [first, last, email] = await rects('contact-card', ['first', 'last', 'email'], renderer);
 			expect(first!.y).toBeCloseTo(last!.y, 0);
 			expect(first!.width).toBeCloseTo(last!.width, 0);
 			expect(email!.y).toBeGreaterThan(first!.y);
@@ -160,9 +186,23 @@ describe('styling docs pages', () => {
 			expect(tones).toEqual(['brand', 'forest']);
 		});
 
-		test('size hooks set on the form class reach the compact card', async () => {
-			const section = page.locator('[data-recipe="tight-size"] .card-shell__section').first();
-			expect(await section.evaluate((element) => getComputedStyle(element).paddingTop)).toBe('8px');
+		test.each([
+			['radiant', '.card-shell__section'],
+			['react', '.se-demo-shell__card'],
+		])('%s: size hooks set on the form class reach the compact card and its controls', async (renderer, card) => {
+			const demo = page.locator(`[data-recipe="tight-size"] [data-renderer="${renderer}"]`);
+			expect(
+				await demo
+					.locator(card)
+					.first()
+					.evaluate((element) => getComputedStyle(element).paddingTop),
+			).toBe('8px');
+			expect(
+				await demo
+					.locator('input')
+					.first()
+					.evaluate((element) => element.getBoundingClientRect().height),
+			).toBe(24);
 		});
 
 		test('the custom recipe frames both renderers', async () => {
@@ -173,24 +213,7 @@ describe('styling docs pages', () => {
 		});
 
 		test('every tab of every recipe copies the source it shows', async () => {
-			for (const id of RECIPE_IDS) {
-				const tabsHost = page.locator(`[data-recipe="${id}"] radiant-code-tabs`);
-				await tabsHost.scrollIntoViewIfNeeded();
-				const tabs = tabsHost.getByRole('tab');
-				const count = await tabs.count();
-				expect(count, id).toBeGreaterThanOrEqual(3);
-				for (let index = 0; index < count; index += 1) {
-					const tab = tabs.nth(index);
-					await tab.click();
-					await pwExpect(tab).toHaveAttribute('aria-selected', 'true');
-					const panel = tabsHost.getByRole('tabpanel').filter({ visible: true });
-					const shown = await panel.locator('.code-tabs__code').textContent();
-					await panel.locator('.code-tabs__copy').click();
-					const copied = await page.evaluate(() => navigator.clipboard.readText());
-					expect(copied, `${id} tab ${index}`).toBe(shown);
-					expect(copied.length).toBeGreaterThan(40);
-				}
-			}
+			for (const id of RECIPE_IDS) await expectEveryTabCopies(id);
 		});
 
 		test('the config tab is the config the demo renders', async () => {
@@ -220,5 +243,8 @@ describe('styling docs pages', () => {
 		expect(await form.evaluate((element) => getComputedStyle(element).getPropertyValue('--primary').trim())).toBe(
 			'#4f46e5',
 		);
+		const input = page.locator('[data-recipe="acme-theme"] input').first();
+		expect(await input.evaluate((element) => element.getBoundingClientRect().height)).toBe(44);
+		await expectEveryTabCopies('acme-theme');
 	});
 });

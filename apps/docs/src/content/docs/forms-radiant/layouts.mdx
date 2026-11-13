@@ -22,7 +22,7 @@ The shells take the same named `appearance` as the React recipes: set `view.shel
 
 Two Radiant details matter when you tune it:
 
-- Radiant declares the size hooks (`--se-space-compact`, `--se-control-height-compact` and their `comfortable` twins) on every element that carries `data-se-theme`, so set them on the form's own `className`, not on `:root` or a wrapper.
+- Radiant maps the size hooks (`--se-space-compact`, `--se-control-height-compact` and their `comfortable` twins) to its theme on the form element, so set them on the form's own `className`; a value set on `:root` or a wrapper above the form is replaced there. A hook on the form's class reaches a pick on the card shell, a step or a field.
 - Radiant UI computes `--size-control-*` on `:root`, so a scoped `--rui-density` does not resize controls below it. [Theming](/docs/styling/theming#radiant-the-spacing-tokens-of-its-own-theme) has the wrapper rule.
 
 Each form carries an identical copy of the layout stylesheet by design; see [Layout stylesheet per form](/docs/forms-radiant/getting-started#layout-stylesheet-per-form). [Styling and layout](/docs/styling/overview) lists which tool fits which job, and [Recipes](/docs/styling/recipes) has copy-paste configs with their CSS, rendered with these shells.

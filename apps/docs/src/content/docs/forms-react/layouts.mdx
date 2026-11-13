@@ -36,7 +36,7 @@ The install copies the recipe stylesheets next to the components. Import the ent
 @import './components/schema-engine/forms/recipes/recipes.css' layer(components);
 ```
 
-The path is relative to your global stylesheet: `./components/schema-engine/forms/recipes/recipes.css` from a Vite `src/index.css`, `../components/schema-engine/forms/recipes/recipes.css` from a Next.js `app/globals.css`. Without the import the card shell renders unstyled. Without Tailwind, import the file plain. Then add the generated recipe barrel when you construct the engine:
+The path is relative to your global stylesheet: `./components/schema-engine/forms/recipes/recipes.css` from a Vite `src/index.css`, `../components/schema-engine/forms/recipes/recipes.css` from a Next.js `app/globals.css`. Without the import the card shell renders unstyled. Without Tailwind, import the file plain. The size axis also needs `controls.css`, unlayered, after the recipe styles: `@import './components/ui/schema-engine/components/controls.css';` (see [Appearance and the default styles](#appearance-and-the-default-styles)). Then add the generated recipe barrel when you construct the engine:
 
 ```typescript
 import { createFormEngine } from '@schema-engine/forms';

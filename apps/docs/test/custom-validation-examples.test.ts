@@ -23,8 +23,10 @@ function example(heading: string, index = 0): string {
 	}).outputText;
 }
 
-/** Each type-check builds a TypeScript program, which is slow when the hook runs every package at once. */
-vi.setConfig({ testTimeout: 60_000 });
+vi.setConfig({ testTimeout: 15_000 });
+
+/** Parsed library and package declaration files, kept across programs: parsing them dominates a type-check. */
+const sourceFileCache = new Map<string, ts.SourceFile | undefined>();
 
 afterEach(() => {
 	vi.restoreAllMocks();
@@ -72,6 +74,10 @@ test('the documented debounced async rule settles replaced checks and keeps fiel
 
 const requireModules = { 'zod/mini': z, '@schema-engine/forms': { createFormEngine } };
 
+/**
+ * @remarks The exports are whatever the documented snippet declares, so a test reads them untyped.
+ */
+// oxlint-disable-next-line typescript/no-explicit-any
 function runPattern(heading: string, index = 0): Record<string, any> {
 	const exports: Record<string, unknown> = {};
 	runInNewContext(example(heading, index), {
@@ -158,10 +164,13 @@ test.each([
 	};
 	const host = ts.createCompilerHost(options);
 	const original = host.getSourceFile.bind(host);
-	host.getSourceFile = (name, languageVersion, onError, shouldCreateNewSourceFile) =>
-		name === fileName
-			? ts.createSourceFile(name, snippets, languageVersion)
-			: original(name, languageVersion, onError, shouldCreateNewSourceFile);
+	host.getSourceFile = (name, languageVersion, onError, shouldCreateNewSourceFile) => {
+		if (name === fileName) return ts.createSourceFile(name, snippets, languageVersion);
+		if (!sourceFileCache.has(name)) {
+			sourceFileCache.set(name, original(name, languageVersion, onError, shouldCreateNewSourceFile));
+		}
+		return sourceFileCache.get(name);
+	};
 	const program = ts.createProgram([fileName], options, host);
 	expect(
 		ts

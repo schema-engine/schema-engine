@@ -18,7 +18,7 @@ Everything a Schema Engine package lets you extend is a registration in a regist
 | Is the schema checked?        | Yes, for each winner, at build                                | No                                        |
 | Use it for                    | Elements, recipes, actions, axes and validations of an engine | A plugin system that registers at runtime |
 
-`createRegistry` is the default. Reach for `BaseRegistry` only when registrations genuinely arrive after the registry exists; the forms engine never does.
+`createRegistry` is the default. Reach for `BaseRegistry` only when registrations arrive after the registry exists; the forms engine never does.
 
 ```ts
 import * as z from 'zod/mini';

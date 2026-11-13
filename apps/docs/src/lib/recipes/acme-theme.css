@@ -1,6 +1,7 @@
 /*
  * acme-theme.css: one theme for every form that carries `className: 'acme'`.
- * Replace `.acme` with `:root` to apply it to every form of the app.
+ * The gap tokens and colour roles also work from `:root`. Keep the size hooks on the form's class:
+ * Radiant maps them on the form element, so a value above it is replaced.
  */
 .acme {
 	/* 1. Rhythm: the gap tokens every grid reads. */
@@ -23,7 +24,6 @@
 /* 4. Literal tokens of an axis value: set them on the element that carries the pick. */
 .acme [data-se-size='comfortable'] {
 	--se-measure: 36rem;
-	--se-font-size: 1.125rem;
 }
 
 .acme [data-se-surface='outlined'] {

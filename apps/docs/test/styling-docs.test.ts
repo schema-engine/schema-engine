@@ -20,8 +20,7 @@ import { docsEngines } from '../src/lib/form-engine-setup';
 import { allRecipes, recipeConfigSource, recipeYamlSources, type Recipe } from '../src/lib/recipes/catalog';
 import { slugifyHeadingText } from '../src/mdx/rehype-heading-ids';
 
-/** Each snippet check builds a TypeScript program, which is slow when the hook runs every package at once. */
-vi.setConfig({ testTimeout: 60_000 });
+vi.setConfig({ testTimeout: 15_000 });
 
 const docsRoot = join(import.meta.dirname, '../src/content/docs');
 const recipesDir = join(import.meta.dirname, '../src/lib/recipes');
@@ -70,6 +69,9 @@ function tsBlock(page: string, heading: string, index = 0): string {
 	return block.code;
 }
 
+/** Parsed library and package declaration files, kept across programs: parsing them dominates a type-check. */
+const sourceFileCache = new Map<string, ts.SourceFile | undefined>();
+
 /** Type-checks virtual modules next to each other and returns the diagnostics per file. */
 function typecheck(files: Record<string, string>): Record<string, string[]> {
 	const virtual = new Map(Object.entries(files).map(([name, text]) => [join(snippetDir, name), text]));
@@ -91,10 +93,12 @@ function typecheck(files: Record<string, string>): Record<string, string[]> {
 	host.directoryExists = (name) => name === snippetDir || (directoryExists?.(name) ?? false);
 	host.fileExists = (name) => virtual.has(name) || fileExists(name);
 	host.readFile = (name) => virtual.get(name) ?? readFile(name);
-	host.getSourceFile = (name, languageVersion, onError, shouldCreate) =>
-		virtual.has(name)
-			? ts.createSourceFile(name, virtual.get(name)!, languageVersion)
-			: getSourceFile(name, languageVersion, onError, shouldCreate);
+	host.getSourceFile = (name, languageVersion, onError, shouldCreate) => {
+		if (virtual.has(name)) return ts.createSourceFile(name, virtual.get(name)!, languageVersion);
+		if (!sourceFileCache.has(name))
+			sourceFileCache.set(name, getSourceFile(name, languageVersion, onError, shouldCreate));
+		return sourceFileCache.get(name);
+	};
 	const program = ts.createProgram([...virtual.keys()], options, host);
 	const result: Record<string, string[]> = {};
 	for (const name of Object.keys(files)) {

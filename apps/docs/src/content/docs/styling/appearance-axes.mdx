@@ -41,7 +41,7 @@ The pipeline is the same in every renderer:
 4. The theme's stylesheet has a rule for that attribute that sets tokens: `--se-space`, `--se-font-size`, `--se-measure`, `--se-control-height`.
 5. Component CSS reads `var(--se-space, 1.5rem)` and keeps the look of an unstyled form as its fallback.
 
-Every token rule sits inside `:where()`, so it adds no specificity and a class of yours on the same element wins.
+Every token rule sits inside `:where()`, so it adds no specificity and a class of yours on the same element wins. (The grid and item rules are not zero-specificity; see [Layout themes](/docs/styling/layout-themes#custom-properties-of-a-container-and-an-item).)
 
 ## What makes a good axis
 
@@ -204,7 +204,7 @@ export const config = engine.defineForm({
 });
 ```
 
-The renderer writes `data-se-tone="brand"` on the form, and the theme's stylesheet sets `--primary` and `--on-primary` below it. Radiant UI and shadcn components read those colour roles, so a button inside recolors with no further CSS. The [brand theme recipe](/docs/styling/recipes#a-brand-theme-with-a-host-tone-axis) is this axis, live.
+The renderer writes `data-se-tone="brand"` on the form, and the theme's stylesheet sets the colour roles below it (`--primary`, `--on-primary`, and the container roles). Radiant UI components read those roles, and shadcn components read `--primary` and `--primary-foreground`, so a button inside recolors with no further CSS. The [brand theme recipe](/docs/styling/recipes#a-brand-theme-with-a-host-tone-axis) is this axis, live.
 
 Tokens are custom properties and inherit. Pick tone on the form and it reaches every field, until a nested form picks a value that declares the same tokens. Keep the axis list inline in `createLayoutTheme` or `as const`, so typed `defineForm` narrows the picks.
 
@@ -245,7 +245,7 @@ An axis value is a plain attribute, so CSS can key on it:
 }
 ```
 
-Write the selector with at least the specificity of a class: the theme's own rules are zero-specificity, so a class of yours on the same element wins. The renderers' own `data-se-*` attributes (`step`, `theme`, `control`, `constraint-field`, and the others) are reserved and cannot be axis names.
+Write the selector with at least the specificity of a class: the theme's token rules are zero-specificity, so a class of yours on the same element wins. The renderers' own `data-se-*` attributes (`step`, `theme`, `control`, `constraint-field`, and the others) are reserved and cannot be axis names.
 
 ## For editors: a JSON Schema enum
 

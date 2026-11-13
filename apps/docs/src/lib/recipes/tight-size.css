@@ -1,14 +1,10 @@
-/*
- * The compact hooks are read where the pick sits, so any ancestor can set them
- * (in Radiant, set them on the form's own class: it declares them on each themed element).
- */
+/* The compact hooks: set them on the form's own class. The pick on the card shell, a step or a field inherits them. */
 .tight-form {
 	--se-space-compact: 0.5rem;
 	--se-control-height-compact: 1.5rem;
 }
 
-/* --se-font-size and --se-measure are literal values of the pick: win on the element that carries it. */
+/* --se-measure is a literal value of the pick: win on the element that carries it. */
 .tight-form [data-se-size='compact'] {
-	--se-font-size: 0.8125rem;
 	--se-measure: 28rem;
 }

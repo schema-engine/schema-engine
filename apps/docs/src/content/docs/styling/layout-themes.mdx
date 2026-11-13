@@ -118,16 +118,17 @@ The forms renderers add these beside their own classes (`se-form-grid se-grid`, 
 
 ### Custom properties of a container and an item
 
-The grid and item rules read custom properties, which the renderer writes inline from the form's `grid` config. Only values an author wrote are written, so an element with no `grid` config has no `style` attribute.
+The grid and item rules read custom properties, which the renderer writes inline from the form's `grid` config. Only values an author wrote are written, so an element with no `grid` config has no `style` attribute. The exception is derived values: a container whose items use named widths gets `--se-grid-template` (12 tracks) and `--se-grid-default-column` even with no `grid` config, and a container that draws `areas` gets its template.
 
-| Properties                                                                                                 | On          | Meaning                                                                  |
-| ---------------------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------ |
-| `--se-grid-template`, `--se-grid-areas`, `--se-grid-gap-x`, `--se-grid-gap-y`                              | A container | Column template, drawn areas, column and row gap.                        |
-| `--se-grid-justify-items`, `--se-grid-align-items`, `--se-grid-justify-content`, `--se-grid-align-content` | A container | Alignment.                                                               |
-| `--se-item-grid-column`, `--se-item-grid-row`                                                              | An item     | Placement: a `width` or `offset` becomes a span, an `area` becomes both. |
-| `--se-item-justify-self`, `--se-item-align-self`                                                           | An item     | Alignment of the item in its cell.                                       |
-| `--se-item-margin-block-start`, `--se-item-margin-block-end`                                               | An item     | Rhythm above and below, from the gap tokens.                             |
-| `--se-item-display`                                                                                        | An item     | `none` when `hidden` at that breakpoint.                                 |
+| Properties                                                                                                 | On          | Meaning                                                                                        |
+| ---------------------------------------------------------------------------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------- |
+| `--se-grid-template`, `--se-grid-areas`, `--se-grid-gap-x`, `--se-grid-gap-y`                              | A container | Column template, drawn areas, column and row gap.                                              |
+| `--se-grid-default-column`                                                                                 | A container | Where an item with no `width` goes when its siblings use named widths: `1 / -1`, the full row. |
+| `--se-grid-justify-items`, `--se-grid-align-items`, `--se-grid-justify-content`, `--se-grid-align-content` | A container | Alignment.                                                                                     |
+| `--se-item-grid-column`, `--se-item-grid-row`                                                              | An item     | Placement: a `width` or `offset` becomes a span, an `area` becomes both.                       |
+| `--se-item-justify-self`, `--se-item-align-self`                                                           | An item     | Alignment of the item in its cell.                                                             |
+| `--se-item-margin-block-start`, `--se-item-margin-block-end`                                               | An item     | Rhythm above and below, from the gap tokens.                                                   |
+| `--se-item-display`                                                                                        | An item     | `none` when `hidden` at that breakpoint.                                                       |
 
 Each property has a variant per breakpoint (`--se-item-grid-column-md`, `--se-grid-template-lg`, and so on) that applies from that width up. The stylesheet falls back through the narrower variants, so you set only the widths that change.
 
@@ -139,7 +140,7 @@ The gap tokens (`--se-grid-gap-none`, `-compact`, `-default`, `-loose`, `-wide`)
 
 Every grid and item carries `data-se-theme`, so a form of theme B rendered inside a grid item of theme A has both themes above it. The token rules do not leak between them: an element takes the tokens of its nearest theme, whichever stylesheet comes later. A pick made on the element that carries the theme, or below it with no other theme in between, uses that theme's tokens. A form embedded in a page grid therefore keeps its own `tone: brand` while the page picks another.
 
-The theme's rules stay at zero specificity, so a class of yours still wins. Two limits follow from the cascade:
+The token rules (the tokens an axis value sets) stay at zero specificity, so a class of yours still wins. The grid and item rules do not: `.se-grid[data-se-theme="<id>"]` and `.se-grid-item[data-se-theme="<id>"]` outrank a lone class, so change placement through the properties above (and `--se-item-display-mode` for an item's own `display`), not with a class that sets `grid-column` or `display`. Two limits follow from the cascade:
 
 - Tokens are custom properties, so they inherit. A pick made outside the embedded form still reaches it, on an axis the form does not pick, until the form picks a value that declares those tokens. A value that sets a token to `initial` (the built-in `size.default`) hands it back to the component.
 - A theme re-entered below another theme (A inside B inside A) is exact in a browser with `@scope`, which is Baseline since late 2025. A browser without it ignores that part and is right for every other nesting. In a browser with `@scope`, scope proximity outranks source order, so a zero-specificity rule such as `:where(.x)` of yours loses to a token rule on the same element. A class with any specificity still wins; prefer one.

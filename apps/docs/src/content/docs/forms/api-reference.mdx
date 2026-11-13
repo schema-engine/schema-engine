@@ -39,8 +39,9 @@ function createFormEngine<
 `FormEngineFromOptions` is the `FormEngine` typed from the merged registration
 lists. `layout` is accepted by `createFormEngine` and by
 `createRadiantFormEngine`, which forwards it. Pass one theme compiled with
-`createLayoutTheme` (from `@schema-engine/layout`) to several engines and they share its
-`data-se-theme` and one stylesheet; inline options compile a theme of the engine's own.
+`createLayoutTheme` (from `@schema-engine/layout`) to several engines and they carry the same
+`data-se-theme` and the same stylesheet content (React hoists one element; Radiant inlines an identical
+copy per form, by design); inline options compile a theme of the engine's own.
 `engine.extend()` does not take `layout`; extended engines inherit the source
 engine's layout theme, which `engine.getLayout()` returns (`id`, `grid`, `axes`, `appearance`, `css`).
 The `grid` and `appearance` engine options no longer exist.
@@ -51,7 +52,6 @@ Duplicate `$type` values follow last-wins at runtime. Tuples and inline arrays
 use last-wins typing; open `T[]` values use a union of configs for the same
 `$type`. Spread shared registration barrels and append overrides when needed.
 
-`layout` is the [layout theme](/docs/styling/layout-themes). `engine.getLayout()` returns it, and
 `engine.getSchemaCatalog()` lists the registered elements, recipes, actions and axes
 ([Registries](/docs/registry/registries)).
 

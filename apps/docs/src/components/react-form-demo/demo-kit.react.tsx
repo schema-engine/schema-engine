@@ -1,6 +1,7 @@
 /** @jsxImportSource react */
 import type { ReactNode } from 'react';
-import { useControlledFormElement } from '@schema-engine/forms-react/hooks';
+import type { ElementGridConfig } from '@schema-engine/layout';
+import { useControlledFormElement, useFieldHost } from '@schema-engine/forms-react/hooks';
 
 /**
  * Radiant-styled field chrome for docs demos.
@@ -8,7 +9,8 @@ import { useControlledFormElement } from '@schema-engine/forms-react/hooks';
  * @remarks
  * Mirrors the DOM structure and `rui-*` classes of radiant-ui so the docs app's
  * global `@ecopages/radiant-ui/styles.css` styles the demo controls. Controls
- * stamp `data-rui-control` for the shared field-control contract.
+ * stamp `data-rui-control` for the shared field-control contract. The field host comes from
+ * `useFieldHost`, so `grid` placement and `appearance` reach the demos as they do the registry fields.
  */
 function DemoField({
 	label,
@@ -16,6 +18,7 @@ function DemoField({
 	description,
 	error,
 	required = false,
+	grid,
 	style,
 	children,
 }: {
@@ -24,11 +27,13 @@ function DemoField({
 	description?: string;
 	error?: string | null;
 	required?: boolean;
+	grid?: ElementGridConfig;
 	style?: React.CSSProperties;
 	children: ReactNode;
 }) {
+	const host = useFieldHost(grid, style);
 	return (
-		<div className="rui-field" data-ref="field" style={style}>
+		<div {...host} className={`rui-field ${host.className}`} data-ref="field">
 			<label className="rui-label" htmlFor={htmlFor}>
 				{label}
 				{required ? ' *' : ''}
@@ -57,7 +62,6 @@ export function DemoInput({
 		onBlur,
 		fieldProps,
 		isRequired,
-		containerStyles,
 	} = useControlledFormElement(config as never);
 	const { inputType = 'text', placeholder } = config as { inputType?: string; placeholder?: string };
 
@@ -68,7 +72,8 @@ export function DemoInput({
 			description={config.description as string}
 			error={error}
 			required={isRequired}
-			style={containerStyles}
+			grid={config.grid as ElementGridConfig | undefined}
+			style={config.style as React.CSSProperties | undefined}
 		>
 			<input
 				{...fieldProps}
@@ -97,14 +102,7 @@ export function DemoTextarea({
 	onChange?: (value: string) => void;
 	onBlur?: () => void;
 }) {
-	const {
-		value,
-		error,
-		onChange: setValue,
-		onBlur,
-		fieldProps,
-		containerStyles,
-	} = useControlledFormElement(config as never);
+	const { value, error, onChange: setValue, onBlur, fieldProps } = useControlledFormElement(config as never);
 	const rows = (config.rows as number | undefined) ?? 5;
 
 	return (
@@ -113,7 +111,8 @@ export function DemoTextarea({
 			htmlFor={config.id as string}
 			description={config.description as string}
 			error={error}
-			style={containerStyles}
+			grid={config.grid as ElementGridConfig | undefined}
+			style={config.style as React.CSSProperties | undefined}
 		>
 			<textarea
 				{...fieldProps}
@@ -142,14 +141,7 @@ export function DemoSelect({
 	onChange?: (value: string) => void;
 	onBlur?: () => void;
 }) {
-	const {
-		value,
-		error,
-		onChange: setValue,
-		onBlur,
-		fieldProps,
-		containerStyles,
-	} = useControlledFormElement(config as never);
+	const { value, error, onChange: setValue, onBlur, fieldProps } = useControlledFormElement(config as never);
 	const options = ((config.options as Array<{ value: unknown; label: string; disabled?: boolean }>) ?? []).map(
 		(option) => ({ value: String(option.value), label: option.label, disabled: option.disabled }),
 	);
@@ -160,7 +152,8 @@ export function DemoSelect({
 			htmlFor={config.id as string}
 			description={config.description as string}
 			error={error}
-			style={containerStyles}
+			grid={config.grid as ElementGridConfig | undefined}
+			style={config.style as React.CSSProperties | undefined}
 		>
 			<select
 				{...fieldProps}
@@ -194,14 +187,7 @@ export function DemoCheckbox({
 	onChange?: (value: boolean) => void;
 	onBlur?: () => void;
 }) {
-	const {
-		value,
-		error,
-		onChange: setValue,
-		onBlur,
-		fieldProps,
-		containerStyles,
-	} = useControlledFormElement(config as never);
+	const { value, error, onChange: setValue, onBlur, fieldProps } = useControlledFormElement(config as never);
 
 	return (
 		<DemoField
@@ -209,7 +195,8 @@ export function DemoCheckbox({
 			htmlFor={config.id as string}
 			description={config.description as string}
 			error={error}
-			style={containerStyles}
+			grid={config.grid as ElementGridConfig | undefined}
+			style={config.style as React.CSSProperties | undefined}
 		>
 			<label className="rui-checkbox">
 				<input

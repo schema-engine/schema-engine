@@ -74,7 +74,10 @@ function file(id: string, label: string, lang: RecipeFile['lang'], name: string)
 
 export const contactCardRecipe: Recipe = {
 	id: 'contact-card',
-	demos: [{ renderer: 'radiant', config: contactCardConfig, configName: 'contactCard' }],
+	demos: [
+		{ renderer: 'react', config: contactCardConfig, configName: 'contactCard', caption: 'React' },
+		{ renderer: 'radiant', config: contactCardConfig, configName: 'contactCard', caption: 'Radiant' },
+	],
 	files: [file('css', 'contact-card.css', 'css', 'contact-card.css')],
 };
 
@@ -131,7 +134,10 @@ export const sharedThemeRecipe: Recipe = {
 
 export const tightSizeRecipe: Recipe = {
 	id: 'tight-size',
-	demos: [{ renderer: 'radiant', config: tightSizeConfig, configName: 'tightForm' }],
+	demos: [
+		{ renderer: 'react', config: tightSizeConfig, configName: 'tightForm', caption: 'React' },
+		{ renderer: 'radiant', config: tightSizeConfig, configName: 'tightForm', caption: 'Radiant' },
+	],
 	files: [file('css', 'tight-size.css', 'css', 'tight-size.css')],
 };
 
