@@ -3,7 +3,7 @@ import * as z from 'zod/mini';
 import { bindRecipe } from '@/recipes/bind-recipe';
 import { defineRecipeProtocol, createRecipeRegistry } from '@/recipes/protocol';
 import { defineProtocolRecipeSpec } from '@/recipes/define-recipe-spec';
-import { getSlotConfig } from '@/recipes/view-model';
+import { readSlotConfig } from '@/recipes/view-model';
 import { mergeSlotDefaults } from '@/recipes/merge-slot-defaults';
 import { ContentConfigSchema, MediaConfigSchema, ShellConfigSchema, sectionProtocol } from './section-protocol';
 
@@ -251,9 +251,9 @@ describe('mergeSlotDefaults', () => {
 	});
 });
 
-describe('getSlotConfig', () => {
+describe('readSlotConfig', () => {
 	test('reads a slot without parsing it again', () => {
 		const viewConfig = { content: { columns: 2, extra: true } };
-		expect(getSlotConfig(viewConfig, 'content', ContentConfigSchema)).toEqual({ columns: 2, extra: true });
+		expect(readSlotConfig(viewConfig, 'content', ContentConfigSchema)).toEqual({ columns: 2, extra: true });
 	});
 });

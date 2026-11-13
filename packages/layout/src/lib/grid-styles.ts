@@ -162,15 +162,15 @@ function gapTokenValue(token: GridGapToken): string {
 const DEFAULT_GAP_CSS = gapTokenValue('default');
 
 /**
- * Display a visible field falls back to.
+ * Display a visible item falls back to.
  *
  * @remarks
- * The field rule outranks a component's own `display` (class plus attribute
+ * The item rule outranks a component's own `display` (class plus attribute
  * beats a lone class), so a host that needs its own layout sets
- * `--se-field-display-mode` rather than `display`. Responsive `hidden` then
+ * `--se-item-display-mode` rather than `display`. Responsive `hidden` then
  * toggles between `none` and that mode instead of forcing `block`.
  */
-const FIELD_DISPLAY_MODE = 'var(--se-field-display-mode, block)';
+const ITEM_DISPLAY_MODE = 'var(--se-item-display-mode, block)';
 
 /** Root font size used when comparing `rem`/`em` breakpoint thresholds. */
 const ROOT_FONT_PX = 16;
@@ -322,33 +322,33 @@ const GRID_PROPERTIES: readonly ResponsiveProperty[] = [
 ];
 
 /**
- * Placement a field takes when it sets none, declared on its grid.
+ * Placement an item takes when it sets none, declared on its grid.
  *
  * @remarks
- * A grid whose fields use named widths has 12 tracks, so a field that sets no
+ * A grid whose items use named widths has 12 tracks, so an item that sets no
  * width would otherwise fall into one of them. The grid declares `1 / -1` here
- * and the field's `grid-column` falls back to it, which keeps the rule in the
+ * and the item's `grid-column` falls back to it, which keeps the rule in the
  * stylesheet. The grid rule resets it so a nested grid does not inherit its
  * parent's default.
  */
 const DEFAULT_COLUMN_VARIABLE = '--se-grid-default-column';
 
 /**
- * Field placement properties that change per breakpoint.
+ * Item placement properties that change per breakpoint.
  *
  * @remarks
  * `justify-self`/`align-self` fall back to `auto`, which defers to the grid's
  * own `justify-items`/`align-items`. Any other fallback would silently beat
  * grid-level alignment on every item.
  */
-const FIELD_PROPERTIES: readonly ResponsiveProperty[] = [
-	['display', 'se-field-display', FIELD_DISPLAY_MODE],
-	['grid-column', 'se-field-grid-column', `var(${DEFAULT_COLUMN_VARIABLE}, auto)`],
-	['grid-row', 'se-field-grid-row', 'auto'],
-	['justify-self', 'se-field-justify-self', 'auto'],
-	['align-self', 'se-field-align-self', 'auto'],
-	['margin-block-start', 'se-field-margin-block-start', '0'],
-	['margin-block-end', 'se-field-margin-block-end', '0'],
+const ITEM_PROPERTIES: readonly ResponsiveProperty[] = [
+	['display', 'se-item-display', ITEM_DISPLAY_MODE],
+	['grid-column', 'se-item-grid-column', `var(${DEFAULT_COLUMN_VARIABLE}, auto)`],
+	['grid-row', 'se-item-grid-row', 'auto'],
+	['justify-self', 'se-item-justify-self', 'auto'],
+	['align-self', 'se-item-align-self', 'auto'],
+	['margin-block-start', 'se-item-margin-block-start', '0'],
+	['margin-block-end', 'se-item-margin-block-end', '0'],
 ];
 
 /** Grid alignment, authored once for all widths. */
@@ -387,7 +387,7 @@ function declarations(properties: readonly ResponsiveProperty[], breakpoint?: Gr
  * Resets every slot so custom properties do not inherit past a host.
  *
  * @remarks
- * Custom properties inherit, so a nested grid or field would otherwise pick up
+ * Custom properties inherit, so a nested grid or item would otherwise pick up
  * its ancestor's placement. `initial` makes `var()` fall through to the chain
  * above, and an inline value on the same element still wins the cascade.
  */
@@ -420,7 +420,7 @@ export function getGridThemeCss(theme: NormalizedGridTheme, themeId: string): st
 	const lines: string[] = [
 		`${scope}{${tokens}}`,
 		`${gridScope}{${inheritanceResets(GRID_PROPERTIES, GRID_ALIGNMENT_PROPERTIES)}${DEFAULT_COLUMN_VARIABLE}:initial;display:grid;${declarations(GRID_PROPERTIES)}${declarations(GRID_ALIGNMENT_PROPERTIES)}}`,
-		`${itemScope}{${inheritanceResets(FIELD_PROPERTIES)}${declarations(FIELD_PROPERTIES)}}`,
+		`${itemScope}{${inheritanceResets(ITEM_PROPERTIES)}${declarations(ITEM_PROPERTIES)}}`,
 	];
 	for (const breakpoint of BREAKPOINT_ORDER) {
 		const ramped = theme.responsive[breakpoint];
@@ -430,7 +430,7 @@ export function getGridThemeCss(theme: NormalizedGridTheme, themeId: string): st
 					.join('')
 			: '';
 		lines.push(
-			`@media (min-width:${theme.breakpoints[breakpoint]}){${rampedTokens ? `${scope}{${rampedTokens}}` : ''}${gridScope}{${declarations(GRID_PROPERTIES, breakpoint)}}${itemScope}{${declarations(FIELD_PROPERTIES, breakpoint)}}}`,
+			`@media (min-width:${theme.breakpoints[breakpoint]}){${rampedTokens ? `${scope}{${rampedTokens}}` : ''}${gridScope}{${declarations(GRID_PROPERTIES, breakpoint)}}${itemScope}{${declarations(ITEM_PROPERTIES, breakpoint)}}}`,
 		);
 	}
 	return lines.join('\n');
@@ -616,7 +616,7 @@ function formatGridLine(value: number | string): string {
 	return typeof value === 'number' ? String(value) : value;
 }
 
-function emitFieldEntry(
+function emitItemEntry(
 	variables: CssVariables,
 	slot: CascadeSlot,
 	entry: GridItemEntry | undefined,
@@ -625,28 +625,28 @@ function emitFieldEntry(
 	if (!entry) return;
 	if (entry.width !== undefined || entry.offset !== undefined) {
 		carryNamedPlacement(named, entry);
-		variables[customProperty('se-field-grid-column', slot)] = namedColumn(named);
+		variables[customProperty('se-item-grid-column', slot)] = namedColumn(named);
 	}
 	if (entry.area !== undefined) {
-		variables[customProperty('se-field-grid-column', slot)] = entry.area;
-		variables[customProperty('se-field-grid-row', slot)] = entry.area;
+		variables[customProperty('se-item-grid-column', slot)] = entry.area;
+		variables[customProperty('se-item-grid-row', slot)] = entry.area;
 	}
 	if (entry.column !== undefined) {
-		variables[customProperty('se-field-grid-column', slot)] = formatGridLine(entry.column);
+		variables[customProperty('se-item-grid-column', slot)] = formatGridLine(entry.column);
 	}
-	if (entry.row !== undefined) variables[customProperty('se-field-grid-row', slot)] = formatGridLine(entry.row);
-	if (entry.justifySelf !== undefined) variables[customProperty('se-field-justify-self', slot)] = entry.justifySelf;
-	if (entry.alignSelf !== undefined) variables[customProperty('se-field-align-self', slot)] = entry.alignSelf;
+	if (entry.row !== undefined) variables[customProperty('se-item-grid-row', slot)] = formatGridLine(entry.row);
+	if (entry.justifySelf !== undefined) variables[customProperty('se-item-justify-self', slot)] = entry.justifySelf;
+	if (entry.alignSelf !== undefined) variables[customProperty('se-item-align-self', slot)] = entry.alignSelf;
 	const marginBlockStart = resolveGridGap(entry.marginBlockStart);
 	if (marginBlockStart !== undefined) {
-		variables[customProperty('se-field-margin-block-start', slot)] = marginBlockStart;
+		variables[customProperty('se-item-margin-block-start', slot)] = marginBlockStart;
 	}
 	const marginBlockEnd = resolveGridGap(entry.marginBlockEnd);
 	if (marginBlockEnd !== undefined) {
-		variables[customProperty('se-field-margin-block-end', slot)] = marginBlockEnd;
+		variables[customProperty('se-item-margin-block-end', slot)] = marginBlockEnd;
 	}
 	if (entry.hidden !== undefined) {
-		variables[customProperty('se-field-display', slot)] = entry.hidden ? 'none' : FIELD_DISPLAY_MODE;
+		variables[customProperty('se-item-display', slot)] = entry.hidden ? 'none' : ITEM_DISPLAY_MODE;
 	}
 }
 
@@ -665,7 +665,7 @@ function emitFieldEntry(
  *
  * `marginBlockStart`/`marginBlockEnd` accept the same gap tokens as the grid, so
  * a one-off rhythm around a non-input element reads in the same vocabulary as
- * the grid's spacing. They ride the shared field property table rather than a
+ * the grid's spacing. They ride the shared item property table rather than a
  * separate mechanism, which is what gives them the breakpoint cascade and the
  * inheritance resets for free — and keeps a single system owning the block axis
  * instead of two fighting over it.
@@ -675,12 +675,12 @@ export function getGridItemVariables(grid?: ElementGridConfig): CssVariables {
 	const [alignSelf, justifySelf] = splitPlaceShorthand(grid?.placeSelf);
 
 	const named: NamedPlacement = {};
-	emitFieldEntry(variables, 'default', { alignSelf, justifySelf });
-	emitFieldEntry(variables, 'default', grid, named);
-	emitFieldEntry(variables, 'default', grid?.responsive?.default, named);
+	emitItemEntry(variables, 'default', { alignSelf, justifySelf });
+	emitItemEntry(variables, 'default', grid, named);
+	emitItemEntry(variables, 'default', grid?.responsive?.default, named);
 
 	for (const breakpoint of BREAKPOINT_ORDER) {
-		emitFieldEntry(variables, breakpoint, grid?.responsive?.[breakpoint], named);
+		emitItemEntry(variables, breakpoint, grid?.responsive?.[breakpoint], named);
 	}
 	return variables;
 }

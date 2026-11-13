@@ -28,10 +28,10 @@ import {
 	WIDTH_TRACKS,
 	type CascadeSlot,
 	type GridAreaTemplates,
-	type CompiledAppearance,
 	type GridLayoutConfig,
 	resolveRecipeView,
 	getDefaultLayoutTheme,
+	type LayoutTheme,
 } from '@schema-engine/layout';
 import { logger } from '@/lib/logger';
 import { resolveAppearance, withAppearance, type AppearanceScope } from '@/lib/resolve-appearance';
@@ -62,7 +62,7 @@ export interface ValidateFormOptions {
 	hasValidation: (type: string) => boolean;
 	parseFormConfig?: (config: unknown) => FormConfig;
 	/** Appearance axes the picks are checked against. Defaults to the built-in `size` and `surface` axes. */
-	axes?: CompiledAppearance['axes'];
+	axes?: LayoutTheme['axes'];
 }
 
 function formatIssuePath(path: StandardSchemaIssue['path']): string {

@@ -2,7 +2,7 @@ import * as z from 'zod/mini';
 import type { FormConfigView } from '@/lib/normalized-form-config';
 import type { StepStates } from '@/engine/step-machine';
 import type { AnyRecipeRegistration } from '@/types/registration';
-import { getSlotConfig as readSlotConfig, type RecipeViewModel } from '@schema-engine/layout';
+import { readSlotConfig, type RecipeViewModel } from '@schema-engine/layout';
 import type { RecipeKind, RecipeSlot } from './types';
 
 export interface ViewNavigation {
@@ -41,7 +41,7 @@ export interface ViewModel extends RecipeViewModel<RecipeKind> {
 }
 
 /**
- * Reads one slot's complete config from a normalized view; see the layout `getSlotConfig`, which this
+ * Reads one slot's complete config from a normalized view; see the layout `readSlotConfig`, which this
  * types by the forms slot names.
  */
 export function getSlotConfig<TSchema extends z.ZodMiniType>(

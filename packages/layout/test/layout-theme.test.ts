@@ -150,6 +150,6 @@ describe('createLayoutTheme', () => {
 		expect(getGridVariables({ columns: 'auto' }, theme.grid, [])).toEqual({
 			'--se-grid-template': 'repeat(auto-fit, minmax(min(10rem, 100%), 1fr))',
 		});
-		expect(getGridItemVariables({ column: 2 })).toEqual({ '--se-field-grid-column': '2' });
+		expect(getGridItemVariables({ column: 2 })).toEqual({ '--se-item-grid-column': '2' });
 	});
 });

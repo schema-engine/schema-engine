@@ -1,16 +1,11 @@
-import {
-	checkAppearance,
-	mergeAppearance,
-	pickSupportedAppearance,
-	type CompiledAppearance,
-} from '@schema-engine/layout';
+import { checkAppearance, mergeAppearance, pickSupportedAppearance, type LayoutTheme } from '@schema-engine/layout';
 
 /**
  * Appearance picks that reach a part of the form: the vocabulary, and what the form, step and
  * containing elements chose.
  */
 export interface AppearanceScope {
-	readonly axes: CompiledAppearance['axes'];
+	readonly axes: LayoutTheme['axes'];
 	readonly inherited: Readonly<Record<string, string>>;
 }
 
