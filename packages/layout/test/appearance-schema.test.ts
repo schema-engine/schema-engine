@@ -75,6 +75,14 @@ describe('withAppearanceAxes', () => {
 		expect(withAppearanceAxes(lazy, registry, ['size'])).toBe(lazy);
 	});
 
+	test('keeps the refinements of the schema it closes', () => {
+		const refined = open.check(z.refine((value) => value.id !== 'x', 'no x'));
+		const closed = withAppearanceAxes(refined, registry, ['size']);
+		expect(closed).not.toBe(refined);
+		expect(z.safeParse(closed, { id: 'x' }).success).toBe(false);
+		expect(z.safeParse(closed, { id: 'y', appearance: { size: 'compact' } }).success).toBe(true);
+	});
+
 	test('does not change the schema it was given', () => {
 		withAppearanceAxes(open, registry, ['size']);
 		expect(z.safeParse(open, { id: 'a', appearance: { anything: 'goes' } }).success).toBe(true);
