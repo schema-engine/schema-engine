@@ -244,16 +244,13 @@ const PARAM_NAMES = [
 ] as const satisfies ReadonlyArray<keyof SchemaIssueDetails>;
 
 /** The code a schema issue carries and the details that code reports, left out when there is no code. */
-function issueCode(
-	details: SchemaIssueDetails,
-	only?: { keys: PropertyKey[] },
-): Pick<FormValidationIssue, 'code' | 'params'> {
+function issueCode(details: SchemaIssueDetails): Pick<FormValidationIssue, 'code' | 'params'> {
 	if (typeof details.code !== 'string') return {};
 	const params: Record<string, unknown> = {};
 	for (const name of PARAM_NAMES) {
 		if (details[name] !== undefined) params[name] = details[name];
 	}
-	return { code: details.code, params: only ? { ...params, ...only } : params };
+	return { code: details.code, params };
 }
 
 function isSchemaIssue(value: unknown): value is StandardSchemaIssue {
@@ -264,20 +261,25 @@ function isSchemaIssue(value: unknown): value is StandardSchemaIssue {
  * The branch of a failed union the value was closest to, when one branch is clearly closest.
  *
  * @remarks
- * Each branch reports the issues it found, with paths relative to the union. The closest branch is the
- * one with the fewest issues, and only when it is the only such branch and none of its issues is about
- * the value itself (an empty path, as when the value has the wrong type for every branch). Any other
- * outcome returns `undefined`, so the issue stays at the union instead of pointing into a branch the
- * value did not choose.
+ * Each branch reports the issues it found, with paths relative to the union. A branch with an issue about
+ * the value itself (an empty path: the value has the wrong type for that branch) is out. Of the rest, the
+ * closest is the one with the fewest issues, and only when it is the only such branch. Any other outcome
+ * returns `undefined`, so the issue stays at the union instead of pointing into a branch the value did not
+ * choose.
+ *
+ * A branch that fails on a literal key (a discriminator) counts like any other issue, so a union keyed
+ * by one can be pointed at the wrong variant when the matching variant has more issues than the one
+ * that misses on the key.
  */
 function closestBranch(details: SchemaIssueDetails): StandardSchemaIssue[] | undefined {
 	if (details.code !== 'invalid_union' || !Array.isArray(details.errors)) return undefined;
-	const branches = details.errors.filter(Array.isArray).map((branch) => branch.filter(isSchemaIssue));
+	const branches = details.errors
+		.filter(Array.isArray)
+		.map((branch) => branch.filter(isSchemaIssue))
+		.filter((branch) => branch.length > 0 && branch.every((issue) => schemaIssuePath(issue.path).length > 0));
 	const fewest = Math.min(...branches.map((branch) => branch.length));
 	const closest = branches.filter((branch) => branch.length === fewest);
-	const [only] = closest;
-	if (!only || closest.length !== 1 || fewest === 0) return undefined;
-	return only.some((issue) => schemaIssuePath(issue.path).length === 0) ? undefined : only;
+	return closest.length === 1 ? closest[0] : undefined;
 }
 
 /**
@@ -308,7 +310,7 @@ function fromSchemaIssues(issues: readonly StandardSchemaIssue[], base: Path): F
 					issue.message === GENERIC_SCHEMA_MESSAGE || keys.length > 1
 						? `Unrecognized key: ${String(key)}.`
 						: issue.message,
-					issueCode(details, { keys: [key] }),
+					issueCode({ ...details, keys: [key] }),
 				),
 			);
 		}

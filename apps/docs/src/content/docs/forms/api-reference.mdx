@@ -109,13 +109,13 @@ type FormValidationIssue = {
 	message: string;
 	path: ReadonlyArray<PropertyKey>; // ['steps', 0, 'elements', 2, 'grid', 'width']
 	code?: string; // the schema's code on a schema issue, such as 'too_small'
-	params?: Readonly<Record<string, unknown>>; // its details, such as { minimum: 3 }
+	params?: Readonly<Record<string, unknown>>; // its details, such as { origin: 'string', minimum: 3, inclusive: true }
 };
 
 type FormValidationResult<T> = { success: true; data: T } | { success: false; issues: FormValidationIssue[] };
 ```
 
-`error.issues` on a `FormValidationError` has the same shape. See
+`params` holds the details a code reports and only those that are set: `values`, `expected`, `origin`, `minimum`, `maximum`, `inclusive`, `format`, `pattern` and `keys`. `error.issues` on a `FormValidationError` has the same shape. See
 [Form configuration errors](/docs/forms/validation-how-it-works#form-configuration-errors)
 for the paths and a copy-pasteable example.
 

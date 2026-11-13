@@ -355,8 +355,8 @@ describe('issue paths name keys the author wrote', () => {
 		const issues = issuesOf(formWith([named('a')], { view: { $type: 'card', shell: { one: 1, two: 2 } } }));
 
 		expect(issues).toMatchObject([
-			{ path: ['view', 'shell', 'one'], message: 'Unrecognized key: one.' },
-			{ path: ['view', 'shell', 'two'], message: 'Unrecognized key: two.' },
+			{ path: ['view', 'shell', 'one'], message: 'Unrecognized key: one.', params: { keys: ['one'] } },
+			{ path: ['view', 'shell', 'two'], message: 'Unrecognized key: two.', params: { keys: ['two'] } },
 		]);
 	});
 
