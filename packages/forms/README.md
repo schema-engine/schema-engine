@@ -78,7 +78,8 @@ An unrecognized key is reported at the key (`['view', 'shell', 'bogus']`), as th
 from what the issue reports (`Expected one of half, third, ...`, `Must be at least 3 characters.`,
 `Invalid email format.`) because these are author diagnostics, not copy shown to a form's users. A message a
 schema or its author wrote is kept, and a host that wants Zod's own wording loads a locale once with
-`z.config(z.locales.en())`, after which its messages pass through untouched.
+`z.config(z.locales.en())`, after which its messages pass through untouched. That reaches the engine's own
+schemas only when the host shares forms' Zod instance; schemas the host builds for its registrations always get it.
 
 `error.message` lists the issues one per line as `<path>: <message>`, with array indexes in brackets and the
 `id` of each element, step or action the path passes

@@ -46,6 +46,7 @@ const sized = defineInput({
 		contact: z.optional(z.email()),
 		tags: z.optional(z.array(z.string()).check(z.minLength(2))),
 		note: z.optional(z.string().check(z.minLength(2, 'Say more.'))),
+		short: z.optional(z.string().check(z.maxLength(1))),
 	}),
 	metadata: { name: 'Sized', category: 'input' },
 	render: () => null,
@@ -335,6 +336,15 @@ describe('issue paths name keys the author wrote', () => {
 		expect(issues).toEqual([{ path: ['view', 'shell', 'bogus'], message: 'Unrecognized key: bogus.' }]);
 	});
 
+	test('several unrecognized keys are reported one per key', () => {
+		const issues = issuesOf(formWith([named('a')], { view: { $type: 'card', shell: { one: 1, two: 2 } } }));
+
+		expect(issues).toEqual([
+			{ path: ['view', 'shell', 'one'], message: 'Unrecognized key: one.' },
+			{ path: ['view', 'shell', 'two'], message: 'Unrecognized key: two.' },
+		]);
+	});
+
 	test('a schema issue inside an action group carries the full path', () => {
 		const result = actionEngine.safeValidateForm({
 			id: 'groups',
@@ -375,6 +385,10 @@ describe('schema issue messages', () => {
 			{ key: 'tags', message: 'Must be at least 2 items.' },
 		]);
 		expect(messagesFor({ count: 'many' })).toEqual([{ key: 'count', message: 'Expected number.' }]);
+	});
+
+	test('use the singular for a bound of one', () => {
+		expect(messagesFor({ short: 'ab' })).toEqual([{ key: 'short', message: 'Must be at most 1 character.' }]);
 	});
 
 	test('keep a message the schema author wrote', () => {

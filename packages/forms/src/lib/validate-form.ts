@@ -170,12 +170,13 @@ function describeBound(details: SchemaIssueDetails, side: 'min' | 'max'): string
 	if (typeof bound !== 'number' && typeof bound !== 'bigint') return undefined;
 	const exclusive = details.inclusive === false;
 	const comparison = side === 'min' ? (exclusive ? 'greater than' : 'at least') : exclusive ? 'less than' : 'at most';
-	const unit =
+	const noun =
 		details.origin === 'string'
-			? ' characters'
+			? 'character'
 			: details.origin === 'array' || details.origin === 'set'
-				? ' items'
+				? 'item'
 				: '';
+	const unit = noun ? ` ${noun}${bound === 1 || bound === 1n ? '' : 's'}` : '';
 	return `${comparison} ${bound}${unit}`;
 }
 
@@ -219,7 +220,8 @@ function describeSchemaIssue(issue: StandardSchemaIssue, details: SchemaIssueDet
  * Schema issues as form issues, each path laid under `base`, the location of the thing that was validated.
  *
  * @remarks
- * An `unrecognized_keys` issue names the object, so it becomes one issue per key, at the key itself.
+ * An `unrecognized_keys` issue names the object, so it becomes one issue per key, at the key itself. A
+ * locale's message that names a single key is kept; one that names several is replaced per key.
  * That is where an editor or a YAML file should point, and where the engine's own check of a view's
  * unknown keys already points.
  */
@@ -233,7 +235,9 @@ function fromSchemaIssues(issues: readonly StandardSchemaIssue[], base: Path): F
 			return keys.map((key) =>
 				issueAt(
 					[...path, key],
-					issue.message === GENERIC_SCHEMA_MESSAGE ? `Unrecognized key: ${String(key)}.` : issue.message,
+					issue.message === GENERIC_SCHEMA_MESSAGE || keys.length > 1
+						? `Unrecognized key: ${String(key)}.`
+						: issue.message,
 				),
 			);
 		}
