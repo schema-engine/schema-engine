@@ -13,13 +13,11 @@ import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { resolveElementRules, toFieldRules, type FieldRulesSource } from '@/lib/field-rules';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
-import { customElement, onUpdated } from '@ecopages/radiant';
+import { bindTo, customElement, onUpdated, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { constraintContext, formValuesContext, type ConstraintState } from '@/contexts/constraint-context';
 import { FormController } from '@/adapters/radiant/controller';
 import { shouldSurfaceDependentError } from '@schema-engine/forms/schemas/validation';
-
-const REQUIRED_MARKER = '[data-se-required-marker]';
 
 /** RuiField's registration and presentation, restoring hydrated rules and defaults. */
 @customElement('se-field')
@@ -30,6 +28,17 @@ export class FormFieldElement extends RuiFieldElement {
 	private appliedRules?: FieldRules;
 	private hydratedEngine?: FormEngine;
 
+	/**
+	 * Whether the required marker is shown.
+	 *
+	 * @remarks
+	 * Paints the marker `FieldGroup` renders, server-rendered or not, so the hydrated markup is reused.
+	 * Seeded from the hydrated rules in `onConnected`, before the first constraint is applied.
+	 */
+	@state
+	@bindTo({ selector: '[data-se-required-marker]', bool: 'hidden', invert: true })
+	private requiredShown = false;
+
 	protected override onConnected(): void {
 		this.hydrateDefaultValue();
 		this.hydratedEngine = resolveFormEngine(this);
@@ -37,6 +46,7 @@ export class FormFieldElement extends RuiFieldElement {
 		if (rules) this.rules = rules;
 		super.onConnected();
 		this.authoredRules ??= this.rules ?? {};
+		this.requiredShown = Boolean(this.rules?.required);
 		this.applyConstraint();
 	}
 
@@ -117,7 +127,7 @@ export class FormFieldElement extends RuiFieldElement {
 		if (this.rules?.required === required) return;
 		this.appliedRules = { ...authored, required };
 		this.rules = this.appliedRules;
-		this.querySelector(REQUIRED_MARKER)?.toggleAttribute('hidden', !required);
+		this.requiredShown = Boolean(required);
 		this.onRulesUpdated();
 
 		const store = new FormController(this).store;
