@@ -44,6 +44,8 @@ describe('copyRegistryDemo', () => {
 				'components/schema-engine/forms/recipes/shells/card-shell.react.tsx',
 				'components/schema-engine/forms/recipes/shells/card-shell.css',
 				'components/schema-engine/forms/recipes/recipes.css',
+				'components/schema-engine/forms/recipes/blocks/form-actions.css',
+				'components/schema-engine/forms/recipes/blocks/step-header.css',
 				'components/ui/schema-engine/components/field.react.tsx',
 				'components/ui/schema-engine/components/controls.css',
 				'components/ui/input.react.tsx',
@@ -52,6 +54,18 @@ describe('copyRegistryDemo', () => {
 			]),
 		);
 		expect(copied.some((file) => file.includes('hero-shell'))).toBe(false);
+	});
+
+	test('the copied recipes.css imports only the stylesheets that were copied', async () => {
+		const entry = await readFile(join(root, 'components/schema-engine/forms/recipes/recipes.css'), 'utf8');
+		const imports = [...entry.matchAll(/@import '\.\/([^']+)';/g)].map((match) => match[1]).toSorted();
+
+		expect(imports).toEqual(['blocks/form-actions.css', 'blocks/step-header.css', 'shells/card-shell.css']);
+		for (const stylesheet of imports) {
+			expect(files.map((file) => relative(root, file))).toContain(
+				`components/schema-engine/forms/recipes/${stylesheet}`,
+			);
+		}
 	});
 
 	test('components are React-owned files with the React JSX pragma', async () => {
