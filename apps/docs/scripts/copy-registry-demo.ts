@@ -23,8 +23,12 @@ const RECIPE_FILES = new Set([
 	'registry/shared/forms/recipes/shells/card-shell.tsx',
 	'registry/shared/forms/recipes/shells/card-shell.css',
 	'registry/shared/forms/recipes/blocks/step-header.tsx',
+	'registry/shared/forms/recipes/blocks/step-header.css',
 	'registry/shared/forms/recipes/blocks/form-actions.tsx',
+	'registry/shared/forms/recipes/blocks/form-actions.css',
 ]);
+
+const RECIPES_ENTRY = 'registry/shared/forms/recipes/recipes.css';
 
 /** The shadcn components the catalog items list as `registryDependencies`, taken from the repository's own copy of them. */
 const SHADCN_FILES: ReadonlyArray<readonly [source: string, target: string]> = [
@@ -61,6 +65,7 @@ function resolveTarget(target: string): string {
  * - components are written as `.react.tsx`, the extension the docs' React integration owns (the docs
  *   default to the Ecopages JSX runtime), imports of them gain the `.react` suffix and the files get the
  *   React JSX pragma;
+ * - `recipes.css` keeps the `@import` of the stylesheets it copies, as a consumer who copies one recipe does.
  * - the recipe and control CSS are imported from a component, unlayered, where an app would import
  *   them once in its global stylesheet.
  */
@@ -101,6 +106,11 @@ export async function copyRegistryDemo(root = REGISTRY_DEMO_ROOT, alias = REGIST
 				.replaceAll(/(\bfrom\s+['"])([^'"]+)(['"])/g, (_, open, specifier, close) => {
 					return `${open}${reactSpecifier(specifier, target)}${close}`;
 				});
+		}
+		if (source === RECIPES_ENTRY) {
+			text = text.replaceAll(/^@import '\.\/([^']+\.css)';\n/gm, (line, stylesheet: string) =>
+				RECIPE_FILES.has(`registry/shared/forms/recipes/${stylesheet}`) ? line : '',
+			);
 		}
 		if (target.endsWith('.tsx') && !text.startsWith('/** @jsxImportSource react */')) {
 			text = `/** @jsxImportSource react */\n${text}`;

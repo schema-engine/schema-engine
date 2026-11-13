@@ -46,7 +46,7 @@
           "target": "@ui/schema-engine/components/controls.css"
         }
       ],
-      "docs": "Import controls.css once in your global stylesheet, unlayered and after Tailwind and the recipe styles: @import \"./components/ui/schema-engine/components/controls.css\"; (adjust the path to your ui alias). It lets the size appearance axis set the height of the form controls that carry data-se-control."
+      "docs": "Import controls.css once in your global stylesheet, unlayered and after Tailwind and the recipe styles: @import \"./components/ui/schema-engine/components/controls.css\"; (adjust the path to your ui alias). It lets the size appearance axis set the height of the form controls that carry data-se-control and the font size of a field."
     },
     {
       "name": "schema-engine-form-combobox-primitive",
@@ -970,9 +970,19 @@
       ],
       "files": [
         {
+          "path": "registry/shared/forms/recipes/blocks/form-actions.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/form-actions.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/blocks/form-actions.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/blocks/form-actions.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/blocks/minimal-progress.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/minimal-progress.css"
         },
         {
           "path": "registry/shared/forms/recipes/blocks/minimal-progress.tsx",
@@ -980,14 +990,29 @@
           "target": "@components/schema-engine/forms/recipes/blocks/minimal-progress.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/blocks/step-header.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/step-header.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/blocks/step-header.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/blocks/step-header.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/blocks/step-indicators.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/step-indicators.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/blocks/step-indicators.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/blocks/step-indicators.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/blocks/wizard-actions.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/wizard-actions.css"
         },
         {
           "path": "registry/shared/forms/recipes/blocks/wizard-actions.tsx",
@@ -1065,9 +1090,19 @@
           "target": "@components/schema-engine/forms/recipes/shells/card-shell.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/shells/hero-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/hero-shell.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/shells/hero-shell.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/shells/hero-shell.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/shells/sidebar-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/sidebar-shell.css"
         },
         {
           "path": "registry/shared/forms/recipes/shells/sidebar-shell.tsx",
@@ -1075,9 +1110,19 @@
           "target": "@components/schema-engine/forms/recipes/shells/sidebar-shell.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/shells/split-screen-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/split-screen-shell.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/shells/split-screen-shell.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/shells/split-screen-shell.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/shells/stack-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/stack-shell.css"
         },
         {
           "path": "registry/shared/forms/recipes/shells/stack-shell.tsx",
@@ -1129,7 +1174,7 @@
           "target": "@ui/schema-engine/components/controls.css"
         }
       ],
-      "docs": "Import controls.css once in your global stylesheet, unlayered and after Tailwind and the recipe styles: @import \"./components/ui/schema-engine/components/controls.css\"; (adjust the path to your ui alias). It lets the size appearance axis set the height of the form controls that carry data-se-control."
+      "docs": "Import controls.css once in your global stylesheet, unlayered and after Tailwind and the recipe styles: @import \"./components/ui/schema-engine/components/controls.css\"; (adjust the path to your ui alias). It lets the size appearance axis set the height of the form controls that carry data-se-control and the font size of a field."
     },
     {
       "name": "schema-engine-form-combobox-primitive-radix",
@@ -2056,9 +2101,19 @@
       ],
       "files": [
         {
+          "path": "registry/shared/forms/recipes/blocks/form-actions.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/form-actions.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/blocks/form-actions.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/blocks/form-actions.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/blocks/minimal-progress.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/minimal-progress.css"
         },
         {
           "path": "registry/shared/forms/recipes/blocks/minimal-progress.tsx",
@@ -2066,14 +2121,29 @@
           "target": "@components/schema-engine/forms/recipes/blocks/minimal-progress.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/blocks/step-header.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/step-header.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/blocks/step-header.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/blocks/step-header.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/blocks/step-indicators.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/step-indicators.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/blocks/step-indicators.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/blocks/step-indicators.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/blocks/wizard-actions.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/wizard-actions.css"
         },
         {
           "path": "registry/shared/forms/recipes/blocks/wizard-actions.tsx",
@@ -2151,9 +2221,19 @@
           "target": "@components/schema-engine/forms/recipes/shells/card-shell.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/shells/hero-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/hero-shell.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/shells/hero-shell.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/shells/hero-shell.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/shells/sidebar-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/sidebar-shell.css"
         },
         {
           "path": "registry/shared/forms/recipes/shells/sidebar-shell.tsx",
@@ -2161,9 +2241,19 @@
           "target": "@components/schema-engine/forms/recipes/shells/sidebar-shell.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/shells/split-screen-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/split-screen-shell.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/shells/split-screen-shell.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/shells/split-screen-shell.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/shells/stack-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/stack-shell.css"
         },
         {
           "path": "registry/shared/forms/recipes/shells/stack-shell.tsx",
@@ -2215,7 +2305,7 @@
           "target": "@ui/schema-engine/components/controls.css"
         }
       ],
-      "docs": "Import controls.css once in your global stylesheet, unlayered and after Tailwind and the recipe styles: @import \"./components/ui/schema-engine/components/controls.css\"; (adjust the path to your ui alias). It lets the size appearance axis set the height of the form controls that carry data-se-control."
+      "docs": "Import controls.css once in your global stylesheet, unlayered and after Tailwind and the recipe styles: @import \"./components/ui/schema-engine/components/controls.css\"; (adjust the path to your ui alias). It lets the size appearance axis set the height of the form controls that carry data-se-control and the font size of a field."
     },
     {
       "name": "schema-engine-form-combobox-primitive-aria",
@@ -3140,9 +3230,19 @@
       ],
       "files": [
         {
+          "path": "registry/shared/forms/recipes/blocks/form-actions.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/form-actions.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/blocks/form-actions.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/blocks/form-actions.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/blocks/minimal-progress.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/minimal-progress.css"
         },
         {
           "path": "registry/shared/forms/recipes/blocks/minimal-progress.tsx",
@@ -3150,14 +3250,29 @@
           "target": "@components/schema-engine/forms/recipes/blocks/minimal-progress.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/blocks/step-header.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/step-header.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/blocks/step-header.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/blocks/step-header.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/blocks/step-indicators.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/step-indicators.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/blocks/step-indicators.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/blocks/step-indicators.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/blocks/wizard-actions.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/blocks/wizard-actions.css"
         },
         {
           "path": "registry/shared/forms/recipes/blocks/wizard-actions.tsx",
@@ -3235,9 +3350,19 @@
           "target": "@components/schema-engine/forms/recipes/shells/card-shell.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/shells/hero-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/hero-shell.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/shells/hero-shell.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/shells/hero-shell.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/shells/sidebar-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/sidebar-shell.css"
         },
         {
           "path": "registry/shared/forms/recipes/shells/sidebar-shell.tsx",
@@ -3245,9 +3370,19 @@
           "target": "@components/schema-engine/forms/recipes/shells/sidebar-shell.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/shells/split-screen-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/split-screen-shell.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/shells/split-screen-shell.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/shells/split-screen-shell.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/shells/stack-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/stack-shell.css"
         },
         {
           "path": "registry/shared/forms/recipes/shells/stack-shell.tsx",

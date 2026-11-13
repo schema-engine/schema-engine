@@ -52,10 +52,25 @@ const sized = defineInput({
 	render: () => null,
 });
 
+const choice = defineInput({
+	$type: 'choice',
+	schema: z.looseObject({
+		$type: z.literal('choice'),
+		id: z.string(),
+		name: z.string(),
+		source: z.union([
+			z.object({ kind: z.literal('http'), endpoint: z.string(), method: z.optional(z.enum(['GET', 'POST'])) }),
+			z.object({ kind: z.literal('static'), values: z.array(z.string()) }),
+		]),
+	}),
+	metadata: { name: 'Choice', category: 'input' },
+	render: () => null,
+});
+
 const actionEngine = createFormEngine({ actions: [formSubmitPlugin()] });
 
 const engine = createFormEngine({
-	elements: [field, fieldset, sized],
+	elements: [field, fieldset, sized, choice],
 	recipes: [defineFormRecipe(cardSpec, {})],
 });
 
@@ -333,15 +348,15 @@ describe('issue paths name keys the author wrote', () => {
 	test('an unrecognized key is reported at the key itself, as the engine reports a view key', () => {
 		const issues = issuesOf(formWith([named('a')], { view: { $type: 'card', shell: { bogus: 1 } } }));
 
-		expect(issues).toEqual([{ path: ['view', 'shell', 'bogus'], message: 'Unrecognized key: bogus.' }]);
+		expect(issues).toMatchObject([{ path: ['view', 'shell', 'bogus'], message: 'Unrecognized key: bogus.' }]);
 	});
 
 	test('several unrecognized keys are reported one per key', () => {
 		const issues = issuesOf(formWith([named('a')], { view: { $type: 'card', shell: { one: 1, two: 2 } } }));
 
-		expect(issues).toEqual([
-			{ path: ['view', 'shell', 'one'], message: 'Unrecognized key: one.' },
-			{ path: ['view', 'shell', 'two'], message: 'Unrecognized key: two.' },
+		expect(issues).toMatchObject([
+			{ path: ['view', 'shell', 'one'], message: 'Unrecognized key: one.', params: { keys: ['one'] } },
+			{ path: ['view', 'shell', 'two'], message: 'Unrecognized key: two.', params: { keys: ['two'] } },
 		]);
 	});
 
@@ -367,6 +382,99 @@ describe('issue paths name keys the author wrote', () => {
 		expect(result.success ? [] : result.issues.map((issue) => issue.path)).toEqual([
 			['steps', 0, 'actions', 0, 1, 'endpoint'],
 		]);
+	});
+});
+
+describe('area template issues', () => {
+	test('a ragged template at a breakpoint points at grid, areas and the breakpoint', () => {
+		const issues = issuesOf(
+			formWith([named('a', { grid: { area: 'a' } })], { grid: { areas: { default: ['a'], md: ['a b', 'a'] } } }),
+		);
+
+		expect(issues.map((issue) => issue.path)).toContainEqual(['grid', 'areas', 'md']);
+		expect(issues.find((issue) => issue.path.at(-1) === 'md')?.message).toMatch(/areas at 'md': row 2 has 1 cell/);
+	});
+});
+
+describe('union issues', () => {
+	const sourceIssues = (source: unknown) =>
+		issuesOf(formWith([{ $type: 'choice', id: 'c', name: 'c', source }])).map((issue) => issue.path);
+	const at = (...path: PropertyKey[]) => ['steps', 0, 'elements', 0, ...path];
+
+	test('point at the key that failed inside the branch the value matches', () => {
+		expect(sourceIssues({ kind: 'http' })).toEqual([at('source', 'endpoint')]);
+		expect(sourceIssues({ kind: 'http', endpoint: 'x', method: 'PUT' })).toEqual([at('source', 'method')]);
+		expect(sourceIssues({ kind: 'static', values: [1] })).toEqual([at('source', 'values', 0)]);
+	});
+
+	test('stay at the union when no branch matches better than another', () => {
+		expect(sourceIssues('http')).toEqual([at('source')]);
+		expect(sourceIssues({ kind: 'nope' })).toEqual([at('source')]);
+	});
+});
+
+describe('union issues in the built-in rules', () => {
+	const withRules = defineInput({
+		$type: 'ruled',
+		schema: z.extend(BaseFieldSchema, { $type: z.literal('ruled') }),
+		metadata: { name: 'Ruled', category: 'input' },
+		render: () => null,
+	});
+	const ruledEngine = createFormEngine({ elements: [withRules] });
+	const ruleIssues = (rule: unknown) => {
+		const result = ruledEngine.safeValidateForm(formWith([{ $type: 'ruled', id: 'r', name: 'r', rules: [rule] }]));
+		if (result.success) throw new Error('expected the form to be invalid');
+		return result.issues.map((issue) => issue.path);
+	};
+	const at = (...path: PropertyKey[]) => ['steps', 0, 'elements', 0, 'rules', 0, ...path];
+
+	test('point at the missing key of the rule the type names', () => {
+		expect(ruleIssues({ type: 'async' })).toEqual([at('url')]);
+	});
+
+	test('point at the key whose value has the wrong type', () => {
+		expect(ruleIssues({ type: 'minLength', value: 'three' })).toEqual([at('value')]);
+	});
+});
+
+describe('issue codes', () => {
+	const issueFor = (element: Record<string, unknown>) =>
+		issuesOf(formWith([{ $type: 'sized', id: 's', name: 's', ...element }]))[0];
+
+	test('a bound carries its code and the bound', () => {
+		expect(issueFor({ title: 'ab' })).toMatchObject({
+			path: ['steps', 0, 'elements', 0, 'title'],
+			message: 'Must be at least 3 characters.',
+			code: 'too_small',
+			params: { origin: 'string', minimum: 3, inclusive: true },
+		});
+		expect(issueFor({ count: 9 })).toMatchObject({ code: 'too_big', params: { maximum: 5 } });
+	});
+
+	test('an enum carries the values it expected', () => {
+		const [issue] = issuesOf(formWith([named('a', { grid: { width: 'halve' } })]));
+
+		expect(issue).toMatchObject({
+			code: 'invalid_value',
+			params: { values: expect.arrayContaining(['half', 'quarter']) },
+		});
+	});
+
+	test('a type mismatch carries the expected type', () => {
+		expect(issueFor({ count: 'many' })).toMatchObject({ code: 'invalid_type', params: { expected: 'number' } });
+	});
+
+	test('an unrecognized key carries its code and the key', () => {
+		const issues = issuesOf(formWith([named('a')], { view: { $type: 'card', shell: { bogus: 1 } } }));
+
+		expect(issues[0]).toMatchObject({ code: 'unrecognized_keys', params: { keys: ['bogus'] } });
+	});
+
+	test('an issue the engine finds itself has no code', () => {
+		const issues = issuesOf(formWith([named('a')], { view: { $type: 'nope' } }));
+
+		expect(issues[0]).not.toHaveProperty('code');
+		expect(issues[0]).not.toHaveProperty('params');
 	});
 });
 
@@ -475,7 +583,7 @@ describe('safeValidateForm', () => {
 	test('its issues satisfy the shape a YAML integration reads', () => {
 		const [issue] = issuesOf(formWith([named('a', { grid: { width: 'halve' } })]));
 
-		expect(Object.keys(issue ?? {}).toSorted()).toEqual(['message', 'path']);
+		expect(Object.keys(issue ?? {}).toSorted()).toEqual(['code', 'message', 'params', 'path']);
 		expect(typeof issue?.message).toBe('string');
 		expect(issue?.path.every((key) => typeof key === 'string' || typeof key === 'number')).toBe(true);
 	});

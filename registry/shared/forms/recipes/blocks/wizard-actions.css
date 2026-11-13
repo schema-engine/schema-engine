@@ -1,0 +1,23 @@
+/*
+ * Layout of the wizard action bar: Previous on the left, the step counter between, Next or Submit on the right.
+ *
+ * Every rule sits inside :where(), so it adds no specificity and a host class on the same element wins.
+ *
+ * Import this file into the `components` layer when the app uses Tailwind, as recipes.css says.
+ */
+:where(.se-wizard-actions) {
+	display: flex;
+	min-width: 0;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
+:where(.se-wizard-actions--minimal) {
+	width: 100%;
+}
+
+:where(.se-wizard-actions__forward) {
+	display: flex;
+	gap: 0.5rem;
+}

@@ -168,6 +168,25 @@ touched state follow their row through every field-array operation, an operation
 naming a row that does not exist does nothing, and `remove` removes a repeated
 index once.
 
+## Validation issue / issue path
+
+A **validation issue** is one problem `validateForm` found: `{ message, path }`, shaped like a Standard
+Schema issue so the YAML layer (`parseYaml`) can point at the line. `path` names the config key the issue is
+about, in the keys and indexes the author wrote (`['steps', 0, 'elements', 2, 'grid', 'width']`); an issue
+about the whole form has the path `[]`.
+
+- **Authored keys.** A path names what the author wrote, not what a viewport resolves. A cascade check
+  (a grid area, a template that changes at a breakpoint) reports the authored key it resolves from, so an
+  array `areas` is `['grid', 'areas']` and a breakpoint's template is `['grid', 'areas', 'md']`. Layout
+  checks (`checkAppearance`, `resolveRecipeView`, `areaTemplateIssues`) return `LayoutIssue`s with paths
+  relative to the thing they checked; forms lays them under that thing's location.
+- **Schema issues.** One a schema reported also carries `code` and `params` (Zod's `too_small`, `minimum`,
+  `values` and so on), so an editor can localize a diagnostic without parsing the English `message`. The
+  engine's own checks have neither. A failed union is reported at the key that failed in the branch the
+  value was closest to, or at the union when no branch is clearly closest.
+- **Ids are decoration.** The `error.message` lines name the id of each element, step or action the path
+  passes; `issue.path` and `issue.message` never do.
+
 ## Container state
 
 A fieldset or array passes two states to every field inside it, at any depth.
@@ -324,8 +343,9 @@ from the document to a container to an item or slot, a closer pick winning. A go
 `size` and `surface` are built in. The catalog and the JSON Schema export list each axis and its
 values, so `appearance.size` on a form and its steps is an enum in an editor. An element's and a
 recipe slot's `appearance` lists only the axes its registration declares, closed, so an undeclared
-axis is rejected there as it is by validation. Children of a container element are loosely typed in
-the export, and a lazy element schema keeps its own `appearance`; validation checks both.
+axis is rejected there as it is by validation. The children of a container element (a fieldset or an
+array row) are typed in the export as the union of every element's schema, so they get the same
+closed `appearance`; a lazy element schema keeps its own `appearance`, which validation still checks.
 
 ## Appearance ownership
 
@@ -381,7 +401,7 @@ that declares no tokens inherits the surrounding value's tokens through custom-p
 also from a pick made outside a nested form of another theme, until that form picks a value that
 declares those tokens. The DOM contract is the same in
 every renderer; the visual effect of a built-in value is not yet: `size` changes a field's font size in
-Radiant only, and both card shells read the tokens. A field's `className` is applied to the same field host, the element that carries its `style` and the attributes, in both renderers. The field host that carries the attributes is the
+both renderers, and both card shells read the tokens; the hero, split screen, sidebar and stack shells read `--se-space` for their padding and gaps, and the first three declare `size` on their `shell` slot. The shared field layout is the font size, a text input that fills its field (in React, the shadcn `Input`'s own `w-full`) and the action bar's `align`; the rest of a field's look is renderer styling. A field's `className` is applied to the same field host, the element that carries its `style` and the attributes, in both renderers. The field host that carries the attributes is the
 inner `.se-form-field` (the Radiant constraint wrapper around it carries only grid placement).
 
 `maxWidth`, `padding` and `shadowSize` are gone: the `size` and `surface` tokens set the padding, border and shadow, and the card's width is the readable measure `--se-measure`. `contentWidth`, `sideWidth` and

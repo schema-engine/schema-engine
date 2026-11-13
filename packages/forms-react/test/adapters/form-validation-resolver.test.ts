@@ -19,7 +19,7 @@ const registry = createDefaultValidationRegistry();
 describe('createFormValidationResolver', () => {
 	test('validates every field when names are omitted', async () => {
 		const resolver = createFormValidationResolver(elements, registry);
-		const resolved = await resolver({ firstName: '', email: '' }, undefined, {
+		const resolved = await resolver({ firstName: '', email: 'nope' }, undefined, {
 			fields: {},
 			shouldUseNativeValidation: false,
 		});
@@ -28,6 +28,16 @@ describe('createFormValidationResolver', () => {
 			firstName: { message: 'First name is required' },
 			email: { message: 'Please enter a valid email address' },
 		});
+	});
+
+	test('lets an optional field with only a format rule stay empty', async () => {
+		const resolver = createFormValidationResolver(elements, registry);
+		const resolved = await resolver({ firstName: 'Ada', email: '' }, undefined, {
+			fields: {},
+			shouldUseNativeValidation: false,
+		});
+
+		expect(resolved.errors).toEqual({});
 	});
 
 	test('validates only requested fields so later steps stay untriggered', async () => {

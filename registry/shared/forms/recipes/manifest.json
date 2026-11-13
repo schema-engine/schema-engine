@@ -6,7 +6,10 @@
       "files": [
         "registrations/bare-controls.ts",
         "blocks/wizard-actions.tsx",
-        "shells/stack-shell.tsx"
+        "blocks/wizard-actions.css",
+        "shells/stack-shell.tsx",
+        "shells/stack-shell.css",
+        "recipes.css"
       ]
     },
     {
@@ -15,7 +18,9 @@
       "files": [
         "registrations/card.ts",
         "blocks/step-header.tsx",
+        "blocks/step-header.css",
         "blocks/form-actions.tsx",
+        "blocks/form-actions.css",
         "shells/card-shell.tsx",
         "shells/card-shell.css",
         "recipes.css"
@@ -27,8 +32,11 @@
       "files": [
         "registrations/card-wizard.ts",
         "blocks/minimal-progress.tsx",
+        "blocks/minimal-progress.css",
         "blocks/step-header.tsx",
+        "blocks/step-header.css",
         "blocks/wizard-actions.tsx",
+        "blocks/wizard-actions.css",
         "shells/card-shell.tsx",
         "shells/card-shell.css",
         "recipes.css"
@@ -40,8 +48,12 @@
       "files": [
         "registrations/hero-background.ts",
         "blocks/step-header.tsx",
+        "blocks/step-header.css",
         "blocks/form-actions.tsx",
-        "shells/hero-shell.tsx"
+        "blocks/form-actions.css",
+        "shells/hero-shell.tsx",
+        "shells/hero-shell.css",
+        "recipes.css"
       ]
     },
     {
@@ -50,9 +62,14 @@
       "files": [
         "registrations/hero-wizard.ts",
         "blocks/minimal-progress.tsx",
+        "blocks/minimal-progress.css",
         "blocks/step-header.tsx",
+        "blocks/step-header.css",
         "blocks/wizard-actions.tsx",
-        "shells/hero-shell.tsx"
+        "blocks/wizard-actions.css",
+        "shells/hero-shell.tsx",
+        "shells/hero-shell.css",
+        "recipes.css"
       ]
     },
     {
@@ -61,9 +78,14 @@
       "files": [
         "registrations/sidebar-wizard.ts",
         "blocks/step-header.tsx",
+        "blocks/step-header.css",
         "blocks/step-indicators.tsx",
+        "blocks/step-indicators.css",
         "blocks/wizard-actions.tsx",
-        "shells/sidebar-shell.tsx"
+        "blocks/wizard-actions.css",
+        "shells/sidebar-shell.tsx",
+        "shells/sidebar-shell.css",
+        "recipes.css"
       ]
     },
     {
@@ -72,7 +94,10 @@
       "files": [
         "registrations/split-screen.ts",
         "blocks/form-actions.tsx",
-        "shells/split-screen-shell.tsx"
+        "blocks/form-actions.css",
+        "shells/split-screen-shell.tsx",
+        "shells/split-screen-shell.css",
+        "recipes.css"
       ]
     },
     {
@@ -81,9 +106,14 @@
       "files": [
         "registrations/split-screen-wizard.ts",
         "blocks/step-header.tsx",
+        "blocks/step-header.css",
         "blocks/step-indicators.tsx",
+        "blocks/step-indicators.css",
         "blocks/wizard-actions.tsx",
-        "shells/split-screen-shell.tsx"
+        "blocks/wizard-actions.css",
+        "shells/split-screen-shell.tsx",
+        "shells/split-screen-shell.css",
+        "recipes.css"
       ]
     },
     {
@@ -92,9 +122,14 @@
       "files": [
         "registrations/wizard.ts",
         "blocks/step-header.tsx",
+        "blocks/step-header.css",
         "blocks/step-indicators.tsx",
+        "blocks/step-indicators.css",
         "blocks/wizard-actions.tsx",
-        "shells/stack-shell.tsx"
+        "blocks/wizard-actions.css",
+        "shells/stack-shell.tsx",
+        "shells/stack-shell.css",
+        "recipes.css"
       ]
     }
   ]

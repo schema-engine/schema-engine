@@ -34,10 +34,7 @@ export function StepHeader() {
 	return (
 		<header
 			data-align={align}
-			className={cn(
-				'max-w-none space-y-2 data-[align=start]:text-left data-[align=center]:text-center',
-				inheritColor && 'text-inherit',
-			)}
+			className={cn('se-step-header', inheritColor && 'se-step-header--inherit-color text-inherit')}
 		>
 			{counterText && counterPlacement === 'before' ? (
 				<p className={cn('text-sm text-muted-foreground', inheritColor && 'text-inherit opacity-80')}>

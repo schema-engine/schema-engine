@@ -79,8 +79,17 @@ describe('schema-engine GitHub registry catalog', () => {
 			const item = catalog.find((entry) => entry.name === name);
 			const stylesheets = item?.files.filter((file) => file.path.endsWith('.css')) ?? [];
 			expect(stylesheets.map((file) => file.target).toSorted()).toEqual([
+				'@components/schema-engine/forms/recipes/blocks/form-actions.css',
+				'@components/schema-engine/forms/recipes/blocks/minimal-progress.css',
+				'@components/schema-engine/forms/recipes/blocks/step-header.css',
+				'@components/schema-engine/forms/recipes/blocks/step-indicators.css',
+				'@components/schema-engine/forms/recipes/blocks/wizard-actions.css',
 				'@components/schema-engine/forms/recipes/recipes.css',
 				'@components/schema-engine/forms/recipes/shells/card-shell.css',
+				'@components/schema-engine/forms/recipes/shells/hero-shell.css',
+				'@components/schema-engine/forms/recipes/shells/sidebar-shell.css',
+				'@components/schema-engine/forms/recipes/shells/split-screen-shell.css',
+				'@components/schema-engine/forms/recipes/shells/stack-shell.css',
 			]);
 			expect(stylesheets.every((file) => file.type === 'registry:file')).toBe(true);
 			expect(item?.docs).toContain('recipes.css');

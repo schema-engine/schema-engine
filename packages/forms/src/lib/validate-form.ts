@@ -45,10 +45,20 @@ export { DEFAULT_WIZARD_RECIPE, assertFormEngine, getRenderableSteps, stepGrid }
  * `path` names the config key the issue is about, in object keys and array indexes, for example
  * `['steps', 0, 'elements', 2, 'grid', 'width']`. An issue about the whole form has the path `[]`.
  * A path is always plain keys, so a `PathSegment` from a schema issue is flattened to its key.
+ *
+ * `code` and `params` are set on an issue a schema reported, so an editor can localize a diagnostic
+ * from the code and its parameters rather than from the English `message`. `code` is the schema
+ * library's own (`too_small`, `invalid_value`, `invalid_type`, `invalid_format`, `unrecognized_keys`
+ * for Zod), and `params` holds the details that code reports, such as `minimum`, `values`, `expected`
+ * or `keys`. An issue the engine finds itself (a cascade check, an unknown `$type`) has neither. A
+ * consumer that only reads `message` and `path` is unaffected, and the shape still satisfies the
+ * Standard Schema issue the YAML layer takes.
  */
 export interface FormValidationIssue {
 	readonly message: string;
 	readonly path: ReadonlyArray<PropertyKey>;
+	readonly code?: string;
+	readonly params?: Readonly<Record<string, unknown>>;
 }
 
 /** What {@link safeValidateFormConfig} returns: the normalized form, or the issues found. */
@@ -114,8 +124,12 @@ export class FormValidationError extends Error {
 	}
 }
 
-function issueAt(path: Path, message: string): FormValidationIssue {
-	return { path, message };
+function issueAt(
+	path: Path,
+	message: string,
+	schemaIssue?: Pick<FormValidationIssue, 'code' | 'params'>,
+): FormValidationIssue {
+	return schemaIssue?.code === undefined ? { path, message } : { path, message, ...schemaIssue };
 }
 
 type ElementRegistration = AnyElementRegistration;
@@ -144,6 +158,7 @@ const GENERIC_SCHEMA_MESSAGE = 'Invalid input';
 
 interface SchemaIssueDetails {
 	code?: unknown;
+	errors?: unknown;
 	values?: unknown;
 	expected?: unknown;
 	origin?: unknown;
@@ -216,6 +231,64 @@ function describeSchemaIssue(issue: StandardSchemaIssue, details: SchemaIssueDet
 	return keys.length > 0 ? `${issue.message} (${keys.map(String).join(', ')})` : issue.message;
 }
 
+const PARAM_NAMES = [
+	'values',
+	'expected',
+	'origin',
+	'minimum',
+	'maximum',
+	'inclusive',
+	'format',
+	'pattern',
+	'keys',
+] as const satisfies ReadonlyArray<keyof SchemaIssueDetails>;
+
+/** The code a schema issue carries and the details that code reports, left out when there is no code. */
+function issueCode(details: SchemaIssueDetails): Pick<FormValidationIssue, 'code' | 'params'> {
+	if (typeof details.code !== 'string') return {};
+	const params: Record<string, unknown> = {};
+	for (const name of PARAM_NAMES) {
+		if (details[name] !== undefined) params[name] = details[name];
+	}
+	return { code: details.code, params };
+}
+
+function isSchemaIssue(value: unknown): value is StandardSchemaIssue {
+	return typeof value === 'object' && value !== null && 'message' in value && typeof value.message === 'string';
+}
+
+/** Whether a schema issue is a miss on one literal value, as a discriminator key reports. */
+function missedLiteral(issue: StandardSchemaIssue): boolean {
+	const { code, values } = issue as StandardSchemaIssue & SchemaIssueDetails;
+	return code === 'invalid_value' && Array.isArray(values) && values.length === 1;
+}
+
+/**
+ * The branch of a failed union the value was closest to, when one branch is clearly closest.
+ *
+ * @remarks
+ * Each branch reports the issues it found, with paths relative to the union. A branch is out when the
+ * value is not of its kind: an issue about the value itself (an empty path, a wrong type for that branch)
+ * or a miss on a single literal value (the discriminator key of another variant). Of the rest, the closest
+ * is the one with the fewest issues, and only when it is the only such branch. Any other outcome returns
+ * `undefined`, so the issue stays at the union instead of pointing into a branch the value did not choose.
+ * An enum of one value reads as a literal, so a branch that fails on it is out.
+ */
+function closestBranch(details: SchemaIssueDetails): StandardSchemaIssue[] | undefined {
+	if (details.code !== 'invalid_union' || !Array.isArray(details.errors)) return undefined;
+	const branches = details.errors
+		.filter(Array.isArray)
+		.map((branch) => branch.filter(isSchemaIssue))
+		.filter(
+			(branch) =>
+				branch.length > 0 &&
+				branch.every((issue) => schemaIssuePath(issue.path).length > 0 && !missedLiteral(issue)),
+		);
+	const fewest = Math.min(...branches.map((branch) => branch.length));
+	const closest = branches.filter((branch) => branch.length === fewest);
+	return closest.length === 1 ? closest[0] : undefined;
+}
+
 /**
  * Schema issues as form issues, each path laid under `base`, the location of the thing that was validated.
  *
@@ -224,12 +297,18 @@ function describeSchemaIssue(issue: StandardSchemaIssue, details: SchemaIssueDet
  * locale's message that names a single key is kept; one that names several is replaced per key.
  * That is where an editor or a YAML file should point, and where the engine's own check of a view's
  * unknown keys already points.
+ *
+ * An `invalid_union` issue is replaced by the issues of the branch the value was closest to (see
+ * {@link closestBranch}), laid under the union's own path, so it points at the key that failed. A
+ * union whose branches cannot be told apart keeps its one issue at the union.
  */
 function fromSchemaIssues(issues: readonly StandardSchemaIssue[], base: Path): FormValidationIssue[] {
 	if (issues.length === 0) return [issueAt(base, 'Validation failed')];
 	return issues.flatMap((issue) => {
 		const details = issue as StandardSchemaIssue & SchemaIssueDetails;
 		const path = [...base, ...schemaIssuePath(issue.path)];
+		const branch = closestBranch(details);
+		if (branch) return fromSchemaIssues(branch, path);
 		const keys = issueKeys(details);
 		if (details.code === 'unrecognized_keys' && keys.length > 0) {
 			return keys.map((key) =>
@@ -238,10 +317,11 @@ function fromSchemaIssues(issues: readonly StandardSchemaIssue[], base: Path): F
 					issue.message === GENERIC_SCHEMA_MESSAGE || keys.length > 1
 						? `Unrecognized key: ${String(key)}.`
 						: issue.message,
+					issueCode({ ...details, keys: [key] }),
 				),
 			);
 		}
-		return [issueAt(path, describeSchemaIssue(issue, details))];
+		return [issueAt(path, describeSchemaIssue(issue, details), issueCode(details))];
 	});
 }
 
@@ -517,7 +597,7 @@ function namedPlacementIssue(item: FormTaggedConfig): FormValidationIssue | unde
 }
 
 /** The slot as it reads in a message: nothing for the default width, else ` at 'md'`. */
-function atSlot(slot: CascadeSlot): string {
+function atSlot(slot: string): string {
 	return slot === 'default' ? '' : ` at '${slot}'`;
 }
 
@@ -598,8 +678,9 @@ function templateIssues(label: string, grid: GridLayoutConfig | undefined, gridP
 			),
 		);
 	}
-	for (const { slot, message } of areaTemplateIssues(templates)) {
-		issues.push(issueAt([...gridPath, ...areasPath(grid, slot)], `${label} areas${atSlot(slot)}: ${message}`));
+	for (const { path, message } of areaTemplateIssues(grid)) {
+		const slot = String(path[1] ?? 'default');
+		issues.push(issueAt([...gridPath, ...path], `${label} areas${atSlot(slot)}: ${message}`));
 	}
 	return issues;
 }

@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { getByRole, queryAllByRole, queryAllByText, queryByRole, queryByText, within } from '@testing-library/dom';
-import { userEvent } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import * as v from 'valibot';
 import { builtInAxes, defineAxis } from '@schema-engine/layout';
 import type { BuilderActionRuntimeContext, FormConfigView } from '@schema-engine/forms';
@@ -154,6 +154,59 @@ const recipeForm = ({ $type, steps, header, progress, sideContent }: RecipeCase)
 			elements: [input(`field${index}`, `Field ${index + 1}`)],
 		})),
 	};
+};
+
+/** The built-in recipes whose shell declares `size` alone, and the picks the spacing checks make. */
+const SPACED_RECIPES = ['hero-background', 'hero-wizard', 'sidebar-wizard', 'split-screen', 'split-screen-wizard'];
+const SIZES = ['compact', 'comfortable'] as const;
+
+/** The viewports the shell spacing checks pin: below and above the shells' 768px breakpoint. */
+const MOBILE_VIEWPORT = { width: 414, height: 896 };
+const DESKTOP_VIEWPORT = { width: 1100, height: 700 };
+const DESKTOP_RECIPES = ['sidebar-wizard', 'split-screen'];
+
+/**
+ * What a `size` pick on the shell slot of each spaced recipe measures, in CSS pixels.
+ *
+ * @remarks
+ * The hero pads itself and centres a 28rem column, the sidebar gaps its slots and the split screen pads its
+ * content panel. A shell that stopped reading `--se-space` would keep its unpicked spacing instead.
+ */
+const DESKTOP_SHELL_MEASURES: Record<string, Record<(typeof SIZES)[number], { padding: string; insetLeft: number }>> = {
+	'sidebar-wizard': {
+		compact: { padding: '0px', insetLeft: 321 },
+		comfortable: { padding: '0px', insetLeft: 353 },
+	},
+	'split-screen': {
+		compact: { padding: '0px', insetLeft: 616 },
+		comfortable: { padding: '0px', insetLeft: 632 },
+	},
+};
+
+const SPACED_SHELL_MEASURES: Record<
+	string,
+	Record<(typeof SIZES)[number], { padding: string; gap: string; insetLeft: number }>
+> = {
+	'hero-background': {
+		compact: { padding: '16px', gap: 'normal', insetLeft: 392 },
+		comfortable: { padding: '32px', gap: 'normal', insetLeft: 408 },
+	},
+	'hero-wizard': {
+		compact: { padding: '16px', gap: 'normal', insetLeft: 392 },
+		comfortable: { padding: '32px', gap: 'normal', insetLeft: 408 },
+	},
+	'sidebar-wizard': {
+		compact: { padding: '0px', gap: '16px', insetLeft: 0 },
+		comfortable: { padding: '0px', gap: '32px', insetLeft: 0 },
+	},
+	'split-screen': {
+		compact: { padding: '0px', gap: 'normal', insetLeft: 16 },
+		comfortable: { padding: '0px', gap: 'normal', insetLeft: 32 },
+	},
+	'split-screen-wizard': {
+		compact: { padding: '0px', gap: 'normal', insetLeft: 16 },
+		comfortable: { padding: '0px', gap: 'normal', insetLeft: 32 },
+	},
 };
 
 /** @remarks The element a form's `className`, `style` and `appearance` land on: `<form>` in React, `<rui-form>` in Radiant. */
@@ -457,6 +510,134 @@ export function rendererConformance(mount: ConformanceMount): void {
 			});
 		});
 		/**
+		 * The shared field and action layout, run against both renderers with their own stylesheets.
+		 *
+		 * @remarks
+		 * The agreed contract is a field's font size from the `size` token (`--se-font-size`), a text input that
+		 * fills its field, and the action bar's `align`. Padding, borders, control heights and the rest of a
+		 * field's look are renderer styling.
+		 */
+		describe('field and action layout parity', () => {
+			test.each([
+				['compact', '14px'],
+				['comfortable', '17px'],
+			])('a field with size %s has the same font size in every renderer', async (size, fontSize) => {
+				const { host } = await setup({ config: sizedForm({ size: 'default' }, { size }) });
+				expect(getComputedStyle(fieldHost(host, 'Email')).fontSize).toBe(fontSize);
+				expect(getComputedStyle(fieldHost(host, 'Name')).fontSize).not.toBe(fontSize);
+			});
+			test('a field without a size pick keeps the font size it inherits', async () => {
+				const { host } = await setup({ config: form([input('email', 'Email')]) });
+				expect(getComputedStyle(fieldHost(host, 'Email')).fontSize).toBe(
+					getComputedStyle(formElement(host)).fontSize,
+				);
+			});
+			test('a text input fills its field', async () => {
+				const { host } = await setup({ config: cardForm({ size: 'default' }) });
+				host.style.width = '1200px';
+				const field = fieldHost(host, 'Field 1').getBoundingClientRect();
+				const textbox = getByRole(host, 'textbox', { name: 'Field 1' }).getBoundingClientRect();
+				expect(textbox.width).toBe(field.width);
+				expect(textbox.left).toBe(field.left);
+			});
+			test.each([
+				['start', 'left'],
+				['center', 'center'],
+				['end', 'right'],
+			])('the action bar aligns its button at %s in every renderer', async (align, edge) => {
+				const base = cardForm({ size: 'default' });
+				const { host } = await setup({
+					config: {
+						...base,
+						view: { ...base.view, $type: 'card', actions: { labels: singleActionLabels, align } },
+					},
+				});
+				host.style.width = '1200px';
+				const submit = getByRole(host, 'button', { name: 'Send application' });
+				const button = submit.getBoundingClientRect();
+				const bar = submit.parentElement!.getBoundingClientRect();
+				expect(bar.width).toBeGreaterThan(button.width);
+				if (edge === 'left') expect(button.left).toBe(bar.left);
+				if (edge === 'right') expect(button.right).toBe(bar.right);
+				if (edge === 'center') expect(button.left - bar.left).toBeCloseTo(bar.right - button.right, 0);
+			});
+		});
+		/**
+		 * The spacing parity checks of the shells that read the `size` token (`--se-space`) beside the card.
+		 *
+		 * @remarks
+		 * Each shell that declares `size` alone gets the pick on its `shell` slot. The carrier is the element
+		 * that holds the pick, and the measures are its own padding and how far the first field sits inside it,
+		 * which add up the padding and gaps every panel between them takes from the token. The literals hold for
+		 * the built-in `size` axis, no host theme variables and a viewport narrower than the shells' 768px
+		 * breakpoint (the browser projects' default; a host element's width does not change a media query), where
+		 * the split screen and the sidebar stack. Both renderers assert the same literals, so equal spacing follows from both suites passing.
+		 */
+		describe('shell spacing parity', () => {
+			beforeAll(() => page.viewport(MOBILE_VIEWPORT.width, MOBILE_VIEWPORT.height));
+			const shellAxes = (recipe: RecipeCase): readonly string[] => {
+				const spec: { appearanceAxes?: Partial<Record<string, readonly string[]>> } | undefined = Object.values(
+					builtInRecipeSpecs,
+				).find((candidate) => candidate.$type === recipe.$type);
+				return spec?.appearanceAxes?.shell ?? [];
+			};
+			const spacedRecipes = recipeCases.filter(
+				(recipe) => shellAxes(recipe).includes('size') && !shellAxes(recipe).includes('surface'),
+			);
+			const measureShell = async (recipe: RecipeCase, size: (typeof SIZES)[number]) => {
+				const base = recipeForm(recipe);
+				const shell: Record<string, unknown> = { ...(base.view?.shell as Record<string, unknown> | undefined) };
+				const { host } = await setup({
+					config: {
+						...base,
+						view: { ...base.view, $type: recipe.$type, shell: { ...shell, appearance: { size } } },
+					},
+				});
+				host.style.width = '1200px';
+				const textbox = getByRole(host, 'textbox', { name: 'Field 1' });
+				const carrier = Array.from(host.querySelectorAll<HTMLElement>(`[data-se-size="${size}"]`)).find(
+					(element) =>
+						element !== formElement(host) &&
+						!element.classList.contains('se-form-field') &&
+						!element.hasAttribute('data-se-step') &&
+						element.contains(textbox),
+				);
+				if (!carrier) throw new Error(`No shell of ${recipe.$type} carries the pick.`);
+				const inside = carrier.getBoundingClientRect();
+				const field = fieldHost(host, 'Field 1').getBoundingClientRect();
+				const style = getComputedStyle(carrier);
+				return { padding: style.paddingTop, gap: style.rowGap, insetLeft: field.left - inside.left };
+			};
+			test('the viewport is below the 768px breakpoint the literals assume', () => {
+				expect(window.innerWidth).toBeLessThan(768);
+			});
+			describe('at a desktop width', () => {
+				beforeAll(() => page.viewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height));
+				afterAll(() => page.viewport(MOBILE_VIEWPORT.width, MOBILE_VIEWPORT.height));
+				test.each(DESKTOP_RECIPES.flatMap((type) => SIZES.map((size) => [type, size] as const)))(
+					'%s with size %s has the same spacing in every renderer',
+					async (type, size) => {
+						const recipe = recipeCases.find((candidate) => candidate.$type === type);
+						if (!recipe) throw new Error(`No conformance case for ${type}.`);
+						expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
+						const { padding, insetLeft } = await measureShell(recipe, size);
+						expect({ padding, insetLeft }).toEqual(DESKTOP_SHELL_MEASURES[type]?.[size]);
+					},
+				);
+			});
+			test('the spaced recipes are found', () => {
+				expect(spacedRecipes.map((recipe) => recipe.$type).toSorted()).toEqual(SPACED_RECIPES);
+			});
+			test.each(SPACED_RECIPES.flatMap((type) => SIZES.map((size) => [type, size] as const)))(
+				'%s with size %s has the same spacing in every renderer',
+				async (type, size) => {
+					const recipe = recipeCases.find((candidate) => candidate.$type === type);
+					if (!recipe) throw new Error(`No conformance case for ${type}.`);
+					expect(await measureShell(recipe, size)).toEqual(SPACED_SHELL_MEASURES[type]?.[size]);
+				},
+			);
+		});
+		/**
 		 * The card parity checks, run against both renderers with their own stylesheets.
 		 *
 		 * @remarks
@@ -515,6 +696,44 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await userEvent.fill(queryAllByRole(host, 'textbox', { name: 'Kind' })[0], 'business');
 			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Email' }).length).toBe(1);
 			expect(getByRole(host, 'textbox', { name: 'Email' }).getAttribute('name')).toBe('contacts.0.email');
+		});
+		describe('format rules on an optional field', () => {
+			const optionalEmail = () =>
+				form([{ ...input('email', 'Email'), rules: [{ type: 'email', message: 'Bad email' }] }]);
+			test('an optional email field can be left empty', async () => {
+				const onSubmit = vi.fn();
+				const { host } = await setup({ config: optionalEmail(), onSubmit });
+				await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+				await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
+				expect(queryByText(host, 'Bad email')).toBeNull();
+			});
+			test('an optional field with a pattern and a minLength rule can be left empty', async () => {
+				const onSubmit = vi.fn();
+				const { host } = await setup({
+					config: form([
+						{
+							...input('code', 'Code'),
+							rules: [
+								{ type: 'pattern', value: '^[a-z]+$', message: 'Letters only' },
+								{ type: 'minLength', value: 3, message: 'Too short' },
+							],
+						},
+					]),
+					onSubmit,
+				});
+				await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+				await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
+				expect(queryByText(host, 'Letters only')).toBeNull();
+				expect(queryByText(host, 'Too short')).toBeNull();
+			});
+			test('a filled optional email field is still checked', async () => {
+				const onSubmit = vi.fn();
+				const { host } = await setup({ config: optionalEmail(), onSubmit });
+				await userEvent.fill(getByRole(host, 'textbox', { name: 'Email' }), 'not-an-email');
+				await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+				await expect.poll(() => queryAllByText(host, 'Bad email').length).toBeGreaterThan(0);
+				expect(onSubmit).not.toHaveBeenCalled();
+			});
 		});
 		test('both renderers add the same row', async () => {
 			const onSubmit = vi.fn();

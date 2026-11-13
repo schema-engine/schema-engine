@@ -15,7 +15,7 @@ export function WizardActions() {
 	const { labels, variant, showStepCounter } = useViewConfig('actions', WizardActionsConfigSchema);
 
 	return (
-		<div className={cn('flex items-center justify-between gap-4', variant === 'minimal' && 'w-full')}>
+		<div className={cn('se-wizard-actions', variant === 'minimal' && 'se-wizard-actions--minimal')}>
 			<Button
 				data-se-control
 				type="button"
@@ -31,7 +31,7 @@ export function WizardActions() {
 					{formatStepLabel(labels.stepCounter, currentStepIndex + 1, steps.length)}
 				</Badge>
 			) : null}
-			<div className="flex gap-2">
+			<div className="se-wizard-actions__forward">
 				{navigation.isLastStep ? (
 					<Button key="submit" data-se-control type="submit" aria-label={labels.submitAriaLabel}>
 						{form.isSubmitting ? labels.submitting : labels.submit}

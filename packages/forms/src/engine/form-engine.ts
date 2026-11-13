@@ -327,6 +327,15 @@ export class FormEngine<
 		return this.schemaArtifacts.formConfigValidator;
 	}
 
+	/**
+	 * JSON Schema of the form config authors write, for editor autocomplete.
+	 *
+	 * @remarks
+	 * `io` defaults to `'input'`, as it does for {@link FormEngine.generateJSONSchemaCollection} and
+	 * {@link FormEngine.generateActionConfigSchema}: the export describes what authors write, and an element
+	 * schema that pipes a transform (Radiant's `input-otp`) has no JSON Schema for its output side, so
+	 * `io: 'output'` throws for an engine that registers one.
+	 */
 	generateFormConfigSchema(options?: {
 		target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0';
 		io?: 'input' | 'output';

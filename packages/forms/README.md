@@ -85,7 +85,9 @@ schemas only when the host shares forms' Zod instance; schemas the host builds f
 `id` of each element, step or action the path passes
 (`steps[0] (main).elements[2] (email).grid.width: Expected one of full, three-quarters, ...`), and the bare
 message for an issue about the whole form. The ids only decorate the message; `issue.path` and
-`issue.message` stay clean. `formatIssuePath(path, source?)` makes the same text, with the ids when you
+`issue.message` stay clean. An issue a schema reported also carries `code` and `params` (Zod's code and its
+details, such as `too_small` and `{ minimum: 3 }`) for an editor that localizes diagnostics; a failed union is
+reported at the key that failed in the closest branch. `formatIssuePath(path, source?)` makes the same text, with the ids when you
 pass the config. `FormValidationIssue` and `FormValidationResult` are exported.
 
 `engine.safeValidateForm(config)` runs the same validation and returns a result instead of throwing:
@@ -300,9 +302,10 @@ every element and slot, so every one gets the key: an owner that declares none g
 `appearance` with no axes. The lists come from the registry and declarations validation checks
 (`checkAppearance`), so the export and validation cannot drift; a parity test walks fixture
 elements (open, strict, non-strict without an `appearance` key, piped) and the built-in recipes
-through both. The limits: a schema that is an object, or a pipe or prefault of one, is rewritten, but
-a lazy schema keeps its own `appearance`; the children of a fieldset or an array row are loosely
-typed in the export, so their `appearance` is not checked there (validation still checks it); and a
+through both, at the top of a step and nested in a fieldset and an array row. The children of an
+element's `elements` array are typed as a lazy union of every element's export schema, so a nested
+field gets the same closed `appearance`. The limits: a schema that is an object, or a pipe or prefault
+of one, is rewritten, but a lazy schema keeps its own `appearance` (validation still checks it); and a
 native Standard Schema element contributes an envelope of its `$type` and the same closed
 `appearance`. The catalog keeps each registration's own validator schema, so `getBySchema` finds it.
 

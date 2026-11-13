@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { formatStepLabel, MinimalProgressConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import { useViewConfig, useViewContext } from '@schema-engine/forms-react/hooks';
 
@@ -14,10 +15,11 @@ export function MinimalProgress() {
 
 	const labelId = `${form.id}-progress-label`;
 	const progressValue = Math.round(((currentStepIndex + 1) / steps.length) * 100);
+	const fillStyle: CSSProperties & Record<'--se-progress', string> = { '--se-progress': `${progressValue}%` };
 
 	return (
-		<div className="w-full space-y-2">
-			<div className="flex items-center justify-between text-sm">
+		<div className="se-minimal-progress">
+			<div className="se-minimal-progress__labels text-sm">
 				<span id={labelId}>{labels.progress}</span>
 				{showPercentage ? (
 					<span aria-hidden className="text-muted-foreground tabular-nums">
@@ -32,9 +34,9 @@ export function MinimalProgress() {
 				aria-valuemax={100}
 				aria-valuenow={progressValue}
 				aria-valuetext={formatStepLabel(labels.valueText, currentStepIndex + 1, steps.length)}
-				className="h-2 w-full overflow-hidden rounded-full bg-secondary"
+				className="se-minimal-progress__track bg-secondary"
 			>
-				<div aria-hidden className="h-full bg-primary" style={{ width: `${progressValue}%` }} />
+				<div aria-hidden className="se-minimal-progress__fill bg-primary" style={fillStyle} />
 			</div>
 		</div>
 	);

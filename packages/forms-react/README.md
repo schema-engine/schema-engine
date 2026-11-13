@@ -164,8 +164,8 @@ through their own `FormRenderer`. They cover array sibling constraints, empty
 scalar array rows and the state that follows them, nested wizard validation,
 required constraints on fields and containers, disabled arrays, `validationMode`,
 nested error clearing, Valibot action registration, submission aborts, submit
-attempt counts, and change and action callbacks. Run this suite
+attempt counts, and change and action callbacks, plus the parity checks of the shared layout (a field's font size, a text input that fills its field, the action bar's `align`) and of the spacing of the hero, split-screen and sidebar shells. Run this suite
 with `pnpm exec vitest run --project browser test/conformance` from this package.
 `test/ssr/nested-theme.acceptance.browser.test.tsx` runs the shared nested-theme
 harness: a form on its own layout theme inside a grid item of another takes its own
-appearance tokens, with the host stylesheet before and after the form's.
+appearance tokens, with the host stylesheet before and after the form's. It also pins a form nested in its own theme, a pick reached through plain wrappers, an outer pick inherited by a form that picks nothing, an author class on the element that carries the theme and the pick, and the documented limit of A in B in A without `@scope`.

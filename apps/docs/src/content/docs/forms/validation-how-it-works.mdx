@@ -248,6 +248,11 @@ steps[0] (contact).elements[2] (email).grid.width: Expected one of full, three-q
 view.$type: Unknown view recipe 'nope'. Register it with createFormEngine({ recipes: [...] }).
 ```
 
+An issue a schema reported also has a `code` and `params` (for example `too_small` with `{ minimum: 3 }`), so
+an editor can localize the diagnostic instead of showing the English `message`. An issue the engine finds
+itself has neither. A union that fails is reported at the key that failed in the branch the value was closest
+to, or at the union when no branch is.
+
 A malformed form envelope (its own shape, such as `steps` not being an array) stops the deeper checks and is
 reported alone. An unrecognized key is reported at the key itself, for example `['view', 'shell', 'bogus']`.
 

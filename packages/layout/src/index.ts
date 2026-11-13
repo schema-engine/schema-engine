@@ -75,13 +75,7 @@ export {
 	gridUsesAreas,
 	namedPlacementOverflow,
 } from './lib/grid-placement';
-export type {
-	AreaTemplateIssue,
-	CascadeSlot,
-	GridAreaRows,
-	GridAreaTemplates,
-	GridBreakpointToken,
-} from './lib/grid-placement';
+export type { CascadeSlot, GridAreaRows, GridAreaTemplates, GridBreakpointToken } from './lib/grid-placement';
 
 export { GRID_CLASS, GRID_ITEM_CLASS, getGridItemVariables, getGridVariables } from './lib/grid-styles';
 export type { CssVariables, GridGapScale, GridThemeOptions, NormalizedGridTheme } from './lib/grid-styles';

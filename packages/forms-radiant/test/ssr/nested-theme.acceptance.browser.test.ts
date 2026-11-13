@@ -1,9 +1,14 @@
 import { describe, inject, test } from 'vitest';
 import {
 	expectAuthorClassOutranksNestedTokens,
+	expectAuthorClassOutranksTokensOnThemeRoot,
+	expectFormNestedInItsOwnThemeUsesItsTokens,
 	expectNestedFormUsesOwnThemeTokens,
 	expectNestedGuestIgnoresHostSlots,
 	expectNestedFormUsesOwnThemeTokensWithoutScope,
+	expectOuterPickReachesUnpickedGuest,
+	expectPlainWrapperKeepsThemeTokens,
+	expectReenteredThemeFallsBackWithoutScope,
 	expectReenteredThemeUsesOwnTokens,
 	nestedHostTheme,
 } from '../../../../test-utils/nested-theme-acceptance';
@@ -44,6 +49,38 @@ describe('a form nested in another theme grid', () => {
 	test('does not read the host item placement at a width its own breakpoints have not reached', async () => {
 		await expectNestedGuestIgnoresHostSlots(
 			inject('ssrNestedThemeHtml'),
+			nestedHostTheme,
+			inject('ssrNestedTheme'),
+		);
+	});
+
+	test('uses its own tokens when it sits in a grid item of its own theme', async () => {
+		await expectFormNestedInItsOwnThemeUsesItsTokens(inject('ssrNestedThemeHtml'), inject('ssrNestedTheme'));
+	});
+
+	test('reaches a pick through plain wrappers below the theme root', async () => {
+		await expectPlainWrapperKeepsThemeTokens(nestedHostTheme, inject('ssrNestedTheme'));
+	});
+
+	test('inherits an outer host pick when it picks nothing itself', async () => {
+		await expectOuterPickReachesUnpickedGuest(
+			inject('ssrNestedThemeUnpickedHtml'),
+			nestedHostTheme,
+			inject('ssrNestedTheme'),
+		);
+	});
+
+	test('keeps an author class on the element that carries the theme and the pick above the tokens', async () => {
+		await expectAuthorClassOutranksTokensOnThemeRoot(
+			inject('ssrNestedThemeFormClassHtml'),
+			nestedHostTheme,
+			inject('ssrNestedTheme'),
+		);
+	});
+
+	test('falls back to the form pick below another theme without @scope, as documented', async () => {
+		await expectReenteredThemeFallsBackWithoutScope(
+			inject('ssrReenteredThemeHtml'),
 			nestedHostTheme,
 			inject('ssrNestedTheme'),
 		);

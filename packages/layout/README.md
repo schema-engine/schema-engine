@@ -93,6 +93,8 @@ Plain selectors cannot say "no other theme between" for a theme re-entered below
 
 `@scope` changes one cascade detail: scope proximity outranks source order, and an unscoped rule is the farthest from any scope root. A zero-specificity author rule such as `:where(.x)` therefore loses to a token rule in a browser with `@scope`, where it won on order alone before. A class with any specificity still wins.
 
+Both renderers run the same Chromium cases (`test-utils/nested-theme-acceptance.ts`), so each statement above is pinned, including the A in B in A fallback without `@scope`: change that behaviour and the test and this section together.
+
 Tokens are custom properties, so they still inherit like any other: an outer pick on an axis reaches a nested form that picks nothing on that axis, until that form picks a value that declares those tokens (the built-in `size.default` and `surface.elevated` set theirs to `initial`, which hands them back to the component).
 
 ## The stylesheet hooks
@@ -186,7 +188,7 @@ The render payload is opaque here: `bindRecipe(spec, render)` stores whatever a 
 
 ## Grid schemas
 
-`GridLayoutConfigSchema` (a container's `grid`) and `ElementGridConfigSchema` (an item's `grid`) are Zod Mini schemas, with `GridLayoutConfig` and `ElementGridConfig` as their inferred types. `ItemGridBreakpointSchema` is the schema of one breakpoint entry of an item's `responsive` map, and `GridBreakpointConfigSchema` the container's. The gap tokens (`GridGapTokens`) and the named widths and offsets (`GridWidthNames`, `GridOffsetNames`) are exported too. Area names are checked by a pattern that the JSON Schema export carries. Placement helpers used by validators (`namedPlacementOverflow`, `gridAreaTemplates`, `areaTemplateIssues`, and the cascade helpers) are exported too.
+`GridLayoutConfigSchema` (a container's `grid`) and `ElementGridConfigSchema` (an item's `grid`) are Zod Mini schemas, with `GridLayoutConfig` and `ElementGridConfig` as their inferred types. `ItemGridBreakpointSchema` is the schema of one breakpoint entry of an item's `responsive` map, and `GridBreakpointConfigSchema` the container's. The gap tokens (`GridGapTokens`) and the named widths and offsets (`GridWidthNames`, `GridOffsetNames`) are exported too. Area names are checked by a pattern that the JSON Schema export carries. Placement helpers used by validators (`namedPlacementOverflow`, `gridAreaTemplates`, `areaTemplateIssues`, and the cascade helpers) are exported too. `areaTemplateIssues(grid)` takes a grid config (any value; one that sets no `areas` has no issue; it replaces the older `AreaTemplateIssue` shape of `{ slot, message }`) and returns `LayoutIssue`s whose `path` is relative to the grid: `['areas']` for the array form of the default template, else `['areas', slot]`.
 
 ## Public surface
 

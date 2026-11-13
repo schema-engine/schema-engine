@@ -108,32 +108,35 @@ engine.describeViewCatalog();
 type FormValidationIssue = {
 	message: string;
 	path: ReadonlyArray<PropertyKey>; // ['steps', 0, 'elements', 2, 'grid', 'width']
+	code?: string; // the schema's code on a schema issue, such as 'too_small'
+	params?: Readonly<Record<string, unknown>>; // its details, such as { origin: 'string', minimum: 3, inclusive: true }
 };
 
 type FormValidationResult<T> = { success: true; data: T } | { success: false; issues: FormValidationIssue[] };
 ```
 
-`error.issues` on a `FormValidationError` has the same shape. See
+`params` holds the details a code reports and only those that are set: `values`, `expected`, `origin`, `minimum`, `maximum`, `inclusive`, `format`, `pattern` and `keys`. `error.issues` on a `FormValidationError` has the same shape. See
 [Form configuration errors](/docs/forms/validation-how-it-works#form-configuration-errors)
 for the paths and a copy-pasteable example.
 
 JSON Schema conversion is backed by Zod Mini for first-party schemas. Use
 `io: 'input'` for authoring input (where defaulted fields are optional) or
-`io: 'output'` for parsed output (the default):
+`io: 'output'` for parsed output. Every generator defaults to `'input'`, since the export describes
+what authors write. An element whose schema pipes a transform (Radiant's `input-otp`) has no
+JSON Schema for its output side, so `io: 'output'` throws for an engine that registers one.
 
 ```ts
-engine.generateJSONSchemaCollection({ io: 'input' });
-engine.generateFormConfigSchema({ io: 'output' });
-engine.generateActionConfigSchema('submit', { io: 'input' });
+engine.generateJSONSchemaCollection(); // io: 'input'
+engine.generateFormConfigSchema(); // io: 'input'
+engine.generateActionConfigSchema('submit', { io: 'output' });
 ```
 
 In these schemas an `appearance` pick is closed over the axes its owner declares. The form and
 each step list every axis of the layout theme; an element lists the axes in its `appearanceAxes`
 and a recipe slot the axes in the recipe's `appearanceAxes`, each as an enum of the axis's
-values. Any other axis is rejected, as it is by `validateForm`. The export checks top-level
-elements and the recipe slots; the children of a fieldset or an array row are loosely typed in it,
-so their `appearance` is not checked there, and neither is that of an element whose schema is lazy.
-`validateForm` checks all of them.
+values. Any other axis is rejected, as it is by `validateForm`. The export checks elements, the
+children of a fieldset or an array row (typed as a union of every element's schema) and the recipe
+slots. It does not check the `appearance` of an element whose schema is lazy; `validateForm` does.
 
 `getFormConfigStandardSchema()` and `getActionConfigStandardSchema()` expose
 the same input/output converters through the Standard JSON Schema contract.

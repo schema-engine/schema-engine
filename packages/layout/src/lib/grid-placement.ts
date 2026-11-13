@@ -1,4 +1,5 @@
 import type { GridBreakpointConfig, GridOffsetName, GridWidthName } from '@/schemas/grid';
+import type { LayoutIssue } from './layout-issue';
 
 /**
  * Reads of an element's grid placement shared by the stylesheet emitter and
@@ -217,11 +218,6 @@ export function cascadeValues<T>(
 	});
 }
 
-export interface AreaTemplateIssue {
-	slot: CascadeSlot;
-	message: string;
-}
-
 function cellCount(count: number): string {
 	return `${count} ${count === 1 ? 'cell' : 'cells'}`;
 }
@@ -244,20 +240,26 @@ function isRectangle(rows: GridAreaRows, name: string): boolean {
  * Why CSS would drop a template: rows of unequal length, or an area whose cells
  * do not fill a rectangle.
  *
+ * @param grid A grid config; one that sets no `areas` has no issue.
+ *
  * @remarks
- * Rows of unequal length stop the check for that template, as no area can be
- * located in a ragged one.
+ * Each issue's `path` is relative to the grid: `['areas']` for the array form of the default
+ * template, else `['areas', slot]`. Rows of unequal length stop the check for that template, as no
+ * area can be located in a ragged one.
  */
-export function areaTemplateIssues(templates: GridAreaTemplates): AreaTemplateIssue[] {
-	const issues: AreaTemplateIssue[] = [];
+export function areaTemplateIssues(grid: unknown): LayoutIssue[] {
+	const templates = gridAreaTemplates(grid);
+	const arrayForm = isRecord(grid) && Array.isArray(grid.areas);
+	const issues: LayoutIssue[] = [];
 	for (const slot of CASCADE_SLOTS) {
 		const rows = templates[slot];
 		if (!rows) continue;
+		const path = arrayForm ? ['areas'] : ['areas', slot];
 		const width = rows[0]?.length ?? 0;
 		const ragged = rows.findIndex((row) => row.length !== width);
 		if (ragged !== -1) {
 			issues.push({
-				slot,
+				path,
 				message: `row ${ragged + 1} has ${cellCount(rows[ragged]?.length ?? 0)} but row 1 has ${width}.`,
 			});
 			continue;
@@ -265,7 +267,7 @@ export function areaTemplateIssues(templates: GridAreaTemplates): AreaTemplateIs
 		for (const name of areaNames(rows)) {
 			if (!isRectangle(rows, name)) {
 				issues.push({
-					slot,
+					path,
 					message: `area '${name}' is not rectangular; CSS drops the whole template unless every area fills a rectangle.`,
 				});
 			}

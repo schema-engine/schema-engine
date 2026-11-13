@@ -15,8 +15,9 @@ export const InputOTPFieldExtensionSchema = z.object({
  *
  * @remarks
  * The code is the filled slots joined, so one with a gap is a shorter string and would
- * otherwise pass as complete. A `pattern` rather than `minLength` keeps an empty optional
- * code valid; `required` still rejects it. `incompleteMessage` replaces the default text.
+ * otherwise pass as complete. A `pattern` rather than `minLength` because it also holds the
+ * code to exactly `length` characters. Format rules skip an empty value, so an empty optional
+ * code stays valid and `required` still rejects it. `incompleteMessage` replaces the default text.
  */
 function withCompleteCodeRule<T extends { length?: number; incompleteMessage?: string; rules?: ValidationRule[] }>(
 	config: T,
@@ -25,7 +26,7 @@ function withCompleteCodeRule<T extends { length?: number; incompleteMessage?: s
 	if (config.rules?.some((rule) => ['minLength', 'maxLength', 'pattern'].includes(rule.type))) return config;
 	const complete = {
 		type: 'pattern',
-		value: `^(.{${length}})?$`,
+		value: `^.{${length}}$`,
 		message: config.incompleteMessage ?? `Enter all ${length} characters`,
 	} as const;
 	return { ...config, rules: [...(config.rules ?? []), complete] };

@@ -13,6 +13,7 @@ import {
 
 const MINIMAL_ACTIONS = { variant: 'minimal', showStepCounter: false } as const;
 const CARD_SHELL_AXES = ['size', 'surface'] as const;
+const SPACED_SHELL_AXES = ['size'] as const;
 const CENTERED_HEADER = { align: 'center', size: 'md' } as const;
 const HERO_HEADER = { align: 'center', size: 'lg', titleAs: 'h1', inheritColor: true } as const;
 const WIZARD_PROGRESS_HEADER = { showStepCounter: true, counterPlacement: 'before' } as const;
@@ -30,6 +31,7 @@ export const splitScreenSpec = defineRecipeSpec({
 	$type: 'split-screen',
 	kind: 'single-step',
 	slotSchemas: { shell: SplitScreenShellConfigSchema, actions: FormActionsConfigSchema },
+	appearanceAxes: { shell: SPACED_SHELL_AXES },
 	metadata: { name: 'Split screen', description: 'Single-step form with a side panel.', category: 'layout' },
 });
 
@@ -38,6 +40,7 @@ export const heroBackgroundSpec = defineRecipeSpec({
 	kind: 'single-step',
 	slotSchemas: { shell: HeroShellConfigSchema, header: StepHeaderConfigSchema, actions: FormActionsConfigSchema },
 	slotDefaults: { header: HERO_HEADER },
+	appearanceAxes: { shell: SPACED_SHELL_AXES },
 	metadata: {
 		name: 'Hero background',
 		description: 'Single-step form over a hero image or video.',
@@ -99,6 +102,7 @@ export const sidebarWizardSpec = defineRecipeSpec({
 		actions: WizardActionsConfigSchema,
 	},
 	slotDefaults: { shell: { showSeparator: true }, header: { size: 'sm' }, progress: { orientation: 'sidebar' } },
+	appearanceAxes: { shell: SPACED_SHELL_AXES },
 	metadata: {
 		name: 'Sidebar wizard',
 		description: 'Multi-step wizard with step indicators in a sidebar.',
@@ -116,6 +120,7 @@ export const heroWizardSpec = defineRecipeSpec({
 		actions: WizardActionsConfigSchema,
 	},
 	slotDefaults: { header: { ...HERO_HEADER, ...WIZARD_PROGRESS_HEADER }, actions: MINIMAL_ACTIONS },
+	appearanceAxes: { shell: SPACED_SHELL_AXES },
 	metadata: { name: 'Hero wizard', description: 'Multi-step wizard over a hero background.', category: 'wizard' },
 });
 
@@ -129,6 +134,7 @@ export const splitScreenWizardSpec = defineRecipeSpec({
 		actions: WizardActionsConfigSchema,
 	},
 	slotDefaults: { header: { fallbackToFormTitle: false } },
+	appearanceAxes: { shell: SPACED_SHELL_AXES },
 	metadata: {
 		name: 'Split screen wizard',
 		description: 'Multi-step wizard with a marketing side panel.',

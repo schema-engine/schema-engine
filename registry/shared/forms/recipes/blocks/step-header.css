@@ -1,0 +1,26 @@
+/*
+ * Layout of the step header block.
+ *
+ * Every rule sits inside :where(), so it adds no specificity and a host class on the same element wins.
+ * The title scale and colours stay with your ui theme (Tailwind classes on the title and the counter).
+ *
+ * Import this file into the `components` layer when the app uses Tailwind, as recipes.css says.
+ */
+:where(.se-step-header) {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	max-width: none;
+}
+
+:where(.se-step-header[data-align='start']) {
+	text-align: left;
+}
+
+:where(.se-step-header[data-align='center']) {
+	text-align: center;
+}
+
+:where(.se-step-header--inherit-color) {
+	color: inherit;
+}

@@ -1,0 +1,77 @@
+/*
+ * Hero shell styles for the React registry recipes.
+ *
+ * Every rule sits inside :where(), so it adds no specificity and a host class on the same element wins.
+ * The shell reads the semantic `size` token --se-space for its padding and the gaps of its content, as the
+ * Radiant hero does; the fallbacks are the look of an unpicked hero. The background image is data and stays
+ * an inline `background-image` on the shell, so no inline style carries layout.
+ *
+ * Import this file into the `components` layer when the app uses Tailwind, so utility classes still outrank
+ * it: `@import "./components/schema-engine/forms/recipes/recipes.css" layer(components);`
+ */
+:where(.se-hero-shell) {
+	position: relative;
+	isolation: isolate;
+	display: flex;
+	box-sizing: border-box;
+	width: 100%;
+	min-height: 100svh;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	padding: var(--se-space, 2rem);
+	background-position: center;
+	background-size: cover;
+}
+
+:where(.se-hero-shell__video) {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+:where(.se-hero-shell__overlay) {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	background: rgb(0 0 0 / 0.5);
+}
+
+:where(.se-hero-shell__content) {
+	position: relative;
+	z-index: 2;
+	width: 100%;
+	text-align: center;
+}
+
+:where(.se-hero-shell__content--sm) {
+	max-width: 24rem;
+}
+
+:where(.se-hero-shell__content--md) {
+	max-width: 28rem;
+}
+
+:where(.se-hero-shell__content--lg) {
+	max-width: 32rem;
+}
+
+:where(.se-hero-shell__content--xl) {
+	max-width: 36rem;
+}
+
+:where(.se-hero-shell__header) {
+	margin-bottom: var(--se-space, 2rem);
+}
+
+:where(.se-hero-shell__form) {
+	display: flex;
+	flex-direction: column;
+	gap: var(--se-space, 1.5rem);
+	padding: var(--se-space, 2rem);
+	border-radius: var(--radius, 0.5rem);
+	text-align: left;
+}
