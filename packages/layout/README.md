@@ -87,6 +87,8 @@ Rules for a good axis: orthogonal to the others; the same meaning on every compo
 
 The stylesheet selects only `.se-grid`, `.se-grid-item` and `[data-se-theme]`. A renderer puts `GRID_CLASS` (`se-grid`) on every grid container, `GRID_ITEM_CLASS` (`se-grid-item`) on every item placed in one, and `data-se-theme="<id>"` on both. It adds them beside its own classes. There are no aliases for another class name.
 
+An item's placement travels as `--se-item-*` custom properties (`--se-item-grid-column`, `--se-item-display`, `--se-item-margin-block-end` and the rest, each with a `-<breakpoint>` variant). A host that needs its own `display` sets `--se-item-display-mode` instead, which the stylesheet's responsive `hidden` toggles against. Container properties are `--se-grid-*`.
+
 The stylesheet owns behavior: neutral defaults, the breakpoint cascade, and the `initial` resets that keep a nested grid from inheriting its parent's placement. Inline custom properties carry only values an author wrote, so an element without `grid` config has no `style` attribute.
 
 ## Emitting a container and its items
@@ -164,13 +166,28 @@ const registry = createRecipeRegistry(sectionProtocol, [bindRecipe(hero, { shell
 - `defineProtocolRecipeSpec` checks `slotDefaults` against the slot schemas and requires a slot that declares `appearanceAxes` to accept an `appearance` key. It keeps the concrete view schema type, so a domain can infer the authoring type of a view from a registration.
 - The protocol types are `RecipeProtocol`, `RecipeRule` and `RecipeShape` (what a rule reads), with `SlotOf` and `KindOf` to get the names back from a protocol, and `ProtocolRecipeSpec` and `ProtocolRecipeRegistration` for the spec and its binding. These carry the `Protocol` prefix because `@schema-engine/forms` exports narrower `RecipeSpec` and `RecipeRegistration` types of its own. `assertRecipeRules(protocol, recipe)` is the check both entry points run, for a domain that validates a recipe outside a registry.
 - `resolveRecipeView(recipe, view, scope)` resolves the view a document selects, for a winning registration: the recipe defaults laid under the author's slot config, each slot's `appearance` (the scope's inherited picks for the axes the slot declares, the slot's own pick winning, invalid picks reported as `view.<slot>: appearance...`), the schema parse, and any key the recipe does not declare. It returns `{ issues, view }`, or `{ issues, schemaIssues }` when the schema rejects the view, so the domain formats schema issues its own way. It does not change the view it is given. What needs the whole document (a kind that wants a number of steps, a default recipe) stays with the domain.
-- `mergeSlotDefaults(view, slotDefaults)` lays a view's slot config over the recipe defaults, deep for plain objects. `getSlotConfig(viewConfig, slot, schema)` reads one slot of a resolved view, and `RecipeViewModel` is the part of a renderer's view model that every domain shares.
+- `mergeSlotDefaults(view, slotDefaults)` lays a view's slot config over the recipe defaults, deep for plain objects. `readSlotConfig(viewConfig, slot, schema)` reads one slot of a resolved view, and `RecipeViewModel` is the part of a renderer's view model that every domain shares.
 
 The render payload is opaque here: `bindRecipe(spec, render)` stores whatever a domain's renderers need. Forms declares its protocol in [`@schema-engine/forms/recipes`](../forms/README.md); the built-in form recipes stay there.
 
 ## Grid schemas
 
-`GridLayoutConfigSchema` (a container's `grid`) and `ElementGridConfigSchema` (an item's `grid`) are Zod Mini schemas, with `GridLayoutConfig` and `ElementGridConfig` as their inferred types. They also export the gap tokens and the named widths and offsets. Area names are checked by a pattern that the JSON Schema export carries. Placement helpers used by validators (`namedPlacementOverflow`, `gridAreaTemplates`, `areaTemplateIssues`, and the cascade helpers) are exported too.
+`GridLayoutConfigSchema` (a container's `grid`) and `ElementGridConfigSchema` (an item's `grid`) are Zod Mini schemas, with `GridLayoutConfig` and `ElementGridConfig` as their inferred types. `ItemGridBreakpointSchema` is the schema of one breakpoint entry of an item's `responsive` map, and `GridBreakpointConfigSchema` the container's. The gap tokens (`GridGapTokens`) and the named widths and offsets (`GridWidthNames`, `GridOffsetNames`) are exported too. Area names are checked by a pattern that the JSON Schema export carries. Placement helpers used by validators (`namedPlacementOverflow`, `gridAreaTemplates`, `areaTemplateIssues`, and the cascade helpers) are exported too.
+
+## Public surface
+
+The package has one entry, `@schema-engine/layout`, and every export is named: nothing is re-exported with `export *`, so adding a function to a module does not widen the API. `test/public-surface.test.ts` lists the runtime exports and `test/types/public-surface.test-d.ts` the exported types; a change to either list is a change to the API.
+
+| Area            | Exports                                                                                                                                                                                                                                        |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Theme           | `createLayoutTheme`, `getDefaultLayoutTheme`, `isLayoutTheme`, `assertAxesNotReserved`, and the types `LayoutTheme`, `LayoutThemeOptions`, `LayoutInput`, `LayoutAxes`                                                                         |
+| Appearance      | `defineAxis`, `builtInAxes`, `createAppearanceSchema`, `AppearanceConfigSchema`, `checkAppearance`, `mergeAppearance`, `pickSupportedAppearance`, `getAppearanceAttributes`, and the axis and pick types                                       |
+| Grid schemas    | `GridLayoutConfigSchema`, `ElementGridConfigSchema`, `GridBreakpointConfigSchema`, `ItemGridBreakpointSchema`, `GridGapTokens`, `GridWidthNames`, `GridOffsetNames`, and their types                                                           |
+| Grid emitters   | `GRID_CLASS`, `GRID_ITEM_CLASS`, `getGridVariables`, `getGridItemVariables`, `CssVariables`, `GridThemeOptions`, `NormalizedGridTheme`, `GridGapScale`                                                                                         |
+| Grid placement  | `namedPlacementOverflow`, `gridAreaTemplates`, `gridUsesAreas`, `areaNames`, `areaTemplateIssues`, `cascadeValues`, `elementAreaSlots`, `elementGridKeys`, `elementHiddenSlots`, `elementUsesGridWidths`, `GRID_TEMPLATE_KEYS`, `WIDTH_TRACKS` |
+| Recipe protocol | `defineRecipeProtocol`, `defineProtocolRecipeSpec`, `bindRecipe`, `createRecipeRegistry`, `assertRecipeRules`, `resolveRecipeView`, `mergeSlotDefaults`, `readSlotConfig`, and the protocol and view types                                     |
+
+Left internal on purpose: `compileAppearance`, `getAppearanceCss`, `resolveGridTheme`, `getGridThemeCss` and `canonicalGridTheme` (a theme is the one way to get a stylesheet, and `theme.appearance` and `theme.grid` already expose what they compile), `assertAxisNotReserved` (`createLayoutTheme` and `assertAxesNotReserved` run it), the `DeepReadonly` type, and the cascade tables (`BREAKPOINT_ORDER`, `CASCADE_SLOTS`, `WIDTH_SPANS`). `readSlotConfig` is named apart from `getSlotConfig` in `@schema-engine/forms/recipes`, which takes the forms slot names: importing the wrong one cannot compile a slot typo through by accident.
 
 ## Tests
 

@@ -19,7 +19,7 @@ export interface RecipeViewModel<TKind extends string = string> {
  * block's own strict schema would reject a custom recipe whose slot schema extends the block's
  * with extra keys.
  */
-export function getSlotConfig<TSchema extends z.ZodMiniType>(
+export function readSlotConfig<TSchema extends z.ZodMiniType>(
 	viewConfig: Record<string, unknown>,
 	slot: string,
 	_schema: TSchema,
