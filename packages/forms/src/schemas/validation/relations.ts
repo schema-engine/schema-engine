@@ -1,4 +1,5 @@
 import * as z from 'zod/mini';
+import { RelateRuleSchema } from './types.js';
 import type { RelateRule, RelationAssert, ValidationRegistration } from './types.js';
 import { isEmpty } from './empty.js';
 
@@ -107,7 +108,13 @@ const EMPTINESS_ASSERTIONS = new Set<RelationAssert>(['atLeastOne', 'exactlyOne'
  * `relation-presets.ts`, which returns plain rule objects a CMS can round-trip.
  */
 export const relateValidation: ValidationRegistration<RelateRule> = {
-	type: 'relate',
+	$type: 'relate',
+	schema: RelateRuleSchema,
+	metadata: {
+		name: 'Relate',
+		description:
+			'The value holds a named comparison with other fields, such as ascending dates or at least one filled.',
+	},
 	category: 'cross-field',
 	dependsOn: (rule) => rule.fields,
 	handler: (rule, context) =>

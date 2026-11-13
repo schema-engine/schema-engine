@@ -2,7 +2,7 @@ import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { ElementMetadata } from './metadata';
 import type { InputRegistration, StaticRegistration } from './registration';
 import type { NormalizedElementConfig } from '@/lib/normalized-form-config';
-import type { AnyValidationRegistration } from '@/schemas/validation/types';
+import type { ValidationRegistrationConstraint } from '@/schemas/validation/types';
 import type { AppearanceAxisList } from '@schema-engine/layout';
 
 type InferOutput<TSchema> = TSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TSchema> : never;
@@ -36,7 +36,7 @@ type DefineInputRegistration<
 	TSchema extends StandardSchemaV1,
 	TProps,
 > = DefineElementRegistration<TType, TSchema, TProps> & {
-	validations?: readonly AnyValidationRegistration[];
+	validations?: readonly ValidationRegistrationConstraint[];
 };
 
 type DefineElementArg<TType extends string, TSchema extends StandardSchemaV1, TProps> =

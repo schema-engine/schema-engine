@@ -6,6 +6,7 @@ import type {
 	ElementRegistrationConstraint,
 	RecipeRegistrationConstraint,
 	ActionRegistrationConstraint,
+	ValidationRegistrationConstraint,
 } from '@/builder/types.utils';
 import type { FormEngine } from './form-engine';
 import type { SchemaMetadataCatalog } from './schema-metadata-catalog';
@@ -20,6 +21,17 @@ export interface CreateFormEngineOptions<
 	elements?: TElements;
 	recipes?: TRecipes;
 	actions?: TActions;
+	/**
+	 * Validation rules to add to the built-in ones and those the elements declare.
+	 *
+	 * @remarks
+	 * Stored with the other validations in a read-only registry: a later registration with the same
+	 * `$type` replaces an earlier one without a warning, and each `schema` must be a Standard Schema or
+	 * the build throws. These come after the validations elements declare, so they win over them.
+	 * {@link FormEngine.extend} inherits them. Rule configs are not typed per engine: the rule objects in
+	 * a field's `rules` keep their `type` string.
+	 */
+	validations?: readonly ValidationRegistrationConstraint[];
 	/**
 	 * Extra schema metadata entries. The engine copies the catalog and writes every
 	 * registration's entry over it, so an entry with a registration's id is replaced.
@@ -96,6 +108,7 @@ export function createFormEngine<
 		elements: options?.elements,
 		recipes: options?.recipes,
 		actions: options?.actions,
+		validations: options?.validations,
 		catalog: options?.catalog,
 		layout: options?.layout,
 		defaultWizardRecipe: options?.defaultWizardRecipe,

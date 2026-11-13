@@ -6,6 +6,7 @@ import type {
 	ElementRegistrationConstraint,
 	RecipeRegistrationConstraint,
 } from '@/builder/types.utils';
+import type { ValidationRegistrationConstraint } from '@/schemas/validation/types';
 import { FormEngine } from '@/engine/form-engine';
 import { ComponentType } from '@/engine/component-type';
 import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from '@/engine/schema-artifacts';
@@ -26,7 +27,7 @@ import * as z from 'zod/mini';
 import { isZodType } from '@/lib/zod-json-schema';
 import { assertDefaultWizardRecipe, createFormRecipeRegistry } from '@/recipes/protocol';
 import { assertStandardSchema } from '@/lib/standard-schema';
-import { createDefaultValidationRegistry, type ValidationRegistry } from '@/schemas/validation';
+import { createDefaultValidationRegistry } from '@/schemas/validation';
 
 function createUnionSchema(schemas: z.ZodMiniType[]): z.ZodMiniType {
 	if (schemas.length === 0) {
@@ -112,6 +113,7 @@ export type FormEngineRegistrationLists = {
 	elements?: readonly ElementRegistrationConstraint[];
 	recipes?: readonly RecipeRegistrationConstraint[];
 	actions?: readonly ActionRegistrationConstraint[];
+	validations?: readonly ValidationRegistrationConstraint[];
 	catalog?: SchemaMetadataCatalog;
 	defaultWizardRecipe?: string;
 	layout?: LayoutInput;
@@ -167,8 +169,11 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 		}
 	}
 
-	const validationRegistryInstance = createDefaultValidationRegistry();
-	registerLastWinsElementValidations(lists.elements ?? [], validationRegistryInstance);
+	const validations = Object.freeze([...(lists.validations ?? [])]);
+	const validationRegistry = createDefaultValidationRegistry([
+		...collectElementValidations(elementRegistry.all() as readonly ElementRegistrationConstraint[]),
+		...validations,
+	]);
 
 	assertDefaultWizardRecipe(recipeRegistry, lists.defaultWizardRecipe);
 
@@ -200,27 +205,24 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 		actions: actionRegistry,
 		schemaArtifacts,
 		layout,
-		validationRegistry: validationRegistryInstance,
+		validationRegistry,
+		validations,
 		defaultWizardRecipe: lists.defaultWizardRecipe,
 	});
 }
 
 /**
- * Registers `validations` from the last-wins element for each `$type`.
+ * Validations declared by the winning element of each `$type`, in the element registry's order.
+ *
+ * @remarks
+ * An element replaced by a later one with the same `$type` contributes nothing. The order is the
+ * registry's: a replaced `$type` keeps the position of its first registration, as it does for
+ * every other lookup. When two elements declare the same validation `$type`, the one later in that
+ * order wins. {@link FormEngine.extend} rebuilds from the same registry order, so an extended
+ * engine with no new elements keeps the same winner.
  */
-function registerLastWinsElementValidations(
+function collectElementValidations(
 	elements: readonly ElementRegistrationConstraint[],
-	registry: ValidationRegistry,
-): void {
-	const seen = new Set<string>();
-	for (let index = elements.length - 1; index >= 0; index -= 1) {
-		const element = elements[index];
-		if (seen.has(element.$type)) {
-			continue;
-		}
-		seen.add(element.$type);
-		if (element.validations?.length) {
-			registry.registerMultiple([...element.validations]);
-		}
-	}
+): ValidationRegistrationConstraint[] {
+	return elements.flatMap((element) => element.validations ?? []);
 }

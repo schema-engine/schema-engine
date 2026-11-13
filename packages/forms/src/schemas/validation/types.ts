@@ -1,4 +1,5 @@
 import * as z from 'zod/mini';
+import type { BaseRegistration, RegistrationMetadata } from '@schema-engine/registry';
 import type { DebounceScope } from '../../lib/debounce.js';
 
 const RegexPatternSchema = z.string().check(
@@ -12,137 +13,137 @@ const RegexPatternSchema = z.string().check(
 	}, 'Must be a valid regular expression'),
 );
 
-const BaseValidationRuleSchema = z.object({
+export const BaseValidationRuleSchema = z.object({
 	type: z.string(),
 	message: z.optional(z.string()),
 });
 
-const RequiredRuleSchema = z.object({
+export const RequiredRuleSchema = z.object({
 	type: z.literal('required'),
 	message: z.optional(z.string()),
 });
 
-const MinLengthRuleSchema = z.object({
+export const MinLengthRuleSchema = z.object({
 	type: z.literal('minLength'),
 	value: z.number(),
 	message: z.optional(z.string()),
 });
 
-const MaxLengthRuleSchema = z.object({
+export const MaxLengthRuleSchema = z.object({
 	type: z.literal('maxLength'),
 	value: z.number(),
 	message: z.optional(z.string()),
 });
 
-const EmailRuleSchema = z.object({
+export const EmailRuleSchema = z.object({
 	type: z.literal('email'),
 	pattern: z.optional(RegexPatternSchema),
 	message: z.optional(z.string()),
 });
 
-const PhoneRuleSchema = z.object({
+export const PhoneRuleSchema = z.object({
 	type: z.literal('phone'),
 	message: z.optional(z.string()),
 });
 
-const PatternRuleSchema = z.object({
+export const PatternRuleSchema = z.object({
 	type: z.literal('pattern'),
 	value: RegexPatternSchema,
 	message: z.optional(z.string()),
 });
 
-const UrlRuleSchema = z.object({
+export const UrlRuleSchema = z.object({
 	type: z.literal('url'),
 	protocol: z.optional(RegexPatternSchema),
 	hostname: z.optional(RegexPatternSchema),
 	message: z.optional(z.string()),
 });
 
-const UuidRuleSchema = z.object({
+export const UuidRuleSchema = z.object({
 	type: z.literal('uuid'),
 	version: z.optional(z.enum(['v1', 'v2', 'v3', 'v4', 'v5'])),
 	message: z.optional(z.string()),
 });
 
-const Ipv4RuleSchema = z.object({
+export const Ipv4RuleSchema = z.object({
 	type: z.literal('ipv4'),
 	message: z.optional(z.string()),
 });
 
-const Ipv6RuleSchema = z.object({
+export const Ipv6RuleSchema = z.object({
 	type: z.literal('ipv6'),
 	message: z.optional(z.string()),
 });
 
-const CidrRuleSchema = z.object({
+export const CidrRuleSchema = z.object({
 	type: z.literal('cidr'),
 	version: z.optional(z.enum(['v4', 'v6'])),
 	message: z.optional(z.string()),
 });
 
-const JwtRuleSchema = z.object({
+export const JwtRuleSchema = z.object({
 	type: z.literal('jwt'),
 	alg: z.optional(z.string()),
 	message: z.optional(z.string()),
 });
 
-const HashRuleSchema = z.object({
+export const HashRuleSchema = z.object({
 	type: z.literal('hash'),
 	algorithm: z.enum(['md5', 'sha1', 'sha256', 'sha384', 'sha512']),
 	message: z.optional(z.string()),
 });
 
-const Base64RuleSchema = z.object({
+export const Base64RuleSchema = z.object({
 	type: z.literal('base64'),
 	urlSafe: z.optional(z.boolean()),
 	message: z.optional(z.string()),
 });
 
-const CuidRuleSchema = z.object({
+export const CuidRuleSchema = z.object({
 	type: z.literal('cuid'),
 	message: z.optional(z.string()),
 });
 
-const Cuid2RuleSchema = z.object({
+export const Cuid2RuleSchema = z.object({
 	type: z.literal('cuid2'),
 	message: z.optional(z.string()),
 });
 
-const UlidRuleSchema = z.object({
+export const UlidRuleSchema = z.object({
 	type: z.literal('ulid'),
 	message: z.optional(z.string()),
 });
 
-const HexRuleSchema = z.object({
+export const HexRuleSchema = z.object({
 	type: z.literal('hex'),
 	message: z.optional(z.string()),
 });
 
-const MinRuleSchema = z.object({
+export const MinRuleSchema = z.object({
 	type: z.literal('min'),
 	value: z.number(),
 	message: z.optional(z.string()),
 });
 
-const MaxRuleSchema = z.object({
+export const MaxRuleSchema = z.object({
 	type: z.literal('max'),
 	value: z.number(),
 	message: z.optional(z.string()),
 });
 
-const MinItemsRuleSchema = z.object({
+export const MinItemsRuleSchema = z.object({
 	type: z.literal('minItems'),
 	value: z.number(),
 	message: z.optional(z.string()),
 });
 
-const MaxItemsRuleSchema = z.object({
+export const MaxItemsRuleSchema = z.object({
 	type: z.literal('maxItems'),
 	value: z.number(),
 	message: z.optional(z.string()),
 });
 
-const DateTimeRuleSchema = z.object({
+export const DateTimeRuleSchema = z.object({
 	type: z.literal('datetime'),
 	precision: z.optional(z.number()),
 	offset: z.optional(z.boolean()),
@@ -150,18 +151,18 @@ const DateTimeRuleSchema = z.object({
 	message: z.optional(z.string()),
 });
 
-const DateRuleSchema = z.object({
+export const DateRuleSchema = z.object({
 	type: z.literal('date'),
 	message: z.optional(z.string()),
 });
 
-const TimeRuleSchema = z.object({
+export const TimeRuleSchema = z.object({
 	type: z.literal('time'),
 	precision: z.optional(z.number()),
 	message: z.optional(z.string()),
 });
 
-const AsyncRuleSchema = z.object({
+export const AsyncRuleSchema = z.object({
 	type: z.literal('async'),
 	url: z.string(),
 	method: z.optional(z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE'])),
@@ -202,7 +203,7 @@ export const RelationAssertSchema = z.enum([
 	'allOrNone',
 ]);
 
-const RelateRuleSchema = z.object({
+export const RelateRuleSchema = z.object({
 	type: z.literal('relate'),
 	fields: z
 		.array(z.string())
@@ -311,11 +312,19 @@ export interface ValidationContext {
 }
 
 /**
- * Validation rule registration definition
+ * Validation rule registration: the shared registration shape plus the handler that builds the rule's schema.
+ *
+ * @remarks
+ * `$type` is the `type` authors write in a field's `rules`, so a registration with
+ * `$type: 'postcode'` handles `{ type: 'postcode' }`. The rule objects themselves keep
+ * `type`; `schema` describes them.
+ *
  * @template TRule - Specific rule type for type-safe handler
  */
-export interface ValidationRegistration<TRule extends { type: string } = { type: string } & Record<string, unknown>> {
-	type: TRule['type'];
+export interface ValidationRegistration<
+	TRule extends { type: string } = { type: string } & Record<string, unknown>,
+> extends BaseRegistration<TRule, RegistrationMetadata> {
+	$type: TRule['type'];
 	category: 'string' | 'number' | 'array' | 'boolean' | 'date' | 'generic' | 'cross-field';
 	/**
 	 * Validation handler function
@@ -350,6 +359,25 @@ export interface ValidationRegistration<TRule extends { type: string } = { type:
 export type AnyValidationRegistration =
 	| (ValidationRule extends infer T ? (T extends ValidationRule ? ValidationRegistration<T> : never) : never)
 	| ValidationRegistration;
+
+/**
+ * A validation registration as `createFormEngine({ validations })`, an element's `validations` and the
+ * registry factories accept it.
+ *
+ * @remarks
+ * `handler` and `dependsOn` take `never`, so a registration typed for one rule shape, such as
+ * `ValidationRegistration<PostcodeRule>`, is accepted without widening its rule type. `handler` still
+ * has to return a Zod Mini schema: a handler that returns anything else does not compile.
+ */
+export type ValidationRegistrationConstraint = {
+	readonly $type: string;
+	readonly schema: { readonly '~standard': { readonly validate: (value: unknown) => unknown } };
+	readonly metadata: { readonly name: string };
+	readonly category: ValidationRegistration['category'];
+	readonly handler: (rule: never, context: ValidationContext) => z.ZodMiniType;
+	readonly dependsOn?: (rule: never) => readonly string[];
+	readonly defaultFor?: readonly string[];
+};
 
 /**
  * Mapping of validation rule types to their specific rule interfaces.

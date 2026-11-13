@@ -1,61 +1,60 @@
 import * as z from 'zod/mini';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
-	ValidationRegistry,
 	createDefaultValidationRegistry,
+	createValidationRegistry,
 } from '../../../src/schemas/validation/validation-registry';
 import { ValidationPresets } from '../../../src/schemas/validation/presets';
 
 const globalRegistry = createDefaultValidationRegistry();
-import type { ValidationRegistration } from '../../../src/schemas/validation/types';
+import type { AnyValidationRegistration, ValidationRegistration } from '../../../src/schemas/validation/types';
 import { createValidationContext } from '../../../src/schemas/validation/utils';
+import { logger } from '../../../src/lib/logger';
+
+const looseRule = z.looseObject({ type: z.string(), message: z.optional(z.string()) });
+
+/** A registration with the shared shape filled in, for tests that only care about the handler. */
+function registration($type: string, rest: Partial<ValidationRegistration> = {}): ValidationRegistration {
+	return {
+		$type,
+		schema: looseRule,
+		metadata: { name: $type },
+		category: 'generic',
+		handler: () => z.unknown(),
+		...rest,
+	};
+}
 
 describe('ValidationRegistry', () => {
-	let registry: ValidationRegistry;
-
-	beforeEach(() => {
-		registry = new ValidationRegistry();
-	});
-
 	describe('Basic Registration', () => {
-		it('should register a custom validation type', () => {
-			const customValidation: ValidationRegistration = {
-				type: 'custom',
-				category: 'generic',
-				handler: (rule: { type: string; message?: string }) => z.string().check(z.minLength(5, rule.message)),
-			};
-
-			registry.register(customValidation);
+		it('should store a custom validation type', () => {
+			const registry = createValidationRegistry([
+				registration('custom', {
+					handler: (rule: { type: string; message?: string }) =>
+						z.string().check(z.minLength(5, rule.message)),
+				}),
+			]);
 			expect(registry.has('custom')).toBe(true);
-
-			const registration = registry.get('custom' as any);
-			expect(registration?.type).toBe('custom');
+			expect(registry.get('custom')?.$type).toBe('custom');
 		});
 
-		it('should allow bulk registration', () => {
+		it('should build from a list of registrations', () => {
 			const registrations: ValidationRegistration<any>[] = [
-				{
-					type: 'v1',
-					category: 'generic',
-					handler: () => z.string(),
-				},
-				{
-					type: 'v2',
-					category: 'generic',
-					handler: () => z.number(),
-				},
+				registration('v1', { handler: () => z.string() }),
+				registration('v2', { handler: () => z.number() }),
 			];
 
-			registry.registerMultiple(registrations);
+			const registry = createValidationRegistry(registrations);
 			expect(registry.has('v1')).toBe(true);
 			expect(registry.has('v2')).toBe(true);
+			expect(registry.keys()).toEqual(['v1', 'v2']);
 		});
 
 		it('should get validations by category', () => {
-			registry.registerMultiple([
-				{ type: 's1', category: 'string', handler: () => z.string() },
-				{ type: 's2', category: 'string', handler: () => z.string() },
-				{ type: 'n1', category: 'number', handler: () => z.number() },
+			const registry = createValidationRegistry([
+				registration('s1', { category: 'string' }),
+				registration('s2', { category: 'string' }),
+				registration('n1', { category: 'number' }),
 			]);
 
 			const stringValidations = registry.getByCategory('string');
@@ -63,18 +62,28 @@ describe('ValidationRegistry', () => {
 			expect(stringValidations.every((v) => v.category === 'string')).toBe(true);
 		});
 
-		it('should unregister validation types', () => {
-			registry.register({ type: 'temp', category: 'generic', handler: () => z.any() });
-			expect(registry.has('temp')).toBe(true);
+		it('has no way to register, unregister or clear after it is built', () => {
+			const registry = createValidationRegistry([registration('temp')]);
 
-			registry.unregister('temp');
-			expect(registry.has('temp')).toBe(false);
+			expect(registry).not.toHaveProperty('register');
+			expect(registry).not.toHaveProperty('registerMultiple');
+			expect(registry).not.toHaveProperty('unregister');
+			expect(registry).not.toHaveProperty('clear');
+			expect(Object.isFrozen(registry)).toBe(true);
+		});
+
+		it('throws naming the type when a schema is not a Standard Schema', () => {
+			expect(() =>
+				createValidationRegistry([
+					{ ...registration('broken'), schema: {} } as unknown as AnyValidationRegistration,
+				]),
+			).toThrow("Validation 'broken' schema must implement Standard Schema");
 		});
 	});
 
 	describe('Built-in Validations', () => {
 		it('should have all required built-in validation types', () => {
-			const types = globalRegistry.getRegisteredTypes();
+			const types = globalRegistry.keys();
 			expect(types).toContain('required');
 			expect(types).toContain('email');
 			expect(types).toContain('minLength');
@@ -166,8 +175,7 @@ describe('ValidationRegistry', () => {
 			 * @see https://en.wikipedia.org/wiki/Luhn_algorithm
 			 */
 			const creditCardValidation: ValidationRegistration = {
-				type: 'creditCard',
-				category: 'string',
+				...registration('creditCard', { category: 'string' }),
 				handler: (rule: { type: string; message?: string }) => {
 					return z.string().check(
 						z.refine((value) => {
@@ -193,7 +201,7 @@ describe('ValidationRegistry', () => {
 				},
 			};
 
-			registry.register(creditCardValidation);
+			const registry = createValidationRegistry([creditCardValidation]);
 
 			const rule = { type: 'creditCard', message: 'Invalid card' };
 			const schema = registry.createSchema(rule, createValidationContext());
@@ -206,15 +214,14 @@ describe('ValidationRegistry', () => {
 
 		it('should support phone number validation', () => {
 			const phoneValidation: ValidationRegistration = {
-				type: 'phone',
-				category: 'string',
+				...registration('phone', { category: 'string' }),
 				handler: (rule: { type: string; message?: string }) => {
 					const phoneRegex = /^\+?[1-9]\d{1,14}$/;
 					return z.string().check(z.regex(phoneRegex, rule.message || 'Invalid phone number'));
 				},
 			};
 
-			registry.register(phoneValidation);
+			const registry = createValidationRegistry([phoneValidation]);
 
 			const phoneRule = { type: 'phone', message: 'Invalid phone format' };
 			const schema = registry.createSchema(phoneRule, createValidationContext());
@@ -224,34 +231,20 @@ describe('ValidationRegistry', () => {
 			expect(() => schema?.parse('invalid')).toThrow();
 		});
 
-		it('injects defaultFor rules onto matching field types', () => {
-			registry.register({
-				type: 'phone',
-				category: 'string',
-				defaultFor: ['phone-input'],
-				handler: () => z.string(),
-			});
+		it('derives defaultFor rules for matching field types at build', () => {
+			const registry = createValidationRegistry([
+				registration('phone', { category: 'string', defaultFor: ['phone-input'], handler: () => z.string() }),
+			]);
 
 			expect(registry.getDefaultRulesForFieldType('phone-input')).toEqual([{ type: 'phone' }]);
 			expect(registry.getDefaultRulesForFieldType('input')).toEqual([]);
-
-			registry.register({
-				type: 'phone',
-				category: 'string',
-				handler: () => z.string(),
-			});
-
-			expect(registry.getDefaultRulesForFieldType('phone-input')).toEqual([]);
 		});
 
-		it('clears defaultFor mappings when a validation is unregistered', () => {
-			registry.register({
-				type: 'phone',
-				category: 'string',
-				defaultFor: ['phone-input'],
-				handler: () => z.string(),
-			});
-			registry.unregister('phone');
+		it('drops the defaultFor rules of a registration that a later one replaces', () => {
+			const registry = createValidationRegistry([
+				registration('phone', { category: 'string', defaultFor: ['phone-input'], handler: () => z.string() }),
+				registration('phone', { category: 'string', handler: () => z.string() }),
+			]);
 
 			expect(registry.getDefaultRulesForFieldType('phone-input')).toEqual([]);
 		});
@@ -259,20 +252,21 @@ describe('ValidationRegistry', () => {
 
 	describe('Error Handling', () => {
 		it('should return null for unregistered validation types', () => {
-			const schema = registry.createSchema({ type: 'nonexistent' }, createValidationContext());
+			const schema = createValidationRegistry([]).createSchema(
+				{ type: 'nonexistent' },
+				createValidationContext(),
+			);
 			expect(schema).toBeNull();
 		});
 
 		it('should handle errors in validation handlers gracefully', () => {
-			const faultyValidation: ValidationRegistration = {
-				type: 'faulty',
-				category: 'generic',
-				handler: () => {
-					throw new Error('Validation handler error');
-				},
-			};
-
-			registry.register(faultyValidation);
+			const registry = createValidationRegistry([
+				registration('faulty', {
+					handler: () => {
+						throw new Error('Validation handler error');
+					},
+				}),
+			]);
 
 			const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 			const schema = registry.createSchema({ type: 'faulty' }, createValidationContext());
@@ -282,15 +276,20 @@ describe('ValidationRegistry', () => {
 			consoleErrorSpy.mockRestore();
 		});
 
-		it('should warn when overriding existing validation types', () => {
-			const v1: ValidationRegistration = { type: 'test', category: 'generic', handler: () => z.string() };
-			const v2: ValidationRegistration = { type: 'test', category: 'generic', handler: () => z.number() };
-
-			registry.register(v1);
-			registry.register(v2);
+		it('lets the later registration of a type win without logging', () => {
+			const spies = (['debug', 'info', 'warn', 'error'] as const).map((level) => vi.spyOn(logger, level));
+			const registry = createValidationRegistry([
+				registration('test', { handler: () => z.string() }),
+				registration('test', { handler: () => z.number() }),
+			]);
 
 			const schema = registry.createSchema({ type: 'test' }, createValidationContext());
 			expect(schema?.parse(123)).toBe(123);
+			expect(registry.size).toBe(1);
+			for (const spy of spies) {
+				expect(spy).not.toHaveBeenCalled();
+				spy.mockRestore();
+			}
 		});
 	});
 });
