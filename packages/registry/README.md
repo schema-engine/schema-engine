@@ -6,6 +6,7 @@ This package provides one registry mechanism for typed registrations keyed by `$
 
 - `createRegistry(kind, registrations)` builds a read-only, frozen registry from a list. The forms engine stores its elements, recipes, actions and validation rules with it, and `@schema-engine/actions` builds `ActionRegistry` on it. `ValidationRegistry` in `@schema-engine/forms` is a read-only registry of this kind with a few validation lookups added; it has no `register`.
 - `BaseRegistry` is the mutable opt-in for runtime plugin systems that register after construction.
+- The `@schema-engine/registry/yaml` subpath parses YAML documents and validates them with errors that point at a line of the file; see [YAML documents](#yaml-documents-schema-engineregistryyaml).
 
 Use the `ComponentRegistration` type when entries must include a render function.
 
@@ -160,6 +161,67 @@ widgets.register({
 });
 ```
 
+## YAML documents (`@schema-engine/registry/yaml`)
+
+Schema Engine documents are plain data, so they can be authored in YAML. The `./yaml` subpath parses a YAML file, validates the value with any validator that reports Standard Schema issues, and points each issue at a line and column of the file. Forms is the first consumer; any domain built on this package can use the same three steps.
+
+Install the optional peer dependency `yaml` (eemeli/yaml, 2.x) in the application that imports the subpath:
+
+```bash
+pnpm add yaml
+```
+
+The root entry `@schema-engine/registry` never imports `yaml`, so an application that does not import the subpath does not need it installed and does not bundle it. The subpath has no `node:` imports and runs in Node, Bun, Deno and the browser.
+
+```typescript
+import * as z from 'zod';
+import { YamlDocumentError, parseYaml, safeParseYaml } from '@schema-engine/registry/yaml';
+import type { YamlValidate } from '@schema-engine/registry/yaml';
+
+const siteSchema = z.object({ title: z.string(), port: z.number() });
+
+/** Wraps a synchronous Standard Schema as a validate function. */
+function validateWith<T>(schema: z.ZodType<T>): YamlValidate<T> {
+	return (value) => {
+		const result = schema['~standard'].validate(value);
+		if (result instanceof Promise) {
+			throw new TypeError('Async schemas are not supported');
+		}
+		return result.issues ? { success: false, issues: result.issues } : { success: true, data: result.value as T };
+	};
+}
+
+const text = ['title: Docs', 'port: eighty', ''].join('\n');
+
+try {
+	parseYaml(text, validateWith(siteSchema), { filename: 'site.yaml' });
+} catch (error) {
+	if (error instanceof YamlDocumentError) {
+		console.error(error.message); // site.yaml:2:7 port: Invalid input: expected number, received string
+		error.issues[0]; // { message, path: ['port'], line: 2, column: 7, filename: 'site.yaml' }
+	}
+}
+
+const result = safeParseYaml(text, validateWith(siteSchema));
+if (!result.success) {
+	for (const issue of result.issues) {
+		console.error(`${issue.line}:${issue.column} ${issue.message}`);
+	}
+}
+```
+
+- `parseYaml(text, validate, { filename? })` returns the data `validate` produced, or throws a `YamlDocumentError` whose `issues` are `YamlIssue[]`. `safeParseYaml` returns `{ success: true, data }` or `{ success: false, issues }` instead of throwing.
+- `validate` is `YamlValidate<T>`: a synchronous function from the parsed value to `{ success: true, data }` or `{ success: false, issues }`, where each issue is `{ message, path? }`. `engine.safeValidateForm` from `@schema-engine/forms` fits as it is. For a Standard Schema, wrap `~standard.validate` as above. Path segments may be keys or `{ key }`, as Standard Schema allows.
+- A `YamlIssue` is `{ message, path, line, column, filename? }`; line and column count from 1. A validation issue points at the start of the value its `path` names, or at the nearest ancestor that exists when the document lacks the key. A syntax error has an empty `path`; `validate` is not called when the text does not parse.
+- The text is read as YAML 1.2 with the core schema, one document per text. Duplicate keys and multiple documents are syntax errors.
+- `stringifyYaml(value, { schemaUrl? })` writes a value as YAML: a short map of scalars under a key in flow style (`grid: { width: half }`), every other collection in block style, and lines are not folded. `schemaUrl` adds a `# yaml-language-server: $schema=<url>` header that editors use for completion.
+
+### Caveats
+
+- `no`, `yes`, `on` and `off` are strings in YAML 1.2 and stay strings here. A YAML 1.1 reader, such as PyYAML or an older editor plugin, reads them as booleans, and `stringifyYaml` does not quote them.
+- An unquoted `1.10` is the number `1.1` in every YAML version. Only quoting keeps it a string: write `version: "1.10"`. `stringifyYaml` quotes such strings for you.
+- There is no loader, plugin or CLI, no multi-document files and no includes across files. Anchors and aliases work inside one file.
+
 ## Package Exports
 
 ```typescript
@@ -175,6 +237,8 @@ Main exports:
 - `ComponentMetadata`
 - `RegistrationMetadata`
 - `Brand`
+
+The `@schema-engine/registry/yaml` subpath exports `parseYaml`, `safeParseYaml`, `stringifyYaml`, `YamlDocumentError`, and the types `YamlIssue`, `YamlValidate`, `YamlParseResult`, `YamlParseOptions` and `StringifyYamlOptions`.
 
 ## Phantom brands
 

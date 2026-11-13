@@ -15,6 +15,10 @@ test('README TypeScript examples compile against the published package entry', (
 			dirname(fileURLToPath(import.meta.resolve('zod/package.json'))),
 			join(directory, 'node_modules', 'zod'),
 		);
+		symlinkSync(
+			dirname(fileURLToPath(import.meta.resolve('yaml/package.json'))),
+			join(directory, 'node_modules', 'yaml'),
+		);
 		writeFileSync(join(directory, 'package.json'), '{"type":"module"}');
 		const examples = [
 			...readFileSync(join(packageDirectory, 'README.md'), 'utf8').matchAll(/```typescript\n([\s\S]*?)```/g),
