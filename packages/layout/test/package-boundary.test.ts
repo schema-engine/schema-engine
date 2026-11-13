@@ -23,9 +23,9 @@ describe('the layout package boundary', () => {
 		expect(declared.filter((name) => name.startsWith('@schema-engine/forms'))).toEqual([]);
 	});
 
-	test('no source file imports forms', () => {
+	test('no source file names forms in an import, a dynamic import or a relative path', () => {
 		const importing = sourceFiles(join(packageRoot, 'src')).filter((file) =>
-			/from\s+['"]@schema-engine\/forms/.test(readFileSync(file, 'utf8')),
+			/['"`](?:@schema-engine\/forms|[./]+\/forms\/src)/.test(readFileSync(file, 'utf8')),
 		);
 		expect(importing).toEqual([]);
 	});

@@ -1,24 +1,8 @@
 import { createLayoutTheme } from '@schema-engine/layout';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
-import { rhfAdapter } from '@/adapters/react-hook-form';
-import { FormEngineProvider } from '@/components/form-engine-provider';
-import { FormRenderer } from '@/components/internals/form-renderer';
 import { expectOneThemeOneStylesheet, expectSharedLayoutTheme } from '../../../../test-utils/ssr-grid-acceptance';
+import { renderSsrFormsOnOnePage } from './render-form-ssr-html';
 import { createSsrAcceptanceEngine } from './ssr-fixture';
-
-const form = {
-	id: 'themed',
-	steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'ssr-input', id: 'a', name: 'a', label: 'A' }] }],
-};
-
-function Form({ engine }: { engine: ReturnType<typeof createSsrAcceptanceEngine> }) {
-	return (
-		<FormEngineProvider engine={engine} adapter={rhfAdapter}>
-			<FormRenderer engine={engine} adapter={rhfAdapter} config={engine.validateForm(form)} />
-		</FormEngineProvider>
-	);
-}
 
 describe('the layout theme in React markup', () => {
 	test('a form carries one data-se-theme and one stylesheet for the grid and the appearance rules', () => {
@@ -26,7 +10,7 @@ describe('the layout theme in React markup', () => {
 			grid: { minColumnWidth: '12rem' },
 			appearance: { tone: { brand: { '--se-tone-accent': '#f60' } } },
 		});
-		const html = renderToStaticMarkup(<Form engine={engine} />);
+		const html = renderSsrFormsOnOnePage([engine]);
 
 		expectOneThemeOneStylesheet(html, engine.getLayout());
 		expect(html).toContain('--se-tone-accent:#f60');
@@ -36,14 +20,23 @@ describe('the layout theme in React markup', () => {
 		const theme = createLayoutTheme({ appearance: { tone: ['neutral', 'brand'] } });
 		const first = createSsrAcceptanceEngine(theme);
 		const second = createSsrAcceptanceEngine(theme);
-		const page = renderToStaticMarkup(
-			<>
-				<Form engine={first} />
-				<Form engine={second} />
-			</>,
-		);
+		const page = renderSsrFormsOnOnePage([first, second]);
 
 		expect(first.getLayout()).toBe(second.getLayout());
 		expectSharedLayoutTheme(page, theme, true);
+	});
+
+	test('engines on different themes keep separate ids and stylesheets', () => {
+		const first = createSsrAcceptanceEngine({ appearance: { tone: ['a'] } });
+		const second = createSsrAcceptanceEngine({ appearance: { tone: ['b'] } });
+		const page = renderSsrFormsOnOnePage([first, second]);
+
+		expect(first.getLayout().id).not.toBe(second.getLayout().id);
+		expect(page).toContain(`data-se-theme="${first.getLayout().id}"`);
+		expect(page).toContain(`data-se-theme="${second.getLayout().id}"`);
+		expect(page).toContain(`se-layout-theme-${first.getLayout().id}`);
+		expect(page).toContain(`se-layout-theme-${second.getLayout().id}`);
+		expect(page).toContain(first.getLayout().css);
+		expect(page).toContain(second.getLayout().css);
 	});
 });

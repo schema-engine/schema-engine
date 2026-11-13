@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import { getDefaultCompiledAppearance } from '@schema-engine/layout';
+import { getDefaultLayoutTheme } from '@schema-engine/layout';
 import { resolveAppearance, withAppearance } from '@/lib/resolve-appearance';
 
-const scope = (inherited: Record<string, string> = {}) => ({ axes: getDefaultCompiledAppearance().axes, inherited });
+const scope = (inherited: Record<string, string> = {}) => ({ axes: getDefaultLayoutTheme().axes, inherited });
 
 describe('resolveAppearance', () => {
 	test('an owner that accepts every axis renders with its pick laid over the inherited one', () => {

@@ -4,7 +4,6 @@ import {
 	compileAppearance,
 	getAppearanceAttributes,
 	getAppearanceCss,
-	getDefaultCompiledAppearance,
 	mergeAppearance,
 	pickSupportedAppearance,
 } from '@/lib/appearance';
@@ -38,10 +37,6 @@ describe('compileAppearance', () => {
 		expect(css).toContain('--se-size-padding:var(--space-block, 1rem);');
 		expect(css).toContain('--se-size-padding:var(--space-block-lg, 1.5rem);');
 		expect(css).toContain('--se-size-padding:var(--space-block-xl, 2rem);');
-	});
-
-	test('the library default is shared', () => {
-		expect(getDefaultCompiledAppearance()).toBe(getDefaultCompiledAppearance());
 	});
 
 	test.each([

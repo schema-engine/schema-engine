@@ -30,12 +30,17 @@ import {
 	type GridAreaTemplates,
 	type CompiledAppearance,
 	type GridLayoutConfig,
-	getDefaultCompiledAppearance,
+	getDefaultLayoutTheme,
 } from '@schema-engine/layout';
 import { logger } from '@/lib/logger';
 import { mergeSlotDefaults } from '@/recipes/merge-slot-defaults';
 import { isPlainObject } from '@/lib/is-plain-object';
-import { resolveAppearance, withAppearance, type AppearanceScope } from '@/lib/resolve-appearance';
+import {
+	resolveAppearance,
+	withAppearance,
+	withoutAppearanceKey,
+	type AppearanceScope,
+} from '@/lib/resolve-appearance';
 
 export type { FormConfigView, NormalizedElementConfig, NormalizedFormConfig } from '@/lib/normalized-form-config';
 export { DEFAULT_WIZARD_RECIPE, assertFormEngine, getRenderableSteps, stepGrid } from '@/lib/form-view';
@@ -211,7 +216,7 @@ function parseView(
  *
  * @remarks
  * The key is removed from the view before the slot schemas parse it, so a registration's slot
- * schema only has to type it; the engine owns the vocabulary check. The form's picks reach a
+ * schema only has to type it; the layout theme owns the vocabulary check. The form's picks reach a
  * slot for the axes the recipe declares on it, and the slot's own pick wins.
  */
 function resolveSlotAppearance(
@@ -232,7 +237,7 @@ function resolveSlotAppearance(
 		);
 		issues.push(...slotAppearance.issues);
 		if (Object.keys(slotAppearance.selection).length > 0) resolved[slot] = slotAppearance.selection;
-		if (isPlainObject(authoredSlot)) withoutAppearance[slot] = withAppearance(authoredSlot, {});
+		if (isPlainObject(authoredSlot)) withoutAppearance[slot] = withoutAppearanceKey(authoredSlot);
 	}
 	return { withoutAppearance, resolved };
 }
@@ -642,7 +647,7 @@ export function validateElementConfig(
 	options: Pick<ValidateFormOptions, 'getElement' | 'hasValidation' | 'axes'>,
 ): NormalizedElementConfig {
 	const parsed = parseElementNode(config, options.getElement, options.hasValidation, '', {
-		axes: options.axes ?? getDefaultCompiledAppearance().axes,
+		axes: options.axes ?? getDefaultLayoutTheme().axes,
 		inherited: {},
 	});
 	if (parsed.issues.length > 0 || !parsed.item) {
@@ -692,7 +697,7 @@ export function validateFormConfig(config: unknown, options: ValidateFormOptions
 			itemKind,
 		);
 
-	const axes = options.axes ?? getDefaultCompiledAppearance().axes;
+	const axes = options.axes ?? getDefaultLayoutTheme().axes;
 	const formScope: AppearanceScope = { axes, inherited: {} };
 	const formAppearance = resolveAppearance(envelope.appearance, formScope, { subject: 'The form', location: 'form' });
 	issues.push(...formAppearance.issues);

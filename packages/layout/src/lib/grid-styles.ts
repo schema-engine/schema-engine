@@ -23,7 +23,7 @@ import {
  * and the default minimum column width. The document owns layout intent:
  * columns, responsive changes, gap selection, item placement.
  *
- * Compile once at the engine boundary ({@link createLayoutTheme}); renderers
+ * Compile once, with the rest of the layout theme ({@link createLayoutTheme}); renderers
  * emit the resulting stylesheet and per-container CSS variables inline. Breakpoint
  * behavior lives entirely in the generated media queries — no runtime
  * observers, and layout is correct with JavaScript disabled.
@@ -131,9 +131,9 @@ const DEFAULT_MIN_COLUMN_WIDTH = '15.625rem';
  * Public gap tokens. Hosts override these at `:root` to restyle every grid.
  *
  * @remarks
- * The engine must never declare these on an element: an element's own
+ * The theme must never declare these on an element: an element's own
  * declaration beats an inherited one, which would make the documented `:root`
- * override a no-op. The engine's value is declared under
+ * override a no-op. The theme's value is declared under
  * {@link gapBaseVariable} instead and reached through a `var()` fallback.
  *
  * A host override therefore replaces the token at *every* width, including one
@@ -149,12 +149,12 @@ const GAP_TOKEN_VARIABLES: Record<GridGapToken, `--${string}`> = {
 	wide: '--se-grid-gap-wide',
 };
 
-/** Engine default for a gap token, shadowed by the public token when a host sets it. */
+/** Theme default for a gap token, shadowed by the public token when a host sets it. */
 function gapBaseVariable(token: GridGapToken): `--${string}` {
 	return `--se-grid-gap-base-${token}`;
 }
 
-/** A gap token as CSS: the host's override if present, else the engine default. */
+/** A gap token as CSS: the host's override if present, else the theme default. */
 function gapTokenValue(token: GridGapToken): string {
 	return `var(${GAP_TOKEN_VARIABLES[token]}, var(${gapBaseVariable(token)}))`;
 }
@@ -266,7 +266,7 @@ function assertBreakpointOrder(breakpoints: Record<GridBreakpointToken, string>)
  * These come from consumer options, so `{ md, lg }` and `{ lg, md }` describe
  * one theme with different `JSON.stringify` output. Hashing that directly would
  * mint two ids for the same theme and emit its stylesheet twice under different
- * scopes, defeating the sharing of one compiled theme between engines.
+ * scopes, defeating the sharing of one compiled theme.
  */
 function canonicalResponsiveGap(
 	responsive: Readonly<Partial<Record<GridBreakpointToken, Readonly<GridGapScale>>>>,
@@ -404,12 +404,13 @@ function inheritanceResets(...tables: readonly (readonly ResponsiveProperty[])[]
  *
  * @remarks
  * Rules are scoped under `[data-se-theme="<id>"]`, which the renderer
- * places on every grid container and item, so two engines with different themes
+ * places on every grid container and item, so two themes that differ
  * cannot overwrite each other. Item rules are scoped under the item that
  * carries the theme attribute so nested grids do not leak styles across themes.
  * Selectors use only {@link GRID_CLASS}, {@link GRID_ITEM_CLASS} and that attribute.
  *
- * @param themeId The id of the layout theme this grid belongs to.
+ * @param theme The resolved grid vocabulary.
+ * @param themeId The id of the layout theme the rules are scoped to.
  */
 export function getGridThemeCss(theme: NormalizedGridTheme, themeId: string): string {
 	const scope = `[data-se-theme="${themeId}"]`;
@@ -530,9 +531,8 @@ function emitGapEntry(variables: CssVariables, slot: CascadeSlot, entry: GridEnt
  * single template — so they are the only values carried across slots. Axis
  * properties win over the matching `placeItems`/`placeContent` shorthand.
  *
- * When `elements` (the step's top-level elements, the ones this grid places)
- * use named widths, the grid gets 12 tracks and a `1 / -1` default placement
- * for fields that set no width. Validation keeps that from meeting `columns`.
+ * When `elements` (the items this grid places) use named widths, the grid
+ * gets 12 tracks and a `1 / -1` default placement for items that set no width. Validation keeps that from meeting `columns`.
  *
  * A grid with `areas` gets the template of each slot that sets one: the quoted
  * rows as `--se-grid-areas` and the track count they draw as `--se-grid-template`,

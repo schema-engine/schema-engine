@@ -19,7 +19,7 @@ Unlike `@schema-engine/forms-react` — where the default view recipes live in t
 ## Install
 
 ```bash
-pnpm add @schema-engine/forms-radiant @schema-engine/forms @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
+pnpm add @schema-engine/forms-radiant @schema-engine/forms @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
 ```
 
 The package targets Radiant `0.6.x` and Radiant UI `0.3.x`. Radiant `0.3.x`

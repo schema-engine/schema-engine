@@ -37,9 +37,11 @@ const theme = createLayoutTheme({
 });
 ```
 
-Options that describe the same theme give the same id, whatever the key order, so two engines built from equal options share a stylesheet. Compile once and pass the theme to several engines to make them carry the same `data-se-theme`:
+Options that describe the same theme give the same id, whatever order the grid's responsive entries were written in, so two engines built from equal options share a stylesheet. Axis and value order is part of the identity. Compile once and pass the theme to several consumers to make them carry the same `data-se-theme`. With the forms engine:
 
 ```ts
+import { createFormEngine } from '@schema-engine/forms';
+
 const checkout = createFormEngine({ elements, layout: theme });
 const profile = createFormEngine({ elements, layout: theme });
 ```

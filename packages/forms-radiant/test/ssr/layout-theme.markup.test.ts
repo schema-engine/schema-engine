@@ -50,4 +50,14 @@ describe('the layout theme in Radiant markup', () => {
 		expect(first.getLayout()).toBe(second.getLayout());
 		expectSharedLayoutTheme(page, theme, false);
 	});
+
+	test('engines on different themes keep separate ids and stylesheets', () => {
+		const first = createSsrAcceptanceEngine({ appearance: { tone: ['a'] } });
+		const second = createSsrAcceptanceEngine({ appearance: { tone: ['b'] } });
+		const page = `${renderOnEngine(first)}${renderOnEngine(second)}`;
+
+		expect(first.getLayout().id).not.toBe(second.getLayout().id);
+		expect(page).toContain(`data-se-theme-css="${first.getLayout().id}"`);
+		expect(page).toContain(`data-se-theme-css="${second.getLayout().id}"`);
+	});
 });

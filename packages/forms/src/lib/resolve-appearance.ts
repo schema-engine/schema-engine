@@ -65,8 +65,13 @@ export function resolveAppearance(
  * appearance where it applies.
  */
 export function withAppearance<T extends object>(config: T, selection: Readonly<Record<string, string>>): T {
-	const hasSelection = Object.keys(selection).length > 0;
-	if (!hasSelection && !('appearance' in config)) return config;
+	if (Object.keys(selection).length === 0) return withoutAppearanceKey(config);
+	return { ...withoutAppearanceKey(config), appearance: selection };
+}
+
+/** `config` without an authored `appearance`, or `config` itself when it has none. */
+export function withoutAppearanceKey<T extends object>(config: T): T {
+	if (!('appearance' in config)) return config;
 	const { appearance: _authored, ...rest } = config as T & { appearance?: unknown };
-	return (hasSelection ? { ...rest, appearance: selection } : rest) as T;
+	return rest as T;
 }

@@ -168,7 +168,7 @@ later disables the rows but not the buttons.
 Grid and appearance live in `@schema-engine/layout`, which knows nothing about
 forms, so any container of items can use it. `createLayoutTheme({ grid,
 appearance }, { reservedNames })` compiles both into one **layout theme**: one
-`id`, one stylesheet (`css`) and one hash function. Renderers put that id on
+`id` and one stylesheet (`css`). Renderers put that id on
 the form, grid and item elements as the single `data-se-theme` attribute and
 emit the stylesheet once. `createFormEngine` and `createRadiantFormEngine` take
 the theme as `layout`, either a compiled theme or inline `{ grid, appearance }`
@@ -255,7 +255,7 @@ no `areas`, so `area` on a container's child is rejected.
 
 Containers are grids too. A fieldset, and each array row, lays its direct
 children out in an inner `se-form-grid se-grid` carrying the engine's theme id, built
-with the same `getGridVariables(undefined, theme, children)` a step uses; a field
+with the same `getGridVariables(undefined, layout.grid, children)` a step uses; a field
 host takes its variables from `getGridItemVariables(grid)`.
 The grid rule resets `--se-grid-default-column` on every grid and the inner
 grid declares its own, so a child's width and default placement come from its

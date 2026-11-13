@@ -1,4 +1,5 @@
 import {
+	assertAxisNotReserved,
 	compileAppearance,
 	getAppearanceCss,
 	type AppearanceCompilerOptions,
@@ -6,8 +7,13 @@ import {
 	type CompiledAppearance,
 	type ResolvedAppearanceAxes,
 } from '@/lib/appearance';
-import { canonicalGridTheme, getGridThemeCss, resolveGridTheme } from '@/lib/grid-styles';
-import type { GridThemeOptions, NormalizedGridTheme } from '@/lib/grid-styles';
+import {
+	canonicalGridTheme,
+	getGridThemeCss,
+	resolveGridTheme,
+	type GridThemeOptions,
+	type NormalizedGridTheme,
+} from '@/lib/grid-styles';
 
 /** What an author writes: the grid vocabulary and the appearance vocabulary of one theme. */
 export interface LayoutThemeOptions<TAppearance extends AppearanceOptions = AppearanceOptions> {
@@ -25,7 +31,7 @@ export type LayoutThemeCompilerOptions = AppearanceCompilerOptions;
  * stylesheet.
  *
  * @remarks
- * Produced once by {@link createLayoutTheme}, frozen, and safe to share between engines: engines
+ * Produced once by {@link createLayoutTheme}, frozen, and safe to share between consumers: engines
  * built on the same theme carry the same `data-se-theme` and share one stylesheet on a page.
  * A renderer puts `id` on the elements the stylesheet should reach, as `data-se-theme`, and
  * emits `css` once.
@@ -69,7 +75,7 @@ export function isLayoutTheme(value: unknown): value is LayoutTheme {
 /**
  * The one hash behind a theme id: djb2 over the serialized theme, in base 36.
  *
- * @remarks Not exported. A theme id is only ever minted by {@link createLayoutTheme}.
+ * @remarks A theme id is only ever minted by {@link createLayoutTheme}.
  */
 function hashThemeId(serialized: string): string {
 	let hash = 5381;
@@ -113,12 +119,12 @@ export function createLayoutTheme<const TAppearance extends AppearanceOptions = 
 	return theme as unknown as LayoutTheme<ResolvedAppearanceAxes<TAppearance>>;
 }
 
-let cachedDefaultLayoutTheme: LayoutTheme | undefined;
+let cachedDefaultLayoutTheme: LayoutTheme<ResolvedAppearanceAxes> | undefined;
 
 /** Frozen library-default theme; shared by engines built without a `layout` option. */
 export function getDefaultLayoutTheme(): LayoutTheme<ResolvedAppearanceAxes> {
 	cachedDefaultLayoutTheme ??= createLayoutTheme();
-	return cachedDefaultLayoutTheme as LayoutTheme<ResolvedAppearanceAxes>;
+	return cachedDefaultLayoutTheme;
 }
 
 /**
@@ -129,9 +135,6 @@ export function getDefaultLayoutTheme(): LayoutTheme<ResolvedAppearanceAxes> {
  * (or for another domain) reaches an engine without that check, so the engine runs this on it.
  */
 export function assertAxesNotReserved(theme: LayoutTheme, reservedNames: readonly string[]): void {
-	for (const axis of Object.keys(theme.axes)) {
-		if (reservedNames.includes(axis)) {
-			throw new Error(`Invalid appearance axis name '${axis}': data-se-${axis} is reserved by the renderer.`);
-		}
-	}
+	const reserved = new Set(reservedNames);
+	for (const axis of Object.keys(theme.axes)) assertAxisNotReserved(axis, reserved);
 }

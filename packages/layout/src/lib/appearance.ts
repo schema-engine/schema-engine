@@ -11,9 +11,9 @@
  * Walking the document tree to inherit picks belongs to the domain, because only it knows the
  * tree's shape.
  *
- * Compile once at the engine boundary ({@link createLayoutTheme} does, with the grid). Token rules are
+ * Compile once, where the theme is built ({@link createLayoutTheme} does, with the grid). Token rules are
  * emitted inside `:where()`, so they add no specificity and an author's `className` always wins; they
- * are scoped to the theme by `data-se-theme`, so two engines with different tokens cannot overwrite
+ * are scoped to the theme by `data-se-theme`, so two themes with different tokens cannot overwrite
  * each other.
  */
 
@@ -114,6 +114,17 @@ function axisEntries(axis: AppearanceAxisOptions): Array<[string, AppearanceToke
 	return isNameList(axis) ? axis.map((name) => [name, {}]) : Object.entries(axis);
 }
 
+/**
+ * Throws when an axis name is one a domain reserves.
+ *
+ * @remarks The one place the message lives, shared by the compiler and by {@link assertAxesNotReserved}.
+ */
+export function assertAxisNotReserved(axisName: string, reserved: ReadonlySet<string>): void {
+	if (reserved.has(axisName)) {
+		throw new Error(`Invalid appearance axis name '${axisName}': data-se-${axisName} is reserved by the renderer.`);
+	}
+}
+
 function mergeAxes(
 	options: AppearanceOptions | undefined,
 	reserved: ReadonlySet<string>,
@@ -125,11 +136,7 @@ function mergeAxes(
 				`Invalid appearance axis name '${axisName}': use lowercase letters, digits and hyphens, starting with a letter.`,
 			);
 		}
-		if (reserved.has(axisName)) {
-			throw new Error(
-				`Invalid appearance axis name '${axisName}': data-se-${axisName} is reserved by the renderer.`,
-			);
-		}
+		assertAxisNotReserved(axisName, reserved);
 		const values = axes.get(axisName) ?? new Map<string, AppearanceTokens>();
 		axes.set(axisName, values);
 		for (const [value, tokens] of entries) {
@@ -215,14 +222,6 @@ export function compileAppearance(
 			),
 		),
 	});
-}
-
-let cachedDefaultCompiledAppearance: CompiledAppearance | undefined;
-
-/** Frozen library-default vocabulary; shared by every theme built without an `appearance` option. */
-export function getDefaultCompiledAppearance(): CompiledAppearance {
-	cachedDefaultCompiledAppearance ??= compileAppearance();
-	return cachedDefaultCompiledAppearance;
 }
 
 /**

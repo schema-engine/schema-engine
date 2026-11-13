@@ -17,7 +17,7 @@ describe('createLayoutTheme', () => {
 		expect(theme.id).toMatch(/^l[0-9a-z]+$/);
 		expect(theme.grid.gap.loose).toBe('3rem');
 		expect(Object.keys(theme.axes)).toEqual(['size', 'surface', 'tone']);
-		expect(theme.css).toContain(`[data-se-theme="${theme.id}"]`);
+		expect(new Set(theme.css.match(/data-se-theme="[^"]*"/g))).toEqual(new Set([`data-se-theme="${theme.id}"`]));
 		expect(theme.css).toContain('--se-tone-accent:#f60');
 		expect(theme.css).toContain('grid-template-columns');
 		expect(theme.css).not.toContain('data-se-grid-theme');
@@ -44,6 +44,22 @@ describe('createLayoutTheme', () => {
 		expect(createLayoutTheme({ grid: { minColumnWidth: '10rem' }, appearance: { tone: ['b'] } }).id).not.toBe(
 			base.id,
 		);
+	});
+
+	test('token values, gap tokens and breakpoints are part of the identity', () => {
+		const tokens = (value: string) => createLayoutTheme({ appearance: { tone: { brand: { '--x': value } } } }).id;
+		expect(tokens('#f60')).not.toBe(tokens('#f70'));
+		const gap = (value: string) => createLayoutTheme({ grid: { gap: { loose: value } } }).id;
+		expect(gap('2rem')).not.toBe(gap('3rem'));
+		const breakpoint = (value: string) => createLayoutTheme({ grid: { breakpoints: { md: value } } }).id;
+		expect(breakpoint('50rem')).not.toBe(breakpoint('52rem'));
+	});
+
+	test('one theme stylesheet never mentions another theme id', () => {
+		const first = createLayoutTheme({ appearance: { tone: ['a'] } });
+		const second = createLayoutTheme({ appearance: { tone: ['b'] } });
+		expect(first.css).not.toContain(second.id);
+		expect(second.css).not.toContain(first.id);
 	});
 
 	test('reserved axis names are a compiler input', () => {

@@ -37,8 +37,8 @@ export function expectSsrGridMarkup(html: string, layout: LayoutThemeLike): void
 	expect(html).not.toMatch(/<script\b/i);
 	expect(html).toContain(layout.css.slice(0, 48));
 	expect(html).toContain(`data-se-theme="${layout.id}"`);
-	expect(html).toContain('se-grid');
-	expect(html).toContain('se-grid-item');
+	expect(html).toMatch(classToken('se-grid'));
+	expect(html).toMatch(classToken('se-grid-item'));
 
 	const tracked = fieldStyle(html, 'Tracked field');
 	expect(tracked).toMatch(/--se-field-grid-column:\s*span 1/);
@@ -48,6 +48,11 @@ export function expectSsrGridMarkup(html: string, layout: LayoutThemeLike): void
 	expect(tracked).not.toContain('-2xl');
 
 	expect(fieldStyle(html, 'Visible field')).toBe('');
+}
+
+/** A `class` attribute that lists exactly this class, not a longer class that starts with it. */
+function classToken(name: string): RegExp {
+	return new RegExp(`class="(?:[^"]*\\s)?${name}(?:\\s[^"]*)?"`);
 }
 
 /** Every `data-se-theme` value in a document, in order, including repeats. */
@@ -81,7 +86,8 @@ function themeStylesheets(html: string, layout: LayoutThemeLike): string[] {
 export function expectOneThemeOneStylesheet(html: string, layout: LayoutThemeLike): void {
 	expect(new Set(themeIds(html))).toEqual(new Set([layout.id]));
 	expect(html).toMatch(new RegExp(`<(?:form|rui-form)[^>]*data-se-theme="${layout.id}"`));
-	expect(themeStylesheets(html, layout)).toHaveLength(1);
+	expect(themeStylesheets(html, layout)).toEqual([layout.css]);
+	expect(html.match(/<style\b/g)).toHaveLength(1);
 	expect(html).not.toContain('data-se-grid-theme');
 	expect(html).not.toContain('data-se-appearance-theme');
 }
@@ -151,8 +157,8 @@ export async function expectSsrGridAcceptance(html: string, layout: LayoutThemeL
 	expect(html).not.toMatch(/<script\b/i);
 	expect(html).toContain(layout.css.slice(0, 48));
 	expect(html).toContain(`data-se-theme="${layout.id}"`);
-	expect(html).toContain('se-grid');
-	expect(html).toContain('se-grid-item');
+	expect(html).toMatch(classToken('se-grid'));
+	expect(html).toMatch(classToken('se-grid-item'));
 
 	const { frame, doc } = await loadSsrFrame(html, 375);
 	try {

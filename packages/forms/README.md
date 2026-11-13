@@ -152,7 +152,14 @@ Inline options are compiled with the renderer's `data-se-*` attribute names rese
 (`RENDERER_DATA_ATTRIBUTES`), so an axis cannot reuse one; a theme you compile yourself is re-checked
 against that list when the engine is built. `engine.getLayout()` returns the frozen theme: `id`
 (the `data-se-theme` value), `grid`, `axes` and the stylesheet `css`. `engine.extend()` inherits it,
-and `layout` is not an extend option. The separate `grid` and `appearance` engine options are gone.
+and `layout` is not an extend option.
+
+Moving to the layout theme removed these, with no aliases:
+
+- The `grid` and `appearance` engine options, and `getCompiledGrid`, `getGridTheme` and `getAppearance` (use `layout` and `getLayout()`).
+- The `@schema-engine/forms/lib/grid-styles` and `lib/appearance` subpaths, and the appearance exports of the package root. The grid and appearance schemas, types and helpers (`ElementGridConfig`, `GridLayoutConfig`, `getGridVariables`, `getGridItemVariables`, `getAppearanceAttributes` and the rest) come from `@schema-engine/layout`; the emitters were `getFormGridVariables` and `getFieldGridVariables`.
+- `data-se-grid-theme` and `data-se-appearance-theme`, replaced by `data-se-theme`; and the React `useGridThemeId`, now `useLayoutThemeId`. A host built by hand adds `se-grid-item` and `data-se-theme` (`useFieldHost` does).
+- The `theme` and `theme-css` attribute names are now reserved, so an appearance axis cannot be called `theme`.
 
 ### Appearance
 
@@ -229,7 +236,7 @@ from the next narrower one. Base values stay in `gap`. Tokens are axis-agnostic 
 a form chooses which token each axis uses through `gapX`/`gapY`, so a theme never
 declares an axis. Overriding the public token (`--se-grid-gap-default`) from a
 host replaces it at every width, ramp included — host declarations beat the
-engine's by design.
+theme's by design.
 
 An individual element can set its own rhythm with `grid.marginBlockStart` and
 `grid.marginBlockEnd`, which accept the same gap tokens and are responsive per
