@@ -89,7 +89,7 @@ Each form picks its own tone. React hoists the shared stylesheet to one element;
 
 ## Overriding size tokens
 
-`size: compact` reads two hooks, `--se-space-compact` and `--se-control-height-compact`, so tighten them on the form's class: the pick on the card shell, a step or a field inherits them. `--se-measure` has a literal value on the element that carries the pick, so override it with a rule that targets that element and has the specificity of a class. The form picks `compact` on the card shell.
+`size: compact` reads two hooks, `--se-space-compact` and `--se-control-height-compact`, so tighten them on the form's class, or on `:root` or a wrapper for every form below it: the pick on the card shell, a step or a field inherits them. `--se-measure` has a literal value on the element that carries the pick, so override it with a rule that targets that element and has the specificity of a class. The form picks `compact` on the card shell.
 
 <RecipeDemo recipe={tightSizeRecipe} />
 

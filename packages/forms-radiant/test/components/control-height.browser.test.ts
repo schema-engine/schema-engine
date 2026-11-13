@@ -14,6 +14,7 @@ import type { ConformanceMount } from '../../../../test-utils/renderer-conforman
 import {
 	controlHeightAcceptance,
 	controlHeightForm,
+	controlHeightHookAcceptance,
 	readControlHeights,
 } from '../../../../test-utils/control-height-acceptance';
 
@@ -146,8 +147,128 @@ describe('a size hook set on the form class', () => {
 	});
 });
 
+describe('a size hook set above the form', () => {
+	controlHeightHookAcceptance(mountRadiant);
+
+	const withRootHook = async (run: () => Promise<void>) => {
+		document.documentElement.style.setProperty('--se-control-height-compact', '18px');
+		try {
+			await run();
+		} finally {
+			document.documentElement.style.removeProperty('--se-control-height-compact');
+		}
+	};
+
+	test('outranks a theme scoped to a wrapper', async () => {
+		await withRootHook(async () => {
+			const scoped = mountIn({
+				'--size-control-sm': '22px',
+				'--size-control-md': '30px',
+				'--size-control-lg': '40px',
+			});
+			const { host, cleanup } = await scoped({ config: controlHeightForm('compact') });
+			try {
+				expect(readControlHeights(host)).toEqual({ input: 18, button: 18 });
+			} finally {
+				cleanup();
+			}
+		});
+	});
+
+	test('keeps a scoped theme for the pick the hook does not name', async () => {
+		await withRootHook(async () => {
+			const scoped = mountIn({
+				'--size-control-sm': '22px',
+				'--size-control-md': '30px',
+				'--size-control-lg': '40px',
+			});
+			const { host, cleanup } = await scoped({ config: controlHeightForm('comfortable') });
+			try {
+				expect(readControlHeights(host)).toEqual({ input: 40, button: 40 });
+			} finally {
+				cleanup();
+			}
+		});
+	});
+
+	test('a form class beats a hook set above it', async () => {
+		const author = document.createElement('style');
+		author.textContent = '.local-controls { --se-control-height-compact: 26px; }';
+		document.head.append(author);
+		try {
+			await withRootHook(async () => {
+				const { host, cleanup } = await mountRadiant({
+					config: { ...controlHeightForm('compact'), className: 'local-controls' },
+				});
+				try {
+					expect(readControlHeights(host)).toEqual({ input: 26, button: 26 });
+				} finally {
+					cleanup();
+				}
+			});
+		} finally {
+			author.remove();
+		}
+	});
+
+	test('a wrapper hook reaches a form nested below it, ahead of the theme wrapper of that form', async () => {
+		const { host, cleanup } = await mountRadiant({ config: controlHeightForm() });
+		const outer = document.createElement('div');
+		outer.style.setProperty('--se-control-height-compact', '19px');
+		const wrapper = document.createElement('div');
+		wrapper.style.setProperty('--size-control-sm', '40px');
+		outer.append(wrapper);
+		host.querySelector('.se-grid-item')!.append(outer);
+		const root = createRoot(wrapper);
+		root.render(
+			FormRenderer({
+				config: engine.validateForm({
+					id: 'nested-hook',
+					appearance: { size: 'compact' },
+					steps: [
+						{
+							id: 'nested',
+							title: 'Nested',
+							elements: [{ $type: 'input', id: 'other', name: 'other', label: 'Other' }],
+						},
+					],
+				}),
+				engine,
+			}),
+		);
+		const nested = new FormController(wrapper.querySelector('rui-form')!);
+		try {
+			await expect.poll(() => nested.ready).toBe(true);
+			expect(getByRole(wrapper, 'textbox', { name: 'Other' }).getBoundingClientRect().height).toBe(19);
+		} finally {
+			nested.disconnect();
+			root.unmount();
+			cleanup();
+		}
+	});
+
+	test('a spacing hook on the root element reaches the spacing of a compact form', async () => {
+		const spacing = async () => {
+			const { host, cleanup } = await mountRadiant({ config: controlHeightForm('compact') });
+			try {
+				return getComputedStyle(host.querySelector('rui-form')!).getPropertyValue('--se-space').trim();
+			} finally {
+				cleanup();
+			}
+		};
+		const themed = await spacing();
+		expect(themed).not.toBe('');
+		document.documentElement.style.setProperty('--se-space-compact', '0.3125rem');
+		try {
+			expect(await spacing()).toBe('0.3125rem');
+		} finally {
+			document.documentElement.style.removeProperty('--se-space-compact');
+		}
+	});
+});
+
 describe('a form nested in a grid item of another theme', () => {
-	test('maps its own hooks from the wrapper it sits in', async () => {
+	test('takes its host control height from the wrapper it sits in', async () => {
 		const { host, cleanup } = await mountRadiant({ config: controlHeightForm() });
 		const wrapper = document.createElement('div');
 		wrapper.style.setProperty('--size-control-sm', '40px');

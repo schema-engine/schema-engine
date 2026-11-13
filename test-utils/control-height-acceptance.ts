@@ -110,3 +110,49 @@ export function controlHeightAcceptance(mount: ConformanceMount, expected: Expec
 		});
 	});
 }
+
+/**
+ * Registers the scenario that an author's size hook on an ancestor reaches a pick in a renderer.
+ *
+ * @param mount The renderer's mount, as the conformance suite uses it.
+ * @remarks
+ * The hooks (`--se-control-height-compact` and `--se-control-height-comfortable`) are the one documented way
+ * to retune the size axis, and the rule is the same in every renderer: set them on `:root` or any ancestor. The
+ * values are far from every theme value the renderers map, so a hook that is replaced shows as the wrong number.
+ * A pick the hook does not name keeps its height: no pick is the theme's own.
+ */
+export function controlHeightHookAcceptance(mount: ConformanceMount): void {
+	const hooks = { '--se-control-height-compact': '18px', '--se-control-height-comfortable': '52px' };
+	describe.each([
+		['the root element', () => document.documentElement],
+		['the body', () => document.body],
+	])('a size hook set on %s', (_label, ancestor) => {
+		let cleanup: (() => void) | undefined;
+		afterEach(() => {
+			cleanup?.();
+			cleanup = undefined;
+			for (const name of Object.keys(hooks)) ancestor().style.removeProperty(name);
+		});
+		const heights = async (size?: string) => {
+			const result = await mount({ config: controlHeightForm(size) });
+			cleanup = result.cleanup;
+			return readControlHeights(result.host);
+		};
+
+		test('reaches a compact and a comfortable pick', async () => {
+			for (const [name, value] of Object.entries(hooks)) ancestor().style.setProperty(name, value);
+			expect(await heights('compact')).toEqual({ input: 18, button: 18 });
+			cleanup?.();
+			expect(await heights('comfortable')).toEqual({ input: 52, button: 52 });
+		});
+
+		test('leaves no pick and default on the height the theme gives', async () => {
+			const unpicked = await heights();
+			cleanup?.();
+			for (const [name, value] of Object.entries(hooks)) ancestor().style.setProperty(name, value);
+			expect(await heights()).toEqual(unpicked);
+			cleanup?.();
+			expect(await heights('default')).toEqual(unpicked);
+		});
+	});
+}

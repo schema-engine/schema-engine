@@ -446,10 +446,11 @@ describe('appearance axes page', () => {
 		const axes = Object.fromEntries(layout.builtInAxes.map((axis) => [axis.$type, axis.values]));
 		expect(axes.size).toEqual({
 			compact: {
-				'--se-space': 'var(--se-space-compact, 1rem)',
+				'--se-space': 'var(--se-space-compact, var(--se-host-space-compact, 1rem))',
 				'--se-font-size': '0.875rem',
 				'--se-measure': '24rem',
-				'--se-control-height': 'var(--se-control-height-compact, 1.75rem)',
+				'--se-control-height':
+					'var(--se-control-height-compact, var(--se-host-control-height-compact, 1.75rem))',
 			},
 			default: {
 				'--se-space': 'initial',
@@ -458,10 +459,11 @@ describe('appearance axes page', () => {
 				'--se-control-height': 'initial',
 			},
 			comfortable: {
-				'--se-space': 'var(--se-space-comfortable, 2rem)',
+				'--se-space': 'var(--se-space-comfortable, var(--se-host-space-comfortable, 2rem))',
 				'--se-font-size': '1.0625rem',
 				'--se-measure': '32rem',
-				'--se-control-height': 'var(--se-control-height-comfortable, 2.25rem)',
+				'--se-control-height':
+					'var(--se-control-height-comfortable, var(--se-host-control-height-comfortable, 2.25rem))',
 			},
 		});
 		expect(axes.surface).toEqual({
