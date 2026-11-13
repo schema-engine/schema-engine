@@ -67,12 +67,20 @@ export function useRHFMultiStep(
 	 * not a submit. Without this, an error a failed step check left stays until the field blurs,
 	 * and on mousedown of Next that blur removes the error text, shifts the button and loses the click.
 	 * Once a step check has failed, a field that has an error is validated again on every change, as
-	 * it is after a failed submit.
+	 * it is after a failed submit. After a submit React Hook Form already does that, so the extra
+	 * `trigger` is skipped there and async rules do not run twice. A reset, which React Hook Form
+	 * reports without a field name, clears the flag.
 	 */
 	const stepCheckFailed = useRef(false);
 	useEffect(() => {
 		const subscription = form.watch((_values, { name }) => {
-			if (stepCheckFailed.current && name && form.getFieldState(name).invalid) void form.trigger(name);
+			if (!name) {
+				stepCheckFailed.current = false;
+				return;
+			}
+			if (stepCheckFailed.current && !form.formState.isSubmitted && form.getFieldState(name).invalid) {
+				void form.trigger(name);
+			}
 		});
 		return () => subscription.unsubscribe();
 	}, [form]);

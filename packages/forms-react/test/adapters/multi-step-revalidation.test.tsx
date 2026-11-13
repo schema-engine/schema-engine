@@ -1,7 +1,7 @@
 import { afterEach, expect, test } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
-import { useController } from 'react-hook-form';
+import { useController, useFormContext } from 'react-hook-form';
 import { createFormEngine } from '@schema-engine/forms';
 import { FormProvider } from '../../src/adapters/rhf/form-provider';
 import { FormEngineContext } from '../../src/components/provider';
@@ -52,8 +52,12 @@ function Field() {
 
 function Controls() {
 	const { currentStep, goToNext } = useFormInstanceActions();
+	const form = useFormContext();
 	return (
 		<>
+			<button type="button" onClick={() => form.reset()}>
+				Reset
+			</button>
 			<output aria-label="step">{currentStep}</output>
 			<button type="button" onClick={goToNext}>
 				Next
@@ -96,4 +100,32 @@ test('a field that failed the step check reports its current error while it is e
 	await userEvent.fill(screen.getByRole('textbox'), 'abc');
 	await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Use at least 8 characters'));
 	expect(screen.getByLabelText('step')).toHaveTextContent('0');
+});
+
+test('a field keeps its blur error while edited before any step check has failed', async () => {
+	mount();
+	const input = screen.getByRole('textbox');
+	await userEvent.click(input);
+	await userEvent.tab();
+	await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Password is required'));
+
+	await userEvent.fill(input, 'abc');
+	await new Promise((resolve) => setTimeout(resolve, 200));
+	expect(screen.getByRole('alert')).toHaveTextContent('Password is required');
+});
+
+test('a reset ends the re-validation a failed step check started', async () => {
+	mount();
+	await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+	await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Password is required'));
+	await userEvent.click(screen.getByRole('button', { name: 'Reset' }));
+	await waitFor(() => expect(screen.getByRole('alert')).toBeEmptyDOMElement());
+
+	const input = screen.getByRole('textbox');
+	await userEvent.click(input);
+	await userEvent.tab();
+	await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Password is required'));
+	await userEvent.fill(input, 'abc');
+	await new Promise((resolve) => setTimeout(resolve, 200));
+	expect(screen.getByRole('alert')).toHaveTextContent('Password is required');
 });
