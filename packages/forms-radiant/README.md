@@ -220,8 +220,13 @@ whatever the render order, streaming, caching or removal of the other forms, and
 copies compress to almost nothing (about 350 B gzip for three forms). Sharing one element would
 need per-render state. `@ecopages/jsx/server` offers that through its render scope, but this
 package's browser bundle cannot import it, and a host such as Ecopages renders each component
-separately, so the state would not span the page. A host that wants the rules in its own head or critical stylesheet can
-serve the theme's `css` as well; the per-form copies stay and hold the same rules:
+separately, so the state would not span the page. The price is browser time, which WebKit pays most: with one small SSR form per copy, headless WebKit 26.6 took
+about 11, 37, 110 and 390 ms for 10, 25, 50 and 100 forms against 2, 3, 6 and 11 ms with a single copy, while
+Chromium 153 stayed under 9 ms and Firefox 155 under 17 ms for 100 forms (real Safari was not measured). A host that renders many
+forms on one page can serve the theme's `css` once in its head and strip the `<style data-se-theme-css>` copies from
+the HTML it renders; the forms look the same, and a form rendered in the browser still adds its own copy. The docs
+([Layout stylesheet per form](../../apps/docs/src/content/docs/forms-radiant/getting-started.mdx)) have the snippet. A host that only wants the rules in its own head or critical stylesheet can
+serve the theme's `css` as well, and the per-form copies stay:
 
 ```ts
 const { id, css } = engine.getLayout();
