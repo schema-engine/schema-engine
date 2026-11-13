@@ -20,7 +20,7 @@ Install the default visual recipes separately when a form uses a supplied `view.
 pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-engine-form-recipes
 ```
 
-The recipes item also copies the recipe stylesheets (`recipes/recipes.css` and one file per shell that has styles). Import the entry point once in your global stylesheet, after Tailwind and into the `components` layer so Tailwind utilities and your own classes win:
+The recipes item also copies the recipe stylesheets (`recipes/recipes.css`, one file per shell that has styles, and `controls.css`, which gives the controls that carry `data-se-control` the control height of the `size` axis). Import the entry point once in your global stylesheet, after Tailwind and into the `components` layer so Tailwind utilities and your own classes win:
 
 ```css
 @import 'tailwindcss';

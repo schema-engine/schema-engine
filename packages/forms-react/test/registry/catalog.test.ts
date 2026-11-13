@@ -79,6 +79,7 @@ describe('schema-engine GitHub registry catalog', () => {
 			const item = catalog.find((entry) => entry.name === name);
 			const stylesheets = item?.files.filter((file) => file.path.endsWith('.css')) ?? [];
 			expect(stylesheets.map((file) => file.target).toSorted()).toEqual([
+				'@components/schema-engine/forms/recipes/controls.css',
 				'@components/schema-engine/forms/recipes/recipes.css',
 				'@components/schema-engine/forms/recipes/shells/card-shell.css',
 			]);
@@ -96,7 +97,8 @@ describe('schema-engine GitHub registry catalog', () => {
 		) as { recipes: Array<{ id: string; files: string[] }> };
 		const styled = manifest.recipes.filter((recipe) => recipe.files.some((file) => file.endsWith('-shell.css')));
 		expect(styled.map((recipe) => recipe.id)).toEqual(expect.arrayContaining(['card', 'card-wizard']));
-		for (const recipe of styled) expect(recipe.files, recipe.id).toContain('recipes.css');
+		for (const recipe of styled)
+			expect(recipe.files, recipe.id).toEqual(expect.arrayContaining(['recipes.css', 'controls.css']));
 	});
 
 	test('every file has an @components or @ui target', () => {

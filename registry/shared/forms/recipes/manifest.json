@@ -18,6 +18,7 @@
         "blocks/form-actions.tsx",
         "shells/card-shell.tsx",
         "shells/card-shell.css",
+        "controls.css",
         "recipes.css"
       ]
     },
@@ -31,6 +32,7 @@
         "blocks/wizard-actions.tsx",
         "shells/card-shell.tsx",
         "shells/card-shell.css",
+        "controls.css",
         "recipes.css"
       ]
     },

@@ -25,6 +25,7 @@ export function FormInput({
 			style={containerStyles}
 		>
 			<Input
+				data-se-control
 				{...fieldProps}
 				type={inputType}
 				value={value || ''}

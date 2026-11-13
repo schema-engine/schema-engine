@@ -987,6 +987,11 @@
           "target": "@components/schema-engine/forms/recipes/blocks/wizard-actions.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/controls.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/controls.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/index.ts",
           "type": "registry:lib",
           "target": "@components/schema-engine/forms/recipes/index.ts"
@@ -2065,6 +2070,11 @@
           "target": "@components/schema-engine/forms/recipes/blocks/wizard-actions.tsx"
         },
         {
+          "path": "registry/shared/forms/recipes/controls.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/controls.css"
+        },
+        {
           "path": "registry/shared/forms/recipes/index.ts",
           "type": "registry:lib",
           "target": "@components/schema-engine/forms/recipes/index.ts"
@@ -3139,6 +3149,11 @@
           "path": "registry/shared/forms/recipes/blocks/wizard-actions.tsx",
           "type": "registry:component",
           "target": "@components/schema-engine/forms/recipes/blocks/wizard-actions.tsx"
+        },
+        {
+          "path": "registry/shared/forms/recipes/controls.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/controls.css"
         },
         {
           "path": "registry/shared/forms/recipes/index.ts",

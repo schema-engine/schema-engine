@@ -858,7 +858,9 @@ function renderRecipeManifest(scan: RecipeScanEntry[]): string {
 			return {
 				id: stem,
 				title: recipeTitle(stem),
-				files: files.some((file) => file.endsWith('.css')) ? [...files, RECIPE_STYLESHEET_ENTRY] : files,
+				files: files.some((file) => file.endsWith('.css'))
+					? [...files, ...recipeSharedStylesheets(), RECIPE_STYLESHEET_ENTRY]
+					: files,
 			};
 		}),
 	};
@@ -869,11 +871,20 @@ function renderRecipeManifest(scan: RecipeScanEntry[]): string {
 /** The stylesheet the app imports; it pulls in every shell stylesheet. */
 const RECIPE_STYLESHEET_ENTRY = 'recipes.css';
 
-/** Shell stylesheets, paired with the shell components beside them. */
+/** Every stylesheet of the recipes tree the entry point imports: the shell ones and the shared ones. */
 function recipeShellStylesheets(): string[] {
 	return listRelativeSourceFiles(join(root, SHARED_FORMS_ROOT, 'recipes')).filter(
 		(file) => file.endsWith('.css') && file !== RECIPE_STYLESHEET_ENTRY,
 	);
+}
+
+/**
+ * Stylesheets beside the entry point that belong to no shell, such as the control height rules.
+ *
+ * @remarks A styled recipe lists them, because the entry point imports them and a copy without them breaks.
+ */
+function recipeSharedStylesheets(): string[] {
+	return recipeShellStylesheets().filter((file) => !file.includes('/'));
 }
 
 function renderRecipeStylesheet(stylesheets: string[]): string {
