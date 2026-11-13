@@ -30,10 +30,10 @@ import {
 	type GridAreaTemplates,
 	type CompiledAppearance,
 	type GridLayoutConfig,
+	mergeSlotDefaults,
 	getDefaultLayoutTheme,
 } from '@schema-engine/layout';
 import { logger } from '@/lib/logger';
-import { mergeSlotDefaults } from '@/recipes/merge-slot-defaults';
 import { isPlainObject } from '@/lib/is-plain-object';
 import {
 	resolveAppearance,

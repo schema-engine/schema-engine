@@ -41,6 +41,9 @@
 			"prettier --write"
 		]
 	},
+	"dependencies": {
+		"@schema-engine/registry": "workspace:^"
+	},
 	"devDependencies": {
 		"@schema-engine/scripts": "workspace:*",
 		"esbuild": "^0.27.0",

@@ -8,6 +8,6 @@ await buildLib({
 	cwd,
 	entryGlobs: ['src/**/*.ts'],
 	aliases: [{ prefix: '@', dir: path.join(cwd, 'src') }],
-	external: ['zod/mini'],
+	external: ['@schema-engine/registry', 'zod/mini'],
 	minify: !process.argv.includes('--watch'),
 });

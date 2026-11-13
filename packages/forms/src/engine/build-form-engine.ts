@@ -23,9 +23,8 @@ import { RENDERER_DATA_ATTRIBUTES } from '@/lib/renderer-data-attributes';
 import { createFormConfigShape } from '@/schemas/form-config-shape';
 import * as z from 'zod/mini';
 import { isZodType } from '@/lib/zod-json-schema';
-import { assertRecipeKindSlots } from '@/recipes/assert-recipe-kind';
+import { assertDefaultWizardRecipe, createFormRecipeRegistry } from '@/recipes/protocol';
 import { assertStandardSchema } from '@/lib/standard-schema';
-import { DEFAULT_WIZARD_RECIPE } from '@/lib/form-view';
 import { createDefaultValidationRegistry, type ValidationRegistry } from '@/schemas/validation';
 
 function createUnionSchema(schemas: z.ZodMiniType[]): z.ZodMiniType {
@@ -152,14 +151,13 @@ function resolveLayout(layout: LayoutInput | undefined): LayoutTheme {
 export function buildFormEngine(lists: FormEngineRegistrationLists) {
 	const layout = resolveLayout(lists.layout);
 	const elementRegistry = createRegistry('Element', (lists.elements ?? []) as readonly AnyElementRegistration[]);
-	const recipeRegistry = createRegistry('Recipe', (lists.recipes ?? []) as readonly AnyRecipeRegistration[]);
+	const recipeRegistry = createFormRecipeRegistry((lists.recipes ?? []) as readonly AnyRecipeRegistration[]);
 	const actionRegistry = createRegistry('Action', (lists.actions ?? []) as readonly AnyActionRegistration[]);
 
 	for (const element of elementRegistry.all()) {
 		assertDeclaredAxes(`Element '${element.$type}'`, element.appearanceAxes, layout);
 	}
 	for (const recipe of recipeRegistry.all()) {
-		assertRecipeKindSlots(recipe);
 		for (const [slot, axes] of Object.entries(recipe.appearanceAxes ?? {})) {
 			assertDeclaredAxes(`Recipe '${recipe.$type}' slot '${slot}'`, axes, layout);
 		}
@@ -168,21 +166,7 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 	const validationRegistryInstance = createDefaultValidationRegistry();
 	registerLastWinsElementValidations(lists.elements ?? [], validationRegistryInstance);
 
-	const defaultWizardRecipe = lists.defaultWizardRecipe;
-	const checkedDefault = defaultWizardRecipe ?? DEFAULT_WIZARD_RECIPE;
-	if (defaultWizardRecipe !== undefined || recipeRegistry.has(checkedDefault)) {
-		const recipe = recipeRegistry.get(checkedDefault);
-		if (!recipe) {
-			throw new Error(
-				`defaultWizardRecipe '${defaultWizardRecipe}' is not a registered recipe. Register it with createFormEngine({ recipes: [...] }).`,
-			);
-		}
-		if (recipe.kind !== 'wizard') {
-			throw new Error(
-				`defaultWizardRecipe '${checkedDefault}' has kind '${recipe.kind}'; it must be a wizard recipe.`,
-			);
-		}
-	}
+	assertDefaultWizardRecipe(recipeRegistry, lists.defaultWizardRecipe);
 
 	logger.debug('Building FormEngine', {
 		elements: elementRegistry.size,
@@ -212,7 +196,7 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 		schemaArtifacts,
 		layout,
 		validationRegistry: validationRegistryInstance,
-		defaultWizardRecipe,
+		defaultWizardRecipe: lists.defaultWizardRecipe,
 	});
 }
 

@@ -1,6 +1,6 @@
 # @schema-engine/layout
 
-Domain-neutral layout for Schema Engine: the grid schemas and compiler, named placement, the appearance vocabulary, and `createLayoutTheme`, which compiles grid and appearance into one theme.
+Domain-neutral layout for Schema Engine: the grid schemas and compiler, named placement, the appearance vocabulary, `createLayoutTheme`, which compiles grid and appearance into one theme, and the recipe protocol that lets a domain declare the slots and kinds of its view recipes.
 
 It knows nothing about forms and does not depend on `@schema-engine/forms`. `@schema-engine/forms` and its renderers build on it, and any other domain that places items in a container can reuse the same rules.
 
@@ -10,7 +10,7 @@ It knows nothing about forms and does not depend on `@schema-engine/forms`. `@sc
 pnpm add @schema-engine/layout zod
 ```
 
-The grid schemas use `zod/mini`, so `zod` is a peer dependency.
+The grid and recipe schemas use `zod/mini`, so `zod` is a peer dependency. The recipe registry comes from `@schema-engine/registry`, which is installed with it.
 
 ## One theme
 
@@ -89,10 +89,61 @@ Walking a document tree to inherit picks belongs to each domain, because only it
 
 `AppearanceConfigSchema` is the schema of a pick (`{ size: 'compact' }`).
 
+## Recipe protocol
+
+A recipe composes slots (shell, header, content, ...) into a view. The spec, binding, slot defaults and resolved view are the same for every domain, so they live here; each domain declares the slots, kinds and rules its recipes use, once:
+
+```ts
+import * as z from 'zod/mini';
+import {
+	AppearanceConfigSchema,
+	bindRecipe,
+	createRecipeRegistry,
+	defineRecipeProtocol,
+	defineRecipeSpec,
+} from '@schema-engine/layout';
+
+const sectionProtocol = defineRecipeProtocol({
+	slots: ['shell', 'media', 'content'],
+	kinds: ['section'],
+	rules: [
+		{
+			name: 'section-needs-content',
+			check: (recipe) =>
+				recipe.slots.includes('content') ? undefined : `kind 'section' must declare a content slot`,
+		},
+	],
+});
+
+const ContentConfigSchema = z.object({ columns: z.optional(z.number()) });
+const MediaConfigSchema = z.object({ ratio: z.optional(z.string()), appearance: z.optional(AppearanceConfigSchema) });
+
+const hero = defineRecipeSpec(sectionProtocol, {
+	$type: 'hero',
+	kind: 'section',
+	metadata: { name: 'Hero' },
+	slotSchemas: { media: MediaConfigSchema, content: ContentConfigSchema },
+	slotDefaults: { content: { columns: 2 } },
+	appearanceAxes: { media: ['size'] },
+});
+
+// `render` is whatever your renderers need; this package never reads it.
+const registry = createRecipeRegistry(sectionProtocol, [bindRecipe(hero, { shell: HeroShell })]);
+```
+
+- `slots` is ordered: a spec lists the slots it declares in that order. A slot or kind outside the protocol is a type error in `defineRecipeSpec` (including `slotDefaults` and `appearanceAxes` keys) and a thrown error for a hand-written registration.
+- A rule's `check` returns the problem, or `undefined`. A failure reads `Recipe 'hero' breaks rule 'section-needs-content': ...`.
+- Rules run in `defineRecipeSpec` and, in `createRecipeRegistry`, on each winning registration of a `$type` (a recipe overridden later in the list is skipped). The registry is the read-only one from `@schema-engine/registry`.
+- `defineRecipeSpec` checks `slotDefaults` against the slot schemas and requires a slot that declares `appearanceAxes` to accept an `appearance` key. It keeps the concrete view schema type, so a domain can infer the authoring type of a view from a registration.
+- The protocol types are `RecipeProtocol`, `RecipeRule` and `RecipeShape` (what a rule reads), with `SlotOf` and `KindOf` to get the names back from a protocol, and `RecipeSpec` and `RecipeRegistration` for the spec and its binding. `assertRecipeRules(protocol, recipe)` is the check both entry points run, for a domain that validates a recipe outside a registry.
+- `mergeSlotDefaults(view, slotDefaults)` lays a view's slot config over the recipe defaults, deep for plain objects. `getSlotConfig(viewConfig, slot, schema)` reads one slot of a resolved view, and `RecipeViewModel` is the part of a renderer's view model that every domain shares.
+
+The render payload is opaque here: `bindRecipe(spec, render)` stores whatever a domain's renderers need. Forms declares its protocol in [`@schema-engine/forms/recipes`](../forms/README.md); the built-in form recipes stay there.
+
 ## Grid schemas
 
 `GridLayoutConfigSchema` (a container's `grid`) and `ElementGridConfigSchema` (an item's `grid`) are Zod Mini schemas, with `GridLayoutConfig` and `ElementGridConfig` as their inferred types. They also export the gap tokens and the named widths and offsets. Area names are checked by a pattern that the JSON Schema export carries. Placement helpers used by validators (`namedPlacementOverflow`, `gridAreaTemplates`, `areaTemplateIssues`, and the cascade helpers) are exported too.
 
 ## Tests
 
-`pnpm --filter @schema-engine/layout test:all` runs the grid compiler, placement, theme and appearance unit tests. The renderer packages run the shared acceptance harnesses in `test-utils/` against this package's output.
+`pnpm --filter @schema-engine/layout test:all` runs the grid compiler, placement, theme, appearance and recipe protocol unit tests. The renderer packages run the shared acceptance harnesses in `test-utils/` against this package's output.

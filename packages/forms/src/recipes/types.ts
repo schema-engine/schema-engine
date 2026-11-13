@@ -1,16 +1,15 @@
 import type * as z from 'zod/mini';
-import type { ComponentMetadata } from '@schema-engine/registry';
-import type { SlotAppearanceAxes } from '@schema-engine/layout';
+import type {
+	RecipeMetadata,
+	RecipeSlotSchemas as ProtocolSlotSchemas,
+	RecipeSpec as ProtocolRecipeSpec,
+} from '@schema-engine/layout';
+import type { RecipeKind, RecipeSlot } from './protocol';
 
-export type RecipeKind = 'single-step' | 'wizard';
+export type { RecipeKind, RecipeSlot } from './protocol';
+export type { RecipeMetadata, RecipeSlotDefaults } from '@schema-engine/layout';
 
-export type RecipeSlot = 'shell' | 'header' | 'progress' | 'actions';
-
-export const RECIPE_SLOT_ORDER = ['shell', 'header', 'progress', 'actions'] as const satisfies readonly RecipeSlot[];
-
-export interface RecipeMetadata extends ComponentMetadata {
-	category?: string;
-}
+export type RecipeSlotSchemas = ProtocolSlotSchemas<RecipeSlot>;
 
 export interface RecipeDescriptor {
 	$type: string;
@@ -30,38 +29,16 @@ export interface ViewCatalog {
 }
 
 /**
- * Slot config applied beneath a form's own slot config, typed as the input of each declared slot schema.
+ * A form recipe spec: the layout recipe spec on the forms protocol.
  *
  * @remarks
- * Undeclared slots and misspelled keys are compile errors; `defineRecipeSpec` also parses each
- * default against its slot schema.
+ * `appearanceAxes` is declared per slot; see {@link ProtocolRecipeSpec.appearanceAxes}.
  */
-export type RecipeSlotDefaults<TSlots extends Partial<Record<RecipeSlot, z.ZodMiniType>>> = {
-	[K in keyof TSlots]?: TSlots[K] extends z.ZodMiniType ? z.input<TSlots[K]> : never;
-};
-
-export interface RecipeSpec<
+export type RecipeSpec<
 	TType extends string = string,
 	TSchema extends z.ZodMiniType = z.ZodMiniType,
-	TSlots extends Partial<Record<RecipeSlot, z.ZodMiniType>> = Partial<Record<RecipeSlot, z.ZodMiniType>>,
-> {
-	$type: TType;
-	kind: RecipeKind;
-	slots: RecipeSlot[];
-	slotSchemas: TSlots;
-	slotDefaults?: RecipeSlotDefaults<TSlots>;
-	/**
-	 * Appearance axes each slot supports (`{ shell: ['size', 'surface'] }`); undeclared axes fail validation on that slot.
-	 *
-	 * @remarks
-	 * A slot that declares axes must accept an `appearance` key in its schema, so authored
-	 * configs type-check and the JSON Schema lists it. `validateForm` does not pass the key to the slot schema when it
-	 * parses the view, and writes the resolved selection back, so a renderer reading the normalized slot sees it.
-	 */
-	appearanceAxes?: SlotAppearanceAxes<keyof TSlots>;
-	metadata: RecipeMetadata;
-	schema: TSchema;
-}
+	TSlots extends RecipeSlotSchemas = RecipeSlotSchemas,
+> = ProtocolRecipeSpec<RecipeSlot, RecipeKind, TType, TSchema, TSlots>;
 
 /**
  * Render payload an adapter binds to a spec: `slots` holds exactly the spec's non-shell slots,
@@ -72,11 +49,9 @@ export interface RecipeSpec<
  * Adapters supply the component types, so a payload that omits a declared slot, or adds an
  * undeclared one, fails to type-check at the binding site.
  */
-export type RecipeRenderPayload<
-	TSlots extends Partial<Record<RecipeSlot, z.ZodMiniType>>,
-	TShell,
-	TSlot,
-> = ('shell' extends keyof TSlots ? { shell: TShell } : { shell?: TShell }) & {
+export type RecipeRenderPayload<TSlots extends RecipeSlotSchemas, TShell, TSlot> = ('shell' extends keyof TSlots
+	? { shell: TShell }
+	: { shell?: TShell }) & {
 	slots: { [K in Exclude<keyof TSlots, 'shell'>]-?: TSlot };
 };
 
