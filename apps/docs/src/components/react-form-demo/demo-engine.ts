@@ -15,7 +15,9 @@ import { brandTheme } from '@/lib/recipes/brand-theme';
  *
  * Self-contained inside the docs app source: the dev client transform refuses
  * entrypoints outside `src/`, so the demo graph must not reach into the
- * `registry/shared/` shadcn sources that the package aliases expose. The
+ * `registry/shared/` shadcn sources that the package aliases expose. The shadcn
+ * example uses a copy of that source under `src/generated/shadcn` instead (see
+ * `shadcn-engine.ts`). The
  * adapter imports from `@schema-engine/forms-react/adapters/react-hook-form`,
  * the subpath that keeps `react-hook-form` an optional peer.
  */

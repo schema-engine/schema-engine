@@ -1,0 +1,86 @@
+---
+title: 'React Forms'
+description: 'Live React forms for validation, conditional fields, layout, wizards, actions and copied shadcn source.'
+order: 6
+---
+
+import { ReactFormDemoEmbed } from '@/components/react-form-demo/react-form-demo-embed';
+import { FormConfigCode } from '@/components/form-config-code';
+import { basicContactFormConfig } from '@/lib/form-configs/basic-contact';
+import { contactFormDemoConfig } from '@/lib/form-configs/contact-with-constraints';
+import { viewRecipesDemoConfig } from '@/lib/form-configs/onboarding-wizard';
+import { sequentialActionsDemoConfig } from '@/lib/form-configs/sequential-actions';
+import { shadcnContactFormConfig, validationDemoConfig } from '@/lib/form-configs/react-examples';
+
+# React Forms
+
+Each form on this page is a live `@schema-engine/forms-react` form. The code block under it is serialized from the same object the form renders, so the two cannot drift. Submit handling is local: a valid submit shows the submitted values under the form and sends nothing anywhere.
+
+Most examples use the docs' Radiant-styled demo kit, so they share their configuration with the Radiant examples ([Basic form](/docs/examples/basic-form), [Contact form](/docs/examples/contact-form), [Registration flow](/docs/examples/registration-flow), [Survey form](/docs/examples/survey-form), [Sequential actions](/docs/examples/sequential-actions)). The last section uses source copied from the shadcn registry.
+
+## Basic form
+
+A single step on the `card` recipe. Submit it empty to see the required-field errors.
+
+<ReactFormDemoEmbed config={basicContactFormConfig} />
+
+<FormConfigCode config={basicContactFormConfig} rootName="basicContactFormConfig" />
+
+## Validation
+
+Rules sit on the element and run on submit. An invalid submit shows each message beside its field, keeps what you typed, and does not reload the page or put values in the URL. See [Validation](/docs/forms/validation) for every rule.
+
+<ReactFormDemoEmbed config={validationDemoConfig} />
+
+<FormConfigCode config={validationDemoConfig} rootName="validationDemoConfig" />
+
+## Conditional fields
+
+Choose "Technical support" and the ticket field appears, with its own required rule. See [constraint logic](/docs/forms-react/advanced).
+
+<ReactFormDemoEmbed config={contactFormDemoConfig} />
+
+<FormConfigCode config={contactFormDemoConfig} rootName="contactFormDemoConfig" />
+
+## Layout
+
+Placement is data too: a field's `grid` puts two fields on one row, and the form's `appearance` sizes the card. The [styling recipes](/docs/styling/recipes#a-contact-card-with-two-half-width-fields) render the same contact card live in React and in Radiant, with its CSS.
+
+## Multi-step wizard
+
+The `wizard` recipe owns progress and navigation. Fill the first step and select Next: the second step opens, and Previous returns to the first with its values kept. See [View recipes](/docs/forms-react/layouts).
+
+<ReactFormDemoEmbed config={viewRecipesDemoConfig} />
+
+<FormConfigCode config={viewRecipesDemoConfig} rootName="viewRecipesDemoConfig" />
+
+## Submission and actions
+
+The `actions` array runs the submit request, a notification and a reset in order, on the submit lifecycle triggers. The request goes to a mock endpoint the docs install in the browser. See [Actions](/docs/forms/actions).
+
+<ReactFormDemoEmbed config={sequentialActionsDemoConfig} />
+
+<FormConfigCode config={sequentialActionsDemoConfig} rootName="sequentialActionsDemoConfig" />
+
+## Copied shadcn source
+
+This form renders with the registry's `input` field and `card` recipe, copied into the docs app the way `shadcn add` copies them, not with the demo kit. The files come from `registry.json` and the repository's shadcn components, are rewritten to the app's `@/` aliases, and land under `src/generated/shadcn` before every build.
+
+<ReactFormDemoEmbed config={shadcnContactFormConfig} kit="shadcn" />
+
+<FormConfigCode config={shadcnContactFormConfig} rootName="shadcnContactFormConfig" />
+
+The engine registers the copied field and recipe like any consumer's would:
+
+```typescript
+import { createFormEngine } from '@schema-engine/forms';
+import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
+import { CardRecipe } from '@/components/schema-engine/forms/recipes/registrations/card';
+
+const engine = createFormEngine({
+	elements: [InputElementRegistration],
+	recipes: [CardRecipe],
+});
+```
+
+The provider, the renderer and the copied field's hooks all import `@schema-engine/forms-react` from the one package, so they share one React context. A bundle that ends up with two copies of the package splits the context, and the field then throws a missing-provider error; keep one copy in your app. See [Registries](/docs/registry/registries) and [View recipes](/docs/forms-react/layouts#default-registry-recipes) for installing the source in your own app.
