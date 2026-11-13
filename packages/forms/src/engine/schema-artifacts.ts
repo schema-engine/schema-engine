@@ -153,7 +153,7 @@ function createFormEngineJSONSchemaSerializer(
 		return generateFormConfigJSONSchemaForIO(
 			metadataRegistry,
 			formConfigValidator,
-			options?.io ?? 'output',
+			options?.io ?? 'input',
 			options,
 		);
 	};
