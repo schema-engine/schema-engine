@@ -78,7 +78,7 @@ function controlLabel(name: string, phase: PlaygroundSnapshot['phase']): string 
 }
 
 function nodeLabel(node: PlaygroundNode, phase: PlaygroundSnapshot['phase']): string {
-	if (phase === 'running' && node.status === 'running') return `Interrupt ${node.label}`;
+	if (phase === 'running') return `Interrupt ${node.label}`;
 	if (phase === 'done') return `Reset ${node.label}`;
 	return `Run ${node.label}`;
 }
@@ -243,7 +243,7 @@ export class ActionPlaygroundElement extends RadiantElement {
 					<NodeList snapshot={snapshot} />
 					<span
 						class="action-playground__connector action-playground__connector--join"
-						data-status={snapshot.result.status === 'idle' ? 'idle' : 'succeeded'}
+						data-status={snapshot.result.status}
 						aria-hidden="true"
 					/>
 					<ActionNodeButton node={snapshot.result} phase={snapshot.phase} className="action-node--result" />
