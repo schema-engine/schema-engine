@@ -227,6 +227,45 @@ if (!result.success) {
 }
 ```
 
+### Form configuration errors
+
+The errors above are about a field's _value_. A form's _configuration_ (a width that does not exist, a
+recipe that is not registered, a rule with no handler) is checked by `engine.validateForm`, which throws a
+`FormValidationError` listing every problem. Each issue has a `message` and the `path` of the config key it
+is about, so you can point at the mistake without parsing English:
+
+| Problem                                           | `path`                                                           |
+| ------------------------------------------------- | ---------------------------------------------------------------- |
+| The third field of step 1 has `grid.width: halve` | `['steps', 0, 'elements', 2, 'grid', 'width']`                   |
+| A fieldset child uses a rule with no handler      | `['steps', 0, 'elements', 1, 'elements', 0, 'rules', 0, 'type']` |
+| `view.$type` is not a registered recipe           | `['view', '$type']`                                              |
+| A problem with the whole form                     | `[]`                                                             |
+
+`error.message` has one line per issue, `<path>: <message>`, with array indexes in brackets:
+
+```text
+steps[0].elements[2].grid.width: Expected one of full, three-quarters, two-thirds, half, third, quarter.
+view.$type: Unknown view recipe 'nope'. Register it with createFormEngine({ recipes: [...] }).
+```
+
+Use `engine.safeValidateForm` when you would rather branch on a result than catch:
+
+```typescript
+const result = engine.safeValidateForm(json);
+
+if (!result.success) {
+	for (const { path, message } of result.issues) {
+		console.error(`${path.join('.') || '(form)'}: ${message}`);
+	}
+} else {
+	const form = result.data; // the same frozen NormalizedFormConfig validateForm returns
+}
+```
+
+The `{ message, path }` shape is a Standard Schema issue, so a YAML loader or an editor can map each `path` to
+a line or a field. `FormRenderer` and the Radiant provider call `validateForm`, so an invalid config thrown at
+render time shows the same lines in the error message.
+
 ### Custom Error Messages
 
 Always provide user-friendly error messages:

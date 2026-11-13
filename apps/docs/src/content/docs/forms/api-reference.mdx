@@ -91,11 +91,28 @@ engine.getRecipe('card');
 engine.getAllRecipes();
 engine.defineForm(config);
 engine.validateForm(json);
+engine.safeValidateForm(json);
 engine.validateElement(field);
 engine.extend({ actions: [extraAction] });
 engine.getFormConfigStandardSchema();
 engine.describeViewCatalog();
 ```
+
+`validateForm` throws a `FormValidationError` when the form is invalid.
+`safeValidateForm` runs the same validation and returns a result instead:
+
+```ts
+type FormValidationIssue = {
+	message: string;
+	path: ReadonlyArray<PropertyKey>; // ['steps', 0, 'elements', 2, 'grid', 'width']
+};
+
+type FormValidationResult<T> = { success: true; data: T } | { success: false; issues: FormValidationIssue[] };
+```
+
+`error.issues` on a `FormValidationError` has the same shape. See
+[Form configuration errors](/docs/forms/validation-how-it-works#form-configuration-errors)
+for the paths and a copy-pasteable example.
 
 JSON Schema conversion is backed by Zod Mini for first-party schemas. Use
 `io: 'input'` for authoring input (where defaulted fields are optional) or
