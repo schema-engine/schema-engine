@@ -5,7 +5,7 @@
 	"scripts": {
 		"start": "pnpm build && ecopages start",
 		"generate:llms": "tsx scripts/generate-llm-docs.ts",
-		"dev": "pnpm generate:llms && pnpm --filter @schema-engine/forms-radiant --filter @schema-engine/forms-react build:lib && ecopages dev",
+		"dev": "pnpm generate:llms && pnpm --filter @schema-engine/actions --filter @schema-engine/forms-radiant --filter @schema-engine/forms-react build:lib && ecopages dev",
 		"build": "pnpm generate:llms && ecopages build",
 		"check-types": "pnpm build && tsc --noEmit && tsc --noEmit -p tsconfig.test-types.json",
 		"preview": "ecopages preview",
@@ -57,6 +57,7 @@
 		"zod": "^4.4.3"
 	},
 	"dependencies": {
+		"@schema-engine/actions": "workspace:*",
 		"@schema-engine/forms": "workspace:*",
 		"@schema-engine/forms-radiant": "workspace:*",
 		"@schema-engine/forms-react": "workspace:*",

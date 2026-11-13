@@ -94,6 +94,9 @@ importers:
 
   apps/docs:
     dependencies:
+      '@schema-engine/actions':
+        specifier: workspace:*
+        version: link:../../packages/actions
       '@schema-engine/forms':
         specifier: workspace:*
         version: link:../../packages/forms
