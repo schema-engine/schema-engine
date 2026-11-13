@@ -13,9 +13,13 @@ When the form lives in TypeScript next to your engine, prefer
 [`engine.defineForm()`](/docs/forms/builder#author-form-configuration) instead.
 See [Authoring modes](/docs/forms/core-concepts#authoring-modes).
 
+## Before you start
+
+This guide uses the React renderer. Follow [Installation](/docs/getting-started/installation#react) first: it installs the packages, copies the form elements and the default recipes into your project with the shadcn registry (`pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-engine/schema-engine-form-recipes`), and imports their styles. The `@/components/schema-engine/forms/...` imports below resolve only after that step. Using Radiant instead? Start from [Forms Radiant: Getting Started](/docs/forms-radiant/getting-started).
+
 ## 1. Create Your Form Engine
 
-Use `createFormEngine` to register components. The returned engine is immutable:
+Use `createFormEngine` to register the copied elements and recipes. The returned engine is immutable:
 
 ```typescript
 // lib/form-engine.ts
@@ -122,7 +126,9 @@ export const contactFormConfig: FormConfig = {
 ## 3. Render the Form
 
 `FormRenderer` validates the config at the form boundary; you do not need to call
-`validateForm` first unless you reuse the normalized result elsewhere.
+`validateForm` first unless you reuse the normalized result elsewhere. The `rhfAdapter`
+is the React Hook Form adapter, so this step needs the `react-hook-form` package from
+Installation; Radiant renders without it.
 
 ```tsx
 import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';

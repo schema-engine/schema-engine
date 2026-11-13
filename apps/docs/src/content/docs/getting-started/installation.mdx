@@ -1,28 +1,111 @@
 ---
 title: 'Installation'
-description: 'Install the packages you need and configure your first engine instance.'
+description: 'Install the packages for your renderer, copy the React registry source or load the Radiant styles, and create your first engine.'
 order: 2
 ---
 
 # Installation
 
-## Package Installation
+Schema Engine is a set of packages. You install the engine and one renderer: **React** with a shadcn registry that copies the field and recipe source into your project, or **Radiant**, which ships its elements in the package.
 
-Schema Engine is a monorepo with multiple packages. Install only what you need:
+## Requirements
+
+- **Node.js 24 or newer** for the tooling this project is built and tested with (installs, builds and the docs). The published packages declare no Node engine of their own; their runtime requirements are the peer dependencies below.
+- **pnpm**. The commands here use it; `npm` and `yarn` take the same package names.
+- **React 19** for the React renderer, in a project set up with [shadcn/ui](https://ui.shadcn.com) (a `components.json` and the `@/` import alias).
+
+## Choose a renderer
+
+| Renderer    | Package                        | Form state                                             | Styling                                                           |
+| ----------- | ------------------------------ | ------------------------------------------------------ | ----------------------------------------------------------------- |
+| **React**   | `@schema-engine/forms-react`   | React Hook Form, through the React adapter (optional)  | Source you own, copied from the shadcn registry; Tailwind helps   |
+| **Radiant** | `@schema-engine/forms-radiant` | Radiant's own form controller; no React Hook Form      | One stylesheet from the package and a Radiant UI theme            |
+
+Both render the same `FormConfig` JSON. React Hook Form is the React adapter's form state, not a requirement of the engine or of the Radiant renderer.
+
+## The engine
+
+Every setup needs the engine, the layout package and Zod:
 
 ```bash
-# Core packages
-pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
-
-# React Hook Form adapter (@schema-engine/forms-react/adapters/react-hook-form),
-# used by the Quick Start and the Forms React guides
-pnpm add react-hook-form
-
-# Optional: standalone actions package
-pnpm add @schema-engine/actions
+pnpm add @schema-engine/forms @schema-engine/layout zod
 ```
 
-### Package Overview
+## React
+
+Add the renderer and its peers. `react-hook-form` is needed for the React Hook Form adapter that the [Quick Start](/docs/getting-started/quick-start) and the [Forms React](/docs/forms-react/getting-started) guides use:
+
+```bash
+pnpm add @schema-engine/forms-react react react-dom react-hook-form
+```
+
+Then copy the form elements and, when you want a ready-made layout, the default recipes from the Schema Engine shadcn registry:
+
+```bash
+pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-engine/schema-engine-form-recipes
+```
+
+The registry has one aggregate per component base: `schema-form` for Base UI, `schema-form-radix` for Radix UI and `schema-form-aria` for React Aria, with matching `schema-engine-form-recipes-radix` and `-aria` recipe items. Install one base per app. [Registries](/docs/registry/registries) lists every item.
+
+### What you now own
+
+The command copies source files into your project, and they are yours to read, edit and delete:
+
+- `components/schema-engine/forms/` holds the form elements, the generated `registrations.ts` barrel, and `recipes/` with the shells, blocks, their CSS files and the generated `recipes/registrations.ts` barrel.
+- `components/ui/schema-engine/components/` holds the primitives the elements share, such as the field wrapper and `controls.css`.
+
+The package keeps the engine, the renderer and the hooks; the copied files are plain React that use your own `ui` components (`Button`, `Input`, `Label`). To change how an element or a shell looks, edit its file. To drop one, remove it from the registration barrel. To add your own, register it next to them with `createFormEngine({ elements: [...schemaFormRegistrations, MyElement] })`. A later `shadcn add` overwrites a file only after it asks.
+
+### Import the styles
+
+The recipes copy their CSS with them, and nothing imports it for you. Import it once in your global stylesheet, after Tailwind. The path is relative to that file (`./components/...` from a Vite `src/index.css`, `../components/...` from a Next.js `app/globals.css`):
+
+```css
+@import 'tailwindcss';
+@import './components/schema-engine/forms/recipes/recipes.css' layer(components);
+@import './components/ui/schema-engine/components/controls.css';
+```
+
+`recipes.css` goes into the `components` layer so your Tailwind utilities and classes sit above it; `controls.css` goes unlayered because a shadcn control sets its height with a Tailwind utility that outranks every layered rule. [View recipes](/docs/forms-react/layouts#default-registry-recipes) says more, and [Styling and layout](/docs/styling/overview) covers sizes, surfaces and tokens.
+
+### Create the engine
+
+Import the generated barrels from the copied files and build the engine once:
+
+```typescript
+import { createFormEngine } from '@schema-engine/forms';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
+import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
+
+export const formEngine = createFormEngine({
+	elements: schemaFormRegistrations,
+	recipes: schemaFormRecipeRegistrations,
+});
+```
+
+These imports resolve only after the `shadcn add` above has copied the files. The [Quick Start](/docs/getting-started/quick-start) renders a form from here.
+
+## Radiant
+
+Radiant needs no registry and no React. Install the renderer and its peers:
+
+```bash
+pnpm add @schema-engine/forms-radiant @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals
+```
+
+Load one Radiant UI theme and the renderer's stylesheet once, then create the engine with `createRadiantFormEngine({ elements: schemaFormRegistrations })`. [Forms Radiant: Getting Started](/docs/forms-radiant/getting-started) has the stylesheet imports, the peer versions and a full example.
+
+## Optional packages
+
+```bash
+# Standalone action system (the forms packages already use it for submission)
+pnpm add @schema-engine/actions
+
+# YAML documents with line-accurate errors
+pnpm add @schema-engine/registry
+```
+
+## Package overview
 
 | Package                        | Description                              |
 | ------------------------------ | ---------------------------------------- |
@@ -33,73 +116,14 @@ pnpm add @schema-engine/actions
 | `@schema-engine/layout`        | Grid and appearance theme (neutral)      |
 | `@schema-engine/registry`      | Registries, and YAML documents (`/yaml`) |
 
-## Development Setup
+## Peer dependencies
 
-To contribute or explore the source code:
+- `zod` >= 4.0.17 when using first-party Zod Mini schemas
+- `react` and `react-dom` >= 19 (React renderer)
+- `react-hook-form` >= 7.60 (optional; needed only for the React Hook Form adapter)
+- `@ecopages/radiant`, `@ecopages/jsx`, `@ecopages/signals` and `@ecopages/radiant-ui` (Radiant renderer; the exact versions are in [Forms Radiant: Getting Started](/docs/forms-radiant/getting-started))
 
-### Prerequisites
-
-- **pnpm** - The workspace uses pnpm
-- **Node.js** 24 or newer
-- **Git** for cloning the repository
-
-### Clone and Setup
-
-```bash
-# Clone the repository
-git clone git@github.com:andeeplus/schema-engine.git
-cd schema-engine
-
-# Install dependencies
-pnpm install
-
-# Start the documentation site
-pnpm dev:docs
-```
-
-### Development Scripts
-
-```bash
-# Start the documentation site
-pnpm dev:docs
-
-# Build all packages, then type-check them and the docs
-pnpm build:lib
-
-# Run the unit and browser tests
-pnpm test:all
-
-# Lint
-pnpm lint
-```
-
-### Verification
-
-To verify that the installation was successful, check the version of the installed packages:
-
-```bash
-pnpm list --depth 0 | grep schema-engine
-```
-
-You should see `@schema-engine/forms` and `@schema-engine/forms-react` listed with their versions.
-
-## Project Structure
-
-```
-schema-engine/
-├── packages/
-│   ├── forms/           # @schema-engine/forms
-│   ├── forms-react/     # @schema-engine/forms-react
-│   ├── forms-radiant/   # @schema-engine/forms-radiant
-│   ├── actions/         # @schema-engine/actions
-│   ├── layout/          # @schema-engine/layout
-│   └── registry/        # @schema-engine/registry
-├── apps/
-│   └── docs/            # Documentation site
-└── package.json
-```
-
-## TypeScript Configuration
+## TypeScript configuration
 
 Schema Engine is built with TypeScript. Recommended `tsconfig.json`:
 
@@ -115,13 +139,13 @@ Schema Engine is built with TypeScript. Recommended `tsconfig.json`:
 }
 ```
 
-## Peer Dependencies
+## Verify the install
 
-The packages require the following peer dependencies:
+```bash
+pnpm list --depth 0 | grep schema-engine
+```
 
-- `zod` >= 4.0.17 when using first-party Zod Mini schemas
-- `react` and `react-dom` >= 19 (for forms-react)
-- `react-hook-form` >= 7.60 (optional; required when using the React Hook Form adapter)
+You should see `@schema-engine/forms` and your renderer listed with their versions. To work on Schema Engine itself rather than use it, see [CONTRIBUTING.md](https://github.com/andeeplus/schema-engine/blob/main/CONTRIBUTING.md).
 
 ## What's Next?
 
