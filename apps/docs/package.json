@@ -5,16 +5,15 @@
 	"scripts": {
 		"start": "pnpm build && ecopages start",
 		"generate:llms": "tsx scripts/generate-llm-docs.ts",
-		"predev": "pnpm generate:llms && pnpm --filter @schema-engine/forms-radiant --filter @schema-engine/forms-react build:lib",
-		"dev": "ecopages dev",
-		"prebuild": "pnpm generate:llms",
-		"build": "ecopages build",
+		"dev": "pnpm generate:llms && pnpm --filter @schema-engine/forms-radiant --filter @schema-engine/forms-react build:lib && ecopages dev",
+		"build": "pnpm generate:llms && ecopages build",
 		"check-types": "pnpm build && tsc --noEmit && tsc --noEmit -p tsconfig.test-types.json",
 		"preview": "ecopages preview",
 		"test:e2e": "vitest run --project e2e",
 		"pretest:e2e": "pnpm build",
 		"test:browser": "vitest run --project browser",
-		"test:unit": "vitest run --project unit"
+		"test:unit": "vitest run --project unit",
+		"test:all": "vitest run --project unit --project browser"
 	},
 	"devDependencies": {
 		"@ecopages/browser-router": "0.7.1",
@@ -32,6 +31,7 @@
 		"@ecopages/signals": "0.8.3",
 		"@mdx-js/esbuild": "^3.1.1",
 		"@mdx-js/mdx": "^3.1.1",
+		"@rehype-pretty/transformers": "^0.13.2",
 		"@tailwindcss/postcss": "^4.0.0",
 		"@types/hast": "^3.0.4",
 		"@types/node": "^24.13.2",

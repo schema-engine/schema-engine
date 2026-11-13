@@ -6,6 +6,7 @@ import type { Entry } from 'ecopages:content/docs';
 import { CopyForLlm } from '@/components/copy-for-llm';
 import { DocsBreadcrumb } from '@/components/docs-breadcrumb';
 import { DOCS_ROOT } from '@/content/docs';
+import { getDocsLlmUrl } from '@/lib/docs/docs-llm-url';
 import { DocsLayout } from '@/layouts/docs-layout';
 import { ReactFormDemoEmbed } from '@/components/react-form-demo/react-form-demo-embed';
 import { ReactFormPreview } from '@/components/react-form-demo/react-form-preview.react';
@@ -67,6 +68,7 @@ export default eco.page<{ entry: Entry }, JsxRenderable>({
 	metadata: ({ props: { entry } }) => ({
 		title: `Docs | ${entry.title}`,
 		description: entry.description,
+		url: `${DOCS_ROOT}/${entry.segments.join('/')}`,
 	}),
 	render: async ({ entry }) => {
 		const Content = await getComponent(entry.slug);
@@ -75,7 +77,7 @@ export default eco.page<{ entry: Entry }, JsxRenderable>({
 			<section class="docs-page">
 				<div class="docs-bar unstyled">
 					<DocsBreadcrumb entry={entry} />
-					<CopyForLlm llmUrl={`/llms-content/${entry.slug}.txt`} />
+					<CopyForLlm llmUrl={getDocsLlmUrl(entry.slug)} />
 				</div>
 				<Content />
 			</section>

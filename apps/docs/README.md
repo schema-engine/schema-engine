@@ -11,7 +11,10 @@ The Ecopages 0.6 CLI requires Node.js 24 or newer.
 - `src/lib/docs-nav.ts` — grouped navigation from content entries.
 - `src/components/code-tabs` — every instance needs a unique, id-safe `name` that prefixes its tab and panel ids; copy status clears after 2 seconds and failures are announced. Source tabs preserve plain-text indentation and copy the selected file verbatim; highlighted tabs retain their rendered markup and separate clipboard text.
 - `src/layouts/docs-layout` — shared Radiant UI sidebar, TOC, and pagination, rendered on the server from the current route (`currentHref`).
-- `src/pages/docs/[...slug]/index.tsx` — catch-all route for MDX content.
+- `src/pages/docs/[...slug]/index.tsx` — catch-all route for MDX content; sets the page `url` that drives the canonical link, the Markdown alternate and the Copy for LLM link.
+- `src/mdx/` — MDX plugin factory (`createDocsMdxPlugins`). Fenced code gets a copy button (`transformerCopyButton` plus `rehype-pretty-copy-compatibility.ts`, which moves the button out of the scrolling `pre`), build-time heading ids (`rehype-heading-ids.ts`, same slug as `RuiToc`) and the shared Shiki themes (`shiki-themes.ts`). The click handler lives in `layouts/base-layout/base-layout.script.ts`. Callouts use `RuiAlert variant="info" layout="banner" class="unstyled"`.
+- `src/lib/docs/` — `site-meta.ts` (site name, origin, canonical, OG image, sitemap extras) and `docs-llm-url.ts`; both are copied from the Ecopages docs starter, with Schema Engine values and the `/llms-content/<slug>.txt` export scheme. `ECOPAGES_BASE_URL` overrides the origin.
+- `scripts/generate-llm-docs.ts` — writes `llms.txt` and `llms-content/` into `src/public` in sidebar order, staged and swapped in only after every write succeeds. Frontmatter `llms: false` leaves a page out.
 
 ## Commands
 
@@ -21,6 +24,7 @@ pnpm dev
 pnpm build
 pnpm generate:llms
 pnpm check-types
+pnpm test:all
 pnpm test:e2e
 ```
 
@@ -29,7 +33,7 @@ pnpm test:e2e
 `test`. Root `pnpm build:lib` runs it through `turbo check-types`, so it builds
 the site too. Unused components that no longer type-check are excluded in `tsconfig.json`.
 
-`pnpm test:e2e` builds the site, serves the production preview on a free port, and
+`pnpm test:all` runs the unit and browser projects (the root pre-commit `turbo test:all` calls it). `pnpm test:e2e` builds the site, serves the production preview on a free port, and
 runs Playwright checks that the getting-started Forms React embed ships its
 serialized config, hydrates, keeps typed values, and surfaces validation after
 submit, and that the Radiant previews on the homepage and sequential-actions page submit and reset after direct or client-side navigation. Set `DOCS_E2E_BASE_URL` to test an already running server instead of
