@@ -152,12 +152,12 @@ export const GridLayoutConfigSchema = z.extend(GridLayoutPropertiesSchema, {
 });
 
 /**
- * Named field widths, as shares of the row.
+ * Named item widths, as shares of the row.
  *
  * @remarks
- * A grid whose fields use `width` or `offset` is laid out on 12 tracks, so
+ * A grid whose items use `width` or `offset` is laid out on 12 tracks, so
  * every name is a whole number of tracks: `full` 12, `three-quarters` 9,
- * `two-thirds` 8, `half` 6, `third` 4, `quarter` 3. A field that sets no width
+ * `two-thirds` 8, `half` 6, `third` 4, `quarter` 3. An item that sets no width
  * fills the row.
  */
 export const GridWidthNames = ['full', 'three-quarters', 'two-thirds', 'half', 'third', 'quarter'] as const;
@@ -172,13 +172,13 @@ export type GridOffsetName = (typeof GridOffsetNames)[number];
 const ElementGridPropertiesSchema = z.strictObject({
 	area: z
 		.optional(GridAreaNameSchema)
-		.check(z.describe('Name of the cell group this field fills in the grid areas template.')),
+		.check(z.describe('Name of the cell group this item fills in the grid areas template.')),
 	width: z
 		.optional(z.enum(GridWidthNames))
 		.check(z.describe(`Named share of the row (${GridWidthNames.join(' | ')}).`)),
 	offset: z
 		.optional(z.enum(GridOffsetNames))
-		.check(z.describe(`Named empty space before the field (${GridOffsetNames.join(' | ')}).`)),
+		.check(z.describe(`Named empty space before the item (${GridOffsetNames.join(' | ')}).`)),
 	column: z.optional(z.union([z.number(), z.string()])),
 	row: z.optional(z.union([z.number(), z.string()])),
 	justifySelf: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
@@ -192,15 +192,15 @@ const ElementGridPropertiesSchema = z.strictObject({
 		.check(z.describe('Extra space after this element, on top of the grid row gap.')),
 });
 
-export const FieldGridBreakpointSchema = z.extend(z.omit(ElementGridPropertiesSchema, { placeSelf: true }), {
+export const ItemGridBreakpointSchema = z.extend(z.omit(ElementGridPropertiesSchema, { placeSelf: true }), {
 	hidden: z.optional(z.boolean()),
 });
 
 export const ElementGridConfigSchema = z.extend(ElementGridPropertiesSchema, {
-	responsive: responsiveSchema(FieldGridBreakpointSchema),
+	responsive: responsiveSchema(ItemGridBreakpointSchema),
 });
 
 export type GridBreakpointConfig = z.infer<typeof GridBreakpointConfigSchema>;
-export type FieldGridBreakpointConfig = z.infer<typeof FieldGridBreakpointSchema>;
+export type ItemGridBreakpointConfig = z.infer<typeof ItemGridBreakpointSchema>;
 export type ElementGridConfig = z.infer<typeof ElementGridConfigSchema>;
 export type GridLayoutConfig = z.infer<typeof GridLayoutConfigSchema>;

@@ -85,7 +85,7 @@ describe('generated stylesheet', () => {
 	});
 
 	test('a visible field falls back to the component display mode, not block', () => {
-		expect(css()).toContain('display:var(--se-field-display, var(--se-field-display-mode, block))');
+		expect(css()).toContain('display:var(--se-item-display, var(--se-item-display-mode, block))');
 	});
 
 	test('declares no place-* shorthand that would reset the axis longhands', () => {
@@ -93,8 +93,8 @@ describe('generated stylesheet', () => {
 	});
 
 	test('defaults field alignment to auto so the grid alignment still applies', () => {
-		expect(css()).toContain('justify-self:var(--se-field-justify-self, auto)');
-		expect(css()).toContain('align-self:var(--se-field-align-self, auto)');
+		expect(css()).toContain('justify-self:var(--se-item-justify-self, auto)');
+		expect(css()).toContain('align-self:var(--se-item-align-self, auto)');
 	});
 
 	test('re-declares every responsive property inside each media query', () => {
@@ -103,21 +103,21 @@ describe('generated stylesheet', () => {
 			expect(query).toContain(`${property}:var(--se-grid-`);
 		}
 		for (const property of ['display', 'grid-column', 'grid-row', 'justify-self', 'align-self']) {
-			expect(query).toContain(`${property}:var(--se-field-`);
+			expect(query).toContain(`${property}:var(--se-item-`);
 		}
 	});
 
 	test('media queries fall back through narrower slots so sparse values cascade', () => {
 		expect(css()).toContain(
-			'grid-column:var(--se-field-grid-column-md, var(--se-field-grid-column-sm, var(--se-field-grid-column, var(--se-grid-default-column, auto))))',
+			'grid-column:var(--se-item-grid-column-md, var(--se-item-grid-column-sm, var(--se-item-grid-column, var(--se-grid-default-column, auto))))',
 		);
 	});
 
 	test('resets every slot so nested grids and fields do not inherit placement', () => {
 		expect(css()).toContain('--se-grid-template:initial;');
 		expect(css()).toContain('--se-grid-template-2xl:initial;');
-		expect(css()).toContain('--se-field-grid-column:initial;');
-		expect(css()).toContain('--se-field-align-self-xl:initial;');
+		expect(css()).toContain('--se-item-grid-column:initial;');
+		expect(css()).toContain('--se-item-align-self-xl:initial;');
 		expect(css()).toContain('--se-grid-align-content:initial;');
 	});
 });
@@ -234,9 +234,9 @@ describe('getGridItemVariables', () => {
 			column: 'span 2',
 			responsive: { md: { column: 'span 3' } },
 		});
-		expect(variables['--se-field-grid-column']).toBe('span 2');
-		expect(variables['--se-field-grid-column-md']).toBe('span 3');
-		expect(variables['--se-field-grid-column-lg']).toBeUndefined();
+		expect(variables['--se-item-grid-column']).toBe('span 2');
+		expect(variables['--se-item-grid-column-md']).toBe('span 3');
+		expect(variables['--se-item-grid-column-lg']).toBeUndefined();
 	});
 
 	test('keeps md placement and visibility through wider breakpoints', () => {
@@ -244,9 +244,9 @@ describe('getGridItemVariables', () => {
 			column: 'span 1',
 			responsive: { md: { column: 'span 2', hidden: true } },
 		});
-		expect(variables['--se-field-grid-column-md']).toBe('span 2');
-		expect(variables['--se-field-display-md']).toBe('none');
-		expect(variables['--se-field-display']).toBeUndefined();
+		expect(variables['--se-item-grid-column-md']).toBe('span 2');
+		expect(variables['--se-item-display-md']).toBe('none');
+		expect(variables['--se-item-display']).toBeUndefined();
 	});
 
 	test('hidden false can undo an earlier hidden true', () => {
@@ -256,13 +256,13 @@ describe('getGridItemVariables', () => {
 				md: { hidden: false },
 			},
 		});
-		expect(variables['--se-field-display']).toBe('none');
-		expect(variables['--se-field-display-md']).toBe('var(--se-field-display-mode, block)');
-		expect(variables['--se-field-display-lg']).toBeUndefined();
+		expect(variables['--se-item-display']).toBe('none');
+		expect(variables['--se-item-display-md']).toBe('var(--se-item-display-mode, block)');
+		expect(variables['--se-item-display-lg']).toBeUndefined();
 	});
 
 	test('numeric columns are stringified', () => {
-		expect(getGridItemVariables({ column: 2 })['--se-field-grid-column']).toBe('2');
+		expect(getGridItemVariables({ column: 2 })['--se-item-grid-column']).toBe('2');
 	});
 
 	test('placeSelf resolves into both axes and joins the cascade', () => {
@@ -270,31 +270,31 @@ describe('getGridItemVariables', () => {
 			placeSelf: 'center end',
 			responsive: { md: { justifySelf: 'start' } },
 		});
-		expect(variables['--se-field-align-self']).toBe('center');
-		expect(variables['--se-field-justify-self']).toBe('end');
-		expect(variables['--se-field-justify-self-md']).toBe('start');
-		expect(variables['--se-field-align-self-md']).toBeUndefined();
+		expect(variables['--se-item-align-self']).toBe('center');
+		expect(variables['--se-item-justify-self']).toBe('end');
+		expect(variables['--se-item-justify-self-md']).toBe('start');
+		expect(variables['--se-item-align-self-md']).toBeUndefined();
 	});
 
 	test('keeps multi-keyword axis values in one axis', () => {
 		expect(getGridItemVariables({ placeSelf: 'safe center' })).toEqual({
-			'--se-field-align-self': 'safe center',
-			'--se-field-justify-self': 'safe center',
+			'--se-item-align-self': 'safe center',
+			'--se-item-justify-self': 'safe center',
 		});
 		expect(getGridItemVariables({ placeSelf: 'first baseline' })).toEqual({
-			'--se-field-align-self': 'first baseline',
-			'--se-field-justify-self': 'first baseline',
+			'--se-item-align-self': 'first baseline',
+			'--se-item-justify-self': 'first baseline',
 		});
 		expect(getGridItemVariables({ placeSelf: 'safe center unsafe start' })).toEqual({
-			'--se-field-align-self': 'safe center',
-			'--se-field-justify-self': 'unsafe start',
+			'--se-item-align-self': 'safe center',
+			'--se-item-justify-self': 'unsafe start',
 		});
 	});
 
 	test('axis properties beat the placeSelf shorthand', () => {
 		const variables = getGridItemVariables({ placeSelf: 'center', alignSelf: 'end' });
-		expect(variables['--se-field-align-self']).toBe('end');
-		expect(variables['--se-field-justify-self']).toBe('center');
+		expect(variables['--se-item-align-self']).toBe('end');
+		expect(variables['--se-item-justify-self']).toBe('center');
 	});
 
 	test('unconfigured fields carry no inline style at all', () => {
@@ -304,7 +304,7 @@ describe('getGridItemVariables', () => {
 
 	test('emits only the authored properties', () => {
 		const variables = getGridItemVariables({ column: 'span 2' });
-		expect(variables).toEqual({ '--se-field-grid-column': 'span 2' });
+		expect(variables).toEqual({ '--se-item-grid-column': 'span 2' });
 	});
 });
 
@@ -386,18 +386,16 @@ describe('responsive gap tokens', () => {
 describe('per-element spacing', () => {
 	test('maps a gap token to the element margin variables', () => {
 		const variables = getGridItemVariables({ marginBlockEnd: 'loose' });
-		expect(variables['--se-field-margin-block-end']).toBe(
-			'var(--se-grid-gap-loose, var(--se-grid-gap-base-loose))',
-		);
-		expect(variables['--se-field-margin-block-start']).toBeUndefined();
+		expect(variables['--se-item-margin-block-end']).toBe('var(--se-grid-gap-loose, var(--se-grid-gap-base-loose))');
+		expect(variables['--se-item-margin-block-start']).toBeUndefined();
 	});
 
 	test('passes a raw CSS length through untouched', () => {
-		expect(getGridItemVariables({ marginBlockStart: '3rem' })['--se-field-margin-block-start']).toBe('3rem');
+		expect(getGridItemVariables({ marginBlockStart: '3rem' })['--se-item-margin-block-start']).toBe('3rem');
 	});
 
 	test('emits nothing when no spacing is authored', () => {
-		expect(getGridItemVariables({ column: 2 })['--se-field-margin-block-end']).toBeUndefined();
+		expect(getGridItemVariables({ column: 2 })['--se-item-margin-block-end']).toBeUndefined();
 		expect(getGridItemVariables()).toEqual({});
 	});
 
@@ -406,25 +404,25 @@ describe('per-element spacing', () => {
 			marginBlockEnd: 'compact',
 			responsive: { lg: { marginBlockEnd: 'wide' } },
 		});
-		expect(variables['--se-field-margin-block-end']).toBe(
+		expect(variables['--se-item-margin-block-end']).toBe(
 			'var(--se-grid-gap-compact, var(--se-grid-gap-base-compact))',
 		);
-		expect(variables['--se-field-margin-block-end-lg']).toBe(
+		expect(variables['--se-item-margin-block-end-lg']).toBe(
 			'var(--se-grid-gap-wide, var(--se-grid-gap-base-wide))',
 		);
-		expect(variables['--se-field-margin-block-end-md']).toBeUndefined();
+		expect(variables['--se-item-margin-block-end-md']).toBeUndefined();
 	});
 
 	test('the stylesheet defaults element margins to zero and falls back through narrower slots', () => {
-		expect(css()).toContain('margin-block-end:var(--se-field-margin-block-end, 0)');
+		expect(css()).toContain('margin-block-end:var(--se-item-margin-block-end, 0)');
 		expect(css()).toContain(
-			'margin-block-start:var(--se-field-margin-block-start-sm, var(--se-field-margin-block-start, 0))',
+			'margin-block-start:var(--se-item-margin-block-start-sm, var(--se-item-margin-block-start, 0))',
 		);
 	});
 
 	test('the stylesheet resets every spacing slot so nested fields do not inherit it', () => {
-		expect(css()).toContain('--se-field-margin-block-end:initial;');
-		expect(css()).toContain('--se-field-margin-block-start-2xl:initial;');
+		expect(css()).toContain('--se-item-margin-block-end:initial;');
+		expect(css()).toContain('--se-item-margin-block-start-2xl:initial;');
 	});
 });
 
@@ -439,24 +437,24 @@ describe('named widths and offsets', () => {
 		['third', 'span 4'],
 		['quarter', 'span 3'],
 	] as const)('width %s emits %s', (width, column) => {
-		expect(getGridItemVariables({ width })).toEqual({ '--se-field-grid-column': column });
+		expect(getGridItemVariables({ width })).toEqual({ '--se-item-grid-column': column });
 	});
 
 	test('offset starts the field after the skipped tracks and runs to the end of the row', () => {
-		expect(getGridItemVariables({ offset: 'quarter' })).toEqual({ '--se-field-grid-column': '4 / -1' });
+		expect(getGridItemVariables({ offset: 'quarter' })).toEqual({ '--se-item-grid-column': '4 / -1' });
 	});
 
 	test('half with a quarter offset is centred in the 12 tracks', () => {
 		expect(getGridItemVariables({ width: 'half', offset: 'quarter' })).toEqual({
-			'--se-field-grid-column': '4 / span 6',
+			'--se-item-grid-column': '4 / span 6',
 		});
 	});
 
 	test('width changes by breakpoint and stays out of unauthored slots', () => {
 		const variables = getGridItemVariables({ width: 'full', responsive: { md: { width: 'third' } } });
 		expect(variables).toEqual({
-			'--se-field-grid-column': 'span 12',
-			'--se-field-grid-column-md': 'span 4',
+			'--se-item-grid-column': 'span 12',
+			'--se-item-grid-column-md': 'span 4',
 		});
 	});
 
@@ -466,8 +464,8 @@ describe('named widths and offsets', () => {
 			offset: 'quarter',
 			responsive: { md: { width: 'third' } },
 		});
-		expect(variables['--se-field-grid-column']).toBe('4 / span 6');
-		expect(variables['--se-field-grid-column-md']).toBe('4 / span 4');
+		expect(variables['--se-item-grid-column']).toBe('4 / span 6');
+		expect(variables['--se-item-grid-column-md']).toBe('4 / span 4');
 	});
 
 	test('a slot that changes only the offset keeps the width of the slot before it', () => {
@@ -475,28 +473,28 @@ describe('named widths and offsets', () => {
 			width: 'third',
 			responsive: { lg: { offset: 'third' } },
 		});
-		expect(variables['--se-field-grid-column']).toBe('span 4');
-		expect(variables['--se-field-grid-column-lg']).toBe('5 / span 4');
+		expect(variables['--se-item-grid-column']).toBe('span 4');
+		expect(variables['--se-item-grid-column-lg']).toBe('5 / span 4');
 	});
 
 	test('responsive.default overrides the top-level width', () => {
 		const variables = getGridItemVariables({ width: 'full', responsive: { default: { width: 'half' } } });
-		expect(variables['--se-field-grid-column']).toBe('span 6');
+		expect(variables['--se-item-grid-column']).toBe('span 6');
 	});
 
 	test('raw column placement still emits the authored line', () => {
-		expect(getGridItemVariables({ column: '4 / 10' })).toEqual({ '--se-field-grid-column': '4 / 10' });
+		expect(getGridItemVariables({ column: '4 / 10' })).toEqual({ '--se-item-grid-column': '4 / 10' });
 	});
 
 	test('a raw column field beside width fields keeps the twelve tracks and its own lines', () => {
 		const elements = [widthElement({ width: 'half' }), widthElement({ column: 'span 2' })];
 		expect(getGridVariables(undefined, theme(), elements)['--se-grid-template']).toBe('repeat(12, minmax(0, 1fr))');
-		expect(getGridItemVariables({ column: 'span 2' })).toEqual({ '--se-field-grid-column': 'span 2' });
+		expect(getGridItemVariables({ column: 'span 2' })).toEqual({ '--se-item-grid-column': 'span 2' });
 	});
 
 	test('the stylesheet makes a field without a width fill the row when its grid has widths', () => {
 		expect(css()).toContain('--se-grid-default-column:initial;');
-		expect(css()).toContain('var(--se-field-grid-column, var(--se-grid-default-column, auto))');
+		expect(css()).toContain('var(--se-item-grid-column, var(--se-grid-default-column, auto))');
 	});
 
 	test('a grid whose fields use widths gets twelve tracks and a full-row default', () => {
@@ -572,18 +570,18 @@ describe('named grid areas', () => {
 
 	test('an element area travels as its column and row', () => {
 		expect(getGridItemVariables({ area: 'a' })).toEqual({
-			'--se-field-grid-column': 'a',
-			'--se-field-grid-row': 'a',
+			'--se-item-grid-column': 'a',
+			'--se-item-grid-row': 'a',
 		});
 	});
 
 	test('a responsive area emits only the breakpoint the author wrote', () => {
 		const variables = getGridItemVariables({ area: 'a', responsive: { md: { area: 'b' } } });
 		expect(variables).toEqual({
-			'--se-field-grid-column': 'a',
-			'--se-field-grid-row': 'a',
-			'--se-field-grid-column-md': 'b',
-			'--se-field-grid-row-md': 'b',
+			'--se-item-grid-column': 'a',
+			'--se-item-grid-row': 'a',
+			'--se-item-grid-column-md': 'b',
+			'--se-item-grid-row-md': 'b',
 		});
 	});
 

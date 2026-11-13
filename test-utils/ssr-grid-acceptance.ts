@@ -42,9 +42,9 @@ export function expectSsrGridMarkup(html: string, layout: LayoutThemeLike): void
 	expect(html).toMatch(classToken('se-grid-item'));
 
 	const tracked = fieldStyle(html, 'Tracked field');
-	expect(tracked).toMatch(/--se-field-grid-column:\s*span 1/);
-	expect(tracked).toMatch(/--se-field-grid-column-md:\s*span 2/);
-	expect(tracked).toMatch(/--se-field-display-md:\s*none/);
+	expect(tracked).toMatch(/--se-item-grid-column:\s*span 1/);
+	expect(tracked).toMatch(/--se-item-grid-column-md:\s*span 2/);
+	expect(tracked).toMatch(/--se-item-display-md:\s*none/);
 	expect(tracked).not.toContain('-lg');
 	expect(tracked).not.toContain('-2xl');
 
@@ -423,8 +423,8 @@ export function expectSsrAreasMarkup(html: string): void {
 	expect(decoded).toMatch(/--se-grid-areas:\s*"a a a b b b" "a a a c c c" "d d e e e e"/);
 	expect(decoded).toMatch(/--se-grid-template:\s*repeat\(6, minmax\(0, 1fr\)\)/);
 	const field = fieldStyle(html, 'Area A');
-	expect(field).toMatch(/--se-field-grid-column:\s*a/);
-	expect(field).toMatch(/--se-field-grid-row:\s*a/);
+	expect(field).toMatch(/--se-item-grid-column:\s*a/);
+	expect(field).toMatch(/--se-item-grid-row:\s*a/);
 	expect(field).not.toContain('grid-area');
 }
 

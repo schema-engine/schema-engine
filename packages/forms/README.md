@@ -329,8 +329,8 @@ emits none at all. The stylesheet selects only `.se-grid`, `.se-grid-item` and
 `[data-se-theme]`; renderers add those beside `se-form-grid` and `se-form-field`, which stay as
 styling hooks. Gap tokens stay host-overridable: the theme declares its
 defaults privately and reads `var(--se-grid-gap-<token>, …)`, so a `:root`
-override still wins. A field host that needs its own layout sets
-`--se-field-display-mode` rather than `display`, because the generated field
+override still wins. An item host that needs its own layout sets
+`--se-item-display-mode` rather than `display`, because the generated item
 rule outranks a bare class.
 
 Single-step forms may omit `view` to render fields directly. Multi-step forms
