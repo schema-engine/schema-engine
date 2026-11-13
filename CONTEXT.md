@@ -226,7 +226,7 @@ thresholds must preserve named cascade order (`sm ≤ md ≤ lg ≤ xl ≤ 2xl`)
 The split between the two is strict: **the stylesheet owns behavior** —
 neutral defaults, the breakpoint cascade (each media query falls back through
 the narrower slots), and the `initial` resets that stop a nested grid or field
-inheriting its parent's placement. **Inline custom properties carry only
+inheriting its parent's placement. The cascade is written once per property as a `var()` chain over private, theme-scoped custom properties that each media query fills from the public `-<breakpoint>` variable, so the stylesheet stays small enough to repeat per form (a test holds the default theme to a size budget); the public variable names and the computed values are unchanged. **Inline custom properties carry only
 values** an author wrote, so an element without a `grid` config emits no style
 attribute. `place-*` shorthands are resolved into their axis longhands before
 emission rather than declared in CSS, because a shorthand would have to follow
@@ -366,8 +366,8 @@ specificity and an author's `className` always wins; the scope is `data-se-theme
 id, which sits on the form element and also on every grid and item. A rule reaches the element that
 carries the theme and the pick together, or a descendant of the theme's root with no other theme
 between, so the nearest theme wins: a form of one engine nested in a grid item of another takes its
-own tokens, whichever stylesheet comes later. The same rules are emitted again as `@scope (theme) to
-(other theme)` blocks, which a browser without `@scope` ignores; they make a theme re-entered below
+own tokens, whichever stylesheet comes later. The same rules are emitted again in one `@scope (theme) to
+(other theme)` block, which a browser without `@scope` ignores; they make a theme re-entered below
 another theme exact too, and, because scope proximity outranks source order, a zero-specificity author
 rule such as `:where(.x)` loses to a token rule in a browser that has `@scope` (the layout README,
 "Nested themes", has the details). Shells read

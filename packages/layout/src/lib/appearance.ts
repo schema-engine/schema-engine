@@ -302,9 +302,9 @@ export interface CompiledAppearance {
  * browser the renderers support. They cannot say "no other theme between" for a theme re-entered
  * below another theme (A in B in A): its descendants match no plain rule, so they inherit the
  * custom properties of the nearest element that did.
- * 2. `@scope` rules, emitted after the plain ones: the theme's roots down to the nearest element of
- * another theme. A browser without `@scope` drops the block and keeps the plain rules; one with it
- * is exact, A in B in A included. About 1.4 KB per theme with the built-in axes.
+ * 2. `@scope` rules, emitted after the plain ones in one block: the theme's roots down to the nearest
+ * element of another theme. A browser without `@scope` drops the block and keeps the plain rules;
+ * one with it is exact, A in B in A included. About 1.1 KB per theme with the built-in axes.
  *
  * The `@scope` rules change one cascade detail: scope proximity outranks source order, and an
  * unscoped rule is the farthest from any root. A zero-specificity author rule such as `:where(.x)`
@@ -324,10 +324,11 @@ export function getAppearanceCss(appearance: CompiledAppearance, themeId: string
 			const match = `[data-se-${axis.$type}="${value}"]`;
 			const descendant = `${scope} ${match}:not(${foreign},${scope} ${foreign} *)`;
 			plain.push(`:where(${scope}${match},${descendant})${block}`);
-			scoped.push(`@scope (${scope}) to (${foreign}){:where(:scope${match},${match})${block}}`);
+			scoped.push(`:where(:scope${match},${match})${block}`);
 		}
 	}
-	return [...plain, ...scoped].join('\n');
+	if (scoped.length === 0) return '';
+	return [...plain, `@scope (${scope}) to (${foreign}){${scoped.join('')}}`].join('\n');
 }
 
 /**
