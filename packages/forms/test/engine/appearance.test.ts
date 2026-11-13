@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { BaseFieldSchema } from '@/schemas/base-field';
@@ -98,6 +98,34 @@ describe('engine appearance vocabulary', () => {
 		expect(extended.getLayout()).toBe(themed.getLayout());
 		expect(extended.validateForm(form({ appearance: { tone: 'brand' } })).appearance).toEqual({ tone: 'brand' });
 		expect(() => extended.validateForm(form({ appearance: { density: 'high' } }))).toThrowError(/density/);
+	});
+});
+
+describe('the layout option and copies of a theme', () => {
+	test('a theme from a second copy of the layout module keeps its id and axes', async () => {
+		vi.resetModules();
+		const other = await import('@schema-engine/layout');
+		const foreign = other.createLayoutTheme({ appearance: { tone: ['neutral', 'brand'] } });
+
+		const built = createFormEngine({ layout: foreign });
+
+		expect(built.getLayout()).toBe(foreign);
+		expect(built.getLayout().id).toBe(foreign.id);
+		expect(Object.keys(built.getLayout().axes)).toEqual(['size', 'surface', 'tone']);
+	});
+
+	test.each([
+		['a spread copy', (theme: object) => ({ ...theme })],
+		['a structured clone', (theme: object) => structuredClone(theme)],
+	])('%s of a compiled theme throws instead of being recompiled', (_name, copy) => {
+		const theme = createLayoutTheme({ appearance: { tone: ['neutral', 'brand'] } });
+		expect(() => createFormEngine({ layout: copy(theme) as never })).toThrowError(
+			/pass the compiled theme itself, not a copy/i,
+		);
+	});
+
+	test('options with an unknown key throw, naming the key', () => {
+		expect(() => createFormEngine({ layout: { gridd: {} } as never })).toThrowError(/'gridd'/);
 	});
 });
 

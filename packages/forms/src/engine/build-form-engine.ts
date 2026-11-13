@@ -123,12 +123,24 @@ export type FormEngineRegistrationLists = {
  * Forms passes its renderer attributes as `reservedNames`, so an axis cannot overwrite a
  * `data-se-*` attribute a renderer writes. A theme compiled elsewhere skipped that check, so it is
  * re-checked here.
+ *
+ * A value that is not a compiled theme must be `{ grid, appearance }` options and nothing else. A
+ * spread copy or a structured clone of a theme has `id`, `axes` and `css` keys and lost its brand;
+ * compiling it as options would drop its appearance axes and change its id without a word, so it
+ * throws instead.
  */
 function resolveLayout(layout: LayoutInput | undefined): LayoutTheme {
 	if (layout === undefined) return getDefaultLayoutTheme();
 	if (isLayoutTheme(layout)) {
 		assertAxesNotReserved(layout, RENDERER_DATA_ATTRIBUTES);
 		return layout;
+	}
+	for (const key of Object.keys(layout)) {
+		if (key !== 'grid' && key !== 'appearance') {
+			throw new Error(
+				`Invalid layout option: unknown key '${key}'. layout takes a theme from createLayoutTheme or { grid, appearance } options. If this is a copy of a compiled theme, pass the compiled theme itself, not a copy.`,
+			);
+		}
 	}
 	return createLayoutTheme(layout, { reservedNames: RENDERER_DATA_ATTRIBUTES });
 }

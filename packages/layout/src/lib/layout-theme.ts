@@ -34,7 +34,8 @@ export type LayoutThemeCompilerOptions = AppearanceCompilerOptions;
  * Produced once by {@link createLayoutTheme}, frozen, and safe to share between consumers: engines
  * built on the same theme carry the same `data-se-theme` and share one stylesheet on a page.
  * A renderer puts `id` on the elements the stylesheet should reach, as `data-se-theme`, and
- * emits `css` once.
+ * emits `css` for each form it renders: React hoists equal stylesheets to one element, while
+ * Radiant inlines an identical copy per form.
  */
 export interface LayoutTheme<TAxes extends Record<string, string> = Record<string, string>> {
 	/** Identity of the whole theme; the value of `data-se-theme` and the scope of every rule in `css`. */
@@ -61,15 +62,24 @@ export type LayoutAxes<TLayout> = TLayout extends { readonly axes: infer TAxes }
 		? ResolvedAppearanceAxes<TAppearance>
 		: ResolvedAppearanceAxes;
 
-const compiledThemes = new WeakSet<object>();
+/**
+ * The brand every compiled theme carries, a non-enumerable property keyed by a registry symbol.
+ *
+ * @remarks
+ * The key comes from `Symbol.for`, so a theme from a second copy of this module (a duplicate
+ * install, or a page and a form bundled apart) is still recognised, and a theme keeps its id and
+ * axes wherever it is passed. The property is non-enumerable and symbol-keyed, so a spread copy
+ * and a structured clone lose it: a copy is not a theme.
+ */
+const LAYOUT_THEME_BRAND = Symbol.for('@schema-engine/layout/theme');
 
 /**
  * Whether a value is a theme made by {@link createLayoutTheme}, as opposed to options for one.
  *
- * @remarks A copy of a theme is not one: only the frozen object the compiler returned is trusted.
+ * @remarks A copy of a theme is not one: only the object the compiler returned carries the brand.
  */
 export function isLayoutTheme(value: unknown): value is LayoutTheme {
-	return typeof value === 'object' && value !== null && compiledThemes.has(value);
+	return typeof value === 'object' && value !== null && Reflect.get(value, LAYOUT_THEME_BRAND) === true;
 }
 
 /**
@@ -114,8 +124,9 @@ export function createLayoutTheme<const TAppearance extends AppearanceOptions = 
 		JSON.stringify({ grid: canonicalGridTheme(grid), appearance: canonicalAppearance(appearance) }),
 	);
 	const css = [getGridThemeCss(grid, id), getAppearanceCss(appearance, id)].filter(Boolean).join('\n');
-	const theme = Object.freeze({ id, grid, axes: appearance.axes, css });
-	compiledThemes.add(theme);
+	const theme = { id, grid, axes: appearance.axes, css };
+	Object.defineProperty(theme, LAYOUT_THEME_BRAND, { value: true, enumerable: false });
+	Object.freeze(theme);
 	return theme as unknown as LayoutTheme<ResolvedAppearanceAxes<TAppearance>>;
 }
 

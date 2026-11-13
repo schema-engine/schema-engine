@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import {
 	assertAxesNotReserved,
 	createLayoutTheme,
@@ -82,6 +82,24 @@ describe('createLayoutTheme', () => {
 		expect(isLayoutTheme({ ...theme })).toBe(false);
 		expect(isLayoutTheme({ grid: {}, appearance: {} })).toBe(false);
 		expect(isLayoutTheme(undefined)).toBe(false);
+	});
+
+	test('the brand is a non-enumerable shared symbol, so copies lose it and no copy of the module is needed to read it', () => {
+		const theme = createLayoutTheme();
+		const brand = Symbol.for('@schema-engine/layout/theme');
+		expect(Object.getOwnPropertySymbols(theme)).toContain(brand);
+		expect(Object.keys(theme)).toEqual(['id', 'grid', 'axes', 'css']);
+		expect(JSON.stringify(theme)).not.toContain('layout/theme');
+		expect(isLayoutTheme(structuredClone(theme))).toBe(false);
+	});
+
+	test('a theme from a second copy of the module is still a theme', async () => {
+		vi.resetModules();
+		const other = await import('@/index');
+		const foreign = other.createLayoutTheme({ appearance: { tone: ['a'] } });
+		expect(other.createLayoutTheme).not.toBe(createLayoutTheme);
+		expect(isLayoutTheme(foreign)).toBe(true);
+		expect(other.isLayoutTheme(createLayoutTheme())).toBe(true);
 	});
 
 	test('the emitters take the grid half of the theme', () => {
