@@ -1,4 +1,3 @@
-/** @jsxImportSource @ecopages/jsx */
 import { RadiantElement, customElement, onUpdated, prop, state } from '@ecopages/radiant';
 import type { JsxCustomElementAttributes } from '@ecopages/jsx';
 import { RuiSpinner } from '@ecopages/radiant-ui/spinner';
