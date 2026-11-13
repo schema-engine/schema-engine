@@ -6,6 +6,33 @@
  * `@schema-engine/forms-radiant/index.css`, these classes cover the shells and
  * step chrome so React demos match the Radiant demos visually.
  */
+/*
+ * The registry card shell fills the viewport (`min-height: 100svh`, centered) because it is meant to
+ * be a page; inside a docs page it sits in the flow like the demo shell. Its rules sit in `:where()`,
+ * so this host class wins.
+ */
+.docs-react-form-demo .se-card-shell {
+	min-height: 0;
+	padding: var(--space-4, 1rem) 0;
+	background-color: transparent;
+}
+
+.docs-react-form-result {
+	display: grid;
+	gap: var(--space-2, 0.5rem);
+	margin-top: var(--space-3, 0.75rem);
+	border: 1px solid var(--border, currentColor);
+	border-radius: var(--radius-md, 0.5rem);
+	padding: var(--space-3, 0.75rem);
+	font-size: 0.875rem;
+}
+
+.docs-react-form-result pre {
+	margin: 0;
+	overflow-x: auto;
+	font-size: 0.8125rem;
+}
+
 .se-demo-shell {
 	display: block;
 	padding: var(--space-4, 1rem) 0;

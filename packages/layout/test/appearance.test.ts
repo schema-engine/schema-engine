@@ -114,19 +114,21 @@ describe('builtInAxes', () => {
 
 	test('compact and comfortable spacing are hooks a renderer maps to its host theme', () => {
 		const css = getAppearanceCss(compileAppearance(), 'lx');
-		expect(declarationsOf(css, '[data-se-size="compact"]')).toContain('{--se-space:var(--se-space-compact, 1rem);');
+		expect(declarationsOf(css, '[data-se-size="compact"]')).toContain(
+			'{--se-space:var(--se-space-compact, var(--se-renderer-space-compact, 1rem));',
+		);
 		expect(declarationsOf(css, '[data-se-size="comfortable"]')).toContain(
-			'{--se-space:var(--se-space-comfortable, 2rem);',
+			'{--se-space:var(--se-space-comfortable, var(--se-renderer-space-comfortable, 2rem));',
 		);
 	});
 
 	test('compact and comfortable control height are hooks with neutral fallbacks, and default hands it back', () => {
 		const css = getAppearanceCss(compileAppearance(), 'lx');
 		expect(declarationsOf(css, '[data-se-size="compact"]')).toContain(
-			'--se-control-height:var(--se-control-height-compact, 1.75rem);',
+			'--se-control-height:var(--se-control-height-compact, var(--se-renderer-control-height-compact, 1.75rem));',
 		);
 		expect(declarationsOf(css, '[data-se-size="comfortable"]')).toContain(
-			'--se-control-height:var(--se-control-height-comfortable, 2.25rem);',
+			'--se-control-height:var(--se-control-height-comfortable, var(--se-renderer-control-height-comfortable, 2.25rem));',
 		);
 		expect(declarationsOf(css, '[data-se-size="default"]')).toContain('--se-control-height:initial;');
 	});
@@ -134,7 +136,7 @@ describe('builtInAxes', () => {
 	test('size sets the readable measure: 24rem, 32rem, and the component fallback for default', () => {
 		const css = getAppearanceCss(compileAppearance(), 'lx');
 		expect(declarationsOf(css, '[data-se-size="compact"]')).toBe(
-			'{--se-space:var(--se-space-compact, 1rem);--se-font-size:0.875rem;--se-measure:24rem;--se-control-height:var(--se-control-height-compact, 1.75rem);}',
+			'{--se-space:var(--se-space-compact, var(--se-renderer-space-compact, 1rem));--se-font-size:0.875rem;--se-measure:24rem;--se-control-height:var(--se-control-height-compact, var(--se-renderer-control-height-compact, 1.75rem));}',
 		);
 		expect(declarationsOf(css, '[data-se-size="default"]')).toBe(
 			'{--se-space:initial;--se-font-size:initial;--se-measure:initial;--se-control-height:initial;}',

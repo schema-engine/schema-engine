@@ -4,7 +4,7 @@
 	min-height: 100svh;
 	align-items: center;
 	justify-content: center;
-	padding: var(--space-block-lg, 2rem);
+	padding: var(--space-8, 2rem);
 	background: var(--background, transparent);
 	color: var(--on-surface, inherit);
 }
@@ -37,24 +37,24 @@
 
 .card-shell__description {
 	margin: 0 0 0.5rem;
-	color: var(--on-surface-muted, color-mix(in srgb, currentColor 70%, transparent));
+	color: color-mix(in srgb, currentColor 70%, transparent);
 }
 
 .card-shell__step-counter {
 	display: block;
 	font-size: 0.875rem;
-	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
+	color: color-mix(in srgb, currentColor 65%, transparent);
 }
 
 .card-shell__section {
-	padding: var(--se-space, var(--space-block-lg, 1.5rem));
+	padding: var(--se-space, var(--space-6, 1.5rem));
 }
 
 .card-shell__content {
 	display: flex;
 	flex-direction: column;
 	align-items: stretch;
-	gap: var(--space-block-lg, 1.5rem);
+	gap: var(--space-6, 1.5rem);
 	width: 100%;
 	min-width: 0;
 	box-sizing: border-box;

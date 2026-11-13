@@ -25,7 +25,7 @@
 	margin: 0;
 	font-size: 0.875rem;
 	font-variant-numeric: tabular-nums;
-	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
+	color: color-mix(in srgb, currentColor 65%, transparent);
 }
 
 .se-minimal-progress {
@@ -45,7 +45,7 @@
 
 .se-minimal-progress__percentage {
 	font-variant-numeric: tabular-nums;
-	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
+	color: color-mix(in srgb, currentColor 65%, transparent);
 }
 
 .se-minimal-progress__track {
@@ -181,13 +181,13 @@
 .se-step-indicators small {
 	display: block;
 	font-size: 0.75rem;
-	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
+	color: color-mix(in srgb, currentColor 65%, transparent);
 }
 
 .se-wizard-actions__counter {
 	font-size: 0.875rem;
 	font-variant-numeric: tabular-nums;
-	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
+	color: color-mix(in srgb, currentColor 65%, transparent);
 }
 
 .se-form-actions {

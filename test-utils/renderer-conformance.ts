@@ -642,7 +642,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 		 *
 		 * @remarks
 		 * The expected values are literals, which hold only for the built-in `size` and `surface` axes, no
-		 * host theme variables (`--space-block`, `--space-block-lg`, `--surface`, `--on-surface`, `--border`)
+		 * host theme variables (`--space-4`, `--space-6`, `--space-8`, `--surface`, `--on-surface`, `--border`)
 		 * and a host wider than the widest card. A themed host changes them; Radiant's own tests cover that.
 		 * Both renderers assert the same literals, so equal geometry follows from both suites passing.
 		 */

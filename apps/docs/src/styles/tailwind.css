@@ -9,6 +9,7 @@
 @import './components/prose.css';
 
 @source inline("sr-only");
+@source "../generated/shadcn";
 
 html {
 	scrollbar-gutter: stable;

@@ -262,7 +262,7 @@ read-only registry. `builtInAxes` is the default: `size` (`compact | default | c
 and `surface` (`flat | outlined | elevated`). A host adds an axis by listing it after the
 built-ins; an axis listed later with the same `$type` replaces the earlier one, so a host
 overrides a built-in axis the same way. The built-in tokens name no host theme; a renderer
-maps them to its own (Radiant's card falls back to `--space-block-lg`), and `size: default`
+maps them to its own (Radiant's card falls back to `--space-6`), and `size: default`
 sets its tokens to `initial`, so it looks like no pick in a themed app.
 
 ```ts
@@ -290,7 +290,7 @@ const engine = createFormEngine({ layout: { appearance: [...builtInAxes, tone, s
 
 Keep the axis list inline, as above, or declare it `as const`: a list stored in a plain
 variable widens, and typed `defineForm` stops narrowing the values. The card's width is the readable measure `--se-measure`, which `size` sets (24rem compact,
-32rem comfortable), so overriding the compact spacing does not resize the card. `size` also sets the control height `--se-control-height`, through the hooks `--se-control-height-compact` (`1.75rem`) and `--se-control-height-comfortable` (`2.25rem`) that a renderer maps to its theme.
+32rem comfortable), so overriding the compact spacing does not resize the card. `size` also sets the control height `--se-control-height`, through the hooks `--se-control-height-compact` (`1.75rem`) and `--se-control-height-comfortable` (`2.25rem`). An author sets the hooks on `:root` or any ancestor; a renderer maps its theme to the `--se-renderer-*` twin each hook falls back to, so the author's value wins in every renderer.
 
 The engine lists every axis in its schema catalog (`axis:size`) and in the JSON Schema
 export, where `appearance.size` is an enum of the axis's values, so an editor autocompletes

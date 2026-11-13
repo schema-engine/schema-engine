@@ -1,9 +1,11 @@
 import { render } from '@testing-library/react';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { createFormEngine } from '@schema-engine/forms';
+import type { ConformanceMount } from '../../../../test-utils/renderer-conformance';
 import {
 	controlHeightAcceptance,
 	controlHeightForm,
+	controlHeightHookAcceptance,
 	readControlHeights,
 } from '../../../../test-utils/control-height-acceptance';
 import { FormRenderer } from '@/components/internals/form-renderer';
@@ -39,20 +41,19 @@ stylesheet.textContent = [
 beforeAll(() => document.head.prepend(stylesheet));
 afterAll(() => stylesheet.remove());
 
+const mountReact: ConformanceMount = async ({ config }) => {
+	const view = render(<FormRenderer config={engine.validateForm(config)} engine={engine} adapter={rhfAdapter} />);
+	return { host: view.container, cleanup: view.unmount, update: async () => undefined };
+};
+
 describe('React registry controls follow the size axis', () => {
-	controlHeightAcceptance(
-		async ({ config }) => {
-			const view = render(
-				<FormRenderer config={engine.validateForm(config)} engine={engine} adapter={rhfAdapter} />,
-			);
-			return { host: view.container, cleanup: view.unmount, update: async () => undefined };
-		},
-		{
-			unpicked: { input: 32, button: 32 },
-			compact: { input: 28, button: 28 },
-			comfortable: { input: 36, button: 36 },
-		},
-	);
+	controlHeightHookAcceptance(mountReact);
+
+	controlHeightAcceptance(mountReact, {
+		unpicked: { input: 32, button: 32 },
+		compact: { input: 28, button: 28 },
+		comfortable: { input: 36, button: 36 },
+	});
 
 	test.each([
 		['compact', 28],

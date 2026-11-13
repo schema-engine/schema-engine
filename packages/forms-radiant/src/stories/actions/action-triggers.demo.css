@@ -46,7 +46,7 @@
 .se-action-demo__card {
 	padding: 1rem;
 	border: 1px solid var(--border);
-	border-radius: var(--radius-card, var(--radius-control));
+	border-radius: var(--radius-control);
 	background: var(--surface-container-lowest, var(--background));
 	color: var(--on-surface, var(--on-background));
 }

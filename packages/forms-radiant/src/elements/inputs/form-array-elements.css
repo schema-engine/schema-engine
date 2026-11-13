@@ -20,13 +20,13 @@
 .se-form-array-field__description {
 	margin: 0 0 0.75rem;
 	font-size: 0.875rem;
-	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
+	color: color-mix(in srgb, currentColor 65%, transparent);
 }
 
 .se-form-array__item {
 	position: relative;
-	padding: var(--space-block, 1rem);
-	padding-right: calc(var(--space-block, 1rem) + 2.5rem);
+	padding: var(--space-4, 1rem);
+	padding-right: calc(var(--space-4, 1rem) + 2.5rem);
 	border: 1px solid var(--border, currentColor);
 	border-radius: var(--radius-control, 0.5rem);
 	background: color-mix(in srgb, var(--surface, #fff) 60%, transparent);
@@ -38,8 +38,8 @@
 
 .se-form-array__remove {
 	position: absolute;
-	top: var(--space-block, 1rem);
-	right: var(--space-block, 1rem);
+	top: var(--space-4, 1rem);
+	right: var(--space-4, 1rem);
 	flex-shrink: 0;
 }
 
@@ -57,7 +57,7 @@
 	padding: 1.5rem 1rem;
 	text-align: center;
 	font-size: 0.875rem;
-	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
+	color: color-mix(in srgb, currentColor 65%, transparent);
 	border: 1px dashed var(--border, currentColor);
 	border-radius: var(--radius-control, 0.5rem);
 }
