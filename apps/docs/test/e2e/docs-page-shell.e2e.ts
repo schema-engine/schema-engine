@@ -9,7 +9,7 @@ test('built docs HTML carries SEO links, heading ids and copy buttons', async ()
 
 	expect(html).toMatch(/<link rel="canonical" href="https?:\/\/[^"]+\/docs\/forms\/builder">/);
 	expect(html).toContain('rel="alternate" type="text/markdown"');
-	expect(html).toContain('/llms-content/forms/builder.txt');
+	expect(html).toContain('/docs-llm/forms/builder.md');
 	expect(html).toContain('property="og:image"');
 	expect(html).toMatch(/<h2 id="[a-z0-9-]+"/);
 	expect(html).toContain('data-rehype-pretty-copy=');
@@ -22,7 +22,7 @@ test('sitemap lists docs pages and the llms index', async () => {
 	expect(sitemap).toContain('/llms.txt');
 });
 
-test('a fenced code block copies its source and a blank line keeps its height', async () => {
+test('a fenced code block copies its source, announces the result and a blank line keeps its height', async () => {
 	const browser = await chromium.launch();
 	try {
 		const context = await browser.newContext();
@@ -38,9 +38,10 @@ test('a fenced code block copies its source and a blank line keeps its height', 
 		await button.focus();
 		await button.click();
 		await page.waitForFunction(
-			(node) => (node as HTMLElement).getAttribute('aria-label') === 'Code copied to clipboard',
-			await button.elementHandle(),
+			() => document.querySelector('[data-code-copy-status]')?.textContent === 'Code copied to clipboard',
 		);
+		expect(await button.getAttribute('aria-label')).toBe('Copy code');
+		expect(await button.textContent()).toBe('Copied');
 		expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(expected);
 
 		const emptyLineHeights = await page
@@ -72,4 +73,37 @@ test('a heading fragment link lands on its heading', async () => {
 	} finally {
 		await browser.close();
 	}
+});
+
+test('Copy for LLM renders on the server and copies the page Markdown export', async () => {
+	const html = await (await fetch(`${baseUrl}${pagePath}`)).text();
+	expect(html).toContain('<radiant-copy-for-llm llm-url="/docs-llm/forms/builder.md"');
+
+	const markdown = await fetch(`${baseUrl}/docs-llm/forms/builder.md`);
+	expect(markdown.status).toBe(200);
+	const expected = await markdown.text();
+
+	const browser = await chromium.launch();
+	try {
+		const context = await browser.newContext();
+		await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+		const page = await context.newPage();
+		await page.goto(`${baseUrl}${pagePath}`, { waitUntil: 'networkidle' });
+
+		const button = page.getByTestId('copy-for-llm');
+		expect(await button.textContent()).toContain('Copy for LLM');
+		await button.click();
+		await page.waitForFunction(
+			() => document.querySelector('.docs-copy-for-llm__status')?.textContent === 'Page copied for LLM',
+		);
+		expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(expected);
+	} finally {
+		await browser.close();
+	}
+});
+
+test('the previous llms-content exports still answer for one release', async () => {
+	const legacy = await fetch(`${baseUrl}/llms-content/forms/builder.txt`);
+	expect(legacy.status).toBe(200);
+	expect(await legacy.text()).toBe(await (await fetch(`${baseUrl}/docs-llm/forms/builder.md`)).text());
 });

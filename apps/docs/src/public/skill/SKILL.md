@@ -63,7 +63,7 @@ under `src/content/docs/` in the repository. The catch-all page renders any
 | Examples                     | `/docs/examples/basic-form`          |
 
 For machine consumption, the full LLM-exported corpus lives at
-`/llms.txt` (index) and `/llms-content/<section>/<slug>.txt` (page bodies).
+`/llms.txt` (index) and `/docs-llm/<section>/<slug>.md` (page bodies).
 
 ## Reference
 
