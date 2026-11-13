@@ -4,7 +4,7 @@ Shared registry primitives for building typed registration systems across the Sc
 
 This package provides one registry mechanism for typed registrations keyed by `$type`:
 
-- `createRegistry(kind, registrations)` builds a read-only, frozen registry from a list. The forms engine stores its elements, recipes and actions with it, and `@schema-engine/actions` builds `ActionRegistry` on it. `ValidationRegistry` in `@schema-engine/forms` is the one registry that does not use it yet.
+- `createRegistry(kind, registrations)` builds a read-only, frozen registry from a list. The forms engine stores its elements, recipes, actions and validation rules with it, and `@schema-engine/actions` builds `ActionRegistry` on it. `ValidationRegistry` in `@schema-engine/forms` is a read-only registry of this kind with a few validation lookups added; it has no `register`.
 - `BaseRegistry` is the mutable opt-in for runtime plugin systems that register after construction.
 
 Use the `ComponentRegistration` type when entries must include a render function.

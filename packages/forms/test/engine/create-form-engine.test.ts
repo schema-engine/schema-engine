@@ -10,6 +10,7 @@ import {
 	createZodSchemaFromRules,
 	getValidationRulesForElement,
 	type AnyValidationRegistration,
+	PhoneRuleSchema,
 } from '@/schemas/validation';
 
 const noteSchema = z.object({
@@ -123,7 +124,9 @@ describe('createFormEngine', () => {
 			render: () => null,
 			validations: [
 				{
-					type: 'phone',
+					$type: 'phone',
+					schema: PhoneRuleSchema,
+					metadata: { name: 'Phone' },
 					category: 'string',
 					defaultFor: ['phone-input'],
 					handler: (rule: { message?: string }) =>
@@ -158,7 +161,9 @@ describe('createFormEngine', () => {
 
 	test('does not leak element validations between engines', () => {
 		const customValidation = {
-			type: 'custom-leak-test',
+			$type: 'custom-leak-test',
+			schema: z.looseObject({ type: z.literal('custom-leak-test') }),
+			metadata: { name: 'Leak test' },
 			category: 'string',
 			defaultFor: ['leak-input'],
 			handler: () => z.string(),

@@ -14,6 +14,8 @@ interface CreateFormEngineOptions<TElements, TRecipes, TActions, TLayout> {
 	elements?: TElements;
 	recipes?: TRecipes;
 	actions?: TActions;
+	/** Custom validation rules, after the built-in ones and the validations elements declare; the last `$type` wins. */
+	validations?: readonly ValidationRegistrationConstraint[];
 	/** Extra schema metadata entries; copied, with every registration's entry written over it. */
 	catalog?: SchemaMetadataCatalog;
 	/**
@@ -49,6 +51,10 @@ Each array is structurally constrained: `$type`, a Standard Schema
 Duplicate `$type` values follow last-wins at runtime. Tuples and inline arrays
 use last-wins typing; open `T[]` values use a union of configs for the same
 `$type`. Spread shared registration barrels and append overrides when needed.
+
+`validations` takes validation registrations (`$type`, `schema`, `metadata`, `category`, `handler`)
+and is not typed per engine: field `rules` keep their `type` string. See
+[Custom Validations](./validation-custom).
 
 Authors supply schema **input**. After validation, render functions receive
 schema **output**. Register elements with `defineInput` / `defineStatic` so the

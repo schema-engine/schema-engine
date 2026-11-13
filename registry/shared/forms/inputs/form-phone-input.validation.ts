@@ -1,10 +1,12 @@
 import * as z from 'zod/mini';
 import { isValidPhoneNumber } from 'libphonenumber-js/min';
-import type { PhoneRule, ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+import { PhoneRuleSchema, type PhoneRule, type ValidationRegistration } from '@schema-engine/forms/schemas/validation';
 
 export function createPhoneValidationRegistration(): ValidationRegistration<PhoneRule> {
 	return {
-		type: 'phone',
+		$type: 'phone',
+		schema: PhoneRuleSchema,
+		metadata: { name: 'Phone', description: 'The text is a complete phone number.' },
 		category: 'string',
 		handler: (rule) =>
 			z.optional(z.string()).check(

@@ -36,11 +36,11 @@ The flow is: define a registration shape, build a registry from a list, then loo
 
 ## Overview
 
-`@schema-engine/registry` provides the registry mechanism for Schema Engine registrations. `createRegistry` builds a read-only, frozen registry from a list: later registrations with the same `$type` win without a warning, and each winning schema is checked as a Standard Schema at build. The forms engine stores its elements, recipes and actions this way, and the actions package builds `ActionRegistry` on it. `ValidationRegistry` in `@schema-engine/forms` is still a separate mutable registry. `BaseRegistry` stays as an explicit, mutable opt-in for plugin systems that register at runtime.
+`@schema-engine/registry` provides the registry mechanism for Schema Engine registrations. `createRegistry` builds a read-only, frozen registry from a list: later registrations with the same `$type` win without a warning, and each winning schema is checked as a Standard Schema at build. The forms engine stores its elements, recipes, actions and validation rules this way, and the actions package builds `ActionRegistry` on it. `ValidationRegistry` in `@schema-engine/forms` is a read-only registry of this kind with a few validation lookups added. `BaseRegistry` stays as an explicit, mutable opt-in for plugin systems that register at runtime.
 
 **Key Features:**
 
-- **One mechanism for elements, recipes and actions**: `createRegistry` for read-only registries, `BaseRegistry` only when you need to register at runtime.
+- **One mechanism for elements, recipes, actions and validation rules**: `createRegistry` for read-only registries, `BaseRegistry` only when you need to register at runtime.
 - **Last wins**: `[...defaults, custom]` overrides a default without logging.
 - **Type Safe**: Full TypeScript support with generic constraints for registrations.
 - **Standard Schema boundary**: Register schemas from Zod Mini, Zod, Valibot, Effect Schema, or another compatible provider. A schema without `~standard.validate` is rejected at build, naming its `$type`.

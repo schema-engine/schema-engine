@@ -29,9 +29,9 @@ Complete elements still need `$type`, `id`, and `name` when you paste configs in
 
 The `ValidationRegistry` is the central hub that manages all validation logic:
 
-- **Stores validation implementations** - Each validation type has a handler function
+- **Stores validation implementations** - Each validation type is a registration (`$type`, `schema`, `metadata`) with a handler function, held in a read-only registry
 - **Converts rules to Zod Mini schemas** - JSON rules become executable validators
-- **Manages custom registrations** - Extend with your own validation logic
+- **Takes custom registrations at engine creation** - Pass your own rules to `createFormEngine({ validations: [...] })`
 
 ### Rule-to-Schema Generation
 
@@ -182,7 +182,7 @@ The validation system organizes validators by category:
 - `uuid` - UUID format validation
 - `phone` - E.164 phone number format
 
-Phone-input integrations replace the core `phone` handler with their own libphonenumber-based validator on the element registration (`validations` + `defaultFor`). Creating a form engine with that element registers the replacement handler and applies the rule to `phone-input` fields. `@schema-engine/forms` does not depend on a phone-number library.
+Phone-input integrations replace the core `phone` handler with their own libphonenumber-based validator on the element registration (`validations` + `defaultFor`). Creating a form engine with that element stores the replacement handler in the engine's validation registry and applies the rule to `phone-input` fields. `@schema-engine/forms` does not depend on a phone-number library.
 
 ### Number Validations
 
@@ -312,7 +312,7 @@ const nonSerializableRule = {
 };
 ```
 
-Register executable custom validators with `ValidationRegistry`; functions do
+Pass executable custom validators to `createFormEngine({ validations })`; functions do
 not belong in a JSON form configuration.
 
 ### 2. Provide Clear Error Messages

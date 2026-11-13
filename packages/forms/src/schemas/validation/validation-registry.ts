@@ -1,107 +1,52 @@
 import * as z from 'zod/mini';
+import { createRegistry, type ReadOnlyRegistry } from '@schema-engine/registry';
 import type {
 	AnyValidationRegistration,
 	BaseValidationRule,
 	ValidationContext,
 	ValidationRegistration,
-	ValidationRegistrationMap,
+	ValidationRegistrationConstraint,
 } from './types.js';
+import { defaultValidations } from './defaults.js';
 import { logger } from '@/lib/logger.js';
 
-/** @remarks Rule-specific handlers are checked at registration, then stored together by rule type. */
+/** @remarks Rule-specific handlers are checked where a registration is defined, then stored together by rule type. */
 type StoredValidationRegistration = ValidationRegistration<any>;
 
 /**
- * Registry for validation rules
- * Provides registration, validation, and execution capabilities for validation types.
+ * Read-only store of validation registrations, with the lookups the renderers and the engine need.
+ *
+ * @remarks
+ * Built by {@link createValidationRegistry}, so it has no `register`, `unregister` or `clear`: to
+ * change the rules, build another registry from a new list. The per-field-type default rules are
+ * derived from the registrations once, at build.
  */
-export class ValidationRegistry {
-	private validations = new Map<string, StoredValidationRegistration>();
-	private defaultRulesByFieldType = new Map<string, Map<string, BaseValidationRule>>();
-
-	/**
-	 * Register a new validation type
-	 */
-	register(registration: StoredValidationRegistration): void {
-		const type = registration.type;
-
-		if (this.validations.has(type)) {
-			logger.debug(`Validation type '${type}' is already registered. Overriding.`);
-		}
-
-		this.validations.set(type, registration);
-		this.bindDefaultFor(registration);
-	}
-
-	/**
-	 * Register multiple validation types at once
-	 */
-	registerMultiple(registrations: StoredValidationRegistration[]): void {
-		for (const registration of registrations) {
-			this.register(registration);
-		}
-	}
-
-	/**
-	 * Check if a validation type is registered
-	 */
-	has(type: string): boolean {
-		return this.validations.has(type);
-	}
-
-	/**
-	 * Get a registration by type
-	 */
-	get<K extends keyof ValidationRegistrationMap>(type: K): ValidationRegistrationMap[K] | undefined {
-		return this.validations.get(type as string) as ValidationRegistrationMap[K] | undefined;
-	}
-
-	/**
-	 * Remove a validation type
-	 */
-	unregister(type: string): boolean {
-		this.unbindDefaultFor(type);
-		return this.validations.delete(type);
-	}
-
+export interface ValidationRegistry extends ReadOnlyRegistry<AnyValidationRegistration> {
 	/**
 	 * Default rules injected for a field `$type` when the author omitted them.
+	 *
+	 * @remarks
+	 * Frozen, and shared between calls. When a registration is replaced, its default rules keep the
+	 * position the first registration of that `$type` had among the field type's defaults.
 	 */
-	getDefaultRulesForFieldType(fieldType: string): BaseValidationRule[] {
-		const rules = this.defaultRulesByFieldType.get(fieldType);
-		return rules ? [...rules.values()] : [];
-	}
+	getDefaultRulesForFieldType(fieldType: string): readonly BaseValidationRule[];
 
 	/**
 	 * Field references a rule reads besides the value under test.
 	 *
 	 * @remarks
-	 * Lives on the registry because the answer comes from the registration, and
-	 * `get` is keyed by the built-in rule union — a consumer-registered type is a
-	 * plain string and would need a cast at every call site.
+	 * Lives on the registry because the answer comes from the registration, and a
+	 * consumer-registered type is a plain string that `get` would otherwise need
+	 * a cast to reach at every call site.
 	 */
-	getRuleDependencies(rule: { type: string }): readonly string[] {
-		return this.validations.get(rule.type)?.dependsOn?.(rule) ?? [];
-	}
+	getRuleDependencies(rule: { type: string }): readonly string[];
+
+	/** Registrations of one category. */
+	getByCategory(category: string): AnyValidationRegistration[];
 
 	/**
-	 * Get all registered validation types
-	 */
-	getRegisteredTypes(): string[] {
-		return Array.from(this.validations.keys());
-	}
-
-	/**
-	 * Get validations by category
-	 */
-	getByCategory(category: string): AnyValidationRegistration[] {
-		return Array.from(this.validations.values()).filter(
-			(v) => v.category === category,
-		) as AnyValidationRegistration[];
-	}
-
-	/**
-	 * Create a Zod Mini schema from a validation rule
+	 * Create a Zod Mini schema from a validation rule, or `null` when the rule type is not registered
+	 * or its handler throws.
 	 *
 	 * @param rule - The validation rule
 	 * @param context - Form context for rules that read other fields
@@ -110,50 +55,85 @@ export class ValidationRegistry {
 	 * `context` is required rather than optional so a caller cannot silently omit
 	 * it: a renderer that did exactly that is why cross-field rules were inert on
 	 * one of the two renderers. Build it with `createValidationContext`.
+	 *
+	 * The rule type is generic, not `{ type: string }`, so a rule literal with extra properties such as
+	 * `{ type: 'min', value: 10 }` is not rejected as an excess-property error.
 	 */
-	createSchema<T extends { type: string }>(rule: T, context: ValidationContext): z.ZodMiniType | null {
-		const registration = this.validations.get(rule.type) as ValidationRegistration<T> | undefined;
-		if (!registration) {
-			return null;
-		}
-
-		try {
-			return registration.handler(rule, context);
-		} catch (error) {
-			logger.error(`Failed to create schema for validation rule '${rule.type}'`, { error });
-			return null;
-		}
-	}
-
-	private unbindDefaultFor(ruleType: string): void {
-		for (const [fieldType, rules] of this.defaultRulesByFieldType) {
-			rules.delete(ruleType);
-			if (rules.size === 0) {
-				this.defaultRulesByFieldType.delete(fieldType);
-			}
-		}
-	}
-
-	private bindDefaultFor(registration: StoredValidationRegistration): void {
-		this.unbindDefaultFor(registration.type);
-		for (const fieldType of registration.defaultFor ?? []) {
-			let rules = this.defaultRulesByFieldType.get(fieldType);
-			if (!rules) {
-				rules = new Map();
-				this.defaultRulesByFieldType.set(fieldType, rules);
-			}
-			rules.set(registration.type, { type: registration.type });
-		}
-	}
+	createSchema<T extends { type: string }>(rule: T, context: ValidationContext): z.ZodMiniType | null;
 }
 
-import { defaultValidations } from './defaults.js';
+function deriveDefaultRules(
+	registrations: readonly AnyValidationRegistration[],
+): ReadonlyMap<string, readonly BaseValidationRule[]> {
+	const byFieldType = new Map<string, BaseValidationRule[]>();
+	for (const registration of registrations) {
+		for (const fieldType of registration.defaultFor ?? []) {
+			const rules = byFieldType.get(fieldType) ?? [];
+			rules.push(Object.freeze({ type: registration.$type }));
+			byFieldType.set(fieldType, rules);
+		}
+	}
+	for (const rules of byFieldType.values()) {
+		Object.freeze(rules);
+	}
+	return byFieldType;
+}
+
+const NO_DEFAULT_RULES: readonly BaseValidationRule[] = Object.freeze([]);
 
 /**
- * Built-in handlers plus any caller-supplied registrations for one engine build.
+ * Build a read-only validation registry from a list of registrations.
+ *
+ * @param registrations - Validation registrations, keyed by `$type`
+ * @throws {Error} Naming the `$type` when a winning registration's schema is not a Standard Schema
+ *
+ * @remarks
+ * Stored by `createRegistry` from `@schema-engine/registry`: a later registration with the same
+ * `$type` replaces the earlier one without a warning, so `[...defaults, custom]` overrides a rule.
+ * The built-in rules are not added; use {@link createDefaultValidationRegistry} for those.
+ *
+ * Takes {@link ValidationRegistrationConstraint}, which erases each rule type so a
+ * `ValidationRegistration<PostcodeRule>` is accepted; the registrations are stored as
+ * {@link AnyValidationRegistration} after that single cast.
  */
-export function createDefaultValidationRegistry(): ValidationRegistry {
-	const registry = new ValidationRegistry();
-	registry.registerMultiple(defaultValidations);
-	return registry;
+export function createValidationRegistry(
+	registrations: readonly ValidationRegistrationConstraint[],
+): ValidationRegistry {
+	const registry = createRegistry<AnyValidationRegistration>(
+		'Validation',
+		registrations as readonly AnyValidationRegistration[],
+	);
+	const defaultRulesByFieldType = deriveDefaultRules(registry.all());
+
+	const api: ValidationRegistry = {
+		...registry,
+		getDefaultRulesForFieldType: (fieldType) => defaultRulesByFieldType.get(fieldType) ?? NO_DEFAULT_RULES,
+		getRuleDependencies: (rule) =>
+			(registry.get(rule.type) as StoredValidationRegistration | undefined)?.dependsOn?.(rule) ?? [],
+		getByCategory: (category) => registry.all().filter((registration) => registration.category === category),
+		createSchema: (rule, context) => {
+			const registration = registry.get(rule.type) as StoredValidationRegistration | undefined;
+			if (!registration) {
+				return null;
+			}
+
+			try {
+				return registration.handler(rule, context);
+			} catch (error) {
+				logger.error(`Failed to create schema for validation rule '${rule.type}'`, { error });
+				return null;
+			}
+		},
+	};
+	return Object.freeze(api);
+}
+
+/**
+ * The built-in rules followed by any extra registrations, so an extra registration with a built-in
+ * `$type` overrides it.
+ */
+export function createDefaultValidationRegistry(
+	extra: readonly ValidationRegistrationConstraint[] = [],
+): ValidationRegistry {
+	return createValidationRegistry([...defaultValidations, ...extra]);
 }

@@ -79,7 +79,8 @@ custom array widgets receive the same path and default behavior as built-ins.
 ## Registration storage
 
 `buildFormEngine` stores elements, recipes, and actions in three read-only
-registries from `@schema-engine/registry`, built with `createRegistry`. Each
+registries from `@schema-engine/registry`, built with `createRegistry`, and validation rules in a
+fourth, built with `createRegistry('Validation', ...)` (see `createValidationRegistry`). Each
 registry checks the winning registration's Standard Schema once, at build, and throws naming
 the offending kind and `$type` (for example `Element 'note' schema must implement
 Standard Schema`). Later duplicates replace earlier registrations without a
@@ -89,6 +90,13 @@ store are frozen and the registration objects you pass stay untouched, so
 `FormEngine` shares its registries with engines built by `extend` without copying, and its lookup
 methods serve renderers and action dispatch. The `getAll*` and `get*Ids` methods
 return fresh arrays.
+
+The validation registry is built from the built-in rules, then the `validations` of each winning
+element in the element registry's order (a replaced `$type` keeps its first position, so for
+[A1, B, A2] where all declare the same validation `$type`, B's validation wins), then
+`createFormEngine({ validations })`. `FormEngine` keeps the `validations`
+option so `extend` rebuilds the registry from it. The per-field-type default rules (`defaultFor`) are
+derived from the stored registrations at build, not kept as mutable state.
 
 Validation helpers accept structural, read-only element views as well as normalized
 snapshots. Both renderers use these same helpers, the step machine and

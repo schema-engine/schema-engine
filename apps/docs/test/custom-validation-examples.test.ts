@@ -38,6 +38,16 @@ test('the documented ABN rule delegates to the illustrative validator', () => {
 	expect(schema?.safeParse('example-invalid').success).toBe(false);
 });
 
+test('the documented postal code rule reports its message through the engine', () => {
+	const { engine, postalCodeField } = runInNewContext(`${example('### Simple Custom Validation')}\nexports;`, {
+		exports: {},
+		require: (name: string) => (name === 'zod/mini' ? z : { createFormEngine }),
+	}) as { engine: ReturnType<typeof createFormEngine>; postalCodeField: { rules: Array<{ type: string }> } };
+	const schema = engine.getValidationRegistry().createSchema(postalCodeField.rules[1], createValidationContext());
+	expect(schema?.safeParse('12345-6789').success).toBe(true);
+	expect(schema?.safeParse('nope').error?.issues[0]?.message).toBe('Please enter a valid postal code');
+});
+
 test('the documented debounced async rule settles replaced checks and keeps fields independent', async () => {
 	vi.useFakeTimers();
 	vi.spyOn(globalThis, 'fetch').mockImplementation(
@@ -57,9 +67,17 @@ test('the documented debounced async rule settles replaced checks and keeps fiel
 	await expect(Promise.all([latest, independent])).resolves.toMatchObject([{ success: true }, { success: true }]);
 });
 
-test('the documented examples type-check for a consumer', () => {
+test.each([
+	['### Simple Custom Validation', ''],
+	['## Several Validations at Once', ''],
+	['### 4. Document Your Validations', ''],
+	[
+		'### Debouncing Async Validations',
+		"\nimport type { ValidationRule } from '@schema-engine/forms/schemas/validation';\nconst fieldRule: ValidationRule = usernameRule;",
+	],
+])('the documented example under %s type-checks for a consumer', (heading, suffix) => {
 	const fileName = fileURLToPath(new URL('./__validation_snippets__.ts', import.meta.url));
-	const snippets = `${exampleSource('### 4. Document Your Validations')}\n${exampleSource('### Debouncing Async Validations')}\nimport type { ValidationRule } from '@schema-engine/forms/schemas/validation';\nconst fieldRule: ValidationRule = usernameRule;`;
+	const snippets = `${exampleSource(heading)}${suffix}`;
 	const options: ts.CompilerOptions = {
 		module: ts.ModuleKind.ESNext,
 		moduleResolution: ts.ModuleResolutionKind.Bundler,
