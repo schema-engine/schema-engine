@@ -77,7 +77,9 @@ export default eco.page<{ entry: Entry }, JsxRenderable>({
 			<section class="docs-page">
 				<div class="docs-bar unstyled">
 					<DocsBreadcrumb entry={entry} />
-					<CopyForLlm llmUrl={getDocsLlmUrl(entry.slug)} />
+					<CopyForLlm
+						llmUrl={getDocsLlmUrl(entry.segments[0]!, entry.segments[entry.segments.length - 1]!)}
+					/>
 				</div>
 				<Content />
 			</section>

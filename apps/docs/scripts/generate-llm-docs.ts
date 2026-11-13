@@ -1,8 +1,15 @@
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { ContentScanner, compareEntriesByField } from '@ecopages/content-processor';
-import { docsFrontmatterSchema, LLM_SECTION_ORDER, type DocsFrontmatter } from '../src/content/docs';
+import { ContentScanner } from '@ecopages/content-processor';
+import {
+	compareDocsEntries,
+	DOCS_SECTION_CONFIG,
+	docsFrontmatterSchema,
+	isDocsSectionId,
+	LLM_SECTION_ORDER,
+	type DocsFrontmatter,
+} from '../src/content/docs';
 import { getDocsLlmUrl } from '../src/lib/docs/docs-llm-url';
 import { absoluteUrl, configuredSiteOrigin, normalizeSiteOrigin } from '../src/lib/docs/site-meta';
 
@@ -18,21 +25,11 @@ export type GenerateLlmDocsOptions = {
 	baseUrl?: string;
 };
 
-function formatSectionTitle(section: string): string {
-	return section
-		.split('-')
-		.map((word) => {
-			if (word === 'ssr' || word === 'jsx') return word.toUpperCase();
-			return word.charAt(0).toUpperCase() + word.slice(1);
-		})
-		.join(' ');
-}
-
 function createScanner(contentRoot: string): ContentScanner<DocsFrontmatter> {
 	return new ContentScanner({
 		contentRoot,
 		schema: docsFrontmatterSchema,
-		orderBy: compareEntriesByField('order'),
+		orderBy: compareDocsEntries,
 	});
 }
 
@@ -40,27 +37,39 @@ function createScanner(contentRoot: string): ContentScanner<DocsFrontmatter> {
  * Writes raw MDX bodies and `llms.txt` into the public directory for static serving.
  *
  * @remarks
- * - `llms.txt` is the discovery index; linked page bodies live under `llms-content/<slug>.txt`.
- * - Pages appear in sidebar order (frontmatter `order`) inside each section, and sections follow `LLM_SECTION_ORDER`.
- * - `llms-content/` is generator-owned: each successful run replaces that tree so deleted or `llms: false` pages are not left public.
- * - Output is staged in `.llms-content-staging/` and swapped in only after all writes succeed; a failed run leaves the previous exports intact and removes the staging tree.
+ * - `llms.txt` is the discovery index; linked page bodies live under `docs-llm/<section>/<slug>.md`.
+ * - Every page is also written to the previous `llms-content/<slug>.txt` path, unlisted, so links
+ *   published before the move keep working for one release. Remove the `llms-content/` output in
+ *   the first release after 0.1.0.
+ * - Pages appear in sidebar order (section order, then frontmatter `order`); sections follow `LLM_SECTION_ORDER`.
+ * - `docs-llm/` and `llms-content/` are generator-owned: each successful run replaces both trees so deleted or `llms: false` pages are not left public.
+ * - Output is staged in `.docs-llm-staging/` and swapped in only after all writes succeed; a failed run leaves the previous exports intact and removes the staging tree.
  * - The origin is normalised so a trailing slash cannot produce `//` in index links.
  */
 export async function generateLlmDocs(outputRoot = publicRoot, options: GenerateLlmDocsOptions = {}): Promise<void> {
 	const scanner = createScanner(options.contentRoot ?? defaultContentRoot);
 	const posts = await scanner.getManifest();
-	const llmRoot = join(outputRoot, 'llms-content');
-	const stagingRoot = join(outputRoot, '.llms-content-staging');
+	const llmRoot = join(outputRoot, 'docs-llm');
+	const legacyRoot = join(outputRoot, 'llms-content');
+	const stagingRoot = join(outputRoot, '.docs-llm-staging');
+	const stagedLlmRoot = join(stagingRoot, 'docs-llm');
+	const stagedLegacyRoot = join(stagingRoot, 'llms-content');
 	const origin = normalizeSiteOrigin(options.baseUrl ?? configuredSiteOrigin());
 
 	try {
 		await rm(stagingRoot, { recursive: true, force: true });
-		await mkdir(stagingRoot, { recursive: true });
+		await mkdir(stagedLlmRoot, { recursive: true });
+		await mkdir(stagedLegacyRoot, { recursive: true });
 
 		const lines: string[] = [
 			'# Schema Engine Documentation',
 			'> Build typed JSON-driven forms, React adapters, actions, and registries with Schema Engine.',
 			`> Start at ${absoluteUrl('/skill.txt', origin)} or ${absoluteUrl('/skill/SKILL.md', origin)}`,
+			'',
+			'## How to read the docs',
+			'',
+			'- This `llms.txt` file is an index only.',
+			'- Follow links to `/docs-llm/<section>/<slug>.md` for full page exports (HTML pages also advertise that URL as `rel=alternate`).',
 			'',
 		];
 
@@ -86,15 +95,22 @@ export async function generateLlmDocs(outputRoot = publicRoot, options: Generate
 				continue;
 			}
 
-			lines.push(`## ${formatSectionTitle(sectionId)}`);
+			lines.push(`## ${isDocsSectionId(sectionId) ? DOCS_SECTION_CONFIG[sectionId].title : sectionId}`);
 
 			for (const page of exported) {
 				const body = await scanner.getRawContent(page.slug);
-				const outputPath = join(stagingRoot, `${page.slug}.txt`);
-				await mkdir(dirname(outputPath), { recursive: true });
-				await writeFile(outputPath, body, 'utf8');
+				const pageSlug = page.segments[page.segments.length - 1]!;
+				const llmUrl = getDocsLlmUrl(sectionId, pageSlug);
 
-				lines.push(`- [${page.title}](${absoluteUrl(getDocsLlmUrl(page.slug), origin)})`);
+				for (const outputPath of [
+					join(stagedLlmRoot, sectionId, `${pageSlug}.md`),
+					join(stagedLegacyRoot, `${page.slug}.txt`),
+				]) {
+					await mkdir(dirname(outputPath), { recursive: true });
+					await writeFile(outputPath, body, 'utf8');
+				}
+
+				lines.push(`- [${page.title}](${absoluteUrl(llmUrl, origin)})`);
 			}
 
 			lines.push('');
@@ -103,7 +119,9 @@ export async function generateLlmDocs(outputRoot = publicRoot, options: Generate
 		await mkdir(outputRoot, { recursive: true });
 		await writeFile(join(outputRoot, 'llms.txt'), lines.join('\n'), 'utf8');
 		await rm(llmRoot, { recursive: true, force: true });
-		await rename(stagingRoot, llmRoot);
+		await rm(legacyRoot, { recursive: true, force: true });
+		await rename(stagedLlmRoot, llmRoot);
+		await rename(stagedLegacyRoot, legacyRoot);
 	} finally {
 		await rm(stagingRoot, { recursive: true, force: true });
 	}
@@ -113,5 +131,5 @@ const isDirectRun = process.argv[1] && import.meta.url === pathToFileURL(process
 
 if (isDirectRun) {
 	await generateLlmDocs(publicRoot);
-	console.log(`[llms.txt] Generated ${join(publicRoot, 'llms.txt')} and ${join(publicRoot, 'llms-content')}/`);
+	console.log(`[llms.txt] Generated ${join(publicRoot, 'llms.txt')} and ${join(publicRoot, 'docs-llm')}/`);
 }
