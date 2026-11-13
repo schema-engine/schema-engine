@@ -92,7 +92,9 @@ methods serve renderers and action dispatch. The `getAll*` and `get*Ids` methods
 return fresh arrays.
 
 The validation registry is built from the built-in rules, then the `validations` of each winning
-element in list order, then `createFormEngine({ validations })`. `FormEngine` keeps the `validations`
+element in the element registry's order (a replaced `$type` keeps its first position, so for
+[A1, B, A2] where all declare the same validation `$type`, B's validation wins), then
+`createFormEngine({ validations })`. `FormEngine` keeps the `validations`
 option so `extend` rebuilds the registry from it. The per-field-type default rules (`defaultFor`) are
 derived from the stored registrations at build, not kept as mutable state.
 

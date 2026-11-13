@@ -116,7 +116,7 @@ const formConfig = {
 
 ### Engine registry
 
-Each `FormEngine` owns a `ValidationRegistry`, built from the built-in handlers, the `validations` of the winning elements and `createFormEngine({ validations })`, in that order. A later registration of the same `$type` replaces the earlier one without a warning. Create a standalone copy with `createDefaultValidationRegistry()` when you are not building an engine:
+Each `FormEngine` owns a `ValidationRegistry`, built from the built-in handlers, the `validations` of the winning elements and `createFormEngine({ validations })`, in that order. A later registration of the same `$type` replaces the earlier one without a warning. Elements contribute in the element registry's order: a replaced `$type` keeps its first position, so for elements [A1, B, A2] where all declare the same validation `$type`, B's validation wins. Create a standalone copy with `createDefaultValidationRegistry()` when you are not building an engine:
 
 ```typescript
 import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';

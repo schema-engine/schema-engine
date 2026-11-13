@@ -357,7 +357,7 @@ order, the built-in rules, the `validations` of the winning elements, and
 `$type` wins without a warning, and a schema that is not a Standard Schema throws
 at build. `engine.extend({ validations })` adds to the source engine's list. The
 per-field-type default rules (`defaultFor`) are derived from the registrations at
-build.
+build. Elements contribute in the element registry's order: a replaced `$type` keeps its first position, so for elements [A1, B, A2] where all declare the same validation `$type`, B's validation wins.
 
 ```ts
 import * as z from 'zod/mini';
