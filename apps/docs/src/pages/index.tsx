@@ -446,6 +446,7 @@ export default eco.page({
 		title: 'Schema Engine',
 		description:
 			'A framework-agnostic toolkit for building schema-driven interfaces. Define your UI in JSON, get automatic Zod Mini validation and type safety.',
+		url: '/',
 	}),
 	render: HomePage,
 });

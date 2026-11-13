@@ -36,6 +36,8 @@ export const docsFrontmatterSchema = z.object({
 	description: z.string(),
 	group: z.optional(z.string()),
 	order: z.optional(z.coerce.number()),
+	/** Set to `false` to leave the page out of `llms.txt` and the `llms-content/` exports. */
+	llms: z.optional(z.boolean()),
 });
 
 export type DocsFrontmatter = z.infer<typeof docsFrontmatterSchema>;
