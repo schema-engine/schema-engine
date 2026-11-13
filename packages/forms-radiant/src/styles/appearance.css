@@ -1,4 +1,13 @@
 /*
+ * The built-in size axis is renderer-neutral: compact and comfortable read these hooks. Radiant maps
+ * them to its theme spacing, with the neutral values as fallbacks, so a themed app keeps its rhythm.
+ */
+:where([data-se-theme]) {
+	--se-space-compact: var(--space-block, 1rem);
+	--se-space-comfortable: var(--space-block-xl, 2rem);
+}
+
+/*
  * Appearance axes. The layout theme declares the tokens a value stands for (--se-space, --se-font-size, --se-shadow and the rest)
  * inside :where() rules scoped by data-se-theme; these rules only read them, also inside
  * :where(), so an author's class on the same element always wins.

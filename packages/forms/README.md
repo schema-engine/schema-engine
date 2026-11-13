@@ -204,6 +204,11 @@ const size = defineAxis({
 const engine = createFormEngine({ layout: { appearance: [...builtInAxes, tone, size] } });
 ```
 
+Keep the axis list inline, as above, or declare it `as const`: a list stored in a plain
+variable widens, and typed `defineForm` stops narrowing the values. The Radiant card derives
+its width from `--se-space`, eight times as sensitive, so overriding the compact spacing also
+narrows the compact card.
+
 The engine lists every axis in its schema catalog (`axis:size`) and in the JSON Schema
 export, where `appearance.size` is an enum of the axis's values, so an editor autocompletes
 a form's and a step's picks. Element and recipe slot picks stay an open record of axis names to values.

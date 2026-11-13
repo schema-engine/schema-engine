@@ -2,6 +2,7 @@ import { afterEach, expect, test } from 'vitest';
 import { createRoot } from '@ecopages/jsx/client';
 import { createFormEngine } from '@schema-engine/forms';
 import { CardShell } from '@/components/shells';
+import '@/styles/appearance.css';
 import '@/components/shells/card-shell.css';
 
 const layout = createFormEngine().getLayout();
@@ -91,6 +92,56 @@ test('size default undoes a compact pick it inherits', async () => {
 	const reset = await card({ size: 'default' }, 'compact');
 	expect(reset.sectionPadding).toBe('24px');
 	expect(reset.width).toBe(448);
+});
+
+/**
+ * Sets host theme variables on the document for one test and returns how to remove them.
+ *
+ * @remarks The variables are the ones a Radiant theme sets; the layout theme's tokens must follow them.
+ */
+function setHostTheme(variables: Record<string, string>) {
+	for (const [name, value] of Object.entries(variables)) document.documentElement.style.setProperty(name, value);
+	return () => {
+		for (const name of Object.keys(variables)) document.documentElement.style.removeProperty(name);
+	};
+}
+
+test.each([
+	['compact', '12px'],
+	['comfortable', '56px'],
+])('size %s follows the host theme spacing', async (size, padding) => {
+	const restore = setHostTheme({ '--space-block': '12px', '--space-block-xl': '56px' });
+	try {
+		const picked = await card({ size });
+		expect(picked.sectionPadding).toBe(padding);
+	} finally {
+		restore();
+	}
+});
+
+test.each(['flat', 'outlined', 'elevated'])('surface %s keeps the themed card background', async (surface) => {
+	const restore = setHostTheme({ '--surface': 'rgb(1, 2, 3)' });
+	try {
+		const picked = await card({ surface });
+		expect(picked.style.backgroundColor).toBe('rgb(1, 2, 3)');
+	} finally {
+		restore();
+	}
+});
+
+test('an explicit surface elevated pick looks like no pick under a themed shadow colour', async () => {
+	const restore = setHostTheme({ '--on-surface': 'rgb(255, 0, 0)' });
+	try {
+		const unpicked = await card();
+		const expected = { shadow: unpicked.style.boxShadow, border: unpicked.style.borderTopWidth };
+		document.body.replaceChildren();
+		const picked = await card({ surface: 'elevated' });
+		expect(picked.style.boxShadow).toBe(expected.shadow);
+		expect(picked.style.borderTopWidth).toBe(expected.border);
+		expect(picked.style.boxShadow).not.toBe('none');
+	} finally {
+		restore();
+	}
 });
 
 test('an engine whose host sets the theme spacing is followed by the size tokens', async () => {

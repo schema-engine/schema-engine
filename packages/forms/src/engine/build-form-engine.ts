@@ -127,7 +127,8 @@ export type FormEngineRegistrationLists = {
  * re-checked here.
  *
  * A value that is not a compiled theme must be `{ grid, appearance }` options and nothing else. A
- * spread copy or a structured clone of a theme has `id`, `axes` and `css` keys and lost its brand;
+ * spread copy or a JSON copy of a theme has `id`, `axes` and `css` keys and lost its brand (a
+ * structured clone of one throws instead, because the theme holds functions);
  * compiling it as options would drop its appearance axes and change its id without a word, so it
  * throws instead.
  */

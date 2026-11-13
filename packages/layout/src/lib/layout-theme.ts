@@ -81,7 +81,8 @@ export type LayoutAxes<TLayout> = TLayout extends { readonly axes: infer TAxes }
  * The key comes from `Symbol.for`, so a theme from a second copy of this module (a duplicate
  * install, or a page and a form bundled apart) is still recognised, and a theme keeps its id and
  * axes wherever it is passed. The property is non-enumerable and symbol-keyed, so a spread copy
- * and a structured clone lose it: a copy is not a theme.
+ * and a JSON copy lose it: a copy is not a theme. A theme holds the axis registry, whose functions
+ * a structured clone cannot copy, so `structuredClone(theme)` throws a `DataCloneError`.
  */
 const LAYOUT_THEME_BRAND = Symbol.for('@schema-engine/layout/theme');
 

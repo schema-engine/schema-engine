@@ -276,7 +276,7 @@ theme's stylesheet is emitted once. The stylesheet selects only `.se-grid`,
 
 An appearance axis is one independent dimension of appearance with 2 to 5 named values.
 Each value stands for a set of semantic CSS tokens (`--se-space`, `--se-font-size`,
-`--se-control-height`, `--se-border-width`, `--se-shadow`, `--se-surface-background`) that
+`--se-border-width`, `--se-shadow`, `--se-surface-background`) that
 components read. Components never read the axis value, and a token never names one
 component. `size` and `surface` are built in.
 
@@ -297,6 +297,11 @@ const size = defineAxis({
 
 const engine = createFormEngine({ elements, layout: { appearance: [...builtInAxes, size] } });
 ```
+
+Keep the axis list inline, as above, or declare it `as const`: a list stored in a plain
+variable widens, and typed `defineForm` stops narrowing the values. The Radiant card derives
+its width from `--se-space`, eight times as sensitive, so overriding the compact spacing also
+narrows the compact card.
 
 A registration declares the axes it responds to (`appearanceAxes: ['tone']`); the engine
 build throws, naming the registration, when it declares an axis the theme lacks. A form, a

@@ -65,7 +65,6 @@ describe('builtInAxes', () => {
 		);
 		expect([...tokens].toSorted()).toEqual([
 			'--se-border-width',
-			'--se-control-height',
 			'--se-font-size',
 			'--se-shadow',
 			'--se-space',
@@ -78,16 +77,37 @@ describe('builtInAxes', () => {
 
 	test('a default value hands its tokens back to the component fallback, so it undoes an inherited pick', () => {
 		const css = getAppearanceCss(compileAppearance(), 'lx');
-		expect(css).toContain(
-			'[data-se-size="default"]){--se-space:initial;--se-font-size:initial;--se-control-height:initial;}',
-		);
+		expect(css).toContain('[data-se-size="default"]){--se-space:initial;--se-font-size:initial;}');
 	});
 
-	test('name no host theme variable', () => {
+	test('name no host theme variable: the only references are renderer hooks in the se namespace', () => {
 		const css = getAppearanceCss(compileAppearance(), 'lx');
-		expect(css).not.toContain('var(');
+		const references = Array.from(css.matchAll(/var\(([^,)]*)/g), (match) => match[1]);
+		expect(references.length).toBeGreaterThan(0);
+		expect(references.filter((name) => !name.startsWith('--se-'))).toEqual([]);
 		expect(css).not.toContain('--space-block');
 		expect(css).not.toContain('--on-surface');
+		expect(css).not.toContain('CanvasText');
+	});
+
+	test('compact and comfortable spacing are hooks a renderer maps to its host theme', () => {
+		const css = getAppearanceCss(compileAppearance(), 'lx');
+		expect(css).toContain('[data-se-size="compact"]){--se-space:var(--se-space-compact, 1rem);');
+		expect(css).toContain('[data-se-size="comfortable"]){--se-space:var(--se-space-comfortable, 2rem);');
+	});
+
+	test('flat and outlined leave the component background alone', () => {
+		const css = getAppearanceCss(compileAppearance(), 'lx');
+		expect(css).not.toContain('--se-surface-background:transparent');
+		expect(css).toMatch(/\[data-se-surface="flat"\]\)\{[^}]*--se-surface-background:initial;/);
+		expect(css).toMatch(/\[data-se-surface="outlined"\]\)\{[^}]*--se-surface-background:initial;/);
+	});
+
+	test('elevated is the default, so it hands every token back to the component', () => {
+		const css = getAppearanceCss(compileAppearance(), 'lx');
+		expect(css).toContain(
+			'[data-se-surface="elevated"]){--se-border-width:initial;--se-shadow:initial;--se-surface-background:initial;}',
+		);
 	});
 });
 
@@ -198,6 +218,17 @@ describe('checkAppearance', () => {
 			"appearance.tone: Element 'note' does not support the axis 'tone'. Supported axes: size.",
 		]);
 	});
+
+	test.each(['constructor', 'toString', '__proto__', 'hasOwnProperty'])(
+		'reports the prototype key %s as an unknown axis instead of throwing',
+		(key) => {
+			const authored = JSON.parse(`{"${key}":"x"}`);
+			const { issues, appearance } = checkAppearance(authored, { axes, subject: 'The root' });
+			expect(issues).toHaveLength(1);
+			expect(issues[0]).toMatch(new RegExp(`unknown axis '${key}'`));
+			expect(appearance).toEqual({});
+		},
+	);
 
 	test('an owner that supports nothing says so', () => {
 		const { issues } = checkAppearance({ size: 'compact' }, { axes, subject: "Element 'note'", supported: [] });

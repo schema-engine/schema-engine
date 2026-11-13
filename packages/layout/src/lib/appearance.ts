@@ -178,24 +178,21 @@ const sizeAxis = defineAxis({
 	$type: 'size',
 	metadata: {
 		name: 'Size',
-		description: 'How much room components take: spacing, type size and control height.',
+		description: 'How much room components take: spacing and type size.',
 	},
 	default: 'default',
 	values: {
 		compact: {
-			'--se-space': '1rem',
+			'--se-space': 'var(--se-space-compact, 1rem)',
 			'--se-font-size': '0.875rem',
-			'--se-control-height': '2rem',
 		},
 		default: {
 			'--se-space': 'initial',
 			'--se-font-size': 'initial',
-			'--se-control-height': 'initial',
 		},
 		comfortable: {
-			'--se-space': '2rem',
+			'--se-space': 'var(--se-space-comfortable, 2rem)',
 			'--se-font-size': '1.0625rem',
-			'--se-control-height': '2.75rem',
 		},
 	},
 });
@@ -211,16 +208,16 @@ const surfaceAxis = defineAxis({
 		flat: {
 			'--se-border-width': '0',
 			'--se-shadow': 'none',
-			'--se-surface-background': 'transparent',
+			'--se-surface-background': 'initial',
 		},
 		outlined: {
 			'--se-border-width': '1px',
 			'--se-shadow': 'none',
-			'--se-surface-background': 'transparent',
+			'--se-surface-background': 'initial',
 		},
 		elevated: {
-			'--se-border-width': '1px',
-			'--se-shadow': '0 8px 24px color-mix(in srgb, CanvasText 10%, transparent)',
+			'--se-border-width': 'initial',
+			'--se-shadow': 'initial',
 			'--se-surface-background': 'initial',
 		},
 	},
@@ -388,7 +385,7 @@ export function checkAppearance(
 	}
 	const declared = Object.keys(options.axes).join(', ');
 	for (const [axis, value] of Object.entries(authored)) {
-		const values = options.axes[axis];
+		const values = Object.hasOwn(options.axes, axis) ? options.axes[axis] : undefined;
 		if (!values) {
 			issues.push(`appearance.${axis}: unknown axis '${axis}'. Declared axes: ${declared}.`);
 			continue;
