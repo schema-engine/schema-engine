@@ -149,7 +149,7 @@ const stepElement = (host: HTMLElement, id: string) => {
 	return element;
 };
 const fieldHost = (host: HTMLElement, label: string) => {
-	const element = getByRole(host, 'textbox', { name: label }).closest<HTMLElement>('.se-form-field');
+	const element = getByRole(host, 'textbox', { name: label }).closest<HTMLElement>('.se-grid-item');
 	if (!element) throw new Error(`No field host rendered for '${label}'.`);
 	return element;
 };

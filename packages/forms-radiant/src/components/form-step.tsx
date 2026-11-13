@@ -2,7 +2,7 @@ import { customElement, bindTo, onUpdated, prop, RadiantElement, state } from '@
 import { onContextUpdate } from '@ecopages/radiant/context';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
-import { getAppearanceAttributes, type AppearanceSelection } from '@schema-engine/forms/lib/appearance';
+import { getAppearanceAttributes, type AppearanceSelection } from '@schema-engine/layout';
 
 /**
  * Visibility host for one authored step.

@@ -1,12 +1,6 @@
-import type {
-	ElementGridConfig,
-	GridGapToken,
-	GridLayoutConfig,
-	GridOffsetName,
-	GridWidthName,
-} from '@/schemas/base-field';
+import type { ElementGridConfig, GridGapToken, GridLayoutConfig, GridOffsetName, GridWidthName } from '@/schemas/grid';
 import type { DeepReadonly } from '@/lib/deep-readonly';
-import { GridGapTokens } from '@/schemas/base-field';
+import { GridGapTokens } from '@/schemas/grid';
 import {
 	areasTemplateValue,
 	BREAKPOINT_ORDER,
@@ -21,18 +15,16 @@ import {
 	type NamedPlacement,
 } from '@/lib/grid-placement';
 
-export type { GridBreakpointToken };
-
 /**
  * Maps authored grid values to theme-scoped CSS variables.
  *
  * @remarks
- * The engine owns the grid vocabulary: breakpoint thresholds, gap tokens,
- * and the default minimum column width. The form owns layout intent:
- * columns, responsive changes, gap selection, field placement.
+ * The theme owns the grid vocabulary: breakpoint thresholds, gap tokens,
+ * and the default minimum column width. The document owns layout intent:
+ * columns, responsive changes, gap selection, item placement.
  *
- * Compile once at the engine boundary ({@link compileGridTheme}); renderers
- * emit the resulting stylesheet and per-form CSS variables inline. Breakpoint
+ * Compile once, with the rest of the layout theme ({@link createLayoutTheme}); renderers
+ * emit the resulting stylesheet and per-container CSS variables inline. Breakpoint
  * behavior lives entirely in the generated media queries — no runtime
  * observers, and layout is correct with JavaScript disabled.
  *
@@ -84,13 +76,13 @@ export interface GridThemeOptions {
 	 * Token values that change from a breakpoint up.
 	 *
 	 * @remarks
-	 * Breakpoint-major, like a form's own `responsive`: one entry per width
+	 * Breakpoint-major, like a document's own `responsive`: one entry per width
 	 * listing the tokens that change there, rather than one entry per token
 	 * listing its widths. Base values stay in `gap`, so there is no `default`
 	 * entry here — and no collision between the `default` *token* and a
 	 * `default` *slot*.
 	 *
-	 * Tokens are axis-agnostic: a form picks which token each axis uses via
+	 * Tokens are axis-agnostic: a document picks which token each axis uses via
 	 * `gapX`/`gapY`, so a theme never declares an axis.
 	 *
 	 * ```ts
@@ -115,20 +107,6 @@ export interface NormalizedGridTheme {
 	/** Token overrides per breakpoint; only the tokens a width changes. */
 	readonly responsive: Readonly<Partial<Record<GridBreakpointToken, Readonly<GridGapScale>>>>;
 	readonly minColumnWidth: string;
-	/** Stable identity of the normalized theme; scopes the generated stylesheet. */
-	readonly id: string;
-}
-
-/**
- * Immutable engine grid configuration: the resolved theme and its stylesheet.
- *
- * @remarks
- * Produced once by {@link compileGridTheme}. Renderers consume this value;
- * {@link FormEngine.extend} carries the same object unchanged.
- */
-export interface CompiledGrid {
-	readonly theme: NormalizedGridTheme;
-	readonly css: string;
 }
 
 const DEFAULT_BREAKPOINTS: Record<GridBreakpointToken, string> = {
@@ -150,12 +128,12 @@ const DEFAULT_GAP: Record<GridGapToken, string> = {
 const DEFAULT_MIN_COLUMN_WIDTH = '15.625rem';
 
 /**
- * Public gap tokens. Hosts override these at `:root` to restyle every form.
+ * Public gap tokens. Hosts override these at `:root` to restyle every grid.
  *
  * @remarks
- * The engine must never declare these on an element: an element's own
+ * The theme must never declare these on an element: an element's own
  * declaration beats an inherited one, which would make the documented `:root`
- * override a no-op. The engine's value is declared under
+ * override a no-op. The theme's value is declared under
  * {@link gapBaseVariable} instead and reached through a `var()` fallback.
  *
  * A host override therefore replaces the token at *every* width, including one
@@ -171,12 +149,12 @@ const GAP_TOKEN_VARIABLES: Record<GridGapToken, `--${string}`> = {
 	wide: '--se-grid-gap-wide',
 };
 
-/** Engine default for a gap token, shadowed by the public token when a host sets it. */
+/** Theme default for a gap token, shadowed by the public token when a host sets it. */
 function gapBaseVariable(token: GridGapToken): `--${string}` {
 	return `--se-grid-gap-base-${token}`;
 }
 
-/** A gap token as CSS: the host's override if present, else the engine default. */
+/** A gap token as CSS: the host's override if present, else the theme default. */
 function gapTokenValue(token: GridGapToken): string {
 	return `var(${GAP_TOKEN_VARIABLES[token]}, var(${gapBaseVariable(token)}))`;
 }
@@ -201,8 +179,6 @@ type CssLengthUnit = 'px' | 'rem' | 'em';
 
 /** CSS property, its variable base name, and the value used when unauthored. */
 type ResponsiveProperty = readonly [property: string, variable: string, fallback: string];
-
-let cachedDefaultCompiledGrid: CompiledGrid | undefined;
 
 function deepFreeze<T extends object>(value: T): T {
 	Object.freeze(value);
@@ -230,16 +206,16 @@ function resolveResponsiveGap(
 }
 
 /**
- * Resolves the immutable grid theme from engine options.
+ * Resolves the immutable grid theme from the `grid` option of a layout theme.
  *
  * @remarks
  * Threshold overrides replace only the named breakpoint; the rest keep
  * library defaults. Thresholds accept `px`/`rem`/`em` lengths and must
  * preserve named cascade order. `rem`/`em` compare at a 16px root.
- * Media queries follow viewport width — a form inside a narrow sidebar
+ * Media queries follow viewport width — a grid inside a narrow sidebar
  * still receives the desktop rules of the wide screen it lives on.
  */
-function resolveGridTheme(options?: GridThemeOptions): NormalizedGridTheme {
+export function resolveGridTheme(options?: GridThemeOptions): NormalizedGridTheme {
 	const breakpoints = { ...DEFAULT_BREAKPOINTS, ...options?.breakpoints };
 	const gap = { ...DEFAULT_GAP, ...options?.gap };
 	const responsive = resolveResponsiveGap(options?.responsive);
@@ -250,34 +226,7 @@ function resolveGridTheme(options?: GridThemeOptions): NormalizedGridTheme {
 		gap,
 		responsive,
 		minColumnWidth,
-		id: gridThemeId({ breakpoints, gap, responsive, minColumnWidth }),
 	});
-}
-
-/**
- * Compiles engine grid options into the frozen theme-plus-stylesheet pair.
- *
- * @remarks
- * This is the single construction boundary. Callers that only need the
- * library default should use {@link getDefaultCompiledGrid} so the pair is
- * shared across engines.
- */
-export function compileGridTheme(options?: GridThemeOptions): CompiledGrid {
-	const theme = resolveGridTheme(options);
-	return Object.freeze({ theme, css: getGridThemeCss(theme) });
-}
-
-/** Frozen library-default compiled grid; shared by engines built without a `grid` option. */
-export function getDefaultCompiledGrid(): CompiledGrid {
-	if (!cachedDefaultCompiledGrid) {
-		cachedDefaultCompiledGrid = compileGridTheme();
-	}
-	return cachedDefaultCompiledGrid;
-}
-
-/** Frozen library-default theme; shared by engines built without a `grid` option. */
-export function getDefaultGridTheme(): NormalizedGridTheme {
-	return getDefaultCompiledGrid().theme;
 }
 
 function isCssLengthUnit(unit: string | undefined): unit is CssLengthUnit {
@@ -317,7 +266,7 @@ function assertBreakpointOrder(breakpoints: Record<GridBreakpointToken, string>)
  * These come from consumer options, so `{ md, lg }` and `{ lg, md }` describe
  * one theme with different `JSON.stringify` output. Hashing that directly would
  * mint two ids for the same theme and emit its stylesheet twice under different
- * scopes, defeating the sharing {@link getDefaultCompiledGrid} exists for.
+ * scopes, defeating the sharing of one compiled theme.
  */
 function canonicalResponsiveGap(
 	responsive: Readonly<Partial<Record<GridBreakpointToken, Readonly<GridGapScale>>>>,
@@ -333,22 +282,29 @@ function canonicalResponsiveGap(
 	});
 }
 
-/** Stable theme identity from the normalized options. */
-function gridThemeId(
-	theme: Pick<NormalizedGridTheme, 'breakpoints' | 'gap' | 'responsive' | 'minColumnWidth'>,
-): string {
-	const serialized = JSON.stringify({
+/** The normalized grid theme in a stable shape, for hashing into a layout theme id. */
+export function canonicalGridTheme(theme: NormalizedGridTheme) {
+	return {
 		breakpoints: theme.breakpoints,
 		gap: theme.gap,
 		responsive: canonicalResponsiveGap(theme.responsive),
 		minColumnWidth: theme.minColumnWidth,
-	});
-	let hash = 5381;
-	for (let index = 0; index < serialized.length; index += 1) {
-		hash = ((hash << 5) + hash + serialized.charCodeAt(index)) | 0;
-	}
-	return `g${(hash >>> 0).toString(36)}`;
+	};
 }
+
+/**
+ * Class a grid container carries, and the stylesheet's hook for it.
+ *
+ * @remarks
+ * Neutral on purpose: a domain's renderer adds this beside its own class,
+ * so a step, a page section and a container of any domain share one set of rules. The stylesheet
+ * keys on this class, {@link GRID_ITEM_CLASS} and `[data-se-theme]` only, with no alias for a
+ * domain's own class.
+ */
+export const GRID_CLASS = 'se-grid';
+
+/** Class an element placed in a grid carries, and the stylesheet's hook for it. See {@link GRID_CLASS}. */
+export const GRID_ITEM_CLASS = 'se-grid-item';
 
 /**
  * Grid container properties that change per breakpoint.
@@ -383,7 +339,7 @@ const DEFAULT_COLUMN_VARIABLE = '--se-grid-default-column';
  * @remarks
  * `justify-self`/`align-self` fall back to `auto`, which defers to the grid's
  * own `justify-items`/`align-items`. Any other fallback would silently beat
- * form-level alignment on every field.
+ * grid-level alignment on every item.
  */
 const FIELD_PROPERTIES: readonly ResponsiveProperty[] = [
 	['display', 'se-field-display', FIELD_DISPLAY_MODE],
@@ -447,21 +403,24 @@ function inheritanceResets(...tables: readonly (readonly ResponsiveProperty[])[]
  * Generates the theme-scoped stylesheet.
  *
  * @remarks
- * Rules are scoped under `[data-se-grid-theme="<id>"]`, which the renderer
- * places on every form grid container, so two engines with different themes
- * cannot overwrite each other. Field rules are scoped under the grid that
- * carries the theme attribute on each field host so nested grids do not leak
- * styles across themes.
+ * Rules are scoped under `[data-se-theme="<id>"]`, which the renderer
+ * places on every grid container and item, so two themes that differ
+ * cannot overwrite each other. Item rules are scoped under the item that
+ * carries the theme attribute so nested grids do not leak styles across themes.
+ * Selectors use only {@link GRID_CLASS}, {@link GRID_ITEM_CLASS} and that attribute.
+ *
+ * @param theme The resolved grid vocabulary.
+ * @param themeId The id of the layout theme the rules are scoped to.
  */
-function getGridThemeCss(theme: NormalizedGridTheme): string {
-	const scope = `[data-se-grid-theme="${theme.id}"]`;
-	const gridScope = `.se-form-grid${scope}`;
-	const fieldScope = `.se-form-field${scope}`;
+export function getGridThemeCss(theme: NormalizedGridTheme, themeId: string): string {
+	const scope = `[data-se-theme="${themeId}"]`;
+	const gridScope = `.${GRID_CLASS}${scope}`;
+	const itemScope = `.${GRID_ITEM_CLASS}${scope}`;
 	const tokens = GridGapTokens.map((token) => `${gapBaseVariable(token)}:${theme.gap[token]};`).join('');
 	const lines: string[] = [
 		`${scope}{${tokens}}`,
 		`${gridScope}{${inheritanceResets(GRID_PROPERTIES, GRID_ALIGNMENT_PROPERTIES)}${DEFAULT_COLUMN_VARIABLE}:initial;display:grid;${declarations(GRID_PROPERTIES)}${declarations(GRID_ALIGNMENT_PROPERTIES)}}`,
-		`${fieldScope}{${inheritanceResets(FIELD_PROPERTIES)}${declarations(FIELD_PROPERTIES)}}`,
+		`${itemScope}{${inheritanceResets(FIELD_PROPERTIES)}${declarations(FIELD_PROPERTIES)}}`,
 	];
 	for (const breakpoint of BREAKPOINT_ORDER) {
 		const ramped = theme.responsive[breakpoint];
@@ -471,7 +430,7 @@ function getGridThemeCss(theme: NormalizedGridTheme): string {
 					.join('')
 			: '';
 		lines.push(
-			`@media (min-width:${theme.breakpoints[breakpoint]}){${rampedTokens ? `${scope}{${rampedTokens}}` : ''}${gridScope}{${declarations(GRID_PROPERTIES, breakpoint)}}${fieldScope}{${declarations(FIELD_PROPERTIES, breakpoint)}}}`,
+			`@media (min-width:${theme.breakpoints[breakpoint]}){${rampedTokens ? `${scope}{${rampedTokens}}` : ''}${gridScope}{${declarations(GRID_PROPERTIES, breakpoint)}}${itemScope}{${declarations(FIELD_PROPERTIES, breakpoint)}}}`,
 		);
 	}
 	return lines.join('\n');
@@ -531,7 +490,7 @@ function customProperty(name: string, slot: CascadeSlot): `--${string}` {
 }
 
 /** Layout values a single cascade slot may set; the top-level config is the `default` slot. */
-interface FormGridEntry {
+interface GridEntry {
 	columns?: number | 'auto';
 	minColumnWidth?: string;
 	gap?: string;
@@ -540,7 +499,7 @@ interface FormGridEntry {
 }
 
 /** Placement a single cascade slot may set; the top-level config is the `default` slot. */
-interface FieldGridEntry {
+interface GridItemEntry {
 	area?: string;
 	width?: GridWidthName;
 	offset?: GridOffsetName;
@@ -553,7 +512,7 @@ interface FieldGridEntry {
 	marginBlockEnd?: string;
 }
 
-function emitGapEntry(variables: CssVariables, slot: CascadeSlot, entry: FormGridEntry | undefined): void {
+function emitGapEntry(variables: CssVariables, slot: CascadeSlot, entry: GridEntry | undefined): void {
 	if (!entry) return;
 	const entryGap = resolveGridGap(entry.gap);
 	const gapX = resolveGridGap(entry.gapX) ?? entryGap;
@@ -563,7 +522,7 @@ function emitGapEntry(variables: CssVariables, slot: CascadeSlot, entry: FormGri
 }
 
 /**
- * Resolves a form grid against the engine theme into one inline style record.
+ * Resolves a grid against the theme into one inline style record.
  *
  * @remarks
  * Only values an author wrote are emitted; the generated stylesheet falls back
@@ -572,15 +531,14 @@ function emitGapEntry(variables: CssVariables, slot: CascadeSlot, entry: FormGri
  * single template — so they are the only values carried across slots. Axis
  * properties win over the matching `placeItems`/`placeContent` shorthand.
  *
- * When `elements` (the step's top-level elements, the ones this grid places)
- * use named widths, the grid gets 12 tracks and a `1 / -1` default placement
- * for fields that set no width. Validation keeps that from meeting `columns`.
+ * When `elements` (the items this grid places) use named widths, the grid
+ * gets 12 tracks and a `1 / -1` default placement for items that set no width. Validation keeps that from meeting `columns`.
  *
  * A grid with `areas` gets the template of each slot that sets one: the quoted
  * rows as `--se-grid-areas` and the track count they draw as `--se-grid-template`,
  * derived from the rows rather than authored, as with named widths.
  */
-export function getFormGridVariables(
+export function getGridVariables(
 	grid: DeepReadonly<GridLayoutConfig> | undefined,
 	theme: NormalizedGridTheme,
 	elements: readonly unknown[],
@@ -601,7 +559,7 @@ export function getFormGridVariables(
 
 	let columns: number | 'auto' = 1;
 	let minColumnWidth = theme.minColumnWidth;
-	const emitTemplate = (slot: CascadeSlot, entry: FormGridEntry | undefined): void => {
+	const emitTemplate = (slot: CascadeSlot, entry: GridEntry | undefined): void => {
 		if (!entry) return;
 		if (entry.columns === undefined && entry.minColumnWidth === undefined) return;
 		if (entry.columns !== undefined) columns = entry.columns;
@@ -661,7 +619,7 @@ function formatGridLine(value: number | string): string {
 function emitFieldEntry(
 	variables: CssVariables,
 	slot: CascadeSlot,
-	entry: FieldGridEntry | undefined,
+	entry: GridItemEntry | undefined,
 	named: NamedPlacement = {},
 ): void {
 	if (!entry) return;
@@ -707,12 +665,12 @@ function emitFieldEntry(
  *
  * `marginBlockStart`/`marginBlockEnd` accept the same gap tokens as the grid, so
  * a one-off rhythm around a non-input element reads in the same vocabulary as
- * the form's spacing. They ride the shared field property table rather than a
+ * the grid's spacing. They ride the shared field property table rather than a
  * separate mechanism, which is what gives them the breakpoint cascade and the
  * inheritance resets for free — and keeps a single system owning the block axis
  * instead of two fighting over it.
  */
-export function getFieldGridVariables(grid?: ElementGridConfig): CssVariables {
+export function getGridItemVariables(grid?: ElementGridConfig): CssVariables {
 	const variables: CssVariables = {};
 	const [alignSelf, justifySelf] = splitPlaceShorthand(grid?.placeSelf);
 

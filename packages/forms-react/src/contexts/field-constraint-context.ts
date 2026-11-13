@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import type { AppearanceSelection } from '@schema-engine/forms/lib/appearance';
+import type { AppearanceSelection } from '@schema-engine/layout';
 import type { UseConstraintLogicResult } from '@/hooks/use-constraint-logic';
 
 export interface FieldConstraints {

@@ -1,5 +1,6 @@
 import * as z from 'zod/mini';
-import { AppearanceConfigSchema, GridLayoutConfigSchema, RendererStyleSchema } from './base-field';
+import { RendererStyleSchema } from './base-field';
+import { AppearanceConfigSchema, GridLayoutConfigSchema } from '@schema-engine/layout';
 
 /**
  * Envelope for a registered config object. Per-item Standard Schema validation

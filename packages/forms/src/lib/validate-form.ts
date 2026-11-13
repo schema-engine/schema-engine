@@ -1,6 +1,5 @@
 import type { AnyActionRegistration, AnyElementRegistration, AnyRecipeRegistration } from '@/types/registration';
 import type { FormConfig, FormConfigEnvelope, FormTaggedConfig } from '@/schemas/form-config';
-import type { GridLayoutConfig } from '@/schemas/base-field';
 import type { ElementConfig } from '@/schemas/field-config';
 import { formConfigEnvelopeSchema } from '@/schemas/form-config';
 import { safeParseStandardSchema, type StandardSchemaIssue } from '@/lib/standard-schema';
@@ -29,16 +28,19 @@ import {
 	WIDTH_TRACKS,
 	type CascadeSlot,
 	type GridAreaTemplates,
-} from '@/lib/grid-placement';
+	type CompiledAppearance,
+	type GridLayoutConfig,
+	getDefaultLayoutTheme,
+} from '@schema-engine/layout';
 import { logger } from '@/lib/logger';
 import { mergeSlotDefaults } from '@/recipes/merge-slot-defaults';
 import { isPlainObject } from '@/lib/is-plain-object';
 import {
-	checkAppearance,
-	getDefaultCompiledAppearance,
-	pickSupportedAppearance,
-	type CompiledAppearance,
-} from '@/lib/appearance';
+	resolveAppearance,
+	withAppearance,
+	withoutAppearanceKey,
+	type AppearanceScope,
+} from '@/lib/resolve-appearance';
 
 export type { FormConfigView, NormalizedElementConfig, NormalizedFormConfig } from '@/lib/normalized-form-config';
 export { DEFAULT_WIZARD_RECIPE, assertFormEngine, getRenderableSteps, stepGrid } from '@/lib/form-view';
@@ -65,16 +67,8 @@ export interface ValidateFormOptions {
 	getAction: (id: string) => AnyActionRegistration | undefined;
 	hasValidation: (type: string) => boolean;
 	parseFormConfig?: (config: unknown) => FormConfig;
-	/** Appearance vocabulary the picks are checked against. Defaults to the built-in `size` and `surface` axes. */
-	appearance?: CompiledAppearance;
-}
-
-/**
- * Appearance picks that reach an element: the vocabulary, and what the form, step and containing elements chose.
- */
-interface AppearanceScope {
-	axes: CompiledAppearance['axes'];
-	inherited: Readonly<Record<string, string>>;
+	/** Appearance axes the picks are checked against. Defaults to the built-in `size` and `surface` axes. */
+	axes?: CompiledAppearance['axes'];
 }
 
 function formatIssuePath(path: StandardSchemaIssue['path']): string {
@@ -222,7 +216,7 @@ function parseView(
  *
  * @remarks
  * The key is removed from the view before the slot schemas parse it, so a registration's slot
- * schema only has to type it; the engine owns the vocabulary check. The form's picks reach a
+ * schema only has to type it; the layout theme owns the vocabulary check. The form's picks reach a
  * slot for the axes the recipe declares on it, and the slot's own pick wins.
  */
 function resolveSlotAppearance(
@@ -235,19 +229,15 @@ function resolveSlotAppearance(
 	const resolved: Record<string, Record<string, string>> = {};
 	for (const slot of recipe.slots) {
 		const authoredSlot = view[slot];
-		const supported = recipe.appearanceAxes?.[slot];
-		const checked = checkAppearance(isPlainObject(authoredSlot) ? authoredSlot.appearance : undefined, {
-			axes: appearance.axes,
-			supported: supported ?? [],
-			subject: `Slot '${slot}' of recipe '${recipe.$type}'`,
-		});
-		issues.push(...checked.issues.map((issue) => prefixed(`view.${slot}`, issue)));
-		const selection = pickSupportedAppearance({ ...appearance.inherited, ...checked.appearance }, supported);
-		if (Object.keys(selection).length > 0) resolved[slot] = selection;
-		if (isPlainObject(authoredSlot) && 'appearance' in authoredSlot) {
-			const { appearance: _authored, ...rest } = authoredSlot;
-			withoutAppearance[slot] = rest;
-		}
+		const supported = recipe.appearanceAxes?.[slot] ?? [];
+		const slotAppearance = resolveAppearance(
+			isPlainObject(authoredSlot) ? authoredSlot.appearance : undefined,
+			appearance,
+			{ subject: `Slot '${slot}' of recipe '${recipe.$type}'`, location: `view.${slot}`, supported },
+		);
+		issues.push(...slotAppearance.issues);
+		if (Object.keys(slotAppearance.selection).length > 0) resolved[slot] = slotAppearance.selection;
+		if (isPlainObject(authoredSlot)) withoutAppearance[slot] = withoutAppearanceKey(authoredSlot);
 	}
 	return { withoutAppearance, resolved };
 }
@@ -571,16 +561,13 @@ function parseElementNode(
 	const areaIssue = areaPlacementIssue(parsed.data, nested);
 	if (areaIssue) return fail(areaIssue);
 
-	const supported = getElement(item.$type)?.appearanceAxes;
-	const checked = checkAppearance(authoredAppearance, {
-		axes: appearance.axes,
-		supported: supported ?? [],
+	const elementAppearance = resolveAppearance(authoredAppearance, appearance, {
 		subject: `Element '${item.$type}'`,
+		location,
+		supported: getElement(item.$type)?.appearanceAxes ?? [],
 	});
-	const issues = checked.issues.map((issue) => (location ? prefixed(location, issue) : issue));
-	const own = { ...appearance.inherited, ...checked.appearance };
-	const selection = pickSupportedAppearance(own, supported);
-	const resolved = Object.keys(selection).length > 0 ? { ...parsed.data, appearance: selection } : parsed.data;
+	const issues = elementAppearance.issues;
+	const resolved = withAppearance(parsed.data, elementAppearance.selection);
 
 	const children = getElementChildren(parsed.data);
 	if (!children) {
@@ -588,7 +575,7 @@ function parseElementNode(
 	}
 
 	const nextChildren: FormTaggedConfig[] = [];
-	const childScope = { axes: appearance.axes, inherited: own };
+	const childScope = elementAppearance.childScope;
 	for (let index = 0; index < children.length; index += 1) {
 		const child = children[index];
 		const parsedChild = parseElementNode(
@@ -657,10 +644,10 @@ function brandElementTree(
  */
 export function validateElementConfig(
 	config: unknown,
-	options: Pick<ValidateFormOptions, 'getElement' | 'hasValidation' | 'appearance'>,
+	options: Pick<ValidateFormOptions, 'getElement' | 'hasValidation' | 'axes'>,
 ): NormalizedElementConfig {
 	const parsed = parseElementNode(config, options.getElement, options.hasValidation, '', {
-		axes: (options.appearance ?? getDefaultCompiledAppearance()).axes,
+		axes: options.axes ?? getDefaultLayoutTheme().axes,
 		inherited: {},
 	});
 	if (parsed.issues.length > 0 || !parsed.item) {
@@ -710,25 +697,29 @@ export function validateFormConfig(config: unknown, options: ValidateFormOptions
 			itemKind,
 		);
 
-	const { axes } = options.appearance ?? getDefaultCompiledAppearance();
-	const formAppearance = checkAppearance(envelope.appearance, { axes, subject: 'The form' });
-	issues.push(...formAppearance.issues.map((issue) => prefixed('form', issue)));
+	const axes = options.axes ?? getDefaultLayoutTheme().axes;
+	const formScope: AppearanceScope = { axes, inherited: {} };
+	const formAppearance = resolveAppearance(envelope.appearance, formScope, { subject: 'The form', location: 'form' });
+	issues.push(...formAppearance.issues);
 
 	const steps = envelope.steps.map((step, stepIndex) => {
 		const stepLocation = itemLocation('steps', stepIndex, step);
-		const stepAppearance = checkAppearance(step.appearance, { axes, subject: 'The step' });
-		issues.push(...stepAppearance.issues.map((issue) => prefixed(stepLocation, issue)));
-		const resolvedStepAppearance = { ...formAppearance.appearance, ...stepAppearance.appearance };
-		const elements = parseElementList(step.elements, options.getElement, options.hasValidation, stepLocation, {
-			axes,
-			inherited: resolvedStepAppearance,
+		const stepAppearance = resolveAppearance(step.appearance, formAppearance.childScope, {
+			subject: 'The step',
+			location: stepLocation,
 		});
+		issues.push(...stepAppearance.issues);
+		const elements = parseElementList(
+			step.elements,
+			options.getElement,
+			options.hasValidation,
+			stepLocation,
+			stepAppearance.childScope,
+		);
 		const actions = parseActions(step.actions, stepLocation, 'actions');
 		issues.push(...elements.issues, ...actions.issues);
-		const { appearance: _authored, ...rest } = step;
 		return {
-			...rest,
-			...(Object.keys(resolvedStepAppearance).length > 0 && { appearance: resolvedStepAppearance }),
+			...withAppearance(step, stepAppearance.selection),
 			elements: elements.items ?? step.elements,
 			actions: actions.items ?? step.actions,
 		};
@@ -749,7 +740,7 @@ export function validateFormConfig(config: unknown, options: ValidateFormOptions
 		envelope.view && typeof envelope.view.$type === 'string' ? envelope.view : undefined,
 		{ id: envelope.id, stepCount: envelope.steps.length },
 		options,
-		{ axes, inherited: formAppearance.appearance },
+		formAppearance.childScope,
 	);
 	const formActions = parseActions(envelope.actions, 'form', 'actions');
 	issues.push(...view.issues, ...formActions.issues);
@@ -758,11 +749,9 @@ export function validateFormConfig(config: unknown, options: ValidateFormOptions
 		throw new FormValidationError(issues[0] ?? 'Invalid form configuration', issues);
 	}
 
-	const { appearance: _authoredForm, ...envelopeRest } = envelope;
 	return markNormalizedFormConfig(
 		{
-			...envelopeRest,
-			...(Object.keys(formAppearance.appearance).length > 0 && { appearance: formAppearance.appearance }),
+			...withAppearance(envelope, formAppearance.selection),
 			steps: steps.map((step) => ({
 				...step,
 				elements: step.elements.map((element) =>

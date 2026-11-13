@@ -11,8 +11,15 @@ import { ComponentType } from '@/engine/component-type';
 import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from '@/engine/schema-artifacts';
 import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
 import { logger } from '@/lib/logger';
-import { compileGridTheme, getDefaultCompiledGrid, type CompiledGrid, type GridThemeOptions } from '@/lib/grid-styles';
-import { compileAppearance, type AppearanceOptions, type CompiledAppearance } from '@/lib/appearance';
+import {
+	assertAxesNotReserved,
+	createLayoutTheme,
+	getDefaultLayoutTheme,
+	isLayoutTheme,
+	type LayoutInput,
+	type LayoutTheme,
+} from '@schema-engine/layout';
+import { RENDERER_DATA_ATTRIBUTES } from '@/lib/renderer-data-attributes';
 import { createFormConfigShape } from '@/schemas/form-config-shape';
 import * as z from 'zod/mini';
 import { isZodType } from '@/lib/zod-json-schema';
@@ -89,11 +96,11 @@ function registerSchemaMetadata(
  * Rejects an axis a registration declares that the engine's vocabulary does not, so a typo such as
  * `'sise'` fails the build instead of silently making the axis unsupported.
  */
-function assertDeclaredAxes(owner: string, axes: readonly string[] | undefined, appearance: CompiledAppearance): void {
+function assertDeclaredAxes(owner: string, axes: readonly string[] | undefined, layout: LayoutTheme): void {
 	for (const axis of axes ?? []) {
-		if (!(axis in appearance.axes)) {
+		if (!(axis in layout.axes)) {
 			throw new Error(
-				`${owner} declares unknown appearance axis '${axis}'. Declared axes: ${Object.keys(appearance.axes).join(', ')}. Add it with createFormEngine({ appearance: { ${axis}: [...] } }).`,
+				`${owner} declares unknown appearance axis '${axis}'. Declared axes: ${Object.keys(layout.axes).join(', ')}. Add it with createFormEngine({ layout: { appearance: { ${axis}: [...] } } }).`,
 			);
 		}
 	}
@@ -105,29 +112,56 @@ export type FormEngineRegistrationLists = {
 	actions?: readonly ActionRegistrationConstraint[];
 	catalog?: SchemaMetadataCatalog;
 	defaultWizardRecipe?: string;
-} & ({ grid?: GridThemeOptions; compiledGrid?: never } | { grid?: never; compiledGrid: CompiledGrid }) &
-	(
-		| { appearance?: AppearanceOptions; compiledAppearance?: never }
-		| { appearance?: never; compiledAppearance: CompiledAppearance }
-	);
+	layout?: LayoutInput;
+};
+
+/**
+ * The layout theme an engine runs on: the library default, a theme compiled elsewhere, or one
+ * compiled from inline options.
+ *
+ * @remarks
+ * Forms passes its renderer attributes as `reservedNames`, so an axis cannot overwrite a
+ * `data-se-*` attribute a renderer writes. A theme compiled elsewhere skipped that check, so it is
+ * re-checked here.
+ *
+ * A value that is not a compiled theme must be `{ grid, appearance }` options and nothing else. A
+ * spread copy or a structured clone of a theme has `id`, `axes` and `css` keys and lost its brand;
+ * compiling it as options would drop its appearance axes and change its id without a word, so it
+ * throws instead.
+ */
+function resolveLayout(layout: LayoutInput | undefined): LayoutTheme {
+	if (layout === undefined) return getDefaultLayoutTheme();
+	if (isLayoutTheme(layout)) {
+		assertAxesNotReserved(layout, RENDERER_DATA_ATTRIBUTES);
+		return layout;
+	}
+	for (const key of Object.keys(layout)) {
+		if (key !== 'grid' && key !== 'appearance') {
+			throw new Error(
+				`Invalid layout option: unknown key '${key}'. layout takes a theme from createLayoutTheme or { grid, appearance } options. If this is a copy of a compiled theme, pass the compiled theme itself, not a copy.`,
+			);
+		}
+	}
+	return createLayoutTheme(layout, { reservedNames: RENDERER_DATA_ATTRIBUTES });
+}
 
 /**
  * Single construction path for {@link createFormEngine} and {@link FormEngine.extend}.
  * Later duplicate `$type` values overwrite earlier ones (last-wins).
  */
 export function buildFormEngine(lists: FormEngineRegistrationLists) {
-	const compiledAppearance = lists.compiledAppearance ?? compileAppearance(lists.appearance);
+	const layout = resolveLayout(lists.layout);
 	const elementRegistry = createRegistry('Element', (lists.elements ?? []) as readonly AnyElementRegistration[]);
 	const recipeRegistry = createRegistry('Recipe', (lists.recipes ?? []) as readonly AnyRecipeRegistration[]);
 	const actionRegistry = createRegistry('Action', (lists.actions ?? []) as readonly AnyActionRegistration[]);
 
 	for (const element of elementRegistry.all()) {
-		assertDeclaredAxes(`Element '${element.$type}'`, element.appearanceAxes, compiledAppearance);
+		assertDeclaredAxes(`Element '${element.$type}'`, element.appearanceAxes, layout);
 	}
 	for (const recipe of recipeRegistry.all()) {
 		assertRecipeKindSlots(recipe);
 		for (const [slot, axes] of Object.entries(recipe.appearanceAxes ?? {})) {
-			assertDeclaredAxes(`Recipe '${recipe.$type}' slot '${slot}'`, axes, compiledAppearance);
+			assertDeclaredAxes(`Recipe '${recipe.$type}' slot '${slot}'`, axes, layout);
 		}
 	}
 
@@ -171,16 +205,12 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 	const actionConfigValidators = createActionConfigValidatorMap(actionRegistry.all());
 	const schemaArtifacts = createFormEngineSchemaArtifacts(metadataCatalog, formConfigSchema, actionConfigValidators);
 
-	const compiledGrid =
-		lists.compiledGrid ?? (lists.grid === undefined ? getDefaultCompiledGrid() : compileGridTheme(lists.grid));
-
 	return new FormEngine({
 		elements: elementRegistry,
 		recipes: recipeRegistry,
 		actions: actionRegistry,
 		schemaArtifacts,
-		compiledGrid,
-		compiledAppearance,
+		layout,
 		validationRegistry: validationRegistryInstance,
 		defaultWizardRecipe,
 	});

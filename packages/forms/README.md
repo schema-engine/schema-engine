@@ -130,20 +130,53 @@ read as camelCase `CSSProperties` by React and as a plain record by Radiant.
 { id: 'checkout', className: 'checkout-step', style: { '--accent': '#f60' }, title: 'Checkout', elements: [] }
 ```
 
+### Layout theme
+
+Grid and appearance come from [`@schema-engine/layout`](../layout/README.md), which does not depend on
+forms. The engine takes them together as the `layout` option, either inline or as a theme compiled
+once with `createLayoutTheme` and shared between engines (the same `data-se-theme` and one stylesheet):
+
+```ts
+import { createLayoutTheme } from '@schema-engine/layout';
+
+const engine = createFormEngine({
+	layout: { grid: { minColumnWidth: '12rem' }, appearance: { tone: ['neutral', 'brand'] } },
+});
+
+const theme = createLayoutTheme({ appearance: { tone: ['neutral', 'brand'] } });
+const checkout = createFormEngine({ elements, layout: theme });
+const profile = createFormEngine({ elements, layout: theme });
+```
+
+Inline options are compiled with the renderer's `data-se-*` attribute names reserved
+(`RENDERER_DATA_ATTRIBUTES`), so an axis cannot reuse one; a theme you compile yourself is re-checked
+against that list when the engine is built. `engine.getLayout()` returns the frozen theme: `id`
+(the `data-se-theme` value), `grid`, `axes` and the stylesheet `css`. `engine.extend()` inherits it,
+and `layout` is not an extend option.
+
+Moving to the layout theme removed these, with no aliases:
+
+- The `grid` and `appearance` engine options, and `getCompiledGrid`, `getGridTheme` and `getAppearance` (use `layout` and `getLayout()`).
+- The `@schema-engine/forms/lib/grid-styles` and `lib/appearance` subpaths, and the appearance exports of the package root. The grid and appearance schemas, types and helpers (`ElementGridConfig`, `GridLayoutConfig`, `getGridVariables`, `getGridItemVariables`, `getAppearanceAttributes` and the rest) come from `@schema-engine/layout`; the emitters were `getFormGridVariables` and `getFieldGridVariables`.
+- `data-se-grid-theme` and `data-se-appearance-theme`, replaced by `data-se-theme`; and the React `useGridThemeId`, now `useLayoutThemeId`. A host built by hand adds `se-grid-item` and `data-se-theme` (`useFieldHost` does).
+- The `theme` and `theme-css` attribute names are now reserved, so an appearance axis cannot be called `theme`.
+
 ### Appearance
 
-The engine also owns the appearance vocabulary through the optional `appearance`
-option. `size` (`compact | default | comfortable`) and `surface`
+The layout theme owns the appearance vocabulary through its optional `appearance`
+half. `size` (`compact | default | comfortable`) and `surface`
 (`flat | outlined | elevated`) are built in; a host adds an axis, or lists more
 values on a built-in one, and may map each value to the CSS custom properties it
 sets (the built-in `size` paddings fall back to the host theme's `--space-block*` variables, so `size: default` looks like no pick in a themed app) (tokens a host sets for a built-in value are merged over the built-in ones, per token):
 
 ```ts
 const engine = createFormEngine({
-	appearance: {
-		tone: ['neutral', 'brand'],
-		size: ['dense'],
-		surface: { elevated: { '--se-surface-shadow': '0 2px 4px rgb(0 0 0 / 0.2)' } },
+	layout: {
+		appearance: {
+			tone: ['neutral', 'brand'],
+			size: ['dense'],
+			surface: { elevated: { '--se-surface-shadow': '0 2px 4px rgb(0 0 0 / 0.2)' } },
+		},
 	},
 });
 ```
@@ -167,17 +200,17 @@ a slot that declares axes must accept an `appearance` key in its schema. An axis
 declared fails validation, and the engine build rejects a registration that declares an axis the vocabulary lacks (a typo such as `'sise'`), naming the registration and the axis. `AppearanceAxisList` is the shared type of those declarations. `validateForm` rejects an unknown axis, an undeclared axis for that
 owner and an unknown value, naming the path and the allowed values, and writes the resolved
 appearance (for a field: form, then step, then containing elements, then the field itself; for a view slot: the form, then the slot itself; each keeping
-only the axes it supports) into the normalized config. `engine.getAppearance()` returns the frozen
-vocabulary (`axes`, the token stylesheet `css`, and the `id` that scopes it); `engine.extend()`
-inherits it, and `appearance` is not an extend option. Renderers emit `data-se-<axis>` attributes
-and the token stylesheet; token rules sit inside `:where()`, so an author's `className` wins. The
+only the axes it supports) into the normalized config. The inheritance walk is `resolveAppearance`
+(`lib/resolve-appearance.ts`); checking, merging and attribute helpers are in `@schema-engine/layout`.
+Renderers emit `data-se-<axis>` attributes and the token rules, which are part of the layout
+theme's one stylesheet and sit inside `:where()`, so an author's `className` wins. The
 built-in card shell no longer takes `maxWidth`, `padding` or `shadowSize`: they are `size` and
 `surface` values. The wizard `actions` slot's former `appearance` key is now `variant`.
 
 ### Grid theme
 
-The engine also owns the grid layout vocabulary through the optional `grid`
-option: breakpoint thresholds (`sm`…`2xl`, CSS lengths), gap token definitions
+The layout theme also owns the grid vocabulary through the optional `grid`
+half of `layout`: breakpoint thresholds (`sm`…`2xl`, CSS lengths), gap token definitions
 (`none | compact | default | loose | wide`), and the default minimum column
 width for `columns: 'auto'` grids. Gap tokens can change by breakpoint, so one
 token carries a whole responsive rhythm and a form that selects it inherits that
@@ -185,11 +218,13 @@ rhythm without any `responsive` entry of its own:
 
 ```ts
 createFormEngine({
-	grid: {
-		gap: { default: '1rem', loose: '1.5rem' },
-		responsive: {
-			md: { default: '1.25rem' },
-			lg: { default: '1.5rem', loose: '2rem' },
+	layout: {
+		grid: {
+			gap: { default: '1rem', loose: '1.5rem' },
+			responsive: {
+				md: { default: '1.25rem' },
+				lg: { default: '1.5rem', loose: '2rem' },
+			},
 		},
 	},
 });
@@ -201,7 +236,7 @@ from the next narrower one. Base values stay in `gap`. Tokens are axis-agnostic 
 a form chooses which token each axis uses through `gapX`/`gapY`, so a theme never
 declares an axis. Overriding the public token (`--se-grid-gap-default`) from a
 host replaces it at every width, ramp included — host declarations beat the
-engine's by design.
+theme's by design.
 
 An individual element can set its own rhythm with `grid.marginBlockStart` and
 `grid.marginBlockEnd`, which accept the same gap tokens and are responsive per
@@ -244,27 +279,27 @@ validation reports the template areas as unclaimed. `stepGrid(config, step)` is
 the one place the step-replaces-form rule lives; renderers and validation both
 use it.
 
-This applies to any element rendering a `.se-form-field` host with the engine's
-theme id — not only inputs. Renderers expose a helper for elements that build
+This applies to any element rendering a `.se-grid-item` host (`se-form-field se-grid-item`) with the
+engine's theme id — not only inputs. Renderers expose a helper for elements that build
 their own container (`useFieldHost` in React, `mergeFieldGridHost` in Radiant). A custom container whose children use `width` or `offset` must lay them out on its own grid with `useChildGridProps` (React) or `mergeChildrenGridHost` (Radiant). Every engine exposes a frozen
-`engine.getCompiledGrid()` (theme plus stylesheet), with `getGridTheme()` as a
-convenience getter, computed once at construction (library defaults apply when
-`grid` is omitted). Configured breakpoint
+`engine.getLayout()`, computed once at construction (library defaults apply when
+`layout` is omitted). Configured breakpoint
 thresholds must preserve named cascade order (`sm ≤ md ≤ lg ≤ xl ≤ 2xl`);
 `rem`/`em` lengths compare at a 16px root so mixed units cannot invert the
 sequence. Forms consume those tokens in their `grid` configuration (`columns`,
 `gap`/`gapX`/`gapY`, `responsive` entries, per-field `grid` placement).
-Renderers emit the scoped stylesheet (`data-se-grid-theme`) inline during
+Renderers emit the scoped stylesheet (`data-se-theme`) inline during
 render, so responsive layout is CSS-driven — no runtime observers, and SSR
 output is styled before hydration. The stylesheet owns the neutral defaults,
 the breakpoint cascade, and the resets that keep nested grids isolated; inline
 styles carry only the values an author actually wrote, so an unconfigured field
-emits none at all. Gap tokens stay host-overridable: the engine declares its
+emits none at all. The stylesheet selects only `.se-grid`, `.se-grid-item` and
+`[data-se-theme]`; renderers add those beside `se-form-grid` and `se-form-field`, which stay as
+styling hooks. Gap tokens stay host-overridable: the theme declares its
 defaults privately and reads `var(--se-grid-gap-<token>, …)`, so a `:root`
 override still wins. A field host that needs its own layout sets
 `--se-field-display-mode` rather than `display`, because the generated field
-rule outranks a bare class. `engine.extend()` inherits the source engine's grid theme;
-`grid` is not an extend option.
+rule outranks a bare class.
 
 Single-step forms may omit `view` to render fields directly. Multi-step forms
 that omit `view` get `{ $type: 'bare-controls' }` written by `validateForm`;

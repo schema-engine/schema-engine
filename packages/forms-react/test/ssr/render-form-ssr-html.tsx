@@ -1,7 +1,9 @@
 import { renderToStaticMarkup } from 'react-dom/server';
+import { rhfAdapter } from '@/adapters/react-hook-form';
 import { FormEngineProvider } from '@/components/form-engine-provider';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import {
+	type createSsrAcceptanceEngine,
 	getSsrAcceptanceFixture,
 	getSsrAreasFixture,
 	getSsrNestedWidthsFixture,
@@ -73,4 +75,22 @@ export function renderSsrSteppedAcceptanceHtml(): string {
 
 export function getSsrAcceptanceEngine() {
 	return getSsrAcceptanceFixture().engine;
+}
+
+const THEMED_FORM = {
+	id: 'themed',
+	steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'ssr-input', id: 'a', name: 'a', label: 'A' }] }],
+};
+
+/** One page holding a form per engine, to see how engines on shared or separate layout themes render together. */
+export function renderSsrFormsOnOnePage(engines: Array<ReturnType<typeof createSsrAcceptanceEngine>>): string {
+	return renderToStaticMarkup(
+		<>
+			{engines.map((engine, index) => (
+				<FormEngineProvider key={index} engine={engine} adapter={rhfAdapter}>
+					<FormRenderer engine={engine} adapter={rhfAdapter} config={engine.validateForm(THEMED_FORM)} />
+				</FormEngineProvider>
+			))}
+		</>,
+	);
 }

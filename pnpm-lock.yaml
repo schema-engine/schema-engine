@@ -100,6 +100,9 @@ importers:
       '@schema-engine/forms-react':
         specifier: workspace:*
         version: link:../../packages/forms-react
+      '@schema-engine/layout':
+        specifier: workspace:*
+        version: link:../../packages/layout
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -273,6 +276,9 @@ importers:
       '@schema-engine/actions':
         specifier: workspace:^
         version: link:../actions
+      '@schema-engine/layout':
+        specifier: workspace:^
+        version: link:../layout
       '@schema-engine/registry':
         specifier: workspace:^
         version: link:../registry
@@ -359,6 +365,9 @@ importers:
       '@schema-engine/forms':
         specifier: workspace:*
         version: link:../forms
+      '@schema-engine/layout':
+        specifier: workspace:*
+        version: link:../layout
       '@schema-engine/scripts':
         specifier: workspace:*
         version: link:../../scripts
@@ -432,6 +441,9 @@ importers:
       '@schema-engine/forms':
         specifier: workspace:*
         version: link:../forms
+      '@schema-engine/layout':
+        specifier: workspace:*
+        version: link:../layout
       '@schema-engine/scripts':
         specifier: workspace:*
         version: link:../../scripts
@@ -571,6 +583,28 @@ importers:
         specifier: ^4.0.17
         version: 4.6.5
 
+  packages/layout:
+    dependencies:
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+    devDependencies:
+      '@schema-engine/scripts':
+        specifier: workspace:*
+        version: link:../../scripts
+      esbuild:
+        specifier: ^0.27.0
+        version: 0.27.7
+      tsc-alias:
+        specifier: ^1.8.16
+        version: 1.9.5
+      vitest:
+        specifier: ^4.0.13
+        version: 4.1.11(@types/node@24.13.6)(@vitest/browser-playwright@4.1.11)(msw@2.15.0(@types/node@24.13.6)(typescript@5.9.3))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
+      zod:
+        specifier: ^4.0.17
+        version: 4.6.5
+
   packages/registry:
     dependencies:
       '@ecopages/logger':
@@ -607,6 +641,9 @@ importers:
       '@schema-engine/forms-react':
         specifier: workspace:*
         version: link:../packages/forms-react
+      '@schema-engine/layout':
+        specifier: workspace:*
+        version: link:../packages/layout
 
   scripts:
     devDependencies:

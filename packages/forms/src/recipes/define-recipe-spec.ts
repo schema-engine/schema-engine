@@ -2,7 +2,7 @@ import * as z from 'zod/mini';
 import { assertRecipeKindSlots } from './assert-recipe-kind';
 import type { RecipeKind, RecipeMetadata, RecipeSlot, RecipeSlotDefaults, RecipeSpec } from './types';
 import { RECIPE_SLOT_ORDER } from './types';
-import type { SlotAppearanceAxes } from '@/lib/appearance';
+import type { SlotAppearanceAxes } from '@schema-engine/layout';
 
 export type RecipeSlotSchemas = Partial<Record<RecipeSlot, z.ZodMiniType>>;
 

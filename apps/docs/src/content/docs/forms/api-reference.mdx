@@ -10,32 +10,39 @@ order: 7
 ## createFormEngine
 
 ```ts
-interface CreateFormEngineOptions<TElements, TRecipes, TActions> {
+interface CreateFormEngineOptions<TElements, TRecipes, TActions, TLayout> {
 	elements?: TElements;
 	recipes?: TRecipes;
 	actions?: TActions;
 	/** Extra schema metadata entries; copied, with every registration's entry written over it. */
 	catalog?: SchemaMetadataCatalog;
-	/** Breakpoint thresholds, gap tokens, and default min column width. */
-	grid?: GridThemeOptions;
-	/** Appearance axes and their values, over the built-in `size` and `surface`. */
-	appearance?: AppearanceOptions;
+	/**
+	 * The layout theme: a compiled theme from `createLayoutTheme`, or inline
+	 * `{ grid, appearance }` options. `grid` holds breakpoint thresholds, gap tokens and the
+	 * default min column width; `appearance` holds the axes and their values, over the
+	 * built-in `size` and `surface`.
+	 */
+	layout?: TLayout;
 }
 
 function createFormEngine<
 	const TElements extends readonly ElementRegistrationConstraint[] = readonly [],
 	const TRecipes extends readonly RecipeRegistrationConstraint[] = readonly [],
 	const TActions extends readonly ActionRegistrationConstraint[] = readonly [],
+	const TLayout extends LayoutInput = Record<never, never>,
 >(
-	options?: CreateFormEngineOptions<TElements, TRecipes, TActions>,
-): FormEngineFromOptions<TElements, TRecipes, TActions>;
+	options?: CreateFormEngineOptions<TElements, TRecipes, TActions, TLayout>,
+): FormEngineFromOptions<TElements, TRecipes, TActions, TLayout>;
 ```
 
 `FormEngineFromOptions` is the `FormEngine` typed from the merged registration
-lists. `grid` is accepted by `createFormEngine` and by
-`createRadiantFormEngine`, which forwards it. `appearance` follows the same rule.
-`engine.extend()` takes neither option; extended engines inherit the source
-engine's grid theme and appearance vocabulary.
+lists. `layout` is accepted by `createFormEngine` and by
+`createRadiantFormEngine`, which forwards it. Pass one theme compiled with
+`createLayoutTheme` (from `@schema-engine/layout`) to several engines and they share its
+`data-se-theme` and one stylesheet; inline options compile a theme of the engine's own.
+`engine.extend()` does not take `layout`; extended engines inherit the source
+engine's layout theme, which `engine.getLayout()` returns (`id`, `grid`, `axes`, `css`).
+The `grid` and `appearance` engine options no longer exist.
 
 Each array is structurally constrained: `$type`, a Standard Schema
 (`~standard.validate`), and the registration's render/execute function.

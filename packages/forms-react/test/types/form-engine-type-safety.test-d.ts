@@ -111,7 +111,7 @@ const invalidEngineContext: FormEngineContextStorage = {
 };
 type PartialEngineRuntime = Pick<
 	FormEngineContextValue['engine'],
-	'getElement' | 'getRecipe' | 'getValidationRegistry' | 'getGridTheme'
+	'getElement' | 'getRecipe' | 'getValidationRegistry' | 'getLayout'
 >;
 declare const partialEngine: PartialEngineRuntime;
 const incompleteEngineContext: FormEngineContextStorage = {

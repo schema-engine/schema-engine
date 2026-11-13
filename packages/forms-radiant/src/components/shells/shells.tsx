@@ -2,7 +2,7 @@ import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import type { FormMeta } from '@/lib/instance-view';
-import { getAppearanceAttributes } from '@schema-engine/forms/lib/appearance';
+import { getAppearanceAttributes } from '@schema-engine/layout';
 import { getSlotConfig } from '@schema-engine/forms/recipes';
 import {
 	CardShellConfigSchema,

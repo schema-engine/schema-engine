@@ -1,4 +1,9 @@
-import { getAppearanceAttributes, type AppearanceSelection } from '@schema-engine/forms/lib/appearance';
+import {
+	GRID_ITEM_CLASS,
+	getAppearanceAttributes,
+	type AppearanceSelection,
+	type ElementGridConfig,
+} from '@schema-engine/layout';
 import { RuiFieldElement, type RuiFieldProps } from '@ecopages/radiant-ui/field';
 import type { FieldRules } from '@ecopages/radiant-ui/form';
 import type { JsxCustomElementAttributes } from '@ecopages/jsx';
@@ -6,7 +11,6 @@ import { readHydratedRules, rebuildHydratedRules } from '@/components/internals/
 import { formEngineContext } from '@/components/provider';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
-import type { ElementGridConfig } from '@schema-engine/forms/schemas';
 import { resolveElementRules, toFieldRules, type FieldRulesSource } from '@/lib/field-rules';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { customElement, onUpdated } from '@ecopages/radiant';
@@ -190,8 +194,8 @@ export function FormField({
 	return (
 		<FormFieldElement
 			{...props}
-			classes={['se-form-field', className]}
-			data-se-grid-theme={fieldHost.themeId}
+			classes={['se-form-field', GRID_ITEM_CLASS, className]}
+			data-se-theme={fieldHost.themeId}
 			style={fieldHost.style}
 			{...getAppearanceAttributes(appearance)}
 			rules={withCustomValidate(toFieldRules({ rules: validationRules, name: validation?.name }), validate)}

@@ -1,15 +1,15 @@
 import type React from 'react';
-import { getAppearanceAttributes } from '@schema-engine/forms/lib/appearance';
+import { getAppearanceAttributes } from '@schema-engine/layout';
 import { getSlotConfig } from '@schema-engine/forms/recipes';
 import { CardShellConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import type { FormShellProps } from '@schema-engine/forms-react/primitives';
 
 /**
- * Card geometry read from the engine's appearance tokens.
+ * Card geometry read from the layout theme's appearance tokens.
  *
  * @remarks
  * The card's `appearance` (`size`, `surface`) sets `--se-size-*` and `--se-surface-*` through the
- * engine's token rules; the fallbacks are the look of an unstyled card, so a form that picks nothing renders as before.
+ * layout theme's token rules; the fallbacks are the look of an unstyled card, so a form that picks nothing renders as before.
  */
 const cardStyle: React.CSSProperties = {
 	maxWidth: 'var(--se-size-max-width, 28rem)',

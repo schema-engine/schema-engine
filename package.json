@@ -35,6 +35,7 @@
 		"build:lib:forms": "turbo run @schema-engine/forms#build:lib",
 		"build:lib:forms-react": "turbo run @schema-engine/forms-react#build:lib",
 		"build:lib:forms-radiant": "turbo run @schema-engine/forms-radiant#build:lib",
+		"build:lib:layout": "turbo run @schema-engine/layout#build:lib",
 		"build:lib:registry": "turbo run @schema-engine/registry#build:lib",
 		"build:react-storybook": "NODE_OPTIONS='--max-old-space-size=4096' turbo run @schema-engine/forms-react#build-storybook",
 		"build:radiant-storybook": "NODE_OPTIONS='--max-old-space-size=4096' turbo run @schema-engine/forms-radiant#build-storybook",

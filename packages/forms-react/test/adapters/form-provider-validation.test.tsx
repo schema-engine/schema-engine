@@ -1,4 +1,4 @@
-import { getDefaultCompiledAppearance } from '@schema-engine/forms/lib/appearance';
+import { getDefaultLayoutTheme } from '@schema-engine/layout';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { FormProvider } from '../../src/adapters/rhf/form-provider';
@@ -10,7 +10,7 @@ vi.mock('@/hooks/use-form-context', () => ({
 	useFormEngine: () => ({
 		engine: {
 			getValidationRegistry: () => createDefaultValidationRegistry(),
-			getAppearance: () => getDefaultCompiledAppearance(),
+			getLayout: () => getDefaultLayoutTheme(),
 		},
 	}),
 }));

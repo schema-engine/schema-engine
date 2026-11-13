@@ -1,6 +1,6 @@
 /*
- * Appearance axes. The engine declares the tokens a value stands for (--se-size-*, --se-surface-*)
- * inside :where() rules scoped by data-se-appearance-theme; these rules only read them, also inside
+ * Appearance axes. The layout theme declares the tokens a value stands for (--se-size-*, --se-surface-*)
+ * inside :where() rules scoped by data-se-theme; these rules only read them, also inside
  * :where(), so an author's class on the same element always wins.
  */
 :where(.se-form-field[data-se-size]) {

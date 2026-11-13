@@ -233,3 +233,34 @@ it starts the field at line 2. Use `column: 'span 2'` to span two columns, or
 `column: '4 / 10'` for explicit lines. A raw `column` field may sit next to
 width fields, but it counts tracks of the 12 the widths use there, so
 `column: 'span 2'` is two of twelve, a sixth of the row.
+
+## The layout theme
+
+The grid vocabulary (breakpoint thresholds, gap tokens, the default minimum column
+width) and the appearance vocabulary (the `size` and `surface` axes, plus any you
+add) belong to one **layout theme**, compiled by `@schema-engine/layout`. Pass it to
+the engine as `layout`, inline or compiled once and shared:
+
+```ts
+import { createFormEngine } from '@schema-engine/forms';
+import { createLayoutTheme } from '@schema-engine/layout';
+
+// Inline: the engine compiles a theme of its own.
+const engine = createFormEngine({
+	elements,
+	layout: {
+		grid: { breakpoints: { md: '50rem' }, gap: { default: '1rem' } },
+		appearance: { tone: ['neutral', 'brand'] },
+	},
+});
+
+// Shared: both engines carry the same `data-se-theme` and one stylesheet.
+const theme = createLayoutTheme({ appearance: { tone: ['neutral', 'brand'] } });
+const checkout = createFormEngine({ elements, layout: theme });
+const profile = createFormEngine({ elements, layout: theme });
+```
+
+A form element, its grids and its items carry one `data-se-theme` attribute, and the
+theme's stylesheet is emitted once. The stylesheet selects only `.se-grid`,
+`.se-grid-item` and `[data-se-theme]`; the renderers add those classes beside
+`se-form-grid` and `se-form-field`, which stay available for your own styles.

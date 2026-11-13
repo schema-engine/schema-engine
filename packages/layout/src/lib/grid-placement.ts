@@ -1,4 +1,4 @@
-import type { GridBreakpointConfig, GridOffsetName, GridWidthName } from '@/schemas/base-field';
+import type { GridBreakpointConfig, GridOffsetName, GridWidthName } from '@/schemas/grid';
 
 /**
  * Reads of an element's grid placement shared by the stylesheet emitter and
@@ -11,7 +11,7 @@ import type { GridBreakpointConfig, GridOffsetName, GridWidthName } from '@/sche
 
 export const BREAKPOINT_ORDER = ['sm', 'md', 'lg', 'xl', '2xl'] as const;
 
-/** Named breakpoint tokens. Thresholds are configured on the engine. */
+/** Named breakpoint tokens. Thresholds are configured on the layout theme's `grid` option. */
 export type GridBreakpointToken = (typeof BREAKPOINT_ORDER)[number];
 
 export type CascadeSlot = 'default' | GridBreakpointToken;
@@ -19,7 +19,7 @@ export type CascadeSlot = 'default' | GridBreakpointToken;
 /** Every slot of the cascade, narrowest first. */
 export const CASCADE_SLOTS: readonly CascadeSlot[] = ['default', ...BREAKPOINT_ORDER];
 
-/** Tracks a grid has once its fields use named widths. */
+/** Tracks a grid has once its items use named widths. */
 export const WIDTH_TRACKS = 12;
 
 export const WIDTH_SPANS: Readonly<Record<GridWidthName, number>> = {
@@ -32,7 +32,7 @@ export const WIDTH_SPANS: Readonly<Record<GridWidthName, number>> = {
 };
 
 /**
- * Form grid keys that define the template, and so cannot meet named widths.
+ * Grid keys that define the template, and so cannot meet named widths.
  *
  * @remarks
  * Typed against the breakpoint schema so a renamed key fails to compile here.
@@ -42,7 +42,7 @@ export const GRID_TEMPLATE_KEYS = [
 	'minColumnWidth',
 ] as const satisfies readonly (keyof GridBreakpointConfig)[];
 
-/** The width and offset a field has authored so far, carried through the cascade. */
+/** The width and offset an item has authored so far, carried through the cascade. */
 export interface NamedPlacement {
 	width?: GridWidthName;
 	offset?: GridOffsetName;

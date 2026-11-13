@@ -57,6 +57,7 @@
 		"@schema-engine/forms": "workspace:*",
 		"@schema-engine/forms-radiant": "workspace:*",
 		"@schema-engine/forms-react": "workspace:*",
+		"@schema-engine/layout": "workspace:*",
 		"clsx": "^2.1.1",
 		"cmdk": "^1.1.1",
 		"date-fns": "4.1.0",

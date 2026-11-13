@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { defineInput } from '@/types';
-import { ElementGridConfigSchema } from '@/schemas/base-field';
+import { ElementGridConfigSchema } from '@schema-engine/layout';
 
 const field = defineInput({
 	$type: 'field',

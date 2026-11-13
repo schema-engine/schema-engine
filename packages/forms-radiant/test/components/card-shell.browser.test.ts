@@ -4,7 +4,7 @@ import { createFormEngine } from '@schema-engine/forms';
 import { CardShell } from '@/components/shells';
 import '@/components/shells/card-shell.css';
 
-const appearance = createFormEngine().getAppearance();
+const layout = createFormEngine().getLayout();
 
 afterEach(() => {
 	document.body.replaceChildren();
@@ -15,15 +15,15 @@ afterEach(() => {
  * Mounts the card shell inside a form-like scope and the engine's token stylesheet.
  *
  * @remarks The shell reads `--se-size-*` and `--se-surface-*`; the engine declares them for the
- * attribute values, so the scope carries `data-se-appearance-theme` and the stylesheet is in the head.
+ * attribute values, so the scope carries `data-se-theme` and the stylesheet is in the head.
  */
 function mountCard(pick?: Record<string, string>) {
 	const style = document.createElement('style');
 	style.dataset.cardShellTest = '';
-	style.textContent = appearance.css;
+	style.textContent = layout.css;
 	document.head.append(style);
 	const scope = document.createElement('div');
-	scope.dataset.seAppearanceTheme = appearance.id;
+	scope.dataset.seTheme = layout.id;
 	scope.style.width = '1200px';
 	document.body.append(scope);
 	createRoot(scope).render(

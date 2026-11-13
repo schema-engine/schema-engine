@@ -201,16 +201,15 @@ describe('FormEngine.extend', () => {
 		expect(extended.hasElement('textarea')).toBe(true);
 	});
 
-	test('preserves the grid theme and cached stylesheet', () => {
+	test('preserves the layout theme and its stylesheet', () => {
 		const base = createFormEngine({
 			elements: [noteElement],
-			grid: { breakpoints: { md: '50rem' } },
+			layout: { grid: { breakpoints: { md: '50rem' } } },
 		});
 		const extended = base.extend({ elements: [textareaElement] });
 
-		expect(extended.getGridTheme()).toBe(base.getGridTheme());
-		expect(extended.getCompiledGrid()).toBe(base.getCompiledGrid());
-		expect(extended.getCompiledGrid()).toBe(base.getCompiledGrid());
+		expect(extended.getLayout()).toBe(base.getLayout());
+		expect(extended.getLayout().grid.breakpoints.md).toBe('50rem');
 	});
 });
 

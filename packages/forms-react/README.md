@@ -9,7 +9,7 @@ Runtime diagnostics go through `@ecopages/logger` with the `[schema-engine/forms
 ## Install
 
 ```sh
-pnpm add @schema-engine/forms @schema-engine/forms-react react react-dom zod
+pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
 ```
 
 For the React Hook Form adapter, also install its optional peer:
@@ -80,7 +80,7 @@ Use `useFormEngine`, `useFormInstanceActions`, `useControlledFormElement`, `useF
 
 `useControlledFormElement(config)` binds a field to the selected adapter and returns its value, error, handlers, control attributes, and field chrome attributes. Spread `fieldProps` onto the control, `labelProps` onto its label, and `errorProps` onto its error message when present. These attributes describe semantics and state; applications choose their styling.
 
-The runtime exposes `se-*` class hooks and grid variables. Consumers do not need to scan the package's built files with Tailwind; applications own their styles, and registry components can bring their own UI library and styling dependencies. Use `useFieldHost` for the grid host of custom elements. A custom container whose children use `width` or `offset` spreads `useChildGridProps(elements)` on the wrapper of its `FormElements`, so the children lay out on the container's own grid. Fields, steps and the form element carry their resolved `appearance` as `data-se-<axis>` attributes (`FieldGroupRoot` and `useFieldHost` emit it, and the field's `className`, on the field host; `useFieldAppearanceAttributes` and `useFieldClassName` do it for a host built by hand), and `FormRenderer` emits the engine's appearance token stylesheet next to the grid theme. A step renders as `<div class="se-form-step" data-se-step="<id>">` carrying its authored `className` and custom-property `style`. Each step's grid is its own `grid` when it has one, else the form's.
+The runtime exposes `se-*` class hooks and grid variables. Consumers do not need to scan the package's built files with Tailwind; applications own their styles, and registry components can bring their own UI library and styling dependencies. The layout stylesheet selects only `.se-grid`, `.se-grid-item` and `[data-se-theme]`; the hooks add `se-grid` and `se-grid-item` beside `se-form-grid` and `se-form-field`. Use `useFieldHost` for the grid host of custom elements (`useLayoutThemeId` gives the `data-se-theme` value for a host built by hand). A custom container whose children use `width` or `offset` spreads `useChildGridProps(elements)` on the wrapper of its `FormElements`, so the children lay out on the container's own grid. Fields, steps and the form element carry their resolved `appearance` as `data-se-<axis>` attributes (`FieldGroupRoot` and `useFieldHost` emit it, and the field's `className`, on the field host; `useFieldAppearanceAttributes` and `useFieldClassName` do it for a host built by hand), and `FormRenderer` emits the engine's layout theme stylesheet (grid and appearance token rules) once, and the form element carries `data-se-theme`. A step renders as `<div class="se-form-step" data-se-step="<id>">` carrying its authored `className` and custom-property `style`. Each step's grid is its own `grid` when it has one, else the form's.
 
 ## Engine-scoped config types
 

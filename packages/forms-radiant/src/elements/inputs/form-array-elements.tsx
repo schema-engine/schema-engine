@@ -20,7 +20,7 @@ import { adoptFieldArrayIds } from '@/adapters/radiant/controller/field-array';
 import { getValueAtPath, setValueAtPath } from '@schema-engine/forms/lib/path-values';
 import { formContext, type FormContextValue } from '@ecopages/radiant-ui/form';
 import { mergeChildrenGridHost, mergeFieldGridHost } from '@/hooks/grid-styles';
-import { getAppearanceAttributes } from '@schema-engine/forms/lib/appearance';
+import { GRID_CLASS, GRID_ITEM_CLASS, getAppearanceAttributes } from '@schema-engine/layout';
 import { readValue } from '@/adapters/radiant/controller/values';
 
 function TrashIcon() {
@@ -139,8 +139,8 @@ function renderArrayContent({ config, rows, initialValues, renderValues, fieldEr
 					return (
 						<div class="se-form-array__item" key={id} data-se-row-id={id}>
 							<div
-								class="se-form-array__fields se-form-grid"
-								data-se-grid-theme={childrenHost.themeId}
+								class={`se-form-array__fields se-form-grid ${GRID_CLASS}`}
+								data-se-theme={childrenHost.themeId}
 								style={childrenHost.style}
 							>
 								<FormElements
@@ -468,7 +468,7 @@ export class SeFormArray extends RadiantElement {
 export function FormArrayElements(config: ArrayElementsProps) {
 	const { ssrInitialRows: _ssrInitialRows, initialFormValues, ...fieldConfig } = config;
 	const engine = resolveFormEngine();
-	const fieldHost = mergeFieldGridHost(fieldConfig.grid, fieldConfig.style, engine?.getGridTheme().id);
+	const fieldHost = mergeFieldGridHost(fieldConfig.grid, fieldConfig.style, engine?.getLayout().id);
 	const initialValues = structuredClone(initialFormValues ?? {});
 	const initialRows = createInitialArrayValue({ ...fieldConfig, initialFormValues }, initialValues);
 	if (initialRows) setValueAtPath(initialValues, fieldConfig.name, initialRows);
@@ -495,9 +495,9 @@ export function FormArrayElements(config: ArrayElementsProps) {
 
 	return (
 		<fieldset
-			classes={['se-form-field', 'se-form-array-field', fieldConfig.className]}
+			classes={['se-form-field', GRID_ITEM_CLASS, 'se-form-array-field', fieldConfig.className]}
 			aria-label={fieldConfig.label ? undefined : fieldConfig.name}
-			data-se-grid-theme={fieldHost.themeId}
+			data-se-theme={fieldHost.themeId}
 			style={fieldHost.style}
 			{...getAppearanceAttributes(fieldConfig.appearance)}
 		>

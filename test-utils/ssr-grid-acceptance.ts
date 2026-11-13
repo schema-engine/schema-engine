@@ -8,8 +8,9 @@
  */
 import { expect } from 'vitest';
 
-export interface CompiledGridLike {
-	readonly theme: { readonly id: string };
+/** The part of a compiled layout theme the markup assertions read. */
+export interface LayoutThemeLike {
+	readonly id: string;
 	readonly css: string;
 }
 
@@ -18,8 +19,8 @@ export interface CompiledGridLike {
  * renderer emitted none (React drops an empty style object entirely).
  */
 function fieldStyle(html: string, label: string): string {
-	const host = new RegExp(`<div class="se-form-field"[^>]*?>\\s*<label[^>]*>${label}<`).exec(html);
-	if (!host) throw new Error(`No .se-form-field host found for ${label}`);
+	const host = new RegExp(`<div class="[^"]*\\bse-grid-item\\b[^"]*"[^>]*?>\\s*<label[^>]*>${label}<`).exec(html);
+	if (!host) throw new Error(`No .se-grid-item host found for ${label}`);
 	return /style="([^"]*)"/.exec(host[0])?.[1] ?? '';
 }
 
@@ -32,12 +33,13 @@ function fieldStyle(html: string, label: string): string {
  * The fixture authors `md` only, so `lg` and wider must be absent from the
  * inline style and resolve through the stylesheet's fallback chain instead.
  */
-export function expectSsrGridMarkup(html: string, compiled: CompiledGridLike): void {
+export function expectSsrGridMarkup(html: string, layout: LayoutThemeLike): void {
 	expect(html).not.toMatch(/<script\b/i);
-	expect(html).toContain(compiled.css.slice(0, 48));
-	expect(html).toContain(`data-se-grid-theme="${compiled.theme.id}"`);
-	expect(html).toContain('se-form-grid');
-	expect(html).toContain('se-form-field');
+	expectNeutralHooksPaired(html);
+	expect(html).toContain(layout.css.slice(0, 48));
+	expect(html).toContain(`data-se-theme="${layout.id}"`);
+	expect(html).toMatch(classToken('se-grid'));
+	expect(html).toMatch(classToken('se-grid-item'));
 
 	const tracked = fieldStyle(html, 'Tracked field');
 	expect(tracked).toMatch(/--se-field-grid-column:\s*span 1/);
@@ -47,6 +49,81 @@ export function expectSsrGridMarkup(html: string, compiled: CompiledGridLike): v
 	expect(tracked).not.toContain('-2xl');
 
 	expect(fieldStyle(html, 'Visible field')).toBe('');
+}
+
+/** A `class` attribute that lists exactly this class, not a longer class that starts with it. */
+function classToken(name: string): RegExp {
+	return new RegExp(`class="(?:[^"]*\\s)?${name}(?:\\s[^"]*)?"`);
+}
+
+/**
+ * Asserts every element a renderer marks as a form grid or form field also carries the neutral
+ * layout class the stylesheet keys on.
+ *
+ * @remarks
+ * The layout rules select only `.se-grid` and `.se-grid-item`, so a host that keeps the form class
+ * and loses the neutral one renders unstyled while every other assertion still finds its siblings.
+ */
+export function expectNeutralHooksPaired(html: string): void {
+	const classes = Array.from(html.matchAll(/class="([^"]*)"/g), (match) => (match[1] ?? '').split(/\s+/));
+	const unpaired = (form: string, neutral: string) =>
+		classes.filter((tokens) => tokens.includes(form) && !tokens.includes(neutral)).length;
+	expect(unpaired('se-form-grid', 'se-grid')).toBe(0);
+	expect(unpaired('se-form-field', 'se-grid-item')).toBe(0);
+	expect(classes.some((tokens) => tokens.includes('se-form-field'))).toBe(true);
+}
+
+/** Every `data-se-theme` value in a document, in order, including repeats. */
+function themeIds(html: string): string[] {
+	return Array.from(html.matchAll(/data-se-theme="([^"]*)"/g), (match) => match[1] ?? '');
+}
+
+/**
+ * The stylesheets in a document that carry the layout theme's rules.
+ *
+ * @remarks
+ * Radiant marks its `style` with `data-se-theme-css`. React hoists a stylesheet by its `href` and
+ * writes that back as `data-href`, dropping other attributes, so the harness reads that instead.
+ */
+function themeStylesheets(html: string, layout: LayoutThemeLike): string[] {
+	const marker = `(?:data-se-theme-css="${layout.id}"|data-href="se-layout-theme-${layout.id}")`;
+	return Array.from(
+		html.matchAll(new RegExp(`<style[^>]*${marker}[^>]*>([\\s\\S]*?)</style>`, 'g')),
+		(match) => match[1] ?? '',
+	);
+}
+
+/**
+ * Asserts a document of one form: a single theme id on the form, the grid and the items,
+ * and one stylesheet for it.
+ *
+ * @remarks
+ * The form element is the element with the `form` tag in React and the `rui-form` host in Radiant,
+ * so the assertion reads the first element that carries the id rather than naming either.
+ */
+export function expectOneThemeOneStylesheet(html: string, layout: LayoutThemeLike): void {
+	expect(new Set(themeIds(html))).toEqual(new Set([layout.id]));
+	expect(html).toMatch(new RegExp(`<(?:form|rui-form)[^>]*data-se-theme="${layout.id}"`));
+	expect(themeStylesheets(html, layout)).toEqual([layout.css]);
+	expect(html.match(/<style\b/g)).toHaveLength(1);
+	expect(html).not.toContain('data-se-grid-theme');
+	expect(html).not.toContain('data-se-appearance-theme');
+}
+
+/**
+ * Asserts two forms of different engines on one page that share a compiled theme: both carry the
+ * same `data-se-theme`, and the page holds only that theme's stylesheet content.
+ *
+ * @param html The page holding both forms.
+ * @param dedupes Whether the renderer hoists a shared stylesheet to a single element (React does);
+ * a renderer that inlines the stylesheet per form (Radiant) repeats identical content instead.
+ */
+export function expectSharedLayoutTheme(html: string, layout: LayoutThemeLike, dedupes: boolean): void {
+	expect(new Set(themeIds(html))).toEqual(new Set([layout.id]));
+	const sheets = themeStylesheets(html, layout);
+	expect(sheets.length).toBeGreaterThan(0);
+	expect(new Set(sheets).size).toBe(1);
+	if (dedupes) expect(sheets).toHaveLength(1);
 }
 
 async function waitForFrameLayout(): Promise<void> {
@@ -77,12 +154,12 @@ async function loadSsrFrame(html: string, width: number): Promise<{ frame: HTMLI
 }
 
 function fieldHost(doc: Document, label: RegExp): HTMLElement {
-	const matches = Array.from(doc.querySelectorAll<HTMLElement>('.se-form-field')).filter((node) =>
+	const matches = Array.from(doc.querySelectorAll<HTMLElement>('.se-grid-item')).filter((node) =>
 		label.test(node.textContent ?? ''),
 	);
 	const innermost = matches.find((node) => !matches.some((other) => other !== node && node.contains(other)));
 	if (!innermost) {
-		throw new Error(`Expected a .se-form-field host for ${label}`);
+		throw new Error(`Expected a .se-grid-item host for ${label}`);
 	}
 	return innermost;
 }
@@ -94,19 +171,20 @@ function fieldHost(doc: Document, label: RegExp): HTMLElement {
  * one-column grid that becomes two columns at `sm`, whose `tracked` field spans
  * two columns and hides from `md` up.
  */
-export async function expectSsrGridAcceptance(html: string, compiled: CompiledGridLike): Promise<void> {
+export async function expectSsrGridAcceptance(html: string, layout: LayoutThemeLike): Promise<void> {
 	expect(html).not.toMatch(/<script\b/i);
-	expect(html).toContain(compiled.css.slice(0, 48));
-	expect(html).toContain(`data-se-grid-theme="${compiled.theme.id}"`);
-	expect(html).toContain('se-form-grid');
-	expect(html).toContain('se-form-field');
+	expectNeutralHooksPaired(html);
+	expect(html).toContain(layout.css.slice(0, 48));
+	expect(html).toContain(`data-se-theme="${layout.id}"`);
+	expect(html).toMatch(classToken('se-grid'));
+	expect(html).toMatch(classToken('se-grid-item'));
 
 	const { frame, doc } = await loadSsrFrame(html, 375);
 	try {
-		const style = doc.querySelector('style[data-se-grid-theme]') ?? doc.querySelector('style');
-		expect(style?.textContent).toContain(compiled.css.slice(0, 48));
+		const style = doc.querySelector('style[data-se-theme-css]') ?? doc.querySelector('style');
+		expect(style?.textContent).toContain(layout.css.slice(0, 48));
 
-		const grid = doc.querySelector<HTMLElement>('.se-form-grid[data-se-grid-theme]');
+		const grid = doc.querySelector<HTMLElement>('.se-grid[data-se-theme]');
 		expect(grid).toBeTruthy();
 		expect(getComputedStyle(grid!).gridTemplateColumns.split(' ').length).toBe(1);
 		expect(getComputedStyle(fieldHost(doc, /tracked field/i)).display).not.toBe('none');
@@ -151,13 +229,13 @@ function near(actual: number, expected: number): void {
  *
  * @param html Server-rendered document for a form built from {@link SSR_WIDTH_FIELDS}.
  */
-export async function expectSsrWidthsAcceptance(html: string, compiled: CompiledGridLike): Promise<void> {
+export async function expectSsrWidthsAcceptance(html: string, layout: LayoutThemeLike): Promise<void> {
 	expect(html).not.toMatch(/<script\b/i);
-	expect(html).toContain(compiled.css.slice(0, 48));
+	expect(html).toContain(layout.css.slice(0, 48));
 
 	const { frame, doc } = await loadSsrFrame(html, 375);
 	try {
-		const grid = doc.querySelector<HTMLElement>('.se-form-grid[data-se-grid-theme]');
+		const grid = doc.querySelector<HTMLElement>('.se-grid[data-se-theme]');
 		expect(grid).toBeTruthy();
 		const rect = (label: RegExp) => fieldHost(doc, label).getBoundingClientRect();
 		const measure = () => {
@@ -228,18 +306,19 @@ export function ssrNestedFields(prefix: 'Nest' | 'Row') {
  */
 export async function expectSsrNestedWidthsAcceptance(
 	html: string,
-	compiled: CompiledGridLike,
+	layout: LayoutThemeLike,
 	groups: readonly ('Nest' | 'Row')[],
 ): Promise<void> {
-	expect(html).toContain(compiled.css.slice(0, 48));
+	expectNeutralHooksPaired(html);
+	expect(html).toContain(layout.css.slice(0, 48));
 
 	const { frame, doc } = await loadSsrFrame(html, 800);
 	try {
 		for (const group of groups) {
 			const first = fieldHost(doc, new RegExp(`${group} A`));
-			const grid = first.parentElement?.closest<HTMLElement>('.se-form-grid[data-se-grid-theme]');
+			const grid = first.parentElement?.closest<HTMLElement>('.se-grid[data-se-theme]');
 			expect(grid, `${group} children sit in their own grid`).toBeTruthy();
-			expect(grid).not.toBe(doc.querySelector('.se-form-grid[data-se-grid-theme]'));
+			expect(grid).not.toBe(doc.querySelector('.se-grid[data-se-theme]'));
 			expect(getComputedStyle(grid!).gridTemplateColumns.split(' ').length).toBe(12);
 
 			const bounds = grid!.getBoundingClientRect();
@@ -327,7 +406,7 @@ export function ssrSteppedForm(type: string) {
 
 /** The grid container that holds a field host. */
 function gridOf(doc: Document, label: RegExp): HTMLElement {
-	const grid = fieldHost(doc, label).parentElement?.closest<HTMLElement>('.se-form-grid[data-se-grid-theme]');
+	const grid = fieldHost(doc, label).parentElement?.closest<HTMLElement>('.se-grid[data-se-theme]');
 	if (!grid) throw new Error(`Expected ${label} to sit in a grid`);
 	return grid;
 }
@@ -339,7 +418,7 @@ function gridOf(doc: Document, label: RegExp): HTMLElement {
  * @param html Server-rendered document for {@link ssrAreasForm}.
  */
 export function expectSsrAreasMarkup(html: string): void {
-	const grid = /<div[^>]*class="[^"]*se-form-grid[^"]*"[^>]*>/.exec(html)?.[0] ?? '';
+	const grid = /<div[^>]*class="(?:[^"]*\s)?se-grid(?:\s[^"]*)?"[^>]*>/.exec(html)?.[0] ?? '';
 	const decoded = grid.replaceAll(/&quot;|&#34;|&#x22;/g, '"');
 	expect(decoded).toMatch(/--se-grid-areas:\s*"a a a b b b" "a a a c c c" "d d e e e e"/);
 	expect(decoded).toMatch(/--se-grid-template:\s*repeat\(6, minmax\(0, 1fr\)\)/);
@@ -356,9 +435,9 @@ export function expectSsrAreasMarkup(html: string): void {
  *
  * @param html Server-rendered document for {@link ssrAreasForm}.
  */
-export async function expectSsrAreasAcceptance(html: string, compiled: CompiledGridLike): Promise<void> {
+export async function expectSsrAreasAcceptance(html: string, layout: LayoutThemeLike): Promise<void> {
 	expect(html).not.toMatch(/<script\b/i);
-	expect(html).toContain(compiled.css.slice(0, 48));
+	expect(html).toContain(layout.css.slice(0, 48));
 
 	const { frame, doc } = await loadSsrFrame(html, 800);
 	try {
@@ -407,8 +486,8 @@ export async function expectSsrAreasAcceptance(html: string, compiled: CompiledG
  *
  * @param html Server-rendered document for {@link ssrSteppedForm}.
  */
-export async function expectSsrSteppedAcceptance(html: string, compiled: CompiledGridLike): Promise<void> {
-	expect(html).toContain(compiled.css.slice(0, 48));
+export async function expectSsrSteppedAcceptance(html: string, layout: LayoutThemeLike): Promise<void> {
+	expect(html).toContain(layout.css.slice(0, 48));
 
 	const { frame, doc } = await loadSsrFrame(html, 375);
 	try {
